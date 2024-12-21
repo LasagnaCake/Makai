@@ -64,9 +64,7 @@ namespace Co {
 			Routine& r = get(current);
 			if (r.status == Routine::Status::RS_NEW) {
 				r.status = Routine::Status::RS_READY;
-				++active;
 				r.call();
-				--active;
 				r.status = Routine::Status::RS_FINISHED;
 				yield(false);
 			}
@@ -173,7 +171,7 @@ namespace Co {
 		/// @warning Should ONLY be called in the context's main thread.
 		void join() {
 			yield(false);
-			while (active)
+			while (current != 1)
 				yield(false);
 		}
 	};

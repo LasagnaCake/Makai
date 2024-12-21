@@ -37,10 +37,11 @@ namespace Co {
 		Registers				registers;
 
 		explicit Routine(Signal<> const& fun, usize const stackSize, usize const id):
-		call(fun), stack(stackSize), status(Status::RS_NEW), routineID(id),
-		registers(stack.data() + stack.size()) {}
+		call(fun), stack(stackSize), routineID(id), registers(nullptr) {
+			registers = Registers(pointer(stack.data() + stack.size()));
+		}
 
-		explicit Routine(usize const id): stack(0), status(Status::RS_NEW), routineID(id), registers(0) {}
+		explicit Routine(usize const id): stack(0), routineID(id), registers(nullptr) {}
 
 		Routine()				= delete;
 		Routine(Routine const&)	= delete;

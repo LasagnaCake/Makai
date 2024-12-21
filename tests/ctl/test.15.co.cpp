@@ -24,29 +24,21 @@ CTL::Co::Context ctx;
 
 void execute() {
 	static usize id = 0;
-	usize wait = rng.number<usize>(10, 20);
+	usize wait = rng.number<usize>(1, 20);
 	usize self = ++id;
-	DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50));
-	while (wait-- > 0) ctx.yield();
-	wait = rng.number<usize>(10, 20);
-	DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50));
-	while (wait-- > 0) ctx.yield();
-	wait = rng.number<usize>(10, 20);
-	DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50));
-	while (wait-- > 0) ctx.yield();
-	wait = rng.number<usize>(10, 20);
-	DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50));
-	while (wait-- > 0) ctx.yield();
-	wait = rng.number<usize>(10, 20);
-	DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50));
-	while (wait-- > 0) ctx.yield();
+	for (usize i = 0; i < 5; ++i) {
+		DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50));
+		while (wait-- > 0) ctx.yield();
+		wait = rng.number<usize>(10, 20);
+	}
 	DEBUGLN("ID: ",self,", Done!");
+	return;
 }
 
 void testContext() {
 	for (int i = 0; i < 10; ++i)
-		DEBUGLN("Spawned: ", ctx.spawn(execute));
-	while (true) ctx.yield();
+		DEBUGLN("Spawned: ", ctx.spawn(execute) - 1);
+	ctx.join();
 }
 
 void testAsync() {
