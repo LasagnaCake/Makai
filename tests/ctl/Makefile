@@ -55,6 +55,7 @@ define tests
 	$(call mktest, $(1), 12.regex)
 	$(call mktest, $(1), 13.random)
 	$(call mktest, $(1), 14.error)
+	$(call mktest, $(1), 15.co)
 	$(call mktest, $(1), ex.01.obfuscator)
 endef
 else
