@@ -4,6 +4,7 @@
 #include <thread>
 #include "../namespace.hpp"
 #include "../os/time.hpp"
+#include "../templates.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -148,6 +149,12 @@ struct Thread:
 	template<class F, class... Args>
 	explicit Thread(F&& f, Args... args):
 		BaseType(move(f), token(), args...) {
+	}
+
+	/// @brief Returns the thread's ID.
+	/// @return Thread ID.
+	ID id() const noexcept {
+		return thread::get_id();
 	}
 	
 	/// @brief Returns the current thread's ID.

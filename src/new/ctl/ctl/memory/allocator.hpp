@@ -32,6 +32,7 @@ struct HeapAllocator {
 	/// @return Pointer to allocated memory.
 	constexpr pointer allocate(usize const sz)
 	requires Type::Void<T> {
+		if (!sz) return nullptr;
 		return MX::malloc(sz);
 	}
 
@@ -40,6 +41,7 @@ struct HeapAllocator {
 	/// @return Pointer to allocated memory.
 	constexpr T* allocate(usize const sz)
 	requires Type::NonVoid<T> {
+		if (!sz) return nullptr;
 		return MX::malloc<T>(sz);
 	}
 
@@ -69,6 +71,7 @@ struct HeapAllocator {
 	/// @param sz New size.
 	constexpr void resize(pointer& mem, usize const sz)
 	requires Type::Void<T> {
+		if (!mem) return;
 		mem = MX::realloc(mem, sz);
 	}
 
@@ -77,6 +80,7 @@ struct HeapAllocator {
 	/// @param sz New element count.
 	constexpr void resize(T*& mem, usize const sz)
 	requires Type::NonVoid<T> {
+		if (!mem) return;
 		mem = MX::realloc<T>(mem, sz);
 	}
 
@@ -86,6 +90,7 @@ struct HeapAllocator {
 	/// @return Pointer to new memory location.
 	constexpr pointer resized(pointer const& mem, usize const sz)
 	requires Type::Void<T> {
+		if (!mem) return nullptr;
 		return MX::realloc(mem, sz);
 	}
 
@@ -95,6 +100,7 @@ struct HeapAllocator {
 	/// @return Pointer to new memory location.
 	constexpr T* resized(T* const mem, usize const sz)
 	requires Type::NonVoid<T> {
+		if (!mem) return nullptr;
 		return MX::realloc<T>(mem, sz);
 	}
 };
@@ -145,11 +151,9 @@ struct MemorySlice:
 	/// @param other `MemorySlice` to copy from.
 	constexpr MemorySlice(SelfType const& other)	{
 		invoke(other.length);
-		/*
 		if constexpr(Type::Standard<TData>)
 			MX::memcpy<TData>(contents, other.contents, length);
 		else MX::objcopy<TData>(contents, other.contents, length);
-		*/
 	}
 
 	/// @brief Move constructor (`MemorySlice`).
@@ -165,18 +169,19 @@ struct MemorySlice:
 
 	/// @brief Returns the maximum element count of the memory slice.
 	/// @return Maxumum element count of memory slice.
-	constexpr usize size()			{return length;							}
+	constexpr usize size() const		{return length;							}
 	/// @brief Returns the size (in bytes) of the memory slice.
 	/// @return Size of the memory slice.
-	constexpr usize byteSize()		{return length * sizeof (TData);		}
+	constexpr usize byteSize() const	{return length * sizeof (TData);		}
 	/// @brief Returns a pointer to the start of the memory slice.
 	/// @return Pointer to start of memory slice.
-	constexpr PointerType data()	{return contents;						}
+	constexpr PointerType data() const	{return contents;						}
 
 protected:
 	/// @brief Allocates (or resizes) the memory slice.
 	/// @param sz Element count.
 	constexpr void invoke(usize const sz) {
+		if (!sz) return;
 		if (!contents) contents = alloc.allocate(sz);
 		else alloc.resize(contents, sz);
 		length = sz;
@@ -185,7 +190,7 @@ protected:
 	/// @brief Frees the memory managed by the slice.
 	constexpr void free() {
 		if (!contents) return;
-		alloc.deallocate((pointer)contents);
+		alloc.deallocate(contents);
 		contents	= nullptr;
 		length		= 0;
 	}
