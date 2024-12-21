@@ -5,7 +5,7 @@
 #include "../../ctypes.hpp"
 #include "../../container/functor.hpp"
 #include "../../container/list.hpp"
-#include "register.hpp"
+#include "stackpointer.hpp"
 
 // Implementation based off of Greeny: https://github.com/nifigase/greeny
 
@@ -26,22 +26,22 @@ namespace Co {
 		};
 
 		/// @brief Function to call.
-		Signal<>				call;
+		Signal<Context&>		call;
 		/// @brief Function stack.
 		MemorySlice<byte> const	stack;
 		/// @brief Routine status.
 		Status					status = Status::RS_NEW;
 		/// @brief Routine id.
 		usize					routineID;
-		/// @brief Stack pointer register copy.
-		Registers				registers;
+		/// @brief Routine stack pointer.
+		StackPointer			sp;
 
-		explicit Routine(Signal<> const& fun, usize const stackSize, usize const id):
-		call(fun), stack(stackSize), routineID(id), registers(nullptr) {
-			registers = Registers(pointer(stack.data() + stack.size()));
+		explicit Routine(Signal<Context&> const& fun, usize const stackSize, usize const id):
+		call(fun), stack(stackSize), routineID(id), sp(nullptr) {
+			sp = StackPointer(pointer(stack.data() + stack.size()));
 		}
 
-		explicit Routine(usize const id): stack(0), routineID(id), registers(nullptr) {}
+		explicit Routine(usize const id): stack(0), routineID(id), sp(nullptr) {}
 
 		Routine()				= delete;
 		Routine(Routine const&)	= delete;

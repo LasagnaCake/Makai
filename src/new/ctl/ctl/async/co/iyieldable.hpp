@@ -11,7 +11,7 @@ CTL_NAMESPACE_BEGIN
 namespace Co {
 	/// @brief Yieldable object interface.
 	struct IYieldable {
-		IYieldable(Context& context): context(context), routine(context.spawn([&]{run();})) {}
+		IYieldable(Context& context): context(context), routine(context.spawn([&](Context&){run();})) {}
 
 		virtual ~IYieldable() {}
 

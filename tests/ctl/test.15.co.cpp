@@ -20,28 +20,27 @@ struct Test: CTL::Co::IYieldable {
 	}
 };
 
-CTL::Co::Context ctx;
-
-void execute() {
+void execute(CTL::Co::Context& ctx) {
 	static usize id = 0;
-	usize wait = rng.number<usize>(1, 20);
 	usize self = ++id;
 	for (usize i = 0; i < 5; ++i) {
-		DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50));
-		while (wait-- > 0) ctx.yield();
-		wait = rng.number<usize>(10, 20);
+		DEBUGLN("ID: ",self,", Value: ", rng.number<usize>(0, 50), ", Cycle: ", i);
+		ctx.yield();
 	}
 	DEBUGLN("ID: ",self,", Done!");
 	return;
 }
 
 void testContext() {
-	for (int i = 0; i < 10; ++i)
+	CTL::Co::Context ctx;
+	for (int i = 0; i < 20; ++i)
 		DEBUGLN("Spawned: ", ctx.spawn(execute) - 1);
 	ctx.join();
+	DEBUGLN("Main path done!");
 }
 
 void testAsync() {
+	CTL::Co::Context ctx;
 	Test t1(ctx), t2(ctx);
 	ctx.yield();
 	DEBUGLN("Value: [ ", t1.value, ", ", t2.value, " ]");
@@ -59,6 +58,7 @@ void testAsync() {
 	DEBUGLN("Value: [ ", t1.value, ", ", t2.value, " ]");
 	ctx.join();
 	DEBUGLN("Value: [ ", t1.value, ", ", t2.value, " ]");
+	DEBUGLN("Main path done!");
 }
 
 int main() {

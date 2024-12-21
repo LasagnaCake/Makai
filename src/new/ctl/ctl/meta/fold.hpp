@@ -106,7 +106,7 @@ namespace Fold {
 	constexpr T avg(Args const&... args) {
 		return (add(args...)) / sizeof...(Args);
 	}
-
+	
 	template<typename T, typename... Args>
 	constexpr bool many(T const& first, Args const&... rest) {
 		return (... || (first == rest));

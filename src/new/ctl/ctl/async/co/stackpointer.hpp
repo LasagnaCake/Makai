@@ -12,16 +12,12 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Asynchronous green thread facilities.
 namespace Co {
-	/// @brief CPU registers.
+	/// @brief Stack pointer register manipulation facilitator.
 	/// @warning Only `Context` and `Routine` should use this!
-	struct Registers {
-		/// @brief Pointers to stack data.
+	struct StackPointer {
+		/// @brief Pointers to stack.
 		pointer sp, bp;
-
-	protected:
-		/// @brief Puts data in the stack.
-		/// @param what Data to put in the stack.
-		/// @return Pointer to stack.
+		
 		inline pointer put(pointer const what) {
 			void* stack = static_cast<char*>(sp) - sizeof(void*);
 			MX::memcpy(stack, &what, sizeof(void*));
@@ -31,13 +27,13 @@ namespace Co {
 	public:
 		/// @brief Constructs the stack pointer register.
 		/// @param stack Pointer to stack.
-		explicit Registers(pointer const stack): sp(stack), bp(sp) {}
+		explicit StackPointer(pointer const stack): sp(stack), bp(sp) {}
 
 		#ifdef X86
 		#if (CPU_ARCH == 64)
 		/// @brief Stores the current stack pointers.
 		[[gnu::always_inline]]
-		inline void pull() {
+		inline void read() {
 			__asm__ __volatile__(
 				"movq %%rsp, %0\n"
 				"movq %%rbp, %1\n" : "=m"(sp), "=m"(bp)
@@ -45,9 +41,9 @@ namespace Co {
 		}
 		/// @brief Sets the current stack pointers.
 		[[gnu::always_inline]]
-		inline pointer push(pointer preserve) {
+		inline pointer write(pointer preserve) {
 			void* stack = put(preserve);
-				__asm__ __volatile__(
+			__asm__ __volatile__(
 				"movq %1, %%rsp\n"
 				"movq %2, %%rbp\n"
 				"popq %0\n" : "+r"(preserve) : "m"(stack), "m"(bp) : "memory"
@@ -57,7 +53,7 @@ namespace Co {
 		#elif (CPU_ARCH == 32)
 		/// @brief Stores the current stack pointers.
 		[[gnu::always_inline]]
-		inline void pull() {
+		inline void read() {
 			__asm__ __volatile__(
 				"mov %%esp, %0\n"
 				"mov %%ebp, %1\n" : "=m"(sp), "=m"(bp)
@@ -65,9 +61,9 @@ namespace Co {
 		}
 		/// @brief Sets the current stack pointers.
 		[[gnu::always_inline]]
-		inline pointer push(pointer preserve) {
+		inline pointer write(pointer preserve) {
 			void* stack = put(preserve);
-				__asm__ __volatile__(
+			__asm__ __volatile__(
 				"mov %1, %%esp\n"
 				"mov %2, %%ebp\n"
 				"pop %0\n" : "+r"(preserve) : "m"(stack), "m"(bp) : "memory"
@@ -76,7 +72,9 @@ namespace Co {
 		}
 		#endif
 		#else
-		#error "Routines are currently only supported on X86 architectures!"
+		inline void read();
+		inline pointer write(pointer preserve);
+		#warning "Routines are currently only supported on X86 architectures!"
 		#endif
 	};
 }

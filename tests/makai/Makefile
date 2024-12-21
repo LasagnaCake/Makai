@@ -5,7 +5,7 @@ LEAN := -static -s
 
 ROOT := ../..
 
-COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -I$(ROOT)/output/include
+COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
 LIBREQS		:= -static-libstdc++ -static-libgcc

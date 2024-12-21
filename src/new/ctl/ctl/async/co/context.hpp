@@ -7,8 +7,6 @@
 #include "../../container/list.hpp"
 #include "routine.hpp"
 
-#include <iostream>
-
 // Implementation based off of Greeny: https://github.com/nifigase/greeny
 
 CTL_NAMESPACE_BEGIN
@@ -26,36 +24,25 @@ namespace Co {
 		usize			active		= 0;
 
 		Routine& get(usize const id) {
-			if (!id || !(id < routines.size()))
+			if (routines.empty())
+				throw OutOfBoundsException("No routines exist!");
+			if (!id || id > routines.size())
 				throw OutOfBoundsException("Routine does not exist!");
 			return *routines[id-1];
 		}
 
-		/*usize next(Routine::Status const status) {
-			for (usize i = current + 1; i != current; ++i) {
-				if (i < routines.size()) {
-					i = 0;
-					continue;
-				}
-				Routine& r = get(i);
-				if (r.status == status)
-					return i;
-			}
-			return 0;
-		}*/
-
-		template<usize N>
-		usize next(Decay::AsType<Routine::Status[N]> const& status) {
+		template<class... Args>
+		usize next(Args const... flags)
+		requires (... && Type::Equal<Args, Routine::Status>) {
 			if (routines.empty()) return 0;
 			for (usize i = current + 1; i != current; ++i) {
-				if (i >= routines.size()) {
+				if (i > routines.size()) {
 					i = 0;
 					continue;
 				}
 				Routine& r = get(i);
-				for (usize j = 0; j < N; ++j)
-					if (r.status == status[j])
-						return i;
+				if (Fold::many(r.status, flags...))
+					return i;
 			}
 			return 0;
 		}
@@ -64,7 +51,10 @@ namespace Co {
 			Routine& r = get(current);
 			if (r.status == Routine::Status::RS_NEW) {
 				r.status = Routine::Status::RS_READY;
-				r.call();
+				++active;
+				// SEGFAULT here???
+				r.call(*this);
+				--active;
 				r.status = Routine::Status::RS_FINISHED;
 				yield(false);
 			}
@@ -74,18 +64,20 @@ namespace Co {
 		/// @param post Whether to post a message.
 		void yield(bool const post) {
 			if (routines.empty()) return;
-			Routine& r = get(current);
+			Routine& currentRoutine = get(current);
 			if (post)
-				r.status = Routine::Status::RS_POSTED;
-			usize nextID = next({
+				currentRoutine.status = Routine::Status::RS_POSTED;
+			usize nextID = next(
 				Routine::Status::RS_NEW,
 				Routine::Status::RS_READY
-			});
+			);
 			if (!nextID) return;
+			Routine& nextRoutine = get(nextID);
 			current = nextID;
-			r.registers.pull();
-			Context* nextContext = static_cast<Context*>(r.registers.push(this));
-			nextContext->run();
+			currentRoutine.sp.read();
+			Context* nextContext = static_cast<Context*>(currentRoutine.sp.write(this));
+			if (nextRoutine.status == Routine::Status::RS_NEW)
+				nextContext->run();
 		}
 
 	public:
@@ -102,13 +94,24 @@ namespace Co {
 		/// @brief Copy constructor (deleted).
 		Context(Context const&) = delete;
 
-		/// @brief Destructor.
-		~Context() {
-			for (Routine* r: routines)
-				delete r;
+		/// @brief Move constructor.
+		/// @param other `Context` to move.
+		Context(Context&& other):
+			routines(other.routines),
+			current(other.current),
+			active(other.active) {
+			other.routines.clear();
 		}
 
-		/// @brief Releases execution.
+		/// @brief Destructor.
+		~Context() {
+			join();
+			for (Routine* r: routines)
+				delete r;
+			routines.clear();
+		}
+
+		/// @brief Hands execution over.
 		void yield() {
 			yield(true);
 		}
@@ -118,7 +121,7 @@ namespace Co {
 		/// @param func Function to run.
 		/// @param stack Stack size. By default, it is `STACK_SIZE`.
 		/// @return ID of spawned routine.
-		usize spawn(Signal<> const& func, usize const stack = STACK_SIZE) {
+		usize spawn(Signal<Context&> const& func, usize const stack = STACK_SIZE) {
 			const usize id = routines.size() + 1;
 			routines.pushBack(new Routine(func, stack, id));
 			return id;
@@ -149,15 +152,15 @@ namespace Co {
 		/// @return Routine that yielded, or zero if all routines are finished.
 		usize waitForNext() {
 			while (true) {
-				usize id = next({Routine::Status::RS_POSTED});
+				usize id = next(Routine::Status::RS_POSTED);
 				if (id) {
 					get(id).status = Routine::Status::RS_READY;
 					return id;
 				}
-				id = next({
+				id = next(
 					Routine::Status::RS_NEW,
 					Routine::Status::RS_READY
-				});
+				);
 				if (id) {
 					yield(false);
 					continue;
@@ -170,9 +173,7 @@ namespace Co {
 		/// @brief Waits for all routines to finish execution.
 		/// @warning Should ONLY be called in the context's main thread.
 		void join() {
-			yield(false);
-			while (current != 1)
-				yield(false);
+			do yield(false); while (active > 0);
 		}
 	};
 }

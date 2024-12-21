@@ -17,7 +17,10 @@
 #define CPU_ARCH (8)
 #endif
 
-#if defined(_M_X64) || defined(__amd64__) || defined(_M_X86) || defined(__i386__) || (_WIN32 || _WIN64 || __WIN32__ || __WIN64__)
+#if defined(_M_X64) || defined(__amd64__) || defined(_M_X86) || defined(__i386__)
+#define X86
+#endif
+#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__)
 #define X86
 #endif
 
