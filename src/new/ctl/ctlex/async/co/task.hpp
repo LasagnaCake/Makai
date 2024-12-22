@@ -9,8 +9,8 @@ CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
-	/// @brief Asynchronous task interface.
-	struct IRoutine {
+	/// @brief Coroutine task interface.
+	struct ITask {
 		/// @brief Task state.
 		enum class State {
 			RS_READY,
@@ -29,7 +29,7 @@ namespace Co {
 		virtual PromiseType run() = 0;
 
 		/// @brief Empty constructor.
-		IRoutine() {}
+		ITask() {}
 
 		/// @brief Processes the assiged routine.
 		void process() {

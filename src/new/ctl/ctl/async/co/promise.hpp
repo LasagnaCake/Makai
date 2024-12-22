@@ -66,7 +66,7 @@ namespace Co {
 		}
 
 		/// @brief Returns process to the coroutine.
-		void process() const {context();}
+		void process() const {if (!finished()) context();}
 
 		/// @brief Empty constructor.
 		Promise() {}
@@ -170,7 +170,7 @@ namespace Co {
 		DataType value() const {return context.promise().value;}
 
 		/// @brief Returns process to the coroutine.
-		void process() const {context();}
+		void process() const {if (!finished()) context();}
 
 		/// @brief Fetches the next value, and returns it.
 		/// @return Next value.
@@ -202,6 +202,9 @@ namespace Co {
 	/// @brief `Promise` analog for genarator coroutines.
 	template<class T>
 	using Generator = Promise<T, false>;
+
+	/// @brief `Promise` analog for "pure coroutines" (`void` return, no initial suspend).
+	using Routine = Promise<>;
 }
 
 CTL_NAMESPACE_END

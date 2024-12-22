@@ -9,7 +9,7 @@ CTL::Co::Generator<usize> cofun() {
 	co_return 100;
 }
 
-CTL::Co::Promise<> cofun2(int ci) {
+CTL::Co::Routine cofun2(int ci) {
 	for (usize i = 0; i < 5; ++i) {
 		usize const time = rng.integer<usize>(0, 10);
 		DEBUGLN("Coroutine: ", ci, ", Cycle: ", i+1, ", Wait: ", time);
@@ -31,7 +31,7 @@ void testCoroutines() {
 }
 
 void testYield() {
-	CTL::Co::Promise<> promises[5] = {
+	CTL::Co::Routine routines[5] = {
 		cofun2(0),
 		cofun2(1),
 		cofun2(2),
@@ -41,9 +41,9 @@ void testYield() {
 	bool processing = true;
 	while (processing) {
 		processing = false;
-		for (auto& p: promises)
-			if (p) {
-				p.process();
+		for (auto& r: routines)
+			if (r) {
+				r.process();
 				processing = true;
 			}
 	}
