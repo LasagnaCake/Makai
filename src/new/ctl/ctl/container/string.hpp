@@ -181,10 +181,10 @@ public:
 
 	/// @brief Constructos the `BaseString` from a STL view analog.
 	/// @param str View to copy from.
-	constexpr BaseString(STDViewType const& str):	BaseType(str.data(), str.data() + str.size())	{}
+	constexpr BaseString(STDViewType const& str):	BaseType(&*str.begin(), &*str.end())	{}
 	/// @brief Constructos the `BaseString` from a STL string analog.
 	/// @param str View to copy from.
-	constexpr BaseString(STDStringType const& str):	BaseType(str.data(), str.data() + str.size())	{}
+	constexpr BaseString(STDStringType const& str):	BaseType(&*str.begin(), &*str.end())	{}
 
 	/// @brief Splits the string by a separator.
 	/// @param sep Separator.
