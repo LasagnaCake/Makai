@@ -9,24 +9,24 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
-	/// @brief Generates a coroutine that stalls a given amount of times.
-	/// @param count Yield count.
-	/// @return Awaitable promise.
-	/// @details
-	///		Generates a coroutine that will return `true` for the given amount of times passed.
-	///		Coroutine is always starts suspended.
-	///
-	///		Meant to be used in conjunction with a `while` loop — see example.
-	/// @example
-	///		auto yielder = yield(/*count*/);
-	///		while (yielder.next())
-	///			co_yield /*return type*/;
-	Promise<bool, false> yield(usize count) {
-		if (!count) co_return false;
-		while (count--)
-			co_yield true;
-		co_yield false;
-	}
+	/// @brief Coroutine staller.
+	struct Yielder {
+		bool await_ready()						{return !counter;	}
+		bool await_suspend(Context<> context)	{return --counter;	}
+		void await_resume()						{					}
+
+		/// @brief Constructs the yielder.
+		/// @param count Amount of times to stall the coroutine for.
+		Yielder(usize const count): counter(count) {}
+
+	private:
+		usize counter;
+	};
+
+	/// @brief Creates a yielder that stalls a coroutine a given number of times. Meant to be used like `co_await yield(count)`
+	/// @param count Amount of times to stall the coroutine for.
+	/// @return Resulting yielder.
+	Yielder yield(usize const count) {return Yielder(count);}
 }
 
 CTL_NAMESPACE_END
