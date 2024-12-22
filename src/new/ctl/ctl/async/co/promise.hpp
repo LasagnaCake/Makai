@@ -199,7 +199,7 @@ namespace Co {
 		operator Context<>() const				{return context;}
 	};
 
-	/// @brief `Promise` analog for genarator coroutines.
+	/// @brief `Promise` analog for genarator coroutines — coroutines that start suspended.
 	template<class T>
 	using Generator = Promise<T, false>;
 
