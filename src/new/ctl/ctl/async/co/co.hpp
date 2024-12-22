@@ -5,5 +5,6 @@
 #include "promise.hpp"
 #include "context.hpp"
 #include "suspend.hpp"
+#include "yield.hpp"
 
 #endif

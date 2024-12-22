@@ -8,9 +8,6 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
-	/// @brief Cooperative routine handler.
-	struct Routine {
-	};
 }
 
 CTL_NAMESPACE_END

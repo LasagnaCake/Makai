@@ -15,8 +15,10 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
-	template<class TReturn = void>
-	using Context = std::coroutine_handle<TReturn>;
+	/// @brief Coroutine context.
+	/// @tparam TReturn Promise type.
+	template<class TPromise = void>
+	using Context = std::coroutine_handle<TPromise>;
 
 	/*template <typename TResult, typename... TArgs>
 	struct coroutine_traits {

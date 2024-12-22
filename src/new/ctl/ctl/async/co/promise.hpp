@@ -15,16 +15,21 @@ namespace Co {
 	template<class TData = void, bool S = false>
 	struct Promise;
 
+	/// @brief Coroutine return type.
+	/// @tparam S Whether the coroutine should start suspended.
 	template<bool S>
 	struct Promise<void, S> {
 		struct promise_type;
+		/// @brief Context type.
 		using ContextType = Context<promise_type>;
-
+		
+		/// @brief Whether the coroutine should start suspended.
 		constexpr static bool START_SUSPENDED = S;
 
+		/// @brief STL promise implementation type.
 		struct promise_type {
-			Exception* ex = nullptr;
-
+			/// @brief Returns the promise associated with this type.
+			/// @return Associated promise.
 			Promise get_return_object() {
 				return ContextType::from_promise(*this);
 			}
@@ -33,22 +38,22 @@ namespace Co {
 			AlwaysSuspend final_suspend() noexcept	{return {};	}
 			AlwaysSuspend yield_value()				{return {};	}
 			void return_void()						{			}
-
+			
 			void unhandled_exception() {
-				ex = Exception::current();
+				throw Exception(*Exception::current());
 			}
 		};
 
 		void await() const {
 			while (!done())
-				yield();
+				process();
 		}
 
 		bool done() const {
 			return context.done();
 		}
 
-		void yield() const {context();}
+		void process() const {context();}
 		
 		Promise(ContextType context): context(context) {}
 		Promise(Promise const&) = delete;
@@ -61,6 +66,9 @@ namespace Co {
 		operator Context<>() const				{return context;}
 	};
 
+	/// @brief Coroutine return type.
+	/// @tparam TData Return value type.
+	/// @tparam S Whether the coroutine should start suspended.
 	template<class TData, bool S>
 	struct Promise: Typed<TData> {
 		using Typed = ::CTL::Typed<TData>;
@@ -110,13 +118,13 @@ namespace Co {
 
 		DataType value() const {return context.promise().value;}
 
-		void yield() const {context();}
+		void process() const {context();}
 
-		DataType next() const {yield(); return value();}
+		DataType next() const {process(); return value();}
 
 		DataType await() const {
 			while (!done())
-				yield();
+				process();
 			return value();
 		}
 
