@@ -4,8 +4,6 @@
 #include "../../namespace.hpp"
 #include "../../ctypes.hpp"
 
-// Based off of: https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html#compiling-code-using-coroutines
-
 CTL_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.

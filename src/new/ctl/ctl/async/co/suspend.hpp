@@ -10,21 +10,17 @@
 CTL_NAMESPACE_BEGIN
 
 namespace Co {
-	template<bool S>
-	struct Suspend {
-		constexpr bool await_ready()			{return S;	}
-		constexpr void await_suspend(Context<>)	{			}
-		constexpr void await_resume(Context<>)	{			}
-	};
+	using AlwaysSuspend	= std::suspend_always;
+	using NeverSuspend	= std::suspend_never;
 
-	using AlwaysSuspend	= Suspend<true>;
-	using NeverSuspend	= Suspend<false>;
+	template<bool S>
+	using Suspend = Meta::DualType<S, AlwaysSuspend, NeverSuspend>;
 
 	template<class TPromise>
 	struct Consumer {
 		TPromise& promise;
 		constexpr bool await_ready()							{return false;								}
-		constexpr bool await_suspend(Context<TPromise> context)	{promise = context.promise() return false;	}
+		constexpr bool await_suspend(Context<TPromise> context)	{promise = context.promise(); return false;	}
 		constexpr TPromise& await_resume()						{return promise;							}
 	};
 }

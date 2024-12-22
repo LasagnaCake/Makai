@@ -7,12 +7,22 @@
 #include "../../order.hpp"
 #include "../../typetraits/traits.hpp"
 
+#include <coroutine>
+
 // Based off of: https://github.com/gcc-mirror/gcc/blob/7d83a32aacd6005c0c038c74562e35d70f6a77a8/libstdc%2B%2B-v3/include/std/coroutine#L264
 
 CTL_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
+	template<class TReturn = void>
+	using Context = std::coroutine_handle<TReturn>;
+
+	/*template <typename TResult, typename... TArgs>
+	struct coroutine_traits {
+		using promise_type = typename TResult::promise_type;
+	};
+
 	template<class T = void>
 	struct Context;
 
@@ -21,9 +31,13 @@ namespace Co {
 		constexpr operator Context<void>() const noexcept {
 			return Context<void>::from(frame);
 		}
+		
+		constexpr operator bool() const noexcept {
+			return true;
+		}
 
 		constexpr void operator()() const		{}
-		constexpr bool done() const noexcept	{}
+		constexpr bool done() const noexcept	{return false;}
 		constexpr void resume() const			{}
 		constexpr void destroy() const			{}
 
@@ -34,8 +48,8 @@ namespace Co {
 
 		struct KingdomOfNothingness {
 			constexpr static void nothingness() {};
-			void (*r) = nothingness;
-			void (*d) = nothingness;
+			Decay::AsFunction<void()>* r = nothingness;
+			Decay::AsFunction<void()>* d = nothingness;
 			nulltype p;
 		};
 
@@ -58,18 +72,10 @@ namespace Co {
 			frame = nullptr;
 			return *this;
 		}
-
-		constexpr static Context from(pointer const address) noexcept
-		requires (Type::Void<PromiseType>) {
-			Frame self;
-			self.frame = address;
-			return self;
-		}
-
-		constexpr static Context from(Promise& promise) noexcept
-		requires (Type::NonVoid<PromiseType>) {
-			Frame self;
-			self.frame = &promise;
+		
+		constexpr static Context from(PromiseType* const promise) noexcept {
+			Context self;
+			self.frame = promise;
 			return self;
 		}
 
@@ -108,7 +114,7 @@ namespace Co {
 
 	protected:
 		pointer frame = nullptr;
-	};
+	};*/
 }
 
 CTL_NAMESPACE_END

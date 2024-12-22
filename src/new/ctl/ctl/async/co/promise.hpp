@@ -12,76 +12,123 @@
 CTL_NAMESPACE_BEGIN
 
 namespace Co {
-	template<class TData = void>
+	template<class TData = void, bool S = false>
 	struct Promise;
 
-	template<>
-	struct Promise<void> {
+	template<bool S>
+	struct Promise<void, S> {
+		struct promise_type;
+		using ContextType = Context<promise_type>;
+
+		constexpr static bool START_SUSPENDED = S;
+
 		struct promise_type {
+			Exception* ex = nullptr;
+
 			Promise get_return_object() {
-				return {
-					.context = Context<promise_type>::from(*this)
-				};
+				return ContextType::from_promise(*this);
 			}
-			NeverSuspend initial_suspend()			{return {};	}
-			NeverSuspend final_suspend() noexcept	{return {};	}
-			AlwaysSuspend yield_value()				{			}
+
+			Suspend<S> initial_suspend()			{return {};	}
+			AlwaysSuspend final_suspend() noexcept	{return {};	}
+			AlwaysSuspend yield_value()				{return {};	}
 			void return_void()						{			}
 
 			void unhandled_exception() {
-				if (Exception::current())
-					throw Exception(*Exception::current());
+				ex = Exception::current();
 			}
 		};
-		Context<promise_type> context;
-		constexpr operator Context<promise_type>() const	{return context;}
-		constexpr operator Context<>() const				{return context;}
+
+		void await() const {
+			while (!done())
+				yield();
+		}
+
+		bool done() const {
+			return context.done();
+		}
+
+		void yield() const {context();}
+		
+		Promise(ContextType context): context(context) {}
+		Promise(Promise const&) = delete;
+		~Promise() {context.destroy();}
+
+		operator bool() const {return !done();}
+
+		ContextType context;
+		operator Context<promise_type>() const	{return context;}
+		operator Context<>() const				{return context;}
 	};
 
-	template<class TData>
+	template<class TData, bool S>
 	struct Promise: Typed<TData> {
 		using Typed = ::CTL::Typed<TData>;
 		
 		using typename Typed::DataType;
-		
-		~Promise() {context.destroy();}
+
+		struct promise_type;
+		using ContextType = Context<promise_type>;
+
+		constexpr static bool START_SUSPENDED = S;
 
 		struct promise_type {
-			Nullable<DataType> value = nullptr;
+			DataType value;
 
 			~promise_type() {}
 			
-			Handler get_return_object() {
-				return {
-					.context = Context<promise_type>::from(*this)
-				};
+			Promise get_return_object() {
+				return ContextType::from_promise(*this);
 			}
 
-			NeverSuspend initial_suspend()			{return {};	}
-			NeverSuspend final_suspend() noexcept	{return {};	}
-			void unhandled_exception()				{			}
+			Suspend<S> initial_suspend()			{return {};	}
+			AlwaysSuspend final_suspend() noexcept	{return {};	}
+			
+			void unhandled_exception() {
+				throw Exception(*Exception::current());
+			}
 
-			AlwaysSuspend yield_value(DataType const& value) {
-				this->value = value;
+			template<Type::Convertible<DataType> TFrom>
+			AlwaysSuspend yield_value(TFrom&& v) {
+				value = v;
 				return {};
 			}
 
-			Nullable<DataType> return_value() {
+			template<Type::Convertible<DataType> TFrom>
+			DataType return_value(TFrom&& v) {
+				value = v;
 				return value;
 			}
-
-			void return_void() {
-			}
 		};
-
-		using ContextType = Context<promise_type>;
 		
 		ContextType context;
 
-		constexpr Promise(ContextType context): context(context) {}
+		Promise(ContextType context): context(context) {}
+		Promise(Promise const&) = delete;
 
-		constexpr operator Context<promise_type>() const	{return context;}
-		constexpr operator Context<>() const				{return context;}
+		~Promise() {context.destroy();}
+
+		DataType value() const {return context.promise().value;}
+
+		void yield() const {context();}
+
+		DataType next() const {yield(); return value();}
+
+		DataType await() const {
+			while (!done())
+				yield();
+			return value();
+		}
+
+		bool done() const {
+			return context.done();
+		}
+
+		operator bool() const		{return !done();	}
+		operator DataType() const	{return value();	}
+
+		operator Context<promise_type>() const	{return context;}
+		operator Context<>() const				{return context;}
 
 		using Context = Co::Context<promise_type>;
 	};
