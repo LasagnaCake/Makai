@@ -19,7 +19,7 @@ class Timer:
 public:
 	using ITimerPeriodic::ITimerPeriodic;
 
-	/// @brief Whether the current Timer is paused.
+	/// @brief Whether the current timer is paused.
 	bool paused	= false;
 
 	/// @brief Whether to repeatedly fire the event.
@@ -28,8 +28,8 @@ public:
 	/// @brief Time between signal events.
 	usize delay = 0;
 
-	/// @brief The amount of times to repeat for. If less than 0, loops indefinitely.
-	llong loopCount = -1;
+	/// @brief The amount of times to repeat for. If less than zero, loops indefinitely.
+	llong loops = -1;
 
 	/// @brief Constructs the timer.
 	/// @param delay Time between signal events.
@@ -45,7 +45,7 @@ public:
 	paused(CTL::move(other.paused)),
 	repeat(CTL::move(other.repeat)),
 	delay(CTL::move(other.delay)),
-	loopCount(CTL::move(other.loopCount)),
+	loops(CTL::move(other.loops)),
 	counter(CTL::move(other.counter)) {
 		isFinished = CTL::move(other.isFinished);
 	}
@@ -61,13 +61,13 @@ public:
 			// If counter has reached target...
 			if(counter >= delay) {
 				// If repeating and not done looping, set counter to 0
-				if (repeat && loopCount != 0) counter = 0;
+				if (repeat && loops != 0) counter = 0;
 				// Else, stop timer
 				else isFinished = true;
 				// Fire signal
 				onEvent();
 				// If loop count above zero, decrease it
-				if (loopCount > 0) loopCount--;
+				if (loops > 0) loops--;
 			}
 			// Increment counter
 			counter += delta;

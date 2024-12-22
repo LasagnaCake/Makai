@@ -3,6 +3,7 @@
 
 #include "algorithm/algorithm.hpp"
 #include "async/async.hpp"
+#include "async/co/co.hpp"
 #include "container/container.hpp"
 #include "io/io.hpp"
 #include "math/math.hpp"

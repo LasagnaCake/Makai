@@ -1,6 +1,5 @@
 #include <ctl/ctl.hpp>
 #include <ctlex/ctlex.hpp>
-#include <ctl/async/co/co.hpp>
 
 CTL::Random::SecureGenerator rng;
 

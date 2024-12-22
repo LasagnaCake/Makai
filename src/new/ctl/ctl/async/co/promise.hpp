@@ -67,6 +67,9 @@ namespace Co {
 
 		/// @brief Returns process to the coroutine.
 		void process() const {context();}
+
+		/// @brief Empty constructor.
+		Promise() {}
 		
 		/// @brief Constructs the coroutine.
 		/// @param context Coroutine context.
@@ -149,6 +152,9 @@ namespace Co {
 		
 		/// @brief Coroutine context.
 		ContextType context;
+
+		/// @brief Empty constructor.
+		Promise() {}
 
 		/// @brief Constructs the coroutine.
 		/// @param context Coroutine context.
