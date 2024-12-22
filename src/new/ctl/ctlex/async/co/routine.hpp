@@ -4,7 +4,6 @@
 #include "../../../ctl/exnamespace.hpp"
 #include "../../../ctl/ctl.hpp"
 #include "../../event/playable.hpp"
-#include "promise.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
 
