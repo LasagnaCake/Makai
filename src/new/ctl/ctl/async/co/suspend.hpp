@@ -9,20 +9,16 @@
 
 CTL_NAMESPACE_BEGIN
 
+/// @brief Cooperative routine facilities.
 namespace Co {
+	/// @brief Always suspend indicator.
 	using AlwaysSuspend	= std::suspend_always;
+	/// @brief Never suspend indicator.
 	using NeverSuspend	= std::suspend_never;
 
+	/// @brief Suspension indicator.
 	template<bool S>
 	using Suspend = Meta::DualType<S, AlwaysSuspend, NeverSuspend>;
-
-	template<class TPromise>
-	struct Consumer {
-		TPromise& promise;
-		constexpr bool await_ready()							{return false;								}
-		constexpr bool await_suspend(Context<TPromise> context)	{promise = context.promise(); return false;	}
-		constexpr TPromise& await_resume()						{return promise;							}
-	};
 }
 
 CTL_NAMESPACE_END
