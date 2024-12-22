@@ -14,10 +14,6 @@ CTL::Co::Routine cofun2(int ci) {
 		usize const time = rng.integer<usize>(0, 10);
 		DEBUGLN("Coroutine: ", ci, ", Cycle: ", i+1, ", Wait: ", time);
 		co_await CTL::Co::yield(time);
-		/*
-		auto yielder = CTL::Co::yield(rng.integer<usize>(1, 10));
-		while (yielder.next()) co_yield false;
-		*/
 	}
 	DEBUGLN("Coroutine: ", ci, ", Done!!!");
 	co_return;
