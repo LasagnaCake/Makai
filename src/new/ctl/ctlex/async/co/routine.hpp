@@ -24,6 +24,9 @@ namespace Co {
 
 		/// @brief task to process. Must be implemented.
 		/// @return Promise to task result.
+		/// @note
+		///		Ideally, should not use `CTL::Co::yield` and `CTL::Co::Yielder`.
+		///		Instead, simply `co_yield` the delay.
 		virtual PromiseType run() = 0;
 
 		/// @brief Empty constructor.

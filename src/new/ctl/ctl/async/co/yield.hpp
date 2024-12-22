@@ -10,6 +10,7 @@ CTL_NAMESPACE_BEGIN
 /// @brief Cooperative routine facilities.
 namespace Co {
 	/// @brief Coroutine staller.
+	/// @note Ideally, should only be used with empty (`void`) promises.
 	struct Yielder {
 		bool await_ready()						{return !counter;	}
 		bool await_suspend(Context<> context)	{return --counter;	}
@@ -27,6 +28,7 @@ namespace Co {
 	///		Creates a yielder that stalls a coroutine a given number of times.
 	///		Meant to be used like `co_await yield(count)`.
 	/// @param count Amount of times to stall the coroutine for.
+	/// @note Ideally, should only be used with empty (`void`) promises.
 	/// @return Resulting yielder.
 	Yielder yield(usize const count) {return Yielder(count);}
 }
