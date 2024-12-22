@@ -12,8 +12,9 @@ namespace Co {
 	/// @brief Generates a coroutine that stalls for a given count of yields.
 	/// @param count Yield count.
 	/// @return Awaitable promise.
-	Promise<bool> yield(usize count) {
-		while (count--)
+	Promise<bool, false> yield(usize count) {
+		if (!count) co_return false;
+		while (--count)
 			co_yield true;
 		co_yield false;
 	}
