@@ -198,6 +198,10 @@ namespace Co {
 		/// @brief Returns the coroutine context.
 		operator Context<>() const				{return context;}
 	};
+
+	/// @brief `Promise` analog for genarator coroutines.
+	template<class T>
+	using Generator = Promise<T, false>;
 }
 
 CTL_NAMESPACE_END

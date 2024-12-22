@@ -1,8 +1,9 @@
-#ifndef CTL_ASYNC_CO_ROUTINE_H
-#define CTL_ASYNC_CO_ROUTINE_H
+#ifndef CTL_EX_ASYNC_CO_ROUTINE_H
+#define CTL_EX_ASYNC_CO_ROUTINE_H
 
-#include "../../ctl/exnamespace.hpp"
-#include "../../ctl/ctl.hpp"
+#include "../../../ctl/exnamespace.hpp"
+#include "../../../ctl/ctl.hpp"
+#include "../../event/playable.hpp"
 #include "promise.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
@@ -23,15 +24,15 @@ namespace Co {
 
 		/// @brief task to process. Must be implemented.
 		/// @return Promise to task result.
-		virtual PromiseType onProcess() = 0;
+		virtual PromiseType run() = 0;
 
 		/// @brief Empty constructor.
 		IRoutine() {}
 
-		/// @brief Processes the assiged task.
-		void execute() {
+		/// @brief Processes the assiged routine.
+		void process() {
 			if (taskState == State::RS_READY) {
-				prommy = onProcess();
+				prommy = run();
 				taskState = State::RS_RUNNING;
 			}
 			if (taskState != State::RS_FINISHED && !paused) {
@@ -41,9 +42,15 @@ namespace Co {
 					else							taskState = State::RS_FINISHED;
 				}
 				if (counter == 0)
-					execute();
+					process();
 				else --counter;
 			}
+		}
+
+		/// @brief Returns the current routine state.
+		/// @return Current state.
+		State state() const {
+			return taskState;
 		}
 
 		/// @brief Whether the current routine is paused.

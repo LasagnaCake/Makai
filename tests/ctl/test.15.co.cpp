@@ -3,13 +3,13 @@
 
 CTL::Random::SecureGenerator rng;
 
-CTL::Co::Promise<usize, true> cofun() {
+CTL::Co::Generator<usize> cofun() {
 	for (usize i = 0; i < 10; ++i)
 		co_yield i;
 	co_return 100;
 }
 
-CTL::Co::Promise<bool> cofun2(int ci) {
+CTL::Co::Promise<> cofun2(int ci) {
 	for (usize i = 0; i < 5; ++i) {
 		usize const time = rng.integer<usize>(0, 10);
 		DEBUGLN("Coroutine: ", ci, ", Cycle: ", i+1, ", Wait: ", time);
@@ -20,7 +20,7 @@ CTL::Co::Promise<bool> cofun2(int ci) {
 		*/
 	}
 	DEBUGLN("Coroutine: ", ci, ", Done!!!");
-	co_return true;
+	co_return;
 }
 
 void testCoroutines() {
@@ -31,7 +31,7 @@ void testCoroutines() {
 }
 
 void testYield() {
-	CTL::Co::Promise<bool> promises[5] = {
+	CTL::Co::Promise<> promises[5] = {
 		cofun2(0),
 		cofun2(1),
 		cofun2(2),
