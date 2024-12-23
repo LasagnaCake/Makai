@@ -170,6 +170,7 @@ public:
 	template<Type::Convertible<DataType> T2>
 	constexpr explicit List(ForwardIterator<T2 const> const& begin, ForwardIterator<T2 const> const& end)
 	requires Type::Different<T2, DataType> {
+		if (end <= begin) return;
 		invoke(end - begin + 1);
 		copy(begin, contents, end - begin);
 		count = end - begin;
@@ -182,6 +183,7 @@ public:
 	template<Type::Convertible<DataType> T2>
 	constexpr explicit List(ReverseIterator<T2 const> const& begin, ReverseIterator<T2 const> const& end)
 	requires Type::Different<T2, DataType> {
+		if (end <= begin) return;
 		invoke(end - begin + 1);
 		for (auto i = begin; i != end; ++i)
 			pushBack(*i);
@@ -192,6 +194,7 @@ public:
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
 	constexpr List(ConstIteratorType const& begin, ConstIteratorType const& end) {
+		if (end <= begin) return;
 		invoke(end - begin + 1);
 		copy(begin, contents, end - begin);
 		count = end - begin;
