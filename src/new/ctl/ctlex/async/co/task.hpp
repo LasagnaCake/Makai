@@ -9,6 +9,7 @@ CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
+	// TODO: Implement `IPlayable` stuff in class
 	/// @brief Coroutine task interface.
 	struct ITask {
 		/// @brief Task state.
