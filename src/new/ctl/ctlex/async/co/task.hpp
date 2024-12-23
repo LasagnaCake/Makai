@@ -44,9 +44,12 @@ namespace Co {
 			}
 			if (taskState != State::RS_FINISHED && !paused) {
 				if (!counter) {
-					if (!prommy)					counter = prommy.next();
-					else if (repeat && loops != 0)	loops--;
-					else							taskState = State::RS_FINISHED;
+					if (prommy)
+						counter = prommy.next();
+					else if (repeat && loops != 0)	{
+						prommy = task();
+						if (loops < 0) --loops;
+					} else taskState = State::RS_FINISHED;
 				}
 				if (counter == 0)
 					process();
