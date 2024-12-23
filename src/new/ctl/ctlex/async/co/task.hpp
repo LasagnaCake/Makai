@@ -26,7 +26,7 @@ namespace Co {
 		/// @note
 		///		Ideally, should not use `CTL::Co::yield` and `CTL::Co::Yielder`.
 		///		Instead, simply `co_yield` the delay.
-		virtual PromiseType run() = 0;
+		virtual PromiseType onProcess() = 0;
 
 		/// @brief Empty constructor.
 		ITask() {}
@@ -34,7 +34,7 @@ namespace Co {
 		/// @brief Processes the assiged routine.
 		void process() {
 			if (taskState == State::RS_READY) {
-				prommy = run();
+				prommy = onProcess();
 				taskState = State::RS_RUNNING;
 			}
 			if (taskState != State::RS_FINISHED && !paused) {
