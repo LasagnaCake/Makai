@@ -21,12 +21,12 @@ namespace Co {
 		/// @brief Promise type.
 		using PromiseType = CTL::Co::Promise<usize, true>;
 
-		/// @brief task to process. Must be implemented.
+		/// @brief Task to process. Must be implemented.
 		/// @return Promise to task result.
 		/// @note
 		///		Ideally, should not use `CTL::Co::yield` and `CTL::Co::Yielder`.
 		///		Instead, simply `co_yield` the delay.
-		virtual PromiseType onProcess() = 0;
+		virtual PromiseType task() = 0;
 
 		/// @brief Empty constructor.
 		ITask() {}
@@ -36,10 +36,10 @@ namespace Co {
 		/// @brief Move constructor (deleted).
 		ITask(ITask&&)		= delete;
 
-		/// @brief Processes the assiged routine.
+		/// @brief Processes the assiged task.
 		void process() {
 			if (taskState == State::RS_READY) {
-				prommy = onProcess();
+				prommy = task();
 				taskState = State::RS_RUNNING;
 			}
 			if (taskState != State::RS_FINISHED && !paused) {
