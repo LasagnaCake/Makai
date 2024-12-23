@@ -31,6 +31,11 @@ namespace Co {
 		/// @brief Empty constructor.
 		ITask() {}
 
+		/// @brief Copy constructor (deleted).
+		ITask(ITask const&)	= delete;
+		/// @brief Move constructor (deleted).
+		ITask(ITask&&)		= delete;
+
 		/// @brief Processes the assiged routine.
 		void process() {
 			if (taskState == State::RS_READY) {
