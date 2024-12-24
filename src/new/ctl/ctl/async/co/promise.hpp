@@ -66,7 +66,12 @@ namespace Co {
 		}
 
 		/// @brief Returns process to the coroutine.
-		void process() const {if (!finished()) context();}
+		/// @return Whether coroutine is still processing.
+		bool process() const {
+			if (finished()) return false;
+			context();
+			return true;
+		}
 
 		/// @brief Empty constructor.
 		Promise() {}
@@ -81,6 +86,10 @@ namespace Co {
 
 		/// @brief Returns whether the coroutine is still processing.
 		operator bool() const {return !finished();}
+
+		/// @brief Returns process to the coroutine.
+		/// @return Whether coroutine is still processing.
+		bool operator()() {return process();}
 
 		/// @brief Coroutine context.
 		ContextType context;
@@ -170,7 +179,12 @@ namespace Co {
 		DataType value() const {return context.promise().value;}
 
 		/// @brief Returns process to the coroutine.
-		void process() const {if (!finished()) context();}
+		/// @return Whether coroutine is still processing.
+		bool process() const {
+			if (finished()) return false;
+			context();
+			return true;
+		}
 
 		/// @brief Fetches the next value, and returns it.
 		/// @return Next value.
@@ -179,8 +193,7 @@ namespace Co {
 		/// @brief Awaits the coroutine to finish executing.
 		/// @return Last value returned.
 		DataType await() const {
-			while (!finished())
-				process();
+			while (process());
 			return value();
 		}
 
@@ -193,6 +206,10 @@ namespace Co {
 		/// @brief Returns whether the coroutine is still processing.
 		operator bool() const {return !finished();	}
 
+		/// @brief Returns process to the coroutine.
+		/// @return Whether coroutine is still processing.
+		bool operator()() {return process();}
+
 		/// @brief Returns the coroutine context.
 		operator Context<promise_type>() const	{return context;}
 		/// @brief Returns the coroutine context.
@@ -202,6 +219,10 @@ namespace Co {
 	/// @brief `Promise` analog for genarator coroutines — coroutines that start suspended.
 	template<class T>
 	using Generator = Promise<T, false>;
+
+	/// @brief `Promise` analog for conventional asynchronous coroutines.
+	template<class T>
+	using Task = Promise<T, true>;
 
 	/// @brief `Promise` analog for "pure coroutines" (`void` return, no initial suspend).
 	using Routine = Promise<>;

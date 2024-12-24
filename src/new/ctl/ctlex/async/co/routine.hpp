@@ -10,9 +10,9 @@ CTL_EX_NAMESPACE_BEGIN
 /// @brief Cooperative routine facilities.
 namespace Co {
 	// TODO: Implement `IPlayable` stuff in class
-	/// @brief Coroutine task interface.
-	struct ITask {
-		/// @brief Task state.
+	/// @brief Specialized coroutine interface.
+	struct IRoutine {
+		/// @brief Routine state.
 		enum class State {
 			RS_READY,
 			RS_RUNNING,
@@ -22,13 +22,16 @@ namespace Co {
 		/// @brief Promise type.
 		using PromiseType = CTL::Co::Promise<usize, true>;
 
+		/// @brief Destructor.
+		virtual ~IRoutine() {}
+
 		/// @brief Empty constructor.
-		ITask() {}
+		IRoutine() {}
 
 		/// @brief Copy constructor (deleted).
-		ITask(ITask const&)	= delete;
+		IRoutine(IRoutine const&)	= delete;
 		/// @brief Move constructor (deleted).
-		ITask(ITask&&)		= delete;
+		IRoutine(IRoutine&&)		= delete;
 
 		/// @brief Processes the assiged task.
 		void process() {
@@ -75,9 +78,9 @@ namespace Co {
 	private:
 		/// @brief Underlying coroutine promise type.
 		PromiseType	prommy;
-		/// @brief The task's current state.
+		/// @brief The routine's current state.
 		State		taskState	= State::RS_READY;
-		/// @brief The task's internal counter.
+		/// @brief The routine's internal counter.
 		usize		counter		= 0;
 	};
 }
