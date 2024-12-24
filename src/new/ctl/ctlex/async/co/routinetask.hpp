@@ -1,5 +1,5 @@
-#ifndef CTL_EX_ASYNC_CO_ROUTINE_H
-#define CTL_EX_ASYNC_CO_ROUTINE_H
+#ifndef CTL_EX_ASYNC_CO_ROUTINETASK_H
+#define CTL_EX_ASYNC_CO_ROUTINETASK_H
 
 #include "../../../ctl/exnamespace.hpp"
 #include "../../../ctl/ctl.hpp"
@@ -10,8 +10,8 @@ CTL_EX_NAMESPACE_BEGIN
 /// @brief Cooperative routine facilities.
 namespace Co {
 	// TODO: Implement `IPlayable` stuff in class
-	/// @brief Specialized coroutine interface.
-	struct IRoutine {
+	/// @brief Specialized coroutine task interface.
+	struct IRoutineTask {
 		/// @brief Routine state.
 		enum class State {
 			RS_READY,
@@ -23,15 +23,15 @@ namespace Co {
 		using PromiseType = CTL::Co::Promise<usize, true>;
 
 		/// @brief Destructor.
-		virtual ~IRoutine() {}
+		virtual ~IRoutineTask() {}
 
 		/// @brief Empty constructor.
-		IRoutine() {}
+		IRoutineTask() {}
 
 		/// @brief Copy constructor (deleted).
-		IRoutine(IRoutine const&)	= delete;
+		IRoutineTask(IRoutineTask const&)	= delete;
 		/// @brief Move constructor (deleted).
-		IRoutine(IRoutine&&)		= delete;
+		IRoutineTask(IRoutineTask&&)		= delete;
 
 		/// @brief Processes the assiged task.
 		void process() {
