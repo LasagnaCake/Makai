@@ -11,7 +11,7 @@ CTL_EX_NAMESPACE_BEGIN
 namespace Co {
 	// TODO: Implement `IPlayable` stuff in class
 	/// @brief Specialized coroutine task interface.
-	struct IRoutineTask {
+	struct IRoutineTask: IPlayable {
 		/// @brief Routine state.
 		enum class State {
 			RS_READY,
@@ -35,10 +35,8 @@ namespace Co {
 
 		/// @brief Processes the assiged task.
 		void process() {
-			if (taskState == State::RS_READY) {
-				prommy = task();
-				taskState = State::RS_RUNNING;
-			}
+			if (taskState == State::RS_READY)
+				start();
 			if (taskState != State::RS_FINISHED && !paused) {
 				if (!counter) {
 					if (prommy)
@@ -46,7 +44,7 @@ namespace Co {
 					else if (repeat && loops != 0)	{
 						prommy = task();
 						if (loops < 0) --loops;
-					} else taskState = State::RS_FINISHED;
+					} else stop();
 				}
 				if (counter == 0)
 					process();
@@ -54,14 +52,48 @@ namespace Co {
 			}
 		}
 
-		/// @brief Returns the current routine state.
-		/// @return Current state.
-		State state() const {
-			return taskState;
+		/// @brief Starts the routine.
+		/// @return Reference to self.
+		IRoutineTask& start() override final {
+			prommy = task();
+			taskState = State::RS_RUNNING;
+			isFinished = false;
+			return *this;
 		}
 
-		/// @brief Whether the current routine is paused.
-		bool	paused	= false;
+		/// @brief Unpauses the routine.
+		/// @return Reference to self.
+		IRoutineTask& play() override final {
+			paused = false;
+			return *this;
+		}
+
+		/// @brief Pauses the routine.
+		/// @return Reference to self.
+		IRoutineTask& pause() override final {
+			paused = true;
+			return *this;
+		}
+
+		/// @brief Stops the routine.
+		/// @return Reference to self.
+		IRoutineTask& stop() override final {
+			taskState = State::RS_FINISHED;
+			isFinished = true;
+			return *this;
+		}
+
+		/// @brief Stops the routine, while waiting for the underlying task to end processing.
+		/// @return Reference to self.
+		IRoutineTask& finalize() {
+			prommy.await();
+			return stop();
+		}
+
+		/// @brief Returns the current routine state.
+		/// @return Current state.
+		State state() const {return taskState;}
+
 		/// @brief Whether to repeatedly fire the event.
 		bool	repeat	= false;
 		/// @brief The amount of times to repeat for. If less than 0, loops indefinitely.
@@ -76,7 +108,7 @@ namespace Co {
 		virtual PromiseType task() = 0;
 
 	private:
-		/// @brief Underlying coroutine promise type.
+		/// @brief Underlying coroutine task.
 		PromiseType	prommy;
 		/// @brief The routine's current state.
 		State		taskState	= State::RS_READY;
