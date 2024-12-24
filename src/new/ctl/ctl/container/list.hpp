@@ -204,6 +204,7 @@ public:
 	/// @param begin Reverse iterator to beginning of range.
 	/// @param end Reverse iterator to end of range.
 	constexpr List(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
+		if (end <= begin) return;
 		invoke(end - begin + 1);
 		for (auto i = begin; i != end; ++i)
 			pushBack(*i);

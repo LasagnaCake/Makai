@@ -34,6 +34,7 @@ namespace MX {
 		if (size == 1) *d = *s;
 		else while (size--) *d++ = *s++;
 		#else
+		if (!(size + 1)) __builtin_unreachable();
 		return __builtin_memcpy(dst, src, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
@@ -77,6 +78,7 @@ namespace MX {
 				*--d = *--s;
 		}
 		#else
+		if (!(size + 1)) __builtin_unreachable();
 		return __builtin_memmove(dst, src, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
@@ -114,6 +116,7 @@ namespace MX {
 			if (*s1++ != *s2++)
 				return s1[-1] < s2[-1] ? -1 : 1;
 		#else
+		if (!(size + 1)) __builtin_unreachable();
 		return __builtin_memcmp(a, b, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
@@ -150,6 +153,7 @@ namespace MX {
 		while (size-- > 0)
 			*d++ = val;
 		#else
+		if (!(size + 1)) __builtin_unreachable();
 		return __builtin_memset(dst, val, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
@@ -207,6 +211,7 @@ namespace MX {
 	/// @return Pointer to start of allocated memory.
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
 	constexpr pointer malloc(usize const sz) {
+		if (!(sz + 1)) __builtin_unreachable();
 		if (!sz) throw AllocationFailure();
 		auto* m = __builtin_malloc(sz);
 		if (!m) throw AllocationFailure();
@@ -220,6 +225,7 @@ namespace MX {
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
 	template<Type::NonVoid T>
 	constexpr T* malloc(usize const sz) {
+		if (!(sz + 1)) __builtin_unreachable();
 		if (!sz) throw AllocationFailure();
 		auto* m = __builtin_malloc(sz * sizeof(T));
 		if (!m) throw AllocationFailure();
@@ -255,6 +261,7 @@ namespace MX {
 	/// @param sz New size in bytes.
 	/// @return Pointer to new memory location.
 	constexpr pointer realloc(pointer const& mem, usize const sz) {
+		if (!(sz + 1)) __builtin_unreachable();
 		if (!sz) {
 			free(mem);
 			return nullptr;
@@ -271,6 +278,7 @@ namespace MX {
 	/// @return Pointer to new memory location.
 	template<Type::NonVoid T>
 	constexpr T* realloc(T* const mem, usize const sz) {
+		if (!(sz + 1)) __builtin_unreachable();
 		if (!sz) {
 			free(mem);
 			return nullptr;
@@ -350,6 +358,7 @@ namespace MX {
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
 	constexpr T* objcopy(T* dst, T const* src, usize sz) {
+		if (!(sz + 1)) __builtin_unreachable();
 		T* start = dst;
 		try {
 			if (dst < src) {
@@ -385,6 +394,7 @@ namespace MX {
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
 	constexpr T* objclear(T* const mem, usize sz) {
+		if (!(sz + 1)) __builtin_unreachable();
 		T* m = mem;
 		while (sz--)
 			destruct<T>(m++);
