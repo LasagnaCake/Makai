@@ -217,15 +217,15 @@ namespace Co {
 	};
 
 	/// @brief `Promise` analog for genarator coroutines — coroutines that start suspended.
-	template<class T>
-	using Generator = Promise<T, false>;
+	template<class T = void>
+	using Generator = Promise<T, true>;
 
 	/// @brief `Promise` analog for conventional asynchronous coroutines.
-	template<class T>
-	using Task = Promise<T, true>;
+	template<class T = void>
+	using Task = Promise<T, false>;
 
 	/// @brief `Promise` analog for "pure coroutines" (`void` return, no initial suspend).
-	using Routine = Promise<>;
+	using Routine = Task<>;
 }
 
 CTL_NAMESPACE_END
