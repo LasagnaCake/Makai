@@ -9,19 +9,19 @@ CTL_EX_NAMESPACE_BEGIN
 struct IPlayable {
 	/// @brief Starts the event. Must be implemented.
 	/// @return Reference to self.
-	virtual IPlayable&	start()		= 0;
+	virtual IPlayable&	start()				= 0;
 	/// @brief Resumes the event. Must be implemented.
 	/// @return Reference to self.
-	virtual IPlayable&	play()		= 0;
+	virtual IPlayable&	play()				= 0;
 	/// @brief Pauses the event. Must be implemented.
 	/// @return Reference to self.
-	virtual IPlayable&	pause()		= 0;
+	virtual IPlayable&	pause()				= 0;
 	/// @brief Stops the event. Must be implemented.
 	/// @return Reference to self.
-	virtual IPlayable&	stop()		= 0;
+	virtual IPlayable&	stop()				= 0;
 	/// @brief Returns whether the event is finished being processed.
 	/// @return Whether the event is finished being processed.
-	virtual bool		finished()	{return isFinished;	}
+	virtual bool		finished() const	{return isFinished;	}
 
 	/// @brief Whether the event is paused.
 	bool paused		= false;
