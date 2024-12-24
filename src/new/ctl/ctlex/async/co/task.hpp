@@ -22,13 +22,6 @@ namespace Co {
 		/// @brief Promise type.
 		using PromiseType = CTL::Co::Promise<usize, true>;
 
-		/// @brief Task to process. Must be implemented.
-		/// @return Promise to task result.
-		/// @note
-		///		Ideally, should not use `CTL::Co::yield` and `CTL::Co::Yielder`.
-		///		Instead, simply `co_yield` the delay.
-		virtual PromiseType task() = 0;
-
 		/// @brief Empty constructor.
 		ITask() {}
 
@@ -70,6 +63,14 @@ namespace Co {
 		bool	repeat	= false;
 		/// @brief The amount of times to repeat for. If less than 0, loops indefinitely.
 		llong	loops	= -1;
+	
+	protected:
+		/// @brief Task to process. Must be implemented.
+		/// @return Promise to task result.
+		/// @note
+		///		Ideally, should not use `CTL::Co::yield` and `CTL::Co::Yielder`.
+		///		Instead, simply `co_yield` the delay.
+		virtual PromiseType task() = 0;
 
 	private:
 		/// @brief Underlying coroutine promise type.
