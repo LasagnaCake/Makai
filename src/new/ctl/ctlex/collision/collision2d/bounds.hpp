@@ -3,6 +3,7 @@
 
 #include "../../../ctl/ctl.hpp"
 #include "../../math/vector.hpp"
+#include "../../math/matrix.hpp"
 #include "../gjk.hpp"
 
 // TODO: Update system to use GJK & IBound2D
@@ -186,19 +187,16 @@ namespace Collision::C2D {
 		/// @param width Width. By default, it is 1.
 		/// @param length Length. By default, it is 0.
 		/// @param angle Rotation. By default, it is 0.
-		/// @param rotation Cap rotation. By default, it is 0.
 		constexpr Capsule(
 			Vector2 const& position,
 			Vector2 const& width = 1,
 			float const length = 0,
-			float const angle = 0,
-			float const rotation = 0
+			float const angle = 0
 		):
 			position(position),
 			width(width),
 			length(length),
-			angle(angle),
-			rotation(rotation) {}
+			angle(angle)		{}
 
 		/// @brief Destructor.
 		constexpr virtual ~Capsule() {}
@@ -216,15 +214,15 @@ namespace Collision::C2D {
 			Vector2 const dirvec = Math::angleV2(angle);
 			float const alignment = dirvec.dot(direction);
 			if (alignment <= 0)
-				return Math::rotateV2(direction, rotation) * width + position;
+				return Math::rotateV2(direction, angle) * width + position;
 			Vector2 left, right;
 			float const frustum = aperture(dirvec, left, right);
-			if (alignment >= frustum) {
+			if (alignment >= (frustum/2)) {
 				float frustumAngle = right.dot(direction) / frustum;
-				return dirvec * length + Math::angleV2(rotation - frustumAngle * PI + HPI) * width + position;
+				return dirvec * length + Math::angleV2(angle - frustumAngle * PI + HPI) * width + position;
 			}
 			float const side = (direction.dot(left) > direction.dot(right)) ? -HPI : +HPI;
-			return direction.projected(dirvec) * length + Math::angleV2(rotation + side) * width + position;
+			return direction.projected(dirvec) * length + Math::angleV2(angle + side) * width + position;
 		}
 
 		/// @brief Calculates the "aperture" (cosine of angle between end cap's edge points in relation to the origin).
@@ -235,8 +233,8 @@ namespace Collision::C2D {
 		constexpr float aperture(Vector2 const& direction, Vector2& left, Vector2& right) const {
 			Vector2 const normals[3] = {
 				direction * length,
-				Math::angleV2(angle - HPI + rotation) * width,
-				Math::angleV2(angle + HPI + rotation) * width
+				Math::angleV2(angle - HPI + angle) * width,
+				Math::angleV2(angle + HPI + angle) * width
 			};
 			left = (normals[0] + normals[1]).normalized();
 			right = (normals[0] + normals[2]).normalized();
@@ -251,8 +249,6 @@ namespace Collision::C2D {
 		float length = 1;
 		/// @brief Capsule rotation.
 		float angle = 0;
-		/// @brief Capsule cap rotation.
-		float rotation = 0;
 	};
 
 	/// @brief Raycast bound.
@@ -333,8 +329,10 @@ namespace Collision::C2D {
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
 			Vector2  maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
+			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				float distance = vertex.dot(direction);
+				Vector2 const tp = mat * vertex; 
+				float distance = tp.dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;
 					maxPoint = vertex;
