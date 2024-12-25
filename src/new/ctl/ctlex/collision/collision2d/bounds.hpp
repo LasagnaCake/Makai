@@ -177,6 +177,8 @@ namespace Collision::C2D {
 	///		This is a "stadium-like" ("2D-capsule-like") shape.
 	///	
 	///		It would be best described as the "convex hull between two equivalent ellipses".
+	///
+	///		Or, a rice grain.
 	/// @note Based off of https://en.wikipedia.org/wiki/Stadium_(geometry)
 	struct Capsule: IBound2D {
 		/// @brief Constructs a capsule bound.
