@@ -177,9 +177,6 @@ namespace Collision::C2D {
 	///		This is a "stadium-like" ("2D-capsule-like") shape.
 	///	
 	///		It would be best described as the "convex hull between two equivalent ellipses".
-	///		
-	///		Also, the ellipses do not rotate with the shape.
-	///		Their angles are separate from the capsule's own angle.
 	/// @note Based off of https://en.wikipedia.org/wiki/Stadium_(geometry)
 	struct Capsule: IBound2D {
 		/// @brief Constructs a capsule bound.
