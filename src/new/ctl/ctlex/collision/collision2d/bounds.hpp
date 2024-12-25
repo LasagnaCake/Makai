@@ -306,7 +306,7 @@ namespace Collision::C2D {
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
 			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				Vector2 const tp = mat * Vector3(vertex, 1); 
+				Vector2 const tp = mat * Math::Vector3(vertex, 1); 
 				float distance = tp.dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;
