@@ -159,6 +159,21 @@ public:
 		}
 		return result;
 	}
+
+	/// @brief Fixed array assignment operator.
+	/// @param arr Array to assign.
+	/// @return Reference to self.
+	template<usize AS>
+	constexpr Array& operator=(Decay::AsType<DataType[AS]> const& arr)
+	requires (AS == SIZE)								{copy(arr, contents, SIZE); return *this;				}
+	/// @brief Copy assignment operator.
+	/// @brief v `Array` to copy from.
+	/// @return Reference to self.
+	constexpr Array& operator=(SelfType const& other)	{copy(other.contents, contents, SIZE); return *this;	}
+	/// @brief Move assignment operator.
+	/// @brief v `Array` to move.
+	/// @return Reference to self.
+	constexpr Array& operator=(SelfType&& other)		{copy(other.contents, contents, SIZE); return *this;	}
 	
 	/// @brief Returns the `Array` size.
 	/// @return Size of the `Array`.
