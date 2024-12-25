@@ -209,7 +209,7 @@ namespace Collision::C2D {
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
-			Vector2 const end = Math::angleV2(angle);
+			Vector2 const end = Math::angleV2(rotation);
 			float const alignment = end.dot(direction);
 			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
 			return ((alignment < 0 ? position : (end * length)) + width * Math::rotateV2(direction, rotation));

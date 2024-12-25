@@ -33,6 +33,16 @@ help:
 	@echo "$$HELP_MESSAGE"
 	@echo ""
 
+clear-output:
+	@rm -rf output/*
+
+create-lib-release:
+	@cd output
+	@7z a -tzip mingw64.zip lib include -r -mem=AES256
+	@cd ..
+
+ship-it: clear-output all create-lib-release
+
 all: build-all up-all link-all
 
 build-all: build-debug build-release

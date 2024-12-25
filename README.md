@@ -37,7 +37,11 @@ No plans to support 32-bit systems.
 - GCC (12+) via MinGW (MSYS (Recommended), Cygwin, TDM-GCC) 
 - Make
 
-#### Installing GCC via MSYS2
+#### Optional packages
+
+- 7-zip: Only required for packing library releases.
+
+#### Installing via MSYS2
 
 If using MSYS, all of them must be installed via pacman:
 
@@ -45,7 +49,10 @@ If using MSYS, all of them must be installed via pacman:
 For toolchain (GCC): pacman -S mingw-w64-x86_64-toolchain
 For make: pacman -S make
 
-In a single line: pacman -S mingw-w64-x86_64-toolchain make
+(Optionals)
+For 7-zip: mingw-w64-x86_64-7zip
+
+In a single line: pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-7zip
 ```
 
 ## How to use
