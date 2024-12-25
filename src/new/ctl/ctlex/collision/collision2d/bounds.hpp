@@ -219,13 +219,13 @@ namespace Collision::C2D {
 			;
 			if (dp <= 0)
 				return Math::angleV2(dirAngle) * width + position;
-			Vector2 l, r;
-			float const frustum = aperture(dirvec, l, r);
+			Vector2 left, right;
+			float const frustum = aperture(dirvec, left, right);
 			if (dp >= frustum) {
-				float frustumAngle = r.dot(direction) / frustum;
+				float frustumAngle = right.dot(direction) / frustum;
 				return dirvec * length + Math::angleV2(rotation - frustumAngle * PI + HPI) * width + position;
 			}
-			float const side = (direction.dot(l) > direction.dot(r)) ? -HPI : +HPI;
+			float const side = (direction.dot(left) > direction.dot(right)) ? -HPI : +HPI;
 			return direction.projected(dirvec) * length + Math::angleV2(rotation + side) * width + position;
 		}
 
@@ -289,8 +289,9 @@ namespace Collision::C2D {
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& dir) const final {
-			if (dir.dot(direction) < 0) return position;
-			return position + dir.projected(direction);
+			if (dir.dot(direction) <= 0)
+				return position;
+			return position + direction;
 		}
 
 		/// @brief Ray position.
