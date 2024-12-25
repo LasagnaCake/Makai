@@ -49,7 +49,7 @@ namespace Collision::C2D {
 		/// @brief Shape of the collision area.
 		Instance<IBound2D>	shape;
 		/// @brief Whether collision is enabled for the area.
-		bool				enabled	= true;
+		bool				enabled		= true;
 		/// @brief Collision layers this area affects.
 		LayerMask			affects		= LayerMask(true);
 		/// @brief Collision layers this area is affected by.
