@@ -213,15 +213,15 @@ namespace Collision::C2D {
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
 			// Is all of this even correct? Definitely not.
 			Vector2 const dirvec = Math::angleV2(angle);
-			float const dp =
-				dirvec.dot(direction),
-				dirAngle = rotation + direction.angle()
+			float const
+				alignment	= dirvec.dot(direction),
+				dirAngle	= rotation + direction.angle()
 			;
-			if (dp <= 0)
+			if (alignment <= 0)
 				return Math::angleV2(dirAngle) * width + position;
 			Vector2 left, right;
 			float const frustum = aperture(dirvec, left, right);
-			if (dp >= frustum) {
+			if (alignment >= frustum) {
 				float frustumAngle = right.dot(direction) / frustum;
 				return dirvec * length + Math::angleV2(rotation - frustumAngle * PI + HPI) * width + position;
 			}
