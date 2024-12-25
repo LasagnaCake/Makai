@@ -93,7 +93,22 @@ namespace Collision::C2D {
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
-			return direction * size + position;
+			Vector2 points[4] = {
+				Vector2(position.x + size.x, position.y + size.y),
+				Vector2(position.x + size.x, position.y - size.y),
+				Vector2(position.x - size.x, position.y - size.y),
+				Vector2(position.x - size.x, position.y + size.y)
+			};
+			Vector2 maxPoint;
+			float maxDistance = CTL::NumberLimit<float>::LOWEST;
+			for (Vector2 const& vertex: points) {
+				float distance = vertex.dot(direction);
+				if (distance > maxDistance) {
+					maxDistance = distance;
+					maxPoint = vertex;
+				}
+			}
+			return maxPoint;
 		}
 
 		/// @brief Box position.
@@ -142,7 +157,7 @@ namespace Collision::C2D {
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
-			return direction + Math::angleV2(rotation) * radius;
+			return position + Math::angleV2(rotation + direction.angle()) * radius;
 		}
 
 		/// @brief Circle position.
@@ -196,11 +211,38 @@ namespace Collision::C2D {
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
-			Vector2 const dirvec	= Math::angleV2(angle) * length;
-			if (dirvec.dot(direction) <= 0)
-				return direction + Math::angleV2(rotation) * width;
-			Vector2 const proj		= direction.projected(dirvec);
-			return proj + Math::angleV2(rotation) * width + position;
+			// Is all of this even correct? Definitely not.
+			Vector2 const dirvec = Math::angleV2(angle);
+			float const dp =
+				dirvec.dot(direction),
+				dirAngle = rotation + direction.angle()
+			;
+			if (dp <= 0)
+				return Math::angleV2(dirAngle) * width + position;
+			Vector2 l, r;
+			float const frustum = aperture(dirvec, l, r);
+			if (dp >= frustum) {
+				float frustumAngle = r.dot(direction) / frustum;
+				return dirvec * length + Math::angleV2(rotation - frustumAngle * PI + HPI) * width + position;
+			}
+			float const side = (direction.dot(l) > direction.dot(r)) ? -HPI : +HPI;
+			return direction.projected(dirvec) * length + Math::angleV2(rotation + side) * width + position;
+		}
+
+		/// @brief Calculates the "aperture" (cosine of angle between end cap's edge points in relation to the origin).
+		/// @param direction Capsule direction.
+		/// @param left Resulting normal to "left"-side edge point.
+		/// @param right Resulting nomal to "right"-side edge point.
+		/// @return Aperture.
+		constexpr float aperture(Vector2 const& direction, Vector2& left, Vector2& right) const {
+			Vector2 const normals[3] = {
+				direction * length,
+				Math::angleV2(angle - HPI + rotation) * width,
+				Math::angleV2(angle + HPI + rotation) * width
+			};
+			left = (normals[0] + normals[1]).normalized();
+			right = (normals[0] + normals[2]).normalized();
+			return left.dot(right);
 		}
 
 		/// @brief Capsule position.
