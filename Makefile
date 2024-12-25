@@ -35,6 +35,8 @@ help:
 
 clear-output:
 	@rm -rf output/*
+	@rm -rf obj/debug/*
+	@rm -rf obj/release/*
 
 create-lib-release:
 	@cd output
