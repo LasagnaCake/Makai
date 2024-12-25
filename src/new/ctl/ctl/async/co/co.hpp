@@ -6,5 +6,6 @@
 #include "consumer.hpp"
 #include "promise.hpp"
 #include "yield.hpp"
+#include "awaitable.hpp"
 
 #endif

@@ -46,6 +46,19 @@ namespace Co {
 			AlwaysSuspend yield_value(void)			{return {};	}
 			/// @brief Returns void.
 			void return_void()						{			}
+
+			/// @brief Specialized suspender.
+			struct SuspendType {
+				virtual bool await_ready()		{return promise.finished();	}
+				virtual void await_suspend()	{							}
+				virtual void await_resume()		{							}
+				Promise promise;
+			};
+
+			/// @brief `co_await` support.
+			SuspendType await_transform(AlwaysSuspend) {
+				return SuspendType{get_return_object()};
+			}
 			
 			/// @brief Unhandle exception processor.
 			void unhandled_exception() {
@@ -106,7 +119,10 @@ namespace Co {
 	struct Promise: Typed<TData> {
 		using Typed = ::CTL::Typed<TData>;
 		
-		using typename Typed::DataType;
+		using
+			typename Typed::DataType,
+			typename Typed::ReferenceType
+		;
 
 		struct promise_type;
 		/// @brief Context type.
@@ -136,6 +152,19 @@ namespace Co {
 			/// @brief Unhandle exception processor.
 			void unhandled_exception() {
 				throw Exception(*Exception::current());
+			}
+
+			/// @brief Specialized suspender.
+			struct SuspendType {
+				virtual bool await_ready()		{return promise.finished();	}
+				virtual void await_suspend()	{							}
+				virtual DataType await_resume()	{return promise.value();	}
+				Promise promise;
+			};
+
+			/// @brief `co_await` support.
+			SuspendType await_transform(AlwaysSuspend) {
+				return SuspendType{get_return_object()};
 			}
 
 			/// @brief Yields a value from the coroutine.

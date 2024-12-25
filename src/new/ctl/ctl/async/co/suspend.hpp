@@ -17,6 +17,14 @@ namespace Co {
 	/// @brief Suspension indicator.
 	template<bool S>
 	using Suspend = Meta::DualType<S, AlwaysSuspend, NeverSuspend>;
+
+	/// @brief Dynamic suspension indicator.
+	struct DynamicSuspend {
+		bool const awaiting = false;
+		virtual bool await_ready()		{return awaiting;	}
+		virtual void await_suspend()	{					}
+		virtual void await_resume()		{					}
+	};
 }
 
 CTL_NAMESPACE_END
