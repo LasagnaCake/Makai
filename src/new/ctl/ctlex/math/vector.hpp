@@ -600,8 +600,8 @@ class Vector2: Ordered {
 		/// @brief Projects this vector in another vector.
 		/// @param vec Vector to project in.
 		/// @return Reference to self.
-		constexpr Vector2 project(Vector2 const& vec) {
-			*this = projected(vec);
+		constexpr Vector2& project(Vector2 const& vec) {
+			return *this = projected(vec);
 		}
 
 		/// @brief Returns the absolute value of the vector.
@@ -856,8 +856,8 @@ class Vector3: Ordered {
 		/// @brief Projects this vector in another vector.
 		/// @param vec Vector to project in.
 		/// @return Reference to self.
-		constexpr Vector3 project(Vector3 const& vec) {
-			*this = projected(vec);
+		constexpr Vector3& project(Vector3 const& vec) {
+			return *this = projected(vec);
 		}
 
 		/// @brief Returns the X and Y components.
@@ -1127,8 +1127,8 @@ class Vector4: Ordered {
 		/// @brief Projects this vector in another vector.
 		/// @param vec Vector to project in.
 		/// @return Reference to self.
-		constexpr Vector4 project(Vector4 const& vec) {
-			*this = projected(vec);
+		constexpr Vector4& project(Vector4 const& vec) {
+			return *this = projected(vec);
 		}
 
 		/// @brief Returns the absolute value of the vector.
