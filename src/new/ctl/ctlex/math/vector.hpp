@@ -418,9 +418,10 @@ class Vector2: Ordered {
 			x(x), y(y) {}
 
 		/// @brief Copy constructor.
-		/// @param vec `Vector2` to copy from.
-		constexpr Vector2(Vector2 const& vec):
-			Vector2(vec.x, vec.y) {}
+		/// @tparam T Vector type.
+		/// @param vec Vector to copy from.
+		template<Type::OneOf<Vector2, Vector3, Vector4> T>
+		constexpr Vector2(T const& vec): Vector2(vec.x, vec.y) {}
 
 		/// @brief Constructs the vector from an array of values.
 		/// @param data Values to construct from.
@@ -650,8 +651,10 @@ class Vector3: Ordered {
 			x(x), y(y), z(z) {}
 
 		/// @brief Copy constructor.
-		/// @param vec `Vector3` to copy from.
-		constexpr Vector3(Vector3 const& vec):
+		/// @tparam T Vector type.
+		/// @param vec Vector to copy from.
+		template<Type::OneOf<Vector3, Vector4> T>
+		constexpr Vector3(T const& vec):
 			Vector3(vec.x, vec.y, vec.z) {}
 
 		/// @brief Constructs the vector's components from a vector and a value.
