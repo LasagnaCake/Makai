@@ -210,35 +210,10 @@ namespace Collision::C2D {
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
-			// Is all of this even correct? Definitely not.
-			Vector2 const dirvec = Math::angleV2(angle);
-			float const alignment = dirvec.dot(direction);
-			if (alignment <= 0)
-				return Math::rotateV2(direction, angle) * width + position;
-			Vector2 left, right;
-			float const frustum = aperture(dirvec, left, right);
-			if (alignment >= (frustum/2)) {
-				float frustumAngle = right.dot(direction) / frustum;
-				return dirvec * length + Math::angleV2(angle - frustumAngle * PI + HPI) * width + position;
-			}
-			float const side = (direction.dot(left) > direction.dot(right)) ? -HPI : +HPI;
-			return direction.projected(dirvec) * length + Math::angleV2(angle + side) * width + position;
-		}
-
-		/// @brief Calculates the "aperture" (cosine of angle between end cap's edge points in relation to the origin).
-		/// @param direction Capsule direction.
-		/// @param left Resulting normal to "left"-side edge point.
-		/// @param right Resulting nomal to "right"-side edge point.
-		/// @return Aperture.
-		constexpr float aperture(Vector2 const& direction, Vector2& left, Vector2& right) const {
-			Vector2 const normals[3] = {
-				direction * length,
-				Math::angleV2(angle - HPI + angle) * width,
-				Math::angleV2(angle + HPI + angle) * width
-			};
-			left = (normals[0] + normals[1]).normalized();
-			right = (normals[0] + normals[2]).normalized();
-			return left.dot(right);
+			Vector2 const end = Math::angleV2(angle);
+			float const alignment = end.dot(direction);
+			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
+			return ((alignment < 0 ? position : (end * length)) + width * direction);
 		}
 
 		/// @brief Capsule position.
