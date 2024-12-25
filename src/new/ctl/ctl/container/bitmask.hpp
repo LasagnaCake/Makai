@@ -42,7 +42,7 @@ struct BitMask:
 
 	/// @brief Constructs a `BitMask` with all bits set to a given state.
 	/// @param state Initial state of the mask.
-	constexpr BitMask(bool const state) {
+	constexpr explicit BitMask(bool const state) {
 		for (usize i = 0; i < SIZE; ++i)
 			mask[i] =  (state ? ALL_ENABLED : 0);
 	}
