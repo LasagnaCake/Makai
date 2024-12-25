@@ -1129,7 +1129,7 @@ public:
 	/// @note Requires matrix to be a valid 3D transformation matrix.
 	constexpr SelfType& transform(Transform2D const& trans)
 	requires Type::Ex::Math::Matrix::ValidTransform2D<R, C> {
-		static_assert(R == 3, "Matrix is not a valid representation of a 3D transform!");
+		static_assert(R == 3, "Matrix is not a valid representation of a 2D transform!");
 		SelfType
 			pos		= Matrix::identity(),
 			rot		= Matrix::identity(),
