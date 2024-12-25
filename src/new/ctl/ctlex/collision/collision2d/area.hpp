@@ -47,13 +47,13 @@ namespace Collision::C2D {
 	/// @brief Collision area.
 	struct Area {
 		/// @brief Shape of the collision area.
-		CollisionShape	shape;
+		Instance<IBound2D>	shape;
 		/// @brief Whether collision is enabled for the area.
-		bool			enabled	= true;
+		bool				enabled	= true;
 		/// @brief Collision layers this area affects.
-		LayerMask		affects;
+		LayerMask			affects		= LayerMask(true);
 		/// @brief Collision layers this area is affected by.
-		LayerMask		affectedBy;
+		LayerMask			affectedBy	= LayerMask(true);
 
 		/// @brief Checks collision with another `Area`.
 		/// @param other `Area` to check against.
@@ -74,6 +74,8 @@ namespace Collision::C2D {
 		///
 		///		- Both:		A <-> B
 		constexpr static Direction check(Area const& a, Area const& b) {
+			if (!(a.shape && b.shape))
+				return Direction::CD_NONE;
 			if (!(a.enabled && b.enabled))
 				return Direction::CD_NONE;
 			Direction dir = asDirection(
@@ -82,7 +84,7 @@ namespace Collision::C2D {
 			);
 			if (
 				dir != Direction::CD_NONE
-			&&	withinBounds(a.shape, b.shape)
+			&&	withinBounds(*a.shape, *b.shape)
 			) return dir;
 			return Direction::CD_NONE;
 		}

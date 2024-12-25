@@ -16,13 +16,19 @@ namespace Collision {
 /// @brief Implementation of the Gilbert-Johnson-Keerthi (GJK) algorithm for collision detection.
 namespace GJK {
 	namespace {
-		using Math::Vector;
+		using
+			Math::Vector,
+			Math::Vector2,
+			Math::Vector3,
+			Math::Vector4
+		;
 	}
 
 	/// @brief GJK-enabled bound interface.
 	/// @tparam D Dimension.
 	template<usize D>
 	struct IGJKBound {
+		constexpr virtual ~IGJKBound() {}
 		constexpr virtual Vector<D> furthest(Vector<D> const& direction) const = 0;
 	};
 	
@@ -38,7 +44,10 @@ namespace GJK {
 		constexpr static usize MAX_POINTS	= DIMENSION+1;
 
 		/// @brief Vector type.
-		using VectorType = Vector<DIMENSION>;
+		using VectorType = Vector3;
+		/// @brief Point array type.
+		using PointArrayType = Array<VectorType, D+1>;
+		//using VectorType = Vector<DIMENSION>;
 
 		/// @brief Empty constructor.
 		constexpr Simplex(): count(0) {}
@@ -101,14 +110,14 @@ namespace GJK {
 		/// @param ao Direction to check.
 		/// @return Whether the dot product is bigger than zero.
 		constexpr static bool same(VectorType const& direction, VectorType const& ao) {
-			return dot(direction, ao) > 0;
+			return direction.dot(ao) > 0;
 		}
 
 	private:
 		/// @brief Simplex points.
-		Array<VectorType, D+1>	points;
+		PointArrayType	points;
 		/// @brief Point count.
-		usize					count;
+		usize			count;
 
 		constexpr bool line(VectorType& direction) {
 			VectorType a = points[0];
@@ -138,11 +147,11 @@ namespace GJK {
 					direction = ac.cross(ao).cross(ac);
 				} else {
 					points = {a, b, 0, 0};
-					return line({a, b}, direction);
+					return line(direction);
 				}
 			} else if (same(ab.cross(abc), ao)) {
 				points = {a, b, 0, 0};
-				return line({a, b}, direction);
+				return line(direction);
 			} else if (same(abc, ao)) {
 				direction = abc;
 			} else {
@@ -166,15 +175,15 @@ namespace GJK {
 			VectorType adb = ad.cross(ab);
 			if (same(abc, ao)) {
 				points = {a, b, c, 0};
-				return triangle({a, b, c}, direction);
+				return triangle(direction);
 			}
 			if (same(acd, ao)) {
 				points = {a, c, d, 0};
-				return triangle({a, c, d}, direction);
+				return triangle(direction);
 			}
 			if (same(adb, ao)) {
 				points = {a, d, b, 0};
-				return triangle({a, d, b}, direction);
+				return triangle(direction);
 			}
 			return DIMENSION == 3;
 		}
@@ -207,15 +216,15 @@ namespace GJK {
 	) {
 		using VectorType = Vector<D>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
-		Simplex<D> pts;
-		pts.pushFront(sup);
-		VectorType d = -sup;
+		Simplex<3> sp;
+		sp.pushFront(sup);
+		Vector3 d = -sup;
 		while (true) {
-			sup = support(a, b, d);
+			sup = support<D>(a, b, d);
 			if (sup.dot(d) <= 0)
 				return false;
-			pts.pushFront(sup);
-			if (pts.remake(d)) {
+			sp.pushFront(sup);
+			if (sp.remake(d)) {
 				return true;
 			}
 		}
