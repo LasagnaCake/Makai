@@ -185,17 +185,17 @@ namespace Collision::C2D {
 		/// @param position Position.
 		/// @param width Width. By default, it is 1.
 		/// @param length Length. By default, it is 0.
-		/// @param angle Rotation. By default, it is 0.
+		/// @param rotation Rotation. By default, it is 0.
 		constexpr Capsule(
 			Vector2 const& position,
 			Vector2 const& width = 1,
 			float const length = 0,
-			float const angle = 0
+			float const rotation = 0
 		):
 			position(position),
 			width(width),
 			length(length),
-			angle(angle)		{}
+			rotation(rotation)	{}
 
 		/// @brief Destructor.
 		constexpr virtual ~Capsule() {}
@@ -212,7 +212,7 @@ namespace Collision::C2D {
 			Vector2 const end = Math::angleV2(angle);
 			float const alignment = end.dot(direction);
 			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
-			return ((alignment < 0 ? position : (end * length)) + width * Math::rotateV2(direction, angle));
+			return ((alignment < 0 ? position : (end * length)) + width * Math::rotateV2(direction, rotation));
 		}
 
 		/// @brief Capsule position.
@@ -222,7 +222,7 @@ namespace Collision::C2D {
 		/// @brief Capsule length.
 		float length = 1;
 		/// @brief Capsule rotation.
-		float angle = 0;
+		float rotation = 0;
 	};
 
 	/// @brief Raycast bound.
