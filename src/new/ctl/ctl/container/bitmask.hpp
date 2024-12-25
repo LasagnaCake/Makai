@@ -134,12 +134,35 @@ struct BitMask:
 	/// @brief Returns the inverse of the `BitMask`.
 	/// @return The inverse of the `BitMask`.
 	constexpr SelfType operator~() const {return inverse();}
+	
+	/// @brief Bit accessor.
+	struct Bit {
+		/// @brief Returns whether the bit is set.
+		constexpr operator bool() const {return data & mask;}
 
-	/// @brief Returns the state of a bit at a given index.
+		/// @brief Sets the bit.
+		/// @param state State to set bit to.
+		/// @return Reference to self.
+		constexpr Bit& operator=(bool const state) {
+			if (state)	data |= mask;
+			else		data &= ~mask;
+			return *this;
+		}
+
+	private:
+		constexpr Bit(DataType& data, usize const index): data(data), mask(1 << index) {}
+		friend class SelfType;
+		/// @brief Data the bit is associated with.
+		DataType&		data;
+		/// @brief Bit mask.
+		DataType const	mask;
+	};
+
+	/// @brief Returns the bit at a given index.
 	/// @param index Index of the bit.
-	/// @return Whether the bit is set or not.
+	/// @return Bit accessor.
 	/// @throw OutOfBoundsException when index is bigger than max possible bit range.
-	constexpr bool operator[](ssize index) {
+	constexpr Bit operator[](ssize index) {
 		if (index >= BYTE_SIZE * 8) throw OutOfBoundsException("Index is bigger than possible bit range!");
 		while (index < 0) index += BYTE_SIZE * 8;
 		usize i = 0;
@@ -147,7 +170,22 @@ struct BitMask:
 			index -= ELEMENT_BIT_SIZE;
 			++i;
 		}
-		return (mask[i] >> index) & 1;
+		return Bit(mask[i], index);
+	}
+
+	/// @brief Returns the state of the bit at a given index.
+	/// @param index Index of the bit.
+	/// @return Whether the bit is set.
+	/// @throw OutOfBoundsException when index is bigger than max possible bit range.
+	constexpr bool operator[](ssize index) const {
+		if (index >= BYTE_SIZE * 8) throw OutOfBoundsException("Index is bigger than possible bit range!");
+		while (index < 0) index += BYTE_SIZE * 8;
+		usize i = 0;
+		while (index > ELEMENT_BIT_SIZE) {
+			index -= ELEMENT_BIT_SIZE;
+			++i;
+		}
+		return mask[i] & (1 << index);
 	}
 
 	/// @brief Underlying bit mask.
