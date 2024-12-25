@@ -157,7 +157,8 @@ namespace Collision::C2D {
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
-			return position + Math::angleV2(rotation + direction.angle()) * radius;
+			//return position + Math::angleV2(rotation + direction.angle()) * radius;
+			return position + Math::rotateV2(direction, rotation) * radius;
 		}
 
 		/// @brief Circle position.
@@ -213,12 +214,9 @@ namespace Collision::C2D {
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
 			// Is all of this even correct? Definitely not.
 			Vector2 const dirvec = Math::angleV2(angle);
-			float const
-				alignment	= dirvec.dot(direction),
-				dirAngle	= rotation + direction.angle()
-			;
+			float const alignment = dirvec.dot(direction);
 			if (alignment <= 0)
-				return Math::angleV2(dirAngle) * width + position;
+				return Math::rotateV2(direction, rotation) * width + position;
 			Vector2 left, right;
 			float const frustum = aperture(dirvec, left, right);
 			if (alignment >= frustum) {
