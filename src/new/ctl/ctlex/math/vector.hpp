@@ -590,6 +590,20 @@ class Vector2: Ordered {
 			return (x * vec.y) - (y * vec.x);
 		}
 
+		/// @brief Returns this vector projected in another vector.
+		/// @param vec Vector to project in.
+		/// @return Result of the operation.
+		constexpr Vector2 projected(Vector2 const& vec) const {
+			return (vec.dot(*this) / vec.dot(vec)) * vec;
+		}
+
+		/// @brief Projects this vector in another vector.
+		/// @param vec Vector to project in.
+		/// @return Reference to self.
+		constexpr Vector2 project(Vector2 const& vec) {
+			*this = projected(vec);
+		}
+
 		/// @brief Returns the absolute value of the vector.
 		/// @return Absolute vector.
 		constexpr Vector2 absolute() const {
@@ -830,6 +844,20 @@ class Vector3: Ordered {
 		/// @return Mixed product.
 		constexpr float mix(Vector3 const& a, Vector3 const& b) const {
 			return dot(a.cross(b));
+		}
+
+		/// @brief Returns this vector projected in another vector.
+		/// @param vec Vector to project in.
+		/// @return Result of the operation.
+		constexpr Vector3 projected(Vector3 const& vec) const {
+			return (vec.dot(*this) / vec.dot(vec)) * vec;
+		}
+
+		/// @brief Projects this vector in another vector.
+		/// @param vec Vector to project in.
+		/// @return Reference to self.
+		constexpr Vector3 project(Vector3 const& vec) {
+			*this = projected(vec);
 		}
 
 		/// @brief Returns the X and Y components.
@@ -1087,6 +1115,20 @@ class Vector4: Ordered {
 		constexpr float dot(Vector4 const& vec) const {
 			Vector4 mult = (*this) * vec;
 			return mult.x + mult.y + mult.z + mult.w;
+		}
+
+		/// @brief Returns this vector projected in another vector.
+		/// @param vec Vector to project in.
+		/// @return Result of the operation.
+		constexpr Vector4 projected(Vector4 const& vec) const {
+			return (vec.dot(*this) / vec.dot(vec)) * vec;
+		}
+
+		/// @brief Projects this vector in another vector.
+		/// @param vec Vector to project in.
+		/// @return Reference to self.
+		constexpr Vector4 project(Vector4 const& vec) {
+			*this = projected(vec);
 		}
 
 		/// @brief Returns the absolute value of the vector.
