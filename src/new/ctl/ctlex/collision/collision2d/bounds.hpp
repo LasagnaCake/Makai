@@ -212,7 +212,7 @@ namespace Collision::C2D {
 			Vector2 const end = Math::angleV2(angle);
 			float const alignment = end.dot(direction);
 			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
-			return ((alignment < 0 ? position : (end * length)) + width * direction);
+			return ((alignment < 0 ? position : (end * length)) + width * Math::rotateV2(direction, angle));
 		}
 
 		/// @brief Capsule position.
