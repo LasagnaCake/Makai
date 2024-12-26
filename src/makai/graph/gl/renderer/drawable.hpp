@@ -66,16 +66,16 @@ namespace Makai::Graph {
 		bool manualMode = false;
 	};
 
-	/// @brief OpenGL drawable object interface.
-	class IGLDrawable: public IDrawable, public Blendable {
+	/// @brief Graphic API drawable object interface.
+	class IGraphic: public IDrawable, public Blendable {
 	public:
 		/// @brief Constructs the drawable object.
 		/// @param layer Layer to register the object to.
 		/// @param manual Whether the object is manually rendered.
-		IGLDrawable(usize const layer = 0, bool const manual = false);
+		IGraphic(usize const layer = 0, bool const manual = false);
 
 		/// @brief Destructor.
-		virtual ~IGLDrawable();
+		virtual ~IGraphic();
 
 		/// @brief Draws the object to the screen. Must be implemented.
 		virtual void draw() = 0;
@@ -116,9 +116,9 @@ namespace Makai::Graph {
 		uint vbo;
 	};
 
-	/// @brief Type must be an OpenGL drawable object.
+	/// @brief Type must be a graphic object.
 	template<class T>
-	concept GLDrawableType = Makai::Type::Subclass<T, IGLDrawable>;
+	concept GraphicType = Makai::Type::Subclass<T, IGraphic>;
 }
 
 #endif // MAKAILIB_GRAPH_RENDERER_DRAWABLE_H

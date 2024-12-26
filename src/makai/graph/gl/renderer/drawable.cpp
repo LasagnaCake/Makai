@@ -56,20 +56,20 @@ IDrawable& IDrawable::removeFromRenderLayer(usize const renderLayer) {
 	return *this;
 }
 
-IGLDrawable::IGLDrawable(usize const layer, bool const manual): IDrawable(layer, manual), Blendable() {
+IGraphic::IGraphic(usize const layer, bool const manual): IDrawable(layer, manual), Blendable() {
 	DEBUGLN("Creating drawable object...");
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	DEBUGLN("Drawable object created!");
 }
 
-IGLDrawable::~IGLDrawable() {
+IGraphic::~IGraphic() {
 	DEBUGLN("Deleting buffers...");
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 }
 
-void IGLDrawable::display(
+void IGraphic::display(
 	Vertex* const		vertices,
 	usize const		count,
 	CullMode const&		culling,
@@ -122,7 +122,7 @@ void IGLDrawable::display(
 	glDisable(GL_PROGRAM_POINT_SIZE);
 }
 
-void IGLDrawable::prepare() {
+void IGraphic::prepare() {
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("DrawableObject::prepare");
 	#endif // MAKAILIB_DEBUG

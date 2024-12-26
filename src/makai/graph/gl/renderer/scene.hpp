@@ -15,7 +15,7 @@ namespace Makai::Graph {
 	namespace Base {
 		/// @brief Collection of drawable objects.
 		/// @tparam TDraw 
-		template<GLDrawableType TDraw>
+		template<GraphicType TDraw>
 		class Collection: public IDrawable {
 		public:
 			/// @brief Drawable object type.

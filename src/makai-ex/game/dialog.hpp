@@ -4,7 +4,7 @@
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game::Dialog {
-	using Graphic = Handle<Graph::IGLDrawable>;
+	using Graphic = Handle<Graph::IGraphic>;
 
 	struct Content {
 		String	content;
@@ -22,6 +22,8 @@ namespace Makai::Ex::Game::Dialog {
 		Graph::Label	title;
 		Graph::Label	text;
 		Graphic			body;
+
+		void display(Content const& title, Content const& text);
 	};
 
 	struct Actor {

@@ -13,7 +13,7 @@ namespace Makai::Graph {
 	class Scene;
 
 	/// @brief Renderable object.
-	class Renderable: public IGLDrawable {
+	class Renderable: public IGraphic {
 	public:
 		/// @brief Latest renderable object definition file version supported.
 		constexpr static usize VERSION = 0;

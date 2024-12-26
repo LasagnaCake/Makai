@@ -229,14 +229,14 @@ inline JSON::JSONData toDefinition(
 }
 
 Renderable::Renderable(usize const layer, bool const manual):
-IGLDrawable(layer, manual) {
+IGraphic(layer, manual) {
 }
 
 Renderable::Renderable(
 	List<Triangle*>&& triangles,
 	usize const layer,
 	bool const manual
-): IGLDrawable(layer, manual) {
+): IGraphic(layer, manual) {
 	this->triangles = triangles;
 }
 
@@ -245,7 +245,7 @@ Renderable::Renderable(
 	usize const count,
 	usize const layer,
 	bool const manual
-): IGLDrawable(layer, manual) {
+): IGraphic(layer, manual) {
 	extend(vertices, count);
 }
 

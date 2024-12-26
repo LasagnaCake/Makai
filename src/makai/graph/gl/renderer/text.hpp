@@ -113,12 +113,12 @@ namespace Makai::Graph {
 	};
 
 	/// @brief Text display.
-	class Label: public IGLDrawable {
+	class Label: public IGraphic {
 	public:
 		/// @brief Constructs the label.
 		/// @param layer Layer to register the object to. By default, it is layer zero.
 		/// @param manual Whether the object is manually rendered. By default, it is `false`.
-		Label(usize const& layer = 0, bool const manual = false): IGLDrawable(layer, manual) {}
+		Label(usize const& layer = 0, bool const manual = false): IGraphic(layer, manual) {}
 
 		/// @brief Destructor.
 		virtual ~Label() {}
