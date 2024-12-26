@@ -80,7 +80,6 @@ Since a version of (most of) them are bundled[^1], including your own version of
 | SDL2_Mixer | Audio backend                                       | Yes (Lib file[^3]) |
 | SDL2_Net   | Networking Backend                                  | Yes (Lib file[^3]) |
 | stb_image  | Image loading                                       | Yes (Implementation file[^2]) |
-| cute_c2    | Collision                                           | Yes (Header-only[^4], modified[^5]) |
 | nlohmann::jsoncpp   | Multiple things                                     | Yes (Header-only[^4]) |
 | cppcodec   | Data encoding & decoding                            | Only used internally, not required |
 | CryptoPP   | Encryption, decryption, compression & decompression | Yes (Lib file[^3]) |
@@ -106,7 +105,5 @@ See [TODO](docs/changes/TODO.md).
 [^3]: Either the contents of `.a` files, or the `.o` file associated with it.
 
 [^4]: "Pure" header-only libraries.
-
-[^5]: `inline`d EVERYTHING.
 
 [^6]: A copy of the source file is located in the `src/new/impl/` folder, and is compiled when all other program parts are.
