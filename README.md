@@ -1,4 +1,4 @@
-# Makai 3D Application Engine
+# Makai: A C++20 3D (+"2D") application & game framework library
 
 [![Core Library CI](https://github.com/LasagnaCake/MakaiLib/actions/workflows/core-lib.yml/badge.svg)](https://github.com/LasagnaCake/MakaiLib/actions/workflows/core-lib.yml)
 
@@ -16,10 +16,8 @@
 
 ## Overview
 
-Formerly a C++20 header-only game engine.
-
-Now, it's a C++20 3D application engine, built on top of SDL2 & OpenGL.
-The game engine part is going to be refactored into a separate extension.
+A C++20 3D application & game framework (with support for "Pseudo-2D"),
+built on top of SDL2 & OpenGL.
 
 ## Supported operating systems
 
