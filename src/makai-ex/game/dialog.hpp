@@ -4,38 +4,38 @@
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game::Dialog {
-	struct Actor {
-		struct Position {
-			Math::Vector2	talking;
-			Math::Vector2	rest;
-			Math::Vector2	out;
-		} position;
-		Handle<Graph::IGLDrawable> body;
-	};
+	using Graphic = Handle<Graph::IGLDrawable>;
 
-	struct ActorRef {
-		String	name;
-		String	face;
-		bool	leaving = false;
+	struct Content {
+		String	content;
+		Vector4	color	= Graph::Color::WHITE;
 	};
-
-	using Actors = List<ActorRef>;
 
 	struct Message {
-		struct Content {
-			String	content;
-			Vector4	color	= Graph::Color::WHITE;
-		};
-		Actors				actors;
-		Content				title;
-		Content				text;
-		Math::Ease::Mode	mode		= Math::Ease::linear;
-		usize				duration	= 600;
-		bool				autoplay	= false;
+		Content	title;
+		Content	text;
+		usize	duration	= 600;
+		bool	autoplay	= false;
 	};
 
-	using Messages	= List<Message>;
-	using Cast		= Dictionary<Actor>;
+	struct SpeechBubble {
+		Graph::Label	title;
+		Graph::Label	text;
+		Graphic			body;
+	};
+
+	struct Actor {
+		Graphic			body;
+		SpeechBubble	bubble;
+		CTL::Co::AlwaysSuspend enter();
+		CTL::Co::AlwaysSuspend leave();
+		CTL::Co::AlwaysSuspend say(Message const& what);
+	};
+
+	struct Scene {
+	};
+
+	using Script = CTL::Co::Routine;
 }
 
 #endif
