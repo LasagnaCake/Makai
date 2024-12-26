@@ -58,15 +58,15 @@ debug: build-debug up-debug $(CREATE_LIB_3P) link-debug
 release: build-release up-release $(CREATE_LIB_3P) link-release
 
 build-debug:
-	@make -C"src/new" debug prefix="$(prefix)"
+	@make -C"$(MAKAISRC)" debug prefix="$(prefix)"
 
 build-release:
-	@make -C"src/new" release prefix="$(prefix)"
+	@make -C"$(MAKAISRC)" release prefix="$(prefix)"
 
 copy-headers:
 	@echo "Copying headers..."
 	@mkdir -p output/include/makai
-	@cd src/new
+	@cd $(MAKAISRC)
 	@cp -r --parents *.hpp ../../output/include/makai/
 	@cp -r --parents **/*.hpp ../../output/include/makai/
 	@cp -r --parents **/**/*.hpp ../../output/include/makai/
@@ -78,20 +78,20 @@ copy-headers:
 copy-o-debug:
 	@echo "Copying objects..."
 	@mkdir -p obj/debug
-	#@cp -r src/new/*.debug.o obj/debug/
-	@cp -r src/new/**/*.debug.o obj/debug/
-	@cp -r src/new/**/**/*.debug.o obj/debug/
-	@cp -r src/new/**/**/**/*.debug.o obj/debug/
-	#@cp -r src/new/**/**/**/**/*.debug.o obj/debug/
+	#@cp -r $(MAKAISRC)/*.debug.o obj/debug/
+	@cp -r $(MAKAISRC)/**/*.debug.o obj/debug/
+	@cp -r $(MAKAISRC)/**/**/*.debug.o obj/debug/
+	@cp -r $(MAKAISRC)/**/**/**/*.debug.o obj/debug/
+	#@cp -r $(MAKAISRC)/**/**/**/**/*.debug.o obj/debug/
 
 copy-o-release:
 	@echo "Copying objects..."
 	@mkdir -p obj/release
-	#@cp -r src/new/*.release.o obj/release/
-	@cp -r src/new/**/*.release.o obj/release/
-	@cp -r src/new/**/**/*.release.o obj/release/
-	@cp -r src/new/**/**/**/*.release.o obj/release/
-	#@cp -r src/new/**/**/**/**/*.release.o obj/release/
+	#@cp -r $(MAKAISRC)/*.release.o obj/release/
+	@cp -r $(MAKAISRC)/**/*.release.o obj/release/
+	@cp -r $(MAKAISRC)/**/**/*.release.o obj/release/
+	@cp -r $(MAKAISRC)/**/**/**/*.release.o obj/release/
+	#@cp -r $(MAKAISRC)/**/**/**/**/*.release.o obj/release/
 
 up-debug: copy-headers copy-o-debug
 	@echo "File copy done!"

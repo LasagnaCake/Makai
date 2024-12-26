@@ -48,3 +48,5 @@ Supported [math] values (any other value will be interpreted as 'normal'):
 > normal
 endef
 export HELP_MESSAGE
+
+export MAKAISRC:=src/makai
