@@ -108,7 +108,8 @@ namespace Makai::Graph {
 
 		/// @brief Prepares the object to render.
 		void prepare();
-
+	
+	private:
 		/// @brief Vertex array.
 		uint vao;
 		/// @brief Vertex buffer.
