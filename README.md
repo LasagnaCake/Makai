@@ -98,7 +98,7 @@ see [Issues](Issues.txt).
 
 See [TODO](docs/changes/TODO.md).
 
-[^1]: I.E. every external library in the `lib` folder.
+[^1]: I.E. specified bundled libraries. Located in the `lib` folder.
 
 [^2]: Implementation part of header-only libraries. Implementations are located under `src/new/impl/`. 
 
