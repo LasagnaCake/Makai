@@ -58,6 +58,27 @@ public:
 
 	/// @brief Event to fire.
 	virtual void onEvent() = 0;
+	
+	/// @brief Yields a cycle.
+	/// @param delta Delta between cycles.
+	void onUpdate(usize delta) override final {
+		// If not paused or not finished...
+		if (!isFinished && !paused) {
+			// If counter has reached target...
+			if(counter >= delay) {
+				// If repeating and not done looping, set counter to 0
+				if (repeat && loops != 0) counter = 0;
+				// Else, stop timer
+				else isFinished = true;
+				// Fire signal
+				onEvent();
+				// If loop count above zero, decrease it
+				if (loops > 0) loops--;
+			}
+			// Increment counter
+			counter += delta;
+		}
+	}
 
 	/// @brief Resets the internal counter to the start.
 	/// @return Reference to self.
@@ -110,27 +131,6 @@ public:
 	}
 
 private:
-	/// @brief Yields a cycle.
-	/// @param delta Delta between cycles.
-	void onUpdate(usize delta) override final {
-		// If not paused or not finished...
-		if (!isFinished && !paused) {
-			// If counter has reached target...
-			if(counter >= delay) {
-				// If repeating and not done looping, set counter to 0
-				if (repeat && loops != 0) counter = 0;
-				// Else, stop timer
-				else isFinished = true;
-				// Fire signal
-				onEvent();
-				// If loop count above zero, decrease it
-				if (loops > 0) loops--;
-			}
-			// Increment counter
-			counter += delta;
-		}
-	}
-	
 	/// @brief Internal counter.
 	usize counter = 0;
 };
