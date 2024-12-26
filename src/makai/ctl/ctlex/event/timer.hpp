@@ -53,27 +53,6 @@ public:
 	/// @brief Copy constructor (deleted).
 	Timer(Timer const& other) = delete;
 
-	/// @brief Yields a cycle.
-	/// @param delta Delta between cycles.
-	void onUpdate(usize delta) override final {
-		// If not paused or not finished...
-		if (!isFinished && !paused) {
-			// If counter has reached target...
-			if(counter >= delay) {
-				// If repeating and not done looping, set counter to 0
-				if (repeat && loops != 0) counter = 0;
-				// Else, stop timer
-				else isFinished = true;
-				// Fire signal
-				onEvent();
-				// If loop count above zero, decrease it
-				if (loops > 0) loops--;
-			}
-			// Increment counter
-			counter += delta;
-		}
-	}
-
 	/// @brief Virtual destructor.
 	virtual ~Timer() {}
 
@@ -131,8 +110,39 @@ public:
 	}
 
 private:
+	/// @brief Yields a cycle.
+	/// @param delta Delta between cycles.
+	void onUpdate(usize delta) override final {
+		// If not paused or not finished...
+		if (!isFinished && !paused) {
+			// If counter has reached target...
+			if(counter >= delay) {
+				// If repeating and not done looping, set counter to 0
+				if (repeat && loops != 0) counter = 0;
+				// Else, stop timer
+				else isFinished = true;
+				// Fire signal
+				onEvent();
+				// If loop count above zero, decrease it
+				if (loops > 0) loops--;
+			}
+			// Increment counter
+			counter += delta;
+		}
+	}
+	
 	/// @brief Internal counter.
 	usize counter = 0;
+};
+
+/// @brief Timer with a dynamic event.
+struct DynamicTimer: Timer {
+	using Timer::Timer;
+
+	Functor<void(void)> event;
+
+private:
+	void onEvent() final {event();}
 };
 
 CTL_EX_NAMESPACE_END

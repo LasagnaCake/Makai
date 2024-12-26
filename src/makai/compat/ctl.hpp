@@ -17,6 +17,11 @@ namespace Makai {
 		using namespace CTL::Ex::Type;
 		using namespace CTL::Type;
 	}
+	/// @brief Cooperative routine facilities.
+	namespace Co {
+		using namespace CTL::Ex::Co;
+		using namespace CTL::Co;
+	}
 	namespace Type = Type;
     using Math::Vector2;
     using Math::Vector3;
