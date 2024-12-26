@@ -22,7 +22,7 @@ CONFIG := -static #--static-libstdc++ --static-libgcc
 
 include make/options.make
 
-.PHONY: build-debug build-release up-debug up-release link-debug link-release build-all up-all link-all debug release copy-headers copy-o-debug copy-o-release all help link-extern
+.PHONY: clear-output package-lib build-debug build-release up-debug up-release link-debug link-release build-all up-all link-all debug release copy-headers copy-o-debug copy-o-release all help link-extern
 .ONESHELL:
 .SHELLFLAGS = -ec
 
@@ -38,12 +38,12 @@ clear-output:
 	@rm -rf obj/debug/*
 	@rm -rf obj/release/*
 
-create-lib-release:
+package-lib:
 	@cd output
 	@7z a -tzip mingw64.zip lib include -r -mem=AES256
 	@cd ..
 
-ship-it: clear-output all create-lib-release
+ship-it: clear-output all package-lib
 
 all: build-all up-all link-all
 
