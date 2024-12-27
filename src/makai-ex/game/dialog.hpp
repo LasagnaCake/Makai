@@ -4,51 +4,51 @@
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game::Dialog {
-	using Graphic = Handle<Graph::IGraphic>;
+	using Graphic = Instance<Graph::IGraphic>;
 
 	struct Content {
 		String	content;
 		Vector4	color	= Graph::Color::WHITE;
 	};
 
-	struct Message {
+	struct Line {
 		Content	title;
 		Content	text;
-		usize	duration	= 600;
-		bool	autoplay	= false;
 	};
 
 	struct Action {
 		String name;
 	};
 
-	struct SpeechBubble: IVisible {
+	struct Box: IVisible {
 		Graph::Label	title;
 		Graph::Label	text;
 		Graphic			body;
 
-		virtual ~SpeechBubble() {}
+		virtual ~Box() {}
+
 		void show() final;
 		void hide() final;
 		virtual void display(Content const& title, Content const& text);
 	};
 
 	struct Actor: IVisible {
-		using Step = Co::AlwaysSuspend;
-		Graphic					body;
-		Handle<SpeechBubble>	bubble;
+		using Step = Co::Yielder;
+		Graphic			body;
+		Instance<Box>	dialog;
 
 		virtual ~Actor() {}
 		
-		virtual Step enter();
-		virtual Step leave();
 		void show() final;
 		void hide() final;
-		Step say(Message const& what);
-		Step act(Action const& what);
+		virtual Step say(Line const& what);
+		virtual Step act(Action const& action);
 	};
 
 	struct Scene {
+		using Actors	= List<Handle<Actor>>;
+		using Cast		= Dictionary<Instance<Actor>>;
+		Cast cast;
 	};
 
 	using Script = Co::Routine;
