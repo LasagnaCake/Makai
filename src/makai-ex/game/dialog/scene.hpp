@@ -37,9 +37,9 @@ namespace Makai::Ex::Game::Dialog {
 		void order(Action const& action, StringList const& actors);
 		void order(Line const& line, Actors const& actors);
 
-		virtual void highlight(Actor const& actor);
-		virtual void detract(Actor const& actor);
-		virtual void redirect(Actor const& actor);
+		virtual void highlight(Actor const& actor)	{};
+		virtual void detract(Actor const& actor)	{};
+		virtual void redirect(Actor const& actor)	{};
 	};
 }
 

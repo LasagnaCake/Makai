@@ -24,6 +24,7 @@ namespace Makai::Ex::Game::Dialog {
 		void show() final;
 		void hide() final;
 		virtual void display(Line const& content);
+		virtual void append(Line const& content);
 	};
 }
 

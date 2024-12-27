@@ -5,16 +5,7 @@
 
 namespace Makai::Ex::Game::Dialog {
 	struct Player: IUpdateable, IPlayable {
-		using Script = Co::Routine;
-
-		struct Waiter: Co::Consumer {
-			Waiter(usize& delay, usize const wait): delay(delay), wait(wait) {}
-		private:
-			usize&	delay;
-			usize	wait;
-			void onEnter() override final	{CTL::swap(delay, wait);}
-			void onExit() override final	{CTL::swap(delay, wait);}
-		};
+		using Script = Co::Generator<usize>;
 
 		Player() {isFinished = true;}
 
@@ -22,9 +13,9 @@ namespace Makai::Ex::Game::Dialog {
 
 		void onUpdate(float, App&) {
 			if (isFinished || paused) return;
-			if (autotimer++ < delay) return;
-			dialog.process();
-			autotimer = 0;
+			if (counter++ < delay) return;
+			counter = dialog.next();
+			counter = 0;
 			if (!dialog) isFinished = true;
 		}
 
@@ -34,20 +25,18 @@ namespace Makai::Ex::Game::Dialog {
 			play();
 		}
 
-		Player& setAutoplay(bool const state)	{autoplay = state;		}
-		Waiter wait(usize const time)			{return {delay, time};	}
+		Player& setAutoplay(bool const state) {autoplay = state;}
 
 		Player& stop()	override final	{isFinished = true;	}
 		Player& play()	override final	{paused = false;	}
 		Player& pause()	override final	{paused = true;		}
 
-		usize delay = 600;
-
 		Input::Manager input;
 
 	private:
-		bool autoplay	= false;
-		usize autotimer	= 0;
+		bool	autoplay	= false;
+		usize	counter		= 0;
+		usize	delay		= 600;
 
 		Script dialog;
 	};
