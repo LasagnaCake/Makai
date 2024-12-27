@@ -25,7 +25,15 @@ namespace Makai::Ex::Game::Dialog {
 		Graph::Label	text;
 		Graphic			body;
 
+		struct Layers {
+			usize title;
+			usize text	= title;
+			usize body	= title - 1;
+		};
+
 		virtual ~Box() {}
+
+		void setRenderLayers(Layers const& layers);
 
 		void show() final;
 		void hide() final;
@@ -33,21 +41,31 @@ namespace Makai::Ex::Game::Dialog {
 	};
 
 	struct Actor: IVisible {
-		using Step = Co::Yielder;
 		Graphic			body;
 		Instance<Box>	dialog;
+
+		struct LineStep: Co::IAwaitable<void> {
+			Instance<Box> box;
+			virtual ~LineStep();
+			bool await_ready() final	{return false;							}
+			bool await_suspend() final	{if (box) box->hide(); return false;	}
+			void await_resume() final	{										}
+		};
+
+		using ActionStep = Co::Yielder;
 
 		virtual ~Actor() {}
 		
 		void show() final;
 		void hide() final;
-		virtual Step say(Line const& what);
-		virtual Step act(Action const& action);
+		virtual LineStep	say(Line const& what);
+		virtual LineStep	add(Line const& what);
+		virtual ActionStep	perform(Action const& act);
 	};
 
 	struct Scene {
 		using Actors	= List<Handle<Actor>>;
-		using Cast		= Dictionary<Instance<Actor>>;
+		using Cast		= Dictionary<Handle<Actor>>;
 		Cast cast;
 	};
 
