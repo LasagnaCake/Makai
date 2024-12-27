@@ -46,6 +46,8 @@ namespace Makai::Ex::Game::Dialog {
 
 		struct LineStep: Co::IAwaitable<void> {
 			Instance<Box> box;
+			LineStep(Instance<Box>&& box):		box(CTL::move(box))	{}
+			LineStep(Instance<Box> const& box):	box(box)			{}
 			virtual ~LineStep();
 			bool await_ready() final	{return false;							}
 			bool await_suspend() final	{if (box) box->hide(); return false;	}
@@ -63,6 +65,15 @@ namespace Makai::Ex::Game::Dialog {
 		virtual ActionStep	perform(Action const& act);
 	};
 
+	struct ActorRef {
+		using LineStep		= Actor::LineStep;
+		using ActionStep	= Actor::ActionStep;
+		Handle<Actor> actor;
+		LineStep	say(Line const& what)		{if (actor) return actor->say(what);	return {nullptr};	}
+		LineStep	add(Line const& what)		{if (actor) return actor->add(what);	return {nullptr};	}
+		ActionStep	perform(Action const& act)	{if (actor) return actor->perform(act);	return {0};			}
+	};
+
 	struct Scene {
 		using Actors	= List<Handle<Actor>>;
 		using Cast		= Dictionary<Handle<Actor>>;
@@ -72,6 +83,12 @@ namespace Makai::Ex::Game::Dialog {
 
 		Step begin();
 		Step end();
+
+		ActorRef actor(String const& name) {
+			if (cast.contains(name))
+				return {cast.at(name)};
+			return {nullptr};
+		}
 
 		void highlight(StringList const& actors);
 		void detract(StringList const& actors);
