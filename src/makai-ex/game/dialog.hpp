@@ -4,11 +4,6 @@
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game::Dialog {
-	struct IVisible {
-		virtual void show() = 0;
-		virtual void hide() = 0;
-	};
-
 	using Graphic = Handle<Graph::IGraphic>;
 
 	struct Content {
@@ -39,7 +34,7 @@ namespace Makai::Ex::Game::Dialog {
 	};
 
 	struct Actor: IVisible {
-		using Step = CTL::Co::AlwaysSuspend;
+		using Step = Co::AlwaysSuspend;
 		Graphic					body;
 		Handle<SpeechBubble>	bubble;
 
@@ -56,7 +51,7 @@ namespace Makai::Ex::Game::Dialog {
 	struct Scene {
 	};
 
-	using Script = CTL::Co::Routine;
+	using Script = Co::Routine;
 }
 
 #endif
