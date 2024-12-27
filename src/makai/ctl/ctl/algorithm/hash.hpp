@@ -222,7 +222,7 @@ struct Hasher {
 	/// @return Resulting hash.
 	template<class T>
 	constexpr static usize hash(T const* const data, usize const size) {
-		return Impl::Hash::hash(ptrcast<byte>(data), size * sizeof(T), size);
+		return Impl::Hash::hash(data, size * sizeof(T), size);
 	}
 
 	/// @brief Generates the hash for a given fixed array.
