@@ -32,7 +32,7 @@ No plans to support 32-bit systems.
 > [!important]
 > **This library does not currently support clang/LLVM!**
 
-- GCC (12+) via MinGW (MSYS (Recommended), Cygwin, TDM-GCC) 
+- GCC (13+) via MinGW (MSYS (Recommended), Cygwin, TDM-GCC) 
 - Make
 
 #### Optional packages
