@@ -44,17 +44,37 @@ namespace Makai::Ex::Game::Dialog {
 		Graphic			body;
 		Instance<Box>	dialog;
 
-		struct LineStep: Co::IAwaitable<void> {
+		struct LineStep {
 			Instance<Box> box;
 			LineStep(Instance<Box>&& box):		box(CTL::move(box))	{}
 			LineStep(Instance<Box> const& box):	box(box)			{}
 			virtual ~LineStep();
-			bool await_ready() final	{return false;							}
-			bool await_suspend() final	{if (box) box->hide(); return false;	}
-			void await_resume() final	{										}
+			bool await_ready()		{return consume();	}
+			void await_suspend()	{					}
+			void await_resume()		{					}
+		private:
+			bool consumed = false;
+			bool consume() {
+				if (!consumed)
+					return consumed = true;
+				box->hide();
+				return false;
+			}
 		};
 
-		using ActionStep = Co::Yielder;
+		struct ActionStep {
+			virtual ~ActionStep();
+			bool await_ready() 		{return consume();	}
+			void await_suspend()	{					}
+			void await_resume()		{					}
+		private:
+			bool consumed = false;
+			bool consume() {
+				if (!consumed)
+					return consumed = true;
+				return false;
+			}
+		};
 
 		virtual ~Actor() {}
 		
@@ -71,7 +91,7 @@ namespace Makai::Ex::Game::Dialog {
 		Handle<Actor> actor;
 		LineStep	say(Line const& what)		{if (actor) return actor->say(what);	return {nullptr};	}
 		LineStep	add(Line const& what)		{if (actor) return actor->add(what);	return {nullptr};	}
-		ActionStep	perform(Action const& act)	{if (actor) return actor->perform(act);	return {0};			}
+		ActionStep	perform(Action const& act)	{if (actor) return actor->perform(act);	return {};			}
 	};
 
 	struct Scene {
@@ -107,7 +127,24 @@ namespace Makai::Ex::Game::Dialog {
 		virtual void redirect(Actor const& actor);
 	};
 
-	using Script = Co::Routine;
+	struct Player: IUpdateable, Co::IRoutineTask {
+		using Script = Co::IRoutineTask::PromiseType;
+
+		Player() {stop();}
+
+		Script task() override {return script();}
+
+		void onUpdate(float, App&) {
+			if (isFinished || paused) return;
+			IRoutineTask::process();
+			if (!dialog) isFinished = true;
+		}
+
+		virtual Script script() = 0;
+
+	private:
+		Script dialog;
+	};
 }
 
 #endif
