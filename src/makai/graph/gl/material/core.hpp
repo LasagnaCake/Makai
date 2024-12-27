@@ -23,7 +23,15 @@ namespace Makai::Graph::Material {
 	/// @brief Object material interface.
 	struct IObjectMaterial: IMaterial {
 		/// @brief Albedo tint.
-		Vector4	color = Color::WHITE;
+		Vector4	color				= Color::WHITE;
+		/// @brief Instances.
+		List<Vector3>	instances	= {Vec3(0, 0, 0)};
+		/// @brief Face culling mode.
+		CullMode		culling		= CullMode::OCM_NONE;
+		/// @brief Face fill mode.
+		FillMode		fill		= FillMode::OFM_FILL;
+		/// @brief Debug view mode.
+		ObjectDebugView	debug		= ObjectDebugView::ODV_NONE;
 
 		/// @brief Destructor.
 		constexpr virtual ~IObjectMaterial() {}
@@ -59,14 +67,6 @@ namespace Makai::Graph::Material {
 		Effect::Negative	negative;
 		/// @brief Gradient effect.
 		Effect::Gradient	gradient;
-		/// @brief Instances.
-		List<Vector3>	instances = {Vec3(0, 0, 0)};
-		/// @brief Face culling mode.
-		CullMode	culling		= CullMode::OCM_NONE;
-		/// @brief Face fill mode.
-		FillMode	fill		= FillMode::OFM_FILL;
-		/// @brief Debug view mode.
-		ObjectDebugView	debug	= ObjectDebugView::ODV_NONE;
 
 		/// @brief Applies the material to the shader.
 		/// @param shader Shader to apply to.
