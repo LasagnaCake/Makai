@@ -29,7 +29,7 @@ namespace Makai::Ex::Game::Dialog {
 
 		void show() final;
 		void hide() final;
-		virtual void display(Content const& title, Content const& text);
+		virtual void display(Line const& content);
 	};
 
 	struct Actor: IVisible {
