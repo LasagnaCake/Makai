@@ -11,6 +11,7 @@ CTL_NAMESPACE_BEGIN
 /// @brief Hash algorithm implementations.
 namespace Impl::Hash {
 	// Based off of https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/libsupc%2B%2B/hash_bytes.cc
+
 	/// @brief Simple hash algorithm implementation.	
 	namespace Simple {
 		/// @brief Generates a hash from the given data, using GCC's dummy hash implementation.
@@ -18,8 +19,8 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize hash(const void* data, usize sz, usize seed) {
-			const char* byte = static_cast<const char*>(data);
+		constexpr usize hash(void const* data, usize sz, usize seed) {
+			char const* byte = static_cast<char const*>(data);
 			for (; sz; --sz) {
 				seed *= 131;
 				seed += *byte++;
@@ -29,6 +30,7 @@ namespace Impl::Hash {
 	}
 	
 	// Based off of https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/libsupc%2B%2B/hash_bytes.cc
+
 	/// @brief FNV1-A hash algorithm implementation.
 	namespace FNV1a {
 		/// @brief Generates the prime to be used.
@@ -57,7 +59,7 @@ namespace Impl::Hash {
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
 		constexpr usize hash(void const* const data, usize sz, usize seed = offset()) {
-			const char* byte = static_cast<const char*>(data);
+			const char* byte = static_cast<char const*>(data);
 			for (; sz; --sz) {
 				seed ^= static_cast<usize>(*byte++);
 				seed *= prime();
@@ -67,6 +69,7 @@ namespace Impl::Hash {
 	}
 	
 	// Based off of https://github.com/aappleby/smhasher/blob/master/src/MurmurHash2.cpp
+	
 	/// @brief Murmur2 hash algorithm implementation.
 	namespace Murmur2 {
 		/// @brief Mixes a set of values.
@@ -97,18 +100,18 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize hash64(const void* data, usize sz, usize seed = 0) {
+		constexpr usize hash64(void const* data, usize sz, usize seed = 0) {
 			constexpr usize	m = 0xc6a4a7935bd1e995ull;
 			constexpr int	r = 47;
 			usize s		= sz;
 			usize hash	= seed;
-			const usize* d1 = static_cast<usize const*>(data);
-			const usize* end = d1 + (sz/8);
+			usize const* d1 = static_cast<usize const*>(data);
+			usize const* end = d1 + (sz/8);
 			while(data != end) {
 				usize k = *d1++;
 				mix(hash, k, m, r);
 			}
-			const byte* d2 = static_cast<const byte*>(data);
+			byte const* d2 = static_cast<byte const*>(data);
 			usize t = 0;
 			switch(sz & 7) {
 			case 7:		t ^= static_cast<usize>(d2[6]) << 48;
@@ -131,12 +134,12 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize hash32(const void* data, usize sz, usize seed = 0) {
+		constexpr usize hash32(void const* data, usize sz, usize seed = 0) {
 			constexpr usize	m = 0x5bd1e995;
 			constexpr int	r = 24;
 			usize s		= sz;
 			usize hash	= seed;
-			const byte* dt = static_cast<const byte*>(data);
+			byte const* dt = static_cast<byte const*>(data);
 			while(sz >= 4){
 				usize k = *(usize*)dt;
 				mix(hash, k, m, r);
@@ -162,7 +165,7 @@ namespace Impl::Hash {
 	/// @param sz Size of data to hash.
 	/// @param seed Starting seed.
 	/// @return Resulting hash.
-	constexpr usize hash(const void* data, usize sz, usize seed = 0) {
+	constexpr usize hash(void const* data, usize sz, usize seed = 0) {
 		if constexpr (sizeof(usize) == sizeof(uint64))	
 			return Murmur2::hash64(data, sz, seed);
 		else if constexpr (sizeof(usize) == sizeof(uint32))
@@ -174,21 +177,43 @@ namespace Impl::Hash {
 /// @brief Static class used for generating hashes.
 /// @note For any type that isn't an `union`, `class` or `struct`, all hashes are guaranteed to be collision-free.
 struct Hasher {
+	/// @brief Generates the hash for a given pointer.
+	/// @tparam T pointed type.
+	/// @param ptr pointer to hash.
+	/// @return Resulting hash.
+	template<class T>
+	constexpr static usize hashPointer(T* const& ptr)	{return bitcast<usize>(ptr);	}
+
 	/// @brief Generates the hash for a given integer.
 	/// @tparam T Integer type.
 	/// @param value Integer to hash.
 	/// @return Resulting hash.
 	template <Type::Integer T>
-	constexpr static usize hash(T const& value)			{return value;					}
+	constexpr static usize hash(T const& value)		{return value;						}
 
 	/// @brief Generates the hash for a given floating point number.
 	/// @param value Number to hash.
 	/// @return Resulting hash.
-	constexpr static usize hash(float const value)		{return bitcast<uint32>(value);	}
+	constexpr static usize hash(float const value)	{return bitcast<uint32>(value);		}
+	
 	/// @brief Generates the hash for a given floating point number.
 	/// @param value Number to hash.
 	/// @return Resulting hash.
-	constexpr static usize hash(double const value)	{return bitcast<uint64>(value);	}
+	constexpr static usize hash(double const value)	{return bitcast<uint64>(value);		}
+
+	/// @brief Generates the hash for a given pointer.
+	/// @tparam T Convertible type.
+	/// @param value Pointer to hash.
+	/// @return Resulting hash.
+	template <Type::Convertible<usize> T>
+	constexpr static usize hash(T const value)		{return static_cast<usize>(value);	}
+
+	/// @brief Generates the hash for a given `enum`.
+	/// @tparam T `enum` type.
+	/// @param value `enum` value to hash.
+	/// @return Resulting hash.
+	template <Type::Enumerator T>
+	constexpr static usize hash(T const& value)		{return static_cast<usize>(value);	}
 
 	/// @brief Generates the hash for a given range of elements.
 	/// @tparam T Element type.
@@ -196,8 +221,8 @@ struct Hasher {
 	/// @param size Size of range.
 	/// @return Resulting hash.
 	template<class T>
-	constexpr static usize hash(T* const data, usize const size) {
-		return Impl::Hash::hash(data, size, size);
+	constexpr static usize hash(T const* const data, usize const size) {
+		return Impl::Hash::hash(ptrcast<byte>(data), size * sizeof(T), size);
 	}
 
 	/// @brief Generates the hash for a given fixed array.
@@ -210,54 +235,23 @@ struct Hasher {
 		return hash(data, S, S);
 	}
 
-	/// @brief Generates the hash for a given pointer.
-	/// @tparam T Pointer type.
-	/// @param value Pointer to hash.
-	/// @return Resulting hash.
-	template <class T>
-	constexpr static usize hash(T* const value)		{return (usize)value;			}
-
-	/// @brief Generates the hash for a given `enum`.
-	/// @tparam T `enum` type.
-	/// @param value `enum` value to hash.
-	/// @return Resulting hash.
-	template <Type::Enumerator T>
-	constexpr static usize hash(T const& value)			{return (usize)value;			}
-
 	/// @brief Generates the hash for a given ranged type.
 	/// @tparam T Ranged type.
 	/// @param value Ranged object to hash.
 	/// @return Resulting hash.
-	template <class T>
-	constexpr static usize hash(T const& value) requires requires (T t) {
-		{t.begin()};
-		{t.end()};
-	} {
-		return Impl::Hash::hash(value.begin(), value.end() - value.begin(), value.end() - value.begin());
-	}
-
-	/// @brief Generates the hash for a given ranged type.
-	/// @tparam T Ranged type.
-	/// @param value Ranged object to hash.
-	/// @return Resulting hash.
-	template <class T>
-	constexpr static usize hash(T const& value) requires requires (T t) {
-		{t.cbegin()};
-		{t.cend()};
-	} {
-		return Impl::Hash::hash(value.cbegin(), value.cend() - value.cbegin(), value.cend() - value.cbegin());
+	template <Type::Iteratable T>
+	constexpr static usize hash(T const& value) {
+		return hash(&*value.begin(), value.end() - value.begin());
 	}
 
 	/// @brief Generates the hash for a given bounded type.
 	/// @tparam T Bounded type.
 	/// @param value Ranged object to hash.
 	/// @return Resulting hash.
-	template <class T>
-	constexpr static usize hash(T const& value) requires requires (T t) {
-		{t.data()};
-		{t.size()};
-	} {
-		return Impl::Hash::hash(value.data(), value.size(), value.size());
+	template <Type::CIteratable T>
+	constexpr static usize hash(T const& value)
+	requires (!Type::Iteratable<T>) {
+		return hash(value.data(), value.size());
 	}
 
 	/// @brief Function prototype for future hashing specializations.

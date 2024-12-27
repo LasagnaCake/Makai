@@ -667,6 +667,20 @@ namespace Type {
 	/// @brief Constraint class `T` must be true when given a series of `Types`.
 	template<template <class...> class T, class... Types>
 	concept Valid = Impl::IsValid<T, Types...>::value;
+
+	/// @brief Type must be an iteratable type.
+	template<class T>
+	concept Iteratable = requires (T t) {
+		{t.begin()};
+		{t.end()};
+	};
+
+	/// @brief Type must be able to be "C-style" iterated.
+	template<class T>
+	concept CIteratable = requires (T t) {
+		{t.data()};
+		{t.size()};
+	};
 }
 
 CTL_NAMESPACE_END
