@@ -7,21 +7,13 @@ namespace Makai::Ex::Game::Dialog {
 	struct Player: IUpdateable, IPlayable {
 		using Script = Co::Routine;
 
-		struct Waiter {
-			bool await_ready()		{return consume();	}
-			void await_suspend()	{					}
-			void await_resume()		{					}
+		struct Waiter: Co::Consumer {
 			Waiter(usize& delay, usize const wait): delay(delay), wait(wait) {}
 		private:
 			usize&	delay;
 			usize	wait;
-			bool	consumed	= false;
-			bool consume() {
-				CTL::swap(delay, wait);
-				if (!consumed)
-					return consumed = true;
-				return false;
-			}
+			void onEnter() override final	{CTL::swap(delay, wait);}
+			void onExit() override final	{CTL::swap(delay, wait);}
 		};
 
 		Player() {isFinished = true;}

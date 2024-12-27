@@ -3,7 +3,7 @@
 
 #include "../../namespace.hpp"
 #include "../../ctypes.hpp"
-#include "context.hpp"
+#include "awaitable.hpp"
 
 // Based off of: https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html#compiling-code-using-coroutines
 
@@ -11,20 +11,27 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
-	/// @brief Coroutine promise consumer.
-	/// @tparam TPromise Promise type.
-	template<class TPromise>
-	struct Consumer {
-		TPromise& promise;
-		constexpr bool await_ready()							{return false;								}
-		constexpr bool await_suspend(Context<TPromise> context)	{promise = context.promise(); return false;	}
-		constexpr TPromise& await_resume()						{return promise;							}
+	/// @brief Single-pass awaiter.
+	struct Consumer: IAwaitable<void, void> {
+		bool await_ready() final	{return consume();	}
+		void await_suspend() final	{					}
+		void await_resume() final	{					}
+	protected:
+		/// @brief What to do when entering the wait.
+		virtual void onEnter()	{};
+		/// @brief What to do when exiting the wait.
+		virtual void onExit()	{};
+	private:
+		bool consumed = false;
+		constexpr bool consume() {
+			if (!consumed) {
+				onEnter();
+				return consumed = true;
+			}
+			onExit();
+			return false;
+		}
 	};
-
-	/// @brief Returns the underlying STL promise type for a given promise.
-	/// @tparam T Promise type.
-	template<class T>
-	using Unpack = Consumer<typename T::promise_type>;
 }
 
 CTL_NAMESPACE_END

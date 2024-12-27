@@ -10,35 +10,15 @@ namespace Makai::Ex::Game::Dialog {
 		Graphic			body;
 		Instance<Box>	dialog;
 
-		struct LineStep {
+		struct LineStep: Co::Consumer {
 			Instance<Box> box;
 			LineStep(Instance<Box>&& box):		box(CTL::move(box))	{}
 			LineStep(Instance<Box> const& box):	box(box)			{}
-			bool await_ready()		{return consume();	}
-			void await_suspend()	{					}
-			void await_resume()		{					}
 		private:
-			bool consumed = false;
-			bool consume() {
-				if (!consumed)
-					return consumed = true;
-				box->hide();
-				return false;
-			}
+			void onExit() override final {box->hide();}
 		};
 
-		struct ActionStep {
-			bool await_ready() 		{return consume();	}
-			void await_suspend()	{					}
-			void await_resume()		{					}
-		private:
-			bool consumed = false;
-			bool consume() {
-				if (!consumed)
-					return consumed = true;
-				return false;
-			}
-		};
+		using ActionStep = Co::Consumer;
 
 		virtual ~Actor() {}
 		
