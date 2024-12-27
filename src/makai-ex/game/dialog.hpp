@@ -122,6 +122,9 @@ namespace Makai::Ex::Game::Dialog {
 		void detract(String const& actor);
 		void redirect(String const& actor);
 
+		void order(StringList const& actors, Action const& action);
+		void order(Actors const& actors, Action const& action);
+
 		virtual void highlight(Actor const& actor);
 		virtual void detract(Actor const& actor);
 		virtual void redirect(Actor const& actor);
