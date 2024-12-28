@@ -6,7 +6,7 @@ Comments are done like C/C++ comments.
 
 Text color will always be white, unless changed for the specified line.
 
-Comprised of four basic commands:
+Comprised of a few commands:
 
 | Comand | Usage |
 |:-:|:-|
@@ -16,8 +16,8 @@ Comprised of four basic commands:
 | `"<text>"` | For specifying character lines. Will apply to previous `[...]` command. |
 | `#<hex>` | For specifying text colour. Will apply to previous `"<text>"` comand. Must be a valid hex color. |
 | `'<number>` | For waiting. MUST be a whole number. |
-| `+<flag>` | For enabling flags. |
-| `-<flag>` | For disabling flags. |
+| `+<flag>` | For enabling flags. Effectively `$<flag> 1`. |
+| `-<flag>` | For disabling flags. Effectively `$<flag> 0`. |
 | `$<name> <value>` | For setting values. For setting strings, use double quotes. |
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
