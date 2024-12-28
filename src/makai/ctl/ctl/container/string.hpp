@@ -185,6 +185,24 @@ public:
 	/// @brief Constructos the `BaseString` from a STL string analog.
 	/// @param str View to copy from.
 	constexpr BaseString(STDStringType const& str):	BaseType(&*str.begin(), &*str.end())	{}
+	
+	/// @brief Returns a string without any leading whitespace characters.
+	/// @return String without leading whitespace.
+	constexpr SelfType stripped() {
+		auto start	= begin();
+		auto stop	= end();
+		while (start != stop && isNullOrSpaceChar(*start))
+			++start;
+		while (stop != start && isNullOrSpaceChar(*stop))
+			--stop;
+		return SelfType(start, stop);
+	}
+
+	/// @brief Strips the string of any leading whitespace characters.
+	/// @return reference to self.
+	constexpr SelfType& strip() {
+		*this = stripped();
+	}
 
 	/// @brief Splits the string by a separator.
 	/// @param sep Separator.
