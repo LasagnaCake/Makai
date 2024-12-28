@@ -27,6 +27,10 @@ Under consideration:
 | Comand | Usage |
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command. |
+| `:{...}` | For (possibly) interpreted, simple code. |
+| `*<act> {...}` | For defining acts (named blocks) in a file. |
+| `goto <act>` | For jumping to different acts. Does not return to previous point. |
+| `do <act>` | For executing different acts. Returns to previous point. |
 
 ### On the `[]` command
 
@@ -48,7 +52,7 @@ Each `<character>` may be followed by an emotion.
 // Set frames to wait for user input before proceeding
 $delay 600
 
-// Alice enters the scene, says something, steps out, then waits
+// Alice enters the scene, says something, then steps out
 [alice] !neutral @enter . @step-in "I'm currently talking!" ; @step-out .
 // Bob enters the scene
 [bob] !bored @enter @step-in "Now I'm talking..." ;
