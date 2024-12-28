@@ -13,11 +13,11 @@ Comprised of four basic commands:
 | `!<emotion>` | For specifying character emotes. Will apply to previous `[...]` command. |
 | `"<text>"` | For specifying character lines. Will apply to previous `[...]` command. |
 | `#<hex>` | For specifying text colour. Will apply to previous `"<text>"` comand. Must be a valid hex color. |
-| `.<number>` | For waiting. MUST be a whole number. User cannot skip this wait. |
+| `.<number>` | For waiting. MUST be a whole number. |
 | `+<flag>` | For enabling flags. |
 | `-<flag>` | For disabling flags. |
 | `$<name> <value>` | For setting values. For setting strings, use double quotes. |
-| `,` | For waiting for previous commands to finish. |
+| `,` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. |
 
 Text color will always be white, unless changed for the specified line.
