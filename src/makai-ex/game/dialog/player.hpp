@@ -14,18 +14,19 @@ namespace Makai::Ex::Game::Dialog {
 		void onUpdate(float, App&) {
 			if (isFinished || paused)	return;
 			++counter;
-			if (autoplay && waiting())	return;
-			if (!shouldAdvanceDialog())	return;
-			counter = dialog.next();
-			counter = 0;
-			if (!dialog) isFinished = true;
+			if (starting) [[unlikely]]
+				starting = false;
+			else [[likely]] {
+				if ((!autoplay) && userAdvanced())	next();
+				else if (!waiting())				next();
+			}
 		}
 
 		Player& start() override final {
 			dialog		= script();
 			isFinished	= false;
 			counter		= 0;
-			play();
+			return play();
 		}
 
 		Player& setAutoplay(bool const state) {autoplay = state;}
@@ -34,6 +35,13 @@ namespace Makai::Ex::Game::Dialog {
 		Player& play()	override final	{paused = false;	}
 		Player& pause()	override final	{paused = true;		}
 
+		Player& next() {
+			if (isFinished) return;
+			counter = dialog.next();
+			counter = 0;
+			if (!dialog) isFinished = true;
+		}
+
 		Input::Manager		input;
 		Dictionary<String>	bindmap	= Dictionary<String>({
 			{"next", "diag-next"},
@@ -41,7 +49,9 @@ namespace Makai::Ex::Game::Dialog {
 		});
 
 	private:
-		bool shouldAdvanceDialog() {
+		bool starting = true;
+
+		bool userAdvanced() {
 			return (!waiting()) || (
 				input.isButtonJustPressed(bindmap["next"])
 			||	input.isButtonDown(bindmap["skip"])
