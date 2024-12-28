@@ -14,16 +14,16 @@ namespace Makai::Ex::Game::Dialog {
 		void show() final;
 		void hide() final;
 
-		virtual void enter()						{show();}
-		virtual void leave()						{hide();}
-		virtual void stepIn()						{}
-		virtual void stepOut()						{}
+		virtual void enter()				{show();}
+		virtual void leave()				{hide();}
+		virtual void stepIn()				{}
+		virtual void stepOut()				{}
 
-		virtual void say(Line const& line)			{if (dialog) dialog->display(line);	}
-		virtual void add(Line const& line)			{if (dialog) dialog->append(line);	}
-
-		virtual usize perform(Action const& action)	{
-			switch (Hasher::hash(action.name)) {
+		virtual void say(Line const& line)	{if (dialog) dialog->display(line);	}
+		virtual void add(Line const& line)	{if (dialog) dialog->append(line);	}
+		
+		virtual usize perform(Action const& action) {
+			switch (action.hash) {
 				#if __cpp_constexpr == 202306L
 				case (Hasher::hash("enter")):		enter();	return 0;
 				case (Hasher::hash("leave")):		leave();	return 0;
@@ -43,15 +43,25 @@ namespace Makai::Ex::Game::Dialog {
 			return 0;
 		}
 
-		virtual usize emote(String const& emotion)	{return 0;}
+		virtual usize emote(Emotion const& emotion)	{
+			return 0;
+		}
 	};
 
 	struct ActorRef {
 		Handle<Actor> actor;
-		void say(Line const& line)			{if (actor) actor->say(line);							}
-		void add(Line const& line)			{if (actor) actor->add(line);							}
-		usize perform(Action const& action)	{if (actor) return actor->perform(action); return 0;	}
-		usize emote(String const& emotion)	{if (actor) return actor->emote(emotion); return 0;		}
+		void say(Line const& line)	{if (actor) actor->say(line);	}
+		void add(Line const& line)	{if (actor) actor->add(line);	}
+		usize perform(Action const& action) {
+			if (actor)
+				return actor->perform(action);
+			return 0;
+		}
+		usize emote(Emotion const& emotion) {
+			if (actor)
+				return actor->emote(emotion);
+			return 0;
+		}
 	};
 }
 

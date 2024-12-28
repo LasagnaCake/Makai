@@ -9,20 +9,19 @@ namespace Makai::Ex::Game::Dialog {
 	struct Box: IVisible {
 		Graph::Label	title;
 		Graph::Label	text;
-		Graphic			body;
 
 		struct Layers {
 			usize title;
 			usize text	= title;
-		//	usize body	= title - 1;
 		};
 
 		virtual ~Box() {}
 
-		void setRenderLayers(Layers const& layers);
+		virtual void setRenderLayers(Layers const& layers);
 
-		void show() final;
-		void hide() final;
+		void show() override;
+		void hide() override;
+		
 		virtual void display(Line const& content);
 		virtual void append(Line const& content);
 	};

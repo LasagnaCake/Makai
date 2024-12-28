@@ -16,9 +16,13 @@ namespace Makai::Ex::Game::Dialog {
 		Content	text;
 	};
 
-	struct Action {
-		String name;
+	struct Method {
+		usize		hash;
+		StringList	params;
 	};
+	
+	struct Action:	Method	{};
+	struct Emotion:	Method	{};
 }
 
 #endif
