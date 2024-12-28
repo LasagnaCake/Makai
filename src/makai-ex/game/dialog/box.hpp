@@ -25,24 +25,32 @@ namespace Makai::Ex::Game::Dialog {
 		void show() override {title.active = body.active = true;	}
 		void hide() override {title.active = body.active = false;	}
 
+		void setTitleColor(Vector4 const& color)	{title.material.color = color;	}
+		void setBodyColor(Vector4 const& color)		{body.material.color = color;	}
+
+		virtual void setColor(Vector4 const& color) {
+			setTitleColor(color);
+			setBodyColor(color);
+		}
+
 		virtual void setTitle(Content const& line) {
-			title.text->content		= line.content;
-			title.material.color	= line.color;
+			title.text->content = line.content;
+			setTitleColor(line.color);
 		}
 
 		virtual void setBody(Content const& line) {
-			body.text->content		= line.content;
-			body.material.color		= line.color;
+			body.text->content = line.content;
+			setBodyColor(line.color);
 		}
 
 		virtual void appendTitle(Content const& line) {
-			title.text->content		+= line.content;
-			title.material.color	= line.color;
+			title.text->content += line.content;
+			setTitleColor(line.color);
 		}
 
 		virtual void appendBody(Content const& line) {
-			body.text->content		+= line.content;
-			body.material.color		= line.color;
+			body.text->content += line.content;
+			setBodyColor(line.color);
 		}
 
 		virtual void display(Line const& line)	{
