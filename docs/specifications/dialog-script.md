@@ -28,8 +28,8 @@ Under consideration:
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command. |
 | `&<act> {...}` | For defining acts (named blocks) in a file. |
-| `*<command>` | For utilizing named commands. |
-| `*{...}` | For (possibly) interpreted, simple code, or named command blocks. |
+| `*<command>` | For utilizing extended commands. |
+| `*{...}` | For (possibly) interpreted, simple code, or extended command blocks. |
 
 Possible named commands:
 
