@@ -53,12 +53,12 @@ namespace Makai::Ex::Game::Dialog {
 			setBodyColor(line.color);
 		}
 
-		virtual void display(Line const& line)	{
+		virtual void display(Line const& line) {
 			setTitle(line.title);
 			setBody(line.body);
 		}
 
-		virtual void append(Line const& line)	{
+		virtual void append(Line const& line) {
 			appendTitle(line.title);
 			appendBody(line.body);
 		}
