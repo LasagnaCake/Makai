@@ -43,7 +43,7 @@ Each `<character>` may be followed by an emotion.
 $delay 600
 
 // Alice enters the scene, says something, steps out, then waits
-[alice] !neutral @enter @step-in "I'm currently talking!" ; @step-out .60 ,
+[alice] !neutral @enter @step-in "I'm currently talking!" ; @step-out ,
 // Bob enters the scene
 [bob] !bored @enter @step-in "Now I'm talking..." ;
 // Alice steps in
@@ -55,13 +55,13 @@ $delay 600
 // Change wait
 $delay 120
 // Charlie steps in, angry
-[charlie] !angry @enter @step-in , "Can you two just SHUT UP!?" #f00 ; @step-out .240 ,
+[charlie] !angry @enter @step-in , "Can you two just SHUT UP!?" #f00 ; @step-out , .240 ,
 // Bob and alice are now sad :(
 [alice, bob] !sad @step-in , "Sorry..." ;
 // Disable autoplay
 -autoplay
 // Reset wait
-$delay 120
+$delay 600
 // All three exit the scene
 [alice, bob, charlie] @exit ,
 
