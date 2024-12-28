@@ -19,7 +19,7 @@ namespace Makai::Ex::Game::Dialog {
 
 		virtual void setRenderLayers(Layers const& layers) {
 			title.setRenderLayer(layers.title);
-			title.setRenderLayer(layers.body);
+			body.setRenderLayer(layers.body);
 		}
 
 		void show() override {title.active = body.active = true;	}

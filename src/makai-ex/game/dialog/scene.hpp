@@ -6,15 +6,10 @@
 #include "actor.hpp"
 
 namespace Makai::Ex::Game::Dialog {
-	struct Scene {
+	struct Scene: IPerformer {
 		using Actors	= List<Handle<Actor>>;
 		using Cast		= Map<usize, Handle<Actor>>;
 		Cast cast;
-
-		using Step = Co::Yielder;
-
-		Step begin();
-		Step end();
 
 		ActorRef actor(usize const& hash) {
 			if (cast.contains(hash))
@@ -25,6 +20,12 @@ namespace Makai::Ex::Game::Dialog {
 		ActorRef actor(String const& name) {
 			return actor(Hasher::hash(name));
 		}
+
+		void color(Vector4 const& color) override		{			}
+		void say(Content const& line) override			{			}
+		void add(Content const& line) override			{			}
+		usize emote(Emotion const& emotion) override	{return 0;	}
+		usize perform(Action const& action) override	{return 0;	}
 
 		template<Type::OneOf<usize, String> T>
 		void say(Line const& line, List<T> const& actors) {

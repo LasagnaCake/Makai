@@ -23,6 +23,16 @@ namespace Makai::Ex::Game::Dialog {
 	
 	struct Action:	Method	{};
 	struct Emotion:	Method	{};
+
+	struct IPerformer {
+		virtual ~IPerformer() {}
+
+		virtual void color(Vector4 const& color)	= 0;
+		virtual void say(Content const& line)		= 0;
+		virtual void add(Content const& line)		= 0;
+		virtual usize perform(Action const& action)	= 0;
+		virtual usize emote(Emotion const& emotion)	= 0;
+	};
 }
 
 #endif

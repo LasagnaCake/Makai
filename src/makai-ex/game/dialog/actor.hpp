@@ -6,7 +6,7 @@
 #include "box.hpp"
 
 namespace Makai::Ex::Game::Dialog {
-	struct Actor: IVisible {
+	struct Actor: IVisible, IPerformer {
 		Instance<Box>	dialog;
 
 		virtual ~Actor() {}
@@ -19,13 +19,15 @@ namespace Makai::Ex::Game::Dialog {
 		virtual void stepIn()	{dialog->show();	}
 		virtual void stepOut()	{dialog->hide();	}
 
-		virtual void say(Content const& line)	{if (dialog) dialog->setBody(line);		}
-		virtual void add(Content const& line)	{if (dialog) dialog->appendBody(line);	}
+		void color(Vector4 const& color) override	{if (dialog) dialog->setBodyColor(color);	}
 
-		virtual void say(Line const& line)		{if (dialog) dialog->display(line);		}
-		virtual void add(Line const& line)		{if (dialog) dialog->append(line);		}
+		void say(Content const& line) override		{if (dialog) dialog->setBody(line);			}
+		void add(Content const& line) override		{if (dialog) dialog->appendBody(line);		}
+
+		virtual void say(Line const& line)			{if (dialog) dialog->display(line);			}
+		virtual void add(Line const& line)			{if (dialog) dialog->append(line);			}
 		
-		virtual usize perform(Action const& action) {
+		usize perform(Action const& action) override {
 			switch (action.hash) {
 				#if __cpp_constexpr == 202306L
 				case (Hasher::hash("enter")):		enter();	return 0;
@@ -46,7 +48,7 @@ namespace Makai::Ex::Game::Dialog {
 			return 0;
 		}
 
-		virtual usize emote(Emotion const& emotion)	{
+		virtual usize emote(Emotion const& emotion) override {
 			return 0;
 		}
 	};
