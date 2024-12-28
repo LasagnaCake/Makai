@@ -21,7 +21,7 @@ Comprised of the following commands:
 | `$<name> <value>` | For setting external values. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  |
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
-| `*<command>` | For utilizing extended & named commands. |
+| `*<command>` | For modifying commands, and using named commands. |
 
 And the following extended commands:
 
@@ -67,7 +67,7 @@ $delay 600
 // Alice steps in
 [alice] @step-in
 // Both say the same line
-[alice, bob] !happy "And now we're both talking!" ; @step-out
+*[bob] !happy "And now we're both talking!" ; @step-out
 // Enable autoplay
 +autoplay
 // Change wait
