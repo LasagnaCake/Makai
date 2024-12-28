@@ -13,7 +13,7 @@ namespace Makai::Ex::Game::Dialog {
 
 	struct Line {
 		Content	title;
-		Content	text;
+		Content	body;
 	};
 
 	struct Method {

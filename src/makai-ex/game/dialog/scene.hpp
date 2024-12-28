@@ -26,14 +26,41 @@ namespace Makai::Ex::Game::Dialog {
 			return actor(Hasher::hash(name));
 		}
 
-		void order(Line const& line, StringList const& actors);
-		void order(Line const& line, List<usize> const& actors);
+		template<Type::OneOf<usize, String> T>
+		void say(Line const& line, List<T> const& actors) {
+			for (auto& a: actors)
+				actor(a).say(line);
+		}
 
-		void order(Action const& action, StringList const& actors);
-		void order(Action const& action, List<usize> const& actors);
+		template<Type::OneOf<usize, String> T>
+		void add(Line const& line, List<T> const& actors) {
+			for (auto& a: actors)
+				actor(a).add(line);
+		}
 
-		void order(Emotion const& emotion, StringList const& actors);
-		void order(Emotion const& emotion, List<usize> const& actors);
+		template<Type::OneOf<usize, String> T>
+		void say(Content const& line, List<T> const& actors) {
+			for (auto& a: actors)
+				actor(a).say(line);
+		}
+
+		template<Type::OneOf<usize, String> T>
+		void add(Content const& line, List<T> const& actors) {
+			for (auto& a: actors)
+				actor(a).add(line);
+		}
+
+		template<Type::OneOf<usize, String> T>
+		void perform(Action const& action, List<T> const& actors) {
+			for (auto& a: actors)
+				actor(a).act(action);
+		}
+
+		template<Type::OneOf<usize, String> T>
+		void emote(Emotion const& emotion, List<T> const& actors) {
+			for (auto& a: actors)
+				actor(a).emote(emotion);
+		}
 	};
 }
 

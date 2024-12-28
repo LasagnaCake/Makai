@@ -11,16 +11,19 @@ namespace Makai::Ex::Game::Dialog {
 
 		virtual ~Actor() {}
 		
-		void show() final;
-		void hide() final;
+		void show() override {dialog->show();}
+		void hide() override {dialog->hide();}
 
-		virtual void enter()				{show();}
-		virtual void leave()				{hide();}
-		virtual void stepIn()				{}
-		virtual void stepOut()				{}
+		virtual void enter()	{show();			}
+		virtual void leave()	{hide();			}
+		virtual void stepIn()	{dialog->show();	}
+		virtual void stepOut()	{dialog->hide();	}
 
-		virtual void say(Line const& line)	{if (dialog) dialog->display(line);	}
-		virtual void add(Line const& line)	{if (dialog) dialog->append(line);	}
+		virtual void say(Content const& line)	{if (dialog) dialog->setBody(line);		}
+		virtual void add(Content const& line)	{if (dialog) dialog->appendBody(line);	}
+
+		virtual void say(Line const& line)		{if (dialog) dialog->display(line);		}
+		virtual void add(Line const& line)		{if (dialog) dialog->append(line);		}
 		
 		virtual usize perform(Action const& action) {
 			switch (action.hash) {
@@ -50,8 +53,10 @@ namespace Makai::Ex::Game::Dialog {
 
 	struct ActorRef {
 		Handle<Actor> actor;
-		void say(Line const& line)	{if (actor) actor->say(line);	}
-		void add(Line const& line)	{if (actor) actor->add(line);	}
+		void say(Content const& line)	{if (actor) actor->say(line);	}
+		void add(Content const& line)	{if (actor) actor->add(line);	}
+		void say(Line const& line)		{if (actor) actor->say(line);	}
+		void add(Line const& line)		{if (actor) actor->add(line);	}
 		usize perform(Action const& action) {
 			if (actor)
 				return actor->perform(action);

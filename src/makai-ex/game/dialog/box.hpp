@@ -8,22 +8,52 @@
 namespace Makai::Ex::Game::Dialog {
 	struct Box: IVisible {
 		Graph::Label	title;
-		Graph::Label	text;
+		Graph::Label	body;
 
 		struct Layers {
 			usize title;
-			usize text	= title;
+			usize body	= title;
 		};
 
 		virtual ~Box() {}
 
-		virtual void setRenderLayers(Layers const& layers);
+		virtual void setRenderLayers(Layers const& layers) {
+			title.setRenderLayer(layers.title);
+			title.setRenderLayer(layers.body);
+		}
 
-		void show() override;
-		void hide() override;
-		
-		virtual void display(Line const& content);
-		virtual void append(Line const& content);
+		void show() override {title.active = body.active = true;	}
+		void hide() override {title.active = body.active = false;	}
+
+		virtual void setTitle(Content const& line) {
+			title.text->content		= line.content;
+			title.material.color	= line.color;
+		}
+
+		virtual void setBody(Content const& line) {
+			body.text->content		= line.content;
+			body.material.color		= line.color;
+		}
+
+		virtual void appendTitle(Content const& line) {
+			title.text->content		+= line.content;
+			title.material.color	= line.color;
+		}
+
+		virtual void appendBody(Content const& line) {
+			body.text->content		+= line.content;
+			body.material.color		= line.color;
+		}
+
+		virtual void display(Line const& line)	{
+			setTitle(line.title);
+			setBody(line.body);
+		}
+
+		virtual void append(Line const& line)	{
+			appendTitle(line.title);
+			appendBody(line.body);
+		}
 	};
 }
 

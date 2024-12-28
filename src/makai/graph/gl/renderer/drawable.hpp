@@ -12,7 +12,7 @@
 /// @brief Graphical facilities.
 namespace Makai::Graph {
 	/// @brief Drawable object interface.
-	class IDrawable {
+	class IDrawable: IVisible {
 	public:
 		/// @brief Constructs the drawable object.
 		/// @param manual Whether the object is manually rendered. By default, it is `falsie`.
@@ -53,6 +53,9 @@ namespace Makai::Graph {
 
 		/// @brief Whether the object should render.
 		bool active	= true;
+
+		void show() override {active = true;	}
+		void hide() override {active = false;	}
 
 	protected:
 		/// @brief Draws the object to the screen. Must be implemented.
