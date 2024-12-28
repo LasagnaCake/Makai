@@ -18,7 +18,7 @@ Comprised of a few commands:
 | `'<number>` | For waiting. MUST be a whole number. |
 | `+<flag>` | For enabling flags. Effectively `$<flag> 1`. |
 | `-<flag>` | For disabling flags. Effectively `$<flag> 0`. |
-| `$<name> <value>` | For setting configuration values. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  |
+| `$<name> <value>` | For setting external values. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  |
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
 
