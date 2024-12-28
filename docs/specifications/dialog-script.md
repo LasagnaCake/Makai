@@ -4,6 +4,8 @@
 
 Comments are done like C/C++ comments.
 
+Text color will always be white, unless changed for the specified line.
+
 Comprised of four basic commands:
 
 | Comand | Usage |
@@ -13,14 +15,18 @@ Comprised of four basic commands:
 | `!<emotion>` | For specifying character emotes. Will apply to previous `[...]` command. |
 | `"<text>"` | For specifying character lines. Will apply to previous `[...]` command. |
 | `#<hex>` | For specifying text colour. Will apply to previous `"<text>"` comand. Must be a valid hex color. |
-| `.<number>` | For waiting. MUST be a whole number. |
+| `'<number>` | For waiting. MUST be a whole number. |
 | `+<flag>` | For enabling flags. |
 | `-<flag>` | For disabling flags. |
 | `$<name> <value>` | For setting values. For setting strings, use double quotes. |
-| `,` | For waiting for previous commands to finish. User cannot skip this wait. |
-| `;` | For waiting for user input to proceed. |
+| `.` | For waiting for previous commands to finish. User cannot skip this wait. |
+| `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
 
-Text color will always be white, unless changed for the specified line.
+Under consideration:
+
+| Comand | Usage |
+|:-:|:-|
+| `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command. |
 
 ### On the `[]` command
 
@@ -43,7 +49,7 @@ Each `<character>` may be followed by an emotion.
 $delay 600
 
 // Alice enters the scene, says something, steps out, then waits
-[alice] !neutral @enter @step-in "I'm currently talking!" ; @step-out ,
+[alice] !neutral @enter . @step-in "I'm currently talking!" ; @step-out .
 // Bob enters the scene
 [bob] !bored @enter @step-in "Now I'm talking..." ;
 // Alice steps in
@@ -55,14 +61,14 @@ $delay 600
 // Change wait
 $delay 120
 // Charlie steps in, angry
-[charlie] !angry @enter @step-in , "Can you two just SHUT UP!?" #f00 ; @step-out , .240 ,
+[charlie] !angry @enter @step-in . !scream "Can you two just SHUT UP!?" #f00 ; !angry @step-out '240 .
 // Bob and alice are now sad :(
-[alice, bob] !sad @step-in , "Sorry..." ;
+[alice, bob] !sad @step-in . "Sorry..." ;
 // Disable autoplay
 -autoplay
 // Reset wait
 $delay 600
 // All three exit the scene
-[alice, bob, charlie] @exit ,
+[...] @exit .
 
 ```
