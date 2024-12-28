@@ -21,14 +21,14 @@ Comprised of the following commands:
 | `$<name> <value>` | For setting external values. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  |
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
-| `*<command>` | For utilizing extended commands. |
+| `*<command>` | For utilizing extended & named commands. |
 
 And the following extended commands:
 
 | Comand | Usage |
 |:-:|:-|
-|`*[<character>, ...]`| Adds characters to the previous `[]` command. |
-|`*"<text>"`| Adds text to the previous `""` command. |
+|`*[<character>, ...]`| Adds characters to the previous `[]` command, instead of overwriting it. |
+|`*"<text>"`| Adds text to the previous spoken line, instead of overwriting it. |
 
 Under consideration:
 
