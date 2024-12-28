@@ -31,7 +31,7 @@ Under consideration:
 | `*<command>` | For utilizing extended commands. |
 | `*{...}` | For (possibly) interpreted, simple code, or extended command blocks. |
 
-Possible named commands:
+Possible extended commands:
 
 | Comand | Usage |
 |:-:|:-|
