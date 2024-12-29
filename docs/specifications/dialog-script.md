@@ -13,7 +13,7 @@ Comprised of the following commands:
 | Comand | Usage |
 |:-:|:-|
 | `[<character>, ...]` | For specifying characters. See ahead for more details. To add a character to the previous character roster, use the `*` modifier. |
-| `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, add a `:` in front. For multiple parameters, surround them with parentheses, and separate them with commas. |
+| `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. |
 | `!<emotion>` | For character emotions. Will apply to previous `[]` command. |
 | `"<text>"` | For character lines. Will apply to previous `[]` command. To add text to the previous spoken line, use the `*` modifier. |
 | `#<hex>` | For specifying text colour. Will apply to previous `""` comand. Must be a valid hex colour. |
@@ -23,7 +23,7 @@ Comprised of the following commands:
 | `$<name> <value>` | For setting external values. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  |
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
-| `*<command>` | For modifying commands, and using named commands. |
+| `*<command>` | For modifying certain commands. |
 
 And the following extended commands:
 
@@ -38,9 +38,9 @@ Under consideration:
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command. |
 | `&<act> {...}` | For defining acts (named blocks) in a file. These will only be executed when jumped to. |
-| `*{...}` | For (possibly) interpreted, simple code, or extended command blocks. |
-| `*goto <act>` | For performing different acts. Does not return to previous point. |
-| `*do <act>` | For performing different acts. Returns to previous point. |
+| `:{...}` | For (possibly) interpreted, simple code, or extended command blocks. |
+| `:goto <act>` | For performing different acts. Does not return to previous point. |
+| `:do <act>` | For performing different acts. Returns to previous point. |
 
 ### On the `[]` command
 
