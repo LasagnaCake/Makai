@@ -18,8 +18,8 @@ Comprised of the following commands:
 | `"<text>"` | For character lines. Will apply to previous `[]` command. To add text to the previous spoken line, use the `*` modifier. |
 | `#<hex>` | For specifying text colour. Will apply to previous `""` comand. Must be a valid hex colour. To use color references (names), use `##<name>`. |
 | `'<number>` | For waiting. MUST be a whole number. |
-| `+<flag>` | For enabling flags. Effectively `$<flag> 1`. |
-| `-<flag>` | For disabling flags. Effectively `$<flag> 0`. |
+| `+<flag>` | For enabling flags. Effectively `$<flag> "true"`. |
+| `-<flag>` | For disabling flags. Effectively `$<flag> "false"`. |
 | `$<name> <value>` | For setting external values. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  |
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
