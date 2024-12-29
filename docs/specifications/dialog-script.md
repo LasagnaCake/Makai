@@ -29,8 +29,8 @@ And the following extended commands:
 
 | Comand | Usage |
 |:-:|:-|
-|`*[<character>, ...]`| Adds characters to the previous `[]` command, instead of overwriting it. |
-|`*"<text>"`| Adds text to the previous spoken line, instead of overwriting it. |
+|`*[<character>, ...]`| Adds characters to the previous `[]` command, instead of overwriting it. If empty, does nothing. |
+|`*"<text>"`| Adds text to the previous spoken line, instead of overwriting it. If empty, does nothing. |
 
 Under consideration:
 
