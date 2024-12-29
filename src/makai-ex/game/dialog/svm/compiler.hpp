@@ -19,12 +19,40 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			compiled = false;
 			compileScript();
 		}
+
+		constexpr static bool isNameChar(char const& c) {
+			return (
+				isNumberChar(c)
+			||	isUppercaseChar(c)
+			||	isLowercaseChar(c)
+			||	(c == '_')
+			||	(c == '-')
+			);
+		}
 	
 	private:
 		bool		compiled = false;
 		String		script;
 		ByteCode	out;
 		usize		dataIndex = 0, lineIndex = 1, columnIndex = 1;
+
+		struct ScopeDelimiter {
+			char begin, end;
+			constexpr ScopeDelimiter(char const ch) {
+				switch(ch) {
+					case '[':
+					case ']': begin = '['; end = ']'; break;
+					case '(':
+					case ')': begin = '('; end = ')'; break;
+					case '{':
+					case '}': begin = '{'; end = '}'; break;
+					case '<':
+					case '>': begin = '<'; end = '>'; break;
+					case '"': begin = end = '"'; break;
+					case '\'': begin = end = '\''; break;
+				}
+			}
+		};
 
 		Operation curOp = Operation::DSO_NO_OP;
 
@@ -106,7 +134,6 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			if (sp) addOperation(Operation::DSO_SP);
 			addOperation(Operation::DSO_ACTION);
 			addOperand(Hasher::hash(str));
-			addOperand(Hasher::hash(str));
 		}
 
 		void addFlag(String const& str, bool const state = false) {
@@ -139,22 +166,24 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		template<class T>
-		StringList processParamPack(T& c, T& end, char const ch = ']') {
+		StringList processParamPack(T& c, T& end, ScopeDelimiter const& sd = ']') {
 			String buf;
 			StringList params;
 			bool space = true;
-			while (c != end && c != ch) {
+			while (c != end && c != sd.end) {
 				lineIterate(*c);
 				if (!isNullOrSpaceChar(*c) && *c != ',' && space)
 					invalidParameterError();
 				else if (isNullOrSpaceChar(*c)) {
 					if (!buf.empty())
 						space = true;
-				} else if (*c == ',') {
+				} else if (isScopeChar(*c) && !isQuoteChar(*c))
+					params.appendBack(processParamPack(c, end, *c++))
+				else if (*c == ',') {
 					params.pushBack(buf);
 					buf.clear();
-				} else if (*c == '"') {
-					params.pushBack(processString(++c, end));
+				} else if (isQuoteChar(*c)) {
+					params.pushBack(processString(c, end, *c++));
 				}
 				else buf.pushBack(*c);
 				++c;
@@ -163,9 +192,9 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		template<class T>
-		String processString(T& c, T& end) {
+		String processString(T& c, T& end, char const scope = '"') {
 			String buf;
-			while (c != end && *c != '"') {
+			while (c != end && *c != scope) {
 				lineIterate(*c);
 				if (*c == '\\') {
 					buf.pushBack(*c++);
@@ -214,22 +243,6 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			return buf;
 		}
 
-		static bool isNameChar(char const& c) {
-			return (
-				(c >= '0' && c <= '9')
-			||	(c >= 'a' && c <= 'z')
-			||	(c >= 'A' && c <= 'Z')
-			||	(c == '_')
-			||	(c == '-')
-			);
-		}
-
-		static bool isNumberChar(char const& c) {
-			return (
-				(c >= '0' && c <= '9')
-			);
-		}
-
 		void processScript() {
 			auto c		= script.begin();
 			auto end	= script.end();
@@ -258,6 +271,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						String cmd = processCommand(++c, end);
 						while (c != end && isNullOrSpaceChar(*c)) ++c;
 						addAction(cmd, *c == '(');
+						if (*c == '(')
+							addParamPack(processParamPack(++c, end, ')'));
 						break;
 					}
 					case '!':
@@ -276,7 +291,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						if (*c == '(')
 							addParamPack(processParamPack(++c, end, ')'));
 						else addStringOperand(
-							*c++ == '"'
+							isQuoteChar(*c++)
 							? processString(c, end)
 							: processCommand(c, end)
 						);
@@ -296,16 +311,6 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void removeComments() {
 			script = Regex::replace(script, "(\\/\\/.*$|\\/\\*(.|\\n)*?(\\*\\/))+", "");
 			script = Regex::replace(script, "(\\/\\*(.*|\\n)*)", "");
-		}
-
-		static StringList consumeStrings(String& str) {
-			auto matches = Regex::find(str, ("(.|\n)*?"));
-			str = Regex::replace(str, "(\"(.|\\n)*?\")", "\"");
-			StringList strings;
-			strings.resize(matches.size());
-			for (Regex::Match& m: matches)
-				strings.pushBack(m.match);
-			return strings;
 		}
 
 		void lineIterate(char const c) {
