@@ -130,6 +130,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			if (strs[0] == "...") esp = 0b10;
 			for (usize i = 0; i < strs.size(); ++i) {
 				if (strs[i] == "...") {
+					if (i != 0)
+						duplicateError();
 					addOperation(Operation::DSO_ACTOR, esp);
 					continue;
 				}
@@ -375,6 +377,15 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void malformedError() {
 			throw Error::InvalidValue(
 				"Malformed operation/parameter!",
+				toString("Line: ", lineIndex, "\nColumn: ", columnIndex),
+				CTL_CPP_PRETTY_SOURCE
+			);
+		}
+
+		[[noreturn]]
+		void duplicateError() {
+			throw Error::InvalidValue(
+				"Duplicate operation/parameter!",
 				toString("Line: ", lineIndex, "\nColumn: ", columnIndex),
 				CTL_CPP_PRETTY_SOURCE
 			);
