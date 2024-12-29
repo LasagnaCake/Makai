@@ -161,8 +161,13 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void addColor(String const& str) {
-			addOperation(Operation::DSO_SET_GLOBAL);
+			addOperation(Operation::DSO_COLOR);
 			addOperand(Graph::Color::toHexCodeRGBA(Graph::Color::fromHexCodeString(str)));
+		}
+
+		void addColorRef(String const& str) {
+			addOperation(Operation::DSO_COLOR, 1);
+			addOperand(Hasher::hash(str));
 		}
 
 		void addWait(String const& str) {
@@ -333,6 +338,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						break;
 					}
 					case '#':
+						lineIterate(*c++);
+						if (c == end) malformedError();
+						if (*c == '#')
+							addColorRef(processCommand(++c, end));
 						addColor(processHex(++c, end));
 					case '\'':
 						addWait(processNumberInt(++c, end));
