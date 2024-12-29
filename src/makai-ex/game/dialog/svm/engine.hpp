@@ -184,8 +184,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			uint64 to;
 			if (!operand64(to)) return;
 			if (!binary.jumps.contains(to))
-				setErrorAndStop(ErrorCode::DSEEC_INVALID_JUMP);
+				return setErrorAndStop(ErrorCode::DSEEC_INVALID_JUMP);
 			op = binary.jumps[to];
+			if (op >= binary.code.size())
+				return setErrorAndStop(ErrorCode::DSEEC_INVALID_JUMP);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
