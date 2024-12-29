@@ -38,9 +38,8 @@ Under consideration:
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command. |
 | `&<act> {...}` | For defining acts (named blocks) in a file. These will only be executed when jumped to. |
-| `:{...}` | For (possibly) interpreted, simple code, or extended command blocks. |
-| `:goto <act>` | For performing different acts. Does not return to previous point. |
-| `:do <act>` | For performing different acts. Returns to previous point. |
+| `next <act>` | For performing different acts. Does not return to previous point. |
+| `perform <act>` | For performing different acts. Returns to previous point. |
 
 ### On the `[]` command
 
