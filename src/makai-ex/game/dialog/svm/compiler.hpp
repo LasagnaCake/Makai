@@ -183,13 +183,12 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						space = true;
 				} else if (isScopeChar(*c) && !isQuoteChar(*c))
 					params.appendBack(processParamPack(c, end, *c++))
+				else if (isQuoteChar(*c))
+					params.pushBack(processString(c, end, *c++));
 				else if (*c == ',') {
 					params.pushBack(buf);
 					buf.clear();
-				} else if (isQuoteChar(*c)) {
-					params.pushBack(processString(c, end, *c++));
-				}
-				else buf.pushBack(*c);
+				} else buf.pushBack(*c);
 				++c;
 			}
 			if (!buf.empty()) params.pushBack(buf);
