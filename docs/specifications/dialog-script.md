@@ -56,8 +56,6 @@ Each `<character>` may be followed by an emotion.
 ## Example
 
 ```
-// Example dialog:
-
 // Set frames to wait for user input before proceeding
 $delay 600
 
@@ -74,7 +72,8 @@ $delay 600
 // Change wait
 $delay 120
 // Charlie steps in, angry
-[charlie] !angry @enter . @step-in !scream "Can you two just SHUT UP!?" #f00 ; !angry @step-out '240 .
+[charlie] !angry @enter . @step-in !scream "Can you two just SHUT UP!?" #f00 ;
+!angry *"I'm trying to sleep here." ; @step-out '240 .
 // Bob and alice are now sad :(
 [alice, bob] !sad @step-in . "Sorry..." ;
 // Disable autoplay
