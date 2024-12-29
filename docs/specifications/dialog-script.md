@@ -12,7 +12,7 @@ Comprised of the following commands:
 
 | Comand | Usage |
 |:-:|:-|
-| `[<character>, ...]` | For specifying characters. See ahead for more details. To add a character to the previous character roster, use the `*` modifier. |
+| `[<characters>]` | For specifying characters. See ahead for more details. To add a character to the previous character roster, use the `*` modifier. |
 | `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. |
 | `!<emotion>` | For character emotions. Will apply to previous `[]` command. |
 | `"<text>"` | For character lines. Will apply to previous `[]` command. To add text to the previous spoken line, use the `*` modifier. |
@@ -29,7 +29,7 @@ And the following extended commands:
 
 | Comand | Usage |
 |:-:|:-|
-|`*[<character>, ...]`| Adds characters to the previous `[]` command, instead of overwriting it. If empty, does nothing. |
+|`*[<characters>]`| Adds characters to the previous `[]` command, instead of overwriting it. If empty, does nothing. |
 |`*"<text>"`| Adds text to the previous spoken line, instead of overwriting it. If empty, does nothing. |
 
 Under consideration:
@@ -49,9 +49,7 @@ May be empty, to specify global scope.
 
 May be `[...]`, to specify all characters.
 
-May be `[... : <character> ...]`, to specify all characters, except the ones listed.
-
-Each `<character>` may be followed by an emotion.
+May be `[..., <characters>]`, to specify all characters, except the ones listed.
 
 ## Example
 
