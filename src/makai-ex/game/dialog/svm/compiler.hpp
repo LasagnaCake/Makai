@@ -192,6 +192,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				else buf.pushBack(*c);
 				++c;
 			}
+			if (!buf.empty()) params.pushBack(buf);
 			return params;
 		}
 
