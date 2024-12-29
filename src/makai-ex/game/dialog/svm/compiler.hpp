@@ -84,6 +84,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 
 		static String format(String str) {
 			str = Regex::replace(str, "\\\\", "\\");
+			str = Regex::replace(str, "\\/", "/");
 			str = Regex::replace(str, "\\n", "\n");
 			str = Regex::replace(str, "\\t", "\t");
 			str = Regex::replace(str, "\\v", "\v");
