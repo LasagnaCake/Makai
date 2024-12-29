@@ -12,7 +12,6 @@ namespace Makai::Ex::Game::Dialog::SVM {
 	enum class Operation: uint16 {
 		DSO_NO_OP,
 		DSO_HALT,
-		DSO_SP,
 		DSO_ACTOR,
 		DSO_LINE,
 		DSO_EMOTION,
@@ -29,7 +28,13 @@ namespace Makai::Ex::Game::Dialog::SVM {
 	constexpr uint64 SCRIPT_VERSION		= 0;
 	constexpr uint64 SCRIPT_MIN_VERSION	= 0;
 
-	constexpr Operation asOperation(uint16 const op) {return static_cast<Operation>(op);}
+	constexpr uint16 SP_FLAG_MASK	= 0xf << 12;
+	constexpr uint16 OPERATION_MASK	= ~SP_FLAG_MASK;
+
+	constexpr Operation	asOperation(uint16 const op)	{return static_cast<Operation>(op & OPERATION_MASK);	}
+	
+	constexpr uint16	spFlag(uint16 const op)			{return (op & 0xF) << 12;								}
+	constexpr uint16	spFlag(Operation const op)		{return (enumcast(op) & SP_FLAG_MASK) >> 12;			}
 
 	using JumpTable = Map<uint64, uint64>;
 	using JumpEntry = typename JumpTable::PairType;

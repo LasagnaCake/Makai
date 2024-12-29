@@ -90,8 +90,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			return str;
 		}
 
-		void addOperation(Operation const op) {
-			out.code.pushBack(enumcast(op));
+		void addOperation(Operation const op, uint16 sp = 0) {
+			out.code.pushBack(enumcast(op) | spFlag(sp));
 		}
 
 		void addOperand(uint64 const op) {
@@ -119,8 +119,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				return;
 			}
 			for (usize i = 0; i < strs.size(); ++i) {
-				if (i) addOperation(Operation::DSO_SP);
-				addOperation(Operation::DSO_ACTOR);
+				if (i)	addOperation(Operation::DSO_ACTOR, 1);
+				else	addOperation(Operation::DSO_ACTOR);
 				addOperand(Hasher::hash(strs[i]));
 			}
 		}
@@ -131,8 +131,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void addAction(String const& str, bool const sp = false) {
-			if (sp) addOperation(Operation::DSO_SP);
-			addOperation(Operation::DSO_ACTION);
+			if (sp)	addOperation(Operation::DSO_ACTION, 1);
+			else	addOperation(Operation::DSO_ACTION);
 			addOperand(Hasher::hash(str));
 		}
 
@@ -143,8 +143,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void addGlobal(String const& str, bool const sp = false) {
-			if (sp) addOperation(Operation::DSO_SP);
-			addOperation(Operation::DSO_SET_GLOBAL);
+			if (sp)	addOperation(Operation::DSO_SET_GLOBAL, 1);
+			else	addOperation(Operation::DSO_SET_GLOBAL);
 		}
 
 		void addColor(String const& str) {
@@ -250,7 +250,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				switch (*c) {
 					case '*':
-						addOperation(Operation::DSO_SP);
+						addOperation(Operation::DSO_NO_OP, 1);
 						break;
 					case '.':
 						addOperation(Operation::DSO_SYNC);

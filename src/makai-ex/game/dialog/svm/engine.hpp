@@ -28,10 +28,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void process() {
 			if (engineState != State::DSES_RUNNING) return;
 			if (op >= binary.code.size()) return opHalt();
-			switch (asOperation(binary.code[op++])) {
-				case (Operation::DSO_NO_OP):						break;
+			curOp = binary.code[op++];
+			switch (asOperation(curOp)) {
+				case (Operation::DSO_NO_OP):		opSetSP();		break;
 				case (Operation::DSO_HALT):			opHalt();		break;
-				case (Operation::DSO_SP):			opEnableSP();	break;
 				case (Operation::DSO_ACTOR):		opActor();		break;
 				case (Operation::DSO_LINE):			opLine();		break;
 				case (Operation::DSO_EMOTION):		opEmotion();	break;
@@ -92,12 +92,18 @@ namespace Makai::Ex::Game::Dialog::SVM {
 	private:
 		ByteCode binary;
 
-		bool sp() {
-			if (spMode) {
-				spMode = false;
-				return true;
-			}
-			return false;
+		Operands64	actors;
+		uint16		spMode		= 0;
+		State		engineState	= State::DSES_READY;
+		usize		op			= 0;
+		ErrorCode	err			= ErrorCode::DSEEC_NONE;
+		uint16		curOp		= 0;
+
+		uint16 sp() {
+			auto sm = spMode;
+			if (!sm) sm = spFlag(curOp);
+			spMode = 0;
+			return spMode;
 		}
 
 		void opInvalidOp() {
@@ -108,7 +114,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			engineState = State::DSES_FINISHED;
 		}
 
-		void opEnableSP() {spMode = true;}
+		void opSetSP() {spMode = spFlag(curOp);}
 
 		void opActor() {
 			uint64 actor;
@@ -222,12 +228,6 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			op += 4;
 			return true;
 		}
-
-		Operands64	actors;
-		bool		spMode		= true;
-		State		engineState	= State::DSES_READY;
-		usize		op			= 0;
-		ErrorCode	err			= ErrorCode::DSEEC_NONE;
 	};
 }
 
