@@ -188,7 +188,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			String buf;
 			StringList params;
 			bool space = true;
-			while (c != end && c != sd.end) {
+			while (c < end && *c != sd.end) {
 				lineIterate(*c);
 				if (!isNullOrSpaceChar(*c) && *c != ',' && space)
 					invalidParameterError();
@@ -212,7 +212,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		template<class T>
 		String processString(T& c, T& end, char const scope = '"') {
 			String buf;
-			while (c != end && *c != scope) {
+			while (c < end && *c != scope) {
 				lineIterate(*c);
 				if (*c == '\\') {
 					buf.pushBack(*c++);
@@ -228,7 +228,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			String buf;
 			if (!isNameChar(*c))
 				malformedError();
-			while (c != end && isNameChar(*c)) {
+			while (c < end && isNameChar(*c)) {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
@@ -241,7 +241,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			auto start = c;
 			if (!isHexChar(*c))
 				malformedError();
-			while (c != end && isHexChar(*c) && (c - start) < 8) {
+			while (c < end && isHexChar(*c) && (c - start) < 8) {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
@@ -254,7 +254,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			auto start = c;
 			if (!isNumberChar(*c))
 				malformedError();
-			while (c != end && isNumberChar(*c)) {
+			while (c < end && isNumberChar(*c)) {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
@@ -268,7 +268,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			if (!isNumberChar(*c))
 				malformedError();
 			bool dotted = false;
-			while (c != end && (isNumberChar(*c) || (*c == '.'))) {
+			while (c < end && (isNumberChar(*c) || (*c == '.'))) {
 				if (*c == '.') {
 					if (!dotted) dotted = true;
 					else break;
@@ -286,7 +286,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				switch (*c) {
 					case '*':
-						while (c != end && isNullOrSpaceChar(*c))
+						while (c < end && isNullOrSpaceChar(*c))
 							lineIterate(*++c);
 						if (!isExtendedOperationChar(*c))
 							invalidExtendedOperationError();
@@ -326,7 +326,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						break;
 					case '$': {
 						String cmd = processCommand(++c, end);
-						while (c != end && isNullOrSpaceChar(*c)) lineIterate(*++c);
+						while (c < end && isNullOrSpaceChar(*c)) lineIterate(*++c);
 						addGlobal(processCommand(++c, end), *c == '(');
 						if (*c == '(')
 							addParamPack(processParamPack(++c, end, ')'));
@@ -342,7 +342,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						if (c == end) malformedError();
 						if (*c == '#')
 							addColorRef(processCommand(++c, end));
-						addColor(processHex(++c, end));
+						addColor(processHex(c, end));
 					case '\'':
 						addWait(processNumberInt(++c, end));
 						break;
