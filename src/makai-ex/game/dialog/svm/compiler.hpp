@@ -179,6 +179,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		template<class T>
 		String processCommand(T& c, T& end) {
 			String buf;
+			if (!isNameChar(*c))
+				malformedError();
 			while (c != end && isNameChar(*c)) {
 				lineIterate(*c);
 				buf.pushBack(*c++);
@@ -190,6 +192,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		String processHex(T& c, T& end) {
 			String buf;
 			auto start = c;
+			if (!isHexChar(*c))
+				malformedError();
 			while (c != end && isHexChar(*c) && (c - start) < 8) {
 				lineIterate(*c);
 				buf.pushBack(*c++);
@@ -201,7 +205,9 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		String processNumber(T& c, T& end) {
 			String buf;
 			auto start = c;
-			while (c != end && isNumber(*c)) {
+			if (!isNumberChar(*c))
+				malformedError();
+			while (c != end && isNumberChar(*c)) {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
