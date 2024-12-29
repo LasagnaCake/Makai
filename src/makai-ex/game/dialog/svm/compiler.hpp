@@ -7,18 +7,24 @@
 
 namespace Makai::Ex::Game::Dialog::SVM {
 	struct Compiler {
+		Compiler()										{					}
+		Compiler(String const& script): script(script)	{compileScript();	}
 
-		ByteCode compile() {
-			ByteCode out;
-			removeComments();
-			processScript();
+		ByteCode result() {
 			return out;
+		}
+
+		void compile(String const& script) {
+			this->script = script;
+			compiled = false;
+			compileScript();
 		}
 	
 	private:
+		bool		compiled = false;
 		String		script;
 		ByteCode	out;
-		usize		dataIndex, lineIndex, columnIndex;
+		usize		dataIndex = 0, lineIndex = 1, columnIndex = 0;
 
 		Operation curOp = Operation::DSO_NO_OP;
 
@@ -26,12 +32,19 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			MX::memcpy((void*)buf, (void*)&val, sizeof(uint64));
 		}
 
-		usize getStringLineCount(String const& str) {
-			usize count = 0;
-			for(char const& c: str)
-				if (c == '\n')
-					++count;
-			return count;
+		void initialize() {
+			out = {};
+			dataIndex	= 0;
+			lineIndex	= 1;
+			columnIndex	= 0;
+		}
+
+		void compileScript() {
+			if (compiled) return;
+			compiled = true;
+			initialize();
+			removeComments();
+			processScript();
 		}
 
 		String format(String str) {
@@ -149,7 +162,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				if (*c == '\\') {
 					buf.pushBack(*c++);
-					if (c >= end) sizeError();
+					if (c >= end) malformedError();
 				}
 				buf.pushBack(*c++);
 			}
@@ -290,13 +303,31 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 		
 		[[noreturn]]
-		void invalidOperationError();
+		void invalidOperationError() {
+			throw Error::InvalidValue(
+				"Invalid operation!",
+				toString("Line: ", lineIndex, "\nColumn: ", columnIndex),
+				CTL_CPP_PRETTY_SOURCE
+			);
+		}
 		
 		[[noreturn]]
-		void sizeError();
+		void malformedError() {
+			throw Error::InvalidValue(
+				"Malformed operation/parameter!",
+				toString("Line: ", lineIndex, "\nColumn: ", columnIndex),
+				CTL_CPP_PRETTY_SOURCE
+			);
+		}
 
 		[[noreturn]]
-		void invalidParameterError();
+		void invalidParameterError() {
+			throw Error::InvalidValue(
+				"Invalid parameter!",
+				toString("Line: ", lineIndex, "\nColumn: ", columnIndex),
+				CTL_CPP_PRETTY_SOURCE
+			);
+		}
 	};
 }
 

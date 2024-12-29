@@ -20,13 +20,14 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			DSEEC_NONE,
 			DSEEC_INVALID_OPERATION,
 			DSEEC_INVALID_OPERAND,
+			DSEEC_INVALID_JUMP,
 		};
 
 		virtual ~Engine() {}
 
 		void process() {
 			if (engineState != State::DSES_RUNNING) return;
-			if (op >= binary.code.size()) opHalt();
+			if (op >= binary.code.size()) return opHalt();
 			switch (asOperation(binary.code[op++])) {
 				case (Operation::DSO_NO_OP):						break;
 				case (Operation::DSO_HALT):			opHalt();		break;
@@ -179,7 +180,9 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void opJump() {
 			uint64 to;
 			if (!operand64(to)) return;
-			op = to;
+			if (!binary.jumps.contains(to))
+				setErrorAndStop(ErrorCode::DSEEC_INVALID_JUMP);
+			op = binary.jumps[to];
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
