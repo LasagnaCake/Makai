@@ -23,7 +23,7 @@ Comprised of the following commands:
 | `$<name> <value>` | For setting external values. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  |
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. |
-| `*<command>` | For modifying certain commands. |
+| `*` | For modifying certain commands. |
 
 And the following extended commands:
 
