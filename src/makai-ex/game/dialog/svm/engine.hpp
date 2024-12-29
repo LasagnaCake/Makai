@@ -112,16 +112,19 @@ namespace Makai::Ex::Game::Dialog::SVM {
 
 		void opActor() {
 			uint64 actor;
+			bool isInSPMode = sp();
 			if (!operand64(actor)) return;
-			if (sp())	actors.pushBack(actor);
-			else		actors.clear().pushBack(actor);
+			if (!actor && !isInSPMode)	actors.clear();
+			if (isInSPMode)				actors.pushBack(actor);
+			else						actors.clear().pushBack(actor);
 		}
 
 		void opLine() {
 			uint64 line;
 			if (!operand64(line)) return;
-			if (sp())	opSay(actors, line);
-			else		opAdd(actors, line);
+			if (sp() && line)
+				opAdd(actors, binary.data[line-1]);
+			else opAdd(actors, line ? binary.data[line-1] : "");
 		}
 
 		void opEmotion() {

@@ -79,6 +79,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 
 		void addLine(String const& str) {
 			addOperation(Operation::DSO_LINE);
+			if (str.empty())
+				return addOperand(0);
 			addStringOperand(str);
 		}
 
