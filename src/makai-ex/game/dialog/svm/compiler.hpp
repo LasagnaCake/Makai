@@ -105,6 +105,11 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			addOperand(Graph::Color::toHexCodeRGBA(Graph::Color::fromHexCodeString(str)));
 		}
 
+		void addWait(String const& str) {
+			addOperation(Operation::DSO_SET_GLOBAL);
+			addOperand(toUInt64(str));
+		}
+
 		void addParamPack(StringList const& strs) {
 			for (String const& str: strs)
 				out.data.pushBack(format(str));
@@ -172,6 +177,17 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			return buf;
 		}
 
+		template<class T>
+		String processNumber(T& c, T& end) {
+			String buf;
+			auto start = c;
+			while (c != end && isNumber(*c)) {
+				lineIterate(*c);
+				buf.pushBack(*c++);
+			}
+			return buf;
+		}
+
 		static bool isNameChar(char const& c) {
 			return (
 				(c >= '0' && c <= '9')
@@ -182,10 +198,15 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			);
 		}
 
+		static bool isNumberChar(char const& c) {
+			return (
+				(c >= '0' && c <= '9')
+			);
+		}
+
 		void processScript() {
-			auto c = script.begin();
-			auto end = script.end();
-			String buf;
+			auto c		= script.begin();
+			auto end	= script.end();
 			while (c != end) {
 				lineIterate(*c);
 				switch (*c) {
@@ -213,9 +234,9 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						addAction(cmd, *c == '(');
 						break;
 					}
-					case '!': {
+					case '!':
 						addEmotion(processCommand(++c, end));
-					}
+						break;
 					case '+':
 						addFlag(processCommand(++c, end), true);
 						break;
@@ -238,8 +259,9 @@ namespace Makai::Ex::Game::Dialog::SVM {
 					case '#':
 						addColor(processHex(++c, end));
 					case '\'':
+						addWait(processNumber(++c, end));
 						break;
-					default: invalidOperationError();
+					default: if (!isNullOrSpaceChar(*c)) invalidOperationError();
 				}
 				++c;
 			}
