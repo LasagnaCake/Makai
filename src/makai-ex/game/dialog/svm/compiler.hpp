@@ -236,12 +236,30 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		template<class T>
-		String processNumber(T& c, T& end) {
+		String processNumberInt(T& c, T& end) {
 			String buf;
 			auto start = c;
 			if (!isNumberChar(*c))
 				malformedError();
 			while (c != end && isNumberChar(*c)) {
+				lineIterate(*c);
+				buf.pushBack(*c++);
+			}
+			return buf;
+		}
+
+		template<class T>
+		String processNumberFloat(T& c, T& end) {
+			String buf;
+			auto start = c;
+			if (!isNumberChar(*c))
+				malformedError();
+			bool dotted = false;
+			while (c != end && (isNumberChar(*c) || (*c == '.'))) {
+				if (*c == '.') {
+					if (!dotted) dotted = true;
+					else break;
+				}
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
@@ -309,7 +327,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 					case '#':
 						addColor(processHex(++c, end));
 					case '\'':
-						addWait(processNumber(++c, end));
+						addWait(processNumberInt(++c, end));
 						break;
 					default: if (!isNullOrSpaceChar(*c)) invalidOperationError();
 				}
