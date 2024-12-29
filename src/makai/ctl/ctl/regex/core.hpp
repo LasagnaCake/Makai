@@ -63,6 +63,18 @@ namespace Regex {
 		String	match;
 	};
 
+	/// @brief Counts all occurrences of a given regular expression.
+	/// @param str String to search in.
+	/// @param expr Regular expression to match.
+	/// @return Match count.
+	inline usize count(String const& str, String const& expr) {
+		std::smatch rm;
+		usize result;
+		auto cs = stdstr(str);
+		std::regex_search(cs, rm, makeRegex(expr));
+		return rm.size() - 2;
+	}
+
 	/// @brief Finds all occurrences of a given regular expression.
 	/// @param str String to search in.
 	/// @param expr Regular expression to match.

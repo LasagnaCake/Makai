@@ -749,7 +749,7 @@ public:
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator pointing to end of range.
 	/// @return Reference to self.
-	constexpr SelfType& appendBack(IteratorType const& begin, IteratorType const& end) {
+	constexpr SelfType& appendBack(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		return appendBack(SelfType(begin, end));
 	}
 
@@ -757,7 +757,7 @@ public:
 	/// @param begin Reverse iterator to beginning of range.
 	/// @param end Reverse iterator pointing to end of range.
 	/// @return Reference to self.
-	constexpr SelfType& appendBack(ReverseIteratorType const& begin, ReverseIteratorType const& end) {
+	constexpr SelfType& appendBack(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		return appendBack(SelfType(begin, end));
 	}
 
