@@ -47,7 +47,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			processScript();
 		}
 
-		String format(String str) {
+		static String format(String str) {
+			str = Regex::replace(str, "\\\\", "\\");
 			str = Regex::replace(str, "\\n", "\n");
 			str = Regex::replace(str, "\\t", "\t");
 			str = Regex::replace(str, "\\v", "\v");
@@ -56,7 +57,6 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			str = Regex::replace(str, "\\b", "\b");
 			str = Regex::replace(str, "\\0", "");
 			str = Regex::replace(str, "\\\"", "\"");
-			str = Regex::replace(str, "\\\\", "\\");
 			if (!str.nullTerminated())
 				str.pushBack('\0');
 			return str;
@@ -68,7 +68,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 
 		void addOperand(uint64 const op) {
 			uint16 opbuf[4];
-			opcopy(opbuf, dataIndex++);
+			opcopy(opbuf, op);
 			out.code.appendBack(opbuf);
 		}
 
