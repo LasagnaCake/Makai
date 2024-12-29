@@ -54,8 +54,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		virtual void opDelay(uint64 const time)															{}
 		virtual void opWaitForActions(bool const async)													{}
 		virtual void opWaitForUser()																	{}
-		virtual void opSetConfigValue(uint64 const param, uint64 const value)							{}
-		virtual void opSetConfigString(uint64 const param, String const& string)						{}
+		virtual void opSetConfigValue(uint64 const param, String const value)							{}
+		virtual void opSetConfigValues(uint64 const param, Parameters const& string)					{}
 		virtual void opNamedOperation(uint64 const name, Parameters const& params)						{}
 
 		constexpr ErrorCode error() const {
@@ -161,8 +161,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void opSetGlobal() {
 			uint64 param, value;
 			if (!operands64(param, value)) return;
-			if (sp())	opSetConfigString(param, value);
-			else		opSetConfigValue(param, value);
+			if (!sp()) return opSetConfigValue(param, binary.data[value]);
+			uint64 vcount;
+			if (!operand64(vcount)) return;
+			opSetConfigValues(param, binary.data.sliced(value, value + vcount));
 		}
 
 		void opNamedOp() {
@@ -194,21 +196,21 @@ namespace Makai::Ex::Game::Dialog::SVM {
 
 		constexpr bool operand16(uint16& opval) {
 			if (!assertOperand(1)) return false;
-			MX::memcpy(&opval, &binary.code[op], sizeof(uint16));
+			MX::memmove(&opval, &binary.code[op], sizeof(uint16));
 			op += 1;
 			return true;
 		}
 
 		constexpr bool operand32(uint32& opval) {
 			if (!assertOperand(2)) return false;
-			MX::memcpy(&opval, &binary.code[op], sizeof(uint32));
+			MX::memmove(&opval, &binary.code[op], sizeof(uint32));
 			op += 2;
 			return true;
 		}
 
 		constexpr bool operand64(uint64& opval) {
 			if (!assertOperand(4)) return false;
-			MX::memcpy(&opval, &binary.code[op], sizeof(uint64));
+			MX::memmove(&opval, &binary.code[op], sizeof(uint64));
 			op += 4;
 			return true;
 		}
