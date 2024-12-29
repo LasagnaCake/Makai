@@ -30,7 +30,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			);
 		}
 
-		constexpr static bool isSPOperationChar(char const& c) {
+		constexpr static bool isExtendedOperationChar(char const& c) {
 			return (
 				(c == '"')
 			||	(c == '[')
@@ -275,7 +275,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 					case '*':
 						while (c != end && isNullOrSpaceChar(*c))
 							lineIterate(*++c);
-						if (!isSPOperationChar(*c))
+						if (!isExtendedOperationChar(*c))
 							invalidExtendedOperationError();
 						addOperation(Operation::DSO_NO_OP, 1);
 						break;
