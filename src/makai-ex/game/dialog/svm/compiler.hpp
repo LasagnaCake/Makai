@@ -29,6 +29,13 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			||	(c == '-')
 			);
 		}
+
+		constexpr static bool isSPOperationChar(char const& c) {
+			return (
+				(c == '"')
+			||	(c == '[')
+			);
+		}
 	
 	private:
 		bool		compiled = false;
@@ -119,8 +126,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				return;
 			}
 			for (usize i = 0; i < strs.size(); ++i) {
-				if (i)	addOperation(Operation::DSO_ACTOR, 1);
-				else	addOperation(Operation::DSO_ACTOR);
+				addOperation(Operation::DSO_ACTOR,(i) ? 1 : 0);
 				addOperand(Hasher::hash(strs[i]));
 			}
 		}
@@ -131,8 +137,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void addAction(String const& str, bool const sp = false) {
-			if (sp)	addOperation(Operation::DSO_ACTION, 1);
-			else	addOperation(Operation::DSO_ACTION);
+			addOperation(Operation::DSO_ACTION, sp ? 1 : 0);
 			addOperand(Hasher::hash(str));
 		}
 
@@ -143,8 +148,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void addGlobal(String const& str, bool const sp = false) {
-			if (sp)	addOperation(Operation::DSO_SET_GLOBAL, 1);
-			else	addOperation(Operation::DSO_SET_GLOBAL);
+			addOperation(Operation::DSO_SET_GLOBAL, sp ? 1 : 0);
 		}
 
 		void addColor(String const& str) {
@@ -250,6 +254,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				switch (*c) {
 					case '*':
+						while (c != end && isNullOrSpaceChar(*c))
+							lineIterate(*++c);
+						if (!isSPOperationChar(*c))
+							invalidExtendedOperationError();
 						addOperation(Operation::DSO_NO_OP, 1);
 						break;
 					case '.':
@@ -269,7 +277,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						break;
 					case '@': {
 						String cmd = processCommand(++c, end);
-						while (c != end && isNullOrSpaceChar(*c)) ++c;
+						while (c != end && isNullOrSpaceChar(*c)) lineIterate(*++c);
 						addAction(cmd, *c == '(');
 						if (*c == '(')
 							addParamPack(processParamPack(++c, end, ')'));
@@ -286,7 +294,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						break;
 					case '$': {
 						String cmd = processCommand(++c, end);
-						while (c != end && isNullOrSpaceChar(*c)) ++c;
+						while (c != end && isNullOrSpaceChar(*c)) lineIterate(*++c);
 						addGlobal(processCommand(++c, end), *c == '(');
 						if (*c == '(')
 							addParamPack(processParamPack(++c, end, ')'));
@@ -324,6 +332,15 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void invalidOperationError() {
 			throw Error::InvalidValue(
 				"Invalid operation!",
+				toString("Line: ", lineIndex, "\nColumn: ", columnIndex),
+				CTL_CPP_PRETTY_SOURCE
+			);
+		}
+
+		[[noreturn]]
+		void invalidExtendedOperationError() {
+			throw Error::InvalidValue(
+				"This operation is not an extensible operation!",
 				toString("Line: ", lineIndex, "\nColumn: ", columnIndex),
 				CTL_CPP_PRETTY_SOURCE
 			);
