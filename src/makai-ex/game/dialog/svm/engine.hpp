@@ -47,11 +47,16 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			}
 		}
 
-		virtual void opSay(Operands64 const& actors, String const& line)								{}
-		virtual void opAdd(Operands64 const& actors, String const& line)								{}
-		virtual void opEmote(Operands64 const& actors, uint64 const emotion)							{}
-		virtual void opPerform(Operands64 const& actors, uint64 const action, Parameters const& params)	{}
-		virtual void opColor(Operands64 const& actors, uint64 const color)								{}
+		struct ActiveCast {
+			Operands64	actors;
+			bool		exclude	= false;
+		};
+
+		virtual void opSay(ActiveCast const& actors, String const& line)								{}
+		virtual void opAdd(ActiveCast const& actors, String const& line)								{}
+		virtual void opEmote(ActiveCast const& actors, uint64 const emotion)							{}
+		virtual void opPerform(ActiveCast const& actors, uint64 const action, Parameters const& params)	{}
+		virtual void opColor(ActiveCast const& actors, uint64 const color)								{}
 		virtual void opDelay(uint64 const time)															{}
 		virtual void opWaitForActions(bool const async)													{}
 		virtual void opWaitForUser()																	{}
@@ -92,7 +97,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 	private:
 		ByteCode binary;
 
-		Operands64	actors;
+		bool		excludeMode = true;
+		ActiveCast	actors;
 		uint16		spMode		= 0;
 		State		engineState	= State::DSES_READY;
 		usize		op			= 0;
@@ -117,12 +123,24 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void opSetSP() {spMode = spFlag(curOp);}
 
 		void opActor() {
+			uint16 spm	= sp();
+			uint16 spco	= spFlag(curOp);
+			if (spco && spm != spco)
+				spm = spco;
+			if (spm == 2) {
+				actors = {.exclude = true};
+				return;		
+			}
 			uint64 actor;
-			bool isInSPMode = sp();
 			if (!operand64(actor)) return;
-			if (!actor && !isInSPMode)	actors.clear();
-			if (isInSPMode)				actors.pushBack(actor);
-			else						actors.clear().pushBack(actor);
+			if (!actor && !spm)	actors = {};
+			else if (spm) {
+				if (!actor || spm != 1) return;
+				actors.actors.pushBack(actor);
+			} else {
+				actors = {};
+				if (actor) actors.actors.pushBack(actor);
+			}
 		}
 
 		void opLine() {
