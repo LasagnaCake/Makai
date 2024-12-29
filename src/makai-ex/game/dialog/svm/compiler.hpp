@@ -83,7 +83,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void addActors(StringList const& strs) {
-			if (strs.empty) {
+			if (strs.empty()) {
 				addOperation(Operation::DSO_ACTOR);
 				addOperand(0);
 				return;
