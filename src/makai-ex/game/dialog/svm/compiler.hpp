@@ -83,6 +83,11 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void addActors(StringList const& strs) {
+			if (strs.empty) {
+				addOperation(Operation::DSO_ACTOR);
+				addOperand(0);
+				return;
+			}
 			for (usize i = 0; i < strs.size(); ++i) {
 				if (i) addOperation(Operation::DSO_SP);
 				addOperation(Operation::DSO_ACTOR);
@@ -152,7 +157,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				else buf.pushBack(*c);
 				++c;
 			}
-			return buf;
+			return params;
 		}
 
 		template<class T>
@@ -261,7 +266,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 						while (c != end && isNullOrSpaceChar(*c)) ++c;
 						addGlobal(processCommand(++c, end), *c == '(');
 						if (*c == '(')
-							addParamPack(processParamPack(++c, end));
+							addParamPack(processParamPack(++c, end, ')'));
 						else addStringOperand(
 							*c++ == '"'
 							? processString(c, end)
