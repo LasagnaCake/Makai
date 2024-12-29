@@ -16,7 +16,7 @@ Comprised of the following commands:
 | `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. |
 | `!<emotion>` | For character emotions. Will apply to previous `[]` command. |
 | `"<text>"` | For character lines. Will apply to previous `[]` command. To add text to the previous spoken line, use the `*` modifier. |
-| `#<hex>` | For specifying text colour. Will apply to previous `""` comand. Must be a valid hex colour. |
+| `#<hex>` | For specifying text colour. Will apply to previous `""` comand. Must be a valid hex colour. To use color references (names), use `##<name>`. |
 | `'<number>` | For waiting. MUST be a whole number. |
 | `+<flag>` | For enabling flags. Effectively `$<flag> 1`. |
 | `-<flag>` | For disabling flags. Effectively `$<flag> 0`. |
