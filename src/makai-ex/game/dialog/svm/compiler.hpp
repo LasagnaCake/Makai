@@ -24,7 +24,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		bool		compiled = false;
 		String		script;
 		ByteCode	out;
-		usize		dataIndex = 0, lineIndex = 1, columnIndex = 0;
+		usize		dataIndex = 0, lineIndex = 1, columnIndex = 1;
 
 		Operation curOp = Operation::DSO_NO_OP;
 
@@ -36,7 +36,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			out = {};
 			dataIndex	= 0;
 			lineIndex	= 1;
-			columnIndex	= 0;
+			columnIndex	= 1;
 		}
 
 		void compileScript() {
@@ -310,7 +310,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 
 		void lineIterate(char const c) {
 			if (c == '\n') {
-				columnIndex = 0;
+				columnIndex = 1;
 				++lineIndex;
 			} else ++columnIndex;
 		}
