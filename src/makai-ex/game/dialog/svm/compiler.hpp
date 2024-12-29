@@ -126,8 +126,14 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				addOperand(0);
 				return;
 			}
+			uint16 esp = 0;
+			if (strs[0] == "...") esp = 0b10;
 			for (usize i = 0; i < strs.size(); ++i) {
-				addOperation(Operation::DSO_ACTOR,(i) ? 1 : 0);
+				if (strs[i] == "...") {
+					addOperation(Operation::DSO_ACTOR, esp);
+					continue;
+				}
+				addOperation(Operation::DSO_ACTOR, (i) ? 1 : 0);
 				addOperand(Hasher::hash(strs[i]));
 			}
 		}
@@ -187,12 +193,12 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				else if (isQuoteChar(*c))
 					params.pushBack(processString(c, end, *c++));
 				else if (*c == ',') {
-					params.pushBack(buf);
+					params.pushBack(buf.stripped());
 					buf.clear();
 				} else buf.pushBack(*c);
 				++c;
 			}
-			if (!buf.empty()) params.pushBack(buf);
+			if (!buf.empty()) params.pushBack(buf.stripped());
 			return params;
 		}
 
