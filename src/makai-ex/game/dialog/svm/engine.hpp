@@ -57,6 +57,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		virtual void opEmote(ActiveCast const& actors, uint64 const emotion)							{}
 		virtual void opPerform(ActiveCast const& actors, uint64 const action, Parameters const& params)	{}
 		virtual void opColor(ActiveCast const& actors, uint64 const color)								{}
+		virtual void opColorRef(ActiveCast const& actors, uint64 const color)							{}
 		virtual void opDelay(uint64 const time)															{}
 		virtual void opWaitForActions(bool const async)													{}
 		virtual void opWaitForUser()																	{}
@@ -169,7 +170,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void opColor() {
 			uint64 color;
 			if (!operand64(color)) return;
-			opEmote(actors, color);
+			if (sp())	opColorRef(actors, color);
+			else		opColor(actors, color);
 		}
 
 		void opWait() {
