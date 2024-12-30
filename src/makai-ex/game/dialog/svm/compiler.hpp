@@ -310,9 +310,14 @@ namespace Makai::Ex::Game::Dialog::SVM {
 					case '@': {
 						String cmd = processCommand(++c, end);
 						while (c != end && isNullOrSpaceChar(*c)) lineIterate(*++c);
-						addAction(cmd, *c == '(');
-						if (*c == '(')
-							addParamPack(processParamPack(++c, end, ')'));
+						if (*c == '(') {
+							auto pp = processParamPack(++c, end, ')');
+							if (pp.empty()) addAction(cmd, 0);
+							else {
+								addAction(cmd, 1);
+								addParamPack(pp);
+							}
+						} else addAction(cmd, 0);
 						break;
 					}
 					case '!':
