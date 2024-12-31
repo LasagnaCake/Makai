@@ -9,7 +9,8 @@ namespace Makai::Ex::Game::Dialog {
 	struct Scene: IPerformer {
 		using Actors	= List<Handle<Actor>>;
 		using Cast		= Map<usize, Handle<Actor>>;
-		Cast cast;
+		Cast			cast;
+		Instance<Box>	dialog;
 
 		ActorRef actor(usize const& hash) {
 			if (cast.contains(hash))
@@ -21,11 +22,11 @@ namespace Makai::Ex::Game::Dialog {
 			return actor(Hasher::hash(name));
 		}
 
-		void color(Vector4 const& color) override		{			}
-		void say(Content const& line) override			{			}
-		void add(Content const& line) override			{			}
-		usize emote(Emotion const& emotion) override	{return 0;	}
-		usize perform(Action const& action) override	{return 0;	}
+		void color(Vector4 const& color) override		{													}
+		usize say(Content const& line) override			{if (dialog) dialog->setBody(line);		return 0;	}
+		usize add(Content const& line) override			{if (dialog) dialog->appendBody(line);	return 0;	}
+		usize emote(Emotion const& emotion) override	{return 0;											}
+		usize perform(Action const& action) override	{return 0;											}
 
 		template<Type::OneOf<usize, String> T>
 		void say(Line const& line, List<T> const& actors) {

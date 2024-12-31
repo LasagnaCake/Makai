@@ -21,11 +21,11 @@ namespace Makai::Ex::Game::Dialog {
 
 		void color(Vector4 const& color) override	{if (dialog) dialog->setBodyColor(color);	}
 
-		void say(Content const& line) override		{if (dialog) dialog->setBody(line);			}
-		void add(Content const& line) override		{if (dialog) dialog->appendBody(line);		}
+		usize say(Content const& line) override		{if (dialog) return dialog->setBody(line);		return 0;	}
+		usize add(Content const& line) override		{if (dialog) return dialog->appendBody(line);	return 0;	}
 
-		virtual void say(Line const& line)			{if (dialog) dialog->display(line);			}
-		virtual void add(Line const& line)			{if (dialog) dialog->append(line);			}
+		virtual usize say(Line const& line)			{if (dialog) return dialog->display(line);		return 0;	}
+		virtual usize add(Line const& line)			{if (dialog) return dialog->append(line);		return 0;	}
 		
 		usize perform(Action const& action) override {
 			switch (action.hash) {
@@ -55,10 +55,11 @@ namespace Makai::Ex::Game::Dialog {
 
 	struct ActorRef {
 		Handle<Actor> actor;
-		void say(Content const& line)	{if (actor) actor->say(line);	}
-		void add(Content const& line)	{if (actor) actor->add(line);	}
-		void say(Line const& line)		{if (actor) actor->say(line);	}
-		void add(Line const& line)		{if (actor) actor->add(line);	}
+		void color(Vector4 const& color)	{if (actor) actor->color(color);				}
+		usize say(Content const& line)		{if (actor) return actor->say(line); return 0;	}
+		usize add(Content const& line)		{if (actor) return actor->add(line); return 0;	}
+		usize say(Line const& line)			{if (actor) return actor->say(line); return 0;	}
+		usize add(Line const& line)			{if (actor) return actor->add(line); return 0;	}
 		usize perform(Action const& action) {
 			if (actor)
 				return actor->perform(action);

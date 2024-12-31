@@ -1,13 +1,13 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_PLAYER_H
-#define MAKAILIB_EX_HAME_DIALOG_PLAYER_H
+#ifndef MAKAILIB_EX_GAME_DIALOG_ACTIONPLAYER_H
+#define MAKAILIB_EX_HAME_DIALOG_ACTIONPLAYER_H
 
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game::Dialog {
-	struct Player: IUpdateable, IPlayable {
+	struct ActionPlayer: IUpdateable, IPlayable {
 		using Script = Co::Generator<usize>;
 
-		Player() {isFinished = true;}
+		ActionPlayer() {isFinished = true;}
 
 		virtual Script script() = 0;
 
@@ -22,30 +22,30 @@ namespace Makai::Ex::Game::Dialog {
 			}
 		}
 
-		Player& start() override final {
+		ActionPlayer& start() override final {
 			dialog		= script();
 			isFinished	= false;
 			counter		= 0;
 			return play();
 		}
 
-		Player& setAutoplay(bool const state) {autoplay = state;}
+		ActionPlayer& setAutoplay(bool const state) {autoplay = state; return *this;	}
 
-		Player& stop()	override final	{isFinished = true;	}
-		Player& play()	override final	{paused = false;	}
-		Player& pause()	override final	{paused = true;		}
+		ActionPlayer& stop()	override final		{isFinished = true; return *this;	}
+		ActionPlayer& play()	override final		{paused = false; return *this;		}
+		ActionPlayer& pause()	override final		{paused = true; return *this;		}
 
-		Player& next() {
+		ActionPlayer& next() {
 			if (isFinished) return;
 			counter = dialog.next();
-			counter = 0;
 			if (!dialog) isFinished = true;
+			return *this;
 		}
 
 		Input::Manager		input;
 		Dictionary<String>	bindmap	= Dictionary<String>({
-			{"next", "diag-next"},
-			{"skip", "diag-skip"}
+			{"next", "dialog-next"},
+			{"skip", "dialog-skip"}
 		});
 
 	private:

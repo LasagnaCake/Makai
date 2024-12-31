@@ -38,9 +38,10 @@ namespace Makai::Ex::Game::Dialog {
 			setTitleColor(line.color);
 		}
 
-		virtual void setBody(Content const& line) {
+		virtual usize setBody(Content const& line) {
 			body.text->content = line.content;
 			setBodyColor(line.color);
+			return 0;
 		}
 
 		virtual void appendTitle(Content const& line) {
@@ -48,19 +49,20 @@ namespace Makai::Ex::Game::Dialog {
 			setTitleColor(line.color);
 		}
 
-		virtual void appendBody(Content const& line) {
+		virtual usize appendBody(Content const& line) {
 			body.text->content += line.content;
 			setBodyColor(line.color);
+			return 0;
 		}
 
-		virtual void display(Line const& line) {
+		virtual usize display(Line const& line) {
 			setTitle(line.title);
-			setBody(line.body);
+			return setBody(line.body);
 		}
 
-		virtual void append(Line const& line) {
+		virtual usize append(Line const& line) {
 			appendTitle(line.title);
-			appendBody(line.body);
+			return appendBody(line.body);
 		}
 	};
 }

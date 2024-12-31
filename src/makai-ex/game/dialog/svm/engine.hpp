@@ -61,7 +61,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		virtual void opDelay(uint64 const time)															{}
 		virtual void opWaitForActions(bool const async)													{}
 		virtual void opWaitForUser()																	{}
-		virtual void opSetConfigValue(uint64 const param, String const value)							{}
+		virtual void opSetConfigValue(uint64 const param, String const& value)							{}
 		virtual void opSetConfigValues(uint64 const param, Parameters const& string)					{}
 		virtual void opNamedOperation(uint64 const name, Parameters const& params)						{}
 
@@ -164,7 +164,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			if (!sp()) return opPerform(actors, action, nullptr);
 			uint64 params, psize;
 			if (!operands64(params, psize)) return;
-			opPerform(actors, action, binary.data.sliced(params, params + psize));
+			opPerform(actors, action, psize ? binary.data.sliced(params, params + psize) : nullptr);
 		}
 
 		void opColor() {
@@ -194,7 +194,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			if (!sp()) return opSetConfigValue(param, binary.data[value]);
 			uint64 vcount;
 			if (!operand64(vcount)) return;
-			opSetConfigValues(param, binary.data.sliced(value, value + vcount));
+			opSetConfigValues(param, vcount ? binary.data.sliced(value, value + vcount) : nullptr);
 		}
 
 		void opNamedOp() {
@@ -203,7 +203,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			if (!sp()) opNamedOperation(name, nullptr);
 			uint64 params, psize;
 			if (!operands64(params, psize)) return;
-			opNamedOperation(name, binary.data.sliced(params, params + psize));
+			opNamedOperation(name, psize ? binary.data.sliced(params, params + psize) : nullptr);
 		}
 
 		void opJump() {

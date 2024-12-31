@@ -41,7 +41,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		bool		compiled = false;
 		String		script;
 		ByteCode	out;
-		usize		dataIndex = 0, lineIndex = 1, columnIndex = 1;
+		usize		dataIndex = 1, lineIndex = 1, columnIndex = 1;
 
 		struct ScopeDelimiter {
 			char begin, end;
@@ -68,8 +68,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void initialize() {
-			out = {};
-			dataIndex	= 0;
+			out = {.data = {""}};
+			dataIndex	= 1;
 			lineIndex	= 1;
 			columnIndex	= 1;
 		}
@@ -178,6 +178,11 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void addParamPack(StringList const& strs) {
 			for (String const& str: strs)
 				out.data.pushBack(format(str));
+			if (strs.empty()) {
+				addOperand(0);
+				addOperand(0);
+				return;
+			}
 			addOperand(dataIndex);
 			addOperand(strs.size());
 			dataIndex += strs.size();
