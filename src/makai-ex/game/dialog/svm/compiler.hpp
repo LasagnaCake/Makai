@@ -5,12 +5,14 @@
 
 #include "bytecode.hpp"
 
+/// @brief Script Virtual Machine.
 namespace Makai::Ex::Game::Dialog::SVM {
+	/// @brief Script compiler.
 	struct Compiler {
 		Compiler()										{					}
 		Compiler(String const& script): script(script)	{compileScript();	}
 
-		ByteCode result() {
+		Script result() {
 			return out;
 		}
 
@@ -38,10 +40,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 	
 	private:
-		bool		compiled = false;
-		String		script;
-		ByteCode	out;
-		usize		dataIndex = 1, lineIndex = 1, columnIndex = 1;
+		bool	compiled = false;
+		String	script;
+		Script	out;
+		usize	dataIndex = 1, lineIndex = 1, columnIndex = 1;
 
 		struct ScopeDelimiter {
 			char begin, end;

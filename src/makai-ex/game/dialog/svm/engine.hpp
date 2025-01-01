@@ -73,7 +73,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			return engineState;
 		}
 
-		void setProgram(ByteCode const& program) {
+		void setProgram(Script const& program) {
 			endProgram();
 			binary = program;
 			engineState = State::DSES_READY;
@@ -96,7 +96,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 	private:
-		ByteCode binary;
+		Script binary;
 
 		bool		excludeMode = true;
 		ActiveCast	actors;
@@ -108,7 +108,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 
 		uint16 sp() {
 			auto sm = spMode;
-			if (!sm) sm = spFlag(curOp);
+			if (!sm) sm = getSPFlag(curOp);
 			spMode = 0;
 			return spMode;
 		}
@@ -121,11 +121,11 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			engineState = State::DSES_FINISHED;
 		}
 
-		void opSetSP() {spMode = spFlag(curOp);}
+		void opSetSP() {spMode = getSPFlag(curOp);}
 
 		void opActor() {
 			uint16 spm	= sp();
-			uint16 spco	= spFlag(curOp);
+			uint16 spco	= getSPFlag(curOp);
 			if (spco && spm != spco)
 				spm = spco;
 			if (spm == 2) {
