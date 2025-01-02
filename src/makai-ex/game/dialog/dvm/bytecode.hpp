@@ -115,13 +115,18 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		fh.dataSize = out.size() - fh.dataStart;
 		// Jump tables
 		fh.jumpTableStart = fh.dataStart + fh.dataSize;
-		out.expand(code.jumps.size() * sizeof(JumpEntry), '\0');
-		MX::memcpy(((JumpEntry*)(out.data() + fh.jumpTableStart)), code.jumps.data(), code.jumps.size());
+		if (!code.jumps.empty()) {
+			out.expand(code.jumps.size() * sizeof(JumpEntry), '\0');
+			MX::memcpy(((JumpEntry*)(out.data() + fh.jumpTableStart)), code.jumps.data(), code.jumps.size());
+		}
 		fh.jumpTableSize = code.jumps.size() * sizeof(JumpEntry);
 		// Bytecode
 		fh.byteCodeStart = fh.jumpTableStart + fh.jumpTableSize;
-		out.expand(code.code.size() * sizeof(Operation), '\0');
-		MX::memcpy(((uint16*)(out.data() + fh.byteCodeStart)), code.code.data(), code.code.size());
+		if (!code.code.empty()) {
+			out.expand(code.code.size() * sizeof(Operation), '\0');
+			MX::memcpy(((uint16*)(out.data() + fh.byteCodeStart)), code.code.data(), code.code.size());
+		}
+		fh.byteCodeSize = code.code.size() * sizeof(Operation);
 		// Main header
 		MX::memcpy(((void*)out.data()), &fh, fh.headerSize);
 		return out;
