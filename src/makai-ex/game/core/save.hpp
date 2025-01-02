@@ -61,7 +61,7 @@ namespace Makai::Ex::Game {
 		}
 		/// @brief Returns whether there is content stored.
 		/// @return Whether contents exists.
-		bool exists() const {return view().is_object();}
+		bool exists() const {return isObject();}
 
 	private:
 		void saveToFile(String const& path) const {
