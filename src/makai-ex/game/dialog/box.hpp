@@ -5,18 +5,28 @@
 
 #include "core.hpp"
 
+/// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
+	/// @brief Dialog box.
 	struct Box: IVisible {
+		/// @brief Dialog box title.
 		Graph::Label	title;
+		/// @brief Dialog box text body.
 		Graph::Label	body;
 
+		/// @brief Dialog box render layers.
 		struct Layers {
+			/// @brief Title layer.
 			usize title;
+			/// @brief Body layer.
 			usize body	= title;
 		};
 
+		/// @brief Destructor.
 		virtual ~Box() {}
 
+		/// @brief Sets the dialog box's render layers.
+		/// @param layers Layers to set box to.
 		virtual void setRenderLayers(Layers const& layers) {
 			title.setRenderLayer(layers.title);
 			body.setRenderLayer(layers.body);

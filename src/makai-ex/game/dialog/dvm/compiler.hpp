@@ -1,27 +1,38 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_SVM_COMPILER_H
-#define MAKAILIB_EX_GAME_DIALOG_SVM_COMPILER_H
+#ifndef MAKAILIB_EX_GAME_DIALOG_DVM_COMPILER_H
+#define MAKAILIB_EX_GAME_DIALOG_DVM_COMPILER_H
 
 #include <makai/makai.hpp>
 
 #include "bytecode.hpp"
 
-/// @brief Script Virtual Machine.
-namespace Makai::Ex::Game::Dialog::SVM {
-	/// @brief Script compiler.
+/// @brief Dialog Virtual Machine.
+namespace Makai::Ex::Game::Dialog::DVM {
+	/// @brief Dialog source compiler.
 	struct Compiler {
+		/// @brief Empty constructor.
 		Compiler()										{					}
-		Compiler(String const& script): script(script)	{compileScript();	}
+		/// @brief Compiles a dialog source.
+		/// @param source Source to compile.
+		Compiler(String const& source): source(source)	{compileScript();	}
 
-		Script result() {
+		/// @brief Returns the compiled dialog.
+		/// @return Compiled dialog.
+		Dialog result() {
 			return out;
 		}
 
-		void compile(String const& script) {
-			this->script = script;
+		/// @brief Compiles the dialog.
+		/// @return Reference to self.
+		Compiler& compile(String const& source) {
+			this->source = source;
 			compiled = false;
 			compileScript();
+			return *this;
 		}
 
+		/// @brief Returns whether the given character is a valid name character.
+		/// @param c Character to check.
+		/// @return Whether character is a valid name character.
 		constexpr static bool isNameChar(char const& c) {
 			return (
 				isNumberChar(c)
@@ -32,6 +43,9 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			);
 		}
 
+		/// @brief Returns whether the given character is a valid extendable operation.
+		/// @param c Character to check.
+		/// @return Whether character is a valid extendable operation.
 		constexpr static bool isExtendedOperationChar(char const& c) {
 			return (
 				(c == '"')
@@ -40,10 +54,16 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 	
 	private:
+		/// @brief Whether the dialog source was compiled.
 		bool	compiled = false;
-		String	script;
-		Script	out;
-		usize	dataIndex = 1, lineIndex = 1, columnIndex = 1;
+		/// @brief Dialog source code.
+		String	source;
+		/// @brief Resulting compiled dialog binary.
+		Dialog	out;
+		/// @brief Current data index.
+		usize	dataIndex = 1;
+		/// @brief Values used for errors.		
+		usize	lineIndex = 1, columnIndex = 1;
 
 		struct ScopeDelimiter {
 			char begin, end;
@@ -239,6 +259,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
+			if (buf.empty()) malformedError();
 			return buf;
 		}
 
@@ -252,6 +273,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
+			if (buf.empty()) malformedError();
 			return buf;
 		}
 
@@ -265,6 +287,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
+			if (buf.empty()) malformedError();
 			return buf;
 		}
 
@@ -283,12 +306,13 @@ namespace Makai::Ex::Game::Dialog::SVM {
 				lineIterate(*c);
 				buf.pushBack(*c++);
 			}
+			if (buf.empty()) malformedError();
 			return buf;
 		}
 
 		void processScript() {
-			auto c		= script.begin();
-			auto end	= script.end();
+			auto c		= source.begin();
+			auto end	= source.end();
 			while (c != end) {
 				lineIterate(*c);
 				switch (*c) {
@@ -365,8 +389,8 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		}
 
 		void removeComments() {
-			script = Regex::replace(script, "(\\/\\/.*$|\\/\\*(.|\\n)*?(\\*\\/))+", "");
-			script = Regex::replace(script, "(\\/\\*(.*|\\n)*)", "");
+			source = Regex::replace(source, "(\\/\\/.*$|\\/\\*(.|\\n)*?(\\*\\/))+", "");
+			source = Regex::replace(source, "(\\/\\*(.*|\\n)*)", "");
 		}
 
 		void lineIterate(char const c) {

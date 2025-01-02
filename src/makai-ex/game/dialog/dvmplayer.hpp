@@ -1,24 +1,24 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_ACTIONPLAYER_H
-#define MAKAILIB_EX_HAME_DIALOG_ACTIONPLAYER_H
+#ifndef MAKAILIB_EX_HAME_DIALOG_DVMPLAYER_H
+#define MAKAILIB_EX_HAME_DIALOG_DVMPLAYER_H
 
 #include <makai/makai.hpp>
 
-#include "svm/svm.hpp"
+#include "dvm/dvm.hpp"
 
 #include "scene.hpp"
 
 namespace Makai::Ex::Game::Dialog {
-	struct ScriptPlayer: private SVM::Engine, IPlayable, IUpdateable {
-		ScriptPlayer(Instance<Scene> const& scene = nullptr): SVM::Engine() {}
+	struct DVMPlayer: private DVM::Engine, IPlayable, IUpdateable {
+		DVMPlayer(Instance<Scene> const& scene = nullptr): DVM::Engine() {}
 
 		Instance<Scene> scene;
 
-		ScriptPlayer(String const& binpath, Instance<Scene> const& scene = nullptr) {
+		DVMPlayer(String const& binpath, Instance<Scene> const& scene = nullptr) {
 			setProgram(binpath);
 		}
 
-		ScriptPlayer& setProgram(String const& binpath) {
-			Engine::setProgram(SVM::fromBytes(File::getBinary(binpath)));
+		DVMPlayer& setProgram(String const& binpath) {
+			Engine::setProgram(DVM::fromBytes(File::getBinary(binpath)));
 		}
 
 		Input::Manager		input;
@@ -34,20 +34,22 @@ namespace Makai::Ex::Game::Dialog {
 			if (autoplay && waiting()) return;
 			if (waitForUser && userAdvanced())	next();
 			else if (!waiting())				next();
+			else if (!waitForUser)				next();
 		}
 
-		ScriptPlayer& start() override final {
+		DVMPlayer& start() override final {
 			inSync		=
 			autoplay	=
 			waitForUser	= false;
 			actionDelay = 0;
 			resetCounters();
+			beginProgram();
 			return play();
 		}
 
-		ScriptPlayer& stop()	override final		{isFinished = true; return *this;	}
-		ScriptPlayer& play()	override final		{paused = false; return *this;		}
-		ScriptPlayer& pause()	override final		{paused = true; return *this;		}
+		DVMPlayer& stop()	override final		{isFinished = true; return *this; beginProgram();	}
+		DVMPlayer& play()	override final		{paused = false; return *this;						}
+		DVMPlayer& pause()	override final		{paused = true; return *this;						}
 
 	protected:
 		virtual Vector4 getColorByName(uint64 const name) {
@@ -84,7 +86,7 @@ namespace Makai::Ex::Game::Dialog {
 		usize delay = 600;
 
 	private:
-		ScriptPlayer& next() {
+		DVMPlayer& next() {
 			if (isFinished) return;
 			inSync		=
 			waitForUser	= false;
@@ -166,11 +168,11 @@ namespace Makai::Ex::Game::Dialog {
 			waitForUser = true;
 		}
 
-		void opSetConfigValue(uint64 const name, String const& value) override final {
+		void opSetGlobalValue(uint64 const name, String const& value) override final {
 			setGlobal(name, value);
 		}
 
-		void opSetConfigValues(uint64 const name, Parameters const& values) override final {
+		void opSetGlobalValues(uint64 const name, Parameters const& values) override final {
 			setGlobal(name, values);
 		}
 
@@ -213,7 +215,7 @@ namespace Makai::Ex::Game::Dialog {
 		bool syncing() {
 			if (inSync && actionCounter < actionDelay)
 				return true;
-			actionCounter = 0;
+			resetCounters();
 			return false;
 		}
 

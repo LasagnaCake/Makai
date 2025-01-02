@@ -1,14 +1,18 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_SVM_ENGINE_H
-#define MAKAILIB_EX_GAME_DIALOG_SVM_ENGINE_H
+#ifndef MAKAILIB_EX_GAME_DIALOG_DVM_ENGINE_H
+#define MAKAILIB_EX_GAME_DIALOG_DVM_ENGINE_H
 
 #include <makai/makai.hpp>
 
 #include "bytecode.hpp"
 
-namespace Makai::Ex::Game::Dialog::SVM {
+/// @brief Dialog Virtual Machine.
+namespace Makai::Ex::Game::Dialog::DVM {
+	/// @brief Dialog engine.
 	struct Engine {
+		/// @brief Function parameters.
 		using Parameters = Nullable<StringList>;
 
+		/// @brief Engine state.
 		enum class State {
 			DSES_READY,
 			DSES_RUNNING,
@@ -16,6 +20,7 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			DSES_FINISHED,
 		};
 
+		/// @brief Engine error code.
 		enum class ErrorCode {
 			DSEEC_NONE,
 			DSEEC_INVALID_OPERATION,
@@ -23,8 +28,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			DSEEC_INVALID_JUMP,
 		};
 
+		/// @brief Destructor.
 		virtual ~Engine() {}
 
+		/// @brief Processes one dialog operation.
 		void process() {
 			if (engineState != State::DSES_RUNNING) return;
 			if (op >= binary.code.size()) return opHalt();
@@ -47,63 +54,115 @@ namespace Makai::Ex::Game::Dialog::SVM {
 			}
 		}
 
+		/// @brief Cast on which to operate on.
 		struct ActiveCast {
+			/// @brief Actors to operate.
 			Operands64	actors;
+			/// @brief Whether the actor list is for excluded actors.
 			bool		exclude	= false;
 		};
 
+		/// @brief Say operation.
+		/// @param actors Actors to operate on.
+		/// @param line Line to say.
 		virtual void opSay(ActiveCast const& actors, String const& line)								{}
+		/// @brief Add operation.
+		/// @param actors Actors to operate on.
+		/// @param line Line to add.
 		virtual void opAdd(ActiveCast const& actors, String const& line)								{}
+		/// @brief Emote operation.
+		/// @param actors Actors to operate on.
+		/// @param emotion Emotion to emote.
 		virtual void opEmote(ActiveCast const& actors, uint64 const emotion)							{}
+		/// @brief Perform operation.
+		/// @param actors Actors to operate on.
+		/// @param action Action to perform.
+		/// @param params Action parameters.
 		virtual void opPerform(ActiveCast const& actors, uint64 const action, Parameters const& params)	{}
+		/// @brief Text color operation.
+		/// @param actors Actors to operate on.
+		/// @param color Hex color to set text to.
 		virtual void opColor(ActiveCast const& actors, uint64 const color)								{}
+		/// @brief Text color operation.
+		/// @param actors Actors to operate on.
+		/// @param color Color name to set text to.
 		virtual void opColorRef(ActiveCast const& actors, uint64 const color)							{}
+		/// @brief Delay operation.
+		/// @param time Time to wait.
 		virtual void opDelay(uint64 const time)															{}
+		/// @brief Synchronization operation.
+		/// @param async Whether to wait asynchronously.
 		virtual void opWaitForActions(bool const async)													{}
+		/// @brief User input operation.
 		virtual void opWaitForUser()																	{}
-		virtual void opSetConfigValue(uint64 const param, String const& value)							{}
-		virtual void opSetConfigValues(uint64 const param, Parameters const& string)					{}
+		/// @brief Set global operation.
+		/// @param param Global to set.
+		/// @param value Value to set to.
+		virtual void opSetGlobalValue(uint64 const param, String const& value)							{}
+		/// @brief Set global operation.
+		/// @param param Global to set.
+		/// @param values Values to set to.
+		virtual void opSetGlobalValues(uint64 const param, Parameters const& values)					{}
+		/// @brief Named operation.
+		/// @param name Operation to execute.
+		/// @param params Parameters to pass to operation.
 		virtual void opNamedOperation(uint64 const name, Parameters const& params)						{}
 
+		/// @brief Returns the error code.
+		/// @return Error code.
 		constexpr ErrorCode error() const {
 			return err;
 		}
 
+		/// @brief Returns the engine state.
+		/// @return Engine state.
 		constexpr State state() const {
 			return engineState;
 		}
 
-		void setProgram(Script const& program) {
+		/// @brief Sets the dialog to process.
+		/// @param program Dialog to process.
+		void setProgram(Dialog const& program) {
 			endProgram();
 			binary = program;
 			engineState = State::DSES_READY;
 		}
 
+		/// @brief Starts the processing of the dialog.
 		void beginProgram() {
 			engineState	= State::DSES_RUNNING;
 			op			= 0;
 		}
 
+		/// @brief Stops the processing of the dialog.
 		void endProgram() {
 			if (engineState == State::DSES_RUNNING)
 				engineState = State::DSES_FINISHED;
 		}
 
 	protected:
+		/// @brief Sets the error code and stops execution.
+		/// @param code Error code to set.
 		void setErrorAndStop(ErrorCode const code) {
 			err = code;
 			engineState = State::DSES_ERROR;
 		}
 
 	private:
-		Script binary;
+		/// @brief Dialog being processed.
+		Dialog binary;
 
-		bool		excludeMode = true;
+		/// @brief Actors being operated on.
 		ActiveCast	actors;
+		/// @brief SP mode being used.
 		uint16		spMode		= 0;
+		/// @brief Engine state.
 		State		engineState	= State::DSES_READY;
+		/// @brief Operation pointer.
 		usize		op			= 0;
+		/// @brief Error code.
 		ErrorCode	err			= ErrorCode::DSEEC_NONE;
+		/// @brief Current operation.
 		uint16		curOp		= 0;
 
 		uint16 sp() {
@@ -191,10 +250,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		void opSetGlobal() {
 			uint64 param, value;
 			if (!operands64(param, value)) return;
-			if (!sp()) return opSetConfigValue(param, binary.data[value]);
+			if (!sp()) return opSetGlobalValue(param, binary.data[value]);
 			uint64 vcount;
 			if (!operand64(vcount)) return;
-			opSetConfigValues(param, vcount ? binary.data.sliced(value, value + vcount) : nullptr);
+			opSetGlobalValues(param, vcount ? binary.data.sliced(value, value + vcount) : nullptr);
 		}
 
 		void opNamedOp() {

@@ -1,9 +1,10 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_SVM_BYTECODE_H
-#define MAKAILIB_EX_GAME_DIALOG_SVM_BYTECODE_H
+#ifndef MAKAILIB_EX_GAME_DIALOG_DVM_BYTECODE_H
+#define MAKAILIB_EX_GAME_DIALOG_DVM_BYTECODE_H
 
 #include <makai/makai.hpp>
 
-namespace Makai::Ex::Game::Dialog::SVM {
+/// @brief Dialog Virtual Machine.
+namespace Makai::Ex::Game::Dialog::DVM {
 	/// @brief Underlying code binary representation.
 	using Binary		= List<uint16>;
 	/// @brief 64-bit operand list.
@@ -76,13 +77,13 @@ namespace Makai::Ex::Game::Dialog::SVM {
 	/// @brief Jump position entry.
 	using JumpEntry = typename JumpTable::PairType;
 
-	/// @brief Dialog script.
-	struct Script {
+	/// @brief Compiled dialog.
+	struct Dialog {
 		/// @brief Jump table.
 		JumpTable	jumps;
-		/// @brief Script data.
+		/// @brief Dialog data.
 		StringList	data;
-		/// @brief Script bytecode.
+		/// @brief Dialog bytecode.
 		Binary		code;
 	};
 
@@ -98,10 +99,10 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		// Put new things BELOW this line
 	};
 
-	/// @brief Converts a script to a storeable binary file.
+	/// @brief Converts a dialog to a storeable binary file.
 	/// @param code Script to convert.
 	/// @return Script as binary.
-	constexpr BinaryData<> toBytes(Script const& code) {
+	constexpr BinaryData<> toBytes(Dialog const& code) {
 		BinaryData<>	out;
 		FileHeader		fh;
 		out.resize(fh.headerSize, '\0');
@@ -126,12 +127,12 @@ namespace Makai::Ex::Game::Dialog::SVM {
 		return out;
 	}
 
-	/// @brief Converts a series of bytes to an executable script.
+	/// @brief Converts a series of bytes to a processable dialog.
 	/// @param data Bytes to convert.
 	/// @return Script.
 	/// @throw Error::FailedAction on errors.
-	constexpr Script fromBytes(BinaryData<> const& data) {
-		Script out;
+	constexpr Dialog fromBytes(BinaryData<> const& data) {
+		Dialog out;
 		if (data.size() < sizeof(uint64))
 			throw Error::FailedAction(
 				"Failed at loading script binary!",

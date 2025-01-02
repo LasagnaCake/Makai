@@ -3,14 +3,21 @@
 
 #include <makai/makai.hpp>
 
+/// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
+	/// @brief Action program player.
 	struct ActionPlayer: IUpdateable, IPlayable {
-		using Script = Co::Generator<usize>;
+		/// @brief Program to perform.
+		using Program = Co::Generator<usize>;
 
+		/// @brief Empty constructor.
 		ActionPlayer() {isFinished = true;}
 
-		virtual Script script() = 0;
+		/// @brief Program to perform. Must be implemented.
+		/// @return Program.
+		virtual Program script() = 0;
 
+		/// @brief Executed every update cycle.
 		void onUpdate(float, App&) {
 			if (isFinished || paused)	return;
 			++counter;
@@ -22,6 +29,8 @@ namespace Makai::Ex::Game::Dialog {
 			}
 		}
 
+		/// @brief Starts the dialog.
+		/// @return Reference to self.
 		ActionPlayer& start() override final {
 			dialog		= script();
 			isFinished	= false;
@@ -29,12 +38,23 @@ namespace Makai::Ex::Game::Dialog {
 			return play();
 		}
 
+		/// @brief Sets the autoplay state.
+		/// @param state Autoplay state.
+		/// @return Reference to self.
 		ActionPlayer& setAutoplay(bool const state) {autoplay = state; return *this;	}
 
+		/// @brief Stops the dialog.
+		/// @return Reference to self.
 		ActionPlayer& stop()	override final		{isFinished = true; return *this;	}
+		/// @brief Unpauses the dialog.
+		/// @return Reference to self.
 		ActionPlayer& play()	override final		{paused = false; return *this;		}
+		/// @brief Pauses the dialog.
+		/// @return Reference to self.
 		ActionPlayer& pause()	override final		{paused = true; return *this;		}
 
+		/// @brief Processes the dialog.
+		/// @return Reference to self.
 		ActionPlayer& next() {
 			if (isFinished) return;
 			counter = dialog.next();
@@ -42,13 +62,16 @@ namespace Makai::Ex::Game::Dialog {
 			return *this;
 		}
 
+		/// @brief Input manager.
 		Input::Manager		input;
+		/// @brief Input bind map.
 		Dictionary<String>	bindmap	= Dictionary<String>({
 			{"next", "dialog-next"},
 			{"skip", "dialog-skip"}
 		});
 
 	private:
+		/// @brief Whether the dialog is starting.
 		bool starting = true;
 
 		bool userAdvanced() {
@@ -62,11 +85,14 @@ namespace Makai::Ex::Game::Dialog {
 			return counter < delay;
 		}
 
+		/// @brief Whether autoplay is enabled.
 		bool	autoplay	= false;
+		/// @brief Wait counter.
 		usize	counter		= 0;
-		usize	delay		= 600;
+		/// @brief Max delay to wait for user input.
+		usize delay = 600;
 
-		Script dialog;
+		Program dialog;
 	};
 }
 
