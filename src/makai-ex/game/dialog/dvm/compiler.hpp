@@ -83,7 +83,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			}
 		};
 
-		Operation curOp = Operation::DSO_NO_OP;
+		Operation curOp = Operation::DVM_O_NO_OP;
 
 		static void opcopy(Decay::AsType<uint16[4]>& buf, uint64 const val) {
 			MX::memcpy((void*)buf, (void*)&val, sizeof(uint64));
@@ -136,7 +136,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		}
 
 		void addLine(String const& str) {
-			addOperation(Operation::DSO_LINE);
+			addOperation(Operation::DVM_O_LINE);
 			if (str.empty())
 				return addOperand(0);
 			addStringOperand(str);
@@ -144,7 +144,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 
 		void addActors(StringList const& strs) {
 			if (strs.empty()) {
-				addOperation(Operation::DSO_ACTOR);
+				addOperation(Operation::DVM_O_ACTOR);
 				addOperand(0);
 				return;
 			}
@@ -154,46 +154,46 @@ namespace Makai::Ex::Game::Dialog::DVM {
 				if (strs[i] == "...") {
 					if (i != 0)
 						duplicateError();
-					addOperation(Operation::DSO_ACTOR, esp);
+					addOperation(Operation::DVM_O_ACTOR, esp);
 					continue;
 				}
-				addOperation(Operation::DSO_ACTOR, (i) ? 1 : 0);
+				addOperation(Operation::DVM_O_ACTOR, (i) ? 1 : 0);
 				addOperand(Hasher::hash(strs[i]));
 			}
 		}
 
 		void addEmotion(String const& str) {
-			addOperation(Operation::DSO_EMOTION);
+			addOperation(Operation::DVM_O_EMOTION);
 			addOperand(Hasher::hash(str));
 		}
 
 		void addAction(String const& str, bool const sp = false) {
-			addOperation(Operation::DSO_ACTION, sp ? 1 : 0);
+			addOperation(Operation::DVM_O_ACTION, sp ? 1 : 0);
 			addOperand(Hasher::hash(str));
 		}
 
 		void addFlag(String const& str, bool const state = false) {
-			addOperation(Operation::DSO_SET_GLOBAL);
+			addOperation(Operation::DVM_O_SET_GLOBAL);
 			addOperand(Hasher::hash(str));
 			addStringOperand(state ? "true" : "false");
 		}
 
 		void addGlobal(String const& str, bool const sp = false) {
-			addOperation(Operation::DSO_SET_GLOBAL, sp ? 1 : 0);
+			addOperation(Operation::DVM_O_SET_GLOBAL, sp ? 1 : 0);
 		}
 
 		void addColor(String const& str) {
-			addOperation(Operation::DSO_COLOR);
+			addOperation(Operation::DVM_O_COLOR);
 			addOperand(Graph::Color::toHexCodeRGBA(Graph::Color::fromHexCodeString(str)));
 		}
 
 		void addColorRef(String const& str) {
-			addOperation(Operation::DSO_COLOR, 1);
+			addOperation(Operation::DVM_O_COLOR, 1);
 			addOperand(Hasher::hash(str));
 		}
 
 		void addWait(String const& str) {
-			addOperation(Operation::DSO_SET_GLOBAL);
+			addOperation(Operation::DVM_O_SET_GLOBAL);
 			addOperand(toUInt64(str));
 		}
 
@@ -321,13 +321,13 @@ namespace Makai::Ex::Game::Dialog::DVM {
 							lineIterate(*++c);
 						if (!isExtendedOperationChar(*c))
 							invalidExtendedOperationError();
-						addOperation(Operation::DSO_NO_OP, 1);
+						addOperation(Operation::DVM_O_NO_OP, 1);
 						break;
 					case '.':
-						addOperation(Operation::DSO_SYNC);
+						addOperation(Operation::DVM_O_SYNC);
 						break;
 					case ';':
-						addOperation(Operation::DSO_USER_INPUT);
+						addOperation(Operation::DVM_O_USER_INPUT);
 						break;
 					case '"':
 						addLine(processString(++c, end));

@@ -17,31 +17,31 @@ namespace Makai::Ex::Game::Dialog::DVM {
 	/// @brief Bytecode operation.
 	enum class Operation: uint16 {
 		/// @brief No-op. If SP is set, sets the internal SP mode.
-		DSO_NO_OP,
+		DVM_O_NO_OP,
 		/// @brief Ends execution of the program.
-		DSO_HALT,
+		DVM_O_HALT,
 		/// @brief Active actor. Behaves differently, depending on SP mode.
-		DSO_ACTOR,
+		DVM_O_ACTOR,
 		/// @brief Dialog line. Behaves differently, depending on SP mode.
-		DSO_LINE,
+		DVM_O_LINE,
 		/// @brief Actor emote.
-		DSO_EMOTION,
+		DVM_O_EMOTION,
 		/// @brief Actor perform. Behaves differently, depending on SP mode.
-		DSO_ACTION,
+		DVM_O_ACTION,
 		/// @brief Text color. Behaves differently, depending on SP mode.
-		DSO_COLOR,
+		DVM_O_COLOR,
 		/// @brief Wait.
-		DSO_WAIT,
+		DVM_O_WAIT,
 		/// @brief Synchronization. Behaves differently, depending on SP mode.
-		DSO_SYNC,
+		DVM_O_SYNC,
 		/// @brief User input wait.
-		DSO_USER_INPUT,
+		DVM_O_USER_INPUT,
 		/// @brief Set global. Behaves differently, depending on SP mode.
-		DSO_SET_GLOBAL,
+		DVM_O_SET_GLOBAL,
 		/// @brief Named operation. Behaves differently, depending on SP mode.
-		DSO_NAMED_OP,
+		DVM_O_NAMED_OP,
 		/// @brief Jump.
-		DSO_JUMP,
+		DVM_O_JUMP,
 	};
 
 	/// @brief Script version.	

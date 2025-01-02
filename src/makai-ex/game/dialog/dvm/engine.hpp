@@ -14,18 +14,18 @@ namespace Makai::Ex::Game::Dialog::DVM {
 
 		/// @brief Engine state.
 		enum class State {
-			DSES_READY,
-			DSES_RUNNING,
-			DSES_ERROR,
-			DSES_FINISHED,
+			DVM_ES_READY,
+			DVM_ES_RUNNING,
+			DVM_ES_ERROR,
+			DVM_ES_FINISHED,
 		};
 
 		/// @brief Engine error code.
 		enum class ErrorCode {
-			DSEEC_NONE,
-			DSEEC_INVALID_OPERATION,
-			DSEEC_INVALID_OPERAND,
-			DSEEC_INVALID_JUMP,
+			DVM_EEC_NONE,
+			DVM_EEC_INVALID_OPERATION,
+			DVM_EEC_INVALID_OPERAND,
+			DVM_EEC_INVALID_JUMP,
 		};
 
 		/// @brief Destructor.
@@ -33,23 +33,23 @@ namespace Makai::Ex::Game::Dialog::DVM {
 
 		/// @brief Processes one dialog operation.
 		void process() {
-			if (engineState != State::DSES_RUNNING) return;
+			if (engineState != State::DVM_ES_RUNNING) return;
 			if (op >= binary.code.size()) return opHalt();
 			curOp = binary.code[op++];
 			switch (asOperation(curOp)) {
-				case (Operation::DSO_NO_OP):		opSetSP();		break;
-				case (Operation::DSO_HALT):			opHalt();		break;
-				case (Operation::DSO_ACTOR):		opActor();		break;
-				case (Operation::DSO_LINE):			opLine();		break;
-				case (Operation::DSO_EMOTION):		opEmotion();	break;
-				case (Operation::DSO_ACTION):		opAction();		break;
-				case (Operation::DSO_COLOR):		opColor();		break;
-				case (Operation::DSO_WAIT):			opWait();		break;
-				case (Operation::DSO_SYNC):			opSync();		break;
-				case (Operation::DSO_USER_INPUT):	opUserInput();	break;
-				case (Operation::DSO_SET_GLOBAL):	opSetGlobal();	break;
-				case (Operation::DSO_NAMED_OP):		opNamedOp();	break;
-				case (Operation::DSO_JUMP):			opJump();		break;
+				case (Operation::DVM_O_NO_OP):		opSetSP();		break;
+				case (Operation::DVM_O_HALT):		opHalt();		break;
+				case (Operation::DVM_O_ACTOR):		opActor();		break;
+				case (Operation::DVM_O_LINE):		opLine();		break;
+				case (Operation::DVM_O_EMOTION):	opEmotion();	break;
+				case (Operation::DVM_O_ACTION):		opAction();		break;
+				case (Operation::DVM_O_COLOR):		opColor();		break;
+				case (Operation::DVM_O_WAIT):		opWait();		break;
+				case (Operation::DVM_O_SYNC):		opSync();		break;
+				case (Operation::DVM_O_USER_INPUT):	opUserInput();	break;
+				case (Operation::DVM_O_SET_GLOBAL):	opSetGlobal();	break;
+				case (Operation::DVM_O_NAMED_OP):	opNamedOp();	break;
+				case (Operation::DVM_O_JUMP):		opJump();		break;
 				default:							opInvalidOp();	break;
 			}
 		}
@@ -125,19 +125,19 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		void setProgram(Dialog const& program) {
 			endProgram();
 			binary = program;
-			engineState = State::DSES_READY;
+			engineState = State::DVM_ES_READY;
 		}
 
 		/// @brief Starts the processing of the dialog.
 		void beginProgram() {
-			engineState	= State::DSES_RUNNING;
+			engineState	= State::DVM_ES_RUNNING;
 			op			= 0;
 		}
 
 		/// @brief Stops the processing of the dialog.
 		void endProgram() {
-			if (engineState == State::DSES_RUNNING)
-				engineState = State::DSES_FINISHED;
+			if (engineState == State::DVM_ES_RUNNING)
+				engineState = State::DVM_ES_FINISHED;
 		}
 
 	protected:
@@ -145,7 +145,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		/// @param code Error code to set.
 		void setErrorAndStop(ErrorCode const code) {
 			err = code;
-			engineState = State::DSES_ERROR;
+			engineState = State::DVM_ES_ERROR;
 		}
 
 	private:
@@ -157,11 +157,11 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		/// @brief SP mode being used.
 		uint16		spMode		= 0;
 		/// @brief Engine state.
-		State		engineState	= State::DSES_READY;
+		State		engineState	= State::DVM_ES_READY;
 		/// @brief Operation pointer.
 		usize		op			= 0;
 		/// @brief Error code.
-		ErrorCode	err			= ErrorCode::DSEEC_NONE;
+		ErrorCode	err			= ErrorCode::DVM_EEC_NONE;
 		/// @brief Current operation.
 		uint16		curOp		= 0;
 
@@ -173,11 +173,11 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		}
 
 		void opInvalidOp() {
-			setErrorAndStop(ErrorCode::DSEEC_INVALID_OPERATION);
+			setErrorAndStop(ErrorCode::DVM_EEC_INVALID_OPERATION);
 		}
 
 		void opHalt() {
-			engineState = State::DSES_FINISHED;
+			engineState = State::DVM_ES_FINISHED;
 		}
 
 		void opSetSP() {spMode = getSPFlag(curOp);}
@@ -269,15 +269,15 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			uint64 to;
 			if (!operand64(to)) return;
 			if (!binary.jumps.contains(to))
-				return setErrorAndStop(ErrorCode::DSEEC_INVALID_JUMP);
+				return setErrorAndStop(ErrorCode::DVM_EEC_INVALID_JUMP);
 			op = binary.jumps[to];
 			if (op >= binary.code.size())
-				return setErrorAndStop(ErrorCode::DSEEC_INVALID_JUMP);
+				return setErrorAndStop(ErrorCode::DVM_EEC_INVALID_JUMP);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
 			if (op + opsize < binary.code.size()) {
-				setErrorAndStop(ErrorCode::DSEEC_INVALID_OPERAND);
+				setErrorAndStop(ErrorCode::DVM_EEC_INVALID_OPERAND);
 				return false;
 			}
 			return true;

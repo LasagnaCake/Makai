@@ -13,7 +13,7 @@ namespace Makai::Ex::Game::Dialog {
 	struct DVMPlayer: private DVM::Engine, IPlayable, IUpdateable {
 		using Engine::state, Engine::error;
 
-		using State = Engine::State;
+		using typename Engine::State;
 
 		/// @brief Constructs the dialog player.
 		/// @param scene Scene to use. By default, it is `nullptr` (none).
@@ -49,7 +49,7 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Executed every update cycle.
 		void onUpdate(auto, auto) {
-			if (state() != State::DSES_RUNNING) {
+			if (state() != State::DVM_ES_RUNNING) {
 				stop();
 				return;
 			}
@@ -159,7 +159,7 @@ namespace Makai::Ex::Game::Dialog {
 			waitForUser	= false;
 			resetCounters();
 			Engine::process();
-			if (state() != Engine::State::DSES_RUNNING)
+			if (state() != Engine::State::DVM_ES_RUNNING)
 				isFinished = true;
 		}
 
