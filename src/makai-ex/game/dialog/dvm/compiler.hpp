@@ -15,8 +15,8 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		/// @param source Source to compile.
 		Compiler(String const& source): source(source)	{compileScript();	}
 
-		/// @brief Returns the compiled dialog.
-		/// @return Compiled dialog.
+		/// @brief Returns the compiled dialog program.
+		/// @return Compiled dialog program.
 		Dialog result() {
 			return out;
 		}
@@ -58,7 +58,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		bool	compiled = false;
 		/// @brief Dialog source code.
 		String	source;
-		/// @brief Resulting compiled dialog binary.
+		/// @brief Resulting compiled dialog program.
 		Dialog	out;
 		/// @brief Current data index.
 		usize	dataIndex = 1;

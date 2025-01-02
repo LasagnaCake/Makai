@@ -35,7 +35,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Steps out of focus.
 		virtual void stepOut()	{if (dialog) dialog->hide();	}
 		
-		/// @brief Sets the text color.
+		/// @brief Sets the text body color.
 		/// @param color Color to set to.
 		void color(Vector4 const& color) override	{if (dialog) dialog->setBodyColor(color);					}
 
@@ -43,7 +43,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param line Line to say.
 		/// @return Time it takes to say the dialog line.
 		usize say(Content const& line) override		{if (dialog) return dialog->setBody(line);		return 0;	}
-		/// @brief Adds text to their current dialog line.
+		/// @brief Adds text to the current dialog line.
 		/// @param line Line to say.
 		/// @return Time it takes to add text.
 		usize add(Content const& line) override		{if (dialog) return dialog->appendBody(line);	return 0;	}
@@ -61,7 +61,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param action Action to perform.
 		/// @return Time it takes to perform the action.
 		usize perform(Action const& action) override {
-			switch (action.hash) {
+			switch (action.name) {
 				#if __cpp_constexpr == 202306L
 				case (Hasher::hash("enter")):		enter();	return 0;
 				case (Hasher::hash("leave")):		leave();	return 0;

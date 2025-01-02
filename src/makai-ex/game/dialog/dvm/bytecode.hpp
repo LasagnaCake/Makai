@@ -45,9 +45,9 @@ namespace Makai::Ex::Game::Dialog::DVM {
 	};
 
 	/// @brief Script version.	
-	constexpr uint64 SCRIPT_VERSION		= 0;
+	constexpr uint64 DIALOG_VERSION		= 0;
 	/// @brief Minimum required version to run script.
-	constexpr uint64 SCRIPT_MIN_VERSION	= 0;
+	constexpr uint64 DIALOG_MIN_VERSION	= 0;
 
 	/// @brief SP mode mask.
 	constexpr uint16 SP_FLAG_MASK	= 0xf << 12;
@@ -77,7 +77,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 	/// @brief Jump position entry.
 	using JumpEntry = typename JumpTable::PairType;
 
-	/// @brief Compiled dialog.
+	/// @brief Compiled dialog program.
 	struct Dialog {
 		/// @brief Jump table.
 		JumpTable	jumps;
@@ -87,11 +87,11 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		Binary		code;
 	};
 
-	/// @brief Compiled script file header.
+	/// @brief Dialog program file header.
 	struct [[gnu::packed]] FileHeader {
 		uint64 const headerSize		= sizeof(FileHeader);
-		uint64 version				= SCRIPT_VERSION;
-		uint64 minVersion			= SCRIPT_MIN_VERSION;
+		uint64 version				= DIALOG_VERSION;
+		uint64 minVersion			= DIALOG_MIN_VERSION;
 		uint64 flags;
 		uint64 dataStart, dataSize;
 		uint64 jumpTableStart, jumpTableSize;
@@ -99,7 +99,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		// Put new things BELOW this line
 	};
 
-	/// @brief Converts a dialog to a storeable binary file.
+	/// @brief Converts a dialog program to a storeable binary file.
 	/// @param code Script to convert.
 	/// @return Script as binary.
 	constexpr BinaryData<> toBytes(Dialog const& code) {
@@ -127,7 +127,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		return out;
 	}
 
-	/// @brief Converts a series of bytes to a processable dialog.
+	/// @brief Converts a series of bytes to a processable dialog progrma.
 	/// @param data Bytes to convert.
 	/// @return Script.
 	/// @throw Error::FailedAction on errors.
