@@ -158,6 +158,7 @@ namespace Makai::Ex::Game::Dialog {
 			inSync		=
 			waitForUser	= false;
 			resetCounters();
+			clearActionDelay();
 			Engine::process();
 			if (state() != Engine::State::DVM_ES_RUNNING)
 				isFinished = true;
@@ -255,6 +256,10 @@ namespace Makai::Ex::Game::Dialog {
 		void resetCounters() {
 			autoCounter		= 0;
 			actionCounter	= 0;
+		}
+
+		void clearActionDelay() {
+			actionDelay = 0;
 		}
 
 		void advanceCounters() {
