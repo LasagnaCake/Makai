@@ -36,10 +36,11 @@ Under consideration:
 
 | Comand | Usage |
 |:-:|:-|
-| `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command. |
+| `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command.
+| `\<command>` | For using named commands. |
 | `&<act> {...}` | For defining acts (named blocks) in a file. These will only be executed when jumped to. |
-| `next <act>` | For performing different acts. Does not return to previous point. |
-| `perform <act>` | For performing different acts. Returns to previous point. |
+| `\next <act>` | For performing different acts. Does not return to where it was called from. |
+| `\perform <act>` | For performing different acts. Returns to where it was called from. |
 
 ### On the `[]` command
 
