@@ -111,7 +111,7 @@ namespace Impl::Hash {
 				usize k = *d1++;
 				mix(hash, k, m, r);
 			}
-			byte const* d2 = static_cast<byte const*>(data);
+			byte const* d2 = (byte const*)d2;
 			usize t = 0;
 			switch(sz & 7) {
 			case 7:		t ^= static_cast<usize>(d2[6]) << 48;
@@ -140,7 +140,7 @@ namespace Impl::Hash {
 			usize s		= sz;
 			usize hash	= seed;
 			byte const* dt = static_cast<byte const*>(data);
-			while(sz >= 4){
+			while(sz >= 4) {
 				usize k = *(usize*)dt;
 				mix(hash, k, m, r);
 				dt += 4;
@@ -158,9 +158,96 @@ namespace Impl::Hash {
 			shuffle(hash, m, 13, 15);
 			return hash;
 		}
+
+		namespace Impl {
+			constexpr usize part(char const* const data, usize const sz, usize const i) {
+				if (i > 7) __builtin_unreachable();
+				return ((i < sz) ? (usize(data[i]) << i * 8) : 0);
+			}
+
+			constexpr usize combine64(char const* const data, usize const sz) {
+				return (
+					part(data, sz, 0)
+				|	part(data, sz, 1)
+				|	part(data, sz, 2)
+				|	part(data, sz, 3)
+				|	part(data, sz, 4)
+				|	part(data, sz, 5)
+				|	part(data, sz, 6)
+				|	part(data, sz, 7)
+				);
+			}
+
+			constexpr usize combine32(char const* const data, usize const sz) {
+				return (
+					part(data, sz, 0)
+				|	part(data, sz, 1)
+				|	part(data, sz, 2)
+				|	part(data, sz, 3)
+				);
+			}
+
+			constexpr usize combine(char const* const data, usize const sz) {
+				if constexpr (sizeof(usize) == sizeof(uint64))
+					return combine64(data, sz);
+				else if constexpr (sizeof(usize) == sizeof(uint32))
+					return combine32(data, sz);
+				else __builtin_unreachable();
+			}
+
+			constexpr usize constHash(
+				char const* data,
+				usize sz,
+				usize seed,
+				Decay::AsType<usize[2]> const& m,
+				Decay::AsType<int[2]> const& r
+			) {
+				constexpr usize hashSize = sizeof(usize);
+				usize const	m0 = m[0], m1 = m[1];
+				int const	r0 = r[0], r1 = r[1];
+				usize s		= sz;
+				while (sz >= hashSize) {
+					usize k = combine(data, sz);
+					mix(seed, k, m0, r0);
+					data += hashSize;
+					sz -= hashSize;
+				}
+				usize t = combine(data, sz);
+				mix(seed, t, m0, r0);
+				mix(seed, s, m0, r0);
+				shuffle(seed, m1, r1);
+				return seed;
+			}
+		}
+
+		/// @brief Generates a compile-time hash from the given data, using the Murmur2 hash algorithm's 64-bit implementation.
+		/// @param data Data to hash.
+		/// @param sz Size of data to hash.
+		/// @param seed Starting seed.
+		/// @return Resulting hash.
+		constexpr usize constHash64(char const* data, usize sz, usize seed = 0) {
+			/*constexpr usize	m = 0xc6a4a7935bd1e995ull;
+			constexpr int	r = 47;
+			usize s		= sz;
+			usize hash	= seed;
+			char const* d1 = data;
+			while (seed >= sizeof(usize)) {
+				usize k = Impl::combine64(d1, sizeof(usize));
+				mix(hash, k, m, r);
+				d1 += sizeof(usize);
+				sz -= sizeof(usize);
+			}
+			char const* d2 = d1;
+			usize t = Impl::combine64(d2, sz);
+			mix(hash, t, m, r);
+			mix(hash, s, m, r);
+			shuffle(hash, m, r);
+			return hash;*/
+			return Impl::constHash(data, sz, seed, {0xc6a4a7935bd1e995ull, 0xc6a4a7935bd1e995ull}, {47, 47});
+		}
 	}
 	
-	/// @brief Generates a hash from the given data, using the Murmur2 hash algorithm.
+	/// @brief Generates a hash from the given data.
 	/// @param data Data to hash.
 	/// @param sz Size of data to hash.
 	/// @param seed Starting seed.
@@ -172,10 +259,60 @@ namespace Impl::Hash {
 			return Murmur2::hash32(data, sz, seed);
 		else return Simple::hash(data, sz, seed);
 	}
+
+	/// @brief Generates a compile-time hash from the given data.
+	/// @param data Data to hash.
+	/// @param sz Size of data to hash.
+	/// @param seed Starting seed.
+	/// @return Resulting hash.
+	constexpr usize constHash(char const* const data, usize const sz, usize seed = 0) {
+		if constexpr (sizeof(usize) == sizeof(uint64))	
+			return Murmur2::constHash64(data, sz, seed);
+		else __builtin_unreachable();
+	}
+}
+
+/// @brief Static class used for generating compile-time string hashes.
+namespace ConstHasher {
+	/// @brief Generates the hash for a given "C-style" string.
+	/// @param data Pointer to beginning of string.
+	/// @param size Size of string.
+	/// @return Resulting hash.
+	constexpr static usize hash(cstring const data, usize const size) {
+		return Impl::Hash::constHash(data, size, size);
+	}
+
+	/// @brief Generates the hash for a given fixed char array.
+	/// @tparam S Array size.
+	/// @param str Array to hash.
+	/// @return Resulting hash.
+	template< usize S>
+	constexpr static usize hash(Decay::AsType<const char[S]> const& data) {
+		return hash(data, S);
+	}
+
+	/// @brief Generates the hash for a given ranged type.
+	/// @tparam T Ranged type.
+	/// @param value Ranged object to hash.
+	/// @return Resulting hash.
+	template <Type::Iteratable T>
+	constexpr static usize hash(T const& value) {
+		return hash(&*value.begin(), value.end() - value.begin());
+	}
+
+	/// @brief Generates the hash for a given bounded type.
+	/// @tparam T Bounded type.
+	/// @param value Ranged object to hash.
+	/// @return Resulting hash.
+	template <Type::CIteratable T>
+	constexpr static usize hash(T const& value)
+	requires (!Type::Iteratable<T>) {
+		return hash(value.data(), value.size());
+	}
 }
 
 /// @brief Static class used for generating hashes.
-/// @note For any type that isn't an `union`, `class` or `struct`, all hashes are guaranteed to be collision-free.
+/// @note For any type that isn't an `union`, `class`, `struct` or an array, all hashes are guaranteed to be collision-free.
 struct Hasher {
 	/// @brief Generates the hash for a given pointer.
 	/// @tparam T pointed type.
