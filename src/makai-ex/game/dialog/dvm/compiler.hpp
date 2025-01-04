@@ -173,13 +173,13 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		}
 
 		void addFlag(String const& str, bool const state = false) {
-			addOperation(Operation::DVM_O_SET_GLOBAL);
+			addOperation(Operation::DVM_O_NAMED_CALL);
 			addOperand(Hasher::hash(str));
 			addStringOperand(state ? "true" : "false");
 		}
 
 		void addGlobal(String const& str, bool const sp = false) {
-			addOperation(Operation::DVM_O_SET_GLOBAL, sp ? 1 : 0);
+			addOperation(Operation::DVM_O_NAMED_CALL, sp ? 1 : 0);
 		}
 
 		void addColor(String const& str) {
@@ -193,7 +193,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		}
 
 		void addWait(String const& str) {
-			addOperation(Operation::DVM_O_SET_GLOBAL);
+			addOperation(Operation::DVM_O_WAIT);
 			addOperand(toUInt64(str));
 		}
 
@@ -344,7 +344,10 @@ namespace Makai::Ex::Game::Dialog::DVM {
 						if (*c == '(') {
 							auto pp = processParamPack(++c, end, ')');
 							if (pp.empty()) addAction(cmd, 0);
-							else {
+							else if (pp.size() == 1) {
+								addAction(cmd);
+								addStringOperand(pp.back());
+							} else {
 								addAction(cmd, 1);
 								addParamPack(pp);
 							}
@@ -362,10 +365,15 @@ namespace Makai::Ex::Game::Dialog::DVM {
 						break;
 					case '$': {
 						String cmd = processCommand(++c, end);
+						StringList args;
 						while (c < end && isNullOrSpaceChar(*c)) lineIterate(*++c);
-						addGlobal(processCommand(++c, end), *c == '(');
 						if (*c == '(')
-							addParamPack(processParamPack(++c, end, ')'));
+							args = processParamPack(++c, end, ')');
+						addGlobal(cmd, args.size() > 1);
+						if (args.size() > 1)
+							addParamPack(args);
+						else if (args.size() == 1)
+							addStringOperand(args.back());
 						else addStringOperand(
 							isQuoteChar(*c++)
 							? processString(c, end)

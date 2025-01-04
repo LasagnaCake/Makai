@@ -36,10 +36,8 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		DVM_O_SYNC,
 		/// @brief User input wait.
 		DVM_O_USER_INPUT,
-		/// @brief Set global. Behaves differently, depending on SP mode.
-		DVM_O_SET_GLOBAL,
 		/// @brief Named operation. Behaves differently, depending on SP mode.
-		DVM_O_NAMED_OP,
+		DVM_O_NAMED_CALL,
 		/// @brief Jump.
 		DVM_O_JUMP,
 	};

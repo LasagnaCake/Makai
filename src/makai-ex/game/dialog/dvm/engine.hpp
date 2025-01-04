@@ -10,7 +10,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 	/// @brief Dialog engine.
 	struct Engine {
 		/// @brief Function parameters.
-		using Parameters = Nullable<StringList>;
+		using Parameters = StringList;
 
 		/// @brief Engine state.
 		enum class State {
@@ -47,8 +47,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 				case (Operation::DVM_O_WAIT):		opWait();		break;
 				case (Operation::DVM_O_SYNC):		opSync();		break;
 				case (Operation::DVM_O_USER_INPUT):	opUserInput();	break;
-				case (Operation::DVM_O_SET_GLOBAL):	opSetGlobal();	break;
-				case (Operation::DVM_O_NAMED_OP):	opNamedOp();	break;
+				case (Operation::DVM_O_NAMED_CALL):	opNamedCall();	break;
 				case (Operation::DVM_O_JUMP):		opJump();		break;
 				default:							opInvalidOp();	break;
 			}
@@ -95,18 +94,14 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		virtual void opWaitForActions(bool const async)													{}
 		/// @brief User input operation.
 		virtual void opWaitForUser()																	{}
-		/// @brief Set global operation.
-		/// @param param Global to set.
-		/// @param value Value to set to.
-		virtual void opSetGlobalValue(uint64 const param, String const& value)							{}
-		/// @brief Set global operation.
-		/// @param param Global to set.
-		/// @param values Values to set to.
-		virtual void opSetGlobalValues(uint64 const param, Parameters const& values)					{}
-		/// @brief Named operation.
-		/// @param name Operation to execute.
-		/// @param params Parameters to pass to operation.
-		virtual void opNamedOperation(uint64 const name, Parameters const& params)						{}
+		/// @brief Named global operation.
+		/// @param param Global name.
+		/// @param value Value to pass.
+		virtual void opNamedCallSingle(uint64 const param, String const& value)							{}
+		/// @brief Named global operation.
+		/// @param param Global name.
+		/// @param values Values to pass.
+		virtual void opNamedCallMultiple(uint64 const param, Parameters const& values)					{}
 
 		/// @brief Returns the error code.
 		/// @return Error code.
@@ -220,10 +215,13 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		void opAction() {
 			uint64 action;
 			if (!operand64(action)) return;
-			if (!sp()) return opPerform(actors, action, nullptr);
+			if (!sp()) return opPerform(actors, action, StringList());
 			uint64 params, psize;
 			if (!operands64(params, psize)) return;
-			opPerform(actors, action, psize ? binary.data.sliced(params, params + psize) : nullptr);
+			if (psize)
+				opPerform(actors, action, binary.data.sliced(params, params + psize));
+			else
+				opPerform(actors, action, StringList());
 		}
 
 		void opColor() {
@@ -247,22 +245,16 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			opWaitForUser();
 		}
 
-		void opSetGlobal() {
+		void opNamedCall() {
 			uint64 param, value;
 			if (!operands64(param, value)) return;
-			if (!sp()) return opSetGlobalValue(param, binary.data[value]);
+			if (!sp()) return opNamedCallSingle(param, binary.data[value]);
 			uint64 vcount;
 			if (!operand64(vcount)) return;
-			opSetGlobalValues(param, vcount ? binary.data.sliced(value, value + vcount) : nullptr);
-		}
-
-		void opNamedOp() {
-			uint64 name;
-			if (!operand64(name)) return;
-			if (!sp()) opNamedOperation(name, nullptr);
-			uint64 params, psize;
-			if (!operands64(params, psize)) return;
-			opNamedOperation(name, psize ? binary.data.sliced(params, params + psize) : nullptr);
+			if (vcount)
+				opNamedCallMultiple(param, binary.data.sliced(value, value + vcount));
+			else
+				opNamedCallMultiple(param, StringList());
 		}
 
 		void opJump() {

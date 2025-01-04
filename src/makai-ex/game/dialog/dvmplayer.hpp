@@ -114,27 +114,18 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Sets a global by a name hash.
 		/// @param name Global to set.
-		/// @param value Value to set to.
-		virtual void setGlobal(usize const name, String const& value) {
+		/// @param values Values to set to.
+		virtual void execute(usize const name, Parameters const& params) {
 			#if __cpp_constexpr == 202306L
 			switch (name) {
-				case (Hasher::hash("autoplay")):	autoplay	= toBool(value);
-				case (Hasher::hash("delay")):		delay		= toUInt64(value);
+				case (Hasher::hash("autoplay")):	autoplay	= toBool(params[0]);
+				case (Hasher::hash("delay")):		delay		= toUInt64(params[0]);
 			}
 			#else
 			// TODO: this
 			#endif
+
 		}
-
-		/// @brief Sets a global by a name hash.
-		/// @param name Global to set.
-		/// @param values Values to set to.
-		virtual void setGlobal(usize const name, Parameters const& values)		{}
-
-		/// @brief Executes a named operation.
-		/// @param operation Name hash to execute.
-		/// @param params Parameters to pass to named operation.
-		virtual void execute(usize const operation, Parameters const& params)	{}
 
 		/// @brief Max time to wait for user input.
 		usize delay = 600;
@@ -230,16 +221,12 @@ namespace Makai::Ex::Game::Dialog {
 			waitForUser = true;
 		}
 
-		void opSetGlobalValue(uint64 const name, String const& value) override final {
-			setGlobal(name, value);
+		void opNamedCallSingle(uint64 const name, String const& value) override final {
+			execute(name, {value});
 		}
 
-		void opSetGlobalValues(uint64 const name, Parameters const& values) override final {
-			setGlobal(name, values);
-		}
-
-		void opNamedOperation(uint64 const op, Parameters const& params) override final {
-			execute(op, params);
+		void opNamedCallMultiple(uint64 const name, Parameters const& values) override final {
+			execute(name, values);
 		}
 
 		Scene::Actors getActors(ActiveCast const& actors) {
