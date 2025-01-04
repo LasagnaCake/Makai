@@ -69,7 +69,6 @@ namespace Regex {
 	/// @return Match count.
 	inline usize count(String const& str, String const& expr) {
 		std::smatch rm;
-		usize result;
 		auto cs = stdstr(str);
 		std::regex_search(cs, rm, makeRegex(expr));
 		return rm.size() - 2;
