@@ -115,9 +115,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			str = Regex::replace(str, "\\b", "\b");
 			str = Regex::replace(str, "\\0", "");
 			str = Regex::replace(str, "\\\"", "\"");
-			if (!str.nullTerminated())
-				str.pushBack('\0');
-			return str;
+			return str.terminated();
 		}
 
 		void addOperation(Operation const op, uint16 sp = 0) {
@@ -227,12 +225,12 @@ namespace Makai::Ex::Game::Dialog::DVM {
 				else if (isQuoteChar(*c))
 					params.pushBack(processString(c, end, *c++));
 				else if (*c == ',') {
-					params.pushBack(buf.stripped());
+					params.pushBack(buf.stripped().terminated());
 					buf.clear();
 				} else buf.pushBack(*c);
 				++c;
 			}
-			if (!buf.empty()) params.pushBack(buf.stripped());
+			if (!buf.empty()) params.pushBack(buf.stripped().terminated());
 			return params;
 		}
 
@@ -260,7 +258,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 				buf.pushBack(*c++);
 			}
 			if (buf.empty()) malformedError();
-			return buf;
+			return buf.terminated();
 		}
 
 		template<class T>

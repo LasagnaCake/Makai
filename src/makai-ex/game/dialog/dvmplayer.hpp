@@ -97,37 +97,28 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param name Name hash.
 		/// @return Color.
 		virtual Vector4 getColorByName(uint64 const name) {
-			#if __cpp_constexpr == 202306L
 			switch (name) {
-				case (Hasher::hash("white")):	return Graph::Color::WHITE;
-				case (Hasher::hash("gray")):	return Graph::Color::GRAY;
-				case (Hasher::hash("black")):	return Graph::Color::BLACK;
-				case (Hasher::hash("red")):		return Graph::Color::RED;
-				case (Hasher::hash("yellow")):	return Graph::Color::YELLOW;
-				case (Hasher::hash("green")):	return Graph::Color::GREEN;
-				case (Hasher::hash("cyan")):	return Graph::Color::CYAN;
-				case (Hasher::hash("blue")):	return Graph::Color::BLUE;
-				case (Hasher::hash("magenta")):	return Graph::Color::MAGENTA;
+				case (ConstHasher::hash("white")):		return Graph::Color::WHITE;
+				case (ConstHasher::hash("gray")):		return Graph::Color::GRAY;
+				case (ConstHasher::hash("black")):		return Graph::Color::BLACK;
+				case (ConstHasher::hash("red")):		return Graph::Color::RED;
+				case (ConstHasher::hash("yellow")):		return Graph::Color::YELLOW;
+				case (ConstHasher::hash("green")):		return Graph::Color::GREEN;
+				case (ConstHasher::hash("cyan")):		return Graph::Color::CYAN;
+				case (ConstHasher::hash("blue")):		return Graph::Color::BLUE;
+				case (ConstHasher::hash("magenta")):	return Graph::Color::MAGENTA;
 			}
-			#else
-			// TODO: this
 			return Graph::Color::WHITE;
-			#endif
 		}
 
 		/// @brief Sets a global by a name hash.
 		/// @param name Global to set.
 		/// @param values Values to set to.
 		virtual void execute(usize const name, Parameters const& params) {
-			#if __cpp_constexpr == 202306L
 			switch (name) {
-				case (Hasher::hash("autoplay")):	autoplay	= toBool(params[0]);
-				case (Hasher::hash("delay")):		delay		= toUInt64(params[0]);
+				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params[0]);
+				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0]);
 			}
-			#else
-			// TODO: this
-			#endif
-
 		}
 
 		/// @brief Max time to wait for user input.

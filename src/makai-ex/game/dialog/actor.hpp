@@ -62,21 +62,10 @@ namespace Makai::Ex::Game::Dialog {
 		/// @return Time it takes to perform the action.
 		usize perform(Action const& action) override {
 			switch (action.name) {
-				#if __cpp_constexpr == 202306L
-				case (Hasher::hash("enter")):		enter();	return 0;
-				case (Hasher::hash("leave")):		leave();	return 0;
-				case (Hasher::hash("step-in")):		stepIn();	return 0;
-				case (Hasher::hash("step-out")):	stepOut();	return 0;
-				#else
-				// enter
-				case (0xca6057231f569b15L): enter();	return 0; 
-				// leave
-				case (0x64141541468a5313L): leave();	return 0;
-				// step-in
-				case (0xc60e254656ddb82dL): stepIn();	return 0;
-				// step-out
-				case (0xf8562229bb12ef2aL): stepOut();	return 0;
-				#endif
+				case (ConstHasher::hash("enter")):		enter();	return 0;
+				case (ConstHasher::hash("leave")):		leave();	return 0;
+				case (ConstHasher::hash("step-in")):	stepIn();	return 0;
+				case (ConstHasher::hash("step-out")):	stepOut();	return 0;
 			}
 			return 0;
 		}
