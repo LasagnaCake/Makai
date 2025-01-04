@@ -311,6 +311,8 @@ namespace ConstHasher {
 	}
 }
 
+static_assert(ConstHasher::hash("Compile-time Magics!") != 0);
+
 /// @brief Static class used for generating hashes.
 /// @note For any type that isn't an `union`, `class`, `struct` or an array, all hashes are guaranteed to be collision-free.
 struct Hasher {
