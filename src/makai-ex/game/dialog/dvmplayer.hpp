@@ -99,6 +99,9 @@ namespace Makai::Ex::Game::Dialog {
 		virtual Vector4 getColorByName(uint64 const name) {
 			#if __cpp_constexpr == 202306L
 			switch (name) {
+				case (Hasher::hash("white")):	return Graph::Color::WHITE;
+				case (Hasher::hash("gray")):	return Graph::Color::GRAY;
+				case (Hasher::hash("black")):	return Graph::Color::BLACK;
 				case (Hasher::hash("red")):		return Graph::Color::RED;
 				case (Hasher::hash("yellow")):	return Graph::Color::YELLOW;
 				case (Hasher::hash("green")):	return Graph::Color::GREEN;
@@ -221,12 +224,12 @@ namespace Makai::Ex::Game::Dialog {
 			waitForUser = true;
 		}
 
-		void opNamedCallSingle(uint64 const name, String const& value) override final {
-			execute(name, {value});
+		void opNamedCallSingle(uint64 const name, String const& param) override final {
+			execute(name, Parameters{param});
 		}
 
-		void opNamedCallMultiple(uint64 const name, Parameters const& values) override final {
-			execute(name, values);
+		void opNamedCallMultiple(uint64 const name, Parameters const& params) override final {
+			execute(name, params);
 		}
 
 		Scene::Actors getActors(ActiveCast const& actors) {
