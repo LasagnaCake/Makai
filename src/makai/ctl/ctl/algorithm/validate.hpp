@@ -137,6 +137,15 @@ constexpr bool isLetterChar(TChar const& c) noexcept {
 	return isUppercaseChar(c) || isLowercaseChar(c);
 }
 
+/// @brief Returns whether the given character is an alphanumeric character.
+/// @tparam TChar Character type.
+/// @param c Character to check.
+/// @return Whether it is an alphanumeric character.
+template <Type::ASCII TChar>
+constexpr bool isAlphanumericChar(TChar const& c) noexcept {
+	return isLetterChar(c) || isNumberChar(c);
+}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_ALGORITHM_VALIDATE_H

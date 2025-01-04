@@ -1,6 +1,7 @@
 #ifndef CTL_ALGORITHM_ATOI_H
 #define CTL_ALGORITHM_ATOI_H
 
+#include "validate.hpp"
 #include "transform.hpp"
 #include "../memory/memory.hpp"
 #include "../cmath.hpp"
@@ -74,6 +75,31 @@ namespace Impl {
 			return val;
 		}
 
+		/// @brief Returns whether the given character is a (possibe) valid integer character.
+		/// @tparam T Character type.
+		/// @param c Character to check.
+		/// @return Whether it is a valid integer character.
+		template<Type::ASCII T>
+		constexpr bool isInvalidChar(T const c) {
+			//return isNullOrSpaceChar(c) || c == '.' || c <= ' ';
+			return !isAlphanumericChar(c);
+		}
+
+		/// @brief Returns the size of the integer stored in the string.
+		/// @tparam T Character type.
+		/// @param str String to get integer size.
+		/// @param size Size of string.
+		/// @return Stored integer size.
+		template<Type::ASCII T>
+		constexpr usize integerSize(T const* str, usize const size) {
+			usize result = 0;
+			while (result < size) {
+				if (isInvalidChar(str[result])) break;
+				++result;
+			}
+			return result;
+		}
+
 		/// @brief Converts a string of charaters to an integer.
 		/// @tparam I Integer type.
 		/// @tparam T Character type.
@@ -85,7 +111,7 @@ namespace Impl {
 		constexpr I toInteger(T const* str, usize const size, usize const base) {
 			I res = 0;
 			for (usize i = 0; i < size; ++i) {
-				if (str[i] == '.') break;
+				if (isInvalidChar(str[i])) break;
 				shiftAndAppend<I>(res, base, toDigit(str[i]));
 			}
 			return res;
@@ -122,9 +148,12 @@ namespace Impl {
 		/// @return Whether it is in the given base.
 		template<Type::ASCII T>
 		constexpr bool isInBase(T const* str, usize const size, usize const base) {
-			for (usize i = 0; i < size; ++i)
-				if(!isDigitInBase(str[i], base))
+			for (usize i = 0; i < integerSize(str, size); ++i) {
+				if (isInvalidChar(str[i]))
+					break;
+				else if (!isDigitInBase(str[i], base))
 					return false;
+			}
 			return true;
 		}
 	}

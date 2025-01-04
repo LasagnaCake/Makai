@@ -596,6 +596,20 @@ public:
 	/// @brief Returns whether the last character is a null character.
 	/// @return Whether the last character is a null character.
 	constexpr bool nullTerminated() const {return back() == '\0';}
+
+	/// @brief Adds a null terminator to the end of the string, if none exists.
+	/// @return Reference to self.
+	constexpr SelfType& terminate() {
+		if (!nullTerminated()) pushBack('\0');
+		return *this;
+	}
+
+	/// @brief Returns a string with a null terminator at the end.
+	/// @return Null-terminated string.
+	constexpr SelfType terminated() {
+		SelfType str = *this;
+		return str.terminate('\0');
+	}
 	
 	/// @brief Returns the string as a "c-style" string.
 	/// @return Pointer to beginning of the "c-style" string.
