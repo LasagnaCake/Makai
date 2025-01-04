@@ -85,15 +85,19 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		Binary		code;
 	};
 
+	struct Section {
+		uint64 start, size;
+	};
+
 	/// @brief Dialog program file header.
 	struct [[gnu::packed]] FileHeader {
 		uint64 const headerSize		= sizeof(FileHeader);
 		uint64 version				= DIALOG_VERSION;
 		uint64 minVersion			= DIALOG_MIN_VERSION;
 		uint64 flags;
-		uint64 dataStart, dataSize;
-		uint64 jumpTableStart, jumpTableSize;
-		uint64 byteCodeStart, byteCodeSize;
+		Section data;
+		Section jumps;
+		Section code;
 		// Put new things BELOW this line
 	};
 
@@ -105,26 +109,26 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		FileHeader		fh;
 		out.resize(fh.headerSize, '\0');
 		// Data division
-		fh.dataStart = fh.headerSize;
+		fh.data.start = fh.headerSize;
 		for (String const& s: code.data) {
 			out.expand(s.nullTerminated() ?  : s.size() + 1, '\0');
 			MX::memcpy(out.end() - s.size(), s.data(), s.size());
 		}
-		fh.dataSize = out.size() - fh.dataStart;
+		fh.data.size = out.size() - fh.data.start;
 		// Jump tables
-		fh.jumpTableStart = fh.dataStart + fh.dataSize;
+		fh.jumps.start = fh.data.start + fh.data.size;
 		if (!code.jumps.empty()) {
 			out.expand(code.jumps.size() * sizeof(JumpEntry), '\0');
-			MX::memcpy(((JumpEntry*)(out.data() + fh.jumpTableStart)), code.jumps.data(), code.jumps.size());
+			MX::memcpy(((JumpEntry*)(out.data() + fh.jumps.start)), code.jumps.data(), code.jumps.size());
 		}
-		fh.jumpTableSize = code.jumps.size() * sizeof(JumpEntry);
+		fh.jumps.size = code.jumps.size() * sizeof(JumpEntry);
 		// Bytecode
-		fh.byteCodeStart = fh.jumpTableStart + fh.jumpTableSize;
+		fh.code.start = fh.jumps.start + fh.jumps.size;
 		if (!code.code.empty()) {
 			out.expand(code.code.size() * sizeof(Operation), '\0');
-			MX::memcpy(((uint16*)(out.data() + fh.byteCodeStart)), code.code.data(), code.code.size());
+			MX::memcpy(((uint16*)(out.data() + fh.code.start)), code.code.data(), code.code.size());
 		}
-		fh.byteCodeSize = code.code.size() * sizeof(Operation);
+		fh.code.size = code.code.size() * sizeof(Operation);
 		// Main header
 		MX::memcpy(((void*)out.data()), &fh, fh.headerSize);
 		return out;
@@ -154,24 +158,24 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		MX::memmove((void*)&fh, (void*)data.data(), fh.headerSize);
 		// Check if sizes are OK
 		if (
-			data.size() < fh.headerSize + fh.dataSize + fh.jumpTableSize + fh.byteCodeSize
-		||	data.size() < fh.dataStart
-		||	data.size() < fh.jumpTableStart
-		||	data.size() < fh.byteCodeStart
-		||	data.size() < (fh.jumpTableStart + fh.jumpTableSize)
-		||	data.size() < (fh.byteCodeStart + fh.byteCodeSize)
-		||	data.size() < (fh.dataStart + fh.dataSize)
+			data.size() < fh.headerSize + fh.data.size + fh.jumps.size + fh.code.size
+		||	data.size() < fh.data.start
+		||	data.size() < fh.jumps.start
+		||	data.size() < fh.code.start
+		||	data.size() < (fh.jumps.start + fh.jumps.size)
+		||	data.size() < (fh.code.start + fh.code.size)
+		||	data.size() < (fh.data.start + fh.data.size)
 		) throw Error::FailedAction(
 			"Failed at loading script binary!",
 			"File size is too small!",
 			CTL_CPP_PRETTY_SOURCE
 		);
 		// Data division
-		if (fh.dataSize) {
+		if (fh.data.size) {
 			usize i = fh.headerSize;
 			String buf;
-			auto c			= data.data() + fh.headerSize + fh.dataStart;
-			auto const end	= c + fh.dataSize;
+			auto c			= data.data() + fh.headerSize + fh.data.start;
+			auto const end	= c + fh.data.size;
 			auto const eof	= data.end();
 			while (c != end && c != eof) {
 				if (*c == '\0') {
@@ -186,26 +190,26 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			}
 		}
 		// Jump tables
-		if (fh.jumpTableSize) {	
-			if (fh.jumpTableSize % sizeof(JumpEntry) != 0) 
+		if (fh.jumps.start) {	
+			if (fh.jumps.size % sizeof(JumpEntry) != 0) 
 				throw Error::FailedAction(
 					"Failed at loading script binary!",
 					"Malformed jump table section!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			auto jte = (JumpEntry*)(data.data() + fh.jumpTableStart);
-			for (usize i = 0; i < (fh.jumpTableSize / sizeof(JumpEntry)); ++i)
+			auto jte = (JumpEntry*)(data.data() + fh.jumps.start);
+			for (usize i = 0; i < (fh.jumps.size / sizeof(JumpEntry)); ++i)
 				out.jumps[jte[i].front()] = jte[i].back();
 		}
 		// Bytecode
-		if (!fh.byteCodeSize || fh.byteCodeSize % sizeof(Operation) != 0) 
+		if (!fh.code.size || fh.code.size % sizeof(Operation) != 0) 
 			throw Error::FailedAction(
 				"Failed at loading script binary!",
 				"Malformed bytecode section!",
 				CTL_CPP_PRETTY_SOURCE
 			);
-		out.code.resize(fh.byteCodeSize / sizeof(Operation), 0);
-		MX::memmove((void*)out.code.data(), (void*)data.data() + fh.byteCodeStart, fh.byteCodeSize);
+		out.code.resize(fh.code.size / sizeof(Operation), 0);
+		MX::memmove((void*)out.code.data(), (void*)data.data() + fh.code.start, fh.code.size);
 		return out;
 	}
 }
