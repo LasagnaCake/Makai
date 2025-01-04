@@ -1,4 +1,4 @@
-# Dialog Scripting Language
+# Makai Dialog Language
 
 ## Overview
 
