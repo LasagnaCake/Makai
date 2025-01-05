@@ -209,19 +209,32 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 	};
 
 	struct Binary: Dialog {
-		constexpr Binary(): Dialog{StringList({"true", "false"})} {}
+		constexpr Binary(): Dialog{
+			.data = StringList({"true", "false"})
+		} {}
 
 		constexpr Binary& addOperation(uint16 const op) {
 			code.pushBack(op);
+			return *this;
 		}
 
 		constexpr Binary& addOperand(uint64 const op) {
-			Decay::AsType<uint16[4]> opval;
-			opcopy(opval, op);
-			code.pushBack(opval[0]);
-			code.pushBack(opval[1]);
-			code.pushBack(opval[2]);
-			code.pushBack(opval[3]);
+			uint16 opbuf[4];
+			opcopy(opbuf, op);
+			code.appendBack(opbuf);
+			return *this;
+		}
+
+		constexpr Binary& addStringOperand(String const& op) {
+			addOperand(data.size()+1);
+			data.pushBack(op);
+			return *this;
+		}
+
+		constexpr Binary& addParameterPack(String const& op) {
+			addOperand(data.size()+1);
+			data.pushBack(op);
+			return *this;
 		}
 
 	private:
