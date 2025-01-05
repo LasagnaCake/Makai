@@ -6,6 +6,9 @@ from typing import Any
 from array import array
 from pathlib import Path
 
+# TODO: Proper errors
+# TODO: Hex color processing
+
 anychr = "[\\S\\s]"
 
 names	= f"[0-z\\-_]"
