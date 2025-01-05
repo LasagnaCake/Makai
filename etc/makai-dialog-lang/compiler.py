@@ -155,7 +155,7 @@ def unpack_recurse(l: tuple[Any] | list[Any]) -> list[str]:
 		if m is tuple or m is list:
 			out.extend(unpack_recurse(m))
 		elif m != "":
-			out.append(normalize(m))
+			out.append(str(m))
 	return out
 
 
@@ -165,7 +165,7 @@ def unpack(tl: list[Any]) -> list[str]:
 		if m is tuple or m is list:
 			out.extend(unpack_recurse(m))
 		elif m != "":
-			out.append(normalize(m))
+			out.append(str(m))
 	return out
 
 def separate(script: str) -> list[str]:
@@ -219,7 +219,7 @@ def tokenize(nodes: list[str]) -> list[Token]:
 			case '/':
 				continue
 			case '"':
-				tokens.append(Token(OperationType.LINE, None, [strip(node)]))
+				tokens.append(Token(OperationType.LINE, None, [normalize(strip(node))]))
 			case '@':
 				if len(node) < 2:
 					raise "ERROR"
@@ -236,7 +236,7 @@ def tokenize(nodes: list[str]) -> list[Token]:
 					if nextNode[0] == '(':
 						tokens.append(Token(OperationType.NAMED_CALL, node[1:], param_pack(nextNode)))
 					elif nextNode[0] == '"':
-						tokens.append(Token(OperationType.NAMED_CALL, node[1:], [strip(nextNode)]))
+						tokens.append(Token(OperationType.NAMED_CALL, node[1:], [normalize(strip(nextNode))]))
 					elif not len(re.findall(nonames, nextNode)):
 						tokens.append(Token(OperationType.NAMED_CALL, node[1:], [nextNode]))
 					else:
