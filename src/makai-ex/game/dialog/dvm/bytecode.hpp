@@ -83,11 +83,96 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		StringList	data;
 		/// @brief Dialog bytecode.
 		Binary		code;
+
+		/// @brief Converts a series of bytes to a processable dialog binary.
+		/// @param data Bytes to convert.
+		/// @return Script.
+		/// @throw Error::FailedAction on errors.
+		constexpr static Dialog fromBytes(BinaryData<> const& data) {
+			Dialog out;
+			if (data.size() < sizeof(uint64))
+				throw Error::FailedAction(
+					"Failed at loading script binary!",
+					"File size is too small!",
+					CTL_CPP_PRETTY_SOURCE
+				);
+			// Main header
+			FileHeader fh;
+			MX::memmove((void*)&fh.headerSize, (void*)data.data(), sizeof(uint64));
+			if (data.size() < fh.headerSize) 
+				throw Error::FailedAction(
+					"Failed at loading script binary!",
+					"File size is too small!",
+					CTL_CPP_PRETTY_SOURCE
+				);
+			MX::memmove((void*)&fh, (void*)data.data(), fh.headerSize);
+			// Check if sizes are OK
+			if (
+				data.size() < fh.headerSize + fh.data.size + fh.jumps.size + fh.code.size
+			||	data.size() < fh.data.start
+			||	data.size() < fh.jumps.start
+			||	data.size() < fh.code.start
+			||	data.size() < (fh.jumps.start + fh.jumps.size)
+			||	data.size() < (fh.code.start + fh.code.size)
+			||	data.size() < (fh.data.start + fh.data.size)
+			) throw Error::FailedAction(
+				"Failed at loading script binary!",
+				"File size is too small!",
+				CTL_CPP_PRETTY_SOURCE
+			);
+			// Data division
+			if (fh.data.size) {
+				usize i = fh.headerSize;
+				String buf;
+				auto c			= data.data() + fh.headerSize + fh.data.start;
+				auto const end	= c + fh.data.size;
+				auto const eof	= data.end();
+				while (c != end && c != eof) {
+					if (*c == '\0') {
+						out.data.pushBack(buf);
+						buf.clear();
+					} else buf.pushBack(*c);
+					++c;
+				}
+				if (!buf.empty()) {
+					out.data.pushBack(buf);
+					buf.clear();
+				}
+			}
+			// Jump tables
+			if (fh.jumps.start) {	
+				if (fh.jumps.size % sizeof(JumpEntry) != 0) 
+					throw Error::FailedAction(
+						"Failed at loading script binary!",
+						"Malformed jump table section!",
+						CTL_CPP_PRETTY_SOURCE
+					);
+				auto jte = (JumpEntry*)(data.data() + fh.jumps.start);
+				for (usize i = 0; i < (fh.jumps.size / sizeof(JumpEntry)); ++i)
+					out.jumps[jte[i].front()] = jte[i].back();
+			}
+			// Bytecode
+			if (!fh.code.size || fh.code.size % sizeof(Operation) != 0) 
+				throw Error::FailedAction(
+					"Failed at loading script binary!",
+					"Malformed bytecode section!",
+					CTL_CPP_PRETTY_SOURCE
+				);
+			out.code.resize(fh.code.size / sizeof(Operation), 0);
+			MX::memmove((void*)out.code.data(), (void*)data.data() + fh.code.start, fh.code.size);
+			return out;
+		}
 	};
-
+	
+	/// @brief File header content section.
 	struct Section {
-		uint64 start, size;
+		/// @brief Section start.
+		uint64 start;
+		/// @brief Section size.
+		uint64 size;
 
+		/// @brief Returns the section offset.
+		/// @return Section offset.
 		constexpr uint64 offset() const {
 			return start + size;
 		}
@@ -104,118 +189,6 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		Section code;
 		// Put new things BELOW this line
 	};
-
-	/// @brief Converts a dialog program to a storeable binary file.
-	/// @param code Script to convert.
-	/// @return Script as binary.
-	constexpr BinaryData<> toBytes(Dialog const& code) {
-		BinaryData<>	out;
-		FileHeader		fh;
-		out.resize(fh.headerSize, '\0');
-		// Data division
-		fh.data.start = fh.headerSize;
-		for (String const& s: code.data) {
-			out.expand(s.nullTerminated() ?  : s.size() + 1, '\0');
-			MX::memcpy(out.end() - s.size(), s.data(), s.size());
-		}
-		fh.data.size = out.size() - fh.data.start;
-		// Jump tables
-		fh.jumps.start = fh.data.start + fh.data.size;
-		if (!code.jumps.empty()) {
-			out.expand(code.jumps.size() * sizeof(JumpEntry), '\0');
-			MX::memcpy(((JumpEntry*)(out.data() + fh.jumps.start)), code.jumps.data(), code.jumps.size());
-		}
-		fh.jumps.size = code.jumps.size() * sizeof(JumpEntry);
-		// Bytecode
-		fh.code.start = fh.jumps.start + fh.jumps.size;
-		if (!code.code.empty()) {
-			out.expand(code.code.size() * sizeof(Operation), '\0');
-			MX::memcpy(((uint16*)(out.data() + fh.code.start)), code.code.data(), code.code.size());
-		}
-		fh.code.size = code.code.size() * sizeof(Operation);
-		// Main header
-		MX::memcpy(((void*)out.data()), &fh, fh.headerSize);
-		return out;
-	}
-
-	/// @brief Converts a series of bytes to a processable dialog progrma.
-	/// @param data Bytes to convert.
-	/// @return Script.
-	/// @throw Error::FailedAction on errors.
-	constexpr Dialog fromBytes(BinaryData<> const& data) {
-		Dialog out;
-		if (data.size() < sizeof(uint64))
-			throw Error::FailedAction(
-				"Failed at loading script binary!",
-				"File size is too small!",
-				CTL_CPP_PRETTY_SOURCE
-			);
-		// Main header
-		FileHeader fh;
-		MX::memmove((void*)&fh.headerSize, (void*)data.data(), sizeof(uint64));
-		if (data.size() < fh.headerSize) 
-			throw Error::FailedAction(
-				"Failed at loading script binary!",
-				"File size is too small!",
-				CTL_CPP_PRETTY_SOURCE
-			);
-		MX::memmove((void*)&fh, (void*)data.data(), fh.headerSize);
-		// Check if sizes are OK
-		if (
-			data.size() < fh.headerSize + fh.data.size + fh.jumps.size + fh.code.size
-		||	data.size() < fh.data.start
-		||	data.size() < fh.jumps.start
-		||	data.size() < fh.code.start
-		||	data.size() < (fh.jumps.start + fh.jumps.size)
-		||	data.size() < (fh.code.start + fh.code.size)
-		||	data.size() < (fh.data.start + fh.data.size)
-		) throw Error::FailedAction(
-			"Failed at loading script binary!",
-			"File size is too small!",
-			CTL_CPP_PRETTY_SOURCE
-		);
-		// Data division
-		if (fh.data.size) {
-			usize i = fh.headerSize;
-			String buf;
-			auto c			= data.data() + fh.headerSize + fh.data.start;
-			auto const end	= c + fh.data.size;
-			auto const eof	= data.end();
-			while (c != end && c != eof) {
-				if (*c == '\0') {
-					out.data.pushBack(buf);
-					buf.clear();
-				} else buf.pushBack(*c);
-				++c;
-			}
-			if (!buf.empty()) {
-				out.data.pushBack(buf);
-				buf.clear();
-			}
-		}
-		// Jump tables
-		if (fh.jumps.start) {	
-			if (fh.jumps.size % sizeof(JumpEntry) != 0) 
-				throw Error::FailedAction(
-					"Failed at loading script binary!",
-					"Malformed jump table section!",
-					CTL_CPP_PRETTY_SOURCE
-				);
-			auto jte = (JumpEntry*)(data.data() + fh.jumps.start);
-			for (usize i = 0; i < (fh.jumps.size / sizeof(JumpEntry)); ++i)
-				out.jumps[jte[i].front()] = jte[i].back();
-		}
-		// Bytecode
-		if (!fh.code.size || fh.code.size % sizeof(Operation) != 0) 
-			throw Error::FailedAction(
-				"Failed at loading script binary!",
-				"Malformed bytecode section!",
-				CTL_CPP_PRETTY_SOURCE
-			);
-		out.code.resize(fh.code.size / sizeof(Operation), 0);
-		MX::memmove((void*)out.code.data(), (void*)data.data() + fh.code.start, fh.code.size);
-		return out;
-	}
 }
 
 #endif

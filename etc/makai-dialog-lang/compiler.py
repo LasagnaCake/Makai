@@ -69,7 +69,7 @@ def bytes_to_long(bytes):
 	assert len(bytes) == 8
 	return sum((b << (k * 8) for k, b in enumerate(bytes)))
 
-
+# From here: https://stackoverflow.com/a/28207808
 def murmur64(data):
 	seed = len(data)
 	m = 0xc6a4a7935bd1e995

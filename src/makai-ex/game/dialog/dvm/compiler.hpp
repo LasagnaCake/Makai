@@ -7,41 +7,72 @@
 
 /// @brief Dialog Virtual Machine.
 namespace Makai::Ex::Game::Dialog::DVM::Compiler {
+	/// @brief Regex matches used for processing.
 	namespace RegexMatches {
+		/// @brief Matches any character.
 		constexpr String ANY_CHAR		= String("[\\S\\s]");
+		/// @brief Matches any parameter character, except commas.
 		constexpr String PARAM_CHAR		= String("[^,]");
+		/// @brief Matches any valid name character.
 		constexpr String NAME_CHAR		= String("[0-z\\-_]");
+		/// @brief Matches any invalid name character.
 		constexpr String NON_NAME_CHAR	= String("[^0-z\\-_]");
+		/// @brief Matches any complex token.
 		constexpr String COMPLEX_TOKEN	= String("[\\w&!@#$%&><+\\-_']");
+		/// @brief Matches any simple token.
 		constexpr String SIMPLE_TOKEN	= String("[*.,;]");
 
+		/// @brief Creates a regex that lazily matches all characters between the given tokens.
+		/// @param begin Start token.
+		/// @param end End token.
+		/// @return Regex.
 		constexpr String makePack(String const& begin, String const& end) {
-			return String() + begin + ANY_CHAR + "*?" + end;
+			return begin + ANY_CHAR + "*?" + end;
 		}
 
+		/// @brief Matches any text string.
 		constexpr String STRINGS		= makePack("\"", "\"");
+		/// @brief Matches any parens pack.
 		constexpr String PARENTHESES	= makePack("(", ")");
+		/// @brief Matches any brackets pack.
 		constexpr String ANGLE_BRACKETS	= makePack("[", "]");
+		/// @brief Matches line comments.
 		constexpr String LINE_COMMENTS	= String("\\/\\/.*");
+		/// @brief Matches block comments.
 		constexpr String BLOCK_COMMENTS = makePack("/*", "*/");
 
+		/// @brief Concatenats a series of regexes into one to match any.
+		/// @tparam ...Args Argument types.
+		/// @param first First regex.
+		/// @param ...args Following regexes.
+		/// @return Concatenated regex.
 		template<class... Args>
 		constexpr String concat(String const& first, Args const&... args)
 		requires (... && Type::Convertible<Args, String>) {
 			return first + (... + ("|" + args));
 		}
 
+		/// @brief Matches all packs.
 		constexpr String PACKS			= concat(STRINGS, PARENTHESES, ANGLE_BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
+		/// @brief Matches all tokens.
 		constexpr String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", PACKS);
+		/// @brief Matches all parameter tokens.
 		constexpr String ALL_PARAMETERS	= concat(ANY_PARAM_CHAR + "+", PACKS);
 	}
 
+	/// @brief Structural representation of the program.
 	struct OperationTree {
+		/// @brief Parameter pack.
 		struct ParameterPack {
+			/// @brief Parameter pack arguments.
 			StringList args;
 
+			/// @brief Empty constructor.
 			constexpr ParameterPack() {}
 
+			/// @brief Creates a parameter pack from a parameter pack string.
+			/// @param str String to create from.
+			/// @return Parameter pack.
 			static ParameterPack fromString(String const& str) {
 				ParameterPack pack;
 				auto matches = Regex::find(str.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
@@ -69,39 +100,63 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 				return pack;
 			}
 
+			/// @brief Constructs a parameter pack from a list of strings.
+			/// @param args Strings to construct from.
 			constexpr ParameterPack(StringList const& args): args(args) {}
 
+			/// @brief Constructs a parameter pack from a series of values.
+			/// @tparam ...Args Argument types.
+			/// @param ...args Values to construct from.
 			template<class... Args>
 			constexpr explicit ParameterPack(Args const&... args)
 			requires (... && Type::Convertible<Args, String>):
 				args(StringList({args...})) {}
 			
+			/// @brief Copy constructor (defaulted).
 			ParameterPack(ParameterPack const& other)	= default;
+			/// @brief Move constructor (defaulted).
 			ParameterPack(ParameterPack&& other)		= default;
 		};
 
+		/// @brief Operation token.
 		struct Token {
+			/// @brief Operation type.
 			Operation		type	= Operation::DVM_O_NO_OP;
+			/// @brief Operation name. Used by some types.
 			String			name	= String();
+			/// @brief Operation value. Used by some types.
 			uint64			value	= 0;
+			/// @brief Operation parameters. Used by some types.
 			ParameterPack	pack	= ParamPack();
+			/// @brief Operation mode.
 			uint64			mode	= 0;
 
+			/// @brief Returns the token's operation.
+			/// @param sp SP mode override. Only used if non-zero. By default, it is zero.
+			/// @return Operation.
 			constexpr uint16 operation(uint16 const sp = 0) const {
 				if (sp)
 					return enumcast(type) | (sp << 12);
 				return enumcast(type) | (mode << 12);
 			}
 
+			/// @brief Returns the token's operation.
+			/// @return Operation.
 			constexpr operator uint16() const {return operation();}
 		};
 
+		/// @brief Token list.
 		using Tokens = List<Token>;
+		/// @brief Token tree operation tokens.
 		Tokens tokens;
 			
+		/// @brief Copy constructor (defaulted).
 		OperationTree(OperationTree const& other)	= default;
+		/// @brief Move constructor (defaulted).
 		OperationTree(OperationTree&& other)		= default;
 
+		/// @brief Constructs the token tree from a series of source file nodes.
+		/// @param nodes Nodes to build from.
 		OperationTree(StringList const& nodes) {
 			if (nodes.empty())
 				throw Error::NonexistentValue("No nodes were given!", CTL_CPP_PRETTY_SOURCE);
@@ -213,6 +268,9 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 				);
 		}
 
+		/// @brief Creates an operation tree from a source file.
+		/// @param src Source file to construct tree from.
+		/// @return Operation tree.
 		static OperationTree fromSource(String const& src) {
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
 			StringList nodes;
@@ -233,16 +291,24 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 	};
 
+	/// @brief Dialog binary builder.
 	struct BinaryBuilder: Dialog {
+		/// @brief Empty constructor.
 		constexpr BinaryBuilder(): Dialog{
 			.data = StringList({"true", "false"})
 		} {}
 
+		/// @brief Adds an operation to the binary.
+		/// @param op Operation to add.
+		/// @return Reference to self.
 		constexpr BinaryBuilder& addOperation(uint16 const op) {
 			code.pushBack(op);
 			return *this;
 		}
 
+		/// @brief Adds an operand to the binary.
+		/// @param op Operand to add.
+		/// @return Reference to self.
 		constexpr BinaryBuilder& addOperand(uint64 const op) {
 			uint16 opbuf[4];
 			opcopy(opbuf, op);
@@ -250,16 +316,25 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return *this;
 		}
 
+		/// @brief Adds a string operand to the binary.
+		/// @param str String to add.
+		/// @return Reference to self.
 		constexpr BinaryBuilder& addStringOperand(String const& str) {
 			addOperand(data.size()+1);
 			data.pushBack(str);
 			return *this;
 		}
 
+		/// @brief Adds a named operand to the binary.
+		/// @param name Name to add.
+		/// @return Reference to self.
 		constexpr BinaryBuilder& addNamedOperand(String const& name) {
 			return addOperand(ConstHasher::hash(name));
 		}
 
+		/// @brief Adds a parameter pack to the binary.
+		/// @param params Parameters to add.
+		/// @return Reference to self.
 		constexpr BinaryBuilder& addParameterPack(StringList const& params) {
 			addOperand(data.size()+1);
 			addOperand(params.size());
@@ -267,6 +342,8 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return *this;
 		}
 
+		/// @brief Creates a file header for the binary.
+		/// @return File header.
 		constexpr FileHeader header() const {
 			FileHeader fh;
 			fh.data		= {fh.headerSize, 0};
@@ -276,6 +353,9 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return fh;
 		}
 
+		/// @brief Creates a binary from an operation tree.
+		/// @param tree Tree to create binary from.
+		/// @return Constructed binary.
 		static BinaryBuilder fromTree(OperationTree const& tree) {
 			BinaryBuilder out;
 			for (auto& token: tree.tokens) {
@@ -330,8 +410,10 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			}
 			return out;
 		}
-
-		BinaryData<> toBytes() const {
+		
+		/// @brief Converts the dialog binary to a storeable binary file.
+		/// @return Dialog as file.
+		constexpr BinaryData<> toBytes() const {
 			BinaryData<>	out;
 			FileHeader		fh	= header();
 			// Main header
@@ -361,19 +443,31 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 	};
 
-	BinaryBuilder const compileSource(String const& source) {
+	/// @brief Compiles a dialog source.
+	/// @param source Source to compile.
+	/// @return Dialog binary.
+	inline BinaryBuilder const compileSource(String const& source) {
 		return BinaryBuilder::fromTree(OperationTree::fromSource(source));
 	}
-
-	BinaryBuilder const compileFile(String const& path) {
+	
+	/// @brief Compiles a dialog source file.
+	/// @param path Path to file to compile.
+	/// @return Dialog binary.
+	inline BinaryBuilder const compileFile(String const& path) {
 		return compileSource(File::getText(path));
 	}
 
-	void const compileSourceToFile(String const& source, String const& outpath) {
+	/// @brief Compiles a dialog source, then saves it to a file.
+	/// @param source Source to compile.
+	/// @param outpath Path to save binary to.
+	inline void compileSourceToFile(String const& source, String const& outpath) {
 		File::saveBinary(outpath, compileSource(source).toBytes());
 	}
 
-	void const compileFileToFile(String const& path, String const& outpath) {
+	/// @brief Compiles a dialog source file, then saves it to a file.
+	/// @param source Path to source to compile.
+	/// @param outpath Path to save binary to.
+	inline void compileFileToFile(String const& path, String const& outpath) {
 		File::saveBinary(outpath, compileFile(path).toBytes());
 	}
 }
