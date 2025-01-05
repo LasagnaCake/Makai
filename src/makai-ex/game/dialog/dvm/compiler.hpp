@@ -233,34 +233,34 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 	};
 
-	struct Binary: Dialog {
-		constexpr Binary(): Dialog{
+	struct BinaryBuilder: Dialog {
+		constexpr BinaryBuilder(): Dialog{
 			.data = StringList({"true", "false"})
 		} {}
 
-		constexpr Binary& addOperation(uint16 const op) {
+		constexpr BinaryBuilder& addOperation(uint16 const op) {
 			code.pushBack(op);
 			return *this;
 		}
 
-		constexpr Binary& addOperand(uint64 const op) {
+		constexpr BinaryBuilder& addOperand(uint64 const op) {
 			uint16 opbuf[4];
 			opcopy(opbuf, op);
 			code.appendBack(opbuf);
 			return *this;
 		}
 
-		constexpr Binary& addStringOperand(String const& str) {
+		constexpr BinaryBuilder& addStringOperand(String const& str) {
 			addOperand(data.size()+1);
 			data.pushBack(str);
 			return *this;
 		}
 
-		constexpr Binary& addNamedOperand(String const& name) {
+		constexpr BinaryBuilder& addNamedOperand(String const& name) {
 			return addOperand(ConstHasher::hash(name));
 		}
 
-		constexpr Binary& addParameterPack(StringList const& params) {
+		constexpr BinaryBuilder& addParameterPack(StringList const& params) {
 			addOperand(data.size()+1);
 			addOperand(params.size());
 			data.appendBack(params);
@@ -269,15 +269,15 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 
 		constexpr FileHeader header() const {
 			FileHeader fh;
-			fh.jumps	= {fh.headerSize, jumps.size()};
-			fh.data		= {fh.jumps.offset(), 0};
+			fh.data		= {fh.headerSize, 0};
 			for (String const& s: data) fh.data.size += s.nullTerminated() ? s.size() : s.size()+1;
-			fh.code		= {fh.data.offset(), code.size()};
+			fh.jumps	= {fh.data.offset(), jumps.size()};
+			fh.code		= {fh.jumps.offset(), code.size()};
 			return fh;
 		}
 
-		static Binary fromTree(OperationTree const& tree) {
-			Binary out;
+		static BinaryBuilder fromTree(OperationTree const& tree) {
+			BinaryBuilder out;
 			for (auto& token: tree.tokens) {
 				switch (token.type) {
 					case Operation::DVM_O_NO_OP:
@@ -331,18 +331,50 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return out;
 		}
 
+		BinaryData<> toBytes() const {
+			BinaryData<>	out;
+			FileHeader		fh	= header();
+			// Main header
+			out.resize(fh.headerSize, '\0');
+			MX::memcpy(((void*)out.data()), &fh, fh.headerSize);
+			// Data division
+			for (String const& s: data) {
+				out.expand(s.nullTerminated() ?  : s.size() + 1, '\0');
+				MX::memcpy(out.end() - s.size(), s.data(), s.size());
+			}
+			// Jump tables
+			if (!jumps.empty()) {
+				out.expand(jumps.size() * sizeof(JumpEntry), '\0');
+				MX::memcpy(((JumpEntry*)(out.data() + fh.jumps.start)), jumps.data(), jumps.size());
+			}
+			// Bytecode
+			if (!code.empty()) {
+				out.expand(code.size() * sizeof(Operation), '\0');
+				MX::memcpy(((uint16*)(out.data() + fh.code.start)), code.data(), code.size());
+			}
+			return out;
+		}
+
 	private:
 		constexpr static void opcopy(Decay::AsType<uint16[4]>& buf, uint64 const val) {
 			MX::memcpy((void*)buf, (void*)&val, sizeof(uint64));
 		}
 	};
 
-	Binary const compileSource(String const& source) {
-		return Binary::fromTree(OperationTree::fromSource(source));
+	BinaryBuilder const compileSource(String const& source) {
+		return BinaryBuilder::fromTree(OperationTree::fromSource(source));
 	}
 
-	Binary const compileFile(String const& path) {
+	BinaryBuilder const compileFile(String const& path) {
 		return compileSource(File::getText(path));
+	}
+
+	void const compileSourceToFile(String const& source, String const& outpath) {
+		File::saveBinary(outpath, compileSource(source).toBytes());
+	}
+
+	void const compileFileToFile(String const& path, String const& outpath) {
+		File::saveBinary(outpath, compileFile(path).toBytes());
 	}
 }
 
