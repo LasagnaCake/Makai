@@ -39,7 +39,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		/// @brief Matches line comments.
 		constexpr String LINE_COMMENTS	= String("\\/\\/.*");
 		/// @brief Matches block comments.
-		constexpr String BLOCK_COMMENTS = makePack("/*", "*/");
+		constexpr String BLOCK_COMMENTS = makePack("\\/*", "*\\/");
 
 		/// @brief Concatenats a series of regexes into one to match any.
 		/// @tparam ...Args Argument types.
