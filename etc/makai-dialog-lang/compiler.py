@@ -149,9 +149,9 @@ def decode_escapes(s: str) -> str:
 def normalize(s: str) -> str:
 	return decode_escapes(s.strip())
 
-def unpack_recurse(tup: tuple[Any]) -> list[str]:
+def unpack_recurse(l: tuple[Any] | list[Any]) -> list[str]:
 	out : list[str] = []
-	for m in tup:
+	for m in l:
 		if m is tuple or m is list:
 			out.extend(unpack_recurse(m))
 		elif m != "":
