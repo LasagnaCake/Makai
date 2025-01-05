@@ -283,7 +283,9 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case Operation::DVM_O_NO_OP:
 					case Operation::DVM_O_HALT:
 					case Operation::DVM_O_SYNC:
-					case Operation::DVM_O_USER_INPUT: out.addOperation(token); break;
+					case Operation::DVM_O_USER_INPUT:
+						out.addOperation(token);
+						break;
 					case Operation::DVM_O_LINE:
 						out.addOperation(token);
 						out.addStringOperand(token.pack.args[0]);
