@@ -31,7 +31,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 
 		/// @brief Matches any text string.
-		constexpr String STRINGS		= makePack("\"", "\"");
+		constexpr String STRINGS		= String("\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"");
 		/// @brief Matches any parens pack.
 		constexpr String PARENTHESES	= makePack("(", ")");
 		/// @brief Matches any brackets pack.

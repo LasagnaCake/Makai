@@ -16,7 +16,7 @@ nonames	= f"[^0-z\\-_]"
 
 tokens	= f"[\\w&!@#$%&><+\\-_\']"
 unaries	= f"[*.,;]"
-strings	= f"\"{anychr}*?\""
+strings	= f"\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\""
 parens	= f"\\({anychr}*?\\)"
 bracks	= f"\\[{anychr}*?\\]"
 lcoms	= f"\\/\\/.*"
