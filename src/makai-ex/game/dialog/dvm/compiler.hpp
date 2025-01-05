@@ -28,7 +28,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		template<class... Args>
 		constexpr String concat(String const& first, Args const&... args)
 		requires (... && Type::Convertible<Args, String>) {
-			return first + "|" + (... + "|" + args);
+			return first + (... + ("|" + args));
 		}
 
 		constexpr String PACKS			= concat(STRINGS, PARENTHESES, ANGLE_BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
@@ -217,9 +217,8 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
 			StringList nodes;
 			nodes.resize(matches.size());
-			for (auto& match: matches) {
+			for (auto& match: matches)
 				nodes.pushBack(match.match);
-			}
 			return SyntaxTree(nodes);
 		}
 
