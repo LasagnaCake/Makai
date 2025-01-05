@@ -90,8 +90,8 @@ namespace Makai::Ex::Game::Dialog::DVM {
 	};
 
 	/// @brief Dialog program file header.
-	struct [[gnu::packed]] FileHeader {
-		uint64 const headerSize		= sizeof(FileHeader);
+	struct [[gnu::packed]] DialogBinaryHeader {
+		uint64 const headerSize		= sizeof(DialogBinaryHeader);
 		uint64 version				= DIALOG_VERSION;
 		uint64 minVersion			= DIALOG_MIN_VERSION;
 		uint64 flags;
@@ -123,7 +123,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 					CTL_CPP_PRETTY_SOURCE
 				);
 			// Main header
-			FileHeader fh;
+			DialogBinaryHeader fh;
 			MX::memmove((void*)&fh.headerSize, (void*)data.data(), sizeof(uint64));
 			if (data.size() < fh.headerSize) 
 				throw Error::FailedAction(
@@ -131,17 +131,14 @@ namespace Makai::Ex::Game::Dialog::DVM {
 					"File size is too small!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			usize const fhs = (fh.headerSize < sizeof(FileHeader)) ? fh.headerSize : sizeof(FileHeader);
+			usize const fhs = (fh.headerSize < sizeof(DialogBinaryHeader)) ? fh.headerSize : sizeof(DialogBinaryHeader);
 			MX::memmove((void*)&fh, (void*)data.data(), fhs);
 			// Check if sizes are OK
 			if (
-				data.size() < fh.headerSize + fh.data.size + fh.jumps.size + fh.code.size
-			||	data.size() < fh.data.start
-			||	data.size() < fh.jumps.start
-			||	data.size() < fh.code.start
-			||	data.size() < (fh.jumps.start + fh.jumps.size)
-			||	data.size() < (fh.code.start + fh.code.size)
-			||	data.size() < (fh.data.start + fh.data.size)
+				data.size() < (fh.headerSize + fh.data.size + fh.jumps.size + fh.code.size)
+			||	data.size() < (fh.jumps.offset())
+			||	data.size() < (fh.code.offset())
+			||	data.size() < (fh.data.offset())
 			) throw Error::FailedAction(
 				"Failed at loading script binary!",
 				"File size is too small!",

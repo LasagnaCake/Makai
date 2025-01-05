@@ -439,8 +439,8 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 
 		/// @brief Creates a file header for the binary.
 		/// @return File header.
-		constexpr FileHeader header() const {
-			FileHeader fh;
+		constexpr DialogBinaryHeader header() const {
+			DialogBinaryHeader fh;
 			fh.data		= {fh.headerSize, 0};
 			for (String const& s: data) fh.data.size += s.nullTerminated() ? s.size() : s.size()+1;
 			fh.jumps	= {fh.data.offset(), jumps.size()};
@@ -515,15 +515,16 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		/// @brief Converts the dialog binary to a storeable binary file.
 		/// @return Dialog as file.
 		constexpr BinaryData<> toBytes() const {
-			BinaryData<>	out;
-			FileHeader		fh	= header();
+			BinaryData<>		out;
+			DialogBinaryHeader	fh	= header();
 			// Main header
 			out.resize(fh.headerSize, '\0');
 			MX::memcpy(((void*)out.data()), &fh, fh.headerSize);
 			// Data division
 			for (String const& s: data) {
-				out.expand(s.nullTerminated() ?  : s.size() + 1, '\0');
-				MX::memcpy(out.end() - s.size(), s.data(), s.size());
+				usize const strsz = s.size() + (s.nullTerminated() ? 0 : 1);
+				out.expand(strsz, '\0');
+				MX::memcpy(out.end() - strsz, s.data(), s.size());	
 			}
 			// Jump tables
 			if (!jumps.empty()) {
