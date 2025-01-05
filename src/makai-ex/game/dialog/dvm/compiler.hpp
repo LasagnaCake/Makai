@@ -67,9 +67,13 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			case 'n': return '\n';
 			case 'v': return '\v';
 			case 't': return '\t';
+			case 'b': return '\b';
+			case 'r': return '\r';
+			case 'f': return '\f';
 			case '"': return '\"';
 			case '\'': return '\'';
 		}
+		return c;
 	}
 
 	constexpr String normalize(String str) {
