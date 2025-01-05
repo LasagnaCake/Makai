@@ -199,6 +199,7 @@ def param_pack(s: str) -> list[str]:
 					raise "ERROR"
 				else:
 					out.append(p)
+	return out
 
 def tokenize(nodes: list[str]) -> list[Token]:
 	tokens: list[Token] = []
@@ -420,6 +421,8 @@ def assemble(tokens: list[Token]) -> Program:
 								raise "ERROR"
 							prog.add_operation(token.as_operation(2))
 							continue
+						if str(token.params[i]).find('.') != -1:
+							raise "ERROR"
 						prog.add_operation(token.as_operation(i > 0))
 						prog.add_named_operand(token.params[i])
 				else:

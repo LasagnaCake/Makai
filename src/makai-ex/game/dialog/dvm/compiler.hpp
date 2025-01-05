@@ -459,12 +459,18 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 						break;
 					case Operation::DVM_O_ACTOR:
 						for (usize i = 0; i < token.pack.args.size(); ++i) {
-							if (token.pack.args[i] == "...") {
-								out.addOperation(token.operation(i));
+							auto const& arg = token.pack.args[i];
+							if (arg == "...") {
+								out.addOperation(token.operation(2));
 								continue;
 							}
+							if (arg.find('.') != -1)
+								throw Error::InvalidValue(
+									"Invalid parameter name'" + arg + "'!",
+									CTL_CPP_PRETTY_SOURCE
+								);
 							out.addOperation(token.operation(i > 0));
-							out.addNamedOperand(token.pack.args[i]);
+							out.addNamedOperand(arg);
 						}
 						break;
 					case Operation::DVM_O_EMOTION:
