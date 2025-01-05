@@ -114,7 +114,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 				usize index = 0;
 				for (auto& match: matches) {
 					auto& arg = pack.args.pushBack(match.match).back();
-					arg = normalize(arg);
+					arg.strip();
 					if (arg == "..." && index != 0)
 						throw Error::InvalidValue(
 							toString("Invalid value list '", str, "'!"),
@@ -130,6 +130,15 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 							toString("'", arg, "' is not a valid value!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
+					switch (arg[0]) {
+						case '"': arg = normalize(arg.sliced(1, -2)); break;
+						case '(':
+						case '[': {
+							String a = pack.args.popBack();
+							ParameterPack pp = ParameterPack::fromString(a);
+							pack.args.appendBack(pp.args);
+						} break;
+					}
 					++index;
 				}
 				return pack;
