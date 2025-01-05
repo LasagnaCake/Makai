@@ -488,6 +488,7 @@ FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password)
 	usize hs = 0;
 	archive.read((char*)&hs, sizeof(uint64));
 	archive.seekg(0);
+	hs = (hs < sizeof(FileHeader)) ? hs : sizeof(FileHeader);
 	archive.read((char*)&header, hs);
 	// check if file is archive
 	if (header.flags & Flags::SINGLE_FILE_ARCHIVE_BIT)
