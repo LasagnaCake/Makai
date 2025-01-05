@@ -225,16 +225,30 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return *this;
 		}
 
-		constexpr Binary& addStringOperand(String const& op) {
+		constexpr Binary& addStringOperand(String const& str) {
 			addOperand(data.size()+1);
-			data.pushBack(op);
+			data.pushBack(str);
 			return *this;
 		}
 
-		constexpr Binary& addParameterPack(String const& op) {
+		constexpr Binary& addNamedOperand(String const& name) {
+			return addOperand(ConstHasher::hash(name));
+		}
+
+		constexpr Binary& addParameterPack(StringList const& params) {
 			addOperand(data.size()+1);
-			data.pushBack(op);
+			addOperand(params.size());
+			data.appendBack(params);
 			return *this;
+		}
+
+		constexpr FileHeader header() const {
+			FileHeader fh;
+			fh.jumps	= {fh.headerSize, jumps.size()};
+			fh.data		= {fh.jumps.offset(), 0};
+			for (String const& s: data) fh.data.size += s.nullTerminated() ? s.size() : s.size()+1;
+			fh.code		= {fh.data.offset(), code.size()};
+			return fh;
 		}
 
 	private:

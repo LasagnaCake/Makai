@@ -87,6 +87,10 @@ namespace Makai::Ex::Game::Dialog::DVM {
 
 	struct Section {
 		uint64 start, size;
+
+		constexpr uint64 offset() const {
+			return start + size;
+		}
 	};
 
 	/// @brief Dialog program file header.
