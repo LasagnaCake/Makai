@@ -47,11 +47,20 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 				StringList nodes;
 				usize index = 0;
 				for (auto& match: matches) {
-					args.pushBack(match.match.stripped());
-					if (args.back() == "..." && index != 0)
+					auto& arg = args.pushBack(match.match.stripped()).back();
+					if (arg == "..." && index != 0)
 						throw Error::InvalidValue(
 							toString("Invalid value list '", pack, "'!"),
 							"'...' may ONLY appear at the beginning of the value list!",
+							CTL_CPP_PRETTY_SOURCE
+						);
+					if (
+						Regex::count(arg, RegexMatches::NON_NAME_CHAR) > 0
+					&&	!Regex::matches(arg, RegexMatches::PACKS)
+					)
+						throw Error::InvalidValue(
+							toString("Invalid value list '", pack, "'!"),
+							toString("'", arg, "' is not a valid value!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
 					++index;
@@ -291,11 +300,32 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case Operation::DVM_O_EMOTION:
 						out.addOperation(token);
 						out.addNamedOperand(token.name);
+						break;
+					case Operation::DVM_O_JUMP:
+					case Operation::DVM_O_WAIT:
 					case Operation::DVM_O_COLOR:
 						out.addOperation(token);
 						out.addOperand(token.value);
+						break;
+					case Operation::DVM_O_ACTION:
+						out.addOperation(token.operation(token.pack.args.size() > 0));
+						if (token.pack.args.size())
+							out.addParameterPack(token.pack.args);
+						break;
+					case Operation::DVM_O_NAMED_CALL:
+						out.addOperation(token.operation(token.pack.args.size() > 2));
+						if (token.pack.args.size() > 2)
+							out.addParameterPack(token.pack.args);
+						else {
+							String const& val = token.pack.args[0];
+							if (val == "true")			out.addOperand(2);
+							else if (val == "false")	out.addOperand(1);
+							else						out.addStringOperand(val);
+						}
+						break;
 				}
 			}
+			return out;
 		}
 
 	private:
