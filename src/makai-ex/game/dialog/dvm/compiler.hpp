@@ -73,6 +73,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			/// @brief Creates a parameter pack from a parameter pack string.
 			/// @param str String to create from.
 			/// @return Parameter pack.
+			/// @throw Error::InvalidValue on syntax errors.
 			static ParameterPack fromString(String const& str) {
 				ParameterPack pack;
 				auto matches = Regex::find(str.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
@@ -157,6 +158,9 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 
 		/// @brief Constructs the token tree from a series of source file nodes.
 		/// @param nodes Nodes to build from.
+		/// @throw Error::NonexistentValue when node list is empty.
+		/// @throw Error::FailedAction if compilation fails.
+		/// @throw Error::InvalidValue on syntax errors.
 		OperationTree(StringList const& nodes) {
 			if (nodes.empty())
 				throw Error::NonexistentValue("No nodes were given!", CTL_CPP_PRETTY_SOURCE);
@@ -234,7 +238,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 							});
 						tokens.pushBack({
 							.type	= Operation::DVM_O_EMOTION,
-							.value	= Graph::Color::toHexCodeRGBA(Graph::Color::fromHexCodeString(node.substring(1)))
+							.value	= hexColor(node.substring(1))
 						});
 					} break;
 					case '[': {
@@ -271,7 +275,13 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		/// @brief Creates an operation tree from a source file.
 		/// @param src Source file to construct tree from.
 		/// @return Operation tree.
+		/// @throw Error::NonexistentValue if source file is empty.
 		static OperationTree fromSource(String const& src) {
+			if (src.empty())
+				throw Error::NonexistentValue(
+					"Source is empty!",
+					CTL_CPP_PRETTY_SOURCE
+				);
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
 			StringList nodes;
 			nodes.resize(matches.size());
@@ -281,6 +291,42 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 
 	private:
+		constexpr uint32 asByte(Decay::AsType<char const[2]> const& nibbles) {
+			return (
+				uint32(nibbles[0] - '0') | (uint32(nibbles[1] - '0') << 4)
+			);
+		}
+
+		constexpr uint32 hexColor(String color) {
+			constexpr uint32 ALPHA_MASK = 0x000000ff;
+			constexpr uint32 COLOR_MASK = ~ALPHA_MASK;
+			color = Regex::replace(color, "(#|0x)", "").upper();
+			if (color.empty()) return ALPHA_MASK;
+			if (color.size() < 3 || color.size() > 8 || !color.isHex())
+				throw Error::InvalidValue(
+					"Invalid color value \"#"+ color +"\"!",
+					"Make sure the color values are correct!",
+					CTL_CPP_PRETTY_SOURCE
+				);
+			if (color.size() <= 4) {
+				String nc;
+				nc.appendBack(2, color[0]);
+				nc.appendBack(2, color[1]);
+				nc.appendBack(2, color[2]);
+				if (color.size() == 4)
+					nc.appendBack(2, color[3]);
+				color = nc;
+			}
+			uint32 out = 
+				(asByte({color[0], color[1]}) << 24) 
+			|	(asByte({color[2], color[3]}) << 16)
+			|	(asByte({color[4], color[5]}) << 8)
+			|	ALPHA_MASK
+			;
+			if (color.size() == 6) return out;
+			return out & (COLOR_MASK | asByte({color[6], color[7]}));
+		}
+
 		void assertValidNamedNode(String const& node, usize const min = 2) {
 			if (node.size() < min)
 				throw Error::InvalidValue(
