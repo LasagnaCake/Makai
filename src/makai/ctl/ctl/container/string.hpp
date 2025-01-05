@@ -606,9 +606,9 @@ public:
 
 	/// @brief Returns a string with a null terminator at the end.
 	/// @return Null-terminated string.
-	constexpr SelfType terminated() {
+	constexpr SelfType terminated() const {
 		SelfType str = *this;
-		return str.terminate('\0');
+		return str.terminate();
 	}
 	
 	/// @brief Returns the string as a "c-style" string.
