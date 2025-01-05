@@ -60,6 +60,35 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		constexpr String ALL_PARAMETERS	= concat(ANY_PARAM_CHAR + "+", PACKS);
 	}
 
+	constexpr char unescape(char const c) {
+		switch (c) {
+			case '\\': return '\\';
+			case '0': return ' ';
+			case 'n': return '\n';
+			case 'v': return '\v';
+			case 't': return '\t';
+			case '"': return '\"';
+			case '\'': return '\'';
+		}
+	}
+
+	constexpr String normalize(String str) {
+		str.strip();
+		String out;
+		bool escape = false;
+		for (auto& c: str) {
+			if (c == '\\') {
+				escape = true;
+				continue;
+			}
+			else if (escape) {
+				out.pushBack(unescape(c));
+				continue;
+			} else out.pushBack(c);
+		}
+		return out;
+	}
+
 	/// @brief Structural representation of the program.
 	struct OperationTree {
 		/// @brief Parameter pack.
@@ -80,7 +109,8 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 				StringList nodes;
 				usize index = 0;
 				for (auto& match: matches) {
-					auto& arg = pack.args.pushBack(match.match.stripped()).back();
+					auto& arg = pack.args.pushBack(match.match).back();
+					arg = normalize(arg);
 					if (arg == "..." && index != 0)
 						throw Error::InvalidValue(
 							toString("Invalid value list '", str, "'!"),
@@ -195,7 +225,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 								tokens.pushBack({
 									.type	= Operation::DVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= ParameterPack(next.sliced(1, -2))
+									.pack	= ParameterPack(normalize(next.sliced(1, -2)))
 								});
 							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR))
 								tokens.pushBack({
@@ -226,6 +256,13 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 						tokens.pushBack({
 							.type	= Operation::DVM_O_WAIT,
 							.value	= toUInt64(node.substring(1))
+						});
+					} break;
+					case '\"': {
+						assertValidNamedNode(node);
+						tokens.pushBack({
+							.type	= Operation::DVM_O_LINE,
+							.pack	= ParameterPack(normalize(next.sliced(1, -2)))
 						});
 					} break;
 					case '#': {
