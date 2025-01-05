@@ -74,6 +74,32 @@ namespace Makai::Ex::Game::Dialog::DVM {
 	using JumpTable = Map<uint64, uint64>;
 	/// @brief Jump position entry.
 	using JumpEntry = typename JumpTable::PairType;
+	
+	/// @brief File header content section.
+	struct Section {
+		/// @brief Section start.
+		uint64 start;
+		/// @brief Section size.
+		uint64 size;
+
+		/// @brief Returns the section offset.
+		/// @return Section offset.
+		constexpr uint64 offset() const {
+			return start + size;
+		}
+	};
+
+	/// @brief Dialog program file header.
+	struct [[gnu::packed]] FileHeader {
+		uint64 const headerSize		= sizeof(FileHeader);
+		uint64 version				= DIALOG_VERSION;
+		uint64 minVersion			= DIALOG_MIN_VERSION;
+		uint64 flags;
+		Section data;
+		Section jumps;
+		Section code;
+		// Put new things BELOW this line
+	};
 
 	/// @brief Compiled dialog program.
 	struct Dialog {
@@ -105,7 +131,8 @@ namespace Makai::Ex::Game::Dialog::DVM {
 					"File size is too small!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			MX::memmove((void*)&fh, (void*)data.data(), fh.headerSize);
+			usize const fhs = (fh.headerSize < sizeof(FileHeader)) ? fh.headerSize : sizeof(FileHeader);
+			MX::memmove((void*)&fh, (void*)data.data(), fhs);
 			// Check if sizes are OK
 			if (
 				data.size() < fh.headerSize + fh.data.size + fh.jumps.size + fh.code.size
@@ -162,32 +189,6 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			MX::memmove((void*)out.code.data(), (void*)data.data() + fh.code.start, fh.code.size);
 			return out;
 		}
-	};
-	
-	/// @brief File header content section.
-	struct Section {
-		/// @brief Section start.
-		uint64 start;
-		/// @brief Section size.
-		uint64 size;
-
-		/// @brief Returns the section offset.
-		/// @return Section offset.
-		constexpr uint64 offset() const {
-			return start + size;
-		}
-	};
-
-	/// @brief Dialog program file header.
-	struct [[gnu::packed]] FileHeader {
-		uint64 const headerSize		= sizeof(FileHeader);
-		uint64 version				= DIALOG_VERSION;
-		uint64 minVersion			= DIALOG_MIN_VERSION;
-		uint64 flags;
-		Section data;
-		Section jumps;
-		Section code;
-		// Put new things BELOW this line
 	};
 }
 
