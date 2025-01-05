@@ -42,15 +42,16 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 
 			constexpr ParameterPack() {}
 
-			ParameterPack(String const& pack) {
-				auto matches = Regex::find(pack.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
+			static ParameterPack fromString(String const& str) {
+				ParameterPack pack;
+				auto matches = Regex::find(str.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
 				StringList nodes;
 				usize index = 0;
 				for (auto& match: matches) {
-					auto& arg = args.pushBack(match.match.stripped()).back();
+					auto& arg = pack.args.pushBack(match.match.stripped()).back();
 					if (arg == "..." && index != 0)
 						throw Error::InvalidValue(
-							toString("Invalid value list '", pack, "'!"),
+							toString("Invalid value list '", str, "'!"),
 							"'...' may ONLY appear at the beginning of the value list!",
 							CTL_CPP_PRETTY_SOURCE
 						);
@@ -59,12 +60,13 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					&&	!Regex::matches(arg, RegexMatches::PACKS)
 					)
 						throw Error::InvalidValue(
-							toString("Invalid value list '", pack, "'!"),
+							toString("Invalid value list '", str, "'!"),
 							toString("'", arg, "' is not a valid value!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
 					++index;
-				}	
+				}
+				return pack;
 			}
 
 			constexpr ParameterPack(StringList const& args): args(args) {}
@@ -72,7 +74,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			template<class... Args>
 			constexpr explicit ParameterPack(Args const&... args)
 			requires (... && Type::Convertible<Args, String>):
-				args(StringList{args...}) {}
+				args(StringList({args...})) {}
 			
 			ParameterPack(ParameterPack const& other)	= default;
 			ParameterPack(ParameterPack&& other)		= default;
@@ -115,7 +117,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 							tokens.pushBack({
 								.type	= Operation::DVM_O_ACTION,
 								.name	= node.substring(1),
-								.pack	= next
+								.pack	= ParameterPack::fromString(next)
 							});
 							++i;
 						}
@@ -128,7 +130,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 								tokens.pushBack({
 									.type	= Operation::DVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= next
+									.pack	= ParameterPack::fromString(next)
 								});
 							else if (next[0] == '"')
 								tokens.pushBack({
@@ -183,7 +185,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case '[': {
 						tokens.pushBack({
 							.type	= Operation::DVM_O_ACTOR,
-							.pack	= node
+							.pack	= ParameterPack::fromString(node)
 						});
 					} break;
 					case '*': tokens.pushBack({.mode = 1});						break;
@@ -333,6 +335,14 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			MX::memcpy((void*)buf, (void*)&val, sizeof(uint64));
 		}
 	};
+
+	Binary const compileSource(String const& source) {
+		return Binary::fromTree(SyntaxTree::fromSource(source));
+	}
+
+	Binary const compileFile(String const& path) {
+		return compileSource(File::getText(path));
+	}
 }
 
 #endif
