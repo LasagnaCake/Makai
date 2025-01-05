@@ -243,7 +243,7 @@ def tokenize(nodes: list[str]) -> list[Token]:
 			case ';':
 				tokens.append(Token(OperationType.USER_INPUT))
 			case '+' | '-':
-				tokens.append(Token(OperationType.NAMED_CALL, node[1:], [node[0] == '+']))
+				tokens.append(Token(OperationType.NAMED_CALL, node[1:], [int(node[0] == '+') + 1]))
 			case '(':
 				continue
 			case _:
@@ -318,7 +318,7 @@ class Program:
 		self.code.extend(value.to_bytes(8))
 
 	def add_string_operand(self, value: str):
-		self.add_operand(len(self.data))
+		self.add_operand(len(self.data)+1)
 		self.data.append(value)
 
 	def add_named_operand(self, value: str):
