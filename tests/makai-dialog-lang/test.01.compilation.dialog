@@ -17,7 +17,7 @@ $delay 120
 [charlie] !angry @enter . @step-in !scream "Can you two just SHUT UP!?" ##red ;
 !angry *" I'm trying to \"sleep\" here." ; @step-out '240 .
 // Bob and alice are now sad :(
-[alice, bob] !sad @step-in . "Sorry..." ;
+[..., charlie] !sad @step-in . "Sorry..." ;
 // Disable autoplay
 -autoplay
 // Reset wait
