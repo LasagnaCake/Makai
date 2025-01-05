@@ -1,0 +1,26 @@
+// Set frames to wait for user input before proceeding
+$delay 600
+
+// Alice enters the scene, says something, then steps out
+[alice] !neutral @enter . @step-in "I'm currently talking!" ; @step-out .
+// Bob enters the scene
+[bob] !bored @enter @step-in "Now I'm talking..." ;
+// Alice steps in
+[alice] @step-in
+// Both say the same line
+*[bob] !happy "And now we're both talking!" ; @step-out
+// Enable autoplay
++autoplay
+// Change wait
+$delay 120
+// Charlie steps in, angry
+[charlie] !angry @enter . @step-in !scream "Can you two just SHUT UP!?" ##red ;
+!angry *" I'm trying to sleep here." ; @step-out '240 .
+// Bob and alice are now sad :(
+[alice, bob] !sad @step-in . "Sorry..." ;
+// Disable autoplay
+-autoplay
+// Reset wait
+$delay 600
+// All three exit the scene
+[...] @exit .
