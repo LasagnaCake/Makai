@@ -45,8 +45,16 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			ParameterPack(String const& pack) {
 				auto matches = Regex::find(pack.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
 				StringList nodes;
+				usize index = 0;
 				for (auto& match: matches) {
 					args.pushBack(match.match.stripped());
+					if (args.back() == "..." && index != 0)
+						throw Error::InvalidValue(
+							toString("Invalid value list '", pack, "'!"),
+							"'...' may ONLY appear at the beginning of the value list!",
+							CTL_CPP_PRETTY_SOURCE
+						);
+					++index;
 				}	
 			}
 
@@ -65,7 +73,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			Operation		type	= Operation::DVM_O_NO_OP;
 			String			name	= String();
 			uint64			value	= 0;
-			ParameterPack	params	= ParamPack();
+			ParameterPack	pack	= ParamPack();
 			uint64			mode	= 0;
 
 			constexpr uint16 operation(uint16 const sp = 0) const {
@@ -98,7 +106,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 							tokens.pushBack({
 								.type	= Operation::DVM_O_ACTION,
 								.name	= node.substring(1),
-								.params	= next
+								.pack	= next
 							});
 							++i;
 						}
@@ -111,19 +119,19 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 								tokens.pushBack({
 									.type	= Operation::DVM_O_NAMED_CALL,
 									.name	= name,
-									.params	= next
+									.pack	= next
 								});
 							else if (next[0] == '"')
 								tokens.pushBack({
 									.type	= Operation::DVM_O_NAMED_CALL,
 									.name	= name,
-									.params	= ParameterPack(next.sliced(1, -2))
+									.pack	= ParameterPack(next.sliced(1, -2))
 								});
 							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR))
 								tokens.pushBack({
 									.type	= Operation::DVM_O_NAMED_CALL,
 									.name	= name,
-									.params	= ParameterPack(next)
+									.pack	= ParameterPack(next)
 								});
 							else throw Error::InvalidValue(
 								toString("Invalid value of '", next, "' for '", node, "'!"),
@@ -147,7 +155,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 						assertValidNamedNode(node);
 						tokens.pushBack({
 							.type	= Operation::DVM_O_WAIT,
-							.params	= ParameterPack(node.substring(1))
+							.value	= toUInt64(node.substring(1))
 						});
 					} break;
 					case '#': {
@@ -166,7 +174,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case '[': {
 						tokens.pushBack({
 							.type	= Operation::DVM_O_ACTOR,
-							.params = node
+							.pack	= node
 						});
 					} break;
 					case '*': tokens.pushBack({.mode = 1});						break;
@@ -176,7 +184,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case '-': {
 						tokens.pushBack({
 							.type	= Operation::DVM_O_NAMED_CALL,
-							.params	= ParameterPack((node[0] == '+') ? "true" : "false")
+							.pack	= ParameterPack((node[0] == '+') ? "true" : "false")
 						}); break;
 					}
 					case '(': continue;
@@ -268,6 +276,24 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case Operation::DVM_O_USER_INPUT: out.addOperation(token); break;
 					case Operation::DVM_O_LINE:
 						out.addOperation(token);
+						out.addStringOperand(token.pack.args[0]);
+						break;
+					case Operation::DVM_O_ACTOR:
+						for (usize i = 0; i < token.pack.args.size(); ++i) {
+							if (token.pack.args[i] == "...") {
+								out.addOperation(token.operation(i));
+								continue;
+							}
+							out.addOperation(token.operation(i > 0));
+							out.addNamedOperand(token.pack.args[i]);
+						}
+						break;
+					case Operation::DVM_O_EMOTION:
+						out.addOperation(token);
+						out.addNamedOperand(token.name);
+					case Operation::DVM_O_COLOR:
+						out.addOperation(token);
+						out.addOperand(token.value);
 				}
 			}
 		}
