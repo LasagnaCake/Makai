@@ -36,7 +36,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		constexpr String ALL_PARAMETERS	= concat(ANY_PARAM_CHAR + "+", PACKS);
 	}
 
-	struct SyntaxTree {
+	struct OperationTree {
 		struct ParameterPack {
 			StringList args;
 
@@ -99,10 +99,10 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		using Tokens = List<Token>;
 		Tokens tokens;
 			
-		SyntaxTree(SyntaxTree const& other)	= default;
-		SyntaxTree(SyntaxTree&& other)		= default;
+		OperationTree(OperationTree const& other)	= default;
+		OperationTree(OperationTree&& other)		= default;
 
-		SyntaxTree(StringList const& nodes) {
+		OperationTree(StringList const& nodes) {
 			if (nodes.empty())
 				throw Error::NonexistentValue("No nodes were given!", CTL_CPP_PRETTY_SOURCE);
 			for (usize i = 0; i < nodes.size(); ++i) {
@@ -213,13 +213,13 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 				);
 		}
 
-		static SyntaxTree fromSource(String const& src) {
+		static OperationTree fromSource(String const& src) {
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
 			StringList nodes;
 			nodes.resize(matches.size());
 			for (auto& match: matches)
 				nodes.pushBack(match.match);
-			return SyntaxTree(nodes);
+			return OperationTree(nodes);
 		}
 
 	private:
@@ -276,7 +276,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return fh;
 		}
 
-		static Binary fromTree(SyntaxTree const& tree) {
+		static Binary fromTree(OperationTree const& tree) {
 			Binary out;
 			for (auto& token: tree.tokens) {
 				switch (token.type) {
@@ -336,7 +336,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 	};
 
 	Binary const compileSource(String const& source) {
-		return Binary::fromTree(SyntaxTree::fromSource(source));
+		return Binary::fromTree(OperationTree::fromSource(source));
 	}
 
 	Binary const compileFile(String const& path) {
