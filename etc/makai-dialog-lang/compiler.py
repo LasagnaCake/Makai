@@ -155,7 +155,7 @@ def unpack_recurse(tup: tuple[Any]) -> list[str]:
 		if m is tuple or m is list:
 			out.extend(unpack_recurse(m))
 		elif m != "":
-			out.append(str(m))
+			out.append(normalize(m))
 	return out
 
 
@@ -165,7 +165,7 @@ def unpack(tl: list[Any]) -> list[str]:
 		if m is tuple or m is list:
 			out.extend(unpack_recurse(m))
 		elif m != "":
-			out.append(str(m))
+			out.append(normalize(m))
 	return out
 
 def separate(script: str) -> list[str]:
@@ -191,7 +191,7 @@ def param_pack(s: str) -> list[str]:
 	for p in pp:
 		match p[0]:
 			case '"':
-				out.append(strip(p))
+				out.append(normalize(strip(p)))
 			case '(' | '[':
 				out.extend(param_pack(p))
 			case _:
