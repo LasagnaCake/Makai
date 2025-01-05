@@ -117,17 +117,8 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					arg.strip();
 					if (arg == "..." && index != 0)
 						throw Error::InvalidValue(
-							toString("Invalid value list '", str, "'!"),
+							toString("Invalid values '", str, "'!"),
 							"'...' may ONLY appear at the beginning of the value list!",
-							CTL_CPP_PRETTY_SOURCE
-						);
-					if (
-						Regex::count(arg, RegexMatches::NON_NAME_CHAR) > 0
-					&&	!Regex::matches(arg, RegexMatches::PACKS)
-					)
-						throw Error::InvalidValue(
-							toString("Invalid value list '", str, "'!"),
-							toString("'", arg, "' is not a valid value!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
 					switch (arg[0]) {
@@ -138,6 +129,14 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 							ParameterPack pp = ParameterPack::fromString(a);
 							pack.args.appendBack(pp.args);
 						} break;
+						default:
+							if (Regex::count(arg, RegexMatches::NON_NAME_CHAR) > 0)
+								throw Error::InvalidValue(
+									toString("Invalid values '", str, "'!"),
+									toString("Value '", arg, "' (at position [", index+1, "]) is invalid!\n"
+									"Names must only contain letters, numbers, '-' and '_'!"),
+									CTL_CPP_PRETTY_SOURCE
+								);
 					}
 					++index;
 				}
