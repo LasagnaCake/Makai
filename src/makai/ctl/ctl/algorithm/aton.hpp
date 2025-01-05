@@ -243,7 +243,7 @@ constexpr bool atoi(T const* const str, usize size, I& out, usize base = 0) {
 ///		
 ///		- `0y`:			Duotrigesimal.
 template<Type::Integer I, Type::ASCII T, usize S>
-constexpr bool atoi(Decay::AsType<const T[S]> const& str, I& out, usize const base = 0) {
+constexpr bool atoi(As<const T[S]> const& str, I& out, usize const base = 0) {
 	static_assert(S-1 > 0, "String cannot be empty!");
 	return ::CTL::atoi<I, T>(str, S - 1, out, base);
 }
@@ -296,7 +296,7 @@ constexpr bool atof(T const* const str, usize size, F& out) {
 /// @param out Output of the conversion.
 /// @return Whether the operation was successful.
 template<Type::Real F, Type::ASCII T, usize S>
-constexpr bool atof(Decay::AsType<const T[S]> const& str, F& out) {
+constexpr bool atof(As<const T[S]> const& str, F& out) {
 	static_assert(S-1 > 0, "String cannot be empty!");
 	return ::CTL::atof<F, T>(str, S - 1, out);
 }

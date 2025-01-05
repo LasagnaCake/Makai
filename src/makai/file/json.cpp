@@ -59,7 +59,7 @@ Makai::JSON::JSONView& Makai::JSON::JSONView::operator=(Makai::JSON::JSONView co
 	return (*this);
 }
 
-CTL::Decay::AsType<Extern::JSONData> Makai::JSON::JSONView::json() const {
+As<Extern::JSONData> Makai::JSON::JSONView::json() const {
 	return view();
 }
 

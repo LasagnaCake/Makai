@@ -10,7 +10,7 @@ CTL_EX_NAMESPACE_BEGIN
 /// @tparam T Element type.
 /// @tparam S Array size.
 template<class T, usize S>
-using CArray = Decay::AsType<T[S]>;
+using CArray = As<T[S]>;
 
 /// @brief Decays to a fixed-size "C-style" string.
 /// @tparam S String size.

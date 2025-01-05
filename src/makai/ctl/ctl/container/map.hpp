@@ -144,7 +144,7 @@ public:
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
 	template<SizeType N>
-	constexpr explicit BaseSimpleMap(Decay::AsType<PairType[N]> const& values): BaseType(values) {
+	constexpr explicit BaseSimpleMap(As<PairType[N]> const& values): BaseType(values) {
 		clean();
 		update();
 	}
@@ -400,7 +400,7 @@ public:
 	/// @param values Pairs to add.
 	/// @return Reference to self.
 	template<SizeType S>
-	constexpr SelfType& insert(Decay::AsType<PairType[S]> const& values) {
+	constexpr SelfType& insert(As<PairType[S]> const& values) {
 		return append(SelfType(values));
 	}
 

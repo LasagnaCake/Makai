@@ -59,19 +59,19 @@ public:
 	/// @brief Single element array type.
 	/// @tparam T Element type.
 	template<class T = DataType>
-	using SingleElementType	= Decay::AsType<TData[1]>;
+	using SingleElementType	= As<TData[1]>;
 	/// @brief Matrix storage type.
 	/// @tparam T Element type.
 	template<class T = DataType>
-	using MatrixType		= Decay::AsType<TData[R][C]>;
+	using MatrixType		= As<TData[R][C]>;
 	/// @brief Value array type.
 	/// @tparam T Element type.
 	template<class T = DataType>
-	using ArrayType			= Decay::AsType<TData[R*C]>;
+	using ArrayType			= As<TData[R*C]>;
 	/// @brief Single matrix column type.
 	/// @tparam T Element type.
 	template<class T = DataType>
-	using SingleColumnType	= Decay::AsType<TData[C]>;
+	using SingleColumnType	= As<TData[C]>;
 
 	/// @brief Self type.
 	using SelfType	= Matrix<ROWS, COLUMNS, DataType>;
@@ -1379,7 +1379,7 @@ private:
 	template<usize R2, usize C2, CTL::Type::Math::Operatable T2> friend class Matrix;
 	template<typename T2> friend Matrix<4, 4, T2> translate(Matrix<4, 4, T2>, Vector3 const&);
 	/// The matrix's data.
-	Decay::AsType<DataType[C][R]> data = {};
+	As<DataType[C][R]> data = {};
 };
 
 /// @brief Template matrix shorthand.

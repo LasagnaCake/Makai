@@ -287,7 +287,7 @@ namespace Collision::C2D {
 		/// @param trans Shape transform.
 		/// @param points Vertices.
 		template<usize S>
-		constexpr Shape(Decay::AsType<Vector2[S]> const& points): points(points)	{}
+		constexpr Shape(As<Vector2[S]> const& points): points(points)	{}
 
 		/// @brief Constructs the shape from a set of points.
 		/// @param trans Shape transform.

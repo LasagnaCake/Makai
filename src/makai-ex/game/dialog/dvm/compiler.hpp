@@ -340,7 +340,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 
 	private:
-		constexpr uint32 asByte(Decay::AsType<char const[2]> const& nibbles) {
+		constexpr uint32 asByte(As<char const[2]> const& nibbles) {
 			return (
 				uint32(nibbles[0] - '0') | (uint32(nibbles[1] - '0') << 4)
 			);
@@ -540,7 +540,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 
 	private:
-		constexpr static void opcopy(Decay::AsType<uint16[4]>& buf, uint64 const val) {
+		constexpr static void opcopy(As<uint16[4]>& buf, uint64 const val) {
 			MX::memcpy((void*)buf, (void*)&val, sizeof(uint64));
 		}
 	};

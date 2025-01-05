@@ -36,7 +36,7 @@ namespace Random::Engine::Impl {
 
 		/// @brief The engine's current state.
 		struct State {
-			Decay::AsType<DataType[N]>	array;
+			As<DataType[N]>	array;
 			usize						index;
 		} state;
 

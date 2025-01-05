@@ -239,7 +239,7 @@ constexpr String toString(String const& value)						{return value;					}
 /// @param value Character array to convert.
 /// @return Resulting string.
 template<Type::ASCII T, usize N>
-constexpr String toString(Decay::AsType<T[N]> const& value) {
+constexpr String toString(As<T[N]> const& value) {
 	return String(value);
 }
 

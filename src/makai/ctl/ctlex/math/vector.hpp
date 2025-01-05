@@ -425,7 +425,7 @@ class Vector2: Ordered {
 
 		/// @brief Constructs the vector from an array of values.
 		/// @param data Values to construct from.
-		constexpr Vector2(Decay::AsType<float[2]> const& data):
+		constexpr Vector2(As<float[2]> const& data):
 			Vector2(data[0], data[1]) {}
 
 		/// @brief Destructor.
@@ -665,7 +665,7 @@ class Vector3: Ordered {
 
 		/// @brief Constructs the vector from an array of values.
 		/// @param data Values to construct from.
-		constexpr Vector3(Decay::AsType<float[3]> const& data):
+		constexpr Vector3(As<float[3]> const& data):
 			Vector3(data[0], data[1], data[2]) {}
 
 		/// @brief Destructor.
@@ -966,7 +966,7 @@ class Vector4: Ordered {
 
 		/// @brief Constructs the vector from an array of values.
 		/// @param data Values to construct from.
-		constexpr Vector4(Decay::AsType<float[4]> const& data):
+		constexpr Vector4(As<float[4]> const& data):
 			Vector4(data[0], data[1], data[2], data[3]) {}
 
 		/// @brief Destructor.

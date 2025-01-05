@@ -56,7 +56,7 @@ namespace Spline {
 		/// @tparam N Array size.
 		/// @param ps Points to use.
 		template<usize N>
-		constexpr Linear(Decay::AsType<T const[N]> const& ps) {
+		constexpr Linear(As<T const[N]> const& ps) {
 			points.resize(N);
 			for (T& p: ps)
 				points.pushBack(p);
@@ -116,7 +116,7 @@ namespace Spline {
 			/// @tparam P Array size.
 			/// @param points Points to use.
 			template <usize P>
-			constexpr Spline(Decay::AsType<T const[P][N]> const& points) {
+			constexpr Spline(As<T const[P][N]> const& points) {
 				sections.resize(P);
 				for (usize i = 0; i < P; ++i) {
 					Section<T, N> sec;
@@ -131,7 +131,7 @@ namespace Spline {
 			/// @param points Points to use.
 			/// @note Requires point count to be a multiple of the section size.
 			template <usize P>
-			constexpr Spline(Decay::AsType<T const[P]> const& points) {
+			constexpr Spline(As<T const[P]> const& points) {
 				static_assert(P % N == 0, "Point count is not a multiple of section size!");
 				sections.resize(P/N);
 				for (usize i = 0; i < P; i += N) {
@@ -225,7 +225,7 @@ namespace Spline {
 			/// @tparam P Array size.
 			/// @param points Points to use.
 			template <usize P>
-			constexpr Spline(Decay::AsType<T const[P][2]> const& points) {
+			constexpr Spline(As<T const[P][2]> const& points) {
 				sections.resize(P);
 				for (usize i = 0; i < P; ++i) {
 					sections.pushBack(
@@ -242,7 +242,7 @@ namespace Spline {
 			/// @param points Points to use.
 			/// @note Requires point count to be a multiple of 2.
 			template<usize P>
-			constexpr Spline(Decay::AsType<T const[P]> const& points) {
+			constexpr Spline(As<T const[P]> const& points) {
 				sections.resize(P/2);
 				static_assert(P % 2 == 0, "Point count is not a multiple of 2!");
 				for (usize i = 0; i < P; i += 2) {

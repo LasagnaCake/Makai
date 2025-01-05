@@ -266,7 +266,7 @@ usize populateTree(JSONData& tree, List<uint64> const& values, usize const start
 	return idx;
 }
 
-void generateBlock(Decay::AsType<uint8[16]>& block) {
+void generateBlock(As<uint8[16]>& block) {
 	uint64* b = (uint64*)block;
 	b[0] = rng.next();
 	b[1] = rng.next();

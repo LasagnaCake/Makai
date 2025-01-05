@@ -42,7 +42,7 @@ struct Arguments:
 	/// @tparam N Array size.
 	/// @param data Fixed array of arguments to use.
 	template<usize N>
-	constexpr Arguments(Decay::AsType<ConstantType[N]> const& data)
+	constexpr Arguments(As<ConstantType[N]> const& data)
 	requires (N <= L): start(::new DataType[N]), length(N) {
 		MX::memcpy(start, data, N);
 	}

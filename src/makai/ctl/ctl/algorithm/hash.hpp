@@ -199,8 +199,8 @@ namespace Impl::Hash {
 				char const* data,
 				usize sz,
 				usize seed,
-				Decay::AsType<usize[2]> const& m,
-				Decay::AsType<int[2]> const& r
+				As<usize[2]> const& m,
+				As<int[2]> const& r
 			) {
 				constexpr usize hashSize = sizeof(usize);
 				usize const	m0 = m[0], m1 = m[1];
@@ -287,7 +287,7 @@ namespace ConstHasher {
 	/// @param str Array to hash.
 	/// @return Resulting hash.
 	template< usize S>
-	constexpr static usize hash(Decay::AsType<const char[S]> const& data) {
+	constexpr static usize hash(As<const char[S]> const& data) {
 		return hash(data, S);
 	}
 
@@ -370,7 +370,7 @@ struct Hasher {
 	/// @param str Array to hash.
 	/// @return Resulting hash.
 	template<class T, usize S>
-	constexpr static usize hash(Decay::AsType<const T[S]> const& data) {
+	constexpr static usize hash(As<const T[S]> const& data) {
 		return hash(data, S, S);
 	}
 

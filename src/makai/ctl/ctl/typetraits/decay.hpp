@@ -23,10 +23,8 @@ namespace Decay {
         >
     >;
 
-	/// @brief Decays type to itself.
-	/// @note Used so certain types, like const references to C-style arrays, become valid declarations.
-	/// @example Decay::AsType<int[32]> const& a; // Instead of: int (const& a)[32].
-	template<class T> using AsType = T;
+	/// @brief Decays type to itself. Behaves equivalently to `As<T>`.
+	template<class T> using AsType = As<T>;
 
     /// @brief Decays type parameter pack to a kingdom of nothingness.
     template<class... Types> struct Pack {};

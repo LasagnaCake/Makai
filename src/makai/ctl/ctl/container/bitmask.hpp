@@ -31,7 +31,7 @@ struct BitMask:
 	using typename Typed::DataType;
 	using typename SelfIdentified::SelfType;
 
-	using MaskType = Decay::AsType<DataType[SIZE]>;
+	using MaskType = As<DataType[SIZE]>;
 
 	constexpr static DataType ALL_ENABLED = TypeInfo<DataType>::HIGHEST;
 

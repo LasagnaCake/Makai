@@ -61,7 +61,7 @@ public:
 	constexpr static SizeType SIZE = N;
 
 	/// @brief Underlying array type.
-	typedef Decay::AsType<DataType[SIZE]> ArrayType;
+	typedef As<DataType[SIZE]> ArrayType;
 
 	static_assert(N <= MAX_SIZE, "Array size must not be bigger than highest SizeType!");
 
@@ -70,7 +70,7 @@ public:
 	/// @brief Fixed array constructor.
 	/// @param arr Array to initialize with.
 	template<usize AS>
-	constexpr Array(Decay::AsType<DataType[AS]> const& arr)
+	constexpr Array(As<DataType[AS]> const& arr)
 	requires (AS == SIZE)											{copy(arr, contents, SIZE);				}
 	/// @brief Copy constructor.
 	/// @brief v `Array` to copy from.
@@ -164,7 +164,7 @@ public:
 	/// @param arr Array to assign.
 	/// @return Reference to self.
 	template<usize AS>
-	constexpr Array& operator=(Decay::AsType<DataType[AS]> const& arr)
+	constexpr Array& operator=(As<DataType[AS]> const& arr)
 	requires (AS == SIZE)								{copy(arr, contents, SIZE); return *this;				}
 	/// @brief Copy assignment operator.
 	/// @brief v `Array` to copy from.

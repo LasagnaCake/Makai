@@ -139,7 +139,7 @@ public:
 	/// @tparam S Size of array.
 	/// @param values Elements to add to `List`.
 	template<SizeType S>
-	constexpr explicit List(Decay::AsType<ConstantType[S]> const& values) {
+	constexpr explicit List(As<ConstantType[S]> const& values) {
 		invoke(S);
 		copy(values, contents, S);
 		count = S;
@@ -314,7 +314,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	template<SizeType S>
-	constexpr SelfType& insert(Decay::AsType<ConstantType[S]> const& values, IndexType const& index) {
+	constexpr SelfType& insert(As<ConstantType[S]> const& values, IndexType const& index) {
 		return insert(SelfType(values), index);
 	}
 
@@ -766,7 +766,7 @@ public:
 	/// @param values Array of elements to append.
 	/// @return Reference to self.
 	template<SizeType S>
-	constexpr SelfType& appendBack(Decay::AsType<DataType[S]> const& values) {
+	constexpr SelfType& appendBack(As<DataType[S]> const& values) {
 		expand(S);
 		copy(values, contents + count, S);
 		count += S;

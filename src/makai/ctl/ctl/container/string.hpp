@@ -139,7 +139,7 @@ public:
 	/// @tparam S Array size.
 	/// @param v Array to copy from.
 	template<SizeType S>
-	constexpr BaseString(Decay::AsType<ConstantType[S]> const& v) {
+	constexpr BaseString(As<ConstantType[S]> const& v) {
 		reserve(S);
 		MX::memcpy<DataType>(cbegin(), v, S);
 	}
@@ -468,7 +468,7 @@ public:
 	/// @param value Char array to concatenate.
 	/// @return Resulting concatenated string.
 	template<SizeType S>
-	constexpr SelfType operator+(Decay::AsType<ConstantType[S]> const& str) const	{return (*this) + SelfType(str);}
+	constexpr SelfType operator+(As<ConstantType[S]> const& str) const	{return (*this) + SelfType(str);}
 
 	/// @brief String concatenation operator (character).
 	/// @param value Character to concatenate.
@@ -487,7 +487,7 @@ public:
 	/// @param self `BaseString` to concatenate with.
 	/// @return Resulting concatenated string.
 	template<SizeType S>
-	friend constexpr SelfType operator+(Decay::AsType<ConstantType[S]> const& str, SelfType const& self)	{return SelfType(str) + (self);}
+	friend constexpr SelfType operator+(As<ConstantType[S]> const& str, SelfType const& self)	{return SelfType(str) + (self);}
 	
 	/// @brief String appending operator (character).
 	/// @param value Caracter to append.
@@ -506,7 +506,7 @@ public:
 	/// @param value Char array to append.
 	/// @return Reference to self.
 	template<SizeType S>
-	constexpr SelfType& operator+=(Decay::AsType<ConstantType[S]> str)	{appendBack(str); return *this;				}
+	constexpr SelfType& operator+=(As<ConstantType[S]> str)	{appendBack(str); return *this;				}
 
 	/// @brief Returns a string, repeated a given amount of times.
 	/// @param times Amount of times to repeat.
@@ -537,7 +537,7 @@ public:
 	/// @param str Array to compare with.
 	/// @return Whether they're equal.
 	template<SizeType S>
-	constexpr bool operator==(Decay::AsType<ConstantType[S]> const& str) const	{return *this == SelfType(str);			}
+	constexpr bool operator==(As<ConstantType[S]> const& str) const	{return *this == SelfType(str);			}
 	/// @brief Equality comparison operator (null-terminated string).
 	/// @param str String to compare with.
 	/// @return Whether they're equal.
@@ -551,7 +551,7 @@ public:
 	/// @param str Char array to compare with.
 	/// @return Order between objects.
 	template<SizeType S>
-	constexpr OrderType operator<=>(Decay::AsType<ConstantType[S]> const& str) const	{return *this <=> SelfType(str);		}
+	constexpr OrderType operator<=>(As<ConstantType[S]> const& str) const	{return *this <=> SelfType(str);		}
 	/// @brief Threeway comparison operator (null-terminated string).
 	/// @param str String to compare with.
 	/// @return Order between objects.
@@ -843,7 +843,7 @@ operator+(
 template<Type::ASCII TChar, Type::Integer TIndex = usize, AsUnsigned<TIndex> S>
 constexpr BaseString<TChar, TIndex>
 operator+(
-	Decay::AsType<typename BaseString<TChar, TIndex>::ConstantType[S]> const& str,
+	As<typename BaseString<TChar, TIndex>::ConstantType[S]> const& str,
 	BaseString<TChar, TIndex> const& self
 ) {
 	return BaseString<TChar, TIndex>(str) + self;
