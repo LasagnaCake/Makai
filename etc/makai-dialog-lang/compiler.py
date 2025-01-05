@@ -326,8 +326,6 @@ class FileHeader:
 	
 	def __str__(self):
 		return f"{{{self.headerSize}, {self.version}, {self.minVersion}, {self.flags}, {self.data}, {self.jumps}, {self.code}}}"
-		
-
 
 class Program:
 	data: list[str]
