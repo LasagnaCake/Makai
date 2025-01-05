@@ -31,9 +31,9 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return first + "|" + (... + "|" + args);
 		}
 
-		constexpr String PACKS		= concat(STRINGS, PARENTHESES, ANGLE_BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
-		constexpr String ALL_TOKENS	= concat(COMPLEX_TOKEN + "+", PACKS);
-		constexpr String ALL_TOKENS	= concat(ANY_PARAM_CHAR + "+", PACKS);
+		constexpr String PACKS			= concat(STRINGS, PARENTHESES, ANGLE_BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
+		constexpr String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", PACKS);
+		constexpr String ALL_PARAMETERS	= concat(ANY_PARAM_CHAR + "+", PACKS);
 	}
 
 	struct SyntaxTree {
@@ -42,7 +42,12 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 
 			constexpr ParameterPack() {}
 
-			ParameterPack(String const& packString) {	
+			ParameterPack(String const& pack) {
+				auto matches = Regex::find(pack.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
+				StringList nodes;
+				for (auto& match: matches) {
+					args.pushBack(match.match.stripped());
+				}	
 			}
 
 			constexpr ParameterPack(StringList const& args): args(args) {}
@@ -63,11 +68,13 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			ParameterPack	params	= ParamPack();
 			uint64			mode	= 0;
 
-			constexpr uint16 operation(uint16 const sp) {
+			constexpr uint16 operation(uint16 const sp = 0) const {
 				if (sp)
 					return enumcast(type) | (sp << 12);
 				return enumcast(type) | (mode << 12);
 			}
+
+			constexpr operator uint16() const {return operation();}
 		};
 
 		using Tokens = List<Token>;
@@ -110,7 +117,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 								tokens.pushBack({
 									.type	= Operation::DVM_O_NAMED_CALL,
 									.name	= name,
-									.params	= ParameterPack(next.substring(1, next.size()-1))
+									.params	= ParameterPack(next.sliced(1, -2))
 								});
 							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR))
 								tokens.pushBack({
@@ -159,7 +166,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case '[': {
 						tokens.pushBack({
 							.type	= Operation::DVM_O_ACTOR,
-							.params = ParameterPack(node)
+							.params = node
 						});
 					} break;
 					case '*': tokens.pushBack({.mode = 1});						break;
@@ -249,6 +256,20 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			for (String const& s: data) fh.data.size += s.nullTerminated() ? s.size() : s.size()+1;
 			fh.code		= {fh.data.offset(), code.size()};
 			return fh;
+		}
+
+		static Binary fromTree(SyntaxTree const& tree) {
+			Binary out;
+			for (auto& token: tree.tokens) {
+				switch (token.type) {
+					case Operation::DVM_O_NO_OP:
+					case Operation::DVM_O_HALT:
+					case Operation::DVM_O_SYNC:
+					case Operation::DVM_O_USER_INPUT: out.addOperation(token); break;
+					case Operation::DVM_O_LINE:
+						out.addOperation(token);
+				}
+			}
 		}
 
 	private:
