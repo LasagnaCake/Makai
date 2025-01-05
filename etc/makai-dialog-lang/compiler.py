@@ -325,7 +325,7 @@ class Program:
 		self.add_operand(murmur64(value))
 
 	def add_param_pack_operand(self, values: list[str]):
-		self.add_operand(len(self.data))
+		self.add_operand(len(self.data)+1)
 		self.add_operand(len(values))
 		self.data.extend(values)
 
