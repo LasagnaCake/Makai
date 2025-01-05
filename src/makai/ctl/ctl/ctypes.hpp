@@ -169,4 +169,11 @@ typedef wchar const*	cwstring;
 /// @brief Null type.
 typedef decltype(nullptr) nulltype;
 
+/// @brief Type identity. Decays to `T`.
+/// @tparam T Type.
+/// @note Used so certain types, like const references to C-style arrays, become valid declarations.
+/// @example As<int[32]> const& a; // Instead of: int (const& a)[32].
+template<class T>
+using As = T;
+
 #endif // CTL_EXTENDED_TYPES_H
