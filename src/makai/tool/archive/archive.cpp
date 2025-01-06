@@ -570,6 +570,7 @@ ArchiveHeader Arch::FileArchive::getHeader(String const& path) {
 	usize hs = 0;
 	af.read((char*)&hs, sizeof(uint64));
 	af.seekg(0);
+	if (hs > sizeof(ArchiveHeader)) hs = sizeof(ArchiveHeader);
 	af.read((char*)&ah, hs);
 	return ah;
 }
