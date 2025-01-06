@@ -179,7 +179,7 @@ struct DateTime {
 	}
 
 	constexpr DateTime& addYears(int64 const years) {
-		uint64 i = (years < 0 ? years : years);
+		uint64 i = (years < 0 ? -years : years);
 		uint64 curYear = year();
 		while (years != 0) {
 			if (years < 0) {
