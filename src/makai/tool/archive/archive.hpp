@@ -98,15 +98,20 @@ namespace Makai::Tool::Arch {
 	};
 	
 	/// @brief Archive file format current version.
-	constexpr uint64 ARCHIVE_VERSION		= 1;
+	constexpr uint64 ARCHIVE_VERSION		= 2;
 	/// @brief Archive file format minimum version required.
-	constexpr uint64 ARCHIVE_MIN_VERSION	= 1;
+	constexpr uint64 ARCHIVE_MIN_VERSION	= 2;
+	/// @brief Size of file token identifier.
+	constexpr usize FILE_TOKEN_SIZE			= 20;
+	
+	/// @brief File token type.
+	using FileToken = As<char const[FILE_TOKEN_SIZE]>;
 
 	/// @brief File archive header.
 	struct [[gnu::packed]] ArchiveHeader {
-		uint64	const headerSize		= sizeof(ArchiveHeader);
-		uint64	const fileHeaderSize	= sizeof(FileHeader);
-		uint64	const dirHeaderSize		= sizeof(DirectoryHeader);
+		uint64 headerSize		= sizeof(ArchiveHeader);
+		uint64 fileHeaderSize	= sizeof(FileHeader);
+		uint64 dirHeaderSize	= sizeof(DirectoryHeader);
 		uint64	version			= ARCHIVE_VERSION;
 		uint64	minVersion		= ARCHIVE_MIN_VERSION;
 		uint16	encryption		= (uint16)EncryptionMethod::AEM_AES256;
@@ -114,6 +119,7 @@ namespace Makai::Tool::Arch {
 		uint8	level			= 9;
 		uint64	flags			= 0;
 		uint64	dirHeaderLoc	= 0;
+		FileToken const token	= "Makai::FileArchive";
 		// Put new things BELOW this line
 	};
 

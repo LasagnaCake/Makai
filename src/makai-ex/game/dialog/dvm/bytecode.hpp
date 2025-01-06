@@ -89,15 +89,18 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		}
 	};
 
+	using Tool::Arch::FileToken;
+
 	/// @brief Dialog program file header.
 	struct [[gnu::packed]] DialogBinaryHeader {
-		uint64 const headerSize		= sizeof(DialogBinaryHeader);
-		uint64 version				= DIALOG_VERSION;
-		uint64 minVersion			= DIALOG_MIN_VERSION;
+		uint64 headerSize		= sizeof(DialogBinaryHeader);
+		uint64 version			= DIALOG_VERSION;
+		uint64 minVersion		= DIALOG_MIN_VERSION;
 		uint64 flags;
 		Section data;
 		Section jumps;
 		Section code;
+		FileToken const token	= "Makai::DialogBinary";
 		// Put new things BELOW this line
 	};
 
@@ -116,9 +119,9 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		/// @throw Error::FailedAction on errors.
 		constexpr static Dialog fromBytes(BinaryData<> const& data) {
 			Dialog out;
-			if (data.size() < sizeof(uint64))
+			if (data.size() < sizeof(uint64) + 12)
 				throw Error::FailedAction(
-					"Failed at loading script binary!",
+					"Failed at loading dialog binary!",
 					"File size is too small!",
 					CTL_CPP_PRETTY_SOURCE
 				);
@@ -127,7 +130,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			MX::memmove((void*)&fh.headerSize, (void*)data.data(), sizeof(uint64));
 			if (data.size() < fh.headerSize) 
 				throw Error::FailedAction(
-					"Failed at loading script binary!",
+					"Failed at loading dialog binary!",
 					"File size is too small!",
 					CTL_CPP_PRETTY_SOURCE
 				);
@@ -140,10 +143,16 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			||	data.size() < (fh.code.offset())
 			||	data.size() < (fh.data.offset())
 			) throw Error::FailedAction(
-				"Failed at loading script binary!",
+				"Failed at loading dialog binary!",
 				"File size is too small!",
 				CTL_CPP_PRETTY_SOURCE
 			);
+			if (String(fh.token) != "Makai::DialogBinary")
+				throw Error::FailedAction(
+					"Failed at loading dialog binary!",
+					"File is not a dialog binary!",
+					CTL_CPP_PRETTY_SOURCE
+				);
 			// Data division
 			if (fh.data.size) {
 				usize i = fh.headerSize;
@@ -167,7 +176,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			if (fh.jumps.start) {	
 				if (fh.jumps.size % sizeof(JumpEntry) != 0) 
 					throw Error::FailedAction(
-						"Failed at loading script binary!",
+						"Failed at loading dialog binary!",
 						"Malformed jump table section!",
 						CTL_CPP_PRETTY_SOURCE
 					);
@@ -178,7 +187,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			// Bytecode
 			if (!fh.code.size || fh.code.size % sizeof(Operation) != 0) 
 				throw Error::FailedAction(
-					"Failed at loading script binary!",
+					"Failed at loading dialog binary!",
 					"Malformed bytecode section!",
 					CTL_CPP_PRETTY_SOURCE
 				);

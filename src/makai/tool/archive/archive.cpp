@@ -430,6 +430,13 @@ void Arch::pack(
 	);
 }
 
+[[noreturn]] void notAFileArchiveError() {
+	throw File::FileLoadError(
+		"File is not a file archive!",
+		CTL_CPP_UNKNOWN_SOURCE
+	);
+}
+
 [[noreturn]] void doesNotExistError(String const& file) {
 	throw File::FileLoadError(
 		"Directory or file '" + file + "' does not exist!",
@@ -488,9 +495,18 @@ FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password)
 	usize hs = 0;
 	archive.read((char*)&hs, sizeof(uint64));
 	archive.seekg(0);
-	hs = (hs < sizeof(FileHeader)) ? hs : sizeof(FileHeader);
+	hs = (hs < sizeof(ArchiveHeader)) ? hs : sizeof(ArchiveHeader);
 	archive.read((char*)&header, hs);
+	// Make sure header sizes are OK
+	if (header.headerSize > sizeof(ArchiveHeader))
+		header.headerSize = sizeof(ArchiveHeader);
+	if (header.dirHeaderSize > sizeof(DirectoryHeader))
+		header.dirHeaderSize = sizeof(DirectoryHeader);
+	if (header.fileHeaderSize > sizeof(FileHeader))
+		header.fileHeaderSize = sizeof(FileHeader);
 	// check if file is archive
+	if (header.minVersion > 1 && String(header.token) != "Makai::FileArchive")
+		notAFileArchiveError();
 	if (header.flags & Flags::SINGLE_FILE_ARCHIVE_BIT)
 		singleFileArchiveError();
 	if (!header.dirHeaderLoc)
