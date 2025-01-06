@@ -60,6 +60,9 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		constexpr String ALL_PARAMETERS	= concat(ANY_PARAM_CHAR + "+", PACKS);
 	}
 
+	/// @brief Unescapes a character.
+	/// @param c Character to unescape.
+	/// @return Unescaped character.
 	constexpr char unescape(char const c) {
 		switch (c) {
 			case '\\': return '\\';
@@ -76,8 +79,11 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		return c;
 	}
 
+	/// @brief Processes all escape sequences on the string.
+	/// @param str String to normalize.
+	/// @return Normalized string.
 	constexpr String normalize(String str) {
-		str.strip();
+		//str.strip();
 		String out;
 		bool escape = false;
 		for (auto& c: str) {
@@ -271,7 +277,6 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 						});
 					} break;
 					case '\"': {
-						assertValidNamedNode(node);
 						tokens.pushBack({
 							.type	= Operation::DVM_O_LINE,
 							.pack	= ParameterPack(normalize(next.sliced(1, -2)))
