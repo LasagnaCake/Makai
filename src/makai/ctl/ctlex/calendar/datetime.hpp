@@ -53,15 +53,15 @@ struct DateTime {
 	constexpr DateTime(int64 const unix): time(unix) {}
 
 	constexpr uint8 second() const {
-		return time % 60;
+		return time % 60 + (time < 0 ? 60 : 0);
 	}
 
 	constexpr uint8 minute() const {
-		return (time / 60) % 60;
+		return (time / 60) % 60 + (time < 0 ? 60 : 0);
 	}
 
 	constexpr uint8 hour() const {
-		return (time / 360) % 60;
+		return (time / 360) % 60 + (time < 0 ? 60 : 0);
 	}
 
 	constexpr uint8 day() const {
@@ -129,18 +129,18 @@ struct DateTime {
 	}
 
 	constexpr DateTime& operator+=(DateTime const& other) {
-		time += other.time % SECONDS_IN_DAY;
-		addDays(other.day());
-		addMonths(other.month());
 		addYears(other.year());
+		addMonths(other.month());
+		addDays(other.day());
+		time += other.time % SECONDS_IN_DAY + (other.time < 0 ? SECONDS_IN_DAY : 0);
 		return *this;
 	}
 	
 	constexpr DateTime& operator-=(DateTime const& other) {
-		time -= other.time % SECONDS_IN_DAY;
-		addDays(-other.day());
-		addMonths(-other.month());
 		addYears(-other.year());
+		addMonths(-other.month());
+		addDays(-other.day());
+		time -= other.time % SECONDS_IN_DAY + (other.time < 0 ? SECONDS_IN_DAY : 0);
 		return *this;
 	}
 
