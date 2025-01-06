@@ -23,7 +23,7 @@ namespace Decay {
         >
     >;
 
-	/// @brief Decays type to itself. Behaves equivalently to `As<T>`.
+	/// @brief Decays type to itself. Behaves the same as `As<T>`.
 	template<class T> using AsType = As<T>;
 
     /// @brief Decays type parameter pack to a kingdom of nothingness.
