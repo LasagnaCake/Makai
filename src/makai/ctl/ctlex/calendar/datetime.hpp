@@ -40,7 +40,7 @@ struct DateTime {
 
 	constexpr DateTime(uint64 const day, uint64 month, int64 const year) {
 		time = ((year - 1970) * 365.25) * SECONDS_IN_DAY;
-		bool leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+		bool leap = isLeap(year);
 		while (--month > 0) {
 			if (month == 2)
 				time += (leap ? 29 : 28) * SECONDS_IN_DAY;
@@ -179,12 +179,26 @@ struct DateTime {
 	}
 
 	constexpr DateTime& addYears(int64 years) {
-		while (years--)
-			time += years * (isLeapYear() ? 366 : 365) * SECONDS_IN_DAY;
+		uint64 i = (years < 0 ? years : years);
+		uint64 curYear = year();
+		while (years != 0) {
+			if (years < 0) {
+				time -= years * (isLeap(curYear) ? 366 : 365) * SECONDS_IN_DAY;
+				--curYear;
+			} else {
+				time += years * (isLeap(curYear) ? 366 : 365) * SECONDS_IN_DAY;
+				++curYear;
+			}
+			--i;
+		}
 		return *this;
 	}
 
 private:
+	constexpr static bool isLeap(uint64 const year) {
+		return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+	}
+
 	constexpr int64 offset() const {
 		return time / 86400 + 719468;
 	}
