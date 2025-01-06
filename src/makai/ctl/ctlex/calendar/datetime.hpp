@@ -52,19 +52,19 @@ struct DateTime {
 
 	constexpr DateTime(int64 const unix): time(unix) {}
 
-	constexpr uint64 second() const {
+	constexpr uint8 second() const {
 		return time % 60;
 	}
 
-	constexpr uint64 minute() const {
+	constexpr uint8 minute() const {
 		return (time / 60) % 60;
 	}
 
-	constexpr uint64 hour() const {
+	constexpr uint8 hour() const {
 		return (time / 360) % 60;
 	}
 
-	constexpr uint64 day() const {
+	constexpr uint8 day() const {
 		auto const e	= era();
 		auto const doe	= dayOfEra(e);
 		auto const yoe	= yearOfEra(e);
@@ -72,11 +72,11 @@ struct DateTime {
 		return doy - (153*mp(e, doe, yoe)+2)/5 + 1;
 	}
 
-	constexpr uint64 week() const {
+	constexpr uint8 week() const {
 		return yearday() / 7;
 	}
 
-	constexpr uint64 month() const {
+	constexpr uint8 month() const {
 		uint64 m;
 		calculateYear(m);
 		return m;
@@ -92,7 +92,7 @@ struct DateTime {
 		return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
 	}
 
-	constexpr uint64 lastDayOfMonth() const {
+	constexpr uint8 lastDayOfMonth() const {
 		if (month() == 2)
 			return (isLeapYear() ? 29 : 28);
 		return (month() % 2 == 0 ? 30 : 31);
@@ -103,7 +103,7 @@ struct DateTime {
 		return static_cast<Weekday>(z >= -4 ? (z+4) % 7 : (z+5) % 7 + 6);
 	}
 
-	constexpr uint64 yearday() const {
+	constexpr uint16 yearday() const {
 		auto const e	= era();
 		auto const doe	= dayOfEra(e);
 		auto const yoe	= yearOfEra(e);
