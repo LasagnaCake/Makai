@@ -75,14 +75,21 @@ namespace Makai::Ex::Game::Danmaku {
 
 	namespace CollisionLayer {
 		using CollisionMask = Makai::Collision::C2D::LayerMask;
-		constexpr CollisionMask	PLAYER			= CollisionMask({1 << 0,	0,		0,		0});
-		constexpr CollisionMask	PLAYER_BULLET	= CollisionMask({1 << 1,	0,		0,		0});
-		constexpr CollisionMask	PLAYER_LASER	= CollisionMask({1 << 2,	0,		0,		0});
-		constexpr CollisionMask	PLAYER_BOMB		= CollisionMask({1 << 3,	0,		0,		0});
-		constexpr CollisionMask	ENEMY			= CollisionMask({0,			1 << 0,	0,		0});
-		constexpr CollisionMask	ENEMY_BULLET	= CollisionMask({0,			1 << 1,	0,		0});
-		constexpr CollisionMask	ENEMY_LASER		= CollisionMask({0,			1 << 2,	0,		0});
-		constexpr CollisionMask	ITEM			= CollisionMask({0,			0,		1 << 0,	0});
+		
+		constexpr CollisionMask	PLAYER			= {1 << 0,	0,		0,		0};
+		constexpr CollisionMask	PLAYER_BULLET	= {1 << 1,	0,		0,		0};
+		constexpr CollisionMask	PLAYER_LASER	= {1 << 2,	0,		0,		0};
+		constexpr CollisionMask	PLAYER_BOMB		= {1 << 3,	0,		0,		0};
+		constexpr CollisionMask	ENEMY			= {0,		1 << 0,	0,		0};
+		constexpr CollisionMask	ENEMY_BULLET	= {0,		1 << 1,	0,		0};
+		constexpr CollisionMask	ENEMY_LASER		= {0,		1 << 2,	0,		0};
+		constexpr CollisionMask	ITEM			= {0,		0,		1 << 0,	0};
+
+		constexpr CollisionMask PLAYER_MASK	=	PLAYER	| PLAYER_BULLET	| PLAYER_LASER	| PLAYER_BOMB	;
+		constexpr CollisionMask ENEMY_MASK	=	ENEMY	| ENEMY_BULLET	| ENEMY_LASER					;
+
+		constexpr CollisionMask PLAYER_COLLISION	= ENEMY_MASK | ITEM;
+		constexpr CollisionMask ENEMY_COLLISION		= PLAYER_MASK;
 	}
 }
 
