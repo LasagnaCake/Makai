@@ -4,6 +4,8 @@
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game::Danmaku {
+	using CollisionServer =  GameObject: Makai::Collision::C2D::Server;
+
 	struct Parameter {
 		float				from;
 		float				to;
@@ -17,7 +19,7 @@ namespace Makai::Ex::Game::Danmaku {
 		bool	enabled	= false;
 	};
 
-	struct GameObject: Makai::Collision::C2D::Server::ICollider, Makai::IUpdateable {
+	struct GameObject: CollisionServer::ICollider, Makai::IUpdateable {
 		Makai::Co::Promise<usize, true> task;
 
 		PauseState pause;
