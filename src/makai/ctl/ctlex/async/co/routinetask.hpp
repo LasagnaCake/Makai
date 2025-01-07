@@ -9,7 +9,6 @@ CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Cooperative routine facilities.
 namespace Co {
-	// TODO: Implement `IPlayable` stuff in class
 	/// @brief Specialized coroutine task interface.
 	struct IRoutineTask: IPlayable {
 		/// @brief Routine state.
@@ -37,7 +36,7 @@ namespace Co {
 		void process() {
 			if (taskState == State::RS_READY)
 				start();
-			if (taskState != State::RS_FINISHED && !paused) {
+			if (taskState == State::RS_RUNNING && !paused) {
 				if (!counter) {
 					if (prommy)
 						counter = prommy.next();
@@ -107,6 +106,12 @@ namespace Co {
 		///		Instead, simply `co_yield` the delay.
 		virtual PromiseType task() = 0;
 
+		/// @brief Do-nothing task.
+		/// @return Promise to task result.
+		PromiseType doNothing() {
+			co_return 1;
+		}
+
 	private:
 		/// @brief Underlying coroutine task.
 		PromiseType	prommy;
@@ -114,6 +119,20 @@ namespace Co {
 		State		taskState	= State::RS_READY;
 		/// @brief The routine's internal counter.
 		usize		counter		= 0;
+	};
+
+	/// @brief Routine task with dynamic task.
+	struct DynamicRoutineTask: IRoutineTask {
+		using IRoutineTask::PromiseType;
+
+		/// @brief Task to execute.
+		Functor<PromiseType()> onTask;
+
+	private:
+		PromiseType task() override final {
+			if (onTask) return onTask();
+			else return doNothing();
+		}
 	};
 }
 

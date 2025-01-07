@@ -287,7 +287,7 @@ private:
 /// @brief Tween interpolation stage.
 /// @tparam T Value type.
 template<Type::Ex::Tween::Tweenable T = float>
-struct StageData {
+struct TweenStage {
 	typedef T DataType;
 	/// @brief Start value.
 	DataType from;
@@ -332,11 +332,11 @@ public:
 	typedef T DataType;
 
 	/// @brief Tween stage type.
-	typedef StageData<DataType>	Stage;
+	typedef TweenStage<DataType>	Stage;
 	/// @brief Tween stage list type.
-	typedef List<Stage>			StageList;
+	typedef List<Stage>				StageList;
 	/// @brief Tween stage argument list type.
-	typedef Arguments<Stage>	StageArguments;
+	typedef Arguments<Stage>		StageArguments;
 
 	using ITweenPeriodic::ITweenPeriodic;
 
