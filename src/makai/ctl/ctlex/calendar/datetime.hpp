@@ -216,8 +216,8 @@ struct DateTime {
 		return DateTime(OS::Time::Clock::sinceEpoch<OS::Time::Seconds>());
 	}
 
-	constexpr String toString(String const& format) const {
-	}
+	/*constexpr String toString(String const& format) const {
+	}*/
 
 private:
 	constexpr void buildFromDate(int64 const year, uint8 month, uint8 const day) {
