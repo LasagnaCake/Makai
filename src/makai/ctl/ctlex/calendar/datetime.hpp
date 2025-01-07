@@ -38,19 +38,37 @@ struct DateTime {
 	constexpr static uint64 SECONDS_IN_DAY	= SECONDS_IN_HOUR * 24;
 	constexpr static uint64 SECONDS_IN_WEEK	= SECONDS_IN_DAY * 7;
 
-	constexpr DateTime(uint64 const day, uint64 month, int64 const year) {
-		time = ((year - 1970) * 365.25) * SECONDS_IN_DAY;
-		bool leap = isLeap(year);
-		while (--month > 0) {
-			if (month == 2)
-				time += (leap ? 29 : 28) * SECONDS_IN_DAY;
-			else
-				time += ((month % 2 == 0) ? 30 : 31) * SECONDS_IN_DAY;
-		}
-		time += day * SECONDS_IN_DAY;
+	struct Stamp {
+		int32	year		= 0;
+		uint32	month:	4	= 0;
+		uint32	day:	5	= 0;
+		uint32	hour:	6	= 0;
+		uint32	minute:	6	= 0;
+		uint32	second:	6	= 0;
+	};
+
+	constexpr explicit DateTime(int64 const year, uint8 const month, uint8 const day) {
+		if (((month % 12) + 1) == 2)
+			buildFromDate(year, (month % 12) + 1, (day % (isLeap(year) ? 29 : 28)) + 1);
+		else 
+			buildFromDate(year, (month % 12) + 1, (day % ((month % 2 == 0) ? 30 : 31)) + 1);
 	}
 
-	constexpr DateTime(int64 const unix): time(unix) {}
+	constexpr explicit DateTime(
+		int32 const year,
+		uint8 const month,
+		uint8 const day,
+		uint8 const hour,
+		uint8 const minute,
+		uint8 const second
+	): DateTime(year, month, day) {
+		time += (hour % 60) * SECONDS_IN_HOUR, (minute % 60) * 60 + (second % 60);
+	}
+
+	constexpr DateTime(Stamp const& time):
+		DateTime(time.year, time.month, time.day, time.hour, time.minute, time.second) {}
+
+	explicit constexpr DateTime(int64 const unix): time(unix) {}
 
 	constexpr uint8 second() const {
 		return time % 60 + (time < 0 ? 60 : 0);
@@ -82,7 +100,7 @@ struct DateTime {
 		return m;
 	}
 
-	constexpr int64 year() const {
+	constexpr int32 year() const {
 		uint64 m;
 		return calculateYear(m);
 	}
@@ -194,7 +212,26 @@ struct DateTime {
 		return *this;
 	}
 
+	static DateTime now() {
+		return DateTime(OS::Time::Clock::sinceEpoch<OS::Time::Seconds>());
+	}
+
+	constexpr String toString(String const& format) const {
+	}
+
 private:
+	constexpr void buildFromDate(int64 const year, uint8 month, uint8 const day) {
+		time = ((year - 1970) * 365.25) * SECONDS_IN_DAY;
+		bool leap = isLeap(year);
+		while (--month > 0) {
+			if (month == 2)
+				time += (leap ? 29 : 28) * SECONDS_IN_DAY;
+			else
+				time += ((month % 2 == 0) ? 30 : 31) * SECONDS_IN_DAY;
+		}
+		time += (day-1) * SECONDS_IN_DAY;
+	}
+
 	constexpr static bool isLeap(uint64 const year) {
 		return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 	}
