@@ -120,20 +120,6 @@ namespace Co {
 		/// @brief The routine's internal counter.
 		usize		counter		= 0;
 	};
-
-	/// @brief Routine task with dynamic task.
-	struct DynamicRoutineTask: IRoutineTask {
-		using IRoutineTask::PromiseType;
-
-		/// @brief Task to execute.
-		Functor<PromiseType()> onTask;
-
-	private:
-		PromiseType task() override final {
-			if (onTask) return onTask();
-			else return doNothing();
-		}
-	};
 }
 
 CTL_EX_NAMESPACE_END
