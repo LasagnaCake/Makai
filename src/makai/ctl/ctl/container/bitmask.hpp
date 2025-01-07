@@ -38,13 +38,13 @@ struct BitMask:
 	using OtherType = BitMask<TData, S, !I>;
 
 	/// @brief Empty constructor.
-	constexpr BitMask() {}
+	constexpr BitMask(): BitMask(INITIAL_STATE) {}
 
 	/// @brief Constructs a `BitMask` with all bits set to a given state.
 	/// @param state Initial state of the mask.
 	constexpr explicit BitMask(bool const state) {
 		for (usize i = 0; i < SIZE; ++i)
-			mask[i] =  (state ? ALL_ENABLED : 0);
+			mask[i] = (state ? ALL_ENABLED : 0);
 	}
 
 	/// @brief Constructs a `BitMask` from a given mask.
@@ -52,6 +52,20 @@ struct BitMask:
 	constexpr BitMask(MaskType const& mask) {
 		for (usize i = 0; i < SIZE; ++i)
 			this->mask[i] = mask[i];
+	}
+
+	/// @brief Constructs a `BitMask` from a series of masks.
+	/// @tparam ...Args Argument types.
+	/// @param ...args Masks to construct from.
+	template<class... Args>
+	constexpr BitMask(Args const... args)
+	requires (
+		(sizeof...(Args) == SIZE)
+	&&	(... && Type::Convertible<Args, DataType>)
+	): BitMask({args...}) {
+		/*MaskType mask = {args...};
+		for (usize i = 0; i < SIZE; ++i)
+			this->mask[i] = mask[i];*/
 	}
 
 	/// @brief Copy constructor.
@@ -189,7 +203,7 @@ struct BitMask:
 	}
 
 	/// @brief Underlying bit mask.
-	MaskType mask = {INITIAL_STATE ? ALL_ENABLED : 0};
+	MaskType mask;
 };
 
 CTL_NAMESPACE_END
