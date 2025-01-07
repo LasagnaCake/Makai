@@ -4,7 +4,7 @@
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game::Danmaku {
-	using CollisionServer =  GameObject: Makai::Collision::C2D::Server;
+	using CollisionServer = Makai::Collision::C2D::Server;
 
 	struct Parameter {
 		float				from;
