@@ -22,7 +22,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 		PauseState pause;
 
-		void onUpdate(float delta, Makai::App& app) override {
+		Math::Transform2D trans;
+
+		void onUpdate(float, Makai::App&) override {
 			if (pause.enabled && pause.time > 0) {
 				--pause.time;
 				return;
