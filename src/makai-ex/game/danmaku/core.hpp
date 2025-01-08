@@ -7,13 +7,23 @@ namespace Makai::Ex::Game::Danmaku {
 	using CollisionServer = Makai::Collision::C2D::Server;
 
 	struct Property {
-		bool				enabled	= false;
-		float				from	= 0;
-		float				to		= 0;
-		float				by		= 0;
-		Math::Ease::Mode	ease	= Math::Ease::linear;
-		float				current	= 0;
-		float				factor	= 0;
+		float				value		= 0;
+		bool				interpolate	= false;
+		float				start		= 0;
+		float				stop		= 0;
+		float				speed		= 0;
+		Math::Ease::Mode	ease		= Math::Ease::linear;
+		float				factor		= 0;
+
+		float next() {
+			if (!interpolate || speed == 0)
+				return value;
+			if (factor == 0)		value = start;
+			else if (factor < 1)	value = Math::lerp(start, stop, ease(factor));
+			else					value = stop;
+			factor += speed;
+			return value;
+		}
 	};
 
 	struct PauseState {
@@ -50,6 +60,12 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			while (!delay && task)
 				delay = task.next();
+		}
+		
+		bool paused() const {
+			if (pause.enabled)
+				return pause.time > 0;
+			return true;
 		}
 
 		Functor<void(GameObject&, float, App&)> onObjectUpdate;

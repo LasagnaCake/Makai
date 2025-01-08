@@ -12,6 +12,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		bool rotateSprite = false;
 
+		Instance<Graph::AnimatedPlaneRef> sprite = nullptr;
+
 		Bullet& clear() override {
 			trans			= Transform2D();
 			velocity		= {};
@@ -31,15 +33,19 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& reset() override {
-			velocity.current	= velocity.from;
-			rotation.current	= rotation.from;
-			velocity.factor		= 0;
-			rotation.factor		= 0;
+			velocity.value	= velocity.start;
+			rotation.value	= rotation.start;
+			velocity.factor	= 0;
+			rotation.factor	= 0;
 			return *this;
 		}
 
 		void onUpdate(float delta, App& app) override {
 			AttackObject::onUpdate(delta, app);
+			sprite->visible = active;
+			if (paused()) return;
+			trans.position += Math::angleV2(rotation.next()) * velocity.next() * delta;
+			updateSprite();
 		}
 
 		Bullet& discard(bool const force = false) override {
@@ -62,6 +68,14 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 		
 	private:
+		void updateSprite() {
+			if (!sprite) return;
+			if (rotateSprite)
+				sprite->local.rotation = rotation.value;
+			sprite->local.position = trans.position;
+			sprite->local.scale = trans.scale;
+		}
+
 		friend class BulletServer;
 
 		Bullet(Bullet const& other) = default;
@@ -72,6 +86,9 @@ namespace Makai::Ex::Game::Danmaku {
 			if (state) {
 				server.release(this);
 				active = false;
+				if (sprite) {
+					sprite->visible = false;
+				}
 			}
 		}
 
