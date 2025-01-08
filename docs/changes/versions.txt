@@ -1,0 +1,16 @@
+[[ 0.5 ]]
+
+Changes:
+► `IUpdateable::onUpdate` : Takes `float` now, instead of `usize`
+► `IGLDrawable` → `IGraphic` (and privated `vao` & `vbo`)
+► `Consumer` → `IConsumer`
+► `tween.hpp`: `StageData` → `TweenStage`
+► `C2D::Area` : `enabled` → `canCollide`
+► `Icollider::onCollision` → Removed `const` qualifier
+
+Additions:
+► Game extension
+	► Save files
+	► New dialog system
+	► Danmaku game base
+		► B
