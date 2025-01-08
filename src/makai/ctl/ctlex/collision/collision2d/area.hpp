@@ -49,7 +49,7 @@ namespace Collision::C2D {
 		/// @brief Shape of the collision area.
 		Instance<IBound2D>	shape;
 		/// @brief Whether collision is enabled for the area.
-		bool				enabled		= true;
+		bool				canCollide	= true;
 		/// @brief Collision layers this area affects.
 		LayerMask			affects		= LayerMask(true);
 		/// @brief Collision layers this area is affected by.
@@ -76,7 +76,7 @@ namespace Collision::C2D {
 		constexpr static Direction check(Area const& a, Area const& b) {
 			if (!(a.shape && b.shape))
 				return Direction::CD_NONE;
-			if (!(a.enabled && b.enabled))
+			if (!(a.canCollide && b.canCollide))
 				return Direction::CD_NONE;
 			Direction dir = asDirection(
 				a.affects.match(b.affectedBy).overlap(),

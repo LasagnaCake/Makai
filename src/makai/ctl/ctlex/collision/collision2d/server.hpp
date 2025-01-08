@@ -93,7 +93,7 @@ namespace Collision::C2D {
 			/// @brief Event to fire on collision. Must be implemented.
 			/// @param collider Collider that this object collided with.
 			/// @param direction Collision direction.
-			virtual void onCollision(ICollider const& collider, Direction const& direction) const = 0;
+			virtual void onCollision(ICollider const& collider, Direction const direction) = 0;
 		};
 
 		/// @brief Empty constructor.
@@ -104,7 +104,7 @@ namespace Collision::C2D {
 		/// @param layers Layers to check against.
 		template<usize SI>
 		constexpr static void check(IColliderType<SI> const& area, LayerMask const& layers) {
-			if (!area.affects.match(layers).overlap()|| !area.enabled) return;
+			if (!area.affects.match(layers).overlap() || !area.canCollide) return;
 			for (ICollider* c : colliders)
 				if (c->enabled && c->affectedBy.match(layers).overlap())
 					area.process(*c);

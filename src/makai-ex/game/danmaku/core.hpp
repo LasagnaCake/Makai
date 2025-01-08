@@ -7,12 +7,13 @@ namespace Makai::Ex::Game::Danmaku {
 	using CollisionServer = Makai::Collision::C2D::Server;
 
 	struct Property {
-		bool				enabled;
-		float				from;
-		float				to;
-		float				by;
+		bool				enabled	= false;
+		float				from	= 0;
+		float				to		= 0;
+		float				by		= 0;
 		Math::Ease::Mode	ease	= Math::Ease::linear;
 		float				current	= 0;
+		float				factor	= 0;
 	};
 
 	struct PauseState {
@@ -21,7 +22,9 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct GameObject: CollisionServer::ICollider, Makai::IUpdateable {
-		using PromiseType = Makai::Co::Promise<usize, true>;
+		using PromiseType			= Makai::Co::Promise<usize, true>;
+		using Collider				= CollisionServer::ICollider;
+		using CollisionDirection	= Collision::C2D::Direction;
 
 		virtual ~GameObject() {}
 
@@ -35,6 +38,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual GameObject& despawn()	= 0;
 
 		void onUpdate(float, Makai::App&) override {
+			if (!active) return;
 			if (pause.enabled && pause.time > 0) {
 				--pause.time;
 				return;
@@ -49,6 +53,9 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Functor<void(GameObject&, float, App&)> onObjectUpdate;
+
+	protected:
+		bool active = false;
 
 	private:
 		usize delay = 0;
@@ -85,7 +92,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Functor<void(AttackObject&, Action const)>	onAction;
 
-		virtual bool isFree() = 0;
+		virtual bool isFree() const = 0;
 
 		AttackObject& free()	{setFree(true);		}
 		AttackObject& enable()	{setFree(false);	}
