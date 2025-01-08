@@ -1,4 +1,4 @@
-[[ 0.5 ]]
+[[ v0.5.0 ]]
 
 Changes:
 ► `IUpdateable::onUpdate` : Takes `float` now, instead of `usize`
@@ -7,10 +7,10 @@ Changes:
 ► `tween.hpp`: `StageData` → `TweenStage`
 ► `C2D::Area` : `enabled` → `canCollide`
 ► `Icollider::onCollision` → Removed `const` qualifier
+► `Icollider::process` → Removed `const` qualifier
 
 Additions:
 ► Game extension
 	► Save files
 	► New dialog system
 	► Danmaku game base
-		► B

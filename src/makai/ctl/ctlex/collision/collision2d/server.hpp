@@ -47,7 +47,7 @@ namespace Collision::C2D {
 			///		and fires the appropriate collision events,
 			///		depending on its result.
 			/// @param other `ICollider` to check against.
-			constexpr void process(ICollider const& other) const {
+			constexpr void process(ICollider& other) {
 				switch(colliding(other)) {
 					using enum Direction;
 					default:
@@ -72,7 +72,7 @@ namespace Collision::C2D {
 			///		depending on its result.
 			/// @param other `ICollider` to check against.
 			template<usize SI>
-			constexpr void process(IColliderType<SI> const& other) const {
+			constexpr void process(IColliderType<SI>& other) {
 				switch(colliding(other)) {
 					using enum Direction;
 					default:
