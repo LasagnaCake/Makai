@@ -20,7 +20,9 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct GameObject: CollisionServer::ICollider, Makai::IUpdateable {
-		Makai::Co::Promise<usize, true> task;
+		using PromiseType = Makai::Co::Promise<usize, true>;
+
+		PromiseType task;
 
 		PauseState pause;
 
