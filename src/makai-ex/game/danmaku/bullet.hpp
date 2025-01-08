@@ -8,44 +8,36 @@ namespace Makai::Ex::Game::Danmaku {
 	struct BulletServer;
 	
 	struct Bullet: AttackObject {
-		Bullet(Server& server): server(server) {}
+		Bullet(
+			Server& server,
+			CollisionMask const& affects,
+			CollisionMask const& affectedBy
+		): AttackObject(affects, affectedBy), server(server) {
 
-		bool rotateSprite = false;
+		}
 
-		Instance<Graph::AnimatedPlaneRef> sprite = nullptr;
+		bool rotateSprite = true;
+
+		SpriteInstance sprite		= nullptr;
+		SpriteInstance glowSprite	= nullptr;
 
 		Bullet& clear() override {
-			trans			= Transform2D();
-			velocity		= {};
-			rotation		= {};
-			dope			= false;
-			discardable		= true;
-			rotateSprite	= false;
-			affects			= {};
-			affectedBy		= {};
-			shape			= nullptr;
-			canCollide		= true;
-			task			= doNothing();
-			pause			= {};
-			onAction.clear();
-			onObjectUpdate.clear();
+			AttackObject::clear();
+			rotateSprite = true;
 			return *this;
 		}
 
 		Bullet& reset() override {
-			velocity.value	= velocity.start;
-			rotation.value	= rotation.start;
-			velocity.factor	= 0;
-			rotation.factor	= 0;
+			AttackObject::reset();
 			return *this;
 		}
 
 		void onUpdate(float delta, App& app) override {
 			AttackObject::onUpdate(delta, app);
-			sprite->visible = active;
+			updateSprite(sprite.asWeak());
+			updateSprite(glowSprite.asWeak());
 			if (paused()) return;
 			trans.position += Math::angleV2(rotation.next()) * velocity.next() * delta;
-			updateSprite();
 		}
 
 		Bullet& discard(bool const force = false) override {
@@ -60,15 +52,13 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& despawn() override {
-			free();
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
-
 		}
 		
 	private:
-		void updateSprite() {
+		void updateSprite(SpriteHandle const& sprite) {
 			if (!sprite) return;
 			if (rotateSprite)
 				sprite->local.rotation = rotation.value;
@@ -78,7 +68,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		friend class BulletServer;
 
-		Bullet(Bullet const& other) = default;
+		Bullet(Bullet const& other)	= default;
+		Bullet(Bullet&& other)		= default;
 
 		Instance<Graph::AnimatedPlaneRef> sprite = nullptr;
 
@@ -97,12 +88,21 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct BulletServer: Server {
-		BulletServer(usize const size) {
-			all.resize(size, Bullet(*this));
+		using CollisionMask = GameObject::CollisionMask;
+
+		BulletServer(
+			usize const size,
+			CollisionMask const& affects = {},
+			CollisionMask const& affectedBy = {}
+		) {
+			all.resize(size);
 			free.resize(size);
 			used.resize(size);
-			for (Bullet& bullet: all)
-				free.pushBack(&bullet);
+			for (usize i = 0; i < size; ++i) {
+				all.pushBack(Bullet(*this, affects, affectedBy));
+				free.pushBack(&all.back());
+			}
+				
 		}
 
 		virtual HandleType acquire() override {

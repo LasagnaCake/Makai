@@ -54,6 +54,8 @@ namespace Collision::C2D {
 		LayerMask			affects		= LayerMask(true);
 		/// @brief Collision layers this area is affected by.
 		LayerMask			affectedBy	= LayerMask(true);
+		/// @brief Tags associated with the collision object.
+		LayerMask			tags		= LayerMask(false);
 
 		/// @brief Checks collision with another `Area`.
 		/// @param other `Area` to check against.

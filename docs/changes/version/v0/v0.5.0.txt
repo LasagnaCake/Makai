@@ -6,8 +6,8 @@ Changes:
 ► `Consumer` → `IConsumer`
 ► `tween.hpp`: `StageData` → `TweenStage`
 ► `C2D::Area` : `enabled` → `canCollide`
-► `Icollider::onCollision` → Removed `const` qualifier
-► `Icollider::process` → Removed `const` qualifier
+► `CollisionServer` : `ICollider` → `Collider` (no longer needed to derive from)
+► `Collider::onCollision` → Now a `Functor` object
 
 Additions:
 ► Game extension
