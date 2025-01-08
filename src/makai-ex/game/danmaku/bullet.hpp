@@ -79,6 +79,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		BulletServer(usize const size) {
 			all.resize(size, Bullet(*this));
+			free.resize(size);
+			used.resize(size);
+			for (Bullet& bullet: all)
+				free.pushBack(&bullet);
 		}
 
 	private:
