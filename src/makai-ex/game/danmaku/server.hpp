@@ -23,7 +23,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
-		constexpr Server& release(HandleType const& object) {
+		constexpr virtual Server& release(HandleType const& object) {
 			if (!contains(object)) return;
 			used.removeLike(object);
 			free.pushBack(object);

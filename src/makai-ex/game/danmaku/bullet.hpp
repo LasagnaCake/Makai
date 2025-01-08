@@ -23,6 +23,10 @@ namespace Makai::Ex::Game::Danmaku {
 			affectedBy		= {};
 			shape			= nullptr;
 			canCollide		= true;
+			task			= doNothing();
+			pause			= {};
+			onAction.clear();
+			onObjectUpdate.clear();
 			return *this;
 		}
 
@@ -76,13 +80,18 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct BulletServer: Server {
-
 		BulletServer(usize const size) {
 			all.resize(size, Bullet(*this));
 			free.resize(size);
 			used.resize(size);
 			for (Bullet& bullet: all)
 				free.pushBack(&bullet);
+		}
+
+		virtual HandleType acquire() override {
+			Handle<Bullet> bullet = Server::acquire().as<Bullet>();
+			bullet->clear();
+			return bullet.as<GameObject>();
 		}
 
 	private:

@@ -55,6 +55,8 @@ namespace Makai::Ex::Game::Danmaku {
 		Functor<void(GameObject&, float, App&)> onObjectUpdate;
 
 	protected:
+		static PromiseType doNothing() {co_return 1;}
+
 		bool active = false;
 
 	private:

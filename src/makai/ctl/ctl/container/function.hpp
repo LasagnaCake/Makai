@@ -119,6 +119,10 @@ public:
 	/// @brief Destructor.
     constexpr ~Function() {destroy();}
 
+	/// @brief Removes the stored function.
+	/// @return Reference to self.
+	constexpr SelfType& clear() {destroy(); return *this;}
+
 	/// @brief Move assignment operator.
 	/// @tparam TFunction Derived type.
 	/// @param f Function to bind.

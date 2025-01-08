@@ -110,6 +110,10 @@ public:
 	/// @brief Returns whether there is a callable bound to this object.
 	constexpr operator bool() const	{return exists();	}
 
+	/// @brief Removes the stored function.
+	/// @return Reference to self.
+	constexpr SelfType& clear() {func.clear(); id = 0; return *this;}
+
 	/// @brief Equality operator.
 	/// @param other Other `Functor` object to compare with.
 	/// @return Whether they're equal.
@@ -124,9 +128,9 @@ private:
 	/// @brief Callable bound to the object.
 	WrapperType			func;
 	/// @brief ID of the object.
-	usize				id = 0;
+	usize				id		= 0;
 	/// @brief ID generator.
-	inline static usize	count;
+	inline static usize	count	= 0;
 };
 
 CTL_NAMESPACE_END
