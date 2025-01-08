@@ -71,8 +71,11 @@ namespace Makai::Ex::Game::Danmaku {
 			if (pause.enabled && pause.time > 0) {
 				--pause.time;
 				return;
+			} else if (pause.enabled) {
+				pause.time		= -1;
+				pause.enabled	= false;
+				onUnpause();
 			}
-			pause.enabled = false;
 			if (delay > 0) {
 				--delay;
 				return;
@@ -90,6 +93,8 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onCollision(Collider const& collider, CollisionDirection const direction) = 0;
 
 	protected:
+		virtual void onUnpause() {}
+
 		void resetCollisionLayers() {
 			collider->affects		= affects;
 			collider->affectedBy	= affectedBy;
@@ -136,8 +141,7 @@ namespace Makai::Ex::Game::Danmaku {
 			AOA_SPAWN_END,
 			AOA_DESPAWN_BEGIN,
 			AOA_DESPAWN_END,
-			AOA_UNPAUSE,
-			AOA_DISCARD
+			AOA_UNPAUSE
 		};
 
 		Property<float> velocity;
@@ -175,7 +179,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual AttackObject& discard(bool const force = false)	= 0;
 
 		Functor<void(AttackObject&, Action const)>	onAction;
-		Functor<void(AttackObject&, float, App&)>	onObjectUpdate;
+		Functor<void(AttackObject&, float)>			onObjectUpdate;
 
 		virtual bool isFree() const = 0;
 
@@ -200,7 +204,16 @@ namespace Makai::Ex::Game::Danmaku {
 
 		State state() {return objectState;};
 
+		void onUpdate(float delta) override {
+			GameObject::onUpdate(delta);
+			onObjectUpdate(*this, delta);
+		}
+
 	protected:
+		void onUnpause() {
+			onAction(*this, Action::AOA_UNPAUSE);
+		}
+
 		State objectState;
 
 		virtual AttackObject& setFree(bool const state) = 0;

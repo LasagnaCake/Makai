@@ -64,11 +64,13 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet& spawn() override {
 			counter = 0;
 			objectState = State::AOS_SPAWNING;
+			onAction(*this, Action::AOA_SPAWN_BEGIN);
 		}
 
 		Bullet& despawn() override {
 			counter = 0;
 			objectState = State::AOS_DESPAWNING;
+			onAction(*this, Action::AOA_DESPAWN_BEGIN);
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
@@ -109,14 +111,20 @@ namespace Makai::Ex::Game::Danmaku {
 		void animate() {
 			switch (objectState) {
 				case State::AOS_DESPAWNING: {
-					if (++counter < despawnTime) {
+					if (counter++ < despawnTime)
 						animColor.a = 1.0 - counter / float(despawnTime);
-					} else free();
+					else {
+						onAction(*this, Action::AOA_DESPAWN_END);
+						free();
+					}
 				}
 				case State::AOS_SPAWNING: {
-					if (++counter < spawnTime) {
+					if (counter++ < spawnTime)
 						animColor.a = counter / float(spawnTime);
-					} else objectState = State::AOS_ACTIVE;
+					else {
+						onAction(*this, Action::AOA_SPAWN_END);
+						objectState = State::AOS_ACTIVE;
+					}
 				}
 				[[likely]]
 				default: break;
