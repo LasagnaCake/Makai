@@ -97,6 +97,8 @@ namespace Makai::Ex::Game::Danmaku {
 	}
 
 	namespace CollisionTag {
+		using CollisionMask = Makai::Collision::C2D::LayerMask;
+
 		constexpr CollisionMask	BULLET_ERASER	= {1 << 0,	0,		0,		0	};
 		constexpr CollisionMask	PLAYER_HITBOX	= {0,		1 << 0,	0,		0	};
 		constexpr CollisionMask	PLAYER_GRAZEBOX	= {0,		1 << 1,	0,		0	};

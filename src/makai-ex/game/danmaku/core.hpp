@@ -6,26 +6,34 @@
 #include "layers.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	using CollisionServer = Makai::Collision::C2D::Server;
+	namespace C2D = Collision::C2D;
 
-	template<class T>
+	using CollisionServer = C2D::Server;
+
+	template<Type::Ex::Tween::Tweenable T>
 	struct Property {
 		T					value		= 0;
 		bool				interpolate	= false;
 		T					start		= 0;
 		T					stop		= 0;
-		T					speed		= 0;
+		float				speed		= 0;
 		Math::Ease::Mode	ease		= Math::Ease::linear;
-		T					factor		= 0;
+		float				factor		= 0;
 
 		constexpr T next() {
 			if (!interpolate || speed == 0)
 				return value;
+			factor = Math::clamp<float>(factor, 0, 1);
 			if (factor == 0)		value = start;
 			else if (factor < 1)	value = Math::lerp<T>(start, stop, ease(factor));
 			else					value = stop;
 			factor += speed;
 			return value;
+		}
+
+		constexpr Property& reverse() {
+			CTL::swap(start, stop);
+			factor = 1 - factor;
 		}
 	};
 
@@ -37,8 +45,8 @@ namespace Makai::Ex::Game::Danmaku {
 	struct GameObject: Makai::IUpdateable {
 		using PromiseType			= Makai::Co::Promise<usize, true>;
 		using Collider				= CollisionServer::Collider;
-		using CollisionArea			= Collision::C2D::Area;
-		using CollisionDirection	= Collision::C2D::Direction;
+		using CollisionArea			= C2D::Area;
+		using CollisionDirection	= C2D::Direction;
 		using CollisionMask			= CollisionLayer::CollisionMask;
 
 		GameObject(CollisionMask const& affects, CollisionMask const& affectedBy):
@@ -88,8 +96,6 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 
-		Instance<Collider> collider = CollisionServer::createCollider();
-
 		void resetCollisionLayers() {
 			collider->affects		= affects;
 			collider->affectedBy	= affectedBy;
@@ -99,7 +105,14 @@ namespace Makai::Ex::Game::Danmaku {
 
 		bool active = false;
 
+	protected:
+		Handle<CollisionArea> collision() const {
+			return collider.asWeak().as<CollisionArea>();
+		}
+
 	private:
+		Instance<Collider> collider = CollisionServer::createCollider();
+
 		const CollisionMask affects;
 		const CollisionMask affectedBy;
 
@@ -139,8 +152,10 @@ namespace Makai::Ex::Game::Danmaku {
 			rotation				= {};
 			dope					= true;
 			discardable				= true;
-			collider->shape			= nullptr;
-			collider->canCollide	= true;
+			if (auto collider = collision()) {
+				collider->shape			= nullptr;
+				collider->canCollide	= true;
+			}
 			task					= doNothing();
 			pause					= {};
 			onAction.clear();
@@ -165,8 +180,20 @@ namespace Makai::Ex::Game::Danmaku {
 		AttackObject& free()	{setFree(true);		}
 		AttackObject& enable()	{setFree(false);	}
 
-		Instance<CollisionArea> collision() const {
-			return collider.as<CollisionArea>();
+		AttackObject& setCollisionState(bool const canCollide = true) {
+			if (auto collider = collision())
+				collider->canCollide = canCollide;
+		}
+
+		AttackObject& setCollisionMask(CollisionMask const& mask, bool const forAffectedBy = false) {
+			if (!collision()) return;
+			if (forAffectedBy)	collision()->affectedBy	= mask;
+			else				collision()->affects	= mask;
+		}
+
+		AttackObject& setCollisionTags(CollisionMask const& tags) {
+			if (!collision()) return;
+			collision()->tags = tags;
 		}
 
 	protected:

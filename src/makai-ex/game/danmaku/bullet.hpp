@@ -13,8 +13,11 @@ namespace Makai::Ex::Game::Danmaku {
 			CollisionMask const& affects,
 			CollisionMask const& affectedBy
 		): AttackObject(affects, affectedBy), server(server) {
-
+			collision()->shape = shape.as<C2D::IBound2D>();
 		}
+
+		Property<Vector2> radius;
+		Property<Vector2> scale;
 
 		bool rotateSprite = true;
 
@@ -23,12 +26,18 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& clear() override {
 			AttackObject::clear();
-			rotateSprite = true;
+			rotateSprite	= true;
+			radius			= {};
+			scale			= {};
 			return *this;
 		}
 
 		Bullet& reset() override {
 			AttackObject::reset();
+			radius.value	= radius.start;
+			scale.value		= scale.start;
+			radius.factor	= 0;
+			scale.factor	= 0;
 			return *this;
 		}
 
@@ -37,7 +46,14 @@ namespace Makai::Ex::Game::Danmaku {
 			updateSprite(sprite.asWeak());
 			updateSprite(glowSprite.asWeak());
 			if (paused()) return;
-			trans.position += Math::angleV2(rotation.next()) * velocity.next() * delta;
+			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
+			trans.rotation	= rotation.value;
+			trans.scale		= scale.next();
+			if (shape) {
+				shape->radius	= radius.next() * trans.scale;
+				shape->position	= trans.position;
+				shape->rotation	= trans.rotation;
+			}
 		}
 
 		Bullet& discard(bool const force = false) override {
@@ -56,14 +72,16 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 		}
-		
+
 	private:
+		Instance<C2D::Circle> shape = new C2D::Circle(0);
+
 		void updateSprite(SpriteHandle const& sprite) {
 			if (!sprite) return;
 			if (rotateSprite)
-				sprite->local.rotation = rotation.value;
-			sprite->local.position = trans.position;
-			sprite->local.scale = trans.scale;
+				sprite->local.rotation	= trans.rotation;
+			sprite->local.position		= trans.position;
+			sprite->local.scale			= trans.scale;
 		}
 
 		friend class BulletServer;
