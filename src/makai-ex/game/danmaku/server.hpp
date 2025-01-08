@@ -11,18 +11,6 @@ namespace Makai::Ex::Game::Danmaku {
 		using ObjectListType	= List<DataType>;
 		using ObjectRefListType	= List<DataType*>;
 
-		struct Object {
-			constexpr Object(HandleType const& object, Server& server): server(server), object(object) {}
-
-			constexpr Object(Object const& other) = delete;
-
-			constexpr ~Object() {server.release(object);}
-
-		private:
-			HandleType	object;
-			Server&		server;
-		}
-
 		constexpr Server() {
 		}
 
@@ -38,19 +26,16 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr Server(Server const& other)	= delete;
 
 		constexpr HandleType acquire() {
-			if (object) {
+			if (free.size()) {
 				HandleType object = free.popBack();
-				used.pushBack(object);
+				used.pushBack(free.popBack());
 				return object;
 			}
 			return nullptr;
 		}
 
-	private:
-		friend class Object;
-
 		constexpr Server& release(HandleType const& object) {
-			if (object && all.find(object) == -1) return;
+			if (!object || all.find(object) == -1) return;
 			used.removeLike(object);
 			free.pushBack(object);
 			return *this;
