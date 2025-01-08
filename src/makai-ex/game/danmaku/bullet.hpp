@@ -5,9 +5,11 @@
 #include "server.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	template<class T>
 	struct Bullet: AttackObject {
+		Bullet(Server& server): server(server) {}
 
+	private:
+		Server& server;
 	};
 }
 
