@@ -21,9 +21,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 		bool rotateSprite = true;
 
-		SpriteInstance sprite		= nullptr;
-		SpriteInstance glowSprite	= nullptr;
-
 		Bullet& clear() override {
 			AttackObject::clear();
 			rotateSprite	= true;
@@ -34,17 +31,16 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& reset() override {
 			AttackObject::reset();
-			radius.value	= radius.start;
-			scale.value		= scale.start;
 			radius.factor	= 0;
 			scale.factor	= 0;
 			return *this;
 		}
 
-		void onUpdate(float delta, App& app) override {
-			AttackObject::onUpdate(delta, app);
+		void onUpdate(float delta) override {
+			AttackObject::onUpdate(delta);
 			updateSprite(sprite.asWeak());
 			updateSprite(glowSprite.asWeak());
+			animate();
 			if (paused()) return;
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
@@ -58,6 +54,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& discard(bool const force = false) override {
 			if (discardable && !force) return *this;
+			despawn();
 		}
 
 		bool isFree() const override {
@@ -65,15 +62,39 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& spawn() override {
+			counter = 0;
+			objectState = State::AOS_SPAWNING;
 		}
 
 		Bullet& despawn() override {
+			counter = 0;
+			objectState = State::AOS_DESPAWNING;
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
+			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap()) {
+				discard();
+			}
+		}
+
+		usize spawnTime		= 5;
+		usize despawnTime	= 5;
+
+		Bullet& setSpriteFrame(Vector2 const& frame)	{if (sprite) sprite->frame = frame; return *this;	}
+		Bullet& setSpriteSheetSize(Vector2 const& size)	{if (sprite) sprite->size = size; return *this;		}
+
+		Bullet& setSprite(Vector2 const& sheetSize, Vector2 const& frame) {
+			return setSpriteFrame(frame).setSpriteSheetSize(sheetSize);
 		}
 
 	private:
+		SpriteInstance sprite		= nullptr;
+		SpriteInstance glowSprite	= nullptr;
+
+		usize counter = 0;
+
+		Vector4 animColor = Graph::Color::WHITE;
+
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
 		void updateSprite(SpriteHandle const& sprite) {
@@ -82,6 +103,24 @@ namespace Makai::Ex::Game::Danmaku {
 				sprite->local.rotation	= trans.rotation;
 			sprite->local.position		= trans.position;
 			sprite->local.scale			= trans.scale;
+			sprite->setColor(animColor * color.next());
+		}
+
+		void animate() {
+			switch (objectState) {
+				case State::AOS_DESPAWNING: {
+					if (++counter < despawnTime) {
+						animColor.a = 1.0 - counter / float(despawnTime);
+					} else free();
+				}
+				case State::AOS_SPAWNING: {
+					if (++counter < spawnTime) {
+						animColor.a = counter / float(spawnTime);
+					} else objectState = State::AOS_ACTIVE;
+				}
+				[[likely]]
+				default: break;
+			}
 		}
 
 		friend class BulletServer;
@@ -105,7 +144,7 @@ namespace Makai::Ex::Game::Danmaku {
 		friend class BulletServer;
 	};
 
-	struct BulletServer: Server {
+	struct BulletServer: Server, IUpdateable {
 		using CollisionMask = GameObject::CollisionMask;
 
 		BulletServer(

@@ -42,7 +42,7 @@ namespace Makai::Ex::Game::Danmaku {
 		bool	enabled	= false;
 	};
 
-	struct GameObject: Makai::IUpdateable {
+	struct GameObject {
 		using PromiseType			= Makai::Co::Promise<usize, true>;
 		using Collider				= CollisionServer::Collider;
 		using CollisionArea			= C2D::Area;
@@ -66,7 +66,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual GameObject& spawn()		= 0;
 		virtual GameObject& despawn()	= 0;
 
-		void onUpdate(float, Makai::App&) override {
+		virtual void onUpdate(float) {
 			if (!active) return;
 			if (pause.enabled && pause.time > 0) {
 				--pause.time;
@@ -90,12 +90,6 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onCollision(Collider const& collider, CollisionDirection const direction) = 0;
 
 	protected:
-		static void bindCollisionHandler(GameObject& self) {
-			self.collider->onCollision = [&] (Collider const& collider, CollisionDirection const direction) {
-				self.onCollision(collider, direction);
-			};
-		}
-
 		void resetCollisionLayers() {
 			collider->affects		= affects;
 			collider->affectedBy	= affectedBy;
@@ -106,6 +100,12 @@ namespace Makai::Ex::Game::Danmaku {
 		bool active = false;
 
 	protected:
+		static void bindCollisionHandler(GameObject& self) {
+			self.collider->onCollision = [&] (Collider const& collider, CollisionDirection const direction) {
+				self.onCollision(collider, direction);
+			};
+		}
+
 		Handle<CollisionArea> collision() const {
 			return collider.asWeak().as<CollisionArea>();
 		}
@@ -143,31 +143,33 @@ namespace Makai::Ex::Game::Danmaku {
 		Property<float> velocity;
 		Property<float> rotation;
 
+		Property<Vector4> color = {Graph::Color::WHITE};
+
 		bool discardable	= true;
 		bool dope			= true;
 
 		virtual AttackObject& clear() {
-			trans					= Transform2D();
-			velocity				= {};
-			rotation				= {};
-			dope					= true;
-			discardable				= true;
+			trans		= Transform2D();
+			velocity	= {};
+			rotation	= {};
+			color		= {Graph::Color::WHITE};
+			dope		= true;
+			discardable	= true;
+			task		= doNothing();
+			pause		= {};
 			if (auto collider = collision()) {
 				collider->shape			= nullptr;
 				collider->canCollide	= true;
 			}
-			task					= doNothing();
-			pause					= {};
 			onAction.clear();
 			onObjectUpdate.clear();
 			resetCollisionLayers();
 		}
 
 		virtual AttackObject& reset() {
-			velocity.value	= velocity.start;
-			rotation.value	= rotation.start;
 			velocity.factor	= 0;
 			rotation.factor	= 0;
+			color.factor	= 0;
 		}
 
 		virtual AttackObject& discard(bool const force = false)	= 0;
@@ -196,7 +198,11 @@ namespace Makai::Ex::Game::Danmaku {
 			collision()->tags = tags;
 		}
 
+		State state() {return objectState;};
+
 	protected:
+		State objectState;
+
 		virtual AttackObject& setFree(bool const state) = 0;
 	};
 
