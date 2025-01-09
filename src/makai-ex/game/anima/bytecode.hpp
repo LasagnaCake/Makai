@@ -1,10 +1,10 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_DVM_BYTECODE_H
-#define MAKAILIB_EX_GAME_DIALOG_DVM_BYTECODE_H
+#ifndef MAKAILIB_EX_GAME_ANIMA_BYTECODE_H
+#define MAKAILIB_EX_GAME_ANIMA_BYTECODE_H
 
 #include <makai/makai.hpp>
 
-/// @brief Dialog Virtual Machine.
-namespace Makai::Ex::Game::Dialog::DVM {
+/// @brief Anima Virtual Machine.
+namespace Makai::Ex::Game::AVM {
 	/// @brief Underlying code binary representation.
 	using Binary		= List<uint16>;
 	/// @brief 64-bit operand list.
@@ -17,29 +17,29 @@ namespace Makai::Ex::Game::Dialog::DVM {
 	/// @brief Bytecode operation.
 	enum class Operation: uint16 {
 		/// @brief No-op. If SP is set, sets the internal SP mode.
-		DVM_O_NO_OP,
+		AVM_O_NO_OP,
 		/// @brief Ends execution of the program.
-		DVM_O_HALT,
+		AVM_O_HALT,
 		/// @brief Active actor. Behaves differently, depending on SP mode.
-		DVM_O_ACTOR,
-		/// @brief Dialog line. Behaves differently, depending on SP mode.
-		DVM_O_LINE,
+		AVM_O_ACTOR,
+		/// @brief Actor line. Behaves differently, depending on SP mode.
+		AVM_O_LINE,
 		/// @brief Actor emote.
-		DVM_O_EMOTION,
+		AVM_O_EMOTION,
 		/// @brief Actor perform. Behaves differently, depending on SP mode.
-		DVM_O_ACTION,
+		AVM_O_ACTION,
 		/// @brief Text color. Behaves differently, depending on SP mode.
-		DVM_O_COLOR,
+		AVM_O_COLOR,
 		/// @brief Wait.
-		DVM_O_WAIT,
+		AVM_O_WAIT,
 		/// @brief Synchronization. Behaves differently, depending on SP mode.
-		DVM_O_SYNC,
+		AVM_O_SYNC,
 		/// @brief User input wait.
-		DVM_O_USER_INPUT,
+		AVM_O_USER_INPUT,
 		/// @brief Named operation. Behaves differently, depending on SP mode.
-		DVM_O_NAMED_CALL,
+		AVM_O_NAMED_CALL,
 		/// @brief Jump.
-		DVM_O_JUMP,
+		AVM_O_JUMP,
 	};
 
 	/// @brief Script version.	
@@ -91,50 +91,50 @@ namespace Makai::Ex::Game::Dialog::DVM {
 
 	using Tool::Arch::FileToken;
 
-	/// @brief Dialog program file header.
-	struct [[gnu::packed]] DialogBinaryHeader {
-		uint64 headerSize		= sizeof(DialogBinaryHeader);
+	/// @brief Anima program file header.
+	struct [[gnu::packed]] AnimaBinaryHeader {
+		uint64 headerSize		= sizeof(AnimaBinaryHeader);
 		uint64 version			= DIALOG_VERSION;
 		uint64 minVersion		= DIALOG_MIN_VERSION;
 		uint64 flags;
 		Section data;
 		Section jumps;
 		Section code;
-		FileToken const token	= "Makai::DialogBinary";
+		FileToken const token	= "Makai::AnimaBinary\0";
 		// Put new things BELOW this line
 	};
 
-	/// @brief Compiled dialog program.
-	struct Dialog {
+	/// @brief Compiled anima program.
+	struct Anima {
 		/// @brief Jump table.
 		JumpTable	jumps;
-		/// @brief Dialog data.
+		/// @brief Anima data.
 		StringList	data;
-		/// @brief Dialog bytecode.
+		/// @brief Anima bytecode.
 		Binary		code;
 
-		/// @brief Converts a series of bytes to a processable dialog binary.
+		/// @brief Converts a series of bytes to a processable anima binary.
 		/// @param data Bytes to convert.
-		/// @return Script.
+		/// @return Anima binary.
 		/// @throw Error::FailedAction on errors.
-		constexpr static Dialog fromBytes(BinaryData<> const& data) {
-			Dialog out;
+		constexpr static Anima fromBytes(BinaryData<> const& data) {
+			Anima out;
 			if (data.size() < sizeof(uint64) + 12)
 				throw Error::FailedAction(
-					"Failed at loading dialog binary!",
+					"Failed at loading anima binary!",
 					"File size is too small!",
 					CTL_CPP_PRETTY_SOURCE
 				);
 			// Main header
-			DialogBinaryHeader fh;
+			AnimaBinaryHeader fh;
 			MX::memmove((void*)&fh.headerSize, (void*)data.data(), sizeof(uint64));
 			if (data.size() < fh.headerSize) 
 				throw Error::FailedAction(
-					"Failed at loading dialog binary!",
+					"Failed at loading anima binary!",
 					"File size is too small!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			usize const fhs = (fh.headerSize < sizeof(DialogBinaryHeader)) ? fh.headerSize : sizeof(DialogBinaryHeader);
+			usize const fhs = (fh.headerSize < sizeof(AnimaBinaryHeader)) ? fh.headerSize : sizeof(AnimaBinaryHeader);
 			MX::memmove((void*)&fh, (void*)data.data(), fhs);
 			// Check if sizes are OK
 			if (
@@ -143,14 +143,14 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			||	data.size() < (fh.code.offset())
 			||	data.size() < (fh.data.offset())
 			) throw Error::FailedAction(
-				"Failed at loading dialog binary!",
+				"Failed at loading anima binary!",
 				"File size is too small!",
 				CTL_CPP_PRETTY_SOURCE
 			);
-			if (String(fh.token) != "Makai::DialogBinary")
+			if (String(fh.token) != "Makai::AnimaBinary\0")
 				throw Error::FailedAction(
-					"Failed at loading dialog binary!",
-					"File is not a dialog binary!",
+					"Failed at loading anima binary!",
+					"File is not an anima binary!",
 					CTL_CPP_PRETTY_SOURCE
 				);
 			// Data division
@@ -176,7 +176,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			if (fh.jumps.start) {	
 				if (fh.jumps.size % sizeof(JumpEntry) != 0) 
 					throw Error::FailedAction(
-						"Failed at loading dialog binary!",
+						"Failed at loading anima binary!",
 						"Malformed jump table section!",
 						CTL_CPP_PRETTY_SOURCE
 					);
@@ -187,7 +187,7 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			// Bytecode
 			if (!fh.code.size || fh.code.size % sizeof(Operation) != 0) 
 				throw Error::FailedAction(
-					"Failed at loading dialog binary!",
+					"Failed at loading anima binary!",
 					"Malformed bytecode section!",
 					CTL_CPP_PRETTY_SOURCE
 				);

@@ -1,54 +1,54 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_DVM_ENGINE_H
-#define MAKAILIB_EX_GAME_DIALOG_DVM_ENGINE_H
+#ifndef MAKAILIB_EX_GAME_ANIMA_ENGINE_H
+#define MAKAILIB_EX_GAME_ANIMA_ENGINE_H
 
 #include <makai/makai.hpp>
 
 #include "bytecode.hpp"
 
-/// @brief Dialog Virtual Machine.
-namespace Makai::Ex::Game::Dialog::DVM {
-	/// @brief Dialog engine.
+/// @brief Anima Virtual Machine.
+namespace Makai::Ex::Game::AVM {
+	/// @brief Anima engine.
 	struct Engine {
 		/// @brief Function parameters.
 		using Parameters = StringList;
 
 		/// @brief Engine state.
 		enum class State {
-			DVM_ES_READY,
-			DVM_ES_RUNNING,
-			DVM_ES_ERROR,
-			DVM_ES_FINISHED,
+			AVM_ES_READY,
+			AVM_ES_RUNNING,
+			AVM_ES_ERROR,
+			AVM_ES_FINISHED,
 		};
 
 		/// @brief Engine error code.
 		enum class ErrorCode {
-			DVM_EEC_NONE,
-			DVM_EEC_INVALID_OPERATION,
-			DVM_EEC_INVALID_OPERAND,
-			DVM_EEC_INVALID_JUMP,
+			AVM_EEC_NONE,
+			AVM_EEC_INVALID_OPERATION,
+			AVM_EEC_INVALID_OPERAND,
+			AVM_EEC_INVALID_JUMP,
 		};
 
 		/// @brief Destructor.
 		virtual ~Engine() {}
 
-		/// @brief Processes one dialog operation.
+		/// @brief Processes one anima operation.
 		void process() {
-			if (engineState != State::DVM_ES_RUNNING) return;
+			if (engineState != State::AVM_ES_RUNNING) return;
 			if (op >= binary.code.size()) return opHalt();
 			curOp = binary.code[op++];
 			switch (asOperation(curOp)) {
-				case (Operation::DVM_O_NO_OP):		opSetSP();		break;
-				case (Operation::DVM_O_HALT):		opHalt();		break;
-				case (Operation::DVM_O_ACTOR):		opActor();		break;
-				case (Operation::DVM_O_LINE):		opLine();		break;
-				case (Operation::DVM_O_EMOTION):	opEmotion();	break;
-				case (Operation::DVM_O_ACTION):		opAction();		break;
-				case (Operation::DVM_O_COLOR):		opColor();		break;
-				case (Operation::DVM_O_WAIT):		opWait();		break;
-				case (Operation::DVM_O_SYNC):		opSync();		break;
-				case (Operation::DVM_O_USER_INPUT):	opUserInput();	break;
-				case (Operation::DVM_O_NAMED_CALL):	opNamedCall();	break;
-				case (Operation::DVM_O_JUMP):		opJump();		break;
+				case (Operation::AVM_O_NO_OP):		opSetSP();		break;
+				case (Operation::AVM_O_HALT):		opHalt();		break;
+				case (Operation::AVM_O_ACTOR):		opActor();		break;
+				case (Operation::AVM_O_LINE):		opLine();		break;
+				case (Operation::AVM_O_EMOTION):	opEmotion();	break;
+				case (Operation::AVM_O_ACTION):		opAction();		break;
+				case (Operation::AVM_O_COLOR):		opColor();		break;
+				case (Operation::AVM_O_WAIT):		opWait();		break;
+				case (Operation::AVM_O_SYNC):		opSync();		break;
+				case (Operation::AVM_O_USER_INPUT):	opUserInput();	break;
+				case (Operation::AVM_O_NAMED_CALL):	opNamedCall();	break;
+				case (Operation::AVM_O_JUMP):		opJump();		break;
 				default:							opInvalidOp();	break;
 			}
 		}
@@ -115,24 +115,24 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			return engineState;
 		}
 
-		/// @brief Sets the dialog to process.
-		/// @param program Dialog to process.
-		void setProgram(Dialog const& program) {
+		/// @brief Sets the anima to process.
+		/// @param program Anima to process.
+		void setProgram(Anima const& program) {
 			endProgram();
 			binary = program;
-			engineState = State::DVM_ES_READY;
+			engineState = State::AVM_ES_READY;
 		}
 
-		/// @brief Starts the processing of the dialog.
+		/// @brief Starts the processing of the anima.
 		void beginProgram() {
-			engineState	= State::DVM_ES_RUNNING;
+			engineState	= State::AVM_ES_RUNNING;
 			op			= 0;
 		}
 
-		/// @brief Stops the processing of the dialog.
+		/// @brief Stops the processing of the anima.
 		void endProgram() {
-			if (engineState == State::DVM_ES_RUNNING)
-				engineState = State::DVM_ES_FINISHED;
+			if (engineState == State::AVM_ES_RUNNING)
+				engineState = State::AVM_ES_FINISHED;
 		}
 
 	protected:
@@ -140,23 +140,23 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		/// @param code Error code to set.
 		void setErrorAndStop(ErrorCode const code) {
 			err = code;
-			engineState = State::DVM_ES_ERROR;
+			engineState = State::AVM_ES_ERROR;
 		}
 
 	private:
-		/// @brief Dialog being processed.
-		Dialog binary;
+		/// @brief Anima being processed.
+		Anima binary;
 
 		/// @brief Actors being operated on.
 		ActiveCast	actors;
 		/// @brief SP mode being used.
 		uint16		spMode		= 0;
 		/// @brief Engine state.
-		State		engineState	= State::DVM_ES_READY;
+		State		engineState	= State::AVM_ES_READY;
 		/// @brief Operation pointer.
 		usize		op			= 0;
 		/// @brief Error code.
-		ErrorCode	err			= ErrorCode::DVM_EEC_NONE;
+		ErrorCode	err			= ErrorCode::AVM_EEC_NONE;
 		/// @brief Current operation.
 		uint16		curOp		= 0;
 
@@ -168,11 +168,11 @@ namespace Makai::Ex::Game::Dialog::DVM {
 		}
 
 		void opInvalidOp() {
-			setErrorAndStop(ErrorCode::DVM_EEC_INVALID_OPERATION);
+			setErrorAndStop(ErrorCode::AVM_EEC_INVALID_OPERATION);
 		}
 
 		void opHalt() {
-			engineState = State::DVM_ES_FINISHED;
+			engineState = State::AVM_ES_FINISHED;
 		}
 
 		void opSetSP() {spMode = getSPFlag(curOp);}
@@ -261,15 +261,15 @@ namespace Makai::Ex::Game::Dialog::DVM {
 			uint64 to;
 			if (!operand64(to)) return;
 			if (!binary.jumps.contains(to))
-				return setErrorAndStop(ErrorCode::DVM_EEC_INVALID_JUMP);
+				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
 			op = binary.jumps[to];
 			if (op >= binary.code.size())
-				return setErrorAndStop(ErrorCode::DVM_EEC_INVALID_JUMP);
+				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
 			if (op + opsize < binary.code.size()) {
-				setErrorAndStop(ErrorCode::DVM_EEC_INVALID_OPERAND);
+				setErrorAndStop(ErrorCode::AVM_EEC_INVALID_OPERAND);
 				return false;
 			}
 			return true;

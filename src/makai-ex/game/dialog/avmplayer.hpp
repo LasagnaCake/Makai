@@ -1,23 +1,23 @@
-#ifndef MAKAILIB_EX_HAME_DIALOG_DVMPLAYER_H
-#define MAKAILIB_EX_HAME_DIALOG_DVMPLAYER_H
+#ifndef MAKAILIB_EX_HAME_ANIMAPLAYER_H
+#define MAKAILIB_EX_HAME_ANIMAPLAYER_H
 
 #include <makai/makai.hpp>
 
-#include "dvm/dvm.hpp"
+#include "../anima/anima.hpp"
 
 #include "scene.hpp"
 
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
-	/// @brief DVM-based dialog player.
-	struct DVMPlayer: private DVM::Engine, IPlayable, IUpdateable {
+	/// @brief AVM-based dialog player.
+	struct AnimaPlayer: private AVM::Engine, IPlayable, IUpdateable {
 		using Engine::state, Engine::error;
 
 		using typename Engine::State;
 
 		/// @brief Constructs the dialog player.
 		/// @param scene Scene to use. By default, it is `nullptr` (none).
-		DVMPlayer(Instance<Scene> const& scene = nullptr): DVM::Engine() {}
+		AnimaPlayer(Instance<Scene> const& scene = nullptr): AVM::Engine() {}
 
 		/// @brief Dialog scene.
 		Instance<Scene> scene;
@@ -25,7 +25,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Constructs the dialog player.
 		/// @param binpath Path to dialog program.
 		/// @param scene Scene to use. By default, it is `nullptr` (none).
-		DVMPlayer(String const& binpath, Instance<Scene> const& scene = nullptr) {
+		AnimaPlayer(String const& binpath, Instance<Scene> const& scene = nullptr) {
 			setProgram(binpath);
 		}
 
@@ -33,15 +33,15 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param binpath Path to dialog program.
 		/// @return Reference to self.
 		/// @note Stops the engine, if running.
-		DVMPlayer& setProgram(String const& binpath) {
-			setProgram(DVM::fromBytes(File::getBinary(binpath)));
+		AnimaPlayer& setProgram(String const& binpath) {
+			setProgram(AVM::fromBytes(File::getBinary(binpath)));
 		}
 
 		/// @brief Sets the dialog program to use.
 		/// @param diag Dialog program to use.
 		/// @return Reference to self.
 		/// @note Stops the engine, if running.
-		DVMPlayer& setProgram(DVM::Dialog const& diag) {
+		AnimaPlayer& setProgram(AVM::Anima const& diag) {
 			stop();
 			Engine::setProgram(diag);
 			return *this;
@@ -49,7 +49,7 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Executed every update cycle.
 		void onUpdate(auto, auto) {
-			if (state() != State::DVM_ES_RUNNING) {
+			if (state() != State::AVM_ES_RUNNING) {
 				stop();
 				return;
 			}
@@ -64,7 +64,7 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Starts the dialog.
 		/// @return Reference to self. 
-		DVMPlayer& start() override final {
+		AnimaPlayer& start() override final {
 			inSync		=
 			autoplay	=
 			waitForUser	= false;
@@ -76,13 +76,13 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Stops the dialog.
 		/// @return Reference to self.
-		DVMPlayer& stop()	override final		{isFinished = true; return *this; endProgram();	}
+		AnimaPlayer& stop()	override final		{isFinished = true; return *this; endProgram();	}
 		/// @brief Unpauses the dialog.
 		/// @return Reference to self.
-		DVMPlayer& play()	override final		{paused = false; return *this;					}
+		AnimaPlayer& play()	override final		{paused = false; return *this;					}
 		/// @brief Pauses the dialog.
 		/// @return Reference to self.
-		DVMPlayer& pause()	override final		{paused = true; return *this;					}
+		AnimaPlayer& pause()	override final		{paused = true; return *this;					}
 
 		/// @brief Input manager.
 		Input::Manager		input;
@@ -138,14 +138,14 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Time to wait for actions to finish processing.
 		usize	actionDelay		= 0;
 
-		DVMPlayer& next() {
+		AnimaPlayer& next() {
 			if (isFinished) return;
 			inSync		=
 			waitForUser	= false;
 			resetCounters();
 			clearActionDelay();
 			Engine::process();
-			if (state() != Engine::State::DVM_ES_RUNNING)
+			if (state() != Engine::State::AVM_ES_RUNNING)
 				isFinished = true;
 		}
 

@@ -1,12 +1,12 @@
-#ifndef MAKAILIB_EX_GAME_DIALOG_DVM_COMPILER_H
-#define MAKAILIB_EX_GAME_DIALOG_DVM_COMPILER_H
+#ifndef MAKAILIB_EX_GAME_ANIMA_COMPILER_H
+#define MAKAILIB_EX_GAME_ANIMA_COMPILER_H
 
 #include <makai/makai.hpp>
 
 #include "bytecode.hpp"
 
-/// @brief Dialog Virtual Machine.
-namespace Makai::Ex::Game::Dialog::DVM::Compiler {
+/// @brief Anima Virtual Machine.
+namespace Makai::Ex::Game::AVM::Compiler {
 	/// @brief Regex matches used for processing.
 	namespace RegexMatches {
 		/// @brief Matches any character.
@@ -170,7 +170,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		/// @brief Operation token.
 		struct Token {
 			/// @brief Operation type.
-			Operation		type	= Operation::DVM_O_NO_OP;
+			Operation		type	= Operation::AVM_O_NO_OP;
 			/// @brief Operation name. Used by some types.
 			String			name	= String();
 			/// @brief Operation value. Used by some types.
@@ -222,7 +222,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 						assertValidNamedNode(node);
 						if (next.size() && next[0] == '(') {
 							tokens.pushBack({
-								.type	= Operation::DVM_O_ACTION,
+								.type	= Operation::AVM_O_ACTION,
 								.name	= node.substring(1),
 								.pack	= ParameterPack::fromString(next)
 							});
@@ -235,19 +235,19 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 						if (next.size()) {
 							if (next[0] == '(')
 								tokens.pushBack({
-									.type	= Operation::DVM_O_NAMED_CALL,
+									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
 									.pack	= ParameterPack::fromString(next)
 								});
 							else if (next[0] == '"')
 								tokens.pushBack({
-									.type	= Operation::DVM_O_NAMED_CALL,
+									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
 									.pack	= ParameterPack(normalize(next.sliced(1, -2)))
 								});
 							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR))
 								tokens.pushBack({
-									.type	= Operation::DVM_O_NAMED_CALL,
+									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
 									.pack	= ParameterPack(next)
 								});
@@ -265,20 +265,20 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 					case '!': {
 						assertValidNamedNode(node);
 						tokens.pushBack({
-							.type	= Operation::DVM_O_EMOTION,
+							.type	= Operation::AVM_O_EMOTION,
 							.name	= node.substring(1)
 						});
 					} break;
 					case '\'': {
 						assertValidNamedNode(node);
 						tokens.pushBack({
-							.type	= Operation::DVM_O_WAIT,
+							.type	= Operation::AVM_O_WAIT,
 							.value	= toUInt64(node.substring(1))
 						});
 					} break;
 					case '\"': {
 						tokens.pushBack({
-							.type	= Operation::DVM_O_LINE,
+							.type	= Operation::AVM_O_LINE,
 							.pack	= ParameterPack(normalize(next.sliced(1, -2)))
 						});
 					} break;
@@ -286,28 +286,28 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 						assertValidNamedNode(node, 4);
 						if (node[1] == '#')
 							tokens.pushBack({
-								.type	= Operation::DVM_O_EMOTION,
+								.type	= Operation::AVM_O_EMOTION,
 								.value	= ConstHasher::hash(node.substring(2)),
 								.mode	= 1
 							});
 						tokens.pushBack({
-							.type	= Operation::DVM_O_EMOTION,
+							.type	= Operation::AVM_O_EMOTION,
 							.value	= hexColor(node.substring(1))
 						});
 					} break;
 					case '[': {
 						tokens.pushBack({
-							.type	= Operation::DVM_O_ACTOR,
+							.type	= Operation::AVM_O_ACTOR,
 							.pack	= ParameterPack::fromString(node)
 						});
 					} break;
 					case '*': tokens.pushBack({.mode = 1});						break;
-					case '.': tokens.pushBack({Operation::DVM_O_SYNC});			break;
-					case ';': tokens.pushBack({Operation::DVM_O_USER_INPUT});	break;
+					case '.': tokens.pushBack({Operation::AVM_O_SYNC});			break;
+					case ';': tokens.pushBack({Operation::AVM_O_USER_INPUT});	break;
 					case '+':
 					case '-': {
 						tokens.pushBack({
-							.type	= Operation::DVM_O_NAMED_CALL,
+							.type	= Operation::AVM_O_NAMED_CALL,
 							.pack	= ParameterPack((node[0] == '+') ? "true" : "false")
 						}); break;
 					}
@@ -391,10 +391,10 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 	};
 
-	/// @brief Dialog binary builder.
-	struct BinaryBuilder: Dialog {
+	/// @brief Anima binary builder.
+	struct BinaryBuilder: Anima {
 		/// @brief Empty constructor.
-		constexpr BinaryBuilder(): Dialog{
+		constexpr BinaryBuilder(): Anima{
 			.data = StringList({"true", "false"})
 		} {}
 
@@ -444,8 +444,8 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 
 		/// @brief Creates a file header for the binary.
 		/// @return File header.
-		constexpr DialogBinaryHeader header() const {
-			DialogBinaryHeader fh;
+		constexpr AnimaBinaryHeader header() const {
+			AnimaBinaryHeader fh;
 			fh.data		= {fh.headerSize, 0};
 			for (String const& s: data) fh.data.size += s.nullTerminated() ? s.size() : s.size()+1;
 			fh.jumps	= {fh.data.offset(), jumps.size()};
@@ -460,17 +460,17 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			BinaryBuilder out;
 			for (auto& token: tree.tokens) {
 				switch (token.type) {
-					case Operation::DVM_O_NO_OP:
-					case Operation::DVM_O_HALT:
-					case Operation::DVM_O_SYNC:
-					case Operation::DVM_O_USER_INPUT:
+					case Operation::AVM_O_NO_OP:
+					case Operation::AVM_O_HALT:
+					case Operation::AVM_O_SYNC:
+					case Operation::AVM_O_USER_INPUT:
 						out.addOperation(token);
 						break;
-					case Operation::DVM_O_LINE:
+					case Operation::AVM_O_LINE:
 						out.addOperation(token);
 						out.addStringOperand(token.pack.args[0]);
 						break;
-					case Operation::DVM_O_ACTOR:
+					case Operation::AVM_O_ACTOR:
 						for (usize i = 0; i < token.pack.args.size(); ++i) {
 							auto const& arg = token.pack.args[i];
 							if (arg == "...") {
@@ -486,22 +486,22 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 							out.addNamedOperand(arg);
 						}
 						break;
-					case Operation::DVM_O_EMOTION:
+					case Operation::AVM_O_EMOTION:
 						out.addOperation(token);
 						out.addNamedOperand(token.name);
 						break;
-					case Operation::DVM_O_JUMP:
-					case Operation::DVM_O_WAIT:
-					case Operation::DVM_O_COLOR:
+					case Operation::AVM_O_JUMP:
+					case Operation::AVM_O_WAIT:
+					case Operation::AVM_O_COLOR:
 						out.addOperation(token);
 						out.addOperand(token.value);
 						break;
-					case Operation::DVM_O_ACTION:
+					case Operation::AVM_O_ACTION:
 						out.addOperation(token.operation(token.pack.args.size() > 0));
 						if (token.pack.args.size())
 							out.addParameterPack(token.pack.args);
 						break;
-					case Operation::DVM_O_NAMED_CALL:
+					case Operation::AVM_O_NAMED_CALL:
 						out.addOperation(token.operation(token.pack.args.size() > 2));
 						if (token.pack.args.size() > 2)
 							out.addParameterPack(token.pack.args);
@@ -517,11 +517,11 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 			return out;
 		}
 		
-		/// @brief Converts the dialog binary to a storeable binary file.
-		/// @return Dialog as file.
+		/// @brief Converts the anima binary to a storeable binary file.
+		/// @return Anima as file.
 		constexpr BinaryData<> toBytes() const {
 			BinaryData<>		out;
-			DialogBinaryHeader	fh	= header();
+			AnimaBinaryHeader	fh	= header();
 			// Main header
 			out.resize(fh.headerSize, '\0');
 			MX::memcpy(((void*)out.data()), &fh, fh.headerSize);
@@ -550,28 +550,28 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 	};
 
-	/// @brief Compiles a dialog source.
+	/// @brief Compiles a anima source.
 	/// @param source Source to compile.
-	/// @return Dialog binary.
+	/// @return Anima binary.
 	inline BinaryBuilder const compileSource(String const& source) {
 		return BinaryBuilder::fromTree(OperationTree::fromSource(source));
 	}
 	
-	/// @brief Compiles a dialog source file.
+	/// @brief Compiles a anima source file.
 	/// @param path Path to file to compile.
-	/// @return Dialog binary.
+	/// @return Anima binary.
 	inline BinaryBuilder const compileFile(String const& path) {
 		return compileSource(File::getText(path));
 	}
 
-	/// @brief Compiles a dialog source, then saves it to a file.
+	/// @brief Compiles a anima source, then saves it to a file.
 	/// @param source Source to compile.
 	/// @param outpath Path to save binary to.
 	inline void compileSourceToFile(String const& source, String const& outpath) {
 		File::saveBinary(outpath, compileSource(source).toBytes());
 	}
 
-	/// @brief Compiles a dialog source file, then saves it to a file.
+	/// @brief Compiles a anima source file, then saves it to a file.
 	/// @param source Path to source to compile.
 	/// @param outpath Path to save binary to.
 	inline void compileFileToFile(String const& path, String const& outpath) {
