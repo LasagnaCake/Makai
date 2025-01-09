@@ -127,10 +127,10 @@ namespace Makai::Ex::Game::Danmaku {
 		usize delay = 0;
 	};
 
-	struct AttackObject: GameObject {
+	struct ServerObject: GameObject {
 		using GameObject::GameObject;
 
-		virtual ~AttackObject() {}
+		virtual ~ServerObject() {}
 
 		enum class State {
 			AOS_FREE,
@@ -155,7 +155,7 @@ namespace Makai::Ex::Game::Danmaku {
 		bool discardable	= true;
 		bool dope			= true;
 
-		virtual AttackObject& clear() {
+		virtual ServerObject& clear() {
 			trans		= Transform2D();
 			velocity	= {};
 			rotation	= {};
@@ -173,28 +173,28 @@ namespace Makai::Ex::Game::Danmaku {
 			resetCollisionState();
 		}
 
-		virtual AttackObject& reset() {
+		virtual ServerObject& reset() {
 			velocity.factor	= 0;
 			rotation.factor	= 0;
 			color.factor	= 0;
 		}
 
-		virtual AttackObject& discard(bool const force = false)	= 0;
+		virtual ServerObject& discard(bool const force = false)	= 0;
 
-		Functor<void(AttackObject&, Action const)>	onAction;
-		Functor<void(AttackObject&, float)>			onObjectUpdate;
+		Functor<void(ServerObject&, Action const)>	onAction;
+		Functor<void(ServerObject&, float)>			onObjectUpdate;
 
 		virtual bool isFree() const = 0;
 
-		AttackObject& free()	{setFree(true);		}
-		AttackObject& enable()	{setFree(false);	}
+		ServerObject& free()	{setFree(true);		}
+		ServerObject& enable()	{setFree(false);	}
 
-		AttackObject& setCollisionState(bool const canCollide = true) {
+		ServerObject& setCollisionState(bool const canCollide = true) {
 			if (auto collider = collision())
 				collider->canCollide = canCollide;
 		}
 
-		AttackObject& setCollisionMask(CollisionMask const& mask, bool const forAffectedBy = false) {
+		ServerObject& setCollisionMask(CollisionMask const& mask, bool const forAffectedBy = false) {
 			if (!collision()) return;
 			if (forAffectedBy)	collision()->affectedBy	= mask;
 			else				collision()->affects	= mask;
@@ -205,7 +205,7 @@ namespace Makai::Ex::Game::Danmaku {
 			else			return collision()->affects;
 		}
 
-		AttackObject& setCollisionTags(CollisionMask const& tags) {
+		ServerObject& setCollisionTags(CollisionMask const& tags) {
 			if (!collision()) return;
 			collision()->tags = tags;
 		}
@@ -224,13 +224,13 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	protected:
-		void onUnpause() {
+		void onUnpause() override {
 			onAction(*this, Action::AOA_UNPAUSE);
 		}
 
 		State objectState;
 
-		virtual AttackObject& setFree(bool const state) = 0;
+		virtual ServerObject& setFree(bool const state) = 0;
 	};
 
 	using SpriteInstance	= Instance<Graph::AnimatedPlaneRef>;

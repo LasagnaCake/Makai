@@ -7,31 +7,27 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct BulletServer;
 	
-	struct Bullet: AttackObject {
+	struct Bullet: ServerObject {
 		Bullet(
 			Server& server,
 			CollisionMask const& affects,
 			CollisionMask const& affectedBy,
 			CollisionMask const& tags
-		): AttackObject(affects, affectedBy, tags), server(server) {
+		): ServerObject(affects, affectedBy, tags), server(server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
-		Property<Vector2> radius;
-		Property<Vector2> scale;
-
-		bool rotateSprite = true;
-
 		Bullet& clear() override {
-			AttackObject::clear();
+			ServerObject::clear();
 			rotateSprite	= true;
 			radius			= {};
 			scale			= {};
+			glowing			= false;
 			return *this;
 		}
 
 		Bullet& reset() override {
-			AttackObject::reset();
+			ServerObject::reset();
 			radius.factor	= 0;
 			scale.factor	= 0;
 			return *this;
@@ -39,7 +35,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta) override {
 			if (objectState == State::AOS_FREE) return;
-			AttackObject::onUpdate(delta);
+			ServerObject::onUpdate(delta);
+			hideSprites();
+			setSpriteVisibility(glowing || spawnglow, true);
 			updateSprite(sprite.asWeak());
 			updateSprite(glowSprite.asWeak());
 			animate();
@@ -83,9 +81,6 @@ namespace Makai::Ex::Game::Danmaku {
 				discard();
 		}
 
-		usize spawnTime		= 5;
-		usize despawnTime	= 5;
-
 		Bullet& setSpriteFrame(Vector2 const& frame)	{if (sprite) sprite->frame = frame; return *this;	}
 		Bullet& setSpriteSheetSize(Vector2 const& size)	{if (sprite) sprite->size = size; return *this;		}
 
@@ -93,15 +88,36 @@ namespace Makai::Ex::Game::Danmaku {
 			return setSpriteFrame(frame).setSpriteSheetSize(sheetSize);
 		}
 
+		Property<Vector2> radius;
+		Property<Vector2> scale;
+
+		bool rotateSprite = true;
+
+		usize spawnTime		= 5;
+		usize despawnTime	= 5;
+
+		bool glowing = false;
+
 	private:
 		SpriteInstance sprite		= nullptr;
 		SpriteInstance glowSprite	= nullptr;
 
-		usize counter = 0;
+		usize counter	= 0;
+		bool spawnglow	= false;
 
 		Vector4 animColor = Graph::Color::WHITE;
 
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
+
+		void setSpriteVisibility(bool const setGlowSprite, bool const state) {
+			if (glowSprite && setGlowSprite)	glowSprite->visible	= state; 
+			else if (sprite)					sprite->visible		= state;
+		}
+
+		void hideSprites() {
+			if (glowSprite)		glowSprite->visible	= false; 
+			else if (sprite)	sprite->visible		= false;
+		}
 
 		void updateSprite(SpriteHandle const& sprite) {
 			if (!sprite) return;
@@ -115,17 +131,21 @@ namespace Makai::Ex::Game::Danmaku {
 		void animate() {
 			switch (objectState) {
 				case State::AOS_DESPAWNING: {
-					if (counter++ < despawnTime)
+					if (counter++ < despawnTime) {
+						spawnglow = true;
 						animColor.a = 1.0 - counter / float(despawnTime);
-					else {
+					} else {
+						spawnglow = false;
 						onAction(*this, Action::AOA_DESPAWN_END);
 						free();
 					}
 				}
 				case State::AOS_SPAWNING: {
-					if (counter++ < spawnTime)
+					if (counter++ < spawnTime) {
+						spawnglow = true;
 						animColor.a = counter / float(spawnTime);
-					else {
+					} else {
+						spawnglow = false;
 						onAction(*this, Action::AOA_SPAWN_END);
 						objectState = State::AOS_ACTIVE;
 					}

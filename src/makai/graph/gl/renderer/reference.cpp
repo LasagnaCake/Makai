@@ -20,7 +20,7 @@ inline void srpTransform(Vertex& vtx, Transform3D const& trans) {
 
 PlaneRef::PlaneRef(
 	List<Triangle*> const& tris,
-	Renderable& parent
+	ReferenceHolder& parent
 ): ShapeRef<2>(tris, parent) {
 	// Get vertices
 	this->tl	= &(tris[0]->verts[0]);
@@ -174,7 +174,7 @@ void AnimatedPlaneRef::onTransform() {
 
 TriangleRef::TriangleRef(
 	List<Triangle*> const& tris,
-	Renderable& parent
+	ReferenceHolder& parent
 ): ShapeRef<1>(tris, parent) {
 	// Get vertices
 	this->a = &(tris[0]->verts[0]);
@@ -292,4 +292,43 @@ void TriangleRef::forEachVertex(VertexFunction const& f) {
 	f(origin[0]);
 	f(origin[1]);
 	f(origin[2]);
+}
+
+void IReference::destroy() {
+	parent.removeReference(*this);
+}
+
+void IReference::unbind() {
+	parent.unbindReference(*this);
+}
+
+void ReferenceHolder::removeReference(IReference& ref)  {
+	if (lockState) return;
+	if (references.find(&ref) == -1) return;
+	const auto tris = ref.getBoundTriangles();
+	triangles.eraseIf(
+		[=] (Triangle* e) {
+			if (tris.find(e) != -1) {
+				delete e;
+				return true;
+			}
+			return false;
+		}
+	);
+	unbindReference(ref);
+}
+
+void ReferenceHolder::unbindReference(IReference& ref)  {
+	if (lockState) return;
+	references.eraseLike(&ref);
+}
+
+void ReferenceHolder::transformReferences() {
+	for (auto& shape: references)
+		shape->transform();
+}
+
+void ReferenceHolder::resetReferenceTransforms() {
+	for (auto& shape: references)
+		shape->reset();
 }

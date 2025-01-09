@@ -8,7 +8,7 @@
 
 namespace Makai::Graph {
 	/// @brief Renderable object.
-	class Renderable;
+	struct ReferenceHolder;
 	/// @brief Renderable object shape reference interface.
 	struct IReference;
 
@@ -17,7 +17,7 @@ namespace Makai::Graph {
 		/// @brief Constructs the reference.
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
-		IReference(List<Triangle*> const& triangles, Renderable& parent):
+		IReference(List<Triangle*> const& triangles, ReferenceHolder& parent):
 			triangles(triangles),
 			parent(parent) {}
 
@@ -44,7 +44,7 @@ namespace Makai::Graph {
 		/// @brief Bound triangles.
 		List<Triangle*> const 	triangles;
 		/// @brief Parent renderable.
-		Renderable& 			parent;
+		ReferenceHolder& 		parent;
 	private:
 		void destroy();
 		void unbind();
@@ -69,7 +69,7 @@ namespace Makai::Graph {
 		/// @param parent Parent renderable object.
 		ShapeRef(
 			List<Triangle*> const& triangles,
-			Renderable& parent
+			ReferenceHolder& parent
 		): IReference(triangles, parent) {}
 
 		/// @brief Destructor.
@@ -109,7 +109,7 @@ namespace Makai::Graph {
 		/// @param parent Parent renderable object.
 		PlaneRef(
 			List<Triangle*> const& triangles,
-			Renderable& parent
+			ReferenceHolder& parent
 		);
 
 		/// @brief Destructor.
@@ -238,7 +238,7 @@ namespace Makai::Graph {
 		/// @param parent Parent renderable object.
 		TriangleRef(
 			List<Triangle*> const& triangles,
-			Renderable& parent
+			ReferenceHolder& parent
 		);
 
 		/// @brief Destructor.
@@ -332,6 +332,102 @@ namespace Makai::Graph {
 		Vertex	*b	= nullptr;
 		/// @brief Third vertex.
 		Vertex	*c	= nullptr;
+	};
+
+	struct ReferenceHolder {
+		/// @brief Triangle storage container type.
+		using TriangleBank = List<Triangle*>;
+
+		/// @brief Constructs the reference holder.
+		/// @param triangles Reference to triangle bank.
+		/// @param lockState Reference to lock state.
+		ReferenceHolder(
+			TriangleBank& triangles,
+			bool const& lockState
+		): triangles(triangles), lockState(lockState) {}
+
+		/// @brief Destructor.
+		~ReferenceHolder() {
+			clearReferences();
+		}
+
+		/// @brief Creates a shape reference bound to this object.
+		/// @tparam T Reference type.
+		/// @return Reference instance.
+		template<ShapeRefType T>
+		[[nodiscard]]
+		Instance<T> createReference() {
+			constexpr usize count = T::SIZE;
+			if (lockState) throw Error::InvalidAction("Renderable object is locked!", CTL_CPP_PRETTY_SOURCE);
+			List<Triangle*> tris;
+			tris.resize(count, nullptr);
+			// Create triangles
+			for (Triangle*& t: tris)
+				t = new Triangle();
+			triangles.appendBack(tris);
+			// Create shape
+			T* shape = new T(tris, *this);
+			// Add to reference list
+			references.pushBack(shape);
+			// return shape
+			return shape;
+		}
+
+		/// @brief
+		///		Destroys a reference and its associated triangles.
+		///		Will only execute if reference is associated with this object.
+		/// @tparam T Reference type.
+		/// @param ref Reference to remove.
+		/// @note If successful, also destroys the reference.
+		template <ShapeRefType T>
+		void removeReference(Instance<T> const& ref) {
+			if (!ref) return;
+			if (lockState) return;
+			removeReference(*ref);
+			ref.destroy();
+		}
+
+		/// @brief
+		///		Destroys a reference while keeping its associated triangles.
+		///		Will only execute if reference is associated with this object.
+		/// @tparam T Reference type.
+		/// @param ref Reference to remove.
+		/// @note If successful, also destroys the reference.
+		template <ShapeRefType T>
+		void unbindReference(Instance<T> const& ref) {
+			if (!ref) return;
+			if (lockState) return;
+			unbindReference(*ref);
+			ref.destroy();
+		}
+
+		/// @brief Destroys all bound references.
+		void clearReferences() {
+			if (!references.empty())
+				for (auto ref: references) {
+					Instance<IReference> iref = ref;
+					iref.destroy();
+				}
+			references.clear();
+		}
+
+	protected:
+		/// @brief Transforms all bound references.
+		void transformReferences();
+		/// @brief Resets applied transformation in all bound references.
+		void resetReferenceTransforms();
+
+	private:
+		void removeReference(IReference& ref);
+		void unbindReference(IReference& ref);
+
+		/// @brief References bound to this object.
+		List<IReference*>	references;
+
+		friend class IReference;
+
+		TriangleBank&	triangles;
+		bool const&		lockState;
 	};
 
 	/// @brief Type must not be an empty reference.
