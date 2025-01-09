@@ -12,9 +12,9 @@ To utilize it, simply derive from `AVM::Engine` in your class.
 
 ## Philosophy
 
-**The implementation is defined by the programmer.**
+**The behaviour is defined by the programmer.**
 
-By default, all of the commands (except those without associated functions) do nothing. It is up to the programmer to choose whether to change that behaviour. To do so, simply override the associated `op*` function.
+By default, all of the commands (except those without associated functions) do nothing. It is up to the programmer to choose whether to change that behaviour. To do so, simply override the associated `op*` function, and implement your own.
 
 For all functions (except `opWait` and `opColor`), all integer values are hashes of the associated name.
 
