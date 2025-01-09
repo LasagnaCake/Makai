@@ -14,6 +14,10 @@ To utilize it, simply derive from `AVM::Engine` in your class.
 
 By default, all of the commands (except those without associated functions) do nothing. It is up to the programmer to choose whether to change that behaviour. To do so, simply override the associated `op*` function.
 
+For all functions (except `opWait` and `opColor`), all integer values are hashes of the associated name.
+
+Example: `opNamedCallSingle` gets called with a value `X`, and a string `"Example"`. `X` is the hash for `do-thing`. In the anima source file, this would be seen as `$do-thing "Example"`.
+
 ## File extensions
 
 `anima`, `an` → Anima source files.
@@ -26,9 +30,7 @@ Comments are done like C/C++ comments.
 
 Default starting character scope is global.
 
-Text color will always be white, unless changed for the specified line.
-
-Comprised of the following commands:
+Comprised of the following commands, and their recommended use case:
 
 | Comand | Usage | Associated Function(s) |
 |:-:|:-|:-:|
@@ -37,7 +39,7 @@ Comprised of the following commands:
 | `!<emotion>` | For character emotions. Will apply to previous `[]` command. | `opEmote` |
 | `"<text>"` | For character lines. Will apply to previous `[]` command. To add text to the previous spoken line, add the `*` modifier before it. | `opSay`, `opAdd` |
 | `#<hex>` | For specifying text colour. Will apply to previous `""` comand. Must be a valid hex colour. To use color references (names), use `##<name>`. | `opColor`, `opColorRef` |
-| `'<number>` | For waiting. MUST be a whole number. | `opWait` |
+| `'<number>` | For setting a time to wait for. MUST be a whole number. | `opDelay` |
 | `+<flag>` | For enabling flags. Same as `$<flag> "true"`. | `opNamedCallSingle` |
 | `-<flag>` | For disabling flags. Same as `$<flag> "false"`. | `opNamedCallSingle` |
 | `$<name> <value>` | For setting external values, and executing named operations. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  | `opNamedCallSingle`, `opNamedCallMultiple` |
