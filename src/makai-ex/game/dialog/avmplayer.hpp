@@ -82,7 +82,7 @@ namespace Makai::Ex::Game::Dialog {
 		AnimaPlayer& play()	override final		{paused = false; return *this;					}
 		/// @brief Pauses the dialog.
 		/// @return Reference to self.
-		AnimaPlayer& pause()	override final		{paused = true; return *this;					}
+		AnimaPlayer& pause() override final		{paused = true; return *this;					}
 
 		/// @brief Input manager.
 		Input::Manager		input;
