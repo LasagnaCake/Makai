@@ -9,23 +9,23 @@
 
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
-	/// @brief AVM-based dialog player.
+	/// @brief Anima-based dialog player.
 	struct AnimaPlayer: private AVM::Engine, IPlayable, IUpdateable {
 		using Engine::state, Engine::error;
 
 		using typename Engine::State;
 
 		/// @brief Constructs the dialog player.
-		/// @param scene Scene to use. By default, it is `nullptr` (none).
-		AnimaPlayer(Instance<Scene> const& scene = nullptr): AVM::Engine() {}
+		/// @param scene Scene to use.
+		AnimaPlayer(Scene& scene): AVM::Engine(), scene(scene) {}
 
 		/// @brief Dialog scene.
-		Instance<Scene> scene;
+		Scene& scene;
 
 		/// @brief Constructs the dialog player.
 		/// @param binpath Path to dialog program.
-		/// @param scene Scene to use. By default, it is `nullptr` (none).
-		AnimaPlayer(String const& binpath, Instance<Scene> const& scene = nullptr) {
+		/// @param scene Scene to use.
+		AnimaPlayer(String const& binpath, Scene& scene): AnimaPlayer(scene) {
 			setProgram(binpath);
 		}
 
@@ -150,8 +150,8 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opSay(ActiveCast const& actors, String const& line) override final {
-			if (actors.actors.empty() && scene) {
-				setActionDelay(scene->say(Content{line}));
+			if (actors.actors.empty()) {
+				setActionDelay(scene.say(Content{line}));
 				return;
 			}
 			for (auto actor: getActors(actors))
@@ -159,8 +159,8 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opAdd(ActiveCast const& actors, String const& line) override final {
-			if (actors.actors.empty() && scene) {
-				setActionDelay(scene->add(Content{line}));
+			if (actors.actors.empty()) {
+				setActionDelay(scene.add(Content{line}));
 				return;
 			}
 			for (auto actor: getActors(actors))
@@ -168,8 +168,8 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opEmote(ActiveCast const& actors, uint64 const emotion) override final {
-			if (actors.actors.empty() && scene) {
-				setActionDelay(scene->emote(Emotion{emotion}));
+			if (actors.actors.empty()) {
+				setActionDelay(scene.emote(Emotion{emotion}));
 				return;
 			}
 			for (auto actor: getActors(actors))
@@ -177,8 +177,8 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opPerform(ActiveCast const& actors, uint64 const action, Parameters const& params) override final {
-			if (actors.actors.empty() && scene) {
-				setActionDelay(scene->perform(Action{action, params}));
+			if (actors.actors.empty()) {
+				setActionDelay(scene.perform(Action{action, params}));
 				return;
 			}
 			for (auto actor: getActors(actors))
@@ -186,8 +186,8 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opColor(ActiveCast const& actors, uint64 const color) override final {
-			if (actors.actors.empty() && scene) {
-				scene->color(Graph::Color::fromHexCodeRGBA(color));
+			if (actors.actors.empty()) {
+				scene.color(Graph::Color::fromHexCodeRGBA(color));
 				return;
 			}
 			for (auto actor: getActors(actors))
@@ -195,8 +195,8 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opColorRef(ActiveCast const& actors, uint64 const color) override final {
-			if (actors.actors.empty() && scene) {
-				scene->color(getColorByName(color));
+			if (actors.actors.empty()) {
+				scene.color(getColorByName(color));
 				return;
 			}
 			for (auto actor: getActors(actors))
@@ -225,11 +225,15 @@ namespace Makai::Ex::Game::Dialog {
 
 		Scene::Actors getActors(ActiveCast const& actors) {
 			Scene::Actors out;
-			if (!scene) return out;
-			for (auto& [id, actor] : scene->cast) {
-				auto match = actors.actors.find(id) != -1;
-				if (actor && actors.exclude ? !match : match)
-					out.pushBack(actor);
+			if (!actors.exclude) [[likely]]
+				for (auto const actor: actors.actors)
+					if (auto aref = scene.cast.at(actor))
+						out.pushBack(aref);
+			else {
+				auto const actorList = actors.actors.sorted();
+				for (auto& [id, actor] : scene.cast)
+					if (actorList.bsearch(id) == -1)
+						out.pushBack(actor);
 			}
 			return out;
 		}
