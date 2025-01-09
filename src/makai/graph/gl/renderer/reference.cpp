@@ -335,10 +335,9 @@ void ReferenceHolder::resetReferenceTransforms() {
 
 void ReferenceHolder::clearReferences() {
 	if (!references.empty())
-			for (auto ref: references) {
-				Instance<IReference> iref = ref;
-				iref.destroy();
-			}
-		references.clear();
-	}
+		for (auto ref: references) {
+			Instance<IReference> iref = ref;
+			iref.destroy();
+		}
+	references.clear();
 }
