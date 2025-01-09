@@ -420,14 +420,7 @@ namespace Makai::Graph {
 		}
 
 		/// @brief Destroys all bound references.
-		void clearReferences() {
-			if (!references.empty())
-				for (auto ref: references) {
-					Instance<IReference> iref = ref;
-					iref.destroy();
-				}
-			references.clear();
-		}
+		void clearReferences();
 
 	protected:
 		/// @brief Transforms all bound references.
@@ -444,7 +437,9 @@ namespace Makai::Graph {
 
 		friend class IReference;
 
+		/// @brief Triangle bank to store triangles into. 
 		TriangleBank&	triangles;
+		/// @brief Triangle bank lock state.
 		bool&			lockState;
 	};
 }

@@ -332,3 +332,13 @@ void ReferenceHolder::resetReferenceTransforms() {
 	for (auto& shape: references)
 		shape->reset();
 }
+
+void ReferenceHolder::clearReferences() {
+	if (!references.empty())
+			for (auto ref: references) {
+				Instance<IReference> iref = ref;
+				iref.destroy();
+			}
+		references.clear();
+	}
+}
