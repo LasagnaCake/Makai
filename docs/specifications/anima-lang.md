@@ -8,6 +8,12 @@ All of its necessary components are located in the `AVM` namespace, inside the `
 
 To utilize it, simply derive from `AVM::Engine` in your class.
 
+## File extensions
+
+`anima`, `an` → Anima source files.
+
+`anib`, `anb` → Compiled anima binaries.
+
 ## Structure
 
 Comments are done like C/C++ comments.
