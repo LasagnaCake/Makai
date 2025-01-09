@@ -176,26 +176,33 @@ namespace Makai::Ex::Game::Danmaku {
 		friend class BulletServer;
 	};
 
+	struct BulletServerConfig {
+		using CollisionMask = GameObject::CollisionMask;
+		usize const				size;
+		Graph::ReferenceHolder&	mainMesh;
+		Graph::ReferenceHolder&	glowMesh;
+		CollisionMask const		affects		= {};
+		CollisionMask const		affectedBy	= {};
+		CollisionMask const		tags		= {};
+	};
+
 	struct BulletServer: Server, IUpdateable {
 		using CollisionMask = GameObject::CollisionMask;
 
-		Graph::Renderable mainMesh;
-		Graph::Renderable glowMesh;
+		Graph::ReferenceHolder& mainMesh;
+		Graph::ReferenceHolder& glowMesh;
 
 		BulletServer(
-			usize const size,
-			CollisionMask const& affects	= {},
-			CollisionMask const& affectedBy	= {},
-			CollisionMask const& tags		= {}
-		) {
-			all.resize(size);
-			free.resize(size);
-			used.resize(size);
-			for (usize i = 0; i < size; ++i) {
-				all.pushBack(Bullet(*this, affects, affectedBy, tags));
-				free.pushBack(&all.back());
+			BulletServerConfig const& cfg
+		): mainMesh(cfg.mainMesh), glowMesh(cfg.glowMesh) {
+			all.resize(cfg.size);
+			free.resize(cfg.size);
+			used.resize(cfg.size);
+			for (usize i = 0; i < cfg.size; ++i) {
+				all.pushBack(Bullet(*this, cfg.affects, cfg.affectedBy, cfg.tags));
 				all.back().sprite		= mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().glowSprite	= glowMesh.createReference<Graph::AnimatedPlaneRef>();
+				free.pushBack(&all.back());
 			}
 		}
 
