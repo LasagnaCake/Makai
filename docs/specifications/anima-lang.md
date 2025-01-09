@@ -4,6 +4,8 @@
 
 Meant to be a (mostly) gereral-purpose, (kinda) simple-to-use, (somewhat) extensible language, to be used for animation, entity control, dialog, and other uses.
 
+It is compiled into bytecode, and run in a virtual machine (`AVM::Engine`).
+
 All of its necessary components are located in the `AVM` namespace, inside the `Makai::Ex::Game` extension.
 
 To utilize it, simply derive from `AVM::Engine` in your class.
@@ -16,7 +18,7 @@ By default, all of the commands (except those without associated functions) do n
 
 For all functions (except `opWait` and `opColor`), all integer values are hashes of the associated name.
 
-Example: `opNamedCallSingle` gets called with a value `X`, and a string `"Example"`. `X` is the hash for `do-thing`. In the anima source file, this would be seen as `$do-thing "Example"`.
+Example: `opNamedCallSingle` gets called with an integer `X`, and a string `"Example"`. `X` is the hash for `do-thing`. In the anima source file, this would be seen as `$do-thing "Example"`.
 
 
 ## Behaviour
