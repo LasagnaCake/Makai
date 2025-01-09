@@ -133,7 +133,7 @@ namespace Makai::Ex::Game::Danmaku {
 				case State::AOS_DESPAWNING: {
 					if (counter++ < despawnTime) {
 						spawnglow = true;
-						animColor.a = 1.0 - counter / float(despawnTime);
+						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
 					} else {
 						spawnglow = false;
 						onAction(*this, Action::AOA_DESPAWN_END);
@@ -143,7 +143,7 @@ namespace Makai::Ex::Game::Danmaku {
 				case State::AOS_SPAWNING: {
 					if (counter++ < spawnTime) {
 						spawnglow = true;
-						animColor.a = counter / float(spawnTime);
+						animColor.a = counter / static_cast<float>(spawnTime);
 					} else {
 						spawnglow = false;
 						onAction(*this, Action::AOA_SPAWN_END);
