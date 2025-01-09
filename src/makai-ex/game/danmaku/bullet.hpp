@@ -192,16 +192,17 @@ namespace Makai::Ex::Game::Danmaku {
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;
 
-		BulletServer(
-			BulletServerConfig const& cfg
-		): mainMesh(cfg.mainMesh), glowMesh(cfg.glowMesh) {
+		BulletServer(BulletServerConfig const& cfg):
+			mainMesh(cfg.mainMesh),
+			glowMesh(cfg.glowMesh) {
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				all.pushBack(Bullet(*this, cfg.affects, cfg.affectedBy, cfg.tags));
-				all.back().sprite		= mainMesh.createReference<Graph::AnimatedPlaneRef>();
-				all.back().glowSprite	= glowMesh.createReference<Graph::AnimatedPlaneRef>();
+				all.back().sprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
+				if (&cfg.mainMesh != &cfg.glowMesh)
+					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
 				free.pushBack(&all.back());
 			}
 		}
