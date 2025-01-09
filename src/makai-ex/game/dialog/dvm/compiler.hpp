@@ -35,7 +35,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		/// @brief Matches any parens pack.
 		constexpr String PARENTHESES	= makePack("(", ")");
 		/// @brief Matches any brackets pack.
-		constexpr String ANGLE_BRACKETS	= makePack("[", "]");
+		constexpr String BRACKETS		= makePack("[", "]");
 		/// @brief Matches line comments.
 		constexpr String LINE_COMMENTS	= String("\\/\\/.*");
 		/// @brief Matches block comments.
@@ -53,7 +53,7 @@ namespace Makai::Ex::Game::Dialog::DVM::Compiler {
 		}
 
 		/// @brief Matches all packs.
-		constexpr String PACKS			= concat(STRINGS, PARENTHESES, ANGLE_BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
+		constexpr String PACKS			= concat(STRINGS, PARENTHESES, BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
 		/// @brief Matches all tokens.
 		constexpr String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", PACKS);
 		/// @brief Matches all parameter tokens.
