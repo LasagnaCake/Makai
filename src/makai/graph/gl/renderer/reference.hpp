@@ -365,7 +365,7 @@ namespace Makai::Graph {
 		): triangles(triangles), lockState(lockState) {}
 
 		/// @brief Destructor.
-		~ReferenceHolder() {
+		virtual ~ReferenceHolder() {
 			clearReferences();
 		}
 
