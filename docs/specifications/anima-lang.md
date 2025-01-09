@@ -1,6 +1,14 @@
-# Makai Dialog Language
+# Anima Language
 
 ## Overview
+
+Meant to be a (mostly) gereral-purpose, simple-to-use, (somewhat) extensible language, to be used for animation, entity control, dialog, and other uses.
+
+All of its necessary components are located in the `AVM` namespace, inside the `Makai::Ex::Game` extension.
+
+To utilize it, simply derive from `AVM::Engine` in your class.
+
+## Structure
 
 Comments are done like C/C++ comments.
 
@@ -52,6 +60,8 @@ May be `[...]`, to specify all characters.
 May be `[..., <characters>]`, to specify all characters, except the ones listed.
 
 ## Example
+
+The following example is made to be used in conjunction with a `Dialog::AnimaPlayer`:
 
 ```
 // Set frames to wait for user input before proceeding
