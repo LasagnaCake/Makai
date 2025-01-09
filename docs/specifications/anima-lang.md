@@ -10,7 +10,7 @@ To utilize it, simply derive from `AVM::Engine` in your class.
 
 ## Philosophy
 
-The implementation is dependent to the programmer.
+**The implementation is defined by the programmer.**
 
 By default, all of the commands (except those without associated functions) do nothing. It is up to the programmer to choose whether to change that behaviour. To do so, simply override the associated `op*` function.
 
