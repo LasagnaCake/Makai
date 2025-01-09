@@ -49,9 +49,10 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionDirection	= C2D::Direction;
 		using CollisionMask			= CollisionLayer::CollisionMask;
 
-		GameObject(CollisionMask const& affects, CollisionMask const& affectedBy):
+		GameObject(CollisionMask const& affects, CollisionMask const& affectedBy, CollisionMask const& tags):
 			affects(affects),
-			affectedBy(affectedBy) {
+			affectedBy(affectedBy),
+			tags(tags) {
 				bindCollisionHandler(*this);
 			}
 
@@ -95,9 +96,10 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		virtual void onUnpause() {}
 
-		void resetCollisionLayers() {
+		void resetCollisionState() {
 			collider->affects		= affects;
 			collider->affectedBy	= affectedBy;
+			collider->tags			= tags;
 		}
 
 		static PromiseType doNothing() {co_return 1;}
@@ -118,8 +120,9 @@ namespace Makai::Ex::Game::Danmaku {
 	private:
 		Instance<Collider> collider = CollisionServer::createCollider();
 
-		const CollisionMask affects;
-		const CollisionMask affectedBy;
+		CollisionMask const affects;
+		CollisionMask const affectedBy;
+		CollisionMask const tags;
 
 		usize delay = 0;
 	};
@@ -167,7 +170,7 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			onAction.clear();
 			onObjectUpdate.clear();
-			resetCollisionLayers();
+			resetCollisionState();
 		}
 
 		virtual AttackObject& reset() {
@@ -196,15 +199,26 @@ namespace Makai::Ex::Game::Danmaku {
 			if (forAffectedBy)	collision()->affectedBy	= mask;
 			else				collision()->affects	= mask;
 		}
+		CollisionMask getCollisionMask(bool const affectedBy = false) {
+			if (!collision()) return {};
+			if (affectedBy)	return collision()->affectedBy;
+			else			return collision()->affects;
+		}
 
 		AttackObject& setCollisionTags(CollisionMask const& tags) {
 			if (!collision()) return;
 			collision()->tags = tags;
 		}
 
+		CollisionMask getCollisionTags() {
+			if (!collision()) return {};
+			return collision()->tags;
+		}
+
 		State state() {return objectState;};
 
 		void onUpdate(float delta) override {
+			if (objectState == State::AOS_FREE) return;
 			GameObject::onUpdate(delta);
 			onObjectUpdate(*this, delta);
 		}

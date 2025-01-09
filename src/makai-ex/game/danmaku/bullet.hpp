@@ -11,8 +11,9 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet(
 			Server& server,
 			CollisionMask const& affects,
-			CollisionMask const& affectedBy
-		): AttackObject(affects, affectedBy), server(server) {
+			CollisionMask const& affectedBy,
+			CollisionMask const& tags
+		): AttackObject(affects, affectedBy, tags), server(server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
@@ -37,6 +38,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onUpdate(float delta) override {
+			if (objectState == State::AOS_FREE) return;
 			AttackObject::onUpdate(delta);
 			updateSprite(sprite.asWeak());
 			updateSprite(glowSprite.asWeak());
@@ -74,9 +76,11 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
-			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap()) {
+			if (
+				collider.tags.match(CollisionTag::PLAYER_GRAZEBOX).overlap()
+			) setCollisionTags(getCollisionTags() & CollisionTag::GRAZEABLE.inverse());
+			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap())
 				discard();
-			}
 		}
 
 		usize spawnTime		= 5;
@@ -155,19 +159,24 @@ namespace Makai::Ex::Game::Danmaku {
 	struct BulletServer: Server, IUpdateable {
 		using CollisionMask = GameObject::CollisionMask;
 
+		Graph::Renderable mainMesh;
+		Graph::Renderable glowMesh;
+
 		BulletServer(
 			usize const size,
-			CollisionMask const& affects = {},
-			CollisionMask const& affectedBy = {}
+			CollisionMask const& affects	= {},
+			CollisionMask const& affectedBy	= {},
+			CollisionMask const& tags		= {}
 		) {
 			all.resize(size);
 			free.resize(size);
 			used.resize(size);
 			for (usize i = 0; i < size; ++i) {
-				all.pushBack(Bullet(*this, affects, affectedBy));
+				all.pushBack(Bullet(*this, affects, affectedBy, tags));
 				free.pushBack(&all.back());
+				all.back().sprite		= mainMesh.createReference<Graph::AnimatedPlaneRef>();
+				all.back().glowSprite	= glowMesh.createReference<Graph::AnimatedPlaneRef>();
 			}
-				
 		}
 
 		virtual HandleType acquire() override {
