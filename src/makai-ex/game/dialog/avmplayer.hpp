@@ -34,7 +34,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @return Reference to self.
 		/// @note Stops the engine, if running.
 		AnimaPlayer& setProgram(String const& binpath) {
-			setProgram(AVM::fromBytes(File::getBinary(binpath)));
+			setProgram(AVM::Anima::fromBytes(File::getBinary(binpath)));
 		}
 
 		/// @brief Sets the dialog program to use.
