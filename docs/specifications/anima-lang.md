@@ -18,6 +18,15 @@ For all functions (except `opWait` and `opColor`), all integer values are hashes
 
 Example: `opNamedCallSingle` gets called with a value `X`, and a string `"Example"`. `X` is the hash for `do-thing`. In the anima source file, this would be seen as `$do-thing "Example"`.
 
+
+## Behaviour
+
+- Default starting character scope is global.
+
+### Dialog-specific behaviour
+
+- Text color will always be white, unless changed for the specified line.
+
 ## File extensions
 
 `anima`, `an` → Anima source files.
@@ -26,9 +35,7 @@ Example: `opNamedCallSingle` gets called with a value `X`, and a string `"Exampl
 
 ## Source code structure
 
-Comments are done like C/C++ comments.
-
-Default starting character scope is global.
+Comments are done like C/C++ line an block comments.
 
 Comprised of the following commands, and their recommended use case:
 
