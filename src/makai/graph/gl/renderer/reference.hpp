@@ -334,6 +334,24 @@ namespace Makai::Graph {
 		Vertex	*c	= nullptr;
 	};
 
+	/// @brief Type must not be an empty reference.
+	template<class T>
+	concept NotEmpty		= Makai::Type::Different<T, IReference>;
+
+	/// @brief Type must be a shape reference some kind.
+	template<class T>
+	concept ShapeRefType	= requires {
+		T::SIZE;
+	} && Makai::Type::Derived<T, ShapeRef<T::SIZE>> && NotEmpty<T>;
+
+	/// @brief Type must be a plane reference of some kind.
+	template<class T>
+	concept PlaneRefType	= Makai::Type::Derived<T, PlaneRef> && NotEmpty<T>;
+
+	/// @brief Type must be a triangle reference of some kind.
+	template<class T>
+	concept TriangleRefType	= Makai::Type::Derived<T, TriangleRef> && NotEmpty<T>;
+
 	struct ReferenceHolder {
 		/// @brief Triangle storage container type.
 		using TriangleBank = List<Triangle*>;
@@ -343,7 +361,7 @@ namespace Makai::Graph {
 		/// @param lockState Reference to lock state.
 		ReferenceHolder(
 			TriangleBank& triangles,
-			bool const& lockState
+			bool& lockState
 		): triangles(triangles), lockState(lockState) {}
 
 		/// @brief Destructor.
@@ -427,26 +445,8 @@ namespace Makai::Graph {
 		friend class IReference;
 
 		TriangleBank&	triangles;
-		bool const&		lockState;
+		bool&			lockState;
 	};
-
-	/// @brief Type must not be an empty reference.
-	template<class T>
-	concept NotEmpty		= Makai::Type::Different<T, IReference>;
-
-	/// @brief Type must be a shape reference some kind.
-	template<class T>
-	concept ShapeRefType	= requires {
-		T::SIZE;
-	} && Makai::Type::Derived<T, ShapeRef<T::SIZE>> && NotEmpty<T>;
-
-	/// @brief Type must be a plane reference of some kind.
-	template<class T>
-	concept PlaneRefType	= Makai::Type::Derived<T, PlaneRef> && NotEmpty<T>;
-
-	/// @brief Type must be a triangle reference of some kind.
-	template<class T>
-	concept TriangleRefType	= Makai::Type::Derived<T, TriangleRef> && NotEmpty<T>;
 }
 
 #endif // MAKAILIB_GRAPH_RENDERER_REFERENCE_H
