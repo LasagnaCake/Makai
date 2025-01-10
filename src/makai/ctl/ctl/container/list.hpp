@@ -129,7 +129,7 @@ public:
 	/// @tparam ...Args Parameter pack.
 	/// @param ...args Pack elements.
 	template<typename... Args>
-	constexpr explicit List(Args const&... args)
+	constexpr List(Args const&... args)
 	requires (... && Type::Convertible<Args, DataType>) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));

@@ -60,6 +60,8 @@ public:
 		typename SelfIdentified::SelfType
 	;
 
+	using NonConstSelfType = Iterator<AsNonConst<TData>, R, TIndex>;
+
 	using typename Ordered::OrderType;
 
 	using STDForwardIterator	= PointerType;
@@ -80,10 +82,14 @@ public:
 
 	/// @brief Copy constructor.
 	/// @param other `Iterator` to copy from.
-	constexpr Iterator(SelfType const& other): iterand(other.iterand)		{}
+	constexpr Iterator(SelfType const& other): iterand(other.iterand)				{}
+	/// @brief Copy constructor.
+	/// @param other non-const `Iterator` to copy from.
+	constexpr Iterator(NonConstSelfType const& other)
+	requires Type::Different<NonConstSelfType, SelfType>: iterand(other.raw())		{}
 	/// @brief Move constructor.
 	/// @param other `Iterator` to move from.
-	constexpr Iterator(SelfType&& other): iterand(CTL::move(other.iterand))	{}
+	constexpr Iterator(SelfType&& other): iterand(CTL::move(other.iterand))			{}
 
 	/// @brief Returns the underlying pointer.
 	/// @return Underlying pointer.
@@ -142,6 +148,8 @@ public:
 	/// @return Offset Resulting offset `Iterator`.
 	constexpr SelfType operator+(IndexType const value) const	{return offset(value);				}
 
+	/// @brief Constant iteratpr type conversion.
+	constexpr operator NonConstSelfType() const								{return iterand;}
 	/// @brief `std::reverse_iterator` type conversion.
 	constexpr operator STDReverseIterator() requires(REVERSE)				{return iterand;}
 	/// @brief `std::reverse_iterator` type conversion.

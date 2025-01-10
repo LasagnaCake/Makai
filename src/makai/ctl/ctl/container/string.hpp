@@ -319,17 +319,17 @@ public:
 
 	constexpr IndexType find(DataType const& value) const {
 		IndexType location = BaseType::find(value);
-		return (location == BaseType::size()) ? -1 : location;
+		return (location == IndexType(size())) ? -1 : location;
 	}
 
 	constexpr IndexType rfind(DataType const& value) const {
 		IndexType location = BaseType::find(value);
-		return (location == BaseType::size()) ? -1 : location;
+		return (location == IndexType(size())) ? -1 : location;
 	}
 
 	constexpr IndexType bsearch(DataType const& value) const {
 		IndexType location = BaseType::find(value);
-		return (location == BaseType::size()) ? -1 : location;
+		return (location == IndexType(size())) ? -1 : location;
 	}
 
 	constexpr SelfType& remove(IndexType index) {
@@ -457,6 +457,7 @@ public:
 	constexpr SelfType& clear() {
 		BaseType::clear();
 		BaseType::pushBack('\0');
+		return *this;
 	}
 
 	constexpr SelfType& dispose() {
@@ -504,7 +505,7 @@ public:
 		return BaseType::equals(other);
 	}
 
-	constexpr SizeType compare(SelfType const& other) const {
+	constexpr OrderType compare(SelfType const& other) const {
 		return BaseType::compare(other);
 	}
 
