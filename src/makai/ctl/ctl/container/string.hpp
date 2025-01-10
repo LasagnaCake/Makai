@@ -272,6 +272,12 @@ public:
 		return value;
 	}
 	
+	/// @brief Inserts a character at a specified index in the `BaseString`.
+	/// @param value Character to insert.
+	/// @param index Index of which to insert in.
+	/// @return Reference to self.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `BaseString`.
 	constexpr SelfType& insert(DataType const& value, IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
@@ -1167,12 +1173,11 @@ private:
 	}
 
 	void assertIsInBounds(IndexType const index) const {
-		if (index >= 0 && usize(index) > size()-1) outOfBoundsError(index);
+		if (index >= 0 && usize(index) > (size()-1)) outOfBoundsError(index);
 	}
 
 	constexpr void wrapBounds(IndexType& index) const {
-		if (index < 0)
-			index = (size()-1) - index % (size());
+		Iteratable::wrapBounds(index, size());
 	}
 
 	[[noreturn]] constexpr void outOfBoundsError(IndexType const index) const {

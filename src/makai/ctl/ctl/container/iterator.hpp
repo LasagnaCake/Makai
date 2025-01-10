@@ -280,15 +280,18 @@ struct Iteratable: Typed<TData>, Indexed<TIndex> {
 	typedef ReverseIterator<DataType, SizeType>		ReverseIteratorType;
 	/// @brief Constant reverse iterator type.
 	typedef ReverseIterator<ConstantType, SizeType>	ConstReverseIteratorType;
-
-protected:
+	
 	/// @brief Ensures a given index, when negative, is between the bounds of the iteratable class.
 	/// @param index Index to wrap.
 	/// @param count Size of the iteratable range.
-	constexpr static void wrapBounds(IndexType& index, SizeType const size) {
+	constexpr static void wrapBounds(IndexType& index, IndexType size) {
+		/*while (index < 0)
+			index += size;*/
 		if (index < 0)
-			index = (size-1) - index % size;
+			index = size + ((index+1) % size) - 1;
 	}
+
+protected:
 
 	/// @brief Throws an OutOfBoundsException when called.
 	/// @throw OutOfBoundsException when called.
