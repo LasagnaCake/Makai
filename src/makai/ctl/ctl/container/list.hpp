@@ -214,7 +214,7 @@ public:
 	/// @brief Constructs a `List` from a "C-style" range of elements.
 	/// @param start Start of range.
 	/// @param size Size of range.
-	constexpr List(ConstPointerType const& start, SizeType const size): List(start, start + size) {}
+	constexpr explicit List(ConstPointerType const& start, SizeType const size): List(start, start + size) {}
 
 	/// @brief Constructs a `List`, from a ranged object of (non-subclass) type T.
 	/// @tparam T Ranged type.
