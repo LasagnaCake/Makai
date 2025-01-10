@@ -30,7 +30,7 @@ namespace Co {
 	/// @param count Amount of times to stall the coroutine for.
 	/// @note Ideally, should only be used with empty (`void`) promises.
 	/// @return Resulting yielder.
-	Yielder yield(usize const count) {return Yielder(count);}
+	inline Yielder yield(usize const count) {return Yielder(count);}
 }
 
 CTL_NAMESPACE_END
