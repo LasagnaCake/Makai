@@ -131,12 +131,20 @@ public:
 		pushBack('\0');
 	}
 
+	/// @brief Constructs the `BaseString` with a preallocated capacity.
+	/// @param size Size to preallocate.
 	constexpr explicit BaseString(SizeType const size): BaseType(size+1) {}
 
+	/// @brief Constructs a `BaseString` of a given size and a given fill.
+	/// @param size Size to allocate.
+	/// @param fill Value to set for each character.
 	constexpr explicit BaseString(SizeType const size, DataType const& fill): BaseType(size+1, fill) {
 		BaseType::back() = '\0';
 	}
 
+	/// @brief Constructs the `BaseString` from a fixed array of characters.
+	/// @tparam S Size of array.
+	/// @param values Characters to add to `BaseString`.
 	template<SizeType S>
 	constexpr BaseString(As<ConstantType[S]> const& values) {
 		BaseType::resize(values[S-1] == '\0' ? S : S+1);
@@ -144,18 +152,25 @@ public:
 		if (values[S-1] != '\0') BaseType::pushBack('\0');
 	}
 
+	/// @brief Copy constructor.
+	/// @param other `BaseString` to copy from.
 	constexpr BaseString(SelfType const& other) {
 		BaseType::resize(other.size()+1);
 		BaseType::appendBack(other.begin(), other.end());
 		BaseType::pushBack('\0');
 	}
 
+	/// @brief Move constructor.
+	/// @param other `BaseString` to move from.
 	constexpr BaseString(SelfType&& other) {
 		BaseType::resize(other.size()+1);
 		BaseType::appendBack(other.begin(), other.end());
 		BaseType::pushBack('\0');
 	}
 
+	/// @brief Constructs a `BaseString` from a range of characters.
+	/// @param begin Iterator to beginning of range.
+	/// @param end Iterator to end of range.
 	constexpr BaseString(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		if (end <= begin) return;
 		if (*(end-1) == '\0') {
@@ -169,6 +184,9 @@ public:
 		}
 	}
 
+	/// @brief Constructs a `BaseString` from a range of characters.
+	/// @param begin Reverse iterator to beginning of range.
+	/// @param end Reverse iterator to end of range.
 	constexpr BaseString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		if (end <= begin) return;
 		if (*(end-1) == '\0') {
@@ -182,13 +200,22 @@ public:
 		}
 	}
 
+	/// @brief Constructs a `BaseString` from a "C-style" range of characters.
+	/// @param start Start of range.
+	/// @param size Size of range.
 	constexpr BaseString(ConstPointerType const& start, SizeType const size): BaseString(start, start + size) {}
 
+	/// @brief Constructs a `BaseString`, from a ranged object of (non-subclass) type T.
+	/// @tparam T Ranged type.
+	/// @param other Object to copy from.
 	template<Type::Container::Ranged<IteratorType, ConstIteratorType> T>
 	constexpr BaseString(T const& other)
 	requires (!Type::Subclass<T, SelfType>):
 		BaseString(other.begin(), other.end()) {}
 	
+	/// @brief Constructs a `BaseString`, from a bounded object of (non-list) type T.
+	/// @tparam T Ranged type.
+	/// @param other Object to copy from.
 	template<Type::Container::Bounded<PointerType, SizeType> T>
 	constexpr explicit BaseString(T const& other)
 	requires (
@@ -199,7 +226,7 @@ public:
 	/// @brief Destructor.
 	constexpr ~BaseString() {}
 	
-	/// @brief Constructs the `BaseString` from a null-terminated strin.
+	/// @brief Constructs a `BaseString` from a null-terminated strin.
 	/// @param v String to copy from.
 	constexpr BaseString(CStringType const& v) {
 		SizeType len = 0;
@@ -209,7 +236,7 @@ public:
 		BaseType::pushBack('\0');
 	}
 
-	/// @brief Constructs the `BaseString` from a series of arguments.
+	/// @brief Constructs a `BaseString` from a series of arguments.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Arguments.
 	template<class... Args>
@@ -218,13 +245,16 @@ public:
 		(*this) += (... + args);
 	}
 
-	/// @brief Constructos the `BaseString` from a STL view analog.
+	/// @brief Constructos a `BaseString` from a STL view analog.
 	/// @param str View to copy from.
 	constexpr BaseString(STDViewType const& str):	BaseType(&*str.begin(), &*str.end())	{}
-	/// @brief Constructos the `BaseString` from a STL string analog.
+	/// @brief Constructos a `BaseString` from a STL string analog.
 	/// @param str View to copy from.
 	constexpr BaseString(STDStringType const& str):	BaseType(&*str.begin(), &*str.end())	{}
 	
+	/// @brief Adds a new character to the end of the `BaseString`. 
+	/// @param value Character to add.
+	/// @return Reference to self.
 	constexpr SelfType& pushBack(DataType const& value) {
 		BaseType::back() = value;
 		BaseType::pushBack('\0');
@@ -1129,13 +1159,6 @@ private:
 	constexpr static DataType toUpperImpl(DataType const& c)	{return toUpperChar<DataType>(c);		}
 	constexpr static bool isHexImpl(DataType const& c)			{return isHexChar<DataType>(c);			}
 	constexpr static bool isNullOrSpaceImpl(DataType const& c)	{return isNullOrSpaceChar<DataType>(c);	}
-
-	/// @brief Buffer containing the "C-style" string.
-	PointerType mutable		strbuf			= nullptr;
-	/// @brief Size of the "C-style" string buffer.
-	usize mutable			strbuflen		= 0;
-	/// @brief Allocator for the "C-style" string buffer.
-	AllocatorType mutable	strbufalloc;
 
 	[[noreturn]] void invalidNumberError(CStringType const& v) const {
 		throw InvalidValueException("Not a valid number!");
