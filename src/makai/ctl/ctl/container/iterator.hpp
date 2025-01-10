@@ -187,7 +187,7 @@ private:
 		else					return iterand - other;
 	}
 
-	constexpr ConstPointerType offset(IndexType const value) const {
+	constexpr PointerType offset(IndexType const value) const {
 		if constexpr (REVERSE)	return iterand + value;
 		else					return iterand - value;
 	}
