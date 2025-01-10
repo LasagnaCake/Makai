@@ -128,7 +128,7 @@ public:
 
 	/// @brief Empty constructor.
 	constexpr BaseString(): BaseType() {
-		pushBack('\0');
+		BaseType::pushBack('\0');
 	}
 
 	/// @brief Constructs the `BaseString` with a preallocated capacity.
@@ -233,7 +233,6 @@ public:
 		while (v[len++] != '\0' && len <= MAX_SIZE);
 		BaseType::reserve(len);
 		BaseType::appendBack(BaseType(v, v+len));
-		BaseType::pushBack('\0');
 	}
 
 	/// @brief Constructs a `BaseString` from a series of arguments.
@@ -435,17 +434,14 @@ public:
 
 	constexpr SelfType sliced(IndexType start) const {
 		if (IndexType(size()) < start) return SelfType();
-		assertIsInBounds(start);
 		wrapBounds(start);
 		return SelfType(begin() + start, end());
 	}
 
 	constexpr SelfType sliced(IndexType start, IndexType stop) const {
 		if (IndexType(size()) < start) return SelfType();
-		assertIsInBounds(start);
 		wrapBounds(start);
 		if (IndexType(size()) < stop) return sliced(start);
-		assertIsInBounds(stop);
 		wrapBounds(stop);
 		if (stop < start) return SelfType();
 		return SelfType(begin() + start, begin() + stop + 1);
@@ -873,7 +869,7 @@ public:
 	/// @brief String concatenation operator (null-terminated string).
 	/// @param value String to concatenate.
 	/// @return Resulting concatenated string.
-	constexpr SelfType operator+(CStringType const& str) const				{return (*this) + SelfType(str);}
+	constexpr SelfType operator+(CStringType const& str) const			{return (*this) + SelfType(str);}
 	/// @brief String concatenation operator (char array).
 	/// @tparam S Array size.
 	/// @param value Char array to concatenate.
@@ -891,7 +887,7 @@ public:
 	/// @param value String to concatenate.
 	/// @param self `BaseString` to concatenate with.
 	/// @return Resulting concatenated string.
-	friend constexpr SelfType operator+(CStringType const& str, SelfType const& self)					{return SelfType(str) + (self);}
+	friend constexpr SelfType operator+(CStringType const& str, SelfType const& self)			{return SelfType(str) + (self);}
 	/// @brief String concatenation operator (char array).
 	/// @tparam S Array size.
 	/// @param value Char array to concatenate.
