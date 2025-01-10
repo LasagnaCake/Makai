@@ -377,7 +377,8 @@ void Arch::pack(
 			// Get directory info
 			String dirInfo = dir.dump(-1, ' ', false, Nlohmann::error_handler_t::replace);
 			// Compress & encrypt directory info
-			BinaryData<> pdi = BinaryData<>(dirInfo);
+			BinaryData<> pdi = BinaryData<>(dirInfo.size());
+			MX::memcpy(pdi.data(), dirInfo.data(), dirInfo.size());
 			pdi = compress(pdi, comp, complvl);
 			pdi = encrypt(pdi, passhash, enc, dheader.block);
 			// Populate header
