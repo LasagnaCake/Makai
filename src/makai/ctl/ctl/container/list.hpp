@@ -575,7 +575,7 @@ public:
 	/// @brief Removes elements that match a given predicate.
 	/// @tparam TPredicate Predicate type.
 	/// @param predicate Predicate to use as check.
-	/// @return Count of objects elements.
+	/// @return Count of elements removed.
 	/// @note
 	///		Does not resize `List`, merely moves it to the end, and destructs it.
 	///		If you need the `List` size to change, use `erase`. 
@@ -598,7 +598,7 @@ public:
 	/// @brief Removes elements that do not match a given predicate.
 	/// @tparam TPredicate Predicate type.
 	/// @param predicate Predicate to use as check.
-	/// @return Count of objects elements.
+	/// @return Count of elements removed.
 	/// @note
 	///		Does not resize `List`, merely moves it to the end, and destructs it.
 	///		If you need the `List` size to change, use `erase`. 
@@ -722,7 +722,7 @@ public:
 	}
 
 	/// @brief Appends another `List` to the end of the `List`.
-	/// @param other List to copy contents from.
+	/// @param other `List` to copy contents from.
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(SelfType const& other) {
 		expand(other.count);
@@ -920,8 +920,8 @@ public:
 	/// @brief Returns the current size of the underlying array.
 	/// @return Size of the underlying array.
 	constexpr SizeType capacity() const	{return maximum;	}
-	/// @brief Returns whether the array is empty.
-	/// @return Whether the array is empty.
+	/// @brief Returns whether the list is empty.
+	/// @return Whether the array is list.
 	constexpr SizeType empty() const	{return count == 0;	}
 
 	/// @brief Equality operator.
@@ -955,7 +955,7 @@ public:
 		return result;
 	}
 
-	/// @brief Returns whether it is equal to another `List`.
+	/// @brief Returns whether this `List` is equal to another `List`.
 	/// @param other Other `List` to compare with.
 	/// @return Whether they're equal.
 	/// @note Requires element type to be equally comparable.
@@ -991,7 +991,7 @@ public:
 		return result;
 	}
 
-	/// @brief How different it is from another `List`.
+	/// @brief Returns how different this `List` is from another `List`.
 	/// @param other Other `List` to compare with.
 	/// @return How different it is.
 	/// @note
