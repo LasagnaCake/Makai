@@ -16,20 +16,22 @@ namespace Makai::Data {
 	/// @brief Hashes the given bytes in a given hashing scheme.
 	/// @param data Data to hash.
 	/// @param mode Hashing scheme to use.
-	void hash(BinaryData<>& data, HashMode const& mode = HashMode::HM_SHA3_256);
+	void hash(BinaryData<>& data, HashMode const mode = HashMode::HM_SHA3_256);
 	/// @brief Hashes a set of bytes in a given hashing scheme.
 	/// @param data Data to hash.
 	/// @param mode Hashing scheme to use.
 	/// @return Hashed data.
-	BinaryData<> hashed(BinaryData<> const& data, HashMode const& mode = HashMode::HM_SHA3_256);
+	BinaryData<> hashed(BinaryData<> const& data, HashMode const mode = HashMode::HM_SHA3_256);
 
 	/// @brief Hashes a string in a given hashing scheme.
 	/// @param str String to hash.
 	/// @param mode Hashing scheme to use.
+	void hash(String& str, HashMode const mode = HashMode::HM_SHA3_256);
+	/// @brief Hashes a string in a given hashing scheme.
+	/// @param str String to hash.
+	/// @param mode Hashing scheme to use.
 	/// @return Hashed string.
-	BinaryData<> hashed(String const& str, HashMode const& mode = HashMode::HM_SHA3_256) {
-		return hashed(BinaryData<>(str.begin(), str.end()));
-	}
+	String hashed(String const& str, HashMode const mode = HashMode::HM_SHA3_256);
 }
 
 #endif // MAKAILIB_DATA_HASH_H
