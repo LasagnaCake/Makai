@@ -35,7 +35,8 @@ struct Iterator:
 	SelfIdentified<Iterator<TData, R, TIndex>> {
 public:
 	/// @brief Whether the `Iterator` is a reverse (`R = true`) or forward (`R = false`) iterator.
-	constexpr static bool REVERSE = R;
+	constexpr static bool REVERSE	= R;
+	constexpr static bool CONSTANT	= Type::Equal<AsNonConst<TData> const, TData>;
 
 	using Typed				= ::CTL::Typed<TData>;
 	using Indexed			= ::CTL::Indexed<TIndex>;
@@ -60,7 +61,8 @@ public:
 		typename SelfIdentified::SelfType
 	;
 
-	using NonConstSelfType = Iterator<AsNonConst<TData>, R, TIndex>;
+	using NonConstSelfType	= Iterator<AsNonConst<TData>, R, TIndex>;
+	using ConstSelfType		= Iterator<AsConstant<TData>, R, TIndex>;
 
 	using typename Ordered::OrderType;
 
@@ -83,10 +85,6 @@ public:
 	/// @brief Copy constructor.
 	/// @param other `Iterator` to copy from.
 	constexpr Iterator(SelfType const& other): iterand(other.iterand)				{}
-	/// @brief Copy constructor.
-	/// @param other non-const `Iterator` to copy from.
-	constexpr Iterator(NonConstSelfType const& other)
-	requires Type::Different<NonConstSelfType, SelfType>: iterand(other.raw())		{}
 	/// @brief Move constructor.
 	/// @param other `Iterator` to move from.
 	constexpr Iterator(SelfType&& other): iterand(CTL::move(other.iterand))			{}
@@ -142,14 +140,22 @@ public:
 	/// @brief Subtracts an offset from the `Iterator`.
 	/// @param value The offset to subtract from.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator-(IndexType const value) const	{return offset(-value);				}
+	constexpr SelfType operator-(IndexType const value) const	{return offset(value);				}
+	/// @brief Subtracts an offset from the `Iterator`.
+	/// @param value The offset to subtract from.
+	/// @return Offset Resulting offset `Iterator`.
+	constexpr SelfType operator-(IndexType const value)			{return offset(value);				}
 	/// @brief Adds an offset to the `Iterator`.
 	/// @param value The offset to add.
 	/// @return Offset Resulting offset `Iterator`.
 	constexpr SelfType operator+(IndexType const value) const	{return offset(value);				}
+	/// @brief Adds an offset to the `Iterator`.
+	/// @param value The offset to add.
+	/// @return Offset Resulting offset `Iterator`.
+	constexpr SelfType operator+(IndexType const value)			{return offset(value);				}
 
 	/// @brief Constant iteratpr type conversion.
-	constexpr operator NonConstSelfType() const								{return iterand;}
+	constexpr operator ConstSelfType() const requires(!CONSTANT)			{return iterand;}
 	/// @brief `std::reverse_iterator` type conversion.
 	constexpr operator STDReverseIterator() requires(REVERSE)				{return iterand;}
 	/// @brief `std::reverse_iterator` type conversion.
