@@ -447,7 +447,7 @@ namespace Makai::Ex::Game::AVM::Compiler {
 		constexpr AnimaBinaryHeader header() const {
 			AnimaBinaryHeader fh;
 			fh.data		= {fh.headerSize, 0};
-			for (String const& s: data) fh.data.size += s.nullTerminated() ? s.size() : s.size()+1;
+			for (String const& s: data) fh.data.size += s.size()+1;
 			fh.jumps	= {fh.data.offset(), jumps.size()};
 			fh.code		= {fh.jumps.offset(), code.size()};
 			return fh;
@@ -527,7 +527,7 @@ namespace Makai::Ex::Game::AVM::Compiler {
 			MX::memcpy(((void*)out.data()), &fh, fh.headerSize);
 			// Data division
 			for (String const& s: data) {
-				usize const strsz = s.size() + (s.nullTerminated() ? 0 : 1);
+				usize const strsz = s.size()+1;
 				out.expand(strsz, '\0');
 				MX::memcpy(out.end() - strsz, s.data(), s.size());	
 			}
