@@ -173,7 +173,7 @@ public:
 	/// @param end Iterator to end of range.
 	constexpr BaseString(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		if (end <= begin) return;
-		BaseType::resize(end - begin + 2);
+		BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 		BaseType::appendBack(begin, end);
 		if (BaseType::back() != '\0')
 			BaseType::pushBack('\0');
@@ -184,7 +184,7 @@ public:
 	/// @param end Reverse iterator to end of range.
 	constexpr BaseString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		if (end <= begin) return;
-		BaseType::resize(end - begin + 2);
+		BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 		BaseType::appendBack(begin, end);
 		if (BaseType::back() != '\0')
 			BaseType::pushBack('\0');
@@ -236,10 +236,10 @@ public:
 
 	/// @brief Constructos a `BaseString` from a STL view analog.
 	/// @param str View to copy from.
-	constexpr BaseString(STDViewType const& str):	BaseType(&*str.begin(), &*str.end())	{}
+	constexpr BaseString(STDViewType const& str):	BaseString(&*str.begin(), &*str.end())	{}
 	/// @brief Constructos a `BaseString` from a STL string analog.
 	/// @param str View to copy from.
-	constexpr BaseString(STDStringType const& str):	BaseType(&*str.begin(), &*str.end())	{}
+	constexpr BaseString(STDStringType const& str):	BaseString(&*str.begin(), &*str.end())	{}
 	
 	/// @brief Adds a new character to the end of the `BaseString`. 
 	/// @param value Character to add.
