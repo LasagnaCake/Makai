@@ -282,6 +282,12 @@ public:
 		return *this;
 	}
 
+	/// @brief Inserts a `BaseString` at a specified index in the `BaseString`.
+	/// @param other `BaseString` to insert.
+	/// @param index Index of which to insert in.
+	/// @return Reference to self.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `BaseString`.
 	constexpr SelfType& insert(SelfType const& other, IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
@@ -289,6 +295,13 @@ public:
 		return *this;
 	}
 	
+	/// @brief Inserts a given character, a given amount of times, at a specified index in the `BaseString`.
+	/// @param value Character to be inserted.
+	/// @param count Amount of times to insert the character.
+	/// @param index Index of which to insert in.
+	/// @return Reference to self.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `BaseString`.
 	constexpr SelfType& insert(DataType const& value, SizeType const count, IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
@@ -296,6 +309,13 @@ public:
 		return *this;
 	}
 
+	/// @brief Inserts a fixed array of characters at a specified index in the `BaseString`.
+	/// @tparam S Size of fixed array.
+	/// @param values Characters to insert.
+	/// @param index Index of which to insert in.
+	/// @return Reference to self.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `BaseString`.
 	template<SizeType S>
 	constexpr SelfType& insert(As<ConstantType[S]> const& values, IndexType index) {
 		assertIsInBounds(index);
@@ -304,21 +324,50 @@ public:
 		return *this;
 	}
 
+	/// @brief Ensures the `BaseString` can hold AT LEAST a given capacity.
+	/// @param count Minimum size of the `BaseString`.
+	/// @return Reference to self.
+	/// @note
+	///		This guarantees the capacity will be AT LEAST `count`,
+	/// 	but does not guarantee the capacity will be EXACTLY `count`.
+	///		For that, use `resize`.
 	constexpr SelfType& reserve(SizeType const count) {
 		BaseType::reserve(count + 1);
 		return *this;
 	}
 
+	/// @brief Resizes the `BaseString`, so the capacity is of a given size.
+	/// @param newSize New `BaseString` size.
+	/// @return Reference to self.
+	/// @note
+	///		This guarantees the capacity will be EXACTLY of `newSize`.
+	/// 	If you need the capacity to be AT LEAST `newSize`, use `reserve`.
 	constexpr SelfType& resize(SizeType const newSize) {
 		BaseType::resize(newSize + 1);
 		return *this;
 	}
 
+	/// @brief Expands the `BaseString`, such that it can hold AT LEAST `size()` + `count`.
+	/// @param count Count to increase by.
+	/// @return Reference to self.
 	constexpr SelfType& expand(SizeType const count) {
 		BaseType::expand(count + 1);
 		return *this;
 	}
 
+	/// @brief
+	///		Ensures the `BaseString` can hold AT LEAST a given capacity.
+	/// @param count Minimum size of the `BaseString`.
+	/// @param fill Character to use as fill.
+	/// @return Reference to self.
+	/// @note
+	///		If current size is smaller,
+	///		then it fills the extra space added with the given `fill`,
+	///		up to `count`, and sets current size to it.
+	/// @note
+	///		This guarantees the capacity will be AT LEAST `count`,
+	/// 	but does not guarantee the capacity will be EXACTLY `count`.
+	///		For that, use `resize`.
 	constexpr SelfType& reserve(SizeType const count, DataType const& fill) {
 		BaseType::back() = fill;
 		BaseType::reserve(count + 1, fill);
@@ -326,6 +375,16 @@ public:
 		return *this;
 	}
 	
+	/// @brief Resizes the `BaseString`, so the capacity is of a given size, then sets current size to it.
+	/// @param newSize New `BaseString` size.
+	/// @param fill Character to use as fill.
+	/// @return Reference to self.
+	///	@note
+	///		If current size is smaller,
+	///		then it fills the extra space added with the given `fill`.
+	/// @note
+	///		This guarantees the capacity will be EXACTLY of `newSize`.
+	///		If you need the capacity to be AT LEAST `newSize`, use `reserve`.
 	constexpr SelfType& resize(SizeType const newSize, DataType const& fill) {
 		BaseType::back() = fill;
 		BaseType::resize(newSize + 1, fill);
@@ -333,6 +392,15 @@ public:
 		return *this;
 	}
 	
+	/// @brief
+	///		Expands the `BaseString`, such that it can hold AT LEAST the current size,
+	///		plus a given `count`.
+	/// @param count Count to increase by.
+	/// @param fill Character to use as fill.
+	/// @return Reference to self.
+	///	@note
+	///		If current size is smaller,
+	///		then it fills the extra space added with the given `fill`.
 	constexpr SelfType& expand(SizeType const count, DataType const& fill) {
 		BaseType::back() = fill;
 		BaseType::expand(count + 1, fill);
@@ -340,25 +408,37 @@ public:
 		return *this;
 	}
 
+	/// @brief Ensures the current capacity is EXACTLY the current size.
+	/// @return Reference to self.
 	constexpr SelfType& tighten() {
 		BaseType::tighten();
 		return *this;
 	}
 
+	/// @brief Reverses the `BaseString`.
+	/// @return Reference to self.
 	constexpr SelfType& reverse() {
 		::CTL::reverse(data(), size());
 		return *this;
 	}
 
+	/// @brief Returns a reversed copy of the `BaseString`.
+	/// @return A reversed copy of the `BaseString`.
 	constexpr SelfType reversed() const {
 		return SelfType(*this).reverse();
 	}
 
+	/// @brief Finds the the position of the first character that matches a value.
+	/// @param value Value to search for.
+	/// @return The index of the value, or -1 if not found.
 	constexpr IndexType find(DataType const& value) const {
 		IndexType location = BaseType::find(value);
 		return (location == IndexType(size())) ? -1 : location;
 	}
 
+	/// @brief Finds the the position of the last character that matches a value.
+	/// @param value Value to search for.
+	/// @return The index of the value, or -1 if not found.
 	constexpr IndexType rfind(DataType const& value) const {
 		if (empty()) return -1;
 		auto const start = rbegin(), stop = rend();
@@ -368,29 +448,59 @@ public:
 		return -1;
 	}
 
+	/// @brief Performs a binary search to find the index of a character that matches a value.
+	/// @param value Value to search for.
+	/// @return The index of the value, or -1 if not found.
+	/// @note Requires the string to be sorted.
 	constexpr IndexType bsearch(DataType const& value) const {
 		IndexType location = BaseType::find(value);
 		return (location == IndexType(size())) ? -1 : location;
 	}
 
+	/// @brief Removes a character at a given index.
+	/// @param index Index of the character to remove.
+	/// @return Reference to self.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note
+	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
+	///		If you need the `BaseString` size to change, use `erase`.
 	constexpr SelfType& remove(IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
 		return BaseType::remove(index);
 	}
 	
+	/// @brief Removes characters that match a given character.
+	/// @param value Character to match.
+	/// @return Count of characters removed.
+	/// @note
+	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
+	///		If you need the `BaseString` size to change, use `erase`.
 	constexpr SizeType removeLike(DataType const& value) {
 		SizeType count = BaseType::removeLike(value) - (value == '\0');
 		if (value == '\0') BaseType::back() = '\0';
 		return count;
 	}
 	
+	/// @brief Removes characters that do not match a given character.
+	/// @param value Character to match.
+	/// @return Count of characters removed.
+	/// @note
+	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
+	///		If you need the `BaseString` size to change, use `erase`. 
 	constexpr SizeType removeUnlike(DataType const& value) {
 		SizeType count = BaseType::removeUnlike(value) - (value == '\0');
 		if (value == '\0') BaseType::back() = '\0';
 		return count;
 	}
 
+	/// @brief Removes characters that match a given predicate.
+	/// @tparam TPredicate Predicate type.
+	/// @param predicate Predicate to use as check.
+	/// @return Count of characters removed.
+	/// @note
+	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
+	///		If you need the `BaseString` size to change, use `erase`. 
 	template<class TPredicate>
 	constexpr SizeType removeIf(TPredicate const& predicate) {
 		SizeType count = BaseType::removeIf(predicate);
@@ -398,6 +508,14 @@ public:
 			--count;
 		return count;
 	}
+
+	/// @brief Removes characters that do not match a given predicate.
+	/// @tparam TPredicate Predicate type.
+	/// @param predicate Predicate to use as check.
+	/// @return Count of characters removed.
+	/// @note
+	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
+	///		If you need the `BaseString` size to change, use `erase`. 
 	template<class TPredicate>
 	constexpr SizeType removeIfNot(TPredicate const& predicate) {
 		SizeType count = BaseType::removeIfNot(predicate);
@@ -406,40 +524,82 @@ public:
 		return count;
 	}
 
+	/// @brief Erases a character at a given index.
+	/// @param index Index of the character to erase.
+	/// @return Reference to self.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note
+	///		Resizes the `BaseString`.
+	///		If you need the `BaseString` size to remain the same, use `remove`. 
 	constexpr SelfType& erase(IndexType const index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
 		return BaseType::erase(index);
 	}
 
+	/// @brief Erases characters that match a given value.
+	/// @param value Value to match.
+	/// @return Count of characters removed.
+	/// @note
+	///		Resizes the `BaseString`.
+	///		If you need the `BaseString` size to remain the same, use `remove`.
 	constexpr SelfType& eraseLike(DataType const& value) {
 		resize(removeLike(value));
 		return *this;
 	}
 
+	/// @brief Erases characters that do not a given value.
+	/// @param value Value to match.
+	/// @return Count of characters removed.
+	/// @note
+	///		Resizes the `BaseString`.
+	///		If you need the `BaseString` size to remain the same, use `remove`.
 	constexpr SelfType& eraseUnlike(DataType const& value) {
 		resize(removeUnlike(value));
 		return *this;
 	}
 
+	/// @brief Erases characters that match a given predicate.
+	/// @tparam TPredicate Predicate type.
+	/// @param predicate Predicate to use as check.
+	/// @note
+	///		Resizes the `BaseString`.
+	///		If you need the `BaseString` size to remain the same, use `remove`.
 	template<Type::Functional<PredicateType> TPredicate>
 	constexpr SelfType& eraseIf(TPredicate const& predicate) {
 		resize(removeIf(predicate));
 		return *this;
 	}
 
+	/// @brief Erases characters that do not match a given predicate.
+	/// @tparam TPredicate Predicate type.
+	/// @param predicate Predicate to use as check.
+	/// @note
+	///		Resizes the `BaseString`.
+	///		If you need the `BaseString` size to remain the same, use `remove`.
 	template<Type::Functional<PredicateType> TPredicate>
 	constexpr SelfType& eraseIfNot(TPredicate const& predicate) {
 		resize(removeIfNot(predicate));
 		return *this;
 	}
 
+	/// @brief Returns a substring starting from a given index.
+	/// @param start Starting index to copy from.
+	/// @return Substring.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `BaseString`.
 	constexpr SelfType sliced(IndexType start) const {
 		if (IndexType(size()) < start) return SelfType();
 		wrapBounds(start);
 		return SelfType(begin() + start, end());
 	}
 
+	/// @brief Returns a substring ranging from between two indices.
+	/// @param start Starting index to copy from.
+	/// @param stop End index to stop copying from.
+	/// @return Substring.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `BaseString`.
 	constexpr SelfType sliced(IndexType start, IndexType stop) const {
 		if (IndexType(size()) < start) return SelfType();
 		wrapBounds(start);
@@ -449,6 +609,9 @@ public:
 		return SelfType(begin() + start, begin() + stop + 1);
 	}
 
+	/// @brief Appends another `BaseString` to the end of the `BaseString`.
+	/// @param other `BaseString` to copy contents from.
+	/// @return Reference to self.
 	constexpr SelfType& appendBack(SelfType const& other) {
 		expand(other.size());
 		BaseType::popBack();
@@ -457,10 +620,18 @@ public:
 		return *this;
 	}
 
+	/// @brief Appends a character several times to the end of the `BaseString`.
+	/// @param count Amount of character to append.
+	/// @param fill Value of the characters.
+	/// @return Reference to self.
 	constexpr SelfType& appendBack(SizeType const count, DataType const& fill) {
 		return expand(count, fill);
 	}
 
+	/// @brief Appends a range of characters to the end of the `BaseString`.
+	/// @param begin Iterator to beginning of range.
+	/// @param end Iterator pointing to end of range.
+	/// @return Reference to self.
 	constexpr SelfType& appendBack(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		expand(end - begin);
 		BaseType::popBack();
@@ -469,6 +640,10 @@ public:
 		return *this;
 	}
 
+	/// @brief Appends a range of characters to the end of the `BaseString`.
+	/// @param begin Reverse iterator to beginning of range.
+	/// @param end Reverse iterator pointing to end of range.
+	/// @return Reference to self.
 	constexpr SelfType& appendBack(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		expand(end - begin);
 		BaseType::popBack();
@@ -477,6 +652,10 @@ public:
 		return *this;
 	}
 
+	/// @brief Appends a fixed array of characters to the end of the `BaseString`.
+	/// @tparam S Size of the array.
+	/// @param values Characters to append.
+	/// @return Reference to self.
 	template<SizeType S>
 	constexpr SelfType& appendBack(As<DataType[S]> const& values) {
 		if (values[S-1] == '\0') {
@@ -492,65 +671,130 @@ public:
 		return *this;
 	}
 
+	/// @brief Clears the `BaseString`.
+	/// @return Reference to self.
+	/// @note
+	///		Does not free the underlying character array held by the `BaseString`.
+	///		To actually free the underlying character array, call `dispose`. 
 	constexpr SelfType& clear() {
 		BaseType::clear();
 		BaseType::pushBack('\0');
 		return *this;
 	}
 
+	/// @brief Frees the underlying character array held by the `BaseString`.
+	/// @return Reference to self.
+	/// @note To not free the underlying character array, call `clear`. 
 	constexpr SelfType& dispose() {
 		BaseType::dump();
 		return *this;
 	}
 
+	/// @brief Returns an iterator to the end of the `BaseString`.
+	/// @return Iterator to the end of the `BaseString`.
 	constexpr IteratorType				end()			{return data()+size();								}
+	/// @brief Returns an iterator to the end of the `BaseString`.
+	/// @return Iterator to the end of the `BaseString`.
 	constexpr ConstIteratorType			end() const		{return data()+size();								}
+	/// @brief Returns a reverse iterator to the end of the `BaseString`.
+	/// @return Reverse iterator to the end of the `BaseString`.
 	constexpr PointerType				cend()			{return data()+size();								}
+	/// @brief Returns a reverse iterator to the end of the `BaseString`.
+	/// @return Reverse iterator to the end of the `BaseString`.
 	constexpr ConstPointerType			cend() const	{return data()+size();								}
+	/// @brief Returns a reverse iterator to the beginning of the `BaseString`.
+	/// @return Reverse iterator to the beginning of the `BaseString`.
 	constexpr ReverseIteratorType		rbegin()		{return ReverseIteratorType(data()+size());			}
+	/// @brief Returns a reverse iterator to the beginning of the `BaseString`.
+	/// @return Reverse iterator to the beginning of the `BaseString`.
 	constexpr ConstReverseIteratorType	rbegin() const	{return ConstReverseIteratorType(data()+size());	}
 	
+	/// @brief Returns the last character.
+	/// @return Last character.
+	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr ReferenceType 	back()			{return at(size()-1);	}
+	/// @brief Returns the last character.
+	/// @return Last character.
+	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr DataType 			back() const	{return at(size()-1);	}
 	
+	/// @brief Returns the character at a given index.
+	/// @param index Index of the character.
+	/// @return Reference to the character.
+	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr DataType& at(IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
 		return BaseType::at(index);
 	}
 
+	/// @brief Returns the character at a given index.
+	/// @param index Index of the character.
+	/// @return Character.
+	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr DataType at(IndexType index) const {
 		assertIsInBounds(index);
 		wrapBounds(index);
 		return BaseType::at(index);
 	}
 
-	constexpr ReferenceType	operator[](IndexType index)			{return at(index);}
+	/// @brief Returns the character at a given index.
+	/// @param index Index of the character.
+	/// @return Reference to the character.
+	/// @throw OutOfBoundsException when `BaseString` is empty.
+	constexpr ReferenceType	operator[](IndexType const index)	{return at(index);}
+	/// @brief Returns the character at a given index.
+	/// @param index Index of the character.
+	/// @return Character.
+	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr DataType operator[](IndexType const index) const	{return at(index);}
 	
+	/// @brief Returns the current size of the underlying character array.
+	/// @return Size of the underlying character array.
 	constexpr SizeType capacity() const	{return BaseType::capacity() - 1;	}
+	/// @brief Returns whether the string is empty.
+	/// @return Whether the string is empty.
 	constexpr SizeType empty() const	{return size() == 0;				}
 
+	/// @brief Equality operator.
+	/// @param other Other `BaseString` to compare with.
+	/// @return Whether they're equal.
 	constexpr bool operator==(SelfType const& other) const {
 		return BaseType::equals(other);
 	}
 
+	/// @brief Threeway comparison operator.
+	/// @param other Other `BaseString` to compare with.
+	/// @return Order between both `BaseString`s.
 	constexpr OrderType operator<=>(SelfType const& other) const {
 		return compare(other);
 	}
 
+	/// @brief Returns whether this `BaseString` is equal to another `BaseString`.
+	/// @param other Other `BaseString` to compare with.
+	/// @return Whether they're equal.
 	constexpr SizeType equals(SelfType const& other) const {
 		return BaseType::equals(other);
 	}
 
+	/// @brief Returns the result of a threeway comparison with another `BaseString`.
+	/// @param other Other `BaseString` to compare with.
+	/// @return Order between both `BaseString`s.
 	constexpr OrderType compare(SelfType const& other) const {
 		return BaseType::compare(other);
 	}
 
+	/// @brief Returns how different this `BaseString` is from another `BaseString`.
+	/// @param other Other `BaseString` to compare with.
+	/// @return How different it is.
 	constexpr SizeType disparity(SelfType const& other) const {
 		return BaseType::disparity(other);
 	}
 
+	/// @brief Apllies a procedure to all characters in the `BaseString`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
 	template <class TProcedure>
 	constexpr SelfType& transform(TProcedure const& fun) {
 		for(DataType& v: *this)
@@ -558,11 +802,19 @@ public:
 		return *this;
 	}
 
+	/// @brief Returns a `transform`ed `BaseString`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Transformed string.
 	template<class TProcedure>
 	constexpr SelfType transformed(TProcedure const& fun) const {
 		return SelfType(*this).transform(fun);
 	}
 
+	/// @brief Returns whether all characters match a given predicate.
+	/// @tparam TPredicate Predicate type.
+	/// @param cond Predicate to match.
+	/// @return Whether all characters match.
 	template<class TPredicate>
 	constexpr bool validate(TPredicate const& cond) const {
 		if (empty()) return false;
@@ -572,21 +824,37 @@ public:
 		return true;
 	}
 
+	/// @brief Removes all characters that do not match a given predicate.
+	/// @tparam TPredicate Predicate type.
+	/// @param filter Predicate to match.
+	/// @return Reference to self.
 	template<Type::Functional<PredicateType> TPredicate>
 	constexpr SelfType& filter(TPredicate const& filter) {
 		return eraseIfNot(filter);
 	}
 
+	/// @brief Removes all characters that fail a given comparison.
+	/// @tparam TCompare Compare type.
+	/// @param compare Comparison to make.
+	/// @return Reference to self.
 	template<Type::Functional<CompareType> TCompare>
 	constexpr SelfType& filter(TCompare const& compare) {
 		return *this = filtered(compare);
 	}
 
+	/// @brief Returns a `filter`ed `BaseString`.
+	/// @tparam TPredicate Predicate type.
+	/// @param filter Predicate to match.
+	/// @return `filter`ed `BaseString`.
 	template<Type::Functional<PredicateType> TPredicate>
 	constexpr SelfType filtered(TPredicate const& filter) const {
 		return SelfType(*this).eraseIfNot(filter);
 	}
 
+	/// @brief Returns a `filter`ed `BaseString`.
+	/// @tparam TCompare Compare type.
+	/// @param compare Comparison to make.
+	/// @return `filter`ed `BaseString`.
 	template<Type::Functional<CompareType> TCompare>
 	constexpr SelfType filtered(TCompare const& compare) const {
 		SelfType result;
@@ -602,10 +870,17 @@ public:
 		return result;
 	}
 
+	/// @brief Returns a `BaseString` containing only unique characters.
+	/// @return `BaseString` containing only unique characters.
 	constexpr SelfType uniques() {
 		return filtered([](ConstReferenceType a, ConstReferenceType b){return a != b;});
 	}
 
+	/// @brief Returns the current `BaseString`, divided at a given index.
+	/// @param index The index to use as pivot.
+	/// @return A `List`  containing the two halves of this `BaseString`.
+	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `BaseString`.
 	constexpr List<SelfType, SizeType> divide(IndexType index) const {
 		List<SelfType, SizeType> res;
 		assertIsInBounds(res);
