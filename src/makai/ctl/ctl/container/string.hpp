@@ -180,7 +180,6 @@ public:
 			BaseType::resize(end - begin + 2);
 			BaseType::appendBack(begin, end);
 			BaseType::pushBack('\0');
-			
 		}
 	}
 
@@ -196,14 +195,13 @@ public:
 			BaseType::resize(end - begin + 2);
 			BaseType::appendBack(begin, end);
 			BaseType::pushBack('\0');
-			
 		}
 	}
 
 	/// @brief Constructs a `BaseString` from a "C-style" range of characters.
 	/// @param start Start of range.
 	/// @param size Size of range.
-	constexpr BaseString(ConstPointerType const& start, SizeType const size): BaseString(start, start + size) {}
+	constexpr explicit BaseString(ConstPointerType const& start, SizeType const size): BaseString(start, start + size) {}
 
 	/// @brief Constructs a `BaseString`, from a ranged object of (non-subclass) type T.
 	/// @tparam T Ranged type.
