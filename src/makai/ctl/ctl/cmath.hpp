@@ -36,7 +36,7 @@ namespace Constants {
 	/// @brief Approximate value of the square root of 3, to the first 64 decimal places.
 	constexpr const ldouble	SQRT3	= 1.7320508075688772935274463415058723669428052538103806280558069795;
 	/// @brief Approximate value of the natural logarithm of 2, to the first 64 decimal places.
-	constexpr const ldouble	LN2		= 0.69314718055994530941723212145817656807550013436025525412068000949;
+	constexpr const ldouble	LN2		= 0.6931471805599453094172321214581765680755001343602552541206800095;
 	/// @brief Approximate value of the natural logarithm of 10, to the first 64 decimal places.
 	constexpr const ldouble LN10	= 2.3025850929940456840179914546843642076011014886287729760333279010;
 	/// @brief Approximate value of pi, to the first 64 decimal places.
