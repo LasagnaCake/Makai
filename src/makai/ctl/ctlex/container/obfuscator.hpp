@@ -65,8 +65,15 @@ namespace Impl {
 	/// @param v Number to check.
 	/// @return Whether it is prime.
 	consteval bool isPrime(usize const v) {
-		if (v == 0) return false;
-		for (usize i = 2; i < v; ++i)
+		if (
+			v == 0
+		||	v % 2 == 0
+		||	v % 3 == 0
+		||	v % 5 == 0
+		||	v % 7 == 0
+		||	v % 11 == 0
+		) return false; 
+		for (usize i = 13; i < v/2; ++i)
 			if (v % i == 0)
 				return false;
 		return true;
