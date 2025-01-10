@@ -12,7 +12,7 @@ To utilize it, simply derive from `AVM::Engine` in your class.
 
 ## Philosophy
 
-**The behaviour is defined by the programmer.**
+### The behaviour is defined by the programmer.
 
 By default, all of the commands (except those without associated functions) do nothing. It is up to the programmer to choose whether to change that behaviour. To do so, simply override the associated `op*` function, and implement your own.
 
@@ -20,6 +20,9 @@ For all functions (except `opWait` and `opColor`), all integer values are hashes
 
 Example: `opNamedCallSingle` gets called with an integer `X`, and a string `"Example"`. `X` is the hash for `do-thing`. In the anima source file, this would be seen as `$do-thing "Example"`.
 
+### The language is designed to be used for *extending* behaviour.
+
+It is not designed to be a replacement programming language, but rather, as an extension to the programmer — and the engine's — systems.
 
 ## Behaviour
 
