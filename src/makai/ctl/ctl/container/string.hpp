@@ -360,8 +360,12 @@ public:
 	}
 
 	constexpr IndexType rfind(DataType const& value) const {
-		IndexType location = BaseType::find(value);
-		return (location == IndexType(size())) ? -1 : location;
+		if (empty()) return -1;
+		auto const start = rbegin(), stop = rend();
+		for (auto i = start; i != stop; ++i)
+			if (BaseType::ComparatorType::equals(*i, value))
+				return size()-(i-start)-1;
+		return -1;
 	}
 
 	constexpr IndexType bsearch(DataType const& value) const {
