@@ -65,7 +65,6 @@ namespace Makai::Ex::Game::AVM::Compiler {
 	/// @return Unescaped character.
 	constexpr char unescape(char const c) {
 		switch (c) {
-			case '\\': return '\\';
 			case '0': return ' ';
 			case 'n': return '\n';
 			case 'v': return '\v';
@@ -73,8 +72,7 @@ namespace Makai::Ex::Game::AVM::Compiler {
 			case 'b': return '\b';
 			case 'r': return '\r';
 			case 'f': return '\f';
-			case '"': return '\"';
-			case '\'': return '\'';
+			default: return c;
 		}
 		return c;
 	}
