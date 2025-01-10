@@ -148,11 +148,11 @@ public:
 	/// @brief Adds an offset to the `Iterator`.
 	/// @param value The offset to add.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator+(IndexType const value) const	{return offset(value);				}
+	constexpr SelfType operator+(IndexType const value) const	{return offset(-value);				}
 	/// @brief Adds an offset to the `Iterator`.
 	/// @param value The offset to add.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator+(IndexType const value)			{return offset(value);				}
+	constexpr SelfType operator+(IndexType const value)			{return offset(-value);				}
 
 	/// @brief Constant iteratpr type conversion.
 	constexpr operator ConstSelfType() const requires(!CONSTANT)			{return iterand;}

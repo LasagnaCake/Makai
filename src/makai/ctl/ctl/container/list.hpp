@@ -853,16 +853,16 @@ public:
 
 	/// @brief Returns a pointer to the beginning of the `List`.
 	/// @return Pointer to the beginning of the `List`.
-	constexpr PointerType	cbegin()		{return contents;		}
+	constexpr PointerType	cbegin()			{return contents;		}
 	/// @brief Returns a pointer to the end of the `List`.
 	/// @return Pointer to the end of the `List`.
-	constexpr PointerType	cend()			{return contents+count;	}
+	constexpr PointerType	cend()				{return contents+count;	}
 	/// @brief Returns a pointer to the beginning of the `List`.
 	/// @return Pointer to the beginning of the `List`.
-	constexpr ConstantType*	cbegin() const	{return contents;		}
+	constexpr ConstPointerType	cbegin() const	{return contents;		}
 	/// @brief Returns a pointer to the end of the `List`.
 	/// @return Pointer to the end of the `List`.
-	constexpr ConstantType*	cend() const	{return contents+count;	}
+	constexpr ConstPointerType	cend() const	{return contents+count;	}
 	
 	/// @brief Returns the value of the first element.
 	/// @return Reference to the first element.

@@ -85,7 +85,6 @@ void testString() {
 	str = "Henlo.";						print(str);
 	str += " You?";						print(str);
 	str = "O! " + str;					print(str);
-	DEBUGLN(str.end() - str.begin());
 	print(str.sliced(2, -3));
 	str = "Impedance. Voltage. Current."s;
 	print(str);
