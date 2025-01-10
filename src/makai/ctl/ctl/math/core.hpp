@@ -24,23 +24,23 @@ namespace Math {
 	/// @brief Math constants.
 	namespace Constants {
 		/// @brief Approximate value of half of the square root of 2.
-		constexpr const double	HSQRT2		= SQRT2 / 2.0;
+		constexpr const ldouble	HSQRT2		= SQRT2 / 2.0;
 		/// @brief Approximate value of a quarter of the square root of 2.
-		constexpr const double	QSQRT2		= SQRT2 / 4.0;
+		constexpr const ldouble	QSQRT2		= SQRT2 / 4.0;
 		/// @brief Approximate value of half of the square root of 3.
-		constexpr const double	HSQRT3		= SQRT2 / 2.0;
+		constexpr const ldouble	HSQRT3		= SQRT2 / 2.0;
 		/// @brief Approximate value of a quarter of the square root of 3.
-		constexpr const double	QSQRT3		= SQRT2 / 4.0;
+		constexpr const ldouble	QSQRT3		= SQRT2 / 4.0;
 		/// @brief Approximate value of half of pi.
-		constexpr const double	HPI			= PI / 2.0;
+		constexpr const ldouble	HPI			= PI / 2.0;
 		/// @brief Approximate value of a quarter of pi.
-		constexpr const double	QPI			= PI / 4.0;
+		constexpr const ldouble	QPI			= PI / 4.0;
 		/// @brief Approximate value of 180 divided by pi.
-		constexpr const double	DEGRAD		= 180.0 / PI;
+		constexpr const ldouble	DEGRAD		= 180.0 / PI;
 		/// @brief Approximate value of this random number I made up.
-		constexpr const double	MARIBEL		= EULER - (11.0 - 6.0 * SQRT2) / 5.0;
+		constexpr const ldouble	MARIBEL		= EULER - (11.0 - 6.0 * SQRT2) / 5.0;
 		/// @brief Approximate value of tau divided by phi.
-		constexpr const double	TAUPHI		= TAU / PHI;
+		constexpr const ldouble	TAUPHI		= TAU / PHI;
 	}
 
 	/// @brief Returns the sign of the value.
@@ -53,7 +53,7 @@ namespace Math {
 		Type::Comparable::All<T, T>
 	&&	Type::Constructible<T, float>
 	) {
-		return (val < 0 ? -1 : (val > 0 ? +1 : 0));
+		return static_cast<T>(val < 0 ? -1 : (val > 0 ? +1 : 0));
 	}
 
 	/// @brief Returns the smallest of the two values.
@@ -127,7 +127,7 @@ namespace Math {
 	/// @param by How much to interpolate by.
 	/// @return Result of the interpolation.
 	template<Type::Number T = float>
-	constexpr T angleLerp(T const& from, T const& to, T const& by) {
+	constexpr T angleLerp(T const from, T const& to, T const& by) {
 		T dist	= fmod(to - from, TAU);
 		dist	= fmod(2.0 * dist, TAU) - dist;
 		return (T)(from + dist * by);
@@ -139,7 +139,7 @@ namespace Math {
 	/// @param step Step size.
 	/// @return Stepped value.
 	template<Type::Number T = float>
-	constexpr T step(T const& val, T const& step) {
+	constexpr T step(T const val, T const& step) {
 		if (step != 0)
 			return (T)(floor(val / step + 0.5) * step);
 		return val;
@@ -150,7 +150,7 @@ namespace Math {
 	/// @param val Value to round.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T floor(T const& val) {
+	constexpr T floor(T const val) {
 		return (T)(::floor(val));
 	}
 
@@ -160,7 +160,7 @@ namespace Math {
 	/// @param decimals Decimal spaces to round down to.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T floor(T const& val, ssize const decimals) {
+	constexpr T floor(T const val, ssize const decimals) {
 		// Get rounding factor
 		T zeros = pow<floatmax>(10, decimals);
 		// Floor it
@@ -172,7 +172,7 @@ namespace Math {
 	/// @param val Value to round.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T ceil(T const& val) {
+	constexpr T ceil(T const val) {
 		return (T)(::ceil(val));
 	}
 
@@ -182,7 +182,7 @@ namespace Math {
 	/// @param decimals Decimal spaces to round up to.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T ceil(T const& val, int const decimals) {
+	constexpr T ceil(T const val, int const decimals) {
 		// Get rounding factor
 		T zeros = pow<floatmax>(10, decimals);
 		// Ceil it
@@ -194,7 +194,7 @@ namespace Math {
 	/// @param val Value to round.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T round(T const& val) {
+	constexpr T round(T const val) {
 		// Add 1/2 & floor it
 		return (T)(::floor(val + 0.5));
 	}
@@ -205,7 +205,7 @@ namespace Math {
 	/// @param decimals Decimal spaces to round to.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T round(T const& val, int const decimals) {
+	constexpr T round(T const val, int const decimals) {
 		// Get rounding factor
 		T zeros = pow<floatmax>(10, decimals);
 		// Add 1/2 & floor it
@@ -213,12 +213,12 @@ namespace Math {
 	}
 	
 	template<Type::Number T = float>
-	constexpr T fmult(T const& val, T const& mult) {
+	constexpr T fmult(T const val, T const mult) {
 		return ::floor(val / (double)mult) * mult;
 	}
 
 	template<Type::Number T = float>
-	constexpr T cmult(T const& val, T const& mult) {
+	constexpr T cmult(T const val, T const mult) {
 		return ::ceil(val / (double)mult) * mult;
 	}
 
@@ -228,7 +228,7 @@ namespace Math {
 	/// @param b Right-hand side.
 	/// @return Modulo between `a` and `b`.
 	template<Type::Number T = float>
-	constexpr T mod(T const& a, T const& b) {
+	constexpr T mod(T const a, T const b) {
 		return fmod(a, b);
 	}
 
@@ -237,7 +237,7 @@ namespace Math {
 	/// @param val Value to wrap around.
 	/// @return Wrapped value.
 	template<Type::Number T = float>
-	constexpr T ramp(T const& val) {
+	constexpr T ramp(T const val) {
 		return val - round(val);
 	}
 
@@ -246,7 +246,7 @@ namespace Math {
 	/// @param val Value to get the fractional part from.
 	/// @return Fractional part of the number.
 	template<Type::Number T = float>
-	constexpr T fract(T const& val) {
+	constexpr T fract(T const val) {
 		return val - ::floor(val);
 	}
 
@@ -257,7 +257,7 @@ namespace Math {
 	/// @param max Maximum.
 	/// @return Wrapped value.
 	template<Type::Integer T = int>
-	constexpr T wrapi(T const& val, T const& min, T const& max) {
+	constexpr T wrapi(T const val, T const min, T const max) {
 		return ((val - min) % (max - min)) + min;
 	}
 
@@ -268,7 +268,7 @@ namespace Math {
 	/// @param max Maximum.
 	/// @return Wrapped value.
 	template<Type::Number T = float>
-	constexpr T wrap(T const& val, T const& min, T const& max) {
+	constexpr T wrap(T const val, T const min, T const max) {
 		return mod(val - min, max - min) + min;
 	}
 
@@ -278,7 +278,7 @@ namespace Math {
 	/// @param root Root to take from the value.
 	/// @return The Nth root of the value.
 	template<Type::Number T = float>
-	constexpr T nroot(T const& val, T const& root) {
+	constexpr T nroot(T const val, T const root) {
 		return exp(log(root) / val);
 	}
 
@@ -287,7 +287,7 @@ namespace Math {
 	/// @param val Value to take its own root from.
 	/// @return The Nth root of N.
 	template<Type::Number T = float>
-	constexpr T nrtn(T const& val) {
+	constexpr T nrtn(T const val) {
 		return nroot(val, val);
 	}
 
@@ -295,23 +295,23 @@ namespace Math {
 	/// @tparam T Number type.
 	/// @param val Value to get the absolute sine of.
 	/// @return Absolute sine of the value.
-	template<Type::Number T = float> constexpr T absin(T const& val) {return abs(sin(val));}
+	template<Type::Number T = float> constexpr T absin(T const val) {return abs(sin(val));}
 	/// @brief Returns the absolute cosine of a value.
 	/// @tparam T Number type.
 	/// @param val Value to get the absolute cosine of.
 	/// @return Absolute cosine of the value.
-	template<Type::Number T = float> constexpr T abcos(T const& val) {return abs(cos(val));}
+	template<Type::Number T = float> constexpr T abcos(T const val) {return abs(cos(val));}
 	/// @brief Returns the absolute tangent of a value.
 	/// @tparam T Number type.
 	/// @param val Value to get the absolute tangent of.
 	/// @return Absolute tangent of the value.
-	template<Type::Number T = float> constexpr T abtan(T const& val) {return abs(tan(val));}
+	template<Type::Number T = float> constexpr T abtan(T const val) {return abs(tan(val));}
 	/// @brief Returns the absolute sine and cosine of a value.
 	/// @tparam T Number type.
 	/// @param val Value to get the absolute sine and cosine of.
 	/// @param sin resulting absolute sine.
 	/// @param sin resulting absolute cosine.
-	template<Type::Number T = float> constexpr void absincos(T const& val, T& sin, T& cos) {
+	template<Type::Number T = float> constexpr void absincos(T const val, T& sin, T& cos) {
 		sincos(val, sin, cos);
 		sin = abs(sin);
 		cos = abs(cos);
@@ -332,7 +332,7 @@ namespace Math {
 	/// @return Interpolation function for between two values.
 	template<Type::Math::Operatable T>
 	constexpr inline Function<T(T const&)> getInterpolationFunction(T const& from, T const& to) {
-		return [=](T const& by) -> T {return (T)lerp(from, to, by);};
+		return [=](T const& by) -> T {return static_cast<T>(lerp(from, to, by));};
 	}
 	
 	/// @brief Multiplies an unsigned integer to a power of two.
@@ -341,7 +341,7 @@ namespace Math {
 	/// @param power Power of two to multiply by.
 	/// @return Multiplied value.
 	template<Type::Integer T = int>
-	constexpr inline usize uipow2(T const& val, usize const power) {
+	constexpr inline usize uipow2(T const val, usize const power) {
 		return val << power;
 	}
 
@@ -351,7 +351,7 @@ namespace Math {
 	/// @param bit Bit to get.
 	/// @return Whether the bit is set.
 	template<Type::Integer T = int>
-	constexpr inline bool bit(T const& val, usize const bit) {
+	constexpr inline bool bit(T const val, usize const bit) {
 		return (val & (0x1 << bit));
 	}
 
@@ -360,7 +360,7 @@ namespace Math {
 	/// @param val Number to extract from.
 	/// @return Pair containing results.
 	template <Type::Number T>
-	constexpr Pair<int, T> frexp(T const& val) {
+	constexpr Pair<int, T> frexp(T const val) {
 		int pow2 = 0;
 		T rem = std::frexp((float)val, &pow2);
 		return Pair<intmax, T>{pow2, rem};
@@ -372,7 +372,7 @@ namespace Math {
 	/// @param exp Power of two to multiply by.
 	/// @return Multiplied value.
 	template <Type::Number T>
-	constexpr T ldexp(T const& val, intmax const& exp) {
+	constexpr T ldexp(T const val, intmax const exp) {
 		return (T)::ldexp((double)val, exp);
 	}
 
