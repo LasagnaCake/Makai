@@ -13,13 +13,13 @@ namespace Co {
 	/// @tparam TSuspend Suspend type.
 	template<class TReturn, class TSuspend = bool>
 	struct IAwaitable {
-		/// @brief Returns whether awaiting is necessary. Must be implemented,
+		/// @brief Returns whether awaiting is necessary. Must be implemented.
 		/// @return Whether to await.
 		virtual bool await_ready()			= 0;
-		/// @brief Returns the suspension state. Must be implemented,
+		/// @brief Returns the suspension state. Must be implemented.
 		/// @return Suspension state.
 		virtual TSuspend await_suspend()	= 0;
-		/// @brief Returns the result of the await. Must be implemented,
+		/// @brief Returns the result of the await. Must be implemented.
 		/// @return Await result.
 		virtual TReturn await_resume()		= 0;
 	};
