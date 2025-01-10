@@ -261,7 +261,11 @@ public:
 		return *this;
 	}
 
+	/// @brief Removes an character from the end of the `BaseString`.
+	/// @return Removed character.
+	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr DataType popBack() {
+		if (empty()) emptyError();
 		BaseType::popBack();
 		DataType value = BaseType::back();
 		BaseType::back() = '\0';
@@ -1140,8 +1144,6 @@ public:
 	/// @param b `BaseString` to swap with.
 	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
 		swap<BaseType>(a, b);
-		swap(a.strbuf, b.strbuf);
-		swap(a.strbuflen, b.strbuflen);
 	}
 
 	/// @brief Returns an STL view for the string.
@@ -1175,6 +1177,10 @@ private:
 
 	[[noreturn]] constexpr void outOfBoundsError(IndexType const index) const {
 		throw OutOfBoundsException("Index is out of bounds!");
+	}
+
+	[[noreturn]] constexpr static void emptyError() {
+		throw OutOfBoundsException("String is empty!");
 	}
 };
 

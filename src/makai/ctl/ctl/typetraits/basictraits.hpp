@@ -656,9 +656,13 @@ namespace Type {
 	template<class T, typename F>
 	concept Functional = Impl::IsFunctional<T, F>::value;
 
-	/// @brief Type must be one of a series of `Types`.
+	/// @brief Type must be one in a series of `Types`.
 	template<class T, typename... Types>
 	concept OneOf = (... || Equal<T, Types>);
+
+	/// @brief Type must NOT be one in a series of `Types`.
+	template<class T, typename... Types>
+	concept NoneOf = !OneOf<T, Types...>;
 
 	/// @brief Type must be equal to `T2` or `T2 const`.
 	template<class T, typename T2>
