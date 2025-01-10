@@ -23,7 +23,6 @@ using namespace Makai;
 void setGLAttribute(SDL_GLattr const a, int const v) {
 	if (SDL_GL_SetAttribute(a, v))
 		throw Error::FailedAction(
-			true,
 			"Failed to set attribute!",
 			SDL_GetError(),
 			CTL_CPP_UNKNOWN_SOURCE

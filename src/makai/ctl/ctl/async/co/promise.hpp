@@ -49,15 +49,21 @@ namespace Co {
 
 			/// @brief Specialized suspender.
 			struct SuspendType {
-				virtual bool await_ready()		{return promise.finished();	}
-				virtual void await_suspend()	{							}
-				virtual void await_resume()		{							}
+				bool await_ready()		{return promise.finished();	}
+				void await_suspend()	{							}
+				void await_resume()		{							}
 				Promise promise;
 			};
 
-			/// @brief `co_await` support.
+			/// @brief `co_await` support for promises.
 			SuspendType await_transform(AlwaysSuspend) {
 				return SuspendType{get_return_object()};
+			}
+
+			/// @brief `co_await` support for specialized suspensions.
+			template<Type::Different<AlwaysSuspend> T>
+			T await_transform(T const& sus) {
+				return sus;
 			}
 			
 			/// @brief Unhandle exception processor.

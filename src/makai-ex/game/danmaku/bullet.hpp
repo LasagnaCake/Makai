@@ -99,6 +99,8 @@ namespace Makai::Ex::Game::Danmaku {
 		bool glowing = false;
 
 	private:
+		Server& server;
+
 		SpriteInstance sprite		= nullptr;
 		SpriteInstance glowSprite	= nullptr;
 
@@ -160,19 +162,14 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet(Bullet const& other)	= default;
 		Bullet(Bullet&& other)		= default;
 
-		Instance<Graph::AnimatedPlaneRef> sprite = nullptr;
-
 		Bullet& setFree(bool const state) override {
 			if (state) {
 				server.release(this);
 				active = false;
-				if (sprite) {
-					sprite->visible = false;
-				}
+				hideSprites();
 			}
 		}
 
-		Server& server;
 		friend class BulletServer;
 	};
 

@@ -35,7 +35,8 @@ struct Iterator:
 	SelfIdentified<Iterator<TData, R, TIndex>> {
 public:
 	/// @brief Whether the `Iterator` is a reverse (`R = true`) or forward (`R = false`) iterator.
-	constexpr static bool REVERSE = R;
+	constexpr static bool REVERSE	= R;
+	constexpr static bool CONSTANT	= Type::Equal<AsNonConst<TData> const, TData>;
 
 	using Typed				= ::CTL::Typed<TData>;
 	using Indexed			= ::CTL::Indexed<TIndex>;
@@ -60,6 +61,9 @@ public:
 		typename SelfIdentified::SelfType
 	;
 
+	using NonConstSelfType	= Iterator<AsNonConst<TData>, R, TIndex>;
+	using ConstSelfType		= Iterator<AsConstant<TData>, R, TIndex>;
+
 	using typename Ordered::OrderType;
 
 	using STDForwardIterator	= PointerType;
@@ -80,10 +84,10 @@ public:
 
 	/// @brief Copy constructor.
 	/// @param other `Iterator` to copy from.
-	constexpr Iterator(SelfType const& other): iterand(other.iterand)		{}
+	constexpr Iterator(SelfType const& other): iterand(other.iterand)				{}
 	/// @brief Move constructor.
 	/// @param other `Iterator` to move from.
-	constexpr Iterator(SelfType&& other): iterand(CTL::move(other.iterand))	{}
+	constexpr Iterator(SelfType&& other): iterand(CTL::move(other.iterand))			{}
 
 	/// @brief Returns the underlying pointer.
 	/// @return Underlying pointer.
@@ -136,12 +140,22 @@ public:
 	/// @brief Subtracts an offset from the `Iterator`.
 	/// @param value The offset to subtract from.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator-(IndexType const& value) const	{return offset(-value);				}
+	constexpr SelfType operator-(IndexType const value) const	{return offset(value);				}
+	/// @brief Subtracts an offset from the `Iterator`.
+	/// @param value The offset to subtract from.
+	/// @return Offset Resulting offset `Iterator`.
+	constexpr SelfType operator-(IndexType const value)			{return offset(value);				}
 	/// @brief Adds an offset to the `Iterator`.
 	/// @param value The offset to add.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator+(IndexType const& value) const	{return offset(value);				}
+	constexpr SelfType operator+(IndexType const value) const	{return offset(-value);				}
+	/// @brief Adds an offset to the `Iterator`.
+	/// @param value The offset to add.
+	/// @return Offset Resulting offset `Iterator`.
+	constexpr SelfType operator+(IndexType const value)			{return offset(-value);				}
 
+	/// @brief Constant iteratpr type conversion.
+	constexpr operator ConstSelfType() const requires(!CONSTANT)			{return iterand;}
 	/// @brief `std::reverse_iterator` type conversion.
 	constexpr operator STDReverseIterator() requires(REVERSE)				{return iterand;}
 	/// @brief `std::reverse_iterator` type conversion.
@@ -173,12 +187,12 @@ private:
 		else					return iterand - other;
 	}
 
-	constexpr ConstPointerType offset(IndexType const& value) const {
+	constexpr PointerType offset(IndexType const value) const {
 		if constexpr (REVERSE)	return iterand + value;
 		else					return iterand - value;
 	}
 
-	constexpr PointerType offset(IndexType const& value) {
+	constexpr PointerType offset(IndexType const value) {
 		if constexpr (REVERSE)	return iterand + value;
 		else					return iterand - value;
 	}
@@ -272,14 +286,18 @@ struct Iteratable: Typed<TData>, Indexed<TIndex> {
 	typedef ReverseIterator<DataType, SizeType>		ReverseIteratorType;
 	/// @brief Constant reverse iterator type.
 	typedef ReverseIterator<ConstantType, SizeType>	ConstReverseIteratorType;
-
-protected:
+	
 	/// @brief Ensures a given index, when negative, is between the bounds of the iteratable class.
 	/// @param index Index to wrap.
 	/// @param count Size of the iteratable range.
-	constexpr static void wrapBounds(IndexType& index, SizeType const& size) {
-		while (index < 0) index += size;
+	constexpr static void wrapBounds(IndexType& index, IndexType size) {
+		/*while (index < 0)
+			index += size;*/
+		if (index < 0)
+			index = size + ((index+1) % size) - 1;
 	}
+
+protected:
 
 	/// @brief Throws an OutOfBoundsException when called.
 	/// @throw OutOfBoundsException when called.

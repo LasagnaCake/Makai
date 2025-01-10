@@ -126,7 +126,7 @@ public:
 
 	/// @brief Constructs the container with a preallocated capacity.
 	/// @param size Size to allocate.
-	constexpr BaseSimpleMap(SizeType const& size): BaseType(size) {}
+	constexpr BaseSimpleMap(SizeType const size): BaseType(size) {}
 
 	/// @brief Constructs the container from a set of key-value pairs.
 	/// @param values Pairs to add.

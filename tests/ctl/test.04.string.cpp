@@ -86,7 +86,6 @@ void testString() {
 	str += " You?";						print(str);
 	str = "O! " + str;					print(str);
 	print(str.sliced(2, -3));
-	str.sort();							print(str);
 	str = "Impedance. Voltage. Current."s;
 	print(str);
 	auto sp = str.splitAtFirst(' ');	print(sp);
