@@ -102,44 +102,44 @@ public:
 	/// Empty constructor.
 	constexpr List() {invoke(1);}
 
-	/// @brief Constructs a `List` with a preallocated capacity.
+	/// @brief Constructs the `List` with a preallocated capacity.
 	/// @param size Size to preallocate.
-	constexpr List(SizeType const& size) {
+	constexpr explicit List(SizeType const size) {
 		invoke(size);
 	}
 
 	/// @brief Constructs a `List` of a given size and a given fill.
 	/// @param size Size to allocate.
 	/// @param fill Value to set for elements.
-	constexpr List(SizeType const& size, DataType const& fill) {
+	constexpr explicit List(SizeType const size, DataType const& fill) {
 		invoke(size);
 		for (usize i = 0; i < size; ++i)
 			contents[i] = fill;
 		count = size;
 	}
 
-	/// @brief Constructs a `List` with a given argument list.
+	/// @brief Constructs the `List` with a given argument list.
 	/// @param values Values to add to `List`.
 	constexpr List(ArgumentListType const& values) {
 		invoke(values.size());
 		for (DataType const& v: values) pushBack(v);
 	}
 	
-	/// @brief Constructs a `List` with a parameter pack.
+	/// @brief Constructs the `List` with a parameter pack.
 	/// @tparam ...Args Parameter pack.
 	/// @param ...args Pack elements.
 	template<typename... Args>
-	constexpr List(Args const&... args)
+	constexpr explicit List(Args const&... args)
 	requires (... && Type::Convertible<Args, DataType>) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));
 	}
 
-	/// @brief Constructs a `List` from a fixed array of elements.
+	/// @brief Constructs the `List` from a fixed array of elements.
 	/// @tparam S Size of array.
 	/// @param values Elements to add to `List`.
 	template<SizeType S>
-	constexpr explicit List(As<ConstantType[S]> const& values) {
+	constexpr List(As<ConstantType[S]> const& values) {
 		invoke(S);
 		copy(values, contents, S);
 		count = S;
@@ -214,7 +214,7 @@ public:
 	/// @brief Constructs a `List` from a "C-style" range of elements.
 	/// @param start Start of range.
 	/// @param size Size of range.
-	constexpr List(ConstPointerType const& start, SizeType const& size): List(start, start + size) {}
+	constexpr List(ConstPointerType const& start, SizeType const size): List(start, start + size) {}
 
 	/// @brief Constructs a `List`, from a ranged object of (non-subclass) type T.
 	/// @tparam T Ranged type.
@@ -314,7 +314,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	template<SizeType S>
-	constexpr SelfType& insert(As<ConstantType[S]> const& values, IndexType const& index) {
+	constexpr SelfType& insert(As<ConstantType[S]> const& values, IndexType const index) {
 		return insert(SelfType(values), index);
 	}
 
@@ -325,7 +325,7 @@ public:
 	/// @return Reference to self.
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
-	constexpr SelfType& insert(DataType const& value, SizeType const& count, IndexType const& index) {
+	constexpr SelfType& insert(DataType const& value, SizeType const count, IndexType const index) {
 		return insert(SelfType(count, value), index);
 	}
 
@@ -336,7 +336,7 @@ public:
 	///		This guarantees the capacity will be AT LEAST `count`,
 	/// 	but does not guarantee the capacity will be EXACTLY `count`.
 	///		For that, use `resize`.
-	constexpr SelfType& reserve(SizeType const& count) {
+	constexpr SelfType& reserve(SizeType const count) {
 		while (count >= maximum)
 			increase();
 		return *this;
@@ -348,7 +348,7 @@ public:
 	/// @note
 	///		This guarantees the capacity will be EXACTLY of `newSize`.
 	/// 	If you need the capacity to be AT LEAST `newSize`, use `reserve`.
-	constexpr SelfType& resize(SizeType const& newSize) {
+	constexpr SelfType& resize(SizeType const newSize) {
 		if (!newSize) return clear();
 		if (contents)	memresize(contents, newSize, maximum, count);
 		else			contents = memcreate(newSize);
@@ -362,7 +362,7 @@ public:
 	/// @brief Expands the `List`, such that it can hold AT LEAST `size()` + `count`.
 	/// @param count Count to increase by.
 	/// @return Reference to self.
-	constexpr SelfType& expand(SizeType const& count) {
+	constexpr SelfType& expand(SizeType const count) {
 		if (!count) return *this;
 		reserve(this->count + count);
 		return *this;
@@ -381,7 +381,7 @@ public:
 	///		This guarantees the capacity will be AT LEAST `count`,
 	/// 	but does not guarantee the capacity will be EXACTLY `count`.
 	///		For that, use `resize`.
-	constexpr SelfType& reserve(SizeType const& count, DataType const& fill) {
+	constexpr SelfType& reserve(SizeType const count, DataType const& fill) {
 		reserve(count);
 		if (count > this->count) {
 			for (SizeType i = this->count; i < count; ++i)
@@ -401,7 +401,7 @@ public:
 	/// @note
 	///		This guarantees the capacity will be EXACTLY of `newSize`.
 	///		If you need the capacity to be AT LEAST `newSize`, use `reserve`.
-	constexpr SelfType& resize(SizeType const& newSize, DataType const& fill) {
+	constexpr SelfType& resize(SizeType const newSize, DataType const& fill) {
 		if (!newSize) return clear();
 		resize(newSize);
 		if (newSize > count)
@@ -625,7 +625,7 @@ public:
 	/// @note
 	///		Resizes the `List`.
 	///		If you need the `List` size to remain the same, use `remove`. 
-	constexpr SelfType& erase(IndexType const& index) {
+	constexpr SelfType& erase(IndexType const index) {
 		if (empty()) return 0;
 		remove(index);
 		count--;
@@ -701,6 +701,7 @@ public:
 		assertIsInBounds(start);
 		wrapBounds(start, count);
 		if (IndexType(count) < stop) return sliced(start);
+		assertIsInBounds(stop);
 		wrapBounds(stop, count);
 		if (stop < start) return SelfType();
 		return SelfType(cbegin() + start, cbegin() + stop + 1);
@@ -741,7 +742,7 @@ public:
 	/// @param count Amount of elements to append.
 	/// @param fill Value of the elements.
 	/// @return Reference to self.
-	constexpr SelfType& appendBack(SizeType const& count, DataType const& fill) {
+	constexpr SelfType& appendBack(SizeType const count, DataType const& fill) {
 		return expand(count, fill);
 	}
 
@@ -911,7 +912,7 @@ public:
 	/// @param index Index of the element.
 	/// @return Value of the element.
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
-	constexpr DataType operator[](IndexType const& index) const	{return at(index);}
+	constexpr DataType operator[](IndexType const index) const	{return at(index);}
 
 	/// @brief Returns the current element count.
 	/// @return Element count.
@@ -1140,7 +1141,7 @@ public:
 private:
 	using Iteratable::wrapBounds;
 
-	constexpr SelfType& squash(SizeType const& i) {
+	constexpr SelfType& squash(SizeType const i) {
 		if (!count) return *this;
 		if (count > 1 && i < count-1)
 			copy(contents + i + 1, contents + i, count-i-1);
@@ -1155,7 +1156,7 @@ private:
 		count		= 0;
 	}
 
-	constexpr static void memdestruct(PointerType const& p, SizeType const& sz) {
+	constexpr static void memdestruct(PointerType const& p, SizeType const sz) {
 		if (!(sz && p)) return;
 		if constexpr (!Type::Standard<DataType>) {
 			for (auto i = p; i != (p+sz); ++i)
@@ -1163,17 +1164,17 @@ private:
 		}
 	}
 
-	constexpr void memdestroy(PointerType const& p, SizeType const& sz) {
+	constexpr void memdestroy(PointerType const& p, SizeType const sz) {
 		if (!(sz && p)) return;
 		memdestruct(p, sz);
 		alloc.deallocate(p);
 	}
 
-	constexpr DataType* memcreate(SizeType const& sz) {
+	constexpr DataType* memcreate(SizeType const sz) {
 		return alloc.allocate(sz);
 	}
 
-	constexpr void memresize(DataType*& data, SizeType const& sz, SizeType const& oldsz, SizeType const& count) {
+	constexpr void memresize(DataType*& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
 		if constexpr(Type::Standard<DataType>)
 			alloc.resize(data, sz);
 		else {
@@ -1190,7 +1191,7 @@ private:
 		else MX::objcopy<DataType>(dst, src, count);
 	}
 
-	constexpr SelfType& invoke(SizeType const& size) {
+	constexpr SelfType& invoke(SizeType const size) {
 		if (contents)	memresize(contents, size, maximum, count);
 		else			contents = memcreate(size);
 		maximum = size;
@@ -1222,7 +1223,7 @@ private:
 		return *this;
 	}
 
-	constexpr SelfType& grow(SizeType const& count) {
+	constexpr SelfType& grow(SizeType const count) {
 		if (SizeType(this->count + count) < this->count)
 			atItsLimitError();
 		SizeType const newSize = this->count + count;
@@ -1230,7 +1231,7 @@ private:
 		return *this;
 	}
 
-	void assertIsInBounds(IndexType const& index) const {
+	void assertIsInBounds(IndexType const index) const {
 		if (index > IndexType(count-1)) outOfBoundsError();
 	}
 

@@ -89,7 +89,7 @@ struct Span:
 	/// @param data Start of span.
 	/// @param size Size of span.
 	/// @note Becomes explicit if span is static.
-	constexpr explicit(STATIC) Span(PointerType const& data, SizeType const& size): contents(data), count(size)					{}
+	constexpr explicit(STATIC) Span(PointerType const& data, SizeType const size): contents(data), count(size)					{}
 	/// @brief Constructs a `Span` from a span of elements.
 	/// @param begin Iterator to beginning of span.
 	/// @param end Iterator to end of span.

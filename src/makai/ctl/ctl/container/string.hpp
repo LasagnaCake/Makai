@@ -29,7 +29,7 @@ template<
 	template <class> class TAlloc = HeapAllocator
 >
 struct BaseString:
-	public List<TChar, TIndex, TAlloc>,
+	private List<TChar, TIndex, TAlloc>,
 	public SelfIdentified<BaseString<TChar, TIndex>>,
 	public Derived<List<TChar, TIndex>>,
 	public CStringable<TChar>,
@@ -44,6 +44,11 @@ public:
 	using typename Derived::BaseType;
 
 	using typename BaseType::OrderType;
+
+	using
+		typename BaseType::PredicateType,
+		typename BaseType::CompareType
+	;
 
 	using
 		typename BaseType::DataType,
@@ -65,7 +70,8 @@ public:
 	using
 		typename BaseType::IteratorType,
 		typename BaseType::ConstIteratorType,
-		typename BaseType::ReverseIteratorType
+		typename BaseType::ReverseIteratorType,
+		typename BaseType::ConstReverseIteratorType
 	;
 
 	using
@@ -91,84 +97,117 @@ public:
 	using STDStringType	= std::basic_string<DataType>;
 
 	using
-		BaseType::BaseType,
+//		BaseType::BaseType,
 		BaseType::allocator,
-		BaseType::clear,
-		BaseType::reserve,
-		BaseType::resize,
+//		BaseType::clear,
+//		BaseType::reserve,
+//		BaseType::resize,
 		BaseType::tight,
-		BaseType::tighten,
+//		BaseType::tighten,
 		BaseType::data,
 		BaseType::cbegin,
-		BaseType::cend,
+//		BaseType::cend,
 		BaseType::begin,
-		BaseType::end,
-		BaseType::rbegin,
+//		BaseType::end,
+//		BaseType::rbegin,
 		BaseType::rend,
-		BaseType::front,
-		BaseType::back,
-		BaseType::transformed,
-		BaseType::validate,
-		BaseType::size,
-		BaseType::empty,
-		BaseType::find,
-		BaseType::rfind,
-		BaseType::bsearch,
-		BaseType::capacity,
-		BaseType::appendBack,
-		BaseType::pushBack,
-		BaseType::popBack
+		BaseType::front
+//		BaseType::back,
+//		BaseType::transformed,
+//		BaseType::validate,
+//		BaseType::size,
+//		BaseType::empty,
+//		BaseType::find,
+//		BaseType::rfind,
+//		BaseType::bsearch,
+//		BaseType::capacity,
+//		BaseType::appendBack,
+//		BaseType::pushBack,
+//		BaseType::popBack
 	;
 
 	/// @brief Empty constructor.
-	constexpr BaseString(): BaseType() {}
+	constexpr BaseString(): BaseType() {
+		pushBack('\0');
+	}
+
+	constexpr explicit BaseString(SizeType const size): BaseType(size+1) {}
+
+	constexpr explicit BaseString(SizeType const size, DataType const& fill): BaseType(size+1, fill) {
+		BaseType::back() = '\0';
+	}
+
+	template<SizeType S>
+	constexpr BaseString(As<ConstantType[S]> const& values) {
+		BaseType::resize(values[S-1] == '\0' ? S : S+1);
+		BaseType::appendBack(values);
+		if (values[S-1] != '\0') BaseType::pushBack('\0');
+	}
+
+	constexpr BaseString(SelfType const& other) {
+		BaseType::resize(other.size()+1);
+		BaseType::appendBack(other.begin(), other.end());
+		BaseType::pushBack('\0');
+	}
+
+	constexpr BaseString(SelfType&& other) {
+		BaseType::resize(other.size()+1);
+		BaseType::appendBack(other.begin(), other.end());
+		BaseType::pushBack('\0');
+	}
+
+	constexpr BaseString(ConstIteratorType const& begin, ConstIteratorType const& end) {
+		if (end <= begin) return;
+		if (*(end-1) == '\0') {
+			BaseType::resize(end - begin + 1);
+			BaseType::appendBack(begin, end);
+		} else {
+			BaseType::resize(end - begin + 2);
+			BaseType::appendBack(begin, end);
+			BaseType::pushBack('\0');
+			
+		}
+	}
+
+	constexpr BaseString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
+		if (end <= begin) return;
+		if (*(end-1) == '\0') {
+			BaseType::resize(end - begin + 1);
+			BaseType::appendBack(begin, end);
+		} else {
+			BaseType::resize(end - begin + 2);
+			BaseType::appendBack(begin, end);
+			BaseType::pushBack('\0');
+			
+		}
+	}
+
+	constexpr BaseString(ConstPointerType const& start, SizeType const size): BaseString(start, start + size) {}
+
+	template<Type::Container::Ranged<IteratorType, ConstIteratorType> T>
+	constexpr BaseString(T const& other)
+	requires (!Type::Subclass<T, SelfType>):
+		BaseString(other.begin(), other.end()) {}
+	
+	template<Type::Container::Bounded<PointerType, SizeType> T>
+	constexpr explicit BaseString(T const& other)
+	requires (
+		!Type::Container::List<T>
+	&&	!Type::Container::Ranged<T, IteratorType, ConstIteratorType>
+	): BaseString(other.data(), other.size()) {}
 
 	/// @brief Destructor.
-	constexpr ~BaseString() {if (strbuf) strbufalloc.deallocate(strbuf);}
+	constexpr ~BaseString() {}
 	
 	/// @brief Constructs the `BaseString` from a null-terminated strin.
 	/// @param v String to copy from.
 	constexpr BaseString(CStringType const& v) {
 		SizeType len = 0;
 		while (v[len++] != '\0' && len <= MAX_SIZE);
-		reserve(len);
-		appendBack(BaseType(v, v+len-1));
+		BaseType::reserve(len);
+		BaseType::appendBack(BaseType(v, v+len));
+		BaseType::pushBack('\0');
 	}
-
-	/// @brief Constructs the `BaseString` from an array of characters.
-	/// @tparam S Array size.
-	/// @param v Array to copy from.
-	template<SizeType S>
-	constexpr BaseString(As<ConstantType[S]> const& v) {
-		reserve(S);
-		MX::memcpy<DataType>(cbegin(), v, S);
-	}
-
-	/// @brief Copy constructor (char `List`).
-	/// @param other Char `List` to copy from.
-	constexpr BaseString(BaseType const& other):	BaseType(other)				{}
-	/// @brief Move constructor (char `List`).
-	/// @param other Char `List` to move.
-	constexpr BaseString(BaseType&& other):			BaseType(CTL::move(other))	{}
-
-	/// @brief Copy constructor (`BaseString`).
-	/// @param other `BaseString` to copy from.
-	constexpr BaseString(SelfType const& other):	BaseType(other)				{}
-	/// @brief Move constructor (`BaseString`).
-	/// @param other `BaseString` to move.
-	constexpr BaseString(SelfType&& other):			BaseType(CTL::move(other))	{}
-
-	/// @brief Constructs the `BaseString` from a ranged object.
-	/// @tparam T Ranged type. 
-	/// @param other Object to copy from.
-	template<Type::Container::Ranged<IteratorType, ConstIteratorType> T>
-	constexpr BaseString(T const& other): BaseType(other.begin(), other.end()) {}
-
-	/// @brief Constructs the `BaseString` from a bounded object.
-	/// @tparam T Bounded type. 
-	/// @param other Object to copy from.
-	template<Type::Container::Bounded<PointerType, SizeType> T>
-	constexpr explicit BaseString(T const& other):BaseType(other.data(), other.data() + other.size()) {}
 
 	/// @brief Constructs the `BaseString` from a series of arguments.
 	/// @tparam ...Args Argument types.
@@ -186,6 +225,357 @@ public:
 	/// @param str View to copy from.
 	constexpr BaseString(STDStringType const& str):	BaseType(&*str.begin(), &*str.end())	{}
 	
+	constexpr SelfType& pushBack(DataType const& value) {
+		BaseType::back() = value;
+		BaseType::pushBack('\0');
+		return *this;
+	}
+
+	constexpr DataType popBack() {
+		BaseType::popBack();
+		DataType value = BaseType::back();
+		BaseType::back() = '\0';
+		return value;
+	}
+	
+	constexpr SelfType& insert(DataType const& value, IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		BaseType::insert(value, index);
+		return *this;
+	}
+
+	constexpr SelfType& insert(SelfType const& other, IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		BaseType::insert(BaseType(other.begin(), other.end()), index);
+		return *this;
+	}
+	
+	constexpr SelfType& insert(DataType const& value, SizeType const count, IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		BaseType::insert(count, value, index);
+		return *this;
+	}
+
+	template<SizeType S>
+	constexpr SelfType& insert(As<ConstantType[S]> const& values, IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		BaseType::insert(values, index);
+		return *this;
+	}
+
+	constexpr SelfType& reserve(SizeType const count) {
+		BaseType::reserve(count + 1);
+		return *this;
+	}
+
+	constexpr SelfType& resize(SizeType const newSize) {
+		BaseType::resize(newSize + 1);
+		return *this;
+	}
+
+	constexpr SelfType& expand(SizeType const count) {
+		BaseType::expand(count + 1);
+		return *this;
+	}
+
+	constexpr SelfType& reserve(SizeType const count, DataType const& fill) {
+		BaseType::back() = fill;
+		BaseType::reserve(count + 1, fill);
+		BaseType::back() = '\0';
+		return *this;
+	}
+	
+	constexpr SelfType& resize(SizeType const newSize, DataType const& fill) {
+		BaseType::back() = fill;
+		BaseType::resize(newSize + 1, fill);
+		BaseType::back() = '\0';
+		return *this;
+	}
+	
+	constexpr SelfType& expand(SizeType const count, DataType const& fill) {
+		BaseType::back() = fill;
+		BaseType::expand(count + 1, fill);
+		BaseType::back() = '\0';
+		return *this;
+	}
+
+	constexpr SelfType& tighten() {
+		BaseType::tighten();
+		return *this;
+	}
+
+	constexpr SelfType& reverse() {
+		::CTL::reverse(data(), size());
+		return *this;
+	}
+
+	constexpr SelfType reversed() const {
+		return SelfType(*this).reverse();
+	}
+
+	constexpr IndexType find(DataType const& value) const {
+		IndexType location = BaseType::find(value);
+		return (location == BaseType::size()) ? -1 : location;
+	}
+
+	constexpr IndexType rfind(DataType const& value) const {
+		IndexType location = BaseType::find(value);
+		return (location == BaseType::size()) ? -1 : location;
+	}
+
+	constexpr IndexType bsearch(DataType const& value) const {
+		IndexType location = BaseType::find(value);
+		return (location == BaseType::size()) ? -1 : location;
+	}
+
+	constexpr SelfType& remove(IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		return BaseType::remove(index);
+	}
+	
+	constexpr SizeType removeLike(DataType const& value) {
+		SizeType count = BaseType::removeLike(value) - (value == '\0');
+		if (value == '\0') BaseType::back() = '\0';
+		return count;
+	}
+	
+	constexpr SizeType removeUnlike(DataType const& value) {
+		SizeType count = BaseType::removeUnlike(value) - (value == '\0');
+		if (value == '\0') BaseType::back() = '\0';
+		return count;
+	}
+
+	template<class TPredicate>
+	constexpr SizeType removeIf(TPredicate const& predicate) {
+		SizeType count = BaseType::removeIf(predicate);
+		if (predicate(BaseType::back()))
+			--count;
+		return count;
+	}
+	template<class TPredicate>
+	constexpr SizeType removeIfNot(TPredicate const& predicate) {
+		SizeType count = BaseType::removeIfNot(predicate);
+		if (!predicate(BaseType::back()))
+			--count;
+		return count;
+	}
+
+	constexpr SelfType& erase(IndexType const index) {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		return BaseType::erase(index);
+	}
+
+	constexpr SelfType& eraseLike(DataType const& value) {
+		resize(removeLike(value));
+		return *this;
+	}
+
+	constexpr SelfType& eraseUnlike(DataType const& value) {
+		resize(removeUnlike(value));
+		return *this;
+	}
+
+	template<Type::Functional<PredicateType> TPredicate>
+	constexpr SelfType& eraseIf(TPredicate const& predicate) {
+		resize(removeIf(predicate));
+		return *this;
+	}
+
+	template<Type::Functional<PredicateType> TPredicate>
+	constexpr SelfType& eraseIfNot(TPredicate const& predicate) {
+		resize(removeIfNot(predicate));
+		return *this;
+	}
+
+	constexpr SelfType sliced(IndexType start) const {
+		if (IndexType(size()) < start) return SelfType();
+		assertIsInBounds(start);
+		wrapBounds(start);
+		return SelfType(begin() + start, end());
+	}
+
+	constexpr SelfType sliced(IndexType start, IndexType stop) const {
+		if (IndexType(size()) < start) return SelfType();
+		assertIsInBounds(start);
+		wrapBounds(start);
+		if (IndexType(size()) < stop) return sliced(start);
+		assertIsInBounds(stop);
+		wrapBounds(stop);
+		if (stop < start) return SelfType();
+		return SelfType(begin() + start, begin() + stop + 1);
+	}
+
+	constexpr SelfType& appendBack(SelfType const& other) {
+		expand(other.size());
+		BaseType::popBack();
+		BaseType::appendBack(other.begin(), other.end());
+		BaseType::pushBack('\0');
+		return *this;
+	}
+
+	constexpr SelfType& appendBack(SizeType const count, DataType const& fill) {
+		return expand(count, fill);
+	}
+
+	constexpr SelfType& appendBack(ConstIteratorType const& begin, ConstIteratorType const& end) {
+		expand(end - begin);
+		BaseType::popBack();
+		BaseType::appendBack(begin, end);
+		pushBack('\0');
+		return *this;
+	}
+
+	constexpr SelfType& appendBack(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
+		expand(end - begin);
+		BaseType::popBack();
+		BaseType::appendBack(begin, end);
+		BaseType::pushBack('\0');
+		return *this;
+	}
+
+	template<SizeType S>
+	constexpr SelfType& appendBack(As<DataType[S]> const& values) {
+		if (values[S-1] == '\0') {
+			expand(S);
+			BaseType::popBack();
+			BaseType::appendBack(values);
+		} else {
+			expand(S+1);
+			BaseType::popBack();
+			BaseType::appendBack(values);
+			BaseType::pushBack('\0');
+		}
+		return *this;
+	}
+
+	constexpr SelfType& clear() {
+		BaseType::clear();
+		BaseType::pushBack('\0');
+	}
+
+	constexpr SelfType& dispose() {
+		BaseType::dump();
+		return *this;
+	}
+
+	constexpr IteratorType				end()			{return data()+size();								}
+	constexpr ConstIteratorType			end() const		{return data()+size();								}
+	constexpr PointerType				cend()			{return data()+size();								}
+	constexpr ConstPointerType			cend() const	{return data()+size();								}
+	constexpr ReverseIteratorType		rbegin()		{return ReverseIteratorType(data()+size());			}
+	constexpr ConstReverseIteratorType	rbegin() const	{return ConstReverseIteratorType(data()+size());	}
+	
+	constexpr ReferenceType 	back()			{return at(size()-1);	}
+	constexpr DataType 			back() const	{return at(size()-1);	}
+	
+	constexpr DataType& at(IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		return BaseType::at(index);
+	}
+
+	constexpr DataType at(IndexType index) const {
+		assertIsInBounds(index);
+		wrapBounds(index);
+		return BaseType::at(index);
+	}
+
+	constexpr ReferenceType	operator[](IndexType index)			{return at(index);}
+	constexpr DataType operator[](IndexType const index) const	{return at(index);}
+	
+	constexpr SizeType capacity() const	{return BaseType::capacity() - 1;	}
+	constexpr SizeType empty() const	{return size() == 0;				}
+
+	constexpr bool operator==(SelfType const& other) const {
+		return BaseType::equals(other);
+	}
+
+	constexpr OrderType operator<=>(SelfType const& other) const {
+		return compare(other);
+	}
+
+	constexpr SizeType equals(SelfType const& other) const {
+		return BaseType::equals(other);
+	}
+
+	constexpr SizeType compare(SelfType const& other) const {
+		return BaseType::compare(other);
+	}
+
+	constexpr SizeType disparity(SelfType const& other) const {
+		return BaseType::disparity(other);
+	}
+
+	template <class TProcedure>
+	constexpr SelfType& transform(TProcedure const& fun) {
+		for(DataType& v: *this)
+			v = fun(v);
+		return *this;
+	}
+
+	template<class TProcedure>
+	constexpr SelfType transformed(TProcedure const& fun) const {
+		return SelfType(*this).transform(fun);
+	}
+
+	template<class TPredicate>
+	constexpr bool validate(TPredicate const& cond) const {
+		if (empty()) return false;
+		for (DataType const& c: *this)
+			if (!cond(c))
+				return false;
+		return true;
+	}
+
+	template<Type::Functional<PredicateType> TPredicate>
+	constexpr SelfType& filter(TPredicate const& filter) {
+		return eraseIfNot(filter);
+	}
+
+	template<Type::Functional<CompareType> TCompare>
+	constexpr SelfType& filter(TCompare const& compare) {
+		return *this = filtered(compare);
+	}
+
+	template<Type::Functional<PredicateType> TPredicate>
+	constexpr SelfType filtered(TPredicate const& filter) const {
+		return SelfType(*this).eraseIfNot(filter);
+	}
+
+	template<Type::Functional<CompareType> TCompare>
+	constexpr SelfType filtered(TCompare const& compare) const {
+		SelfType result;
+		for (SizeType i = 0; i < size(); ++i) {
+			bool miss = false;
+			for(SizeType j = size() - 1; j >= 0; --j) {
+				if (i == j) break;
+				if ((miss = !compare(data()[i], data()[j])))
+					break;
+			}
+			if (!miss) result.pushBack(data()[i]);
+		}
+		return result;
+	}
+
+	constexpr SelfType uniques() {
+		return filtered([](ConstReferenceType a, ConstReferenceType b){return a != b;});
+	}
+
+	constexpr List<SelfType, SizeType> divide(IndexType index) const {
+		List<SelfType, SizeType> res;
+		assertIsInBounds(res);
+		wrapBounds(index);
+		res.pushBack(sliced(0, index));
+		res.pushBack(sliced(index+1));
+		return res;
+	}
+
 	/// @brief Returns a string without any leading whitespace characters.
 	/// @return String without leading whitespace.
 	constexpr SelfType stripped() {
@@ -241,26 +631,6 @@ public:
 		if (res.empty()) res.pushBack(*this);
 		return res;
 	}
-	
-	/// @brief Splits the string at a given index.
-	/// @param index Pivot index.
-	/// @return List of split strings.
-	constexpr List<SelfType, SizeType> divide(IndexType index) const {
-		List<SelfType, SizeType> res;
-		res.pushBack(sliced(0, index));
-		res.pushBack(sliced(index+1));
-		return res;
-	}
-
-	/// @brief Returns a substring, starting at a given point.
-	/// @param start Start of new string.
-	/// @return Resulting substring.
-	constexpr SelfType sliced(IndexType const& start) const							{return BaseType::sliced(start);		}
-	/// @brief Returns a substring, from between `start` and `stop`.
-	/// @param start Start of new string.
-	/// @param stop End of new string.
-	/// @return Resulting substring.
-	constexpr SelfType sliced(IndexType const& start, IndexType const& stop) const	{return BaseType::sliced(start, stop);	}
 	
 	/// @brief Splits the string at the first character that matches the separator.
 	/// @param sep Separator.
@@ -434,7 +804,7 @@ public:
 	/// @brief Copy assignment operator (null-terminated string).
 	/// @param other String to copy from.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(CStringType const& other)	{BaseType::operator=(SelfType(other)); return *this;	}
+	constexpr SelfType& operator=(CStringType const& other)			{BaseType::operator=(SelfType(other)); return *this;	}
 
 	/// @brief Insertion operator (`BaseString`).
 	/// @param other `Basestring` to insert into.
@@ -511,7 +881,7 @@ public:
 	/// @brief Returns a string, repeated a given amount of times.
 	/// @param times Amount of times to repeat.
 	/// @return Resulting string.
-	constexpr SelfType operator*(IndexType const& times) const {
+	constexpr SelfType operator*(IndexType const times) const {
 		if (times < 1) return SelfType();
 		if (times == 1) return *this;
 		SelfType result(size() * usize(times));
@@ -523,7 +893,7 @@ public:
 	/// @brief Repeats the string a given amount of times.
 	/// @param times Amount of times to repeat.
 	/// @return Reference to self.
-	constexpr SelfType& operator*=(IndexType const& times) {
+	constexpr SelfType& operator*=(IndexType const times) {
 		if (times < 1) return SelfType();
 		if (times == 1) return *this;
 		SelfType copy = *this;
@@ -541,11 +911,7 @@ public:
 	/// @brief Equality comparison operator (null-terminated string).
 	/// @param str String to compare with.
 	/// @return Whether they're equal.
-	constexpr bool operator==(CStringType const& str) const				{return *this == SelfType(str);			}
-	/// @brief Equality comparison operator (`BaseString`).
-	/// @param str `BaseString` to compare with.
-	/// @return Whether they're equal.
-	constexpr bool operator==(SelfType const& other) const						{return BaseType::operator==(other);	}
+	constexpr bool operator==(CStringType const& str) const			{return *this == SelfType(str);			}
 	/// @brief Threeway comparison operator (char array).
 	/// @tparam S Array size.
 	/// @param str Char array to compare with.
@@ -555,11 +921,7 @@ public:
 	/// @brief Threeway comparison operator (null-terminated string).
 	/// @param str String to compare with.
 	/// @return Order between objects.
-	constexpr OrderType operator<=>(CStringType const& str) const					{return *this <=> SelfType(str);		}
-	/// @brief Threeway comparison operator (`BaseString`).
-	/// @param str `BaseString` to compare with.
-	/// @return Order between objects.
-	constexpr OrderType operator<=>(SelfType const& other) const						{return BaseType::operator<=>(other);	}
+	constexpr OrderType operator<=>(CStringType const& str) const			{return *this <=> SelfType(str);		}
 
 	/// @brief Returns this string as a "C-style" string.
 	constexpr explicit operator const char*() const {return cstr();}
@@ -579,7 +941,7 @@ public:
 	/// @brief Returns a substring, starting at a given point.
 	/// @param start Start of new string.
 	/// @return Resulting substring.
-	SelfType substring(IndexType const& start) const {
+	SelfType substring(IndexType const start) const {
 		return sliced(start);
 	}
 
@@ -587,40 +949,23 @@ public:
 	/// @param start Start of new string.
 	/// @param length Length of new string.
 	/// @return Resulting substring.
-	SelfType substring(IndexType start, SizeType const& length) const {
+	SelfType substring(IndexType start, SizeType const length) const {
 		assertIsInBounds(start);
+		wrapBounds(start);
 		while (start < 0) start += size();
 		return sliced(start, start + length);
-	}
-
-	/// @brief Returns whether the last character is a null character.
-	/// @return Whether the last character is a null character.
-	constexpr bool nullTerminated() const {return back() == '\0';}
-
-	/// @brief Adds a null terminator to the end of the string, if none exists.
-	/// @return Reference to self.
-	constexpr SelfType& terminate() {
-		if (!nullTerminated()) pushBack('\0');
-		return *this;
-	}
-
-	/// @brief Returns a string with a null terminator at the end.
-	/// @return Null-terminated string.
-	constexpr SelfType terminated() const {
-		SelfType str = *this;
-		return str.terminate();
 	}
 	
 	/// @brief Returns the string as a "c-style" string.
 	/// @return Pointer to beginning of the "c-style" string.
 	constexpr CStringType cstr() const {
-		if (nullTerminated()) return cbegin();
-		strbuflen = size() + 1;
-		strbufalloc.resize(strbuf, strbuflen);
-		MX::memcpy<DataType>(strbuf, cbegin(), size());
-		strbuf[size()] = '\0';
-		return strbuf;
+		return data();
 	}
+
+	constexpr SizeType size() const {
+		return BaseType::size() - 1;
+	}
+	
 
 	/// @brief Returns the string as lowercase.
 	/// @return Lowercase string.
@@ -795,11 +1140,16 @@ private:
 		throw InvalidValueException("Not a valid number!");
 	}
 
-	void assertIsInBounds(IndexType const& index) const {
+	void assertIsInBounds(IndexType const index) const {
 		if (index >= 0 && usize(index) > size()-1) outOfBoundsError(index);
 	}
 
-	[[noreturn]] constexpr void outOfBoundsError(IndexType const& index) const {
+	constexpr void wrapBounds(IndexType& index) const {
+		if (index < 0)
+			index = (size()-1) - index % (size());
+	}
+
+	[[noreturn]] constexpr void outOfBoundsError(IndexType const index) const {
 		throw OutOfBoundsException("Index is out of bounds!");
 	}
 };
@@ -957,13 +1307,13 @@ template<usize N> using StaticWideString	= BaseStaticString<wchar_t,	N>;
 /// @brief String literals.
 namespace Literals::Text {
 	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cstring cstr, usize sz)	{return String(cstr, cstr + sz);				}
+	constexpr String operator "" s		(cstring cstr, usize sz)	{return String(cstr, sz);					}
 	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cwstring cstr, usize sz)	{return WideString(cstr, cstr + sz).toString();	}
+	constexpr String operator "" s		(cwstring cstr, usize sz)	{return WideString(cstr, sz).toString();	}
 	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cstring cstr, usize sz)	{return String(cstr, cstr + sz).toWideString();	}
+	constexpr WideString operator "" ws	(cstring cstr, usize sz)	{return String(cstr, sz).toWideString();	}
 	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cwstring cstr, usize sz)	{return WideString(cstr, cstr + sz);			}
+	constexpr WideString operator "" ws	(cwstring cstr, usize sz)	{return WideString(cstr, sz);				}
 }
 #pragma GCC diagnostic pop
 
