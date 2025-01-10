@@ -173,14 +173,10 @@ public:
 	/// @param end Iterator to end of range.
 	constexpr BaseString(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		if (end <= begin) return;
-		if (*(end-1) == '\0') {
-			BaseType::resize(end - begin + 1);
-			BaseType::appendBack(begin, end);
-		} else {
-			BaseType::resize(end - begin + 2);
-			BaseType::appendBack(begin, end);
+		BaseType::resize(end - begin + 2);
+		BaseType::appendBack(begin, end);
+		if (BaseType::back() != '\0')
 			BaseType::pushBack('\0');
-		}
 	}
 
 	/// @brief Constructs a `BaseString` from a range of characters.
@@ -188,14 +184,10 @@ public:
 	/// @param end Reverse iterator to end of range.
 	constexpr BaseString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		if (end <= begin) return;
-		if (*(end-1) == '\0') {
-			BaseType::resize(end - begin + 1);
-			BaseType::appendBack(begin, end);
-		} else {
-			BaseType::resize(end - begin + 2);
-			BaseType::appendBack(begin, end);
+		BaseType::resize(end - begin + 2);
+		BaseType::appendBack(begin, end);
+		if (BaseType::back() != '\0')
 			BaseType::pushBack('\0');
-		}
 	}
 
 	/// @brief Constructs a `BaseString` from a "C-style" range of characters.
