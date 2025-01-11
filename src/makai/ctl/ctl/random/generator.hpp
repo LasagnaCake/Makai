@@ -150,7 +150,7 @@ struct BaseGenerator: Base::Generator<TEngine> {
 	template<Type::Integer T = ssize>
 	T integer(T const& min, T const& max) {
 		if (min > max) return integer<T>(max, min);
-		return (integer<AsUnsigned<T>>() % (max - min)) + min;
+		return (integer<AsUnsigned<T>>() % (max - min + 1)) + min;
 	}
 
 	/// @brief Returns a random integer between lowest and highest value the integer can hold.
