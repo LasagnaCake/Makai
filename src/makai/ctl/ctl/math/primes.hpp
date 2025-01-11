@@ -70,9 +70,10 @@ namespace Math {
 	///		- If not divisible by the first 32 primes, and is less than
 	///			2x the 32nd prime (131), then it is a prime.
 	///
-	///		- Does modulo exponentiation (base^(value-1) (mod value)) with a set of random bases.
+	///		- Does modulo exponentiation with a set of random bases,
+	///			With `value-1` as the exponent, and `value` as the modulo.
 	///			The amount of times done is equal to `accuracy`.
-	///			Then, returns the amount of operations that were equal to 1, divided by the accuracy.
+	///			Then, returns the amount of operations that resulted in 1, divided by the accuracy.
 	template<Type::Unsigned T = usize, Type::Float TProbability = float, usize MEMORY = 4>
 	constexpr TProbability isPossiblePrime(T const value, usize const accuracy = sizeof(usize) * 8) {
 		Random::Engine::Impl::Mersenne rng(
