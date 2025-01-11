@@ -46,7 +46,6 @@ namespace Makai::Ex::Game::Danmaku {
 			updateSprite(sprite.asWeak());
 			updateSprite(glowSprite.asWeak());
 			updateHitbox();
-			animate();
 			if (paused()) return;
 			color.next();
 			radius.next();
@@ -55,9 +54,7 @@ namespace Makai::Ex::Game::Danmaku {
 			trans.scale		= scale.next();
 			playfieldCheck();
 			loopAndBounce();
-			updateSprite(sprite.asWeak());
-			updateSprite(glowSprite.asWeak());
-			updateHitbox();
+			animate();
 		}
 
 		Bullet& discard(bool const force = false) override {
@@ -72,6 +69,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& spawn() override {
 			if (isFree()) return *this;
+			setCollisionState(false);
 			counter = 0;
 			objectState = State::AOS_SPAWNING;
 			onAction(*this, Action::AOA_SPAWN_BEGIN);
@@ -79,6 +77,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& despawn() override {
 			if (isFree()) return *this;
+			setCollisionState(false);
 			counter = 0;
 			objectState = State::AOS_DESPAWNING;
 			onAction(*this, Action::AOA_DESPAWN_BEGIN);
@@ -233,6 +232,7 @@ namespace Makai::Ex::Game::Danmaku {
 						animColor.a = counter / static_cast<float>(spawnTime);
 					} else {
 						spawnglow = false;
+						setCollisionState(true);
 						onAction(*this, Action::AOA_SPAWN_END);
 						objectState = State::AOS_ACTIVE;
 					}
