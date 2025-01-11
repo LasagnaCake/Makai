@@ -35,7 +35,7 @@ namespace Math {
 	/// @param accuracy Maximum precision. By default, it is equal to `sizeof(usize) * 8`.
 	/// @return Probability of number being a prime, in the range of [0, 1].
 	/// @note
-	///		For sufficiently small values (less than 2 x 131),
+	///		For sufficiently small values (less than 262),
 	///		this check will always be deterministic.
 	/// @details
 	///		How it works:
