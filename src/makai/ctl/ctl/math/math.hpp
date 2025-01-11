@@ -3,6 +3,7 @@
 
 #include "../cmath.hpp"
 #include "core.hpp"
+#include "primes.hpp"
 #include "p3.hpp"
 
 #endif // CTL_MATH_H

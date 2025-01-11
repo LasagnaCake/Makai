@@ -387,6 +387,41 @@ namespace Math {
 		while (--val) res *= val;
 		return res;
 	}
+
+	/// @brief Returns an integer raised to another integer.
+	/// @tparam T Unsigned integer type.
+	/// @param value Value to raise.
+	/// @param exponent Exponent to raise by.
+	/// @return Result of the operation.
+	template<Type::Unsigned T = usize>
+	constexpr T uipow(T value, T exponent) {
+		T out = 1;
+		while (exponent) {
+			if (exponent & 1) out *= value;
+			value *= value;
+			exponent >>= 1;
+		}
+		return out;
+	}
+
+	/// @brief Performs modular exponentiation on a given value.
+	/// @tparam T Unsigned integer type.
+	/// @param value Value to raise.
+	/// @param exponent Exponent to raise by.
+	/// @param modulo Modulo to get the remainder for.
+	/// @return Result of the operation.
+	template<Type::Unsigned T = usize>
+	constexpr T uipowm(T value, T exponent, T const modulo) {
+		value %= modulo;
+		T out = 1;
+		while (exponent) {
+			if (exponent & 1)
+				out *= value % modulo;
+			value *= value % modulo;
+			exponent >>= 1;
+		}
+		return out;
+	}
 }
 
 /// @brief Math literals.

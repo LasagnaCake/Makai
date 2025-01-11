@@ -1,6 +1,7 @@
 #ifndef CTL_RANDOM_GENERATOR_H
 #define CTL_RANDOM_GENERATOR_H
 
+#include "../math/math.hpp"
 #include "../typetraits/traits.hpp"
 #include "engine.hpp"
 
@@ -28,7 +29,7 @@ namespace Base {
 		Generator(): engine()				{}
 		/// @brief Constructs the generator from a seed.
 		/// @param seed Seed to use.
-		Generator(usize const seed)		{engine.setSeed(seed);						}
+		Generator(usize const seed)			{engine.setSeed(seed);						}
 		/// @brief Copy constructor.
 		/// @param other `Generator` to copy from.
 		Generator(Generator const& other) 	{engine.setSeed(other.engine.getSeed());	}

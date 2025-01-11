@@ -1,7 +1,6 @@
 #ifndef CTL_RANDOM_MERSENNE_H
 #define CTL_RANDOM_MERSENNE_H
 
-#include "../math/math.hpp"
 #include "../typetraits/traits.hpp"
 #include "../namespace.hpp"
 #include "../typeinfo.hpp"

@@ -7,7 +7,6 @@
 #else
 #endif
 
-#include "../math/math.hpp"
 #include "../os/time.hpp"
 #include "../typeinfo.hpp"
 #include "../meta/logic.hpp"
