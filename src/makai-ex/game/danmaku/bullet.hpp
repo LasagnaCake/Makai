@@ -86,9 +86,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
-			if (
-				collider.tags.match(CollisionTag::PLAYER_GRAZEBOX).overlap()
-			) setCollisionTags(getCollisionTags() & CollisionTag::GRAZEABLE.inverse());
 			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap())
 				discard();
 		}
@@ -155,7 +152,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void loopAndBounce() {
 			if (bouncy && !Collision::GJK::check(
-				C2D::Box(board.center, board.size),
+				board.asArea(),
 				C2D::Point(trans.position)
 			)) {
 				auto const
@@ -168,9 +165,8 @@ namespace Makai::Ex::Game::Danmaku {
 				if (trans.position.y < tl.y) shift(0);
 				onAction(*this, Action::AOA_BOUNCE);
 				bouncy = false;
-			}
-			else if (loopy && shape && !Collision::GJK::check(
-				C2D::Box(board.center, board.size),
+			} else if (loopy && shape && !Collision::GJK::check(
+				board.asArea(),
 				*shape
 			)) {
 				auto const

@@ -46,10 +46,12 @@ namespace Makai::Ex::Game::Danmaku {
 		Vector2 center;
 		Vector2 size;
 
-		constexpr Vector2 topLeft() const		{return center + size * Vector2(-1, +1);}
-		constexpr Vector2 topRight() const		{return center + size * Vector2(+1, +1);}
-		constexpr Vector2 bottomLeft() const	{return center + size * Vector2(-1, -1);}
-		constexpr Vector2 bottomRight() const	{return center + size * Vector2(+1, -1);}
+		constexpr Vector2 topLeft() const		{return center + size * Vector2(-1, +1);	}
+		constexpr Vector2 topRight() const		{return center + size * Vector2(+1, +1);	}
+		constexpr Vector2 bottomLeft() const	{return center + size * Vector2(-1, -1);	}
+		constexpr Vector2 bottomRight() const	{return center + size * Vector2(+1, -1);	}
+
+		constexpr C2D::Box asArea() const		{return C2D::Box(board.center, board.size);	}
 	};
 
 	struct GameObjectConfig {
