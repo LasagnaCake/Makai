@@ -8,6 +8,7 @@ namespace Makai::Ex::Game::Danmaku {
 		using DataType			= GameObject;
 		using HandleType		= Handle<DataType>;
 		using ObjectRefListType	= List<DataType*>;
+		using ObjectQueryType	= List<HandleType>;
 
 		constexpr Server() {}
 
@@ -23,11 +24,36 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
+		template<Type::Derived<GameObject> T>
+		constexpr Handle<T> acquire() {
+			return acquire().polymorph<T>();
+		}
+
 		virtual void discardAll()	= 0;
 		virtual void freeAll()		= 0;
 		virtual void despawnAll()	= 0;
+		
+		virtual usize freeCount()	{return free.size();}
+		virtual usize activeCount()	{return used.size();}
+		virtual usize capacity()	= 0;
+
+		virtual ObjectQueryType getInArea(C2D::IBound2D const& bound)		= 0;
+		virtual ObjectQueryType getNotInArea(C2D::IBound2D const& bound)	= 0;
+		
+		virtual ObjectQueryType getActive() {
+			ObjectQueryType query;
+			query.resize(used.size());
+			for (auto& o: used)
+				query.pushBack(o);
+			return query;
+		}
 
 	protected:
+		template<class TTo, class TFrom>
+		constexpr TTo& access(TFrom* const from) {
+			return *(dynamic_cast<TTo*>(from));
+		}
+
 		constexpr virtual Server& release(HandleType const& object) {
 			if (!contains(object)) return;
 			used.removeLike(object);

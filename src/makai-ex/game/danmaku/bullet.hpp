@@ -305,23 +305,51 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void discardAll() override {
 			for (auto b: used) {
-				Bullet& bullet = *(dynamic_cast<Bullet*>(b));
+				Bullet& bullet = access<Bullet>(b);
 				bullet.discard();
 			};
 		}
 		
 		void freeAll() override {
 			for (auto b: used) {
-				Bullet& bullet = *(dynamic_cast<Bullet*>(b));
+				Bullet& bullet = access<Bullet>(b);
 				bullet.free();
 			};
 		}
 
 		void despawnAll() override {
 			for (auto b: used) {
-				Bullet& bullet = *(dynamic_cast<Bullet*>(b));
+				Bullet& bullet = access<Bullet>(b);
 				bullet.despawn();
 			};
+		}
+
+		usize capacity() override {
+			return all.size();
+		}
+
+		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
+			ObjectQueryType query;
+			for (auto b: used) {
+				Bullet& bullet = access<Bullet>(b);
+				if (
+					bullet.shape
+				&&	Collision::GJK::check(*bullet.shape, bound)
+				) query.pushBack(b);
+			}
+			return query;
+		}
+
+		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
+			ObjectQueryType query;
+			for (auto b: used) {
+				Bullet& bullet = access<Bullet>(b);
+				if (
+					bullet.shape
+				&&	!Collision::GJK::check(*bullet.shape, bound)
+				) query.pushBack(b);
+			}
+			return query;
 		}
 
 		HandleType acquire() override {
