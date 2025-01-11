@@ -20,6 +20,8 @@ namespace Makai::Ex::Game::Danmaku {
 			rotateSprite	= true;
 			radius			= {};
 			scale			= {};
+			velocity		= {};
+			rotation		= {};
 			dope			= false;
 			glowing			= false;
 			bouncy			= false;
@@ -29,6 +31,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& reset() override {
 			ServerObject::reset();
+			velocity.factor	= 0;
+			rotation.factor	= 0;
 			radius.factor	= 0;
 			scale.factor	= 0;
 			return *this;
@@ -106,7 +110,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return setSpriteFrame(frame).setSpriteSheetSize(sheetSize);
 		}
 
-		Property<Vector2> radius;
+		Property<float>		velocity;
+		Property<float>		rotation;
+		Property<Vector2>	radius;
 
 		bool dope = true;
 
@@ -246,12 +252,11 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet(Bullet&& other)		= default;
 
 		Bullet& setFree(bool const state) override {
-			if (isFree()) return *this;
 			if (state) {
 				active = false;
 				hideSprites();
 				objectState = State::AOS_FREE;
-				server.release(this);
+				release(this, server);
 			} else {
 				active = true;
 				objectState = State::AOS_ACTIVE;
@@ -330,10 +335,10 @@ namespace Makai::Ex::Game::Danmaku {
 			return b;
 		}
 
+	protected:
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			Bullet& bullet = *(object.as<Bullet>());
-			bullet.free();
 			Server::release(object);
 			return *this;
 		}
