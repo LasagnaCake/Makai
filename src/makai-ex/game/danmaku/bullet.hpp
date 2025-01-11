@@ -10,10 +10,11 @@ namespace Makai::Ex::Game::Danmaku {
 	struct Bullet: ServerObject {
 		Bullet(
 			Server& server,
+			Playfield& playfield,
 			CollisionMask const& affects,
 			CollisionMask const& affectedBy,
 			CollisionMask const& tags
-		): ServerObject(affects, affectedBy, tags), server(server) {
+		): ServerObject(affects, affectedBy, tags), server(server), playfield(playfield) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
@@ -40,16 +41,18 @@ namespace Makai::Ex::Game::Danmaku {
 			setSpriteVisibility(glowing || spawnglow, true);
 			updateSprite(sprite.asWeak());
 			updateSprite(glowSprite.asWeak());
+			updateHitbox();
 			animate();
 			if (paused()) return;
+			color.next();
+			radius.next();
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
 			trans.scale		= scale.next();
-			if (shape) {
-				shape->radius	= radius.next() * trans.scale;
-				shape->position	= trans.position;
-				shape->rotation	= trans.rotation;
-			}
+			loopAndBounce();
+			updateSprite(sprite.asWeak());
+			updateSprite(glowSprite.asWeak());
+			updateHitbox();
 		}
 
 		Bullet& discard(bool const force = false) override {
@@ -92,6 +95,9 @@ namespace Makai::Ex::Game::Danmaku {
 		Property<Vector2> scale;
 
 		bool rotateSprite = true;
+		
+		bool bouncy	= false;
+		bool loopy	= false;
 
 		usize spawnTime		= 5;
 		usize despawnTime	= 5;
@@ -99,7 +105,8 @@ namespace Makai::Ex::Game::Danmaku {
 		bool glowing = false;
 
 	private:
-		Server& server;
+		Server&		server;
+		Playfield&	playfield;
 
 		SpriteInstance sprite		= nullptr;
 		SpriteInstance glowSprite	= nullptr;
@@ -110,6 +117,45 @@ namespace Makai::Ex::Game::Danmaku {
 		Vector4 animColor = Graph::Color::WHITE;
 
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
+
+		void loopAndBounce() {
+			if (bouncy && !Collision::GJK::check(
+				C2D::Box(playfield.center, playfield.size),
+				C2D::Point(trans.position)
+			)) {
+				auto const
+					tl = playfield.topLeft(),
+					br = playfield.bottomRight()
+				;
+				if (trans.position.x < tl.x) shift(PI);
+				if (trans.position.x > br.x) shift(PI);
+				if (trans.position.y > tl.y) shift(0);
+				if (trans.position.y < tl.y) shift(0);
+				onAction(*this, Action::AOA_BOUNCE);
+				bouncy = false;
+			}
+			else if (loopy && shape && !Collision::GJK::check(
+				C2D::Box(playfield.center, playfield.size),
+				*shape
+			)) {
+				auto const
+					tl = playfield.topLeft(),
+					br = playfield.bottomRight()
+				;
+				if (trans.position.x < tl.x) trans.position.x = br.x + shape->radius.x;
+				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radius.x;
+				if (trans.position.y > tl.y) trans.position.y = br.y - shape->radius.y;
+				if (trans.position.y < tl.y) trans.position.y = tl.y + shape->radius.y;
+				onAction(*this, Action::AOA_LOOP);
+				loopy = false;
+			}
+		}
+
+		void shift(float const angle) {
+			rotation.value	= angle - rotation.value;
+			rotation.start	= angle - rotation.start;
+			rotation.stop	= angle - rotation.stop;
+		}
 
 		void setSpriteVisibility(bool const setGlowSprite, bool const state) {
 			if (glowSprite && setGlowSprite)	glowSprite->visible	= state; 
@@ -127,7 +173,15 @@ namespace Makai::Ex::Game::Danmaku {
 				sprite->local.rotation	= trans.rotation;
 			sprite->local.position		= trans.position;
 			sprite->local.scale			= trans.scale;
-			sprite->setColor(animColor * color.next());
+			sprite->setColor(animColor * color.value);
+		}
+
+		void updateHitbox() {
+			if (shape) {
+				shape->radius	= radius.value * trans.scale;
+				shape->position	= trans.position;
+				shape->rotation	= trans.rotation;
+			}
 		}
 
 		void animate() {
@@ -167,6 +221,10 @@ namespace Makai::Ex::Game::Danmaku {
 				server.release(this);
 				active = false;
 				hideSprites();
+				objectState = State::AOS_FREE;
+			} else {
+				active = true;
+				objectState = State::AOS_ACTIVE;
 			}
 		}
 
@@ -178,6 +236,7 @@ namespace Makai::Ex::Game::Danmaku {
 		usize const				size;
 		Graph::ReferenceHolder&	mainMesh;
 		Graph::ReferenceHolder&	glowMesh;
+		Playfield&				playfield;
 		CollisionMask const		affects		= {};
 		CollisionMask const		affectedBy	= {};
 		CollisionMask const		tags		= {};
@@ -189,14 +248,17 @@ namespace Makai::Ex::Game::Danmaku {
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;
 
+		Playfield& playfield;
+
 		BulletServer(BulletServerConfig const& cfg):
 			mainMesh(cfg.mainMesh),
-			glowMesh(cfg.glowMesh) {
+			glowMesh(cfg.glowMesh),
+			playfield(cfg.playfield) {
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
-				all.pushBack(Bullet(*this, cfg.affects, cfg.affectedBy, cfg.tags));
+				all.pushBack(Bullet(*this, playfield, cfg.affects, cfg.affectedBy, cfg.tags));
 				all.back().sprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				if (&cfg.mainMesh != &cfg.glowMesh)
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
@@ -208,6 +270,11 @@ namespace Makai::Ex::Game::Danmaku {
 			Handle<Bullet> bullet = Server::acquire().as<Bullet>();
 			bullet->clear();
 			return bullet.as<GameObject>();
+		}
+
+		void onUpdate(float delta, App& app) override {
+			for (auto& obj: used)
+				obj->onUpdate(delta);
 		}
 
 	private:
