@@ -292,9 +292,12 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		virtual HandleType acquire() override {
-			Handle<Bullet> bullet = Server::acquire().as<Bullet>();
-			bullet->clear();
-			return bullet.as<GameObject>();
+			if (auto b = Server::acquire()) {
+				Handle<Bullet> bullet = b.polymorph<Bullet>();
+				bullet->clear();
+				return bullet.as<GameObject>();
+			}
+			return nullptr;
 		}
 
 		void onUpdate(float delta, App& app) override {
