@@ -26,7 +26,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 		template<Type::Derived<GameObject> T>
 		constexpr Handle<T> acquire() {
-			return acquire().polymorph<T>();
+			if (auto obj = acquire())
+				return obj.polymorph<T>();
+			return nullptr;
 		}
 
 		virtual void discardAll()	= 0;
