@@ -7,8 +7,7 @@
 - - Problem: `gcc`/`g++` is missing, somehow???
 - [ ] Add HSL (Hue-Saturation-Luminosity) & BC (Brightness-Contrast) to buffer mask effect
 - [ ] Embedded language (compiled (preferable, even if to bytecode), JIT or interpreted)
-- - Currently have an idea, don't know if it would be feasible
-- - Could also implement support for Squirrel/LUA/AngelScript
+- - Could implement support for Squirrel/LUA/AngelScript
 - - Or C# even, this one might be the more feasible option
 - - - This one sounds enticing
 - - What about [SWIG](https://www.swig.org/)?
