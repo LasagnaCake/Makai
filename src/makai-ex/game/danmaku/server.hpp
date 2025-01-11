@@ -23,6 +23,11 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
+		virtual void discardAll()	= 0;
+		virtual void freeAll()		= 0;
+		virtual void despawnAll()	= 0;
+
+	protected:
 		constexpr virtual Server& release(HandleType const& object) {
 			if (!contains(object)) return;
 			used.removeLike(object);
@@ -30,12 +35,10 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		virtual void discardAll()	= 0;
-		virtual void freeAll()		= 0;
-		virtual void despawnAll()	= 0;
-
 	protected:
 		constexpr virtual bool contains(HandleType const& object) = 0;
+
+		friend class ServerObject;
 
 		ObjectRefListType free, used;
 	};
@@ -62,8 +65,6 @@ namespace Makai::Ex::Game::Danmaku {
 			AOA_UNPAUSE
 		};
 
-		Property<float>		velocity;
-		Property<float>		rotation;
 		Property<Vector2>	scale;
 
 		Property<Vector4> color = {Graph::Color::WHITE};
@@ -72,8 +73,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual ServerObject& clear() {
 			trans		= Transform2D();
-			velocity	= {};
-			rotation	= {};
 			color		= {Graph::Color::WHITE};
 			discardable	= true;
 			task		= doNothing();
@@ -88,8 +87,6 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		virtual ServerObject& reset() {
-			velocity.factor	= 0;
-			rotation.factor	= 0;
 			color.factor	= 0;
 		}
 
@@ -138,6 +135,10 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	protected:
+		static void release(Server::HandleType const& object, Server& server) {
+			server.release(object);
+		}
+
 		void onUnpause() override {
 			onAction(*this, Action::AOA_UNPAUSE);
 		}
