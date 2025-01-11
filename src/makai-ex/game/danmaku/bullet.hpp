@@ -92,7 +92,6 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Property<Vector2> radius;
-		Property<Vector2> scale;
 
 		bool rotateSprite = true;
 		

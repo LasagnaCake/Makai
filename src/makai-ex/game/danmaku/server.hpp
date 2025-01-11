@@ -58,8 +58,9 @@ namespace Makai::Ex::Game::Danmaku {
 			AOA_UNPAUSE
 		};
 
-		Property<float> velocity;
-		Property<float> rotation;
+		Property<float>		velocity;
+		Property<float>		rotation;
+		Property<Vector2>	scale;
 
 		Property<Vector4> color = {Graph::Color::WHITE};
 
