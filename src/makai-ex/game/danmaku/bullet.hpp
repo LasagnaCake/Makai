@@ -9,7 +9,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {};
 	
-	struct Bullet: ServerObject {
+	struct Bullet: ServerObject, ISpriteContainer {
 		Bullet(BulletConfig const& cfg):
 			ServerObject(cfg), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
@@ -89,21 +89,36 @@ namespace Makai::Ex::Game::Danmaku {
 				discard();
 		}
 
-		Bullet& setSpriteFrame(Vector2 const& frame)	{
-			if (!isFree() && sprite)
-				sprite->frame = frame;
+		Bullet& setSpriteFrame(Vector2 const& frame) override {
+			if (isFree()) return *this;
+			if (sprite)
+				sprite->frame		= frame;
+			if (glowSprite)
+				glowSprite->frame	= frame;
 			return *this;
 		}
 
-		Bullet& setSpriteSheetSize(Vector2 const& size)	{
-			if (!isFree() && sprite)
-				sprite->size = size;
+		Bullet& setSpriteSheetSize(Vector2 const& size) override {
+			if (isFree()) return *this;
+			if (sprite)
+				sprite->size		= size;
+			if (glowSprite)
+				glowSprite->size	= size;
 			return *this;	
 		}
 
-		Bullet& setSprite(Vector2 const& sheetSize, Vector2 const& frame) {
+		Bullet& setSprite(Vector2 const& sheetSize, Vector2 const& frame) override {
 			if (isFree()) return *this;
 			return setSpriteFrame(frame).setSpriteSheetSize(sheetSize);
+		}
+
+		Bullet& setSpriteRotation(float const angle) override {
+			if (isFree()) return *this;
+			if (sprite)
+				sprite->local.rotation.z		= angle;
+			if (glowSprite)
+				glowSprite->local.rotation.z	= angle;
+			if (isFree()) return *this;
 		}
 
 		Property<float>		velocity;
@@ -200,9 +215,9 @@ namespace Makai::Ex::Game::Danmaku {
 		void updateSprite(SpriteHandle const& sprite) {
 			if (!sprite) return;
 			if (rotateSprite)
-				sprite->local.rotation	= trans.rotation;
-			sprite->local.position		= trans.position;
-			sprite->local.scale			= trans.scale;
+				sprite->local.rotation.z	= trans.rotation;
+			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
+			sprite->local.scale				= trans.scale;
 			sprite->setColor(animColor * color.value);
 		}
 
