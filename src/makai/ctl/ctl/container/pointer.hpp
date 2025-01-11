@@ -252,19 +252,24 @@ public:
 	/// @return Raw pointer to bound object.
 	constexpr PointerType operator&() const {return raw();}
 
-	/// @brief Casts the smart pointer to point to a new type.
-	/// @tparam New object type.
+	/// @brief Statically casts the smart pointer to point to a new type.
+	/// @tparam TNew New object type.
 	/// @return Smart pointer to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Pointer<TNew, WEAK>		as() const		{return	static_cast<TNew*>(raw());			}
+	constexpr Pointer<TNew, WEAK>		as() const			{return	static_cast<TNew*>(raw());			}
+	/// @brief Dynamically casts the smart pointer to point to a new type.
+	/// @tparam TNew New object type.
+	/// @return Smart pointer to new object type.
+	template<Type::Container::Pointable TNew>
+	constexpr Pointer<TNew, WEAK>		polymorph() const	{return	dynamic_cast<TNew*>(raw());			}
 	/// @brief Returns a weak pointer to the bound object.
 	/// @return Weak pointer to object.
-	constexpr Pointer<DataType, true>	asWeak() const	{return	raw();								}
+	constexpr Pointer<DataType, true>	asWeak() const		{return	raw();								}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
-	constexpr PointerType				raw() const		{return	exists() ? getPointer() : nullptr;	}
-//	constexpr PointerType				raw() const		{return	getPointer();						}
-//	constexpr ConstPointerType			raw() const		{return	getPointer();						}
+	constexpr PointerType				raw() const			{return	exists() ? getPointer() : nullptr;	}
+//	constexpr PointerType				raw() const			{return	getPointer();						}
+//	constexpr ConstPointerType			raw() const			{return	getPointer();						}
 	
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
