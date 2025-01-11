@@ -10,8 +10,16 @@
 
 CTL_NAMESPACE_BEGIN
 
+/// @brief Math functions.
 namespace Math {
+	/// @brief Implementations.
 	namespace Impl {
+		/// @brief Checks to see if a value is contained inside an array.
+		/// @tparam T Unsigned integer type.
+		/// @tparam N Array size.
+		/// @param v Value to check.
+		/// @param arr Array to check against.
+		/// @return Whether the array contains the value.
 		template<Type::Unsigned T, usize N>
 		constexpr bool contains(T const v, As<T[N]> const& arr) {
 			for (T const e: arr)
@@ -19,11 +27,19 @@ namespace Math {
 			return false;
 		}
 
+		/// @brief Shifts the array's contents towards the beginning, then inserts a value at the end.
+		/// @tparam T Unsigned integer type.
+		/// @tparam N Array size.
+		/// @param v Value to insert at the end.
+		/// @param arr Array to shift.
+		/// @return Value at the beginning of the array.
 		template<Type::Unsigned T, usize N>
-		constexpr void shift(T const v, As<T[N]>& arr) {
+		constexpr T shift(T const v, As<T[N]>& arr) {
+			T const out = arr[0];
 			for (usize i = N; i > 0; --i)
 				arr[i-1] = arr[i];
 			arr[N-1] = v;
+			return out;
 		}
 	}
 
