@@ -153,6 +153,13 @@ namespace Makai::Ex::Game::Danmaku {
 		usize delay = 0;
 	};
 
+	struct ISpriteContainer {
+		virtual ISpriteContainer& setSpriteFrame(Vector2 const& frame)						= 0;
+		virtual ISpriteContainer& setSpriteSheetSize(Vector2 const& size)					= 0;
+		virtual ISpriteContainer& setSprite(Vector2 const& sheetSize, Vector2 const& frame)	= 0;
+		virtual ISpriteContainer& setSpriteRotation(float const angle)						= 0;
+	};
+
 	using SpriteInstance	= Instance<Graph::AnimatedPlaneRef>;
 	using SpriteHandle		= Handle<Graph::AnimatedPlaneRef>;
 }
