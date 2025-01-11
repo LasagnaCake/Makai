@@ -42,6 +42,25 @@ namespace Makai::Ex::Game::Danmaku {
 		bool	enabled	= false;
 	};
 
+	struct GameArea {
+		Vector2 center;
+		Vector2 size;
+
+		constexpr Vector2 topLeft() const		{return center + size * Vector2(-1, +1);}
+		constexpr Vector2 topRight() const		{return center + size * Vector2(+1, +1);}
+		constexpr Vector2 bottomLeft() const	{return center + size * Vector2(-1, -1);}
+		constexpr Vector2 bottomRight() const	{return center + size * Vector2(+1, -1);}
+	};
+
+	struct GameObjectConfig {
+		using CollisionMask = GameObject::CollisionMask;
+		GameArea&			board;
+		GameArea&			playfield;
+		CollisionMask const	affects		= {};
+		CollisionMask const	affectedBy	= {};
+		CollisionMask const	tags		= {};
+	};
+
 	struct GameObject {
 		using PromiseType			= Makai::Co::Promise<usize, true>;
 		using Collider				= CollisionServer::Collider;
@@ -49,10 +68,12 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionDirection	= C2D::Direction;
 		using CollisionMask			= CollisionLayer::CollisionMask;
 
-		GameObject(CollisionMask const& affects, CollisionMask const& affectedBy, CollisionMask const& tags):
-			affects(affects),
-			affectedBy(affectedBy),
-			tags(tags) {
+		GameObject(GameObjectConfig const& cfg):
+			board(cfg.board),
+			playfield(cfg.playfield),
+			affects(cfg.affects),
+			affectedBy(cfg.affectedBy),
+			tags(cfg.tags) {
 				bindCollisionHandler(*this);
 			}
 
@@ -94,6 +115,9 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onCollision(Collider const& collider, CollisionDirection const direction) = 0;
 
 	protected:
+		GameArea&	board;
+		GameArea&	playfield;
+
 		virtual void onUnpause() {}
 
 		void resetCollisionState() {
@@ -125,16 +149,6 @@ namespace Makai::Ex::Game::Danmaku {
 		CollisionMask const tags;
 
 		usize delay = 0;
-	};
-
-	struct Playfield {
-		Vector2 center;
-		Vector2 size;
-
-		constexpr Vector2 topLeft()		{return center + size * Vector2(-1, +1);}
-		constexpr Vector2 topRight()	{return center + size * Vector2(+1, +1);}
-		constexpr Vector2 bottomLeft()	{return center + size * Vector2(-1, -1);}
-		constexpr Vector2 bottomRight()	{return center + size * Vector2(+1, -1);}
 	};
 
 	using SpriteInstance	= Instance<Graph::AnimatedPlaneRef>;

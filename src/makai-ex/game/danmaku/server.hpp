@@ -30,6 +30,10 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		virtual void discardAll()	= 0;
+		virtual void freeAll()		= 0;
+		virtual void despawnAll()	= 0;
+
 	protected:
 		constexpr virtual bool contains(HandleType const& object) = 0;
 
@@ -65,14 +69,12 @@ namespace Makai::Ex::Game::Danmaku {
 		Property<Vector4> color = {Graph::Color::WHITE};
 
 		bool discardable	= true;
-		bool dope			= true;
 
 		virtual ServerObject& clear() {
 			trans		= Transform2D();
 			velocity	= {};
 			rotation	= {};
 			color		= {Graph::Color::WHITE};
-			dope		= true;
 			discardable	= true;
 			task		= doNothing();
 			pause		= {};
@@ -143,6 +145,20 @@ namespace Makai::Ex::Game::Danmaku {
 		State objectState;
 
 		virtual ServerObject& setFree(bool const state) = 0;
+	};
+
+	struct ServerConfig {
+		usize const size;
+	};
+
+	struct ServerObjectConfig {
+		using CollisionMask = GameObject::CollisionMask;
+		Server& server;
+	};
+
+	struct ServerMeshConfig {
+		Graph::ReferenceHolder&	mainMesh;
+		Graph::ReferenceHolder&	glowMesh;
 	};
 }
 

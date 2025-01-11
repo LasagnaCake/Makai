@@ -6,15 +6,12 @@
 
 namespace Makai::Ex::Game::Danmaku {
 	struct BulletServer;
+
+	struct BulletConfig: ServerObjectConfig, GameObjectConfig {};
 	
 	struct Bullet: ServerObject {
-		Bullet(
-			Server& server,
-			Playfield& playfield,
-			CollisionMask const& affects,
-			CollisionMask const& affectedBy,
-			CollisionMask const& tags
-		): ServerObject(affects, affectedBy, tags), server(server), playfield(playfield) {
+		Bullet(BulletConfig const& cfg):
+			ServerObject(cfg), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
@@ -23,7 +20,10 @@ namespace Makai::Ex::Game::Danmaku {
 			rotateSprite	= true;
 			radius			= {};
 			scale			= {};
+			dope			= false;
 			glowing			= false;
+			bouncy			= false;
+			loopy			= false;
 			return *this;
 		}
 
@@ -35,7 +35,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onUpdate(float delta) override {
-			if (objectState == State::AOS_FREE) return;
+			if (isFree()) return;
 			ServerObject::onUpdate(delta);
 			hideSprites();
 			setSpriteVisibility(glowing || spawnglow, true);
@@ -49,6 +49,7 @@ namespace Makai::Ex::Game::Danmaku {
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
 			trans.scale		= scale.next();
+			playfieldCheck();
 			loopAndBounce();
 			updateSprite(sprite.asWeak());
 			updateSprite(glowSprite.asWeak());
@@ -56,27 +57,31 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& discard(bool const force = false) override {
+			if (isFree()) return *this;
 			if (discardable && !force) return *this;
 			despawn();
 		}
 
 		bool isFree() const override {
-			return false;
+			return objectState == State::AOS_FREE;
 		}
 
 		Bullet& spawn() override {
+			if (isFree()) return *this;
 			counter = 0;
 			objectState = State::AOS_SPAWNING;
 			onAction(*this, Action::AOA_SPAWN_BEGIN);
 		}
 
 		Bullet& despawn() override {
+			if (isFree()) return *this;
 			counter = 0;
 			objectState = State::AOS_DESPAWNING;
 			onAction(*this, Action::AOA_DESPAWN_BEGIN);
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
+			if (isFree()) return;
 			if (
 				collider.tags.match(CollisionTag::PLAYER_GRAZEBOX).overlap()
 			) setCollisionTags(getCollisionTags() & CollisionTag::GRAZEABLE.inverse());
@@ -84,14 +89,26 @@ namespace Makai::Ex::Game::Danmaku {
 				discard();
 		}
 
-		Bullet& setSpriteFrame(Vector2 const& frame)	{if (sprite) sprite->frame = frame; return *this;	}
-		Bullet& setSpriteSheetSize(Vector2 const& size)	{if (sprite) sprite->size = size; return *this;		}
+		Bullet& setSpriteFrame(Vector2 const& frame)	{
+			if (!isFree() && sprite)
+				sprite->frame = frame;
+			return *this;
+		}
+
+		Bullet& setSpriteSheetSize(Vector2 const& size)	{
+			if (!isFree() && sprite)
+				sprite->size = size;
+			return *this;	
+		}
 
 		Bullet& setSprite(Vector2 const& sheetSize, Vector2 const& frame) {
+			if (isFree()) return *this;
 			return setSpriteFrame(frame).setSpriteSheetSize(sheetSize);
 		}
 
 		Property<Vector2> radius;
+
+		bool dope = true;
 
 		bool rotateSprite = true;
 		
@@ -105,7 +122,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 	private:
 		Server&		server;
-		Playfield&	playfield;
 
 		SpriteInstance sprite		= nullptr;
 		SpriteInstance glowSprite	= nullptr;
@@ -117,14 +133,28 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
+		void playfieldCheck() {
+			if (!dope) return;
+			auto const
+				tl = playfield.topLeft(),
+				br = playfield.bottomRight()
+			;
+			if (
+				trans.position.x < tl.x
+			||	trans.position.x > br.x
+			||	trans.position.y > tl.y
+			||	trans.position.y < tl.y
+			) free();
+		}
+
 		void loopAndBounce() {
 			if (bouncy && !Collision::GJK::check(
-				C2D::Box(playfield.center, playfield.size),
+				C2D::Box(board.center, board.size),
 				C2D::Point(trans.position)
 			)) {
 				auto const
-					tl = playfield.topLeft(),
-					br = playfield.bottomRight()
+					tl = board.topLeft(),
+					br = board.bottomRight()
 				;
 				if (trans.position.x < tl.x) shift(PI);
 				if (trans.position.x > br.x) shift(PI);
@@ -134,12 +164,12 @@ namespace Makai::Ex::Game::Danmaku {
 				bouncy = false;
 			}
 			else if (loopy && shape && !Collision::GJK::check(
-				C2D::Box(playfield.center, playfield.size),
+				C2D::Box(board.center, board.size),
 				*shape
 			)) {
 				auto const
-					tl = playfield.topLeft(),
-					br = playfield.bottomRight()
+					tl = board.topLeft(),
+					br = board.bottomRight()
 				;
 				if (trans.position.x < tl.x) trans.position.x = br.x + shape->radius.x;
 				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radius.x;
@@ -216,30 +246,23 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet(Bullet&& other)		= default;
 
 		Bullet& setFree(bool const state) override {
+			if (isFree()) return *this;
 			if (state) {
-				server.release(this);
 				active = false;
 				hideSprites();
 				objectState = State::AOS_FREE;
+				server.release(this);
 			} else {
 				active = true;
 				objectState = State::AOS_ACTIVE;
 			}
+			return *this;
 		}
 
 		friend class BulletServer;
 	};
 
-	struct BulletServerConfig {
-		using CollisionMask = GameObject::CollisionMask;
-		usize const				size;
-		Graph::ReferenceHolder&	mainMesh;
-		Graph::ReferenceHolder&	glowMesh;
-		Playfield&				playfield;
-		CollisionMask const		affects		= {};
-		CollisionMask const		affectedBy	= {};
-		CollisionMask const		tags		= {};
-	};
+	struct BulletServerConfig: ServerConfig, ServerMeshConfig, GameObjectConfig {};
 
 	struct BulletServer: Server, IUpdateable {
 		using CollisionMask = GameObject::CollisionMask;
@@ -247,17 +270,19 @@ namespace Makai::Ex::Game::Danmaku {
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;
 
-		Playfield& playfield;
+		GameArea& board;
+		GameArea& playfield;
 
 		BulletServer(BulletServerConfig const& cfg):
 			mainMesh(cfg.mainMesh),
 			glowMesh(cfg.glowMesh),
+			board(cfg.board),
 			playfield(cfg.playfield) {
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
-				all.pushBack(Bullet(*this, playfield, cfg.affects, cfg.affectedBy, cfg.tags));
+				all.pushBack(Bullet({*this, cfg}));
 				all.back().sprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				if (&cfg.mainMesh != &cfg.glowMesh)
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
@@ -272,8 +297,45 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onUpdate(float delta, App& app) override {
-			for (auto& obj: used)
+			for (auto& obj: used) {
 				obj->onUpdate(delta);
+			}
+		}
+
+		void discardAll() override {
+			for (auto b: used) {
+				Bullet& bullet = *(dynamic_cast<Bullet*>(b));
+				bullet.discard();
+			};
+		}
+		
+		void freeAll() override {
+			for (auto b: used) {
+				Bullet& bullet = *(dynamic_cast<Bullet*>(b));
+				bullet.free();
+			};
+		}
+
+		void despawnAll() override {
+			for (auto b: used) {
+				Bullet& bullet = *(dynamic_cast<Bullet*>(b));
+				bullet.despawn();
+			};
+		}
+
+		HandleType acquire() override {
+			auto b = Server::acquire();
+			Bullet& bullet = *(b.as<Bullet>());
+			bullet.clear();
+			return b;
+		}
+
+		BulletServer& release(HandleType const& object) override {
+			if (used.find(object) == -1) return *this;
+			Bullet& bullet = *(object.as<Bullet>());
+			bullet.free();
+			Server::release(object);
+			return *this;
 		}
 
 	private:
