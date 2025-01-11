@@ -177,10 +177,10 @@ namespace Makai::Ex::Game::Danmaku {
 					tl = board.topLeft(),
 					br = board.bottomRight()
 				;
-				if (trans.position.x < tl.x) trans.position.x = br.x + shape->radius.x;
-				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radius.x;
-				if (trans.position.y > tl.y) trans.position.y = br.y - shape->radius.y;
-				if (trans.position.y < tl.y) trans.position.y = tl.y + shape->radius.y;
+				if (trans.position.x < tl.x) trans.position.x = br.x + shape->radiusAt(0);
+				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radiusAt(PI);
+				if (trans.position.y > tl.y) trans.position.y = br.y - shape->radiusAt(HPI);
+				if (trans.position.y < br.y) trans.position.y = tl.y + shape->radiusAt(-HPI);
 				onAction(*this, Action::AOA_LOOP);
 				loopy = false;
 			}
