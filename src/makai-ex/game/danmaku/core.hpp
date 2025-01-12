@@ -160,6 +160,19 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ISpriteContainer& setSpriteRotation(float const angle)						= 0;
 	};
 
+	struct AttackObject {
+		Property<float>	velocity;
+		Property<float>	rotation;
+	};
+
+	struct Circular {
+		Property<Vector2>	radius;
+	};
+
+	struct Glowing {
+		bool glowing = false;
+	}
+
 	using SpriteInstance	= Instance<Graph::AnimatedPlaneRef>;
 	using SpriteHandle		= Handle<Graph::AnimatedPlaneRef>;
 }
