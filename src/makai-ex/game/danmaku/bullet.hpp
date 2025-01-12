@@ -9,7 +9,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {};
 	
-	struct Bullet: ServerObject, ISpriteContainer {
+	struct Bullet: ServerObject, ISpriteContainer, AttackObject, Circular, Glowing {
 		Bullet(BulletConfig const& cfg):
 			ServerObject(cfg), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
@@ -121,10 +121,6 @@ namespace Makai::Ex::Game::Danmaku {
 			if (isFree()) return *this;
 		}
 
-		Property<float>		velocity;
-		Property<float>		rotation;
-		Property<Vector2>	radius;
-
 		bool dope = true;
 
 		bool rotateSprite = true;
@@ -134,8 +130,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 		usize spawnTime		= 5;
 		usize despawnTime	= 5;
-
-		bool glowing = false;
 
 	private:
 		Server&		server;
