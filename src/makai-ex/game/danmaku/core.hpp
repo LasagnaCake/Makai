@@ -171,7 +171,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct Glowing {
 		bool glowing = false;
-	}
+	};
 
 	using SpriteInstance	= Instance<Graph::AnimatedPlaneRef>;
 	using SpriteHandle		= Handle<Graph::AnimatedPlaneRef>;
