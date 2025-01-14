@@ -4,72 +4,72 @@
 
 using namespace Makai; using namespace Makai::Graph;
 
-void IDrawable::render() {if (active) draw();}
+void ADrawable::render() {if (active) draw();}
 
-IDrawable::IDrawable(bool const manual, usize const layer) {
+ADrawable::ADrawable(bool const manual, usize const layer) {
 	if(!manual) setAuto(layer);
 	manualMode = manual;
 }
 
 
-IDrawable::IDrawable(bool const manual): IDrawable(manual, 0) {
+ADrawable::ADrawable(bool const manual): ADrawable(manual, 0) {
 }
 
-IDrawable::~IDrawable() {
+ADrawable::~ADrawable() {
 	DEBUGLN("Removing from rendering layers...");
 	if(!manualMode)
 		RenderServer::layers.removeFromAll(&doRender);
 	DEBUGLN("Finalizing...\n");
 }
 
-IDrawable& IDrawable::setManual() {
+ADrawable& ADrawable::setManual() {
 	if(!manualMode)
 		RenderServer::layers.removeFromAll(&doRender);
 	manualMode = true;
 	return *this;
 }
 
-IDrawable& IDrawable::setAuto(usize const renderLayer) {
+ADrawable& ADrawable::setAuto(usize const renderLayer) {
 	if(manualMode)
 		RenderServer::layers.add(&doRender, renderLayer);
 	manualMode = false;
 	return *this;
 }
 
-IDrawable& IDrawable::setRenderLayer(usize const renderLayer) {
+ADrawable& ADrawable::setRenderLayer(usize const renderLayer) {
 	RenderServer::layers.removeFromAll(&doRender);
 	RenderServer::layers.add(&doRender, renderLayer);
 	manualMode = false;
 	return *this;
 }
 
-IDrawable& IDrawable::addToRenderLayer(usize const renderLayer) {
+ADrawable& ADrawable::addToRenderLayer(usize const renderLayer) {
 	RenderServer::layers.add(&doRender, renderLayer);
 	manualMode = false;
 	return *this;
 }
 
-IDrawable& IDrawable::removeFromRenderLayer(usize const renderLayer) {
+ADrawable& ADrawable::removeFromRenderLayer(usize const renderLayer) {
 	RenderServer::layers.remove(&doRender, renderLayer);
 	if (RenderServer::layers.withObject(&doRender).empty())
 		manualMode = true;
 	return *this;
 }
 
-IGraphic::IGraphic(usize const layer, bool const manual): IDrawable(layer, manual), Blendable() {
+AGraphic::AGraphic(usize const layer, bool const manual): ADrawable(layer, manual), Blendable() {
 	DEBUGLN("Creating drawable object...");
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	DEBUGLN("Drawable object created!");
 }
 
-IGraphic::~IGraphic() {
+AGraphic::~AGraphic() {
 	DEBUGLN("Deleting buffers...");
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 }
 
-void IGraphic::display(
+void AGraphic::display(
 	Vertex* const		vertices,
 	usize const		count,
 	CullMode const&		culling,
@@ -122,7 +122,7 @@ void IGraphic::display(
 	glDisable(GL_PROGRAM_POINT_SIZE);
 }
 
-void IGraphic::prepare() {
+void AGraphic::prepare() {
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("DrawableObject::prepare");
 	#endif // MAKAILIB_DEBUG

@@ -9,14 +9,14 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {};
 	
-	struct Bullet: ServerObject, ISpriteContainer, AttackObject, Circular, Glowing {
+	struct Bullet: AServerObject, ISpriteContainer, AttackObject, Circular, Glowing {
 		Bullet(BulletConfig const& cfg):
-			ServerObject(cfg), server(cfg.server) {
+			AServerObject(cfg), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
 		Bullet& clear() override {
-			ServerObject::clear();
+			AServerObject::clear();
 			rotateSprite	= true;
 			radius			= {};
 			scale			= {};
@@ -30,7 +30,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& reset() override {
-			ServerObject::reset();
+			AServerObject::reset();
 			velocity.factor	= 0;
 			rotation.factor	= 0;
 			radius.factor	= 0;
@@ -40,7 +40,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta) override {
 			if (isFree()) return;
-			ServerObject::onUpdate(delta);
+			AServerObject::onUpdate(delta);
 			hideSprites();
 			setSpriteVisibility(glowing || spawnglow, true);
 			updateSprite(sprite.asWeak());
@@ -132,7 +132,7 @@ namespace Makai::Ex::Game::Danmaku {
 		usize despawnTime	= 5;
 
 	private:
-		Server&		server;
+		AServer&	server;
 
 		SpriteInstance sprite		= nullptr;
 		SpriteInstance glowSprite	= nullptr;
@@ -274,8 +274,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct BulletServerConfig: ServerConfig, ServerMeshConfig, GameObjectConfig {};
 
-	struct BulletServer: Server, IUpdateable {
-		using CollisionMask = GameObject::CollisionMask;
+	struct BulletServer: AServer, AUpdateable {
+		using CollisionMask = AGameObject::CollisionMask;
 
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;

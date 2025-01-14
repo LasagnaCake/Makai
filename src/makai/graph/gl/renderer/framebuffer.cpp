@@ -10,22 +10,22 @@ namespace ImageSlot {
 
 using namespace Makai; using namespace Makai::Graph;
 
-Graph::Base::Buffer::Buffer(uint const width, uint const height) {
+Graph::Base::ABuffer::ABuffer(uint const width, uint const height) {
 	create(width, height);
 }
 
-Graph::Base::Buffer::~Buffer() {
+Graph::Base::ABuffer::~ABuffer() {
 	destroy();
 }
 
-Graph::Base::Buffer& Graph::Base::Buffer::destroy() {
+Graph::Base::ABuffer& Graph::Base::ABuffer::destroy() {
 	if (!created) return *this;
 	else created = false;
 	glDeleteFramebuffers(1, &id);
 	return *this;
 }
 
-Graph::Base::Buffer& Graph::Base::Buffer::create(uint const width, uint const height) {
+Graph::Base::ABuffer& Graph::Base::ABuffer::create(uint const width, uint const height) {
 	if (created) return *this;
 	else created = true;
 	glGenFramebuffers(1, &id);
@@ -36,28 +36,28 @@ Graph::Base::Buffer& Graph::Base::Buffer::create(uint const width, uint const he
 	return *this;
 }
 
-Graph::Base::Buffer& Graph::Base::Buffer::enable() {
+Graph::Base::ABuffer& Graph::Base::ABuffer::enable() {
 	if (!created) return *this;
 	glBindFramebuffer(GL_FRAMEBUFFER, id);
 	return *this;
 }
 
-Graph::Base::Buffer& Graph::Base::Buffer::operator()() {
+Graph::Base::ABuffer& Graph::Base::ABuffer::operator()() {
 	return enable();
 }
 
-Graph::Base::Buffer& Graph::Base::Buffer::disable() {
+Graph::Base::ABuffer& Graph::Base::ABuffer::disable() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return *this;
 }
 
-bool Graph::Base::Buffer::exists() const	{return created;	}
+bool Graph::Base::ABuffer::exists() const		{return created;	}
 
-uint Graph::Base::Buffer::getWidth() const	{return width;		}
-uint Graph::Base::Buffer::getHeight() const	{return height;		}
-uint Graph::Base::Buffer::getID() const		{return id;			}
+uint Graph::Base::ABuffer::getWidth() const		{return width;		}
+uint Graph::Base::ABuffer::getHeight() const	{return height;		}
+uint Graph::Base::ABuffer::getID() const		{return id;			}
 
-Graph::Base::Buffer& Graph::Base::Buffer::render(Base::Buffer const& target) {
+Graph::Base::ABuffer& Graph::Base::ABuffer::render(Base::ABuffer const& target) {
 	if (!exists()) return *this;
 	if (!target.exists()) return *this;
 	return renderTo(target.data());
@@ -66,7 +66,7 @@ Graph::Base::Buffer& Graph::Base::Buffer::render(Base::Buffer const& target) {
 Graph::DrawBuffer::DrawBuffer(
 	unsigned int const width,
 	unsigned int const height
-): Base::Buffer() {
+): Base::ABuffer() {
 	create(width, height);
 }
 
@@ -81,14 +81,14 @@ Graph::DrawBuffer& Graph::DrawBuffer::destroy() {
 	buffer.depth.destroy();
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
-	Base::Buffer::destroy();
+	Base::ABuffer::destroy();
 	DEBUGLN("Framebuffer destroyed!");
 	return *this;
 }
 
 Graph::DrawBuffer& Graph::DrawBuffer::create(uint const width, uint const height) {
 	if (exists()) return *this;
-	Base::Buffer::create(width, height);
+	Base::ABuffer::create(width, height);
 	glBindFramebuffer(GL_FRAMEBUFFER, getID());
 	buffer.screen.create(
 		width,
@@ -139,12 +139,12 @@ Graph::DrawBuffer& Graph::DrawBuffer::create(uint const width, uint const height
 
 Graph::DrawBuffer& Graph::DrawBuffer::enable() {
 	if (!exists()) return *this;
-	Base::Buffer::enable();
+	Base::ABuffer::enable();
 	this->clearDepthBuffer();
 	return *this;
 }
 
-Graph::Base::BufferObject Graph::Base::Buffer::data() const {
+Graph::Base::BufferObject Graph::Base::ABuffer::data() const {
 	if (!exists())
 		return Base::BufferObject{};
 	return *this;
@@ -227,7 +227,7 @@ Graph::DrawBuffer& Graph::DrawBuffer::renderTo(Graph::Base::BufferObject const& 
 }
 
 Graph::DrawBuffer& Graph::DrawBuffer::disable() {
-	Base::Buffer::disable();
+	Base::ABuffer::disable();
 	return *this;
 }
 

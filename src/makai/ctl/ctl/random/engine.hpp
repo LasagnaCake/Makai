@@ -29,7 +29,7 @@ namespace Base {
 	};
 
 	/// @brief Pseudo-random number engine interface.
-	struct SimpleEngine: IEngine {
+	struct ISimpleEngine: IEngine {
 		constexpr static bool SECURE = false;
 		/// @brief Generates a new random number.
 		/// @return Generated number.
@@ -41,24 +41,24 @@ namespace Base {
 		/// @param seed Current seed.
 		virtual void setSeed(usize const seed) = 0;
 		/// @brief Virtual destructor.
-		virtual ~SimpleEngine() {}
+		virtual ~ISimpleEngine() {}
 	};
 
 	/// @brief Cryptographically secure random number engine interface.
-	struct SecureEngine: IEngine {
+	struct ISecureEngine: IEngine {
 		constexpr static bool SECURE = true;
 		/// @brief Generates a new random number.
 		/// @return Generated number.
 		virtual usize next() = 0;
 		/// @brief Virtual destructor.
-		virtual ~SecureEngine() {}
+		virtual ~ISecureEngine() {}
 	};
 }
 
 /// @brief Random number engine implementations.
 namespace Engine {
 	/// @brief Mersenne twister engine.
-	struct Mersenne: Base::SimpleEngine {
+	struct Mersenne: Base::ISimpleEngine {
 	private:
 		using InternalEngine = Impl::Mersenne;
 
@@ -110,7 +110,7 @@ namespace Engine {
 
 	#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
 	/// @brief Secure random engine.
-	struct Secure: Base::SecureEngine {
+	struct Secure: Base::ISecureEngine {
 	private:
 		/// @brief Random number algorithm wrapper.
 		struct Algorithm {
@@ -184,7 +184,7 @@ namespace Engine {
 	#else
 	/// @brief Secure random engine.
 	/// @warning Currently unimplemented!
-	struct Secure: Base::SecureEngine {
+	struct Secure: Base::ISecureEngine {
 		/// @brief Generates a new random number.
 		/// @return Generated number.
 		/// @warning Currently unimplemented! Returns zero.

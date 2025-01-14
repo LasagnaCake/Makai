@@ -17,7 +17,7 @@ namespace Base {
 
 	/// @brief Pseudo-random number generator.
 	/// @tparam TEngine Random number engine type.
-	template <Type::Subclass<SimpleEngine> TEngine>
+	template <Type::Subclass<ISimpleEngine> TEngine>
 	struct Generator<TEngine> {
 		/// @brief Random number engine type.
 		using EngineType = TEngine;
@@ -78,7 +78,7 @@ namespace Base {
 
 	/// @brief Cryptographically secure random number generator.
 	/// @tparam TEngine Random number engine type.
-	template <Type::Subclass<SecureEngine> TEngine>
+	template <Type::Subclass<ISecureEngine> TEngine>
 	struct Generator<TEngine> {
 		/// @brief Random number engine type.
 		using EngineType = TEngine;

@@ -9,9 +9,9 @@
 /// @brief Audio facilities.
 namespace Makai::Audio {
 	/// @brief Sound source.
-	class Sound: public ISource {
+	class Sound: public ASource {
 	public:
-		using ISource::ISource;
+		using ASource::ASource;
 
 		/// @brief Destructor.
 		virtual ~Sound() final;

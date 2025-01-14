@@ -12,41 +12,41 @@
 /// @brief Graphical facilities.
 namespace Makai::Graph {
 	/// @brief Drawable object interface.
-	class IDrawable: IVisible {
+	class ADrawable: IVisible {
 	public:
 		/// @brief Constructs the drawable object.
 		/// @param manual Whether the object is manually rendered. By default, it is `falsie`.
-		IDrawable(bool const manual = false);
+		ADrawable(bool const manual = false);
 
 		/// @brief Constructs the drawable object.
 		/// @param manual Whether the object is manually rendered.
 		/// @param layer Layer to register the object to.
-		IDrawable(bool const manual, usize const layer);
+		ADrawable(bool const manual, usize const layer);
 		
 		/// @brief Destructor.
-		virtual ~IDrawable();
+		virtual ~ADrawable();
 
 		/// @brief Sets the object as to be manually rendered.
-		IDrawable& setManual();
+		ADrawable& setManual();
 
 		/// @brief Sets the object as to be automatically rendered.
 		/// @param layer Layer to register the object to.
-		IDrawable& setAuto(usize const renderLayer);
+		ADrawable& setAuto(usize const renderLayer);
 
 		/// @brief Sets the object to only render for a specific layer.
 		/// @param renderLayer Layer to register the object to.
 		/// @return Reference to self.
-		IDrawable& setRenderLayer(usize const renderLayer);
+		ADrawable& setRenderLayer(usize const renderLayer);
 
 		/// @brief Adds the object to a render layer.
 		/// @param renderLayer Layer to register the object to.
 		/// @return Reference to self.
-		IDrawable& addToRenderLayer(usize const renderLayer);
+		ADrawable& addToRenderLayer(usize const renderLayer);
 
 		/// @brief Removes the object from a render layer.
 		/// @param renderLayer Layer to register the object to.
 		/// @return Reference to self.
-		IDrawable& removeFromRenderLayer(usize const renderLayer);
+		ADrawable& removeFromRenderLayer(usize const renderLayer);
 		
 		/// @brief Renders the object to the screen.
 		void render();
@@ -70,15 +70,15 @@ namespace Makai::Graph {
 	};
 
 	/// @brief Graphic API drawable object interface.
-	class IGraphic: public IDrawable, public Blendable {
+	class AGraphic: public ADrawable, public Blendable {
 	public:
 		/// @brief Constructs the drawable object.
 		/// @param layer Layer to register the object to.
 		/// @param manual Whether the object is manually rendered.
-		IGraphic(usize const layer = 0, bool const manual = false);
+		AGraphic(usize const layer = 0, bool const manual = false);
 
 		/// @brief Destructor.
-		virtual ~IGraphic();
+		virtual ~AGraphic();
 
 		/// @brief Draws the object to the screen. Must be implemented.
 		virtual void draw() = 0;
@@ -121,7 +121,7 @@ namespace Makai::Graph {
 
 	/// @brief Type must be a graphic object.
 	template<class T>
-	concept GraphicType = Makai::Type::Subclass<T, IGraphic>;
+	concept GraphicType = Makai::Type::Subclass<T, AGraphic>;
 }
 
 #endif // MAKAILIB_GRAPH_RENDERER_DRAWABLE_H

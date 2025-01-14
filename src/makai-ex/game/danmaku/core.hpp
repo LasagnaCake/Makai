@@ -63,14 +63,14 @@ namespace Makai::Ex::Game::Danmaku {
 		CollisionMask const	tags		= {};
 	};
 
-	struct GameObject {
+	struct AGameObject {
 		using PromiseType			= Makai::Co::Promise<usize, true>;
 		using Collider				= CollisionServer::Collider;
 		using CollisionArea			= C2D::Area;
 		using CollisionDirection	= C2D::Direction;
 		using CollisionMask			= CollisionLayer::CollisionMask;
 
-		GameObject(GameObjectConfig const& cfg):
+		AGameObject(GameObjectConfig const& cfg):
 			board(cfg.board),
 			playfield(cfg.playfield),
 			affects(cfg.affects),
@@ -87,8 +87,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Math::Transform2D trans;
 		
-		virtual GameObject& spawn()		= 0;
-		virtual GameObject& despawn()	= 0;
+		virtual AGameObject& spawn()	= 0;
+		virtual AGameObject& despawn()	= 0;
 
 		virtual void onUpdate(float) {
 			if (!active) return;

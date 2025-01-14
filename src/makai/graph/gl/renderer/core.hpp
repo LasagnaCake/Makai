@@ -11,7 +11,7 @@ namespace Makai {
 
 /// @brief Graphical facilities.
 namespace Makai::Graph {
-	class IDrawable;
+	class ADrawable;
 
 	/// @brief Graphical renderer coordinator.
 	struct RenderServer {
@@ -43,7 +43,7 @@ namespace Makai::Graph {
 
 		static void renderLayer(typename Layers::GroupType const& layer);
 
-		friend class IDrawable;
+		friend class ADrawable;
 		friend class ::Makai::App;
 	};
 

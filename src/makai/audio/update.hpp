@@ -9,7 +9,7 @@ namespace Makai::Audio {
 	/// @brief Updates the audio & music subsystem.
 	inline void updateAll() {
 		Music::update();
-		ISource::update();
+		ASource::update();
 	}
 }
 

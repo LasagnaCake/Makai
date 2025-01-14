@@ -16,7 +16,7 @@ namespace Makai::Graph {
 		/// @brief Collection of drawable objects.
 		/// @tparam TDraw 
 		template<GraphicType TDraw>
-		class Collection: public IDrawable {
+		class Collection: public ADrawable {
 		public:
 			/// @brief Drawable object type.
 			using DrawableType	= TDraw;
@@ -29,7 +29,7 @@ namespace Makai::Graph {
 			/// @brief Constructs the collection.
 			/// @param layer Layer to register the object to. By default, it is layer zero.
 			/// @param manual Whether the object is manually rendered. By default, it is `false`.
-			Collection(usize const layer = 0, bool const manual = false): IDrawable(layer, manual) {}
+			Collection(usize const layer = 0, bool const manual = false): ADrawable(layer, manual) {}
 
 			/// @brief Destructor.
 			virtual ~Collection() {

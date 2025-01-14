@@ -28,30 +28,30 @@ namespace Makai::Graph {
 		};
 
 		/// @brief Basic screen buffer.
-		class Buffer: private BufferObject {
+		class ABuffer: private BufferObject {
 		public:
 			/// @brief Empty constructor.
-			Buffer() {}
+			ABuffer() {}
 
 			/// @brief Creates the buffer with a given width and height.
 			/// @param width Buffer width.
 			/// @param height Buffer height.
-			Buffer(
+			ABuffer(
 				uint const width,
 				uint const height
 			);
 
 			/// @brief Destructor.
-			virtual ~Buffer();
+			virtual ~ABuffer();
 			
 			/// @brief Destroys the buffer.
 			/// @return Reference to self.
-			virtual Buffer& destroy();
+			virtual ABuffer& destroy();
 			
 			/// @brief Creates the buffer with a given width and height.
 			/// @param width Buffer width.
 			/// @param height Buffer height.
-			virtual Buffer& create(
+			virtual ABuffer& create(
 				uint const width,
 				uint const height
 			);
@@ -59,24 +59,24 @@ namespace Makai::Graph {
 			/// @brief Renders the buffer to another buffer.
 			/// @param target Buffer to render to.
 			/// @return Reference to self.
-			Buffer& render(Buffer const& target);
+			ABuffer& render(ABuffer const& target);
 
 			/// @brief Renders the buffer to another buffer.
 			/// @param target Buffer to render to.
 			/// @return Reference to self.
-			virtual Buffer& renderTo(BufferObject const& target) = 0;
+			virtual ABuffer& renderTo(BufferObject const& target) = 0;
 
 			/// @brief Enables the buffer.
 			/// @return Reference to self.
-			virtual Buffer& enable();
+			virtual ABuffer& enable();
 
 			/// @brief Enables the buffer.
 			/// @return Reference to self.
-			Buffer& operator()();
+			ABuffer& operator()();
 
 			/// @brief Disables the buffer.
 			/// @return Reference to self.
-			virtual Buffer& disable();
+			virtual ABuffer& disable();
 
 			/// @brief Returns whether the buffer exists.
 			/// @return Whether buffer exists.
@@ -104,7 +104,7 @@ namespace Makai::Graph {
 	}
 
 	/// @brief Render operation buffer.
-	class DrawBuffer: public Base::Buffer, public Blendable {
+	class DrawBuffer: public Base::ABuffer, public Blendable {
 	public:
 		/// @brief Empty constructor.
 		DrawBuffer(): Blendable() {}

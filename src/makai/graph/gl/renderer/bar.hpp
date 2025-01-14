@@ -32,15 +32,15 @@ namespace Makai::Graph {
 
 	/// @brief Type must be a valid bar type.
 	template<class T>
-	concept BarType = Makai::Type::Subclass<T, Base::Progressbar> && Makai::Type::Subclass<T, IGraphic>;
+	concept BarType = Makai::Type::Subclass<T, Base::Progressbar> && Makai::Type::Subclass<T, AGraphic>;
 
 	/// @brief Linear progress bar.
-	class LinearBar: public IGraphic, public Base::Progressbar {
+	class LinearBar: public AGraphic, public Base::Progressbar {
 	public:
 		/// @brief Constructs the progressbar.
 		/// @param layer Layer to register the object to. By default, it is layer zero.
 		/// @param manual Whether the object is manually rendered. By default, it is `false`.
-		LinearBar(usize const& layer = 0, bool const manual = false): IGraphic(layer, manual) {}
+		LinearBar(usize const& layer = 0, bool const manual = false): AGraphic(layer, manual) {}
 
 		/// @brief Material to use.
 		Material::ObjectMaterial material;
@@ -53,7 +53,7 @@ namespace Makai::Graph {
 	};
 
 	/// @brief Radial progress bar.
-	class RadialBar: public IGraphic, public Base::Progressbar {
+	class RadialBar: public AGraphic, public Base::Progressbar {
 	public:
 		/// @brief Whether the progressbar "fans out", or follows a counterclockwise path.
 		bool	centered	= false;
@@ -63,7 +63,7 @@ namespace Makai::Graph {
 		/// @brief Constructs the progressbar.
 		/// @param layer Layer to register the object to. By default, it is layer zero.
 		/// @param manual Whether the object is manually rendered. By default, it is `false`.
-		RadialBar(usize const& layer = 0, bool const manual = false): IGraphic(layer, manual) {
+		RadialBar(usize const& layer = 0, bool const manual = false): AGraphic(layer, manual) {
 			vertices[0].uv.u = vertices[0].uv.v = 0.5;
 		}
 

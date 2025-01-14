@@ -4,16 +4,16 @@
 #include "core.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	struct Server {
-		using DataType			= GameObject;
+	struct AServer {
+		using DataType			= AGameObject;
 		using HandleType		= Handle<DataType>;
 		using ObjectRefListType	= List<DataType*>;
 		using ObjectQueryType	= List<HandleType>;
 
-		constexpr Server() {}
+		constexpr AServer() {}
 
-		constexpr Server(Server&& other)		= default;
-		constexpr Server(Server const& other)	= delete;
+		constexpr AServer(AServer&& other)		= default;
+		constexpr AServer(AServer const& other)	= delete;
 
 		constexpr virtual HandleType acquire() {
 			if (free.size()) {
@@ -24,7 +24,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
-		template<Type::Derived<GameObject> T>
+		template<Type::Derived<AGameObject> T>
 		constexpr Handle<T> acquire() {
 			if (auto obj = acquire())
 				return obj.polymorph<T>();
@@ -56,7 +56,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *(dynamic_cast<TTo*>(from));
 		}
 
-		constexpr virtual Server& release(HandleType const& object) {
+		constexpr virtual AServer& release(HandleType const& object) {
 			if (!contains(object)) return;
 			used.removeLike(object);
 			free.pushBack(object);
@@ -66,15 +66,15 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		constexpr virtual bool contains(HandleType const& object) = 0;
 
-		friend class ServerObject;
+		friend class AServerObject;
 
 		ObjectRefListType free, used;
 	};
 
-	struct ServerObject: GameObject {
-		using GameObject::GameObject;
+	struct AServerObject: AGameObject {
+		using AGameObject::AGameObject;
 
-		virtual ~ServerObject() {}
+		virtual ~AServerObject() {}
 
 		enum class State {
 			AOS_FREE,
@@ -99,7 +99,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		bool discardable	= true;
 
-		virtual ServerObject& clear() {
+		virtual AServerObject& clear() {
 			trans		= Transform2D();
 			color		= {Graph::Color::WHITE};
 			discardable	= true;
@@ -114,37 +114,38 @@ namespace Makai::Ex::Game::Danmaku {
 			resetCollisionState();
 		}
 
-		virtual ServerObject& reset() {
+		virtual AServerObject& reset() {
 			color.factor	= 0;
 		}
 
-		virtual ServerObject& discard(bool const force = false)	= 0;
+		virtual AServerObject& discard(bool const force = false)	= 0;
 
-		Functor<void(ServerObject&, Action const)>	onAction;
-		Functor<void(ServerObject&, float)>			onObjectUpdate;
+		Functor<void(AServerObject&, Action const)>	onAction;
+		Functor<void(AServerObject&, float)>		onObjectUpdate;
 
 		virtual bool isFree() const = 0;
 
-		ServerObject& free()	{setFree(true);		}
-		ServerObject& enable()	{setFree(false);	}
+		AServerObject& free()	{setFree(true);		}
+		AServerObject& enable()	{setFree(false);	}
 
-		ServerObject& setCollisionState(bool const canCollide = true) {
+		AServerObject& setCollisionState(bool const canCollide = true) {
 			if (auto collider = collision())
 				collider->canCollide = canCollide;
 		}
 
-		ServerObject& setCollisionMask(CollisionMask const& mask, bool const forAffectedBy = false) {
+		AServerObject& setCollisionMask(CollisionMask const& mask, bool const forAffectedBy = false) {
 			if (!collision()) return;
 			if (forAffectedBy)	collision()->affectedBy	= mask;
 			else				collision()->affects	= mask;
 		}
+
 		CollisionMask getCollisionMask(bool const affectedBy = false) {
 			if (!collision()) return {};
 			if (affectedBy)	return collision()->affectedBy;
 			else			return collision()->affects;
 		}
 
-		ServerObject& setCollisionTags(CollisionMask const& tags) {
+		AServerObject& setCollisionTags(CollisionMask const& tags) {
 			if (!collision()) return;
 			collision()->tags = tags;
 		}
@@ -158,12 +159,12 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta) override {
 			if (objectState == State::AOS_FREE) return;
-			GameObject::onUpdate(delta);
+			AGameObject::onUpdate(delta);
 			onObjectUpdate(*this, delta);
 		}
 
 	protected:
-		static void release(Server::HandleType const& object, Server& server) {
+		static void release(AServer::HandleType const& object, Server& server) {
 			server.release(object);
 		}
 
@@ -173,7 +174,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		State objectState;
 
-		virtual ServerObject& setFree(bool const state) = 0;
+		virtual AServerObject& setFree(bool const state) = 0;
 	};
 
 	struct ServerConfig {
@@ -181,8 +182,8 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct ServerObjectConfig {
-		using CollisionMask = GameObject::CollisionMask;
-		Server& server;
+		using CollisionMask = AGameObject::CollisionMask;
+		AServer& server;
 	};
 
 	struct ServerMeshConfig {

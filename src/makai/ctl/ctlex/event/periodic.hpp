@@ -11,7 +11,7 @@ CTL_EX_NAMESPACE_BEGIN
 /// @tparam _ Class associated with the event.
 /// @tparam ...Args Event argument types.
 template<class _ = void, class... Args>
-class IPeriodic: Argumented<Args...> {
+class APeriodic: Argumented<Args...> {
 public:
 	/// @brief Event wrapper.
 	using EventWrapper	= Signal<Args...>;
@@ -20,7 +20,7 @@ public:
 
 	/// @brief Constructs the periodic.
 	/// @param manual Whether the event is fired manually. By default, it is `false`.
-	IPeriodic(bool const manual = false): manual(manual) {
+	APeriodic(bool const manual = false): manual(manual) {
 		if (!manual)
 			events.pushBack(&update);
 	}
@@ -49,7 +49,7 @@ public:
 	}
 
 	/// @brief Destructor.
-	virtual ~IPeriodic() {
+	virtual ~APeriodic() {
 		if (!manual && !events.empty())
 			events.eraseIf([&](auto const& e){return e == &update;});
 	}

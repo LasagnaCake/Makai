@@ -9,19 +9,19 @@
 /// @brief Audio facilities.
 namespace Makai::Audio {
 	/// @brief Audio source interface.
-	class ISource {
+	class ASource {
 	public:
 		using Callback = const Signal<>;
 
 		/// @brief Empty constructor.
-		ISource();
+		ASource();
 
 		/// @brief Creates the source from a file.
 		/// @param path Path to audio file.
-		ISource(String const& path);
+		ASource(String const& path);
 
 		/// @brief Destructor.
-		virtual ~ISource();
+		virtual ~ASource();
 
 		/// @brief Creates the source from a file.
 		/// @param path Path to audio file.
@@ -65,7 +65,7 @@ namespace Makai::Audio {
 	};
 
 	/// @brief Audio callback.
-	using AudioCallback = typename ISource::Callback;
+	using AudioCallback = typename ASource::Callback;
 }
 
 #endif // MAKAILIB_AUDIO_PLAYABLE_H

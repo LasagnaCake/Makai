@@ -21,7 +21,7 @@ namespace Makai::Graph::Material {
 	};
 
 	/// @brief Object material interface.
-	struct IObjectMaterial: IMaterial {
+	struct AObjectMaterial: IMaterial {
 		/// @brief Albedo tint.
 		Vector4	color				= Color::WHITE;
 		/// @brief Instances.
@@ -34,11 +34,11 @@ namespace Makai::Graph::Material {
 		ObjectDebugView	debug		= ObjectDebugView::ODV_NONE;
 
 		/// @brief Destructor.
-		constexpr virtual ~IObjectMaterial() {}
+		constexpr virtual ~AObjectMaterial() {}
 	};
 
 	/// @brief Default object material.
-	struct ObjectMaterial final: IObjectMaterial {
+	struct ObjectMaterial final: AObjectMaterial {
 		/// @brief Whether the has directional shading.
 		bool shaded			= false;
 		/// @brief Whether the object can recieve illumination.
@@ -77,16 +77,16 @@ namespace Makai::Graph::Material {
 	};
 
 	/// @brief Framebuffer material interface.
-	struct IBufferMaterial: IMaterial {
+	struct ABufferMaterial: IMaterial {
 		/// @brief Background color.
 		Vector4 background = Color::NONE;
 
 		/// @brief Destructor.
-		constexpr virtual ~IBufferMaterial() {}
+		constexpr virtual ~ABufferMaterial() {}
 	};
 
 	/// @brief Default framebuffer material.
-	struct BufferMaterial final: IBufferMaterial {
+	struct BufferMaterial final: ABufferMaterial {
 		Vector4
 			/// @brief Albedo tint.
 			color	= Color::WHITE,
@@ -139,13 +139,13 @@ namespace Makai::Graph::Material {
 	};
 
 	/// @brief World material interface.
-	struct IWorldMaterial: IMaterial {
+	struct AWorldMaterial: IMaterial {
 		/// @brief Destructor.
-		constexpr virtual ~IWorldMaterial() {}
+		constexpr virtual ~AWorldMaterial() {}
 	};
 
 	/// @brief Default world material.
-	struct WorldMaterial final: IWorldMaterial {
+	struct WorldMaterial final: AWorldMaterial {
 		/// @brief Near fog effect.
 		Effect::Fog		nearFog;
 		/// @brief Far fog effect.
@@ -164,11 +164,11 @@ namespace Makai::Graph::Material {
 	/// @brief Type must be a material of some kind.
 	template<class T> concept ValidMaterial			= Makai::Type::Subclass<T, IMaterial>;
 	/// @brief Type must be a object material of some kind.
-	template<class T> concept ValidObjectMaterial	= Makai::Type::Subclass<T, IObjectMaterial>;
+	template<class T> concept ValidObjectMaterial	= Makai::Type::Subclass<T, AObjectMaterial>;
 	/// @brief Type must be a framebuffer material of some kind.
-	template<class T> concept ValidBufferMaterial	= Makai::Type::Subclass<T, IBufferMaterial>;
+	template<class T> concept ValidBufferMaterial	= Makai::Type::Subclass<T, ABufferMaterial>;
 	/// @brief Type must be a world material of some kind.
-	template<class T> concept ValidWorldMaterial	= Makai::Type::Subclass<T, IWorldMaterial>;
+	template<class T> concept ValidWorldMaterial	= Makai::Type::Subclass<T, AWorldMaterial>;
 }
 
 #endif // MAKAILIB_GRAPH_MATERIAL_MATERIALS_H

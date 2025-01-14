@@ -6,12 +6,12 @@
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
 	/// @brief Action-based player.
-	struct ActionPlayer: IUpdateable, IPlayable {
+	struct AActionPlayer: AUpdateable, IPlayable {
 		/// @brief Program to perform.
 		using Program = Co::Generator<usize>;
 
 		/// @brief Empty constructor.
-		ActionPlayer() {isFinished = true;}
+		AActionPlayer() {isFinished = true;}
 
 		/// @brief Program to perform. Must be implemented.
 		/// @return Program.
@@ -31,7 +31,7 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Starts the dialog.
 		/// @return Reference to self.
-		ActionPlayer& start() override final {
+		AActionPlayer& start() override final {
 			dialog		= script();
 			isFinished	= false;
 			counter		= 0;
@@ -41,21 +41,21 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Sets the autoplay state.
 		/// @param state Autoplay state.
 		/// @return Reference to self.
-		ActionPlayer& setAutoplay(bool const state) {autoplay = state; return *this;	}
+		AActionPlayer& setAutoplay(bool const state) {autoplay = state; return *this;	}
 
 		/// @brief Stops the dialog.
 		/// @return Reference to self.
-		ActionPlayer& stop()	override final		{isFinished = true; return *this;	}
+		AActionPlayer& stop()	override final		{isFinished = true; return *this;	}
 		/// @brief Unpauses the dialog.
 		/// @return Reference to self.
-		ActionPlayer& play()	override final		{paused = false; return *this;		}
+		AActionPlayer& play()	override final		{paused = false; return *this;		}
 		/// @brief Pauses the dialog.
 		/// @return Reference to self.
-		ActionPlayer& pause()	override final		{paused = true; return *this;		}
+		AActionPlayer& pause()	override final		{paused = true; return *this;		}
 
 		/// @brief Processes the dialog.
 		/// @return Reference to self.
-		ActionPlayer& next() {
+		AActionPlayer& next() {
 			if (isFinished) return;
 			counter = dialog.next();
 			if (!dialog) isFinished = true;

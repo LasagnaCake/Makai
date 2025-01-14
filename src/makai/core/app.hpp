@@ -65,7 +65,7 @@ namespace Makai {
 	struct App;
 
 	/// @brief App-specific periodic event.
-	struct IUpdateable: CTL::Ex::IPeriodic<App, float, App&> {
+	struct AUpdateable: CTL::Ex::APeriodic<App, float, App&> {
 		/// @brief Called every application logic cycle. Must be implemented.
 		virtual void onUpdate(float delta, App& app) = 0;
 	};
@@ -198,7 +198,7 @@ namespace Makai {
 		/// @brief Happens after the screen is rendered, after the frame buffer is drawn to the screen.
 		virtual void onDrawEnd()		{}
 
-		/// @brief Gets called every logic cycle, along with all `IUpdateable`s.
+		/// @brief Gets called every logic cycle, along with all `AUpdateable`s.
 		/// @param delta Seconds between each logic cycle.
 		virtual void onUpdate(float delta)	{}
 

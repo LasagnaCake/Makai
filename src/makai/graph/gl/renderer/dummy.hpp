@@ -4,7 +4,7 @@
 #include "drawable.hpp"
 
 namespace Makai::Graph {
-	class Dummy: public IDrawable {
+	class Dummy: public ADrawable {
 	public:
 		/// @brief Constructs the dummy.
 		/// @param layers Layers to insert the dummy in.

@@ -221,14 +221,14 @@ inline JSON::JSONData toDefinition(
 }
 
 Renderable::Renderable(usize const layer, bool const manual):
-IGraphic(layer, manual), ReferenceHolder(triangles, locked) {
+AGraphic(layer, manual), ReferenceHolder(triangles, locked) {
 }
 
 Renderable::Renderable(
 	List<Triangle*>&& triangles,
 	usize const layer,
 	bool const manual
-): IGraphic(layer, manual), ReferenceHolder(triangles, locked) {
+): AGraphic(layer, manual), ReferenceHolder(triangles, locked) {
 	this->triangles = triangles;
 }
 
@@ -237,7 +237,7 @@ Renderable::Renderable(
 	usize const count,
 	usize const layer,
 	bool const manual
-): IGraphic(layer, manual), ReferenceHolder(triangles, locked) {
+): AGraphic(layer, manual), ReferenceHolder(triangles, locked) {
 	extend(vertices, count);
 }
 

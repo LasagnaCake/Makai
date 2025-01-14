@@ -174,14 +174,14 @@ void App::run() {
 	appState = App::AppState::AS_OPENING;
 	// The timer process
 	auto timerFunc	= [&](float delta)-> void {
-		ITweenPeriodic::process(1);
-		ITimerPeriodic::process(1);
+		ATweenPeriodic::process(1);
+		ATimerPeriodic::process(1);
 		CTL::Ex::Collision::C2D::Server::process();
 	};
 	// The logical process
 	auto logicFunc	= [&](float delta)-> void {
 		onUpdate(delta);
-		IUpdateable::process(delta, *this);
+		AUpdateable::process(delta, *this);
 	};
 	// Clear screen
 	Makai::Graph::API::setClearColor(background);

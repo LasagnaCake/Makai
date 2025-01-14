@@ -5,7 +5,7 @@
 
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
-	using Graphic = Instance<Graph::IGraphic>;
+	using Graphic = Instance<Graph::AGraphic>;
 
 	/// @brief Dialog box text content.
 	struct Content {

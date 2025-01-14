@@ -7,17 +7,17 @@
 
 CTL_EX_NAMESPACE_BEGIN
 
-class Timer;
+class ATimer;
 
-/// @brief Timer-specific periodic event.
-using ITimerPeriodic = IPeriodic<Timer, usize>;
+/// @brief ATimer-specific periodic event.
+using ATimerPeriodic = APeriodic<ATimer, usize>;
 
-/// @brief Timer-based periodic event.
-class Timer:
-	public ITimerPeriodic,
+/// @brief ATimer-based periodic event.
+class ATimer:
+	public ATimerPeriodic,
 	public IPlayable {
 public:
-	using ITimerPeriodic::ITimerPeriodic;
+	using ATimerPeriodic::ATimerPeriodic;
 
 	/// @brief Whether the current timer is paused.
 	bool paused	= false;
@@ -35,13 +35,13 @@ public:
 	/// @param delay Time between signal events.
 	/// @param repeat Whether to repeatedly fire the event.
 	/// @param manual Whether the timer should be manually updated.
-	Timer(usize const delay, bool const repeat = false, bool const manual = false)
-	: ITimerPeriodic(manual), repeat(repeat), delay(delay) {
+	ATimer(usize const delay, bool const repeat = false, bool const manual = false)
+	: ATimerPeriodic(manual), repeat(repeat), delay(delay) {
 	}
 
 	/// @brief Move constructor.
-	/// @param other `Timer` to move.
-	Timer(Timer&& other):
+	/// @param other `ATimer` to move.
+	ATimer(ATimer&& other):
 	paused(CTL::move(other.paused)),
 	repeat(CTL::move(other.repeat)),
 	delay(CTL::move(other.delay)),
@@ -51,10 +51,10 @@ public:
 	}
 
 	/// @brief Copy constructor (deleted).
-	Timer(Timer const& other) = delete;
+	ATimer(ATimer const& other) = delete;
 
 	/// @brief Virtual destructor.
-	virtual ~Timer() {}
+	virtual ~ATimer() {}
 
 	/// @brief Event to fire.
 	virtual void onEvent() = 0;
@@ -82,7 +82,7 @@ public:
 
 	/// @brief Resets the internal counter to the start.
 	/// @return Reference to self.
-	Timer& reset() {
+	ATimer& reset() {
 		counter = 0;
 		return (*this);
 	}
@@ -90,14 +90,14 @@ public:
 	/// @brief Starts the timer from the beginning, with a given delay.
 	/// @brief time Time between signal events.
 	/// @return Reference to self.
-	Timer& start(usize const time) {
+	ATimer& start(usize const time) {
 		delay = time;
 		return start();
 	}
 
 	/// @brief Starts the timer from the beginning.
 	/// @return Reference to self.
-	Timer& start() override final {
+	ATimer& start() override final {
 		counter = 0;
 		isFinished = false;
 		return (*this);
@@ -105,21 +105,21 @@ public:
 
 	/// @brief Stops the timer.
 	/// @return Reference to self.
-	Timer& stop() override final {
+	ATimer& stop() override final {
 		isFinished = true;
 		return (*this);
 	}
 
 	/// @brief Unpauses the timer.
 	/// @return Reference to self.
-	Timer& play() override final {
+	ATimer& play() override final {
 		paused = true;
 		return (*this);
 	}
 
 	/// @brief Pauses the timer.
 	/// @return Reference to self.
-	Timer& pause() override final {
+	ATimer& pause() override final {
 		paused = false;
 		return (*this);
 	}
@@ -135,9 +135,9 @@ private:
 	usize counter = 0;
 };
 
-/// @brief Timer with a dynamic event.
-struct DynamicTimer: Timer {
-	using Timer::Timer;
+/// @brief ATimer with a dynamic event.
+struct DynamicTimer: ATimer {
+	using ATimer::ATimer;
 
 	Functor<void(void)> event;
 

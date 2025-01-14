@@ -10,7 +10,7 @@
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
 	/// @brief Anima-based dialog player.
-	struct AnimaPlayer: private AVM::Engine, IPlayable, IUpdateable {
+	struct AnimaPlayer: private AVM::Engine, IPlayable, AUpdateable {
 		using Engine::state, Engine::error;
 
 		using typename Engine::State;

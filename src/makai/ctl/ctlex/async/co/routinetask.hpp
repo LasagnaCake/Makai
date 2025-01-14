@@ -10,7 +10,7 @@ CTL_EX_NAMESPACE_BEGIN
 /// @brief Cooperative routine facilities.
 namespace Co {
 	/// @brief Specialized coroutine task interface.
-	struct IRoutineTask: IPlayable {
+	struct ARoutineTask: IPlayable {
 		/// @brief Routine state.
 		enum class State {
 			RS_READY,
@@ -22,15 +22,15 @@ namespace Co {
 		using PromiseType = CTL::Co::Promise<usize, true>;
 
 		/// @brief Destructor.
-		virtual ~IRoutineTask() {}
+		virtual ~ARoutineTask() {}
 
 		/// @brief Empty constructor.
-		IRoutineTask() {}
+		ARoutineTask() {}
 
 		/// @brief Copy constructor (deleted).
-		IRoutineTask(IRoutineTask const&)	= delete;
+		ARoutineTask(ARoutineTask const&)	= delete;
 		/// @brief Move constructor (deleted).
-		IRoutineTask(IRoutineTask&&)		= delete;
+		ARoutineTask(ARoutineTask&&)		= delete;
 
 		/// @brief Processes the assiged task.
 		void process() {
@@ -53,7 +53,7 @@ namespace Co {
 
 		/// @brief Starts the routine.
 		/// @return Reference to self.
-		IRoutineTask& start() override final {
+		ARoutineTask& start() override final {
 			prommy = task();
 			taskState = State::RS_RUNNING;
 			isFinished = false;
@@ -62,21 +62,21 @@ namespace Co {
 
 		/// @brief Unpauses the routine.
 		/// @return Reference to self.
-		IRoutineTask& play() override final {
+		ARoutineTask& play() override final {
 			paused = false;
 			return *this;
 		}
 
 		/// @brief Pauses the routine.
 		/// @return Reference to self.
-		IRoutineTask& pause() override final {
+		ARoutineTask& pause() override final {
 			paused = true;
 			return *this;
 		}
 
 		/// @brief Stops the routine.
 		/// @return Reference to self.
-		IRoutineTask& stop() override final {
+		ARoutineTask& stop() override final {
 			taskState = State::RS_FINISHED;
 			isFinished = true;
 			return *this;
@@ -84,7 +84,7 @@ namespace Co {
 
 		/// @brief Stops the routine, while waiting for the underlying task to end processing.
 		/// @return Reference to self.
-		IRoutineTask& finalize() {
+		ARoutineTask& finalize() {
 			prommy.await();
 			return stop();
 		}

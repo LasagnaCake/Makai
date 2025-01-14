@@ -7,7 +7,7 @@
 /// @brief Audio facilities.
 namespace Makai::Audio {
 	/// @brief Music source.
-	class Music: public ISource {
+	class Music: public ASource {
 	public:
 		/// @brief File metadata.
 		struct Metadata {
@@ -17,7 +17,7 @@ namespace Makai::Audio {
 			String	copyright;
 		};
 
-		using ISource::ISource;
+		using ASource::ASource;
 
 		/// @brief Destructor.
 		virtual ~Music() final;

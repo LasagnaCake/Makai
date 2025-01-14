@@ -21,7 +21,7 @@ template <Type::Ex::Tween::Tweenable T = float>
 class Tween;
 
 /// @brief Tween-specific periodic event interface.
-using ITweenPeriodic = IPeriodic<Tween<>, usize>;
+using ATweenPeriodic = APeriodic<Tween<>, usize>;
 
 /// @brief Stepable tween interface.
 struct IStepable {
@@ -62,7 +62,7 @@ private:
 /// @tparam T Value type.
 template <Type::Ex::Tween::Tweenable T>
 class Tween:
-	public ITweenPeriodic,
+	public ATweenPeriodic,
 	public ITweenPlayable,
 	public IValue<T>,
 	public IStepable {
@@ -70,7 +70,7 @@ public:
 	/// @brief Value type.
 	typedef T DataType;
 
-	using ITweenPeriodic::ITweenPeriodic;
+	using ATweenPeriodic::ATweenPeriodic;
 
 	/// @brief Easing function to use.
 	Math::Ease::Mode easeMode = Math::Ease::linear;
@@ -92,7 +92,7 @@ public:
 		Math::Ease::Mode const& easeMode = Math::Ease::linear,
 		bool const manual = false
 	)
-	: ITweenPeriodic(manual) {
+	: ATweenPeriodic(manual) {
 		setInterpolation(from, to, step, easeMode);
 	}
 
@@ -323,7 +323,7 @@ private:
 /// @tparam T Value type.
 template<Type::Ex::Tween::Tweenable T = float>
 class TweenChain:
-	public ITweenPeriodic,
+	public ATweenPeriodic,
 	public ITweenPlayable,
 	public IValue<T>,
 	public IStageable {
@@ -338,13 +338,13 @@ public:
 	/// @brief Tween stage argument list type.
 	typedef Arguments<Stage>		StageArguments;
 
-	using ITweenPeriodic::ITweenPeriodic;
+	using ATweenPeriodic::ATweenPeriodic;
 
 	/// @brief Constructs the tween with a set of stages.
 	/// @param stages Stages to interpolate between.
 	/// @param manual Whether the tween is processed manually. By default, it is `false`.
 	TweenChain(StageList const& stages, bool const manual = false)
-	: ITweenPeriodic(manual) {
+	: ATweenPeriodic(manual) {
 		setInterpolation(stages);
 	}
 
@@ -352,7 +352,7 @@ public:
 	/// @param stages Stages to interpolate between.
 	/// @param manual Whether the tween is processed manually. By default, it is `false`.
 	TweenChain(StageArguments const& stages, bool const manual = false)
-	: ITweenPeriodic(manual) {
+	: ATweenPeriodic(manual) {
 		setInterpolation(stages);
 	}
 

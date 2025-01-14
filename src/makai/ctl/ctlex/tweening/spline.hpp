@@ -14,7 +14,7 @@ namespace Spline {
 	/// @brief Spline interpolator interface.
 	/// @tparam T Value type.
 	template<CTL::Type::Math::Operatable T>
-	struct Splinoid {
+	struct ISplinoid {
 		typedef T DataType;
 
 		constexpr virtual T interpolate(float const by) const = 0;
@@ -24,7 +24,7 @@ namespace Spline {
 /// @brief Spline-specific type constraints.
 namespace Type::Ex::Spline {
 	template<class T>
-	concept Spline = CTL::Type::Subclass<T, CTL::Ex::Spline::Splinoid<typename T::DataType>>;
+	concept Spline = CTL::Type::Subclass<T, CTL::Ex::Spline::ISplinoid<typename T::DataType>>;
 }
 
 /// @brief Spline facilities.
@@ -32,7 +32,7 @@ namespace Spline {
 	/// @brief Linear spline interpolator.
 	/// @tparam T Value type.
 	template<class T>
-	class Linear: public Splinoid<T> {
+	class Linear: public ISplinoid<T> {
 	public:
 		/// @brief Points to interpolate between.
 		List<T> points;
@@ -93,7 +93,7 @@ namespace Spline {
 		/// @tparam T Value type.
 		/// @tparam N Section size (spline type).
 		template<CTL::Type::Math::Operatable T, usize N>
-		class Spline: public Splinoid<T> {
+		class Spline: public ISplinoid<T> {
 		public:
 			/// @brief Empty constructor.
 			constexpr Spline() {}
@@ -202,7 +202,7 @@ namespace Spline {
 		/// @brief Hermite spline interpolator.
 		/// @tparam T Value type.
 		template<CTL::Type::Math::Operatable T>
-		class Spline: public Splinoid<T> {
+		class Spline: public ISplinoid<T> {
 		public:
 			/// @brief Empty constructor.
 			constexpr Spline() {}
