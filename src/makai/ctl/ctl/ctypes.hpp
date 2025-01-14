@@ -192,7 +192,7 @@ using hardptr = ptr<T>;
 /// @brief
 ///		Syntatic sugar for `T*`.
 ///		Hints to the programmer that the function
-///		takes ownership of the data pointed to.
+///		does not take ownership of the data pointed to.
 /// @tparam T Pointed type.
 template<class T>
 using weakptr = ptr<T>;
