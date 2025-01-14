@@ -1,12 +1,12 @@
-#ifndef MAKAILIB_EX_GAME_ANIMA_COMPILER_H
-#define MAKAILIB_EX_GAME_ANIMA_COMPILER_H
+#ifndef MAKAILIB_EX_ANIMA_COMPILER_H
+#define MAKAILIB_EX_ANIMA_COMPILER_H
 
 #include <makai/makai.hpp>
 
 #include "bytecode.hpp"
 
 /// @brief Anima Virtual Machine.
-namespace Makai::Ex::Game::AVM::Compiler {
+namespace Makai::Ex::AVM::Compiler {
 	/// @brief Regex matches used for processing.
 	namespace RegexMatches {
 		/// @brief Matches any character.

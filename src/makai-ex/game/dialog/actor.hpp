@@ -1,5 +1,5 @@
-#ifndef MAKAILIB_EX_DIALOG_ACTOR_H
-#define MAKAILIB_EX_DIALOG_ACTOR_H
+#ifndef MAKAILIB_EX_GAME_DIALOG_ACTOR_H
+#define MAKAILIB_EX_GAME_DIALOG_ACTOR_H
 
 #include <makai/makai.hpp>
 

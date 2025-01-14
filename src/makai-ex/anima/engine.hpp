@@ -1,12 +1,12 @@
-#ifndef MAKAILIB_EX_GAME_ANIMA_ENGINE_H
-#define MAKAILIB_EX_GAME_ANIMA_ENGINE_H
+#ifndef MAKAILIB_EX_ANIMA_ENGINE_H
+#define MAKAILIB_EX_ANIMA_ENGINE_H
 
 #include <makai/makai.hpp>
 
 #include "bytecode.hpp"
 
 /// @brief Anima Virtual Machine.
-namespace Makai::Ex::Game::AVM {
+namespace Makai::Ex::AVM {
 	/// @brief Anima engine.
 	struct Engine {
 		/// @brief Function parameters.

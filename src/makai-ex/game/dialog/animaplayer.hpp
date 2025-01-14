@@ -1,9 +1,9 @@
-#ifndef MAKAILIB_EX_HAME_ANIMAPLAYER_H
-#define MAKAILIB_EX_HAME_ANIMAPLAYER_H
+#ifndef MAKAILIB_EX_GAME_DIALOG_ANIMAPLAYER_H
+#define MAKAILIB_EX_GAME_DIALOG_ANIMAPLAYER_H
 
 #include <makai/makai.hpp>
 
-#include "../anima/anima.hpp"
+#include "../../anima/anima.hpp"
 
 #include "scene.hpp"
 

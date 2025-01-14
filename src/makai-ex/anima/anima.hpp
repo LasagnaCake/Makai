@@ -1,5 +1,5 @@
-#ifndef MAKAILIB_EX_GAME_ANIMA_H
-#define MAKAILIB_EX_GAME_ANIMA_H
+#ifndef MAKAILIB_EX_ANIMA_H
+#define MAKAILIB_EX_ANIMA_H
 
 #include "bytecode.hpp"
 #include "compiler.hpp"

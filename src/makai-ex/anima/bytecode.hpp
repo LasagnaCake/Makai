@@ -1,10 +1,10 @@
-#ifndef MAKAILIB_EX_GAME_ANIMA_BYTECODE_H
-#define MAKAILIB_EX_GAME_ANIMA_BYTECODE_H
+#ifndef MAKAILIB_EX_ANIMA_BYTECODE_H
+#define MAKAILIB_EX_ANIMA_BYTECODE_H
 
 #include <makai/makai.hpp>
 
 /// @brief Anima Virtual Machine.
-namespace Makai::Ex::Game::AVM {
+namespace Makai::Ex::AVM {
 	/// @brief Underlying code binary representation.
 	using Binary		= List<uint16>;
 	/// @brief 64-bit operand list.
