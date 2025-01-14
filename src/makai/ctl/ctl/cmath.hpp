@@ -11,19 +11,19 @@ CTL_NAMESPACE_BEGIN
 namespace Math {
 
 template<usize B>
-struct IEEFloat;
+struct IEEEFloat;
 
-/// @brief 32-bit IEE float representation.
+/// @brief 32-bit IEEE float representation.
 template<>
-struct IEEFloat<32> {
+struct IEEEFloat<32> {
 	uint32 sign:	1;
 	int32 mantissa:	8;
 	int32 exponent:	23;
 };
 
-/// @brief 64-bit IEE float representation.
+/// @brief 64-bit IEEE float representation.
 template<>
-struct IEEFloat<64> {
+struct IEEEFloat<64> {
 	uint64 sign:	1;
 	int64 mantissa:	11;
 	int64 exponent:	53;
