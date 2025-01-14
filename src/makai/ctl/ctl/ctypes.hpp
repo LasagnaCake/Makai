@@ -176,11 +176,25 @@ typedef decltype(nullptr) nulltype;
 template<class T>
 using As = T;
 
-
+/// @brief Syntatic sugar for `T*`.
+/// @tparam T Pointed type.
 template<class T>
-using hardptr = T*;
+using ptr = T*;
 
+/// @brief
+///		Syntatic sugar for `T*`.
+///		Hints to the programmer that the function
+///		takes ownership of the data pointed to.
+/// @tparam T Pointed type.
 template<class T>
-using weakptr = T*;
+using hardptr = ptr<T>;
+
+/// @brief
+///		Syntatic sugar for `T*`.
+///		Hints to the programmer that the function
+///		takes ownership of the data pointed to.
+/// @tparam T Pointed type.
+template<class T>
+using weakptr = ptr<T>;
 
 #endif // CTL_EXTENDED_TYPES_H
