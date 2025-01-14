@@ -176,4 +176,11 @@ typedef decltype(nullptr) nulltype;
 template<class T>
 using As = T;
 
+
+template<class T>
+using hardptr = T*;
+
+template<class T>
+using weakptr = T*;
+
 #endif // CTL_EXTENDED_TYPES_H
