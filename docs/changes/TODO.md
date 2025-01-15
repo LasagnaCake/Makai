@@ -15,16 +15,12 @@
 
 ## Game extension stuff
 - [ ] Curvy/Bent lasers
-- [ ] File format implementation (These need better names):
-- - For more info, see the [specifications](../specifications) folder
-- - [ ] Animation keyframes definition
-- - [ ] Danmaku stage layout definition
-- - - Possibly via combining 2nd & 3rd implementations
 - [ ] Other game types
 - [ ] More "multi-purpose" game classes
 
 ## Future
 
+- [ ] See [ideas.md](ideas.md)
 - [ ] (Maybe) replace JSON to other specification
 - - For the *custom file formats*, that is
 - - See [File Format Alternatives Proposal](../../docs/changes/AltFormats.md) for more informaion
