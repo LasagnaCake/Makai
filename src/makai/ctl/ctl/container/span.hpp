@@ -101,18 +101,17 @@ struct Span:
 	/// @param other Object to view from.
 	template<Type::Container::Ranged<IteratorType, ConstIteratorType> T>
 	constexpr explicit Span(T const& other)
-	requires requires {
-		requires !Type::Derived<T, SelfType>;
-	}: Span(other.begin(), other.end())	{}
+	requires (!Type::Derived<T, SelfType>):
+		Span(other.begin(), other.end())	{}
 	/// @brief Constructs a `Span` from a bounded object.
 	/// @tparam T Bounded object type.
 	/// @param other Object to view from.
 	template<Type::Container::Bounded<PointerType, SizeType> T>
 	constexpr explicit Span(T const& other)
-	requires requires {
-		requires !Type::Derived<T, SelfType>;
-		requires !Type::Container::Ranged<T, IteratorType, ConstIteratorType>;
-	}: Span(other.data(), other.size())	{}
+	requires (
+		!Type::Derived<T, SelfType>
+	&&	!Type::Container::Ranged<T, IteratorType, ConstIteratorType>
+	): Span(other.data(), other.size())	{}
 
 	/// @brief Returns the value of the element at a given index.
 	/// @param index Index of the element.
