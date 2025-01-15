@@ -82,8 +82,8 @@ namespace Base {
 ///			either via releasing the pointer to it, or when a strong pointer destroys it.
 template <Type::Container::Pointable T, bool W>
 class Pointer:
-	private Base::ReferenceCounter<void*>,
-	Derived<Base::ReferenceCounter<void*>>,
+	private Base::ReferenceCounter<pointer>,
+	Derived<Base::ReferenceCounter<pointer>>,
 	Typed<T>,
 	SelfIdentified<Pointer<T, W>>,
 	Ordered {
@@ -143,7 +143,7 @@ public:
 
 	/// @brief Copy constructor (raw pointer).
 	/// @param obj Pointer to bind.
-	constexpr Pointer(PointerType const& obj) {bind(obj);}
+	constexpr Pointer(owner<DataType> const& obj) {bind(obj);}
 
 	/// @brief Destructor.
 	constexpr ~Pointer() {if (exists()) unbind();}
@@ -158,7 +158,7 @@ public:
 	/// @brief Sets the pointer as a reference to an object.
 	/// @param obj Object to reference.
 	/// @return Reference to self.
-	constexpr SelfType& bind(PointerType const& obj) {
+	constexpr SelfType& bind(owner<DataType> const& obj) {
 		if (ref == obj) return (*this);
 		unbind();
 		if (!obj) return (*this);
@@ -224,18 +224,18 @@ public:
 	/// @brief Detaches a given object from the reference system.
 	/// @param ptr Object to detach.
 	/// @note Requires smart pointer type to be strong.
-	constexpr static void detach(PointerType const& ptr)
+	constexpr static void detach(ref<DataType> const& ptr)
 	requires (!WEAK) {
 		if (isBound(ptr))
-			database[(void*)ptr] = {false, 0};
+			database[(pointer)ptr] = {false, 0};
 	}
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether the object exists.
 	constexpr bool exists() const {
 		if (!ref) return false;
-		CTL_PTR_IF_STRONG	return (database[(void*)ref].count > 0);
-		else				return (database[(void*)ref].exists);
+		CTL_PTR_IF_STRONG	return (database[(pointer)ref].count > 0);
+		else				return (database[(pointer)ref].exists);
 	}
 
 	/// @brief Returns whether this pointer is the sole owner of the bound object.
@@ -267,18 +267,18 @@ public:
 	constexpr Pointer<DataType, true>	asWeak() const		{return	raw();								}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
-	constexpr PointerType				raw() const			{return	exists() ? getPointer() : nullptr;	}
-//	constexpr PointerType				raw() const			{return	getPointer();						}
-//	constexpr ConstPointerType			raw() const			{return	getPointer();						}
+	constexpr ref<DataType>				raw() const			{return	exists() ? getPointer() : nullptr;	}
+//	constexpr ref<DataType>				raw() const			{return	getPointer();						}
+//	constexpr ref<ConstantType>			raw() const			{return	getPointer();						}
 	
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	/// @note Conversion is explicit if smart pointer type is strong.
-	constexpr explicit(!WEAK) operator PointerType const() const	{return raw();		}
+	constexpr explicit(!WEAK) operator ref<DataType> const() const	{return raw();		}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	/// @note Conversion is explicit if smart pointer type is strong.
-	constexpr explicit(!WEAK) operator PointerType()				{return raw();		}
+	constexpr explicit(!WEAK) operator ref<DataType>()				{return raw();		}
 
 	/// @brief Returns whether the bound object exists.
 	/// @return Whether the bound object exists.
@@ -347,8 +347,8 @@ private:
 	constexpr void attach(PointerType const& p) {
 		if (!p) return;
 		ref = p;
-		database[(void*)p].exists = true;
-		CTL_PTR_IF_STRONG database[(void*)p].count++;
+		database[(pointer)p].exists = true;
+		CTL_PTR_IF_STRONG database[(pointer)p].count++;
 	}
 
 	friend SelfType;

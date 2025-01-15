@@ -1156,7 +1156,7 @@ private:
 		count		= 0;
 	}
 
-	constexpr static void memdestruct(PointerType const& p, SizeType const sz) {
+	constexpr static void memdestruct(ref<DataType> const& p, SizeType const sz) {
 		if (!(sz && p)) return;
 		if constexpr (!Type::Standard<DataType>) {
 			for (auto i = p; i != (p+sz); ++i)
@@ -1164,17 +1164,17 @@ private:
 		}
 	}
 
-	constexpr void memdestroy(PointerType const& p, SizeType const sz) {
+	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz) {
 		if (!(sz && p)) return;
 		memdestruct(p, sz);
 		alloc.deallocate(p);
 	}
 
-	constexpr DataType* memcreate(SizeType const sz) {
+	constexpr owner<DataType> memcreate(SizeType const sz) {
 		return alloc.allocate(sz);
 	}
 
-	constexpr void memresize(DataType*& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
+	constexpr void memresize(ref<DataType>& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
 		if constexpr(Type::Standard<DataType>)
 			alloc.resize(data, sz);
 		else {
@@ -1185,7 +1185,7 @@ private:
 		}
 	}
 
-	constexpr static void copy(ConstantType* src, DataType* dst, SizeType count) {
+	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
 		if constexpr (Type::Standard<DataType>)
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
@@ -1258,7 +1258,7 @@ private:
 	/// @brief Element count.
 	SizeType		count		= 0;
 	/// @brief Underlying array.
-	DataType*		contents	= nullptr;
+	owner<DataType>	contents	= nullptr;
 
 	AllocatorType	alloc;
 };

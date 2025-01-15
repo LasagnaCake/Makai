@@ -73,25 +73,25 @@ struct Thread:
 	struct ExecutionToken {
 		/// @brief Binds a token to an execution source.
 		/// @param source Source to bind to.
-		constexpr ExecutionToken(ExecutionSource*&& source):		source(source)	{}
+		constexpr ExecutionToken(ref<ExecutionSource>&& source):	source(source)	{}
 		/// @brief Binds a token to an execution source.
 		/// @param source Source to bind to.
 		constexpr ExecutionToken(ExecutionSource& source):			source(&source)	{}
 		/// @brief Deleted. 
-		constexpr ExecutionToken(ExecutionSource* const source)	= delete;
+		constexpr ExecutionToken(ref<ExecutionSource> const source)	= delete;
 		/// @brief Deleted.
 		constexpr ExecutionToken(ExecutionSource&& source)			= delete;
 
 		/// @brief Returns the execution source bound to.
 		/// @return Pointer to execution source bound to.
-		constexpr ExecutionSource* operator->()	{return source;		}
+		constexpr ref<ExecutionSource> operator->()	{return source;		}
 		/// @brief Returns the execution source bound to.
 		/// @return Reference to execution source bound to.
-		constexpr ExecutionSource& operator*()	{return *source;	}
+		constexpr ExecutionSource& operator*()		{return *source;	}
 
 	private:
 		/// @brief Execution source associated with the token.
-		ExecutionSource* const source;
+		ref<ExecutionSource> const source;
 	};
 
 	/// @brief Unique thread identifier.

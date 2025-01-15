@@ -19,8 +19,8 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize hash(void const* data, usize sz, usize seed) {
-			char const* byte = static_cast<char const*>(data);
+		constexpr usize hash(ref<void const> data, usize sz, usize seed) {
+			ref<char const> byte = static_cast<ref<char const>>(data);
 			for (; sz; --sz) {
 				seed *= 131;
 				seed += *byte++;
@@ -58,8 +58,8 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize hash(void const* const data, usize sz, usize seed = offset()) {
-			const char* byte = static_cast<char const*>(data);
+		constexpr usize hash(ref<void const> const data, usize sz, usize seed = offset()) {
+			ref<char const> byte = static_cast<ref<char const>>(data);
 			for (; sz; --sz) {
 				seed ^= static_cast<usize>(*byte++);
 				seed *= prime();
@@ -100,18 +100,18 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize hash64(void const* data, usize sz, usize seed = 0) {
+		constexpr usize hash64(ref<void const> data, usize sz, usize seed = 0) {
 			constexpr usize	m = 0xc6a4a7935bd1e995ull;
 			constexpr int	r = 47;
 			usize s		= sz;
 			usize hash	= seed;
-			usize const* d1 = static_cast<usize const*>(data);
-			usize const* end = d1 + (sz/8);
+			ref<usize const> d1 = static_cast<ref<usize const>>(data);
+			ref<usize const> end = d1 + (sz/8);
 			while(data != end) {
 				usize k = *d1++;
 				mix(hash, k, m, r);
 			}
-			byte const* d2 = (byte const*)d2;
+			ref<byte const> d2 = (ref<byte const>)d2;
 			usize t = 0;
 			switch(sz & 7) {
 			case 7:		t ^= static_cast<usize>(d2[6]) << 48;
@@ -134,12 +134,12 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize hash32(void const* data, usize sz, usize seed = 0) {
+		constexpr usize hash32(ref<void const> data, usize sz, usize seed = 0) {
 			constexpr usize	m = 0x5bd1e995;
 			constexpr int	r = 24;
 			usize s		= sz;
 			usize hash	= seed;
-			byte const* dt = static_cast<byte const*>(data);
+			ref<byte const> dt = static_cast<ref<byte const>>(data);
 			while(sz >= 4) {
 				usize k = *(usize*)dt;
 				mix(hash, k, m, r);
@@ -160,12 +160,12 @@ namespace Impl::Hash {
 		}
 
 		namespace Impl {
-			constexpr usize part(char const* const data, usize const sz, usize const i) {
+			constexpr usize part(ref<char const> const data, usize const sz, usize const i) {
 				if (i > 7) __builtin_unreachable();
 				return ((i < sz) ? (usize(data[i]) << i * 8) : 0);
 			}
 
-			constexpr usize combine64(char const* const data, usize const sz) {
+			constexpr usize combine64(ref<char const> const data, usize const sz) {
 				return (
 					part(data, sz, 0)
 				|	part(data, sz, 1)
@@ -178,7 +178,7 @@ namespace Impl::Hash {
 				);
 			}
 
-			constexpr usize combine32(char const* const data, usize const sz) {
+			constexpr usize combine32(ref<char const> const data, usize const sz) {
 				return (
 					part(data, sz, 0)
 				|	part(data, sz, 1)
@@ -187,7 +187,7 @@ namespace Impl::Hash {
 				);
 			}
 
-			constexpr usize combine(char const* const data, usize const sz) {
+			constexpr usize combine(ref<char const> const data, usize const sz) {
 				if constexpr (sizeof(usize) == sizeof(uint64))
 					return combine64(data, sz);
 				else if constexpr (sizeof(usize) == sizeof(uint32))
@@ -196,7 +196,7 @@ namespace Impl::Hash {
 			}
 
 			constexpr usize constHash(
-				char const* data,
+				ref<char const> data,
 				usize sz,
 				usize seed,
 				As<usize[2]> const& m,
@@ -225,24 +225,7 @@ namespace Impl::Hash {
 		/// @param sz Size of data to hash.
 		/// @param seed Starting seed.
 		/// @return Resulting hash.
-		constexpr usize constHash64(char const* data, usize sz, usize seed = 0) {
-			/*constexpr usize	m = 0xc6a4a7935bd1e995ull;
-			constexpr int	r = 47;
-			usize s		= sz;
-			usize hash	= seed;
-			char const* d1 = data;
-			while (seed >= sizeof(usize)) {
-				usize k = Impl::combine64(d1, sizeof(usize));
-				mix(hash, k, m, r);
-				d1 += sizeof(usize);
-				sz -= sizeof(usize);
-			}
-			char const* d2 = d1;
-			usize t = Impl::combine64(d2, sz);
-			mix(hash, t, m, r);
-			mix(hash, s, m, r);
-			shuffle(hash, m, r);
-			return hash;*/
+		constexpr usize constHash64(ref<char const> data, usize sz, usize seed = 0) {
 			return Impl::constHash(data, sz, seed, {0xc6a4a7935bd1e995ull, 0xc6a4a7935bd1e995ull}, {47, 47});
 		}
 	}
@@ -252,7 +235,7 @@ namespace Impl::Hash {
 	/// @param sz Size of data to hash.
 	/// @param seed Starting seed.
 	/// @return Resulting hash.
-	constexpr usize hash(void const* data, usize sz, usize seed = 0) {
+	constexpr usize hash(ref<void const> data, usize sz, usize seed = 0) {
 		if constexpr (sizeof(usize) == sizeof(uint64))	
 			return Murmur2::hash64(data, sz, seed);
 		else if constexpr (sizeof(usize) == sizeof(uint32))
@@ -265,7 +248,7 @@ namespace Impl::Hash {
 	/// @param sz Size of data to hash.
 	/// @param seed Starting seed.
 	/// @return Resulting hash.
-	constexpr usize constHash(char const* const data, usize const sz, usize seed = 0) {
+	constexpr usize constHash(ref<char const> const data, usize const sz, usize seed = 0) {
 		if constexpr (sizeof(usize) == sizeof(uint64))	
 			return Murmur2::constHash64(data, sz, seed);
 		else __builtin_unreachable();
@@ -321,24 +304,24 @@ struct Hasher {
 	/// @param ptr pointer to hash.
 	/// @return Resulting hash.
 	template<class T>
-	constexpr static usize hashPointer(T* const& ptr)	{return bitcast<usize>(ptr);	}
+	constexpr static usize hashPointer(ref<T> const ptr)	{return bitcast<usize>(ptr);	}
 
 	/// @brief Generates the hash for a given integer.
 	/// @tparam T Integer type.
 	/// @param value Integer to hash.
 	/// @return Resulting hash.
 	template <Type::Integer T>
-	constexpr static usize hash(T const& value)		{return value;						}
+	constexpr static usize hash(T const& value)				{return value;						}
 
 	/// @brief Generates the hash for a given floating point number.
 	/// @param value Number to hash.
 	/// @return Resulting hash.
-	constexpr static usize hash(float const value)	{return bitcast<uint32>(value);		}
+	constexpr static usize hash(float const value)			{return bitcast<uint32>(value);		}
 	
 	/// @brief Generates the hash for a given floating point number.
 	/// @param value Number to hash.
 	/// @return Resulting hash.
-	constexpr static usize hash(double const value)	{return bitcast<uint64>(value);		}
+	constexpr static usize hash(double const value)			{return bitcast<uint64>(value);		}
 
 	/// @brief Generates the hash for a given pointer.
 	/// @tparam T Convertible type.
@@ -360,7 +343,7 @@ struct Hasher {
 	/// @param size Size of range.
 	/// @return Resulting hash.
 	template<class T>
-	constexpr static usize hash(T const* const data, usize const size) {
+	constexpr static usize hash(ref<T const> const data, usize const size) {
 		return Impl::Hash::hash(data, size * sizeof(T), size);
 	}
 
@@ -391,6 +374,19 @@ struct Hasher {
 	constexpr static usize hash(T const& value)
 	requires (!Type::Iteratable<T>) {
 		return hash(value.data(), value.size());
+	}
+
+	
+	/// @brief Generates the hash for a given bounded type.
+	/// @tparam T Bounded type.
+	/// @param value Ranged object to hash.
+	/// @return Resulting hash.
+	template <Type::Class T>
+	constexpr static usize hash(T const& value)
+	requires (
+		requires (T const& t) {{t.hash()} -> Type::Convertible<usize>;}
+	) {
+		return value.hash();
 	}
 
 	/// @brief Function prototype for future hashing specializations.

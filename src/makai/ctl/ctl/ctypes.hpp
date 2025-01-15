@@ -183,18 +183,27 @@ using ptr = T*;
 
 /// @brief
 ///		Syntatic sugar for `T*`.
-///		Hints to the programmer that the function
-///		takes ownership of the data pointed to.
+///		Hints to the programmer that the value is owned.
+///
+///		- If field/parameter, then it takes ownership of the data pointed to.
+///
+///		- If return value, then the caller takes ownership of the data pointed to.
 /// @tparam T Pointed type.
 template<class T>
-using hardptr = ptr<T>;
+using owner = ptr<T>;
 
 /// @brief
 ///		Syntatic sugar for `T*`.
-///		Hints to the programmer that the function
-///		does not take ownership of the data pointed to.
+///		Hints to the programmer that the value is not owned.
+///
+///		- If field/parameter, then it does not take ownership of the data pointed to.
+///
+///		- If return value, then the caller does not take ownership of the data pointed to.
 /// @tparam T Pointed type.
 template<class T>
-using weakptr = ptr<T>;
+using ref = ptr<T>;
+
+template<class T> using in		= T const&;
+template<class T> using inout	= T&;
 
 #endif // CTL_EXTENDED_TYPES_H

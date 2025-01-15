@@ -24,7 +24,7 @@ public:
 	constexpr static usize ID = I;
 
 	/// @brief Message handle type
-	typedef IMessage const*								MessageHandleType;
+	typedef ref<IMessage const>							MessageHandleType;
 	/// @brief Signal type.
 	typedef Signal<MessageHandleType const>				SignalType;
 	/// @brief Signal list type.

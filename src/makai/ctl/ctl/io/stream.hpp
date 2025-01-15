@@ -31,7 +31,7 @@ struct MemoryStream: DataStream {
 	/// @brief Constructor.
 	/// @param data Memory to reference.
 	/// @param size Size of memory pointed to.
-	MemoryStream(char* const data, usize const size):
+	MemoryStream(ref<char> const data, usize const size):
 		DataStream(&buffer),
 		buffer(data, size) {}
 };

@@ -152,10 +152,10 @@ struct Span:
 
 	/// @brief Returns a pointer to the beginning of the span.
 	/// @return Pointer to beginning of span.
-	constexpr PointerType		data()			{return contents;	}
+	constexpr ref<DataType>		data()			{return contents;	}
 	/// @brief Returns a pointer to the beginning of the span.
 	/// @return Pointer to beginning of span.
-	constexpr ConstPointerType	data() const	{return contents;	}
+	constexpr ref<ConstantType>	data() const	{return contents;	}
 
 
 	/// @brief Returns an iterator to the beginning of the `Span`.
@@ -186,16 +186,16 @@ struct Span:
 
 	/// @brief Returns a pointer to the beginning of the `Span`.
 	/// @return Pointer to the beginning of the `Span`.
-	constexpr PointerType	cbegin()		{return contents;		}
+	constexpr ref<DataType>		cbegin()		{return contents;		}
 	/// @brief Returns a pointer to the end of the `Span`.
 	/// @return Pointer to the end of the `Span`.
-	constexpr PointerType	cend()			{return contents+count;	}
+	constexpr ref<DataType>		cend()			{return contents+count;	}
 	/// @brief Returns a pointer to the beginning of the `Span`.
 	/// @return Pointer to the beginning of the `Span`.
-	constexpr ConstantType*	cbegin() const	{return contents;		}
+	constexpr ref<ConstantType>	cbegin() const	{return contents;		}
 	/// @brief Returns a pointer to the end of the `Span`.
 	/// @return Pointer to the end of the `Span`.
-	constexpr ConstantType*	cend() const	{return contents+count;	}
+	constexpr ref<ConstantType>	cend() const	{return contents+count;	}
 	
 	/// @brief Returns the value of the first element.
 	/// @return Reference to the first element.
@@ -335,8 +335,8 @@ private:
 
 	using Iteratable::wrapBounds;
 
-	DataType*	contents	= nullptr;
-	usize		count		= S;
+	ref<DataType>	contents	= nullptr;
+	usize			count		= S;
 };
 
 /// @brief `Span` analog for a viewable set of bytes.

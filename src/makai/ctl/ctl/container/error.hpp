@@ -53,7 +53,7 @@ namespace Error {
 	#undef DEFINE_ERROR_TYPE
 
 	/// @brief Pointer to an exception.
-	typedef Exception* ErrorPointer;
+	typedef ref<Exception> ErrorPointer;
 
 	/// @brief Returns a pointer to the current exception.
 	/// @return Pointer to the current exception. 
@@ -69,19 +69,19 @@ namespace Error {
 	/// @tparam T Error type.
 	/// @param err Pointer to error to re-throw.
 	template<Type::Derived<Generic> T>
-	[[noreturn]] inline void rethrow(T* const err) {if (err) throw T(*err);}
+	[[noreturn]] inline void rethrow(ref<T> const err)			{if (err) throw T(*err);	}
 	
 	/// @brief Re-throws an `Exception` as an error.
 	/// @tparam T Error type.
 	/// @param err `Exception` to re-throw.
 	template<Type::Derived<Generic> T>
-	[[noreturn]] inline void rethrow(Exception const& err) {throw T(err);}
+	[[noreturn]] inline void rethrow(Exception const& err)		{throw T(err);				}
 
 	/// @brief Re-throws an `Exception` as an error.
 	/// @tparam T Error type.
 	/// @param err Pointer to `Exception` to re-throw. 
 	template<Type::Derived<Generic> T>
-	[[noreturn]] inline void rethrow(Exception* const err) {throw T(*err);}
+	[[noreturn]] inline void rethrow(ref<Exception> const err)	{throw T(*err);				}
 }
 
 CTL_NAMESPACE_END

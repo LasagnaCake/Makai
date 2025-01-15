@@ -16,7 +16,7 @@ public:
 	/// @brief Event wrapper.
 	using EventWrapper	= Signal<Args...>;
 	/// @brief Event list.
-	using EventList		= List<EventWrapper const*>;
+	using EventList		= List<ref<EventWrapper const>>;
 
 	/// @brief Constructs the periodic.
 	/// @param manual Whether the event is fired manually. By default, it is `false`.
@@ -29,7 +29,7 @@ public:
 	/// @param ...args Values to pass.
 	static void process(Args... args) {
 		if (events.size())
-			for(EventWrapper const* func : events)
+			for(ref<EventWrapper const> func : events)
 				(*func)(args...);
 	}
 

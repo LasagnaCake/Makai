@@ -36,14 +36,14 @@ namespace Base {
 
 		/// @brief Returns the raw name of the type.
 		/// @return Raw name of the type.
-		constexpr static const char* rawName()	{return id->name();}
+		constexpr static cstring rawName()	{return id->name();}
 		/// @brief Returns the name of the type.
 		/// @return Type name.
-		constexpr static const char* name()		{return abi::__cxa_demangle(id->name(),0,0,NULL);}
+		constexpr static cstring name()		{return abi::__cxa_demangle(id->name(),0,0,NULL);}
 
 	private:
 		/// @brief Underlying type info structure.
-		constexpr static const std::type_info* id = &typeid(T);
+		constexpr static ref<const std::type_info> id = &typeid(T);
 	};
 }
 

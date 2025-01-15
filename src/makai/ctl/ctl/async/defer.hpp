@@ -25,9 +25,9 @@ struct Defer {
 	constexpr ~Defer() {func();}
 
 private:
-	void* operator new(usize);
+	pointer operator new(usize);
 	void operator delete(pointer);
-	void* operator new[](usize);
+	pointer operator new[](usize);
 	void operator delete[](pointer);
 
 	/// @brief Function to call at the end of the scope.

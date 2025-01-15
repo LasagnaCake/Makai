@@ -19,7 +19,7 @@ struct MemoryBuffer: public DataBuffer {
 	/// @brief Constructor.
 	/// @param data Memory to reference.
 	/// @param size Size of memory pointed to.
-	MemoryBuffer(char* const data, usize const size) {
+	MemoryBuffer(ref<char> const data, usize const size) {
 		setg(data, data, data + size);
 		setp(data, data + size);
 	}

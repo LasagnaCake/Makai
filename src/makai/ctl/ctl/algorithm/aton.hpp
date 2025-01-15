@@ -54,7 +54,7 @@ namespace Impl {
 		/// @return Signedness of character. -1 if character is `-`, +1 otherwise.
 		/// @note Only advances the pointer if character is a numeric sign.
 		template<Type::ASCII T>
-		constexpr int8 getSignAndConsume(T const*& c) {
+		constexpr int8 getSignAndConsume(ref<T const>& c) {
 			switch (c[0]) {
 				case '-':	++c; return -1;
 				case '+':	++c;
@@ -91,7 +91,7 @@ namespace Impl {
 		/// @param size Size of string.
 		/// @return Stored integer size.
 		template<Type::ASCII T>
-		constexpr usize integerSize(T const* str, usize const size) {
+		constexpr usize integerSize(ref<T const> str, usize const size) {
 			usize result = 0;
 			while (result < size) {
 				if (isInvalidChar(str[result])) break;
@@ -108,7 +108,7 @@ namespace Impl {
 		/// @param base Base of number.
 		/// @return Resulting integer in the given base.
 		template<Type::Integer I, Type::ASCII T>
-		constexpr I toInteger(T const* str, usize const size, usize const base) {
+		constexpr I toInteger(ref<T const> str, usize const size, usize const base) {
 			I res = 0;
 			for (usize i = 0; i < size; ++i) {
 				if (isInvalidChar(str[i])) break;
@@ -123,7 +123,7 @@ namespace Impl {
 		/// @param base Base override. Will be returned instead if it is not zero.
 		/// @return Base of the character identifier. If no match is found, returns 8.
 		template<Type::ASCII T>
-		constexpr ssize getBaseAndConsume(T const*& c, usize const base) {
+		constexpr ssize getBaseAndConsume(ref<T const>& c, usize const base) {
 			if (c[0] == '0') {
 				++c;
 				switch (c[0]) {
@@ -147,7 +147,7 @@ namespace Impl {
 		/// @param base Base to check against.
 		/// @return Whether it is in the given base.
 		template<Type::ASCII T>
-		constexpr bool isInBase(T const* str, usize const size, usize const base) {
+		constexpr bool isInBase(ref<T const> str, usize const size, usize const base) {
 			for (usize i = 0; i < integerSize(str, size); ++i) {
 				if (isInvalidChar(str[i]))
 					break;
@@ -184,9 +184,9 @@ namespace Impl {
 ///		
 ///		- `0y`:			Duotrigesimal.
 template<Type::Integer I, Type::ASCII T>
-constexpr bool atoi(T const* const str, usize size, I& out, usize base = 0) {
+constexpr bool atoi(ref<T const> const str, usize size, I& out, usize base = 0) {
 	// Copy string pointer
-	T const* s = str;
+	ref<T const> s = str;
 	// If string is size 1, try and convert digit
 	if (size == 1) {
 		if (Impl::A2I::isDigitInBase(str[0], base))
@@ -256,7 +256,7 @@ constexpr bool atoi(As<const T[S]> const& str, I& out, usize const base = 0) {
 /// @param out Output of the conversion.
 /// @return Whether the operation was successful.
 template<Type::Real F, Type::ASCII T>
-constexpr bool atof(T const* const str, usize size, F& out) {
+constexpr bool atof(ref<T const> const str, usize size, F& out) {
 	// If character is appended to the end, exclude it
 	if (
 		toLowerChar(str[size-1]) == 'f'
@@ -312,7 +312,7 @@ constexpr bool atof(As<const T[S]> const& str, F& out) {
 /// @param base Base to convert to. By default, it is base 10.
 /// @return Size of resulting number string.
 template<Type::Integer I, Type::ASCII T>
-constexpr ssize itoa(I val, T* const buf, usize const bufSize, I const& base = 10) {
+constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base = 10) {
 	// Digits
 	cstring const digits = "0123456789abcdef""ghijklmnopqrstuv";
 	// If empty buffer, or buffer is too small for a non-decimal base
@@ -379,7 +379,7 @@ constexpr ssize itoa(I val, T* const buf, usize const bufSize, I const& base = 1
 ///
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T>
-constexpr ssize ftoa(F val, T* buf, usize bufSize, usize const precision = sizeof(F)*2) {
+constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
 	// Get amount of zeroes to add to number
 	usize zeroes = Math::pow<F>(10, precision);
 	// If value is negative, append negative sign and invert value

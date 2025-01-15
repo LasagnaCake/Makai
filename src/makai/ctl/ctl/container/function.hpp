@@ -67,26 +67,26 @@ public:
 
 private:
 	/// @brief Callable bound to the object.
-	Impl::Partial::Function<ReturnType, TArgs...>* func{nullptr};
+	owner<Impl::Partial::Function<ReturnType, TArgs...>> func{nullptr};
 
 	template<typename TFunction>
 	using Callable = Impl::Function<Decay::AsArgument<TFunction>, TReturn, TArgs...>;
 
 	template<typename TFunction>
-	constexpr static Callable<TFunction>*
+	constexpr static owner<Callable<TFunction>>
 	makeCallable(TFunction&& f) {
 		return ::new Callable<TFunction>(CTL::move(f));
 	}
 
 	template<typename TFunction>
-	constexpr static Callable<TFunction>*
+	constexpr static owner<Callable<TFunction>>
 	makeCallable(TFunction const& f) {
 		return ::new Callable<TFunction>(f);
 	}
 
 	constexpr void assign(SelfType const& other) {
 		if (!other.func) return;
-		func = makeCallable(((Callable<FunctionType>*)other.func)->func);
+		func = makeCallable(((owner<Callable<FunctionType>>)other.func)->func);
 	}
 
 	constexpr void destroy() {

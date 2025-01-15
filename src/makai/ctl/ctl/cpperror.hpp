@@ -41,14 +41,14 @@ public:
 
 	/// @brief Returns the exception's message.
 	/// @return Message.
-	virtual char const* what() const noexcept {return message;}
+	virtual cstring what() const noexcept		{return message;}
 
 	/// @brief Returns the current exception.
 	/// @return Current exception.
-	static Exception* current() noexcept 	{return ex;		}
+	static ref<Exception> current() noexcept 	{return ex;		}
 	/// @brief Returns the previous exception.
 	/// @return Previous exception.
-	Exception* previous() const noexcept	{return prev;	}
+	ref<Exception> previous() const noexcept	{return prev;	}
 
 private:
 	/// @brief Message.

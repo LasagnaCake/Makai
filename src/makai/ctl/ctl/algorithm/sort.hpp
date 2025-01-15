@@ -31,7 +31,7 @@ namespace Sorting {
 	/// @param arr Pointer to beginning of range.
 	/// @param sz Size of range.
 	template<Type::Algorithm::Sortable T>
-	constexpr void insertionSort(T* const arr, usize const sz) {
+	constexpr void insertionSort(ref<T> const arr, usize const sz) {
 		for (usize i = 1; i < sz; ++i) {
 			usize j = i-1;
 			while(j-- > 0 && SimpleComparator<T>::lesser(arr[j+1], arr[j]))
@@ -47,7 +47,7 @@ namespace Sorting {
 	/// @param arr Pointer to beginning of range.
 	/// @param sz Size of range.
 	template<Type::Algorithm::Sortable T>
-	constexpr void mergeSort(T* const arr, usize const sz) {
+	constexpr void mergeSort(ref<T> const arr, usize const sz) {
 		if (sz == 1) return;
 		if (sz == 2) {
 			if (SimpleComparator<T>::greater(arr[0], arr[1]))
@@ -58,9 +58,9 @@ namespace Sorting {
 			szRight	= sz/2,
 			szLeft	= szRight + (sz%2==0 ? 0 : 1)
 		;
-		T
-			*left	= new T[szLeft],
-			*right	= new T[szRight]
+		ref<T>
+			left	= new T[szLeft],
+			right	= new T[szRight]
 		;
 		MX::objcopy(left, arr, szLeft);
 		MX::objcopy(right, arr+szLeft, szRight);
@@ -87,7 +87,7 @@ namespace Sorting {
 	namespace Partial {
 		// TODO: fix this
 		template<Type::Algorithm::Sortable T>
-		constexpr void mergeSort(T* const arr, usize const sz) {
+		constexpr void mergeSort(ref<T> const arr, usize const sz) {
 			if (sz == 1) return;
 			if (sz == 2) {
 				if (SimpleComparator<T>::greater(arr[0], arr[1]))
@@ -98,9 +98,9 @@ namespace Sorting {
 				szRight	= sz/2,
 				szLeft	= szRight + (sz%2==0 ? 0 : 1)
 			;
-			T
-				*left = new T[szLeft],
-				*right = new T[szRight]
+			ref<T>
+				left	= new T[szLeft],
+				right	= new T[szRight]
 			;
 			MX::objcopy(left, arr, szLeft);
 			MX::objcopy(right, arr+szLeft, szRight);
@@ -130,7 +130,7 @@ namespace Sorting {
 	/// @param arr Pointer to beginning of range.
 	/// @param sz Size of range.
 	template<Type::Algorithm::Sortable T>
-	constexpr void vivoSort(T* const arr, usize const sz) {
+	constexpr void vivoSort(ref<T> const arr, usize const sz) {
 		if (sz < 2) return;
 		if (sz == 2) {
 			if (SimpleComparator<T>::lesser(arr[0], arr[1]))
@@ -190,7 +190,7 @@ constexpr void sort(T const& begin, T const& end) {
 /// @param begin Pointer to beginning of range.
 /// @param end Pointer to end of range.
 template <Type::Algorithm::Sortable T>
-constexpr void sort(T* const begin, T* const end) {
+constexpr void sort(ref<T> const begin, ref<T> const end) {
 	Sorting::insertionSort(begin, end - begin + 1);
 }
 

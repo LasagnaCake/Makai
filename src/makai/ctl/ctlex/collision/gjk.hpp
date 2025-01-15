@@ -67,7 +67,7 @@ namespace GJK {
 		constexpr Iterator<VectorType const>	end() const		{return points.end() - (MAX_POINTS - count);	}
 		/// @brief Returns a pointer to the underlying point list.
 		/// @return Pointer to underlying point list.
-		constexpr VectorType const*				data() const	{return points.data();							}
+		constexpr ref<VectorType const>			data() const	{return points.data();							}
 		/// @brief Returns the ammount of points the simplex has.
 		/// @return Point count.
 		constexpr usize							size() const	{return count;									}

@@ -53,9 +53,9 @@ protected:
 	using BaseType::mutex;
 
 private:
-	void* operator new(usize);
+	pointer operator new(usize);
 	void operator delete(pointer);
-	void* operator new[](usize);
+	pointer operator new[](usize);
 	void operator delete[](pointer);
 };
 
