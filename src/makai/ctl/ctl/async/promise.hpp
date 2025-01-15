@@ -107,7 +107,6 @@ public:
 	/// @return Whether to await.
 	bool await_ready()			{return ready();	}
 	/// @brief Returns the suspension state.
-	/// @return Suspension state.
 	void await_suspend()		{					}
 	/// @brief Returns the result of the await.
 	/// @return Await result.

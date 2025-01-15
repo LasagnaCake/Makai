@@ -180,6 +180,21 @@ public:
 		return *this;
 	}
 
+	
+	/// @brief Returns whether awaiting is necessary.
+	/// @return Whether to await.
+	bool await_ready()												{return !running();	}
+
+	/// @brief Returns the suspension state.
+	void await_suspend()											{					}
+
+	/// @brief Returns the result of the await.
+	void await_resume() requires Type::Void<ReturnType>				{					}
+	
+	/// @brief Returns the result of the await.
+	/// @return Await result.
+	NullableType await_resume() requires Type::NonVoid<ReturnType>	{return value();	}
+
 
 private:
 	void rebindResult() {
