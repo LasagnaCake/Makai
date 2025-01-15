@@ -485,6 +485,7 @@ Arch::FileArchive::FileArchive(DataBuffer& buffer, String const& password) {open
 Arch::FileArchive::~FileArchive() {close();}
 
 FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password) try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (streamOpen) return *this;
 	// Set archive
 	archive.rdbuf(&buffer);
@@ -522,6 +523,7 @@ FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password)
 }
 
 FileArchive& Arch::FileArchive::close() try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (!streamOpen) return *this;
 	streamOpen = false;
 	return *this;
@@ -530,6 +532,7 @@ FileArchive& Arch::FileArchive::close() try {
 }
 
 String Arch::FileArchive::getTextFile(String const& path) try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	assertOpen();
 	FileEntry fe = getFileEntry(path);
 	processFileEntry(fe);
@@ -542,6 +545,7 @@ String Arch::FileArchive::getTextFile(String const& path) try {
 }
 
 BinaryData<> Arch::FileArchive::getBinaryFile(String const& path) try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	assertOpen();
 	FileEntry fe = getFileEntry(path);
 	processFileEntry(fe);
@@ -554,6 +558,7 @@ BinaryData<> Arch::FileArchive::getBinaryFile(String const& path) try {
 }
 
 Makai::JSON::JSONData Arch::FileArchive::getFileTree(String const& root) const {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	assertOpen();
 	JSONData dir = fstruct["tree"];
 	populateTree((!root.empty()) ? dir[root] : dir, root);
@@ -585,10 +590,12 @@ FileArchive& Arch::FileArchive::unpackTo(String const& path) {
 }
 
 bool Arch::FileArchive::isOpen() const {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	return streamOpen;
 }
 
 void Arch::FileArchive::parseFileTree() {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	String fs;
 	switch (header.minVersion) {
 	default:
@@ -626,6 +633,7 @@ void Arch::FileArchive::parseFileTree() {
 }
 
 void Arch::FileArchive::demangleData(BinaryData<>& data, uint8* const block) const {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	_ARCDEBUGLN("Before decryption: ", data.size());
 	data = decrypt(
 		data,
@@ -644,6 +652,7 @@ void Arch::FileArchive::demangleData(BinaryData<>& data, uint8* const block) con
 }
 
 void Arch::FileArchive::unpackLayer(JSONData const& layer, String const& path) {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	assertOpen();
 	List<KeyValuePair<String, String>> files;
 	for (auto& [name, data]: layer.items()) {
@@ -677,6 +686,7 @@ void Arch::FileArchive::processFileEntry(FileEntry& entry) const {
 }
 
 Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path) try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (!fstruct["tree"].is_object())
 		directoryTreeError();
 	_ARCDEBUGLN("Getting file entry location...");
@@ -699,6 +709,7 @@ Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path)
 }
 
 BinaryData<> Arch::FileArchive::getFileEntryData(uint64 const index, FileHeader const& fh) try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	BinaryData<> fd(fh.compSize, 0);
 	auto lp = archive.tellg();
 	archive.seekg(index + header.fileHeaderSize);
@@ -713,6 +724,7 @@ BinaryData<> Arch::FileArchive::getFileEntryData(uint64 const index, FileHeader 
 }
 
 FileHeader Arch::FileArchive::getFileEntryHeader(uint64 const index) try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	FileHeader fh;
 	auto lp = archive.tellg();
 	archive.seekg(index);
@@ -727,6 +739,7 @@ FileHeader Arch::FileArchive::getFileEntryHeader(uint64 const index) try {
 }
 
 uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const& origpath) try {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	List<JSONData> stack;
 	JSONData entry = fstruct["tree"];
 	// Loop through path and get entry location
@@ -756,6 +769,7 @@ uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const&
 }
 
 void Arch::FileArchive::assertOpen() const {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (!streamOpen)
 		notOpenError();
 }

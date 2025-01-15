@@ -261,6 +261,8 @@ namespace Makai::Tool::Arch {
 		ArchiveHeader			header;
 		/// @brief Archive file structure.
 		JSON::Extern::JSONData	fstruct;
+		/// @brief Synchronization barrier for thread safety.
+		mutable Mutex			sync;
 	};
 
 	/// @brief Reads an encrypted (single-file archive) text file from disk.
