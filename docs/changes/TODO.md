@@ -1,6 +1,6 @@
-## TODO
+# TODO
 
-### Current
+## Current
 - [ ] Generate documentation
 - - Code is documented via doxygen comments, so must figure out how to generate docs from that
 - [ ] Fix core library CI
@@ -13,7 +13,7 @@
 - - What about [SWIG](https://www.swig.org/)?
 - [ ] Bugs & Errors (see [Issues.txt](../../Issues.txt))
 
-### Game extension stuff
+## Game extension stuff
 - [ ] Curvy/Bent lasers
 - [ ] File format implementation (These need better names):
 - - For more info, see the [specifications](../specifications) folder
@@ -23,7 +23,7 @@
 - [ ] Other game types
 - [ ] More "multi-purpose" game classes
 
-### Future
+## Future
 
 - [ ] (Maybe) replace JSON to other specification
 - - For the *custom file formats*, that is
@@ -39,11 +39,11 @@
 - [ ] Support for "Game DLLs"
 - - Having the game being separate from the executable, and stuff being loadable from a DLL
 
-### Other refactoring
+## Other refactoring
 
 See [Refactor](Refactor.md).
 
-### Very far future (may never happen)
+## Very far future (may never happen)
 
 - Vulkanize graphical system (VERY DIFFICULT, might not be done)
 - Maybe WebGPU instead?
