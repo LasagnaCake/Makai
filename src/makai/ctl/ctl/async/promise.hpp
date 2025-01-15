@@ -5,6 +5,7 @@
 #include "../typetraits/traits.hpp"
 #include "../templates.hpp"
 #include "../container/pointer.hpp"
+#include "co/awaitable.hpp"
 #include "atomic.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -32,6 +33,14 @@ template<> class Promise<void>:
 	/// @brief Copy constructor.
 	/// @param other `Promise` to copy from.
 	constexpr Promise(Promise const& other): Promise(other.thread) {}
+
+	/// @brief Returns whether awaiting is necessary.
+	/// @return Whether to await.
+	bool await_ready()			{return ready();	}
+	/// @brief Returns the suspension state.
+	void await_suspend()		{					}
+	/// @brief Returns the result of the await.
+	void await_resume()			{					}
 
 private:
 	/// @brief Binds a promise to a thread.
@@ -92,6 +101,17 @@ public:
 	/// @brief Copy constructor.
 	/// @param other `Promise` to copy from.
 	constexpr Promise(SelfType const& other): Promise(other.data, other.thread) {}
+
+	
+	/// @brief Returns whether awaiting is necessary.
+	/// @return Whether to await.
+	bool await_ready()			{return ready();	}
+	/// @brief Returns the suspension state.
+	/// @return Suspension state.
+	void await_suspend()		{					}
+	/// @brief Returns the result of the await.
+	/// @return Await result.
+	NullableType await_resume()	{return value();	}
 
 private:
 	/// @brief Binds a promise to a thread.
