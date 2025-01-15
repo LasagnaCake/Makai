@@ -301,10 +301,10 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		virtual HandleType acquire() override {
-			if (auto b = Server::acquire()) {
+			if (auto b = AServer::acquire()) {
 				Handle<Bullet> bullet = b.polymorph<Bullet>();
 				bullet->clear();
-				return bullet.as<GameObject>();
+				return bullet.as<AGameObject>();
 			}
 			return nullptr;
 		}
@@ -364,18 +364,11 @@ namespace Makai::Ex::Game::Danmaku {
 			return query;
 		}
 
-		HandleType acquire() override {
-			auto b = Server::acquire();
-			Bullet& bullet = *(b.as<Bullet>());
-			bullet.clear();
-			return b;
-		}
-
 	protected:
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			Bullet& bullet = *(object.as<Bullet>());
-			Server::release(object);
+			AServer::release(object);
 			return *this;
 		}
 
