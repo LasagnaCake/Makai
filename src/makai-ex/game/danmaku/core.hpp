@@ -188,7 +188,7 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct Circular {
-		Property<Vector2>	radius;
+		Property<Vector2> radius;
 	};
 
 	struct Long {
@@ -213,6 +213,19 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ~IToggleable() {}
 	protected:
 		State toggleState = State::TS_UNTOGGLED;
+	};
+
+	struct Weighted {
+		Property<Vector2> gravity;
+		Property<Vector2> terminalVelocity;
+	};
+
+	struct Dope {
+		bool dope = false;
+	};
+
+	struct RotatesSprite {
+		bool rotateSprite = true;
 	};
 }
 

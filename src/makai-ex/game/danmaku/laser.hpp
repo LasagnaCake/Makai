@@ -23,7 +23,6 @@ namespace Makai::Ex::Game::Danmaku {
 			rotation		= {};
 			length			= {};
 			toggleState		= IToggleable::State::TS_UNTOGGLED;
-			toggleCounter	= 0;
 			patch			= {};
 			animColor		= Graph::Color::WHITE;
 			return *this;
