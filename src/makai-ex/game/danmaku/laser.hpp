@@ -85,7 +85,6 @@ namespace Makai::Ex::Game::Danmaku {
 				discard();
 			*/
 		}
-
 		
 		Laser& discard(bool const force = false) override {
 			if (isFree()) return *this;
