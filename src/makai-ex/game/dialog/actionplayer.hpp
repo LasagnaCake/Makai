@@ -16,8 +16,8 @@ namespace Makai::Ex::Game::Dialog {
 		AActionPlayer() {
 			isFinished = true;
 			bindmap = Dictionary<String>({	
-				{"next", "dialog-next"},
-				{"skip", "dialog-skip"}
+				{"next", "dialog/next"},
+				{"skip", "dialog/skip"}
 			});
 		}
 

@@ -20,8 +20,8 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param scene Scene to use.
 		AnimaPlayer(Scene& scene): AVM::Engine(), scene(scene) {
 			bindmap = Dictionary<String>({	
-				{"next", "dialog-next"},
-				{"skip", "dialog-skip"}
+				{"next", "dialog/next"},
+				{"skip", "dialog/skip"}
 			});
 		}
 
