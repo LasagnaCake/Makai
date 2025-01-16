@@ -64,23 +64,23 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		bool isFree() const override {
-			return objectState == State::AOS_FREE;
+			return objectState == State::SOS_FREE;
 		}
 
 		Bullet& spawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
 			counter = 0;
-			objectState = State::AOS_SPAWNING;
-			onAction(*this, Action::AOA_SPAWN_BEGIN);
+			objectState = State::SOS_SPAWNING;
+			onAction(*this, Action::SOA_SPAWN_BEGIN);
 		}
 
 		Bullet& despawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
 			counter = 0;
-			objectState = State::AOS_DESPAWNING;
-			onAction(*this, Action::AOA_DESPAWN_BEGIN);
+			objectState = State::SOS_DESPAWNING;
+			onAction(*this, Action::SOA_DESPAWN_BEGIN);
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
@@ -128,9 +128,6 @@ namespace Makai::Ex::Game::Danmaku {
 		bool bouncy	= false;
 		bool loopy	= false;
 
-		usize spawnTime		= 5;
-		usize despawnTime	= 5;
-
 	private:
 		AServer&	server;
 
@@ -171,7 +168,7 @@ namespace Makai::Ex::Game::Danmaku {
 				if (trans.position.x > br.x) shift(PI);
 				if (trans.position.y > tl.y) shift(0);
 				if (trans.position.y < tl.y) shift(0);
-				onAction(*this, Action::AOA_BOUNCE);
+				onAction(*this, Action::SOA_BOUNCE);
 				bouncy = false;
 			} else if (loopy && shape && !Collision::GJK::check(
 				board.asArea(),
@@ -185,7 +182,7 @@ namespace Makai::Ex::Game::Danmaku {
 				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radius.max();
 				if (trans.position.y > tl.y) trans.position.y = br.y - shape->radius.max();
 				if (trans.position.y < tl.y) trans.position.y = tl.y + shape->radius.max();
-				onAction(*this, Action::AOA_LOOP);
+				onAction(*this, Action::SOA_LOOP);
 				loopy = false;
 			}
 		}
@@ -225,33 +222,31 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void animate() {
 			switch (objectState) {
-				case State::AOS_DESPAWNING: {
+				case State::SOS_DESPAWNING: {
 					if (counter++ < despawnTime) {
 						spawnglow = true;
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
 					} else {
 						spawnglow = false;
-						onAction(*this, Action::AOA_DESPAWN_END);
+						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
 				}
-				case State::AOS_SPAWNING: {
+				case State::SOS_SPAWNING: {
 					if (counter++ < spawnTime) {
 						spawnglow = true;
 						animColor.a = counter / static_cast<float>(spawnTime);
 					} else {
 						spawnglow = false;
 						setCollisionState(true);
-						onAction(*this, Action::AOA_SPAWN_END);
-						objectState = State::AOS_ACTIVE;
+						onAction(*this, Action::SOA_SPAWN_END);
+						objectState = State::SOS_ACTIVE;
 					}
 				}
 				[[likely]]
 				default: break;
 			}
 		}
-
-		friend class BulletServer;
 
 		Bullet(Bullet const& other)	= default;
 		Bullet(Bullet&& other)		= default;
@@ -260,11 +255,11 @@ namespace Makai::Ex::Game::Danmaku {
 			if (state) {
 				active = false;
 				hideSprites();
-				objectState = State::AOS_FREE;
+				objectState = State::SOS_FREE;
 				release(this, server);
 			} else {
 				active = true;
-				objectState = State::AOS_ACTIVE;
+				objectState = State::SOS_ACTIVE;
 			}
 			return *this;
 		}
@@ -272,7 +267,7 @@ namespace Makai::Ex::Game::Danmaku {
 		friend class BulletServer;
 	};
 
-	struct BulletServerConfig: ServerConfig, ServerMeshConfig, GameObjectConfig {};
+	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, GameObjectConfig {};
 
 	struct BulletServer: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
@@ -300,7 +295,7 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 		}
 
-		virtual HandleType acquire() override {
+		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Handle<Bullet> bullet = b.polymorph<Bullet>();
 				bullet->clear();

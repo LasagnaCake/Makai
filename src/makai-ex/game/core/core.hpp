@@ -4,5 +4,6 @@
 #include "controlable.hpp"
 #include "save.hpp"
 #include "app.hpp"
+#include "sprite.hpp"
 
 #endif

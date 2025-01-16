@@ -27,8 +27,8 @@ PlaneRef::PlaneRef(
 	this->tr1	= &(tris[0]->verts[1]);
 	this->tr2	= &(tris[1]->verts[0]);
 	this->bl1	= &(tris[0]->verts[2]);
-	this->bl2	= &(tris[1]->verts[1]);
-	this->br	= &(tris[1]->verts[2]);
+	this->bl2	= &(tris[1]->verts[2]);
+	this->br	= &(tris[1]->verts[1]);
 	// Setup plane
 	this->setOrigin(
 		Vector3(-1.0, +1.0, 0.0),
@@ -136,16 +136,17 @@ Handle<IReference> PlaneRef::reset() {
 Handle<IReference> PlaneRef::transform() {
 	onTransform();
 	if (!fixed) return this;
-	// Get transformation
-	Transform3D self = local;
-	self.scale *= (float)visible;
-	Matrix4x4 tmat(self);
 	// Calculate transformed vertices
 	Vertex plane[4] = {origin[0], origin[1], origin[2], origin[3]};
-	srpTransform(plane[0], tmat);
-	srpTransform(plane[1], tmat);
-	srpTransform(plane[2], tmat);
-	srpTransform(plane[3], tmat);
+	if (visible) {
+		Matrix4x4 tmat(local);
+		Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
+		for (Graph::Vertex& vert: plane) {
+			vert.position	= tmat * Vector4(vert.position, 1);
+			vert.normal		= nmat * vert.normal;
+		}
+	} else for (auto& vert: plane)
+		vert.position = 0;
 	// Apply transformation
 	*tl				= plane[0];
 	*tr1	= *tr2	= plane[1];
@@ -272,15 +273,17 @@ Handle<IReference> TriangleRef::reset() {
 Handle<IReference> TriangleRef::transform() {
 	onTransform();
 	if (!fixed) return this;
-	// Get transformation
-	Transform3D self = local;
-	self.scale *= (float)visible;
-	Matrix4x4 tmat(self);
 	// Calculate transformed vertices
 	Vertex tri[3] = {origin[0], origin[1], origin[2]};
-	srpTransform(tri[0], tmat);
-	srpTransform(tri[1], tmat);
-	srpTransform(tri[2], tmat);
+	if (visible) {
+		Matrix4x4 tmat(local);
+		Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
+		for (Graph::Vertex& vert: tri) {
+			vert.position	= tmat * Vector4(vert.position, 1);
+			vert.normal		= nmat * vert.normal;
+		}
+	} else for (auto& vert: tri)
+		vert.position = 0;
 	// Apply transformation
 	*a	= tri[0];
 	*b	= tri[1];

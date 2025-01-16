@@ -77,20 +77,20 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ~AServerObject() {}
 
 		enum class State {
-			AOS_FREE,
-			AOS_SPAWNING,
-			AOS_ACTIVE,
-			AOS_DESPAWNING
+			SOS_FREE,
+			SOS_SPAWNING,
+			SOS_ACTIVE,
+			SOS_DESPAWNING
 		};
 		
 		enum class Action {
-			AOA_SPAWN_BEGIN,
-			AOA_SPAWN_END,
-			AOA_DESPAWN_BEGIN,
-			AOA_DESPAWN_END,
-			AOA_BOUNCE,
-			AOA_LOOP,
-			AOA_UNPAUSE
+			SOA_SPAWN_BEGIN,
+			SOA_SPAWN_END,
+			SOA_DESPAWN_BEGIN,
+			SOA_DESPAWN_END,
+			SOA_BOUNCE,
+			SOA_LOOP,
+			SOA_UNPAUSE
 		};
 
 		Property<Vector2>	scale;
@@ -158,18 +158,18 @@ namespace Makai::Ex::Game::Danmaku {
 		State state() {return objectState;};
 
 		void onUpdate(float delta) override {
-			if (objectState == State::AOS_FREE) return;
+			if (objectState == State::SOS_FREE) return;
 			AGameObject::onUpdate(delta);
 			onObjectUpdate(*this, delta);
 		}
 
 	protected:
-		static void release(AServer::HandleType const& object, Server& server) {
+		static void release(AServer::HandleType const& object, AServer& server) {
 			server.release(object);
 		}
 
 		void onUnpause() override {
-			onAction(*this, Action::AOA_UNPAUSE);
+			onAction(*this, Action::SOA_UNPAUSE);
 		}
 
 		State objectState;
@@ -188,6 +188,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct ServerMeshConfig {
 		Graph::ReferenceHolder&	mainMesh;
+	};
+
+	struct ServerGlowMeshConfig {
 		Graph::ReferenceHolder&	glowMesh;
 	};
 }

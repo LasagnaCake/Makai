@@ -4,6 +4,7 @@
 #include <makai/makai.hpp>
 
 #include "layers.hpp"
+#include "../core/sprite.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
 	namespace C2D = Collision::C2D;
@@ -55,7 +56,7 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct GameObjectConfig {
-		using CollisionMask = GameObject::CollisionMask;
+		using CollisionMask = CollisionLayer::CollisionMask;
 		GameArea&			board;
 		GameArea&			playfield;
 		CollisionMask const	affects		= {};
@@ -68,7 +69,7 @@ namespace Makai::Ex::Game::Danmaku {
 		using Collider				= CollisionServer::Collider;
 		using CollisionArea			= C2D::Area;
 		using CollisionDirection	= C2D::Direction;
-		using CollisionMask			= CollisionLayer::CollisionMask;
+		using CollisionMask			= GameObjectConfig::CollisionMask;
 
 		AGameObject(GameObjectConfig const& cfg):
 			board(cfg.board),
@@ -79,13 +80,16 @@ namespace Makai::Ex::Game::Danmaku {
 				bindCollisionHandler(*this);
 			}
 
-		virtual ~GameObject() {}
+		virtual ~AGameObject() {}
 
 		PromiseType task;
 
 		PauseState pause;
 
 		Math::Transform2D trans;
+
+		usize spawnTime		= 5;
+		usize despawnTime	= 5;
 		
 		virtual AGameObject& spawn()	= 0;
 		virtual AGameObject& despawn()	= 0;
@@ -133,7 +137,7 @@ namespace Makai::Ex::Game::Danmaku {
 		bool active = false;
 
 	protected:
-		static void bindCollisionHandler(GameObject& self) {
+		static void bindCollisionHandler(AGameObject& self) {
 			self.collider->onCollision = [&] (Collider const& collider, CollisionDirection const direction) {
 				self.onCollision(collider, direction);
 			};
@@ -160,6 +164,12 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ISpriteContainer& setSpriteRotation(float const angle)						= 0;
 	};
 
+	struct IThreePatchContainer {
+		virtual IThreePatchContainer& setPatchDirection(bool const vertical)										= 0;
+		virtual IThreePatchContainer& setPatchSheetSize(Vector2 const& size)										= 0;
+		virtual IThreePatchContainer& setPatchFrame(Vector2 const& head, Vector2 const& body, Vector2 const& tail)	= 0;
+	}
+
 	struct AttackObject {
 		Property<float>	velocity;
 		Property<float>	rotation;
@@ -173,8 +183,10 @@ namespace Makai::Ex::Game::Danmaku {
 		bool glowing = false;
 	};
 
-	using SpriteInstance	= Instance<Graph::AnimatedPlaneRef>;
-	using SpriteHandle		= Handle<Graph::AnimatedPlaneRef>;
+	struct IToggleable {
+		usize toggleTime = 5;
+		virtual IToggleable& toggle(bool const state) = 0;
+	};
 }
 
 #endif
