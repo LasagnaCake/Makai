@@ -261,6 +261,71 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 		}
 
+		HandleType acquire() override {
+			if (auto b = AServer::acquire()) {
+				Handle<Item> item = b.polymorph<Item>();
+				item->setFree(false);
+				item->clear();
+				return item.as<AGameObject>();
+			}
+			return nullptr;
+		}
+
+		void onUpdate(float delta, App& app) override {
+			for (auto& obj: used) {
+				obj->onUpdate(delta);
+			}
+		}
+
+		void discardAll() override {
+			for (auto b: used) {
+				Item& item = access<Item>(b);
+				item.discard();
+			};
+		}
+		
+		void freeAll() override {
+			for (auto b: used) {
+				Item& item = access<Item>(b);
+				item.free();
+			};
+		}
+
+		void despawnAll() override {
+			for (auto b: used) {
+				Item& item = access<Item>(b);
+				item.despawn();
+			};
+		}
+
+		usize capacity() override {
+			return all.size();
+		}
+
+		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
+			ObjectQueryType query;
+			for (auto b: used) {
+				Item& item = access<Item>(b);
+				if (
+					item.shape
+				&&	Collision::GJK::check(*item.shape, bound)
+				) query.pushBack(b);
+			}
+			return query;
+		}
+
+		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
+			ObjectQueryType query;
+			for (auto b: used) {
+				Item& item = access<Item>(b);
+				if (
+					item.shape
+				&&	!Collision::GJK::check(*item.shape, bound)
+				) query.pushBack(b);
+			}
+			return query;
+		}
+
 	protected:
 		ItemServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
