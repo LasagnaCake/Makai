@@ -162,12 +162,14 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ISpriteContainer& setSpriteSheetSize(Vector2 const& size)					= 0;
 		virtual ISpriteContainer& setSprite(Vector2 const& sheetSize, Vector2 const& frame)	= 0;
 		virtual ISpriteContainer& setSpriteRotation(float const angle)						= 0;
+		virtual ~ISpriteContainer() {}
 	};
 
 	struct IThreePatchContainer {
 		virtual IThreePatchContainer& setPatchDirection(bool const vertical)										= 0;
 		virtual IThreePatchContainer& setPatchSheetSize(Vector2 const& size)										= 0;
 		virtual IThreePatchContainer& setPatchFrame(Vector2 const& head, Vector2 const& body, Vector2 const& tail)	= 0;
+		virtual ~IThreePatchContainer() {}
 	};
 
 	struct AttackObject {
@@ -177,6 +179,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct Circular {
 		Property<Vector2>	radius;
+	};
+
+	struct Long {
+		Property<Vector2>	length;
 	};
 
 	struct Glowing {
@@ -190,8 +196,13 @@ namespace Makai::Ex::Game::Danmaku {
 			TS_TOGGLED,
 			TS_UNTOGGLING,
 		};
-		usize toggleTime = 5;
+		usize toggleTime	= 5;
+		usize untoggleTime	= 5;
 		virtual IToggleable& toggle(bool const state) = 0;
+		bool isToggled() {return toggleState == State::TS_TOGGLED;}
+		virtual ~IToggleable() {}
+	protected:
+		State toggleState = State::TS_UNTOGGLED;
 	};
 }
 

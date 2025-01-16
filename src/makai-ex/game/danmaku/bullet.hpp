@@ -63,10 +63,6 @@ namespace Makai::Ex::Game::Danmaku {
 			despawn();
 		}
 
-		bool isFree() const override {
-			return objectState == State::SOS_FREE;
-		}
-
 		Bullet& spawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
@@ -231,7 +227,7 @@ namespace Makai::Ex::Game::Danmaku {
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
-				}
+				} break;
 				case State::SOS_SPAWNING: {
 					if (counter++ < spawnTime) {
 						spawnglow = true;
@@ -242,7 +238,7 @@ namespace Makai::Ex::Game::Danmaku {
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = State::SOS_ACTIVE;
 					}
-				}
+				} break;
 				[[likely]]
 				default: break;
 			}
@@ -299,6 +295,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (auto b = AServer::acquire()) {
 				Handle<Bullet> bullet = b.polymorph<Bullet>();
 				bullet->clear();
+				bullet->setFree(false);
 				return bullet.as<AGameObject>();
 			}
 			return nullptr;

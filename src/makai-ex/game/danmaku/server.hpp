@@ -123,7 +123,9 @@ namespace Makai::Ex::Game::Danmaku {
 		Functor<void(AServerObject&, Action const)>	onAction;
 		Functor<void(AServerObject&, float)>		onObjectUpdate;
 
-		virtual bool isFree() const = 0;
+		bool isFree() const {
+			return objectState == State::SOS_FREE;
+		}
 
 		AServerObject& free()	{setFree(true);		}
 		AServerObject& enable()	{setFree(false);	}
