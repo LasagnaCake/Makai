@@ -168,7 +168,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual IThreePatchContainer& setPatchDirection(bool const vertical)										= 0;
 		virtual IThreePatchContainer& setPatchSheetSize(Vector2 const& size)										= 0;
 		virtual IThreePatchContainer& setPatchFrame(Vector2 const& head, Vector2 const& body, Vector2 const& tail)	= 0;
-	}
+	};
 
 	struct AttackObject {
 		Property<float>	velocity;
