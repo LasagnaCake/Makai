@@ -16,12 +16,14 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& clear() override {
+			if (isFree()) return *this;
 			AServerObject::clear();
 			rotateSprite	= true;
 			radius			= {};
 			scale			= {};
 			velocity		= {};
 			rotation		= {};
+			sprite			= {};
 			dope			= false;
 			glowing			= false;
 			bouncy			= false;
@@ -30,6 +32,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& reset() override {
+			if (isFree()) return *this;
 			AServerObject::reset();
 			velocity.factor	= 0;
 			rotation.factor	= 0;
@@ -43,9 +46,10 @@ namespace Makai::Ex::Game::Danmaku {
 			AServerObject::onUpdate(delta);
 			hideSprites();
 			setSpriteVisibility(glowing || spawnglow, true);
-			updateSprite(sprite.asWeak());
+			updateSprite(mainSprite.asWeak());
 			updateSprite(glowSprite.asWeak());
 			updateHitbox();
+			animate();
 			if (paused()) return;
 			color.next();
 			radius.next();
@@ -54,7 +58,6 @@ namespace Makai::Ex::Game::Danmaku {
 			trans.scale		= scale.next();
 			playfieldCheck();
 			loopAndBounce();
-			animate();
 		}
 
 		Bullet& discard(bool const force = false) override {
@@ -85,36 +88,35 @@ namespace Makai::Ex::Game::Danmaku {
 				discard();
 		}
 
-		Bullet& setSpriteFrame(Vector2 const& frame) override {
-			if (isFree()) return *this;
-			if (sprite)
-				sprite->frame		= frame;
-			if (glowSprite)
-				glowSprite->frame	= frame;
-			return *this;
-		}
-
-		Bullet& setSpriteSheetSize(Vector2 const& size) override {
-			if (isFree()) return *this;
-			if (sprite)
-				sprite->size		= size;
-			if (glowSprite)
-				glowSprite->size	= size;
-			return *this;	
-		}
-
-		Bullet& setSprite(Vector2 const& sheetSize, Vector2 const& frame) override {
-			if (isFree()) return *this;
-			return setSpriteFrame(frame).setSpriteSheetSize(sheetSize);
-		}
-
 		Bullet& setSpriteRotation(float const angle) override {
 			if (isFree()) return *this;
-			if (sprite)
-				sprite->local.rotation.z		= angle;
+			if (mainSprite)
+				mainSprite->local.rotation.z	= angle;
 			if (glowSprite)
 				glowSprite->local.rotation.z	= angle;
 			if (isFree()) return *this;
+		}
+
+		float getSpriteRotation() const override {
+			if (isFree()) return 0;
+			if (mainSprite)
+				return mainSprite->local.rotation.z;
+			if (glowSprite)
+				return glowSprite->local.rotation.z;
+			if (isFree()) return 0;
+		}
+
+		Bullet& setFree(bool const state) override {
+			if (state) {
+				active = false;
+				hideSprites();
+				objectState = State::SOS_FREE;
+				release(this, server);
+			} else {
+				active = true;
+				objectState = State::SOS_ACTIVE;
+			}
+			return *this;
 		}
 
 		bool dope = true;
@@ -127,7 +129,7 @@ namespace Makai::Ex::Game::Danmaku {
 	private:
 		AServer&	server;
 
-		SpriteInstance sprite		= nullptr;
+		SpriteInstance mainSprite	= nullptr;
 		SpriteInstance glowSprite	= nullptr;
 
 		usize counter	= 0;
@@ -191,16 +193,18 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void setSpriteVisibility(bool const setGlowSprite, bool const state) {
 			if (glowSprite && setGlowSprite)	glowSprite->visible	= state; 
-			else if (sprite)					sprite->visible		= state;
+			else if (mainSprite)				mainSprite->visible	= state;
 		}
 
 		void hideSprites() {
-			if (glowSprite)		glowSprite->visible	= false; 
-			else if (sprite)	sprite->visible		= false;
+			if (glowSprite)	glowSprite->visible	= false; 
+			if (mainSprite)	mainSprite->visible	= false;
 		}
 
 		void updateSprite(SpriteHandle const& sprite) {
 			if (!sprite) return;
+			sprite->frame	= this->sprite.frame;
+			sprite->size	= this->sprite.sheetSize;
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
@@ -247,19 +251,6 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet(Bullet const& other)	= default;
 		Bullet(Bullet&& other)		= default;
 
-		Bullet& setFree(bool const state) override {
-			if (state) {
-				active = false;
-				hideSprites();
-				objectState = State::SOS_FREE;
-				release(this, server);
-			} else {
-				active = true;
-				objectState = State::SOS_ACTIVE;
-			}
-			return *this;
-		}
-
 		friend class BulletServer;
 	};
 
@@ -284,7 +275,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				all.pushBack(Bullet({*this, cfg}));
-				all.back().sprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
+				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				if (&cfg.mainMesh != &cfg.glowMesh)
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
 				free.pushBack(&all.back());
@@ -294,8 +285,8 @@ namespace Makai::Ex::Game::Danmaku {
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Handle<Bullet> bullet = b.polymorph<Bullet>();
-				bullet->clear();
 				bullet->setFree(false);
+				bullet->clear();
 				return bullet.as<AGameObject>();
 			}
 			return nullptr;

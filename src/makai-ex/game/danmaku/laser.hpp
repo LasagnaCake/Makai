@@ -9,7 +9,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct LaserConfig: ServerObjectConfig, GameObjectConfig {};
 
-	struct Laser: AServerObject, IThreePatchContainer, AttackObject, Circular, Long, IToggleable {
+	struct Laser: AServerObject, ThreePatchContainer, AttackObject, Circular, Long, IToggleable {
 		Laser(LaserConfig const& cfg):
 			AServerObject(cfg), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
@@ -17,13 +17,14 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Laser& clear() override {
 			AServerObject::clear();
-			radius		= {};
-			scale		= {};
-			velocity	= {};
-			rotation	= {};
-			length		= {};
-			toggleState	= IToggleable::State::TS_UNTOGGLED;
-			toggleCounter = 0;
+			radius			= {};
+			scale			= {};
+			velocity		= {};
+			rotation		= {};
+			length			= {};
+			toggleState		= IToggleable::State::TS_UNTOGGLED;
+			toggleCounter	= 0;
+			patch			= {};
 			return *this;
 		}
 
@@ -37,8 +38,14 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		Laser& toggle(bool const state) override {
+		Laser& toggle(bool const state, bool const immediately = false) override {
+			if (isFree()) return *this;
 			toggleCounter = 0;
+			if (immediately) {
+				toggleState = state ? IToggleable::State::TS_TOGGLED : IToggleable::State::TS_UNTOGGLED;
+				toggleColor = state ? 1.0 : 0.5;
+				return *this;
+			}
 			nextState = state ? IToggleable::State::TS_TOGGLED : IToggleable::State::TS_UNTOGGLED;
 			if (toggleState != nextState) {
 				switch (toggleState) {
@@ -53,6 +60,22 @@ namespace Makai::Ex::Game::Danmaku {
 				}
 			}
 			return *this;
+		}
+
+		void onUpdate(float delta) override {
+			sprite->visible = isFree();
+			if (isFree()) return;
+			AServerObject::onUpdate(delta);
+			updateHitbox();
+			animate();
+			if (paused()) return;
+			color.next();
+			radius.next();
+			length.next();
+			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
+			trans.rotation	= rotation.value;
+			trans.scale		= scale.next();
+			animateToggle();
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
@@ -86,6 +109,19 @@ namespace Makai::Ex::Game::Danmaku {
 			onAction(*this, Action::SOA_DESPAWN_BEGIN);
 		}
 
+		Laser& setFree(bool const state) override {
+			if (state) {
+				active = false;
+				sprite->visible = false;
+				objectState = AServerObject::State::SOS_FREE;
+				release(this, server);
+			} else {
+				active = true;
+				objectState = AServerObject::State::SOS_ACTIVE;
+			}
+			return *this;
+		}
+
 	private:
 		AServer&	server;
 
@@ -106,6 +142,39 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Laser(Laser const& other)	= default;
 		Laser(Laser&& other)		= default;
+
+		void updateSprite() {
+			if (!sprite) return;
+			sprite->local.rotation.z	= trans.rotation;
+			sprite->local.position		= Vec3(trans.position, sprite->local.position.z);
+			sprite->local.scale			= trans.scale;
+			for (usize i: {0, 1, 2, 3}) {
+				Vector2 const uvOffset = Vector2(i&1, (i&2)>>1);
+				sprite->color.head[i] = color.value;
+				sprite->color.body[i] = color.value;
+				sprite->color.tail[i] = color.value;
+				sprite->uv.head[i] = (patch.frame.head + uvOffset) / patch.size;
+				sprite->uv.body[i] = (patch.frame.body + uvOffset) / patch.size;
+				sprite->uv.tail[i] = (patch.frame.tail + uvOffset) / patch.size;
+				if (patch.vertical) {
+					sprite->uv.head[i] = sprite->uv.head[i].yx();
+					sprite->uv.body[i] = sprite->uv.body[i].yx();
+					sprite->uv.tail[i] = sprite->uv.tail[i].yx();
+				}
+			}
+			sprite->size.head = radius.value.x;
+			sprite->size.tail = radius.value.x;
+			sprite->size.body = length.value;
+		}
+
+		void updateHitbox() {
+			if (shape) {
+				shape->width	= radius.value * trans.scale;
+				shape->length	= length.value * trans.scale.x;
+				shape->position	= trans.position;
+				shape->rotation	= trans.rotation;
+			}
+		}
 
 		void animate() {
 			switch (objectState) {
@@ -129,6 +198,9 @@ namespace Makai::Ex::Game::Danmaku {
 				[[likely]]
 				default: break;
 			}
+		}
+
+		void animateToggle() {
 			switch (toggleState) {
 				case IToggleable::State::TS_UNTOGGLING: {
 					if (toggleCounter++ < untoggleTime) {
@@ -178,8 +250,8 @@ namespace Makai::Ex::Game::Danmaku {
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Handle<Laser> laser = b.polymorph<Laser>();
-				laser->clear();
 				laser->setFree(false);
+				laser->clear();
 				return laser.as<AGameObject>();
 			}
 			return nullptr;

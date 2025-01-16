@@ -158,18 +158,28 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct ISpriteContainer {
-		virtual ISpriteContainer& setSpriteFrame(Vector2 const& frame)						= 0;
-		virtual ISpriteContainer& setSpriteSheetSize(Vector2 const& size)					= 0;
-		virtual ISpriteContainer& setSprite(Vector2 const& sheetSize, Vector2 const& frame)	= 0;
-		virtual ISpriteContainer& setSpriteRotation(float const angle)						= 0;
+		struct SpriteSetting {
+			Vector2 frame;
+			Vector2 sheetSize;
+		} sprite;
+
+		virtual ISpriteContainer& setSpriteRotation(float const angle)	= 0;
+		virtual float getSpriteRotation() const							= 0;
 		virtual ~ISpriteContainer() {}
 	};
 
-	struct IThreePatchContainer {
-		virtual IThreePatchContainer& setPatchDirection(bool const vertical)										= 0;
-		virtual IThreePatchContainer& setPatchSheetSize(Vector2 const& size)										= 0;
-		virtual IThreePatchContainer& setPatchFrame(Vector2 const& head, Vector2 const& body, Vector2 const& tail)	= 0;
-		virtual ~IThreePatchContainer() {}
+	struct ThreePatchContainer {
+		struct PatchFrame {
+			Vector2 head = Vector2(0, 0);
+			Vector2 body = Vector2(1, 0);
+			Vector2 tail = Vector2(2, 0);
+		};
+
+		struct PatchSetting {
+			PatchFrame	frame		= {};
+			Vector2		size		= 1;
+			bool		vertical	= false;
+		} patch;
 	};
 
 	struct AttackObject {
@@ -182,7 +192,7 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct Long {
-		Property<Vector2>	length;
+		Property<float>	length;
 	};
 
 	struct Glowing {
@@ -198,7 +208,7 @@ namespace Makai::Ex::Game::Danmaku {
 		};
 		usize toggleTime	= 5;
 		usize untoggleTime	= 5;
-		virtual IToggleable& toggle(bool const state) = 0;
+		virtual IToggleable& toggle(bool const state, bool const immediately = false) = 0;
 		bool isToggled() {return toggleState == State::TS_TOGGLED;}
 		virtual ~IToggleable() {}
 	protected:
