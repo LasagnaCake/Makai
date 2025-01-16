@@ -244,8 +244,10 @@ namespace Makai::Ex::Game::Danmaku {
 			free.resize(cfg.size);
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
+				float const zoff = i / static_cast<float>(cfg.size);
 				all.pushBack(Laser({*this, cfg}));
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
+				all.back().sprite->local.position.z = zoff;
 				free.pushBack(&all.back());
 			}
 		}

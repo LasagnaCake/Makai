@@ -134,6 +134,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 		usize counter	= 0;
 		bool spawnglow	= false;
+		float spawnsize = 1;
+
+		constexpr static float SPAWN_GOWTH = .5;
 
 		Vector4 animColor = Graph::Color::WHITE;
 
@@ -226,6 +229,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < despawnTime) {
 						spawnglow = true;
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
+						spawnsize = 1.0 + animColor.a * SPAWN_GOWTH;
 					} else {
 						spawnglow = false;
 						onAction(*this, Action::SOA_DESPAWN_END);
@@ -236,6 +240,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < spawnTime) {
 						spawnglow = true;
 						animColor.a = counter / static_cast<float>(spawnTime);
+						spawnsize = (1.0 + SPAWN_GOWTH) - animColor.a;
 					} else {
 						spawnglow = false;
 						setCollisionState(true);
@@ -274,10 +279,14 @@ namespace Makai::Ex::Game::Danmaku {
 			free.resize(cfg.size);
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
+				float const zoff = i / static_cast<float>(cfg.size);
 				all.pushBack(Bullet({*this, cfg}));
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
-				if (&cfg.mainMesh != &cfg.glowMesh)
+				all.back().mainSprite->local.position.z = zoff;
+				if (&cfg.mainMesh != &cfg.glowMesh) {
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
+					all.back().glowSprite->local.position.z = zoff;
+				}
 				free.pushBack(&all.back());
 			}
 		}

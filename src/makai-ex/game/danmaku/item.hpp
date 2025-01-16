@@ -249,10 +249,14 @@ namespace Makai::Ex::Game::Danmaku {
 			free.resize(cfg.size);
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
+				float const zoff = i / static_cast<float>(cfg.size);
 				all.pushBack(Item({*this, cfg}));
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
-				if (&cfg.mainMesh != &cfg.glowMesh)
+				all.back().mainSprite->local.position.z = zoff;
+				if (&cfg.mainMesh != &cfg.glowMesh) {
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
+					all.back().glowSprite->local.position.z = zoff;
+				}
 				free.pushBack(&all.back());
 			}
 		}
