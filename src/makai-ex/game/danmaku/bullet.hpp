@@ -229,9 +229,11 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < despawnTime) {
 						spawnglow = true;
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
-						spawnsize = 1.0 + animColor.a * SPAWN_GOWTH;
+					//	spawnsize = 1.0 + animColor.a * SPAWN_GOWTH;
 					} else {
 						spawnglow = false;
+						animColor.a = 0;
+						spawnsize = 1.0;
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
@@ -243,6 +245,8 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnsize = (1.0 + SPAWN_GOWTH) - animColor.a;
 					} else {
 						spawnglow = false;
+						animColor.a = 1;
+						spawnsize = 1.0;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = State::SOS_ACTIVE;
