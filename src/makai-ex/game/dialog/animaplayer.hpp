@@ -4,20 +4,26 @@
 #include <makai/makai.hpp>
 
 #include "../../anima/anima.hpp"
+#include "../core/core.hpp"
 
 #include "scene.hpp"
 
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
 	/// @brief Anima-based dialog player.
-	struct AnimaPlayer: private AVM::Engine, IPlayable, AUpdateable {
+	struct AnimaPlayer: private AVM::Engine, IPlayable, AUpdateable, Controllable {
 		using Engine::state, Engine::error;
 
 		using typename Engine::State;
 
 		/// @brief Constructs the dialog player.
 		/// @param scene Scene to use.
-		AnimaPlayer(Scene& scene): AVM::Engine(), scene(scene) {}
+		AnimaPlayer(Scene& scene): AVM::Engine(), scene(scene) {
+			bindmap = Dictionary<String>({	
+				{"next", "dialog-next"},
+				{"skip", "dialog-skip"}
+			});
+		}
 
 		/// @brief Dialog scene.
 		Scene& scene;
@@ -83,14 +89,6 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Pauses the dialog.
 		/// @return Reference to self.
 		AnimaPlayer& pause() override final		{paused = true; return *this;					}
-
-		/// @brief Input manager.
-		Input::Manager		input;
-		/// @brief Input bind map.
-		Dictionary<String>	bindmap	= Dictionary<String>({
-			{"next", "dialog-next"},
-			{"skip", "dialog-skip"}
-		});
 
 	protected:
 		/// @brief Returns a color by a name hash.
@@ -253,9 +251,9 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		bool userAdvanced() {
-			return (
-				input.isButtonJustPressed(bindmap["next"])
-			||	input.isButtonDown(bindmap["skip"])
+			return (!waiting()) || (
+				action("next", true)
+			||	action("skip")
 			);
 		}
 

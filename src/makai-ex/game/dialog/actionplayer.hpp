@@ -3,15 +3,23 @@
 
 #include <makai/makai.hpp>
 
+#include "../core/controlable.hpp"
+
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
 	/// @brief Action-based player.
-	struct AActionPlayer: AUpdateable, IPlayable {
+	struct AActionPlayer: AUpdateable, IPlayable, Controllable {
 		/// @brief Program to perform.
 		using Program = Co::Generator<usize>;
 
 		/// @brief Empty constructor.
-		AActionPlayer() {isFinished = true;}
+		AActionPlayer() {
+			isFinished = true;
+			bindmap = Dictionary<String>({	
+				{"next", "dialog-next"},
+				{"skip", "dialog-skip"}
+			});
+		}
 
 		/// @brief Program to perform. Must be implemented.
 		/// @return Program.
@@ -62,22 +70,14 @@ namespace Makai::Ex::Game::Dialog {
 			return *this;
 		}
 
-		/// @brief Input manager.
-		Input::Manager		input;
-		/// @brief Input bind map.
-		Dictionary<String>	bindmap	= Dictionary<String>({
-			{"next", "dialog-next"},
-			{"skip", "dialog-skip"}
-		});
-
 	private:
 		/// @brief Whether the dialog is starting.
 		bool starting = true;
 
 		bool userAdvanced() {
 			return (!waiting()) || (
-				input.isButtonJustPressed(bindmap["next"])
-			||	input.isButtonDown(bindmap["skip"])
+				action("next", true)
+			||	action("skip")
 			);
 		}
 
