@@ -25,6 +25,7 @@ namespace Makai::Ex::Game::Danmaku {
 			toggleState		= IToggleable::State::TS_UNTOGGLED;
 			toggleCounter	= 0;
 			patch			= {};
+			animColor		= Graph::Color::WHITE;
 			return *this;
 		}
 
@@ -147,11 +148,12 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position		= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale			= trans.scale;
+			Vector4 const spriteColor = color.value * animColor;
 			for (usize i: {0, 1, 2, 3}) {
 				Vector2 const uvOffset = Vector2(i&1, (i&2)>>1);
-				sprite->color.head[i] = color.value;
-				sprite->color.body[i] = color.value;
-				sprite->color.tail[i] = color.value;
+				sprite->color.head[i] = spriteColor;
+				sprite->color.body[i] = spriteColor;
+				sprite->color.tail[i] = spriteColor;
 				sprite->uv.head[i] = (patch.frame.head + uvOffset) / patch.size;
 				sprite->uv.body[i] = (patch.frame.body + uvOffset) / patch.size;
 				sprite->uv.tail[i] = (patch.frame.tail + uvOffset) / patch.size;
