@@ -34,7 +34,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void animate() {
 			switch (objectState) {
-				case State::SOS_DESPAWNING: {
+				case AServerObject::State::SOS_DESPAWNING: {
 					if (counter++ < despawnTime) {
 						spawnglow = true;
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
@@ -44,7 +44,7 @@ namespace Makai::Ex::Game::Danmaku {
 						free();
 					}
 				}
-				case State::SOS_SPAWNING: {
+				case AServerObject::State::SOS_SPAWNING: {
 					if (counter++ < spawnTime) {
 						spawnglow = true;
 						animColor.a = counter / static_cast<float>(spawnTime);
@@ -52,7 +52,7 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnglow = false;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
-						objectState = State::SOS_ACTIVE;
+						objectState = AServerObject::State::SOS_ACTIVE;
 					}
 				}
 				[[likely]]
@@ -79,7 +79,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				all.pushBack(Laser({*this, cfg}));
-				all.back().sprite = mainMesh.createReference<Graph::ThreePatchRef>();
+				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
 				free.pushBack(&all.back());
 			}
 		}
