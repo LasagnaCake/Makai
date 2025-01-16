@@ -28,6 +28,7 @@ namespace Makai::Ex::Game::Danmaku {
 			glowing			= false;
 			bouncy			= false;
 			loopy			= false;
+			animColor		= Graph::Color::WHITE;
 			return *this;
 		}
 
