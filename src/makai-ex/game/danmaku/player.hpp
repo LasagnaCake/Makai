@@ -13,13 +13,13 @@ namespace Makai::Ex::Game::Danmaku {
 		Player(PlayerConfig const& cfg):
 			AGameObject(cfg) {
 				bindmap = Dictionary<String>({
-					{"left", "player/left"},
-					{"right", "player/right"},
-					{"up", "player/up"},
-					{"down", "player/down"},
-					{"shot", "player/shot"},
-					{"bomb", "player/bomb"},
-					{"focus", "player/focus"}
+					{"up",		"player/up"		},
+					{"down",	"player/down"	},
+					{"left",	"player/left"	},
+					{"right",	"player/right"	},
+					{"shot",	"player/shot"	},
+					{"bomb",	"player/bomb"	},
+					{"focus",	"player/focus"	}
 				});
 			}
 	};
