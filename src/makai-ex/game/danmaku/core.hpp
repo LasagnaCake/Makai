@@ -184,6 +184,12 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct IToggleable {
+		enum State {
+			TS_UNTOGGLED,
+			TS_TOGGLING,
+			TS_TOGGLED,
+			TS_UNTOGGLING,
+		};
 		usize toggleTime = 5;
 		virtual IToggleable& toggle(bool const state) = 0;
 	};
