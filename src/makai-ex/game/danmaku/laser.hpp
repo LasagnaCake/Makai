@@ -90,6 +90,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (isFree()) return *this;
 			if (discardable && !force) return *this;
 			despawn();
+			return *this;
 		}
 
 		Laser& spawn() override {
@@ -98,6 +99,7 @@ namespace Makai::Ex::Game::Danmaku {
 			counter = 0;
 			objectState = AServerObject::State::SOS_SPAWNING;
 			onAction(*this, Action::SOA_SPAWN_BEGIN);
+			return *this;
 		}
 
 		Laser& despawn() override {
@@ -106,6 +108,7 @@ namespace Makai::Ex::Game::Danmaku {
 			counter = 0;
 			objectState = AServerObject::State::SOS_DESPAWNING;
 			onAction(*this, Action::SOA_DESPAWN_BEGIN);
+			return *this;
 		}
 
 		Laser& setFree(bool const state) override {

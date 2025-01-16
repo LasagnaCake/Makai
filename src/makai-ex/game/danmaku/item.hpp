@@ -20,13 +20,25 @@ namespace Makai::Ex::Game::Danmaku {
 		Item& clear() override {
 			if (isFree()) return *this;
 			AServerObject::clear();
-			radius			= {};
-			scale			= {};
-			sprite			= {};
-			glowing			= false;
-			rotateSprite	= true;
-			dope			= false;
-			animColor		= Graph::Color::WHITE;
+			radius				= {};
+			scale				= {};
+			sprite				= {};
+			gravity				= {};
+			terminalVelocity	= {};
+			glowing				= false;
+			rotateSprite		= true;
+			dope				= false;
+			animColor			= Graph::Color::WHITE;
+			return *this;
+		}
+
+		Item& reset() override {
+			if (isFree()) return *this;
+			AServerObject::reset();
+			gravity.factor			= 0;
+			terminalVelocity.factor	= 0;
+			radius.factor			= 0;
+			scale.factor			= 0;
 			return *this;
 		}
 
@@ -52,6 +64,68 @@ namespace Makai::Ex::Game::Danmaku {
 			playfieldCheck();
 		}
 
+		Item& discard(bool const force = false) override {
+			if (isFree()) return *this;
+			if (discardable && !force) return *this;
+			despawn();
+			return *this;
+		}
+
+		Item& spawn() override {
+			if (isFree()) return *this;
+			setCollisionState(false);
+			counter = 0;
+			objectState = State::SOS_SPAWNING;
+			onAction(*this, Action::SOA_SPAWN_BEGIN);
+			return *this;
+		}
+
+		Item& despawn() override {
+			if (isFree()) return *this;
+			setCollisionState(false);
+			counter = 0;
+			objectState = State::SOS_DESPAWNING;
+			onAction(*this, Action::SOA_DESPAWN_BEGIN);
+			return *this;
+		}
+
+		void onCollision(Collider const& collider, CollisionDirection const direction) override {
+			if (isFree()) return;
+			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap())
+				discard();
+		}
+
+		Item& setSpriteRotation(float const angle) override {
+			if (isFree()) return *this;
+			if (mainSprite)
+				mainSprite->local.rotation.z	= angle;
+			if (glowSprite)
+				glowSprite->local.rotation.z	= angle;
+			return *this;
+		}
+
+		float getSpriteRotation() const override {
+			if (isFree()) return 0;
+			if (mainSprite)
+				return mainSprite->local.rotation.z;
+			if (glowSprite)
+				return glowSprite->local.rotation.z;
+			return 0;
+		}
+
+		Item& setFree(bool const state) override {
+			if (state) {
+				active = false;
+				hideSprites();
+				objectState = State::SOS_FREE;
+				release(this, server);
+			} else {
+				active = true;
+				objectState = State::SOS_ACTIVE;
+			}
+			return *this;
+		}
+
 		bool rotateSprite = true;
 
 	private:
@@ -70,6 +144,8 @@ namespace Makai::Ex::Game::Danmaku {
 		Vector4 animColor = Graph::Color::WHITE;
 
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
+
+		friend class ItemServer;
 
 		constexpr static void processMax(float& value, float const max) {
 			if (value > abs(max) || value < -abs(max))
@@ -151,6 +227,46 @@ namespace Makai::Ex::Game::Danmaku {
 			||	trans.position.y > br.y
 			) free();
 		}
+	};
+
+	struct ItemServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, GameObjectConfig {};
+
+	struct ItemServer: AServer, AUpdateable {
+		using CollisionMask = AGameObject::CollisionMask;
+
+		Graph::ReferenceHolder& mainMesh;
+		Graph::ReferenceHolder& glowMesh;
+
+		GameArea& board;
+		GameArea& playfield;
+
+		ItemServer(ItemServerConfig const& cfg):
+			mainMesh(cfg.mainMesh),
+			glowMesh(cfg.glowMesh),
+			board(cfg.board),
+			playfield(cfg.playfield) {
+			all.resize(cfg.size);
+			free.resize(cfg.size);
+			used.resize(cfg.size);
+			for (usize i = 0; i < cfg.size; ++i) {
+				all.pushBack(Item({*this, cfg}));
+				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
+				if (&cfg.mainMesh != &cfg.glowMesh)
+					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
+				free.pushBack(&all.back());
+			}
+		}
+
+	protected:
+		ItemServer& release(HandleType const& object) override {
+			if (used.find(object) == -1) return *this;
+			Item& item = *(object.as<Item>());
+			AServer::release(object);
+			return *this;
+		}
+
+	private:
+		List<Item> all;
 	};
 }
 

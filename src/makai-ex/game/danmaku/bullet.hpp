@@ -65,6 +65,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (isFree()) return *this;
 			if (discardable && !force) return *this;
 			despawn();
+			return *this;
 		}
 
 		Bullet& spawn() override {
@@ -73,6 +74,7 @@ namespace Makai::Ex::Game::Danmaku {
 			counter = 0;
 			objectState = State::SOS_SPAWNING;
 			onAction(*this, Action::SOA_SPAWN_BEGIN);
+			return *this;
 		}
 
 		Bullet& despawn() override {
@@ -81,6 +83,7 @@ namespace Makai::Ex::Game::Danmaku {
 			counter = 0;
 			objectState = State::SOS_DESPAWNING;
 			onAction(*this, Action::SOA_DESPAWN_BEGIN);
+			return *this;
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
@@ -95,7 +98,7 @@ namespace Makai::Ex::Game::Danmaku {
 				mainSprite->local.rotation.z	= angle;
 			if (glowSprite)
 				glowSprite->local.rotation.z	= angle;
-			if (isFree()) return *this;
+			return *this;
 		}
 
 		float getSpriteRotation() const override {
@@ -104,7 +107,7 @@ namespace Makai::Ex::Game::Danmaku {
 				return mainSprite->local.rotation.z;
 			if (glowSprite)
 				return glowSprite->local.rotation.z;
-			if (isFree()) return 0;
+			return 0;
 		}
 
 		Bullet& setFree(bool const state) override {
