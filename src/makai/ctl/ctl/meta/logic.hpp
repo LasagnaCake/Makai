@@ -41,8 +41,11 @@ namespace Meta {
 	template<bool COND, class TTrue, class TFalse>
 	using DualType = typename Impl::DualType<COND, TTrue, TFalse>::Type;
 
-	template<class T, template <class> class TApply>
-	using Apply = typename Impl::ApplyType<T, TApply>::Type;
+	/// @brief Applies a type qualifier to another type, if it is not void.
+	/// @tparam T Type to apply qualifier to.
+	/// @tparam TQualifier<class> Qualifier to apply.
+	template<class T, template <class> class TQualifier>
+	using Apply = typename Impl::ApplyType<T, TQualifier>::Type;
 }
 
 CTL_NAMESPACE_END
