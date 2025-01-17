@@ -4,7 +4,7 @@
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
 #include "../templates.hpp"
-#include "../container/pointer.hpp"
+#include "../container/pointer/smart.hpp"
 #include "atomic.hpp"
 
 CTL_NAMESPACE_BEGIN

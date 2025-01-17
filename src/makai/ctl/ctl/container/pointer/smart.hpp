@@ -1,15 +1,15 @@
-#ifndef CTL_CONTAINER_POINTER_H
-#define CTL_CONTAINER_POINTER_H
+#ifndef CTL_CONTAINER_POINTER_SMART_H
+#define CTL_CONTAINER_POINTER_SMART_H
 
-#include "../namespace.hpp"
-#include "../templates.hpp"
-#include "../typeinfo.hpp"
-#include "../ctypes.hpp"
-#include "../typetraits/traits.hpp"
-#include "../algorithm/strconv.hpp"
-#include "error.hpp"
-#include "function.hpp"
-#include "map.hpp"
+#include "../../namespace.hpp"
+#include "../../templates.hpp"
+#include "../../typeinfo.hpp"
+#include "../../ctypes.hpp"
+#include "../../typetraits/traits.hpp"
+#include "../../algorithm/strconv.hpp"
+#include "../error.hpp"
+#include "../function.hpp"
+#include "../map.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -384,25 +384,15 @@ private:
 #undef CTL_PTR_ASSERT_WEAK
 #undef CTL_PTR_IF_STRONG
 
-/// @brief `Pointer` analog for a weak pointer.
-/// @tparam T Type of data pointed to.
-template <Type::Container::Pointable T>
-using WeakPointer	= Pointer<T, true>;
-
-/// @brief `Pointer` analog for a strong pointer.
-/// @tparam T Type of data pointed to.
-template <Type::Container::Pointable T>
-using StrongPointer	= Pointer<T, false>;
-
-/// @brief `StrongPointer` analog for a managed instance of an object.
+/// @brief `Pointer` analog for a managed instance of an object (strong pojnter).
 /// @tparam T Type of data pointed to.
 template<Type::Container::Pointable T>
-using Instance	= StrongPointer<T>;
+using Instance	= Pointer<T, false>;
 
-/// @brief `WeakPointer` analog for a handle to an object.
+/// @brief `Pointer` analog for a handle to an object (weak pojnter).
 /// @tparam T Type of data pointed to.
 template<Type::Container::Pointable T>
-using Handle	= WeakPointer<T>;
+using Handle	= Pointer<T, true>;
 
 #pragma GCC diagnostic pop
 

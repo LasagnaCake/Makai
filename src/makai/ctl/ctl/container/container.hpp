@@ -13,7 +13,6 @@
 #include "map.hpp"
 #include "nullable.hpp"
 #include "pair.hpp"
-#include "pointer.hpp"
 #include "result.hpp"
 #include "set.hpp"
 #include "setget.hpp"
@@ -22,5 +21,6 @@
 #include "tuple.hpp"
 #include "variant.hpp"
 #include "view.hpp"
+#include "pointer/pointer.hpp"
 
 #endif // CTL_CONTAINER_H

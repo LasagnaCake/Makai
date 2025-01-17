@@ -50,7 +50,13 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) {
-			if (collider.affects.match(CollisionLayer::ENEMY_MASK).overlap()) {}
+			if (collider.affects.match(CollisionLayer::ENEMY_MASK).overlap())
+				pichun();
+		}
+
+	protected:
+		void pichun() {
+
 		}
 	};
 }

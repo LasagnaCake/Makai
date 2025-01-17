@@ -78,6 +78,8 @@ struct InvalidCastException:		Exception {using Exception::Exception;};
 struct FailedActionException:		Exception {using Exception::Exception;};
 /// @brief Missing stream.
 struct MissingStreamException:		Exception {using Exception::Exception;};
+/// @brief Null pointer.
+struct NullPointerException:		Exception {using Exception::Exception;};
 
 namespace {
 	template<Type::Convertible<char const*> T>
