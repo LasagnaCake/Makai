@@ -1,5 +1,5 @@
-#ifndef CTL_CONTAINER_POINTER_SMART_H
-#define CTL_CONTAINER_POINTER_SMART_H
+#ifndef CTL_CONTAINER_POINTER_SHARED_H
+#define CTL_CONTAINER_POINTER_SHARED_H
 
 #include "../../namespace.hpp"
 #include "../../templates.hpp"
@@ -64,7 +64,7 @@ namespace Base {
 #define CTL_PTR_IF_STRONG			if constexpr(!WEAK)
 /// @brief Smart pointer, with automatic reference counting.
 /// @tparam T Type of data pointed to.
-/// @tparam W Whether the given `Pointer` is weak.
+/// @tparam W Whether the given `Shared` is weak.
 /// @note
 ///		Differences between strong and weak pointers:
 /// @note
@@ -81,11 +81,11 @@ namespace Base {
 ///			Both types will throw if object is no longer usable,
 ///			either via releasing the pointer to it, or when a strong pointer destroys it.
 template <Type::Container::Pointable T, bool W>
-class Pointer:
+class Shared:
 	private Base::ReferenceCounter<pointer>,
 	Derived<Base::ReferenceCounter<pointer>>,
 	Typed<T>,
-	SelfIdentified<Pointer<T, W>>,
+	SelfIdentified<Shared<T, W>>,
 	Ordered {
 public:
 	/// @brief Whether the pointer is a strong or weak pointer.
@@ -94,7 +94,7 @@ public:
 	using ReferenceCounter::isBound;
 
 	using Typed				= ::CTL::Typed<T>;
-	using SelfIdentified	= ::CTL::SelfIdentified<Pointer<T, WEAK>>;
+	using SelfIdentified	= ::CTL::SelfIdentified<Shared<T, WEAK>>;
 
 	using
 		typename Typed::DataType,
@@ -113,40 +113,40 @@ public:
 		typename Ordered::OrderType
 	;
 
-	/// @brief New smart pointer type.
+	/// @brief New shared pointer type.
 	/// @tparam NW Whether the pointer is weak.
 	template<bool NW>
-	using NewPointerType = Pointer<DataType, NW>;
+	using NewPointerType = Shared<DataType, NW>;
 
-	/// @brief Opposite smart pointer type.
+	/// @brief Opposite shared pointer type.
 	using OtherType = NewPointerType<!WEAK>;
 
 	/// @brief Operation type.
 	using OperationType = Decay::AsFunction<DataType(ConstReferenceType)>;
 
 	/// @brief Default constructor.
-	constexpr Pointer() {}
+	constexpr Shared() {}
 	
 	/// @brief Move constructor (strong pointer).
 	/// @param other Strong pointer to bind.
-	constexpr Pointer(NewPointerType<false>&& other)		{CTL_PTR_ASSERT_STRONG_MOVE;	bind(other);}
+	constexpr Shared(NewPointerType<false>&& other)			{CTL_PTR_ASSERT_STRONG_MOVE;	bind(other);}
 	/// @brief Move constructor (weak pointer).
 	/// @param other Weak pointer to bind.
-	constexpr Pointer(NewPointerType<true>&& other)			{CTL_PTR_ASSERT_WEAK;			bind(other);}
+	constexpr Shared(NewPointerType<true>&& other)			{CTL_PTR_ASSERT_WEAK;			bind(other);}
 
 	/// @brief Copy constructor (strong pointer).
 	/// @param other Strong pointer to bind.
-	constexpr Pointer(NewPointerType<false> const& other)	{								bind(other);}
+	constexpr Shared(NewPointerType<false> const& other)	{								bind(other);}
 	/// @brief Move constructor (weak pointer).
 	/// @param other Weak pointer to bind.
-	constexpr Pointer(NewPointerType<true> const& other)	{CTL_PTR_ASSERT_WEAK;			bind(other);}
+	constexpr Shared(NewPointerType<true> const& other)		{CTL_PTR_ASSERT_WEAK;			bind(other);}
 
 	/// @brief Copy constructor (raw pointer).
 	/// @param obj Pointer to bind.
-	constexpr Pointer(owner<DataType> const& obj) {bind(obj);}
+	constexpr Shared(owner<DataType> const& obj) {bind(obj);}
 
 	/// @brief Destructor.
-	constexpr ~Pointer() {if (exists()) unbind();}
+	constexpr ~Shared() {if (exists()) unbind();}
 
 	/// @brief Returns the amount of references holding the current object.
 	/// @return Reference count.
@@ -214,7 +214,7 @@ public:
 
 	/// @brief Detaches the bound object from the reference system.
 	/// @return Reference to self.
-	/// @note Requires smart pointer type to be strong.
+	/// @note Requires shared pointer type to be strong.
 	constexpr SelfType& release() requires (!WEAK) {
 		if (!exists())
 			detach(ref);
@@ -223,7 +223,7 @@ public:
 
 	/// @brief Detaches a given object from the reference system.
 	/// @param ptr Object to detach.
-	/// @note Requires smart pointer type to be strong.
+	/// @note Requires shared pointer type to be strong.
 	constexpr static void detach(ref<DataType> const& ptr)
 	requires (!WEAK) {
 		if (isBound(ptr))
@@ -240,7 +240,7 @@ public:
 
 	/// @brief Returns whether this pointer is the sole owner of the bound object.
 	/// @return Whether this pointer is the sole owner of the bound object.
-	/// @note Requires smart pointer type to be strong.
+	/// @note Requires shared pointer type to be strong.
 	constexpr bool unique() const requires (!WEAK) {return count() == 1;}
 	
 	/// @brief Returns whether the object exists.
@@ -252,19 +252,19 @@ public:
 	/// @return Raw pointer to bound object.
 	constexpr PointerType operator&() const {return raw();}
 
-	/// @brief Statically casts the smart pointer to point to a new type.
+	/// @brief Statically casts the shared pointer to point to a new type.
 	/// @tparam TNew New object type.
-	/// @return Smart pointer to new object type.
+	/// @return Shared pointer to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Pointer<TNew, WEAK>		as() const			{return	static_cast<TNew*>(raw());			}
-	/// @brief Dynamically casts the smart pointer to point to a new type.
+	constexpr Shared<TNew, WEAK>		as() const			{return	static_cast<TNew*>(raw());			}
+	/// @brief Dynamically casts the shared pointer to point to a new type.
 	/// @tparam TNew New object type.
-	/// @return Smart pointer to new object type.
+	/// @return Shared pointer to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Pointer<TNew, WEAK>		polymorph() const	{return	dynamic_cast<TNew*>(raw());			}
+	constexpr Shared<TNew, WEAK>		polymorph() const	{return	dynamic_cast<TNew*>(raw());			}
 	/// @brief Returns a weak pointer to the bound object.
 	/// @return Weak pointer to object.
-	constexpr Pointer<DataType, true>	asWeak() const		{return	raw();								}
+	constexpr Shared<DataType, true>	asWeak() const		{return	raw();								}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	constexpr ref<DataType>				raw() const			{return	exists() ? getPointer() : nullptr;	}
@@ -273,11 +273,11 @@ public:
 	
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
-	/// @note Conversion is explicit if smart pointer type is strong.
+	/// @note Conversion is explicit if shared pointer type is strong.
 	constexpr explicit(!WEAK) operator ref<DataType> const() const	{return raw();		}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
-	/// @note Conversion is explicit if smart pointer type is strong.
+	/// @note Conversion is explicit if shared pointer type is strong.
 	constexpr explicit(!WEAK) operator ref<DataType>()				{return raw();		}
 
 	/// @brief Returns whether the bound object exists.
@@ -285,9 +285,9 @@ public:
 	constexpr operator bool() const	{return exists();	}
 
 	template<Type::Functional<OperationType> TFunction>
-	constexpr Pointer& modify(TFunction const& op)		{T& ref = *getPointer(); ref = op(ref); return (*this);	}
+	constexpr Shared& modify(TFunction const& op)		{T& ref = *getPointer(); ref = op(ref); return (*this);	}
 	template<Type::Functional<OperationType> TFunction>
-	constexpr Pointer& operator()(TFunction const& op)	{return modify(op);										}
+	constexpr Shared& operator()(TFunction const& op)	{return modify(op);										}
 
 	/// @brief Returns whether the bound object doesn't exist.
 	/// @return Whether the bound object doesn't exist.
@@ -302,12 +302,12 @@ public:
 	/// @return Order between objects.
 	constexpr OrderType operator<=>(PointerType const& obj) const	{return	ref <=> obj;		}
 	
-	/// @brief Equality comparison operator (`Pointer`).
-	/// @param obj `Pointer` to compare to.
+	/// @brief Equality comparison operator (`Shared`).
+	/// @param obj `Shared` to compare to.
 	/// @return Whether they're equal.
 	constexpr bool operator==(SelfType const& other) const			{return ref == other.ref;	}
-	/// @brief Threeway comparison operator (`Pointer`).
-	/// @param obj `Pointer` to compare to.
+	/// @brief Threeway comparison operator (`Shared`).
+	/// @param obj `Shared` to compare to.
 	/// @return Order between objects.
 	constexpr OrderType operator<=>(SelfType const& other) const	{return ref <=> other.ref;	}
 
@@ -384,15 +384,15 @@ private:
 #undef CTL_PTR_ASSERT_WEAK
 #undef CTL_PTR_IF_STRONG
 
-/// @brief `Pointer` analog for a managed instance of an object (strong pojnter).
+/// @brief `Shared` analog for a managed instance of an object (strong pojnter).
 /// @tparam T Type of data pointed to.
 template<Type::Container::Pointable T>
-using Instance	= Pointer<T, false>;
+using Instance	= Shared<T, false>;
 
-/// @brief `Pointer` analog for a handle to an object (weak pojnter).
+/// @brief `Shared` analog for a handle to an object (weak pojnter).
 /// @tparam T Type of data pointed to.
 template<Type::Container::Pointable T>
-using Handle	= Pointer<T, true>;
+using Handle	= Shared<T, true>;
 
 #pragma GCC diagnostic pop
 
