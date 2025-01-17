@@ -161,6 +161,13 @@ private:
 	}
 };
 
+template<class T>
+struct RefRef {
+	constexpr operator Reference<T>() const {return *refref;}
+private:
+	T** refref = nullptr;
+};
+
 CTL_NAMESPACE_END
 
 #endif
