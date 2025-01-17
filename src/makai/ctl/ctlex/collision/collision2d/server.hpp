@@ -94,7 +94,7 @@ namespace Collision::C2D {
 			template <usize> friend class CollisionServer;
 
 			/// @brief Amount of created colliders.
-			static usize count = 0;
+			inline static usize count = 0;
 
 			/// @brief Copy constructor (deleted). 
 			constexpr Collider(Collider const& other)	= delete;
