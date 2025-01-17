@@ -403,7 +403,7 @@ class Vector2: Ordered {
 			float data[2] = {0};
 		};
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr Vector2() {}
 
 		/// @brief Constructs the vector's components with a starting value.
@@ -635,7 +635,7 @@ class Vector3: Ordered {
 			float data[3] = {0};
 		};
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr Vector3() {}
 
 		/// @brief Constructs the vector's components with a starting value.
@@ -924,7 +924,7 @@ class Vector4: Ordered {
 			float data[4] = {0};
 		};
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr Vector4() {}
 
 		/// @brief Constructs the vector's components with a starting value.
@@ -1205,7 +1205,7 @@ struct Transform {
 	/// @brief Scaling component type.
 	typedef TScale		ScaleType;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Transform():
 		position(0),
 		rotation(0),

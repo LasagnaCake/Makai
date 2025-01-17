@@ -240,7 +240,7 @@ namespace OS::FS {
 	struct FileTree {
 		/// @brief File tree entry.
 		struct Entry {
-			/// @brief Empty constructor.
+			/// @brief Default constructor.
 			constexpr Entry() {}
 			
 			/// @brief Constructs a path entry as a file.

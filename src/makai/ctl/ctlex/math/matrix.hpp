@@ -79,7 +79,7 @@ public:
 	static_assert(R > 0, "Matrix row size must not be zero!");
 	static_assert(C > 0, "Matrix column size must not be zero!");
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Matrix() {}
 
 	/// @brief Constructs the matrix's main diagonal with a value.

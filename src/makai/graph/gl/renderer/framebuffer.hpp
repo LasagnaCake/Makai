@@ -30,7 +30,7 @@ namespace Makai::Graph {
 		/// @brief Basic screen buffer.
 		class ABuffer: private BufferObject {
 		public:
-			/// @brief Empty constructor.
+			/// @brief Default constructor.
 			ABuffer() {}
 
 			/// @brief Creates the buffer with a given width and height.
@@ -106,7 +106,7 @@ namespace Makai::Graph {
 	/// @brief Render operation buffer.
 	class DrawBuffer: public Base::ABuffer, public Blendable {
 	public:
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		DrawBuffer(): Blendable() {}
 
 		/// @brief Creates the buffer with a given width and height.

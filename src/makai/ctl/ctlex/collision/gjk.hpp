@@ -49,7 +49,7 @@ namespace GJK {
 		using PointArrayType = Array<VectorType, D+1>;
 		//using VectorType = Vector<DIMENSION>;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr Simplex(): count(0) {}
 
 		/// @brief Constructs the simplex from a list of points.

@@ -126,7 +126,7 @@ public:
 //		BaseType::popBack
 	;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr BaseString(): BaseType() {
 		BaseType::pushBack('\0');
 	}

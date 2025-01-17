@@ -12,7 +12,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Program to perform.
 		using Program = Co::Generator<usize>;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		AActionPlayer() {
 			isFinished = true;
 			bindmap = Dictionary<String>({	

@@ -22,7 +22,7 @@ namespace Base {
 		/// @brief Bit size of type.
 		constexpr static usize BIT_SIZE	= SIZE * 8;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr BasicInfo() {}
 		/// @brief Copy constructor (deleted).
 		constexpr BasicInfo(BasicInfo const& other)	= delete;

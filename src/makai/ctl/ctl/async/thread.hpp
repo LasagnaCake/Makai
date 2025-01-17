@@ -22,7 +22,7 @@ struct Thread:
 
 	using BaseType::swap;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	Thread() noexcept:					BaseType(), exect(*this)												{}
 	/// @brief Move constructor.
 	/// @param other `Thread` to move.
@@ -108,7 +108,7 @@ struct Thread:
 		/// @brief Returns the ID as its underlying STL counterpart.
 		/// @return ID as `std::thread::id`.
 		BaseType const& base() const {return (*this);}
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		ID(): BaseType() {}
 
 		/// @brief Copy constructor (defaulted).

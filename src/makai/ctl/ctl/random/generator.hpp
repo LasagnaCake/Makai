@@ -25,7 +25,7 @@ namespace Base {
 		/// @brief Whether the random number generator is ecure.
 		constexpr static bool SECURE = false;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Generator(): engine()				{}
 		/// @brief Constructs the generator from a seed.
 		/// @param seed Seed to use.
@@ -86,7 +86,7 @@ namespace Base {
 		/// @brief Whether the random number generator is ecure.
 		constexpr static bool SECURE = true;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Generator(): engine()							{}
 
 		/// @brief Copy constructor (deleted).

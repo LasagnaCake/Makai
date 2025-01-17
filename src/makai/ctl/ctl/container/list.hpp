@@ -99,7 +99,7 @@ public:
 
 	using ComparatorType = SimpleComparator<DataType>;
 
-	/// Empty constructor.
+	/// Default constructor.
 	constexpr List() {invoke(1);}
 
 	/// @brief Constructs the `List` with a preallocated capacity.

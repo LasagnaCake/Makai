@@ -36,7 +36,7 @@ public:
 	/// @brief Signal database type.
 	typedef Dictionary<List<SignalWrapper>>				SignalDatabase;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	NotificationServer() {}
 
 	/// @brief Subscribes an action to a signal.
@@ -266,7 +266,7 @@ template<typename... Args>
 struct Notification {
 	typedef Signal<Args...>	SignalType;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	Notification() {}
 	
 	/// @brief Registers which signal this notification should fire.

@@ -272,7 +272,7 @@ namespace Collision::C2D {
 
 	/// @brief Convex shape bound with dynamic vertex count.
 	struct Shape: IBound2D {
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr Shape() {}
 
 		/// @brief Destructor.

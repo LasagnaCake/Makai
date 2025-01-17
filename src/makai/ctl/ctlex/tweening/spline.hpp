@@ -37,7 +37,7 @@ namespace Spline {
 		/// @brief Points to interpolate between.
 		List<T> points;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr Linear() {}
 
 		/// @brief Constructs the spline with a series of points.
@@ -95,7 +95,7 @@ namespace Spline {
 		template<CTL::Type::Math::Operatable T, usize N>
 		class Spline: public ISplinoid<T> {
 		public:
-			/// @brief Empty constructor.
+			/// @brief Default constructor.
 			constexpr Spline() {}
 
 			/// @brief Constructs the spline from a series of sections.
@@ -204,7 +204,7 @@ namespace Spline {
 		template<CTL::Type::Math::Operatable T>
 		class Spline: public ISplinoid<T> {
 		public:
-			/// @brief Empty constructor.
+			/// @brief Default constructor.
 			constexpr Spline() {}
 
 			/// @brief Constructs the spline from a series of sections.

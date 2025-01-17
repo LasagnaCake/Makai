@@ -26,7 +26,7 @@ namespace Makai::Graph {
 
 		void attach(String const& code, ShaderType const& shaderType);
 	public:
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Shader();
 
 		/// @brief Creates a shader and associates it to the object.

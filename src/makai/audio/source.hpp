@@ -13,7 +13,7 @@ namespace Makai::Audio {
 	public:
 		using Callback = const Signal<>;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		ASource();
 
 		/// @brief Creates the source from a file.

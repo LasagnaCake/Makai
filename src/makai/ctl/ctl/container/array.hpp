@@ -65,7 +65,7 @@ public:
 
 	static_assert(N <= MAX_SIZE, "Array size must not be bigger than highest SizeType!");
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Array()	{}
 	/// @brief Fixed array constructor.
 	/// @param arr Array to initialize with.

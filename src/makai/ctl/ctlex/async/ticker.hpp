@@ -39,7 +39,7 @@ public:
 		friend class Ticker;
 	};
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	Ticker()	{}
 	/// @brief Destructor.
 	~Ticker()	{}

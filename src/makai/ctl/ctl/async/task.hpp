@@ -48,7 +48,7 @@ public:
 	/// @brief Nullable result type.
 	using NullableType	= Nullable<ReturnType>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Task() {}
 
 	/// @brief Copy constructor.

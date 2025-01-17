@@ -101,14 +101,14 @@ namespace Collision::C2D {
 			/// @brief Move constructor (deleted).
 			constexpr Collider(Collider&& other)		= delete;
 
-			/// @brief Empty constructor.
+			/// @brief Default constructor.
 			constexpr Collider(): ID(++count)								{CollisionServer::bind(this);}
 			/// @brief Constructs the collider from a collision area.
 			/// @param other Collision area to construct from.
 			constexpr Collider(Area const& other): Area{other}, ID(++count)	{CollisionServer::bind(this);}
 		};
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr CollisionServer() {}
 
 		constexpr static Instance<Collider> createCollider() {

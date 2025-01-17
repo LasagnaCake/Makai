@@ -175,7 +175,7 @@ namespace Makai::Tool::Arch {
 			uint64 const minimum;
 		};
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		FileArchive() {}
 
 		/// @brief Opens a file archive for reading.

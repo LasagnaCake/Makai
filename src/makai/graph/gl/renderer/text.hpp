@@ -38,7 +38,7 @@ namespace Makai::Graph {
 		using FontInstance = Instance<FontData>;
 		
 		// This needs to be initialized this specific way, else it breaks somehow???
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		FontFace();
 
 		/// @brief Constructs the font face from font data.

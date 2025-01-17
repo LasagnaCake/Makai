@@ -56,7 +56,7 @@ public:
 	/// @brief Thread-safe operation.
 	using OperationType = Decay::AsFunction<void(ReferenceType)>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Atomic() noexcept											{}
 	/// @brief Copy constructor.
 	/// @param data Value to copy from.

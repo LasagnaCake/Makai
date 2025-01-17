@@ -37,7 +37,7 @@ struct BitMask:
 
 	using OtherType = BitMask<TData, S, !I>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr BitMask(): BitMask(INITIAL_STATE) {}
 
 	/// @brief Constructs a `BitMask` with all bits set to a given state.

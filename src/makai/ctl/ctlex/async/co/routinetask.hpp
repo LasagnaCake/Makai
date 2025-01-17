@@ -24,7 +24,7 @@ namespace Co {
 		/// @brief Destructor.
 		virtual ~ARoutineTask() {}
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		ARoutineTask() {}
 
 		/// @brief Copy constructor (deleted).

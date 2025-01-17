@@ -141,7 +141,7 @@ struct MemorySlice:
 		typename Typed::PointerType
 	;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr MemorySlice()					{				}
 	/// @brief Constructs the memory slice with space for a number of elements.
 	/// @param sz Element count to allocate for.

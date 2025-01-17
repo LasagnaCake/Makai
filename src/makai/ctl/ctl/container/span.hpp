@@ -66,7 +66,7 @@ struct Span:
 
 	using ComparatorType = SimpleComparator<DataType>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Span() noexcept: contents(nullptr), count(0) {}
 
 	/// @brief Copy constructor (`Span`).

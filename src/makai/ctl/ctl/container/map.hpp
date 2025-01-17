@@ -121,7 +121,7 @@ public:
 		BaseType::empty
 	;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr BaseSimpleMap(): BaseType() {}
 
 	/// @brief Constructs the container with a preallocated capacity.

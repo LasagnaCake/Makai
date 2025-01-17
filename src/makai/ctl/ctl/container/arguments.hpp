@@ -35,7 +35,7 @@ struct Arguments:
 	/// @brief Destructor.
 	constexpr ~Arguments() noexcept {delete[] start;}
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Arguments() noexcept: start(nullptr), length(0) {}
 
 	/// @brief Constructs the argument list with a fixed array of arguments.

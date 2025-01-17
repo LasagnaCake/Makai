@@ -16,7 +16,7 @@ namespace Makai::Graph {
 			IT_TEXTURE_2D
 		};
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Image() {}
 
 		/// @brief Destructor.

@@ -37,7 +37,7 @@ namespace Base {
 			/// @brief How many references are being held.
 			ssize	count	= 0;
 
-			/// @brief Empty constructor.
+			/// @brief Default constructor.
 			constexpr Reference() = default;
 
 			/// @brief Basic constructor. 
@@ -124,7 +124,7 @@ public:
 	/// @brief Operation type.
 	using OperationType = Decay::AsFunction<DataType(ConstReferenceType)>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Pointer() {}
 	
 	/// @brief Move constructor (strong pointer).

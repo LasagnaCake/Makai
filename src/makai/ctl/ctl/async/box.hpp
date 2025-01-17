@@ -45,7 +45,7 @@ public:
 	/// @brief Mutex type.
 	using MutexType = BaseType;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Box()	noexcept										{}
 	/// @brief Copy constructor.
 	/// @param data Data to copy from.

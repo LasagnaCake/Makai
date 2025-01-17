@@ -124,7 +124,7 @@ struct Pair:
 	/// @brief "B" value.
 	BType b;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Pair() = default;
 	/// @brief Constructs only `a`.
 	/// @param a Value of `a`.
@@ -204,7 +204,7 @@ struct KeyValuePair:
 	/// @brief Value.
 	BType	value;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr KeyValuePair() = default;
 
 	/// @brief Constructs only the key.
@@ -299,7 +299,7 @@ struct LeftRightPair:
 	/// @return Const reference to `right`.
 	constexpr BType const& back() const	{return right;	}
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr LeftRightPair() = default;
 	
 	/// @brief Constructs only the left side.
@@ -373,7 +373,7 @@ struct FirstSecondPair:
 	/// @return Const reference to `second`.
 	constexpr BType const& back() const	{return second;	}
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr FirstSecondPair() = default;
 
 	/// @brief Constructs only the first value.

@@ -146,7 +146,7 @@ public:
     /// @return Reference to self.
     constexpr SelfType& operator=(SelfType const& f)	{destroy(); assign(f); return *this;								}
 
-    /// @brief Empty constructor.
+    /// @brief Default constructor.
     constexpr Function() {}
 
     /// @brief Move constructor (callable).

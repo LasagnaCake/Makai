@@ -72,7 +72,7 @@ public:
 	using STDConstForwardIterator	= ConstPointerType;
 	using STDConstReverseIterator	= std::reverse_iterator<ConstPointerType>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Iterator() {}
 
 	/// @brief Copy constructor.

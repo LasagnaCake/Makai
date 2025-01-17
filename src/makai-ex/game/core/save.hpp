@@ -75,7 +75,7 @@ namespace Makai::Ex::Game {
 
 	/// @brief Save file.
 	struct Save {
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Save() {}
 
 		/// @brief Constructs the save file.

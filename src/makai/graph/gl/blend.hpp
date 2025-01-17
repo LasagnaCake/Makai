@@ -67,7 +67,7 @@ namespace Makai::Graph {
 		/// @brief Default blend mode.
 		inline static BlendMode DEFAULT_MODE = {};
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Blendable(): blend(DEFAULT_MODE) {}
 
 		/// @brief Constructs the blendable with a given mode.

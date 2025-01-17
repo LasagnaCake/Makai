@@ -54,7 +54,7 @@ public:
 	/// @brief Whether the `Functor` is a procedure (does not return any value).
 	constexpr static bool PROCEDURE = Type::Different<ReturnType, void>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Functor(): id(0) {}
 	/// @brief Callable/wrapper constructor.
 	/// @param f Callable to bind.

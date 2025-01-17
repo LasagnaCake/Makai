@@ -92,7 +92,7 @@ namespace Co {
 			return true;
 		}
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Promise() {}
 		
 		/// @brief Constructs the coroutine.
@@ -197,7 +197,7 @@ namespace Co {
 		/// @brief Coroutine context.
 		ContextType context;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Promise() {}
 
 		/// @brief Constructs the coroutine.

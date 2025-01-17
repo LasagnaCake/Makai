@@ -150,7 +150,7 @@ namespace Engine {
 		Algorithm algo;
 
 	public:
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		Secure(): algo()						{}
 
 		/// @brief Move constructor.

@@ -177,7 +177,7 @@ namespace StaticStringMangler {
 		/// @brief String size.
 		constexpr static usize SIZE = 1;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr BinaryShuffle()							{				}
 		/// @brief Constructs the mangled string from a single character.
 		/// @param dat Character to mangle.
@@ -216,7 +216,7 @@ namespace StaticStringMangler {
 		/// @brief Shuffle parity.
 		constexpr static bool PARITY = P;
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr BinaryShuffle(): trueSize(Impl::shuffle<SizeType>(SIZE)) {}
 
 		/// @brief Constructs a mangled string from a fixed string.
@@ -395,7 +395,7 @@ namespace StaticStringMangler {
 		static_assert(SIZE > 1);
 		static_assert(Impl::nearestPrime(SIZE, true) != SIZE);
 
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr PrimeShuffle(): trueSize(Impl::shuffle<SizeType>(SIZE)) {}
 
 		/// @brief Constructs a mangled string from a fixed string.

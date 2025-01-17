@@ -9,7 +9,7 @@ CTL_NAMESPACE_BEGIN
 /// @brief Function to be called at the end of a scope.
 /// @note Cannot be directly heap-allocated.
 struct Defer {
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Defer() {}
 	
 	/// @brief Sets a function to be called at the end of the scope.

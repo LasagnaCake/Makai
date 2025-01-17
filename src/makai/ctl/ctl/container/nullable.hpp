@@ -25,7 +25,7 @@ public:
 	using typename Nulled::NullType;
 	using typename Ordered::OrderType;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Nullable() noexcept			{}
 	/// @brief Null constructor.
 	constexpr Nullable(NullType) noexcept	{}
@@ -105,7 +105,7 @@ public:
 	/// @brief Procedure type.
 	using ProcedureType	= Decay::AsFunction<void(DataType const&)>;
 
-	/// @brief Empty constructor.
+	/// @brief Default constructor.
 	constexpr Nullable() noexcept										{												}
 	/// @brief Null constructor.
 	constexpr Nullable(NullType) noexcept								{												}

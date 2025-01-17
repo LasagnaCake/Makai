@@ -104,7 +104,7 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @brief Parameter pack arguments.
 			StringList args;
 
-			/// @brief Empty constructor.
+			/// @brief Default constructor.
 			constexpr ParameterPack() {}
 
 			/// @brief Creates a parameter pack from a parameter pack string.
@@ -391,7 +391,7 @@ namespace Makai::Ex::AVM::Compiler {
 
 	/// @brief Anima binary builder.
 	struct BinaryBuilder: Anima {
-		/// @brief Empty constructor.
+		/// @brief Default constructor.
 		constexpr BinaryBuilder(): Anima{
 			.data = StringList({"true", "false"})
 		} {}
