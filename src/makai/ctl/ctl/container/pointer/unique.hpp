@@ -66,20 +66,25 @@ struct Unique:
 	/// @tparam TNew New object type.
 	/// @return `Reference` to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Reference<TNew>	as() const				{return	static_cast<TNew*>(raw());		}
+	constexpr Reference<TNew>	as() const			{return	static_cast<TNew*>(raw());		}
 	/// @brief Dynamically casts the pointer to point to a new type.
 	/// @tparam TNew New object type.
 	/// @return `Reference` to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Reference<TNew>	polymorph() const		{return	dynamic_cast<TNew*>(raw());		}
+	constexpr Reference<TNew>	morph() const		{return	dynamic_cast<TNew*>(raw());		}
 	/// @brief Reinterprets the pointer as a different pointer type.
 	/// @tparam TNew New object type.
 	/// @return `Reference` to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Reference<TNew>	reinterpret() const		{return	reinterpret_cast<TNew*>(raw());	}
+	constexpr Reference<TNew>	reinterpret() const	{return	reinterpret_cast<TNew*>(raw());	}
+	/// @brief Reinterprets the shared pointer as a pointer type with different constness and volatileness.
+	/// @tparam TNew New object type.
+	/// @return Reference to new object type.
+	template<class TNew = AsNonConst<DataType>>
+	constexpr Reference<TNew>	mutate() const		{return	const_cast<TNew*>(raw());		}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
-	constexpr ref<DataType>		raw() const				{return	ref;							}
+	constexpr ref<DataType>		raw() const			{return	ref;							}
 
 	/// @brief Relinquishes ownership of the bound object.
 	/// @return Pointer to object.

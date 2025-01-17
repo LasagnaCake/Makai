@@ -88,7 +88,7 @@ namespace Collision::C2D {
 			usize const ID;
 
 			/// @brief data associated with the collider.
-			Reference<void> data;
+			Reference<void const> data;
 
 		private:
 			template <usize> friend class CollisionServer;

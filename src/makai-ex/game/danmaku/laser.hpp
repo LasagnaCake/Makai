@@ -255,7 +255,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<Laser> laser = b.polymorph<Laser>();
+				Reference<Laser> laser = b.morph<Laser>();
 				laser->setFree(false);
 				laser->clear();
 				return laser.as<AGameObject>();
@@ -321,7 +321,7 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		LaserServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
-			Laser& laser = *object.polymorph<Laser>();
+			Laser& laser = *object.morph<Laser>();
 			AServer::release(object);
 			return *this;
 		}

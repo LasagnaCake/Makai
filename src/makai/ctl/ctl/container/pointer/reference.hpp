@@ -62,12 +62,17 @@ struct Reference:
 	/// @tparam TNew New object type.
 	/// @return Reference to new object type.
 	template<class TNew>
-	constexpr Reference<TNew>		polymorph() const	{return	dynamic_cast<TNew*>(raw());		}
+	constexpr Reference<TNew>		morph() const		{return	dynamic_cast<TNew*>(raw());		}
 	/// @brief Reinterprets the pointer as a different pointer type.
 	/// @tparam TNew New object type.
 	/// @return Reference to new object type.
 	template<class TNew>
 	constexpr Reference<TNew>		reinterpret() const	{return	reinterpret_cast<TNew*>(raw());	}
+	/// @brief Reinterprets the pointer as a pointer type with different constness and volatileness.
+	/// @tparam TNew New object type.
+	/// @return Reference to new object type.
+	template<class TNew = AsNonConst<DataType>>
+	constexpr Reference<TNew>		mutate() const		{return	const_cast<TNew*>(raw());		}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	constexpr ref<DataType>			raw() const			{return	ref;							}
