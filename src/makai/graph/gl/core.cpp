@@ -310,20 +310,20 @@ void Makai::Graph::API::setFrontFace(bool const clockwise) {
 }
 
 #ifdef MAKAILIB_DEBUG
-Instance<Debug::Context> renderContext = nullptr;
+Unique<Debug::Context> renderContext;
 #endif // MAKAILIB_DEBUG
 
 void Makai::Graph::API::beginRender() {
 	#ifdef MAKAILIB_DEBUG
 	if (apiDebug)
-		renderContext = new Debug::Context("render");
+		renderContext.bind(new Debug::Context("render"));
 	#endif // MAKAILIB_DEBUG
 }
 void Makai::Graph::API::endRender() {
 	#ifdef MAKAILIB_DEBUG
 	if (apiDebug) {
 		DEBUGLN(renderContext->report());
-		renderContext.destroy();
+		renderContext.unbind();
 	}
 	#endif // MAKAILIB_DEBUG
 	useMainBuffer();

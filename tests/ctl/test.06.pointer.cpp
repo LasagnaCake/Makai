@@ -1,7 +1,7 @@
 #include <ctl/ctl.hpp>
 #include <ctlex/ctlex.hpp>
 
-using CTL::Instance, CTL::Handle;
+using CTL::Instance, CTL::Handle, CTL::Unique, CTL::Reference;
 
 template<class T>
 void print(Handle<T> const& p) {

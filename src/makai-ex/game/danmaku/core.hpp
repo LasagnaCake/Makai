@@ -144,12 +144,12 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 
-		Handle<CollisionArea> collision() const {
-			return collider.asWeak().as<CollisionArea>();
+		Reference<CollisionArea> collision() const {
+			return collider.as<CollisionArea>();
 		}
 
 	private:
-		Instance<Collider> collider = CollisionServer::createCollider();
+		Unique<Collider> collider = CollisionServer::createCollider();
 
 		CollisionMask const affects;
 		CollisionMask const affectedBy;

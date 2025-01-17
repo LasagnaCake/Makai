@@ -111,12 +111,12 @@ namespace Collision::C2D {
 		/// @brief Default constructor.
 		constexpr CollisionServer() {}
 
-		constexpr static Instance<Collider> createCollider() {
-			return new Collider();
+		constexpr static Unique<Collider>&& createCollider() {
+			return Unique<Collider>(new Collider());
 		}
 
-		constexpr static Instance<Collider> createCollider(Area const& area) {
-			return new Collider(area);
+		constexpr static Unique<Collider>&& createCollider(Area const& area) {
+			return Unique<Collider>(new Collider(area));
 		}
 
 		/// @brief Handles collision between a given collider, and a set of layers.
