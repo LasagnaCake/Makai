@@ -137,18 +137,17 @@ namespace Makai::Ex::Game::Danmaku {
 
 		bool active = false;
 
-	protected:
+		Reference<CollisionArea> collision() const {
+			return collider.as<CollisionArea>();
+		}
+
+	private:
 		static void bindCollisionHandler(AGameObject& self) {
 			self.collider->onCollision = [&] (Collider const& collider, CollisionDirection const direction) {
 				self.onCollision(collider, direction);
 			};
 		}
 
-		Reference<CollisionArea> collision() const {
-			return collider.as<CollisionArea>();
-		}
-
-	private:
 		Unique<Collider> collider = CollisionServer::createCollider();
 
 		CollisionMask const affects;
