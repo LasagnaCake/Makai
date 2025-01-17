@@ -6,7 +6,7 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct AServer {
 		using DataType			= AGameObject;
-		using HandleType		= Handle<DataType>;
+		using HandleType		= Reference<DataType>;
 		using ObjectRefListType	= List<DataType*>;
 		using ObjectQueryType	= List<HandleType>;
 

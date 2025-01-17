@@ -301,7 +301,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Handle<Bullet> bullet = b.polymorph<Bullet>();
+				Reference<Bullet> bullet = b.polymorph<Bullet>();
 				bullet->setFree(false);
 				bullet->clear();
 				return bullet.as<AGameObject>();

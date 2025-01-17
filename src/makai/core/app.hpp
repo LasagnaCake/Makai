@@ -115,7 +115,7 @@ namespace Makai {
 
 		/// @brief Returns the current open app. Returns `nullptr` if no app is open.
 		/// @return Current open app, or `nullptr`.
-		static Handle<App> current();
+		static Reference<App> current();
 
 		/// @brief Runs the application.
 		void run();

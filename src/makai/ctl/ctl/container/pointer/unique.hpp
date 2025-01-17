@@ -8,6 +8,8 @@
 
 CTL_NAMESPACE_BEGIN
 
+/// @brief Unique pointer.
+/// @tparam T Pointed type.
 template<Type::Safe T>
 struct Unique:
 	Typed<T>,

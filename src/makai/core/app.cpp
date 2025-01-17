@@ -307,7 +307,7 @@ App::AppState App::state() {
 
 void App::setWindowSize(Vector2 const& size) {}
 
-Handle<App> App::current() {
+Reference<App> App::current() {
 	return mainApp;
 }
 

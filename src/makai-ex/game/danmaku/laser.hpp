@@ -255,7 +255,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Handle<Laser> laser = b.polymorph<Laser>();
+				Reference<Laser> laser = b.polymorph<Laser>();
 				laser->setFree(false);
 				laser->clear();
 				return laser.as<AGameObject>();
