@@ -3,6 +3,6 @@
 
 #include "smart.hpp"
 #include "reference.hpp"
-//#include "unique.hpp"
+#include "unique.hpp"
 
 #endif
