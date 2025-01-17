@@ -115,8 +115,11 @@ namespace Type {
 		template<typename T>	struct IsUnion:			Partial::IsUnion<AsNonCV<T>>		{};
 		template<typename T>	struct IsEnumerator:	Partial::IsEnumerator<AsNonCV<T>>	{};
 
-		template<typename T>	struct IsVoid:			FalseType	{};
-		template<>				struct IsVoid<void>:	TrueType	{};
+		template<typename T>	struct IsVoid:						FalseType	{};
+		template<>				struct IsVoid<void>:				TrueType	{};
+		template<>				struct IsVoid<void const>:			TrueType	{};
+		template<>				struct IsVoid<void volatile>:		TrueType	{};
+		template<>				struct IsVoid<void volatile const>:	TrueType	{};
 
 		template<class T>			struct IsAutoArray:			FalseType	{};
 		template<class T>			struct IsAutoArray<T[]>:	TrueType	{};

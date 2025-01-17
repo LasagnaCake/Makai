@@ -10,6 +10,7 @@
 #include "../error.hpp"
 #include "../function.hpp"
 #include "../map.hpp"
+#include "unique.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -17,12 +18,6 @@ CTL_NAMESPACE_BEGIN
 #pragma GCC diagnostic ignored "-Wmismatched-new-delete"
 
 // TODO: make this thread-safe
-
-/// @brief Container-specific type constraints.
-namespace Type::Container {
-	/// Type must be a pointable type.
-	template <typename T> concept Pointable = Safe<T>;
-}
 
 /// @brief Base classes for other classes.
 namespace Base {
@@ -262,6 +257,11 @@ public:
 	/// @return Shared pointer to new object type.
 	template<Type::Container::Pointable TNew>
 	constexpr Shared<TNew, WEAK>		polymorph() const	{return	dynamic_cast<TNew*>(raw());			}
+	/// @brief Reinterprets the shared pointer as a different pointer type.
+	/// @tparam TNew New object type.
+	/// @return Reference to new object type.
+	template<Type::Container::Pointable TNew>
+	constexpr Shared<TNew, WEAK>		reinterpret() const	{return	reinterpret_cast<TNew*>(raw());		}
 	/// @brief Returns a weak pointer to the bound object.
 	/// @return Weak pointer to object.
 	constexpr Shared<DataType, true>	asWeak() const		{return	raw();								}

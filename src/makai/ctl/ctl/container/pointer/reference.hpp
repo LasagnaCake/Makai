@@ -56,17 +56,17 @@ struct Reference:
 	/// @brief Statically casts the pointer to point to a new type.
 	/// @tparam TNew New object type.
 	/// @return Reference to new object type.
-	template<Type::Container::Pointable TNew>
+	template<class TNew>
 	constexpr Reference<TNew>		as() const			{return	static_cast<TNew*>(raw());		}
 	/// @brief Dynamically casts the pointer to point to a new type.
 	/// @tparam TNew New object type.
 	/// @return Reference to new object type.
-	template<Type::Container::Pointable TNew>
+	template<class TNew>
 	constexpr Reference<TNew>		polymorph() const	{return	dynamic_cast<TNew*>(raw());		}
 	/// @brief Reinterprets the pointer as a different pointer type.
 	/// @tparam TNew New object type.
 	/// @return Reference to new object type.
-	template<Type::Container::Pointable TNew>
+	template<class TNew>
 	constexpr Reference<TNew>		reinterpret() const	{return	reinterpret_cast<TNew*>(raw());	}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.

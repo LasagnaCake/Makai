@@ -8,6 +8,12 @@
 
 CTL_NAMESPACE_BEGIN
 
+/// @brief Container-specific type constraints.
+namespace Type::Container {
+	/// Type must be a pointable type.
+	template <typename T> concept Pointable = Safe<T>;
+}
+
 /// @brief Unique pointer.
 /// @tparam T Pointed type.
 template<Type::Safe T>

@@ -24,71 +24,27 @@ struct SelfIdentified {
 template<class TData>
 struct Typed;
 
-/// @brief Tags the deriving class as having content related to `void`.
-template<>
-struct Typed<void> {
-	/// @brief Whether the associated type is `void`.
+/// @brief Tags the deriving class as having content related to a `void` type.
+/// @tparam TData Type.
+template<Type::Void TData>
+struct Typed<TData> {
+	/// @brief Whether the associated type is a `void` type.
 	constexpr static bool IS_VOID_TYPE = true;
 	/// @brief Type.
-	using DataType				= void;
+	using DataType				= TData;
 	/// @brief Constant type.
-	using ConstantType			= void const;
+	using ConstantType			= DataType const;
 	/// @brief Pointer type.
-	using PointerType			= void*;
+	using PointerType			= DataType*;
 	/// @brief Const pointer type.
-	using ConstPointerType		= void const*;
-};
-
-/// @brief Tags the deriving class as having content related to `void const`.
-template<>
-struct Typed<void const> {
-	/// @brief Whether the associated type is `void`.
-	constexpr static bool IS_VOID_TYPE = true;
-	/// @brief Type.
-	using DataType				= void const;
-	/// @brief Constant type.
-	using ConstantType			= void const;
-	/// @brief Pointer type.
-	using PointerType			= void const*;
-	/// @brief Const pointer type.
-	using ConstPointerType		= void const*;
-};
-
-/// @brief Tags the deriving class as having content related to `void volatile`.
-template<>
-struct Typed<void volatile> {
-	/// @brief Whether the associated type is `void`.
-	constexpr static bool IS_VOID_TYPE = true;
-	/// @brief Type.
-	using DataType				= void volatile;
-	/// @brief Constant type.
-	using ConstantType			= void const volatile;
-	/// @brief Pointer type.
-	using PointerType			= void volatile*;
-	/// @brief Const pointer type.
-	using ConstPointerType		= void const volatile*;
-};
-
-/// @brief Tags the deriving class as having content related to `void const volatile`.
-template<>
-struct Typed<void const volatile> {
-	/// @brief Whether the associated type is `void`.
-	constexpr static bool IS_VOID_TYPE = true;
-	/// @brief Type.
-	using DataType				= void const volatile;
-	/// @brief Constant type.
-	using ConstantType			= void const volatile;
-	/// @brief Pointer type.
-	using PointerType			= void const volatile*;
-	/// @brief Const pointer type.
-	using ConstPointerType		= void const volatile*;
+	using ConstPointerType		= DataType const*;
 };
 
 /// @brief Tags the deriving class as having content related to a specific type.
 /// @tparam TData Type.
 template<Type::NonVoid TData>
 struct Typed<TData> {
-	/// @brief Whether the associated type is `void`.
+	/// @brief Whether the associated type is a `void` type.
 	constexpr static bool IS_VOID_TYPE = false;
 	/// @brief Type.
 	using DataType				= TData;
