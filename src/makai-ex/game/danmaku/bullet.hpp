@@ -28,6 +28,7 @@ namespace Makai::Ex::Game::Danmaku {
 			glowing			= false;
 			bouncy			= false;
 			loopy			= false;
+			grazed			= false;
 			animColor		= Graph::Color::WHITE;
 			return *this;
 		}
@@ -54,6 +55,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (paused()) return;
 			color.next();
 			radius.next();
+			damage.next();
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
 			trans.scale		= scale.next();
@@ -125,6 +127,8 @@ namespace Makai::Ex::Game::Danmaku {
 		
 		bool bouncy	= false;
 		bool loopy	= false;
+
+		bool grazed	= false;
 
 	private:
 		AServer&	server;

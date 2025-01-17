@@ -83,9 +83,18 @@ namespace Collision::C2D {
 			/// @param collider Collider that this object collided with.
 			/// @param direction Collision direction.
 			Functor<void(Collider const&, Direction const)> onCollision;
+			
+			/// @brief Unique collider ID.
+			usize const ID;
+
+			/// @brief data associated with the collider.
+			ref<void> data = nullptr;
 
 		private:
 			template <usize> friend class CollisionServer;
+
+			/// @brief Amount of created colliders.
+			static usize count = 0;
 
 			/// @brief Copy constructor (deleted). 
 			constexpr Collider(Collider const& other)	= delete;
@@ -93,10 +102,10 @@ namespace Collision::C2D {
 			constexpr Collider(Collider&& other)		= delete;
 
 			/// @brief Empty constructor.
-			constexpr Collider()								{CollisionServer::bind(this);}
+			constexpr Collider(): ID(++count)								{CollisionServer::bind(this);}
 			/// @brief Constructs the collider from a collision area.
 			/// @param other Collision area to construct from.
-			constexpr Collider(Area const& other): Area{other}	{CollisionServer::bind(this);}
+			constexpr Collider(Area const& other): Area{other}, ID(++count)	{CollisionServer::bind(this);}
 		};
 
 		/// @brief Empty constructor.

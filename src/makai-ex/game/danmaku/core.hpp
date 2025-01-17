@@ -78,6 +78,7 @@ namespace Makai::Ex::Game::Danmaku {
 			affectedBy(cfg.affectedBy),
 			tags(cfg.tags) {
 				bindCollisionHandler(*this);
+				collider->data = this;
 			}
 
 		virtual ~AGameObject() {}
@@ -185,6 +186,7 @@ namespace Makai::Ex::Game::Danmaku {
 	struct AttackObject {
 		Property<float>	velocity;
 		Property<float>	rotation;
+		Property<float>	damage;
 	};
 
 	struct Circular {

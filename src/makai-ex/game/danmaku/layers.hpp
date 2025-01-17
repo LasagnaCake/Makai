@@ -79,13 +79,13 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr CollisionMask	PLAYER			= {1 << 0,	0,		0,		0		};
 		constexpr CollisionMask	PLAYER_BULLET	= {1 << 1,	0,		0,		0		};
 		constexpr CollisionMask	PLAYER_LASER	= {1 << 2,	0,		0,		0		};
-		constexpr CollisionMask	PLAYER_BOMB		= {1 << 3,	0,		0,		0		};
+		constexpr CollisionMask	PLAYER_SPELL	= {1 << 3,	0,		0,		0		};
 		constexpr CollisionMask	ENEMY			= {0,		1 << 0,	0,		0		};
 		constexpr CollisionMask	ENEMY_BULLET	= {0,		1 << 1,	0,		0		};
 		constexpr CollisionMask	ENEMY_LASER		= {0,		1 << 2,	0,		0		};
 		constexpr CollisionMask	ITEM			= {0,		0,		1 << 0,	0		};
 
-		constexpr CollisionMask PLAYER_MASK	=	PLAYER	| PLAYER_BULLET	| PLAYER_LASER	| PLAYER_BOMB	;
+		constexpr CollisionMask PLAYER_MASK	=	PLAYER	| PLAYER_BULLET	| PLAYER_LASER	| PLAYER_SPELL	;
 		constexpr CollisionMask ENEMY_MASK	=	ENEMY	| ENEMY_BULLET	| ENEMY_LASER					;
 
 		constexpr CollisionMask PLAYER_COLLISION		= ENEMY_MASK	| ITEM				;
