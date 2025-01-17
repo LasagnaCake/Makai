@@ -54,6 +54,36 @@ struct Typed<void const> {
 	using ConstPointerType		= void const*;
 };
 
+/// @brief Tags the deriving class as having content related to `void volatile`.
+template<>
+struct Typed<void volatile> {
+	/// @brief Whether the associated type is `void`.
+	constexpr static bool IS_VOID_TYPE = true;
+	/// @brief Type.
+	using DataType				= void volatile;
+	/// @brief Constant type.
+	using ConstantType			= void const volatile;
+	/// @brief Pointer type.
+	using PointerType			= void volatile*;
+	/// @brief Const pointer type.
+	using ConstPointerType		= void const volatile*;
+};
+
+/// @brief Tags the deriving class as having content related to `void const volatile`.
+template<>
+struct Typed<void const volatile> {
+	/// @brief Whether the associated type is `void`.
+	constexpr static bool IS_VOID_TYPE = true;
+	/// @brief Type.
+	using DataType				= void const volatile;
+	/// @brief Constant type.
+	using ConstantType			= void const volatile;
+	/// @brief Pointer type.
+	using PointerType			= void const volatile*;
+	/// @brief Const pointer type.
+	using ConstPointerType		= void const volatile*;
+};
+
 /// @brief Tags the deriving class as having content related to a specific type.
 /// @tparam TData Type.
 template<Type::NonVoid TData>
