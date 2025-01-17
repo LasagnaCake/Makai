@@ -8,7 +8,7 @@
 
 CTL_NAMESPACE_BEGIN
 
-template<class T>
+template<Type::Safe T>
 struct Unique:
 	Typed<T>,
 	SelfIdentified<Unique<T>>,
