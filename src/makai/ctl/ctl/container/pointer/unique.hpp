@@ -168,10 +168,10 @@ private:
 	/// @param ptr Object to bind.
 	/// @return Reference to self.
 	constexpr SelfType& bind(owner<DataType> const ptr) {
-		if (ref == obj) return (*this);
+		if (ref == ptr) return (*this);
 		unbind();
-		if (!obj) return (*this);
-		ref = obj;
+		if (!ptr) return (*this);
+		ref = ptr;
 		return (*this);
 	}
 	
