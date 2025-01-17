@@ -57,8 +57,8 @@ struct Unique:
 	/// @brief Destructor.
 	constexpr ~Unique() {unbind();}
 	
-	/// @brief Copy constructor (raw pointer).
-	/// @param obj Pointer to bind.
+	/// @brief Constructs the unique pointer from an unmanaged object.
+	/// @param obj Object to bind.
 	constexpr explicit Unique(owner<DataType> const& obj): ref(obj) {}
 	
 	/// @brief Returns a `Reference` to the underlying data.
