@@ -384,12 +384,12 @@ private:
 #undef CTL_PTR_ASSERT_WEAK
 #undef CTL_PTR_IF_STRONG
 
-/// @brief `Shared` analog for a managed instance of an object (strong pojnter).
+/// @brief `Shared` analog for a managed instance of an object (strong pointer).
 /// @tparam T Type of data pointed to.
 template<Type::Container::Pointable T>
 using Instance	= Shared<T, false>;
 
-/// @brief `Shared` analog for a handle to an object (weak pojnter).
+/// @brief `Shared` analog for a handle to an object (weak pointer).
 /// @tparam T Type of data pointed to.
 template<Type::Container::Pointable T>
 using Handle	= Shared<T, true>;
@@ -398,4 +398,4 @@ using Handle	= Shared<T, true>;
 
 CTL_NAMESPACE_END
 
-#endif // CTL_CONTAINER_POINTER_H
+#endif // CTL_CONTAINER_POINTER_SHARED_H
