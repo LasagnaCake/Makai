@@ -12,10 +12,10 @@ CTL_NAMESPACE_BEGIN
 template<class T>
 struct Reference:
 	Typed<T>,
-	SelfIdentified<Pointer<T, W>>,
+	SelfIdentified<Reference<T>>,
 	Ordered {
 	using Typed				= ::CTL::Typed<T>;
-	using SelfIdentified	= ::CTL::SelfIdentified<Pointer<T, WEAK>>;
+	using SelfIdentified	= ::CTL::SelfIdentified<Reference<T>>;
 
 	using
 		typename Typed::DataType,
@@ -34,6 +34,9 @@ struct Reference:
 		typename Ordered::OrderType
 	;
 
+	/// @brief Default constructor.
+	constexpr Reference() {}
+
 	/// @brief Move constructor (defaulted).
 	/// @param other `Reference` to move.
 	constexpr Reference(Reference&& other)		= default;
@@ -44,7 +47,7 @@ struct Reference:
 	
 	/// @brief Copy constructor (raw pointer).
 	/// @param obj Pointer to bind.
-	constexpr Pointer(ref<DataType> const& obj): ref(obj) {}
+	constexpr Reference(ref<DataType> const& obj): ref(obj) {}
 
 	/// @brief Statically casts the pointer to point to a new type.
 	/// @tparam TNew New object type.
@@ -94,10 +97,14 @@ struct Reference:
 	/// @param obj Object to reference.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(PointerType const& obj)	{ref = (obj); return (*this);		}
-	/// @brief Assignment operator.
-	/// @param obj Object to reference.
+	/// @brief Copy assignment operator (defaulted).
+	/// @param obj `Reference` to copy from.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)	{ref = (other.ref); return (*this);	}
+	constexpr Reference& operator=(Reference const& other)	= default;
+	/// @brief Move assignment operator (defaulted).
+	/// @param obj `Reference` to move.
+	/// @return Reference to self.
+	constexpr Reference& operator=(Reference&& other)		= default;
 	
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
