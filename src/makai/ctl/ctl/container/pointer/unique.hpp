@@ -53,6 +53,9 @@ struct Unique:
 
 	/// @brief Copy constructor (deleted)
 	constexpr Unique(Unique const& other)	= delete;
+
+	/// @brief Destructor.
+	constexpr ~Unique() {unbind();}
 	
 	/// @brief Copy constructor (raw pointer).
 	/// @param obj Pointer to bind.
@@ -165,15 +168,11 @@ struct Unique:
 
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
-	constexpr operator ref<DataType> const() const	{return raw();		}
+	constexpr explicit operator ref<DataType> const() const	{return raw();		}
 
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
-	constexpr operator ref<DataType>()				{return raw();		}
-
-private:
-	/// @brief Pointer to referenced object.
-	PointerType ref = nullptr;
+	constexpr explicit operator ref<DataType>()				{return raw();		}
 
 	/// @brief Binds an object to the pointer.
 	/// @param ptr Object to bind.
@@ -194,6 +193,10 @@ private:
 		ref = nullptr;
 		return (*this);
 	}
+
+private:
+	/// @brief Pointer to referenced object.
+	PointerType ref = nullptr;
 
 	constexpr PointerType getPointer() {
 		if (!exists()) nullPointerError();
