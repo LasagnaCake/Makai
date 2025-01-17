@@ -22,7 +22,44 @@ struct SelfIdentified {
 /// @brief Tags the deriving class as having content related to a specific type.
 /// @tparam TData Type.
 template<class TData>
-struct Typed {
+struct Typed;
+
+/// @brief Tags the deriving class as having content related to `void`.
+template<>
+struct Typed<void> {
+	/// @brief Whether the associated type is `void`.
+	constexpr static bool IS_VOID_TYPE = true;
+	/// @brief Type.
+	using DataType				= void;
+	/// @brief Constant type.
+	using ConstantType			= void const;
+	/// @brief Pointer type.
+	using PointerType			= void*;
+	/// @brief Const pointer type.
+	using ConstPointerType		= void const*;
+};
+
+/// @brief Tags the deriving class as having content related to `void const`.
+template<>
+struct Typed<void const> {
+	/// @brief Whether the associated type is `void`.
+	constexpr static bool IS_VOID_TYPE = true;
+	/// @brief Type.
+	using DataType				= void const;
+	/// @brief Constant type.
+	using ConstantType			= void const;
+	/// @brief Pointer type.
+	using PointerType			= void const*;
+	/// @brief Const pointer type.
+	using ConstPointerType		= void const*;
+};
+
+/// @brief Tags the deriving class as having content related to a specific type.
+/// @tparam TData Type.
+template<Type::NonVoid TData>
+struct Typed<TData> {
+	/// @brief Whether the associated type is `void`.
+	constexpr static bool IS_VOID_TYPE = false;
 	/// @brief Type.
 	using DataType				= TData;
 	/// @brief Constant type.

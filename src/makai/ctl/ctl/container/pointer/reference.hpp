@@ -9,22 +9,26 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Specialized reference.
 /// @tparam T Pointed type.
-template<class T>
+template<class TData>
 struct Reference:
-	Typed<T>,
-	SelfIdentified<Reference<T>>,
+	Typed<TData>,
+	SelfIdentified<Reference<TData>>,
 	Ordered {
-	using Typed				= ::CTL::Typed<T>;
-	using SelfIdentified	= ::CTL::SelfIdentified<Reference<T>>;
+	using Typed				= ::CTL::Typed<TData>;
+	using SelfIdentified	= ::CTL::SelfIdentified<Reference<TData>>;
 
 	using
 		typename Typed::DataType,
 		typename Typed::ConstantType,
-		typename Typed::ReferenceType,
-		typename Typed::ConstReferenceType,
 		typename Typed::PointerType,
 		typename Typed::ConstPointerType
 	;
+
+	using Typed::IS_VOID_TYPE;
+
+	using ReferenceType			= Meta::Apply<DataType,		Impl::ReferenceType>;
+	using ConstReferenceType	= Meta::Apply<ConstantType,	Impl::ReferenceType>;
+	using TemporaryType			= Meta::Apply<DataType,		Impl::TemporaryType>;
 
 	using
 		typename SelfIdentified::SelfType
@@ -112,20 +116,20 @@ struct Reference:
 
 	/// @brief Returns the value pointed to.
 	/// @return Reference to object being pointed to.
-	constexpr ReferenceType value() const {
+	constexpr ReferenceType value() const requires (!IS_VOID_TYPE) {
 		if (!exists()) nullPointerError();
 		return (*ref);
 	}
 	
 	/// @brief Pointer member access operator.
 	/// @return Underlying pointer.
-	constexpr PointerType operator->()				{return getPointer();	}
+	constexpr PointerType operator->() requires (!IS_VOID_TYPE)				{return getPointer();	}
 	/// @brief Pointer member access operator.
 	/// @return Underlying pointer.
-	constexpr PointerType const operator->() const	{return getPointer();	}
+	constexpr PointerType const operator->() const requires (!IS_VOID_TYPE)	{return getPointer();	}
 	/// @brief Dereference operator.
 	/// @return Reference to underlying object.
-	constexpr ReferenceType operator*() const		{return value();		}
+	constexpr ReferenceType operator*() const requires (!IS_VOID_TYPE)		{return value();		}
 	
 	/// @brief Returns whether the object exists.
 	/// @return Whether the object exists.
