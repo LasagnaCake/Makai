@@ -77,7 +77,7 @@ struct Unique:
 	/// @return `Reference` to new object type.
 	template<Type::Container::Pointable TNew>
 	constexpr Reference<TNew>	reinterpret() const	{return	reinterpret_cast<TNew*>(raw());	}
-	/// @brief Reinterprets the shared pointer as a pointer type with different constness and volatileness.
+	/// @brief Reinterprets the pointer as a pointer type with different constness and volatileness.
 	/// @tparam TNew New object type.
 	/// @return Reference to new object type.
 	template<class TNew = AsNonConst<DataType>>
