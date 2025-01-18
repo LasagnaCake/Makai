@@ -67,12 +67,10 @@ namespace Makai::Ex::Game::Danmaku {
 			if (!active) return;
 			AGameObject::onUpdate(delta);
 			if (paused()) return;
-			pollInputs();
 			friction.clamp(0, 1);
+			pollInputs();
 			doMovement(delta);
-			if (bombTime > 0)		--bombTime;
-			if (shotTime > 0)		--shotTime;
-			if (invincibleTime > 0)	--invincibleTime;
+			updateTimers();
 			if (action("bomb", true)	&& !bombTime && areFlagsSet(CAN_BOMB))	onBomb();
 			if (action("shot")			&& !shotTime && areFlagsSet(CAN_SHOOT))	onShot();
 		}
@@ -174,6 +172,12 @@ namespace Makai::Ex::Game::Danmaku {
 				speed = Math::lerp<Vector2>(speed, vel, friction);
 				trans.position += direction * speed * delta;
 			} else trans.position += direction * vel * delta;
+		}
+
+		void updateTimers() {
+			if (bombTime > 0)		--bombTime;
+			if (shotTime > 0)		--shotTime;
+			if (invincibleTime > 0)	--invincibleTime;
 		}
 
 		Vector2 speed = 0;
