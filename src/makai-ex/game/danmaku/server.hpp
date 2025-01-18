@@ -133,28 +133,35 @@ namespace Makai::Ex::Game::Danmaku {
 		AServerObject& setCollisionState(bool const canCollide = true) {
 			if (auto collider = collision())
 				collider->canCollide = canCollide;
+			return *this;
 		}
 
 		AServerObject& setCollisionMask(CollisionMask const& mask, bool const forAffectedBy = false) {
-			if (!collision()) return;
-			if (forAffectedBy)	collision()->affectedBy	= mask;
-			else				collision()->affects	= mask;
+			if (auto colli = collision()) {
+				if (forAffectedBy)	colli->affectedBy	= mask;
+				else				colli->affects		= mask;
+			}
+			return *this;
 		}
 
 		CollisionMask getCollisionMask(bool const affectedBy = false) {
-			if (!collision()) return {};
-			if (affectedBy)	return collision()->affectedBy;
-			else			return collision()->affects;
+			if (auto colli = collision()) {
+				if (affectedBy)	return colli->affectedBy;
+				else			return colli->affects;
+			}
+			return CollisionMask(0);
 		}
 
 		AServerObject& setCollisionTags(CollisionMask const& tags) {
-			if (!collision()) return;
-			collision()->tags = tags;
+			if (auto colli = collision())
+				colli->tags = tags;
+			return *this;
 		}
 
 		CollisionMask getCollisionTags() {
-			if (!collision()) return {};
-			return collision()->tags;
+			if (auto colli = collision())
+				return colli->tags;
+			return CollisionMask(0);
 		}
 
 		State state() {return objectState;};
