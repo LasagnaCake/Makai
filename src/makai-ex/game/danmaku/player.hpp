@@ -55,10 +55,10 @@ namespace Makai::Ex::Game::Danmaku {
 			Instance<Vector2>::detach(&trans.position);
 		}
 
-		constexpr static usize CAN_MOVE			= 1 << 0;
-		constexpr static usize CAN_FOCUS		= 1 << 1;
-		constexpr static usize CAN_SHOOT		= 1 << 2;
-		constexpr static usize CAN_BOMB			= 1 << 3;
+		constexpr static usize CAN_MOVE		= 1 << 0;
+		constexpr static usize CAN_FOCUS	= 1 << 1;
+		constexpr static usize CAN_SHOOT	= 1 << 2;
+		constexpr static usize CAN_BOMB		= 1 << 3;
 
 		usize flags = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
 
