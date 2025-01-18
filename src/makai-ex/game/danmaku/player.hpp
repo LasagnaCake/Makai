@@ -71,8 +71,8 @@ namespace Makai::Ex::Game::Danmaku {
 			pollInputs();
 			doMovement(delta);
 			updateTimers();
-			if (action("bomb", true)	&& !bombTime && areFlagsSet(CAN_BOMB))	onBomb();
-			if (action("shot")			&& !shotTime && areFlagsSet(CAN_SHOOT))	onShot();
+			if (action("bomb", true)	&& !bombTime && areAnyFlagsSet(CAN_BOMB))	onBomb();
+			if (action("shot")			&& !shotTime && areAnyFlagsSet(CAN_SHOOT))	onShot();
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -137,13 +137,17 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		APlayer& getHurt(Reference<AGameObject> const& object) {
-			if (invincibleTime || areFlagsSet(INVINCIBLE)) return *this;
+			if (invincibleTime || areAnyFlagsSet(INVINCIBLE)) return *this;
 			onDamage(object);
 			return *this;
 		}
 
-		bool areFlagsSet(usize const mask) const {
+		bool areAnyFlagsSet(usize const mask) const {
 			return flags & mask;
+		}
+
+		bool areAllFlagsSet(usize const mask) const {
+			return (flags & mask) == mask;
 		}
 
 	protected:
@@ -166,7 +170,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void doMovement(float const delta) {
-			if (!areFlagsSet(CAN_MOVE)) return;
+			if (!areAnyFlagsSet(CAN_MOVE)) return;
 			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
 			if (friction.min() < 1) {
 				speed = Math::lerp<Vector2>(speed, vel, friction);
