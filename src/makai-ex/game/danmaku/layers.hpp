@@ -80,17 +80,20 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr CollisionMask	PLAYER_BULLET	= {1 << 1,	0,		0,		0		};
 		constexpr CollisionMask	PLAYER_LASER	= {1 << 2,	0,		0,		0		};
 		constexpr CollisionMask	PLAYER_SPELL	= {1 << 3,	0,		0,		0		};
+		constexpr CollisionMask	PLAYER_GRAZEBOX	= {1 << 4,	0,		0,		0		};
+		constexpr CollisionMask	PLAYER_ITEMBOX	= {1 << 5,	0,		0,		0		};
 		constexpr CollisionMask	ENEMY			= {0,		1 << 0,	0,		0		};
 		constexpr CollisionMask	ENEMY_BULLET	= {0,		1 << 1,	0,		0		};
 		constexpr CollisionMask	ENEMY_LASER		= {0,		1 << 2,	0,		0		};
 		constexpr CollisionMask	ITEM			= {0,		0,		1 << 0,	0		};
+		constexpr CollisionMask	BULLET_ERASER	= {0,		0,		0,		1 << 0	};
 
 		constexpr CollisionMask PLAYER_MASK	=	PLAYER	| PLAYER_BULLET	| PLAYER_LASER	| PLAYER_SPELL	;
 		constexpr CollisionMask ENEMY_MASK	=	ENEMY	| ENEMY_BULLET	| ENEMY_LASER					;
 
-		constexpr CollisionMask PLAYER_COLLISION		= ENEMY_MASK	| ITEM				;
-		constexpr CollisionMask ENEMY_COLLISION			= PLAYER_MASK						;
-		constexpr CollisionMask ITEM_COLLISION			= PLAYER		| PLAYER_ITEMBOX	;
+		constexpr CollisionMask PLAYER_COLLISION		= ENEMY_MASK							;
+		constexpr CollisionMask ENEMY_COLLISION			= PLAYER_MASK							;
+		constexpr CollisionMask ITEM_COLLISION			= PLAYER_GRAZEBOX	| PLAYER_ITEMBOX	;
 		
 		constexpr CollisionMask ENEMY_ATTACK_COLLISION	= PLAYER	| PLAYER_GRAZEBOX	| PLAYER_ITEMBOX	;
 		constexpr CollisionMask PLAYER_ATTACK_COLLISION	= ENEMY												;
@@ -100,10 +103,8 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionMask = Makai::Collision::C2D::LayerMask;
 
 		constexpr CollisionMask	BULLET_ERASER	= {1 << 0,	0,		0,		0	};
-		constexpr CollisionMask	GRAZEABLE		= {1 << 1,	0,		0,		0	};
-		constexpr CollisionMask	PLAYER_HITBOX	= {0,		1 << 0,	0,		0	};
-		constexpr CollisionMask	PLAYER_GRAZEBOX	= {0,		1 << 1,	0,		0	};
-		constexpr CollisionMask	PLAYER_ITEMBOX	= {0,		1 << 2,	0,		0	};
+		constexpr CollisionMask	FOR_PLAYER_1	= {0,		1 << 0,	0,		0	};
+		constexpr CollisionMask	FOR_PLAYER_2	= {0,		1 << 1,	0,		0	};
 	}
 }
 

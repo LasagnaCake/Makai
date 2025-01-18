@@ -12,7 +12,20 @@
 #include "../core/sprite.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	struct PlayerConfig: GameObjectConfig {};
+	struct PlayerConfig: GameObjectConfig {
+		struct Collision {
+			CollisionMask const item			= CollisionLayer::ITEM;
+			struct Enemy {
+				CollisionMask const bullet		= CollisionLayer::ENEMY_BULLET;
+				CollisionMask const laser		= CollisionLayer::ENEMY_LASER;
+				CollisionMask const body		= CollisionLayer::ENEMY_COLLISION;
+				CollisionMask const damageable	= CollisionLayer::ENEMY_MASK;
+			} const enemy = {};
+			struct Tag {
+				CollisionMask const player		= CollisionTag::FOR_PLAYER_1;
+			} const tag = {};
+		} const colli = {};
+	};
 
 	struct APlayer: Controllable, AGameObject, AUpdateable {
 		struct Velocity {
@@ -20,7 +33,7 @@ namespace Makai::Ex::Game::Danmaku {
 			Vector2 unfocused	= 0;
 		};
 
-		APlayer(PlayerConfig const& cfg): AGameObject(cfg) {
+		APlayer(PlayerConfig const& cfg): AGameObject(cfg), colli(cfg.colli) {
 			bindmap = Dictionary<String>({
 				{"up",		"player/up"		},
 				{"down",	"player/down"	},
@@ -53,7 +66,6 @@ namespace Makai::Ex::Game::Danmaku {
 				speed = Math::lerp<Vector2>(speed, vel, friction);
 				trans.position += direction * speed * delta;
 			} else trans.position += direction * vel * delta;
-//			trans.position.clamp(playfield.topLeft(), playfield.bottomRight());
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -62,12 +74,18 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) {
-			if (collider.affects.match(CollisionLayer::ENEMY_MASK).overlap())
+			if (
+				collider.affects.match(colli.enemy.damageable).overlap()
+			&&	collider.tags.match(colli.tag.player).overlap()
+			)
 				pichun();
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (collider.affects.match(CollisionLayer::ENEMY_BULLET).overlap())
+			if (
+				collider.affects.match(colli.enemy.bullet).overlap()
+			&&	collider.tags.match(colli.tag.player).overlap()
+			)
 				if (auto bullet = collider.data.reinterpret<Bullet>()) {
 					if (!bullet->grazed) {
 						bullet->grazed = true;
@@ -76,36 +94,41 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (collider.affects.match(CollisionLayer::ITEM).overlap())
-				if (auto item = collider.data.reinterpret<Item>()) {
-					item->magnet = {
-						true,
-						&trans.position,
-						itemMagnetStrength
-					};
-				}
+			if (
+				collider.affects.match(colli.item).overlap()
+			&&	collider.tags.match(colli.tag.player).overlap()
+			)
+				if (auto item = collider.data.reinterpret<Item>())
+					onItemMagnet(item);
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (collider.affects.match(CollisionLayer::ITEM).overlap())
+			if (
+				collider.affects.match(colli.item).overlap()
+			&&	collider.tags.match(colli.tag.player).overlap()
+			)
 				if (auto item = collider.data.reinterpret<Item>()) {
 					onItem(item);
 					item->discard();
 				}
 		}
 
+		virtual void onItemMagnet(Reference<Item> const& item)			{item->magnet = {true, &trans.position, {8}};}
 		virtual void onItem(Reference<Item> const& item)				= 0;
 		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
 		virtual void onBomb()											= 0;
 		virtual void onShot()											= 0;
-
-		Property<float>	itemMagnetStrength = {8};
 
 		Vector2 friction	= 0;
 		Velocity velocity	= {};
 
 		bool focused() const			{return isFocused;}
 		Vector2 getDirection() const	{return direction;}
+
+		usize bombTime = 60;
+		usize shotTime = 5;
+
+		PlayerConfig::Collision const colli;
 
 	protected:
 		void pichun() {

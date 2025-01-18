@@ -7,11 +7,16 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct BulletServer;
 
-	struct BulletConfig: ServerObjectConfig, GameObjectConfig {};
+	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
+		using GameObjectConfig::CollisionMask;
+		struct Collision {
+			CollisonMask eraser = CollisionLayer::BULLET_ERASER;
+		} const colli = {};
+	};
 	
 	struct Bullet: AServerObject, ISpriteContainer, AttackObject, Circular, Glowing, Dope, RotatesSprite {
 		Bullet(BulletConfig const& cfg):
-			AServerObject(cfg), server(cfg.server) {
+			AServerObject(cfg), server(cfg.server), colli(colli) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
@@ -89,7 +94,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
-			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap())
+			if (collider.affects.match(colli.eraser).overlap())
 				discard();
 		}
 
@@ -128,6 +133,8 @@ namespace Makai::Ex::Game::Danmaku {
 		bool loopy	= false;
 
 		bool grazed	= false;
+
+		BulletConfig::Collision const colli;
 
 	private:
 		AServer&	server;

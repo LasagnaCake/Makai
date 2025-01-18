@@ -180,7 +180,7 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct ServerConfig {
-		usize size;
+		usize const size;
 	};
 
 	struct ServerObjectConfig {
