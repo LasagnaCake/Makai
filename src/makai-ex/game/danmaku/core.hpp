@@ -77,9 +77,9 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionMask			= GameObjectConfig::CollisionMask;
 
 		AGameObject(GameObjectConfig const& cfg):
+			colli(cfg),
 			board(cfg.board),
-			playfield(cfg.playfield),
-			colli(cfg) {
+			playfield(cfg.playfield) {
 				bindCollisionHandler(*this);
 				collider->data = this;
 			}
@@ -124,6 +124,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual void onCollision(Collider const& collider, CollisionDirection const direction) = 0;
 
+		ColliderConfig const colli;
+
 	protected:
 		GameArea&	board;
 		GameArea&	playfield;
@@ -152,8 +154,6 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Unique<Collider> collider = CollisionServer::createCollider();
-
-		ColliderConfig const colli;
 
 		usize delay = 0;
 	};
