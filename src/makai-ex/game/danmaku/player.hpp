@@ -46,8 +46,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onUpdate(float delta) override {
 			AGameObject::onUpdate(delta);
 			if (!active || paused()) return;
-			direction.y = action("up") - action("down");
-			direction.x = action("right") - action("left");
+			pollInputs();
 			friction.clamp(0, 1);
 			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
 			if (friction < 1) {
@@ -97,17 +96,26 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual void onItem(Reference<Item> const& item)				= 0;
 		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
+		virtual void onBomb()											= 0;
+		virtual void onShot()											= 0;
 
 		Property<float>	itemMagnetStrength = {8};
 
 		Vector2 friction	= 0;
 		Velocity velocity	= {};
 
-		bool focused() const {return focused;}
+		bool focused() const			{return isFocused;}
+		Vector2 getDirection() const	{return direction;}
 
 	protected:
 		void pichun() {
 
+		}
+
+		void pollInputs() {
+			direction.y	= action("up") - action("down");
+			direction.x	= action("right") - action("left");
+			isFocused	= action("focus");
 		}
 
 	private:
