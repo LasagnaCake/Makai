@@ -15,7 +15,7 @@ namespace Makai::Ex::Game::Danmaku {
 	struct PlayerConfig: BoundedObjectConfig {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const colli = {
-			CollisionLayer::ITEM,
+			{},
 			CollisionLayer::ENEMY_MASK,
 			CollisionTag::FOR_PLAYER_1
 		};
