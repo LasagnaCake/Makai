@@ -63,8 +63,9 @@ namespace Makai::Ex::Game::Danmaku {
 		usize flags = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
 
 		void onUpdate(float delta) override {
+			if (!active) return;
 			AGameObject::onUpdate(delta);
-			if (!active || paused()) return;
+			if (paused()) return;
 			pollInputs();
 			friction.clamp(0, 1);
 			doMovement(delta);
@@ -75,48 +76,35 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onUpdate(float delta, App& app) override {
+			if (!active) return;
 			onUpdate(delta);
-			if (!active || paused()) return;
+			if (paused()) return;
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) {
-			if (
-				collider.affects.match(colli.enemy.attacker).overlap()
-			&&	collider.tags.match(colli.tag.player).overlap()
-			)
+			if (!collider.tags.match(colli.tag.player).overlap()) return;
+			if (collider.affects.match(colli.enemy.attacker).overlap())
 				getHurt(collider.data.reinterpret<AGameObject>());
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (
-				collider.affects.match(colli.enemy.bullet).overlap()
-			&&	collider.tags.match(colli.tag.player).overlap()
-			)
-				if (auto bullet = collider.data.reinterpret<Bullet>()) {
-					if (!bullet->grazed) {
+			if (!collider.tags.match(colli.tag.player).overlap()) return;
+			if (collider.affects.match(colli.enemy.bullet).overlap())
+				if (auto bullet = collider.data.reinterpret<Bullet>())
+					if (!bullet->grazed)
 						bullet->grazed = true;
-					}
-				}
-		}
-
-		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (
-				collider.affects.match(colli.item).overlap()
-			&&	collider.tags.match(colli.tag.player).overlap()
-			)
-				if (auto item = collider.data.reinterpret<Item>())
-					onItemMagnet(item);
-		}
-
-		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (
-				collider.affects.match(colli.item).overlap()
-			&&	collider.tags.match(colli.tag.player).overlap()
-			)
+			if (collider.affects.match(colli.item).overlap())
 				if (auto item = collider.data.reinterpret<Item>()) {
 					onItem(item);
 					item->discard();
 				}
+		}
+
+		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
+			if (!collider.tags.match(colli.tag.player).overlap()) return;
+			if (collider.affects.match(colli.item).overlap())
+				if (auto item = collider.data.reinterpret<Item>())
+					onItemMagnet(item);
 		}
 
 		virtual void onItemMagnet(Reference<Item> const& item)			{item->magnet = {true, &trans.position, {1}};}
