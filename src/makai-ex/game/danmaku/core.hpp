@@ -119,7 +119,7 @@ namespace Makai::Ex::Game::Danmaku {
 		bool paused() const {
 			if (pause.enabled)
 				return pause.time > 0;
-			return true;
+			return false;
 		}
 
 		virtual void onCollision(Collider const& collider, CollisionDirection const direction) = 0;
