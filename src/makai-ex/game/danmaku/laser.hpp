@@ -7,7 +7,12 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct LaserServer;
 
-	struct LaserConfig: ServerObjectConfig, GameObjectConfig {};
+	struct LaserConfig: ServerObjectConfig, GameObjectConfig {
+		using GameObjectConfig::CollisionMask;
+		struct Collision {
+			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
+		} const colli;
+	};
 
 	struct Laser: AServerObject, ThreePatchContainer, AttackObject, Circular, Long, IToggleable {
 		Laser(LaserConfig const& cfg):
@@ -229,7 +234,14 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 	};
 
-	struct LaserServerConfig: ServerConfig, ServerMeshConfig, GameObjectConfig {};
+	struct LaserServerConfig: ServerConfig, ServerMeshConfig, BoundedObjectConfig {
+		ColliderConfig const colli = {
+			CollisionLayer::ENEMY_LASER,
+			{},
+			CollisionTag::FOR_PLAYER_1
+		};
+		LaserConfig::Collision const mask = {};
+	};
 
 	struct LaserServer: AServer, AUpdateable {
 
@@ -247,7 +259,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.pushBack(Laser({*this, cfg}));
+				all.pushBack(Laser({*this, cfg, cfg.colli, cfg.mask}));
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
 				all.back().sprite->local.position.z = zoff;
 				free.pushBack(&all.back());

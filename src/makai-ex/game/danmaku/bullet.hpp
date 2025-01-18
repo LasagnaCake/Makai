@@ -10,7 +10,8 @@ namespace Makai::Ex::Game::Danmaku {
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
-			CollisonMask eraser = CollisionLayer::BULLET_ERASER;
+			CollisionMask const eraser	= CollisionLayer::BULLET_ERASER;
+			CollisionMask const player	= CollisionTag::FOR_PLAYER_1;
 		} const colli = {};
 	};
 	
@@ -94,7 +95,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
-			if (collider.affects.match(colli.eraser).overlap())
+			if (
+				collider.affects.match(colli.eraser).overlap()
+			&&	collider.tags.match(colli.player).overlap()
+			)
 				discard();
 		}
 
@@ -273,7 +277,14 @@ namespace Makai::Ex::Game::Danmaku {
 		friend class BulletServer;
 	};
 
-	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, GameObjectConfig {};
+	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
+		ColliderConfig const colli = {
+			CollisionLayer::ENEMY_BULLET,
+			CollisionLayer::BULLET_ERASER,
+			CollisionTag::FOR_PLAYER_1
+		};
+		BulletConfig::Collision const mask = {};
+	};
 
 	struct BulletServer: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
@@ -294,7 +305,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.pushBack(Bullet({*this, cfg}));
+				all.pushBack(Bullet({*this, cfg, cfg.colli, cfg.mask}));
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {

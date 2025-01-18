@@ -12,7 +12,13 @@
 #include "../core/sprite.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	struct PlayerConfig: GameObjectConfig {
+	struct PlayerConfig: BoundedObjectConfig {
+		using CollisionMask = ColliderConfig::CollisionMask;
+		ColliderConfig const colli = {
+			CollisionLayer::ITEM,
+			CollisionLayer::ENEMY_MASK,
+			CollisionTag::FOR_PLAYER_1
+		};
 		struct Collision {
 			CollisionMask const item			= CollisionLayer::ITEM;
 			struct Enemy {
@@ -24,7 +30,7 @@ namespace Makai::Ex::Game::Danmaku {
 			struct Tag {
 				CollisionMask const player		= CollisionTag::FOR_PLAYER_1;
 			} const tag = {};
-		} const colli = {};
+		} const mask = {};
 	};
 
 	struct APlayer: Controllable, AGameObject, AUpdateable {
@@ -33,7 +39,7 @@ namespace Makai::Ex::Game::Danmaku {
 			Vector2 unfocused	= 0;
 		};
 
-		APlayer(PlayerConfig const& cfg): AGameObject(cfg), colli(cfg.colli) {
+		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.colli}), colli(cfg.mask) {
 			bindmap = Dictionary<String>({
 				{"up",		"player/up"		},
 				{"down",	"player/down"	},

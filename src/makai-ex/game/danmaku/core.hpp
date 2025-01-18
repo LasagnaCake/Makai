@@ -55,14 +55,19 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr C2D::Box asArea() const		{return C2D::Box(center, size);				}
 	};
 
-	struct GameObjectConfig {
-		using CollisionMask = CollisionLayer::CollisionMask;
+	struct BoundedObjectConfig {
 		GameArea&			board;
 		GameArea&			playfield;
+	};
+
+	struct ColliderConfig {
+		using CollisionMask = CollisionLayer::CollisionMask;
 		CollisionMask const	affects		= {};
 		CollisionMask const	affectedBy	= {};
 		CollisionMask const	tags		= {};
 	};
+
+	struct GameObjectConfig: BoundedObjectConfig, ColliderConfig {};
 
 	struct AGameObject {
 		using PromiseType			= Makai::Co::Promise<usize, true>;
@@ -74,9 +79,7 @@ namespace Makai::Ex::Game::Danmaku {
 		AGameObject(GameObjectConfig const& cfg):
 			board(cfg.board),
 			playfield(cfg.playfield),
-			affects(cfg.affects),
-			affectedBy(cfg.affectedBy),
-			tags(cfg.tags) {
+			colli(cfg) {
 				bindCollisionHandler(*this);
 				collider->data = this;
 			}
@@ -128,9 +131,9 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onUnpause() {}
 
 		void resetCollisionState() {
-			collider->affects		= affects;
-			collider->affectedBy	= affectedBy;
-			collider->tags			= tags;
+			collider->affects		= colli.affects;
+			collider->affectedBy	= colli.affectedBy;
+			collider->tags			= colli.tags;
 		}
 
 		static PromiseType doNothing() {co_return 1;}
@@ -150,9 +153,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Unique<Collider> collider = CollisionServer::createCollider();
 
-		CollisionMask const affects;
-		CollisionMask const affectedBy;
-		CollisionMask const tags;
+		ColliderConfig const colli;
 
 		usize delay = 0;
 	};

@@ -8,7 +8,10 @@ namespace Makai::Ex::Game::Danmaku {
 	struct ItemServer;
 
 	struct ItemConfig: ServerObjectConfig, GameObjectConfig {
-
+		using GameObjectConfig::CollisionMask;
+		struct Collision {
+			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
+		} const colli;
 	};
 
 	struct Item: AServerObject, ISpriteContainer, Weighted, Circular, Glowing, Dope, RotatesSprite, Magnetizable {
@@ -235,7 +238,14 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 	};
 
-	struct ItemServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, GameObjectConfig {};
+	struct ItemServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
+		ColliderConfig const colli = {
+			CollisionLayer::ITEM,
+			{},
+			CollisionTag::FOR_PLAYER_1
+		};
+		ItemConfig::Collision const mask = {};
+	};
 
 	struct ItemServer: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
@@ -256,7 +266,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.pushBack(Item({*this, cfg}));
+				all.pushBack(Item({*this, cfg, cfg.colli, cfg.mask}));
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
