@@ -20,18 +20,17 @@ namespace Makai::Ex::Game::Danmaku {
 			Vector2 unfocused	= 0;
 		};
 
-		Player(PlayerConfig const& cfg):
-			AGameObject(cfg) {
-				bindmap = Dictionary<String>({
-					{"up",		"player/up"		},
-					{"down",	"player/down"	},
-					{"left",	"player/left"	},
-					{"right",	"player/right"	},
-					{"shot",	"player/shot"	},
-					{"bomb",	"player/bomb"	},
-					{"focus",	"player/focus"	}
-				});
-			}
+		Player(PlayerConfig const& cfg): AGameObject(cfg) {
+			bindmap = Dictionary<String>({
+				{"up",		"player/up"		},
+				{"down",	"player/down"	},
+				{"left",	"player/left"	},
+				{"right",	"player/right"	},
+				{"shot",	"player/shot"	},
+				{"bomb",	"player/bomb"	},
+				{"focus",	"player/focus"	}
+			});
+		}
 
 		constexpr static usize CAN_MOVE		= 1 << 0;
 		constexpr static usize CAN_FOCUS	= 1 << 1;
