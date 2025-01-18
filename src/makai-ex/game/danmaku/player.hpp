@@ -55,10 +55,10 @@ namespace Makai::Ex::Game::Danmaku {
 			Instance<Vector2>::detach(&trans.position);
 		}
 
-		constexpr static usize CAN_MOVE		= 1 << 0;
-		constexpr static usize CAN_FOCUS	= 1 << 1;
-		constexpr static usize CAN_SHOOT	= 1 << 2;
-		constexpr static usize CAN_BOMB		= 1 << 3;
+		constexpr static usize CAN_MOVE			= 1 << 0;
+		constexpr static usize CAN_FOCUS		= 1 << 1;
+		constexpr static usize CAN_SHOOT		= 1 << 2;
+		constexpr static usize CAN_BOMB			= 1 << 3;
 
 		usize flags = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
 
@@ -68,6 +68,10 @@ namespace Makai::Ex::Game::Danmaku {
 			pollInputs();
 			friction.clamp(0, 1);
 			doMovement(delta);
+			if (bombTime > 0) --bombTime;
+			if (shotTime > 0) --shotTime;
+			if (action("bomb", true)	&& bombTime == 0 && (flags & CAN_BOMB))		onBomb();
+			if (action("shot")			&& shotTime == 0 && (flags & CAN_SHOOT))	onShot();
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -80,7 +84,7 @@ namespace Makai::Ex::Game::Danmaku {
 				collider.affects.match(colli.enemy.attacker).overlap()
 			&&	collider.tags.match(colli.tag.player).overlap()
 			)
-				pichun(collider.data.reinterpret<AGameObject>());
+				getHurt(collider.data.reinterpret<AGameObject>());
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
@@ -128,17 +132,24 @@ namespace Makai::Ex::Game::Danmaku {
 		bool focused() const			{return isFocused;}
 		Vector2 getDirection() const	{return direction;}
 
-		usize bombTime = 60;
-		usize shotTime = 5;
-
 		PlayerConfig::Collision const colli;
 
-	protected:
-		void pichun(Reference<AGameObject> const& object) {
+		APlayer& disableBomb(usize const frames) {
+			bombTime = frames;
+		}
+		
+		APlayer& disableShot(usize const frames) {
+			shotTime = frames;
+		}
+
+		void getHurt(Reference<AGameObject> const& object) {
 			onDamage(object);
 		}
 
 	private:
+		usize shotTime = 0;
+		usize bombTime = 0;
+
 		void pollInputs() {
 			direction.y	= action("up") - action("down");
 			direction.x	= action("right") - action("left");
