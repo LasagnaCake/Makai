@@ -73,8 +73,8 @@ namespace Makai::Ex::Game::Danmaku {
 			if (bombTime > 0)		--bombTime;
 			if (shotTime > 0)		--shotTime;
 			if (invincibleTime > 0)	--invincibleTime;
-			if (action("bomb", true)	&& bombTime == 0 && areFlagsSet(CAN_BOMB))	onBomb();
-			if (action("shot")			&& shotTime == 0 && areFlagsSet(CAN_SHOOT))	onShot();
+			if (action("bomb", true)	&& !bombTime && areFlagsSet(CAN_BOMB))	onBomb();
+			if (action("shot")			&& !shotTime && areFlagsSet(CAN_SHOOT))	onShot();
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -109,7 +109,7 @@ namespace Makai::Ex::Game::Danmaku {
 					onItemMagnet(item);
 		}
 
-		Vector2		friction	= 0;
+		Vector2		friction	= 1;
 		Velocity	velocity	= {};
 
 		bool focused() const			{return isFocused;}
