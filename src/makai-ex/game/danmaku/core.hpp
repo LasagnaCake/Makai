@@ -200,6 +200,14 @@ namespace Makai::Ex::Game::Danmaku {
 		bool glowing = false;
 	};
 
+	struct Magnetizable {
+		struct MagnetSetting {
+			bool			enabled		= false;
+			Handle<Vector2>	target		= nullptr;
+			Property<float> strength	= {};
+		} magnet;
+	};
+
 	struct IToggleable {
 		enum State {
 			TS_UNTOGGLED,

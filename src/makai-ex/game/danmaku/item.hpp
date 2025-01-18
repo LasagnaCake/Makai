@@ -11,7 +11,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	};
 
-	struct Item: AServerObject, ISpriteContainer, Weighted, Circular, Glowing, Dope, RotatesSprite {
+	struct Item: AServerObject, ISpriteContainer, Weighted, Circular, Glowing, Dope, RotatesSprite, Magnetizable {
 		Item(ItemConfig const& cfg):
 			AServerObject(cfg), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
@@ -25,20 +25,24 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite				= {};
 			gravity				= {};
 			terminalVelocity	= {};
+			magnet				= {};
 			glowing				= false;
 			rotateSprite		= true;
 			dope				= false;
 			animColor			= Graph::Color::WHITE;
+			id					= 0;
+			value				= 1;
 			return *this;
 		}
 
 		Item& reset() override {
 			if (isFree()) return *this;
 			AServerObject::reset();
-			gravity.factor			= 0;
-			terminalVelocity.factor	= 0;
 			radius.factor			= 0;
 			scale.factor			= 0;
+			gravity.factor			= 0;
+			terminalVelocity.factor	= 0;
+			magnet.strength.factor	= 0;
 			return *this;
 		}
 
@@ -58,8 +62,10 @@ namespace Makai::Ex::Game::Danmaku {
 			acceleration += gravity.next();
 			processMax(acceleration.x, terminalVelocity.value.x);
 			processMax(acceleration.y, terminalVelocity.value.y);
-			trans.position	+= acceleration;
-			trans.position	+= gravity.next() * terminalVelocity.next() * delta;
+			if (magnet.enabled && magnet.target)
+				trans.position	+= trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
+			else
+				trans.position	+= acceleration;
 			trans.scale		= scale.next();
 			playfieldCheck();
 		}
@@ -126,7 +132,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		bool rotateSprite = true;
+		usize id	= 0;
+		usize value	= 1;
 
 	private:
 		AServer&	server;

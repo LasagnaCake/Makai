@@ -14,13 +14,13 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct PlayerConfig: GameObjectConfig {};
 
-	struct Player: Controllable, AGameObject, AUpdateable {
+	struct APlayer: Controllable, AGameObject, AUpdateable {
 		struct Velocity {
 			Vector2 focused		= 0;
 			Vector2 unfocused	= 0;
 		};
 
-		Player(PlayerConfig const& cfg): AGameObject(cfg) {
+		APlayer(PlayerConfig const& cfg): AGameObject(cfg) {
 			bindmap = Dictionary<String>({
 				{"up",		"player/up"		},
 				{"down",	"player/down"	},
@@ -30,6 +30,10 @@ namespace Makai::Ex::Game::Danmaku {
 				{"bomb",	"player/bomb"	},
 				{"focus",	"player/focus"	}
 			});
+		}
+
+		virtual ~APlayer() {
+			Instance<Vector2>::detach(&trans.position);
 		}
 
 		constexpr static usize CAN_MOVE		= 1 << 0;
@@ -44,12 +48,13 @@ namespace Makai::Ex::Game::Danmaku {
 			if (!active || paused()) return;
 			direction.y = action("up") - action("down");
 			direction.x = action("right") - action("left");
-			friction = Math::clamp<float>(friction, 0, 1);
+			friction.clamp(0, 1);
 			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
 			if (friction < 1) {
 				speed = Math::lerp<Vector2>(speed, vel, friction);
 				trans.position += direction * speed * delta;
 			} else trans.position += direction * vel * delta;
+//			trans.position.clamp(playfield.topLeft(), playfield.bottomRight());
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -62,7 +67,40 @@ namespace Makai::Ex::Game::Danmaku {
 				pichun();
 		}
 
-		float friction		= 0;
+		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
+			if (collider.affects.match(CollisionLayer::ENEMY_BULLET).overlap())
+				if (auto bullet = collider.data.reinterpret<Bullet>()) {
+					if (!bullet->grazed) {
+						bullet->grazed = true;
+					}
+				}
+		}
+
+		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
+			if (collider.affects.match(CollisionLayer::ITEM).overlap())
+				if (auto item = collider.data.reinterpret<Item>()) {
+					item->magnet = {
+						true,
+						&trans.position,
+						itemMagnetStrength
+					};
+				}
+		}
+
+		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
+			if (collider.affects.match(CollisionLayer::ITEM).overlap())
+				if (auto item = collider.data.reinterpret<Item>()) {
+					onItem(item);
+					item->discard();
+				}
+		}
+
+		virtual void onItem(Reference<Item> const& item)				= 0;
+		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
+
+		Property<float>	itemMagnetStrength = {8};
+
+		Vector2 friction	= 0;
 		Velocity velocity	= {};
 
 		bool focused() const {return focused;}
