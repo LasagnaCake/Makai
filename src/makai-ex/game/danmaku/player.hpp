@@ -60,18 +60,14 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr static usize CAN_SHOOT	= 1 << 2;
 		constexpr static usize CAN_BOMB		= 1 << 3;
 
-		usize actions = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
+		usize flags = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
 
 		void onUpdate(float delta) override {
 			AGameObject::onUpdate(delta);
 			if (!active || paused()) return;
 			pollInputs();
 			friction.clamp(0, 1);
-			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
-			if (friction < 1) {
-				speed = Math::lerp<Vector2>(speed, vel, friction);
-				trans.position += direction * speed * delta;
-			} else trans.position += direction * vel * delta;
+			doMovement(delta);
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -142,13 +138,22 @@ namespace Makai::Ex::Game::Danmaku {
 			onDamage(object);
 		}
 
+	private:
 		void pollInputs() {
 			direction.y	= action("up") - action("down");
 			direction.x	= action("right") - action("left");
 			isFocused	= action("focus");
 		}
 
-	private:
+		void doMovement(float const delta) {
+			if (!(flags & CAN_MOVE)) return;
+			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
+			if (friction.min() < 1) {
+				speed = Math::lerp<Vector2>(speed, vel, friction);
+				trans.position += direction * speed * delta;
+			} else trans.position += direction * vel * delta;
+		}
+
 		Vector2 speed = 0;
 
 		Vector2 direction;
