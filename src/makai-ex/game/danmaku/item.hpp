@@ -18,7 +18,6 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Item& clear() override {
-			if (isFree()) return *this;
 			AServerObject::clear();
 			radius				= {};
 			scale				= {};

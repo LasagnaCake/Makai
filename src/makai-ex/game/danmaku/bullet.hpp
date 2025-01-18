@@ -16,7 +16,6 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& clear() override {
-			if (isFree()) return *this;
 			AServerObject::clear();
 			rotateSprite	= true;
 			radius			= {};

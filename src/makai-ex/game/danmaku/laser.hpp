@@ -29,6 +29,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Laser& reset() override {
+			if (isFree()) return *this;
 			AServerObject::reset();
 			velocity.factor	= 0;
 			rotation.factor	= 0;
