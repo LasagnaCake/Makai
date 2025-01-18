@@ -59,6 +59,7 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr static usize CAN_FOCUS	= 1 << 1;
 		constexpr static usize CAN_SHOOT	= 1 << 2;
 		constexpr static usize CAN_BOMB		= 1 << 3;
+		constexpr static usize INVINCIBLE	= 1 << 3;
 
 		usize flags = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
 
@@ -69,8 +70,9 @@ namespace Makai::Ex::Game::Danmaku {
 			pollInputs();
 			friction.clamp(0, 1);
 			doMovement(delta);
-			if (bombTime > 0) --bombTime;
-			if (shotTime > 0) --shotTime;
+			if (bombTime > 0)		--bombTime;
+			if (shotTime > 0)		--shotTime;
+			if (invincibleTime > 0)	--invincibleTime;
 			if (action("bomb", true)	&& bombTime == 0 && (flags & CAN_BOMB))		onBomb();
 			if (action("shot")			&& shotTime == 0 && (flags & CAN_SHOOT))	onShot();
 		}
@@ -107,13 +109,6 @@ namespace Makai::Ex::Game::Danmaku {
 					onItemMagnet(item);
 		}
 
-		virtual void onItemMagnet(Reference<Item> const& item)			{item->magnet = {true, &trans.position, {1}};}
-		virtual void onItem(Reference<Item> const& item)				= 0;
-		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
-		virtual void onBomb()											= 0;
-		virtual void onShot()											= 0;
-		virtual void onDamage(Reference<AGameObject> const& object)		= 0;
-
 		Vector2		friction	= 0;
 		Velocity	velocity	= {};
 
@@ -130,13 +125,24 @@ namespace Makai::Ex::Game::Danmaku {
 			shotTime = frames;
 		}
 
-		void getHurt(Reference<AGameObject> const& object) {
+		APlayer& getHurt(Reference<AGameObject> const& object) {
+			if (invincibleTime || (flags & INVINCIBLE)) return *this;
 			onDamage(object);
+			return *this;
 		}
 
+	protected:
+		virtual void onItemMagnet(Reference<Item> const& item)			{item->magnet = {true, &trans.position, {1}};}
+		virtual void onItem(Reference<Item> const& item)				= 0;
+		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
+		virtual void onBomb()											= 0;
+		virtual void onShot()											= 0;
+		virtual void onDamage(Reference<AGameObject> const& object)		= 0;
+
 	private:
-		usize shotTime = 0;
-		usize bombTime = 0;
+		usize shotTime			= 0;
+		usize bombTime			= 0;
+		usize invincibleTime	= 0;
 
 		void pollInputs() {
 			direction.y	= action("up") - action("down");
