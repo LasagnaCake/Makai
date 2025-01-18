@@ -73,8 +73,8 @@ namespace Makai::Ex::Game::Danmaku {
 			if (bombTime > 0)		--bombTime;
 			if (shotTime > 0)		--shotTime;
 			if (invincibleTime > 0)	--invincibleTime;
-			if (action("bomb", true)	&& bombTime == 0 && (flags & CAN_BOMB))		onBomb();
-			if (action("shot")			&& shotTime == 0 && (flags & CAN_SHOOT))	onShot();
+			if (action("bomb", true)	&& bombTime == 0 && areFlagsSet(CAN_BOMB))	onBomb();
+			if (action("shot")			&& shotTime == 0 && areFlagsSet(CAN_SHOOT))	onShot();
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -83,7 +83,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (paused()) return;
 		}
 
-		void onCollision(Collider const& collider, CollisionDirection const direction) {
+		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!collider.tags.match(colli.tag.player).overlap()) return;
 			if (collider.affects.match(colli.enemy.attacker).overlap())
 				getHurt(collider.data.reinterpret<AGameObject>());
@@ -119,16 +119,33 @@ namespace Makai::Ex::Game::Danmaku {
 
 		APlayer& disableBomb(usize const frames) {
 			bombTime = frames;
+			return *this;
 		}
 		
 		APlayer& disableShot(usize const frames) {
 			shotTime = frames;
+			return *this;
+		}
+		
+		APlayer& makeInvincible(usize const frames) {
+			invincibleTime = frames;
+			return *this;
+		}
+
+		APlayer& setFlags(usize const mask, bool const state = true) {
+			if (state)	flags |= mask;
+			else		flags &= ~mask;
+			return *this;
 		}
 
 		APlayer& getHurt(Reference<AGameObject> const& object) {
-			if (invincibleTime || (flags & INVINCIBLE)) return *this;
+			if (invincibleTime || areFlagsSet(INVINCIBLE)) return *this;
 			onDamage(object);
 			return *this;
+		}
+
+		bool areFlagsSet(usize const mask) const {
+			return flags & mask;
 		}
 
 	protected:
@@ -151,7 +168,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void doMovement(float const delta) {
-			if (!(flags & CAN_MOVE)) return;
+			if (!areFlagsSet(CAN_MOVE)) return;
 			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
 			if (friction.min() < 1) {
 				speed = Math::lerp<Vector2>(speed, vel, friction);
