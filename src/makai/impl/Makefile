@@ -20,9 +20,11 @@ all: debug release
 
 debug:
 	$(call compile, stb)
+	$(call compile, cute)
 	$(MAKE_GLOADER_D)
 
 
 release:
 	$(call compile, stb)
+	$(call compile, cute)
 	$(MAKE_GLOADER)
