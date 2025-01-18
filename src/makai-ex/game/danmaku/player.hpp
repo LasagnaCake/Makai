@@ -16,7 +16,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct Player: Controllable, AGameObject, AUpdateable {
 		struct Velocity {
-
+			Vector2 focused		= 0;
+			Vector2 unfocused	= 0;
 		};
 
 		Player(PlayerConfig const& cfg):
@@ -42,6 +43,14 @@ namespace Makai::Ex::Game::Danmaku {
 		void onUpdate(float delta) override {
 			AGameObject::onUpdate(delta);
 			if (!active || paused()) return;
+			direction.y = action("up") - action("down");
+			direction.x = action("right") - action("left");
+			friction = Math::clamp<float>(friction, 0, 1);
+			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
+			if (friction < 1) {
+				speed = Math::lerp<Vector2>(speed, vel, friction);
+				trans.position += direction * speed * delta;
+			} else trans.position += direction * vel * delta;
 		}
 
 		void onUpdate(float delta, App& app) override {
@@ -54,10 +63,22 @@ namespace Makai::Ex::Game::Danmaku {
 				pichun();
 		}
 
+		float friction		= 0;
+		Velocity velocity	= {};
+
+		bool focused() const {return focused;}
+
 	protected:
 		void pichun() {
 
 		}
+
+	private:
+		Vector2 speed = 0;
+
+		Vector2 direction;
+
+		bool isFocused = 0;
 	};
 }
 

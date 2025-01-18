@@ -62,9 +62,12 @@ public:
 	/// @return Whether the periodic event is manually executed.
 	bool isManual() {return manual;}
 
+	/// @brief Whether the periodic event is updating.
+	bool updating = true;
+
 private:
 	/// @brief Event wrapper.
-	const EventWrapper update = [this] (Args... args) {onUpdate(args...);};
+	const EventWrapper update = [this] (Args... args) {if (updating) onUpdate(args...);};
 
 	/// @brief Whether the periodic event is manually executed.
 	bool manual = false;
