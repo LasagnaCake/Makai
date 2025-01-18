@@ -84,7 +84,7 @@ namespace Makai::Ex::Game::Danmaku {
 				collider.affects.match(colli.enemy.damageable).overlap()
 			&&	collider.tags.match(colli.tag.player).overlap()
 			)
-				pichun();
+				pichun(collider.data.reinterpret<AGameObject>());
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
@@ -119,14 +119,15 @@ namespace Makai::Ex::Game::Danmaku {
 				}
 		}
 
-		virtual void onItemMagnet(Reference<Item> const& item)			{item->magnet = {true, &trans.position, {8}};}
+		virtual void onItemMagnet(Reference<Item> const& item)			{item->magnet = {true, &trans.position, {1}};}
 		virtual void onItem(Reference<Item> const& item)				= 0;
 		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
 		virtual void onBomb()											= 0;
 		virtual void onShot()											= 0;
+		virtual void onDamage(Reference<AGameObject> const& object)		= 0;
 
-		Vector2 friction	= 0;
-		Velocity velocity	= {};
+		Vector2		friction	= 0;
+		Velocity	velocity	= {};
 
 		bool focused() const			{return isFocused;}
 		Vector2 getDirection() const	{return direction;}
@@ -137,8 +138,8 @@ namespace Makai::Ex::Game::Danmaku {
 		PlayerConfig::Collision const colli;
 
 	protected:
-		void pichun() {
-
+		void pichun(Reference<AGameObject> const& object) {
+			onDamage(object);
 		}
 
 		void pollInputs() {
