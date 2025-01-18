@@ -60,7 +60,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (paused()) return;
 			color.next();
 			radius.next();
-			damage.next();
+			//damage.next();
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
 			trans.scale		= scale.next();
