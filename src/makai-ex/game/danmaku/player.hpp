@@ -25,7 +25,7 @@ namespace Makai::Ex::Game::Danmaku {
 				CollisionMask const bullet		= CollisionLayer::ENEMY_BULLET;
 				CollisionMask const laser		= CollisionLayer::ENEMY_LASER;
 				CollisionMask const body		= CollisionLayer::ENEMY_COLLISION;
-				CollisionMask const damageable	= CollisionLayer::ENEMY_MASK;
+				CollisionMask const attacker	= CollisionLayer::ENEMY_MASK;
 			} const enemy = {};
 			struct Tag {
 				CollisionMask const player		= CollisionTag::FOR_PLAYER_1;
@@ -81,7 +81,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) {
 			if (
-				collider.affects.match(colli.enemy.damageable).overlap()
+				collider.affects.match(colli.enemy.attacker).overlap()
 			&&	collider.tags.match(colli.tag.player).overlap()
 			)
 				pichun(collider.data.reinterpret<AGameObject>());
