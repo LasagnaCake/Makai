@@ -17,7 +17,7 @@ CTL_NAMESPACE_BEGIN
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmismatched-new-delete"
 
-// TODO: make this thread-safe
+// TODO: make reference counter thread-safe
 
 /// @brief Base classes for other classes.
 namespace Base {
