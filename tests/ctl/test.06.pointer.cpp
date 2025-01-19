@@ -5,7 +5,14 @@ using CTL::Instance, CTL::Handle, CTL::Unique, CTL::Reference;
 
 template<class T>
 void print(Handle<T> const& p) {
-	DEBUG("?: ", p.exists(), ",\tI: ", p.count(), ",\tV: ");
+	DEBUG("S?: ", p.exists(), ",\tI: ", p.count(), ",\tV: ");
+	if (p)	DEBUGLN(*p);
+	else	DEBUGLN("Oops!");
+}
+
+template<class T>
+void print(Reference<T> const& p) {
+	DEBUG("U?: ", p.exists(), "\tV: ");
 	if (p)	DEBUGLN(*p);
 	else	DEBUGLN("Oops!");
 }
@@ -42,6 +49,7 @@ void f4(Instance<T> p1, Instance<T> const& p2, Instance<T> p3) {
 }
 
 void testIntPointer() {
+	DEBUGLN("<shared>");
 	Instance<int> ptr = new int(4);
 	print<int>(ptr);
 	f1(ptr);
@@ -50,10 +58,25 @@ void testIntPointer() {
 	print<int>(ptr);
 	f4(ptr, ptr, ptr);
 	print2(ptr);
+	DEBUGLN("</shared>");
+}
+
+void testUniquePointer() {
+	DEBUGLN("<unique>");
+	Unique<int> ptr = Unique<int>::create(4);
+	print(ptr.reference());
+	*ptr = 5;
+	print(ptr.reference());
+	ptr.unbind();
+	print(ptr.reference());
+	ptr = Unique<int>::create(8);
+	print(ptr.reference());
+	DEBUGLN("</unique>");
 }
 
 int main() {
 	testIntPointer();
+	testUniquePointer();
 	DEBUGLN("Pointer test passed!");
 	return 0;
 }

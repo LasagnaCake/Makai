@@ -60,7 +60,7 @@ namespace Base {
 /// @brief Smart pointer, with automatic reference counting.
 /// @tparam T Type of data pointed to.
 /// @tparam W Whether the given `Shared` is weak.
-/// @tparam TDeleter<class> Deleter type.
+/// @tparam D Deleter.
 /// @note
 ///		Differences between strong and weak pointers:
 /// @note
@@ -76,14 +76,14 @@ namespace Base {
 /// @note
 ///			Both types will throw if object is no longer usable,
 ///			either via releasing the pointer to it, or when a strong pointer destroys it.
-template <Type::Container::Pointable TData, bool W, template <class> class TDeleter = Impl::BasicDeleter>
+template <Type::Container::Pointable TData, bool W, auto D = Impl::BasicDeleter<TData>()>
 class Shared:
 	private Base::ReferenceCounter<pointer>,
 	Derived<Base::ReferenceCounter<pointer>>,
 	Typed<TData>,
 	SelfIdentified<Shared<TData, W>>,
 	Ordered,
-	Deletable<TDeleter, TData> {
+	Deletable<D, TData> {
 public:
 	/// @brief Whether the pointer is a strong or weak pointer.
 	constexpr static bool WEAK = W;
@@ -92,7 +92,7 @@ public:
 
 	using Typed				= ::CTL::Typed<TData>;
 	using SelfIdentified	= ::CTL::SelfIdentified<Shared<TData, WEAK>>;
-	using Deletable		= ::CTL::Deletable<TDeleter, TData>;
+	using Deletable			= ::CTL::Deletable<D, TData>;
 
 	using
 		typename Typed::DataType,
@@ -111,7 +111,7 @@ public:
 		typename Ordered::OrderType
 	;
 
-	using typename Deletable::DeleterType;
+	using Deletable::deleter;
 
 	/// @brief New shared pointer type.
 	/// @tparam NW Whether the pointer is weak.
@@ -211,7 +211,7 @@ public:
 	constexpr SelfType& destroy() requires (!WEAK) {
 		if (!exists()) return (*this);
 		release();
-		DeleterType::destroy(ref);
+		deleter(ref);
 		ref = nullptr;
 		return (*this);
 	}
@@ -220,7 +220,7 @@ public:
 	/// @return Reference to self.
 	/// @note Requires shared pointer type to be strong.
 	constexpr SelfType& release() requires (!WEAK) {
-		if (!exists())
+		if (exists())
 			detach(ref);
 		return (*this);
 	}
@@ -362,7 +362,7 @@ public:
 	/// @param ...args Arguments to pass to object construtor.
 	/// @return Shared pointer.
 	template<class... Args>
-	constexpr static SelfType&& create(Args... args) {
+	constexpr static SelfType create(Args... args) {
 		return SelfType(new DataType(args...));
 	}
 

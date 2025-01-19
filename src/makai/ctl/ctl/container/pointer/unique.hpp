@@ -10,10 +10,11 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Container-specific type constraints.
 namespace Type::Container {
-	/// Type must be a pointable type.
+	/// @brief Type must be a pointable type.
 	template <typename T> concept Pointable = Safe<T>;
-	template <class T, class TData> concept Deleter = requires (TData* data) {
-		{T::destroy(data)};
+	/// @brief Type must be a deleter for `TData`.
+	template <class T, class TData> concept Deleter = requires (T t, TData* data) {
+		{t(data)};
 	};
 }
 
@@ -22,12 +23,12 @@ namespace Impl {
 	struct BasicDeleter {
 		using DataType = T;
 
-		constexpr static void destroy(DataType* const obj) {
+		constexpr void operator()(DataType* const obj) const {
 			delete obj;
 		}
 
 		template<class U>
-		constexpr static void destroy(U* const obj)
+		constexpr void operator()(U* const obj) const
 		requires Type::Convertible<As<U[]>*, As<DataType[]>*> {
 			delete[] obj;
 		}
@@ -35,27 +36,27 @@ namespace Impl {
 }
 
 /// @brief Tags the deriving class as possessing a deleter of some kind.
-/// @tparam TDeleter<class> Deleter type.
+/// @tparam D Deleter.
 /// @tparam TData Data type deleted by deleter.
-template<template <class> class TDeleter, class TData>
-requires Type::Container::Deleter<TDeleter<TData>, TData>
+template<auto D, class TData>
+requires Type::Container::Deleter<decltype(D), TData>
 struct Deletable {
-	/// @brief Deleter type.
-	using DeleterType = TDeleter<TData>;
+	/// @brief Deleter.
+	constexpr static auto deleter = D;
 };
 
 /// @brief Unique pointer.
 /// @tparam TData Pointed type.
-/// @tparam TDeleter<class> Deleter type.
-template<Type::Safe TData, template <class> class TDeleter = Impl::BasicDeleter>
+/// @tparam D Deleter.
+template<Type::Safe TData, auto D = Impl::BasicDeleter<TData>()>
 struct Unique:
 	Typed<TData>,
 	SelfIdentified<Unique<TData>>,
 	Ordered,
-	Deletable<TDeleter, TData> {
+	Deletable<D, TData> {
 	using Typed				= ::CTL::Typed<TData>;
 	using SelfIdentified	= ::CTL::SelfIdentified<Unique<TData>>;
-	using Deletable		= ::CTL::Deletable<TDeleter, TData>;
+	using Deletable			= ::CTL::Deletable<D, TData>;
 
 	using
 		typename Typed::DataType,
@@ -74,7 +75,7 @@ struct Unique:
 		typename Ordered::OrderType
 	;
 
-	using typename Deletable::DeleterType;
+	using Deletable::deleter;
 
 	/// @brief Default constructor.
 	constexpr Unique() {}
@@ -134,8 +135,8 @@ struct Unique:
 
 	/// @brief Transfers ownership of the bound object.
 	/// @return Temporary `Unique` to object.
-	constexpr SelfType&& transfer() {
-		return ::CTL::move(SelfType(release()));
+	constexpr SelfType transfer() {
+		return SelfType(release());
 	}
 
 	/// @brief Returns whether the bound object exists.
@@ -172,6 +173,7 @@ struct Unique:
 	constexpr SelfType& operator=(SelfType&& other) {
 		ref = other.ref;
 		other.ref = nullptr;
+		return *this;
 	}
 	
 	/// @brief Returns a raw pointer to the bound object.
@@ -224,7 +226,7 @@ struct Unique:
 	/// @return Reference to self.
 	constexpr SelfType& unbind() {
 		if (!exists()) return (*this);
-		DeleterType::destroy(ref);
+		deleter(ref);
 		ref = nullptr;
 		return (*this);
 	}
@@ -234,7 +236,7 @@ struct Unique:
 	/// @param ...args Arguments to pass to object construtor.
 	/// @return Unique pointer.
 	template<class... Args>
-	constexpr static SelfType&& create(Args... args) {
+	constexpr static SelfType create(Args... args) {
 		return SelfType(new DataType(args...));
 	}
 
