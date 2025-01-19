@@ -12,17 +12,50 @@ CTL_NAMESPACE_BEGIN
 namespace Type::Container {
 	/// Type must be a pointable type.
 	template <typename T> concept Pointable = Safe<T>;
+	template <class T, class TData> concept Deleter = requires (TData* data) {
+		{T::destroy(data)};
+	};
 }
 
+namespace Impl {
+	template<class T>
+	struct BasicDeleter {
+		using DataType = T;
+
+		constexpr static void destroy(DataType* const obj) {
+			delete obj;
+		}
+
+		template<class U>
+		constexpr static void destroy(U* const obj)
+		requires Type::Convertible<As<U[]>*, As<DataType[]>*> {
+			delete[] obj;
+		}
+	};
+}
+
+/// @brief Tags the deriving class as possessing a deleter of some kind.
+/// @tparam TDeleter<class> Deleter type.
+/// @tparam TData Data type deleted by deleter.
+template<template <class> class TDeleter, class TData>
+requires Type::Container::Deleter<TDeleter<TData>, TData>
+struct Deletable {
+	/// @brief Deleter type.
+	using DeleterType = TDeleter<TData>;
+};
+
 /// @brief Unique pointer.
-/// @tparam T Pointed type.
-template<Type::Safe T>
+/// @tparam TData Pointed type.
+/// @tparam TDeleter<class> Deleter type.
+template<Type::Safe TData, template <class> class TDeleter = Impl::BasicDeleter>
 struct Unique:
-	Typed<T>,
-	SelfIdentified<Unique<T>>,
-	Ordered {
-	using Typed				= ::CTL::Typed<T>;
-	using SelfIdentified	= ::CTL::SelfIdentified<Unique<T>>;
+	Typed<TData>,
+	SelfIdentified<Unique<TData>>,
+	Ordered,
+	Deletable<TDeleter, TData> {
+	using Typed				= ::CTL::Typed<TData>;
+	using SelfIdentified	= ::CTL::SelfIdentified<Unique<TData>>;
+	using Deletable		= ::CTL::Deletable<TDeleter, TData>;
 
 	using
 		typename Typed::DataType,
@@ -40,6 +73,8 @@ struct Unique:
 	using
 		typename Ordered::OrderType
 	;
+
+	using typename Deletable::DeleterType;
 
 	/// @brief Default constructor.
 	constexpr Unique() {}
@@ -189,9 +224,18 @@ struct Unique:
 	/// @return Reference to self.
 	constexpr SelfType& unbind() {
 		if (!exists()) return (*this);
-		delete ref;
+		DeleterType::destroy(ref);
 		ref = nullptr;
 		return (*this);
+	}
+
+	/// @brief Creates an unique pointer.
+	/// @tparam ...Args Argument types.
+	/// @param ...args Arguments to pass to object construtor.
+	/// @return Unique pointer.
+	template<class... Args>
+	constexpr static SelfType&& create(Args... args) {
+		return SelfType(new DataType(args...));
 	}
 
 private:

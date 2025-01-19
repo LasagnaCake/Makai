@@ -26,7 +26,7 @@ namespace Collision::C2D {
 		template<usize SI>
 		using ColliderType = typename CollisionServer<SI>::Collider;
 
-		/// @brief Server collision object interface.
+		/// @brief Server collision object.
 		struct Collider: Area {
 			/// @brief Destructor.
 			constexpr virtual ~Collider() {CollisionServer::unbind(this);}
@@ -112,11 +112,11 @@ namespace Collision::C2D {
 		constexpr CollisionServer() {}
 
 		constexpr static Unique<Collider>&& createCollider() {
-			return Unique<Collider>(new Collider());
+			return Unique<Collider>::create();
 		}
 
 		constexpr static Unique<Collider>&& createCollider(Area const& area) {
-			return Unique<Collider>(new Collider(area));
+			return Unique<Collider>::create(area);
 		}
 
 		/// @brief Handles collision between a given collider, and a set of layers.

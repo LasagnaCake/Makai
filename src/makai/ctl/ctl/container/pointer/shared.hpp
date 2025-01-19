@@ -60,6 +60,7 @@ namespace Base {
 /// @brief Smart pointer, with automatic reference counting.
 /// @tparam T Type of data pointed to.
 /// @tparam W Whether the given `Shared` is weak.
+/// @tparam TDeleter<class> Deleter type.
 /// @note
 ///		Differences between strong and weak pointers:
 /// @note
@@ -75,21 +76,23 @@ namespace Base {
 /// @note
 ///			Both types will throw if object is no longer usable,
 ///			either via releasing the pointer to it, or when a strong pointer destroys it.
-template <Type::Container::Pointable T, bool W>
+template <Type::Container::Pointable TData, bool W, template <class> class TDeleter = Impl::BasicDeleter>
 class Shared:
 	private Base::ReferenceCounter<pointer>,
 	Derived<Base::ReferenceCounter<pointer>>,
-	Typed<T>,
-	SelfIdentified<Shared<T, W>>,
-	Ordered {
+	Typed<TData>,
+	SelfIdentified<Shared<TData, W>>,
+	Ordered,
+	Deletable<TDeleter, TData> {
 public:
 	/// @brief Whether the pointer is a strong or weak pointer.
 	constexpr static bool WEAK = W;
 
 	using ReferenceCounter::isBound;
 
-	using Typed				= ::CTL::Typed<T>;
-	using SelfIdentified	= ::CTL::SelfIdentified<Shared<T, WEAK>>;
+	using Typed				= ::CTL::Typed<TData>;
+	using SelfIdentified	= ::CTL::SelfIdentified<Shared<TData, WEAK>>;
+	using Deletable		= ::CTL::Deletable<TDeleter, TData>;
 
 	using
 		typename Typed::DataType,
@@ -107,6 +110,8 @@ public:
 	using
 		typename Ordered::OrderType
 	;
+
+	using typename Deletable::DeleterType;
 
 	/// @brief New shared pointer type.
 	/// @tparam NW Whether the pointer is weak.
@@ -206,7 +211,7 @@ public:
 	constexpr SelfType& destroy() requires (!WEAK) {
 		if (!exists()) return (*this);
 		release();
-		delete ref;
+		DeleterType::destroy(ref);
 		ref = nullptr;
 		return (*this);
 	}
@@ -294,9 +299,9 @@ public:
 	constexpr operator bool() const	{return exists();	}
 
 	template<Type::Functional<OperationType> TFunction>
-	constexpr Shared& modify(TFunction const& op)		{T& ref = *getPointer(); ref = op(ref); return (*this);	}
+	constexpr Shared& modify(TFunction const& op)		{ReferenceType ref = *getPointer(); ref = op(ref); return (*this);	}
 	template<Type::Functional<OperationType> TFunction>
-	constexpr Shared& operator()(TFunction const& op)	{return modify(op);										}
+	constexpr Shared& operator()(TFunction const& op)	{return modify(op);													}
 
 	/// @brief Returns whether the bound object doesn't exist.
 	/// @return Whether the bound object doesn't exist.
@@ -351,6 +356,15 @@ public:
 	/// @brief Dereference operator.
 	/// @return Reference to underlying object.
 	constexpr ReferenceType operator*() const		{return value();		}
+	
+	/// @brief Creates a shared pointer.
+	/// @tparam ...Args Argument types.
+	/// @param ...args Arguments to pass to object construtor.
+	/// @return Shared pointer.
+	template<class... Args>
+	constexpr static SelfType&& create(Args... args) {
+		return SelfType(new DataType(args...));
+	}
 
 private:
 	constexpr void attach(PointerType const& p) {
@@ -381,7 +395,7 @@ private:
 	[[noreturn]]
 	inline void nullPointerError() const {
 		throw Error::NullPointer(
-			toString("Pointer reference of type '", TypeInfo<T>::name(), "' does not exist!"),
+			toString("Pointer reference of type '", TypeInfo<DataType>::name(), "' does not exist!"),
 			"Pointer might be null or nonexistent.",
 			"none",
 			CTL_CPP_UNKNOWN_SOURCE
