@@ -11,12 +11,12 @@ namespace Makai::Ex::Game::Danmaku {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
 			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
-		} const colli;
+		} const mask;
 	};
 
 	struct Item: AServerObject, ISpriteContainer, Weighted, Circular, Glowing, Dope, RotatesSprite, Magnetizable {
 		Item(ItemConfig const& cfg):
-			AServerObject(cfg), server(cfg.server) {
+			AServerObject(cfg), mask(mask), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
@@ -99,8 +99,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
-			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap())
-				discard();
 		}
 
 		Item& setSpriteRotation(float const angle) override {
@@ -133,6 +131,8 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			return *this;
 		}
+		
+		ItemConfig::Collision const mask;
 
 		usize id	= 0;
 		usize value	= 1;

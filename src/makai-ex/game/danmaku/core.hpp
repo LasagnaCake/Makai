@@ -81,7 +81,6 @@ namespace Makai::Ex::Game::Danmaku {
 			board(cfg.board),
 			playfield(cfg.playfield) {
 				bindCollisionHandler(*this);
-				collider->data = this;
 			}
 
 		virtual ~AGameObject() {}
@@ -142,14 +141,15 @@ namespace Makai::Ex::Game::Danmaku {
 
 		bool active = false;
 
-		Reference<CollisionArea> collision() const {
-			return collider.as<CollisionArea>();
+		Reference<Collider> collision() const {
+			return collider.reference();
 		}
 
 	private:
 		static void bindCollisionHandler(AGameObject& self) {
 			self.collider->onCollision = [&self = self] (Collider const& collider, CollisionDirection const direction) {
 				self.onCollision(collider, direction);
+				self.collider->data = &self;
 			};
 		}
 

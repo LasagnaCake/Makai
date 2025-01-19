@@ -11,12 +11,12 @@ namespace Makai::Ex::Game::Danmaku {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
 			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
-		} const colli;
+		} const mask;
 	};
 
 	struct Laser: AServerObject, ThreePatchContainer, AttackObject, Circular, Long, IToggleable {
 		Laser(LaserConfig const& cfg):
-			AServerObject(cfg), server(cfg.server) {
+			AServerObject(cfg), mask(mask), server(cfg.server) {
 			collision()->shape = shape.as<C2D::IBound2D>();
 		}
 
@@ -87,10 +87,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
-			/*
-			if (collider.tags.match(CollisionTag::BULLET_ERASER).overlap())
-				discard();
-			*/
 		}
 		
 		Laser& discard(bool const force = false) override {
@@ -130,6 +126,8 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			return *this;
 		}
+
+		LaserConfig::Collision const mask;
 
 	private:
 		AServer&	server;

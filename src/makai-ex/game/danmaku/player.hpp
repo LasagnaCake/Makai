@@ -14,9 +14,19 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct PlayerConfig: BoundedObjectConfig {
 		using CollisionMask = ColliderConfig::CollisionMask;
-		ColliderConfig const colli = {
+		ColliderConfig const hitbox = {
 			{},
 			CollisionLayer::ENEMY_MASK,
+			CollisionTag::FOR_PLAYER_1
+		};
+		ColliderConfig const grazebox = {
+			{},
+			CollisionLayer::ENEMY_BULLET | CollisionLayer::ENEMY_LASER | CollisionLayer::ITEM,
+			CollisionTag::FOR_PLAYER_1
+		};
+		ColliderConfig const itembox = {
+			{},
+			CollisionLayer::ITEM,
 			CollisionTag::FOR_PLAYER_1
 		};
 		struct Collision {
@@ -39,7 +49,7 @@ namespace Makai::Ex::Game::Danmaku {
 			Vector2 unfocused	= 0;
 		};
 
-		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.colli}), colli(cfg.mask) {
+		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
 			bindmap = Dictionary<String>({
 				{"up",		"player/up"		},
 				{"down",	"player/down"	},
@@ -49,6 +59,8 @@ namespace Makai::Ex::Game::Danmaku {
 				{"bomb",	"player/bomb"	},
 				{"focus",	"player/focus"	}
 			});
+			bindGrazeHandler(*this);
+			bindItemMagnetHandler(*this);
 		}
 
 		virtual ~APlayer() {
@@ -82,18 +94,23 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
-			if (!collider.tags.match(colli.tag.player).overlap()) return;
-			if (collider.affects.match(colli.enemy.attacker).overlap())
+			if (!isForThisPlayer(collider)) return;
+			if (collider.affects.match(mask.enemy.attacker).overlap())
 				getHurt(collider.data.reinterpret<AGameObject>());
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (!collider.tags.match(colli.tag.player).overlap()) return;
-			if (collider.affects.match(colli.enemy.bullet).overlap())
+			if (!isForThisPlayer(collider)) return;
+			if (collider.affects.match(
+				mask.enemy.bullet
+			|	mask.enemy.laser
+			).overlap())
 				if (auto bullet = collider.data.reinterpret<Bullet>())
-					if (!bullet->grazed)
-						bullet->grazed = true;
-			if (collider.affects.match(colli.item).overlap())
+					onGraze(bullet.as<AServerObject>());
+			if (collider.affects.match(mask.enemy.laser).overlap())
+				if (auto laser = collider.data.reinterpret<Laser>())
+					onGraze(laser.as<AServerObject>());
+			if (collider.affects.match(mask.item).overlap())
 				if (auto item = collider.data.reinterpret<Item>()) {
 					onItem(item);
 					item->discard();
@@ -101,19 +118,14 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
-			if (!collider.tags.match(colli.tag.player).overlap()) return;
-			if (collider.affects.match(colli.item).overlap())
+			if (!isForThisPlayer(collider)) return;
+			if (collider.affects.match(mask.item).overlap())
 				if (auto item = collider.data.reinterpret<Item>())
 					onItemMagnet(item);
 		}
 
-		Vector2		friction	= 1;
-		Velocity	velocity	= {};
-
 		bool focused() const			{return isFocused;}
 		Vector2 getDirection() const	{return direction;}
-
-		PlayerConfig::Collision const colli;
 
 		APlayer& disableBomb(usize const frames) {
 			bombTime = frames;
@@ -150,18 +162,55 @@ namespace Makai::Ex::Game::Danmaku {
 			return (flags & mask) == mask;
 		}
 
+		bool isForThisPlayer(Collider const& collider) const {
+			return collider.tags.match(mask.tag.player).overlap();
+		}
+
+		Vector2		friction	= 1;
+		Velocity	velocity	= {};
+
+		PlayerConfig::Collision const mask;
+
 	protected:
-		virtual void onItemMagnet(Reference<Item> const& item)			{item->magnet = {true, &trans.position, {1}};}
+		virtual void onItemMagnet(Reference<Item> const& item) {
+			if (!item->magnet.enabled && item->magnet.target != &trans.position)
+				item->magnet = {true, &trans.position, {1}};
+		}
 		virtual void onItem(Reference<Item> const& item)				= 0;
 		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
 		virtual void onBomb()											= 0;
 		virtual void onShot()											= 0;
 		virtual void onDamage(Reference<AGameObject> const& object)		= 0;
 
+		Reference<Collider> getGrazebox() {
+			return grazebox.reference();
+		}
+
+		Reference<Collider> getItembox() {
+			return grazebox.reference();
+		}
+
 	private:
+		static void bindGrazeHandler(APlayer& self) {
+			self.grazebox->onCollision = [&self = self] (Collider const& collider, CollisionDirection const direction) {
+				self.onGrazeboxCollision(collider, direction);
+			};
+			self.itembox->data = &self;
+		}
+
+		static void bindItemMagnetHandler(APlayer& self) {
+			self.itembox->onCollision = [&self = self] (Collider const& collider, CollisionDirection const direction) {
+				self.onItemboxCollision(collider, direction);
+			};
+			self.itembox->data = &self;
+		}
+
 		usize shotTime			= 0;
 		usize bombTime			= 0;
 		usize invincibleTime	= 0;
+
+		Unique<Collider> grazebox	= CollisionServer::createCollider();
+		Unique<Collider> itembox	= CollisionServer::createCollider();
 
 		void pollInputs() {
 			direction.y	= action("up") - action("down");
