@@ -138,7 +138,11 @@ public:
 
 	/// @brief Copy constructor (raw pointer).
 	/// @param obj Pointer to bind.
-	constexpr Shared(owner<DataType> const& obj) {bind(obj);}
+	constexpr Shared(owner<DataType> const& obj)	{bind(obj);				}
+
+	/// @brief Move constructor (`Unique`).
+	/// @param obj Pointer to bind.
+	constexpr Shared(Unique<DataType>&& obj)		{bind(obj.release());	}
 
 	/// @brief Destructor.
 	constexpr ~Shared() {if (exists()) unbind();}
