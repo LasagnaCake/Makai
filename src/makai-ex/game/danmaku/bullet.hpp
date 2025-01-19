@@ -25,7 +25,6 @@ namespace Makai::Ex::Game::Danmaku {
 			AServerObject::clear();
 			rotateSprite	= true;
 			radius			= {};
-			scale			= {};
 			velocity		= {};
 			rotation		= {};
 			sprite			= {};

@@ -102,6 +102,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual AServerObject& clear() {
 			trans		= Transform2D();
 			color		= {Graph::Color::WHITE};
+			scale		= {};
 			discardable	= true;
 			task		= doNothing();
 			pause		= {};
@@ -116,6 +117,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual AServerObject& reset() {
 			color.factor	= 0;
+			scale.factor	= 0;
 		}
 
 		virtual AServerObject& discard(bool const force = false)	= 0;

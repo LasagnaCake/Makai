@@ -23,7 +23,6 @@ namespace Makai::Ex::Game::Danmaku {
 		Laser& clear() override {
 			AServerObject::clear();
 			radius			= {};
-			scale			= {};
 			velocity		= {};
 			rotation		= {};
 			length			= {};
@@ -72,6 +71,7 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->visible = isFree();
 			if (isFree()) return;
 			AServerObject::onUpdate(delta);
+			updateSprite();
 			updateHitbox();
 			animate();
 			if (paused()) return;

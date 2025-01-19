@@ -23,7 +23,6 @@ namespace Makai::Ex::Game::Danmaku {
 		Item& clear() override {
 			AServerObject::clear();
 			radius				= {};
-			scale				= {};
 			sprite				= {};
 			gravity				= {};
 			terminalVelocity	= {};
