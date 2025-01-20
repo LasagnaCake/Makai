@@ -63,7 +63,7 @@ namespace Makai::Ex::Game::Danmaku {
 			acceleration += gravity.next();
 			processMax(acceleration.x, terminalVelocity.value.x);
 			processMax(acceleration.y, terminalVelocity.value.y);
-			if (magnet.enabled && magnet.target && objectState == State::SOS_SPAWNING)
+			if (magnet.enabled && magnet.target && objectState == State::SOS_ACTIVE)
 				trans.position	+= trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
 			else
 				trans.position	+= acceleration;
