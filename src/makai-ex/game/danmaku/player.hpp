@@ -96,7 +96,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
 			if (collider.affects.match(mask.enemy.attacker).overlap())
-				getHurt(collider.data.reinterpret<AGameObject>());
+				takeDamage(collider.data.reinterpret<AGameObject>());
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
@@ -113,7 +113,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (collider.affects.match(mask.item).overlap())
 				if (auto item = collider.data.reinterpret<Item>()) {
 					onItem(item);
-					item->discard();
+					item->discard(true);
 				}
 		}
 
@@ -148,7 +148,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		APlayer& getHurt(Reference<AGameObject> const& object) {
+		APlayer& takeDamage(Reference<AGameObject> const& object = nullptr) {
 			if (invincibleTime || areAnyFlagsSet(INVINCIBLE)) return *this;
 			onDamage(object);
 			return *this;

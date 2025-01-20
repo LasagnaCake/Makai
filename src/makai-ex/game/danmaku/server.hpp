@@ -120,7 +120,7 @@ namespace Makai::Ex::Game::Danmaku {
 			scale.factor	= 0;
 		}
 
-		virtual AServerObject& discard(bool const force = false)	= 0;
+		virtual AServerObject& discard(bool const immediately = false, bool const force = false)	= 0;
 
 		Functor<void(AServerObject&, Action const)>	onAction;
 		Functor<void(AServerObject&, float)>		onObjectUpdate;

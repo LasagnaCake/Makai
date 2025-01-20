@@ -63,7 +63,7 @@ namespace Makai::Ex::Game::Danmaku {
 			acceleration += gravity.next();
 			processMax(acceleration.x, terminalVelocity.value.x);
 			processMax(acceleration.y, terminalVelocity.value.y);
-			if (magnet.enabled && magnet.target)
+			if (magnet.enabled && magnet.target && objectState == State::SOS_SPAWNING)
 				trans.position	+= trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
 			else
 				trans.position	+= acceleration;
@@ -71,10 +71,11 @@ namespace Makai::Ex::Game::Danmaku {
 			playfieldCheck();
 		}
 
-		Item& discard(bool const force = false) override {
+		Item& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
 			if (discardable && !force) return *this;
-			despawn();
+			if (!immediately)	despawn();
+			else				free();
 			return *this;
 		}
 

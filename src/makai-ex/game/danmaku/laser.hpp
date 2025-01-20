@@ -89,10 +89,11 @@ namespace Makai::Ex::Game::Danmaku {
 			if (isFree()) return;
 		}
 		
-		Laser& discard(bool const force = false) override {
+		Laser& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
 			if (discardable && !force) return *this;
-			despawn();
+			if (!immediately)	despawn();
+			else				free();
 			return *this;
 		}
 

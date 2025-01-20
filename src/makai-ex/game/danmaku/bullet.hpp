@@ -67,10 +67,11 @@ namespace Makai::Ex::Game::Danmaku {
 			loopAndBounce();
 		}
 
-		Bullet& discard(bool const force = false) override {
+		Bullet& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
 			if (discardable && !force) return *this;
-			despawn();
+			if (!immediately)	despawn();
+			else				free();
 			return *this;
 		}
 
