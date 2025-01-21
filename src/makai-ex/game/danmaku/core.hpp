@@ -187,6 +187,12 @@ namespace Makai::Ex::Game::Danmaku {
 		Property<float>	velocity;
 		Property<float>	rotation;
 		Property<float>	damage;
+
+		float getDamage() {
+			return autoDecay ? damage.value : damage.next();
+		}
+
+		bool autoDecay = false;
 	};
 
 	struct Circular {

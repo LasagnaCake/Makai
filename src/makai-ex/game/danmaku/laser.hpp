@@ -29,6 +29,7 @@ namespace Makai::Ex::Game::Danmaku {
 			toggleState		= IToggleable::State::TS_UNTOGGLED;
 			patch			= {};
 			animColor		= Graph::Color::WHITE;
+			autoDecay		= false;
 			return *this;
 		}
 
@@ -78,7 +79,7 @@ namespace Makai::Ex::Game::Danmaku {
 			color.next();
 			radius.next();
 			length.next();
-			damage.next();
+			if (autoDecay) damage.next();
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
 			trans.scale		= scale.next();

@@ -28,6 +28,7 @@ namespace Makai::Ex::Game::Danmaku {
 			velocity		= {};
 			rotation		= {};
 			sprite			= {};
+			autoDecay		= false;
 			dope			= false;
 			glowing			= false;
 			bouncy			= false;
@@ -59,7 +60,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (paused()) return;
 			color.next();
 			radius.next();
-			//damage.next();
+			if (autoDecay) damage.next();
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
 			trans.scale		= scale.next();
