@@ -14,8 +14,8 @@ namespace Makai::Ex::Game::Danmaku {
 	struct EnemyConfig: BoundedObjectConfig {
 
 	};
-	
-	struct AEnemy {
+
+	struct AEnemy: AGameObject, AUpdateable, IDamageable {
 
 	};
 }
