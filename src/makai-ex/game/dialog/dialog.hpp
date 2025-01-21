@@ -5,7 +5,7 @@
 #include "box.hpp"
 #include "actor.hpp"
 #include "scene.hpp"
-#include "dvmplayer.hpp"
+#include "animaplayer.hpp"
 #include "actionplayer.hpp"
 
 #endif
