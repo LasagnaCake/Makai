@@ -16,7 +16,17 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct AEnemy: AGameObject, AUpdateable, IDamageable {
+		void onUpdate(float delta) override {
+			if (!active) return;
+			AGameObject::onUpdate(delta);
+			if (paused()) return;
+		}
 
+		void onUpdate(float delta, App& app) override {
+			if (!active) return;
+			onUpdate(delta);
+			if (paused()) return;
+		}
 	};
 }
 
