@@ -95,7 +95,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.affects.match(mask.enemy.attacker).overlap())
+			if (collider.affects.match(mask.enemy.attack).overlap())
 				takeDamage(collider.data.reinterpret<AGameObject>());
 		}
 
