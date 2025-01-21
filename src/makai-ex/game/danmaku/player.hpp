@@ -105,11 +105,8 @@ namespace Makai::Ex::Game::Danmaku {
 				mask.enemy.bullet
 			|	mask.enemy.laser
 			).overlap())
-				if (auto bullet = collider.data.reinterpret<Bullet>())
-					onGraze(bullet.as<AServerObject>());
-			if (collider.affects.match(mask.enemy.laser).overlap())
-				if (auto laser = collider.data.reinterpret<Laser>())
-					onGraze(laser.as<AServerObject>());
+				if (auto object = collider.data.reinterpret<AServerObject>())
+					onGraze(object);
 			if (collider.affects.match(mask.item).overlap())
 				if (auto item = collider.data.reinterpret<Item>()) {
 					onItem(item);
