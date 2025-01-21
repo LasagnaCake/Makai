@@ -215,6 +215,13 @@ namespace Makai::Ex::Game::Danmaku {
 		} magnet;
 	};
 
+	struct IDamageable {
+		virtual ~IDamageable() {}
+
+		virtual IDamageable& takeDamage(Reference<AGameObject> const& object = nullptr)	= 0;
+		virtual IDamageable& takeDamage(float const damage)								= 0;
+	};
+
 	struct IToggleable {
 		enum State {
 			TS_UNTOGGLED,

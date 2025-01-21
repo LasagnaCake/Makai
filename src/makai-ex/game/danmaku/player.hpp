@@ -43,7 +43,7 @@ namespace Makai::Ex::Game::Danmaku {
 		} const mask = {};
 	};
 
-	struct APlayer: Controllable, AGameObject, AUpdateable {
+	struct APlayer: Controllable, AGameObject, AUpdateable, IDamageable {
 		struct Velocity {
 			Vector2 focused		= 0;
 			Vector2 unfocused	= 0;
@@ -148,12 +148,6 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		APlayer& takeDamage(Reference<AGameObject> const& object = nullptr) {
-			if (invincibleTime || areAnyFlagsSet(INVINCIBLE)) return *this;
-			onDamage(object);
-			return *this;
-		}
-
 		bool areAnyFlagsSet(usize const mask) const {
 			return flags & mask;
 		}
@@ -171,6 +165,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		PlayerConfig::Collision const mask;
 
+		bool isInvincible() const {
+			return invincibleTime || areAnyFlagsSet(INVINCIBLE);
+		}
+
 	protected:
 		virtual void onItemMagnet(Reference<Item> const& item) {
 			if (!item->magnet.enabled && item->magnet.target != &trans.position)
@@ -180,7 +178,6 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
 		virtual void onBomb()											= 0;
 		virtual void onShot()											= 0;
-		virtual void onDamage(Reference<AGameObject> const& object)		= 0;
 
 		Reference<Collider> getGrazebox() {
 			return grazebox.reference();
