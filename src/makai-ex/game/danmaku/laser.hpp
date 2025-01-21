@@ -5,7 +5,9 @@
 #include "server.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	struct LaserServer;
+	struct Laser;
+
+	template<Type::Derived<Laser> T = Laser> struct LaserServer;
 
 	struct LaserConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -243,7 +245,9 @@ namespace Makai::Ex::Game::Danmaku {
 		LaserConfig::Collision const mask = {};
 	};
 
+	template<Type::Derived<Laser> TLaser = Laser>
 	struct LaserServer: AServer, AUpdateable {
+		using LaserType = TLaser;
 
 		Graph::ReferenceHolder& mainMesh;
 
@@ -259,7 +263,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.pushBack(Laser({*this, cfg, cfg.colli, cfg.mask}));
+				all.constructBack({*this, cfg, cfg.colli, cfg.mask});
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
 				all.back().sprite->local.position.z = zoff;
 				free.pushBack(&all.back());
@@ -268,7 +272,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<Laser> laser = b.morph<Laser>();
+				Reference<LaserType> laser = b.morph<LaserType>();
 				laser->setFree(false);
 				laser->clear();
 				return laser.as<AGameObject>();
@@ -284,21 +288,21 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void discardAll() override {
 			for (auto b: used) {
-				Laser& laser = access<Laser>(b);
+				LaserType& laser = access<LaserType>(b);
 				laser.discard();
 			};
 		}
 		
 		void freeAll() override {
 			for (auto b: used) {
-				Laser& laser = access<Laser>(b);
+				LaserType& laser = access<LaserType>(b);
 				laser.free();
 			};
 		}
 
 		void despawnAll() override {
 			for (auto b: used) {
-				Laser& laser = access<Laser>(b);
+				LaserType& laser = access<LaserType>(b);
 				laser.despawn();
 			};
 		}
@@ -310,7 +314,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
-				Laser& laser = access<Laser>(b);
+				LaserType& laser = access<LaserType>(b);
 				if (
 					laser.shape
 				&&	Collision::GJK::check(*laser.shape, bound)
@@ -322,7 +326,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
-				Laser& laser = access<Laser>(b);
+				LaserType& laser = access<LaserType>(b);
 				if (
 					laser.shape
 				&&	!Collision::GJK::check(*laser.shape, bound)
@@ -334,7 +338,7 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		LaserServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
-			Laser& laser = *object.morph<Laser>();
+			LaserType& laser = *object.morph<LaserType>();
 			AServer::release(object);
 			return *this;
 		}

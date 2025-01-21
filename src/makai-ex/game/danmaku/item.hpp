@@ -5,7 +5,9 @@
 #include "server.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	struct ItemServer;
+	struct Item;
+
+	template<Type::Derived<Item> T = Item> struct ItemServer;
 
 	struct ItemConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -247,8 +249,11 @@ namespace Makai::Ex::Game::Danmaku {
 		ItemConfig::Collision const mask = {};
 	};
 
+	template<Type::Derived<Item> TItem = Item>
 	struct ItemServer: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
+
+		using ItemType = TItem;
 
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;
@@ -266,7 +271,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.pushBack(Item({*this, cfg, cfg.colli, cfg.mask}));
+				all.constructBack({*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
@@ -279,7 +284,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<Item> item = b.morph<Item>();
+				Reference<ItemType> item = b.morph<ItemType>();
 				item->setFree(false);
 				item->clear();
 				return item.as<AGameObject>();
@@ -295,21 +300,21 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void discardAll() override {
 			for (auto b: used) {
-				Item& item = access<Item>(b);
+				ItemType& item = access<ItemType>(b);
 				item.discard();
 			};
 		}
 		
 		void freeAll() override {
 			for (auto b: used) {
-				Item& item = access<Item>(b);
+				ItemType& item = access<ItemType>(b);
 				item.free();
 			};
 		}
 
 		void despawnAll() override {
 			for (auto b: used) {
-				Item& item = access<Item>(b);
+				ItemType& item = access<ItemType>(b);
 				item.despawn();
 			};
 		}
@@ -321,7 +326,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
-				Item& item = access<Item>(b);
+				ItemType& item = access<ItemType>(b);
 				if (
 					item.shape
 				&&	Collision::GJK::check(*item.shape, bound)
@@ -333,7 +338,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
-				Item& item = access<Item>(b);
+				ItemType& item = access<ItemType>(b);
 				if (
 					item.shape
 				&&	!Collision::GJK::check(*item.shape, bound)
@@ -345,7 +350,7 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		ItemServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
-			Item& item = *(object.as<Item>());
+			ItemType& item = *(object.as<ItemType>());
 			AServer::release(object);
 			return *this;
 		}

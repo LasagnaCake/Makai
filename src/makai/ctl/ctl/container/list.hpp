@@ -254,6 +254,18 @@ public:
 	/// Destructor.
 	constexpr ~List() {dump();}
 
+	/// @brief Constructs and adds new element to the end of the `List`. 
+	/// @tparam ...Args Argument types.
+	/// @param ...args Values to pass to constructor.
+	/// @return Reference to self.
+	template<class... Args>
+	constexpr SelfType& constructBack(Args... args) {
+		if (count >= maximum)
+			increase();
+		MX::construct(contents+(count++), args...);
+		return *this;
+	}
+
 	/// @brief Adds a new element to the end of the `List`. 
 	/// @param value Element to add.
 	/// @return Reference to self.
@@ -268,6 +280,7 @@ public:
 	/// @return Value of the element removed.
 	/// @throw OutOfBoundsException when `List` is empty.
 	constexpr DataType popBack() {
+		if (empty()) emptyError();
 		DataType value = back();
 		count--;
 		if (count) MX::destruct<DataType>(contents+count);

@@ -5,7 +5,9 @@
 #include "server.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	struct BulletServer;
+	struct Bullet;
+
+	template<Type::Derived<Bullet> T = Bullet> struct BulletServer;
 
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -287,8 +289,11 @@ namespace Makai::Ex::Game::Danmaku {
 		BulletConfig::Collision const mask = {};
 	};
 
+	template<Type::Derived<Bullet> TBullet = Bullet>
 	struct BulletServer: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
+
+		using BulletType = TBullet;
 
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;
@@ -306,7 +311,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.pushBack(Bullet({*this, cfg, cfg.colli, cfg.mask}));
+				all.constructBack({*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
@@ -319,7 +324,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<Bullet> bullet = b.morph<Bullet>();
+				Reference<BulletType> bullet = b.morph<BulletType>();
 				bullet->setFree(false);
 				bullet->clear();
 				return bullet.as<AGameObject>();
@@ -335,21 +340,21 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void discardAll() override {
 			for (auto b: used) {
-				Bullet& bullet = access<Bullet>(b);
+				BulletType& bullet = access<BulletType>(b);
 				bullet.discard();
 			};
 		}
 		
 		void freeAll() override {
 			for (auto b: used) {
-				Bullet& bullet = access<Bullet>(b);
+				BulletType& bullet = access<BulletType>(b);
 				bullet.free();
 			};
 		}
 
 		void despawnAll() override {
 			for (auto b: used) {
-				Bullet& bullet = access<Bullet>(b);
+				BulletType& bullet = access<BulletType>(b);
 				bullet.despawn();
 			};
 		}
@@ -361,7 +366,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
-				Bullet& bullet = access<Bullet>(b);
+				BulletType& bullet = access<BulletType>(b);
 				if (
 					bullet.shape
 				&&	Collision::GJK::check(*bullet.shape, bound)
@@ -373,7 +378,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
-				Bullet& bullet = access<Bullet>(b);
+				BulletType& bullet = access<BulletType>(b);
 				if (
 					bullet.shape
 				&&	!Collision::GJK::check(*bullet.shape, bound)
@@ -385,13 +390,13 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
-			Bullet& bullet = *(object.as<Bullet>());
+			BulletType& bullet = *(object.as<BulletType>());
 			AServer::release(object);
 			return *this;
 		}
 
 	private:
-		List<Bullet> all;
+		List<BulletType> all;
 	};
 }
 
