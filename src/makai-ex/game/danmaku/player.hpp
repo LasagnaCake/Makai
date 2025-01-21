@@ -32,10 +32,10 @@ namespace Makai::Ex::Game::Danmaku {
 		struct Collision {
 			CollisionMask const item			= CollisionLayer::ITEM;
 			struct Enemy {
-				CollisionMask const bullet		= CollisionLayer::ENEMY_BULLET;
-				CollisionMask const laser		= CollisionLayer::ENEMY_LASER;
-				CollisionMask const body		= CollisionLayer::ENEMY_COLLISION;
-				CollisionMask const attacker	= CollisionLayer::ENEMY_MASK;
+				CollisionMask const bullet	= CollisionLayer::ENEMY_BULLET;
+				CollisionMask const laser	= CollisionLayer::ENEMY_LASER;
+				CollisionMask const body	= CollisionLayer::ENEMY_COLLISION;
+				CollisionMask const attack	= CollisionLayer::ENEMY_ATTACK;
 			} const enemy = {};
 			struct Tag {
 				CollisionMask const player		= CollisionTag::FOR_PLAYER_1;
