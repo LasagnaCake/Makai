@@ -7,6 +7,7 @@
 #include "../../ctypes.hpp"
 #include "../../typetraits/traits.hpp"
 #include "../../algorithm/strconv.hpp"
+#include "../../memory/deleter.hpp"
 #include "../error.hpp"
 #include "../function.hpp"
 #include "../map.hpp"
@@ -76,7 +77,7 @@ namespace Base {
 /// @note
 ///			Both types will throw if object is no longer usable,
 ///			either via releasing the pointer to it, or when a strong pointer destroys it.
-template <Type::Container::Pointable TData, bool W, auto D = Impl::BasicDeleter<TData>()>
+template <Type::Container::Pointable TData, bool W, auto D = Deleter<TData>()>
 class Shared:
 	private Base::ReferenceCounter<pointer>,
 	Derived<Base::ReferenceCounter<pointer>>,

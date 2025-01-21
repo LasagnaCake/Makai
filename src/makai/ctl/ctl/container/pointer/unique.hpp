@@ -4,6 +4,8 @@
 #include "../../namespace.hpp"
 #include "../../templates.hpp"
 
+#include "../../memory/deleter.hpp"
+
 #include "reference.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -12,43 +14,12 @@ CTL_NAMESPACE_BEGIN
 namespace Type::Container {
 	/// @brief Type must be a pointable type.
 	template <typename T> concept Pointable = Safe<T>;
-	/// @brief Type must be a deleter for `TData`.
-	template <class T, class TData> concept Deleter = requires (T t, TData* data) {
-		{t(data)};
-	};
 }
-
-namespace Impl {
-	template<class T>
-	struct BasicDeleter {
-		using DataType = T;
-
-		constexpr void operator()(DataType* const obj) const {
-			delete obj;
-		}
-
-		template<class U>
-		constexpr void operator()(U* const obj) const
-		requires Type::Convertible<As<U[]>*, As<DataType[]>*> {
-			delete[] obj;
-		}
-	};
-}
-
-/// @brief Tags the deriving class as possessing a deleter of some kind.
-/// @tparam D Deleter.
-/// @tparam TData Data type deleted by deleter.
-template<auto D, class TData>
-requires Type::Container::Deleter<decltype(D), TData>
-struct Deletable {
-	/// @brief Deleter.
-	constexpr static auto deleter = D;
-};
 
 /// @brief Unique pointer.
 /// @tparam TData Pointed type.
 /// @tparam D Deleter.
-template<Type::Safe TData, auto D = Impl::BasicDeleter<TData>()>
+template<Type::Safe TData, auto D = Deleter<TData>()>
 struct Unique:
 	Typed<TData>,
 	SelfIdentified<Unique<TData>>,
