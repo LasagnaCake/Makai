@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
 			Makai::String const out = argv[2];
 			Makai::Ex::AVM::Compiler::compileFileToFile(src, out);
 		} catch (Makai::Error::Generic const& e) {
-			DEBUGLN(e.report());
+			DEBUGLN("\n", e.report());
 		}
 	}
 	return 0;
