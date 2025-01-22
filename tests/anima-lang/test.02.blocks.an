@@ -1,0 +1,12 @@
+:perform NewBeginnings:act1
+:story NewBeginnings {
+	:act act1 {
+		
+	}
+	:act act2 {
+		
+	}
+	:act act3 {
+		
+	}
+}
