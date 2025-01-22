@@ -10,17 +10,17 @@ namespace Makai::Ex::AVM::Compiler {
 	/// @brief Regex matches used for processing.
 	namespace RegexMatches {
 		/// @brief Matches any character.
-		constexpr String ANY_CHAR		= String("[\\S\\s]");
+		const static String ANY_CHAR		= String("[\\S\\s]");
 		/// @brief Matches any parameter character, except commas.
-		constexpr String PARAM_CHAR		= String("[^,]");
+		const static String PARAM_CHAR		= String("[^,]");
 		/// @brief Matches any valid name character.
-		constexpr String NAME_CHAR		= String("[0-z\\-_]");
+		const static String NAME_CHAR		= String("[0-z\\-_]");
 		/// @brief Matches any invalid name character.
-		constexpr String NON_NAME_CHAR	= String("[^0-z\\-_]");
+		const static String NON_NAME_CHAR	= String("[^0-z\\-_]");
 		/// @brief Matches any complex token.
-		constexpr String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_':~]");
+		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_':~]");
 		/// @brief Matches any simple token.
-		constexpr String SIMPLE_TOKEN	= String("[*.,;]");
+		const static String SIMPLE_TOKEN	= String("[*.,;]");
 
 		/// @brief Creates a regex that lazily matches all characters between the given tokens.
 		/// @param begin Start token.
@@ -31,15 +31,15 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		/// @brief Matches any text string.
-		constexpr String STRINGS		= String("(?<!\\\\)\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"");
+		const static String STRINGS			= String("(?<!\\\\)\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"");
 		/// @brief Matches any parens pack.
-		constexpr String PARENTHESES	= makePack("(", ")");
+		const static String PARENTHESES		= makePack("(", ")");
 		/// @brief Matches any brackets pack.
-		constexpr String BRACKETS		= makePack("[", "]");
+		const static String BRACKETS		= makePack("[", "]");
 		/// @brief Matches line comments.
-		constexpr String LINE_COMMENTS	= String("\\/\\/.*");
+		const static String LINE_COMMENTS	= String("\\/\\/.*");
 		/// @brief Matches block comments.
-		constexpr String BLOCK_COMMENTS = makePack("\\/*", "*\\/");
+		const static String BLOCK_COMMENTS	= makePack("\\/*", "*\\/");
 
 		/// @brief Concatenats a series of regexes into one to match any.
 		/// @tparam ...Args Argument types.
@@ -53,11 +53,11 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		/// @brief Matches all packs.
-		constexpr String PACKS			= concat(STRINGS, PARENTHESES, BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
+		const static String PACKS			= concat(STRINGS, PARENTHESES, BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
 		/// @brief Matches all tokens.
-		constexpr String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", PACKS);
+		const static String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", PACKS);
 		/// @brief Matches all parameter tokens.
-		constexpr String ALL_PARAMETERS	= concat(ANY_PARAM_CHAR + "+", PACKS);
+		const static String ALL_PARAMETERS	= concat(PARAM_CHAR + "+", PACKS);
 	}
 
 	/// @brief Unescapes a character.
@@ -157,7 +157,7 @@ namespace Makai::Ex::AVM::Compiler {
 			template<class... Args>
 			constexpr explicit ParameterPack(Args const&... args)
 			requires (... && Type::Convertible<Args, String>):
-				args(StringList({args...})) {}
+				args({args...}) {}
 			
 			/// @brief Copy constructor (defaulted).
 			ParameterPack(ParameterPack const& other)	= default;
@@ -174,7 +174,7 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @brief Operation value. Used by some types.
 			uint64			value	= 0;
 			/// @brief Operation parameters. Used by some types.
-			ParameterPack	pack	= ParamPack();
+			ParameterPack	pack	= ParameterPack();
 			/// @brief Operation mode.
 			uint64			mode	= 0;
 			/// @brief Jump target for a given jump.
@@ -221,7 +221,7 @@ namespace Makai::Ex::AVM::Compiler {
 					case '@': {
 						assertValidNamedNode(node);
 						if (next.size() && next[0] == '(') {
-							tokens.pushBack({
+							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_ACTION,
 								.name	= node.substring(1),
 								.pack	= ParameterPack::fromString(next)
@@ -234,19 +234,19 @@ namespace Makai::Ex::AVM::Compiler {
 						String const name = node.substring(1);
 						if (next.size()) {
 							if (next[0] == '(')
-								tokens.pushBack({
+								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
 									.pack	= ParameterPack::fromString(next)
 								});
 							else if (next[0] == '"')
-								tokens.pushBack({
+								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
 									.pack	= ParameterPack(normalize(next.sliced(1, -2)))
 								});
 							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR))
-								tokens.pushBack({
+								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
 									.pack	= ParameterPack(next)
@@ -264,20 +264,20 @@ namespace Makai::Ex::AVM::Compiler {
 					} break;
 					case '!': {
 						assertValidNamedNode(node);
-						tokens.pushBack({
+						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_EMOTION,
 							.name	= node.substring(1)
 						});
 					} break;
 					case '\'': {
 						assertValidNamedNode(node);
-						tokens.pushBack({
+						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_WAIT,
 							.value	= toUInt64(node.substring(1))
 						});
 					} break;
 					case '\"': {
-						tokens.pushBack({
+						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_LINE,
 							.pack	= ParameterPack(normalize(next.sliced(1, -2)))
 						});
@@ -285,12 +285,12 @@ namespace Makai::Ex::AVM::Compiler {
 					case '#': {
 						assertValidNamedNode(node, 4);
 						if (node[1] == '#')
-							tokens.pushBack({
+							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_COLOR,
 								.value	= ConstHasher::hash(node.substring(2)),
 								.mode	= 1
 							});
-						tokens.pushBack({
+						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_COLOR,
 							.value	= hexColor(node.substring(1))
 						});
@@ -300,17 +300,17 @@ namespace Makai::Ex::AVM::Compiler {
 						addExtendedOperation(node, next, i, nodes);
 					} break;
 					case '[': {
-						tokens.pushBack({
+						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_ACTOR,
 							.pack	= ParameterPack::fromString(node)
 						});
 					} break;
-					case '*': tokens.pushBack({.mode = 1});						break;
-					case '.': tokens.pushBack({Operation::AVM_O_SYNC});			break;
-					case ';': tokens.pushBack({Operation::AVM_O_USER_INPUT});	break;
+					case '*': tokens.pushBack(Token{.mode = 1});					break;
+					case '.': tokens.pushBack(Token{Operation::AVM_O_SYNC});		break;
+					case ';': tokens.pushBack(Token{Operation::AVM_O_USER_INPUT});	break;
 					case '+':
 					case '-': {
-						tokens.pushBack({
+						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_NAMED_CALL,
 							.pack	= ParameterPack((node[0] == '+') ? "true" : "false")
 						}); break;
@@ -359,11 +359,11 @@ namespace Makai::Ex::AVM::Compiler {
 					token.name = act + sep + token.name;
 			}
 			optree.tokens.front().entry = act;
-			optree.tokens.pushBack({
+			optree.tokens.pushBack(Token{
 				.type = Operation::AVM_O_HALT,
 				.mode = 1
 			});
-			optree.tokens.pushBack({
+			optree.tokens.pushBack(Token{
 				.type = Operation::AVM_O_NO_OP,
 				.entry = end,
 			});
@@ -371,7 +371,7 @@ namespace Makai::Ex::AVM::Compiler {
 			if (last.type == Operation::AVM_O_NO_OP && last.mode == 0) {
 				last.type = Operation::AVM_O_JUMP;
 				last.name = end;
-			} else tokens.pushBack({
+			} else tokens.pushBack(Token{
 				.type = Operation::AVM_O_JUMP,
 				.name = end
 			});
@@ -387,7 +387,7 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing value for '", op, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					tokens.pushBack({
+					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= val,
 						.mode	= ophash == ConstHasher::hash(":perform")
@@ -432,14 +432,13 @@ namespace Makai::Ex::AVM::Compiler {
 		constexpr uint32 hexColor(String color) {
 			constexpr uint32 ALPHA_MASK = 0x000000ff;
 			constexpr uint32 COLOR_MASK = ~ALPHA_MASK;
-			color = Regex::replace(color, "(#|0x)", "").upper();
+			if (color.size() < 3) return ALPHA_MASK;
+			color = color.eraseLike('#').upper();
+			if (color[0] == '0' && color[1] == 'X')
+				color = color.substring(2);
 			if (color.empty()) return ALPHA_MASK;
 			if (color.size() < 3 || color.size() > 8 || !color.isHex())
-				throw Error::InvalidValue(
-					"Invalid color value \"#"+ color +"\"!",
-					"Make sure the color values are correct!",
-					CTL_CPP_PRETTY_SOURCE
-				);
+				return ALPHA_MASK;
 			if (color.size() <= 4) {
 				String nc;
 				nc.appendBack(2, color[0]);
@@ -473,7 +472,7 @@ namespace Makai::Ex::AVM::Compiler {
 	struct BinaryBuilder: Anima {
 		/// @brief Default constructor.
 		constexpr BinaryBuilder(): Anima{
-			.data = StringList({"true", "false"})
+			.data = {"true", "false"}
 		} {}
 
 		/// @brief Adds an operation to the binary.

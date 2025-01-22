@@ -898,6 +898,7 @@ public:
 	/// @return reference to self.
 	constexpr SelfType& strip() {
 		*this = stripped();
+		return *this;
 	}
 
 	/// @brief Splits the string by a separator.

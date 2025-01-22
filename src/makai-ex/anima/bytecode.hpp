@@ -154,13 +154,12 @@ namespace Makai::Ex::AVM {
 					CTL_CPP_PRETTY_SOURCE
 				);
 			// Data division
-			if (fh.data.size) {
-				usize i = fh.headerSize;
+			if (fh.data.size) {''
 				String buf;
 				auto c			= data.data() + fh.headerSize + fh.data.start;
 				auto const end	= c + fh.data.size;
 				auto const eof	= data.end();
-				while (c != end && c != eof) {
+				while (c != end && c != eof.raw()) {
 					if (*c == '\0') {
 						out.data.pushBack(buf);
 						buf.clear();
