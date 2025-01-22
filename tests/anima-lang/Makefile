@@ -1,6 +1,9 @@
 COMPILER := ../../tools/ex/anima-compiler/animac.exe
 
-compile = $(COMPILER) $(strip $(1)).an output/$(strip $(1)).anb
+define compile
+	@echo "$(strip $(1))"
+	$(COMPILER) $(strip $(1)).an output/$(strip $(1)).anb
+endef
 
-build:
+tests:
 	$(call compile, test.01.compilation)
