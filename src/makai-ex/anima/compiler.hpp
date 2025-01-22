@@ -31,7 +31,7 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		/// @brief Matches any text string.
-		const static String STRINGS			= String("(?<!\\\\)\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"");
+		const static String STRINGS			= String("\"(?:[^\"\\\\]|\\\\.)*\"");
 		/// @brief Matches any parens pack.
 		const static String PARENTHESES		= makePack("\\(", "\\)");
 		/// @brief Matches any brackets pack.
