@@ -27,7 +27,43 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onDeath() override {
+			if (currentAct++ < getActCount()) {
+				setFlags(DEAD, false);
+				doCurrentAct();
+			} else onBattleEnd();
 		}
+
+		ABoss& beginBattle() {
+			currentAct = 0;
+			onBattleBegin();
+			return *this;
+		}
+
+		ABoss& doAct(usize const act) {
+			onAct(act);
+			return *this;
+		}
+
+		ABoss& doCurrentAct() {
+			onAct(currentAct);
+			return *this;
+		}
+
+		ABoss& setAct(usize const act) {
+			auto const total = getActCount();
+			currentAct = act < total ? act : total;
+			return *this;
+		}
+
+		virtual usize getActCount()			= 0;
+
+	protected:
+		virtual void onBattleBegin()		= 0;
+		virtual void onAct(usize const act)	= 0;
+		virtual void onBattleEnd()			= 0;
+
+	private:
+		usize currentAct	= 0;
 	};
 }
 
