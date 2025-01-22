@@ -506,7 +506,7 @@ void App::render() {
 void App::copyScreenToQueued() {
 	if (!screenQueue.empty()) {
 		#ifndef MAKAILIB_DO_NOT_USE_BUFFERS
-		auto screen = framebuffer.getScreenBuffer();
+		auto screen = framebuffer.storage().screen;
 		for (Graph::Texture2D target: screenQueue)
 			target.make(screen);
 		#endif // MAKAILIB_DO_NOT_USE_BUFFERS

@@ -4,8 +4,10 @@
 #include "../global.hpp"
 
 namespace ImageSlot {
-	constexpr uint8 SCREEN	= 30;
-	constexpr uint8 DEPTH	= 31;
+	constexpr uint8 POSITION	= 28;
+	constexpr uint8 NORMAL		= 29;
+	constexpr uint8 SCREEN		= 30;
+	constexpr uint8 DEPTH		= 31;
 }
 
 using namespace Makai; using namespace Makai::Graph;
@@ -86,11 +88,8 @@ Graph::DrawBuffer& Graph::DrawBuffer::destroy() {
 	return *this;
 }
 
-Graph::DrawBuffer& Graph::DrawBuffer::create(uint const width, uint const height) {
-	if (exists()) return *this;
-	Base::ABuffer::create(width, height);
-	glBindFramebuffer(GL_FRAMEBUFFER, getID());
-	buffer.screen.create(
+inline void makeColorTexture(Graph::Texture2D& tex, uint const width, uint const height, GLuint const attachment) {
+	tex.create(
 		width,
 		height,
 		Image2D::ComponentType::CT_FLOAT,
@@ -102,11 +101,20 @@ Graph::DrawBuffer& Graph::DrawBuffer::create(uint const width, uint const height
 	);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT0,
+		attachment,
 		GL_TEXTURE_2D,
-		buffer.screen.getID(),
+		tex.getID(),
 		0
 	);
+}
+
+Graph::DrawBuffer& Graph::DrawBuffer::create(uint const width, uint const height) {
+	if (exists()) return *this;
+	Base::ABuffer::create(width, height);
+	glBindFramebuffer(GL_FRAMEBUFFER, getID());
+	makeColorTexture(buffer.screen, width, height, GL_COLOR_ATTACHMENT0);
+	makeColorTexture(buffer.normal, width, height, GL_COLOR_ATTACHMENT1);
+	makeColorTexture(buffer.position, width, height, GL_COLOR_ATTACHMENT2);
 	buffer.depth.create(
 		width,
 		height,
@@ -125,6 +133,13 @@ Graph::DrawBuffer& Graph::DrawBuffer::create(uint const width, uint const height
 		buffer.depth.getID(),
 		0
 	);
+	// Setup buffers to use
+	unsigned int attachments[3] = {
+		GL_COLOR_ATTACHMENT0,
+		GL_COLOR_ATTACHMENT1,
+		GL_COLOR_ATTACHMENT2
+	};
+	glDrawBuffers(3, attachments);
 	// Setup display rectangle
 	rect[0] = Vertex(-1, +1, 0, 0, 1);
 	rect[1] = Vertex(+1, +1, 0, 1, 1);
@@ -196,19 +211,25 @@ Graph::DrawBuffer& Graph::DrawBuffer::renderTo(Graph::Base::BufferObject const& 
 	// Set shader textures
 	buffer.depth(ImageSlot::DEPTH);
 	buffer.screen(ImageSlot::SCREEN);
+	buffer.position(ImageSlot::POSITION);
+	buffer.normal(ImageSlot::NORMAL);
 	// Set camera's near and far plane
 	shader["near"](Global::camera.zNear);
 	shader["far"](Global::camera.zFar);
 	// Set texture locations
 	shader["depth"](ImageSlot::DEPTH);
 	shader["screen"](ImageSlot::SCREEN);
+	shader["position"](ImageSlot::POSITION);
+	shader["normal"](ImageSlot::NORMAL);
 	// Set transformation matrix
 	shader["posMatrix"](Matrix4x4(trans));
 	shader["uvMatrix"](Matrix4x4(uv));
 	Vector2 const resolution = Vector2(getWidth(), getHeight());
+	// Set attributes
 	shader["resolution"](resolution);
 	shader["screenVUSpace"](screenVUSpace);
 	shader["pixelVU"](resolution / screenVUSpace);
+	shader["cameraPosition"](Global::camera.eye);
 	// Enable attribute pointers
 	Vertex::enableAttributes();
 	// Set VAO as active
@@ -229,11 +250,4 @@ Graph::DrawBuffer& Graph::DrawBuffer::renderTo(Graph::Base::BufferObject const& 
 Graph::DrawBuffer& Graph::DrawBuffer::disable() {
 	Base::ABuffer::disable();
 	return *this;
-}
-
-Graph::Texture2D Graph::DrawBuffer::getScreenBuffer() const {
-	return buffer.screen;
-}
-Graph::Texture2D Graph::DrawBuffer::getDepthBuffer() const {
-	return buffer.depth;
 }

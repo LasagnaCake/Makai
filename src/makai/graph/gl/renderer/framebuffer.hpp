@@ -106,6 +106,18 @@ namespace Makai::Graph {
 	/// @brief Render operation buffer.
 	class DrawBuffer: public Base::ABuffer, public Blendable {
 	public:
+		/// @brief Buffer storage.
+		struct Storage {
+			/// @brief Color buffer.
+			Texture2D screen;
+			/// @brief Normal buffer.
+			Texture2D normal;
+			/// @brief Position buffer.
+			Texture2D position;
+			/// @brief Depth buffer.
+			Texture2D depth;
+		};
+
 		/// @brief Default constructor.
 		DrawBuffer(): Blendable() {}
 
@@ -163,12 +175,9 @@ namespace Makai::Graph {
 		/// @brief  Screen Vertex Unit space. Usually the inverse of the camera's orthographic size.
 		Vector2 screenVUSpace = 1;
 
-		/// @brief Returns the color buffer.
-		/// @return Color buffer.
-		Texture2D getScreenBuffer() const;
-		/// @brief Returns the depth buffer.
-		/// @return Depth buffer.
-		Texture2D getDepthBuffer() const;
+		/// @brief Returns the buffer storage.
+		/// @return Buffer storage.
+		Storage const& storage() const {return buffer;}
 
 		/// @brief Renders the buffer to another buffer.
 		/// @param target Buffer to render to.
@@ -180,13 +189,8 @@ namespace Makai::Graph {
 		Vector4 clearColor = Color::CLEAR;
 
 	private:
-		/// @brief Buffer storage objects.
-		struct BufferStorage {
-			/// @brief Color buffer.
-			Texture2D screen;
-			/// @brief Depth buffer.
-			Texture2D depth;
-		} buffer;
+		/// @brief Buffer storage.
+		Storage buffer;
 		/// @brief Vertex array.
 		uint vao;
 		/// @brief Vertex buffer.

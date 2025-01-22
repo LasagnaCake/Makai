@@ -15,7 +15,8 @@ in vec2 warpUV;
 //in vec3 fragShadeColor;
 
 layout (location = 0) out vec4	FragColor;
-//layout (location = 1) out float	DepthValue;
+layout (location = 1) out vec4	FragNormal;
+layout (location = 2) out vec4	FragPosition;
 
 struct TextureEffect {
 	bool		enabled;
@@ -232,7 +233,9 @@ void main(void) {
 		color.rgb = mix(color.rgb, emitColor.rgb, emitFactor * emission.strength);
 	}
 
-	FragColor = color;
+	FragColor		= color;
+	FragNormal		= vec4(fragNormal, 1);
+	FragPosition	= vec4(fragCoord3D, 1);
 
 	if (debugView > 0) {
 		switch(debugView) {
