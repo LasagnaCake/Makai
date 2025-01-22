@@ -88,11 +88,11 @@ namespace Regex {
 	/// @param expr Regular expression to match.
 	/// @return List of matches.
 	inline List<Match> find(String const& str, String const& expr) {
-		std::smatch rm;
 		List<Match> result;
+		std::smatch rm;
 		auto cs = stdstr(str);
 		auto re = makeRegex(expr);
-		while (std::regex_search(cs, rm, makeRegex(expr)))
+		while (std::regex_search(cs, rm, re))
 			for (usize i = 0; i < rm.size(); ++i)
 				result.pushBack(Match{
 					rm.position(i),
