@@ -87,13 +87,11 @@ namespace Makai::Ex::AVM::Compiler {
 		String out;
 		bool escape = false;
 		for (auto& c: str) {
-			if (c == '\\') {
+			if (c == '\\')
 				escape = true;
-				continue;
-			}
 			else if (escape) {
 				out.pushBack(unescape(c));
-				continue;
+				escape = false;
 			} else out.pushBack(c);
 		}
 		return out;
@@ -120,9 +118,9 @@ namespace Makai::Ex::AVM::Compiler {
 				usize index = 0;
 				for (auto& match: matches) {
 					auto& arg = pack.args.pushBack(match.match).back();
-					DEBUG("[", index, "]", ": '", arg, "' ");
 					arg.strip();
-					if (arg == String("...")) {
+					DEBUG("[", index, "]", ": '", arg, "' ");
+					if (arg == "...") {
 						if (index != 0) {
 							DEBUGLN("\t[! INVALID EXPANSION EXPRESSION !]");
 							throw Error::InvalidValue(
@@ -289,9 +287,10 @@ namespace Makai::Ex::AVM::Compiler {
 						});
 					} break;
 					case '\"': {
+						DEBUGLN("Normalized: [", normalize(node.sliced(1, -2)), "]");
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_LINE,
-							.pack	= ParameterPack(normalize(next.sliced(1, -2)))
+							.name	= normalize(node.sliced(1, -2))
 						});
 					} break;
 					case '#': {
@@ -364,6 +363,7 @@ namespace Makai::Ex::AVM::Compiler {
 			DEBUGLN("\nParsing tree...\n");
 			for (auto& match: matches)
 				nodes.pushBack(match.match);
+			DEBUGLN("\nTree parsed!\n");
 			return OperationTree(nodes);
 		}
 
@@ -555,6 +555,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @param tree Tree to create binary from.
 		/// @return Constructed binary.
 		static BinaryBuilder fromTree(OperationTree const& tree) {
+			DEBUGLN("\nBuilding binary...\n");
 			BinaryBuilder out;
 			for (auto& token: tree.tokens) {
 				if (token.entry.size())
@@ -568,7 +569,7 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 					case Operation::AVM_O_LINE:
 						out.addOperation(token);
-						out.addStringOperand(token.pack.args[0]);
+						out.addStringOperand(token.name);
 						break;
 					case Operation::AVM_O_ACTOR:
 						for (usize i = 0; i < token.pack.args.size(); ++i) {
@@ -617,6 +618,10 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 				}
 			}
+			for (auto& name: out.data)
+				DEBUG("'", name, "', ");
+			DEBUGLN("");
+			DEBUGLN("\nBinary built!\n");
 			return out;
 		}
 		
