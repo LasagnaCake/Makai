@@ -1,4 +1,4 @@
-:perform NewBeginnings:act1
+:next NewBeginnings:act1
 :story NewBeginnings {
 	:act act1 {
 		
