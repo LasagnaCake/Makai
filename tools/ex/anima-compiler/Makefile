@@ -20,9 +20,10 @@ COMPILER_CONFIG += $(LEAN)
 endif
 
 PRGNAME	:= animac
-SRC_DST	:= -o $(PRGNAME).exe $(PRGNAME).cpp
+SRC_DST	= -o $(PRGNAME)$(strip $(1)).exe $(PRGNAME).cpp
 
-compile = @$(CXX) -O$(o) $(SRC_DST) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(WINREQS)
+compile = @$(CXX) -O$(o) $(call SRC_DST, $(1)) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(WINREQS)
+compile = @$(CXX) -O$(o) $(call SRC_DST, $(1)) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(WINREQS)
 
 NOCMD := -mwindows
 
@@ -42,7 +43,12 @@ endef
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-compiler:
-	$(call compile)
+all: debug release
 
-all: compiler
+debug:
+	@echo "Making debug..."
+	$(call compile, .debug) -DMAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
+
+release:
+	@echo "Making release..."
+	$(call compile,)

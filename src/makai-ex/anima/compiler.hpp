@@ -1,6 +1,14 @@
 #ifndef MAKAILIB_EX_ANIMA_COMPILER_H
 #define MAKAILIB_EX_ANIMA_COMPILER_H
 
+#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
+#define MAKAILIB_EX_ANIMA_COMPILER_DEBUG(...) DEBUG(__VA_ARGS__)
+#define MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(...) DEBUGLN(__VA_ARGS__)
+#else
+#define MAKAILIB_EX_ANIMA_COMPILER_DEBUG(...)
+#define MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(...)
+#endif
+
 #include <makai/makai.hpp>
 
 #include "bytecode.hpp"
@@ -119,21 +127,21 @@ namespace Makai::Ex::AVM::Compiler {
 				for (auto& match: matches) {
 					auto& arg = pack.args.pushBack(match.match).back();
 					arg.strip();
-					DEBUG("[", index, "]", ": '", arg, "' ");
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUG("[", index, "]", ": '", arg, "' ");
 					if (arg == "...") {
 						if (index != 0) {
-							DEBUGLN("\t[! INVALID EXPANSION EXPRESSION !]");
+							MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[! INVALID EXPANSION EXPRESSION !]");
 							throw Error::InvalidValue(
 								toString("Invalid values '", str, "'!"),
 								"'...' may ONLY appear at the beginning of the value list!",
 								CTL_CPP_PRETTY_SOURCE
 							);
 						}
-						DEBUGLN("\t[Valid expansion expression]");
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[Valid expansion expression]");
 						pack.args.pushBack(arg);
 						continue;
 					}
-					DEBUGLN("\t[Parameter]");
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[Parameter]");
 					switch (arg[0]) {
 						case '"': arg = normalize(arg.sliced(1, -2)); break;
 						case '(':
@@ -225,7 +233,7 @@ namespace Makai::Ex::AVM::Compiler {
 				String node = nodes[i], next;
 				if (i+1 < nodes.size())
 					next = nodes[i+1];
-				DEBUGLN(node);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(node);
 				switch (node[0]) {
 					case '/': continue;
 					case '@': {
@@ -287,7 +295,7 @@ namespace Makai::Ex::AVM::Compiler {
 						});
 					} break;
 					case '\"': {
-						DEBUGLN("Normalized: [", normalize(node.sliced(1, -2)), "]");
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Normalized: [", normalize(node.sliced(1, -2)), "]");
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_LINE,
 							.name	= normalize(node.sliced(1, -2))
@@ -346,7 +354,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @return Operation tree.
 		/// @throw Error::NonexistentValue if source file is empty.
 		static OperationTree fromSource(String const& src) {
-			DEBUGLN("Tokenizer regex: ", RegexMatches::ALL_TOKENS);
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Tokenizer regex: ", RegexMatches::ALL_TOKENS);
 			if (src.empty())
 				throw Error::NonexistentValue(
 					"Source is empty!",
@@ -360,16 +368,16 @@ namespace Makai::Ex::AVM::Compiler {
 				);
 			StringList nodes;
 			nodes.resize(matches.size());
-			DEBUGLN("\nParsing tree...\n");
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nParsing tree...\n");
 			for (auto& match: matches)
 				nodes.pushBack(match.match);
-			DEBUGLN("\nTree parsed!\n");
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nTree parsed!\n");
 			return OperationTree(nodes);
 		}
 
 	private:
 		void addActBlock(String const& act, String const& block, char const sep = '*') {
-			DEBUGLN("<block:", act, ">");
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<block:", act, ">");
 			auto optree = OperationTree::fromSource(block.sliced(1, -2));
 			auto const end = act + "[end]";
 			for (auto& token : optree.tokens) {
@@ -396,7 +404,7 @@ namespace Makai::Ex::AVM::Compiler {
 				.name = end
 			});
 			tokens.appendBack(optree.tokens);
-			DEBUGLN("</block:", act, ">");
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</block:", act, ">");
 		}
 
 		constexpr void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
@@ -555,7 +563,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @param tree Tree to create binary from.
 		/// @return Constructed binary.
 		static BinaryBuilder fromTree(OperationTree const& tree) {
-			DEBUGLN("\nBuilding binary...\n");
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nBuilding binary...\n");
 			BinaryBuilder out;
 			for (auto& token: tree.tokens) {
 				if (token.entry.size()) {
@@ -625,10 +633,12 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 				}
 			}
+			#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
 			for (auto& name: out.data)
-				DEBUG("'", name, "', ");
-			DEBUGLN("");
-			DEBUGLN("\nBinary built!\n");
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUG("'", name, "', ");
+			#endif
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("");
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nBinary built!\n");
 			return out;
 		}
 		

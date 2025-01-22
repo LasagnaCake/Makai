@@ -7,3 +7,4 @@ endef
 
 tests:
 	$(call compile, test.01.compilation)
+	$(call compile, test.02.blocks)
