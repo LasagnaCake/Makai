@@ -18,7 +18,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any invalid name character.
 		constexpr String NON_NAME_CHAR	= String("[^0-z\\-_]");
 		/// @brief Matches any complex token.
-		constexpr String COMPLEX_TOKEN	= String("[\\w&!@#$%&><+\\-_']");
+		constexpr String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_':~]");
 		/// @brief Matches any simple token.
 		constexpr String SIMPLE_TOKEN	= String("[*.,;]");
 
@@ -297,13 +297,7 @@ namespace Makai::Ex::AVM::Compiler {
 					} break;
 					case ':': {
 						assertValidNamedNode(node);
-						if (next.empty() || next.front() != '{' || next.back() != '}')
-							throw Error::InvalidValue(
-								toString("Missing/invalid act block for '", node, "'!"),
-								CTL_CPP_PRETTY_SOURCE
-							);
-						addActBlock(node.substring(1), next);
-						++i;
+						addExtendedOperation(node, next, i, nodes);
 					} break;
 					case '[': {
 						tokens.pushBack({
@@ -321,7 +315,6 @@ namespace Makai::Ex::AVM::Compiler {
 							.pack	= ParameterPack((node[0] == '+') ? "true" : "false")
 						}); break;
 					}
-					case '\\': i += addExtendedOperation(node, next);
 					case '(': continue;
 					default:
 						throw Error::InvalidValue(
@@ -362,6 +355,8 @@ namespace Makai::Ex::AVM::Compiler {
 			for (auto& token : optree.tokens) {
 				if (token.entry.size())
 					token.entry = act + "/" + token.entry;
+				if (token.type == Operation::AVM_O_JUMP)
+					token.name = act + "/" + token.name;
 			}
 			optree.tokens.front().entry = act;
 			optree.tokens.pushBack({
@@ -383,10 +378,10 @@ namespace Makai::Ex::AVM::Compiler {
 			tokens.appendBack(optree.tokens);
 		}
 
-		constexpr usize addExtendedOperation(String const& op, String const& val) {
+		constexpr void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
 			switch (auto ophash = ConstHasher::hash(op)) {
-				case (ConstHasher::hash("\\perform")):
-				case (ConstHasher::hash("\\next")): {
+				case (ConstHasher::hash(":perform")):
+				case (ConstHasher::hash(":next")): {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
@@ -395,9 +390,29 @@ namespace Makai::Ex::AVM::Compiler {
 					tokens.pushBack({
 						.type	= Operation::AVM_O_JUMP,
 						.name	= val,
-						.mode	= ophash == ConstHasher::hash("\\perform")
+						.mode	= ophash == ConstHasher::hash(":perform")
 					});
-					return 1;
+					++curNode;
+					return;
+				}
+				case (ConstHasher::hash(":act")): {
+					if (val.empty())
+						throw Error::InvalidValue(
+							toString("Missing act name!"),
+							CTL_CPP_PRETTY_SOURCE
+						);
+					if (
+						nodes.size() < curNode + 2 
+					||	nodes[curNode + 2].front() != '{'
+					||	nodes[curNode + 2].back() != '}'
+					)
+						throw Error::InvalidValue(
+							toString("Missing/invalid act block for '", val, "'!"),
+							CTL_CPP_PRETTY_SOURCE
+						);
+					addActBlock(val, nodes[curNode+2]);
+					curNode += 2;
+					return;
 				}
 				default:
 				throw Error::InvalidValue(
