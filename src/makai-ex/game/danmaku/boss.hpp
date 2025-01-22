@@ -11,7 +11,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta) override {
 			if (!active) return;
-			AGameObject::onUpdate(delta);
+			AEnemy::onUpdate(delta);
 			if (paused()) return;
 			healthBar.value = health;
 			healthBar.max	= maxHealth;
@@ -22,8 +22,11 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta, App& app) override {
 			if (!active) return;
-			onUpdate(delta);
+			AEnemy::onUpdate(delta, app);
 			if (paused()) return;
+		}
+
+		void onDeath() override {
 		}
 	};
 }
