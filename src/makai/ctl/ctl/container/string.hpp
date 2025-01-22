@@ -886,12 +886,12 @@ public:
 	/// @return String without leading whitespace.
 	constexpr SelfType stripped() {
 		auto start	= begin();
-		auto stop	= end();
+		auto stop	= end()-1;
 		while (start != stop && isNullOrSpaceChar(*start))
 			++start;
 		while (stop != start && isNullOrSpaceChar(*stop))
 			--stop;
-		return SelfType(start, stop);
+		return SelfType(start, stop+1);
 	}
 
 	/// @brief Strips the string of any leading whitespace characters.
