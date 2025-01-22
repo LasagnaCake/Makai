@@ -91,12 +91,17 @@ namespace Regex {
 		std::smatch rm;
 		List<Match> result;
 		auto cs = stdstr(str);
-		std::regex_search(cs, rm, makeRegex(expr));
-		for (usize i = 1; i < rm.size()-1; ++i)
-			result.pushBack(Match{
-				rm.position(i),
-				ctlstr(rm[i].str())
-			});
+		auto re = makeRegex(expr);
+		auto const begin	= std::sregex_iterator(cs.cbegin(), cs.cend(), re);
+		auto const end		= std::sregex_iterator();
+		for (auto mi = begin; begin != end; ++mi) {
+			std::smatch const& match = *mi;
+			for (usize i = 1; i < match.size()-1; ++i)
+				result.pushBack(Match{
+					match.position(i),
+					ctlstr(match[i].str())
+				});
+		}
 		return result;
 	}
 

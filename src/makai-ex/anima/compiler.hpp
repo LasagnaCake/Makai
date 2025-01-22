@@ -57,7 +57,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches all packs.
 		const static String PACKS			= concat(STRINGS, PARENTHESES, BRACKETS, SQUIGGLIES, LINE_COMMENTS, BLOCK_COMMENTS);
 		/// @brief Matches all tokens.
-		const static String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", PACKS);
+		const static String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", SIMPLE_TOKEN, PACKS);
 		/// @brief Matches all parameter tokens.
 		const static String ALL_PARAMETERS	= concat(PARAM_CHAR + "+", PACKS);
 	}
@@ -360,7 +360,8 @@ namespace Makai::Ex::AVM::Compiler {
 
 	private:
 		void addActBlock(String const& act, String const& block, char const sep = '*') {
-			auto optree = OperationTree::fromSource(block.sliced(1, -1));
+			DEBUGLN("<block:", act, ">");
+			auto optree = OperationTree::fromSource(block.sliced(1, -2));
 			auto const end = act + "[end]";
 			for (auto& token : optree.tokens) {
 				if (token.entry.size())
@@ -386,6 +387,7 @@ namespace Makai::Ex::AVM::Compiler {
 				.name = end
 			});
 			tokens.appendBack(optree.tokens);
+			DEBUGLN("</block:", act, ">");
 		}
 
 		constexpr void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
