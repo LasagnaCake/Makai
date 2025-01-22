@@ -218,8 +218,11 @@ namespace Makai::Ex::Game::Danmaku {
 	struct IDamageable {
 		virtual ~IDamageable() {}
 
-		virtual IDamageable& takeDamage(Reference<AGameObject> const& object = nullptr)	= 0;
-		virtual IDamageable& takeDamage(float const damage)								= 0;
+		virtual IDamageable& takeDamage(
+			Reference<AGameObject> const& object,
+			CollisionLayer::CollisionMask const& collider
+		) = 0;
+		virtual IDamageable& takeDamage(float const damage) = 0;
 	};
 
 	struct IToggleable {
@@ -249,6 +252,24 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct RotatesSprite {
 		bool rotateSprite = true;
+	};
+
+	struct Healthy {
+		constexpr Healthy& setHealth(float const hp)	{health = hp < maxHealth ? hp : maxHealth; return *this;	}
+		constexpr Healthy& gainHealth(float const hp)	{setHealth(hp + health); return *this;						}
+		constexpr Healthy& loseHealth(float const hp)	{health -= hp; return *this;								}
+
+		constexpr Healthy& setHealth(float const hp, float maxHP) {
+			maxHealth = maxHP;
+			return setHealth(hp);
+		}
+
+		constexpr float getHealth()const {return health;	}
+
+		float maxHealth	= 100;
+
+	protected:
+		float health	= 100;
 	};
 }
 

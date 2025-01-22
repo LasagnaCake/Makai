@@ -15,7 +15,7 @@ namespace Makai::Ex::Game::Danmaku {
 	struct PlayerConfig: BoundedObjectConfig {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const hitbox = {
-			{},
+			CollisionLayer::PLAYER,
 			CollisionLayer::ENEMY_MASK,
 			CollisionTag::FOR_PLAYER_1
 		};
@@ -71,7 +71,7 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr static usize CAN_FOCUS	= 1 << 1;
 		constexpr static usize CAN_SHOOT	= 1 << 2;
 		constexpr static usize CAN_BOMB		= 1 << 3;
-		constexpr static usize INVINCIBLE	= 1 << 3;
+		constexpr static usize INVINCIBLE	= 1 << 4;
 
 		usize flags = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
 
@@ -96,7 +96,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
 			if (collider.affects.match(mask.enemy.attack).overlap())
-				takeDamage(collider.data.reinterpret<AGameObject>());
+				takeDamage(collider.data.reinterpret<AGameObject>(), collider.affects);
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
