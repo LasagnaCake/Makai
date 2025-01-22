@@ -7,9 +7,14 @@
 namespace Makai::Graph {
 	/// @brief Face culling mode.
 	enum class CullMode {
+		/// @brief No culling.
 		OCM_NONE,
+		/// @brief Front face culling.
 		OCM_FRONT,
+		/// @brief Back face culling.
 		OCM_BACK,
+		/// @brief Special mode that renders the object two times - first back face, then front face.
+		OCM_DUAL,
 	};
 
 	/// @brief Face fill mode.

@@ -35,6 +35,7 @@ bool Makai::Graph::setFillMode(FillMode const& mode) {
 
 void Makai::Graph::setCullMode(CullMode const& mode) {
 	switch (mode) {
+		case CullMode::OCM_DUAL:
 		case CullMode::OCM_NONE:	glDisable(GL_CULL_FACE);						break;
 		case CullMode::OCM_FRONT:	glEnable(GL_CULL_FACE); glCullFace(GL_FRONT);	break;
 		case CullMode::OCM_BACK:	glEnable(GL_CULL_FACE); glCullFace(GL_BACK);	break;

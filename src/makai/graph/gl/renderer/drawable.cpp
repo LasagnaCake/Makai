@@ -71,7 +71,7 @@ AGraphic::~AGraphic() {
 
 void AGraphic::display(
 	Vertex* const		vertices,
-	usize const		count,
+	usize const			count,
 	CullMode const&		culling,
 	FillMode const&		fill,
 	DisplayMode const&	mode,
@@ -104,13 +104,26 @@ void AGraphic::display(
 	glBindVertexArray(vao);
 	// Enable attribute pointers
 	Vertex::enableAttributes();
-	// Set face culling
-	setCullMode(culling);
-	// Set fill mode (if none, exit)
+	// If fill mode is not none...
 	if (setFillMode(fill)) {
-		// Draw object to screen
-		if (instances)	glDrawArraysInstanced(getGLDisplayMode(mode), 0, count, instances);
-		else			glDrawArrays(getGLDisplayMode(mode), 0, count);
+		// If not dual culling...
+		if (culling != CullMode::OCM_DUAL) {
+			// Set face culling
+			setCullMode(culling);
+			// Draw object to screen
+			if (instances)	glDrawArraysInstanced(getGLDisplayMode(mode), 0, count, instances);
+			else			glDrawArrays(getGLDisplayMode(mode), 0, count);
+		// Else...
+		} else {
+			// Draw back face
+			setCullMode(CullMode::OCM_BACK);
+			if (instances)	glDrawArraysInstanced(getGLDisplayMode(mode), 0, count, instances);
+			else			glDrawArrays(getGLDisplayMode(mode), 0, count);
+			// Draw front face
+			setCullMode(CullMode::OCM_FRONT);
+			if (instances)	glDrawArraysInstanced(getGLDisplayMode(mode), 0, count, instances);
+			else			glDrawArrays(getGLDisplayMode(mode), 0, count);
+		}
 	}
 	// Disable culling
 	setCullMode(CullMode::OCM_NONE);
