@@ -79,8 +79,11 @@ namespace Regex {
 	inline usize count(String const& str, String const& expr) {
 		std::smatch rm;
 		auto cs = stdstr(str);
-		std::regex_search(cs, rm, makeRegex(expr));
-		return rm.size() - 2;
+		usize count = 0;
+		auto const re = makeRegex(expr);
+		while (std::regex_search(cs, rm, re))
+			count += cs.size();
+		return count;
 	}
 
 	/// @brief Finds all occurrences of a given regular expression.
@@ -91,7 +94,7 @@ namespace Regex {
 		List<Match> result;
 		std::smatch match;
 		auto cs = stdstr(str);
-		auto re = makeRegex(expr);
+		auto const re = makeRegex(expr);
 		while (std::regex_search(cs, match, re)) {
 			for (usize i = 0; i < match.size(); ++i)
 				result.pushBack(Match{
@@ -111,7 +114,7 @@ namespace Regex {
 		std::smatch rm;
 		auto cs = stdstr(str);
 		std::regex_search(cs, rm, makeRegex(expr));
-		return Match{rm.position(1), ctlstr(rm[1].str())};
+		return Match{rm.position(0), ctlstr(rm[0].str())};
 	}
 }
 
