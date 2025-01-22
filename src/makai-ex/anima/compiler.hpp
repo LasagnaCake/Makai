@@ -120,7 +120,7 @@ namespace Makai::Ex::AVM::Compiler {
 				usize index = 0;
 				for (auto& match: matches) {
 					auto& arg = pack.args.pushBack(match.match).back();
-					DEBUG(index, ": '", arg, "' ");
+					DEBUG("[", index, "]", ": '", arg, "' ");
 					arg.strip();
 					if (arg == String("...")) {
 						if (index != 0) {
