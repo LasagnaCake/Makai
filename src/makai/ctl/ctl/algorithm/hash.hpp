@@ -271,7 +271,7 @@ namespace ConstHasher {
 	/// @return Resulting hash.
 	template< usize S>
 	constexpr static usize hash(As<const char[S]> const& data) {
-		return hash(data, S);
+		return hash(data, S-1);
 	}
 
 	/// @brief Generates the hash for a given ranged type.

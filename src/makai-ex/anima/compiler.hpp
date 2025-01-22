@@ -409,6 +409,10 @@ namespace Makai::Ex::AVM::Compiler {
 
 		constexpr void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
 			auto const ophash = ConstHasher::hash(op);
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":perform"));
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":next"));
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":chapter"));
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":act"));
 			switch (ophash) {
 				case (ConstHasher::hash(":perform")):
 				case (ConstHasher::hash(":next")): {
@@ -441,7 +445,7 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing/invalid block for '", op, " ", val, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					addActBlock(val, nodes[curNode+2], (ophash == ConstHasher::hash(":story")) ? ':' : '*');
+					addActBlock(val, nodes[curNode+2], (ophash == ConstHasher::hash(":act")) ? '*' : ':');
 					curNode += 2;
 					return;
 				}
