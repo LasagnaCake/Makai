@@ -349,14 +349,14 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 	private:
-		void addActBlock(String const& act, String const& block) {
+		void addActBlock(String const& act, String const& block, char const sep = '*') {
 			auto optree = OperationTree::fromSource(block.sliced(1, -1));
 			auto const end = act + "[end]";
 			for (auto& token : optree.tokens) {
 				if (token.entry.size())
-					token.entry = act + "/" + token.entry;
+					token.entry = act + sep + token.entry;
 				if (token.type == Operation::AVM_O_JUMP)
-					token.name = act + "/" + token.name;
+					token.name = act + sep + token.name;
 			}
 			optree.tokens.front().entry = act;
 			optree.tokens.pushBack({
@@ -395,10 +395,11 @@ namespace Makai::Ex::AVM::Compiler {
 					++curNode;
 					return;
 				}
+				case (ConstHasher::hash(":chapter")):
 				case (ConstHasher::hash(":act")): {
 					if (val.empty())
 						throw Error::InvalidValue(
-							toString("Missing act name!"),
+							toString("Missing act/chapter name!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
 					if (
@@ -407,10 +408,10 @@ namespace Makai::Ex::AVM::Compiler {
 					||	nodes[curNode + 2].back() != '}'
 					)
 						throw Error::InvalidValue(
-							toString("Missing/invalid act block for '", val, "'!"),
+							toString("Missing/invalid block for '", op, " ", val, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					addActBlock(val, nodes[curNode+2]);
+					addActBlock(val, nodes[curNode+2], (ophash == ConstHasher::hash(":story")) ? ':' : '*');
 					curNode += 2;
 					return;
 				}
