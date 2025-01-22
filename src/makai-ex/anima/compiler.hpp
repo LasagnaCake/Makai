@@ -36,6 +36,8 @@ namespace Makai::Ex::AVM::Compiler {
 		const static String PARENTHESES		= makePack("\\(", "\\)");
 		/// @brief Matches any brackets pack.
 		const static String BRACKETS		= makePack("\\[", "\\]");
+		/// @brief Matches any squiggle brackets pack.
+		const static String SQUIGGLIES		= makePack("\\[", "\\]");
 		/// @brief Matches line comments.
 		const static String LINE_COMMENTS	= String("\\/\\/.*");
 		/// @brief Matches block comments.
@@ -53,7 +55,7 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		/// @brief Matches all packs.
-		const static String PACKS			= concat(STRINGS, PARENTHESES, BRACKETS, LINE_COMMENTS, BLOCK_COMMENTS);
+		const static String PACKS			= concat(STRINGS, PARENTHESES, BRACKETS, SQUIGGLIES, LINE_COMMENTS, BLOCK_COMMENTS);
 		/// @brief Matches all tokens.
 		const static String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", PACKS);
 		/// @brief Matches all parameter tokens.
