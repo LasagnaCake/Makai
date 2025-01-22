@@ -30,6 +30,7 @@ namespace Makai::Ex::Game::Danmaku {
 			velocity		= {};
 			rotation		= {};
 			sprite			= {};
+			damage			= {};
 			autoDecay		= false;
 			dope			= false;
 			glowing			= false;

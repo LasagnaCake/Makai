@@ -15,7 +15,7 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const hitbox = {
 			CollisionLayer::ENEMY,
-			CollisionLayer::PLAYER_MASK,
+			CollisionLayer::PLAYER_ATTACK,
 			CollisionTag::FOR_PLAYER_1
 		};
 		struct Collision {

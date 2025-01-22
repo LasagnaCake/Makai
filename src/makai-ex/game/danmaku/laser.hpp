@@ -28,10 +28,11 @@ namespace Makai::Ex::Game::Danmaku {
 			velocity		= {};
 			rotation		= {};
 			length			= {};
-			toggleState		= IToggleable::State::TS_UNTOGGLED;
+			damage			= {};
 			patch			= {};
-			animColor		= Graph::Color::WHITE;
 			autoDecay		= false;
+			toggleState		= IToggleable::State::TS_UNTOGGLED;
+			animColor		= Graph::Color::WHITE;
 			return *this;
 		}
 
