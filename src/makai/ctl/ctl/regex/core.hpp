@@ -89,15 +89,17 @@ namespace Regex {
 	/// @return List of matches.
 	inline List<Match> find(String const& str, String const& expr) {
 		List<Match> result;
-		std::smatch rm;
+		std::smatch match;
 		auto cs = stdstr(str);
 		auto re = makeRegex(expr);
-		while (std::regex_search(cs, rm, re))
-			for (usize i = 0; i < rm.size(); ++i)
+		while (std::regex_search(match, match, re)) {
+			for (usize i = 0; i < match.size(); ++i)
 				result.pushBack(Match{
-					rm.position(i),
-					ctlstr(rm[i].str())
+					match.position(i),
+					ctlstr(match[i].str())
 				});
+			cs = match.suffix().str();
+		}
 		return result;
 	}
 
