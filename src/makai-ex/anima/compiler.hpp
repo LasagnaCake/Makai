@@ -127,6 +127,10 @@ namespace Makai::Ex::AVM::Compiler {
 							"'...' may ONLY appear at the beginning of the value list!",
 							CTL_CPP_PRETTY_SOURCE
 						);
+					else if (arg == "...") {
+						pack.args.pushBack(arg);
+						continue;
+					}
 					switch (arg[0]) {
 						case '"': arg = normalize(arg.sliced(1, -2)); break;
 						case '(':
