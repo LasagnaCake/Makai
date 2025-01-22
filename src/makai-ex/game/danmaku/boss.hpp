@@ -20,14 +20,8 @@ namespace Makai::Ex::Game::Danmaku {
 			healthBar.trans.scale		= trans.scale;
 		}
 
-		void onUpdate(float delta, App& app) override {
-			if (!active) return;
-			AEnemy::onUpdate(delta, app);
-			if (paused()) return;
-		}
-
 		void onDeath() override {
-			if (currentAct++ < getActCount()) {
+			if (currentAct++ < getActCount() && !practiceMode) {
 				setFlags(DEAD, false);
 				doCurrentAct();
 			} else onBattleEnd();
@@ -39,7 +33,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		ABoss& doAct(usize const act) {
+		ABoss& doAct(usize const act, bool const practice = false) {
+			practiceMode = practice;
 			onAct(act);
 			return *this;
 		}
@@ -55,7 +50,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		virtual usize getActCount()			= 0;
+		virtual usize getActCount()	= 0;
+
+		bool practiceMode = false;
 
 	protected:
 		virtual void onBattleBegin()		= 0;
@@ -63,7 +60,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onBattleEnd()			= 0;
 
 	private:
-		usize currentAct	= 0;
+		usize currentAct = 0;
 	};
 }
 
