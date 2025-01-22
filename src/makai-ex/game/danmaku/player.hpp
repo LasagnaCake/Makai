@@ -139,6 +139,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		usize getRemainingIFrames() const {return invincibleTime;}
+
 		APlayer& setFlags(usize const mask, bool const state = true) {
 			if (state)	flags |= mask;
 			else		flags &= ~mask;
