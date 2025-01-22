@@ -13,6 +13,8 @@ WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -
 
 o?=3
 
+lean-bean-machine:=1
+
 ifdef lean-bean-machine
 COMPILER_CONFIG += $(LEAN)
 endif
