@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../container/string.hpp"
+#include "../container/error.hpp"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmismatched-new-delete"
