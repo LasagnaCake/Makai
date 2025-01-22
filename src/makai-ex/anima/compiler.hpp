@@ -18,7 +18,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any invalid name character.
 		const static String NON_NAME_CHAR	= String("[^0-z\\-_]");
 		/// @brief Matches any complex token.
-		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_':~]");
+		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_'\\:\\~]");
 		/// @brief Matches any simple token.
 		const static String SIMPLE_TOKEN	= String("[*.,;]");
 
@@ -33,13 +33,13 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any text string.
 		const static String STRINGS			= String("(?<!\\\\)\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"");
 		/// @brief Matches any parens pack.
-		const static String PARENTHESES		= makePack("(", ")");
+		const static String PARENTHESES		= makePack("\\(", "\\)");
 		/// @brief Matches any brackets pack.
-		const static String BRACKETS		= makePack("[", "]");
+		const static String BRACKETS		= makePack("\\[", "\\]");
 		/// @brief Matches line comments.
 		const static String LINE_COMMENTS	= String("\\/\\/.*");
 		/// @brief Matches block comments.
-		const static String BLOCK_COMMENTS	= makePack("\\/*", "*\\/");
+		const static String BLOCK_COMMENTS	= makePack("\\/\\*", "\\*\\/");
 
 		/// @brief Concatenats a series of regexes into one to match any.
 		/// @tparam ...Args Argument types.

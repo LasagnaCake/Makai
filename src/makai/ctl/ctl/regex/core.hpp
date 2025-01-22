@@ -22,7 +22,15 @@ namespace Regex {
 		}
 
 		inline std::regex makeRegex(String const& expr) {
-			return std::regex(stdstr(expr));
+			try {
+				return std::regex(stdstr(expr));
+			} catch (std::regex_error const& e) {
+				throw Error::InvalidValue(
+					toString("Invalid regex [", expr,"]!"),
+					e.what(),
+					CTL_CPP_PRETTY_SOURCE
+				);
+			}
 		}
 	}
 
