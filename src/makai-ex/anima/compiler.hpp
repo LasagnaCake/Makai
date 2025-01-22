@@ -335,12 +335,18 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @return Operation tree.
 		/// @throw Error::NonexistentValue if source file is empty.
 		static OperationTree fromSource(String const& src) {
+			DEBUGLN(RegexMatches::ALL_TOKENS);
 			if (src.empty())
 				throw Error::NonexistentValue(
 					"Source is empty!",
 					CTL_CPP_PRETTY_SOURCE
 				);
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
+			if (matches.empty())
+				throw Error::NonexistentValue(
+					"Failed to split source tree!",
+					CTL_CPP_PRETTY_SOURCE
+				);
 			StringList nodes;
 			nodes.resize(matches.size());
 			for (auto& match: matches)
