@@ -60,12 +60,12 @@ Comprised of the following commands, and their recommended use case:
 | `*` | For modifying certain commands. | none |
 | `:act <name> {...}` | For defining acts (named blocks) in a file. These will only be executed when jumped to. | none |
 | `:story <name> {...}` | For defining stories (named blocks) in a file. These will only be executed when jumped to. | none |
-| `:next <block>` | For performing different acts. Does not return to where it was called from. | none |
-| `:perform <block>` | For performing different acts. Returns to where it was called from. | none |
+| `:next <block-name>` | For performing different acts. Does not return to where it was called from. | none |
+| `:perform <block-name>` | For performing different acts. Returns to where it was called from. | none |
 
 Both acts and stories can have named blocks inside them. You can perform a **story**'s sub-blocks from outside its story, **but not an act**'s.
 
-To perform a story's sub-block, simply use `<story>:<block>` as the name.
+To access a story's sub-block, append `:<block-name>` to the name.
 
 Under consideration:
 
