@@ -147,6 +147,8 @@ namespace Makai::Ex::AVM {
 		/// @brief Anima being processed.
 		Anima binary;
 
+		List<usize> stack;
+
 		/// @brief Actors being operated on.
 		ActiveCast	actors;
 		/// @brief SP mode being used.
@@ -172,7 +174,9 @@ namespace Makai::Ex::AVM {
 		}
 
 		void opHalt() {
-			engineState = State::AVM_ES_FINISHED;
+			if (sp() && !stack.empty())
+				op = stack.popBack();
+			else engineState = State::AVM_ES_FINISHED;
 		}
 
 		void opSetSP() {spMode = getSPFlag(curOp);}
@@ -259,6 +263,7 @@ namespace Makai::Ex::AVM {
 
 		void opJump() {
 			uint64 to;
+			if (sp()) stack.pushBack(op);
 			if (!operand64(to)) return;
 			if (!binary.jumps.contains(to))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
