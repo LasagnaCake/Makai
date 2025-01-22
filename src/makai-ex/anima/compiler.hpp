@@ -120,17 +120,22 @@ namespace Makai::Ex::AVM::Compiler {
 				usize index = 0;
 				for (auto& match: matches) {
 					auto& arg = pack.args.pushBack(match.match).back();
+					DEBUG(index, ": ", arg, " ");
 					arg.strip();
-					if (arg == "..." && index != 0)
+					if (arg == String("...") && index != 0) {
+						DEBUGLN("\t[! INVALID EXPANSION EXPRESSION !]");
 						throw Error::InvalidValue(
 							toString("Invalid values '", str, "'!"),
 							"'...' may ONLY appear at the beginning of the value list!",
 							CTL_CPP_PRETTY_SOURCE
 						);
-					else if (arg == "...") {
+					}
+					else if (arg == String("...")) {
+						DEBUGLN("\t[Valid expansion expression]");
 						pack.args.pushBack(arg);
 						continue;
 					}
+					DEBUGLN("\t[Parameter]");
 					switch (arg[0]) {
 						case '"': arg = normalize(arg.sliced(1, -2)); break;
 						case '(':
