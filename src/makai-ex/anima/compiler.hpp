@@ -376,9 +376,15 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 	private:
-		void addActBlock(String const& act, String const& block, char const sep = '*') {
+		void addActBlock(String const& act, String block, char const sep = '*') {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<block:", act, ">");
-			auto optree = OperationTree::fromSource(block.sliced(1, -2));
+			block = block.sliced(1, -2);
+			if (
+				block.empty()
+			||	block.isNullOrSpaces()
+			)
+				return;
+			auto optree = OperationTree::fromSource(block);
 			auto const end = act + "[end]";
 			for (auto& token : optree.tokens) {
 				if (token.entry.size())
@@ -407,7 +413,7 @@ namespace Makai::Ex::AVM::Compiler {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</block:", act, ">");
 		}
 
-		constexpr void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
+		void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
 			auto const ophash = ConstHasher::hash(op);
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":perform"));
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":next"));
@@ -436,13 +442,14 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing act/chapter name!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					if (
-						nodes.size() < curNode + 2 
-					||	nodes[curNode + 2].front() != '{'
-					||	nodes[curNode + 2].back() != '}'
-					)
+					if (nodes.size() < (curNode + 2))
 						throw Error::InvalidValue(
-							toString("Missing/invalid block for '", op, " ", val, "'!"),
+							toString("Missing block for '", op, " ", val, "'!"),
+							CTL_CPP_PRETTY_SOURCE
+						);
+					if (nodes[curNode + 2].front() != '{' || nodes[curNode + 2].back() != '}')
+						throw Error::InvalidValue(
+							toString("Invalid block for '", op, " ", val, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
 					addActBlock(val, nodes[curNode+2], (ophash == ConstHasher::hash(":act")) ? '*' : ':');
