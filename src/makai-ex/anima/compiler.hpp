@@ -157,7 +157,7 @@ namespace Makai::Ex::AVM::Compiler {
 			template<class... Args>
 			constexpr explicit ParameterPack(Args const&... args)
 			requires (... && Type::Convertible<Args, String>):
-				args({args...}) {}
+				args(StringList{args...}) {}
 			
 			/// @brief Copy constructor (defaulted).
 			ParameterPack(ParameterPack const& other)	= default;

@@ -20,7 +20,7 @@ endif
 PRGNAME	:= animac
 SRC_DST	:= -o $(PRGNAME).exe $(PRGNAME).cpp
 
-compile = @$(CXX) -O$(o) $(SRC_DST) $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3) $(LIBREQS) $(WINREQS)
+compile = @$(CXX) -O$(o) $(SRC_DST) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(WINREQS)
 
 NOCMD := -mwindows
 

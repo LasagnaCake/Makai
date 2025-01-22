@@ -48,9 +48,9 @@ namespace Makai::Ex::AVM {
 	constexpr uint64 DIALOG_MIN_VERSION	= 0;
 
 	/// @brief SP mode mask.
-	constexpr uint16 SP_FLAG_MASK	= 0xf << 12;
+	constexpr uint16 SP_FLAG_MASK	= 0xf000;
 	/// @brief Operation mask.
-	constexpr uint16 OPERATION_MASK	= ~SP_FLAG_MASK;
+	constexpr uint16 OPERATION_MASK	= 0x0fff;
 
 	/// @brief Converts the given data to an operation.
 	/// @param op Data to convert.
@@ -117,7 +117,7 @@ namespace Makai::Ex::AVM {
 		/// @param data Bytes to convert.
 		/// @return Anima binary.
 		/// @throw Error::FailedAction on errors.
-		constexpr static Anima fromBytes(BinaryData<> const& data) {
+		static Anima fromBytes(BinaryData<> const& data) {
 			Anima out;
 			if (data.size() < sizeof(uint64) + 12)
 				throw Error::FailedAction(
@@ -154,7 +154,7 @@ namespace Makai::Ex::AVM {
 					CTL_CPP_PRETTY_SOURCE
 				);
 			// Data division
-			if (fh.data.size) {''
+			if (fh.data.size) {
 				String buf;
 				auto c			= data.data() + fh.headerSize + fh.data.start;
 				auto const end	= c + fh.data.size;
@@ -191,7 +191,7 @@ namespace Makai::Ex::AVM {
 					CTL_CPP_PRETTY_SOURCE
 				);
 			out.code.resize(fh.code.size / sizeof(Operation), 0);
-			MX::memmove((void*)out.code.data(), (void*)data.data() + fh.code.start, fh.code.size);
+			MX::memmove((byte*)out.code.data(), (byte*)data.data() + fh.code.start, fh.code.size);
 			return out;
 		}
 	};
