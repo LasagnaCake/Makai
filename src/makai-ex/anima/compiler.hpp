@@ -295,7 +295,7 @@ namespace Makai::Ex::AVM::Compiler {
 							.value	= hexColor(node.substring(1))
 						});
 					} break;
-					case '&': {
+					case ':': {
 						assertValidNamedNode(node);
 						if (next.empty() || next.front() != '{' || next.back() != '}')
 							throw Error::InvalidValue(
@@ -359,6 +359,10 @@ namespace Makai::Ex::AVM::Compiler {
 		void addActBlock(String const& act, String const& block) {
 			auto optree = OperationTree::fromSource(block.sliced(1, -1));
 			auto const end = act + "[end]";
+			for (auto& token : optree.tokens) {
+				if (token.entry.size())
+					token.entry = act + "/" + token.entry;
+			}
 			optree.tokens.front().entry = act;
 			optree.tokens.pushBack({
 				.type = Operation::AVM_O_HALT,
@@ -380,7 +384,7 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		constexpr usize addExtendedOperation(String const& op, String const& val) {
-			switch (auto oh = ConstHasher::hash(op)) {
+			switch (auto ophash = ConstHasher::hash(op)) {
 				case (ConstHasher::hash("\\perform")):
 				case (ConstHasher::hash("\\next")): {
 					if (val.empty())
@@ -391,7 +395,7 @@ namespace Makai::Ex::AVM::Compiler {
 					tokens.pushBack({
 						.type	= Operation::AVM_O_JUMP,
 						.name	= val,
-						.mode	= oh == ConstHasher::hash("\\perform")
+						.mode	= ophash == ConstHasher::hash("\\perform")
 					});
 					return 1;
 				}
