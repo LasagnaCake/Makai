@@ -92,7 +92,7 @@ namespace Regex {
 		std::smatch match;
 		auto cs = stdstr(str);
 		auto re = makeRegex(expr);
-		while (std::regex_search(match, match, re)) {
+		while (std::regex_search(cs, match, re)) {
 			for (usize i = 0; i < match.size(); ++i)
 				result.pushBack(Match{
 					match.position(i),
