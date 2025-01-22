@@ -558,8 +558,15 @@ namespace Makai::Ex::AVM::Compiler {
 			DEBUGLN("\nBuilding binary...\n");
 			BinaryBuilder out;
 			for (auto& token: tree.tokens) {
-				if (token.entry.size())
-					out.jumps[ConstHasher::hash(token.entry)] = out.code.size();
+				if (token.entry.size()) {
+					auto const njloc = ConstHasher::hash(token.entry);
+					if (out.jumps.contains(njloc))
+						throw Error::InvalidValue(
+							toString("Named block '", token.entry, "' already exists!"),
+							CTL_CPP_PRETTY_SOURCE
+						);
+					out.jumps[njloc] = out.code.size();
+				}
 				switch (token.type) {
 					case Operation::AVM_O_NO_OP:
 					case Operation::AVM_O_HALT:
