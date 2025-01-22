@@ -74,8 +74,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 		AEnemy& takeDamage(float const damage) override {
 			if (areAnyFlagsSet(DEAD)) return;
-			loseHealth(damage);
-			if (health <= 0) {
+			if (health > 0)
+				loseHealth(damage);
+			else {
 				setFlags(DEAD, true);
 				onDeath();
 			}
