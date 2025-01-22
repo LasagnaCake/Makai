@@ -177,6 +177,8 @@ namespace Makai::Ex::AVM::Compiler {
 			ParameterPack	pack	= ParamPack();
 			/// @brief Operation mode.
 			uint64			mode	= 0;
+			/// @brief Jump target for a given jump.
+			String			entry	= "";
 
 			/// @brief Returns the token's operation.
 			/// @param sp SP mode override. Only used if non-zero. By default, it is zero.
@@ -284,14 +286,24 @@ namespace Makai::Ex::AVM::Compiler {
 						assertValidNamedNode(node, 4);
 						if (node[1] == '#')
 							tokens.pushBack({
-								.type	= Operation::AVM_O_EMOTION,
+								.type	= Operation::AVM_O_COLOR,
 								.value	= ConstHasher::hash(node.substring(2)),
 								.mode	= 1
 							});
 						tokens.pushBack({
-							.type	= Operation::AVM_O_EMOTION,
+							.type	= Operation::AVM_O_COLOR,
 							.value	= hexColor(node.substring(1))
 						});
+					} break;
+					case '&': {
+						assertValidNamedNode(node);
+						if (next.empty() || next.front() != '{' || next.back() != '}')
+							throw Error::InvalidValue(
+								toString("Missing/invalid act block for '", node, "'!"),
+								CTL_CPP_PRETTY_SOURCE
+							);
+						addActBlock(node.substring(1), next);
+						++i;
 					} break;
 					case '[': {
 						tokens.pushBack({
@@ -309,6 +321,7 @@ namespace Makai::Ex::AVM::Compiler {
 							.pack	= ParameterPack((node[0] == '+') ? "true" : "false")
 						}); break;
 					}
+					case '\\': i += addExtendedOperation(node, next);
 					case '(': continue;
 					default:
 						throw Error::InvalidValue(
@@ -343,6 +356,53 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 	private:
+		void addActBlock(String const& act, String const& block) {
+			auto optree = OperationTree::fromSource(block.sliced(1, -1));
+			auto const end = act + "[end]";
+			optree.tokens.front().entry = act;
+			optree.tokens.pushBack({
+				.type = Operation::AVM_O_HALT,
+				.mode = 1
+			});
+			optree.tokens.pushBack({
+				.type = Operation::AVM_O_NO_OP,
+				.entry = end,
+			});
+			auto& last = tokens.back();
+			if (last.type == Operation::AVM_O_NO_OP && last.mode == 0) {
+				last.type = Operation::AVM_O_JUMP;
+				last.name = end;
+			} else tokens.pushBack({
+				.type = Operation::AVM_O_JUMP,
+				.name = end
+			});
+			tokens.appendBack(optree.tokens);
+		}
+
+		constexpr usize addExtendedOperation(String const& op, String const& val) {
+			switch (auto oh = ConstHasher::hash(op)) {
+				case (ConstHasher::hash("\\perform")):
+				case (ConstHasher::hash("\\next")): {
+					if (val.empty())
+						throw Error::InvalidValue(
+							toString("Missing value for '", op, "'!"),
+							CTL_CPP_PRETTY_SOURCE
+						);
+					tokens.pushBack({
+						.type	= Operation::AVM_O_JUMP,
+						.name	= val,
+						.mode	= oh == ConstHasher::hash("\\perform")
+					});
+					return 1;
+				}
+				default:
+				throw Error::InvalidValue(
+					toString("Invalid operation '", op, "'!"),
+					CTL_CPP_PRETTY_SOURCE
+				);
+			}
+		}
+
 		constexpr uint32 asByte(As<char const[2]> const& nibbles) {
 			return (
 				uint32(nibbles[0] - '0') | (uint32(nibbles[1] - '0') << 4)
@@ -457,6 +517,8 @@ namespace Makai::Ex::AVM::Compiler {
 		static BinaryBuilder fromTree(OperationTree const& tree) {
 			BinaryBuilder out;
 			for (auto& token: tree.tokens) {
+				if (token.entry.size())
+					out.jumps[ConstHasher::hash(token.entry)] = out.code.size();
 				switch (token.type) {
 					case Operation::AVM_O_NO_OP:
 					case Operation::AVM_O_HALT:
@@ -488,7 +550,6 @@ namespace Makai::Ex::AVM::Compiler {
 						out.addOperation(token);
 						out.addNamedOperand(token.name);
 						break;
-					case Operation::AVM_O_JUMP:
 					case Operation::AVM_O_WAIT:
 					case Operation::AVM_O_COLOR:
 						out.addOperation(token);
@@ -509,6 +570,10 @@ namespace Makai::Ex::AVM::Compiler {
 							else if (val == "false")	out.addOperand(1);
 							else						out.addStringOperand(val);
 						}
+						break;
+					case Operation::AVM_O_JUMP:
+						out.addOperation(token.operation());
+						out.addNamedOperand(token.name);
 						break;
 				}
 			}
