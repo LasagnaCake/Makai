@@ -172,7 +172,7 @@ namespace Makai::Ex::AVM {
 				}
 			}
 			// Jump tables
-			if (fh.jumps.start) {	
+			if (fh.jumps.size) {	
 				if (fh.jumps.size % sizeof(JumpEntry) != 0) 
 					throw Error::FailedAction(
 						"Failed at loading anima binary!",
