@@ -37,7 +37,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any brackets pack.
 		const static String BRACKETS		= makePack("\\[", "\\]");
 		/// @brief Matches any squiggle brackets pack.
-		const static String SQUIGGLIES		= makePack("\\[", "\\]");
+		const static String SQUIGGLIES		= makePack("\\{", "\\}");
 		/// @brief Matches line comments.
 		const static String LINE_COMMENTS	= String("\\/\\/.*");
 		/// @brief Matches block comments.
@@ -218,6 +218,7 @@ namespace Makai::Ex::AVM::Compiler {
 				String node = nodes[i], next;
 				if (i+1 < nodes.size())
 					next = nodes[i+1];
+				DEBUGLN(node);
 				switch (node[0]) {
 					case '/': continue;
 					case '@': {
@@ -337,7 +338,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @return Operation tree.
 		/// @throw Error::NonexistentValue if source file is empty.
 		static OperationTree fromSource(String const& src) {
-			DEBUGLN(RegexMatches::ALL_TOKENS);
+			DEBUGLN("Tokenizer regex: ", RegexMatches::ALL_TOKENS);
 			if (src.empty())
 				throw Error::NonexistentValue(
 					"Source is empty!",
@@ -351,6 +352,7 @@ namespace Makai::Ex::AVM::Compiler {
 				);
 			StringList nodes;
 			nodes.resize(matches.size());
+			DEBUGLN("\nParsing tree...\n");
 			for (auto& match: matches)
 				nodes.pushBack(match.match);
 			return OperationTree(nodes);
