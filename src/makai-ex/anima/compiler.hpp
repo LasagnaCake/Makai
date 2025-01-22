@@ -408,7 +408,8 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		constexpr void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
-			switch (auto ophash = ConstHasher::hash(op)) {
+			auto const ophash = ConstHasher::hash(op);
+			switch (ophash) {
 				case (ConstHasher::hash(":perform")):
 				case (ConstHasher::hash(":next")): {
 					if (val.empty())
@@ -446,7 +447,7 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				default:
 				throw Error::InvalidValue(
-					toString("Invalid operation '", op, "'!"),
+					toString("Invalid extended operation '", op, "'!"),
 					CTL_CPP_PRETTY_SOURCE
 				);
 			}
