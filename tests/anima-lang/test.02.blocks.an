@@ -1,12 +1,9 @@
 :next NewBeginnings:act1
-:chapter NewBeginnings {
-	:act act1 {
-		
-	}
-	:act act2 {
-		
-	}
-	:act act3 {
-		
-	}
-}
+:scene NewBeginnings
+	:act act1
+	:end
+	:act act2
+	:end
+	:act act3
+	:end
+:end

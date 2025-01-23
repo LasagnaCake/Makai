@@ -58,12 +58,12 @@ Comprised of the following commands, and their recommended use case:
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. | `opWaitForActions` |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. | `opWaitForUser` |
 | `*` | For modifying certain commands. | none |
-| `:act <name> {...}` | For defining acts (named blocks) in a file. These will only be executed when jumped to. | none |
-| `:story <name> {...}` | For defining stories (named blocks) in a file. These will only be executed when jumped to. | none |
+| `:act <name> ... :end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
+| `:scene <name> ... :end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
 | `:next <block-name>` | For performing different acts. Does not return to where it was called from. | none |
 | `:perform <block-name>` | For performing different acts. Returns to where it was called from. | none |
 
-Both acts and stories can have named blocks inside them. You can perform a **story**'s sub-blocks from outside its story, **but not an act**'s.
+Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its story, **but not an act**'s.
 
 To access a story's sub-block, append `:<block-name>` to the name.
 

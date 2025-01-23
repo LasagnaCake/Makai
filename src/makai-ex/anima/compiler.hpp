@@ -221,6 +221,9 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Move constructor (defaulted).
 		OperationTree(OperationTree&& other)		= default;
 
+		/// @brief Default constructor.
+		OperationTree() {}
+
 		/// @brief Constructs the token tree from a series of source file nodes.
 		/// @param nodes Nodes to build from.
 		/// @throw Error::NonexistentValue when node list is empty.
@@ -316,7 +319,7 @@ namespace Makai::Ex::AVM::Compiler {
 					} break;
 					case ':': {
 						assertValidNamedNode(node);
-						addExtendedOperation(node, next, i, nodes);
+						addExtendedOperation(node, next, i);
 					} break;
 					case '[': {
 						tokens.pushBack(Token{
@@ -341,6 +344,14 @@ namespace Makai::Ex::AVM::Compiler {
 							CTL_CPP_PRETTY_SOURCE
 						);
 				}
+				if (entry.size()) {
+					if (blocks.size())	{
+						for (auto block: blocks) tokens.back().entry += block + (isScene ? ':' : '*');
+						tokens.back().entry += (isScene ? ':' : '*') + entry;
+					}
+					else tokens.back().entry = entry;
+					entry.clear();
+				}
 			}
 			if (tokens.empty())
 				throw Error::FailedAction(
@@ -362,10 +373,7 @@ namespace Makai::Ex::AVM::Compiler {
 				);
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
 			if (matches.empty())
-				throw Error::NonexistentValue(
-					"Failed to split source tree!",
-					CTL_CPP_PRETTY_SOURCE
-				);
+				return OperationTree();
 			StringList nodes;
 			nodes.resize(matches.size());
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nParsing tree...\n");
@@ -376,14 +384,19 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 	private:
+		StringList	blocks;
+		String		entry;
+		bool		isScene = false;
+
 		void addActBlock(String const& act, String block, char const sep = '*') {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<block:", act, ">");
+			if (block.size() < 2)
+				return;
 			block = block.sliced(1, -2);
 			if (
 				block.empty()
 			||	block.isNullOrSpaces()
-			)
-				return;
+			) return;
 			auto optree = OperationTree::fromSource(block);
 			auto const end = act + "[end]";
 			for (auto& token : optree.tokens) {
@@ -413,12 +426,13 @@ namespace Makai::Ex::AVM::Compiler {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</block:", act, ">");
 		}
 
-		void addExtendedOperation(String const& op, String const& val, usize& curNode, StringList const& nodes) {
+		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
 			auto const ophash = ConstHasher::hash(op);
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":perform"));
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":next"));
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":chapter"));
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":scene"));
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":act"));
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":end"));
 			switch (ophash) {
 				case (ConstHasher::hash(":perform")):
 				case (ConstHasher::hash(":next")): {
@@ -435,25 +449,47 @@ namespace Makai::Ex::AVM::Compiler {
 					++curNode;
 					return;
 				}
-				case (ConstHasher::hash(":chapter")):
+				case (ConstHasher::hash(":scene")):
 				case (ConstHasher::hash(":act")): {
 					if (val.empty())
 						throw Error::InvalidValue(
-							toString("Missing act/chapter name!"),
+							toString("Missing block name!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					if (nodes.size() < (curNode + 2))
+					blocks.pushBack(val);
+					entry = val;
+					++curNode;
+					isScene = ophash == ConstHasher::hash(":scene");
+					return;
+				}
+				case (ConstHasher::hash(":end")): {
+					if (blocks.empty())
 						throw Error::InvalidValue(
-							toString("Missing block for '", op, " ", val, "'!"),
+							toString("Missing block for ':end' statement!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					if (nodes[curNode + 2].front() != '{' || nodes[curNode + 2].back() != '}')
-						throw Error::InvalidValue(
-							toString("Invalid block for '", op, " ", val, "'!"),
-							CTL_CPP_PRETTY_SOURCE
-						);
-					addActBlock(val, nodes[curNode+2], (ophash == ConstHasher::hash(":act")) ? '*' : ':');
-					curNode += 2;
+					auto const act = blocks.popBack();
+					auto const end = act + "[end]";
+					tokens.pushBack(Token{
+						.type = Operation::AVM_O_HALT,
+						.mode = 1
+					});
+					tokens.pushBack(Token{
+						.type = Operation::AVM_O_NEXT,
+						.entry = end,
+					});
+					auto& last = tokens.back();
+					if (
+						last.type == Operation::AVM_O_NO_OP
+					&&	last.mode == 0
+					&&	last.entry.empty()
+					) {
+						last.type = Operation::AVM_O_JUMP;
+						last.name = end;
+					} else tokens.pushBack(Token{
+						.type = Operation::AVM_O_JUMP,
+						.name = end
+					});
 					return;
 				}
 				default:
@@ -589,6 +625,7 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				switch (token.type) {
 					case Operation::AVM_O_NO_OP:
+					case Operation::AVM_O_NEXT:
 					case Operation::AVM_O_HALT:
 					case Operation::AVM_O_SYNC:
 					case Operation::AVM_O_USER_INPUT:
@@ -640,7 +677,7 @@ namespace Makai::Ex::AVM::Compiler {
 						}
 						break;
 					case Operation::AVM_O_JUMP:
-						out.addOperation(token.operation());
+						out.addOperation(token);
 						out.addNamedOperand(token.name);
 						break;
 				}

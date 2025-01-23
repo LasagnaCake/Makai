@@ -891,6 +891,7 @@ public:
 			++start;
 		while (stop != start && isNullOrSpaceChar(*stop))
 			--stop;
+		if (start > stop) return SelfType();
 		return SelfType(start, stop+1);
 	}
 
