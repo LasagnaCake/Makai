@@ -1,9 +1,13 @@
 :next NewBeginnings:act1
-:scene NewBeginnings
-	:act act1
-	:end
-	:act act2
-	:end
-	:act act3
+:scene MyFirstScene
+	:scene NewBeginnings
+		:act act1
+			:act sub1
+			:end
+		:end
+		:act act2
+		:end
+		:act act3
+		:end
 	:end
 :end

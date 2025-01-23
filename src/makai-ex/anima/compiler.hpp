@@ -392,6 +392,7 @@ namespace Makai::Ex::AVM::Compiler {
 	private:
 		StringList	blocks;
 		String		entry;
+		bool		isInAct	= false;
 
 		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
 			auto const ophash = ConstHasher::hash(op);
@@ -418,9 +419,12 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing block name!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					bool const isScene = ophash == ConstHasher::hash(":scene");
-					if (blocks.size())
-						blocks.back().pushBack(isScene ? ':' : '*');
+					if (
+						blocks.size()
+					&&	blocks.back().back() != ':'
+					&&	blocks.back().back() != '*'
+					) blocks.back().pushBack(isInAct ? '*' : ':');
+					isInAct = ophash == ConstHasher::hash(":act");
 					entry = val;
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
@@ -434,7 +438,11 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing block for ':end' statement!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					auto const end = blocks.join().sliced(0, -2) + "[end]";
+					if (
+						blocks.back().back() == ':'
+					||	blocks.back().back() == '*'
+					) blocks.back().popBack();
+					auto const end = blocks.join() + "[end]";
 					blocks.popBack();
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", end);
 					tokens.pushBack(Token{
