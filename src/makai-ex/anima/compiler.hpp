@@ -344,10 +344,6 @@ namespace Makai::Ex::AVM::Compiler {
 							CTL_CPP_PRETTY_SOURCE
 						);
 				}
-				if (entry.size()) {
-					tokens.back().entry += blocks.join() + entry;
-					entry.clear();
-				}
 			}
 			if (blocks.size()) {
 				String bnames;
@@ -442,6 +438,11 @@ namespace Makai::Ex::AVM::Compiler {
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
+					tokens.pushBack(Token{
+						.type = Operation::AVM_O_NEXT,
+						.entry = blocks.join(),
+					});
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Entrypoint: ", tokens.back().entry);
 					++curNode;
 					return;
 				}
