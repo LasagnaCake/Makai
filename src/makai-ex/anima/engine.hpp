@@ -145,9 +145,9 @@ namespace Makai::Ex::AVM {
 
 		/// @brief Jumps the operation pointer to a named block.
 		/// @param name Block to jump to.
-		/// @param returns Whether to return to previous point when block is finished. By default, it is `true`.
-		void jumpTo(usize const name, bool const returns = true) {
-			if (returns)
+		/// @param returnable Whether to return to previous point when block is finished. By default, it is `true`.
+		void jumpTo(usize const name, bool const returnable = true) {
+			if (returnable)
 				stack.pushBack(Frame{actors, spMode, op});
 			if (!binary.jumps.contains(name))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
