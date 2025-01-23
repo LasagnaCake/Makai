@@ -143,6 +143,16 @@ namespace Makai::Ex::AVM {
 			engineState = State::AVM_ES_ERROR;
 		}
 
+		/// @brief Jumps the operation pointer to a named address.
+		/// @param Point to jump to.
+		void jumpTo(usize const name) {
+			if (!binary.jumps.contains(name))
+				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
+			op = binary.jumps[name];
+			if (op >= binary.code.size())
+				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
+		}
+
 	private:
 		/// @brief Anima being processed.
 		Anima binary;
@@ -265,11 +275,7 @@ namespace Makai::Ex::AVM {
 			uint64 to;
 			if (sp()) stack.pushBack(op);
 			if (!operand64(to)) return;
-			if (!binary.jumps.contains(to))
-				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
-			op = binary.jumps[to];
-			if (op >= binary.code.size())
-				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
+			jumpTo(to);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
