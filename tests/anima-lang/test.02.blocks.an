@@ -4,6 +4,12 @@
 		:act act1
 			:act sub1
 			:end
+			:act sub2
+				:scene sub-sub1
+					:scene GodHasAbandonedUs
+					:end
+				:end
+			:end
 		:end
 		:act act2
 		:end
