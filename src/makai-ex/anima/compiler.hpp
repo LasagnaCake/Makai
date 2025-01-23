@@ -422,7 +422,7 @@ namespace Makai::Ex::AVM::Compiler {
 							path += val.substring(1);
 						} break;
 						default: {
-							path = path = blocks.join() + val.substring(1); break;
+							path = path = blocks.join() + val; break;
 						} break;
 					}
 					tokens.pushBack(Token{
