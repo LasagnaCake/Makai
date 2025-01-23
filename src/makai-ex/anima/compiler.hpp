@@ -413,15 +413,16 @@ namespace Makai::Ex::AVM::Compiler {
 						case ':': {
 							path = val.substring(1);
 						} break;
-						default: {
-							path = path = blocks.join() + val.substring(1); break;
-						} break;
 						case '\'': {
 							auto scope = blocks;
 							if (scope.size()) {
 								scope.popBack();
-								path = scope.join() + val;
-							} else path = val.substring(1);
+								path = scope.join();
+							}
+							path += val.substring(1);
+						} break;
+						default: {
+							path = path = blocks.join() + val.substring(1); break;
 						} break;
 					}
 					tokens.pushBack(Token{
