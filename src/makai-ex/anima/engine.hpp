@@ -147,8 +147,11 @@ namespace Makai::Ex::AVM {
 		/// @param name Block to jump to.
 		/// @param returnable Whether to return to previous point when block is finished. By default, it is `true`.
 		void jumpTo(usize const name, bool const returnable = true) {
-			if (returnable)
+			if (returnable) {
 				stack.pushBack(Frame{actors, spMode, op});
+				actors	= {};
+				spMode	= 0;
+			}
 			if (!binary.jumps.contains(name))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
 			op = binary.jumps[name];
@@ -177,10 +180,10 @@ namespace Makai::Ex::AVM {
 		ActiveCast	actors;
 		/// @brief SP mode being used.
 		uint16		spMode		= 0;
-		/// @brief Engine state.
-		State		engineState	= State::AVM_ES_READY;
 		/// @brief Operation pointer.
 		usize		op			= 0;
+		/// @brief Engine state.
+		State		engineState	= State::AVM_ES_READY;
 		/// @brief Error code.
 		ErrorCode	err			= ErrorCode::AVM_EEC_NONE;
 		/// @brief Current operation.
