@@ -60,8 +60,8 @@ Comprised of the following commands, and their recommended use case:
 | `*` | For modifying certain commands. | none |
 | `:act <name> ... :end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
 | `:scene <name> ... :end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
-| `:next <block-name>` | For performing different acts. Does not return to where it was called from. | none |
-| `:perform <block-name>` | For performing different acts. Returns to where it was called from. | none |
+| `:next <block-name>` | For performing different blocks. Does not return to where it was called from. | none |
+| `:perform <block-name>` | For performing different blocks. Returns to where it was called from. | none |
 
 Under consideration:
 
