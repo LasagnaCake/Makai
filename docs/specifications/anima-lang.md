@@ -71,7 +71,7 @@ Under consideration:
 
 ### On `:act`s and `:scene`s
 
-Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its story, **but not an act**'s.
+Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its scene, **but not an act**'s.
 
 To access a scene's sub-block, append `:<sub-block>` to the name.
 
