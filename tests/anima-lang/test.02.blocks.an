@@ -6,7 +6,7 @@
 			:end
 			:act sub2
 				:scene sub-sub1
-					:scene GodHasAbandonedUs
+					:scene Why
 					:end
 				:end
 			:end
