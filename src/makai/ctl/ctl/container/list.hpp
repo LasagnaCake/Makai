@@ -1112,6 +1112,7 @@ public:
 	/// @return Resulting joined element.
 	template<Type::Equal<DataType> T = DataType>
 	constexpr DataType join(typename T::DataType const& sep) const {
+		if (!count) return DataType();
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.pushBack(sep);
@@ -1124,6 +1125,7 @@ public:
 	/// @return Resulting joined element.
 	template<Type::Equal<DataType> T = DataType>
 	constexpr DataType join() const {
+		if (!count) return DataType();
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.appendBack(contents[i]);

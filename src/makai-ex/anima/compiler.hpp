@@ -345,18 +345,13 @@ namespace Makai::Ex::AVM::Compiler {
 						);
 				}
 				if (entry.size()) {
-					if (blocks.size())	{
-						auto const sep = isScene ? ':' : '*';
-						tokens.back().entry += blocks.join() + sep + entry;
-					}
-					else tokens.back().entry = entry;
-					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(tokens.back().entry);
+					tokens.back().entry += blocks.join() + entry;
 					entry.clear();
 				}
 			}
 			if (blocks.size()) {
 				String bnames;
-				for (auto block: blocks)
+				for (auto& block: blocks)
 					bnames.appendBack(block.popBack() + ", ");
 				throw Error::InvalidValue(
 					toString("Missing closure for one or more blocks!"),
@@ -397,7 +392,6 @@ namespace Makai::Ex::AVM::Compiler {
 	private:
 		StringList	blocks;
 		String		entry;
-		bool		isScene = false;
 
 		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
 			auto const ophash = ConstHasher::hash(op);
@@ -424,9 +418,13 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing block name!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					isScene = ophash == ConstHasher::hash(":scene");
-					blocks.pushBack(val + (isScene ? ':' : '*'));
+					bool const isScene = ophash == ConstHasher::hash(":scene");
+					if (blocks.size())
+						blocks.back().pushBack(isScene ? ':' : '*');
 					entry = val;
+					blocks.pushBack(entry);
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
 					++curNode;
 					return;
 				}
@@ -436,8 +434,9 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing block for ':end' statement!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					auto const end = blocks.back() + "[end]";
-					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(tokens.back().entry);
+					auto const end = blocks.join().sliced(0, -2) + "[end]";
+					blocks.popBack();
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", end);
 					tokens.pushBack(Token{
 						.type = Operation::AVM_O_HALT,
 						.mode = 1
