@@ -346,12 +346,19 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				if (entry.size()) {
 					if (blocks.size())	{
-						for (auto block: blocks) tokens.back().entry += block + (isScene ? ':' : '*');
-						tokens.back().entry += (isScene ? ':' : '*') + entry;
+						auto const sep = isScene ? ':' : '*';
+						tokens.back().entry += blocks.join(sep) + sep + entry;
 					}
 					else tokens.back().entry = entry;
 					entry.clear();
 				}
+			}
+			if (blocks.size()) {
+				throw Error::InvalidValue(
+					toString("Missing closure for one or more blocks!"),
+					toString("Blocks are: [", blocks.join(':'), "]"),
+					CTL_CPP_PRETTY_SOURCE
+				);
 			}
 			if (tokens.empty())
 				throw Error::FailedAction(
@@ -387,44 +394,6 @@ namespace Makai::Ex::AVM::Compiler {
 		StringList	blocks;
 		String		entry;
 		bool		isScene = false;
-
-		void addActBlock(String const& act, String block, char const sep = '*') {
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<block:", act, ">");
-			if (block.size() < 2)
-				return;
-			block = block.sliced(1, -2);
-			if (
-				block.empty()
-			||	block.isNullOrSpaces()
-			) return;
-			auto optree = OperationTree::fromSource(block);
-			auto const end = act + "[end]";
-			for (auto& token : optree.tokens) {
-				if (token.entry.size())
-					token.entry = act + sep + token.entry;
-				if (token.type == Operation::AVM_O_JUMP)
-					token.name = act + sep + token.name;
-			}
-			optree.tokens.front().entry = act;
-			optree.tokens.pushBack(Token{
-				.type = Operation::AVM_O_HALT,
-				.mode = 1
-			});
-			optree.tokens.pushBack(Token{
-				.type = Operation::AVM_O_NO_OP,
-				.entry = end,
-			});
-			auto& last = tokens.back();
-			if (last.type == Operation::AVM_O_NO_OP && last.mode == 0) {
-				last.type = Operation::AVM_O_JUMP;
-				last.name = end;
-			} else tokens.pushBack(Token{
-				.type = Operation::AVM_O_JUMP,
-				.name = end
-			});
-			tokens.appendBack(optree.tokens);
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</block:", act, ">");
-		}
 
 		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
 			auto const ophash = ConstHasher::hash(op);

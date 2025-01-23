@@ -1107,24 +1107,11 @@ public:
 		return filtered([](ConstReferenceType a, ConstReferenceType b){return a != b;});
 	}
 
-	/// @brief Joins a `List` of `List`s with a given separator between them.
-	/// @tparam T Element type.
+	/// @brief Joins a `List` of ranged elements with a given separator between them.
 	/// @param sep Separator value.
-	/// @return Resulting joined `List`.
-	template <Type::Equal<DataType> T>
-	constexpr DataType join(typename T::DataType const& sep) const
-	requires requires {
-		requires Type::Container::List<DataType>;
-		typename DataType::DataType;
-		typename DataType::SizeType;
-		requires Type::Equal<
-			DataType,
-			List<
-				typename DataType::DataType,
-				typename DataType::SizeType
-			>
-		>;
-	} {
+	/// @return Resulting joined element.
+	template<Type::Equal<DataType> T = DataType>
+	constexpr DataType join(typename T::DataType const& sep) const {
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.pushBack(sep);
@@ -1132,6 +1119,9 @@ public:
 		}
 		return result;
 	}
+
+	template<class T>
+	constexpr DataType join(T const&) const = delete;
 
 	/// @brief Returns whether the current size matches the current capacity.
 	/// @return Whether the current size matches the current capacity.
