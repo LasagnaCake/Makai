@@ -73,7 +73,7 @@ Under consideration:
 
 Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its story, **but not an act**'s.
 
-To access a story's sub-block, append `:<block-name>` to the name.
+To access a scene's sub-block, append `:<block-name>` to the name.
 
 ### On the `[]` command
 
