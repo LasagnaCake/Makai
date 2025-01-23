@@ -438,6 +438,12 @@ namespace Makai::Ex::AVM::Compiler {
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
+					auto& last = tokens.back();
+					auto const end = blocks.join() + "[end]";
+					tokens.pushBack(Token{
+						.type = Operation::AVM_O_JUMP,
+						.name = end
+					});
 					tokens.pushBack(Token{
 						.type = Operation::AVM_O_NEXT,
 						.entry = blocks.join(),
@@ -466,18 +472,6 @@ namespace Makai::Ex::AVM::Compiler {
 					tokens.pushBack(Token{
 						.type = Operation::AVM_O_NEXT,
 						.entry = end,
-					});
-					auto& last = tokens.back();
-					if (
-						last.type == Operation::AVM_O_NO_OP
-					&&	last.mode == 0
-					&&	last.entry.empty()
-					) {
-						last.type = Operation::AVM_O_JUMP;
-						last.name = end;
-					} else tokens.pushBack(Token{
-						.type = Operation::AVM_O_JUMP,
-						.name = end
 					});
 					return;
 				}
