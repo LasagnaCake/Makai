@@ -1,22 +1,23 @@
 :next main
 :scene MyFirstScene
 	:scene NewBeginnings
-		:act act1
-			:act sub1
-			:end
-			:act sub2
-				:scene sub-sub1
-					:scene Why
-					:end
-				:end
-			:end
+		:act start-of-the-adventure
+			:next 'lets-go-gambling
 		:end
-		:act act2
+		:act lets-go-gambling
+			:next 'severe-debt
 		:end
-		:act act3
+		:act severe-debt
+			:next loan-sharks
+			:act loan-sharks
+				:next :MyFirstScene:end-of-story
+			:end
 		:end
 	:end
+	:act end-of-story
+	:end
+	:next NewBeginnings:start-of-the-adventure
 :end
 :act main
-	:perform MyFirstScene:NewBeginnings:act1
+	:perform 'MyFirstScene:NewBeginnings
 :end

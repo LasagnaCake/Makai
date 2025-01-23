@@ -408,11 +408,28 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing value for '", op, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
+					String path;
+					switch (val.front()) {
+						case ':': {
+							path = val.substring(1);
+						} break;
+						default: {
+							path = path = blocks.join() + val.substring(1); break;
+						} break;
+						case '\'': {
+							auto scope = blocks;
+							if (scope.size()) {
+								scope.popBack();
+								path = scope.join() + val;
+							} else path = val.substring(1);
+						} break;
+					}
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
-						.name	= val,
+						.name	= path,
 						.mode	= ophash == ConstHasher::hash(":perform")
 					});
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Jump to: ", tokens.back().name);
 					++curNode;
 					return;
 				}

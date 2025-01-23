@@ -59,8 +59,8 @@ Comprised of the following commands, and their recommended use case:
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. | `opWaitForUser` |
 | `*` | For modifying certain commands. | none |
 | `:act <name> ... :end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
-| `:scene <name> ... :end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
-| `:next <block-name>` | For performing different blocks. **Does not return** to where it was called from. | none |
+| `:scene <name> ... :end` | For jumping to named blocks in a file. These will only be executed when jumped to. | none |
+| `:next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from. | none |
 | `:perform <block-name>` | For performing different blocks. **Returns** to where it was called from. | none |
 
 Under consideration:
@@ -74,6 +74,8 @@ Under consideration:
 Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its story, **but not an act**'s.
 
 To access a scene's sub-block, append `:<block-name>` to the name.
+
+Jumps will be relative to the current block's scope (or global, if none). To jump to a different block in the previous scope, prepend the jump target with `'`. To jump via an absolute path, prepend the jump target with `:`.
 
 ### On the `[]` command
 
