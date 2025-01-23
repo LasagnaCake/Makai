@@ -19,5 +19,5 @@
 	:perform NewBeginnings:severe-debt
 :end
 :act main
-	:perform 'MyFirstScene:NewBeginnings
+	:perform ~MyFirstScene:NewBeginnings
 :end

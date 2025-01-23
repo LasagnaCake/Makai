@@ -75,7 +75,7 @@ Both acts and stories can have named blocks inside them. You can perform a **sce
 
 To access a scene's sub-block, append `:<block-name>` to the name.
 
-Jumps will be relative to the current block's scope. To jump to a different block in the previous scope (or global, if none), prepend the jump target with `'`. To jump via an absolute path, prepend the jump target with `:`.
+Jumps will be relative to the current block's scope. To jump to a different block in the previous scope (or global, if none), prepend the jump target with `~`. To jump via an absolute path, prepend the jump target with `:`.
 
 ### On the `[]` command
 

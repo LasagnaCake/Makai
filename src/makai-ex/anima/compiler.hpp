@@ -413,7 +413,7 @@ namespace Makai::Ex::AVM::Compiler {
 						case ':': {
 							path = val.substring(1);
 						} break;
-						case '\'': {
+						case '~': {
 							auto scope = blocks;
 							if (scope.size()) {
 								scope.popBack();
