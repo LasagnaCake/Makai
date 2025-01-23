@@ -438,7 +438,6 @@ namespace Makai::Ex::AVM::Compiler {
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
-					auto& last = tokens.back();
 					auto const end = blocks.join() + "[end]";
 					tokens.pushBack(Token{
 						.type = Operation::AVM_O_JUMP,
