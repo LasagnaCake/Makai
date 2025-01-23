@@ -1120,6 +1120,17 @@ public:
 		return result;
 	}
 
+	/// @brief Joins a `List` of ranged elements.
+	/// @return Resulting joined element.
+	template<Type::Equal<DataType> T = DataType>
+	constexpr DataType join() const {
+		DataType result = front();
+		for (SizeType i = 1; i < count; ++i) {
+			result.appendBack(contents[i]);
+		}
+		return result;
+	}
+
 	template<class T>
 	constexpr DataType join(T const&) const = delete;
 
