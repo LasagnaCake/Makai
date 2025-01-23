@@ -69,13 +69,23 @@ Under consideration:
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command.|
 
-### On the `:act` and `:scene` commands
+### On `:act`s and `:scene`s
 
 Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its story, **but not an act**'s.
 
-To access a scene's sub-block, append `:<block-name>` to the name.
+To access a scene's sub-block, append `:<sub-block>` to the name.
 
-Jumps will be relative to the current block's scope. To jump to a different block in the previous scope (or global, if none), prepend the jump target with `~`. To jump via an absolute path, prepend the jump target with `:`.
+Jumps will be relative to the current block's scope. To jump to a different block in the previous scope (or global, if none), prepend the jump target with `~`. To jump via an absolute path (starting from global scope), prepend the jump target with `:`.
+
+In essence: An `:act`'s contents are private, and a `:scene`'s contents are public.
+
+### On the `:next` and `:perform` commands
+
+The state is comprised of the current actor state, global SP mode, and execution pointer.
+
+`:next` behaves more like how a `goto` would - immediately jumps execution to the block, without changing the current state.
+
+`:perform` behaves more like how a function call would. The current state gets pushed in the stack, and then reset to its starting value. Once the named block is done, the stack gets popped, and the previous state is restored.
 
 ### On the `[]` command
 
