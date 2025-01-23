@@ -1,4 +1,4 @@
-:next NewBeginnings:act1
+:next main
 :scene MyFirstScene
 	:scene NewBeginnings
 		:act act1
@@ -10,4 +10,7 @@
 		:act act3
 		:end
 	:end
+:end
+:act main
+	:perform MyFirstScene:NewBeginnings:act1
 :end

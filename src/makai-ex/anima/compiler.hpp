@@ -404,6 +404,11 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing value for '", op, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
+					if (Regex::count(val, RegexMatches::NON_NAME_CHAR))
+						throw Error::InvalidValue(
+							toString("Invalid block name '", val, "'!"),
+							CTL_CPP_PRETTY_SOURCE
+						);
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= val,
@@ -417,6 +422,11 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing block name!"),
+							CTL_CPP_PRETTY_SOURCE
+						);
+					if (Regex::count(val, RegexMatches::NON_NAME_CHAR))
+						throw Error::InvalidValue(
+							toString("Invalid block name '", val, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
 					if (
