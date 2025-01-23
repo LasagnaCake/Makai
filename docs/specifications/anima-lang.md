@@ -63,15 +63,17 @@ Comprised of the following commands, and their recommended use case:
 | `:next <block-name>` | For performing different acts. Does not return to where it was called from. | none |
 | `:perform <block-name>` | For performing different acts. Returns to where it was called from. | none |
 
-Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its story, **but not an act**'s.
-
-To access a story's sub-block, append `:<block-name>` to the name.
-
 Under consideration:
 
 | Comand | Usage |
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command.|
+
+### On the `:act` and `:scene` commands
+
+Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its story, **but not an act**'s.
+
+To access a story's sub-block, append `:<block-name>` to the name.
 
 ### On the `[]` command
 
