@@ -2,21 +2,21 @@
 :scene MyFirstScene
 	:scene NewBeginnings
 		:act start-of-the-adventure
-			:next 'lets-go-gambling
 		:end
 		:act lets-go-gambling
-			:next 'severe-debt
 		:end
 		:act severe-debt
-			:next loan-sharks
 			:act loan-sharks
-				:next :MyFirstScene:end-of-story
+				:next :MyFirstScene:end-of-history
 			:end
+			:next loan-sharks
 		:end
 	:end
-	:act end-of-story
+	:act end-of-history
 	:end
-	:next NewBeginnings:start-of-the-adventure
+	:perform NewBeginnings:start-of-the-adventure
+	:perform NewBeginnings:lets-go-gambling
+	:perform NewBeginnings:severe-debt
 :end
 :act main
 	:perform 'MyFirstScene:NewBeginnings
