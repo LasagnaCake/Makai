@@ -347,16 +347,20 @@ namespace Makai::Ex::AVM::Compiler {
 				if (entry.size()) {
 					if (blocks.size())	{
 						auto const sep = isScene ? ':' : '*';
-						tokens.back().entry += blocks.join(sep) + sep + entry;
+						tokens.back().entry += blocks.join() + sep + entry;
 					}
 					else tokens.back().entry = entry;
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(tokens.back().entry);
 					entry.clear();
 				}
 			}
 			if (blocks.size()) {
+				String bnames;
+				for (auto block: blocks)
+					bnames.appendBack(block.popBack() + ", ");
 				throw Error::InvalidValue(
 					toString("Missing closure for one or more blocks!"),
-					toString("Blocks are: [", blocks.join(':'), "]"),
+					toString("Blocks are: [", bnames.sliced(0, -3), "]"),
 					CTL_CPP_PRETTY_SOURCE
 				);
 			}
@@ -397,11 +401,6 @@ namespace Makai::Ex::AVM::Compiler {
 
 		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
 			auto const ophash = ConstHasher::hash(op);
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":perform"));
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":next"));
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":scene"));
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":act"));
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(ophash, " == ", ConstHasher::hash(":end"));
 			switch (ophash) {
 				case (ConstHasher::hash(":perform")):
 				case (ConstHasher::hash(":next")): {
@@ -425,10 +424,10 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing block name!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					blocks.pushBack(val);
+					isScene = ophash == ConstHasher::hash(":scene");
+					blocks.pushBack(val + (isScene ? ':' : '*'));
 					entry = val;
 					++curNode;
-					isScene = ophash == ConstHasher::hash(":scene");
 					return;
 				}
 				case (ConstHasher::hash(":end")): {
@@ -437,8 +436,8 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing block for ':end' statement!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					auto const act = blocks.popBack();
-					auto const end = act + "[end]";
+					auto const end = blocks.back() + "[end]";
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(tokens.back().entry);
 					tokens.pushBack(Token{
 						.type = Operation::AVM_O_HALT,
 						.mode = 1
