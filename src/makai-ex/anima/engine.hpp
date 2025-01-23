@@ -143,9 +143,12 @@ namespace Makai::Ex::AVM {
 			engineState = State::AVM_ES_ERROR;
 		}
 
-		/// @brief Jumps the operation pointer to a named address.
-		/// @param Point to jump to.
-		void jumpTo(usize const name) {
+		/// @brief Jumps the operation pointer to a named block.
+		/// @param name Block to jump to.
+		/// @param returns Whether to return to previous point when block is finished. By default, it is `true`.
+		void jumpTo(usize const name, bool const returns = true) {
+			if (returns)
+				stack.pushBack(Frame{actors, spMode, op});
 			if (!binary.jumps.contains(name))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
 			op = binary.jumps[name];
@@ -157,7 +160,18 @@ namespace Makai::Ex::AVM {
 		/// @brief Anima being processed.
 		Anima binary;
 
-		List<usize> stack;
+		/// @brief Stack frame.
+		struct Frame {
+			/// @brief Actors being operated on.
+			ActiveCast	actors;
+			/// @brief SP mode being used.
+			uint16		spMode	= 0;
+			/// @brief Operation pointer.
+			usize		op		= 0;
+		};
+
+		/// @brief Program stack.
+		List<Frame> stack;
 
 		/// @brief Actors being operated on.
 		ActiveCast	actors;
@@ -184,8 +198,12 @@ namespace Makai::Ex::AVM {
 		}
 
 		void opHalt() {
-			if (sp() && !stack.empty())
-				op = stack.popBack();
+			if (sp() && !stack.empty()) {
+				auto frame = stack.popBack();
+				actors	= frame.actors;
+				spMode	= frame.spMode;
+				op		= frame.op;
+			}
 			else engineState = State::AVM_ES_FINISHED;
 		}
 
@@ -273,9 +291,8 @@ namespace Makai::Ex::AVM {
 
 		void opJump() {
 			uint64 to;
-			if (sp()) stack.pushBack(op);
 			if (!operand64(to)) return;
-			jumpTo(to);
+			jumpTo(to, sp());
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
