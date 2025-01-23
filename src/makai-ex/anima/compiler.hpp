@@ -22,9 +22,9 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any parameter character, except commas.
 		const static String PARAM_CHAR		= String("[^,]");
 		/// @brief Matches any valid name character.
-		const static String NAME_CHAR		= String("[0-z\\-_]");
+		const static String NAME_CHAR		= String("[\\w\\-_]");
 		/// @brief Matches any invalid name character.
-		const static String NON_NAME_CHAR	= String("[^0-z\\-_]");
+		const static String NON_NAME_CHAR	= String("[^\\w\\-_]");
 		/// @brief Matches any complex token.
 		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_'\\:\\~]");
 		/// @brief Matches any simple token.
@@ -394,6 +394,14 @@ namespace Makai::Ex::AVM::Compiler {
 		String		entry;
 		bool		isInAct	= false;
 
+		constexpr static bool isValidNameChar(char const c) {
+			return
+				isAlphanumericChar(c)
+			||	c == '_'
+			||	c == '-'
+			;
+		}
+
 		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
 			auto const ophash = ConstHasher::hash(op);
 			switch (ophash) {
@@ -402,11 +410,6 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
-							CTL_CPP_PRETTY_SOURCE
-						);
-					if (Regex::count(val, RegexMatches::NON_NAME_CHAR))
-						throw Error::InvalidValue(
-							toString("Invalid block name '", val, "'!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
 					tokens.pushBack(Token{
@@ -424,7 +427,7 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing block name!"),
 							CTL_CPP_PRETTY_SOURCE
 						);
-					if (Regex::count(val, RegexMatches::NON_NAME_CHAR))
+					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
 							toString("Invalid block name '", val, "'!"),
 							CTL_CPP_PRETTY_SOURCE
