@@ -83,9 +83,11 @@ In essence: An `:act`'s contents are private, and a `:scene`'s contents are publ
 
 The state is comprised of the current actor state, global SP mode, and execution pointer.
 
-`:next` behaves more like how a `goto` would - immediately jumps execution to the block, without changing the current state.
+`:next` behaves more like how a `goto` would - immediately jumps execution to the block, without resetting or saving the current state, and **does not return to the previous execution point**.
 
-`:perform` behaves more like how a function call would. The current state gets pushed in the stack, and then reset to its starting value. Once the named block is done, the stack gets popped, and the previous state is restored.
+`:perform` behaves more like how a function call would. The current state gets pushed in the stack, and then reset to its starting value. Once the named block is done, the stack gets popped, and **the previous state is restored**.
+
+If a `:perform` is followed by any amount of `:next`s, then the program will return execution to the `:perform` statement's location.
 
 ### On the `[]` command
 
