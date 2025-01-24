@@ -26,6 +26,7 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet& clear() override {
 			AServerObject::clear();
 			rotateSprite	= true;
+			glowOnSpawn		= true;
 			radius			= {};
 			velocity		= {};
 			rotation		= {};
@@ -230,8 +231,9 @@ namespace Makai::Ex::Game::Danmaku {
 				sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale;
-			float iglow = Math::lerp<float>(1, glow.value, spawnglow);
-			sprite->setColor(animColor * color.value * Graph::Color::alpha(glowSprite ? iglow : 1 - iglow));
+			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
+			auto const glowFX = Graph::Color::alpha(glowSprite ? iglow : 1 - iglow);
+			sprite->setColor(animColor * color.value * glowFX);
 		}
 
 		void updateHitbox() {

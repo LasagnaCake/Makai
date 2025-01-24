@@ -205,6 +205,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct Glowing {
 		Property<float> glow;
+		bool			glowOnSpawn = true;
 	};
 
 	struct Magnetizable {
