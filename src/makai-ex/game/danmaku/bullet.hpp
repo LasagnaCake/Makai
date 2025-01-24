@@ -31,9 +31,9 @@ namespace Makai::Ex::Game::Danmaku {
 			rotation		= {};
 			sprite			= {};
 			damage			= {};
+			glow			= {};
 			autoDecay		= false;
 			dope			= false;
-			glowing			= false;
 			bouncy			= false;
 			loopy			= false;
 			grazed			= false;
@@ -54,15 +54,14 @@ namespace Makai::Ex::Game::Danmaku {
 		void onUpdate(float delta) override {
 			if (isFree()) return;
 			AServerObject::onUpdate(delta);
-			hideSprites();
-			setSpriteVisibility(glowing || spawnglow, true);
 			updateSprite(mainSprite.asWeak());
-			updateSprite(glowSprite.asWeak());
+			updateSprite(glowSprite.asWeak(), true);
 			updateHitbox();
 			animate();
 			if (paused()) return;
 			color.next();
 			radius.next();
+			glow.next();
 			if (autoDecay) damage.next();
 			trans.position	+= Math::angleV2(rotation.next()) * velocity.next() * delta;
 			trans.rotation	= rotation.value;
@@ -151,7 +150,7 @@ namespace Makai::Ex::Game::Danmaku {
 		SpriteInstance glowSprite	= nullptr;
 
 		usize counter	= 0;
-		bool spawnglow	= false;
+		float spawnglow	= 0;
 		float spawnsize = 1;
 
 		constexpr static float SPAWN_GOWTH = .5;
@@ -222,15 +221,17 @@ namespace Makai::Ex::Game::Danmaku {
 			if (mainSprite)	mainSprite->visible	= false;
 		}
 
-		void updateSprite(SpriteHandle const& sprite) {
+		void updateSprite(SpriteHandle const& sprite, bool glowSprite = false) {
 			if (!sprite) return;
+			sprite->visible = true;
 			sprite->frame	= this->sprite.frame;
 			sprite->size	= this->sprite.sheetSize;
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale;
-			sprite->setColor(animColor * color.value);
+			float iglow = Math::lerp<float>(1, glow.value, spawnglow);
+			sprite->setColor(animColor * color.value * Graph::Color::alpha(glowSprite ? iglow : 1 - iglow));
 		}
 
 		void updateHitbox() {
@@ -245,11 +246,11 @@ namespace Makai::Ex::Game::Danmaku {
 			switch (objectState) {
 				case State::SOS_DESPAWNING: {
 					if (counter++ < despawnTime) {
-						spawnglow = true;
+						spawnglow = counter / static_cast<float>(despawnTime);
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
 					//	spawnsize = 1.0 + animColor.a * SPAWN_GOWTH;
 					} else {
-						spawnglow = false;
+						spawnglow = 0;
 						animColor.a = 0;
 						spawnsize = 1.0;
 						onAction(*this, Action::SOA_DESPAWN_END);
@@ -258,11 +259,11 @@ namespace Makai::Ex::Game::Danmaku {
 				} break;
 				case State::SOS_SPAWNING: {
 					if (counter++ < spawnTime) {
-						spawnglow = true;
+						spawnglow = 1.0 - counter / static_cast<float>(despawnTime);
 						animColor.a = counter / static_cast<float>(spawnTime);
 						spawnsize = (1.0 + SPAWN_GOWTH) - animColor.a;
 					} else {
-						spawnglow = false;
+						spawnglow = 0;
 						animColor.a = 1;
 						spawnsize = 1.0;
 						setCollisionState(true);
