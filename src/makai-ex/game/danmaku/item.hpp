@@ -199,6 +199,7 @@ namespace Makai::Ex::Game::Danmaku {
 			switch (objectState) {
 				case State::SOS_DESPAWNING: {
 					if (counter++ < despawnTime) {
+						spawnglow = counter / static_cast<float>(despawnTime);
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
 						internalRotation = (1.0 - counter / static_cast<float>(spawnTime));
 						internalRotation *= TAU * 3;
@@ -210,6 +211,7 @@ namespace Makai::Ex::Game::Danmaku {
 				} break;
 				case State::SOS_SPAWNING: {
 					if (counter++ < spawnTime) {
+						spawnglow = 1.0 - counter / static_cast<float>(despawnTime);
 						animColor.a = counter / static_cast<float>(spawnTime);
 						internalRotation = (counter / static_cast<float>(spawnTime));
 						internalRotation *= TAU * 3;
