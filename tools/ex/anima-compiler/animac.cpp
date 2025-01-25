@@ -10,17 +10,14 @@ void compile(Makai::String const src, Makai::String const& out) {
 			auto const lines = file.split('\n');
 			usize ccount = 0, linei = 0;
 			usize eline = 0;
+			DEBUGLN("\n<error>\n");
 			if (e.line != "unspecified") {
-				DEBUGLN("'",e.line,"'");
 				eline = CTL::toUInt64(e.line.stripped(), 10);
 				for (auto const& line: lines) {
 					if ((ccount + line.size()) >= eline) break;
 					ccount += line.size() + 1;
 					++linei;
 				}
-			}
-			DEBUGLN("\n<error>\n");
-			if (e.line != "unspecified") {	
 				constexpr usize DISPLAY_SIZE = 80 - 8;
 				usize c = eline - ccount;
 				Makai::String dl = lines[linei];

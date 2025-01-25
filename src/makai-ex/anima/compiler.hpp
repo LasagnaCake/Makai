@@ -248,7 +248,7 @@ namespace Makai::Ex::AVM::Compiler {
 					mnext = nodes[i+1];
 				String& node = mnode.match;
 				String& next = mnext.match;
-				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(node);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("[", mnode.position, "] : ", node);
 				switch (node[0]) {
 					case '/': continue;
 					case '@': {

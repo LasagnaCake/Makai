@@ -95,10 +95,11 @@ namespace Regex {
 		std::smatch match;
 		auto cs = stdstr(str);
 		auto const re = makeRegex(expr);
+		ssize mi = 0;
 		while (std::regex_search(cs, match, re)) {
 			for (usize i = 0; i < match.size(); ++i)
 				result.pushBack(Match{
-					match.position(i)/* + match.position()*/,
+					mi += match.position(i),
 					ctlstr(match[i].str())
 				});
 			cs = match.suffix().str();
