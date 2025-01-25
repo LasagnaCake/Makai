@@ -13,6 +13,8 @@
 
 #include "bytecode.hpp"
 
+#define MKEX_ANIMAC_SOURCE(POSITION, FILENAME) (::CTL::CPP::SourceFile((FILENAME), (POSITION)))
+
 /// @brief Anima Virtual Machine.
 namespace Makai::Ex::AVM::Compiler {
 	/// @brief Regex matches used for processing.
@@ -119,7 +121,8 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @param str String to create from.
 			/// @return Parameter pack.
 			/// @throw Error::InvalidValue on syntax errors.
-			static ParameterPack fromString(String const& str) {
+			static ParameterPack fromString(Regex::Match const& ppack, String const& fname = "unknown") {
+				auto const& [mpos, str] = ppack;
 				ParameterPack pack;
 				auto matches = Regex::find(str.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
 				StringList nodes;
@@ -134,7 +137,7 @@ namespace Makai::Ex::AVM::Compiler {
 							throw Error::InvalidValue(
 								toString("Invalid values '", str, "'!"),
 								"'...' may ONLY appear at the beginning of the value list!",
-								CTL_CPP_PRETTY_SOURCE
+								CPP::SourceFile(fname, mpos + match.position)
 							);
 						}
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[Valid expansion expression]");
@@ -147,7 +150,7 @@ namespace Makai::Ex::AVM::Compiler {
 						case '(':
 						case '[': {
 							String a = pack.args.popBack();
-							ParameterPack pp = ParameterPack::fromString(a);
+							ParameterPack pp = ParameterPack::fromString({mpos + match.position, arg}, fname);
 							pack.args.appendBack(pp.args);
 						} break;
 						default:
@@ -156,7 +159,7 @@ namespace Makai::Ex::AVM::Compiler {
 									toString("Invalid values '", str, "'!"),
 									toString("Value '", arg, "' (at position [", index+1, "]) is invalid!\n"
 									"Names must only contain letters, numbers, '-' and '_'!"),
-									CTL_CPP_PRETTY_SOURCE
+									CPP::SourceFile(fname, mpos + match.position)
 								);
 					}
 					++index;
@@ -196,6 +199,10 @@ namespace Makai::Ex::AVM::Compiler {
 			uint64			mode	= 0;
 			/// @brief Jump target for a given jump.
 			String			entry	= "";
+			/// @brief Token position.
+			ssize			pos		= 0;
+			/// @brief Token value position.
+			ssize			valPos	= 0;
 
 			/// @brief Returns the token's operation.
 			/// @param sp SP mode override. Only used if non-zero. By default, it is zero.
@@ -215,6 +222,9 @@ namespace Makai::Ex::AVM::Compiler {
 		using Tokens = List<Token>;
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
+
+		/// @brief Source file name.
+		String const fileName;
 			
 		/// @brief Copy constructor (defaulted).
 		OperationTree(OperationTree const& other)	= default;
@@ -229,119 +239,143 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @throw Error::NonexistentValue when node list is empty.
 		/// @throw Error::FailedAction if compilation fails.
 		/// @throw Error::InvalidValue on syntax errors.
-		OperationTree(StringList const& nodes) {
+		OperationTree(List<Regex::Match> const& nodes, String const& fname = "unknown"): fileName(fname) {
 			if (nodes.empty())
-				throw Error::NonexistentValue("No nodes were given!", CTL_CPP_PRETTY_SOURCE);
+				throw Error::NonexistentValue("No nodes were given!", CPP::SourceFile(fileName, 0));
 			for (usize i = 0; i < nodes.size(); ++i) {
-				String node = nodes[i], next;
+				Regex::Match mnode = nodes[i], mnext;
 				if (i+1 < nodes.size())
-					next = nodes[i+1];
+					mnext = nodes[i+1];
+				String& node = mnode.match;
+				String& next = mnext.match;
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(node);
 				switch (node[0]) {
 					case '/': continue;
 					case '@': {
-						assertValidNamedNode(node);
+						assertValidNamedNode(mnode);
 						if (next.size() && next[0] == '(') {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_ACTION,
 								.name	= node.substring(1),
-								.pack	= ParameterPack::fromString(next)
+								.pack	= ParameterPack::fromString(mnext, fileName),
+								.pos	= mnode.position,
+								.valPos	= mnext.position
 							});
 							++i;
 						}
 					} break;
 					case '$': {
-						assertValidNamedNode(node);
+						assertValidNamedNode(mnode);
 						String const name = node.substring(1);
 						if (next.size()) {
 							if (next[0] == '(')
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= ParameterPack::fromString(next)
+									.pack	= ParameterPack::fromString(mnext, fileName),
+									.pos	= mnode.position,
+									.valPos	= mnext.position
 								});
 							else if (next[0] == '"')
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= ParameterPack(normalize(next.sliced(1, -2)))
+									.pack	= ParameterPack(normalize(next.sliced(1, -2))),
+									.pos	= mnode.position,
+									.valPos	= mnext.position
 								});
 							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR))
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= ParameterPack(next)
+									.pack	= ParameterPack(next),
+									.pos	= mnode.position,
+									.valPos	= mnext.position
 								});
 							else throw Error::InvalidValue(
 								toString("Invalid value of '", next, "' for '", node, "'!"),
-								CTL_CPP_PRETTY_SOURCE
+								CPP::SourceFile(fileName, mnode.position)
 							);
 						} else throw Error::InvalidValue(
 							toString("Missing value for '", node, "'!"),
 							"Maybe you confused '$' with '+' or '-', perhaps?",
-							CTL_CPP_PRETTY_SOURCE
+							CPP::SourceFile(fileName, mnode.position)
 						);
 						++i;
 					} break;
 					case '!': {
-						assertValidNamedNode(node);
+						assertValidNamedNode(mnode);
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_EMOTION,
-							.name	= node.substring(1)
+							.name	= node.substring(1),
+							.pos	= mnode.position,
+							.valPos	= mnext.position
 						});
 					} break;
 					case '\'': {
-						assertValidNamedNode(node);
+						assertValidNamedNode(mnode);
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_WAIT,
-							.value	= toUInt64(node.substring(1))
+							.value	= toUInt64(node.substring(1)),
+							.pos	= mnode.position,
+							.valPos	= mnext.position
 						});
 					} break;
 					case '\"': {
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Normalized: [", normalize(node.sliced(1, -2)), "]");
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_LINE,
-							.name	= normalize(node.sliced(1, -2))
+							.name	= normalize(node.sliced(1, -2)),
+							.pos	= mnode.position,
+							.valPos	= mnext.position
 						});
 					} break;
 					case '#': {
-						assertValidNamedNode(node, 4);
+						assertValidNamedNode(mnode, 4);
 						if (node[1] == '#')
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_COLOR,
 								.value	= ConstHasher::hash(node.substring(2)),
-								.mode	= 1
+								.mode	= 1,
+								.pos	= mnode.position,
+								.valPos	= mnext.position
 							});
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_COLOR,
-							.value	= hexColor(node.substring(1))
+							.value	= hexColor(node.substring(1)),
+							.pos	= mnode.position,
+							.valPos	= mnext.position
 						});
 					} break;
 					case ':': {
-						assertValidNamedNode(node);
-						addExtendedOperation(node, next, i);
+						assertValidNamedNode(mnode);
+						addExtendedOperation(mnode, mnext, i);
 					} break;
 					case '[': {
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_ACTOR,
-							.pack	= ParameterPack::fromString(node)
+							.pack	= ParameterPack::fromString(mnode, fileName),
+							.pos	= mnode.position,
+							.valPos	= mnext.position
 						});
 					} break;
-					case '*': tokens.pushBack(Token{.mode = 1});					break;
-					case '.': tokens.pushBack(Token{Operation::AVM_O_SYNC});		break;
-					case ';': tokens.pushBack(Token{Operation::AVM_O_USER_INPUT});	break;
+					case '*': tokens.pushBack(Token{.mode = 1, .pos = mnode.position});								break;
+					case '.': tokens.pushBack(Token{.type = Operation::AVM_O_SYNC, .pos = mnode.position});			break;
+					case ';': tokens.pushBack(Token{.type = Operation::AVM_O_USER_INPUT, .pos = mnode.position});	break;
 					case '+':
 					case '-': {
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_NAMED_CALL,
-							.pack	= ParameterPack((node[0] == '+') ? "true" : "false")
+							.pack	= ParameterPack((node[0] == '+') ? "true" : "false"),
+							.pos	= mnode.position,
+							.valPos	= mnext.position
 						}); break;
 					}
 					case '(': continue;
 					default:
 						throw Error::InvalidValue(
 							toString("Invalid operation '" + node + "'!"),
-							CTL_CPP_PRETTY_SOURCE
+							CPP::SourceFile(fileName, mnode.position)
 						);
 				}
 			}
@@ -352,13 +386,13 @@ namespace Makai::Ex::AVM::Compiler {
 				throw Error::InvalidValue(
 					toString("Missing closure for one or more blocks!"),
 					toString("Blocks are: [", bnames.sliced(0, -3), "]"),
-					CTL_CPP_PRETTY_SOURCE
+					CPP::SourceFile(fileName, nodes.back().position)
 				);
 			}
 			if (tokens.empty())
 				throw Error::FailedAction(
 					"Failed to parse tree!",
-					CTL_CPP_PRETTY_SOURCE
+					CPP::SourceFile(fileName, 0)
 				);
 		}
 
@@ -366,23 +400,18 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @param src Source file to construct tree from.
 		/// @return Operation tree.
 		/// @throw Error::NonexistentValue if source file is empty.
-		static OperationTree fromSource(String const& src) {
+		static OperationTree fromSource(String const& src, String const& fname = "unknown") {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Tokenizer regex: ", RegexMatches::ALL_TOKENS);
 			if (src.empty())
 				throw Error::NonexistentValue(
 					"Source is empty!",
-					CTL_CPP_PRETTY_SOURCE
+					CPP::SourceFile(fname, 0)
 				);
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
 			if (matches.empty())
 				return OperationTree();
-			StringList nodes;
-			nodes.resize(matches.size());
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nParsing tree...\n");
-			for (auto& match: matches)
-				nodes.pushBack(match.match);
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nTree parsed!\n");
-			return OperationTree(nodes);
+			return OperationTree(matches, fname);
 		}
 
 	private:
@@ -398,14 +427,27 @@ namespace Makai::Ex::AVM::Compiler {
 			;
 		}
 
-		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
+		void addExtendedOperation(Regex::Match const& opmatch, Regex::Match const& valmatch, usize& curNode) {
+			auto const& [opi, op]	= opmatch;
+			auto const& [vali, val]	= valmatch;
+			if (
+				tokens.size()
+			&&	tokens.back().type == Operation::AVM_O_NO_OP
+			&&	tokens.back().mode != 0
+			)
+				throw Error::InvalidValue(
+					"Cannot apply '*' modifier on extended operations!",
+					CPP::SourceFile(fileName, opi)
+				);
 			auto const ophash = ConstHasher::hash(op);
 			switch (ophash) {
 				case (ConstHasher::hash(":finish")):
 				case (ConstHasher::hash(":terminate")): {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_HALT,
-						.mode	= ophash == ConstHasher::hash(":finish")
+						.mode	= ophash == ConstHasher::hash(":finish"),
+						.pos	= opi,
+						.valPos	= vali
 					});
 				} break;
 				case (ConstHasher::hash(":perform")):
@@ -413,7 +455,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
-							CTL_CPP_PRETTY_SOURCE
+							CPP::SourceFile(fileName, opi)
 						);
 					String path;
 					switch (val.front()) {
@@ -435,7 +477,9 @@ namespace Makai::Ex::AVM::Compiler {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= path,
-						.mode	= ophash == ConstHasher::hash(":perform")
+						.mode	= ophash == ConstHasher::hash(":perform"),
+						.pos	= opi,
+						.valPos	= vali
 					});
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Jump to: ", tokens.back().name);
 					++curNode;
@@ -446,12 +490,12 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing block name!"),
-							CTL_CPP_PRETTY_SOURCE
+							CPP::SourceFile(fileName, opi)
 						);
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
 							toString("Invalid block name '", val, "'!"),
-							CTL_CPP_PRETTY_SOURCE
+							CPP::SourceFile(fileName, opi)
 						);
 					if (
 						blocks.size()
@@ -465,12 +509,16 @@ namespace Makai::Ex::AVM::Compiler {
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
 					auto const end = blocks.join() + "[end]";
 					tokens.pushBack(Token{
-						.type = Operation::AVM_O_JUMP,
-						.name = end
+						.type	= Operation::AVM_O_JUMP,
+						.name	= end,
+						.pos	= opi,
+						.valPos	= vali
 					});
 					tokens.pushBack(Token{
-						.type = Operation::AVM_O_NEXT,
-						.entry = blocks.join(),
+						.type	= Operation::AVM_O_NEXT,
+						.entry	= blocks.join(),
+						.pos	= opi,
+						.valPos	= vali
 					});
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Entrypoint: ", tokens.back().entry);
 					++curNode;
@@ -480,7 +528,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (blocks.empty())
 						throw Error::InvalidValue(
 							toString("Missing block for ':end' statement!"),
-							CTL_CPP_PRETTY_SOURCE
+							CPP::SourceFile(fileName, opi)
 						);
 					if (
 						blocks.back().back() == ':'
@@ -490,19 +538,23 @@ namespace Makai::Ex::AVM::Compiler {
 					blocks.popBack();
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", end);
 					tokens.pushBack(Token{
-						.type = Operation::AVM_O_HALT,
-						.mode = 1
+						.type	= Operation::AVM_O_HALT,
+						.mode	= 1,
+						.pos	= opi,
+						.valPos	= vali
 					});
 					tokens.pushBack(Token{
-						.type = Operation::AVM_O_NEXT,
-						.entry = end,
+						.type	= Operation::AVM_O_NEXT,
+						.entry	= end,
+						.pos	= opi,
+						.valPos	= vali
 					});
 					return;
 				}
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid extended operation '", op, "'!"),
-					CTL_CPP_PRETTY_SOURCE
+					CPP::SourceFile(fileName, opi)
 				);
 			}
 		}
@@ -542,12 +594,12 @@ namespace Makai::Ex::AVM::Compiler {
 			return out & (COLOR_MASK | asByte({color[6], color[7]}));
 		}
 
-		void assertValidNamedNode(String const& node, usize const min = 2) {
-			if (node.size() < min)
+		void assertValidNamedNode(Regex::Match const& node, usize const min = 2) {
+			if (node.match.size() < min)
 				throw Error::InvalidValue(
-					toString("Invalid operation '", node, "'!"),
+					toString("Invalid operation '", node.match, "'!"),
 					"Name is too small!",
-					CTL_CPP_PRETTY_SOURCE
+					CPP::SourceFile(fileName, node.position)
 				);
 		}
 	};
@@ -626,7 +678,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (out.jumps.contains(njloc))
 						throw Error::InvalidValue(
 							toString("Named block '", token.entry, "' already exists!"),
-							CTL_CPP_PRETTY_SOURCE
+							CPP::SourceFile(tree.fileName, token.valPos)
 						);
 					out.jumps[njloc] = out.code.size();
 				}
@@ -649,11 +701,6 @@ namespace Makai::Ex::AVM::Compiler {
 								out.addOperation(token.operation(2));
 								continue;
 							}
-							if (arg.find('.') != -1)
-								throw Error::InvalidValue(
-									"Invalid parameter name'" + arg + "'!",
-									CTL_CPP_PRETTY_SOURCE
-								);
 							out.addOperation(token.operation(i > 0));
 							out.addNamedOperand(arg);
 						}
@@ -734,22 +781,22 @@ namespace Makai::Ex::AVM::Compiler {
 	/// @brief Compiles a anima source.
 	/// @param source Source to compile.
 	/// @return Anima binary.
-	inline BinaryBuilder const compileSource(String const& source) {
-		return BinaryBuilder::fromTree(OperationTree::fromSource(source));
+	inline BinaryBuilder const compileSource(String const& source, String const& fname = "unknown") {
+		return BinaryBuilder::fromTree(OperationTree::fromSource(source, fname));
 	}
 	
 	/// @brief Compiles a anima source file.
 	/// @param path Path to file to compile.
 	/// @return Anima binary.
 	inline BinaryBuilder const compileFile(String const& path) {
-		return compileSource(File::getText(path));
+		return compileSource(File::getText(path), OS::FS::fileName(path));
 	}
 
 	/// @brief Compiles a anima source, then saves it to a file.
 	/// @param source Source to compile.
 	/// @param outpath Path to save binary to.
-	inline void compileSourceToFile(String const& source, String const& outpath) {
-		File::saveBinary(outpath, compileSource(source).toBytes());
+	inline void compileSourceToFile(String const& source, String const& outpath, String const& fname = "unknown") {
+		File::saveBinary(outpath, compileSource(source, fname).toBytes());
 	}
 
 	/// @brief Compiles a anima source file, then saves it to a file.
@@ -759,5 +806,7 @@ namespace Makai::Ex::AVM::Compiler {
 		File::saveBinary(outpath, compileFile(path).toBytes());
 	}
 }
+
+#undef MKEX_ANIMAC_SOURCE
 
 #endif

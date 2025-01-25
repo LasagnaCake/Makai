@@ -884,7 +884,7 @@ public:
 
 	/// @brief Returns a string without any leading whitespace characters.
 	/// @return String without leading whitespace.
-	constexpr SelfType stripped() {
+	constexpr SelfType stripped() const {
 		auto start	= begin();
 		auto stop	= end()-1;
 		while (start != stop && isNullOrSpaceChar(*start))
