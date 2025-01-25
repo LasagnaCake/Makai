@@ -20,7 +20,7 @@ namespace Makai::Ex::AVM {
 		AVM_O_NO_OP,
 		/// @brief No-op, but skips directly to the next instruction, and does not waste a cycle.
 		AVM_O_NEXT,
-		/// @brief Ends execution of the program.
+		/// @brief Ends execution of the program. Behaves differently, depending on SP mode.
 		AVM_O_HALT,
 		/// @brief Active actor. Behaves differently, depending on SP mode.
 		AVM_O_ACTOR,
