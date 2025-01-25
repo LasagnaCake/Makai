@@ -7,20 +7,18 @@ void compile(Makai::String const src, Makai::String const& out) {
 		try {
 			Makai::Ex::AVM::Compiler::compileSourceToFile(file, out, Makai::OS::FS::fileName(src));
 		} catch (Makai::Error::Generic const& e) {
-			auto const lines = file.split('\n');
-			usize ccount = 0, linei = 0;
 			usize eline = 0;
 			DEBUGLN("\n<error>\n");
+			// This is jank, but it works, so not that big of a deal for me
 			if (e.line != "unspecified") {
+				auto const ff = file.replaced('\t', ' ');
 				eline = CTL::toUInt64(e.line.stripped(), 10);
-				for (auto const& line: lines) {
-					if ((ccount + line.size()) >= eline) break;
-					ccount += line.size() + 1;
-					++linei;
-				}
+				//DEBUGLN("'", eline, "'");
+				ssize const lhs = ff.sliced(0, eline).rfind('\n'), rhs = ff.sliced(eline).find('\n');
+				usize linei = ff.sliced(0, eline).split('\n').size();
 				constexpr usize DISPLAY_SIZE = 80 - 8;
-				usize c = eline - ccount;
-				Makai::String dl = lines[linei];
+				usize c = eline - lhs;
+				Makai::String dl = ff.substring(lhs > 1 ? lhs : 0, rhs + 2);
 				bool prepend = c > DISPLAY_SIZE;
 				while (c > DISPLAY_SIZE) {
 					c -= DISPLAY_SIZE;
@@ -41,11 +39,11 @@ void compile(Makai::String const src, Makai::String const& out) {
 				DEBUGLN("\n");
 				DEBUGLN("FILE: ", e.caller);
 				DEBUGLN("LINE: ", linei);
-				DEBUGLN("COLUMN: ", eline - ccount, "\n");
+				DEBUGLN("COLUMN: ", eline - lhs, "\n");
 			}
 			else DEBUGLN("\n");
 			DEBUGLN(e.type, ": ", e.message, "\n");
-			DEBUGLN(e.info, "\n");
+			if (e.info != "none") DEBUGLN(e.info, "\n");
 			DEBUGLN("</error>\n");
 		}
 	} catch (Makai::Error::Generic const& e) {

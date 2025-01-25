@@ -248,7 +248,7 @@ namespace Makai::Ex::AVM::Compiler {
 					mnext = nodes[i+1];
 				String& node = mnode.match;
 				String& next = mnext.match;
-				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("[", mnode.position, "] : ", node);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("[", mnode.position, "]: [", node, "]");
 				switch (node[0]) {
 					case '/': continue;
 					case '@': {
@@ -495,7 +495,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
 							toString("Invalid block name '", val, "'!"),
-							CPP::SourceFile(fileName, opi)
+							CPP::SourceFile(fileName, vali)
 						);
 					if (
 						blocks.size()
@@ -678,7 +678,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (out.jumps.contains(njloc))
 						throw Error::InvalidValue(
 							toString("Named block '", token.entry, "' already exists!"),
-							CPP::SourceFile(tree.fileName, token.valPos)
+							CPP::SourceFile(tree.fileName, 0)
 						);
 					out.jumps[njloc] = out.code.size();
 				}

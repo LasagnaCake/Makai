@@ -105,6 +105,7 @@ namespace Regex {
 					mi,
 					ctlstr(match[i].str())
 				});
+				mi += match[i].length();
 			}
 			cs = match.suffix().str();
 		}
