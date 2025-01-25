@@ -18,7 +18,7 @@ namespace Makai::Ex::AVM {
 	enum class Operation: uint16 {
 		/// @brief No-op. If SP is set, sets the internal SP mode.
 		AVM_O_NO_OP,
-		/// @brief No-op, but skips directly to the next instruction.
+		/// @brief No-op, but skips directly to the next instruction, and does not waste a cycle.
 		AVM_O_NEXT,
 		/// @brief Ends execution of the program.
 		AVM_O_HALT,
