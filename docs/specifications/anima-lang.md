@@ -62,6 +62,8 @@ Comprised of the following commands, and their recommended use case:
 | `:scene <name> ... :end` | For jumping to named blocks in a file. These will only be executed when jumped to. | none |
 | `:next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none |
 | `:perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
+| `:finish` | Exits the current block early. | none |
+| `:terminate` | Exits the program early. | none |
 
 Under consideration:
 

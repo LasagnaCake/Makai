@@ -401,6 +401,13 @@ namespace Makai::Ex::AVM::Compiler {
 		void addExtendedOperation(String const& op, String const& val, usize& curNode) {
 			auto const ophash = ConstHasher::hash(op);
 			switch (ophash) {
+				case (ConstHasher::hash(":finish")):
+				case (ConstHasher::hash(":terminate")): {
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_HALT,
+						.mode	= ophash == ConstHasher::hash(":finish")
+					});
+				} break;
 				case (ConstHasher::hash(":perform")):
 				case (ConstHasher::hash(":next")): {
 					if (val.empty())

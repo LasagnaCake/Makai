@@ -13,6 +13,7 @@
 		:end
 	:end
 	:act end-of-history
+		:terminate
 	:end
 	:perform NewBeginnings:start-of-the-adventure
 	:perform NewBeginnings:lets-go-gambling
