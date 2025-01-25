@@ -16,7 +16,7 @@ namespace Makai::Ex::AVM {
 	
 	/// @brief Bytecode operation.
 	enum class Operation: uint16 {
-		/// @brief No-op. If SP is set, sets the internal SP mode.
+		/// @brief No-op. If SP is set, sets the global SP mode.
 		AVM_O_NO_OP,
 		/// @brief No-op, but skips directly to the next instruction, and does not waste a cycle.
 		AVM_O_NEXT,
