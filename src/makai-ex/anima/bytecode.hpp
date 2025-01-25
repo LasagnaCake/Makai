@@ -40,7 +40,7 @@ namespace Makai::Ex::AVM {
 		AVM_O_USER_INPUT,
 		/// @brief Named operation. Behaves differently, depending on SP mode.
 		AVM_O_NAMED_CALL,
-		/// @brief Jump.
+		/// @brief Jump. Behaves differently, depending on SP mode.
 		AVM_O_JUMP,
 	};
 
