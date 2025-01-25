@@ -5,7 +5,7 @@ void compile(Makai::String const src, Makai::String const& out) {
 	try {
 		Makai::String const file = Makai::File::getText(src);
 		try {
-			Makai::Ex::AVM::Compiler::compileSourceToFile(file, out, Makai::OS::FS::fileName(file));
+			Makai::Ex::AVM::Compiler::compileSourceToFile(file, out, Makai::OS::FS::fileName(src));
 		} catch (Makai::Error::Generic const& e) {
 			auto const lines = file.split('\n');
 			usize ccount = 0, linei = 0;
