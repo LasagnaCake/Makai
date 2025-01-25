@@ -13,7 +13,7 @@
 		:end
 	:end
 	:act end-of-history
-		:terminate
+		:fuck-you-give-me-an-error
 	:end
 	:perform NewBeginnings:start-of-the-adventure
 	:perform NewBeginnings:lets-go-gambling

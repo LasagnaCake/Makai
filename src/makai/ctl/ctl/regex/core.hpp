@@ -98,7 +98,7 @@ namespace Regex {
 		while (std::regex_search(cs, match, re)) {
 			for (usize i = 0; i < match.size(); ++i)
 				result.pushBack(Match{
-					match.position(i),
+					match.position(i)/* + match.position()*/,
 					ctlstr(match[i].str())
 				});
 			cs = match.suffix().str();

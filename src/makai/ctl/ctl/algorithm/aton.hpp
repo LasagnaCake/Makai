@@ -34,6 +34,7 @@ namespace Impl {
 		/// @return Whether it is in the given base.
 		template<Type::ASCII T>
 		constexpr bool isDigitInBase(T const& c, usize const base) {
+			if (!base) return true;
 			if (c == '.') return true;
 			ssize const v = toDigit(c);
 			return 0 <= v && v < ssize(base);
@@ -148,6 +149,7 @@ namespace Impl {
 		/// @return Whether it is in the given base.
 		template<Type::ASCII T>
 		constexpr bool isInBase(ref<T const> str, usize const size, usize const base) {
+			if (!base) return true;
 			for (usize i = 0; i < integerSize(str, size); ++i) {
 				if (isInvalidChar(str[i]))
 					break;
@@ -189,7 +191,7 @@ constexpr bool atoi(ref<T const> const str, usize size, I& out, usize base = 0) 
 	ref<T const> s = str;
 	// If string is size 1, try and convert digit
 	if (size == 1) {
-		if (Impl::A2I::isDigitInBase(str[0], base))
+		if (Impl::A2I::isDigitInBase(str[0], base) || base == 0)
 			return Impl::A2I::toDigit(str[0]);
 		else return false;
 	}
@@ -197,8 +199,9 @@ constexpr bool atoi(ref<T const> const str, usize size, I& out, usize base = 0) 
 	if (
 		size == 2
 	&&	Impl::A2I::isSign(str[0])
-	&&	Impl::A2I::isDigitInBase(str[1], base)
-	) {
+	&&	(
+		Impl::A2I::isDigitInBase(str[1], base) || base == 0
+	)) {
 		out = Impl::A2I::getSignAndConsume<T>(s) * Impl::A2I::toDigit<T>(s[0]);
 		return true;
 	}
