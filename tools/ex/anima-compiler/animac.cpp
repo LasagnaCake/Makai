@@ -10,6 +10,8 @@
 // FG_RED	31
 // BOLD		1
 
+constexpr auto CONSOLE_INVERT	= ANSI(7);
+
 constexpr auto CONSOLE_BLACK	= ANSI(30);
 
 constexpr auto CONSOLE_RED		= ANSI(31);
@@ -19,7 +21,7 @@ constexpr auto CONSOLE_BLUE		= ANSI(34);
 constexpr auto CONSOLE_CYAN		= ANSI(35);
 constexpr auto CONSOLE_MAGENTA	= ANSI(36);
 
-constexpr auto CONSOLE_L_BLACK		= ANSI(90);
+constexpr auto CONSOLE_L_BLACK		= ANSI(90;2);
 
 constexpr auto CONSOLE_L_RED		= ANSI(91);
 constexpr auto CONSOLE_L_GREEN		= ANSI(92);
@@ -86,23 +88,23 @@ int compile(Makai::String const src, Makai::String const& out) {
 					DEBUG("~");
 				DEBUG("Here", CONSOLE_RESET);
 				DEBUGLN("\n");
-				DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_WHITE, CONSOLE_BLACK);
+				DEBUG(CONSOLE_L_YELLOW, CONSOLE_BOLD);
 				DEBUGLN("FILE:", CONSOLE_RESET, " ", e.caller);
-				DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_WHITE, CONSOLE_BLACK);
+				DEBUG(CONSOLE_L_YELLOW, CONSOLE_BOLD);
 				DEBUGLN("LINE:", CONSOLE_RESET, " ", linei);
-				DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_WHITE, CONSOLE_BLACK);
+				DEBUG(CONSOLE_L_YELLOW, CONSOLE_BOLD);
 				DEBUGLN("COLUMN:", CONSOLE_RESET, " ", eline - lhs, "\n");
 			}
 			else DEBUGLN("\n");
-			DEBUG(CONSOLE_RESET, CONSOLE_BOLD, CONSOLE_BG_L_RED, CONSOLE_BLACK);
+			DEBUG(CONSOLE_L_RED, CONSOLE_BOLD);
 			DEBUGLN(e.type, ":", CONSOLE_RESET, " ", CONSOLE_L_WHITE, e.message, "\n", CONSOLE_RESET);
 			if (e.info != "none") DEBUGLN(e.info, "\n");
 			DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
 			return 2;
 		}
 	} catch (Makai::Error::Generic const& e) {
-		DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "\n<error>\n", CONSOLE_RESET);
-		DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_RED, CONSOLE_BLACK);
+		DEBUGLN(CONSOLE_RED, "\n<error>\n", CONSOLE_RESET);
+		DEBUG(CONSOLE_L_RED, CONSOLE_BOLD);
 		DEBUGLN(e.type, ":", CONSOLE_RESET, " ", CONSOLE_L_WHITE, e.message, "\n", CONSOLE_RESET);
 		DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
 		return 1;
