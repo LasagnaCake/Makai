@@ -81,8 +81,10 @@ namespace Regex {
 		auto cs = stdstr(str);
 		usize count = 0;
 		auto const re = makeRegex(expr);
-		while (std::regex_search(cs, rm, re))
+		while (std::regex_search(cs, rm, re)) {
 			count += cs.size();
+			cs = rm.suffix().str();
+		}
 		return count;
 	}
 
@@ -97,11 +99,13 @@ namespace Regex {
 		auto const re = makeRegex(expr);
 		ssize mi = 0;
 		while (std::regex_search(cs, match, re)) {
-			for (usize i = 0; i < match.size(); ++i)
+			for (usize i = 0; i < match.size(); ++i) {
+				mi += match.position(i);
 				result.pushBack(Match{
-					mi += match.position(i),
+					mi,
 					ctlstr(match[i].str())
 				});
+			}
 			cs = match.suffix().str();
 		}
 		return result;
