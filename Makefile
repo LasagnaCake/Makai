@@ -22,7 +22,7 @@ CONFIG := -static #--static-libstdc++ --static-libgcc
 
 include make/options.make
 
-.PHONY: clear-output package-lib build-debug build-release up-debug up-release link-debug link-release build-all up-all link-all debug release copy-headers copy-o-debug copy-o-release all help link-extern
+.PHONY: clear-output package-lib build-debug build-release up-debug up-release link-debug link-release build-all up-all link-all debug release copy-headers copy-ex-headers copy-o-debug copy-o-release all help link-extern
 .ONESHELL:
 .SHELLFLAGS = -ec
 
@@ -49,7 +49,7 @@ all: build-all up-all link-all
 
 build-all: build-debug build-release
 
-up-all: copy-headers copy-o-debug copy-o-release
+up-all: copy-headers copy-ex-headers copy-o-debug copy-o-release
 
 link-all: $(CREATE_LIB_3P) link-debug link-release
 
@@ -73,6 +73,18 @@ copy-headers:
 	@cp -r --parents **/**/**/*.hpp ../../output/include/makai/
 	#@cp -r --parents **/**/**/**/*.hpp ../../output/include/makai/
 	@cp -r --parents ctl/* ../../output/include/makai/
+	@cd ../..
+
+copy-ex-headers:
+	@echo "Copying extensions..."
+	@mkdir -p output/include/makai-ex
+	@cd $(MAKAIEXSRC)
+	@cp -r --parents *.hpp ../../output/include/makai-ex/
+	@cp -r --parents **/*.hpp ../../output/include/makai-ex/
+	@cp -r --parents **/**/*.hpp ../../output/include/makai-ex/
+	@cp -r --parents **/**/**/*.hpp ../../output/include/makai-ex/
+	#@cp -r --parents **/**/**/**/*.hpp ../../output/include/makai-ex/
+	@cp -r --parents ctl/* ../../output/include/makai-ex/
 	@cd ../..
 
 copy-o-debug:

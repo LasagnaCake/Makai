@@ -50,3 +50,4 @@ endef
 export HELP_MESSAGE
 
 export MAKAISRC:=src/makai
+export MAKAIEXSRC:=src/makai-ex
