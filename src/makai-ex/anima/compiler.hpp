@@ -119,6 +119,7 @@ namespace Makai::Ex::AVM::Compiler {
 
 			/// @brief Creates a parameter pack from a parameter pack string.
 			/// @param str String to create from.
+			/// @param fname Source file. For error purposes.
 			/// @return Parameter pack.
 			/// @throw Error::InvalidValue on syntax errors.
 			static ParameterPack fromString(Regex::Match const& ppack, String const& fname = "unknown") {
@@ -236,6 +237,7 @@ namespace Makai::Ex::AVM::Compiler {
 
 		/// @brief Constructs the token tree from a series of source file nodes.
 		/// @param nodes Nodes to build from.
+		/// @param fname Source file. For error purposes.
 		/// @throw Error::NonexistentValue when node list is empty.
 		/// @throw Error::FailedAction if compilation fails.
 		/// @throw Error::InvalidValue on syntax errors.
@@ -398,6 +400,7 @@ namespace Makai::Ex::AVM::Compiler {
 
 		/// @brief Creates an operation tree from a source file.
 		/// @param src Source file to construct tree from.
+		/// @param fname Source file. For error purposes.
 		/// @return Operation tree.
 		/// @throw Error::NonexistentValue if source file is empty.
 		static OperationTree fromSource(String const& src, String const& fname = "unknown") {
