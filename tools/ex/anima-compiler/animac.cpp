@@ -1,14 +1,62 @@
 #include <makai/makai.hpp>
 #include <anima/compiler.hpp>
 
-void compile(Makai::String const src, Makai::String const& out) {
+#define CONCAT(A,B) #A #B
+
+#define ANSI(CODE) "\x1b["#CODE"m"
+
+// FG_RESET	39
+// BG_RESET	39
+// FG_RED	31
+// BOLD		1
+
+constexpr auto CONSOLE_BLACK	= ANSI(30);
+
+constexpr auto CONSOLE_RED		= ANSI(31);
+constexpr auto CONSOLE_GREEN	= ANSI(32);
+constexpr auto CONSOLE_YELLOW	= ANSI(33);
+constexpr auto CONSOLE_BLUE		= ANSI(34);
+constexpr auto CONSOLE_CYAN		= ANSI(35);
+constexpr auto CONSOLE_MAGENTA	= ANSI(36);
+
+constexpr auto CONSOLE_L_BLACK		= ANSI(90);
+
+constexpr auto CONSOLE_L_RED		= ANSI(91);
+constexpr auto CONSOLE_L_GREEN		= ANSI(92);
+constexpr auto CONSOLE_L_YELLOW		= ANSI(93);
+constexpr auto CONSOLE_L_BLUE		= ANSI(94);
+constexpr auto CONSOLE_L_CYAN		= ANSI(95);
+constexpr auto CONSOLE_L_MAGENTA	= ANSI(96);
+constexpr auto CONSOLE_L_WHITE		= ANSI(97);
+
+constexpr auto CONSOLE_BG_BLACK		= ANSI(40);
+constexpr auto CONSOLE_BG_RED		= ANSI(41);
+constexpr auto CONSOLE_BG_GREEN		= ANSI(42);
+constexpr auto CONSOLE_BG_YELLOW	= ANSI(43);
+constexpr auto CONSOLE_BG_BLUE		= ANSI(44);
+constexpr auto CONSOLE_BG_CYAN		= ANSI(45);
+constexpr auto CONSOLE_BG_MAGENTA	= ANSI(46);
+
+constexpr auto CONSOLE_BG_L_RED		= ANSI(101);
+constexpr auto CONSOLE_BG_L_GREEN	= ANSI(102);
+constexpr auto CONSOLE_BG_L_YELLOW	= ANSI(103);
+constexpr auto CONSOLE_BG_L_BLUE	= ANSI(104);
+constexpr auto CONSOLE_BG_L_CYAN	= ANSI(105);
+constexpr auto CONSOLE_BG_L_MAGENTA	= ANSI(106);
+constexpr auto CONSOLE_BG_L_WHITE	= ANSI(107);
+
+constexpr auto CONSOLE_BOLD			= ANSI(1);
+constexpr auto CONSOLE_RESET		= ANSI(0;97);
+constexpr auto CONSOLE_TRUE_RESET	= ANSI(0);
+
+int compile(Makai::String const src, Makai::String const& out) {
 	try {
 		Makai::String const file = Makai::File::getText(src);
 		try {
 			Makai::Ex::AVM::Compiler::compileSourceToFile(file, out, Makai::OS::FS::fileName(src));
 		} catch (Makai::Error::Generic const& e) {
 			usize eline = 0;
-			DEBUGLN("\n<error>\n");
+			DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "\n<error>\n", CONSOLE_RESET);
 			// This is jank, but it works, so not that big of a deal for me
 			if (e.line != "unspecified") {
 				auto const ff = file.replaced('\t', ' ');
@@ -32,33 +80,42 @@ void compile(Makai::String const src, Makai::String const& out) {
 				DEBUGLN("");
 				if (c) for (usize i = 0; i < c-1; ++i)
 					DEBUG(" ");
+				DEBUG(CONSOLE_L_RED);
 				DEBUGLN("^");
 				if (c) for (usize i = 0; i < c-1; ++i)
 					DEBUG("~");
-				DEBUG("Here");
+				DEBUG("Here", CONSOLE_RESET);
 				DEBUGLN("\n");
-				DEBUGLN("FILE: ", e.caller);
-				DEBUGLN("LINE: ", linei);
-				DEBUGLN("COLUMN: ", eline - lhs, "\n");
+				DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_WHITE, CONSOLE_BLACK);
+				DEBUGLN("FILE:", CONSOLE_RESET, " ", e.caller);
+				DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_WHITE, CONSOLE_BLACK);
+				DEBUGLN("LINE:", CONSOLE_RESET, " ", linei);
+				DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_WHITE, CONSOLE_BLACK);
+				DEBUGLN("COLUMN:", CONSOLE_RESET, " ", eline - lhs, "\n");
 			}
 			else DEBUGLN("\n");
-			DEBUGLN(e.type, ": ", e.message, "\n");
+			DEBUG(CONSOLE_RESET, CONSOLE_BOLD, CONSOLE_BG_L_RED, CONSOLE_BLACK);
+			DEBUGLN(e.type, ":", CONSOLE_RESET, " ", CONSOLE_L_WHITE, e.message, "\n", CONSOLE_RESET);
 			if (e.info != "none") DEBUGLN(e.info, "\n");
-			DEBUGLN("</error>\n");
+			DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
+			return 2;
 		}
 	} catch (Makai::Error::Generic const& e) {
-		DEBUGLN("\n<error>");
-		DEBUGLN(e.type, ": ", e.message);
-		DEBUGLN("</error>\n");
+		DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "\n<error>\n", CONSOLE_RESET);
+		DEBUG(CONSOLE_BOLD, CONSOLE_BG_L_RED, CONSOLE_BLACK);
+		DEBUGLN(e.type, ":", CONSOLE_RESET, " ", CONSOLE_L_WHITE, e.message, "\n", CONSOLE_RESET);
+		DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
+		return 1;
 	}
+	return 0;
 }
 
-void compile(Makai::String const& src) {
+int compile(Makai::String const& src) {
 	Makai::String const out = Makai::OS::FS::concatenate(
 		Makai::OS::FS::directoryFromPath(src),
 		Makai::OS::FS::fileName(src, true) + ".anb"
 	);
-	compile(src, out);
+	return compile(src, out);
 }
 
 int main(int argc, char** argv) {
@@ -69,7 +126,7 @@ int main(int argc, char** argv) {
 		DEBUGLN("    animac.exe \"path/to/source\" \"path/to/output\"");
 		DEBUGLN("\nIf output path is not specified, will be placed source directory, with a name of \"<file-name>.anb\".");
 	}
-	else if (argc < 3)	compile(argv[1]);
-	else				compile(argv[1], argv[2]);
+	else if (argc < 3)	return compile(argv[1]);
+	else				return compile(argv[1], argv[2]);
 	return 0;
 }
