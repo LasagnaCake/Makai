@@ -18,7 +18,7 @@ void compile(Makai::String const src, Makai::String const& out) {
 				usize linei = ff.sliced(0, eline).split('\n').size();
 				constexpr usize DISPLAY_SIZE = 80 - 8;
 				usize c = eline - lhs;
-				Makai::String dl = ff.substring(lhs > 1 ? lhs : 0, rhs + 2);
+				Makai::String dl = rhs < 0 ? ff.sliced(lhs > 1 ? lhs : 0) : ff.substring(lhs > 1 ? lhs : 0, rhs + 2);
 				bool prepend = c > DISPLAY_SIZE;
 				while (c > DISPLAY_SIZE) {
 					c -= DISPLAY_SIZE;
@@ -34,7 +34,7 @@ void compile(Makai::String const src, Makai::String const& out) {
 					DEBUG(" ");
 				DEBUGLN("^");
 				if (c) for (usize i = 0; i < c-1; ++i)
-					DEBUG(" ");
+					DEBUG("~");
 				DEBUG("Here");
 				DEBUGLN("\n");
 				DEBUGLN("FILE: ", e.caller);
