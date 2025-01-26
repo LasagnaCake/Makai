@@ -553,15 +553,15 @@ namespace Makai::Ex::AVM::Compiler {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_GET_VALUE,
 								.name	= val.substring(1),
-								.value	= ppack.args.size(),
-								.range	= 3,
+								.value	= 0,
+								.range	= ppack.args.size()-1,
 								.pos	= opi,
 								.valPos	= vali
 							});
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_JUMP,
 								.range	= ppack.args.size(),
-								.mode	= 0b010,
+								.mode	= 2,
 								.pos	= opi,
 								.valPos	= vali
 							});
@@ -572,7 +572,7 @@ namespace Makai::Ex::AVM::Compiler {
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_JUMP,
 									.range	= ppack.args.size(),
-									.mode	= 0b100,
+									.mode	= 3,
 									.pos	= opi,
 									.valPos	= vali
 								});
@@ -817,7 +817,7 @@ namespace Makai::Ex::AVM::Compiler {
 						}
 						break;
 					case Operation::AVM_O_JUMP:
-						if (token.mode <= 1) {
+						if (token.mode < 2) {
 							out.addOperation(token);
 							out.addNamedOperand(token.name);
 						} else {
@@ -828,8 +828,8 @@ namespace Makai::Ex::AVM::Compiler {
 					case Operation::AVM_O_GET_VALUE:
 						out.addOperation(token);
 						if (!token.mode) {
-							out.addOperation(token.value);
-							out.addOperation(token.range);
+							out.addOperand(token.value);
+							out.addOperand(token.range);
 						}
 						break;
 				}

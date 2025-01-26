@@ -322,24 +322,18 @@ namespace Makai::Ex::AVM {
 		}
 
 		void opJump() {
+			constexpr usize JUMP_SIZE = (sizeof(Operation) + sizeof(uint64));
 			auto spm = sp();
-			if (spm & 1) {
+			if (spm < 2) {
 				uint64 to;
 				if (!operand64(to)) return;
-				return jumpTo(to, sp());
+				return jumpTo(to, spm);
 			}
-			else if (spm & 2) {
-				uint64 range;
-				if (!operand64(range)) return;
-				storeState(op + range * 2);
-				op += integer * 2;
-			}
-			else {
-				uint64 range;
-				if (!operand64(range)) return;
-				storeState(op + range * 2);
-				op += rng.integer<usize>(0, range) * 2;
-			}
+			uint64 range;
+			if (!operand64(range)) return;
+			storeState(op + range * JUMP_SIZE);
+			if (spm == 2)	op += integer * JUMP_SIZE;
+			else			op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
 		}
 
 		void opGetValue() {
@@ -347,10 +341,10 @@ namespace Makai::Ex::AVM {
 			if (!operand64(name)) return;
 			auto spm = sp();
 			if (spm) return opGetString(name, string);
-			uint64 max, range;
-			if (!operands64(max, range)) return;
+			uint64 min, max;
+			if (!operands64(min, max)) return;
 			opGetInt(name, integer);
-			integer = Math::clamp<ssize>(integer, static_cast<ssize>(max) - static_cast<ssize>(range), max);
+			integer = Math::clamp<ssize>(integer, min, max);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
