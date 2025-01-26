@@ -69,7 +69,7 @@ Also contains the following keywords:
 | `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
 | `finish` | Exits the current block early. | none |
 | `terminate` | Exits the program early. | none |
-| `choice $<name>\|random (<blocks>)` | Performs one of the listed blocks, depending on a requested value, or at random. | `opGetInt` |
+| `choice <$<name>\|random> (<blocks>)` | Performs one of the listed blocks, depending on a requested value, or at random. | `opGetInt` |
 
 Under consideration:
 
