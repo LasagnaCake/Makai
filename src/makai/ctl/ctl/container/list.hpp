@@ -1111,8 +1111,7 @@ public:
 	/// @param sep Separator.
 	/// @return Resulting joined element.
 	template<Type::Equal<DataType> T = DataType>
-	constexpr DataType join(typename T::DataType const& sep) const
-	requires (requires {typename T::DataType;}) {
+	constexpr DataType join(typename T::DataType const& sep) const {
 		if (!count) return DataType();
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
@@ -1125,7 +1124,7 @@ public:
 	/// @brief Joins a `List` of ranged elements with a given separator between them.
 	/// @param sep Separator.
 	/// @return Resulting joined element.
-	template<Type::Equal<DataType> T = DataType>
+	template<Type::Convertible<DataType> T = DataType>
 	constexpr DataType join(T const& sep) const {
 		if (!count) return DataType();
 		DataType result = front();
@@ -1138,7 +1137,6 @@ public:
 
 	/// @brief Joins a `List` of ranged elements.
 	/// @return Resulting joined element.
-	template<Type::Equal<DataType> T = DataType>
 	constexpr DataType join() const {
 		if (!count) return DataType();
 		DataType result = front();
@@ -1148,7 +1146,7 @@ public:
 		return result;
 	}
 
-	template<Type::Different<DataType> T>
+	template<class T>
 	constexpr DataType join(T const&) const = delete;
 
 	/// @brief Returns whether the current size matches the current capacity.
