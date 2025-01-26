@@ -62,12 +62,14 @@ Comprised of the following commands, and their recommended use case:
 Also contains the following keywords:
 
 | Keyword | Usage | Associated Function(s) |
+|:-:|:-|:-:|
 | `act <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
 | `scene <name> ... end` | For jumping to named blocks in a file. These will only be executed when jumped to. | none |
 | `next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none |
 | `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
 | `finish` | Exits the current block early. | none |
 | `terminate` | Exits the program early. | none |
+| `choice $<name>\|random (<blocks>)` | Performs one of the listed blocks, depending on a requested value, or at random. | `opGetInt` |
 
 Under consideration:
 
