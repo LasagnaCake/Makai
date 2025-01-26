@@ -19,7 +19,7 @@ scene MyFirstScene
 		end
 		act bad-end
 		end
-		choice $ending (good-end, neutral-end, bad-end)
+		next choice $ending (good-end, neutral-end, bad-end)
 		terminate
 	end
 	perform NewBeginnings:start-of-the-adventure

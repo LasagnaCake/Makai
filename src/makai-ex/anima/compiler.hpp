@@ -436,7 +436,8 @@ namespace Makai::Ex::AVM::Compiler {
 			Regex::Match const& opmatch,
 			Regex::Match const& valmatch,
 			usize& curNode,
-			List<Regex::Match> const& nodes
+			List<Regex::Match> const& nodes,
+			bool isNotNext = false
 		) {
 			auto const& [opi, op]	= opmatch;
 			auto const& [vali, val]	= valmatch;
@@ -462,6 +463,12 @@ namespace Makai::Ex::AVM::Compiler {
 				} break;
 				case (ConstHasher::hash("perform")):
 				case (ConstHasher::hash("next")): {
+					if (val == "choice") {
+						assertHasAtLeast(nodes, curNode, 3, opmatch);
+						++curNode;
+						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, ophash == ConstHasher::hash("perform"));
+						return;
+					}
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
@@ -562,7 +569,7 @@ namespace Makai::Ex::AVM::Compiler {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_JUMP,
 								.range	= ppack.args.size(),
-								.mode	= 2,
+								.mode	= 2 | (isNotNext ? 0b1000u : 0u),
 								.pos	= opi,
 								.valPos	= vali
 							});
@@ -573,7 +580,7 @@ namespace Makai::Ex::AVM::Compiler {
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_JUMP,
 									.range	= ppack.args.size(),
-									.mode	= 3,
+									.mode	= 3 | (isNotNext ? 0b100u : 0u),
 									.pos	= opi,
 									.valPos	= vali
 								});
