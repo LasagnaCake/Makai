@@ -1,24 +1,24 @@
-:next main
-:scene MyFirstScene
-	:scene NewBeginnings
-		:act start-of-the-adventure
-		:end
-		:act lets-go-gambling
-		:end
-		:act severe-debt
-			:act loan-sharks
-				:next :MyFirstScene:end-of-history
-			:end
-			:next loan-sharks
-		:end
-	:end
-	:act end-of-history
-		:terminate
-	:end
-	:perform NewBeginnings:start-of-the-adventure
-	:perform NewBeginnings:lets-go-gambling
-	:perform NewBeginnings:severe-debt
-:end
-:act main
-	:perform ~MyFirstScene:NewBeginnings
-:end
+next main
+scene MyFirstScene
+	scene NewBeginnings
+		act start-of-the-adventure
+		end
+		act lets-go-gambling
+		end
+		act severe-debt
+			act loan-sharks
+				next :MyFirstScene:end-of-history
+			end
+			next loan-sharks
+		end
+	end
+	act end-of-history
+		terminate
+	end
+	perform NewBeginnings:start-of-the-adventure
+	perform NewBeginnings:lets-go-gambling
+	perform NewBeginnings:severe-debt
+end
+act main
+	perform ~MyFirstScene:NewBeginnings
+end

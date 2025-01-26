@@ -44,7 +44,7 @@ Comments are done like C/C++ line an block comments.
 
 Comprised of the following commands, and their recommended use case:
 
-| Comand | Usage | Associated Function(s) |
+| Command | Usage | Associated Function(s) |
 |:-:|:-|:-:|
 | `[<characters>]` | For specifying the character roster. See ahead for more details. To add a character to the current roster, add the `*` modifier before it. | none |
 | `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. | `opPerform` |
@@ -58,12 +58,16 @@ Comprised of the following commands, and their recommended use case:
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. | `opWaitForActions` |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. | `opWaitForUser` |
 | `*` | For modifying certain commands. | none |
-| `:act <name> ... :end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
-| `:scene <name> ... :end` | For jumping to named blocks in a file. These will only be executed when jumped to. | none |
-| `:next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none |
-| `:perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
-| `:finish` | Exits the current block early. | none |
-| `:terminate` | Exits the program early. | none |
+
+Also contains the following keywords:
+
+| Keyword | Usage | Associated Function(s) |
+| `act <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
+| `scene <name> ... end` | For jumping to named blocks in a file. These will only be executed when jumped to. | none |
+| `next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none |
+| `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
+| `finish` | Exits the current block early. | none |
+| `terminate` | Exits the program early. | none |
 
 Under consideration:
 
@@ -71,7 +75,7 @@ Under consideration:
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command.|
 
-### On `:act`s and `:scene`s
+### On `act`s and `scene`s
 
 Both acts and stories can have named blocks inside them. You can perform a **scene**'s sub-blocks from outside its scene, **but not an act**'s.
 
@@ -79,17 +83,17 @@ To access a scene's sub-block, append `:<sub-block>` to the name.
 
 Jumps will be relative to the current block's scope. To jump to a different block in the **previous scope** (or global, if none), prepend the jump target with `~`. To jump via an **absolute path (starting from global scope)**, prepend the jump target with `:`.
 
-In essence: An `:act`'s contents are **private**, and a `:scene`'s contents are **public**.
+In essence: An `act`'s contents are **private**, and a `scene`'s contents are **public**.
 
-### On the `:next` and `:perform` commands
+### On the `next` and `perform` commands
 
 The state is comprised of the current actor state, global SP mode, and execution pointer.
 
-`:next` behaves more like how a `goto` would - immediately jumps execution to the block, without resetting or saving the current state, and **does not return to the previous execution point**.
+`next` behaves more like how a `goto` would - immediately jumps execution to the block, without resetting or saving the current state, and **does not return to the previous execution point**.
 
-`:perform` behaves more like how a function call would. The current state gets pushed in the stack, and then reset to its starting value. Once the named block is done, the stack gets popped, and **the previous state is restored**.
+`perform` behaves more like how a function call would. The current state gets pushed in the stack, and then reset to its starting value. Once the named block is done, the stack gets popped, and **the previous state is restored**.
 
-If a `:perform` is followed by any amount of `:next`s, then the program will return execution to the `:perform` statement's location.
+If a `perform` is followed by any amount of `next`s, then the program will return execution to the `:perform` statement's location.
 
 ### On the `[]` command
 

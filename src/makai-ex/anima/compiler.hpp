@@ -349,10 +349,6 @@ namespace Makai::Ex::AVM::Compiler {
 							.valPos	= mnext.position
 						});
 					} break;
-					case ':': {
-						assertValidNamedNode(mnode);
-						addExtendedOperation(mnode, mnext, i);
-					} break;
 					case '[': {
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_ACTOR,
@@ -375,7 +371,10 @@ namespace Makai::Ex::AVM::Compiler {
 					}
 					case '(': continue;
 					default:
-						throw Error::InvalidValue(
+						if (isLowercaseChar(node[0])) {	
+							assertValidNamedNode(mnode);
+							addExtendedOperation(mnode, mnext, i);
+						} else throw Error::InvalidValue(
 							toString("Invalid operation '" + node + "'!"),
 							CPP::SourceFile(fileName, mnode.position)
 						);
@@ -439,22 +438,22 @@ namespace Makai::Ex::AVM::Compiler {
 			&&	tokens.back().mode != 0
 			)
 				throw Error::InvalidValue(
-					"Cannot apply '*' modifier on extended operations!",
+					"Cannot apply '*' modifier on keywords!",
 					CPP::SourceFile(fileName, opi)
 				);
 			auto const ophash = ConstHasher::hash(op);
 			switch (ophash) {
-				case (ConstHasher::hash(":finish")):
-				case (ConstHasher::hash(":terminate")): {
+				case (ConstHasher::hash("finish")):
+				case (ConstHasher::hash("terminate")): {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_HALT,
-						.mode	= ophash == ConstHasher::hash(":finish"),
+						.mode	= ophash == ConstHasher::hash("finish"),
 						.pos	= opi,
 						.valPos	= vali
 					});
 				} break;
-				case (ConstHasher::hash(":perform")):
-				case (ConstHasher::hash(":next")): {
+				case (ConstHasher::hash("perform")):
+				case (ConstHasher::hash("next")): {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
@@ -480,7 +479,7 @@ namespace Makai::Ex::AVM::Compiler {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= path,
-						.mode	= ophash == ConstHasher::hash(":perform"),
+						.mode	= ophash == ConstHasher::hash("perform"),
 						.pos	= opi,
 						.valPos	= vali
 					});
@@ -488,8 +487,8 @@ namespace Makai::Ex::AVM::Compiler {
 					++curNode;
 					return;
 				}
-				case (ConstHasher::hash(":scene")):
-				case (ConstHasher::hash(":act")): {
+				case (ConstHasher::hash("scene")):
+				case (ConstHasher::hash("act")): {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing block name!"),
@@ -505,7 +504,7 @@ namespace Makai::Ex::AVM::Compiler {
 					&&	blocks.back().back() != ':'
 					&&	blocks.back().back() != '*'
 					) blocks.back().pushBack(isInAct ? '*' : ':');
-					isInAct = ophash == ConstHasher::hash(":act");
+					isInAct = ophash == ConstHasher::hash("act");
 					entry = val;
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
@@ -527,10 +526,10 @@ namespace Makai::Ex::AVM::Compiler {
 					++curNode;
 					return;
 				}
-				case (ConstHasher::hash(":end")): {
+				case (ConstHasher::hash("end")): {
 					if (blocks.empty())
 						throw Error::InvalidValue(
-							toString("Missing block for ':end' statement!"),
+							toString("Missing block for 'end' statement!"),
 							CPP::SourceFile(fileName, opi)
 						);
 					if (
@@ -556,7 +555,7 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				default:
 				throw Error::InvalidValue(
-					toString("Invalid extended operation '", op, "'!"),
+					toString("Invalid keywords '", op, "'!"),
 					CPP::SourceFile(fileName, opi)
 				);
 			}
