@@ -29,7 +29,11 @@ include make/options.make
 export HELP_MESSAGE
 
 define refcopy
-	@find . -name '*.$(strip $(1))' -exec cp --parents \{\} $(strip $(2)) \;
+	@find . -name '$(strip $(1))' -exec cp --parents \{\} $(strip $(2)) \;
+endef
+
+define refmove
+	@find . -name '$(strip $(1))' -exec cp \{\} $(strip $(2)) \;
 endef
 
 help:
@@ -71,7 +75,7 @@ copy-headers:
 	@echo "Copying headers..."
 	@mkdir -p output/include/makai
 	@cd $(MAKAISRC)
-	$(call refcopy, hpp, ../../output/include/makai/)
+	$(call refcopy, *.hpp, ../../output/include/makai/)
 	@cp -r --parents ctl/* ../../output/include/makai/
 	@cd ../..
 
@@ -79,26 +83,22 @@ copy-ex-headers:
 	@echo "Copying extensions..."
 	@mkdir -p output/include/makai-ex
 	@cd $(MAKAIEXSRC)
-	$(call refcopy, hpp, ../../output/include/makai-ex/)
+	$(call refcopy, *.hpp, ../../output/include/makai-ex/)
 	@cd ../..
 
 copy-o-debug:
 	@echo "Copying objects..."
 	@mkdir -p obj/debug
-	#@cp -r $(MAKAISRC)/*.debug.o obj/debug/
-	@cp -r $(MAKAISRC)/**/*.debug.o obj/debug/
-	@cp -r $(MAKAISRC)/**/**/*.debug.o obj/debug/
-	@cp -r $(MAKAISRC)/**/**/**/*.debug.o obj/debug/
-	#@cp -r $(MAKAISRC)/**/**/**/**/*.debug.o obj/debug/
+	@cd $(MAKAISRC)
+	$(call refmove, *.debug.o, ../../obj/debug/)
+	@cd ../..
 
 copy-o-release:
 	@echo "Copying objects..."
 	@mkdir -p obj/release
-	#@cp -r $(MAKAISRC)/*.release.o obj/release/
-	@cp -r $(MAKAISRC)/**/*.release.o obj/release/
-	@cp -r $(MAKAISRC)/**/**/*.release.o obj/release/
-	@cp -r $(MAKAISRC)/**/**/**/*.release.o obj/release/
-	#@cp -r $(MAKAISRC)/**/**/**/**/*.release.o obj/release/
+	@cd $(MAKAISRC)
+	$(call refmove, *.release.o, ../../obj/release/)
+	@cd ../..
 
 up-debug: copy-headers copy-o-debug
 	@echo "File copy done!"
