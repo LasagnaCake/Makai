@@ -109,15 +109,25 @@ namespace Makai::Ex::Game::Dialog {
 			return Graph::Color::WHITE;
 		}
 
-		/// @brief Sets a global by a name hash.
-		/// @param name Global to set.
-		/// @param values Values to set to.
+		/// @brief Calls a global function by a name hash.
+		/// @param name Function to call.
+		/// @param values Values to pass to it.
 		virtual void execute(usize const name, Parameters const& params) {
 			switch (name) {
 				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params[0]);
 				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0]);
 			}
 		}
+
+		/// @brief Gets a global integer by a name hash.
+		/// @param name Global to get.
+		/// @return Integer.
+		virtual ssize getInt(usize const name)		{return 0;	}
+
+		/// @brief Gets a global string by a name hash.
+		/// @param name Global to get.
+		/// @return String.
+		virtual String getString(usize const name)	{return "";	}
 
 		/// @brief Max time to wait for user input.
 		usize delay = 600;
@@ -219,6 +229,14 @@ namespace Makai::Ex::Game::Dialog {
 
 		void opNamedCallMultiple(uint64 const name, Parameters const& params) override final {
 			execute(name, params);
+		}
+
+		void opGetInt(uint64 const name, ssize& out) override final {
+			out = getInt(name);
+		}
+
+		void opGetString(uint64 const name, String& out) override final {
+			out = getString(name);
 		}
 
 		Scene::Actors getActors(ActiveCast const& actors) {
