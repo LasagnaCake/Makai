@@ -340,11 +340,11 @@ namespace Makai::Ex::AVM {
 			uint64 name;
 			if (!operand64(name)) return;
 			auto spm = sp();
-			if (spm) return opGetString(name, string);
+			if (spm & 2) return opGetString(name, string);
 			uint64 min, max;
 			if (!operands64(min, max)) return;
 			opGetInt(name, integer);
-			integer = Math::clamp<ssize>(integer, min, max);
+			if (spm & 1) integer = Math::clamp<ssize>(integer, min, max);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {

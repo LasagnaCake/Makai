@@ -555,6 +555,7 @@ namespace Makai::Ex::AVM::Compiler {
 								.name	= val.substring(1),
 								.value	= 0,
 								.range	= ppack.args.size()-1,
+								.mode	= 1,
 								.pos	= opi,
 								.valPos	= vali
 							});
