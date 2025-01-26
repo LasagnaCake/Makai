@@ -470,6 +470,7 @@ namespace Makai::Ex::AVM::Compiler {
 				} break;
 				case (ConstHasher::hash("perform")):
 				case (ConstHasher::hash("next")): {
+					bool const performing = ophash == ConstHasher::hash("perform");
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
@@ -479,14 +480,14 @@ namespace Makai::Ex::AVM::Compiler {
 						assertHasAtLeast(nodes, curNode, 3, opmatch);
 						++curNode;
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice type: ", nodes[curNode+1].match);
-						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, ophash == ConstHasher::hash("perform"));
+						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, performing);
 						return;
 					}
 					String path = getScopePath(val);
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= path,
-						.mode	= ophash == ConstHasher::hash("perform"),
+						.mode	= performing,
 						.pos	= opi,
 						.valPos	= vali
 					});
