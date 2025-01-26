@@ -809,7 +809,7 @@ namespace Makai::Ex::AVM::Compiler {
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Value: ", token.value);
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Range: ", token.range);
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Entry: ", token.entry);
-				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Params: ['", token.pack.args.join("', '"s), "']");
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Params: ['", token.pack.args.join("', '"), "']");
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</token>");
 				#endif
 				switch (token.type) {
