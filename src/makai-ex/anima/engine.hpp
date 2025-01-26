@@ -34,11 +34,11 @@ namespace Makai::Ex::AVM {
 		/// @brief Processes one anima operation.
 		void process() {
 			if (engineState != State::AVM_ES_RUNNING) return;
-			if (op >= binary.code.size()) return opHalt();
+			if (current.op >= binary.code.size()) return opHalt();
 			while (
-				op < binary.code.size()
-			&&	asOperation(curOp = binary.code[op++]
-			) == Operation::AVM_O_NEXT);
+				current.op < binary.code.size()
+			&&	asOperation(curOp = binary.code[current.op++]) == Operation::AVM_O_NEXT
+			);
 			switch (asOperation(curOp)) {
 				case (Operation::AVM_O_NO_OP):		opSetSP();		break;
 				case (Operation::AVM_O_HALT):		opHalt();		break;
@@ -138,13 +138,15 @@ namespace Makai::Ex::AVM {
 		/// @brief Starts the processing of the anima.
 		void beginProgram() {
 			engineState	= State::AVM_ES_RUNNING;
-			op			= 0;
+			current = {};
+			stack.clear();
 		}
 
 		/// @brief Stops the processing of the anima.
 		void endProgram() {
 			if (engineState == State::AVM_ES_RUNNING)
 				engineState = State::AVM_ES_FINISHED;
+			stack.clear();
 		}
 
 		Random::Generator rng;
@@ -162,11 +164,11 @@ namespace Makai::Ex::AVM {
 		/// @param returnable Whether to return to previous point when block is finished. By default, it is `true`.
 		void jumpTo(usize const name, bool const returnable = true) {
 			if (returnable)
-				storeState(op);
+				storeState();
 			if (!binary.jumps.contains(name))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
-			op = binary.jumps[name];
-			if (op >= binary.code.size())
+			current.op = binary.jumps[name];
+			if (current.op >= binary.code.size())
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
 		}
 
@@ -190,29 +192,21 @@ namespace Makai::Ex::AVM {
 
 		/// @brief Program stack.
 		List<Frame> stack;
+		/// @brief Current execution state.
+		Frame		current;
 
-		/// @brief Actors being operated on.
-		ActiveCast	actors;
-		/// @brief SP mode being used.
-		uint16		spMode		= 0;
-		/// @brief Operation pointer.
-		usize		op			= 0;
 		/// @brief Engine state.
 		State		engineState	= State::AVM_ES_READY;
 		/// @brief Error code.
 		ErrorCode	err			= ErrorCode::AVM_EEC_NONE;
 		/// @brief Current operation.
 		uint16		curOp		= 0;
-		/// @brief Current integer.
-		ssize		integer		= 0;
-		/// @brief Current string.
-		String		string		= "";
 
 		uint16 sp() {
-			auto sm = spMode;
+			auto sm = current.spMode;
 			if (!sm) sm = getSPFlag(curOp);
-			spMode = 0;
-			return spMode;
+			current.spMode = 0;
+			return current.spMode;
 		}
 
 		void opInvalidOp() {
@@ -225,7 +219,7 @@ namespace Makai::Ex::AVM {
 			else engineState = State::AVM_ES_FINISHED;
 		}
 
-		void opSetSP() {spMode = getSPFlag(curOp);}
+		void opSetSP() {current.spMode = getSPFlag(curOp);}
 
 		void opActor() {
 			uint16 spm	= sp();
@@ -233,18 +227,18 @@ namespace Makai::Ex::AVM {
 			if (spco && spm != spco)
 				spm = spco;
 			if (spm == 2) {
-				actors = {.exclude = true};
+				current.actors = {.exclude = true};
 				return;		
 			}
 			uint64 actor;
 			if (!operand64(actor)) return;
-			if (!actor && !spm)	actors = {};
+			if (!actor && !spm)	current.actors = {};
 			else if (spm) {
 				if (!actor || spm != 1) return;
-				actors.actors.pushBack(actor);
+				current.actors.actors.pushBack(actor);
 			} else {
-				actors = {};
-				if (actor) actors.actors.pushBack(actor);
+				current.actors = {};
+				if (actor) current.actors.actors.pushBack(actor);
 			}
 		}
 
@@ -252,33 +246,33 @@ namespace Makai::Ex::AVM {
 			uint64 line;
 			if (!operand64(line)) return;
 			if (sp() && line)
-				opAdd(actors, binary.data[line-1]);
-			else opAdd(actors, line ? binary.data[line-1] : "");
+				opAdd(current.actors, binary.data[line-1]);
+			else opAdd(current.actors, line ? binary.data[line-1] : "");
 		}
 
 		void opEmotion() {
 			uint64 emotion;
 			if (!operand64(emotion)) return;
-			opEmote(actors, emotion);
+			opEmote(current.actors, emotion);
 		}
 
 		void opAction() {
 			uint64 action;
 			if (!operand64(action)) return;
-			if (!sp()) return opPerform(actors, action, StringList());
+			if (!sp()) return opPerform(current.actors, action, StringList());
 			uint64 params, psize;
 			if (!operands64(params, psize)) return;
 			if (psize)
-				opPerform(actors, action, binary.data.sliced(params, params + psize));
+				opPerform(current.actors, action, binary.data.sliced(params, params + psize));
 			else
-				opPerform(actors, action, StringList());
+				opPerform(current.actors, action, StringList());
 		}
 
 		void opColor() {
 			uint64 color;
 			if (!operand64(color)) return;
-			if (sp())	opColorRef(actors, color);
-			else		opColor(actors, color);
+			if (sp())	opColorRef(current.actors, color);
+			else		opColor(current.actors, color);
 		}
 
 		void opWait() {
@@ -308,20 +302,17 @@ namespace Makai::Ex::AVM {
 		}
 
 		void storeState(usize const op) {
-			stack.pushBack(Frame{actors, spMode, op, integer, string});
-			actors	= {};
-			spMode	= 0;
-			integer	= 0;
-			string	= "";
+			storeState();
+			stack.back().op = op;
+		}
+
+		void storeState() {
+			stack.pushBack(current);
+			current		= {.op = current.op};
 		}
 
 		void retrieveState() {
-			auto frame	= stack.popBack();
-			actors		= frame.actors;
-			spMode		= frame.spMode;
-			op			= frame.op;
-			integer		= frame.integer;
-			string		= frame.string;
+			current	= stack.popBack();
 		}
 
 		void opJump() {
@@ -334,24 +325,24 @@ namespace Makai::Ex::AVM {
 			}
 			uint64 range;
 			if (!operand64(range)) return;
-			if (spm & 0b1000)	storeState(op + range * JUMP_SIZE);
-			if (spm == 2)		op += integer * JUMP_SIZE;
-			else				op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
+			if (spm & 0b1000)	storeState(current.op + range * JUMP_SIZE);
+			if (spm == 2)		current.op += current.integer * JUMP_SIZE;
+			else				current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
 		}
 
 		void opGetValue() {
 			uint64 name;
 			if (!operand64(name)) return;
 			auto spm = sp();
-			if (spm & 2) return opGetString(name, string);
+			if (spm & 2) return opGetString(name, current.string);
 			uint64 min, max;
 			if (spm & 1 && !operands64(min, max)) return;
-			opGetInt(name, integer);
-			if (spm & 1) integer = Math::clamp<ssize>(integer, min, max);
+			opGetInt(name, current.integer);
+			if (spm & 1) current.integer = Math::clamp<ssize>(current.integer, min, max);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
-			if (op + opsize < binary.code.size()) {
+			if (current.op + opsize < binary.code.size()) {
 				setErrorAndStop(ErrorCode::AVM_EEC_INVALID_OPERAND);
 				return false;
 			}
@@ -364,22 +355,22 @@ namespace Makai::Ex::AVM {
 
 		constexpr bool operand16(uint16& opval) {
 			if (!assertOperand(1)) return false;
-			MX::memmove(&opval, &binary.code[op], sizeof(uint16));
-			op += 1;
+			MX::memmove(&opval, &binary.code[current.op], sizeof(uint16));
+			current.op += 1;
 			return true;
 		}
 
 		constexpr bool operand32(uint32& opval) {
 			if (!assertOperand(2)) return false;
-			MX::memmove(&opval, &binary.code[op], sizeof(uint32));
-			op += 2;
+			MX::memmove(&opval, &binary.code[current.op], sizeof(uint32));
+			current.op += 2;
 			return true;
 		}
 
 		constexpr bool operand64(uint64& opval) {
 			if (!assertOperand(4)) return false;
-			MX::memmove(&opval, &binary.code[op], sizeof(uint64));
-			op += 4;
+			MX::memmove(&opval, &binary.code[current.op], sizeof(uint64));
+			current.op += 4;
 			return true;
 		}
 	};
