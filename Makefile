@@ -28,6 +28,10 @@ include make/options.make
 
 export HELP_MESSAGE
 
+define refcopy
+	@find . -name '*.$(strip $(1))' -exec cp --parents \{\} $(strip $(2)) \;
+endef
+
 help:
 	@echo ""
 	@echo "$$HELP_MESSAGE"
@@ -67,11 +71,7 @@ copy-headers:
 	@echo "Copying headers..."
 	@mkdir -p output/include/makai
 	@cd $(MAKAISRC)
-	@cp -r --parents *.hpp ../../output/include/makai/
-	@cp -r --parents **/*.hpp ../../output/include/makai/
-	@cp -r --parents **/**/*.hpp ../../output/include/makai/
-	@cp -r --parents **/**/**/*.hpp ../../output/include/makai/
-	#@cp -r --parents **/**/**/**/*.hpp ../../output/include/makai/
+	$(call refcopy, hpp, ../../output/include/makai/)
 	@cp -r --parents ctl/* ../../output/include/makai/
 	@cd ../..
 
@@ -79,12 +79,7 @@ copy-ex-headers:
 	@echo "Copying extensions..."
 	@mkdir -p output/include/makai-ex
 	@cd $(MAKAIEXSRC)
-	@cp -r --parents *.hpp ../../output/include/makai-ex/
-	@cp -r --parents **/*.hpp ../../output/include/makai-ex/
-	@cp -r --parents **/**/*.hpp ../../output/include/makai-ex/
-	@cp -r --parents **/**/**/*.hpp ../../output/include/makai-ex/
-	#@cp -r --parents **/**/**/**/*.hpp ../../output/include/makai-ex/
-	@cp -r --parents ctl/* ../../output/include/makai-ex/
+	$(call refcopy, hpp, ../../output/include/makai-ex/)
 	@cd ../..
 
 copy-o-debug:
