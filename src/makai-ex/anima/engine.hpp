@@ -158,13 +158,8 @@ namespace Makai::Ex::AVM {
 		/// @param name Block to jump to.
 		/// @param returnable Whether to return to previous point when block is finished. By default, it is `true`.
 		void jumpTo(usize const name, bool const returnable = true) {
-			if (returnable) {
-				stack.pushBack(Frame{actors, spMode, op, integer, string});
-				actors	= {};
-				spMode	= 0;
-				integer	= 0;
-				string	= "";
-			}
+			if (returnable)
+				storeState(op);
 			if (!binary.jumps.contains(name))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
 			op = binary.jumps[name];
@@ -222,12 +217,8 @@ namespace Makai::Ex::AVM {
 		}
 
 		void opHalt() {
-			if (sp() && !stack.empty()) {
-				auto frame = stack.popBack();
-				actors	= frame.actors;
-				spMode	= frame.spMode;
-				op		= frame.op;
-			}
+			if (sp() && !stack.empty())
+				retrieveState();
 			else engineState = State::AVM_ES_FINISHED;
 		}
 
@@ -313,6 +304,23 @@ namespace Makai::Ex::AVM {
 				opNamedCallMultiple(param, StringList());
 		}
 
+		void storeState(usize const op) {
+			stack.pushBack(Frame{actors, spMode, op, integer, string});
+			actors	= {};
+			spMode	= 0;
+			integer	= 0;
+			string	= "";
+		}
+
+		void retrieveState() {
+			auto frame	= stack.popBack();
+			actors		= frame.actors;
+			spMode		= frame.spMode;
+			op			= frame.op;
+			integer		= frame.integer;
+			string		= frame.string;
+		}
+
 		void opJump() {
 			auto spm = sp();
 			if (spm & 1) {
@@ -323,13 +331,13 @@ namespace Makai::Ex::AVM {
 			else if (spm & 2) {
 				uint64 range;
 				if (!operand64(range)) return;
-				stack.pushBack(Frame{actors, spMode, op + range * 2, integer, string});
+				storeState(op + range * 2);
 				op += integer * 2;
 			}
 			else {
 				uint64 range;
 				if (!operand64(range)) return;
-				stack.pushBack(Frame{actors, spMode, op + range * 2, integer, string});
+				storeState(op + range * 2);
 				op += rng.integer<usize>(0, range) * 2;
 			}
 		}
