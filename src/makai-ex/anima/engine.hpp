@@ -49,6 +49,7 @@ namespace Makai::Ex::AVM {
 				case (Operation::AVM_O_USER_INPUT):	opUserInput();	break;
 				case (Operation::AVM_O_NAMED_CALL):	opNamedCall();	break;
 				case (Operation::AVM_O_JUMP):		opJump();		break;
+				case (Operation::AVM_O_GET_VALUE):	opGetValue();	break;
 				default:							opInvalidOp();	break;
 			}
 		}
@@ -102,6 +103,14 @@ namespace Makai::Ex::AVM {
 		/// @param param Global name.
 		/// @param values Values to pass.
 		virtual void opNamedCallMultiple(uint64 const param, Parameters const& values)					{}
+		/// @brief Integer value acquisition.
+		/// @param name Value name.
+		/// @param out Value output.
+		virtual void opGetInt(uint64 const name, ssize& out)											{}
+		/// @brief String value acquisition.
+		/// @param name Value name.
+		/// @param out Value output.
+		virtual void opGetString(uint64 const name, String& out)										{}
 
 		/// @brief Returns the error code.
 		/// @return Error code.
@@ -135,6 +144,8 @@ namespace Makai::Ex::AVM {
 				engineState = State::AVM_ES_FINISHED;
 		}
 
+		Random::Generator rng;
+
 	protected:
 		/// @brief Sets the error code and stops execution.
 		/// @param code Error code to set.
@@ -148,9 +159,11 @@ namespace Makai::Ex::AVM {
 		/// @param returnable Whether to return to previous point when block is finished. By default, it is `true`.
 		void jumpTo(usize const name, bool const returnable = true) {
 			if (returnable) {
-				stack.pushBack(Frame{actors, spMode, op});
+				stack.pushBack(Frame{actors, spMode, op, integer, string});
 				actors	= {};
 				spMode	= 0;
+				integer	= 0;
+				string	= "";
 			}
 			if (!binary.jumps.contains(name))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
@@ -171,6 +184,10 @@ namespace Makai::Ex::AVM {
 			uint16		spMode	= 0;
 			/// @brief Operation pointer.
 			usize		op		= 0;
+			/// @brief Current integer.
+			ssize		integer	= 0;
+			/// @brief Current string.
+			String		string	= "";
 		};
 
 		/// @brief Program stack.
@@ -188,6 +205,10 @@ namespace Makai::Ex::AVM {
 		ErrorCode	err			= ErrorCode::AVM_EEC_NONE;
 		/// @brief Current operation.
 		uint16		curOp		= 0;
+		/// @brief Current integer.
+		ssize		integer		= 0;
+		/// @brief Current string.
+		String		string		= "";
 
 		uint16 sp() {
 			auto sm = spMode;
@@ -293,9 +314,35 @@ namespace Makai::Ex::AVM {
 		}
 
 		void opJump() {
-			uint64 to;
-			if (!operand64(to)) return;
-			jumpTo(to, sp());
+			auto spm = sp();
+			if (spm & 1) {
+				uint64 to;
+				if (!operand64(to)) return;
+				return jumpTo(to, sp());
+			}
+			else if (spm & 2) {
+				uint64 range;
+				if (!operand64(range)) return;
+				stack.pushBack(Frame{actors, spMode, op + range * 2, integer, string});
+				op += integer * 2;
+			}
+			else {
+				uint64 range;
+				if (!operand64(range)) return;
+				stack.pushBack(Frame{actors, spMode, op + range * 2, integer, string});
+				op += rng.integer<usize>(0, range) * 2;
+			}
+		}
+
+		void opGetValue() {
+			uint64 name;
+			if (!operand64(name)) return;
+			auto spm = sp();
+			if (spm) return opGetString(name, string);
+			uint64 max, range;
+			if (!operands64(max, range)) return;
+			opGetInt(name, integer);
+			integer = Math::clamp<ssize>(integer, static_cast<ssize>(max) - static_cast<ssize>(range), max);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {

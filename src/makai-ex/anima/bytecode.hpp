@@ -42,6 +42,8 @@ namespace Makai::Ex::AVM {
 		AVM_O_NAMED_CALL,
 		/// @brief Jump. Behaves differently, depending on SP mode.
 		AVM_O_JUMP,
+		/// @brief Value request. Behaves differently, depending on SP mode.
+		AVM_O_GET_VALUE,
 	};
 
 	/// @brief Script version.	

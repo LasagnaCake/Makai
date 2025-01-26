@@ -19,7 +19,7 @@ scene MyFirstScene
 		end
 		act bad-end
 		end
-		$perform-random (good-end, neutral-end, bad-end)
+		choice $ending (good-end, neutral-end, bad-end)
 		terminate
 	end
 	perform NewBeginnings:start-of-the-adventure

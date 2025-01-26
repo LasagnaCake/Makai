@@ -24,9 +24,9 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any parameter character, except commas.
 		const static String PARAM_CHAR		= String("[^,]");
 		/// @brief Matches any valid name character.
-		const static String NAME_CHAR		= String("[\\w\\-_]");
+		const static String NAME_CHAR		= String("[\\w\\-_~:]");
 		/// @brief Matches any invalid name character.
-		const static String NON_NAME_CHAR	= String("[^\\w\\-_]");
+		const static String NON_NAME_CHAR	= String("[^\\w\\-_~:]");
 		/// @brief Matches any complex token.
 		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_'\\:\\~]");
 		/// @brief Matches any simple token.
@@ -194,6 +194,8 @@ namespace Makai::Ex::AVM::Compiler {
 			String			name	= String();
 			/// @brief Operation value. Used by some types.
 			uint64			value	= 0;
+			/// @brief Operation range. Used by some types.
+			uint64			range	= 0;
 			/// @brief Operation parameters. Used by some types.
 			ParameterPack	pack	= ParameterPack();
 			/// @brief Operation mode.
@@ -373,7 +375,7 @@ namespace Makai::Ex::AVM::Compiler {
 					default:
 						if (isLowercaseChar(node[0])) {	
 							assertValidNamedNode(mnode);
-							addExtendedOperation(mnode, mnext, i);
+							addExtendedOperation(mnode, mnext, i, nodes);
 						} else throw Error::InvalidValue(
 							toString("Invalid operation '" + node + "'!"),
 							CPP::SourceFile(fileName, mnode.position)
@@ -419,7 +421,8 @@ namespace Makai::Ex::AVM::Compiler {
 	private:
 		StringList	blocks;
 		String		entry;
-		bool		isInAct	= false;
+		bool		isInAct		= false;
+		bool		isInChoice	= false;
 
 		constexpr static bool isValidNameChar(char const c) {
 			return
@@ -429,7 +432,12 @@ namespace Makai::Ex::AVM::Compiler {
 			;
 		}
 
-		void addExtendedOperation(Regex::Match const& opmatch, Regex::Match const& valmatch, usize& curNode) {
+		void addExtendedOperation(
+			Regex::Match const& opmatch,
+			Regex::Match const& valmatch,
+			usize& curNode,
+			List<Regex::Match> const& nodes
+		) {
 			auto const& [opi, op]	= opmatch;
 			auto const& [vali, val]	= valmatch;
 			if (
@@ -459,23 +467,7 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing value for '", op, "'!"),
 							CPP::SourceFile(fileName, opi)
 						);
-					String path;
-					switch (val.front()) {
-						case ':': {
-							path = val.substring(1);
-						} break;
-						case '~': {
-							auto scope = blocks;
-							if (scope.size()) {
-								scope.popBack();
-								path = scope.join();
-							}
-							path += val.substring(1);
-						} break;
-						default: {
-							path = path = blocks.join() + val; break;
-						} break;
-					}
+					String path = getScopePath(val);
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= path,
@@ -553,9 +545,72 @@ namespace Makai::Ex::AVM::Compiler {
 					});
 					return;
 				}
+				case (ConstHasher::hash("choice")): {
+					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
+					switch (val[0]) {
+						case '$': {
+							tokens.pushBack(Token{
+								.type	= Operation::AVM_O_GET_VALUE,
+								.name	= val.substring(1),
+								.value	= ppack.args.size(),
+								.range	= 3,
+								.pos	= opi,
+								.valPos	= vali
+							});
+							tokens.pushBack(Token{
+								.type	= Operation::AVM_O_JUMP,
+								.range	= ppack.args.size(),
+								.mode	= 0b010,
+								.pos	= opi,
+								.valPos	= vali
+							});
+						} break;
+						default:
+						switch (ConstHasher::hash(val)) {
+							case (ConstHasher::hash("random")): {
+								tokens.pushBack(Token{
+									.type	= Operation::AVM_O_JUMP,
+									.range	= ppack.args.size(),
+									.mode	= 0b100,
+									.pos	= opi,
+									.valPos	= vali
+								});
+							} break;
+							default:
+								throw Error::InvalidValue(
+									toString("Invalid choice mode '", val, "'!"),
+									CPP::SourceFile(fileName, vali)
+								);
+						}
+					}
+					for (auto const& param: ppack.args) {
+						if (param == "...") {
+							throw Error::InvalidValue(
+								toString("Cannot have pack expansions in a choice!"),
+								CPP::SourceFile(fileName, nodes[curNode+2].position)
+							);
+						}
+						if (Regex::count(param, RegexMatches::NON_NAME_CHAR) > 0) {
+							throw Error::InvalidValue(
+								toString("Invalid choice option '", param,"'!"),
+								"Choice options must ONLY be block paths!",
+								CPP::SourceFile(fileName, nodes[curNode+2].position)
+							);
+						}
+						tokens.pushBack(Token{
+							.type	= Operation::AVM_O_JUMP,
+							.name	= getScopePath(param),
+							.pos	= opi,
+							.valPos	= vali
+						});
+					}
+					curNode += 2;
+					return;
+				}
 				default:
 				throw Error::InvalidValue(
-					toString("Invalid keywords '", op, "'!"),
+					toString("Invalid keyword '", op, "'!"),
 					CPP::SourceFile(fileName, opi)
 				);
 			}
@@ -594,6 +649,35 @@ namespace Makai::Ex::AVM::Compiler {
 			;
 			if (color.size() == 6) return out;
 			return out & (COLOR_MASK | asByte({color[6], color[7]}));
+		}
+
+		String getScopePath(String const& val) {
+			String path;
+			switch (val.front()) {
+				case ':': {
+					path = val.substring(1);
+				} break;
+				case '~': {
+					auto scope = blocks;
+					if (scope.size()) {
+						scope.popBack();
+						path = scope.join();
+					}
+					path += val.substring(1);
+				} break;
+				default: {
+					path = path = blocks.join() + val; break;
+				} break;
+			}
+			return path;
+		}
+
+		void assertHasAtLeast(List<Regex::Match> const& nodes, usize const index, usize const size, Regex::Match const& node) {
+			if (nodes.size() < index + size)
+				throw Error::InvalidValue(
+					toString("Too few required arguments for '", node.match, "'!"),
+					CPP::SourceFile(fileName, node.position)
+				);
 		}
 
 		void assertValidNamedNode(Regex::Match const& node, usize const min = 2) {
@@ -733,8 +817,20 @@ namespace Makai::Ex::AVM::Compiler {
 						}
 						break;
 					case Operation::AVM_O_JUMP:
+						if (token.mode <= 1) {
+							out.addOperation(token);
+							out.addNamedOperand(token.name);
+						} else {
+							out.addOperation(token);
+							out.addOperand(token.range);
+						}
+						break;
+					case Operation::AVM_O_GET_VALUE:
 						out.addOperation(token);
-						out.addNamedOperand(token.name);
+						if (!token.mode) {
+							out.addOperation(token.value);
+							out.addOperation(token.range);
+						}
 						break;
 				}
 			}
