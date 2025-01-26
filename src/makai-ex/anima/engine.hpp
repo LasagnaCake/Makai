@@ -322,7 +322,7 @@ namespace Makai::Ex::AVM {
 		}
 
 		void opJump() {
-			constexpr usize JUMP_SIZE = (sizeof(Operation) + sizeof(uint64));
+			constexpr usize JUMP_SIZE = (sizeof(Operation) + sizeof(uint64)) / 2;
 			auto spm = sp();
 			if (spm < 2) {
 				uint64 to;
