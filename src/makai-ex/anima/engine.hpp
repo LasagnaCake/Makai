@@ -149,7 +149,8 @@ namespace Makai::Ex::AVM {
 			stack.clear();
 		}
 
-		Random::Generator rng;
+		/// @brief Random number generator.
+		inline static Random::Generator rng;
 
 	protected:
 		/// @brief Sets the error code and stops execution.
