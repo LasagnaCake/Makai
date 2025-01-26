@@ -13,6 +13,13 @@ scene MyFirstScene
 		end
 	end
 	act end-of-history
+		act good-end
+		end
+		act neutral-end
+		end
+		act bad-end
+		end
+		$perform-random (good-end, neutral-end, bad-end)
 		terminate
 	end
 	perform NewBeginnings:start-of-the-adventure
