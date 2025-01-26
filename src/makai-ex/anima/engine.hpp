@@ -35,7 +35,10 @@ namespace Makai::Ex::AVM {
 		void process() {
 			if (engineState != State::AVM_ES_RUNNING) return;
 			if (op >= binary.code.size()) return opHalt();
-			while (asOperation(curOp = binary.code[op++]) == Operation::AVM_O_NEXT);
+			while (
+				op < binary.code.size()
+			&&	asOperation(curOp = binary.code[op++]
+			) == Operation::AVM_O_NEXT);
 			switch (asOperation(curOp)) {
 				case (Operation::AVM_O_NO_OP):		opSetSP();		break;
 				case (Operation::AVM_O_HALT):		opHalt();		break;
@@ -342,7 +345,7 @@ namespace Makai::Ex::AVM {
 			auto spm = sp();
 			if (spm & 2) return opGetString(name, string);
 			uint64 min, max;
-			if (!operands64(min, max)) return;
+			if (spm & 1 && !operands64(min, max)) return;
 			opGetInt(name, integer);
 			if (spm & 1) integer = Math::clamp<ssize>(integer, min, max);
 		}

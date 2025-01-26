@@ -37,7 +37,7 @@ namespace Type::Container {
 
 	/// Type must be `List`.
 	template<class T>
-	concept List = Impl::IsList<T>::value;
+	concept List = Impl::IsList<T>::value; 
 }
 
 /// @brief Dynamic array of objects.
@@ -1108,14 +1108,29 @@ public:
 	}
 
 	/// @brief Joins a `List` of ranged elements with a given separator between them.
-	/// @param sep Separator value.
+	/// @param sep Separator.
 	/// @return Resulting joined element.
 	template<Type::Equal<DataType> T = DataType>
-	constexpr DataType join(typename T::DataType const& sep) const {
+	constexpr DataType join(typename T::DataType const& sep) const
+	requires (requires {typename T::DataType;}) {
 		if (!count) return DataType();
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.pushBack(sep);
+			result.appendBack(contents[i]);
+		}
+		return result;
+	}
+
+	/// @brief Joins a `List` of ranged elements with a given separator between them.
+	/// @param sep Separator.
+	/// @return Resulting joined element.
+	template<Type::Equal<DataType> T = DataType>
+	constexpr DataType join(T const& sep) const {
+		if (!count) return DataType();
+		DataType result = front();
+		for (SizeType i = 1; i < count; ++i) {
+			result.appendBack(sep);
 			result.appendBack(contents[i]);
 		}
 		return result;
@@ -1133,7 +1148,7 @@ public:
 		return result;
 	}
 
-	template<class T>
+	template<Type::Different<DataType> T>
 	constexpr DataType join(T const&) const = delete;
 
 	/// @brief Returns whether the current size matches the current capacity.

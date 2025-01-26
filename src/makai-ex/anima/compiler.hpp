@@ -17,6 +17,10 @@
 
 /// @brief Anima Virtual Machine.
 namespace Makai::Ex::AVM::Compiler {
+	namespace {
+		using namespace Literals::Text;
+	}
+
 	/// @brief Regex matches used for processing.
 	namespace RegexMatches {
 		/// @brief Matches any character.
@@ -376,10 +380,11 @@ namespace Makai::Ex::AVM::Compiler {
 						if (isLowercaseChar(node[0])) {	
 							assertValidNamedNode(mnode);
 							addExtendedOperation(mnode, mnext, i, nodes);
-						} else throw Error::InvalidValue(
-							toString("Invalid operation '" + node + "'!"),
-							CPP::SourceFile(fileName, mnode.position)
-						);
+						} else if (!customKeyword(mnode, nodes, i))
+							throw Error::InvalidValue(
+								toString("Invalid operation '" + node + "'!"),
+								CPP::SourceFile(fileName, mnode.position)
+							);
 				}
 			}
 			if (blocks.size()) {
@@ -417,6 +422,8 @@ namespace Makai::Ex::AVM::Compiler {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nParsing tree...\n");
 			return OperationTree(matches, fname);
 		}
+
+		virtual bool customKeyword(Regex::Match node, List<Regex::Match> const& nodes, usize& curNode) {return false;}
 
 	private:
 		StringList	blocks;
@@ -463,17 +470,18 @@ namespace Makai::Ex::AVM::Compiler {
 				} break;
 				case (ConstHasher::hash("perform")):
 				case (ConstHasher::hash("next")): {
-					if (val == "choice") {
-						assertHasAtLeast(nodes, curNode, 3, opmatch);
-						++curNode;
-						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, ophash == ConstHasher::hash("perform"));
-						return;
-					}
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
 							CPP::SourceFile(fileName, opi)
 						);
+					if (val == "choice") {
+						assertHasAtLeast(nodes, curNode, 3, opmatch);
+						++curNode;
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice type: ", nodes[curNode+1].match);
+						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, ophash == ConstHasher::hash("perform"));
+						return;
+					}
 					String path = getScopePath(val);
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
@@ -755,8 +763,8 @@ namespace Makai::Ex::AVM::Compiler {
 			AnimaBinaryHeader fh;
 			fh.data		= {fh.headerSize, 0};
 			for (String const& s: data) fh.data.size += s.size()+1;
-			fh.jumps	= {fh.data.offset(), jumps.size()};
-			fh.code		= {fh.jumps.offset(), code.size()};
+			fh.jumps	= {fh.data.offset(), jumps.size() * sizeof(JumpEntry)};
+			fh.code		= {fh.jumps.offset(), code.size() * sizeof(Operation)};
 			return fh;
 		}
 
@@ -776,6 +784,34 @@ namespace Makai::Ex::AVM::Compiler {
 						);
 					out.jumps[njloc] = out.code.size();
 				}
+				#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<token>");
+				#define MKEX_ANIMAC_PRINT_NAME(NAME) case (NAME): DEBUGLN("Type: '", #NAME, "'"); break
+				switch (token.type) {
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_NO_OP);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_NEXT);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_HALT);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_SYNC);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_USER_INPUT);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_LINE);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_ACTOR);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_EMOTION);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_WAIT);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_COLOR);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_ACTION);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_NAMED_CALL);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_JUMP);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_GET_VALUE);
+				}
+				#undef MKEX_ANIMAC_PRINT_NAME
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Mode: ", token.mode);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Name: '", token.name, "'");
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Value: ", token.value);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Range: ", token.range);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Entry: ", token.entry);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Params: ['", token.pack.args.join("', '"s), "']");
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</token>");
+				#endif
 				switch (token.type) {
 					case Operation::AVM_O_NO_OP:
 					case Operation::AVM_O_NEXT:
@@ -835,7 +871,8 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 					case Operation::AVM_O_GET_VALUE:
 						out.addOperation(token);
-						if (!token.mode) {
+						out.addNamedOperand(token.name);
+						if (token.mode == 1) {
 							out.addOperand(token.value);
 							out.addOperand(token.range);
 						}
