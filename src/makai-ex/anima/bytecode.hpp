@@ -46,10 +46,10 @@ namespace Makai::Ex::AVM {
 		AVM_O_GET_VALUE,
 	};
 
-	/// @brief Script version.	
-	constexpr uint64 DIALOG_VERSION		= 0;
-	/// @brief Minimum required version to run script.
-	constexpr uint64 DIALOG_MIN_VERSION	= 0;
+	/// @brief Binary version.	
+	constexpr uint64 ANIMA_VERSION		= 0;
+	/// @brief Minimum required version to run binary.
+	constexpr uint64 ANIMA_MIN_VERSION	= 0;
 
 	/// @brief SP mode mask.
 	constexpr uint16 SP_FLAG_MASK	= 0xf000;
@@ -98,8 +98,8 @@ namespace Makai::Ex::AVM {
 	/// @brief Anima program file header.
 	struct [[gnu::packed]] AnimaBinaryHeader {
 		uint64 headerSize		= sizeof(AnimaBinaryHeader);
-		uint64 version			= DIALOG_VERSION;
-		uint64 minVersion		= DIALOG_MIN_VERSION;
+		uint64 version			= ANIMA_VERSION;
+		uint64 minVersion		= ANIMA_MIN_VERSION;
 		uint64 flags;
 		Section data;
 		Section jumps;
