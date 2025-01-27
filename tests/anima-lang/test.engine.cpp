@@ -64,7 +64,7 @@ struct TestEngine: Makai::Ex::AVM::Engine {
 	void opNamedCallSingle(uint64 const param, Makai::String const& value) override {
 		DEBUGLN("-----");
 		DEBUGLN("Call: ", param);
-		DEBUGLN("Value: ", value);
+		DEBUGLN("Value: '", value, "'");
 	}
 
 	void opNamedCallMultiple(uint64 const param, Parameters const& values) override {
