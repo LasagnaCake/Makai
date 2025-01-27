@@ -127,6 +127,16 @@ namespace Makai::Ex::AVM {
 			return engineState;
 		}
 
+		/// @brief Returns whether the engine is currently running.
+		/// @return Whether engine is currently running.
+		constexpr bool running() const {
+			return engineState == State::AVM_ES_RUNNING;
+		}
+
+		/// @brief Returns whether the engine is currently running.
+		/// @return Whether engine is currently running.
+		constexpr operator bool() const {return running();}
+
 		/// @brief Sets the anima to process.
 		/// @param program Anima to process.
 		void setProgram(Anima const& program) {
@@ -138,7 +148,8 @@ namespace Makai::Ex::AVM {
 		/// @brief Starts the processing of the anima.
 		void beginProgram() {
 			engineState	= State::AVM_ES_RUNNING;
-			current = {};
+			current = Frame();
+			current.op = 0;
 			stack.clear();
 		}
 
@@ -180,7 +191,7 @@ namespace Makai::Ex::AVM {
 		/// @brief Stack frame.
 		struct Frame {
 			/// @brief Actors being operated on.
-			ActiveCast	actors;
+			ActiveCast	actors	= {};
 			/// @brief SP mode being used.
 			uint16		spMode	= 0;
 			/// @brief Operation pointer.
@@ -309,7 +320,9 @@ namespace Makai::Ex::AVM {
 
 		void storeState() {
 			stack.pushBack(current);
-			current		= {.op = current.op};
+			auto op		= current.op;
+			current		= Frame();
+			current.op	= op;
 		}
 
 		void retrieveState() {
@@ -343,16 +356,15 @@ namespace Makai::Ex::AVM {
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
-			if (current.op + opsize < binary.code.size()) {
-				setErrorAndStop(ErrorCode::AVM_EEC_INVALID_OPERAND);
-				return false;
-			}
-			return true;
+			if (current.op + opsize < binary.code.size())
+				return true;
+			setErrorAndStop(ErrorCode::AVM_EEC_INVALID_OPERAND);
+			return false;
 		}
 
-		template<class... Args> constexpr bool operands64(Args&... args) {return (... && operands64(args));}
-		template<class... Args> constexpr bool operands32(Args&... args) {return (... && operands32(args));}
-		template<class... Args> constexpr bool operands16(Args&... args) {return (... && operands16(args));}
+		template<class... Args> constexpr bool operands64(Args&... args) {return (... && operand64(args));}
+		template<class... Args> constexpr bool operands32(Args&... args) {return (... && operand32(args));}
+		template<class... Args> constexpr bool operands16(Args&... args) {return (... && operand16(args));}
 
 		constexpr bool operand16(uint16& opval) {
 			if (!assertOperand(1)) return false;
