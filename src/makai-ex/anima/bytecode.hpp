@@ -167,7 +167,6 @@ namespace Makai::Ex::AVM {
 				auto const eof	= data.end().raw();
 				while (c != end && c != eof) {
 					if (*c == '\0') {
-						DEBUGLN("[", out.data.size(), "]: '", buf, "'");
 						out.data.pushBack(buf);
 						buf.clear();
 					} else buf.pushBack(*c);
