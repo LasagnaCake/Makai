@@ -97,6 +97,7 @@ int main(int argc, char** argv) {
 	engine.beginProgram();
 	while (engine)
 		engine.process();
+	DEBUGLN("-----");
 	DEBUGLN("Done!");
 	if (engine.state() == TestEngine::State::AVM_ES_ERROR) {
 		DEBUGLN("ERROR: ", CTL::enumcast(engine.error()));
