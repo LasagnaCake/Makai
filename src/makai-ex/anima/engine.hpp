@@ -259,7 +259,7 @@ namespace Makai::Ex::AVM {
 			if (!operand64(line)) return;
 			if (sp() && line)
 				opAdd(current.actors, binary.data[line-1]);
-			else opAdd(current.actors, line ? binary.data[line-1] : "");
+			else opSay(current.actors, line ? binary.data[line-1] : "");
 		}
 
 		void opEmotion() {
