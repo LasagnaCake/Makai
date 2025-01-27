@@ -146,7 +146,6 @@ namespace Makai::Ex::AVM::Compiler {
 							);
 						}
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[Valid expansion expression]");
-						pack.args.pushBack(arg);
 						continue;
 					}
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[Parameter]");
@@ -215,9 +214,7 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @param sp SP mode override. Only used if non-zero. By default, it is zero.
 			/// @return Operation.
 			constexpr uint16 operation(uint16 const sp = 0) const {
-				if (sp)
-					return enumcast(type) | (sp << 12);
-				return enumcast(type) | (mode << 12);
+				return enumcast(type) | ((sp ? sp : mode) << 12);
 			}
 
 			/// @brief Returns the token's operation.
@@ -813,6 +810,12 @@ namespace Makai::Ex::AVM::Compiler {
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Params: ['", token.pack.args.join("', '"), "']");
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</token>");
 				#endif
+				if (token.type != asOperation(token.operation(SP_FLAG_MASK))) {
+					throw Error::FailedAction(
+						"Compiler error!",
+						CTL_CPP_UNKNOWN_SOURCE
+					);
+				}
 				switch (token.type) {
 					case Operation::AVM_O_NO_OP:
 					case Operation::AVM_O_NEXT:
@@ -852,6 +855,7 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 					case Operation::AVM_O_NAMED_CALL:
 						out.addOperation(token.operation(token.pack.args.size() > 2));
+						out.addNamedOperand(token.name);
 						if (token.pack.args.size() > 2)
 							out.addParameterPack(token.pack.args);
 						else {

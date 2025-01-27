@@ -218,7 +218,7 @@ namespace Makai::Ex::AVM {
 			auto sm = current.spMode;
 			if (!sm) sm = getSPFlag(curOp);
 			current.spMode = 0;
-			return current.spMode;
+			return sm;
 		}
 
 		void opInvalidOp() {
