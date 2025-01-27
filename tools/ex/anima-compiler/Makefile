@@ -6,7 +6,7 @@ LEAN := -static -s
 ROOT := ../../..
 
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
-COMPILER_CONFIG	:= $(DEBUGMODE) -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include -I$(ROOT)/src/makai-ex
+COMPILER_CONFIG	:= $(DEBUGMODE) -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
 WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32 -lbcrypt
