@@ -52,14 +52,16 @@ namespace Makai::Ex::AVM {
 	constexpr uint64 ANIMA_MIN_VERSION	= 0;
 
 	/// @brief SP mode mask.
-	constexpr uint16 SP_FLAG_MASK	= 0xf000;
+	constexpr uint16 SP_FLAG_MASK	= 0xf000u;
 	/// @brief Operation mask.
-	constexpr uint16 OPERATION_MASK	= 0x0fff;
+	constexpr uint16 OPERATION_MASK	= 0x0fffu;
 
 	/// @brief Converts the given data to an operation.
 	/// @param op Data to convert.
 	/// @return Operation.
 	constexpr Operation	asOperation(uint16 const op)	{return static_cast<Operation>(op & OPERATION_MASK);	}
+
+	static_assert(asOperation(SP_FLAG_MASK) == Operation::AVM_O_NO_OP);
 	
 	/// @brief Returns the given mode as the appropriate SP mode.
 	/// @param mode SP mode to get. 
