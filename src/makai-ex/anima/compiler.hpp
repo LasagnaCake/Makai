@@ -348,12 +348,12 @@ namespace Makai::Ex::AVM::Compiler {
 								.pos	= mnode.position,
 								.valPos	= mnext.position
 							});
-						tokens.pushBack(Token{
-							.type	= Operation::AVM_O_COLOR,
-							.value	= hexColor(node.substring(1)),
-							.pos	= mnode.position,
-							.valPos	= mnext.position
-						});
+						else tokens.pushBack(Token{
+								.type	= Operation::AVM_O_COLOR,
+								.value	= hexColor(node.substring(1)),
+								.pos	= mnode.position,
+								.valPos	= mnext.position
+							});
 					} break;
 					case '[': {
 						tokens.pushBack(Token{
