@@ -162,11 +162,12 @@ namespace Makai::Ex::AVM {
 			// Data division
 			if (fh.data.size) {
 				String buf;
-				auto c			= data.data() + fh.headerSize + fh.data.start;
+				auto c			= data.data() + fh.data.start;
 				auto const end	= c + fh.data.size;
-				auto const eof	= data.end();
-				while (c != end && c != eof.raw()) {
+				auto const eof	= data.end().raw();
+				while (c != end && c != eof) {
 					if (*c == '\0') {
+						DEBUGLN("[", out.data.size(), "]: '", buf, "'");
 						out.data.pushBack(buf);
 						buf.clear();
 					} else buf.pushBack(*c);

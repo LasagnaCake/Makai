@@ -365,8 +365,11 @@ namespace Makai::Ex::AVM::Compiler {
 					case ';': tokens.pushBack(Token{.type = Operation::AVM_O_USER_INPUT, .pos = mnode.position});	break;
 					case '+':
 					case '-': {
+						assertValidNamedNode(mnode);
+						String const name = node.substring(1);
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_NAMED_CALL,
+							.name	= name,
 							.pack	= ParameterPack((node[0] == '+') ? "true" : "false"),
 							.pos	= mnode.position,
 							.valPos	= mnext.position
@@ -708,7 +711,7 @@ namespace Makai::Ex::AVM::Compiler {
 	struct BinaryBuilder: Anima {
 		/// @brief Default constructor.
 		constexpr BinaryBuilder(): Anima{
-			.data = {"true", "false"}
+			.data = {"false", "true"}
 		} {}
 
 		/// @brief Adds an operation to the binary.
@@ -733,7 +736,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @param str String to add.
 		/// @return Reference to self.
 		constexpr BinaryBuilder& addStringOperand(String const& str) {
-			addOperand(data.size()+1);
+			addOperand(data.size());
 			data.pushBack(str);
 			return *this;
 		}
@@ -749,7 +752,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @param params Parameters to add.
 		/// @return Reference to self.
 		constexpr BinaryBuilder& addParameterPack(StringList const& params) {
-			addOperand(data.size()+1);
+			addOperand(data.size());
 			addOperand(params.size());
 			data.appendBack(params);
 			return *this;
@@ -860,8 +863,8 @@ namespace Makai::Ex::AVM::Compiler {
 							out.addParameterPack(token.pack.args);
 						else {
 							String const& val = token.pack.args[0];
-							if (val == "true")			out.addOperand(2);
-							else if (val == "false")	out.addOperand(1);
+							if (val == "true")			out.addOperand(1);
+							else if (val == "false")	out.addOperand(0);
 							else						out.addStringOperand(val);
 						}
 						break;
