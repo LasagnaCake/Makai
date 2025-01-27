@@ -1,13 +1,6 @@
 #include <makai/makai.hpp>
 #include <makai-ex/anima/anima.hpp>
 
-// TODO: Figure out why engine reports error
-/*
-Could be:
-> Compilation issue
-> Engine issiue
-*/
-
 struct TestEngine: Makai::Ex::AVM::Engine {
 	void opSay(ActiveCast const& actors, Makai::String const& line) override {
 		DEBUGLN("-----");
