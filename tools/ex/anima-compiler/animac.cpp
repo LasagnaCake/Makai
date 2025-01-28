@@ -1,8 +1,6 @@
 #include <makai/makai.hpp>
 #include <makai-ex/anima/compiler.hpp>
 
-#define CONCAT(A,B) #A #B
-
 #define ANSI(CODE) "\x1b["#CODE"m"
 
 // FG_RESET	39
