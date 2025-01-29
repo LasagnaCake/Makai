@@ -69,7 +69,7 @@ Also contains the following keywords:
 | `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
 | `finish` | Exits the current block early. | none |
 | `terminate` | Exits the program early. | none |
-| `<perform\|next> choice <$<name>\|random> (<blocks>)` | Jumps one of the listed blocks, depending on a requested value, or at random. Behaves like how the chosen operation would. | `opGetInt` |
+| `<perform\|next> choice <$<name>\|random> (<blocks>)` | Jumps one of the listed blocks, depending on a requested value, or at random. See ahead for further details. | `opGetInt` |
 
 Under consideration:
 
@@ -95,7 +95,31 @@ The state is comprised of the current actor state, global SP mode, and execution
 
 `perform` behaves more like how a function call would. The current state gets pushed in the stack, and then reset to its starting value. Once the named block is done, the stack gets popped, and **the previous state is restored**.
 
-If a `perform` is followed by any amount of `next`s, then the program will return execution to the `:perform` statement's location.
+If a `perform` is followed by any amount of `next`s, then the program will return execution to the `:perform` statement's 
+location.
+
+### On `choice`s
+
+Command: `<perform|next> choice <$<name>|random> (<blocks>)`
+
+Jumps to one of the listed blocks. Behaves like a `perform`/`next` command would, depending on which is used.
+
+Jump paths are separated by commas.
+
+To jump depending on a value, use `$<name>`. The value will be clamped between the first choice (0) and the last (amount of choices - 1).
+
+To jump at random, use `random`.
+
+For any particular choice:
+
+- To jump to a given block, pass the name as you would for a `perform`/`next` command.
+- To exit the block, use `terminate`/`finish`, depending on your need.
+- To simply continue executing, use `none`.
+
+#### Example
+```
+perform choice $ending (good-end, neutral-end, bad-end, none)
+```
 
 ### On the `[]` command
 
