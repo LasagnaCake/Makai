@@ -601,6 +601,8 @@ namespace Makai::Ex::AVM::Compiler {
 								);
 						}
 					}
+					usize i = 0;
+					String const exit = getScopePath(toString("*choice", opmatch.position, "[end]"));
 					for (auto const& param: ppack.args) {
 						if (param == "...") {
 							throw Error::InvalidValue(
@@ -615,14 +617,15 @@ namespace Makai::Ex::AVM::Compiler {
 								CPP::SourceFile(fileName, nodes[curNode+2].position)
 							);
 						}
-						if (param != "none")
+						if (param == "none") {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_JUMP,
-								.name	= getScopePath(param),
+								.name	= exit,
 								.pos	= opi,
 								.valPos	= vali
 							});
-						else {
+							
+						} else if (param == "finish") {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_HALT,
 								.mode	= 1,
@@ -635,8 +638,20 @@ namespace Makai::Ex::AVM::Compiler {
 									.pos	= opi,
 									.valPos	= vali
 								});
-						}
+						} else tokens.pushBack(Token{
+							.type	= Operation::AVM_O_JUMP,
+							.name	= getScopePath(param),
+							.pos	= opi,
+							.valPos	= vali
+						});
 					}
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_NEXT,
+						.entry	= exit,
+						.pos	= opi,
+						.valPos	= vali
+					});
+					++i;
 					curNode += 2;
 					return;
 				}
