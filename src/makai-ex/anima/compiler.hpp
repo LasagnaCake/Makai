@@ -625,10 +625,10 @@ namespace Makai::Ex::AVM::Compiler {
 								.valPos	= vali
 							});
 							
-						} else if (param == "finish") {
+						} else if (param == "finish" || param == "terminate") {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_HALT,
-								.mode	= 1,
+								.mode	= param == "finish",
 								.pos	= opi,
 								.valPos	= vali
 							});
