@@ -615,12 +615,27 @@ namespace Makai::Ex::AVM::Compiler {
 								CPP::SourceFile(fileName, nodes[curNode+2].position)
 							);
 						}
-						tokens.pushBack(Token{
-							.type	= Operation::AVM_O_JUMP,
-							.name	= getScopePath(param),
-							.pos	= opi,
-							.valPos	= vali
-						});
+						if (param != "none")
+							tokens.pushBack(Token{
+								.type	= Operation::AVM_O_JUMP,
+								.name	= getScopePath(param),
+								.pos	= opi,
+								.valPos	= vali
+							});
+						else {
+							tokens.pushBack(Token{
+								.type	= Operation::AVM_O_HALT,
+								.mode	= 1,
+								.pos	= opi,
+								.valPos	= vali
+							});
+							for (usize i = 0; i < 4; ++i)
+								tokens.pushBack(Token{
+									.type	= Operation::AVM_O_NEXT,
+									.pos	= opi,
+									.valPos	= vali
+								});
+						}
 					}
 					curNode += 2;
 					return;

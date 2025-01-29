@@ -29,7 +29,7 @@ scene MyFirstScene
 		act good-end
 			"GOOD END"
 		end
-		perform choice $ending (good-end, neutral-end, bad-end)
+		perform choice $ending (good-end, neutral-end, bad-end, none)
 		terminate
 	end
 	perform NewBeginnings:start-of-the-adventure
