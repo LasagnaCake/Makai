@@ -23,11 +23,11 @@ scene MyFirstScene
 		act bad-end
 			"BAD END"
 		end
-		act good-end
-			"GOOD END"
-		end
 		act neutral-end
 			"NEUTRAL END"
+		end
+		act good-end
+			"GOOD END"
 		end
 		perform choice $ending (good-end, neutral-end, bad-end)
 		terminate
