@@ -339,9 +339,9 @@ namespace Makai::Ex::AVM {
 			}
 			uint64 range;
 			if (!operand64(range)) return;
-			if (spm & 0b1000)	storeState(current.op + range * JUMP_SIZE);
-			if (spm == 2)		current.op += current.integer * JUMP_SIZE;
-			else				current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
+			if (spm & 0b1000)			storeState(current.op + range * JUMP_SIZE);
+			if ((spm & 0b0111) == 2)	current.op += current.integer * JUMP_SIZE;
+			else						current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
 		}
 
 		void opGetValue() {
