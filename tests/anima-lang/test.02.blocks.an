@@ -1,23 +1,33 @@
 next main
 scene MyFirstScene
 	scene NewBeginnings
-		act start-of-the-adventure
-		end
 		act lets-go-gambling
+			"Let's go gambling!"
+			"Aw, dangit!"
+			*"Aw, dangit!"
+			*"Aw, dangit!"
+		end
+		act start-of-the-adventure
+			"Let us commence."
 		end
 		act severe-debt
+			"Oh no"
 			act loan-sharks
+				"Time to borrow some money..."
 				next :MyFirstScene:end-of-history
 			end
 			next loan-sharks
 		end
 	end
 	act end-of-history
+		act bad-end
+			"BAD END"
+		end
 		act good-end
+			"GOOD END"
 		end
 		act neutral-end
-		end
-		act bad-end
+			"NEUTRAL END"
 		end
 		perform choice $ending (good-end, neutral-end, bad-end)
 		terminate
