@@ -446,6 +446,7 @@ namespace Makai::Ex::AVM::Compiler {
 			List<Regex::Match> const& nodes,
 			bool isNotNext = false
 		) {
+			constexpr uint16 CHOICE_JUMP_BIT = 0b1000u;
 			auto const& [opi, op]	= opmatch;
 			auto const& [vali, val]	= valmatch;
 			if (
@@ -578,7 +579,7 @@ namespace Makai::Ex::AVM::Compiler {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_JUMP,
 								.range	= ppack.args.size(),
-								.mode	= 2 | (isNotNext ? 0b1000u : 0u),
+								.mode	= 2 | (isNotNext ? CHOICE_JUMP_BIT : 0u),
 								.pos	= opi,
 								.valPos	= vali
 							});
@@ -589,7 +590,7 @@ namespace Makai::Ex::AVM::Compiler {
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_JUMP,
 									.range	= ppack.args.size(),
-									.mode	= 3 | (isNotNext ? 0b1000u : 0u),
+									.mode	= 3 | (isNotNext ? CHOICE_JUMP_BIT : 0u),
 									.pos	= opi,
 									.valPos	= vali
 								});
