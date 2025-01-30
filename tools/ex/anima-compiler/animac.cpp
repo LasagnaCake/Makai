@@ -49,6 +49,8 @@ constexpr auto CONSOLE_BOLD			= ANSI(1);
 constexpr auto CONSOLE_RESET		= ANSI(0;97);
 constexpr auto CONSOLE_TRUE_RESET	= ANSI(0);
 
+Makai::String const EMPHASIZE = Makai::toString(CONSOLE_L_BLUE, CONSOLE_BOLD, "$1", CONSOLE_RESET);
+
 int compile(Makai::String const src, Makai::String const& out) {
 	try {
 		Makai::String const file = Makai::File::getText(src);
@@ -96,7 +98,7 @@ int compile(Makai::String const src, Makai::String const& out) {
 			else DEBUGLN("\n");
 			DEBUG(CONSOLE_L_RED, CONSOLE_BOLD);
 			DEBUGLN(e.type, ":", CONSOLE_RESET, " ", CONSOLE_L_WHITE, e.message, "\n", CONSOLE_RESET);
-			if (e.info != "none") DEBUGLN(e.info, "\n");
+			if (e.info != "none") DEBUGLN(Makai::Regex::replace(e.info, "!\\[(.*?)\\]", EMPHASIZE), "\n");
 			DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
 			return 2;
 		}
@@ -104,6 +106,7 @@ int compile(Makai::String const src, Makai::String const& out) {
 		DEBUGLN(CONSOLE_RED, "\n<error>\n", CONSOLE_RESET);
 		DEBUG(CONSOLE_L_RED, CONSOLE_BOLD);
 		DEBUGLN(e.type, ":", CONSOLE_RESET, " ", CONSOLE_L_WHITE, e.message, "\n", CONSOLE_RESET);
+		if (e.info != "none") DEBUGLN(Makai::Regex::replace(e.info, "!\\[(.*?)\\]", EMPHASIZE), "\n");
 		DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
 		return 1;
 	}

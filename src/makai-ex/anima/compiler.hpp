@@ -484,7 +484,16 @@ namespace Makai::Ex::AVM::Compiler {
 						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, performing);
 						return;
 					}
-					String path = getScopePath(val);
+					++curNode;
+					if (val == "none") return;
+					if (val == "terminate" || val == "finish") {
+						throw Error::InvalidValue(
+							toString("Cannot have this keyword as a jump target!"),
+							"Did you perhaps intend to do a ![choice] jump?",
+							CPP::SourceFile(fileName, vali)
+						);
+					}
+					String const path = getScopePath(val);
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= path,
@@ -493,7 +502,6 @@ namespace Makai::Ex::AVM::Compiler {
 						.valPos	= vali
 					});
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Jump to: ", tokens.back().name);
-					++curNode;
 					return;
 				}
 				case (ConstHasher::hash("scene")):
@@ -508,6 +516,12 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Invalid block name '", val, "'!"),
 							CPP::SourceFile(fileName, vali)
 						);
+					if (val == "none" || val == "terminate" || val == "finish") {
+						throw Error::InvalidValue(
+							toString("Cannot have this keyword as a block name!"),
+							CPP::SourceFile(fileName, vali)
+						);
+					}
 					if (
 						blocks.size()
 					&&	blocks.back().back() != ':'
