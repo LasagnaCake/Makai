@@ -2,16 +2,18 @@ next main
 scene MyFirstScene
 	scene NewBeginnings
 		act lets-go-gambling
+			act win *" Aw, dangit!" end
+			act lose *" Yippee!" end
 			"Let's go gambling!"
-			"Aw, dangit!"
-			*"Aw, dangit!"
-			*"Aw, dangit!"
+			perform choice random (win, lose)
+			perform choice random (win, lose)
+			perform choice random (win, lose)
 		end
 		act start-of-the-adventure
 			"Let us commence."
 		end
 		act severe-debt
-			"Oh no"
+			"Oh no, I am broke now :("
 			act loan-sharks
 				"Time to borrow some money..."
 				next :MyFirstScene:end-of-history
