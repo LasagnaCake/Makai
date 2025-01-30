@@ -16,12 +16,12 @@ scene MyFirstScene
 			"Oh no, I am broke now :("
 			act loan-sharks
 				"Time to borrow some money..."
-				next :MyFirstScene:end-of-history
+				next :MyFirstScene:endings
 			end
 			next loan-sharks
 		end
 	end
-	act end-of-history
+	act endings
 		act bad-end
 			"BAD END"
 		end
