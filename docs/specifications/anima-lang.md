@@ -76,7 +76,8 @@ Under consideration:
 | Comand | Usage |
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command.|
-| `<<type-name>\|value> <name> ` | For defining variables. |
+| `<<type-name>\|value> <name> ` | For defining variables. Follows the same path name rules as a jump would. To utilize it in places, use `#` instead of `$`. |
+| `<operation-name> <name> <<value>\|#<name>\|$<name>> ` | For setting/modifying variables. |
 
 ### On `act`s and `scene`s
 
