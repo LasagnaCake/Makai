@@ -76,6 +76,7 @@ Under consideration:
 | Comand | Usage |
 |:-:|:-|
 | `,` | For waiting for previous commands to finish. User can skip this wait. If done so, will proceed from next `;` command.|
+| `<<type-name>\|value> <name> ` | For defining variables. |
 
 ### On `act`s and `scene`s
 
