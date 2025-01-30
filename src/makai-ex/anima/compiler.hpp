@@ -589,7 +589,7 @@ namespace Makai::Ex::AVM::Compiler {
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_JUMP,
 									.range	= ppack.args.size(),
-									.mode	= 3 | (isNotNext ? 0b100u : 0u),
+									.mode	= 3 | (isNotNext ? 0b1000u : 0u),
 									.pos	= opi,
 									.valPos	= vali
 								});

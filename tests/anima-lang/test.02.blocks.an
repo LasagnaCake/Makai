@@ -29,7 +29,8 @@ scene MyFirstScene
 		act good-end
 			"GOOD END"
 		end
-		perform choice random (good-end, neutral-end, bad-end, none)
+		next choice random (good-end, neutral-end, bad-end, none)
+		"Huh?"
 		"STRANGE END???"
 		terminate
 	end
@@ -39,4 +40,5 @@ scene MyFirstScene
 end
 act main
 	perform ~MyFirstScene
+	"The end!"
 end
