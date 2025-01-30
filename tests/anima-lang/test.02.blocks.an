@@ -2,8 +2,8 @@ next main
 scene MyFirstScene
 	scene NewBeginnings
 		act lets-go-gambling
-			act win *" Aw, dangit!" end
-			act lose *" Yippee!" end
+			act lose *" Aw, dangit!" end
+			act win *" Yippee!" end
 			"Let's go gambling!"
 			perform choice random (win, lose)
 			perform choice random (win, lose)
