@@ -96,11 +96,11 @@ namespace Makai::Ex::AVM::Compiler {
 	/// @brief Processes all escape sequences on the string.
 	/// @param str String to normalize.
 	/// @return Normalized string.
-	constexpr String normalize(String str) {
+	constexpr String normalize(String const& str) {
 		//str.strip();
 		String out;
 		bool escape = false;
-		for (auto& c: str) {
+		for (auto const& c: str) {
 			if (c == '\\')
 				escape = true;
 			else if (escape) {
