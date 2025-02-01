@@ -39,7 +39,7 @@ struct TestPlayer: Danmaku::APlayer {
 
 	void onUpdate(float delta, Makai::App& app) override {
 		if (!active) return;
-		APlayer::onUpdate(delta);
+		APlayer::onUpdate(delta, app);
 		if (paused()) return;
 	}
 
@@ -58,7 +58,7 @@ struct TestApp: Makai::Ex::Game::App {
 
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 02", false}}) {
 		loadDefaultShaders();
-		camera.cam2D = Makai::Graph::Camera3D::from2D(64);
+		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3));
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {
