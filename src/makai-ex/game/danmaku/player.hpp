@@ -30,7 +30,7 @@ namespace Makai::Ex::Game::Danmaku {
 			CollisionTag::FOR_PLAYER_1
 		};
 		struct Collision {
-			CollisionMask const item			= CollisionLayer::ITEM;
+			CollisionMask const item		= CollisionLayer::ITEM;
 			struct Enemy {
 				CollisionMask const bullet	= CollisionLayer::ENEMY_BULLET;
 				CollisionMask const laser	= CollisionLayer::ENEMY_LASER;
@@ -38,15 +38,15 @@ namespace Makai::Ex::Game::Danmaku {
 				CollisionMask const attack	= CollisionLayer::ENEMY_ATTACK;
 			} const enemy = {};
 			struct Tag {
-				CollisionMask const player		= CollisionTag::FOR_PLAYER_1;
+				CollisionMask const player	= CollisionTag::FOR_PLAYER_1;
 			} const tag = {};
 		} const mask = {};
 	};
 
 	struct APlayer: Controllable, AGameObject, AUpdateable, IDamageable {
 		struct Velocity {
-			Vector2 focused		= 0;
 			Vector2 unfocused	= 0;
+			Vector2 focused		= 0;
 		};
 
 		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
@@ -64,6 +64,7 @@ namespace Makai::Ex::Game::Danmaku {
 			active = true;
 		}
 
+		// FIXME: Segfault at function's end
 		virtual ~APlayer() {
 			DEBUGLN("Demagnetizing player...");
 			Instance<Vector2>::detach(&trans.position);
