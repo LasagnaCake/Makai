@@ -64,7 +64,9 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		virtual ~APlayer() {
+			DEBUGLN("Demagnetizing player...");
 			Instance<Vector2>::detach(&trans.position);
+			DEBUGLN("Player demagnetized!");
 		}
 
 		constexpr static usize CAN_MOVE		= 1 << 0;

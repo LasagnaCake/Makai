@@ -66,6 +66,9 @@ namespace Makai {
 
 	/// @brief App-specific periodic event.
 	struct AUpdateable: CTL::Ex::APeriodic<App, float, App&> {
+		/// @brief Virtual destructor.
+		virtual ~AUpdateable() {}
+
 		/// @brief Called every application logic cycle. Must be implemented.
 		virtual void onUpdate(float delta, App& app) = 0;
 	};

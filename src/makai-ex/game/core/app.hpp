@@ -4,6 +4,15 @@
 #include <makai/makai.hpp>
 
 namespace Makai::Ex::Game {
+	struct DualCamera {
+		Graph::Camera3D cam2D;
+		Graph::Camera3D cam3D;
+
+		void use(bool const set2D = false) {
+			Graph::Global::camera = set2D ? cam2D : cam3D;
+		}
+	};
+
 	struct App: Makai::App {
 		using Makai::App::App;
 
@@ -15,6 +24,12 @@ namespace Makai::Ex::Game {
 		Graph::Material::BufferMaterial& layer = getLayerBuffer().material;
 
 		LayerMap layers;
+
+		DualCamera camera;
+
+		void onLayerDrawBegin(usize const layerID) override {
+			layer = layers[layerID];
+		}
 	};
 }
 
