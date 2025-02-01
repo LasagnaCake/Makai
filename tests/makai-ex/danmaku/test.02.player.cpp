@@ -27,14 +27,14 @@ struct TestPlayer: Danmaku::APlayer {
 		body.trans.scale		= trans.scale;
 	}
 
-	virtual void onItem(Makai::Reference<Danmaku::Item> const& item) override										{}
-	virtual void onGraze(Makai::Reference<Danmaku::AServerObject> const& object) override							{}
-	virtual void onBomb() override																					{}
-	virtual void onShot() override																					{}
-	virtual TestPlayer& spawn() override																			{}
-	virtual TestPlayer& despawn() override																			{}
-	virtual TestPlayer& takeDamage(Makai::Reference<Danmaku::AGameObject> const&, CollisionMask const&) override	{}
-	virtual TestPlayer& takeDamage(float const damage) override														{}
+	virtual void onItem(Makai::Reference<Danmaku::Item> const& item) override										{				}
+	virtual void onGraze(Makai::Reference<Danmaku::AServerObject> const& object) override							{				}
+	virtual void onBomb() override																					{				}
+	virtual void onShot() override																					{				}
+	virtual TestPlayer& spawn() override																			{return *this;	}
+	virtual TestPlayer& despawn() override																			{return *this;	}
+	virtual TestPlayer& takeDamage(Makai::Reference<Danmaku::AGameObject> const&, CollisionMask const&) override	{return *this;	}
+	virtual TestPlayer& takeDamage(float const damage) override														{return *this;	}
 };
 
 struct TestApp: Makai::Ex::Game::App {
