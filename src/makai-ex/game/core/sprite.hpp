@@ -72,6 +72,7 @@ namespace Makai::Ex::Game {
 			body[5]->position	= tail[2]->position	= tail[4]->position	= origin[6];
 			tail[1]->position	= tail[3]->position						= origin[3];
 			tail[5]->position											= origin[7];
+			return this;
 		}
 
 		Vector3	origin[8] = {0, 0, 0, 0, 0, 0, 0, 0};

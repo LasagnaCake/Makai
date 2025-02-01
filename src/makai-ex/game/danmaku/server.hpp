@@ -57,7 +57,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		constexpr virtual AServer& release(HandleType const& object) {
-			if (!contains(object)) return;
+			if (!contains(object)) return *this;
 			used.removeLike(object);
 			free.pushBack(object);
 			return *this;
@@ -113,11 +113,13 @@ namespace Makai::Ex::Game::Danmaku {
 			onAction.clear();
 			onObjectUpdate.clear();
 			resetCollisionState();
+			return *this;
 		}
 
 		virtual AServerObject& reset() {
 			color.factor	= 0;
 			scale.factor	= 0;
+			return *this;
 		}
 
 		virtual AServerObject& discard(bool const immediately = false, bool const force = false)	= 0;
@@ -129,8 +131,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return objectState == State::SOS_FREE;
 		}
 
-		AServerObject& free()	{setFree(true);		}
-		AServerObject& enable()	{setFree(false);	}
+		AServerObject& free()	{setFree(true); return *this;	}
+		AServerObject& enable()	{setFree(false); return *this;	}
 
 		AServerObject& setCollisionState(bool const canCollide = true) {
 			if (auto collider = collision())

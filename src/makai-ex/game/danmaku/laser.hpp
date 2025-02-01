@@ -7,7 +7,7 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct Laser;
 
-	template<Type::Derived<Laser> T = Laser> struct LaserServer;
+	template<class T = Laser> struct LaserServer;
 
 	struct LaserConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -18,8 +18,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct Laser: AServerObject, ThreePatchContainer, AttackObject, Circular, Long, IToggleable {
 		Laser(LaserConfig const& cfg):
-			AServerObject(cfg), mask(mask), server(cfg.server) {
-			collision()->shape = shape.as<C2D::IBound2D>();
+			AServerObject(cfg), mask(cfg.mask), server(cfg.server) {
+			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
 		Laser& clear() override {
@@ -150,7 +150,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Instance<C2D::Capsule> shape = new C2D::Capsule(0);
 
-		friend class LaserServer;
+		template <class> friend class LaserServer;
 
 		Laser(Laser const& other)	= default;
 		Laser(Laser&& other)		= default;
@@ -246,8 +246,8 @@ namespace Makai::Ex::Game::Danmaku {
 		LaserConfig::Collision const mask = {};
 	};
 
-	template<Type::Derived<Laser> TLaser = Laser>
-	struct LaserServer: AServer, AUpdateable {
+	template<Type::Derived<Laser> TLaser>
+	struct LaserServer<TLaser>: AServer, AUpdateable {
 		using LaserType = TLaser;
 
 		Graph::ReferenceHolder& mainMesh;
@@ -273,10 +273,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<LaserType> laser = b.morph<LaserType>();
+				Reference<LaserType> laser = b.template morph<LaserType>();
 				laser->setFree(false);
 				laser->clear();
-				return laser.as<AGameObject>();
+				return laser.template as<AGameObject>();
 			}
 			return nullptr;
 		}
@@ -339,7 +339,7 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		LaserServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
-			LaserType& laser = *object.morph<LaserType>();
+			LaserType& laser = *object.template morph<LaserType>();
 			AServer::release(object);
 			return *this;
 		}

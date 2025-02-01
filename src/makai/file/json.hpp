@@ -252,6 +252,21 @@ namespace Makai::JSON {
 			return false;
 		}
 
+		/// @brief Tries to get a value from the underlying JSON value.
+		/// @tparam T Value type.
+		/// @param out Output of the value.
+		/// @return Whether the value was successfully acquired
+		template <Type::Derived<JSONView> T>
+		bool tryGet(T& out) const
+		try {
+			out = T(view().get<JSONType>());
+			err = "";
+			return true;
+		} catch (Extern::Nlohmann::exception const& e) {
+			err = e.what();
+			return false;
+		}
+
 		/// @brief Returns the error that happened when `tryGet` was executed.
 		/// @return Error.
 		String error() {return err;}

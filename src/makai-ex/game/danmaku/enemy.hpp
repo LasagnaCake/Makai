@@ -46,7 +46,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (paused()) return;
 		}
 
-		void onUpdate(float delta, App& app) override {
+		void onUpdate(float delta, Makai::App& app) override {
 			if (!active) return;
 			onUpdate(delta);
 			if (paused()) return;
@@ -55,7 +55,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
 			if (collider.affects.match(mask.player.attack).overlap())
-				takeDamage(collider.data.reinterpret<AGameObject>(), collider.affects);
+				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.affects);
 		}
 		
 		bool isForThisPlayer(Collider const& collider) const {
@@ -73,7 +73,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		AEnemy& takeDamage(float const damage) override {
-			if (areAnyFlagsSet(DEAD)) return;
+			if (areAnyFlagsSet(DEAD)) return *this;
 			if (health > 0)
 				loseHealth(damage);
 			else {

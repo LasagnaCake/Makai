@@ -7,7 +7,7 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct Item;
 
-	template<Type::Derived<Item> T = Item> struct ItemServer;
+	template<class T = Item> struct ItemServer;
 
 	struct ItemConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -18,8 +18,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct Item: AServerObject, ISpriteContainer, Weighted, Circular, Glowing, Dope, RotatesSprite, Magnetizable {
 		Item(ItemConfig const& cfg):
-			AServerObject(cfg), mask(mask), server(cfg.server) {
-			collision()->shape = shape.as<C2D::IBound2D>();
+			AServerObject(cfg), mask(cfg.mask), server(cfg.server) {
+			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
 		Item& clear() override {
@@ -156,7 +156,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
-		friend class ItemServer;
+		template <class> friend class ItemServer;
 
 		constexpr static void processMax(float& value, float const max) {
 			if (value > abs(max) || value < -abs(max))
@@ -250,8 +250,8 @@ namespace Makai::Ex::Game::Danmaku {
 		ItemConfig::Collision const mask = {};
 	};
 
-	template<Type::Derived<Item> TItem = Item>
-	struct ItemServer: AServer, AUpdateable {
+	template<Type::Derived<Item> TItem>
+	struct ItemServer<TItem>: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
 
 		using ItemType = TItem;
@@ -285,10 +285,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<ItemType> item = b.morph<ItemType>();
+				Reference<ItemType> item = b.template morph<ItemType>();
 				item->setFree(false);
 				item->clear();
-				return item.as<AGameObject>();
+				return item.template as<AGameObject>();
 			}
 			return nullptr;
 		}
@@ -351,7 +351,7 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		ItemServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
-			ItemType& item = *(object.as<ItemType>());
+			ItemType& item = *(object.template as<ItemType>());
 			AServer::release(object);
 			return *this;
 		}

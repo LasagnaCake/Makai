@@ -9,6 +9,8 @@ namespace Makai::Ex::Game {
 	struct SaveView: Makai::JSON::JSONView {
 		using JSONView::JSONView;
 
+		SaveView(): JSONView({}) {}
+
 		/// @brief Saves the current view's contents to disk.
 		/// @param path Path to save contents to.
 		/// @return Const reference to self.

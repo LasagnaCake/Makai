@@ -26,7 +26,8 @@ namespace Impl {
 	struct Function: Partial::Function<TReturn, TArgs...> {
 		TFunction func;
 		constexpr TReturn invoke(TArgs... args) const override {return func(args...);}
-		constexpr Function(TFunction&& func): func(func) {}
+		constexpr Function(TFunction&& func):		func(move(func))	{}
+		constexpr Function(TFunction const& func):	func(func)			{}
 
 		constexpr virtual ~Function() {}
 	};
@@ -129,7 +130,7 @@ public:
 	/// @return Reference to self.
 	template<typename TFunction>
     constexpr SelfType& operator=(TFunction&& f)
-	requires (!Type::Derived<TFunction, SelfType>)		{destroy(); func = makeCallable(f); return *this;					}
+	requires (!Type::Derived<TFunction, SelfType>)		{destroy(); func = makeCallable(move(f)); return *this;				}
 	/// @brief Copy assignment operator.
 	/// @tparam TFunction Derived type.
 	/// @param f Function to bind.

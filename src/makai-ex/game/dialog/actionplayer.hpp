@@ -26,8 +26,8 @@ namespace Makai::Ex::Game::Dialog {
 		virtual Program script() = 0;
 
 		/// @brief Executed every update cycle.
-		void onUpdate(float, App&) {
-			if (isFinished || paused)	return;
+		void onUpdate(float, Makai::App&) override {
+			if (isFinished || paused) return;
 			++counter;
 			if (starting) [[unlikely]]
 				starting = false;
@@ -64,7 +64,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Processes the dialog.
 		/// @return Reference to self.
 		AActionPlayer& next() {
-			if (isFinished) return;
+			if (isFinished) return *this;
 			counter = dialog.next();
 			if (!dialog) isFinished = true;
 			return *this;

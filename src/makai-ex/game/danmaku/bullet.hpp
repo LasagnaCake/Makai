@@ -7,7 +7,7 @@
 namespace Makai::Ex::Game::Danmaku {
 	struct Bullet;
 
-	template<Type::Derived<Bullet> T = Bullet> struct BulletServer;
+	template<class T = Bullet> struct BulletServer;
 
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -19,8 +19,8 @@ namespace Makai::Ex::Game::Danmaku {
 	
 	struct Bullet: AServerObject, ISpriteContainer, AttackObject, Circular, Glowing, Dope, RotatesSprite {
 		Bullet(BulletConfig const& cfg):
-			AServerObject(cfg), server(cfg.server), mask(mask) {
-			collision()->shape = shape.as<C2D::IBound2D>();
+			AServerObject(cfg), mask(cfg.mask), server(cfg.server) {
+			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
 		Bullet& clear() override {
@@ -281,7 +281,7 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet(Bullet const& other)	= default;
 		Bullet(Bullet&& other)		= default;
 
-		friend class BulletServer;
+		template <class> friend class BulletServer;
 	};
 
 	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
@@ -293,8 +293,8 @@ namespace Makai::Ex::Game::Danmaku {
 		BulletConfig::Collision const mask = {};
 	};
 
-	template<Type::Derived<Bullet> TBullet = Bullet>
-	struct BulletServer: AServer, AUpdateable {
+	template<Type::Derived<Bullet> TBullet>
+	struct BulletServer<TBullet>: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
 
 		using BulletType = TBullet;
@@ -328,10 +328,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<BulletType> bullet = b.morph<BulletType>();
+				Reference<BulletType> bullet = b.template morph<BulletType>();
 				bullet->setFree(false);
 				bullet->clear();
-				return bullet.as<AGameObject>();
+				return bullet.template as<AGameObject>();
 			}
 			return nullptr;
 		}
@@ -394,7 +394,7 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
-			BulletType& bullet = *(object.as<BulletType>());
+			BulletType& bullet = *(object.template as<BulletType>());
 			AServer::release(object);
 			return *this;
 		}

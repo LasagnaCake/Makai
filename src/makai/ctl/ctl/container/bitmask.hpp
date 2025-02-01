@@ -62,10 +62,10 @@ struct BitMask:
 	requires (
 		(sizeof...(Args) == SIZE)
 	&&	(... && Type::Convertible<Args, DataType>)
-	): BitMask({args...}) {
-		/*MaskType mask = {args...};
+	) {
+		MaskType mask = {static_cast<DataType>(args)...};
 		for (usize i = 0; i < SIZE; ++i)
-			this->mask[i] = mask[i];*/
+			this->mask[i] = mask[i];
 	}
 
 	/// @brief Copy constructor.
@@ -135,15 +135,15 @@ struct BitMask:
 	/// @brief Returns this `BitMask` `AND`ed with another.
 	/// @param other `BitMask` to `AND` with.
 	/// @return This `BitMask` `AND`ed with it.
-	constexpr SelfType operator&(SelfType const& other) const {return matched(other);	}
+	constexpr SelfType operator&(SelfType const& other) const {return match(other);		}
 	/// @brief Returns this `BitMask` `OR`ed with another.
 	/// @param other `BitMask` to `OR` with.
 	/// @return This `BitMask` `OR`ed with it.
-	constexpr SelfType operator|(SelfType const& other) const {return joined(other);	}
+	constexpr SelfType operator|(SelfType const& other) const {return join(other);		}
 	/// @brief Returns this `BitMask` `XOR`ed with another.
 	/// @param other `BitMask` to `XOR` with.
 	/// @return This `BitMask` `XOR`ed with it.
-	constexpr SelfType operator^(SelfType const& other) const {return excluded(other);	}
+	constexpr SelfType operator^(SelfType const& other) const {return exclude(other);	}
 
 	/// @brief Returns the inverse of the `BitMask`.
 	/// @return The inverse of the `BitMask`.

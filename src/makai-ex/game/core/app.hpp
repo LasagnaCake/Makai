@@ -5,7 +5,7 @@
 
 namespace Makai::Ex::Game {
 	struct App: Makai::App {
-		using App::App;
+		using Makai::App::App;
 
 		using LayerMap = Map<usize, Graph::Material::BufferMaterial>;
 

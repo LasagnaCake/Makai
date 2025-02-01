@@ -55,12 +55,12 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		/// @brief Executed every update cycle.
-		void onUpdate(auto, auto) {
+		void onUpdate(float, Makai::App&) override {
 			if (state() != State::AVM_ES_RUNNING) {
 				stop();
 				return;
 			}
-			if (isFinished || paused)	return;
+			if (isFinished || paused) return;
 			advanceCounters();
 			if (syncing()) return;
 			if (autoplay && waiting()) return;
@@ -148,7 +148,7 @@ namespace Makai::Ex::Game::Dialog {
 		usize	actionDelay		= 0;
 
 		AnimaPlayer& next() {
-			if (isFinished) return;
+			if (isFinished) return *this;
 			inSync		=
 			waitForUser	= false;
 			resetCounters();
@@ -156,6 +156,7 @@ namespace Makai::Ex::Game::Dialog {
 			Engine::process();
 			if (state() != Engine::State::AVM_ES_RUNNING)
 				isFinished = true;
+			return *this;
 		}
 
 		void opSay(ActiveCast const& actors, String const& line) override final {
@@ -242,11 +243,11 @@ namespace Makai::Ex::Game::Dialog {
 
 		Scene::Actors getActors(ActiveCast const& actors) {
 			Scene::Actors out;
-			if (!actors.exclude) [[likely]]
+			if (!actors.exclude) [[likely]] {
 				for (auto const actor: actors.actors)
 					if (auto aref = scene.cast.at(actor))
 						out.pushBack(aref);
-			else {
+			} else {
 				auto const actorList = actors.actors.sorted();
 				for (auto& [id, actor] : scene.cast)
 					if (actorList.bsearch(id) == -1)

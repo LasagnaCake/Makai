@@ -3,6 +3,7 @@
 
 #include "dialog/dialog.hpp"
 #include "core/core.hpp"
+#include "danmaku/danmaku.hpp"
 
 namespace MkExGame = Makai::Ex::Game;
 

@@ -87,7 +87,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (action("shot")			&& !shotTime && areAnyFlagsSet(CAN_SHOOT))	onShot();
 		}
 
-		void onUpdate(float delta, App& app) override {
+		void onUpdate(float delta, Makai::App& app) override {
 			if (!active) return;
 			onUpdate(delta);
 			if (paused()) return;
@@ -96,7 +96,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
 			if (collider.affects.match(mask.enemy.attack).overlap())
-				takeDamage(collider.data.reinterpret<AGameObject>(), collider.affects);
+				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.affects);
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
@@ -105,10 +105,10 @@ namespace Makai::Ex::Game::Danmaku {
 				mask.enemy.bullet
 			|	mask.enemy.laser
 			).overlap())
-				if (auto object = collider.data.reinterpret<AServerObject>())
+				if (auto object = collider.data.mutate<>().as<AServerObject>())
 					onGraze(object);
 			if (collider.affects.match(mask.item).overlap())
-				if (auto item = collider.data.reinterpret<Item>()) {
+				if (auto item = collider.data.mutate<>().as<Item>()) {
 					onItem(item);
 					item->discard(true);
 				}
@@ -117,7 +117,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
 			if (!isForThisPlayer(collider)) return;
 			if (collider.affects.match(mask.item).overlap())
-				if (auto item = collider.data.reinterpret<Item>())
+				if (auto item = collider.data.mutate<>().as<Item>())
 					onItemMagnet(item);
 		}
 
@@ -188,16 +188,20 @@ namespace Makai::Ex::Game::Danmaku {
 
 	private:
 		static void bindGrazeHandler(APlayer& self) {
-			self.grazebox->onCollision = [&self = self] (Collider const& collider, CollisionDirection const direction) {
-				self.onGrazeboxCollision(collider, direction);
-			};
+			self.grazebox->onCollision = (
+				[&self = self] (Collider const& collider, CollisionDirection const direction) -> void {
+					self.onGrazeboxCollision(collider, direction);
+				}
+			);
 			self.grazebox->data = &self;
 		}
 
 		static void bindItemMagnetHandler(APlayer& self) {
-			self.itembox->onCollision = [&self = self] (Collider const& collider, CollisionDirection const direction) {
-				self.onItemboxCollision(collider, direction);
-			};
+			self.itembox->onCollision = (
+				[&self = self] (Collider const& collider, CollisionDirection const direction) -> void {
+					self.onItemboxCollision(collider, direction);
+				}
+			);
 			self.itembox->data = &self;
 		}
 

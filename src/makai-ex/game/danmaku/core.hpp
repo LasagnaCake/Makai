@@ -147,10 +147,12 @@ namespace Makai::Ex::Game::Danmaku {
 
 	private:
 		static void bindCollisionHandler(AGameObject& self) {
-			self.collider->onCollision = [&self = self] (Collider const& collider, CollisionDirection const direction) {
-				self.onCollision(collider, direction);
-				self.collider->data = &self;
-			};
+			self.collider->onCollision = (
+				[&self = self] (Collider const& collider, CollisionDirection const direction) -> void {
+					self.onCollision(collider, direction);
+				}
+			);
+			self.collider->data = &self;
 		}
 
 		Unique<Collider> collider = CollisionServer::createCollider();
@@ -265,7 +267,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return setHealth(hp);
 		}
 
-		constexpr float getHealth()const {return health;	}
+		constexpr float getHealth() const {return health;	}
 
 		float maxHealth	= 100;
 

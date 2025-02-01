@@ -18,13 +18,13 @@ namespace Makai::Ex::Game::Danmaku {
 	namespace RenderLayer {
 		#define MK_EX_DANMAKU_LAYER(NAME)\
 			NAME##_BOTTOM_LAYER,\
-			NAME##_LAYER		= (NAME##_BOTTOM_LAYER + (SUBLAYER_COUNT)),\
-			NAME##_TOP_LAYER	= (NAME##_LAYER + (SUBLAYER_COUNT))
+			NAME##_LAYER		= (NAME##_BOTTOM_LAYER + (MK_EX_DANMAKU_SUBLAYER_COUNT)),\
+			NAME##_TOP_LAYER	= (NAME##_LAYER + (MK_EX_DANMAKU_SUBLAYER_COUNT))
 		
 		#define MK_EX_DANMAKU_LAYER_CUSTOM(NAME, INDEX)\
 			NAME##_BOTTOM_LAYER = (INDEX),\
-			NAME##_LAYER		= (NAME##_BOTTOM_LAYER + (SUBLAYER_COUNT)),\
-			NAME##_TOP_LAYER	= (NAME##_LAYER + (SUBLAYER_COUNT))
+			NAME##_LAYER		= (NAME##_BOTTOM_LAYER + (MK_EX_DANMAKU_SUBLAYER_COUNT)),\
+			NAME##_TOP_LAYER	= (NAME##_LAYER + (MK_EX_DANMAKU_SUBLAYER_COUNT))
 		
 		#define MK_EX_DANMAKU_LAYER_WITH_OVERLAY(NAME)\
 			MK_EX_DANMAKU_LAYER(NAME),\
@@ -76,17 +76,17 @@ namespace Makai::Ex::Game::Danmaku {
 	namespace CollisionLayer {
 		using CollisionMask = Makai::Collision::C2D::LayerMask;
 		
-		constexpr CollisionMask	PLAYER			= {1 << 0,	0,		0,		0		};
-		constexpr CollisionMask	PLAYER_BULLET	= {1 << 1,	0,		0,		0		};
-		constexpr CollisionMask	PLAYER_LASER	= {1 << 2,	0,		0,		0		};
-		constexpr CollisionMask	PLAYER_SPELL	= {1 << 3,	0,		0,		0		};
-		constexpr CollisionMask	PLAYER_GRAZEBOX	= {1 << 4,	0,		0,		0		};
-		constexpr CollisionMask	PLAYER_ITEMBOX	= {1 << 5,	0,		0,		0		};
-		constexpr CollisionMask	ENEMY			= {0,		1 << 0,	0,		0		};
-		constexpr CollisionMask	ENEMY_BULLET	= {0,		1 << 1,	0,		0		};
-		constexpr CollisionMask	ENEMY_LASER		= {0,		1 << 2,	0,		0		};
-		constexpr CollisionMask	ITEM			= {0,		0,		1 << 0,	0		};
-		constexpr CollisionMask	BULLET_ERASER	= {0,		0,		0,		1 << 0	};
+		constexpr CollisionMask	PLAYER			= {1u << 0,	0,			0,			0		};
+		constexpr CollisionMask	PLAYER_BULLET	= {1u << 1,	0,			0,			0		};
+		constexpr CollisionMask	PLAYER_LASER	= {1u << 2,	0,			0,			0		};
+		constexpr CollisionMask	PLAYER_SPELL	= {1u << 3,	0,			0,			0		};
+		constexpr CollisionMask	PLAYER_GRAZEBOX	= {1u << 4,	0,			0,			0		};
+		constexpr CollisionMask	PLAYER_ITEMBOX	= {1u << 5,	0,			0,			0		};
+		constexpr CollisionMask	ENEMY			= {0,		1u << 0,	0,			0		};
+		constexpr CollisionMask	ENEMY_BULLET	= {0,		1u << 1,	0,			0		};
+		constexpr CollisionMask	ENEMY_LASER		= {0,		1u << 2,	0,			0		};
+		constexpr CollisionMask	ITEM			= {0,		0,			1u << 0,	0		};
+		constexpr CollisionMask	BULLET_ERASER	= {0,		0,			0,			1u << 0	};
 
 		constexpr CollisionMask PLAYER_ATTACK	=	PLAYER_BULLET	| PLAYER_LASER	| PLAYER_SPELL	;
 		constexpr CollisionMask ENEMY_ATTACK	=	ENEMY_BULLET	| ENEMY_LASER					;
@@ -105,9 +105,9 @@ namespace Makai::Ex::Game::Danmaku {
 	namespace CollisionTag {
 		using CollisionMask = Makai::Collision::C2D::LayerMask;
 
-		constexpr CollisionMask	BULLET_ERASER	= {1 << 0,	0,		0,		0	};
-		constexpr CollisionMask	FOR_PLAYER_1	= {0,		1 << 0,	0,		0	};
-		constexpr CollisionMask	FOR_PLAYER_2	= {0,		1 << 1,	0,		0	};
+		constexpr CollisionMask	BULLET_ERASER	= {1u << 0,	0,			0,		0	};
+		constexpr CollisionMask	FOR_PLAYER_1	= {0,		1u << 0,	0,		0	};
+		constexpr CollisionMask	FOR_PLAYER_2	= {0,		1u << 1,	0,		0	};
 	}
 }
 

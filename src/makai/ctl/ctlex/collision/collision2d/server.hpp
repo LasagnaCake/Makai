@@ -31,6 +31,8 @@ namespace Collision::C2D {
 			/// @brief Destructor.
 			constexpr virtual ~Collider() {CollisionServer::unbind(this);}
 
+			using CollisionEvent = Functor<void(Collider const&, Direction const)>;
+
 			/// @brief
 			///		Checks collision between objects,
 			///		and fires the appropriate collision events,
@@ -82,7 +84,7 @@ namespace Collision::C2D {
 			/// @brief Event to fire on collision.
 			/// @param collider Collider that this object collided with.
 			/// @param direction Collision direction.
-			Functor<void(Collider const&, Direction const)> onCollision;
+			CollisionEvent onCollision;
 			
 			/// @brief Unique collider ID.
 			usize const ID;
@@ -111,12 +113,12 @@ namespace Collision::C2D {
 		/// @brief Default constructor.
 		constexpr CollisionServer() {}
 
-		constexpr static Unique<Collider>&& createCollider() {
-			return Unique<Collider>::create();
+		[[nodiscard]] constexpr static Unique<Collider> createCollider() {
+			return Unique<Collider>(new Collider());
 		}
 
-		constexpr static Unique<Collider>&& createCollider(Area const& area) {
-			return Unique<Collider>::create(area);
+		[[nodiscard]] constexpr static Unique<Collider> createCollider(Area const& area) {
+			return Unique<Collider>(new Collider(area));
 		}
 
 		/// @brief Handles collision between a given collider, and a set of layers.
@@ -149,6 +151,8 @@ namespace Collision::C2D {
 		}
 
 	private:
+		friend class Unique<Collider>;
+
 		constexpr static void bind(Collider* const collider) {
 			colliders.pushBack(collider);
 		}
