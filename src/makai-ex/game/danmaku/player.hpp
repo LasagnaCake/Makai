@@ -80,23 +80,14 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta) override {
 			if (!active) return;
-			DEBUGLN("Player: 0");
 			AGameObject::onUpdate(delta);
-			DEBUGLN("Player: 1");
 			if (paused()) return;
-			DEBUGLN("Player: 2");
 			friction.clamp(0, 1);
-			DEBUGLN("Player: 3");
 			pollInputs();
-			DEBUGLN("Player: 4");
 			doMovement(delta);
-			DEBUGLN("Player: 5");
 			updateTimers();
-			DEBUGLN("Player: 6");
 			if (action("bomb", true)	&& !bombTime && areAnyFlagsSet(CAN_BOMB))	onBomb();
-			DEBUGLN("Player: 7");
 			if (action("shot")			&& !shotTime && areAnyFlagsSet(CAN_SHOOT))	onShot();
-			DEBUGLN("Player: DONE!");
 		}
 
 		void onUpdate(float delta, Makai::App& app) override {
