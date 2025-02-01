@@ -101,9 +101,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual AGameObject& despawn()	= 0;
 
 		virtual void onUpdate(float) {
-			DEBUGLN("AGameObject: 0");
 			if (!active) return;
-			DEBUGLN("AGameObject: 1");
 			if (pause.enabled && pause.time > 0) {
 				--pause.time;
 				return;
@@ -112,15 +110,12 @@ namespace Makai::Ex::Game::Danmaku {
 				pause.enabled	= false;
 				onUnpause();
 			}
-			DEBUGLN("AGameObject: 2");
 			if (delay > 0) {
 				--delay;
 				return;
 			}
-			DEBUGLN("AGameObject: 3");
 			while (!delay && task)
 				delay = task.next();
-			DEBUGLN("AGameObject: DONE!");
 		}
 		
 		bool paused() const {
