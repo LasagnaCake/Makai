@@ -230,8 +230,8 @@ namespace Makai::Ex::Game::Danmaku {
 		void playfieldCheck() {
 			if (!dope) return;
 			auto const
-				tl = playfield.topLeft(),
-				br = playfield.bottomRight()
+				tl = playfield.min(),
+				br = playfield.max()
 			;
 			if (
 				trans.position.x < tl.x

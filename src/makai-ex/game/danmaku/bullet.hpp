@@ -163,8 +163,8 @@ namespace Makai::Ex::Game::Danmaku {
 		void playfieldCheck() {
 			if (!dope) return;
 			auto const
-				tl = playfield.topLeft(),
-				br = playfield.bottomRight()
+				tl = playfield.min(),
+				br = playfield.max()
 			;
 			if (
 				trans.position.x < tl.x
@@ -180,8 +180,8 @@ namespace Makai::Ex::Game::Danmaku {
 				C2D::Point(trans.position)
 			)) {
 				auto const
-					tl = board.topLeft(),
-					br = board.bottomRight()
+					tl = board.min(),
+					br = board.max()
 				;
 				if (trans.position.x < tl.x) shift(PI);
 				if (trans.position.x > br.x) shift(PI);
@@ -194,8 +194,8 @@ namespace Makai::Ex::Game::Danmaku {
 				*shape
 			)) {
 				auto const
-					tl = board.topLeft(),
-					br = board.bottomRight()
+					tl = board.min(),
+					br = board.max()
 				;
 				if (trans.position.x < tl.x) trans.position.x = br.x + shape->radius.max();
 				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radius.max();

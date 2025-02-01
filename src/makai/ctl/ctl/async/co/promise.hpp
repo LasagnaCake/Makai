@@ -81,7 +81,9 @@ namespace Co {
 		/// @brief Returns whether the coroutine is done executing.
 		/// @return Whether coroutine is done executing.
 		bool finished() const {
-			return context.done();
+			if (context)
+				return context.done();
+			return true;
 		}
 
 		/// @brief Returns process to the coroutine.
@@ -101,7 +103,7 @@ namespace Co {
 		/// @brief Copy constructor (deleted).
 		Promise(Promise const&) = delete;
 		/// @brief Destructor.
-		~Promise() {context.destroy();}
+		~Promise() {if (context) context.destroy();}
 
 		/// @brief Returns whether the coroutine is still processing.
 		operator bool() const {return !finished();}
@@ -235,7 +237,9 @@ namespace Co {
 		/// @brief Returns whether the coroutine is done executing.
 		/// @return Whether coroutine is done executing.
 		bool finished() const {
-			return context.done();
+			if (context)
+				return context.done();
+			return true;
 		}
 
 		/// @brief Returns whether the coroutine is still processing.

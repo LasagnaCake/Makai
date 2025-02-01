@@ -29,7 +29,7 @@ namespace Collision::C2D {
 		/// @brief Server collision object.
 		struct Collider: Area {
 			/// @brief Destructor.
-			constexpr virtual ~Collider() {CollisionServer::unbind(this);}
+			constexpr ~Collider() {CollisionServer::unbind(this);}
 
 			using CollisionEvent = Functor<void(Collider const&, Direction const)>;
 

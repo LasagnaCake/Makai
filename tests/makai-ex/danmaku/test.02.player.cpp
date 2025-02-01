@@ -19,6 +19,11 @@ struct TestPlayer: Danmaku::APlayer {
 	TestPlayer(): APlayer(cfg), sprite(body.createReference<Makai::Ex::Game::Sprite>()) {
 		body.setRenderLayer(Danmaku::RenderLayer::PLAYER1_LAYER);
 		trans.position = board.center;
+		input.binds["player/up"] 	= {Makai::Input::KeyCode::KC_UP};
+		input.binds["player/down"]	= {Makai::Input::KeyCode::KC_DOWN};
+		input.binds["player/left"] 	= {Makai::Input::KeyCode::KC_LEFT};
+		input.binds["player/right"]	= {Makai::Input::KeyCode::KC_RIGHT};
+		velocity = {20, 10};
 	}
 
 	virtual ~TestPlayer() {}
@@ -30,6 +35,12 @@ struct TestPlayer: Danmaku::APlayer {
 		body.trans.position		= trans.position;
 		body.trans.rotation.z	= trans.rotation;
 		body.trans.scale		= trans.scale;
+	}
+
+	void onUpdate(float delta, Makai::App& app) override {
+		if (!active) return;
+		APlayer::onUpdate(delta);
+		if (paused()) return;
 	}
 
 	virtual void onItem(Makai::Reference<Danmaku::Item> const& item) override										{				}
