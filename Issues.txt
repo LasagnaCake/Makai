@@ -1,7 +1,4 @@
 !!! [ REALLY IMPORTANT ] !!!
-> Minor memory leak on debug mode
-	> Might be related to console output / graphical API debug facilities
-	> Might also be related to Strings's .cstr() function
 
 [ Library-specific(?) ]
 > Fullscreen does not work properly
