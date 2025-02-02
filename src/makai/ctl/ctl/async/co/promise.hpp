@@ -112,9 +112,7 @@ namespace Co {
 		~Promise() {if (context) context.destroy();}
 
 		/// @brief Returns whether the coroutine is still processing.
-		operator bool() const			{return !finished();	}
-		/// @brief Returns whether the coroutine exists.
-		explicit operator bool() const	{return exists();		}
+		operator bool() const {return !finished();}
 
 		/// @brief Returns process to the coroutine.
 		/// @return Whether coroutine is still processing.
@@ -257,9 +255,7 @@ namespace Co {
 		}
 
 		/// @brief Returns whether the coroutine is still processing.
-		operator bool() const			{return !finished();	}
-		/// @brief Returns whether the coroutine exists.
-		explicit operator bool() const	{return exists();		}
+		operator bool() const {return !finished();}
 
 		/// @brief Returns process to the coroutine.
 		/// @return Whether coroutine is still processing.
