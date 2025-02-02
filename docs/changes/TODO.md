@@ -1,6 +1,23 @@
 # TODO
 
-## Current
+## High Priority
+
+### Core library
+
+### Extension library
+
+- [ ] Fix `SIGSEGV` on `APlayer`'s destructor
+- [ ] Write test cases
+- - [ ] `BulletServer`
+- - [ ] `LaserServer`
+- - [ ] `ItemServer`
+- - [ ] `AEnemy`
+- - [ ] `ABoss`
+
+## Low Priority
+
+### Core library
+
 - [ ] Generate documentation
 - - Code is documented via doxygen comments, so must figure out how to generate docs from that
 - [ ] Fix core library CI
@@ -13,10 +30,9 @@
 - - What about [SWIG](https://www.swig.org/)?
 - [ ] Bugs & Errors (see [Issues.txt](../../Issues.txt))
 
-## Game extension stuff
+### Extension library
+
 - [ ] Curvy/Bent lasers
-- [ ] Other game types
-- [ ] More "multi-purpose" game classes
 
 ## Future
 
