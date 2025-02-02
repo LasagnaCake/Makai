@@ -85,6 +85,12 @@ namespace Co {
 				return context.done();
 			return true;
 		}
+		
+		/// @brief Returns whether there is a coroutine.
+		/// @return Whether there is a coroutine.
+		bool exists() const {
+			return context;
+		}
 
 		/// @brief Returns process to the coroutine.
 		/// @return Whether coroutine is still processing.
@@ -106,7 +112,9 @@ namespace Co {
 		~Promise() {if (context) context.destroy();}
 
 		/// @brief Returns whether the coroutine is still processing.
-		operator bool() const {return !finished();}
+		operator bool() const			{return !finished();	}
+		/// @brief Returns whether the coroutine exists.
+		explicit operator bool() const	{return exists();		}
 
 		/// @brief Returns process to the coroutine.
 		/// @return Whether coroutine is still processing.
@@ -241,9 +249,17 @@ namespace Co {
 				return context.done();
 			return true;
 		}
+		
+		/// @brief Returns whether there is a coroutine.
+		/// @return Whether there is a coroutine.
+		bool exists() const {
+			return context;
+		}
 
 		/// @brief Returns whether the coroutine is still processing.
-		operator bool() const {return !finished();	}
+		operator bool() const			{return !finished();	}
+		/// @brief Returns whether the coroutine exists.
+		explicit operator bool() const	{return exists();		}
 
 		/// @brief Returns process to the coroutine.
 		/// @return Whether coroutine is still processing.
