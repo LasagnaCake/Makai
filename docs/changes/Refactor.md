@@ -12,5 +12,8 @@
 ## Very Complex
 - [ ] Rethink [menu](../../src/legacy/gamedata/menu.hpp) code
 - - Have it also be an extension
-- [ ] Decouple [reference](../../src/makai/graph/gl/renderer/reference.hpp) from [renderable](../../src/makai/graph/gl/renderer/renderable.hpp)
+- [x] Decouple [reference](../../src/makai/graph/gl/renderer/reference.hpp) from [renderable](../../src/makai/graph/gl/renderer/renderable.hpp)
 - - So it can be used with other types
+- [ ] Rewrite backend to not use SDL
+- - For `SDL`: Pure Win32
+- - For `SDL_Mixer`: `cute_audio`
