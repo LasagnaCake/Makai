@@ -31,6 +31,10 @@ namespace Collision::C2D {
 			/// @brief Destructor.
 			constexpr ~Collider() {CollisionServer::unbind(this);}
 
+			struct IData {
+				virtual ~IData() {}
+			};
+
 			using CollisionEvent = Functor<void(Collider const&, Direction const)>;
 
 			/// @brief
@@ -90,7 +94,7 @@ namespace Collision::C2D {
 			usize const ID;
 
 			/// @brief data associated with the collider.
-			Reference<void const> data;
+			Reference<IData const> data;
 
 		private:
 			template <usize> friend class CollisionServer;

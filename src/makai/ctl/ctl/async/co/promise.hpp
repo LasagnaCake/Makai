@@ -215,7 +215,7 @@ namespace Co {
 		Promise(Promise const&) = delete;
 
 		/// @brief Destructor.
-		~Promise() {context.destroy();}
+		~Promise() {if (context) context.destroy();}
 
 		/// @brief Returns the current stored value.
 		/// @return Current stored value.

@@ -72,7 +72,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct GameObjectConfig: BoundedObjectConfig, ColliderConfig {};
 
-	struct AGameObject {
+	struct AGameObject: C2D::Collider<>::IData {
 		using PromiseType			= Makai::Co::Promise<usize, true>;
 		using Collider				= CollisionServer::Collider;
 		using CollisionArea			= C2D::Area;
