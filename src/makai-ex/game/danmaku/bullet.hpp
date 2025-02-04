@@ -392,9 +392,14 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	protected:
+		bool contains(HandleType const& object) override {
+			return (used.find(object) == -1);
+		}
+
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			BulletType& bullet = *(object.template as<BulletType>());
+			bullet.free();
 			AServer::release(object);
 			return *this;
 		}

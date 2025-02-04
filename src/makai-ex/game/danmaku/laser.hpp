@@ -337,9 +337,14 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	protected:
+		bool contains(HandleType const& object) override {
+			return (used.find(object) == -1);
+		}
+		
 		LaserServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			LaserType& laser = *object.template morph<LaserType>();
+			laser.free();
 			AServer::release(object);
 			return *this;
 		}
