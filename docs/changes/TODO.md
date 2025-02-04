@@ -6,7 +6,8 @@
 
 ### Extension library
 
-- [ ] Fix `SIGSEGV` on `APlayer`'s destructor
+- Create `StaticList` class (dynamic list for move-only objects)
+- - Or expand `List` for move-only objects
 - [ ] Write test cases
 - - [ ] `BulletServer`
 - - [ ] `LaserServer`
