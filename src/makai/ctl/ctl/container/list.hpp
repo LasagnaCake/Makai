@@ -100,7 +100,7 @@ public:
 	using ComparatorType = SimpleComparator<DataType>;
 
 	/// Default constructor.
-	constexpr List() {invoke(1);}
+	constexpr List(): count(0) {invoke(1);}
 
 	/// @brief Constructs the `List` with a preallocated capacity.
 	/// @param size Size to preallocate.
@@ -1194,7 +1194,7 @@ private:
 	}
 
 	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz) {
-		if (!(sz && p)) return;
+		if (!p) return;
 		memdestruct(p, sz);
 		alloc.deallocate(p);
 	}
@@ -1207,22 +1207,28 @@ private:
 		if constexpr(Type::Standard<DataType>)
 			alloc.resize(data, sz);
 		else {
+			if (!count) {
+				alloc.resize(data, sz);
+				return;
+			}
 			DataType* ndata = alloc.allocate(sz);
-			copy(data, ndata, count < sz ? count : sz);
+			if (count) copy(data, ndata, count < sz ? count : sz);
 			memdestroy(data, count);
 			data = ndata;
 		}
 	}
 
 	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+		if (!count) return;
 		if constexpr (Type::Standard<DataType>)
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
-		if (contents)	memresize(contents, size, maximum, count);
-		else			contents = memcreate(size);
+		if (contents && !count)	alloc.resize(contents, size);
+		if (contents)			memresize(contents, size, maximum, count);
+		else					contents = memcreate(size);
 		maximum = size;
 		recalculateMagnitude();
 		return *this;
