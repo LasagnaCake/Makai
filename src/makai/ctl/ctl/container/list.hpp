@@ -1226,9 +1226,8 @@ private:
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
-		if (contents && !count)	alloc.resize(contents, size);
-		if (contents)			memresize(contents, size, maximum, count);
-		else					contents = memcreate(size);
+		if (contents) return *this;
+		else contents = memcreate(size);
 		maximum = size;
 		recalculateMagnitude();
 		return *this;
