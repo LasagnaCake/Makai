@@ -268,8 +268,8 @@ namespace Makai::Ex::Game::Danmaku {
 			mainMesh(cfg.mainMesh),
 			glowMesh(cfg.glowMesh),
 			board(cfg.board),
-			playfield(cfg.playfield) {
-			all.resize(cfg.size);
+			playfield(cfg.playfield),
+			all(cfg.size) {
 			free.resize(cfg.size);
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
