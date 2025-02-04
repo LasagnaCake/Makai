@@ -6,8 +6,9 @@
 
 namespace Makai::Ex::Game::Danmaku {
 	struct Bullet;
+	struct BulletConfig;
 
-	template<class T = Bullet> struct BulletServer;
+	template<class T = Bullet, class C = BulletConfig> struct BulletServer;
 
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -281,7 +282,7 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet(Bullet const& other)	= default;
 		Bullet(Bullet&& other)		= default;
 
-		template <class> friend class BulletServer;
+		template <class, class> friend class BulletServer;
 	};
 
 	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
@@ -293,11 +294,12 @@ namespace Makai::Ex::Game::Danmaku {
 		BulletConfig::Collision const mask = {};
 	};
 
-	template<Type::Derived<Bullet> TBullet>
-	struct BulletServer<TBullet>: AServer, AUpdateable {
+	template<Type::Derived<Bullet> TBullet, Type::Derived<BulletConfig> TConfig>
+	struct BulletServer<TBullet, TConfig>: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
 
 		using BulletType = TBullet;
+		using ConfigType = TConfig;
 
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;
@@ -315,7 +317,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.constructBack({*this, cfg, cfg.colli, cfg.mask});
+				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
@@ -336,7 +338,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
-		void onUpdate(float delta, App& app) override {
+		void onUpdate(float delta, Makai::App& app) override {
 			for (auto& obj: used) {
 				obj->onUpdate(delta);
 			}

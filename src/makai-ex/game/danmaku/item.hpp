@@ -6,8 +6,9 @@
 
 namespace Makai::Ex::Game::Danmaku {
 	struct Item;
+	struct ItemConfig;
 
-	template<class T = Item> struct ItemServer;
+	template<class T = Item, class C = ItemConfig> struct ItemServer;
 
 	struct ItemConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -156,7 +157,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
-		template <class> friend class ItemServer;
+		template <class, class> friend class ItemServer;
 
 		constexpr static void processMax(float& value, float const max) {
 			if (value > abs(max) || value < -abs(max))
@@ -250,11 +251,12 @@ namespace Makai::Ex::Game::Danmaku {
 		ItemConfig::Collision const mask = {};
 	};
 
-	template<Type::Derived<Item> TItem>
-	struct ItemServer<TItem>: AServer, AUpdateable {
+	template<Type::Derived<Item> TItem, Type::Derived<ItemConfig> TConfig>
+	struct ItemServer<TItem, TConfig>: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
 
-		using ItemType = TItem;
+		using ItemType		= TItem;
+		using ConfigType	= TConfig;
 
 		Graph::ReferenceHolder& mainMesh;
 		Graph::ReferenceHolder& glowMesh;
@@ -272,7 +274,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.constructBack({*this, cfg, cfg.colli, cfg.mask});
+				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
@@ -293,7 +295,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
-		void onUpdate(float delta, App& app) override {
+		void onUpdate(float delta, Makai::App& app) override {
 			for (auto& obj: used) {
 				obj->onUpdate(delta);
 			}

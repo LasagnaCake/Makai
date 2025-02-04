@@ -6,8 +6,9 @@
 
 namespace Makai::Ex::Game::Danmaku {
 	struct Laser;
+	struct LaserConfig;
 
-	template<class T = Laser> struct LaserServer;
+	template<class T = Laser, class C = LaserConfig> struct LaserServer;
 
 	struct LaserConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
@@ -150,7 +151,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Instance<C2D::Capsule> shape = new C2D::Capsule(0);
 
-		template <class> friend class LaserServer;
+		template <class, class> friend class LaserServer;
 
 		Laser(Laser const& other)	= default;
 		Laser(Laser&& other)		= default;
@@ -246,9 +247,10 @@ namespace Makai::Ex::Game::Danmaku {
 		LaserConfig::Collision const mask = {};
 	};
 
-	template<Type::Derived<Laser> TLaser>
-	struct LaserServer<TLaser>: AServer, AUpdateable {
-		using LaserType = TLaser;
+	template<Type::Derived<Laser> TLaser, Type::Derived<LaserConfig> TConfig>
+	struct LaserServer<TLaser, TConfig>: AServer, AUpdateable {
+		using LaserType		= TLaser;
+		using ConfigType	= TConfig;
 
 		Graph::ReferenceHolder& mainMesh;
 
@@ -264,7 +266,7 @@ namespace Makai::Ex::Game::Danmaku {
 			used.resize(cfg.size);
 			for (usize i = 0; i < cfg.size; ++i) {
 				float const zoff = i / static_cast<float>(cfg.size);
-				all.constructBack({*this, cfg, cfg.colli, cfg.mask});
+				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
 				all.back().sprite->local.position.z = zoff;
 				free.pushBack(&all.back());
@@ -281,7 +283,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
-		void onUpdate(float delta, App& app) override {
+		void onUpdate(float delta, Makai::App& app) override {
 			for (auto& obj: used) {
 				obj->onUpdate(delta);
 			}
