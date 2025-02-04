@@ -3,8 +3,8 @@
 
 namespace Danmaku = Makai::Ex::Game::Danmaku;
 
-struct TestBulletServer: Danmaku::BulletServer {
-
+struct TestBulletServer: Danmaku::BulletServer<> {
+	
 };
 
 int main() {
