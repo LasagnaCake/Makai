@@ -95,7 +95,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Property<Vector2>	scale;
 
-		Property<Vector4> color = {Graph::Color::WHITE};
+		Property<Vector4>	color = {Graph::Color::WHITE};
 
 		bool discardable	= true;
 
