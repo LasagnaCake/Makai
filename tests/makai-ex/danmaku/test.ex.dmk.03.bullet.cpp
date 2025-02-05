@@ -50,7 +50,6 @@ struct TestApp: Makai::Ex::Game::App {
 			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
 			bullet->trans.position = gamearea * Makai::Vector2(1, -1);
 			bullet->velocity.value = 30;
-			bullet->spawn();
 			DEBUGLN("[", bullet->trans.position.x, ", ", bullet->trans.position.y, "]");
 		}
 	}

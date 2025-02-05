@@ -104,7 +104,6 @@ namespace Makai::Ex::Game::Danmaku {
 			color		= {Graph::Color::WHITE};
 			scale		= {};
 			discardable	= true;
-			task		= doNothing();
 			pause		= {};
 			if (auto collider = collision()) {
 				collider->shape			= nullptr;
@@ -112,6 +111,7 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			onAction.clear();
 			onObjectUpdate.clear();
+			task.clear();
 			resetCollisionState();
 			return *this;
 		}
