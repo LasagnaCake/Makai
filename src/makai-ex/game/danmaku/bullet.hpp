@@ -327,6 +327,7 @@ namespace Makai::Ex::Game::Danmaku {
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
 					all.back().glowSprite->local.position.z = zoff;
 				}
+				all.back().hideSprites();
 				free.pushBack(&all.back());
 			}
 		}
