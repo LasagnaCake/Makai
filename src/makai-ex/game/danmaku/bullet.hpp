@@ -232,6 +232,7 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->size	= this->sprite.sheetSize;
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation;
+			// Position is somehow zero over here
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
@@ -333,9 +334,9 @@ namespace Makai::Ex::Game::Danmaku {
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Reference<BulletType> bullet = b.template morph<BulletType>();
-				bullet->enable();
 				bullet->clear();
-				return bullet.template as<AGameObject>();
+				bullet->enable();
+				return b;
 			}
 			return nullptr;
 		}

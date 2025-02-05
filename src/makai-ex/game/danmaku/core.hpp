@@ -22,7 +22,7 @@ namespace Makai::Ex::Game::Danmaku {
 		float				factor		= 0;
 
 		constexpr T next() {
-			if (!interpolate || speed == 0)
+			if (!(interpolate && speed != 0))
 				return value;
 			factor = Math::clamp<float>(factor, 0, 1);
 			if (factor == 0)		value = start;
