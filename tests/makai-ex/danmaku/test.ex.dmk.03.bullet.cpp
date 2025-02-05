@@ -12,10 +12,12 @@ Danmaku::GameArea
 
 using BaseBulletServer = Danmaku::BulletServer<>;
 
-struct TestBulletServer: BaseBulletServer {
-	MkGraph::Renderable mesh, glowMesh;
-	
-	TestBulletServer(): BaseBulletServer({1024, mesh, glowMesh, board, playfield}) {}
+struct MeshHolder {
+	MkGraph::Renderable m, gm;
+};
+
+struct TestBulletServer: MeshHolder, BaseBulletServer {
+	TestBulletServer(): MeshHolder(), BaseBulletServer({1024, m, gm, ::board, ::playfield}) {}
 };
 
 struct TestApp: Makai::Ex::Game::App {
@@ -35,11 +37,21 @@ struct TestApp: Makai::Ex::Game::App {
 	usize frcount = 0;
 
 	float framerate[MAX_FRCOUNT];
+	
+	void createShots() {
+		for (usize i = 0; i < 10; ++i) {
+			auto bullet = server.acquire().morph<Danmaku::Bullet>();
+			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
+			bullet->trans.position = gamearea;
+			bullet->velocity.value = 30;
+		}
+	}
 
 	void onUpdate(float delta) {
 		if (frcount < MAX_FRCOUNT)
 			framerate[frcount++] = 1000.0 / getFrameDelta();
 		else {
+			createShots();
 			float fravg = 0;
 			for(float& f: framerate) fravg += f;
 			fravg *= (1.0 / (float)MAX_FRCOUNT);
@@ -51,5 +63,11 @@ struct TestApp: Makai::Ex::Game::App {
 };
 
 int main() {
+	try {
+		TestApp app;
+		app.run();
+	} catch (Makai::Error::Generic const& e) {
+		Makai::Popup::showError(e.what());
+	}
 	return 0;
 }
