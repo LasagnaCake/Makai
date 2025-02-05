@@ -54,16 +54,13 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onUpdate(float delta) override {
-			DEBUGLN("A");
 			if (isFree()) return;
-			DEBUGLN("B");
 			AServerObject::onUpdate(delta);
 			updateSprite(mainSprite.asWeak());
 			updateSprite(glowSprite.asWeak(), true);
 			updateHitbox();
 			animate();
 			if (paused()) return;
-			DEBUGLN("C");
 			color.next();
 			radius.next();
 			glow.next();
@@ -322,6 +319,7 @@ namespace Makai::Ex::Game::Danmaku {
 				float const zoff = i / static_cast<float>(cfg.size);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
+				DEBUGLN(all.back().mainSprite.exists() ? "Sprite!" : "No sprite?");
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
