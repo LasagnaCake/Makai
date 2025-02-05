@@ -109,7 +109,11 @@ namespace Co {
 		/// @brief Copy constructor (deleted).
 		Promise(Promise const&) = delete;
 		/// @brief Destructor.
-		~Promise() {if (context) context.destroy();}
+		~Promise() {clear();}
+
+		/// @brief Destroys the bound coroutine, if any.
+		/// @return Reference to self.
+		Promise& clear() {if (!finished()) context.destroy(); return *this;}
 
 		/// @brief Returns whether the coroutine is still processing.
 		operator bool() const {return !finished();}
@@ -215,7 +219,7 @@ namespace Co {
 		Promise(Promise const&) = delete;
 
 		/// @brief Destructor.
-		~Promise() {if (context) context.destroy();}
+		~Promise() {clear();}
 
 		/// @brief Returns the current stored value.
 		/// @return Current stored value.
@@ -253,6 +257,10 @@ namespace Co {
 		bool exists() const {
 			return context;
 		}
+		
+		/// @brief Destroys the bound coroutine, if any.
+		/// @return Reference to self.
+		Promise& clear() {if (!finished()) context.destroy(); return *this;}
 
 		/// @brief Returns whether the coroutine is still processing.
 		operator bool() const {return !finished();}
