@@ -42,7 +42,7 @@ struct TestApp: Makai::Ex::Game::App {
 		for (usize i = 0; i < 10; ++i) {
 			auto bullet = server.acquire().morph<Danmaku::Bullet>();
 			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
-			bullet->trans.position = gamearea;
+			bullet->trans.position = gamearea + Vector2(1, -1);
 			bullet->velocity.value = 30;
 		}
 	}
