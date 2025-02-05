@@ -276,7 +276,7 @@ namespace Makai::Ex::Game::Danmaku {
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Reference<LaserType> laser = b.template morph<LaserType>();
-				laser->setFree(false);
+				laser->enable();
 				laser->clear();
 				return laser.template as<AGameObject>();
 			}

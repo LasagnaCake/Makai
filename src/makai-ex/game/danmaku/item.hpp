@@ -231,13 +231,13 @@ namespace Makai::Ex::Game::Danmaku {
 		void playfieldCheck() {
 			if (!dope) return;
 			auto const
-				tl = playfield.min(),
-				br = playfield.max()
+				min = playfield.min(),
+				max = playfield.max()
 			;
 			if (
-				trans.position.x < tl.x
-			||	trans.position.x > br.x
-			||	trans.position.y > br.y
+				trans.position.x < min.x
+			||	trans.position.x > max.x
+			||	trans.position.y < min.y
 			) free();
 		}
 	};
@@ -288,7 +288,7 @@ namespace Makai::Ex::Game::Danmaku {
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Reference<ItemType> item = b.template morph<ItemType>();
-				item->setFree(false);
+				item->enable();
 				item->clear();
 				return item.template as<AGameObject>();
 			}

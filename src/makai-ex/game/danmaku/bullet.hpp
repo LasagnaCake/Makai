@@ -127,11 +127,13 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& setFree(bool const state) override {
 			if (state) {
+				DEBUGLN("Freeing...");
 				active = false;
 				hideSprites();
 				objectState = State::SOS_FREE;
 				release(this, server);
 			} else {
+				DEBUGLN("Enabling...");
 				active = true;
 				objectState = State::SOS_ACTIVE;
 			}
@@ -164,14 +166,14 @@ namespace Makai::Ex::Game::Danmaku {
 		void playfieldCheck() {
 			if (!dope) return;
 			auto const
-				tl = playfield.min(),
-				br = playfield.max()
+				min = playfield.min(),
+				max = playfield.max()
 			;
 			if (
-				trans.position.x < tl.x
-			||	trans.position.x > br.x
-			||	trans.position.y > br.y
-			||	trans.position.y < tl.y
+				trans.position.x < min.x
+			||	trans.position.x > max.x
+			||	trans.position.y < min.y
+			||	trans.position.y > max.y
 			) free();
 		}
 
@@ -331,7 +333,7 @@ namespace Makai::Ex::Game::Danmaku {
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Reference<BulletType> bullet = b.template morph<BulletType>();
-				bullet->setFree(false);
+				bullet->enable();
 				bullet->clear();
 				return bullet.template as<AGameObject>();
 			}
