@@ -41,6 +41,7 @@ struct TestApp: Makai::Ex::Game::App {
 	void createShots() {
 		for (usize i = 0; i < 10; ++i) {
 			auto bullet = server.acquire().morph<Danmaku::Bullet>();
+			if (!bullet) return;
 			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
 			bullet->trans.position = gamearea * Makai::Vector2(1, -1);
 			bullet->velocity.value = 30;
