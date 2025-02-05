@@ -131,8 +131,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return objectState == State::SOS_FREE;
 		}
 
-		AServerObject& free()	{setFree(true); return *this;	}
-		AServerObject& enable()	{setFree(false); return *this;	}
+		AServerObject& free()	{return setFree(true);	}
+		AServerObject& enable()	{return setFree(false);	}
 
 		AServerObject& setCollisionState(bool const canCollide = true) {
 			if (auto collider = collision())
