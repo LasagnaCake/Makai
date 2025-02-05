@@ -16,7 +16,6 @@
 
 CTL_NAMESPACE_BEGIN
 
-
 template<
 	class TData,
 	Type::Integer TIndex = usize,
@@ -1294,6 +1293,7 @@ private:
 	/// @brief Underlying array.
 	owner<DataType>	contents	= nullptr;
 
+	/// @brief Memory allocator.
 	AllocatorType	alloc;
 };
 

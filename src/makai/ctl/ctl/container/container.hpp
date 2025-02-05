@@ -10,6 +10,7 @@
 #include "functor.hpp"
 #include "iterator.hpp"
 #include "list.hpp"
+#include "staticlist.hpp"
 #include "map.hpp"
 #include "nullable.hpp"
 #include "pair.hpp"
