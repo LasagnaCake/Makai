@@ -54,13 +54,16 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onUpdate(float delta) override {
+			DEBUGLN("A");
 			if (isFree()) return;
+			DEBUGLN("B");
 			AServerObject::onUpdate(delta);
 			updateSprite(mainSprite.asWeak());
 			updateSprite(glowSprite.asWeak(), true);
 			updateHitbox();
 			animate();
 			if (paused()) return;
+			DEBUGLN("C");
 			color.next();
 			radius.next();
 			glow.next();
@@ -127,13 +130,11 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Bullet& setFree(bool const state) override {
 			if (state) {
-				DEBUGLN("Freeing...");
 				active = false;
 				hideSprites();
 				objectState = State::SOS_FREE;
 				release(this, server);
 			} else {
-				DEBUGLN("Enabling...");
 				active = true;
 				objectState = State::SOS_ACTIVE;
 			}
