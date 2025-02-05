@@ -23,6 +23,8 @@ namespace Makai::Ex::Game::Danmaku {
 			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
+		virtual ~Laser() {}
+
 		Laser& clear() override {
 			AServerObject::clear();
 			radius			= {};

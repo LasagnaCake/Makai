@@ -14,6 +14,11 @@ using BaseBulletServer = Danmaku::BulletServer<>;
 
 struct MeshHolder {
 	MkGraph::Renderable m, gm;
+
+	MeshHolder() {
+		m.setRenderLayer(Danmaku::RenderLayer::ENEMY1_BULLET_LAYER);
+		gm.setRenderLayer(Danmaku::RenderLayer::ENEMY1_BULLET_LAYER);
+	}
 };
 
 struct TestBulletServer: MeshHolder, BaseBulletServer {

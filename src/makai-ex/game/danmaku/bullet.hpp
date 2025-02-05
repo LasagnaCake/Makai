@@ -24,6 +24,8 @@ namespace Makai::Ex::Game::Danmaku {
 			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
+		virtual ~Bullet() {}
+
 		Bullet& clear() override {
 			AServerObject::clear();
 			rotateSprite	= true;
@@ -319,7 +321,6 @@ namespace Makai::Ex::Game::Danmaku {
 				float const zoff = i / static_cast<float>(cfg.size);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
-				DEBUGLN(all.back().mainSprite.exists() ? "Sprite!" : "No sprite?");
 				all.back().mainSprite->local.position.z = zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
