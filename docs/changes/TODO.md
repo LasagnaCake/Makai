@@ -52,6 +52,7 @@
 - [ ] Support for "Game DLLs"
 - - Having the game being separate from the executable, and stuff being loadable from a DLL
 - (Maybe) reimplement save & load file dialogs ([via this, perhaps?](https://github.com/btzy/nativefiledialog-extended))
+- [ ] Add OKLAB support
 
 ## Other refactoring
 
