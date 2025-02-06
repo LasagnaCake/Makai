@@ -153,7 +153,7 @@ namespace Collision::C2D {
 			///		- Backward:	A <-- B
 			///
 			///		- Both:		A <-> B
-			constexpr static bool check(Layer const& a, Layer const& b) {
+			constexpr static Direction check(Layer const& a, Layer const& b) {
 				return asDirection(
 					a.affects.match(b.affectedBy).overlap(),
 					b.affectedBy.match(a.affects).overlap()
