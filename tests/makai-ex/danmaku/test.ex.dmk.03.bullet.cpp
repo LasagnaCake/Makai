@@ -16,14 +16,21 @@ struct MeshHolder {
 	MkGraph::Renderable m, gm;
 
 	MeshHolder() {
-		m.setRenderLayer(Danmaku::RenderLayer::ENEMY1_BULLET_LAYER);
-		gm.setRenderLayer(Danmaku::RenderLayer::ENEMY1_BULLET_LAYER);
+		m.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER);
+		gm.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER);
 	}
 };
 
 struct TestBulletServer: MeshHolder, BaseBulletServer {
 	TestBulletServer(): MeshHolder(), BaseBulletServer({1024, m, gm, ::board, ::playfield}) {}
 };
+
+Danmaku::Bullet::PromiseType bfun(Danmaku::Bullet& bullet) {
+	co_yield 60;
+	DEBUGLN("Oh no I died");
+	bullet.free();
+	co_return 1;
+}
 
 struct TestApp: Makai::Ex::Game::App {
 	TestBulletServer server;
@@ -34,7 +41,7 @@ struct TestApp: Makai::Ex::Game::App {
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {
-		camera.use(layerID >= Danmaku::RenderLayer::BOSS1_SPELL_BG_BOTTOM_LAYER);
+		camera.use(layerID >= Danmaku::Render::Layer::BOSS1_SPELL_BG_BOTTOM_LAYER);
 	}
 
 	constexpr static usize MAX_FRCOUNT = 10;
@@ -50,6 +57,7 @@ struct TestApp: Makai::Ex::Game::App {
 			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
 			bullet->trans.position = gamearea * Makai::Vector2(1, -1);
 			bullet->velocity.value = 30;
+//			bullet->task = bfun(*bullet);
 			DEBUGLN("[", bullet->trans.position.x, ", ", bullet->trans.position.y, "]");
 		}
 	}

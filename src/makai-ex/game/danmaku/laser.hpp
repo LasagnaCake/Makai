@@ -13,7 +13,7 @@ namespace Makai::Ex::Game::Danmaku {
 	struct LaserConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
-			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
+			CollisionMask const player = Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask;
 	};
 
@@ -242,9 +242,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct LaserServerConfig: ServerConfig, ServerMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
-			CollisionLayer::ENEMY_LASER,
+			Danmaku::Collision::Layer::ENEMY_LASER,
+			Danmaku::Collision::Mask::ENEMY_LASER,
 			{},
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Tag::FOR_PLAYER_1
 		};
 		LaserConfig::Collision const mask = {};
 	};
@@ -263,6 +264,9 @@ namespace Makai::Ex::Game::Danmaku {
 			mainMesh(cfg.mainMesh),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+			auto& cl		= CollisionServer::layers[cfg.colli.layer];
+			cl.affects		= cfg.colli.affects;
+			cl.affectedBy	= cfg.colli.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);

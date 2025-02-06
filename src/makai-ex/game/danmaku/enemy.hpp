@@ -14,19 +14,20 @@ namespace Makai::Ex::Game::Danmaku {
 	struct EnemyConfig: BoundedObjectConfig {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const hitbox = {
-			CollisionLayer::ENEMY,
-			CollisionLayer::PLAYER_ATTACK,
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Layer::ENEMY,
+			Danmaku::Collision::Mask::ENEMY,
+			Danmaku::Collision::Mask::PLAYER_ATTACK,
+			Danmaku::Collision::Tag::FOR_PLAYER_1
 		};
 		struct Collision {
 			struct Player {
-				CollisionMask const bullet	= CollisionLayer::PLAYER_BULLET;
-				CollisionMask const laser	= CollisionLayer::PLAYER_LASER;
-				CollisionMask const body	= CollisionLayer::PLAYER_COLLISION;
-				CollisionMask const attack	= CollisionLayer::PLAYER_ATTACK;
+				CollisionMask const bullet	= Danmaku::Collision::Mask::PLAYER_BULLET;
+				CollisionMask const laser	= Danmaku::Collision::Mask::PLAYER_LASER;
+				CollisionMask const body	= Danmaku::Collision::Mask::PLAYER_COLLISION;
+				CollisionMask const attack	= Danmaku::Collision::Mask::PLAYER_ATTACK;
 			} const player = {};
 			struct Tag {
-				CollisionMask const player	= CollisionTag::FOR_PLAYER_1;
+				CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 			} const tag = {};
 		} const mask = {};
 	};

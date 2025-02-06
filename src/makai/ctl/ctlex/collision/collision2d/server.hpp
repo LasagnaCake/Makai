@@ -114,16 +114,41 @@ namespace Collision::C2D {
 			constexpr Collider(Area const& other): Area{other}, ID(++count)	{CollisionServer::bind(this);}
 		};
 
+		struct Layer {
+			LayerMask	affects;
+			LayerMask	affectedBy;
+
+			[[nodiscard]] constexpr Unique<Collider> createCollider() {
+				auto colli = new Collider();
+				colliders.pushBack(colli);
+				return Unique<Collider>(colli);
+			}
+
+			[[nodiscard]] constexpr Unique<Collider> createCollider(Area const& area) {
+				auto colli = new Collider(area);
+				colliders.pushBack(colli);
+				return Unique<Collider>(colli);
+			}
+
+			constexpr void process(Layer const& other) const {
+				Direction dir = asDirection(
+					affects.match(other.affectedBy).overlap(),
+					affectedBy.match(other.affects).overlap()
+				);
+				if (dir == Direction::CD_NONE) return;
+				for (auto const& a: colliders)
+					for (auto const& b: other.colliders)
+						if (a != b) a->process(*b);
+			}
+
+		private:
+			template <usize> friend class Server;
+
+			List<Collider*>	colliders;
+		};
+
 		/// @brief Default constructor.
 		constexpr CollisionServer() {}
-
-		[[nodiscard]] constexpr static Unique<Collider> createCollider() {
-			return Unique<Collider>(new Collider());
-		}
-
-		[[nodiscard]] constexpr static Unique<Collider> createCollider(Area const& area) {
-			return Unique<Collider>(new Collider(area));
-		}
 
 		/// @brief Handles collision between a given collider, and a set of layers.
 		/// @param area Collider to check.
@@ -144,15 +169,22 @@ namespace Collision::C2D {
 				area.process(*c);
 		}
 
+		[[nodiscard]] constexpr static Unique<Collider> createCollider(usize const layer) {
+			return layers[layer].createCollider();
+		}
+
+		[[nodiscard]] constexpr static Unique<Collider> createCollider(Area const& area, usize const layer) {
+			return layers[layer].createCollider(area);
+		}
+
 		/// @brief Processes (and handles) collision for all colliders in the server.
 		constexpr static void process() {
-			usize const stop = colliders.size();
-			for (usize start = 1; start < stop; ++start) {
-				Collider& c = *colliders[start-1];
-				for (usize i = start; i < stop; ++i)
-					c.process(*colliders[start]);
-			}
+			for (usize i = 0; i < 64; ++i)
+				for (usize j = i; j < 64; ++j)
+					layers[i].process(layers[j]);
 		}
+
+		static inline As<Layer[64]> layers = {};
 
 	private:
 		friend class Unique<Collider>;
@@ -163,6 +195,7 @@ namespace Collision::C2D {
 
 		constexpr static void unbind(Collider* const collider) {
 			colliders.eraseLike(collider);
+			for (auto& layer: layers) layer.colliders.eraseLike(collider);
 		}
 
 		friend class Collider;

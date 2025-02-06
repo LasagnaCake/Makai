@@ -13,7 +13,7 @@ namespace Makai::Ex::Game::Danmaku {
 	struct ItemConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
-			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
+			CollisionMask const player = Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask;
 	};
 
@@ -132,6 +132,7 @@ namespace Makai::Ex::Game::Danmaku {
 				release(this, server);
 			} else {
 				active = true;
+				showSprites();
 				objectState = State::SOS_ACTIVE;
 			}
 			return *this;
@@ -175,6 +176,12 @@ namespace Makai::Ex::Game::Danmaku {
 			if (glowSprite)	glowSprite->visible	= false; 
 			if (mainSprite)	mainSprite->visible	= false;
 		}
+
+		void showSprites() {
+			if (glowSprite)	glowSprite->visible	= true; 
+			if (mainSprite)	mainSprite->visible	= true;
+		}
+		
 
 		void updateSprite(SpriteHandle const& sprite, bool glowSprite = false) {
 			if (!sprite) return;
@@ -246,9 +253,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct ItemServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
-			CollisionLayer::ITEM,
+			Danmaku::Collision::Layer::ITEM,
+			Danmaku::Collision::Mask::ITEM,
 			{},
-			CollisionTag::FOR_PLAYER_1
+			Collision::Tag::FOR_PLAYER_1
 		};
 		ItemConfig::Collision const mask = {};
 	};
@@ -271,6 +279,9 @@ namespace Makai::Ex::Game::Danmaku {
 			glowMesh(cfg.glowMesh),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+			auto& cl		= CollisionServer::layers[cfg.colli.layer];
+			cl.affects		= cfg.colli.affects;
+			cl.affectedBy	= cfg.colli.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);

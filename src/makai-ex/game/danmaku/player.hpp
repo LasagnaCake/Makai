@@ -15,30 +15,33 @@ namespace Makai::Ex::Game::Danmaku {
 	struct PlayerConfig: BoundedObjectConfig {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const hitbox = {
-			CollisionLayer::PLAYER,
-			CollisionLayer::ENEMY_MASK,
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Layer::PLAYER,
+			Danmaku::Collision::Mask::PLAYER,
+			Danmaku::Collision::Mask::ENEMY_MASK,
+			Danmaku::Collision::Tag::FOR_PLAYER_1
 		};
 		ColliderConfig const grazebox = {
+			Danmaku::Collision::Layer::PLAYER_GRAZEBOX,
 			{},
-			CollisionLayer::ENEMY_BULLET | CollisionLayer::ENEMY_LASER | CollisionLayer::ITEM,
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Mask::ENEMY_BULLET | Danmaku::Collision::Mask::ENEMY_LASER | Danmaku::Collision::Mask::ITEM,
+			Danmaku::Collision::Tag::FOR_PLAYER_1
 		};
 		ColliderConfig const itembox = {
+			Danmaku::Collision::Layer::PLAYER_ITEMBOX,
 			{},
-			CollisionLayer::ITEM,
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Mask::ITEM,
+			Danmaku::Collision::Tag::FOR_PLAYER_1
 		};
 		struct Collision {
-			CollisionMask const item		= CollisionLayer::ITEM;
+			CollisionMask const item		= Danmaku::Collision::Mask::ITEM;
 			struct Enemy {
-				CollisionMask const bullet	= CollisionLayer::ENEMY_BULLET;
-				CollisionMask const laser	= CollisionLayer::ENEMY_LASER;
-				CollisionMask const body	= CollisionLayer::ENEMY_COLLISION;
-				CollisionMask const attack	= CollisionLayer::ENEMY_ATTACK;
+				CollisionMask const bullet	= Danmaku::Collision::Mask::ENEMY_BULLET;
+				CollisionMask const laser	= Danmaku::Collision::Mask::ENEMY_LASER;
+				CollisionMask const body	= Danmaku::Collision::Mask::ENEMY_COLLISION;
+				CollisionMask const attack	= Danmaku::Collision::Mask::ENEMY_ATTACK;
 			} const enemy = {};
 			struct Tag {
-				CollisionMask const player	= CollisionTag::FOR_PLAYER_1;
+				CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 			} const tag = {};
 		} const mask = {};
 	};
@@ -50,7 +53,9 @@ namespace Makai::Ex::Game::Danmaku {
 		};
 
 		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
-			bindmap = Dictionary<String>({
+			grazebox	= CollisionServer::createCollider(cfg.grazebox.layer);
+			itembox		= CollisionServer::createCollider(cfg.itembox.layer);
+			bindmap		= Dictionary<String>({
 				{"up",		"player/up"		},
 				{"down",	"player/down"	},
 				{"left",	"player/left"	},
@@ -213,8 +218,8 @@ namespace Makai::Ex::Game::Danmaku {
 		usize bombTime			= 0;
 		usize invincibleTime	= 0;
 
-		Unique<Collider> grazebox	= CollisionServer::createCollider();
-		Unique<Collider> itembox	= CollisionServer::createCollider();
+		Unique<Collider> grazebox;
+		Unique<Collider> itembox;
 
 		void pollInputs() {
 			direction.y	= action("up") - action("down");

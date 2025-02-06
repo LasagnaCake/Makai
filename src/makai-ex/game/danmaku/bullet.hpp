@@ -13,8 +13,8 @@ namespace Makai::Ex::Game::Danmaku {
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
-			CollisionMask const eraser	= CollisionLayer::BULLET_ERASER;
-			CollisionMask const player	= CollisionTag::FOR_PLAYER_1;
+			CollisionMask const eraser	= Danmaku::Collision::Mask::BULLET_ERASER;
+			CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask = {};
 	};
 	
@@ -57,6 +57,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta) override {
 			if (isFree()) return;
+			DEBUGLN("[", trans.position.x, ", ", trans.position.y, "]");
 			AServerObject::onUpdate(delta);
 			updateSprite(mainSprite.asWeak());
 			updateSprite(glowSprite.asWeak(), true);
@@ -135,6 +136,7 @@ namespace Makai::Ex::Game::Danmaku {
 				release(this, server);
 			} else {
 				active = true;
+				showSprites();
 				objectState = State::SOS_ACTIVE;
 			}
 			return *this;
@@ -178,7 +180,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void loopAndBounce() {
-			if (bouncy && !Collision::GJK::check(
+			if (bouncy && !CTL::Ex::Collision::GJK::check(
 				board.asArea(),
 				C2D::Point(trans.position)
 			)) {
@@ -192,7 +194,7 @@ namespace Makai::Ex::Game::Danmaku {
 				if (trans.position.y < tl.y) shift(0);
 				onAction(*this, Action::SOA_BOUNCE);
 				bouncy = false;
-			} else if (loopy && shape && !Collision::GJK::check(
+			} else if (loopy && shape && !CTL::Ex::Collision::GJK::check(
 				board.asArea(),
 				*shape
 			)) {
@@ -223,6 +225,11 @@ namespace Makai::Ex::Game::Danmaku {
 		void hideSprites() {
 			if (glowSprite)	glowSprite->visible	= false; 
 			if (mainSprite)	mainSprite->visible	= false;
+		}
+
+		void showSprites() {
+			if (glowSprite)	glowSprite->visible	= true; 
+			if (mainSprite)	mainSprite->visible	= true;
 		}
 
 		void updateSprite(SpriteHandle const& sprite, bool glowSprite = false) {
@@ -290,9 +297,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
-			CollisionLayer::ENEMY_BULLET,
-			CollisionLayer::BULLET_ERASER,
-			CollisionTag::FOR_PLAYER_1
+			Collision::Layer::ENEMY_BULLET,
+			Collision::Mask::ENEMY_BULLET,
+			Collision::Mask::BULLET_ERASER,
+			Collision::Tag::FOR_PLAYER_1
 		};
 		BulletConfig::Collision const mask = {};
 	};
@@ -315,6 +323,9 @@ namespace Makai::Ex::Game::Danmaku {
 			glowMesh(cfg.glowMesh),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+			auto& cl		= CollisionServer::layers[cfg.colli.layer];
+			cl.affects		= cfg.colli.affects;
+			cl.affectedBy	= cfg.colli.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);
