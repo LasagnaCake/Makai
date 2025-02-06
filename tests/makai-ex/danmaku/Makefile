@@ -6,7 +6,7 @@ LEAN := -static -s
 ROOT := ../../..
 
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
-DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
+DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic -Og
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
@@ -14,14 +14,14 @@ WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -
 
 o?=3
 
-testcmd = @$(CXX) -O$(o) -o output/$(1)/test.$(2).$(1).exe test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
+testcmd = @$(CXX) -o output/$(1)/test.$(2).$(1).exe test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
 
 NOCMD := -mwindows
 
 ifdef debug-release
 RELEASEMODE := $(DEBUGMODE)
 else
-RELEASEMODE := $(NOCMD) $(LEAN)
+RELEASEMODE := $(NOCMD) $(LEAN) -O$(o)
 endif
 
 dotest = \
