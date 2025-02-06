@@ -334,7 +334,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<BulletType> bullet = b.template morph<BulletType>();
+				Reference<BulletType> bullet = b.template as<BulletType>();
 				bullet->clear();
 				bullet->enable();
 				return b;

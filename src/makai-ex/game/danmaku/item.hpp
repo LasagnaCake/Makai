@@ -290,7 +290,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
-				Reference<ItemType> item = b.template morph<ItemType>();
+				Reference<ItemType> item = b.template as<ItemType>();
 				item->clear();
 				item->enable();
 				return b;

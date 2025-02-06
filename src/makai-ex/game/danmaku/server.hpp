@@ -27,7 +27,7 @@ namespace Makai::Ex::Game::Danmaku {
 		template<Type::Derived<AGameObject> T>
 		constexpr Reference<T> acquire() {
 			if (auto obj = acquire())
-				return obj.morph<T>();
+				return obj.as<T>();
 			return nullptr;
 		}
 
