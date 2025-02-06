@@ -109,11 +109,11 @@ namespace Co {
 		/// @brief Copy constructor (deleted).
 		Promise(Promise const&) = delete;
 		/// @brief Destructor.
-		~Promise() {clear();}
+		~Promise() {}
 
 		/// @brief Destroys the bound coroutine, if any.
 		/// @return Reference to self.
-		Promise& clear() {if (!finished()) context.destroy(); return *this;}
+		Promise& clear() {if (!finished()) *this = {}; return *this;}
 
 		/// @brief Returns whether the coroutine is still processing.
 		operator bool() const {return !finished();}
@@ -205,9 +205,6 @@ namespace Co {
 				return value;
 			}
 		};
-		
-		/// @brief Coroutine context.
-		ContextType context;
 
 		/// @brief Default constructor.
 		Promise() {}
@@ -219,7 +216,7 @@ namespace Co {
 		Promise(Promise const&) = delete;
 
 		/// @brief Destructor.
-		~Promise() {clear();}
+		~Promise() {}
 
 		/// @brief Returns the current stored value.
 		/// @return Current stored value.
@@ -257,10 +254,10 @@ namespace Co {
 		bool exists() const {
 			return context;
 		}
-		
+
 		/// @brief Destroys the bound coroutine, if any.
 		/// @return Reference to self.
-		Promise& clear() {if (!finished()) context.destroy(); return *this;}
+		Promise& clear() {if (!finished()) *this = {}; return *this;}
 
 		/// @brief Returns whether the coroutine is still processing.
 		operator bool() const {return !finished();}
@@ -273,6 +270,10 @@ namespace Co {
 		operator Context<promise_type>() const	{return context;}
 		/// @brief Returns the coroutine context.
 		operator Context<>() const				{return context;}
+
+	private:
+		/// @brief Coroutine context.
+		ContextType context;
 	};
 
 	/// @brief `Promise` analog for genarator coroutines — coroutines that start suspended.
