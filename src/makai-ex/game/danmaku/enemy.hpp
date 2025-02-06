@@ -15,9 +15,11 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const hitbox = {
 			Danmaku::Collision::Layer::ENEMY,
-			Danmaku::Collision::Mask::ENEMY,
-			Danmaku::Collision::Mask::PLAYER_ATTACK,
 			Danmaku::Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const hitboxLayer = {
+			Danmaku::Collision::Mask::ENEMY,
+			Danmaku::Collision::Mask::PLAYER_ATTACK
 		};
 		struct Collision {
 			struct Player {
@@ -34,6 +36,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct AEnemy: AGameObject, AUpdateable, IDamageable, Healthy {
 		AEnemy(EnemyConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
+			collision()->layer.affects		= cfg.hitboxLayer.affects;
+			collision()->layer.affectedBy	= cfg.hitboxLayer.affectedBy;
 		}
 
 		constexpr static usize INVINCIBLE	= 1 << 0;
@@ -55,8 +59,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.affects.match(mask.player.attack).overlap())
-				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.affects);
+			if (collider.layer.affects.match(mask.player.attack).overlap())
+				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.layer.affects);
 		}
 		
 		bool isForThisPlayer(Collider const& collider) const {

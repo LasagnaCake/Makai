@@ -66,9 +66,13 @@ namespace Makai::Ex::Game::Danmaku {
 	struct ColliderConfig {
 		using CollisionMask = Collision::Mask::MaskType;
 		uint64 const		layer		= 0;
+		CollisionMask const	tags		= {};
+	};
+
+	struct CollisionLayerConfig {
+		using CollisionMask = Collision::Mask::MaskType;
 		CollisionMask const	affects		= {};
 		CollisionMask const	affectedBy	= {};
-		CollisionMask const	tags		= {};
 	};
 
 	struct GameObjectConfig: BoundedObjectConfig, ColliderConfig {};
@@ -137,9 +141,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onUnpause() {}
 
 		void resetCollisionState() {
-			collider->affects		= colli.affects;
-			collider->affectedBy	= colli.affectedBy;
-			collider->tags			= colli.tags;
+			collider->tags = colli.tags;
 		}
 
 		static PromiseType doNothing() {co_return 1;}

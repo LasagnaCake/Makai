@@ -104,7 +104,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
 			if (
-				collider.affects.match(mask.eraser).overlap()
+				collider.layer.affects.match(mask.eraser).overlap()
 			&&	collider.tags.match(mask.player).overlap()
 			)
 				discard();
@@ -298,9 +298,11 @@ namespace Makai::Ex::Game::Danmaku {
 	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
 			Collision::Layer::ENEMY_BULLET,
+			Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const layer = {
 			Collision::Mask::ENEMY_BULLET,
 			Collision::Mask::BULLET_ERASER,
-			Collision::Tag::FOR_PLAYER_1
 		};
 		BulletConfig::Collision const mask = {};
 	};
@@ -324,8 +326,8 @@ namespace Makai::Ex::Game::Danmaku {
 			board(cfg.board),
 			playfield(cfg.playfield) {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
-			cl.affects		= cfg.colli.affects;
-			cl.affectedBy	= cfg.colli.affectedBy;
+			cl.affects		= cfg.layer.affects;
+			cl.affectedBy	= cfg.layer.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);

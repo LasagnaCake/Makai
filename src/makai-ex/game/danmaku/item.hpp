@@ -254,9 +254,11 @@ namespace Makai::Ex::Game::Danmaku {
 	struct ItemServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
 			Danmaku::Collision::Layer::ITEM,
-			Danmaku::Collision::Mask::ITEM,
-			{},
 			Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const layer = {
+			Danmaku::Collision::Mask::ITEM,
+			{}
 		};
 		ItemConfig::Collision const mask = {};
 	};
@@ -280,8 +282,8 @@ namespace Makai::Ex::Game::Danmaku {
 			board(cfg.board),
 			playfield(cfg.playfield) {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
-			cl.affects		= cfg.colli.affects;
-			cl.affectedBy	= cfg.colli.affectedBy;
+			cl.affects		= cfg.layer.affects;
+			cl.affectedBy	= cfg.layer.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);

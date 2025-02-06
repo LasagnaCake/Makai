@@ -16,21 +16,27 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const hitbox = {
 			Danmaku::Collision::Layer::PLAYER,
-			Danmaku::Collision::Mask::PLAYER,
-			Danmaku::Collision::Mask::ENEMY_MASK,
 			Danmaku::Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const hitboxLayer = {
+			Danmaku::Collision::Mask::PLAYER,
+			Danmaku::Collision::Mask::ENEMY_MASK
 		};
 		ColliderConfig const grazebox = {
 			Danmaku::Collision::Layer::PLAYER_GRAZEBOX,
-			{},
-			Danmaku::Collision::Mask::ENEMY_BULLET | Danmaku::Collision::Mask::ENEMY_LASER | Danmaku::Collision::Mask::ITEM,
 			Danmaku::Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const grazeboxLayer = {
+			{},
+			Danmaku::Collision::Mask::ENEMY_BULLET | Danmaku::Collision::Mask::ENEMY_LASER | Danmaku::Collision::Mask::ITEM
 		};
 		ColliderConfig const itembox = {
 			Danmaku::Collision::Layer::PLAYER_ITEMBOX,
-			{},
-			Danmaku::Collision::Mask::ITEM,
 			Danmaku::Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const itemboxLayer = {
+			{},
+			Danmaku::Collision::Mask::ITEM
 		};
 		struct Collision {
 			CollisionMask const item		= Danmaku::Collision::Mask::ITEM;
@@ -55,6 +61,12 @@ namespace Makai::Ex::Game::Danmaku {
 		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
 			grazebox	= CollisionServer::createCollider(cfg.grazebox.layer);
 			itembox		= CollisionServer::createCollider(cfg.itembox.layer);
+			collision()->layer.affects		= cfg.hitboxLayer.affects;
+			collision()->layer.affectedBy	= cfg.hitboxLayer.affectedBy;
+			grazebox->layer.affects			= cfg.grazeboxLayer.affects;
+			grazebox->layer.affectedBy		= cfg.grazeboxLayer.affectedBy;
+			itembox->layer.affects			= cfg.itemboxLayer.affects;
+			itembox->layer.affectedBy		= cfg.itemboxLayer.affectedBy;
 			bindmap		= Dictionary<String>({
 				{"up",		"player/up"		},
 				{"down",	"player/down"	},
@@ -104,19 +116,19 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.affects.match(mask.enemy.attack).overlap())
-				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.affects);
+			if (collider.layer.affects.match(mask.enemy.attack).overlap())
+				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.layer.affects);
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.affects.match(
+			if (collider.layer.affects.match(
 				mask.enemy.bullet
 			|	mask.enemy.laser
 			).overlap())
 				if (auto object = collider.data.mutate<>().as<AServerObject>())
 					onGraze(object);
-			if (collider.affects.match(mask.item).overlap())
+			if (collider.layer.affects.match(mask.item).overlap())
 				if (auto item = collider.data.mutate<>().as<Item>()) {
 					onItem(item);
 					item->discard(true);
@@ -125,7 +137,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.affects.match(mask.item).overlap())
+			if (collider.layer.affects.match(mask.item).overlap())
 				if (auto item = collider.data.mutate<>().as<Item>())
 					onItemMagnet(item);
 		}

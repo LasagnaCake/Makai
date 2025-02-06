@@ -26,6 +26,8 @@ namespace Collision::C2D {
 		template<usize SI>
 		using ColliderType = typename CollisionServer<SI>::Collider;
 
+		struct Layer;
+
 		/// @brief Server collision object.
 		struct Collider: Area {
 			/// @brief Destructor.
@@ -42,8 +44,10 @@ namespace Collision::C2D {
 			///		and fires the appropriate collision events,
 			///		depending on its result.
 			/// @param other `Collider` to check against.
-			constexpr void process(Collider const& other) const {
-				switch(colliding(other)) {
+			/// @param direction Direction to process collision for.
+			constexpr void process(Collider const& other, Direction const direction) const {
+				if (!colliding(other)) return;
+				switch(direction) {
 					using enum Direction;
 					default:
 					case CD_NONE: break;
@@ -66,9 +70,11 @@ namespace Collision::C2D {
 			///		and fires the appropriate collision events,
 			///		depending on its result.
 			/// @param other `Collider` to check against.
+			/// @param direction Direction to process collision for.
 			template<usize SI>
-			constexpr void process(ColliderType<SI> const& other) const {
-				switch(colliding(other)) {
+			constexpr void process(ColliderType<SI> const& other, Direction const direction) const {
+				if (!colliding(other)) return;
+				switch(direction) {
 					using enum Direction;
 					default:
 					case CD_NONE: break;
@@ -96,6 +102,7 @@ namespace Collision::C2D {
 			/// @brief data associated with the collider.
 			Reference<IData const> data;
 
+			Layer& layer;
 		private:
 			template <usize> friend class CollisionServer;
 
@@ -108,10 +115,15 @@ namespace Collision::C2D {
 			constexpr Collider(Collider&& other)		= delete;
 
 			/// @brief Default constructor.
-			constexpr Collider(): ID(++count)								{CollisionServer::bind(this);}
+			constexpr Collider(
+				Layer& layer
+			): ID(++count), layer(layer)				{CollisionServer::bind(this);}
 			/// @brief Constructs the collider from a collision area.
 			/// @param other Collision area to construct from.
-			constexpr Collider(Area const& other): Area{other}, ID(++count)	{CollisionServer::bind(this);}
+			constexpr Collider(
+				Area const& other,
+				Layer& layer
+			): Area{other}, ID(++count), layer(layer)	{CollisionServer::bind(this);}
 		};
 
 		struct Layer {
@@ -119,30 +131,61 @@ namespace Collision::C2D {
 			LayerMask	affectedBy;
 
 			[[nodiscard]] constexpr Unique<Collider> createCollider() {
-				auto colli = new Collider();
+				auto colli = new Collider(*this);
 				colliders.pushBack(colli);
 				return Unique<Collider>(colli);
 			}
 
 			[[nodiscard]] constexpr Unique<Collider> createCollider(Area const& area) {
-				auto colli = new Collider(area);
+				auto colli = new Collider(area, *this);
 				colliders.pushBack(colli);
 				return Unique<Collider>(colli);
 			}
 
-			constexpr void process(Layer const& other) const {
-				Direction dir = asDirection(
-					affects.match(other.affectedBy).overlap(),
-					affectedBy.match(other.affects).overlap()
+			/// @brief Checks collision direction between two layers.
+			/// @param a `Layer` to check.
+			/// @param b `Layer` to check against.
+			/// @return Collision event direction.
+			/// @note Directions:
+			///
+			///		- Forward:	A --> B
+			///
+			///		- Backward:	A <-- B
+			///
+			///		- Both:		A <-> B
+			constexpr static bool check(Layer const& a, Layer const& b) {
+				return asDirection(
+					a.affects.match(b.affectedBy).overlap(),
+					b.affectedBy.match(a.affects).overlap()
 				);
+			}
+
+			/// @brief Checks collision direction between two layers.
+			/// @param a `Layer` to check.
+			/// @param b `Layer` to check against.
+			/// @return Collision event direction.
+			/// @note Directions:
+			///
+			///		- Forward:	A --> B
+			///
+			///		- Backward:	A <-- B
+			///
+			///		- Both:		A <-> B
+			constexpr friend Direction operator<=>(Layer const& a, Layer const& b) {
+				return check(a, b);
+			}
+
+			constexpr void process(Layer const& other) const {
+				if (colliders.empty() || other.colliders.empty()) return;
+				const auto dir = check(*this, other);
 				if (dir == Direction::CD_NONE) return;
 				for (auto const& a: colliders)
 					for (auto const& b: other.colliders)
-						if (a != b) a->process(*b);
+						if (a != b) a->process(*b, dir);
 			}
 
 		private:
-			template <usize> friend class Server;
+			template <usize> friend class CollisionServer;
 
 			List<Collider*>	colliders;
 		};
