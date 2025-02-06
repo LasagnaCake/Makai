@@ -57,7 +57,6 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onUpdate(float delta) override {
 			if (isFree()) return;
-			DEBUGLN("[", trans.position.x, ", ", trans.position.y, "]");
 			AServerObject::onUpdate(delta);
 			updateSprite(mainSprite.asWeak());
 			updateSprite(glowSprite.asWeak(), true);
