@@ -87,7 +87,9 @@ namespace GJK {
 		/// @param vec Point to add.
 		/// @return Reference to self.
 		constexpr Simplex& pushFront(VectorType const& vec) {
-			points = {vec, points[0], points[1], points[2]};
+			if constexpr		(DIMENSION == 1) points = {vec, points[0]};
+			else if constexpr	(DIMENSION == 2) points = {vec, points[0], points[1]};
+			else if constexpr	(DIMENSION == 3) points = {vec, points[0], points[1], points[2]};
 			if (count < MAX_POINTS)
 				++count;
 			return *this;
@@ -127,13 +129,19 @@ namespace GJK {
 			if (same(ab, ao))
 				direction = ab.cross(ao).cross(ab);
 			else {
-				points = {a, 0, 0, 0};
+				if constexpr (DIMENSION == 1) points = {a, 0};
+				if constexpr (DIMENSION == 2) points = {a, 0, 0};
+				if constexpr (DIMENSION == 3) points = {a, 0, 0, 0};
 				direction = ao;
 			}
 			return DIMENSION == 1;
 		}
 
-		constexpr bool triangle(VectorType& direction) {
+		#define CTLEX_GJK_FILL3(a, b, c)\
+			if constexpr (DIMENSION == 2) points = {a, b, c};\
+			if constexpr (DIMENSION == 3) points = {a, b, c, 0}
+
+		constexpr bool triangle(VectorType& direction) requires (DIMENSION > 1) {
 			VectorType a = points[0];
 			VectorType b = points[1];
 			VectorType c = points[2];
@@ -143,25 +151,27 @@ namespace GJK {
 			VectorType abc = ab.cross(ac);
 			if (same(abc.cross(ac), ao)) {
 				if (same(ac, ao)) {
-					points = {a, c, 0, 0};
+					CTLEX_GJK_FILL3(a, c, 0);
 					direction = ac.cross(ao).cross(ac);
 				} else {
-					points = {a, b, 0, 0};
+					CTLEX_GJK_FILL3(a, b, 0);
 					return line(direction);
 				}
 			} else if (same(ab.cross(abc), ao)) {
-				points = {a, b, 0, 0};
+				CTLEX_GJK_FILL3(a, b, 0);
 				return line(direction);
 			} else if (same(abc, ao)) {
 				direction = abc;
 			} else {
-				points = {a, c, b, 0};
+				CTLEX_GJK_FILL3(a, c, b);
 				direction = -abc;
 			}
 			return DIMENSION == 2;
 		}
 
-		constexpr bool tetrahedron(VectorType& direction) {
+		constexpr bool triangle(VectorType& direction) requires (DIMENSION < 2) {return false;} 
+
+		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION > 2) {
 			VectorType a = points[0];
 			VectorType b = points[1];
 			VectorType c = points[2];
@@ -187,6 +197,8 @@ namespace GJK {
 			}
 			return DIMENSION == 3;
 		}
+
+		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION < 3) {return false;}
 	};
 
 	/// @brief Gets the support vector between two bounds.
@@ -224,10 +236,10 @@ namespace GJK {
 			if (sup.dot(d) <= 0)
 				return false;
 			sp.pushFront(sup);
-			if (sp.remake(d)) {
+			if (sp.remake(d))
 				return true;
-			}
 		}
+		return false;
 	}
 }
 
