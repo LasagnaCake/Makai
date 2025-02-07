@@ -55,7 +55,7 @@ struct TestApp: Makai::Ex::Game::App {
 			auto bullet = server.acquire().as<Danmaku::Bullet>();
 			if (!bullet) return;
 			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
-			bullet->trans.position = gamearea * Makai::Vector2(1, -1);
+			bullet->trans.position = playfield.center;
 			bullet->velocity.value = 30;
 //			bullet->task = bfun(*bullet);
 			DEBUGLN("[", bullet->trans.position.x, ", ", bullet->trans.position.y, "]");
