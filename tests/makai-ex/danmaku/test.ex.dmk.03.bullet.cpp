@@ -57,7 +57,6 @@ struct TestApp: Makai::Ex::Game::App {
 			bullet->rotation.value = (TAU / 10) * (i + (getCurrentCycle() * 0.5));
 			bullet->trans.position = playfield.center;
 			bullet->velocity.value = 30;
-			bullet->dope = false;
 //			bullet->task = btask(*bullet);
 		}
 	}
