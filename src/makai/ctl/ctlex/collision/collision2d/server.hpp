@@ -200,7 +200,7 @@ namespace Collision::C2D {
 		constexpr static void check(ColliderType<SI> const& area, LayerMask const& layers) {
 			if (!area.affects.match(layers).overlap() || !area.canCollide) return;
 			for (Collider* c : colliders)
-				if (c->enabled && c->affectedBy.match(layers).overlap())
+				if (c->enabled && c->layer.affectedBy.match(layers).overlap())
 					area.process(*c);
 		}
 
