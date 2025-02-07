@@ -169,7 +169,7 @@ namespace GJK {
 			return DIMENSION == 2;
 		}
 
-		constexpr bool triangle(VectorType& direction) requires (DIMENSION < 2) {return false;} 
+		constexpr bool triangle(VectorType& direction) requires (DIMENSION < 2) {return line(direction);} 
 
 		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION > 2) {
 			VectorType a = points[0];
@@ -198,7 +198,7 @@ namespace GJK {
 			return DIMENSION == 3;
 		}
 
-		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION < 3) {return false;}
+		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION < 3) {return triangle(direction);}
 	};
 
 	/// @brief Gets the support vector between two bounds.
