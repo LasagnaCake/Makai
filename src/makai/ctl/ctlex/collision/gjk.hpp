@@ -46,7 +46,7 @@ namespace GJK {
 		/// @brief Vector type.
 		using VectorType = Vector3;
 		/// @brief Point array type.
-		using PointArrayType = Array<VectorType, D+1>;
+		using PointArrayType = Array<VectorType, MAX_POINTS>;
 		//using VectorType = Vector<DIMENSION>;
 
 		/// @brief Default constructor.
