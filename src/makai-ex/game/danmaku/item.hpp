@@ -374,7 +374,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ItemServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			ItemType& item = *(object.template as<ItemType>());
-			item.free();
+			if (!item.isFree()) item.free();
 			AServer::release(object);
 			return *this;
 		}

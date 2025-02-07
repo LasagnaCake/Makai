@@ -355,7 +355,7 @@ namespace Makai::Ex::Game::Danmaku {
 		LaserServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			LaserType& laser = *object.template as<LaserType>();
-			laser.free();
+			if (!laser.isFree()) laser.free();
 			AServer::release(object);
 			return *this;
 		}

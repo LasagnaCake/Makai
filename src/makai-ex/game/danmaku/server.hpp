@@ -17,8 +17,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		constexpr virtual HandleType acquire() {
 			if (free.size()) {
-				HandleType object = free.popBack();
-				used.pushBack(free.popBack());
+				auto object = free.popBack();
+				used.pushBack(object);
 				return object;
 			}
 			return nullptr;

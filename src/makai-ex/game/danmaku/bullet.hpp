@@ -27,9 +27,11 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ~Bullet() {}
 
 		Bullet& clear() override {
+			DEBUGLN("Clearing...");
 			AServerObject::clear();
 			rotateSprite	= true;
 			glowOnSpawn		= true;
+			dope			= true;
 			radius			= {};
 			velocity		= {};
 			rotation		= {};
@@ -37,7 +39,6 @@ namespace Makai::Ex::Game::Danmaku {
 			damage			= {};
 			glow			= {};
 			autoDecay		= false;
-			dope			= false;
 			bouncy			= false;
 			loopy			= false;
 			grazed			= false;
@@ -170,12 +171,10 @@ namespace Makai::Ex::Game::Danmaku {
 				min = playfield.min(),
 				max = playfield.max()
 			;
-			if (
-				trans.position.x < min.x
-			||	trans.position.x > max.x
-			||	trans.position.y < min.y
-			||	trans.position.y > max.y
-			) free();
+			if (!CTL::Ex::Collision::GJK::check(
+				board.asArea(),
+				*shape
+			)) free();
 		}
 
 		void loopAndBounce() {
@@ -184,13 +183,13 @@ namespace Makai::Ex::Game::Danmaku {
 				C2D::Point(trans.position)
 			)) {
 				auto const
-					tl = board.min(),
-					br = board.max()
+					min = board.min(),
+					max = board.max()
 				;
-				if (trans.position.x < tl.x) shift(PI);
-				if (trans.position.x > br.x) shift(PI);
-				if (trans.position.y > tl.y) shift(0);
-				if (trans.position.y < tl.y) shift(0);
+				if (trans.position.x < min.x) shift(PI);
+				if (trans.position.x > max.x) shift(PI);
+				if (trans.position.y < min.y) shift(0);
+				if (trans.position.y > max.y) shift(0);
 				onAction(*this, Action::SOA_BOUNCE);
 				bouncy = false;
 			} else if (loopy && shape && !CTL::Ex::Collision::GJK::check(
@@ -198,13 +197,13 @@ namespace Makai::Ex::Game::Danmaku {
 				*shape
 			)) {
 				auto const
-					tl = board.min(),
-					br = board.max()
+					min = board.min(),
+					max = board.max()
 				;
-				if (trans.position.x < tl.x) trans.position.x = br.x + shape->radius.max();
-				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radius.max();
-				if (trans.position.y > tl.y) trans.position.y = br.y - shape->radius.max();
-				if (trans.position.y < tl.y) trans.position.y = tl.y + shape->radius.max();
+				if (trans.position.x < min.x) trans.position.x = max.x + shape->radius.max();
+				if (trans.position.x > max.x) trans.position.x = min.x - shape->radius.max();
+				if (trans.position.y < min.y) trans.position.y = max.y - shape->radius.max();
+				if (trans.position.y > max.y) trans.position.y = min.y + shape->radius.max();
 				onAction(*this, Action::SOA_LOOP);
 				loopy = false;
 			}
@@ -238,7 +237,6 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->size	= this->sprite.sheetSize;
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation;
-			// Position is somehow zero over here
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
@@ -417,7 +415,7 @@ namespace Makai::Ex::Game::Danmaku {
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			BulletType& bullet = *(object.template as<BulletType>());
-			bullet.free();
+			if (!bullet.isFree()) bullet.free();
 			AServer::release(object);
 			return *this;
 		}
