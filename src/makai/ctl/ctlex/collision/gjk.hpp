@@ -54,10 +54,16 @@ namespace GJK {
 
 		/// @brief Constructs the simplex from a list of points.
 		/// @param ps Points to construct from.
-		constexpr Simplex(List<VectorType> const& ps): Simplex() {
+		constexpr explicit Simplex(List<VectorType> const& ps): Simplex() {
 			for (;count < ps.size() && count < MAX_POINTS; ++count)
 				points[count] = ps[count];
 		}
+
+		/// @brief Constructs the simplex from a static array of points.
+		/// @param points Points to construct from.
+		template<usize S>
+		constexpr Simplex(Array<VectorType, S> const& points)
+		requires (S <= MAX_POINTS): points(points), count(S) {}
 		
 		/// @brief Returns an iterator to the beginning of the point list.
 		/// @return iterator to beginning of point list.
