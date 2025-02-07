@@ -129,17 +129,11 @@ namespace GJK {
 			if (same(ab, ao))
 				direction = ab.cross(ao).cross(ab);
 			else {
-				if constexpr (DIMENSION == 1) points = {a, 0};
-				if constexpr (DIMENSION == 2) points = {a, 0, 0};
-				if constexpr (DIMENSION == 3) points = {a, 0, 0, 0};
+				points = {a};
 				direction = ao;
 			}
 			return DIMENSION == 1;
 		}
-
-		#define CTLEX_GJK_FILL3(a, b, c)\
-			if constexpr (DIMENSION == 2) points = {a, b, c};\
-			if constexpr (DIMENSION == 3) points = {a, b, c, 0}
 
 		constexpr bool triangle(VectorType& direction) requires (DIMENSION > 1) {
 			VectorType a = points[0];
@@ -151,19 +145,19 @@ namespace GJK {
 			VectorType abc = ab.cross(ac);
 			if (same(abc.cross(ac), ao)) {
 				if (same(ac, ao)) {
-					CTLEX_GJK_FILL3(a, c, 0);
+					points = {a, c};
 					direction = ac.cross(ao).cross(ac);
 				} else {
-					CTLEX_GJK_FILL3(a, b, 0);
+					points = {a, b};
 					return line(direction);
 				}
 			} else if (same(ab.cross(abc), ao)) {
-				CTLEX_GJK_FILL3(a, b, 0);
+				points = {a, b};
 				return line(direction);
 			} else if (same(abc, ao)) {
 				direction = abc;
 			} else {
-				CTLEX_GJK_FILL3(a, c, b);
+				points = {a, c, b};
 				direction = -abc;
 			}
 			return DIMENSION == 2;
@@ -184,15 +178,15 @@ namespace GJK {
 			VectorType acd = ac.cross(ad);
 			VectorType adb = ad.cross(ab);
 			if (same(abc, ao)) {
-				points = {a, b, c, 0};
+				points = {a, b, c};
 				return triangle(direction);
 			}
 			if (same(acd, ao)) {
-				points = {a, c, d, 0};
+				points = {a, c, d};
 				return triangle(direction);
 			}
 			if (same(adb, ao)) {
-				points = {a, d, b, 0};
+				points = {a, d, b};
 				return triangle(direction);
 			}
 			return DIMENSION == 3;
@@ -228,7 +222,7 @@ namespace GJK {
 	) {
 		using VectorType = Vector<D>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
-		Simplex<D> sp;
+		Simplex<3> sp;
 		sp.pushFront(sup);
 		Vector3 d = -sup;
 		while (true) {
