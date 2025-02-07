@@ -240,7 +240,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
-			sprite->local.scale				= Vec3(trans.scale, 1);
+			sprite->local.scale				= trans.scale;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
 			auto const glowFX = Graph::Color::alpha(glowSprite ? iglow : 1 - iglow);
 			sprite->setColor(animColor * color.value * glowFX);

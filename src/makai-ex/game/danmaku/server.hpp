@@ -100,9 +100,9 @@ namespace Makai::Ex::Game::Danmaku {
 		bool discardable	= true;
 
 		virtual AServerObject& clear() {
-			trans		= Transform2D();
+			trans		= Transform2D::identity();
 			color		= {Graph::Color::WHITE};
-			scale		= {};
+			scale		= {1};
 			discardable	= true;
 			pause		= {};
 			if (auto collider = collision()) {

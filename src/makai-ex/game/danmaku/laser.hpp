@@ -165,7 +165,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (!sprite) return;
 			sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position		= Vec3(trans.position, sprite->local.position.z);
-			sprite->local.scale			= Vec3(trans.scale, 1);
+			sprite->local.scale			= trans.scale;
 			Vector4 const spriteColor = color.value * animColor;
 			for (usize i: {0, 1, 2, 3}) {
 				Vector2 const uvOffset = Vector2(i&1, (i&2)>>1);
