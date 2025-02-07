@@ -65,7 +65,9 @@ namespace Collision::C2D {
 		/// @param b `Area` to check against.
 		/// @return Whether collision happens.
 		constexpr static bool check(Area const& a, Area const& b) {
-			return withinBounds(*a.shape, *b.shape);
+			if (a.canCollide && b.canCollide)
+				return withinBounds(*a.shape, *b.shape);
+			return false;
 		}
 	};
 }
