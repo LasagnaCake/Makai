@@ -133,8 +133,8 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet& setFree(bool const state) override {
 			if (state) {
 				active = false;
-				hideSprites();
 				objectState = State::SOS_FREE;
+				hideSprites();
 				release(this, server);
 			} else {
 				active = true;
