@@ -27,7 +27,6 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ~Bullet() {}
 
 		Bullet& clear() override {
-			DEBUGLN("Clearing...");
 			AServerObject::clear();
 			rotateSprite	= true;
 			glowOnSpawn		= true;
