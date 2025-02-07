@@ -59,7 +59,7 @@ struct TestApp: Makai::Ex::Game::App {
 			bullet->velocity.value = 30;
 			bullet->dope = false;
 //			bullet->task = bfun(*bullet);
-			DEBUGLN("[", bullet->trans.position.x, ", ", bullet->trans.position.y, "]");
+			DEBUGLN("[", bullet->trans.scale.x, ", ", bullet->trans.scale.y, "]");
 		}
 	}
 
