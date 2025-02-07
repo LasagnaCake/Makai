@@ -36,6 +36,9 @@ namespace Makai::Ex::Game::Danmaku {
 			autoDecay		= false;
 			toggleState		= IToggleable::State::TS_UNTOGGLED;
 			animColor		= Graph::Color::WHITE;
+			counter			= 0;
+			toggleCounter	= 0;
+			toggleColor		= 0;
 			return *this;
 		}
 
@@ -198,6 +201,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < despawnTime) {
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime) * toggleColor;
 					} else {
+						counter = 0;
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
@@ -206,6 +210,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < spawnTime) {
 						animColor.a = counter / static_cast<float>(spawnTime) * toggleColor;
 					} else {
+						counter = 0;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = AServerObject::State::SOS_ACTIVE;
@@ -222,6 +227,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (toggleCounter++ < untoggleTime) {
 						toggleColor = 0.5 * (2.0 - (toggleCounter / static_cast<float>(untoggleTime)));
 					} else {
+						toggleCounter = 0;
 						toggleColor = 0.5;
 						toggleState = IToggleable::State::TS_UNTOGGLED;
 					}
@@ -230,6 +236,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (toggleCounter++ < toggleTime) {
 						toggleColor = 0.5 * (1.0 + (toggleCounter / static_cast<float>(toggleTime)));
 					} else {
+						toggleCounter = 0;
 						toggleColor = 1.0;
 						toggleState = IToggleable::State::TS_TOGGLED;
 					}

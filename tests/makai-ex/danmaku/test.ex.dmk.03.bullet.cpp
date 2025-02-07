@@ -17,7 +17,7 @@ struct MeshHolder {
 
 	MeshHolder() {
 		m.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER);
-		gm.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER);
+		gm.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER+1);
 	}
 };
 
@@ -57,6 +57,7 @@ struct TestApp: Makai::Ex::Game::App {
 			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
 			bullet->trans.position = playfield.center;
 			bullet->velocity.value = 30;
+			bullet->dope = false;
 //			bullet->task = bfun(*bullet);
 			DEBUGLN("[", bullet->trans.position.x, ", ", bullet->trans.position.y, "]");
 		}

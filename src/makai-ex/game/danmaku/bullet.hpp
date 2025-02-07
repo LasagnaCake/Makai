@@ -42,6 +42,9 @@ namespace Makai::Ex::Game::Danmaku {
 			loopy			= false;
 			grazed			= false;
 			animColor		= Graph::Color::WHITE;
+			spawnglow		= 0;
+			spawnsize		= 0;
+			counter			= 0;
 			return *this;
 		}
 
@@ -262,6 +265,7 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnglow = 0;
 						animColor.a = 0;
 						spawnsize = 1.0;
+						counter = 0;
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
@@ -275,6 +279,7 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnglow = 0;
 						animColor.a = 1;
 						spawnsize = 1.0;
+						counter = 0;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = State::SOS_ACTIVE;

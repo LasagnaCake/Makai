@@ -36,9 +36,11 @@ namespace Makai::Ex::Game::Danmaku {
 			glow				= {};
 			dope				= false;
 			glowOnSpawn			= false;
-			animColor			= Graph::Color::WHITE;
 			id					= 0;
 			value				= 1;
+			animColor			= Graph::Color::WHITE;
+			counter				= 0;
+			spawnglow			= 0;
 			return *this;
 		}
 
@@ -215,6 +217,7 @@ namespace Makai::Ex::Game::Danmaku {
 						internalRotation *= TAU * 3;
 					} else {
 						internalRotation = 0;
+						counter = 0;
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
@@ -227,6 +230,7 @@ namespace Makai::Ex::Game::Danmaku {
 						internalRotation *= TAU * 3;
 					} else {
 						internalRotation = 0;
+						counter = 0;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = State::SOS_ACTIVE;
