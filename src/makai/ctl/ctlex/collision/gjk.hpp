@@ -216,7 +216,7 @@ namespace GJK {
 	) {
 		using VectorType = Vector<D>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
-		Simplex<3> sp;
+		Simplex<D> sp;
 		sp.pushFront(sup);
 		Vector3 d = -sup;
 		while (true) {
