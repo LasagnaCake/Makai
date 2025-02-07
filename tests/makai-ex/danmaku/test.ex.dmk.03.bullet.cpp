@@ -25,7 +25,7 @@ struct TestBulletServer: MeshHolder, BaseBulletServer {
 	TestBulletServer(): MeshHolder(), BaseBulletServer({1024, m, gm, ::board, ::playfield}) {}
 };
 
-Danmaku::Bullet::PromiseType bfun(Danmaku::Bullet& bullet) {
+Danmaku::Bullet::PromiseType btask(Danmaku::Bullet& bullet) {
 	co_yield 60;
 	DEBUGLN("Oh no I died");
 	bullet.free();
@@ -58,7 +58,7 @@ struct TestApp: Makai::Ex::Game::App {
 			bullet->trans.position = playfield.center;
 			bullet->velocity.value = 30;
 			bullet->dope = false;
-//			bullet->task = bfun(*bullet);
+//			bullet->task = btask(*bullet);
 			DEBUGLN("[", bullet->trans.scale.x, ", ", bullet->trans.scale.y, "]");
 		}
 	}
