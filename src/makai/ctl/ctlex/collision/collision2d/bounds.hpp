@@ -159,7 +159,7 @@ namespace Collision::C2D {
 		/// @returns Furthest point.
 		constexpr Vector2 furthest(Vector2 const& direction) const final {
 			//return position + Math::angleV2(rotation + direction.angle()) * radius;
-			return position + Math::rotateV2(direction, rotation) * radius;
+			return position + direction * radiusAt(direction.angle());
 		}
 
 		/// @brief Circle position.
@@ -205,6 +205,15 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Capsule(Capsule&& other)		= default;
 
+		/// @brief Returns the cap's radius at a given angle.
+		/// @param angle Angle to get the radius for.
+		/// @return Radius at the given angle.
+		constexpr float radiusAt(float const angle) const {
+			float as, ac;
+			CTL::Math::absincos(angle + rotation, as, ac);
+			return (as * width.x) + (ac * width.y);
+		}
+
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
@@ -212,7 +221,7 @@ namespace Collision::C2D {
 			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
 			Vector2 const end = Math::angleV2(rotation);
 			float const alignment = end.dot(direction);
-			Vector2 point = width * Math::rotateV2(direction, rotation) + position;
+			Vector2 point = position + direction * radiusAt(direction.angle());
 			if (alignment > 0) point += end * length;
 			return point;
 		}
