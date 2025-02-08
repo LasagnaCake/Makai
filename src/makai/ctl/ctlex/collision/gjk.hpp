@@ -33,13 +33,9 @@ namespace GJK {
 	};
 	
 	/// @brief Simplex for bound calculation.
-	/// @tparam D Dimension.
-	template<usize D>
 	struct Simplex {
-		static_assert(D > 0 && D < 5);
-
 		/// @brief Dimension of the simplex.
-		constexpr static usize DIMENSION	= D;
+		constexpr static usize DIMENSION	= 3;
 		/// @brief Maximum amount of points in the simplex.
 		constexpr static usize MAX_POINTS	= DIMENSION+1;
 
@@ -93,9 +89,7 @@ namespace GJK {
 		/// @param vec Point to add.
 		/// @return Reference to self.
 		constexpr Simplex& pushFront(VectorType const& vec) {
-			if constexpr		(DIMENSION == 1) points = {vec, points[0]};
-			else if constexpr	(DIMENSION == 2) points = {vec, points[0], points[1]};
-			else if constexpr	(DIMENSION == 3) points = {vec, points[0], points[1], points[2]};
+			points = {vec, points[0], points[1], points[2]};
 			if (count < MAX_POINTS)
 				++count;
 			return *this;
@@ -138,10 +132,10 @@ namespace GJK {
 				points = {a};
 				direction = ao;
 			}
-			return DIMENSION == 1;
+			return false;
 		}
 
-		constexpr bool triangle(VectorType& direction) requires (DIMENSION > 1) {
+		constexpr bool triangle(VectorType& direction) {
 			VectorType a = points[0];
 			VectorType b = points[1];
 			VectorType c = points[2];
@@ -166,12 +160,10 @@ namespace GJK {
 				points = {a, c, b};
 				direction = -abc;
 			}
-			return DIMENSION == 2;
+			return false;
 		}
 
-		constexpr bool triangle(VectorType& direction) requires (DIMENSION < 2) {return line(direction);} 
-
-		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION > 2) {
+		constexpr bool tetrahedron(VectorType& direction) {
 			VectorType a = points[0];
 			VectorType b = points[1];
 			VectorType c = points[2];
@@ -195,10 +187,8 @@ namespace GJK {
 				points = {a, d, b};
 				return triangle(direction);
 			}
-			return DIMENSION == 3;
+			return true;
 		}
-
-		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION < 3) {return triangle(direction);}
 	};
 
 	/// @brief Gets the support vector between two bounds.
@@ -228,7 +218,7 @@ namespace GJK {
 	) {
 		using VectorType = Vector<D>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
-		Simplex<3> sp;
+		Simplex sp;
 		sp.pushFront(sup);
 		Vector3 d = -sup;
 		while (true) {
