@@ -27,6 +27,7 @@ namespace Collision::C2D {
 
 		/// @brief Other server collider type.
 		/// @tparam SI Server ID.
+		/// @tparam SL Collision layer count.
 		template<usize SI, usize SL = MAX_LAYERS>
 		using ColliderType = typename CollisionServer<SI, SL>::Collider;
 
