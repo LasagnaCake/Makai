@@ -10,6 +10,13 @@
 
 CTL_EX_NAMESPACE_BEGIN
 
+namespace Type::Ex::Collision::GJK {
+	template<usize N>
+	concept Dimension = (N == 2 || N == 3);
+	template<usize... D>
+	concept Dimensions = (... && Dimension<D>);
+}
+
 /// @brief Collision detection facilities.
 namespace Collision {
 
@@ -29,13 +36,15 @@ namespace GJK {
 	template<usize D>
 	struct IGJKBound {
 		constexpr virtual ~IGJKBound() {}
-		constexpr virtual Vector<D> furthest(Vector<D> const& direction) const = 0;
+		constexpr virtual Vector3 furthest(Vector3 const& direction) const = 0;
 	};
 	
 	/// @brief Simplex for bound calculation.
+	template<usize D>
 	struct Simplex {
+		static_assert(Type::Ex::Collision::GJK::Dimension<D>, "GJK collision detection is only available for 2D & 3D collision!");
 		/// @brief Dimension of the simplex.
-		constexpr static usize DIMENSION	= 3;
+		constexpr static usize DIMENSION	= D;
 		/// @brief Maximum amount of points in the simplex.
 		constexpr static usize MAX_POINTS	= DIMENSION+1;
 
@@ -89,16 +98,28 @@ namespace GJK {
 		/// @param vec Point to add.
 		/// @return Reference to self.
 		constexpr Simplex& pushFront(VectorType const& vec) {
-			points = {vec, points[0], points[1], points[2]};
+			if constexpr (DIMENSION == 3)		points = {vec, points[0], points[1], points[2]};
+			else if constexpr (DIMENSION == 2)	points = {vec, points[0], points[1]};
 			if (count < MAX_POINTS)
 				++count;
 			return *this;
+		}
+		
+		/// @brief Remakes the simplex as the next simplex to check.
+		/// @param direction Direction to remake simplex for.
+		/// @return Whether simplex contains the origin.
+		constexpr bool remake(VectorType& direction) requires (DIMENSION == 2) {
+			switch (count) {
+				case 2: return line(direction);
+				case 3: return triangle(direction);
+			}
+			return false;
 		}
 
 		/// @brief Remakes the simplex as the next simplex to check.
 		/// @param direction Direction to remake simplex for.
 		/// @return Whether simplex contains the origin.
-		constexpr bool remake(VectorType& direction) {
+		constexpr bool remake(VectorType& direction) requires (DIMENSION == 3) {
 			switch (count) {
 				case 2: return line(direction);
 				case 3: return triangle(direction);
@@ -160,10 +181,10 @@ namespace GJK {
 				points = {a, c, b};
 				direction = -abc;
 			}
-			return false;
+			return DIMENSION == 2;
 		}
 
-		constexpr bool tetrahedron(VectorType& direction) {
+		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION == 3) {
 			VectorType a = points[0];
 			VectorType b = points[1];
 			VectorType c = points[2];
@@ -187,42 +208,45 @@ namespace GJK {
 				points = {a, d, b};
 				return triangle(direction);
 			}
-			return true;
+			return DIMENSION == 3;
 		}
 	};
 
 	/// @brief Gets the support vector between two bounds.
-	/// @tparam D Dimension.
+	/// @tparam DA Dimension of bound A.
+	/// @tparam DB Dimension of bound B.
 	/// @param a GJK-enabled bound.
 	/// @param b GJK-enabled bound.
 	/// @param direction Direction to get support vector for.
 	/// @return Support vector.
-	template<usize D>
-	constexpr Vector<D> support(
-		IGJKBound<D> const& a,
-		IGJKBound<D> const& b,
-		Vector<D> const& direction
+	template<usize DA, usize DB>
+	constexpr Vector3 support(
+		IGJKBound<DA> const& a,
+		IGJKBound<DB> const& b,
+		Vector3 const& direction
 	) {
 		return a.furthest(direction) - b.furthest(-direction);
 	}
 
 	/// @brief Checks collision between two bounds.
-	/// @tparam D Dimension.
+	/// @tparam DA Dimension of collider A.
+	/// @tparam DB Dimension of collider B.
 	/// @param a GJK-enabled bound.
 	/// @param b GJK-enabled bound.
 	/// @return Whether they collide.
-	template<usize D>
+	template<usize DA, usize DB>
 	constexpr bool check(
-		IGJKBound<D> const& a,
-		IGJKBound<D> const& b
-	) requires (D > 1 && D < 4) {
-		using VectorType = Vector<D>;
+		IGJKBound<DA> const& a,
+		IGJKBound<DB> const& b
+	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
+		using VectorType = Vector3;
+		constexpr usize DIMENSION = (DA > DB ? DA : DB);
 		VectorType sup = support(a, b, VectorType::RIGHT());
-		Simplex sp;
+		Simplex<DIMENSION> sp;
 		sp.pushFront(sup);
-		Vector3 d = Vector3(-sup);
+		VectorType d = -sup;
 		while (true) {
-			sup = support<D>(a, b, d);
+			sup = support(a, b, d);
 			if (sup.dot(d) <= 0)
 				return false;
 			sp.pushFront(sup);
