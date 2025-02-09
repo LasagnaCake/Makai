@@ -37,6 +37,7 @@ namespace Collision::C2D {
 			/// @brief Destructor.
 			constexpr ~Collider() {CollisionServer::unbind(this);}
 
+			/// @brief Collision data interface.
 			struct IData {
 				virtual ~IData() {}
 			};
