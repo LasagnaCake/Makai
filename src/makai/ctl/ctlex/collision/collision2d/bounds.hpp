@@ -15,18 +15,6 @@ namespace Collision {}
 
 /// @brief Two-dimensional collision.
 namespace Collision::C2D {
-	template<usize UUID> struct Bounded;
-}
-
-/// @brief Two-dimensional collision type constraints.
-namespace Type::Ex::Collision::C2D {
-	/// @brief Type must be a valid collision bound.
-	template<class T>
-	concept Collidable = CTL::Type::Subclass<T, CTL::Ex::Collision::C2D::Bounded<T::ID>>;
-}
-
-/// @brief Two-dimensional collision.
-namespace Collision::C2D {
 	namespace {
 		using
 			Math::center,
