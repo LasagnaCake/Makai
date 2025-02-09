@@ -27,11 +27,9 @@ namespace Collision {
 
 		template<usize DO = D>
 		constexpr bool overlap(AABB<DO> const& other) const {
-			if constexpr (DO >= D) return (
-				(overlapMin(other) || overlapMax(other))
-			&&	(remainingMin(other) || remainingMax(other))
-			);
-			else return other.overlap(*this);
+			if constexpr (DO == D)		return (overlapMin(other) || overlapMax(other));
+			else if constexpr (DO > D)	return overlap({other.min, other.max});
+			else						return other.overlap({min, max});
 		}
 
 		constexpr AABB normalized() const {
@@ -39,8 +37,7 @@ namespace Collision {
 		}
 	
 	private:
-		template<usize DO>
-		constexpr bool overlapMin(AABB<DO> const& other) const {
+		constexpr bool overlapMin(AABB const& other) const {
 			bool overlapping = true;
 			overlapping = overlapping && (other.min.x <= min.x && min.x <= other.max.x);
 			overlapping = overlapping && (other.min.y <= min.y && min.y <= other.max.y);
@@ -51,8 +48,7 @@ namespace Collision {
 			return overlapping;
 		}
 
-		template<usize DO>
-		constexpr bool overlapMax(AABB<DO> const& other) const {
+		constexpr bool overlapMax(AABB const& other) const {
 			bool overlapping = true;
 			overlapping = overlapping && (other.min.x <= max.x && max.x <= other.max.x);
 			overlapping = overlapping && (other.min.y <= max.y && max.y <= other.max.y);
@@ -61,28 +57,6 @@ namespace Collision {
 			if constexpr (D > 3)
 				overlapping = overlapping && (other.min.w <= max.w && max.w <= other.max.w);
 			return overlapping;
-		}
-
-		template<usize DO>
-		constexpr bool remainingMin(AABB<DO> const& other) const {
-			if constexpr (D == DO) return true;
-			else {
-				bool overlapping = true;
-				if constexpr (D < 3 && DO > 2) overlapping = overlapping && (other.min.z == 0);
-				if constexpr (D < 4 && DO > 3) overlapping = overlapping && (other.min.w == 0);
-				return overlapping;
-			}
-		}
-
-		template<usize DO>
-		constexpr bool remainingMax(AABB<DO> const& other) const {
-			if constexpr (D == DO) return true;
-			else {
-				bool overlapping = true;
-				if constexpr (D < 3 && DO > 2) overlapping = overlapping && (other.max.z == 0);
-				if constexpr (D < 4 && DO > 3) overlapping = overlapping && (other.max.w == 0);
-				return overlapping;
-			}
 		}
 	};
 }
