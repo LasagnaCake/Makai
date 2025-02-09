@@ -4,9 +4,9 @@
 #include "../../ctl/ctl.hpp"
 #include "../math/vector.hpp"
 
-// Based off of https://winter.dev/articles/gjk-algorithm
+#include "aabb.hpp"
 
-// TODO: Document this
+// Based off of https://winter.dev/articles/gjk-algorithm
 
 CTL_EX_NAMESPACE_BEGIN
 
@@ -36,7 +36,11 @@ namespace GJK {
 	template<usize D>
 	struct IGJKBound {
 		constexpr virtual ~IGJKBound() {}
-		constexpr virtual Vector3 furthest(Vector3 const& direction) const = 0;
+		constexpr virtual Vector3 furthest(Vector3 const& direction) const	= 0;
+		constexpr virtual AABB<D> aabb() const								= 0;
+
+		template<usize DO>
+		constexpr bool bounded(IGJKBound<DO> const& other) const {return aabb().overlap(other.aabb());}
 	};
 	
 	/// @brief Simplex for bound calculation.
@@ -239,6 +243,7 @@ namespace GJK {
 		IGJKBound<DA> const& a,
 		IGJKBound<DB> const& b
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
+		if (!a.bounded(b)) return false;
 		using VectorType = Vector3;
 		constexpr usize DIMENSION = (DA > DB ? DA : DB);
 		VectorType sup = support(a, b, VectorType::RIGHT());

@@ -27,6 +27,12 @@ namespace Collision::C2D {
 	/// @brief Basic 2D bound interface.
 	using IBound2D = IBound<2>;
 
+	/// @brief 2D Axis-Aligned Bounding Box.
+	using AABB2D = AABB<2>;
+
+	static_assert((AABB2D{-1, 1}).overlap(AABB2D{-1, 1}));
+	static_assert(!(AABB2D{-2, -1}).overlap(AABB2D{1, 2}));
+
 	/// @brief Point bound.
 	struct Point: IBound2D {
 		/// @brief Constructs a point bound.
@@ -47,6 +53,10 @@ namespace Collision::C2D {
 		constexpr Vector3 furthest(Vector3 const& direction) const final {
 			return position;
 		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const final {return {position, 0};}
 
 		/// @brief Point position.
 		Vector2 position;
@@ -101,6 +111,10 @@ namespace Collision::C2D {
 			return maxPoint;
 		}
 
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const final {return {position - size, position + size};}
+
 		/// @brief Box position.
 		Vector2 position;
 		/// @brief Box size.
@@ -150,6 +164,10 @@ namespace Collision::C2D {
 			//return position + Math::angleV2(rotation + direction.angle()) * radius;
 			return position + direction * radiusAt(direction.xy().angle());
 		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const final {return {position - radius.max(), position + radius.max()};}
 
 		/// @brief Circle position.
 		Vector2 position;
@@ -215,6 +233,10 @@ namespace Collision::C2D {
 			return point;
 		}
 
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const final {return {position - length - width.max(), position + length + width.max()};}
+
 		/// @brief Capsule position.
 		Vector2 position;
 		/// @brief Capsule width.
@@ -262,6 +284,22 @@ namespace Collision::C2D {
 			return position + direction;
 		}
 
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const final {
+			auto const end = position + direction;
+			return {
+				Vector2(
+					CTL::Math::min(position.x, end.x),
+					CTL::Math::min(position.y, end.y)
+				), 
+				Vector2(
+					CTL::Math::max(position.x, end.x),
+					CTL::Math::max(position.y, end.y)
+				)
+			};
+		}
+
 		/// @brief Ray position.
 		Vector2 position;
 		/// @brief Ray direction.
@@ -290,7 +328,7 @@ namespace Collision::C2D {
 		/// @brief Constructs the shape from a set of points.
 		/// @param trans Shape transform.
 		/// @param points Vertices.
-		constexpr Shape(Span<Vector2> const& points): points(points)				{}
+		constexpr Shape(Span<Vector2> const& points): points(points)	{}
 
 		/// @brief Copy constructor (defaulted).
 		constexpr Shape(Shape const& other)	= default;
@@ -313,6 +351,21 @@ namespace Collision::C2D {
 				}
 			}
 			return maxPoint;
+		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const final {
+			Vector2  min = 0, max = 0;
+			Math::Matrix3x3 mat = trans;
+			for (Vector2 const& vertex: points) {
+				Vector2 const tp = mat * Math::Vector3(vertex, 1); 
+				if (min.x > tp.x) min.x = tp.x;
+				if (min.y > tp.y) min.y = tp.y;
+				if (max.x < tp.x) max.x = tp.x;
+				if (max.y < tp.y) max.y = tp.y;
+			}
+			return {min, max};
 		}
 		
 		/// @brief Shape transform.
