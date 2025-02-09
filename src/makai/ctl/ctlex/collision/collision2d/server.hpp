@@ -42,6 +42,7 @@ namespace Collision::C2D {
 				virtual ~IData() {}
 			};
 
+			/// @brief Event fired on collision with another collider.
 			using CollisionEvent = Functor<void(Collider const&, Direction const)>;
 
 			/// @brief
