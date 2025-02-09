@@ -35,10 +35,17 @@ namespace GJK {
 	/// @tparam D Dimension.
 	template<usize D>
 	struct IGJKBound {
+		/// @brief Destructor.
 		constexpr virtual ~IGJKBound() {}
+		/// @brief Returns the furthest point in a given direction. Must be implemented.
 		constexpr virtual Vector3 furthest(Vector3 const& direction) const	= 0;
+		/// @brief Returns the Axis-Aligned Bounding Box the shape resides in. Must be implemented.
 		constexpr virtual AABB<D> aabb() const								= 0;
 
+		/// @brief Checks if this shape's AABB overlaps with another shape's AABB.
+		/// @tparam DO Other shape's dimension.
+		/// @param other Shape to check overlap with.
+		/// @return Whether shapes overlap.
 		template<usize DO>
 		constexpr bool bounded(IGJKBound<DO> const& other) const {return aabb().overlap(other.aabb());}
 	};
