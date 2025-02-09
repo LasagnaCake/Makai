@@ -56,7 +56,7 @@ namespace Collision::C2D {
 
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
 		/// @return Shape's AABB.
-		constexpr AABB2D aabb() const final {return {position, 0};}
+		constexpr AABB2D aabb() const final {return {position, position};}
 
 		/// @brief Point position.
 		Vector2 position;
