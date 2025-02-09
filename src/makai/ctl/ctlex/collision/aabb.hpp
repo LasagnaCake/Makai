@@ -20,11 +20,18 @@ namespace Collision {
 	struct AABB {
 		static_assert(D > 1, "AABB is only available for 2D and up!");
 
+		/// @brief AABB's dimension.
 		constexpr static usize DIMENSION = D;
 
+		/// @brief Lowest corner of the bounding box.
 		Vector<D> min;
+		/// @brief Highest corner of the bounding box.
 		Vector<D> max;
 
+		/// @brief Returns whether this bounding box overlaps with another.
+		/// @tparam DO Other bounding box's dimension.
+		/// @param other Bounding box to check overlap with.
+		/// @return Whether boxes overlap.
 		template<usize DO = D>
 		constexpr bool overlap(AABB<DO> const& other) const {
 			if constexpr (DO == D)		return (overlapMin(other) || overlapMax(other));
@@ -32,6 +39,8 @@ namespace Collision {
 			else						return other.overlap({min, max});
 		}
 
+		/// @brief Returns the bounding box configured correctly.
+		/// @return Correctly-configured bounding box.
 		constexpr AABB normalized() const {
 			return {min.min(max), max.max(min)};
 		}
