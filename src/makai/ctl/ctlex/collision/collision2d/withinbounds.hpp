@@ -28,6 +28,12 @@ namespace Collision::C2D {
 	constexpr bool withinBounds(IBound2D const& a, IBound2D const& b) {
 		return GJK::check(a, b);
 	}
+
+	static_assert(withinBounds(Point(0), Point(0)));
+	static_assert(withinBounds(0, Circle(0, 1)));
+	static_assert(withinBounds(Circle(0, 1), Circle(0, 1)));
+	static_assert(withinBounds(Circle(0, 1), Box(0, 1)));
+	static_assert(withinBounds(Box(0, 1), Box(0, 1)));
 }
 
 CTL_EX_NAMESPACE_END
