@@ -203,7 +203,7 @@ namespace GJK {
 		IGJKBound<D> const& b,
 		Vector<D> const& direction
 	) {
-		return b.furthest(direction) - b.furthest(-direction);
+		return a.furthest(direction) - b.furthest(-direction);
 	}
 
 	/// @brief Checks collision between two bounds.
@@ -215,12 +215,12 @@ namespace GJK {
 	constexpr bool check(
 		IGJKBound<D> const& a,
 		IGJKBound<D> const& b
-	) {
+	) requires (D > 1 && D < 4) {
 		using VectorType = Vector<D>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
 		Simplex sp;
 		sp.pushFront(sup);
-		Vector3 d = -sup;
+		Vector3 d = Vector3(-sup);
 		while (true) {
 			sup = support<D>(a, b, d);
 			if (sup.dot(d) <= 0)
