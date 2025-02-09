@@ -173,17 +173,11 @@ namespace Makai::Ex::Game::Danmaku {
 				min = playfield.min(),
 				max = playfield.max()
 			;
-			if (!CTL::Ex::Collision::GJK::check(
-				board.asArea(),
-				*shape
-			)) free();
+			if (!C2D::withinBounds(board.asArea(), *shape)) free();
 		}
 
 		void loopAndBounce() {
-			if (bouncy && !CTL::Ex::Collision::GJK::check(
-				board.asArea(),
-				C2D::Point(trans.position)
-			)) {
+			if (bouncy && !C2D::withinBounds(trans.position, board.asArea())) {
 				auto const
 					min = board.min(),
 					max = board.max()
@@ -194,10 +188,7 @@ namespace Makai::Ex::Game::Danmaku {
 				if (trans.position.y > max.y) shift(0);
 				onAction(*this, Action::SOA_BOUNCE);
 				bouncy = false;
-			} else if (loopy && shape && !CTL::Ex::Collision::GJK::check(
-				board.asArea(),
-				*shape
-			)) {
+			} else if (loopy && shape && !C2D::withinBounds(board.asArea(), *shape)) {
 				auto const
 					min = board.min(),
 					max = board.max()
@@ -393,7 +384,7 @@ namespace Makai::Ex::Game::Danmaku {
 				BulletType& bullet = access<BulletType>(b);
 				if (
 					bullet.shape
-				&&	Collision::GJK::check(*bullet.shape, bound)
+				&&	C2D::withinBounds(*bullet.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -405,7 +396,7 @@ namespace Makai::Ex::Game::Danmaku {
 				BulletType& bullet = access<BulletType>(b);
 				if (
 					bullet.shape
-				&&	!Collision::GJK::check(*bullet.shape, bound)
+				&&	!C2D::withinBounds(*bullet.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;

@@ -352,7 +352,7 @@ namespace Makai::Ex::Game::Danmaku {
 				ItemType& item = access<ItemType>(b);
 				if (
 					item.shape
-				&&	Collision::GJK::check(*item.shape, bound)
+				&&	C2D::withinBounds(*item.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -364,7 +364,7 @@ namespace Makai::Ex::Game::Danmaku {
 				ItemType& item = access<ItemType>(b);
 				if (
 					item.shape
-				&&	!Collision::GJK::check(*item.shape, bound)
+				&&	!C2D::withinBounds(*item.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;

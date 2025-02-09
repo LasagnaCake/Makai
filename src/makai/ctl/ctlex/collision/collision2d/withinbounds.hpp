@@ -21,6 +21,10 @@ namespace Collision::C2D {
 		return GJK::check(p, area);
 	}
 
+	constexpr bool withinBounds(IBound2D const& area, Vector2 const& point) {
+		return withinBounds(point, area);
+	}
+
 	constexpr bool withinBounds(IBound2D const& a, IBound2D const& b) {
 		return GJK::check(a, b);
 	}

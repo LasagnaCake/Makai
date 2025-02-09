@@ -336,7 +336,7 @@ namespace Makai::Ex::Game::Danmaku {
 				LaserType& laser = access<LaserType>(b);
 				if (
 					laser.shape
-				&&	Collision::GJK::check(*laser.shape, bound)
+				&&	C2D::withinBounds(*laser.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -348,7 +348,7 @@ namespace Makai::Ex::Game::Danmaku {
 				LaserType& laser = access<LaserType>(b);
 				if (
 					laser.shape
-				&&	!Collision::GJK::check(*laser.shape, bound)
+				&&	!C2D::withinBounds(*laser.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
