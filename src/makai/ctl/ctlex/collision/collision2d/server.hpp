@@ -146,8 +146,11 @@ namespace Collision::C2D {
 			): Area{other}, ID(++count), layerID(layer)	{CollisionServer::bind(this);}
 		};
 
+		/// @brief Server collision layer.
 		struct Layer {
+			/// @brief Layers affected by this one.
 			LayerMask	affects;
+			/// @brief Layers that can affect this one.
 			LayerMask	affectedBy;
 
 			/// @brief Checks collision direction between two layers.
@@ -183,6 +186,8 @@ namespace Collision::C2D {
 				return check(a, b);
 			}
 
+			/// @brief Processes collision with another layer.
+			/// @param other Layer to process collision with.
 			constexpr void process(Layer const& other) const {
 				if (colliders.empty() || other.colliders.empty()) return;
 				const auto dir = check(*this, other);
@@ -194,20 +199,17 @@ namespace Collision::C2D {
 
 		private:
 			[[nodiscard]] constexpr Unique<Collider> createCollider(usize const layer) {
-				auto colli = new Collider(layer);
-				colliders.pushBack(colli);
-				return Unique<Collider>(colli);
+				return Unique<Collider>::create(layer);
 			}
 
 			[[nodiscard]] constexpr Unique<Collider> createCollider(usize const layer, Area const& area) {
-				auto colli = new Collider(area, layer);
-				colliders.pushBack(colli);
-				return Unique<Collider>(colli);
+				return Unique<Collider>::create(area, layer);
 			}
 
 			template <usize, usize> friend class CollisionServer;
 
-			List<Collider*>	colliders;
+			/// @brief Colliders in this layer.
+			List<ref<Collider>>	colliders;
 		};
 
 		/// @brief Default constructor.
@@ -232,10 +234,17 @@ namespace Collision::C2D {
 				area.process(*c);
 		}
 
+		/// @brief Creates a collider in the server.
+		/// @param layer Layer to bind collider to.
+		/// @return Collider.
 		[[nodiscard]] constexpr static Unique<Collider> createCollider(usize const layer) {
 			return layers[layer].createCollider(layer);
 		}
 
+		/// @brief Creates a collider in the server.
+		/// @param area Area to construct collider from.
+		/// @param layer Layer to bind collider to.
+		/// @return Collider.
 		[[nodiscard]] constexpr static Unique<Collider> createCollider(Area const& area, usize const layer) {
 			return layers[layer].createCollider(layer, area);
 		}
@@ -247,17 +256,18 @@ namespace Collision::C2D {
 					layers[i].process(layers[j]);
 		}
 
+		/// @brief Collision layers in the server.
 		static inline As<Layer[MAX_LAYERS]> layers = {};
 
 	private:
 		friend class Unique<Collider>;
 
-		constexpr static void bind(Collider* const collider) {
+		constexpr static void bind(ref<Collider> const collider) {
 			colliders.pushBack(collider);
 			collider->getLayer().colliders.pushBack(collider);
 		}
 
-		constexpr static void unbind(Collider* const collider) {
+		constexpr static void unbind(ref<Collider> const collider) {
 			colliders.eraseLike(collider);
 			collider->getLayer().colliders.eraseLike(collider);
 		}
