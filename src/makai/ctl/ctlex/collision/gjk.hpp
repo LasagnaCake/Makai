@@ -265,7 +265,7 @@ namespace GJK {
 			if (sp.remake(d))
 				return true;
 		}
-		return false;
+		return true;
 	}
 }
 
