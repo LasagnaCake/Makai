@@ -15,16 +15,20 @@ namespace Collision::C2D {
 	}
 
 	/// @brief Collision server.
-	/// @tparam Server ID.
-	template<usize I>
+	/// @tparam I Server ID.
+	/// @tparam L Collision layer count.
+	template<usize I, usize L = 64>
 	struct CollisionServer {
 		/// @brief Server ID.
 		constexpr static usize ID = I;
 
+		/// @brief Max layers count.
+		constexpr static usize MAX_LAYERS = L;
+
 		/// @brief Other server collider type.
 		/// @tparam SI Server ID.
-		template<usize SI>
-		using ColliderType = typename CollisionServer<SI>::Collider;
+		template<usize SI, usize SL = MAX_LAYERS>
+		using ColliderType = typename CollisionServer<SI, SL>::Collider;
 
 		struct Layer;
 
@@ -71,8 +75,8 @@ namespace Collision::C2D {
 			///		depending on its result.
 			/// @param other `Collider` to check against.
 			/// @param direction Direction to process collision for.
-			template<usize SI>
-			constexpr void process(ColliderType<SI> const& other, Direction const direction) const {
+			template<usize SI, usize SL>
+			constexpr void process(ColliderType<SI, SL> const& other, Direction const direction) const {
 				if (!colliding(other)) return;
 				switch(direction) {
 					using enum Direction;
@@ -102,9 +106,26 @@ namespace Collision::C2D {
 			/// @brief data associated with the collider.
 			Reference<IData const> data;
 
-			Layer& layer;
+			/// @brief Returns the layer associated with this collision object.
+			/// @return Associated layer.
+			Layer& getLayer() const {return CollisionServer::layers[layerID];}
+
+			/// @brief Sets the layer associated with this collision object.
+			/// @return Reference to self.
+			Collider& setLayer(usize const layer) {
+				if (layer < MAX_LAYERS) {
+					getLayer().colliders.eraseLike(this);
+					layerID = layer;
+					getLayer().colliders.pushBack(this);
+				}
+				return *this;
+			}
+
 		private:
 			template <usize> friend class CollisionServer;
+
+			/// @brief Layer the collider resides in.
+			usize layerID;
 
 			/// @brief Amount of created colliders.
 			inline static usize count = 0;
@@ -116,14 +137,14 @@ namespace Collision::C2D {
 
 			/// @brief Default constructor.
 			constexpr Collider(
-				Layer& layer
-			): ID(++count), layer(layer)				{CollisionServer::bind(this);}
+				usize const layer
+			): ID(++count), layerID(layer)				{CollisionServer::bind(this);}
 			/// @brief Constructs the collider from a collision area.
 			/// @param other Collision area to construct from.
 			constexpr Collider(
 				Area const& other,
-				Layer& layer
-			): Area{other}, ID(++count), layer(layer)	{CollisionServer::bind(this);}
+				usize const layer
+			): Area{other}, ID(++count), layerID(layer)	{CollisionServer::bind(this);}
 		};
 
 		struct Layer {
@@ -196,8 +217,8 @@ namespace Collision::C2D {
 		/// @brief Handles collision between a given collider, and a set of layers.
 		/// @param area Collider to check.
 		/// @param layers Layers to check against.
-		template<usize SI>
-		constexpr static void check(ColliderType<SI> const& area, LayerMask const& layers) {
+		template<usize SI, usize SL>
+		constexpr static void check(ColliderType<SI, SL> const& area, LayerMask const& layers) {
 			if (!area.affects.match(layers).overlap() || !area.canCollide) return;
 			for (Collider* c : colliders)
 				if (c->enabled && c->layer.affectedBy.match(layers).overlap())
@@ -222,23 +243,24 @@ namespace Collision::C2D {
 
 		/// @brief Processes (and handles) collision for all colliders in the server.
 		constexpr static void process() {
-			for (usize i = 0; i < 64; ++i)
-				for (usize j = i; j < 64; ++j)
+			for (usize i = 0; i < MAX_LAYERS; ++i)
+				for (usize j = i; j < MAX_LAYERS; ++j)
 					layers[i].process(layers[j]);
 		}
 
-		static inline As<Layer[64]> layers = {};
+		static inline As<Layer[MAX_LAYERS]> layers = {};
 
 	private:
 		friend class Unique<Collider>;
 
 		constexpr static void bind(Collider* const collider) {
 			colliders.pushBack(collider);
+			collider->getLayer().colliders.pushBack(collider);
 		}
 
 		constexpr static void unbind(Collider* const collider) {
 			colliders.eraseLike(collider);
-			for (auto& layer: layers) layer.colliders.eraseLike(collider);
+			collider->getLayer().colliders.eraseLike(collider);
 		}
 
 		friend class Collider;
@@ -252,12 +274,12 @@ namespace Collision::C2D {
 		void operator delete[](pointer);
 	};
 	/// @brief Default collision server.
-	using Server = CollisionServer<0>;
+	using Server = CollisionServer<0, 64>;
 
 	/// @brief Server collision object interface.
 	/// @tparam I Server ID. 
-	template<usize I = 0>
-	using Collider = typename CollisionServer<I>::Collider;
+	template<usize I = 0, usize L = 64>
+	using Collider = typename CollisionServer<I, L>::Collider;
 }
 
 CTL_EX_NAMESPACE_END
