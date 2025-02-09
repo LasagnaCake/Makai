@@ -135,12 +135,10 @@ namespace Collision::C2D {
 			/// @brief Move constructor (deleted).
 			constexpr Collider(Collider&& other)		= delete;
 
-			/// @brief Default constructor.
 			constexpr Collider(
 				usize const layer
 			): ID(++count), layerID(layer)				{CollisionServer::bind(this);}
-			/// @brief Constructs the collider from a collision area.
-			/// @param other Collision area to construct from.
+
 			constexpr Collider(
 				Area const& other,
 				usize const layer
