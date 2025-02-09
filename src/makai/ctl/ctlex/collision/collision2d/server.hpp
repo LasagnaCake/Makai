@@ -287,8 +287,9 @@ namespace Collision::C2D {
 	/// @brief Default collision server.
 	using Server = CollisionServer<0, 64>;
 
-	/// @brief Server collision object interface.
-	/// @tparam I Server ID. 
+	/// @brief Server collision object.
+	/// @tparam I Server ID.
+	/// @tparam L Collision layer count.
 	template<usize I = 0, usize L = 64>
 	using Collider = typename CollisionServer<I, L>::Collider;
 }
