@@ -33,6 +33,10 @@ namespace Collision {
 			);
 			else return other.overlap(*this);
 		}
+
+		constexpr AABB normalized() const {
+			return {min.min(max), max.max(min)};
+		}
 	
 	private:
 		template<usize DO>

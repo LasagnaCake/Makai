@@ -167,7 +167,14 @@ namespace Collision::C2D {
 
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
 		/// @return Shape's AABB.
-		constexpr AABB2D aabb() const final {return {position - radius.max(), position + radius.max()};}
+		constexpr AABB2D aabb() const final {
+			auto min = position - radius, max = position + radius;
+			if (rotation && (radius.x != radius.y)) {
+				Math::rotateV2(min, rotation);
+				Math::rotateV2(max, rotation);
+			}
+			return AABB2D{min, max}.normalized();
+		}
 
 		/// @brief Circle position.
 		Vector2 position;
@@ -235,7 +242,14 @@ namespace Collision::C2D {
 
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
 		/// @return Shape's AABB.
-		constexpr AABB2D aabb() const final {return {position - length - width.max(), position + length + width.max()};}
+		constexpr AABB2D aabb() const final {
+			auto min = position - width, max = position + Vector2(length, 0) + width;
+			if (rotation) {
+				Math::rotateV2(min, rotation);
+				Math::rotateV2(max, rotation);
+			}
+			return AABB2D{min, max}.normalized();
+		}
 
 		/// @brief Capsule position.
 		Vector2 position;
@@ -287,17 +301,7 @@ namespace Collision::C2D {
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
 		/// @return Shape's AABB.
 		constexpr AABB2D aabb() const final {
-			auto const end = position + direction;
-			return {
-				Vector2(
-					CTL::Math::min(position.x, end.x),
-					CTL::Math::min(position.y, end.y)
-				), 
-				Vector2(
-					CTL::Math::max(position.x, end.x),
-					CTL::Math::max(position.y, end.y)
-				)
-			};
+			return AABB2D{position, position + direction}.normalized();
 		}
 
 		/// @brief Ray position.
@@ -359,11 +363,9 @@ namespace Collision::C2D {
 			Vector2  min = 0, max = 0;
 			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				Vector2 const tp = mat * Math::Vector3(vertex, 1); 
-				if (min.x > tp.x) min.x = tp.x;
-				if (min.y > tp.y) min.y = tp.y;
-				if (max.x < tp.x) max.x = tp.x;
-				if (max.y < tp.y) max.y = tp.y;
+				Vector2 const tp = mat * Math::Vector3(vertex, 1);
+				min = min.min(vertex);
+				max = max.max(vertex);
 			}
 			return {min, max};
 		}

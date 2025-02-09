@@ -483,6 +483,26 @@ class Vector2: Ordered {
 			return (x > y) ? x : y;
 		}
 
+		/// @brief Returns a vector containing the smallest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Smallest vector.
+		constexpr Vector2 min(Vector2 const& other) const {
+			return Vector2(
+				CTL::Math::min(x, other.x),
+				CTL::Math::min(y, other.y)
+			);
+		}
+
+		/// @brief Returns a vector containing the biggest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Biggest vector.
+		constexpr Vector2 max(Vector2 const& other) const {
+			return Vector2(
+				CTL::Math::max(x, other.x),
+				CTL::Math::max(y, other.y)
+			);
+		}
+
 		/// @brief Gets the vector's length.
 		/// @brief Length of vector.
 		constexpr float length() const {
@@ -727,6 +747,28 @@ class Vector3: Ordered {
 		/// @return Biggest component.
 		constexpr float max() const {
 			return ::CTL::Math::max(::CTL::Math::max(x, y), z);
+		}
+
+		/// @brief Returns a vector containing the smallest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Smallest vector.
+		constexpr Vector3 min(Vector3 const& other) const {
+			return Vector3(
+				CTL::Math::min(x, other.x),
+				CTL::Math::min(y, other.y),
+				CTL::Math::min(z, other.z)
+			);
+		}
+
+		/// @brief Returns a vector containing the biggest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Biggest vector.
+		constexpr Vector3 max(Vector3 const& other) const {
+			return Vector3(
+				CTL::Math::max(x, other.x),
+				CTL::Math::max(y, other.y),
+				CTL::Math::min(z, other.z)
+			);
 		}
 
 		/// @brief Gets the vector's length.
@@ -1034,6 +1076,30 @@ class Vector4: Ordered {
 		/// @return Biggest component.
 		constexpr float max() const {
 			return ::CTL::Math::max(::CTL::Math::max(::CTL::Math::max(x, y), z), w);
+		}
+
+		/// @brief Returns a vector containing the smallest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Smallest vector.
+		constexpr Vector4 min(Vector4 const& other) const {
+			return Vector4(
+				CTL::Math::min(x, other.x),
+				CTL::Math::min(y, other.y),
+				CTL::Math::min(z, other.z),
+				CTL::Math::min(w, other.w)
+			);
+		}
+
+		/// @brief Returns a vector containing the biggest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Biggest vector.
+		constexpr Vector4 max(Vector4 const& other) const {
+			return Vector4(
+				CTL::Math::max(x, other.x),
+				CTL::Math::max(y, other.y),
+				CTL::Math::min(z, other.z),
+				CTL::Math::min(w, other.w)
+			);
 		}
 
 		/// @brief Gets the vector's length.
