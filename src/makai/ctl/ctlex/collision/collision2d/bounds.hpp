@@ -82,10 +82,10 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Box(Box&& other)		= default;
 		
-		/// @brief Returns the top-left corner of the box.
+		/// @brief Returns the lowest corner of the box.
 		/// @return Top-left corner.
 		constexpr Vector2 min() const {return position - size;}
-		/// @brief Returns the bottom-right corner of the box.
+		/// @brief Returns the highest corner of the box.
 		/// @return Bottom-right corner.
 		constexpr Vector2 max() const {return position + size;}
 
