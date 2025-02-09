@@ -123,6 +123,7 @@ namespace Collision::C2D {
 
 		private:
 			template <usize, usize> friend class CollisionServer;
+			friend struct Layer;
 
 			/// @brief Layer the collider resides in.
 			usize layerID;
@@ -148,18 +149,6 @@ namespace Collision::C2D {
 		struct Layer {
 			LayerMask	affects;
 			LayerMask	affectedBy;
-
-			[[nodiscard]] constexpr Unique<Collider> createCollider() {
-				auto colli = new Collider(*this);
-				colliders.pushBack(colli);
-				return Unique<Collider>(colli);
-			}
-
-			[[nodiscard]] constexpr Unique<Collider> createCollider(Area const& area) {
-				auto colli = new Collider(area, *this);
-				colliders.pushBack(colli);
-				return Unique<Collider>(colli);
-			}
 
 			/// @brief Checks collision direction between two layers.
 			/// @param a `Layer` to check.
@@ -204,6 +193,18 @@ namespace Collision::C2D {
 			}
 
 		private:
+			[[nodiscard]] constexpr Unique<Collider> createCollider(usize const layer) {
+				auto colli = new Collider(layer);
+				colliders.pushBack(colli);
+				return Unique<Collider>(colli);
+			}
+
+			[[nodiscard]] constexpr Unique<Collider> createCollider(usize const layer, Area const& area) {
+				auto colli = new Collider(area, layer);
+				colliders.pushBack(colli);
+				return Unique<Collider>(colli);
+			}
+
 			template <usize, usize> friend class CollisionServer;
 
 			List<Collider*>	colliders;
@@ -232,11 +233,11 @@ namespace Collision::C2D {
 		}
 
 		[[nodiscard]] constexpr static Unique<Collider> createCollider(usize const layer) {
-			return layers[layer].createCollider();
+			return layers[layer].createCollider(layer);
 		}
 
 		[[nodiscard]] constexpr static Unique<Collider> createCollider(Area const& area, usize const layer) {
-			return layers[layer].createCollider(area);
+			return layers[layer].createCollider(layer, area);
 		}
 
 		/// @brief Processes (and handles) collision for all colliders in the server.
