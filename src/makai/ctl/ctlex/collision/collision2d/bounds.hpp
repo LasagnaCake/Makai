@@ -83,10 +83,10 @@ namespace Collision::C2D {
 		constexpr Box(Box&& other)		= default;
 		
 		/// @brief Returns the lowest corner of the box.
-		/// @return Top-left corner.
+		/// @return Lowest corner.
 		constexpr Vector2 min() const {return position - size;}
 		/// @brief Returns the highest corner of the box.
-		/// @return Bottom-right corner.
+		/// @return Highest corner.
 		constexpr Vector2 max() const {return position + size;}
 
 		/// @brief Returns the furthest point in a given direction.
