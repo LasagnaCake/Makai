@@ -152,6 +152,7 @@ namespace Collision::C2D {
 		/// @param angle Angle to get the radius for.
 		/// @return Radius at the given angle.
 		constexpr float radiusAt(float const angle) const {
+			if (radius.x == radius.y) return radius.x;
 			float as, ac;
 			CTL::Math::absincos(angle + rotation, as, ac);
 			return (as * radius.x) + (ac * radius.y);
@@ -225,6 +226,7 @@ namespace Collision::C2D {
 		/// @param angle Angle to get the radius for.
 		/// @return Radius at the given angle.
 		constexpr float radiusAt(float const angle) const {
+			if (width.x == width.y) return width.x;
 			float as, ac;
 			CTL::Math::absincos(angle + rotation, as, ac);
 			return (as * width.x) + (ac * width.y);
