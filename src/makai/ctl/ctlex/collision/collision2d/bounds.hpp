@@ -148,32 +148,31 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Circle(Circle&& other)		= default;
 
-		/// @brief Returns the circle's radius at a given angle.
-		/// @param angle Angle to get the radius for.
-		/// @return Radius at the given angle.
-		constexpr float radiusAt(float const angle) const {
-			float as, ac;
-			CTL::Math::absincos(angle + rotation, as, ac);
-			return (as * radius.x) + (ac * radius.y);
+		/// @brief Returns the circle's radius at a given direction.
+		/// @param angle Direction to get the radius for.
+		/// @return Radius at the given direction.
+		constexpr Vector2 radiusAt(Vector3 const& direction) const {
+			if (direction.z != 0) return 0;
+			return Math::rotateV2(radius * Math::rotateV2(direction, rotation), -rotation);
 		}
 
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
 		constexpr Vector3 furthest(Vector3 const& direction) const final {
-			//return position + Math::angleV2(rotation + direction.angle()) * radius;
-			return position + direction * radiusAt(direction.xy().angle());
+			return position + radiusAt(direction);
 		}
 
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
 		/// @return Shape's AABB.
 		constexpr AABB2D aabb() const final {
-			auto min = position - radius, max = position + radius;
+			/*auto min = position - radius, max = position + radius;
 			if (rotation && (radius.x != radius.y)) {
 				Math::rotateV2(min, rotation);
 				Math::rotateV2(max, rotation);
 			}
-			return AABB2D{min, max}.normalized();
+			return AABB2D{min, max}.normalized();*/
+			return AABB2D{position - radius.max(), position + radius.max()};
 		}
 
 		/// @brief Circle position.
@@ -219,13 +218,12 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Capsule(Capsule&& other)		= default;
 
-		/// @brief Returns the cap's radius at a given angle.
-		/// @param angle Angle to get the radius for.
-		/// @return Radius at the given angle.
-		constexpr float radiusAt(float const angle) const {
-			float as, ac;
-			CTL::Math::absincos(angle + rotation, as, ac);
-			return (as * width.x) + (ac * width.y);
+		/// @brief Returns the cap's radius at a given direction.
+		/// @param angle Direction to get the cap's radius for.
+		/// @return Radius at the given direction.
+		constexpr Vector2 radiusAt(Vector3 const& direction) const {
+			if (direction.z != 0) return 0;
+			return Math::rotateV2(width * Math::rotateV2(direction, rotation), -rotation);
 		}
 
 		/// @brief Returns the furthest point in a given direction.
@@ -235,7 +233,7 @@ namespace Collision::C2D {
 			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
 			Vector2 const end = Math::angleV2(rotation);
 			float const alignment = end.dot(direction);
-			Vector2 point = position + direction * radiusAt(direction.xy().angle());
+			Vector2 point = position + radiusAt(direction);
 			if (alignment > 0) point += end * length;
 			return point;
 		}
