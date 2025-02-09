@@ -202,11 +202,11 @@ namespace Collision::C2D {
 
 		private:
 			[[nodiscard]] constexpr Unique<Collider> createCollider(usize const layer) {
-				return Unique<Collider>::create(layer);
+				return Unique<Collider>(new Collider(layer));
 			}
 
 			[[nodiscard]] constexpr Unique<Collider> createCollider(usize const layer, Area const& area) {
-				return Unique<Collider>::create(area, layer);
+				return Unique<Collider>(new Collider(area, layer));
 			}
 
 			template <usize, usize> friend class CollisionServer;
