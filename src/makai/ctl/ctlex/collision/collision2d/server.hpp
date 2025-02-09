@@ -122,7 +122,7 @@ namespace Collision::C2D {
 			}
 
 		private:
-			template <usize> friend class CollisionServer;
+			template <usize, usize> friend class CollisionServer;
 
 			/// @brief Layer the collider resides in.
 			usize layerID;
@@ -204,7 +204,7 @@ namespace Collision::C2D {
 			}
 
 		private:
-			template <usize> friend class CollisionServer;
+			template <usize, usize> friend class CollisionServer;
 
 			List<Collider*>	colliders;
 		};
