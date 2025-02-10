@@ -4,8 +4,8 @@
 
 ## Intermediate
 
-- [ ] Move danmaku layer `enum` values into own `enum`
-- [ ] Separate game-related stuff from core engine
+- [x] Move danmaku layer `enum` values into own `enum`
+- [x] Separate game-related stuff from core engine
 - - Have it be an extension
 
 ## Complex
