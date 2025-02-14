@@ -16,8 +16,8 @@ template<usize I>
 struct DebugCrash: Crash {};
 
 /// @brief Generic, potentially-recoverable failure.
-struct Failure: std::exception {
-	cstring what() const noexcept override {return "Something happened!";}
+struct Failure {
+	virtual cstring what() const noexcept {return "Something happened!";}
 };
 
 /// @brief Irrecoverable failure. Catastrophic.
@@ -27,21 +27,21 @@ struct CatastrophicFailure: Crash {
 
 /// @brief Allocation failure. Catastrophic.
 struct AllocationFailure: CatastrophicFailure {
-	cstring what() const noexcept override {return "Memory allocation failed!";}
+	virtual cstring what() const noexcept {return "Memory allocation failed!";}
 };
 
 /// @brief Maximum size possible reached failure. Catastrophic.
 struct MaximumSizeFailure: CatastrophicFailure {
-	cstring what() const noexcept override {return "Maximum size reached!";}
+	virtual cstring what() const noexcept {return "Maximum size reached!";}
 };
 
 /// @brief Object construction failure. Catastrophic.
 struct ConstructionFailure: CatastrophicFailure {
-	cstring what() const noexcept override {return "Failed to construct type!";}
+	virtual cstring what() const noexcept {return "Failed to construct type!";}
 };
 
 /// @brief Crashes the program.
-[[noreturn]] inline void panic() {
+inline void panic() {
 	throw Crash();
 }
 

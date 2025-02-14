@@ -20,8 +20,6 @@ public:
 	using Typed				= ::CTL::Typed<const char*>;
 	using SelfIdentified	= ::CTL::SelfIdentified<Exception>;
 
-	using Pointer			= std::exception_ptr;
-
 	using
 		typename Typed::DataType,
 		typename Typed::ConstReferenceType
@@ -43,15 +41,14 @@ public:
 
 	/// @brief Returns the exception's message.
 	/// @return Message.
-	cstring what() const noexcept override	{return message;					}
+	virtual cstring what() const noexcept		{return message;}
 
 	/// @brief Returns the current exception.
 	/// @return Current exception.
-	static Pointer current() noexcept 		{return std::current_exception();	}
-
-	/// @brief Re-throws an exception.
-	/// @param ex Exception to re-throw.
-	[[noreturn]] static void rethrow(Pointer const& ex)	{std::rethrow_exception(ex);	}
+	static ref<Exception> current() noexcept 	{return ex;		}
+	/// @brief Returns the previous exception.
+	/// @return Previous exception.
+	ref<Exception> previous() const noexcept	{return prev;	}
 
 private:
 	/// @brief Message.
