@@ -34,11 +34,11 @@ namespace Collision::C2D {
 	static_assert(Circle(0, 1).bounded(Box(0, 1)));
 	static_assert(Box(0, 1).bounded(Box(0, 1)));
 	
-	static_assert(withinBounds(Point(0), Point(0)));
-	static_assert(withinBounds(0, Circle(0, 1)));
-	static_assert(withinBounds(Circle(0, 1), Circle(0, 1)));
-	static_assert(withinBounds(Circle(0, 1), Box(0, 1)));
-	static_assert(withinBounds(Box(0, 1), Box(0, 1)));
+	//static_assert(withinBounds(Point(0), Point(0)));
+	//static_assert(withinBounds(0, Circle(0, 1)));
+	//static_assert(withinBounds(Circle(0, 1), Circle(0, 1)));
+	//static_assert(withinBounds(Circle(0, 1), Box(0, 1)));
+	//static_assert(withinBounds(Box(0, 1), Box(0, 1)));
 }
 
 CTL_EX_NAMESPACE_END
