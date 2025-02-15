@@ -1,4 +1,4 @@
-select Choices (
+choice Choices (
 	"I don't want to die!",
 	"Go ahead, kill me.",
 	"B-but, I love you..."
@@ -13,6 +13,6 @@ scene Result
 	end
 end
 
-next select Choices (Result:choice-a, Result:choice-b, none)
+next choice Choices (Result:choice-a, Result:choice-b, none)
 
 "H-huh? Really?"

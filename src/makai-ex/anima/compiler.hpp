@@ -234,8 +234,8 @@ namespace Makai::Ex::AVM::Compiler {
 		using Tokens = List<Token>;
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
-		/// @brief Declared menu options.
-		Map<usize, StringList> menus;
+		/// @brief Declared choices.
+		Map<usize, StringList> choices;
 
 		/// @brief Source file name.
 		String const fileName;
@@ -488,24 +488,24 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing value for '", op, "'!"),
 							CPP::SourceFile(fileName, opi)
 						);
-					if (val == "choice") {
+					if (val == "select") {
 						assertHasAtLeast(nodes, curNode, 3, opmatch);
 						++curNode;
-						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice type: ", nodes[curNode+1].match);
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Select type: ", nodes[curNode+1].match);
 						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, performing);
 						return;
 					}
-					if (val == "select") {
+					if (val == "choice") {
 						assertHasAtLeast(nodes, curNode, 3, opmatch);
 						curNode += 2;
 						if (!nodes[curNode].match.validate(isValidNameChar))
 							throw Error::InvalidValue(
-								toString("Invalid select name '", val, "'!"),
+								toString("Invalid choice name '", val, "'!"),
 								CPP::SourceFile(fileName, vali)
 							);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Menu: ", nodes[curNode].match);
 						auto const ppack = ParameterPack::fromString(nodes[curNode+1]);
-						auto const path = ConstHasher::hash(getScopePath(nodes[curNode].match + "[select]"));
+						auto const path = ConstHasher::hash(getScopePath(nodes[curNode].match + "[choice]"));
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_GET_VALUE,
 							.name	= getScopePath(nodes[curNode+1].match),
@@ -514,7 +514,7 @@ namespace Makai::Ex::AVM::Compiler {
 							.pos	= opi,
 							.valPos	= vali
 						});
-						String const exit = getScopePath(nodes[curNode].match + "[select:end]");
+						String const exit = getScopePath(nodes[curNode].match + "[choice:end]");
 						processChoice(opi, vali, exit, ppack.args, curNode, nodes);
 						++curNode;
 						return;
@@ -611,7 +611,7 @@ namespace Makai::Ex::AVM::Compiler {
 					});
 					return;
 				}
-				case (ConstHasher::hash("choice")): {
+				case (ConstHasher::hash("select")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
 					switch (val[0]) {
@@ -646,28 +646,28 @@ namespace Makai::Ex::AVM::Compiler {
 							} break;
 							default:
 								throw Error::InvalidValue(
-									toString("Invalid choice mode '", val, "'!"),
+									toString("Invalid select mode '", val, "'!"),
 									CPP::SourceFile(fileName, vali)
 								);
 						}
 					}
 					usize i = 0;
-					String const exit = getScopePath(toString("*choice", opmatch.position, "[end]"));
+					String const exit = getScopePath(toString("*select", opmatch.position, "[end]"));
 					processChoice(opi, vali, exit, ppack.args, curNode, nodes);
 					++i;
 					curNode += 2;
 					return;
 				}
-				case (ConstHasher::hash("select")): {
+				case (ConstHasher::hash("choice")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
-							toString("Invalid select name '", val, "'!"),
+							toString("Invalid choice name '", val, "'!"),
 							CPP::SourceFile(fileName, vali)
 						);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
-					auto const menu = ConstHasher::hash(getScopePath(val + "[select]"));
-					menus[menu] = ppack.args;
+					auto const choice = ConstHasher::hash(getScopePath(val + "[choice]"));
+					choices[choice] = ppack.args;
 					curNode += 2;
 				} break;
 				default:
@@ -992,7 +992,7 @@ namespace Makai::Ex::AVM::Compiler {
 						out.addOperation(token);
 						if (token.mode == 3) {
 							out.addNamedOperand(token.name);
-							out.addParameterPack(tree.menus[token.value]);
+							out.addParameterPack(tree.choices[token.value]);
 						} else {	
 							out.addNamedOperand(token.name);
 							if (token.mode == 1) {

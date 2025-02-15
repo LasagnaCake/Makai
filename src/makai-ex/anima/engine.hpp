@@ -354,10 +354,10 @@ namespace Makai::Ex::AVM {
 			if (!operand64(name)) return;
 			auto spm = sp();
 			if (spm == 3) {
-				uint64 menu, start, size;
-				if (!operands64(menu, start, size)) return;
-				opGetChoice(menu, binary.data.sliced(start, start + size), current.integer);
-				current.integer = Math::clamp<ssize>(current.integer, 0, size);
+				uint64 choice, start, size;
+				if (!operands64(choice, start, size)) return;
+				opGetChoice(choice, binary.data.sliced(start, start + size), current.integer);
+				current.integer = Math::clamp<ssize>(current.integer, 0, size-1);
 				return;
 			}
 			if (spm == 2) return opGetString(name, current.string);
