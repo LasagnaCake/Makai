@@ -156,7 +156,7 @@ namespace Makai::Ex::AVM::Compiler {
 									unspaced = false;
 								continue;
 							}
-							else if (unspaced && (isValidNameChar(c) || c == '.'))
+							else if (unspaced && (isValidNameChar(c) || c == '.' || c == '~' || c == ':'))
 								param.pushBack(c);
 							else throw Error::InvalidValue(
 								toString("Invalid parameter at position [", out.size(), "]!"),
@@ -504,7 +504,7 @@ namespace Makai::Ex::AVM::Compiler {
 								CPP::SourceFile(fileName, vali)
 							);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Menu: ", nodes[curNode].match);
-						auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
+						auto const ppack = ParameterPack::fromString(nodes[curNode+1]);
 						auto const path = ConstHasher::hash(getScopePath(nodes[curNode].match + "[menu]"));
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_GET_VALUE,
