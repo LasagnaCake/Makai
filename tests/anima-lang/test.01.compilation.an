@@ -22,7 +22,5 @@ $delay 120
 -autoplay
 // Reset wait
 $delay 600
-// Fade out screen
-$fadeout (normal, 500)
 // All three exit the scene
 [...] @exit .
