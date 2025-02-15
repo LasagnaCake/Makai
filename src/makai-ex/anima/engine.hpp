@@ -114,6 +114,11 @@ namespace Makai::Ex::AVM {
 		/// @param name Value name.
 		/// @param out Value output.
 		virtual void opGetString(uint64 const name, String& out)										{}
+		/// @brief Menu choice acquisition.
+		/// @param name Menu name.
+		/// @param choices Menu choices.
+		/// @param out Value output.
+		virtual void opGetChoice(uint64 const name, Parameters const& choices, ssize& out)				{}
 
 		/// @brief Returns the error code.
 		/// @return Error code.
@@ -348,7 +353,14 @@ namespace Makai::Ex::AVM {
 			uint64 name;
 			if (!operand64(name)) return;
 			auto spm = sp();
-			if (spm & 2) return opGetString(name, current.string);
+			if (spm == 3) {
+				uint64 menu, start, size;
+				if (!operands64(menu, start, size)) return;
+				opGetChoice(menu, binary.data.sliced(start, start + size), current.integer);
+				current.integer = Math::clamp<ssize>(current.integer, 0, size);
+				return;
+			}
+			if (spm == 2) return opGetString(name, current.string);
 			uint64 min, max;
 			if (spm & 1 && !operands64(min, max)) return;
 			opGetInt(name, current.integer);

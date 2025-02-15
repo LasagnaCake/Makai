@@ -70,6 +70,12 @@ struct TestEngine: Makai::Ex::AVM::Engine {
 		DEBUGLN("-----");
 		DEBUGLN("Int: ", name);
 		out = 0;
+	
+	}void opGetChoice(uint64 const name, Parameters const& choices, ssize& out) {
+		DEBUGLN("-----");
+		DEBUGLN("Choice: ", name);
+		DEBUGLN("Options: ['", choices.join("', '"), "']");
+		out = 0;
 	}
 
 	void opGetString(uint64 const name, Makai::String& out) override {
