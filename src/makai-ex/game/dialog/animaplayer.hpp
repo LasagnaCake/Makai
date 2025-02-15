@@ -130,7 +130,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @return String.
 		virtual String getString(usize const name)		{return "";	}
 
-		/// @brief Opens a menu for the user to select a choice.
+		/// @brief Requests a choice from the user.
 		/// @param choices Choices to make.
 		/// @return Chosen choice.
 		virtual ssize choose(Parameters const& choices)	{return 0;	}
