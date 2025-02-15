@@ -15,9 +15,9 @@
             <Keywords name="Numbers, range"></Keywords>
             <Keywords name="Operators1">* . , ; ~ :</Keywords>
             <Keywords name="Operators2"></Keywords>
-            <Keywords name="Folders in code1, open"></Keywords>
+            <Keywords name="Folders in code1, open">( [ {</Keywords>
             <Keywords name="Folders in code1, middle"></Keywords>
-            <Keywords name="Folders in code1, close"></Keywords>
+            <Keywords name="Folders in code1, close">) ] }</Keywords>
             <Keywords name="Folders in code2, open">scene act</Keywords>
             <Keywords name="Folders in code2, middle"></Keywords>
             <Keywords name="Folders in code2, close">end</Keywords>
@@ -26,12 +26,12 @@
             <Keywords name="Folders in comment, close">*/</Keywords>
             <Keywords name="Keywords1">@</Keywords>
             <Keywords name="Keywords2">!</Keywords>
-            <Keywords name="Keywords3">perform&#x000D;&#x000A;next&#x000D;&#x000A;end&#x000D;&#x000A;scene&#x000D;&#x000A;act&#x000D;&#x000A;finish&#x000D;&#x000A;choice</Keywords>
+            <Keywords name="Keywords3">perform&#x000D;&#x000A;next&#x000D;&#x000A;end&#x000D;&#x000A;scene&#x000D;&#x000A;act&#x000D;&#x000A;finish&#x000D;&#x000A;choice&#x000D;&#x000A;menu</Keywords>
             <Keywords name="Keywords4">+&#x000D;&#x000A;-&#x000D;&#x000A;$</Keywords>
             <Keywords name="Keywords5">#</Keywords>
             <Keywords name="Keywords6">terminate&#x000D;&#x000A;</Keywords>
             <Keywords name="Keywords7">true&#x000D;&#x000A;false&#x000D;&#x000A;random&#x000D;&#x000A;none</Keywords>
-            <Keywords name="Keywords8">finish&#x000D;&#x000A;terminate&#x000D;&#x000A;none</Keywords>
+            <Keywords name="Keywords8">finish&#x000D;&#x000A;terminate&#x000D;&#x000A;none&#x000D;&#x000A;repeat</Keywords>
             <Keywords name="Delimiters">00[ 01 02] 03( 04 05) 06&quot; 07\ 08&quot; 09{ 10 11} 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
         </KeywordLists>
         <Styles>
