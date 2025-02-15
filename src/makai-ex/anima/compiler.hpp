@@ -517,6 +517,13 @@ namespace Makai::Ex::AVM::Compiler {
 							.pos	= opi,
 							.valPos	= vali
 						});
+						tokens.pushBack(Token{
+							.type	= Operation::AVM_O_JUMP,
+							.range	= ppack.args.size(),
+							.mode	= 2 | (isNotNext ? CHOICE_JUMP_BIT : 0u),
+							.pos	= opi,
+							.valPos	= vali
+						});
 						String const exit = getScopePath(nodes[curNode].match + "[choice:end]");
 						processChoice(opi, vali, exit, ppack.args, curNode, nodes);
 						++curNode;
@@ -711,7 +718,7 @@ namespace Makai::Ex::AVM::Compiler {
 						.pos	= opi,
 						.valPos	= vali
 					});
-				} if (param == "none") {
+				} else if (param == "none") {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= exit,
@@ -1036,6 +1043,7 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 				}
 			}
+			out.addOperation(OperationTree::Token{Operation::AVM_O_HALT});
 			#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
 			for (auto& name: out.data)
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUG("'", name, "', ");

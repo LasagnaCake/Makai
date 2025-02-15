@@ -75,7 +75,8 @@ struct TestEngine: Makai::Ex::AVM::Engine {
 		DEBUGLN("-----");
 		DEBUGLN("Choice: ", name);
 		DEBUGLN("Options: ['", choices.join("', '"), "']");
-		out = 0;
+		out = rng.integer<ssize>(0, choices.size()-1);
+		DEBUGLN("Selected: ", out);
 	}
 
 	void opGetString(uint64 const name, Makai::String& out) override {

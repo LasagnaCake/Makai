@@ -357,7 +357,7 @@ namespace Makai::Ex::AVM {
 				uint64 start, size;
 				if (!operands64(start, size)) return;
 				opGetChoice(name, binary.data.sliced(start, start + size), current.integer);
-				current.integer = Math::clamp<ssize>(current.integer, 0, size-1);
+				current.integer = Math::clamp<ssize>(current.integer, 0, size);
 				return;
 			}
 			if (spm == 2) return opGetString(name, current.string);
