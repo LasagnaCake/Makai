@@ -72,8 +72,6 @@ namespace Makai::Ex::AVM::Compiler {
 		const static String PACKS			= concat(LINE_COMMENTS, BLOCK_COMMENTS, STRINGS, PARENTHESES, BRACKETS, SQUIGGLIES);
 		/// @brief Matches all tokens.
 		const static String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", SIMPLE_TOKEN, PACKS);
-		/// @brief Matches all parameter tokens.
-		const static String ALL_PARAMETERS	= concat(PACKS, PARAM_CHAR + "+");
 	}
 
 	/// @brief Unescapes a character.
