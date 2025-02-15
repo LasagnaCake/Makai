@@ -993,7 +993,7 @@ namespace Makai::Ex::AVM::Compiler {
 						if (token.mode == 3) {
 							out.addNamedOperand(token.name);
 							out.addParameterPack(tree.choices[token.value]);
-						} else {	
+						} else {
 							out.addNamedOperand(token.name);
 							if (token.mode == 1) {
 								out.addOperand(token.value);
