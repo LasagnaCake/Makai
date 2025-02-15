@@ -123,12 +123,17 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Gets a global integer by a name hash.
 		/// @param name Global to get.
 		/// @return Integer.
-		virtual ssize getInt(usize const name)		{return 0;	}
+		virtual ssize getInt(usize const name)			{return 0;	}
 
 		/// @brief Gets a global string by a name hash.
 		/// @param name Global to get.
 		/// @return String.
-		virtual String getString(usize const name)	{return "";	}
+		virtual String getString(usize const name)		{return "";	}
+
+		/// @brief Opens a menu for the user to select a choice.
+		/// @param choices Choices to make.
+		/// @return Chosen choice.
+		virtual ssize choose(Parameters const& choices)	{return 0;	}
 
 		/// @brief Max time to wait for user input.
 		usize delay = 600;
@@ -239,6 +244,10 @@ namespace Makai::Ex::Game::Dialog {
 
 		void opGetString(uint64 const name, String& out) override final {
 			out = getString(name);
+		}
+
+		void opGetChoice(uint64 const name, Parameters const& choices, ssize& out) override final {
+			out = choose(choices);
 		}
 
 		Scene::Actors getActors(ActiveCast const& actors) {
