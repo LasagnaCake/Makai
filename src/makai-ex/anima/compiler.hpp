@@ -234,7 +234,7 @@ namespace Makai::Ex::AVM::Compiler {
 		using Tokens = List<Token>;
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
-		/// @brief Declared menus.
+		/// @brief Declared menu options.
 		Map<usize, StringList> menus;
 
 		/// @brief Source file name.
@@ -495,17 +495,17 @@ namespace Makai::Ex::AVM::Compiler {
 						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, performing);
 						return;
 					}
-					if (val == "menu") {
+					if (val == "select") {
 						assertHasAtLeast(nodes, curNode, 3, opmatch);
 						curNode += 2;
 						if (!nodes[curNode].match.validate(isValidNameChar))
 							throw Error::InvalidValue(
-								toString("Invalid menu name '", val, "'!"),
+								toString("Invalid select name '", val, "'!"),
 								CPP::SourceFile(fileName, vali)
 							);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Menu: ", nodes[curNode].match);
 						auto const ppack = ParameterPack::fromString(nodes[curNode+1]);
-						auto const path = ConstHasher::hash(getScopePath(nodes[curNode].match + "[menu]"));
+						auto const path = ConstHasher::hash(getScopePath(nodes[curNode].match + "[select]"));
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_GET_VALUE,
 							.name	= getScopePath(nodes[curNode+1].match),
@@ -514,7 +514,7 @@ namespace Makai::Ex::AVM::Compiler {
 							.pos	= opi,
 							.valPos	= vali
 						});
-						String const exit = getScopePath(nodes[curNode].match + "[menu:end]");
+						String const exit = getScopePath(nodes[curNode].match + "[select:end]");
 						processChoice(opi, vali, exit, ppack.args, curNode, nodes);
 						++curNode;
 						return;
@@ -524,7 +524,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val == "terminate" || val == "finish") {
 						throw Error::InvalidValue(
 							toString("Cannot have this keyword as a jump target!"),
-							"Did you perhaps intend to do a ![choice] or ![menu] jump?",
+							"Did you perhaps intend to do a ![choice] or ![select] jump?",
 							CPP::SourceFile(fileName, vali)
 						);
 					}
@@ -658,15 +658,15 @@ namespace Makai::Ex::AVM::Compiler {
 					curNode += 2;
 					return;
 				}
-				case (ConstHasher::hash("menu")): {
+				case (ConstHasher::hash("select")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
-							toString("Invalid menu name '", val, "'!"),
+							toString("Invalid select name '", val, "'!"),
 							CPP::SourceFile(fileName, vali)
 						);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
-					auto const menu = ConstHasher::hash(getScopePath(val + "[menu]"));
+					auto const menu = ConstHasher::hash(getScopePath(val + "[select]"));
 					menus[menu] = ppack.args;
 					curNode += 2;
 				} break;
