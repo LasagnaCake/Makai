@@ -134,6 +134,7 @@ namespace Makai::Ex::AVM::Compiler {
 				StringList out;
 				bool inString	= false;
 				bool unspaced	= true;
+				bool escape		= false;
 				for (usize i = 0; i < pack.match.size(); ++i) {
 					auto const c = pack.match[i];
 					switch (c) {
@@ -144,10 +145,13 @@ namespace Makai::Ex::AVM::Compiler {
 								unspaced = true;
 							}
 						} break;
-						case '"': inString = !inString; break;
+						case '"':
+							if (escape) param.pushBack(c);
+							else inString = !inString;
+						break;
 						default:
 							if (inString) {
-								if (c == '\\') ++i;
+								if (c == '\\') escape = !escape;
 								param.pushBack(c);
 								continue;
 							}
@@ -165,6 +169,7 @@ namespace Makai::Ex::AVM::Compiler {
 							);
 						break;
 					}
+					escape = false;
 				}
 				if (out.size()) out.pushBack(param);
 				return out;
