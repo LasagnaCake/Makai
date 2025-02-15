@@ -424,7 +424,6 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @throw Error::NonexistentValue if source file is empty.
 		static OperationTree fromSource(String const& src, String const& fname = "unknown") {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Tokenizer regex: ", RegexMatches::ALL_TOKENS);
-			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Param pack regex: ", RegexMatches::ALL_PARAMETERS);
 			if (src.empty())
 				throw Error::NonexistentValue(
 					"Source is empty!",
@@ -506,12 +505,13 @@ namespace Makai::Ex::AVM::Compiler {
 								toString("Invalid choice name '", val, "'!"),
 								CPP::SourceFile(fileName, vali)
 							);
-						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Menu: ", nodes[curNode].match);
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", nodes[curNode].match);
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(nodes[curNode].match));
 						auto const ppack = ParameterPack::fromString(nodes[curNode+1]);
-						auto const path = ConstHasher::hash(getScopePath(nodes[curNode].match + "[choice]"));
+						auto const path = ConstHasher::hash(getChoicePath(nodes[curNode].match));
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_GET_VALUE,
-							.name	= getScopePath(nodes[curNode+1].match),
+							.name	= getScopePath(nodes[curNode].match),
 							.value	= path,
 							.mode	= 3,
 							.pos	= opi,
@@ -663,13 +663,14 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				case (ConstHasher::hash("choice")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(val));
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
 							toString("Invalid choice name '", val, "'!"),
 							CPP::SourceFile(fileName, vali)
 						);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
-					auto const choice = ConstHasher::hash(getScopePath(val + "[choice]"));
+					auto const choice = ConstHasher::hash(getChoicePath(val));
 					choices[choice] = ppack.args;
 					curNode += 2;
 				} break;
@@ -745,6 +746,10 @@ namespace Makai::Ex::AVM::Compiler {
 			});
 		}
 
+		constexpr String getChoicePath(String const& choice) {
+			return getScopePath(choice + "[choice]");
+		}
+
 		constexpr uint32 asByte(As<char const[2]> const& nibbles) {
 			return (
 				uint32(nibbles[0] - '0') | (uint32(nibbles[1] - '0') << 4)
@@ -780,7 +785,7 @@ namespace Makai::Ex::AVM::Compiler {
 			return out & (COLOR_MASK | asByte({color[6], color[7]}));
 		}
 
-		String getScopePath(String const& val) {
+		constexpr String getScopePath(String const& val) {
 			String path;
 			switch (val.front()) {
 				case ':': {
@@ -867,9 +872,23 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @return Reference to self.
 		constexpr BinaryBuilder& addParameterPack(StringList const& params) {
 			addOperand(data.size());
-			addOperand(params.size());
+			addOperand(params.size() - 1);
 			data.appendBack(params);
 			return *this;
+		}
+
+		struct ChoiceRef {
+			uint64 start;
+			uint64 size;
+		};
+
+		constexpr Map<uint64, ChoiceRef> processChoices(Map<usize, StringList> const& choices) {
+			Map<uint64, ChoiceRef> out;
+			for (auto& [choice, options]: choices) {
+				out[choice] = {data.size(), options.size() - 1};
+				data.appendBack(options);
+			}
+			return out;
 		}
 
 		/// @brief Creates a file header for the binary.
@@ -889,6 +908,16 @@ namespace Makai::Ex::AVM::Compiler {
 		static BinaryBuilder fromTree(OperationTree const& tree) {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nBuilding binary...\n");
 			BinaryBuilder out;
+			auto const choices = out.processChoices(tree.choices);
+			#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<choices>");
+			for (auto& choice: choices) {
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", choice.key);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("    Start: ", choice.value.start);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("    Size: ", choice.value.size);
+			}
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</choices>");
+			#endif
 			for (auto& token: tree.tokens) {
 				#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<token>");
@@ -971,9 +1000,9 @@ namespace Makai::Ex::AVM::Compiler {
 							out.addParameterPack(token.pack.args);
 						break;
 					case Operation::AVM_O_NAMED_CALL:
-						out.addOperation(token.operation(token.pack.args.size() > 2));
+						out.addOperation(token.operation(token.pack.args.size() > 1));
 						out.addNamedOperand(token.name);
-						if (token.pack.args.size() > 2)
+						if (token.pack.args.size() > 1)
 							out.addParameterPack(token.pack.args);
 						else {
 							String const& val = token.pack.args[0];
@@ -995,7 +1024,8 @@ namespace Makai::Ex::AVM::Compiler {
 						out.addOperation(token);
 						if (token.mode == 3) {
 							out.addNamedOperand(token.name);
-							out.addParameterPack(tree.choices[token.value]);
+							out.addOperand(choices[token.value].start);
+							out.addOperand(choices[token.value].size);
 						} else {
 							out.addNamedOperand(token.name);
 							if (token.mode == 1) {
