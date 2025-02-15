@@ -133,7 +133,7 @@ namespace Makai::Ex::AVM::Compiler {
 				String param = "";
 				StringList out;
 				bool inString	= false;
-				bool spaced		= false;
+				bool unspaced	= true;
 				for (usize i = 0; i < pack.match.size(); ++i) {
 					auto const c = pack.match[i];
 					switch (c) {
@@ -141,25 +141,32 @@ namespace Makai::Ex::AVM::Compiler {
 							if (!inString) {
 								out.pushBack(param);
 								param.clear();
-								spaced = false;
+								unspaced = true;
 							}
 						} break;
 						case '"': inString = !inString; break;
-						case '\\': {
-							if (inString) ++i;
-						} break;
 						default:
-							if (isNullOrSpaceChar(c)) {spaced = true; continue;}
-							else if ((isValidNameChar(c) && spaced) || inString) param.pushBack(c);
+							if (inString) {
+								if (c == '\\') ++i;
+								param.pushBack(c);
+								continue;
+							}
+							else if (isNullOrSpaceChar(c)) {
+								if (param.size())
+									unspaced = false;
+								continue;
+							}
+							else if (unspaced && (isValidNameChar(c) || c == '.'))
+								param.pushBack(c);
 							else throw Error::InvalidValue(
 								toString("Invalid parameter at position [", out.size(), "]!"),
 								toString("Names must only contain letters, numbers, '-' and '_'!"),
-								CPP::SourceFile(fname, (i - out.size()) + pack.position)
+								CPP::SourceFile(fname, i + pack.position)
 							);
 						break;
 					}
 				}
-				out.pushBack(param);
+				if (out.size()) out.pushBack(param);
 				return out;
 			}
 
@@ -661,7 +668,8 @@ namespace Makai::Ex::AVM::Compiler {
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
 					auto const menu = ConstHasher::hash(getScopePath(val + "[menu]"));
 					menus[menu] = ppack.args;
-				}
+					curNode += 2;
+				} break;
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
