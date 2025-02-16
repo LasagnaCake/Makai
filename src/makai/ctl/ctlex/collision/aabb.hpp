@@ -39,6 +39,22 @@ namespace Collision {
 			else						return other.overlap({min, max});
 		}
 
+		template<usize DO = D>
+		constexpr float coverage(AABB<DO> const& other) const {
+			auto const a = normalized();
+			auto const b = other.normalized();
+			auto const max = a.max.min(b.max);
+			auto const min = a.min.max(b.min);
+			auto const as = (a.max - a.min).absolute();
+			auto const bs = (b.max - b.min).absolute();
+			auto const os = (max - min).absolute();
+			float const pa = (os.x * os.y);
+			float const ua = ((as.x * as.y + bs.x * bs.y) - (os.x * os.y));
+			if (!ua) return 1;
+			if (!pa) return 0;
+			return CTL::Math::clamp<float>(pa/ua, 0, 1);
+		}
+
 		/// @brief Returns the bounding box configured correctly.
 		/// @return Correctly-configured bounding box.
 		constexpr AABB normalized() const {

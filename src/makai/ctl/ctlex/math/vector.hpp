@@ -611,6 +611,13 @@ class Vector2: Ordered {
 			return (x * vec.y) - (y * vec.x);
 		}
 
+		/// @brief Returns the "cross product" with another vector via the triple product.
+		/// @param vec Vector to get cross product with.
+		/// @return "Cross product" between vectors.
+		constexpr Vector2 fcross(Vector2 const& vec) const {
+			return tri(vec, vec);
+		}
+
 		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
 		/// @param b Vector to get triple cross product with.
 		/// @param c Vector to get triple cross product with.
@@ -897,6 +904,13 @@ class Vector3: Ordered {
 				(z * vec.x) - (x * vec.z),
 				(x * vec.y) - (y * vec.x)
 			);
+		}
+
+		/// @brief Returns the "cross product" with another vector via the triple product.
+		/// @param vec Vector to get cross product with.
+		/// @return "Cross product" between vectors.
+		constexpr Vector3 fcross(Vector3 const& vec) const {
+			return tri(vec, vec);
 		}
 
 		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
@@ -1216,6 +1230,13 @@ class Vector4: Ordered {
 		constexpr float dot(Vector4 const& vec) const {
 			Vector4 mult = (*this) * vec;
 			return mult.x + mult.y + mult.z + mult.w;
+		}
+
+		/// @brief Returns the "cross product" with another vector via the triple product.
+		/// @param vec Vector to get cross product with.
+		/// @return "Cross product" between vectors.
+		constexpr Vector4 fcross(Vector4 const& vec) const {
+			return tri(vec, vec);
 		}
 
 		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.

@@ -36,10 +36,10 @@ namespace Collision::C2D {
 	static_assert(Box(0, 1).bounded(Box(0, 1)));
 	
 	static_assert(withinBounds(Point(0), Point(0)));
-	static_assert(withinBounds(Point(0), Circle(0, 1)));
-	static_assert(withinBounds(Circle(0, 1), Circle(0, 1)));
-	static_assert(withinBounds(Circle(0, 1), Box(0, 1)));
-	static_assert(withinBounds(Box(0, 1), Box(0, 1)));
+	static_assert(withinBounds(Point(0), Circle(0.5, 1)));
+	static_assert(withinBounds(Circle(0.5, 1), Circle(0, 1)));
+	static_assert(withinBounds(Circle(0.5, 1), Box(0, 1)));
+	static_assert(withinBounds(Box(0.5, 1), Box(0, 1)));
 	
 	static_assert(!withinBounds(Point(-1), Point(1)));
 	static_assert(!withinBounds(Point(-1), Circle(1, 1)));

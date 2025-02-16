@@ -47,7 +47,14 @@ namespace GJK {
 		/// @param other Shape to check overlap with.
 		/// @return Whether shapes overlap.
 		template<usize DO>
-		constexpr bool bounded(IGJKBound<DO> const& other) const {return aabb().overlap(other.aabb());}
+		constexpr bool bounded(IGJKBound<DO> const& other) const {return aabb().overlap(other.aabb());				}
+
+		/// @brief Checks if this shape's AABB overlaps a lot with another shape's AABB.
+		/// @tparam DO Other shape's dimension.
+		/// @param other Shape to check overlap with.
+		/// @return Whether shapes overlap a lot.
+		template<usize DO>
+		constexpr bool shorted(IGJKBound<DO> const& other) const {return !(aabb().coverage(other.aabb()) < 1.0);	}
 	};
 	
 	/// @brief Simplex for bound calculation.
@@ -175,8 +182,8 @@ namespace GJK {
 			VectorType ab = b - a;
 			VectorType ac = c - a;
 			VectorType ao =   - a;
-			VectorType abc = ab.tri(ac, ac);
-			if (same(abc.tri(ac, ac), ao)) {
+			VectorType abc = ab.fcross(ac);
+			if (same(abc.fcross(ac), ao)) {
 				if (same(ac, ao)) {
 					points = {a, c};
 					direction = ac.itri(ao, ac);
@@ -184,7 +191,7 @@ namespace GJK {
 					points = {a, b};
 					return line(direction);
 				}
-			} else if (same(ab.tri(abc, abc), ao)) {
+			} else if (same(ab.fcross(abc), ao)) {
 				points = {a, b};
 				return line(direction);
 			} else if (same(abc, ao)) {
@@ -205,9 +212,9 @@ namespace GJK {
 			VectorType ac = c - a;
 			VectorType ad = d - a;
 			VectorType ao =   - a;
-			VectorType abc = ab.tri(ac, ac);
-			VectorType acd = ac.tri(ad, ad);
-			VectorType adb = ad.tri(ab, ab);
+			VectorType abc = ab.fcross(ac);
+			VectorType acd = ac.fcross(ad);
+			VectorType adb = ad.fcross(ab);
 			if (same(abc, ao)) {
 				points = {a, b, c};
 				return triangle(direction);
@@ -235,7 +242,7 @@ namespace GJK {
 	constexpr Vector3 support(
 		IGJKBound<DA> const& a,
 		IGJKBound<DB> const& b,
-		Vector3 const& direction
+		Vector<(DA > DB ? DA : DB)> const& direction
 	) {
 		return a.furthest(direction) - b.furthest(-direction);
 	}
@@ -252,7 +259,8 @@ namespace GJK {
 		IGJKBound<DB> const& b
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		constexpr usize DIMENSION = (DA > DB ? DA : DB);
-		if (!a.bounded(b)) return false;
+		if (!a.bounded(b))	return false;
+		if (a.shorted(b))	return true;
 		using VectorType = Vector<DIMENSION>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
 		Simplex<DIMENSION> sp;
