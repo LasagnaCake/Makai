@@ -160,7 +160,7 @@ namespace GJK {
 			VectorType ab = b - a;
 			VectorType ao =   - a;
 			if (same(ab, ao))
-				direction = ab.tri(ao, ao).tri(ab, ab);
+				direction = ab.itri(ao, ab);
 			else {
 				points = {a};
 				direction = ao;
@@ -179,7 +179,7 @@ namespace GJK {
 			if (same(abc.tri(ac, ac), ao)) {
 				if (same(ac, ao)) {
 					points = {a, c};
-					direction = ac.tri(ao, ao).tri(ac, ac);
+					direction = ac.itri(ao, ac);
 				} else {
 					points = {a, b};
 					return line(direction);
