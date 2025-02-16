@@ -39,6 +39,17 @@ namespace Collision {
 			else						return other.overlap({min, max});
 		}
 
+		/// @brief Returns whether this bounding box perfectly overlaps with another.
+		/// @tparam DO Other bounding box's dimension.
+		/// @param other Bounding box to check overlap with.
+		/// @return Whether boxes perfectly overlap.
+		template<usize DO = D>
+		constexpr bool match(AABB<DO> const& other) const {return coverage(other) > 0.9999;}
+
+		/// @brief Returns how much overlap exists between bounding boxes.
+		/// @tparam DO Other bounding box's dimension.
+		/// @param other Bounding box to get overlap with.
+		/// @return How much boxes overlap.
 		template<usize DO = D>
 		constexpr float coverage(AABB<DO> const& other) const {
 			auto const a = normalized();
@@ -47,12 +58,12 @@ namespace Collision {
 			auto const min = a.min.max(b.min);
 			auto const as = (a.max - a.min).absolute();
 			auto const bs = (b.max - b.min).absolute();
-			auto const os = (max - min).absolute();
-			float const pa = (os.x * os.y);
-			float const ua = ((as.x * as.y + bs.x * bs.y) - (os.x * os.y));
+			auto const ds = (max - min).absolute();
+			float const da = (ds.x * ds.y);
+			float const ua = ((as.x * as.y + bs.x * bs.y) - da);
 			if (!ua) return 1;
-			if (!pa) return 0;
-			return CTL::Math::clamp<float>(pa/ua, 0, 1);
+			if (!da) return 0;
+			return CTL::Math::clamp<float>(da/ua, 0, 1);
 		}
 
 		/// @brief Returns the bounding box configured correctly.
