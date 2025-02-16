@@ -102,7 +102,7 @@ namespace Collision::C2D {
 			Vector2 maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
 			for (Vector2 const& vertex: points) {
-				float distance = vertex.dot(direction);
+				float distance = Vector3(vertex).dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;
 					maxPoint = vertex;
@@ -352,7 +352,7 @@ namespace Collision::C2D {
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
 			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				Vector2 const tp = mat * Math::Vector3(vertex, 1); 
+				Vector3 const tp = (mat * Math::Vector3(vertex, 1)).xy(); 
 				float distance = tp.dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;
@@ -368,7 +368,7 @@ namespace Collision::C2D {
 			Vector2  min = 0, max = 0;
 			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				Vector2 const tp = mat * Math::Vector3(vertex, 1);
+				Vector2 const tp = (mat * Math::Vector3(vertex, 1)).xy();
 				min = min.min(vertex);
 				max = max.max(vertex);
 			}
