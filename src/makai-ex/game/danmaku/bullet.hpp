@@ -168,12 +168,7 @@ namespace Makai::Ex::Game::Danmaku {
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
 		void playfieldCheck() {
-			if (!dope) return;
-			auto const
-				min = playfield.min(),
-				max = playfield.max()
-			;
-			if (!C2D::withinBounds(board.asArea(), *shape)) free();
+			if (dope && !shape->bounded(playfield.asArea())) free();
 		}
 
 		void loopAndBounce() {
