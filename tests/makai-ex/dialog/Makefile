@@ -22,7 +22,7 @@ else
 RELEASEMODE := $(NOCMD) $(LEAN) -O$(o)
 endif
 
-enginecmd = @$(CXX) -o output/test.engine.$(strip $(2)).exe test.engine.cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(strip $(1))
+enginecmd = @$(CXX) -o output/test.diag.engine.$(strip $(2)).exe test.diag.engine.cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(strip $(1))
 
 make-test-engine = $(if $(findstring debug,$(1)),\
 		$(call enginecmd, libmakai.debug.a, $(1)) $(WINREQS) $(LIBREQS) $(DEBUGMODE),\
@@ -66,36 +66,31 @@ define tests
 endef
 else
 define tests
-	$(call animac, $(1))
+	$(call animac, $(t))
 endef
 endif
 
 all: debug release
 
-debug:
-	@echo "Building tests [$@]..."
+dialog:
+	@echo "Building tests..."
 	@mkdir -p output
-	$(call tests, $@)
+	$(call tests)
 	@echo "Done!"
 	@echo 
-
-release:
-	@echo "Building tests [$@]..."
-	@mkdir -p output
-	$(call tests, $@)
-	@echo "Done!"
-	@echo 
+	
+engine: engine-debug engine-release
 
 engine-debug:
-	@echo "Building engine [$@]..."
+	@echo "Building engine [debug]..."
 	@mkdir -p output
-	$(call make-test-engine, $@)
+	$(call make-test-engine, debug)
 	@echo "Done!"
 	@echo 
 	
 engine-release:
-	@echo "Building engine [$@]..."
+	@echo "Building engine [release]..."
 	@mkdir -p output
-	$(call make-test-engine, $@)
+	$(call make-test-engine, release)
 	@echo "Done!"
 	@echo 
