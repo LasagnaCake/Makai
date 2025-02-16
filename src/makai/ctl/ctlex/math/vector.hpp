@@ -1468,7 +1468,7 @@ constexpr Vector3 rotateV3(Vector3 const& vec, Vector2 const& angle, RotationAxi
 constexpr Vector2 angleV2(float const angle) {
 	float s, c;
 	CTL::Math::sincos(angle, s, c);
-	return Vector2(c, s);
+	return Vector2(c, -s);
 }
 
 /// @brief Gets a 3D normal at a given angle around one of the origin's axis.
@@ -1481,14 +1481,14 @@ constexpr Vector3 angleV3(float const angle, RotationAxis const& axis = Rotation
 	switch (axis) {
 	case RotationAxis::POS_X:
 	case RotationAxis::NEG_X:
-		return Vector3(0, c, s);
+		return Vector3(0, c, -s);
 	case RotationAxis::POS_Y:
 	case RotationAxis::NEG_Y:
-		return Vector3(c, 0, s);
+		return Vector3(c, 0, -s);
 	default:
 	case RotationAxis::POS_Z:
 	case RotationAxis::NEG_Z:
-		return Vector3(c, s, 0);
+		return Vector3(c, -s, 0);
 	}
 }
 
