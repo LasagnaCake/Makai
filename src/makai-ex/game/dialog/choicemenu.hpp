@@ -38,8 +38,10 @@ namespace Makai::Ex::Game::Dialog {
 		void setChoice(ssize const newChoice) {
 			if (prevChoice == newChoice) return;
 			choice = newChoice;
-			while (choice < 0)					choice += options.size();
-			while (choice >= options.size())	choice -= options.size();
+			while (choice < 0)
+				choice += options.size();
+			while (choice >= static_cast<ssize>(options.size()))
+				choice -= options.size();
 			onFocusChange(prevChoice, choice);
 			prevChoice = choice;
 		}
@@ -64,7 +66,7 @@ namespace Makai::Ex::Game::Dialog {
 		void repaint() {
 			auto& display = menu.text->content;
 			display.clear();
-			usize i					= 0;
+			ssize i					= 0;
 			usize lines				= 0;
 			usize cursor			= 0;
 			menu.text->rectAlign.x	= 0.5;
@@ -74,9 +76,9 @@ namespace Makai::Ex::Game::Dialog {
 				display += option + "\n\n";
 				if (menu.text->rect.h < option.size())
 					menu.text->rect.h = option.size();
-				++i;
 				if (i == choice) cursor = lines;
 				lines += 2 + Regex::count(option, "\n");
+				++i;
 			}
 			setCursor(cursor);
 		}
