@@ -399,7 +399,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	protected:
 		bool contains(HandleType const& object) override {
-			return (used.find(object) == -1);
+			return (used.find(object) != -1);
 		}
 
 		BulletServer& release(HandleType const& object) override {
