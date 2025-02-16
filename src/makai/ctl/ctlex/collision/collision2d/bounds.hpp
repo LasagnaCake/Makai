@@ -94,10 +94,10 @@ namespace Collision::C2D {
 		/// @returns Furthest point.
 		constexpr Vector3 furthest(Vector3 const& direction) const override final {
 			Vector2 points[4] = {
-				Vector2(position.x + size.x, position.y + size.y),
-				Vector2(position.x + size.x, position.y - size.y),
-				Vector2(position.x - size.x, position.y - size.y),
-				Vector2(position.x - size.x, position.y + size.y)
+				position + size * (+1),
+				position + size * Vector2(+1, -1),
+				position + size * (-1),
+				position + size * Vector2(-1, +1)
 			};
 			Vector2 maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
