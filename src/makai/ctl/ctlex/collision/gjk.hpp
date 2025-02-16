@@ -53,7 +53,7 @@ namespace GJK {
 	/// @brief Simplex for bound calculation.
 	template<usize D>
 	struct Simplex {
-		static_assert(Type::Ex::Collision::GJK::Dimension<D>, "Invalid dimension!");
+		static_assert(Type::Ex::Collision::GJK::Dimension<D>, "GJK only works for 2D & 3D collision!");
 
 		/// @brief Dimension of the simplex.
 		constexpr static usize DIMENSION	= D;
