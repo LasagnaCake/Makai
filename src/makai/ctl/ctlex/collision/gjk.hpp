@@ -47,14 +47,14 @@ namespace GJK {
 		/// @param other Shape to check overlap with.
 		/// @return Whether shapes overlap.
 		template<usize DO>
-		constexpr bool bounded(IGJKBound<DO> const& other) const {return aabb().overlap(other.aabb());				}
+		constexpr bool bounded(IGJKBound<DO> const& other) const {return aabb().overlap(other.aabb());	}
 
 		/// @brief Checks if this shape's AABB overlaps a lot with another shape's AABB.
 		/// @tparam DO Other shape's dimension.
 		/// @param other Shape to check overlap with.
 		/// @return Whether shapes overlap a lot.
 		template<usize DO>
-		constexpr bool shorted(IGJKBound<DO> const& other) const {return !(aabb().coverage(other.aabb()) < 1.0);	}
+		constexpr bool shorted(IGJKBound<DO> const& other) const {return aabb().match(other.aabb());	}
 	};
 	
 	/// @brief Simplex for bound calculation.
