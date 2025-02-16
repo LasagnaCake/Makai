@@ -51,9 +51,12 @@ namespace GJK {
 	};
 	
 	/// @brief Simplex for bound calculation.
+	template<usize D>
 	struct Simplex {
+		static_assert(Type::Ex::Collision::GJK::Dimension<D>, "Invalid dimension!");
+
 		/// @brief Dimension of the simplex.
-		constexpr static usize DIMENSION	= 3;
+		constexpr static usize DIMENSION	= D;
 		/// @brief Maximum amount of points in the simplex.
 		constexpr static usize MAX_POINTS	= DIMENSION+1;
 
@@ -107,7 +110,8 @@ namespace GJK {
 		/// @param vec Point to add.
 		/// @return Reference to self.
 		constexpr Simplex& pushFront(VectorType const& vec) {
-			points = {vec, points[0], points[1], points[2]};
+			if constexpr (DIMENSION == 3)	points = {vec, points[0], points[1], points[2]};
+			else							points = {vec, points[0], points[1]};
 			if (count < MAX_POINTS)
 				++count;
 			return *this;
@@ -116,11 +120,22 @@ namespace GJK {
 		/// @brief Remakes the simplex as the next simplex to check.
 		/// @param direction Direction to remake simplex for.
 		/// @return Whether simplex contains the origin.
-		constexpr bool remake(VectorType& direction) {
+		constexpr bool remake(VectorType& direction) requires (DIMENSION == 3) {
 			switch (count) {
 				case 2: return line(direction);
 				case 3: return triangle(direction);
 				case 4: return tetrahedron(direction);
+			}
+			return false;
+		}
+
+		/// @brief Remakes the simplex as the next simplex to check.
+		/// @param direction Direction to remake simplex for.
+		/// @return Whether simplex contains the origin.
+		constexpr bool remake(VectorType& direction) requires (DIMENSION == 2) {
+			switch (count) {
+				case 2: return line(direction);
+				case 3: return triangle(direction);
 			}
 			return false;
 		}
@@ -137,7 +152,7 @@ namespace GJK {
 		/// @brief Simplex points.
 		PointArrayType	points;
 		/// @brief Point count.
-		usize			count;
+		usize			count	= 0;
 
 		constexpr bool line(VectorType& direction) {
 			VectorType a = points[0];
@@ -178,10 +193,10 @@ namespace GJK {
 				points = {a, c, b};
 				direction = -abc;
 			}
-			return false;
+			return DIMENSION == 2;
 		}
 
-		constexpr bool tetrahedron(VectorType& direction) {
+		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION > 2) {
 			VectorType a = points[0];
 			VectorType b = points[1];
 			VectorType c = points[2];
@@ -236,11 +251,11 @@ namespace GJK {
 		IGJKBound<DA> const& a,
 		IGJKBound<DB> const& b
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
-		//constexpr usize DIMENSION = (DA > DB ? DA : DB);
+		constexpr usize DIMENSION = (DA > DB ? DA : DB);
 		if (!a.bounded(b)) return false;
 		using VectorType = Vector3;
 		VectorType sup = support(a, b, VectorType::RIGHT());
-		Simplex sp;
+		Simplex<DIMENSION> sp;
 		sp.pushFront(sup);
 		VectorType d = -sup;
 		while (true) {
