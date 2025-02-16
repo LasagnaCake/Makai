@@ -135,6 +135,7 @@ namespace Makai::Ex::Game::Danmaku {
 				active = false;
 				objectState = State::SOS_FREE;
 				hideSprites();
+				clear();
 				release(this, server);
 			} else {
 				active = true;
