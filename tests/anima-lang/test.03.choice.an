@@ -1,0 +1,18 @@
+choice Choices (
+	"I don't want to die!",
+	"Go ahead, kill me.",
+	"B-but, I love you..."
+)
+
+scene Result
+	act choice-a
+		"Ok, fine -_-"
+	end
+	act choice-b
+		"Now I don't wanna >:("
+	end
+end
+
+next choice Choices (Result:choice-a, Result:choice-b, none)
+
+"H-huh? Really?"

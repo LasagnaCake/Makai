@@ -15,7 +15,7 @@
 #define MK_EX_DANMAKU_TRUE_UI_LAYER_OFFSET (MK_EX_DANMAKU_TRUE_SUBLAYER_COUNT * MK_EX_DANMAKU_UI_LAYER_OFFSET)
 
 namespace Makai::Ex::Game::Danmaku {
-	namespace RenderLayer {
+	namespace Render::Layer {
 		#define MK_EX_DANMAKU_LAYER(NAME)\
 			NAME##_BOTTOM_LAYER,\
 			NAME##_LAYER		= (NAME##_BOTTOM_LAYER + (MK_EX_DANMAKU_SUBLAYER_COUNT)),\
@@ -73,41 +73,60 @@ namespace Makai::Ex::Game::Danmaku {
 		#undef MK_EX_DANMAKU_LAYER_SPELL_BG
 	}
 
-	namespace CollisionLayer {
-		using CollisionMask = Makai::Collision::C2D::LayerMask;
-		
-		constexpr CollisionMask	PLAYER			= {1u << 0,	0,			0,			0		};
-		constexpr CollisionMask	PLAYER_BULLET	= {1u << 1,	0,			0,			0		};
-		constexpr CollisionMask	PLAYER_LASER	= {1u << 2,	0,			0,			0		};
-		constexpr CollisionMask	PLAYER_SPELL	= {1u << 3,	0,			0,			0		};
-		constexpr CollisionMask	PLAYER_GRAZEBOX	= {1u << 4,	0,			0,			0		};
-		constexpr CollisionMask	PLAYER_ITEMBOX	= {1u << 5,	0,			0,			0		};
-		constexpr CollisionMask	ENEMY			= {0,		1u << 0,	0,			0		};
-		constexpr CollisionMask	ENEMY_BULLET	= {0,		1u << 1,	0,			0		};
-		constexpr CollisionMask	ENEMY_LASER		= {0,		1u << 2,	0,			0		};
-		constexpr CollisionMask	ITEM			= {0,		0,			1u << 0,	0		};
-		constexpr CollisionMask	BULLET_ERASER	= {0,		0,			0,			1u << 0	};
-
-		constexpr CollisionMask PLAYER_ATTACK	=	PLAYER_BULLET	| PLAYER_LASER	| PLAYER_SPELL	;
-		constexpr CollisionMask ENEMY_ATTACK	=	ENEMY_BULLET	| ENEMY_LASER					;
-
-		constexpr CollisionMask PLAYER_MASK	=	PLAYER	| PLAYER_ATTACK	;
-		constexpr CollisionMask ENEMY_MASK	=	ENEMY	| ENEMY_ATTACK	;
-
-		constexpr CollisionMask PLAYER_COLLISION		= ENEMY_MASK							;
-		constexpr CollisionMask ENEMY_COLLISION			= PLAYER_MASK							;
-		constexpr CollisionMask ITEM_COLLISION			= PLAYER_GRAZEBOX	| PLAYER_ITEMBOX	;
-		
-		constexpr CollisionMask ENEMY_ATTACK_COLLISION	= PLAYER	| PLAYER_GRAZEBOX	| PLAYER_ITEMBOX	;
-		constexpr CollisionMask PLAYER_ATTACK_COLLISION	= ENEMY												;
+	namespace Collision {
+		namespace GJK = CTL::Ex::Collision::GJK;
+		namespace C2D = CTL::Ex::Collision::C2D;
+	}
+	
+	namespace Collision::Layer {
+		constexpr uint16 PLAYER				= 0x00;
+		constexpr uint16 PLAYER_BULLET		= 0x01;
+		constexpr uint16 PLAYER_LASER		= 0x02;
+		constexpr uint16 PLAYER_SPELL		= 0x03;
+		constexpr uint16 PLAYER_GRAZEBOX	= 0x04;
+		constexpr uint16 PLAYER_ITEMBOX		= 0x05;
+		constexpr uint16 ENEMY				= 0x10;
+		constexpr uint16 ENEMY_BULLET		= 0x11;
+		constexpr uint16 ENEMY_LASER		= 0x12;
+		constexpr uint16 ITEM				= 0x20;
+		constexpr uint16 BULLET_ERASER		= 0x30;
 	}
 
-	namespace CollisionTag {
-		using CollisionMask = Makai::Collision::C2D::LayerMask;
+	namespace Collision::Mask {
+		using MaskType = Makai::Collision::C2D::LayerMask;
+		
+		constexpr MaskType	PLAYER			= {1u << 0,	0,			0,			0		};
+		constexpr MaskType	PLAYER_BULLET	= {1u << 1,	0,			0,			0		};
+		constexpr MaskType	PLAYER_LASER	= {1u << 2,	0,			0,			0		};
+		constexpr MaskType	PLAYER_SPELL	= {1u << 3,	0,			0,			0		};
+		constexpr MaskType	PLAYER_GRAZEBOX	= {1u << 4,	0,			0,			0		};
+		constexpr MaskType	PLAYER_ITEMBOX	= {1u << 5,	0,			0,			0		};
+		constexpr MaskType	ENEMY			= {0,		1u << 0,	0,			0		};
+		constexpr MaskType	ENEMY_BULLET	= {0,		1u << 1,	0,			0		};
+		constexpr MaskType	ENEMY_LASER		= {0,		1u << 2,	0,			0		};
+		constexpr MaskType	ITEM			= {0,		0,			1u << 0,	0		};
+		constexpr MaskType	BULLET_ERASER	= {0,		0,			0,			1u << 0	};
 
-		constexpr CollisionMask	BULLET_ERASER	= {1u << 0,	0,			0,		0	};
-		constexpr CollisionMask	FOR_PLAYER_1	= {0,		1u << 0,	0,		0	};
-		constexpr CollisionMask	FOR_PLAYER_2	= {0,		1u << 1,	0,		0	};
+		constexpr MaskType PLAYER_ATTACK	=	PLAYER_BULLET	| PLAYER_LASER	| PLAYER_SPELL	;
+		constexpr MaskType ENEMY_ATTACK		=	ENEMY_BULLET	| ENEMY_LASER					;
+
+		constexpr MaskType PLAYER_MASK		=	PLAYER	| PLAYER_ATTACK	;
+		constexpr MaskType ENEMY_MASK		=	ENEMY	| ENEMY_ATTACK	;
+
+		constexpr MaskType PLAYER_COLLISION			= ENEMY_MASK							;
+		constexpr MaskType ENEMY_COLLISION			= PLAYER_MASK							;
+		constexpr MaskType ITEM_COLLISION			= PLAYER_GRAZEBOX	| PLAYER_ITEMBOX	;
+		
+		constexpr MaskType ENEMY_ATTACK_COLLISION	= PLAYER	| PLAYER_GRAZEBOX	| PLAYER_ITEMBOX	;
+		constexpr MaskType PLAYER_ATTACK_COLLISION	= ENEMY												;
+	}
+
+	namespace Collision::Tag {
+		using MaskType = Makai::Collision::C2D::LayerMask;
+
+		constexpr MaskType	BULLET_ERASER	= {1u << 0,	0,			0,		0	};
+		constexpr MaskType	FOR_PLAYER_1	= {0,		1u << 0,	0,		0	};
+		constexpr MaskType	FOR_PLAYER_2	= {0,		1u << 1,	0,		0	};
 	}
 }
 

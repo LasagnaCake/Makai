@@ -109,11 +109,16 @@ namespace Makai::Ex::AVM {
 		/// @brief Integer value acquisition.
 		/// @param name Value name.
 		/// @param out Value output.
-		virtual void opGetInt(uint64 const name, ssize& out)											{}
+		virtual void opGetInt(uint64 const name)														{}
 		/// @brief String value acquisition.
 		/// @param name Value name.
 		/// @param out Value output.
-		virtual void opGetString(uint64 const name, String& out)										{}
+		virtual void opGetString(uint64 const name)														{}
+		/// @brief Menu choice acquisition.
+		/// @param name Menu name.
+		/// @param choices Menu choices.
+		/// @param out Value output.
+		virtual void opGetChoice(uint64 const name, Parameters const& choices)							{}
 
 		/// @brief Returns the error code.
 		/// @return Error code.
@@ -182,6 +187,14 @@ namespace Makai::Ex::AVM {
 			current.op = binary.jumps[name];
 			if (current.op >= binary.code.size())
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
+		}
+
+		void setInt(ssize const value) {
+			current.integer = value;
+		}
+
+		void setString(String const& value) {
+			current.string = value;
 		}
 
 	private:
@@ -340,7 +353,7 @@ namespace Makai::Ex::AVM {
 			uint64 range;
 			if (!operand64(range)) return;
 			if (spm & 0b1000)			storeState(current.op + range * JUMP_SIZE);
-			if ((spm & 0b0111) == 2)	current.op += current.integer * JUMP_SIZE;
+			if ((spm & 0b0111) == 2)	current.op += Math::clamp<ssize>(current.integer, 0, range) * JUMP_SIZE;
 			else						current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
 		}
 
@@ -348,11 +361,14 @@ namespace Makai::Ex::AVM {
 			uint64 name;
 			if (!operand64(name)) return;
 			auto spm = sp();
-			if (spm & 2) return opGetString(name, current.string);
-			uint64 min, max;
-			if (spm & 1 && !operands64(min, max)) return;
-			opGetInt(name, current.integer);
-			if (spm & 1) current.integer = Math::clamp<ssize>(current.integer, min, max);
+			if (spm == 3) {
+				uint64 start, size;
+				if (!operands64(start, size)) return;
+				opGetChoice(name, binary.data.sliced(start, start + size));
+				return;
+			}
+			if (spm == 2) return opGetString(name);
+			opGetInt(name);
 		}
 
 		constexpr bool assertOperand(usize const opsize) {

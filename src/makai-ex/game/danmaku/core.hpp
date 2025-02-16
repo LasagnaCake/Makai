@@ -7,7 +7,7 @@
 #include "../core/sprite.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
-	namespace C2D = Collision::C2D;
+	namespace C2D = CTL::Ex::Collision::C2D;
 
 	using CollisionServer = C2D::Server;
 
@@ -64,10 +64,15 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct ColliderConfig {
-		using CollisionMask = CollisionLayer::CollisionMask;
+		using CollisionMask = Collision::Mask::MaskType;
+		uint64 const		layer		= 0;
+		CollisionMask const	tags		= {};
+	};
+
+	struct CollisionLayerConfig {
+		using CollisionMask = Collision::Mask::MaskType;
 		CollisionMask const	affects		= {};
 		CollisionMask const	affectedBy	= {};
-		CollisionMask const	tags		= {};
 	};
 
 	struct GameObjectConfig: BoundedObjectConfig, ColliderConfig {};
@@ -83,12 +88,13 @@ namespace Makai::Ex::Game::Danmaku {
 			colli(cfg),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+				collider = CollisionServer::createCollider(cfg.layer);
 				bindCollisionHandler(*this);
 			}
 
 		virtual ~AGameObject() {}
 
-		PromiseType task;
+//		PromiseType task;
 
 		PauseState pause;
 
@@ -114,8 +120,8 @@ namespace Makai::Ex::Game::Danmaku {
 				--delay;
 				return;
 			}
-			while (!delay && task)
-				delay = task.next();
+//			while (!delay && task)
+//				delay = task.next();
 		}
 		
 		bool paused() const {
@@ -135,9 +141,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void onUnpause() {}
 
 		void resetCollisionState() {
-			collider->affects		= colli.affects;
-			collider->affectedBy	= colli.affectedBy;
-			collider->tags			= colli.tags;
+			collider->tags = colli.tags;
 		}
 
 		static PromiseType doNothing() {co_return 1;}
@@ -158,7 +162,7 @@ namespace Makai::Ex::Game::Danmaku {
 			self.collider->data = &self;
 		}
 
-		Unique<Collider> collider = CollisionServer::createCollider();
+		Unique<Collider> collider;
 
 		usize delay = 0;
 	};
@@ -226,7 +230,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual IDamageable& takeDamage(
 			Reference<AGameObject> const& object,
-			CollisionLayer::CollisionMask const& collider
+			Collision::Mask::MaskType const& collider
 		) = 0;
 		virtual IDamageable& takeDamage(float const damage) = 0;
 	};

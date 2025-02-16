@@ -483,6 +483,26 @@ class Vector2: Ordered {
 			return (x > y) ? x : y;
 		}
 
+		/// @brief Returns a vector containing the smallest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Smallest vector.
+		constexpr Vector2 min(Vector2 const& other) const {
+			return Vector2(
+				CTL::Math::min(x, other.x),
+				CTL::Math::min(y, other.y)
+			);
+		}
+
+		/// @brief Returns a vector containing the biggest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Biggest vector.
+		constexpr Vector2 max(Vector2 const& other) const {
+			return Vector2(
+				CTL::Math::max(x, other.x),
+				CTL::Math::max(y, other.y)
+			);
+		}
+
 		/// @brief Gets the vector's length.
 		/// @brief Length of vector.
 		constexpr float length() const {
@@ -529,7 +549,7 @@ class Vector2: Ordered {
 		/// @brief Gets the vector's angle.
 		/// @return Angle of vector.
 		constexpr float angle() const {
-			return CTL::Math::atan2(x, y) - HPI;
+			return CTL::Math::atan2(x, y);
 		}
 
 		/// @brief Gets the vector's angle to another vector.
@@ -589,6 +609,29 @@ class Vector2: Ordered {
 		/// @return Cross product between vectors.
 		constexpr float cross(Vector2 const& vec) const {
 			return (x * vec.y) - (y * vec.x);
+		}
+
+		/// @brief Returns the "cross product" with another vector via the triple product.
+		/// @param vec Vector to get cross product with.
+		/// @return "Cross product" between vectors.
+		constexpr Vector2 fcross(Vector2 const& vec) const {
+			return tri(vec, vec);
+		}
+
+		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector2 tri(Vector2 const& b, Vector2 const& c) const {
+			return (b * dot(c)) - (c * dot(b));
+		}
+
+		/// @brief Returns the inverse triple cross product `(A x B) x C` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector2 itri(Vector2 const& b, Vector2 const& c) const {
+			return - c.tri(*this, b);
 		}
 
 		/// @brief Returns this vector projected in another vector.
@@ -729,6 +772,28 @@ class Vector3: Ordered {
 			return ::CTL::Math::max(::CTL::Math::max(x, y), z);
 		}
 
+		/// @brief Returns a vector containing the smallest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Smallest vector.
+		constexpr Vector3 min(Vector3 const& other) const {
+			return Vector3(
+				CTL::Math::min(x, other.x),
+				CTL::Math::min(y, other.y),
+				CTL::Math::min(z, other.z)
+			);
+		}
+
+		/// @brief Returns a vector containing the biggest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Biggest vector.
+		constexpr Vector3 max(Vector3 const& other) const {
+			return Vector3(
+				CTL::Math::max(x, other.x),
+				CTL::Math::max(y, other.y),
+				CTL::Math::min(z, other.z)
+			);
+		}
+
 		/// @brief Gets the vector's length.
 		/// @return Length of vector.
 		constexpr float length() const {
@@ -839,6 +904,29 @@ class Vector3: Ordered {
 				(z * vec.x) - (x * vec.z),
 				(x * vec.y) - (y * vec.x)
 			);
+		}
+
+		/// @brief Returns the "cross product" with another vector via the triple product.
+		/// @param vec Vector to get cross product with.
+		/// @return "Cross product" between vectors.
+		constexpr Vector3 fcross(Vector3 const& vec) const {
+			return tri(vec, vec);
+		}
+
+		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector3 tri(Vector3 const& b, Vector3 const& c) const {
+			return (b * dot(c)) - (c * dot(b));
+		}
+
+		/// @brief Returns the inverse triple cross product `(A x B) x C` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector3 itri(Vector3 const& b, Vector3 const& c) const {
+			return - c.tri(*this, b);
 		}
 
 		/// @brief Returns the mixed (scalar triple) product with two other vectors (`this` dot (`a` cross `b`)).
@@ -1036,6 +1124,30 @@ class Vector4: Ordered {
 			return ::CTL::Math::max(::CTL::Math::max(::CTL::Math::max(x, y), z), w);
 		}
 
+		/// @brief Returns a vector containing the smallest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Smallest vector.
+		constexpr Vector4 min(Vector4 const& other) const {
+			return Vector4(
+				CTL::Math::min(x, other.x),
+				CTL::Math::min(y, other.y),
+				CTL::Math::min(z, other.z),
+				CTL::Math::min(w, other.w)
+			);
+		}
+
+		/// @brief Returns a vector containing the biggest components between it and another vector.
+		/// @param other Other vector.
+		/// @return Biggest vector.
+		constexpr Vector4 max(Vector4 const& other) const {
+			return Vector4(
+				CTL::Math::max(x, other.x),
+				CTL::Math::max(y, other.y),
+				CTL::Math::min(z, other.z),
+				CTL::Math::min(w, other.w)
+			);
+		}
+
 		/// @brief Gets the vector's length.
 		/// @return Length of vector.
 		constexpr float length() const {
@@ -1118,6 +1230,29 @@ class Vector4: Ordered {
 		constexpr float dot(Vector4 const& vec) const {
 			Vector4 mult = (*this) * vec;
 			return mult.x + mult.y + mult.z + mult.w;
+		}
+
+		/// @brief Returns the "cross product" with another vector via the triple product.
+		/// @param vec Vector to get cross product with.
+		/// @return "Cross product" between vectors.
+		constexpr Vector4 fcross(Vector4 const& vec) const {
+			return tri(vec, vec);
+		}
+
+		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector4 tri(Vector4 const& b, Vector4 const& c) const {
+			return (b * dot(c)) - (c * dot(b));
+		}
+
+		/// @brief Returns the inverse triple cross product `(A x B) x C` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector4 itri(Vector4 const& b, Vector4 const& c) const {
+			return - c.tri(*this, b);
 		}
 
 		/// @brief Returns this vector projected in another vector.

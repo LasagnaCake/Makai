@@ -4,6 +4,7 @@
 #include <makai/makai.hpp>
 
 #include "actor.hpp"
+#include "choicemenu.hpp"
 
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
@@ -16,9 +17,11 @@ namespace Makai::Ex::Game::Dialog {
 		using Cast		= Map<usize, Handle<Actor>>;
 		/// @brief Actors in scene.
 		/// @note Key should be their name hash.
-		Cast			cast;
+		Cast					cast;
 		/// @brief Scene's dialog box.
-		Instance<Box>	dialog = nullptr;
+		Instance<Box>			dialog	= nullptr;
+		/// @brief Scene's choice menu.
+		Instance<ChoiceMenu>	choice	= nullptr;
 
 		/// @brief Returns a reference to an actor by its name hash.
 		/// @param hash Actor name hash.

@@ -14,25 +14,30 @@ namespace Makai::Ex::Game::Danmaku {
 	struct EnemyConfig: BoundedObjectConfig {
 		using CollisionMask = ColliderConfig::CollisionMask;
 		ColliderConfig const hitbox = {
-			CollisionLayer::ENEMY,
-			CollisionLayer::PLAYER_ATTACK,
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Layer::ENEMY,
+			Danmaku::Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const hitboxLayer = {
+			Danmaku::Collision::Mask::ENEMY,
+			Danmaku::Collision::Mask::PLAYER_ATTACK
 		};
 		struct Collision {
 			struct Player {
-				CollisionMask const bullet	= CollisionLayer::PLAYER_BULLET;
-				CollisionMask const laser	= CollisionLayer::PLAYER_LASER;
-				CollisionMask const body	= CollisionLayer::PLAYER_COLLISION;
-				CollisionMask const attack	= CollisionLayer::PLAYER_ATTACK;
+				CollisionMask const bullet	= Danmaku::Collision::Mask::PLAYER_BULLET;
+				CollisionMask const laser	= Danmaku::Collision::Mask::PLAYER_LASER;
+				CollisionMask const body	= Danmaku::Collision::Mask::PLAYER_COLLISION;
+				CollisionMask const attack	= Danmaku::Collision::Mask::PLAYER_ATTACK;
 			} const player = {};
 			struct Tag {
-				CollisionMask const player	= CollisionTag::FOR_PLAYER_1;
+				CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 			} const tag = {};
 		} const mask = {};
 	};
 
 	struct AEnemy: AGameObject, AUpdateable, IDamageable, Healthy {
 		AEnemy(EnemyConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
+			collision()->getLayer().affects		= cfg.hitboxLayer.affects;
+			collision()->getLayer().affectedBy	= cfg.hitboxLayer.affectedBy;
 		}
 
 		constexpr static usize INVINCIBLE	= 1 << 0;
@@ -54,8 +59,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.affects.match(mask.player.attack).overlap())
-				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.affects);
+			if (collider.getLayer().affects.match(mask.player.attack).overlap())
+				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
 		}
 		
 		bool isForThisPlayer(Collider const& collider) const {

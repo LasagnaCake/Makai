@@ -50,60 +50,24 @@ namespace Collision::C2D {
 		Instance<IBound2D>	shape;
 		/// @brief Whether collision is enabled for the area.
 		bool				canCollide	= true;
-		/// @brief Collision layers this area affects.
-		LayerMask			affects		= LayerMask(true);
-		/// @brief Collision layers this area is affected by.
-		LayerMask			affectedBy	= LayerMask(true);
 		/// @brief Tags associated with the collision object.
 		LayerMask			tags		= LayerMask(false);
 
 		/// @brief Checks collision with another `Area`.
 		/// @param other `Area` to check against.
-		/// @return Collision event direction.
-		constexpr Direction colliding(Area const& other) const {
+		/// @return Whether collision happens.
+		constexpr bool colliding(Area const& other) const {
 			return check(*this, other);
 		}
 
 		/// @brief Checks collision between two areas.
 		/// @param a `Area` to check.
 		/// @param b `Area` to check against.
-		/// @return Collision event direction.
-		/// @note Directions:
-		///
-		///		- Forward:	A --> B
-		///
-		///		- Backward:	A <-- B
-		///
-		///		- Both:		A <-> B
-		constexpr static Direction check(Area const& a, Area const& b) {
-			if (!(a.shape && b.shape))
-				return Direction::CD_NONE;
-			if (!(a.canCollide && b.canCollide))
-				return Direction::CD_NONE;
-			Direction dir = asDirection(
-				a.affects.match(b.affectedBy).overlap(),
-				b.affectedBy.match(a.affects).overlap()
-			);
-			if (
-				dir != Direction::CD_NONE
-			&&	withinBounds(*a.shape, *b.shape)
-			) return dir;
-			return Direction::CD_NONE;
-		}
-
-		/// @brief Checks collision between two areas.
-		/// @param a `Area` to check.
-		/// @param b `Area` to check against.
-		/// @return Collision event direction.
-		/// @note Directions:
-		///
-		///		- Forward:	A --> B
-		///
-		///		- Backward:	A <-- B
-		///
-		///		- Both:		A <-> B
-		constexpr friend Direction operator<=>(Area const& a, Area const& b) {
-			return check(a, b);
+		/// @return Whether collision happens.
+		constexpr static bool check(Area const& a, Area const& b) {
+			if (a.canCollide && b.canCollide)
+				return withinBounds(*a.shape, *b.shape);
+			return false;
 		}
 	};
 }

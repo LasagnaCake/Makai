@@ -13,7 +13,7 @@ namespace Makai::Ex::Game::Danmaku {
 	struct ItemConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
-			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
+			CollisionMask const player = Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask;
 	};
 
@@ -36,9 +36,11 @@ namespace Makai::Ex::Game::Danmaku {
 			glow				= {};
 			dope				= false;
 			glowOnSpawn			= false;
-			animColor			= Graph::Color::WHITE;
 			id					= 0;
 			value				= 1;
+			animColor			= Graph::Color::WHITE;
+			counter				= 0;
+			spawnglow			= 0;
 			return *this;
 		}
 
@@ -132,6 +134,7 @@ namespace Makai::Ex::Game::Danmaku {
 				release(this, server);
 			} else {
 				active = true;
+				showSprites();
 				objectState = State::SOS_ACTIVE;
 			}
 			return *this;
@@ -176,6 +179,12 @@ namespace Makai::Ex::Game::Danmaku {
 			if (mainSprite)	mainSprite->visible	= false;
 		}
 
+		void showSprites() {
+			if (glowSprite)	glowSprite->visible	= true; 
+			if (mainSprite)	mainSprite->visible	= true;
+		}
+		
+
 		void updateSprite(SpriteHandle const& sprite, bool glowSprite = false) {
 			if (!sprite) return;
 			sprite->visible = true;
@@ -208,6 +217,7 @@ namespace Makai::Ex::Game::Danmaku {
 						internalRotation *= TAU * 3;
 					} else {
 						internalRotation = 0;
+						counter = 0;
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
@@ -220,6 +230,7 @@ namespace Makai::Ex::Game::Danmaku {
 						internalRotation *= TAU * 3;
 					} else {
 						internalRotation = 0;
+						counter = 0;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = State::SOS_ACTIVE;
@@ -246,9 +257,12 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct ItemServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
-			CollisionLayer::ITEM,
-			{},
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Layer::ITEM,
+			Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const layer = {
+			Danmaku::Collision::Mask::ITEM,
+			{}
 		};
 		ItemConfig::Collision const mask = {};
 	};
@@ -271,6 +285,9 @@ namespace Makai::Ex::Game::Danmaku {
 			glowMesh(cfg.glowMesh),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+			auto& cl		= CollisionServer::layers[cfg.colli.layer];
+			cl.affects		= cfg.layer.affects;
+			cl.affectedBy	= cfg.layer.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);
@@ -335,7 +352,7 @@ namespace Makai::Ex::Game::Danmaku {
 				ItemType& item = access<ItemType>(b);
 				if (
 					item.shape
-				&&	Collision::GJK::check(*item.shape, bound)
+				&&	C2D::withinBounds(*item.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -347,7 +364,7 @@ namespace Makai::Ex::Game::Danmaku {
 				ItemType& item = access<ItemType>(b);
 				if (
 					item.shape
-				&&	!Collision::GJK::check(*item.shape, bound)
+				&&	!C2D::withinBounds(*item.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -361,7 +378,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ItemServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			ItemType& item = *(object.template as<ItemType>());
-			item.free();
+			if (!item.isFree()) item.free();
 			AServer::release(object);
 			return *this;
 		}

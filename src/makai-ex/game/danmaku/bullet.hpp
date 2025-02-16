@@ -13,8 +13,8 @@ namespace Makai::Ex::Game::Danmaku {
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
-			CollisionMask const eraser	= CollisionLayer::BULLET_ERASER;
-			CollisionMask const player	= CollisionTag::FOR_PLAYER_1;
+			CollisionMask const eraser	= Danmaku::Collision::Mask::BULLET_ERASER;
+			CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask = {};
 	};
 	
@@ -30,6 +30,7 @@ namespace Makai::Ex::Game::Danmaku {
 			AServerObject::clear();
 			rotateSprite	= true;
 			glowOnSpawn		= true;
+			dope			= true;
 			radius			= {};
 			velocity		= {};
 			rotation		= {};
@@ -37,11 +38,13 @@ namespace Makai::Ex::Game::Danmaku {
 			damage			= {};
 			glow			= {};
 			autoDecay		= false;
-			dope			= false;
 			bouncy			= false;
 			loopy			= false;
 			grazed			= false;
 			animColor		= Graph::Color::WHITE;
+			spawnglow		= 0;
+			spawnsize		= 0;
+			counter			= 0;
 			return *this;
 		}
 
@@ -103,7 +106,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
 			if (
-				collider.affects.match(mask.eraser).overlap()
+				collider.getLayer().affects.match(mask.eraser).overlap()
 			&&	collider.tags.match(mask.player).overlap()
 			)
 				discard();
@@ -130,11 +133,12 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet& setFree(bool const state) override {
 			if (state) {
 				active = false;
-				hideSprites();
 				objectState = State::SOS_FREE;
+				hideSprites();
 				release(this, server);
 			} else {
 				active = true;
+				showSprites();
 				objectState = State::SOS_ACTIVE;
 			}
 			return *this;
@@ -164,46 +168,30 @@ namespace Makai::Ex::Game::Danmaku {
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
 		void playfieldCheck() {
-			if (!dope) return;
-			auto const
-				min = playfield.min(),
-				max = playfield.max()
-			;
-			if (
-				trans.position.x < min.x
-			||	trans.position.x > max.x
-			||	trans.position.y < min.y
-			||	trans.position.y > max.y
-			) free();
+			if (dope && !shape->bounded(playfield.asArea())) free();
 		}
 
 		void loopAndBounce() {
-			if (bouncy && !Collision::GJK::check(
-				board.asArea(),
-				C2D::Point(trans.position)
-			)) {
+			if (bouncy && !C2D::withinBounds(trans.position, board.asArea())) {
 				auto const
-					tl = board.min(),
-					br = board.max()
+					min = board.min(),
+					max = board.max()
 				;
-				if (trans.position.x < tl.x) shift(PI);
-				if (trans.position.x > br.x) shift(PI);
-				if (trans.position.y > tl.y) shift(0);
-				if (trans.position.y < tl.y) shift(0);
+				if (trans.position.x < min.x) shift(PI);
+				if (trans.position.x > max.x) shift(PI);
+				if (trans.position.y < min.y) shift(0);
+				if (trans.position.y > max.y) shift(0);
 				onAction(*this, Action::SOA_BOUNCE);
 				bouncy = false;
-			} else if (loopy && shape && !Collision::GJK::check(
-				board.asArea(),
-				*shape
-			)) {
+			} else if (loopy && shape && !C2D::withinBounds(board.asArea(), *shape)) {
 				auto const
-					tl = board.min(),
-					br = board.max()
+					min = board.min(),
+					max = board.max()
 				;
-				if (trans.position.x < tl.x) trans.position.x = br.x + shape->radius.max();
-				if (trans.position.x > br.x) trans.position.x = tl.x - shape->radius.max();
-				if (trans.position.y > tl.y) trans.position.y = br.y - shape->radius.max();
-				if (trans.position.y < tl.y) trans.position.y = tl.y + shape->radius.max();
+				if (trans.position.x < min.x) trans.position.x = max.x + shape->radius.max();
+				if (trans.position.x > max.x) trans.position.x = min.x - shape->radius.max();
+				if (trans.position.y < min.y) trans.position.y = max.y - shape->radius.max();
+				if (trans.position.y > max.y) trans.position.y = min.y + shape->radius.max();
 				onAction(*this, Action::SOA_LOOP);
 				loopy = false;
 			}
@@ -225,6 +213,11 @@ namespace Makai::Ex::Game::Danmaku {
 			if (mainSprite)	mainSprite->visible	= false;
 		}
 
+		void showSprites() {
+			if (glowSprite)	glowSprite->visible	= true; 
+			if (mainSprite)	mainSprite->visible	= true;
+		}
+
 		void updateSprite(SpriteHandle const& sprite, bool glowSprite = false) {
 			if (!sprite) return;
 			sprite->visible = true;
@@ -232,7 +225,6 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->size	= this->sprite.sheetSize;
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation;
-			// Position is somehow zero over here
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
@@ -259,6 +251,7 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnglow = 0;
 						animColor.a = 0;
 						spawnsize = 1.0;
+						counter = 0;
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
@@ -272,6 +265,7 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnglow = 0;
 						animColor.a = 1;
 						spawnsize = 1.0;
+						counter = 0;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = State::SOS_ACTIVE;
@@ -290,9 +284,12 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
-			CollisionLayer::ENEMY_BULLET,
-			CollisionLayer::BULLET_ERASER,
-			CollisionTag::FOR_PLAYER_1
+			Collision::Layer::ENEMY_BULLET,
+			Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const layer = {
+			Collision::Mask::ENEMY_BULLET,
+			Collision::Mask::BULLET_ERASER,
 		};
 		BulletConfig::Collision const mask = {};
 	};
@@ -315,6 +312,9 @@ namespace Makai::Ex::Game::Danmaku {
 			glowMesh(cfg.glowMesh),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+			auto& cl		= CollisionServer::layers[cfg.colli.layer];
+			cl.affects		= cfg.layer.affects;
+			cl.affectedBy	= cfg.layer.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);
@@ -379,7 +379,7 @@ namespace Makai::Ex::Game::Danmaku {
 				BulletType& bullet = access<BulletType>(b);
 				if (
 					bullet.shape
-				&&	Collision::GJK::check(*bullet.shape, bound)
+				&&	C2D::withinBounds(*bullet.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -391,7 +391,7 @@ namespace Makai::Ex::Game::Danmaku {
 				BulletType& bullet = access<BulletType>(b);
 				if (
 					bullet.shape
-				&&	!Collision::GJK::check(*bullet.shape, bound)
+				&&	!C2D::withinBounds(*bullet.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -405,7 +405,7 @@ namespace Makai::Ex::Game::Danmaku {
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			BulletType& bullet = *(object.template as<BulletType>());
-			bullet.free();
+			if (!bullet.isFree()) bullet.free();
 			AServer::release(object);
 			return *this;
 		}

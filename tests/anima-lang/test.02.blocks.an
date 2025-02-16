@@ -5,9 +5,9 @@ scene MyFirstScene
 			act lose *" Aw, dangit!" end
 			act win *" Yippee!" end
 			"Let's go gambling!"
-			perform choice random (win, lose)
-			perform choice random (win, lose)
-			perform choice random (win, lose)
+			perform select random (win, lose)
+			perform select random (win, lose)
+			perform select random (win, lose)
 		end
 		act start-of-the-adventure
 			"Let us commence."
@@ -31,7 +31,7 @@ scene MyFirstScene
 		act good-end
 			"GOOD END"
 		end
-		next choice random (good-end, neutral-end, bad-end, none)
+		next select random (good-end, neutral-end, bad-end, none)
 		"Huh?"
 		"STRANGE END???"
 		terminate

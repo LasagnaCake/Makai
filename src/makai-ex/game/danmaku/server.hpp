@@ -17,8 +17,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		constexpr virtual HandleType acquire() {
 			if (free.size()) {
-				HandleType object = free.popBack();
-				used.pushBack(free.popBack());
+				auto object = free.popBack();
+				used.pushBack(object);
 				return object;
 			}
 			return nullptr;
@@ -100,9 +100,9 @@ namespace Makai::Ex::Game::Danmaku {
 		bool discardable	= true;
 
 		virtual AServerObject& clear() {
-			trans		= Transform2D();
+			trans		= Transform2D::identity();
 			color		= {Graph::Color::WHITE};
-			scale		= {};
+			scale		= {1};
 			discardable	= true;
 			pause		= {};
 			if (auto collider = collision()) {
@@ -111,7 +111,7 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			onAction.clear();
 			onObjectUpdate.clear();
-			task.clear();
+//			task.clear();
 			resetCollisionState();
 			return *this;
 		}
@@ -138,22 +138,6 @@ namespace Makai::Ex::Game::Danmaku {
 			if (auto collider = collision())
 				collider->canCollide = canCollide;
 			return *this;
-		}
-
-		AServerObject& setCollisionMask(CollisionMask const& mask, bool const forAffectedBy = false) {
-			if (auto colli = collision()) {
-				if (forAffectedBy)	colli->affectedBy	= mask;
-				else				colli->affects		= mask;
-			}
-			return *this;
-		}
-
-		CollisionMask getCollisionMask(bool const affectedBy = false) {
-			if (auto colli = collision()) {
-				if (affectedBy)	return colli->affectedBy;
-				else			return colli->affects;
-			}
-			return CollisionMask(0);
 		}
 
 		AServerObject& setCollisionTags(CollisionMask const& tags) {

@@ -4,10 +4,11 @@
 
 ### Core library
 
+- [x] Create `StaticList` class (dynamic list for move-only objects)
+- [ ] Fix GJK not detecting collision
+
 ### Extension library
 
-- Create `StaticList` class (dynamic list for move-only objects)
-- - Or expand `List` for move-only objects
 - [ ] Write test cases
 - - [ ] `BulletServer`
 - - [ ] `LaserServer`

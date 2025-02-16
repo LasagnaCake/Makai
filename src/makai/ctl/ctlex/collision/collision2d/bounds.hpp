@@ -15,28 +15,23 @@ namespace Collision {}
 
 /// @brief Two-dimensional collision.
 namespace Collision::C2D {
-	template<usize UUID> struct Bounded;
-}
-
-/// @brief Two-dimensional collision type constraints.
-namespace Type::Ex::Collision::C2D {
-	/// @brief Type must be a valid collision bound.
-	template<class T>
-	concept Collidable = CTL::Type::Subclass<T, CTL::Ex::Collision::C2D::Bounded<T::ID>>;
-}
-
-/// @brief Two-dimensional collision.
-namespace Collision::C2D {
 	namespace {
 		using
 			Math::center,
 			Math::Transform2D,
-			Math::Vector2
+			Math::Vector2,
+			Math::Vector3
 		;
 	}
 
 	/// @brief Basic 2D bound interface.
 	using IBound2D = IBound<2>;
+
+	/// @brief 2D Axis-Aligned Bounding Box.
+	using AABB2D = AABB<2>;
+
+	static_assert((AABB2D{-1, 1}).overlap(AABB2D{-1, 1}));
+	static_assert(!(AABB2D{-2, -1}).overlap(AABB2D{1, 2}));
 
 	/// @brief Point bound.
 	struct Point: IBound2D {
@@ -52,12 +47,20 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Point(Point&& other)		= default;
 
+		/// @brief Returns this bound's special case.
+		/// @return Special case.
+		constexpr GJK::SpecialCase specialCase() const override final {return GJK::SpecialCase::GSC_POINT;}
+
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector2 furthest(Vector2 const& direction) const final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			return position;
 		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const override final {return {position, position};}
 
 		/// @brief Point position.
 		Vector2 position;
@@ -83,22 +86,26 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Box(Box&& other)		= default;
 		
-		/// @brief Returns the top-left corner of the box.
-		/// @return Top-left corner.
+		/// @brief Returns the lowest corner of the box.
+		/// @return Lowest corner.
 		constexpr Vector2 min() const {return position - size;}
-		/// @brief Returns the bottom-right corner of the box.
-		/// @return Bottom-right corner.
+		/// @brief Returns the highest corner of the box.
+		/// @return Highest corner.
 		constexpr Vector2 max() const {return position + size;}
+
+		/// @brief Returns this bound's special case.
+		/// @return Special case.
+		constexpr GJK::SpecialCase specialCase() const override final {return GJK::SpecialCase::GSC_BOX;}
 
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector2 furthest(Vector2 const& direction) const final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			Vector2 points[4] = {
-				Vector2(position.x + size.x, position.y + size.y),
-				Vector2(position.x + size.x, position.y - size.y),
-				Vector2(position.x - size.x, position.y - size.y),
-				Vector2(position.x - size.x, position.y + size.y)
+				position + size * (+1),
+				position + size * Vector2(+1, -1),
+				position + size * (-1),
+				position + size * Vector2(-1, +1)
 			};
 			Vector2 maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
@@ -111,6 +118,10 @@ namespace Collision::C2D {
 			}
 			return maxPoint;
 		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const override final {return {position - size, position + size};}
 
 		/// @brief Box position.
 		Vector2 position;
@@ -149,6 +160,7 @@ namespace Collision::C2D {
 		/// @param angle Angle to get the radius for.
 		/// @return Radius at the given angle.
 		constexpr float radiusAt(float const angle) const {
+			if (radius.x == radius.y) return radius.x;
 			float as, ac;
 			CTL::Math::absincos(angle + rotation, as, ac);
 			return (as * radius.x) + (ac * radius.y);
@@ -157,9 +169,22 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector2 furthest(Vector2 const& direction) const final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			//return position + Math::angleV2(rotation + direction.angle()) * radius;
-			return position + Math::rotateV2(direction, rotation) * radius;
+			if (!(direction.x && direction.y)) return position;
+			return position + direction.normalized() * radiusAt(direction.angle());
+		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const override final {
+			/*auto min = position - radius, max = position + radius;
+			if (rotation && (radius.x != radius.y)) {
+				Math::rotateV2(min, rotation);
+				Math::rotateV2(max, rotation);
+			}
+			return AABB2D{min, max}.normalized();*/
+			return AABB2D{position - radius.max(), position + radius.max()};
 		}
 
 		/// @brief Circle position.
@@ -205,16 +230,38 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Capsule(Capsule&& other)		= default;
 
+		/// @brief Returns the cap's radius at a given angle.
+		/// @param angle Angle to get the radius for.
+		/// @return Radius at the given angle.
+		constexpr float radiusAt(float const angle) const {
+			if (width.x == width.y) return width.x;
+			float as, ac;
+			CTL::Math::absincos(angle + rotation, as, ac);
+			return (as * width.x) + (ac * width.y);
+		}
+
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector2 furthest(Vector2 const& direction) const final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
+			if (!(direction.x && direction.y)) return position;
 			Vector2 const end = Math::angleV2(rotation);
 			float const alignment = end.dot(direction);
-			Vector2 point = width * Math::rotateV2(direction, rotation) + position;
+			Vector2 point = position + direction.normalized() * radiusAt(direction.angle());
 			if (alignment > 0) point += end * length;
 			return point;
+		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const override final {
+			auto min = position - width, max = position + Vector2(length, 0) + width;
+			if (rotation) {
+				Math::rotateV2(min, rotation);
+				Math::rotateV2(max, rotation);
+			}
+			return AABB2D{min, max}.normalized();
 		}
 
 		/// @brief Capsule position.
@@ -258,10 +305,16 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector2 furthest(Vector2 const& dir) const final {
-			if (dir.dot(direction) <= 0)
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
+			if (this->direction.dot(direction) <= 0)
 				return position;
 			return position + direction;
+		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const override final {
+			return AABB2D{position, position + direction}.normalized();
 		}
 
 		/// @brief Ray position.
@@ -292,7 +345,7 @@ namespace Collision::C2D {
 		/// @brief Constructs the shape from a set of points.
 		/// @param trans Shape transform.
 		/// @param points Vertices.
-		constexpr Shape(Span<Vector2> const& points): points(points)				{}
+		constexpr Shape(Span<Vector2> const& points): points(points)	{}
 
 		/// @brief Copy constructor (defaulted).
 		constexpr Shape(Shape const& other)	= default;
@@ -302,12 +355,12 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector2 furthest(Vector2 const& direction) const final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			Vector2  maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
 			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				Vector2 const tp = mat * Math::Vector3(vertex, 1); 
+				Vector2 const tp = (mat * Math::Vector3(vertex, 1)); 
 				float distance = tp.dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;
@@ -315,6 +368,19 @@ namespace Collision::C2D {
 				}
 			}
 			return maxPoint;
+		}
+
+		/// @brief Returns the axis-aligned bounding box the shape resides in.
+		/// @return Shape's AABB.
+		constexpr AABB2D aabb() const override final {
+			Vector2  min = 0, max = 0;
+			Math::Matrix3x3 mat = trans;
+			for (Vector2 const& vertex: points) {
+				Vector2 const tp = (mat * Math::Vector3(vertex, 1)).toVector3().xy();
+				min = min.min(vertex);
+				max = max.max(vertex);
+			}
+			return {min, max};
 		}
 		
 		/// @brief Shape transform.

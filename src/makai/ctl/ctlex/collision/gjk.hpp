@@ -4,11 +4,18 @@
 #include "../../ctl/ctl.hpp"
 #include "../math/vector.hpp"
 
+#include "aabb.hpp"
+
 // Based off of https://winter.dev/articles/gjk-algorithm
 
-// TODO: Document this
-
 CTL_EX_NAMESPACE_BEGIN
+
+namespace Type::Ex::Collision::GJK {
+	template<usize N>
+	concept Dimension = (N == 2 || N == 3);
+	template<usize... D>
+	concept Dimensions = (... && Dimension<D>);
+}
 
 /// @brief Collision detection facilities.
 namespace Collision {
@@ -23,20 +30,65 @@ namespace GJK {
 			Math::Vector4
 		;
 	}
+	/// @brief Special case.
+	enum class SpecialCase {
+		GSC_NONE,
+		GSC_POINT,
+		GSC_BOX
+	};
 
 	/// @brief GJK-enabled bound interface.
 	/// @tparam D Dimension.
 	template<usize D>
 	struct IGJKBound {
+		/// @brief Destructor.
 		constexpr virtual ~IGJKBound() {}
-		constexpr virtual Vector<D> furthest(Vector<D> const& direction) const = 0;
+		/// @brief Returns the furthest point in a given direction. Must be implemented.
+		constexpr virtual Vector<D> furthest(Vector<D> const& direction) const	= 0;
+		/// @brief Returns the Axis-Aligned Bounding Box the shape resides in. Must be implemented.
+		constexpr virtual AABB<D> aabb() const									= 0;
+		
+		/// @brief Returns this bound's special case.
+		/// @return Special case.
+		constexpr virtual SpecialCase specialCase() const {return SpecialCase::GSC_NONE;}
+
+		/// @brief Returns whether this bound is an axis-aligned bounding box.
+		/// @return Whether this bound is an AABB.
+		constexpr bool isBox() const		{return specialCase() == SpecialCase::GSC_BOX;		}
+		/// @brief Returns whether this bound is an axis-aligned bounding box.
+		/// @return Whether this bound is an AABB.
+		constexpr bool isPoint() const		{return specialCase() == SpecialCase::GSC_POINT;	}
+
+		/// @brief Returns whether this bound is an axis-aligned bounding box or a point.
+		/// @return Whether this bound is an AABB.
+		constexpr bool isBoxOrPoint() const	{return isBox() || isPoint();						}
+
+		/// @brief Checks if this shape's AABB overlaps with another shape's AABB.
+		/// @tparam DO Other shape's dimension.
+		/// @param other Shape to check overlap with.
+		/// @return Whether shapes overlap.
+		template<usize DO>
+		constexpr bool bounded(IGJKBound<DO> const& other) const	{return aabb().overlap(other.aabb());	}
+
+		/// @brief Returns how much this shape's AABB overlaps a lot with another shape's AABB.
+		/// @tparam DO Other shape's dimension.
+		/// @param other Shape to get overlap with.
+		/// @return How much shapes overlap.
+		template<usize DO>
+		constexpr bool overlap(IGJKBound<DO> const& other) const	{return aabb().overlap(other.aabb());	}
+
+		/// @brief Checks if this shape's AABB perfectly overlaps with another shape's AABB.
+		/// @tparam DO Other shape's dimension.
+		/// @param other Shape to check overlap with.
+		/// @return Whether shapes perfectly overlap.
+		template<usize DO>
+		constexpr bool match(IGJKBound<DO> const& other) const		{return aabb().match(other.aabb());		}
 	};
 	
 	/// @brief Simplex for bound calculation.
-	/// @tparam D Dimension.
 	template<usize D>
 	struct Simplex {
-		static_assert(D > 0 && D < 5);
+		static_assert(Type::Ex::Collision::GJK::Dimension<D>, "GJK only works for 2D & 3D collision!");
 
 		/// @brief Dimension of the simplex.
 		constexpr static usize DIMENSION	= D;
@@ -44,9 +96,9 @@ namespace GJK {
 		constexpr static usize MAX_POINTS	= DIMENSION+1;
 
 		/// @brief Vector type.
-		using VectorType = Vector3;
+		using VectorType = Vector<DIMENSION>;
 		/// @brief Point array type.
-		using PointArrayType = Array<VectorType, D+1>;
+		using PointArrayType = Array<VectorType, MAX_POINTS>;
 		//using VectorType = Vector<DIMENSION>;
 
 		/// @brief Default constructor.
@@ -54,10 +106,16 @@ namespace GJK {
 
 		/// @brief Constructs the simplex from a list of points.
 		/// @param ps Points to construct from.
-		constexpr Simplex(List<VectorType> const& ps): Simplex() {
+		constexpr explicit Simplex(List<VectorType> const& ps): Simplex() {
 			for (;count < ps.size() && count < MAX_POINTS; ++count)
 				points[count] = ps[count];
 		}
+
+		/// @brief Constructs the simplex from a static array of points.
+		/// @param points Points to construct from.
+		template<usize S>
+		constexpr Simplex(Array<VectorType, S> const& points)
+		requires (S <= MAX_POINTS): points(points), count(S) {}
 		
 		/// @brief Returns an iterator to the beginning of the point list.
 		/// @return iterator to beginning of point list.
@@ -87,7 +145,8 @@ namespace GJK {
 		/// @param vec Point to add.
 		/// @return Reference to self.
 		constexpr Simplex& pushFront(VectorType const& vec) {
-			points = {vec, points[0], points[1], points[2]};
+			if constexpr (DIMENSION == 3)	points = {vec, points[0], points[1], points[2]};
+			else							points = {vec, points[0], points[1]};
 			if (count < MAX_POINTS)
 				++count;
 			return *this;
@@ -96,11 +155,22 @@ namespace GJK {
 		/// @brief Remakes the simplex as the next simplex to check.
 		/// @param direction Direction to remake simplex for.
 		/// @return Whether simplex contains the origin.
-		constexpr bool remake(VectorType& direction) {
+		constexpr bool remake(VectorType& direction) requires (DIMENSION == 3) {
 			switch (count) {
 				case 2: return line(direction);
 				case 3: return triangle(direction);
 				case 4: return tetrahedron(direction);
+			}
+			return false;
+		}
+
+		/// @brief Remakes the simplex as the next simplex to check.
+		/// @param direction Direction to remake simplex for.
+		/// @return Whether simplex contains the origin.
+		constexpr bool remake(VectorType& direction) requires (DIMENSION == 2) {
+			switch (count) {
+				case 2: return line(direction);
+				case 3: return triangle(direction);
 			}
 			return false;
 		}
@@ -117,7 +187,7 @@ namespace GJK {
 		/// @brief Simplex points.
 		PointArrayType	points;
 		/// @brief Point count.
-		usize			count;
+		usize			count	= 0;
 
 		constexpr bool line(VectorType& direction) {
 			VectorType a = points[0];
@@ -125,12 +195,12 @@ namespace GJK {
 			VectorType ab = b - a;
 			VectorType ao =   - a;
 			if (same(ab, ao))
-				direction = ab.cross(ao).cross(ab);
+				direction = ab.itri(ao, ab);
 			else {
-				points = {a, 0, 0, 0};
+				points = {a};
 				direction = ao;
 			}
-			return DIMENSION == 1;
+			return false;
 		}
 
 		constexpr bool triangle(VectorType& direction) {
@@ -140,28 +210,28 @@ namespace GJK {
 			VectorType ab = b - a;
 			VectorType ac = c - a;
 			VectorType ao =   - a;
-			VectorType abc = ab.cross(ac);
-			if (same(abc.cross(ac), ao)) {
+			VectorType abc = ab.fcross(ac);
+			if (same(abc.fcross(ac), ao)) {
 				if (same(ac, ao)) {
-					points = {a, c, 0, 0};
-					direction = ac.cross(ao).cross(ac);
+					points = {a, c};
+					direction = ac.itri(ao, ac);
 				} else {
-					points = {a, b, 0, 0};
+					points = {a, b};
 					return line(direction);
 				}
-			} else if (same(ab.cross(abc), ao)) {
-				points = {a, b, 0, 0};
+			} else if (same(ab.fcross(abc), ao)) {
+				points = {a, b};
 				return line(direction);
 			} else if (same(abc, ao)) {
 				direction = abc;
 			} else {
-				points = {a, c, b, 0};
+				points = {a, c, b};
 				direction = -abc;
 			}
 			return DIMENSION == 2;
 		}
 
-		constexpr bool tetrahedron(VectorType& direction) {
+		constexpr bool tetrahedron(VectorType& direction) requires (DIMENSION > 2) {
 			VectorType a = points[0];
 			VectorType b = points[1];
 			VectorType c = points[2];
@@ -170,19 +240,19 @@ namespace GJK {
 			VectorType ac = c - a;
 			VectorType ad = d - a;
 			VectorType ao =   - a;
-			VectorType abc = ab.cross(ac);
-			VectorType acd = ac.cross(ad);
-			VectorType adb = ad.cross(ab);
+			VectorType abc = ab.fcross(ac);
+			VectorType acd = ac.fcross(ad);
+			VectorType adb = ad.fcross(ab);
 			if (same(abc, ao)) {
-				points = {a, b, c, 0};
+				points = {a, b, c};
 				return triangle(direction);
 			}
 			if (same(acd, ao)) {
-				points = {a, c, d, 0};
+				points = {a, c, d};
 				return triangle(direction);
 			}
 			if (same(adb, ao)) {
-				points = {a, d, b, 0};
+				points = {a, d, b};
 				return triangle(direction);
 			}
 			return DIMENSION == 3;
@@ -190,44 +260,64 @@ namespace GJK {
 	};
 
 	/// @brief Gets the support vector between two bounds.
-	/// @tparam D Dimension.
+	/// @tparam DA Dimension of bound A.
+	/// @tparam DB Dimension of bound B.
 	/// @param a GJK-enabled bound.
 	/// @param b GJK-enabled bound.
 	/// @param direction Direction to get support vector for.
 	/// @return Support vector.
-	template<usize D>
-	constexpr Vector<D> support(
-		IGJKBound<D> const& a,
-		IGJKBound<D> const& b,
-		Vector<D> const& direction
+	template<usize DA, usize DB>
+	constexpr Vector3 support(
+		IGJKBound<DA> const& a,
+		IGJKBound<DB> const& b,
+		Vector<(DA > DB ? DA : DB)> const& direction
 	) {
-		return b.furthest(direction) - b.furthest(-direction);
+		return a.furthest(direction) - b.furthest(-direction);
 	}
 
-	/// @brief Checks collision between two bounds.
-	/// @tparam D Dimension.
+	/// @brief Checks shape-to-shape collision between two bounds via GJK.
+	/// @tparam DA Dimension of collider A.
+	/// @tparam DB Dimension of collider B.
 	/// @param a GJK-enabled bound.
 	/// @param b GJK-enabled bound.
 	/// @return Whether they collide.
-	template<usize D>
-	constexpr bool check(
-		IGJKBound<D> const& a,
-		IGJKBound<D> const& b
-	) {
-		using VectorType = Vector<D>;
+	template<usize DA, usize DB>
+	constexpr bool shapeToShape(
+		IGJKBound<DA> const& a,
+		IGJKBound<DB> const& b
+	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
+		constexpr usize DIMENSION = (DA > DB ? DA : DB);
+		using VectorType = Vector<DIMENSION>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
-		Simplex<3> sp;
+		Simplex<DIMENSION> sp;
 		sp.pushFront(sup);
-		Vector3 d = -sup;
+		VectorType d = -sup;
 		while (true) {
-			sup = support<D>(a, b, d);
+			sup = support(a, b, d);
 			if (sup.dot(d) <= 0)
 				return false;
 			sp.pushFront(sup);
-			if (sp.remake(d)) {
+			if (sp.remake(d))
 				return true;
-			}
 		}
+		return true;
+	}
+
+	/// @brief Checks collision between two bounds.
+	/// @tparam DA Dimension of collider A.
+	/// @tparam DB Dimension of collider B.
+	/// @param a GJK-enabled bound.
+	/// @param b GJK-enabled bound.
+	/// @return Whether they collide.
+	template<usize DA, usize DB>
+	constexpr bool check(
+		IGJKBound<DA> const& a,
+		IGJKBound<DB> const& b
+	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
+		if (!a.bounded(b))							return false;
+		if (a.isBoxOrPoint() && b.isBoxOrPoint())	return true;
+		if (a.match(b))								return true;
+		return shapeToShape(a, b);
 	}
 }
 

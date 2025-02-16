@@ -6,32 +6,31 @@
 #include "../../anima/anima.hpp"
 #include "../core/core.hpp"
 
-#include "scene.hpp"
-
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
 	/// @brief Anima-based dialog player.
-	struct AnimaPlayer: private AVM::Engine, IPlayable, AUpdateable, Controllable {
+	struct AAnimaPlayer: private AVM::Engine, IPlayable, AUpdateable, Controllable {
 		using Engine::state, Engine::error;
 
-		using typename Engine::State;
+		using
+			typename Engine::State,
+			typename Engine::Parameters,
+			typename Engine::ActiveCast
+		;
 
 		/// @brief Constructs the dialog player.
 		/// @param scene Scene to use.
-		AnimaPlayer(Scene& scene): AVM::Engine(), scene(scene) {
+		AAnimaPlayer(): AVM::Engine() {
 			bindmap = Dictionary<String>({	
 				{"next", "dialog/next"},
 				{"skip", "dialog/skip"}
 			});
 		}
 
-		/// @brief Dialog scene.
-		Scene& scene;
-
 		/// @brief Constructs the dialog player.
 		/// @param binpath Path to dialog program.
 		/// @param scene Scene to use.
-		AnimaPlayer(String const& binpath, Scene& scene): AnimaPlayer(scene) {
+		AAnimaPlayer(String const& binpath): AAnimaPlayer() {
 			setProgram(binpath);
 		}
 
@@ -39,7 +38,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param binpath Path to dialog program.
 		/// @return Reference to self.
 		/// @note Stops the engine, if running.
-		AnimaPlayer& setProgram(String const& binpath) {
+		AAnimaPlayer& setProgram(String const& binpath) {
 			setProgram(AVM::Anima::fromBytes(File::getBinary(binpath)));
 			return *this;
 		}
@@ -48,7 +47,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param diag Dialog program to use.
 		/// @return Reference to self.
 		/// @note Stops the engine, if running.
-		AnimaPlayer& setProgram(AVM::Anima const& diag) {
+		AAnimaPlayer& setProgram(AVM::Anima const& diag) {
 			stop();
 			Engine::setProgram(diag);
 			return *this;
@@ -60,6 +59,8 @@ namespace Makai::Ex::Game::Dialog {
 				stop();
 				return;
 			}
+			if (needsChoice && !hasChoice) return;
+			needsChoice = false;
 			if (isFinished || paused) return;
 			advanceCounters();
 			if (syncing()) return;
@@ -71,7 +72,7 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Starts the dialog.
 		/// @return Reference to self. 
-		AnimaPlayer& start() override final {
+		AAnimaPlayer& start() override final {
 			inSync		=
 			autoplay	=
 			waitForUser	= false;
@@ -83,13 +84,13 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Stops the dialog.
 		/// @return Reference to self.
-		AnimaPlayer& stop()	override final		{isFinished = true; return *this; endProgram();	}
+		AAnimaPlayer& stop()	override final		{isFinished = true; return *this; endProgram();	}
 		/// @brief Unpauses the dialog.
 		/// @return Reference to self.
-		AnimaPlayer& play()	override final		{paused = false; return *this;					}
+		AAnimaPlayer& play()	override final		{paused = false; return *this;					}
 		/// @brief Pauses the dialog.
 		/// @return Reference to self.
-		AnimaPlayer& pause() override final		{paused = true; return *this;					}
+		AAnimaPlayer& pause() override final		{paused = true; return *this;					}
 
 	protected:
 		/// @brief Returns a color by a name hash.
@@ -120,15 +121,86 @@ namespace Makai::Ex::Game::Dialog {
 			}
 		}
 
-		/// @brief Gets a global integer by a name hash.
+		/// @brief Called when a global value is requested. Must be implemented.
 		/// @param name Global to get.
-		/// @return Integer.
-		virtual ssize getInt(usize const name)		{return 0;	}
+		/// @return Value.
+		virtual ssize onGlobalInt(usize const name)				{return 0;	}
 
-		/// @brief Gets a global string by a name hash.
+		/// @brief Called when a global value is requested. Must be implemented.
 		/// @param name Global to get.
-		/// @return String.
-		virtual String getString(usize const name)	{return "";	}
+		/// @return Value.
+		virtual String onGlobalString(usize const name)			{return "";	}
+
+		/// @brief Called when a choice is requested. Must be implemented.
+		/// @param choices Choices to make.
+		/// @return Chosen choice.
+		virtual void onChoice(Parameters const& choices)	= 0;
+
+		/// @brief Called when a scene dialog line is requested to be said. Must be implemented.
+		/// @param line Line to say.
+		/// @return Time it takes to say the line.
+		virtual usize onSay(String const& line)									= 0;
+		/// @brief Called when a scene dialog line is requested to be added. Must be implemented.
+		/// @param line Line to add.
+		/// @return Time it takes to add the line.
+		virtual usize onAdd(String const& line)									= 0;
+		/// @brief Called when a scene emotion is requested to be emoted. Must be implemented.
+		/// @param line Emotion to emote.
+		/// @return Time it takes to emote the emotion.
+		virtual usize onEmote(uint64 const emotion)								= 0;
+		/// @brief Called when a scene action is requested to be performed. Must be implemented.
+		/// @param action Action to perform.
+		/// @param params Action parameters.
+		/// @return Time it takes to perform the action.
+		virtual usize onPerform(uint64 const action, Parameters const& params)	= 0;
+		/// @brief Called when a scene text color change is requested. Must be implemented.
+		/// @param color Color to set.
+		virtual void onTextColor(Vector4 const& color)							= 0;
+		
+		/// @brief Called when actors are requested to say a line. Must be implemented.
+		/// @param actors Requested actors.
+		/// @param line Line to say.
+		/// @return Time it takes to say the line.
+		virtual usize onActorSay(ActiveCast const& actors, String const& line)									= 0;
+		/// @brief Called when actors are requested to add a line. Must be implemented.
+		/// @param actors Requested actors.
+		/// @param line Line to add.
+		/// @return Time it takes to say the line.
+		virtual usize onActorAdd(ActiveCast const& actors, String const& line)									= 0;
+		/// @brief Called when actors are requested to emote. Must be implemented.
+		/// @param actors Requested actors.
+		/// @param emotion Emotion to emote.
+		/// @return Time it takes to emote.
+		virtual usize onActorEmote(ActiveCast const& actors, uint64 const emotion)								= 0;
+		/// @brief Called when actors are requested to perform. Must be implemented.
+		/// @param actors Requested actors.
+		/// @param Action Action to perform.
+		/// @param params Action parameters.
+		/// @return Time it takes to perform.
+		virtual usize onActorPerform(ActiveCast const& actors, uint64 const action, Parameters const& params)	= 0;
+		/// @brief Called when actors are requested to change their text color. Must be implemented.
+		/// @param actors Requested actors.
+		/// @param color Color to set.
+		virtual void onActorTextColor(ActiveCast const& actors, Vector4 const& color)							= 0;
+
+		/// @brief Sets the current choice.
+		/// @param choice Choice.
+		void setChoice(ssize const choice) {
+			setCurrentInt(choice);
+			postChoice();
+		}
+
+		/// @brief Tells the dialog player that the user has made a choice.
+		void postChoice()	{hasChoice = true;	}
+		/// @brief Clears the current choice.
+		void clearChoice()	{hasChoice = false;	}
+
+		/// @brief Sets the AVM's current string value.
+		/// @param value Value to set.
+		void setCurrentString(String const& value)	{setString(value);	}
+		/// @brief Sets the AVM's current integer value.
+		/// @param value Value to set.
+		void setCurrentInt(ssize const value)		{setInt(value);		}
 
 		/// @brief Max time to wait for user input.
 		usize delay = 600;
@@ -140,6 +212,10 @@ namespace Makai::Ex::Game::Dialog {
 		bool	autoplay		= false;
 		/// @brief Whether to wait for user input.
 		bool	waitForUser		= false;
+		/// @brief Whether the user has chosen something.
+		bool	hasChoice		= false;
+		/// @brief Whether a choice was requested.
+		bool	needsChoice		= false;
 		/// @brief Counter for the auto-advance timer.
 		usize	autoCounter		= 0;
 		/// @brief Counter for the action sync timer.
@@ -147,7 +223,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Time to wait for actions to finish processing.
 		usize	actionDelay		= 0;
 
-		AnimaPlayer& next() {
+		AAnimaPlayer& next() {
 			if (isFinished) return *this;
 			inSync		=
 			waitForUser	= false;
@@ -160,57 +236,39 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opSay(ActiveCast const& actors, String const& line) override final {
-			if (actors.actors.empty()) {
-				setActionDelay(scene.say(Content{line}));
-				return;
-			}
-			for (auto actor: getActors(actors))
-				setActionDelay(actor->say(Content{line}));
+			if (actors.actors.empty())
+				setActionDelay(onSay(line));
+			else setActionDelay(onActorSay(actors, line));
 		}
 
 		void opAdd(ActiveCast const& actors, String const& line) override final {
-			if (actors.actors.empty()) {
-				setActionDelay(scene.add(Content{line}));
-				return;
-			}
-			for (auto actor: getActors(actors))
-				setActionDelay(actor->add(Content{line}));
+			if (actors.actors.empty())
+				setActionDelay(onAdd(line));
+			else setActionDelay(onActorAdd(actors, line));
 		}
 
 		void opEmote(ActiveCast const& actors, uint64 const emotion) override final {
-			if (actors.actors.empty()) {
-				setActionDelay(scene.emote(Emotion{emotion}));
-				return;
-			}
-			for (auto actor: getActors(actors))
-				setActionDelay(actor->emote(Emotion{emotion}));
+			if (actors.actors.empty())
+				setActionDelay(onEmote(emotion));
+			else setActionDelay(onActorEmote(actors, emotion));
 		}
 
 		void opPerform(ActiveCast const& actors, uint64 const action, Parameters const& params) override final {
-			if (actors.actors.empty()) {
-				setActionDelay(scene.perform(Action{action, params}));
-				return;
-			}
-			for (auto actor: getActors(actors))
-				setActionDelay(actor->perform(Action{action, params}));
+			if (actors.actors.empty())
+				setActionDelay(onPerform(action, params));
+			else setActionDelay(onActorPerform(actors, action, params));
 		}
 
 		void opColor(ActiveCast const& actors, uint64 const color) override final {
-			if (actors.actors.empty()) {
-				scene.color(Graph::Color::fromHexCodeRGBA(color));
-				return;
-			}
-			for (auto actor: getActors(actors))
-				actor->color(Graph::Color::fromHexCodeRGBA(color));
+			if (actors.actors.empty())
+				onTextColor(Graph::Color::fromHexCodeRGBA(color));
+			else onActorTextColor(actors, Graph::Color::fromHexCodeRGBA(color));
 		}
 
 		void opColorRef(ActiveCast const& actors, uint64 const color) override final {
-			if (actors.actors.empty()) {
-				scene.color(getColorByName(color));
-				return;
-			}
-			for (auto actor: getActors(actors))
-				actor->color(getColorByName(color));
+			if (actors.actors.empty())
+				onTextColor(getColorByName(color));
+			else onActorTextColor(actors, getColorByName(color));
 		}
 
 		void opDelay(uint64 const time) override final {
@@ -233,27 +291,18 @@ namespace Makai::Ex::Game::Dialog {
 			execute(name, params);
 		}
 
-		void opGetInt(uint64 const name, ssize& out) override final {
-			out = getInt(name);
+		void opGetInt(uint64 const name) override final {
+			setInt(onGlobalInt(name));
 		}
 
-		void opGetString(uint64 const name, String& out) override final {
-			out = getString(name);
+		void opGetString(uint64 const name) override final {
+			setString(onGlobalString(name));
 		}
 
-		Scene::Actors getActors(ActiveCast const& actors) {
-			Scene::Actors out;
-			if (!actors.exclude) [[likely]] {
-				for (auto const actor: actors.actors)
-					if (auto aref = scene.cast.at(actor))
-						out.pushBack(aref);
-			} else {
-				auto const actorList = actors.actors.sorted();
-				for (auto& [id, actor] : scene.cast)
-					if (actorList.bsearch(id) == -1)
-						out.pushBack(actor);
-			}
-			return out;
+		void opGetChoice(uint64 const name, Parameters const& choices) override final {
+			clearChoice();
+			needsChoice = true;
+			onChoice(choices);
 		}
 
 		void resetCounters() {

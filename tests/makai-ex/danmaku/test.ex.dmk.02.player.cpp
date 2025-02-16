@@ -17,7 +17,7 @@ struct TestPlayer: Danmaku::APlayer {
 	Makai::Instance<Makai::Ex::Game::Sprite> sprite;
 
 	TestPlayer(): APlayer(cfg), sprite(body.createReference<Makai::Ex::Game::Sprite>()) {
-		body.setRenderLayer(Danmaku::RenderLayer::PLAYER1_LAYER);
+		body.setRenderLayer(Danmaku::Render::Layer::PLAYER1_LAYER);
 		trans.position = board.center;
 		input.binds["player/up"] 	= {Makai::Input::KeyCode::KC_UP};
 		input.binds["player/down"]	= {Makai::Input::KeyCode::KC_DOWN};
@@ -63,7 +63,7 @@ struct TestApp: Makai::Ex::Game::App {
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {
-		camera.use(layerID >= Danmaku::RenderLayer::BOSS1_SPELL_BG_BOTTOM_LAYER);
+		camera.use(layerID >= Danmaku::Render::Layer::BOSS1_SPELL_BG_BOTTOM_LAYER);
 	}
 
 	constexpr static usize MAX_FRCOUNT = 10;

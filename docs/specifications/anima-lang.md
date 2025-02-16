@@ -69,7 +69,7 @@ Also contains the following keywords:
 | `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
 | `finish` | Exits the current block early. | none |
 | `terminate` | Exits the program early. | none |
-| `<perform\|next> choice <$<name>\|random> (<blocks>)` | Jumps one of the listed blocks, depending on a requested value, or at random. See ahead for further details. | `opGetInt` |
+| `<perform\|next> <params...> (<blocks>)` | Jumps one of the listed blocks, depending on a requested value, or at random. See ahead for further details. | see ahead |
 
 Under consideration:
 
@@ -100,9 +100,11 @@ The state is comprised of the current actor state, global SP mode, and execution
 If a `perform` is followed by any amount of `next`s, then the program will return execution to the `:perform` statement's 
 location.
 
-### On `choice`s
+### On `perform select`s
 
-Command: `<perform|next> choice <$<name>|random> (<blocks>)`
+Associated command: `opGetInt`.
+
+Command: `<perform|next> select <$<name>|random> (<blocks>)`
 
 Jumps to one of the listed blocks. Behaves like a `perform`/`next` command would, depending on which is used.
 
@@ -112,16 +114,36 @@ To jump depending on a value, use `$<name>`. The value will be clamped between t
 
 To jump at random, use `random`.
 
-For any particular choice:
+#### Example
+```
+perform select $ending (good-end, neutral-end, bad-end, none)
+```
+
+### On `perform choice`s
+
+Associated command: `opGetChoice`.
+
+Command: `<perform|next> choice <name> (<blocks>)`
+
+Jumps to one of the listed blocks. Behaves like a `perform`/`next` command would, depending on which is used.
+
+Jump paths are separated by commas.
+
+Intended to be used like a dialog choice.
+
+#### Example
+```
+perform choice choose-your-ending (good-end, neutral-end, bad-end, none)
+```
+
+### For any kind of jump list (`<perform|next> <type>`)
+
+For any particular jump target:
 
 - To jump to a given block, pass the name as you would for a `perform`/`next` command.
 - To exit the block, use `terminate`/`finish`, depending on your need.
 - To simply continue executing, use `none`.
-
-#### Example
-```
-perform choice $ending (good-end, neutral-end, bad-end, none)
-```
+- To repeat the block from the begginning, use `repeat`.
 
 ### On the `[]` command
 

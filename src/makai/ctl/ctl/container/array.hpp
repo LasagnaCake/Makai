@@ -71,24 +71,28 @@ public:
 	/// @param arr Array to initialize with.
 	template<usize AS>
 	constexpr Array(As<DataType[AS]> const& arr)
-	requires (AS == SIZE)											{copy(arr, contents, SIZE);				}
-	/// @brief Copy constructor.
-	/// @brief v `Array` to copy from.
-	constexpr Array(SelfType const& other)							{copy(other.contents, contents, SIZE);	}
-	/// @brief Move constructor.
-	/// @brief v `Array` to move.
-	constexpr Array(SelfType&& other)								{copy(other.contents, contents, SIZE);	}
-	
-	/// @brief Fill constructor.
-	/// @brief v Value to fill with.
-	constexpr explicit  Array(ConstReferenceType v): contents{v}	{}
+	requires (AS <= SIZE) {
+		copy(arr, contents, AS);
+		for (usize i = AS; AS < SIZE; ++i)
+			contents[i] = DataType();
+	}
+	/// @brief Copy constructor (defaulted).
+	constexpr Array(Array const& other)	= default;
+	/// @brief Move constructor (defaulted).
+	constexpr Array(Array&& other)		= default;
+
+	/// @brief Smaller array copy constructor.
+	/// @param other `Array` to initialize with.
+	template<usize AS>
+	constexpr Array(Array<DataType, AS, TIndex> const& other)
+	requires (AS < SIZE): Array(other.contents) {}
 
 	/// @brief Argument list constructor.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Values to construct from.
 	template<typename... Args>
-	constexpr Array(Args const&... rest)
-	requires (sizeof...(Args) == N): contents{DataType(rest)...} {}
+	constexpr Array(Args const&... args)
+	requires (... && Type::Convertible<Args, DataType>): contents{static_cast<DataType>(args)...} {}
 
 	/// @brief Returns the element at the given index.
 	/// @param index Index of the element.
@@ -160,20 +164,10 @@ public:
 		return result;
 	}
 
-	/// @brief Fixed array assignment operator.
-	/// @param arr Array to assign.
-	/// @return Reference to self.
-	template<usize AS>
-	constexpr Array& operator=(As<DataType[AS]> const& arr)
-	requires (AS == SIZE)								{copy(arr, contents, SIZE); return *this;				}
-	/// @brief Copy assignment operator.
-	/// @brief v `Array` to copy from.
-	/// @return Reference to self.
-	constexpr Array& operator=(SelfType const& other)	{copy(other.contents, contents, SIZE); return *this;	}
-	/// @brief Move assignment operator.
-	/// @brief v `Array` to move.
-	/// @return Reference to self.
-	constexpr Array& operator=(SelfType&& other)		{copy(other.contents, contents, SIZE); return *this;	}
+	/// @brief Copy assignment operator (defaulted).
+	constexpr Array& operator=(Array const& other)	= default;
+	/// @brief Move assignment operator (defaulted).
+	constexpr Array& operator=(Array&& other)		= default;
 	
 	/// @brief Returns the `Array` size.
 	/// @return Size of the `Array`.
@@ -236,6 +230,15 @@ public:
 	/// @brief Returns the last element.
 	/// @return Const reference to the last element.
 	constexpr ConstReferenceType	back() const	{return contents[SIZE-1];	}
+	
+	/// @brief Constructs an array filled with a single value.
+	/// @param fill Value to fill with.
+	/// @return Resulting array.
+	constexpr static SelfType withFill(ConstReferenceType fill) {
+		SelfType out;
+		for (auto& e: out) e = fill;
+		return out;
+	}
 
 private:
 	using Iteratable::wrapBounds;

@@ -69,11 +69,9 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		/// @brief Matches all packs.
-		const static String PACKS			= concat(STRINGS, PARENTHESES, BRACKETS, SQUIGGLIES, LINE_COMMENTS, BLOCK_COMMENTS);
+		const static String PACKS			= concat(LINE_COMMENTS, BLOCK_COMMENTS, STRINGS, PARENTHESES, BRACKETS, SQUIGGLIES);
 		/// @brief Matches all tokens.
 		const static String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", SIMPLE_TOKEN, PACKS);
-		/// @brief Matches all parameter tokens.
-		const static String ALL_PARAMETERS	= concat(PARAM_CHAR + "+", PACKS);
 	}
 
 	/// @brief Unescapes a character.
@@ -113,6 +111,8 @@ namespace Makai::Ex::AVM::Compiler {
 
 	/// @brief Structural representation of the program.
 	struct OperationTree {
+		constexpr static As<char const[]> GLOBAL_BLOCK = "[***]";
+
 		/// @brief Parameter pack.
 		struct ParameterPack {
 			/// @brief Parameter pack arguments.
@@ -121,54 +121,65 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @brief Default constructor.
 			constexpr ParameterPack() {}
 
+			/// @brief Parses a parameter pack.
+			/// @param pack Pack to parse.
+			/// @param fname Source file. For error purposes.
+			/// @return Parameter pack.
+			/// @throw Error::InvalidValue on syntax errors.
+			constexpr static StringList parse(Regex::Match pack, String const& fname = "unknown") {
+				pack.match = pack.match.sliced(1, -2);
+				String param = "";
+				StringList out;
+				bool inString	= false;
+				bool unspaced	= true;
+				bool escape		= false;
+				for (usize i = 0; i < pack.match.size(); ++i) {
+					auto const c = pack.match[i];
+					switch (c) {
+						case ',': {
+							if (!inString) {
+								out.pushBack(param);
+								param.clear();
+								unspaced = true;
+							}
+						} break;
+						case '"':
+							if (escape) param.pushBack(c);
+							else inString = !inString;
+						break;
+						default:
+							if (inString) {
+								if (c == '\\') escape = !escape;
+								param.pushBack(c);
+								continue;
+							}
+							else if (isNullOrSpaceChar(c)) {
+								if (param.size())
+									unspaced = false;
+								continue;
+							}
+							else if (unspaced && (isValidNameChar(c) || c == '.' || c == '~' || c == ':'))
+								param.pushBack(c);
+							else throw Error::InvalidValue(
+								toString("Invalid parameter at position [", out.size(), "]!"),
+								toString("Names must only contain letters, numbers, '-' and '_'!"),
+								CPP::SourceFile(fname, i + pack.position)
+							);
+						break;
+					}
+					escape = false;
+				}
+				if (out.size()) out.pushBack(param);
+				return out;
+			}
+
 			/// @brief Creates a parameter pack from a parameter pack string.
 			/// @param str String to create from.
 			/// @param fname Source file. For error purposes.
 			/// @return Parameter pack.
 			/// @throw Error::InvalidValue on syntax errors.
-			static ParameterPack fromString(Regex::Match const& ppack, String const& fname = "unknown") {
-				auto const& [mpos, str] = ppack;
-				ParameterPack pack;
-				auto matches = Regex::find(str.sliced(1, -2), RegexMatches::ALL_PARAMETERS);
-				StringList nodes;
-				usize index = 0;
-				for (auto& match: matches) {
-					auto& arg = pack.args.pushBack(match.match).back();
-					arg.strip();
-					MAKAILIB_EX_ANIMA_COMPILER_DEBUG("[", index, "]", ": '", arg, "' ");
-					if (arg == "...") {
-						if (index != 0) {
-							MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[! INVALID EXPANSION EXPRESSION !]");
-							throw Error::InvalidValue(
-								toString("Invalid values '", str, "'!"),
-								"'...' may ONLY appear at the beginning of the value list!",
-								CPP::SourceFile(fname, mpos + match.position)
-							);
-						}
-						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[Valid expansion expression]");
-						continue;
-					}
-					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\t[Parameter]");
-					switch (arg[0]) {
-						case '"': arg = normalize(arg.sliced(1, -2)); break;
-						case '(':
-						case '[': {
-							String a = pack.args.popBack();
-							ParameterPack pp = ParameterPack::fromString({mpos + match.position, arg}, fname);
-							pack.args.appendBack(pp.args);
-						} break;
-						default:
-							if (Regex::count(arg, RegexMatches::NON_NAME_CHAR) > 0)
-								throw Error::InvalidValue(
-									toString("Invalid values '", str, "'!"),
-									toString("Value '", arg, "' (at position [", index+1, "]) is invalid!\n"
-									"Names must only contain letters, numbers, '-' and '_'!"),
-									CPP::SourceFile(fname, mpos + match.position)
-								);
-					}
-					++index;
-				}
-				return pack;
+			constexpr static ParameterPack fromString(Regex::Match const& ppack, String const& fname = "unknown") {
+				return parse(ppack, fname);
 			}
 
 			/// @brief Constructs a parameter pack from a list of strings.
@@ -226,6 +237,8 @@ namespace Makai::Ex::AVM::Compiler {
 		using Tokens = List<Token>;
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
+		/// @brief Declared choices.
+		Map<usize, StringList> choices;
 
 		/// @brief Source file name.
 		String const fileName;
@@ -477,11 +490,43 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Missing value for '", op, "'!"),
 							CPP::SourceFile(fileName, opi)
 						);
-					if (val == "choice") {
+					if (val == "select") {
 						assertHasAtLeast(nodes, curNode, 3, opmatch);
 						++curNode;
-						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice type: ", nodes[curNode+1].match);
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Select type: ", nodes[curNode+1].match);
 						addExtendedOperation(valmatch, nodes[curNode+1], curNode, nodes, performing);
+						return;
+					}
+					if (val == "choice") {
+						assertHasAtLeast(nodes, curNode, 3, opmatch);
+						curNode += 2;
+						if (!nodes[curNode].match.validate(isValidNameChar))
+							throw Error::InvalidValue(
+								toString("Invalid choice name '", val, "'!"),
+								CPP::SourceFile(fileName, vali)
+							);
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", nodes[curNode].match);
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(nodes[curNode].match));
+						auto const ppack = ParameterPack::fromString(nodes[curNode+1]);
+						auto const path = ConstHasher::hash(getChoicePath(nodes[curNode].match));
+						tokens.pushBack(Token{
+							.type	= Operation::AVM_O_GET_VALUE,
+							.name	= getScopePath(nodes[curNode].match),
+							.value	= path,
+							.mode	= 3,
+							.pos	= opi,
+							.valPos	= vali
+						});
+						tokens.pushBack(Token{
+							.type	= Operation::AVM_O_JUMP,
+							.range	= ppack.args.size(),
+							.mode	= 2 | (isNotNext ? CHOICE_JUMP_BIT : 0u),
+							.pos	= opi,
+							.valPos	= vali
+						});
+						String const exit = getScopePath(nodes[curNode].match + "[choice:end]");
+						processChoice(opi, vali, exit, ppack.args, curNode, nodes);
+						++curNode;
 						return;
 					}
 					++curNode;
@@ -489,7 +534,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val == "terminate" || val == "finish") {
 						throw Error::InvalidValue(
 							toString("Cannot have this keyword as a jump target!"),
-							"Did you perhaps intend to do a ![choice] jump?",
+							"Did you perhaps intend to do a ![choice] or ![select] jump?",
 							CPP::SourceFile(fileName, vali)
 						);
 					}
@@ -576,7 +621,7 @@ namespace Makai::Ex::AVM::Compiler {
 					});
 					return;
 				}
-				case (ConstHasher::hash("choice")): {
+				case (ConstHasher::hash("select")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
 					switch (val[0]) {
@@ -611,70 +656,105 @@ namespace Makai::Ex::AVM::Compiler {
 							} break;
 							default:
 								throw Error::InvalidValue(
-									toString("Invalid choice mode '", val, "'!"),
+									toString("Invalid select mode '", val, "'!"),
 									CPP::SourceFile(fileName, vali)
 								);
 						}
 					}
 					usize i = 0;
-					String const exit = getScopePath(toString("*choice", opmatch.position, "[end]"));
-					for (auto const& param: ppack.args) {
-						if (param == "...") {
-							throw Error::InvalidValue(
-								toString("Cannot have pack expansions in a choice!"),
-								CPP::SourceFile(fileName, nodes[curNode+2].position)
-							);
-						}
-						if (Regex::count(param, RegexMatches::NON_NAME_CHAR) > 0) {
-							throw Error::InvalidValue(
-								toString("Invalid choice option '", param,"'!"),
-								"Choice options must ONLY be block paths!",
-								CPP::SourceFile(fileName, nodes[curNode+2].position)
-							);
-						}
-						if (param == "none") {
-							tokens.pushBack(Token{
-								.type	= Operation::AVM_O_JUMP,
-								.name	= exit,
-								.pos	= opi,
-								.valPos	= vali
-							});
-						} else if (param == "finish" || param == "terminate") {
-							tokens.pushBack(Token{
-								.type	= Operation::AVM_O_HALT,
-								.mode	= param == "finish",
-								.pos	= opi,
-								.valPos	= vali
-							});
-							for (usize i = 0; i < 4; ++i)
-								tokens.pushBack(Token{
-									.type	= Operation::AVM_O_NEXT,
-									.pos	= opi,
-									.valPos	= vali
-								});
-						} else tokens.pushBack(Token{
-							.type	= Operation::AVM_O_JUMP,
-							.name	= getScopePath(param),
-							.pos	= opi,
-							.valPos	= vali
-						});
-					}
-					tokens.pushBack(Token{
-						.type	= Operation::AVM_O_NEXT,
-						.entry	= exit,
-						.pos	= opi,
-						.valPos	= vali
-					});
+					String const exit = getScopePath(toString("*select", opmatch.position, "[end]"));
+					processChoice(opi, vali, exit, ppack.args, curNode, nodes);
 					++i;
 					curNode += 2;
 					return;
 				}
+				case (ConstHasher::hash("choice")): {
+					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(val));
+					if (!val.validate(isValidNameChar))
+						throw Error::InvalidValue(
+							toString("Invalid choice name '", val, "'!"),
+							CPP::SourceFile(fileName, vali)
+						);
+					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
+					auto const choice = ConstHasher::hash(getChoicePath(val));
+					choices[choice] = ppack.args;
+					curNode += 2;
+				} break;
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
 					CPP::SourceFile(fileName, opi)
 				);
 			}
+		}
+
+		constexpr void processChoice(
+			ssize const opi,
+			ssize const vali,
+			String const& exit,
+			StringList const& args,
+			usize& curNode,
+			List<Regex::Match> const& nodes
+		) {
+			for (auto const& param: args) {
+				if (param == "...") {
+					throw Error::InvalidValue(
+						toString("Cannot have pack expansions in a jump list!"),
+						CPP::SourceFile(fileName, nodes[curNode+2].position)
+					);
+				}
+				if (Regex::count(param, RegexMatches::NON_NAME_CHAR) > 0) {
+					throw Error::InvalidValue(
+						toString("Invalid option '", param,"'!"),
+						"Options must ONLY be block paths!",
+						CPP::SourceFile(fileName, nodes[curNode+2].position)
+					);
+				}
+				if (param == "repeat") {
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_JUMP,
+						.name	= blocks.empty() ? String(GLOBAL_BLOCK) : blocks.join(),
+						.pos	= opi,
+						.valPos	= vali
+					});
+				} else if (param == "none") {
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_JUMP,
+						.name	= exit,
+						.pos	= opi,
+						.valPos	= vali
+					});
+				} else if (param == "finish" || param == "terminate") {
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_HALT,
+						.mode	= param == "finish",
+						.pos	= opi,
+						.valPos	= vali
+					});
+					for (usize i = 0; i < 4; ++i)
+						tokens.pushBack(Token{
+							.type	= Operation::AVM_O_NEXT,
+							.pos	= opi,
+							.valPos	= vali
+						});
+				} else tokens.pushBack(Token{
+					.type	= Operation::AVM_O_JUMP,
+					.name	= getScopePath(param),
+					.pos	= opi,
+					.valPos	= vali
+				});
+			}
+			tokens.pushBack(Token{
+				.type	= Operation::AVM_O_NEXT,
+				.entry	= exit,
+				.pos	= opi,
+				.valPos	= vali
+			});
+		}
+
+		constexpr String getChoicePath(String const& choice) {
+			return getScopePath(choice + "[choice]");
 		}
 
 		constexpr uint32 asByte(As<char const[2]> const& nibbles) {
@@ -712,7 +792,7 @@ namespace Makai::Ex::AVM::Compiler {
 			return out & (COLOR_MASK | asByte({color[6], color[7]}));
 		}
 
-		String getScopePath(String const& val) {
+		constexpr String getScopePath(String const& val) {
 			String path;
 			switch (val.front()) {
 				case ':': {
@@ -727,7 +807,7 @@ namespace Makai::Ex::AVM::Compiler {
 					path += val.substring(1);
 				} break;
 				default: {
-					path = path = blocks.join() + val; break;
+					path = blocks.join() + val; break;
 				} break;
 			}
 			return path;
@@ -755,8 +835,10 @@ namespace Makai::Ex::AVM::Compiler {
 	struct BinaryBuilder: Anima {
 		/// @brief Default constructor.
 		constexpr BinaryBuilder(): Anima{
-			.data = {"false", "true"}
-		} {}
+			.data	= {"false", "true"}
+		} {
+			jumps[ConstHasher::hash(OperationTree::GLOBAL_BLOCK)] = 0;
+		}
 
 		/// @brief Adds an operation to the binary.
 		/// @param op Operation to add.
@@ -797,9 +879,23 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @return Reference to self.
 		constexpr BinaryBuilder& addParameterPack(StringList const& params) {
 			addOperand(data.size());
-			addOperand(params.size());
+			addOperand(params.size() - 1);
 			data.appendBack(params);
 			return *this;
+		}
+
+		struct ChoiceRef {
+			uint64 start;
+			uint64 size;
+		};
+
+		constexpr Map<uint64, ChoiceRef> processChoices(Map<usize, StringList> const& choices) {
+			Map<uint64, ChoiceRef> out;
+			for (auto& [choice, options]: choices) {
+				out[choice] = {data.size(), options.size() - 1};
+				data.appendBack(options);
+			}
+			return out;
 		}
 
 		/// @brief Creates a file header for the binary.
@@ -819,16 +915,17 @@ namespace Makai::Ex::AVM::Compiler {
 		static BinaryBuilder fromTree(OperationTree const& tree) {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("\nBuilding binary...\n");
 			BinaryBuilder out;
+			auto const choices = out.processChoices(tree.choices);
+			#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<choices>");
+			for (auto& choice: choices) {
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", choice.key);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("    Start: ", choice.value.start);
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("    Size: ", choice.value.size);
+			}
+			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</choices>");
+			#endif
 			for (auto& token: tree.tokens) {
-				if (token.entry.size()) {
-					auto const njloc = ConstHasher::hash(token.entry);
-					if (out.jumps.contains(njloc))
-						throw Error::InvalidValue(
-							toString("Named block '", token.entry, "' already exists!"),
-							CPP::SourceFile(tree.fileName, 0)
-						);
-					out.jumps[njloc] = out.code.size();
-				}
 				#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<token>");
 				#define MKEX_ANIMAC_PRINT_NAME(NAME) case (NAME): DEBUGLN("Type: '", #NAME, "'"); break
@@ -857,6 +954,15 @@ namespace Makai::Ex::AVM::Compiler {
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Params: ['", token.pack.args.join("', '"), "']");
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</token>");
 				#endif
+				if (token.entry.size()) {
+					auto const njloc = ConstHasher::hash(token.entry);
+					if (out.jumps.contains(njloc))
+						throw Error::InvalidValue(
+							toString("Named block '", token.entry, "' already exists!"),
+							CPP::SourceFile(tree.fileName, 0)
+						);
+					out.jumps[njloc] = out.code.size();
+				}
 				if (token.type != asOperation(token.operation(SP_FLAG_MASK))) {
 					throw Error::FailedAction(
 						"Compiler error!",
@@ -901,9 +1007,9 @@ namespace Makai::Ex::AVM::Compiler {
 							out.addParameterPack(token.pack.args);
 						break;
 					case Operation::AVM_O_NAMED_CALL:
-						out.addOperation(token.operation(token.pack.args.size() > 2));
+						out.addOperation(token.operation(token.pack.args.size() > 1));
 						out.addNamedOperand(token.name);
-						if (token.pack.args.size() > 2)
+						if (token.pack.args.size() > 1)
 							out.addParameterPack(token.pack.args);
 						else {
 							String const& val = token.pack.args[0];
@@ -923,14 +1029,21 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 					case Operation::AVM_O_GET_VALUE:
 						out.addOperation(token);
-						out.addNamedOperand(token.name);
-						if (token.mode == 1) {
-							out.addOperand(token.value);
-							out.addOperand(token.range);
+						if (token.mode == 3) {
+							out.addNamedOperand(token.name);
+							out.addOperand(choices[token.value].start);
+							out.addOperand(choices[token.value].size);
+						} else {
+							out.addNamedOperand(token.name);
+							if (token.mode == 1) {
+								out.addOperand(token.value);
+								out.addOperand(token.range);
+							}
 						}
 						break;
 				}
 			}
+			out.addOperation(OperationTree::Token{Operation::AVM_O_HALT});
 			#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
 			for (auto& name: out.data)
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUG("'", name, "', ");

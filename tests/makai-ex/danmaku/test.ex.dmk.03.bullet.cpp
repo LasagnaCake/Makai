@@ -16,14 +16,21 @@ struct MeshHolder {
 	MkGraph::Renderable m, gm;
 
 	MeshHolder() {
-		m.setRenderLayer(Danmaku::RenderLayer::ENEMY1_BULLET_LAYER);
-		gm.setRenderLayer(Danmaku::RenderLayer::ENEMY1_BULLET_LAYER);
+		m.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER);
+		gm.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER+1);
 	}
 };
 
 struct TestBulletServer: MeshHolder, BaseBulletServer {
 	TestBulletServer(): MeshHolder(), BaseBulletServer({1024, m, gm, ::board, ::playfield}) {}
 };
+
+Danmaku::Bullet::PromiseType btask(Danmaku::Bullet& bullet) {
+	co_yield 60;
+	DEBUGLN("Oh no I died");
+	bullet.free();
+	co_return 1;
+}
 
 struct TestApp: Makai::Ex::Game::App {
 	TestBulletServer server;
@@ -34,7 +41,7 @@ struct TestApp: Makai::Ex::Game::App {
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {
-		camera.use(layerID >= Danmaku::RenderLayer::BOSS1_SPELL_BG_BOTTOM_LAYER);
+		camera.use(layerID >= Danmaku::Render::Layer::BOSS1_SPELL_BG_BOTTOM_LAYER);
 	}
 
 	constexpr static usize MAX_FRCOUNT = 10;
@@ -47,10 +54,10 @@ struct TestApp: Makai::Ex::Game::App {
 		for (usize i = 0; i < 10; ++i) {
 			auto bullet = server.acquire().as<Danmaku::Bullet>();
 			if (!bullet) return;
-			bullet->rotation.value = (TAU / 10) * (i + getCurrentCycle());
-			bullet->trans.position = gamearea * Makai::Vector2(1, -1);
+			bullet->rotation.value = (TAU / 10) * (i + (getCurrentCycle() * 0.5));
+			bullet->trans.position = playfield.center;
 			bullet->velocity.value = 30;
-			DEBUGLN("[", bullet->trans.position.x, ", ", bullet->trans.position.y, "]");
+//			bullet->task = btask(*bullet);
 		}
 	}
 

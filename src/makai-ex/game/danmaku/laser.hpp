@@ -13,7 +13,7 @@ namespace Makai::Ex::Game::Danmaku {
 	struct LaserConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
-			CollisionMask const player = CollisionTag::FOR_PLAYER_1;
+			CollisionMask const player = Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask;
 	};
 
@@ -36,6 +36,9 @@ namespace Makai::Ex::Game::Danmaku {
 			autoDecay		= false;
 			toggleState		= IToggleable::State::TS_UNTOGGLED;
 			animColor		= Graph::Color::WHITE;
+			counter			= 0;
+			toggleCounter	= 0;
+			toggleColor		= 0;
 			return *this;
 		}
 
@@ -198,6 +201,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < despawnTime) {
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime) * toggleColor;
 					} else {
+						counter = 0;
 						onAction(*this, Action::SOA_DESPAWN_END);
 						free();
 					}
@@ -206,6 +210,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < spawnTime) {
 						animColor.a = counter / static_cast<float>(spawnTime) * toggleColor;
 					} else {
+						counter = 0;
 						setCollisionState(true);
 						onAction(*this, Action::SOA_SPAWN_END);
 						objectState = AServerObject::State::SOS_ACTIVE;
@@ -222,6 +227,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (toggleCounter++ < untoggleTime) {
 						toggleColor = 0.5 * (2.0 - (toggleCounter / static_cast<float>(untoggleTime)));
 					} else {
+						toggleCounter = 0;
 						toggleColor = 0.5;
 						toggleState = IToggleable::State::TS_UNTOGGLED;
 					}
@@ -230,6 +236,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (toggleCounter++ < toggleTime) {
 						toggleColor = 0.5 * (1.0 + (toggleCounter / static_cast<float>(toggleTime)));
 					} else {
+						toggleCounter = 0;
 						toggleColor = 1.0;
 						toggleState = IToggleable::State::TS_TOGGLED;
 					}
@@ -242,9 +249,12 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct LaserServerConfig: ServerConfig, ServerMeshConfig, BoundedObjectConfig {
 		ColliderConfig const colli = {
-			CollisionLayer::ENEMY_LASER,
-			{},
-			CollisionTag::FOR_PLAYER_1
+			Danmaku::Collision::Layer::ENEMY_LASER,
+			Danmaku::Collision::Tag::FOR_PLAYER_1
+		};
+		CollisionLayerConfig const layer = {
+			Danmaku::Collision::Mask::ENEMY_LASER,
+			{}
 		};
 		LaserConfig::Collision const mask = {};
 	};
@@ -263,6 +273,9 @@ namespace Makai::Ex::Game::Danmaku {
 			mainMesh(cfg.mainMesh),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+			auto& cl		= CollisionServer::layers[cfg.colli.layer];
+			cl.affects		= cfg.layer.affects;
+			cl.affectedBy	= cfg.layer.affectedBy;
 			all.resize(cfg.size);
 			free.resize(cfg.size);
 			used.resize(cfg.size);
@@ -323,7 +336,7 @@ namespace Makai::Ex::Game::Danmaku {
 				LaserType& laser = access<LaserType>(b);
 				if (
 					laser.shape
-				&&	Collision::GJK::check(*laser.shape, bound)
+				&&	C2D::withinBounds(*laser.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -335,7 +348,7 @@ namespace Makai::Ex::Game::Danmaku {
 				LaserType& laser = access<LaserType>(b);
 				if (
 					laser.shape
-				&&	!Collision::GJK::check(*laser.shape, bound)
+				&&	!C2D::withinBounds(*laser.shape, bound)
 				) query.pushBack(b);
 			}
 			return query;
@@ -349,7 +362,7 @@ namespace Makai::Ex::Game::Danmaku {
 		LaserServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			LaserType& laser = *object.template as<LaserType>();
-			laser.free();
+			if (!laser.isFree()) laser.free();
 			AServer::release(object);
 			return *this;
 		}
