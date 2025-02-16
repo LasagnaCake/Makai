@@ -220,7 +220,7 @@ namespace GJK {
 				points = {a, d, b};
 				return triangle(direction);
 			}
-			return true;
+			return DIMENSION == 3;
 		}
 	};
 
