@@ -58,7 +58,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		constexpr virtual AServer& release(HandleType const& object) {
 			if (!contains(object)) return *this;
-			used.removeLike(object);
+			used.eraseLike(object);
 			free.pushBack(object);
 			return *this;
 		}
