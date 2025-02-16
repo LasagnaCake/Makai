@@ -611,12 +611,20 @@ class Vector2: Ordered {
 			return (x * vec.y) - (y * vec.x);
 		}
 
-		/// @brief Returns the triple cross product with two other vectors.
+		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
 		/// @param b Vector to get triple cross product with.
 		/// @param c Vector to get triple cross product with.
 		/// @return Triple cross product.
 		constexpr Vector2 tri(Vector2 const& b, Vector2 const& c) const {
-			return (b * dot(c)) - ((*this) * b.dot(c));
+			return (b * dot(c)) - (c * dot(b));
+		}
+
+		/// @brief Returns the inverse triple cross product `(A x B) x C` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector2 itri(Vector2 const& b, Vector2 const& c) const {
+			return - c.tri(*this, b);
 		}
 
 		/// @brief Returns this vector projected in another vector.
@@ -891,12 +899,20 @@ class Vector3: Ordered {
 			);
 		}
 
-		/// @brief Returns the triple cross product with two other vectors.
+		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
 		/// @param b Vector to get triple cross product with.
 		/// @param c Vector to get triple cross product with.
 		/// @return Triple cross product.
 		constexpr Vector3 tri(Vector3 const& b, Vector3 const& c) const {
-			return (b * dot(c)) - ((*this) * b.dot(c));
+			return (b * dot(c)) - (c * dot(b));
+		}
+
+		/// @brief Returns the inverse triple cross product `(A x B) x C` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector3 itri(Vector3 const& b, Vector3 const& c) const {
+			return - c.tri(*this, b);
 		}
 
 		/// @brief Returns the mixed (scalar triple) product with two other vectors (`this` dot (`a` cross `b`)).
@@ -1202,12 +1218,20 @@ class Vector4: Ordered {
 			return mult.x + mult.y + mult.z + mult.w;
 		}
 
-		/// @brief Returns the triple cross product with two other vectors.
+		/// @brief Returns the triple cross product `A x (B x C)` with two other vectors.
 		/// @param b Vector to get triple cross product with.
 		/// @param c Vector to get triple cross product with.
 		/// @return Triple cross product.
 		constexpr Vector4 tri(Vector4 const& b, Vector4 const& c) const {
-			return (b * dot(c)) - ((*this) * b.dot(c));
+			return (b * dot(c)) - (c * dot(b));
+		}
+
+		/// @brief Returns the inverse triple cross product `(A x B) x C` with two other vectors.
+		/// @param b Vector to get triple cross product with.
+		/// @param c Vector to get triple cross product with.
+		/// @return Triple cross product.
+		constexpr Vector4 itri(Vector4 const& b, Vector4 const& c) const {
+			return - c.tri(*this, b);
 		}
 
 		/// @brief Returns this vector projected in another vector.
