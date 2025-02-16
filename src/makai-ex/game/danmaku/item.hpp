@@ -317,9 +317,10 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onUpdate(float delta, Makai::App& app) override {
-			for (auto& obj: used) {
-				obj->onUpdate(delta);
-			}
+			if (used.empty()) return;
+			for (auto& obj: all)
+				if (!obj.isFree())
+					obj.onUpdate(delta);
 		}
 
 		void discardAll() override {
