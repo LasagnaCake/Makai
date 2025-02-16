@@ -47,6 +47,10 @@ namespace Collision::C2D {
 		/// @brief Move constructor (defaulted).
 		constexpr Point(Point&& other)		= default;
 
+		/// @brief Returns this bound's special case.
+		/// @return Special case.
+		constexpr GJK::SpecialCase specialCase() const override final {return GJK::SpecialCase::GSC_POINT;}
+
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
@@ -88,6 +92,10 @@ namespace Collision::C2D {
 		/// @brief Returns the highest corner of the box.
 		/// @return Highest corner.
 		constexpr Vector2 max() const {return position + size;}
+
+		/// @brief Returns this bound's special case.
+		/// @return Special case.
+		constexpr GJK::SpecialCase specialCase() const override final {return GJK::SpecialCase::GSC_BOX;}
 
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.

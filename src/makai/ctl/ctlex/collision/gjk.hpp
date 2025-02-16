@@ -30,6 +30,12 @@ namespace GJK {
 			Math::Vector4
 		;
 	}
+	/// @brief Special case.
+	enum class SpecialCase {
+		GSC_NONE,
+		GSC_POINT,
+		GSC_BOX
+	};
 
 	/// @brief GJK-enabled bound interface.
 	/// @tparam D Dimension.
@@ -41,6 +47,21 @@ namespace GJK {
 		constexpr virtual Vector<D> furthest(Vector<D> const& direction) const	= 0;
 		/// @brief Returns the Axis-Aligned Bounding Box the shape resides in. Must be implemented.
 		constexpr virtual AABB<D> aabb() const									= 0;
+		
+		/// @brief Returns this bound's special case.
+		/// @return Special case.
+		constexpr virtual SpecialCase specialCase() const {return SpecialCase::GSC_NONE;}
+
+		/// @brief Returns whether this bound is an axis-aligned bounding box.
+		/// @return Whether this bound is an AABB.
+		constexpr bool isBox() const		{return specialCase() == SpecialCase::GSC_BOX;		}
+		/// @brief Returns whether this bound is an axis-aligned bounding box.
+		/// @return Whether this bound is an AABB.
+		constexpr bool isPoint() const		{return specialCase() == SpecialCase::GSC_POINT;	}
+
+		/// @brief Returns whether this bound is an axis-aligned bounding box or a point.
+		/// @return Whether this bound is an AABB.
+		constexpr bool isBoxOrPoint() const	{return isBox() || isPoint();						}
 
 		/// @brief Checks if this shape's AABB overlaps with another shape's AABB.
 		/// @tparam DO Other shape's dimension.
@@ -254,20 +275,18 @@ namespace GJK {
 		return a.furthest(direction) - b.furthest(-direction);
 	}
 
-	/// @brief Checks collision between two bounds.
+	/// @brief Checks shape-to-shape collision between two bounds via GJK.
 	/// @tparam DA Dimension of collider A.
 	/// @tparam DB Dimension of collider B.
 	/// @param a GJK-enabled bound.
 	/// @param b GJK-enabled bound.
 	/// @return Whether they collide.
 	template<usize DA, usize DB>
-	constexpr bool check(
+	constexpr bool shapeToShape(
 		IGJKBound<DA> const& a,
 		IGJKBound<DB> const& b
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		constexpr usize DIMENSION = (DA > DB ? DA : DB);
-		if (!a.bounded(b))	return false;
-		if (a.match(b))		return true;
 		using VectorType = Vector<DIMENSION>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
 		Simplex<DIMENSION> sp;
@@ -282,6 +301,23 @@ namespace GJK {
 				return true;
 		}
 		return true;
+	}
+
+	/// @brief Checks collision between two bounds.
+	/// @tparam DA Dimension of collider A.
+	/// @tparam DB Dimension of collider B.
+	/// @param a GJK-enabled bound.
+	/// @param b GJK-enabled bound.
+	/// @return Whether they collide.
+	template<usize DA, usize DB>
+	constexpr bool check(
+		IGJKBound<DA> const& a,
+		IGJKBound<DB> const& b
+	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
+		if (!a.bounded(b))							return false;
+		if (a.isBoxOrPoint() && b.isBoxOrPoint())	return true;
+		if (a.match(b))								return true;
+		return shapeToShape(a, b);
 	}
 }
 
