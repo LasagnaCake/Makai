@@ -21,7 +21,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Scene's dialog box.
 		Instance<Box>			dialog	= nullptr;
 		/// @brief Scene's choice menu.
-		Instance<AChoiceMenu>	choice	= nullptr;
+		Instance<ChoiceMenu>	choice	= nullptr;
 
 		/// @brief Returns a reference to an actor by its name hash.
 		/// @param hash Actor name hash.

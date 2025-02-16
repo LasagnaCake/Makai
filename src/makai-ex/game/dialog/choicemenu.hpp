@@ -6,12 +6,15 @@
 #include "../core/core.hpp"
 
 namespace Makai::Ex::Game::Dialog {
-	struct AChoiceMenu: IVisible, AUpdateable, Controllable {
+	struct ChoiceMenu: IVisible, AUpdateable, Controllable {
+		Graph::Label menu;
+		Graph::Label cursor;
+
 		Functor<void(ssize const)> onChoice;
 
-		virtual ~AChoiceMenu() {}
+		virtual ~ChoiceMenu() {}
 
-		AChoiceMenu() {
+		ChoiceMenu() {
 			bindmap = Dictionary<String>({	
 				{"next",		"dialog/choice/next"		},
 				{"previous",	"dialog/choice/previous"	},
@@ -47,10 +50,46 @@ namespace Makai::Ex::Game::Dialog {
 		void select()	{onChoice(choice); hide();				}
 		void cancel()	{choice = options.size()-1; select();	}
 
-		virtual void onFocusChange(ssize const oldChoice, ssize const newChoice) 	= 0;
-		virtual void onOptionsChanged()												= 0;
+		virtual void onFocusChange(ssize const oldChoice, ssize const newChoice) {
+			repaint();
+		}
+
+		virtual void onOptionsChanged()	{
+			choice		= 0;
+			prevChoice	= 0;
+			repaint();
+		}
 
 	private:
+		void repaint() {
+			auto& display = menu.text->content;
+			display.clear();
+			usize i					= 0;
+			usize lines				= 0;
+			usize cursor			= 0;
+			menu.text->rectAlign.x	= 0.5;
+			menu.text->rect.h		= 0;
+			menu.text->rect.v		= options.size();
+			for (String const& option: options) {
+				display += option + "\n\n";
+				if (menu.text->rect.h < option.size())
+					menu.text->rect.h = option.size();
+				++i;
+				if (i == choice) cursor = lines;
+				lines += 2 + Regex::count(option, "\n");
+			}
+			setCursor(cursor);
+		}
+
+		void setCursor(usize const line) {
+			cursor.text->rectAlign.x	= 0.5;
+			cursor.text->rect.h			= menu.text->rect.h + 4;
+			cursor.text->rect.v			= options.size();
+			auto& display = cursor.text->content;
+			display = String(line, '\n');
+			display += "> " + String(cursor.text->rect.h - 4, ' ') + " <";
+		}
+
 		StringList options;
 
 		ssize choice		= 0;
