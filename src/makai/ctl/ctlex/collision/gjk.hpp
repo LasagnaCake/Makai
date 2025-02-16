@@ -47,14 +47,21 @@ namespace GJK {
 		/// @param other Shape to check overlap with.
 		/// @return Whether shapes overlap.
 		template<usize DO>
-		constexpr bool bounded(IGJKBound<DO> const& other) const {return aabb().overlap(other.aabb());	}
+		constexpr bool bounded(IGJKBound<DO> const& other) const	{return aabb().overlap(other.aabb());	}
 
-		/// @brief Checks if this shape's AABB overlaps a lot with another shape's AABB.
+		/// @brief Returns how much this shape's AABB overlaps a lot with another shape's AABB.
+		/// @tparam DO Other shape's dimension.
+		/// @param other Shape to get overlap with.
+		/// @return How much shapes overlap.
+		template<usize DO>
+		constexpr bool overlap(IGJKBound<DO> const& other) const	{return aabb().overlap(other.aabb());	}
+
+		/// @brief Checks if this shape's AABB perfectly overlaps with another shape's AABB.
 		/// @tparam DO Other shape's dimension.
 		/// @param other Shape to check overlap with.
-		/// @return Whether shapes overlap a lot.
+		/// @return Whether shapes perfectly overlap.
 		template<usize DO>
-		constexpr bool shorted(IGJKBound<DO> const& other) const {return aabb().match(other.aabb());	}
+		constexpr bool match(IGJKBound<DO> const& other) const		{return aabb().match(other.aabb());		}
 	};
 	
 	/// @brief Simplex for bound calculation.
@@ -260,7 +267,7 @@ namespace GJK {
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		constexpr usize DIMENSION = (DA > DB ? DA : DB);
 		if (!a.bounded(b))	return false;
-		if (a.shorted(b))	return true;
+		if (a.match(b))		return true;
 		using VectorType = Vector<DIMENSION>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
 		Simplex<DIMENSION> sp;

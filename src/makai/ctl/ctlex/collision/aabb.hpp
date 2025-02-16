@@ -46,22 +46,26 @@ namespace Collision {
 		template<usize DO = D>
 		constexpr bool match(AABB<DO> const& other) const {return coverage(other) > 0.9999;}
 
+		/// @brief Returns the bounding box's size.
+		/// @return Bounding box size.
+		constexpr Vector<D> size() const {return (max - min).absolute();}
+
 		/// @brief Returns how much overlap exists between bounding boxes.
 		/// @tparam DO Other bounding box's dimension.
 		/// @param other Bounding box to get overlap with.
-		/// @return How much boxes overlap.
+		/// @return How much boxes overlap. Returns -1 if it is impossible to determine (i.e. when both bound's sizes are zero).
 		template<usize DO = D>
 		constexpr float coverage(AABB<DO> const& other) const {
-			auto const a = normalized();
-			auto const b = other.normalized();
-			auto const max = a.max.min(b.max);
-			auto const min = a.min.max(b.min);
-			auto const as = (a.max - a.min).absolute();
-			auto const bs = (b.max - b.min).absolute();
-			auto const ds = (max - min).absolute();
+			if (min == other.min && max == other.max)
+				return 1;
+			auto const dmax = max.min(other.max);
+			auto const dmin = min.max(other.min);
+			auto const as = size();
+			auto const bs = other.size();
+			auto const ds = (dmax - dmin).absolute();
 			float const da = (ds.x * ds.y);
 			float const ua = ((as.x * as.y + bs.x * bs.y) - da);
-			if (!ua) return 1;
+			if (!ua) return -1;
 			if (!da) return 0;
 			return CTL::Math::clamp<float>(da/ua, 0, 1);
 		}
