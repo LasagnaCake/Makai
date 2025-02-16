@@ -50,7 +50,7 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector3 furthest(Vector3 const& direction) const override final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			return position;
 		}
 
@@ -92,7 +92,7 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector3 furthest(Vector3 const& direction) const override final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			Vector2 points[4] = {
 				position + size * (+1),
 				position + size * Vector2(+1, -1),
@@ -102,7 +102,7 @@ namespace Collision::C2D {
 			Vector2 maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
 			for (Vector2 const& vertex: points) {
-				float distance = Vector3(vertex).dot(direction);
+				float distance = vertex.dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;
 					maxPoint = vertex;
@@ -161,10 +161,10 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector3 furthest(Vector3 const& direction) const override final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			//return position + Math::angleV2(rotation + direction.angle()) * radius;
 			if (!(direction.x && direction.y)) return position;
-			return position + direction * radiusAt(direction.xy().angle());
+			return position + direction.normalized() * radiusAt(direction.angle());
 		}
 
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
@@ -235,12 +235,12 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector3 furthest(Vector3 const& direction) const override final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			// Based off of: http://gamedev.net/forums/topic/708675-support-function-for-capsule-gjk-and-mpr/5434478/
 			if (!(direction.x && direction.y)) return position;
 			Vector2 const end = Math::angleV2(rotation);
 			float const alignment = end.dot(direction);
-			Vector2 point = position + direction * radiusAt(direction.xy().angle());
+			Vector2 point = position + direction.normalized() * radiusAt(direction.angle());
 			if (alignment > 0) point += end * length;
 			return point;
 		}
@@ -297,8 +297,8 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector3 furthest(Vector3 const& direction) const override final {
-			if (direction.dot(direction) <= 0)
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
+			if (this->direction.dot(direction) <= 0)
 				return position;
 			return position + direction;
 		}
@@ -347,12 +347,12 @@ namespace Collision::C2D {
 		/// @brief Returns the furthest point in a given direction.
 		/// @param direction Direction to get furthest point.
 		/// @returns Furthest point.
-		constexpr Vector3 furthest(Vector3 const& direction) const override final {
+		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			Vector2  maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
 			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				Vector3 const tp = (mat * Math::Vector3(vertex, 1)).toVector3().xy(); 
+				Vector2 const tp = (mat * Math::Vector3(vertex, 1)); 
 				float distance = tp.dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;

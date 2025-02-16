@@ -38,9 +38,9 @@ namespace GJK {
 		/// @brief Destructor.
 		constexpr virtual ~IGJKBound() {}
 		/// @brief Returns the furthest point in a given direction. Must be implemented.
-		constexpr virtual Vector3 furthest(Vector3 const& direction) const	= 0;
+		constexpr virtual Vector<D> furthest(Vector<D> const& direction) const	= 0;
 		/// @brief Returns the Axis-Aligned Bounding Box the shape resides in. Must be implemented.
-		constexpr virtual AABB<D> aabb() const								= 0;
+		constexpr virtual AABB<D> aabb() const									= 0;
 
 		/// @brief Checks if this shape's AABB overlaps with another shape's AABB.
 		/// @tparam DO Other shape's dimension.
@@ -61,7 +61,7 @@ namespace GJK {
 		constexpr static usize MAX_POINTS	= DIMENSION+1;
 
 		/// @brief Vector type.
-		using VectorType = Vector3;
+		using VectorType = Vector<DIMENSION>;
 		/// @brief Point array type.
 		using PointArrayType = Array<VectorType, MAX_POINTS>;
 		//using VectorType = Vector<DIMENSION>;
@@ -160,7 +160,7 @@ namespace GJK {
 			VectorType ab = b - a;
 			VectorType ao =   - a;
 			if (same(ab, ao))
-				direction = ab.cross(ao).cross(ab);
+				direction = ab.tri(ao, ab);
 			else {
 				points = {a};
 				direction = ao;
@@ -175,16 +175,16 @@ namespace GJK {
 			VectorType ab = b - a;
 			VectorType ac = c - a;
 			VectorType ao =   - a;
-			VectorType abc = ab.cross(ac);
-			if (same(abc.cross(ac), ao)) {
+			VectorType abc = ab.tri(ac, ac);
+			if (same(abc.tri(ac, ac), ao)) {
 				if (same(ac, ao)) {
 					points = {a, c};
-					direction = ac.cross(ao).cross(ac);
+					direction = ac.tri(ao, ac);
 				} else {
 					points = {a, b};
 					return line(direction);
 				}
-			} else if (same(ab.cross(abc), ao)) {
+			} else if (same(ab.tri(abc, abc), ao)) {
 				points = {a, b};
 				return line(direction);
 			} else if (same(abc, ao)) {
@@ -205,9 +205,9 @@ namespace GJK {
 			VectorType ac = c - a;
 			VectorType ad = d - a;
 			VectorType ao =   - a;
-			VectorType abc = ab.cross(ac);
-			VectorType acd = ac.cross(ad);
-			VectorType adb = ad.cross(ab);
+			VectorType abc = ab.tri(ac, ac);
+			VectorType acd = ac.tri(ad, ad);
+			VectorType adb = ad.tri(ab, ad);
 			if (same(abc, ao)) {
 				points = {a, b, c};
 				return triangle(direction);
@@ -253,7 +253,7 @@ namespace GJK {
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		constexpr usize DIMENSION = (DA > DB ? DA : DB);
 		if (!a.bounded(b)) return false;
-		using VectorType = Vector3;
+		using VectorType = Vector<DIMENSION>;
 		VectorType sup = support(a, b, VectorType::RIGHT());
 		Simplex<DIMENSION> sp;
 		sp.pushFront(sup);
