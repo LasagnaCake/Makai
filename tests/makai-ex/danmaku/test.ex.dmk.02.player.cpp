@@ -59,7 +59,7 @@ struct TestApp: Makai::Ex::Game::App {
 
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 02", false}}) {
 		loadDefaultShaders();
-		camera.cam2D = Makai::Graph::Camera3D::from2D(32, Makai::Vector2(4, 3));
+		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {

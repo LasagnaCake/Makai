@@ -59,6 +59,7 @@ namespace Makai::Ex::Game::Danmaku {
 		};
 
 		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
+			DEBUGLN("Building player...");
 			grazebox	= CollisionServer::createCollider(cfg.grazebox.layer);
 			itembox		= CollisionServer::createCollider(cfg.itembox.layer);
 			collision()->getLayer().affects		= cfg.hitboxLayer.affects;

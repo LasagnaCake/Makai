@@ -88,6 +88,7 @@ namespace Makai::Ex::Game::Danmaku {
 			colli(cfg),
 			board(cfg.board),
 			playfield(cfg.playfield) {
+				DEBUGLN("Building game object...");
 				collider = CollisionServer::createCollider(cfg.layer);
 				bindCollisionHandler(*this);
 			}
