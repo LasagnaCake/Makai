@@ -207,7 +207,7 @@ namespace GJK {
 			VectorType ao =   - a;
 			VectorType abc = ab.tri(ac, ac);
 			VectorType acd = ac.tri(ad, ad);
-			VectorType adb = ad.tri(ab, ad);
+			VectorType adb = ad.tri(ab, ab);
 			if (same(abc, ao)) {
 				points = {a, b, c};
 				return triangle(direction);
