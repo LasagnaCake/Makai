@@ -34,9 +34,8 @@ namespace Collision {
 		/// @return Whether boxes overlap.
 		template<usize DO = D>
 		constexpr bool overlap(AABB<DO> const& other) const {
-			if constexpr (DO == D)		return (overlapMin(other) || overlapMax(other));
-			else if constexpr (DO > D)	return overlap({other.min, other.max});
-			else						return other.overlap({min, max});
+			if constexpr (D < DO)	return other.overlap(*this);
+			else					return (contains(other.min) || contains(other.min));
 		}
 
 		/// @brief Returns whether this bounding box perfectly overlaps with another.
@@ -75,29 +74,29 @@ namespace Collision {
 		constexpr AABB normalized() const {
 			return {min.min(max), max.max(min)};
 		}
+
+		/// @brief Returns whether the given point is inside the bounding box.
+		/// @param point Point to check.
+		/// @return Whether point is inside bounding box.
+		constexpr bool contains(Vector<D> const& point) const {
+			if constexpr (D == 2) return 
+				(min.x <= point.x && point.x <= max.x)
+			||	(min.y <= point.y && point.y <= max.y)
+			;
+			else if constexpr (D == 3) return 
+				(min.x <= point.x && point.x <= max.x)
+			||	(min.y <= point.y && point.y <= max.y)
+			||	(min.z <= point.z && point.z <= max.z)
+			;
+			else if constexpr (D == 3) return 
+				(min.x <= point.x && point.x <= max.x)
+			||	(min.y <= point.y && point.y <= max.y)
+			||	(min.z <= point.z && point.z <= max.z)
+			||	(min.w <= point.w && point.w <= max.w)
+			;
+		}
 	
 	private:
-		constexpr bool overlapMin(AABB const& other) const {
-			bool overlapping = true;
-			overlapping = overlapping && (other.min.x <= min.x && min.x <= other.max.x);
-			overlapping = overlapping && (other.min.y <= min.y && min.y <= other.max.y);
-			if constexpr (D > 2)
-				overlapping = overlapping && (other.min.z <= min.z && min.z <= other.max.z);
-			if constexpr (D > 3)
-				overlapping = overlapping && (other.min.w <= min.w && min.w <= other.max.w);
-			return overlapping;
-		}
-
-		constexpr bool overlapMax(AABB const& other) const {
-			bool overlapping = true;
-			overlapping = overlapping && (other.min.x <= max.x && max.x <= other.max.x);
-			overlapping = overlapping && (other.min.y <= max.y && max.y <= other.max.y);
-			if constexpr (D > 2)
-				overlapping = overlapping && (other.min.z <= max.z && max.z <= other.max.z);
-			if constexpr (D > 3)
-				overlapping = overlapping && (other.min.w <= max.w && max.w <= other.max.w);
-			return overlapping;
-		}
 	};
 }
 
