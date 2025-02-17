@@ -62,18 +62,16 @@ namespace Makai::Ex::Game::Dialog {
 			repaint();
 		}
 
-		ChoiceMenu& show() override {
+		void show() override {
 			menu.active		=
 			cursor.active	=
 			updating		= true;
-			return *this;
 		}
 
-		ChoiceMenu& hide() override {
+		void hide() override {
 			menu.active		=
 			cursor.active	=
 			updating		= false;
-			return *this;
 		}
 
 	private:
