@@ -1090,6 +1090,12 @@ class Vector4: Ordered {
 		/// @brief Returns a vector pointing towards the negative W axis.
 		/// @return vector pointing towards -W.
 		constexpr static Vector4 PAST()		{return Vector4(+0, +0, +0, -1);	}
+		/// @brief Returns a vector pointing towards the positive W axis.
+		/// @return vector pointing towards +W.
+		constexpr static Vector4 ANA()		{return Vector4(+0, +0, +0, +1);	}
+		/// @brief Returns a vector pointing towards the negative W axis.
+		/// @return vector pointing towards -W.
+		constexpr static Vector4 KATA()		{return Vector4(+0, +0, +0, -1);	}
 
 		/// @brief Gets a component at a given index.
 		/// @param pos Index of the component.
