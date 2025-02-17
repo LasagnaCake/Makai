@@ -35,7 +35,7 @@ namespace Collision {
 		template<usize DO = D>
 		constexpr bool overlap(AABB<DO> const& other) const {
 			if constexpr (D < DO)	return other.overlap(*this);
-			else					return (contains(other.min) || contains(other.min));
+			else					return (contains(other.min) || contains(other.max));
 		}
 
 		/// @brief Returns whether this bounding box perfectly overlaps with another.
