@@ -240,9 +240,9 @@ namespace Makai::Ex::Game::Dialog {
 
 		AAnimaPlayer& next() {
 			if (isFinished) return *this;
-			if (inSync)						onAdvance(AdvanceType::APAT_SYNC);
-			else if (waitForUser)			onAdvance(AdvanceType::APAT_USER_INPUT);
-			else if (autoCounter >= delay)	onAdvance(AdvanceType::APAT_AUTO_ADVANCE);
+			if (inSync)				onAdvance(AdvanceType::APAT_SYNC);
+			else if (waitForUser)	onAdvance(AdvanceType::APAT_USER_INPUT);
+			else if (!waiting())	onAdvance(AdvanceType::APAT_AUTO_ADVANCE);
 			inSync		=
 			waitForUser	= false;
 			resetCounters();
