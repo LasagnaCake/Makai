@@ -188,6 +188,16 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param color Color to set.
 		virtual void onActorTextColor(ActiveCast const& actors, Vector4 const& color)							= 0;
 
+		enum class AdvanceType {
+			APAT_USER_INPUT,
+			APAT_AUTOPLAY,
+			APAT_SYNC
+		};
+
+		/// @brief Called when the engine advances from a sync or an user input.
+		/// @param advance Advance type.
+		virtual void onAdvance(AdvanceType const advance)	{DEBUGLN("Dialog advance: ", enumcast(advance));}
+
 		/// @brief Sets the current choice.
 		/// @param choice Choice.
 		void setChoice(ssize const choice) {
@@ -230,6 +240,9 @@ namespace Makai::Ex::Game::Dialog {
 
 		AAnimaPlayer& next() {
 			if (isFinished) return *this;
+			if (inSync)				onAdvance(AdvanceType::APAT_SYNC);
+			else if (waitForUser)	onAdvance(AdvanceType::APAT_USER_INPUT);
+			else if (!waiting())	onAdvance(AdvanceType::APAT_AUTOPLAY);
 			inSync		=
 			waitForUser	= false;
 			resetCounters();
