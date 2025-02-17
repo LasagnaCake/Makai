@@ -121,8 +121,8 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param values Values to pass to it.
 		virtual void execute(usize const name, Parameters const& params) {
 			switch (name) {
-				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params[0]);
-				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0]);
+				case (ConstHasher::hash("autoplay")):	autoplay	= params[0] == "true";
+				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0], 10);
 			}
 		}
 
