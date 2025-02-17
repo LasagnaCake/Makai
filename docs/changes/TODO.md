@@ -10,7 +10,7 @@
 ### Extension library
 
 - [ ] Write test cases
-- - [ ] `BulletServer`
+- - [x] `BulletServer`
 - - [ ] `LaserServer`
 - - [ ] `ItemServer`
 - - [ ] `AEnemy`
