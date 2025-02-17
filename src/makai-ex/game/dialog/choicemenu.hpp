@@ -18,7 +18,8 @@ namespace Makai::Ex::Game::Dialog {
 			bindmap = Dictionary<String>({	
 				{"next",		"dialog/choice/next"		},
 				{"previous",	"dialog/choice/previous"	},
-				{"select",		"dialog/next"				}
+				{"select",		"dialog/next"				},
+				{"cancel",		"dialog/skip"				}
 			});
 		}
 
@@ -49,8 +50,8 @@ namespace Makai::Ex::Game::Dialog {
 		void setOptions(StringList const& choices)	{options = choices; onOptionsChanged();	}
 		StringList const& getOptions()				{return options;						}
 
-		void select()	{onChoice(choice); hide();				}
-		void cancel()	{choice = options.size()-1; select();	}
+		void select()	{onChoice(choice); hide();		}
+		void cancel()	{setChoice(options.size()-1);	}
 
 		virtual void onFocusChange(ssize const oldChoice, ssize const newChoice) {
 			repaint();
