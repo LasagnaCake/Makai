@@ -55,6 +55,10 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Executed every update cycle.
 		void onUpdate(float, Makai::App&) override {
+			if (
+				state() == State::AVM_ES_FINISHED
+			||	state() == State::AVM_ES_READY
+			) return;
 			if (state() != State::AVM_ES_RUNNING) {
 				stop();
 				return;
@@ -73,6 +77,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Starts the dialog.
 		/// @return Reference to self. 
 		AAnimaPlayer& start() override final {
+			isFinished	=
 			inSync		=
 			autoplay	=
 			waitForUser	= false;
@@ -84,13 +89,13 @@ namespace Makai::Ex::Game::Dialog {
 
 		/// @brief Stops the dialog.
 		/// @return Reference to self.
-		AAnimaPlayer& stop()	override final		{isFinished = true; return *this; endProgram();	}
+		AAnimaPlayer& stop() override final		{isFinished = true; return *this; endProgram();	}
 		/// @brief Unpauses the dialog.
 		/// @return Reference to self.
-		AAnimaPlayer& play()	override final		{paused = false; return *this;					}
+		AAnimaPlayer& play() override final		{paused = false; return *this;					}
 		/// @brief Pauses the dialog.
 		/// @return Reference to self.
-		AAnimaPlayer& pause() override final		{paused = true; return *this;					}
+		AAnimaPlayer& pause() override final	{paused = true; return *this;					}
 
 	protected:
 		/// @brief Returns a color by a name hash.
