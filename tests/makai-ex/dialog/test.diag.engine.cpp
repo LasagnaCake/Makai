@@ -11,7 +11,7 @@ struct TextBox: Makai::Ex::Game::Dialog::Box {
 		title.text->rectAlign.x	= 0.5;
 		title.text->rect		= {80, 1};
 		body.text->rect			= {80, 4};
-		title.trans.position	= gamearea * Makai::Vector2(1, 1.5);
+		title.trans.position	= gamearea * Makai::Vector2(1, -1.5);
 		body.trans.position		= title.trans.position + Makai::Vector2::DOWN() * 2;
 	}
 };
