@@ -256,12 +256,11 @@ namespace Collision::C2D {
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
 		/// @return Shape's AABB.
 		constexpr AABB2D aabb() const override final {
-			auto min = position - width, max = position + Vector2(length, 0) + width;
-			if (rotation) {
-				Math::rotateV2(min, rotation);
-				Math::rotateV2(max, rotation);
-			}
-			return AABB2D{min, max}.normalized();
+			auto
+				min = position - length - width.max(),
+				max = position + length + width.max()
+			;
+			return AABB2D{min, max};
 		}
 
 		/// @brief Capsule position.
@@ -358,10 +357,8 @@ namespace Collision::C2D {
 		constexpr Vector2 furthest(Vector2 const& direction) const override final {
 			Vector2  maxPoint;
 			float maxDistance = CTL::NumberLimit<float>::LOWEST;
-			Math::Matrix3x3 mat = trans;
-			for (Vector2 const& vertex: points) {
-				Vector2 const tp = (mat * Math::Vector3(vertex, 1)); 
-				float distance = tp.dot(direction);
+			for (Vector2 const& vertex: transformed) {
+				float distance = vertex.dot(direction);
 				if (distance > maxDistance) {
 					maxDistance = distance;
 					maxPoint = vertex;
@@ -373,20 +370,37 @@ namespace Collision::C2D {
 		/// @brief Returns the axis-aligned bounding box the shape resides in.
 		/// @return Shape's AABB.
 		constexpr AABB2D aabb() const override final {
+			return bound;
+		}
+
+		/// @brief Returns the bound's location.
+		/// @return Bound location.
+		constexpr Vector2 location() const override final {
+			return center;
+		}
+
+		/// @brief Precomputes any necessary transformations.
+		constexpr void precompute() const override final {
 			Vector2  min = 0, max = 0;
 			Math::Matrix3x3 mat = trans;
 			for (Vector2 const& vertex: points) {
-				Vector2 const tp = (mat * Math::Vector3(vertex, 1)).toVector3().xy();
-				min = min.min(vertex);
-				max = max.max(vertex);
+				transformed.pushBack(mat * Vector3(vertex, 1));
+				min = min.min(transformed.back());
+				max = max.max(transformed.back());
 			}
-			return {min, max};
+			bound = {min, max};
+			center = Math::center(points);
 		}
 		
 		/// @brief Shape transform.
 		Transform2D		trans;
 		/// @brief Shape vertices.
 		List<Vector2>	points;
+
+	private:
+		List<Vector2> mutable	transformed;
+		AABB2D mutable			bound;
+		Vector2 mutable			center;
 	};
 }
 

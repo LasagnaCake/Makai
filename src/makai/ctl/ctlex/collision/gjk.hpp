@@ -49,6 +49,8 @@ namespace GJK {
 		constexpr virtual AABB<D> aabb() const									= 0;
 		/// @brief Returns the bound's location. By default, it returns the bounding box's center.
 		constexpr virtual Vector<D> location() const							{return aabb().center();}
+		/// @brief Precomputes any necessary transformations.
+		constexpr virtual void precompute() const								{}
 		
 		/// @brief Returns this bound's special case.
 		/// @return Special case.
@@ -325,6 +327,8 @@ namespace GJK {
 		IGJKBound<DA> const& a,
 		IGJKBound<DB> const& b
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
+		a.precompute();
+		b.precompute();
 		if (!a.bounded(b))							return false;
 		if (a.locate(b))							return true;
 		if (a.isBoxOrPoint() && b.isBoxOrPoint())	return true;
