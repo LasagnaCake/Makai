@@ -11,7 +11,7 @@ struct TextBox: Makai::Ex::Game::Dialog::Box {
 		title.text->rectAlign.x	= 0.5;
 		title.text->rect		= {80, 1};
 		body.text->rect			= {80, 4};
-		title.trans.position	= gamearea * Makai::Vector2(1, -1.5);
+		title.trans.position	= gamearea * Makai::Vector2(1, -1);
 		body.trans.position		= title.trans.position + Makai::Vector2::DOWN() * 2;
 		title.font				= font;
 	}
@@ -41,13 +41,14 @@ struct TestScene: Makai::Ex::Game::Dialog::Scene {
 };
 
 struct TestApp: Makai::Ex::Game::App {
-	TestScene scene;
 	Makai::Graph::FontFace font;
+
+	TestScene scene;
 
 	Makai::Ex::Game::Dialog::ScenePlayer player;
 
-	TestApp(Makai::String const& path): App(Makai::Config::App{{800, 600, "Test 02", false}}), player(scene), scene(font) {
-		font = Makai::Graph::FontData{Makai::Graph::Texture2D("../tests/makai/files/TestFontGrid-lotuscoder.png")};
+	TestApp(Makai::String const& path): App(Makai::Config::App{{800, 600, "Test 02", false}}), scene(font), player(scene) {
+		font.data() = Makai::Graph::FontData{Makai::Graph::Texture2D("../tests/makai/files/TestFontGrid-lotuscoder.png")};
 		player.setProgram(path);
 		loadDefaultShaders();
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
