@@ -13,6 +13,9 @@ namespace Collision {
 	namespace {
 		using Math::Vector;
 	}
+
+	/// @brief Maximum detection precision.
+	constexpr float const PRECISION = 1e-6;
 	
 	/// @brief Axis-aligned bounding box.
 	/// @tparam D Dimension.
@@ -34,8 +37,10 @@ namespace Collision {
 		/// @return Whether boxes overlap.
 		template<usize DO = D>
 		constexpr bool overlap(AABB<DO> const& other) const {
-			if constexpr (D < DO)	return other.overlap(*this);
-			else					return (contains(other.min) || contains(other.max));
+			return 
+				(contains(other.min) || contains(other.max))
+			||	(other.contains(min) || other.contains(max))
+			;
 		}
 
 		/// @brief Returns whether this bounding box perfectly overlaps with another.
@@ -43,11 +48,17 @@ namespace Collision {
 		/// @param other Bounding box to check overlap with.
 		/// @return Whether boxes perfectly overlap.
 		template<usize DO = D>
-		constexpr bool match(AABB<DO> const& other) const {return coverage(other) > 0.9999;}
+		constexpr bool match(AABB<DO> const& other) const {
+			return CTL::Math::compare<float>(coverage(other), 1.0, PRECISION);
+		}
 
 		/// @brief Returns the bounding box's size.
 		/// @return Bounding box size.
 		constexpr Vector<D> size() const {return (max - min).absolute();}
+
+		/// @brief Returns the bounding box's center.
+		/// @return Bounding box center.
+		constexpr Vector<D> center() const {return (max + min) / 2.0f;}
 
 		/// @brief Returns how much overlap exists between bounding boxes.
 		/// @tparam DO Other bounding box's dimension.
@@ -78,22 +89,32 @@ namespace Collision {
 		/// @brief Returns whether the given point is inside the bounding box.
 		/// @param point Point to check.
 		/// @return Whether point is inside bounding box.
-		constexpr bool contains(Vector<D> const& point) const {
-			if constexpr (D == 2) return 
+		template<usize DO = D>
+		constexpr static bool contains(Vector<DO> const& point, Vector<DO> const& min, Vector<DO> const& max) {
+			if constexpr (DO == 2) return 
 				(min.x <= point.x && point.x <= max.x)
 			||	(min.y <= point.y && point.y <= max.y)
 			;
-			else if constexpr (D == 3) return 
+			else if constexpr (DO == 3) return 
 				(min.x <= point.x && point.x <= max.x)
 			||	(min.y <= point.y && point.y <= max.y)
 			||	(min.z <= point.z && point.z <= max.z)
 			;
-			else if constexpr (D == 3) return 
+			else if constexpr (DO == 3) return 
 				(min.x <= point.x && point.x <= max.x)
 			||	(min.y <= point.y && point.y <= max.y)
 			||	(min.z <= point.z && point.z <= max.z)
 			||	(min.w <= point.w && point.w <= max.w)
 			;
+		}
+
+		/// @brief Returns whether the given point is inside the bounding box.
+		/// @param point Point to check.
+		/// @return Whether point is inside bounding box.
+		template<usize DO = D>
+		constexpr bool contains(Vector<DO> const& point) const {
+			if constexpr (D < DO)	return contains<DO>(point, min, max);
+			else					return contains<D>(point, min, max);
 		}
 	
 	private:

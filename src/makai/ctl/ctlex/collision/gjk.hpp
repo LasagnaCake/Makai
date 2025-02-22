@@ -47,6 +47,8 @@ namespace GJK {
 		constexpr virtual Vector<D> furthest(Vector<D> const& direction) const	= 0;
 		/// @brief Returns the Axis-Aligned Bounding Box the shape resides in. Must be implemented.
 		constexpr virtual AABB<D> aabb() const									= 0;
+		/// @brief Returns the bound's location. By default, it returns the bounding box's center.
+		constexpr virtual Vector<D> location() const							{return aabb().center();}
 		
 		/// @brief Returns this bound's special case.
 		/// @return Special case.
@@ -75,7 +77,7 @@ namespace GJK {
 		/// @param other Shape to get overlap with.
 		/// @return How much shapes overlap.
 		template<usize DO>
-		constexpr bool overlap(IGJKBound<DO> const& other) const	{return aabb().overlap(other.aabb());	}
+		constexpr float overlap(IGJKBound<DO> const& other) const	{return aabb().coverage(other.aabb());	}
 
 		/// @brief Checks if this shape's AABB perfectly overlaps with another shape's AABB.
 		/// @tparam DO Other shape's dimension.
@@ -83,6 +85,15 @@ namespace GJK {
 		/// @return Whether shapes perfectly overlap.
 		template<usize DO>
 		constexpr bool match(IGJKBound<DO> const& other) const		{return aabb().match(other.aabb());		}
+
+		/// @brief Checks if this shape's location overlaps with another shape's location.
+		/// @tparam DO Other shape's dimension.
+		/// @param other Shape to check location with.
+		/// @return Whether shape locations overlap.
+		template<usize DO>
+		constexpr bool locate(IGJKBound<DO> const& other) const {
+			return CTL::Math::compare<float>((other.location() - location()).absolute().max(), 1.0, PRECISION);
+		}
 	};
 	
 	/// @brief Simplex for bound calculation.
@@ -315,6 +326,7 @@ namespace GJK {
 		IGJKBound<DB> const& b
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		if (!a.bounded(b))							return false;
+		if (a.locate(b))							return true;
 		if (a.isBoxOrPoint() && b.isBoxOrPoint())	return true;
 		if (a.match(b))								return true;
 		return shapeToShape(a, b);

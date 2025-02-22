@@ -4,7 +4,7 @@
 constexpr Makai::Vector2 gamearea = Makai::Vector2(64 * (4.0/3.0), 64) / 2;
 
 struct TextBox: Makai::Ex::Game::Dialog::Box {
-	TextBox(): Box() {
+	TextBox(Makai::Graph::FontFace const& font): Box() {
 		setTitle({""});
 		setBody({""});
 		body.text->rectAlign.x	=
@@ -13,24 +13,24 @@ struct TextBox: Makai::Ex::Game::Dialog::Box {
 		body.text->rect			= {80, 4};
 		title.trans.position	= gamearea * Makai::Vector2(1, -1.5);
 		body.trans.position		= title.trans.position + Makai::Vector2::DOWN() * 2;
+		title.font				= font;
 	}
 };
 
 struct TestActor: Makai::Ex::Game::Dialog::Actor {
-	TestActor(Makai::String const& name): Actor(new TextBox()) {
+	TestActor(Makai::String const& name, Makai::Graph::FontFace const& font): Actor(new TextBox(font)) {
 		dialog->setTitle({name});
 	}
 };
 
 struct TestScene: Makai::Ex::Game::Dialog::Scene {
-	Makai::Instance<TestActor> actors[3] = {
-		new TestActor("Alice"),
-		new TestActor("Bob"),
-		new TestActor("Charlie")
-	};
+	Makai::Instance<TestActor> actors[3];
 
-	TestScene(): Scene() {
-		dialog = new TextBox();
+	TestScene(Makai::Graph::FontFace const& font): Scene() {
+		actors[0] =	new TestActor("Alice", font);
+		actors[1] =	new TestActor("Bob", font);
+		actors[2] =	new TestActor("Charlie", font);
+		dialog = new TextBox(font);
 		choice = new Makai::Ex::Game::Dialog::ChoiceMenu();
 		dialog->setTitle({"Society"});
 		dialog->setBody({""});
@@ -42,10 +42,12 @@ struct TestScene: Makai::Ex::Game::Dialog::Scene {
 
 struct TestApp: Makai::Ex::Game::App {
 	TestScene scene;
+	Makai::Graph::FontFace font;
 
 	Makai::Ex::Game::Dialog::ScenePlayer player;
 
-	TestApp(Makai::String const& path): App(Makai::Config::App{{800, 600, "Test 02", false}}), player(scene) {
+	TestApp(Makai::String const& path): App(Makai::Config::App{{800, 600, "Test 02", false}}), player(scene), scene(font) {
+		font = Makai::Graph::FontData{Makai::Graph::Texture2D("../tests/makai/files/TestFontGrid-lotuscoder.png")};
 		player.setProgram(path);
 		loadDefaultShaders();
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
