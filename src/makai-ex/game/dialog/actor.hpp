@@ -15,7 +15,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Constructs the actor.
 		/// @param dialog Dialog box to assign.
 		Actor(Instance<Box> const& dialog = nullptr): dialog(dialog) {
-			dialog->hide();
+			if (dialog) dialog->hide();
 		}
 
 		/// @brief Destructor.
