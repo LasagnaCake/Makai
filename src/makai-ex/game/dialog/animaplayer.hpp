@@ -246,7 +246,8 @@ namespace Makai::Ex::Game::Dialog {
 			waitForUser	= false;
 			resetCounters();
 			clearActionDelay();
-			Engine::process();
+			while (running() && !(inSync && waitForUser))
+				Engine::process();
 			if (state() != Engine::State::AVM_ES_RUNNING)
 				isFinished = true;
 			return *this;
