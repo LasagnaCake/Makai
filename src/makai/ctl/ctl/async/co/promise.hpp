@@ -48,21 +48,24 @@ namespace Co {
 			void return_void()						{			}
 
 			/// @brief Specialized suspender.
-			struct SuspendType {
-				bool await_ready()		{return promise.finished();	}
-				void await_suspend()	{							}
-				void await_resume()		{							}
+			struct ChainSuspend {
+				template<class... Args>
+				bool await_ready(Args...)	{return promise.finished();	}
+				template<class... Args>
+				void await_suspend(Args...)	{							}
+				template<class... Args>
+				void await_resume(Args...)	{							}
 				Promise promise;
 			};
-
+			
 			/// @brief `co_await` support for promises.
-			SuspendType await_transform(AlwaysSuspend) {
-				return SuspendType{get_return_object()};
+			ChainSuspend await_transform(AlwaysSuspend) {
+				return ChainSuspend{get_return_object()};
 			}
 
 			/// @brief `co_await` support for specialized suspensions.
 			template<Type::Different<AlwaysSuspend> T>
-			T await_transform(T const& sus) {
+			T await_transform(T sus) {
 				return sus;
 			}
 			
@@ -173,16 +176,25 @@ namespace Co {
 			}
 
 			/// @brief Specialized suspender.
-			struct SuspendType {
-				virtual bool await_ready()		{return promise.finished();	}
-				virtual void await_suspend()	{							}
-				virtual DataType await_resume()	{return promise.value();	}
+			struct ChainSuspend {
+				template<class... Args>
+				bool await_ready(Args...)		{return promise.finished();	}
+				template<class... Args>
+				void await_suspend(Args...)		{							}
+				template<class... Args>
+				DataType await_resume(Args...)	{return promise.value();	}
 				Promise promise;
 			};
+			
+			/// @brief `co_await` support for promises.
+			ChainSuspend await_transform(AlwaysSuspend) {
+				return ChainSuspend{get_return_object()};
+			}
 
-			/// @brief `co_await` support.
-			SuspendType await_transform(AlwaysSuspend) {
-				return SuspendType{get_return_object()};
+			/// @brief `co_await` support for specialized suspensions.
+			template<Type::Different<AlwaysSuspend> T>
+			T await_transform(T sus) {
+				return sus;
 			}
 
 			/// @brief Yields a value from the coroutine.
