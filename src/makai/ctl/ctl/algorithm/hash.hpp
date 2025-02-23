@@ -253,16 +253,23 @@ namespace Impl::Hash {
 			return Murmur2::constHash64(data, sz, seed);
 		else __builtin_unreachable();
 	}
+
+	/// @brief Returns the default seed.
+	/// @return Default seed.
+	constexpr usize seed() {
+		return Impl::Hash::constHash(
+			"The intelligence of modern machines...",
+			32,
+			bitcast<usize, ssize>(0x15'A271F1C1AL)
+		) & static_cast<usize>(0xFFFF'FFFF);
+	}
 }
 
 /// @brief Static class used for generating compile-time string hashes.
 namespace ConstHasher {
-	constexpr static usize SEED = Impl::Hash::constHash(
-		"The intelligence of modern machines...",
-		32,
-		bitcast<usize>(0x15'A271F1C1AL)
-	) & static_cast<usize>(0xFFFF'FFFF'FFFF);
-	
+	/// @brief Hasher seed.
+	constexpr static usize SEED = Impl::Hash::seed();
+
 	/// @brief Generates the hash for a given "C-style" string.
 	/// @param data Pointer to beginning of string.
 	/// @param size Size of string.
@@ -305,6 +312,7 @@ static_assert(ConstHasher::hash("Compile-time Magics!") != 0);
 /// @brief Static class used for generating hashes.
 /// @note For any type that isn't an `union`, `class`, `struct` or an array, all hashes are guaranteed to be collision-free.
 struct Hasher {
+	/// @brief Hasher seed.
 	constexpr static usize SEED = ConstHasher::SEED;
 
 	/// @brief Generates the hash for a given pointer.
