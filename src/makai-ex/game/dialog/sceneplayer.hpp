@@ -34,8 +34,11 @@ namespace Makai::Ex::Game::Dialog {
 		void onUpdate(float delta, Makai::App& app) override {
 			AAnimaPlayer::onUpdate(delta, app);
 			if (query.process()) return;
-			setChoice(query.value());
-			postChoice();
+			if (query.exists()) {
+				setChoice(query.value());
+				postChoice();
+				query.clear();
+			}
 		}
 
 	protected:
