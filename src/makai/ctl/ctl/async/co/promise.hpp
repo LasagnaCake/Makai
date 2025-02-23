@@ -252,7 +252,7 @@ namespace Co {
 		/// @brief Returns whether there is a coroutine.
 		/// @return Whether there is a coroutine.
 		bool exists() const {
-			return context;
+			return static_cast<bool>(context);
 		}
 
 		/// @brief Destroys the bound coroutine, if any.
