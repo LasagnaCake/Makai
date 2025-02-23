@@ -28,16 +28,16 @@ struct TestActor: Makai::Ex::Game::Dialog::Actor {
 		dialog->setTitle({name});
 		dialog->hide();
 	}
-	/*
+	
 	/// @brief Enters the scene.
-	void enter() override	{}
+	void enter() override	{Actor::enter();							}
 	/// @brief Leaves the scene.
-	void leave() override	{}
+	void leave() override	{Actor::leave();							}
 	/// @brief Steps into focus.
-	void stepIn() override	{}
+	void stepIn() override	{Actor::stepIn(); dialog->setBody({""});	}
 	/// @brief Steps out of focus.
-	void stepOut() override	{}
-	*/
+	void stepOut() override	{Actor::stepOut();							}
+	
 };
 
 struct TestScene: Makai::Ex::Game::Dialog::Scene {
