@@ -257,12 +257,18 @@ namespace Impl::Hash {
 
 /// @brief Static class used for generating compile-time string hashes.
 namespace ConstHasher {
+	constexpr static usize SEED = Impl::Hash::constHash(
+		"The intelligence of modern machines...",
+		32,
+		bitcast<usize>(0x15'A271F1C1AL)
+	) & static_cast<usize>(0xFFFF'FFFF'FFFF);
+	
 	/// @brief Generates the hash for a given "C-style" string.
 	/// @param data Pointer to beginning of string.
 	/// @param size Size of string.
 	/// @return Resulting hash.
 	constexpr static usize hash(cstring const data, usize const size) {
-		return Impl::Hash::constHash(data, size, size);
+		return Impl::Hash::constHash(data, size, SEED);
 	}
 
 	/// @brief Generates the hash for a given fixed char array.
@@ -299,12 +305,14 @@ static_assert(ConstHasher::hash("Compile-time Magics!") != 0);
 /// @brief Static class used for generating hashes.
 /// @note For any type that isn't an `union`, `class`, `struct` or an array, all hashes are guaranteed to be collision-free.
 struct Hasher {
+	constexpr static usize SEED = ConstHasher::SEED;
+
 	/// @brief Generates the hash for a given pointer.
 	/// @tparam T pointed type.
 	/// @param ptr pointer to hash.
 	/// @return Resulting hash.
 	template<class T>
-	constexpr static usize hashPointer(ref<T> const ptr)	{return bitcast<usize>(ptr);	}
+	constexpr static usize hashPointer(ref<T> const ptr)	{return bitcast<usize>(ptr);		}
 
 	/// @brief Generates the hash for a given integer.
 	/// @tparam T Integer type.
@@ -344,7 +352,7 @@ struct Hasher {
 	/// @return Resulting hash.
 	template<class T>
 	constexpr static usize hash(ref<T const> const data, usize const size) {
-		return Impl::Hash::hash(data, size * sizeof(T), size);
+		return Impl::Hash::hash(data, size * sizeof(T), SEED);
 	}
 
 	/// @brief Generates the hash for a given fixed array.
@@ -354,7 +362,7 @@ struct Hasher {
 	/// @return Resulting hash.
 	template<class T, usize S>
 	constexpr static usize hash(As<const T[S]> const& data) {
-		return hash(data, S, S);
+		return hash(data, S);
 	}
 
 	/// @brief Generates the hash for a given ranged type.
@@ -384,9 +392,9 @@ struct Hasher {
 	template <Type::Class T>
 	constexpr static usize hash(T const& value)
 	requires (
-		requires (T const& t) {{t.hash()} -> Type::Convertible<usize>;}
+		requires (T const& t) {{t.hash(SEED)} -> Type::Convertible<usize>;}
 	) {
-		return value.hash();
+		return value.hash(SEED);
 	}
 
 	/// @brief Function prototype for future hashing specializations.
