@@ -45,15 +45,16 @@ struct TestScene: Makai::Ex::Game::Dialog::Scene {
 
 	TestScene(Makai::Graph::FontFace const& font): Scene() {
 		actors[0] =	new TestActor("Alice", font);
-		actors[1] =	new TestActor("Bob", font);
-		actors[2] =	new TestActor("Charlie", font);
+		actors[1] =	new TestActor("      Bob", font);
+		actors[2] =	new TestActor("          Charlie", font);
 		dialog = new TextBox(font);
 		choice = new Makai::Ex::Game::Dialog::ChoiceMenu();
-		dialog->setTitle({"Society"});
-		dialog->setBody({""});
 		cast[Makai::ConstHasher::hash("alice")]		= actors[0].asWeak();
 		cast[Makai::ConstHasher::hash("bob")]		= actors[1].asWeak();
 		cast[Makai::ConstHasher::hash("charlie")]	= actors[2].asWeak();
+		dialog->setTitle({"Society"});
+		dialog->setBody({""});
+		dialog->hide();
 	}
 };
 
