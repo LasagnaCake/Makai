@@ -41,16 +41,15 @@ namespace Makai::Ex::Game::Dialog {
 				choice += options.size();
 			while (choice >= static_cast<ssize>(options.size()))
 				choice -= options.size();
-			posted		= false;
 			onFocusChange(prevChoice, choice);
 			prevChoice = choice;
 		}
 
 		void setOptions(StringList const& choices) {
 			options		= choices;
-			posted		= false;
 			choice		= 0;
 			prevChoice	= 0;
+			clear();
 			onOptionsChanged();	
 		}
 
