@@ -251,11 +251,11 @@ namespace Makai::Ex::Game::Dialog {
 			inSync		=
 			waitForUser	= false;
 			resetCounters();
-			//do
+			do {
 				Engine::process();
-			//while (shouldProcess());
-			if (state() != Engine::State::AVM_ES_RUNNING)
-				isFinished = true;
+				if (state() != Engine::State::AVM_ES_RUNNING)
+					isFinished = true;
+			} while (!(isFinished || waitForUser || inSync));
 			return *this;
 		}
 
