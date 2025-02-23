@@ -58,6 +58,7 @@ namespace Makai::Ex::Game::Dialog {
 			return options;
 		}
 
+		void clear()	{posted = false;				}
 		void select()	{posted = true; hide();			}
 		void cancel()	{setChoice(options.size()-1);	}
 
@@ -83,6 +84,18 @@ namespace Makai::Ex::Game::Dialog {
 
 		bool ready()	{return posted;}
 		ssize value()	{return choice;}
+
+		struct ChoiceAwaiter {
+			template<class... Args>
+			bool await_ready(Args...)	{return menu.ready();	}
+			template<class... Args>
+			void await_suspend(Args...)	{						}
+			template<class... Args>
+			ssize await_resume(Args...)	{return menu.value();	}
+			ChoiceMenu& menu;
+		};
+
+		ChoiceAwaiter awaiter() {return {*this};}
 
 	private:
 		bool posted = false;
