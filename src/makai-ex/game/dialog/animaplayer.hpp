@@ -351,6 +351,7 @@ namespace Makai::Ex::Game::Dialog {
 		bool syncing() {
 			if (inSync && actionCounter < actionDelay)
 				return true;
+			inSync = false;
 			resetCounters();
 			return false;
 		}

@@ -10,8 +10,6 @@ namespace Makai::Ex::Game::Dialog {
 		Graph::Label menu;
 		Graph::Label cursor;
 
-		Functor<void(ssize const)> onChoice;
-
 		virtual ~ChoiceMenu() {}
 
 		ChoiceMenu() {
@@ -43,14 +41,24 @@ namespace Makai::Ex::Game::Dialog {
 				choice += options.size();
 			while (choice >= static_cast<ssize>(options.size()))
 				choice -= options.size();
+			posted		= false;
 			onFocusChange(prevChoice, choice);
 			prevChoice = choice;
 		}
 
-		void setOptions(StringList const& choices)	{options = choices; onOptionsChanged();	}
-		StringList const& getOptions()				{return options;						}
+		void setOptions(StringList const& choices) {
+			options		= choices;
+			posted		= false;
+			choice		= 0;
+			prevChoice	= 0;
+			onOptionsChanged();	
+		}
 
-		void select()	{onChoice(choice); hide();		}
+		StringList const& getOptions() {
+			return options;
+		}
+
+		void select()	{posted = true; hide();			}
 		void cancel()	{setChoice(options.size()-1);	}
 
 		virtual void onFocusChange(ssize const oldChoice, ssize const newChoice) {
@@ -58,8 +66,6 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		virtual void onOptionsChanged()	{
-			choice		= 0;
-			prevChoice	= 0;
 			repaint();
 		}
 
@@ -75,7 +81,12 @@ namespace Makai::Ex::Game::Dialog {
 			updating		= false;
 		}
 
+		bool ready()	{return posted;}
+		ssize value()	{return choice;}
+
 	private:
+		bool posted = false;
+
 		void repaint() {
 			auto& display = menu.text->content;
 			display.clear();
