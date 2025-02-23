@@ -9,18 +9,35 @@ struct TextBox: Makai::Ex::Game::Dialog::Box {
 		setBody({""});
 		body.text->rectAlign.x	=
 		title.text->rectAlign.x	= 0.5;
-		title.text->rect		= {80, 1};
-		body.text->rect			= {80, 4};
+		title.text->rect		= {40, 1};
+		body.text->rect			= {40, 4};
+		body.text->lineWrap		= Makai::Graph::LineWrap::LW_HYPHEN_WORD;
 		title.trans.position	= gamearea * Makai::Vector2(1, -1);
 		body.trans.position		= title.trans.position + Makai::Vector2::DOWN() * 2;
+		title.trans.scale		= 2;
+		body.trans.scale		= 2;
 		title.font				= font;
+		body.font				= font;
+		title.setRenderLayer(1);
+		body.setRenderLayer(1);
 	}
 };
 
 struct TestActor: Makai::Ex::Game::Dialog::Actor {
 	TestActor(Makai::String const& name, Makai::Graph::FontFace const& font): Actor(new TextBox(font)) {
 		dialog->setTitle({name});
+		dialog->hide();
 	}
+	/*
+	/// @brief Enters the scene.
+	void enter() override	{}
+	/// @brief Leaves the scene.
+	void leave() override	{}
+	/// @brief Steps into focus.
+	void stepIn() override	{}
+	/// @brief Steps out of focus.
+	void stepOut() override	{}
+	*/
 };
 
 struct TestScene: Makai::Ex::Game::Dialog::Scene {
@@ -47,7 +64,10 @@ struct TestApp: Makai::Ex::Game::App {
 
 	Makai::Ex::Game::Dialog::ScenePlayer player;
 
-	TestApp(Makai::String const& path): App(Makai::Config::App{{800, 600, "Test 02", false}}), scene(font), player(scene) {
+	TestApp(Makai::String const& path):
+		App(Makai::Config::App{{800, 600, "Dialog Engine Test", false}}),
+		scene(font),
+		player(scene) {
 		font.data() = Makai::Graph::FontData{Makai::Graph::Texture2D("../tests/makai/files/TestFontGrid-lotuscoder.png")};
 		player.setProgram(path);
 		loadDefaultShaders();
