@@ -139,7 +139,9 @@ namespace Makai::Ex::Game::Dialog {
 				for (auto const actor: actors.actors)
 					if (auto aref = scene.cast.at(actor))
 						out.pushBack(aref);
-			} else {
+			} else if (actors.actors.empty())
+				return scene.cast.values();
+			else {
 				auto const actorList = actors.actors.sorted();
 				for (auto& [id, actor] : scene.cast)
 					if (actorList.bsearch(id) == -1)

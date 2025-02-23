@@ -68,10 +68,9 @@ namespace Makai::Ex::Game::Dialog {
 			if (isFinished || paused) return;
 			advanceCounters();
 			if (syncing()) return;
-			if (autoplay && waiting()) return;
-			if (waitForUser && userAdvanced())	next();
-			else if (!waiting())				next();
-			else if (!waitForUser)				next();
+			if (!autoplay && waitForUser && userAdvanced())	next();
+			else if (!waiting())							next();
+			else if (!waitForUser)							next();
 		}
 
 		/// @brief Starts the dialog.
@@ -345,7 +344,6 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		bool waiting() {
-			if (autoplay) DEBUGLN("Wait Counter: ", autoCounter);
 			return autoCounter < delay;
 		}
 

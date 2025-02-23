@@ -184,6 +184,6 @@ $delay 120
 -autoplay
 // Reset wait
 $delay 600
-// All three exit the scene
-[...] @exit .
+// All three leave the scene
+[...] @leave .
 ```
