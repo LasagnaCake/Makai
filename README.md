@@ -1,7 +1,8 @@
 # Makai: A C++20 3D (+"2D") application & game framework library
 
 > [!important]
-> **Still under development!**
+> **Currently under development!**
+> Currently in alpha/beta!
 
 [![Core Library CI](https://github.com/LasagnaCake/MakaiLib/actions/workflows/core-lib.yml/badge.svg)](https://github.com/LasagnaCake/MakaiLib/actions/workflows/core-lib.yml)
 
