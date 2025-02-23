@@ -153,11 +153,8 @@ namespace Makai::Ex::Game::Dialog {
 		Co::Generator<ssize> query;
 
 		Co::Generator<ssize> getQuery() {
-			if (scene.choice) {
-				while (scene.choice->ready())
-					co_yield -1;
-				co_return scene.choice->value();
-			}
+			if (scene.choice)
+				co_return co_await scene.choice->awaiter();
 			co_return 0;
 		}
 	};
