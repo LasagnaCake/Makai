@@ -67,10 +67,7 @@ namespace Makai::Ex::Game::Dialog {
 			needsChoice = false;
 			if (isFinished || paused) return;
 			advanceCounters();
-			if (syncing()) return;
-			if (!autoplay && waitForUser && userAdvanced())	next();
-			else if (!waiting())							next();
-			else if (!waitForUser)							next();
+			if (shouldProcess()) next();
 		}
 
 		/// @brief Starts the dialog.
@@ -204,6 +201,14 @@ namespace Makai::Ex::Game::Dialog {
 			postChoice();
 		}
 
+		bool shouldProcess() {
+			if (syncing()) return false;
+			if (!autoplay && waitForUser && userAdvanced())	return true;
+			if (!waiting())									return true;
+			if (!waitForUser)								return true;
+			return false;
+		}
+
 		/// @brief Tells the dialog player that the user has made a choice.
 		void postChoice()	{hasChoice = true;	}
 		/// @brief Clears the current choice.
@@ -242,13 +247,13 @@ namespace Makai::Ex::Game::Dialog {
 			if (inSync)				onAdvance(AdvanceType::APAT_SYNC);
 			else if (waitForUser)	onAdvance(AdvanceType::APAT_USER_INPUT);
 			else if (!waiting())	onAdvance(AdvanceType::APAT_AUTO_ADVANCE);
+			if (inSync) clearActionDelay();
 			inSync		=
 			waitForUser	= false;
 			resetCounters();
-			clearActionDelay();
 			//do
 				Engine::process();
-			//while (running() && !(inSync && waitForUser));
+			//while (shouldProcess());
 			if (state() != Engine::State::AVM_ES_RUNNING)
 				isFinished = true;
 			return *this;
