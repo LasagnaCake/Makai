@@ -71,18 +71,18 @@ struct TestEngine: Makai::Ex::AVM::Engine {
 		DEBUGLN("Int: ", name);
 		out = 0;
 	
-	}void opGetChoice(uint64 const name, Parameters const& choices, ssize& out) {
+	}void opGetChoice(uint64 const name, Parameters const& choices) {
 		DEBUGLN("-----");
 		DEBUGLN("Choice: ", name);
 		DEBUGLN("Options: ['", choices.join("', '"), "']");
-		out = rng.integer<ssize>(0, choices.size()-1);
+		auto const out = rng.integer<ssize>(0, choices.size()-1);
 		DEBUGLN("Selected: ", out);
+		setInt(out);
 	}
 
-	void opGetString(uint64 const name, Makai::String& out) override {
+	void opGetString(uint64 const name) override {
 		DEBUGLN("-----");
 		DEBUGLN("String: ", name);
-		out = "";
 	}
 
 	static void printActors(ActiveCast const& actors) {

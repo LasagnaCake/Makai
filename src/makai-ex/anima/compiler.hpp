@@ -169,7 +169,7 @@ namespace Makai::Ex::AVM::Compiler {
 					}
 					escape = false;
 				}
-				if (out.size()) out.pushBack(param);
+				if (param.size()) out.pushBack(param);
 				return out;
 			}
 
@@ -280,6 +280,13 @@ namespace Makai::Ex::AVM::Compiler {
 								.valPos	= mnext.position
 							});
 							++i;
+						} else {
+							tokens.pushBack(Token{
+								.type	= Operation::AVM_O_ACTION,
+								.name	= node.substring(1),
+								.pos	= mnode.position,
+								.valPos	= mnext.position
+							});
 						}
 					} break;
 					case '$': {
@@ -951,7 +958,13 @@ namespace Makai::Ex::AVM::Compiler {
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Value: ", token.value);
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Range: ", token.range);
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Entry: ", token.entry);
-				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Params: ['", token.pack.args.join("', '"), "']");
+				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN(
+					"Params (",
+					token.pack.args.size(),
+					"): ['",
+					token.pack.args.join("', '"),
+					"']"
+				);
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("</token>");
 				#endif
 				if (token.entry.size()) {
@@ -1003,6 +1016,7 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 					case Operation::AVM_O_ACTION:
 						out.addOperation(token.operation(token.pack.args.size() > 0));
+						out.addNamedOperand(token.name);
 						if (token.pack.args.size())
 							out.addParameterPack(token.pack.args);
 						break;
