@@ -22,9 +22,9 @@ namespace Makai::Ex::Game::Dialog {
 		virtual ~Actor() {}
 		
 		/// @brief Shows the actor.
-		void show() override {}
+		void show() override {				}
 		/// @brief Hides the actor.
-		void hide() override {}
+		void hide() override {stepOut();	}
 
 		/// @brief Enters the scene.
 		virtual void enter()	{show();						}
