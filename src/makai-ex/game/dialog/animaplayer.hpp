@@ -121,8 +121,8 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param values Values to pass to it.
 		virtual void execute(usize const name, Parameters const& params) {
 			switch (name) {
-				case (ConstHasher::hash("autoplay")):	autoplay	= params[0] == "true";		break;
-				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0], 10);	break;
+				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params[0]);	break;
+				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0]);	break;
 			}
 		}
 
@@ -345,15 +345,12 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		bool waiting() {
+			if (autoplay) DEBUGLN("Wait Counter: ", autoCounter);
 			return autoCounter < delay;
 		}
 
 		bool syncing() {
-			if (inSync && actionCounter < actionDelay)
-				return true;
-			inSync = false;
-			resetCounters();
-			return false;
+			return inSync && actionCounter < actionDelay;
 		}
 
 		void setActionDelay(uint64 const time) {
