@@ -42,8 +42,6 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 	protected:
-		Co::Generator<ssize> query;
-
 		/// @brief Called when a choice is requested.
 		/// @param choices Choices to make.
 		/// @return Chosen choice.
@@ -52,15 +50,6 @@ namespace Makai::Ex::Game::Dialog {
 			scene.choice->show();
 			scene.choice->setOptions(choices);
 			query = getQuery();
-		}
-
-		Co::Generator<ssize> getQuery() {
-			if (scene.choice) {
-				while (scene.choice->ready())
-					co_yield -1;
-				co_return scene.choice->value();
-			}
-			co_return 0;
 		}
 
 		/// @brief Called when a scene dialog line is requested to be said.
@@ -157,6 +146,19 @@ namespace Makai::Ex::Game::Dialog {
 						out.pushBack(actor);
 			}
 			return out;
+		}
+
+	private:
+		/// @brief Choice query handler.
+		Co::Generator<ssize> query;
+
+		Co::Generator<ssize> getQuery() {
+			if (scene.choice) {
+				while (scene.choice->ready())
+					co_yield -1;
+				co_return scene.choice->value();
+			}
+			co_return 0;
 		}
 	};
 }
