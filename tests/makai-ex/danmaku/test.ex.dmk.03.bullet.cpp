@@ -36,7 +36,7 @@ Danmaku::Bullet::PromiseType btask(Danmaku::Bullet& bullet) {
 struct TestApp: Makai::Ex::Game::App {
 	TestBulletServer server;
 
-	TestApp(): App(Makai::Config::App{{800, 600, "Test 03", false}}) {
+	TestApp(): App(Makai::Config::App{{800, 600, "Test 03: [Clockwise Sweep] \"Poincaré Reflection of Edge and Vertex\"", false}}) {
 		loadDefaultShaders();
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
 	}
@@ -51,14 +51,20 @@ struct TestApp: Makai::Ex::Game::App {
 
 	float framerate[MAX_FRCOUNT];
 	
-	void createShots() {
+	void createShots(float const stride = MAX_FRCOUNT) {
 		DEBUGLN("Firing shots...");
 		for (usize i = 0; i < 5; ++i) {
 			auto bullet = server.acquire().as<Danmaku::Bullet>();
 			if (!bullet) return;
-			float const crot = (TAU / 10) * (i + (getCurrentCycle() * 0.5));
+			float const crot = (TAU / 20) * (i + (getCurrentCycle() / stride * 0.5));
 			bullet->trans.position = playfield.center;
-			bullet->velocity.value = 30;
+			bullet->velocity = {
+				-30,
+				true,
+				-30,
+				30,
+				.01
+			};
 			bullet->rotation = {
 				crot,
 				true,
@@ -67,19 +73,17 @@ struct TestApp: Makai::Ex::Game::App {
 				.01,
 				Makai::Math::Ease::InOut::back
 			};
-//			bullet->bouncy	= true;
+			bullet->bouncy	= true;
 			bullet->loopy	= true;
 //			bullet->task = btask(*bullet);
 		}
 	}
-	
-	usize sc = 6;
 
 	void onUpdate(float delta) {
 		if (frcount < MAX_FRCOUNT)
 			framerate[frcount++] = 1000.0 / getCycleDelta();
 		else {
-			if (!--sc) {sc = 6; createShots();}
+			createShots();
 			float fravg = 0;
 			for(float& f: framerate) fravg += f;
 			fravg *= (1.0 / (float)MAX_FRCOUNT);
