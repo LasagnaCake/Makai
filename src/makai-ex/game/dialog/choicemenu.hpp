@@ -130,7 +130,7 @@ namespace Makai::Ex::Game::Dialog {
 		void setCursor(usize const line) {
 			cursor.text->rectAlign.x	= menu.text->rectAlign.x;
 			cursor.text->rect.h			= menu.text->rect.h + 4;
-			cursor.text->rect.v			= options.size();
+			cursor.text->rect.v			= menu.text->rect.v;
 			auto& display = cursor.text->content;
 			display = String(line, '\n');
 			display += "> " + String(cursor.text->rect.h - 4, ' ') + " <";
