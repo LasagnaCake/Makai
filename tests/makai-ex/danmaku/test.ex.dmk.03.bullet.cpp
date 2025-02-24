@@ -53,7 +53,7 @@ struct TestApp: Makai::Ex::Game::App {
 	
 	void createShots() {
 		DEBUGLN("Firing shots...");
-		for (usize i = 0; i < 10; ++i) {
+		for (usize i = 0; i < 5; ++i) {
 			auto bullet = server.acquire().as<Danmaku::Bullet>();
 			if (!bullet) return;
 			float const crot = (TAU / 10) * (i + (getCurrentCycle() * 0.5));
@@ -72,12 +72,14 @@ struct TestApp: Makai::Ex::Game::App {
 //			bullet->task = btask(*bullet);
 		}
 	}
+	
+	usize sc = 6;
 
 	void onUpdate(float delta) {
 		if (frcount < MAX_FRCOUNT)
 			framerate[frcount++] = 1000.0 / getCycleDelta();
 		else {
-			createShots();
+			if (!--sc) {sc = 6; createShots();}
 			float fravg = 0;
 			for(float& f: framerate) fravg += f;
 			fravg *= (1.0 / (float)MAX_FRCOUNT);
