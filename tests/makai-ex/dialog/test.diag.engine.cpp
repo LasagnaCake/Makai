@@ -8,9 +8,9 @@ struct TestChoice: Makai::Ex::Game::Dialog::ChoiceMenu {
 		cursor.text->content	=
 		menu.text->content		= "";
 		cursor.text->rectAlign	=
-		menu.text->rectAlign	= Math::Vector2(0.5);
+		menu.text->rectAlign	= Makai::Vector2(0.5);
 		cursor.trans.position	=
-		menu.trans.position		= gamearea * Makai::Vector2(1, -1);
+		menu.trans.position		= gamearea * Makai::Vector2(1, -0.66);
 		cursor.trans.scale		= 2;
 		menu.trans.scale		= 2;
 		cursor.font				= font;
@@ -30,7 +30,7 @@ struct TextBox: Makai::Ex::Game::Dialog::Box {
 		title.text->rect		= {40, 1};
 		body.text->rect			= {40, 4};
 		body.text->lineWrap		= Makai::Graph::LineWrap::LW_HYPHEN_WORD;
-		title.trans.position	= gamearea * Makai::Vector2(1, -1);
+		title.trans.position	= gamearea * Makai::Vector2(1, -1.33);
 		body.trans.position		= title.trans.position + Makai::Vector2::DOWN() * 2;
 		title.trans.scale		= 2;
 		body.trans.scale		= 2;
