@@ -6,8 +6,8 @@ namespace Danmaku = Makai::Ex::Game::Danmaku;
 constexpr Makai::Vector2 gamearea = Makai::Vector2(64 * (4.0/3.0), 64) / 2;
 
 Danmaku::GameArea
-	board		= {gamearea * Makai::Vector2(1, -1), gamearea / 2},
-	playfield	= {gamearea * Makai::Vector2(1, -1), gamearea / 2}
+	board		= {gamearea * Makai::Vector2(1, -1), (gamearea)},
+	playfield	= {gamearea * Makai::Vector2(1, -1), (gamearea * 1.5)}
 ;
 
 using BaseLaserServer = Danmaku::LaserServer<>;
