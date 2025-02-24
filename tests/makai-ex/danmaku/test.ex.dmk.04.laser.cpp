@@ -12,7 +12,23 @@ Danmaku::GameArea
 
 using BaseLaserServer = Danmaku::LaserServer<>;
 
+struct MeshHolder {
+	MkGraph::Renderable gm;
+
+	MeshHolder() {
+		gm.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LASER_LAYER);
+		gm.setBlendEquation(Makai::Graph::BlendEquation::BE_ADD);
+	}
+};
+
+
+struct TestLaserServer: MeshHolder, BaseLaserServer {
+	TestLaserServer(): MeshHolder(), BaseLaserServer({32, gm, ::board, ::playfield}) {}
+};
+
 struct TestApp: Makai::Ex::Game::App {
+	TestLaserServer server;
+
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 04", false}}) {
 		loadDefaultShaders();
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
