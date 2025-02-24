@@ -95,7 +95,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual ~AGameObject() {}
 
-//		PromiseType task;
+		PromiseType task;
 
 		PauseState pause;
 
@@ -121,8 +121,8 @@ namespace Makai::Ex::Game::Danmaku {
 				--delay;
 				return;
 			}
-//			while (!delay && task)
-//				delay = task.next();
+			while (!delay && task)
+				delay = task.next();
 		}
 		
 		bool paused() const {
