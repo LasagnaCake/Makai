@@ -260,37 +260,37 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opSay(ActiveCast const& actors, String const& line) override final {
-			if (actors.actors.empty())
+			if (!actors.exclude && actors.actors.empty())
 				setActionDelay(onSay(line));
 			else setActionDelay(onActorSay(actors, line));
 		}
 
 		void opAdd(ActiveCast const& actors, String const& line) override final {
-			if (actors.actors.empty())
+			if (!actors.exclude && actors.actors.empty())
 				setActionDelay(onAdd(line));
 			else setActionDelay(onActorAdd(actors, line));
 		}
 
 		void opEmote(ActiveCast const& actors, uint64 const emotion) override final {
-			if (actors.actors.empty())
+			if (!actors.exclude && actors.actors.empty())
 				setActionDelay(onEmote(emotion));
 			else setActionDelay(onActorEmote(actors, emotion));
 		}
 
 		void opPerform(ActiveCast const& actors, uint64 const action, Parameters const& params) override final {
-			if (actors.actors.empty())
+			if (!actors.exclude && actors.actors.empty())
 				setActionDelay(onPerform(action, params));
 			else setActionDelay(onActorPerform(actors, action, params));
 		}
 
 		void opColor(ActiveCast const& actors, uint64 const color) override final {
-			if (actors.actors.empty())
+			if (!actors.exclude && actors.actors.empty())
 				onTextColor(Graph::Color::fromHexCodeRGBA(color));
 			else onActorTextColor(actors, Graph::Color::fromHexCodeRGBA(color));
 		}
 
 		void opColorRef(ActiveCast const& actors, uint64 const color) override final {
-			if (actors.actors.empty())
+			if (!actors.exclude && actors.actors.empty())
 				onTextColor(getColorByName(color));
 			else onActorTextColor(actors, getColorByName(color));
 		}
