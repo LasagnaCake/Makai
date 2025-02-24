@@ -121,9 +121,6 @@ namespace Makai::Ex::Game::Dialog {
 					menu.text->rect.v += 2;
 				}
 			}
-			DEBUGLN("<display>");
-			DEBUGLN(display);
-			DEBUGLN("</display>");
 			setCursor(cursor);
 		}
 
@@ -134,9 +131,6 @@ namespace Makai::Ex::Game::Dialog {
 			auto& display = cursor.text->content;
 			display = String(line, '\n');
 			display += "> " + String(cursor.text->rect.h - 4, ' ') + " <";
-			DEBUGLN("<display>");
-			DEBUGLN(display);
-			DEBUGLN("</display>");
 		}
 
 		StringList options;
