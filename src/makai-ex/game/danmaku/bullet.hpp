@@ -184,7 +184,7 @@ namespace Makai::Ex::Game::Danmaku {
 				if (trans.position.y > max.y) shift(0);
 				onAction(*this, Action::SOA_BOUNCE);
 				bouncy = false;
-			} else if (loopy && shape && !C2D::withinBounds(board.asArea(), *shape)) {
+			} else if (loopy && shape && !shape->aabb().overlap(board.aabb())) {
 				auto const
 					min = board.min(),
 					max = board.max()
@@ -193,6 +193,7 @@ namespace Makai::Ex::Game::Danmaku {
 				if (trans.position.x > max.x) trans.position.x = min.x - shape->radius.max();
 				if (trans.position.y < min.y) trans.position.y = max.y - shape->radius.max();
 				if (trans.position.y > max.y) trans.position.y = min.y + shape->radius.max();
+				DEBUGLN("Loop!");
 				onAction(*this, Action::SOA_LOOP);
 				loopy = false;
 			}
