@@ -52,6 +52,7 @@ struct TestApp: Makai::Ex::Game::App {
 	float framerate[MAX_FRCOUNT];
 	
 	void createShots() {
+		DEBUGLN("Firing shots...");
 		for (usize i = 0; i < 10; ++i) {
 			auto bullet = server.acquire().as<Danmaku::Bullet>();
 			if (!bullet) return;
