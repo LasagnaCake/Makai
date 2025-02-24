@@ -2,20 +2,20 @@ next main
 scene MyFirstScene
 	scene NewBeginnings
 		act lets-go-gambling
-			act lose *" Aw, dangit!" end
-			act win *" Yippee!" end
-			"Let's go gambling!"
+			act lose *"\nAw, dangit!" ; end
+			act win *"\nYippee!" ; end
+			"Let's go gambling!" ;
 			perform select random (win, lose)
 			perform select random (win, lose)
 			perform select random (win, lose)
 		end
 		act start-of-the-adventure
-			"Let us commence."
+			"Let us commence." ;
 		end
 		act severe-debt
-			"Oh no, I am broke now :("
+			"Oh no, I am broke now :(" ;
 			act loan-sharks
-				"Time to borrow some money..."
+				"Time to borrow some money..." ;
 				next :MyFirstScene:endings
 			end
 			next loan-sharks
@@ -23,17 +23,17 @@ scene MyFirstScene
 	end
 	act endings
 		act bad-end
-			"BAD END"
+			"BAD END" ;
 		end
 		act neutral-end
-			"NEUTRAL END"
+			"NEUTRAL END" ;
 		end
 		act good-end
-			"GOOD END"
+			"GOOD END" ;
 		end
 		next select random (good-end, neutral-end, bad-end, none)
-		"Huh?"
-		"STRANGE END???"
+		"Huh?" ;
+		"STRANGE END???" ;
 		terminate
 	end
 	perform NewBeginnings:start-of-the-adventure
@@ -41,6 +41,8 @@ scene MyFirstScene
 	perform NewBeginnings:severe-debt
 end
 act main
+	[] @show
 	perform ~MyFirstScene
-	"The end!"
+	"The end!" ;
+	[] @hide
 end

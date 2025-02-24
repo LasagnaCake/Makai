@@ -6,13 +6,17 @@ choice Choices (
 
 scene Result
 	act choice-a
-		"Ok, fine -_-"
+		"Ok, fine -_-" ;
 	end
 	act choice-b
-		"Now I don't wanna >:("
+		"Now I don't wanna >:(" ;
 	end
 end
 
+[] @show
+
+"You are going to die!" ;
+
 next choice Choices (Result:choice-a, Result:choice-b, none)
 
-"H-huh? Really?"
+"H-huh? Really?" ;
