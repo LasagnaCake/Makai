@@ -3,6 +3,17 @@
 
 constexpr Makai::Vector2 gamearea = Makai::Vector2(64 * (4.0/3.0), 64) / 2;
 
+struct TestChoice: Makai::Ex::Game::Dialog::ChoiceMenu {
+	TestChoice(Makai::Graph::FontFace const& font): ChoiceMenu() {
+		cursor.font	= font;
+		menu.font	= font;
+		cursor.text->rectAlign	=
+		menu.text->rectAlign	= 0.5;
+		cursor.trans.position	=
+		menu.trans.position		= gamearea * Makai::Vector2(1, -1);
+	}
+};
+
 struct TextBox: Makai::Ex::Game::Dialog::Box {
 	TextBox(Makai::Graph::FontFace const& font): Box() {
 		setTitle({""});
@@ -48,13 +59,21 @@ struct TestScene: Makai::Ex::Game::Dialog::Scene {
 		actors[1] =	new TestActor("      Bob", font);
 		actors[2] =	new TestActor("          Charlie", font);
 		dialog = new TextBox(font);
-		choice = new Makai::Ex::Game::Dialog::ChoiceMenu();
+		choice = new TestChoice(font);
 		cast[Makai::ConstHasher::hash("alice")]		= actors[0].asWeak();
 		cast[Makai::ConstHasher::hash("bob")]		= actors[1].asWeak();
 		cast[Makai::ConstHasher::hash("charlie")]	= actors[2].asWeak();
 		dialog->setTitle({"Society"});
 		dialog->setBody({""});
 		dialog->hide();
+	}
+
+	usize perform(Makai::Ex::Game::Dialog::Action const& action) override {
+		switch (action.name) {
+			case (Makai::ConstHasher::hash("show")): dialog->show(); break;
+			case (Makai::ConstHasher::hash("hide")): dialog->hide(); break;
+		}
+		return 0;
 	}
 };
 

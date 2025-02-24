@@ -324,6 +324,7 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void opGetChoice(uint64 const name, Parameters const& choices) override final {
+			DEBUGLN("Choice needed!");
 			clearChoice();
 			needsChoice = true;
 			onChoice(choices);

@@ -113,7 +113,9 @@ namespace Makai::Ex::Game::Dialog {
 				if (menu.text->rect.h < option.size())
 					menu.text->rect.h = option.size();
 				if (i == choice) cursor = lines;
-				lines += 2 + Regex::count(option, "\n");
+				auto const extras = Regex::count(option, "\n");
+				lines += 2 + extras;
+				menu.text->rect.v += extras;
 				++i;
 			}
 			setCursor(cursor);
