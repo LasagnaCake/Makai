@@ -100,7 +100,7 @@ namespace Collision {
 			||	(min.y <= point.y && point.y <= max.y)
 			||	(min.z <= point.z && point.z <= max.z)
 			;
-			else if constexpr (DO == 3) return 
+			else if constexpr (DO == 4) return 
 				(min.x <= point.x && point.x <= max.x)
 			||	(min.y <= point.y && point.y <= max.y)
 			||	(min.z <= point.z && point.z <= max.z)
