@@ -6,8 +6,8 @@ namespace Danmaku = Makai::Ex::Game::Danmaku;
 constexpr Makai::Vector2 gamearea = Makai::Vector2(64 * (4.0/3.0), 64) / 2;
 
 Danmaku::GameArea
-	board		= {gamearea * Makai::Vector2(1, -1), (gamearea / 4)},
-	playfield	= {gamearea * Makai::Vector2(1, -1), (gamearea * 1.5) / 4}
+	board		= {gamearea * Makai::Vector2(1, -1), (gamearea)},
+	playfield	= {gamearea * Makai::Vector2(1, -1), (gamearea * 1.5)}
 ;
 
 using BaseBulletServer = Danmaku::BulletServer<>;
@@ -66,7 +66,7 @@ struct TestApp: Makai::Ex::Game::App {
 				.01,
 				Makai::Math::Ease::InOut::back
 			};
-			bullet->bouncy	= true;
+//			bullet->bouncy	= true;
 			bullet->loopy	= true;
 //			bullet->task = btask(*bullet);
 		}
