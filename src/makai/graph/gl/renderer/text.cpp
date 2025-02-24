@@ -220,7 +220,7 @@ void Label::draw() {
 	material.use(shader);
 	// Display to screen
 	display(
-		&vertices[0], vertices.size(),
+		vertices.data(), vertices.size(),
 		material.culling,
 		material.fill,
 		DisplayMode::ODM_TRIS,
@@ -263,12 +263,13 @@ void Label::update() {
 		;
 		// Check if should break line
 		if (text->lineWrap != LineWrap::LW_CHARACTER && text->content.size() >= text->rect.h)
-			endOfWordLine = chrRect.h > lineEnd[curLine];
+			endOfWordLine = curLine < lineEnd.size() ? (chrRect.h > lineEnd[curLine]) : false;
 		// If cursor has reached the rect's horizontal limit or newline, move to new line
 		if((chrRect.h >= text->rect.h) || newline || endOfWordLine) {
 			// If cursor has reach the rect's vertical limit, break
 			if(chrRect.v >= text->rect.v) break;
-			cursor.x = (lineStart[++curLine]) - rectStart.x;
+			if (++curLine < lineStart.size()) cursor.x = (lineStart[curLine]) - rectStart.x;
+			else cursor.x = -rectStart.x;
 			cursor.y -= (text->spacing.y + font->spacing.y) * 1.0;
 			chrRect.h = 0;
 			chrRect.v++;

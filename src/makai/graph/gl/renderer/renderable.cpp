@@ -289,7 +289,7 @@ void Renderable::extendFromBinaryFile(String const& path) {
 		"File does not exist or is empty! (" + path + ")!",
 		CTL_CPP_PRETTY_SOURCE
 	);
-	extend((Vertex*)&data[0], data.size() / sizeof(Vertex));
+	extend((Vertex*)data.data(), data.size() / sizeof(Vertex));
 	DEBUG("Vertices: ");
 	DEBUGLN(data.size() / sizeof(Vertex));
 }
