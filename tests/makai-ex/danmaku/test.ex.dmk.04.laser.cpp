@@ -3,6 +3,15 @@
 
 namespace Danmaku = Makai::Ex::Game::Danmaku;
 
+constexpr Makai::Vector2 gamearea = Makai::Vector2(64 * (4.0/3.0), 64) / 2;
+
+Danmaku::GameArea
+	board		= {gamearea * Makai::Vector2(1, -1), gamearea},
+	playfield	= {gamearea * Makai::Vector2(1, -1), gamearea}
+;
+
+using BaseLaserServer = Danmaku::LaserServer<>;
+
 struct TestApp: Makai::Ex::Game::App {
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 04", false}}) {
 		loadDefaultShaders();
