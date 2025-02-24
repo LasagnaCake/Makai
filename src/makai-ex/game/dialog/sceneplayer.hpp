@@ -33,11 +33,10 @@ namespace Makai::Ex::Game::Dialog {
 
 		void onUpdate(float delta, Makai::App& app) override {
 			AAnimaPlayer::onUpdate(delta, app);
-			if (query.process()) return;
-			if (query.exists()) {
-				setChoice(query.value());
+			if (scene.choice && scene.choice->ready()) {
+				DEBUGLN("Choice: ", scene.choice->value());
+				setChoice(scene.choice->collect());
 				postChoice();
-				query.clear();
 			}
 		}
 
@@ -46,10 +45,11 @@ namespace Makai::Ex::Game::Dialog {
 		/// @param choices Choices to make.
 		/// @return Chosen choice.
 		void onChoice(Parameters const& choices) override {
+			DEBUGLN("Processing choice...");
 			if (!scene.choice) return setChoice(0);
+			DEBUGLN("Opening menu...");
 			scene.choice->show();
 			scene.choice->setOptions(choices);
-			query = getQuery();
 		}
 
 		/// @brief Called when a scene dialog line is requested to be said.
@@ -148,16 +148,6 @@ namespace Makai::Ex::Game::Dialog {
 						out.pushBack(actor);
 			}
 			return out;
-		}
-
-	private:
-		/// @brief Choice query handler.
-		Co::Generator<ssize> query;
-
-		Co::Generator<ssize> getQuery() {
-			if (scene.choice)
-				co_return co_await scene.choice->awaiter();
-			co_return 0;
 		}
 	};
 }

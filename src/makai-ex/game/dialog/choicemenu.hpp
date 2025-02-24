@@ -23,6 +23,10 @@ namespace Makai::Ex::Game::Dialog {
 
 		void onUpdate(float, Makai::App&) override {
 			if (!updating) return;
+			if (counter < cooldown) {
+				++counter;
+				return;
+			}
 			if (action("select", true))
 				select();
 			else if (bindmap.contains("cancel") && action("cancel", true))
@@ -57,7 +61,7 @@ namespace Makai::Ex::Game::Dialog {
 			return options;
 		}
 
-		void clear()	{posted = false;				}
+		void clear()	{posted = false; cooldown = 0;	}
 		void select()	{posted = true; hide();			}
 		void cancel()	{setChoice(options.size()-1);	}
 
@@ -81,22 +85,15 @@ namespace Makai::Ex::Game::Dialog {
 			updating		= false;
 		}
 
-		bool ready()	{return posted;}
-		ssize value()	{return choice;}
+		bool ready()	{return posted;						}
+		ssize value()	{return choice;						}
+		ssize collect()	{posted = false; return value();	}
 
-		struct ChoiceAwaiter {
-			template<class... Args>
-			bool await_ready(Args...)	{return menu.ready();	}
-			template<class... Args>
-			void await_suspend(Args...)	{						}
-			template<class... Args>
-			ssize await_resume(Args...)	{return menu.value();	}
-			ChoiceMenu& menu;
-		};
-
-		ChoiceAwaiter awaiter() {return {*this};}
+		usize cooldown = 1;
 
 	private:
+		usize counter = 0;
+
 		bool posted = false;
 
 		void repaint() {
@@ -109,25 +106,37 @@ namespace Makai::Ex::Game::Dialog {
 			menu.text->rect.h		= 0;
 			menu.text->rect.v		= options.size();
 			for (String const& option: options) {
-				display += option + "\n\n";
-				if (menu.text->rect.h < option.size())
-					menu.text->rect.h = option.size();
+				display += option;
+				auto const il = option.split('\n');
+				for (auto const& l: il)
+					if (menu.text->rect.h < l.size())
+						menu.text->rect.h = l.size();
 				if (i == choice) cursor = lines;
 				auto const extras = Regex::count(option, "\n");
 				lines += 2 + extras;
 				menu.text->rect.v += extras;
 				++i;
+				if (i < static_cast<ssize>(options.size())) {
+					display += "\n\n";
+					menu.text->rect.v += 2;
+				}
 			}
+			DEBUGLN("<display>");
+			DEBUGLN(display);
+			DEBUGLN("</display>");
 			setCursor(cursor);
 		}
 
 		void setCursor(usize const line) {
-			cursor.text->rectAlign.x	= 0.5;
+			cursor.text->rectAlign.x	= menu.text->rectAlign.x;
 			cursor.text->rect.h			= menu.text->rect.h + 4;
 			cursor.text->rect.v			= options.size();
 			auto& display = cursor.text->content;
 			display = String(line, '\n');
 			display += "> " + String(cursor.text->rect.h - 4, ' ') + " <";
+			DEBUGLN("<display>");
+			DEBUGLN(display);
+			DEBUGLN("</display>");
 		}
 
 		StringList options;

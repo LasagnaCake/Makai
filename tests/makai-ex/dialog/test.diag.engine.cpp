@@ -5,12 +5,19 @@ constexpr Makai::Vector2 gamearea = Makai::Vector2(64 * (4.0/3.0), 64) / 2;
 
 struct TestChoice: Makai::Ex::Game::Dialog::ChoiceMenu {
 	TestChoice(Makai::Graph::FontFace const& font): ChoiceMenu() {
-		cursor.font	= font;
-		menu.font	= font;
+		cursor.text->content	=
+		menu.text->content		= "";
 		cursor.text->rectAlign	=
-		menu.text->rectAlign	= 0.5;
+		menu.text->rectAlign	= Math::Vector2(0.5);
 		cursor.trans.position	=
 		menu.trans.position		= gamearea * Makai::Vector2(1, -1);
+		cursor.trans.scale		= 2;
+		menu.trans.scale		= 2;
+		cursor.font				= font;
+		menu.font				= font;
+		cooldown				= 5;
+		cursor.setRenderLayer(1);
+		menu.setRenderLayer(1);
 	}
 };
 
@@ -96,8 +103,8 @@ struct TestApp: Makai::Ex::Game::App {
 		auto& keybinds = Makai::Input::Manager::binds;
 		keybinds["dialog/next"]				= Makai::Input::KeyCode::KC_Z;
 		keybinds["dialog/skip"]				= Makai::Input::KeyCode::KC_X;
-		keybinds["dialog/choice/next"]		= Makai::Input::KeyCode::KC_UP;
-		keybinds["dialog/choice/previous"]	= Makai::Input::KeyCode::KC_DOWN;
+		keybinds["dialog/choice/previous"]	= Makai::Input::KeyCode::KC_UP;
+		keybinds["dialog/choice/next"]		= Makai::Input::KeyCode::KC_DOWN;
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {

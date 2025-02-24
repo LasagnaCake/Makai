@@ -255,7 +255,7 @@ namespace Makai::Ex::Game::Dialog {
 				Engine::process();
 				if (state() != Engine::State::AVM_ES_RUNNING)
 					isFinished = true;
-			} while (!(isFinished || waitForUser || inSync));
+			} while (!(isFinished || waitForUser || inSync || needsChoice));
 			return *this;
 		}
 
