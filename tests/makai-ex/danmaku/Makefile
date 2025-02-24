@@ -50,6 +50,7 @@ define tests
 	$(call mktest-ex, $(1), 01.compilation)
 	$(call mktest-ex, $(1), 02.player)
 	$(call mktest-ex, $(1), 03.bullet)
+	$(call mktest-ex, $(1), 04.laser)
 endef
 else
 define tests

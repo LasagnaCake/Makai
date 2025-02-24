@@ -56,6 +56,7 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr Vector2 bottomRight() const	{return center + size * Vector2(+1, -1);	}
 
 		constexpr C2D::Box asArea() const		{return C2D::Box(center, size);				}
+		constexpr C2D::AABB2D aabb() const		{return {min(), max()};						}
 	};
 
 	struct BoundedObjectConfig {
