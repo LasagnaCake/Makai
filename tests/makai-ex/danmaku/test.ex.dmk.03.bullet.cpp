@@ -18,6 +18,7 @@ struct MeshHolder {
 	MeshHolder() {
 		m.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER);
 		gm.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER+1);
+		gm.setBlendEquation(Makai::Graph::BlendEquation::BE_ADD);
 	}
 };
 
