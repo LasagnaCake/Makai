@@ -88,7 +88,7 @@ namespace Sorting {
 		while (h < sz) h = h * 3 + 1;
 		while (h > 1) {
 			h /= 3;
-			for (usize i = h/ i < sz; ++i) {
+			for (usize i = h; i < sz; ++i) {
 				T const val = arr[i];
 				usize j = i;
 				for (usize j = i;j >= h && SimpleComparator<T>::lesser(val, arr[j-h]); j -= h)
