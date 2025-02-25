@@ -26,6 +26,58 @@ namespace Type::Algorithm {
 
 /// @brief Sorting algorithm implementations.
 namespace Sorting {
+	/// @brief Algorithm implementations.
+	namespace Impl {}
+
+	/// @brief Threeway quicksort implementation.
+	namespace Impl::QuickSort3 {
+		template <Type::Algorithm::Sortable T>
+		constexpr void partition(ref<T> const arr, ssize const left, ssize const right, ssize& start, ssize& stop) {
+			ssize
+				i = start	= left-1,
+				j = stop	= right
+			;
+			T pivot = arr[right];
+			while (true) {
+				while (SimpleComparator<T>::lesser(arr[++left], pivot));
+				while (SimpleComparator<T>::greater(arr[--right], pivot))
+					if (SimpleComparator<T>::equal(left, right)) break;
+				if (SimpleComparator<T>::greaterEquals(left, right)) break;
+				swap(arr[left], arr[right]);
+				if (SimpleComparator<T>::equal(arr[left], pivot))
+					swap(arr[++i], arr[start]);
+				if (SimpleComparator<T>::equal(arr[left], pivot))
+					swap(arr[--j], arr[stop]);
+			}
+			swap(arr[start], arr[right]);
+			stop = start - 1;
+			for (ssize k = left; k < i; ++k, --stop)
+				swap(arr[k], arr[stop]);
+			++start;
+			for (ssize k = right - 1; k > j; --k, ++start)
+				swap(arr[k], arr[start]);
+		}
+		
+		template <Type::Algorithm::Sortable T>
+		constexpr void sort(ref<T> const arr, usize const left, usize const right) {
+			if (stop < start)
+				return;
+			ssize start, stop;
+			partition(arr, left, right, start, stop);
+			quicksort(arr, left, stop);
+			quicksort(arr, start, right);
+		}
+	}
+
+	/// @brief Sorts the given range of elements using 3-way quick sort.
+	/// @tparam T Element type.
+	/// @param arr Pointer to beginning of range.
+	/// @param sz Size of range.
+	template<Type::Algorithm::Sortable T>
+	constexpr void quickSort3(ref<T> const arr, usize const sz) {
+		Partial::QuickSort3::sort(arr, 0, sz-1);
+	}
+
 	/// @brief Sorts the given range of elements using insertion sort.
 	/// @tparam T Element type.
 	/// @param arr Pointer to beginning of range.
@@ -84,6 +136,7 @@ namespace Sorting {
 		delete[] right;
 	}
 
+	/// @brief partial algorithm implementations.
 	namespace Partial {
 		// TODO: fix this
 		template<Type::Algorithm::Sortable T>
@@ -182,6 +235,7 @@ namespace Sorting {
 /// @param end Iterator to end of range.
 template <Type::Algorithm::SortableIterator T>
 constexpr void sort(T const& begin, T const& end) {
+	// TODO: change to & test QuickSort3
 	Sorting::insertionSort(begin.raw(), end - begin + 1);
 }
 
@@ -191,6 +245,7 @@ constexpr void sort(T const& begin, T const& end) {
 /// @param end Pointer to end of range.
 template <Type::Algorithm::Sortable T>
 constexpr void sort(ref<T> const begin, ref<T> const end) {
+	// TODO: change to & test QuickSort3
 	Sorting::insertionSort(begin, end - begin + 1);
 }
 
