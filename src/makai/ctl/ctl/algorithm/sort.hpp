@@ -90,7 +90,7 @@ namespace Sorting {
 				usize j = i;
 				for (usize j = i; j >= h && SimpleComparator<T>::lesser(val, arr[j-h]); j -= h)
 					arr[j] = arr[j-h];
-				v[j] = val;
+				arr[j] = val;
 			}
 		}
 	}
