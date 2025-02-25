@@ -44,9 +44,9 @@ namespace Sorting {
 					if (SimpleComparator<T>::equal(left, right)) break;
 				if (SimpleComparator<T>::greaterEquals(left, right)) break;
 				swap(arr[left], arr[right]);
-				if (SimpleComparator<T>::equal(arr[left], pivot))
+				if (SimpleComparator<T>::equals(arr[left], pivot))
 					swap(arr[++i], arr[start]);
-				if (SimpleComparator<T>::equal(arr[left], pivot))
+				if (SimpleComparator<T>::equals(arr[left], pivot))
 					swap(arr[--j], arr[stop]);
 			}
 			swap(arr[start], arr[right]);
