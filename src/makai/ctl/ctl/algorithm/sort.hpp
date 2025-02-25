@@ -91,7 +91,7 @@ namespace Sorting {
 			for (usize i = h; i < sz; ++i) {
 				T const val = arr[i];
 				usize j = i;
-				for (usize j = i;j >= h && SimpleComparator<T>::lesser(val, arr[j-h]); j -= h)
+				for (usize j = i; j >= h && SimpleComparator<T>::lesser(val, arr[j-h]); j -= h)
 					arr[j] = arr[j-h];
 				v[j] = val;
 			}
