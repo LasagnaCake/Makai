@@ -32,9 +32,12 @@ List<int> testList() {
 	lst.insert({-5, 9, 9, 8, 9, -20, 4, 8}, 1);	print(lst);
 	lst = lst.uniques();						print(lst);
 	lst.reverse();								print(lst);
+	DEBUG("![Sorted] ");
 	lst.sort();									print(lst);
 	lst = List<int>({20, -64, -20, 20, 0, -1, 17, -5, 1, 28, 34, 6, 4, -1, 1, -4, 57, 8, -19, 20, 19, 8});
 	print(lst);
+	DEBUG("![Sorted] ");
+	lst.sort();									print(lst);
 	lst.eraseLike(20);							print(lst);
 	lst = lst.sliced(3, 11);					print(lst);
 	lst = lst.sliced(1, -2);					print(lst);
