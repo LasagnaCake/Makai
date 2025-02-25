@@ -26,10 +26,11 @@ namespace Type::Algorithm {
 
 /// @brief Sorting algorithm implementations.
 namespace Sorting {
+	// TODO: Fix this mess
 	/// @brief Threeway quicksort implementation.
 	namespace QuickSort3 {
 		template <Type::Algorithm::Sortable T>
-		constexpr void partition(ref<T> const arr, ssize const left, ssize const right, ssize& start, ssize& stop) {
+		constexpr void partition(ref<T> const arr, ssize left, ssize right, ssize& start, ssize& stop) {
 			ssize
 				i = start	= left-1,
 				j = stop	= right
@@ -38,8 +39,8 @@ namespace Sorting {
 			while (true) {
 				while (SimpleComparator<T>::lesser(arr[++left], pivot));
 				while (SimpleComparator<T>::greater(arr[--right], pivot))
-					if (SimpleComparator<T>::equal(left, right)) break;
-				if (SimpleComparator<T>::greaterEquals(left, right)) break;
+					if (left == right) break;
+				if (left >= right) break;
 				swap(arr[left], arr[right]);
 				if (SimpleComparator<T>::equals(arr[left], pivot))
 					swap(arr[++i], arr[start]);
@@ -57,12 +58,12 @@ namespace Sorting {
 		
 		template <Type::Algorithm::Sortable T>
 		constexpr void sort(ref<T> const arr, usize const left, usize const right) {
-			if (stop < start)
+			if (left < right)
 				return;
 			ssize start, stop;
 			partition(arr, left, right, start, stop);
-			quicksort(arr, left, stop);
-			quicksort(arr, start, right);
+			sort(arr, left, stop);
+			sort(arr, start, right);
 		}
 	}
 
@@ -81,17 +82,17 @@ namespace Sorting {
 	/// @param sz Size of range.
 	template<Type::Algorithm::Sortable T>
 	constexpr void shellSort(ref<T> const arr, usize const sz) {
-		usize h = 1;
-		while (h < sz) h = h * 3 + 1;
-		while (h > 1) {
-			h /= 3;
-			for (usize i = h; i < sz; ++i) {
+		usize gap = 1;
+		while (gap < sz) gap = (gap * 3) + 1;
+		while (gap > 0) {
+			for (usize i = gap; i < sz; ++i) {
 				T const val = arr[i];
-				usize j = i;
-				for (usize j = i; j >= h && SimpleComparator<T>::lesser(val, arr[j-h]); j -= h)
-					arr[j] = arr[j-h];
+				usize j;
+				for (j = i; j >= gap && SimpleComparator<T>::greater(arr[j-gap], val); j -= gap)
+					arr[j] = arr[j-gap];
 				arr[j] = val;
 			}
+			gap /= 3;
 		}
 	}
 
@@ -110,7 +111,7 @@ namespace Sorting {
 	}
 
 	// Based off of https://www.geeksforgeeks.org/merge-sort/
-	// TODO: fix this
+	// TODO: fix(?) this
 	/// @brief Sorts the given range of elements using merge sort.
 	/// @tparam T Element type.
 	/// @param arr Pointer to beginning of range.
@@ -127,7 +128,7 @@ namespace Sorting {
 			szRight	= sz/2,
 			szLeft	= szRight + (sz%2==0 ? 0 : 1)
 		;
-		ref<T>
+		owner<T>
 			left	= new T[szLeft],
 			right	= new T[szRight]
 		;
@@ -155,7 +156,7 @@ namespace Sorting {
 
 	/// @brief partial algorithm implementations.
 	namespace Partial {
-		// TODO: fix this
+		// TODO: fix(?) this
 		template<Type::Algorithm::Sortable T>
 		constexpr void mergeSort(ref<T> const arr, usize const sz) {
 			if (sz == 1) return;
@@ -194,7 +195,7 @@ namespace Sorting {
 	}
 
 	// Based off of Tim Sort, with minor changes
-	// TODO: fix this (`mergeSort` not working, so must start by fixing that first)
+	// TODO: fix this (`mergeSort` maybe not working)
 	/// @brief Sorts the given range of elements using a modified version of TimSort.
 	/// @tparam T Element type.
 	/// @param arr Pointer to beginning of range.
@@ -223,7 +224,7 @@ namespace Sorting {
 				if (currentOrder != prevOrder && currentOrder != Ordered::Order::EQUAL) {
 					if (j < run) {
 						j = (offset+j > sz) ? (sz-offset) : j;
-						Partial::mergeSort(arr+offset, j);
+						shellSort(arr+offset, j);
 					} else if (SimpleComparator<T>::lesser(arr[offset], arr[offset+j]))
 						reverse(arr+offset, j);
 					offset += j;
@@ -253,7 +254,7 @@ namespace Sorting {
 template <Type::Algorithm::SortableIterator T>
 constexpr void sort(T const& begin, T const& end) {
 	// TODO: change to & test QuickSort3 or shellSort
-	Sorting::insertionSort(begin.raw(), end - begin + 1);
+	Sorting::shellSort(begin.raw(), end - begin + 1);
 }
 
 /// @brief Sorts a given range of elements.
@@ -263,9 +264,32 @@ constexpr void sort(T const& begin, T const& end) {
 template <Type::Algorithm::Sortable T>
 constexpr void sort(ref<T> const begin, ref<T> const end) {
 	// TODO: change to & test QuickSort3 or shellSort
-	Sorting::insertionSort(begin, end - begin + 1);
+	Sorting::shellSort(begin, end - begin + 1);
 }
 
+namespace {
+	template<class T, usize N>
+	constexpr bool isSortingCorrectly(As<T const[N]> const& arr) {
+		As<T[N]> buf;
+		for (usize i = 0; i < N; ++i)
+			buf[i] = arr[i];
+		sort(buf, buf + N-1);
+		for (usize i = 0; i < N-1; ++i)
+			if (buf[i] > buf[i+1]) return false;
+		return true;		
+	}
+}
+/*
+static_assert(isSortingCorrectly<int>({10, 1, -1, -43, 281, 34, 35, 819, 22, -77, -1024, -2048}));
+static_assert(isSortingCorrectly<int>({-2048, 10, 1, -1, -43, 281, 34, 35, 819, 22, -77, -1024}));
+static_assert(isSortingCorrectly<int>({-1024, -2048, 10, 1, -1, -43, 281, 34, 35, 819, 22, -77}));
+static_assert(isSortingCorrectly<int>({-77, -1024, -2048, 10, 1, -1, -43, 281, 34, 35, 819, 22}));
+static_assert(isSortingCorrectly<int>({22, -77, -1024, -2048, 10, 1, -1, -43, 281, 34, 35, 819}));
+static_assert(isSortingCorrectly<int>({819, 22, -77, -1024, -2048, 10, 1, -1, -43, 281, 34, 35}));
+static_assert(isSortingCorrectly<int>({35, 819, 22, -77, -1024, -2048, 10, 1, -1, -43, 281, 34}));
+
+static_assert(isSortingCorrectly<int>({12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4}));
+*/
 CTL_NAMESPACE_END
 
 #endif // CTL_ALGORITHM_FUNCTIONS_H
