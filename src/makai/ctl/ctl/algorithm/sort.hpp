@@ -26,11 +26,8 @@ namespace Type::Algorithm {
 
 /// @brief Sorting algorithm implementations.
 namespace Sorting {
-	/// @brief Algorithm implementations.
-	namespace Impl {}
-
 	/// @brief Threeway quicksort implementation.
-	namespace Impl::QuickSort3 {
+	namespace QuickSort3 {
 		template <Type::Algorithm::Sortable T>
 		constexpr void partition(ref<T> const arr, ssize const left, ssize const right, ssize& start, ssize& stop) {
 			ssize
@@ -75,7 +72,7 @@ namespace Sorting {
 	/// @param sz Size of range.
 	template<Type::Algorithm::Sortable T>
 	constexpr void quickSort3(ref<T> const arr, usize const sz) {
-		Partial::QuickSort3::sort(arr, 0, sz-1);
+		QuickSort3::sort(arr, 0, sz-1);
 	}
 
 	/// @brief Sorts the given range of elements using shell sort.
