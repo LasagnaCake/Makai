@@ -78,6 +78,26 @@ namespace Sorting {
 		Partial::QuickSort3::sort(arr, 0, sz-1);
 	}
 
+	/// @brief Sorts the given range of elements using shell sort.
+	/// @tparam T Element type.
+	/// @param arr Pointer to beginning of range.
+	/// @param sz Size of range.
+	template<Type::Algorithm::Sortable T>
+	constexpr void shellSort(ref<T> const arr, usize const sz) {
+		usize h = 1;
+		while (h < sz) h = h * 3 + 1;
+		while (h > 1) {
+			h /= 3;
+			for (usize i = h/ i < sz; ++i) {
+				T const val = arr[i];
+				usize j = i;
+				for (usize j = i;j >= h && SimpleComparator<T>::lesser(val, arr[j-h]); j -= h)
+					arr[j] = arr[j-h];
+				v[j] = val;
+			}
+		}
+	}
+
 	/// @brief Sorts the given range of elements using insertion sort.
 	/// @tparam T Element type.
 	/// @param arr Pointer to beginning of range.
@@ -235,7 +255,7 @@ namespace Sorting {
 /// @param end Iterator to end of range.
 template <Type::Algorithm::SortableIterator T>
 constexpr void sort(T const& begin, T const& end) {
-	// TODO: change to & test QuickSort3
+	// TODO: change to & test QuickSort3 or shellSort
 	Sorting::insertionSort(begin.raw(), end - begin + 1);
 }
 
@@ -245,7 +265,7 @@ constexpr void sort(T const& begin, T const& end) {
 /// @param end Pointer to end of range.
 template <Type::Algorithm::Sortable T>
 constexpr void sort(ref<T> const begin, ref<T> const end) {
-	// TODO: change to & test QuickSort3
+	// TODO: change to & test QuickSort3 or shellSort
 	Sorting::insertionSort(begin, end - begin + 1);
 }
 
