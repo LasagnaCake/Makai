@@ -77,6 +77,7 @@ namespace Sorting {
 		QuickSort3::sort(arr, 0, sz-1);
 	}
 
+	// Based off of https://pt.wikipedia.org/wiki/Shell_sort#Código_em_C
 	/// @brief Sorts the given range of elements using shell sort.
 	/// @tparam T Element type.
 	/// @param arr Pointer to beginning of range.
