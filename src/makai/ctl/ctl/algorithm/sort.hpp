@@ -27,6 +27,7 @@ namespace Type::Algorithm {
 /// @brief Sorting algorithm implementations.
 namespace Sorting {
 	// TODO: Fix this mess
+	// Based off of https://www.geeksforgeeks.org/3-way-quicksort-dutch-national-flag/
 	/// @brief Threeway quicksort implementation.
 	namespace QuickSort3 {
 		template <Type::Algorithm::Sortable T>
@@ -110,48 +111,48 @@ namespace Sorting {
 		}
 	}
 
-	// Based off of https://www.geeksforgeeks.org/merge-sort/
-	// TODO: fix(?) this
+	// Based off of https://pt.wikipedia.org/wiki/Merge_sort#Implementa%C3%A7%C3%A3o_em_C++
+	/// @brief Merge sort implementation.
+	namespace MergeSort {
+		template <Type::Algorithm::Sortable T>
+		constexpr void merge(ref<T> const arr, usize const start, usize const mid, usize const stop, ref<T> const aux) {
+			usize left	= start;
+			usize right	= mid;
+			for (usize i = start; i < stop; ++i)
+				if (left < mid && (right >= end || SimpleComparator<T>::lesser(arr[left], arr[right])))
+					aux[i] = arr[left++];
+				else
+					aux[i] = arr[right++];
+			for (usize i = start; i < stop; ++i)
+					arr[i] = aux[i];
+		}
+	
+		template <Type::Algorithm::Sortable T>
+		constexpr void sort(ref<T> const arr, usize const start, usize const stop, ref<T> const aux) {
+			if ((start - stop) < 2)
+				return;
+			usize const mid = (start + stop) / 2;
+			sort(arr, start, mid, aux);
+			sort(arr, mid, stop, aux);
+			merge(arr, start, mid, stop, aux);
+		}
+	}
+
 	/// @brief Sorts the given range of elements using merge sort.
 	/// @tparam T Element type.
 	/// @param arr Pointer to beginning of range.
 	/// @param sz Size of range.
-	template<Type::Algorithm::Sortable T>
+	template <Type::Algorithm::Sortable T>
 	constexpr void mergeSort(ref<T> const arr, usize const sz) {
-		if (sz == 1) return;
-		if (sz == 2) {
-			if (SimpleComparator<T>::greater(arr[0], arr[1]))
+		if (sz < 2) return;
+		else if (sz == 2) {
+			if (arr[0] > arr[1])
 				swap(arr[0], arr[1]);
 			return;
 		}
-		usize
-			szRight	= sz/2,
-			szLeft	= szRight + (sz%2==0 ? 0 : 1)
-		;
-		owner<T>
-			left	= new T[szLeft],
-			right	= new T[szRight]
-		;
-		MX::objcopy(left, arr, szLeft);
-		MX::objcopy(right, arr+szLeft, szRight);
-		mergeSort(left, szLeft);
-		mergeSort(right, szRight);
-		usize
-			i = 0,
-			j = 0,
-			k = szLeft
-		;
-		while (i < szLeft && j < szRight) {
-			if (SimpleComparator<T>::lesserEquals(left[i], right[j]))
-				arr[k] = left[i++];
-			else
-				arr[k] = right[j++];
-			k++;
-		}
-		while (i < szLeft) arr[k++] = left[i++];
-		while (j < szRight) arr[k++] = right[j++];
-		delete[] left;
-		delete[] right;
+		T* aux = new T[sz];
+		MergeSort::sort(arr, 0, sz, aux);
+		delete[] aux;
 	}
 
 	/// @brief partial algorithm implementations.
@@ -224,7 +225,7 @@ namespace Sorting {
 				if (currentOrder != prevOrder && currentOrder != Ordered::Order::EQUAL) {
 					if (j < run) {
 						j = (offset+j > sz) ? (sz-offset) : j;
-						shellSort(arr+offset, j);
+						mergeSort(arr+offset, j);
 					} else if (SimpleComparator<T>::lesser(arr[offset], arr[offset+j]))
 						reverse(arr+offset, j);
 					offset += j;
