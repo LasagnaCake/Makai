@@ -10,7 +10,8 @@ CTL_NAMESPACE_BEGIN
 
 /*
 	Other possible algorithms:
- 	! Radix sort (https://pt.wikipedia.org/wiki/Radix_sort#C%C3%B3digo_em_C);
+ 	+ Radix sort (https://pt.wikipedia.org/wiki/Radix_sort#C%C3%B3digo_em_C);
+  		- Requires arithmetic operations on element types, so maybe not :/
   	- Comb sort (https://pt.wikipedia.org/wiki/Comb_sort#C)
 */
 
