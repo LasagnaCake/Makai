@@ -503,6 +503,7 @@ public:
 		return -1;
 	}
 
+	// TODO: Move this to separate function
 	/// @brief Performs a binary search to find the index of an element that matches a value.
 	/// @param value Value to search for.
 	/// @return The index of the value, or -1 if not found.
