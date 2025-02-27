@@ -8,6 +8,12 @@
 
 CTL_NAMESPACE_BEGIN
 
+/*
+	Other possible algorithms:
+ 	! Radix sort (https://pt.wikipedia.org/wiki/Radix_sort#C%C3%B3digo_em_C);
+  	- Comb sort (https://pt.wikipedia.org/wiki/Comb_sort#C)
+*/
+
 /// @brief Algorithm-specific type constraints.
 namespace Type::Algorithm {
 	/// @brief Type must be able to be sorted.
