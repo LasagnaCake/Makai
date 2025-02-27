@@ -1,7 +1,7 @@
-#ifndef MAKAILIB_GRAPH_UNIFORM_H
-#define MAKAILIB_GRAPH_UNIFORM_H
+#ifndef MAKAILIB_GRAPH_SHADER_UNIFORM_H
+#define MAKAILIB_GRAPH_SHADER_UNIFORM_H
 
-#include "../../compat/ctl.hpp"
+#include "../../../compat/ctl.hpp"
 #include "core.hpp"
 
 /// @brief Graphical facilites.

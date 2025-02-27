@@ -6,7 +6,7 @@
 #include "effect.hpp"
 #include "debug.hpp"
 #include "../color.hpp"
-#include "../shader.hpp"
+#include "../shader/shader.hpp"
 #include "../renderer/mode.hpp"
 
 /// @brief Shader materials.

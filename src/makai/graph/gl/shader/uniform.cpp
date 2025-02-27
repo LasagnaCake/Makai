@@ -1,4 +1,4 @@
-#include "glapiloader.cc"
+#include "../glapiloader.cc"
 
 #include "uniform.hpp"
 

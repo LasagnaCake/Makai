@@ -6,11 +6,11 @@
 #include "camera.hpp"
 #include "color.hpp"
 #include "uniform.hpp"
-#include "shader.hpp"
 #include "image.hpp"
 #include "texture.hpp"
 #include "vertex.hpp"
 #include "blend.hpp"
+#include "shader/shader.hpp"
 #include "renderer/renderer.hpp"
 #include "material/material.hpp"
 

@@ -3,9 +3,9 @@
 
 #include "../texture.hpp"
 #include "../vertex.hpp"
-#include "../shader.hpp"
 #include "../color.hpp"
 #include "../blend.hpp"
+#include "../shader/shader.hpp"
 #include "../material/material.hpp"
 
 /*

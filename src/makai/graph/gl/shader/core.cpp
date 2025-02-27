@@ -1,6 +1,6 @@
-#include "glapiloader.cc"
+#include "../glapiloader.cc"
 
-#include "shader.hpp"
+#include "core.hpp"
 
 using namespace Makai; using namespace Makai::Graph;
 

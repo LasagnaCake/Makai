@@ -15,13 +15,12 @@ debug:
 	$(call compile, core)
 	$(call compile, global)
 	$(call compile, vertex)
-	$(call compile, uniform)
 	$(call compile, blend)
 	$(call compile, color)
 	$(call compile, image)
 	$(call compile, texture)
-	$(call compile, shader)
 
+	$(call submake, shader)
 	$(call submake, renderer)
 	$(call submake, material)
 
@@ -29,12 +28,11 @@ release:
 	$(call compile, core)
 	$(call compile, global)
 	$(call compile, vertex)
-	$(call compile, uniform)
 	$(call compile, blend)
 	$(call compile, color)
 	$(call compile, image)
 	$(call compile, texture)
-	$(call compile, shader)
 
+	$(call submake, shader)
 	$(call submake, renderer)
 	$(call submake, material)
