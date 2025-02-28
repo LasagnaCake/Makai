@@ -25,8 +25,6 @@ namespace Makai::Graph::Pipeline {
 		/// @return Pipeline dispatcher ID.
 		uint id() const;
 
-		Map<SLF::ShaderType, Stage> stages;
-
 		Dispatcher();
 		~Dispatcher();
 	};
