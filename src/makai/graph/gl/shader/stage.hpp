@@ -4,7 +4,7 @@
 #include "../../file/file.hpp"
 #include "../../compat/ctl.hpp"
 
-/// @brief Graphical facilites.
+/// @brief Shader pipeline facilites.
 namespace Makai::Graph::Pipeline {
 	/// @brief Shader pipeline stage.
 	class Stage {
@@ -12,7 +12,7 @@ namespace Makai::Graph::Pipeline {
 
 		using StageInstance = Instance<StageProgram>;
 
-		/// @brief Underlying shader stage instance.
+		/// @brief Underlying pipeline stage instance.
 		StageInstance instance;
 
 	public:

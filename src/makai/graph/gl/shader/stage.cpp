@@ -39,7 +39,12 @@ struct Pipeline::Stage::StageProgram {
 	StageProgram()						{				}
 	~StageProgram()						{destroy();		}
 
-	StageProgram& destroy()				{if (id != 0) glDeleteProgram(id); id = 0; return *this;}
+	StageProgram& destroy()				{
+		if (id != 0) glDeleteProgram(id);
+		id = 0;
+		created = false;
+		return *this;
+	}
 
 	StageProgram& create(String const& path) {
 		if (created) return *this;

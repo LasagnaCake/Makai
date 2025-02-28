@@ -2,7 +2,7 @@
 #define MAKAILIB_GRAPH_SHADER_UNIFORM_H
 
 #include "../../../compat/ctl.hpp"
-#include "core.hpp"
+#include "../core.hpp"
 
 /// @brief Graphical facilites.
 namespace Makai::Graph {

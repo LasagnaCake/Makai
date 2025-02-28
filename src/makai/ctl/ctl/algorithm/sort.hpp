@@ -127,7 +127,7 @@ namespace Sorting {
 			usize left	= start;
 			usize right	= mid;
 			for (usize i = start; i < stop; ++i)
-				if (left < mid && (right >= end || SimpleComparator<T>::lesser(arr[left], arr[right])))
+				if (left < mid && (right >= stop || SimpleComparator<T>::lesser(arr[left], arr[right])))
 					aux[i] = arr[left++];
 				else
 					aux[i] = arr[right++];
