@@ -14,11 +14,13 @@ CTL_NAMESPACE_BEGIN
 namespace Type::Container {
 	/// @brief Type must be a valid pair type.
 	template<class T>
-	concept PairLike = requires (T t) {
+	concept PairLike = requires (T t1, T const t2) {
 		typename T::AType;
 		typename T::BType;
-		{t.front()} -> EqualOrConst<typename T::AType&>;
-		{t.back()} -> EqualOrConst<typename T::BType&>;
+		{t1.front()} -> EqualOrConst<typename T::AType&>;
+		{t1.back()} -> EqualOrConst<typename T::BType&>;
+		{t2.front()} -> EqualOrConst<typename T::AType const&>;
+		{t2.back()} -> EqualOrConst<typename T::BType const&>;
 		requires Constructible<T, typename T::AType, typename T::BType>;
 	};
 }
@@ -126,6 +128,7 @@ struct Pair:
 
 	/// @brief Default constructor.
 	constexpr Pair() = default;
+
 	/// @brief Constructs only `a`.
 	/// @param a Value of `a`.
 	constexpr Pair(AType const& a):					a(a)								{}
@@ -136,11 +139,44 @@ struct Pair:
 	/// @brief Copy constructor.
 	/// @param other `Pair` to copy from.
 	constexpr Pair(SelfType const& other):			a(other.a), b(other.b)				{}
+
+	/// @brief Constructs only `a`.
+	/// @param a Value of `a`.
+	constexpr Pair(AType&& a):						a(move(a))							{}
+	/// @brief Constructs both `a` and `b`. 
+	/// @param a Value of `a`.
+	/// @param b Value of `b`.
+	constexpr Pair(AType&& a, BType&& b):			a(move(a)), b(move(b))				{}
+	/// @brief Move constructor.
+	/// @param other `Pair` to move.
+	constexpr Pair(SelfType&& other):				a(move(other.a)), b(move(other.b))	{}
+
 	/// @brief Copy constructor (pair-like).
 	/// @tparam T Pair-like type.
 	/// @param other Pair-like object to copy from.
 	template<Type::Container::PairLike T>
 	constexpr Pair(T const& other):					a(other.front()), b(other.back())	{}
+
+	/// @brief Copy assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to copy from.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to move.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
+	/// @brief Copy assignment operator.
+	/// @param other Pair to copy from.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @param other Pair to move.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
 
 	/// @brief Threeway comparison operator.
 	/// @param other Other `Pair` to compare with.
@@ -155,13 +191,13 @@ struct Pair:
 	constexpr AType& front()				{return a;	}
 	/// @brief Returns `b`.
 	/// @return Reference to `b`.
-	constexpr BType& back()				{return b;	}
+	constexpr BType& back()					{return b;	}
 	/// @brief Returns `a`.
 	/// @return Const reference to `a`.
 	constexpr AType const& front() const	{return a;	}
 	/// @brief Returns `a`.
 	/// @return Const reference to `a`.
-	constexpr BType const& back() const	{return b;	}
+	constexpr BType const& back() const		{return b;	}
 
 	/// @brief Converts the object to another pair-esque type.
 	/// @tparam TPair Pair-esque type.
@@ -209,17 +245,52 @@ struct KeyValuePair:
 
 	/// @brief Constructs only the key.
 	/// @param k Value of key.
-	constexpr KeyValuePair(AType const& k):					key(k)									{}
+	constexpr KeyValuePair(AType const& k):					key(k)												{}
 	/// @brief Constructs both key and value.
 	/// @param k Value of `key`.
 	/// @param v Value of `value`.
-	constexpr KeyValuePair(AType const& k, BType const& v):	key(k), value(v)						{}
+	constexpr KeyValuePair(AType const& k, BType const& v):	key(k), value(v)									{}
 	/// @brief Copy constructor (Pair-like).
 	/// @param other Other pair-like object.
-	constexpr explicit KeyValuePair(PairType const& other):	KeyValuePair(other.a, other.b)			{}
+	constexpr explicit KeyValuePair(PairType const& other):	KeyValuePair(move(other.a), move(other.b))			{}
 	/// @brief Copy constructor (`KeyValuePair`).
 	/// @param other Other `KeyValuePair`.
-	constexpr KeyValuePair(SelfType const& other):			KeyValuePair(other.key, other.value)	{}
+	constexpr KeyValuePair(SelfType const& other):			KeyValuePair(other.key, other.value)				{}
+
+	/// @brief Constructs only the key.
+	/// @param k Value of key.
+	constexpr KeyValuePair(AType&& k):						key(move(k))										{}
+	/// @brief Constructs both key and value.
+	/// @param k Value of `key`.
+	/// @param v Value of `value`.
+	constexpr KeyValuePair(AType && k, BType&& v):			key(move(k)), value(move(v))						{}
+	/// @brief Move constructor (Pair-like).
+	/// @param other Other pair-like object.
+	constexpr explicit KeyValuePair(PairType&& other):		KeyValuePair(move(other.a), move(other.b))			{}
+	/// @brief Move constructor (`KeyValuePair`).
+	/// @param other Other `KeyValuePair`.
+	constexpr KeyValuePair(SelfType&& other):				KeyValuePair(move(other.key), move(other.value))	{}
+
+	/// @brief Copy assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to copy from.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to move.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
+	/// @brief Copy assignment operator.
+	/// @param other Pair to copy from.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @param other Pair to move.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
 
 	/// @brief Threeway comparison operator.
 	/// @param other Other `KeyValuePair` to compare with.
@@ -234,13 +305,13 @@ struct KeyValuePair:
 	constexpr AType& front()				{return key;	}
 	/// @brief Returns `value`.
 	/// @return Reference to `value`.
-	constexpr BType& back()				{return value;	}
+	constexpr BType& back()					{return value;	}
 	/// @brief Returns `key`.
 	/// @return Const reference to `key`.
 	constexpr AType const& front() const	{return key;	}
 	/// @brief Returns `value`.
 	/// @return Const reference to `value`.
-	constexpr BType const& back() const	{return value;	}
+	constexpr BType const& back() const		{return value;	}
 
 	/// @brief Converts the object to a `Pair`.
 	/// @return Object as `Pair`.
@@ -277,6 +348,71 @@ struct LeftRightPair:
 	AType	left;
 	/// @brief Right side.
 	BType	right;
+
+	/// @brief Returns `left`.
+	/// @return Reference to `left`.
+	constexpr AType& front()				{return left;	}
+	/// @brief Returns `right`.
+	/// @return Reference to `right`.
+	constexpr BType& back()					{return right;	}
+	/// @brief Returns `left`.
+	/// @return Const reference to `left`.
+	constexpr AType const& front() const	{return left;	}
+	/// @brief Returns `right`.
+	/// @return Const reference to `right`.
+	constexpr BType const& back() const		{return right;	}
+
+	/// @brief Default constructor.
+	constexpr LeftRightPair() = default;
+	
+	/// @brief Constructs only the left side.
+	/// @param l Value of the left side.
+	constexpr LeftRightPair(AType const& l):					left(l)												{}
+	/// @brief Constructs both the left and right sides.
+	/// @param l Value of the left side.
+	/// @param r Value of the right side.
+	constexpr LeftRightPair(AType const& l, BType const& r):	left(l), right(r)									{}
+	/// @brief Copy constructor (Pair-like).
+	/// @param other Other pair-like object.
+	constexpr explicit LeftRightPair(PairType const& other):	LeftRightPair(other.a, other.b)						{}
+	/// @brief Copy constructor (`LeftRightPair`).
+	/// @param other Other `LeftRightPair`.
+	constexpr LeftRightPair(SelfType const& other):				LeftRightPair(other.left, other.right)				{}
+	
+	/// @brief Constructs only the left side.
+	/// @param l Value of the left side.
+	constexpr LeftRightPair(AType&& l):							left(move(l))										{}
+	/// @brief Constructs both the left and right sides.
+	/// @param l Value of the left side.
+	/// @param r Value of the right side.
+	constexpr LeftRightPair(AType&& l, BType&& r):				left(move(l)), right(move(r))						{}
+	/// @brief Move constructor (Pair-like).
+	/// @param other Other pair-like object.
+	constexpr explicit LeftRightPair(PairType&& other):			LeftRightPair(move(other.a), move(other.b))			{}
+	/// @brief Move constructor (`LeftRightPair`).
+	/// @param other Other `LeftRightPair`.
+	constexpr LeftRightPair(SelfType&& other):					LeftRightPair(move(other.left), move(other.right))	{}
+
+	/// @brief Copy assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to copy from.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to move.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
+	/// @brief Copy assignment operator.
+	/// @param other Pair to copy from.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @param other Pair to move.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
 	
 	/// @brief Threeway comparison operator.
 	/// @param other Other `LeftRightPair` to compare with.
@@ -285,36 +421,6 @@ struct LeftRightPair:
 	requires (PairComparator<SelfType>::IS_COMPARABLE) {
 		return PairComparator<SelfType>::compare(*this, other);
 	}
-
-	/// @brief Returns `left`.
-	/// @return Reference to `left`.
-	constexpr AType& front()				{return left;	}
-	/// @brief Returns `right`.
-	/// @return Reference to `right`.
-	constexpr BType& back()				{return right;	}
-	/// @brief Returns `left`.
-	/// @return Const reference to `left`.
-	constexpr AType const& front() const	{return left;	}
-	/// @brief Returns `right`.
-	/// @return Const reference to `right`.
-	constexpr BType const& back() const	{return right;	}
-
-	/// @brief Default constructor.
-	constexpr LeftRightPair() = default;
-	
-	/// @brief Constructs only the left side.
-	/// @param l Value of the left side.
-	constexpr LeftRightPair(AType const& l):					left(l)									{}
-	/// @brief Constructs both the left and right sides.
-	/// @param l Value of the left side.
-	/// @param r Value of the right side.
-	constexpr LeftRightPair(AType const& l, BType const& r):	left(l), right(r)						{}
-	/// @brief Copy constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit LeftRightPair(PairType const& other):	LeftRightPair(other.a, other.b)			{}
-	/// @brief Copy constructor (`LeftRightPair`).
-	/// @param other Other `LeftRightPair`.
-	constexpr LeftRightPair(SelfType const& other):				LeftRightPair(other.left, other.right)	{}
 
 	/// @brief Converts the object to a `Pair`.
 	/// @return Object as `Pair`.
@@ -352,6 +458,71 @@ struct FirstSecondPair:
 	/// @brief Second value.
 	BType	second;
 
+	/// @brief Returns `first`.
+	/// @return Reference to `first`.
+	constexpr AType& front()				{return first;	}
+	/// @brief Returns `second`.
+	/// @return Reference to `second`.
+	constexpr BType& back()					{return second;	}
+	/// @brief Returns `first`.
+	/// @return Const reference to `first`.
+	constexpr AType const& front() const	{return first;	}
+	/// @brief Returns `second`.
+	/// @return Const reference to `second`.
+	constexpr BType const& back() const		{return second;	}
+
+	/// @brief Default constructor.
+	constexpr FirstSecondPair() = default;
+
+	/// @brief Constructs only the first value.
+	/// @param v1 First value.
+	constexpr FirstSecondPair(AType const& v1):						first(v1)												{}
+	/// @brief Constructs both first and second values.
+	/// @param v1 First value.
+	/// @param v2 Second value.
+	constexpr FirstSecondPair(AType const& v1, BType const& v2):	first(v1), second(v2)									{}
+	/// @brief Copy constructor (Pair-like).
+	/// @param other Other pair-like object.
+	constexpr explicit FirstSecondPair(PairType const& other):		FirstSecondPair(other.a, other.b)						{}
+	/// @brief Copy constructor (`FirstSecondPair`).
+	/// @param other Other `FirstSecondPair`.
+	constexpr FirstSecondPair(SelfType const& other):				FirstSecondPair(other.first, other.second)				{}
+
+	/// @brief Constructs only the first value.
+	/// @param v1 First value.
+	constexpr FirstSecondPair(AType&& v1):							first(move(v1))											{}
+	/// @brief Constructs both first and second values.
+	/// @param v1 First value.
+	/// @param v2 Second value.
+	constexpr FirstSecondPair(AType&& v1, BType&& v2):				first(move(v1)), second(move(v2))						{}
+	/// @brief Move constructor (Pair-like).
+	/// @param other Other pair-like object.
+	constexpr explicit FirstSecondPair(PairType&& other):			FirstSecondPair(move(other.a), move(other.b))			{}
+	/// @brief Move constructor (`FirstSecondPair`).
+	/// @param other Other `FirstSecondPair`.
+	constexpr FirstSecondPair(SelfType&& other):					FirstSecondPair(move(other.first), move(other.second))	{}
+
+	/// @brief Copy assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to copy from.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @tparam T Pair-like type.
+	/// @param other Pair-like object to move.
+	/// @return Reference to self.
+	template<Type::Container::PairLike T>
+	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
+	/// @brief Copy assignment operator.
+	/// @param other Pair to copy from.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
+	/// @brief Move assignment operator.
+	/// @param other Pair to move.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
+
 	/// @brief Threeway comparison operator.
 	/// @param other Other `FirstSecondPair` to compare with.
 	/// @return Order between objects.
@@ -359,36 +530,6 @@ struct FirstSecondPair:
 	requires (PairComparator<SelfType>::IS_COMPARABLE) {
 		return PairComparator<SelfType>::compare(*this, other);
 	}
-
-	/// @brief Returns `first`.
-	/// @return Reference to `first`.
-	constexpr AType& front()				{return first;	}
-	/// @brief Returns `second`.
-	/// @return Reference to `second`.
-	constexpr BType& back()				{return second;	}
-	/// @brief Returns `first`.
-	/// @return Const reference to `first`.
-	constexpr AType const& front() const	{return first;	}
-	/// @brief Returns `second`.
-	/// @return Const reference to `second`.
-	constexpr BType const& back() const	{return second;	}
-
-	/// @brief Default constructor.
-	constexpr FirstSecondPair() = default;
-
-	/// @brief Constructs only the first value.
-	/// @param v1 First value.
-	constexpr FirstSecondPair(AType const& v1):						first(v1)									{}
-	/// @brief Constructs both first and second values.
-	/// @param v1 First value.
-	/// @param v2 Second value.
-	constexpr FirstSecondPair(AType const& v1, BType const& v2):	first(v1), second(v2)						{}
-	/// @brief Copy constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit FirstSecondPair(PairType const& other):		FirstSecondPair(other.a, other.b)			{}
-	/// @brief Copy constructor (`FirstSecondPair`).
-	/// @param other Other `FirstSecondPair`.
-	constexpr FirstSecondPair(SelfType const& other):				FirstSecondPair(other.first, other.second)	{}
 
 	/// @brief Converts the object to a `Pair`.
 	/// @return Object as `Pair`.
