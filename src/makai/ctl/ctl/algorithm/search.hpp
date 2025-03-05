@@ -43,6 +43,7 @@ template<
 	Type::Algorithm::Search::EqualityComparator<TData> TCompare = SimpleComparator<TData>
 >
 constexpr TIndex fsearch(T begin, T const& end, TData const& value) {
+	if (end <= begin) return -1;
 	while (begin < end) {
 		if (TCompare::equals(*begin, value))
 			return end-begin;
@@ -67,6 +68,7 @@ template<
 	Type::Algorithm::Search::EqualityComparator<TData> TCompare = SimpleComparator<TData>
 >
 constexpr TIndex rsearch(T const& begin, T end, TData const& value) {
+	if (end <= begin) return -1;
 	while (--end >= begin)
 		if (TCompare::equals(*end, value))
 			return end-begin;
@@ -109,6 +111,83 @@ constexpr TIndex bsearch(T const& begin, T const& end, TData const& value) {
 
 /// @brief Nearest match search algorithms.
 namespace Nearest {
+	/// @brief Performs a forward search through a range of elements, and returns the closest to the value.
+	/// @tparam T Iterator type.
+	/// @tparam TIndex Index type.
+	/// @tparam TData Element type.
+	/// @tparam TCompare Comparator type.
+	/// @param begin Iterator to beginning of range.
+	/// @param end Iterator to end of range.
+	/// @param value Value to search for.
+	/// @param low Whether to return the "nearest lowest value" or the "nearest highest value".
+	/// @return Index of value that matches, or the nearest. Returns `-1` if range is empty or invalid.
+	template<
+		Type::Container::Iterator T,
+		Type::Signed TIndex = ssize,
+		class TData = typename T::DataType,
+		Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>
+	>
+	constexpr TIndex fsearch(T begin, T const& end, TData const& value, bool const low = true) {
+		if (end <= begin) return -1;
+		auto const size = (end - begin);
+		TIndex lowest	= 0;
+		TIndex highest	= 0;
+		for (decltype(size) i = 0; i < size; ++i) {
+			auto const current	= (begin + i);
+			auto const lo		= (begin + lowest);
+			auto const hi		= (begin + highest);
+			if (
+				TCompare::compare(*current, *lo)	== StandardOrder::GREATER
+			&&	TCompare::compare(*current, value)	!= StandardOrder::GREATER
+			) lowest = i;
+			if (
+				TCompare::compare(*current, *hi)	== StandardOrder::LESSER
+			&&	TCompare::compare(*current, value)	!= StandardOrder::LESSER
+			) highest = i;
+			++begin;
+		}
+		return low ? lowest : highest;
+	}
+
+	/// @brief Performs a reverse search through a range of elements, and returns the closest to the value.
+	/// @tparam T Iterator type.
+	/// @tparam TIndex Index type.
+	/// @tparam TData Element type.
+	/// @tparam TCompare Comparator type.
+	/// @param begin Iterator to beginning of range.
+	/// @param end Iterator to end of range.
+	/// @param value Value to search for.
+	/// @param low Whether to return the "nearest lowest value" or the "nearest highest value".
+	/// @return Index of value that matches, or the nearest. Returns `-1` if range is empty or invalid.
+	template<
+		Type::Container::Iterator T,
+		Type::Signed TIndex = ssize,
+		class TData = typename T::DataType,
+		Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>
+	>
+	constexpr TIndex rsearch(T begin, T const& end, TData const& value, bool const low = true) {
+		if (end <= begin) return -1;
+		auto const size = (end - begin);
+		TIndex lowest	= 0;
+		TIndex highest	= 0;
+		for (decltype(size) i = size-1; i >= 0; --i) {
+			auto const current	= (begin + i);
+			auto const lo		= (begin + lowest);
+			auto const hi		= (begin + highest);
+			if (
+				TCompare::compare(*current, *lo)	== StandardOrder::GREATER
+			&&	TCompare::compare(*current, value)	!= StandardOrder::GREATER
+			) lowest = i;
+			if (
+				TCompare::compare(*current, *hi)	== StandardOrder::LESSER
+			&&	TCompare::compare(*current, value)	!= StandardOrder::LESSER
+			) highest = i;
+			++begin;
+		}
+		return low ? lowest : highest;
+	}
+
+
 	/// @brief Performs a binary search through a range of elements, and returns the closest to the value.
 	/// @tparam T Iterator type.
 	/// @tparam TIndex Index type.
@@ -117,6 +196,7 @@ namespace Nearest {
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
 	/// @param value Value to search for.
+	/// @param low Whether to return the "nearest lowest value" or the "nearest highest value".
 	/// @return Index of value that matches, or the nearest. Returns `-1` if range is empty or invalid.
 	template<
 		Type::Container::Iterator T,
@@ -124,7 +204,7 @@ namespace Nearest {
 		class TData = typename T::DataType,
 		Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>
 	>
-	constexpr TIndex bsearch(T const& begin, T const& end, TData const& value) {
+	constexpr TIndex bsearch(T const& begin, T const& end, TData const& value, bool const low = true) {
 		if (end <= begin) return -1;
 		auto const size = (end - begin);
 		if (TCompare::equals(*begin, value)) return 0;
@@ -140,7 +220,7 @@ namespace Nearest {
 				case StandardOrder::UNORDERED:	return -1;
 			}
 		}
-		return lo;
+		return low ? lo : hi;
 	}
 }
 
