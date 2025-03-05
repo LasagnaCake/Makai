@@ -354,8 +354,12 @@ public:
 	/// @param pair Key-value pair to insert.
 	/// @return Reference to self.
 	constexpr SelfType& insert(PairType const& pair) requires (SORTED) {
-		if (!contains(pair.key))
-			BaseType::insert(pair, Nearest::bsearch(begin(), end(), pair).lowest);
+		if (!contains(pair.key)) {
+			auto const pos = Nearest::bsearch(begin(), end(), pair).lowest;
+			if (static_cast<SizeType>(pos) < size())
+				BaseType::insert(pair, Nearest::bsearch(begin(), end(), pair).lowest);
+			else BaseType::pushBack(pair);
+		}
 		return *this;
 	}
 
