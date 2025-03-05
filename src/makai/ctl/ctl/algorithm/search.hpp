@@ -111,6 +111,16 @@ constexpr TIndex bsearch(T const& begin, T const& end, TData const& value) {
 
 /// @brief Nearest match search algorithms.
 namespace Nearest {
+	/// @brief Search result.
+	/// @tparam T Index type.
+	template <Type::Signed T>
+	struct Match {
+		/// @brief Nearest lowest match.
+		T lowest;
+		/// @brief Nearest highest match.
+		T highest;
+	};
+
 	/// @brief Performs a forward search through a range of elements, and returns the closest to the value.
 	/// @tparam T Iterator type.
 	/// @tparam TIndex Index type.
@@ -119,34 +129,32 @@ namespace Nearest {
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
 	/// @param value Value to search for.
-	/// @param low Whether to return the "nearest lowest value" or the "nearest highest value".
-	/// @return Index of value that matches, or the nearest. Returns `-1` if range is empty or invalid.
+	/// @return Index of matches, or the nearest. Returns `-1` for both if range is empty or invalid.
 	template<
 		Type::Container::Iterator T,
 		Type::Signed TIndex = ssize,
 		class TData = typename T::DataType,
-		Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>
+		Type::Algorithm::Search::ThreewayComparator<TData> TCompare = SimpleComparator<TData>
 	>
-	constexpr TIndex fsearch(T begin, T const& end, TData const& value, bool const low = true) {
-		if (end <= begin) return -1;
+	constexpr Match<TIndex> fsearch(T begin, T const& end, TData const& value) {
+		if (end <= begin) return {-1, -1};
 		auto const size = (end - begin);
-		TIndex lowest	= 0;
-		TIndex highest	= 0;
+		Match<TIndex> match = {0, 0};
 		for (decltype(size) i = 0; i < size; ++i) {
 			auto const current	= (begin + i);
-			auto const lo		= (begin + lowest);
-			auto const hi		= (begin + highest);
+			auto const lo		= (begin + match.lowest);
+			auto const hi		= (begin + match.highest);
 			if (
 				TCompare::compare(*current, *lo)	== StandardOrder::GREATER
 			&&	TCompare::compare(*current, value)	!= StandardOrder::GREATER
-			) lowest = i;
+			) match.lowest = i;
 			if (
-				TCompare::compare(*current, *hi)	== StandardOrder::LESSER
-			&&	TCompare::compare(*current, value)	!= StandardOrder::LESSER
-			) highest = i;
+				TCompare::compare(*current, *hi)	== StandardOrder::LESS
+			&&	TCompare::compare(*current, value)	!= StandardOrder::LESS
+			) match.highest = i;
 			++begin;
 		}
-		return low ? lowest : highest;
+		return match;
 	}
 
 	/// @brief Performs a reverse search through a range of elements, and returns the closest to the value.
@@ -157,34 +165,32 @@ namespace Nearest {
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
 	/// @param value Value to search for.
-	/// @param low Whether to return the "nearest lowest value" or the "nearest highest value".
-	/// @return Index of value that matches, or the nearest. Returns `-1` if range is empty or invalid.
+	/// @return Index of matches, or the nearest. Returns `-1` for both if range is empty or invalid.
 	template<
 		Type::Container::Iterator T,
 		Type::Signed TIndex = ssize,
 		class TData = typename T::DataType,
-		Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>
+		Type::Algorithm::Search::ThreewayComparator<TData> TCompare = SimpleComparator<TData>
 	>
-	constexpr TIndex rsearch(T begin, T const& end, TData const& value, bool const low = true) {
-		if (end <= begin) return -1;
+	constexpr Match<TIndex> rsearch(T begin, T const& end, TData const& value) {
+		if (end <= begin) return {-1, -1};
 		auto const size = (end - begin);
-		TIndex lowest	= 0;
-		TIndex highest	= 0;
+		Match<TIndex> match = {0, 0};
 		for (decltype(size) i = size-1; i >= 0; --i) {
 			auto const current	= (begin + i);
-			auto const lo		= (begin + lowest);
-			auto const hi		= (begin + highest);
+			auto const lo		= (begin + match.lowest);
+			auto const hi		= (begin + match.highest);
 			if (
 				TCompare::compare(*current, *lo)	== StandardOrder::GREATER
 			&&	TCompare::compare(*current, value)	!= StandardOrder::GREATER
-			) lowest = i;
+			) match.lowest = i;
 			if (
-				TCompare::compare(*current, *hi)	== StandardOrder::LESSER
-			&&	TCompare::compare(*current, value)	!= StandardOrder::LESSER
-			) highest = i;
+				TCompare::compare(*current, *hi)	== StandardOrder::LESS
+			&&	TCompare::compare(*current, value)	!= StandardOrder::LESS
+			) match.highest = i;
 			++begin;
 		}
-		return low ? lowest : highest;
+		return match;
 	}
 
 
@@ -196,31 +202,33 @@ namespace Nearest {
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
 	/// @param value Value to search for.
-	/// @param low Whether to return the "nearest lowest value" or the "nearest highest value".
-	/// @return Index of value that matches, or the nearest. Returns `-1` if range is empty or invalid.
+	/// @return
+	///		Index of matches, or the nearest. Returns `-1` for both if
+	///		range is empty or invalid, or an invalid comparison happened.
 	template<
 		Type::Container::Iterator T,
 		Type::Signed TIndex = ssize,
 		class TData = typename T::DataType,
 		Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>
 	>
-	constexpr TIndex bsearch(T const& begin, T const& end, TData const& value, bool const low = true) {
-		if (end <= begin) return -1;
+	constexpr Match<TIndex> bsearch(T const& begin, T const& end, TData const& value) {
+		if (end <= begin) return {-1, -1};
 		auto const size = (end - begin);
-		if (TCompare::equals(*begin, value)) return 0;
-		if (TCompare::equals(*(end-1), value)) return size - 1;
+		if (TCompare::equals(*begin, value)) return {0, 0};
+		if (TCompare::equals(*(end-1), value)) return {size - 1, size - 1};
 		TIndex lo = 0, hi = size - 1, i = -1;
 		while (hi >= lo) {
 			i = lo + (hi - lo) / 2;
 			switch(TCompare::compare(value, *(begin + i))) {
 				case StandardOrder::LESS:		hi = i-1; break;
-				case StandardOrder::EQUAL:		return i;
+				case StandardOrder::EQUAL:		return {i, i};
 				case StandardOrder::GREATER:	lo = i+1; break;
-				default:
-				case StandardOrder::UNORDERED:	return -1;
+				default:						[[unlikely]]
+				case StandardOrder::UNORDERED:	[[unlikely]]
+												return {-1, -1};
 			}
 		}
-		return low ? lo : hi;
+		return {lo, hi};
 	}
 }
 

@@ -360,7 +360,7 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& insert(PairType const& pair) requires (SORTED) {
 		if (!contains(pair.key))
-			BaseType::insert(pair, Nearest::bsearch(begin(), end(), pair));
+			BaseType::insert(pair, Nearest::bsearch(begin(), end(), pair).lowest);
 		return *this;
 	}
 
