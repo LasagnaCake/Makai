@@ -250,10 +250,9 @@ public:
 	constexpr ValueType& operator[](KeyType const& key) {
 		if (empty()) return BaseType::pushBack(PairType(key)).back().back();
 		IndexType i = search(key);
-		if (i == -1) {
-			insert(PairType(key));
-			return BaseType::at(search(key)).back();
-		} else return BaseType::at(i).back();
+		while ((i = search(key)) == -1)
+			insert(PairType(key, ValueType()));
+		return BaseType::at(i).back();
 	}
 
 	/// @brief Searches for the index of a given key. If key doesn't exist, returns -1.
@@ -261,9 +260,7 @@ public:
 	/// @return Index of key, or -1 if not found.
 	constexpr IndexType search(KeyType const& key) const
 	requires (SORTED) {
-		PairType target;
-		target.front() = key;
-		return bsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), target);
+		return bsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), PairType(key));
 	}
 
 	/// @brief Searches for the index of a given key. If key doesn't exist, returns -1.
@@ -271,9 +268,7 @@ public:
 	/// @return Index of key, or -1 if not found.
 	constexpr IndexType search(KeyType const& key) const
 	requires (!SORTED) {
-		PairType target;
-		target.front() = key;
-		return fsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), target);
+		return fsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), PairType(key));
 	}
 
 	/// @brief Returns all keys in the container.
