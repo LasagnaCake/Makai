@@ -262,7 +262,7 @@ namespace Sorting {
 /// @param end Iterator to end of range.
 template <Type::Algorithm::SortableIterator T>
 constexpr void sort(T const& begin, T const& end) {
-	Sorting::shellSort(begin.raw(), end - begin + 1);
+	Sorting::shellSort(begin.raw(), end - begin);
 }
 
 /// @brief Sorts a given range of elements.
@@ -271,7 +271,7 @@ constexpr void sort(T const& begin, T const& end) {
 /// @param end Pointer to end of range.
 template <Type::Algorithm::Sortable T>
 constexpr void sort(ref<T> const begin, ref<T> const end) {
-	Sorting::shellSort(begin, end - begin + 1);
+	Sorting::shellSort(begin, end - begin);
 }
 
 namespace {
