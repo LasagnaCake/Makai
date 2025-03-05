@@ -11,6 +11,7 @@
 #include "span.hpp"
 #include "../algorithm/sort.hpp"
 #include "../algorithm/reverse.hpp"
+#include "../algorithm/search.hpp"
 #include "../adapter/comparator.hpp"
 #include "../memory/memory.hpp"
 
@@ -482,12 +483,7 @@ public:
 	/// @return The index of the value, or -1 if not found.
 	constexpr IndexType find(DataType const& value) const
 	requires Type::Comparator::Equals<DataType, DataType> {
-		if (empty()) return -1;
-		auto const start = begin(), stop = end();
-		for (auto i = start; i != stop; ++i)
-			if (ComparatorType::equals(*i, value))
-				return i-start;
-		return -1;
+		return fsearch(begin(), end(), value);
 	}
 
 	/// @brief Finds the the position of the last element that matches a value.
@@ -495,12 +491,7 @@ public:
 	/// @return The index of the value, or -1 if not found.
 	constexpr IndexType rfind(DataType const& value) const
 	requires Type::Comparator::Equals<DataType, DataType> {
-		if (empty()) return -1;
-		auto const start = rbegin(), stop = rend();
-		for (auto i = start; i != stop; ++i)
-			if (ComparatorType::equals(*i, value))
-				return count-(i-start)-1;
-		return -1;
+		return rsearch(begin(), end(), value);
 	}
 
 	// TODO: Move this to separate function
@@ -510,22 +501,7 @@ public:
 	/// @note Requires the array to be sorted.
 	constexpr IndexType bsearch(DataType const& value) const
 	requires (Type::Comparator::Threeway<DataType, DataType>) {
-		if (empty()) return -1;
-		if (ComparatorType::equals(front(), value)) return 0;
-		if (ComparatorType::equals(back(), value)) return size() - 1;
-		IndexType lo = 0, hi = size() - 1, i = -1;
-		SizeType loop = 0;
-		while (hi >= lo && loop < size()) {
-			i = lo + (hi - lo) / 2;
-			switch(ComparatorType::compare(value, *(cbegin() + i))) {
-				case Order::LESS:		hi = i-1; break;
-				case Order::EQUAL:		return i;
-				case Order::GREATER:	lo = i+1; break;
-				default:
-				case Order::UNORDERED:	return -1;
-			}
-		}
-		return -1;
+		return bsearch(begin(), end(), value);
 	}
 
 	/// @brief Removes an element at a given index.

@@ -17,7 +17,12 @@ CTL_NAMESPACE_BEGIN
 /// @tparam TKey Key type.
 /// @tparam TValue Value type.
 /// @tparam TPair<class, class> Pair type.
-template<class TKey, class TValue, template <class TPairKey, class TPairValue> class TPair = Pair>
+template<
+	class TKey,
+	class TValue,
+	template <class TPairKey, class TPairValue> class TPair = Pair,
+	template <class TListElement, class TListIndex> class TList = List
+>
 struct Collected {
 	static_assert(Type::Container::PairLike<TPair<TKey, TValue>>, "Type is not a valid pair type!");
 
@@ -40,18 +45,18 @@ template<
 	class TValue,
 	Type::Integer TIndex = usize,
 	bool SORT = true,
-	template <class> class TAlloc = HeapAllocator
+	template <class TListElement, class TListIndex> class TList = List
 >
 struct BaseSimpleMap:
 	Collected<TKey, TValue, KeyValuePair>,
-	Derived<List<KeyValuePair<TKey, TValue>, TIndex>>,
+	Derived<TList<KeyValuePair<TKey, TValue>, TIndex>>,
 	SelfIdentified<BaseSimpleMap<TKey, TValue, TIndex, SORT>>,
-	private List<KeyValuePair<TKey, TValue>, TIndex, TAlloc> {
+	private TList<KeyValuePair<TKey, TValue>, TIndex> {
 public:
 	/// @brief Whether the container is sorted by default.
 	constexpr static bool SORTED = SORT;
 
-	using Derived			= ::CTL::Derived<List<KeyValuePair<TKey, TValue>, TIndex>>;
+	using Derived			= ::CTL::Derived<TList<KeyValuePair<TKey, TValue>, TIndex>>;
 	using Collected			= ::CTL::Collected<TKey, TValue, KeyValuePair>;
 	using SelfIdentified	= ::CTL::SelfIdentified<BaseSimpleMap<TKey, TValue, TIndex, SORTED>>;
 
@@ -121,6 +126,27 @@ public:
 		BaseType::empty
 	;
 
+	/// @brief Pair key comparator.
+	struct KeyCompare {
+		/// @brief Returns whether a pair's key is equal to another.
+		/// @param a Pair to compare.
+		/// @param b Pair to compare to.
+		/// @return Whether they're equal.
+		constexpr static bool equals(PairType const& a, PairType const& b)
+		requires Type::Comparator::Equals<KeyType, KeyType> {
+			return SimpleComparator<KeyType>::equals(a.front(), b.front());
+		}
+
+		/// @brief Returns the order between two pairs' keys.
+		/// @param a Pair to compare.
+		/// @param b Pair to compare to.
+		/// @return Order between keys.
+		constexpr static auto compare(PairType const& a, PairType const& b)
+		requires Type::Comparator::Threeway<KeyType, KeyType> {
+			return SimpleComparator<KeyType>::compare(a.front(), b.front());
+		}
+	};
+
 	/// @brief Default constructor.
 	constexpr BaseSimpleMap(): BaseType() {}
 
@@ -163,8 +189,8 @@ public:
 		update();
 	}
 
-	/// @brief Constructs the container form a `List` of key-value pairs.
-	/// @param other `List` of key-value pairs to copy from.
+	/// @brief Constructs the container form a list-like container of key-value pairs.
+	/// @param other List-like of key-value pairs to copy from.
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
@@ -173,8 +199,8 @@ public:
 		update();
 	}
 
-	/// @brief Constructs the container form a `List` of key-value pairs.
-	/// @param other `List` of key-value pairs to construct from.
+	/// @brief Constructs the container form a list-like of key-value pairs.
+	/// @param other List-like of key-value pairs to construct from.
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
@@ -222,12 +248,12 @@ public:
 	/// @param key Key to look for.
 	/// @return Reference to element's value.
 	constexpr ValueType& operator[](KeyType const& key) {
-		if (empty()) return BaseType::pushBack(PairType(key)).back().value;
+		if (empty()) return BaseType::pushBack(PairType(key)).back().back();
 		IndexType i = search(key);
 		if (i == -1) {
-			BaseType::pushBack(PairType(key)).sort();
-			return (data() + search(key))->value;
-		} else return (data() + i)->value;
+			insert(PairType(key));
+			return BaseType::at(search(key)).back();
+		} else return BaseType::at(i).back();
 	}
 
 	/// @brief Searches for the index of a given key. If key doesn't exist, returns -1.
@@ -235,22 +261,9 @@ public:
 	/// @return Index of key, or -1 if not found.
 	constexpr IndexType search(KeyType const& key) const
 	requires (SORTED) {
-		if (empty()) return -1;
-		if (OrderType(front().key <=> key) == Order::EQUAL) return 0;
-		if (OrderType(back().key <=> key) == Order::EQUAL) return size() - 1;
-		IndexType lo = 0, hi = size() - 1, i = -1;
-		SizeType loop = 0;
-		while (hi >= lo && loop < size()) {
-			i = lo + (hi - lo) / 2;
-			switch(OrderType(key <=> (cbegin() + i)->key)) {
-				case Order::LESS:		hi = i-1; break;
-				case Order::EQUAL:		return i;
-				case Order::GREATER:	lo = i+1; break;
-				default:
-				case Order::UNORDERED:	return -1;
-			}
-		}
-		return -1;
+		PairType target;
+		target.front() = key;
+		return bsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), target);
 	}
 
 	/// @brief Searches for the index of a given key. If key doesn't exist, returns -1.
@@ -258,21 +271,18 @@ public:
 	/// @return Index of key, or -1 if not found.
 	constexpr IndexType search(KeyType const& key) const
 	requires (!SORTED) {
-		usize i = 0;
-		for (auto& e: *this) {
-			if (e.key == key)
-				return i;
-			++i;
-		}
-		return -1;
+		PairType target;
+		target.front() = key;
+		return fsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), target);
 	}
 
 	/// @brief Returns all keys in the container.
 	/// @return `List` of keys.
 	constexpr List<KeyType, SizeType> keys() const {
 		List<KeyType, SizeType> result;
+		result.reserve(size());
 		for (auto& i: *this)
-			result.pushBack(i.key);
+			result.pushBack(i.front());
 		return result;
 	}
 
@@ -280,8 +290,9 @@ public:
 	/// @return `List` of values.
 	constexpr List<ValueType, SizeType> values() const {
 		List<ValueType, SizeType> result;
+		result.reserve(size());
 		for (auto& i: *this)
-			result.pushBack(i.value);
+			result.pushBack(i.back());
 		return result;
 	}
 
@@ -289,6 +300,7 @@ public:
 	/// @return `List` of key-value pairs.
 	constexpr List<PairType, SizeType> items() const {
 		List<PairType, SizeType> result;
+		result.reserve(size());
 		for (auto& i: *this)
 			result.pushBack(i);
 		return result;
@@ -346,9 +358,18 @@ public:
 	/// @brief Inserts a key-value pair into the container, if key does not exist.
 	/// @param pair Key-value pair to insert.
 	/// @return Reference to self.
-	constexpr SelfType& insert(PairType const& pair) {
+	constexpr SelfType& insert(PairType const& pair) requires (SORTED) {
 		if (!contains(pair.key))
-			BaseType::pushBack(pair).sort();
+			BaseType::insert(pair, Nearest::bsearch(begin(), end(), pair));
+		return *this;
+	}
+
+	/// @brief Inserts a key-value pair into the container, if key does not exist.
+	/// @param pair Key-value pair to insert.
+	/// @return Reference to self.
+	constexpr SelfType& insert(PairType const& pair) requires (!SORTED) {
+		if (!contains(pair.key))
+			BaseType::pushBack(pair);
 		return *this;
 	}
 
@@ -412,10 +433,10 @@ private:
 	//*/
 
 	//*
-	constexpr static auto const	UNIQUE_VALUES	= [](PairType const& a, PairType const& b){return a.key != b.key;};
+	constexpr static auto const	UNIQUE_VALUES	= [](PairType const& a, PairType const& b){return a.front() != b.front();};
 	
 	constexpr bool notInMap(PairType const& pair) const {
-		return !contains(pair.key);
+		return !contains(pair.front());
 	}
 	//*/
 
@@ -435,12 +456,12 @@ namespace Type::Container {
 		struct IsSimpleMap;
 
 		template<
-			template <class, class, class, bool, template <class> class> class T0,
+			template <class, class, class, bool, template <class, class> class> class T0,
 			class T1,
 			class T2,
 			class T3,
 			bool B4,
-			template <class> class T5
+			template <class, class> class T5
 		>
 		struct IsSimpleMap<T0<T1, T2, T3, B4, T5>>:
 			BooleanConstant<
