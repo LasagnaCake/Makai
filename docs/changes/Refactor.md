@@ -1,4 +1,4 @@
-# Great Refactor
+# Refactor
 
 ## Simple
 
