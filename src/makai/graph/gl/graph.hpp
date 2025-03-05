@@ -5,7 +5,6 @@
 #include "global.hpp"
 #include "camera.hpp"
 #include "color.hpp"
-#include "uniform.hpp"
 #include "image.hpp"
 #include "texture.hpp"
 #include "vertex.hpp"
