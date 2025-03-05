@@ -112,6 +112,7 @@ void testStringMap() {
 	printMap(mp, "Papaya");
 	printMap(mp, "Grape");
 	printMap(mp, "Pineapple");
+	// ERROR: `OrderedMap` causes `AllocationFailure` here
 	printMap(mp, "Avocado");
 	mp.insert({
 		{"Kiwi", "Kiwi"},
