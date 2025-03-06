@@ -174,32 +174,15 @@ namespace Sorting {
 					swap(arr[0], arr[1]);
 				return;
 			}
-			usize
-				szRight	= sz/2,
-				szLeft	= szRight + (sz%2==0 ? 0 : 1)
+			auto const buf = new T[sz];
+			auto const
+				mid		= sz / 2,
+				left	= mid / 2,
+				right	= mid + left
 			;
-			ref<T>
-				left	= new T[szLeft],
-				right	= new T[szRight]
-			;
-			MX::objcopy(left, arr, szLeft);
-			MX::objcopy(right, arr+szLeft, szRight);
-			usize
-				i = 0,
-				j = 0,
-				k = szLeft
-			;
-			while (i < szLeft && j < szRight) {
-				if (SimpleComparator<T>::lesserEquals(left[i], right[j]))
-					arr[k] = left[i++];
-				else
-					arr[k] = right[j++];
-				k++;
-			}
-			while (i < szLeft) arr[k++] = left[i++];
-			while (j < szRight) arr[k++] = right[j++];
-			delete[] left;
-			delete[] right;
+			MergeSort::merge(arr, 0, left, mid, buf);
+			MergeSort::merge(arr, mid, right, sz, buf);
+			delete[] buf;
 		}
 	}
 
@@ -233,7 +216,7 @@ namespace Sorting {
 				if (currentOrder != prevOrder && currentOrder != Ordered::Order::EQUAL) {
 					if (j < run) {
 						j = (offset+j > sz) ? (sz-offset) : j;
-						mergeSort(arr+offset, j);
+						Partial::mergeSort(arr+offset, j);
 					} else if (SimpleComparator<T>::lesser(arr[offset], arr[offset+j]))
 						reverse(arr+offset, j);
 					offset += j;
