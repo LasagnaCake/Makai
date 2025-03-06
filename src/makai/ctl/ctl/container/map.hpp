@@ -260,7 +260,7 @@ public:
 	/// @return Index of key, or -1 if not found.
 	constexpr IndexType search(KeyType const& key) const
 	requires (SORTED) {
-		return bsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), PairType(key));
+		return ::CTL::bsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), PairType(key));
 	}
 
 	/// @brief Searches for the index of a given key. If key doesn't exist, returns -1.
@@ -268,7 +268,7 @@ public:
 	/// @return Index of key, or -1 if not found.
 	constexpr IndexType search(KeyType const& key) const
 	requires (!SORTED) {
-		return fsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), PairType(key));
+		return ::CTL::fsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), PairType(key));
 	}
 
 	/// @brief Returns all keys in the container.
