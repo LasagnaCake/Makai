@@ -137,7 +137,7 @@ namespace Sorting {
 	
 		template <Type::Algorithm::Sortable T>
 		constexpr void sort(ref<T> const arr, usize const start, usize const stop, ref<T> const aux) {
-			if ((start - stop) < 2)
+			if ((stop - start) < 2)
 				return;
 			usize const mid = (start + stop) / 2;
 			sort(arr, start, mid, aux);
