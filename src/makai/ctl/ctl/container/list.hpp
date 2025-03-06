@@ -483,7 +483,7 @@ public:
 	/// @return The index of the value, or -1 if not found.
 	constexpr IndexType find(DataType const& value) const
 	requires Type::Comparator::Equals<DataType, DataType> {
-		return fsearch(begin(), end(), value);
+		return ::CTL::fsearch(begin(), end(), value);
 	}
 
 	/// @brief Finds the the position of the last element that matches a value.
@@ -491,7 +491,7 @@ public:
 	/// @return The index of the value, or -1 if not found.
 	constexpr IndexType rfind(DataType const& value) const
 	requires Type::Comparator::Equals<DataType, DataType> {
-		return rsearch(begin(), end(), value);
+		return ::CTL::rsearch(begin(), end(), value);
 	}
 
 	// TODO: Move this to separate function
@@ -501,7 +501,7 @@ public:
 	/// @note Requires the array to be sorted.
 	constexpr IndexType bsearch(DataType const& value) const
 	requires (Type::Comparator::Threeway<DataType, DataType>) {
-		return bsearch(begin(), end(), value);
+		return ::CTL::bsearch(begin(), end(), value);
 	}
 
 	/// @brief Removes an element at a given index.
