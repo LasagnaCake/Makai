@@ -23,8 +23,6 @@ namespace Makai::Ex::Game::Danmaku {
 			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
-		bool fakeOut = false;
-
 		virtual ~Laser() {}
 
 		Laser& clear() override {
@@ -142,6 +140,8 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			return *this;
 		}
+
+		bool fakeOut = false;
 
 		LaserConfig::Collision const mask;
 
