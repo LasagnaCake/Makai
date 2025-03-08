@@ -67,12 +67,7 @@ void Scene::draw() {
 void Scene::extend(Scene const& other) {
 	for(auto& [name, obj]: other.objects) {
 		auto [_, nobj] = createObject(name);
-		bool wasBaked = obj->baked;
-		if(!wasBaked)
-			obj->bake();
-		nobj->extend(obj->vertices, obj->vertexCount);
-		if(!wasBaked)
-			obj->unbake();
+		nobj->triangles = obj->triangles;
 		nobj->trans = obj->trans;
 		nobj->material = obj->material;
 		nobj->material.texture.image.makeUnique();
@@ -125,7 +120,7 @@ void Scene::saveToSceneFile(
 				bool wasBaked = obj->baked;
 				if (!wasBaked)
 					obj->bake();
-				File::saveBinary(OS::FS::concatenate(folderpath, objname + ".mesh"), obj->vertices, obj->vertexCount);
+				File::saveBinary(OS::FS::concatenate(folderpath, objname + ".mesh"), obj->triangles.data(), obj->triangles.size());
 				file["mesh"]["data"] = {{"path", objname.std() + ".mesh"}};
 				if (!wasBaked)
 					obj->unbake();

@@ -225,7 +225,7 @@ AGraphic(layer, manual), ReferenceHolder(triangles, locked) {
 }
 
 Renderable::Renderable(
-	List<Triangle*>&& triangles,
+	List<Triangle>&& triangles,
 	usize const layer,
 	bool const manual
 ): AGraphic(layer, manual), ReferenceHolder(triangles, locked) {
@@ -262,25 +262,12 @@ void Renderable::extend(Vertex* const vertices, usize const size) {
 		throw Error::InvalidValue("No vertices were provided!", CTL_CPP_PRETTY_SOURCE);
 	if (size % 3 != 0)
 		throw Error::InvalidValue("Vertex amount is not a multiple of 3!", CTL_CPP_PRETTY_SOURCE);
-	const usize arrEnd = triangles.size();
-	triangles.resize(triangles.size() + (size / 3));
-	if (this->vertices)
-		delete[] this->vertices;
-	for (usize i = 0; i < size; i += 3) {
-		triangles[arrEnd + (i / 3)] = (
-			new Triangle{
-				vertices[i],
-				vertices[i+1],
-				vertices[i+2]
-			}
-		);
-	}
+	triangles.appendBack(List<Triangle>((Triangle*)vertices, (Triangle*)vertices + (size/3)));
 }
 
 void Renderable::extend(Renderable const& other) {
 	if (locked) return;
-	for (auto& t: other.triangles)
-		triangles.pushBack(new Triangle(*t));
+	triangles.appendBack(other.triangles);
 }
 
 void Renderable::extendFromBinaryFile(String const& path) {
@@ -301,31 +288,19 @@ void Renderable::extendFromDefinitionFile(String const& path) {
 void Renderable::bake() {
 	if (baked || locked) return;
 	baked = true;
-	//Bake vertices
-	copyVertices();
 }
 
 void Renderable::unbake() {
 	if (!baked || locked) return;
 	baked = false;
-	// Clear vertex buffer
-	delete[] vertices;
-	vertices = nullptr;
 }
 
 void Renderable::clearData() {
-	if (vertices && !locked)
-		delete [] vertices;
 	clearReferences();
-	if (!triangles.empty())
-		for (auto t: triangles)
-			delete t;
-	triangles.clear();
 }
 
 void Renderable::saveToBinaryFile(String const& path) {
-	bake();
-	File::saveBinary(path, vertices, vertexCount);
+	File::saveBinary(path, triangles.data(), triangles.size());
 }
 
 void Renderable::saveToDefinitionFile(
@@ -346,7 +321,7 @@ void Renderable::saveToDefinitionFile(
 	JSON::JSONData file = getObjectDefinition("base64", integratedBinary, integratedTextures);
 	// If binary is in a different location, save there
 	if (!integratedBinary) {
-		File::saveBinary(binpath, vertices, vertexCount);
+		File::saveBinary(binpath, triangles.data(), triangles.size());
 		file["mesh"]["data"] = JSON::JSONType{{"path", name + ".mesh"}};
 	}
 	// Get material data
@@ -357,53 +332,28 @@ void Renderable::saveToDefinitionFile(
 	File::saveText(folder + "/" + name + ".mrod", contents);
 }
 
-//#define POS(v) "[", (v).position.x, ", ", (v).position.y, ", ", (v).position.z, "]"
-
-void Renderable::copyVertices() {
-	// If no triangles exist, return
-	if (!triangles.size()) return;
-	// Transform references (if applicable)
-	transformReferences();
-	// Copy data to vertex buffer
-	// Get vertex count
-	vertexCount = triangles.size() * 3;
-	// Copy data to vertex buffer
-	if (vertices) delete[] vertices;
-	vertices = new Vertex[(vertexCount)];
-	// Copy data to IVB
-	usize i = 0;
-	for (auto& t: triangles) {
-		// Check if not null
-		if (!t) continue;
-		vertices[i]		= t->verts[0];
-		vertices[i+1]	= t->verts[1];
-		vertices[i+2]	= t->verts[2];
-		i += 3;
-	}
-	// De-transform references (if applicable)
-	resetReferenceTransforms();
-}
-
 void Renderable::draw() {
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("Renderable::draw");
 	#endif // MAKAILIB_DEBUG
-	// If object's vertices are not "baked" (i.e. finalized), copy them
-	if (!baked && !locked) copyVertices();
 	// If no vertices, return
-	if (!vertices) return;
+	if (triangles.empty()) return;
+	// If object's not finalized, transform references
+	if (!baked && !locked) transformReferences();
 	// Set shader data
 	prepare();
 	material.use(shader);
 	// Present to screen
 	display(
-		vertices,
-		vertexCount,
+		(Vertex*)triangles.data(),
+		triangles.size()*3,
 		material.culling,
 		material.fill,
 		DisplayMode::ODM_TRIS,
 		material.instances.size()
 	);
+	// If object's not finalized, reset references
+	if (!baked && !locked) resetReferenceTransforms();
 }
 
 void Renderable::extendFromDefinition(
@@ -594,7 +544,7 @@ JSON::JSONData Renderable::getObjectDefinition(
 	bool wasBaked = baked;
 	if (!wasBaked) bake();
 	// check if there is any data
-	if (vertices == nullptr || vertexCount == 0)
+	if (triangles.empty())
 		throw Error::InvalidValue("Renderable object is empty!", CTL_CPP_PRETTY_SOURCE);
 	// Create definition
 	JSON::JSONData def;
@@ -606,8 +556,8 @@ JSON::JSONData Renderable::getObjectDefinition(
 	// If data is to be integrated into the JSON object, do so
 	if (integratedBinary) {
 		// Allocate data buffer
-		ubyte* vertEnd = (ubyte*)(&vertices[vertexCount-1]);
-		BinaryData<> data((ubyte*)vertices, (ubyte*)(vertEnd + sizeof(Vertex)));
+		ubyte* vertEnd = (ubyte*)(&triangles[triangles.size()-1]);
+		BinaryData<> data((ubyte*)triangles.data(), (ubyte*)(vertEnd + sizeof(Triangle)));
 		// Save mesh data
 		def["mesh"]["data"]		= Data::encode(data, Data::fromString(encoding));
 		def["mesh"]["encoding"]	= encoding;

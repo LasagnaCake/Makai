@@ -607,6 +607,24 @@ public:
 		return removed;
 	}
 
+	/// @brief Removes elements from a specified range.
+	/// @param start Starting index to start removing from.
+	/// @param stop End index to stop removing from.
+	/// @return Count of elements removed.
+	/// @note
+	///		Does not resize `List`, merely moves it to the end, and destructs it.
+	///		If you need the `List` size to change, use `erase`. 
+	constexpr SizeType removeRange(IndexType start, IndexType stop = -1) {
+		if (empty()) return 0;
+		assertIsInBounds(start);
+		wrapBounds(start, count);
+		if (stop < 0) wrapBounds(stop, count);
+		if (stop < start) return 0;
+		if (SizeType(stop) > count) stop = count;
+		squashRange(start, stop - start);
+		return stop - start;
+	}
+
 	/// @brief Erases an element at a given index.
 	/// @param index Index of the element to erase.
 	/// @return Reference to self.
@@ -665,6 +683,27 @@ public:
 	constexpr SelfType& eraseIfNot(TPredicate const& predicate) {
 		count -= removeIfNot(predicate);
 		return *this;
+	}
+
+	/// @brief Erases elements between a given range.
+	/// @param start Starting index to start removing from.
+	/// @param stop End index to stop removing from.
+	/// @note
+	///		Resizes the `List`.
+	///		If you need the `List` size to remain the same, use `remove`.
+	constexpr SizeType eraseRange(IndexType const start, IndexType const stop) {
+		count -= removeRange(start, stop);
+		return *this;
+	}
+
+	/// @brief Returns a `List` containing all elements EXCLUDING the ones located between two indices.
+	/// @param start Starting index to start removing from.
+	/// @param stop End index to stop removing from.
+	/// @return `List` containing elements between `start` and `stop`.
+	/// @throw OutOfBoundsException when index is bigger than `List` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
+	constexpr SelfType withoutRange(IndexType const start, IndexType const stop) const {
+		return sliced(0, start).appendBack(sliced(stop));
 	}
 
 	/// @brief Returns a `List` containing all elements starting from a given index.
@@ -1151,6 +1190,14 @@ private:
 		if (count > 1 && i < count-1)
 			copy(contents + i + 1, contents + i, count-i-1);
 		MX::destruct(contents+count-1);
+		return *this;
+	}
+
+	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
+		if (!count) return *this;
+		if (count > 1 && start < count-1)
+			copy(contents + start + amount, contents + start, count-(start+amount));
+		MX::objclear(contents+start, amount);
 		return *this;
 	}
 
