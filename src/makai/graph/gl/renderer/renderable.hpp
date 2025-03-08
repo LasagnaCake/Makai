@@ -31,7 +31,7 @@ namespace Makai::Graph {
 		/// @param layer Layer to register the object to. By default, it is layer zero.
 		/// @param manual Whether the object is manually rendered. By default, it is `false`.
 		Renderable(
-			List<Triangle*>&& triangles,
+			List<Triangle>&& triangles,
 			usize const layer = 0,
 			bool const manual = false
 		);
@@ -117,26 +117,18 @@ namespace Makai::Graph {
 		);
 
 		/// @brief Triangles bound to this object.
-		List<Triangle*> triangles;
+		List<Triangle> triangles;
 
 	private:
 		friend class Scene;
 		friend class IReference;
-
-		/// @brief Vertices used in rendering.
-		Vertex* vertices = nullptr;
 
 		/// @brief Whether the object has been baked.	
 		bool baked	= false;
 		/// @brief Whether the object is locked.
 		bool locked	= false;
 
-		void copyVertices();
-
 		void draw() override;
-
-		/// @brief Vertex count.
-		usize vertexCount = 0;
 
 		void extendFromDefinition(
 			JSON::JSONData def,

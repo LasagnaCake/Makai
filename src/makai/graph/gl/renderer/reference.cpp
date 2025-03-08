@@ -19,16 +19,9 @@ inline void srpTransform(Vertex& vtx, Transform3D const& trans) {
 }
 
 PlaneRef::PlaneRef(
-	List<Triangle*> const& tris,
+	IReference::BoundRange const& tris,
 	ReferenceHolder& parent
 ): ShapeRef<2>(tris, parent) {
-	// Get vertices
-	this->tl	= &(tris[0]->verts[0]);
-	this->tr1	= &(tris[0]->verts[1]);
-	this->tr2	= &(tris[1]->verts[0]);
-	this->bl1	= &(tris[0]->verts[2]);
-	this->bl2	= &(tris[1]->verts[2]);
-	this->br	= &(tris[1]->verts[1]);
 	// Setup plane
 	this->setOrigin(
 		Vector3(-1.0, +1.0, 0.0),
@@ -125,15 +118,31 @@ Handle<PlaneRef> PlaneRef::setNormal(
 
 /// Sets the plane to its original state (last state set with setPosition).
 Handle<IReference> PlaneRef::reset() {
+	As<Vertex&>
+		tl	= (triangles[0].verts[0]),
+		tr1	= (triangles[0].verts[1]),
+		tr2	= (triangles[1].verts[0]),
+		bl1	= (triangles[0].verts[2]),
+		bl2	= (triangles[1].verts[2]),
+		br	= (triangles[1].verts[1])
+	;
 	// Set origin
-	*tl				= origin[0];
-	*tr1	= *tr2	= origin[1];
-	*bl1	= *bl2	= origin[2];
-	*br				= origin[3];
+	tl			= origin[0];
+	tr1	= tr2	= origin[1];
+	bl1	= bl2	= origin[2];
+	br			= origin[3];
 	return this;
 }
 
 Handle<IReference> PlaneRef::transform() {
+	As<Vertex&>
+		tl	= (triangles[0].verts[0]),
+		tr1	= (triangles[0].verts[1]),
+		tr2	= (triangles[1].verts[0]),
+		bl1	= (triangles[0].verts[2]),
+		bl2	= (triangles[1].verts[2]),
+		br	= (triangles[1].verts[1])
+	;
 	onTransform();
 	if (!fixed) return this;
 	// Calculate transformed vertices
@@ -148,10 +157,10 @@ Handle<IReference> PlaneRef::transform() {
 	} else for (auto& vert: plane)
 		vert.position = 0;
 	// Apply transformation
-	*tl				= plane[0];
-	*tr1	= *tr2	= plane[1];
-	*bl1	= *bl2	= plane[2];
-	*br				= plane[3];
+	tl			= plane[0];
+	tr1	= tr2	= plane[1];
+	bl1	= bl2	= plane[2];
+	br			= plane[3];
 	return this;
 }
 
@@ -174,13 +183,9 @@ void AnimatedPlaneRef::onTransform() {
 }
 
 TriangleRef::TriangleRef(
-	List<Triangle*> const& tris,
+	IReference::BoundRange const& tris,
 	ReferenceHolder& parent
 ): ShapeRef<1>(tris, parent) {
-	// Get vertices
-	this->a = &(tris[0]->verts[0]);
-	this->b = &(tris[0]->verts[1]);
-	this->c = &(tris[0]->verts[2]);
 	// Setup trigon
 	this->setOrigin(
 		Vector3(-0.0, +1.0, 0.0),
@@ -264,13 +269,23 @@ Handle<TriangleRef> TriangleRef::setNormal(Vector3 const& n) {
 
 /// Sets the triangle to its original state (last state set with setPosition).
 Handle<IReference> TriangleRef::reset() {
-	*a = origin[0];
-	*b = origin[1];
-	*c = origin[2];
+	As<Vertex&>
+		a	= (triangles[0].verts[0]),
+		b	= (triangles[0].verts[1]),
+		c	= (triangles[0].verts[0])
+	;
+	a = origin[0];
+	b = origin[1];
+	c = origin[2];
 	return this;
 }
 
 Handle<IReference> TriangleRef::transform() {
+	As<Vertex&>
+		a	= (triangles[0].verts[0]),
+		b	= (triangles[0].verts[1]),
+		c	= (triangles[0].verts[0])
+	;
 	onTransform();
 	if (!fixed) return this;
 	// Calculate transformed vertices
@@ -285,9 +300,9 @@ Handle<IReference> TriangleRef::transform() {
 	} else for (auto& vert: tri)
 		vert.position = 0;
 	// Apply transformation
-	*a	= tri[0];
-	*b	= tri[1];
-	*c	= tri[2];
+	a	= tri[0];
+	b	= tri[1];
+	c	= tri[2];
 	return this;
 }
 
@@ -308,16 +323,7 @@ void IReference::unbind() {
 void ReferenceHolder::removeReference(IReference& ref)  {
 	if (lockState) return;
 	if (references.find(&ref) == -1) return;
-	const auto tris = ref.getBoundTriangles();
-	triangles.eraseIf(
-		[=] (Triangle* e) {
-			if (tris.find(e) != -1) {
-				delete e;
-				return true;
-			}
-			return false;
-		}
-	);
+	triangles.removeRange(ref.triangles.start, ref.triangles.start + ref.triangles.count);
 	unbindReference(ref);
 }
 

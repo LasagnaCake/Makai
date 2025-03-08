@@ -6,32 +6,20 @@
 namespace Makai::Ex::Game {
 	using Sprite = Graph::AnimatedPlaneRef;
 
-	using SpriteInstance	= Instance<Sprite>;
-	using SpriteHandle		= Handle<Sprite>;
+	using SpriteInstance	= Makai::Instance<Sprite>;
+	using SpriteHandle		= Makai::Handle<Sprite>;
 
 	struct ThreePatchRef: Graph::ShapeRef<6> {
 		ThreePatchRef(
-			List<Graph::Triangle*> const& triangles,
+			BoundRange const& triangles,
 			Graph::ReferenceHolder& parent
 		): ShapeRef<6>(triangles, parent) {
-			init(head, {triangles[0], triangles[1]});
-			init(body, {triangles[2], triangles[3]});
-			init(tail, {triangles[4], triangles[5]});
+			init(head, {0, 1});
+			init(body, {2, 3});
+			init(tail, {4, 5});
 		}
 
 		Handle<Graph::IReference> transform() override {
-			for (usize i = 0; i < 4; ++i) {
-				head[i]->uv		= uv.head[i];
-				head[i]->color	= color.head[i];
-			}
-			for (usize i = 0; i < 4; ++i) {
-				body[i]->uv		= uv.body[i];
-				body[i]->color	= color.body[i];
-			}
-			for (usize i = 0; i < 4; ++i) {
-				tail[i]->uv		= uv.tail[i];
-				tail[i]->color	= color.tail[i];
-			}
 			if (!fixed) return this;
 			// Calculate transformed vertices
 			Graph::Vertex patch[8] = {
@@ -52,26 +40,29 @@ namespace Makai::Ex::Game {
 			} else for (auto& vert: patch)
 				vert.position = 0;
 			// Apply transformations
-			*head[0]							= patch[0];
-			*head[1]	= *head[3]	= *body[0]	= patch[1];
-			*head[2]	= *head[4]				= patch[4];
-			*head[5]	= *body[2]	= *body[4]	= patch[5];
-			*body[1]	= *body[3]	= *tail[0]	= patch[2];
-			*body[5]	= *tail[2]	= *tail[4]	= patch[6];
-			*tail[1]	= *tail[3]				= patch[3];
-			*tail[5]							= patch[7];
+			at(head[0])									= patch[0];
+			at(head[1])	= at(head[3])	= at(body[0])	= patch[1];
+			at(head[2])	= at(head[4])					= patch[4];
+			at(head[5])	= at(body[2])	= at(body[4])	= patch[5];
+			at(body[1])	= at(body[3])	= at(tail[0])	= patch[2];
+			at(body[5])	= at(tail[2])	= at(tail[4])	= patch[6];
+			at(tail[1])	= at(tail[3])					= patch[3];
+			at(tail[5])									= patch[7];
+			setGroup(head, uv.head, color.head);
+			setGroup(body, uv.body, color.body);
+			setGroup(tail, uv.tail, color.tail);
 			return this;
 		}
 
 		Handle<Graph::IReference> reset() override {
-			head[0]->position											= origin[0];
-			head[1]->position	= head[3]->position	= body[0]->position	= origin[1];
-			head[2]->position	= head[4]->position						= origin[4];
-			head[5]->position	= body[2]->position	= body[4]->position	= origin[5];
-			body[1]->position	= body[3]->position	= tail[0]->position	= origin[2];
-			body[5]->position	= tail[2]->position	= tail[4]->position	= origin[6];
-			tail[1]->position	= tail[3]->position						= origin[3];
-			tail[5]->position											= origin[7];
+			at(head[0]).position													= origin[0];
+			at(head[1]).position	= at(head[3]).position	= at(body[0]).position	= origin[1];
+			at(head[2]).position	= at(head[4]).position							= origin[4];
+			at(head[5]).position	= at(body[2]).position	= at(body[4]).position	= origin[5];
+			at(body[1]).position	= at(body[3]).position	= at(tail[0]).position	= origin[2];
+			at(body[5]).position	= at(tail[2]).position	= at(tail[4]).position	= origin[6];
+			at(tail[1]).position	= at(tail[3]).position							= origin[3];
+			at(tail[5]).position													= origin[7];
 			return this;
 		}
 
@@ -96,13 +87,37 @@ namespace Makai::Ex::Game {
 		} color;
 
 	private:
-		constexpr static void init(As<ref<Graph::Vertex>[6]>& list, As<ref<Graph::Triangle>[2]> const& tris) {
-			list[0] = &tris[0]->verts[0];
-			list[1] = &tris[0]->verts[1];
-			list[2] = &tris[0]->verts[2];
-			list[3] = &tris[1]->verts[0];
-			list[4] = &tris[1]->verts[2];
-			list[5] = &tris[1]->verts[1];
+		constexpr Graph::Vertex& at(As<usize[2]> const& place) {
+			return triangles[place[0]].verts[place[1]];
+		}
+
+		constexpr void setGroup(As<usize[6][2]>& list, As<Vector2[4]>& uv, As<Vector4[4]>& color) {
+			set(at(list[0]), uv[0], color[0]);
+			set(at(list[1]), uv[1], color[1]);
+			set(at(list[3]), uv[1], color[1]);
+			set(at(list[2]), uv[2], color[2]);
+			set(at(list[4]), uv[2], color[2]);
+			set(at(list[5]), uv[3], color[3]);
+		}
+
+		constexpr static void set(Graph::Vertex& vtx, Vector2 const& uv, Vector4 const& color) {
+			vtx.uv		= uv;
+			vtx.color	= color;
+		}
+
+		constexpr static void init(As<usize[6][2]>& list, As<usize[2]> const& tris) {
+			list[0][0] =
+			list[1][0] =
+			list[2][0] = tris[0];
+			list[3][0] =
+			list[4][0] =
+			list[5][0] = tris[1];
+			list[0][1] = 0;
+			list[1][1] = 1;
+			list[2][1] = 2;
+			list[3][1] = 0;
+			list[4][1] = 2;
+			list[5][1] = 1;
 		}
 
 		constexpr static void doVertex(Graph::Vertex& vertex, Matrix4x4 const& mat, Matrix3x3 const& nmat) {
@@ -110,9 +125,9 @@ namespace Makai::Ex::Game {
 				vertex.normal	= nmat * vertex.normal;
 		}
 
-		As<ref<Graph::Vertex>[6]> head;
-		As<ref<Graph::Vertex>[6]> body;
-		As<ref<Graph::Vertex>[6]> tail;
+		As<usize[6][2]> head;
+		As<usize[6][2]> body;
+		As<usize[6][2]> tail;
 	};
 
 	using ThreePatchInstance	= Instance<ThreePatchRef>;

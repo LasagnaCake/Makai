@@ -44,23 +44,23 @@ struct TestApp: Makai::App {
 		cube.trans.scale = .5;
 		cube.triangles = {
 			// Face +X
-			new Makai::Graph::Triangle{{vertices[2], vertices[1], vertices[0]}},
-			new Makai::Graph::Triangle{{vertices[1], vertices[2], vertices[3]}},
+			Makai::Graph::Triangle{{vertices[2], vertices[1], vertices[0]}},
+			Makai::Graph::Triangle{{vertices[1], vertices[2], vertices[3]}},
 			// Face -X
-			new Makai::Graph::Triangle{{vertices[4], vertices[5], vertices[6]}},
-			new Makai::Graph::Triangle{{vertices[7], vertices[6], vertices[5]}},
+			Makai::Graph::Triangle{{vertices[4], vertices[5], vertices[6]}},
+			Makai::Graph::Triangle{{vertices[7], vertices[6], vertices[5]}},
 			// Face +Y
-			new Makai::Graph::Triangle{{vertices[0], vertices[1], vertices[4]}},
-			new Makai::Graph::Triangle{{vertices[5], vertices[4], vertices[1]}},
+			Makai::Graph::Triangle{{vertices[0], vertices[1], vertices[4]}},
+			Makai::Graph::Triangle{{vertices[5], vertices[4], vertices[1]}},
 			// Face -Y
-			new Makai::Graph::Triangle{{vertices[6], vertices[3], vertices[2]}},
-			new Makai::Graph::Triangle{{vertices[3], vertices[6], vertices[7]}},
+			Makai::Graph::Triangle{{vertices[6], vertices[3], vertices[2]}},
+			Makai::Graph::Triangle{{vertices[3], vertices[6], vertices[7]}},
 			// Face +Z
-			new Makai::Graph::Triangle{{vertices[4], vertices[2], vertices[0]}},
-			new Makai::Graph::Triangle{{vertices[2], vertices[4], vertices[6]}},
+			Makai::Graph::Triangle{{vertices[4], vertices[2], vertices[0]}},
+			Makai::Graph::Triangle{{vertices[2], vertices[4], vertices[6]}},
 			// Face -Z
-			new Makai::Graph::Triangle{{vertices[1], vertices[3], vertices[5]}},
-			new Makai::Graph::Triangle{{vertices[7], vertices[5], vertices[3]}}
+			Makai::Graph::Triangle{{vertices[1], vertices[3], vertices[5]}},
+			Makai::Graph::Triangle{{vertices[7], vertices[5], vertices[3]}}
 		};
 		DEBUGLN("Done!");
 	}

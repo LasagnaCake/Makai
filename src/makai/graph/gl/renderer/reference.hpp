@@ -12,12 +12,41 @@ namespace Makai::Graph {
 	/// @brief Renderable object shape reference interface.
 	struct IReference;
 
-	/// @brief Renderable object shape reference interface
+	/// @brief Renderable object shape reference interface.
 	struct IReference {
+		/// @brief Triangle range associated with the reference.
+		struct BoundRange {
+			/// @brief Mesh containing bound triangles.
+			List<Triangle>& mesh;
+			/// @brief Start of bound range.
+			usize const start;
+			/// @brief Amount of triangles bound to the range.
+			usize const count;
+			/// @brief Returns an iterator to the beginning of the range.
+			/// @return Iterator to beginning of range.
+			constexpr auto begin() const	{return mesh.begin() + start;	}
+			/// @brief Returns an iterator to the end of the range.
+			/// @return Iterator to end of range.
+			constexpr auto end() const		{return begin() + count;		}
+			/// @brief Returns an iterator to the beginning of the range.
+			/// @return Iterator to beginning of range.
+			constexpr auto begin()			{return mesh.begin() + start;	}
+			/// @brief Returns an iterator to the end of the range.
+			/// @return Iterator to end of range.
+			constexpr auto end()			{return begin() + count;		}
+			/// @brief Access operator.
+			/// @param index Triangle to get.
+			/// @return Reference to triangle.
+			constexpr Triangle& operator[](usize const index)		{return mesh[index+start];}
+			/// @brief Access operator.
+			/// @param index Triangle to get.
+			/// @return Reference to triangle.
+			constexpr Triangle& operator[](usize const index) const	{return mesh[index+start];}
+		};
 		/// @brief Constructs the reference.
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
-		IReference(List<Triangle*> const& triangles, ReferenceHolder& parent):
+		IReference(BoundRange const& triangles, ReferenceHolder& parent):
 			triangles(triangles),
 			parent(parent) {}
 
@@ -25,11 +54,11 @@ namespace Makai::Graph {
 		virtual ~IReference() {destroy();}
 
 		/// @brief Bound triangle view type.
-		using Triangles = Span<Triangle* const>;
+		using Triangles = Span<Triangle const>;
 
 		/// @brief Returns a view to the triangles bound to the reference.
 		/// @return View to bound triangles.
-		Triangles getBoundTriangles() {
+		Triangles getBoundTriangles() const {
 			return Triangles(triangles.begin(), triangles.end());
 		}
 
@@ -41,10 +70,12 @@ namespace Makai::Graph {
 		virtual Handle<IReference> transform()	= 0;
 		
 	protected:
+		friend class ReferenceHolder;
+
 		/// @brief Bound triangles.
-		List<Triangle*> const 	triangles;
+		BoundRange const 	triangles;
 		/// @brief Parent renderable.
-		ReferenceHolder& 		parent;
+		ReferenceHolder& 	parent;
 	private:
 		void destroy();
 		void unbind();
@@ -68,7 +99,7 @@ namespace Makai::Graph {
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
 		ShapeRef(
-			List<Triangle*> const& triangles,
+			BoundRange const& triangles,
 			ReferenceHolder& parent
 		): IReference(triangles, parent) {}
 
@@ -78,9 +109,11 @@ namespace Makai::Graph {
 		/// @brief Applies an operation to the bound triangles' vertices.
 		/// @param f operation to apply.
 		virtual void forEachVertex(VertexFunction const& f) {
-			for (usize i = 0; i < SIZE; ++i)
-				for (usize j = 0; j < 3; ++j)
-					f(((Vertex*)triangles[i])[j]);
+			for (usize i = 0; i < SIZE; ++i) {
+				f(triangles[i].verts[0]);
+				f(triangles[i].verts[1]);
+				f(triangles[i].verts[2]);
+			}
 		}
 
 		/// @brief Resets transformations applied to the bound triangles. Must be implemented.
@@ -108,7 +141,7 @@ namespace Makai::Graph {
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
 		PlaneRef(
-			List<Triangle*> const& triangles,
+			BoundRange const& triangles,
 			ReferenceHolder& parent
 		);
 
@@ -200,20 +233,6 @@ namespace Makai::Graph {
 	protected:
 		/// @brief Called when the reference's transforms are applied.
 		virtual void onTransform() {};
-
-	private:
-		/// @brief Top-left corner's vertex.
-		Vertex	*tl		= nullptr;
-		/// @brief Top-right corner's first vertex.
-		Vertex	*tr1	= nullptr;
-		/// @brief Top-right corner's second vertex.
-		Vertex	*tr2	= nullptr;
-		/// @brief Bottom-left corner's first vertex.
-		Vertex	*bl1	= nullptr;
-		/// @brief Bottom-left corner's second vertex.
-		Vertex	*bl2	= nullptr;
-		/// @brief Bottom-right corner's vertex.
-		Vertex	*br		= nullptr;
 	};
 
 	/// @brief Animated plane reference.
@@ -237,7 +256,7 @@ namespace Makai::Graph {
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
 		TriangleRef(
-			List<Triangle*> const& triangles,
+			BoundRange const& triangles,
 			ReferenceHolder& parent
 		);
 
@@ -324,14 +343,6 @@ namespace Makai::Graph {
 	protected:
 		/// @brief Called when the reference's transforms are applied.
 		virtual void onTransform() {};
-
-	private:
-		/// @brief First vertex.
-		Vertex	*a	= nullptr;
-		/// @brief Second vertex.
-		Vertex	*b	= nullptr;
-		/// @brief Third vertex.
-		Vertex	*c	= nullptr;
 	};
 
 	/// @brief Type must not be an empty reference.
@@ -354,7 +365,7 @@ namespace Makai::Graph {
 
 	struct ReferenceHolder {
 		/// @brief Triangle storage container type.
-		using TriangleBank = List<Triangle*>;
+		using TriangleBank = List<Triangle>;
 
 		/// @brief Constructs the reference holder.
 		/// @param triangles Reference to triangle bank.
@@ -377,14 +388,9 @@ namespace Makai::Graph {
 		Instance<T> createReference() {
 			constexpr usize count = T::SIZE;
 			if (lockState) throw Error::InvalidAction("Renderable object is locked!", CTL_CPP_PRETTY_SOURCE);
-			List<Triangle*> tris;
-			tris.resize(count, nullptr);
-			// Create triangles
-			for (Triangle*& t: tris)
-				t = new Triangle();
-			triangles.appendBack(tris);
+			triangles.expand(count, {});
 			// Create shape
-			T* shape = new T(tris, *this);
+			T* shape = new T({triangles, triangles.size()-count, count}, *this);
 			// Add to reference list
 			references.pushBack(shape);
 			// return shape
