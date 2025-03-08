@@ -23,6 +23,8 @@ namespace Makai::Ex::Game::Danmaku {
 			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
+		bool fakeOut = false;
+
 		virtual ~Laser() {}
 
 		Laser& clear() override {
@@ -34,6 +36,7 @@ namespace Makai::Ex::Game::Danmaku {
 			damage			= {};
 			patch			= {};
 			autoDecay		= false;
+			fakeOut			= false;
 			toggleState		= IToggleable::State::TS_UNTOGGLED;
 			animColor		= Graph::Color::WHITE;
 			counter			= 0;
@@ -168,7 +171,7 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position		= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale			= trans.scale;
-			Vector4 const spriteColor = color.value * animColor;
+			Vector4 const spriteColor = color.value * animColor * (fakeOut ? 1 : Graph::Color::alpha(toggleColor));
 			for (usize i: {0, 1, 2, 3}) {
 				Vector2 const uvOffset = Vector2(i&1, (i&2)>>1);
 				sprite->color.head[i] = spriteColor;
@@ -221,7 +224,6 @@ namespace Makai::Ex::Game::Danmaku {
 				[[likely]]
 				default: break;
 			}
-			animColor.a *= toggleColor;
 		}
 
 		void animateToggle() {
