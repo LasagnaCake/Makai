@@ -64,6 +64,7 @@ namespace Makai::Ex::Game::Danmaku {
 				collision()->canCollide = state;
 				return *this;
 			}
+			toggleColor = state ? 0.5 : 1.0;
 			nextState = state ? IToggleable::State::TS_TOGGLED : IToggleable::State::TS_UNTOGGLED;
 			if (toggleState != nextState) {
 				switch (toggleState) {
