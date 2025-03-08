@@ -287,11 +287,13 @@ void Renderable::extendFromDefinitionFile(String const& path) {
 
 void Renderable::bake() {
 	if (baked || locked) return;
+	transformReferences();
 	baked = true;
 }
 
 void Renderable::unbake() {
 	if (!baked || locked) return;
+	resetReferenceTransforms();
 	baked = false;
 }
 
