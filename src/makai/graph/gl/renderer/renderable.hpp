@@ -79,8 +79,7 @@ namespace Makai::Graph {
 
 		/// @brief Bakes the object.
 		/// @details
-		///		Pre-processes all references, and copies the triangles' vertices
-		///		To the internal buffer that is used when rendering.
+		///		Pre-processes all references.
 		///
 		///		Any reference transformation no longer affects the object.
 		///		In return, speeds up render time substantially.
