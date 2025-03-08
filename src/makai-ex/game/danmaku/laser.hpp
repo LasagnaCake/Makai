@@ -59,6 +59,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (immediately) {
 				toggleState = state ? IToggleable::State::TS_TOGGLED : IToggleable::State::TS_UNTOGGLED;
 				toggleColor = state ? 1.0 : 0.5;
+				collision()->canCollide = state;
 				return *this;
 			}
 			nextState = state ? IToggleable::State::TS_TOGGLED : IToggleable::State::TS_UNTOGGLED;
@@ -166,7 +167,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (!sprite) return;
 			sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position		= Vec3(trans.position, sprite->local.position.z);
-			sprite->local.scale			= trans.scale;
+			sprite->local.scale			= Vec3(shape->width, 1);
 			Vector4 const spriteColor = color.value * animColor;
 			for (usize i: {0, 1, 2, 3}) {
 				Vector2 const uvOffset = Vector2(i&1, (i&2)>>1);
@@ -200,7 +201,7 @@ namespace Makai::Ex::Game::Danmaku {
 			switch (objectState) {
 				case AServerObject::State::SOS_DESPAWNING: {
 					if (counter++ < despawnTime) {
-						animColor.a = 1.0 - counter / static_cast<float>(despawnTime) * toggleColor;
+						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
 					} else {
 						counter = 0;
 						onAction(*this, Action::SOA_DESPAWN_END);
@@ -209,7 +210,7 @@ namespace Makai::Ex::Game::Danmaku {
 				} break;
 				case AServerObject::State::SOS_SPAWNING: {
 					if (counter++ < spawnTime) {
-						animColor.a = counter / static_cast<float>(spawnTime) * toggleColor;
+						animColor.a = counter / static_cast<float>(spawnTime);
 					} else {
 						counter = 0;
 						setCollisionState(true);
@@ -220,6 +221,7 @@ namespace Makai::Ex::Game::Danmaku {
 				[[likely]]
 				default: break;
 			}
+			animColor.a *= toggleColor;
 		}
 
 		void animateToggle() {
@@ -231,6 +233,7 @@ namespace Makai::Ex::Game::Danmaku {
 						toggleCounter = 0;
 						toggleColor = 0.5;
 						toggleState = IToggleable::State::TS_UNTOGGLED;
+						collision()->canCollide = false;
 					}
 				} break;
 				case IToggleable::State::TS_TOGGLING: {
@@ -240,6 +243,7 @@ namespace Makai::Ex::Game::Danmaku {
 						toggleCounter = 0;
 						toggleColor = 1.0;
 						toggleState = IToggleable::State::TS_TOGGLED;
+						collision()->canCollide = true;
 					}
 				} break;
 				[[likely]]
