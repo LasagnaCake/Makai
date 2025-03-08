@@ -28,7 +28,7 @@ namespace Makai::Ex::Game {
 			};
 			if (visible) {
 				patch[0].position.x -= size.head;
-				patch[1].position.x -= size.head;
+				patch[4].position.x -= size.head;
 				patch[2].position.x += size.body;
 				patch[6].position.x += size.body;
 				patch[3].position.x += size.body + size.tail;
@@ -66,7 +66,7 @@ namespace Makai::Ex::Game {
 			return this;
 		}
 
-		Vector3	origin[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+		Vector3	origin[8] = {{0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, -1}, {0, -1}, {0, -1}, {0, -1}};
 
 		struct PatchSize {
 			float head = 0;

@@ -31,7 +31,7 @@ namespace Makai::Ex::Game::Danmaku {
 			rotateSprite	= true;
 			glowOnSpawn		= true;
 			dope			= true;
-			radius			= {};
+			radius			= {1};
 			velocity		= {};
 			rotation		= {};
 			sprite			= {};
@@ -91,6 +91,10 @@ namespace Makai::Ex::Game::Danmaku {
 			counter = 0;
 			objectState = State::SOS_SPAWNING;
 			onAction(*this, Action::SOA_SPAWN_BEGIN);
+			spawnglow = 0;
+			animColor.a = 0;
+			spawnsize = 1.0;
+			counter = 0;
 			return *this;
 		}
 
@@ -131,14 +135,13 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Bullet& setFree(bool const state) override {
+			active = state;
 			if (state) {
-				active = false;
 				objectState = State::SOS_FREE;
 				hideSprites();
 				clear();
 				release(this, server);
 			} else {
-				active = true;
 				showSprites();
 				objectState = State::SOS_ACTIVE;
 			}
@@ -259,7 +262,7 @@ namespace Makai::Ex::Game::Danmaku {
 				} break;
 				case State::SOS_SPAWNING: {
 					if (counter++ < spawnTime) {
-						spawnglow = 1.0 - counter / static_cast<float>(despawnTime);
+						spawnglow = 1.0 - counter / static_cast<float>(spawnTime);
 						animColor.a = counter / static_cast<float>(spawnTime);
 						spawnsize = (1.0 + SPAWN_GOWTH) - animColor.a;
 					} else {

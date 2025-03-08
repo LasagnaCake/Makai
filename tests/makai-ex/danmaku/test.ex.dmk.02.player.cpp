@@ -14,11 +14,14 @@ Danmaku::PlayerConfig cfg = {board, playfield};
 
 struct TestPlayer: Danmaku::APlayer {
 	MkGraph::Renderable body;
-	Makai::Instance<Makai::Ex::Game::Sprite> sprite;
+	Makai::Instance<Makai::Ex::Game::ThreePatchRef> sprite;
 
-	TestPlayer(): APlayer(cfg), sprite(body.createReference<Makai::Ex::Game::Sprite>()) {
+	TestPlayer(): APlayer(cfg), sprite(body.createReference<Makai::Ex::Game::ThreePatchRef>()) {
 		body.setRenderLayer(Danmaku::Render::Layer::PLAYER1_LAYER);
 		trans.position = board.center;
+		sprite->size.head = 1;
+		sprite->size.body = 1;
+		sprite->size.tail = 1;
 		input.binds["player/up"] 	= {Makai::Input::KeyCode::KC_UP};
 		input.binds["player/down"]	= {Makai::Input::KeyCode::KC_DOWN};
 		input.binds["player/left"] 	= {Makai::Input::KeyCode::KC_LEFT};
@@ -41,6 +44,7 @@ struct TestPlayer: Danmaku::APlayer {
 	void onUpdate(float delta, Makai::App& app) override {
 		if (!active) return;
 		APlayer::onUpdate(delta, app);
+		sprite->size.body = sin(app.getCurrentCycle() / 60.0) + 1;
 		if (paused()) return;
 	}
 

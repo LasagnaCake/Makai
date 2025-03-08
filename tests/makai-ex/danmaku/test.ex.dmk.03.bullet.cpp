@@ -75,6 +75,7 @@ struct TestApp: Makai::Ex::Game::App {
 			};
 			bullet->bouncy	= true;
 			bullet->loopy	= true;
+			bullet->spawn();
 //			bullet->task = btask(*bullet);
 		}
 	}

@@ -27,10 +27,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Laser& clear() override {
 			AServerObject::clear();
-			radius			= {};
+			radius			= {1};
 			velocity		= {};
 			rotation		= {};
-			length			= {};
+			length			= {1};
 			damage			= {};
 			patch			= {};
 			autoDecay		= false;
@@ -40,6 +40,7 @@ namespace Makai::Ex::Game::Danmaku {
 			counter			= 0;
 			toggleCounter	= 0;
 			toggleColor		= 0;
+			setCollisionState(false);
 			return *this;
 		}
 
@@ -50,7 +51,7 @@ namespace Makai::Ex::Game::Danmaku {
 			rotation.factor	= 0;
 			radius.factor	= 0;
 			scale.factor	= 0;
-			length.factor	= 0;
+			length.factor	= 0.5;
 			return *this;
 		}
 
@@ -113,6 +114,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (isFree()) return *this;
 			setCollisionState(false);
 			counter = 0;
+			animColor.a = 0;
 			objectState = AServerObject::State::SOS_SPAWNING;
 			onAction(*this, Action::SOA_SPAWN_BEGIN);
 			return *this;
@@ -128,14 +130,13 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Laser& setFree(bool const state) override {
+			active =
+			sprite->visible = state;
 			if (state) {
-				active = false;
-				sprite->visible = false;
 				objectState = AServerObject::State::SOS_FREE;
 				clear();
 				release(this, server);
 			} else {
-				active = true;
 				objectState = AServerObject::State::SOS_ACTIVE;
 			}
 			return *this;
@@ -235,7 +236,7 @@ namespace Makai::Ex::Game::Danmaku {
 						toggleCounter = 0;
 						toggleColor = 0.5;
 						toggleState = IToggleable::State::TS_UNTOGGLED;
-						collision()->canCollide = false;
+						setCollisionState(false);
 					}
 				} break;
 				case IToggleable::State::TS_TOGGLING: {
@@ -245,7 +246,7 @@ namespace Makai::Ex::Game::Danmaku {
 						toggleCounter = 0;
 						toggleColor = 1.0;
 						toggleState = IToggleable::State::TS_TOGGLED;
-						collision()->canCollide = true;
+						setCollisionState(true);
 					}
 				} break;
 				[[likely]]
@@ -291,7 +292,6 @@ namespace Makai::Ex::Game::Danmaku {
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
 				all.back().sprite->local.position.z = zoff;
-				all.back().sprite->visible = false;
 				free.pushBack(&all.back());
 			}
 		}

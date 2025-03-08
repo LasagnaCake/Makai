@@ -35,7 +35,6 @@ struct TestApp: Makai::Ex::Game::App {
 	}
 
 	void onOpen() override {
-		createAttacks();
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {
@@ -46,23 +45,33 @@ struct TestApp: Makai::Ex::Game::App {
 
 	usize frcount = 0;
 
+	usize delay = 5;
+
 	float framerate[MAX_FRCOUNT];
 
+	bool fired = false;
+
 	void createAttacks() {
+		if (fired) return;
+		fired = true;
+		DEBUGLN("Creating shots...");
 		for (usize i = 0; i < 10; ++i) {
 			auto laser = server.acquire().as<Danmaku::Laser>();
 			if (!laser) return;
 			float const crot = (TAU / 10) * (i + (getCurrentCycle() * 0.5));
 			laser->trans.position = playfield.center;
-			laser->velocity.value = 30;
-			laser->rotation = {
+			//laser->velocity.value = 30;
+			/*laser->rotation = {
 				crot,
 				true,
-				crot,
+				0,
 				crot + static_cast<float>(TAU),
 				.01,
 				Makai::Math::Ease::InOut::back
-			};
+			};*/
+			laser->length = {32};
+			//laser->spawn();
+			laser->toggle(true, true);
 		}
 	}
 
@@ -76,6 +85,9 @@ struct TestApp: Makai::Ex::Game::App {
 			fravg = Makai::Math::clamp<float>(fravg, 0, maxFrameRate);
 			DEBUGLN("Framerate: ", Makai::Format::prettify(Makai::Math::round(fravg, 2), 2, 0));
 			frcount = 0;
+			if (delay > 0) --delay;
+			else delay = 5;
+			if (!delay) createAttacks();
 		}
 	}
 };
