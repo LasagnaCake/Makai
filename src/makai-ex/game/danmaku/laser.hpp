@@ -39,7 +39,7 @@ namespace Makai::Ex::Game::Danmaku {
 			animColor		= Graph::Color::WHITE;
 			counter			= 0;
 			toggleCounter	= 0;
-			toggleColor		= 0;
+			toggleColor		= 0.5;
 			setCollisionState(false);
 			return *this;
 		}
@@ -51,7 +51,7 @@ namespace Makai::Ex::Game::Danmaku {
 			rotation.factor	= 0;
 			radius.factor	= 0;
 			scale.factor	= 0;
-			length.factor	= 0.5;
+			length.factor	= 0;
 			return *this;
 		}
 
