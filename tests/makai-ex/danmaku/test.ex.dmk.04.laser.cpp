@@ -61,14 +61,14 @@ struct TestApp: Makai::Ex::Game::App {
 			float const crot = (TAU / 10) * (i + (getCurrentCycle() * 0.5));
 			laser->trans.position = playfield.center;
 			//laser->velocity.value = 30;
-			/*laser->rotation = {
+			laser->rotation = {
 				crot,
 				true,
 				0,
 				crot + static_cast<float>(TAU),
 				.01,
 				Makai::Math::Ease::InOut::back
-			};*/
+			};
 			laser->length = {32};
 			//laser->spawn();
 			laser->toggle(true, true);
