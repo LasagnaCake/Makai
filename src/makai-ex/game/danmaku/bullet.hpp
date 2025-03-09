@@ -165,7 +165,7 @@ namespace Makai::Ex::Game::Danmaku {
 		float spawnglow	= 0;
 		float spawnsize = 1;
 
-		constexpr static float SPAWN_GOWTH = .5;
+		constexpr static float SPAWN_GROWTH = .5;
 
 		Vector4 animColor = Graph::Color::WHITE;
 
@@ -230,7 +230,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
-			sprite->local.scale				= trans.scale;
+			sprite->local.scale				= trans.scale * spawnsize;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
 			auto const glowFX = Graph::Color::alpha(glowSprite ? iglow : 1 - iglow);
 			sprite->setColor(animColor * color.value * glowFX);
@@ -250,7 +250,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < despawnTime) {
 						spawnglow = counter / static_cast<float>(despawnTime);
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
-					//	spawnsize = 1.0 + animColor.a * SPAWN_GOWTH;
+					//	spawnsize = 1.0 + animColor.a * SPAWN_GROWTH;
 					} else {
 						spawnglow = 0;
 						animColor.a = 0;
@@ -264,7 +264,7 @@ namespace Makai::Ex::Game::Danmaku {
 					if (counter++ < spawnTime) {
 						spawnglow = 1.0 - counter / static_cast<float>(spawnTime);
 						animColor.a = counter / static_cast<float>(spawnTime);
-						spawnsize = (1.0 + SPAWN_GOWTH) - animColor.a;
+						spawnsize = (1.0 + SPAWN_GROWTH) - animColor.a;
 					} else {
 						spawnglow = 0;
 						animColor.a = 1;
