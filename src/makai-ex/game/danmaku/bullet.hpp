@@ -194,8 +194,8 @@ namespace Makai::Ex::Game::Danmaku {
 				;
 				if (trans.position.x < min.x) trans.position.x = max.x + shape->radius.max()*2;
 				if (trans.position.x > max.x) trans.position.x = min.x - shape->radius.max()*2;
-				if (trans.position.y < min.y) trans.position.y = max.y - shape->radius.max()*2;
-				if (trans.position.y > max.y) trans.position.y = min.y + shape->radius.max()*2;
+				if (trans.position.y < min.y) trans.position.y = max.y + shape->radius.max()*2;
+				if (trans.position.y > max.y) trans.position.y = min.y - shape->radius.max()*2;
 				onAction(*this, Action::SOA_LOOP);
 				loopy = false;
 			}
