@@ -326,10 +326,10 @@ namespace Makai::Ex::Game::Danmaku {
 				float const zoff = i / static_cast<float>(cfg.size);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
-				all.back().mainSprite->local.position.z = zoff;
+				all.back().mainSprite->local.position.z = -zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
 					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
-					all.back().glowSprite->local.position.z = zoff;
+					all.back().glowSprite->local.position.z = -zoff;
 				}
 				all.back().hideSprites();
 				free.pushBack(&all.back());

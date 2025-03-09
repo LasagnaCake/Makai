@@ -292,7 +292,7 @@ namespace Makai::Ex::Game::Danmaku {
 				float const zoff = i / static_cast<float>(cfg.size);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
-				all.back().sprite->local.position.z = zoff;
+				all.back().sprite->local.position.z = -zoff;
 				all.back().sprite->visible = false;
 				free.pushBack(&all.back());
 			}
