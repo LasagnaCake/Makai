@@ -55,10 +55,10 @@ struct TestApp: Makai::Ex::Game::App {
 		if (fired) return;
 		fired = true;
 		DEBUGLN("Creating shots...");
-		for (usize i = 0; i < 16; ++i) {
+		for (usize i = 0; i < 12; ++i) {
 			auto laser = server.acquire().as<Danmaku::Laser>();
 			if (!laser) return;
-			float const crot = (TAU / 16) * i;
+			float const crot = (TAU / 12) * i;
 			laser->trans.position = playfield.center;
 			//laser->velocity.value = 30;
 			laser->rotation = {
