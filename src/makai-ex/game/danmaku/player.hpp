@@ -82,7 +82,6 @@ namespace Makai::Ex::Game::Danmaku {
 			active = true;
 		}
 
-		// FIXME: Segfault at function's end
 		virtual ~APlayer() {
 			DEBUGLN("Demagnetizing player...");
 			Instance<Vector2>::detach(&trans.position);
