@@ -259,6 +259,7 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct Dope {
+		/// @brief `DOPE`: Destroy On Playfield Exit.
 		bool dope = false;
 	};
 
