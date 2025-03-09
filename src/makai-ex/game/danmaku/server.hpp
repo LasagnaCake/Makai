@@ -105,6 +105,8 @@ namespace Makai::Ex::Game::Danmaku {
 			scale		= {1};
 			discardable	= true;
 			pause		= {};
+			spawnTime	= 5;
+			despawnTime	= 5;
 			if (auto collider = collision()) {
 				collider->shape			= nullptr;
 				collider->canCollide	= true;

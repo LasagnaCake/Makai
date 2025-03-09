@@ -40,6 +40,8 @@ namespace Makai::Ex::Game::Danmaku {
 			counter			= 0;
 			toggleCounter	= 0;
 			toggleColor		= 0.5;
+			toggleTime		= 5;
+			untoggleTime	= 5;
 			setCollisionState(false);
 			return *this;
 		}
