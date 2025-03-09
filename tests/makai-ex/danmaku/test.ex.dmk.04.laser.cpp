@@ -66,12 +66,20 @@ struct TestApp: Makai::Ex::Game::App {
 				true,
 				0,
 				crot + static_cast<float>(TAU),
-				.001,
+				.005,
 				Makai::Math::Ease::InOut::back
 			};
 			laser->length = {32};
-			//laser->spawn();
-			laser->toggle(true, true);
+			laser->spawn();
+			laser->spawnTime	= 60;
+			laser->toggleTime	= 60;
+			laser->onAction = [=] (auto& object, auto action) {
+				Danmaku::Laser& l = (Danmaku::Laser&)object;
+				if (action == Danmaku::AServerObject::Action::SOA_SPAWN_END) {
+					l.toggle(true);
+					l.onAction.clear();
+				}
+			};
 		}
 	}
 
