@@ -4,6 +4,9 @@
 #include "core.hpp"
 #include "server.hpp"
 
+/*
+	BUG: Slows down processing but speeds up as more items are active
+*/
 namespace Makai::Ex::Game::Danmaku {
 	struct Item;
 	struct ItemConfig;
@@ -28,19 +31,22 @@ namespace Makai::Ex::Game::Danmaku {
 		Item& clear() override {
 			AServerObject::clear();
 			rotateSprite		= true;
+			dope				= true;
+			jumpy				= false;
+			glowOnSpawn			= false;
 			radius				= {1};
 			sprite				= {};
 			gravity				= {1};
 			terminalVelocity	= {1};
 			magnet				= {};
 			glow				= {};
-			dope				= false;
-			glowOnSpawn			= false;
 			id					= 0;
 			value				= 1;
 			animColor			= Graph::Color::WHITE;
 			counter				= 0;
 			spawnglow			= 0;
+			acceleration		= 0;
+			internalRotation	= 0;
 			return *this;
 		}
 
@@ -68,12 +74,21 @@ namespace Makai::Ex::Game::Danmaku {
 			glow.next();
 			terminalVelocity.next();
 			acceleration += gravity.next();
-			processMax(acceleration.x, terminalVelocity.value.x);
-			processMax(acceleration.y, terminalVelocity.value.y);
+			if (!jumpy) {
+				auto const tv = terminalVelocity.value.absolute();
+				acceleration.clamp(-tv, tv);
+			}
 			if (magnet.enabled && magnet.target && objectState == State::SOS_ACTIVE)
 				trans.position	+= trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
-			else
-				trans.position	+= acceleration;
+			// Originally a bug, now a feature
+			else if (jumpy)
+				trans.position	+= acceleration.clamped(
+					terminalVelocity.value.min(-terminalVelocity.value),
+					(-terminalVelocity.value).max(terminalVelocity.value)
+				);
+			else {
+				trans.position += acceleration * delta;
+			}
 			trans.scale		= scale.next();
 			playfieldCheck();
 		}
@@ -150,6 +165,8 @@ namespace Makai::Ex::Game::Danmaku {
 		usize id	= 0;
 		usize value	= 1;
 
+		bool jumpy = false;
+
 	private:
 		AServer&	server;
 
@@ -170,8 +187,10 @@ namespace Makai::Ex::Game::Danmaku {
 		template <class, class> friend class ItemServer;
 
 		constexpr static void processMax(float& value, float const max) {
-			if (value > abs(max) || value < -abs(max))
-				value = max;
+			if (value > abs(max))
+				value = abs(max);
+			if (value < -abs(max))
+				value = -abs(max);
 		}
 
 		void setSpriteVisibility(bool const setGlowSprite, bool const state) {
@@ -196,7 +215,7 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->frame	= this->sprite.frame;
 			sprite->size	= this->sprite.sheetSize;
 			if (rotateSprite)
-				sprite->local.rotation.z	= trans.rotation;
+				sprite->local.rotation.z	= trans.rotation + internalRotation;
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
