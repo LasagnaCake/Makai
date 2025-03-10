@@ -80,15 +80,11 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			if (magnet.enabled && magnet.target && objectState == State::SOS_ACTIVE)
 				trans.position	+= trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
-			// Originally a bug, now a feature
-			else if (jumpy)
-				trans.position	+= acceleration.clamped(
-					terminalVelocity.value.min(-terminalVelocity.value),
-					(-terminalVelocity.value).max(terminalVelocity.value)
-				);
-			else {
+			else if (jumpy) {
+				if (acceleration.absolute() > terminalVelocity.value.absolute())
+					acceleration = acceleration * -1 + gravity.value;
 				trans.position += acceleration * delta;
-			}
+			} else trans.position += acceleration * delta;
 			trans.scale		= scale.next();
 			playfieldCheck();
 		}
