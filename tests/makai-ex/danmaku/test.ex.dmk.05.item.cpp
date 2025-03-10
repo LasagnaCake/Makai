@@ -30,6 +30,8 @@ struct TestItemServer: MeshHolder, BaseItemServer {
 struct TestApp: Makai::Ex::Game::App {
 	TestItemServer server;
 
+	Makai::Random::Generator rng;
+
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 05", false}}) {
 		loadDefaultShaders();
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
@@ -37,6 +39,16 @@ struct TestApp: Makai::Ex::Game::App {
 
 	void onLayerDrawBegin(usize const layerID) override {
 		camera.use(layerID >= Danmaku::Render::Layer::BOSS1_SPELL_BG_BOTTOM_LAYER);
+	}
+
+	void createItems() {
+		if (auto item = server.acquire().as<Danmaku::Item>()) {
+			item->trans.position = Makai::Vec2(
+				rng.number<float>(gamearea.x * 0.5, gamearea.x * 1.5),
+				rng.number<float>(-gamearea.y * 1.5, -gamearea.y * 0.5)
+			);
+			item->spawn();
+		}
 	}
 
 	constexpr static usize MAX_FRCOUNT = 10;
