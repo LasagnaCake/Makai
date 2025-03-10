@@ -52,9 +52,11 @@ struct TestApp: Makai::Ex::Game::App {
 				.interpolate = true,
 				.start = Makai::Vec2(0, 1),
 				.stop = Makai::Vec2(0, -1),
-				.speed = 0.05
+				.speed = 0.025
 			};
-			item->terminalVelocity = {Makai::Vec2(0, 10)};
+			item->terminalVelocity = {Makai::Vec2(0, 20)};
+			item->spawnTime = 30;
+			if (input.isButtonDown(Makai::Input::KeyCode::KC_LEFT_SHIFT)) item->jumpy = true;
 			item->spawn();
 		}
 	}
