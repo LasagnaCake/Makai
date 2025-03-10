@@ -10,21 +10,33 @@ Danmaku::GameArea
 	playfield	= {gamearea * Makai::Vector2(1, -1), (gamearea * 1.5)}
 ;
 
+using BaseItemServer = Danmaku::ItemServer<>;
+
 struct MeshHolder {
 	MkGraph::Renderable m, gm;
 
 	MeshHolder() {
-		m.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER);
-		gm.setRenderLayer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER+1);
+		m.setRenderLayer(Danmaku::Render::Layer::PLAYER1_ITEM_LAYER);
+		gm.setRenderLayer(Danmaku::Render::Layer::PLAYER1_ITEM_LAYER+1);
 		gm.setBlendEquation(Makai::Graph::BlendEquation::BE_ADD);
 	}
 };
 
+struct TestItemServer: MeshHolder, BaseItemServer {
+	TestItemServer(): MeshHolder(), BaseItemServer({256, m, gm, ::board, ::playfield}) {}
+};
+
+
 struct TestApp: Makai::Ex::Game::App {
+	TestItemServer server;
+
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 05", false}}) {
+		loadDefaultShaders();
+		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {
+		camera.use(layerID >= Danmaku::Render::Layer::BOSS1_SPELL_BG_BOTTOM_LAYER);
 	}
 
 	constexpr static usize MAX_FRCOUNT = 10;
