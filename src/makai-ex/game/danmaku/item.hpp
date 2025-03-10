@@ -227,7 +227,7 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnglow = counter / static_cast<float>(despawnTime);
 						animColor.a = 1.0 - counter / static_cast<float>(despawnTime);
 						internalRotation = (1.0 - counter / static_cast<float>(spawnTime));
-						internalRotation *= TAU * 3;
+						internalRotation *= TAU;
 					} else {
 						internalRotation = 0;
 						counter = 0;
@@ -240,7 +240,7 @@ namespace Makai::Ex::Game::Danmaku {
 						spawnglow = 1.0 - counter / static_cast<float>(despawnTime);
 						animColor.a = counter / static_cast<float>(spawnTime);
 						internalRotation = (counter / static_cast<float>(spawnTime));
-						internalRotation *= TAU * 3;
+						internalRotation *= TAU;
 					} else {
 						internalRotation = 0;
 						counter = 0;
