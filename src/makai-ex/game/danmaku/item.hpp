@@ -28,10 +28,10 @@ namespace Makai::Ex::Game::Danmaku {
 		Item& clear() override {
 			AServerObject::clear();
 			rotateSprite		= true;
-			radius				= {};
+			radius				= {1};
 			sprite				= {};
-			gravity				= {};
-			terminalVelocity	= {};
+			gravity				= {1};
+			terminalVelocity	= {1};
 			magnet				= {};
 			glow				= {};
 			dope				= false;
