@@ -47,6 +47,8 @@ struct TestApp: Makai::Ex::Game::App {
 				rng.number<float>(gamearea.x * 0.5, gamearea.x * 1.5),
 				rng.number<float>(-gamearea.y * 1.5, -gamearea.y * 0.5)
 			);
+			item->gravity = {5};
+			item->terminalVelocity = {10};
 			item->spawn();
 		}
 	}
