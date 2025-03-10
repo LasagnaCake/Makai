@@ -5,7 +5,7 @@
 #include "server.hpp"
 
 /*
-	BUG: Slows down processing but speeds up as more items are active
+	BUG: (Debug (-Og) only) Slows down processing but speeds up as more items are active
 */
 namespace Makai::Ex::Game::Danmaku {
 	struct Item;
@@ -181,13 +181,6 @@ namespace Makai::Ex::Game::Danmaku {
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
 		template <class, class> friend class ItemServer;
-
-		constexpr static void processMax(float& value, float const max) {
-			if (value > abs(max))
-				value = abs(max);
-			if (value < -abs(max))
-				value = -abs(max);
-		}
 
 		void setSpriteVisibility(bool const setGlowSprite, bool const state) {
 			if (glowSprite && setGlowSprite)	glowSprite->visible	= state; 
