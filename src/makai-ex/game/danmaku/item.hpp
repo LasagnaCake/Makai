@@ -89,7 +89,9 @@ namespace Makai::Ex::Game::Danmaku {
 		Item& spawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
+			animColor.a = 0;
 			counter = 0;
+			internalRotation = 0;
 			objectState = State::SOS_SPAWNING;
 			onAction(*this, Action::SOA_SPAWN_BEGIN);
 			return *this;
@@ -98,7 +100,9 @@ namespace Makai::Ex::Game::Danmaku {
 		Item& despawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
+			animColor.a = 1;
 			counter = 0;
+			internalRotation = 0;
 			objectState = State::SOS_DESPAWNING;
 			onAction(*this, Action::SOA_DESPAWN_BEGIN);
 			return *this;

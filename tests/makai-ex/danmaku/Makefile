@@ -51,6 +51,7 @@ define tests
 	$(call mktest-ex, $(1), 02.player)
 	$(call mktest-ex, $(1), 03.bullet)
 	$(call mktest-ex, $(1), 04.laser)
+	$(call mktest-ex, $(1), 05.item)
 endef
 else
 define tests
