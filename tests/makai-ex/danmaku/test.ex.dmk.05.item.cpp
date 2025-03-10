@@ -30,7 +30,7 @@ struct TestItemServer: MeshHolder, BaseItemServer {
 struct TestApp: Makai::Ex::Game::App {
 	TestItemServer server;
 
-	Makai::Random::Generator rng;
+	Makai::Random::SecureGenerator rng;
 
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 05", false}}) {
 		loadDefaultShaders();
@@ -43,12 +43,18 @@ struct TestApp: Makai::Ex::Game::App {
 
 	void createItems() {
 		if (auto item = server.acquire().as<Danmaku::Item>()) {
-			item->trans.position = Makai::Vec2(
-				rng.number<float>(gamearea.x * 0.5, gamearea.x * 1.5),
-				rng.number<float>(-gamearea.y * 1.5, -gamearea.y * 0.5)
+			item->trans.position = gamearea * Makai::Vec2(1, -1);
+			item->trans.position += Makai::Vec2(
+				rng.number<ssize>(-24, 24),
+				rng.number<ssize>(-24, 24)
 			);
-			item->gravity = {5};
-			item->terminalVelocity = {10};
+			item->gravity = Danmaku::Property<Makai::Vec2>{
+				.interpolate = true,
+				.start = Makai::Vec2(0, 1),
+				.stop = Makai::Vec2(0, -1),
+				.speed = 0.05
+			};
+			item->terminalVelocity = {Makai::Vec2(0, 10)};
 			item->spawn();
 		}
 	}
@@ -63,6 +69,7 @@ struct TestApp: Makai::Ex::Game::App {
 		if (frcount < MAX_FRCOUNT)
 			framerate[frcount++] = 1000.0 / getCycleDelta();
 		else {
+			createItems();
 			float fravg = 0;
 			for(float& f: framerate) fravg += f;
 			fravg *= (1.0 / (float)MAX_FRCOUNT);
