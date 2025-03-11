@@ -107,6 +107,7 @@ namespace Makai::Ex::Game::Danmaku {
 			pause		= {};
 			spawnTime	= 5;
 			despawnTime	= 5;
+			cycle		= 0;
 			if (auto collider = collision()) {
 				collider->shape			= nullptr;
 				collider->canCollide	= true;
@@ -127,7 +128,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual AServerObject& discard(bool const immediately = false, bool const force = false)	= 0;
 
 		Functor<void(AServerObject&, Action const)>	onAction;
-		Functor<void(AServerObject&, float)>		onObjectUpdate;
+		Functor<void(AServerObject&, float, usize)>	onObjectUpdate;
 
 		bool isFree() const {
 			return objectState == State::SOS_FREE;
@@ -159,7 +160,8 @@ namespace Makai::Ex::Game::Danmaku {
 		void onUpdate(float delta) override {
 			if (objectState == State::SOS_FREE) return;
 			AGameObject::onUpdate(delta);
-			onObjectUpdate(*this, delta);
+			if (!paused()) return;
+			onObjectUpdate(*this, delta, cycle++);
 		}
 
 	protected:
@@ -174,6 +176,9 @@ namespace Makai::Ex::Game::Danmaku {
 		State objectState;
 
 		virtual AServerObject& setFree(bool const state) = 0;
+
+	private:
+		usize cycle = 0;
 	};
 
 	struct ServerConfig {
