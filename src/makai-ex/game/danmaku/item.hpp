@@ -75,14 +75,17 @@ namespace Makai::Ex::Game::Danmaku {
 			terminalVelocity.next();
 			acceleration += gravity.next();
 			if (!jumpy) {
-				auto const tv = terminalVelocity.value.absolute();
-				acceleration.clamp(-tv, tv);
+				auto const tva = terminalVelocity.value.absolute();
+				acceleration.clamp(-tva, tva);
 			}
 			if (magnet.enabled && magnet.target && objectState == State::SOS_ACTIVE)
 				trans.position	+= trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
 			else if (jumpy) {
-				if (acceleration.absolute() > terminalVelocity.value.absolute())
-					acceleration = acceleration * -1 + gravity.value;
+				auto const tva = terminalVelocity.value.absolute();
+				if (acceleration.x > +tva.x) acceleration.x = (acceleration.x * -1) - gravity.value.x;
+				if (acceleration.y > +tva.y) acceleration.y = (acceleration.y * -1) - gravity.value.y;
+				if (acceleration.x < -tva.x) acceleration.x = (acceleration.x * -1) + gravity.value.x;
+				if (acceleration.y < -tva.y) acceleration.y = (acceleration.y * -1) + gravity.value.y;
 				trans.position += acceleration * delta;
 			} else trans.position += acceleration * delta;
 			trans.scale		= scale.next();
