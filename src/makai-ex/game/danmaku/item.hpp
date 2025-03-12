@@ -79,7 +79,7 @@ namespace Makai::Ex::Game::Danmaku {
 				acceleration.clamp(-tva, tva);
 			}
 			if (magnet.enabled && magnet.target && objectState == State::SOS_ACTIVE)
-				trans.position	+= trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
+				trans.position += trans.position.normalTo(*magnet.target) * magnet.strength.next() * delta;
 			else if (jumpy) {
 				auto const tva = terminalVelocity.value.absolute();
 				if (acceleration.x > +tva.x) acceleration.x = (acceleration.x * -1) - gravity.value.x;
@@ -152,6 +152,7 @@ namespace Makai::Ex::Game::Danmaku {
 				clear();
 				release(this, server);
 			} else {
+				setCollisionState(false);
 				active = true;
 				showSprites();
 				objectState = State::SOS_ACTIVE;
@@ -401,7 +402,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	private:
-		StaticList<Item> all;
+		StaticList<ItemType> all;
 	};
 }
 
