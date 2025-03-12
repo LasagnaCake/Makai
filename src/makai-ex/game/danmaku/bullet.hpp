@@ -137,6 +137,7 @@ namespace Makai::Ex::Game::Danmaku {
 		Bullet& setFree(bool const state) override {
 			active = state;
 			if (state) {
+				setCollisionState(false);
 				objectState = State::SOS_FREE;
 				hideSprites();
 				clear();
