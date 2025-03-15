@@ -74,7 +74,7 @@ struct Registry {
 
 	template<Type::Subclass<Member> TSub, class... Args>
 	[[nodiscard]] static constexpr Instance<TSub> create(Args... args) {
-		return Member::create(args...);
+		return Member::template create<TSub>(args...);
 	}
 	
 private:
