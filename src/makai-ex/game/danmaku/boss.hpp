@@ -7,17 +7,10 @@ namespace Makai::Ex::Game::Danmaku {
 	struct ABoss: AEnemy {
 		ABoss(EnemyConfig const& cfg): AEnemy(cfg) {}
 
-		Graph::RadialBar healthBar;
-
 		void onUpdate(float delta) override {
 			if (!active) return;
 			AEnemy::onUpdate(delta);
 			if (paused()) return;
-			healthBar.value = health;
-			healthBar.max	= maxHealth;
-			healthBar.trans.position	= trans.position;
-			healthBar.trans.rotation.z	= trans.rotation;
-			healthBar.trans.scale		= trans.scale;
 		}
 
 		void onDeath() override {

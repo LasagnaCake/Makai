@@ -35,6 +35,8 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct AEnemy: AGameObject, AUpdateable, IDamageable, Healthy {
+		Graph::RadialBar healthBar;
+
 		AEnemy(EnemyConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
 			collision()->getLayer().affects		= cfg.hitboxLayer.affects;
 			collision()->getLayer().affectedBy	= cfg.hitboxLayer.affectedBy;
@@ -50,6 +52,11 @@ namespace Makai::Ex::Game::Danmaku {
 			if (!active) return;
 			AGameObject::onUpdate(delta);
 			if (paused()) return;
+			healthBar.value = health;
+			healthBar.max	= maxHealth;
+			healthBar.trans.position	= trans.position;
+			healthBar.trans.rotation.z	= trans.rotation;
+			healthBar.trans.scale		= trans.scale;
 		}
 
 		void onUpdate(float delta, Makai::App& app) override {
