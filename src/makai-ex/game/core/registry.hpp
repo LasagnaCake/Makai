@@ -25,11 +25,13 @@ struct Registry {
 		}
 
 		constexpr virtual ~Member() {Registry::remove(this);}
+
+		constexpr Member() {
+			Registry::add(this);
+		}
 	
 	private:
 		friend class Registry;
-
-		constexpr Member() {Registry::add(*this);}
 
 		bool destroying = true;
 	};
