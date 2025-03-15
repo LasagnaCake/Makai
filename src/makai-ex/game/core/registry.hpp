@@ -26,15 +26,15 @@ struct Registry {
 		constexpr TSub* operator->() const	{return static_cast<TSub*>(content->operator->());	}
 		constexpr TSub& operator*() const	{return static_cast<TSub&>(*content);				}
 
-		constexpr Reference<TSub>	reference() const		{return content.template as<TSub>();			}
+		constexpr Reference<TSub>	reference() const	{return content.template as<TSub>();			}
 		template <class TNew = TSub>
-		constexpr Reference<TNew>	as() const				{return content.template as<TNew>();			}
+		constexpr Reference<TNew>	as() const			{return content.template as<TNew>();			}
 		template <class TNew = TSub>
-		constexpr Reference<TNew>	morph() const			{return content.template morph<TNew>();			}
+		constexpr Reference<TNew>	morph() const		{return content.template morph<TNew>();			}
 		template <class TNew = TSub>
-		constexpr Reference<TNew>	reinterpret() const		{return content.template reinterpret<TNew>();	}
+		constexpr Reference<TNew>	reinterpret() const	{return content.template reinterpret<TNew>();	}
 		template <class TNew = TSub>
-		constexpr Reference<TNew>	mutate() const			{return content.template mutate<TNew>();		}
+		constexpr Reference<TNew>	mutate() const		{return content.template mutate<TNew>();		}
 
 		constexpr operator<=>(Member const& other) const	{return content <=> other.content;	}
 		constexpr operator==(Member const& other) const		{return content == other.content;	}
