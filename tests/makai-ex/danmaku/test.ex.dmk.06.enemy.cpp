@@ -14,6 +14,8 @@ struct TestEnemy: Danmaku::AEnemy {
 	TestEnemy(): AEnemy({::board, ::playfield}) {}
 };
 
+struct TestRegistry: Makai::Ex::Game::Registry<TestEnemy> {};
+
 struct TestApp: Makai::Ex::Game::App {
 	Makai::Random::SecureGenerator rng;
 
