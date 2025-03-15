@@ -29,6 +29,7 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 		AEnemy::onUpdate(delta, app);
 		if (paused()) return;
 		trans.position.x = sin(app.getCurrentCycle() / 60.0) * 24 + gamearea.x;
+		sprite->local.position = trans.position;
 	}
 
 	virtual TestEnemy& spawn() override		{return *this;}
