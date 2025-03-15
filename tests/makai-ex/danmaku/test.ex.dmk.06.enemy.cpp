@@ -20,7 +20,7 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 	Makai::Ex::Game::SpriteInstance sprite;
 
 	TestEnemy(): AEnemy({::board, ::playfield}) {
-		trans.position.y = playfield.center.y * .5;
+		trans.position = playfield.center;
 		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
 	}
