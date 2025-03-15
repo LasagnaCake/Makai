@@ -1,5 +1,5 @@
-#ifndef MAKAILIB_EX_GAME_CORE_H
-#define MAKAILIB_EX_GAME_CORE_H
+#ifndef MAKAILIB_EX_GAME_CORE_APP_H
+#define MAKAILIB_EX_GAME_CORE_APP_H
 
 #include <makai/makai.hpp>
 

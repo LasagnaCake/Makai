@@ -82,6 +82,14 @@ namespace Type {
 
 			template<typename T>
 			constexpr bool isDefined<T, decltype(typeid(T), void())> = true;
+
+			// cppreference
+			template <class T>
+			TrueType isPoly(decltype(dynamic_cast<const volatile void*>(static_cast<T*>(nullptr))));
+			
+			// cppreference
+			template <class T>
+			FalseType isPoly();
 		}
 
 		template<typename A, typename B>	struct IsEqual:			FalseType	{};
@@ -190,6 +198,10 @@ namespace Type {
 
 		template <template <class...> class T, class... Types>
 		struct IsValid: T<Types...> {};
+
+		template <class T> struct IsPolymorphic: decltype(Partial::isPoly<T>()) {};
+
+		template <class T> struct IsVirtual: BooleanConstant<__has_virtual_destructor(T)> {};
 	}
 
 	/// @brief Both types must be equal.
@@ -688,6 +700,14 @@ namespace Type {
 		{t.data()};
 		{t.size()};
 	};
+
+	/// @brief Type must be a polymorphic type.
+	template <class T>
+	concept Polymorphic = Impl::IsPolymorphic<T>::value;
+
+	/// @brief Type must have a virtual destructor.
+	template <class T>
+	concept Virtual = Impl::IsVirtual<T>::value;
 }
 
 CTL_NAMESPACE_END

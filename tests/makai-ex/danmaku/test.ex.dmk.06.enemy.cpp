@@ -10,6 +10,10 @@ Danmaku::GameArea
 	playfield	= {gamearea * Makai::Vector2(1, -1), (gamearea * 1.5)}
 ;
 
+struct TestEnemy: Danmaku::AEnemy {
+	TestEnemy(): AEnemy({::board, ::playfield}) {}
+};
+
 struct TestApp: Makai::Ex::Game::App {
 	Makai::Random::SecureGenerator rng;
 
