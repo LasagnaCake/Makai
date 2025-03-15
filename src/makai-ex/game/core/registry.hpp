@@ -20,12 +20,13 @@ struct Registry {
 		}
 
 		template<Type::Subclass<Member> TSub, class... Args>
-		static constexpr Instance<TSub> create(Args... args) {
+		[[nodiscard]] static constexpr Instance<TSub> create(Args... args) {
 			return new TSub(args...);
 		}
 
 		constexpr virtual ~Member() {Registry::remove(this);}
 
+	protected:
 		constexpr Member() {
 			Registry::add(this);
 		}
@@ -38,14 +39,14 @@ struct Registry {
 
 	using FindPredicate = bool(Member const&);
 
-	using QueryResult = List<Handle<Member>>;
+	using QueryResult = List<Instance<Member>>;
 
 	template <Type::Functional<FindPredicate> TPred>
 	constexpr static QueryResult find(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
 			if (predicate(*m))
-				res.pushBack(m.asWeak());
+				res.pushBack(m);
 		return res;
 	}
 
@@ -54,14 +55,14 @@ struct Registry {
 		QueryResult res;
 		for (auto const& m: members)
 			if (!predicate(*m))
-				res.pushBack(m.asWeak());
+				res.pushBack(m);
 		return res;
 	}
 
 	constexpr static QueryResult all() {
 		QueryResult res;
 		for (auto const& m: members)
-			res.pushBack(m.asWeak());
+			res.pushBack(m);
 		return res;
 	}
 
@@ -72,21 +73,21 @@ struct Registry {
 	}
 
 	template<Type::Subclass<Member> TSub, class... Args>
-	static constexpr Instance<TSub> create(Args... args) {
+	[[nodiscard]] static constexpr Instance<TSub> create(Args... args) {
 		return Member::create(args...);
 	}
 	
 private:
 	friend class Member;
 
-	constexpr static void queue(Instance<Member> const& member)		{queued.pushBack(member);	}
-	constexpr static void unqueue(Instance<Member> const& member)	{queued.eraseLike(member);	}
+	constexpr static void queue(owner<Member> const& member)	{queued.pushBack(member);	}
+	constexpr static void unqueue(owner<Member> const& member)	{queued.eraseLike(member);	}
 
-	constexpr static void add(Instance<Member> const& member)		{members.pushBack(member);	}
-	constexpr static void remove(Instance<Member> const& member)	{members.eraseLike(member);	}
+	constexpr static void add(owner<Member> const& member)		{members.pushBack(member);	}
+	constexpr static void remove(owner<Member> const& member)	{members.eraseLike(member);	}
 
-	inline static List<Instance<Member>> members;
-	inline static List<Instance<Member>> queued;
+	inline static List<owner<Member>> members;
+	inline static List<owner<Member>> queued;
 };
 
 }
