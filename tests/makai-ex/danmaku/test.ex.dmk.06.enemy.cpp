@@ -15,7 +15,28 @@ struct TestEnemy;
 using TestRegistry = Makai::Ex::Game::Registry<TestEnemy>;
 
 struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
-	TestEnemy(): AEnemy({::board, ::playfield}) {}
+	Makai::Graph::Renderable mesh;
+
+	Makai::Ex::Game::SpriteInstance sprite;
+
+	TestEnemy(): AEnemy({::board, ::playfield}) {
+		trans.position.y = -16;
+		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
+	}
+
+	void onUpdate(float delta, Makai::App& app) override {
+		if (!active) return;
+		AEnemy::onUpdate(delta, app);
+		if (paused()) return;
+		trans.position.x = sin(app.getCurrentCycle() / 60.0) * 24 + gamearea.x;
+	}
+
+	virtual TestEnemy& spawn() override		{return *this;}
+	virtual TestEnemy& despawn() override	{return *this;}
+
+	void onDeath() override {
+		queueDestroy();
+	}
 };
 
 struct TestApp: Makai::Ex::Game::App {
@@ -33,13 +54,21 @@ struct TestApp: Makai::Ex::Game::App {
 	constexpr static usize MAX_FRCOUNT = 10;
 
 	usize frcount = 0;
+	usize counter = 12;
 
 	float framerate[MAX_FRCOUNT];
+
+	Makai::Instance<TestEnemy> enemy;
 
 	void onUpdate(float delta) {
 		if (frcount < MAX_FRCOUNT)
 			framerate[frcount++] = 1000.0 / getCycleDelta();
 		else {
+			if (counter > 0) --counter;
+			else {
+				counter = -1;
+				enemy = TestRegistry::create<TestEnemy>();
+			}
 			float fravg = 0;
 			for(float& f: framerate) fravg += f;
 			fravg *= (1.0 / (float)MAX_FRCOUNT);
@@ -47,6 +76,7 @@ struct TestApp: Makai::Ex::Game::App {
 			DEBUGLN("Framerate: ", Makai::Format::prettify(Makai::Math::round(fravg, 2), 2, 0));
 			frcount = 0;
 		}
+		TestRegistry::destroyQueued();
 	}
 };
 
