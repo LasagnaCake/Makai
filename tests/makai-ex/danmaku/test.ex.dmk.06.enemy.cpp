@@ -19,7 +19,9 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 
 	Makai::Ex::Game::SpriteInstance sprite;
 
-	TestEnemy(): AEnemy({::board, ::playfield}) {
+	usize const offset;
+
+	TestEnemy(usize const offset): AEnemy({::board, ::playfield}), offset(offset) {
 		trans.position = playfield.center;
 		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
@@ -29,7 +31,7 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 		if (!active) return;
 		AEnemy::onUpdate(delta, app);
 		if (paused()) return;
-		trans.position.x = sin(app.getCurrentCycle() / 60.0) * 24 + playfield.center.x;
+		trans.position.x = sin((app.getCurrentCycle() - offset) / 60.0) * 24 + playfield.center.x;
 		mesh.trans.position		= trans.position;
 		mesh.trans.rotation.z	= trans.rotation;
 		mesh.trans.scale		= trans.scale;
@@ -56,18 +58,21 @@ struct TestApp: Makai::Ex::Game::App {
 	}
 
 	void spawnEnemy() {
-		enemy = TestRegistry::create<TestEnemy>();
-		enemy->trans.position.y = rng.number<float>(24, -24) + playfield.center.y;
+		enemies[current] = TestRegistry::create<TestEnemy>(getCurrentCycle());
+		enemies[current]->trans.position.y = rng.number<float>(24, -24) + playfield.center.y;
+		(++current) %= MAX_ENEMIES;
 	}
 
 	constexpr static usize MAX_FRCOUNT = 10;
+	constexpr static usize MAX_ENEMIES = 10;
 
 	usize frcount = 0;
 	usize counter = 12;
+	usize current = 0;
 
 	float framerate[MAX_FRCOUNT];
 
-	Makai::Instance<TestEnemy> enemy;
+	Makai::Instance<TestEnemy> enemies[MAX_ENEMIES];
 
 	void onUpdate(float delta) {
 		if (frcount < MAX_FRCOUNT)
