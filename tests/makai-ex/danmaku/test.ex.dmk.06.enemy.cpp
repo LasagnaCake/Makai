@@ -20,15 +20,16 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 	Makai::Ex::Game::SpriteInstance sprite;
 
 	TestEnemy(): AEnemy({::board, ::playfield}) {
-		trans.position.y = -16;
+		trans.position.y = playfield.center.y * .5;
 		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
+		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
 	}
 
 	void onUpdate(float delta, Makai::App& app) override {
 		if (!active) return;
 		AEnemy::onUpdate(delta, app);
 		if (paused()) return;
-		trans.position.x = sin(app.getCurrentCycle() / 60.0) * 24 + gamearea.x;
+		trans.position.x = sin(app.getCurrentCycle() / 60.0) * 24 + playfield.center.x;
 		sprite->local.position = trans.position;
 	}
 
