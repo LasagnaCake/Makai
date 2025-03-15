@@ -5,69 +5,41 @@
 
 namespace Makai::Ex::Game {
 
-template<Type::Virtual T>
+template<class T, usize ID = 0>
 struct Registry {
-	template <class TSub = T>
-	struct Member;
-
-	template <Type::Derived<T> TSub>
-	struct Member<TSub> {
+	struct Member {
 		constexpr void destroy() {
 			if (destroying) return;
 			destroying = true;
-			registry.remove(this);
+			Instance<Member>(this).destroy();
 		}
 
 		constexpr Member& queueDestroy() {
-			registry.queue(this);
+			Registry::queue(this);
 			return *this;
 		}
 
-		constexpr TSub* operator->() const	{return static_cast<TSub*>(content->operator->());	}
-		constexpr TSub& operator*() const	{return static_cast<TSub&>(*content);				}
+		template<Type::Subclass<Member> TSub, class... Args>
+		static constexpr Instance<TSub> create(Args... args) {
+			return new TSub(args...);
+		}
 
-		constexpr Reference<TSub>	reference() const	{return content.template as<TSub>();			}
-		template <class TNew = TSub>
-		constexpr Reference<TNew>	as() const			{return content.template as<TNew>();			}
-		template <class TNew = TSub>
-		constexpr Reference<TNew>	morph() const		{return content.template morph<TNew>();			}
-		template <class TNew = TSub>
-		constexpr Reference<TNew>	reinterpret() const	{return content.template reinterpret<TNew>();	}
-		template <class TNew = TSub>
-		constexpr Reference<TNew>	mutate() const		{return content.template mutate<TNew>();		}
-
-		constexpr operator<=>(Member const& other) const	{return content <=> other.content;	}
-		constexpr operator==(Member const& other) const		{return content == other.content;	}
-
-		constexpr ~Member() {destroy();}
-
+		constexpr virtual ~Member() {Registry::remove(this);}
+	
 	private:
 		friend class Registry;
 
+		constexpr Member() {Registry::add(*this);}
+
 		bool destroying = true;
-
-		constexpr void destroy(bool const) {Instance<Member<T>>(this).destroy();}
-
-		template <Type::Derived<T> TClass>
-		constexpr Member(Registry& registry, Unique<TClass>&& content): registry(registry), content(move(content)) {
-			registry.add(this);
-		}
-
-		Registry&	registry;
-		Unique<T>	content;
 	};
 
-	using FindPredicate = bool(Member<T> const&);
+	using FindPredicate = bool(Member const&);
 
-	using QueryResult = List<Handle<Member<T>>>;
-
-	template<Type::Derived<T> TClass, class... Args>
-	constexpr Instance<Member<TClass>> create(Args... args) {
-		return new Member<TClass>(*this, new TClass(args...));
-	}
+	using QueryResult = List<Handle<Member>>;
 
 	template <Type::Functional<FindPredicate> TPred>
-	constexpr QueryResult find(TPred const& predicate) const {
+	constexpr static QueryResult find(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
 			if (predicate(*m))
@@ -76,7 +48,7 @@ struct Registry {
 	}
 
 	template <Type::Functional<FindPredicate> TPred>
-	constexpr QueryResult findNot(TPred const& predicate) const {
+	constexpr static QueryResult findNot(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
 			if (!predicate(*m))
@@ -84,37 +56,35 @@ struct Registry {
 		return res;
 	}
 
-	constexpr QueryResult all() const {
+	constexpr static QueryResult all() {
 		QueryResult res;
 		for (auto const& m: members)
 			res.pushBack(m.asWeak());
 		return res;
 	}
 
-	constexpr Registry& destroyQueued() {
+	constexpr static void destroyQueued() {
 		for (auto& q: queued)
 			if (q) q->destroy();
 		queued.clear();
-		return *this;
 	}
 
-	constexpr ~Registry() {
-		for (auto& m: members)
-			if (m) m->destroy(true);
-		members.clear();
+	template<Type::Subclass<Member> TSub, class... Args>
+	static constexpr Instance<TSub> create(Args... args) {
+		return Member::create(args...);
 	}
 	
 private:
-	template <class> friend class Member;
+	friend class Member;
 
-	constexpr void queue(Instance<Member<T>> const& member)		{queued.pushBack(member);						}
-	constexpr void unqueue(Instance<Member<T>> const& member)	{queued.eraseLike(member);						}
+	constexpr static void queue(Instance<Member> const& member)		{queued.pushBack(member);	}
+	constexpr static void unqueue(Instance<Member> const& member)	{queued.eraseLike(member);	}
 
-	constexpr void add(Instance<Member<T>> const& member)		{members.pushBack(member);						}
-	constexpr void remove(Instance<Member<T>> const& member)	{members.eraseLike(member); member.destroy();	}
+	constexpr static void add(Instance<Member> const& member)		{members.pushBack(member);	}
+	constexpr static void remove(Instance<Member> const& member)	{members.eraseLike(member);	}
 
-	List<Instance<Member<T>>> members;
-	List<Instance<Member<T>>> queued;
+	inline static List<Instance<Member>> members;
+	inline static List<Instance<Member>> queued;
 };
 
 }
