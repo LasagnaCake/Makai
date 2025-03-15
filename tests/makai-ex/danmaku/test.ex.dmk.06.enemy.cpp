@@ -55,6 +55,11 @@ struct TestApp: Makai::Ex::Game::App {
 		camera.use(layerID >= Danmaku::Render::Layer::BOSS1_SPELL_BG_BOTTOM_LAYER);
 	}
 
+	void spawnEnemy() {
+		enemy = TestRegistry::create<TestEnemy>();
+		enemy->trans.position.y = rng.number<float>(24, -24) + playfield.center.y;
+	}
+
 	constexpr static usize MAX_FRCOUNT = 10;
 
 	usize frcount = 0;
@@ -70,8 +75,8 @@ struct TestApp: Makai::Ex::Game::App {
 		else {
 			if (counter > 0) --counter;
 			else {
-				counter = -1;
-				enemy = TestRegistry::create<TestEnemy>();
+				counter = 12;
+				spawnEnemy();
 			}
 			float fravg = 0;
 			for(float& f: framerate) fravg += f;
