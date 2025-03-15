@@ -38,6 +38,7 @@ namespace Makai::Ex::Game::Danmaku {
 		AEnemy(EnemyConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
 			collision()->getLayer().affects		= cfg.hitboxLayer.affects;
 			collision()->getLayer().affectedBy	= cfg.hitboxLayer.affectedBy;
+			active = true;
 		}
 
 		constexpr static usize INVINCIBLE	= 1 << 0;
