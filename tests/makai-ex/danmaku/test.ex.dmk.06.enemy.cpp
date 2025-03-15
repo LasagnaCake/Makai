@@ -30,7 +30,9 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 		AEnemy::onUpdate(delta, app);
 		if (paused()) return;
 		trans.position.x = sin(app.getCurrentCycle() / 60.0) * 24 + playfield.center.x;
-		sprite->local.position = trans.position;
+		mesh.trans.position		= trans.position;
+		mesh.trans.rotation.z	= trans.rotation;
+		mesh.trans.scale		= trans.scale;
 	}
 
 	virtual TestEnemy& spawn() override		{return *this;}
