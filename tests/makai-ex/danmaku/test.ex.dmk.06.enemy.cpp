@@ -48,7 +48,7 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 struct TestApp: Makai::Ex::Game::App {
 	Makai::Random::SecureGenerator rng;
 
-	TestApp(): App(Makai::Config::App{{800, 600, "Test 05", false}}) {
+	TestApp(): App(Makai::Config::App{{800, 600, "Test 06", false}}) {
 		loadDefaultShaders();
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
 	}
