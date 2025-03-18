@@ -15,14 +15,20 @@ jobs:
 
   install-gcc:
     name: Install Latest GCC
-    runs-on: windows-2022
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-    - name: Setup Compiler
-      id: gccx
-      uses: rlalik/setup-cpp-compiler@master
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
       with:
-        compiler: gcc-latest
-
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64- mingw-w64-x86_64-cmake mingw-w64-x86_64-make --needed
+    - name: Checkout
+      uses: actions/checkout@v4
+          
     - name: Verify GCC Installation
       run: |
         gcc --version
@@ -33,7 +39,7 @@ jobs:
 
   build-ctl-tests-debug:
     name: Build CTL Tests (DEBUG)
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +58,7 @@ jobs:
 
   build-ctl-tests-release:
     name: Build CTL Tests (RELEASE)
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +77,7 @@ jobs:
 
   build-core-lib-debug:
     name: Build Makai (DEBUG)
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
@@ -87,7 +93,7 @@ jobs:
 
   build-core-lib-release:
     name: Build Makai (RELEASE)
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
@@ -103,7 +109,7 @@ jobs:
         
   build-lib-tests-debug:
     name: Build API Tests (DEBUG)
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +129,7 @@ jobs:
 
   build-lib-tests-release:
     name: Build API Tests (RELEASE)
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
