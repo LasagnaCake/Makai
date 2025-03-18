@@ -41,6 +41,7 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
+      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
       - name: make tests
         run: |
@@ -63,6 +64,7 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
+      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
       - name: make tests
         run: |
@@ -85,6 +87,7 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
+    - uses: msys2/setup-msys2@v2
     - uses: actions/checkout@v4
     - name: make debug
       run: make debug
@@ -104,6 +107,7 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
+    - uses: msys2/setup-msys2@v2
     - uses: actions/checkout@v4
     - name: make release
       run: make release
@@ -123,6 +127,7 @@ jobs:
         shell: msys2 {0}
     needs: [build-core-lib-debug]
     steps:
+      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
@@ -146,6 +151,7 @@ jobs:
         shell: msys2 {0}
     needs: [build-core-lib-release]
     steps:
+      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
