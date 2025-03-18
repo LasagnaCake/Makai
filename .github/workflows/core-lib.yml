@@ -25,7 +25,7 @@ jobs:
       with:
           msystem: MINGW64
           update: true
-          install: git mingw-w64-x86_64- mingw-w64-x86_64-cmake mingw-w64-x86_64-make --needed
+          install: git mingw-w64-x86_64-toolchain
     - name: Checkout
       uses: actions/checkout@v4
           
