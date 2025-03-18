@@ -74,13 +74,13 @@ constexpr AsConstant<T>&		constant(T& v)					{return v;										}
 /// @param v Value to decay.
 /// @return Value as either a reference or temporary.
 template<class T>
-constexpr T&& forward(T&& v)		{if constexpr (Type::LeftReference<T>) return v; else return move(v);	}
+constexpr T&& forward(T& v)				{return v;			}
 
-/// @brief Forwards const references as const references.
+/// @brief Forwards references as either references or temporaries, depending on its type.
 /// @param v Value to decay.
 /// @return Value as either a reference or temporary.
 template<class T>
-constexpr T const& forward(T const& v)	{return v;								}
+constexpr T&& forward(T&& v)			{return move(v);	}
 
 CTL_NAMESPACE_END
 
