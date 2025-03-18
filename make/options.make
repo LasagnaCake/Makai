@@ -31,7 +31,7 @@ Supported options:
 >   openmp        = [ flag ]         : Whether openmp should be enabled        ( DEF: undefined    )
 >   omp-threads   = [ number ]       : How many threads openmp should use      ( DEF: 128          )
 
->   deug-release  = [ flag ]         : Whether to not use buffers in App       ( DEF: undefined    )
+>   deug-release  = [ flag ]         : Whether enable debugging in release lib ( DEF: undefined    )
 
 >   gl-loader     = [ string ]       : Which GL loading API to use             ( DEF: glad         )
 
