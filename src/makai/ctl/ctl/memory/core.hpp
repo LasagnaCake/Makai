@@ -307,7 +307,7 @@ namespace MX {
 	template<Type::NonVoid T, typename... Args>
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args) {
 		if (!mem) throw ConstructionFailure();
-		::new (static_cast<void*>(mem)) T(forward<Args>(args)...);
+		::new (static_cast<void*>(mem)) T(::CTL::forward<Args>(args)...);
 		return mem;
 	}
 
@@ -320,7 +320,7 @@ namespace MX {
 	template<Type::NonVoid T, typename... Args>
 	constexpr void reconstruct(ref<T> const mem, Args&&... args) {
 		destruct(mem);
-		construct(mem, forward<Args>(args)...);
+		construct(mem, ::CTL::forward<Args>(args)...);
 	}
 
 	/// @brief Allocates & constructs an object of a given type on the heap.
