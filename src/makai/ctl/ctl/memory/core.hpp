@@ -330,7 +330,7 @@ namespace MX {
 	/// @return Pointer to created object.
 	template<Type::NonVoid T, typename... Args>
 	constexpr owner<T> create(Args&&... args) {
-		return construct<T>(malloc<T>(), forward<Args>(args)...);
+		return construct<T>(malloc<T>(), ::CTL::forward<Args>(args)...);
 	}
 
 	/// @brief Resizes memory allocated in the heap.
