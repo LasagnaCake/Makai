@@ -36,6 +36,9 @@ jobs:
   build-ctl-tests-debug:
     name: Build CTL Tests (DEBUG)
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
@@ -55,6 +58,9 @@ jobs:
   build-ctl-tests-release:
     name: Build CTL Tests (RELEASE)
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
@@ -74,6 +80,9 @@ jobs:
   build-core-lib-debug:
     name: Build Makai (DEBUG)
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
@@ -90,6 +99,9 @@ jobs:
   build-core-lib-release:
     name: Build Makai (RELEASE)
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
@@ -106,6 +118,9 @@ jobs:
   build-lib-tests-debug:
     name: Build API Tests (DEBUG)
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
@@ -126,6 +141,9 @@ jobs:
   build-lib-tests-release:
     name: Build API Tests (RELEASE)
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
