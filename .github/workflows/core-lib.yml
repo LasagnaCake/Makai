@@ -42,7 +42,6 @@ jobs:
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
       - name: make tests
         run: |
           cd tests/ctl
@@ -65,7 +64,6 @@ jobs:
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
       - name: make tests
         run: |
           cd tests/ctl
@@ -88,7 +86,6 @@ jobs:
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
-    - uses: msys2/setup-msys2@v2
     - name: make debug
       run: make debug
 #      env:
@@ -108,7 +105,6 @@ jobs:
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
-    - uses: msys2/setup-msys2@v2
     - name: make release
       run: make release
 #      env:
@@ -128,7 +124,6 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -152,7 +147,6 @@ jobs:
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
       - uses: actions/download-artifact@master
         with:
           name: lib-release
