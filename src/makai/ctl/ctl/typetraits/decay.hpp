@@ -74,13 +74,13 @@ constexpr AsConstant<T>&		constant(T& v)					{return v;										}
 /// @param v Value to decay.
 /// @return Value as either a reference or temporary.
 template<class T>
-constexpr T&& forward(typename Impl::NonReferenceType<T>::Type& v)	{return static_cast<T&&>(t);	}
+constexpr T&& forward(typename Impl::NonReferenceType<T>::Type& v)	{return static_cast<T&&>(v);	}
 
 /// @brief Forwards references as either references or temporaries, depending on its type.
 /// @param v Value to decay.
 /// @return Value as either a reference or temporary.
 template<class T>
-constexpr T&& forward(typename Impl::NonReferenceType<T>::Type&& v)	{return static_cast<T&&>(t);	}
+constexpr T&& forward(typename Impl::NonReferenceType<T>::Type&& v)	{return static_cast<T&&>(v);	}
 
 CTL_NAMESPACE_END
 
