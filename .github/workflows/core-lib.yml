@@ -27,7 +27,7 @@ jobs:
       with:
           msystem: MINGW64
           update: true
-          install: git mingw-w64-x86_64-toolchain
+          install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
     - name: Verify GCC Installation
       run: |
         gcc --version
@@ -41,8 +41,8 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
-      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
       - name: make tests
         run: |
           cd tests/ctl
@@ -64,8 +64,8 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
-      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
       - name: make tests
         run: |
           cd tests/ctl
@@ -87,8 +87,8 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
-    - uses: msys2/setup-msys2@v2
     - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2
     - name: make debug
       run: make debug
 #      env:
@@ -107,8 +107,8 @@ jobs:
         shell: msys2 {0}
     needs: install-gcc
     steps:
-    - uses: msys2/setup-msys2@v2
     - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2
     - name: make release
       run: make release
 #      env:
@@ -127,8 +127,8 @@ jobs:
         shell: msys2 {0}
     needs: [build-core-lib-debug]
     steps:
-      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -151,8 +151,8 @@ jobs:
         shell: msys2 {0}
     needs: [build-core-lib-release]
     steps:
-      - uses: msys2/setup-msys2@v2
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
       - uses: actions/download-artifact@master
         with:
           name: lib-release
