@@ -107,7 +107,7 @@ public:
 				new Thread(
 					[this, ...args = args] (ExecutionTokenType& exect) {
 						result = nullptr;
-						result = target.value()(exect, args...);
+						result = target.value()(exect, forward<Args>(args)...);
 					}
 				)
 			);
@@ -118,7 +118,7 @@ public:
 	/// @brief Runs the bound function asynchronously, if not already running. If no function is bound, does nothing.
 	/// @param ...args Values to pass to function.
 	/// @return Promise to result.
-	PromiseType run(Args... args) requires Type::Void<ReturnType> {
+	PromiseType run(Args&&... args) requires Type::Void<ReturnType> {
 		if (!running()) {
 			rebindResult();
 			executor
@@ -126,7 +126,7 @@ public:
 			.bind(
 				new Thread(
 					target.value(),
-					args...
+					forward<Args>(args)...
 				)
 			);
 		}

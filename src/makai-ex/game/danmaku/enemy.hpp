@@ -34,7 +34,7 @@ namespace Makai::Ex::Game::Danmaku {
 		} const mask = {};
 	};
 
-	struct AEnemy: AGameObject, AUpdateable, IDamageable, Healthy {
+	struct AEnemy: AGameObject, AUpdateable, IDamageable, IKillable, Healthy {
 		Graph::RadialBar healthBar;
 
 		AEnemy(EnemyConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
@@ -89,14 +89,15 @@ namespace Makai::Ex::Game::Danmaku {
 			if (areAnyFlagsSet(DEAD)) return *this;
 			if (health > 0)
 				loseHealth(damage);
-			else {
-				setFlags(DEAD, true);
-				onDeath();
-			}
+			else die();
 			return *this;
 		}
 
-		virtual void onDeath() = 0;
+		AEnemy& die() override {
+			setFlags(DEAD, true);
+			onDeath();
+			return *this;
+		}
 
 		EnemyConfig::Collision const mask;
 

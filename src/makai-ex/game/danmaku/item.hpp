@@ -272,7 +272,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 	};
 
-	struct ItemServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
+	struct ItemCollisionConfig {
 		ColliderConfig const colli = {
 			Danmaku::Collision::Layer::ITEM,
 			Collision::Tag::FOR_PLAYER_1
@@ -283,6 +283,15 @@ namespace Makai::Ex::Game::Danmaku {
 		};
 		ItemConfig::Collision const mask = {};
 	};
+
+	struct ItemServerConfig:
+		ServerConfig,
+		ServerMeshConfig,
+		ServerGlowMeshConfig,
+		BoundedObjectConfig,
+		ItemCollisionConfig {};
+
+	struct ItemServerInstanceConfig: ServerConfig, ItemCollisionConfig {};
 
 	template<Type::Derived<Item> TItem, Type::Derived<ItemConfig> TConfig>
 	struct ItemServer<TItem, TConfig>: AServer, AUpdateable {

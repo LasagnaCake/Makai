@@ -207,8 +207,8 @@ struct Unique:
 	/// @param ...args Arguments to pass to object construtor.
 	/// @return Unique pointer.
 	template<class... Args>
-	constexpr static SelfType create(Args... args) {
-		return SelfType(new DataType(args...));
+	constexpr static SelfType create(Args&&... args) {
+		return SelfType(new DataType(forward<Args>(args)...));
 	}
 
 private:

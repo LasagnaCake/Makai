@@ -59,16 +59,6 @@ namespace Decay {
 
 static_assert(Type::Equal<Decay::AsFunction<bool(void)>, bool()>, "Something's not correct...");
 
-/// @brief Forwards references as either references or temporaries, depending on where it is being passed to.
-/// @param v Value to decay.
-/// @return Value as either a reference or temporary.
-template<class T>
-constexpr AsTemporary<T>		forward(AsNonReference<T>& v)	{return static_cast<T&&>(v);					}
-/// @brief Ensures temporary can only be passed as a temporary.
-/// @param v Value to decay.
-/// @return Value as a temporary.
-template<class T>
-constexpr AsTemporary<T>		forward(AsNonReference<T>&& v)	{return static_cast<T&&>(v);					}
 /// @brief Ensures value passed can safely be moved.
 /// @param v Value to move.
 /// @return Value as a temporary.
@@ -79,6 +69,12 @@ constexpr AsNonReference<T>&&	move(T&& v)						{return static_cast<AsNonReferenc
 /// @return Value as const reference.
 template <class T>
 constexpr AsConstant<T>&		constant(T& v)					{return v;										}
+
+/// @brief Forwards references as either references or temporaries, depending on its type.
+/// @param v Value to decay.
+/// @return Value as either a reference or temporary.
+template<class T>
+constexpr T&& forward(T&& v) {if constexpr (Type::LeftReference<T>) return v; else return move(v);	}
 
 CTL_NAMESPACE_END
 

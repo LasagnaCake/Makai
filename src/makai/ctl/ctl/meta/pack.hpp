@@ -19,23 +19,37 @@ namespace Meta {
 		struct NthInPack<N, T, Types...> {
 			using Type = typename NthInPack<N-1, Types...>::Type;
 		};
+
+		template <typename... T>
+		struct Inherit;
+
+		template <typename T>
+		struct Inherit<T>: T {};
+
+		template <typename T, typename... Types>
+		struct Inherit<T, Types...>: Inherit<T>, Inherit<Types...> {};
 	}
 
 	/// @brief Returns the Nth type in a series of types.
 	/// @tparam ...Types Types.
 	/// @tparam N Type to locate.
-	template<usize N, typename... Types>
+	template <usize N, typename... Types>
 	using NthType = typename Impl::NthInPack<N, Types...>::Type;
 
 	/// @brief Returns the first type in a series of types.
 	/// @tparam ...Types Types.
-	template<typename... Types>
+	template <typename... Types>
 	using FirstType = typename Impl::NthInPack<0, Types...>::Type;
 
 	/// @brief Returns the last type in a series of types.
 	/// @tparam ...Types Types.
 	template<typename... Types>
 	using LastType = typename Impl::NthInPack<sizeof...(Types)-1, Types...>::Type;
+
+	/// @brief Creates a class that inherits all of the given types.
+	/// @tparam ...Types Types.
+	template <class... Types>
+	using Inherit = Impl::Inherit<Types...>;
 }
 
 CTL_NAMESPACE_END

@@ -27,11 +27,11 @@ struct Collected {
 	static_assert(Type::Container::PairLike<TPair<TKey, TValue>>, "Type is not a valid pair type!");
 
 	/// @brief Key type.
-	typedef TKey				KeyType;
+	typedef TKey					KeyType;
 	/// @brief Value type.
-	typedef TValue				ValueType;
+	typedef TValue					ValueType;
 	/// @brief Pair type.
-	typedef TPair<TKey, TValue>	PairType;
+	typedef TPair<TKey , TValue>	PairType;
 };
 
 /// @brief Associative container comprised of key-value pairs.

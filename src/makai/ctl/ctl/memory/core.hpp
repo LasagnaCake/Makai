@@ -305,9 +305,9 @@ namespace MX {
 	/// @param ...args Constructor arguments.
 	/// @return Pointer to constructed memory.
 	template<Type::NonVoid T, typename... Args>
-	constexpr ref<T> construct(ref<T> const mem, Args... args) {
+	constexpr ref<T> construct(ref<T> const mem, Args&&... args) {
 		if (!mem) throw ConstructionFailure();
-		::new (static_cast<void*>(mem)) T(args...);
+		::new (static_cast<void*>(mem)) T(forward<Args>(args)...);
 		return mem;
 	}
 
@@ -318,9 +318,9 @@ namespace MX {
 	/// @param ...args Constructor arguments.
 	/// @return Pointer to reconstructed memory.
 	template<Type::NonVoid T, typename... Args>
-	constexpr void reconstruct(ref<T> const mem, Args... args) {
+	constexpr void reconstruct(ref<T> const mem, Args&&... args) {
 		destruct(mem);
-		construct(mem, args...);
+		construct(mem, forward<Args>(args)...);
 	}
 
 	/// @brief Allocates & constructs an object of a given type on the heap.
@@ -329,8 +329,8 @@ namespace MX {
 	/// @param ...args Constructor arguments.
 	/// @return Pointer to created object.
 	template<Type::NonVoid T, typename... Args>
-	constexpr owner<T> create(Args... args) {
-		return construct<T>(malloc<T>(), args...);
+	constexpr owner<T> create(Args&&... args) {
+		return construct<T>(malloc<T>(), forward<Args>(args)...);
 	}
 
 	/// @brief Resizes memory allocated in the heap.

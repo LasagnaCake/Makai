@@ -258,7 +258,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 	};
 
-	struct LaserServerConfig: ServerConfig, ServerMeshConfig, BoundedObjectConfig {
+	struct LaserCollisionConfig {
 		ColliderConfig const colli = {
 			Danmaku::Collision::Layer::ENEMY_LASER,
 			Danmaku::Collision::Tag::FOR_PLAYER_1
@@ -269,6 +269,14 @@ namespace Makai::Ex::Game::Danmaku {
 		};
 		LaserConfig::Collision const mask = {};
 	};
+
+	struct LaserServerConfig:
+		ServerConfig,
+		ServerMeshConfig,
+		BoundedObjectConfig,
+		LaserCollisionConfig {};
+
+	struct LaserServerInstanceConfig: ServerConfig, LaserCollisionConfig {};
 
 	template<Type::Derived<Laser> TLaser, Type::Derived<LaserConfig> TConfig>
 	struct LaserServer<TLaser, TConfig>: AServer, AUpdateable {

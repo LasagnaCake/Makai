@@ -287,17 +287,26 @@ namespace Makai::Ex::Game::Danmaku {
 		template <class, class> friend class BulletServer;
 	};
 
-	struct BulletServerConfig: ServerConfig, ServerMeshConfig, ServerGlowMeshConfig, BoundedObjectConfig {
+	struct BulletCollisionConfig {
 		ColliderConfig const colli = {
 			Collision::Layer::ENEMY_BULLET,
 			Collision::Tag::FOR_PLAYER_1
 		};
 		CollisionLayerConfig const layer = {
 			Collision::Mask::ENEMY_BULLET,
-			Collision::Mask::BULLET_ERASER,
+			Collision::Mask::BULLET_ERASER
 		};
 		BulletConfig::Collision const mask = {};
 	};
+
+	struct BulletServerConfig:
+		ServerConfig,
+		ServerMeshConfig,
+		ServerGlowMeshConfig,
+		BoundedObjectConfig,
+		BulletCollisionConfig {};
+
+	struct BulletServerInstanceConfig: ServerConfig, BulletCollisionConfig {};
 
 	template<Type::Derived<Bullet> TBullet, Type::Derived<BulletConfig> TConfig>
 	struct BulletServer<TBullet, TConfig>: AServer, AUpdateable {

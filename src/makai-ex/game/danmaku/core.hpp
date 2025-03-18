@@ -268,6 +268,8 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	struct Healthy {
+		virtual ~Healthy() {}
+
 		constexpr Healthy& setHealth(float const hp)	{health = hp < maxHealth ? hp : maxHealth; return *this;	}
 		constexpr Healthy& gainHealth(float const hp)	{setHealth(hp + health); return *this;						}
 		constexpr Healthy& loseHealth(float const hp)	{health -= hp; return *this;								}
@@ -283,6 +285,14 @@ namespace Makai::Ex::Game::Danmaku {
 
 	protected:
 		float health	= 100;
+	};
+
+	struct IKillable {
+		virtual ~IKillable() {}
+
+		virtual IKillable& die()	= 0;
+
+		virtual void onDeath()		= 0;
 	};
 }
 

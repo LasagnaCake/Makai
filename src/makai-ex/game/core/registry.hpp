@@ -20,8 +20,8 @@ struct Registry {
 		}
 
 		template<Type::Subclass<Member> TSub, class... Args>
-		[[nodiscard]] static constexpr Instance<TSub> create(Args... args) {
-			return new TSub(args...);
+		[[nodiscard]] static constexpr Instance<TSub> create(Args&&... args) {
+			return new TSub(forward<Args>(args)...);
 		}
 
 		constexpr virtual ~Member() {Registry::remove(this);}
@@ -73,8 +73,8 @@ struct Registry {
 	}
 
 	template<Type::Subclass<Member> TSub, class... Args>
-	[[nodiscard]] static constexpr Instance<TSub> create(Args... args) {
-		return Member::template create<TSub>(args...);
+	[[nodiscard]] static constexpr Instance<TSub> create(Args&&... args) {
+		return Member::template create<TSub>(forward<Args>(args)...);
 	}
 	
 private:

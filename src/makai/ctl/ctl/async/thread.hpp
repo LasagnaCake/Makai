@@ -147,8 +147,8 @@ struct Thread:
 	/// @param f Process (function) to execute.
 	/// @param ...args Values to pass to function.
 	template<class F, class... Args>
-	explicit Thread(F&& f, Args... args):
-		BaseType(move(f), token(), args...) {
+	explicit Thread(F&& f, Args&&... args):
+		BaseType(move(f), token(), forward<Args>(args)...) {
 	}
 
 	/// @brief Returns the thread's ID.
