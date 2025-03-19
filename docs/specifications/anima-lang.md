@@ -97,7 +97,7 @@ The state is comprised of the current actor state, global SP mode, and execution
 
 `perform` behaves more like how a function call would. The current state gets pushed in the stack, and then reset to its starting value. Once the named block is done, the stack gets popped, and **the previous state is restored**.
 
-If a `perform` is followed by any amount of `next`s, then the program will return execution to the `:perform` statement's 
+If a `perform` is followed by any amount of `next`s, then the program will return execution to the `perform` statement's 
 location.
 
 ### On `perform select`s
