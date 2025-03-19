@@ -17,7 +17,7 @@ namespace Collision::C2D {
 	/// @brief Collision server.
 	/// @tparam I Server ID.
 	/// @tparam L Collision layer count.
-	template<usize I, usize L = 64>
+	template<usize I, usize L = 16>
 	struct CollisionServer {
 		/// @brief Server ID.
 		constexpr static usize ID = I;
@@ -254,6 +254,7 @@ namespace Collision::C2D {
 
 		/// @brief Processes (and handles) collision for all colliders in the server.
 		constexpr static void process() {
+			//return;
 			for (usize i = 0; i < MAX_LAYERS; ++i)
 				for (usize j = i; j < MAX_LAYERS; ++j)
 					layers[i].process(layers[j]);
@@ -286,12 +287,12 @@ namespace Collision::C2D {
 		void operator delete[](pointer);
 	};
 	/// @brief Default collision server.
-	using Server = CollisionServer<0, 64>;
+	using Server = CollisionServer<0, 16>;
 
 	/// @brief Server collision object.
 	/// @tparam I Server ID.
 	/// @tparam L Collision layer count.
-	template<usize I = 0, usize L = 64>
+	template<usize I = 0, usize L = 16>
 	using Collider = typename CollisionServer<I, L>::Collider;
 }
 
