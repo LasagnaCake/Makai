@@ -1,7 +1,7 @@
 name: Core Library CI
 
 # ...at least it's working.
-# I do not wish to mess with this EVER AGAIN.
+# I do not want to mess with this EVER AGAIN.
 
 on:
   schedule:
