@@ -11,9 +11,9 @@
 ## Complex
 
 - [ ] Rethink old graphical pipeline
-- - Remove `*Ref` subsytem's dependence on pointers
-- - Change way triangles are stored
-- - Add pipeline support
+- - [x] Remove `*Ref` subsytem's dependence on pointers
+- - [x] Change way triangles are stored
+- - [ ] Add pipeline support
 - - - Via `Dispatcher`
 
 ## Very Complex
