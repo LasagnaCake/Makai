@@ -1,5 +1,8 @@
 name: Core Library CI
 
+# ...at least it's working.
+# I do not wish to mess with this EVER AGAIN.
+
 on:
   schedule:
     - cron: '30 9 * * 1'
