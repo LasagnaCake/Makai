@@ -3,8 +3,6 @@
 
 #include "area.hpp"
 
-// TODO: Fix collision being slow
-
 CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Two-dimensional collision.
