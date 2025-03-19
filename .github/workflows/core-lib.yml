@@ -51,7 +51,7 @@ jobs:
       - name: bind-make
         run: |
           shopt -s expand_aliases
-          alias make="ming32-make"
+          alias make="mingw32-make"
       # Hellspawn END
       - name: make tests
         run: |
@@ -80,7 +80,7 @@ jobs:
       - name: bind-make
         run: |
           shopt -s expand_aliases
-          alias make="ming32-make"
+          alias make="mingw32-make"
       # Hellspawn END
       - name: make tests
         run: |
@@ -109,7 +109,7 @@ jobs:
     - name: bind-make
       run: |
         shopt -s expand_aliases
-        alias make="ming32-make"
+        alias make="mingw32-make"
     # Hellspawn END
     - name: make debug
       run: |
@@ -136,7 +136,7 @@ jobs:
     - name: bind-make
       run: |
         shopt -s expand_aliases
-        alias make="ming32-make"
+        alias make="mingw32-make"
     # Hellspawn END
     - name: make release
       run: |
@@ -163,7 +163,7 @@ jobs:
       - name: bind-make
         run: |
           shopt -s expand_aliases
-          alias make="ming32-make"
+          alias make="mingw32-make"
       # Hellspawn END
       - uses: actions/download-artifact@master
         with:
@@ -196,7 +196,7 @@ jobs:
       - name: bind-make
         run: |
           shopt -s expand_aliases
-          alias make="ming32-make"
+          alias make="mingw32-make"
       # Hellspawn END
       - uses: actions/download-artifact@master
         with:
