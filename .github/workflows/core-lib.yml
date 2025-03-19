@@ -46,7 +46,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/ctl
-          make debug
+          mingw32-make debug
           cd ../..
       - uses: actions/upload-artifact@master
         with:
@@ -65,7 +65,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/ctl
-          make release
+          mingw32-make release
           cd ../..
       - uses: actions/upload-artifact@master
         with:
@@ -82,7 +82,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: make debug
-      run: make debug
+      run: mingw32-make debug
     - uses: actions/upload-artifact@master
       with:
         name: lib-debug
@@ -98,7 +98,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: make release
-      run: make release
+      run: mingw32-make release
     - uses: actions/upload-artifact@master
       with:
         name: lib-release
@@ -120,7 +120,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make debug
+          mingw32-make debug
           cd ../.. 
       - uses: actions/upload-artifact@master
         with:
@@ -143,7 +143,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make release
+          mingw32-make release
           cd ../.. 
       - uses: actions/upload-artifact@master
         with:
