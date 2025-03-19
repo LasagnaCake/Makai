@@ -25,9 +25,9 @@ jobs:
     - name: Install MSYS2
       uses: msys2/setup-msys2@v2
       with:
-          msystem: MINGW64
-          update: true
-          install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
+        msystem: MINGW64
+        update: true
+        install: git mingw-w64-x86_64-toolchain
     - name: Verify GCC Installation
       run: |
         gcc --version
@@ -42,6 +42,10 @@ jobs:
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain
       - name: make tests
         run: |
           cd tests/ctl
@@ -61,6 +65,10 @@ jobs:
     needs: install-gcc
     steps:
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain
       - name: make tests
         run: |
           cd tests/ctl
@@ -80,6 +88,10 @@ jobs:
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: git mingw-w64-x86_64-toolchain
     - name: make debug
       run: make debug
     - uses: actions/upload-artifact@master
@@ -96,6 +108,10 @@ jobs:
     needs: install-gcc
     steps:
     - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: git mingw-w64-x86_64-toolchain
     - name: make release
       run: make release
     - uses: actions/upload-artifact@master
@@ -112,6 +128,10 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -135,6 +155,10 @@ jobs:
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain
       - uses: actions/download-artifact@master
         with:
           name: lib-release
