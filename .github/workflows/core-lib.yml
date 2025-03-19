@@ -47,9 +47,8 @@ jobs:
           cd tests/ctl
           make debug
           cd ../..
-#        env:
-#          CC: ${{ steps.gccx.outputs.cc }}
-#          CXX: ${{ steps.gccx.outputs.cxx }}
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
       - uses: actions/upload-artifact@master
         with:
           name: tests-ctl-debug
@@ -69,9 +68,8 @@ jobs:
           cd tests/ctl
           make release
           cd ../..
-#        env:
-#          CC: ${{ steps.gccx.outputs.cc }}
-#          CXX: ${{ steps.gccx.outputs.cxx }}
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
       - uses: actions/upload-artifact@master
         with:
           name: tests-ctl-release
@@ -88,9 +86,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: make debug
       run: make debug
-#      env:
-#        CC: ${{ steps.gccx.outputs.cc }}
-#        CXX: ${{ steps.gccx.outputs.cxx }}
+      env:
+        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
     - uses: actions/upload-artifact@master
       with:
         name: lib-debug
@@ -107,9 +104,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: make release
       run: make release
-#      env:
-#        CC: ${{ steps.gccx.outputs.cc }}
-#        CXX: ${{ steps.gccx.outputs.cxx }}
+      env:
+        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
     - uses: actions/upload-artifact@master
       with:
         name: lib-release
@@ -132,7 +128,9 @@ jobs:
         run: |
           cd tests/makai
           make debug
-          cd ../..
+          cd ../.. 
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
       - uses: actions/upload-artifact@master
         with:
           name: tests-api-debug
@@ -155,7 +153,9 @@ jobs:
         run: |
           cd tests/makai
           make release
-          cd ../..
+          cd ../.. 
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
       - uses: actions/upload-artifact@master
         with:
           name: tests-api-release
