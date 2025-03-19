@@ -27,7 +27,7 @@ jobs:
       with:
         msystem: MINGW64
         update: true
-        install: git mingw-w64-x86_64-toolchain
+        install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
     - name: Verify GCC Installation
       run: |
         gcc --version
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
-          install: git mingw-w64-x86_64-toolchain
+          install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
           cache: false
       - name: make tests
         run: |
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
-          install: git mingw-w64-x86_64-toolchain
+          install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
           cache: false
       - name: make tests
         run: |
@@ -90,7 +90,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: msys2/setup-msys2@v2
       with:
-        install: git mingw-w64-x86_64-toolchain
+        install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
         cache: false
     - name: make debug
       run: make debug
@@ -110,7 +110,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: msys2/setup-msys2@v2
       with:
-        install: git mingw-w64-x86_64-toolchain
+        install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
         cache: false
     - name: make release
       run: make release
@@ -130,7 +130,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
-          install: git mingw-w64-x86_64-toolchain
+          install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
           cache: false
       - uses: actions/download-artifact@master
         with:
@@ -157,7 +157,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
-          install: git mingw-w64-x86_64-toolchain
+          install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-make
           cache: false
       - uses: actions/download-artifact@master
         with:
