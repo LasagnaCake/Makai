@@ -14,7 +14,7 @@ on:
 jobs: 
 
   install-gcc:
-    name: Install Latest GCC
+    name: Install Latest GCC Via MSYS2
     runs-on: windows-latest
     defaults:
       run:
