@@ -5,15 +5,15 @@
 ### Core library
 
 - [x] Create `StaticList` class (dynamic list for move-only objects)
-- [ ] Fix GJK not detecting collision
+- [ ] Fix collision detection being slow
 
 ### Extension library
 
 - [ ] Write test cases
 - - [x] `BulletServer`
-- - [ ] `LaserServer`
-- - [ ] `ItemServer`
-- - [ ] `AEnemy`
+- - [x] `LaserServer`
+- - [x] `ItemServer`
+- - [x] `AEnemy`
 - - [ ] `ABoss`
 
 ## Low Priority
@@ -22,8 +22,7 @@
 
 - [ ] Generate documentation
 - - Code is documented via doxygen comments, so must figure out how to generate docs from that
-- [ ] Fix core library CI
-- - Problem: `gcc`/`g++` is missing, somehow???
+- [x] Fix core library CI
 - [ ] Add HSL (Hue-Saturation-Luminosity) & BC (Brightness-Contrast) to buffer mask effect
 - [ ] Embedded language (compiled (preferable, even if to bytecode), JIT or interpreted)
 - - Could implement support for Squirrel/LUA/AngelScript
