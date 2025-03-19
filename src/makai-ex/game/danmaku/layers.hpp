@@ -80,17 +80,17 @@ namespace Makai::Ex::Game::Danmaku {
 	}
 	
 	namespace Collision::Layer {
-		constexpr uint16 PLAYER				= 0x00;
-		constexpr uint16 PLAYER_BULLET		= 0x01;
-		constexpr uint16 PLAYER_LASER		= 0x02;
-		constexpr uint16 PLAYER_SPELL		= 0x03;
-		constexpr uint16 PLAYER_GRAZEBOX	= 0x04;
-		constexpr uint16 PLAYER_ITEMBOX		= 0x05;
-		constexpr uint16 ENEMY				= 0x10;
-		constexpr uint16 ENEMY_BULLET		= 0x11;
-		constexpr uint16 ENEMY_LASER		= 0x12;
-		constexpr uint16 ITEM				= 0x20;
-		constexpr uint16 BULLET_ERASER		= 0x30;
+		constexpr uint16 PLAYER				= 0x0;
+		constexpr uint16 PLAYER_BULLET		= 0x1;
+		constexpr uint16 PLAYER_LASER		= 0x2;
+		constexpr uint16 PLAYER_SPELL		= 0x3;
+		constexpr uint16 PLAYER_GRAZEBOX	= 0x4;
+		constexpr uint16 PLAYER_ITEMBOX		= 0x5;
+		constexpr uint16 ENEMY				= 0x6;
+		constexpr uint16 ENEMY_BULLET		= 0x7;
+		constexpr uint16 ENEMY_LASER		= 0x8;
+		constexpr uint16 ITEM				= 0x9;
+		constexpr uint16 BULLET_ERASER		= 0xF;
 	}
 
 	namespace Collision::Mask {
