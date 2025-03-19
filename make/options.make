@@ -26,6 +26,8 @@ export o?=2
 
 export math?=fast
 
+export gmake?=make
+
 define HELP_MESSAGE
 Supported options:
 >   openmp        = [ flag ]         : Whether openmp should be enabled        ( DEF: undefined    )

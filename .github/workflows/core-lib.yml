@@ -48,7 +48,7 @@ jobs:
         with:
           install: git mingw-w64-x86_64-toolchain
           cache: false
-      - name: bind-make
+      - name: Bind make
         run: |
           shopt -s expand_aliases
           alias make="mingw32-make"
@@ -56,7 +56,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/ctl
-          make debug
+          make debug gmake=mingw32-make
           cd ../..
       - uses: actions/upload-artifact@master
         with:
@@ -77,7 +77,7 @@ jobs:
         with:
           install: git mingw-w64-x86_64-toolchain
           cache: false
-      - name: bind-make
+      - name: Bind make
         run: |
           shopt -s expand_aliases
           alias make="mingw32-make"
@@ -85,7 +85,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/ctl
-          make release
+          make release gmake=mingw32-make
           cd ../..
       - uses: actions/upload-artifact@master
         with:
@@ -106,14 +106,14 @@ jobs:
       with:
         install: git mingw-w64-x86_64-toolchain
         cache: false
-    - name: bind-make
+    - name: Bind make
       run: |
         shopt -s expand_aliases
         alias make="mingw32-make"
     # Hellspawn END
-    - name: make debug
+    - name: make debug gmake=mingw32-make
       run: |
-        make debug
+        make debug gmake=mingw32-make
     - uses: actions/upload-artifact@master
       with:
         name: lib-debug
@@ -133,14 +133,14 @@ jobs:
       with:
         install: git mingw-w64-x86_64-toolchain
         cache: false
-    - name: bind-make
+    - name: Bind make
       run: |
         shopt -s expand_aliases
         alias make="mingw32-make"
     # Hellspawn END
     - name: make release
       run: |
-        make release
+        make release gmake=mingw32-make
     - uses: actions/upload-artifact@master
       with:
         name: lib-release
@@ -160,7 +160,7 @@ jobs:
         with:
           install: git mingw-w64-x86_64-toolchain
           cache: false
-      - name: bind-make
+      - name: Bind make
         run: |
           shopt -s expand_aliases
           alias make="mingw32-make"
@@ -172,7 +172,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make debug
+          make debug gmake=mingw32-make
           cd ../.. 
       - uses: actions/upload-artifact@master
         with:
@@ -193,7 +193,7 @@ jobs:
         with:
           install: git mingw-w64-x86_64-toolchain
           cache: false
-      - name: bind-make
+      - name: Bind make
         run: |
           shopt -s expand_aliases
           alias make="mingw32-make"
@@ -205,7 +205,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make release
+          make release gmake=mingw32-make
           cd ../.. 
       - uses: actions/upload-artifact@master
         with:

@@ -66,10 +66,10 @@ debug: build-debug up-debug $(CREATE_LIB_3P) link-debug
 release: build-release up-release $(CREATE_LIB_3P) link-release
 
 build-debug:
-	@make -C"$(MAKAISRC)" debug prefix="$(prefix)"
+	@$(gmake) -C"$(MAKAISRC)" debug prefix="$(prefix)"
 
 build-release:
-	@make -C"$(MAKAISRC)" release prefix="$(prefix)"
+	@$(gmake) -C"$(MAKAISRC)" release prefix="$(prefix)"
 
 copy-headers:
 	@echo "Copying headers..."
