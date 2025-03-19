@@ -12,7 +12,7 @@ on:
   workflow_call:
 #  pull_request:
 #    types: [ "closed" ]
-#    branches: [ "!legacy-system" ]
+#    branches: [ "main" ]
 
 jobs: 
 
