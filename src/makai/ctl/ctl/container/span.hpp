@@ -61,10 +61,16 @@ struct Span:
 
 	using Ordered::OrderType;
 
+	/// @brief Whether the span is a static span.
 	constexpr static bool STATIC	= (S != DYNAMIC_SIZE || EXTENT == ExtentSize::CES_STATIC);
+	/// @brief Whether the span is a dynamic span.
 	constexpr static bool DYNAMIC	= (S == DYNAMIC_SIZE && EXTENT != ExtentSize::CES_STATIC);
 
+	/// @brief Comparator type.	
 	using ComparatorType = SimpleComparator<DataType>;
+
+	/// @brief Transformation function type.
+	using TransformType	= Decay::AsFunction<DataType(ConstReferenceType)>;
 
 	/// @brief Default constructor.
 	constexpr Span() noexcept: contents(nullptr), count(0) {}
@@ -324,8 +330,63 @@ struct Span:
 			++i;
 		}
 	}
-	
 
+	/// @brief Apllies a procedure to all elements of the `List`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType& operator&(TProcedure const& fun) {
+		return transform(fun);
+	}
+
+	/// @brief Returns a `List` of `transform`ed elements.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return List of transformed elements.
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType operator|(TProcedure const& fun) const {
+		return transformed(fun);
+	}
+
+	/// @brief Apllies a procedure to the `List`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
+	template <Type::Functional<SelfType&(SelfType&)> TProcedure>
+	constexpr SelfType& operator&(TProcedure const& fun) {
+		return fun(*this);
+	}
+	
+	/// @brief Returns a copy of the list, with the given procedure applied to it.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Transformed list.
+	template <Type::Functional<SelfType(SelfType const&)> TProcedure>
+	constexpr SelfType operator|(TProcedure const& fun) const {
+		return fun(*this);
+	}
+
+	/// @brief Apllies a procedure to all elements of the `List`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType& transform(TProcedure const& fun) {
+		for(DataType& v: *this)
+			v = fun(v);
+		return *this;
+	}
+
+	/// @brief Returns a `List` of `transform`ed elements.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return List of transformed elements.
+	template<Type::Functional<TransformType> TProcedure>
+	constexpr SelfType transformed(TProcedure const& fun) const {
+		return SelfType(*this).transform(fun);
+	}
+	
 private:
 	constexpr void assertExists() {
 		if (!(contents && count))

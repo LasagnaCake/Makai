@@ -94,9 +94,15 @@ public:
 		typename Allocatable::AllocatorType
 	;
 
+	/// @brief Transformation function type.
+	using TransformType	= Decay::AsFunction<DataType(ConstReferenceType)>;
+
+	/// @brief Predicate function type.
 	using PredicateType	= Decay::AsFunction<bool(ConstReferenceType)>;
+	/// @brief Comparison function type.
 	using CompareType	= Decay::AsFunction<bool(ConstReferenceType, ConstReferenceType)>;
 
+	/// @brief Comparator type.
 	using ComparatorType = SimpleComparator<DataType>;
 
 	/// Default constructor.
@@ -1041,7 +1047,43 @@ public:
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
 	/// @return Reference to self.
-	template <class TProcedure>
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType& operator&(TProcedure const& fun) {
+		return transform(fun);
+	}
+
+	/// @brief Returns a `List` of `transform`ed elements.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return List of transformed elements.
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType operator|(TProcedure const& fun) const {
+		return transformed(fun);
+	}
+
+	/// @brief Apllies a procedure to the `List`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
+	template <Type::Functional<SelfType&(SelfType&)> TProcedure>
+	constexpr SelfType& operator&(TProcedure const& fun) {
+		return fun(*this);
+	}
+	
+	/// @brief Returns a copy of the list, with the given procedure applied to it.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Transformed list.
+	template <Type::Functional<SelfType(SelfType const&)> TProcedure>
+	constexpr SelfType operator|(TProcedure const& fun) const {
+		return fun(*this);
+	}
+
+	/// @brief Apllies a procedure to all elements of the `List`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
+	template <Type::Functional<TransformType> TProcedure>
 	constexpr SelfType& transform(TProcedure const& fun) {
 		for(DataType& v: *this)
 			v = fun(v);
@@ -1052,7 +1094,7 @@ public:
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
 	/// @return List of transformed elements.
-	template<class TProcedure>
+	template<Type::Functional<TransformType> TProcedure>
 	constexpr SelfType transformed(TProcedure const& fun) const {
 		return SelfType(*this).transform(fun);
 	}

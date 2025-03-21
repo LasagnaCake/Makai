@@ -64,6 +64,11 @@ static_assert(Type::Equal<Decay::AsFunction<bool(void)>, bool()>, "Something's n
 /// @return Value as a temporary.
 template<class T>
 constexpr AsNonReference<T>&&	move(T&& v)						{return static_cast<AsNonReference<T>&&>(v);	}
+/// @brief Ensures value passed can safely be copied.
+/// @param v Value to copy.
+/// @return Copy of value.
+template<class T>
+constexpr AsNonReference<T>		copy(T const& v)				{return static_cast<AsNonReference<T>>(v);		}
 /// @brief Ensures the given value is a constant reference.
 /// @param v Value to decay.
 /// @return Value as const reference.
