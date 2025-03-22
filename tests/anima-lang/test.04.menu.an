@@ -1,0 +1,26 @@
+menu MainMenu
+	"Main Game"	: open Difficulty end
+	"Options"	: open Options end
+	"Quit"		: terminate
+	none		: option "Quit"
+end
+
+menu Difficulty
+	"Easy"		: open PlayerSelect end
+	"Normal"	: open PlayerSelect end
+	"Hard"		: open PlayerSelect end
+	"Lunatic"	: open PlayerSelect end
+	none		: return
+end
+
+menu PlayerSelect
+	"Alice"	: $load-stage "Alice" end
+	"Bob"	: $load-stage "Bob" end
+	none	: return
+end
+
+menu Options
+	none	: return
+end
+
+open MainMenu

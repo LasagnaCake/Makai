@@ -34,7 +34,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any complex token.
 		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_'\\:\\~]");
 		/// @brief Matches any simple token.
-		const static String SIMPLE_TOKEN	= String("[*.,;]");
+		const static String SIMPLE_TOKEN	= String("[*.,;\\{\\}\\<\\>]");
 
 		/// @brief Creates a regex that lazily matches all characters between the given tokens.
 		/// @param begin Start token.
@@ -50,8 +50,6 @@ namespace Makai::Ex::AVM::Compiler {
 		const static String PARENTHESES		= makePack("\\(", "\\)");
 		/// @brief Matches any brackets pack.
 		const static String BRACKETS		= makePack("\\[", "\\]");
-		/// @brief Matches any squiggle brackets pack.
-		const static String SQUIGGLIES		= makePack("\\{", "\\}");
 		/// @brief Matches line comments.
 		const static String LINE_COMMENTS	= String("\\/\\/.*");
 		/// @brief Matches block comments.
@@ -69,7 +67,7 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		/// @brief Matches all packs.
-		const static String PACKS			= concat(LINE_COMMENTS, BLOCK_COMMENTS, STRINGS, PARENTHESES, BRACKETS, SQUIGGLIES);
+		const static String PACKS			= concat(LINE_COMMENTS, BLOCK_COMMENTS, STRINGS, PARENTHESES, BRACKETS);
 		/// @brief Matches all tokens.
 		const static String ALL_TOKENS		= concat(COMPLEX_TOKEN + "+", SIMPLE_TOKEN, PACKS);
 	}
@@ -235,10 +233,23 @@ namespace Makai::Ex::AVM::Compiler {
 
 		/// @brief Token list.
 		using Tokens = List<Token>;
+		
+		/// @brief Menu.
+		struct Menu {
+			/// @brief Operation done when the exit button is pressed.
+			Tokens				onExit = {Token{.type = Operation::AVM_O_MENU, .mode = 1}};
+			/// @brief Operation done when the back button is pressed.
+			Tokens				onBack = {Token{.type = Operation::AVM_O_MENU, .mode = 2}};
+			/// @brief Menu options.
+			Map<String, Tokens>	options;
+		};
+
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
 		/// @brief Declared choices.
 		Map<usize, StringList> choices;
+		/// @brief Declared menus.
+		Map<usize, Menu> menus;
 
 		/// @brief Source file name.
 		String const fileName;
@@ -688,12 +699,140 @@ namespace Makai::Ex::AVM::Compiler {
 					choices[choice] = ppack.args;
 					curNode += 2;
 				} break;
+				case (ConstHasher::hash("menu")): {
+					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					curNode += 2;
+					processMenu(curNode, nodes);
+				} break;
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
 					CPP::SourceFile(fileName, opi)
 				);
 			}
+		}
+
+		void processMenu(
+			usize& curNode,
+			List<Regex::Match> const& nodes
+		) {
+			auto const name = nodes[curNode-1].match;
+			if (!name.validate(isValidNameChar))
+				throw Error::InvalidValue(
+					toString("Invalid menu name '", name, "'!"),
+					CPP::SourceFile(fileName, nodes[curNode-1].position)
+				);
+			auto const menuName = "[menu]*" + name;
+			Menu menu;
+			menu.onBack[0].pos		=
+			menu.onBack[0].valPos	=
+			menu.onExit[0].pos		=
+			menu.onExit[0].valPos	= nodes[curNode-1].position;
+			menu.onBack[0].entry	=
+			menu.onExit[0].entry	= menuName;
+			while (nodes[curNode].match != "end" && curNode < nodes.size()) {
+				assertHasAtLeast(nodes, curNode, 3, nodes[curNode]);
+				if (nodes[curNode].match == "none") {
+					processMenuOption(menu.onBack, curNode, nodes, menuName);
+				} else if (nodes[curNode].match == "finish") {
+					processMenuOption(menu.onExit, curNode, nodes, menuName);
+				} else {
+					auto const optionName = nodes[curNode].match;
+					menu.options[optionName] = Tokens();
+					processMenuOption(menu.options[optionName], curNode, nodes, menuName);
+				}
+			}
+		}
+
+		void processMenuOption(
+			List<Token>& actions,
+			usize& curNode,
+			List<Regex::Match> const& nodes,
+			String const& menuName
+		) {
+			auto const option = nodes[curNode];
+			++curNode;
+			if (nodes[curNode].match != ":")
+				++curNode;
+			if (nodes[curNode].match == "none") {
+				addMenuTerminator(actions, option.match, menuName, option.position);
+				++curNode;
+			} else if (nodes[curNode].match == "option") {
+				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
+				actions.pushBack(Token{
+					.type	= Operation::AVM_O_MENU,
+					.name	= nodes[curNode+1].match,
+					.mode	= 3,
+					.entry	= menuName + "[" + nodes[curNode+1].match + "]",
+					.pos	= nodes[curNode].position,
+					.valPos	= nodes[curNode+1].position
+				});
+				addMenuTerminator(actions, option.match, menuName, option.position);
+				curNode += 2;
+			} else if (nodes[curNode].match == "finish") {
+				actions.pushBack(Token{
+					.type	= Operation::AVM_O_MENU,
+					.mode	= 2,
+					.entry	= menuName + "[" + nodes[curNode+1].match + "]",
+					.pos	= nodes[curNode].position,
+				});
+				addMenuTerminator(actions, option.match, menuName, option.position);
+				++curNode;
+			} else if (nodes[curNode].match == "terminate") {
+				actions.pushBack(Token{
+					.type	= Operation::AVM_O_HALT,
+					.entry	= menuName + "[" + nodes[curNode+1].match + "]",
+					.pos	= nodes[curNode].position,
+				});
+				++curNode;
+			} else {
+				auto const start = curNode;
+				while (nodes[curNode].match != "end" && curNode < nodes.size())
+					++curNode;
+				OperationTree optionTree = {nodes.sliced(start, curNode), fileName};
+				if (optionTree.choices.size() || optionTree.menus.size())
+					throw Error::InvalidValue(
+						toString("Option blocks cannot contain choices or menus inside them!"),
+						CPP::SourceFile(fileName, nodes[start].position)
+					);
+				actions = optionTree.tokens;
+				for (auto const& op: actions) {
+					if (!isValidMenuOptionOperation(op)) 
+						throw Error::InvalidValue(
+							toString("Invalid operation inside menu option!"),
+							toString(
+								"Option blocks cannot contain:"
+								"\n> Non-returning jumps"
+								"\n> Non-terminating exits"
+							),
+							CPP::SourceFile(fileName, op.pos)
+						);
+				}
+				addMenuTerminator(actions, option.match, menuName, option.position);
+				actions[0].entry = menuName + "[" + nodes[curNode+1].match + "]";
+			}
+
+		}
+
+		constexpr void addMenuTerminator(
+			Tokens& actions,
+			String const& name,
+			String const& menuName,
+			ssize const posi
+		) {
+			actions.pushBack(Token{
+				.type	= Operation::AVM_O_MENU,
+				.name	= name,
+				.mode	= 4,
+				.entry	= menuName + "[" + name + "]:end",
+				.pos	= posi
+			});
+		}
+
+		constexpr static bool isValidMenuOptionOperation(Token const& token) {
+			if (token.type == Operation::AVM_O_JUMP && !(token.mode & 0b1000))	return false;
+			if (token.type == Operation::AVM_O_HALT && token.mode)				return false;
+			return true;
 		}
 
 		constexpr void processChoice(
