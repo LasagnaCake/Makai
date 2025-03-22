@@ -218,6 +218,11 @@ namespace Makai::Ex::AVM::Compiler {
 			ssize			pos		= 0;
 			/// @brief Token value position.
 			ssize			valPos	= 0;
+			/// @brief Tags associated with the token.
+			usize			tags	= 0;
+
+			/// @brief Tags this token as being part of a choice.
+			constexpr static usize CHOICE_BIT = 1;
 
 			/// @brief Returns the token's operation.
 			/// @param sp SP mode override. Only used if non-zero. By default, it is zero.
@@ -829,9 +834,13 @@ namespace Makai::Ex::AVM::Compiler {
 			});
 		}
 
+		constexpr static usize getRangeSkip(Token const& token) {
+		}
+
 		constexpr static bool isValidMenuOptionOperation(Token const& token) {
-			if (token.type == Operation::AVM_O_JUMP && !(token.mode & 0b1000))	return false;
-			if (token.type == Operation::AVM_O_HALT && token.mode)				return false;
+			if (token.tags & Token::CHOICE_BIT) return true;
+			if (token.type == Operation::AVM_O_JUMP && !(token.mode & 0b1000) && token.tags)	return false;
+			if (token.type == Operation::AVM_O_HALT && token.mode)								return false;
 			return true;
 		}
 
@@ -862,40 +871,46 @@ namespace Makai::Ex::AVM::Compiler {
 						.type	= Operation::AVM_O_JUMP,
 						.name	= blocks.empty() ? String(GLOBAL_BLOCK) : blocks.join(),
 						.pos	= opi,
-						.valPos	= vali
+						.valPos	= vali,
+						.tags	= Token::CHOICE_BIT
 					});
 				} else if (param == "none") {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= exit,
 						.pos	= opi,
-						.valPos	= vali
+						.valPos	= vali,
+						.tags	= Token::CHOICE_BIT
 					});
 				} else if (param == "finish" || param == "terminate") {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_HALT,
 						.mode	= param == "finish",
 						.pos	= opi,
-						.valPos	= vali
+						.valPos	= vali,
+						.tags	= Token::CHOICE_BIT
 					});
 					for (usize i = 0; i < 4; ++i)
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_NEXT,
 							.pos	= opi,
-							.valPos	= vali
+							.valPos	= vali,
+							.tags	= Token::CHOICE_BIT
 						});
 				} else tokens.pushBack(Token{
 					.type	= Operation::AVM_O_JUMP,
 					.name	= getScopePath(param),
 					.pos	= opi,
-					.valPos	= vali
+					.valPos	= vali,
+					.tags	= Token::CHOICE_BIT
 				});
 			}
 			tokens.pushBack(Token{
 				.type	= Operation::AVM_O_NEXT,
 				.entry	= exit,
 				.pos	= opi,
-				.valPos	= vali
+				.valPos	= vali,
+				.tags	= Token::CHOICE_BIT
 			});
 		}
 
