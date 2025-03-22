@@ -705,9 +705,19 @@ namespace Makai::Ex::AVM::Compiler {
 					curNode += 2;
 				} break;
 				case (ConstHasher::hash("menu")): {
-					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					assertHasAtLeast(nodes, curNode, 3, opmatch);
 					curNode += 2;
 					processMenu(curNode, nodes);
+				} break;
+				case (ConstHasher::hash("open")): {
+					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_MENU,
+						.name	= val,
+						.pos	= opi,
+						.valPos	= vali
+					});
+					curNode += 2;
 				} break;
 				default:
 				throw Error::InvalidValue(
@@ -736,7 +746,7 @@ namespace Makai::Ex::AVM::Compiler {
 			menu.onBack[0].entry	=
 			menu.onExit[0].entry	= menuName;
 			while (nodes[curNode].match != "end" && curNode < nodes.size()) {
-				assertHasAtLeast(nodes, curNode, 3, nodes[curNode]);
+				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
 				if (nodes[curNode].match == "none") {
 					processMenuOption(menu.onBack, curNode, nodes, menuName);
 				} else if (nodes[curNode].match == "finish") {
@@ -747,6 +757,7 @@ namespace Makai::Ex::AVM::Compiler {
 					processMenuOption(menu.options[optionName], curNode, nodes, menuName);
 				}
 			}
+			menus[name] = menu;
 		}
 
 		void processMenuOption(
@@ -829,7 +840,7 @@ namespace Makai::Ex::AVM::Compiler {
 				.type	= Operation::AVM_O_MENU,
 				.name	= name,
 				.mode	= 4,
-				.entry	= menuName + "[" + name + "]:end",
+				.entry	= menuName + "[" + name + "]*[end]",
 				.pos	= posi
 			});
 		}
