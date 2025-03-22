@@ -79,9 +79,13 @@ namespace Makai::Ex::AVM {
 		///
 		///		- MODE 1: Jump with return.
 		///
-		///		- MODE 2: Selection jump (with return).
+		///		- MODE 2: Random jump (without return).
 		///
-		///		- MODE 10: Selection jump (without return).
+		///		- MODE 3: Selection jump (without return).
+		///
+		///		- MODE 10: Random jump (with return).
+		///
+		///		- MODE 11: Selection jump (with return).
 		AVM_O_JUMP,
 		/// @brief Value request. Behaves differently, depending on SP mode.
 		///
