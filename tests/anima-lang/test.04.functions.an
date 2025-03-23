@@ -12,13 +12,13 @@ scene Movement
 	end
 
 	function move-2d (x, y)
-		call to-x (%x)
-		call to-y (%y)
+		call ~to-x (%x)
+		call ~to-y (%y)
 	end
 
 	function move-3d (x, y, z)
-		call move-2d (%x, %y)
-		call to-z (%z)
+		call ~move-2d (%x, %y)
+		call ~to-z (%z)
 	end
 end
 
