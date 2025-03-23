@@ -44,32 +44,34 @@ Comments are done like C/C++ line an block comments.
 
 Comprised of the following commands, and their recommended use case:
 
-| Command | Usage | Associated Function(s) |
-|:-:|:-|:-:|
-| `[<characters>]` | For specifying the character roster. See ahead for more details. To add a character to the current roster, add the `*` modifier before it. | none |
-| `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. | `opPerform` |
-| `!<emotion>` | For character emotions. Will apply to previous `[]` command. | `opEmote` |
-| `"<text>"` | For character lines. Will apply to previous `[]` command. To add text to the previous spoken line, add the `*` modifier before it. | `opSay`, `opAdd` |
-| `#<hex>` | For specifying text colour. Will apply to previous `""` comand. Must be a valid hex colour. To use color references (names), use `##<name>`. | `opColor`, `opColorRef` |
-| `'<number>` | For setting a time to wait for. MUST be a whole number. | `opDelay` |
-| `+<flag>` | For enabling flags. Same as `$<flag> "true"`. | `opNamedCallSingle` |
-| `-<flag>` | For disabling flags. Same as `$<flag> "false"`. | `opNamedCallSingle` |
-| `$<name> <value>` | For setting external values, and executing named operations. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  | `opNamedCallSingle`, `opNamedCallMultiple` |
-| `.` | For waiting for previous commands to finish. User cannot skip this wait. | `opWaitForActions` |
-| `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. | `opWaitForUser` |
-| `*` | For modifying certain commands. | none |
+| Command | Usage | Associated Function(s) | Can accept function arguments |
+|:-:|:-|:-:|:-:|
+| `[<characters>]` | For specifying the character roster. See ahead for more details. To add a character to the current roster, add the `*` modifier before it. | none | No |
+| `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. | `opPerform` | Yes (parameters) |
+| `!<emotion>` | For character emotions. Will apply to previous `[]` command. | `opEmote` | No |
+| `"<text>"` | For character lines. Will apply to previous `[]` command. To add text to the previous spoken line, add the `*` modifier before it. | `opSay`, `opAdd` | Yes (string interpolation) |
+| `#<hex>` | For specifying text colour. Will apply to previous `""` comand. Must be a valid hex colour. To use color references (names), use `##<name>`. | `opColor`, `opColorRef` | No |
+| `'<number>` | For setting a time to wait for. MUST be a whole number. | `opDelay` | No |
+| `+<flag>` | For enabling flags. Same as `$<flag> "true"`. | `opNamedCallSingle` | No |
+| `-<flag>` | For disabling flags. Same as `$<flag> "false"`. | `opNamedCallSingle` | No |
+| `$<name> <value>` | For setting external values, and executing named operations. For passing strings, use double quotes. For multiple parameters, surround them with parentheses, and separate them with commas.  | `opNamedCallSingle`, `opNamedCallMultiple` | Yes (parameters) |
+| `.` | For waiting for previous commands to finish. User cannot skip this wait. | `opWaitForActions` | N/A |
+| `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. | `opWaitForUser` | N/A |
+| `*` | For modifying certain commands. | none | N/A |
 
 Also contains the following keywords:
 
 | Keyword | Usage | Associated Function(s) |
 |:-:|:-|:-:|
 | `act <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
-| `scene <name> ... end` | For jumping to named blocks in a file. These will only be executed when jumped to. | none |
+| `scene <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
+| `function <name> (<args...>) ... end` | For defining functions. These will only be executed when called. | none |
 | `next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none |
 | `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
 | `finish` | Exits the current block early. | none |
 | `terminate` | Exits the program early. | none |
-| `<perform\|next> <params...> (<blocks>)` | Jumps one of the listed blocks, depending on a requested value, or at random. See ahead for further details. | see ahead |
+| `<perform\|next> <params...> (<blocks>)` | Jumps one of the listed blocks, depending on a set of parameters. See ahead for further details. | see ahead |
+| `call <function> (<args...>)` | For calling functions. See ahead for further details. | see ahead |
 
 Under consideration:
 
@@ -88,6 +90,16 @@ To access a scene's sub-block, append `:<sub-block>` to the name.
 Jumps will be relative to the current block's scope. To jump to a different block in the **previous scope** (or global, if none), prepend the jump target with `~`. To jump via an **absolute path (starting from global scope)**, prepend the jump target with `:`.
 
 In essence: An `act`'s contents are **private**, and a `scene`'s contents are **public**.
+
+### On `function`s
+
+Named blocks that can take in values.
+
+To call a function, use `call <name> (<args...>)`. Scope rules that apply to jump lists also apply here.
+
+To use an argument inside a function, do it via `%<arg-name>`.
+
+To use an argument inside a string, do it via `%<arg-name>%`. To use the `%` character, use `%%` instead.
 
 ### On the `next` and `perform` commands
 
@@ -136,7 +148,7 @@ Intended to be used like a dialog choice.
 perform choice choose-your-ending (good-end, neutral-end, bad-end, none)
 ```
 
-### For any kind of jump list (`<perform|next> <type>`)
+### For any kind of jump list (`<perform|next> <type>`) and function call
 
 For any particular jump target:
 
