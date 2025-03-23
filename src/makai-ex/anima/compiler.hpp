@@ -46,6 +46,8 @@ namespace Makai::Ex::AVM::Compiler {
 
 		/// @brief Matches any text string.
 		const static String STRINGS			= String("\"(?:[^\"\\\\]|\\\\.)*\"");
+		/// @brief Matches any interpolation.
+		const static String INTERPOLATIONS	= String("%([^%\\\\]|\\\\.)*%");
 		/// @brief Matches any parens pack.
 		const static String PARENTHESES		= makePack("\\(", "\\)");
 		/// @brief Matches any brackets pack.
