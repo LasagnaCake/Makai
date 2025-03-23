@@ -133,7 +133,7 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 				}
 				if (func != -1)
-					return toString("%", stack[func].scope, ":", place);
+					return toString("%", stack[func].name, ":", place);
 				return "";
 			}
 		};
