@@ -732,6 +732,15 @@ namespace Makai::Ex::AVM::Compiler {
 					});
 					curNode += 2;
 				} break;
+				case (ConstHasher::hash("close")): {
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_MENU,
+						.name	= getScopePath(val),
+						.mode	= 1,
+						.pos	= opi,
+						.valPos	= vali
+					});
+				}
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
