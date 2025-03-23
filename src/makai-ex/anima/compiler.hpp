@@ -861,10 +861,9 @@ namespace Makai::Ex::AVM::Compiler {
 							CPP::SourceFile(fileName, op.pos)
 						);
 				}
-				if (actions.empty()) {
+				if (actions.empty())
 					actions.pushBack(Token{.type = Operation::AVM_O_NEXT});
-					actions.front().entry = menuPath + "[" + nodes[curNode+1].match + "]";
-				}
+				actions.front().entry = menuPath + "[" + nodes[curNode+1].match + "]";
 				addMenuTerminator(actions, option.match, menuPath, option.position, menuName);
 			}
 
