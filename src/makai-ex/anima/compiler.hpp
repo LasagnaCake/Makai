@@ -748,22 +748,23 @@ namespace Makai::Ex::AVM::Compiler {
 			for (auto& opt: menu.onBack) {
 				opt.pos		=
 				opt.valPos	= nodes[curNode-1].position;
-				opt.entry	= menuName;
 			}
-			menu.onBack.back().entry = menuName + "[:end]";
+			menu.onBack.front().entry	= menuName + "[back]";
+			menu.onBack.back().entry	= menuName + "[back:end]";
 			for (auto& opt: menu.onExit) {
 				opt.pos		=
 				opt.valPos	= nodes[curNode-1].position;
 				opt.entry	= menuName;
 			}
-			menu.onExit.back().entry = menuName + "[:end]";
+			menu.onExit.front().entry	= menuName + "[exit]";
+			menu.onExit.back().entry	= menuName + "[exit:end]";
 			while (nodes[curNode].match != "end" && curNode < nodes.size()) {
 				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
-				if (nodes[curNode].match == "none") {
+				if (nodes[curNode].match == "none")
 					processMenuOption(menu.onBack, curNode, nodes, menuName);
-				} else if (nodes[curNode].match == "finish") {
+				else if (nodes[curNode].match == "finish")
 					processMenuOption(menu.onExit, curNode, nodes, menuName);
-				} else {
+				else {
 					auto const optionName = nodes[curNode].match;
 					menu.options[optionName] = Tokens();
 					processMenuOption(menu.options[optionName], curNode, nodes, menuName);
@@ -836,8 +837,11 @@ namespace Makai::Ex::AVM::Compiler {
 							CPP::SourceFile(fileName, op.pos)
 						);
 				}
+				if (actions.empty()) {
+					actions.pushBack(Token{.type = Operation::AVM_O_NEXT});
+					actions.front().entry = menuName + "[" + nodes[curNode+1].match + "]";
+				}
 				addMenuTerminator(actions, option.match, menuName, option.position);
-				actions[0].entry = menuName + "[" + nodes[curNode+1].match + "]";
 			}
 
 		}
@@ -998,7 +1002,7 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		void assertHasAtLeast(List<Regex::Match> const& nodes, usize const index, usize const size, Regex::Match const& node) {
-			if (nodes.size() < index + size)
+			if (nodes.size() <= index + size)
 				throw Error::InvalidValue(
 					toString("Too few required arguments for '", node.match, "'!"),
 					CPP::SourceFile(fileName, node.position)
