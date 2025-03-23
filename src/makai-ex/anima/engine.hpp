@@ -257,6 +257,45 @@ namespace Makai::Ex::AVM {
 			return sm;
 		}
 
+		void storeState(usize const op) {
+			storeState();
+			stack.back().op = op;
+		}
+
+		void storeState() {
+			stack.pushBack(current);
+			auto op		= current.op;
+			current		= Frame();
+			current.op	= op;
+		}
+
+		void retrieveState() {
+			current	= stack.popBack();
+		}
+
+		void enterMenuMode(usize const name) {
+			menus[name].previous.pushBack(menu.current);
+			menus[name].current	= name;
+			menus[name].open	= true;
+			menu = menus[name];
+			//storeState();
+		}
+
+		void returnFromCurrentMenu() {
+			if (menu.previous.empty()) return exitMenuMode();
+			menu.open			= false;
+			menus[menu.current]	= menu;
+			menu				= menus[menu.previous.popBack()];
+			menu.open			= true;
+			menus[menu.current]	= menu;
+		}
+
+		void exitMenuMode() {
+			for (auto& [menu, _]: menus)
+				opCloseMenu(menu);
+			menus.clear();
+		}
+
 		void opInvalidOp() {
 			setErrorAndStop(ErrorCode::AVM_EEC_INVALID_OPERATION);
 		}
@@ -349,43 +388,6 @@ namespace Makai::Ex::AVM {
 				opNamedCallMultiple(param, StringList());
 		}
 
-		void storeState(usize const op) {
-			storeState();
-			stack.back().op = op;
-		}
-
-		void storeState() {
-			stack.pushBack(current);
-			auto op		= current.op;
-			current		= Frame();
-			current.op	= op;
-		}
-
-		void retrieveState() {
-			current	= stack.popBack();
-		}
-
-		void enterMenuMode(usize const name) {
-			menus[name].previous.pushBack(menu.current);
-			menus[name].current	= name;
-			menus[name].open	= true;
-			menu = menus[name];
-			storeState();
-		}
-
-		void returnFromCurrentMenu() {
-			if (menu.previous.empty()) return exitMenuMode();
-			menu				= menus[menu.previous.popBack()];
-			menu.open			= true;
-			menus[menu.current]	= menu;
-		}
-
-		void exitMenuMode() {
-			for (auto& [menu, _]: menus)
-				opCloseMenu(menu);
-			menus.clear();
-		}
-
 		void opJump() {
 			constexpr usize JUMP_SIZE = (sizeof(Operation) + sizeof(uint64)) / 2;
 			auto spm = sp();
@@ -427,7 +429,7 @@ namespace Makai::Ex::AVM {
 
 		void opMenuSubReturn() {
 			returnFromCurrentMenu();
-			retrieveState();
+			//retrieveState();
 		}
 
 		void opMenuSubHighlightOption() {
