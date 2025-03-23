@@ -111,11 +111,16 @@ namespace Makai::Ex::AVM::Compiler {
 	struct OperationTree {
 		constexpr static As<char const[]> GLOBAL_BLOCK = "[***]";
 
-		struct Functions {	
+		struct Functions {
+			struct Index {
+				usize index;
+				usize name;
+				usize scope;
+			};	
 			/// @brief Declared functions.
 			Map<usize, StringList>	functions;
 			/// @brief Function stack.
-			List<usize>				stack;
+			List<Index>				stack;
 
 			constexpr String parseArgument(String name) const {
 				if (name[0] == '%')
@@ -124,11 +129,11 @@ namespace Makai::Ex::AVM::Compiler {
 				ssize func	= stack.size()-1;
 				for (auto const& fun: stack.reversed()) {
 					--func;
-					if ((place = functions[fun].find(name)) != -1)
+					if ((place = functions[fun.name].find(name)) != -1)
 						break;
 				}
 				if (func != -1)
-					return toString("%", func, ":", place);
+					return toString("%", stack[func].scope, ":", place);
 				return "";
 			}
 		};
@@ -661,14 +666,18 @@ namespace Makai::Ex::AVM::Compiler {
 					entry = val;
 					if (ophash == ConstHasher::hash("function")) {
 						auto const fpath = getScopePath(entry);
-						functions.stack.pushBack(ConstHasher::hash(fpath));
+						functions.stack.pushBack({
+							functions.stack.size(),
+							ConstHasher::hash(fpath),
+							blocks.size()
+						});
 						++curNode;
 						if (curNode+1 >= nodes.size() || nodes[curNode+1].match[0] != '(')
 							throw Error::InvalidValue(
 								toString("Missing function arguments!"),
 								CPP::SourceFile(fileName, opi)
 							);
-						functions.functions[functions.stack.back()] = ParameterPack::fromString(
+						functions.functions[functions.stack.back().name] = ParameterPack::fromString(
 							nodes[curNode+1],
 							fileName,
 							functions
