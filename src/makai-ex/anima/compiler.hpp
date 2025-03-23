@@ -242,9 +242,15 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Menu.
 		struct Menu {
 			/// @brief Operation done when the exit button is pressed.
-			Tokens				onExit = {Token{.type = Operation::AVM_O_MENU, .mode = 1}};
+			Tokens onExit = {
+				Token{.type = Operation::AVM_O_MENU, .mode = 1},
+				Token{.type = Operation::AVM_O_MENU, .mode = 4}
+			};
 			/// @brief Operation done when the back button is pressed.
-			Tokens				onBack = {Token{.type = Operation::AVM_O_MENU, .mode = 2}};
+			Tokens onBack = {
+				Token{.type = Operation::AVM_O_MENU, .mode = 2},
+				Token{.type = Operation::AVM_O_MENU, .mode = 4}
+			};
 			/// @brief Menu options.
 			Map<String, Tokens>	options;
 		};
@@ -739,12 +745,18 @@ namespace Makai::Ex::AVM::Compiler {
 				);
 			auto const menuName = "[menu]*" + name;
 			Menu menu;
-			menu.onBack[0].pos		=
-			menu.onBack[0].valPos	=
-			menu.onExit[0].pos		=
-			menu.onExit[0].valPos	= nodes[curNode-1].position;
-			menu.onBack[0].entry	=
-			menu.onExit[0].entry	= menuName;
+			for (auto& opt: menu.onBack) {
+				opt.pos		=
+				opt.valPos	= nodes[curNode-1].position;
+				opt.entry	= menuName;
+			}
+			menu.onBack.back().entry = menuName + "[:end]";
+			for (auto& opt: menu.onExit) {
+				opt.pos		=
+				opt.valPos	= nodes[curNode-1].position;
+				opt.entry	= menuName;
+			}
+			menu.onExit.back().entry = menuName + "[:end]";
 			while (nodes[curNode].match != "end" && curNode < nodes.size()) {
 				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
 				if (nodes[curNode].match == "none") {
@@ -757,7 +769,7 @@ namespace Makai::Ex::AVM::Compiler {
 					processMenuOption(menu.options[optionName], curNode, nodes, menuName);
 				}
 			}
-			menus[name] = menu;
+			menus[ConstHasher::hash(name)] = menu;
 		}
 
 		void processMenuOption(
