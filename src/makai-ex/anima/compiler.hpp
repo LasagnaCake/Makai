@@ -111,6 +111,13 @@ namespace Makai::Ex::AVM::Compiler {
 	struct OperationTree {
 		constexpr static As<char const[]> GLOBAL_BLOCK = "[***]";
 
+		struct Functions {	
+			/// @brief Declared functions.
+			Map<usize, StringList>	functions;
+			/// @brief Function stack.
+			List<usize>				stack;
+		};
+
 		/// @brief Parameter pack.
 		struct ParameterPack {
 			/// @brief Parameter pack arguments.
@@ -124,7 +131,11 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @param fname Source file. For error purposes.
 			/// @return Parameter pack.
 			/// @throw Error::InvalidValue on syntax errors.
-			constexpr static StringList parse(Regex::Match pack, String const& fname = "unknown") {
+			constexpr static StringList parse(
+				Regex::Match pack,
+				String const& fname = "unknown",
+				Functions const& funcs
+			) {
 				pack.match = pack.match.sliced(1, -2);
 				String param = "";
 				StringList out;
@@ -136,7 +147,23 @@ namespace Makai::Ex::AVM::Compiler {
 					switch (c) {
 						case ',': {
 							if (!inString) {
-								out.pushBack(param);
+								if (param.size() && param[0] == '%') {
+									String const arg = param.substring(1);
+									auto place	= -1;
+									auto func	= -1;
+									for (auto const& fun: funcs.stack.reversed())
+										if (place = funcs.functions[fun].find(arg) != -1) {
+											func = fun;
+											break;
+										}
+									if (func != -1)
+										out.pushBack(toString(func) + "*" + toString(place));
+									else
+										throw Error::InvalidValue(
+											toString("Argument substitution at [", out.size(), "] does not exist!"),
+											CPP::SourceFile(fname, i + pack.position)
+										);
+								} else out.pushBack(param);
 								param.clear();
 								unspaced = true;
 							}
@@ -251,9 +278,9 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
 		/// @brief Declared choices.
-		Map<usize, StringList>		choices;
+		Map<usize, StringList>	choices;
 		/// @brief Declared functions.
-		Map<usize, ParameterPack>	functions;
+		Map<usize, StringList>	functions;
 
 		/// @brief Function stack.
 		List<usize> funStack;
@@ -416,7 +443,7 @@ namespace Makai::Ex::AVM::Compiler {
 					case '%': {
 						throw Error::InvalidValue(
 							toString("Floating argument substitutions are not allowed!"),
-							CPP::SourceFile(fileName, mnext.position)
+							CPP::SourceFile(fileName, mnode.position)
 						);
 					} break;
 					case '(': continue;
@@ -472,9 +499,9 @@ namespace Makai::Ex::AVM::Compiler {
 	private:
 		StringList	blocks;
 		String		entry;
-		bool		isInScene		= false;
-		bool		isInChoice		= false;
-		bool		hasBlocks		= false;
+		bool		isInScene	= false;
+		bool		isInChoice	= false;
+		bool		hasBlocks	= false;
 
 		constexpr static bool isValidNameChar(char const c) {
 			return
