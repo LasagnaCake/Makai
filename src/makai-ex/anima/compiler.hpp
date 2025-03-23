@@ -750,14 +750,14 @@ namespace Makai::Ex::AVM::Compiler {
 				opt.valPos	= nodes[curNode-1].position;
 			}
 			menu.onBack.front().entry	= menuName + "[back]";
-			menu.onBack.back().entry	= menuName + "[back:end]";
+			menu.onBack.back().entry	= menuName + "[back]:[end]";
 			for (auto& opt: menu.onExit) {
 				opt.pos		=
 				opt.valPos	= nodes[curNode-1].position;
 				opt.entry	= menuName;
 			}
 			menu.onExit.front().entry	= menuName + "[exit]";
-			menu.onExit.back().entry	= menuName + "[exit:end]";
+			menu.onExit.back().entry	= menuName + "[exit]:[end]";
 			while (nodes[curNode].match != "end" && curNode < nodes.size()) {
 				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
 				if (nodes[curNode].match == "none")
@@ -784,7 +784,12 @@ namespace Makai::Ex::AVM::Compiler {
 			if (nodes[curNode].match != ":")
 				++curNode;
 			if (nodes[curNode].match == "none") {
-				addMenuTerminator(actions, option.match, menuName, option.position);
+				actions.pushBack(Token{
+					.type	= Operation::AVM_O_NEXT,
+					.entry	= menuName + "[back]",
+					.pos	= nodes[curNode].position
+				});
+				addMenuTerminator(actions, "back", menuName, option.position);
 				++curNode;
 			} else if (nodes[curNode].match == "option") {
 				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
@@ -802,10 +807,10 @@ namespace Makai::Ex::AVM::Compiler {
 				actions.pushBack(Token{
 					.type	= Operation::AVM_O_MENU,
 					.mode	= 2,
-					.entry	= menuName + "[" + nodes[curNode+1].match + "]",
+					.entry	= menuName + "[exit]",
 					.pos	= nodes[curNode].position,
 				});
-				addMenuTerminator(actions, option.match, menuName, option.position);
+				addMenuTerminator(actions, "exit", menuName, option.position);
 				++curNode;
 			} else if (nodes[curNode].match == "terminate") {
 				actions.pushBack(Token{
@@ -856,7 +861,7 @@ namespace Makai::Ex::AVM::Compiler {
 				.type	= Operation::AVM_O_MENU,
 				.name	= name,
 				.mode	= 4,
-				.entry	= menuName + "[" + name + "]*[end]",
+				.entry	= menuName + "[" + name + "]:[end]",
 				.pos	= posi
 			});
 		}
