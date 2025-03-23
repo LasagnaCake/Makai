@@ -26,6 +26,8 @@ namespace Makai::Ex::AVM {
 			AVM_EEC_INVALID_OPERATION,
 			AVM_EEC_INVALID_OPERAND,
 			AVM_EEC_INVALID_JUMP,
+			AVM_EEC_MISSING_FUNCTION_ARGUMENT,
+			AVM_EEC_ARGUMENT_PARSE_FAILURE,
 		};
 
 		/// @brief Destructor.
@@ -259,11 +261,17 @@ namespace Makai::Ex::AVM {
 		String parseSub(String const& arg) {
 			String out = arg[0] == SUB_CHAR ? arg.substring(1) : arg;
 			StringList const argInfo = out.splitAtLast(':');
-			usize const name	= toUInt64(argInfo[0]);
-			usize const index	= toUInt64(argInfo[1]);
-			for (usize i = funStack.size()-1; i < funStack.size(); --i) {
-				if (funStack[i].name == name)
-					return funStack[i].values[i];
+			try {
+				usize const name	= toUInt64(argInfo[0]);
+				usize const index	= toUInt64(argInfo[1]);
+				for (usize i = funStack.size()-1; i < funStack.size(); --i) {
+					if (funStack[i].name == name && index < funStack[i].values.size())
+						return funStack[i].values[index];
+					else if (funStack[i].values.empty())
+						setErrorAndStop(ErrorCode::AVM_EEC_MISSING_FUNCTION_ARGUMENT);
+				}
+			} catch (FailedActionException const& e) {
+				setErrorAndStop(ErrorCode::AVM_EEC_ARGUMENT_PARSE_FAILURE);
 			}
 			return "";
 		}
@@ -281,10 +289,15 @@ namespace Makai::Ex::AVM {
 		}
 
 		Parameters getArguments(usize const start, usize const count) {
+			if (!count) return StringList();
 			auto args = binary.data.sliced(start, start + count);
 			for (auto& arg: args)
-				if (arg.size() && arg[0] == SUB_CHAR)
-					arg = parseSub(arg);
+				if (arg.size()) {
+					if (arg[0] == SUB_CHAR)
+						arg = parseSub(arg);
+					else arg = "%";
+				}
+				
 			return args;
 		}
 
