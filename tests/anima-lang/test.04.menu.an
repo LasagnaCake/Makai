@@ -1,21 +1,21 @@
 menu MainMenu
-	"Main Game"	: open Difficulty end
-	"Options"	: open Options end
+	"Main Game"	: close MainMenu open Difficulty end
+	"Options"	: close MainMenu open Options end
 	"Quit"		: terminate
 	none		: option "Quit"
 end
 
 menu Difficulty
-	"Easy"		: $difficulty E open PlayerSelect end
-	"Normal"	: $difficulty N open PlayerSelect end
-	"Hard"		: $difficulty H open PlayerSelect end
-	"Lunatic"	: $difficulty L open PlayerSelect end
+	"Easy"		: $difficulty E close Difficulty open PlayerSelect end
+	"Normal"	: $difficulty N close Difficulty open PlayerSelect end
+	"Hard"		: $difficulty H close Difficulty open PlayerSelect end
+	"Lunatic"	: $difficulty L close Difficulty open PlayerSelect end
 	none		: return
 end
 
 menu PlayerSelect
-	"Alice"	: $load-stage "Alice" end
-	"Bob"	: $load-stage "Bob" end
+	"Alice"	: close PlayerSelect $load-stage "Alice" end
+	"Bob"	: close PlayerSelect $load-stage "Bob" end
 	none	: return
 end
 
