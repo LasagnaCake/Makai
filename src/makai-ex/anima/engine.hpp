@@ -264,7 +264,6 @@ namespace Makai::Ex::AVM {
 
 		void storeState() {
 			stack.pushBack(current);
-			auto op		= current.op;
 			current		= Frame{.op = current.op};
 		}
 
