@@ -260,7 +260,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Declared choices.
 		Map<usize, StringList> choices;
 		/// @brief Declared menus.
-		Map<usize, Menu> menus;
+		Map<String, Menu> menus;
 
 		/// @brief Source file name.
 		String const fileName;
@@ -770,7 +770,7 @@ namespace Makai::Ex::AVM::Compiler {
 					processMenuOption(menu.options[optionName], curNode, nodes, menuName);
 				}
 			}
-			menus[ConstHasher::hash(name)] = menu;
+			menus[name] = menu;
 		}
 
 		void processMenuOption(
