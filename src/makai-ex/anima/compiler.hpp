@@ -131,9 +131,10 @@ namespace Makai::Ex::AVM::Compiler {
 				ssize place	= -1;
 				ssize func	= stack.size()-1;
 				for (auto const& fun: stack.reversed()) {
-					--func;
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Func: ", fun.name, ", Args: ('", functions[fun.name].join("', '"), "')");
 					if ((place = functions[fun.name].find(name)) != -1)
 						break;
+					--func;
 				}
 				if (func != -1)
 					return toString(SUB_CHAR, stack[func].name, ":", place);
@@ -147,8 +148,9 @@ namespace Makai::Ex::AVM::Compiler {
 				for (auto& c: str) {
 					if (c == '%') {
 						if (substitute && sub.size())
-							out += toString(SUB_CHAR, parseArgument(sub), SUB_CHAR);
-						else out += '%';
+							out += toString(parseArgument(sub), SUB_CHAR);
+						else if (substitute)
+							out += '%';
 						sub.clear();
 						substitute = !substitute;
 					} else if (substitute) {
@@ -258,7 +260,7 @@ namespace Makai::Ex::AVM::Compiler {
 					}
 					if (arg.empty() && !old.empty())
 						throw Error::InvalidAction(
-							toString("Invalid string interpolation in parameter pack!"),
+							toString("Invalid argument or string interpolation in parameter pack (", pack.match,")!"),
 							toString("Names must only contain letters, numbers, '-', '~', ':' and '_'!"),
 							CPP::SourceFile(fname, pack.position)
 						);
