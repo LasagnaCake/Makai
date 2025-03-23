@@ -740,7 +740,7 @@ namespace Makai::Ex::AVM::Compiler {
 						.pos	= opi,
 						.valPos	= vali
 					});
-				}
+				} break;
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
