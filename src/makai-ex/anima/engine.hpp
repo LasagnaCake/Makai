@@ -294,6 +294,7 @@ namespace Makai::Ex::AVM {
 			for (auto& [menu, _]: menus)
 				opCloseMenu(menu);
 			menus.clear();
+			//retrieveState();
 		}
 
 		void opInvalidOp() {
@@ -429,7 +430,6 @@ namespace Makai::Ex::AVM {
 
 		void opMenuSubReturn() {
 			returnFromCurrentMenu();
-			//retrieveState();
 		}
 
 		void opMenuSubHighlightOption() {
