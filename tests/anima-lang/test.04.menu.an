@@ -6,10 +6,10 @@ menu MainMenu
 end
 
 menu Difficulty
-	"Easy"		: open PlayerSelect end
-	"Normal"	: open PlayerSelect end
-	"Hard"		: open PlayerSelect end
-	"Lunatic"	: open PlayerSelect end
+	"Easy"		: $difficulty E open PlayerSelect end
+	"Normal"	: $difficulty N open PlayerSelect end
+	"Hard"		: $difficulty H open PlayerSelect end
+	"Lunatic"	: $difficulty L open PlayerSelect end
 	none		: return
 end
 
