@@ -228,9 +228,9 @@ namespace Makai::Ex::AVM {
 		};
 
 		struct MenuState {
-			usize	name		= 0;
-			bool	inMenu		= false;
-			usize	stackSize	= 0;
+			usize		current		= 0;
+			List<usize>	previous	= 0;
+			bool		open		= false;
 		};
 
 		/// @brief Program stack.
@@ -238,10 +238,10 @@ namespace Makai::Ex::AVM {
 		/// @brief Current execution state.
 		Frame			current;
 
-		/// @brief Menu stack.
-		List<MenuState>	menuStack;
+		/// @brief Menus.
+		Map<usize, MenuState>	menus;
 		/// @brief Current menu state.
-		MenuState		menu;
+		MenuState				menu;
 
 		/// @brief Engine state.
 		State		engineState	= State::AVM_ES_READY;
@@ -366,24 +366,21 @@ namespace Makai::Ex::AVM {
 		}
 
 		void enterMenuMode(usize const name) {
-			menu.stackSize	= stack.size();
-			menu.name		= name;
-			menuStack.pushBack(menu);
-			menu.inMenu		= true;
+			menus[name].previous.pushBack(menu.current);
+			menus[name].current	= name;
+			menus[name].open	= true;
+			menu = menus[name];
 			storeState();
 		}
 
 		void returnFromCurrentMenu() {
-			menu = menuStack.popBack();
-			stack.resize(menu.stackSize);
-			retrieveState();
+			if (menu.previous.empty()) return exitMenuMode();
+			menu = menus[menu.previous.popBack()];
 		}
 
 		void exitMenuMode() {
-			menu = menuStack.front();
-			stack.resize(menu.stackSize);
-			menuStack.clear();
-			retrieveState();
+			menu = {};
+			menus.clear();
 		}
 
 		void opJump() {
@@ -414,19 +411,19 @@ namespace Makai::Ex::AVM {
 		void opMenuOpen() {
 			uint64 name, start, count;
 			if (!operands64(name, start, count)) return;
-			opOpenMenu(name, binary.data.sliced(start, start + count));
 			enterMenuMode(name);
+			opOpenMenu(name, binary.data.sliced(start, start + count));
 		}
 
 		void opMenuClose() {
 			uint64 name;
 			if (!operands64(name)) return;
+			menus[name].open = false;
 			opCloseMenu(name);
-			returnFromCurrentMenu();
 		}
 
 		void opMenuReturn() {
-			exitMenuMode();
+			returnFromCurrentMenu();
 			retrieveState();
 		}
 
