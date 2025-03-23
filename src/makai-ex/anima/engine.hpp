@@ -375,11 +375,14 @@ namespace Makai::Ex::AVM {
 
 		void returnFromCurrentMenu() {
 			if (menu.previous.empty()) return exitMenuMode();
-			menu = menus[menu.previous.popBack()];
+			menu				= menus[menu.previous.popBack()];
+			menu.open			= true;
+			menus[menu.current]	= menu;
 		}
 
 		void exitMenuMode() {
-			menu = {};
+			for (auto& [menu, _]: menus)
+				opCloseMenu(menu);
 			menus.clear();
 		}
 
@@ -400,40 +403,40 @@ namespace Makai::Ex::AVM {
 
 		void opMenu() {
 			switch (sp()) {
-				case 0: opMenuOpen();
-				case 1: opMenuClose();
-				case 2: opMenuReturn();
-				case 3: opMenuHighlightOption();
-				case 4: opMenuReturnControl();
+				case 0: opMenuSubOpen();
+				case 1: opMenuSubClose();
+				case 2: opMenuSubReturn();
+				case 3: opMenuSubHighlightOption();
+				case 4: opMenuSubReturnControl();
 			}
 		}
 
-		void opMenuOpen() {
+		void opMenuSubOpen() {
 			uint64 name, start, count;
 			if (!operands64(name, start, count)) return;
 			enterMenuMode(name);
 			opOpenMenu(name, binary.data.sliced(start, start + count));
 		}
 
-		void opMenuClose() {
+		void opMenuSubClose() {
 			uint64 name;
 			if (!operands64(name)) return;
 			menus[name].open = false;
 			opCloseMenu(name);
 		}
 
-		void opMenuReturn() {
+		void opMenuSubReturn() {
 			returnFromCurrentMenu();
 			retrieveState();
 		}
 
-		void opMenuHighlightOption() {
+		void opMenuSubHighlightOption() {
 			uint64 name, option;
 			if (!operands64(name, option)) return;
 			opSetMenuOption(name, binary.data[option]);
 		}
 
-		void opMenuReturnControl() {
+		void opMenuSubReturnControl() {
 			uint64 name;
 			if (!operands64(name)) return;
 			opReturnControlToMenu(name);
