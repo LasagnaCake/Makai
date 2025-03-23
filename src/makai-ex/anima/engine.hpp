@@ -53,6 +53,7 @@ namespace Makai::Ex::AVM {
 				case (Operation::AVM_O_NAMED_CALL):	opNamedCall();	break;
 				case (Operation::AVM_O_JUMP):		opJump();		break;
 				case (Operation::AVM_O_GET_VALUE):	opGetValue();	break;
+				case (Operation::AVM_O_MENU):		opMenu();		break;
 				default:							opInvalidOp();	break;
 			}
 		}
@@ -355,6 +356,10 @@ namespace Makai::Ex::AVM {
 			if (spm & 0b1000)			storeState(current.op + range * JUMP_SIZE);
 			if ((spm & 0b0111) == 2)	current.op += Math::clamp<ssize>(current.integer, 0, range) * JUMP_SIZE;
 			else						current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
+		}
+
+		void opMenu() {
+
 		}
 
 		void opGetValue() {
