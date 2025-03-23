@@ -254,6 +254,7 @@ namespace Makai::Ex::AVM::Compiler {
 					switch (arg[0]) {
 						case '\x02':	arg = funcs.parseString(arg.substring(1)); break;
 						case '%':		arg = funcs.parseArgument(arg); break;
+						default:		continue;
 					}
 					if (arg.empty() && !old.empty())
 						throw Error::InvalidAction(
