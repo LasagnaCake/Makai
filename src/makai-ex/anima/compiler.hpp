@@ -116,6 +116,21 @@ namespace Makai::Ex::AVM::Compiler {
 			Map<usize, StringList>	functions;
 			/// @brief Function stack.
 			List<usize>				stack;
+
+			constexpr String parseArgument(String name) const {
+				if (name[0] == '%')
+					name.erase(0);
+				ssize place	= -1;
+				ssize func	= stack.size()-1;
+				for (auto const& fun: stack.reversed()) {
+					--func;
+					if ((place = functions[fun].find(name)) != -1)
+						break;
+				}
+				if (func != -1)
+					return toString("%", func, ":", place);
+				return "";
+			}
 		};
 
 		/// @brief Parameter pack.
@@ -133,34 +148,30 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @throw Error::InvalidValue on syntax errors.
 			constexpr static StringList parse(
 				Regex::Match pack,
-				String const& fname = "unknown",
-				Functions const& funcs
+				String const& fname,
+				Functions const& funcs,
+				bool const canUseSubs = true
 			) {
 				pack.match = pack.match.sliced(1, -2);
-				String param = "";
+				String param	= "";
+				String sub		= "";
 				StringList out;
 				bool inString	= false;
 				bool unspaced	= true;
 				bool escape		= false;
+				bool subArg		= false;
 				for (usize i = 0; i < pack.match.size(); ++i) {
 					auto const c = pack.match[i];
 					switch (c) {
 						case ',': {
 							if (!inString) {
 								if (param.size() && param[0] == '%') {
-									String const arg = param.substring(1);
-									auto place	= -1;
-									auto func	= -1;
-									for (auto const& fun: funcs.stack.reversed())
-										if (place = funcs.functions[fun].find(arg) != -1) {
-											func = fun;
-											break;
-										}
-									if (func != -1)
-										out.pushBack(toString(func) + "*" + toString(place));
+									String const arg = funcs.parseArgument(param);
+									if (arg.size())
+										out.pushBack(arg);
 									else
 										throw Error::InvalidValue(
-											toString("Argument substitution at [", out.size(), "] does not exist!"),
+											toString("Function argument at [", out.size(), "] does not exist!"),
 											CPP::SourceFile(fname, i + pack.position)
 										);
 								} else out.pushBack(param);
@@ -175,7 +186,19 @@ namespace Makai::Ex::AVM::Compiler {
 						default:
 							if (inString) {
 								if (c == '\\') escape = !escape;
-								param.pushBack(c);
+								if (!canUseSubs) {
+									param.pushBack(c);
+									continue;
+								}
+								if (c == '%' && !escape) {
+									if (subArg)
+										param += "%" + funcs.parseArgument(sub) + "%";
+									subArg = !subArg;
+									continue;
+								}
+								if (subArg && isValidNameChar(c))
+									sub.pushBack(c);
+								else param.pushBack(c);
 								continue;
 							}
 							else if (isNullOrSpaceChar(c)) {
@@ -188,14 +211,14 @@ namespace Makai::Ex::AVM::Compiler {
 							||	c == '.'
 							||	c == '~'
 							||	c == ':'
-							||	(c == '%' && param.empty())
+							||	(c == '%' && param.empty() && canUseSubs)
 							))
 								param.pushBack(c);
 							else throw Error::InvalidValue(
 								toString("Invalid parameter at position [", out.size(), "]!"),
 								toString(
-									"Names must only contain letters, numbers, '-', '~', ':' and '_'!"
-									"\n And '%' may ONLY appear at the begginnig of a name!"
+									"Names must only contain letters, numbers, '-', '~', ':' and '_'!",
+									canUseSubs ? "\n And '%' may ONLY appear at the begginnig of a name!" : ""
 								),
 								CPP::SourceFile(fname, i + pack.position)
 							);
@@ -212,8 +235,13 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @param fname Source file. For error purposes.
 			/// @return Parameter pack.
 			/// @throw Error::InvalidValue on syntax errors.
-			constexpr static ParameterPack fromString(Regex::Match const& ppack, String const& fname = "unknown") {
-				return parse(ppack, fname);
+			constexpr static ParameterPack fromString(
+				Regex::Match const& ppack,
+				String const& fname,
+				Functions const& funcs,
+				bool const canUseSubs = true
+			) {
+				return parse(ppack, fname, funcs, canUseSubs);
 			}
 
 			/// @brief Constructs a parameter pack from a list of strings.
@@ -280,10 +308,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Declared choices.
 		Map<usize, StringList>	choices;
 		/// @brief Declared functions.
-		Map<usize, StringList>	functions;
-
-		/// @brief Function stack.
-		List<usize> funStack;
+		Functions				functions;
 
 		/// @brief Source file name.
 		String const fileName;
@@ -320,7 +345,7 @@ namespace Makai::Ex::AVM::Compiler {
 							tokens.pushBack(Token{
 								.type	= Operation::AVM_O_ACTION,
 								.name	= node.substring(1),
-								.pack	= ParameterPack::fromString(mnext, fileName),
+								.pack	= ParameterPack::fromString(mnext, fileName, functions),
 								.pos	= mnode.position,
 								.valPos	= mnext.position
 							});
@@ -342,7 +367,7 @@ namespace Makai::Ex::AVM::Compiler {
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= ParameterPack::fromString(mnext, fileName),
+									.pack	= ParameterPack::fromString(mnext, fileName, functions),
 									.pos	= mnode.position,
 									.valPos	= mnext.position
 								});
@@ -358,7 +383,7 @@ namespace Makai::Ex::AVM::Compiler {
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= ParameterPack(next),
+									.pack	= ParameterPack(next[0] == '%' ? functions.parseArgument(next) : next),
 									.pos	= mnode.position,
 									.valPos	= mnext.position
 								});
@@ -420,7 +445,7 @@ namespace Makai::Ex::AVM::Compiler {
 					case '[': {
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_ACTOR,
-							.pack	= ParameterPack::fromString(mnode, fileName),
+							.pack	= ParameterPack::fromString(mnode, fileName, functions, false),
 							.pos	= mnode.position,
 							.valPos	= mnext.position
 						});
@@ -566,7 +591,7 @@ namespace Makai::Ex::AVM::Compiler {
 							);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", nodes[curNode].match);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(nodes[curNode].match));
-						auto const ppack = ParameterPack::fromString(nodes[curNode+1]);
+						auto const ppack = ParameterPack::fromString(nodes[curNode+1], fileName, functions, false);
 						auto const path = ConstHasher::hash(getChoicePath(nodes[curNode].match));
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_GET_VALUE,
@@ -634,8 +659,21 @@ namespace Makai::Ex::AVM::Compiler {
 					) blocks.back().pushBack(isInScene ? ':' : '*');
 					isInScene = ophash == ConstHasher::hash("scene");
 					entry = val;
-					if (ophash == ConstHasher::hash("function"))
-						funStack.pushBack(ConstHasher::hash(getScopePath(entry)));
+					if (ophash == ConstHasher::hash("function")) {
+						auto const fpath = getScopePath(entry);
+						functions.stack.pushBack(ConstHasher::hash(fpath));
+						++curNode;
+						if (curNode+1 >= nodes.size() || nodes[curNode+1].match[0] != '(')
+							throw Error::InvalidValue(
+								toString("Missing function arguments!"),
+								CPP::SourceFile(fileName, opi)
+							);
+						functions.functions[functions.stack.back()] = ParameterPack::fromString(
+							nodes[curNode+1],
+							fileName,
+							functions
+						).args;
+					}
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
@@ -686,7 +724,7 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				case (ConstHasher::hash("select")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
-					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
+					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions, false);
 					switch (val[0]) {
 						case '$': {
 							tokens.pushBack(Token{
@@ -739,7 +777,7 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Invalid choice name '", val, "'!"),
 							CPP::SourceFile(fileName, vali)
 						);
-					auto const ppack = ParameterPack::fromString(nodes[curNode+2]);
+					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions, false);
 					auto const choice = ConstHasher::hash(getChoicePath(val));
 					choices[choice] = ppack.args;
 					curNode += 2;
