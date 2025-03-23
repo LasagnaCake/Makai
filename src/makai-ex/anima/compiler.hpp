@@ -81,6 +81,7 @@ namespace Makai::Ex::AVM::Compiler {
 			case 'n': return '\n';
 			case 'v': return '\v';
 			case 't': return '\t';
+			case 'a': return '\a';
 			case 'b': return '\b';
 			case 'r': return '\r';
 			case 'f': return '\f';
@@ -112,7 +113,7 @@ namespace Makai::Ex::AVM::Compiler {
 		constexpr static As<char const[]> GLOBAL_BLOCK = "[***]";
 
 		struct Functions {
-			struct Index {
+			struct Composition {
 				usize index;
 				usize name;
 				usize scope;
@@ -120,7 +121,7 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @brief Declared functions.
 			Map<usize, StringList>	functions;
 			/// @brief Function stack.
-			List<Index>				stack;
+			List<Composition>		stack;
 
 			constexpr String parseArgument(String name) const {
 				if (name[0] == '%')
@@ -133,8 +134,37 @@ namespace Makai::Ex::AVM::Compiler {
 						break;
 				}
 				if (func != -1)
-					return toString("%", stack[func].name, ":", place);
+					return toString(SUB_CHAR, stack[func].name, ":", place);
 				return "";
+			}
+
+			constexpr String parseString(String const& str) const {
+				String out;
+				String sub;
+				bool subArg = false;
+				bool escape = false;
+				for (auto& c: str) {
+					if (c == '\\' && !subArg) escape = !escape;
+					if (c == '%' && !escape) {
+						if (subArg && sub.size())
+							out += toString(SUB_CHAR, parseArgument(sub), SUB_CHAR);
+						subArg = !subArg;
+						continue;
+					}
+					if (subArg) {
+						if (
+							isValidNameChar(c)
+							||	c == '.'
+							||	c == '~'
+							||	c == ':'
+						) sub.pushBack(c);
+						else return "";
+					} else {
+						out.pushBack(c);
+						escape = false;
+						continue;
+					}
+				}
 			}
 		};
 
@@ -182,32 +212,20 @@ namespace Makai::Ex::AVM::Compiler {
 								} else out.pushBack(param);
 								param.clear();
 								unspaced = true;
-							}
+							} else param.pushBack(c);
 						} break;
 						case '"':
 							if (escape) param.pushBack(c);
-							else inString = !inString;
+							else {
+								inString = !inString;
+								if (inString) param.pushBack('\x02');
+							}
 						break;
 						default:
 							if (inString) {
-								if (c == '\\') escape = !escape;
-								if (!canUseSubs) {
-									param.pushBack(c);
-									continue;
-								}
-								if (c == '%' && !escape) {
-									if (subArg)
-										param += "%" + funcs.parseArgument(sub) + "%";
-									subArg = !subArg;
-									continue;
-								}
-								if (subArg && (
-									isValidNameChar(c)
-									||	c == '.'
-									||	c == '~'
-									||	c == ':'
-								)) sub.pushBack(c);
-								else param.pushBack(c);
+								if (c == '\\')
+									escape = !escape;
+								param.pushBack(c);
 								continue;
 							}
 							else if (isNullOrSpaceChar(c)) {
@@ -221,8 +239,7 @@ namespace Makai::Ex::AVM::Compiler {
 							||	c == '~'
 							||	c == ':'
 							||	(c == '%' && param.empty() && canUseSubs)
-							))
-								param.pushBack(c);
+							)) param.pushBack(c);
 							else throw Error::InvalidValue(
 								toString("Invalid parameter at position [", out.size(), "]!"),
 								toString(
@@ -236,6 +253,19 @@ namespace Makai::Ex::AVM::Compiler {
 					escape = false;
 				}
 				if (param.size()) out.pushBack(param);
+				for (auto& arg: out) {
+					String const old = arg;
+					switch (arg[0]) {
+						case '\x02':	arg = funcs.parseString(arg.substring(1)); break;
+						case '%':		arg = funcs.parseArgument(arg); break;
+					}
+					if (arg.empty() && !old.empty())
+						throw Error::InvalidAction(
+								toString("Invalid string interpolation in parameter pack!"),
+								toString("Names must only contain letters, numbers, '-', '~', ':' and '_'!"),
+								CPP::SourceFile(fname, pack.position)
+							);
+				}
 				return out;
 			}
 
@@ -426,10 +456,18 @@ namespace Makai::Ex::AVM::Compiler {
 						});
 					} break;
 					case '\"': {
-						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Normalized: [", normalize(node.sliced(1, -2)), "]");
+						auto const rawContent = node.sliced(1, -2);
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Normalized: [", normalize(rawContent), "]");
+						auto const content = functions.parseString(rawContent);
+						if (content.empty() && !rawContent.empty())
+							throw Error::InvalidAction(
+								toString("Invalid string interpolation!"),
+								toString("Names must only contain letters, numbers, '-', '~', ':' and '_'!"),
+								CPP::SourceFile(fname, mnode.position)
+							);
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_LINE,
-							.name	= normalize(node.sliced(1, -2)),
+							.name	= normalize(content),
 							.pos	= mnode.position,
 							.valPos	= mnext.position
 						});
@@ -720,6 +758,11 @@ namespace Makai::Ex::AVM::Compiler {
 					) blocks.back().popBack();
 					auto const end = blocks.join() + "[end]";
 					blocks.popBack();
+					for (auto& fun: functions.stack)
+						if (fun.scope == blocks.size()) {
+							functions.stack.popBack();
+							break;
+						}
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", end);
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_HALT,
@@ -793,6 +836,17 @@ namespace Makai::Ex::AVM::Compiler {
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions, false);
 					auto const choice = ConstHasher::hash(getChoicePath(val));
 					choices[choice] = ppack.args;
+					curNode += 2;
+				} break;
+				case (ConstHasher::hash("call")): {
+					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_INVOKE,
+						.name	= getScopePath(val),
+						.pack	= ParameterPack::fromString(nodes[curNode+2], fileName, functions),
+						.pos	= opi,
+						.valPos	= vali
+					});
 					curNode += 2;
 				} break;
 				default:

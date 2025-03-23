@@ -105,6 +105,8 @@ namespace Makai::Ex::AVM {
 		AVM_O_INVOKE,
 	};
 
+	constexpr char const SUB_CHAR = '\x1a';
+
 	/// @brief Binary version.	
 	constexpr uint64 ANIMA_VERSION		= 0;
 	/// @brief Minimum required version to run binary.

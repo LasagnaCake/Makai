@@ -1,21 +1,27 @@
-function move-to-x (pos)
-	"Moving along X: %pos%"
+scene Movement
+	function to-x (pos)
+		*"Moving to X: %pos%"
+	end
+
+	function to-y (pos)
+		*"Moving to Y: %pos%"
+	end
+
+	function to-z (pos)
+		*"Moving to Z: %pos%"
+	end
+
+	function move-2d (x, y)
+		call to-x (%x)
+		call to-y (%y)
+	end
+
+	function move-3d (x, y, z)
+		call move-2d (%x, %y)
+		call to-z (%z)
+	end
 end
 
-function move-to-y (pos)
-	"Moving along Y: %pos%"
-end
+[] @show
 
-function move-to-z (pos)
-	"Moving along Z: %pos%"
-end
-
-function move-to-2d (x, y)
-	call move-to-x (%x)
-	call move-to-y (%y)
-end
-
-function move-to-3d (x, y, z)
-	call move-to-2d (%x, %y)
-	call move-to-z (%z)
-end
+call Movement:move-3d (3, 5, 8)

@@ -53,6 +53,7 @@ namespace Makai::Ex::AVM {
 				case (Operation::AVM_O_NAMED_CALL):	opNamedCall();	break;
 				case (Operation::AVM_O_JUMP):		opJump();		break;
 				case (Operation::AVM_O_GET_VALUE):	opGetValue();	break;
+				case (Operation::AVM_O_INVOKE):		opInvoke();		break;
 				default:							opInvalidOp();	break;
 			}
 		}
@@ -220,16 +221,26 @@ namespace Makai::Ex::AVM {
 			uint16		spMode	= 0;
 			/// @brief Operation pointer.
 			usize		op		= 0;
+			/// @brief Whether inside a function.
+			bool		inFunc	= false;
 			/// @brief Current integer.
 			ssize		integer	= 0;
 			/// @brief Current string.
 			String		string	= "";
 		};
 
+		/// @brief Function stack frame.
+		struct FunctionFrame {
+			usize		name;
+			StringList	values;
+		};
+
 		/// @brief Program stack.
-		List<Frame>		stack;
+		List<Frame>			stack;
+		/// @brief Function stack.
+		List<FunctionFrame>	funStack;
 		/// @brief Current execution state.
-		Frame			current;
+		Frame				current;
 
 		/// @brief Engine state.
 		State		engineState	= State::AVM_ES_READY;
@@ -245,6 +256,38 @@ namespace Makai::Ex::AVM {
 			return sm;
 		}
 
+		String parseSub(String const& arg) {
+			String out = arg[0] == SUB_CHAR ? arg.substring(1) : arg;
+			StringList const argInfo = out.splitAtLast(':');
+			usize const name	= toUInt64(argInfo[0]);
+			usize const index	= toUInt64(argInfo[1]);
+			for (usize i = funStack.size()-1; i < funStack.size(); --i) {
+				if (funStack[i].name == name)
+					return funStack[i].values[i];
+			}
+			return "";
+		}
+
+		String parseReps(String const& str) {
+			String out = "";
+			bool inSub = false;
+			for (auto const& bit: str.split(SUB_CHAR)) {
+				if (inSub)
+					out += parseSub(bit);
+				else out += bit;
+				inSub = !inSub;
+			}
+			return out;
+		}
+
+		Parameters getArguments(usize const start, usize const count) {
+			auto args = binary.data.sliced(start, start + count);
+			for (auto& arg: args)
+				if (arg.size() && arg[0] == SUB_CHAR)
+					arg = parseSub(arg);
+			return args;
+		}
+
 		void storeState(usize const op) {
 			storeState();
 			stack.back().op = op;
@@ -256,6 +299,7 @@ namespace Makai::Ex::AVM {
 		}
 
 		void retrieveState() {
+			if (current.inFunc) funStack.popBack();
 			current	= stack.popBack();
 		}
 
@@ -313,7 +357,7 @@ namespace Makai::Ex::AVM {
 			uint64 params, psize;
 			if (!operands64(params, psize)) return;
 			if (psize)
-				opPerform(current.actors, action, binary.data.sliced(params, params + psize));
+				opPerform(current.actors, action, getArguments(params, psize));
 			else
 				opPerform(current.actors, action, StringList());
 		}
@@ -346,7 +390,7 @@ namespace Makai::Ex::AVM {
 			uint64 vcount;
 			if (!operand64(vcount)) return;
 			if (vcount)
-				opNamedCallMultiple(param, binary.data.sliced(value, value + vcount));
+				opNamedCallMultiple(param, getArguments(value, vcount));
 			else
 				opNamedCallMultiple(param, StringList());
 		}
@@ -373,11 +417,25 @@ namespace Makai::Ex::AVM {
 			if (spm == 3) {
 				uint64 start, size;
 				if (!operands64(start, size)) return;
-				opGetChoice(name, binary.data.sliced(start, start + size));
+				opGetChoice(name, getArguments(start, size));
 				return;
 			}
 			if (spm == 2) return opGetString(name);
 			opGetInt(name);
+		}
+
+		void opInvoke() {
+			uint64 name;
+			if (!operand64(name)) return;
+			auto spm = sp();
+			funStack.pushBack({name});
+			if (spm) {
+				uint64 args, count;
+				if (!operands64(args, count)) return;
+				funStack.back().values = getArguments(args, count);
+			}
+			jumpTo(name);
+			current.inFunc = true;
 		}
 
 		constexpr bool assertOperand(usize const opsize) {
