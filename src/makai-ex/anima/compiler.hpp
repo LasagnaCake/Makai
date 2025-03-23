@@ -472,6 +472,7 @@ namespace Makai::Ex::AVM::Compiler {
 		String		entry;
 		bool		isInAct		= false;
 		bool		isInChoice	= false;
+		bool		hasBlocks	= false;
 
 		constexpr static bool isValidNameChar(char const c) {
 			return
@@ -620,6 +621,7 @@ namespace Makai::Ex::AVM::Compiler {
 						.valPos	= vali
 					});
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Entrypoint: ", tokens.back().entry);
+					hasBlocks = true;
 					++curNode;
 					return;
 				}
@@ -714,6 +716,7 @@ namespace Makai::Ex::AVM::Compiler {
 					assertHasAtLeast(nodes, curNode, 3, opmatch);
 					curNode += 2;
 					processMenu(curNode, nodes);
+					hasBlocks = true;
 				} break;
 				case (ConstHasher::hash("open")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
@@ -843,9 +846,9 @@ namespace Makai::Ex::AVM::Compiler {
 				while (nodes[curNode].match != "end" && curNode < nodes.size())
 					++curNode;
 				OperationTree optionTree = {nodes.sliced(start, curNode-1), fileName};
-				if (optionTree.choices.size() || optionTree.menus.size())
+				if (optionTree.hasBlocks)
 					throw Error::InvalidValue(
-						toString("Option blocks cannot contain choices or menus inside them!"),
+						toString("Option blocks cannot contain other blocks!"),
 						CPP::SourceFile(fileName, nodes[start].position)
 					);
 				actions = optionTree.tokens;
@@ -855,8 +858,7 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Invalid operation inside menu option!"),
 							toString(
 								"Option blocks cannot contain:"
-								"\n> Non-returning jumps"
-								"\n> Non-terminating exits"
+								"\n> ![next] and ![finish] statements"
 							),
 							CPP::SourceFile(fileName, op.pos)
 						);
