@@ -4,11 +4,11 @@ scene Movement
 	end
 
 	function to-y (pos)
-		*"Moving to Y: %pos%"
+		*"\nMoving to Y: %pos%"
 	end
 
 	function to-z (pos)
-		*"Moving to Z: %pos%"
+		*"\nMoving to Z: %pos%"
 	end
 
 	function move-2d (x, y)
@@ -24,4 +24,4 @@ end
 
 [] @show
 
-call Movement:move-3d (3, 5, 8)
+call Movement:move-3d (3, 5, 8) ;
