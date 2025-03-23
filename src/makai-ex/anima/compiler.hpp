@@ -1114,6 +1114,7 @@ namespace Makai::Ex::AVM::Compiler {
 					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_NAMED_CALL);
 					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_JUMP);
 					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_GET_VALUE);
+					MKEX_ANIMAC_PRINT_NAME(Operation::AVM_O_INVOKE);
 				}
 				#undef MKEX_ANIMAC_PRINT_NAME
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Mode: ", token.mode);

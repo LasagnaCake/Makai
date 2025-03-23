@@ -119,20 +119,6 @@ namespace Makai::Ex::AVM {
 		/// @param name Choice name.
 		/// @param choices Choices.
 		virtual void opGetChoice(uint64 const name, Parameters const& choices)							{}
-		/// @brief Menu opening.
-		/// @param name Menu name.
-		/// @param choices Menu options.
-		virtual void opOpenMenu(uint64 const name, Parameters const& options)							{}
-		/// @brief Menu closing.
-		/// @param name Menu name.
-		virtual void opCloseMenu(uint64 const name)														{}
-		/// @brief Menu option highlighting.
-		/// @param name Menu name.
-		/// @param option Option to highlight.
-		virtual void opSetMenuOption(uint64 const name, String const& option)							{}
-		/// @brief Menu control returnal.
-		/// @param name Option name.
-		virtual void opReturnControlToMenu(uint64 const& name)											{}
 
 		/// @brief Returns the error code.
 		/// @return Error code.
@@ -308,7 +294,9 @@ namespace Makai::Ex::AVM {
 
 		void storeState() {
 			stack.pushBack(current);
-			current		= Frame{.op = current.op};
+			auto const op	= current.op;
+			current			= Frame();
+			current.op		= op;
 		}
 
 		void retrieveState() {
