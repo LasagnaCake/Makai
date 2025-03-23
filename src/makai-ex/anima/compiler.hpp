@@ -753,12 +753,13 @@ namespace Makai::Ex::AVM::Compiler {
 			usize& curNode,
 			List<Regex::Match> const& nodes
 		) {
-			auto const name = nodes[curNode-1].match;
+			auto name = nodes[curNode-1].match;
 			if (!name.validate(isValidNameChar))
 				throw Error::InvalidValue(
 					toString("Invalid menu name '", name, "'!"),
 					CPP::SourceFile(fileName, nodes[curNode-1].position)
 				);
+			name = getScopePath(name);
 			auto const menuPath = getScopePath(name + "[menu]");
 			Menu menu;
 			for (auto& opt: menu.onBack) {
