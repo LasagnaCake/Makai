@@ -263,10 +263,10 @@ namespace Makai::Ex::AVM::Compiler {
 					}
 					if (arg.empty() && !old.empty())
 						throw Error::InvalidAction(
-								toString("Invalid string interpolation in parameter pack!"),
-								toString("Names must only contain letters, numbers, '-', '~', ':' and '_'!"),
-								CPP::SourceFile(fname, pack.position)
-							);
+							toString("Invalid string interpolation in parameter pack!"),
+							toString("Names must only contain letters, numbers, '-', '~', ':' and '_'!"),
+							CPP::SourceFile(fname, pack.position)
+						);
 				}
 				return out;
 			}
