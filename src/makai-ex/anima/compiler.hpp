@@ -723,6 +723,13 @@ namespace Makai::Ex::AVM::Compiler {
 						.pos	= opi,
 						.valPos	= vali
 					});
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_MENU,
+						.name	= getScopePath(val),
+						.mode	= 4,
+						.pos	= opi,
+						.valPos	= vali
+					});
 					curNode += 2;
 				} break;
 				default:
