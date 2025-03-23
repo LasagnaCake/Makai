@@ -32,9 +32,9 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any invalid name character.
 		const static String NON_NAME_CHAR	= String("[^\\w\\-_~:]");
 		/// @brief Matches any complex token.
-		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_'\\:\\~]");
+		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_'\\:\\~\\%]");
 		/// @brief Matches any simple token.
-		const static String SIMPLE_TOKEN	= String("[*.,;\\{\\}\\<\\>]");
+		const static String SIMPLE_TOKEN	= String("[*.,;\\{\\}\\<\\>\\=]");
 
 		/// @brief Creates a regex that lazily matches all characters between the given tokens.
 		/// @param begin Start token.
@@ -156,11 +156,20 @@ namespace Makai::Ex::AVM::Compiler {
 									unspaced = false;
 								continue;
 							}
-							else if (unspaced && (isValidNameChar(c) || c == '.' || c == '~' || c == ':'))
+							else if (unspaced && (
+								isValidNameChar(c)
+							||	c == '.'
+							||	c == '~'
+							||	c == ':'
+							||	(c == '%' && param.empty())
+							))
 								param.pushBack(c);
 							else throw Error::InvalidValue(
 								toString("Invalid parameter at position [", out.size(), "]!"),
-								toString("Names must only contain letters, numbers, '-' and '_'!"),
+								toString(
+									"Names must only contain letters, numbers, '-', '~', ':' and '_'!"
+									"\n And '%' may ONLY appear at the begginnig of a name!"
+								),
 								CPP::SourceFile(fname, i + pack.position)
 							);
 						break;
@@ -238,29 +247,16 @@ namespace Makai::Ex::AVM::Compiler {
 
 		/// @brief Token list.
 		using Tokens = List<Token>;
-		
-		/// @brief Menu.
-		struct Menu {
-			/// @brief Operation done when the exit button is pressed.
-			Tokens onExit = {
-				Token{.type = Operation::AVM_O_MENU, .mode = 1},
-				Token{.type = Operation::AVM_O_MENU, .mode = 4}
-			};
-			/// @brief Operation done when the back button is pressed.
-			Tokens onBack = {
-				Token{.type = Operation::AVM_O_MENU, .mode = 2},
-				Token{.type = Operation::AVM_O_MENU, .mode = 4}
-			};
-			/// @brief Menu options.
-			Map<String, Tokens>	options;
-		};
 
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
 		/// @brief Declared choices.
-		Map<usize, StringList> choices;
-		/// @brief Declared menus.
-		Map<String, Menu> menus;
+		Map<usize, StringList>		choices;
+		/// @brief Declared functions.
+		Map<usize, ParameterPack>	functions;
+
+		/// @brief Function stack.
+		List<usize> funStack;
 
 		/// @brief Source file name.
 		String const fileName;
@@ -331,7 +327,7 @@ namespace Makai::Ex::AVM::Compiler {
 									.pos	= mnode.position,
 									.valPos	= mnext.position
 								});
-							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR))
+							else if (!Regex::count(next, RegexMatches::NON_NAME_CHAR) || next[0] == '%')
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
@@ -417,6 +413,12 @@ namespace Makai::Ex::AVM::Compiler {
 							.valPos	= mnext.position
 						}); break;
 					}
+					case '%': {
+						throw Error::InvalidValue(
+							toString("Floating argument substitutions are not allowed!"),
+							CPP::SourceFile(fileName, mnext.position)
+						);
+					} break;
 					case '(': continue;
 					default:
 						if (isLowercaseChar(node[0])) {	
@@ -470,9 +472,9 @@ namespace Makai::Ex::AVM::Compiler {
 	private:
 		StringList	blocks;
 		String		entry;
-		bool		isInAct		= false;
-		bool		isInChoice	= false;
-		bool		hasBlocks	= false;
+		bool		isInScene		= false;
+		bool		isInChoice		= false;
+		bool		hasBlocks		= false;
 
 		constexpr static bool isValidNameChar(char const c) {
 			return
@@ -579,6 +581,7 @@ namespace Makai::Ex::AVM::Compiler {
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Jump to: ", tokens.back().name);
 					return;
 				}
+				case (ConstHasher::hash("function")):
 				case (ConstHasher::hash("scene")):
 				case (ConstHasher::hash("act")): {
 					if (val.empty())
@@ -601,9 +604,11 @@ namespace Makai::Ex::AVM::Compiler {
 						blocks.size()
 					&&	blocks.back().back() != ':'
 					&&	blocks.back().back() != '*'
-					) blocks.back().pushBack(isInAct ? '*' : ':');
-					isInAct = ophash == ConstHasher::hash("act");
+					) blocks.back().pushBack(isInScene ? ':' : '*');
+					isInScene = ophash == ConstHasher::hash("scene");
 					entry = val;
+					if (ophash == ConstHasher::hash("function"))
+						funStack.pushBack(ConstHasher::hash(getScopePath(entry)));
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
@@ -712,189 +717,12 @@ namespace Makai::Ex::AVM::Compiler {
 					choices[choice] = ppack.args;
 					curNode += 2;
 				} break;
-				case (ConstHasher::hash("menu")): {
-					assertHasAtLeast(nodes, curNode, 3, opmatch);
-					curNode += 2;
-					processMenu(curNode, nodes);
-					hasBlocks = true;
-				} break;
-				case (ConstHasher::hash("open")): {
-					assertHasAtLeast(nodes, curNode, 2, opmatch);
-					tokens.pushBack(Token{
-						.type	= Operation::AVM_O_MENU,
-						.name	= getScopePath(val),
-						.pos	= opi,
-						.valPos	= vali
-					});
-					tokens.pushBack(Token{
-						.type	= Operation::AVM_O_MENU,
-						.name	= getScopePath(val),
-						.mode	= 4,
-						.pos	= opi,
-						.valPos	= vali
-					});
-					curNode += 2;
-				} break;
-				case (ConstHasher::hash("close")): {
-					tokens.pushBack(Token{
-						.type	= Operation::AVM_O_MENU,
-						.name	= getScopePath(val),
-						.mode	= 1,
-						.pos	= opi,
-						.valPos	= vali
-					});
-				} break;
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
 					CPP::SourceFile(fileName, opi)
 				);
 			}
-		}
-
-		void processMenu(
-			usize& curNode,
-			List<Regex::Match> const& nodes
-		) {
-			auto name = nodes[curNode-1].match;
-			if (!name.validate(isValidNameChar))
-				throw Error::InvalidValue(
-					toString("Invalid menu name '", name, "'!"),
-					CPP::SourceFile(fileName, nodes[curNode-1].position)
-				);
-			name = getScopePath(name);
-			auto const menuPath = getScopePath(name + "[menu]");
-			Menu menu;
-			for (auto& opt: menu.onBack) {
-				opt.pos		=
-				opt.valPos	= nodes[curNode-1].position;
-			}
-			menu.onBack.front().entry	= menuPath + "[back]";
-			menu.onBack.back().entry	= menuPath + "[back]:[end]";
-			for (auto& opt: menu.onExit) {
-				opt.pos		=
-				opt.valPos	= nodes[curNode-1].position;
-				opt.entry	= menuPath;
-			}
-			menu.onExit.front().entry	= menuPath + "[exit]";
-			menu.onExit.back().entry	= menuPath + "[exit]:[end]";
-			while (nodes[curNode].match != "end" && curNode < nodes.size()) {
-				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
-				if (nodes[curNode].match == "none")
-					processMenuOption(menu.onBack, curNode, nodes, menuPath, name);
-				else if (nodes[curNode].match == "finish")
-					processMenuOption(menu.onExit, curNode, nodes, menuPath, name);
-				else {
-					auto const optionName = nodes[curNode].match;
-					menu.options[optionName] = Tokens();
-					processMenuOption(menu.options[optionName], curNode, nodes, menuPath, name);
-				}
-			}
-			menus[name] = menu;
-		}
-
-		void processMenuOption(
-			List<Token>& actions,
-			usize& curNode,
-			List<Regex::Match> const& nodes,
-			String const& menuPath,
-			String const& menuName
-		) {
-			auto const option = nodes[curNode];
-			++curNode;
-			if (nodes[curNode].match != ":")
-				++curNode;
-			if (nodes[curNode].match == "none") {
-				actions.pushBack(Token{
-					.type	= Operation::AVM_O_NEXT,
-					.entry	= menuPath + "[back]",
-					.pos	= nodes[curNode].position
-				});
-				addMenuTerminator(actions, "back", menuPath, option.position, menuName);
-				++curNode;
-			} else if (nodes[curNode].match == "option") {
-				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
-				actions.pushBack(Token{
-					.type	= Operation::AVM_O_MENU,
-					.name	= menuName,
-					.pack	= ParameterPack(nodes[curNode+1].match),
-					.mode	= 3,
-					.entry	= menuPath + "[" + nodes[curNode+1].match + "]",
-					.pos	= nodes[curNode].position,
-					.valPos	= nodes[curNode+1].position
-				});
-				addMenuTerminator(actions, option.match, menuPath, option.position, menuName);
-				curNode += 2;
-			} else if (nodes[curNode].match == "finish") {
-				actions.pushBack(Token{
-					.type	= Operation::AVM_O_MENU,
-					.mode	= 2,
-					.entry	= menuPath + "[exit]",
-					.pos	= nodes[curNode].position,
-				});
-				addMenuTerminator(actions, "exit", menuPath, option.position, menuName);
-				++curNode;
-			} else if (nodes[curNode].match == "terminate") {
-				actions.pushBack(Token{
-					.type	= Operation::AVM_O_HALT,
-					.entry	= menuPath + "[" + nodes[curNode+1].match + "]",
-					.pos	= nodes[curNode].position,
-				});
-				++curNode;
-			} else {
-				auto const start = curNode;
-				while (nodes[curNode].match != "end" && curNode < nodes.size())
-					++curNode;
-				OperationTree optionTree = {nodes.sliced(start, curNode-1), fileName};
-				if (optionTree.hasBlocks)
-					throw Error::InvalidValue(
-						toString("Option blocks cannot contain other blocks!"),
-						CPP::SourceFile(fileName, nodes[start].position)
-					);
-				actions = optionTree.tokens;
-				for (auto const& op: actions) {
-					if (!isValidMenuOptionOperation(op)) 
-						throw Error::InvalidValue(
-							toString("Invalid operation inside menu option!"),
-							toString(
-								"Option blocks cannot contain:"
-								"\n> ![next] and ![finish] statements"
-							),
-							CPP::SourceFile(fileName, op.pos)
-						);
-				}
-				if (actions.empty())
-					actions.pushBack(Token{.type = Operation::AVM_O_NEXT});
-				actions.front().entry = menuPath + "[" + nodes[curNode+1].match + "]";
-				addMenuTerminator(actions, option.match, menuPath, option.position, menuName);
-			}
-
-		}
-
-		constexpr void addMenuTerminator(
-			Tokens& actions,
-			String const& name,
-			String const& menuPath,
-			ssize const posi,
-			String const& menuName
-		) {
-			actions.pushBack(Token{
-				.type	= Operation::AVM_O_MENU,
-				.name	= menuName,
-				.mode	= 4,
-				.entry	= menuPath + "[" + name + "]:[end]",
-				.pos	= posi
-			});
-		}
-
-		constexpr static usize getRangeSkip(Token const& token) {
-		}
-
-		constexpr static bool isValidMenuOptionOperation(Token const& token) {
-			if (token.tags & Token::CHOICE_BIT) return true;
-			if (token.type == Operation::AVM_O_JUMP && !(token.mode & 0b1000) && token.tags)	return false;
-			if (token.type == Operation::AVM_O_HALT && token.mode)								return false;
-			return true;
 		}
 
 		constexpr void processChoice(

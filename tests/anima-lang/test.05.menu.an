@@ -1,0 +1,42 @@
+function open-difficulty-select ()
+	close MainMenu
+	open Difficulty
+end
+
+function set-difficulty (diff)
+	$difficulty =diff
+	close Difficulty
+	open PlayerSelect
+end
+
+function start-game (player)
+	close PlayerSelect
+	$load-stage =diff
+end
+
+menu MainMenu
+	"Main Game"	: perform open-difficulty-select
+	Options		: perform open-difficulty-select
+	Quit		: terminate
+	none		: option "Quit"
+end
+
+menu Difficulty
+	Easy	: call set-difficulty (E)
+	Normal	: call set-difficulty (N)
+	Hard	: call set-difficulty (H)
+	Lunatic	: call set-difficulty (L)
+	none	: return
+end
+
+menu PlayerSelect
+	Alice	: call start-game (Alice)
+	Bob		: call start-game (Bob)
+	none	: return
+end
+
+menu Options
+	none	: return
+end
+
+open MainMenu

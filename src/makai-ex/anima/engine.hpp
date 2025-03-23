@@ -227,21 +227,10 @@ namespace Makai::Ex::AVM {
 			String		string	= "";
 		};
 
-		struct MenuState {
-			usize		current		= 0;
-			List<usize>	previous	= 0;
-			bool		open		= false;
-		};
-
 		/// @brief Program stack.
 		List<Frame>		stack;
 		/// @brief Current execution state.
 		Frame			current;
-
-		/// @brief Menus.
-		Map<usize, MenuState>	menus;
-		/// @brief Current menu state.
-		MenuState				menu;
 
 		/// @brief Engine state.
 		State		engineState	= State::AVM_ES_READY;
@@ -269,30 +258,6 @@ namespace Makai::Ex::AVM {
 
 		void retrieveState() {
 			current	= stack.popBack();
-		}
-
-		void enterMenuMode(usize const name) {
-			menus[name].previous.pushBack(menu.current);
-			menus[name].current	= name;
-			menus[name].open	= true;
-			menu = menus[name];
-			storeState();
-		}
-
-		void returnFromCurrentMenu() {
-			if (menu.previous.empty()) return exitMenuMode();
-			menu.open			= false;
-			menus[menu.current]	= menu;
-			menu				= menus[menu.previous.popBack()];
-			menu.open			= true;
-			menus[menu.current]	= menu;
-		}
-
-		void exitMenuMode() {
-			for (auto& [menu, _]: menus)
-				opCloseMenu(menu);
-			menus.clear();
-			retrieveState();
 		}
 
 		void opInvalidOp() {
@@ -400,46 +365,6 @@ namespace Makai::Ex::AVM {
 			if (spm & 0b1000)			storeState(current.op + range * JUMP_SIZE);
 			if ((spm & 0b0111) == 2)	current.op += Math::clamp<ssize>(current.integer, 0, range) * JUMP_SIZE;
 			else						current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
-		}
-
-		void opMenu() {
-			switch (sp()) {
-				case 0: opMenuSubOpen();
-				case 1: opMenuSubClose();
-				case 2: opMenuSubReturn();
-				case 3: opMenuSubHighlightOption();
-				case 4: opMenuSubReturnControl();
-			}
-		}
-
-		void opMenuSubOpen() {
-			uint64 name, start, count;
-			if (!operands64(name, start, count)) return;
-			enterMenuMode(name);
-			opOpenMenu(name, binary.data.sliced(start, start + count));
-		}
-
-		void opMenuSubClose() {
-			uint64 name;
-			if (!operands64(name)) return;
-			menus[name].open = false;
-			opCloseMenu(name);
-		}
-
-		void opMenuSubReturn() {
-			returnFromCurrentMenu();
-		}
-
-		void opMenuSubHighlightOption() {
-			uint64 name, option;
-			if (!operands64(name, option)) return;
-			opSetMenuOption(name, binary.data[option]);
-		}
-
-		void opMenuSubReturnControl() {
-			uint64 name;
-			if (!operands64(name)) return;
-			opReturnControlToMenu(name);
 		}
 
 		void opGetValue() {

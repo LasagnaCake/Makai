@@ -97,18 +97,18 @@ namespace Makai::Ex::AVM {
 		///
 		///		- MODE 4: Get menu option.
 		AVM_O_GET_VALUE,
-		/// @brief Menu. Behaves differently, depending on SP mode.
+		/// @brief Function invocation. Behaves differently, depending on SP mode.
 		///
-		///		- MODE 0: Open menu.
+		///		- MODE 0: Call with no parameters.
 		///
-		///		- MODE 1: Close menu.
+		///		- MODE 1: Call with a series of parameters.
+		AVM_O_INVOKE,
+		/// @brief Stack manipulation. Behaves differently, depending on SP mode.
 		///
-		///		- MODE 2: Return to previous menu, if any.
+		///		- MODE 0: Push strings to stack.
 		///
-		///		- MODE 3: Highlight option.
-		///
-		///		- MODE 4: Return control to menu.
-		AVM_O_MENU,
+		///		- MODE 1: Pop strings from stack, into argument stack.
+		AVM_O_STACK,
 	};
 
 	/// @brief Binary version.	
