@@ -1048,7 +1048,7 @@ public:
 	/// @param fun Procedure to apply.
 	/// @return Reference to self.
 	template <Type::Functional<TransformType> TProcedure>
-	constexpr SelfType& operator&(TProcedure const& fun) {
+	constexpr SelfType& operator|=(TProcedure const& fun) {
 		return transform(fun);
 	}
 
@@ -1066,7 +1066,7 @@ public:
 	/// @param fun Procedure to apply.
 	/// @return Reference to self.
 	template <Type::Functional<SelfType&(SelfType&)> TProcedure>
-	constexpr SelfType& operator&(TProcedure const& fun) {
+	constexpr SelfType& operator|=(TProcedure const& fun) {
 		return fun(*this);
 	}
 	
