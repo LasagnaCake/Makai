@@ -94,6 +94,8 @@ namespace Makai::Ex::AVM {
 		///		- MODE 2: Get string.
 		///
 		///		- MODE 3: Get choice.
+		///
+		///		- MODE 4: Get menu option.
 		AVM_O_GET_VALUE,
 		/// @brief Menu. Behaves differently, depending on SP mode.
 		///
