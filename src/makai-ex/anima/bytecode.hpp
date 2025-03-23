@@ -103,12 +103,6 @@ namespace Makai::Ex::AVM {
 		///
 		///		- MODE 1: Call with a series of parameters.
 		AVM_O_INVOKE,
-		/// @brief Stack manipulation. Behaves differently, depending on SP mode.
-		///
-		///		- MODE 0: Push strings to stack.
-		///
-		///		- MODE 1: Pop strings from stack, into argument stack.
-		AVM_O_STACK,
 	};
 
 	/// @brief Binary version.	
