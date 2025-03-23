@@ -127,7 +127,7 @@ namespace Makai::Ex::AVM::Compiler {
 
 			constexpr String parseArgument(String name) const {
 				if (name[0] == '%')
-					name.erase(0);
+					name = name.substring(1);
 				ssize place	= -1;
 				ssize func	= stack.size()-1;
 				for (auto const& fun: stack.reversed()) {
@@ -143,17 +143,15 @@ namespace Makai::Ex::AVM::Compiler {
 			constexpr String parseString(String const& str) const {
 				String out;
 				String sub;
-				bool subArg = false;
-				bool escape = false;
+				bool substitute = false;
 				for (auto& c: str) {
-					if (c == '\\' && !subArg) escape = !escape;
-					if (c == '%' && !escape) {
-						if (subArg && sub.size())
+					if (c == '%') {
+						if (substitute && sub.size())
 							out += toString(SUB_CHAR, parseArgument(sub), SUB_CHAR);
-						subArg = !subArg;
-						continue;
-					}
-					if (subArg) {
+						else out += '%';
+						sub.clear();
+						substitute = !substitute;
+					} else if (substitute) {
 						if (
 							isValidNameChar(c)
 							||	c == '.'
@@ -161,12 +159,9 @@ namespace Makai::Ex::AVM::Compiler {
 							||	c == ':'
 						) sub.pushBack(c);
 						else return "";
-					} else {
-						out.pushBack(c);
-						escape = false;
-						continue;
-					}
+					} else out.pushBack(c);
 				}
+				return out;
 			}
 		};
 
@@ -196,7 +191,6 @@ namespace Makai::Ex::AVM::Compiler {
 				bool inString	= false;
 				bool unspaced	= true;
 				bool escape		= false;
-				bool subArg		= false;
 				for (usize i = 0; i < pack.match.size(); ++i) {
 					auto const c = pack.match[i];
 					switch (c) {
@@ -416,7 +410,7 @@ namespace Makai::Ex::AVM::Compiler {
 								tokens.pushBack(Token{
 									.type	= Operation::AVM_O_NAMED_CALL,
 									.name	= name,
-									.pack	= ParameterPack(normalize(next.sliced(1, -2))),
+									.pack	= ParameterPack(normalize(functions.parseString(next.sliced(1, -2)))),
 									.pos	= mnode.position,
 									.valPos	= mnext.position
 								});
@@ -1222,6 +1216,13 @@ namespace Makai::Ex::AVM::Compiler {
 								out.addOperand(token.value);
 								out.addOperand(token.range);
 							}
+						}
+						break;
+					case Operation::AVM_O_INVOKE:
+						out.addOperation(token.operation(token.pack.args.size()));
+						if (token.pack.args.size()) {
+							out.addNamedOperand(token.name);
+							out.addParameterPack(token.pack.args);
 						}
 						break;
 				}
