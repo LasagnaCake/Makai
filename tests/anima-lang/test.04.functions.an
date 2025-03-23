@@ -1,2 +1,21 @@
-function move-to (x, y)
+function move-to-x (pos)
+	"Moving along X: %pos%"
+end
+
+function move-to-y (pos)
+	"Moving along Y: %pos%"
+end
+
+function move-to-z (pos)
+	"Moving along Z: %pos%"
+end
+
+function move-to-2d (x, y)
+	call move-to-x (%x)
+	call move-to-y (%y)
+end
+
+function move-to-3d (x, y, z)
+	call move-to-2d (%x, %y)
+	call move-to-z (%z)
 end
