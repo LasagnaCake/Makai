@@ -201,8 +201,12 @@ namespace Makai::Ex::AVM::Compiler {
 									subArg = !subArg;
 									continue;
 								}
-								if (subArg && isValidNameChar(c))
-									sub.pushBack(c);
+								if (subArg && (
+									isValidNameChar(c)
+									||	c == '.'
+									||	c == '~'
+									||	c == ':'
+								)) sub.pushBack(c);
 								else param.pushBack(c);
 								continue;
 							}
