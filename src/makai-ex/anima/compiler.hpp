@@ -777,7 +777,7 @@ namespace Makai::Ex::AVM::Compiler {
 					processMenuOption(menu.options[optionName], curNode, nodes, menuPath, name);
 				}
 			}
-			menus[name] = menu;
+			menus[getScopePath(name)] = menu;
 		}
 
 		void processMenuOption(
