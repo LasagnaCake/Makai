@@ -109,17 +109,28 @@ namespace Makai::Ex::AVM {
 		virtual void opNamedCallMultiple(uint64 const param, Parameters const& values)					{}
 		/// @brief Integer value acquisition.
 		/// @param name Value name.
-		/// @param out Value output.
 		virtual void opGetInt(uint64 const name)														{}
 		/// @brief String value acquisition.
 		/// @param name Value name.
-		/// @param out Value output.
 		virtual void opGetString(uint64 const name)														{}
-		/// @brief Menu choice acquisition.
-		/// @param name Menu name.
-		/// @param choices Menu choices.
-		/// @param out Value output.
+		/// @brief Choice acquisition.
+		/// @param name Choice name.
+		/// @param choices Choices.
 		virtual void opGetChoice(uint64 const name, Parameters const& choices)							{}
+		/// @brief Menu opening.
+		/// @param name Menu name.
+		/// @param choices Menu options.
+		virtual void opOpenMenu(uint64 const name, Parameters const& options)							{}
+		/// @brief Menu closing.
+		/// @param name Menu name.
+		virtual void opCloseMenu(uint64 const name)														{}
+		/// @brief Menu option highlighting.
+		/// @param name Menu name.
+		/// @param option Option to highlight.
+		virtual void opSetMenuOption(uint64 const name, String const& option)							{}
+		/// @brief Menu control returnal.
+		/// @param name Option name.
+		virtual void opReturnControlToMenu(uint64 const& name)											{}
 
 		/// @brief Returns the error code.
 		/// @return Error code.
@@ -216,10 +227,21 @@ namespace Makai::Ex::AVM {
 			String		string	= "";
 		};
 
+		struct MenuState {
+			usize	name		= 0;
+			bool	inMenu		= false;
+			usize	stackSize	= 0;
+		};
+
 		/// @brief Program stack.
-		List<Frame> stack;
+		List<Frame>		stack;
 		/// @brief Current execution state.
-		Frame		current;
+		Frame			current;
+
+		/// @brief Menu stack.
+		List<MenuState>	menuStack;
+		/// @brief Current menu state.
+		MenuState		menu;
 
 		/// @brief Engine state.
 		State		engineState	= State::AVM_ES_READY;
@@ -343,6 +365,27 @@ namespace Makai::Ex::AVM {
 			current	= stack.popBack();
 		}
 
+		void enterMenuMode(usize const name) {
+			menu.stackSize	= stack.size();
+			menu.name		= name;
+			menuStack.pushBack(menu);
+			menu.inMenu		= true;
+			storeState();
+		}
+
+		void returnFromCurrentMenu() {
+			menu = menuStack.popBack();
+			stack.resize(menu.stackSize);
+			retrieveState();
+		}
+
+		void exitMenuMode() {
+			menu = menuStack.front();
+			stack.resize(menu.stackSize);
+			menuStack.clear();
+			retrieveState();
+		}
+
 		void opJump() {
 			constexpr usize JUMP_SIZE = (sizeof(Operation) + sizeof(uint64)) / 2;
 			auto spm = sp();
@@ -359,7 +402,44 @@ namespace Makai::Ex::AVM {
 		}
 
 		void opMenu() {
+			switch (sp()) {
+				case 0: opMenuOpen();
+				case 1: opMenuClose();
+				case 2: opMenuReturn();
+				case 3: opMenuHighlightOption();
+				case 4: opMenuReturnControl();
+			}
+		}
 
+		void opMenuOpen() {
+			uint64 name, start, count;
+			if (!operands64(name, start, count)) return;
+			opOpenMenu(name, binary.data.sliced(start, start + count));
+			enterMenuMode(name);
+		}
+
+		void opMenuClose() {
+			uint64 name;
+			if (!operands64(name)) return;
+			opCloseMenu(name);
+			returnFromCurrentMenu();
+		}
+
+		void opMenuReturn() {
+			exitMenuMode();
+			retrieveState();
+		}
+
+		void opMenuHighlightOption() {
+			uint64 name, option;
+			if (!operands64(name, option)) return;
+			opSetMenuOption(name, binary.data[option]);
+		}
+
+		void opMenuReturnControl() {
+			uint64 name;
+			if (!operands64(name)) return;
+			opReturnControlToMenu(name);
 		}
 
 		void opGetValue() {
