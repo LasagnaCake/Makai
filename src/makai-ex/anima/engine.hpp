@@ -53,7 +53,6 @@ namespace Makai::Ex::AVM {
 				case (Operation::AVM_O_NAMED_CALL):	opNamedCall();	break;
 				case (Operation::AVM_O_JUMP):		opJump();		break;
 				case (Operation::AVM_O_GET_VALUE):	opGetValue();	break;
-				case (Operation::AVM_O_MENU):		opMenu();		break;
 				default:							opInvalidOp();	break;
 			}
 		}
