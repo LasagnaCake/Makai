@@ -278,7 +278,7 @@ namespace Makai::Ex::AVM {
 			menus[name].current	= name;
 			menus[name].open	= true;
 			menu = menus[name];
-			//storeState();
+			storeState();
 		}
 
 		void returnFromCurrentMenu() {
@@ -294,7 +294,7 @@ namespace Makai::Ex::AVM {
 			for (auto& [menu, _]: menus)
 				opCloseMenu(menu);
 			menus.clear();
-			//retrieveState();
+			retrieveState();
 		}
 
 		void opInvalidOp() {
