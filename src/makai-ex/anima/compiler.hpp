@@ -719,7 +719,7 @@ namespace Makai::Ex::AVM::Compiler {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_MENU,
-						.name	= val,
+						.name	= getScopePath(val),
 						.pos	= opi,
 						.valPos	= vali
 					});
@@ -743,31 +743,31 @@ namespace Makai::Ex::AVM::Compiler {
 					toString("Invalid menu name '", name, "'!"),
 					CPP::SourceFile(fileName, nodes[curNode-1].position)
 				);
-			auto const menuName = "[menu]*" + name;
+			auto const menuPath = getScopePath(name + "[menu]");
 			Menu menu;
 			for (auto& opt: menu.onBack) {
 				opt.pos		=
 				opt.valPos	= nodes[curNode-1].position;
 			}
-			menu.onBack.front().entry	= menuName + "[back]";
-			menu.onBack.back().entry	= menuName + "[back]:[end]";
+			menu.onBack.front().entry	= menuPath + "[back]";
+			menu.onBack.back().entry	= menuPath + "[back]:[end]";
 			for (auto& opt: menu.onExit) {
 				opt.pos		=
 				opt.valPos	= nodes[curNode-1].position;
-				opt.entry	= menuName;
+				opt.entry	= menuPath;
 			}
-			menu.onExit.front().entry	= menuName + "[exit]";
-			menu.onExit.back().entry	= menuName + "[exit]:[end]";
+			menu.onExit.front().entry	= menuPath + "[exit]";
+			menu.onExit.back().entry	= menuPath + "[exit]:[end]";
 			while (nodes[curNode].match != "end" && curNode < nodes.size()) {
 				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
 				if (nodes[curNode].match == "none")
-					processMenuOption(menu.onBack, curNode, nodes, menuName);
+					processMenuOption(menu.onBack, curNode, nodes, menuPath, name);
 				else if (nodes[curNode].match == "finish")
-					processMenuOption(menu.onExit, curNode, nodes, menuName);
+					processMenuOption(menu.onExit, curNode, nodes, menuPath, name);
 				else {
 					auto const optionName = nodes[curNode].match;
 					menu.options[optionName] = Tokens();
-					processMenuOption(menu.options[optionName], curNode, nodes, menuName);
+					processMenuOption(menu.options[optionName], curNode, nodes, menuPath, name);
 				}
 			}
 			menus[name] = menu;
@@ -777,6 +777,7 @@ namespace Makai::Ex::AVM::Compiler {
 			List<Token>& actions,
 			usize& curNode,
 			List<Regex::Match> const& nodes,
+			String const& menuPath,
 			String const& menuName
 		) {
 			auto const option = nodes[curNode];
@@ -786,36 +787,37 @@ namespace Makai::Ex::AVM::Compiler {
 			if (nodes[curNode].match == "none") {
 				actions.pushBack(Token{
 					.type	= Operation::AVM_O_NEXT,
-					.entry	= menuName + "[back]",
+					.entry	= menuPath + "[back]",
 					.pos	= nodes[curNode].position
 				});
-				addMenuTerminator(actions, "back", menuName, option.position);
+				addMenuTerminator(actions, "back", menuPath, option.position, menuName);
 				++curNode;
 			} else if (nodes[curNode].match == "option") {
 				assertHasAtLeast(nodes, curNode, 2, nodes[curNode]);
 				actions.pushBack(Token{
 					.type	= Operation::AVM_O_MENU,
-					.name	= nodes[curNode+1].match,
+					.name	= menuName,
+					.pack	= ParameterPack(nodes[curNode+1].match),
 					.mode	= 3,
-					.entry	= menuName + "[" + nodes[curNode+1].match + "]",
+					.entry	= menuPath + "[" + nodes[curNode+1].match + "]",
 					.pos	= nodes[curNode].position,
 					.valPos	= nodes[curNode+1].position
 				});
-				addMenuTerminator(actions, option.match, menuName, option.position);
+				addMenuTerminator(actions, option.match, menuPath, option.position, menuName);
 				curNode += 2;
 			} else if (nodes[curNode].match == "finish") {
 				actions.pushBack(Token{
 					.type	= Operation::AVM_O_MENU,
 					.mode	= 2,
-					.entry	= menuName + "[exit]",
+					.entry	= menuPath + "[exit]",
 					.pos	= nodes[curNode].position,
 				});
-				addMenuTerminator(actions, "exit", menuName, option.position);
+				addMenuTerminator(actions, "exit", menuPath, option.position, menuName);
 				++curNode;
 			} else if (nodes[curNode].match == "terminate") {
 				actions.pushBack(Token{
 					.type	= Operation::AVM_O_HALT,
-					.entry	= menuName + "[" + nodes[curNode+1].match + "]",
+					.entry	= menuPath + "[" + nodes[curNode+1].match + "]",
 					.pos	= nodes[curNode].position,
 				});
 				++curNode;
@@ -823,7 +825,7 @@ namespace Makai::Ex::AVM::Compiler {
 				auto const start = curNode;
 				while (nodes[curNode].match != "end" && curNode < nodes.size())
 					++curNode;
-				OperationTree optionTree = {nodes.sliced(start, curNode), fileName};
+				OperationTree optionTree = {nodes.sliced(start, curNode-1), fileName};
 				if (optionTree.choices.size() || optionTree.menus.size())
 					throw Error::InvalidValue(
 						toString("Option blocks cannot contain choices or menus inside them!"),
@@ -844,9 +846,9 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				if (actions.empty()) {
 					actions.pushBack(Token{.type = Operation::AVM_O_NEXT});
-					actions.front().entry = menuName + "[" + nodes[curNode+1].match + "]";
+					actions.front().entry = menuPath + "[" + nodes[curNode+1].match + "]";
 				}
-				addMenuTerminator(actions, option.match, menuName, option.position);
+				addMenuTerminator(actions, option.match, menuPath, option.position, menuName);
 			}
 
 		}
@@ -854,14 +856,15 @@ namespace Makai::Ex::AVM::Compiler {
 		constexpr void addMenuTerminator(
 			Tokens& actions,
 			String const& name,
-			String const& menuName,
-			ssize const posi
+			String const& menuPath,
+			ssize const posi,
+			String const& menuName
 		) {
 			actions.pushBack(Token{
 				.type	= Operation::AVM_O_MENU,
-				.name	= name,
+				.name	= menuName,
 				.mode	= 4,
-				.entry	= menuName + "[" + name + "]:[end]",
+				.entry	= menuPath + "[" + name + "]:[end]",
 				.pos	= posi
 			});
 		}
