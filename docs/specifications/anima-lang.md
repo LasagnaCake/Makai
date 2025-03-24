@@ -95,11 +95,14 @@ In essence: An `act`'s contents are **private**, and a `scene`'s contents are **
 
 Named blocks that can take in values.
 
-To call a function, use `call <name> (<args...>)`. Scope rules that apply to jump lists also apply here.
+To call a function, use `call <name> (<args...>)`. Scope rules that apply to `act`s and `scene`s also apply here.
 
 To use an argument inside a function, do it via `%<arg-name>`.
 
-To use an argument inside a string, do it via `%<arg-name>%`. To use the `%` character, use `%%` instead.
+To use string interpolation inside a function, do it via `%<arg-name>%`. To use the `%` character, use `%%` instead.
+
+> [!note]
+> You may also execute a function via a `perform` or `next` command, but this method is not recommended, as the compiler **does not check if the function takes arguments or not** in this case.
 
 ### On the `next` and `perform` commands
 
@@ -148,7 +151,7 @@ Intended to be used like a dialog choice.
 perform choice choose-your-ending (good-end, neutral-end, bad-end, none)
 ```
 
-### For any kind of jump list (`<perform|next> <type>`) and function call
+### For any kind of jump list (`<perform|next> <type>`)
 
 For any particular jump target:
 

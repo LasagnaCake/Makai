@@ -182,13 +182,17 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @brief Parses a parameter pack.
 			/// @param pack Pack to parse.
 			/// @param fname Source file. For error purposes.
+			/// @param funcs Function stack.
+			/// @param canUseSubs Can use argument substitutions.
+			/// @param minSize Minimum pack size.
 			/// @return Parameter pack.
 			/// @throw Error::InvalidValue on syntax errors.
 			constexpr static StringList parse(
 				Regex::Match pack,
 				String const& fname,
 				Functions const& funcs,
-				bool const canUseSubs = true
+				bool const canUseSubs = true,
+				usize const minSize = 0
 			) {
 				pack.match = pack.match.sliced(1, -2);
 				String param	= "";
@@ -269,6 +273,12 @@ namespace Makai::Ex::AVM::Compiler {
 							CPP::SourceFile(fname, pack.position)
 						);
 				}
+				if (out.size() < minSize)
+					throw Error::InvalidAction(
+						toString("Missing arguments in parameter pack!"),
+						toString("Necessary argument count is [", minSize, "], but recieved [", out.size(), "] instead."),
+						CPP::SourceFile(fname, pack.position)
+					);
 				return out;
 			}
 
@@ -276,14 +286,18 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @param str String to create from.
 			/// @param fname Source file. For error purposes.
 			/// @return Parameter pack.
+			/// @param funcs Function stack.
+			/// @param canUseSubs Can use argument substitutions.
+			/// @param minSize Minimum pack size.
 			/// @throw Error::InvalidValue on syntax errors.
 			constexpr static ParameterPack fromString(
 				Regex::Match const& ppack,
 				String const& fname,
 				Functions const& funcs,
-				bool const canUseSubs = true
+				bool const canUseSubs = true,
+				usize const minSize = 0
 			) {
-				return parse(ppack, fname, funcs, canUseSubs);
+				return parse(ppack, fname, funcs, canUseSubs, minSize);
 			}
 
 			/// @brief Constructs a parameter pack from a list of strings.
@@ -1226,13 +1240,20 @@ namespace Makai::Ex::AVM::Compiler {
 							}
 						}
 						break;
-					case Operation::AVM_O_INVOKE:
-						out.addOperation(token.operation(!token.pack.args.empty()));
-						if (token.pack.args.size()) {
-							out.addNamedOperand(token.name);
-							out.addParameterPack(token.pack.args);
-						}
-						break;
+						case Operation::AVM_O_INVOKE: {
+							auto const argCount = token.pack.args.size();
+							auto const paramCount = tree.functions.functions[ConstHasher::hash(token.name)].size();
+							if (argCount < paramCount) throw Error::InvalidAction(
+								toString("Missing arguments in parameter pack!"),
+								toString("Necessary argument count is [", paramCount, "], but recieved [", argCount, "] instead."),
+								CPP::SourceFile(tree.fileName, token.pos)
+							);
+							out.addOperation(token.operation(!token.pack.args.empty()));
+							if (token.pack.args.size()) {
+								out.addNamedOperand(token.name);
+								out.addParameterPack(token.pack.args);
+							}
+						} break;
 				}
 			}
 			out.addOperation(OperationTree::Token{Operation::AVM_O_HALT});
