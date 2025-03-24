@@ -45,7 +45,7 @@ Comments are done like C/C++ line an block comments.
 Comprised of the following commands, and their recommended use case:
 
 | Command | Usage | Associated Function(s) | Can accept function arguments |
-|:-:|:-|:-:|:-:|
+|:-:|:-|:-:|:-:|:-:|
 | `[<characters>]` | For specifying the character roster. See ahead for more details. To add a character to the current roster, add the `*` modifier before it. | none | No |
 | `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. | `opPerform` | Yes (parameters) |
 | `!<emotion>` | For character emotions. Will apply to previous `[]` command. | `opEmote` | No |
@@ -61,17 +61,17 @@ Comprised of the following commands, and their recommended use case:
 
 Also contains the following keywords:
 
-| Keyword | Usage | Associated Function(s) |
-|:-:|:-|:-:|
-| `act <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
-| `scene <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none |
-| `function <name> (<args...>) ... end` | For defining functions. These will only be executed when called. | none |
-| `next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none |
-| `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none |
-| `finish` | Exits the current block early. | none |
-| `terminate` | Exits the program early. | none |
-| `<perform\|next> <params...> (<blocks>)` | Jumps one of the listed blocks, depending on a set of parameters. See ahead for further details. | see ahead |
-| `call <function> (<args...>)` | For calling functions. See ahead for further details. | see ahead |
+| Keyword | Usage | Associated Function(s) | Can accept function arguments |
+|:-:|:-|:-:|:-:|
+| `act <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none | No |
+| `scene <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none | No |
+| `function <name> (<args...>) ... end` | For defining functions. These will only be executed when called. | none | No |
+| `next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none | No |
+| `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none | No |
+| `finish` | Exits the current block early. | none | N/A |
+| `terminate` | Exits the program early. | none | N/A |
+| `<perform\|next> <params...> (<blocks>)` | Jumps one of the listed blocks, depending on a set of parameters. See ahead for further details. | see ahead | No |
+| `call <function> (<args...>)` | For calling functions. See ahead for further details. | see ahead | Yes (Arguments) |
 
 Under consideration:
 
