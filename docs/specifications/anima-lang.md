@@ -45,7 +45,7 @@ Comments are done like C/C++ line an block comments.
 Comprised of the following commands, and their recommended use case:
 
 | Command | Usage | Associated Function(s) | Can accept function arguments |
-|:-:|:-|:-:|:-:|:-:|
+|:-:|:-|:-:|:-:|
 | `[<characters>]` | For specifying the character roster. See ahead for more details. To add a character to the current roster, add the `*` modifier before it. | none | No |
 | `@<action>` | For character actions. Will apply to previous `[]` command. For passing parameters, surround the value with parentheses. For multiple parameters, separate them with commas. | `opPerform` | Yes (parameters) |
 | `!<emotion>` | For character emotions. Will apply to previous `[]` command. | `opEmote` | No |
