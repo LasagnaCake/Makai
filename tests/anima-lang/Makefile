@@ -35,8 +35,10 @@ tests:
 	$(call compile, test.01.compilation)
 	$(call compile, test.02.blocks)
 	$(call compile, test.03.choice)
+	$(call compile, test.04.functions)
 
 tests-with-compiler-debug:
 	$(call compile-debug, test.01.compilation)
 	$(call compile-debug, test.02.blocks)
 	$(call compile-debug, test.03.choice)
+	$(call compile-debug, test.04.functions)

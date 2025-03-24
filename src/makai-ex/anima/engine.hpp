@@ -26,6 +26,8 @@ namespace Makai::Ex::AVM {
 			AVM_EEC_INVALID_OPERATION,
 			AVM_EEC_INVALID_OPERAND,
 			AVM_EEC_INVALID_JUMP,
+			AVM_EEC_MISSING_FUNCTION_ARGUMENT,
+			AVM_EEC_ARGUMENT_PARSE_FAILURE,
 		};
 
 		/// @brief Destructor.
@@ -53,6 +55,7 @@ namespace Makai::Ex::AVM {
 				case (Operation::AVM_O_NAMED_CALL):	opNamedCall();	break;
 				case (Operation::AVM_O_JUMP):		opJump();		break;
 				case (Operation::AVM_O_GET_VALUE):	opGetValue();	break;
+				case (Operation::AVM_O_INVOKE):		opInvoke();		break;
 				default:							opInvalidOp();	break;
 			}
 		}
@@ -108,16 +111,13 @@ namespace Makai::Ex::AVM {
 		virtual void opNamedCallMultiple(uint64 const param, Parameters const& values)					{}
 		/// @brief Integer value acquisition.
 		/// @param name Value name.
-		/// @param out Value output.
 		virtual void opGetInt(uint64 const name)														{}
 		/// @brief String value acquisition.
 		/// @param name Value name.
-		/// @param out Value output.
 		virtual void opGetString(uint64 const name)														{}
-		/// @brief Menu choice acquisition.
-		/// @param name Menu name.
-		/// @param choices Menu choices.
-		/// @param out Value output.
+		/// @brief Choice acquisition.
+		/// @param name Choice name.
+		/// @param choices Choices.
 		virtual void opGetChoice(uint64 const name, Parameters const& choices)							{}
 
 		/// @brief Returns the error code.
@@ -209,16 +209,26 @@ namespace Makai::Ex::AVM {
 			uint16		spMode	= 0;
 			/// @brief Operation pointer.
 			usize		op		= 0;
+			/// @brief Whether inside a function.
+			bool		inFunc	= false;
 			/// @brief Current integer.
 			ssize		integer	= 0;
 			/// @brief Current string.
 			String		string	= "";
 		};
 
+		/// @brief Function stack frame.
+		struct FunctionFrame {
+			usize		name;
+			StringList	values;
+		};
+
 		/// @brief Program stack.
-		List<Frame> stack;
+		List<Frame>			stack;
+		/// @brief Function stack.
+		List<FunctionFrame>	funStack;
 		/// @brief Current execution state.
-		Frame		current;
+		Frame				current;
 
 		/// @brief Engine state.
 		State		engineState	= State::AVM_ES_READY;
@@ -232,6 +242,71 @@ namespace Makai::Ex::AVM {
 			if (!sm) sm = getSPFlag(curOp);
 			current.spMode = 0;
 			return sm;
+		}
+
+		String parseSub(String const& arg) {
+			String out = arg[0] == SUB_CHAR ? arg.substring(1) : arg;
+			StringList const argInfo = out.splitAtLast('@');
+			//DEBUGLN("Finding value for argument '", arg, "'...");
+			try {
+				usize const name	= argInfo[0].size() > 1 ? toUInt64(argInfo[0], 10) : argInfo[0][0] - '0';
+				usize const index	= argInfo[1].size() > 1 ? toUInt64(argInfo[1], 10) : argInfo[1][0] - '0';
+				//DEBUGLN("ARGUMENT: Func: ", name, ", Index: [", index, "]");
+				for (usize i = funStack.size()-1; i < funStack.size(); --i) {
+					if (funStack[i].name == name && index < funStack[i].values.size())
+						return funStack[i].values[index];
+				}
+			} catch (FailedActionException const& e) {
+				//DEBUGLN("Uh oh...");
+				setErrorAndStop(ErrorCode::AVM_EEC_ARGUMENT_PARSE_FAILURE);
+			}
+			setErrorAndStop(ErrorCode::AVM_EEC_MISSING_FUNCTION_ARGUMENT);
+			//DEBUGLN("Value not found");
+			return "";
+		}
+
+		String parseReps(String const& str) {
+			String out = "";
+			bool inSub = false;
+			//DEBUGLN("Parsing string...");
+			for (auto const& bit: str.split(SUB_CHAR)) {
+				if (inSub)
+					out += parseSub(bit);
+				else out += bit;
+				inSub = !inSub;
+			}
+			//DEBUGLN("String parsed!");
+			return out;
+		}
+
+		Parameters getArguments(usize const start, usize const count) {
+			//DEBUGLN("Processing argument set [Start: ", start, ", Count: ", count+1, "]...");
+			auto args = binary.data.sliced(start, start + count);
+			//DEBUGLN("Before: ['", args.join("', '"), "']");
+			for (auto& arg: args)
+				if (arg.size())
+					switch (arg[0]) {
+						case SUB_CHAR: arg = parseSub(arg); break;
+						case REP_CHAR: arg = parseReps(arg.substring(1)); break;
+					}
+			return args;
+		}
+
+		void storeState(usize const op) {
+			storeState();
+			stack.back().op = op;
+		}
+
+		void storeState() {
+			stack.pushBack(current);
+			auto const op	= current.op;
+			current			= Frame();
+			current.op		= op;
+		}
+
+		void retrieveState() {
+			if (current.inFunc) funStack.popBack();
+			current	= stack.popBack();
 		}
 
 		void opInvalidOp() {
@@ -271,8 +346,8 @@ namespace Makai::Ex::AVM {
 			uint64 line;
 			if (!operand64(line)) return;
 			if (sp() && line)
-				opAdd(current.actors, binary.data[line]);
-			else opSay(current.actors, line ? binary.data[line] : "");
+				opAdd(current.actors, parseReps(binary.data[line]));
+			else opSay(current.actors, line ? parseReps(binary.data[line]) : "");
 		}
 
 		void opEmotion() {
@@ -287,10 +362,7 @@ namespace Makai::Ex::AVM {
 			if (!sp()) return opPerform(current.actors, action, StringList());
 			uint64 params, psize;
 			if (!operands64(params, psize)) return;
-			if (psize)
-				opPerform(current.actors, action, binary.data.sliced(params, params + psize));
-			else
-				opPerform(current.actors, action, StringList());
+			opPerform(current.actors, action, getArguments(params, psize));
 		}
 
 		void opColor() {
@@ -320,26 +392,7 @@ namespace Makai::Ex::AVM {
 			if (!sp()) return opNamedCallSingle(param, binary.data[value]);
 			uint64 vcount;
 			if (!operand64(vcount)) return;
-			if (vcount)
-				opNamedCallMultiple(param, binary.data.sliced(value, value + vcount));
-			else
-				opNamedCallMultiple(param, StringList());
-		}
-
-		void storeState(usize const op) {
-			storeState();
-			stack.back().op = op;
-		}
-
-		void storeState() {
-			stack.pushBack(current);
-			auto op		= current.op;
-			current		= Frame();
-			current.op	= op;
-		}
-
-		void retrieveState() {
-			current	= stack.popBack();
+			opNamedCallMultiple(param, getArguments(value, vcount));
 		}
 
 		void opJump() {
@@ -364,11 +417,28 @@ namespace Makai::Ex::AVM {
 			if (spm == 3) {
 				uint64 start, size;
 				if (!operands64(start, size)) return;
-				opGetChoice(name, binary.data.sliced(start, start + size));
+				opGetChoice(name, getArguments(start, size));
 				return;
 			}
 			if (spm == 2) return opGetString(name);
 			opGetInt(name);
+		}
+
+		void opInvoke() {
+			uint64 name;
+			if (!operand64(name)) return;
+			auto spm = sp();
+			funStack.pushBack({name});
+			//DEBUGLN("Calling function [", name, "]...");
+			if (spm) {
+				uint64 args, count;
+				if (!operands64(args, count)) return;
+				funStack.back().values = getArguments(args, count);
+				//DEBUGLN("Args: ['", funStack.back().values.join("', '"), "']");
+				//DEBUGLN("Stack: [", funStack.size(), "]");
+			}
+			jumpTo(name);
+			current.inFunc = true;
 		}
 
 		constexpr bool assertOperand(usize const opsize) {

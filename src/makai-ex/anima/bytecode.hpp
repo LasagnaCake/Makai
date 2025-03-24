@@ -21,16 +21,43 @@ namespace Makai::Ex::AVM {
 		/// @brief No-op, but skips directly to the next instruction, and does not waste a cycle.
 		AVM_O_NEXT,
 		/// @brief Ends execution of the program. Behaves differently, depending on SP mode.
+		/// @note
+		///
+		///		- MODE 0: Halt execution entirely.
+		///
+		/// 	- MODE 1: Return to previous return point.
 		AVM_O_HALT,
 		/// @brief Active actor. Behaves differently, depending on SP mode.
+		/// @note
+		///
+		///		- MODE 0: Clear and set actor.
+		///
+		///		- MODE 1: Add actor.
+		///
+		///		- MODE 2: Clear and change exclude mode.
 		AVM_O_ACTOR,
 		/// @brief Actor line. Behaves differently, depending on SP mode.
+		/// @note
+		///
+		///		- MODE 0: Say line.
+		///
+		///		- MODE 1: Add line.
 		AVM_O_LINE,
 		/// @brief Actor emote.
 		AVM_O_EMOTION,
 		/// @brief Actor perform. Behaves differently, depending on SP mode.
+		/// @note
+		///
+		///		- MODE 0: Perform with no arguments.
+		///
+		///		- MODE 1: Perform with arguments.
 		AVM_O_ACTION,
 		/// @brief Text color. Behaves differently, depending on SP mode.
+		/// @note
+		///
+		///		- MODE 0: RGB Value.
+		///
+		///		- MODE 1: Name Hash.
 		AVM_O_COLOR,
 		/// @brief Wait.
 		AVM_O_WAIT,
@@ -39,12 +66,47 @@ namespace Makai::Ex::AVM {
 		/// @brief User input wait.
 		AVM_O_USER_INPUT,
 		/// @brief Named operation. Behaves differently, depending on SP mode.
+		/// @note
+		///
+		///		- MODE 0: Single Argument.
+		///
+		///		- MODE 1: Multiple Arguments.
 		AVM_O_NAMED_CALL,
 		/// @brief Jump. Behaves differently, depending on SP mode.
+		/// @note
+		///
+		///		- MODE 0: Jump without return.
+		///
+		///		- MODE 1: Jump with return.
+		///
+		///		- MODE 2: Random jump (without return).
+		///
+		///		- MODE 3: Selection jump (without return).
+		///
+		///		- MODE 10: Random jump (with return).
+		///
+		///		- MODE 11: Selection jump (with return).
 		AVM_O_JUMP,
 		/// @brief Value request. Behaves differently, depending on SP mode.
+		///
+		///		- MODE 0: Get integer.
+		///
+		///		- MODE 2: Get string.
+		///
+		///		- MODE 3: Get choice.
+		///
+		///		- MODE 4: Get menu option.
 		AVM_O_GET_VALUE,
+		/// @brief Function invocation. Behaves differently, depending on SP mode.
+		///
+		///		- MODE 0: Call with no parameters.
+		///
+		///		- MODE 1: Call with a series of parameters.
+		AVM_O_INVOKE,
 	};
+
+	constexpr char const SUB_CHAR = '\x1a';
+	constexpr char const REP_CHAR = '\x02';
 
 	/// @brief Binary version.	
 	constexpr uint64 ANIMA_VERSION		= 0;
