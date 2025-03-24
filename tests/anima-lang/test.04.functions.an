@@ -22,8 +22,13 @@ scene Movement
 		call ~move-2d (%x, %y)
 		call ~to-z ("%z%")
 	end
+	
+	function move-3d-xz (x, z)
+		//*"3D Movement..."
+		call ~move-3d (%x, 0, %z)
+	end
 end
 
 [] @show
 
-call Movement:move-3d (3, 5, 8) ;
+call Movement:move-3d-xz (3, 5, 8) ;
