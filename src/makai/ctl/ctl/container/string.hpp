@@ -47,7 +47,8 @@ public:
 
 	using
 		typename BaseType::PredicateType,
-		typename BaseType::CompareType
+		typename BaseType::CompareType,
+		typename BaseType::TransformType
 	;
 
 	using
@@ -787,7 +788,7 @@ public:
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
 	/// @return Reference to self.
-	template <class TProcedure>
+	template <Type::Functional<TransformType> TProcedure>
 	constexpr SelfType& transform(TProcedure const& fun) {
 		for(DataType& v: *this)
 			v = fun(v);
@@ -798,9 +799,45 @@ public:
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
 	/// @return Transformed string.
-	template<class TProcedure>
+	template<Type::Functional<TransformType> TProcedure>
 	constexpr SelfType transformed(TProcedure const& fun) const {
 		return SelfType(*this).transform(fun);
+	}
+
+	/// @brief Apllies a procedure to all characters in the `BaseString`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType& operator|=(TProcedure const& fun) {
+		return transform(fun);
+	}
+
+	/// @brief Returns a `transform`ed `BaseString`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Transformed string.
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType operator|(TProcedure const& fun) const {
+		return transformed(fun);
+	}
+
+	/// @brief Apllies a procedure to all characters in the `BaseString`.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Reference to self.
+	template <Type::Functional<SelfType&(SelfType&)> TProcedure>
+	constexpr SelfType& operator|=(TProcedure const& fun) {
+		return fun(*this);
+	}
+	
+	/// @brief Returns a copy of the `BaseString`, with the given procedure applied to it.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Transformed string.
+	template <Type::Functional<SelfType(SelfType const&)> TProcedure>
+	constexpr SelfType operator|(TProcedure const& fun) const {
+		return fun(*this);
 	}
 
 	/// @brief Returns whether all characters match a given predicate.
