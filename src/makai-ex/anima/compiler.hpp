@@ -130,14 +130,18 @@ namespace Makai::Ex::AVM::Compiler {
 					name = name.substring(1);
 				ssize place	= -1;
 				ssize func	= stack.size()-1;
+				//MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Looking for '", name, "' match...");
 				for (auto const& fun: stack.reversed()) {
-					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Func: ", fun.name, ", Args: ('", functions[fun.name].join("', '"), "')");
-					if ((place = functions[fun.name].find(name)) != -1)
-						break;
+					//MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Func: ", fun.name, ", Args: ('", functions[fun.name].join("', '"), "')");
+					place = functions[fun.name].find(name);
+					if (place != -1) break;
 					--func;
 				}
-				if (func != -1)
-					return toString(SUB_CHAR, stack[func].name, ":", place);
+				if (func != -1) {
+					usize const sz = functions[stack[func].name].size();
+					//MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("FOUND! Func: ", stack[func].name, ", Index: [", sz-place, "]");
+					return toString(SUB_CHAR, stack[func].name, "@", sz-place);
+				}
 				return "";
 			}
 
@@ -216,7 +220,7 @@ namespace Makai::Ex::AVM::Compiler {
 							if (escape) param.pushBack(c);
 							else {
 								inString = !inString;
-								if (inString) param.pushBack('\x02');
+								if (inString) param.pushBack(REP_CHAR);
 							}
 						break;
 						default:
@@ -254,7 +258,7 @@ namespace Makai::Ex::AVM::Compiler {
 				for (auto& arg: out) {
 					String const old = arg;
 					switch (arg[0]) {
-						case '\x02':	arg = funcs.parseString(arg.substring(1)); break;
+						case REP_CHAR:	arg = "\x02" + funcs.parseString(arg.substring(1)); break;
 						case '%':		arg = funcs.parseArgument(arg); break;
 						default:		continue;
 					}
@@ -1223,7 +1227,7 @@ namespace Makai::Ex::AVM::Compiler {
 						}
 						break;
 					case Operation::AVM_O_INVOKE:
-						out.addOperation(token.operation(token.pack.args.size()));
+						out.addOperation(token.operation(!token.pack.args.empty()));
 						if (token.pack.args.size()) {
 							out.addNamedOperand(token.name);
 							out.addParameterPack(token.pack.args);

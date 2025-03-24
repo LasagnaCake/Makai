@@ -246,44 +246,49 @@ namespace Makai::Ex::AVM {
 
 		String parseSub(String const& arg) {
 			String out = arg[0] == SUB_CHAR ? arg.substring(1) : arg;
-			StringList const argInfo = out.splitAtLast(':');
+			StringList const argInfo = out.splitAtLast('@');
+			//DEBUGLN("Finding value for argument '", arg, "'...");
 			try {
-				usize const name	= toUInt64(argInfo[0]);
-				usize const index	= toUInt64(argInfo[1]);
+				usize const name	= argInfo[0].size() > 1 ? toUInt64(argInfo[0], 10) : argInfo[0][0] - '0';
+				usize const index	= argInfo[1].size() > 1 ? toUInt64(argInfo[1], 10) : argInfo[1][0] - '0';
+				//DEBUGLN("ARGUMENT: Func: ", name, ", Index: [", index, "]");
 				for (usize i = funStack.size()-1; i < funStack.size(); --i) {
 					if (funStack[i].name == name && index < funStack[i].values.size())
 						return funStack[i].values[index];
-					else if (funStack[i].values.empty())
-						setErrorAndStop(ErrorCode::AVM_EEC_MISSING_FUNCTION_ARGUMENT);
 				}
 			} catch (FailedActionException const& e) {
+				//DEBUGLN("Uh oh...");
 				setErrorAndStop(ErrorCode::AVM_EEC_ARGUMENT_PARSE_FAILURE);
 			}
+			setErrorAndStop(ErrorCode::AVM_EEC_MISSING_FUNCTION_ARGUMENT);
+			//DEBUGLN("Value not found");
 			return "";
 		}
 
 		String parseReps(String const& str) {
 			String out = "";
 			bool inSub = false;
+			//DEBUGLN("Parsing string...");
 			for (auto const& bit: str.split(SUB_CHAR)) {
 				if (inSub)
 					out += parseSub(bit);
 				else out += bit;
 				inSub = !inSub;
 			}
+			//DEBUGLN("String parsed!");
 			return out;
 		}
 
 		Parameters getArguments(usize const start, usize const count) {
-			if (!count) return StringList();
+			//DEBUGLN("Processing argument set [Start: ", start, ", Count: ", count+1, "]...");
 			auto args = binary.data.sliced(start, start + count);
+			//DEBUGLN("Before: ['", args.join("', '"), "']");
 			for (auto& arg: args)
-				if (arg.size()) {
-					if (arg[0] == SUB_CHAR)
-						arg = parseSub(arg);
-					else arg = "%";
-				}
-				
+				if (arg.size())
+					switch (arg[0]) {
+						case SUB_CHAR: arg = parseSub(arg); break;
+						case REP_CHAR: arg = parseReps(arg.substring(1)); break;
+					}
 			return args;
 		}
 
@@ -341,8 +346,8 @@ namespace Makai::Ex::AVM {
 			uint64 line;
 			if (!operand64(line)) return;
 			if (sp() && line)
-				opAdd(current.actors, binary.data[line]);
-			else opSay(current.actors, line ? binary.data[line] : "");
+				opAdd(current.actors, parseReps(binary.data[line]));
+			else opSay(current.actors, line ? parseReps(binary.data[line]) : "");
 		}
 
 		void opEmotion() {
@@ -357,10 +362,7 @@ namespace Makai::Ex::AVM {
 			if (!sp()) return opPerform(current.actors, action, StringList());
 			uint64 params, psize;
 			if (!operands64(params, psize)) return;
-			if (psize)
-				opPerform(current.actors, action, getArguments(params, psize));
-			else
-				opPerform(current.actors, action, StringList());
+			opPerform(current.actors, action, getArguments(params, psize));
 		}
 
 		void opColor() {
@@ -390,10 +392,7 @@ namespace Makai::Ex::AVM {
 			if (!sp()) return opNamedCallSingle(param, binary.data[value]);
 			uint64 vcount;
 			if (!operand64(vcount)) return;
-			if (vcount)
-				opNamedCallMultiple(param, getArguments(value, vcount));
-			else
-				opNamedCallMultiple(param, StringList());
+			opNamedCallMultiple(param, getArguments(value, vcount));
 		}
 
 		void opJump() {
@@ -430,10 +429,13 @@ namespace Makai::Ex::AVM {
 			if (!operand64(name)) return;
 			auto spm = sp();
 			funStack.pushBack({name});
+			//DEBUGLN("Calling function [", name, "]...");
 			if (spm) {
 				uint64 args, count;
 				if (!operands64(args, count)) return;
 				funStack.back().values = getArguments(args, count);
+				//DEBUGLN("Args: ['", funStack.back().values.join("', '"), "']");
+				//DEBUGLN("Stack: [", funStack.size(), "]");
 			}
 			jumpTo(name);
 			current.inFunc = true;

@@ -106,6 +106,7 @@ namespace Makai::Ex::AVM {
 	};
 
 	constexpr char const SUB_CHAR = '\x1a';
+	constexpr char const REP_CHAR = '\x02';
 
 	/// @brief Binary version.	
 	constexpr uint64 ANIMA_VERSION		= 0;
