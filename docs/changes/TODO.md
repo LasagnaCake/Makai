@@ -28,6 +28,7 @@
 - - Could implement support for Squirrel/LUA/AngelScript
 - - Or C# even, this one might be the more feasible option
 - - - This one sounds enticing
+- - Or Ruby via [Rice](https://ruby-rice.github.io/4.x/api/overview.html), perhaps?
 - - What about [SWIG](https://www.swig.org/)?
 - [ ] Bugs & Errors (see [Issues.txt](../../Issues.txt))
 
