@@ -105,8 +105,12 @@ namespace Makai::Ex::AVM {
 		AVM_O_INVOKE,
 	};
 
-	constexpr char const SUB_CHAR = '\x1a';
+	/// @brief Argument substitution marker.
+	constexpr char const SUB_CHAR = '\x1A';
+	/// @brief String interpolation marker.
 	constexpr char const REP_CHAR = '\x02';
+	/// @brief Variable substitution marker.
+	constexpr char const VAR_CHAR = '\x1E';
 
 	/// @brief Binary version.	
 	constexpr uint64 ANIMA_VERSION		= 0;
