@@ -70,7 +70,7 @@ define tests
 endef
 endif
 
-all: debug release
+all: engine
 
 dialog:
 	@echo "Building tests..."

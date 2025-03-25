@@ -4,5 +4,6 @@
 #include "bytecode.hpp"
 #include "compiler.hpp"
 #include "engine.hpp"
+#include "simpleengine.hpp"
 
 #endif

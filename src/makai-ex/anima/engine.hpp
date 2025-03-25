@@ -7,7 +7,7 @@
 
 /// @brief Anima Virtual Machine.
 namespace Makai::Ex::AVM {
-	/// @brief Anima engine.
+	/// @brief Basic anima engine.
 	struct Engine {
 		/// @brief Function parameters.
 		using Parameters = StringList;
@@ -419,7 +419,7 @@ namespace Makai::Ex::AVM {
 				if (!operands64(start, size)) return;
 				if (start)
 					opGetChoice(name, getArguments(start, size));
-				else opGetChoice(name, Arguments());
+				else opGetChoice(name, Parameters());
 				return;
 			}
 			if (spm == 2) return opGetString(name);
