@@ -66,6 +66,7 @@ Also contains the following keywords:
 | `act <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none | No |
 | `scene <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none | No |
 | `function <name> (<args...>) ... end` | For defining functions. These will only be executed when called. | none | No |
+| `choice <name> (<options...>)` | For defining choices to be used with `choice` jumps. | none | No |
 | `next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none | No |
 | `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none | No |
 | `finish` | Exits the current block early. | none | N/A |
@@ -115,7 +116,7 @@ The state is comprised of the current actor state, global SP mode, and execution
 If a `perform` is followed by any amount of `next`s, then the program will return execution to the `perform` statement's 
 location.
 
-### On `perform select`s
+### On `select` jumps
 
 Associated command: `opGetInt`.
 
@@ -134,7 +135,7 @@ To jump at random, use `random`.
 perform select $ending (good-end, neutral-end, bad-end, none)
 ```
 
-### On `perform choice`s
+### On `choice` jumps
 
 Associated command: `opGetChoice`.
 
