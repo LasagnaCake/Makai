@@ -1251,7 +1251,7 @@ namespace Makai::Ex::AVM::Compiler {
 							out.addOperation(token.operation(!token.pack.args.empty()));
 							if (token.pack.args.size()) {
 								out.addNamedOperand(token.name);
-								out.addParameterPack(token.pack.args);
+								out.addParameterPack(token.pack.args.sliced(0, paramCount-1));
 							}
 						} break;
 				}
