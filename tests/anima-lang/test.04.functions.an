@@ -12,18 +12,21 @@ scene Movement
 	end
 
 	function move-2d (x, y)
+		""
 		//*"2D Movement..."
 		call ~to-x (%x)
 		call ~to-y (%y)
 	end
 
 	function move-3d (x, y, z)
+		""
 		//*"3D Movement..."
 		call ~move-2d (%x, %y)
 		call ~to-z ("%z%")
 	end
 	
 	function move-3d-xz (x, z)
+		""
 		//*"3D Movement..."
 		call ~move-3d (%x, 0, %z)
 	end
