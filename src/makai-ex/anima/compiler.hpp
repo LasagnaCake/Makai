@@ -866,6 +866,15 @@ namespace Makai::Ex::AVM::Compiler {
 					});
 					curNode += 2;
 				} break;
+				case (ConstHasher::hash("repeat")): {
+					tokens.pushBack(Token{
+						.type	= Operation::AVM_O_JUMP,
+						.name	= blocks.empty() ? String(GLOBAL_BLOCK) : blocks.join(),
+						.pos	= opi,
+						.valPos	= vali,
+						.tags	= Token::CHOICE_BIT
+					});
+				} break;
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
@@ -1241,17 +1250,26 @@ namespace Makai::Ex::AVM::Compiler {
 						}
 						break;
 						case Operation::AVM_O_INVOKE: {
-							auto const argCount = token.pack.args.size();
-							auto const paramCount = tree.functions.functions[ConstHasher::hash(token.name)].size();
-							if (argCount < paramCount) throw Error::InvalidAction(
-								toString("Missing arguments in parameter pack!"),
-								toString("Necessary argument count is [", paramCount, "], but recieved [", argCount, "] instead."),
-								CPP::SourceFile(tree.fileName, token.pos)
-							);
-							out.addOperation(token.operation(!token.pack.args.empty()));
-							if (token.pack.args.size()) {
-								out.addNamedOperand(token.name);
-								out.addParameterPack(token.pack.args.sliced(0, paramCount-1));
+							auto const name = ConstHasher::hash(token.name);
+							if (tree.functions.functions.contains(name)) {
+								auto const argCount = token.pack.args.size();
+								auto const paramCount = tree.functions.functions[name].size();
+								if (argCount < paramCount) throw Error::InvalidAction(
+									toString("Missing arguments in parameter pack!"),
+									toString("Necessary argument count is [", paramCount, "], but recieved [", argCount, "] instead."),
+									CPP::SourceFile(tree.fileName, token.pos)
+								);
+								out.addOperation(token.operation(!token.pack.args.empty()));
+								if (token.pack.args.size()) {
+									out.addNamedOperand(token.name);
+									out.addParameterPack(token.pack.args.sliced(0, paramCount-1));
+								}
+							} else {
+								throw Error::InvalidAction(
+									toString("Function '", token.name, "' does not exist!"),
+									toString("Did you perhaps miss a '~' or ':'?"),
+									CPP::SourceFile(tree.fileName, token.pos)
+								);
 							}
 						} break;
 				}
