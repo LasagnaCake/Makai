@@ -147,7 +147,8 @@ Jump paths are separated by commas.
 
 Intended to be used like a dialog choice.
 
-Requires the given choice to exist.
+> [!note]
+> While choices are **not required to be defined in code**, it is strongly recommended to do so.
 
 #### Example
 ```
