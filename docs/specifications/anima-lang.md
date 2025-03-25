@@ -66,7 +66,7 @@ Also contains the following keywords:
 | `act <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none | No |
 | `scene <name> ... end` | For defining named blocks in a file. These will only be executed when jumped to. | none | No |
 | `function <name> (<args...>) ... end` | For defining functions. These will only be executed when called. | none | No |
-| `choice <name> (<options...>)` | For defining choices to be used with `choice` jumps. | none | No |
+| `choice <name> (<options...>)` | For defining choices to be used with `choice` jumps. | none | Yes |
 | `next <block-name>` | For jumping to named blocks. **Does not return** to where it was called from, once the block is finished. | none | No |
 | `perform <block-name>` | For jumping to named blocks. **Returns** to where it was called from, once the block is finished. | none | No |
 | `finish` | Exits the current block early. | none | N/A |

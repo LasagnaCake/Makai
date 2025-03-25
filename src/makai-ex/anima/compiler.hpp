@@ -850,7 +850,7 @@ namespace Makai::Ex::AVM::Compiler {
 							toString("Invalid choice name '", val, "'!"),
 							CPP::SourceFile(fileName, vali)
 						);
-					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions, false);
+					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions);
 					auto const choice = ConstHasher::hash(getChoicePath(val));
 					choices[choice] = ppack.args;
 					curNode += 2;
