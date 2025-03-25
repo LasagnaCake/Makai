@@ -95,7 +95,7 @@ In essence: An `act`'s contents are **private**, and a `scene`'s contents are **
 
 Named blocks that can take in values.
 
-To call a function, use `call <name> (<args...>)`. Scope rules that apply to `act`s and `scene`s also apply here.
+To call a function, use `call <name> (<args...>)`. Scope rules that apply to `act`s and `scene`s also apply here. The compiler checks if the minimum amount of arguments are met, and discards all excess arguments.
 
 To use an argument inside a function, do it via `%<arg-name>`.
 
