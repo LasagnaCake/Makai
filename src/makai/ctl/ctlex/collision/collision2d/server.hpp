@@ -195,13 +195,10 @@ namespace Collision::C2D {
 				if (colliders.empty() || other.colliders.empty()) return;
 				const auto dir = check(*this, other);
 				if (dir == Direction::CD_NONE) return;
-				DEBUGLN("    <layer type=\"collision\">");
-				DEBUGLN("        Self: ", colliders.size());
-				DEBUGLN("        Other: ", other.colliders.size());
-				DEBUGLN("    </layer>");
 				for (auto const& a: colliders)
 					for (auto const& b: other.colliders)
-						if (a != b) /*a->process(*b, dir);*/ continue;
+						if (a != b) a->process(*b, dir);
+						//if (a != b) continue;
 			}
 
 		private:
@@ -258,14 +255,9 @@ namespace Collision::C2D {
 
 		/// @brief Processes (and handles) collision for all colliders in the server.
 		constexpr static void process() {
-			//return;
-			DEBUGLN("<server type=\"collision\">");
 			for (usize i = 0; i < MAX_LAYERS; ++i)
-				for (usize j = i; j < MAX_LAYERS; ++j) {
-					DEBUGLN("    <event type=\"collision\" for=\"layer-check\" a=\"", i, "\" b=\"", j, "\"/>");
+				for (usize j = i; j < MAX_LAYERS; ++j)
 					layers[i].process(layers[j]);
-				}
-			DEBUGLN("</server>");
 		}
 
 		/// @brief Collision layers in the server.
