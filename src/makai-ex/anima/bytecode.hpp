@@ -107,7 +107,7 @@ namespace Makai::Ex::AVM {
 
 	/// @brief Argument substitution marker.
 	constexpr char const SUB_CHAR = '\x1A';
-	/// @brief String interpolation marker.
+	/// @brief String preprocessing marker.
 	constexpr char const REP_CHAR = '\x02';
 	/// @brief Variable substitution marker.
 	constexpr char const VAR_CHAR = '\x1E';
