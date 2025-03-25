@@ -1076,14 +1076,14 @@ namespace Makai::Ex::AVM::Compiler {
 		}
 
 		struct ChoiceRef {
-			uint64 start;
-			uint64 size;
+			uint64 start	= 0;
+			uint64 size		= 0;
 		};
 
 		constexpr Map<uint64, ChoiceRef> processChoices(Map<usize, StringList> const& choices) {
 			Map<uint64, ChoiceRef> out;
 			for (auto& [choice, options]: choices) {
-				out[choice] = {data.size(), options.size() - 1};
+				out[choice] = {options.empty() ? 0 : data.size(), options.size() - 1};
 				data.appendBack(options);
 			}
 			return out;
