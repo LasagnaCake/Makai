@@ -50,6 +50,7 @@ constexpr Danmaku::BulletServerInstanceConfig PLAYER_BULLET_SERVER_CFG = {
 	256,
 	Danmaku::BulletCollisionConfig{
 		{Danmaku::Collision::Layer::PLAYER_BULLET},
+		{Danmaku::Collision::Layer::PLAYER_BULLET},
 	}
 };
 
@@ -71,7 +72,8 @@ constexpr Danmaku::LaserServerInstanceConfig ENEMY_LASER_SERVER_CFG = {
 constexpr Danmaku::LaserServerInstanceConfig PLAYER_LASER_SERVER_CFG = {
 	16,
 	Danmaku::LaserCollisionConfig{
-		{Danmaku::Collision::Layer::PLAYER_LASER}
+		{Danmaku::Collision::Layer::PLAYER_LASER},
+		{Danmaku::Collision::Layer::PLAYER_LASER},
 	}
 };
 
