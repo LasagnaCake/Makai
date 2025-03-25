@@ -59,16 +59,16 @@ namespace Makai::Ex::AVM {
 
 		/// @brief Stops the dialog.
 		/// @return Reference to self.
-		SimpleEngine& stop() override final	{isFinished = true; return *this; endProgram();	}
+		SimpleEngine& stop() override final		{isFinished = true; return *this; endProgram();	}
 		/// @brief Unpauses the dialog.
 		/// @return Reference to self.
-		SimpleEngine& play() override final	{paused = false; return *this;					}
+		SimpleEngine& play() override final		{paused = false; return *this;					}
 		/// @brief Pauses the dialog.
 		/// @return Reference to self.
 		SimpleEngine& pause() override final	{paused = true; return *this;					}
 
 	protected:
-		/// @brief Advances the engine forward..
+		/// @brief Advances the engine forward.
 		void process() {
 			if (
 				state() == State::AVM_ES_FINISHED
