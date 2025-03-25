@@ -147,6 +147,8 @@ Jump paths are separated by commas.
 
 Intended to be used like a dialog choice.
 
+Requires the given choice to exist.
+
 #### Example
 ```
 perform choice choose-your-ending (good-end, neutral-end, bad-end, none)
