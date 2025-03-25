@@ -417,9 +417,9 @@ namespace Makai::Ex::AVM {
 			if (spm == 3) {
 				uint64 start, size;
 				if (!operands64(start, size)) return;
-				if (size == static_cast<usize>(-1))
-					opGetChoice(name, Arguments());
-				else opGetChoice(name, getArguments(start, size));
+				if (start)
+					opGetChoice(name, getArguments(start, size));
+				else opGetChoice(name, Arguments());
 				return;
 			}
 			if (spm == 2) return opGetString(name);
