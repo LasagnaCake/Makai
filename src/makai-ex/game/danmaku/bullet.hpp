@@ -110,8 +110,8 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
 			if (
-				collider.getLayer().affects.match(mask.eraser).overlap()
-			&&	collider.tags.match(mask.player).overlap()
+				collider.getLayer().affects & mask.eraser
+			&&	collider.tags & mask.player
 			)
 				discard();
 		}

@@ -67,19 +67,19 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.getLayer().affects.match(mask.player.attack).overlap())
+			if (collider.getLayer().affects & mask.player.attack)
 				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
 		}
 		
 		bool isForThisPlayer(Collider const& collider) const {
-			return collider.tags.match(mask.tag.player).overlap();
+			return collider.tags & mask.tag.player;
 		}
 
 		AEnemy& takeDamage(Reference<AGameObject> const& object, CollisionMask const& collider) override {
 			if (object) {
-				if (collider.match(mask.player.bullet).overlap())
+				if (collider & mask.player.bullet)
 					takeDamage(object.as<Bullet>()->getDamage());
-				else if (collider.match(mask.player.laser).overlap())
+				else if (collider & mask.player.laser)
 					takeDamage(object.as<Laser>()->getDamage());
 			}
 			return *this;

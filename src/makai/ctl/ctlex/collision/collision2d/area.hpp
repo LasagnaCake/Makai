@@ -17,7 +17,7 @@ namespace Collision::C2D {
 	}
 
 	/// @brief Collision layer mask.
-	typedef BitMask<uint16, 4> LayerMask;
+	typedef uint64 LayerMask;
 
 	/// @brief Collision event direction.
 	enum class Direction {
@@ -38,7 +38,7 @@ namespace Collision::C2D {
 	/// @param backwards Result of a backwards collision event.
 	/// @return Both events as a single `Direction`.
 	constexpr Direction asDirection(bool const forwards, bool const backwards) {
-		return Direction(
+		return static_cast<Direction>(
 			usize(forwards)
 		|	(usize(backwards) << 1)
 		);
@@ -51,7 +51,7 @@ namespace Collision::C2D {
 		/// @brief Whether collision is enabled for the area.
 		bool				canCollide	= true;
 		/// @brief Tags associated with the collision object.
-		LayerMask			tags		= LayerMask(false);
+		LayerMask			tags		= 0;
 
 		/// @brief Checks collision with another `Area`.
 		/// @param other `Area` to check against.

@@ -116,19 +116,16 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.getLayer().affects.match(mask.enemy.attack).overlap())
+			if (collider.getLayer().affects & mask.enemy.attack)
 				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
 		}
 
 		virtual void onGrazeboxCollision(Collider const& collider, CollisionDirection const direction) {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.getLayer().affects.match(
-				mask.enemy.bullet
-			|	mask.enemy.laser
-			).overlap())
+			if (collider.getLayer().affects & (mask.enemy.bullet | mask.enemy.laser))
 				if (auto object = collider.data.mutate<>().as<AServerObject>())
 					onGraze(object);
-			if (collider.getLayer().affects.match(mask.item).overlap())
+			if (collider.getLayer().affects & mask.item)
 				if (auto item = collider.data.mutate<>().as<Item>()) {
 					onItem(item);
 					item->discard(true);
@@ -137,7 +134,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		virtual void onItemboxCollision(Collider const& collider, CollisionDirection const direction) {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.getLayer().affects.match(mask.item).overlap())
+			if (collider.getLayer().affects & mask.item)
 				if (auto item = collider.data.mutate<>().as<Item>())
 					onItemMagnet(item);
 		}
@@ -177,7 +174,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		bool isForThisPlayer(Collider const& collider) const {
-			return collider.tags.match(mask.tag.player).overlap();
+			return collider.tags & mask.tag.player;
 		}
 
 		Vector2		friction	= 1;

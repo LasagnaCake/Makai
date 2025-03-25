@@ -96,17 +96,17 @@ namespace Makai::Ex::Game::Danmaku {
 	namespace Collision::Mask {
 		using MaskType = Makai::Collision::C2D::LayerMask;
 		
-		constexpr MaskType	PLAYER			= {1u << 0,	0,			0,			0		};
-		constexpr MaskType	PLAYER_BULLET	= {1u << 1,	0,			0,			0		};
-		constexpr MaskType	PLAYER_LASER	= {1u << 2,	0,			0,			0		};
-		constexpr MaskType	PLAYER_SPELL	= {1u << 3,	0,			0,			0		};
-		constexpr MaskType	PLAYER_GRAZEBOX	= {1u << 4,	0,			0,			0		};
-		constexpr MaskType	PLAYER_ITEMBOX	= {1u << 5,	0,			0,			0		};
-		constexpr MaskType	ENEMY			= {0,		1u << 0,	0,			0		};
-		constexpr MaskType	ENEMY_BULLET	= {0,		1u << 1,	0,			0		};
-		constexpr MaskType	ENEMY_LASER		= {0,		1u << 2,	0,			0		};
-		constexpr MaskType	ITEM			= {0,		0,			1u << 0,	0		};
-		constexpr MaskType	BULLET_ERASER	= {0,		0,			0,			1u << 0	};
+		constexpr MaskType	PLAYER			= 1u << (0 + 0*8);
+		constexpr MaskType	PLAYER_BULLET	= 1u << (1 + 0*8);
+		constexpr MaskType	PLAYER_LASER	= 1u << (2 + 0*8);
+		constexpr MaskType	PLAYER_SPELL	= 1u << (3 + 0*8);
+		constexpr MaskType	PLAYER_GRAZEBOX	= 1u << (4 + 0*8);
+		constexpr MaskType	PLAYER_ITEMBOX	= 1u << (5 + 0*8);
+		constexpr MaskType	ENEMY			= 1u << (0 + 1*8);
+		constexpr MaskType	ENEMY_BULLET	= 1u << (1 + 1*8);
+		constexpr MaskType	ENEMY_LASER		= 1u << (2 + 1*8);
+		constexpr MaskType	ITEM			= 1u << (0 + 2*8);
+		constexpr MaskType	BULLET_ERASER	= 1u << (0 + 3*8);
 
 		constexpr MaskType PLAYER_ATTACK	=	PLAYER_BULLET	| PLAYER_LASER	| PLAYER_SPELL	;
 		constexpr MaskType ENEMY_ATTACK		=	ENEMY_BULLET	| ENEMY_LASER					;
@@ -125,9 +125,9 @@ namespace Makai::Ex::Game::Danmaku {
 	namespace Collision::Tag {
 		using MaskType = Makai::Collision::C2D::LayerMask;
 
-		constexpr MaskType	BULLET_ERASER	= {1u << 0,	0,			0,		0	};
-		constexpr MaskType	FOR_PLAYER_1	= {0,		1u << 0,	0,		0	};
-		constexpr MaskType	FOR_PLAYER_2	= {0,		1u << 1,	0,		0	};
+		constexpr MaskType	BULLET_ERASER	= 1u << (0 + 0*8);
+		constexpr MaskType	FOR_PLAYER_1	= 1u << (0 + 1*8);
+		constexpr MaskType	FOR_PLAYER_2	= 1u << (1 + 1*8);
 	}
 }
 
