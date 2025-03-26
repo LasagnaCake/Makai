@@ -134,7 +134,7 @@ public:
 			// If begin != end, calculate step
 			if (from != to) {
 				factor = easeMode(float(step)/float(stop));
-				current = Math::lerp(from, to, T(factor));
+				current = ::CTL::Math::lerp<T>(from, to, factor);
 			}
 			// Else, set target to end
 			else current = to;
@@ -158,7 +158,7 @@ public:
 		this->from = from;
 		this->to = to;
 		stop = step;
-		value = from;
+		current = from;
 		this->easeMode = easeMode;
 		factor = 0.0f;
 		return *this;
@@ -219,7 +219,6 @@ public:
 	/// @return Reference to self.
 	Tween<T>& setStep(usize const step) override final {
 		this->step = step > stop ? stop : step;
-		onUpdate();
 		return *this;
 	}
 
@@ -239,13 +238,21 @@ public:
 		isFinished = true;
 		return *this;
 	}
+	
+	/// @brief Starts the tween from the beginning.
+	/// @return Reference to self.
+	Tween<T>& start() override final {
+		factor = 0;
+		step = 0;
+		paused = false;
+		isFinished = false;
+		return *this;
+	}
 
 	/// @brief Resumes the tween.
 	/// @return Reference to self.
 	Tween<T>& play() override final {
-		factor = 1.0f;
 		paused = false;
-		isFinished = false;
 		return *this;
 	}
 
@@ -396,7 +403,7 @@ public:
 			// If begin != end, calculate step
 			if (current.from != current.to) {
 				factor = current.ease(float(step)/float(current.step));
-				currentValue = Math::lerp(current.from, current.to, T(factor));
+				currentValue = ::CTL::Math::lerp<T>(current.from, current.to, factor);
 			}
 			// Else, set target to end
 			currentValue = current.to;
@@ -456,16 +463,7 @@ public:
 	/// @brief Resumes the tween.
 	/// @return Reference to self.
 	TweenChain& play() override final {
-		factor = 1.0f;
 		paused = false;
-		isFinished = false;
-		return *this;
-	}
-
-	/// @brief Pauses the tween.
-	/// @return Reference to self.
-	TweenChain& pause() override final {
-		paused = true;
 		return *this;
 	}
 
@@ -475,6 +473,8 @@ public:
 		step = 0;
 		stage = 0;
 		current = stages[stage++];
+		paused = false;
+		isFinished = false;
 		return play();
 	}
 
