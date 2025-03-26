@@ -200,6 +200,7 @@ struct TestPlayer: Danmaku::APlayer {
 				.stop			= 60,
 				.speed			= 0.05
 			};
+			bullet->radius = {1};
 			bullet->spawn();
 		}
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
@@ -213,6 +214,7 @@ struct TestPlayer: Danmaku::APlayer {
 				.stop			= 60,
 				.speed			= 0.05
 			};
+			bullet->radius = {1};
 			bullet->spawn();
 		}
 	}
