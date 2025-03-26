@@ -50,7 +50,7 @@ constexpr Danmaku::BulletServerInstanceConfig PLAYER_BULLET_SERVER_CFG = {
 	256,
 	Danmaku::BulletCollisionConfig{
 		{Danmaku::Collision::Layer::PLAYER_BULLET},
-		{Danmaku::Collision::Layer::PLAYER_BULLET},
+		{Danmaku::Collision::Mask::PLAYER_BULLET, 0},
 	}
 };
 
@@ -73,7 +73,7 @@ constexpr Danmaku::LaserServerInstanceConfig PLAYER_LASER_SERVER_CFG = {
 	16,
 	Danmaku::LaserCollisionConfig{
 		{Danmaku::Collision::Layer::PLAYER_LASER},
-		{Danmaku::Collision::Layer::PLAYER_LASER},
+		{Danmaku::Collision::Mask::PLAYER_LASER},
 	}
 };
 
@@ -157,6 +157,14 @@ struct TestPlayer: Danmaku::APlayer {
 		input.binds["player/bomb"] 	= {Makai::Input::KeyCode::KC_X};
 		velocity = {20, 10};
 		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();
+		DEBUGLN("<c2d:layers>");
+		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i)
+			for (usize j = i; j < Danmaku::C2D::Server::MAX_LAYERS; ++j)
+				if (Danmaku::C2D::Server::layers[i].affects & Danmaku::C2D::Server::layers[j].affectedBy)
+					DEBUGLN ("<c2d:overlap direction='forward' a='", i, "', b='", j, "'/>");
+				else if (Danmaku::C2D::Server::layers[j].affects & Danmaku::C2D::Server::layers[i].affectedBy)
+					DEBUGLN ("<c2d:overlap direction='reverse' a='", j, "', b='", i, "'/>");
+		DEBUGLN("</c2d:layers>");
 	}
 
 	virtual ~TestPlayer() {}
