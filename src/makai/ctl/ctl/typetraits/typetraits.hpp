@@ -10,5 +10,6 @@
 #include "decay.hpp"
 #include "number.hpp"
 #include "traits.hpp"
+#include "verify.hpp"
 
 #endif // CTL_TYPETRAITS_H

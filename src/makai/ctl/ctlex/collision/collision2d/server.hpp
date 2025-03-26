@@ -101,7 +101,7 @@ namespace Collision::C2D {
 			/// @brief Event to fire on collision.
 			/// @param collider Collider that this object collided with.
 			/// @param direction Collision direction.
-			CollisionEvent onCollision;
+			CollisionEvent onCollision = [] (Collider const&, Direction const&) {DEBUGLN("Empty?");};
 			
 			/// @brief Unique collider ID.
 			usize const ID;

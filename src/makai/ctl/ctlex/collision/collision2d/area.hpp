@@ -39,8 +39,8 @@ namespace Collision::C2D {
 	/// @return Both events as a single `Direction`.
 	constexpr Direction asDirection(bool const forwards, bool const backwards) {
 		return static_cast<Direction>(
-			usize(forwards)
-		|	(usize(backwards) << 1)
+			static_cast<usize>(forwards)
+		|	(static_cast<usize>(backwards) << 1)
 		);
 	}
 	

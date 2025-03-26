@@ -28,7 +28,7 @@ namespace Collision::C2D {
 	constexpr bool withinBounds(IBound2D const& a, IBound2D const& b) {
 		return GJK::check(a, b);
 	}
-
+	
 	static_assert(Point(0).bounded(Point(0)));
 	static_assert(Point(0).bounded(Circle(0, 1)));
 	static_assert(Point(0).bounded(Box(0, 1)));

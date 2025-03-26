@@ -156,6 +156,7 @@ struct TestPlayer: Danmaku::APlayer {
 		input.binds["player/shot"] 	= {Makai::Input::KeyCode::KC_Z};
 		input.binds["player/bomb"] 	= {Makai::Input::KeyCode::KC_X};
 		velocity = {20, 10};
+		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();
 	}
 
 	virtual ~TestPlayer() {}
@@ -227,6 +228,8 @@ struct TestPlayer: Danmaku::APlayer {
 	}
 
 	usize shot = 10;
+
+	Makai::Instance<Danmaku::C2D::Circle> collider = new Danmaku::C2D::Circle(0, 0.1);
 };
 
 // Application

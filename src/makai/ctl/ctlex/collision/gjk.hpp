@@ -94,7 +94,7 @@ namespace GJK {
 		/// @return Whether shape locations overlap.
 		template<usize DO>
 		constexpr bool locate(IGJKBound<DO> const& other) const {
-			return CTL::Math::compare<float>((other.location() - location()).absolute().max(), 1.0, PRECISION);
+			return CTL::Math::compare<float>((other.location() - location()).max(), 0.0, PRECISION);
 		}
 	};
 	
@@ -329,10 +329,14 @@ namespace GJK {
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		a.precompute();
 		b.precompute();
+		if constexpr (inRunTime())
+			DEBUGLN("Checking bounds...");
 		if (!a.bounded(b))							return false;
 		if (a.locate(b))							return true;
 		if (a.isBoxOrPoint() && b.isBoxOrPoint())	return true;
 		if (a.match(b))								return true;
+		if constexpr (inRunTime())
+			DEBUGLN("Checking collision...");
 		return shapeToShape(a, b);
 	}
 }

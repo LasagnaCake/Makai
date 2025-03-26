@@ -207,7 +207,7 @@ namespace Makai::Ex::Game::Danmaku {
 	private:
 		static void bindGrazeHandler(APlayer& self) {
 			self.grazebox->onCollision = (
-				[&self = self] (Collider const& collider, CollisionDirection const direction) -> void {
+				[&] (Collider const& collider, CollisionDirection const direction) -> void {
 					self.onGrazeboxCollision(collider, direction);
 				}
 			);
@@ -216,7 +216,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		static void bindItemMagnetHandler(APlayer& self) {
 			self.itembox->onCollision = (
-				[&self = self] (Collider const& collider, CollisionDirection const direction) -> void {
+				[&] (Collider const& collider, CollisionDirection const direction) -> void {
 					self.onItemboxCollision(collider, direction);
 				}
 			);
