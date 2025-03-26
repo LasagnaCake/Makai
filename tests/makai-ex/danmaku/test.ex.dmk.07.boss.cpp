@@ -95,20 +95,40 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	ABoss({::board, ::playfield}),
 	bulletServer(bulletServer),
 	laserServer(laserServer) {
-		trans.position = playfield.center;
 		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
 		setHealth(1000, 1000);
+		movement
+		.setInterpolation(trans.position, board.center * Makai::Vec2(1, 0.5), 60, Makai::Math::Ease::Out::cubic)
+		.onCompleted = [&] {beginBattle();};
+		movement.setManual();
+		trans.scale = 4;
+		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();
+		this->healthBar.setRenderLayer(Danmaku::Render::Layer::INGAME_OVERLAY_BOTTOM_LAYER);
 	}
 
-	void onBattleBegin() override			{					}
-	void onAct(usize const act) override	{					}
-	void onBattleEnd() override				{queueDestroy();	}
+	void onUpdate(float delta) override {
+		ABoss::onUpdate(delta);
+		movement.onUpdate(1);
+		trans.position = movement.value();
+		mesh.trans.position		= trans.position;
+		mesh.trans.rotation.z	= trans.rotation;
+		mesh.trans.scale		= trans.scale;
+		collider->position		= trans.position;
+	}
+
+	void onBattleBegin() override			{						}
+	void onAct(usize const act) override	{setHealth(1000, 1000);	}
+	void onBattleEnd() override				{queueDestroy();		}
 
 	usize getActCount() override			{return 3;			}
 	
 	TestBoss& spawn() override				{return *this;		}
 	TestBoss& despawn() override			{return *this;		}
+
+	Makai::Tween<Makai::Vec2> movement;
+
+	Makai::Instance<Danmaku::C2D::Circle> collider = new Danmaku::C2D::Circle(0, 4);
 };
 
 // Player stuff
@@ -162,7 +182,7 @@ struct TestPlayer: Danmaku::APlayer {
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
 			DEBUGLN("Shots fired!");
 			bullet->damage = {5};
-			bullet->trans.position = trans.position + Makai::Vec2(-3, 2);
+			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(-3, 2) : Makai::Vec2(-1.5, 6));
 			bullet->rotation = {-HPI};
 			bullet->velocity = Danmaku::Property<float>{
 				.interpolate	= true,
@@ -175,7 +195,7 @@ struct TestPlayer: Danmaku::APlayer {
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
 			DEBUGLN("Shots fired!");
 			bullet->damage = {5};
-			bullet->trans.position = trans.position + Makai::Vec2(3, 2);
+			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(3, 2) : Makai::Vec2(1.5, 6));
 			bullet->rotation = {-HPI};
 			bullet->velocity = Danmaku::Property<float>{
 				.interpolate	= true,
