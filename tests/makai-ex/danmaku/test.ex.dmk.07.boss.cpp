@@ -108,8 +108,8 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	}
 
 	void onUpdate(float delta) override {
-		ABoss::onUpdate(delta);
 		movement.onUpdate(1);
+		ABoss::onUpdate(delta);
 		trans.position = movement.value();
 		mesh.trans.position		= trans.position;
 		mesh.trans.rotation.z	= trans.rotation;
@@ -176,6 +176,7 @@ struct TestPlayer: Danmaku::APlayer {
 		body.trans.position		= trans.position;
 		body.trans.rotation.z	= trans.rotation;
 		body.trans.scale		= trans.scale;
+		collider->position		= trans.position;
 		if (shot > 0) --shot;
 	}
 
