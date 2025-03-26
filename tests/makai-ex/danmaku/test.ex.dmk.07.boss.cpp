@@ -109,12 +109,12 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 
 	void onUpdate(float delta) override {
 		ABoss::onUpdate(delta);
-		trans.position = movement.value();
 		mesh.trans.position		= trans.position;
 		mesh.trans.rotation.z	= trans.rotation;
 		mesh.trans.scale		= trans.scale;
 		collider->position		= trans.position;
 		movement.onUpdate(1);
+		trans.position = movement.value();
 	}
 
 	void onBattleBegin() override			{						}
