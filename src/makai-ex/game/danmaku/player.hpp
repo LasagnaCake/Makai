@@ -189,7 +189,7 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		virtual void onItemMagnet(Reference<Item> const& item) {
 			if (!item->magnet.enabled && item->magnet.target != &trans.position)
-				item->magnet = {true, &trans.position, {1}};
+				item->magnet = {true, &trans.position, {10}};
 		}
 		virtual void onItem(Reference<Item> const& item)				= 0;
 		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
