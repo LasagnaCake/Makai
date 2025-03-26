@@ -98,6 +98,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		trans.position = playfield.center;
 		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
+		setHealth(1000, 1000);
 	}
 
 	void onBattleBegin() override			{					}
