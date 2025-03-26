@@ -281,9 +281,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		constexpr float getHealth() const {return health;	}
 
-		float maxHealth	= 100;
-
 	protected:
+		float maxHealth	= 100;
 		float health	= 100;
 	};
 
