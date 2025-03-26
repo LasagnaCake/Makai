@@ -133,6 +133,8 @@ struct TestPlayer: Danmaku::APlayer {
 		input.binds["player/left"] 	= {Makai::Input::KeyCode::KC_LEFT};
 		input.binds["player/right"]	= {Makai::Input::KeyCode::KC_RIGHT};
 		input.binds["player/focus"]	= {Makai::Input::KeyCode::KC_LEFT_SHIFT};
+		input.binds["player/shot"] 	= {Makai::Input::KeyCode::KC_Z};
+		input.binds["player/bomb"] 	= {Makai::Input::KeyCode::KC_X};
 		velocity = {20, 10};
 	}
 
@@ -145,6 +147,7 @@ struct TestPlayer: Danmaku::APlayer {
 		body.trans.position		= trans.position;
 		body.trans.rotation.z	= trans.rotation;
 		body.trans.scale		= trans.scale;
+		if (shot > 0) --shot;
 	}
 
 	void onUpdate(float delta, Makai::App& app) override {
@@ -153,12 +156,43 @@ struct TestPlayer: Danmaku::APlayer {
 		if (paused()) return;
 	}
 
-	virtual void onItem(Makai::Reference<Danmaku::Item> const& item) override										{				}
-	virtual void onGraze(Makai::Reference<Danmaku::AServerObject> const& object) override							{				}
-	virtual void onBomb() override																					{				}
-	virtual void onShot() override																					{				}
-	virtual TestPlayer& spawn() override																			{return *this;	}
-	virtual TestPlayer& despawn() override																			{return *this;	}
+	void createShots() {
+		if (shot) return;
+		shot = 10;
+		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
+			DEBUGLN("Shots fired!");
+			bullet->damage = {5};
+			bullet->trans.position = trans.position + Makai::Vec2(-3, 2);
+			bullet->rotation = {-HPI};
+			bullet->velocity = Danmaku::Property<float>{
+				.interpolate	= true,
+				.start			= -40,
+				.stop			= 60,
+				.speed			= 0.05
+			};
+			bullet->spawn();
+		}
+		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
+			DEBUGLN("Shots fired!");
+			bullet->damage = {5};
+			bullet->trans.position = trans.position + Makai::Vec2(3, 2);
+			bullet->rotation = {-HPI};
+			bullet->velocity = Danmaku::Property<float>{
+				.interpolate	= true,
+				.start			= -40,
+				.stop			= 60,
+				.speed			= 0.05
+			};
+			bullet->spawn();
+		}
+	}
+
+	virtual void onItem(Makai::Reference<Danmaku::Item> const& item) override				{				}
+	virtual void onGraze(Makai::Reference<Danmaku::AServerObject> const& object) override	{				}
+	virtual void onBomb() override															{				}
+	virtual void onShot() override															{createShots();	}
+	virtual TestPlayer& spawn() override													{return *this;	}
+	virtual TestPlayer& despawn() override													{return *this;	}
 
 	virtual TestPlayer& takeDamage(Makai::Reference<Danmaku::AGameObject> const&, CollisionMask const&) override {
 		makeInvincible(120);
@@ -171,6 +205,8 @@ struct TestPlayer: Danmaku::APlayer {
 		trans.position = board.center * Makai::Vector2(1, 1.5);
 		return *this;	
 	}
+
+	usize shot = 10;
 };
 
 // Application
