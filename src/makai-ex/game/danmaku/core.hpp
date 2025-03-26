@@ -158,7 +158,6 @@ namespace Makai::Ex::Game::Danmaku {
 		static void bindCollisionHandler(AGameObject& self) {
 			self.collider->onCollision = (
 				[&] (Collider const& collider, CollisionDirection const direction) -> void {
-					DEBUGLN("Collision Event!");
 					self.onCollision(collider, direction);
 				}
 			);
