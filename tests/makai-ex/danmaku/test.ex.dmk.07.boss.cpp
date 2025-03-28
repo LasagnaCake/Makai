@@ -100,7 +100,10 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		setHealth(1000, 1000);
 		movement
 		.setInterpolation(trans.position, board.center * Makai::Vec2(1, 0.5), 60, Makai::Math::Ease::Out::cubic)
-		.onCompleted = [&] {beginBattle();};
+		.onCompleted = [&] {
+			DEBUGLN("Collider: [ ", collider->position.x, ", ", collider->position.y, " ]");
+			beginBattle();
+		};
 		movement.setManual();
 		trans.scale = 4;
 		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();

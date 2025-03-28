@@ -66,7 +66,9 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
+			DEBUGLN("Collision event!\nFlags: ", collider.tags);
 			if (!isForThisPlayer(collider)) return;
+			DEBUGLN("Layer: ", collider.getLayer().affects);
 			if (collider.getLayer().affects & mask.player.attack)
 				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
 		}

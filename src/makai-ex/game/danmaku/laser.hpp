@@ -304,6 +304,7 @@ namespace Makai::Ex::Game::Danmaku {
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
 				all.back().sprite->local.position.z = -zoff;
 				all.back().sprite->visible = false;
+				all.back().setCollisionState(false);
 				free.pushBack(&all.back());
 			}
 		}

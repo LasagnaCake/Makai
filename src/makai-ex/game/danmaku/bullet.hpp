@@ -342,6 +342,7 @@ namespace Makai::Ex::Game::Danmaku {
 					all.back().glowSprite->local.position.z = -zoff;
 				}
 				all.back().hideSprites();
+				all.back().setCollisionState(false);
 				free.pushBack(&all.back());
 			}
 		}
