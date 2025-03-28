@@ -329,14 +329,10 @@ namespace GJK {
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		a.precompute();
 		b.precompute();
-		if constexpr (inRunTime())
-			DEBUGLN("Checking bounds...");
 		if (!a.bounded(b))							return false;
 		if (a.locate(b))							return true;
 		if (a.isBoxOrPoint() && b.isBoxOrPoint())	return true;
 		if (a.match(b))								return true;
-		if constexpr (inRunTime())
-			DEBUGLN("Checking collision...");
 		return shapeToShape(a, b);
 	}
 }
