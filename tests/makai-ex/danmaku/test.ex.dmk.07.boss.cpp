@@ -106,6 +106,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		};
 		movement.setManual();
 		trans.scale = 4;
+		collision()->canCollide = true;
 		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();
 		this->healthBar.setRenderLayer(Danmaku::Render::Layer::INGAME_OVERLAY_BOTTOM_LAYER);
 	}
@@ -159,7 +160,10 @@ struct TestPlayer: Danmaku::APlayer {
 		input.binds["player/shot"] 	= {Makai::Input::KeyCode::KC_Z};
 		input.binds["player/bomb"] 	= {Makai::Input::KeyCode::KC_X};
 		velocity = {20, 10};
-		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();
+		collision()->canCollide	= true;
+		collision()->shape		= collider.as<Danmaku::C2D::IBound2D>();
+		getGrazebox()->shape	= grazebox.as<Danmaku::C2D::IBound2D>();
+		getItembox()->shape		= itembox.as<Danmaku::C2D::IBound2D>();
 		DEBUGLN("<c2d:layers>");
 		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i)
 			for (usize j = i; j < Danmaku::C2D::Server::MAX_LAYERS; ++j)
@@ -179,6 +183,8 @@ struct TestPlayer: Danmaku::APlayer {
 		body.trans.position		= trans.position;
 		body.trans.rotation.z	= trans.rotation;
 		body.trans.scale		= trans.scale;
+		itembox->position		=
+		grazebox->position		=
 		collider->position		= trans.position;
 		if (shot > 0) --shot;
 	}
@@ -243,7 +249,9 @@ struct TestPlayer: Danmaku::APlayer {
 
 	usize shot = 10;
 
-	Makai::Instance<Danmaku::C2D::Circle> collider = new Danmaku::C2D::Circle(0, 0.1);
+	Makai::Instance<Danmaku::C2D::Circle> collider	= new Danmaku::C2D::Circle(0, 0.1);
+	Makai::Instance<Danmaku::C2D::Circle> grazebox	= new Danmaku::C2D::Circle(0, 2);
+	Makai::Instance<Danmaku::C2D::Circle> itembox	= new Danmaku::C2D::Circle(0, 5);
 };
 
 // Application
