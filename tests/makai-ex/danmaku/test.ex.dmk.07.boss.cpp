@@ -124,9 +124,9 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		trans.position = movement.value();
 	}
 
-	void onBattleBegin() override			{collision()->canCollide = true; DEBUGLN("Boss: ", collision()->canCollide)	}
-	void onAct(usize const act) override	{setHealth(1000, 1000);														}
-	void onBattleEnd() override				{queueDestroy();															}
+	void onBattleBegin() override			{collision()->canCollide = true; DEBUGLN("Boss: ", collision()->canCollide);	}
+	void onAct(usize const act) override	{setHealth(1000, 1000);															}
+	void onBattleEnd() override				{queueDestroy();																}
 
 	usize getActCount() override			{return 3;			}
 	
