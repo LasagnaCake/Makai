@@ -84,6 +84,10 @@ namespace Makai::Ex::Game::Danmaku {
 					takeDamage(object.as<Bullet>()->getDamage());
 				else if (collider & mask.player.laser)
 					takeDamage(object.as<Laser>()->getDamage());
+				if (collider & (mask.player.bullet | mask.player.laser)) {
+					DEBUGLN("Owie! :'(");
+					object.as<AServerObject>()->discard();
+				}
 			}
 			return *this;
 		}
