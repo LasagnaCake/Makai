@@ -107,7 +107,7 @@ namespace Makai::Ex::Game::Danmaku {
 				MKEX_DMK_LAYER_NAME_CASE(ITEM);
 				MKEX_DMK_LAYER_NAME_CASE(BULLET_ERASER);
 			}
-			return "null";
+			return "UNKNOWN";
 			#undef MKEX_DMK_LAYER_NAME_CASE
 		}
 	}
