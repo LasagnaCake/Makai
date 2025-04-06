@@ -6,8 +6,6 @@ endef
 
 prefix:=lib
 
-#WINGARBAGE := -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32
-
 SDL			:= lib/SDL2-2.0.10/lib/libSDL2.dll.a
 SDLNET		:= lib/SDL2-2.0.10/lib/libSDL2_net.a
 SDLMIXER	:= lib/SDL2-2.0.10/lib/libSDL2_mixer.dll.a

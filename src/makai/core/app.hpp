@@ -138,13 +138,24 @@ namespace Makai {
 		/// @param size Size to set to.
 		void setWindowSize(Vector2 const& size);
 
+		/// @brief Sets the window's borderless state.
+		/// @param borderless Whether window should be borderless or not.
+		void setBorderless(bool const borderless = true);
+
+		/// @brief Enables transparent window backgrounds in the application.
+		/// @warning
+		///		Does not work with `setWindowOpacity`!
+		///		If you also need the window to change opacity,
+		///		change the main framebuffer's alpha channel instead!
+		void enableClearWindow();
+
 		/// @brief Set the application window's opacity.
 		/// @param opacity Opacity to set to.
+		/// @warning
+		///		Does not work with clear window mode!
+		///		If you also need the window to remain with a transparent background,
+		///		change the main framebuffer's alpha channel instead!
 		void setWindowOpacity(float const opacity = 1);
-
-		/// @brief Enables transparent window background in the application.
-		/// @warning Not sure if it actually works. SDL is kind of a pain in this.
-		void enableTransparentWindowBackground();
 
 		/// @brief Returns the current frame.
 		/// @return Current frame.

@@ -6,7 +6,8 @@ COMPILER_DEBUG := $(ROOT)/tools/ex/anima-compiler/animac.debug.exe
 LEAN := -static -s
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
-WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32 -lbcrypt
+
+sinclude $(ROOT)/make/os-windows.make
 
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
@@ -15,7 +16,7 @@ o?=3
 
 enginecmd = @$(CXX) -O$(o) -o output/test.engine.exe test.engine.cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(strip $(1))
 
-make-test-engine = $(call enginecmd, libmakai.debug.a) $(DEBUGMODE) $(WINREQS) $(LIBREQS)
+make-test-engine = $(call enginecmd, libmakai.debug.a) $(DEBUGMODE) $(OS_LIBS) $(LIBREQS)
 
 define compile
 	@echo "$(strip $(1))"

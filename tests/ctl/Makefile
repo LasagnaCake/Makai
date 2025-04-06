@@ -10,7 +10,8 @@ DEBUGMODE := -DCTL_CONSOLE_OUT -Wall -Wpedantic
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
-WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32 -lbcrypt
+
+sinclude $(ROOT)/make/os-windows.make
 
 o?=3
 
@@ -32,7 +33,7 @@ dotest = \
 
 case = $(if $(findstring $(strip $(2)),$(strip $(1))),$(3))
 
-params = $(LIBREQS) $(WINREQS)
+params = $(LIBREQS) $(OS_LIBS)
 
 define mktest
 	@echo "$(strip $(2))"

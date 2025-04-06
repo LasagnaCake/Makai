@@ -10,7 +10,8 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic -O
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
-WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32 -lbcrypt
+
+sinclude $(ROOT)/make/os-windows.make
 
 NOCMD := -mwindows
 
@@ -25,8 +26,8 @@ endif
 enginecmd = @$(CXX) -o output/test.diag.engine.$(strip $(2)).exe test.diag.engine.cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(strip $(1))
 
 make-test-engine = $(if $(findstring debug,$(1)),\
-		$(call enginecmd, libmakai.debug.a, $(1)) $(WINREQS) $(LIBREQS) $(DEBUGMODE),\
-		$(call enginecmd, libmakai.a, $(1)) $(WINREQS) $(LIBREQS) $(RELEASEMODE)\
+		$(call enginecmd, libmakai.debug.a, $(1)) $(OS_LIBS) $(LIBREQS) $(DEBUGMODE),\
+		$(call enginecmd, libmakai.a, $(1)) $(OS_LIBS) $(LIBREQS) $(RELEASEMODE)\
 	)
 
 define animac
@@ -47,7 +48,7 @@ dotest = \
 
 case = $(if $(findstring $(strip $(2)),$(strip $(1))),$(3))
 
-params = $(WINREQS) $(LIBREQS) $(GRAPHREQS) \
+params = $(OS_LIBS) $(LIBREQS) $(GRAPHREQS) \
 	$(call case, $(1), 01,)\
 	$(call case, $(1), 02,)\
 

@@ -10,7 +10,8 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
-WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32 -lbcrypt
+
+sinclude $(ROOT)/make/os-windows.make
 
 o?=3
 
@@ -32,7 +33,7 @@ dotest = \
 
 case = $(if $(findstring $(strip $(2)),$(strip $(1))),$(3))
 
-params = $(WINREQS) $(LIBREQS) \
+params = $(OS_LIBS) $(LIBREQS) \
 	$(call case, $(1), 01,)\
 	$(call case, $(1), 02,$(GRAPHREQS))\
 	$(call case, $(1), 03,$(GRAPHREQS))\

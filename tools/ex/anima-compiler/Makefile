@@ -9,7 +9,8 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 COMPILER_CONFIG	:= $(DEBUGMODE) -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
-WINREQS		:= -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32 -lbcrypt
+
+sinclude $(ROOT)/make/os-windows.make
 
 o?=3
 
@@ -22,8 +23,8 @@ endif
 PRGNAME	:= animac
 SRC_DST	= -o $(PRGNAME)$(strip $(1)).exe $(PRGNAME).cpp
 
-compile = @$(CXX) -O$(o) $(call SRC_DST, $(1)) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(WINREQS)
-compile = @$(CXX) -O$(o) $(call SRC_DST, $(1)) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(WINREQS)
+compile = @$(CXX) -O$(o) $(call SRC_DST, $(1)) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(OS_LIBS)
+compile = @$(CXX) -O$(o) $(call SRC_DST, $(1)) $(COMPILER_CONFIG) $(ROOT)/output/lib/libmakai.debug.a $(LIBREQS) $(OS_LIBS)
 
 NOCMD := -mwindows
 

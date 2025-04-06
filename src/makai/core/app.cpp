@@ -6,6 +6,7 @@
 
 #if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__)
 #include <windows.h>
+#include <dwmapi.h>
 #define SDL_MAIN_HANDLED
 #endif
 #include <SDL2/SDL.h>
@@ -364,13 +365,26 @@ void App::setWindowOpacity(float const opacity) {
 	SDL_SetWindowOpacity(sdlWindow, opacity);
 }
 
-void App::enableTransparentWindowBackground() {
+void App::setBorderless(bool const borderless) {
+	SDL_SetWindowBordered(sdlWindow, borderless ? SDL_FALSE : SDL_TRUE);
+}
+
+void App::enableClearWindow() {
 	SDL_SysWMinfo wmInfo;
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdlWindow, &wmInfo);
     HWND hWnd = wmInfo.info.win.window;
 	SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
-	SetLayeredWindowAttributes(hWnd, RGB(0,0,0), 0, LWA_ALPHA);
+	//SetLayeredWindowAttributes(hWnd, 0, 0, LWA_ALPHA);
+	HRGN region = CreateRectRgn(-1, -1, 0, 0);
+	// Backported from SDL3 source: https://github.com/libsdl-org/SDL/blob/646f1f243f8be853531703c1f656325580435f9e/src/video/windows/SDL_windowswindow.c#L792
+	DWM_BLURBEHIND blur;
+	blur.dwFlags = (DWM_BB_ENABLE | DWM_BB_BLURREGION);
+	blur.fEnable = TRUE;
+	blur.hRgnBlur = region;
+	blur.fTransitionOnMaximized = FALSE;
+	DwmEnableBlurBehindWindow(hWnd, &blur);
+	DeleteObject(region);
 }
 
 void App::skipDrawingThisLayer() {skipLayer = true;}
