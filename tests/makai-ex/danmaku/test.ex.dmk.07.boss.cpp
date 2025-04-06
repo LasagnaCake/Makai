@@ -108,7 +108,10 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		trans.scale = 4;
 		collision()->canCollide = true;
 		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();
-		this->healthBar.setRenderLayer(Danmaku::Render::Layer::INGAME_OVERLAY_BOTTOM_LAYER);
+		healthBar.setRenderLayer(Danmaku::Render::Layer::INGAME_OVERLAY_BOTTOM_LAYER);
+		healthBar.size = 2.0;
+		healthBar.setBlendEquation(Makai::Graph::BlendEquation::BE_ADD);
+		healthBar.material.color = Makai::Graph::Color::MAGENTA * Makai::Graph::Color::alpha(0.5);
 	}
 
 	void onUpdate(float delta) override {
