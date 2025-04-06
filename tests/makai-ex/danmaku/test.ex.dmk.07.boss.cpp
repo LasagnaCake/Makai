@@ -106,7 +106,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		};
 		movement.setManual();
 		trans.scale = 4;
-		collision()->canCollide = true;
+		collision()->canCollide = false;
 		collision()->shape = collider.as<Danmaku::C2D::IBound2D>();
 		healthBar.setRenderLayer(Danmaku::Render::Layer::INGAME_OVERLAY_BOTTOM_LAYER);
 		healthBar.size = 2.0;
@@ -124,9 +124,9 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		trans.position = movement.value();
 	}
 
-	void onBattleBegin() override			{						}
-	void onAct(usize const act) override	{setHealth(1000, 1000);	}
-	void onBattleEnd() override				{queueDestroy();		}
+	void onBattleBegin() override			{collision()->canCollide = true; DEBUGLN("Boss: ", collision()->canCollide)	}
+	void onAct(usize const act) override	{setHealth(1000, 1000);														}
+	void onBattleEnd() override				{queueDestroy();															}
 
 	usize getActCount() override			{return 3;			}
 	
