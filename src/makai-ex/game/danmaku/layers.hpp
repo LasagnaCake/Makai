@@ -91,6 +91,25 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr uint16 ENEMY_LASER		= 0x8;
 		constexpr uint16 ITEM				= 0x9;
 		constexpr uint16 BULLET_ERASER		= 0xF;
+
+		constexpr String asName(uint16 const layer) {
+			#define MKEX_DMK_LAYER_NAME_CASE(LAYER) case LAYER: return #LAYER
+			switch (layer) {
+				MKEX_DMK_LAYER_NAME_CASE(PLAYER);
+				MKEX_DMK_LAYER_NAME_CASE(PLAYER_BULLET);
+				MKEX_DMK_LAYER_NAME_CASE(PLAYER_LASER);
+				MKEX_DMK_LAYER_NAME_CASE(PLAYER_SPELL);
+				MKEX_DMK_LAYER_NAME_CASE(PLAYER_GRAZEBOX);
+				MKEX_DMK_LAYER_NAME_CASE(PLAYER_ITEMBOX);
+				MKEX_DMK_LAYER_NAME_CASE(ENEMY);
+				MKEX_DMK_LAYER_NAME_CASE(ENEMY_BULLET);
+				MKEX_DMK_LAYER_NAME_CASE(ENEMY_LASER);
+				MKEX_DMK_LAYER_NAME_CASE(ITEM);
+				MKEX_DMK_LAYER_NAME_CASE(BULLET_ERASER);
+			}
+			return "null";
+			#undef MKEX_DMK_LAYER_NAME_CASE
+		}
 	}
 
 	namespace Collision::Mask {
