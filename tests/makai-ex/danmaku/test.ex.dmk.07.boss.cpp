@@ -167,14 +167,6 @@ struct TestPlayer: Danmaku::APlayer {
 		collision()->shape		= collider.as<Danmaku::C2D::IBound2D>();
 		getGrazebox()->shape	= grazebox.as<Danmaku::C2D::IBound2D>();
 		getItembox()->shape		= itembox.as<Danmaku::C2D::IBound2D>();
-		DEBUGLN("<c2d:layers>");
-		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i)
-			for (usize j = i; j < Danmaku::C2D::Server::MAX_LAYERS; ++j)
-				if (Danmaku::C2D::Server::layers[i].affects & Danmaku::C2D::Server::layers[j].affectedBy)
-					DEBUGLN ("<c2d:overlap direction='forward' a='", i, "', b='", j, "'/>");
-				else if (Danmaku::C2D::Server::layers[j].affects & Danmaku::C2D::Server::layers[i].affectedBy)
-					DEBUGLN ("<c2d:overlap direction='reverse' a='", j, "', b='", i, "'/>");
-		DEBUGLN("</c2d:layers>");
 	}
 
 	virtual ~TestPlayer() {}
@@ -274,6 +266,14 @@ struct TestApp: Makai::Ex::Game::App {
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
 		boss	= TestBossRegistry::create<TestBoss>(enemyBullet, enemyLaser);
 		player	= new TestPlayer(playerBullet);
+		DEBUGLN("<c2d:layers>");
+		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i)
+			for (usize j = i; j < Danmaku::C2D::Server::MAX_LAYERS; ++j)
+				if (Danmaku::C2D::Server::layers[i].affects & Danmaku::C2D::Server::layers[j].affectedBy)
+					DEBUGLN ("<c2d:overlap direction='forward' a='", i, "', b='", j, "'/>");
+				else if (Danmaku::C2D::Server::layers[j].affects & Danmaku::C2D::Server::layers[i].affectedBy)
+					DEBUGLN ("<c2d:overlap direction='reverse' a='", j, "', b='", i, "'/>");
+		DEBUGLN("</c2d:layers>");
 	}
 
 	void onLayerDrawBegin(usize const layerID) override {
