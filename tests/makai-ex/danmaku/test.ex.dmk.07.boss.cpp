@@ -268,11 +268,12 @@ struct TestApp: Makai::Ex::Game::App {
 		player	= new TestPlayer(playerBullet);
 		DEBUGLN("<c2d:layers>");
 		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i)
-			for (usize j = i; j < Danmaku::C2D::Server::MAX_LAYERS; ++j)
+			for (usize j = i; j < Danmaku::C2D::Server::MAX_LAYERS; ++j) {
 				if (Danmaku::C2D::Server::layers[i].affects & Danmaku::C2D::Server::layers[j].affectedBy)
-					DEBUGLN ("<c2d:overlap from='", i, "', to='", j, "'/>");
-				else if (Danmaku::C2D::Server::layers[j].affects & Danmaku::C2D::Server::layers[i].affectedBy)
-					DEBUGLN ("<c2d:overlap from='", j, "', to='", i, "'/>");
+					DEBUGLN ("<c2d:overlap from='", i, "' to='", j, "'/>");
+				if (Danmaku::C2D::Server::layers[j].affects & Danmaku::C2D::Server::layers[i].affectedBy)
+					DEBUGLN ("<c2d:overlap from='", j, "' to='", i, "'/>");
+			}
 		DEBUGLN("</c2d:layers>");
 	}
 
