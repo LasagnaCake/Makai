@@ -301,7 +301,7 @@ namespace GJK {
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		constexpr usize DIMENSION = (DA > DB ? DA : DB);
 		using VectorType = Vector<DIMENSION>;
-		VectorType sup = support(a, b, VectorType::RIGHT());
+		VectorType sup = support(a, b, VectorType(1, 0));
 		Simplex<DIMENSION> sp;
 		sp.pushFront(sup);
 		VectorType d = -sup;
