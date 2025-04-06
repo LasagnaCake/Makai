@@ -6,10 +6,6 @@
 #include "../../anima/anima.hpp"
 #include "../core/core.hpp"
 
-// TODO:
-//	- Separate this engine code into a separate class (so it can be reused)
-//	- - Make sure (user wait, autoplay) can be changed from C++ as well
-
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
 	/// @brief Anima-based dialog player.

@@ -34,7 +34,8 @@ namespace GJK {
 	enum class SpecialCase {
 		GSC_NONE,
 		GSC_POINT,
-		GSC_BOX
+		GSC_BOX,
+		GSC_CIRCLE
 	};
 
 	/// @brief GJK-enabled bound interface.
@@ -51,6 +52,9 @@ namespace GJK {
 		constexpr virtual Vector<D> location() const							{return aabb().center();}
 		/// @brief Precomputes any necessary transformations.
 		constexpr virtual void precompute() const								{}
+		/// @brief Handles collision between circles.
+		/// @return Whether collision was handled.
+		constexpr virtual bool handleCircles(IGJKBound<D> const& other) const	{return false;}
 		
 		/// @brief Returns this bound's special case.
 		/// @return Special case.
@@ -58,14 +62,20 @@ namespace GJK {
 
 		/// @brief Returns whether this bound is an axis-aligned bounding box.
 		/// @return Whether this bound is an AABB.
-		constexpr bool isBox() const		{return specialCase() == SpecialCase::GSC_BOX;		}
+		constexpr bool isBox() const			{return specialCase() == SpecialCase::GSC_BOX;		}
 		/// @brief Returns whether this bound is an axis-aligned bounding box.
 		/// @return Whether this bound is an AABB.
-		constexpr bool isPoint() const		{return specialCase() == SpecialCase::GSC_POINT;	}
+		constexpr bool isPoint() const			{return specialCase() == SpecialCase::GSC_POINT;	}
+		/// @brief Returns whether this bound is a circle-esque shape.
+		/// @return Whether this bound is circle.
+		constexpr bool isCircle() const			{return specialCase() == SpecialCase::GSC_CIRCLE;	}
 
 		/// @brief Returns whether this bound is an axis-aligned bounding box or a point.
 		/// @return Whether this bound is an AABB.
-		constexpr bool isBoxOrPoint() const	{return isBox() || isPoint();						}
+		constexpr bool isBoxOrPoint() const		{return isBox() || isPoint();						}
+		/// @brief Returns whether this bound is a circle-esque shape or a point.
+		/// @return Whether this bound is an AABB.
+		constexpr bool isCircleOrPoint() const	{return isCircle() || isPoint();					}
 
 		/// @brief Checks if this shape's AABB overlaps with another shape's AABB.
 		/// @tparam DO Other shape's dimension.
@@ -301,7 +311,7 @@ namespace GJK {
 	) requires (Type::Ex::Collision::GJK::Dimensions<DA, DB>) {
 		constexpr usize DIMENSION = (DA > DB ? DA : DB);
 		using VectorType = Vector<DIMENSION>;
-		VectorType sup = support(a, b, VectorType(1, 0));
+		VectorType sup = support(a, b, VectorType::RIGHT());
 		Simplex<DIMENSION> sp;
 		sp.pushFront(sup);
 		VectorType d = -sup;
@@ -333,6 +343,7 @@ namespace GJK {
 		if (a.locate(b))							return true;
 		if (a.isBoxOrPoint() && b.isBoxOrPoint())	return true;
 		if (a.match(b))								return true;
+		if (a.handleCircles(b))						return true;
 		return shapeToShape(a, b);
 	}
 }

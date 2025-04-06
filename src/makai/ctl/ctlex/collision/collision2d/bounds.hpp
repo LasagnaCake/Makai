@@ -6,8 +6,6 @@
 #include "../../math/matrix.hpp"
 #include "../gjk.hpp"
 
-// TODO: Update system to use GJK & IBound2D
-
 CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Collision facilities.
@@ -185,6 +183,19 @@ namespace Collision::C2D {
 			}
 			return AABB2D{min, max}.normalized();*/
 			return AABB2D{position - radius.max(), position + radius.max()};
+		}
+
+		/// @brief Returns this bound's special case.
+		/// @return Special case.
+		constexpr GJK::SpecialCase specialCase() const override final {return GJK::SpecialCase::GSC_CIRCLE;}
+
+		/// @brief Handles collision between circles.
+		/// @return Whether collision was handled.
+		constexpr bool handleCircles(IBound2D const& other) const override final {
+			if (!other.isCircle()) return false;
+			Circle const& target = static_cast<Circle const&>(other);
+			auto const angle = position.angleTo(target.position);
+			return position.distanceTo(target.position) <= (radiusAt(angle) + target.radiusAt(PI-angle));
 		}
 
 		/// @brief Circle position.

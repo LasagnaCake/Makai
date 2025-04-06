@@ -4,9 +4,6 @@
 #include "core.hpp"
 #include "server.hpp"
 
-/*
-	BUG: (Debug (-Og) only) Slows down processing but speeds up as more items are active
-*/
 namespace Makai::Ex::Game::Danmaku {
 	struct Item;
 	struct ItemConfig;
