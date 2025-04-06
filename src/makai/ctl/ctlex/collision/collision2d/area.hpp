@@ -66,6 +66,7 @@ namespace Collision::C2D {
 		/// @return Whether collision happens.
 		constexpr static bool check(Area const& a, Area const& b) {
 			if (!(a.shape && b.shape))				return false;
+			// BUG: `canCollide` for both shapes is false, despite being set to true?????
 			if (!(a.canCollide && b.canCollide))	return false;
 			return withinBounds(*a.shape, *b.shape);
 		}

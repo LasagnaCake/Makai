@@ -44,6 +44,7 @@ namespace Makai::Ex::Game::Danmaku {
 			spawnglow			= 0;
 			acceleration		= 0;
 			internalRotation	= 0;
+			initSprites();
 			return *this;
 		}
 
@@ -198,6 +199,10 @@ namespace Makai::Ex::Game::Danmaku {
 			if (mainSprite)	mainSprite->visible	= true;
 		}
 		
+		void initSprites() {
+			if (mainSprite) mainSprite->local.scale = 0;
+			if (glowSprite) glowSprite->local.scale = 0;
+		}
 
 		void updateSprite(SpriteHandle const& sprite, bool glowSprite = false) {
 			if (!sprite) return;

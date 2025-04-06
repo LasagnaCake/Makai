@@ -43,6 +43,7 @@ namespace Makai::Ex::Game::Danmaku {
 			toggleTime		= 5;
 			untoggleTime	= 5;
 			setCollisionState(false);
+			initSprite();
 			return *this;
 		}
 
@@ -169,6 +170,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Laser(Laser const& other)	= default;
 		Laser(Laser&& other)		= default;
+
+		void initSprite() {
+			if (sprite) sprite->local.scale = 0;
+		}
 
 		void updateSprite() {
 			if (!sprite) return;

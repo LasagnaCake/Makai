@@ -114,6 +114,8 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		healthBar.material.color = Makai::Graph::Color::MAGENTA * Makai::Graph::Color::alpha(0.5);
 	}
 
+	usize counterForTests = 10;
+
 	void onUpdate(float delta) override {
 		ABoss::onUpdate(delta);
 		mesh.trans.position		= trans.position;

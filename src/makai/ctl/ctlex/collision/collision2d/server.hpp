@@ -113,6 +113,10 @@ namespace Collision::C2D {
 			/// @return Associated layer.
 			Layer& getLayer() const {return CollisionServer::layers[layerID];}
 
+			/// @brief Returns the ID of the layer associated with this collision object.
+			/// @return Layer ID.
+			usize getLayerID() const {return layerID;}
+
 			/// @brief Sets the layer associated with this collision object.
 			/// @return Reference to self.
 			Collider& setLayer(usize const layer) {
