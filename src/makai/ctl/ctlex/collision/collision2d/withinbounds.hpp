@@ -46,7 +46,7 @@ namespace Collision::C2D {
 	/// @param point Bound to check against.
 	/// @return Whether collision happens.
 	constexpr bool withinBounds(IBound2D const& a, IBound2D const& b) {
-		return GJK::check(a, b) || GJK::check(b, a);
+		return GJK::check(a, b);
 	}
 	
 	static_assert(Point(0).bounded(Point(0)));
