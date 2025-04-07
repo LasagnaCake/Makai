@@ -185,7 +185,7 @@ namespace Collision::C2D {
 				Math::rotateV2(max, rotation);
 			}
 			return AABB2D{min, max}.normalized();*/
-			return AABB2D{position - radius.max() * SQRT2, position + radius.max() * SQRT2};
+			return AABB2D{position - radius.max(), position + radius.max()};
 		}
 
 		/// @brief Returns this bound's special case.
@@ -271,8 +271,8 @@ namespace Collision::C2D {
 		/// @return Shape's AABB.
 		constexpr AABB2D aabb() const override final {
 			auto
-				min = position - length - width.max() * SQRT2,
-				max = position + length + width.max() * SQRT2
+				min = position - length - width.max(),
+				max = position + length + width.max()
 			;
 			return AABB2D{min, max};
 		}
