@@ -112,7 +112,6 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		healthBar.size = 2.0;
 		healthBar.setBlendEquation(Makai::Graph::BlendEquation::BE_ADD);
 		healthBar.material.color = Makai::Graph::Color::MAGENTA * Makai::Graph::Color::alpha(0.5);
-		collider->radius = 4;
 	}
 
 	void onUpdate(float delta) override {
