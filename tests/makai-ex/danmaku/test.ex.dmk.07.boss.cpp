@@ -112,9 +112,8 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		healthBar.size = 2.0;
 		healthBar.setBlendEquation(Makai::Graph::BlendEquation::BE_ADD);
 		healthBar.material.color = Makai::Graph::Color::MAGENTA * Makai::Graph::Color::alpha(0.5);
+		collider->radius = 4;
 	}
-
-	usize counterForTests = 10;
 
 	void onUpdate(float delta) override {
 		ABoss::onUpdate(delta);
@@ -269,7 +268,8 @@ struct TestApp: Makai::Ex::Game::App {
 		boss	= TestBossRegistry::create<TestBoss>(enemyBullet, enemyLaser);
 		player	= new TestPlayer(playerBullet);
 		DEBUGLN("<c2d:layers>");
-		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i)
+		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i) {
+			DEBUGLN("<c2d:layer id=", i, " count=", Danmaku::C2D::Server::layers[i].getColliderCount(), " />");
 			for (usize j = i; j < Danmaku::C2D::Server::MAX_LAYERS; ++j) {
 				if (Danmaku::C2D::Server::layers[i].affects & Danmaku::C2D::Server::layers[j].affectedBy)
 					DEBUGLN (
@@ -288,6 +288,7 @@ struct TestApp: Makai::Ex::Game::App {
 						"'/>"
 					);
 			}
+		}
 		DEBUGLN("</c2d:layers>");
 	}
 

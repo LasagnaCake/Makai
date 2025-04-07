@@ -205,6 +205,12 @@ namespace Collision::C2D {
 						//if (a != b) continue;
 			}
 
+			/// @brief Returns the amount of colliders in the layer.
+			/// @return Amount of colliders in layer.
+			constexpr usize getColliderCount() const {
+				return colliders.size();
+			}
+
 		private:
 			[[nodiscard]] constexpr Unique<Collider> createCollider(usize const layer) {
 				return Unique<Collider>(new Collider(layer));

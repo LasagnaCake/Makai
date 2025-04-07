@@ -31,6 +31,9 @@ namespace Collision::C2D {
 	static_assert((AABB2D{-1, 1}).overlap(AABB2D{-1, 1}));
 	static_assert(!(AABB2D{-2, -1}).overlap(AABB2D{1, 2}));
 
+	static_assert((AABB2D{64, 65.5}).overlap(AABB2D{65, 68.5}));
+	static_assert(!(AABB2D{64, 66}).overlap(AABB2D{68, 70}));
+
 	/// @brief Point bound.
 	struct Point: IBound2D {
 		/// @brief Constructs a point bound.
@@ -182,7 +185,7 @@ namespace Collision::C2D {
 				Math::rotateV2(max, rotation);
 			}
 			return AABB2D{min, max}.normalized();*/
-			return AABB2D{position - radius.max(), position + radius.max()};
+			return AABB2D{position - radius.max() * SQRT2, position + radius.max() * SQRT2};
 		}
 
 		/// @brief Returns this bound's special case.
@@ -195,7 +198,7 @@ namespace Collision::C2D {
 			if (!other.isCircle()) return false;
 			Circle const& target = static_cast<Circle const&>(other);
 			auto const angle = position.angleTo(target.position);
-			return position.distanceTo(target.position) <= (radiusAt(angle) + target.radiusAt(PI-angle));
+			return position.distanceTo(target.position) <= (radiusAt(angle) + target.radiusAt(angle-PI));
 		}
 
 		/// @brief Circle position.
@@ -268,8 +271,8 @@ namespace Collision::C2D {
 		/// @return Shape's AABB.
 		constexpr AABB2D aabb() const override final {
 			auto
-				min = position - length - width.max(),
-				max = position + length + width.max()
+				min = position - length - width.max() * SQRT2,
+				max = position + length + width.max() * SQRT2
 			;
 			return AABB2D{min, max};
 		}
