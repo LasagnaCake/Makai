@@ -234,6 +234,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	void onBattleEnd() override				{collision()->canCollide = false; queueDestroy();					}
 
 	void onAct(usize const act) override {
+		bulletServer.despawnAll();
 		DEBUGLN("Act: [", act, "]");
 		if (act > 0)
 			for (usize i = 0; i < 10; ++i)
