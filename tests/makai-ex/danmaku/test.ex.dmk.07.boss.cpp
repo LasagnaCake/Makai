@@ -231,7 +231,14 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	}
 
 	void onBattleBegin() override			{collision()->canCollide = true; doCurrentAct();					}
-	void onBattleEnd() override				{collision()->canCollide = false; queueDestroy();					}
+	void onBattleEnd() override	{
+		for (usize i = 0; i < 20; ++i)
+			createItems();
+		collision()->canCollide = false;
+		bulletServer.despawnAll();
+		laserServer.despawnAll();
+		queueDestroy();
+	}
 
 	void onAct(usize const act) override {
 		bulletServer.despawnAll();
