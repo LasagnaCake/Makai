@@ -255,7 +255,7 @@ struct TestPlayer: Danmaku::APlayer {
 struct TestApp: Makai::Ex::Game::App {
 	Makai::Random::SecureGenerator rng;
 
-	Makai::Instance<TestBoss>	boss;
+	TestBossRegistry::Object	boss;
 	Makai::Instance<TestPlayer>	player;
 
 	TestBulletServer	enemyBullet		= TestBulletServer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER, ENEMY_BULLET_SERVER_CFG);
@@ -317,6 +317,7 @@ struct TestApp: Makai::Ex::Game::App {
 	}
 
 	void onClose() override {
+		DEBUGLN("Boss still exists (somehow)? ", (boss.exists() ? "YES" : "NO"));
 	}
 };
 

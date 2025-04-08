@@ -7,13 +7,34 @@ namespace Makai::Ex::Game {
 
 template<class T, usize ID = 0>
 struct Registry {
+	struct Member;
+
+	struct Entry {
+		template <Type::Subclass<Member> TSub>
+		constexpr Reference<TSub> as() const			{return member.template as<TSub>();				}
+		template <Type::Subclass<Member> TSub>
+		constexpr Reference<TSub> morph() const			{return member.template morph<TSub>();			}
+		template <Type::Subclass<Member> TSub>
+		constexpr Reference<TSub> mutate() const		{return member.template mutate<TSub>();			}
+		template <Type::Subclass<Member> TSub>
+		constexpr Reference<TSub> reinterpret() const	{return member.template reinterpret<TSub>();	}
+
+		constexpr Reference<Member> content() const		{return member.reference();	}
+
+		constexpr bool exists() const	{return member.exists();	}
+		constexpr operator bool() const	{return exists();			}
+
+	private:
+		friend class Member;
+
+		Unique<Member> member;
+	};
+
 	struct Member {
 		constexpr void destroy() {
 			if (destroying) return;
 			destroying = true;
-			Instance<Member> self = this;
-			self.destroy();
-			DEBUGLN("Still exists (somehow)? ", (self.exists() ? "YES" : "NO"));
+			self->member.unbind();
 		}
 
 		constexpr Member& queueDestroy() {
@@ -23,8 +44,8 @@ struct Registry {
 		}
 
 		template<Type::Subclass<Member> TSub, class... Args>
-		[[nodiscard]] static constexpr Instance<TSub> create(Args&&... args) {
-			return new TSub(forward<Args>(args)...);
+		[[nodiscard]] static constexpr Instance<Entry> create(Args&&... args) {
+			return (new TSub(forward<Args>(args)...))->self;
 		}
 
 		constexpr virtual ~Member() {
@@ -34,10 +55,13 @@ struct Registry {
 
 	protected:
 		constexpr Member() {
+			self->member.bind(this);
 			Registry::add(this);
 		}
 	
 	private:
+		Entry* self = new Entry();
+
 		constexpr void destroy(bool const) {
 			queued = false;
 			destroy();
@@ -51,14 +75,16 @@ struct Registry {
 
 	using FindPredicate = bool(Member const&);
 
-	using QueryResult = List<Instance<Member>>;
+	using QueryResult = List<Reference<Member>>;
+
+	using Object = Instance<Entry>;
 
 	template <Type::Functional<FindPredicate> TPred>
 	constexpr static QueryResult find(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
-			if (predicate(*m))
-				res.pushBack(m);
+			if (predicate(*m->content()))
+				res.pushBack(m->content());
 		return res;
 	}
 
@@ -66,15 +92,15 @@ struct Registry {
 	constexpr static QueryResult findNot(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
-			if (!predicate(*m))
-				res.pushBack(m);
+			if (!predicate(*m->content()))
+				res.pushBack(m->content());
 		return res;
 	}
 
 	constexpr static QueryResult all() {
 		QueryResult res;
 		for (auto const& m: members)
-			res.pushBack(m);
+			res.pushBack(m->content());
 		return res;
 	}
 
@@ -86,7 +112,7 @@ struct Registry {
 	}
 
 	template<Type::Subclass<Member> TSub, class... Args>
-	[[nodiscard]] static constexpr Instance<TSub> create(Args&&... args) {
+	[[nodiscard]] static constexpr Object create(Args&&... args) {
 		return Member::template create<TSub>(forward<Args>(args)...);
 	}
 	
@@ -96,11 +122,11 @@ private:
 	constexpr static void queue(owner<Member> const& member)	{queued.pushBack(member);	}
 	constexpr static void unqueue(owner<Member> const& member)	{queued.eraseLike(member);	}
 
-	constexpr static void add(owner<Member> const& member)		{members.pushBack(member);	}
-	constexpr static void remove(owner<Member> const& member)	{members.eraseLike(member);	}
+	constexpr static void add(owner<Member> const& member)		{members.pushBack(member->self);	}
+	constexpr static void remove(owner<Member> const& member)	{members.eraseLike(member->self);	}
 
-	inline static List<owner<Member>> members;
-	inline static List<owner<Member>> queued;
+	inline static List<owner<Entry>>	members;
+	inline static List<owner<Member>>	queued;
 };
 
 }

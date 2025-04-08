@@ -59,7 +59,7 @@ struct TestApp: Makai::Ex::Game::App {
 
 	void spawnEnemy() {
 		enemies[current] = TestRegistry::create<TestEnemy>(getCurrentCycle());
-		enemies[current]->trans.position.y = rng.number<float>(24, -24) + playfield.center.y;
+		enemies[current]->as<TestEnemy>()->trans.position.y = rng.number<float>(24, -24) + playfield.center.y;
 		(++current) %= MAX_ENEMIES;
 	}
 
@@ -72,7 +72,7 @@ struct TestApp: Makai::Ex::Game::App {
 
 	float framerate[MAX_FRCOUNT];
 
-	Makai::Instance<TestEnemy> enemies[MAX_ENEMIES];
+	TestRegistry::Object enemies[MAX_ENEMIES];
 
 	void onUpdate(float delta) {
 		if (frcount < MAX_FRCOUNT)
