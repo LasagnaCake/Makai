@@ -213,7 +213,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	protected:
 		virtual void onItemMagnet(Reference<Item> const& item) {
-			if (!item->magnet.enabled && item->magnet.target != &trans.position)
+			if (!item->magnet.enabled)
 				item->magnet = {true, &trans.position, {10}};
 		}
 		virtual void onItem(Reference<Item> const& item)				= 0;
