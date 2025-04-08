@@ -75,9 +75,10 @@ struct Registry {
 
 	using FindPredicate = bool(Member const&);
 
-	using Object = Instance<Entry>;
+	using Object		= Instance<Entry>;
+	using ObjectHandle	= Handle<Entry>;
 
-	using QueryResult = List<Object>;
+	using QueryResult = List<ObjectHandle>;
 
 	template <Type::Functional<FindPredicate> TPred>
 	constexpr static QueryResult find(TPred const& predicate) {
