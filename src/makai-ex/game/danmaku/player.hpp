@@ -88,13 +88,23 @@ namespace Makai::Ex::Game::Danmaku {
 			DEBUGLN("Player demagnetized!");
 		}
 
-		constexpr static usize CAN_MOVE		= 1 << 0;
-		constexpr static usize CAN_FOCUS	= 1 << 1;
-		constexpr static usize CAN_SHOOT	= 1 << 2;
-		constexpr static usize CAN_BOMB		= 1 << 3;
-		constexpr static usize INVINCIBLE	= 1 << 4;
+		struct Flags {
+			constexpr static usize PF_CAN_MOVE		= 1 << 0;
+			constexpr static usize PF_CAN_FOCUS		= 1 << 1;
+			constexpr static usize PF_CAN_UNFOCUS	= 1 << 2;
+			constexpr static usize PF_CAN_SHOOT		= 1 << 3;
+			constexpr static usize PF_CAN_BOMB		= 1 << 4;
+			constexpr static usize PF_INVINCIBLE	= 1 << 5;
+			constexpr static usize DEFAULT			=
+				Flags::PF_CAN_MOVE
+			|	Flags::PF_CAN_FOCUS
+			|	Flags::PF_CAN_UNFOCUS
+			|	Flags::PF_CAN_SHOOT
+			|	Flags::PF_CAN_BOMB
+			;
+		};
 
-		usize flags = CAN_MOVE | CAN_FOCUS | CAN_SHOOT | CAN_BOMB;
+		usize flags = Flags::DEFAULT;
 
 		void onUpdate(float delta) override {
 			if (!active) return;
@@ -104,8 +114,8 @@ namespace Makai::Ex::Game::Danmaku {
 			pollInputs();
 			doMovement(delta);
 			updateTimers();
-			if (action("bomb", true)	&& !bombTime && areAnyFlagsSet(CAN_BOMB))	onBomb();
-			if (action("shot")			&& !shotTime && areAnyFlagsSet(CAN_SHOOT))	onShot();
+			if (action("bomb", true) && canBomb())	onBomb();
+			if (action("shot") && canShoot())		onShot();
 		}
 
 		void onUpdate(float delta, Makai::App& app) override {
@@ -139,7 +149,12 @@ namespace Makai::Ex::Game::Danmaku {
 					onItemMagnet(item);
 		}
 
-		bool focused() const			{return isFocused;}
+		bool focused() const {
+			if (areAllFlagsSet(Flags::PF_CAN_FOCUS | Flags::PF_CAN_UNFOCUS)) return isFocused;
+			if (areAnyFlagsSet(Flags::PF_CAN_FOCUS)) return true;
+			return false;
+		}
+
 		Vector2 getDirection() const	{return direction;}
 
 		APlayer& disableBomb(usize const frames) {
@@ -183,7 +198,15 @@ namespace Makai::Ex::Game::Danmaku {
 		PlayerConfig::Collision const mask;
 
 		bool isInvincible() const {
-			return invincibleTime || areAnyFlagsSet(INVINCIBLE);
+			return invincibleTime || areAnyFlagsSet(Flags::PF_INVINCIBLE);
+		}
+
+		bool canBomb() const {
+			return (!bombTime) && areAnyFlagsSet(Flags::PF_CAN_BOMB);
+		}
+
+		bool canShoot() const {
+			return (!shotTime) && areAnyFlagsSet(Flags::PF_CAN_SHOOT);
 		}
 
 	protected:
@@ -237,7 +260,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void doMovement(float const delta) {
-			if (!areAnyFlagsSet(CAN_MOVE)) return;
+			if (!areAnyFlagsSet(Flags::PF_CAN_MOVE)) return;
 			Vector2 const& vel = focused() ? velocity.focused : velocity.unfocused;
 			if (friction.min() < 1) {
 				speed = Math::lerp<Vector2>(speed, vel, friction);
@@ -255,7 +278,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Vector2 direction;
 
-		bool isFocused = 0;
+		bool isFocused = false;
 	};
 }
 

@@ -44,10 +44,13 @@ namespace Makai::Ex::Game::Danmaku {
 			active = true;
 		}
 
-		constexpr static usize INVINCIBLE	= 1 << 0;
-		constexpr static usize DEAD			= 1 << 1;
+		struct Flags {
+			constexpr static usize EF_INVINCIBLE	= 1 << 0;
+			constexpr static usize EF_DEAD			= 1 << 1;
+			constexpr static usize DEFAULT			= 0;
+		};
 
-		usize flags = 0;
+		usize flags = Flags::DEFAULT;
 
 		void onUpdate(float delta) override {
 			if (!active) return;
@@ -68,7 +71,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			//DEBUGLN("Collision event!\nFlags: ", collider.tags);
-			if (!isForThisPlayer(collider)) return;
+			if (isInvincible() || !isForThisPlayer(collider)) return;
 			//DEBUGLN("Layer: ", collider.getLayer().affects);
 			if (collider.getLayer().affects & mask.player.attack)
 				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
@@ -79,7 +82,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		AEnemy& takeDamage(Reference<AGameObject> const& object, CollisionMask const& collider) override {
-			if (object) {
+			if (!isInvincible() && object) {
 				if (collider & mask.player.bullet)
 					takeDamage(object.as<Bullet>()->getDamage());
 				else if (collider & mask.player.laser)
@@ -93,7 +96,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		AEnemy& takeDamage(float const damage) override {
-			if (areAnyFlagsSet(DEAD)) return *this;
+			if (isInvincible() || areAnyFlagsSet(Flags::EF_DEAD)) return *this;
 			if (health > 0)
 				loseHealth(damage);
 			else die();
@@ -101,8 +104,10 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		AEnemy& die() override {
-			setFlags(DEAD, true);
-			onDeath();
+			if (!isInvincible()) {
+				setFlags(Flags::EF_DEAD, true);
+				onDeath();
+			}
 			return *this;
 		}
 
@@ -120,6 +125,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		bool areAllFlagsSet(usize const mask) const {
 			return (flags & mask) == mask;
+		}
+
+		bool isInvincible() const {
+			return areAnyFlagsSet(Flags::EF_INVINCIBLE);
 		}
 	};
 }
