@@ -85,6 +85,8 @@ struct TestBoss;
 using TestBossRegistry = Makai::Ex::Game::Registry<TestBoss>;
 
 struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
+	Makai::Random::Generator rng;
+	
 	Makai::Graph::Renderable mesh;
 
 	Makai::Ex::Game::SpriteInstance sprite;
@@ -96,6 +98,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	ABoss({::board, ::playfield}),
 	bulletServer(bulletServer),
 	laserServer(laserServer) {
+		rng.setSeed(Makai::OS::Time::now());
 		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
 		setHealth(1000, 1000);
@@ -115,6 +118,34 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		healthBar.material.color = Makai::Graph::Color::MAGENTA * Makai::Graph::Color::alpha(0.5);
 	}
 
+	void createShots(float const stride = 10) {
+		DEBUGLN("Firing shots...");
+		for (usize i = 0; i < 5; ++i) {
+			auto bullet = bulletServer.acquire().as<Danmaku::Bullet>();
+			if (!bullet) return;
+			float const crot = (TAU / 20) * (i + (Makai::App::current()->getCurrentCycle() / stride * 0.5));
+			bullet->trans.position = trans.position;
+			bullet->velocity = {
+				-30,
+				true,
+				-30,
+				30,
+				.01
+			};
+			bullet->rotation = {
+				crot,
+				true,
+				crot,
+				crot + static_cast<float>(TAU),
+				.05,
+				Makai::Math::Ease::InOut::back
+			};
+			bullet->spawn();
+		}
+	}
+
+	usize counter = 0;
+
 	void onUpdate(float delta) override {
 		ABoss::onUpdate(delta);
 		mesh.trans.position		= trans.position;
@@ -123,11 +154,35 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		collider->position		= trans.position;
 		movement.onUpdate(1);
 		trans.position = movement.value();
+		if (collision()->canCollide) {
+			if (counter) --counter;
+			else {
+				counter = 10;
+				createShots();
+			}
+		}
 	}
 
-	void onBattleBegin() override			{collision()->canCollide = true; doCurrentAct();		}
-	void onAct(usize const act) override	{DEBUGLN("Act: [", act, "]"); setHealth(1000, 1000);	}
-	void onBattleEnd() override				{collision()->canCollide = false; queueDestroy();		}
+	void moveRandom() {
+		movement
+		.setInterpolation(
+			trans.position,
+			board.center * Makai::Vec2(1, 0.75) + rpos(64, 16), 60,
+			Makai::Math::Ease::Out::cubic
+		)
+		.onCompleted.clear();
+	}
+
+	Makai::Vec2 rpos(float const rangeX, float const rangeY) {
+		return Makai::Vec2(
+			rng.number<float>(-rangeX, rangeX),
+			rng.number<float>(-rangeY, rangeY)
+		);
+	}
+
+	void onBattleBegin() override			{collision()->canCollide = true; doCurrentAct();					}
+	void onAct(usize const act) override	{DEBUGLN("Act: [", act, "]"); moveRandom(); setHealth(1000, 1000);	}
+	void onBattleEnd() override				{collision()->canCollide = false; queueDestroy();					}
 
 	usize getActCount() override			{return 3;			}
 	
