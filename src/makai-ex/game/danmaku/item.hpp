@@ -92,7 +92,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		Item& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
-			if (discardable && !force) return *this;
+			if (!discardable && !force) return *this;
 			if (!immediately)	despawn();
 			else				free();
 			return *this;
