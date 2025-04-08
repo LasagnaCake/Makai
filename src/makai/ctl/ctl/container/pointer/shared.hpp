@@ -199,7 +199,7 @@ public:
 	constexpr SelfType& unbind() {
 		if (!exists()) return (*this);
 		CTL_PTR_IF_STRONG {
-			if ((count() < 2))
+			if (unique())
 				destroy();
 			else database[(void*)ref].count--;
 		}

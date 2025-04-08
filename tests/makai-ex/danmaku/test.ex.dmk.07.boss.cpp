@@ -196,7 +196,7 @@ struct TestPlayer: Danmaku::APlayer {
 		shot = 5;
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
 			//DEBUGLN("Shots fired!");
-			bullet->damage = {5};
+			bullet->damage = {50};
 			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(-3, 2) : Makai::Vec2(-1.5, 6));
 			bullet->rotation = {-HPI};
 			bullet->velocity = Danmaku::Property<float>{
@@ -210,7 +210,7 @@ struct TestPlayer: Danmaku::APlayer {
 		}
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
 			//DEBUGLN("Shots fired!");
-			bullet->damage = {5};
+			bullet->damage = {50};
 			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(3, 2) : Makai::Vec2(1.5, 6));
 			bullet->rotation = {-HPI};
 			bullet->velocity = Danmaku::Property<float>{
@@ -302,7 +302,7 @@ struct TestApp: Makai::Ex::Game::App {
 
 	float framerate[MAX_FRCOUNT];
 
-	void onUpdate(float delta) {
+	void onUpdate(float delta) override {
 		TestBossRegistry::destroyQueued();
 		if (frcount < MAX_FRCOUNT)
 			framerate[frcount++] = 1000.0 / getCycleDelta();
@@ -314,6 +314,9 @@ struct TestApp: Makai::Ex::Game::App {
 			DEBUGLN("Framerate: ", Makai::Format::prettify(Makai::Math::round(fravg, 2), 2, 0));
 			frcount = 0;
 		}
+	}
+
+	void onClose() override {
 	}
 };
 

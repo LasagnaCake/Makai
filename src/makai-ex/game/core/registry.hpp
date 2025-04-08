@@ -11,11 +11,14 @@ struct Registry {
 		constexpr void destroy() {
 			if (destroying) return;
 			destroying = true;
-			Instance<Member>(this).destroy();
+			Instance<Member> self = this;
+			self.destroy();
+			DEBUGLN("Still exists (somehow)? ", (self.exists() ? "YES" : "NO"));
 		}
 
 		constexpr Member& queueDestroy() {
 			Registry::queue(this);
+			queued = true;
 			return *this;
 		}
 
@@ -24,7 +27,10 @@ struct Registry {
 			return new TSub(forward<Args>(args)...);
 		}
 
-		constexpr virtual ~Member() {Registry::remove(this);}
+		constexpr virtual ~Member() {
+			Registry::remove(this);
+			if (queued) Registry::unqueue(this);
+		}
 
 	protected:
 		constexpr Member() {
@@ -32,9 +38,15 @@ struct Registry {
 		}
 	
 	private:
+		constexpr void destroy(bool const) {
+			queued = false;
+			destroy();
+		}
+
 		friend class Registry;
 
-		bool destroying = true;
+		bool destroying = false;
+		bool queued		= false;
 	};
 
 	using FindPredicate = bool(Member const&);
@@ -67,8 +79,9 @@ struct Registry {
 	}
 
 	constexpr static void destroyQueued() {
-		for (auto& q: queued)
-			if (q) q->destroy();
+		auto qc = queued;
+		for (auto& q: qc)
+			if (q) q->destroy(true);
 		queued.clear();
 	}
 
