@@ -214,7 +214,15 @@ namespace Makai::Ex::Game::Danmaku {
 	protected:
 		virtual void onItemMagnet(Reference<Item> const& item) {
 			if (!item->magnet.enabled)
-				item->magnet = {true, &trans.position, {10}};
+				item->magnet = {
+					true,
+					&trans.position, {
+						.interpolate = true,
+						.start = 5,
+						.stop = 60,
+						.speed = 0.05
+					}
+				};
 		}
 		virtual void onItem(Reference<Item> const& item)				= 0;
 		virtual void onGraze(Reference<AServerObject> const& object)	= 0;
