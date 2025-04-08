@@ -75,16 +75,16 @@ struct Registry {
 
 	using FindPredicate = bool(Member const&);
 
-	using QueryResult = List<Reference<Member>>;
-
 	using Object = Instance<Entry>;
+
+	using QueryResult = List<Object>;
 
 	template <Type::Functional<FindPredicate> TPred>
 	constexpr static QueryResult find(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
 			if (predicate(*m->content()))
-				res.pushBack(m->content());
+				res.pushBack(m);
 		return res;
 	}
 
@@ -93,14 +93,14 @@ struct Registry {
 		QueryResult res;
 		for (auto const& m: members)
 			if (!predicate(*m->content()))
-				res.pushBack(m->content());
+				res.pushBack(m);
 		return res;
 	}
 
 	constexpr static QueryResult all() {
 		QueryResult res;
 		for (auto const& m: members)
-			res.pushBack(m->content());
+			res.pushBack(m);
 		return res;
 	}
 
