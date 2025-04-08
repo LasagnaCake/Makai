@@ -31,6 +31,18 @@ struct GlowMeshHolder {
 	}
 };
 
+// Item stuff
+
+constexpr Danmaku::ItemServerInstanceConfig ITEM_CFG = {};
+
+using BaseItemServer = Danmaku::ItemServer<>;
+
+struct TestItemServer: DoubleMeshHolder, BaseItemServer {
+	TestItemServer(usize const layer):
+		DoubleMeshHolder(layer),
+		BaseItemServer({256, m, gm, ::board, ::playfield, ITEM_CFG}) {}
+};
+
 // Bullet stuff
 
 using BaseBulletServer = Danmaku::BulletServer<>;
@@ -93,11 +105,13 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 
 	TestBulletServer&	bulletServer;
 	TestLaserServer&	laserServer;
+	TestItemServer&		itemServer;
 
-	TestBoss(TestBulletServer& bulletServer, TestLaserServer& laserServer):
+	TestBoss(TestBulletServer& bulletServer, TestLaserServer& laserServer, TestItemServer& itemServer):
 	ABoss({::board, ::playfield}),
 	bulletServer(bulletServer),
-	laserServer(laserServer) {
+	laserServer(laserServer),
+	itemServer(itemServer) {
 		rng.setSeed(Makai::OS::Time::now());
 		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
@@ -193,6 +207,22 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		.onCompleted.clear();
 	}
 
+	void createItems() {
+		if (auto item = itemServer.acquire().as<Danmaku::Item>()) {
+			item->trans.position = trans.position + rpos(6, 6);
+			item->gravity = Danmaku::Property<Makai::Vec2>{
+				.interpolate = true,
+				.start = Makai::Vec2(0, 1),
+				.stop = Makai::Vec2(0, -1),
+				.speed = 0.025
+			};
+			item->radius = {1};
+			item->terminalVelocity = {Makai::Vec2(0, 20)};
+			item->spawnTime = 30;
+			item->spawn();
+		}
+	}
+
 	Makai::Vec2 rpos(float const rangeX, float const rangeY) {
 		return Makai::Vec2(
 			rng.number<float>(-rangeX, rangeX),
@@ -205,6 +235,9 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 
 	void onAct(usize const act) override {
 		DEBUGLN("Act: [", act, "]");
+		if (act > 0)
+			for (usize i = 0; i < 10; ++i)
+				createItems();
 		moveRandom();
 		if (act == 1) spawnLasers(0);
 		if (act == 2) spawnLasers(6.4);
@@ -343,11 +376,12 @@ struct TestApp: Makai::Ex::Game::App {
 	TestBulletServer	enemyBullet		= TestBulletServer(Danmaku::Render::Layer::ENEMY1_BULLET_LAYER, ENEMY_BULLET_SERVER_CFG);
 	TestBulletServer	playerBullet	= TestBulletServer(Danmaku::Render::Layer::PLAYER1_BULLET_LAYER, PLAYER_BULLET_SERVER_CFG);
 	TestLaserServer		enemyLaser		= TestLaserServer(Danmaku::Render::Layer::ENEMY1_LASER_LAYER, ENEMY_LASER_SERVER_CFG);
+	TestItemServer		item			= TestItemServer(Danmaku::Render::Layer::PLAYER1_ITEM_LAYER);
 
 	TestApp(): App(Makai::Config::App{{800, 600, "Test 07", false}}) {
 		loadDefaultShaders();
 		camera.cam2D = Makai::Graph::Camera3D::from2D(64, Makai::Vector2(4, 3) / 3.0);
-		boss	= TestBossRegistry::create<TestBoss>(enemyBullet, enemyLaser);
+		boss	= TestBossRegistry::create<TestBoss>(enemyBullet, enemyLaser, item);
 		player	= new TestPlayer(playerBullet);
 		DEBUGLN("<c2d:layers>");
 		for (usize i = 0; i < Danmaku::C2D::Server::MAX_LAYERS; ++i) {
