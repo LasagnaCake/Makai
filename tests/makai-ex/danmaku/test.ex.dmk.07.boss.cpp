@@ -130,14 +130,14 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 				true,
 				-30,
 				30,
-				.01
+				.03
 			};
 			bullet->rotation = {
 				crot,
 				true,
 				crot,
 				crot + static_cast<float>(TAU),
-				.05,
+				.02,
 				Makai::Math::Ease::InOut::back
 			};
 			bullet->spawn();
@@ -167,7 +167,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		movement
 		.setInterpolation(
 			trans.position,
-			board.center * Makai::Vec2(1, 0.75) + rpos(64, 16), 60,
+			board.center * Makai::Vec2(1, 0.75) + rpos(32, 16), 60,
 			Makai::Math::Ease::Out::cubic
 		)
 		.onCompleted.clear();
