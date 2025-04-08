@@ -362,7 +362,7 @@ struct TestPlayer: Danmaku::APlayer {
 
 	Makai::Instance<Danmaku::C2D::Circle> collider	= new Danmaku::C2D::Circle(0, 0.1);
 	Makai::Instance<Danmaku::C2D::Circle> grazebox	= new Danmaku::C2D::Circle(0, 2);
-	Makai::Instance<Danmaku::C2D::Circle> itembox	= new Danmaku::C2D::Circle(0, 5);
+	Makai::Instance<Danmaku::C2D::Circle> itembox	= new Danmaku::C2D::Circle(0, 10);
 };
 
 // Application

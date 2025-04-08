@@ -226,7 +226,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		Reference<Collider> getItembox() {
-			return grazebox.reference();
+			return itembox.reference();
 		}
 
 	private:
