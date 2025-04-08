@@ -201,7 +201,7 @@ public:
 		CTL_PTR_IF_STRONG {
 			if (unique())
 				destroy();
-			else database[(void*)ref].count--;
+			else if (count() > 0) database[(pointer)ref].count--;
 		}
 		ref = nullptr;
 		return (*this);
