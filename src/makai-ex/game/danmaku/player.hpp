@@ -116,7 +116,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (!isForThisPlayer(collider)) return;
-			if (collider.getLayer().affects & mask.enemy.attack)
+			if (collider.getLayer().affects & mask.enemy.attack && !isInvincible())
 				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
 		}
 
