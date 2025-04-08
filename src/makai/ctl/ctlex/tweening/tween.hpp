@@ -52,7 +52,7 @@ struct ITweenPlayable: IPlayable {
 	virtual ITweenPlayable& halt()		= 0;
 
 	/// @brief Signal to be fired upon completion.
-	::CTL::Signal<> onCompleted;
+	::CTL::Functor<void()> onCompleted;
 
 private:
 	virtual ITweenPlayable& stop()		{return halt();}
@@ -305,7 +305,7 @@ struct TweenStage {
 	/// @brief Ease function to use. By default, it is `Math::Ease::linear`.
 	Math::Ease::Mode ease	= Math::Ease::linear;
 	/// @brief Action to do when this stage is finished. By default, does nothing.
-	::CTL::Signal<> onCompleted = []{};
+	::CTL::Functor<void()> onCompleted;
 };
 
 /// @brief Stageable tween interface.
