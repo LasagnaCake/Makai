@@ -83,7 +83,7 @@ struct Registry {
 	constexpr static QueryResult find(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
-			if (predicate(*m->content()))
+			if (*m && predicate(*m->content()))
 				res.pushBack(m);
 		return res;
 	}
@@ -92,7 +92,7 @@ struct Registry {
 	constexpr static QueryResult findNot(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
-			if (!predicate(*m->content()))
+			if (*m && !predicate(*m->content()))
 				res.pushBack(m);
 		return res;
 	}
@@ -100,7 +100,7 @@ struct Registry {
 	constexpr static QueryResult all() {
 		QueryResult res;
 		for (auto const& m: members)
-			res.pushBack(m);
+			if (*m) res.pushBack(m);
 		return res;
 	}
 
