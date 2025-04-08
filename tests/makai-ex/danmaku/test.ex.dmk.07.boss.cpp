@@ -144,6 +144,26 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		}
 	}
 
+	void spawnLasers(float const offset) {
+		for (ssize i: {1, 2, 3, 4}) {
+			auto laser = laserServer.acquire().as<Danmaku::Laser>();
+			if (!laser) return;
+			laser->trans.position = Makai::Vec2(-10, (-i) * (64.0 / 5.0) + offset);
+			laser->rotation = {0};
+			laser->length = {128};
+			laser->spawn();
+			laser->spawnTime	= 60 + 30 * i;
+			laser->toggleTime	= 60;
+			laser->onAction = [=] (auto& object, auto action) {
+				Danmaku::Laser& l = (Danmaku::Laser&)object;
+				if (action == Danmaku::AServerObject::Action::SOA_SPAWN_END) {
+					l.toggle(true);
+					l.onAction.clear();
+				}
+			};
+		}
+	}
+
 	usize counter = 0;
 
 	void onUpdate(float delta) override {
@@ -181,8 +201,15 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	}
 
 	void onBattleBegin() override			{collision()->canCollide = true; doCurrentAct();					}
-	void onAct(usize const act) override	{DEBUGLN("Act: [", act, "]"); moveRandom(); setHealth(1000, 1000);	}
 	void onBattleEnd() override				{collision()->canCollide = false; queueDestroy();					}
+
+	void onAct(usize const act) override {
+		DEBUGLN("Act: [", act, "]");
+		moveRandom();
+		if (act == 1) spawnLasers(0);
+		if (act == 2) spawnLasers(6.4);
+		setHealth(1000, 1000);
+	}
 
 	usize getActCount() override			{return 3;			}
 	
