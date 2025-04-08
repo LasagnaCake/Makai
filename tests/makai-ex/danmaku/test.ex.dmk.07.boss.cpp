@@ -125,9 +125,9 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		trans.position = movement.value();
 	}
 
-	void onBattleBegin() override			{collision()->canCollide = true; DEBUGLN("Boss: ", collision()->canCollide);	}
-	void onAct(usize const act) override	{setHealth(1000, 1000);															}
-	void onBattleEnd() override				{queueDestroy();																}
+	void onBattleBegin() override			{collision()->canCollide = true; doCurrentAct();		}
+	void onAct(usize const act) override	{DEBUGLN("Act: [", act, "]"); setHealth(1000, 1000);	}
+	void onBattleEnd() override				{collision()->canCollide = false; queueDestroy();		}
 
 	usize getActCount() override			{return 3;			}
 	
@@ -193,9 +193,9 @@ struct TestPlayer: Danmaku::APlayer {
 
 	void createShots() {
 		if (shot) return;
-		shot = 10;
+		shot = 5;
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
-			DEBUGLN("Shots fired!");
+			//DEBUGLN("Shots fired!");
 			bullet->damage = {5};
 			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(-3, 2) : Makai::Vec2(-1.5, 6));
 			bullet->rotation = {-HPI};
@@ -209,7 +209,7 @@ struct TestPlayer: Danmaku::APlayer {
 			bullet->spawn();
 		}
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
-			DEBUGLN("Shots fired!");
+			//DEBUGLN("Shots fired!");
 			bullet->damage = {5};
 			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(3, 2) : Makai::Vec2(1.5, 6));
 			bullet->rotation = {-HPI};
@@ -243,7 +243,7 @@ struct TestPlayer: Danmaku::APlayer {
 		return *this;	
 	}
 
-	usize shot = 10;
+	usize shot = 5;
 
 	Makai::Instance<Danmaku::C2D::Circle> collider	= new Danmaku::C2D::Circle(0, 0.1);
 	Makai::Instance<Danmaku::C2D::Circle> grazebox	= new Danmaku::C2D::Circle(0, 2);
@@ -303,6 +303,7 @@ struct TestApp: Makai::Ex::Game::App {
 	float framerate[MAX_FRCOUNT];
 
 	void onUpdate(float delta) {
+		TestBossRegistry::destroyQueued();
 		if (frcount < MAX_FRCOUNT)
 			framerate[frcount++] = 1000.0 / getCycleDelta();
 		else {

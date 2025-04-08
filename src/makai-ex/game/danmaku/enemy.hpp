@@ -67,9 +67,9 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
-			DEBUGLN("Collision event!\nFlags: ", collider.tags);
+			//DEBUGLN("Collision event!\nFlags: ", collider.tags);
 			if (!isForThisPlayer(collider)) return;
-			DEBUGLN("Layer: ", collider.getLayer().affects);
+			//DEBUGLN("Layer: ", collider.getLayer().affects);
 			if (collider.getLayer().affects & mask.player.attack)
 				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
 		}
@@ -85,7 +85,7 @@ namespace Makai::Ex::Game::Danmaku {
 				else if (collider & mask.player.laser)
 					takeDamage(object.as<Laser>()->getDamage());
 				if (collider & (mask.player.bullet | mask.player.laser)) {
-					DEBUGLN("Owie! :'(");
+					//DEBUGLN("Owie! :'(");
 					object.as<AServerObject>()->discard();
 				}
 			}

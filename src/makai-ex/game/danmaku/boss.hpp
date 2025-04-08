@@ -14,7 +14,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void onDeath() override {
-			if (currentAct++ < getActCount() && !practiceMode) {
+			if (++currentAct < getActCount() && !practiceMode) {
 				setFlags(DEAD, false);
 				doCurrentAct();
 			} else onBattleEnd();
