@@ -108,10 +108,8 @@ namespace Makai::Ex::Game::Danmaku {
 			spawnTime	= 5;
 			despawnTime	= 5;
 			cycle		= 0;
-			if (auto collider = collision()) {
-				collider->shape			= nullptr;
-				collider->canCollide	= true;
-			}
+			if (auto collider = collision())
+				collider->canCollide = true;
 			onAction.clear();
 			onObjectUpdate.clear();
 //			task.clear();

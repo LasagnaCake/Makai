@@ -234,9 +234,9 @@ namespace Collision::C2D {
 		/// @param layers Layers to check against.
 		template<usize SI, usize SL>
 		constexpr static void check(ColliderType<SI, SL> const& area, LayerMask const& layers) {
-			if (!area.affects.match(layers).overlap() || !area.canCollide) return;
+			if (!(area.affects & layers) || !area.canCollide) return;
 			for (Collider* c : colliders)
-				if (c->enabled && c->layer.affectedBy.match(layers).overlap())
+				if (c->enabled && (c->layer.affectedBy & layers))
 					area.process(*c);
 		}
 

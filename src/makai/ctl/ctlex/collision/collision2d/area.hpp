@@ -65,11 +65,15 @@ namespace Collision::C2D {
 		/// @param b `Area` to check against.
 		/// @return Whether collision happens.
 		constexpr static bool check(Area const& a, Area const& b) {
-			if (!(a.shape && b.shape))				return false;
 			// BUG: `canCollide` for both shapes is false, despite being set to true?????
-			if (!(a.canCollide && b.canCollide))	return false;
+			if (!bothAreasCanCollide(a, b))	return false;
+			if (!bothShapesExist(a, b))		return false;
 			return withinBounds(*a.shape, *b.shape);
 		}
+
+	private:
+		constexpr static bool bothShapesExist(Area const& a, Area const& b)		{return a.shape.exists() && b.shape.exists();	}
+		constexpr static bool bothAreasCanCollide(Area const& a, Area const& b)	{return a.canCollide && b.canCollide;			}
 	};
 }
 
