@@ -7,7 +7,7 @@
 
 /// @brief Anima Virtual Machine.
 namespace Makai::Ex::AVM {
-	/// @brief Basic anima engine.
+	/// @brief Base anima engine.
 	struct Engine {
 		/// @brief Function parameters.
 		using Parameters = StringList;
