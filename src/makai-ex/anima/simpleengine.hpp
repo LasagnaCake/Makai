@@ -4,6 +4,7 @@
 #include "engine.hpp"
 
 namespace Makai::Ex::AVM {
+	/// @brief Simplified anima engine. Comes with (most) bells & whistles.
 	struct SimpleEngine: private Engine, IPlayable {
 		using Engine::state, Engine::error;
 
