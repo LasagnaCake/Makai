@@ -25,7 +25,7 @@ struct Registry {
 		template <Type::Subclass<Member> TSub>
 		constexpr Reference<TSub> reinterpret() const	{return member.template reinterpret<TSub>();	}
 
-		constexpr Reference<Member> content() const		{return member.reference();	}
+		constexpr Reference<Member> content() const	{return member.reference();	}
 
 		constexpr bool exists() const	{return member.exists();	}
 		constexpr operator bool() const	{return exists();			}
