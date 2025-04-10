@@ -15,33 +15,14 @@ struct Registry {
 	struct Member;
 
 	/// @brief Registry entry.
-	struct Entry {
-		template <Type::Subclass<Member> TSub>
-		constexpr Reference<TSub> as() const			{return member.template as<TSub>();				}
-		template <Type::Subclass<Member> TSub>
-		constexpr Reference<TSub> morph() const			{return member.template morph<TSub>();			}
-		template <Type::Subclass<Member> TSub>
-		constexpr Reference<TSub> mutate() const		{return member.template mutate<TSub>();			}
-		template <Type::Subclass<Member> TSub>
-		constexpr Reference<TSub> reinterpret() const	{return member.template reinterpret<TSub>();	}
-
-		constexpr Reference<Member> reference() const	{return member.reference();	}
-
-		constexpr bool exists() const	{return member.exists();	}
-		constexpr operator bool() const	{return exists();			}
-
-	private:
-		friend class Member;
-
-		Unique<Member> member;
-	};
+	using Entry = Unique<Member>;
 
 	/// @brief Registry member.
 	struct Member {
 		constexpr void destroy() {
 			if (destroying) return;
 			destroying = true;
-			self->member.unbind();
+			self->unbind();
 		}
 
 		constexpr Member& queueDestroy() {
@@ -52,7 +33,7 @@ struct Registry {
 
 		template<Type::Subclass<Member> TSub, class... Args>
 		[[nodiscard]] static constexpr Instance<Entry> create(Args&&... args) {
-			return (new TSub(forward<Args>(args)...))->self;
+			return (new TSub(forward<Args>(args)...))->self.raw();
 		}
 
 		constexpr virtual ~Member() {
@@ -62,12 +43,12 @@ struct Registry {
 
 	protected:
 		constexpr Member() {
-			self->member.bind(this);
+			self->bind(this);
 			Registry::add(this);
 		}
 	
 	private:
-		Entry* self = new Entry();
+		Handle<Entry> self = new Entry();
 
 		constexpr void destroy(bool const) {
 			queued = false;
