@@ -25,7 +25,7 @@ struct Registry {
 		template <Type::Subclass<Member> TSub>
 		constexpr Reference<TSub> reinterpret() const	{return member.template reinterpret<TSub>();	}
 
-		constexpr Reference<Member> content() const	{return member.reference();	}
+		constexpr Reference<Member> reference() const	{return member.reference();	}
 
 		constexpr bool exists() const	{return member.exists();	}
 		constexpr operator bool() const	{return exists();			}
@@ -91,7 +91,7 @@ struct Registry {
 	constexpr static QueryResult find(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
-			if (*m && predicate(*m->content()))
+			if (*m && predicate(*m->reference()))
 				res.pushBack(m);
 		return res;
 	}
@@ -100,7 +100,7 @@ struct Registry {
 	constexpr static QueryResult findNot(TPred const& predicate) {
 		QueryResult res;
 		for (auto const& m: members)
-			if (*m && !predicate(*m->content()))
+			if (*m && !predicate(*m->reference()))
 				res.pushBack(m);
 		return res;
 	}
