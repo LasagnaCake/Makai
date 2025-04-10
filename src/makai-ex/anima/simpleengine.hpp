@@ -178,6 +178,7 @@ namespace Makai::Ex::AVM {
 		/// @param color Color to set.
 		virtual void onActorTextColor(ActiveCast const& actors, Vector4 const& color)							{			}
 
+		/// @brief Advance type.
 		enum class AdvanceType {
 			APAT_USER_INPUT,
 			APAT_AUTO_ADVANCE,

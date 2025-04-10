@@ -3,6 +3,7 @@
 
 #include <makai/makai.hpp>
 
+/// @brief Game extensions.
 namespace Makai::Ex::Game {
 	using Sprite = Graph::AnimatedPlaneRef;
 

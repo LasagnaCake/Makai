@@ -3,12 +3,18 @@
 
 #include <makai/makai.hpp>
 
+/// @brief Game extensions.
 namespace Makai::Ex::Game {
 
+/// @brief Object registry ("Garbage Collector"-ish structure).
+/// @tparam T Object type.
+/// @tparam ID Unique identifier. By default, it is `0`.
 template<class T, usize ID = 0>
 struct Registry {
+	/// @brief Registry member.
 	struct Member;
 
+	/// @brief Registry entry.
 	struct Entry {
 		template <Type::Subclass<Member> TSub>
 		constexpr Reference<TSub> as() const			{return member.template as<TSub>();				}
@@ -30,6 +36,7 @@ struct Registry {
 		Unique<Member> member;
 	};
 
+	/// @brief Registry member.
 	struct Member {
 		constexpr void destroy() {
 			if (destroying) return;
