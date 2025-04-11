@@ -441,7 +441,7 @@ struct TestApp: Makai::Ex::Game::App {
 	}
 
 	void onClose() override {
-		DEBUGLN("Boss still exists (somehow)? ", (boss.exists() ? "YES" : "NO"));
+		DEBUGLN("Boss still exists (somehow)? ", ((boss && *boss) ? "YES" : "NO"));
 	}
 };
 
