@@ -6,21 +6,35 @@
 #include "layers.hpp"
 #include "../core/sprite.hpp"
 
+/// @brief Danmaku-specific game extensions.
 namespace Makai::Ex::Game::Danmaku {
+	/// @brief Collision facility.
 	namespace C2D = CTL::Ex::Collision::C2D;
 
+	/// @brief Collision server.
 	using CollisionServer = C2D::Server;
 
+	/// @brief Interpolatable property.
+	/// @tparam T Property type.
 	template<Type::Ex::Tween::Tweenable T>
 	struct Property {
+		/// @brief Current value.
 		T					value		= 0;
+		/// @brief Whether to interpolate the property.
 		bool				interpolate	= false;
+		/// @brief Starting value.
 		T					start		= 0;
+		/// @brief End value.
 		T					stop		= 0;
+		/// @brief Interpolation speed.
 		float				speed		= 0;
+		/// @brief Interpolation function.
 		Math::Ease::Mode	ease		= Math::Ease::linear;
+		/// @brief Current interpolation factor.
 		float				factor		= 0;
 
+		/// @brief Updates the property, and returns its current value.
+		/// @return Current value after processing.
 		constexpr T next() {
 			if (!(interpolate && speed != 0))
 				return value;
@@ -32,17 +46,22 @@ namespace Makai::Ex::Game::Danmaku {
 			return value;
 		}
 
+		/// @brief Reverses the property.
+		/// @return Reference to self.
 		constexpr Property& reverse() {
 			CTL::swap(start, stop);
 			factor = 1 - factor;
 		}
 	};
-
+	/// @brief Pause state.
 	struct PauseState {
+		/// @brief Duration.
 		llong	time	= -1;
+		/// @brief Whether pause is enabled.
 		bool	enabled	= false;
 	};
 
+	
 	struct GameArea {
 		Vector2 center;
 		Vector2 size;

@@ -4,8 +4,11 @@
 #include "core.hpp"
 #include "server.hpp"
 
+/// @brief Danmaku-specific game extensions.
 namespace Makai::Ex::Game::Danmaku {
+	/// @brief Bullet server bullet.
 	struct Bullet;
+	/// @brief Bullet configuration.
 	struct BulletConfig;
 
 	/// @brief Bullet server.
@@ -93,7 +96,11 @@ namespace Makai::Ex::Game::Danmaku {
 			playfieldCheck();
 			loopAndBounce();
 		}
-		
+
+		/// @brief Discards the bullet, if applicable.
+		/// @param immediately Whether to despawn first, or discard directly. By default, it is `false`.
+		/// @param force Whether to force discard. By default, it is `false`.
+		/// @return Reference to self.
 		Bullet& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
 			if (!discardable && !force) return *this;
@@ -102,6 +109,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Spawns the bullet.
+		/// @return Reference to self.
 		Bullet& spawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
@@ -115,6 +124,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Despawns the bullet.
+		/// @return Reference to self.
 		Bullet& despawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
@@ -124,6 +135,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Executes when a collision event happens.
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
 			if (
@@ -133,6 +145,9 @@ namespace Makai::Ex::Game::Danmaku {
 				discard();
 		}
 
+		/// @brief Sets the sprite's rotation.
+		/// @param angle Rotation angle.
+		/// @return Reference to self.
 		Bullet& setSpriteRotation(float const angle) override {
 			if (isFree()) return *this;
 			if (mainSprite)
@@ -142,6 +157,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Returns the sprite's current rotation.
+		/// @return Sprite rotation.
 		float getSpriteRotation() const override {
 			if (isFree()) return 0;
 			if (mainSprite)
@@ -151,6 +168,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return 0;
 		}
 
+		/// @brief Sets the bullet's "free state".
+		/// @param state Whether to set the bullet as free or as active.
+		/// @return Reference to self.
 		Bullet& setFree(bool const state) override {
 			active = state;
 			if (state) {
@@ -166,27 +186,40 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 		
+		/// @brief Whether the bullet should bounce when touching the edge of the board.
 		bool bouncy	= false;
+		/// @brief Whether the bullet should wrap around when leaving one edge of the board.
 		bool loopy	= false;
 
+		/// @brief Whether the bullet has been grazed.
 		bool grazed	= false;
 
+		/// @brief Collision mask.
 		BulletConfig::Collision const mask;
 
 	private:
+		/// @brief Server associated with the bullet.
 		AServer&	server;
 
+		/// @brief Main sprite.
 		SpriteInstance mainSprite	= nullptr;
+		/// @brief Glow sprite.
 		SpriteInstance glowSprite	= nullptr;
 
+		/// @brief Counter used for spawn/despawn timing purposes.
 		usize counter	= 0;
+		/// @brief Current spawn glow.
 		float spawnglow	= 0;
+		/// @brief Current spawn size.
 		float spawnsize = 1;
 
+		/// @brief Spawn size factor.
 		constexpr static float SPAWN_GROWTH = .5;
 
+		/// @brief Current animation color.
 		Vector4 animColor = Graph::Color::WHITE;
 
+		/// @brief Collision shape.
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
 		void playfieldCheck() {
@@ -309,18 +342,23 @@ namespace Makai::Ex::Game::Danmaku {
 		template <class, class> friend class BulletServer;
 	};
 
+	/// @brief Bullet collision configuration.
 	struct BulletCollisionConfig {
+		/// @brief Collider settings.
 		ColliderConfig const colli = {
 			Collision::Layer::ENEMY_BULLET,
 			Collision::Tag::FOR_PLAYER_1
 		};
+		/// @brief Collision layer settings.
 		CollisionLayerConfig const layer = {
 			Collision::Mask::ENEMY_BULLET,
 			Collision::Mask::BULLET_ERASER
 		};
+		/// @brief Collision mask.
 		BulletConfig::Collision const mask = {};
 	};
 
+	/// @brief Bullet server configuration.
 	struct BulletServerConfig:
 		ServerConfig,
 		ServerMeshConfig,
@@ -328,6 +366,7 @@ namespace Makai::Ex::Game::Danmaku {
 		BoundedObjectConfig,
 		BulletCollisionConfig {};
 
+	/// @brief Bullet server instance configuration.
 	struct BulletServerInstanceConfig: ServerConfig, BulletCollisionConfig {};
 
 	/// @brief Bullet server.
@@ -335,17 +374,26 @@ namespace Makai::Ex::Game::Danmaku {
 	/// @tparam TConfig Bullet configuration type. By default, it is `BulletConfig`.
 	template<Type::Derived<Bullet> TBullet, Type::Derived<BulletConfig> TConfig>
 	struct BulletServer<TBullet, TConfig>: AServer, AUpdateable {
+		/// @brief Collision mask type.
 		using CollisionMask = AGameObject::CollisionMask;
 
+		/// @brief Bullet type.
 		using BulletType = TBullet;
+		/// @brief Bullet configuration type.
 		using ConfigType = TConfig;
 
+		/// @brief Main sprites container.
 		Graph::ReferenceHolder& mainMesh;
+		/// @brief Glow sprites container.
 		Graph::ReferenceHolder& glowMesh;
 
+		/// @brief Game board.
 		GameArea& board;
+		/// @brief Game playfield.
 		GameArea& playfield;
 
+		/// @brief Constructs the bullet server.
+		/// @param cfg Bullet server configuration.
 		BulletServer(BulletServerConfig const& cfg):
 			mainMesh(cfg.mainMesh),
 			glowMesh(cfg.glowMesh),
@@ -371,7 +419,9 @@ namespace Makai::Ex::Game::Danmaku {
 				free.pushBack(&all.back());
 			}
 		}
-
+		
+		/// @brief Tries to acquire a bullet.
+		/// @return Reference to bullet, or `nullptr`.
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Reference<BulletType> bullet = b.template as<BulletType>();
@@ -382,6 +432,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
+		/// @brief Executed every update cycle.
 		void onUpdate(float delta, Makai::App& app) override {
 			if (used.empty()) return;
 			for (auto& obj: all)
@@ -389,6 +440,7 @@ namespace Makai::Ex::Game::Danmaku {
 					obj.onUpdate(delta);
 		}
 
+		/// @brief Discards all active bullets, if applicable.
 		void discardAll() override {
 			for (auto b: used) {
 				BulletType& bullet = access<BulletType>(b);
@@ -396,6 +448,7 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 		
+		/// @brief Frees all active bullets.
 		void freeAll() override {
 			for (auto b: used) {
 				BulletType& bullet = access<BulletType>(b);
@@ -403,6 +456,7 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 
+		/// @brief Despaws all active bullets.
 		void despawnAll() override {
 			for (auto b: used) {
 				BulletType& bullet = access<BulletType>(b);
@@ -410,10 +464,15 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 
+		/// @brief Returns the server's bullet capacity.
+		/// @return Bullet capacity.
 		usize capacity() override {
 			return all.size();
 		}
 
+		/// @brief Returns all active bullets in a given area.
+		/// @param bound Area to get bullets in.
+		/// @return Active bullets in area.
 		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
@@ -426,6 +485,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return query;
 		}
 
+		/// @brief Returns all active bullets not in a given area.
+		/// @param bound Area to get bullets out.
+		/// @return Active bullets not in area.
 		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
@@ -439,10 +501,16 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	protected:
+		/// @brief Returns whether a bullet is in the active bullets list.
+		/// @param object Bullet to check.
+		/// @return Whether bullet exists in active list.
 		bool contains(HandleType const& object) override {
 			return (used.find(object) != -1);
 		}
 
+		/// @brief Frees up a bullet from use.
+		/// @param object Bullet to free.
+		/// @return Reference to self.
 		BulletServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			BulletType& bullet = *(object.template as<BulletType>());
@@ -452,6 +520,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	private:
+		/// @brief Bullets in the server.
 		StaticList<BulletType> all;
 	};
 }
