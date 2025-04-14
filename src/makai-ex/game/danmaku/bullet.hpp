@@ -8,24 +8,37 @@ namespace Makai::Ex::Game::Danmaku {
 	struct Bullet;
 	struct BulletConfig;
 
+	/// @brief Bullet server.
+	/// @tparam T Bullet type. By default, it is `Bullet`.
+	/// @tparam C Bullet configuration type. By default, it is `BulletConfig`.
 	template<class T = Bullet, class C = BulletConfig> struct BulletServer;
 
+	/// @brief Bullet configuration.
 	struct BulletConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
+		/// @brief Collision masks & tags.
 		struct Collision {
+			/// @brief Bullet eraser mask.
 			CollisionMask const eraser	= Danmaku::Collision::Mask::BULLET_ERASER;
+			/// @brief Player tag.
 			CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask = {};
 	};
 	
+	/// @brief Bullet server bullet.
 	struct Bullet: AServerObject, ISpriteContainer, AttackObject, Circular, Glowing, Dope, RotatesSprite {
+		/// @brief Constructs a bullet.
+		/// @param cfg Bullet configuration.
 		Bullet(BulletConfig const& cfg):
 			AServerObject(cfg), mask(cfg.mask), server(cfg.server) {
 			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
+		/// @brief Destructor.
 		virtual ~Bullet() {}
 
+		/// @brief Resets all of the object's properties to their default values.
+		/// @return Reference to self.
 		Bullet& clear() override {
 			AServerObject::clear();
 			rotateSprite	= true;
@@ -49,6 +62,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Restarts the object's transformable properties to the beginning.
+		/// @return Reference to self.
 		Bullet& reset() override {
 			if (isFree()) return *this;
 			AServerObject::reset();
@@ -59,6 +74,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Executes every update cycle.
 		void onUpdate(float delta) override {
 			if (isFree()) return;
 			AServerObject::onUpdate(delta);
@@ -77,7 +93,7 @@ namespace Makai::Ex::Game::Danmaku {
 			playfieldCheck();
 			loopAndBounce();
 		}
-
+		
 		Bullet& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
 			if (!discardable && !force) return *this;
@@ -314,6 +330,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 	struct BulletServerInstanceConfig: ServerConfig, BulletCollisionConfig {};
 
+	/// @brief Bullet server.
+	/// @tparam TBullet Bullet type. By default, it is `Bullet`.
+	/// @tparam TConfig Bullet configuration type. By default, it is `BulletConfig`.
 	template<Type::Derived<Bullet> TBullet, Type::Derived<BulletConfig> TConfig>
 	struct BulletServer<TBullet, TConfig>: AServer, AUpdateable {
 		using CollisionMask = AGameObject::CollisionMask;
