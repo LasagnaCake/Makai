@@ -923,7 +923,8 @@ namespace Makai::Ex::AVM::Compiler {
 						);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions);
 					auto const choice = ConstHasher::hash(getChoicePath(val));
-					choices[choice].options = ppack.args;
+					choices[choice].name	= getChoicePath(val);
+					choices[choice].options	= ppack.args;
 					curNode += 2;
 				} break;
 				case (ConstHasher::hash("call")): {
