@@ -34,7 +34,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Matches any complex token.
 		const static String COMPLEX_TOKEN	= String("[\\w&!@#$&+\\-_'\\:\\~\\%]");
 		/// @brief Matches any simple token.
-		const static String SIMPLE_TOKEN	= String("[*.,;\\{\\}\\<\\>\\=]");
+		const static String SIMPLE_TOKEN	= String("[*.,;{}<>=\\\\]");
 
 		/// @brief Creates a regex that lazily matches all characters between the given tokens.
 		/// @param begin Start token.
@@ -120,10 +120,14 @@ namespace Makai::Ex::AVM::Compiler {
 				usize name;
 				usize scope;
 			};	
+			struct Entry {
+				StringList	args;
+				String		name;
+			};
 			/// @brief Declared functions.
-			Map<usize, StringList>	functions;
+			Map<usize, Entry>	functions;
 			/// @brief Function stack.
-			List<Composition>		stack;
+			List<Composition>	stack;
 
 			constexpr String parseArgument(String name) const {
 				if (name[0] == '%')
@@ -133,12 +137,12 @@ namespace Makai::Ex::AVM::Compiler {
 				//MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Looking for '", name, "' match...");
 				for (auto const& fun: stack.reversed()) {
 					//MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Func: ", fun.name, ", Args: ('", functions[fun.name].join("', '"), "')");
-					place = functions[fun.name].find(name);
+					place = functions[fun.name].args.find(name);
 					if (place != -1) break;
 					--func;
 				}
 				if (func != -1) {
-					usize const sz = functions[stack[func].name].size();
+					usize const sz = functions[stack[func].name].args.size();
 					//MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("FOUND! Func: ", stack[func].name, ", Index: [", sz-place, "]");
 					return toString(SUB_CHAR, stack[func].name, "@", sz-place);
 				}
@@ -356,13 +360,18 @@ namespace Makai::Ex::AVM::Compiler {
 			constexpr operator uint16() const {return operation();}
 		};
 
+		struct ChoiceEntry {
+			String		name;
+			StringList	options;
+		};
+
 		/// @brief Token list.
 		using Tokens = List<Token>;
 
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
 		/// @brief Declared choices.
-		Map<usize, StringList>	choices;
+		Map<usize, ChoiceEntry>	choices;
 		/// @brief Declared functions.
 		Functions				functions;
 
@@ -535,6 +544,9 @@ namespace Makai::Ex::AVM::Compiler {
 							CPP::SourceFile(fileName, mnode.position)
 						);
 					} break;
+					case '\\': {
+						processMacro(mnode, mnext, i, nodes);
+					} break;
 					case '(': continue;
 					default:
 						if (isLowercaseChar(node[0])) {	
@@ -571,7 +583,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @throw Error::NonexistentValue if source file is empty.
 		static OperationTree fromSource(String const& src, String const& fname = "unknown") {
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Tokenizer regex: ", RegexMatches::ALL_TOKENS);
-			if (src.empty())
+			if (src.empty() || src.isNullOrSpaces())
 				throw Error::NonexistentValue(
 					"Source is empty!",
 					CPP::SourceFile(fname, 0)
@@ -598,6 +610,59 @@ namespace Makai::Ex::AVM::Compiler {
 			||	c == '_'
 			||	c == '-'
 			;
+		}
+
+		void append(OperationTree const& other, usize const incline) {
+			tokens.appendBack(other.tokens);
+			for (auto& fun: other.functions.functions)
+				if (functions.functions.contains(fun.key))
+					throw Error::InvalidValue(
+						"Function '" + fun.value.name
+					+	"' (from file '" + other.fileName + "') already exists in '"
+					+	fileName + "'!",
+						CPP::SourceFile(fileName, incline)
+					);
+				else functions.functions[fun.key] = fun.value;
+			for (auto& cho: other.choices)
+				if (choices.contains(cho.key))
+					throw Error::InvalidValue(
+						"Choice '" + cho.value.name
+					+	"' (from file '" + other.fileName + "') already exists in '"
+					+	fileName + "'!",
+						CPP::SourceFile(fileName, incline)
+					);
+				else choices[cho.key] = cho.value;
+			choices.append(other.choices);
+		}
+
+		void processMacro(
+			Regex::Match const& opmatch,
+			Regex::Match const& valmatch,
+			usize& curNode,
+			List<Regex::Match> const& nodes
+		) {
+			assertHasAtLeast(nodes, curNode, 2, opmatch);
+			switch (ConstHasher::hash(valmatch.match)) {
+				case ConstHasher::hash("append"): {
+					++curNode;
+					assertHasAtLeast(nodes, curNode, 2, opmatch);
+					String const& file = nodes[curNode+1].match;
+					String const root = std::filesystem::current_path().string();
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Current path: ", root);
+					String const filePath = OS::FS::concatenate(
+						OS::FS::directoryFromPath(fileName),
+						file.front() == '\"' ? file.sliced(1, -2) : file
+					);
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("File path: '", filePath, "'");
+					if (OS::FS::exists(root + "/" + filePath) && !OS::FS::isDirectory(root + "/" + filePath))
+						append(OperationTree::fromSource(File::getText(root + "/" + filePath), filePath), curNode+1);
+					else throw Error::InvalidValue(
+						"File '" + filePath + "' does not exist!",
+						CPP::SourceFile(fileName, curNode + 1)
+					);
+					curNode += 2;
+				} break;
+			}
 		}
 
 		void addExtendedOperation(
@@ -736,7 +801,13 @@ namespace Makai::Ex::AVM::Compiler {
 								toString("Missing function arguments!"),
 								CPP::SourceFile(fileName, opi)
 							);
-						functions.functions[functions.stack.back().name] = ParameterPack::fromString(
+						if (functions.functions.contains(functions.stack.back().name))
+							throw Error::InvalidValue(
+								toString("Function '"+fpath+"' already exists!"),
+								CPP::SourceFile(fileName, opi)
+							);
+						functions.functions[functions.stack.back().name].name = fpath;
+						functions.functions[functions.stack.back().name].args = ParameterPack::fromString(
 							nodes[curNode+1],
 							fileName,
 							functions
@@ -852,7 +923,7 @@ namespace Makai::Ex::AVM::Compiler {
 						);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions);
 					auto const choice = ConstHasher::hash(getChoicePath(val));
-					choices[choice] = ppack.args;
+					choices[choice].options = ppack.args;
 					curNode += 2;
 				} break;
 				case (ConstHasher::hash("call")): {
@@ -1089,11 +1160,11 @@ namespace Makai::Ex::AVM::Compiler {
 			uint64 size		= 0;
 		};
 
-		constexpr Map<uint64, ChoiceRef> processChoices(Map<usize, StringList> const& choices) {
+		constexpr Map<uint64, ChoiceRef> processChoices(Map<usize, OperationTree::ChoiceEntry> const& choices) {
 			Map<uint64, ChoiceRef> out;
 			for (auto& [choice, options]: choices) {
-				out[choice] = {options.empty() ? 0 : data.size(), options.size() - 1};
-				data.appendBack(options);
+				out[choice] = {options.options.empty() ? 0 : data.size(), options.options.size() - 1};
+				data.appendBack(options.options);
 			}
 			return out;
 		}
@@ -1253,7 +1324,7 @@ namespace Makai::Ex::AVM::Compiler {
 							auto const name = ConstHasher::hash(token.name);
 							if (tree.functions.functions.contains(name)) {
 								auto const argCount = token.pack.args.size();
-								auto const paramCount = tree.functions.functions[name].size();
+								auto const paramCount = tree.functions.functions[name].args.size();
 								if (argCount < paramCount) throw Error::InvalidAction(
 									toString("Missing arguments in parameter pack!"),
 									toString("Necessary argument count is [", paramCount, "], but recieved [", argCount, "] instead."),
@@ -1328,7 +1399,7 @@ namespace Makai::Ex::AVM::Compiler {
 	/// @param path Path to file to compile.
 	/// @return Anima binary.
 	inline BinaryBuilder const compileFile(String const& path) {
-		return compileSource(File::getText(path), OS::FS::fileName(path));
+		return compileSource(File::getText(path), path);
 	}
 
 	/// @brief Compiles a anima source, then saves it to a file.
