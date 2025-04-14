@@ -5,11 +5,15 @@
 
 /// @brief Game extensions.
 namespace Makai::Ex::Game {
+	/// @brief Animated sprite type.
 	using Sprite = Graph::AnimatedPlaneRef;
 
+	/// @brief Sprite instance type.
 	using SpriteInstance	= Makai::Instance<Sprite>;
+	/// @brief Sprite handle type.
 	using SpriteHandle		= Makai::Handle<Sprite>;
 
+	/// @brief Three-patch (three-slice) reference.
 	struct ThreePatchRef: Graph::ShapeRef<6> {
 		ThreePatchRef(
 			BoundRange const& triangles,
