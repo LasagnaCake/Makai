@@ -1,0 +1,12 @@
+\append "util/movement.an"
+
+[] @show
+
+scene Main
+	call :Movement:move-3d-xz (3, 5) ;
+	call :Movement:move-3d-xz (5, 8) ;
+	call :Movement:move-3d-xz (3, 8) ;
+	repeat
+end
+
+perform Main

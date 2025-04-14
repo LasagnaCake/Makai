@@ -37,9 +37,11 @@ tests:
 	$(call compile, test.02.blocks)
 	$(call compile, test.03.choice)
 	$(call compile, test.04.functions)
+	$(call compile, test.05.macro-append)
 
 tests-with-compiler-debug:
 	$(call compile-debug, test.01.compilation)
 	$(call compile-debug, test.02.blocks)
 	$(call compile-debug, test.03.choice)
 	$(call compile-debug, test.04.functions)
+	$(call compile-debug, test.05.macro-append)
