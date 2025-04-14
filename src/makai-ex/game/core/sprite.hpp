@@ -13,8 +13,11 @@ namespace Makai::Ex::Game {
 	/// @brief Sprite handle type.
 	using SpriteHandle		= Makai::Handle<Sprite>;
 
-	/// @brief Three-patch (three-slice) reference.
+	/// @brief Three-patch (three-slice) shape reference.
 	struct ThreePatchRef: Graph::ShapeRef<6> {
+		/// @brief Constructs the reference.
+		/// @param triangles Triangles bound to the reference.
+		/// @param parent Parent renderable object.
 		ThreePatchRef(
 			BoundRange const& triangles,
 			Graph::ReferenceHolder& parent
@@ -24,6 +27,8 @@ namespace Makai::Ex::Game {
 			init(tail, {4, 5});
 		}
 
+		/// @brief Applies transformations to the bound triangles.
+		/// @return Handle to self.
 		Handle<Graph::IReference> transform() override {
 			if (!fixed) return this;
 			// Calculate transformed vertices
@@ -59,6 +64,8 @@ namespace Makai::Ex::Game {
 			return this;
 		}
 
+		/// @brief Resets transformations applied to the bound triangles.
+		/// @return Handle to self.
 		Handle<Graph::IReference> reset() override {
 			at(head[0]).position													= origin[0];
 			at(head[1]).position	= at(head[3]).position	= at(body[0]).position	= origin[1];
@@ -71,23 +78,36 @@ namespace Makai::Ex::Game {
 			return this;
 		}
 
+		/// @brief Three-patch shape positional origins, in left-to-right, top-to-bottom order.
 		Vector3	origin[8] = {{0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, -1}, {0, -1}, {0, -1}, {0, -1}};
 
+		/// @brief Three-patch shape size.
 		struct PatchSize {
+			/// @brief Head size.
 			float head = 0;
+			/// @brief Body size.
 			float body = 0;
+			/// @brief Tail size.
 			float tail = 0;
 		} size;
 
+		/// @brief Three-patch shape UVs, in left-to-right, top-to-bottom order.
 		struct PatchUV {
+			/// @brief Head UVs.
 			Vector2 head[4] = {0, 0, 0, 0};
+			/// @brief Body UVs.
 			Vector2 body[4] = {0, 0, 0, 0};
+			/// @brief Tail UVs.
 			Vector2 tail[4] = {0, 0, 0, 0};
 		} uv;
 
+		/// @brief Three-patch shape colors, in left-to-right, top-to-bottom order.
 		struct PatchColor {
+			/// @brief Head colors.
 			Vector4 head[4] = {1, 1, 1, 1};
+			/// @brief Body colors.
 			Vector4 body[4] = {1, 1, 1, 1};
+			/// @brief Tail colors.
 			Vector4 tail[4] = {1, 1, 1, 1};
 		} color;
 
@@ -130,12 +150,17 @@ namespace Makai::Ex::Game {
 				vertex.normal	= nmat * vertex.normal;
 		}
 
+		/// @brief Head triangle indices.
 		As<usize[6][2]> head;
+		/// @brief Body triangle indices.
 		As<usize[6][2]> body;
+		/// @brief Tail triangle indices.
 		As<usize[6][2]> tail;
 	};
 
+	/// @brief Three-patch shape instance type.
 	using ThreePatchInstance	= Instance<ThreePatchRef>;
+	/// @brief Three-patch shape handle type.
 	using ThreePatchHandle		= Handle<ThreePatchRef>;
 }
 
