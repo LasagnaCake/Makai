@@ -104,6 +104,7 @@ namespace Makai::Ex::Game::Danmaku {
 		GameArea&			playfield;
 	};
 
+	/// @brief Collider configuration.
 	struct ColliderConfig {
 		using CollisionMask = Collision::Mask::MaskType;
 		uint64 const		layer		= 0;
