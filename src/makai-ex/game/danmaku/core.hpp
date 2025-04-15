@@ -61,12 +61,18 @@ namespace Makai::Ex::Game::Danmaku {
 		bool	enabled	= false;
 	};
 
-	
+	/// @brief Game area.
 	struct GameArea {
+		/// @brief Area center.
 		Vector2 center;
+		/// @brief Area size.
 		Vector2 size;
 
+		/// @brief Returns the lowest corner in the area.
+		/// @return Lowest point in area.
 		constexpr Vector2 min() const			{return center - size;						}
+		/// @brief Returns the highest corner in the area.
+		/// @return Highest point in area.
 		constexpr Vector2 max() const			{return center + size;						}
 
 		constexpr Vector2 topLeft() const		{return center + size * Vector2(-1, +1);	}
