@@ -75,17 +75,32 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @return Highest point in area.
 		constexpr Vector2 max() const			{return center + size;						}
 
+		/// @brief Returns the game area's top left corner.
+		/// @return Top left corner.
 		constexpr Vector2 topLeft() const		{return center + size * Vector2(-1, +1);	}
+		/// @brief Returns the game area's top right corner.
+		/// @return Top right corner.
 		constexpr Vector2 topRight() const		{return center + size * Vector2(+1, +1);	}
+		/// @brief Returns the game area's bottom left corner.
+		/// @return Bottom left corner.
 		constexpr Vector2 bottomLeft() const	{return center + size * Vector2(-1, -1);	}
+		/// @brief Returns the game area's bottom right corner.
+		/// @return Bottom right corner.
 		constexpr Vector2 bottomRight() const	{return center + size * Vector2(+1, -1);	}
 
-		constexpr C2D::Box asArea() const		{return C2D::Box(center, size);				}
+		/// @brief Returns the game area as a collision shape.
+		/// @return Game area as collision shape.
+		constexpr C2D::Box asShape() const		{return C2D::Box(center, size);				}
+		/// @brief Returns the game area as an AABB.
+		/// @return Game area as AABB.
 		constexpr C2D::AABB2D aabb() const		{return {min(), max()};						}
 	};
 
+	/// @brief Bounded object configuration.
 	struct BoundedObjectConfig {
+		/// @brief Game board.
 		GameArea&			board;
+		/// @brief Game playfield.
 		GameArea&			playfield;
 	};
 
