@@ -107,10 +107,13 @@ namespace Makai::Ex::Game::Danmaku {
 	/// @brief Collider configuration.
 	struct ColliderConfig {
 		using CollisionMask = Collision::Mask::MaskType;
+		/// @brief Layer the collider resides in.
 		uint64 const		layer		= 0;
+		/// @brief Collider tags.
 		CollisionMask const	tags		= {};
 	};
 
+	/// @brief Collision layer configuration.
 	struct CollisionLayerConfig {
 		using CollisionMask = Collision::Mask::MaskType;
 		CollisionMask const	affects		= {};
