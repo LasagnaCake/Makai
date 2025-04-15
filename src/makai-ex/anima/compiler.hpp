@@ -644,6 +644,11 @@ namespace Makai::Ex::AVM::Compiler {
 			assertHasAtLeast(nodes, curNode, 2, opmatch);
 			switch (ConstHasher::hash(valmatch.match)) {
 				case ConstHasher::hash("append"): {
+					if (blocks.size())
+						throw Error::InvalidValue(
+							"Macro ![append] is only allowed in global scope!",
+							CPP::SourceFile(fileName, curNode + 1)
+						);
 					++curNode;
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
 					String const& file = nodes[curNode+1].match;
