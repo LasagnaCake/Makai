@@ -28,3 +28,7 @@ scene Movement
 		call ~move-3d (%x, 0, %z)
 	end
 end
+
+scene Fuck:You
+
+end

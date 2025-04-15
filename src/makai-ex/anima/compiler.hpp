@@ -13,7 +13,7 @@
 
 #include "bytecode.hpp"
 
-#define MKEX_ANIMAC_SOURCE(POSITION, FILENAME) (::CTL::CPP::SourceFile((FILENAME), (POSITION)))
+#define MKEX_ANIMAC_SOURCE(FILENAME, POSITION) (::CTL::CPP::SourceFile("", (POSITION), (FILENAME)))
 
 /// @brief Anima Virtual Machine.
 namespace Makai::Ex::AVM::Compiler {
@@ -217,7 +217,7 @@ namespace Makai::Ex::AVM::Compiler {
 									else
 										throw Error::InvalidValue(
 											toString("Function argument at [", out.size(), "] does not exist!"),
-											CPP::SourceFile(fname, i + pack.position)
+											MKEX_ANIMAC_SOURCE(fname, i + pack.position)
 										);
 								} else out.pushBack(param);
 								param.clear();
@@ -256,7 +256,7 @@ namespace Makai::Ex::AVM::Compiler {
 									"Names must only contain letters, numbers, '-', '~', ':' and '_'!",
 									canUseSubs ? "\n And '%' may ONLY appear at the begginnig of a name!" : ""
 								),
-								CPP::SourceFile(fname, i + pack.position)
+								MKEX_ANIMAC_SOURCE(fname, i + pack.position)
 							);
 						break;
 					}
@@ -274,14 +274,14 @@ namespace Makai::Ex::AVM::Compiler {
 						throw Error::InvalidAction(
 							toString("Invalid argument or string interpolation in parameter pack (", pack.match,")!"),
 							toString("Names must only contain letters, numbers, '-', '~', ':' and '_'!"),
-							CPP::SourceFile(fname, pack.position)
+							MKEX_ANIMAC_SOURCE(fname, pack.position)
 						);
 				}
 				if (out.size() < minSize)
 					throw Error::InvalidAction(
 						toString("Missing arguments in parameter pack!"),
 						toString("Necessary argument count is [", minSize, "], but recieved [", out.size(), "] instead."),
-						CPP::SourceFile(fname, pack.position)
+						MKEX_ANIMAC_SOURCE(fname, pack.position)
 					);
 				return out;
 			}
@@ -376,12 +376,17 @@ namespace Makai::Ex::AVM::Compiler {
 		Functions				functions;
 
 		/// @brief Source file name.
-		String const fileName;
+		String fileName;
 			
 		/// @brief Copy constructor (defaulted).
 		OperationTree(OperationTree const& other)	= default;
 		/// @brief Move constructor (defaulted).
 		OperationTree(OperationTree&& other)		= default;
+
+		/// @brief Copy assignment operator (defaulted).
+		OperationTree& operator=(OperationTree const& other)	= default;
+		/// @brief Move assignment operator (defaulted).
+		OperationTree& operator=(OperationTree&& other)			= default;
 
 		/// @brief Default constructor.
 		OperationTree() {}
@@ -394,7 +399,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @throw Error::InvalidValue on syntax errors.
 		OperationTree(List<Regex::Match> const& nodes, String const& fname = "unknown"): fileName(fname) {
 			if (nodes.empty())
-				throw Error::NonexistentValue("No nodes were given!", CPP::SourceFile(fileName, 0));
+				throw Error::NonexistentValue("No nodes were given!", MKEX_ANIMAC_SOURCE(fileName, 0));
 			for (usize i = 0; i < nodes.size(); ++i) {
 				Regex::Match mnode = nodes[i], mnext;
 				if (i+1 < nodes.size())
@@ -454,12 +459,12 @@ namespace Makai::Ex::AVM::Compiler {
 								});
 							else throw Error::InvalidValue(
 								toString("Invalid value of '", next, "' for '", node, "'!"),
-								CPP::SourceFile(fileName, mnode.position)
+								MKEX_ANIMAC_SOURCE(fileName, mnode.position)
 							);
 						} else throw Error::InvalidValue(
 							toString("Missing value for '", node, "'!"),
 							"Maybe you confused '$' with '+' or '-', perhaps?",
-							CPP::SourceFile(fileName, mnode.position)
+							MKEX_ANIMAC_SOURCE(fileName, mnode.position)
 						);
 						++i;
 					} break;
@@ -489,7 +494,7 @@ namespace Makai::Ex::AVM::Compiler {
 							throw Error::InvalidAction(
 								toString("Invalid string interpolation!"),
 								toString("Names must only contain letters, numbers, '-', '~', ':' and '_'!"),
-								CPP::SourceFile(fname, mnode.position)
+								MKEX_ANIMAC_SOURCE(fname, mnode.position)
 							);
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_LINE,
@@ -541,7 +546,7 @@ namespace Makai::Ex::AVM::Compiler {
 					case '%': {
 						throw Error::InvalidValue(
 							toString("Floating argument substitutions are not allowed!"),
-							CPP::SourceFile(fileName, mnode.position)
+							MKEX_ANIMAC_SOURCE(fileName, mnode.position)
 						);
 					} break;
 					case '\\': {
@@ -555,7 +560,7 @@ namespace Makai::Ex::AVM::Compiler {
 						} else if (!customKeyword(mnode, nodes, i))
 							throw Error::InvalidValue(
 								toString("Invalid operation '" + node + "'!"),
-								CPP::SourceFile(fileName, mnode.position)
+								MKEX_ANIMAC_SOURCE(fileName, mnode.position)
 							);
 				}
 			}
@@ -566,13 +571,13 @@ namespace Makai::Ex::AVM::Compiler {
 				throw Error::InvalidValue(
 					toString("Missing closure for one or more blocks!"),
 					toString("Blocks are: [", bnames.sliced(0, -3), "]"),
-					CPP::SourceFile(fileName, nodes.back().position)
+					MKEX_ANIMAC_SOURCE(fileName, nodes.back().position)
 				);
 			}
 			if (tokens.empty())
 				throw Error::FailedAction(
 					"Failed to parse tree!",
-					CPP::SourceFile(fileName, 0)
+					MKEX_ANIMAC_SOURCE(fileName, 0)
 				);
 		}
 
@@ -586,7 +591,7 @@ namespace Makai::Ex::AVM::Compiler {
 			if (src.empty() || src.isNullOrSpaces())
 				throw Error::NonexistentValue(
 					"Source is empty!",
-					CPP::SourceFile(fname, 0)
+					MKEX_ANIMAC_SOURCE(fname, 0)
 				);
 			auto matches = Regex::find(src, RegexMatches::ALL_TOKENS);
 			if (matches.empty())
@@ -620,7 +625,7 @@ namespace Makai::Ex::AVM::Compiler {
 						"Function '" + fun.value.name
 					+	"' (from file '" + other.fileName + "') already exists in '"
 					+	fileName + "'!",
-						CPP::SourceFile(fileName, incline)
+						MKEX_ANIMAC_SOURCE(fileName, incline)
 					);
 				else functions.functions[fun.key] = fun.value;
 			for (auto& cho: other.choices)
@@ -629,10 +634,9 @@ namespace Makai::Ex::AVM::Compiler {
 						"Choice '" + cho.value.name
 					+	"' (from file '" + other.fileName + "') already exists in '"
 					+	fileName + "'!",
-						CPP::SourceFile(fileName, incline)
+						MKEX_ANIMAC_SOURCE(fileName, incline)
 					);
 				else choices[cho.key] = cho.value;
-			choices.append(other.choices);
 		}
 
 		void processMacro(
@@ -647,7 +651,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (blocks.size())
 						throw Error::InvalidValue(
 							"Macro ![append] is only allowed in global scope!",
-							CPP::SourceFile(fileName, curNode + 1)
+							MKEX_ANIMAC_SOURCE(fileName, nodes[curNode+1].position)
 						);
 					++curNode;
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
@@ -659,11 +663,25 @@ namespace Makai::Ex::AVM::Compiler {
 						file.front() == '\"' ? file.sliced(1, -2) : file
 					);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("File path: '", filePath, "'");
-					if (OS::FS::exists(root + "/" + filePath) && !OS::FS::isDirectory(root + "/" + filePath))
-						append(OperationTree::fromSource(File::getText(root + "/" + filePath), filePath), curNode+1);
-					else throw Error::InvalidValue(
+					String const fullFilePath = root + "/" + filePath;
+					if (OS::FS::exists(fullFilePath) && !OS::FS::isDirectory(fullFilePath)) {
+						OperationTree optree;
+						try {
+							optree = OperationTree::fromSource(File::getText(fullFilePath), filePath);
+						} catch (Error::Generic const& e) {
+							throw Error::InvalidValue(
+								"Error at file '" + e.file + "', position " + toString(e.line) + "!",
+								e.what(),
+								MKEX_ANIMAC_SOURCE(
+									OS::FS::concatenate(fullFilePath.splitAtLast({'/', '\\'}).back(), e.file),
+									nodes[curNode+1].position
+								)
+							);
+						}
+						append(optree, nodes[curNode+1].position);
+					} else throw Error::InvalidValue(
 						"File '" + filePath + "' does not exist!",
-						CPP::SourceFile(fileName, curNode + 1)
+						MKEX_ANIMAC_SOURCE(fileName, nodes[curNode+1].position)
 					);
 					curNode += 2;
 				} break;
@@ -687,7 +705,7 @@ namespace Makai::Ex::AVM::Compiler {
 			)
 				throw Error::InvalidValue(
 					"Cannot apply '*' modifier on keywords!",
-					CPP::SourceFile(fileName, opi)
+					MKEX_ANIMAC_SOURCE(fileName, opi)
 				);
 			auto const ophash = ConstHasher::hash(op);
 			switch (ophash) {
@@ -706,7 +724,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing value for '", op, "'!"),
-							CPP::SourceFile(fileName, opi)
+							MKEX_ANIMAC_SOURCE(fileName, opi)
 						);
 					if (val == "select") {
 						assertHasAtLeast(nodes, curNode, 3, opmatch);
@@ -721,7 +739,7 @@ namespace Makai::Ex::AVM::Compiler {
 						if (!nodes[curNode].match.validate(isValidNameChar))
 							throw Error::InvalidValue(
 								toString("Invalid choice name '", val, "'!"),
-								CPP::SourceFile(fileName, vali)
+								MKEX_ANIMAC_SOURCE(fileName, vali)
 							);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", nodes[curNode].match);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(nodes[curNode].match));
@@ -753,7 +771,7 @@ namespace Makai::Ex::AVM::Compiler {
 						throw Error::InvalidValue(
 							toString("Cannot have this keyword as a jump target!"),
 							"Did you perhaps intend to do a ![choice] or ![select] jump?",
-							CPP::SourceFile(fileName, vali)
+							MKEX_ANIMAC_SOURCE(fileName, vali)
 						);
 					}
 					String const path = getScopePath(val);
@@ -773,17 +791,17 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val.empty())
 						throw Error::InvalidValue(
 							toString("Missing block name!"),
-							CPP::SourceFile(fileName, opi)
+							MKEX_ANIMAC_SOURCE(fileName, opi)
 						);
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
 							toString("Invalid block name '", val, "'!"),
-							CPP::SourceFile(fileName, vali)
+							MKEX_ANIMAC_SOURCE(fileName, vali)
 						);
 					if (val == "none" || val == "terminate" || val == "finish") {
 						throw Error::InvalidValue(
 							toString("Cannot have this keyword as a block name!"),
-							CPP::SourceFile(fileName, vali)
+							MKEX_ANIMAC_SOURCE(fileName, vali)
 						);
 					}
 					if (
@@ -804,12 +822,12 @@ namespace Makai::Ex::AVM::Compiler {
 						if (curNode+1 >= nodes.size() || nodes[curNode+1].match[0] != '(')
 							throw Error::InvalidValue(
 								toString("Missing function arguments!"),
-								CPP::SourceFile(fileName, opi)
+								MKEX_ANIMAC_SOURCE(fileName, opi)
 							);
 						if (functions.functions.contains(functions.stack.back().name))
 							throw Error::InvalidValue(
 								toString("Function '"+fpath+"' already exists!"),
-								CPP::SourceFile(fileName, opi)
+								MKEX_ANIMAC_SOURCE(fileName, opi)
 							);
 						functions.functions[functions.stack.back().name].name = fpath;
 						functions.functions[functions.stack.back().name].args = ParameterPack::fromString(
@@ -843,7 +861,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (blocks.empty())
 						throw Error::InvalidValue(
 							toString("Missing block for 'end' statement!"),
-							CPP::SourceFile(fileName, opi)
+							MKEX_ANIMAC_SOURCE(fileName, opi)
 						);
 					if (
 						blocks.back().back() == ':'
@@ -907,7 +925,7 @@ namespace Makai::Ex::AVM::Compiler {
 							default:
 								throw Error::InvalidValue(
 									toString("Invalid select mode '", val, "'!"),
-									CPP::SourceFile(fileName, vali)
+									MKEX_ANIMAC_SOURCE(fileName, vali)
 								);
 						}
 					}
@@ -924,7 +942,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
 							toString("Invalid choice name '", val, "'!"),
-							CPP::SourceFile(fileName, vali)
+							MKEX_ANIMAC_SOURCE(fileName, vali)
 						);
 					auto const ppack = ParameterPack::fromString(nodes[curNode+2], fileName, functions);
 					auto const choice = ConstHasher::hash(getChoicePath(val));
@@ -955,7 +973,7 @@ namespace Makai::Ex::AVM::Compiler {
 				default:
 				throw Error::InvalidValue(
 					toString("Invalid keyword '", op, "'!"),
-					CPP::SourceFile(fileName, opi)
+					MKEX_ANIMAC_SOURCE(fileName, opi)
 				);
 			}
 		}
@@ -972,14 +990,14 @@ namespace Makai::Ex::AVM::Compiler {
 				if (param == "...") {
 					throw Error::InvalidValue(
 						toString("Cannot have pack expansions in a jump list!"),
-						CPP::SourceFile(fileName, nodes[curNode+2].position)
+						MKEX_ANIMAC_SOURCE(fileName, nodes[curNode+2].position)
 					);
 				}
 				if (Regex::count(param, RegexMatches::NON_NAME_CHAR) > 0) {
 					throw Error::InvalidValue(
 						toString("Invalid option '", param,"'!"),
 						"Options must ONLY be block paths!",
-						CPP::SourceFile(fileName, nodes[curNode+2].position)
+						MKEX_ANIMAC_SOURCE(fileName, nodes[curNode+2].position)
 					);
 				}
 				if (param == "repeat") {
@@ -1094,7 +1112,7 @@ namespace Makai::Ex::AVM::Compiler {
 			if (nodes.size() <= index + size)
 				throw Error::InvalidValue(
 					toString("Too few required arguments for '", node.match, "'!"),
-					CPP::SourceFile(fileName, node.position)
+					MKEX_ANIMAC_SOURCE(fileName, node.position)
 				);
 		}
 
@@ -1103,7 +1121,7 @@ namespace Makai::Ex::AVM::Compiler {
 				throw Error::InvalidValue(
 					toString("Invalid operation '", node.match, "'!"),
 					"Name is too small!",
-					CPP::SourceFile(fileName, node.position)
+					MKEX_ANIMAC_SOURCE(fileName, node.position)
 				);
 		}
 	};
@@ -1243,7 +1261,7 @@ namespace Makai::Ex::AVM::Compiler {
 					if (out.jumps.contains(njloc))
 						throw Error::InvalidValue(
 							toString("Named block '", token.entry, "' already exists!"),
-							CPP::SourceFile(tree.fileName, 0)
+							MKEX_ANIMAC_SOURCE(tree.fileName, 0)
 						);
 					out.jumps[njloc] = out.code.size();
 				}
@@ -1334,7 +1352,7 @@ namespace Makai::Ex::AVM::Compiler {
 								if (argCount < paramCount) throw Error::InvalidAction(
 									toString("Missing arguments in parameter pack!"),
 									toString("Necessary argument count is [", paramCount, "], but recieved [", argCount, "] instead."),
-									CPP::SourceFile(tree.fileName, token.pos)
+									MKEX_ANIMAC_SOURCE(tree.fileName, token.pos)
 								);
 								out.addOperation(token.operation(!token.pack.args.empty()));
 								if (token.pack.args.size()) {
@@ -1345,7 +1363,7 @@ namespace Makai::Ex::AVM::Compiler {
 								throw Error::InvalidAction(
 									toString("Function '", token.name, "' does not exist!"),
 									toString("Did you perhaps miss a '~' or ':'?"),
-									CPP::SourceFile(tree.fileName, token.pos)
+									MKEX_ANIMAC_SOURCE(tree.fileName, token.pos)
 								);
 							}
 						} break;

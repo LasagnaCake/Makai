@@ -24,6 +24,12 @@ Example: `opNamedCallSingle` gets called with an integer `X`, and a string `"Exa
 
 It is not designed to be a replacement programming language, but rather, as an extension to the programmer — and the engine's — systems.
 
+### SAFE: Stop At First error
+
+More of a rule for the provided compiler, and its implementations (`animac.exe` and `animac.debug.exe`).
+
+Meaning: At the first compilation error found in your code, it will stop compiling and exit out.
+
 ## Behaviour
 
 - Default starting character scope is global.
@@ -58,7 +64,7 @@ Comprised of the following commands, and their recommended use case:
 | `.` | For waiting for previous commands to finish. User cannot skip this wait. | `opWaitForActions` | N/A |
 | `;` | For waiting for user input to proceed. If autoplay is enabled, waits for the auto-timer to finish. | `opWaitForUser` | N/A |
 | `*` | For modifying certain commands. | none | N/A |
-| `\<macro>` | For utilizing preprocessor macros. See ahead for further details. | none | N/A |
+| `\<macro>` | For utilizing *Compiler Directives*. See ahead for further details. | none | N/A |
 
 Also contains the following keywords:
 
@@ -83,11 +89,11 @@ Under consideration:
 | `<<type-name>\|value> <name> ` | For defining variables. Follows the same path name rules as a jump would. To utilize it in places, use `#` instead of `$`. |
 | `<operation-name> <name> <<value>\|#<name>\|$<name>> ` | For setting/modifying variables. |
 
-### macros
+### Compiler Directives
 
 | Macro | Usage | Requirements |
 |:-:|:-|:-:|
-| `\append "<source>"` | Adds the contents of another file, to your current file, at the current position. | Can only be used in the global scope (outside of named blocks & functions) |
+| `\append "<source>"` | Processes and adds the contents of another file, to your current file, at the current position. | Can only be used in the global scope (outside of named blocks & functions), If there are functions, choices or blocks which names are shared, an error is thrown. |
 
 ### On `act`s and `scene`s
 
