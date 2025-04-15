@@ -115,20 +115,32 @@ namespace Makai::Ex::Game::Danmaku {
 
 	/// @brief Collision layer configuration.
 	struct CollisionLayerConfig {
+		/// @brief Collision mask type.
 		using CollisionMask = Collision::Mask::MaskType;
+		/// @brief Which layers this layer can collide with.
 		CollisionMask const	affects		= {};
+		/// @brief Which layers can collide with this layer.
 		CollisionMask const	affectedBy	= {};
 	};
 
+	/// @brief Danmaku game object configuration.
 	struct GameObjectConfig: BoundedObjectConfig, ColliderConfig {};
 
+	/// @brief Basic danmaku game object abstract class.
 	struct AGameObject: C2D::Collider<>::IData {
+		/// @brief Coroutine promise type.
 		using PromiseType			= Makai::Co::Promise<usize, true>;
+		/// @brief Collider type.
 		using Collider				= CollisionServer::Collider;
+		/// @brief Collision area type.
 		using CollisionArea			= C2D::Area;
+		/// @brief Collision direction type.
 		using CollisionDirection	= C2D::Direction;
+		/// @brief Collision mask type.
 		using CollisionMask			= GameObjectConfig::CollisionMask;
 
+		/// @brief Constructs the object.
+		/// @param cfg Game object configuration.
 		AGameObject(GameObjectConfig const& cfg):
 			colli(cfg),
 			board(cfg.board),
@@ -138,15 +150,21 @@ namespace Makai::Ex::Game::Danmaku {
 				bindCollisionHandler(*this);
 			}
 
+		/// @brief Destructor.
 		virtual ~AGameObject() {}
 
+		/// @brief Coroutine task associated with the object.
 		PromiseType task;
 
+		/// @brief Pause state.
 		PauseState pause;
 
+		/// @brief 2D Transform.
 		Math::Transform2D trans;
 
+		/// @brief Spawn time.
 		usize spawnTime		= 5;
+		/// @brief Despawn time.
 		usize despawnTime	= 5;
 		
 		virtual AGameObject& spawn()	= 0;
