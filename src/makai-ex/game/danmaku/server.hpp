@@ -113,7 +113,7 @@ namespace Makai::Ex::Game::Danmaku {
 			onAction.clear();
 			onObjectUpdate.clear();
 //			task.clear();
-			resetCollisionState();
+			resetCollisionTags();
 			return *this;
 		}
 

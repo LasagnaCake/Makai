@@ -167,9 +167,12 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Despawn time.
 		usize despawnTime	= 5;
 		
+		/// @brief Spawns the object. Must be implemented. 
 		virtual AGameObject& spawn()	= 0;
+		/// @brief Despawns the object. Must be implemented.
 		virtual AGameObject& despawn()	= 0;
 
+		/// @brief Called every update cycle.
 		virtual void onUpdate(float) {
 			if (!active) return;
 			if (pause.enabled && pause.time > 0) {
@@ -188,30 +191,43 @@ namespace Makai::Ex::Game::Danmaku {
 				delay = task.next();
 		}
 		
+		/// @brief Returns whether the object is currently paused.
+		/// @return Whether object is currently paused.
 		bool paused() const {
 			if (pause.enabled)
 				return pause.time > 0;
 			return false;
 		}
 
+		/// @brief Called when a collision event with the object's hitbox happens. Must be implemented.
 		virtual void onCollision(Collider const& collider, CollisionDirection const direction) = 0;
 
+		/// @brief Collider configuration.
 		ColliderConfig const colli;
 
 	protected:
+		/// @brief Game board.
 		GameArea&	board;
+		/// @brief Game playfield.
 		GameArea&	playfield;
 
+		/// @brief Gets called when the object's timed pause is finished. Does not get called when pause is stopped early.
 		virtual void onUnpause() {}
 
-		void resetCollisionState() {
+		/// @brief Resets the collider's tags to their original values.
+		void resetCollisionTags() {
 			collider->tags = colli.tags;
 		}
 
+		/// @brief Coroutine task that does nothing.
+		/// @return Promise to coroutine. 
 		static PromiseType doNothing() {co_return 1;}
 
+		/// @brief Whether the object is currently active.
 		bool active = false;
 
+		/// @brief Returns a reference to the object's collider.
+		/// @return Reference to collider.
 		Reference<Collider> collision() const {
 			return collider.reference();
 		}
@@ -226,88 +242,137 @@ namespace Makai::Ex::Game::Danmaku {
 			self.collider->data = &self;
 		}
 
+		/// @brief Collider associated with the object.
 		Unique<Collider> collider;
 
+		/// @brief Time to wait until coroutine is resumed.
 		usize delay = 0;
 	};
 
+	/// @brief Sprite container interface.
 	struct ISpriteContainer {
+		/// @brief Sprite settings.
 		struct SpriteSetting {
+			/// @brief Sprite frame.
 			Vector2 frame;
+			/// @brief Sprite sheet size.
 			Vector2 sheetSize;
 		} sprite;
 
+		/// @brief Sets the sprite's rotation.
+		/// @param angle Rotation angle.
+		/// @return Reference to self.
 		virtual ISpriteContainer& setSpriteRotation(float const angle)	= 0;
+		/// @brief Returns the sprite's current rotation.
+		/// @return Current sprite rotation.
 		virtual float getSpriteRotation() const							= 0;
+		/// @brief Destructor.
 		virtual ~ISpriteContainer() {}
 	};
 
+	/// @brief Three patch shape container component.
 	struct ThreePatchContainer {
+		/// @brief Three-patch frame settings.
 		struct PatchFrame {
+			/// @brief Head frame.
 			Vector2 head = Vector2(0, 0);
+			/// @brief Body frame.
 			Vector2 body = Vector2(1, 0);
+			/// @brief Tail frame.
 			Vector2 tail = Vector2(2, 0);
 		};
 
+		/// @brief Three-patch shape settings.
 		struct PatchSetting {
+			/// @brief Frame settings.
 			PatchFrame	frame		= {};
+			/// @brief Sheet size.
 			Vector2		size		= 1;
+			/// @brief Whether sprite sheet is vertical.
 			bool		vertical	= false;
 		} patch;
 	};
 
+	/// @brief Attack object component.
 	struct AttackObject {
+		/// @brief Velocity.
 		Property<float>	velocity;
+		/// @brief Rotation.
 		Property<float>	rotation;
+		/// @brief Damage.
 		Property<float>	damage;
 
+		/// @brief Returns the current damage.
+		/// @return Current damage.
 		float getDamage() {
 			return autoDecay ? damage.value : damage.next();
 		}
 
+		/// @brief Whether damage decays automatically, or when `getDamage` is called.
 		bool autoDecay = false;
 	};
 
+	/// @brief Circular object component.
 	struct Circular {
+		/// @brief Radius.
 		Property<Vector2> radius;
 	};
 
+	/// @brief Long object component.
 	struct Long {
+		/// @brief Length.
 		Property<float>	length;
 	};
 
+	/// @brief Glowing object component.
 	struct Glowing {
+		/// @brief Glow factor.
 		Property<float> glow;
+		/// @brief Whether to glow when spawning.
 		bool			glowOnSpawn = true;
 	};
 
+	/// @brief Magnetizable object component.
 	struct Magnetizable {
+		/// @brief Magnet settings.
 		struct MagnetSetting {
+			/// @brief Whether object is currently magnetized.
 			bool			enabled		= false;
+			/// @brief Magnet target position.
 			Handle<Vector2>	target		= nullptr;
+			/// @brief Magnet strength.
 			Property<float> strength	= {};
 		} magnet;
 	};
 
+	/// @brief Damageable object interface.
 	struct IDamageable {
+		/// @brief Destructor.
 		virtual ~IDamageable() {}
 
+		/// @brief Recieves damage from a source. Must be implemented.
 		virtual IDamageable& takeDamage(
 			Reference<AGameObject> const& object,
 			Collision::Mask::MaskType const& collider
 		) = 0;
+		/// @brief Recieves damage from a source. Must be implemented.
 		virtual IDamageable& takeDamage(float const damage) = 0;
 	};
 
+	/// @brief Toggleable object interface.
 	struct IToggleable {
+		/// @brief Toggle state.
 		enum State {
 			TS_UNTOGGLED,
 			TS_TOGGLING,
 			TS_TOGGLED,
 			TS_UNTOGGLING,
 		};
+		/// @brief Toggle time.
 		usize toggleTime	= 5;
+		/// @brief Untoggle time.
 		usize untoggleTime	= 5;
+		///
 		virtual IToggleable& toggle(bool const state, bool const immediately = false) = 0;
 		bool isToggled() {return toggleState == State::TS_TOGGLED;}
 		virtual ~IToggleable() {}
