@@ -372,47 +372,77 @@ namespace Makai::Ex::Game::Danmaku {
 		usize toggleTime	= 5;
 		/// @brief Untoggle time.
 		usize untoggleTime	= 5;
-		///
+		/// @brief Sets the object's toggle state. Must be implemented.
 		virtual IToggleable& toggle(bool const state, bool const immediately = false) = 0;
+		/// @brief Returns whether the object is currently toggled.
+		/// @return Whether object is currently toggled.
 		bool isToggled() {return toggleState == State::TS_TOGGLED;}
+		/// @brief Destructor.
 		virtual ~IToggleable() {}
 	protected:
+		/// @brief Current toggle state.	
 		State toggleState = State::TS_UNTOGGLED;
 	};
 
+	/// @brief Weighted object component.
 	struct Weighted {
+		/// @brief Gravity.
 		Property<Vector2> gravity;
+		/// @brief Terminal velocity.
 		Property<Vector2> terminalVelocity;
 	};
 
+	/// @brief Dope object component.
 	struct Dope {
 		/// @brief `DOPE`: Destroy On Playfield Exit.
 		bool dope = false;
 	};
 
+	/// @brief Rotating sprite object component.
 	struct RotatesSprite {
+		/// @brief Whether to rotate sprite to match transform rotation.
 		bool rotateSprite = true;
 	};
 
+	/// @brief Healthy object component.
 	struct Healthy {
-		virtual ~Healthy() {}
+		/// @brief Destructor.
+		~Healthy() {}
 
+		/// @brief Sets the current health.
+		/// @param hp Health to set.
+		/// @return Reference to self.
 		constexpr Healthy& setHealth(float const hp)	{health = hp < maxHealth ? hp : maxHealth; return *this;	}
+		/// @brief Adds health to the current health.
+		/// @param hp Health to add.
+		/// @return Reference to self.
 		constexpr Healthy& gainHealth(float const hp)	{setHealth(hp + health); return *this;						}
+		/// @brief Removes health from the current health.
+		/// @param hp Health to remove.
+		/// @return Reference to self.
 		constexpr Healthy& loseHealth(float const hp)	{health -= hp; return *this;								}
 
+		/// @brief Sets the current health and max health.
+		/// @param hp Health to set.
+		/// @param maxHP Max health to set.
+		/// @return Reference to self.
 		constexpr Healthy& setHealth(float const hp, float maxHP) {
 			maxHealth = maxHP;
 			return setHealth(hp);
 		}
 
+		/// @brief Returns the current health.
+		/// @return Current health.
 		constexpr float getHealth() const {return health;	}
 
 	protected:
+		/// @brief Max health.
 		float maxHealth	= 100;
+		/// @brief Current health.
 		float health	= 100;
 	};
 
+	/// @brief Killable object interface.
 	struct IKillable {
 		virtual ~IKillable() {}
 
