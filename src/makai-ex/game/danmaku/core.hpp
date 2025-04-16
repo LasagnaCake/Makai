@@ -444,10 +444,13 @@ namespace Makai::Ex::Game::Danmaku {
 
 	/// @brief Killable object interface.
 	struct IKillable {
+		/// @brief Destructor.
 		virtual ~IKillable() {}
 
+		/// @brief Kills the object. Must be implemented.
 		virtual IKillable& die()	= 0;
 
+		/// @brief Called when the object dies. Must be implemented.
 		virtual void onDeath()		= 0;
 	};
 }
