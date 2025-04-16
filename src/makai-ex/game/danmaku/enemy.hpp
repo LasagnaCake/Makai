@@ -10,30 +10,39 @@
 #include "../core/controlable.hpp"
 #include "../core/sprite.hpp"
 
+/// @brief Danmaku-specific game extensions.
 namespace Makai::Ex::Game::Danmaku {
+	/// @brief Enemy configuration.
 	struct EnemyConfig: BoundedObjectConfig {
+		/// @brief Collision mask type.
 		using CollisionMask = ColliderConfig::CollisionMask;
+		/// @brief Hitbox configuration.
 		ColliderConfig const hitbox = {
 			Danmaku::Collision::Layer::ENEMY,
 			Danmaku::Collision::Tag::FOR_PLAYER_1
 		};
+		/// @brief Hitbox layer configuration.
 		CollisionLayerConfig const hitboxLayer = {
 			Danmaku::Collision::Mask::ENEMY,
 			Danmaku::Collision::Mask::PLAYER_ATTACK
 		};
+		/// @brief Collision mask configuration.
 		struct Collision {
+			/// @brief Player masks.
 			struct Player {
 				CollisionMask const bullet	= Danmaku::Collision::Mask::PLAYER_BULLET;
 				CollisionMask const laser	= Danmaku::Collision::Mask::PLAYER_LASER;
 				CollisionMask const body	= Danmaku::Collision::Mask::PLAYER_COLLISION;
 				CollisionMask const attack	= Danmaku::Collision::Mask::PLAYER_ATTACK;
 			} const player = {};
+			/// @brief Collision tags.
 			struct Tag {
 				CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 			} const tag = {};
 		} const mask = {};
 	};
 
+	/// @brief 
 	struct AEnemy: AGameObject, AUpdateable, IDamageable, IKillable, Healthy {
 		Graph::RadialBar healthBar;
 
