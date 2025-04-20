@@ -389,9 +389,9 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Constructs the bullet server.
 		/// @param cfg Bullet server configuration.
 		BulletServer(BulletServerConfig const& cfg):
-			ReferencesSpriteMesh{cfg.mainMesh},
-			ReferencesGlowSpriteMesh{cfg.glowMesh},
-			ReferencesGameBounds{cfg.board, cfg.playfield} {
+			ReferencesSpriteMesh{cfg},
+			ReferencesGlowSpriteMesh{cfg},
+			ReferencesGameBounds{cfg} {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;
@@ -479,7 +479,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		/// @brief Returns all active bullets not in a given area.
-		/// @param bound Area to get bullets out.
+		/// @param bound Area to get bullets not in.
 		/// @return Active bullets not in area.
 		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
@@ -513,7 +513,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	private:
-		/// @brief Bullets in the server.
+		/// @brief All items in the server.
 		StaticList<BulletType> all;
 	};
 }

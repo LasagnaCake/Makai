@@ -188,13 +188,8 @@ namespace Makai::Ex::Game::Danmaku {
 		AServer& server;
 	};
 
-	struct ServerMeshConfig {
-		Graph::ReferenceHolder&	mainMesh;
-	};
-
-	struct ServerGlowMeshConfig {
-		Graph::ReferenceHolder&	glowMesh;
-	};
+	using ServerMeshConfig		= ReferencesSpriteMesh;
+	using ServerGlowMeshConfig	= ReferencesGlowSpriteMesh;
 }
 
 #endif

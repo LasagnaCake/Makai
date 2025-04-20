@@ -365,10 +365,12 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Item configuration type.
 		using ConfigType	= TConfig;
 
+		/// @brief Constructs the item server.
+		/// @param cfg Item server configuration.
 		ItemServer(ItemServerConfig const& cfg):
-			ReferencesSpriteMesh{cfg.mainMesh},
-			ReferencesGlowSpriteMesh{cfg.glowMesh},
-			ReferencesGameBounds{cfg.board, cfg.playfield} {
+			ReferencesSpriteMesh{cfg},
+			ReferencesGlowSpriteMesh{cfg},
+			ReferencesGameBounds{cfg} {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;
@@ -390,6 +392,8 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 		}
 
+		/// @brief Tries to acquire an item.
+		/// @return Reference to item, or `nullptr`.
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Reference<ItemType> item = b.template as<ItemType>();
@@ -400,6 +404,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
+		/// @brief Executed every update cycle.
 		void onUpdate(float delta, Makai::App& app) override {
 			if (used.empty()) return;
 			for (auto& obj: all)
@@ -407,6 +412,7 @@ namespace Makai::Ex::Game::Danmaku {
 					obj.onUpdate(delta);
 		}
 
+		/// @brief Discards all active items, if applicable.
 		void discardAll() override {
 			for (auto b: used) {
 				ItemType& item = access<ItemType>(b);
@@ -414,6 +420,7 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 		
+		/// @brief Frees all active items.
 		void freeAll() override {
 			for (auto b: used) {
 				ItemType& item = access<ItemType>(b);
@@ -421,6 +428,7 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 
+		/// @brief Despaws all active items.
 		void despawnAll() override {
 			for (auto b: used) {
 				ItemType& item = access<ItemType>(b);
@@ -428,10 +436,15 @@ namespace Makai::Ex::Game::Danmaku {
 			};
 		}
 
+		/// @brief Returns the server's item capacity.
+		/// @return Item capacity.
 		usize capacity() override {
 			return all.size();
 		}
 
+		/// @brief Returns all active items in a given area.
+		/// @param bound Area to get items in.
+		/// @return Active items in area.
 		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
@@ -444,6 +457,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return query;
 		}
 
+		/// @brief Returns all active items not in a given area.
+		/// @param bound Area to get items not in.
+		/// @return Active items not in area.
 		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
@@ -457,10 +473,16 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	protected:
+		/// @brief Returns whether a item is in the active items list.
+		/// @param object Item to check.
+		/// @return Whether item exists in active list.
 		bool contains(HandleType const& object) override {
 			return (used.find(object) != -1);
 		}
 		
+		/// @brief Frees up an item from use.
+		/// @param object Item to free.
+		/// @return Reference to self.
 		ItemServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			ItemType& item = *(object.template as<ItemType>());
@@ -470,6 +492,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	private:
+		/// @brief All items in the server.
 		StaticList<ItemType> all;
 	};
 }

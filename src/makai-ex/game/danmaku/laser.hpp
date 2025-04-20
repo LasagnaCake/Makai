@@ -291,8 +291,8 @@ namespace Makai::Ex::Game::Danmaku {
 		using ConfigType	= TConfig;
 
 		LaserServer(LaserServerConfig const& cfg):
-			ReferencesSpriteMesh{cfg.mainMesh},
-			ReferencesGameBounds{cfg.board, cfg.playfield} {
+			ReferencesSpriteMesh{cfg},
+			ReferencesGameBounds{cfg} {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;

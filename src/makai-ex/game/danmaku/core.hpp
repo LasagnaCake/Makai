@@ -96,13 +96,16 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr C2D::AABB2D aabb() const		{return {min(), max()};						}
 	};
 
-	/// @brief Bounded object configuration.
-	struct BoundedObjectConfig {
+	/// @brief Game-bounds-referencing object component.
+	struct ReferencesGameBounds {
 		/// @brief Game board.
-		GameArea&			board;
+		GameArea&	board;
 		/// @brief Game playfield.
-		GameArea&			playfield;
+		GameArea&	playfield;
 	};
+
+	/// @brief Bounded object configuration.
+	using BoundedObjectConfig = ReferencesGameBounds;
 
 	/// @brief Collider configuration.
 	struct ColliderConfig {
@@ -530,14 +533,6 @@ namespace Makai::Ex::Game::Danmaku {
 	struct ReferencesGlowSpriteMesh	{
 		/// @brief Glow sprites container.
 		Graph::ReferenceHolder& glowMesh;
-	};
-
-	/// @brief Game-bounds-referencing object component.
-	struct ReferencesGameBounds {
-		/// @brief Game board.
-		GameArea& board;
-		/// @brief Game playfield.
-		GameArea& playfield;
 	};
 }
 
