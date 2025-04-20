@@ -5,26 +5,40 @@
 #include "server.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
+	/// @brief Item server item.
 	struct Item;
+	/// @brief Item configuration.
 	struct ItemConfig;
 
+	/// @brief Item server.
+	/// @tparam T Item type. By default, it is `Item`.
+	/// @tparam C Item configuration type. By default, it is `ItemConfig`.
 	template<class T = Item, class C = ItemConfig> struct ItemServer;
 
+	/// @brief Item configuration.
 	struct ItemConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
+		/// @brief Collision masks & tags.
 		struct Collision {
+			/// @brief Player tag.
 			CollisionMask const player = Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask;
 	};
 
+	/// @brief Item server item.
 	struct Item: AServerObject, ISpriteContainer, Weighted, Circular, Glowing, Dope, RotatesSprite, Magnetizable {
+		/// @brief Constructs the item.
+		/// @param cfg Item configuration to use.
 		Item(ItemConfig const& cfg):
 			AServerObject(cfg), mask(cfg.mask), server(cfg.server) {
 			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
+		/// @brief Destructor.
 		virtual ~Item() {}
 
+		/// @brief Resets all of the object's properties to their default values.
+		/// @return Reference to self.
 		Item& clear() override {
 			AServerObject::clear();
 			rotateSprite		= true;
@@ -48,6 +62,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Restarts the object's transformable properties to the beginning.
+		/// @return Reference to self.
 		Item& reset() override {
 			if (isFree()) return *this;
 			AServerObject::reset();
@@ -59,6 +75,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Executes every update cycle.
 		void onUpdate(float delta) override {
 			if (isFree()) return;
 			AServerObject::onUpdate(delta);
@@ -90,6 +107,10 @@ namespace Makai::Ex::Game::Danmaku {
 			playfieldCheck();
 		}
 
+		/// @brief Discards the object, if applicable.
+		/// @param immediately Whether to despawn first, or discard directly. By default, it is `false`.
+		/// @param force Whether to force discard. By default, it is `false`.
+		/// @return Reference to self.
 		Item& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
 			if (!discardable && !force) return *this;
@@ -98,6 +119,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Spawns the object.
+		/// @return Reference to self.
 		Item& spawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
@@ -109,6 +132,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Despawns the object.
+		/// @return Reference to self.
 		Item& despawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
@@ -120,10 +145,14 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Executes when a collision event happens.
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
 		}
 
+		/// @brief Sets the sprite's current rotation.
+		/// @param angle Rotation angle.
+		/// @return Reference to self.
 		Item& setSpriteRotation(float const angle) override {
 			if (isFree()) return *this;
 			if (mainSprite)
@@ -133,6 +162,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Returns the sprite's current rotation.
+		/// @return Sprite rotation.
 		float getSpriteRotation() const override {
 			if (isFree()) return 0;
 			if (mainSprite)
@@ -142,6 +173,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return 0;
 		}
 
+		/// @brief Sets the object's "free state".
+		/// @param state Whether to set the object as free or as active.
+		/// @return Reference to self.
 		Item& setFree(bool const state) override {
 			if (state) {
 				active = false;
@@ -158,28 +192,41 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 		
+		/// @brief Collision mask associated with the item.
 		ItemConfig::Collision const mask;
-
+		
+		/// @brief The item's ID.
 		usize id	= 0;
+		/// @brief The item's value.
 		usize value	= 1;
 
+		/// @brief Whether the item bounces in place, instead of falling down.
 		bool jumpy = false;
 
 	private:
+		/// @brief Server associated with the object.
 		AServer&	server;
 
+		/// @brief Internal rotation.
 		float		internalRotation = 0;
 
+		/// @brief Main sprite.
 		SpriteInstance mainSprite	= nullptr;
+		/// @brief Glow sprite.
 		SpriteInstance glowSprite	= nullptr;
 
+		/// @brief Item acceleration.
 		Vector2 acceleration = 0;
 
+		/// @brief Counter used for spawn/despawn timing purposes.
 		usize counter	= 0;
+		/// @brief Current spawn glow.
 		float spawnglow	= 0;
 
+		/// @brief Current animation color.
 		Vector4 animColor = Graph::Color::WHITE;
 
+		/// @brief Collision shape.
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
 
 		template <class, class> friend class ItemServer;
@@ -274,18 +321,22 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 	};
 
-	struct ItemCollisionConfig {
-		ColliderConfig const colli = {
+	/// @brief Item collision configuration.
+	struct ItemCollisionConfig: CollisionObjectConfig<
+		ColliderConfig{
 			Danmaku::Collision::Layer::ITEM,
 			Collision::Tag::FOR_PLAYER_1
-		};
-		CollisionLayerConfig const layer = {
+		},
+		CollisionLayerConfig{
 			Danmaku::Collision::Mask::ITEM,
 			{}
-		};
-		ItemConfig::Collision const mask = {};
+		},
+		ItemConfig::Collision{}
+	> {
+		using CollisionObjectConfig::CollisionObjectConfig;
 	};
 
+	/// @brief Item server configuration.
 	struct ItemServerConfig:
 		ServerConfig,
 		ServerMeshConfig,
@@ -293,26 +344,31 @@ namespace Makai::Ex::Game::Danmaku {
 		BoundedObjectConfig,
 		ItemCollisionConfig {};
 
+	/// @brief Item server instance configuration.
 	struct ItemServerInstanceConfig: ServerConfig, ItemCollisionConfig {};
 
+	/// @brief Item server.
+	/// @tparam T Item type. By default, it is `Item`.
+	/// @tparam C Item configuration type. By default, it is `ItemConfig`.
 	template<Type::Derived<Item> TItem, Type::Derived<ItemConfig> TConfig>
-	struct ItemServer<TItem, TConfig>: AServer, AUpdateable {
+	struct ItemServer<TItem, TConfig>:
+		AServer,
+		AUpdateable,
+		ReferencesSpriteMesh,
+		ReferencesGlowSpriteMesh,
+		ReferencesGameBounds {
+		/// @brief Collision mask type.
 		using CollisionMask = AGameObject::CollisionMask;
-
+		
+		/// @brief Item type.
 		using ItemType		= TItem;
+		/// @brief Item configuration type.
 		using ConfigType	= TConfig;
 
-		Graph::ReferenceHolder& mainMesh;
-		Graph::ReferenceHolder& glowMesh;
-
-		GameArea& board;
-		GameArea& playfield;
-
 		ItemServer(ItemServerConfig const& cfg):
-			mainMesh(cfg.mainMesh),
-			glowMesh(cfg.glowMesh),
-			board(cfg.board),
-			playfield(cfg.playfield) {
+			ReferencesSpriteMesh{cfg.mainMesh},
+			ReferencesGlowSpriteMesh{cfg.glowMesh},
+			ReferencesGameBounds{cfg.board, cfg.playfield} {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;

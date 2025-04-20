@@ -30,8 +30,8 @@ namespace Makai::Ex::Game::Danmaku {
 	
 	/// @brief Bullet server bullet.
 	struct Bullet: AServerObject, ISpriteContainer, AttackObject, Circular, Glowing, Dope, RotatesSprite {
-		/// @brief Constructs a bullet.
-		/// @param cfg Bullet configuration.
+		/// @brief Constructs the bullet.
+		/// @param cfg Bullet configuration to use.
 		Bullet(BulletConfig const& cfg):
 			AServerObject(cfg), mask(cfg.mask), server(cfg.server) {
 			collision()->shape = shape.template as<C2D::IBound2D>();
@@ -97,7 +97,7 @@ namespace Makai::Ex::Game::Danmaku {
 			loopAndBounce();
 		}
 
-		/// @brief Discards the bullet, if applicable.
+		/// @brief Discards the object, if applicable.
 		/// @param immediately Whether to despawn first, or discard directly. By default, it is `false`.
 		/// @param force Whether to force discard. By default, it is `false`.
 		/// @return Reference to self.
@@ -109,7 +109,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		/// @brief Spawns the bullet.
+		/// @brief Spawns the object.
 		/// @return Reference to self.
 		Bullet& spawn() override {
 			if (isFree()) return *this;
@@ -124,7 +124,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
-		/// @brief Despawns the bullet.
+		/// @brief Despawns the object.
 		/// @return Reference to self.
 		Bullet& despawn() override {
 			if (isFree()) return *this;
@@ -145,7 +145,7 @@ namespace Makai::Ex::Game::Danmaku {
 				discard();
 		}
 
-		/// @brief Sets the sprite's rotation.
+		/// @brief Sets the sprite's current rotation.
 		/// @param angle Rotation angle.
 		/// @return Reference to self.
 		Bullet& setSpriteRotation(float const angle) override {
@@ -168,8 +168,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return 0;
 		}
 
-		/// @brief Sets the bullet's "free state".
-		/// @param state Whether to set the bullet as free or as active.
+		/// @brief Sets the object's "free state".
+		/// @param state Whether to set the object as free or as active.
 		/// @return Reference to self.
 		Bullet& setFree(bool const state) override {
 			active = state;
@@ -194,11 +194,11 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Whether the bullet has been grazed.
 		bool grazed	= false;
 
-		/// @brief Collision mask.
+		/// @brief Collision mask associated with the bullet.
 		BulletConfig::Collision const mask;
 
 	private:
-		/// @brief Server associated with the bullet.
+		/// @brief Server associated with the object.
 		AServer&	server;
 
 		/// @brief Main sprite.
@@ -343,19 +343,18 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	/// @brief Bullet collision configuration.
-	struct BulletCollisionConfig {
-		/// @brief Collider settings.
-		ColliderConfig const colli = {
+	struct BulletCollisionConfig: CollisionObjectConfig<
+		ColliderConfig{
 			Collision::Layer::ENEMY_BULLET,
 			Collision::Tag::FOR_PLAYER_1
-		};
-		/// @brief Collision layer settings.
-		CollisionLayerConfig const layer = {
+		},
+		CollisionLayerConfig{
 			Collision::Mask::ENEMY_BULLET,
 			Collision::Mask::BULLET_ERASER
-		};
-		/// @brief Collision mask.
-		BulletConfig::Collision const mask = {};
+		},
+		BulletConfig::Collision{}
+	> {
+		using CollisionObjectConfig::CollisionObjectConfig;
 	};
 
 	/// @brief Bullet server configuration.
@@ -373,7 +372,12 @@ namespace Makai::Ex::Game::Danmaku {
 	/// @tparam TBullet Bullet type. By default, it is `Bullet`.
 	/// @tparam TConfig Bullet configuration type. By default, it is `BulletConfig`.
 	template<Type::Derived<Bullet> TBullet, Type::Derived<BulletConfig> TConfig>
-	struct BulletServer<TBullet, TConfig>: AServer, AUpdateable {
+	struct BulletServer<TBullet, TConfig>:
+		AServer,
+		AUpdateable,
+		ReferencesSpriteMesh,
+		ReferencesGlowSpriteMesh,
+		ReferencesGameBounds {
 		/// @brief Collision mask type.
 		using CollisionMask = AGameObject::CollisionMask;
 
@@ -382,23 +386,12 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Bullet configuration type.
 		using ConfigType = TConfig;
 
-		/// @brief Main sprites container.
-		Graph::ReferenceHolder& mainMesh;
-		/// @brief Glow sprites container.
-		Graph::ReferenceHolder& glowMesh;
-
-		/// @brief Game board.
-		GameArea& board;
-		/// @brief Game playfield.
-		GameArea& playfield;
-
 		/// @brief Constructs the bullet server.
 		/// @param cfg Bullet server configuration.
 		BulletServer(BulletServerConfig const& cfg):
-			mainMesh(cfg.mainMesh),
-			glowMesh(cfg.glowMesh),
-			board(cfg.board),
-			playfield(cfg.playfield) {
+			ReferencesSpriteMesh{cfg.mainMesh},
+			ReferencesGlowSpriteMesh{cfg.glowMesh},
+			ReferencesGameBounds{cfg.board, cfg.playfield} {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;

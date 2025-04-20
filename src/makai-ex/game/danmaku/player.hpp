@@ -52,13 +52,29 @@ namespace Makai::Ex::Game::Danmaku {
 		} const mask = {};
 	};
 
-	struct APlayer: Controllable, AGameObject, AUpdateable, IDamageable {
+	struct APlayer: Controllable, AGameObject, AUpdateable, IDamageable, Flaggable {
+		struct Flags {
+			constexpr static usize PF_CAN_MOVE		= 1 << 0;
+			constexpr static usize PF_CAN_FOCUS		= 1 << 1;
+			constexpr static usize PF_CAN_UNFOCUS	= 1 << 2;
+			constexpr static usize PF_CAN_SHOOT		= 1 << 3;
+			constexpr static usize PF_CAN_BOMB		= 1 << 4;
+			constexpr static usize PF_INVINCIBLE	= 1 << 5;
+			constexpr static usize DEFAULT			=
+				Flags::PF_CAN_MOVE
+			|	Flags::PF_CAN_FOCUS
+			|	Flags::PF_CAN_UNFOCUS
+			|	Flags::PF_CAN_SHOOT
+			|	Flags::PF_CAN_BOMB
+			;
+		};
+
 		struct Velocity {
 			Vector2 unfocused	= 0;
 			Vector2 focused		= 0;
 		};
 
-		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), mask(cfg.mask) {
+		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), Flaggable{Flags::DEFAULT}, mask(cfg.mask) {
 			DEBUGLN("Building player...");
 			DEBUGLN("Graze: ", Collision::Layer::asName(cfg.grazebox.layer));
 			DEBUGLN("Item: ", Collision::Layer::asName(cfg.itembox.layer));
@@ -89,24 +105,6 @@ namespace Makai::Ex::Game::Danmaku {
 			Instance<Vector2>::detach(&trans.position);
 			DEBUGLN("Player demagnetized!");
 		}
-
-		struct Flags {
-			constexpr static usize PF_CAN_MOVE		= 1 << 0;
-			constexpr static usize PF_CAN_FOCUS		= 1 << 1;
-			constexpr static usize PF_CAN_UNFOCUS	= 1 << 2;
-			constexpr static usize PF_CAN_SHOOT		= 1 << 3;
-			constexpr static usize PF_CAN_BOMB		= 1 << 4;
-			constexpr static usize PF_INVINCIBLE	= 1 << 5;
-			constexpr static usize DEFAULT			=
-				Flags::PF_CAN_MOVE
-			|	Flags::PF_CAN_FOCUS
-			|	Flags::PF_CAN_UNFOCUS
-			|	Flags::PF_CAN_SHOOT
-			|	Flags::PF_CAN_BOMB
-			;
-		};
-
-		usize flags = Flags::DEFAULT;
 
 		void onUpdate(float delta) override {
 			if (!active) return;
@@ -175,20 +173,6 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		usize getRemainingIFrames() const {return invincibleTime;}
-
-		APlayer& setFlags(usize const mask, bool const state = true) {
-			if (state)	flags |= mask;
-			else		flags &= ~mask;
-			return *this;
-		}
-
-		bool areAnyFlagsSet(usize const mask) const {
-			return flags & mask;
-		}
-
-		bool areAllFlagsSet(usize const mask) const {
-			return (flags & mask) == mask;
-		}
 
 		bool isForThisPlayer(Collider const& collider) const {
 			return collider.tags & mask.tag.player;

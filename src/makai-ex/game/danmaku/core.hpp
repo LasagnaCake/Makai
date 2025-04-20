@@ -126,7 +126,7 @@ namespace Makai::Ex::Game::Danmaku {
 	/// @brief Danmaku game object configuration.
 	struct GameObjectConfig: BoundedObjectConfig, ColliderConfig {};
 
-	/// @brief Basic danmaku game object abstract class.
+	/// @brief Basic danmaku game object abstract base.
 	struct AGameObject: C2D::Collider<>::IData {
 		/// @brief Coroutine promise type.
 		using PromiseType			= Makai::Co::Promise<usize, true>;
@@ -392,7 +392,7 @@ namespace Makai::Ex::Game::Danmaku {
 		Property<Vector2> terminalVelocity;
 	};
 
-	/// @brief Dope object component.
+	/// @brief DOPE (Destroyable On Playfield Exit) object component.
 	struct Dope {
 		/// @brief `DOPE`: Destroy On Playfield Exit.
 		bool dope = false;
@@ -452,6 +452,92 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Called when the object dies. Must be implemented.
 		virtual void onDeath()		= 0;
+	};
+
+	/// @brief Flaggable object component.
+	struct Flaggable {
+		/// @brief Flags attributed to the object.
+		usize flags = 0;
+
+		/// @brief Sets or clears a series of flags.
+		/// @param mask Flags to set.
+		/// @param state Whether to set or clear them. By default it is `true`.
+		/// @return Reference to self.
+		constexpr Flaggable& setFlags(usize const mask, bool const state = true) {
+			if (state)	flags |= mask;
+			else		flags &= ~mask;
+			return *this;
+		}
+
+		/// @brief Returns whether one or more flags in a given set of flags are set.
+		/// @param mask Flags to check.
+		/// @return Whether one or more are set.
+		constexpr bool areAnyFlagsSet(usize const mask) const {
+			return flags & mask;
+		}
+
+		/// @brief Returns whether all flags in a set of flags are set.
+		/// @param mask Flags to check.
+		/// @return Whether all are set.
+		constexpr bool areAllFlagsSet(usize const mask) const {
+			return (flags & mask) == mask;
+		}
+	};
+
+	/// @brief Collidable object configuration.
+	/// @tparam C Collider configuration default value.
+	/// @tparam L Collision layer configuration default value.
+	/// @tparam M Collision mask default value.
+	template<ColliderConfig C, CollisionLayerConfig L, auto M>
+	struct CollisionObjectConfig {
+		/// @brief Collision mask settings type.
+		using CollisionMaskConfig = decltype(M);
+		/// @brief Collider settings.
+		ColliderConfig const		colli	= C;
+		/// @brief Collision layer settings.
+		CollisionLayerConfig const	layer	= L;
+		/// @brief Collision mask settings.
+		CollisionMaskConfig const	mask	= M;
+
+		/// @brief Constructs the configuration.
+		/// @param colli Collisder settings.
+		/// @param layer Collision layer settings.
+		/// @param mask Collison mask settings.
+		constexpr CollisionObjectConfig(
+			ColliderConfig const& colli			= C,
+			CollisionLayerConfig const& layer	= L,
+			CollisionMaskConfig const& mask		= M
+		): colli(colli), layer(layer), mask(mask) {}
+
+		/// @brief Copy constructor (defaulted).
+		constexpr CollisionObjectConfig(CollisionObjectConfig const& other)	= default;
+		/// @brief Move constructor (defaulted).
+		constexpr CollisionObjectConfig(CollisionObjectConfig&& other)		= default;
+
+		/// @brief Copy assignment operator (defaulted).
+		constexpr CollisionObjectConfig& operator=(CollisionObjectConfig const& other)	= default;
+		/// @brief Move assignment operator (defaulted).
+		constexpr CollisionObjectConfig& operator=(CollisionObjectConfig&& other)		= default;
+	};
+
+	/// @brief Sprite-mesh-referencing object component.
+	struct ReferencesSpriteMesh {
+		/// @brief Main sprites container.
+		Graph::ReferenceHolder& mainMesh;
+	};
+
+	/// @brief Glow-sprite-mesh-referencing object component.
+	struct ReferencesGlowSpriteMesh	{
+		/// @brief Glow sprites container.
+		Graph::ReferenceHolder& glowMesh;
+	};
+
+	/// @brief Game-bounds-referencing object component.
+	struct ReferencesGameBounds {
+		/// @brief Game board.
+		GameArea& board;
+		/// @brief Game playfield.
+		GameArea& playfield;
 	};
 }
 

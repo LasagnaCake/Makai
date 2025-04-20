@@ -263,16 +263,18 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 	};
 
-	struct LaserCollisionConfig {
-		ColliderConfig const colli = {
+	struct LaserCollisionConfig: CollisionObjectConfig<
+		ColliderConfig{
 			Danmaku::Collision::Layer::ENEMY_LASER,
 			Danmaku::Collision::Tag::FOR_PLAYER_1
-		};
-		CollisionLayerConfig const layer = {
+		},
+		CollisionLayerConfig{
 			Danmaku::Collision::Mask::ENEMY_LASER,
 			{}
-		};
-		LaserConfig::Collision const mask = {};
+		},
+		LaserConfig::Collision{}
+	> {
+		using CollisionObjectConfig::CollisionObjectConfig;
 	};
 
 	struct LaserServerConfig:
@@ -284,19 +286,13 @@ namespace Makai::Ex::Game::Danmaku {
 	struct LaserServerInstanceConfig: ServerConfig, LaserCollisionConfig {};
 
 	template<Type::Derived<Laser> TLaser, Type::Derived<LaserConfig> TConfig>
-	struct LaserServer<TLaser, TConfig>: AServer, AUpdateable {
+	struct LaserServer<TLaser, TConfig>: AServer, AUpdateable, ReferencesSpriteMesh, ReferencesGameBounds {
 		using LaserType		= TLaser;
 		using ConfigType	= TConfig;
 
-		Graph::ReferenceHolder& mainMesh;
-
-		GameArea& board;
-		GameArea& playfield;
-
 		LaserServer(LaserServerConfig const& cfg):
-			mainMesh(cfg.mainMesh),
-			board(cfg.board),
-			playfield(cfg.playfield) {
+			ReferencesSpriteMesh{cfg.mainMesh},
+			ReferencesGameBounds{cfg.board, cfg.playfield} {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;
