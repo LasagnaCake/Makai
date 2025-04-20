@@ -26,7 +26,7 @@ namespace Makai::Ex::Game::Danmaku {
 			Danmaku::Collision::Mask::ENEMY,
 			Danmaku::Collision::Mask::PLAYER_ATTACK
 		};
-		/// @brief Collision mask configuration.
+		/// @brief Collision mask & tags.
 		struct Collision {
 			/// @brief Player masks.
 			struct Player {
@@ -87,7 +87,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Called when a collision event with the enemy's hitbox happens.
 		/// @param collider Collider colliding with the enemy's hitbox.
-		/// @param direction Direction collision happens.
+		/// @param direction Direction in which collision happens.
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			//DEBUGLN("Collision event!\nFlags: ", collider.tags);
 			if (isInvincible() || !isForThisPlayer(collider)) return;

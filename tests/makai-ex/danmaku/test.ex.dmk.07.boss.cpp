@@ -320,7 +320,7 @@ struct TestPlayer: Danmaku::APlayer {
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
 			//DEBUGLN("Shots fired!");
 			bullet->damage = {50};
-			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(-3, 2) : Makai::Vec2(-1.5, 6));
+			bullet->trans.position = trans.position + ((!focusing()) ? Makai::Vec2(-3, 2) : Makai::Vec2(-1.5, 6));
 			bullet->rotation = {-HPI};
 			bullet->velocity = Danmaku::Property<float>{
 				.interpolate	= true,
@@ -334,7 +334,7 @@ struct TestPlayer: Danmaku::APlayer {
 		if (auto bullet = server.acquire().as<Danmaku::Bullet>()) {
 			//DEBUGLN("Shots fired!");
 			bullet->damage = {50};
-			bullet->trans.position = trans.position + ((!focused()) ? Makai::Vec2(3, 2) : Makai::Vec2(1.5, 6));
+			bullet->trans.position = trans.position + ((!focusing()) ? Makai::Vec2(3, 2) : Makai::Vec2(1.5, 6));
 			bullet->rotation = {-HPI};
 			bullet->velocity = Danmaku::Property<float>{
 				.interpolate	= true,
