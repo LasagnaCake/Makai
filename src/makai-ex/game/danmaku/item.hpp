@@ -414,7 +414,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Discards all active items, if applicable.
 		void discardAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				ItemType& item = access<ItemType>(b);
 				item.discard();
 			};
@@ -422,7 +423,8 @@ namespace Makai::Ex::Game::Danmaku {
 		
 		/// @brief Frees all active items.
 		void freeAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				ItemType& item = access<ItemType>(b);
 				item.free();
 			};
@@ -430,7 +432,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Despaws all active items.
 		void despawnAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				ItemType& item = access<ItemType>(b);
 				item.despawn();
 			};

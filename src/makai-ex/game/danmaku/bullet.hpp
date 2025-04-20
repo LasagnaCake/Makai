@@ -435,7 +435,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Discards all active bullets, if applicable.
 		void discardAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				BulletType& bullet = access<BulletType>(b);
 				bullet.discard();
 			};
@@ -443,7 +444,8 @@ namespace Makai::Ex::Game::Danmaku {
 		
 		/// @brief Frees all active bullets.
 		void freeAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				BulletType& bullet = access<BulletType>(b);
 				bullet.free();
 			};
@@ -451,7 +453,8 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Despaws all active bullets.
 		void despawnAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				BulletType& bullet = access<BulletType>(b);
 				bullet.despawn();
 			};

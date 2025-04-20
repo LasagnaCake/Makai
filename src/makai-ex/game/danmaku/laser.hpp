@@ -5,26 +5,38 @@
 #include "server.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
+	/// @brief Laser server laser.
 	struct Laser;
+	/// @brief Laser configuration.
 	struct LaserConfig;
 
+	/// @brief Laser server.
+	/// @tparam T Laser type. By default, it is `Laser`.
+	/// @tparam C Laser configuration type. By default, it is `LaserConfig`.
 	template<class T = Laser, class C = LaserConfig> struct LaserServer;
 
+	/// @brief Laser configuration.
 	struct LaserConfig: ServerObjectConfig, GameObjectConfig {
 		using GameObjectConfig::CollisionMask;
 		struct Collision {
 			CollisionMask const player = Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask;
 	};
-
+	
+	/// @brief Laser server laser.
 	struct Laser: AServerObject, ThreePatchContainer, AttackObject, Circular, Long, IToggleable {
+		/// @brief Constructs the laser.
+		/// @param cfg Laser configuration to use.
 		Laser(LaserConfig const& cfg):
 			AServerObject(cfg), mask(cfg.mask), server(cfg.server) {
 			collision()->shape = shape.template as<C2D::IBound2D>();
 		}
 
+		/// @brief Destructor.
 		virtual ~Laser() {}
 
+		/// @brief Resets all of the object's properties to their default values.
+		/// @return Reference to self.
 		Laser& clear() override {
 			AServerObject::clear();
 			radius			= {1};
@@ -47,6 +59,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Restarts the object's transformable properties to the beginning.
+		/// @return Reference to self.
 		Laser& reset() override {
 			if (isFree()) return *this;
 			AServerObject::reset();
@@ -58,6 +72,10 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Sets the object's toggle state.
+		/// @param state Wether to toggle or untoggle.
+		/// @param immediately Whether to toggle immediately. By default, it is false.
+		/// @return Reference to self.
 		Laser& toggle(bool const state, bool const immediately = false) override {
 			if (isFree()) return *this;
 			toggleCounter = 0;
@@ -84,6 +102,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Executes every update cycle.
 		void onUpdate(float delta) override {
 			sprite->visible = !isFree();
 			if (isFree()) return;
@@ -102,10 +121,15 @@ namespace Makai::Ex::Game::Danmaku {
 			animateToggle();
 		}
 
+		/// @brief Executes when a collision event happens.
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
 		}
 		
+		/// @brief Discards the object, if applicable.
+		/// @param immediately Whether to despawn first, or discard directly. By default, it is `false`.
+		/// @param force Whether to force discard. By default, it is `false`.
+		/// @return Reference to self.
 		Laser& discard(bool const immediately = false, bool const force = false) override {
 			if (isFree()) return *this;
 			if (!discardable && !force) return *this;
@@ -114,6 +138,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Spawns the object.
+		/// @return Reference to self.
 		Laser& spawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
@@ -124,6 +150,8 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Despawns the object.
+		/// @return Reference to self.
 		Laser& despawn() override {
 			if (isFree()) return *this;
 			setCollisionState(false);
@@ -146,24 +174,34 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Whether to fake being toggled when untoggled.
 		bool fakeOut = false;
-
+		
+		/// @brief Collision mask associated with the laser.
 		LaserConfig::Collision const mask;
 
 	private:
+		/// @brief Server associated with the object.
 		AServer&	server;
 
+		/// @brief Counter used for togge/untoggle timing purposes.
 		usize toggleCounter	= 0;
+		/// @brief Counter used for spawn/despawn timing purposes.
 		usize counter		= 0;
-
+		
+		/// @brief Next toggle state.
 		IToggleable::State nextState = IToggleable::State::TS_TOGGLED;
 
+		/// @brief Laser sprite.
 		ThreePatchInstance sprite	= nullptr;
 
+		/// @brief Current animation color.
 		Vector4 animColor = Graph::Color::WHITE;
 
+		/// @brief Current toggle color factor.
 		float toggleColor = 1.0f;
 
+		/// @brief Collision shape.
 		Instance<C2D::Capsule> shape = new C2D::Capsule(0);
 
 		template <class, class> friend class LaserServer;
@@ -262,7 +300,8 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 		}
 	};
-
+	
+	/// @brief Laser collision configuration.
 	struct LaserCollisionConfig: CollisionObjectConfig<
 		ColliderConfig{
 			Danmaku::Collision::Layer::ENEMY_LASER,
@@ -277,19 +316,28 @@ namespace Makai::Ex::Game::Danmaku {
 		using CollisionObjectConfig::CollisionObjectConfig;
 	};
 
+	/// @brief Laser server configuration.
 	struct LaserServerConfig:
 		ServerConfig,
 		ServerMeshConfig,
 		BoundedObjectConfig,
 		LaserCollisionConfig {};
 
+	/// @brief Laser server instance configuration.
 	struct LaserServerInstanceConfig: ServerConfig, LaserCollisionConfig {};
 
+	/// @brief Laser server.
+	/// @tparam T Laser type. By default, it is `Laser`.
+	/// @tparam C Laser configuration type. By default, it is `LaserConfig`.
 	template<Type::Derived<Laser> TLaser, Type::Derived<LaserConfig> TConfig>
 	struct LaserServer<TLaser, TConfig>: AServer, AUpdateable, ReferencesSpriteMesh, ReferencesGameBounds {
+		/// @brief Laser type.
 		using LaserType		= TLaser;
+		/// @brief Laser configuration type.
 		using ConfigType	= TConfig;
 
+		/// @brief Constructs the laser server.
+		/// @param cfg Laser server configuration.
 		LaserServer(LaserServerConfig const& cfg):
 			ReferencesSpriteMesh{cfg},
 			ReferencesGameBounds{cfg} {
@@ -310,6 +358,8 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 		}
 
+		/// @brief Tries to acquire a laser.
+		/// @return Reference to laser, or `nullptr`.
 		HandleType acquire() override {
 			if (auto b = AServer::acquire()) {
 				Reference<LaserType> laser = b.template as<LaserType>();
@@ -320,6 +370,7 @@ namespace Makai::Ex::Game::Danmaku {
 			return nullptr;
 		}
 
+		/// @brief Executed every update cycle.
 		void onUpdate(float delta, Makai::App& app) override {
 			if (used.empty()) return;
 			for (auto& obj: all)
@@ -327,31 +378,42 @@ namespace Makai::Ex::Game::Danmaku {
 					obj.onUpdate(delta);
 		}
 
+		/// @brief Discards all active items, if applicable.
 		void discardAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				LaserType& laser = access<LaserType>(b);
 				laser.discard();
 			};
 		}
 		
+		/// @brief Frees all active lasers.
 		void freeAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				LaserType& laser = access<LaserType>(b);
 				laser.free();
 			};
 		}
 
+		/// @brief Despaws all active lasers.
 		void despawnAll() override {
-			for (auto b: used) {
+			auto const uc = used;
+			for (auto b: uc) {
 				LaserType& laser = access<LaserType>(b);
 				laser.despawn();
 			};
 		}
 
+		/// @brief Returns the server's laser capacity.
+		/// @return Laser capacity.
 		usize capacity() override {
 			return all.size();
 		}
 
+		/// @brief Returns all active lasers in a given area.
+		/// @param bound Area to get lasers in.
+		/// @return Active lasers in area.
 		ObjectQueryType getInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
@@ -364,6 +426,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return query;
 		}
 
+		/// @brief Returns all active lasers not in a given area.
+		/// @param bound Area to get lasers not in.
+		/// @return Active lasers not in area.
 		ObjectQueryType getNotInArea(C2D::IBound2D const& bound) override {
 			ObjectQueryType query;
 			for (auto b: used) {
@@ -377,10 +442,16 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	protected:
+		/// @brief Returns whether a laser is in the active lasers list.
+		/// @param object Laser to check.
+		/// @return Whether item exists in active list.
 		bool contains(HandleType const& object) override {
 			return (used.find(object) != -1);
 		}
 		
+		/// @brief Frees up an laser from use.
+		/// @param object Laser to free.
+		/// @return Reference to self.
 		LaserServer& release(HandleType const& object) override {
 			if (used.find(object) == -1) return *this;
 			LaserType& laser = *object.template as<LaserType>();
@@ -390,6 +461,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 	private:
+		/// @brief All lasers in the server.
 		StaticList<Laser> all;
 	};
 }
