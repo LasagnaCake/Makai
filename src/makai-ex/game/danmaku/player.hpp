@@ -283,10 +283,14 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Gets called when the player shoots. Must be implemented.
 		virtual void onShot()											= 0;
 
+		/// @brief Returns a refeference to the player's grazebox.
+		/// @return Reference to grazebox.
 		Reference<Collider> getGrazebox() {
 			return grazebox.reference();
 		}
 
+		/// @brief Returns a refeference to the player's itembox.
+		/// @return Reference to itembox.
 		Reference<Collider> getItembox() {
 			return itembox.reference();
 		}
@@ -310,11 +314,16 @@ namespace Makai::Ex::Game::Danmaku {
 			self.itembox->data = &self;
 		}
 
+		/// @brief Remaining time without shooting.
 		usize shotTime			= 0;
+		/// @brief Remaining time without bombing.
 		usize bombTime			= 0;
+		/// @brief Remaining invincible time.
 		usize invincibleTime	= 0;
 
+		/// @brief Grazebox.
 		Unique<Collider> grazebox;
+		/// @brief Itembox.
 		Unique<Collider> itembox;
 
 		void pollInputs() {
@@ -338,10 +347,13 @@ namespace Makai::Ex::Game::Danmaku {
 			if (invincibleTime > 0)	--invincibleTime;
 		}
 
+		/// @brief Calculated speed.
 		Vector2 speed = 0;
 
+		/// @brief Calculated direction.
 		Vector2 direction;
 
+		/// @brief Whether the shift key is pressed.
 		bool isFocused = false;
 	};
 }
