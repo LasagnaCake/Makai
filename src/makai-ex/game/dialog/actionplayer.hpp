@@ -7,7 +7,7 @@
 
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
-	/// @brief Action-based player.
+	/// @brief Action-based player abstract base.
 	struct AActionPlayer: AUpdateable, IPlayable, Controllable {
 		/// @brief Program to perform.
 		using Program = Co::Generator<usize>;

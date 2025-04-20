@@ -50,7 +50,7 @@ using BaseBulletServer = Danmaku::BulletServer<>;
 struct TestBulletServer: DoubleMeshHolder, BaseBulletServer {
 	TestBulletServer(usize const layer, Danmaku::BulletServerInstanceConfig const& cfg):
 		DoubleMeshHolder(layer),
-		BaseBulletServer({cfg.size, m, gm, ::board, ::playfield, cfg}) {}
+		BaseBulletServer({cfg.capacity, m, gm, ::board, ::playfield, cfg}) {}
 };
 
 constexpr Danmaku::BulletServerInstanceConfig ENEMY_BULLET_SERVER_CFG = {
@@ -74,7 +74,7 @@ using BaseLaserServer = Danmaku::LaserServer<>;
 struct TestLaserServer: GlowMeshHolder, BaseLaserServer {
 	TestLaserServer(usize const layer, Danmaku::LaserServerInstanceConfig const& cfg):
 		GlowMeshHolder(layer),
-		BaseLaserServer({cfg.size, gm, ::board, ::playfield, cfg}) {}
+		BaseLaserServer({cfg.capacity, gm, ::board, ::playfield, cfg}) {}
 };
 
 constexpr Danmaku::LaserServerInstanceConfig ENEMY_LASER_SERVER_CFG = {

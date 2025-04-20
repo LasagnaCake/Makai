@@ -395,11 +395,11 @@ namespace Makai::Ex::Game::Danmaku {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;
-			all.resize(cfg.size);
-			free.resize(cfg.size);
-			used.resize(cfg.size);
-			for (usize i = 0; i < cfg.size; ++i) {
-				float const zoff = i / static_cast<float>(cfg.size);
+			all.resize(cfg.capacity);
+			free.resize(cfg.capacity);
+			used.resize(cfg.capacity);
+			for (usize i = 0; i < cfg.capacity; ++i) {
+				float const zoff = i / static_cast<float>(cfg.capacity);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
 				all.back().mainSprite->local.position.z = -zoff;

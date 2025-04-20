@@ -161,6 +161,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 
+		/// @brief Sets the object's "free state".
+		/// @param state Whether to set the object as free or as active.
+		/// @return Reference to self.
 		Laser& setFree(bool const state) override {
 			active = state;
 			sprite->visible = !state;
@@ -344,11 +347,11 @@ namespace Makai::Ex::Game::Danmaku {
 			auto& cl		= CollisionServer::layers[cfg.colli.layer];
 			cl.affects		= cfg.layer.affects;
 			cl.affectedBy	= cfg.layer.affectedBy;
-			all.resize(cfg.size);
-			free.resize(cfg.size);
-			used.resize(cfg.size);
-			for (usize i = 0; i < cfg.size; ++i) {
-				float const zoff = i / static_cast<float>(cfg.size);
+			all.resize(cfg.capacity);
+			free.resize(cfg.capacity);
+			used.resize(cfg.capacity);
+			for (usize i = 0; i < cfg.capacity; ++i) {
+				float const zoff = i / static_cast<float>(cfg.capacity);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
 				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
 				all.back().sprite->local.position.z = -zoff;

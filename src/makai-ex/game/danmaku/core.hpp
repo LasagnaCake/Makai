@@ -298,11 +298,11 @@ namespace Makai::Ex::Game::Danmaku {
 
 	/// @brief Attack object component.
 	struct AttackObject {
-		/// @brief Velocity.
+		/// @brief Velocity property.
 		Property<float>	velocity;
-		/// @brief Rotation.
+		/// @brief Rotation property.
 		Property<float>	rotation;
-		/// @brief Damage.
+		/// @brief Damage property.
 		Property<float>	damage;
 
 		/// @brief Returns the current damage.
@@ -323,13 +323,13 @@ namespace Makai::Ex::Game::Danmaku {
 
 	/// @brief Long object component.
 	struct Long {
-		/// @brief Length.
+		/// @brief Length property.
 		Property<float>	length;
 	};
 
 	/// @brief Glowing object component.
 	struct Glowing {
-		/// @brief Glow factor.
+		/// @brief Glow factor property.
 		Property<float> glow;
 		/// @brief Whether to glow when spawning.
 		bool			glowOnSpawn = true;
@@ -343,7 +343,7 @@ namespace Makai::Ex::Game::Danmaku {
 			bool			enabled		= false;
 			/// @brief Magnet target position.
 			Handle<Vector2>	target		= nullptr;
-			/// @brief Magnet strength.
+			/// @brief Magnet strength property.
 			Property<float> strength	= {};
 		} magnet;
 	};
@@ -389,9 +389,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 	/// @brief Weighted object component.
 	struct Weighted {
-		/// @brief Gravity.
+		/// @brief Gravity property.
 		Property<Vector2> gravity;
-		/// @brief Terminal velocity.
+		/// @brief Terminal velocity property.
 		Property<Vector2> terminalVelocity;
 	};
 

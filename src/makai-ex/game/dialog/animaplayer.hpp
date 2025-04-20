@@ -8,7 +8,7 @@
 
 /// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
-	/// @brief Anima-based dialog player.
+	/// @brief Anima-based dialog player abstract base.
 	struct AAnimaPlayer: AVM::SimpleEngine, AUpdateable, Controllable {
 		/// @brief Constructs the dialog player.
 		/// @param scene Scene to use.
