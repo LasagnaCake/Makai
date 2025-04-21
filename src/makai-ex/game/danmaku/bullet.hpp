@@ -172,9 +172,9 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @param state Whether to set the object as free or as active.
 		/// @return Reference to self.
 		Bullet& setFree(bool const state) override {
+			setCollisionState(false);
 			active = state;
 			if (state) {
-				setCollisionState(false);
 				objectState = State::SOS_FREE;
 				hideSprites();
 				clear();

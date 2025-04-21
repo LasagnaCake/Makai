@@ -177,6 +177,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @param state Whether to set the object as free or as active.
 		/// @return Reference to self.
 		Item& setFree(bool const state) override {
+			setCollisionState(false);
 			if (state) {
 				active = false;
 				hideSprites();
@@ -184,7 +185,6 @@ namespace Makai::Ex::Game::Danmaku {
 				clear();
 				release(this, server);
 			} else {
-				setCollisionState(false);
 				active = true;
 				showSprites();
 				objectState = State::SOS_ACTIVE;

@@ -165,6 +165,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @param state Whether to set the object as free or as active.
 		/// @return Reference to self.
 		Laser& setFree(bool const state) override {
+			setCollisionState(false);
 			active = state;
 			sprite->visible = !state;
 			if (state) {
