@@ -186,9 +186,9 @@ namespace Makai::Ex::Game::Danmaku {
 			return *this;
 		}
 		
-		/// @brief Whether the bullet should bounce when touching the edge of the board.
+		/// @brief Whether the bullet should bounce when touching the edge of the board. Only bounces once.
 		bool bouncy	= false;
-		/// @brief Whether the bullet should wrap around when leaving one edge of the board.
+		/// @brief Whether the bullet should wrap around when leaving one edge of the board. Only loops once.
 		bool loopy	= false;
 
 		/// @brief Whether the bullet has been grazed.
