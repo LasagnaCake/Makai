@@ -48,24 +48,24 @@ struct Registry {
 
 		/// @brief Returns whether the underlying object exists.
 		/// @return Whether the underlying object exists.
-		constexpr bool exists() const		{return BaseType::exists() && (*this).exists();	}
+		constexpr bool exists() const		{return BaseType::exists() && BaseType::value().exists();	}
 		/// @brief Returns whether the underlying object exists.
 		/// @return Whether the underlying object exists.
-		constexpr operator bool() const		{return exists();								}
+		constexpr operator bool() const		{return exists();											}
 		/// @brief Returns whether the underlying object does not exist.
 		/// @return Whether the underlying object does not exist.
-		constexpr bool operator!() const	{return	!exists();								}
+		constexpr bool operator!() const	{return	!exists();											}
 
 		/// @brief Returns a raw pointer to the underlying object.
 		/// @return Raw pointer to underlying object.
 		constexpr ref<DataType> raw() const {
-			if (exists()) return (*this).raw();
+			if (exists()) return BaseType::value().raw();
 			return nullptr;
 		}
 		/// @brief Returns a `Reference` to the underlying object.
 		/// @return `Reference` to underlying object.
 		constexpr Reference<DataType> reference() const {
-			if (exists()) return (*this).reference();
+			if (exists()) return BaseType::value().reference();
 			return nullptr;
 		}
 
@@ -73,40 +73,44 @@ struct Registry {
 		/// @tparam TNew New object type.
 		/// @return Reference to new object type.
 		template<class TNew>
-		constexpr Reference<TNew> as() const			{return (*this).reference().template as<TNew>();			}
+		constexpr Reference<TNew> as() const			{return reference().template as<TNew>();			}
 		/// @brief Dynamically casts the object to a new type.
 		/// @tparam TNew New object type.
 		/// @return Reference to new object type.
 		template<class TNew>
-		constexpr Reference<TNew> polymorph() const		{return (*this).reference().template polymorph<TNew>();		}
+		constexpr Reference<TNew> polymorph() const		{return reference().template polymorph<TNew>();		}
 		/// @brief Reinterprets the object as an object type with different constness and volatileness.
 		/// @tparam TNew New object type.
 		/// @return Reference to new object type.
 		template<class TNew>
-		constexpr Reference<TNew> mutate() const		{return (*this).reference().template mutate<TNew>();		}
+		constexpr Reference<TNew> mutate() const		{return reference().template mutate<TNew>();		}
 		/// @brief Reinterprets the object as a different object type.
 		/// @tparam TNew New object type.
 		/// @return Reference to new object type.
 		template<class TNew>
-		constexpr Reference<TNew> reinterpret() const	{return (*this).reference().template reinterpret<TNew>();	}
+		constexpr Reference<TNew> reinterpret() const	{return reference().template reinterpret<TNew>();	}
 
 		/// @brief Pointer member access operator.
 		/// @return Pointer to underlying object.
 		/// @warning Will throw `Error::NullPointer` if object does not exist!
-		constexpr PointerType operator->()				{return (*this).operator->();		}
+		constexpr PointerType operator->()				{return BaseType::value().operator->();		}
 		/// @brief Pointer member access operator.
 		/// @return Pointer to underlying object.
 		/// @warning Will throw `Error::NullPointer` if object does not exist!
-		constexpr PointerType const operator->() const	{return (*this).operator->();		}
+		constexpr PointerType const operator->() const	{return BaseType::value().operator->();		}
 
 		/// @brief Returns the value of the underlying object.
 		/// @return Reference to underlying object.
 		/// @warning Will throw `Error::NullPointer` if object does not exist!
-		constexpr DataType& value() const 				{return BaseType::value().value();	}
+		constexpr DataType& value() const 				{return BaseType::value().value();			}
 		/// @brief Dereference operator.
 		/// @return Reference to underlying object.
 		/// @warning Will throw `Error::NullPointer` if object does not exist!
-		constexpr ReferenceType operator*() const		{return value();					}
+		constexpr ReferenceType operator*() const		{return value();							}
+		
+		/// @brief Returns a weak object container.
+		/// @return Weak object container.
+		constexpr Container<Handle>	asWeak() const		{return	BaseType::asWeak();					}
 	};
 
 	/// @brief "Instance-to-entry" type.
