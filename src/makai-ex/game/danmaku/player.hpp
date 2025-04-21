@@ -95,7 +95,7 @@ namespace Makai::Ex::Game::Danmaku {
 			/// @brief Unfocused velocity.
 			Vector2 unfocused	= 0;
 			/// @brief Focused velocity.
-			Vector2 focusing		= 0;
+			Vector2 focused		= 0;
 		};
 
 		/// @brief Constructs the player.
@@ -334,7 +334,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		void doMovement(float const delta) {
 			if (!areAnyFlagsSet(Flags::PF_CAN_MOVE)) return;
-			Vector2 const& vel = focusing() ? velocity.focusing : velocity.unfocused;
+			Vector2 const& vel = focusing() ? velocity.focused : velocity.unfocused;
 			if (friction.min() < 1) {
 				speed = Math::lerp<Vector2>(speed, vel, friction);
 				trans.position += direction * speed * delta;
