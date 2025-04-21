@@ -354,7 +354,8 @@ struct TestPlayer: Danmaku::APlayer {
 	virtual TestPlayer& spawn() override													{return *this;	}
 	virtual TestPlayer& despawn() override													{return *this;	}
 
-	virtual TestPlayer& takeDamage(Makai::Reference<Danmaku::AGameObject> const&, CollisionMask const&) override {
+	virtual TestPlayer& takeDamage(Makai::Reference<Danmaku::AGameObject> const& obj, CollisionMask const&) override {
+		if (obj.as<Danmaku::AServerObject>()->isFree()) return *this;
 		makeInvincible(120);
 		trans.position = board.center * Makai::Vector2(1, 1.5);
 		return *this;	
