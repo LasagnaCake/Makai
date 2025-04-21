@@ -364,7 +364,7 @@ struct TestPlayer: Danmaku::APlayer {
 	virtual TestPlayer& takeDamage(float const damage) override {
 		makeInvincible(120);
 		trans.position = board.center * Makai::Vector2(1, 1.5);
-		return *this;	
+		return *this;
 	}
 
 	usize shot = 5;
