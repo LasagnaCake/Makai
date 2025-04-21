@@ -3,6 +3,7 @@
 
 #include <makai/makai.hpp>
 
+/// @brief Game extensions.
 namespace Makai::Ex::Game {
 	/// @brief Dual (2D & 3D) camera.
 	struct DualCamera {
