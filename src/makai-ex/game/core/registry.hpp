@@ -17,6 +17,103 @@ struct Registry {
 	/// @brief Registry entry.
 	using Entry = Unique<Member>;
 
+	/// @brief Object container type.
+	/// @tparam TShared<class> Shared pointer type.
+	template<template <class> class TShared>
+	struct Container: private TShared<Entry> {
+		/// @brief Base class type.
+		using BaseType = TShared<Entry>;
+		static_assert(Type::OneOf<BaseType, Instance<Entry>, Handle<Entry>>, "T must be a shared pointer type!");
+		/// @brief Data type.
+		using DataType		= typename Entry::DataType;
+		/// @brief Reference type.
+		using ReferenceType	= typename Entry::ReferenceType;
+		/// @brief Pointer type.
+		using PointerType	= typename Entry::PointerType;
+
+		using BaseType::BaseType;
+		using BaseType::operator=;
+		using BaseType::operator==;
+		using BaseType::operator<=>;
+		
+		/// @brief Copy constructor (defaulted).
+		constexpr Container(Container const& other)	= default;
+		/// @brief Move constructor (defaulted).
+		constexpr Container(Container&& other)		= default;
+
+		/// @brief Copy assignment operator (defaulted).
+		constexpr Container& operator=(Container const& other)	= default;
+		/// @brief Move assignment operator (defaulted).
+		constexpr Container& operator=(Container&& other)		= default;
+
+		/// @brief Returns whether the underlying object exists.
+		/// @return Whether the underlying object exists.
+		constexpr bool exists() const		{return BaseType::exists() && (*this).exists();	}
+		/// @brief Returns whether the underlying object exists.
+		/// @return Whether the underlying object exists.
+		constexpr operator bool() const		{return exists();								}
+		/// @brief Returns whether the underlying object does not exist.
+		/// @return Whether the underlying object does not exist.
+		constexpr bool operator!() const	{return	!exists();								}
+
+		/// @brief Returns a raw pointer to the underlying object.
+		/// @return Raw pointer to underlying object.
+		constexpr ref<DataType> raw() const {
+			if (exists()) return (*this).raw();
+			return nullptr;
+		}
+		/// @brief Returns a `Reference` to the underlying object.
+		/// @return `Reference` to underlying object.
+		constexpr Reference<DataType> reference() const {
+			if (exists()) return (*this).reference();
+			return nullptr;
+		}
+
+		/// @brief Statically casts the object to a new type.
+		/// @tparam TNew New object type.
+		/// @return Reference to new object type.
+		template<class TNew>
+		constexpr Reference<TNew> as() const			{return (*this).reference().template as<TNew>();			}
+		/// @brief Dynamically casts the object to a new type.
+		/// @tparam TNew New object type.
+		/// @return Reference to new object type.
+		template<class TNew>
+		constexpr Reference<TNew> polymorph() const		{return (*this).reference().template polymorph<TNew>();		}
+		/// @brief Reinterprets the object as an object type with different constness and volatileness.
+		/// @tparam TNew New object type.
+		/// @return Reference to new object type.
+		template<class TNew>
+		constexpr Reference<TNew> mutate() const		{return (*this).reference().template mutate<TNew>();		}
+		/// @brief Reinterprets the object as a different object type.
+		/// @tparam TNew New object type.
+		/// @return Reference to new object type.
+		template<class TNew>
+		constexpr Reference<TNew> reinterpret() const	{return (*this).reference().template reinterpret<TNew>();	}
+
+		/// @brief Pointer member access operator.
+		/// @return Pointer to underlying object.
+		/// @warning Will throw `Error::NullPointer` if object does not exist!
+		constexpr PointerType operator->()				{return (*this).operator->();		}
+		/// @brief Pointer member access operator.
+		/// @return Pointer to underlying object.
+		/// @warning Will throw `Error::NullPointer` if object does not exist!
+		constexpr PointerType const operator->() const	{return (*this).operator->();		}
+
+		/// @brief Returns the value of the underlying object.
+		/// @return Reference to underlying object.
+		/// @warning Will throw `Error::NullPointer` if object does not exist!
+		constexpr DataType& value() const 				{return BaseType::value().value();	}
+		/// @brief Dereference operator.
+		/// @return Reference to underlying object.
+		/// @warning Will throw `Error::NullPointer` if object does not exist!
+		constexpr ReferenceType operator*() const		{return value();					}
+	};
+
+	/// @brief "Instance-to-entry" type.
+	using Object		= Container<Instance>;
+	/// @brief "Handle-to-entry" type.
+	using ObjectHandle	= Container<Handle>;
+
 	/// @brief Registry member. All classes that are part of this registry must derive from this one.
 	/// @warning
 	///		Normal instantiation is STRICTLY forbidden for this class!
@@ -43,7 +140,7 @@ struct Registry {
 		/// @param ...args Constructor arguments.
 		/// @return Reference to member entry.
 		template<Type::Subclass<Member> TSub, class... Args>
-		[[nodiscard]] static constexpr Instance<Entry> create(Args&&... args) {
+		[[nodiscard]] static constexpr Object create(Args&&... args) {
 			return (new TSub(forward<Args>(args)...))->self.raw();
 		}
 
@@ -92,11 +189,6 @@ struct Registry {
 
 	/// @brief Search predicate type.
 	using FindPredicate = bool(Member const&);
-
-	/// @brief Object entry type.
-	using Object		= Instance<Entry>;
-	/// @brief "Handle-to-object-entry" type.
-	using ObjectHandle	= Handle<Entry>;
 
 	/// @brief Query result type.
 	using QueryResult = List<ObjectHandle>;

@@ -269,12 +269,12 @@ public:
 	constexpr Shared<TNew, WEAK>		morph() const		{return	dynamic_cast<TNew*>(raw());			}
 	/// @brief Reinterprets the shared pointer as a different pointer type.
 	/// @tparam TNew New object type.
-	/// @return Reference to new object type.
+	/// @return Shared pointer to new object type.
 	template<Type::Container::Pointable TNew>
 	constexpr Shared<TNew, WEAK>		reinterpret() const	{return	reinterpret_cast<TNew*>(raw());		}
 	/// @brief Reinterprets the shared pointer as a pointer type with different constness and volatileness.
 	/// @tparam TNew New object type.
-	/// @return Reference to new object type.
+	/// @return Shared pointer to new object type.
 	template<class TNew = AsNonConst<DataType>>
 	constexpr Shared<TNew, WEAK>		mutate() const		{return	const_cast<TNew*>(raw());			}
 	/// @brief Returns a weak pointer to the bound object.
@@ -285,6 +285,10 @@ public:
 	constexpr ref<DataType>				raw() const			{return	exists() ? getPointer() : nullptr;	}
 //	constexpr ref<DataType>				raw() const			{return	getPointer();						}
 //	constexpr ref<ConstantType>			raw() const			{return	getPointer();						}
+
+	/// @brief Returns a `Reference` to the underlying data.
+	/// @return `Reference` to underlying data.
+	constexpr Reference<DataType> reference() const {return	raw();}
 	
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.

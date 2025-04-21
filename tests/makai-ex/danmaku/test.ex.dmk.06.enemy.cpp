@@ -59,7 +59,7 @@ struct TestApp: Makai::Ex::Game::App {
 
 	void spawnEnemy() {
 		enemies[current] = TestRegistry::create<TestEnemy>(getCurrentCycle());
-		enemies[current]->as<TestEnemy>()->trans.position.y = rng.number<float>(24, -24) + playfield.center.y;
+		enemies[current].as<TestEnemy>()->trans.position.y = rng.number<float>(24, -24) + playfield.center.y;
 		(++current) %= MAX_ENEMIES;
 	}
 
