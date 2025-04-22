@@ -69,6 +69,14 @@ namespace Makai::Ex::AVM {
 		SimpleEngine& pause() override final	{paused = true; return *this;					}
 
 	protected:
+		/// @brief Behaviour to execute when a "back" choice (-1) is selected.
+		enum class OnBackBehaviour: usize {
+			OBB_DO_NOTHING	= 0,
+			OBB_TERMINATE	= ConstHasher::hash("terminate"),
+			OBB_EXIT_BLOCK	= ConstHasher::hash("exit-block"),
+			OBB_ERROR		= ConstHasher::hash("error"),
+		};
+
 		/// @brief Advances the engine forward.
 		void process() {
 			if (
@@ -80,10 +88,26 @@ namespace Makai::Ex::AVM {
 				return;
 			}
 			if (needsChoice && !hasChoice) return;
-			needsChoice = false;
+			needsChoice	= false;
 			if (isFinished || paused) return;
+			if (hasChoice && getInt() == -1) {
+				switch (onBack) {
+					case OnBackBehaviour::OBB_EXIT_BLOCK:	forceBlockExit();									break;
+					case OnBackBehaviour::OBB_TERMINATE:	stop();												break;
+					case OnBackBehaviour::OBB_ERROR:		setErrorAndStop(ErrorCode::AVM_EEC_INVALID_VALUE);	break;
+					default:	break;
+				}
+			}
+			clearChoice();
 			advanceCounters();
 			if (shouldProcess()) next();
+		}
+
+		/// @brief Returns a string as a behaviour.
+		/// @param name String to convert.
+		/// @return String as behaviour.
+		constexpr static OnBackBehaviour getBehaviourByName(String const& name) {
+			return static_cast<OnBackBehaviour>(ConstHasher::hash(name));
 		}
 
 		/// @brief Returns a color by a name hash.
@@ -110,8 +134,9 @@ namespace Makai::Ex::AVM {
 		/// @return Whether action was found.
 		virtual bool execute(usize const name, Parameters const& params) {
 			switch (name) {
-				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params[0]);	return true;
-				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0]);	return true;
+				case (ConstHasher::hash("on-back")):	onBack		= getBehaviourByName(params[0]);	return true;
+				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params[0]);				return true;
+				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0]);				return true;
 			}
 			return false;
 		}
@@ -213,11 +238,13 @@ namespace Makai::Ex::AVM {
 		void setCurrentInt(ssize const value)		{setInt(value);		}
 
 		/// @brief Max time to wait for user input.
-		usize	delay		= 600;
+		usize	delay			= 600;
 		/// @brief Whether to wait for user input.
-		bool	waitForUser	= false;
+		bool	waitForUser		= false;
 		/// @brief Whether autoplay is enabled.
-		bool	autoplay	= false;
+		bool	autoplay		= false;
+		/// @brief What to do on a "back" choice (-1).
+		OnBackBehaviour	onBack	= OnBackBehaviour::OBB_DO_NOTHING;
 
 	private:
 		/// @brief Whether the engine is waiting for actions to finish processing.
