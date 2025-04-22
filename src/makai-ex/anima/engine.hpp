@@ -186,9 +186,16 @@ namespace Makai::Ex::AVM {
 				storeState();
 			if (!binary.jumps.contains(name))
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
-			current.op = binary.jumps[name];
+			current.op = current.start = binary.jumps[name];
 			if (current.op >= binary.code.size())
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
+		}
+
+		/// @brief Jumps the operation pointer to the block's start.
+		void jumpToBlockStart() {
+			auto const start = current.start;
+			current = {};
+			current.start = start;
 		}
 
 		/// @brief Sets the AVM's current integer value.
@@ -228,6 +235,8 @@ namespace Makai::Ex::AVM {
 			ActiveCast	actors	= {};
 			/// @brief SP mode being used.
 			uint16		spMode	= 0;
+			/// @brief Start-of-block pointer.
+			usize		start	= 0;
 			/// @brief Operation pointer.
 			usize		op		= 0;
 			/// @brief Whether inside a function.
