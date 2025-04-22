@@ -93,7 +93,7 @@ Under consideration:
 
 | Macro | Usage | Requirements |
 |:-:|:-|:-:|
-| `\append "<source>"` | Processes and adds the contents of another file, to your current file, at the current position. | Can only be used in the global scope (outside of named blocks & functions), If there are functions, choices or blocks which names are shared, an error is thrown. |
+| `\append "<source>"` | Processes and adds the contents of another file, to your current file, at the current position. | Can only be used in the global scope (outside of named blocks & functions). If there are functions, choices or blocks which names are shared, an error is thrown. |
 
 ### On `act`s and `scene`s
 
