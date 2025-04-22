@@ -211,19 +211,24 @@ namespace Makai::Ex::AVM {
 		}
 
 		/// @brief Returns the AVM's current integer value.
-		/// @param Current value.
+		/// @return Current value.
 		ssize getInt() {
 			return current.integer;
 		}
 		
 		/// @brief Returns the AVM's current string value.
-		/// @param Current value.
+		/// @return Current value.
 		String getString() {
 			return current.string;
 		}
 
 		/// @brief Forces an early return from the current block, if in any.
-		void forceBlockExit() {retrieveState();}
+		/// @return Whether it was inside a block.
+		bool forceBlockExit() {
+			if (stack.empty()) return false;
+			retrieveState();
+			return true;
+		}
 
 	private:
 		/// @brief Anima being processed.
