@@ -97,7 +97,7 @@ namespace Makai::Ex::AVM {
 					case OnBackBehaviour::OBB_TERMINATE:	stop();												break;
 					case OnBackBehaviour::OBB_ERROR:		setErrorAndStop(ErrorCode::AVM_EEC_INVALID_VALUE);	break;
 					case OnBackBehaviour::OBB_REPEAT_BLOCK:	jumpToBlockStart();									break;
-					default:	break;
+					default: break;
 				}
 			}
 			clearChoice();
