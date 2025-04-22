@@ -28,6 +28,8 @@ namespace Makai::Ex::AVM {
 			AVM_EEC_INVALID_JUMP,
 			AVM_EEC_MISSING_FUNCTION_ARGUMENT,
 			AVM_EEC_ARGUMENT_PARSE_FAILURE,
+			AVM_EEC_INVALID_VALUE,
+			AVM_EEC_IMPLEMENTATION_ERROR,
 		};
 
 		/// @brief Destructor.
@@ -189,13 +191,32 @@ namespace Makai::Ex::AVM {
 				return setErrorAndStop(ErrorCode::AVM_EEC_INVALID_JUMP);
 		}
 
+		/// @brief Sets the AVM's current integer value.
+		/// @param value Value to set.
 		void setInt(ssize const value) {
 			current.integer = value;
 		}
-
+		
+		/// @brief Sets the AVM's current string value.
+		/// @param value Value to set.
 		void setString(String const& value) {
 			current.string = value;
 		}
+
+		/// @brief Returns the AVM's current integer value.
+		/// @param Current value.
+		ssize getInt() {
+			return current.integer;
+		}
+		
+		/// @brief Returns the AVM's current string value.
+		/// @param Current value.
+		String getString() {
+			return current.string;
+		}
+
+		/// @brief Forces an early return from the current block, if in any.
+		void forceBlockExit() {retrieveState();}
 
 	private:
 		/// @brief Anima being processed.
@@ -305,6 +326,7 @@ namespace Makai::Ex::AVM {
 		}
 
 		void retrieveState() {
+			if (stack.empty()) return;
 			if (current.inFunc) funStack.popBack();
 			current	= stack.popBack();
 		}
