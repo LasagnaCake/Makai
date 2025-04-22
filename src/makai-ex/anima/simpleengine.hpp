@@ -71,10 +71,11 @@ namespace Makai::Ex::AVM {
 	protected:
 		/// @brief Behaviour to execute when a "back" choice (-1) is selected.
 		enum class OnBackBehaviour: usize {
-			OBB_DO_NOTHING	= 0,
-			OBB_TERMINATE	= ConstHasher::hash("terminate"),
-			OBB_EXIT_BLOCK	= ConstHasher::hash("exit-block"),
-			OBB_ERROR		= ConstHasher::hash("error"),
+			OBB_DO_NOTHING		= 0,
+			OBB_TERMINATE		= ConstHasher::hash("terminate"),
+			OBB_EXIT_BLOCK		= ConstHasher::hash("exit-block"),
+			OBB_ERROR			= ConstHasher::hash("error"),
+			OBB_REPEAT_BLOCK	= ConstHasher::hash("repeat-block"),
 		};
 
 		/// @brief Advances the engine forward.
@@ -95,6 +96,7 @@ namespace Makai::Ex::AVM {
 					case OnBackBehaviour::OBB_EXIT_BLOCK:	forceBlockExit();									break;
 					case OnBackBehaviour::OBB_TERMINATE:	stop();												break;
 					case OnBackBehaviour::OBB_ERROR:		setErrorAndStop(ErrorCode::AVM_EEC_INVALID_VALUE);	break;
+					case OnBackBehaviour::OBB_REPEAT_BLOCK:	jumpToBlockStart();									break;
 					default:	break;
 				}
 			}
