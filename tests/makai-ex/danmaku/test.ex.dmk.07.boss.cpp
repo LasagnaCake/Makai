@@ -87,6 +87,7 @@ constexpr Danmaku::LaserServerInstanceConfig PLAYER_LASER_SERVER_CFG = {
 	Danmaku::LaserCollisionConfig{
 		{Danmaku::Collision::Layer::PLAYER_LASER, Danmaku::Collision::Tag::FOR_PLAYER_1},
 		{Danmaku::Collision::Mask::PLAYER_LASER},
+		{}
 	}
 };
 
