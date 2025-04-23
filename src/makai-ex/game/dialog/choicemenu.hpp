@@ -5,6 +5,7 @@
 
 #include "../core/core.hpp"
 
+/// @brief Dialog facilities.
 namespace Makai::Ex::Game::Dialog {
 	struct ChoiceMenu: IVisible, AUpdateable, Controllable {
 		Graph::Label menu;
@@ -61,9 +62,9 @@ namespace Makai::Ex::Game::Dialog {
 			return options;
 		}
 
-		void clear()	{posted = false; cooldown = 0;	}
-		void select()	{posted = true; hide();			}
-		void cancel()	{setChoice(options.size()-1);	}
+		void clear()	{posted = false; cooldown = 0;													}
+		void select()	{posted = true; hide();															}
+		void cancel()	{if (exitOnCancel) {choice = -1; select();} else setChoice(options.size()-1);	}
 
 		virtual void onFocusChange(ssize const oldChoice, ssize const newChoice) {
 			repaint();
@@ -90,6 +91,8 @@ namespace Makai::Ex::Game::Dialog {
 		ssize collect()	{posted = false; return value();	}
 
 		usize cooldown = 1;
+
+		bool exitOnCancel = false;
 
 	private:
 		usize counter = 0;
