@@ -16,9 +16,9 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 
 	struct ANamedRequestable;
 
-	using PeriodicRequest = CTL::Ex::APeriodic<ANamedRequestable, usize const, IRequestable::Parameters const&>;
+	using APeriodicRequest = CTL::Ex::APeriodic<ANamedRequestable, usize const, IRequestable::Parameters const&>;
 
-	struct ANamedRequestable: IRequestable, PeriodicRequest {
+	struct ANamedRequestable: IRequestable, APeriodicRequest {
 		usize const id;
 
 		ANamedRequestable(usize const id): id(id) {}
