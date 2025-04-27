@@ -184,12 +184,12 @@ namespace Math::Ease {
 	/// @return Easing function.
 	inline EaseFunction& getMode(String const& mode, String const& type) {
 		if (type == "linear") return linear;
-		MODE_CASE("in", In)
-		MODE_CASE("out", Out)
-		MODE_CASE("inOut", InOut)
-		MODE_CASE("outIn", OutIn)
-		MODE_CASE("inIn", InIn)
-		MODE_CASE("outOut", OutOut)
+		MODE_CASE("In", In)
+		MODE_CASE("Out", Out)
+		MODE_CASE("InOut", InOut)
+		MODE_CASE("OutIn", OutIn)
+		MODE_CASE("InIn", InIn)
+		MODE_CASE("OutOut", OutOut)
 		return linear;
 	}
 	#undef MODE_CASE
