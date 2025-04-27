@@ -56,6 +56,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 		}
 
 		void preprocess(float& value, usize const id, ObjectHandle const& object, String const& param) override {
+			if (param.empty()) return;
 			StringList const params = param.substring(1).split(':');
 			if (params.size() < 2 || params.size() > 3) return;
 			Reference<AGameObject> target;
@@ -72,7 +73,10 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 				try {
 					result += toFloat(params[2]);
 				} catch (...) {
-
+					throw Error::InvalidValue(
+						toString("Invalid value of [" , params[2], "] for number!"),
+						CTL_CPP_PRETTY_SOURCE
+					);
 				}
 			}
 			value = result;
