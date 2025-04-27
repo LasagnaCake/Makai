@@ -1,6 +1,8 @@
 #ifndef MAKAILIB_EX_GAME_DANMAKU_ANIMA_REQUESTABLE_H
 #define MAKAILIB_EX_GAME_DANMAKU_ANIMA_REQUESTABLE_H
 
+#include <makai/makai.hpp>
+
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
 	struct IRequestable {
