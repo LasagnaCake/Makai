@@ -9,6 +9,8 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 	struct ServerSpawner: ANamedRequestable {
 		AServer& server;
 
+		ServerSpawner(AServer& server, usize const id): ANamedRequestable(id), server(server) {}
+
 		bool onRequest(Parameters const& params) override final {
 			if (auto object = server.acquire()) {
 				onObjectRequest(object.as<AServerObject>(), params);
