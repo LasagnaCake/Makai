@@ -1,5 +1,5 @@
-#ifndef MAKAILIB_EX_GAME_DANMAKU_ANIMA_REQUEST_H
-#define MAKAILIB_EX_GAME_DANMAKU_ANIMA_REQUEST_H
+#ifndef MAKAILIB_EX_GAME_DANMAKU_ANIMA_REQUESTABLE_H
+#define MAKAILIB_EX_GAME_DANMAKU_ANIMA_REQUESTABLE_H
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
