@@ -109,17 +109,17 @@ public:
 
 	/// @brief Pre-increments the operator.
 	/// @return Reference to self.
-	SelfType& operator++()		{step(); return *this;							}
+	constexpr SelfType& operator++()	{step(); return *this;							}
 	/// @brief Post-increments the operator.
 	/// @return Copy of self pre-increment.
-	SelfType operator++(int)	{SelfType copy = *this; step(); return copy;	}
+	constexpr SelfType operator++(int)	{SelfType copy = *this; step(); return copy;	}
 
 	/// @brief Pre-decrements the operator.
 	/// @return Reference to self.
-	SelfType& operator--()		{rstep(); return *this;							}
+	constexpr SelfType& operator--()	{rstep(); return *this;							}
 	/// @brief Post-decrements the operator.
 	/// @return Copy of self pre-decrement.
-	SelfType operator--(int)	{SelfType copy = *this; rstep(); return copy;	}
+	constexpr SelfType operator--(int)	{SelfType copy = *this; rstep(); return copy;	}
 
 	/// @brief Pointer-to-Object type conversion.
 	constexpr operator PointerType() const		{return iter();	}
