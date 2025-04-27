@@ -115,6 +115,7 @@ namespace MX {
 		while (size-- > 0)
 			if (*s1++ != *s2++)
 				return s1[-1] < s2[-1] ? -1 : 1;
+		return 0;
 		#else
 		if (!(size + 1)) __builtin_unreachable();
 		return __builtin_memcmp(a, b, size);
