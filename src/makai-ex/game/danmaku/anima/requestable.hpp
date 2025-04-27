@@ -8,7 +8,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 	struct IRequestable {
 		virtual ~IRequestable() {}
 
-		using Parameters = Map<usize, StringList>;
+		using Parameters = OrderedMap<usize, StringList>;
 		using Parameter = typename Parameters::PairType;
 
 		virtual bool onRequest(Parameters const& params) = 0;

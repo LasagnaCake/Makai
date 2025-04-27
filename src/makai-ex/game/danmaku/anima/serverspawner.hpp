@@ -9,126 +9,186 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 	struct ServerSpawner: ANamedRequestable {
 		AServer& server;
 
+		using ObjectHandle = Reference<AServerObject>;
+
 		ServerSpawner(AServer& server, usize const id): ANamedRequestable(id), server(server) {}
 
 		bool onRequest(Parameters const& params) override final {
-			if (auto object = server.acquire()) {
-				onObjectRequest(object.as<AServerObject>(), params);
-				return true;
+			if (!params.contains(ConstHasher::hash("count"))) return;
+			usize count = 0;
+			try {
+				auto const& param = params[ConstHasher::hash("count")];
+				if (!param.empty())
+					count = toInt64(param.front());
+			} catch (...) {
+				auto const& param = params[ConstHasher::hash("count")];
+				throw Error::InvalidValue("Invalid count of [", param.front(), "]!");
 			}
+			for (usize i = 0; i < count; ++i)
+				if (auto object = server.acquire()) {
+					onObjectRequest(i, count, object.as<AServerObject>(), params);
+					return true;
+				}
 			return false;
 		}
 
-		virtual void onObjectRequest(Reference<AServerObject> const& object, Parameters const& params) {
+		virtual void onObjectRequest(usize const id, usize const count, ObjectHandle const& object, Parameters const& params) {
 			if (!object) return;
 			for (auto const& param: params) {
+				if (param.key == ConstHasher::hash("at")) {
+					setParameter<Math::Vector2>(object, object->trans.position, param, 0);
+					continue;
+				}
 				switch (param.key) {
-					default: break;
-					case (ConstHasher::hash("at")):				setParameter<Math::Vector2>(object->trans.position, param.value, 0);	break;
-					case (ConstHasher::hash("color")):			setParameter(object->color, param.value, Graph::Color::WHITE); 			break;
-					case (ConstHasher::hash("scale")):			setParameter<Math::Vector2>(object->scale, param.value, 1); 			break;
-					case (ConstHasher::hash("discardable")):	setParameter(object->discardable, param.value, false);		 			break;
-					case (ConstHasher::hash("spawn")):			{object->spawn(); if (param.value.empty()) break;	}
-					case (ConstHasher::hash("spawn-time")):		setParameter<usize>(object->spawnTime, param.value, 5);			 		break;
-					case (ConstHasher::hash("despawn")):		{object->despawn(); if (param.value.empty()) break;	}
-					case (ConstHasher::hash("despawn-time")):	setParameter<usize>(object->despawnTime, param.value, 10);			 	break;
+					default: continue;
+					case (ConstHasher::hash("color")):			setParameter(object, object->color, param, Graph::Color::WHITE); 	continue;
+					case (ConstHasher::hash("scale")):			setParameter<Math::Vector2>(object, object->scale, param, 1); 		continue;
+					case (ConstHasher::hash("discardable")):	setParameter(object, object->discardable, param, false);		 	continue;
+					case (ConstHasher::hash("spawn")):			{object->spawn(); if (param.value.empty()) continue;	}
+					case (ConstHasher::hash("spawn-time")):		setParameter<usize>(object, object->spawnTime, param, 5);			continue;
+					case (ConstHasher::hash("despawn")):		{object->despawn(); if (param.value.empty()) continue;	}
+					case (ConstHasher::hash("despawn-time")):	setParameter<usize>(object, object->despawnTime, param, 10);	 	continue;
 					case (ConstHasher::hash("can-collide")): {
 						bool tmp = false;
-						setParameter<bool>(tmp, param.value, true);
+						setParameter<bool>(object, tmp, param, true);
 						object->setCollisionState(tmp);
-					} break;
+					} continue;
 				}
 			}
 		}
 
-		template<class T>
-		static void setParameter(
+		template<Type::Ex::Math::Vector::Vector T>
+		void setParameter(
+			ObjectHandle const& object,
 			T& prop,
-			StringList const& params,
+			Parameter const& param,
 			T const& fallback = 0
-		) requires (Type::Ex::Math::Vector::Vector<T> || Type::Equal<T, float>) {
-			prop = getVector(params, fallback);
+		) {
+			prop = getVector(object, param, fallback);
 		}
 
 		template<Type::Ex::Math::Vector::Vectorable T>
-		static void setParameter(
+		void setParameter(
+			ObjectHandle const& object,
 			Property<T>& prop,
-			StringList const& params,
+			Parameter const& param,
 			T const& fallback = 0
 		) {
-			prop = getProperty(params, fallback);
+			prop = getProperty(object, param, fallback);
 		}
 
 		template<Type::Primitive T>
-		static void setParameter(
+		void setParameter(
+			ObjectHandle const& object,
 			T& prop,
-			StringList const& params,
+			Parameter const& param,
 			T const& fallback = 0
 		) {
-			prop = getPrimitive<D>(param, fallback);
+			prop = getPrimitive<D>(object, param, fallback);
 		}
 
 		template<usize D>
-		static Property<Math::Vector<D>> getProperty(StringList const& params, Math::Vector<D> const& fallback = 0) {
+		Property<Math::Vector<D>> getProperty(ObjectHandle const& object, Parameter const& param, Math::Vector<D> const& fallback = 0) {
 			Property<Math::Vector<D>> prop;
-			if (params.empty()) return prop;
-			if (params.size() < 2) return {convert<D>(params[0], fallback)};
+			if (param.value.empty()) return prop;
+			if (param.value.size() < 2) {
+				prop.value = convert<D>(param.value.front(), fallback);
+				prop.start = prop.value;
+				return prop;
+			}
 			usize current = 1;
 			props.interpolate = true;
-			prop.start	= convert<D>(params[current++], fallback);
-			if (current >= params.size()) return prop;
-			prop.stop	= convert<D>(params[current++], fallback);
-			if (current >= params.size()) return prop;
-			prop.speed	= convert<1>(params[current++], fallback);
-			if (current >= params.size()) return prop;
-			prop.ease	= getEase(params[current++]);
+			if (param.value[current].front() == '@')
+				preprocess(prop.start, param.key, object, param.value[current++]);
+			else prop.start	= convert<D>(param.value[current++], fallback);
+			if (current >= param.value.size()) return prop;
+			if (param.value[current].front() == '@')
+				preprocess(prop.stop, param.key, object, param.value[current++]);
+			prop.stop	= convert<D>(param.value[current++], fallback);
+			if (current >= param.value.size()) return prop;
+			if (param.value[current].front() == '@')
+				preprocess(prop.speed, param.key, object, param.value[current++]);
+			prop.speed	= convert<1>(param.value[current++], fallback);
+			if (current >= param.value.size()) return prop;
+			if (param.value[current].front() == '@')
+				preprocess(prop.ease, param.key, object, param.value[current++]);
+			prop.ease	= getEase(param.value[current++]);
 			return prop;
 		}
 
 		template <class T>
-		static T getPrimitive(StringList const& params, T const& fallback) {
+		T getPrimitive(ObjectHandle const& object, Parameter const& param, T const& fallback = 0) {
 			if (params.empty()) return fallback;
 			try {
-				return String::toNumber<T>(params[0]);
+				if (param.value.front().front() == '@') {
+					auto out = fallback;
+					preprocess(out, param.key, object, param.value.front());
+					return out;
+				}
+				else return String::toNumber<T>(params.front());
 			} catch (...) {
 				throw Error::InvalidValue(
-					toString("Invalid value of [", params[0], "] for ", String(nameof<T>()), "!"),
+					toString("Invalid value of [", params.front(), "] for ", String(nameof<T>()), "!"),
 					CTL_CPP_PRETTY_SOURCE
 				);
 			}
 		}
 
 		template <class T>
-		static T getVector(StringList const& params, T const& fallback) {
+		static T getVector(ObjectHandle const& object, Parameter const& param, T const& fallback = 0) {
 			if (params.empty()) return fallback;
-			return convert(params[0], fallback);
+			if (params.front().front() == '@') {
+				auto out = fallback;
+				preprocess(out, param.key, object, param.value.front());
+				return out;
+			}
+			return convert(params.front(), fallback);
 		}
 
 		static Math::Ease::Mode getEase(String const& param) {
 			if (param.empty()) return Math::Ease::linear;
-			StringList ease = param.split('.');
-			if (param.size() == 1) return Math::Ease::getMode(ease[0], "linear");
-			return Math::Ease::getMode(ease[0], ease[1]);
+			StringList ease = param.splitAtFirst('.');
+			if (param.size() == 1) return Math::Ease::getMode(ease.front(), "linear");
+			return Math::Ease::getMode(ease.front(), ease.back());
 		}
+		
+		virtual void preprocess(bool& value, usize const id, ObjectHandle const& object, String const& param)				{}
+		virtual void preprocess(usize& value, usize const id, ObjectHandle const& object, String const& param)				{}
+		virtual void preprocess(ssize& value, usize const id, ObjectHandle const& object, String const& param)				{}
+		virtual void preprocess(float& value, usize const id, ObjectHandle const& object, String const& param)				{}
+		virtual void preprocess(Vector2& value, usize const id, ObjectHandle const& object, String const& param)			{}
+		virtual void preprocess(Vector3& value, usize const id, ObjectHandle const& object, String const& param)			{}
+		virtual void preprocess(Vector4& value, usize const id, ObjectHandle const& object, String const& param)			{}
+		virtual void preprocess(Math::Ease::Mode& value, usize const id, ObjectHandle const& object, String const& param)	{}
 
-	private:
+	protected:
 		template<usize D>
-		constexpr static Math::Vector<D> convert(String const& str, Math::Vector<D> const& fallback = 0)
+		static Math::Vector<D> convert(String const& str, Math::Vector<D> const& fallback = 0)
 		requires (D == 1) {
 			if (str.empty()) return fallback;
-			return getPrimitive<float>(str.split(':'), fallback);
+			try {
+				return String::toNumber<T>(str);
+			} catch (...) {
+				throw Error::InvalidValue(
+					toString("Invalid value of [", str, "] for ", String(nameof<Vector<D>>()), "!"),
+					CTL_CPP_PRETTY_SOURCE
+				);
+			}
 		}
 
 		template<usize D>
-		constexpr static Math::Vector<D> convert(String const& str, Math::Vector<D> const& fallback = 0)
+		static Math::Vector<D> convert(String const& str, Math::Vector<D> const& fallback = 0)
 		requires (D > 1) {
 			if (str.empty()) return fallback;
+			if (D == 4 && str.front() == '#')
+				return Graph::Color::fromHexCodeString(str);
 			StringList components = str.split(':');
-			usize const end = (components.size() < D ? components.size() : D);
 			Math::Vector<D> out;
+			usize const end = (components.size() < D ? components.size() : D);
 			for (usize i = 0; i < end; ++i) {
 				try {
-					out.data[i] = toFloat(components[i]);
+					if (end == 1) out = toFloat(components[i]);
+					else out.data[i] = toFloat(components[i]);
 				} catch (...) {
 					throw Error::InvalidValue(
 						toString("Invalid value of [", str, "] for ", String(nameof<Math::Vector<D>>()), " property!"),
