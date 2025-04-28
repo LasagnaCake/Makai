@@ -196,6 +196,61 @@ using Trigger	= Function<bool(Args...)>;
 
 #pragma GCC diagnostic pop
 
+/// @brief Wraps an object with its member function.
+/// @tparam TObject Object type.
+/// @tparam TFunction Member function type.
+/// @tparam TReturn Member function return type.
+/// @tparam ...TArgs Member function argument types.
+/// @param obj Object to wrap.
+/// @param func Member function to wrap for object.
+/// @return Wrapped function.
+template<class TObject, class TFunction, class TReturn, class... TArgs>
+constexpr Function<TReturn(TArgs...)> memberCall(TObject& obj, TFunction* const func)
+requires Type::Equal<TFunction, TReturn(TObject::*)(TArgs...)> {
+	return [&] (TArgs... args) -> TReturn {return (obj.*func)(args...);};
+}
+
+/// @brief Returns a callable version of a member function.
+/// @tparam TObject Object type.
+/// @tparam TFunction Member function type.
+/// @tparam TReturn Member function return type.
+/// @tparam ...TArgs Member function argument types.
+/// @param func Member function to wrap.
+/// @return Member function as callable function.
+template<class TObject, class TFunction, class TReturn, class... TArgs>
+constexpr Function<TReturn(TObject&, TArgs...)> fromMemberCall(TFunction const func)
+requires Type::Equal<TFunction, TReturn(TObject::*)(TArgs...)> {
+	return [&] (TObject& obj, TArgs... args) -> TReturn {return (obj.*func)(args...);};
+}
+
+/// @brief Binds an object as the first argument of a function.
+/// @tparam TObject Object type.
+/// @tparam TFunction Function type.
+/// @tparam TReturn Function return type.
+/// @tparam ...TArgs Function argument types.
+/// @param obj Object to bind to function.
+/// @param func Function to bind object to.
+/// @return Bound function.
+template<class TObject, class TFunction, class TReturn, class... TArgs>
+constexpr Function<TReturn(TArgs...)> bind(TObject& obj, TFunction& func)
+requires Type::Functional<TFunction, TReturn(TObject& obj, TArgs...)> {
+	return [&] (TArgs... args) -> TReturn {return func(obj, args...);};
+}
+
+/// @brief Binds an object as the first argument of a function.
+/// @tparam TObject Object type.
+/// @tparam TFunction Function type.
+/// @tparam TReturn Function return type.
+/// @tparam ...TArgs Function argument types.
+/// @param obj Object to bind to function.
+/// @param func Function to bind object to.
+/// @return Bound function.
+template<class TObject, class TFunction, class TReturn, class... TArgs>
+constexpr Function<TReturn(TArgs...)> bind(TObject& obj, TFunction const func)
+requires Type::Equal<TFunction, TReturn(TObject::*)(TArgs...)> {
+	return bind(obj, fromMemberCall(func));
+}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_CONTAINER_FUNCTION_H
