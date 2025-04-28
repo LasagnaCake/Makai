@@ -7,11 +7,12 @@
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
 	struct ServerSpawner: ANamedRequestable {
+		Random::Generator& rng;
 		AServer& server;
 
 		using ObjectHandle = Reference<AServerObject>;
 
-		ServerSpawner(AServer& server, usize const id): ANamedRequestable(id), server(server) {}
+		ServerSpawner(AServer& server, usize const id, Random::Generator& rng): ANamedRequestable(id), server(server), rng(rng) {}
 
 		bool onRequest(Parameters const& params) override final {
 			if (!params.contains(ConstHasher::hash("count"))) return;
@@ -152,14 +153,31 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			return Math::Ease::getMode(ease.front(), ease.back());
 		}
 		
-		virtual void preprocess(bool& value, usize const id, ObjectHandle const& object, String const& param)				{}
-		virtual void preprocess(usize& value, usize const id, ObjectHandle const& object, String const& param)				{}
-		virtual void preprocess(ssize& value, usize const id, ObjectHandle const& object, String const& param)				{}
-		virtual void preprocess(float& value, usize const id, ObjectHandle const& object, String const& param)				{}
-		virtual void preprocess(Vector2& value, usize const id, ObjectHandle const& object, String const& param)			{}
-		virtual void preprocess(Vector3& value, usize const id, ObjectHandle const& object, String const& param)			{}
-		virtual void preprocess(Vector4& value, usize const id, ObjectHandle const& object, String const& param)			{}
-		virtual void preprocess(Math::Ease::Mode& value, usize const id, ObjectHandle const& object, String const& param)	{}
+		virtual bool preprocess(bool& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
+		virtual bool preprocess(usize& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
+		virtual bool preprocess(ssize& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
+		virtual bool preprocess(float& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
+		virtual bool preprocess(Vector2& value, usize const id, ObjectHandle const& object, String const& param)			{return processRNG(value, param);	}
+		virtual bool preprocess(Vector3& value, usize const id, ObjectHandle const& object, String const& param)			{return processRNG(value, param);	}
+		virtual bool preprocess(Vector4& value, usize const id, ObjectHandle const& object, String const& param)			{return processRNG(value, param);	}
+		virtual bool preprocess(Math::Ease::Mode& value, usize const id, ObjectHandle const& object, String const& param)	{return false;						}
+
+		template <class T>
+		bool processRNG(T& value, String const& param) {
+			if (param.empty()) return false;
+			StringList const params = param.value.split(':');
+			if (params.front() != "@rng") return false;
+			if (params.size() == 1) value = rng.template number<T>();
+			else if (params.size() > 2) try {
+				value = rng.template number<T>(String::toNumber<T>(params[1]), String::toNumber<T>(params[2]));
+			} catch (...) {
+				throw Error::InvalidValue(
+					toString("Invalid value of [", str, "] for ", String(nameof<T>()), "!"),
+					CTL_CPP_PRETTY_SOURCE
+				);
+			}
+			return true;
+		}
 
 	protected:
 		template<usize D>
@@ -182,7 +200,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (str.empty()) return fallback;
 			if (D == 4 && str.front() == '#')
 				return Graph::Color::fromHexCodeString(str);
-			StringList components = str.split(':');
+			StringList components = str.split(',');
 			Math::Vector<D> out;
 			usize const end = (components.size() < D ? components.size() : D);
 			for (usize i = 0; i < end; ++i) {
