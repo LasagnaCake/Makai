@@ -143,6 +143,9 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Whether the object can be discarded.
 		bool discardable	= true;
 
+		/// @brief The object's lifetime. If `-1`, it never dies.
+		ssize lifetime		= -1;
+
 		/// @brief Resets all of the object's properties to their default values.
 		/// @return Reference to self.
 		virtual AServerObject& clear() {
@@ -154,6 +157,7 @@ namespace Makai::Ex::Game::Danmaku {
 			spawnTime	= 5;
 			despawnTime	= 10;
 			cycle		= 0;
+			lifetime	= -1;
 			if (auto collider = collision())
 				collider->canCollide = true;
 			onAction.clear();
@@ -226,6 +230,7 @@ namespace Makai::Ex::Game::Danmaku {
 			AGameObject::onUpdate(delta);
 			if (!paused()) return;
 			onObjectUpdate(*this, delta, cycle++);
+			if (lifetime > 0 && cycle >= lifetime) despawn();
 		}
 
 	protected:

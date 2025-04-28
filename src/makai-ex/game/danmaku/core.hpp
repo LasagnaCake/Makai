@@ -257,9 +257,9 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Sprite settings.
 		struct SpriteSetting {
 			/// @brief Sprite frame.
-			Vector2 frame;
+			Vector2 frame		= 0;
 			/// @brief Sprite sheet size.
-			Vector2 sheetSize;
+			Vector2 sheetSize	= 16;
 		} sprite;
 
 		/// @brief Sets the sprite's rotation.
@@ -290,7 +290,7 @@ namespace Makai::Ex::Game::Danmaku {
 			/// @brief Frame settings.
 			PatchFrame	frame		= {};
 			/// @brief Sheet size.
-			Vector2		size		= 1;
+			Vector2		size		= Vector2(3, 8);
 			/// @brief Whether sprite sheet is vertical.
 			bool		vertical	= false;
 		} patch;

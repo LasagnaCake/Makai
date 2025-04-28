@@ -6,7 +6,7 @@
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
-	struct ServerSpawner: ANamedRequestable {
+	struct ServerSpawner: ANamedRequestable<>, ITargetsObjects {
 		Random::Generator& rng;
 		AServer& server;
 
@@ -42,6 +42,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 				}
 				switch (param.key) {
 					default: continue;
+					case (ConstHasher::hash("lifetime")):		setParameter<ssize>(object, object->lifetime, param, -1); 			continue;
 					case (ConstHasher::hash("color")):			setParameter(object, object->color, param, Graph::Color::WHITE); 	continue;
 					case (ConstHasher::hash("scale")):			setParameter<Math::Vector2>(object, object->scale, param, 1); 		continue;
 					case (ConstHasher::hash("discardable")):	setParameter(object, object->discardable, param, false);		 	continue;
@@ -102,6 +103,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (param.value[current].front() == '@')
 				preprocess(prop.start, param.key, object, param.value[current++]);
 			else prop.start	= convert<D>(param.value[current++], fallback);
+			props.value = props.start;
 			if (current >= param.value.size()) return prop;
 			if (param.value[current].front() == '@')
 				preprocess(prop.stop, param.key, object, param.value[current++]);

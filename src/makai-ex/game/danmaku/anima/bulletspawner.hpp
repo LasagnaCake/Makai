@@ -3,32 +3,31 @@
 
 #include "serverspawner.hpp"
 #include "../bullet.hpp"
-#include "../player.hpp"
-#include "../boss.hpp"
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
-	struct BulletSpawner: ServerSpawner {
+	struct BulletSpawner: ServerSpawner<> {
 		template<class TBullet = Bullet, class TConfig = BulletConfig>
 		BulletSpawner(BulletServer<TBullet, TConfig>& server, String const& uniqueName):
-			ServerSpawner(server, ConstHasher::hash("bullet:" + uniqueName)) {}
+			ServerSpawner(server, ConstHasher::hash("bullet" + uniqueName)) {}
 
 		void onObjectRequest(usize const id, usize const count, Reference<AServerObject> const& object, Parameters const& params) override {
 			if (auto bullet = object.as<Bullet>()) {
 				for (auto const& param: params) {
 					switch (param.key) {
-						case (ConstHasher::hash("rotate-sprite")):	setParameter(object, bullet->rotateSprite, param, true);		continue;
-						case (ConstHasher::hash("glow-on-spawn")):	setParameter(object, bullet->glowOnSpawn, param, true);			continue;
-						case (ConstHasher::hash("dope")):			setParameter(object, bullet->dope, param, true);				continue;
-						case (ConstHasher::hash("radius")):			setParameter<Math::Vector2>(object, bullet->radius, param, 1);	continue;
-						case (ConstHasher::hash("velocity")):		setParameter<float>(object, bullet->velocity, param, 0);		continue;
-						case (ConstHasher::hash("rotation")):		setParameter<float>(object, bullet->rotation, param, 0);		continue;
-						case (ConstHasher::hash("damage")):			setParameter<float>(object, bullet->damage, param, 0);			continue;
-						case (ConstHasher::hash("glow")):			setParameter<float>(object, bullet->glow, param, 0);			continue;
-						case (ConstHasher::hash("auto-decay")):		setParameter(object, bullet->autoDecay, param, true);			continue;
-						case (ConstHasher::hash("bouncy")):			setParameter(object, bullet->bouncy, param, true);				continue;
-						case (ConstHasher::hash("loopy")):			setParameter(object, bullet->loopy, param, true);				continue;
-						case (ConstHasher::hash("grazed")):			setParameter(object, bullet->grazed, param, true);				continue;
+						case (ConstHasher::hash("rotate-sprite")):	setParameter(object, bullet->rotateSprite, param, true);				continue;
+						case (ConstHasher::hash("glow-on-spawn")):	setParameter(object, bullet->glowOnSpawn, param, true);					continue;
+						case (ConstHasher::hash("dope")):			setParameter(object, bullet->dope, param, true);						continue;
+						case (ConstHasher::hash("radius")):			setParameter<Math::Vector2>(object, bullet->radius, param, 1);			continue;
+						case (ConstHasher::hash("velocity")):		setParameter<float>(object, bullet->velocity, param, 0);				continue;
+						case (ConstHasher::hash("rotation")):		setParameter<float>(object, bullet->rotation, param, 0);				continue;
+						case (ConstHasher::hash("damage")):			setParameter<float>(object, bullet->damage, param, 0);					continue;
+						case (ConstHasher::hash("glow")):			setParameter<float>(object, bullet->glow, param, 0);					continue;
+						case (ConstHasher::hash("auto-decay")):		setParameter(object, bullet->autoDecay, param, true);					continue;
+						case (ConstHasher::hash("bouncy")):			setParameter(object, bullet->bouncy, param, true);						continue;
+						case (ConstHasher::hash("loopy")):			setParameter(object, bullet->loopy, param, true);						continue;
+						case (ConstHasher::hash("grazed")):			setParameter(object, bullet->grazed, param, true);						continue;
+						case (ConstHasher::hash("sprite")):			setParameter<Math::Vector2>(object, bullet->sprite.frame, param, 0);	continue;
 					}
 					switch (param.key) {
 						case (ConstHasher::hash("spread")): {
@@ -60,13 +59,10 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (param.empty()) return false;
 			StringList const params = param.split(':');
 			if (params.size() < 1) return false;
-			Reference<AGameObject> target;
-			switch (ConstHasher::hash(params.front())) {
-				case (ConstHasher::hash("@self")):		target = getSelf();															break;
-				case (ConstHasher::hash("@player")):	if (params.size() < 2) return true; target = getTargetPlayer(params[1]);	break;
-				case (ConstHasher::hash("@boss")):		if (params.size() < 2) return true; target = getTargetBoss(params[1]);		break;
-				case (ConstHasher::hash("@enemy")):		if (params.size() < 2) return true; target = getTargetEnemy(params[1]);		break;
-			}
+			usize const type	= ConstHasher::hash(params[0]);
+			String const name	= params.size() < 2 ? "" : params[1];
+			Reference<AGameObject> target = ITargetsObjects::getTarget(type, name);
+			if (!target) target = IParented::getTarget(type, name);
 			float result = 0;
 			if (target) switch (id) {
 				case (ConstHasher::hash("rotation")): result = object->trans.position.angleTo(target->trans.position);
@@ -83,11 +79,6 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			}
 			value = result;
 		}
-
-		virtual Reference<AGameObject>	getTargetPlayer(String const playerID)	{return nullptr;}
-		virtual Reference<AGameObject>	getTargetBoss(String const bossID)		{return nullptr;}
-		virtual Reference<AGameObject>	getTargetEnemy(String const enemyID)	{return nullptr;}
-		virtual Reference<AGameObject>	getSelf()								{return nullptr;}
 	};
 }
 
