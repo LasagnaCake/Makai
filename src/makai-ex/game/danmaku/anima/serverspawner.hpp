@@ -162,7 +162,39 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 		virtual bool preprocess(Vector4& value, usize const id, ObjectHandle const& object, String const& param)			{return processRNG(value, param);	}
 		virtual bool preprocess(Math::Ease::Mode& value, usize const id, ObjectHandle const& object, String const& param)	{return false;						}
 
-		template <class T>
+		template <Type::Ex::Math::Vector::Vector T>
+		bool processRNG(T& value, String const& param) {
+			if (param.empty()) return false;
+			StringList const params = param.value.split(':');
+			if (params.front() != "@rng") return false;
+			if (params.size() == 1) {
+				value = Vector4(
+					rng.template number<T>(),
+					rng.template number<T>(),
+					rng.template number<T>(),
+					rng.template number<T>()
+				);
+			} else if (params.size() > 2) try {
+				Vector4 const
+					min = convert<4>(params[1], 0),
+					max = convert<4>(params[2], 0)
+				;
+				value = Vector4(
+					rng.template number<T>(min.x, max.x),
+					rng.template number<T>(min.y, max.z),
+					rng.template number<T>(min.z, max.y),
+					rng.template number<T>(min.w, max.w)
+				);
+			} catch (...) {
+				throw Error::InvalidValue(
+					toString("Invalid value of [", param, "] for ", String(nameof<T>()), "!"),
+					CTL_CPP_PRETTY_SOURCE
+				);
+			}
+			return true;
+		}
+
+		template <Type::Primitive T>
 		bool processRNG(T& value, String const& param) {
 			if (param.empty()) return false;
 			StringList const params = param.value.split(':');
@@ -172,7 +204,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 				value = rng.template number<T>(String::toNumber<T>(params[1]), String::toNumber<T>(params[2]));
 			} catch (...) {
 				throw Error::InvalidValue(
-					toString("Invalid value of [", str, "] for ", String(nameof<T>()), "!"),
+					toString("Invalid value of [", param, "] for ", String(nameof<T>()), "!"),
 					CTL_CPP_PRETTY_SOURCE
 				);
 			}
