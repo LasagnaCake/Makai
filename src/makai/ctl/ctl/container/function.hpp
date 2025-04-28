@@ -227,17 +227,31 @@ requires Type::Equal<TFunction, TReturn(TObject::*)(TArgs...)> {
 /// @tparam TObject Object type.
 /// @tparam TFunction Function type.
 /// @tparam TReturn Function return type.
-/// @tparam ...TArgs Function argument types.
+/// @tparam ...TArgs Remaining function argument types.
 /// @param obj Object to bind to function.
 /// @param func Function to bind object to.
 /// @return Bound function.
-template<class TObject, class TFunction, class TReturn, class... TArgs>
+/*template<class TObject, class TFunction, class TReturn, class... TArgs>
 constexpr Function<TReturn(TArgs...)> bind(TObject& obj, TFunction& func)
 requires Type::Functional<TFunction, TReturn(TObject& obj, TArgs...)> {
 	return [&] (TArgs... args) -> TReturn {return func(obj, args...);};
+}*/
+
+/// @brief Binds a series of objects as the first arguments to a function.
+/// @tparam TFunction Function type.
+/// @tparam ...TObjects Object types.
+/// @tparam TReturn Function return type.
+/// @tparam ...TArgs Remaining function argument types.
+/// @param obj Object to bind to function.
+/// @param func Function to bind object to.
+/// @return Bound function.
+template<class TFunction, class... TObjects, class TReturn, class... TArgs>
+constexpr Function<TReturn(TArgs...)> bind(TObjects&... objs, TFunction& func)
+requires Type::Functional<TFunction, TReturn(TObjects&..., TArgs...)> {
+	return [&] (TArgs... args) -> TReturn {return func(objs..., args...);};
 }
 
-/// @brief Binds an object as the first argument of a function.
+/// @brief Binds an object as the first argument of a function. Specialized for member functions.
 /// @tparam TObject Object type.
 /// @tparam TFunction Function type.
 /// @tparam TReturn Function return type.
