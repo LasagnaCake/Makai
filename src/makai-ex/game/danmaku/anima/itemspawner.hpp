@@ -35,7 +35,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 					switch (param.key) {
 						case (ConstHasher::hash("offset")): {
 							Vector2 tmp = 0;
-							setParameter<Vector2>(object, tmp, param, 0);
+							setParameter<Math::Vector2>(object, tmp, param, 0);
 							auto const offset = spread / count;
 							object->trans.position += Math::angleV2(offset * id - (count / 2.0) + angle) * tmp;
 							continue;
