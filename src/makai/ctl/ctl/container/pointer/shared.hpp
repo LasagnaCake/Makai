@@ -11,6 +11,7 @@
 #include "../error.hpp"
 #include "../function.hpp"
 #include "../map.hpp"
+#include "reference.hpp"
 #include "unique.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -27,21 +28,21 @@ namespace Base {
 	template <class T>
 	struct ReferenceCounter {
 		/// @brief Reference data.
-		struct Reference {
+		struct ReferenceData {
 			/// @brief Whether the reference exists.
 			bool	exists	= false;
 			/// @brief How many references are being held.
 			ssize	count	= 0;
 
 			/// @brief Default constructor.
-			constexpr Reference() = default;
+			constexpr ReferenceData() = default;
 
 			/// @brief Basic constructor. 
-			constexpr Reference(bool const exists, int64 const count = 0): exists(exists), count(count) {}
+			constexpr ReferenceData(bool const exists, int64 const count = 0): exists(exists), count(count) {}
 		};
 
 		/// @brief Underlying database type.
-		using Database = Map<T, Reference>;
+		using Database = Map<T, ReferenceData>;
 
 		/// @brief Checks whether the reference is bound.
 		/// @param ptr Reference to check.
