@@ -29,7 +29,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 						case (ConstHasher::hash("id")):				setParameter<usize>(object, item->id, param, 0);						continue;
 						case (ConstHasher::hash("value")):			setParameter<usize>(object, item->value, param, 1);						continue;
 						case (ConstHasher::hash("sprite")):			setParameter<Math::Vector2>(object, item->sprite.frame, param, 1);		continue;
-						case (ConstHasher::hash("spread")):			setParameter<float>(object, spread, param, PI);							continue;
+						case (ConstHasher::hash("spread")):			setParameter<float>(object, spread, param, TAU);						continue;
 						case (ConstHasher::hash("angle")):			setParameter<float>(object, angle, param, 0);							continue;
 					}
 					switch (param.key) {
