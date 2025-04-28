@@ -8,20 +8,14 @@
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
-	struct ABulletSpawner: ServerSpawner {
+	struct BulletSpawner: ServerSpawner {
 		template<class TBullet = Bullet, class TConfig = BulletConfig>
-		ABulletSpawner(BulletServer<TBullet, TConfig>& server, String const& uniqueName):
+		BulletSpawner(BulletServer<TBullet, TConfig>& server, String const& uniqueName):
 			ServerSpawner(server, ConstHasher::hash("bullet:" + uniqueName)) {}
 
 		void onObjectRequest(usize const id, usize const count, Reference<AServerObject> const& object, Parameters const& params) override {
 			if (auto bullet = object.as<Bullet>()) {
 				for (auto const& param: params) {
-					if (param.key == ConstHasher::hash("offset")) {
-						Vector2 tmp = 0;
-						setParameter<Vector2>(object, tmp, param, 0);
-						object->trans.position += tmp;
-						continue;
-					}
 					switch (param.key) {
 						case (ConstHasher::hash("rotate-sprite")):	setParameter(object, bullet->rotateSprite, param, true);		continue;
 						case (ConstHasher::hash("glow-on-spawn")):	setParameter(object, bullet->glowOnSpawn, param, true);			continue;
@@ -45,9 +39,15 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 							continue;
 						}
 						case (ConstHasher::hash("offset")): {
-							float tmp = 0;
-							setParameter<float>(object, tmp, param, 0);
+							Vector2 tmp = 0;
+							setParameter<Vector2>(object, tmp, param, 0);
 							object->trans.position += Math::angleV2(bullet->rotation.value) * tmp;
+							continue;
+						}
+						case (ConstHasher::hash("wait")): {
+							ssize tmp = 0;
+							setParameter<ssize>(object, tmp, param, 0);
+							if (tmp) object->pause = {tmp, true};
 							continue;
 						}
 					}
@@ -55,18 +55,20 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			}
 		}
 
-		void preprocess(float& value, usize const id, ObjectHandle const& object, String const& param) override {
-			if (param.empty()) return;
-			StringList const params = param.substring(1).split(':');
-			if (params.size() < 2 || params.size() > 3) return;
+		bool preprocess(float& value, usize const id, ObjectHandle const& object, String const& param) override {
+			if (ServerSpawner::preprocess(value, id, object, param)) return true;
+			if (param.empty()) return false;
+			StringList const params = param.split(':');
+			if (params.size() < 1) return false;
 			Reference<AGameObject> target;
 			switch (ConstHasher::hash(params.front())) {
-				case (ConstHasher::hash("player")):	target = getTargetPlayer(params[1]);
-				case (ConstHasher::hash("boss")):	target = getTargetBoss(params[1]);
-				case (ConstHasher::hash("enemy")):	target = getTargetEnemy(params[1]);
+				case (ConstHasher::hash("@self")):		target = getSelf();															break;
+				case (ConstHasher::hash("@player")):	if (params.size() < 2) return true; target = getTargetPlayer(params[1]);	break;
+				case (ConstHasher::hash("@boss")):		if (params.size() < 2) return true; target = getTargetBoss(params[1]);		break;
+				case (ConstHasher::hash("@enemy")):		if (params.size() < 2) return true; target = getTargetEnemy(params[1]);		break;
 			}
 			float result = 0;
-			switch (id) {
+			if (target) switch (id) {
 				case (ConstHasher::hash("rotation")): result = object->trans.position.angleTo(target->trans.position);
 			}
 			if (params.size() > 2) {
@@ -82,9 +84,10 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			value = result;
 		}
 
-		virtual Reference<AGameObject>	getTargetPlayer(String const playerID)	= 0;
-		virtual Reference<AGameObject>	getTargetBoss(String const bossID)		= 0;
-		virtual Reference<AGameObject>	getTargetEnemy(String const enemyID)	= 0;
+		virtual Reference<AGameObject>	getTargetPlayer(String const playerID)	{return nullptr;}
+		virtual Reference<AGameObject>	getTargetBoss(String const bossID)		{return nullptr;}
+		virtual Reference<AGameObject>	getTargetEnemy(String const enemyID)	{return nullptr;}
+		virtual Reference<AGameObject>	getSelf()								{return nullptr;}
 	};
 }
 
