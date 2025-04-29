@@ -38,8 +38,8 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			} else {
 				if (!acceleration.finished())
 					speed = acceleration.value();
-				trans.position += speed;
-				direction = speed.normalized();
+				trans.position += Math::angleV2(angle) * speed * delta;
+				direction = Math::angleV2(angle);
 			}
 			updateMesh();
 		}
