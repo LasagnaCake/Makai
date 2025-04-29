@@ -6,7 +6,7 @@
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
-	struct BulletSpawner: ServerSpawner<> {
+	struct BulletSpawner: ServerSpawner {
 		template<class TBullet = Bullet, class TConfig = BulletConfig>
 		BulletSpawner(BulletServer<TBullet, TConfig>& server, String const& uniqueName):
 			ServerSpawner(server, ConstHasher::hash("bullet" + uniqueName)) {}
@@ -62,7 +62,6 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			usize const type	= ConstHasher::hash(params[0]);
 			String const name	= params.size() < 2 ? "" : params[1];
 			Reference<AGameObject> target = ITargetsObjects::getTarget(type, name);
-			if (!target) target = IParented::getTarget(type, name);
 			float result = 0;
 			if (target) switch (id) {
 				case (ConstHasher::hash("rotation")): result = object->trans.position.angleTo(target->trans.position);

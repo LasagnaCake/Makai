@@ -1,6 +1,7 @@
 #ifndef MAKAILIB_EX_GAME_DANMAKU_ANIMA_SERVERSPAWNER_H
 #define MAKAILIB_EX_GAME_DANMAKU_ANIMA_SERVERSPAWNER_H
 
+#include "interfaces.hpp"
 #include "requestable.hpp"
 #include "../server.hpp"
 

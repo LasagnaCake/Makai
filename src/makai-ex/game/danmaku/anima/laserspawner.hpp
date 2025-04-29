@@ -6,7 +6,7 @@
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
-	struct LaserSpawner: ServerSpawner<> {
+	struct LaserSpawner: ServerSpawner {
 		template<class TLaser = Laser, class TConfig = LaserConfig>
 		LaserSpawner(LaserServer<TLaser, TConfig>& server, String const& uniqueName):
 			ServerSpawner(server, ConstHasher::hash("laser" + uniqueName)) {}
@@ -68,7 +68,9 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (param.empty()) return false;
 			StringList const params = param.split(':');
 			if (params.size() < 1) return false;
-			Reference<AGameObject> target = getTarget(ConstHasher::hash(params[0]), params.size() < 2 ? "" : params[1]);
+			usize const type	= ConstHasher::hash(params[0]);
+			String const name	= params.size() < 2 ? "" : params[1];
+			Reference<AGameObject> target = ITargetsObjects::getTarget(type, name);
 			float result = 0;
 			if (target) switch (id) {
 				case (ConstHasher::hash("rotation")): result = object->trans.position.angleTo(target->trans.position);
