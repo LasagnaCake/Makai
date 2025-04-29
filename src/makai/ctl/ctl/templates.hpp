@@ -45,7 +45,9 @@ struct Typed<TData> {
 template<Type::NonVoid TData>
 struct Typed<TData> {
 	/// @brief Whether the associated type is a `void` type.
-	constexpr static bool IS_VOID_TYPE = false;
+	constexpr static bool IS_VOID_TYPE	= false;
+	/// @brief Whether the associated type is a `const` type.
+	constexpr static bool IS_CONST		= Type::Constant<TData>;
 	/// @brief Type.
 	using DataType				= TData;
 	/// @brief Constant type.
@@ -57,9 +59,9 @@ struct Typed<TData> {
 	/// @brief Const reference type.
 	using ConstReferenceType	= ConstantType&;
 	/// @brief Pointer type.
-	using PointerType			= DataType*;
+	using PointerType			= AsNonReference<DataType>*;
 	/// @brief Const pointer type.
-	using ConstPointerType		= DataType const*;
+	using ConstPointerType		= AsNonReference<DataType> const*;
 };
 
 /// @brief Tags the deriving class as being indexable.

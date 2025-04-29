@@ -10,104 +10,153 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief General implementations.
 namespace Impl {
-	/// @brief An element in the tuple.
+	/// @brief Tuple implementation.
+	/// @tparam ...Types Tuple types.
+	template<class... Types>
+	struct Tuple;
+
+	/// @brief Tuple implementation.
 	/// @tparam T Element type.
-	/// @tparam N Element index.
-	template<usize N, class T>
-	struct TupleItem: Typed<T> {
-		using Typed = ::CTL::Typed<T>;
+	template<class T>
+	struct Tuple<T>:
+		Typed<T> {
+		using Typed = Typed<T>;
 
 		using typename Typed::DataType;
 
+		constexpr static bool NON_CONST_TUPLE = Type::NonConstant<T>;
+		
+		/// @brief Nth element type.
+		/// @tparam I Type index.
+		template<usize I>
+		using TupleType = DataType;
+
+		/// @brief Default constructor (defaulted).
+		constexpr Tuple()				= default;
+		/// @brief Copy constructor (defaulted).
+		constexpr Tuple(Tuple&&)		= default;
+		/// @brief Move constructor (defaulted).
+		constexpr Tuple(Tuple const&)	= default;
+
+		/// @brief Constructs the tuple.
+		/// @param first Element value.
+		constexpr Tuple(DataType const& first):							value(first)		{}
+		/// @brief Constructs the tuple.
+		/// @param first Element value.
+		constexpr Tuple(DataType&& first) requires (NON_CONST_TUPLE):	value(move(first))	{}
+
+		/// @brief Gets the Nth element in the tuple.
+		/// @tparam INDEX Element index.
+		/// @return Reference to element.
+		template<usize I>
+		constexpr DataType& get() 
+		requires (I == 0) {
+			return value;
+		}
+
+		/// @brief Gets the Nth element in the tuple.
+		/// @tparam INDEX Element index.
+		/// @return Reference to element.
+		template<usize I>
+		constexpr DataType const& get() const
+		requires (I == 0) {
+			return value;
+		}
+
+	private:
+		/// @brief Tuple value.
 		DataType value;
 	};
 
 	/// @brief Tuple implementation.
-	/// @tparam ...Types Tuple types.
-	/// @tparam N Tuple index.
-	template<usize N, class... Types>
-	struct TuplePack;
-
-	/// @brief Empty tuple implementation.
-	/// @tparam N Tuple index.
-	template<usize N>
-	struct TuplePack<N>{};
-
-	/// @brief Tuple implementation.
 	/// @tparam T First type.
 	/// @tparam ...Types Subsequent types.
-	/// @tparam N Tuple index.
-	template<usize N, class T, class... Types>
-	struct TuplePack<N, T, Types...>:
-		public TupleItem<N, T>,
-		public TuplePack<N + 1, Types...>,
-		Polyglot<T, Types...>
-	{
+	template<class T, class... Types>
+	struct Tuple<T, Types...>:
+		Polyglot<T, Types...> {
 		using Polyglot = Polyglot<T, Types...>;
 
 		using typename Polyglot::DataTypes;
 
-		/// @brief Gets the Nth element in the tuple.
-		/// @tparam INDEX Element index.
-		/// @return Reference to element.
-		template<usize INDEX>
-		constexpr DataTypes::NthType<INDEX>& get()
-		requires (INDEX < DataTypes::COUNT) {
-			return get<INDEX>(*this);
-		}
+		using DataType = typename Polyglot::DataTypes::FirstType;
+
+		/// @brief Nth element type.
+		/// @tparam I Type index.
+		template<usize I>
+		using TupleType = typename DataTypes::Type<I>;
+
+		/// @brief Default constructor (defaulted).
+		constexpr Tuple()				= default;
+		/// @brief Copy constructor (defaulted).
+		constexpr Tuple(Tuple&&)		= default;
+		/// @brief Move constructor (defaulted).
+		constexpr Tuple(Tuple const&)	= default;
+
+		/// @brief Constructs the tuple.
+		/// @param first Frst element value.
+		/// @param ...rest Subsequent element values.
+		constexpr Tuple(T const& first, Types const&... rest):	value(first), rest(rest...)				{}
+		/// @brief Constructs the tuple.
+		/// @param first Frst element value.
+		/// @param ...rest Subsequent element values.
+		constexpr Tuple(T&& first, Types&&... rest):			value(move(first)), rest(move(rest)...)	{}
 
 		/// @brief Gets the Nth element in the tuple.
 		/// @tparam INDEX Element index.
 		/// @return Reference to element.
-		template<usize INDEX>
-		constexpr DataTypes::NthType<INDEX> const& get()
-		requires (INDEX < DataTypes::COUNT) {
-			return get<INDEX>(*this);
+		template<usize I>
+		constexpr TupleType<I>& get()
+		requires (I > 0 && I < DataTypes::COUNT) {
+			return rest.template get<I-1>();
 		}
 
-		/// @brief Gets the Nth element in a given tuple.
-		/// @tparam T1 First tuple type.
-		/// @tparam ...Types1 Subsequent tuple types.
-		/// @tparam N1 Element index.
-		/// @param tup Tuple to index into.
+		/// @brief Gets the Nth element in the tuple.
+		/// @tparam INDEX Element index.
 		/// @return Reference to element.
-		template<usize N1, class T1, class... Types1>
-		constexpr static T1& get(TuplePack<N1, T1, Types1...>& tup)
-		requires (N1 < TuplePack<N1, T1, Types1...>::DataTypes::COUNT) {
-			return tup.TupleItem<N1, T1>::value;
+		template<usize I>
+		constexpr TupleType<I> const& get() const
+		requires (I > 0 && I < DataTypes::COUNT) {
+			return rest.template get<I-1>();
 		}
 
-		/// @brief Gets the Nth element in a given tuple.
-		/// @tparam T1 First tuple type.
-		/// @tparam ...Types1 Subsequent tuple types.
-		/// @tparam N1 Element index.
-		/// @param tup Tuple to index into.
+		/// @brief Gets the Nth element in the tuple.
+		/// @tparam INDEX Element index.
 		/// @return Reference to element.
-		template<usize N1, class T1, class... Types1>
-		constexpr static T1 const& get(TuplePack<N1, T1, Types1...> const& tup)
-		requires (N1 < TuplePack<N1, T1, Types1...>::DataTypes::COUNT) {
-			return tup.TupleItem<N1, T1>::value;
-		}
+		template<usize I> constexpr TupleType<I>& get() requires (I == 0)				{return value;}
+
+		/// @brief Gets the Nth element in the tuple.
+		/// @tparam INDEX Element index.
+		/// @return Reference to element.
+		template<usize I> constexpr TupleType<I> const& get() const requires (I == 0)	{return value;}
+	private:
+		/// @brief Tuple value.
+		DataType value;
+		/// @brief Other values.
+		Tuple<Types...> rest;
 	};
-	
-	/// @brief Gets the Nth element in a given tuple.
-	/// @tparam T First tuple type.
-	/// @tparam ...Types Subsequent tuple types.
-	/// @tparam N Element index.
-	/// @param tup Tuple to index into.
-	/// @return Reference to element.
-	template<usize N, class T, class... Types>
-	T& get(TuplePack<N, T, Types...>& tup)
-	requires (N < TuplePack<N, T, Types...>::DataTypes::COUNT) {
-		return tup.TupleItem<N, T>::value;
-	}
 
+	/// @brief Index tuple item.
+	/// @tparam N Tuple index.
+	/// @tparam V Index value.
 	template<usize N, usize V>
 	struct IndexTupleItem: ValueConstant<usize, V> {};
 
-	template<usize N, usize... R>
+	/// @brief Index tuple implementation.
+	/// @tparam N Tuple index.
+	/// @tparam V... Values.
+	template<usize N, usize... V>
 	struct IndexTuplePack;
 
+	/// @brief Index tuple implementation.
+	/// @tparam N Tuple index.
+	/// @tparam F First value.
+	template<usize N, usize F>
+	struct IndexTuplePack<N, F>: IndexTupleItem<N, F> {};
+
+	/// @brief Index tuple implementation.
+	/// @tparam N Tuple index.
+	/// @tparam F First value.
+	/// @tparam R... Subsequent values.
 	template<usize N, usize F, usize... R>
 	struct IndexTuplePack<N, F, R...>:
 		public IndexTupleItem<N, F>,
@@ -128,7 +177,7 @@ namespace Impl {
 		/// @return Element value.
 		template<usize N1, usize F1, usize... R1>
 		consteval static usize get(IndexTuplePack<N1, F1, R1...>& tup) {
-			return tup.::IndexTupleItem<N1, F1>::value;
+			return tup.IndexTupleItem<N1, F1>::value;
 		}
 	};
 }
@@ -136,7 +185,7 @@ namespace Impl {
 /// @brief Collection of values.
 /// @tparam ...Types Element types.
 template<class... Types>
-using Tuple = Impl::TuplePack<0, Types...>;
+using Tuple = Impl::Tuple<Types...>;
 
 /// @brief Collection of indices.
 /// @tparam ...I Indices.
@@ -152,7 +201,36 @@ using IntegerPack = IndexTuple<__integer_pack(N)...>;
 /// @tparam T Tuple type.
 /// @tparam N Element type.
 template<class T, usize N>
-using TupleType = typename T::DataTypes::NthType<N>;
+using TupleType = typename T::TupleType<N>;
+
+/// @brief Gets the Nth element in a given tuple.
+/// @tparam I Element index.
+/// @tparam ...Types Tuple types.
+/// @param tuple Tuple to index into.
+/// @return Reference to element.
+template <usize I, class... Types>
+constexpr TupleType<Tuple<Types...>, I>& get(Tuple<Types...>& tuple) {
+	return tuple.template get<I>();
+}
+
+/// @brief Gets the Nth element in a given tuple.
+/// @tparam I Element index.
+/// @tparam ...Types Tuple types.
+/// @param tuple Tuple to index into.
+/// @return Const reference to element.
+template <usize I, class... Types>
+constexpr TupleType<Tuple<Types...>, I> const& get(Tuple<Types...> const& tuple) {
+	return tuple.template get<I>();
+}
+
+/// @brief Gets the Nth element in a given index tuple.
+/// @tparam I Element index.
+/// @tparam ...V Tuple values.
+/// @return Element value.
+template<usize I, usize... V>
+consteval usize get(IndexTuple<V...> const& tuple) {
+	return tuple.template get<I>();
+}
 
 CTL_NAMESPACE_END
 

@@ -708,6 +708,10 @@ namespace Type {
 	/// @brief Type must have a virtual destructor.
 	template <class T>
 	concept Virtual = Impl::IsVirtual<T>::value;
+	
+	/// @brief Type must NOT be constant.
+	template <class T>
+	concept NonConstant = Type::Different<T, T const>;
 }
 
 CTL_NAMESPACE_END

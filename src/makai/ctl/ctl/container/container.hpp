@@ -3,6 +3,7 @@
 
 #include "arguments.hpp"
 #include "array.hpp"
+#include "bind.hpp"
 #include "bitmask.hpp"
 #include "dictionary.hpp"
 #include "error.hpp"
