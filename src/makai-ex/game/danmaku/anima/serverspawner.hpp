@@ -8,13 +8,19 @@
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
-	struct ServerSpawner: ANamedRequestable<>, ITargetsObjects {
-		Random::Generator& rng;
-		AServer& server;
+	struct ServerSpawner: ANamedRequestable<> {
+		Random::Generator&	rng;
+		AServer&			server;
+		IObjectSolver&	solver;
 
 		using ObjectHandle = Reference<AServerObject>;
 
-		ServerSpawner(AServer& server, usize const id, Random::Generator& rng): ANamedRequestable(id), server(server), rng(rng) {}
+		ServerSpawner(
+			AServer& server,
+			usize const id,
+			Random::Generator& rng,
+			IObjectSolver& solver
+		): ANamedRequestable(id), server(server), rng(rng), solver(solver) {}
 
 		bool onRequest(Parameters const& params) override final {
 			if (!params.contains(ConstHasher::hash("count"))) return;

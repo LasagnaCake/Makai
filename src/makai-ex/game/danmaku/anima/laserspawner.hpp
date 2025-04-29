@@ -8,8 +8,12 @@
 namespace Makai::Ex::Game::Danmaku::Anima {
 	struct LaserSpawner: ServerSpawner {
 		template<class TLaser = Laser, class TConfig = LaserConfig>
-		LaserSpawner(LaserServer<TLaser, TConfig>& server, String const& uniqueName):
-			ServerSpawner(server, ConstHasher::hash("laser" + uniqueName)) {}
+		LaserSpawner(
+			LaserServer<TLaser, TConfig>& server,
+			usize const id,
+			Random::Generator& rng,
+			IObjectSolver& solver
+		): ServerSpawner(server, ConstHasher::hash("laser" + uniqueName), rng, solver) {}
 
 		void onObjectRequest(usize const id, usize const count, Reference<AServerObject> const& object, Parameters const& params) override {
 			if (auto laser = object.as<Laser>()) {
@@ -70,21 +74,13 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (params.size() < 1) return false;
 			usize const type	= ConstHasher::hash(params[0]);
 			String const name	= params.size() < 2 ? "" : params[1];
-			Reference<AGameObject> target = ITargetsObjects::getTarget(type, name);
+			Reference<AGameObject> target = solver.getTarget(type, name);
 			Math::Vector2 result = 0;
 			if (target) switch (id) {
 				case (ConstHasher::hash("at")): result = target->trans.position;
 			}
-			if (params.size() > 2) {
-				try {
-					result += convert<2>(params[2], 0);
-				} catch (...) {
-					throw Error::InvalidValue(
-						toString("Invalid value of [" , params[2], "] for number!"),
-						CTL_CPP_PRETTY_SOURCE
-					);
-				}
-			}
+			if (params.size() > 2)
+				result += convert<2>(params[2], 0);
 			value = result;
 		}
 
@@ -95,7 +91,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (params.size() < 1) return false;
 			usize const type	= ConstHasher::hash(params[0]);
 			String const name	= params.size() < 2 ? "" : params[1];
-			Reference<AGameObject> target = ITargetsObjects::getTarget(type, name);
+			Reference<AGameObject> target = solver.getTarget(type, name);
 			float result = 0;
 			if (target) switch (id) {
 				case (ConstHasher::hash("rotation")): result = object->trans.position.angleTo(target->trans.position);

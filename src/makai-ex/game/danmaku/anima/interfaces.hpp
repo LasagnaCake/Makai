@@ -6,8 +6,8 @@
 
 /// @brief Anima-specific danmaku facilities.
 namespace Makai::Ex::Game::Danmaku::Anima {
-	struct ITargetsObjects {
-		virtual ~ITargetsObjects() {}
+	struct IObjectSolver {
+		virtual ~IObjectSolver() {}
 
 		Reference<AGameObject> getTarget(usize const type, String const name) {
 			switch (type) {
