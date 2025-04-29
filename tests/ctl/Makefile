@@ -57,6 +57,7 @@ define tests
 	$(call mktest, $(1), 13.random)
 	$(call mktest, $(1), 14.error)
 	$(call mktest, $(1), 15.co)
+	$(call mktest, $(1), 16.bind)
 	$(call mktest, $(1), ex.01.obfuscator)
 	$(call mktest, $(1), ex.02.collision)
 endef
