@@ -80,12 +80,52 @@ namespace Impl {
 	requires (N < TuplePack<N, T, Types...>::DataTypes::COUNT) {
 		return tup.TupleItem<N, T>::value;
 	}
+
+	template<usize N, usize V>
+	struct IndexTupleItem: ValueConstant<usize, V> {};
+
+	template<usize N, usize... R>
+	struct IndexTuplePack;
+
+	template<usize N, usize F, usize... R>
+	struct IndexTuplePack<N, F, R...>:
+		public IndexTupleItem<N, F>,
+		public IndexTuplePack<F + 1, R...> {
+		/// @brief Gets the Nth element in the tuple.
+		/// @tparam INDEX Element index.
+		/// @return Element value.
+		template<usize INDEX>
+		consteval usize get() const {
+			return get<INDEX>(*this);
+		}
+
+		/// @brief Gets the Nth element in a given tuple.
+		/// @tparam F1 First tuple index value.
+		/// @tparam ...R1 Subsequent tuple index values.
+		/// @tparam N1 Element index.
+		/// @param tup Tuple to index into.
+		/// @return Element value.
+		template<usize N1, usize F1, usize... R1>
+		consteval static usize get(IndexTuplePack<N1, F1, R1...>& tup) {
+			return tup.::IndexTupleItem<N1, F1>::value;
+		}
+	};
 }
 
 /// @brief Collection of values.
 /// @tparam ...Types Element types.
 template<class... Types>
 using Tuple = Impl::TuplePack<0, Types...>;
+
+/// @brief Collection of indices.
+/// @tparam ...I Indices.
+template<usize... I>
+using IndexTuple = Impl::IndexTuplePack<0, I...>;
+
+/// @brief Returns an integer pack from [0 -> N-1].
+/// @tparam N Pack size.
+template<usize N>
+using IntegerPack = IndexTuple<__integer_pack(N)...>;
 
 CTL_NAMESPACE_END
 
