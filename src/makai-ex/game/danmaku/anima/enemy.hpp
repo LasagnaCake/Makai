@@ -106,7 +106,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 		void solveMoveTo(Parameters const& params) {
 			if (params.size() < 2) return;
 			Math::Vector2 to;
-			if (params[0].front() == '@') getTargetPosition(to, params[0]);
+			if (params[0].front() == '@') getTargetPosition(to, params.front());
 			else to = toVector<2>(params[0], trans.position);
 			usize time;
 			try {
@@ -142,7 +142,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 		void solveTurnTo(Parameters const& params) {
 			if (params.size() < 2) return;
 			float to;
-			if (params.front().front() == '@') getAngleToTarget(to, params[0]);
+			if (params.front().front() == '@') getAngleToTarget(to, params.front());
 			else to = toVector<1>(params.front(), speed);
 			usize time;
 			try {
