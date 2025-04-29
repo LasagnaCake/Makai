@@ -1,6 +1,7 @@
 #ifndef MAKAILIB_EX_GAME_DANMAKU_ANIMA_SERVERSPAWNER_H
 #define MAKAILIB_EX_GAME_DANMAKU_ANIMA_SERVERSPAWNER_H
 
+#include "decode.hpp"
 #include "interfaces.hpp"
 #include "requestable.hpp"
 #include "../server.hpp"
@@ -150,19 +151,16 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 		}
 
 		static Math::Ease::Mode getEase(String const& param) {
-			if (param.empty()) return Math::Ease::linear;
-			StringList ease = param.splitAtFirst('.');
-			if (param.size() == 1) return Math::Ease::getMode(ease.front(), "linear");
-			return Math::Ease::getMode(ease.front(), ease.back());
+			return toEaseMode(param);
 		}
 		
 		virtual bool preprocess(bool& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
 		virtual bool preprocess(usize& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
 		virtual bool preprocess(ssize& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
 		virtual bool preprocess(float& value, usize const id, ObjectHandle const& object, String const& param)				{return processRNG(value, param);	}
-		virtual bool preprocess(Vector2& value, usize const id, ObjectHandle const& object, String const& param)			{return processRNG(value, param);	}
-		virtual bool preprocess(Vector3& value, usize const id, ObjectHandle const& object, String const& param)			{return processRNG(value, param);	}
-		virtual bool preprocess(Vector4& value, usize const id, ObjectHandle const& object, String const& param)			{return processRNG(value, param);	}
+		virtual bool preprocess(Math::Vector2& value, usize const id, ObjectHandle const& object, String const& param)		{return processRNG(value, param);	}
+		virtual bool preprocess(Math::Vector3& value, usize const id, ObjectHandle const& object, String const& param)		{return processRNG(value, param);	}
+		virtual bool preprocess(Math::Vector4& value, usize const id, ObjectHandle const& object, String const& param)		{return processRNG(value, param);	}
 		virtual bool preprocess(Math::Ease::Mode& value, usize const id, ObjectHandle const& object, String const& param)	{return false;						}
 
 		template <Type::Ex::Math::Vector::Vector T>
@@ -216,40 +214,8 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 
 	protected:
 		template<usize D>
-		static Math::Vector<D> convert(String const& str, Math::Vector<D> const& fallback = 0)
-		requires (D == 1) {
-			if (str.empty()) return fallback;
-			try {
-				return String::toNumber<T>(str);
-			} catch (...) {
-				throw Error::InvalidValue(
-					toString("Invalid value of [", str, "] for ", String(nameof<Vector<D>>()), "!"),
-					CTL_CPP_PRETTY_SOURCE
-				);
-			}
-		}
-
-		template<usize D>
-		static Math::Vector<D> convert(String const& str, Math::Vector<D> const& fallback = 0)
-		requires (D > 1) {
-			if (str.empty()) return fallback;
-			if (D == 4 && str.front() == '#')
-				return Graph::Color::fromHexCodeString(str);
-			StringList components = str.split(',');
-			Math::Vector<D> out;
-			usize const end = (components.size() < D ? components.size() : D);
-			for (usize i = 0; i < end; ++i) {
-				try {
-					if (end == 1) out = toFloat(components[i]);
-					else out.data[i] = toFloat(components[i]);
-				} catch (...) {
-					throw Error::InvalidValue(
-						toString("Invalid value of [", str, "] for ", String(nameof<Math::Vector<D>>()), " property!"),
-						CTL_CPP_PRETTY_SOURCE
-					);
-				}
-			}
-			return out;
+		static Math::Vector<D> convert(String const& str, Math::Vector<D> const& fallback = 0) {
+			return toVector<D>(str, fallback);
 		}
 	};
 }

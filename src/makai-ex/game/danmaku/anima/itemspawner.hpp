@@ -51,6 +51,31 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			}
 		}
 
+		bool preprocess(Math::Vector2& value, usize const id, ObjectHandle const& object, String const& param) override {
+			if (ServerSpawner::preprocess(value, id, object, param)) return true;
+			if (param.empty()) return false;
+			StringList const params = param.split(':');
+			if (params.size() < 1) return false;
+			usize const type	= ConstHasher::hash(params[0]);
+			String const name	= params.size() < 2 ? "" : params[1];
+			Reference<AGameObject> target = ITargetsObjects::getTarget(type, name);
+			Math::Vector2 result = 0;
+			if (target) switch (id) {
+				case (ConstHasher::hash("position")): result = target->trans.position;
+			}
+			if (params.size() > 2) {
+				try {
+					result += convert<2>(params[2], 0);
+				} catch (...) {
+					throw Error::InvalidValue(
+						toString("Invalid value of [" , params[2], "] for number!"),
+						CTL_CPP_PRETTY_SOURCE
+					);
+				}
+			}
+			value = result;
+		}
+
 		bool preprocess(float& value, usize const id, ObjectHandle const& object, String const& param) override {
 			if (ServerSpawner::preprocess(value, id, object, param)) return true;
 			if (param.empty()) return false;
