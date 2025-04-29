@@ -204,9 +204,9 @@ using Trigger	= Function<bool(Args...)>;
 /// @param obj Object to wrap.
 /// @param func Member function to wrap for object.
 /// @return Wrapped function.
-template<class TObject, class TFunction, class TReturn, class... TArgs>
-constexpr Function<TReturn(TArgs...)> memberCall(TObject& obj, TFunction const func)
-requires Type::Equal<TFunction, TReturn(TObject::*)(TArgs...)> {
+template<class TObject, class TReturn, class... TArgs>
+constexpr Function<TReturn(TArgs...)>
+memberCall(TObject& obj, As<TReturn(TObject::*)(TArgs...)> const func) {
 	return [&] (TArgs... args) -> TReturn {return (obj.*func)(args...);};
 }
 
@@ -217,9 +217,9 @@ requires Type::Equal<TFunction, TReturn(TObject::*)(TArgs...)> {
 /// @tparam ...TArgs Member function argument types.
 /// @param func Member function to wrap.
 /// @return Member function as callable function.
-template<class TObject, class TFunction, class TReturn, class... TArgs>
-constexpr Function<TReturn(TObject&, TArgs...)> fromMemberCall(TFunction const func)
-requires Type::Equal<TFunction, TReturn(TObject::*)(TArgs...)> {
+template<class TObject, class TReturn, class... TArgs>
+constexpr Function<TReturn(TObject&, TArgs...)>
+fromMemberCall(As<TReturn(TObject::*)(TArgs...)> const func) {
 	return [&] (TObject& obj, TArgs... args) -> TReturn {return (obj.*func)(args...);};
 }
 
