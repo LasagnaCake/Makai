@@ -73,7 +73,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			Reference<AGameObject> target = ITargetsObjects::getTarget(type, name);
 			Math::Vector2 result = 0;
 			if (target) switch (id) {
-				case (ConstHasher::hash("position")): result = target->trans.position;
+				case (ConstHasher::hash("at")): result = target->trans.position;
 			}
 			if (params.size() > 2) {
 				try {
