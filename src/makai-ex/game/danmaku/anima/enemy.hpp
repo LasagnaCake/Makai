@@ -142,8 +142,8 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 		void solveTurnTo(Parameters const& params) {
 			if (params.size() < 2) return;
 			float to;
-			if (params[0].front() == '@') getAngleToTarget(to, params[0]);
-			else to = toVector<1>(params[0], speed);
+			if (params.front().front() == '@') getAngleToTarget(to, params[0]);
+			else to = toVector<1>(params.front(), speed);
 			usize time;
 			try {
 				time = toUInt64(params[1]);
@@ -180,7 +180,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (param.empty()) return;
 			StringList const params = param.split(':');
 			if (params.size() < 1) return;
-			usize const type	= ConstHasher::hash(params[0]);
+			usize const type	= ConstHasher::hash(params.front());
 			String const name	= params.size() < 2 ? "" : params[1];
 			Reference<AGameObject> target = solver.getTarget(type, name);
 			Math::Vector2 result = 0;
@@ -194,7 +194,7 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (param.empty()) return;
 			StringList const params = param.split(':');
 			if (params.size() < 1) return;
-			usize const type	= ConstHasher::hash(params[0]);
+			usize const type	= ConstHasher::hash(params.front());
 			String const name	= params.size() < 2 ? "" : params[1];
 			Reference<AGameObject> target = solver.getTarget(type, name);
 			float result = 0;
