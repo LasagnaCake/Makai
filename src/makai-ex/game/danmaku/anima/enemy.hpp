@@ -30,14 +30,17 @@ namespace Makai::Ex::Game::Danmaku::Anima {
 			if (AEnemy::paused()) return;
 			SimpleEngine::process();
 			movement.onUpdate(1);
-			acceleration.onUpdate(1);
 			if (SimpleEngine::paused) return;
 			if (!movement.finished()) {
 				direction = (movement.value() - trans.position).normalized();
 				trans.position = movement.value();
 			} else {
+				acceleration.onUpdate(1);
+				turning.onUpdate(1);
 				if (!acceleration.finished())
 					speed = acceleration.value();
+				if (!turning.finished())
+					angle = turning.value();
 				trans.position += Math::angleV2(angle) * speed * delta;
 				direction = Math::angleV2(angle);
 			}
