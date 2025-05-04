@@ -192,7 +192,7 @@ using Tuple = Impl::Tuple<Types...>;
 template<usize... I>
 using IndexTuple = Impl::IndexTuplePack<0, I...>;
 
-/// @brief Compiler-agnostic builtin characteristics helper.
+/// @brief Builtins demangler.
 namespace Impl::Builtin {
 #if defined(__clang__)
 	namespace {	
