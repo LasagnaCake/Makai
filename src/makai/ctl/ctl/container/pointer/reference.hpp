@@ -2,6 +2,7 @@
 #define CTL_CONTAINER_POINTER_REFERENCE_H
 
 #include "../../namespace.hpp"
+#include "../../order.hpp"
 #include "../../templates.hpp"
 #include "../../cpperror.hpp"
 

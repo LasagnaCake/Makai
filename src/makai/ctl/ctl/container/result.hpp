@@ -55,11 +55,11 @@ public:
 	/// @brief Copy constructor (Error).
 	/// @param other Error value to copy.
 	/// @note Explicit if error type to not be implicitly convertible to result type.
-	constexpr explicit(IMPLICIT) Result(ErrorType const& value)	{result.error = error; state = ResultState::RS_ERROR;				}
+	constexpr explicit(IMPLICIT) Result(ErrorType const& value)	{result.error = value; state = ResultState::RS_ERROR;				}
 	/// @brief Move constructor (Error).
 	/// @param other Error value to copy.
 	/// @note Explicit if error type to not be implicitly convertible to result type.
-	constexpr explicit(IMPLICIT) Result(ErrorType&& value)		{result.error = CTL::move(error); state = ResultState::RS_ERROR;	}
+	constexpr explicit(IMPLICIT) Result(ErrorType&& value)		{result.error = CTL::move(value); state = ResultState::RS_ERROR;	}
 
 	/// @brief Runs the passed callable if there is a value.
 	/// @tparam TFunction Callable type.

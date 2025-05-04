@@ -6,6 +6,7 @@
 #include "../templates.hpp"
 #include "../cpperror.hpp"
 #include "../typeinfo.hpp"
+#include "../memory/core.hpp"
 
 CTL_NAMESPACE_BEGIN
 

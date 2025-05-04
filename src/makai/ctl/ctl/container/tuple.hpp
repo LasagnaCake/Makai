@@ -192,10 +192,25 @@ using Tuple = Impl::Tuple<Types...>;
 template<usize... I>
 using IndexTuple = Impl::IndexTuplePack<0, I...>;
 
+/// @brief Compiler-agnostic builtin characteristics helper.
+namespace Impl::Builtin {
+#if defined(__clang__)
+	namespace {	
+		template <class T, usize... V>
+		using IntegerPackWrapper = IndexTuple<V...>;
+	}
+	template <usize N>
+	using MakePack = __make_integer_seq<IntegerPackWrapper, usize, N>;
+#else
+	template <usize N>
+	using MakePack = IndexTuple<__integer_pack(N)...>;
+#endif
+}
+
 /// @brief Creates an integer pack from [0 -> N-1].
 /// @tparam N Pack size.
 template<usize N>
-using IntegerPack = IndexTuple<__integer_pack(N)...>;
+using IntegerPack = Impl::Builtin::MakePack<N>;
 
 /// @brief Gets the type of the Nth element in a tuple.
 /// @tparam T Tuple type.
