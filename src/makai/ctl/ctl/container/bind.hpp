@@ -7,6 +7,8 @@
 
 CTL_NAMESPACE_BEGIN
 
+// Based off of GCC's implementation
+
 /// @brief Argument placeholder representation.
 /// @tparam N Argument index.
 template <usize N> struct Placeholder: ValueConstant<usize, N> {};
