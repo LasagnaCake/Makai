@@ -6,6 +6,7 @@
 
 #include "../../memory/deleter.hpp"
 
+#include "makai/ctl/ctl/typetraits/basictraits.hpp"
 #include "reference.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -209,6 +210,16 @@ struct Unique:
 	template<class... Args>
 	constexpr static SelfType create(Args&&... args) {
 		return SelfType(new DataType(forward<Args>(args)...));
+	}
+
+	/// @brief Creates an unique pointer.
+	/// @tparam TDerived Derived type.
+	/// @tparam ...Args Argument types.
+	/// @param ...args Arguments to pass to object construtor.
+	/// @return Unique pointer.
+	template<Type::Derived<DataType> TDerived, class... Args>
+	constexpr static SelfType create(Args&&... args) {
+		return SelfType(new TDerived(forward<Args>(args)...));
 	}
 
 private:

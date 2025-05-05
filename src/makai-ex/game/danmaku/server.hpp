@@ -230,7 +230,7 @@ namespace Makai::Ex::Game::Danmaku {
 			AGameObject::onUpdate(delta);
 			if (!paused()) return;
 			onObjectUpdate(*this, delta, cycle++);
-			if (lifetime > 0 && cycle >= lifetime) despawn();
+			if (lifetime > 0 && static_cast<ssize>(cycle) >= lifetime) despawn();
 		}
 
 	protected:

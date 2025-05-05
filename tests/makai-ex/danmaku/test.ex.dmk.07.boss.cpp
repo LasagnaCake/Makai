@@ -98,6 +98,52 @@ struct TestBoss;
 using TestBossRegistry = Makai::Ex::Game::Registry<TestBoss>;
 
 struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
+	struct TestAct: AAct {
+		usize const id = 0;
+
+		TestBulletServer& bulletServer;
+
+		TestAct(TestBoss& boss, usize const id, TestBulletServer& bulletServer):
+			AAct(boss), id(id), bulletServer(bulletServer) {}
+
+		void createShots(float const stride = 10) {
+			DEBUGLN("Firing shots...");
+			for (usize i = 0; i < 5; ++i) {
+				auto bullet = bulletServer.acquire().as<Danmaku::Bullet>();
+				if (!bullet) return;
+				float const crot = (TAU / 20) * (i + (Makai::App::current()->getCurrentCycle() / stride * 0.5));
+				bullet->trans.position = boss.trans.position;
+				bullet->velocity = {
+					-30,
+					true,
+					-30,
+					30,
+					.03
+				};
+				bullet->rotation = {
+					crot,
+					true,
+					crot,
+					crot + static_cast<float>(TAU),
+					.02,
+					Makai::Math::Ease::InOut::back
+				};
+				bullet->spawn();
+			}
+		}
+
+		PromiseType task() override {
+			while (true) {
+				createShots();
+				co_yield 10;
+			}
+		}
+
+		usize next() const override {
+			return id;
+		}
+	};
+
 	Makai::Random::Generator rng;
 	
 	Makai::Graph::Renderable mesh;
@@ -133,32 +179,6 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		healthBar.material.color = Makai::Graph::Color::MAGENTA * Makai::Graph::Color::alpha(0.5);
 	}
 
-	void createShots(float const stride = 10) {
-		DEBUGLN("Firing shots...");
-		for (usize i = 0; i < 5; ++i) {
-			auto bullet = bulletServer.acquire().as<Danmaku::Bullet>();
-			if (!bullet) return;
-			float const crot = (TAU / 20) * (i + (Makai::App::current()->getCurrentCycle() / stride * 0.5));
-			bullet->trans.position = trans.position;
-			bullet->velocity = {
-				-30,
-				true,
-				-30,
-				30,
-				.03
-			};
-			bullet->rotation = {
-				crot,
-				true,
-				crot,
-				crot + static_cast<float>(TAU),
-				.02,
-				Makai::Math::Ease::InOut::back
-			};
-			bullet->spawn();
-		}
-	}
-
 	void spawnLasers(float const offset) {
 		for (ssize i: {1, 2, 3, 4}) {
 			auto laser = laserServer.acquire().as<Danmaku::Laser>();
@@ -189,13 +209,6 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		collider->position		= trans.position;
 		movement.onUpdate(1);
 		trans.position = movement.value();
-		if (collision()->canCollide) {
-			if (counter) --counter;
-			else {
-				counter = 10;
-				createShots();
-			}
-		}
 	}
 
 	void moveRandom() {
@@ -231,7 +244,10 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		);
 	}
 
-	void onBattleBegin() override			{collision()->canCollide = true; doCurrentAct();					}
+	void onBattleBegin() override {
+		doAct(0);
+	}
+	
 	void onBattleEnd() override	{
 		for (usize i = 0; i < 20; ++i)
 			createItems();
@@ -241,19 +257,22 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		queueDestroy();
 	}
 
-	void onAct(usize const act) override {
+	Makai::Unique<AAct> onAct(usize const act) override {
 		bulletServer.despawnAll();
 		DEBUGLN("Act: [", act, "]");
 		if (act > 0)
 			for (usize i = 0; i < 10; ++i)
 				createItems();
+		if (act == static_cast<usize>(-1)) {
+			endBattle();
+			return {};
+		}
 		moveRandom();
 		if (act == 1) spawnLasers(0);
 		if (act == 2) spawnLasers(6.4);
 		setHealth(1000, 1000);
+		return ActInstanceType::create<TestAct>(*this, act+1, bulletServer);
 	}
-
-	usize getActCount() override			{return 3;			}
 	
 	TestBoss& spawn() override				{return *this;		}
 	TestBoss& despawn() override			{return *this;		}

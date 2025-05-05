@@ -22,7 +22,9 @@ namespace Makai {
 		using namespace CTL::Ex::Co;
 		using namespace CTL::Co;
 	}
+	#ifndef __clang__
 	namespace Type = Type;
+	#endif
     using Math::Vector2;
     using Math::Vector3;
     using Math::Vector4;
