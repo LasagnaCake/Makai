@@ -69,7 +69,7 @@ namespace Spline {
 			by = ::CTL::Math::clamp<float>(by, 0, 1);
 			if (by == 1.0) return points.end();
 			usize curp = ::CTL::Math::floor(by * points.size());
-			return Math::lerp(points[curp], points[curp+1], by);
+			return ::CTL::Math::lerp(points[curp], points[curp+1], by);
 		}
 	};
 
@@ -162,7 +162,7 @@ namespace Spline {
 					return ::CTL::Math::lerp(sec.points[0], end, T(by));
 				else {
 					Section<T, S-1> res;
-					T newEnd = Math::lerp(sec.points[S-1], end, T(by));
+					T newEnd = ::CTL::Math::lerp(sec.points[S-1], end, T(by));
 					for (usize i = 0; i < S-2; ++i)
 						res.points[i] = ::CTL::Math::lerp(sec.points[S], sec.points[S+1], T(by));
 					return lerpSection(res, newEnd, by);

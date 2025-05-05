@@ -4,6 +4,7 @@
 #include "vector.hpp"
 #include "../../ctl/exnamespace.hpp"
 #include "../../ctl/math/core.hpp"
+#include "../../ctl/container/error.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
 

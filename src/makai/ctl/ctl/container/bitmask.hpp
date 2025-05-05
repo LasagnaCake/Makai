@@ -2,6 +2,7 @@
 #define CTL_CONTAINER_BITMASK_H
 
 #include "../templates.hpp"
+#include "../cpperror.hpp"
 #include "../typetraits/traits.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -165,7 +166,7 @@ struct BitMask:
 
 	private:
 		constexpr Bit(DataType& data, usize const index): data(data), mask(1 << index) {}
-		friend class SelfType;
+		friend class BitMask<TData, S, I>;
 		/// @brief Data the bit is associated with.
 		DataType&		data;
 		/// @brief Bit mask.

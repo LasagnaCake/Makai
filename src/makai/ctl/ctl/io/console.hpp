@@ -7,6 +7,7 @@
 #include "stream.hpp"
 
 #ifdef CTL_CONSOLE_OUT
+#include <syncstream>
 #include <iostream>
 #endif // CTL_CONSOLE_OUT
 

@@ -5,6 +5,7 @@
 #include "../typetraits/traits.hpp"
 #include "../templates.hpp"
 #include "../container/pointer/shared.hpp"
+#include "../container/nullable.hpp"
 #include "atomic.hpp"
 
 CTL_NAMESPACE_BEGIN

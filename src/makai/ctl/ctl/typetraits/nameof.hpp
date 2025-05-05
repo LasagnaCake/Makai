@@ -11,7 +11,7 @@ CTL_NAMESPACE_BEGIN
 /// @brief Type name extraction implementations.
 namespace Impl::TypeName {
 	template <class _>
-	constexpr cstring fname() {
+	constexpr cstring getFuncName() {
 		return __PRETTY_FUNCTION__;
 	}
 
@@ -27,7 +27,7 @@ namespace Impl::TypeName {
 	}
 
 	constexpr cstring basename() {
-		return fname<int>();
+		return getFuncName<int>();
 	}
 
 	constexpr Format base() {
@@ -44,15 +44,15 @@ namespace Impl::TypeName {
 
 	template <class T>
 	struct Solver {
-		constexpr static usize NAME_SIZE = csize(fname<T>()) - fmt.total + 1;
+		constexpr static usize NAME_SIZE = csize(getFuncName<T>()) - fmt.total + 1;
 
 		using ReturnType = Span<char const, NAME_SIZE>;
 
 		constexpr static ReturnType name() {
-			cstring const fname = fname<T>();
+			cstring const fname = getFuncName<T>();
 			usize end = 0;
 			while (fname[end] != '\0') ++end;
-			return ReturnType str = ReturnType(fname + fmt.lead);
+			return ReturnType(fname + fmt.lead);
 		}
 	};
 }

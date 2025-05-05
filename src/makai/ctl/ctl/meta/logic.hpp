@@ -2,6 +2,7 @@
 #define CTL_META_LOGIC_H
 
 #include "../namespace.hpp"
+#include "../typetraits/typecontainer.hpp"
 
 CTL_NAMESPACE_BEGIN
 

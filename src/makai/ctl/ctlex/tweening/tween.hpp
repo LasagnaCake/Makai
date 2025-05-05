@@ -5,6 +5,7 @@
 #include "../../ctl/container/arguments.hpp"
 #include "../../ctl/container/list.hpp"
 #include "../../ctl/container/functor.hpp"
+#include "../../ctl/interface/core.hpp"
 #include "../math/ease.hpp"
 #include "../event/timer.hpp"
 
@@ -172,7 +173,7 @@ public:
 	/// @return Reference to self.
 	Tween<T>& reinterpolateTo(T const& to) {
 		paused = false;
-		setInterpolation(value, to, step, easeMode);
+		setInterpolation(current, to, step, easeMode);
 		return *this;
 	}
 
@@ -197,7 +198,7 @@ public:
 	/// @return Reference to self.
 	Tween<T>& reinterpolateTo(T const& to, usize const step) {
 		paused = false;
-		setInterpolation(value, to, step, easeMode);
+		setInterpolation(current, to, step, easeMode);
 		return *this;
 	}
 

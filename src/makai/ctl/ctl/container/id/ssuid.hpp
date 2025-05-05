@@ -3,6 +3,7 @@
 
 #include "../../namespace.hpp"
 #include "../../templates.hpp"
+#include "../../order.hpp"
 #include "../../memory/core.hpp"
 
 CTL_NAMESPACE_BEGIN
