@@ -245,6 +245,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	}
 
 	void onBattleBegin() override {
+		collision()->canCollide = true;
 		doAct(0);
 	}
 	
@@ -271,7 +272,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		if (act == 1) spawnLasers(0);
 		if (act == 2) spawnLasers(6.4);
 		setHealth(1000, 1000);
-		return ActInstanceType::create<TestAct>(*this, act+1, bulletServer);
+		return ActInstanceType::create<TestAct>(*this, act < 2 ? act+1 : -1, bulletServer);
 	}
 	
 	TestBoss& spawn() override				{return *this;		}
