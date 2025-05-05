@@ -39,7 +39,10 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Called when the enemy dies. In this case, when a phase ends.
 		void onDeath() override {
-			if (!practiceMode && (current = onAct(current->next())))
+			current.unbind();
+			if (!practiceMode)
+				current = onAct(current->next());
+			if (current)
 				setFlags(Flags::EF_DEAD, false);
 			else endBattle();
 		}
