@@ -48,7 +48,12 @@ struct Console {
 	/// @param ...args Values to print.
 	template<typename... Args>
 	static void syncprint(Args... args) {
+		// HACK: Clangd hates osyncstreams...
+		#ifndef __clang__
 		Fold::strins(std::osyncstream(out), args...);
+		#else
+		print(args...);
+		#endif
 	}
 
 	/// @brief Synchronous version of `println`.
