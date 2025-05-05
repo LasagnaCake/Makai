@@ -6,7 +6,7 @@
 
 #include "../../memory/deleter.hpp"
 
-#include "makai/ctl/ctl/typetraits/basictraits.hpp"
+#include "../../typetraits/basictraits.hpp"
 #include "reference.hpp"
 
 CTL_NAMESPACE_BEGIN
