@@ -4,6 +4,7 @@
 #include "namespace.hpp"
 #include "typetraits/traits.hpp"
 #include "typetraits/cast.hpp"
+#include "typetraits/verify.hpp"
 #include "algorithm/bitwise.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -69,28 +70,40 @@ constexpr T abs(T const v) {
 	return (v < 0) ? -v : v;
 }
 
+namespace {
+	consteval bool canMathBuiltin() {
+		#if defined(CTL_MATH_DO_NOT_USE_BUILTINS)
+		return false;
+		#else
+		return true;
+		#endif
+	}
+}
+
+#define CTL_MATH_CAN_BUILTIN(f) (canMathBuiltin() && (inRunTime() || __has_constexpr_builtin(__builtin_##f)))
+
 /// @brief Returns euler's number raised to the given value.
 /// @tparam F Floating point type.
 /// @param value Value to use as exponent.
 /// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
-/// @note `precision` is only used if `CTL_MATH_DO_NOT_USE_BUILTINS` is defined.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return euler's number raised to the given value.
 template<Type::Real F = double>
 constexpr F exp(F const value, usize precision = sizeof(F) * 4) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_expf(value);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_exp(value);
-	else
-		return __builtin_expl(value);
-	#else
-	// Based off of https://codingforspeed.com/using-faster-exponential-approximation/
-	F out = 1.0 + value / static_cast<F>(static_cast<usize>(1) << precision);
-	for (usize i = 0; i < precision; ++i)
-		out *= out;
-	return out;
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(exp)) {	
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_expf(value);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_exp(value);
+		else
+			return __builtin_expl(value);
+	} else {
+		// Based off of https://codingforspeed.com/using-faster-exponential-approximation/
+		F out = 1.0 + value / static_cast<F>(static_cast<usize>(1) << precision);
+		for (usize i = 0; i < precision; ++i)
+			out *= out;
+		return out;
+	}
 }
 
 static_assert(compare<double>(exp<double>(1.0), Constants::EULER));
@@ -98,16 +111,31 @@ static_assert(compare<double>(exp<double>(1.0), Constants::EULER));
 /// @brief Returns the natural logarithm of a given number.
 /// @tparam F Floating point type.
 /// @param value Value to get the natural logarithm for.
+/// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return Natural logarithm of number.
 template<Type::Real F = double>
-constexpr F log(F value) {
-	if (!value) return 0;
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_logf(value);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_log(value);
-	else
-		return __builtin_logl(value);
+constexpr F log(F value, F const precision = sizeof(F) * 4) {
+	if constexpr(CTL_MATH_CAN_BUILTIN(log)) {	
+		if (!value) return 0;
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_logf(value);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_log(value);
+		else
+			return __builtin_logl(value);
+	} else {
+		// Based off of https://stackoverflow.com/a/63773160
+		constexpr F ONE = static_cast<F>(1);
+		constexpr F TWO = static_cast<F>(2);
+		F x0 = value - ONE, x1 = x0, xe;
+		do {
+			x0 = x1;
+			xe = exp(x0, precision);
+			x1 = x0 + TWO * (value - xe) / (value + xe);
+		} while (abs(x1 - x0) > ONE / precision);
+		return x1;
+	}
 }
 
 static_assert(compare<double>(log<double>(4.0), 1.38629436112));
@@ -116,68 +144,71 @@ static_assert(compare<double>(log<double>(4.0), 1.38629436112));
 /// @tparam F Floating point type.
 /// @param value Value to get the logarithm for.
 /// @param base Base to get logarithm in.
+/// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return Logarithm of number.
 template<Type::Real F = double>
-constexpr F logn(F const value, F const base) {
-	return log<F>(value) / log<F>(base);
+constexpr F logn(F const value, F const base, F const precision = sizeof(F) * 4) {
+	return log<F>(value, precision) / log<F>(base, precision);
 }
 
 /// @brief Returns the base-2 logarithm for a given number.
 /// @tparam F Floating point type.
 /// @param value Value to get the logarithm for.
+/// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return Logarithm of number.
 template<Type::Real F = double>
-constexpr F log2(F const value) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if (!value) return 0;
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_log2f(value);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_log2(value);
-	else
-		return __builtin_log2l(value);
-	#else
-	return log<F>(value) / static_cast<F>(Constants::LN2);
-	#endif
+constexpr F log2(F const value, F const precision = sizeof(F) * 4) {
+	if constexpr (CTL_MATH_CAN_BUILTIN(log2)) {
+		if (!value) return 0;
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_log2f(value);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_log2(value);
+		else
+			return __builtin_log2l(value);
+	} else return log<F>(value, precision) / static_cast<F>(Constants::LN2);
 }
 
 /// @brief Returns the base-10 logarithm for a given number.
 /// @tparam F Floating point type.
 /// @param value Value to get the logarithm for.
+/// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return Logarithm of number.
 template<Type::Real F = double>
-constexpr F log10(F const value) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if (!value) return 0;
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_log10f(value);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_log10(value);
-	else
-		return __builtin_log10l(value);
-	#else
-	return log<F>(value) / static_cast<F>(Constants::LN10);
-	#endif
+constexpr F log10(F const value, F const precision = sizeof(F) * 4) {
+	if constexpr (CTL_MATH_CAN_BUILTIN(log10)) {
+		if (!value) return 0;
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_log10f(value);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_log10(value);
+		else
+			return __builtin_log10l(value);
+	}
+	else return log<F>(value, precision) / static_cast<F>(Constants::LN10);
 }
 
 /// @brief Calculates a value raised to a given power.
 /// @tparam F Floating point type.
 /// @param value Value to raise.
 /// @param power Power to raise by.
+/// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return Value raised to the given power.
 template<Type::Real F = double>
 constexpr F pow(F const value, F power, usize const precision = sizeof(F) * 4) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if (!value) return 0;
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_powf(value, power);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_pow(value, power);
-	else
-		return __builtin_powl(value, power);
-	#else
-	return exp<F>(power*log<F>(value), precision);
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(pow)) {
+		if (!value) return 0;
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_powf(value, power);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_pow(value, power);
+		else
+			return __builtin_powl(value, power);
+	} else return exp<F>(power*log<F>(value, precision), precision);
 }
 
 static_assert(compare<double>(pow<double>(10, 0), 1));
@@ -189,31 +220,29 @@ static_assert(compare<double>(pow<double>(10, 2), 100));
 /// @param value Value to get root for.
 /// @param root Root to get.
 /// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
-/// @note `precision` is only used if `CTL_MATH_DO_NOT_USE_BUILTINS` is defined.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return Root of number.
 template<Type::Real F = double>
 constexpr F root(F const value, F const root, usize const precision = sizeof(F) * 4) {
-	return exp<F>(log<F>(value) / root, precision);
+	return exp<F>(log<F>(value, precision) / root, precision);
 }
 
 /// @brief Returns the square root of a number.
 /// @tparam F Floating point type.
 /// @param value Value to get square root for.
 /// @param precision Precision of approximation. By default, it is `sizeof(F) * 4`.
-/// @note `precision` is only used if `CTL_MATH_DO_NOT_USE_BUILTINS` is defined.
+/// @note `precision` is only used if math builtins are enabled.
 /// @return Square root of number.
 template<Type::Real F = double>
 constexpr F sqrt(F const value, usize const precision = sizeof(F) * 4) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_sqrtf(value);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_sqrt(value);
-	else
-		return __builtin_sqrtl(value);
-	#else
-	return root<F>(value, 2, precision);
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(sqrt)) {
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_sqrtf(value);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_sqrt(value);
+		else
+			return __builtin_sqrtl(value);
+	} else return root<F>(value, 2, precision);
 }
 
 static_assert(compare<double>(sqrt<double>(4.0), 2));
@@ -225,12 +254,17 @@ static_assert(compare<double>(sqrt<double>(4.0), 2));
 /// @return Remainder.
 template<Type::Real F = double>
 constexpr F fmod(F const val, F const mod) {
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_fmodf(val, mod);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_fmod(val, mod);
-	else
-		return __builtin_fmodl(val, mod);
+	if constexpr (CTL_MATH_CAN_BUILTIN(fmod)) {	
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_fmodf(val, mod);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_fmod(val, mod);
+		else
+			return __builtin_fmodl(val, mod);
+	} else {
+		// TODO: Implement fmod
+		static_assert(false, "No constexpr fmod implementation yet!");
+	}
 }
 
 /// @brief Returns the given angle, wrapped between `-PI` and `+PI`.
@@ -246,19 +280,18 @@ constexpr F rmod(F const& angle) {
 /// @tparam F Floating point type.
 /// @param x Number to get the arc tangent for.
 /// @return Arc tangent of number.
-/// @note Based off of https://stackoverflow.com/a/42542593
 template<Type::Real F = double>
 constexpr F atan(F const value) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_atanf(value);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_atan(value);
-	else
-		return __builtin_atanl(value);
-	#else
-	return 8.430893743524 * value / (3.2105332277903100 + sqrt<F>(27.2515970979709 + 29.3591908371266 * value * value));
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(atan)) {
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_atanf(value);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_atan(value);
+		else
+			return __builtin_atanl(value);
+	}
+	// Based off of https://stackoverflow.com/a/42542593
+	else return 8.430893743524 * value / (3.2105332277903100 + sqrt<F>(27.2515970979709 + 29.3591908371266 * value * value));
 }
 
 /// @brief Calculates the arc tangent of Y/X.
@@ -268,24 +301,34 @@ constexpr F atan(F const value) {
 /// @return Arc tangent of Y/X.
 template<Type::Real F = double>
 constexpr F atan2(F const y, F const x) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_atan2f(y, x);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_atan2(y, x);
-	else
-		return __builtin_atan2l(y, x);
-	#else
-	if (!x && !y)	return 0;
-	if (x == 0)		return (static_cast<F>(Constants::PI)/2) * (y < 0 ? -1 : +1);
-	if (x < 0)		return atan<F>(y/x) + static_cast<F>(Constants::PI) * (y < 0 ? -1 : +1);
-	return atan<F>(y/x);
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(atan2)) {
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_atan2f(y, x);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_atan2(y, x);
+		else
+			return __builtin_atan2l(y, x);
+	}
+	else {
+		if (!x && !y)	return 0;
+		if (x == 0)		return (static_cast<F>(Constants::PI)/2) * (y < 0 ? -1 : +1);
+		if (x < 0)		return atan<F>(y/x) + static_cast<F>(Constants::PI) * (y < 0 ? -1 : +1);
+		return atan<F>(y/x);
+	}
 }
 
 static_assert(compare<double>(atan2<double>(0, 1), 0));
 static_assert(compare<double>(atan2<double>(1, 0), Constants::PI/2));
 static_assert(compare<double>(atan2<double>(1, 1), Constants::PI/4));
+
+namespace Impl {
+	template<Type::Real F = double>
+	constexpr F sin(F angle) {
+		angle = fmod<F>(angle + Constants::PI, Constants::TAU) - Constants::PI;
+		F const sq = angle * angle;
+		return angle + (angle * sq) * (-0.16612511580269618l + sq * (8.0394356072977748e-3l + sq * -1.49414020045938777495e-4l));
+	}
+}
 
 /// @brief Calculates both sine and cosine of a given angle.
 /// @tparam F Floating point type.
@@ -294,12 +337,18 @@ static_assert(compare<double>(atan2<double>(1, 1), Constants::PI/4));
 /// @param cos Output of cosine of angle.
 template<Type::Real F = double>
 constexpr void sincos(F const angle, F& sin, F& cos) {
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_sincosf(angle, &sin, &cos);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_sincos(angle, &sin, &cos);
-	else
-		return __builtin_sincosl(angle, &sin, &cos);
+	if constexpr (CTL_MATH_CAN_BUILTIN(sincos)) {
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_sincosf(angle, &sin, &cos);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_sincos(angle, &sin, &cos);
+		else
+			return __builtin_sincosl(angle, &sin, &cos);
+	}
+	else {
+		sin = Impl::sin<F>(angle);
+		cos = Impl::sin<F>(angle + Constants::PI);
+	}
 }
 
 /// @brief Calculates the sine of a given angle.
@@ -308,18 +357,16 @@ constexpr void sincos(F const angle, F& sin, F& cos) {
 /// @return Sine of angle.
 template<Type::Real F = double>
 constexpr F sin(F const angle) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_sinf(angle);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_sin(angle);
-	else
-		return __builtin_sinl(angle);
-	#else
-	F out, _;
-	sincos<F>(angle, out, _);
-	return out;
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(sin)) {
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_sinf(angle);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_sin(angle);
+		else
+			return __builtin_sinl(angle);
+	} else {	
+		return Impl::sin<F>(angle);
+	}
 }
 
 /// @brief Calculates the cosine of a given angle.
@@ -328,18 +375,16 @@ constexpr F sin(F const angle) {
 /// @return Cosine of angle.
 template<Type::Real F = double>
 constexpr F cos(F const angle) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_cosf(angle);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_cos(angle);
-	else
-		return __builtin_cosl(angle);
-	#else
-	F out, _;
-	sincos<F>(angle, _, out);
-	return out;
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(cos)) {
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_cosf(angle);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_cos(angle);
+		else
+			return __builtin_cosl(angle);
+	} else {
+		return Impl::sin<F>(angle + Constants::PI);
+	}
 }
 
 /// @brief Calculates the tangent of a given angle.
@@ -348,18 +393,18 @@ constexpr F cos(F const angle) {
 /// @return Tangent of angle.
 template<Type::Real F = double>
 constexpr F tan(F const angle) {
-	#ifndef CTL_MATH_DO_NOT_USE_BUILTINS
-	if constexpr (Type::Equal<F, float>)
-		return __builtin_tanf(angle);
-	else if constexpr (Type::Equal<F, double>)
-		return __builtin_tan(angle);
-	else
-		return __builtin_tanl(angle);
-	#else
-	F s, c;
-	sincos<F>(angle, s, c);
-	return s / c;
-	#endif
+	if constexpr (CTL_MATH_CAN_BUILTIN(tan)) {
+		if constexpr (Type::Equal<F, float>)
+			return __builtin_tanf(angle);
+		else if constexpr (Type::Equal<F, double>)
+			return __builtin_tan(angle);
+		else
+			return __builtin_tanl(angle);
+	} else {	
+		F s, c;
+		sincos<F>(angle, s, c);
+		return s / c;
+	}
 }
 
 static_assert(compare<double>(sin<double>(0), 0));
