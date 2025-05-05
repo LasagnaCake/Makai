@@ -364,7 +364,8 @@ public:
 		// Return result
 		return result;
 	}
-
+	
+	// BUG: Clangd errors out on this function (and only THIS function)
 	/// @brief Converts a 3D rotation into a rotation matrix.
 	/// @param angle Rotation to convert.
 	/// @return Rotation matrix.
