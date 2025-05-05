@@ -337,30 +337,32 @@ public:
 	/// @param angle Rotation to convert.
 	/// @return Rotation matrix.
 	/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/gtx/euler_angles.inl
-	constexpr static Matrix<4, 4, DataType> fromEulerXYZ(Vector3 const& angle) {
+	template <class T = DataType>
+	constexpr static Matrix<4, 4, T> fromEulerXYZ(Vector3 const& angle) {
+		using Type = T;
 		// Get sines and cosines
 		float c1, c2, c3, s1, s2, s3;
 		CTL::Math::sincos<float>(-angle.x, s1, c1);
 		CTL::Math::sincos<float>(-angle.y, s2, c2);
 		CTL::Math::sincos<float>(-angle.z, s3, c3);
 		// Formulate matrix
-		Matrix<4, 4, DataType> result;
+		Matrix<4, 4, Type> result;
 		result[0][0] = c2 * c3;
 		result[0][1] =-c1 * s3 + s1 * s2 * c3;
 		result[0][2] = s1 * s3 + c1 * s2 * c3;
-		result[0][3] = DataType(0);
+		result[0][3] = Type(0);
 		result[1][0] = c2 * s3;
 		result[1][1] = c1 * c3 + s1 * s2 * s3;
 		result[1][2] =-s1 * c3 + c1 * s2 * s3;
-		result[1][3] = DataType(0);
+		result[1][3] = Type(0);
 		result[2][0] =-s2;
 		result[2][1] = s1 * c2;
 		result[2][2] = c1 * c2;
-		result[2][3] = DataType(0);
-		result[3][0] = DataType(0);
-		result[3][1] = DataType(0);
-		result[3][2] = DataType(0);
-		result[3][3] = DataType(1);
+		result[2][3] = Type(0);
+		result[3][0] = Type(0);
+		result[3][1] = Type(0);
+		result[3][2] = Type(0);
+		result[3][3] = Type(1);
 		// Return result
 		return result;
 	}
@@ -370,36 +372,38 @@ public:
 	/// @param angle Rotation to convert.
 	/// @return Rotation matrix.
 	/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/gtx/euler_angles.inl
-	constexpr static Matrix<4, 4, DataType> fromEulerYXZ(Vector3 const& angle) {
+	template <class T = DataType>
+	constexpr static Matrix<4, 4, T> fromEulerYXZ(Vector3 const& angle) {
+		using Type = T;
 		// Get sines and cosines
 		float tmp_ch, tmp_sh, tmp_cp, tmp_sp, tmp_cb, tmp_sb;
 		CTL::Math::sincos<float>(-angle.y, tmp_sh, tmp_ch);
 		CTL::Math::sincos<float>(-angle.x, tmp_sp, tmp_cp);
 		CTL::Math::sincos<float>(-angle.z, tmp_sb, tmp_cb);
 		// Compute matrix
-		Matrix<4, 4, DataType> result;
+		Matrix<4, 4, Type> result;
 		result[0][0] = tmp_ch * tmp_cb + tmp_sh * tmp_sp * tmp_sb;
 		result[0][1] = tmp_sb * tmp_cp;
 		result[0][2] = -tmp_sh * tmp_cb + tmp_ch * tmp_sp * tmp_sb;
-		result[0][3] = DataType(0);
+		result[0][3] = Type(0);
 		result[1][0] = -tmp_ch * tmp_sb + tmp_sh * tmp_sp * tmp_cb;
 		result[1][1] = tmp_cb * tmp_cp;
 		result[1][2] = tmp_sb * tmp_sh + tmp_ch * tmp_sp * tmp_cb;
-		result[1][3] = DataType(0);
+		result[1][3] = Type(0);
 		result[2][0] = tmp_sh * tmp_cp;
 		result[2][1] = -tmp_sp;
 		result[2][2] = tmp_ch * tmp_cp;
-		result[2][3] = DataType(0);
-		result[3][0] = DataType(0);
-		result[3][1] = DataType(0);
-		result[3][2] = DataType(0);
-		result[3][3] = DataType(1);
+		result[2][3] = Type(0);
+		result[3][0] = Type(0);
+		result[3][1] = Type(0);
+		result[3][2] = Type(0);
+		result[3][3] = Type(1);
 		// Return result
 		return result;
 	}
 
 	/// @brief Euler function type.
-	typedef decltype(fromEulerXYZ)	EulerFunction;
+	typedef decltype(fromEulerYXZ<DataType>)	EulerFunction;
 
 	/// @brief Converts a 3D translation into a translation matrix.
 	/// @param vec Translation to convert.
@@ -471,7 +475,7 @@ public:
 	/// @param vec Rotation to apply.
 	/// @return Rotated matrix.
 	/// @note Matrix must be a valid 3D transformation matrix.
-	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ>
+	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ<DataType>>
 	constexpr Matrix<4, 4, DataType> rotated(Vector3 const& vec) const
 	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		static_assert(R == 4, "Matrix is not a valid representation of a 3D transform!");
@@ -483,7 +487,7 @@ public:
 	/// @param vec Rotation to apply.
 	/// @return Reference to self.
 	/// @note Matrix must be a valid 3D transformation matrix.
-	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ>
+	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ<DataType>>
 	constexpr Matrix<4, 4, DataType>& rotate(Vector3 const& vec)
 	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		static_assert(R == 4, "Matrix is not a valid representation of a 3D transform!");
@@ -1060,7 +1064,7 @@ public:
 	/// @param scale Scaling.
 	/// @return Transformed matrix.
 	/// @note Requires matrix to be a valid 3D transformation matrix.
-	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ>
+	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ<DataType>>
 	constexpr SelfType transformed(
 		Vector3 const& position,
 		Vector3 const& rotation,
@@ -1076,7 +1080,7 @@ public:
 	/// @param trans Transformation to apply.
 	/// @return Transformed matrix.
 	/// @note Requires matrix to be a valid 3D transformation matrix.
-	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ>
+	template<EulerFunction ANGLE_FUNC = Matrix::fromEulerYXZ<DataType>>
 	constexpr SelfType transformed(Transform3D const& trans)
 	const requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		static_assert(R == 4, "Matrix is not a valid representation of a 3D transform!");
