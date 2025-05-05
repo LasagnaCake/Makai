@@ -1642,7 +1642,11 @@ template<usize N> using StaticString		= BaseStaticString<char,	N>;
 template<usize N> using StaticWideString	= BaseStaticString<wchar_t,	N>;
 
 #pragma GCC diagnostic push
+#ifndef __clang__
 #pragma GCC diagnostic ignored "-Wliteral-suffix"
+#else
+#pragma GCC diagnostic ignored "-Wuser-defined-literals"
+#endif
 /// @brief String literals.
 namespace Literals::Text {
 	/// @brief CTL `String` literal.
