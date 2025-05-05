@@ -143,6 +143,7 @@ struct Unique:
 	/// @param other `Unique` to copy from.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
+		unbind();
 		ref = other.ref;
 		other.ref = nullptr;
 		return *this;
