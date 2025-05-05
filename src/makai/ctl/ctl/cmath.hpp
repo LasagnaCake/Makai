@@ -474,7 +474,11 @@ static_assert(compare<double>(cos<double>(Constants::PI), -1));
 /// @brief Numeric literals.
 namespace Literals::Numbers {
 	#pragma GCC diagnostic push
+	#ifndef __clang__
 	#pragma GCC diagnostic ignored "-Wliteral-suffix"
+	#else
+	#pragma GCC diagnostic ignored "-Wuser-defined-literals"
+	#endif
 	constexpr ldouble operator "" sqrt2(ullong v)	{return static_cast<ldouble>(v) * Math::Constants::SQRT2;	}
 	constexpr ldouble operator "" sqrt2(ldouble v)	{return v * Math::Constants::SQRT2;							}
 	constexpr ldouble operator "" sqrt3(ullong v)	{return static_cast<ldouble>(v) * Math::Constants::SQRT3;	}
@@ -485,8 +489,8 @@ namespace Literals::Numbers {
 	constexpr ldouble operator "" ln10(ldouble v)	{return v * Math::Constants::LN10;							}
 	constexpr ldouble operator "" pi(ullong v)		{return static_cast<ldouble>(v) * Math::Constants::PI;		}
 	constexpr ldouble operator "" pi(ldouble v)		{return v * Math::Constants::PI;							}
-	constexpr ldouble operator "" tau(ullong v)		{return static_cast<ldouble>(v) * 2pi;						}
-	constexpr ldouble operator "" tau(ldouble v)	{return v * 2pi;											}
+	constexpr ldouble operator "" tau(ullong v)		{return static_cast<ldouble>(v) * Math::Constants::TAU;		}
+	constexpr ldouble operator "" tau(ldouble v)	{return v * Math::Constants::TAU;							}
 	constexpr ldouble operator "" euler(ullong v)	{return static_cast<ldouble>(v) * Math::Constants::EULER;	}
 	constexpr ldouble operator "" euler(ldouble v)	{return v * Math::Constants::EULER;							}
 	constexpr ldouble operator "" phi(ullong v)		{return static_cast<ldouble>(v) * Math::Constants::PHI;		}
@@ -497,7 +501,11 @@ namespace Literals::Numbers {
 CTL_NAMESPACE_END
 
 #pragma GCC diagnostic push
+#ifndef __clang__
 #pragma GCC diagnostic ignored "-Wliteral-suffix"
+#else
+#pragma GCC diagnostic ignored "-Wuser-defined-literals"
+#endif
 /// @brief Custom floating point literal.
 constexpr float			operator "" f(unsigned long long v)		{return v;	}
 /// @brief Custom floating point literal.
