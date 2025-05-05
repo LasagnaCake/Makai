@@ -262,10 +262,13 @@ constexpr F fmod(F const val, F const mod) {
 		else
 			return __builtin_fmodl(val, mod);
 	} else {
-		// TODO: Implement fmod
-		static_assert(false, "No constexpr fmod implementation yet!");
+		// Based off of https://stackoverflow.com/a/14294981
+		return (val < 0 ? -1 : 1) * (abs(val) - static_cast<ssize>(abs(val/mod)) * abs(mod));
 	}
 }
+
+static_assert(compare<double>(fmod<double>(7.0, 3.0), 1.0));
+static_assert(compare<double>(fmod<double>(Constants::TAU * 1.5, Constants::TAU), Constants::PI));
 
 /// @brief Returns the given angle, wrapped between `-PI` and `+PI`.
 /// @tparam F Floating point type.
@@ -291,7 +294,15 @@ constexpr F atan(F const value) {
 			return __builtin_atanl(value);
 	}
 	// Based off of https://stackoverflow.com/a/42542593
-	else return 8.430893743524 * value / (3.2105332277903100 + sqrt<F>(27.2515970979709 + 29.3591908371266 * value * value));
+	else {
+		constexpr F MAGIC_CONSTS[4] = {
+			8.430893743524l,
+			3.2105332277903100l,
+			27.2515970979709l,
+			29.3591908371266l
+		};
+		return MAGIC_CONSTS[0] * value / (MAGIC_CONSTS[1] + sqrt<F>(MAGIC_CONSTS[2] + MAGIC_CONSTS[3] * value * value));
+	}
 }
 
 /// @brief Calculates the arc tangent of Y/X.
@@ -321,12 +332,53 @@ static_assert(compare<double>(atan2<double>(0, 1), 0));
 static_assert(compare<double>(atan2<double>(1, 0), Constants::PI/2));
 static_assert(compare<double>(atan2<double>(1, 1), Constants::PI/4));
 
-namespace Impl {
+/// @brief Trigonometry function implementations.
+namespace Impl::Trigonometry {
+	/// @brief Returns `x` in the appropriate sine domain for `angle`.
+	/// @tparam F Floating point type.
+	/// @param angle Angle to get domain for.
+	/// @param x Sine of a given angle in range [0 <= x <= (pi/4)].
+	/// @return `x` in appropriate sine domain.
+	template <Type::Real F = double>
+	constexpr F inDomain(F const x, usize const domain) {
+		switch (domain % 4) {
+			case 0: return x;
+			case 1: return static_cast<F>(1) - x;
+			case 2: return - x;
+			case 3: return static_cast<F>(-1) + x;
+		}
+		return 0;
+	}
+
+	template <Type::Real F = double>
+	constexpr void getSinDomain(F& angle, usize& domain) {
+		constexpr F const HALF_PI		= static_cast<F>(Constants::PI * .5l);
+		constexpr F const QUARTER_PI	= static_cast<F>(Constants::PI * .25l);
+		angle = fmod<F>(angle + QUARTER_PI, Constants::TAU);
+		while (angle > HALF_PI) {
+			angle -= HALF_PI;
+			++domain;
+		}
+		angle -= QUARTER_PI;
+	}
+
+	/// @brief Calculates the sine of a given angle.
+	/// @tparam F Floating point type.
+	/// @param angle Angle to get sine for.
+	/// @return Sine of angle.
 	template<Type::Real F = double>
 	constexpr F sin(F angle) {
-		angle = fmod<F>(angle + Constants::PI, Constants::TAU) - Constants::PI;
+		usize domain = 0;
+		getSinDomain(angle, domain);
+		// Based off of https://stackoverflow.com/a/23839191
+		constexpr F MAGIC_CONSTS[3] = {
+			0.16612511580269618l,
+			8.0394356072977748e-3l,
+			-1.49414020045938777495e-4l
+		};
 		F const sq = angle * angle;
-		return angle + (angle * sq) * (-0.16612511580269618l + sq * (8.0394356072977748e-3l + sq * -1.49414020045938777495e-4l));
+		F const out = angle + (angle * sq) * (-MAGIC_CONSTS[0] + sq * (MAGIC_CONSTS[1] + sq * MAGIC_CONSTS[2]));
+		return inDomain(out, domain);
 	}
 }
 
@@ -346,8 +398,8 @@ constexpr void sincos(F const angle, F& sin, F& cos) {
 			return __builtin_sincosl(angle, &sin, &cos);
 	}
 	else {
-		sin = Impl::sin<F>(angle);
-		cos = Impl::sin<F>(angle + Constants::PI);
+		sin = Impl::Trigonometry::sin<F>(angle);
+		cos = Impl::Trigonometry::sin<F>(angle + Constants::PI);
 	}
 }
 
@@ -365,7 +417,7 @@ constexpr F sin(F const angle) {
 		else
 			return __builtin_sinl(angle);
 	} else {	
-		return Impl::sin<F>(angle);
+		return Impl::Trigonometry::sin<F>(angle);
 	}
 }
 
@@ -383,7 +435,7 @@ constexpr F cos(F const angle) {
 		else
 			return __builtin_cosl(angle);
 	} else {
-		return Impl::sin<F>(angle + Constants::PI);
+		return Impl::Trigonometry::sin<F>(angle + static_cast<F>(Constants::PI*0.5l));
 	}
 }
 
@@ -406,6 +458,9 @@ constexpr F tan(F const angle) {
 		return s / c;
 	}
 }
+
+static_assert(sin<double>(0) == 0, "Uh oh");
+static_assert(cos<double>(0) == 1, "Uh oh");
 
 static_assert(compare<double>(sin<double>(0), 0));
 static_assert(compare<double>(cos<double>(0), 1));
