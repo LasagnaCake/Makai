@@ -133,7 +133,6 @@ public:
 	template<Type::Ex::Math::Matrix::Compatitble<DataType> T2>
 	constexpr Matrix(SingleElementType<T2> const& v) {
 		DataType rv = DataType(v[0]);
-		usize const start = ::CTL::Math::min(C, R);
 		for (usize i = 0; i < C; i++)
 			for (usize j = 0; j < R; j++)
 				data[i][j] = rv;
@@ -1261,7 +1260,11 @@ public:
 	/// @note Based off of https://opensource.apple.com/source/WebCore/WebCore-514/platform/graphics/transforms/TransformationMatrix.cpp 
 	/// @note Requires matrix to be a valid 3D transformation matrix.
 	/// @warning Doesn't currently work!
+	#ifndef __clang__
 	[[gnu::unavailable("Not working as intended!")]]
+	#else
+	[[clang::unavailable("Not working as intended!")]]
+	#endif
 	constexpr Transform3D decompose(
 			Vector4& perspective,
 			Vector3& skew
@@ -1360,7 +1363,11 @@ public:
 	/// @return 3D transformation.
 	/// @note Requires matrix to be a valid 3D transformation matrix.
 	/// @warning Doesn't currently work!
+	#ifndef __clang__
 	[[gnu::unavailable("Not working as intended!")]]
+	#else
+	[[clang::unavailable("Not working as intended!")]]
+	#endif
 	constexpr Transform3D decompose() const
 	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		Vector4 _p;
