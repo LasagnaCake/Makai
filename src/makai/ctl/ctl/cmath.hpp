@@ -80,7 +80,11 @@ namespace {
 	}
 }
 
+#ifdef __clang__
 #define CTL_MATH_CAN_BUILTIN(f) (canMathBuiltin() && (inRunTime() || __has_constexpr_builtin(__builtin_##f)))
+#else
+#define CTL_MATH_CAN_BUILTIN(f) (canMathBuiltin())
+#endif
 
 /// @brief Returns euler's number raised to the given value.
 /// @tparam F Floating point type.
