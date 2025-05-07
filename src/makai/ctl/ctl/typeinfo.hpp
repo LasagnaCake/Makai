@@ -1,6 +1,7 @@
 #ifndef CTL_TYPE_INFO_H
 #define CTL_TYPE_INFO_H
 
+#include "makai/ctl/ctl/typetraits/basictraits.hpp"
 #include "typetraits/traits.hpp"
 #include "meta/logic.hpp"
 #include "typetraits/enum.hpp"
@@ -124,6 +125,12 @@ struct TypeInfo<T>: NumberLimit<Decay::Enum::AsInteger<T>>, Base::BasicInfo<T> {
 /// @tparam T Type.
 template<Type::Class T>
 struct TypeInfo<T>: Base::BasicInfo<T> {};
+
+namespace Limit {
+	template <Type::Number T> constexpr T const MAX		= TypeInfo<T>::HIGHEST;
+	template <Type::Number T> constexpr T const MIN		= TypeInfo<T>::LOWEST;
+	template <Type::Number T> constexpr T const STRIDE	= TypeInfo<T>::SMALLEST;
+}
 
 CTL_NAMESPACE_END
 
