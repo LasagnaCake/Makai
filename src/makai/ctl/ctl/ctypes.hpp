@@ -203,7 +203,9 @@ using owner = ptr<T>;
 template<class T>
 using ref = ptr<T>;
 
+/// @brief Syntatic sugar for `T const&`. Indicates a variable is a read-only reference.
 template<class T> using in		= T const&;
+/// @brief Syntatic sugar for `T&`. Indicates a variable is a reference that can be read from, and written to.
 template<class T> using inout	= T&;
 
 #endif // CTL_EXTENDED_TYPES_H
