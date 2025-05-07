@@ -1,7 +1,6 @@
 #ifndef CTL_TYPE_INFO_H
 #define CTL_TYPE_INFO_H
 
-#include "makai/ctl/ctl/typetraits/basictraits.hpp"
 #include "typetraits/traits.hpp"
 #include "meta/logic.hpp"
 #include "typetraits/enum.hpp"
