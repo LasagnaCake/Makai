@@ -264,7 +264,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 		if (act > 0)
 			for (usize i = 0; i < 10; ++i)
 				createItems();
-		if (act == static_cast<usize>(-1)) {
+		if (act == CTL::Limit::MAX<usize>) {
 			endBattle();
 			return {};
 		}
