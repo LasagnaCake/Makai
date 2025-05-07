@@ -9,7 +9,7 @@ namespace Makai::Ex::Game::Danmaku {
 	/// @brief Boss enemy.
 	struct ABoss: AEnemy {
 		/// @brief Boss battle act.
-		struct AAct: Co::ARoutineTask, AUpdateable {
+		struct AAct: Co::ARoutineTask {
 			/// @brief Virtual destructor.
 			virtual ~AAct() {}
 			/// @brief Boss associated with the act.
@@ -18,7 +18,7 @@ namespace Makai::Ex::Game::Danmaku {
 			/// @param boss Boss associated with the act.
 			AAct(ABoss& boss): boss(boss) {}
 			/// @brief Called every update cycle.
-			void onUpdate(float, Makai::App&) override {ARoutineTask::process();}
+			virtual void onUpdate(float, Makai::App&) {ARoutineTask::process();}
 			/// @brief Returns the act that follows this one. Must be implemented.
 			virtual usize next() const = 0;
 		};
@@ -37,9 +37,17 @@ namespace Makai::Ex::Game::Danmaku {
 			if (paused()) return;
 		}
 
+		/// @brief Executed every update cycle.
+		void onUpdate(float delta, Makai::App& app) override {
+			if (!active) return;
+			AEnemy::onUpdate(delta, app);
+			if (paused()) return;
+			if (currentAct) currentAct->onUpdate(delta, app);
+		}
+
 		/// @brief Called when the enemy dies. In this case, when a phase ends.
 		void onDeath() override {
-			if (!practiceMode && current && (current = onAct(current->next())))
+			if (!practiceMode && currentAct && (currentAct = onAct(currentAct->next())))
 				setFlags(Flags::EF_DEAD, false);
 			else endBattle();
 		}
@@ -47,7 +55,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Begins the boss battle.
 		/// @return Reference to self.
 		ABoss& beginBattle() {
-			current.unbind();
+			currentAct.unbind();
 			onBattleBegin();
 			return *this;
 		}
@@ -55,7 +63,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Ends the boss battle.
 		/// @return Reference to self.
 		ABoss& endBattle() {
-			current.unbind();
+			currentAct.unbind();
 			onBattleEnd();
 			return *this;
 		}
@@ -64,7 +72,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @return Reference to self.
 		ABoss& doAct(usize const act, bool const practice = false) {
 			practiceMode = practice;
-			current = onAct(act);
+			currentAct = onAct(act);
 			return *this;
 		}
 
@@ -81,7 +89,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 	private:
 		/// @brief Current act being executed.
-		Unique<AAct> current;
+		Unique<AAct> currentAct;
 	};
 }
 
