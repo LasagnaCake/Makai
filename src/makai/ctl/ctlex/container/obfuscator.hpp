@@ -144,47 +144,35 @@ namespace Impl {
 
 /// @brief Static string obfuscators.
 namespace StaticStringMangler {
-	/// @brief Binary shuffle.
-	/// @tparam S String size.
-	/// @tparam MASK Shuffle mask.
-	/// @tparam PARITY Shuffle parity.
-	template<usize S, usize MASK, bool PARITY, class TSize>
-	struct BinaryShuffle;
+	template<usize S, usize MASK, bool PARITY, auto NEWSIZE, class TSize>
+	struct FunctionShuffle;
 
-	/// @brief Binary shuffle.
-	/// @tparam MASK Shuffle mask.
-	/// @tparam PARITY Shuffle parity.
-	template<usize MASK, bool PARITY, class TS>
-	struct BinaryShuffle<0, MASK, PARITY, TS> {
+	template<usize MASK, bool PARITY, auto NEWSIZE, class TSize>
+	struct FunctionShuffle<0, MASK, PARITY, NEWSIZE, TSize> {
 		/// @brief String size.
 		constexpr static usize SIZE = 0;
 
-		constexpr BinaryShuffle()			{}
+		constexpr FunctionShuffle()			{}
 		template<class T>
-		constexpr BinaryShuffle(T const&)	{}
+		constexpr FunctionShuffle(T const&)	{}
 
 		String mangled() const		{return String();}
 		String demangled() const	{return String();}
-
-	private:
 	};
 
-	/// @brief Binary shuffle.
-	/// @tparam MASK Shuffle mask.
-	/// @tparam PARITY Shuffle parity.
-	template<usize MASK, bool PARITY, class T>
-	struct BinaryShuffle<1, MASK, PARITY, T> {
+	template<usize MASK, bool PARITY, auto NEWSIZE, class TSize>
+	struct FunctionShuffle<1, MASK, PARITY, NEWSIZE, TSize> {
 		/// @brief String size.
 		constexpr static usize SIZE = 1;
 
 		/// @brief Default constructor.
-		constexpr BinaryShuffle()							{				}
+		constexpr FunctionShuffle()								{				}
 		/// @brief Constructs the mangled string from a single character.
 		/// @param dat Character to mangle.
-		constexpr BinaryShuffle(FixedCString<1> const& dat)	{c = dat[0];	}
+		constexpr FunctionShuffle(FixedCString<1> const& dat)	{c = dat[0];	}
 		/// @brief Constructs the mangled string from a single byte.
 		/// @param dat Byte to mangle.
-		constexpr BinaryShuffle(Array<uint8, 1> const& dat)	{c = dat[0];	}
+		constexpr FunctionShuffle(Array<uint8, 1> const& dat)	{c = dat[0];	}
 
 		/// @brief Returns the mangled string.
 		/// @return Mangled string.
@@ -198,12 +186,8 @@ namespace StaticStringMangler {
 		char c;
 	};
 
-	/// @brief Binary shuffle.
-	/// @tparam S String size.
-	/// @tparam M Shuffle mask.
-	/// @tparam P Shuffle parity.
-	template<usize S, usize M, bool P, class TSize = CTL::Decay::Number::AsUnsigned<S>>
-	struct BinaryShuffle {
+	template<usize S, usize M, bool P, auto NEWSIZE, class TSize = CTL::Decay::Number::AsUnsigned<S>>
+	struct FunctionShuffle {
 	private:
 		using SizeType = TSize;
 	public:
@@ -216,14 +200,19 @@ namespace StaticStringMangler {
 		/// @brief Shuffle parity.
 		constexpr static bool PARITY = P;
 
+		static_assert(SIZE > 1);
+		static_assert(NEWSIZE(SIZE, true) != SIZE);
+		static_assert(NEWSIZE(SIZE, false) != SIZE);
+		static_assert(Type::Functional<decltype(NEWSIZE), usize(usize, bool)>, "NEWSIZE must be a valid size function!");
+
 		/// @brief Default constructor.
-		constexpr BinaryShuffle(): trueSize(Impl::shuffle<SizeType>(SIZE)) {}
+		constexpr FunctionShuffle(): trueSize(Impl::shuffle<SizeType>(SIZE)) {}
 
 		/// @brief Constructs a mangled string from a fixed string.
 		/// @tparam CS String size.
 		/// @param dat String to mangle.
 		template<usize CS>
-		constexpr BinaryShuffle(FixedCString<CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
+		constexpr FunctionShuffle(FixedCString<CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
 			static_assert(CS <= SIZE, "String must not be bigger than maximum size!");
 			Array<uint8, SIZE> str {'\0'};
 			for(usize i = 0; i < CS; ++i)
@@ -235,7 +224,7 @@ namespace StaticStringMangler {
 		/// @tparam CS Array size.
 		/// @param dat Bytes to mangle.
 		template<usize CS>
-		constexpr BinaryShuffle(Array<uint8, CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
+		constexpr FunctionShuffle(Array<uint8, CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
 			static_assert(CS <= SIZE, "String must not be bigger than maximum size!");
 			Array<uint8, SIZE> str {'\0'};
 			for(usize i = 0; i < CS; ++i)
@@ -268,9 +257,9 @@ namespace StaticStringMangler {
 
 		constexpr static usize
 			/// @brief Size of the first half.
-			H1{(EVEN_SIZE) ? (SIZE/2) : (SIZE/2+1)},
+			H1{NEWSIZE(SIZE, true)},
 			/// @brief Size of the second half.
-			H2{(SIZE/2)}
+			H2{NEWSIZE(SIZE, false)}
 		;
 
 		constexpr static usize
@@ -281,192 +270,15 @@ namespace StaticStringMangler {
 		;
 
 		/// @brief Type of the left side.
-		typedef BinaryShuffle<LEFT_SIZE, NEW_MASK, LHS_PARITY>	LeftType;
+		typedef FunctionShuffle<LEFT_SIZE, NEW_MASK, LHS_PARITY, NEWSIZE>	LeftType;
 		/// @brief Type of the right side.
-		typedef BinaryShuffle<RIGHT_SIZE, NEW_MASK, RHS_PARITY>	RightType;
+		typedef FunctionShuffle<RIGHT_SIZE, NEW_MASK, RHS_PARITY, NEWSIZE>	RightType;
 
 		constexpr SizeType isize() const {return Impl::shuffle<SizeType>(trueSize);}
 
 		/// @brief Mangles a string.
 		/// @tparam TArray String container type.
 		/// @param dat String to decompose.
-		template<class TArray>
-		constexpr void decompose(TArray const& dat) {
-			Array<uint8, LEFT_SIZE>		l {'\0'};
-			Array<uint8, RIGHT_SIZE>	r {'\0'};
-			for (usize i = 0; i < H2; ++i) {
-				if constexpr (PARITY) {
-					l[i] = dat[i+H2];
-					r[i] = dat[i];
-				} else {
-					l[i] = dat[i];
-					r[i] = dat[i+H2];
-				}
-			}
-			if constexpr(H2 < H1) {
-				if constexpr (PARITY)
-					l[H1-1] = dat[SIZE-1];
-				else
-					r[H1-1] = dat[SIZE-1];
-			}
-			left	= LeftType(l);
-			right	= RightType(r);
-		}
-
-		/// @brief Left side of the string.
-		LeftType	left;
-		/// @brief True size of the stored string.
-		SizeType const trueSize;
-		/// @brief Right side of the string.
-		RightType	right;
-	};
-
-	/// @brief Prime number shuffle.
-	/// @tparam S String size.
-	/// @tparam MASK Shuffle mask.
-	/// @tparam PARITY Shuffle parity.
-	template<usize S, usize MASK, bool PARITY, class TSize>
-	struct PrimeShuffle;
-
-	/// @brief Prime number shuffle.
-	/// @tparam MASK Shuffle mask.
-	/// @tparam PARITY Shuffle parity.
-	template<usize MASK, bool PARITY, class T>
-	struct PrimeShuffle<0, MASK, PARITY, T> {
-		/// @brief String size.
-		constexpr static usize SIZE = 0;
-
-		constexpr PrimeShuffle()			{}
-		template<class TS>
-		constexpr PrimeShuffle(TS const&)	{}
-
-		String mangled() const		{return String();}
-		String demangled() const	{return String();}
-
-	private:
-	};
-
-	/// @brief Prime number shuffle.
-	/// @tparam MASK Shuffle mask.
-	/// @tparam PARITY Shuffle parity.
-	template<usize MASK, bool PARITY, class T>
-	struct PrimeShuffle<1, MASK, PARITY, T> {
-		/// @brief String size.
-		constexpr static usize SIZE = 1;
-
-		/// @brief Constructs the mangled string from a single character.
-		/// @param dat Character to mangle.
-		constexpr PrimeShuffle()							{				}
-		/// @brief Constructs the mangled string from a single character.
-		/// @param dat Character to mangle.
-		constexpr PrimeShuffle(FixedCString<1> const& dat)	{c = dat[0];	}
-		/// @brief Constructs the mangled string from a single byte.
-		/// @param dat Byte to mangle.
-		constexpr PrimeShuffle(Array<uint8, 1> const& dat)	{c = dat[0];	}
-
-		/// @brief Returns the mangled string.
-		/// @return Mangled string.
-		String mangled() const		{return toString(c);}
-		/// @brief Returns the demangled string.
-		/// @return Demangled string.
-		String demangled() const	{return toString(c);}
-
-	private:
-		char c;
-	};
-
-	/// @brief Prime number shuffle.
-	/// @tparam S String size.
-	/// @tparam M Shuffle mask.
-	/// @tparam P Shuffle parity.
-	template<usize S, usize M, bool P, class TSize = Decay::Number::AsUnsigned<S>>
-	struct PrimeShuffle {
-	private:
-		using SizeType = TSize;
-	public:
-		constexpr static usize
-		/// @brief String size.
-			SIZE = S,
-		/// @brief Shuffle mask.
-			MASK = M
-		;
-		constexpr static bool PARITY = P;
-
-		static_assert(SIZE > 1);
-		static_assert(Impl::nearestPrime(SIZE, true) != SIZE);
-
-		/// @brief Default constructor.
-		constexpr PrimeShuffle(): trueSize(Impl::shuffle<SizeType>(SIZE)) {}
-
-		/// @brief Constructs a mangled string from a fixed string.
-		/// @tparam CS String size.
-		/// @param dat String to mangle.
-		template<usize CS>
-		constexpr PrimeShuffle(FixedCString<CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
-			static_assert(CS <= SIZE, "String must not be bigger than maximum size!");
-			Array<uint8, SIZE> str {'\0'};
-			for(usize i = 0; i < CS; ++i)
-				str[i] = dat[i];
-			decompose<Array<uint8, SIZE>>(str);
-		}
-
-		/// @brief Constructs a mangled string from a byte array.
-		/// @tparam CS Array size.
-		/// @param dat Bytes to mangle.
-		template<usize CS>
-		constexpr PrimeShuffle(Array<uint8, CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
-			static_assert(CS <= SIZE, "String must not be bigger than maximum size!");
-			Array<uint8, SIZE> str {'\0'};
-			for(usize i = 0; i < CS; ++i)
-				str[i] = dat[i];
-			decompose<Array<uint8, SIZE>>(str);
-		}
-
-		/// @brief Returns the mangled string.
-		/// @return Mangled string.
-		String mangled() const						{return (left.mangled() + right.mangled());						}
-
-		/// @brief Returns the demangled string.
-		/// @return Demangled string.
-		String demangled() const requires (PARITY)	{return (right.demangled() + left.demangled()).resize(isize());	}
-		/// @brief Returns the demangled string.
-		/// @return Demangled string.
-		String demangled() const requires (!PARITY)	{return (left.demangled() + right.demangled()).resize(isize());	}
-	private:
-		/// @brief Mask of the subsequent left & right sides.
-		constexpr static usize NEW_MASK = MASK ^ (MASK >> 2);
-
-		constexpr static bool
-			/// @brief Parity of the left side.
-			LHS_PARITY	= (MASK & 0b10) ? !PARITY : PARITY,
-			/// @brief Parity of the right side.
-			RHS_PARITY	= (MASK & 0b01) ? !PARITY : PARITY
-		;
-
-		constexpr static usize
-			/// @brief Size of the first half.
-			H1{Impl::nearestPrime(S, true)},
-			/// @brief Size of the second half.
-			H2{S - Impl::nearestPrime(S, true)}
-		;
-
-		constexpr static usize
-			/// @brief Size of the left side.
-			LEFT_SIZE{(PARITY) ? H1 : H2},
-			/// @brief Size of the left side.
-			RIGHT_SIZE{(PARITY) ? H2 : H1}
-		;
-
-		/// @brief Type of the left side.
-		typedef PrimeShuffle<LEFT_SIZE, NEW_MASK, LHS_PARITY>	LeftType;
-		/// @brief Type of the right side.
-		typedef PrimeShuffle<RIGHT_SIZE, NEW_MASK, RHS_PARITY>	RightType;
-
-		constexpr SizeType isize() const {return Impl::shuffle<SizeType>(trueSize);}
-
-		/// @brief Mangles a string.
-		/// @tparam TArray String container type.
-		/// @param dat String to mangle.
 		template<class TArray>
 		constexpr void decompose(TArray const& dat) {
 			Array<uint8, LEFT_SIZE>		l;
@@ -490,6 +302,42 @@ namespace StaticStringMangler {
 		/// @brief Right side of the string.
 		RightType	right;
 	};
+
+	namespace Shuffles {
+		consteval usize binary(usize const sz, bool const firstHalf) {
+			if (firstHalf && (sz%2)) return (sz/2)+1;
+			return sz/2;
+		}
+
+		consteval usize prime(usize const sz, bool const firstHalf) {
+			if (firstHalf) return Impl::nearestPrime(sz, true);
+			return sz - Impl::nearestPrime(sz, true);
+		}
+
+		consteval usize prng(usize const sz, bool const firstHalf) {
+			constexpr usize SEED = (
+				ConstHasher::hash(__DATE__)
+			+	ConstHasher::hash(__TIME__)
+			);
+			usize const rng = (SEED % sz) ? (SEED % sz) : (SEED % sz + 1);
+			if (firstHalf) return sz - rng;
+			return rng;
+		}
+	}
+	
+	/// @brief Binary shuffle.
+	/// @tparam S String size.
+	/// @tparam MASK Shuffle mask.
+	/// @tparam PARITY Shuffle parity.
+	template<usize S, usize MASK, bool PARITY, class TSize>
+	using BinaryShuffle = FunctionShuffle<S, MASK, PARITY, Shuffles::binary, TSize>;
+	
+	/// @brief Prime shuffle.
+	/// @tparam S String size.
+	/// @tparam MASK Shuffle mask.
+	/// @tparam PARITY Shuffle parity.
+	template<usize S, usize MASK, bool PARITY, class TSize>
+	using PrimeShuffle = FunctionShuffle<S, MASK, PARITY, Shuffles::prime, TSize>;
 }
 
 /// @brief Static string mangler.
