@@ -8,12 +8,12 @@
 
 CTL_NAMESPACE_BEGIN
 
-/// @brief Callable object wrapper.
+/// @brief Callable object wrapper, with support for comparison & ordering.
 /// @tparam TFunction Callable type.
 /// @note Callable objects: functions and lambdas.
 template<typename TFunction> class Functor;
 
-/// @brief Callable object wrapper.
+/// @brief Callable object wrapper, with support for comparison & ordering.
 /// @tparam TReturn Return type.
 /// @tparam ...TArgs Argument types.
 /// @note Callable objects: functions and lambdas.
@@ -132,6 +132,24 @@ private:
 	/// @brief ID generator.
 	inline static usize	count	= 0;
 };
+
+/// @brief Returns a callable object as a `Functor`.
+/// @tparam TFunction Callable object type.
+/// @param func Callable to convert.
+/// @return Callable as functor.
+template<class TFunction>
+constexpr Functor<TFunction> toFunctor(Function<TFunction> const& func) {
+	return func;
+}
+
+/// @brief Returns a callable object as a `Functor`.
+/// @tparam TFunction Callable object type.
+/// @param func Callable to convert.
+/// @return Callable as functor.
+template<class TFunction>
+constexpr Functor<TFunction> toFunctor(TFunction const& func) {
+	return func;
+}
 
 CTL_NAMESPACE_END
 
