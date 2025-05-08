@@ -20,7 +20,7 @@ OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-af
 sinclude $(ROOT)/make/os-windows.make
 
 INCLUDES	:= -I$(ROOT)/lib/cryptopp/include -I$(ROOT)/lib/cppcodec-0.2 -I$(ROOT)/output/include
-LIBRARIES	:= $(WINGARBAGE)
+LIBRARIES	:= $(OS_LIBS)
 
 DEBUGMODE		:= -DMAKAILIB_DEBUG -DCTL_CONSOLE_OUT -DNDEBUG
 DEBUGCOMPCFG	:= $(COMPILER_CONFIG) -Wall -Wpedantic -Og -ggdb3 -fno-omit-frame-pointer $(DEBUGMODE)
