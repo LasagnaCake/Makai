@@ -3,5 +3,6 @@
 
 #include "engine.hpp"
 #include "generator.hpp"
+#include "ctprng.hpp"
 
 #endif

@@ -5,6 +5,7 @@
 
 #include "../container/list.hpp"
 #include "../random/mersenne.hpp"
+#include "../random/ctprng.hpp"
 #include "../algorithm/hash.hpp"
 
 
@@ -76,10 +77,7 @@ namespace Math {
 	///			Then, returns the amount of operations that resulted in 1, divided by the accuracy.
 	template<Type::Unsigned T = usize, Type::Float TProbability = float, usize MEMORY = 4>
 	constexpr TProbability isPossiblePrime(T const value, usize const accuracy = sizeof(usize) * 8) {
-		Random::Engine::Impl::Mersenne rng(
-			ConstHasher::hash(__DATE__)
-		+	ConstHasher::hash(__TIME__)
-		);
+		Random::Engine::Impl::Mersenne rng(Random::CTPRNG<usize>);
 		constexpr As<T[]> FIRST_PRIMES = {
 			2, 3, 5, 7, 11, 13, 17, 19,
 			23, 29, 31, 37, 41, 43, 47, 53,
