@@ -99,7 +99,7 @@ namespace Impl {
 	+	(__INCLUDE_LEVEL__)
 	);
 
-	constexpr char filler(usize const offset = 0, usize const min = PRNG % 32, usize const max = 64 + PRNG % 31) {
+	constexpr char filler(usize const offset = 0, usize const min = PRNG % 32, usize const max = 127) {
 		return static_cast<char>(((Impl::PRNG + offset) % (max - min)) + min);
 	}
 
