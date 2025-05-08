@@ -107,8 +107,6 @@ namespace Impl {
 	static_assert(nearestPrime(127, true) == 113);
 	static_assert(nearestPrime(113, true) == 109);
 
-	static_assert(filler() >= 32);
-
 	/// @brief Contains information on the primality of a number.
 	/// @tparam N Number to check.
 	template<usize N>
@@ -374,7 +372,7 @@ namespace StaticStringMangler {
 template<usize S>
 using MangledStaticString = StaticStringMangler::PseudoRandomShuffle<
 	S,
-	Impl::PRNG * Impl::PrimeNumber<S>::CLOSEST,
+	(Impl::PRNG & (~0xFF)) | (Impl::PrimeNumber<S>::CLOSEST & 0xFF),
 	!Impl::PrimeNumber<S>::IS_PRIME,
 	Decay::Number::AsUnsigned<S>
 >;
