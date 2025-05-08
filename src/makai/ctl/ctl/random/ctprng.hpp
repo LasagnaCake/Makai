@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../algorithm/hash.hpp"
+#include "../typetraits/nameof.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -17,6 +18,7 @@ namespace Random {
 	+	ConstHasher::hash(__VERSION__)
 	+	ConstHasher::hash(__BASE_FILE__)
 	+	ConstHasher::hash(__FILE_NAME__)
+	+	ConstHasher::hash(nameof<T>())
 	+	(__INCLUDE_LEVEL__)
 	+	(__LINE__)
 	);
