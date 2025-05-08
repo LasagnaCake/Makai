@@ -47,7 +47,7 @@ namespace Math {
 	/// @brief Returns whether a number is a prime, with a given range of certainty.
 	/// @tparam T Unsigned integer type. By default, it is `usize`.
 	/// @tparam TProbability Probability result type. By default, it is `float`.
-	/// @tparam MEMORY Max unique bases to remember. By default, it is 8.
+	/// @tparam MEMORY Max unique bases to remember. By default, it is 4.
 	/// @param value Number to check for.
 	/// @param accuracy Maximum precision. By default, it is equal to `sizeof(usize) * 8`.
 	/// @return Probability of number being a prime, in the range of [0, 1].
