@@ -9,7 +9,7 @@ CTL_NAMESPACE_BEGIN
 
 /// @brief Random number generation.
 namespace Random {
-	/// @brief Compile-time pseudo-random number. There's enough entropy for most purposes.
+	/// @brief Compile-time "pseudo"-random number. There's enough entropy for most purposes.
 	template<Type::Integer T>
 	constexpr T CTPRNG = (
 		ConstHasher::hash(__DATE__)
