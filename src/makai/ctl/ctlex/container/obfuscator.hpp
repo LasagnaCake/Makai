@@ -95,6 +95,10 @@ namespace Impl {
 	/// @brief Compile-time pseudo-random number.
 	constexpr usize PRNG = Random::CTPRNG<usize>;
 
+	/// @brief Returns a random filler character.
+	/// @param offset Offset.
+	/// @param min Beginning of selectable character range.
+	/// @param max End of selectable character range.
 	constexpr char filler(usize const offset = 0, usize const min = PRNG % 32, usize const max = 127) {
 		return static_cast<char>(((Impl::PRNG + offset) % (max - min)) + min);
 	}
