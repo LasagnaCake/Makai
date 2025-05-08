@@ -21,6 +21,12 @@ namespace Random {
 	+	ConstHasher::hash(nameof<T>())
 	+	(__INCLUDE_LEVEL__)
 	+	(__LINE__)
+	#ifdef CTL_CTPRNG_ENTROPY_OFFSET
+	+	(CTL_CTPRNG_OFFSET)
+	#endif
+	#ifdef CTL_CTPRNG_ENTROPY_HASH
+	+	ConstHasher::hash(CTL_CTPRNG_HASH)
+	#endif
 	);
 }
 
