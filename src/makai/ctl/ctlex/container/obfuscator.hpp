@@ -64,7 +64,7 @@ namespace Impl {
 	/// @brief Returns whether a number is a prime.
 	/// @param v Number to check.
 	/// @return Whether it is prime.
-	consteval bool isPrime(usize const v) {
+	constexpr bool isPrime(usize const v) {
 		if (
 			v == 0
 		||	v % 2 == 0
@@ -83,7 +83,7 @@ namespace Impl {
 	/// @param v Number to get nearest prime.
 	/// @param excludeSelf Whether to exclude the number itself, if it is prime.
 	/// @return Nearest prime.
-	consteval usize nearestPrime(usize const v, bool excludeSelf = false) {
+	constexpr usize nearestPrime(usize const v, bool excludeSelf = false) {
 		if (!v) return 0;
 		if (v < 2) return excludeSelf ? v-1 : v;
 		for (usize i = (excludeSelf ? (v-1) : v); i > 0; --i)
@@ -91,10 +91,23 @@ namespace Impl {
 				return i;
 		return 0;
 	}
+	
+	/// @brief Compile-time pseudo-random number.
+	constexpr usize PRNG = (
+		ConstHasher::hash(__DATE__)
+	+	ConstHasher::hash(__TIME__)
+	+	(__INCLUDE_LEVEL__)
+	);
+
+	constexpr char filler(usize const offset = 0, usize const min = PRNG % 32, usize const max = 64 + PRNG % 31) {
+		return static_cast<char>(((Impl::PRNG + offset) % (max - min)) + min);
+	}
 
 	static_assert(nearestPrime(128, true) == 127);
 	static_assert(nearestPrime(127, true) == 113);
 	static_assert(nearestPrime(113, true) == 109);
+
+	static_assert(filler() >= 32);
 
 	/// @brief Contains information on the primality of a number.
 	/// @tparam N Number to check.
@@ -183,7 +196,7 @@ namespace StaticStringMangler {
 
 	private:
 		/// @brief String character.
-		char c;
+		char c = Impl::filler(MASK);
 	};
 
 	template<usize S, usize M, bool P, auto NEWSIZE, class TSize = CTL::Decay::Number::AsUnsigned<S>>
@@ -214,9 +227,14 @@ namespace StaticStringMangler {
 		template<usize CS>
 		constexpr FunctionShuffle(FixedCString<CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
 			static_assert(CS <= SIZE, "String must not be bigger than maximum size!");
-			Array<uint8, SIZE> str {'\0'};
+			Array<uint8, SIZE> str {Impl::filler(CS)};
 			for(usize i = 0; i < CS; ++i)
 				str[i] = dat[i];
+			usize off = 0;
+			for (usize i = CS; i < SIZE; ++i) {
+				str[i] = Impl::filler(CS + SIZE + off);
+				off += CS + SIZE + str[i];
+			}
 			decompose<Array<uint8, SIZE>>(str);
 		}
 
@@ -226,9 +244,14 @@ namespace StaticStringMangler {
 		template<usize CS>
 		constexpr FunctionShuffle(Array<uint8, CS> const& dat): trueSize(Impl::shuffle<SizeType>(CS)) {
 			static_assert(CS <= SIZE, "String must not be bigger than maximum size!");
-			Array<uint8, SIZE> str {'\0'};
+			Array<uint8, SIZE> str {Impl::filler(CS)};
 			for(usize i = 0; i < CS; ++i)
 				str[i] = dat[i];
+			usize off = 0;
+			for (usize i = CS; i < SIZE; ++i) {
+				str[i] = Impl::filler(CS + SIZE + off);
+				off += CS + SIZE + str[i];
+			}
 			decompose<Array<uint8, SIZE>>(str);
 		}
 
@@ -281,8 +304,8 @@ namespace StaticStringMangler {
 		/// @param dat String to decompose.
 		template<class TArray>
 		constexpr void decompose(TArray const& dat) {
-			Array<uint8, LEFT_SIZE>		l;
-			Array<uint8, RIGHT_SIZE>	r;
+			Array<uint8, LEFT_SIZE>		l{Impl::filler(RIGHT_SIZE + SIZE)};
+			Array<uint8, RIGHT_SIZE>	r{Impl::filler(LEFT_SIZE + SIZE)};
 			for (usize i = 0; i < LEFT_SIZE; ++i) {
 				if constexpr (PARITY)	l[i] = dat[i+RIGHT_SIZE];
 				else					l[i] = dat[i];
@@ -304,21 +327,20 @@ namespace StaticStringMangler {
 	};
 
 	namespace Shuffles {
-		consteval usize binary(usize const sz, bool const firstHalf) {
+		constexpr usize binary(usize const sz, bool const firstHalf) {
 			if (firstHalf && (sz%2)) return (sz/2)+1;
 			return sz/2;
 		}
 
-		consteval usize prime(usize const sz, bool const firstHalf) {
+		constexpr usize prime(usize const sz, bool const firstHalf) {
 			if (firstHalf) return Impl::nearestPrime(sz, true);
 			return sz - Impl::nearestPrime(sz, true);
 		}
 
-		consteval usize prng(usize const sz, bool const firstHalf) {
-			constexpr usize SEED = (
-				ConstHasher::hash(__DATE__)
-			+	ConstHasher::hash(__TIME__)
-			);
+		constexpr usize prng(usize const sz, bool const firstHalf) {
+			constexpr usize SEED = Impl::PRNG;
+			if (sz % 2) return prime(sz, firstHalf);
+			if (Impl::isPrime(sz) && sz > 16) return binary(sz, firstHalf);
 			usize const rng = (SEED % sz) ? (SEED % sz) : (SEED % sz + 1);
 			if (firstHalf) return sz - rng;
 			return rng;
@@ -338,14 +360,21 @@ namespace StaticStringMangler {
 	/// @tparam PARITY Shuffle parity.
 	template<usize S, usize MASK, bool PARITY, class TSize>
 	using PrimeShuffle = FunctionShuffle<S, MASK, PARITY, Shuffles::prime, TSize>;
+
+	/// @brief Pseudo-random shuffle.
+	/// @tparam S String size.
+	/// @tparam MASK Shuffle mask.
+	/// @tparam PARITY Shuffle parity.
+	template<usize S, usize MASK, bool PARITY, class TSize>
+	using PseudoRandomShuffle = FunctionShuffle<S, MASK, PARITY, Shuffles::prng, TSize>;
 }
 
 /// @brief Static string mangler.
 /// @tparam S String size.
 template<usize S>
-using MangledStaticString = StaticStringMangler::PrimeShuffle<
+using MangledStaticString = StaticStringMangler::PseudoRandomShuffle<
 	S,
-	Impl::PrimeNumber<S>::CLOSEST,
+	Impl::PRNG * Impl::PrimeNumber<S>::CLOSEST,
 	!Impl::PrimeNumber<S>::IS_PRIME,
 	Decay::Number::AsUnsigned<S>
 >;
@@ -384,7 +413,7 @@ public:
 	/// @param str String to mangle.
 	template<usize CS>
 	constexpr ObfuscatedStaticString(FixedCString<CS> const& str):
-		trueSize(Impl::shuffle<SizeType>(CS)),
+		trueSize(Impl::shuffle<SizeType>(CS-1)),
 		data(decompose(str))
 	{}
 
@@ -419,11 +448,15 @@ private:
 	template<usize CS>
 	constexpr static ContainerType decompose(FixedCString<CS> const& str) {
 		static_assert(CS <= SIZE, "String must not be bigger than maximum size!");
-		Array<uint8, CS> result {'\0'};
+		Array<uint8, SIZE> result {Impl::filler(CS + SIZE)};
 		uint8 off = 0;
 		for (usize i = 0; i < CS; ++i) {
 			result[i] = (str[i] - off);
 			off = str[i];
+		}
+		for (usize i = CS; i < SIZE; ++i) {
+			result[i] = Impl::filler(CS + SIZE + off);
+			off += CS + SIZE + result[i];
 		}
 		return ContainerType(result);
 	}
