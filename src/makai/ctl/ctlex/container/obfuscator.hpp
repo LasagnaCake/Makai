@@ -392,7 +392,7 @@ namespace StaticStringMangler {
 	template<usize S, usize MASK, bool PARITY, class TSize>
 	using PrimeShuffle = FunctionShuffle<S, MASK, PARITY, Shuffles::prime, TSize>;
 
-	/// @brief Pseudo-random shuffle.
+	/// @brief "Pseudo"-random shuffle.
 	/// @tparam S String size.
 	/// @tparam MASK Shuffle mask.
 	/// @tparam PARITY Shuffle parity.
