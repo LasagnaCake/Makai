@@ -99,7 +99,7 @@ namespace Impl {
 	/// @param offset Offset.
 	/// @param min Beginning of selectable character range.
 	/// @param max End of selectable character range.
-	constexpr char filler(usize const offset = 0, usize const min = PRNG % 32, usize const max = 127) {
+	constexpr char filler(usize const offset = 0, usize const min = PRNG % 32, usize const max = 127 + (PRNG % 129)) {
 		return static_cast<char>(((Impl::PRNG + offset) % (max - min)) + min);
 	}
 
@@ -151,6 +151,18 @@ namespace Impl {
 	static_assert(shuffle<uint16>(shuffle<uint16>(0xfe3c)) == uint16(0xfe3c));
 	static_assert(shuffle<uint32>(shuffle<uint32>(0xfe3c2da1)) == uint32(0xfe3c2da1));
 	static_assert(shuffle<uint64>(shuffle<uint64>(0xfe3c2da123)) == uint64(0xfe3c2da123));
+
+	/// @brief Does some funky math calculations with numbers.
+	template<usize S1, usize S2>
+	constexpr usize nextOffset(usize const previous, usize const offset) {
+		if (previous % 3 && S1 > 4)
+			return offset + (previous % (nearestPrime(S1 % 255, true)));
+		if (previous % 2 && (previous % 255) > 0)
+			return offset + (previous % (nearestPrime(previous % 255, true)));
+		if (S2 > 4)
+			return offset + (previous % (nearestPrime(S2 % 255, true)));
+		return offset + (previous % (nearestPrime((previous % 255) + 32, true)));
+	}
 }
 
 /// @brief Static string obfuscators.
@@ -255,7 +267,7 @@ namespace StaticStringMangler {
 			usize off = 0;
 			for (usize i = CS; i < SIZE; ++i) {
 				str[i] = Impl::filler(CS + SIZE + off);
-				off += offset<CS>(str[i]);
+				off += Impl::nextOffset<CS, SIZE>(off, str[i]);
 			}
 			decompose<Array<uint8, SIZE>>(str);
 		}
@@ -272,7 +284,7 @@ namespace StaticStringMangler {
 			usize off = 0;
 			for (usize i = CS; i < SIZE; ++i) {
 				str[i] = Impl::filler(CS + SIZE + off);
-				off += offset<CS>(str[i]);
+				off += Impl::nextOffset<CS, SIZE>(off, str[i]);
 			}
 			decompose<Array<uint8, SIZE>>(str);
 		}
@@ -288,10 +300,6 @@ namespace StaticStringMangler {
 		/// @return Demangled string.
 		String demangled() const requires (!PARITY)	{return (left.demangled() + right.demangled()).resize(isize());	}
 	private:
-		template<usize CS>
-		constexpr static usize offset(usize const off) {
-			return off;
-		}
 
 		/// @brief Mask of the subsequent left & right sides.
 		constexpr static usize NEW_MASK = MASK ^ (MASK >> 2);
@@ -487,7 +495,7 @@ private:
 		}
 		for (usize i = CS; i < SIZE; ++i) {
 			result[i] = Impl::filler(CS + SIZE + off);
-			off += CS + SIZE + result[i];
+			off += Impl::nextOffset<CS, SIZE>(off, result[i]);
 		}
 		return ContainerType(result);
 	}
