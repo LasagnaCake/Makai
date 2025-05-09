@@ -324,22 +324,26 @@ namespace StaticStringMangler {
 		RightType	right;
 	};
 
+	/// @brief String shuffles.
 	namespace Shuffles {
+		/// @brief Binary shuffle.
 		constexpr usize binary(usize const sz, bool const firstHalf) {
 			if (firstHalf && (sz%2)) return (sz/2)+1;
 			return sz/2;
 		}
 
+		/// @brief Prime shuffle.
 		constexpr usize prime(usize const sz, bool const firstHalf) {
 			if (firstHalf) return Impl::nearestPrime(sz, true);
 			return sz - Impl::nearestPrime(sz, true);
 		}
 
+		/// @brief Pseudo-random shuffle.
 		constexpr usize prng(usize const sz, bool const firstHalf) {
 			constexpr usize SEED = Impl::PRNG;
 			if (sz % 2) return prime(sz, firstHalf);
 			if (Impl::isPrime(sz) && sz > 16) return binary(sz, firstHalf);
-			usize const rng = (SEED % sz) ? (SEED % sz) : (SEED % sz + 1);
+			usize const rng = (SEED % sz) ? (SEED % sz) : (1);
 			if (firstHalf) return sz - rng;
 			return rng;
 		}
