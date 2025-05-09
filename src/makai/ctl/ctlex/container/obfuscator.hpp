@@ -231,7 +231,7 @@ namespace StaticStringMangler {
 			usize off = 0;
 			for (usize i = CS; i < SIZE; ++i) {
 				str[i] = Impl::filler(CS + SIZE + off);
-				off += CS + SIZE + str[i];
+				off += offset<CS>(str[i]);
 			}
 			decompose<Array<uint8, SIZE>>(str);
 		}
@@ -248,7 +248,7 @@ namespace StaticStringMangler {
 			usize off = 0;
 			for (usize i = CS; i < SIZE; ++i) {
 				str[i] = Impl::filler(CS + SIZE + off);
-				off += CS + SIZE + str[i];
+				off += offset<CS>(str[i]);
 			}
 			decompose<Array<uint8, SIZE>>(str);
 		}
@@ -264,6 +264,11 @@ namespace StaticStringMangler {
 		/// @return Demangled string.
 		String demangled() const requires (!PARITY)	{return (left.demangled() + right.demangled()).resize(isize());	}
 	private:
+		template<usize CS>
+		constexpr static usize offset(usize const off) {
+			return off;
+		}
+
 		/// @brief Mask of the subsequent left & right sides.
 		constexpr static usize NEW_MASK = MASK ^ (MASK >> 2);
 
