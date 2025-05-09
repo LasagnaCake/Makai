@@ -353,7 +353,7 @@ namespace StaticStringMangler {
 		RightType	right;
 	};
 
-	/// @brief String shuffles.
+	/// @brief String shuffle functions.
 	namespace Shuffles {
 		/// @brief Binary shuffle.
 		constexpr usize binary(usize const sz, bool const firstHalf) {
