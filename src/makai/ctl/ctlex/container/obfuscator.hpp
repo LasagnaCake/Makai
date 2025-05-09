@@ -155,9 +155,21 @@ namespace Impl {
 
 /// @brief Static string obfuscators.
 namespace StaticStringMangler {
+	/// @brief String shuffle implementer.
+	/// @tparam S String size.
+	/// @tparam MASK Shuffle mask.
+	/// @tparam PARITY Shuffle parity.
+	/// @tparam NEWSIZE Shuffle function to use.
+	/// @tparam TSize Size type.
 	template<usize S, usize MASK, bool PARITY, auto NEWSIZE, class TSize>
 	struct FunctionShuffle;
 
+	/// @brief String shuffle implementer.
+	/// @tparam S String size.
+	/// @tparam MASK Shuffle mask.
+	/// @tparam PARITY Shuffle parity.
+	/// @tparam NEWSIZE Shuffle function to use.
+	/// @tparam TSize Size type.
 	template<usize MASK, bool PARITY, auto NEWSIZE, class TSize>
 	struct FunctionShuffle<0, MASK, PARITY, NEWSIZE, TSize> {
 		/// @brief String size.
@@ -171,6 +183,12 @@ namespace StaticStringMangler {
 		String demangled() const	{return String();}
 	};
 
+	/// @brief String shuffle implementer.
+	/// @tparam S String size.
+	/// @tparam MASK Shuffle mask.
+	/// @tparam PARITY Shuffle parity.
+	/// @tparam NEWSIZE Shuffle function to use.
+	/// @tparam TSize Size type.
 	template<usize MASK, bool PARITY, auto NEWSIZE, class TSize>
 	struct FunctionShuffle<1, MASK, PARITY, NEWSIZE, TSize> {
 		/// @brief String size.
@@ -197,6 +215,12 @@ namespace StaticStringMangler {
 		char c = Impl::filler(MASK);
 	};
 
+	/// @brief String shuffle implementer.
+	/// @tparam S String size.
+	/// @tparam MASK Shuffle mask.
+	/// @tparam PARITY Shuffle parity.
+	/// @tparam NEWSIZE Shuffle function to use.
+	/// @tparam TSize Size type.
 	template<usize S, usize M, bool P, auto NEWSIZE, class TSize = CTL::Decay::Number::AsUnsigned<S>>
 	struct FunctionShuffle {
 	private:
