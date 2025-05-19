@@ -26,22 +26,22 @@ namespace Base {
 		constexpr static bool SECURE = false;
 
 		/// @brief Default constructor.
-		Generator(): engine()				{}
+		constexpr Generator(): engine()					{}
 		/// @brief Constructs the generator from a seed.
 		/// @param seed Seed to use.
-		Generator(usize const seed)			{engine.setSeed(seed);						}
+		constexpr Generator(usize const seed)			{engine.setSeed(seed);						}
 		/// @brief Copy constructor.
 		/// @param other `Generator` to copy from.
-		Generator(Generator const& other) 	{engine.setSeed(other.engine.getSeed());	}
+		constexpr Generator(Generator const& other) 	{engine.setSeed(other.engine.getSeed());	}
 		/// @brief Move constructor.
 		/// @param other `Generator` to move.
-		Generator(Generator&& other)		= default;
+		constexpr Generator(Generator&& other)			= default;
 
 		/// @brief Returns a random floating point number between 0 and 1.
 		/// @tparam T Floating point type.
 		/// @return Random number.
 		template<Type::Real T = float>
-		T real() {
+		constexpr T real() {
 			return static_cast<T>(engine.next()) / static_cast<T>(NumberLimit<usize>::HIGHEST);
 		}
 
@@ -49,25 +49,25 @@ namespace Base {
 		/// @tparam T Integer type.
 		/// @return Random number.
 		template<Type::Integer T = ssize>
-		T integer() {
+		constexpr T integer() {
 			return engine.next();
 		}
 
 		/// @brief Sets the random number generator's seed.
 		/// @param seed Seed to use.
-		void setSeed(usize const seed) {
+		constexpr void setSeed(usize const seed) {
 			engine.setSeed(seed);
 		}
 
 		/// @brief Gets the random number generator's current seed.
 		/// @return Current seed.
-		usize getSeed() {
+		constexpr usize getSeed() const {
 			return engine.getSeed();
 		}
 
 		/// @brief Gets a seed based on the current clock's time, and a random number.
 		/// @return New seed.
-		usize generateNewSeed() {
+		constexpr usize generateNewSeed() {
 			return OS::Time::now() ^ !(integer() << 0x2F);
 		}
 		
@@ -137,7 +137,7 @@ struct BaseGenerator: Base::Generator<TEngine> {
 	/// @param max Highest value.
 	/// @return Random number.
 	template<Type::Real T = float>
-	T real(T const& min, T const& max) {
+	constexpr T real(T const& min, T const& max) {
 		if (min > max) return real<T>(max, min);
 		return real<T>() * (max - min) + min;
 	}
@@ -148,7 +148,7 @@ struct BaseGenerator: Base::Generator<TEngine> {
 	/// @param max Highest value.
 	/// @return Random number.
 	template<Type::Integer T = ssize>
-	T integer(T const& min, T const& max) {
+	constexpr T integer(T const& min, T const& max) {
 		if (min > max) return integer<T>(max, min);
 		return (integer<AsUnsigned<T>>() % (max - min + 1)) + min;
 	}
@@ -157,13 +157,13 @@ struct BaseGenerator: Base::Generator<TEngine> {
 	/// @tparam T Integer type.
 	/// @return Random number.
 	template<Type::Integer T = ssize>
-	T number()								{return integer<T>();			}
+	constexpr T number()							{return integer<T>();			}
 
 	/// @brief Returns a random floating point number between 0 and 1.
 	/// @tparam T Floating point type.
 	/// @return Random number.
 	template<Type::Real T = float>
-	T number() 								{return real<T>();				}
+	constexpr T number() 							{return real<T>();				}
 
 	/// @brief Returns a random integer between the given range.
 	/// @tparam T Integer type.
@@ -171,7 +171,7 @@ struct BaseGenerator: Base::Generator<TEngine> {
 	/// @param max Highest value.
 	/// @return Random number.
 	template<Type::Integer T = ssize>
-	T number(T const& min, T const& max)	{return integer<T>(min, max);	}
+	constexpr T number(T const& min, T const& max)	{return integer<T>(min, max);	}
 
 	/// @brief Returns a random floating point number between the given range.
 	/// @tparam T Floating point type.
@@ -179,7 +179,7 @@ struct BaseGenerator: Base::Generator<TEngine> {
 	/// @param max Highest value.
 	/// @return Random number.
 	template<Type::Real T = float>
-	T number(T const& min, T const& max)	{return real<T>(min, max);		}
+	constexpr T number(T const& min, T const& max)	{return real<T>(min, max);		}
 
 protected:
 	using Base::Generator<TEngine>::engine;

@@ -51,17 +51,17 @@ namespace Random::Engine::Impl {
 
 		/// @brief Copy constructor.
 		/// @param other `BaseMersenne` engine to copy from.
-		BaseMersenne(BaseMersenne const& other)				= default;
+		constexpr BaseMersenne(BaseMersenne const& other)				= default;
 		/// @brief Move constructor.
 		/// @param other `BaseMersenne` engine to move.
-		BaseMersenne(BaseMersenne&& other)					= default;
+		constexpr BaseMersenne(BaseMersenne&& other)					= default;
 
 		/// @brief Copy assignment operator.
 		/// @param other `BaseMersenne` engine to copy from.
-		BaseMersenne& operator=(BaseMersenne const& other)	= default;
+		constexpr BaseMersenne& operator=(BaseMersenne const& other)	= default;
 		/// @brief Move assignment operator.
 		/// @param other `BaseMersenne` engine to move.
-		BaseMersenne& operator=(BaseMersenne&& other)		= default;
+		constexpr BaseMersenne& operator=(BaseMersenne&& other)			= default;
 
 		/// @brief Sets the engine's current seed.
 		/// @param seed Seed to use.

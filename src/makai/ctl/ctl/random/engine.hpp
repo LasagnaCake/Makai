@@ -10,6 +10,8 @@
 #include "../os/time.hpp"
 #include "../typeinfo.hpp"
 #include "../meta/logic.hpp"
+#include "../typetraits/verify.hpp"
+#include "ctprng.hpp"
 #include "mersenne.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -33,13 +35,13 @@ namespace Base {
 		constexpr static bool SECURE = false;
 		/// @brief Generates a new random number.
 		/// @return Generated number.
-		virtual usize next() = 0;
+		constexpr virtual usize next() = 0;
 		/// @brief Returns the engine's current seed.
 		/// @return Current seed.
-		virtual usize getSeed() = 0;
+		constexpr virtual usize getSeed() = 0;
 		/// @brief Sets the engine's current seed.
 		/// @param seed Current seed.
-		virtual void setSeed(usize const seed) = 0;
+		constexpr virtual void setSeed(usize const seed) = 0;
 		/// @brief Virtual destructor.
 		virtual ~ISimpleEngine() {}
 	};
@@ -64,46 +66,51 @@ namespace Engine {
 
 		/// @brief Underlying engine used.
 		InternalEngine engine;
+
+		constexpr static usize startingSeed() {
+			if constexpr (inCompileTime())	return CTPRNG<usize>;
+			else							return OS::Time::now();
+		}
 	public:
 		/// @brief Constructs the engine with a given seed.
 		/// @param seed Seed to use.
-		Mersenne(usize const seed):	engine(seed)				{}
+		constexpr Mersenne(usize const seed):	engine(seed)					{}
 		/// @brief Constructs the engine with the seed being the current time.
-		Mersenne():					Mersenne(OS::Time::now())	{}
+		constexpr Mersenne():					Mersenne(CTPRNG<usize>)	{}
 
-		/// @brief Copy constructor.
-		/// @param other `Mersenne` engine to copy from.
-		Mersenne(Mersenne const& other)				= default;
-		/// @brief Move constructor.
-		/// @param other `Mersenne` engine to move.
-		Mersenne(Mersenne&& other)					= default;
+		/// @brief Move constructor (defaulted).
+		constexpr Mersenne(Mersenne&& other)		= default;
+		/// @brief Copy constructor (deleted).
+		constexpr Mersenne(Mersenne const& other)	= delete;
 
-		/// @brief Copy assignment operator.
-		/// @param other `Mersenne` engine to copy from.
-		Mersenne& operator=(Mersenne const& other)	= default;
-		/// @brief Move assignment operator.
-		/// @param other `Mersenne` engine to move.
-		Mersenne& operator=(Mersenne&& other)		= default;
+		/// @brief Move assignment operator (defaulted).
+		#ifdef __clang__
+		constexpr Mersenne& operator=(Mersenne&& other)			{engine = CTL::move(other.engine); return *this;}
+		#else
+		constexpr Mersenne& operator=(Mersenne&& other)			= default;
+		#endif
+		/// @brief Copy assignment operator (deleted).
+		constexpr Mersenne& operator=(Mersenne const& other)	= delete;
 
 		/// @brief Destructor.
 		virtual ~Mersenne() {}
 
 		/// @brief 
 		/// @return 
-		virtual usize getSeed() final {
+		constexpr virtual usize getSeed() final {
 			return engine.getSeed();
 		}
 
 		/// @brief Sets the engine's current seed.
 		/// @param seed Seed to use.
 		/// @return Reference to self.
-		virtual void setSeed(usize const newSeed) final {
+		constexpr virtual void setSeed(usize const newSeed) final {
 			engine.setSeed(newSeed);
 		}
 
 		/// @brief Generates a new random number.
 		/// @return Generated number.
-		virtual usize next() final {
+		constexpr virtual usize next() final {
 			return engine.next();
 		}
 	};
