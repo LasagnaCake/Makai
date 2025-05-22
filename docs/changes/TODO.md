@@ -5,16 +5,17 @@
 ### Core library
 
 - [x] Create `StaticList` class (dynamic list for move-only objects)
-- [ ] Fix collision detection being slow
+- [x] Fix collision detection being slow
 
 ### Extension library
 
-- [ ] Write test cases
+- [x] Write test cases
+- - [x] `APlayer`
 - - [x] `BulletServer`
 - - [x] `LaserServer`
 - - [x] `ItemServer`
 - - [x] `AEnemy`
-- - [ ] `ABoss`
+- - [x] `ABoss`
 
 ## Low Priority
 
@@ -38,6 +39,7 @@
 
 ## Future
 
+- [ ] Replace SDL2 with SDL3
 - [ ] See [ideas.md](ideas.md)
 - [ ] (Maybe) replace JSON to other specification
 - - For the *custom file formats*, that is
@@ -53,7 +55,7 @@
 - [ ] Support for "Game DLLs"
 - - Having the game being separate from the executable, and stuff being loadable from a DLL
 - (Maybe) reimplement save & load file dialogs ([via this, perhaps?](https://github.com/btzy/nativefiledialog-extended))
-- [ ] Add OKLAB support
+- [ ] Add OKLAB support (perhaps?)
 
 ## Other refactoring
 
