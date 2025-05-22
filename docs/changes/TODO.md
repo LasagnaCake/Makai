@@ -39,7 +39,7 @@
 
 ## Future
 
-- [ ] Replace SDL2 with SDL3
+- [ ] Replace SDL2 with SDL3 (perhaps?)
 - [ ] See [ideas.md](ideas.md)
 - [ ] (Maybe) replace JSON to other specification
 - - For the *custom file formats*, that is
