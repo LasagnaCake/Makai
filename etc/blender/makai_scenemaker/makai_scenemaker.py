@@ -185,7 +185,7 @@ tx_blend_equations = [
 
 tx_blend_states = {
 	"Normal":			0,
-	"Inverse":			1,
+	"Invert":			1,
 	"Constant (One)":	4
 }
 
