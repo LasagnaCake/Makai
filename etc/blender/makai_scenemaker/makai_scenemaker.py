@@ -334,6 +334,7 @@ def get_binary_data(mesh):
 	vertex_binary = struct.pack("<" + "f"*len(vertex_data), *vertex_data)
 	return (vertex_binary, component_data)
 
+# TODO: Test this
 def get_blend_equation(props):
 	eq = 0;
 	eq = int(props.blend_3_equation & 0x3);
