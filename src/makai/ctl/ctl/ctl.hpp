@@ -1,6 +1,7 @@
 #ifndef CTL_H
 #define CTL_H
 
+#include "adapter/adapter.hpp"
 #include "algorithm/algorithm.hpp"
 #include "async/async.hpp"
 #include "async/co/co.hpp"

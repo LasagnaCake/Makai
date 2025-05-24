@@ -174,11 +174,36 @@ blend_functions = [
 	"SRC Alpha Saturate"
 ]
 
+tx_blend_equations = [
+	"Multiply",
+	"Divide",
+	"Add",
+	"Subtract",
+	"Min",
+	"Max"
+]
+
+tx_blend_states = {
+	"Normal":			0,
+	"Inverse":			1,
+	"Constant (One)":	4
+}
+
 def BlendFunctionProperty(prop_name, prop_default, prop_update=None):
 	return EnumProperty(prop_name, blend_functions, prop_default, prop_update)
 
 def BlendEquationProperty(prop_name, prop_default, prop_update=None):
 	return EnumProperty(prop_name, blend_equations, prop_default, prop_update)
+
+def BlendTextureStateProperty(prop_name, prop_default, prop_update=None):
+	prop_items = [(str(value), key, "", value) for [key, value] in tx_blend_states.items()]
+	return bp.EnumProperty(
+		name=prop_name,
+		items=prop_items,
+		default=prop_default,
+		update=prop_update,
+		options=set()
+	)
 
 def DirectoryPathProperty(prop_name, prop_default="", prop_options=set()):
 	return bp.StringProperty(
@@ -309,6 +334,15 @@ def get_binary_data(mesh):
 	vertex_binary = struct.pack("<" + "f"*len(vertex_data), *vertex_data)
 	return (vertex_binary, component_data)
 
+def get_blend_equation(props):
+	eq = 0;
+	eq = int(props.blend_3_equation & 0x3);
+	eq |= int(props.blend_4_src_state & 0xf0);
+	eq |= int(props.blend_5_dst_state& 0xf0) << 1;
+	eq = int(props.blend_6_clamp_result) << 8;
+	eq = int(props.blend_7_swap_src_dst) << 9;
+	return eq;
+
 def create_render_definition(context, obj, file_name, folder_path, tx_folder, mesh_folder, embed_texture, embed_mesh, apply_modifiers, hexcolor):
 	def hex_color_or_array(color):
 		return as_hex_string(color) if hexcolor else [x for x in color]
@@ -404,6 +438,19 @@ def create_render_definition(context, obj, file_name, folder_path, tx_folder, me
 			obj.material_props.texture_0_enabled,
 			obj.material_props.texture_2_alpha_clip
 		)
+	# Set blend texture
+	if obj.material_props.blend_0_enabled and obj.material_props.blend_1_image is not None:
+		strfile["material"]["blend"] = process_image_file(
+			embed_texture,
+			obj.material_props.blend_1_image,
+			f"{txpath}\\blend.png",
+			f"{mrodpath}\\_bl_TMP.png",
+			f"{tx_folder}\\blend.png",
+			obj.material_props.blend_0_enabled,
+			None
+		)
+		strfile["material"]["blend"]["strength"] = [x for x in obj.material_props.blend_2_strength]
+		strfile["material"]["blend"]["equation"] = get_blend_equation(obj.material_props)
 	# Set normal map
 	if obj.material_props.normalmap_0_enabled and obj.material_props.normalmap_1_image is not None:
 		strfile["material"]["normalMap"] = process_image_file(
@@ -522,6 +569,15 @@ class ObjectMaterialProperties(BaseProperties):
 	texture_0_enabled: BoolProperty("Enable Texture")
 	texture_1_image: ImageProperty("Texture Image")
 	texture_2_alpha_clip: AlphaClipProperty("Texture")
+
+	blend_0_enabled: BoolProperty("Enable Blend Texthre")
+	blend_1_image: ImageProperty("Blend Texture Image")
+	blend_2_strength: Vector3Property("Blend Texture Strength")
+	blend_3_equation: EnumProperty("Blend Texture Equation", tx_blend_equations)
+	blend_4_src_state: BlendTextureStateProperty("Blend Source", 0)
+	blend_5_dst_state: BlendTextureStateProperty("Blend Destination", 0)
+	blend_6_clamp_result: BoolProperty("Clamp result")
+	blend_7_swap_src_dst: BoolProperty("Swap Source and Destination")
 	
 	normalmap_0_enabled: BoolProperty("Enable Normal Map")
 	normalmap_1_image: ImageProperty("Normal Map Image")
@@ -572,6 +628,8 @@ class ObjectMaterialProperties(BaseProperties):
 		layout.column()
 		layout.label(text="Texture Effect")
 		self.render_child(target, "texture_")
+		layout.label(text="Blend Texture Effect")
+		self.render_child(target, "blend_")
 		layout.label(text="Normal Map Effect")
 		self.render_child(target, "normalmap_")
 		layout.label(text="Emission Effect")
