@@ -24,6 +24,13 @@ struct TextureEffect {
 	float		alphaClip;
 };
 
+struct BlendTextureEffect {
+	bool		enabled;
+	sampler2D 	image;
+	vec3		strength;
+	uint		equation;
+};
+
 struct NormalMapEffect {
 	bool		enabled;
 	sampler2D	image;
@@ -107,10 +114,11 @@ uniform FogEffect		nearFog		= FogEffect(false, 0, 1, 1, vec4(1));
 uniform NegativeEffect	negative	= NegativeEffect(false, 1);
 uniform GradientEffect	gradient	= GradientEffect(false, -1, vec4(0), vec4(1), false);
 
-uniform TextureEffect	imgTexture;
-uniform NormalMapEffect	normalMap;
-uniform EmissionEffect	emission;
-uniform WarpEffect		warp;
+uniform TextureEffect		imgTexture;
+uniform BlendTextureEffect	blendTexture;
+uniform NormalMapEffect		normalMap;
+uniform EmissionEffect		emission;
+uniform WarpEffect			warp;
 
 vec3 calculateLights(vec3 position, vec3 normal) {
 	if (!lights.enabled) return vec3(1);
@@ -186,28 +194,67 @@ vec4 applyBrightnessAndContrast(vec4 color) {
 	return vec4(((res - 0.5f) * max(contrast, 0)) + 0.5f, color.a);
 }
 
+vec3 equate(vec3 a, vec3 b, uint mode) {
+	switch (mode & 0x0Fu) {
+		case 0x00: return a * b;
+		case 0x01: return a / b;
+		case 0x02: return a + b;
+		case 0x03: return a - b;
+		case 0x04: return max(a, b);
+		case 0x05: return min(a, b);
+		// Fallback
+		default: return vec3(1);
+	}
+}
+
 void main(void) {
-	vec4 color;
-	vec2 calculatedFragUV = fragUV;
+	vec4 color = fragColor;
 	vec3 normal = fragNormal;
-	if (imgTexture.enabled) {
-		if (warp.enabled) {
-			uint wcx = clamp(warp.channelX, 0u, 3u);
-			uint wcy = clamp(warp.channelY, 0u, 3u);
-			vec4 warpFac = texture(warp.image, warpUV);
-			vec2 warpCoord = vec2(warpFac[wcx], warpFac[wcy]) * 2 - 1;
-			calculatedFragUV = fragUV + warpCoord;
-			color = texture(imgTexture.image, calculatedFragUV) * fragColor;
-		} else color = texture(imgTexture.image, fragUV) * fragColor;
-	} else color = fragColor;
+	vec2 texelUV = fragUV;
+
+	if (warp.enabled) {
+		uint wcx = clamp(warp.channelX, 0u, 3u);
+		uint wcy = clamp(warp.channelY, 0u, 3u);
+		vec4 warpFac = texture(warp.image, warpUV);
+		vec2 warpCoord = vec2(warpFac[wcx], warpFac[wcy]) * 2 - 1;
+		texelUV = fragUV + warpCoord;
+	}
+
+	if (imgTexture.enabled)
+		color = texture(imgTexture.image, texelUV) * fragColor;
+
+	if (blendTexture.enabled) {
+		bool reverse	= bool(blendTexture.equation & 0x200u);
+		vec3 blend		= bool(blendTexture.equation & 0x40u) ? vec3(1) : texture(blendTexture.image, texelUV).rgb;
+		vec3 source		= bool(blendTexture.equation & 0x80u) ? vec3(1) : color.rgb;
+		vec3 src		= (reverse) ? blend : source; 
+		vec3 dst		= (reverse) ? source : blend; 
+		vec3 result		= vec3(0);
+		switch (blendTexture.equation & 0x30u) {
+			// Default equations
+			case 0x00: result = equate((src),		(dst),		blendTexture.equation); break;
+			// Destination-inverse equations
+			case 0x10: result = equate((src),		(1 - dst),	blendTexture.equation); break;
+			// Source-inverse equations
+			case 0x20: result = equate((1 - src),	(dst),		blendTexture.equation); break;
+			// Full-inverse equations
+			case 0x30: result = equate((1 - src),	(1 - dst),	blendTexture.equation); break;
+			// Fallback
+			default: break;
+		}
+		if (bool(blendTexture.equation & 0x100u))
+			result = clamp(result, vec3(0), vec3(1));
+		color.rgb = mix(color.rgb, result, blendTexture.strength);
+	}
 
 	if (imgTexture.enabled && color.a <= (fragColor.a * imgTexture.alphaClip))
 		discard;
 	if (normalMap.enabled) {
-		vec4 tn = texture(normalMap.image, calculatedFragUV);
+		vec4 tn = texture(normalMap.image, texelUV);
 		normal = tn.rgb * tn.a;
 		normal = normalize(normal * 2.0 - 1.0 + normal);  
 	}
+	
 	color.xyz *= calculateLights(fragCoord3D, normal) * getShadingColor(fragCoord3D, normal);
 
 	color *= albedo;
@@ -228,7 +275,7 @@ void main(void) {
 	if (farFog.enabled) color = applyFarFog(color);
 
 	if (emission.enabled) {
-		vec4	emitColor	= texture(emission.image, calculatedFragUV) * fragColor;
+		vec4	emitColor	= texture(emission.image, texelUV) * fragColor;
 		float	emitFactor	= rgb2hsl(emitColor.rgb).z * emitColor.a;
 		color.rgb = mix(color.rgb, emitColor.rgb, emitFactor * emission.strength);
 	}

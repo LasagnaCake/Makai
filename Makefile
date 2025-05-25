@@ -34,6 +34,12 @@ define refmove
 	@find . -name '$(strip $(1))' -exec cp \{\} $(strip $(2)) \;
 endef
 
+define clear-old-shaders
+	@cd obj/$(strip $(1))
+	@rm -f *.embed.shader.$(strip $(1)).o
+	@cd ../..
+endef
+
 help:
 	@echo ""
 	@echo "$$HELP_MESSAGE"
@@ -87,6 +93,7 @@ copy-ex-headers:
 copy-o-debug:
 	@echo "Copying objects..."
 	@mkdir -p obj/debug
+	$(call clear-old-shaders, debug)
 	@cd $(MAKAISRC)
 	$(call refmove, *.debug.o, ../../obj/debug/)
 	@cd ../..
@@ -94,6 +101,7 @@ copy-o-debug:
 copy-o-release:
 	@echo "Copying objects..."
 	@mkdir -p obj/release
+	$(call clear-old-shaders, release)
 	@cd $(MAKAISRC)
 	$(call refmove, *.release.o, ../../obj/release/)
 	@cd ../..

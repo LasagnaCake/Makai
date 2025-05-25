@@ -32,10 +32,11 @@ struct TestApp: Makai::App {
 
 	TestApp(): Makai::App(Makai::Config::App{{600, 400, "Test 03", false}}) {
 		DEBUGLN("Loading shaders...");
-		loadShaders(
+		/*loadShaders(
 			Makai::File::getSLF("shaders/base/base.slf"),
 			Makai::File::getSLF("shaders/framebuffer/compose.slf")
-		);
+		);*/
+		loadDefaultShaders();
 		//loadDefaultShaders();
 		DEBUGLN("Creating cube...");
 		cube.material.texture = {true, Makai::Graph::Texture2D("../tests/makai/files/grid.png"), 0};

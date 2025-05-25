@@ -203,6 +203,67 @@ namespace Makai::Graph::Material {
 			/// @brief Texture alpha clip.
 			float alphaClip = 0.1;
 		};
+		
+		/// @brief Blend equation the blend texture uses.
+		/// @details
+		///		Layout (from LSB to MSB):
+		///
+		///		- First four bits: which equation to use (`*`, `/`, `+`, `-`, `max`, `min`).
+		///
+		///		- Next two bits: Which parameters to use the inverse from (none, destination, source, both).
+		///			Due to the implementation, it is affected by the swap bit (i.e. If swapped,
+		///			which parameter gets the inverse also swaps).
+		///
+		///		- Next two bits: Which parameters to replace with 1 (none, destination, source, both).
+		///
+		///		- Next bit: Whether to clamp the result between 0 and 1.
+		///
+		///		- Next bit: Whether to swap source and destination.
+		enum class BlendTextureEquation: uint {
+			BTE_MUL				= 0x00,
+			BTE_DIV				= 0x01,
+			BTE_ADD				= 0x02,
+			BTE_SUB				= 0x03,
+			BTE_MAX				= 0x04,
+			BTE_MIN				= 0x05,
+			BTE_INVERT_DST		= 0x10,
+			BTE_INVERT_SRC		= 0x20,
+			BTE_INVERT_BOTH		= BTE_INVERT_DST | BTE_INVERT_SRC,
+			BTE_DST_ONE			= 0x40,
+			BTE_SRC_ONE			= 0x80,
+			BTE_BOTH_ONE		= BTE_DST_ONE | BTE_SRC_ONE,
+			BTE_CLAMP_RESULT	= 0x100,
+			BTE_SWAP_SRC_DST	= 0x200,
+			BTE_DEFAULT			= BTE_MUL,
+		};
+
+		/// @brief Bitwise OR for `BlendTextureEquation`.
+		constexpr BlendTextureEquation operator|(BlendTextureEquation const a, BlendTextureEquation const b) {
+			return static_cast<BlendTextureEquation>(CTL::enumcast(a) | CTL::enumcast(b));
+		}
+
+		/// @brief Bitwise AND for `BlendTextureEquation`.
+		constexpr BlendTextureEquation operator&(BlendTextureEquation const a, BlendTextureEquation const b)	{
+			return static_cast<BlendTextureEquation>(CTL::enumcast(a) & CTL::enumcast(b));
+		}
+
+		/// @brief Bitwise XOR for `BlendTextureEquation`.
+		constexpr BlendTextureEquation operator^(BlendTextureEquation const a, BlendTextureEquation const b)	{
+			return static_cast<BlendTextureEquation>(CTL::enumcast(a) ^ CTL::enumcast(b));
+		}
+
+		/// @brief Bitwise NOT for `BlendTextureEquation`.
+		constexpr BlendTextureEquation operator~(BlendTextureEquation const eq)	{
+			return static_cast<BlendTextureEquation>(~CTL::enumcast(eq));
+		}
+
+		struct BlendTexture: Image, Variable3D {
+			using Equation = BlendTextureEquation;
+			/// @brief Blend equation to use.
+			/// @note Source is the current color (texture * vertex color), destination is the blend texture.
+			/// @note For ease of use, refer to the enum itself.
+			Equation equation = Equation::BTE_DEFAULT;
+		};
 
 		/// @brief Emmisive texture effect.
 		struct Emission: Image, Variable {

@@ -9,6 +9,7 @@ namespace ImageSlot {
 	constexpr uint8 NORMAL_MAP	= 2;
 	constexpr uint8 WARP		= 3;
 	constexpr uint8 MASK		= 4;
+	constexpr uint8 BLEND		= 5;
 }
 
 void ObjectMaterial::use(Shader const& shader) const {
@@ -22,6 +23,11 @@ void ObjectMaterial::use(Shader const& shader) const {
 		shader["imgTexture.enabled"](true, ImageSlot::TEXTURE, texture.alphaClip);
 		texture.image.enable(ImageSlot::TEXTURE);
 	} else shader["imgTexture.enabled"](false);
+	// Blend texture
+	if (blend.image && blend.enabled && blend.image.exists()) {
+		shader["blendTexture.enabled"](true, ImageSlot::BLEND, blend.strength, blend.equation);
+		blend.image.enable(ImageSlot::BLEND);
+	} else shader["blendTexture.enabled"](false);
 	// Emission Texture
 	if (emission.image && emission.enabled && emission.image.exists()) {
 		shader["emission.enabled"](true, ImageSlot::EMISSION, emission.strength);

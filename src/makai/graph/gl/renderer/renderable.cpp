@@ -60,6 +60,7 @@ inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaul
 inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitionFolder) {
 	ObjectMaterial mat;
 	Texture2D& texture		= mat.texture.image;
+	Texture2D& blend		= mat.blend.image;
 	Texture2D& normalMap	= mat.normalMap.image;
 	Texture2D& emission		= mat.emission.image;
 	Texture2D& warp			= mat.warp.image;
@@ -91,6 +92,15 @@ inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitio
 			mat.texture.image	= fx.image;
 			if (dmat["texture"]["alphaClip"].isNumber())
 				mat.texture.alphaClip	= dmat["texture"]["alphaClip"].get<float>();
+		}
+		// Set blend texture
+		if (dmat["blend"].isObject()) {
+			auto fx = loadImageEffect(dmat["blend"], definitionFolder, blend);
+			mat.blend.enabled	= fx.enabled;
+			mat.blend.image		= fx.image;
+			mat.blend.strength	= fromJSONArrayV3(dmat["texture"]["alphaClip"], 0);
+			if (dmat["blend"]["equation"].isNumber())
+				mat.blend.equation	= (Effect::BlendTextureEquation)dmat["blend"]["equation"].get<uint>();
 		}
 		// Set normal map texture
 		if (dmat["normalMap"].isObject()) {
@@ -203,11 +213,14 @@ inline JSON::JSONData toDefinition(
 		def["warp"]		= saveImageEffect(mat.warp, definitionFolder, texturesFolder + "/warp.tga");
 		def["texture"]	= saveImageEffect(mat.texture, definitionFolder, texturesFolder + "/texture.tga");
 		def["emission"]	= saveImageEffect(mat.emission, definitionFolder, texturesFolder + "/emission.tga");
+		def["blend"]	= saveImageEffect(mat.blend, definitionFolder, texturesFolder + "/blend.tga");
 	} else {
 		// TODO: integrated textures
 	}
 	// Set image parameters
 	def["texture"]["alphaClip"] = mat.texture.alphaClip;
+	def["blend"]["strength"] = JSON::JSONType{mat.blend.strength.x, mat.blend.strength.y, mat.blend.strength.z};
+	def["blend"]["equation"] = mat.blend.equation;
 	def["emission"]["strength"] = mat.emission.strength;
 	def["warp"]["channelX"] = mat.warp.channelX;
 	def["warp"]["channelY"] = mat.warp.channelY;

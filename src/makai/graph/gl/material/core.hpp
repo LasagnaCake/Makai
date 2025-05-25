@@ -54,19 +54,21 @@ namespace Makai::Graph::Material {
 		/// @brief Contrast.
 		float			contrast	= 1;
 		/// @brief Texture UV shift.
-		Vector2				uvShift;
+		Vector2					uvShift;
 		/// @brief Texture.
-		Effect::Texture		texture;
+		Effect::Texture			texture;
+		/// @brief Blend texture.
+		Effect::BlendTexture	blend;
 		/// @brief Normal map.
-		Effect::NormalMap	normalMap;
+		Effect::NormalMap		normalMap;
 		/// @brief Emmision texture.
-		Effect::Emission	emission;
+		Effect::Emission		emission;
 		/// @brief Displacement texture.
-		Effect::Warp		warp;
+		Effect::Warp			warp;
 		/// @brief Negative effect.
-		Effect::Negative	negative;
+		Effect::Negative		negative;
 		/// @brief Gradient effect.
-		Effect::Gradient	gradient;
+		Effect::Gradient		gradient;
 
 		/// @brief Applies the material to the shader.
 		/// @param shader Shader to apply to.
