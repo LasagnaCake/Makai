@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 			"arcgen.exe \"YOUR_PASSWORD_HERE\""
 		);
 	else if (argc >= 2) {
-		usize sz = srng.number<usize>(64, 128);
+		usize sz = srng.number<usize>(32, 64);
 		CTL::String keyfile = CTL::toString(
 			"consinit ObfuscatedStaticString<",
 			sz
@@ -42,13 +42,12 @@ int main(int argc, char** argv) {
 		);
 		CTL::String const passhash = Makai::Tool::Arch::hashPassword(argv[1]);
 		DEBUGLN("Password hash size: ", passhash.size());
-		keyfile += Makai::Data::encode(
-			Makai::BinaryData<>(
-				(byte const*)passhash.data(), 
-				passhash.size()
-			), 
-			Makai::Data::EncodingType::ET_BASE64
-		);
+		for (char const c: passhash) {
+			std::stringstream stream;
+			stream << std::hex << (unsigned int)(unsigned char)(c);
+			std::string code = stream.str();
+			keyfile += CTL::String("\\x") + (code.size()<2?"0":"") + CTL::String(code);
+		}
 		keyfile += "\");";
 		Makai::File::saveText("key.256.h", keyfile);
 		DEBUGLN("Key generated!");
