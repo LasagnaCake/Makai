@@ -37,11 +37,13 @@ int main(int argc, char** argv) {
 			sz
 			,">(\""
 		);
-		for (char& c: Makai::Tool::Arch::hashPassword(argv[1])) {
+		auto const passhash = Makai::Tool::Arch::hashPassword(argv[1]);
+		DEBUGLN("Password hash size: ", passhash.size());
+		for (char const c: passhash) {
 			std::stringstream stream;
 			stream << std::hex << (unsigned int)(unsigned char)(c);
 			std::string code = stream.str();
-			keyfile += CTL::String("\\x") + (code.size()<2?"0":"") + CTL::String(code);
+			keyfile += CTL::String("\\x") + (code.size()<2?"0":"") + CTL::String(code.c_str());
 		}
 		keyfile += "\");";
 		Makai::File::saveText("key.256.h", keyfile);
