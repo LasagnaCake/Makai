@@ -40,7 +40,6 @@ int main(int argc, char** argv) {
 			sz
 			,">(\""
 		);
-		// HOW ARE YOU EMPTY????
 		CTL::String const passhash = Makai::Tool::Arch::hashPassword(argv[1]);
 		DEBUGLN("Password hash size: ", passhash.size());
 		keyfile += Makai::Data::encode(
