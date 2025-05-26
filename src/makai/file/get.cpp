@@ -205,7 +205,7 @@ Makai::File::CSVData Makai::File::loadCSV(String const& path, char const delimit
 }
 
 void Makai::File::saveBinary(String const& path, CTL::ByteSpan<> const& data) {
-	OS::FS::makeDirectory(OS::FS::directoryFromPath(path));
+	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
 	try {
 		std::ofstream file(path.cstr(), std::ios::binary);
@@ -226,7 +226,7 @@ void Makai::File::saveBinary(String const& path, BinaryData<> const& data) {
 }
 
 void Makai::File::saveText(String const& path, String const& text) {
-	OS::FS::makeDirectory(OS::FS::directoryFromPath(path));
+	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
 	try {
 		std::ofstream file(path.cstr(), std::ios::trunc);
