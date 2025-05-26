@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
 			sz
 			,">(\""
 		);
+		// HOW ARE YOU EMPTY????
 		auto const passhash = Makai::Tool::Arch::hashPassword(argv[1]);
 		DEBUGLN("Password hash size: ", passhash.size());
 		for (char const c: passhash) {
