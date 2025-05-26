@@ -60,7 +60,7 @@ String hash(String const& str) {
 	String result;
 	T hasher;
 	hasher.Update((const byte*)str.data(), str.size());
-	result.resize(hasher.DigestSize());
+	result.resize(hasher.DigestSize(), '\0');
 	hasher.Final((byte*)result.data());
 	return result;
 }
