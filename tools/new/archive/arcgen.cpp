@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 			,">(\""
 		);
 		// HOW ARE YOU EMPTY????
-		auto const passhash = Makai::Tool::Arch::hashPassword(argv[1]);
+		CTL::String const passhash = Makai::Tool::Arch::hashPassword(argv[1]);
 		DEBUGLN("Password hash size: ", passhash.size());
 		keyfile += Makai::Data::encode(
 			Makai::BinaryData<>(
