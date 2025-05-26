@@ -1,7 +1,5 @@
 !!! [ REALLY IMPORTANT ] !!!
 
-> Makai::Tool::Arch::hashPassword returns empty string
-
 [ Library-specific(?) ]
 > Fullscreen does not work properly
 
