@@ -3,6 +3,7 @@
 
 #include "get.hpp"
 #include "json.hpp"
+#include "xml.hpp"
 #include "slf.hpp"
 
 namespace Makai::File {
