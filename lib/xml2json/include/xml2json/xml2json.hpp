@@ -36,8 +36,8 @@
 #endif
 
 /* [Start] This part is configurable */
-static const char xml2json_text_additional_name[] = (XML2JSON_CONTENT_PROP);
-static const char xml2json_attribute_name_prefix[] = (XML2JSON_ATTRIB_PREFIX);
+static const char xml2json_text_additional_name[] = XML2JSON_CONTENT_PROP;
+static const char xml2json_attribute_name_prefix[] = XML2JSON_ATTRIB_PREFIX;
 /* Example:
    <node_name attribute_name="attribute_value">value</node_name> ---> "node_name":{"#text":"value","@attribute_name":"attribute_value"}
 */
