@@ -117,7 +117,8 @@ namespace Makai::Graph::Armature {
 					current = stack.popBack();
 					if (!stack.empty())
 						matrices[current] = matrices[stack.back()] * matrices[current];
-					stack.appendBack(childrenOf(current));
+					if (!isLeafBone(current))
+						stack.appendBack(childrenOf(current));
 				}
 			}
 			return matrices;
