@@ -86,7 +86,7 @@ namespace Makai::Graph::Armature {
 		}
 
 		constexpr bool isRootBone(usize const bone) const {
-			if (bone >= MAX_BONES) return 0;
+			if (bone >= MAX_BONES) return false;
 			if (reverse.contains(bone)) {
 				for (auto const& child : reverse[bone])
 					if (child.value) return false;
@@ -95,7 +95,7 @@ namespace Makai::Graph::Armature {
 		}
 
 		constexpr bool isLeafBone(usize const bone) const {
-			if (bone >= MAX_BONES) return 0;
+			if (bone >= MAX_BONES) return false;
 			if (forward.contains(bone)) {
 				for (auto const& child : reverse[bone])
 					if (child.value) return false;
