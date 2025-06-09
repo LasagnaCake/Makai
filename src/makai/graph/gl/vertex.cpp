@@ -1,4 +1,5 @@
 #include "glapiloader.cc"
+#include <GL/gl.h>
 
 #define GET_GL_POINTER(start, offset) (void*)((start) + (offset) * sizeof(float))
 #define GET_GL_OFFSET(offset) (void*)((offset) * sizeof(float))
@@ -83,6 +84,24 @@ void Vertex::setAttributes() {
 		sizeof(Vertex),
 		GET_GL_OFFSET(9)
 	);
+	// Bone
+	glVertexAttribPointer(
+		4,
+		4,
+		GL_UNSIGNED_INT,
+		GL_FALSE,
+		sizeof(Vertex),
+		GET_GL_OFFSET(12)
+	);
+	// Weight
+	glVertexAttribPointer(
+		5,
+		4,
+		GL_FLOAT,
+		GL_FALSE,
+		sizeof(Vertex),
+		GET_GL_OFFSET(16)
+	);
 }
 
 void Vertex::enableAttributes() {
@@ -90,9 +109,13 @@ void Vertex::enableAttributes() {
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(4);
+	glEnableVertexAttribArray(5);
 }
 
 void Vertex::disableAttributes() {
+	glDisableVertexAttribArray(5);
+	glDisableVertexAttribArray(4);
 	glDisableVertexAttribArray(3);
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(1);

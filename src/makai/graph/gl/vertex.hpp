@@ -14,15 +14,25 @@ namespace Makai::Graph {
 	namespace Base {
 		/// @brief Basic vertex structure.
 		struct BasicVertex {
+			using BoneIndices	= Array<uint32, 4>;
+			using BoneWeights	= Array<float, 4>;
 			/// @brief Vertex position.
-			Vector3 position	= 0;
+			Vector3		position	= 0;
 			/// @brief Vertex UV.
-			Vector2 uv			= 0;
+			Vector2		uv			= 0;
 			/// @brief Vertex color.
-			Vector4 color		= 1;
+			Vector4		color		= 1;
 			/// @brief Vertex normal.
-			Vector3 normal		= 0;
+			Vector3		normal		= 0;
+			/// @brief Vertex bone indices.
+			BoneIndices	bones		= {0, 0, 0, 0};
+			/// @brief Vertex bone weights.
+			BoneWeights	weights		= {0, 0, 0, 0};
 		};
+	}
+
+	namespace {
+		constexpr usize const REQUIRED_COMPONENT_COUNT = (3+2+4+3+4+4);
 	}
 
 	/// @brief 3D vertex.
@@ -38,7 +48,7 @@ namespace Makai::Graph {
 		/// @brief Vertex component count.
 		constexpr static usize COMPONENT_COUNT = (sizeof(BaseType) / sizeof(float));
 
-		static_assert(COMPONENT_COUNT == (3+2+4+3), "Vertex size is off...");
+		static_assert(COMPONENT_COUNT == REQUIRED_COMPONENT_COUNT, "Vertex size is off...");
 
 		/// @brief Returns the default vertex mapping.
 		static VertexMap defaultMap();
@@ -72,12 +82,22 @@ namespace Makai::Graph {
 			float const a	= 1,
 			float const nx	= 0,
 			float const ny	= 0,
-			float const nz	= 0
+			float const nz	= 0,
+			uint32 const b0	= 0,
+			uint32 const b1	= 0,
+			uint32 const b2	= 0,
+			uint32 const b3	= 0,
+			float const i0	= 0,
+			float const i1	= 0,
+			float const i2	= 0,
+			float const i3	= 0
 		): Vertex(
 			Vector3(x, y, z),
 			Vector2(u, v),
 			Vector4(r, g, b, a),
-			Vector3(nx, ny, nz)
+			Vector3(nx, ny, nz),
+			{b0, b1, b2, b3},
+			{i0, i1, i2, i3}
 		) {}
 
 		/// @brief Constructs the vertex from a series of vectors.
@@ -86,17 +106,26 @@ namespace Makai::Graph {
 		/// @param color Vertex color.
 		/// @param normal Vertex normal.
 		constexpr Vertex(
-			Vector3 const& position = 0,
-			Vector2 const& uv		= 0,
-			Vector4 const& color	= 1,
-			Vector3 const& normal	= 0
-		):	BaseType{position, uv, color, normal} {}
+			Vector3 const& position 	= 0,
+			Vector2 const& uv			= 0,
+			Vector4 const& color		= 1,
+			Vector3 const& normal		= 0,
+			BoneIndices const& bones	= 0,
+			BoneWeights const& weights	= 0
+		):	BaseType{position, uv, color, normal, bones, weights} {}
 
 		/// @brief Copy construtor.
 		/// @param other `Vertex` to copy from.
 		constexpr Vertex(
 			Vertex const& other
-		):	Vertex(other.position, other.uv, other.color, other.normal) {}
+		):	Vertex(
+			other.position, 
+			other.uv, 
+			other.color, 
+			other.normal, 
+			other.bones,
+			other.weights
+		) {}
 
 		/// @brief Sets the vertex attributes in the active vertex array.
 		static void setAttributes();
@@ -107,7 +136,7 @@ namespace Makai::Graph {
 	};
 
 	static_assert(sizeof(Vertex) == sizeof(Base::BasicVertex), "Vertex size is off...");
-	static_assert(sizeof(Vertex) == (sizeof(float) * (3+2+4+3)), "Vertex size is off...");
+	static_assert(sizeof(Vertex) == (sizeof(float) * REQUIRED_COMPONENT_COUNT), "Vertex size is off...");
 
 	/// @brief 3D triangle.
 	struct Triangle {
