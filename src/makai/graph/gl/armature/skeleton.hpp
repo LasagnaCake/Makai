@@ -5,22 +5,24 @@
 
 /// @brief Skeletal animation facilites.
 namespace Makai::Graph::Armature {
+	template<usize MB = 64>
 	struct Skeleton {
 		using Bone = Transform3D;
 
-		constexpr static usize const MAX_BONES = 64;
+		constexpr static usize const MAX_BONES = MB;
 
 		template<class T>
-		using Container = Array<T, MAX_BONES>;
+		using Container	= Array<T, MAX_BONES>;
 
-		constexpr Skeleton() {
-			for (usize i = 0; i < MAX_BONES; ++i)
-				bones[i] = {};
-		}
+		using Bones		= Container<Transform3D>;
+		using Matrices	= Container<Matrix4x4>;
+		using Relations	= Map<usize, Map<usize, bool>>;
+
+		constexpr Skeleton()						= default;
 		constexpr Skeleton(Skeleton const& other)	= default;
 		constexpr Skeleton(Skeleton&& other)		= default;
 
-		Container<Transform3D> bones;
+		Bones bones;
 
 		constexpr Skeleton& addChild(usize const bone, usize const child) {
 			if (bone >= MAX_BONES || child >= MAX_BONES) return *this;
@@ -101,18 +103,22 @@ namespace Makai::Graph::Armature {
 			return false;
 		}
 
-		constexpr Container<Matrix4x4> matrices() const {
-			Container<Matrix4x4> matrices;
+		constexpr Matrices matrices() const {
+			Matrices matrices;
 			for (usize i = 0; i < MAX_BONES; ++i) {
 				matrices[i] = bones[i];
 			}
-			List<usize> stack = roots();
-			usize current;
-			while (!stack.empty()) {
-				current = stack.popBack();
-				if (!stack.empty())
-					matrices[current] = matrices[stack.back()] * matrices[current];
-				stack.appendBack(childrenOf(current));
+			List<usize> const boneRoots = roots();
+			for (auto const root : boneRoots) {
+				List<usize> stack;
+				stack.pushBack(root);
+				usize current;
+				while (!stack.empty()) {
+					current = stack.popBack();
+					if (!stack.empty())
+						matrices[current] = matrices[stack.back()] * matrices[current];
+					stack.appendBack(childrenOf(current));
+				}
 			}
 			return matrices;
 		}
@@ -151,8 +157,8 @@ namespace Makai::Graph::Armature {
 			return bridge(bone, child);
 		}
 
-		Container<Map<usize, bool>> forward;
-		Container<Map<usize, bool>> reverse;
+		Relations forward;
+		Relations reverse;
 	};
 }
 
