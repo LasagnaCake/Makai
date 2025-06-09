@@ -5,6 +5,8 @@
 
 /// @brief Skeletal animation facilites.
 namespace Makai::Graph::Armature {
+	/// @brief Armature skeleton.
+	/// @tparam MB Maximum amount of bones.
 	template<usize MB = 64>
 	struct Skeleton {
 		using Bone = Transform3D;

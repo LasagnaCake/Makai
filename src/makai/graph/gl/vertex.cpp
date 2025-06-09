@@ -96,7 +96,7 @@ void Vertex::setAttributes() {
 	glVertexAttribPointer(
 		4,
 		4,
-		GL_UNSIGNED_INT,
+		GL_INT,
 		GL_FALSE,
 		sizeof(Vertex),
 		GET_GL_OFFSET(12)

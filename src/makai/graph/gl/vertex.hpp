@@ -2,6 +2,8 @@
 #define MAKAILIB_GRAPH_VERTEX_H
 
 #include "../../compat/ctl.hpp"
+#include "../armature/armature.hpp"
+#include "armature/skeleton.hpp"
 
 /// @brief Graphical facilites.
 namespace Makai::Graph {
@@ -14,7 +16,7 @@ namespace Makai::Graph {
 	namespace Base {
 		/// @brief Basic vertex structure.
 		struct BasicVertex {
-			using BoneIndices	= Array<uint32, 4>;
+			using BoneIndices	= Array<int32, 4>;
 			using BoneWeights	= Array<float, 4>;
 			/// @brief Vertex position.
 			Vector3		position	= 0;
@@ -25,9 +27,9 @@ namespace Makai::Graph {
 			/// @brief Vertex normal.
 			Vector3		normal		= 0;
 			/// @brief Vertex bone indices.
-			BoneIndices	bones		= {0, 0, 0, 0};
+			BoneIndices	bones		= BoneIndices::withFill(Armature::Skeleton<>::MAX_BONES);
 			/// @brief Vertex bone weights.
-			BoneWeights	weights		= {0, 0, 0, 0};
+			BoneWeights	weights		= BoneWeights::withFill(0);
 		};
 	}
 
@@ -44,6 +46,8 @@ namespace Makai::Graph {
 		using BaseType::uv;
 		using BaseType::color;
 		using BaseType::normal;
+		using BaseType::bones;
+		using BaseType::weights;
 
 		/// @brief Vertex component count.
 		constexpr static usize COMPONENT_COUNT = (sizeof(BaseType) / sizeof(float));
@@ -83,10 +87,10 @@ namespace Makai::Graph {
 			float const nx	= 0,
 			float const ny	= 0,
 			float const nz	= 0,
-			uint32 const b0	= 0,
-			uint32 const b1	= 0,
-			uint32 const b2	= 0,
-			uint32 const b3	= 0,
+			int32 const b0	= Armature::Skeleton<>::MAX_BONES,
+			int32 const b1	= Armature::Skeleton<>::MAX_BONES,
+			int32 const b2	= Armature::Skeleton<>::MAX_BONES,
+			int32 const b3	= Armature::Skeleton<>::MAX_BONES,
 			float const i0	= 0,
 			float const i1	= 0,
 			float const i2	= 0,
@@ -110,8 +114,8 @@ namespace Makai::Graph {
 			Vector2 const& uv			= 0,
 			Vector4 const& color		= 1,
 			Vector3 const& normal		= 0,
-			BoneIndices const& bones	= 0,
-			BoneWeights const& weights	= 0
+			BoneIndices const& bones	= BoneIndices::withFill(Armature::Skeleton<>::MAX_BONES),
+			BoneWeights const& weights	= BoneWeights::withFill(0)
 		):	BaseType{position, uv, color, normal, bones, weights} {}
 
 		/// @brief Copy construtor.
