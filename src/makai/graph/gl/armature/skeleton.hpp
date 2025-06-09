@@ -10,6 +10,9 @@ namespace Makai::Graph::Armature {
 
 		constexpr static usize const MAX_BONES = 64;
 
+		template<class T>
+		using Container = Array<T, MAX_BONES>;
+
 		constexpr Skeleton() {
 			for (usize i = 0; i < MAX_BONES; ++i)
 				bones[i] = {};
@@ -17,7 +20,7 @@ namespace Makai::Graph::Armature {
 		constexpr Skeleton(Skeleton const& other)	= default;
 		constexpr Skeleton(Skeleton&& other)		= default;
 
-		Array<Transform3D, MAX_BONES> bones;
+		Container<Transform3D> bones;
 
 		constexpr Skeleton& addChild(usize const bone, usize const child) {
 			if (bone >= MAX_BONES || child >= MAX_BONES) return *this;
@@ -33,6 +36,20 @@ namespace Makai::Graph::Armature {
 			if (bone == child) return *this;
 			forward[bone][child] = false;
 			reverse[child][bone] = false;
+			return *this;
+		}
+
+		constexpr Skeleton& clearChildren(usize const bone) {
+			if (bone >= MAX_BONES) return *this;
+			for (auto const& child: forward[bone])
+				reverse[child.key] = false;
+			forward[bone].clear();
+			return *this;
+		}
+
+		constexpr Skeleton& clearAllRelations() {
+			forward = {};
+			reverse = {};
 			return *this;
 		}
 
@@ -84,8 +101,8 @@ namespace Makai::Graph::Armature {
 			return false;
 		}
 
-		constexpr Array<Matrix4x4, MAX_BONES> matrices() const {
-			Array<Matrix4x4, MAX_BONES> matrices;
+		constexpr Container<Matrix4x4> matrices() const {
+			Container<Matrix4x4> matrices;
 			for (usize i = 0; i < MAX_BONES; ++i) {
 				matrices[i] = bones[i];
 			}
@@ -134,8 +151,8 @@ namespace Makai::Graph::Armature {
 			return bridge(bone, child);
 		}
 
-		Array<Map<usize, bool>, 64> forward;
-		Array<Map<usize, bool>, 64> reverse;
+		Container<Map<usize, bool>> forward;
+		Container<Map<usize, bool>> reverse;
 	};
 }
 
