@@ -27,7 +27,7 @@ namespace Makai::Graph::Armature {
 		constexpr Skeleton& addChild(usize const bone, usize const child) {
 			if (bone >= MAX_BONES || child >= MAX_BONES) return *this;
 			if (bone == child) return *this;
-			if (hasChild(child, bone) || hasChild(bone, child)) return *this;
+			if (connected(child, bone) || connected(bone, child)) return *this;
 			forward[bone][child] = true;
 			reverse[child][bone] = true;
 			return *this;
@@ -58,7 +58,7 @@ namespace Makai::Graph::Armature {
 		constexpr List<usize> childrenOf(usize const bone) const {
 			if (bone >= MAX_BONES) return List<usize>();
 			List<usize> children;
-			if (!forward[bone].empty()) {
+			if (!forward.contains(bone)) {
 				children.resize(forward[bone].size());
 				for (auto const& child : forward[bone])
 					if (child.value) children.pushBack(child.key);
@@ -68,7 +68,7 @@ namespace Makai::Graph::Armature {
 
 		constexpr List<usize> parentOf(usize const bone) const {
 			if (bone >= MAX_BONES) return -1;
-			if (!reverse[bone].empty()) {
+			if (!reverse.contains(bone)) {
 				for (auto const& child : reverse[bone])
 					if (child.value) return child.key;
 			}
@@ -78,7 +78,7 @@ namespace Makai::Graph::Armature {
 		constexpr usize childrenCount(usize const bone) const {
 			if (bone >= MAX_BONES) return 0;
 			usize count = 0;
-			if (!forward[bone].empty()) {
+			if (!forward.contains(bone)) {
 				for (auto const& child : forward[bone])
 					if (child.value) ++count;
 			}
@@ -87,7 +87,7 @@ namespace Makai::Graph::Armature {
 
 		constexpr bool isRootBone(usize const bone) const {
 			if (bone >= MAX_BONES) return 0;
-			if (!reverse[bone].empty()) {
+			if (!reverse.contains(bone)) {
 				for (auto const& child : reverse[bone])
 					if (child.value) return false;
 			}
@@ -96,11 +96,11 @@ namespace Makai::Graph::Armature {
 
 		constexpr bool isLeafBone(usize const bone) const {
 			if (bone >= MAX_BONES) return 0;
-			if (!forward[bone].empty()) {
+			if (!forward.contains(bone)) {
 				for (auto const& child : reverse[bone])
 					if (child.value) return false;
 			}
-			return false;
+			return true;
 		}
 
 		constexpr Matrices matrices() const {
@@ -141,7 +141,7 @@ namespace Makai::Graph::Armature {
 		}
 
 	private:
-		constexpr bool bridge(usize const from, usize const to) const {
+		constexpr bool connected(usize const from, usize const to) const {
 			if (from == to) return true;
 			List<usize> stack;
 			stack.pushBack(from);
@@ -152,10 +152,6 @@ namespace Makai::Graph::Armature {
 				stack.appendBack(childrenOf(current));
 			}
 			return false;
-		}
-
-		constexpr bool hasChild(usize const bone, usize const child) const {
-			return bridge(bone, child);
 		}
 
 		Relations forward;
