@@ -43,7 +43,15 @@ Vertex::Vertex(VertexMap const& vmap)
 		getValue(vmap, "a",		1),
 		getValue(vmap, "nx",	0),
 		getValue(vmap, "ny",	0),
-		getValue(vmap, "nz",	0)
+		getValue(vmap, "nz",	0),
+		getValue(vmap, "b0",	0),
+		getValue(vmap, "b1",	0),
+		getValue(vmap, "b2",	0),
+		getValue(vmap, "b3",	0),
+		getValue(vmap, "i0",	0),
+		getValue(vmap, "i1",	0),
+		getValue(vmap, "i2",	0),
+		getValue(vmap, "i3",	0)
 	)
 {}
 
