@@ -43,6 +43,7 @@ namespace Makai::Graph::Armature {
 		/// @param child Bone to act as child.
 		/// @return Reference to self.
 		constexpr Skeleton& addChild(usize const bone, usize const child) {
+			if (baked || locked) return *this;
 			if (bone >= MAX_BONES || child >= MAX_BONES) return *this;
 			if (bone == child) return *this;
 			if (connected(child, bone) || connected(bone, child)) return *this;
@@ -56,6 +57,7 @@ namespace Makai::Graph::Armature {
 		/// @param child Bone acting as child.
 		/// @return Reference to self.
 		constexpr Skeleton& removeChild(usize const bone, usize const child) {
+			if (baked || locked) return *this;
 			if (bone >= MAX_BONES || child >= MAX_BONES) return *this;
 			if (bone == child) return *this;
 			forward[bone][child] = false;
@@ -67,6 +69,7 @@ namespace Makai::Graph::Armature {
 		/// @param bone Bone clear relations from.
 		/// @return Reference to self.
 		constexpr Skeleton& clearChildren(usize const bone) {
+			if (baked || locked) return *this;
 			if (bone >= MAX_BONES) return *this;
 			for (auto const& child: forward[bone])
 				reverse[child.key] = false;
@@ -77,6 +80,7 @@ namespace Makai::Graph::Armature {
 		/// @brief Clears all relations for every bone.
 		/// @return Reference to self.
 		constexpr Skeleton& clearAllRelations() {
+			if (baked || locked) return *this;
 			forward = {};
 			reverse = {};
 			return *this;
@@ -148,12 +152,17 @@ namespace Makai::Graph::Armature {
 		/// @brief Returns the computed matrices for all bones.
 		/// @return Bone matrices.
 		constexpr Matrices matrices() const {
-			Matrices matrices, inverse, local;
+			Matrices matrices, boneMatrix, inverse, poseMatrix;
 			for (usize i = 0; i < MAX_BONES; ++i) {
-				local[i]	= rest[i];
-				inverse[i]	= local[i].inverted();
+				poseMatrix[i] = pose[i];
+				if (baked)
+					inverse[i] = bakedInverse[i];
+				else {
+					boneMatrix[i]	= rest[i];
+					inverse[i]		= boneMatrix[i].inverted();
+				}
 			}
-			List<usize> const boneRoots = roots();
+			List<usize> const boneRoots = baked ? bakedRoots : roots();
 			for (auto const root : boneRoots) {
 				List<usize> stack;
 				stack.pushBack(root);
@@ -161,9 +170,12 @@ namespace Makai::Graph::Armature {
 				while (!stack.empty()) {
 					current = stack.popBack();
 					if (!stack.empty()) {
-						local[current]		= local[stack.back()] * matrices[current];
-						inverse[current]	= local[current].inverted();
-						matrices[current]	= inverse[current] * pose[current];
+						if (!baked) {
+							boneMatrix[current]	= boneMatrix[stack.back()] * boneMatrix[current];
+							inverse[current]	= boneMatrix[current].inverted();
+						}
+						poseMatrix[current]	= poseMatrix[stack.back()] * poseMatrix[current];
+						matrices[current]	= inverse[current] * poseMatrix[current];
 					}
 					if (!isLeafBone(current))
 						stack.appendBack(childrenOf(current));
@@ -210,9 +222,66 @@ namespace Makai::Graph::Armature {
 			return false;
 		}
 
+		/// @brief Bakes the armature.
+		/// @details
+		///		Pre-processes the rest poses and bone relations.
+		///
+		///		Any rest pose changes no longer affect the object.
+		///		Any bone relation changes no longer affect the object.
+		///		In return, speeds up calculations substantially.
+		///		
+		///		If you need speed, use this.
+		/// @return Refeference to self.
+		constexpr Skeleton& bake() {
+			Matrices bone;
+			for (usize i = 0; i < MAX_BONES; ++i) {
+				bone[i] = rest[i];
+			}
+			bakedRoots = roots();
+			for (auto const root : bakedRoots) {
+				List<usize> stack;
+				stack.pushBack(root);
+				usize current;
+				while (!stack.empty()) {
+					current = stack.popBack();
+					if (!stack.empty()) {
+						bone[current]			= bone[stack.back()] * bone[current];
+						bakedInverse[current]	= bone[current].inverted();
+					}
+					if (!isLeafBone(current))
+						stack.appendBack(childrenOf(current));
+				}
+			}
+			baked = true;
+			return *this;
+		}
+
+		/// @brief Unbakes the armature.
+		/// @return Refeference to self.
+		constexpr Skeleton& unbake() {
+			baked = false;
+			return *this;
+		}
+
+		/// @brief IRREVERSIBLE. bakes and locks the object.
+		constexpr void bakeAndLock() {
+			bake();
+			locked = true;
+		}
+
 	private:
-		Relations forward;
-		Relations reverse;
+		/// @brief Whether rest pose was baked.
+		bool		baked		= false;
+		/// @brief Whether the object is locked.
+		bool		locked		= false;
+		/// @brief Baked rest pose.
+		Matrices	bakedInverse;
+		/// @brief Baked root bones.
+		List<usize>	bakedRoots;
+		/// @brief Parent-child relations.
+		Relations	forward;
+		/// @brief Child-parent relations.
+		Relations	reverse;
 	};
 }
 

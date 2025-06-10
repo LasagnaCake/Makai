@@ -511,20 +511,23 @@ void Renderable::extendFromDefinitionV0(
 	}
 	// Set armature data
 	if (def["armature"].isObject()) {
-		if (!def["armature"]["bones"].isArray())
-			throw "";
+		bool const hasBones = def["armature"]["bones"].isArray();
 		armature.clearAllRelations();
 		for (usize bone = 0; bone < Renderable::MAX_BONES; ++bone) {
-			armature.rest[i] = Transform3D(
-				fromJSONArrayV3(def["armature"]["bones"][i]["position"]),
-				fromJSONArrayV3(def["armature"]["bones"][i]["rotation"]),
-				fromJSONArrayV3(def["armature"]["bones"][i]["scale"], 1)
-			);
+			if (hasBones && def["armature"]["bones"][bone].isObject()) {
+				armature.rest[bone] = Transform3D(
+					fromJSONArrayV3(def["armature"]["bones"][bone]["position"]),
+					fromJSONArrayV3(def["armature"]["bones"][bone]["rotation"]),
+					fromJSONArrayV3(def["armature"]["bones"][bone]["scale"], 1)
+				);
+				armature.pose[bone] = armature.rest[bone];
+			}
 			if (!def["armature"]["relations"].has(toString(bone))) continue;
 			for (auto& child: def["armature"]["relations"][toString(bone)].get<List<usize>>({})) {
 				armature.addChild(bone, child);
 			}
 		}
+		armature.bake();
 	}
 	// Set blend data
 	if (def["blend"].isObject()) {
