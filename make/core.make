@@ -115,6 +115,8 @@ ifdef subsystem
 	override SUBSYSTEM_BASE			:= $(strip $(firstword $(subst ., ,$(SUBSYSTEM_PATH))))
 	override SUBSYSTEM_SUBPATH		:= $(subst $(SUBSYSTEM_BASE).,,$(SUBSYSTEM_PATH))
 	override SUBSYSTEM_PROPAGATE	:= $(if $(findstring $(SUBSYSTEM_BASE),$(SUBSYSTEM_SUBPATH)),,"subsystem='$(SUBSYSTEM_SUBPATH)'")
+else
+	override SUBSYSTEM_PROPAGATE:=
 endif
 
 ifndef SUBSYSTEM
@@ -124,7 +126,7 @@ else
 	ifneq ($(SUBSYSTEM_PROPAGATE),)
 		compile-all-impl = $(NO_OP);
 	else
-		compile-all-impl = @$(call compile-chain, $(SUBSYSTEM_BASE));$(space)
+		compile-all-impl = @$(call compile-splice, $(SUBSYSTEM_BASE))
 	endif
 endif
 
@@ -133,7 +135,7 @@ ifndef SUBSYSTEM
 	submake-all-impl = @$(foreach subsys,$(1),$(call submake-splice,$(subsys)))
 else
 	ifneq ($(SUBSYSTEM_PROPAGATE),)
-		submake-all-impl = @$(call submake-chain, $(SUBSYSTEM_BASE)) $(SUBSYSTEM_PROPAGATE);$(space)
+		submake-all-impl = @$(call submake-splice, $(SUBSYSTEM_BASE))
 	else
 		submake-all-impl = $(NO_OP);
 	endif

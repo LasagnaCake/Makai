@@ -9,10 +9,14 @@ INCLUDES := $(INC_SDL)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, manager)
+endef
+
 all: debug release
 
 debug:
-	$(call compile, manager)
+	$(MAKE_SUB)
 
 release:
-	$(call compile, manager)
+	$(MAKE_SUB)

@@ -9,26 +9,15 @@ INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, mode core drawable reference renderable bar text scene framebuffer)
+	$(call submake-all, renderer material)
+endef
+
 all: debug release
 
 debug:
-	$(call compile, mode)
-	$(call compile, core)
-	$(call compile, drawable)
-	$(call compile, reference)
-	$(call compile, renderable)
-	$(call compile, bar)
-	$(call compile, text)
-	$(call compile, scene)
-	$(call compile, framebuffer)
+	$(MAKE_SUB)
 
 release:
-	$(call compile, mode)
-	$(call compile, core)
-	$(call compile, drawable)
-	$(call compile, reference)
-	$(call compile, renderable)
-	$(call compile, bar)
-	$(call compile, text)
-	$(call compile, scene)
-	$(call compile, framebuffer)
+	$(MAKE_SUB)
