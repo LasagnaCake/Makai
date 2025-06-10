@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), makai)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call submake-all,impl tool file data audio graph/gl core)
+	$(call submake-all,embed impl tool file data audio graph/gl core)
 endef
 
 all: debug release
@@ -37,7 +37,6 @@ debug:
 	@echo "<systems>"
 	@echo ""
 
-	$(call submake-any, embed)
 	$(MAKE_SUB)
 
 	@echo ""
@@ -86,7 +85,6 @@ release:
 	@echo "<systems>"
 	@echo ""
 
-	$(call submake-any, embed)
 	$(MAKE_SUB)
 
 	@echo ""
