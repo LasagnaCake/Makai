@@ -53,6 +53,7 @@ void withArmatureAndTransforms(inout vec4 position, inout vec3 normal) {
 	vec4 totalPosition = vec4(0);
 	vec3 totalNormal = vec3(0);
 	for (uint i = 0; i < 4; ++i) {
+		if (boneIndices[i] == -2) break;
 		if (boneIndices[i] > MAX_BONES) return;
 		if (boneIndices[i] == -1 || boneIndices[i] > armature.boneCount) continue;
 		vec4 localPosition = armature.bones[boneIndices[i]] * position;
