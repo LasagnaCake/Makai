@@ -567,8 +567,9 @@ inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
 	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
 		if (vertebrate.armature.isLeafBone(i)) continue;
 		auto const children = vertebrate.armature.childrenOf(i);
-		auto& bone = skele[toString(i)];
-		bone = children;
+		auto bone = skele[toString(i)];
+		for (usize j = 0; j < children.size(); ++j)
+			bone[j] = children[j];
 	}
 	return skele;
 }
