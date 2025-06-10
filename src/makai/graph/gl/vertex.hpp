@@ -17,6 +17,7 @@ namespace Makai::Graph {
 		struct BasicVertex {
 			using BoneIndices	= Array<int32, 4>;
 			using BoneWeights	= Array<float, 4>;
+			constexpr static auto const BONE_DEFAULT_ID = -2;
 			/// @brief Vertex position.
 			Vector3		position	= 0;
 			/// @brief Vertex UV.
@@ -26,7 +27,7 @@ namespace Makai::Graph {
 			/// @brief Vertex normal.
 			Vector3		normal		= 0;
 			/// @brief Vertex bone indices.
-			BoneIndices	bones		= BoneIndices::withFill(Limit::MAX<int32>);
+			BoneIndices	bones		= BoneIndices::withFill(BONE_DEFAULT_ID);
 			/// @brief Vertex bone weights.
 			BoneWeights	weights		= BoneWeights::withFill(0);
 		};
@@ -86,10 +87,10 @@ namespace Makai::Graph {
 			float const nx	= 0,
 			float const ny	= 0,
 			float const nz	= 0,
-			int32 const b0	= Limit::MAX<int32>,
-			int32 const b1	= Limit::MAX<int32>,
-			int32 const b2	= Limit::MAX<int32>,
-			int32 const b3	= Limit::MAX<int32>,
+			int32 const b0	= BONE_DEFAULT_ID,
+			int32 const b1	= BONE_DEFAULT_ID,
+			int32 const b2	= BONE_DEFAULT_ID,
+			int32 const b3	= BONE_DEFAULT_ID,
 			float const i0	= 0,
 			float const i1	= 0,
 			float const i2	= 0,
@@ -113,7 +114,7 @@ namespace Makai::Graph {
 			Vector2 const& uv			= 0,
 			Vector4 const& color		= 1,
 			Vector3 const& normal		= 0,
-			BoneIndices const& bones	= BoneIndices::withFill(Limit::MAX<int32>),
+			BoneIndices const& bones	= BoneIndices::withFill(BONE_DEFAULT_ID),
 			BoneWeights const& weights	= BoneWeights::withFill(0)
 		):	BaseType{position, uv, color, normal, bones, weights} {}
 
