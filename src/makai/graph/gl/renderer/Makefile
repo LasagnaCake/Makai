@@ -11,7 +11,6 @@ INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 
 define MAKE_SUB
 	$(call compile-all, mode core drawable reference renderable bar text scene framebuffer)
-	$(call submake-all, renderer material)
 endef
 
 all: debug release

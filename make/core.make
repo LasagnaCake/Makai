@@ -114,10 +114,12 @@ ifdef subsystem
 	override SUBSYSTEM_PATH			:= $(subst $(SPACE),,$(strip $(subsystem)))
 	override SUBSYSTEM_BASE			:= $(strip $(firstword $(subst ., ,$(SUBSYSTEM_PATH))))
 	override SUBSYSTEM_SUBPATH		:= $(subst $(SUBSYSTEM_BASE).,,$(SUBSYSTEM_PATH))
-	override SUBSYSTEM_PROPAGATE	:= $(if $(findstring $(SUBSYSTEM_BASE),$(SUBSYSTEM_SUBPATH)),,"subsystem='$(SUBSYSTEM_SUBPATH)'")
+	override SUBSYSTEM_PROPAGATE	:= $(if $(findstring $(SUBSYSTEM_BASE),$(SUBSYSTEM_SUBPATH)),,"subsystem=$(SUBSYSTEM_SUBPATH)")
 else
 	override SUBSYSTEM_PROPAGATE:=
 endif
+
+compile-splice = $(call compile-chain,$(1));$(space)
 
 ifndef SUBSYSTEM
 	compile-splice = $(call compile-chain,$(1));$(space)
@@ -130,8 +132,9 @@ else
 	endif
 endif
 
+submake-splice = $(call submake-chain,$(1)) $(SUBSYSTEM_PROPAGATE);$(space)
+
 ifndef SUBSYSTEM
-	submake-splice = $(call submake-chain,$(1)) $(SUBSYSTEM_PROPAGATE);$(space)
 	submake-all-impl = @$(foreach subsys,$(1),$(call submake-splice,$(subsys)))
 else
 	ifneq ($(SUBSYSTEM_PROPAGATE),)
@@ -141,6 +144,27 @@ else
 	endif
 endif
 
-export compile-all = $(call compile-all-impl,$(strip $(1)))
+ifdef debug-makefile
+	define SUBMAKE_DEBUG_OUTPUT
+		@echo "Path: [$(SUBSYSTEM_PATH)]"
+		@echo "Base: [$(SUBSYSTEM_BASE)]"
+		@echo "Subpath: [$(SUBSYSTEM_SUBPATH)]"
+		@echo "Propagate: [$(SUBSYSTEM_PROPAGATE)]"
+	endef
+endif
 
-export submake-all = $(call submake-all-impl,$(strip $(1)))
+define compile-all
+	$(SUBMAKE_DEBUG_OUTPUT)
+	$(call compile-all-impl,$(strip $(1)))
+endef
+export compile-all
+
+define submake-all
+	$(SUBMAKE_DEBUG_OUTPUT)
+	$(call submake-all-impl,$(strip $(1)))
+endef
+export submake-all
+
+#export compile-all = $(call compile-all-impl,$(strip $(1)))
+
+#export submake-all = $(call submake-all-impl,$(strip $(1)))
