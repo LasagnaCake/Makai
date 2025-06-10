@@ -511,10 +511,17 @@ void Renderable::extendFromDefinitionV0(
 	}
 	// Set armature data
 	if (def["armature"].isObject()) {
+		if (!def["armature"]["bones"].isArray())
+			throw "";
 		armature.clearAllRelations();
 		for (usize bone = 0; bone < Renderable::MAX_BONES; ++bone) {
-			if (!def["armature"].has(toString(bone))) continue;
-			for (auto& child: def["armature"][toString(bone)].get<List<usize>>({})) {
+			armature.rest[i] = Transform3D(
+				fromJSONArrayV3(def["armature"]["bones"][i]["position"]),
+				fromJSONArrayV3(def["armature"]["bones"][i]["rotation"]),
+				fromJSONArrayV3(def["armature"]["bones"][i]["scale"], 1)
+			);
+			if (!def["armature"]["relations"].has(toString(bone))) continue;
+			for (auto& child: def["armature"]["relations"][toString(bone)].get<List<usize>>({})) {
 				armature.addChild(bone, child);
 			}
 		}
@@ -563,8 +570,17 @@ void Renderable::extendFromDefinitionV0(
 
 template<usize S>
 inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
-	JSON::JSONData skele = JSON::object();
+	JSON::JSONData armature;
+	auto skele = armature["relations"];
+	auto bones = armature["bones"];
+	bones = JSON::array();
 	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
+		auto const& trans = vertebrate.armature.rest[i];
+		def["bones"][i] = JSON::JSONType{
+			{"position",	{trans.position.x,	trans.position.y,	trans.position.z	}	},
+			{"rotation",	{trans.rotation.x,	trans.rotation.y,	trans.rotation.z	}	},
+			{"scale",		{trans.scale.x,		trans.scale.y,		trans.scale.z		}	}
+		};
 		if (vertebrate.armature.isLeafBone(i)) continue;
 		auto const children = vertebrate.armature.childrenOf(i);
 		auto bone = skele[toString(i)];
@@ -572,7 +588,7 @@ inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
 		for (usize j = 0; j < children.size(); ++j)
 			bone[j] = children[j];
 	}
-	return skele;
+	return armature;
 }
 
 JSON::JSONData Renderable::getObjectDefinition(

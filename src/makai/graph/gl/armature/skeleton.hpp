@@ -20,7 +20,7 @@ namespace Makai::Graph::Armature {
 		using Container	= Array<T, MAX_BONES>;
 
 		/// @brief Bones' container type.
-		using Bones		= Container<Transform3D>;
+		using Bones		= Container<Bone>;
 		/// @brief Resulting matrices' container type.
 		using Matrices	= Container<Matrix4x4>;
 		/// @brief Relation graph type.
@@ -33,8 +33,10 @@ namespace Makai::Graph::Armature {
 		/// @brief Move constructor (defaulted).
 		constexpr Skeleton(Skeleton&& other)		= default;
 
-		/// @brief Skeleton bones.
-		Bones bones = Bones::withFill(Transform3D::identity());
+		/// @brief Skeleton pose.
+		Bones pose	= Bones::withFill(Bone::identity());
+		/// @brief Rest pose.
+		Bones rest	= Bones::withFill(Bone::identity());
 
 		/// @brief Creates a parent-child relationship between two bones, if applicable.
 		/// @param bone Bone to act as parent.
@@ -146,9 +148,10 @@ namespace Makai::Graph::Armature {
 		/// @brief Returns the computed matrices for all bones.
 		/// @return Bone matrices.
 		constexpr Matrices matrices() const {
-			Matrices matrices;
+			Matrices matrices, inverse, local;
 			for (usize i = 0; i < MAX_BONES; ++i) {
-				matrices[i] = bones[i];
+				local[i]	= rest[i];
+				inverse[i]	= local[i].inverted();
 			}
 			List<usize> const boneRoots = roots();
 			for (auto const root : boneRoots) {
@@ -157,8 +160,11 @@ namespace Makai::Graph::Armature {
 				usize current;
 				while (!stack.empty()) {
 					current = stack.popBack();
-					if (!stack.empty())
-						matrices[current] = matrices[stack.back()] * matrices[current];
+					if (!stack.empty()) {
+						local[current]		= local[stack.back()] * matrices[current];
+						inverse[current]	= local[current].inverted();
+						matrices[current]	= inverse[current] * pose[current];
+					}
 					if (!isLeafBone(current))
 						stack.appendBack(childrenOf(current));
 				}
