@@ -1,7 +1,5 @@
 #include <cppcodec/base64_rfc4648.hpp>
 #include <cppcodec/base32_rfc4648.hpp>
-#include <vector>
-#include <string>
 
 #include "encdec.hpp"
 
@@ -16,7 +14,7 @@ BinaryData<> Data::decode(String const& data, EncodingType const& encoding) try 
 		case EncodingType::ET_BASE64: result = cppcodec::base64_rfc4648::decode<std::vector<ubyte>>(data);
 		default: throw Error::InvalidValue("Invalid encoding type!", CTL_CPP_PRETTY_SOURCE);
 	}
-	return BinaryData<>(stdata.begin(), stdata.end());
+	return BinaryData<>(result.begin(), result.end());
 } catch (cppcodec::parse_error const& e) {
 	throw Error::FailedAction(
 		"Failed at decoding byte data!",
