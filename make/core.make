@@ -111,8 +111,8 @@ export SUBSYSTEM := subsystem="$(strip $(subsystem))"
 endif
 
 ifdef subsystem
-	export SUBSYSTEM_PATH			:= $(subsystem)
-	export SUBSYSTEM_BASE			:= $(strip $(firstword $(subst $(SPACE),,$(subsystem))))
+	export SUBSYSTEM_PATH			:= $(subst $(SPACE),,$(strip $(subsystem)))
+	export SUBSYSTEM_BASE			:= $(strip $(firstword $(subst ., ,$(SUBSYSTEM_PATH))))
 	export SUBSYSTEM_SUBPATH		:= $(subst $(SUBSYSTEM_BASE).,,$(SUBSYSTEM_PATH))
 	ifneq ($(SUBSYSTEM_SUBPATH),)
 		export SUBSYSTEM_PROPAGATE	:= subsystem="$(SUBPATH)"
@@ -120,13 +120,13 @@ ifdef subsystem
 endif
 
 ifndef SUBSYSTEM
-	compile-splice = $(call compile-chain,$(file));$(space)
+	compile-splice = $(call compile-chain,$(1));$(space)
 	compile-all-impl = @$(foreach file,$(1),$(call compile-splice,$(file)))
 else
 	ifdef SUBSYSTEM_PROPAGATE
 		compile-all-impl = $(NO_OP);
 	else
-		compile-all-impl = $(call compile, $(SUBSYSTEM_BASE));
+		compile-all-impl = @$(call compile-chain, $(SUBSYSTEM_BASE));
 	endif
 endif
 
@@ -135,11 +135,13 @@ ifndef SUBSYSTEM
 	submake-all-impl = @$(foreach subsys,$(1),$(call submake-splice,$(subsys)))
 else
 	ifdef SUBSYSTEM_PROPAGATE
-		submake-all-impl = $(call submake,$(SUBSYSTEM_BASE)) $(SUBSYSTEM_SUBPATH);
+		submake-all-impl = @$(call submake-chain, $(SUBSYSTEM_BASE)) $(SUBSYSTEM_SUBPATH);$(space)
 	else
 		submake-all-impl = $(NO_OP);
 	endif
 endif
 
-export compile-all = $(call compile-all-impl,$(strip $(1)))
+export compile-all = @echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+#export compile-all = $(call compile-all-impl,$(strip $(1)))
+
 export submake-all = $(call submake-all-impl,$(strip $(1)))
