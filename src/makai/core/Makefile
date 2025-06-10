@@ -10,7 +10,8 @@ INCLUDES := $(INC_SDL)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, app display dpi popup input)
+	$(call compile-all, app display dpi popup)
+	$(call submake-all, input)
 endef
 
 all: debug release
