@@ -15,8 +15,11 @@ namespace Makai::Graph {
 	namespace Base {
 		/// @brief Basic vertex structure.
 		struct BasicVertex {
+			/// @brief Bone indices type.
 			using BoneIndices	= Array<int32, 4>;
+			/// @brief Bone weights type.
 			using BoneWeights	= Array<float, 4>;
+			/// @brief Bone indices default ID.
 			constexpr static auto const BONE_DEFAULT_ID = -2;
 			/// @brief Vertex position.
 			Vector3		position	= 0;
@@ -74,6 +77,14 @@ namespace Makai::Graph {
 		/// @param nx Normal X position. By default, it is zero.
 		/// @param ny Normal Y position. By default, it is zero.
 		/// @param nz Normal Z position. By default, it is zero.
+		/// @param b0 First bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param b1 Second bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param b2 Third bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param b3 Fourth bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param w0 First bone weight. By default, it is zero.
+		/// @param w1 Second bone weight. By default, it is zero.
+		/// @param w2 Third bone weight. By default, it is zero.
+		/// @param w3 Fourth bone weight. By default, it is zero.
 		constexpr Vertex(
 			float const x,
 			float const y	= 0,
@@ -91,24 +102,26 @@ namespace Makai::Graph {
 			int32 const b1	= BONE_DEFAULT_ID,
 			int32 const b2	= BONE_DEFAULT_ID,
 			int32 const b3	= BONE_DEFAULT_ID,
-			float const i0	= 0,
-			float const i1	= 0,
-			float const i2	= 0,
-			float const i3	= 0
+			float const w0	= 0,
+			float const w1	= 0,
+			float const w2	= 0,
+			float const w3	= 0
 		): Vertex(
 			Vector3(x, y, z),
 			Vector2(u, v),
 			Vector4(r, g, b, a),
 			Vector3(nx, ny, nz),
 			{b0, b1, b2, b3},
-			{i0, i1, i2, i3}
+			{w0, w1, w2, w3}
 		) {}
 
-		/// @brief Constructs the vertex from a series of vectors.
+		/// @brief Constructs the vertex from a series of vectors & arrays.
 		/// @param position Vertex position.
 		/// @param uv Vertex UV.
 		/// @param color Vertex color.
 		/// @param normal Vertex normal.
+		/// @param bones Vertex bone indices.
+		/// @param weights Vertex bone weights.
 		constexpr Vertex(
 			Vector3 const& position 	= 0,
 			Vector2 const& uv			= 0,
