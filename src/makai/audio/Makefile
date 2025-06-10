@@ -5,6 +5,10 @@ override prefix := $(call concat, $(prefix), audio)
 
 INCLUDES := $(INC_SDL)
 
+define MAKE_SUB
+	$(call compile-all, core source music sound)
+endef
+
 .PHONY: debug release all
 .ONESHELL:
 .SHELLFLAGS = -ec
@@ -12,13 +16,7 @@ INCLUDES := $(INC_SDL)
 all: debug release
 
 debug:
-	$(call compile, core)
-	$(call compile, source)
-	$(call compile, music)
-	$(call compile, sound)
+	$(MAKE_SUB)
 
 release:
-	$(call compile, core)
-	$(call compile, source)
-	$(call compile, music)
-	$(call compile, sound)
+	$(MAKE_SUB)

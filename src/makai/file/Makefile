@@ -9,18 +9,16 @@ INCLUDES := $(INC_XML2JSON)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, json xml slf get)
+endef
+
 all: debug release
 
 # compile-get = $(call compile-with-o, get, 1)
 
 debug:
-	$(call compile, json)
-	$(call compile, xml)
-	$(call compile, slf)
-	$(call compile, get)
+	$(MAKE_SUB)
 
 release:
-	$(call compile, json)
-	$(call compile, xml)
-	$(call compile, slf)
-	$(call compile, get)
+	$(MAKE_SUB)

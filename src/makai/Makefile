@@ -7,6 +7,10 @@ override prefix := $(call concat, $(prefix), makai)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call submake-all,impl tool file data audio graph/gl core)
+endef
+
 all: debug release
 
 debug:
@@ -34,13 +38,7 @@ debug:
 	@echo ""
 
 	$(call submake-any, embed)
-	$(call submake, impl)
-	$(call submake, tool)
-	$(call submake, file)
-	$(call submake, data)
-	$(call submake, audio)
-	$(call submake, graph/gl)
-	$(call submake, core)
+	$(MAKE_SUB)
 
 	@echo ""
 	@echo "</systems>"
@@ -89,13 +87,7 @@ release:
 	@echo ""
 
 	$(call submake-any, embed)
-	$(call submake, impl)
-	$(call submake, tool)
-	$(call submake, file)
-	$(call submake, data)
-	$(call submake, audio)
-	$(call submake, graph/gl)
-	$(call submake, core)
+	$(MAKE_SUB)
 
 	@echo ""
 	@echo "</systems>"

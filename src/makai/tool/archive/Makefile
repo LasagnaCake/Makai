@@ -7,6 +7,10 @@ INCLUDES := $(INC_CRYPTOPP) $(INC_CPPCODEC)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, archive)
+endef
+
 all: debug release
 
 debug:

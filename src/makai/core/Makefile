@@ -9,21 +9,15 @@ INCLUDES := $(INC_SDL)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, app display dpi popup input)
+endef
+
 all: debug release
 
 debug:
-	$(call compile, app)
-	$(call compile, display)
-	$(call compile, dpi)
-	$(call compile, popup)
-
-	$(call submake, input)
+	$(MAKE_SUB)
 
 
 release:
-	$(call compile, app)
-	$(call compile, display)
-	$(call compile, dpi)
-	$(call compile, popup)
-
-	$(call submake, input)
+	$(MAKE_SUB)

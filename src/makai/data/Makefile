@@ -9,12 +9,14 @@ INCLUDES := $(INC_CPPCODEC) $(INC_CRYPTOPP)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, encdec hash)
+endef
+
 all: debug release
 
 debug:
-	$(call compile, encdec)
-	$(call compile, hash)
+	$(MAKE_SUB)
 
 release:
-	$(call compile, encdec)
-	$(call compile, hash)
+	$(MAKE_SUB)
