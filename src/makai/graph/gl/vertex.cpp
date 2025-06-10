@@ -24,12 +24,12 @@ VertexMap Vertex::defaultMap() {
 		{"ny", 0},
 		{"nz", 0},
 		{"b0", BONE_DEFAULT_ID},
-		{"b1", BONE_DEFAULT_ID},
-		{"b2", BONE_DEFAULT_ID},
-		{"b3", BONE_DEFAULT_ID},
 		{"w0", 0},
+		{"b1", BONE_DEFAULT_ID},
 		{"w1", 0},
+		{"b2", BONE_DEFAULT_ID},
 		{"w2", 0},
+		{"b3", BONE_DEFAULT_ID},
 		{"w3", 0}
 	});
 }
@@ -53,12 +53,12 @@ Vertex::Vertex(VertexMap const& vmap)
 		getValue(vmap, "ny",	0),
 		getValue(vmap, "nz",	0),
 		getValue(vmap, "b0",	BONE_DEFAULT_ID),
-		getValue(vmap, "b1",	BONE_DEFAULT_ID),
-		getValue(vmap, "b2",	BONE_DEFAULT_ID),
-		getValue(vmap, "b3",	BONE_DEFAULT_ID),
 		getValue(vmap, "w0",	0),
+		getValue(vmap, "b1",	BONE_DEFAULT_ID),
 		getValue(vmap, "w1",	0),
+		getValue(vmap, "b2",	BONE_DEFAULT_ID),
 		getValue(vmap, "w2",	0),
+		getValue(vmap, "b3",	BONE_DEFAULT_ID),
 		getValue(vmap, "w3",	0)
 	)
 {}

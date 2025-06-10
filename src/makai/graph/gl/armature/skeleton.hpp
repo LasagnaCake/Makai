@@ -19,9 +19,9 @@ namespace Makai::Graph::Armature {
 		template<class T>
 		using Container	= Array<T, MAX_BONES>;
 
-		/// @brief Bones' container type.
+		/// @brief Bone list container type.
 		using Bones		= Container<Bone>;
-		/// @brief Resulting matrices' container type.
+		/// @brief Matrix list container type.
 		using Matrices	= Container<Matrix4x4>;
 		/// @brief Relation graph type.
 		using Relations	= Map<usize, Map<usize, bool>>;
