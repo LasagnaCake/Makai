@@ -34,7 +34,7 @@ namespace Makai::Graph::Armature {
 		constexpr Skeleton(Skeleton&& other)		= default;
 
 		/// @brief Skeleton bones.
-		Bones bones;
+		Bones bones = Bones::withFill(Transform3D::identity());
 
 		/// @brief Creates a parent-child relationship between two bones, if applicable.
 		/// @param bone Bone to act as parent.

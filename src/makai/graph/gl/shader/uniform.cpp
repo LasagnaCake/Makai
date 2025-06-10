@@ -67,51 +67,51 @@ void Uniform::set(Matrix4x4 const& value, usize const offset) const {
 	glUniformMatrix4fv(getUniform() + offset, 1, GL_FALSE, value.begin().raw());
 }
 
-void Uniform::setArray(int* const values, usize const count, usize const offset) const {
+void Uniform::setArray(int const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
 	glUniform1iv(getUniform() + offset, count, values);
 	this->offset = count;
 }
 
-void Uniform::setArray(uint* const values, usize const count, usize const offset) const {
+void Uniform::setArray(uint const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
 	glUniform1uiv(getUniform() + offset, count, values);
 	this->offset = count;
 }
 
-void Uniform::setArray(float* const values, usize const count, usize const offset) const {
+void Uniform::setArray(float const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
-	glUniform1fv(getUniform() + offset, count, (float*)values);
+	glUniform1fv(getUniform() + offset, count, values);
 	this->offset = count;
 }
 
-void Uniform::setArray(double* const values, usize const count, usize const offset) const {
+void Uniform::setArray(double const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
-	glUniform1dv(getUniform() + offset, count, (double*)values);
+	glUniform1dv(getUniform() + offset, count, values);
 	this->offset = count;
 }
 
-void Uniform::setArray(Vector2* const values, usize const count, usize const offset) const {
+void Uniform::setArray(Vector2 const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
-	glUniform2fv(getUniform() + offset, count, (float*)values);
+	glUniform2fv(getUniform() + offset, count, (float const*)values);
 	this->offset = count;
 }
 
-void Uniform::setArray(Vector3* const values, usize const count, usize const offset) const {
+void Uniform::setArray(Vector3 const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
-	glUniform3fv(getUniform() + offset, count, (float*)values);
+	glUniform3fv(getUniform() + offset, count, (float const*)values);
 	this->offset = count;
 }
 
-void Uniform::setArray(Vector4* const values, usize const count, usize const offset) const {
+void Uniform::setArray(Vector4 const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
-	glUniform4fv(getUniform() + offset, count, (float*)values);
+	glUniform4fv(getUniform() + offset, count, (float const*)values);
 	this->offset = count;
 }
 
-void Uniform::setArray(Matrix4x4* const values, usize const count, usize const offset) const {
+void Uniform::setArray(Matrix4x4 const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
-	glUniformMatrix4fv(getUniform() + offset, count, GL_FALSE, (float*)values);
+	glUniformMatrix4fv(getUniform() + offset, count, GL_FALSE, (float const*)values);
 	this->offset = count;
 }
 

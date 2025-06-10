@@ -512,9 +512,9 @@ void Renderable::extendFromDefinitionV0(
 	// Set armature data
 	if (def["armature"].isObject()) {
 		armature.clearAllRelations();
-		for (usize bone = 0; i < Renderable::MAX_BONES; ++bone) {
-			if (!def["armature"].has(bone)) continue;
-			for (auto& child: def["armature"][bone].get<Array<usize>>()) {
+		for (usize bone = 0; bone < Renderable::MAX_BONES; ++bone) {
+			if (!def["armature"].has(toString(bone))) continue;
+			for (auto& child: def["armature"][toString(bone)].get<List<usize>>({})) {
 				armature.addChild(bone, child);
 			}
 		}
@@ -567,9 +567,8 @@ inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
 	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
 		if (vertebrate.armature.isLeafBone(i)) continue;
 		auto const children = vertebrate.armature.childrenOf(i);
-		skele[i] = JSON::array();
-		for (usize j = 0; j < children.size(); ++j)
-			skele[i][j] = children[j];
+		auto& bone = skele[toString(i)];
+		bone = children;
 	}
 	return skele;
 }
