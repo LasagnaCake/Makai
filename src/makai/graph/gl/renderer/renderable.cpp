@@ -469,8 +469,12 @@ void Renderable::extendFromDefinitionV0(
 	// Loop time
 	while (component < vdata.size() / sizeof(float)) {
 		vm = Vertex::defaultMap();
-		for (auto& c: components)
-			vm[c] = rawdata[component++];
+		for (auto& c: components) {
+			if (c[0] == "b" c.size() > 1)
+				vm[c] = ((int32*)rawdata)[component++];
+			else
+				vm[c] = rawdata[component++];
+		}
 		vertices.pushBack(Vertex(vm));
 	}
 	// Check if data is OK

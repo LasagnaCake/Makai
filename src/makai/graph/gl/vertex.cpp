@@ -52,13 +52,13 @@ Vertex::Vertex(VertexMap const& vmap)
 		getValue(vmap, "nx",	0),
 		getValue(vmap, "ny",	0),
 		getValue(vmap, "nz",	0),
-		getValue(vmap, "b0",	BONE_DEFAULT_ID),
+		Math::round(getValue(vmap, "b0",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w0",	0),
-		getValue(vmap, "b1",	BONE_DEFAULT_ID),
+		Math::round(getValue(vmap, "b1",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w1",	0),
-		getValue(vmap, "b2",	BONE_DEFAULT_ID),
+		Math::round(getValue(vmap, "b2",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w2",	0),
-		getValue(vmap, "b3",	BONE_DEFAULT_ID),
+		Math::round(getValue(vmap, "b3",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w3",	0)
 	)
 {}
