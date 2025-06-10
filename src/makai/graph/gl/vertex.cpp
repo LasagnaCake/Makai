@@ -23,13 +23,13 @@ VertexMap Vertex::defaultMap() {
 		{"nx", 0},
 		{"ny", 0},
 		{"nz", 0},
-		{"b0", BONE_DEFAULT_ID},
+		{"i0", BONE_DEFAULT_ID},
 		{"w0", 0},
-		{"b1", BONE_DEFAULT_ID},
+		{"i1", BONE_DEFAULT_ID},
 		{"w1", 0},
-		{"b2", BONE_DEFAULT_ID},
+		{"i2", BONE_DEFAULT_ID},
 		{"w2", 0},
-		{"b3", BONE_DEFAULT_ID},
+		{"i3", BONE_DEFAULT_ID},
 		{"w3", 0}
 	});
 }
@@ -52,13 +52,13 @@ Vertex::Vertex(VertexMap const& vmap)
 		getValue(vmap, "nx",	0),
 		getValue(vmap, "ny",	0),
 		getValue(vmap, "nz",	0),
-		Math::round(getValue(vmap, "b0",	BONE_DEFAULT_ID)),
+		Math::round(getValue(vmap, "i0",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w0",	0),
-		Math::round(getValue(vmap, "b1",	BONE_DEFAULT_ID)),
+		Math::round(getValue(vmap, "i1",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w1",	0),
-		Math::round(getValue(vmap, "b2",	BONE_DEFAULT_ID)),
+		Math::round(getValue(vmap, "i2",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w2",	0),
-		Math::round(getValue(vmap, "b3",	BONE_DEFAULT_ID)),
+		Math::round(getValue(vmap, "i3",	BONE_DEFAULT_ID)),
 		getValue(vmap, "w3",	0)
 	)
 {}

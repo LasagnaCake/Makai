@@ -470,7 +470,7 @@ void Renderable::extendFromDefinitionV0(
 	while (component < vdata.size() / sizeof(float)) {
 		vm = Vertex::defaultMap();
 		for (auto& c: components) {
-			if (c[0] == "b" c.size() > 1)
+			if (c.size() && c[0] == "i")
 				vm[c] = ((int32*)rawdata)[component++];
 			else
 				vm[c] = rawdata[component++];

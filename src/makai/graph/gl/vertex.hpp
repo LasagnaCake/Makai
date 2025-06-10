@@ -77,13 +77,13 @@ namespace Makai::Graph {
 		/// @param nx Normal X position. By default, it is zero.
 		/// @param ny Normal Y position. By default, it is zero.
 		/// @param nz Normal Z position. By default, it is zero.
-		/// @param b0 First bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param i0 First bone index. By default, it is `DEFAULT_BONE_ID`.
 		/// @param w0 First bone weight. By default, it is zero.
-		/// @param b1 Second bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param i1 Second bone index. By default, it is `DEFAULT_BONE_ID`.
 		/// @param w1 Second bone weight. By default, it is zero.
-		/// @param b2 Third bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param i2 Third bone index. By default, it is `DEFAULT_BONE_ID`.
 		/// @param w2 Third bone weight. By default, it is zero.
-		/// @param b3 Fourth bone index. By default, it is `DEFAULT_BONE_ID`.
+		/// @param i3 Fourth bone index. By default, it is `DEFAULT_BONE_ID`.
 		/// @param w3 Fourth bone weight. By default, it is zero.
 		constexpr Vertex(
 			float const x,
@@ -98,20 +98,20 @@ namespace Makai::Graph {
 			float const nx	= 0,
 			float const ny	= 0,
 			float const nz	= 0,
-			int32 const b0	= BONE_DEFAULT_ID,
+			int32 const i0	= BONE_DEFAULT_ID,
 			float const w0	= 0,
-			int32 const b1	= BONE_DEFAULT_ID,
+			int32 const i1	= BONE_DEFAULT_ID,
 			float const w1	= 0,
-			int32 const b2	= BONE_DEFAULT_ID,
+			int32 const i2	= BONE_DEFAULT_ID,
 			float const w2	= 0,
-			int32 const b3	= BONE_DEFAULT_ID,
+			int32 const i3	= BONE_DEFAULT_ID,
 			float const w3	= 0
 		): Vertex(
 			Vector3(x, y, z),
 			Vector2(u, v),
 			Vector4(r, g, b, a),
 			Vector3(nx, ny, nz),
-			{b0, b1, b2, b3},
+			{i0, i1, i2, i3},
 			{w0, w1, w2, w3}
 		) {}
 
