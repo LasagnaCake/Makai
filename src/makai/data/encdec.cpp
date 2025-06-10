@@ -12,11 +12,11 @@ using namespace Data;
 BinaryData<> Data::decode(String const& data, EncodingType const& encoding) try {
 	std::vector<ubyte> result;
 	switch (encoding) {
-		case EncodingType::ET_BASE32: return cppcodec::base32_rfc4648::decode<std::vector<ubyte>>(data);
-		case EncodingType::ET_BASE64: return cppcodec::base64_rfc4648::decode<std::vector<ubyte>>(data);
+		case EncodingType::ET_BASE32: result = cppcodec::base32_rfc4648::decode<std::vector<ubyte>>(data);
+		case EncodingType::ET_BASE64: result = cppcodec::base64_rfc4648::decode<std::vector<ubyte>>(data);
 		default: throw Error::InvalidValue("Invalid encoding type!", CTL_CPP_PRETTY_SOURCE);
 	}
-	return stdata;
+	return BinaryData<>(stdata.begin(), stdata.end());
 } catch (cppcodec::parse_error const& e) {
 	throw Error::FailedAction(
 		"Failed at decoding byte data!",
