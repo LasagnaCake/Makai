@@ -509,6 +509,7 @@ void Renderable::extendFromDefinitionV0(
 	if (def["material"].isObject()) {
 		material = fromDefinition(def["material"], sourcepath);
 	}
+	// Set armature data
 	if (def["armature"].isObject()) {
 		armature.clearAllRelations();
 		for (usize bone = 0; i < Renderable::MAX_BONES; ++bone) {
