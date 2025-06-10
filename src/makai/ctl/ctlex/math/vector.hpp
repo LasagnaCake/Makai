@@ -1365,6 +1365,19 @@ struct Transform {
 	/// @return Identity transform.
 	constexpr static Transform identity() {return Transform(0, 0, 1);}
 
+	/// @brief Returns the inverse of the transform.
+	/// @return Inverse of transform.
+	constexpr Transform inverted() const {return Transform(-position, -rotation, TScale(1) / scale);}
+
+	/// @brief Inverts the transform.
+	/// @return Reference to self.
+	constexpr Transform& invert() const {
+		position *= -1;
+		rotation *= -1;
+		scale = TScale(1) / scale;
+		return *this;
+	}
+
 	/// @brief Position transform.
 	TPosition	position	= TPosition(0);
 	/// @brief Rotation transform.
