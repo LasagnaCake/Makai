@@ -81,6 +81,13 @@ def ImageProperty(prop_name = "Image"):
 		options=set()
 	)
 
+def ArmatureProperty(prop_name = "Armature"):
+	return bp.PointerProperty(
+		name=prop_name,
+		type=bt.Armature,
+		options=set()
+	)
+
 def CameraProperty(prop_name = "Camera"):
 	def is_camera(self, obj):
 		return obj.type=="CAMERA"
@@ -305,13 +312,92 @@ def process_image_file(embed_texture, image, path, temp_path, relative_path = ""
 			return file
 	return None
 
-def get_binary_data(mesh):
+def inverted_with_parent(bone):
+	return (bone.parent.matrix_local.inverted() * bone.matrix_local)
+
+def global_matrix(bone):
+	if bone.parent == None:
+		return bone.matrix_local * bone.matrix_basis
+	else:
+		return global_matrix(bone.parent) * inverted_with_parent(bone) * bone.matrix_basis
+
+def get_child_names(bone):
+	children = []
+	for child in bone.children:
+		children.append(child.name)
+	return children
+
+# TODO: Figure out how to get armature
+def build_armature(obj):
+	# Get armature
+	armature = obj.object_props.armature
+	# TODO: Armature search
+	#if obj.type == "ARMATURE":
+	#	armature = obj.data
+	if armature is None:
+		return None
+	# Start building armature
+	armature_build = {
+		"maxBones": 4,
+		"map": {
+			"groups": {},
+			"names": {},
+			"relations": {}
+		},
+		"data": {
+			"bones": [],
+			"relations": {}
+		}
+	}
+	# Enable rest pose
+	last_pose = armature.pose_position
+	armature.pose_position = "REST"
+	# Build bone data and relation tree
+	index = 0
+	for bone in ob.data.bones:
+		pos, rot, scale = bone.matrix_local.decompose()
+		rot = rot.to_euler('YXZ')
+		armature_build["data"]["bones"].append({
+			"position": [-pos.x, pos.z, pos.y],
+			"rotation": [rot.x, -rot.z, rot.y],
+			"scale": [scale.x, scale.z, scale.y]
+		})
+		armature_build["map"]["groups"][obj.vertex_groups[bone.name].index] = bone.name
+		armature_build["map"]["names"][bone.name] = index
+		armature_build["map"]["relations"][bone.name] = get_child_names(bone)
+		index += 1
+	# Expand relations
+	names = armature_build["map"]["names"]
+	for bone in armature_build["map"]["relations"].keys():
+		armature_build["data"]["relations"][f"{names[i]}"] = []
+		for child in armature_build["map"]["relations"][bone]:
+			armature_build["data"]["relations"][f"{names[i]}"].append(name[child])
+	# Return everything to nothingness
+	armature.pose_position = last_pose
+	return armature_build
+
+def get_vertex_bone_info(vertex, armature):
+	vbi = []
+	current = 0
+	for group in vertex.groups:
+		if current > armature["maxBones"]:
+			break
+		if (group in armature["map"]["names"].keys()):
+			vbi.extend([armature["map"]["names"][group], group.weight]);
+
+def get_skeleton(armature):
+	return armature["data"]
+
+def get_binary_data(mesh, armature):
 	# iterate through the mesh's loop triangles to collect the vertex data
 	vertex_data = []
 	component_data = "x,y,z"
 	if mesh.uv_layers.active: component_data += ",u,v"
 	if mesh.vertex_colors.active: component_data += ",r,g,b,a"
 	component_data += ",nx,ny,nz"
+	if armature is not None:
+		for i in range(armature["maxBones"]):
+			component_data += f",b{i},w{i}"
 	for triangles in mesh.loop_triangles:
 		for idx in triangles.loops:
 			vertex = mesh.vertices[mesh.loops[idx].vertex_index]
@@ -326,6 +412,8 @@ def get_binary_data(mesh):
 				vtxdat.extend([uv[0], 1-uv[1]])
 			if mesh.vertex_colors.active:
 				vtxdat.extend([color[0], color[1], color[2], color[3]])
+			if armature is not None:
+				vtxdat.extend(get_vertex_bone_info(vertex, armature))
 			# Append normal data
 			vtxdat.extend([-normal.x, normal.z, normal.y])
 			# Append to array
@@ -362,8 +450,11 @@ def create_render_definition(context, obj, file_name, folder_path, tx_folder, me
 	else:
 		mesh = obj.to_mesh()
 	verts = mesh.vertices
+	armature = build_armature(obj)
+	if obj.material_props.armature:
+		strfile["armature"] = get_skeleton(armature)
 	# iterate through the mesh's loop triangles to collect the vertex data
-	vertex_binary, component_data = get_binary_data(mesh)
+	vertex_binary, component_data = get_binary_data(mesh, armature)
 	# Do appropriate mesh procedure
 	strfile = {
 		"version": 0,
@@ -553,6 +644,15 @@ class PropertyPanel(bt.Panel):
 	---------------
 
 """
+class ObjectProperties(BaseProperties):
+	armature: ArmatureProperty("Armature")
+
+	def render(self, target):
+		layout = target.layout
+		layout.label(text="Armature")
+		layout.prop(self, "armature")
+
+
 	
 class ObjectMaterialProperties(BaseProperties):
 	color: RGBAColorProperty("Color")
@@ -952,6 +1052,19 @@ class EXPORT_OT_ExportSceneOperator(bt.Operator):
 
 	------
 """
+class SCENEOBJECT_PT_SceneObjectPanel(PropertyPanel):
+	bl_label = "Object Properties"
+	bl_idname = "SO0_OBJECT_PT_SceneObjectPanel"
+	bl_category = "Scene Object"
+
+	def draw(self, context):
+		obj = context.object
+		if obj.type != "MESH":
+			return
+		layout = self.layout
+		props = context.object.object_props
+		props.render(self)
+		layout.column()
 
 class SCENEOBJECT_PT_SceneObjectMaterialPanel(PropertyPanel):
 	bl_label = "Material Properties"
@@ -1032,6 +1145,7 @@ class SCENE_PT_SceneExportPanel(PropertyPanel):
 """
 
 classes = (
+	ObjectProperties,
 	ObjectMaterialProperties,
 	ObjectBlendProperties,
 	ObjectExportProperties,
@@ -1039,6 +1153,7 @@ classes = (
 	SceneExportProperties,
 	EXPORT_OT_ExportSceneOperator,
 	EXPORT_OT_ExportSceneObjectOperator,
+	SCENEOBJECT_PT_SceneObjectPanel,
 	SCENEOBJECT_PT_SceneObjectMaterialPanel,
 	SCENEOBJECT_PT_SceneObjectBlendPanel,
 	SCENEOBJECT_PT_SceneObjectExportPanel,
@@ -1051,17 +1166,19 @@ def register():
 	for cls in classes:
 		register_class(cls)
 	
-	bt.Object.material_props = bp.PointerProperty(type=ObjectMaterialProperties)
-	bt.Object.blend_props = bp.PointerProperty(type=ObjectBlendProperties)
-	bt.Object.object_export_props = bp.PointerProperty(type=ObjectExportProperties)
-	bt.Scene.scene_props = bp.PointerProperty(type=SceneProperties)
-	bt.Scene.scene_export_props = bp.PointerProperty(type=SceneExportProperties)
+	bt.Object.object_props			= bp.PointerProperty(type=ObjectProperties)
+	bt.Object.material_props		= bp.PointerProperty(type=ObjectMaterialProperties)
+	bt.Object.blend_props			= bp.PointerProperty(type=ObjectBlendProperties)
+	bt.Object.object_export_props	= bp.PointerProperty(type=ObjectExportProperties)
+	bt.Scene.scene_props			= bp.PointerProperty(type=SceneProperties)
+	bt.Scene.scene_export_props		= bp.PointerProperty(type=SceneExportProperties)
 
 def unregister():
 	from bpy.utils import unregister_class
 	for cls in reversed(classes):
 		unregister_class(cls)
 	
+	del bt.Object.object_props
 	del bt.Object.material_props
 	del bt.Object.blend_props
 	del bt.Object.object_export_props
