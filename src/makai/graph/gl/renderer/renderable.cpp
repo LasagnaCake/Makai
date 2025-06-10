@@ -571,7 +571,7 @@ void Renderable::extendFromDefinitionV0(
 template<usize S>
 inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
 	JSON::JSONData armature;
-	auto skele = armature["relations"];
+	auto rel = armature["relations"];
 	auto bones = armature["bones"];
 	bones = JSON::array();
 	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
@@ -583,7 +583,7 @@ inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
 		};
 		if (vertebrate.armature.isLeafBone(i)) continue;
 		auto const children = vertebrate.armature.childrenOf(i);
-		auto bone = skele[toString(i)];
+		auto bone = rel[toString(i)];
 		bone = JSON::array();
 		for (usize j = 0; j < children.size(); ++j)
 			bone[j] = children[j];
