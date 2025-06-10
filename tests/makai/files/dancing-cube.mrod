@@ -1,0 +1,133 @@
+{
+	"version": 0,
+	"mesh": {
+		"data": "AACAvwAAgD8AAIA/AAAgPwAAAD86zRO/Os0TPzrNEz8CAAAAXUF/P/7///8AAAAA/v///wAAAAD+////AAAAAAAAgD8AAIA/AACAPwAAYD8AAAA/Os0TPzrNEz86zRM/AgAAANi7fz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIA/AACAPwAAgL8AAGA/AACAPjrNEz86zRM/Os0TvwMAAABGln8//v///wAAAAD+////AAAAAP7///8AAAAAAACAvwAAgD8AAIA/AAAgPwAAAD86zRO/Os0TPzrNEz8CAAAAXUF/P/7///8AAAAA/v///wAAAAD+////AAAAAAAAgD8AAIA/AACAvwAAYD8AAIA+Os0TPzrNEz86zRO/AwAAAEaWfz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIC/AACAPwAAgL8AACA/AACAPjrNE786zRM/Os0TvwMAAAAD0n8//v///wAAAAD+////AAAAAP7///8AAAAAAACAvwAAgL8AAIC/AADAPgAAgD46zRO/Os0TvzrNE78AAAAAAFN9P/7///8AAAAA/v///wAAAAD+////AAAAAAAAgL8AAIA/AACAvwAAID8AAIA+Os0TvzrNEz86zRO/AwAAAAPSfz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIA/AACAPwAAgL8AACA/AAAAADrNEz86zRM/Os0TvwMAAABGln8//v///wAAAAD+////AAAAAP7///8AAAAAAACAvwAAgL8AAIC/AADAPgAAgD46zRO/Os0TvzrNE78AAAAAAFN9P/7///8AAAAA/v///wAAAAD+////AAAAAAAAgD8AAIA/AACAvwAAID8AAAAAOs0TPzrNEz86zRO/AwAAAEaWfz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIA/AACAvwAAgL8AAMA+AAAAADrNEz86zRO/Os0TvwAAAAAKjHs//v///wAAAAD+////AAAAAP7///8AAAAAAACAPwAAgL8AAIC/AADAPgAAgD86zRM/Os0TvzrNE78AAAAACox7P/7///8AAAAA/v///wAAAAD+////AAAAAAAAgD8AAIA/AACAvwAAID8AAIA/Os0TPzrNEz86zRO/AwAAAEaWfz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIA/AACAPwAAgD8AACA/AABAPzrNEz86zRM/Os0TPwIAAADYu38//v///wAAAAD+////AAAAAP7///8AAAAAAACAPwAAgL8AAIC/AADAPgAAgD86zRM/Os0TvzrNE78AAAAACox7P/7///8AAAAA/v///wAAAAD+////AAAAAAAAgD8AAIA/AACAPwAAID8AAEA/Os0TPzrNEz86zRM/AgAAANi7fz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIA/AACAvwAAgD8AAMA+AABAPzrNEz86zRO/Os0TPwEAAAAAAAA/AAAAAHP0/z7+////AAAAAP7///8AAAAAAACAPwAAgL8AAIA/AAAAPgAAAD86zRM/Os0TvzrNEz8BAAAAAAAAPwAAAABz9P8+/v///wAAAAD+////AAAAAAAAgL8AAIC/AACAPwAAwD4AAAA/Os0TvzrNE786zRM/AQAAAGT6/z4AAAAAHv//Pv7///8AAAAA/v///wAAAAAAAIC/AACAvwAAgL8AAMA+AACAPjrNE786zRO/Os0TvwAAAAAAU30//v///wAAAAD+////AAAAAP7///8AAAAAAACAPwAAgL8AAIA/AAAAPgAAAD86zRM/Os0TvzrNEz8BAAAAAAAAPwAAAABz9P8+/v///wAAAAD+////AAAAAAAAgL8AAIC/AACAvwAAwD4AAIA+Os0TvzrNE786zRO/AAAAAABTfT/+////AAAAAP7///8AAAAA/v///wAAAAAAAIA/AACAvwAAgL8AAAA+AACAPjrNEz86zRO/Os0TvwAAAAAKjHs//v///wAAAAD+////AAAAAP7///8AAAAAAACAvwAAgL8AAIA/AADAPgAAAD86zRO/Os0TvzrNEz8BAAAAZPr/PgAAAAAe//8+/v///wAAAAD+////AAAAAAAAgL8AAIA/AACAPwAAID8AAAA/Os0TvzrNEz86zRM/AgAAAF1Bfz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIC/AACAPwAAgL8AACA/AACAPjrNE786zRM/Os0TvwMAAAAD0n8//v///wAAAAD+////AAAAAP7///8AAAAAAACAvwAAgL8AAIA/AADAPgAAAD86zRO/Os0TvzrNEz8BAAAAZPr/PgAAAAAe//8+/v///wAAAAD+////AAAAAAAAgL8AAIA/AACAvwAAID8AAIA+Os0TvzrNEz86zRO/AwAAAAPSfz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIC/AACAvwAAgL8AAMA+AACAPjrNE786zRO/Os0TvwAAAAAAU30//v///wAAAAD+////AAAAAP7///8AAAAAAACAPwAAgL8AAIA/AADAPgAAQD86zRM/Os0TvzrNEz8BAAAAAAAAPwAAAABz9P8+/v///wAAAAD+////AAAAAAAAgD8AAIA/AACAPwAAID8AAEA/Os0TPzrNEz86zRM/AgAAANi7fz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIC/AACAPwAAgD8AACA/AAAAPzrNE786zRM/Os0TPwIAAABdQX8//v///wAAAAD+////AAAAAP7///8AAAAAAACAPwAAgL8AAIA/AADAPgAAQD86zRM/Os0TvzrNEz8BAAAAAAAAPwAAAABz9P8+/v///wAAAAD+////AAAAAAAAgL8AAIA/AACAPwAAID8AAAA/Os0TvzrNEz86zRM/AgAAAF1Bfz/+////AAAAAP7///8AAAAA/v///wAAAAAAAIC/AACAvwAAgD8AAMA+AAAAPzrNE786zRO/Os0TPwEAAABk+v8+AAAAAB7//z7+////AAAAAP7///8AAAAA",
+		"components": "x,y,z,u,v,nx,ny,nz,b0,w0,b1,w1,b2,w2,b3,w3",
+		"encoding": "base64"
+	},
+	"armature": {
+		"bones": [
+			{
+				"position": [
+					-0.0,
+					-1.0,
+					0.0
+				],
+				"rotation": [
+					1.570796251296997,
+					0.0,
+					0.0
+				],
+				"scale": [
+					1.0,
+					1.0,
+					1.0
+				]
+			},
+			{
+				"position": [
+					-0.0,
+					0.0,
+					0.0
+				],
+				"rotation": [
+					0.0,
+					0.0,
+					-0.0
+				],
+				"scale": [
+					1.0,
+					1.0,
+					1.0
+				]
+			},
+			{
+				"position": [
+					-0.0,
+					0.0,
+					1.0
+				],
+				"rotation": [
+					1.570796251296997,
+					0.0,
+					-2.1656725313672157e-16
+				],
+				"scale": [
+					1.0,
+					1.0,
+					1.0
+				]
+			},
+			{
+				"position": [
+					-0.0,
+					0.0,
+					0.0
+				],
+				"rotation": [
+					2.356194496154785,
+					6.371314913644014e-15,
+					2.384184938364342e-07
+				],
+				"scale": [
+					1.0,
+					1.0,
+					0.9999999403953552
+				]
+			}
+		],
+		"relations": {
+			"0": [
+				1,
+				3
+			],
+			"1": [
+				2
+			]
+		}
+	},
+	"trans": {
+		"position": [
+			-0.0,
+			0.0,
+			0.0
+		],
+		"rotation": [
+			0.0,
+			0.0,
+			-0.0
+		],
+		"scale": [
+			1.0,
+			1.0,
+			1.0
+		]
+	},
+	"material": {
+		"color": "#ffffffff",
+		"shaded": true,
+		"illuminated": true,
+		"hue": 0.0,
+		"saturation": 1.0,
+		"luminosity": 1.0,
+		"brightness": 0.0,
+		"contrast": 1.0,
+		"instances": [
+			[
+				0.0,
+				0.0,
+				0.0
+			]
+		],
+		"culling": 0,
+		"fill": 0
+	},
+	"blend": {
+		"function": {
+			"src": 6,
+			"dst": 7
+		},
+		"equation": 2
+	},
+	"active": true
+}
