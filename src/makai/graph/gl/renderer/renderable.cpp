@@ -583,7 +583,7 @@ inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
 	bones = JSON::array();
 	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
 		auto const& trans = vertebrate.armature.rest[i];
-		def["bones"][i] = JSON::JSONType{
+		bones[i] = JSON::JSONType{
 			{"position",	{trans.position.x,	trans.position.y,	trans.position.z	}	},
 			{"rotation",	{trans.rotation.x,	trans.rotation.y,	trans.rotation.z	}	},
 			{"scale",		{trans.scale.x,		trans.scale.y,		trans.scale.z		}	}
