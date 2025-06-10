@@ -331,9 +331,6 @@ def get_child_names(bone):
 def build_armature(obj):
 	# Get armature
 	armature = obj.basic_props.armature
-	# TODO: Armature search
-	#if obj.type == "ARMATURE":
-	#	armature = obj.data
 	if armature is None:
 		return None
 	# Start building armature
@@ -369,9 +366,10 @@ def build_armature(obj):
 	# Expand relations
 	names = armature_build["map"]["names"]
 	for bone in armature_build["map"]["relations"].keys():
-		armature_build["data"]["relations"][f"{names[bone]}"] = []
-		for child in armature_build["map"]["relations"][bone]:
-			armature_build["data"]["relations"][f"{names[bone]}"].append(names[child])
+		if len(armature_build["map"]["relations"][bone]) > 0:
+			armature_build["data"]["relations"][f"{names[bone]}"] = []
+			for child in armature_build["map"]["relations"][bone]:
+				armature_build["data"]["relations"][f"{names[bone]}"].append(names[child])
 	# Return everything to nothingness
 	armature.pose_position = last_pose
 	return armature_build
@@ -380,7 +378,7 @@ def get_vertex_bone_info(vertex, armature):
 	vbi = []
 	current = 0
 	for group in vertex.groups:
-		if current > armature["maxBones"]:
+		if current >= armature["maxBones"]:
 			break
 		#print("Group: " + str(group.group))
 		if group.group in armature["map"]["groups"].keys() and group.weight > 0:
