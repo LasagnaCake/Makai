@@ -7,13 +7,14 @@
 #include "reference.hpp"
 #include "../material/material.hpp"
 #include "../vertex.hpp"
+#include "vertebrate.hpp"
 
 /// @brief Graphical facilities.
 namespace Makai::Graph {
 	class Scene;
 
 	/// @brief Renderable object.
-	class Renderable: public AGraphic, public ReferenceHolder {
+	class Renderable: public AGraphic, public ReferenceHolder, public Vertebrate<64> {
 	public:
 		/// @brief Latest renderable object definition file version supported.
 		constexpr static usize VERSION = 0;

@@ -2,8 +2,7 @@
 #define MAKAILIB_GRAPH_VERTEX_H
 
 #include "../../compat/ctl.hpp"
-#include "../armature/armature.hpp"
-#include "armature/skeleton.hpp"
+#include "armature/armature.hpp"
 
 /// @brief Graphical facilites.
 namespace Makai::Graph {
@@ -27,7 +26,7 @@ namespace Makai::Graph {
 			/// @brief Vertex normal.
 			Vector3		normal		= 0;
 			/// @brief Vertex bone indices.
-			BoneIndices	bones		= BoneIndices::withFill(Armature::Skeleton<>::MAX_BONES);
+			BoneIndices	bones		= BoneIndices::withFill(Limit::MAX<int32>);
 			/// @brief Vertex bone weights.
 			BoneWeights	weights		= BoneWeights::withFill(0);
 		};
@@ -87,10 +86,10 @@ namespace Makai::Graph {
 			float const nx	= 0,
 			float const ny	= 0,
 			float const nz	= 0,
-			int32 const b0	= Armature::Skeleton<>::MAX_BONES,
-			int32 const b1	= Armature::Skeleton<>::MAX_BONES,
-			int32 const b2	= Armature::Skeleton<>::MAX_BONES,
-			int32 const b3	= Armature::Skeleton<>::MAX_BONES,
+			int32 const b0	= Limit::MAX<int32>,
+			int32 const b1	= Limit::MAX<int32>,
+			int32 const b2	= Limit::MAX<int32>,
+			int32 const b3	= Limit::MAX<int32>,
 			float const i0	= 0,
 			float const i1	= 0,
 			float const i2	= 0,
@@ -114,7 +113,7 @@ namespace Makai::Graph {
 			Vector2 const& uv			= 0,
 			Vector4 const& color		= 1,
 			Vector3 const& normal		= 0,
-			BoneIndices const& bones	= BoneIndices::withFill(Armature::Skeleton<>::MAX_BONES),
+			BoneIndices const& bones	= BoneIndices::withFill(Limit::MAX<int32>),
 			BoneWeights const& weights	= BoneWeights::withFill(0)
 		):	BaseType{position, uv, color, normal, bones, weights} {}
 

@@ -131,6 +131,13 @@ namespace Makai::Graph {
 		void setArray(Vector4* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
+		/// @param values Values to set.
+		/// @param count Count of values to set.
+		/// @param offset Uniform location offset. By default, it is zero.
+		/// @warning `offset` should NEVER be used directly!
+		void setArray(Matrix4x4* const values, usize const count, usize const offset = 0) const;
+
+		/// @brief Sets the uniform.
 		/// @tparam T Element type.
 		/// @param values List of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.

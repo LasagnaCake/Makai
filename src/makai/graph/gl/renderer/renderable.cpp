@@ -357,6 +357,7 @@ void Renderable::draw() {
 	if (!baked && !locked) transformReferences();
 	// Set shader data
 	prepare();
+	applyArmature(shader);
 	material.use(shader);
 	// Present to screen
 	display(
@@ -508,6 +509,15 @@ void Renderable::extendFromDefinitionV0(
 	if (def["material"].isObject()) {
 		material = fromDefinition(def["material"], sourcepath);
 	}
+	if (def["armature"].isObject()) {
+		armature.clearAllRelations();
+		for (usize bone = 0; i < Renderable::MAX_BONES; ++bone) {
+			if (!def["armature"].has(bone)) continue;
+			for (auto& child: def["armature"][bone].get<Array<usize>>()) {
+				armature.addChild(bone, child);
+			}
+		}
+	}
 	// Set blend data
 	if (def["blend"].isObject()) {
 		try {
@@ -548,6 +558,19 @@ void Renderable::extendFromDefinitionV0(
 	}
 	if (def["active"].isBool())
 		active = def["active"].get<bool>();
+}
+
+template<usize S>
+inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
+	JSON::JSONData skele = JSON::object();
+	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
+		if (vertebrate.armature.isLeafBone(i)) continue;
+		auto const children = vertebrate.armature.childrenOf(i);
+		skele[i] = JSON::array();
+		for (usize j = 0; j < children.size(); ++j)
+			skele[i][j] = children[j];
+	}
+	return skele;
 }
 
 JSON::JSONData Renderable::getObjectDefinition(
@@ -600,6 +623,8 @@ JSON::JSONData Renderable::getObjectDefinition(
 			{"alpha", uint(blend.eq.alpha)}
 		}}
 	};
+	// Set armature
+	def["armature"] = getArmature(*this);
 	// Unbake object if applicable
 	if (!wasBaked) unbake();
 	// Return definition

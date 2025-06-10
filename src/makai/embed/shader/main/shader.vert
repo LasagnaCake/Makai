@@ -48,7 +48,7 @@ uniform vec3[MAX_INSTANCES]	instances;
 // [ ARMATURE ]
 uniform Armature armature;
 
-void withArmature(inout vec4 position, inout vec3 normal) {
+void withArmatureAndTransforms(inout vec4 position, inout vec3 normal) {
 	mat4 result = mat4(1);
 	vec4 totalPosition = vec4(0);
 	vec3 totalNormal = vec3(0);
@@ -60,16 +60,8 @@ void withArmature(inout vec4 position, inout vec3 normal) {
         vec3 localNormal = mat3(armature.bones[boneIndices[i]]) * normal;
         totalNormal += localNormal * boneWeights[i];
 	}
-	position = totalPosition;
+	position = vertMatrix * (totalPosition + vec4(instances[gl_InstanceID], 0));
 	normal = totalNormal;
-}
-
-vec3 getInstancePosition() {
-	return (instances[gl_InstanceID]);
-}
-
-vec4 transformed(vec3 vec) {
-	return vertMatrix * vec4(vec + getInstancePosition(), 1.0);
 }
 
 void main() {
@@ -82,8 +74,7 @@ void main() {
 	// Vertex & Normal
 	vec4 vertex	= vec4(vertPos, 1);
 	vec3 normal	= normalize(mat3(normalsMatrix) * vertNormal);
-	withArmature(vertex, normal);
-	vertex = transformed(vertPos);
+	withArmatureAndTransforms(vertex, normal);
 	// Point Size
 	gl_PointSize = vertex.z;
 	// Coordinates

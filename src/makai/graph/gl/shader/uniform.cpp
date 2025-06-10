@@ -109,6 +109,12 @@ void Uniform::setArray(Vector4* const values, usize const count, usize const off
 	this->offset = count;
 }
 
+void Uniform::setArray(Matrix4x4* const values, usize const count, usize const offset) const {
+	this->offset = 0;
+	glUniformMatrix4fv(getUniform() + offset, count, GL_FALSE, (float*)values);
+	this->offset = count;
+}
+
 uint Uniform::getUniformArray(usize const offset) const {
 	return location + offset + this->offset;
 }
