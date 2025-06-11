@@ -401,15 +401,11 @@ void Renderable::extendFromDefinitionV0(
 			String encoding	= mesh["encoding"].get<String>();
 			DEBUGLN("Encoding: [", encoding, "]");
 			DEBUGLN("ID: ", enumcast(Data::fromString(encoding)));
-			try {
-				vdata		= Data::decode(data.get<String>(), Data::fromString(encoding));
-			} catch (CTL::OutOfBoundsException const& e) {
-				throw Error::FailedAction(e.what(), CTL_CPP_PRETTY_SOURCE);
-			}
+			vdata		= Data::decode(data.get<String>(), Data::fromString(encoding));
 		} else if (data.isObject()) {
-			vdata			= File::getBinary(OS::FS::concatenate(sourcepath, data["path"].get<String>()));
+			vdata		= File::getBinary(OS::FS::concatenate(sourcepath, data["path"].get<String>()));
 		}
-		componentData		= mesh["components"].get<String>();
+		componentData	= mesh["components"].get<String>();
 	} catch (std::exception const& e) {
 		throw Error::FailedAction(
 			"Failed at getting mesh values!",
@@ -520,11 +516,13 @@ void Renderable::extendFromDefinitionV0(
 		material = fromDefinition(def["material"], sourcepath);
 	}
 	// Set armature data
+	DEBUGLN("Armature...");
 	if (def["armature"].isObject()) {
 		bool const hasBones = def["armature"]["bones"].isArray();
 		armature.clearAllRelations();
 		for (usize bone = 0; bone < Renderable::MAX_BONES; ++bone) {
 			if (hasBones && def["armature"]["bones"][bone].isObject()) {
+				DEBUGLN("Bone [", bone, "]");
 				armature.rest[bone] = Transform3D(
 					fromJSONArrayV3(def["armature"]["bones"][bone]["position"]),
 					fromJSONArrayV3(def["armature"]["bones"][bone]["rotation"]),
@@ -533,12 +531,15 @@ void Renderable::extendFromDefinitionV0(
 				armature.pose[bone] = armature.rest[bone];
 			}
 			if (!def["armature"]["relations"].has(toString(bone))) continue;
-			for (auto& child: def["armature"]["relations"][toString(bone)].get<List<usize>>({})) {
+			auto children = def["armature"]["relations"][toString(bone)].get<List<usize>>({});
+			for (auto child: children) {
+				DEBUGLN("Relation [", bone, " -> ", child, "]");
 				armature.addChild(bone, child);
 			}
 		}
 		armature.bake();
 	}
+	DEBUGLN("Armature!");
 	// Set blend data
 	if (def["blend"].isObject()) {
 		try {

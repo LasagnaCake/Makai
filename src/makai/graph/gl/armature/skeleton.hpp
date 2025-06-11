@@ -71,8 +71,9 @@ namespace Makai::Graph::Armature {
 		constexpr Skeleton& clearChildren(usize const bone) {
 			if (baked || locked) return *this;
 			if (bone >= MAX_BONES) return *this;
-			for (auto const& child: forward[bone])
-				reverse[child.key] = false;
+			if (forward.contains(bone))
+				for (auto const& child: forward[bone])
+					reverse[child.key][bone] = false;
 			forward[bone].clear();
 			return *this;
 		}
@@ -81,8 +82,8 @@ namespace Makai::Graph::Armature {
 		/// @return Reference to self.
 		constexpr Skeleton& clearAllRelations() {
 			if (baked || locked) return *this;
-			forward = {};
-			reverse = {};
+			forward.clear();
+			reverse.clear();
 			return *this;
 		}
 
@@ -103,7 +104,7 @@ namespace Makai::Graph::Armature {
 		/// @brief Returns the parent of a given bone.
 		/// @param bone Bone to get parent.
 		/// @return Parent of bone.
-		constexpr List<usize> parentOf(usize const bone) const {
+		constexpr usize parentOf(usize const bone) const {
 			if (bone >= MAX_BONES) return -1;
 			if (reverse.contains(bone)) {
 				for (auto const& child : reverse[bone])
@@ -143,7 +144,7 @@ namespace Makai::Graph::Armature {
 		constexpr bool isLeafBone(usize const bone) const {
 			if (bone >= MAX_BONES) return false;
 			if (forward.contains(bone)) {
-				for (auto const& child : reverse[bone])
+				for (auto const& child : forward[bone])
 					if (child.value) return false;
 			}
 			return true;
