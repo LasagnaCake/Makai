@@ -17,6 +17,8 @@ struct TestApp: Makai::App {
 		loadDefaultShaders();
 		DEBUGLN("2...");
 		danceCube.extendFromDefinitionFile("../tests/makai/files/dancing-cube.mrod");
+		danceCube.material.texture = {true, Makai::Graph::Texture2D("../tests/makai/files/grid.png"), 0};
+		danceCube.material.culling = Makai::Graph::CullMode::OCM_FRONT;
 		DEBUGLN("Done!");
 	}
 
@@ -30,9 +32,13 @@ struct TestApp: Makai::App {
 	}
 
 	void onUpdate(float delta) override {
+		if (input.isButtonJustPressed(Makai::Input::KeyCode::KC_ESCAPE))
+			close();
+		getFrameBuffer().material.background = Makai::Graph::Color::WHITE * (sin(getCurrentFrame() / 180.0) / 2 + .5);
 		float as, ac;
 		Makai::Math::sincos<float>((getCurrentCycle() / 180.0), as, ac);
 		camera.eye	= Makai::Vec3(as, 0.25, ac) * 5.0;
+		animateCube();
 	}
 };
 
