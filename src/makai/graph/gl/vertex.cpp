@@ -101,11 +101,10 @@ void Vertex::setAttributes() {
 		GET_GL_OFFSET(9)
 	);
 	// Bone
-	glVertexAttribPointer(
+	glVertexAttribIPointer(
 		4,
 		4,
 		GL_INT,
-		GL_FALSE,
 		sizeof(Vertex),
 		GET_GL_OFFSET(12)
 	);
