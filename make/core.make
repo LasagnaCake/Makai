@@ -127,6 +127,8 @@ ifndef SUBSYSTEM
 else
 	ifneq ($(SUBSYSTEM_PROPAGATE),)
 		compile-all-impl = $(NO_OP);
+	else ifeq ($(SUBSYSTEM_BASE),*)
+		compile-all-impl = @$(foreach file,$(1),$(call compile-splice,$(file)))
 	else
 		compile-all-impl = @$(call compile-splice, $(SUBSYSTEM_BASE))
 	endif
@@ -139,6 +141,8 @@ ifndef SUBSYSTEM
 else
 	ifneq ($(SUBSYSTEM_PROPAGATE),)
 		submake-all-impl = @$(call submake-splice, $(SUBSYSTEM_BASE))
+	else ifeq ($(SUBSYSTEM_BASE),*)
+		submake-all-impl = @$(foreach subsys,$(1),$(call submake-splice,$(subsys)))
 	else
 		submake-all-impl = $(NO_OP);
 	endif
