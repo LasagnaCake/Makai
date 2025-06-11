@@ -399,7 +399,7 @@ void Renderable::extendFromDefinitionV0(
 		auto data	= mesh["data"];
 		if (data.isString()) {
 			String encoding	= mesh["encoding"].get<String>();
-			DEBUGLN("Encoding: ", encoding);
+			DEBUGLN("Encoding: [", encoding, "]");
 			vdata			= Data::decode(data.get<String>(), Data::fromString(encoding));
 		} else if (data.isObject()) {
 			vdata			= File::getBinary(OS::FS::concatenate(sourcepath, data["path"].get<String>()));
