@@ -20,7 +20,7 @@ namespace Makai::Graph {
 			/// @brief Bone weights type.
 			using BoneWeights	= Array<float, 4>;
 			/// @brief Bone indices default ID.
-			constexpr static auto const BONE_DEFAULT_ID = -2;
+			constexpr static int32 const BONE_DEFAULT_ID = -2;
 			/// @brief Vertex position.
 			Vector3		position	= 0;
 			/// @brief Vertex UV.
