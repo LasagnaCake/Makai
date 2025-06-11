@@ -400,7 +400,12 @@ void Renderable::extendFromDefinitionV0(
 		if (data.isString()) {
 			String encoding	= mesh["encoding"].get<String>();
 			DEBUGLN("Encoding: [", encoding, "]");
-			vdata			= Data::decode(data.get<String>(), Data::fromString(encoding));
+			DEBUGLN("ID: ", enumcast(Data::fromString(encoding)));
+			try {
+				vdata		= Data::decode(data.get<String>(), Data::fromString(encoding));
+			} catch (CTL::OutOfBoundsException const& e) {
+				throw Error::FailedAction(e.what(), CTL_CPP_PRETTY_SOURCE);
+			}
 		} else if (data.isObject()) {
 			vdata			= File::getBinary(OS::FS::concatenate(sourcepath, data["path"].get<String>()));
 		}
