@@ -193,7 +193,7 @@ namespace Makai::Graph::Armature {
 		/// @brief Returns all root bones.
 		/// @return Root bones.
 		constexpr List<usize> roots() const {
-			if (baked) return bakedRoots;
+			if (baked || locked) return bakedRoots;
 			List<usize> roots;
 			for (usize i = 0; i < MAX_BONES; ++i)
 				if (isRootBone(i))
@@ -204,7 +204,7 @@ namespace Makai::Graph::Armature {
 		/// @brief Returns all leaf bones.
 		/// @return Leaf bones.
 		constexpr List<usize> leaves() const {
-			if (baked) return bakedLeaves;
+			if (baked || locked) return bakedLeaves;
 			List<usize> leaves;
 			for (usize i = 0; i < MAX_BONES; ++i)
 				if (isLeafBone(i))
@@ -241,7 +241,7 @@ namespace Makai::Graph::Armature {
 		///		If you need speed, use this.
 		/// @return Refeference to self.
 		constexpr Skeleton& bake() {
-			if (locked) return *this;
+			if (baked || locked) return *this;
 			Matrices bone;
 			for (usize i = 0; i < MAX_BONES; ++i) {
 				bone[i]			= rest[i];
@@ -282,6 +282,7 @@ namespace Makai::Graph::Armature {
 
 		/// @brief IRREVERSIBLE. bakes and locks the object.
 		constexpr void bakeAndLock() {
+			if (locked) return;
 			bake();
 			locked = true;
 		}
