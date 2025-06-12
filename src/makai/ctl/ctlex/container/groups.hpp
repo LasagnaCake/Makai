@@ -84,11 +84,8 @@ public:
 	/// @param group Group to remove from.
 	/// @return Reference to self.
 	constexpr SelfType& remove(ValueType const& obj, KeyType const& group) {
-		DEBUGLN("Finding object group...");
 		GroupType& gp = get(group);
-		DEBUGLN("Removing object...");
 		gp.eraseLike(obj);
-		DEBUGLN("Done!");
 		return *this;
 	}
 
