@@ -165,24 +165,26 @@ namespace Makai::Graph::Armature {
 			}
 			List<usize> const boneRoots = baked ? bakedRoots : roots();
 			for (auto const root : boneRoots) {
-				List<usize> stack, branch;
-				stack.pushBack(root);
+				List<KeyValuePair<usize, usize>> stack;
+				stack.pushBack({Limit::MAX<usize>, root});
 				usize current;
+				usize parent = Limit::MAX<usize>;
 				while (stack.size()) {
-					current = stack.popBack();
-					if (branch.size()) {
+					auto relation = stack.popBack();
+					parent	= relation.key;
+					current	= relation.value;
+					if (parent != Limit::MAX<usize>) {
 						if (!baked) {
-							boneMatrix[current]	= boneMatrix[branch.back()] * boneMatrix[current];
+							boneMatrix[current]	= boneMatrix[parent] * boneMatrix[current];
 							inverse[current]	= boneMatrix[current].inverted();
 						}
-						poseMatrix[current]	= poseMatrix[branch.back()] * poseMatrix[current];
+						poseMatrix[current]	= poseMatrix[parent] * poseMatrix[current];
 						matrices[current]	= inverse[current] * poseMatrix[current];
 					}
 					if (!isLeafBone(current)) {
-						stack.appendBack(childrenOf(current));
-						branch.pushBack(current);
-					} else if (branch.size())
-						branch.popBack();
+						for (auto& child: childrenOf(current))
+							stack.pushBack({current, child});
+					}
 				}
 			}
 			return matrices;
@@ -191,6 +193,7 @@ namespace Makai::Graph::Armature {
 		/// @brief Returns all root bones.
 		/// @return Root bones.
 		constexpr List<usize> roots() const {
+			if (baked) return bakedRoots;
 			List<usize> roots;
 			for (usize i = 0; i < MAX_BONES; ++i)
 				if (isRootBone(i))
@@ -201,6 +204,7 @@ namespace Makai::Graph::Armature {
 		/// @brief Returns all leaf bones.
 		/// @return Leaf bones.
 		constexpr List<usize> leaves() const {
+			if (baked) return bakedLeaves;
 			List<usize> leaves;
 			for (usize i = 0; i < MAX_BONES; ++i)
 				if (isLeafBone(i))
@@ -241,19 +245,25 @@ namespace Makai::Graph::Armature {
 			for (usize i = 0; i < MAX_BONES; ++i) {
 				bone[i] = rest[i];
 			}
-			bakedRoots = roots();
+			bakedRoots	= roots();
+			bakedLeaves	= leaves();
 			for (auto const root : bakedRoots) {
-				List<usize> stack;
-				stack.pushBack(root);
+				List<KeyValuePair<usize, usize>> stack;
+				stack.pushBack({Limit::MAX<usize>, root});
 				usize current;
-				while (!stack.empty()) {
-					current = stack.popBack();
-					if (!stack.empty()) {
-						bone[current]			= bone[stack.back()] * bone[current];
+				usize parent = Limit::MAX<usize>;
+				while (stack.size()) {
+					auto relation = stack.popBack();
+					parent	= relation.key;
+					current	= relation.value;
+					if (parent != Limit::MAX<usize>) {
+						bone[current]			= bone[parent] * bone[current];
 						bakedInverse[current]	= bone[current].inverted();
 					}
-					if (!isLeafBone(current))
-						stack.appendBack(childrenOf(current));
+					if (!isLeafBone(current)) {
+						for (auto& child: childrenOf(current))
+							stack.pushBack({current, child});
+					}
 				}
 			}
 			baked = true;
@@ -282,6 +292,8 @@ namespace Makai::Graph::Armature {
 		Matrices	bakedInverse;
 		/// @brief Baked root bones.
 		List<usize>	bakedRoots;
+		/// @brief Baked leaf bones.
+		List<usize>	bakedLeaves;
 		/// @brief Parent-child relations.
 		Relations	forward;
 		/// @brief Child-parent relations.
