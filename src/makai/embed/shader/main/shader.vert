@@ -57,17 +57,18 @@ void withArmatureAndTransforms(inout vec4 position, inout vec3 normal) {
 	mat4 result = mat4(1);
 	vec4 totalPosition = position;
 	vec3 totalNormal = normal;
+	const vec4 normalWeights = normalize(boneWeights);
 	for (uint i = 0; i < 4; ++i) {
 		if (boneIndices[i] == -2) break;
 		if (boneIndices[i] > MAX_BONES) {
 			withTransform(position, normal);
 			return;
 		}
-		if (boneIndices[i] == -1 || boneIndices[i] > armature.boneCount || boneWeights[i] == 0) continue;
+		if (boneIndices[i] == -1 || boneIndices[i] > armature.boneCount || normalWeights[i] == 0) continue;
 		vec4 localPosition = armature.bones[boneIndices[i]] * position;
-        totalPosition += localPosition * boneWeights[i];
+        totalPosition += localPosition * normalWeights[i];
         vec3 localNormal = mat3(armature.bones[boneIndices[i]]) * normal;
-        totalNormal += localNormal * boneWeights[i];
+        totalNormal += localNormal * normalWeights[i];
 	}
 	withTransform(totalPosition, totalNormal);
 	position = totalPosition;
