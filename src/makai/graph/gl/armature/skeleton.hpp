@@ -241,6 +241,7 @@ namespace Makai::Graph::Armature {
 		///		If you need speed, use this.
 		/// @return Refeference to self.
 		constexpr Skeleton& bake() {
+			if (locked) return *this;
 			Matrices bone;
 			for (usize i = 0; i < MAX_BONES; ++i) {
 				bone[i]			= rest[i];
@@ -274,6 +275,7 @@ namespace Makai::Graph::Armature {
 		/// @brief Unbakes the armature.
 		/// @return Refeference to self.
 		constexpr Skeleton& unbake() {
+			if (locked) return *this;
 			baked = false;
 			return *this;
 		}

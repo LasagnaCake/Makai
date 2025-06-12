@@ -265,6 +265,7 @@ Renderable::~Renderable() {
 void Renderable::bakeAndLock() {
 	if (locked) return;
 	bake();
+	armature.bakeAndLock();
 	locked = true;
 	clearData();
 }
@@ -301,17 +302,20 @@ void Renderable::extendFromDefinitionFile(String const& path) {
 void Renderable::bake() {
 	if (baked || locked) return;
 	transformReferences();
+	armature.bake();
 	baked = true;
 }
 
 void Renderable::unbake() {
 	if (!baked || locked) return;
 	resetReferenceTransforms();
+	armature.unbake();
 	baked = false;
 }
 
 void Renderable::clearData() {
 	clearReferences();
+	armature.clearAllRelations();
 }
 
 void Renderable::saveToBinaryFile(String const& path) {
@@ -519,6 +523,7 @@ void Renderable::extendFromDefinitionV0(
 	DEBUGLN("Armature...");
 	if (def["armature"].isObject()) {
 		bool const hasBones = def["armature"]["bones"].isArray();
+		armature.unbake();
 		armature.clearAllRelations();
 		for (usize bone = 0; bone < Renderable::MAX_BONES; ++bone) {
 			if (hasBones && def["armature"]["bones"][bone].isObject()) {
