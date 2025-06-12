@@ -244,7 +244,7 @@ namespace Makai::Graph::Armature {
 			Matrices bone;
 			for (usize i = 0; i < MAX_BONES; ++i) {
 				bone[i]			= rest[i];
-				bakedInverse[i]	= rest[i].inverted();
+				bakedInverse[i]	= bone[i].inverted();
 			}
 			bakedRoots	= roots();
 			bakedLeaves	= leaves();
