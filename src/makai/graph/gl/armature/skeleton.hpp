@@ -179,8 +179,8 @@ namespace Makai::Graph::Armature {
 							inverse[current]	= boneMatrix[current].inverted();
 						}
 						poseMatrix[current]	= poseMatrix[parent] * poseMatrix[current];
-						matrices[current]	= inverse[current] * poseMatrix[current];
 					}
+					matrices[current] = inverse[current] * poseMatrix[current];
 					if (!isLeafBone(current)) {
 						for (auto& child: childrenOf(current))
 							stack.pushBack({current, child});
@@ -243,7 +243,8 @@ namespace Makai::Graph::Armature {
 		constexpr Skeleton& bake() {
 			Matrices bone;
 			for (usize i = 0; i < MAX_BONES; ++i) {
-				bone[i] = rest[i];
+				bone[i]			= rest[i];
+				bakedInverse[i]	= rest[i].inverted();
 			}
 			bakedRoots	= roots();
 			bakedLeaves	= leaves();
