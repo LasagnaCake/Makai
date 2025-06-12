@@ -48,7 +48,7 @@ uniform vec3[MAX_INSTANCES]	instances;
 // [ ARMATURE ]
 uniform Armature armature;
 
-void withNoArmature(inout vec4 position, inout vec3 normal) {
+void withTransform(inout vec4 position, inout vec3 normal) {
 	position = vertMatrix * (position + vec4(instances[gl_InstanceID], 0));
 	normal = normalize(mat3(normalsMatrix) * normal);
 }
@@ -60,7 +60,7 @@ void withArmatureAndTransforms(inout vec4 position, inout vec3 normal) {
 	for (uint i = 0; i < 4; ++i) {
 		if (boneIndices[i] == -2) break;
 		if (boneIndices[i] > MAX_BONES) {
-			withNoArmature(position, normal);
+			withTransform(position, normal);
 			return;
 		}
 		if (boneIndices[i] == -1 || boneIndices[i] > armature.boneCount || boneWeights[i] == 0) continue;
@@ -69,8 +69,9 @@ void withArmatureAndTransforms(inout vec4 position, inout vec3 normal) {
         vec3 localNormal = mat3(armature.bones[boneIndices[i]]) * normal;
         totalNormal += localNormal * boneWeights[i];
 	}
-	position = vertMatrix * (totalPosition + vec4(instances[gl_InstanceID], 0));
-	normal = normalize(mat3(normalsMatrix) * totalNormal);
+	withTransform(totalPosition, totalNormal);
+	position = totalPosition;
+	normal = totalNormal;
 }
 
 void main() {
