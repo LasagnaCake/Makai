@@ -20,6 +20,7 @@ struct TestApp: Makai::App {
 		//danceCube.material.texture = {true, Makai::Graph::Texture2D("../tests/makai/files/grid.png"), 0};
 		danceCube.material.culling = Makai::Graph::CullMode::OCM_FRONT;
 		DEBUGLN("Done!");
+		danceCube.setRenderLayer(0);
 	}
 
 	void animateCube() {
@@ -29,7 +30,6 @@ struct TestApp: Makai::App {
 		danceCube.armature.pose[2].rotation.x = ac * 0.2 * Makai::Math::Constants::PI;
 		danceCube.armature.pose[3].rotation.x = as * 0.2 * Makai::Math::Constants::PI;
 		danceCube.armature.pose[0].scale.y = 0.8 + ac * 0.2;
-		danceCube.setRenderLayer(0);
 	}
 
 	void onUpdate(float delta) override {
