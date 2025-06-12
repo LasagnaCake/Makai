@@ -413,7 +413,7 @@ def get_binary_data(mesh, armature):
 	pack_size += 3
 	if armature is not None:
 		for i in range(armature["maxBones"]):
-			component_data += f",b{i},w{i}"
+			component_data += f",i{i},w{i}"
 			pack_format += "lf"
 			pack_size += 2
 	for triangles in mesh.loop_triangles:
