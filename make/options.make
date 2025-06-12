@@ -40,6 +40,8 @@ Supported options:
 >   o             = [ 0..3|g|s ]     : Optimization level for release lib      ( DEF: 2            )
 >   math          = [ string ]       : Math mode                               ( DEF: fast         )
 
+>   subsystem     = [ string ]       : Which subsystem/file to compile         ( DEF: undefined    )
+
 Supported [gl-loader] values:
 > glad
 > gl3w
@@ -48,6 +50,16 @@ Supported [math] values (any other value will be interpreted as 'normal'):
 > fast
 > safe
 > normal
+
+On the [subsystem] option:
+If not defined, compiles all subsystems.
+MUST be a (dot-separated) path to a file.
+For the graphical subsystem, MUST be "graph/" + name of subsystem.
+To compile EVERYTHING in a subsystem, use "*".
+Examples:
+	graph/gl.renderer.renderable
+	embed.shader
+	audio.*
 endef
 export HELP_MESSAGE
 
