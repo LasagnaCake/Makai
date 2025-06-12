@@ -17,7 +17,7 @@ struct TestApp: Makai::App {
 		loadDefaultShaders();
 		DEBUGLN("2...");
 		danceCube.extendFromDefinitionFile("../tests/makai/files/dancing-cube.mrod");
-		//danceCube.material.texture = {true, Makai::Graph::Texture2D("../tests/makai/files/grid.png"), 0};
+		danceCube.material.texture = {true, Makai::Graph::Texture2D("../tests/makai/files/grid.png"), 0};
 		danceCube.material.culling = Makai::Graph::CullMode::OCM_FRONT;
 		DEBUGLN("Done!");
 		danceCube.setRenderLayer(0);
