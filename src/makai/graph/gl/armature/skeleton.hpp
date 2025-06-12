@@ -168,7 +168,7 @@ namespace Makai::Graph::Armature {
 				List<KeyValuePair<usize, usize>> stack;
 				stack.pushBack({Limit::MAX<usize>, root});
 				usize current;
-				usize parent = Limit::MAX<usize>;
+				usize parent;
 				while (stack.size()) {
 					auto relation = stack.popBack();
 					parent	= relation.key;
@@ -253,7 +253,7 @@ namespace Makai::Graph::Armature {
 				List<KeyValuePair<usize, usize>> stack;
 				stack.pushBack({Limit::MAX<usize>, root});
 				usize current;
-				usize parent = Limit::MAX<usize>;
+				usize parent;
 				while (stack.size()) {
 					auto relation = stack.popBack();
 					parent	= relation.key;
