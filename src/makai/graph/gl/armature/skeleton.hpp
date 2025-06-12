@@ -165,21 +165,24 @@ namespace Makai::Graph::Armature {
 			}
 			List<usize> const boneRoots = baked ? bakedRoots : roots();
 			for (auto const root : boneRoots) {
-				List<usize> stack;
+				List<usize> stack, branch;
 				stack.pushBack(root);
 				usize current;
-				while (!stack.empty()) {
+				while (stack.size()) {
 					current = stack.popBack();
-					if (!stack.empty()) {
+					if (branch.size()) {
 						if (!baked) {
-							boneMatrix[current]	= boneMatrix[stack.back()] * boneMatrix[current];
+							boneMatrix[current]	= boneMatrix[branch.back()] * boneMatrix[current];
 							inverse[current]	= boneMatrix[current].inverted();
 						}
-						poseMatrix[current]	= poseMatrix[stack.back()] * poseMatrix[current];
+						poseMatrix[current]	= poseMatrix[branch.back()] * poseMatrix[current];
 						matrices[current]	= inverse[current] * poseMatrix[current];
 					}
-					if (!isLeafBone(current))
+					if (!isLeafBone(current)) {
 						stack.appendBack(childrenOf(current));
+						branch.pushBack(current);
+					} else if (branch.size())
+						branch.popBack();
 				}
 			}
 			return matrices;
