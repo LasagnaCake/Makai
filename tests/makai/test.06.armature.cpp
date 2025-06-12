@@ -12,6 +12,8 @@ struct TestApp: Makai::App {
 
 	virtual ~TestApp() {}
 
+	float angles[3];
+
 	void onOpen() override {
 		DEBUGLN("1...");
 		loadDefaultShaders();
@@ -21,14 +23,17 @@ struct TestApp: Makai::App {
 		danceCube.material.culling = Makai::Graph::CullMode::OCM_FRONT;
 		DEBUGLN("Done!");
 		danceCube.setRenderLayer(0);
+		angles[0] = danceCube.armature.pose[1].rotation.x;
+		angles[1] = danceCube.armature.pose[2].rotation.z;
+		angles[2] = danceCube.armature.pose[3].rotation.x;
 	}
 
 	void animateCube() {
 		float as, ac;
 		Makai::Math::sincos<float>((getCurrentCycle() / 30.0), as, ac);
-		danceCube.armature.pose[1].rotation.x = -ac * 0.1 * Makai::Math::Constants::PI;
-		danceCube.armature.pose[2].rotation.z = ac * 0.1 * Makai::Math::Constants::PI;
-		danceCube.armature.pose[3].rotation.x = as * 0.1 * Makai::Math::Constants::PI;
+		danceCube.armature.pose[1].rotation.x = -ac * 0.1 * Makai::Math::Constants::PI + angles[0];
+		danceCube.armature.pose[2].rotation.z = ac * 0.1 * Makai::Math::Constants::PI + angles[1];
+		danceCube.armature.pose[3].rotation.x = as * 0.1 * Makai::Math::Constants::PI + angles[2];
 		danceCube.armature.pose[0].scale.y = 0.75 + ac * 0.25;
 	}
 
