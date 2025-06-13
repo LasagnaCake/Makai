@@ -163,30 +163,18 @@ namespace Makai::Graph::Armature {
 					inverse[i]		= boneMatrix[i].inverted();
 				}
 			}
-			List<usize> const boneRoots = baked ? bakedRoots : roots();
-			for (auto const root : boneRoots) {
-				List<KeyValuePair<usize, usize>> stack;
-				stack.pushBack({Limit::MAX<usize>, root});
-				usize current;
-				usize parent;
-				while (stack.size()) {
-					auto relation = stack.popBack();
-					parent	= relation.key;
-					current	= relation.value;
+			dfsTraverse(
+				[&] (usize const parent, usize const child) {
 					if (parent != Limit::MAX<usize>) {
 						if (!baked) {
-							boneMatrix[current]	= boneMatrix[parent] * boneMatrix[current];
-							inverse[current]	= boneMatrix[current].inverted();
+							boneMatrix[child]	= boneMatrix[parent] * boneMatrix[child];
+							inverse[child]		= boneMatrix[child].inverted();
 						}
-						poseMatrix[current]	= poseMatrix[parent] * poseMatrix[current];
+						poseMatrix[child] = poseMatrix[parent] * poseMatrix[child];
 					}
-					matrices[current] = inverse[current] * poseMatrix[current];
-					if (!isLeafBone(current)) {
-						for (auto& child: childrenOf(current))
-							stack.pushBack({current, child});
-					}
+					matrices[child] = inverse[child] * poseMatrix[child];
 				}
-			}
+			);
 			return matrices;
 		}
 
@@ -249,26 +237,15 @@ namespace Makai::Graph::Armature {
 			}
 			bakedRoots	= roots();
 			bakedLeaves	= leaves();
-			for (auto const root : bakedRoots) {
-				List<KeyValuePair<usize, usize>> stack;
-				stack.pushBack({Limit::MAX<usize>, root});
-				usize current;
-				usize parent;
-				while (stack.size()) {
-					auto relation = stack.popBack();
-					parent	= relation.key;
-					current	= relation.value;
+			baked = true;
+			dfsTraverse(
+				[&] (usize const parent, usize const child) {
 					if (parent != Limit::MAX<usize>) {
-						bone[current]			= bone[parent] * bone[current];
-						bakedInverse[current]	= bone[current].inverted();
-					}
-					if (!isLeafBone(current)) {
-						for (auto& child: childrenOf(current))
-							stack.pushBack({current, child});
+						bone[child]			= bone[parent] * bone[child];
+						bakedInverse[child]	= bone[child].inverted();
 					}
 				}
-			}
-			baked = true;
+			);
 			return *this;
 		}
 
@@ -287,6 +264,32 @@ namespace Makai::Graph::Armature {
 			locked = true;
 		}
 
+		/// @brief Traverses via depth-first search across the bone tree.
+		/// @tparam
+		///		TFunction Function type.
+		///		The first parameter it takes is the `parent` bone,
+		///		and the second is the `child` bone.
+		/// @param Function to execure for every bone in the tree.
+		template<Type::Functional<void(usize const, usize const)> TFunction>
+		constexpr void dfsTraverse(TFunction const& func) const {
+			List<usize> boneRoots = baked ? bakedRoots : roots();
+			for (auto const root : boneRoots) {
+				List<KeyValuePair<usize, usize>> stack;
+				stack.pushBack({Limit::MAX<usize>, root});
+				usize current;
+				usize parent;
+				while (stack.size()) {
+					auto relation = stack.popBack();
+					parent	= relation.key;
+					current	= relation.value;
+					func(parent, current);
+					if (!isLeafBone(current)) {
+						for (auto& child: childrenOf(current))
+							stack.pushBack({current, child});
+					}
+				}
+			}
+		}
 	private:
 		/// @brief Whether rest pose was baked.
 		bool		baked		= false;
