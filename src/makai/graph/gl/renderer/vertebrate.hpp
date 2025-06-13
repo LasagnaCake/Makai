@@ -39,8 +39,8 @@ namespace Makai::Graph {
 		void applyArmature(Shader& shader, String const& name = "armature") {
 			auto const bones = armature.matrices();
 			auto const uniform = shader[name + ".bones[0]"];
-			uniform.setArray(bones.begin().raw(), MAX_BONES);
-			shader[name + ".boneCount"].set(static_cast<uint>(MAX_BONES));
+			uniform.setArray(bones.data(), bones.size());
+			shader[name + ".boneCount"].set(static_cast<uint>(bones.size()));
 		}
 	};
 }
