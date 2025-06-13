@@ -86,49 +86,56 @@ namespace Makai::Graph {
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(int* const values, usize const count, usize const offset = 0) const;
+		void setArray(int const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param values Values to set.
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(uint* const values, usize const count, usize const offset = 0) const;
+		void setArray(uint const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param values Values to set.
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(float* const values, usize const count, usize const offset = 0) const;
+		void setArray(float const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param values Values to set.
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(double* const values, usize const count, usize const offset = 0) const;
+		void setArray(double const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param values Values to set.
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(Vector2* const values, usize const count, usize const offset = 0) const;
+		void setArray(Vector2 const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param values Values to set.
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(Vector3* const values, usize const count, usize const offset = 0) const;
+		void setArray(Vector3 const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param values Values to set.
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(Vector4* const values, usize const count, usize const offset = 0) const;
+		void setArray(Vector4 const* const values, usize const count, usize const offset = 0) const;
+
+		/// @brief Sets the uniform.
+		/// @param values Values to set.
+		/// @param count Count of values to set.
+		/// @param offset Uniform location offset. By default, it is zero.
+		/// @warning `offset` should NEVER be used directly!
+		void setArray(Matrix4x4 const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @tparam T Element type.

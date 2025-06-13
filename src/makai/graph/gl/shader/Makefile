@@ -9,6 +9,10 @@ INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, core uniform)
+endef
+
 all: debug release
 
 debug:

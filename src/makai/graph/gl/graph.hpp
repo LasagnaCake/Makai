@@ -12,6 +12,7 @@
 #include "shader/shader.hpp"
 #include "renderer/renderer.hpp"
 #include "material/material.hpp"
+#include "armature/armature.hpp"
 
 namespace MkGraph = Makai::Graph;
 

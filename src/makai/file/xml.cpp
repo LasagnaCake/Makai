@@ -4,6 +4,7 @@
 #include <exception>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic ignored "-Woverflow"
 #define XML2JSON_CONTENT_PROP		".content"
 #define XML2JSON_ATTRIB_PREFIX		"@" 
 #define XML2JSON_ACCEPTS_NUMBERS	true

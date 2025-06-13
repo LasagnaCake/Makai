@@ -7,11 +7,15 @@ override prefix := $(call concat, $(prefix), tool)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call submake-all, archive)
+endef
+
 all: debug release
 
 debug:
-	$(call submake, archive)
+	$(MAKE_SUB)
 
 
 release:
-	$(call submake, archive)
+	$(MAKE_SUB)

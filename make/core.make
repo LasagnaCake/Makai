@@ -2,6 +2,10 @@ sinclude options.make
 
 export space := 
 
+define newline
+
+endef
+
 #export CC	?= gcc
 #export CXX	?= g++
 export LD	?= ld
@@ -23,11 +27,11 @@ ifdef no-buffers
 export NO_BUFFERS := -DMAKAILIB_DO_NOT_USE_BUFFERS
 endif
 
-ifeq (math,fast)
-export MATHMODE := -ffast-math -fsingle-precision-constant
+ifeq ($(math),fast)
+	export MATHMODE := -ffast-math -fsingle-precision-constant
 endif
-ifeq (math,safe)
-export MATHMODE := -frounding-math -fsignaling-nans
+ifeq ($(math),safe)
+	export MATHMODE := -frounding-math -fsignaling-nans
 endif
 
 OPTIMIZATIONS	:= $(USE_OPENMP) $(MATHMODE) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize -fexpensive-optimizations
@@ -35,9 +39,9 @@ OPTIMIZATIONS	:= $(USE_OPENMP) $(MATHMODE) -funswitch-loops -fpredictive-commoni
 export DEBUGMODE	:= -DMAKAILIB_DEBUG -DCTL_CONSOLE_OUT -DNDEBUG
 
 ifdef debug-release
-export RELEASEMODE := $(DEBUGMODE)
+	export RELEASEMODE := $(DEBUGMODE)
 else
-export RELEASEMODE := $(LEAN)
+	export RELEASEMODE := $(LEAN)
 endif
 
 #export ROOT := $(CURDIR)/..
@@ -65,7 +69,9 @@ DEBUG_CONFIG		= $(DEBUG_CONFIG_BASE)
 RELEASE_CONFIG_BASE	= $(COMPILER_CONFIG) $(OPTIMIZATIONS) $(FRAME_PTR) $(RELEASEMODE)
 RELEASE_CONFIG		= $(RELEASE_CONFIG_BASE) -O$(o)
 
-COMPILER = @$(CXX) $(INCLUDES)
+COMPILER = $(CXX) $(INCLUDES)
+
+export NO_OP := @:
 
 compile-debug	= $(COMPILER) $(DEBUG_CONFIG_BASE) -c $(strip $(1)).cpp -o $(prefix).$(strip $(1)).$@.o
 compile-release	= $(COMPILER) $(RELEASE_CONFIG_BASE) -O$(strip $(2)) -c $(strip $(1)).cpp -o $(prefix).$(strip $(1)).$@.o
@@ -76,7 +82,8 @@ export compile-with-o = \
 		$(call compile-release, $(1), $(2))\
 	)
 
-export compile = $(call compile-with-o, $(1), $(o))
+export compile	= @$(call compile-with-o, $(1), $(o))
+compile-chain	= $(call compile-with-o, $(1), $(o))
 
 define GET_TIME
 @printf "\nTime: "
@@ -87,10 +94,81 @@ export GET_TIME
 
 export leave = $(subst $(space),,$(filter ../,$(subst /, ../ ,$(strip $(1)))))
 
-submake-impl = @$(gmake) -C$(call path, $(1)) $@ prefix="$(strip $(2))"
+submake-impl = $(gmake) -C$(call path, $(1)) $@ prefix="$(strip $(2))"
 
-export submake = $(call submake-impl, $(1), $(prefix))
+submake-chain = $(call submake-impl, $(1), $(prefix))
 
-export submake-any-impl = @$(gmake) -C$(call path, $(1)) prefix="$(strip $(2))"
+export submake = @$(call submake-impl, $(1), $(prefix))
 
-export submake-any = $(call submake-any-impl, $(1), $(prefix))
+submake-any-impl = $(gmake) -C$(call path, $(1)) prefix="$(strip $(2))"
+
+export submake-any = @$(call submake-any-impl, $(1), $(prefix))
+
+submake-any-chain = $(call submake-any-impl, $(1), $(prefix))
+
+ifdef subsystem
+	export SUBSYSTEM := subsystem="$(strip $(subsystem))"
+endif
+
+ifdef subsystem
+	override SUBSYSTEM_PATH			:= $(subst $(SPACE),,$(strip $(subsystem)))
+	override SUBSYSTEM_BASE			:= $(strip $(firstword $(subst ., ,$(SUBSYSTEM_PATH))))
+	override SUBSYSTEM_SUBPATH		:= $(subst $(SUBSYSTEM_BASE).,,$(SUBSYSTEM_PATH))
+	override SUBSYSTEM_PROPAGATE	:= $(if $(findstring $(SUBSYSTEM_BASE),$(SUBSYSTEM_SUBPATH)),,"subsystem=$(SUBSYSTEM_SUBPATH)")
+else
+	override SUBSYSTEM_PROPAGATE:=
+endif
+
+compile-splice = $(call compile-chain,$(1));$(space)
+
+ifndef SUBSYSTEM
+	compile-splice = $(call compile-chain,$(1));$(space)
+	compile-all-impl = @$(foreach file,$(1),$(call compile-splice,$(file)))
+else
+	ifneq ($(SUBSYSTEM_PROPAGATE),)
+		compile-all-impl = $(NO_OP);
+	else ifeq ($(SUBSYSTEM_BASE),*)
+		compile-all-impl = @$(foreach file,$(1),$(call compile-splice,$(file)))
+	else
+		compile-all-impl = @$(call compile-splice, $(SUBSYSTEM_BASE))
+	endif
+endif
+
+submake-splice = $(call submake-chain,$(1)) $(SUBSYSTEM_PROPAGATE);$(space)
+
+ifndef SUBSYSTEM
+	submake-all-impl = @$(foreach subsys,$(1),$(call submake-splice,$(subsys)))
+else
+	ifneq ($(SUBSYSTEM_PROPAGATE),)
+		submake-all-impl = @$(call submake-splice, $(SUBSYSTEM_BASE))
+	else ifeq ($(SUBSYSTEM_BASE),*)
+		submake-all-impl = @$(foreach subsys,$(1),$(call submake-splice,$(subsys)))
+	else
+		submake-all-impl = $(NO_OP);
+	endif
+endif
+
+ifdef debug-makefile
+	define SUBMAKE_DEBUG_OUTPUT
+		@echo "Path: [$(SUBSYSTEM_PATH)]"
+		@echo "Base: [$(SUBSYSTEM_BASE)]"
+		@echo "Subpath: [$(SUBSYSTEM_SUBPATH)]"
+		@echo "Propagate: [$(SUBSYSTEM_PROPAGATE)]"
+	endef
+endif
+
+define compile-all
+	$(SUBMAKE_DEBUG_OUTPUT)
+	$(call compile-all-impl,$(strip $(1)))
+endef
+export compile-all
+
+define submake-all
+	$(SUBMAKE_DEBUG_OUTPUT)
+	$(call submake-all-impl,$(strip $(1)))
+endef
+export submake-all
+
+#export compile-all = $(call compile-all-impl,$(strip $(1)))
+
+#export submake-all = $(call submake-all-impl,$(strip $(1)))

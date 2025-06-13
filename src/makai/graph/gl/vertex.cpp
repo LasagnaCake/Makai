@@ -1,4 +1,5 @@
 #include "glapiloader.cc"
+#include <GL/gl.h>
 
 #define GET_GL_POINTER(start, offset) (void*)((start) + (offset) * sizeof(float))
 #define GET_GL_OFFSET(offset) (void*)((offset) * sizeof(float))
@@ -22,6 +23,14 @@ VertexMap Vertex::defaultMap() {
 		{"nx", 0},
 		{"ny", 0},
 		{"nz", 0},
+		{"i0", BONE_DEFAULT_ID},
+		{"w0", 0},
+		{"i1", BONE_DEFAULT_ID},
+		{"w1", 0},
+		{"i2", BONE_DEFAULT_ID},
+		{"w2", 0},
+		{"i3", BONE_DEFAULT_ID},
+		{"w3", 0}
 	});
 }
 
@@ -42,7 +51,15 @@ Vertex::Vertex(VertexMap const& vmap)
 		getValue(vmap, "a",		1),
 		getValue(vmap, "nx",	0),
 		getValue(vmap, "ny",	0),
-		getValue(vmap, "nz",	0)
+		getValue(vmap, "nz",	0),
+		Math::round(getValue(vmap, "i0",	BONE_DEFAULT_ID)),
+		getValue(vmap, "w0",	0),
+		Math::round(getValue(vmap, "i1",	BONE_DEFAULT_ID)),
+		getValue(vmap, "w1",	0),
+		Math::round(getValue(vmap, "i2",	BONE_DEFAULT_ID)),
+		getValue(vmap, "w2",	0),
+		Math::round(getValue(vmap, "i3",	BONE_DEFAULT_ID)),
+		getValue(vmap, "w3",	0)
 	)
 {}
 
@@ -83,6 +100,23 @@ void Vertex::setAttributes() {
 		sizeof(Vertex),
 		GET_GL_OFFSET(9)
 	);
+	// Bone
+	glVertexAttribIPointer(
+		4,
+		4,
+		GL_INT,
+		sizeof(Vertex),
+		GET_GL_OFFSET(12)
+	);
+	// Weight
+	glVertexAttribPointer(
+		5,
+		4,
+		GL_FLOAT,
+		GL_FALSE,
+		sizeof(Vertex),
+		GET_GL_OFFSET(16)
+	);
 }
 
 void Vertex::enableAttributes() {
@@ -90,9 +124,13 @@ void Vertex::enableAttributes() {
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(4);
+	glEnableVertexAttribArray(5);
 }
 
 void Vertex::disableAttributes() {
+	glDisableVertexAttribArray(5);
+	glDisableVertexAttribArray(4);
 	glDisableVertexAttribArray(3);
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(1);

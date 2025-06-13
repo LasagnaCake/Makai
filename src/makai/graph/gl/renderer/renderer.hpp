@@ -10,5 +10,6 @@
 #include "framebuffer.hpp"
 #include "reference.hpp"
 #include "core.hpp"
+#include "vertebrate.hpp"
 
 #endif // MAKAILIB_GRAPH_RENDERER_H

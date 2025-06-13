@@ -265,6 +265,7 @@ Renderable::~Renderable() {
 void Renderable::bakeAndLock() {
 	if (locked) return;
 	bake();
+	armature.bakeAndLock();
 	locked = true;
 	clearData();
 }
@@ -301,17 +302,20 @@ void Renderable::extendFromDefinitionFile(String const& path) {
 void Renderable::bake() {
 	if (baked || locked) return;
 	transformReferences();
+	armature.bake();
 	baked = true;
 }
 
 void Renderable::unbake() {
 	if (!baked || locked) return;
 	resetReferenceTransforms();
+	armature.unbake();
 	baked = false;
 }
 
 void Renderable::clearData() {
 	clearReferences();
+	armature.clearAllRelations();
 }
 
 void Renderable::saveToBinaryFile(String const& path) {
@@ -357,6 +361,7 @@ void Renderable::draw() {
 	if (!baked && !locked) transformReferences();
 	// Set shader data
 	prepare();
+	applyArmature(shader);
 	material.use(shader);
 	// Present to screen
 	display(
@@ -398,11 +403,13 @@ void Renderable::extendFromDefinitionV0(
 		auto data	= mesh["data"];
 		if (data.isString()) {
 			String encoding	= mesh["encoding"].get<String>();
-			vdata			= Data::decode(data.get<String>(), Data::fromString(encoding));
+			DEBUGLN("Encoding: [", encoding, "]");
+			DEBUGLN("ID: ", enumcast(Data::fromString(encoding)));
+			vdata		= Data::decode(data.get<String>(), Data::fromString(encoding));
 		} else if (data.isObject()) {
-			vdata			= File::getBinary(OS::FS::concatenate(sourcepath, data["path"].get<String>()));
+			vdata		= File::getBinary(OS::FS::concatenate(sourcepath, data["path"].get<String>()));
 		}
-		componentData		= mesh["components"].get<String>();
+		componentData	= mesh["components"].get<String>();
 	} catch (std::exception const& e) {
 		throw Error::FailedAction(
 			"Failed at getting mesh values!",
@@ -468,8 +475,12 @@ void Renderable::extendFromDefinitionV0(
 	// Loop time
 	while (component < vdata.size() / sizeof(float)) {
 		vm = Vertex::defaultMap();
-		for (auto& c: components)
-			vm[c] = rawdata[component++];
+		for (auto& c: components) {
+			if (c.size() && c[0] == 'i')
+				vm[c] = ((int32*)rawdata)[component++];
+			else
+				vm[c] = rawdata[component++];
+		}
 		vertices.pushBack(Vertex(vm));
 	}
 	// Check if data is OK
@@ -508,6 +519,31 @@ void Renderable::extendFromDefinitionV0(
 	if (def["material"].isObject()) {
 		material = fromDefinition(def["material"], sourcepath);
 	}
+	// Set armature data
+	DEBUGLN("Armature...");
+	if (def["armature"].isObject()) {
+		bool const hasBones = def["armature"]["bones"].isArray();
+		armature.unbake();
+		armature.clearAllRelations();
+		for (usize bone = 0; bone < Renderable::MAX_BONES; ++bone) {
+			if (hasBones && def["armature"]["bones"][bone].isObject()) {
+				DEBUGLN("Bone [", bone, "]");
+				armature.rest[bone] = Transform3D(
+					fromJSONArrayV3(def["armature"]["bones"][bone]["position"]),
+					fromJSONArrayV3(def["armature"]["bones"][bone]["rotation"]),
+					fromJSONArrayV3(def["armature"]["bones"][bone]["scale"], 1)
+				);
+			}
+			if (!def["armature"]["relations"].has(toString(bone))) continue;
+			auto children = def["armature"]["relations"][toString(bone)].get<List<usize>>({});
+			for (auto child: children) {
+				DEBUGLN("Relation [", bone, " -> ", child, "]");
+				armature.addChild(bone, child);
+			}
+		}
+		armature.bake();
+	}
+	DEBUGLN("Armature!");
 	// Set blend data
 	if (def["blend"].isObject()) {
 		try {
@@ -550,6 +586,29 @@ void Renderable::extendFromDefinitionV0(
 		active = def["active"].get<bool>();
 }
 
+template<usize S>
+inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
+	JSON::JSONData armature;
+	auto rel = armature["relations"];
+	auto bones = armature["bones"];
+	bones = JSON::array();
+	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
+		auto const& trans = vertebrate.armature.rest[i];
+		bones[i] = JSON::JSONType{
+			{"position",	{trans.position.x,	trans.position.y,	trans.position.z	}	},
+			{"rotation",	{trans.rotation.x,	trans.rotation.y,	trans.rotation.z	}	},
+			{"scale",		{trans.scale.x,		trans.scale.y,		trans.scale.z		}	}
+		};
+		if (vertebrate.armature.isLeafBone(i)) continue;
+		auto const children = vertebrate.armature.childrenOf(i);
+		auto bone = rel[toString(i)];
+		bone = JSON::array();
+		for (usize j = 0; j < children.size(); ++j)
+			bone[j] = children[j];
+	}
+	return armature;
+}
+
 JSON::JSONData Renderable::getObjectDefinition(
 	String const& encoding,
 	bool const integratedBinary,
@@ -565,7 +624,7 @@ JSON::JSONData Renderable::getObjectDefinition(
 	JSON::JSONData def;
 	// Save mesh components
 	def["mesh"] = JSON::JSONType{
-		{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz"}
+		{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz,b0,b1,b2,b3,w0,w1,w2,w3"}
 	};
 	def["version"] = VERSION;
 	// If data is to be integrated into the JSON object, do so
@@ -600,6 +659,8 @@ JSON::JSONData Renderable::getObjectDefinition(
 			{"alpha", uint(blend.eq.alpha)}
 		}}
 	};
+	// Set armature
+	def["armature"] = getArmature(*this);
 	// Unbake object if applicable
 	if (!wasBaked) unbake();
 	// Return definition

@@ -5,12 +5,14 @@ override prefix := $(call concat, $(prefix), mat)
 
 INCLUDES := $(INC_SDL) $(INC_OPENGL)
 
+define MAKE_SUB
+	$(call compile-all, effect core)
+endef
+
 all: debug release
 
 debug:
-	$(call compile, effect)
-	$(call compile, core)
+	$(MAKE_SUB)
 
 release:
-	$(call compile, effect)
-	$(call compile, core)
+	$(MAKE_SUB)

@@ -9,30 +9,15 @@ INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+define MAKE_SUB
+	$(call compile-all, core global vertex blend color image texture)
+	$(call submake-all, shader renderer material)
+endef
+
 all: debug release
 
 debug:
-	$(call compile, core)
-	$(call compile, global)
-	$(call compile, vertex)
-	$(call compile, blend)
-	$(call compile, color)
-	$(call compile, image)
-	$(call compile, texture)
-
-	$(call submake, shader)
-	$(call submake, renderer)
-	$(call submake, material)
+	$(MAKE_SUB)
 
 release:
-	$(call compile, core)
-	$(call compile, global)
-	$(call compile, vertex)
-	$(call compile, blend)
-	$(call compile, color)
-	$(call compile, image)
-	$(call compile, texture)
-
-	$(call submake, shader)
-	$(call submake, renderer)
-	$(call submake, material)
+	$(MAKE_SUB)
