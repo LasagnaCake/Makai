@@ -533,7 +533,6 @@ void Renderable::extendFromDefinitionV0(
 					fromJSONArrayV3(def["armature"]["bones"][bone]["rotation"]),
 					fromJSONArrayV3(def["armature"]["bones"][bone]["scale"], 1)
 				);
-				armature.pose[bone] = armature.rest[bone];
 			}
 			if (!def["armature"]["relations"].has(toString(bone))) continue;
 			auto children = def["armature"]["relations"][toString(bone)].get<List<usize>>({});
