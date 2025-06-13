@@ -25,10 +25,10 @@ struct TestApp: Makai::App {
 
 	void animateCube() {
 		float as, ac;
-		Makai::Math::absincos<float>((getCurrentCycle() / 30.0), as, ac);
-		danceCube.armature.pose[1].rotation.x = -ac * 0.1 * Makai::Math::Constants::PI;
-		danceCube.armature.pose[2].rotation.x = ac * 0.1 * Makai::Math::Constants::PI;
-		danceCube.armature.pose[3].rotation.x = as * 0.1 * Makai::Math::Constants::PI;
+		Makai::Math::sincos<float>((getCurrentCycle() / 30.0), as, ac);
+		danceCube.armature.pose[1].rotation.x = -ac * 0.2 * Makai::Math::Constants::PI;
+		danceCube.armature.pose[2].rotation.x = ac * 0.2 * Makai::Math::Constants::PI;
+		danceCube.armature.pose[3].rotation.x = as * 0.2 * Makai::Math::Constants::PI;
 		danceCube.armature.pose[0].scale.y = 0.75 + ac * 0.25;
 	}
 
