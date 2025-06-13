@@ -638,7 +638,7 @@ public:
 	///		Resizes the `List`.
 	///		If you need the `List` size to remain the same, use `remove`. 
 	constexpr SelfType& erase(IndexType const index) {
-		if (empty()) return 0;
+		if (empty()) return *this;
 		remove(index);
 		count--;
 		return *this;
