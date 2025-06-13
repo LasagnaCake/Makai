@@ -264,11 +264,12 @@ namespace Makai::Graph::Armature {
 			locked = true;
 		}
 
-		/// @brief Traverses via depth-first search across the bone tree.
+		/// @brief Traverses via Depth-First Search across the bone tree.
 		/// @tparam
 		///		TFunction Function type.
 		///		The first parameter it takes is the `parent` bone,
 		///		and the second is the `child` bone.
+		///		If bone does not have parent, its value is `Limit::MAX<usize>`.
 		/// @param Function to execure for every bone in the tree.
 		template<Type::Functional<void(usize const, usize const)> TFunction>
 		constexpr void dfsTraverse(TFunction const& func) const {
