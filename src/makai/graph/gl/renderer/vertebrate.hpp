@@ -36,7 +36,7 @@ namespace Makai::Graph {
 		///		- An array of `mat4`s of at least `MAX_BONES` entries, named `bones`.
 		///
 		///		- An integer of name `boneCount`.
-		void applyArmature(Shader& shader, String const& name = "armature") {
+		void applyArmature(Shader& shader, String const& name = "armature") const {
 			auto const bones = armature.matrices();
 			auto const uniform = shader[name + ".bones[0]"];
 			uniform.setArray(bones.data(), bones.size());
