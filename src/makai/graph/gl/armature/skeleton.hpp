@@ -291,6 +291,7 @@ namespace Makai::Graph::Armature {
 				}
 			}
 		}
+		
 	private:
 		/// @brief Whether rest pose was baked.
 		bool		baked		= false;
