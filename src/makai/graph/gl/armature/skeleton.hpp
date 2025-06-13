@@ -228,7 +228,7 @@ namespace Makai::Graph::Armature {
 		///		
 		///		If you need speed, use this.
 		/// @return Refeference to self.
-		Skeleton& bake() {
+		constexpr Skeleton& bake() {
 			if (baked || locked) return *this;
 			Matrices bone;
 			for (usize i = 0; i < MAX_BONES; ++i) {
@@ -240,13 +240,10 @@ namespace Makai::Graph::Armature {
 			baked = true;
 			dfsTraverse(
 				[&] (usize const parent, usize const child) {
-					DEBUG("[ ");
 					if (parent != Limit::MAX<usize>) {
-						DEBUG(parent);
 						bone[child]			= bone[parent] * bone[child];
 						bakedInverse[child]	= bone[child].inverted();
-					} else DEBUG("*");
-					DEBUGLN(" -> ", child," ]");
+					}
 				}
 			);
 			return *this;
