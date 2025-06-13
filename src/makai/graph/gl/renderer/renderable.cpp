@@ -624,7 +624,7 @@ JSON::JSONData Renderable::getObjectDefinition(
 	JSON::JSONData def;
 	// Save mesh components
 	def["mesh"] = JSON::JSONType{
-		{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz,b0,b1,b2,b3,w0,w1,w2,w3"}
+		{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz,i0,i1,i2,i3,w0,w1,w2,w3"}
 	};
 	def["version"] = VERSION;
 	// If data is to be integrated into the JSON object, do so
