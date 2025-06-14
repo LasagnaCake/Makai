@@ -26,6 +26,51 @@ namespace Makai::Graph::Armature {
 		/// @brief Relation graph type.
 		using Relations	= Map<usize, Map<usize, bool>>;
 
+		/// @brief Specialized bone accessor.
+		/// @tparam TBone Bone type. MUST be `Bone` or `Bone const`.
+		template<Type::EqualOrConst<Bone> TBone>
+		struct Accessor {
+			/// @brief Bone type, without cv-qualifiers.
+			using AccessType = AsNormal<TBone>;
+			/// @brief Bone type.
+			using BoneType = TBone;
+			/// @brief Whether bone is `const`.
+			constexpr static bool CONSTANT = Type::Constant<BoneType>;
+			/// @brief Returns the bone (if exists), else returns identity bone.
+			constexpr operator AccessType() const										{return bone ? *bone : AccessType::identity();	}
+			/// @brief Threeway comparison operator. Compares names.
+			/// @tparam T Other `Accessor`'s bone type.
+			/// @param other `Accessor` to compare to.
+			/// @return Order between bones.
+			template<class T>
+			constexpr StandardOrder operator<=>(Accessor<T> const& other) const			{return (name <=> other.name);					}
+			/// @brief Equality comparison operator. Compares names.
+			/// @tparam T Other `Accessor`'s bone type.
+			/// @param other `Accessor` to compare to.
+			/// @return Whether bones are equal.
+			template<class T>
+			constexpr bool operator==(Accessor<T> const& other) const					{return (name == other.name);					}
+			/// @brief Copy assignment operator. ONLY operates if bone exists.
+			/// @param value Value to set bone to.
+			/// @return Reference to self.
+			constexpr Accessor& operator=(AccessType const& value) requires (!CONSTANT)	{if (bone) *bone = value; return *this;			}
+			/// @brief Move assignment operator. ONLY operates if bone exists.
+			/// @param value Value to set bone to.
+			/// @return Reference to self.
+			constexpr Accessor& operator=(AccessType&& value) requires (!CONSTANT)		{if (bone) *bone = move(value); return *this;	}
+			/// @brief Returns whether bone exists.
+			/// @return Whether bone exists.
+			constexpr bool exists() const												{return bone.exists();							}
+			/// @brief Returns whether bone exists.
+			/// @return Whether bone exists.
+			constexpr operator bool() const												{return exists();								}
+		private:
+			/// @brief Underlying bone.
+			Reference<BoneType> const	bone;
+			/// @brief Name of underlying bone.
+			String const				name;
+		};
+
 		/// @brief Empty constructor.
 		constexpr Skeleton()						= default;
 		/// @brief Copy constructor (defaulted).
@@ -37,6 +82,55 @@ namespace Makai::Graph::Armature {
 		Bones pose	= Bones::withFill(Bone::identity());
 		/// @brief Rest pose.
 		Bones rest	= Bones::withFill(Bone::identity());
+		/// @brief Bone names.
+		Dictionary<usize> names;
+
+		/// @brief Returns whether a name has a bone associated with it.
+		/// @return Whether name is name of a bone.
+		constexpr bool contains(String const& name) const {
+			return names.contains(name);
+		}
+
+		/// @brief Returns a pose bone by a given name, if it exists.
+		/// @param name Name of bone to get.
+		/// @return Bone associated with the name, or empty accessor.
+		constexpr Accessor<Bone> const poseBoneByName(String const& name) {
+			if (contains(name)) return {&pose[names[name]], name};
+			return {nullptr, name};
+		}
+
+		/// @brief Returns a pose rest by a given name, if it exists.
+		/// @param name Name of bone to get.
+		/// @return Bone associated with the name, or empty accessor.
+		constexpr Accessor<Bone> const restBoneByName(String const& name) {
+			if (contains(name)) return {&rest[names[name]], name};
+			return {nullptr, name};
+		}
+
+		/// @brief Returns a pose bone by a given name, if it exists.
+		/// @param name Name of bone to get.
+		/// @return Bone associated with the name, or empty accessor.
+		constexpr Accessor<Bone const> poseBoneByName(String const& name) const {
+			if (contains(name)) return {&pose[names[name]], name};
+			return {nullptr, name};
+		}
+
+		/// @brief Returns a pose rest by a given name, if it exists.
+		/// @param name Name of bone to get.
+		/// @return Bone associated with the name, or empty accessor.
+		constexpr Accessor<Bone const> restBoneByName(String const& name) const {
+			if (contains(name)) return {&rest[names[name]], name};
+			return {nullptr, name};
+		}
+
+		/// @brief Returns a pose bone by a given name, if it exists.
+		/// @param name Name of bone to get.
+		/// @return Bone associated with the name, or empty accessor.
+		constexpr Accessor<Bone>		operator[](String const& name)			{return poseBoneByName(name);}
+		/// @brief Returns a pose bone by a given name, if it exists.
+		/// @param name Name of bone to get.
+		/// @return Bone associated with the name, or empty accessor.
+		constexpr Accessor<Bone const>	operator[](String const& name) const	{return poseBoneByName(name);}
 
 		/// @brief Creates a parent-child relationship between two bones, if applicable.
 		/// @param bone Bone to act as parent.
@@ -49,6 +143,16 @@ namespace Makai::Graph::Armature {
 			if (connected(child, bone) || connected(bone, child)) return *this;
 			forward[bone][child] = true;
 			reverse[child][bone] = true;
+			return *this;
+		}
+
+		/// @brief Creates a parent-child relationship between two bones, if applicable.
+		/// @param bone Bone to act as parent.
+		/// @param child Bone to act as child.
+		/// @return Reference to self.
+		constexpr Skeleton& addChild(String const& bone, String const& child) {
+			if (contains(bone) && contains(child))
+				addChild(names[bone], names[child]);
 			return *this;
 		}
 
@@ -65,6 +169,16 @@ namespace Makai::Graph::Armature {
 			return *this;
 		}
 
+		/// @brief Removes a parent-child relationship between two bones, if applicable.
+		/// @param bone Bone acting as parent.
+		/// @param child Bone acting as child.
+		/// @return Reference to self.
+		constexpr Skeleton& removeChild(String const& bone, String const& child) {
+			if (contains(bone) && contains(child))
+				removeChild(names[bone], names[child]);
+			return *this;
+		}
+
 		/// @brief Clears all parent-child relations associated with the bone.
 		/// @param bone Bone clear relations from.
 		/// @return Reference to self.
@@ -75,6 +189,15 @@ namespace Makai::Graph::Armature {
 				for (auto const& child: forward[bone])
 					reverse[child.key][bone] = false;
 			forward[bone].clear();
+			return *this;
+		}
+
+		/// @brief Clears all parent-child relations associated with the bone.
+		/// @param bone Bone clear relations from.
+		/// @return Reference to self.
+		constexpr Skeleton& clearChildren(String const& bone) {
+			if (contains(bone))
+				clearChildren(names[bone]);
 			return *this;
 		}
 
@@ -101,6 +224,15 @@ namespace Makai::Graph::Armature {
 			return children;
 		}
 
+		/// @brief Returns all children of a given bone.
+		/// @param bone Bone to get children.
+		/// @return Children of bone.
+		constexpr List<usize> childrenOf(String const& bone) const {
+			if (contains(bone))
+				return childrenOf(names[bone]);
+			return List<usize>();
+		}
+
 		/// @brief Returns the parent of a given bone.
 		/// @param bone Bone to get parent.
 		/// @return Parent of bone.
@@ -110,6 +242,15 @@ namespace Makai::Graph::Armature {
 				for (auto const& child : reverse[bone])
 					if (child.value) return child.key;
 			}
+			return -1;
+		}
+
+		/// @brief Returns the parent of a given bone.
+		/// @param bone Bone to get parent.
+		/// @return Parent of bone.
+		constexpr usize parentOf(String const& bone) const {
+			if (contains(bone))
+				return parentOf(names[bone]);
 			return -1;
 		}
 
@@ -126,6 +267,15 @@ namespace Makai::Graph::Armature {
 			return count;
 		}
 
+		/// @brief Returns the amount of children a given bone has.
+		/// @param bone Bone to get children count.
+		/// @return Children count of bone.
+		constexpr usize childrenCount(String const& bone) const {
+			if (contains(bone))
+				return childrenCount(names[bone]);
+			return 0;
+		}
+
 		/// @brief Returns whether a bone is a "root" bone (i.e. has no parent).
 		/// @param bone Bone to check.
 		/// @return Whether bone is a root bone.
@@ -138,6 +288,15 @@ namespace Makai::Graph::Armature {
 			return true;
 		}
 
+		/// @brief Returns whether a bone is a "root" bone (i.e. has no parent).
+		/// @param bone Bone to check.
+		/// @return Whether bone is a root bone.
+		constexpr bool isRootBone(String const& bone) const {
+			if (contains(bone))
+				return isRootBone(names[bone]);
+			return false;
+		}
+
 		/// @brief Returns whether a bone is a "leaf" bone (i.e. has no children).
 		/// @param bone Bone to check.
 		/// @return Whether bone is a leaf bone.
@@ -148,6 +307,15 @@ namespace Makai::Graph::Armature {
 					if (child.value) return false;
 			}
 			return true;
+		}
+
+		/// @brief Returns whether a bone is a "leaf" bone (i.e. has no children).
+		/// @param bone Bone to check.
+		/// @return Whether bone is a leaf bone.
+		constexpr bool isLeafBone(String const& bone) const {
+			if (contains(bone))
+				return isLeafBone(names[bone]);
+			return false;
 		}
 
 		/// @brief Returns the computed matrices for all bones.
@@ -215,6 +383,16 @@ namespace Makai::Graph::Armature {
 				if (!isLeafBone(current))
 					stack.appendBack(childrenOf(current));
 			}
+			return false;
+		}
+
+		/// @brief Returns whether a bone can be reached from another bone.
+		/// @param from Bone to start from.
+		/// @param from Bone to end in.
+		/// @return Whether bones are connected.
+		constexpr bool connected(String const& from, String const& to) const {
+			if (contains(from) && contains(to))
+				return connected(names[from], names[to]);
 			return false;
 		}
 

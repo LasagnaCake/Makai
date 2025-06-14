@@ -542,6 +542,11 @@ void Renderable::extendFromDefinitionV0(
 			}
 		}
 		armature.bake();
+		if (def["armature"]["names"].isObject()) {
+			JSON::JSONValue names = def["armature"]["names"];
+			for (auto [name, bone]: names.get<Dictionary<usize>>())
+				armature.names[name] = bone;
+		}
 	}
 	DEBUGLN("Armature!");
 	// Set blend data
