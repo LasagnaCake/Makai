@@ -302,6 +302,7 @@ If data gets saved in a different file:
 		// equation - Option 2
 		"equation": 0
 	},
+	"armature": {/* See Renderable:Armature:Layout */},
 	"active": true,
 }
 ```
