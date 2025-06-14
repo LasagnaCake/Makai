@@ -34,6 +34,23 @@ namespace Makai::Graph::Armature {
 			using AccessType = AsNormal<TBone>;
 			/// @brief Bone type.
 			using BoneType = TBone;
+
+			/// @brief Empty constructor (defaulted).
+			constexpr Accessor()							= default;
+			/// @brief Copy constructor (defaulted).
+			constexpr Accessor(Accessor const&)				= default;
+			/// @brief Move constructor (defaulted).
+			constexpr Accessor(Accessor&&)					= default;
+			/// @brief Copy assignment operator (defaulted).
+			constexpr Accessor& operator=(Accessor const&)	= default;
+			/// @brief Move assignment operator (defaulted).
+			constexpr Accessor& operator=(Accessor&&)		= default;
+
+			/// @brief Constructs the accessor.
+			/// @param bone Bone to bind to.
+			/// @param Name of bone.
+			constexpr Accessor(BoneType* const bone, String const& name): bone(bone), name(name) {}
+
 			/// @brief Whether bone is `const`.
 			constexpr static bool CONSTANT = Type::Constant<BoneType>;
 			/// @brief Returns the bone (if exists), else returns identity bone.
@@ -64,7 +81,28 @@ namespace Makai::Graph::Armature {
 			/// @brief Returns whether bone exists.
 			/// @return Whether bone exists.
 			constexpr operator bool() const												{return exists();								}
+			/// @brief Accesses the bone.
+			/// @return Reference to bone.
+			constexpr BoneType& operator*() const {
+				if (exists())
+					return *bone;
+				else nonexistentBoneError();
+			}
+			/// @brief Accesses the bone.
+			/// @return Reference to bone.
+			constexpr BoneType* operator->() const {
+				if (exists())
+					return bone.raw();
+				else nonexistentBoneError();
+			}
 		private:
+			[[noreturn]] void nonexistentBoneError() const {
+				throw Error::NonexistentValue(
+					"Bone for name '" + name + "' does not exist or is unassociated!",
+					CTL_CPP_PRETTY_SOURCE 
+				);
+			}
+
 			/// @brief Underlying bone.
 			Reference<BoneType> const	bone;
 			/// @brief Name of underlying bone.
