@@ -348,9 +348,8 @@ namespace Makai::JSON {
 			Makai::Type::Equal<typename T::KeyType, String>
 		&&	Makai::Type::Equal<typename T::ValueType, JSONValue>
 		) try {
-			T res;
 			for (auto [k, v]: view().items())
-				res[k] = v;
+				out[k] = v;
 			err = "";
 			return true;
 		} catch (Extern::Nlohmann::exception const& e) {
@@ -368,9 +367,8 @@ namespace Makai::JSON {
 			Makai::Type::Equal<typename T::KeyType, String>
 		&&	Makai::Type::Different<typename T::ValueType, JSONValue>
 		) try {
-			T res;
 			for (auto [k, v]: view().items())
-				res[k] = v.template get<typename T::ValueType>();
+				out[k] = v.template get<typename T::ValueType>();
 			err = "";
 			return true;
 		} catch (Extern::Nlohmann::exception const& e) {
