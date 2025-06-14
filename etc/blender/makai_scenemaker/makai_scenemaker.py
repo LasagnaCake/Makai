@@ -343,7 +343,8 @@ def build_armature(obj):
 		},
 		"data": {
 			"bones": [],
-			"relations": {}
+			"relations": {},
+			"names": {}
 		}
 	}
 	# Enable rest pose
@@ -370,6 +371,7 @@ def build_armature(obj):
 			armature_build["data"]["relations"][f"{names[bone]}"] = []
 			for child in armature_build["map"]["relations"][bone]:
 				armature_build["data"]["relations"][f"{names[bone]}"].append(names[child])
+	armature_build["data"]["names"] = names;
 	# Return everything to nothingness
 	armature.pose_position = last_pose
 	return armature_build
