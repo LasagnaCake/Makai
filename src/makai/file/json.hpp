@@ -53,12 +53,7 @@ namespace Makai::JSON {
 		inline T get() const {
 			T result;
 			if (!tryGet<T>(result))
-				throw Error::FailedAction(
-					"Parameter '" + name + "' is not of type '"
-					+ TypeInfo<T>::name() + "'!",
-					err,
-					CTL_CPP_PRETTY_SOURCE
-				);
+				typeMismatchError<T>();
 			return result;
 		}
 
@@ -174,6 +169,12 @@ namespace Makai::JSON {
 		/// @brief Returns whether the JSON value is a discarded value.
 		/// @return Whether it is discarded.
 		bool isDiscarded() const;
+		
+		/// @brief Tries to get a value from the underlying JSON value.
+		/// @tparam T Value type.
+		/// @param out Output of the value.
+		/// @return Whether the value was successfully acquired.
+		template<class T> bool tryGet(T& out) const;
 
 		/// @brief Tries to get a value from the underlying JSON value.
 		/// @tparam T Value type.
@@ -255,7 +256,7 @@ namespace Makai::JSON {
 		/// @brief Tries to get a value from the underlying JSON value.
 		/// @tparam T Value type.
 		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired
+		/// @return Whether the value was successfully acquired.
 		template <Type::Derived<JSONView> T>
 		bool tryGet(T& out) const
 		try {
@@ -272,6 +273,16 @@ namespace Makai::JSON {
 		String error() {return err;}
 
 	private:
+		template<class T>
+		[[noreturn]] void typeMismatchError() const {
+			throw Error::FailedAction(
+				"Parameter '" + name + "' is not of type '"
+				+ TypeInfo<T>::name() + "'!",
+				err,
+				CTL_CPP_PRETTY_SOURCE
+			);
+		}
+
 		/// @brief Constant reference to JSON data.
 		Extern::JSONData const&	cdata;
 		/// @brief Dummy reference. Used if reference to JSON value is constant.
@@ -308,6 +319,8 @@ namespace Makai::JSON {
 		/// @brief Copy constructor.
 		/// @param other `JSONValue` to copy from.
 		JSONValue(JSONValue const& other);
+
+		using JSONView::tryGet;
 
 		/// @brief Tries to get a value from the underlying JSON value.
 		/// @tparam T Value type.
@@ -369,12 +382,25 @@ namespace Makai::JSON {
 		/// @tparam T Value type.
 		/// @return Stored value.
 		/// @throw Error::FailedAction if stored value is not of the given type.
-		template<class T> T get() const						{return JSONView::get<T>();			}
+		template<class T>
+		inline T get() const {
+			T result;
+			if (!tryGet<T>(result))
+				typeMismatchError<T>();
+			return result;
+		}
+
 		/// @brief Returns the current value stored in the view, or the fallback value.
 		/// @tparam T Value type.
 		/// @param fallback Fallback value.
 		/// @return Stored value, or fallback.
-		template<class T> T get(T const& fallback) const	{return JSONView::get<T>(fallback);	}
+		template<class T>
+		inline T get(T const& fallback) const {
+			T result;
+			if (!tryGet<T>(result))
+				return fallback;
+			return result;
+		}
 
 		/// @brief Empties the underlying JSON value.
 		/// @return Reference to self.
