@@ -83,6 +83,7 @@ namespace Makai::Graph::Armature {
 			constexpr operator bool() const												{return exists();								}
 			/// @brief Accesses the bone.
 			/// @return Reference to bone.
+			/// @throw Error::NonexistentValue if bone does not exist.
 			constexpr BoneType& operator*() const {
 				if (exists())
 					return *bone;
@@ -90,6 +91,7 @@ namespace Makai::Graph::Armature {
 			}
 			/// @brief Accesses the bone.
 			/// @return Reference to bone.
+			/// @throw Error::NonexistentValue if bone does not exist.
 			constexpr BoneType* operator->() const {
 				if (exists())
 					return bone.raw();
