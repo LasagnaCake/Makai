@@ -84,6 +84,12 @@
 			"1": [
 				2
 			]
+		},
+		"names": {
+			"Vert": 0,
+			"Horiz": 1,
+			"Leaf": 2,
+			"Diag": 3
 		}
 	},
 	"trans": {
