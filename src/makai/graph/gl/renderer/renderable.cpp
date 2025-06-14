@@ -98,7 +98,7 @@ inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitio
 			auto fx = loadImageEffect(dmat["blend"], definitionFolder, blend);
 			mat.blend.enabled	= fx.enabled;
 			mat.blend.image		= fx.image;
-			mat.blend.strength	= fromJSONArrayV3(dmat["texture"]["alphaClip"], 0);
+			mat.blend.strength	= fromJSONArrayV3(dmat["texture"]["strength"], 0);
 			if (dmat["blend"]["equation"].isNumber())
 				mat.blend.equation	= (Effect::BlendTextureEquation)dmat["blend"]["equation"].get<uint>();
 		}
@@ -212,6 +212,7 @@ inline JSON::JSONData toDefinition(
 	if (!integratedTextures) {
 		def["warp"]		= saveImageEffect(mat.warp, definitionFolder, texturesFolder + "/warp.tga");
 		def["texture"]	= saveImageEffect(mat.texture, definitionFolder, texturesFolder + "/texture.tga");
+		def["blend"]	= saveImageEffect(mat.texture, definitionFolder, texturesFolder + "/blend.tga");
 		def["emission"]	= saveImageEffect(mat.emission, definitionFolder, texturesFolder + "/emission.tga");
 		def["blend"]	= saveImageEffect(mat.blend, definitionFolder, texturesFolder + "/blend.tga");
 	} else {
