@@ -122,6 +122,13 @@ TODO: Add `"GIMBAL"` type
 		"image": {/* See Components:ImageData2D:Layout */},
 		"alphaClip": 0.1, // Texture alpha clipping
 	},
+	"blend": {
+		// Required
+		"enabled": true,
+		"image": {/* See Components:ImageData2D:Layout */},
+		"strength": [1.0, 1.0, 1.0], // 3D vector representing the blend strength
+		"equation": 0, // Blend equation integer (see associated enum)
+	},
 	"normalMap": {
 		// Required
 		"enabled": true,
