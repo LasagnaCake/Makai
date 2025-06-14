@@ -546,7 +546,7 @@ void Renderable::extendFromDefinitionV0(
 			JSON::JSONValue names = def["armature"]["names"];
 			for (auto [name, bone]: names.get<Dictionary<usize>>()) {
 				armature.names[name] = bone;
-				DEBUGLN("Map [ '" name, "' -> ", bone, " ]");
+				DEBUGLN("Map [ '", name, "' -> ", bone, " ]");
 			}
 		}
 	}
