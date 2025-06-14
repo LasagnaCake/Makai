@@ -201,6 +201,20 @@ TODO: Add `"GIMBAL"` type
 
 ## Renderable Object
 
+### Armature
+
+#### Layout
+
+```javascript
+"armature": {
+	// Required
+	"bones": [/* See Transform3D:Layout */], // Array containing all bone transforms (NOT its offset matrix) (MAX. 64 bones)
+	// Optional
+	"relations": {"" : []}, // List map containing relations between bones, mapping: [Parent bone index (as string)] → [Children bone indices...]
+	"names": {} //  Map containing bone name associations, mapping [Bone name]: → [Bone index] 
+}
+```
+
 ### Layout
 
 This can be saved as a `JSON` file of extension `.mrod` (Makai Renderable Object Definition).
@@ -244,6 +258,7 @@ If data is to be integrated in the file:
 		// equation - Option 2
 		"equation": 0
 	},
+	"armature": {/* See Renderable:Armature:Layout */}
 	"active": true,
 }
 ```
