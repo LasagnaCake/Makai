@@ -20,7 +20,7 @@ Makai::JSON::JSONView Makai::JSON::JSONView::operator[](String const& key) {
 		"Parameter '" + name + "' is not an object!",
 		CTL_CPP_PRETTY_SOURCE
 	);
-	return Makai::JSON::JSONView(view()[key.std()], name + "/" + key);
+	return Makai::JSON::JSONView(view()[key.stdView()], name + "/" + key);
 }
 
 const Makai::JSON::JSONView Makai::JSON::JSONView::operator[](String const& key) const {
@@ -28,7 +28,7 @@ const Makai::JSON::JSONView Makai::JSON::JSONView::operator[](String const& key)
 		"Parameter '" + name + "' is not an object!",
 		CTL_CPP_PRETTY_SOURCE
 	);
-	return Makai::JSON::JSONView(cdata[key.std()], name + "/" + key);
+	return Makai::JSON::JSONView(cdata[key.stdView()], name + "/" + key);
 }
 
 Makai::JSON::JSONView Makai::JSON::JSONView::operator[](usize const index) {
