@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 		CTL::String keyfile = "";
 		keyfile += CTL::toString(
 			"#ifndef ", pkid, "_H\n",
-			"#define", pkid, "_H\n",
+			"#define ", pkid, "_H\n",
 			"#include <makai/makai.hpp>\n"
 		); 
 		keyfile += CTL::toString(
