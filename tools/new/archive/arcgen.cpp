@@ -1,3 +1,4 @@
+#include "makai/ctl/ctl/algorithm/strconv.hpp"
 #include "makai/ctl/ctl/container/list.hpp"
 #include "makai/ctl/ctl/container/span.hpp"
 #define ARCSYS_APPLICATION_
@@ -33,10 +34,17 @@ int main(int argc, char** argv) {
 		);
 	else if (argc >= 2) {
 		usize sz = srng.number<usize>(32, 64);
-		CTL::String keyfile = CTL::toString(
-			"consinit ObfuscatedStaticString<",
+		CTL::String const pkid = CTL::toString("PASSKEY_ID", srng.integer(), "EX");
+		CTL::String keyfile = "";
+		keyfile += CTL::toString(
+			"#ifndef ", pkid, "_H\n",
+			"#define", pkid, "_H\n",
+			"#include <makai/makai.hpp>\n"
+		); 
+		keyfile += CTL::toString(
+			"constinit Makai::Ex::ObfuscatedStaticString<",
 			sz
-			,"> const passkey = ObfuscatedStaticString<",
+			,"> const passkey = Makai::Ex::ObfuscatedStaticString<",
 			sz
 			,">(\""
 		);
@@ -48,7 +56,8 @@ int main(int argc, char** argv) {
 			std::string code = stream.str();
 			keyfile += CTL::String("\\x") + (code.size()<2?"0":"") + CTL::String(code);
 		}
-		keyfile += "\");";
+		keyfile += "\");\n";
+		keyfile += "#endif\n";
 		Makai::File::saveText("key.256.h", keyfile);
 		DEBUGLN("Key generated!");
 	}
