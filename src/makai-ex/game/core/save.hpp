@@ -10,18 +10,30 @@ namespace Makai::Ex::Game {
 		using JSONView::JSONView;
 		using JSONView::operator=;
 
+		/// @brief Copy constructor (`JSONView`).
+		/// @param other `JSONView` to copy from.
+		SaveView(JSONView const& other):	JSONView(other) {}
+		/// @brief Move constructor (`JSONView`).
+		/// @param other `JSONView` to move.
+		SaveView(JSONView&& other):			JSONView(other) {}
+
+		/// @brief Copy constructor (self) (defaulted).
+		SaveView(SaveView const&)	= default;
+		/// @brief Move constructor (self) (defaulted).
+		SaveView(SaveView&&)		= default;
+
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return Const view to member.
 		SaveView const operator[](String const& key) const {
-			return SaveView(JSONView::operator[](key));
+			return JSONView::operator[](key);
 		}
 		
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return View to member.
 		SaveView operator[](String const& key) {
-			return SaveView(JSONView::operator[](key));
+			return JSONView::operator[](key);
 		}
 
 		/// @brief Saves the current view's contents to disk.
@@ -193,14 +205,14 @@ namespace Makai::Ex::Game {
 		/// @param key Member to get.
 		/// @return Const view to member.
 		SaveView const operator[](String const& key) const {
-			return SaveView(data[key]);
+			return data[key];
 		}
 		
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return View to member.
 		SaveView operator[](String const& key) {
-			return SaveView(data[key]);
+			return data[key];
 		}
 
 		/// @brief Returns a view to the save's contents.
