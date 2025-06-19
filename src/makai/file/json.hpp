@@ -24,6 +24,11 @@ namespace Makai::JSON {
 	
 	struct JSONValue;
 
+	namespace {
+		template <class T>
+		concept ValidReturnType = Type::Constructible<T> && Type::Different<T, JSONType>;
+	}
+
 	/// @brief JSON view.
 	class JSONView: public View<Extern::JSONData> {
 	public:
@@ -104,7 +109,7 @@ namespace Makai::JSON {
 		/// @tparam T Value type.
 		/// @param value Value to assign to underlying data.
 		/// @return Reference to self.
-		template<class T>
+		template<Type::Different<JSONView> T>
 		inline JSONView& operator=(T const& value)
 		requires (!Makai::Type::Convertible<T, JSONView>) {
 			view() = value;
@@ -113,7 +118,7 @@ namespace Makai::JSON {
 
 		/// @brief Returns the current value stored in the view.
 		/// @tparam T Value type.
-		template<Type::Constructible<> T> operator T() const {return get<T>();}
+		template<ValidReturnType T> operator T() const {return get<T>();}
 
 		/// @brief Returns the JSON value's name.
 		/// @return Structure name.
