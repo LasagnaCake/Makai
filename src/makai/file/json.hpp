@@ -83,7 +83,7 @@ namespace Makai::JSON {
 		/// @param key Member to access.
 		/// @return Constant view to member.
 		/// @throw Error::InvalidAction if data is not a JSON object.
-		const JSONView operator[](String const& key) const;
+		JSONView const operator[](String const& key) const;
 
 		/// @brief JSON structure indexing operator.
 		/// @param key Index to access.
@@ -94,7 +94,7 @@ namespace Makai::JSON {
 		/// @param key Index to access.
 		/// @return Constant view to index.
 		/// @throw Error::InvalidAction if data is not a JSON array.
-		const JSONView operator[](usize const index) const;
+		JSONView const operator[](usize const index) const;
 		
 		/// @brief Returns the member/element count of the underlying data.
 		/// @return Member/element count.
