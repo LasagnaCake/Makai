@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
 			"#include <makai/makai.hpp>\n"
 		); 
 		keyfile += CTL::toString(
-			"constinit Makai::Ex::ObfuscatedStaticString<",
+			"constinit static Makai::Ex::ObfuscatedStaticString<",
 			sz
 			,"> const passkey = Makai::Ex::ObfuscatedStaticString<",
 			sz
