@@ -113,7 +113,7 @@ namespace Makai::JSON {
 
 		/// @brief Returns the current value stored in the view.
 		/// @tparam T Value type.
-		template<typename T> operator T() const {return get<T>();}
+		template<Type::Constructible<> T> operator T() const {return get<T>();}
 
 		/// @brief Returns the JSON value's name.
 		/// @return Structure name.

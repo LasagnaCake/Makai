@@ -6,11 +6,23 @@
 /// @brief Game extensions.
 namespace Makai::Ex::Game {
 	/// @brief Save file view.
-	struct SaveView: Makai::JSON::JSONView {
+	struct SaveView: public Makai::JSON::JSONView {
 		using JSONView::JSONView;
+		using JSONView::operator=;
 
-		/// @brief Default constructor.
-		SaveView(): JSONView({}) {}
+		/// @brief Member access operator.
+		/// @param key Member to get.
+		/// @return Const view to member.
+		SaveView const operator[](String const& key) const {
+			return SaveView(JSONView::operator[](key));
+		}
+		
+		/// @brief Member access operator.
+		/// @param key Member to get.
+		/// @return View to member.
+		SaveView operator[](String const& key) {
+			return SaveView(JSONView::operator[](key));
+		}
 
 		/// @brief Saves the current view's contents to disk.
 		/// @param path Path to save contents to.
@@ -181,22 +193,22 @@ namespace Makai::Ex::Game {
 		/// @param key Member to get.
 		/// @return Const view to member.
 		SaveView const operator[](String const& key) const {
-			return data[key];
+			return SaveView(data[key]);
 		}
 		
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return View to member.
 		SaveView operator[](String const& key) {
-			return data[key];
+			return SaveView(data[key]);
 		}
 
 		/// @brief Returns a view to the save's contents.
 		/// @return View to contents.
-		SaveView				view()	{return data;}
+		SaveView				view()	{return SaveView(data);	}
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		Makai::JSON::JSONValue	value()	{return data;}
+		Makai::JSON::JSONValue	value()	{return data;			}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.
