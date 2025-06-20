@@ -105,12 +105,12 @@ struct StateMachine {
 		return *this;
 	}
 
-	/// @return Adds a path between two states.
+	/// @return Creates/Modifies a path between two states.
 	/// @param from State to part from.
 	/// @param to State to end up in.
 	/// @param priority Priority of path.
 	/// @return Reference to self.
-	constexpr StateMachine& setPath(StateType const& from, StateType const& to, usize const priority = 0) {
+	constexpr StateMachine& setPath(StateType const& from, StateType const& to, Nullable<usize> const priority = 0ull) {
 		forward[from][to] = priority;
 		reverse[to][from] = priority;
 		return *this;
@@ -121,9 +121,7 @@ struct StateMachine {
 	/// @param to State to end up in.
 	/// @return Reference to self.
 	constexpr StateMachine& removePath(StateType const& from, StateType const& to) {
-		forward[from][to] = nullptr;
-		reverse[to][from] = nullptr;
-		return *this;
+		return setPath(from, to, nullptr);
 	}
 
 	/// @brief Returns the current state graph.
