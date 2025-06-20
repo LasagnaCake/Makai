@@ -67,7 +67,7 @@ struct StateMachine {
 	/// @brief Returns the current state graph.
 	/// @param revers Whether to return the reverse of the current graph. By default, it is false.
 	/// @return Current state graph.
-	constexpr StateGraph getStates(bool const reversed = false) const {
+	constexpr StateGraph const& getStates(bool const reversed = false) const {
 		return reversed ? reverse : forward;
 	}
 
