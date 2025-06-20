@@ -53,7 +53,7 @@ struct StateMachine {
 	/// @brief
 	///		Advances the state machine forward to its next state.
 	///		If state does not contain any path,
-	///		or a path could not be found with the given behaviour,
+	///		or a path could not be found with the given behaviour (failure),
 	///		returns the current state.
 	/// @param priority
 	///		Priority of the path to take.
@@ -69,7 +69,7 @@ struct StateMachine {
 	/// @brief
 	///		Retreats the state machine forward to its previous state.
 	///		If state does not contain any path,
-	///		or a path could not be found with the given behaviour,
+	///		or a path could not be found with the given behaviour (failure),
 	///		returns the current state.
 	/// @param priority
 	///		Priority of the path to take.
