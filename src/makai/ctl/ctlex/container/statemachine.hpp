@@ -22,8 +22,8 @@ struct StateMachine {
 	/// @brief State graph type.
 	using StateGraph	= Map<StateType, StateMap>;
 
-	/// @brief Priority selection behaviour. For usage in `advance()` and `retreat()`.
-	/// @note For more information, see respective functions.
+	/// @brief Priority selection behaviour.
+	/// @note What happens on failure depends on the function that uses it.
 	enum class Behaviour {
 		/// @brief
 		///		Path with a priority closest to (BUT not less than) the requested priority.
@@ -47,6 +47,7 @@ struct StateMachine {
 		SMB_LAST_PRECEDENCE
 	};
 
+	/// @brief Default behaviour for path selection.
 	constexpr static Behaviour DEFAULT_BEHAVIOUR = Behaviour::SMB_FIRST_MATCH;
 
 	/// @brief
@@ -57,9 +58,8 @@ struct StateMachine {
 	/// @param priority
 	///		Priority of the path to take.
 	///		By default, it is the lowest possible priority (`0`).
+	/// @param behaviour Behaviour to use for choosing the next path. By default, it is `DEFAULT_BEHAVIOUR`.
 	/// @return Next state.
-	///		Will always take the path with the priority that is closest
-	///		(BUT not lower than) the given priority.
 	constexpr StateType advance(usize const priority = 0, Behaviour const behaviour = DEFAULT_BEHAVIOUR) {
 		if (forward.contains(current))
 			current = getStateByBehaviour(forward[current], priority, current, behaviour);
@@ -77,8 +77,6 @@ struct StateMachine {
 	/// @param priority
 	/// @param behaviour Behaviour to use for choosing the next path. By default, it is `DEFAULT_BEHAVIOUR`.
 	/// @return Previous state.
-	/// @note
-	///		Will take the path depending on the behaviour chosen.
 	constexpr StateType retreat(usize const priority = 0, Behaviour const behaviour = DEFAULT_BEHAVIOUR) {
 		if (reverse.contains(current))
 			current = getStateByBehaviour(reverse[current], priority, current, behaviour);
