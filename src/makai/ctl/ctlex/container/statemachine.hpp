@@ -9,7 +9,7 @@
 
 CTL_EX_NAMESPACE_BEGIN
 
-/// @brief Simple state machine.
+/// @brief Simple state machine with priority pathing.
 /// @tparam TState State type.
 template <class TState>
 struct StateMachine {
@@ -22,39 +22,66 @@ struct StateMachine {
 	/// @brief State graph type.
 	using StateGraph	= Map<StateType, StateMap>;
 
+	/// @brief Priority selection behaviour. For usage in `advance()` and `retreat()`.
+	/// @note For more information, see respective functions.
+	enum class Behaviour {
+		/// @brief
+		///		Path with a priority closest to (BUT not less than) the requested priority.
+		///		Fails if no paths with priority greater than or equal to requested priority exists.
+		SMB_CLOSEST_MATCH,
+		/// @brief
+		///		First path found which has the EXACT requested priority.
+		///		Fails if no paths with the requested priority exists.
+		SMB_FIRST_MATCH,
+		/// @brief
+		///		Last path found which has the EXACT requested priority.
+		///		Fails if no paths with the requested priority exists.
+		SMB_LAST_MATCH,
+		/// @brief
+		///		First path found with a priority equal to or higher than the requested priority.
+		///		Fails if no paths with priority greater than or equal to requested priority exists.
+		SMB_FIRST_PRECEDENCE,
+		/// @brief
+		///		Last path found with a priority equal to or higher than the requested priority.
+		///		Fails if no paths with priority greater than or equal to requested priority exists.
+		SMB_LAST_PRECEDENCE
+	};
+
+	constexpr static Behaviour DEFAULT_BEHAVIOUR = Behaviour::SMB_FIRST_MATCH;
+
 	/// @brief
 	///		Advances the state machine forward to its next state.
 	///		If state does not contain any path,
-	///		or all possible paths are of greater priority than requested,
+	///		or a path could not be found with the given behaviour,
 	///		returns the current state.
-	/// @param priority Priority of the path to take. By default, it is the highest possible priority (`Limit::MAX<usize>`).
+	/// @param priority
+	///		Priority of the path to take.
+	///		By default, it is the lowest possible priority (`0`).
 	/// @return Next state.
-	/// @note Will always take the path with the priority that is closest (BUT not greater than) the given priority.
-	constexpr StateType advance(usize const priority = Limit::MAX<usize>) {
-		if (forward.contains(current)) {
-			for (auto const& [state, id]: forward[current]) {
-				if (!id || id.value() > priority) continue;
-				current = state;
-			}
-		}
+	///		Will always take the path with the priority that is closest
+	///		(BUT not lower than) the given priority.
+	constexpr StateType advance(usize const priority = 0, Behaviour const behaviour = DEFAULT_BEHAVIOUR) {
+		if (forward.contains(current))
+			current = getStateByBehaviour(forward[current], priority, current, behaviour);
 		return current;
 	}
 
 	/// @brief
 	///		Retreats the state machine forward to its previous state.
 	///		If state does not contain any path,
-	///		or all possible paths are of greater priority than requested,
+	///		or a path could not be found with the given behaviour,
 	///		returns the current state.
-	/// @param priority Priority of the path to take. By default, it is the highest possible priority (`Limit::MAX<usize>`).
+	/// @param priority
+	///		Priority of the path to take.
+	///		By default, it is the lowest possible priority (`0`).
+	/// @param priority
+	/// @param behaviour Behaviour to use for choosing the next path. By default, it is `DEFAULT_BEHAVIOUR`.
 	/// @return Previous state.
-	/// @note Will always take the path with the priority that is closest (BUT not greater than) the given priority.
-	constexpr StateType retreat(usize const priority = Limit::MAX<usize>) {
-		if (reverse.contains(current)) {
-			for (auto const& [state, id]: reverse[current]) {
-				if (!id || id.value() > priority) continue;
-				current = state;
-			}
-		}
+	/// @note
+	///		Will take the path depending on the behaviour chosen.
+	constexpr StateType retreat(usize const priority = 0, Behaviour const behaviour = DEFAULT_BEHAVIOUR) {
+		if (reverse.contains(current))
+			current = getStateByBehaviour(reverse[current], priority, current, behaviour);
 		return current;
 	}
 
@@ -110,7 +137,7 @@ struct StateMachine {
 	/// @return Creates/Modifies a path between two states.
 	/// @param from State to part from.
 	/// @param to State to end up in.
-	/// @param priority Priority of path.
+	/// @param priority Priority of path. By default, it is the lowest possible priority (`0`).
 	/// @return Reference to self.
 	constexpr StateMachine& setPath(StateType const& from, StateType const& to, PriorityType const priority = 0ull) {
 		forward[from][to] = priority;
@@ -137,6 +164,70 @@ struct StateMachine {
 	StateType	current;
 	
 private:
+	constexpr static StateType getStateByBehaviour(
+		StateMap const& map,
+		usize const& priority,
+		StateType const& startState,
+		Behaviour const behaviour
+	) {
+		switch (behaviour) {
+			case Behaviour::SMB_CLOSEST_MATCH:		return closestMatch(map, priority, startState);		break;
+			case Behaviour::SMB_FIRST_MATCH:		return firstMatch(map, priority, startState);		break;
+			case Behaviour::SMB_LAST_MATCH:			return lastMatch(map, priority, startState);		break;
+			case Behaviour::SMB_FIRST_PRECEDENCE:	return firstPrecedence(map, priority, startState);	break;
+			case Behaviour::SMB_LAST_PRECEDENCE:	return lastPrecedence(map, priority, startState);	break;
+		}
+		return behaviour;
+	}
+
+	constexpr static StateType closestMatch(StateMap const& map, usize const& priority, StateType const& startState) {
+		StateType currentState = startState;
+		usize currentPriority	= Limit::MAX<usize>;
+		for (auto const& [state, id]: map) {
+			if (id && id.value() == currentPriority) {
+				currentState = state;
+			}
+		}
+		return currentState;
+	}
+	
+	constexpr static StateType firstMatch(StateMap const& map, usize const& priority, StateType const& startState) {
+		StateType currentState = startState;
+		for (auto const& [state, id]: map)
+			if (id && id.value() == priority) {
+				currentState = state;
+				break;
+			}
+		return currentState;
+	}
+	
+	constexpr static StateType lastMatch(StateMap const& map, usize const& priority, StateType const& startState) {
+		StateType currentState = startState;
+		for (auto const& [state, id]: map)
+			if (id && id.value() == priority)
+				currentState = state;
+		return currentState;
+	}
+
+	constexpr static StateType firstPrecedence(StateMap const& map, usize const& priority, StateType const& startState) {
+		StateType currentState = startState;
+		for (auto const& [state, id]: map) {
+			if (id && id.value() >= priority) {
+				currentState = state;
+				break;
+			}
+		}
+		return currentState;
+	}
+
+	constexpr static StateType lastPrecedence(StateMap const& map, usize const& priority, StateType const& startState) {
+		StateType currentState = startState;
+		for (auto const& [state, id]: map)
+			if (id && id.value() >= priority)
+				currentState = state;
+		return currentState;
+	}
+
 	/// @brief Forward state graph.
 	StateGraph	forward;
 	/// @brief Reverse state graph.
