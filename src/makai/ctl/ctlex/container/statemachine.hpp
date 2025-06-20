@@ -15,8 +15,10 @@ template <class TState>
 struct StateMachine {
 	/// @brief State type.
 	using StateType 	= TState;
+	/// @brief Priority type.
+	using PriorityType	= Nullable<usize>;
 	/// @brief State map type.
-	using StateMap		= Map<StateType, Nullable<usize>>;
+	using StateMap		= Map<StateType, PriorityType>;
 	/// @brief State graph type.
 	using StateGraph	= Map<StateType, StateMap>;
 
@@ -110,7 +112,7 @@ struct StateMachine {
 	/// @param to State to end up in.
 	/// @param priority Priority of path.
 	/// @return Reference to self.
-	constexpr StateMachine& setPath(StateType const& from, StateType const& to, Nullable<usize> const priority = 0ull) {
+	constexpr StateMachine& setPath(StateType const& from, StateType const& to, PriorityType const priority = 0ull) {
 		forward[from][to] = priority;
 		reverse[to][from] = priority;
 		return *this;
