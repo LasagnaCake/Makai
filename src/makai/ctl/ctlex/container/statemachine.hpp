@@ -50,6 +50,12 @@ struct StateMachine {
 	/// @brief Default behaviour for path selection.
 	constexpr static Behaviour DEFAULT_BEHAVIOUR = Behaviour::SMB_FIRST_MATCH;
 
+	/// @brief Returns whether the state machine is empty.
+	/// @return Whether state machine is empty.
+	constexpr bool empty() const {
+		return forward.empty() || reverse.empty();
+	}
+
 	/// @brief
 	///		Advances the state machine forward to its next state.
 	///		If state does not contain any path,
