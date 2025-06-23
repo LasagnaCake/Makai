@@ -175,7 +175,7 @@ private:
 			case Behaviour::SMB_FIRST_PRECEDENCE:	return firstPrecedence(map, priority, startState);	break;
 			case Behaviour::SMB_LAST_PRECEDENCE:	return lastPrecedence(map, priority, startState);	break;
 		}
-		return behaviour;
+		return startState;
 	}
 
 	constexpr static StateType closestMatch(StateMap const& map, usize const& priority, StateType const& startState) {
