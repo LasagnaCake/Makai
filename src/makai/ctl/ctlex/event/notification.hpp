@@ -3,6 +3,7 @@
 
 #include "../../ctl/exnamespace.hpp"
 #include "../../ctl/container/functor.hpp"
+#include "../../ctl/container/pointer/reference.hpp"
 #include "../../ctl/container/string.hpp"
 #include "../../ctl/container/map.hpp"
 #include "../../ctl/container/dictionary.hpp"
@@ -15,7 +16,7 @@ CTL_EX_NAMESPACE_BEGIN
 template<usize I>
 class NotificationServer {
 public:
-	/// @brief Interface for the notification's message.
+	/// @brief Notification message interface.
 	struct IMessage {
 		virtual ~IMessage() {}
 	};
@@ -23,8 +24,8 @@ public:
 	/// @brief Server ID.
 	constexpr static usize ID = I;
 
-	/// @brief Message handle type
-	typedef ref<IMessage const>							MessageHandleType;
+	/// @brief Message handle type.
+	typedef Reference<IMessage const>					MessageHandleType;
 	/// @brief Signal type.
 	typedef Signal<MessageHandleType const>				SignalType;
 	/// @brief Signal list type.
