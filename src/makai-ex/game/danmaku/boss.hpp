@@ -80,6 +80,12 @@ namespace Makai::Ex::Game::Danmaku {
 		bool practiceMode = false;
 
 	protected:
+		/// @brief Returns the current act.
+		/// @return Reference to current act.
+		Reference<AAct> getCurrentAct() const {
+			return currentAct.reference();
+		}
+
 		/// @brief Called when battle begins. Must be implemented.
 		virtual void onBattleBegin()					= 0;
 		/// @brief Called when a specific act is requested. Must be implemented.
