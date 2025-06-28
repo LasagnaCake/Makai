@@ -3,7 +3,7 @@
 
 #include "core.hpp"
 
-#include "../container/list.hpp"
+#include "../container/lists/list.hpp"
 #include "../random/mersenne.hpp"
 #include "../random/ctprng.hpp"
 #include "../algorithm/hash.hpp"
