@@ -249,18 +249,24 @@ namespace Tree {
 			return node->parent && node == node->parent->children[1];
 		}
 		
+		/// @brief Rotates a branch.
+		/// @param left Whether to do a leftwise rotation.
 		constexpr void rotateBranch(ref<Node> const branch, bool const left) {
 			if (!branch) return;
-			ref<Node> const newRoot	= branch->children[!left];
-			ref<Node> const child	= branch->children[left];
-			branch->children[!left]	= child;
+			ref<Node> const newRoot	= branch->children[left];
+			ref<Node> const child	= branch->children[!left];
+			branch->children[left]	= child;
 			if (child) child->parent = branch;
-			newRoot->children[left]	= branch;
+			newRoot->children[!left]	= branch;
 			if (branch->parent)
 				branch->parent->children[isRightChild(branch)] = newRoot;
 			else root = newRoot;
 		}
 		
+		/// @brief Inserts a node into a parent.
+		/// @param node Node to insert.
+		/// @param parent Parent to insert to.
+		/// @param left Whether to insert as the left child. 
 		constexpr void insertNode(ref<Node> node, ref<Node> parent, bool left) {
 			if (!node) return;
 			node->red = true;
@@ -270,7 +276,7 @@ namespace Tree {
 				return;
 			}
 			ref<Node> grandparent = parent->parent;
-			parent->children[left] = node;
+			parent->children[!left] = node;
 			do {
 				if (!parent->red) return;
 				if (!grandparent) {
@@ -278,12 +284,12 @@ namespace Tree {
 					return;
 				}
 				left = parent != grandparent->right;
-				ref<Node> const uncle = grandparent->children[!left];
+				ref<Node> const uncle = grandparent->children[left];
 				if (!uncle || !uncle->red) {
-					if (node == grandparent->children[!left]) {
+					if (node == grandparent->children[left]) {
 						rotateBranch(parent, left);
 						node = parent;
-						parent = grandparent->children[left];
+						parent = grandparent->children[!left];
 					}
 					rotateBranch(grandparent, !left);
 					parent->red			= false;
@@ -302,22 +308,22 @@ namespace Tree {
 			ref<Node> closeNephew	= nullptr;
 			ref<Node> farNephew		= nullptr;
 			bool left = !isRightChild(node);
-			parent->children[left] = nullptr;
+			parent->children[!left] = nullptr;
 			do {
-				sibling = parent->children[!left];
-				farNephew = sibling->children[!left];
-				closeNephew = sibling->children[left];
+				sibling = parent->children[left];
+				farNephew = sibling->children[left];
+				closeNephew = sibling->children[!left];
 				if (sibling->red) {
 					rotateBranch(parent, left);
 					parent->red = true;
 					sibling->red = false;
 					sibling = closeNephew;
-					farNephew = sibling->child[!left];
+					farNephew = sibling->child[left];
 					if (farNephew && farNephew->red) {
 						repaintLeft(sibling, parent, farNephew, left);
 						return;
 					}
-					closeNephew = sibling->child[left];
+					closeNephew = sibling->child[!left];
 					if (closeNephew && closeNephew->red) {
 						repaintRight(sibling, closeNephew, farNephew, left);
 						repaintLeft(sibling, parent, farNephew, left);
