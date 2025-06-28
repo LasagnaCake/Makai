@@ -302,6 +302,9 @@ namespace Tree {
 			} while ((parent = node->parent));
 		}
 		
+		/// @brief Removes a node from the tree.
+		/// @param node Node to remove.
+		/// @warning DO NOT USE THIS ONE DIRECTLY! If you MUST, use `removeAndRelink` instead!
 		constexpr void removeNode(ref<Node> node) {
 			ref<Node> parent = node->parent;
 			ref<Node> sibling		= nullptr;
@@ -354,16 +357,25 @@ namespace Tree {
 			} while ((parent = node->parent));
 		}
 		
+		/// @brief Finds the appropriate parent node for a value.
+		/// @param val Value to find parent for.
+		/// @return Appropriate parent, or `nullptr` if tree is empty.
 		constexpr ref<Node const> findParent(DataType const& val) const {
 			if (!root) return nullptr;
 			return searchBranch(root, val);
 		}
 		
+		/// @brief Finds the appropriate parent node for a value.
+		/// @param val Value to find parent for.
+		/// @return Appropriate parent, or `nullptr` if tree is empty.
 		constexpr ref<Node> findParent(DataType const& val) {
 			if (!root) return nullptr;
 			return searchBranch(root, val);
 		}
 		
+		/// @brief Inserts a value in the tree.
+		/// @param val Value to insert.
+		/// @return Node containing the value.
 		constexpr ref<Node> insert(DataType const& val) {
 			ref<Node> const parent = findParent(val);
 			if constexpr (!ALLOW_DUPES) {
@@ -376,6 +388,9 @@ namespace Tree {
 			return node;
 		}
 		
+		/// @brief Finds a node containing a value in the tree.
+		/// @param val Value to match.
+		/// @return Node containing the value, or `nullptr`.
 		constexpr ref<Node const> find(DataType const& val) const {
 			ref<Node> result = findParent(val);
 			if (result && ComparatorType::equals(val, result->value))
@@ -383,6 +398,9 @@ namespace Tree {
 			return nullptr;
 		}
 		
+		/// @brief Finds a node containing a value in the tree.
+		/// @param val Value to match.
+		/// @return Node containing the value, or `nullptr`.
 		constexpr ref<Node> find(DataType const& val) {
 			ref<Node> result = findParent(val);
 			if (result && ComparatorType::equals(val, result->value))
@@ -390,6 +408,9 @@ namespace Tree {
 			return nullptr;
 		}
 		
+		/// @brief Removes a node from the tree, and updates its links.
+		/// @param val Value to match.
+		/// @return Removed node, or `nullptr` if node does not exist.
 		constexpr ref<Node> removeAndRelink(ref<Node> const node) {
 			if (!node) return nullptr;
 			removeNode(node);
@@ -397,6 +418,8 @@ namespace Tree {
 			return node;
 		}
 		
+		/// @brief Erases a given value from the tree.
+		/// @param val Value to erase.
 		constexpr void erase(DataType const& val) {
 			if (auto node = removeAndRelink(find(val)))
 				delete node;
