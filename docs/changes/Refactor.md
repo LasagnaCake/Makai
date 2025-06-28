@@ -14,6 +14,6 @@
 - - - Perhaps via [miniaudio](https://miniaud.io/)?
 
 ## Very Complex
-- [ ] Make engine be less windows-dependent
+- [ ] Make framework be less windows-dependent
 - [ ] Rewrite backend to use SDL3 (& also make it less dependent on OpenGL)
 - - See [ideas](ideas.md) for more info
