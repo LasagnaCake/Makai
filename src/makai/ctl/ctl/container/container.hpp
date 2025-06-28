@@ -10,7 +10,6 @@
 #include "function.hpp"
 #include "functor.hpp"
 #include "iterator.hpp"
-#include "list.hpp"
 #include "staticlist.hpp"
 #include "map.hpp"
 #include "nullable.hpp"
@@ -24,5 +23,6 @@
 #include "variant.hpp"
 #include "view.hpp"
 #include "pointer/pointer.hpp"
+#include "lists/lists.hpp"
 
 #endif // CTL_CONTAINER_H
