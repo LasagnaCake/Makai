@@ -35,14 +35,15 @@ namespace Tree {
 		template <class> class TAlloc = HeapAllocator,
 		bool D = false
 	>
-	struct RBL: Typed<KeyValuePair<TKey const&, TValue&>>, Paired<TKey, TValue> {
+	struct RBL: Paired<TKey, TValue> {
 		struct Node;
 
-		using Typed			= Typed<KeyValuePair<TKey const&, TValue&>>;
 		using Paired		= Paired<TKey, TValue>;
 		using Allocatable	= Allocatable<TAlloc, Node>;
 		
-		using typename Typed::DataType;
+		using DataType		= KeyValuePair<TKey const&, TValue&>;
+
+		using ConstantType	= KeyValuePair<TKey const&, TValue const&>;
 
 		using typename Paired::KeyType;
 		using typename Paired::ValueType;
@@ -56,6 +57,34 @@ namespace Tree {
 		
 		/// @brief Whether duplicate values are allowed
 		constexpr static bool ALLOW_DUPES = D;
+
+		/// @brief Empty constructor (defaulted).
+		constexpr RBL() = default;
+
+		/// @brief Copy constructor.
+		constexpr RBL(RBL const& other) {
+			append(other);
+		}
+
+		/// @brief Move constructor (defaulted).
+		constexpr RBL(RBL&& other) = default;
+
+		/// @brief Copy assignment operator.
+		constexpr RBL& operator=(RBL const& other) {
+			traverseAndDelete(root);
+			return append(other);
+		}
+
+		/// @brief Move assignment operator.
+		constexpr RBL& operator=(RBL&& other) {
+			traverseAndDelete(root);
+			root = other.root;
+			other.root = nullptr;
+			return *this;
+		}
+
+		/// @brief Destructor.
+		constexpr ~RBL() {traverseAndDelete(root);}
 		
 		/// @brief Tree node.
 		struct Node: Ordered {
@@ -147,7 +176,11 @@ namespace Tree {
 			/// @brief Node type.
 			using NodeType = TNode;
 			/// @brief Iterator value accessor type.
-			using DataType = Meta::DualType<Type::Constant<NodeType>, DataType const, DataType>;
+			using DataType = Meta::DualType<
+				Type::Constant<NodeType>,
+				KeyValuePair<TKey const&, TValue&>,
+				KeyValuePair<TKey const&, TValue const&>
+			>;
 			
 			/// @brief Constructs the iterator.
 			/// @param node Pointer to node.	
@@ -228,7 +261,7 @@ namespace Tree {
 		/// @brief Returns the key-value pair at the "begginning" of the tree.
 		/// @return Value at begginning of tree.
 		/// @throw NonexistentValueException if tree is empty.
-		constexpr DataType const& front() const {
+		constexpr ConstantType front() const {
 			if (!root) throw NonexistentValueException("Tree is empty!");
 			auto const edge = leftmostEdge();
 			return {edge->key, edge->value};
@@ -237,7 +270,7 @@ namespace Tree {
 		/// @brief Returns the key-value pair at the "begginning" of the tree.
 		/// @return Value at begginning of tree.
 		/// @throw NonexistentValueException if tree is empty.
-		constexpr DataType& front() {
+		constexpr DataType front() {
 			if (!root) throw NonexistentValueException("Tree is empty!");
 			auto const edge = leftmostEdge();
 			return {edge->key, edge->value};
@@ -246,7 +279,7 @@ namespace Tree {
 		/// @brief Returns the key-value pair at the "end" of the tree.
 		/// @return Value at end of tree.
 		/// @throw NonexistentValueException if tree is empty.
-		constexpr DataType const& back() const {
+		constexpr ConstantType back() const {
 			if (!root) throw NonexistentValueException("Tree is empty!");
 			auto const edge = rightmostEdge();
 			return {edge->key, edge->value};
@@ -255,7 +288,7 @@ namespace Tree {
 		/// @brief Returns the key-value pair at the "end" of the tree.
 		/// @return Value at end of tree.
 		/// @throw NonexistentValueException if tree is empty.
-		constexpr DataType& back() {
+		constexpr DataType back() {
 			if (!root) throw NonexistentValueException("Tree is empty!");
 			auto const edge = rightmostEdge();
 			return {edge->key, edge->value};
@@ -445,6 +478,20 @@ namespace Tree {
 				alloc.deallocate(MX::destruct(node));
 		}
 
+		/// @brief Deletes all nodes in the tree.
+		constexpr void clear() {
+			traverseAndDelete(root);
+		}
+
+		/// @brief Adds another container's items to this one.
+		/// @param other Container to copy from.
+		/// @return Reference to self.
+		constexpr RBL& append(RBL const& other) {
+			for (auto& node: other)
+				insert(node.front())->value = node.back();
+			return *this;
+		}
+
 		/// @brief Returns the associated allocator.
 		/// @return Associated allocator.
 		constexpr AllocatorType& allocator() {return alloc;}
@@ -454,6 +501,13 @@ namespace Tree {
 		owner<Node>		root = nullptr;
 		/// @brief Allocator.
 		AllocatorType	alloc;
+
+		constexpr void traverseAndDelete(ref<Node> const node) {
+			if (!node) return;
+			traverseAndDelete(node->left);
+			traverseAndDelete(node->right);
+			alloc.deallocate(MX::destruct(node));
+		}
 
 		/// @brief Returns the leftmost node in the linked list.
 		/// @return Rightmost node.

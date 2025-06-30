@@ -1,37 +1,31 @@
-#ifndef CTL_CONTAINER_MAP_H
-#define CTL_CONTAINER_MAP_H
+#ifndef CTL_CONTAINER_MAP_LISTMAP_H
+#define CTL_CONTAINER_MAP_LISTMAP_H
 
-#include "arguments.hpp"
-#include "lists/list.hpp"
-#include "../namespace.hpp"
-#include "../templates.hpp"
-#include "../typetraits/traits.hpp"
-#include "../algorithm/hash.hpp"
-#include "pair.hpp"
+#include "../arguments.hpp"
+#include "../lists/list.hpp"
+#include "../../namespace.hpp"
+#include "../../templates.hpp"
+#include "../../typetraits/traits.hpp"
+#include "../../algorithm/hash.hpp"
+#include "../pair.hpp"
 
 CTL_NAMESPACE_BEGIN
 
 #define NOT_IN_MAP [this](PairType const& p) -> bool {return notInMap(p);}
 
-/// @brief Tags the deriving class as a collection of key-value pairs.
+/// @brief Tags the deriving class as a collection of key-value pairs, stored in a list structure.
 /// @tparam TKey Key type.
 /// @tparam TValue Value type.
 /// @tparam TPair<class, class> Pair type.
+/// @tparam TList<class, class> List type. By default, it is `List`.
 template<
 	class TKey,
 	class TValue,
 	template <class TPairKey, class TPairValue> class TPair = Pair,
 	template <class TListElement, class TListIndex> class TList = List
 >
-struct Collected {
+struct ListCollected: Paired<TKey, TValue, TPair> {
 	static_assert(Type::Container::PairLike<TPair<TKey, TValue>>, "Type is not a valid pair type!");
-
-	/// @brief Key type.
-	typedef TKey					KeyType;
-	/// @brief Value type.
-	typedef TValue					ValueType;
-	/// @brief Pair type.
-	typedef TPair<TKey , TValue>	PairType;
 };
 
 /// @brief Associative container comprised of key-value pairs.
@@ -39,7 +33,7 @@ struct Collected {
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type for underlying storage.
 /// @tparam SORT Whether the container is sorted by default.
-/// @param TAlloc<class> Allocator type.
+/// @tparam TList<class, class> List type. By default, it is `List`.
 template<
 	class TKey,
 	class TValue,
@@ -47,25 +41,25 @@ template<
 	bool SORT = true,
 	template <class TListElement, class TListIndex> class TList = List
 >
-struct BaseSimpleMap:
-	Collected<TKey, TValue, KeyValuePair>,
+struct BaseListMap:
+	ListCollected<TKey, TValue, KeyValuePair>,
 	Derived<TList<KeyValuePair<TKey, TValue>, TIndex>>,
-	SelfIdentified<BaseSimpleMap<TKey, TValue, TIndex, SORT>>,
+	SelfIdentified<BaseListMap<TKey, TValue, TIndex, SORT>>,
 	private TList<KeyValuePair<TKey, TValue>, TIndex> {
 public:
 	/// @brief Whether the container is sorted by default.
 	constexpr static bool SORTED = SORT;
 
 	using Derived			= ::CTL::Derived<TList<KeyValuePair<TKey, TValue>, TIndex>>;
-	using Collected			= ::CTL::Collected<TKey, TValue, KeyValuePair>;
-	using SelfIdentified	= ::CTL::SelfIdentified<BaseSimpleMap<TKey, TValue, TIndex, SORTED>>;
+	using ListCollected		= ::CTL::ListCollected<TKey, TValue, KeyValuePair>;
+	using SelfIdentified	= ::CTL::SelfIdentified<BaseListMap<TKey, TValue, TIndex, SORTED>>;
 
 	using typename Derived::BaseType;
 
 	using
-		typename Collected::KeyType,
-		typename Collected::ValueType,
-		typename Collected::PairType
+		typename ListCollected::KeyType,
+		typename ListCollected::ValueType,
+		typename ListCollected::PairType
 	;
 
 	using typename SelfIdentified::SelfType;
@@ -148,18 +142,18 @@ public:
 	};
 
 	/// @brief Default constructor.
-	constexpr BaseSimpleMap(): BaseType() {}
+	constexpr BaseListMap(): BaseType() {}
 
 	/// @brief Constructs the container with a preallocated capacity.
 	/// @param size Size to allocate.
-	constexpr BaseSimpleMap(SizeType const size): BaseType(size) {}
+	constexpr BaseListMap(SizeType const size): BaseType(size) {}
 
 	/// @brief Constructs the container from a set of key-value pairs.
 	/// @param values Pairs to add.
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
-	constexpr BaseSimpleMap(ArgumentListType const& values): BaseType(values) {
+	constexpr BaseListMap(ArgumentListType const& values): BaseType(values) {
 		clean();
 		update();
 	}
@@ -170,7 +164,7 @@ public:
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
 	template<SizeType N>
-	constexpr explicit BaseSimpleMap(As<PairType[N]> const& values): BaseType(values) {
+	constexpr explicit BaseListMap(As<PairType[N]> const& values): BaseType(values) {
 		clean();
 		update();
 	}
@@ -182,7 +176,7 @@ public:
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
 	template<typename... Args>
-	constexpr BaseSimpleMap(Args const&... args)
+	constexpr BaseListMap(Args const&... args)
 	requires (... && Type::Convertible<Args, PairType>)
 	: BaseType(args...) {
 		clean();
@@ -194,7 +188,7 @@ public:
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
-	constexpr BaseSimpleMap(BaseType const& other): BaseType(other) {
+	constexpr BaseListMap(BaseType const& other): BaseType(other) {
 		clean();
 		update();
 	}
@@ -204,23 +198,23 @@ public:
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
-	constexpr BaseSimpleMap(BaseType&& other): BaseType(CTL::move(other)) {
+	constexpr BaseListMap(BaseType&& other): BaseType(CTL::move(other)) {
 		clean();
 		update();
 	}
 
 	/// @brief Constructs the container from another of the same type.
 	/// @param other Container to copy from.
-	constexpr BaseSimpleMap(SelfType const& other): BaseType(other) {}
+	constexpr BaseListMap(SelfType const& other): BaseType(other) {}
 
 	/// @brief Constructs the container from another of the same type.
 	/// @param other Container to move from.
-	constexpr BaseSimpleMap(SelfType&& other): BaseType(CTL::move(other)) {}
+	constexpr BaseListMap(SelfType&& other): BaseType(CTL::move(other)) {}
 
 	/// @brief Constructs the container from a range of key-value pairs.
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
-	constexpr BaseSimpleMap(IteratorType const& begin, IteratorType const& end): BaseType(begin, end) {
+	constexpr BaseListMap(IteratorType const& begin, IteratorType const& end): BaseType(begin, end) {
 		clean();
 		update();
 	}
@@ -228,7 +222,7 @@ public:
 	/// @brief Constructs the container from a range of key-value pairs.
 	/// @param begin Reverse iterator to beginning of range.
 	/// @param end Reverse iterator to end of range.
-	constexpr BaseSimpleMap(ReverseIteratorType const& begin, ReverseIteratorType const& end): BaseType(begin, end) {
+	constexpr BaseListMap(ReverseIteratorType const& begin, ReverseIteratorType const& end): BaseType(begin, end) {
 		clean();
 		update();
 	}
@@ -237,7 +231,7 @@ public:
 	/// @param key Key to look for.
 	/// @return Value of the element.
 	/// @throw OutOfBoundsException when key does not exist.
-	constexpr ValueType at(KeyType const& key) const {
+	constexpr ValueType const& at(KeyType const& key) const {
 		if (empty()) throw OutOfBoundsException("Key does not exist!");
 		IndexType i = search(key);
 		if (i == -1)	throw OutOfBoundsException("Key does not exist!");
@@ -305,7 +299,7 @@ public:
 	/// @param key Key to look for.
 	/// @return Value of the element.
 	/// @throw OutOfBoundsException when key does not exist.
-	constexpr ValueType operator[](KeyType const& index) const {return at(index);}
+	constexpr ValueType const& operator[](KeyType const& index) const {return at(index);}
 
 	/// @brief Copy assignment operator.
 	/// @param other Container to copy from.
@@ -372,7 +366,7 @@ public:
 		return *this;
 	}
 
-	/// @brief Adds another's items container to this one.
+	/// @brief Adds another container's items to this one.
 	/// @param other Container to copy from.
 	/// @return Reference to self.
 	/// @note
@@ -465,7 +459,7 @@ namespace Type::Container {
 		struct IsSimpleMap<T0<T1, T2, T3, B4, T5>>:
 			BooleanConstant<
 				Type::Equal<T0<T1, T2, T3, B4, T5>,
-				::CTL::BaseSimpleMap<T1, T2, T3, B4, T5>
+				::CTL::BaseListMap<T1, T2, T3, B4, T5>
 			>> {};
 	}
 
@@ -493,22 +487,14 @@ requires (
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.
 template<class TKey, class TValue, Type::Integer TIndex = usize>
-using OrderedMap	= BaseSimpleMap<TKey, TValue, TIndex, false>;
+using OrderedMap	= BaseListMap<TKey, TValue, TIndex, false>;
 
 /// @brief `BaseSimpleMap` analog for a sorted map.
 /// @tparam TKey Key type.
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.
 template<class TKey, class TValue, Type::Integer TIndex = usize>
-using SimpleMap		= BaseSimpleMap<TKey, TValue, TIndex, true>;
-
-
-/// @brief Analog for a key-value associative container.
-/// @tparam TKey Key type.
-/// @tparam TValue Value type.
-/// @tparam TIndex Index type.
-template<class TKey, class TValue, Type::Integer TIndex = usize>
-using Map	= SimpleMap<TKey, TValue, TIndex>;
+using ListMap		= BaseListMap<TKey, TValue, TIndex, true>;
 
 CTL_NAMESPACE_END
 
