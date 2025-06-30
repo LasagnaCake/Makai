@@ -16,7 +16,7 @@ namespace Type::Tree {
 	template <class TData, template <class> class TCompare>
 	concept Comparator = requires {
 		{TCompare<TData>::lesser(TData(), TData())}	-> Type::Convertible<bool>;
-		{TCompare<TData>::equal(TData(), TData())}	-> Type::Convertible<bool>;
+		{TCompare<TData>::equals(TData(), TData())}	-> Type::Convertible<bool>;
 	};
 };
 
@@ -36,19 +36,13 @@ namespace Tree {
 		bool D = false
 	>
 	struct RBL: Paired<TKey, TValue> {
-		struct Node;
-
-		using Paired		= Paired<TKey, TValue>;
-		using Allocatable	= Allocatable<TAlloc, Node>;
+		using Paired		= ::CTL::Paired<TKey, TValue>;
 		
 		using DataType		= KeyValuePair<TKey const&, TValue&>;
-
 		using ConstantType	= KeyValuePair<TKey const&, TValue const&>;
 
 		using typename Paired::KeyType;
 		using typename Paired::ValueType;
-
-		using typename Allocatable::AllocatorType;
 
 		/// @brief Comparator type.
 		using ComparatorType = TCompare<KeyType>;
@@ -87,7 +81,7 @@ namespace Tree {
 		constexpr ~RBL() {traverseAndDelete(root);}
 		
 		/// @brief Tree node.
-		struct Node: Ordered {
+		struct Node {
 			/// @brief Node key.
 			KeyType		key;
 			/// @brief Node value.
@@ -167,6 +161,9 @@ namespace Tree {
 				return node;
 			}
 		};
+
+		/// @brief Allocator type.
+		using AllocatorType = HeapAllocator<Node>;
 		
 		/// @brief Tree node iterator.
 		/// @tparam R Whether it is a reverse iterator.
@@ -336,7 +333,7 @@ namespace Tree {
 					parent->red = true;
 					return;
 				}
-				left = parent != grandparent->right;
+				left = parent != grandparent->right();
 				ref<Node> const uncle = grandparent->children[left];
 				if (!uncle || !uncle->red) {
 					if (node == grandparent->children[left]) {
@@ -430,12 +427,12 @@ namespace Tree {
 		/// @param key Key to insert.
 		/// @return Node containing the key.
 		constexpr ref<Node> insert(KeyType const& key) {
-			ref<Node> const parent = findParent(key);
+			auto const parent = findParent(key);
 			if constexpr (!ALLOW_DUPES) {
 				if (ComparatorType::equals(parent->key, key))
 					return parent;
 			}
-			ref<Node> const node = MX::construct(alloc.allocate(), key);
+			ref<Node> const node = MX::construct<Node>(alloc.allocate(), key);
 			insertNode(node, parent, true);
 			Node::append(node, parent);
 			return node;
@@ -445,7 +442,7 @@ namespace Tree {
 		/// @param key Key to match.
 		/// @return Node containing the key, or `nullptr`.
 		constexpr ref<Node const> find(KeyType const& key) const {
-			ref<Node> result = findParent(key);
+			auto result = findParent(key);
 			if (result && ComparatorType::equals(key, result->key))
 				return result;
 			return nullptr;
@@ -455,7 +452,7 @@ namespace Tree {
 		/// @param val Key to match.
 		/// @return Node containing the key, or `nullptr`.
 		constexpr ref<Node> find(KeyType const& key) {
-			ref<Node> result = findParent(key);
+			auto result = findParent(key);
 			if (result && ComparatorType::equals(key, result->key))
 				return result;
 			return nullptr;
@@ -504,9 +501,9 @@ namespace Tree {
 
 		constexpr void traverseAndDelete(ref<Node> const node) {
 			if (!node) return;
-			traverseAndDelete(node->left);
-			traverseAndDelete(node->right);
-			alloc.deallocate(MX::destruct(node));
+			traverseAndDelete(node->left());
+			traverseAndDelete(node->right());
+			alloc.deallocate(MX::destruct<Node>(node));
 		}
 
 		/// @brief Returns the leftmost node in the linked list.

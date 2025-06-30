@@ -14,6 +14,7 @@
 #include "regex/regex.hpp"
 #include "typetraits/typetraits.hpp"
 #include "interface/interface.hpp"
+#include "range/range.hpp"
 #include "cmath.hpp"
 #include "cpperror.hpp"
 #include "ctypes.hpp"

@@ -11,7 +11,6 @@
 #include "functor.hpp"
 #include "iterator.hpp"
 #include "staticlist.hpp"
-#include "map.hpp"
 #include "nullable.hpp"
 #include "pair.hpp"
 #include "result.hpp"
@@ -22,6 +21,7 @@
 #include "tuple.hpp"
 #include "variant.hpp"
 #include "view.hpp"
+#include "map/map.hpp"
 #include "pointer/pointer.hpp"
 #include "lists/lists.hpp"
 

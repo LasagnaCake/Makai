@@ -2,9 +2,10 @@
 #include <ctlex/ctlex.hpp>
 
 using
-	CTL::BaseSimpleMap,
+	CTL::BaseListMap,
 	CTL::OrderedMap,
-	CTL::SimpleMap,
+	CTL::ListMap,
+	CTL::TreeMap,
 	CTL::List,
 	CTL::KeyValuePair,
 	CTL::TypeInfo
@@ -26,7 +27,22 @@ void print(List<T> const& lst) {
 }
 
 template<typename K, typename V, typename I, bool S>
-void print(BaseSimpleMap<K, V, I, S> const& m) {
+void print(BaseListMap<K, V, I, S> const& m) {
+	DEBUG(
+		"S: ",
+		m.size(),
+		", C: ",
+		m.capacity(),
+		", I: [ "
+	);
+	for (auto& i: m) {
+		DEBUG("[", i.key, " ", i.value, "] ");
+	}
+	DEBUGLN("];");
+}
+
+template<typename K, typename V, typename I>
+void print(TreeMap<K, V, I> const& m) {
 	DEBUG(
 		"S: ",
 		m.size(),
@@ -56,7 +72,7 @@ void print(List<KeyValuePair<K, V>> const& m) {
 }
 
 template<typename K, typename V, typename I, bool S>
-void print(BaseSimpleMap<K, V, I, S> const& m, K const& k) {
+void print(BaseListMap<K, V, I, S> const& m, K const& k) {
 	auto r = m.search(k);
 	if (r != -1)
 		CTL::Console::println("K: ", k, ", L: ", r, ", V: ", m[k]);
@@ -64,7 +80,16 @@ void print(BaseSimpleMap<K, V, I, S> const& m, K const& k) {
 		CTL::Console::println("K: ", k, ", L: ", r);
 }
 
-template<template<typename K, typename V> class TMap = SimpleMap>
+template<typename K, typename V, typename I>
+void print(TreeMap<K, V, I> const& m, K const& k) {
+	auto r = m.search(k);
+	if (r != -1)
+		CTL::Console::println("K: ", k, ", L: ", r, ", V: ", m[k]);
+	else
+		CTL::Console::println("K: ", k, ", L: ", r);
+}
+
+template<template<typename K, typename V> class TMap = ListMap>
 void testMap() {
 	using MapType = TMap<int, int>;
 	DEBUGLN("<", TypeInfo<MapType>::name(), ">");
@@ -115,8 +140,9 @@ void testMap() {
 }
 
 int main() {
-	testMap<SimpleMap>();
+	testMap<ListMap>();
 	testMap<OrderedMap>();
+	testMap<TreeMap>();
 	DEBUGLN("Map test passed!");
 	return 0;
 }

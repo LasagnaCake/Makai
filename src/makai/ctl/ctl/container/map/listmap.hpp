@@ -446,7 +446,7 @@ namespace Type::Container {
 	/// @brief Implementation of type constraints.
 	namespace Impl {
 		template<class T>
-		struct IsSimpleMap;
+		struct IsListMap;
 
 		template<
 			template <class, class, class, bool, template <class, class> class> class T0,
@@ -456,16 +456,16 @@ namespace Type::Container {
 			bool B4,
 			template <class, class> class T5
 		>
-		struct IsSimpleMap<T0<T1, T2, T3, B4, T5>>:
+		struct IsListMap<T0<T1, T2, T3, B4, T5>>:
 			BooleanConstant<
 				Type::Equal<T0<T1, T2, T3, B4, T5>,
 				::CTL::BaseListMap<T1, T2, T3, B4, T5>
 			>> {};
 	}
 
-	/// @brief Type must be `BaseSimpleMap`.
+	/// @brief Type must be `BaseListMap`.
 	template<class T>
-	concept SimpleMap = Impl::IsSimpleMap<T>::value;
+	concept ListMap = Impl::IsListMap<T>::value;
 }
 
 /*
@@ -482,14 +482,14 @@ requires (
 }
 */
 
-/// @brief `BaseSimpleMap` analog for an unsorted map that remembers order of insertion.
+/// @brief `BaseListMap` analog for an unsorted map that remembers order of insertion.
 /// @tparam TKey Key type.
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.
 template<class TKey, class TValue, Type::Integer TIndex = usize>
 using OrderedMap	= BaseListMap<TKey, TValue, TIndex, false>;
 
-/// @brief `BaseSimpleMap` analog for a sorted map.
+/// @brief `BaseListMap` analog for a sorted map.
 /// @tparam TKey Key type.
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.

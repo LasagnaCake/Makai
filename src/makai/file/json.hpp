@@ -347,7 +347,7 @@ namespace Makai::JSON {
 		/// @tparam T Value type.
 		/// @param out Output of the value.
 		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Container::SimpleMap T>
+		template <Makai::Type::Container::Map T>
 		bool tryGet(T& out) const
 		requires (
 			Makai::Type::Equal<typename T::KeyType, String>
@@ -366,7 +366,7 @@ namespace Makai::JSON {
 		/// @tparam T Value type.
 		/// @param out Output of the value.
 		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Container::SimpleMap T>
+		template <Makai::Type::Container::Map T>
 		bool tryGet(T& out) const
 		requires (
 			Makai::Type::Equal<typename T::KeyType, String>

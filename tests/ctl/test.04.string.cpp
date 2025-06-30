@@ -3,9 +3,9 @@
 
 using
 	CTL::String,
-	CTL::BaseSimpleMap,
+	CTL::BaseListMap,
 	CTL::OrderedMap,
-	CTL::SimpleMap,
+	CTL::ListMap,
 	CTL::List,
 	CTL::KeyValuePair,
 	CTL::TypeInfo
@@ -57,7 +57,7 @@ void print(List<T> const& lst) {
 }
 
 template<typename I, bool S>
-void printMap(BaseSimpleMap<String, String, I, S> const& m) {
+void printMap(BaseListMap<String, String, I, S> const& m) {
 	DEBUG(
 		"S: ",
 		m.size(),
@@ -72,7 +72,7 @@ void printMap(BaseSimpleMap<String, String, I, S> const& m) {
 }
 
 template<typename I, bool S>
-void printMap(BaseSimpleMap<String, String, I, S> const& m, String const& k) {
+void printMap(BaseListMap<String, String, I, S> const& m, String const& k) {
 	auto r = m.search(k);
 	if (r != -1)
 		CTL::Console::println("K: ", k, ", L: ", r, ", V: ", m[k]);
@@ -94,7 +94,7 @@ void testString() {
 	sp.sort();							print(sp);
 }
 
-template<template<typename K, typename V> class TMap = SimpleMap>
+template<template<typename K, typename V> class TMap = ListMap>
 void testStringMap() {
 	using MapType = TMap<String, String>;
 	DEBUGLN("<", TypeInfo<MapType>::name(), ">");
@@ -148,7 +148,7 @@ void testStringConversion() {
 
 int main() {
 	testString();
-	testStringMap<SimpleMap>();
+	testStringMap<ListMap>();
 	testStringMap<OrderedMap>();
 	testStringConversion();
 	DEBUGLN("String test passed!");
