@@ -26,8 +26,15 @@ namespace Tree {
 	/// @tparam TKey Node key type.
 	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
-	/// @tparam D Whether to allow duplicate values.
-	template<class TKey, class TValue, template <class> class TCompare, template <class> class TAlloc = HeapAllocator, bool D = false>
+	/// @tparam TAlloc<class> Allocator type. By default, it is `HeapAllocator`.
+	/// @tparam D Whether to allow duplicate values. By default, it is `false`.
+	template<
+		class TKey,
+		class TValue,
+		template <class> class TCompare,
+		template <class> class TAlloc = HeapAllocator,
+		bool D = false
+	>
 	struct RBL: Typed<KeyValuePair<TKey const&, TValue&>>, Paired<TKey, TValue> {
 		struct Node;
 
