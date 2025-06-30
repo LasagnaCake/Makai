@@ -539,6 +539,26 @@ struct FirstSecondPair:
 	constexpr operator PairType() const	{return pair();						}
 };
 
+/// @brief Tags the deriving class containing a pair of some sort.
+/// @tparam TKey Key type.
+/// @tparam TValue Value type.
+/// @tparam TPair<class, class> Pair type.
+template<
+	class TKey,
+	class TValue,
+	template <class TPairKey, class TPairValue> class TPair = Pair
+>
+struct Paired {
+	static_assert(Type::Container::PairLike<TPair<TKey, TValue>>, "Type is not a valid pair type!");
+
+	/// @brief Key type.
+	typedef TKey				KeyType;
+	/// @brief Value type.
+	typedef TValue				ValueType;
+	/// @brief Pair type.
+	typedef TPair<TKey, TValue>	PairType;
+};
+
 static_assert(Type::Comparator::Threeway<Pair<int, int>, Pair<int, int>>);
 static_assert(Type::Comparator::Threeway<KeyValuePair<int, int>, KeyValuePair<int, int>>);
 static_assert(Type::Comparator::Threeway<LeftRightPair<int, int>, LeftRightPair<int, int>>);

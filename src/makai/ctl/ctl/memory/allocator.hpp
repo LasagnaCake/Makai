@@ -29,7 +29,7 @@ template<class T>
 struct HeapAllocator {
 	/// @brief Allocates memory on the heap.
 	/// @param sz Size of memory to allocate.
-	/// @return Pointer to allocated memory.
+	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
 	constexpr pointer allocate(usize const sz)
 	requires Type::Void<T> {
 		if (!sz) return nullptr;
@@ -38,7 +38,7 @@ struct HeapAllocator {
 
 	/// @brief Allocates space for elements on the heap.
 	/// @param sz Element count to allocate for.
-	/// @return Pointer to allocated memory.
+	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
 	constexpr owner<T> allocate(usize const sz)
 	requires Type::NonVoid<T> {
 		if (!sz) return nullptr;
@@ -87,7 +87,7 @@ struct HeapAllocator {
 	/// @brief Resizes allocated memory.
 	/// @param mem Memory to resize.
 	/// @param sz New size.
-	/// @return Pointer to new memory location.
+	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	constexpr pointer resized(pointer const& mem, usize const sz)
 	requires Type::Void<T> {
 		if (!mem) return nullptr;
@@ -97,7 +97,7 @@ struct HeapAllocator {
 	/// @brief Resizes allocated memory.
 	/// @param mem Memory to resize.
 	/// @param sz New element count.
-	/// @return Pointer to new memory location.
+	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	constexpr owner<T> resized(owner<T> const mem, usize const sz)
 	requires Type::NonVoid<T> {
 		if (!mem) return nullptr;

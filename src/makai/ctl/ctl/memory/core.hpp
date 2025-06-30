@@ -260,7 +260,7 @@ namespace MX {
 	/// @brief Reallocates memory allocated in the heap.
 	/// @param mem Memory to reallocate.
 	/// @param sz New size in bytes.
-	/// @return Pointer to new memory location.
+	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	constexpr owner<void> realloc(owner<void> const mem, usize const sz) {
 		if (!(sz + 1)) __builtin_unreachable();
 		if (!sz) {
@@ -276,7 +276,7 @@ namespace MX {
 	/// @tparam T Type of data to reallocate.
 	/// @param mem Memory to reallocate.
 	/// @param sz New count of elements.
-	/// @return Pointer to new memory location.
+	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	template<Type::NonVoid T>
 	constexpr owner<T> realloc(owner<T> const mem, usize const sz) {
 		if (!(sz + 1)) __builtin_unreachable();
@@ -289,14 +289,16 @@ namespace MX {
 		return (T*)m;
 	}
 
-	/// @brief Destructs an object of a given type.
+	/// @brief Destructs an object of a given type, if it exists.
 	/// @tparam T Type of object to destruct.
 	/// @param val Object to destruct.
+	/// @return Pointer to destructed object.
 	/// @note Does not delete the underlying memory.
 	template<Type::NonVoid T>
-	constexpr void destruct(ref<T> const val) {
-		if (!val) return;
+	constexpr ref<T> destruct(ref<T> const val) {
+		if (!val) return nullptr;
 		val->~T();
+		return val;
 	}
 
 	/// @brief Constructs a given address of memory as a given type, with a list of arguments.
@@ -305,6 +307,7 @@ namespace MX {
 	/// @param mem Memory to construct as `T`.
 	/// @param ...args Constructor arguments.
 	/// @return Pointer to constructed memory.
+	/// @throw ConstructionFailure if memory does not exist.
 	template<Type::NonVoid T, typename... Args>
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args) {
 		if (!mem) throw ConstructionFailure();

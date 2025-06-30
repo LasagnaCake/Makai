@@ -5,6 +5,8 @@
 #include "../../cpperror.hpp"
 #include "../../adapter/comparator.hpp"
 #include "../../typetraits/traits.hpp"
+#include "../../memory/allocator.hpp"
+#include "../pair.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -21,27 +23,39 @@ namespace Type::Tree {
 namespace Tree {
 	// Based off of https://en.wikipedia.org/wiki/Red%E2%80%93black_tree, modified to allow for easier iteration
 	/// @brief Red-Black Tree + Doubly-Linked-List hybrid.
-	/// @tparam TData Node value type
+	/// @tparam TKey Node key type.
+	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
 	/// @tparam D Whether to allow duplicate values.
-	template<class TData, template <class> class TCompare, bool D>
-	struct RBL: Typed<TData> {
-		using Typed = Typed<TData>;
+	template<class TKey, class TValue, template <class> class TCompare, template <class> class TAlloc = HeapAllocator, bool D = false>
+	struct RBL: Typed<KeyValuePair<TKey const&, TValue&>>, Paired<TKey, TValue> {
+		struct Node;
+
+		using Typed			= Typed<KeyValuePair<TKey const&, TValue&>>;
+		using Paired		= Paired<TKey, TValue>;
+		using Allocatable	= Allocatable<TAlloc, Node>;
 		
 		using typename Typed::DataType;
 
+		using typename Paired::KeyType;
+		using typename Paired::ValueType;
+
+		using typename Allocatable::AllocatorType;
+
 		/// @brief Comparator type.
-		using ComparatorType = TCompare<DataType>;
+		using ComparatorType = TCompare<KeyType>;
 		
-		static_assert(Type::Tree::Comparator<TData, TCompare>, "TCompare must be a valid comparator for TData!");
+		static_assert(Type::Tree::Comparator<KeyType, TCompare>, "TCompare must be a valid comparator for TData!");
 		
 		/// @brief Whether duplicate values are allowed
 		constexpr static bool ALLOW_DUPES = D;
 		
 		/// @brief Tree node.
-		struct Node {
+		struct Node: Ordered {
+			/// @brief Node key.
+			KeyType		key;
 			/// @brief Node value.
-			DataType	value;
+			ValueType	value;
 			/// @brief Parent.
 			ref<Node>	parent		= nullptr;
 			/// @brief Left & right children.
@@ -65,7 +79,7 @@ namespace Tree {
 			/// @param parent Parent to parent to.
 			constexpr static void append(ref<Node> const node, ref<Node> parent) {
 				if (!node || !parent) return;
-				if (ComparatorType::lesser(node->value, parent->value)) {
+				if (ComparatorType::lesser(node->key, parent->key)) {
 					if constexpr (ALLOW_DUPES) parent = leftEdge(parent);
 					node->next = parent;
 					if (parent->prev) {
@@ -97,22 +111,22 @@ namespace Tree {
 				}
 			}
 			
-			/// @brief Returns the leftmost edge of a node that contains the same value as itself in the list.
+			/// @brief Returns the leftmost edge of a node that contains the same key as itself in the list.
 			/// @param node Node to get edge of.
 			/// @return Edge node.
 			constexpr static ref<Node> leftEdge(ref<Node> node) {
 				if (!node) return node;
-				while (node->prev && ComparatorType::equals(node->value, node->prev->value))
+				while (node->prev && ComparatorType::equals(node->key, node->prev->key))
 					node = node->prev;
 				return node;
 			}
 			
-			/// @brief Returns the rightmost edge of a node that contains the same value as itself in the list.
+			/// @brief Returns the rightmost edge of a node that contains the same key as itself in the list.
 			/// @param node Node to get edge of.
 			/// @return Edge node.
 			constexpr static ref<Node> rightEdge(ref<Node> node) {
 				if (!node) return node;
-				while (node->next && ComparatorType::equals(node->value, node->next->value))
+				while (node->next && ComparatorType::equals(node->key, node->next->key))
 					node = node->next;
 				return node;
 			}
@@ -125,7 +139,7 @@ namespace Tree {
 		struct NodeIterator {
 			/// @brief Node type.
 			using NodeType = TNode;
-			/// @brief Node value type.
+			/// @brief Iterator value accessor type.
 			using DataType = Meta::DualType<Type::Constant<NodeType>, DataType const, DataType>;
 			
 			/// @brief Constructs the iterator.
@@ -152,13 +166,8 @@ namespace Tree {
 			}
 			
 			/// @brief Dereference operator overloading.
-			constexpr DataType& operator*() const {
-				return value();
-			}
-			
-			/// @brief Dereference operator overloading.
-			constexpr DataType* operator->() const {
-				return &value();
+			constexpr DataType operator*() const {
+				return pair();
 			}
 			
 			/// @brief Comparison operator overloading.
@@ -168,9 +177,9 @@ namespace Tree {
 			}
 			
 		private:
-			constexpr DataType& value() const {
+			constexpr DataType pair() const {
 				if (!current) throw NullPointerException("Iterator is empty!");
-				return current->value;
+				return {current->key, current->value};
 			}
 
 			/// @brief Current node.
@@ -209,36 +218,40 @@ namespace Tree {
 		/// @return Whether tree is empty.
 		constexpr bool empty() const {return root;}
 		
-		/// @brief Returns the value at the "begginning" of the tree.
+		/// @brief Returns the key-value pair at the "begginning" of the tree.
 		/// @return Value at begginning of tree.
 		/// @throw NonexistentValueException if tree is empty.
 		constexpr DataType const& front() const {
 			if (!root) throw NonexistentValueException("Tree is empty!");
-			return leftmostEdge()->value;
+			auto const edge = leftmostEdge();
+			return {edge->key, edge->value};
 		}
 		
-		/// @brief Returns the value at the "begginning" of the tree.
+		/// @brief Returns the key-value pair at the "begginning" of the tree.
 		/// @return Value at begginning of tree.
 		/// @throw NonexistentValueException if tree is empty.
 		constexpr DataType& front() {
 			if (!root) throw NonexistentValueException("Tree is empty!");
-			return leftmostEdge()->value;
+			auto const edge = leftmostEdge();
+			return {edge->key, edge->value};
 		}
 		
-		/// @brief Returns the value at the "end" of the tree.
+		/// @brief Returns the key-value pair at the "end" of the tree.
 		/// @return Value at end of tree.
 		/// @throw NonexistentValueException if tree is empty.
 		constexpr DataType const& back() const {
 			if (!root) throw NonexistentValueException("Tree is empty!");
-			return rightmostEdge()->value;
+			auto const edge = rightmostEdge();
+			return {edge->key, edge->value};
 		}
 		
-		/// @brief Returns the value at the "end" of the tree.
+		/// @brief Returns the key-value pair at the "end" of the tree.
 		/// @return Value at end of tree.
 		/// @throw NonexistentValueException if tree is empty.
 		constexpr DataType& back() {
 			if (!root) throw NonexistentValueException("Tree is empty!");
-			return rightmostEdge()->value;
+			auto const edge = rightmostEdge();
+			return {edge->key, edge->value};
 		}
 		
 		/// @brief Returns whether a node is the right-side child of its parent.
@@ -357,59 +370,59 @@ namespace Tree {
 			} while ((parent = node->parent));
 		}
 		
-		/// @brief Finds the appropriate parent node for a value.
-		/// @param val Value to find parent for.
+		/// @brief Finds the appropriate parent node for a key.
+		/// @param key Key to find parent for.
 		/// @return Appropriate parent, or `nullptr` if tree is empty.
-		constexpr ref<Node const> findParent(DataType const& val) const {
+		constexpr ref<Node const> findParent(KeyType const& key) const {
 			if (!root) return nullptr;
-			return searchBranch(root, val);
+			return searchBranch(root, key);
 		}
 		
-		/// @brief Finds the appropriate parent node for a value.
-		/// @param val Value to find parent for.
+		/// @brief Finds the appropriate parent node for a key.
+		/// @param val Key to find parent for.
 		/// @return Appropriate parent, or `nullptr` if tree is empty.
-		constexpr ref<Node> findParent(DataType const& val) {
+		constexpr ref<Node> findParent(KeyType const& key) {
 			if (!root) return nullptr;
-			return searchBranch(root, val);
+			return searchBranch(root, key);
 		}
 		
-		/// @brief Inserts a value in the tree.
-		/// @param val Value to insert.
-		/// @return Node containing the value.
-		constexpr ref<Node> insert(DataType const& val) {
-			ref<Node> const parent = findParent(val);
+		/// @brief Inserts a key in the tree.
+		/// @param key Key to insert.
+		/// @return Node containing the key.
+		constexpr ref<Node> insert(KeyType const& key) {
+			ref<Node> const parent = findParent(key);
 			if constexpr (!ALLOW_DUPES) {
-				if (ComparatorType::equals(parent->value, val))
+				if (ComparatorType::equals(parent->key, key))
 					return parent;
 			}
-			ref<Node> const node = new Node{val};
-			insertNode(node, findParent(val), true);
+			ref<Node> const node = MX::construct(alloc.allocate(), key);
+			insertNode(node, parent, true);
 			Node::append(node, parent);
 			return node;
 		}
 		
-		/// @brief Finds a node containing a value in the tree.
-		/// @param val Value to match.
-		/// @return Node containing the value, or `nullptr`.
-		constexpr ref<Node const> find(DataType const& val) const {
-			ref<Node> result = findParent(val);
-			if (result && ComparatorType::equals(val, result->value))
+		/// @brief Finds a node containing a key in the tree.
+		/// @param key Key to match.
+		/// @return Node containing the key, or `nullptr`.
+		constexpr ref<Node const> find(KeyType const& key) const {
+			ref<Node> result = findParent(key);
+			if (result && ComparatorType::equals(key, result->key))
 				return result;
 			return nullptr;
 		}
 		
-		/// @brief Finds a node containing a value in the tree.
-		/// @param val Value to match.
-		/// @return Node containing the value, or `nullptr`.
-		constexpr ref<Node> find(DataType const& val) {
-			ref<Node> result = findParent(val);
-			if (result && ComparatorType::equals(val, result->value))
+		/// @brief Finds a node containing a key in the tree.
+		/// @param val Key to match.
+		/// @return Node containing the key, or `nullptr`.
+		constexpr ref<Node> find(KeyType const& key) {
+			ref<Node> result = findParent(key);
+			if (result && ComparatorType::equals(key, result->key))
 				return result;
 			return nullptr;
 		}
 		
 		/// @brief Removes a node from the tree, and updates its links.
-		/// @param val Value to match.
+		/// @param node Node to remove.
 		/// @return Removed node, or `nullptr` if node does not exist.
 		constexpr ref<Node> removeAndRelink(ref<Node> const node) {
 			if (!node) return nullptr;
@@ -418,16 +431,22 @@ namespace Tree {
 			return node;
 		}
 		
-		/// @brief Erases a given value from the tree.
-		/// @param val Value to erase.
-		constexpr void erase(DataType const& val) {
-			if (auto node = removeAndRelink(find(val)))
-				delete node;
+		/// @brief Erases a node with a given key from the tree.
+		/// @param key Key to erase.
+		constexpr void erase(KeyType const& key) {
+			if (auto node = removeAndRelink(find(key)))
+				alloc.deallocate(MX::destruct(node));
 		}
+
+		/// @brief Returns the associated allocator.
+		/// @return Associated allocator.
+		constexpr AllocatorType& allocator() {return alloc;}
 		
 	private:
 		/// @brief Tree root.
-		owner<Node> root = nullptr;
+		owner<Node>		root = nullptr;
+		/// @brief Allocator.
+		AllocatorType	alloc;
 
 		/// @brief Returns the leftmost node in the linked list.
 		/// @return Rightmost node.
@@ -451,13 +470,13 @@ namespace Tree {
 			else return edge;
 		}
 	
-		constexpr static ref<Node> searchBranch(ref<Node> node, DataType const& val) {
+		constexpr static ref<Node> searchBranch(ref<Node> node, KeyType const& key) {
 			if (!node) return nullptr;
 			if (!(node->left() || node->right())) return node;
 			while (node->left() || node->right()) {
-				if (ComparatorType::lesser(node->value, val) && node->left())
+				if (ComparatorType::lesser(node->key, key) && node->left())
 					node = node->left();
-				else if ((!ComparatorType::equals(node->value, val)) && node->right())
+				else if ((!ComparatorType::equals(node->key, key)) && node->right())
 					node = node->right();
 				else break;
 			}
