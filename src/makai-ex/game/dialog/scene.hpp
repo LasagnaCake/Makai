@@ -29,7 +29,7 @@ namespace Makai::Ex::Game::Dialog {
 		ActorRef actor(usize const& hash) {
 			if (cast.contains(hash))
 				return {cast.at(hash)};
-			return {cast.at(hash) = nullptr};
+			return {cast[hash] = nullptr};
 		}
 
 		/// @brief Returns a reference to an actor by its name.

@@ -619,7 +619,7 @@ namespace Makai::Ex::AVM::Compiler {
 
 		void append(OperationTree const& other, usize const incline) {
 			tokens.appendBack(other.tokens);
-			for (auto& fun: other.functions.functions)
+			for (auto const& fun: other.functions.functions)
 				if (functions.functions.contains(fun.key))
 					throw Error::InvalidValue(
 						"Function '" + fun.value.name
@@ -628,7 +628,7 @@ namespace Makai::Ex::AVM::Compiler {
 						MKEX_ANIMAC_SOURCE(fileName, incline)
 					);
 				else functions.functions[fun.key] = fun.value;
-			for (auto& cho: other.choices)
+			for (auto const& cho: other.choices)
 				if (choices.contains(cho.key))
 					throw Error::InvalidValue(
 						"Choice '" + cho.value.name
@@ -1186,7 +1186,7 @@ namespace Makai::Ex::AVM::Compiler {
 
 		constexpr Map<uint64, ChoiceRef> processChoices(Map<usize, OperationTree::ChoiceEntry> const& choices) {
 			Map<uint64, ChoiceRef> out;
-			for (auto& [choice, options]: choices) {
+			for (auto const& [choice, options]: choices) {
 				out[choice] = {options.options.empty() ? 0 : data.size(), options.options.size() - 1};
 				data.appendBack(options.options);
 			}
@@ -1395,8 +1395,9 @@ namespace Makai::Ex::AVM::Compiler {
 			}
 			// Jump tables
 			if (!jumps.empty()) {
-				out.expand(jumps.size() * sizeof(JumpEntry), '\0');
-				MX::memcpy(((JumpEntry*)(out.data() + fh.jumps.start)), jumps.data(), jumps.size());
+				auto const ji = jumps.items();
+				out.expand(ji.size() * sizeof(JumpEntry), '\0');
+				MX::memcpy(((JumpEntry*)(out.data() + fh.jumps.start)), ji.data(), ji.size());
 			}
 			// Bytecode
 			if (!code.empty()) {

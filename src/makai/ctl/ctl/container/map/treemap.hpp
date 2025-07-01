@@ -128,7 +128,7 @@ private TTree<TKey, TValue, SimpleComparator> {
 	/// @brief Gets the value of the element that matches the given key.
 	/// @param key Key to look for.
 	/// @return Value of the element.
-	constexpr ValueType& operator[](KeyType const& key) {
+	constexpr ValueType& at(KeyType const& key) {
 		if (auto const node = BaseType::find(key))
 			return node->value;
 		return BaseType::insert(key)->value;
@@ -137,10 +137,13 @@ private TTree<TKey, TValue, SimpleComparator> {
 	/// @brief Gets the value of the element that matches the given key.
 	/// @param key Key to look for.
 	/// @return Value of the element.
+	constexpr ValueType& operator[](KeyType const& key)				{return at(key);}
+
+	/// @brief Gets the value of the element that matches the given key.
+	/// @param key Key to look for.
+	/// @return Value of the element.
 	/// @throw OutOfBoundsException when key does not exist.
-	constexpr ValueType const& operator[](KeyType const& key) const {
-		return at(key);
-	}
+	constexpr ValueType const& operator[](KeyType const& key) const	{return at(key);}
 
 	/// @brief Inserts a key-value pair into the container, if key does not exist.
 	/// @param pair Key-value pair to insert.
