@@ -106,7 +106,7 @@ public:
 	/// @param signals Pairs of signals and their series of actions.
 	/// @return Reference to self.
 	NotificationServer& subscribe(Dictionary<SignalList> const& signals) {
-		for (auto& [name, actions]: signals)
+		for (auto const& [name, actions]: signals)
 			subscribe(name, actions);
 		return *this;
 	}
@@ -115,7 +115,7 @@ public:
 	/// @param signals Pairs of signals and their series of actions.
 	/// @return Reference to self.
 	NotificationServer& subscribe(Arguments<KeyValuePair<String, SignalList>> const& signals) {
-		for (auto& [name, actions]: signals)
+		for (auto const& [name, actions]: signals)
 			subscribe(name, actions);
 		return *this;
 	}
@@ -124,7 +124,7 @@ public:
 	/// @param signals Pairs of signals and their series of actions.
 	/// @return Reference to self.
 	NotificationServer& subscribe(Arguments<KeyValuePair<String, SignalArguments>> const& signals) {
-		for (auto& [name, actions]: signals)
+		for (auto const& [name, actions]: signals)
 			subscribe(name, actions);
 		return *this;
 	}
@@ -134,7 +134,7 @@ public:
 	/// @return Reference to self.
 	NotificationServer& unsubscribe(String const& signal) {
 		if (db.contains(signal)) {
-			auto& al = added[signal];
+			auto const& al = added[signal];
 			db[signal].eraseIf([&] (auto const& elem) {return al.find(elem) != -1;});
 		}
 		added[signal].clear();
@@ -173,7 +173,7 @@ public:
 	/// @brief Unsubscribes all actions this object registered.
 	/// @return Reference to self.
 	NotificationServer& unsubscribeFromAll() {
-		for (auto& [name, lst]: db) {
+		for (auto const& [name, lst]: db) {
 			if (!added.contains(name))
 				continue;
 			auto& al = added[name];
@@ -211,7 +211,7 @@ public:
 	/// @brief Broadcasts a series of notifications.
 	/// @param notifs Pairs of notifications and their messages.
 	static void broadcast(List<KeyValuePair<String, MessageHandleType>> const& notifs) {
-		for (auto& [sig, msg]: notifs)
+		for (auto const& [sig, msg]: notifs)
 			broadcast(sig, msg);
 	}
 
