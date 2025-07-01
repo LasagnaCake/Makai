@@ -513,14 +513,13 @@ namespace Tree {
 		constexpr static ref<Node> searchBranch(ref<Node> node, KeyType const& key) {
 			if (!node) return nullptr;
 			if (!(node->left() || node->right())) return node;
-			while (node->left() || node->right()) {
-				if (ComparatorType::lesser(node->key, key) && node->left())
-					node = node->left();
-				else if (!(ComparatorType::equals(node->key, key)) && node->right())
-					node = node->right();
-				else break;
+			ref<Node> parent = node;
+			while (node) {
+				parent = node;
+				if (ComparatorType::equals(node->key, key)) break;
+				node = node->children[!ComparatorType::lesser(key, node->key)];
 			}
-			return node;
+			return parent;
 		}
 
 		constexpr void repaintLeft(ref<Node>& sibling, ref<Node>& closeNephew, ref<Node>& farNephew, bool& right) {
