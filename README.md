@@ -64,6 +64,9 @@ For the old system, se the `legacy-system` branch.
 3. Run `make all`;
 4. Done! The result is located in the generated `output/` folder.
 
+> [!note]
+> If `../../../lib/xml2json/[...]: warning: floating constant exceeds range of 'float' [-Woverflow]` appears while compiling for release, ignore it - it's a third-party library issue.
+
 ### Note
 
 ## Libraries used
