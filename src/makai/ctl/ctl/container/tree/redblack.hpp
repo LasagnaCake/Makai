@@ -8,19 +8,11 @@
 #include "../../memory/allocator.hpp"
 #include "../pair.hpp"
 
+#include "comparator.hpp"
+
 #include <iostream>
 
 CTL_NAMESPACE_BEGIN
-
-/// @brief Tree-specific type constraints.
-namespace Type::Tree {
-	/// @brief Whether `TComparator` forms a valid tree comparator with `TData`.
-	template <class TData, template <class> class TCompare>
-	concept Comparator = requires {
-		{TCompare<TData>::lesser(TData(), TData())}	-> Type::Convertible<bool>;
-		{TCompare<TData>::equals(TData(), TData())}	-> Type::Convertible<bool>;
-	};
-};
 
 namespace Tree {
 	// Based off of https://en.wikipedia.org/wiki/Red%E2%80%93black_tree
@@ -165,7 +157,6 @@ namespace Tree {
 						}
 					} else if (previous == current->children[!forward]) {
 						previous = current;
-						// TODO: stuff here
 						paused = true;
 						break;
 					} else if (previous == current->children[forward]) {
@@ -173,16 +164,6 @@ namespace Tree {
 						current = current->parent;
 					}
 				}
-			}
-
-			constexpr bool shift(bool const right) {
-				if (current->children[right]) {
-					previous = current;
-					current = current->children[right];
-					return true;
-				}
-				previous = nullptr;
-				return false;
 			}
 
 			constexpr DataType pair() const {
@@ -311,7 +292,7 @@ namespace Tree {
 					parent->red = false;
 					return;
 				}
-				right = parent == grandparent->right();
+				right = isRightChild(parent);
 				ref<Node> const uncle = grandparent->children[!right];
 				if (!uncle || !uncle->red) {
 					if (node == parent->children[!right]) {
@@ -410,7 +391,9 @@ namespace Tree {
 			if (parent && ComparatorType::equals(parent->key, key))
 				return parent;
 			ref<Node> const node = MX::construct(alloc.allocate(), key);
-			insertNode(node, parent, false);
+			if (!parent)
+				return (root = node);
+			insertNode(node, parent, !ComparatorType::lesser(key, parent->key));
 			return node;
 		}
 		
@@ -523,7 +506,7 @@ namespace Tree {
 			while (node->left() || node->right()) {
 				if (ComparatorType::lesser(node->key, key) && node->left())
 					node = node->left();
-				else if (ComparatorType::greater(node->key, key) && node->right())
+				else if (!(ComparatorType::equals(node->key, key)) && node->right())
 					node = node->right();
 				else break;
 			}
