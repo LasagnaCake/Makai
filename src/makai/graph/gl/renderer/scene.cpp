@@ -60,12 +60,12 @@ void Scene::draw() {
 	API::Debug::Context ctx("Scene::draw");
 	#endif // MAKAILIB_DEBUG
 	GlobalState state(camera, Matrix4x4(space), world);
-	for(auto& [_, obj]: objects)
+	for(auto const& [_, obj]: objects)
 		obj->render();
 }
 
 void Scene::extend(Scene const& other) {
-	for(auto& [name, obj]: other.objects) {
+	for(auto const& [name, obj]: other.objects) {
 		auto [_, nobj] = createObject(name);
 		nobj->triangles = obj->triangles;
 		nobj->trans = obj->trans;
@@ -99,7 +99,7 @@ void Scene::saveToSceneFile(
 	JSON::JSONData file = getSceneDefinition(integratedObjects, integratedObjectBinaries, integratedObjectTextures);
 	List<JSON::JSONData> objpaths;
 	OS::FS::makeDirectory(folder);
-	for (auto& [objname, obj]: getObjects()) {
+	for (auto const& [objname, obj]: getObjects()) {
 		String folderpath	= OS::FS::concatenate(folder, objname);
 		String objpath		= OS::FS::concatenate(folder, objname);
 		if (!integratedObjects) {
@@ -256,7 +256,7 @@ void Scene::extendFromDefinitionV0(JSON::JSONData def, String const& sourcepath)
 				}
 			} else if (def["data"].isObject()) {
 				auto objs = def["data"].json().items();
-				for(auto& [name, obj]: objs) {
+				for(auto const& [name, obj]: objs) {
 					DEBUGLN("[[ ", name," ]]");
 					auto r = createObject(name).value;
 					r->extendFromDefinition(
@@ -285,7 +285,7 @@ JSON::JSONData Scene::getSceneDefinition(
 	JSON::JSONData def;
 	def["version"] = VERSION;
 	if (integratedObjects)
-		for (auto& [name, obj]: getObjects())
+		for (auto const& [name, obj]: getObjects())
 			def["data"][name] = obj->getObjectDefinition("base64", integratedObjectBinaries, integratedObjectTextures);
 	Camera3D cam = camera;
 	def["camera"] = JSON::JSONType{
