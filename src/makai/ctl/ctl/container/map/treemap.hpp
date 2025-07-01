@@ -22,7 +22,7 @@ template<
 	class TKey,
 	class TValue,
 	template <class, class> class							TPair	= Pair,
-	template <class, class, template<class> class> class	TTree	= Tree::RedBlack
+	template <class, class, template<class> class> class	TTree	= Tree::AVL
 >
 struct TreeCollected: Paired<TKey, TValue, TPair> {
 	static_assert(Type::Container::PairLike<TPair<TKey, TValue>>, "Type is not a valid pair type!");
@@ -39,7 +39,7 @@ template<
 	class TValue,
 	Type::Integer TSize = usize,
 	template <class> class									TCompare	= SimpleComparator,
-	template <class, class, template <class> class> class	TTree		= Tree::RedBlack
+	template <class, class, template <class> class> class	TTree		= Tree::AVL
 >
 struct TreeMap:
 TreeCollected<TKey, TValue, KeyValuePair, TTree>,
@@ -73,7 +73,6 @@ private TTree<TKey, TValue, SimpleComparator> {
 	using BaseType::clear;
 	using BaseType::empty;
 	using BaseType::allocator;
-	using BaseType::treeverse;
 
 	using
 		typename BaseType::DataType,

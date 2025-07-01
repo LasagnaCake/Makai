@@ -43,8 +43,6 @@ void print(BaseListMap<K, V, I, S> const& m) {
 
 template<typename K, typename V, typename I>
 void print(TreeMap<K, V, I> const& m) {
-	m.treeverse();
-	return;
 	DEBUG("(M) ");
 	DEBUG(
 		"S: ",
