@@ -28,7 +28,7 @@ namespace Tree {
 		template <class> class TAlloc = HeapAllocator
 	>
 	struct AVL:
-		BaseTree<TKey, TValue, TCompare, TAlloc>,
+		BaseTree<TKey, TValue, TCompare, TAlloc, Base::AVLNode>,
 		Derived<BaseTree<TKey, TValue, TCompare, TAlloc, Base::AVLNode>> {
 		using Derived = ::CTL::Derived<BaseTree<TKey, TValue, TCompare, TAlloc, Base::AVLNode>>;
 
@@ -39,11 +39,11 @@ namespace Tree {
 		using typename BaseType::DataType;
 		using typename BaseType::ConstantType;
 		using typename BaseType::Node;
-		using typename Derived::ComparatorType;
-		using typename Derived::IteratorType;
-		using typename Derived::ReverseIteratorType;
-		using typename Derived::ConstIteratorType;
-		using typename Derived::ConstReverseIteratorType;
+		using typename BaseType::ComparatorType;
+		using typename BaseType::IteratorType;
+		using typename BaseType::ReverseIteratorType;
+		using typename BaseType::ConstIteratorType;
+		using typename BaseType::ConstReverseIteratorType;
 
 		using BaseType::alloc;
 
@@ -203,7 +203,7 @@ namespace Tree {
 			auto const parent = findParent(key);
 			if (parent && ComparatorType::equals(parent->key, key))
 				return parent;
-			ref<Node> const node = MX::construct(alloc.allocate(), cachedDepth(parent), 0, key);
+			ref<Node> const node = MX::construct(alloc.allocate(), Node{cachedDepth(parent), 0, key});
 			if (!parent)
 				return (root = node);
 			insertNode(node, parent, !ComparatorType::lesser(key, parent->key));

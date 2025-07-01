@@ -73,7 +73,9 @@ namespace Tree {
 			
 			/// @brief Constructs the iterator.
 			/// @param node Pointer to node.	
-			constexpr NodeIterator(ref<NodeType> const node = nullptr): current(node), previous(nullptr) {}
+			constexpr NodeIterator(ref<NodeType> const node = nullptr): current(node), previous(nullptr) {
+				advance(!REVERSE);
+			}
 			
 			/// @brief Wether it is a reverse iterator.
 			constexpr static bool REVERSE = R;
