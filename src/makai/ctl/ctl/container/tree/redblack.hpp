@@ -428,9 +428,13 @@ namespace Tree {
 		
 		/// @brief Erases a node with a given key from the tree.
 		/// @param key Key to erase.
-		constexpr void erase(KeyType const& key) {
-			if (auto node = removeAndRelink(find(key)))
+		/// @return Whether operation was successful.
+		constexpr bool erase(KeyType const& key) {
+			if (auto node = removeAndRelink(find(key))) {
 				alloc.deallocate(MX::destruct(node));
+				return true;
+			}
+			return false;
 		}
 
 		/// @brief Deletes all nodes in the tree.

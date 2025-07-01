@@ -132,6 +132,8 @@ void testMap() {
 	print(mp.keys());
 	print(mp.values());
 	print(mp.items());
+	mp.erase(29);
+	print(mp);
 	mp.clear(); print(mp);
 	DEBUGLN("</", TypeInfo<MapType>::name(), ">");
 }

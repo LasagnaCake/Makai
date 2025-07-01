@@ -212,8 +212,7 @@ private TTree<TKey, TValue, SimpleComparator> {
 	/// @param key Key to search for.
 	/// @return Reference to self.
 	constexpr SelfType& erase(KeyType const& key) {
-		if (contains(key)) --count;
-		BaseType::erase(key);
+		if (BaseType::erase(key)) --count;
 		return *this;
 	}
 	

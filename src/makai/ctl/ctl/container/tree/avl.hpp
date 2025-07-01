@@ -154,30 +154,59 @@ namespace Tree {
 			if (!(node || parent)) return;
 			node->parent			= parent;
 			parent->children[right]	= node;
-			while (parent) {
-				if (parent->weight > 1) {
-					switch (parent->right()->weight) {
-						case -1:
-						case 0:		rotate(parent->right(), false);	break;
-						case 1:		shuffle(parent->right(), false);	break;
-						default: break;
-					}
-				} else if (parent->weight < -1) {
-					switch (parent->left()->weight) {
-						case -1:	shuffle(parent->left(), true);	break;
-						case 0:
-						case 1:		rotate(parent->left(), true);	break;
-						default: break;
-					}
-				} else break;
-				parent = parent->parent;
-			}
+			rebalance(parent);
 		}
 		
 		/// @brief Removes a node from the tree.
 		/// @param node Node to remove.
-		constexpr static void removeNode(ref<Node> node) {
-			if (!node) return;
+		constexpr void removeNode(ref<Node> node) {
+			if (!node || !(node->left() || node->right())) return;
+			bool const right = node->parent->right() == node;
+			if (node->parent) {
+				if (!node->left()) {
+					node->parent->children[right] = node->right();
+					node->right()->parent = node->parent;
+					return refactor(node->parent);
+				}
+				if (!node->right()) {
+					node->parent->children[right] = node->left();
+					node->left()->parent = node->parent;
+					return refactor(node->parent);
+				}
+				throw FailedActionException("Removal not implemented for this case!");
+			} else if (!node->left())
+				root = node->right();
+			else if (!node->right())
+				root = node->left();
+			else {
+				throw FailedActionException("Removal not implemented for this case!");
+			}
+		}
+
+		constexpr static void rebalance(ref<Node> node) {
+			while (node) {
+				if (node->weight > 1) {
+					switch (node->right()->weight) {
+						case -1:
+						case 0:		rotate(node->right(), false);	break;
+						case 1:		shuffle(node->right(), false);	break;
+						default: break;
+					}
+				} else if (node->weight < -1) {
+					switch (node->left()->weight) {
+						case -1:	shuffle(node->left(), true);	break;
+						case 0:
+						case 1:		rotate(node->left(), true);	break;
+						default: break;
+					}
+				} else break;
+				node = node->parent;
+			}
+		}
+
+		constexpr static void refactor(ref<Node> node) {
+			node->weight = cachedWeight(node);
+			rebalance(node);
 		}
 		
 		/// @brief Finds the appropriate parent node for a key.
@@ -232,11 +261,14 @@ namespace Tree {
 		
 		/// @brief Erases a node with a given key from the tree.
 		/// @param key Key to erase.
-		constexpr void erase(KeyType const& key) {
+		/// @return Whether operation was successful.
+		constexpr bool erase(KeyType const& key) {
 			if (auto node = find(key)) {
-				//removeNode(node);
-				//alloc.deallocate(MX::destruct(node));
+				removeNode(node);
+				alloc.deallocate(MX::destruct(node));
+				return true;
 			}
+			return false;
 		}
 
 		/// @brief Deletes all nodes in the tree.
