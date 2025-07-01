@@ -14,13 +14,13 @@ CTL_NAMESPACE_BEGIN
 
 namespace Tree {
 	// Based off of https://en.wikipedia.org/wiki/Red%E2%80%93black_tree
-	// TODO: Figure out why it's broken
+	// TODO: Figure out why it's broken (& also make it use `BaseTree`, like `AVL` does)
 	/// @brief Red-Black Tree.
 	/// @tparam TKey Node key type.
 	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
 	/// @tparam TAlloc<class> Allocator type. By default, it is `HeapAllocator`.
-	/// @warning DO NOT USE THIS TREE! It's currently not working as intended!
+	/// @warning DO NOT USE THIS STRUCTURE! It's currently not working as intended!
 	template<
 		class TKey,
 		class TValue,
