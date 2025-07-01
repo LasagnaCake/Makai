@@ -85,7 +85,7 @@ namespace Range {
 	constexpr Impl::SequenceWrapper<T> sequence(T const begin, T const end) {
 		if (begin < end)
 			return sequence<T>(begin, end, -1);
-		return sequence<T>(begin, end, -1);
+		return sequence<T>(begin, end, 1);
 	}
 
 	/// @brief returns a numeric sequence from `0` to `end`.
