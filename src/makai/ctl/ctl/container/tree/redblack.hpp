@@ -1,5 +1,5 @@
-#ifndef CTL_CONTAINER_TREE_RBL_H
-#define CTL_CONTAINER_TREE_RBL_H
+#ifndef CTL_CONTAINER_TREE_REDBLACK_H
+#define CTL_CONTAINER_TREE_REDBLACK_H
 
 #include "../../namespace.hpp"
 #include "../../cpperror.hpp"
@@ -23,21 +23,19 @@ namespace Type::Tree {
 };
 
 namespace Tree {
-	// Based off of https://en.wikipedia.org/wiki/Red%E2%80%93black_tree, modified to allow for easier iteration
-	/// @brief Red-Black Tree + Doubly-Linked-List hybrid.
+	// Based off of https://en.wikipedia.org/wiki/Red%E2%80%93black_tree
+	/// @brief Red-Black Tree.
 	/// @tparam TKey Node key type.
 	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
 	/// @tparam TAlloc<class> Allocator type. By default, it is `HeapAllocator`.
-	/// @tparam D Whether to allow duplicate values. By default, it is `false`.
 	template<
 		class TKey,
 		class TValue,
 		template <class> class TCompare,
-		template <class> class TAlloc = HeapAllocator,
-		bool D = false
+		template <class> class TAlloc = HeapAllocator
 	>
-	struct RBL: Paired<TKey const, TValue> {
+	struct RedBlack: Paired<TKey const, TValue> {
 		using Paired		= ::CTL::Paired<TKey const, TValue>;
 
 		using typename Paired::KeyType;
@@ -50,32 +48,29 @@ namespace Tree {
 		using ComparatorType = TCompare<KeyType>;
 		
 		static_assert(Type::Tree::Comparator<KeyType, TCompare>, "TCompare must be a valid comparator for TData!");
-		
-		/// @brief Whether duplicate values are allowed.
-		constexpr static bool ALLOW_DUPES = D;
 
 		/// @brief Empty constructor (defaulted).
-		constexpr RBL() = default;
+		constexpr RedBlack() = default;
 
 		/// @brief Copy constructor.
-		constexpr RBL(RBL const& other) {
+		constexpr RedBlack(RedBlack const& other) {
 			append(other);
 		}
 
 		/// @brief Move constructor (defaulted).
-		constexpr RBL(RBL&& other) {
+		constexpr RedBlack(RedBlack&& other) {
 			root = other.root;
 			other.root = nullptr;
 		}
 
 		/// @brief Copy assignment operator.
-		constexpr RBL& operator=(RBL const& other) {
+		constexpr RedBlack& operator=(RedBlack const& other) {
 			clear();
 			return append(other);
 		}
 
 		/// @brief Move assignment operator.
-		constexpr RBL& operator=(RBL&& other) {
+		constexpr RedBlack& operator=(RedBlack&& other) {
 			clear();
 			root = other.root;
 			other.root = nullptr;
@@ -83,7 +78,7 @@ namespace Tree {
 		}
 
 		/// @brief Destructor.
-		constexpr ~RBL() {clear();}
+		constexpr ~RedBlack() {clear();}
 		
 		/// @brief Tree node.
 		struct Node {
@@ -97,10 +92,6 @@ namespace Tree {
 			ref<Node>	children[2]	= {nullptr, nullptr};
 			/// @brief Whether the node is red.
 			bool		red			= false;
-			/// @brief Previous node in the list.
-			ref<Node>	prev		= nullptr;
-			/// @brief Next node in the list.
-			ref<Node>	next		= nullptr;
 			
 			/// @brief Returns the left child.
 			/// @return Left child.
@@ -108,63 +99,6 @@ namespace Tree {
 			/// @brief Returns the right child.
 			/// @return Right child.
 			constexpr ref<Node> right() const	{return children[1];}
-			
-			/// @brief Links two nodes in the list, while respecting their children.
-			/// @param node Node to parent.
-			/// @param parent Parent to parent to.
-			constexpr static void append(ref<Node> const node, ref<Node> parent) {
-				if (!(node && parent)) return;
-				if (ComparatorType::lesser(node->key, parent->key)) {
-					if constexpr (ALLOW_DUPES) parent = leftEdge(parent);
-					node->next = parent;
-					if (parent->prev) {
-						parent->prev->next	= node;
-						node->prev			= parent->prev;
-					}
-					parent->prev = node;
-				} else {
-					if constexpr (ALLOW_DUPES) parent = rightEdge(parent);
-					node->prev = parent;
-					if (parent->next) {
-						parent->next->prev	= node;
-						node->next			= parent->next;
-					}
-					parent->next = node;
-				}
-			}
-			
-			/// @brief Links two nodes, sequentially, in the list.
-			/// @param prev "Before" node.
-			/// @param next "After" node.
-			constexpr static void link(ref<Node> const prev, ref<Node> const next) {
-				if (!next || !prev) return;
-				else if (!next)	prev->next = nullptr;
-				else if (!prev)	next->prev = nullptr;
-				else {
-					prev->next = next;
-					next->prev = prev;
-				}
-			}
-			
-			/// @brief Returns the leftmost edge of a node that contains the same key as itself in the list.
-			/// @param node Node to get edge of.
-			/// @return Edge node.
-			constexpr static ref<Node> leftEdge(ref<Node> node) {
-				if (!node) return node;
-				while (node->prev && ComparatorType::equals(node->key, node->prev->key))
-					node = node->prev;
-				return node;
-			}
-			
-			/// @brief Returns the rightmost edge of a node that contains the same key as itself in the list.
-			/// @param node Node to get edge of.
-			/// @return Edge node.
-			constexpr static ref<Node> rightEdge(ref<Node> node) {
-				if (!node) return node;
-				while (node->next && ComparatorType::equals(node->key, node->next->key))
-					node = node->next;
-				return node;
-			}
 		};
 
 		/// @brief Allocator type.
@@ -182,26 +116,22 @@ namespace Tree {
 			
 			/// @brief Constructs the iterator.
 			/// @param node Pointer to node.	
-			constexpr NodeIterator(ref<NodeType> const node = nullptr): current(node) {}
+			constexpr NodeIterator(ref<NodeType> const node = nullptr): current(node), previous(nullptr) {}
 			
 			/// @brief Wether it is a reverse iterator.
 			constexpr static bool REVERSE = R;
 			
 			/// @brief Pre-increment operator overloading.
 			constexpr NodeIterator& operator++() {
-				if (current) {
-					if constexpr (!REVERSE)	current = current->next;
-					else					current = current->prev;
-				}
+				if (current)
+					advance(!REVERSE);
 				return *this;
 			}
 			
 			/// @brief Pre-decrement operator overloading.
 			constexpr NodeIterator& operator--() {
-				if (current) {
-					if constexpr (!REVERSE)	current = current->prev;
-					else					current = current->next;
-				}
+				if (current)
+					advance(REVERSE);
 				return *this;
 			}
 			
@@ -217,13 +147,55 @@ namespace Tree {
 			}
 			
 		private:
+			constexpr void advance(bool const forward) {
+				if (paused) {
+					if (current->children[forward])
+						current = current->children[forward];
+					else current = current->parent;
+				}
+				paused = false;
+				while (current) {
+					if (previous == current->parent) {
+						previous = current;
+						if (current->children[!forward]) {
+							current = current->children[!forward];
+						} else {
+							paused = true;
+							break;
+						}
+					} else if (previous == current->children[!forward]) {
+						previous = current;
+						// TODO: stuff here
+						paused = true;
+						break;
+					} else if (previous == current->children[forward]) {
+						previous = current;
+						current = current->parent;
+					}
+				}
+			}
+
+			constexpr bool shift(bool const right) {
+				if (current->children[right]) {
+					previous = current;
+					current = current->children[right];
+					return true;
+				}
+				previous = nullptr;
+				return false;
+			}
+
 			constexpr DataType pair() const {
 				if (!current) throw NullPointerException("Iterator is empty!");
 				return {current->key, current->value};
 			}
 
 			/// @brief Current node.
-			ref<NodeType> current;
+			ref<NodeType>	current;
+			/// @brief Previous visited node.
+			ref<NodeType>	previous	= nullptr;
+			/// @brief Whether traversal was paused until the next iteration.
+			bool			paused		= false;
 		};
 		
 		/// @brief Returns an iterator to the "begginning" of the tree.
@@ -303,24 +275,27 @@ namespace Tree {
 		}
 		
 		/// @brief Rotates a branch.
-		/// @param left Whether to do a leftwise rotation.
-		constexpr void rotateBranch(ref<Node> const branch, bool const left) {
+		/// @param right Whether to do a rightwise rotation.
+		constexpr void rotateBranch(ref<Node> const branch, bool const right) {
 			if (!branch) return;
-			ref<Node> const newRoot	= branch->children[!left];
-			ref<Node> const child	= branch->children[left];
-			branch->children[!left]	= child;
+			ref<Node> const parent	= branch->parent;
+			ref<Node> const newRoot	= branch->children[!right];
+			ref<Node> const child	= branch->children[right];
+			branch->children[!right] = child;
 			if (child) child->parent = branch;
-			newRoot->children[left] = branch;
-			if (branch->parent)
-				branch->parent->children[isRightChild(branch)] = newRoot;
+			newRoot->children[right] = branch;
+			newRoot->parent = parent;
+			branch->parent = newRoot;
+			if (parent)
+				parent->children[isRightChild(branch)] = newRoot;
 			else root = newRoot;
 		}
 		
 		/// @brief Inserts a node into a parent.
 		/// @param node Node to insert.
 		/// @param parent Parent to insert to.
-		/// @param left Whether to insert as the left child. 
-		constexpr void insertNode(ref<Node> node, ref<Node> parent, bool left) {
+		/// @param right Whether to insert as the right child. 
+		constexpr void insertNode(ref<Node> node, ref<Node> parent, bool right) {
 			if (!node) return;
 			node->red = true;
 			node->parent = parent;
@@ -328,29 +303,30 @@ namespace Tree {
 				root = node;
 				return;
 			}
-			ref<Node> grandparent = parent->parent;
-			parent->children[left] = node;
+			parent->children[right] = node;
 			do {
 				if (!parent->red) return;
+				ref<Node> grandparent = parent->parent;
 				if (!grandparent) {
-					parent->red = true;
+					parent->red = false;
 					return;
 				}
-				left = parent != grandparent->right();
-				ref<Node> const uncle = grandparent->children[!left];
+				right = parent == grandparent->right();
+				ref<Node> const uncle = grandparent->children[!right];
 				if (!uncle || !uncle->red) {
-					if (node == grandparent->children[!left]) {
-						rotateBranch(parent, left);
+					if (node == parent->children[!right]) {
+						rotateBranch(parent, right);
 						node = parent;
-						parent = grandparent->children[left];
+						parent = grandparent->children[right];
 					}
-					rotateBranch(grandparent, !left);
+					rotateBranch(grandparent, !right);
 					parent->red			= false;
 					grandparent->red	= true;
 					return;
 				}
-				parent->red	= false;
-				uncle->red	= false;
+				parent->red			= false;
+				uncle->red			= false;
+				grandparent->red	= true;
 				node = grandparent;
 			} while ((parent = node->parent));
 		}
@@ -363,26 +339,26 @@ namespace Tree {
 			ref<Node> sibling		= nullptr;
 			ref<Node> closeNephew	= nullptr;
 			ref<Node> farNephew		= nullptr;
-			bool left = !isRightChild(node);
-			parent->children[left] = nullptr;
+			bool right = !isRightChild(node);
+			parent->children[right] = nullptr;
 			do {
-				sibling = parent->children[!left];
-				farNephew = sibling->children[!left];
-				closeNephew = sibling->children[left];
-				if (sibling && sibling->red) {
-					rotateBranch(parent, left);
+				sibling = parent->children[!right];
+				farNephew = sibling->children[!right];
+				closeNephew = sibling->children[right];
+				if (sibling->red) {
+					rotateBranch(parent, right);
 					parent->red = true;
 					sibling->red = false;
 					sibling = closeNephew;
-					farNephew = sibling->child[!left];
+					farNephew = sibling->child[!right];
 					if (farNephew && farNephew->red) {
-						repaintLeft(sibling, parent, farNephew, left);
+						repaintRight(sibling, parent, farNephew, right);
 						return;
 					}
-					closeNephew = sibling->child[left];
+					closeNephew = sibling->child[right];
 					if (closeNephew && closeNephew->red) {
-						repaintRight(sibling, closeNephew, farNephew, left);
-						repaintLeft(sibling, parent, farNephew, left);
+						repaintLeft(sibling, parent, farNephew, right);
+						repaintRight(sibling, closeNephew, farNephew, right);
 						return;
 					}
 					sibling->red = true;
@@ -390,12 +366,12 @@ namespace Tree {
 					return;
 				}
 				if (farNephew && farNephew->red) {
-					repaintLeft(sibling, parent, farNephew, left);
+					repaintRight(sibling, parent, farNephew, right);
 					return;
 				}
 				if (closeNephew && closeNephew->red) {
-					repaintRight(sibling, closeNephew, farNephew, left);
-					repaintLeft(sibling, parent, farNephew, left);
+					repaintLeft(sibling, parent, farNephew, right);
+					repaintRight(sibling, closeNephew, farNephew, right);
 					return;
 				}
 				if (parent && parent->red) {
@@ -406,7 +382,7 @@ namespace Tree {
 				if (!parent) return;
 				sibling->red = true;
 				node = parent;
-				left = !isRightChild(node);
+				right = !isRightChild(node);
 			} while ((parent = node->parent));
 		}
 		
@@ -431,13 +407,10 @@ namespace Tree {
 		/// @return Node containing the key.
 		constexpr ref<Node> insert(KeyType const& key) {
 			auto const parent = findParent(key);
-			if constexpr (!ALLOW_DUPES) {
-				if (parent && ComparatorType::equals(parent->key, key))
-					return parent;
-			}
+			if (parent && ComparatorType::equals(parent->key, key))
+				return parent;
 			ref<Node> const node = MX::construct(alloc.allocate(), key);
-			insertNode(node, parent, parent ? (ComparatorType::lesser(node->key, parent->key)) : true);
-			Node::append(node, parent);
+			insertNode(node, parent, false);
 			return node;
 		}
 		
@@ -467,7 +440,6 @@ namespace Tree {
 		constexpr ref<Node> removeAndRelink(ref<Node> const node) {
 			if (!node) return nullptr;
 			removeNode(node);
-			Node::link(node->prev, node->next);
 			return node;
 		}
 		
@@ -480,7 +452,6 @@ namespace Tree {
 
 		/// @brief Deletes all nodes in the tree.
 		constexpr void clear() {
-			treeverse(root, 0);
 			traverseAndDelete(root);
 			root = nullptr;
 		}
@@ -488,7 +459,7 @@ namespace Tree {
 		/// @brief Adds another container's items to this one.
 		/// @param other Container to copy from.
 		/// @return Reference to self.
-		constexpr RBL& append(RBL const& other) {
+		constexpr RedBlack& append(RedBlack const& other) {
 			for (auto node: other)
 				if (auto const newNode = insert(node->front()))
 					newNode->value = node.back();
@@ -499,21 +470,27 @@ namespace Tree {
 		/// @brief Returns the associated allocator.
 		/// @return Associated allocator.
 		constexpr AllocatorType& allocator() {return alloc;}
+
+		constexpr void treeverse() const {
+			treeverse(root, 0);
+		}
+
+		constexpr void treeverse(ref<Node> const node, usize const depth) const {
+			if (!node) return;
+			if (!depth) std::cout << "<tree>\n";
+			for (usize i = 0; i < depth; ++i)
+				std::cout << "  ";
+			std::cout << ": [" << node->key << "] > " << node << " : " << node->parent << "\n";
+			treeverse(node->left(), depth + 1);
+			treeverse(node->right(), depth + 1);
+			if (!depth) std::cout << "</tree>\n";
+		}
 		
 	private:
 		/// @brief Tree root.
 		owner<Node>		root = nullptr;
 		/// @brief Allocator.
 		AllocatorType	alloc;
-
-		constexpr void treeverse(ref<Node> const node, usize const depth) const {
-			if (!node) return;
-			for (usize i = 0; i < depth; ++i)
-				std::cout << "  ";
-			std::cout << ": [" << node->key << "]\n";
-			treeverse(node->left(), depth + 1);
-			treeverse(node->right(), depth + 1);
-		}
 
 		constexpr void traverseAndDelete(ref<Node> const node) {
 			if (!node) return;
@@ -528,9 +505,7 @@ namespace Tree {
 			if (!root) return nullptr;
 			ref<Node> edge = root;
 			while (edge && edge->left()) edge = edge->left();
-			if constexpr (ALLOW_DUPES)
-				return Node::leftEdge(edge);
-			else return edge;
+			return edge;
 		}
 		
 		/// @brief Returns the rightmost node in the linked list.
@@ -539,9 +514,7 @@ namespace Tree {
 			if (!root) return nullptr;
 			ref<Node> edge = root;
 			while (edge && edge->right()) edge = edge->right();
-			if constexpr (ALLOW_DUPES)
-				return Node::rightEdge(edge);
-			else return edge;
+			return edge;
 		}
 	
 		constexpr static ref<Node> searchBranch(ref<Node> node, KeyType const& key) {
@@ -557,16 +530,16 @@ namespace Tree {
 			return node;
 		}
 
-		constexpr void repaintRight(ref<Node>& sibling, ref<Node>& closeNephew, ref<Node>& farNephew, bool& left) {
-			rotateBranch(sibling, !left);
+		constexpr void repaintLeft(ref<Node>& sibling, ref<Node>& closeNephew, ref<Node>& farNephew, bool& right) {
+			rotateBranch(sibling, !right);
 			sibling->red = true;
 			closeNephew->red = false;
 			farNephew = sibling;
 			sibling = closeNephew;
 		}
 		
-		constexpr void repaintLeft(ref<Node>& sibling, ref<Node>& parent, ref<Node>& farNephew, bool& left) {
-			rotateBranch(parent, left);
+		constexpr void repaintRight(ref<Node>& sibling, ref<Node>& parent, ref<Node>& farNephew, bool& right) {
+			rotateBranch(parent, right);
 			sibling->red = parent->red;
 			parent->red = false;
 			farNephew->red = false;

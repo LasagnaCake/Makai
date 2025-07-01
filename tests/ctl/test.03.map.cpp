@@ -13,6 +13,7 @@ using
 
 template<typename T>
 void print(List<T> const& lst) {
+	DEBUG("(L) ");
 	DEBUG(
 		"S: ",
 		lst.size(),
@@ -28,6 +29,7 @@ void print(List<T> const& lst) {
 
 template<typename K, typename V, typename I, bool S>
 void print(BaseListMap<K, V, I, S> const& m) {
+	DEBUG("(M) ");
 	DEBUG(
 		"S: ",
 		m.size(),
@@ -41,6 +43,9 @@ void print(BaseListMap<K, V, I, S> const& m) {
 
 template<typename K, typename V, typename I>
 void print(TreeMap<K, V, I> const& m) {
+	m.treeverse();
+	return;
+	DEBUG("(M) ");
 	DEBUG(
 		"S: ",
 		m.size(),
@@ -54,6 +59,7 @@ void print(TreeMap<K, V, I> const& m) {
 
 template<typename K, typename V>
 void print(List<KeyValuePair<K, V>> const& m) {
+	DEBUG("(L) ");
 	DEBUG(
 		"S: ",
 		m.size(),
