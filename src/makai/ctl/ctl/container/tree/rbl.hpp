@@ -8,6 +8,8 @@
 #include "../../memory/allocator.hpp"
 #include "../pair.hpp"
 
+#include <iostream>
+
 CTL_NAMESPACE_BEGIN
 
 /// @brief Tree-specific type constraints.
@@ -35,21 +37,21 @@ namespace Tree {
 		template <class> class TAlloc = HeapAllocator,
 		bool D = false
 	>
-	struct RBL: Paired<TKey, TValue> {
-		using Paired		= ::CTL::Paired<TKey, TValue>;
-		
-		using DataType		= KeyValuePair<TKey const&, TValue&>;
-		using ConstantType	= KeyValuePair<TKey const&, TValue const&>;
+	struct RBL: Paired<TKey const, TValue> {
+		using Paired		= ::CTL::Paired<TKey const, TValue>;
 
 		using typename Paired::KeyType;
 		using typename Paired::ValueType;
+		
+		using DataType		= KeyValuePair<KeyType&, ValueType&>;
+		using ConstantType	= KeyValuePair<KeyType&, ValueType const&>;
 
 		/// @brief Comparator type.
 		using ComparatorType = TCompare<KeyType>;
 		
 		static_assert(Type::Tree::Comparator<KeyType, TCompare>, "TCompare must be a valid comparator for TData!");
 		
-		/// @brief Whether duplicate values are allowed
+		/// @brief Whether duplicate values are allowed.
 		constexpr static bool ALLOW_DUPES = D;
 
 		/// @brief Empty constructor (defaulted).
@@ -61,24 +63,27 @@ namespace Tree {
 		}
 
 		/// @brief Move constructor (defaulted).
-		constexpr RBL(RBL&& other) = default;
+		constexpr RBL(RBL&& other) {
+			root = other.root;
+			other.root = nullptr;
+		}
 
 		/// @brief Copy assignment operator.
 		constexpr RBL& operator=(RBL const& other) {
-			traverseAndDelete(root);
+			clear();
 			return append(other);
 		}
 
 		/// @brief Move assignment operator.
 		constexpr RBL& operator=(RBL&& other) {
-			traverseAndDelete(root);
+			clear();
 			root = other.root;
 			other.root = nullptr;
 			return *this;
 		}
 
 		/// @brief Destructor.
-		constexpr ~RBL() {traverseAndDelete(root);}
+		constexpr ~RBL() {clear();}
 		
 		/// @brief Tree node.
 		struct Node {
@@ -108,7 +113,7 @@ namespace Tree {
 			/// @param node Node to parent.
 			/// @param parent Parent to parent to.
 			constexpr static void append(ref<Node> const node, ref<Node> parent) {
-				if (!node || !parent) return;
+				if (!(node && parent)) return;
 				if (ComparatorType::lesser(node->key, parent->key)) {
 					if constexpr (ALLOW_DUPES) parent = leftEdge(parent);
 					node->next = parent;
@@ -173,11 +178,7 @@ namespace Tree {
 			/// @brief Node type.
 			using NodeType = TNode;
 			/// @brief Iterator value accessor type.
-			using DataType = Meta::DualType<
-				Type::Constant<NodeType>,
-				KeyValuePair<KeyType const&, ValueType const&>,
-				KeyValuePair<KeyType const&, ValueType&>
-			>;
+			using DataType = Meta::DualType<Type::Constant<NodeType>, ConstantType, DataType>;
 			
 			/// @brief Constructs the iterator.
 			/// @param node Pointer to node.	
@@ -305,11 +306,11 @@ namespace Tree {
 		/// @param left Whether to do a leftwise rotation.
 		constexpr void rotateBranch(ref<Node> const branch, bool const left) {
 			if (!branch) return;
-			ref<Node> const newRoot	= branch->children[left];
-			ref<Node> const child	= branch->children[!left];
-			branch->children[left]	= child;
+			ref<Node> const newRoot	= branch->children[!left];
+			ref<Node> const child	= branch->children[left];
+			branch->children[!left]	= child;
 			if (child) child->parent = branch;
-			newRoot->children[!left]	= branch;
+			newRoot->children[left] = branch;
 			if (branch->parent)
 				branch->parent->children[isRightChild(branch)] = newRoot;
 			else root = newRoot;
@@ -328,7 +329,7 @@ namespace Tree {
 				return;
 			}
 			ref<Node> grandparent = parent->parent;
-			parent->children[!left] = node;
+			parent->children[left] = node;
 			do {
 				if (!parent->red) return;
 				if (!grandparent) {
@@ -336,12 +337,12 @@ namespace Tree {
 					return;
 				}
 				left = parent != grandparent->right();
-				ref<Node> const uncle = grandparent->children[left];
+				ref<Node> const uncle = grandparent->children[!left];
 				if (!uncle || !uncle->red) {
-					if (node == grandparent->children[left]) {
+					if (node == grandparent->children[!left]) {
 						rotateBranch(parent, left);
 						node = parent;
-						parent = grandparent->children[!left];
+						parent = grandparent->children[left];
 					}
 					rotateBranch(grandparent, !left);
 					parent->red			= false;
@@ -363,22 +364,22 @@ namespace Tree {
 			ref<Node> closeNephew	= nullptr;
 			ref<Node> farNephew		= nullptr;
 			bool left = !isRightChild(node);
-			parent->children[!left] = nullptr;
+			parent->children[left] = nullptr;
 			do {
-				sibling = parent->children[left];
-				farNephew = sibling->children[left];
-				closeNephew = sibling->children[!left];
-				if (sibling->red) {
+				sibling = parent->children[!left];
+				farNephew = sibling->children[!left];
+				closeNephew = sibling->children[left];
+				if (sibling && sibling->red) {
 					rotateBranch(parent, left);
 					parent->red = true;
 					sibling->red = false;
 					sibling = closeNephew;
-					farNephew = sibling->child[left];
+					farNephew = sibling->child[!left];
 					if (farNephew && farNephew->red) {
 						repaintLeft(sibling, parent, farNephew, left);
 						return;
 					}
-					closeNephew = sibling->child[!left];
+					closeNephew = sibling->child[left];
 					if (closeNephew && closeNephew->red) {
 						repaintRight(sibling, closeNephew, farNephew, left);
 						repaintLeft(sibling, parent, farNephew, left);
@@ -431,11 +432,11 @@ namespace Tree {
 		constexpr ref<Node> insert(KeyType const& key) {
 			auto const parent = findParent(key);
 			if constexpr (!ALLOW_DUPES) {
-				if (ComparatorType::equals(parent->key, key))
+				if (parent && ComparatorType::equals(parent->key, key))
 					return parent;
 			}
-			ref<Node> const node = MX::construct<Node>(alloc.allocate(), key);
-			insertNode(node, parent, true);
+			ref<Node> const node = MX::construct(alloc.allocate(), key);
+			insertNode(node, parent, parent ? (ComparatorType::lesser(node->key, parent->key)) : true);
 			Node::append(node, parent);
 			return node;
 		}
@@ -479,7 +480,9 @@ namespace Tree {
 
 		/// @brief Deletes all nodes in the tree.
 		constexpr void clear() {
+			treeverse(root, 0);
 			traverseAndDelete(root);
+			root = nullptr;
 		}
 
 		/// @brief Adds another container's items to this one.
@@ -487,7 +490,9 @@ namespace Tree {
 		/// @return Reference to self.
 		constexpr RBL& append(RBL const& other) {
 			for (auto node: other)
-				insert(node.front())->value = node.back();
+				if (auto const newNode = insert(node->front()))
+					newNode->value = node.back();
+				else throw FailedActionException("Failed to insert key-value pair!");
 			return *this;
 		}
 
@@ -501,11 +506,20 @@ namespace Tree {
 		/// @brief Allocator.
 		AllocatorType	alloc;
 
+		constexpr void treeverse(ref<Node> const node, usize const depth) const {
+			if (!node) return;
+			for (usize i = 0; i < depth; ++i)
+				std::cout << "  ";
+			std::cout << ": [" << node->key << "]\n";
+			treeverse(node->left(), depth + 1);
+			treeverse(node->right(), depth + 1);
+		}
+
 		constexpr void traverseAndDelete(ref<Node> const node) {
 			if (!node) return;
 			traverseAndDelete(node->left());
 			traverseAndDelete(node->right());
-			alloc.deallocate(MX::destruct<Node>(node));
+			alloc.deallocate(MX::destruct(node));
 		}
 
 		/// @brief Returns the leftmost node in the linked list.
@@ -536,7 +550,7 @@ namespace Tree {
 			while (node->left() || node->right()) {
 				if (ComparatorType::lesser(node->key, key) && node->left())
 					node = node->left();
-				else if ((!ComparatorType::equals(node->key, key)) && node->right())
+				else if (ComparatorType::greater(node->key, key) && node->right())
 					node = node->right();
 				else break;
 			}

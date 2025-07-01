@@ -20,7 +20,7 @@ void print(List<T> const& lst) {
 		lst.capacity(),
 		", E: [ "
 	);
-	for (auto& i: lst) {
+	for (auto const& i: lst) {
 		DEBUG(i, " ");
 	}
 	DEBUGLN("];");
@@ -31,11 +31,9 @@ void print(BaseListMap<K, V, I, S> const& m) {
 	DEBUG(
 		"S: ",
 		m.size(),
-		", C: ",
-		m.capacity(),
 		", I: [ "
 	);
-	for (auto& i: m) {
+	for (auto const& i: m) {
 		DEBUG("[", i.key, " ", i.value, "] ");
 	}
 	DEBUGLN("];");
@@ -46,11 +44,9 @@ void print(TreeMap<K, V, I> const& m) {
 	DEBUG(
 		"S: ",
 		m.size(),
-		", C: ",
-		m.capacity(),
 		", I: [ "
 	);
-	for (auto& i: m) {
+	for (auto const& i: m) {
 		DEBUG("[", i.key, " ", i.value, "] ");
 	}
 	DEBUGLN("];");
@@ -65,7 +61,7 @@ void print(List<KeyValuePair<K, V>> const& m) {
 		m.capacity(),
 		", P: [ "
 	);
-	for (auto& i: m) {
+	for (auto const& i: m) {
 		DEBUG("[", i.key, " ", i.value, "] ");
 	}
 	DEBUGLN("];");
@@ -73,20 +69,18 @@ void print(List<KeyValuePair<K, V>> const& m) {
 
 template<typename K, typename V, typename I, bool S>
 void print(BaseListMap<K, V, I, S> const& m, K const& k) {
-	auto r = m.search(k);
-	if (r != -1)
-		CTL::Console::println("K: ", k, ", L: ", r, ", V: ", m[k]);
+	if (m.contains(k))
+		CTL::Console::println("K: ", k, ", V: ", m[k]);
 	else
-		CTL::Console::println("K: ", k, ", L: ", r);
+		CTL::Console::println("K: ", k, ", none");
 }
 
 template<typename K, typename V, typename I>
 void print(TreeMap<K, V, I> const& m, K const& k) {
-	auto r = m.search(k);
-	if (r != -1)
-		CTL::Console::println("K: ", k, ", L: ", r, ", V: ", m[k]);
+	if (m.contains(k))
+		CTL::Console::println("K: ", k, ", V: ", m[k]);
 	else
-		CTL::Console::println("K: ", k, ", L: ", r);
+		CTL::Console::println("K: ", k, ", none");
 }
 
 template<template<typename K, typename V> class TMap = ListMap>
@@ -134,8 +128,7 @@ void testMap() {
 	print(mp.keys());
 	print(mp.values());
 	print(mp.items());
-	mp.clear();		print(mp);
-	mp.dispose();	print(mp);
+	mp.clear(); print(mp);
 	DEBUGLN("</", TypeInfo<MapType>::name(), ">");
 }
 

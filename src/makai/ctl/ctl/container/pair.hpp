@@ -102,81 +102,24 @@ struct Pairable {
 /// @tparam TA "A" type. 
 /// @tparam TB "B" type.
 template<typename TA, typename TB>
-struct Pair:
-	Ordered,
-	SelfIdentified<Pair<TA, TB>>,
-	Pairable<TA, TB> {
+struct Pair {
 	using SelfIdentified	= ::CTL::SelfIdentified<Pair<TA, TB>>;
 	using Pairable			= ::CTL::Pairable<TA, TB>;
 
 	using
-		typename SelfIdentified::SelfType
+		SelfType = typename SelfIdentified::SelfType
 	;
 
-	using
-		typename Pairable::AType,
-		typename Pairable::BType,
-		typename Pairable::PairType
-	;
+	using AType		= typename Pairable::AType;
+	using BType		= typename Pairable::BType;
+	using PairType	= typename Pairable::PairType;
 
-	using typename Ordered::OrderType;
+	using OrderType = typename Ordered::OrderType;
 
 	/// @brief "A" value.
 	AType a;
 	/// @brief "B" value.
 	BType b;
-
-	/// @brief Default constructor.
-	constexpr Pair() = default;
-
-	/// @brief Constructs only `a`.
-	/// @param a Value of `a`.
-	constexpr Pair(AType const& a):					a(a)								{}
-	/// @brief Constructs both `a` and `b`. 
-	/// @param a Value of `a`.
-	/// @param b Value of `b`.
-	constexpr Pair(AType const& a, BType const& b):	a(a), b(b)							{}
-	/// @brief Copy constructor.
-	/// @param other `Pair` to copy from.
-	constexpr Pair(SelfType const& other):			a(other.a), b(other.b)				{}
-
-	/// @brief Constructs only `a`.
-	/// @param a Value of `a`.
-	constexpr Pair(AType&& a):						a(move(a))							{}
-	/// @brief Constructs both `a` and `b`. 
-	/// @param a Value of `a`.
-	/// @param b Value of `b`.
-	constexpr Pair(AType&& a, BType&& b):			a(move(a)), b(move(b))				{}
-	/// @brief Move constructor.
-	/// @param other `Pair` to move.
-	constexpr Pair(SelfType&& other):				a(move(other.a)), b(move(other.b))	{}
-
-	/// @brief Copy constructor (pair-like).
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to copy from.
-	template<Type::Container::PairLike T>
-	constexpr Pair(T const& other):					a(other.front()), b(other.back())	{}
-
-	/// @brief Copy assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to copy from.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to move.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
-	/// @brief Copy assignment operator.
-	/// @param other Pair to copy from.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @param other Pair to move.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
 
 	/// @brief Threeway comparison operator.
 	/// @param other Other `Pair` to compare with.
@@ -216,87 +159,25 @@ struct Pair:
 /// @tparam TKey Key type.
 /// @tparam TValue Value type.
 template<typename TKey, typename TValue>
-struct KeyValuePair:
-	Ordered,
-	SelfIdentified<KeyValuePair<TKey, TValue>>,
-	Pairable<TKey, TValue> {
+struct KeyValuePair {
 	using SelfIdentified	= ::CTL::SelfIdentified<KeyValuePair<TKey, TValue>>;
 	using Pairable			= ::CTL::Pairable<TKey, TValue>;
 
 	using
-		typename SelfIdentified::SelfType
+		SelfType = typename SelfIdentified::SelfType
 	;
 
-	using
-		typename Pairable::AType,
-		typename Pairable::BType,
-		typename Pairable::PairType
-	;
+	using AType		= typename Pairable::AType;
+	using BType		= typename Pairable::BType;
+	using PairType	= typename Pairable::PairType;
 
-	using typename Ordered::OrderType;
+	using OrderType = typename Ordered::OrderType;
 
 	/// @brief Key.
 	AType	key;
 	/// @brief Value.
 	BType	value;
-
-	/// @brief Default constructor.
-	constexpr KeyValuePair() = default;
-
-	/// @brief Constructs only the key.
-	/// @param k Value of key.
-	constexpr KeyValuePair(AType const& k):					key(k)												{}
-	/// @brief Constructs both key and value.
-	/// @param k Value of `key`.
-	/// @param v Value of `value`.
-	constexpr KeyValuePair(AType const& k, BType const& v):	key(k), value(v)									{}
-	/// @brief Copy constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit KeyValuePair(PairType const& other):	KeyValuePair(move(other.a), move(other.b))			{}
-	/// @brief Copy constructor (`KeyValuePair`).
-	/// @param other Other `KeyValuePair`.
-	constexpr KeyValuePair(SelfType const& other):			KeyValuePair(other.key, other.value)				{}
-
-	/// @brief Constructs only the key.
-	/// @param k Value of key.
-	constexpr KeyValuePair(AType&& k)
-	requires (Type::Different<AType&&, AType>):				key(move(k))										{}
-	/// @brief Constructs both key and value.
-	/// @param k Value of `key`.
-	/// @param v Value of `value`.
-	constexpr KeyValuePair(AType && k, BType&& v)
-	requires (
-		Type::Different<AType&&, AType>
-	&&	Type::Different<BType&&, BType>
-	):														key(move(k)), value(move(v))						{}
-	/// @brief Move constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit KeyValuePair(PairType&& other):		KeyValuePair(move(other.a), move(other.b))			{}
-	/// @brief Move constructor (`KeyValuePair`).
-	/// @param other Other `KeyValuePair`.
-	constexpr KeyValuePair(SelfType&& other):				KeyValuePair(move(other.key), move(other.value))	{}
-
-	/// @brief Copy assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to copy from.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to move.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
-	/// @brief Copy assignment operator.
-	/// @param other Pair to copy from.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @param other Pair to move.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
-
+	
 	/// @brief Threeway comparison operator.
 	/// @param other Other `KeyValuePair` to compare with.
 	/// @return Order between objects.
@@ -330,29 +211,32 @@ struct KeyValuePair:
 /// @tparam TLeft Left type.
 /// @tparam TRight Right type.
 template<typename TLeft, typename TRight>
-struct LeftRightPair:
-	Ordered,
-	SelfIdentified<LeftRightPair<TLeft, TRight>>,
-	Pairable<TLeft, TRight> {
+struct LeftRightPair {
 	using SelfIdentified	= ::CTL::SelfIdentified<LeftRightPair<TLeft, TRight>>;
 	using Pairable			= ::CTL::Pairable<TLeft, TRight>;
 
 	using
-		typename SelfIdentified::SelfType
+		SelfType = typename SelfIdentified::SelfType
 	;
 
-	using
-		typename Pairable::AType,
-		typename Pairable::BType,
-		typename Pairable::PairType
-	;
+	using AType		= typename Pairable::AType;
+	using BType		= typename Pairable::BType;
+	using PairType	= typename Pairable::PairType;
 
-	using typename Ordered::OrderType;
+	using OrderType = typename Ordered::OrderType;
 
 	/// @brief Left side.
 	AType	left;
 	/// @brief Right side.
 	BType	right;
+
+	/// @brief Threeway comparison operator.
+	/// @param other Other `LeftRightPair` to compare with.
+	/// @return Order between objects.
+	constexpr OrderType operator<=>(SelfType const& other) const
+	requires (PairComparator<SelfType>::IS_COMPARABLE) {
+		return PairComparator<SelfType>::compare(*this, other);
+	}
 
 	/// @brief Returns `left`.
 	/// @return Reference to `left`.
@@ -367,66 +251,6 @@ struct LeftRightPair:
 	/// @return Const reference to `right`.
 	constexpr BType const& back() const		{return right;	}
 
-	/// @brief Default constructor.
-	constexpr LeftRightPair() = default;
-	
-	/// @brief Constructs only the left side.
-	/// @param l Value of the left side.
-	constexpr LeftRightPair(AType const& l):					left(l)												{}
-	/// @brief Constructs both the left and right sides.
-	/// @param l Value of the left side.
-	/// @param r Value of the right side.
-	constexpr LeftRightPair(AType const& l, BType const& r):	left(l), right(r)									{}
-	/// @brief Copy constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit LeftRightPair(PairType const& other):	LeftRightPair(other.a, other.b)						{}
-	/// @brief Copy constructor (`LeftRightPair`).
-	/// @param other Other `LeftRightPair`.
-	constexpr LeftRightPair(SelfType const& other):				LeftRightPair(other.left, other.right)				{}
-	
-	/// @brief Constructs only the left side.
-	/// @param l Value of the left side.
-	constexpr LeftRightPair(AType&& l):							left(move(l))										{}
-	/// @brief Constructs both the left and right sides.
-	/// @param l Value of the left side.
-	/// @param r Value of the right side.
-	constexpr LeftRightPair(AType&& l, BType&& r):				left(move(l)), right(move(r))						{}
-	/// @brief Move constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit LeftRightPair(PairType&& other):			LeftRightPair(move(other.a), move(other.b))			{}
-	/// @brief Move constructor (`LeftRightPair`).
-	/// @param other Other `LeftRightPair`.
-	constexpr LeftRightPair(SelfType&& other):					LeftRightPair(move(other.left), move(other.right))	{}
-
-	/// @brief Copy assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to copy from.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to move.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
-	/// @brief Copy assignment operator.
-	/// @param other Pair to copy from.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @param other Pair to move.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
-	
-	/// @brief Threeway comparison operator.
-	/// @param other Other `LeftRightPair` to compare with.
-	/// @return Order between objects.
-	constexpr OrderType operator<=>(SelfType const& other) const
-	requires (PairComparator<SelfType>::IS_COMPARABLE) {
-		return PairComparator<SelfType>::compare(*this, other);
-	}
-
 	/// @brief Converts the object to a `Pair`.
 	/// @return Object as `Pair`.
 	constexpr PairType pair() const		{return PairType(left, right);	}
@@ -439,29 +263,32 @@ struct LeftRightPair:
 /// @tparam T1 First type.
 /// @tparam T2 Second type.
 template<typename T1, typename T2>
-struct FirstSecondPair:
-	Ordered,
-	SelfIdentified<FirstSecondPair<T1, T2>>,
-	Pairable<T1, T2> {
+struct FirstSecondPair {
 	using SelfIdentified	= ::CTL::SelfIdentified<FirstSecondPair<T1, T2>>;
 	using Pairable			= ::CTL::Pairable<T1, T2>;
 
 	using
-		typename SelfIdentified::SelfType
+		SelfType = typename SelfIdentified::SelfType
 	;
 
-	using
-		typename Pairable::AType,
-		typename Pairable::BType,
-		typename Pairable::PairType
-	;
+	using AType		= typename Pairable::AType;
+	using BType		= typename Pairable::BType;
+	using PairType	= typename Pairable::PairType;
 
-	using typename Ordered::OrderType;
+	using OrderType = typename Ordered::OrderType;
 
 	/// @brief First value.
 	AType	first;
 	/// @brief Second value.
 	BType	second;
+	
+	/// @brief Threeway comparison operator.
+	/// @param other Other `FirstSecondPair` to compare with.
+	/// @return Order between objects.
+	constexpr OrderType operator<=>(SelfType const& other) const
+	requires (PairComparator<SelfType>::IS_COMPARABLE) {
+		return PairComparator<SelfType>::compare(*this, other);
+	}
 
 	/// @brief Returns `first`.
 	/// @return Reference to `first`.
@@ -475,66 +302,6 @@ struct FirstSecondPair:
 	/// @brief Returns `second`.
 	/// @return Const reference to `second`.
 	constexpr BType const& back() const		{return second;	}
-
-	/// @brief Default constructor.
-	constexpr FirstSecondPair() = default;
-
-	/// @brief Constructs only the first value.
-	/// @param v1 First value.
-	constexpr FirstSecondPair(AType const& v1):						first(v1)												{}
-	/// @brief Constructs both first and second values.
-	/// @param v1 First value.
-	/// @param v2 Second value.
-	constexpr FirstSecondPair(AType const& v1, BType const& v2):	first(v1), second(v2)									{}
-	/// @brief Copy constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit FirstSecondPair(PairType const& other):		FirstSecondPair(other.a, other.b)						{}
-	/// @brief Copy constructor (`FirstSecondPair`).
-	/// @param other Other `FirstSecondPair`.
-	constexpr FirstSecondPair(SelfType const& other):				FirstSecondPair(other.first, other.second)				{}
-
-	/// @brief Constructs only the first value.
-	/// @param v1 First value.
-	constexpr FirstSecondPair(AType&& v1):							first(move(v1))											{}
-	/// @brief Constructs both first and second values.
-	/// @param v1 First value.
-	/// @param v2 Second value.
-	constexpr FirstSecondPair(AType&& v1, BType&& v2):				first(move(v1)), second(move(v2))						{}
-	/// @brief Move constructor (Pair-like).
-	/// @param other Other pair-like object.
-	constexpr explicit FirstSecondPair(PairType&& other):			FirstSecondPair(move(other.a), move(other.b))			{}
-	/// @brief Move constructor (`FirstSecondPair`).
-	/// @param other Other `FirstSecondPair`.
-	constexpr FirstSecondPair(SelfType&& other):					FirstSecondPair(move(other.first), move(other.second))	{}
-
-	/// @brief Copy assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to copy from.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T const& other)			{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @tparam T Pair-like type.
-	/// @param other Pair-like object to move.
-	/// @return Reference to self.
-	template<Type::Container::PairLike T>
-	constexpr SelfType& operator=(T&& other)				{front() = move(other.front()); back() = move(other.back()); return *this;	}
-	/// @brief Copy assignment operator.
-	/// @param other Pair to copy from.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)	{front() = other.front(); back() = other.back(); return *this;				}
-	/// @brief Move assignment operator.
-	/// @param other Pair to move.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other)			{front() = move(other.front()); back() = move(other.back()); return *this;	}
-
-	/// @brief Threeway comparison operator.
-	/// @param other Other `FirstSecondPair` to compare with.
-	/// @return Order between objects.
-	constexpr OrderType operator<=>(SelfType const& other) const
-	requires (PairComparator<SelfType>::IS_COMPARABLE) {
-		return PairComparator<SelfType>::compare(*this, other);
-	}
 
 	/// @brief Converts the object to a `Pair`.
 	/// @return Object as `Pair`.

@@ -34,7 +34,7 @@ void print(List<KeyValuePair<K, V>> const& m) {
 		m.capacity(),
 		", P: [ "
 	);
-	for (auto& i: m) {
+	for (auto const& i: m) {
 		DEBUG("[", i.key, " ", i.value, "] ");
 	}
 	DEBUGLN("];");
@@ -49,7 +49,7 @@ void print(List<T> const& lst) {
 		lst.capacity(),
 		", L: [ "
 	);
-	for (auto& i : lst)
+	for (auto const& i : lst)
 		DEBUG("\"", i ,"\" ");
 	DEBUGLN(
 		"];"
@@ -65,7 +65,7 @@ void printMap(BaseListMap<String, String, I, S> const& m) {
 		m.capacity(),
 		", I: [ "
 	);
-	for (auto& i: m) {
+	for (auto const& i: m) {
 		DEBUG("[", i.key, " ", i.value, "] ");
 	}
 	DEBUGLN("];");

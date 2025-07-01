@@ -149,7 +149,9 @@ private TTree<TKey, TValue, SimpleComparator> {
 	/// @param pair Key-value pair to insert.
 	/// @return Reference to self.
 	constexpr SelfType& insert(PairType const& pair) {
-		BaseType::insert(pair.key)->value = pair.value;
+		if (auto const node = BaseType::insert(pair.key))
+			node->value = pair.value;
+		else throw FailedActionException("Failed to insert key-value pair!");
 		++count;
 		return *this;
 	}
