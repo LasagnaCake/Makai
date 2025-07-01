@@ -42,7 +42,7 @@ namespace Makai::Graph {
 			/// @brief Deletes all drawable objects in the collection.
 			void destroy() {
 				auto objs = objects;
-				for (auto& [n, o]: objs)
+				for (auto const& [n, o]: objs)
 					delete o;
 				objects.clear();
 			}
@@ -57,7 +57,7 @@ namespace Makai::Graph {
 				if (objects.contains(name))
 					throw Error::InvalidValue("Object of name '"+name+"' already exists!", CTL_CPP_PRETTY_SOURCE);
 				#endif // MAKAILIB_SCENE_ERROR_IF_DUPLICATE_NAME
-				DrawableType* r = nullptr;
+				ref<DrawableType> r = nullptr;
 				if (name.empty())	name = validateName("unnamed");
 				else				name = validateName(name);
 				objects[name] = (r = new DrawableType(true));
@@ -66,9 +66,9 @@ namespace Makai::Graph {
 
 			/// @brief Deletes a drawable object.
 			/// @param obj Object to delete.
-			void deleteObject(DrawableType* const obj) {
+			void deleteObject(ref<DrawableType> const obj) {
 				if (obj)
-					for (auto& [k, v]: objects)
+					for (auto const& [k, v]: objects)
 						if (obj == v) {
 							objects.erase(k);
 							delete obj;
@@ -107,7 +107,7 @@ namespace Makai::Graph {
 			/// @param name Name of object.
 			/// @return Requested object, or `nullptr` if not found.
 			/// @note Pointer returned is a non-owning pointer.
-			DrawableType* getObject(String const& name) {
+			ref<DrawableType> getObject(String const& name) {
 				if (!objects.contains(name))
 					return nullptr;
 				return objects[name];
@@ -117,7 +117,7 @@ namespace Makai::Graph {
 			/// @param name Name of object.
 			/// @return Requested object, or `nullptr` if not found.
 			/// @note Pointer returned is a non-owning pointer.
-			inline DrawableType* operator[](String const& name) {
+			inline ref<DrawableType> operator[](String const& name) {
 				return getObject(name);
 			}
 
@@ -204,7 +204,7 @@ namespace Makai::Graph {
 		void extendFromDefinitionV0(JSON::JSONData def, String const& sourcepath);
 
 		JSON::JSONData getSceneDefinition(
-			bool const integratedObjects			= true,
+			bool const integratedObjects		= true,
 			bool const integratedObjectBinaries	= true,
 			bool const integratedObjectTextures	= true
 		);
