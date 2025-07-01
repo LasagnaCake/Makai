@@ -175,8 +175,8 @@ namespace Tree {
 			/// @brief Iterator value accessor type.
 			using DataType = Meta::DualType<
 				Type::Constant<NodeType>,
-				KeyValuePair<TKey const&, TValue&>,
-				KeyValuePair<TKey const&, TValue const&>
+				KeyValuePair<KeyType const&, ValueType const&>,
+				KeyValuePair<KeyType const&, ValueType&>
 			>;
 			
 			/// @brief Constructs the iterator.
@@ -187,19 +187,21 @@ namespace Tree {
 			constexpr static bool REVERSE = R;
 			
 			/// @brief Pre-increment operator overloading.
-			constexpr NodeIterator& operator++(int) {
+			constexpr NodeIterator& operator++() {
 				if (current) {
 					if constexpr (!REVERSE)	current = current->next;
 					else					current = current->prev;
 				}
+				return *this;
 			}
 			
 			/// @brief Pre-decrement operator overloading.
-			constexpr NodeIterator& operator--(int) {
+			constexpr NodeIterator& operator--() {
 				if (current) {
 					if constexpr (!REVERSE)	current = current->prev;
 					else					current = current->next;
 				}
+				return *this;
 			}
 			
 			/// @brief Dereference operator overloading.

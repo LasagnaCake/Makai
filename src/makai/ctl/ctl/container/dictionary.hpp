@@ -22,14 +22,14 @@ using ListDictionary	= ListMap<String, TValue, TIndex>;
 /// @brief `Map` analog for `String`-mapped tree-based collections.
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.
-template<class TValue>
-using TreeDictionary	= TreeMap<String, TValue>;
+template<class TValue, Type::Integer TIndex = usize>
+using TreeDictionary	= TreeMap<String, TValue, TIndex>;
 
 /// @brief `Map` analog for `String`-mapped collections.
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.
 template<class TValue, Type::Integer TIndex = usize>
-using Dictionary		= ListMap<TValue, TIndex>;
+using Dictionary		= TreeDictionary<TValue, TIndex>;
 
 CTL_NAMESPACE_END
 

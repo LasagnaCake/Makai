@@ -146,8 +146,7 @@ private TTree<TKey, TValue, SimpleComparator> {
 	/// @param pair Key-value pair to insert.
 	/// @return Reference to self.
 	constexpr SelfType& insert(PairType const& pair) {
-		if (!contains(pair.key))
-			insert(pair.key)->value = pair.value;
+		BaseType::insert(pair.key)->value = pair.value;
 		++count;
 		return *this;
 	}
@@ -227,7 +226,7 @@ private TTree<TKey, TValue, SimpleComparator> {
 	constexpr List<KeyType> keys() const {
 		List<KeyType> result;
 		result.reserve(count);
-		for (auto& i: *this)
+		for (auto i: *this)
 			result.pushBack(i.front());
 		return result;
 	}

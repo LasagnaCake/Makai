@@ -259,11 +259,16 @@ struct KeyValuePair:
 
 	/// @brief Constructs only the key.
 	/// @param k Value of key.
-	constexpr KeyValuePair(AType&& k):						key(move(k))										{}
+	constexpr KeyValuePair(AType&& k)
+	requires (Type::Different<AType&&, AType>):				key(move(k))										{}
 	/// @brief Constructs both key and value.
 	/// @param k Value of `key`.
 	/// @param v Value of `value`.
-	constexpr KeyValuePair(AType && k, BType&& v):			key(move(k)), value(move(v))						{}
+	constexpr KeyValuePair(AType && k, BType&& v)
+	requires (
+		Type::Different<AType&&, AType>
+	&&	Type::Different<BType&&, BType>
+	):														key(move(k)), value(move(v))						{}
 	/// @brief Move constructor (Pair-like).
 	/// @param other Other pair-like object.
 	constexpr explicit KeyValuePair(PairType&& other):		KeyValuePair(move(other.a), move(other.b))			{}

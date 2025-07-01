@@ -226,7 +226,7 @@ namespace Makai::Graph::Armature {
 			if (baked || locked) return *this;
 			if (bone >= MAX_BONES) return *this;
 			if (forward.contains(bone))
-				for (auto const& child: forward[bone])
+				for (auto child: forward[bone])
 					reverse[child.key][bone] = false;
 			forward[bone].clear();
 			return *this;
@@ -258,7 +258,7 @@ namespace Makai::Graph::Armature {
 			List<usize> children;
 			if (forward.contains(bone)) {
 				children.resize(forward[bone].size());
-				for (auto const& child : forward[bone])
+				for (auto child : forward[bone])
 					if (child.value) children.pushBack(child.key);
 			}
 			return children;
@@ -279,7 +279,7 @@ namespace Makai::Graph::Armature {
 		constexpr usize parentOf(usize const bone) const {
 			if (bone >= MAX_BONES) return -1;
 			if (reverse.contains(bone)) {
-				for (auto const& child : reverse[bone])
+				for (auto child : reverse[bone])
 					if (child.value) return child.key;
 			}
 			return -1;

@@ -22,8 +22,9 @@ namespace Range {
 					if (!step) throw InvalidValueException("Step cannot be zero!");
 				}
 
-			constexpr DataType operator*() const				{return value;					}
-			constexpr SequenceIterator& operator++(int) const	{value += step; return *this;	}
+			constexpr DataType operator*() const			{return value;					}
+			constexpr SequenceIterator& operator++() const	{value += step; return *this;	}
+			constexpr SequenceIterator& operator--() const	{value -= step; return *this;	}
 
 			constexpr bool operator!=(SequenceIterator const& other) const {
 				return decrementing ? value > other.value : value < other.value;
