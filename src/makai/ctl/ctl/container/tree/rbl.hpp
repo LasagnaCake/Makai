@@ -486,7 +486,7 @@ namespace Tree {
 		/// @param other Container to copy from.
 		/// @return Reference to self.
 		constexpr RBL& append(RBL const& other) {
-			for (auto& node: other)
+			for (auto node: other)
 				insert(node.front())->value = node.back();
 			return *this;
 		}
