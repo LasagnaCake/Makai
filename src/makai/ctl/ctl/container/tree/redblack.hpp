@@ -357,8 +357,8 @@ namespace Tree {
 					}
 					closeNephew = sibling->child[right];
 					if (closeNephew && closeNephew->red) {
-						repaintLeft(sibling, parent, farNephew, right);
-						repaintRight(sibling, closeNephew, farNephew, right);
+						repaintLeft(sibling, closeNephew, farNephew, right);
+						repaintRight(sibling, parent, farNephew, right);
 						return;
 					}
 					sibling->red = true;
@@ -370,8 +370,8 @@ namespace Tree {
 					return;
 				}
 				if (closeNephew && closeNephew->red) {
-					repaintLeft(sibling, parent, farNephew, right);
-					repaintRight(sibling, closeNephew, farNephew, right);
+					repaintLeft(sibling, closeNephew, farNephew, right);
+					repaintRight(sibling, parent, farNephew, right);
 					return;
 				}
 				if (parent && parent->red) {
