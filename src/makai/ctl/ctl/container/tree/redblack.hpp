@@ -10,6 +10,7 @@
 
 #include "comparator.hpp"
 
+// NOTE: For testing purposes only, remove this later
 #include <iostream>
 
 CTL_NAMESPACE_BEGIN
@@ -454,17 +455,26 @@ namespace Tree {
 		/// @return Associated allocator.
 		constexpr AllocatorType& allocator() {return alloc;}
 
+		// NOTE: For testing purposes only, remove this later
 		constexpr void treeverse() const {
 			treeverse(root, 0);
 		}
 
+		// NOTE: For testing purposes only, remove this later
 		constexpr void treeverse(ref<Node> const node, usize const depth) const {
-			if (!node) return;
-			if (!depth) std::cout << "<tree>\n";
-			for (usize i = 0; i < depth; ++i)
-				std::cout << "  ";
+			if (!node) {
+				std::cout << ": none\n";
+				return;
+			}
+			if (!depth) std::cout << "<tree>\n0";
 			std::cout << ": [" << node->key << "] > " << node << " : " << node->parent << "\n";
+			for (usize i = 0; i < (depth); ++i)
+				std::cout << "|   ";
+			std::cout << "+--[L]";
 			treeverse(node->left(), depth + 1);
+			for (usize i = 0; i < (depth); ++i)
+				std::cout << "|   ";
+			std::cout << "+--[R]";
 			treeverse(node->right(), depth + 1);
 			if (!depth) std::cout << "</tree>\n";
 		}
