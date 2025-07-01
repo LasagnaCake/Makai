@@ -2,7 +2,7 @@
 #define CTL_CONTAINER_MAP_TREEMAP_H
 
 #include "../arguments.hpp"
-#include "../tree/redblack.hpp"
+#include "../tree/avl.hpp"
 #include "../lists/list.hpp"
 #include "../../namespace.hpp"
 #include "../../templates.hpp"
@@ -22,7 +22,7 @@ template<
 	class TKey,
 	class TValue,
 	template <class, class> class							TPair	= Pair,
-	template <class, class, template<class> class> class	TTree	= Tree::AVL
+	template <class, class, template <class> class> class	TTree	= Tree::AVL
 >
 struct TreeCollected: Paired<TKey, TValue, TPair> {
 	static_assert(Type::Container::PairLike<TPair<TKey, TValue>>, "Type is not a valid pair type!");
