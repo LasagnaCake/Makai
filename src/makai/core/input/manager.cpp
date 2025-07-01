@@ -390,7 +390,7 @@ bool Manager::isBound(String const& name) {
 
 StringList Manager::getNamesForButton(Button const& button) {
 	StringList names;
-	for (auto& [name, buttons]: binds) {
+	for (auto const& [name, buttons]: binds) {
 		for (Button& btn: buttons) {
 			if (button == btn) {
 				names.pushBack(name);
