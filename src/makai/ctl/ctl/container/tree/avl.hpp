@@ -264,7 +264,7 @@ namespace Tree {
 		/// @return Reference to self.
 		constexpr AVL& append(AVL const& other) {
 			for (auto node: other)
-				if (auto const newNode = insert(node->front()))
+				if (auto const newNode = insert(node.front()))
 					newNode->value = node.back();
 				else throw FailedActionException("Failed to insert key-value pair!");
 			return *this;
