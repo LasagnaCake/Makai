@@ -72,8 +72,8 @@ void printMap(BaseListMap<String, String, I, S> const& m) {
 	DEBUGLN("];");
 }
 
-template<typename K, typename V, typename I>
-void print(TreeMap<K, V, I> const& m) {
+template<typename I>
+void printMap(TreeMap<String, String, I> const& m) {
 	DEBUG("(M) ");
 	DEBUG(
 		"S: ",
@@ -95,8 +95,8 @@ void printMap(BaseListMap<String, String, I, S> const& m, String const& k) {
 		CTL::Console::println("K: ", k, ", L: ", r);
 }
 
-template<typename K, typename V, typename I>
-void print(TreeMap<K, V, I> const& m, K const& k) {
+template<typename I>
+void printMap(TreeMap<String, String, I> const& m, String const& k) {
 	if (m.contains(k))
 		CTL::Console::println("K: ", k, ", V: ", m[k]);
 	else
@@ -149,8 +149,7 @@ void testStringMap() {
 	print(mp.keys());
 	print(mp.values());
 	print(mp.items());
-	mp.clear();		printMap(mp);
-	mp.dispose();	printMap(mp);
+	mp.clear();	printMap(mp);
 	DEBUGLN("</", TypeInfo<MapType>::name(), ">");
 }
 
