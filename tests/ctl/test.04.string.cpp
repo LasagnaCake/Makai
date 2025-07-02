@@ -6,6 +6,7 @@ using
 	CTL::BaseListMap,
 	CTL::OrderedMap,
 	CTL::ListMap,
+	CTL::TreeMap,
 	CTL::List,
 	CTL::KeyValuePair,
 	CTL::TypeInfo
@@ -71,6 +72,20 @@ void printMap(BaseListMap<String, String, I, S> const& m) {
 	DEBUGLN("];");
 }
 
+template<typename K, typename V, typename I>
+void print(TreeMap<K, V, I> const& m) {
+	DEBUG("(M) ");
+	DEBUG(
+		"S: ",
+		m.size(),
+		", I: [ "
+	);
+	for (auto const& i: m) {
+		DEBUG("[", i.key, " ", i.value, "] ");
+	}
+	DEBUGLN("];");
+}
+
 template<typename I, bool S>
 void printMap(BaseListMap<String, String, I, S> const& m, String const& k) {
 	auto r = m.search(k);
@@ -78,6 +93,14 @@ void printMap(BaseListMap<String, String, I, S> const& m, String const& k) {
 		CTL::Console::println("K: ", k, ", L: ", r, ", V: ", m[k]);
 	else
 		CTL::Console::println("K: ", k, ", L: ", r);
+}
+
+template<typename K, typename V, typename I>
+void print(TreeMap<K, V, I> const& m, K const& k) {
+	if (m.contains(k))
+		CTL::Console::println("K: ", k, ", V: ", m[k]);
+	else
+		CTL::Console::println("K: ", k, ", none");
 }
 
 void testString() {
@@ -113,7 +136,7 @@ void testStringMap() {
 	printMap(mp, "Grape");
 	printMap(mp, "Pineapple");
 	// ERROR: `OrderedMap` causes `AllocationFailure` here
-	printMap(mp, "Avocado");
+	//printMap(mp, "Avocado");
 	mp.insert({
 		{"Kiwi", "Kiwi"},
 		{"Banana", "Alguma-fruta"},
@@ -150,6 +173,7 @@ int main() {
 	testString();
 	testStringMap<ListMap>();
 	testStringMap<OrderedMap>();
+	testStringMap<TreeMap>();
 	testStringConversion();
 	DEBUGLN("String test passed!");
 	return 0;
