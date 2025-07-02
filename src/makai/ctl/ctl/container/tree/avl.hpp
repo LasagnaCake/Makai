@@ -160,53 +160,35 @@ namespace Tree {
 		/// @brief Removes a node from the tree.
 		/// @param node Node to remove.
 		constexpr void removeNode(ref<Node> node) {
-			if (!node || !(node->left() || node->right())) return;
-			bool const right = node->parent->right() == node;
-			if (node->parent) {
-				if (!node->left()) {
-					node->parent->children[right] = node->right();
-					node->right()->parent = node->parent;
-					return refactor(node->parent);
-				}
-				if (!node->right()) {
-					node->parent->children[right] = node->left();
-					node->left()->parent = node->parent;
-					return refactor(node->parent);
-				}
-				throw FailedActionException("Removal not implemented for this case!");
-			} else if (!node->left())
-				root = node->right();
+			if (!node) return refactor(node->parent);
+			if (!node->left())
+				shift(node, node->right());
 			else if (!node->right())
-				root = node->left();
+				shift(node, node->left());
 			else {
-				throw FailedActionException("Removal not implemented for this case!");
+				ref<Node> succ = successor(node);
+				if (succ->parent != node) {
+					shift(succ, succ->right());
+					succ->children[1]		= node->right();
+					node->right()->parent	= succ;
+					//refactor(succ->right());
+				}
+				shift(node, succ);
+				succ->children[0]		= node->left();
+				node->left()->parent	= succ;
+				//refactor(succ->left());
+				refactor(succ);
+				return;
 			}
+			refactor(node->parent);
 		}
 
-		constexpr static void rebalance(ref<Node> node) {
-			while (node) {
-				if (node->weight > 1) {
-					switch (node->right()->weight) {
-						case -1:
-						case 0:		rotate(node->right(), false);	break;
-						case 1:		shuffle(node->right(), false);	break;
-						default: break;
-					}
-				} else if (node->weight < -1) {
-					switch (node->left()->weight) {
-						case -1:	shuffle(node->left(), true);	break;
-						case 0:
-						case 1:		rotate(node->left(), true);	break;
-						default: break;
-					}
-				} else break;
-				node = node->parent;
-			}
-		}
-
-		constexpr static void refactor(ref<Node> node) {
-			node->weight = cachedWeight(node);
-			rebalance(node);
+		/// @brief Returns whether a node is the right-side child of its parent.
+		/// @return Whether node is right child.
+		/// @note Returns `false` if node doesn't have a parent.
+		constexpr static bool isRightChild(ref<Node> const node) {
+			if (!node) return false;
+			return node->parent && node == node->parent->children[1];
 		}
 		
 		/// @brief Finds the appropriate parent node for a key.
@@ -291,6 +273,43 @@ namespace Tree {
 	private:
 		/// @brief Tree root.
 		owner<Node>		root = nullptr;
+
+		constexpr static ref<Node> successor(ref<Node> const node) {
+			return nullptr;
+		}
+
+		constexpr void shift(ref<Node> from, ref<Node> to) {
+			if (!from->parent) root = to;
+			else from->parent->children[isRightChild(from)] = to;
+			if (to) to->parent = from->parent;
+		}
+
+		constexpr static void rebalance(ref<Node> node) {
+			while (node) {
+				if (node->weight > 1) {
+					switch (node->right()->weight) {
+						case -1:
+						case 0:		rotate(node->right(), false);	break;
+						case 1:		shuffle(node->right(), false);	break;
+						default: break;
+					}
+				} else if (node->weight < -1) {
+					switch (node->left()->weight) {
+						case -1:	shuffle(node->left(), true);	break;
+						case 0:
+						case 1:		rotate(node->left(), true);	break;
+						default: break;
+					}
+				} else break;
+				node = node->parent;
+			}
+		}
+
+		constexpr static void refactor(ref<Node> node) {
+			if (!node) return;
+			node->weight = cachedWeight(node);
+			rebalance(node);
+		}
 		
 		constexpr static usize depth(ref<Node> const node) {
 			if (!node) return 0;
