@@ -51,6 +51,7 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr Property& reverse() {
 			CTL::swap(start, stop);
 			factor = 1 - factor;
+			return *this;
 		}
 	};
 	/// @brief Pause state.
