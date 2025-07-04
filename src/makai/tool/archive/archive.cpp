@@ -13,6 +13,8 @@
 
 #include "archive.hpp"
 
+#include "../../data/encdec.hpp"
+
 using namespace CTL::Literals::Text;
 
 // Legacy stuff, TODO: Remove this later
@@ -39,16 +41,20 @@ using namespace Arch;
 using Nlohmann = nlohmann::json;
 using Makai::JSON::Extern::JSONData;
 
-CTL::Random::Engine::Secure rng;
-
-String encoded(uint64 const v) {
-	BinaryData<> data(8, 0);
-	for (usize i = 0; i < 8; ++i) data[i] = uint8((v >> (8 * i)) & 0xFF);
-	return cppcodec::base64_rfc4648::encode<String>(data);
+static CTL::Random::Engine::Secure& rng() {
+	static CTL::Random::Engine::Secure r;
+	return r;
 }
 
-uint64 decoded(String const& v) {
-	BinaryData<> data = cppcodec::base64_rfc4648::decode<BinaryData<>>(v);
+static String encoded(uint64 const v) {
+	BinaryData<> data;
+	data.resize(8, 0);
+	for (usize i = 0; i < data.size(); ++i) data[i] = uint8((v >> (8 * i)) & 0xFF);
+	return Makai::Data::encode(data, Makai::Data::EncodingType::ET_BASE64);
+}
+
+static uint64 decoded(String const& v) {
+	BinaryData<> data = Makai::Data::decode(v, Makai::Data::EncodingType::ET_BASE64);
 	usize result = 0;
 	for (usize i = 0; i < data.size(); ++i)
 		result |= (uint64(data[i]) << (8 * i));
@@ -56,7 +62,7 @@ uint64 decoded(String const& v) {
 }
 
 template<class T>
-String hash(String const& str) {
+static String hash(String const& str) {
 	String result;
 	T hasher;
 	hasher.Update((const byte*)str.data(), str.size());
@@ -77,7 +83,7 @@ String Arch::hashPassword(String const& str) {
 }
 
 template<class T>
-BinaryData<> cbcTransform(
+static BinaryData<> cbcTransform(
 	BinaryData<> const&		data,
 	String					password	= "",
 	uint8* const			block		= nullptr
@@ -114,17 +120,17 @@ BinaryData<> cbcTransform(
 }
 
 template<Makai::Type::Equal<Deflator> T>
-T* getFlator(std::string& result, uint8 const level) {
+static T* getFlator(std::string& result, uint8 const level) {
 	return new T(new StringSink(result), level);
 }
 
 template<Makai::Type::Equal<Inflator> T>
-T* getFlator(std::string& result, uint8 const level) {
+static T* getFlator(std::string& result, uint8 const level) {
 	return new T(new StringSink(result));
 }
 
 template<class T>
-BinaryData<> flate(
+static BinaryData<> flate(
 	BinaryData<>	const&		data,
 	CompressionMethod const&	method	= CompressionMethod::ACM_ZIP,
 	uint8 const				level	= 9
@@ -153,7 +159,7 @@ BinaryData<> flate(
 }
 
 template<typename T>
-BinaryData<> cbcEncrypt(
+static BinaryData<> cbcEncrypt(
 	BinaryData<> const&		data,
 	String const&			password	= "",
 	uint8* const			block		= nullptr
@@ -162,7 +168,7 @@ BinaryData<> cbcEncrypt(
 }
 
 template<typename T>
-BinaryData<> cbcDecrypt(
+static BinaryData<> cbcDecrypt(
 	BinaryData<> const&		data,
 	String const&			password	= "",
 	uint8* const			block		= nullptr
@@ -214,7 +220,7 @@ BinaryData<> Arch::decompress(
 	return flate<Inflator>(data, method, level);
 }
 
-JSONData getStructure(fs::path const& path, StringList& files, String const& root) {
+static JSONData getStructure(fs::path const& path, StringList& files, String const& root) {
 	JSONData dir = Nlohmann::object();
 	for (auto const& e : fs::directory_iterator(path)) {
 		if (e.is_directory()) {
@@ -231,7 +237,7 @@ JSONData getStructure(fs::path const& path, StringList& files, String const& roo
 	return dir;
 }
 
-StringList getFileInfo(JSONData const& filestruct) {
+static StringList getFileInfo(JSONData const& filestruct) {
 	StringList res;
 	for (auto& [name, data]: filestruct.items()) {
 		if (data.is_string())
@@ -243,7 +249,7 @@ StringList getFileInfo(JSONData const& filestruct) {
 	return res;
 }
 
-void populateTree(JSONData& tree, String const& root = "") {
+static void populateTree(JSONData& tree, String const& root = "") {
 	if (!tree.is_object())
 		throw Error::FailedAction("file tree is not a JSON object!", CTL_CPP_PRETTY_SOURCE);
 	for (auto& [name, data]: tree.items()) {
@@ -254,7 +260,7 @@ void populateTree(JSONData& tree, String const& root = "") {
 	}
 }
 
-usize populateTree(JSONData& tree, List<uint64> const& values, usize const start = 0) {
+static usize populateTree(JSONData& tree, List<uint64> const& values, usize const start = 0) {
 	if (!tree.is_object())
 		throw Error::FailedAction("file tree is not a JSON object!", CTL_CPP_PRETTY_SOURCE);
 	usize idx = start;
@@ -266,10 +272,10 @@ usize populateTree(JSONData& tree, List<uint64> const& values, usize const start
 	return idx;
 }
 
-void generateBlock(As<uint8[16]>& block) {
+static void generateBlock(As<uint8[16]>& block) {
 	uint64* b = (uint64*)block;
-	b[0] = rng.next();
-	b[1] = rng.next();
+	b[0] = rng().next();
+	b[1] = rng().next();
 }
 
 void Arch::pack(
@@ -283,22 +289,23 @@ void Arch::pack(
 	try {
 		// Hash the password
 		String passhash = hashPassword(password);
-		_ARCDEBUGLN("FOLDER: ", folderPath, "\nARCHIVE: ", archivePath);
+		DEBUGLN("FOLDER: ", folderPath, "\nARCHIVE: ", archivePath);
 		// Get file structure
-		_ARCDEBUGLN("Getting file structure...");
+		DEBUGLN("Getting file structure...");
 		JSONData dir;
 		StringList files;
 		JSONData tree = dir["tree"];
 		tree = getStructure(fs::path(folderPath.std()), files, String(fs::path(folderPath.std()).stem().string()));
-		_ARCDEBUGLN("\n", dir.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
+		DEBUGLN("\n", dir.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
 		// Populate with temporary values
-		List<uint64> locations(files.size(), 0);
+		List<uint64> locations;
+		locations.resize(files.size(), 0);
 		// Open file
 		std::ofstream file;
 		file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
 		file.open(archivePath.cstr(), std::ios::binary | std::ios::trunc);
 		// Populate header
-		_ARCDEBUGLN("Creating header...\n");
+		DEBUGLN("Creating header...\n");
 		// Headers
 		ArchiveHeader	header;
 		// Set main header params
@@ -310,27 +317,30 @@ void Arch::pack(
 		/*header.flags =
 			Flags::SHOULD_CHECK_CRC_BIT				// Do CRC step
 		;*/
-		_ARCDEBUGLN("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
-		_ARCDEBUGLN("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
-		_ARCDEBUGLN("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
-		_ARCDEBUGLN("     FILE FORMAT VERSION: ", (uint64)header.version				);
-		_ARCDEBUGLN(" FILE FORMAT MIN VERSION: ", (uint64)header.minVersion				);
-		_ARCDEBUGLN("         ENCRYPTION MODE: ", (uint64)header.encryption				);
-		_ARCDEBUGLN("        COMPRESSION MODE: ", (uint64)header.compression			);
-		_ARCDEBUGLN("       COMPRESSION LEVEL: ", (uint64)header.level					);
-		_ARCDEBUGLN("\nDirectory structure layout:");
-		_ARCDEBUGLN("       FILE COUNT: ", files.size()			);
+		DEBUGLN("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
+		DEBUGLN("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
+		DEBUGLN("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
+		DEBUGLN("     FILE FORMAT VERSION: ", (uint64)header.version				);
+		DEBUGLN(" FILE FORMAT MIN VERSION: ", (uint64)header.minVersion				);
+		DEBUGLN("         ENCRYPTION MODE: ", (uint64)header.encryption				);
+		DEBUGLN("        COMPRESSION MODE: ", (uint64)header.compression			);
+		DEBUGLN("       COMPRESSION LEVEL: ", (uint64)header.level					);
+		DEBUGLN("\nDirectory structure layout:");
+		DEBUGLN("       FILE COUNT: ", files.size()			);
 		// Write main header first pass
 		file.write((char*)&header, header.headerSize);
 		// Write file info
-		_ARCDEBUGLN("\nWriting files...\n");
+		DEBUGLN("\nWriting files...\n");
 		usize i = 0;
 		for (auto const& f: files) {
 			// Get current stream position as file location
 			locations[i] = file.tellp();
 			// Read file
-			String const loc = f.splitAtFirst({'/', '\\'}).back();
-			BinaryData<> contents = File::loadBinary(Makai::OS::FS::concatenate(folderPath, loc));
+			String const loc = Regex::replace(f, "^(.*?)[\\\\\\/]", "");
+			DEBUGLN("Clean path: '", loc, "'");
+			String const fpath = Makai::OS::FS::concatenate(folderPath, loc);
+			DEBUGLN("Full path: '", fpath, "'");
+			BinaryData<> contents = File::loadBinary(fpath);
 			// Prepare header
 			FileHeader fheader;
 			fheader.uncSize = contents.size();				// Uncompressed file size
@@ -343,24 +353,25 @@ void Arch::pack(
 					comp,
 					complvl
 				);
-				_ARCDEBUGLN("Before encryption: ", contents.size());
+				DEBUGLN("Before encryption: ", contents.size());
 				contents = encrypt(
 					contents,
 					passhash,
 					enc,
 					fheader.block
 				);
-				_ARCDEBUGLN("After encryption: ", contents.size());
+				DEBUGLN("After encryption: ", contents.size());
 			}
 			fheader.compSize	= contents.size();	// Compressed file size
 			fheader.crc			= 0;				// CRC (currently not working)
 			// Debug info
-			_ARCDEBUGLN("'", files[i], "':");
-			_ARCDEBUGLN("          FILE INDEX: ", i						);
-			_ARCDEBUGLN("       FILE LOCATION: ", locations[i]		, " (", encoded(locations[i]), ")");
-			_ARCDEBUGLN("   UNCOMPRESSED SIZE: ", fheader.uncSize,	"B"	);
-			_ARCDEBUGLN("     COMPRESSED SIZE: ", fheader.compSize,	"B"	);
-			_ARCDEBUGLN("               CRC32: ", fheader.crc,		"\n"	);
+			DEBUGLN("'", files[i], "':");
+			DEBUGLN("          FILE INDEX: ", i							);
+			DEBUGLN("       FILE LOCATION: ", locations[i]				);
+			DEBUGLN("                 ENCODED: ", encoded(locations[i])	);
+			DEBUGLN("   UNCOMPRESSED SIZE: ", fheader.uncSize,	"B"		);
+			DEBUGLN("     COMPRESSED SIZE: ", fheader.compSize,	"B"		);
+			DEBUGLN("               CRC32: ", fheader.crc,		"\n"	);
 			// Copy header & file data
 			file.write((char*)&fheader, header.fileHeaderSize);
 			file.write((char*)contents.data(), contents.size());
@@ -368,9 +379,10 @@ void Arch::pack(
 		}
 		// Populate file tree
 		populateTree(tree, locations);
+		dir["tree"] = tree;
 		// Process directory structure
-		_ARCDEBUGLN("\nWriting directory structure...\n");
-		_ARCDEBUGLN("\n", dir.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
+		DEBUGLN("\nWriting directory structure...\n");
+		DEBUGLN("\n", dir.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
 		{
 			// Directory header
 			DirectoryHeader	dheader;
@@ -389,9 +401,9 @@ void Arch::pack(
 			// Get directory header location
 			header.dirHeaderLoc = file.tellp();
 			// Debug info
-			_ARCDEBUGLN("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
-			_ARCDEBUGLN("        UNCOMPRESSED SIZE: ", dheader.uncSize,		"B"	);
-			_ARCDEBUGLN("          COMPRESSED SIZE: ", dheader.compSize,	"B"	);
+			DEBUGLN("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
+			DEBUGLN("        UNCOMPRESSED SIZE: ", dheader.uncSize,		"B"	);
+			DEBUGLN("          COMPRESSED SIZE: ", dheader.compSize,	"B"	);
 			// Write header & directory info
 			file.write((char*)&dheader, header.dirHeaderSize);
 			file.write((char*)pdi.data(), pdi.size());
@@ -402,7 +414,7 @@ void Arch::pack(
 		// Close file
 		file.flush();
 		file.close();
-		_ARCDEBUGLN("\nDone!");
+		DEBUGLN("\nDone!");
 		_ARCDEBUGLN("Please run [arcgen \"YOUR_PASSWORD_HERE\"] to generate the hash to use in your game.");
 	#ifdef ARCSYS_APPLICATION_
 	} catch (Error::Generic const& e) {
@@ -419,63 +431,63 @@ void Arch::pack(
 	#endif // ARCSYS_APPLICATION_
 }
 
-[[noreturn]] void notOpenError() {
+[[noreturn]] static void notOpenError() {
 	throw File::FileLoadError(
 		"Archive is not open!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void singleFileArchiveError() {
+[[noreturn]] static void singleFileArchiveError() {
 	throw File::FileLoadError(
 		"Archive is not a multi-file archive!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void notAFileArchiveError() {
+[[noreturn]] static void notAFileArchiveError() {
 	throw File::FileLoadError(
 		"File is not a file archive!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void doesNotExistError(String const& file) {
+[[noreturn]] static void doesNotExistError(String const& file) {
 	throw File::FileLoadError(
 		"Directory or file '" + file + "' does not exist!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void outOfArchiveBoundsError(String const& file) {
+[[noreturn]] static void outOfArchiveBoundsError(String const& file) {
 	throw File::FileLoadError(
 		"Directory or file '" + file + "' lives outside the archive!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void notAFileError(String const& file) {
+[[noreturn]] static void notAFileError(String const& file) {
 	throw File::FileLoadError(
 		"Entry '" + file + "' is not a file!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void directoryTreeError() {
+[[noreturn]] static void directoryTreeError() {
 	throw File::FileLoadError(
 		"Missing or corrupted directory tree info!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void corruptedFileError(String const& path) {
+[[noreturn]] static void corruptedFileError(String const& path) {
 	throw File::FileLoadError(
 		"Corrupted file '" + path + "'!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void crcFailError(String const& path) {
+[[noreturn]] static void crcFailError(String const& path) {
 	throw File::FileLoadError(
 		"CRC check failed for file '" + path + "'!",
 		CTL_CPP_UNKNOWN_SOURCE
@@ -776,7 +788,7 @@ void Arch::FileArchive::assertOpen() const {
 		notOpenError();
 }
 
-void unpackV1(
+static void unpackV1(
 	String const& archivePath,
 	String const folderPath,
 	String const& password = ""
@@ -802,7 +814,7 @@ void unpackV1(
 }
 #endif // ARCSYS_APPLICATION_
 
-void unpackV0(
+static void unpackV0(
 	String const& archivePath,
 	String const folderPath,
 	String const& password = ""
