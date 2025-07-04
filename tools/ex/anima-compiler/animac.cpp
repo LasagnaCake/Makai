@@ -109,6 +109,10 @@ int compile(Makai::String const src, Makai::String const& out) {
 		if (e.info != "none") DEBUGLN(Makai::Regex::replace(e.info, "!\\[(.*?)\\]", EMPHASIZE), "\n");
 		DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
 		return 1;
+	} catch (Makai::Exception const& e) {
+		DEBUGLN(CONSOLE_RED, "\n<error>\n", CONSOLE_RESET);
+		DEBUGLN(Makai::Regex::replace(e.what(), "!\\[(.*?)\\]", EMPHASIZE), "\n");
+		DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "</error>\n", CONSOLE_TRUE_RESET);
 	}
 	return 0;
 }

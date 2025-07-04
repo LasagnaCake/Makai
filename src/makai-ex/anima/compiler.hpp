@@ -125,9 +125,9 @@ namespace Makai::Ex::AVM::Compiler {
 				String		name;
 			};
 			/// @brief Declared functions.
-			Map<usize, Entry>	functions;
+			ListMap<usize, Entry>	functions;
 			/// @brief Function stack.
-			List<Composition>	stack;
+			List<Composition>		stack;
 
 			constexpr String parseArgument(String name) const {
 				if (name[0] == '%')
@@ -371,9 +371,9 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @brief Token tree operation tokens.
 		Tokens tokens;
 		/// @brief Declared choices.
-		Map<usize, ChoiceEntry>	choices;
+		ListMap<usize, ChoiceEntry>	choices;
 		/// @brief Declared functions.
-		Functions				functions;
+		Functions					functions;
 
 		/// @brief Source file name.
 		String fileName;
@@ -617,6 +617,14 @@ namespace Makai::Ex::AVM::Compiler {
 			;
 		}
 
+		constexpr static bool isValidPathChar(char const c) {
+			return
+				isValidNameChar(c)
+			||	c == '~'
+			||	c == ':'
+			;
+		}
+
 		void append(OperationTree const& other, usize const incline) {
 			tokens.appendBack(other.tokens);
 			for (auto const& fun: other.functions.functions)
@@ -736,18 +744,18 @@ namespace Makai::Ex::AVM::Compiler {
 					if (val == "choice") {
 						assertHasAtLeast(nodes, curNode, 3, opmatch);
 						curNode += 2;
-						if (!nodes[curNode].match.validate(isValidNameChar))
+						if (!nodes[curNode].match.validate(isValidPathChar))
 							throw Error::InvalidValue(
-								toString("Invalid choice name '", val, "'!"),
+								toString("Invalid choice name '", nodes[curNode].match, "' for select!"),
 								MKEX_ANIMAC_SOURCE(fileName, vali)
 							);
 						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", nodes[curNode].match);
-						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(nodes[curNode].match));
+						MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: (", getChoicePath(nodes[curNode].match), ")");
 						auto const ppack = ParameterPack::fromString(nodes[curNode+1], fileName, functions, false);
 						auto const path = ConstHasher::hash(getChoicePath(nodes[curNode].match));
 						tokens.pushBack(Token{
 							.type	= Operation::AVM_O_GET_VALUE,
-							.name	= getScopePath(nodes[curNode].match),
+							.name	= getChoicePath(nodes[curNode].match),
 							.value	= path,
 							.mode	= 3,
 							.pos	= opi,
@@ -866,7 +874,10 @@ namespace Makai::Ex::AVM::Compiler {
 					if (
 						blocks.back().back() == ':'
 					||	blocks.back().back() == '*'
-					) blocks.back().popBack();
+					) {
+						isInScene = blocks.back().back() == ':';
+						blocks.back().popBack();
+					}
 					auto const end = blocks.join() + "[end]";
 					blocks.popBack();
 					for (auto& fun: functions.stack)
@@ -938,7 +949,7 @@ namespace Makai::Ex::AVM::Compiler {
 				}
 				case (ConstHasher::hash("choice")): {
 					assertHasAtLeast(nodes, curNode, 2, opmatch);
-					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", getChoicePath(val));
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Path: ", val, " (", getChoicePath(val), ")");
 					if (!val.validate(isValidNameChar))
 						throw Error::InvalidValue(
 							toString("Invalid choice name '", val, "'!"),
@@ -1098,13 +1109,20 @@ namespace Makai::Ex::AVM::Compiler {
 					if (scope.size()) {
 						scope.popBack();
 						path = scope.join();
+						if (path[-2] == '*' || path[-2] == ':')
+							path.popBack();
 					}
 					path += val.substring(1);
 				} break;
 				default: {
-					path = blocks.join() + val; break;
+					path = blocks.join();
+					if (path.size() && path.back() != '*' && path.back() != ':')
+						path += isInScene ? ':' : '*';
+					path += val;
 				} break;
 			}
+			if (path.back() == '*' || path.back() == ':')
+				path.popBack();
 			return path;
 		}
 
@@ -1184,8 +1202,8 @@ namespace Makai::Ex::AVM::Compiler {
 			uint64 size		= 0;
 		};
 
-		constexpr Map<uint64, ChoiceRef> processChoices(Map<usize, OperationTree::ChoiceEntry> const& choices) {
-			Map<uint64, ChoiceRef> out;
+		constexpr ListMap<uint64, ChoiceRef> processChoices(ListMap<usize, OperationTree::ChoiceEntry> const& choices) {
+			ListMap<uint64, ChoiceRef> out;
 			for (auto const& [choice, options]: choices) {
 				out[choice] = {options.options.empty() ? 0 : data.size(), options.options.size() - 1};
 				data.appendBack(options.options);
@@ -1213,7 +1231,7 @@ namespace Makai::Ex::AVM::Compiler {
 			auto const choices = out.processChoices(tree.choices);
 			#ifdef MAKAILIB_EX_ANIMA_COMPILER_DEBUG_ABSOLUTELY_EVERYTHING
 			MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("<choices>");
-			for (auto& choice: choices) {
+			for (auto choice: choices) {
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Choice: ", choice.key);
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("    Start: ", choice.value.start);
 				MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("    Size: ", choice.value.size);
@@ -1310,11 +1328,11 @@ namespace Makai::Ex::AVM::Compiler {
 							out.addParameterPack(token.pack.args);
 						break;
 					case Operation::AVM_O_NAMED_CALL:
-						out.addOperation(token.operation(token.pack.args.size() > 1));
+						out.addOperation(token.operation(token.pack.args.size() > 1 || token.pack.args.empty()));
 						out.addNamedOperand(token.name);
-						if (token.pack.args.size() > 1)
+						if (token.pack.args.size() > 1 || token.pack.args.empty())
 							out.addParameterPack(token.pack.args);
-						else {
+						else if (token.pack.args.size()) {
 							String const& val = token.pack.args[0];
 							if (val == "true")			out.addOperand(1);
 							else if (val == "false")	out.addOperand(0);
@@ -1333,7 +1351,12 @@ namespace Makai::Ex::AVM::Compiler {
 					case Operation::AVM_O_GET_VALUE:
 						out.addOperation(token);
 						if (token.mode == 3) {
-							out.addNamedOperand(token.name);
+							out.addOperand(token.value);
+							if (choices.empty() || !choices.contains(token.value))
+								throw Error::InvalidValue(
+									toString("Could not find choice for '", token.name, "'!"),
+									MKEX_ANIMAC_SOURCE(tree.fileName, token.pos)
+								);
 							out.addOperand(choices[token.value].start);
 							out.addOperand(choices[token.value].size);
 						} else {
