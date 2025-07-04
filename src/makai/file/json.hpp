@@ -335,7 +335,9 @@ namespace Makai::JSON {
 		bool tryGet(T& out) const
 		requires Makai::Type::Equal<typename T::DataType, JSONValue>
 		try {
-			out = T(view().get<std::vector<Extern::JSONData>>());
+			out = T();
+			for (auto val: view().get<std::vector<Extern::JSONData>>())
+				out.pushBack(val);
 			err = "";
 			return true;
 		} catch (Extern::Nlohmann::exception const& e) {

@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 		);
 	else if (argc >= 2) {
 		usize sz = srng.number<usize>(32, 64);
-		CTL::String const pkid = CTL::toString("PASSKEY_ID", srng.integer(), "EX");
+		CTL::String const pkid = CTL::toString("PASSKEY_ID", srng.integer<usize>(), "EX");
 		CTL::String keyfile = "";
 		keyfile += CTL::toString(
 			"#ifndef ", pkid, "_H\n",
@@ -42,9 +42,9 @@ int main(int argc, char** argv) {
 			"#include <makai/makai.hpp>\n"
 		); 
 		keyfile += CTL::toString(
-			"constinit static Makai::Ex::ObfuscatedStaticString<",
+			"constinit static CTL::Ex::ObfuscatedStaticString<",
 			sz
-			,"> const passkey = Makai::Ex::ObfuscatedStaticString<",
+			,"> const passkey = CTL::Ex::ObfuscatedStaticString<",
 			sz
 			,">(\""
 		);
