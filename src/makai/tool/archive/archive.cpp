@@ -294,8 +294,9 @@ void Arch::pack(
 		// Populate with temporary values
 		List<uint64> locations(files.size(), 0);
 		// Open file
-		std::ofstream file(archivePath.cstr(), std::ios::binary | std::ios::trunc);
+		std::ofstream file;
 		file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
+		file.open(archivePath.cstr(), std::ios::binary | std::ios::trunc);
 		// Populate header
 		_ARCDEBUGLN("Creating header...\n");
 		// Headers
@@ -328,7 +329,8 @@ void Arch::pack(
 			// Get current stream position as file location
 			locations[i] = file.tellp();
 			// Read file
-			BinaryData<> contents = File::loadBinary(f);
+			String const loc = f.splitAtFirst({'/', '\\'}).back();
+			BinaryData<> contents = File::loadBinary(Makai::OS::FS::concatenate(folderPath, loc));
 			// Prepare header
 			FileHeader fheader;
 			fheader.uncSize = contents.size();				// Uncompressed file size
@@ -351,7 +353,7 @@ void Arch::pack(
 				_ARCDEBUGLN("After encryption: ", contents.size());
 			}
 			fheader.compSize	= contents.size();	// Compressed file size
-			fheader.crc			= 0					// CRC (currently not working)
+			fheader.crc			= 0;				// CRC (currently not working)
 			// Debug info
 			_ARCDEBUGLN("'", files[i], "':");
 			_ARCDEBUGLN("          FILE INDEX: ", i						);

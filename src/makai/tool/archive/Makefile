@@ -14,8 +14,8 @@ endef
 all: debug release
 
 debug:
-	$(call compile, archive)
+	$(MAKE_SUB)
 
 
 release:
-	$(call compile, archive)
+	$(MAKE_SUB)

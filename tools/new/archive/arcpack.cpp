@@ -1,8 +1,6 @@
-#define ARCSYS_APPLICATION_
-
 #include <makai/tool/archive/archive.hpp>
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
 	DEBUGLN("Starting...");
 	if (argc < 3)
 		DEBUGLN(
@@ -18,4 +16,6 @@ int main(int argc, char** argv) {
 		Makai::Tool::Arch::pack(argv[1], argv[2], argv[3]);
 	}
 	return 0;
+} catch (Makai::Error::Generic const& e) {
+	DEBUGLN(e.report());
 }
