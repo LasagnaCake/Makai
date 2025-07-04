@@ -691,7 +691,7 @@ namespace Makai::Ex::AVM::Compiler {
 						"File '" + filePath + "' does not exist!",
 						MKEX_ANIMAC_SOURCE(fileName, nodes[curNode+1].position)
 					);
-					curNode += 2;
+					++curNode;
 				} break;
 			}
 		}

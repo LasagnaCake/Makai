@@ -55,7 +55,7 @@ int compile(Makai::String const src, Makai::String const& out) {
 	try {
 		Makai::String const file = Makai::File::getText(src);
 		try {
-			Makai::Ex::AVM::Compiler::compileSourceToFile(file, out, Makai::OS::FS::fileName(src));
+			Makai::Ex::AVM::Compiler::compileSourceToFile(file, out, src);
 		} catch (Makai::Error::Generic const& e) {
 			usize eline = 0;
 			DEBUGLN(CONSOLE_RED, CONSOLE_BOLD, "\n<error>\n", CONSOLE_RESET);
