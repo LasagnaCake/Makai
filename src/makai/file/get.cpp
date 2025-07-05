@@ -250,7 +250,7 @@ void Makai::File::saveText(String const& path, String const& text) {
 String Makai::File::loadTextFromArchive(String const& path) {
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
-	return archive().getTextFile(OS::FS::childPath(path));
+	return archive().getTextFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
 	#else
 	fileLoadError(path, "Archive functionality disabled!");
 	#endif
@@ -259,7 +259,7 @@ String Makai::File::loadTextFromArchive(String const& path) {
 BinaryData<> Makai::File::loadBinaryFromArchive(String const& path) {
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
-	return archive().getBinaryFile(OS::FS::childPath(path));
+	return archive().getBinaryFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
 	#else
 	fileLoadError(path, "Archive functionality disabled!");
 	#endif

@@ -554,7 +554,7 @@ String Arch::FileArchive::getTextFile(String const& path) try {
 	String content;
 	content.resize(fe.data.size(), 0);
 	MX::memcpy(content.data(), fe.data.data(), content.size());
-	return String(List<char>(fe.data));
+	return content;
 } catch (Error::FailedAction const& e) {
 	throw File::FileLoadError(
 		"could not load file '" + path + "'!",
@@ -619,7 +619,7 @@ void Arch::FileArchive::parseFileTree() {
 	default:
 	case 0:
 		// "dirHeaderSize" is located in the old "dirInfoSize" parameter
-		fs = String().resize(header.dirHeaderSize, ' ');
+		fs.resize(header.dirHeaderSize, ' ');
 		archive.read(fs.data(), fs.size());
 		archive.seekg(0);
 		break;
@@ -765,8 +765,10 @@ uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const&
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	List<JSONData> stack;
 	JSONData entry = fstruct["tree"];
+	DEBUGLN("Path: ", origpath);
+	DEBUGLN("Cleaned: ", Regex::replace(path, "[\\\\\\/]+", "/"));
 	// Loop through path and get entry location
-	for (String fld: path.split({'\\', '/'})) {
+	for (String fld: Regex::replace(path, "[\\\\\\/]+", "/").split('/')) {
 		if (fld == "..") {
 			if (stack.empty())
 				outOfArchiveBoundsError(origpath);
