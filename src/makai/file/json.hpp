@@ -29,6 +29,75 @@ namespace Makai::JSON {
 		concept ValidReturnType = Type::Constructible<T> && Type::Different<T, JSONType>;
 	}
 
+	/// @brief Implementation details.
+	namespace Impl {
+		/// @brief JSON value reference.
+		struct JSONReference {
+			JSONReference(Extern::JSONData const& data): data(data) {}
+
+		protected:
+			Extern::JSONData const& data;
+		};
+
+		/// @brief JSON attribute accessor.
+		/// @tparam T Value type.
+		template<class T>
+		struct JSONAttribute;
+
+		template<Type::Primitive T>
+		struct JSONAttribute<T>: JSONReference {
+			using JSONReference::JSONReference;
+
+			/// @brief Tries to get a value from the underlying JSON value.
+			/// @tparam T Value type.
+			/// @param out Output of the value.
+			/// @return Whether the value was successfully acquired.
+			Nullable<String> tryGet(T& out) const try {
+				out = data.get<T>();
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+		};
+
+		template<Makai::Type::Enumerator T>
+		struct JSONAttribute<T>: JSONReference {
+			using JSONReference::JSONReference;
+
+			/// @brief Tries to get a value from the underlying JSON value.
+			/// @tparam T Value type.
+			/// @param out Output of the value.
+			/// @return Whether the value was successfully acquired.
+			Nullable<String> tryGet(T& out) const try {
+				out = data.get<T>();
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+		};
+
+		template <Makai::Type::Equal<String> T>
+		struct JSONAttribute<T>: JSONReference {
+			using JSONReference::JSONReference;
+
+			/// @brief Tries to get a value from the underlying JSON value.
+			/// @tparam T Value type.
+			/// @param out Output of the value.
+			/// @return Whether the value was successfully acquired.
+			Nullable<String> tryGet(T& out) const try {
+				out = data.get<std::string>();
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+		};
+
+		template<class T>
+		concept Accessible = requires (JSONValue data, T val) {
+			{Impl::JSONAttribute<T>(data).tryGet(val)} -> Type::Equal<Nullable<String>>;
+		};
+	};
+
 	/// @brief JSON view.
 	class JSONView: public View<Extern::JSONData> {
 	public:
@@ -54,7 +123,7 @@ namespace Makai::JSON {
 		/// @tparam T Value type.
 		/// @return Stored value.
 		/// @throw Error::FailedAction if stored value is not of the given type.
-		template<class T>
+		template<Impl::Accessible T>
 		inline T get() const {
 			T result;
 			if (!tryGet<T>(result))
@@ -66,12 +135,26 @@ namespace Makai::JSON {
 		/// @tparam T Value type.
 		/// @param fallback Fallback value.
 		/// @return Stored value, or fallback.
-		template<class T>
+		template<Impl::Accessible T>
 		inline T get(T const& fallback) const {
 			T result;
 			if (!tryGet<T>(result))
 				return fallback;
 			return result;
+		}
+
+		/// @brief Tries to get a value from the underlying JSON value.
+		/// @tparam T Value type.
+		/// @param out Output of the value.
+		/// @return Whether the value was successfully acquired.
+		template<Impl::Accessible T>
+		bool tryGet(T& out) const {
+			if (auto result = Impl::JSONAttribute<T>(view()).tryGet(out)) {
+				err = result.value();
+				return false;
+			}
+			err = "";
+			return true;
 		}
 
 		/// @brief JSON structure member access operator.
@@ -174,104 +257,6 @@ namespace Makai::JSON {
 		/// @brief Returns whether the JSON value is a discarded value.
 		/// @return Whether it is discarded.
 		bool isDiscarded() const;
-		
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template<class T> bool tryGet(T& out) const;
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template<Makai::Type::Primitive T>
-		bool tryGet(T& out) const try {
-			out = view().get<T>();
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template<Makai::Type::Enumerator T>
-		bool tryGet(T& out) const try {
-			out = view().get<T>();
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Equal<String> T>
-		bool tryGet(T& out) const try {
-			out = view().get<std::string>();
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Container::List T>
-		bool tryGet(T& out) const
-		requires (
-			Makai::Type::Different<typename T::DataType, String>
-		&&	Makai::Type::Different<typename T::DataType, JSONView>
-		&&	Makai::Type::Different<typename T::DataType, JSONValue>
-		) try {
-			out = T(view().get<std::vector<typename T::DataType>>());
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Container::List T>
-		bool tryGet(T& out) const
-		requires Makai::Type::Equal<typename T::DataType, String>
-		try {
-			out = T(view().get<std::vector<std::string>>());
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template <Type::Derived<JSONView> T>
-		bool tryGet(T& out) const
-		try {
-			out = T(view().get<JSONType>());
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
 
 		/// @brief Returns the error that happened when `tryGet` was executed.
 		/// @return Error.
@@ -301,6 +286,23 @@ namespace Makai::JSON {
 
 		friend class JSONValue;
 	};
+	namespace Impl {
+		template<Type::Derived<JSONView> T>
+		struct JSONAttribute<T>: JSONReference {
+			using JSONReference::JSONReference;
+
+			/// @brief Tries to get a value from the underlying JSON value.
+			/// @tparam T Value type.
+			/// @param out Output of the value.
+			/// @return Whether the value was successfully acquired.
+			Nullable<String> tryGet(JSONView& out) const try {
+				out = data.get<JSONType>();
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+		};
+	}
 
 	/// @brief JSON value.
 	struct JSONValue: public JSONView {
@@ -325,88 +327,6 @@ namespace Makai::JSON {
 		/// @param other `JSONValue` to copy from.
 		JSONValue(JSONValue const& other);
 
-		using JSONView::tryGet;
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Container::List T>
-		bool tryGet(T& out) const
-		requires Makai::Type::Equal<typename T::DataType, JSONValue>
-		try {
-			out = T();
-			for (auto val: view().get<std::vector<Extern::JSONData>>())
-				out.pushBack(val);
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Container::Map T>
-		bool tryGet(T& out) const
-		requires (
-			Makai::Type::Equal<typename T::KeyType, String>
-		&&	Makai::Type::Equal<typename T::ValueType, JSONValue>
-		) try {
-			for (auto [k, v]: view().items())
-				out[k] = v;
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Tries to get a value from the underlying JSON value.
-		/// @tparam T Value type.
-		/// @param out Output of the value.
-		/// @return Whether the value was successfully acquired.
-		template <Makai::Type::Container::Map T>
-		bool tryGet(T& out) const
-		requires (
-			Makai::Type::Equal<typename T::KeyType, String>
-		&&	Makai::Type::Different<typename T::ValueType, JSONValue>
-		) try {
-			for (auto [k, v]: view().items())
-				out[k] = v.template get<typename T::ValueType>();
-			err = "";
-			return true;
-		} catch (Extern::Nlohmann::exception const& e) {
-			err = e.what();
-			return false;
-		}
-
-		/// @brief Returns the current value stored in the view.
-		/// @tparam T Value type.
-		/// @return Stored value.
-		/// @throw Error::FailedAction if stored value is not of the given type.
-		template<class T>
-		inline T get() const {
-			T result;
-			if (!tryGet<T>(result))
-				typeMismatchError<T>();
-			return result;
-		}
-
-		/// @brief Returns the current value stored in the view, or the fallback value.
-		/// @tparam T Value type.
-		/// @param fallback Fallback value.
-		/// @return Stored value, or fallback.
-		template<class T>
-		inline T get(T const& fallback) const {
-			T result;
-			if (!tryGet<T>(result))
-				return fallback;
-			return result;
-		}
-
 		/// @brief Empties the underlying JSON value.
 		/// @return Reference to self.
 		JSONValue& clear();
@@ -417,6 +337,86 @@ namespace Makai::JSON {
 		/// @brief Underlying JSON value.
 		Extern::JSONData data;
 	};
+
+	namespace Impl {
+		template <Makai::Type::Container::List T>
+		struct JSONAttribute<T>: JSONReference {
+			using JSONReference::JSONReference;
+
+			/// @brief Tries to get a value from the underlying JSON value.
+			/// @tparam T Value type.
+			/// @param out Output of the value.
+			/// @return Whether the value was successfully acquired.
+			Nullable<String> tryGet(T& out) const
+			requires (
+				Makai::Type::Different<typename T::DataType, String>
+			&&	Makai::Type::Different<typename T::DataType, JSONView>
+			&&	Makai::Type::Different<typename T::DataType, JSONValue>
+			) try {
+				out = T(data.get<std::vector<typename T::DataType>>());
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+
+			Nullable<String> tryGet(T& out) const
+			requires(Makai::Type::Equal<typename T::DataType, String>)
+			try {
+				out = data.get<std::vector<std::string>>();
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+
+			/// @brief Tries to get a value from the underlying JSON value.
+			/// @tparam T Value type.
+			/// @param out Output of the value.
+			/// @return Whether the value was successfully acquired.
+			Nullable<String> tryGet(T& out) const
+			requires (Makai::Type::Equal<typename T::DataType, JSONValue>)
+			try {
+				out = T();
+				for (auto val: data.get<std::vector<Extern::JSONData>>())
+					out.pushBack(val);
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+		};
+
+		template <Makai::Type::Container::Map T>
+		struct JSONAttribute<T>: JSONReference {
+			using JSONReference::JSONReference;
+
+			/// @brief Tries to get a value from the underlying JSON value.
+			/// @tparam T Value type.
+			/// @param out Output of the value.
+			/// @return Whether the value was successfully acquired.
+			Nullable<String> tryGet(T& out) const
+			requires (
+				Makai::Type::Equal<typename T::KeyType, String>
+			&&	Makai::Type::Equal<typename T::ValueType, JSONValue>
+			) try {
+				for (auto [k, v]: data.items())
+					out[k] = v;
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+
+			Nullable<String> tryGet(T& out) const
+			requires (
+				Makai::Type::Equal<typename T::KeyType, String>
+			&&	Makai::Type::Different<typename T::ValueType, JSONValue>
+			) try {
+				for (auto [k, v]: data.items())
+					out[k] = v.template get<typename T::ValueType>();
+				return nullptr;
+			} catch (Extern::Nlohmann::exception const& e) {
+				return String(e.what());
+			}
+		};
+	}
 
 	/// @brief Creates a JSON object.
 	/// @param name Value name.

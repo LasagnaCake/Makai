@@ -2,6 +2,7 @@
 
 #include "../tool/archive/archive.hpp"
 
+#include <exception>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -77,8 +78,12 @@ void Makai::File::attachArchive(DataBuffer& buffer, String const& password) {
 		archive().open(buffer, password);
 		state() = ArchiveState::FAS_OPEN;
 		DEBUGLN("Archive Attached!");
-	} catch (...) {
+	} catch (Error::Generic const& e) {
 		DEBUGLN("Archive attachment failed!");
+		DEBUGLN("Reason: ", e.report());
+	} catch (std::exception const& e) {
+		DEBUGLN("Archive attachment failed!");
+		DEBUGLN("Reason: ", e.what());
 	}
 	#endif
 }

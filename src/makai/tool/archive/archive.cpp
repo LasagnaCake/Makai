@@ -91,8 +91,8 @@ static BinaryData<> cbcTransform(
 	std::string result;
 	T tf;
 	uint8* iv = new uint8[16];
-	if (iv != nullptr)	MX::memcpy(iv, block, 16);
-	else				MX::memset(iv, 0, 16);
+	if (block != nullptr)	MX::memcpy(iv, block, 16);
+	else					MX::memset(iv, 0, 16);
 	while (password.size() < tf.MaxKeyLength())
 		password += " ";
 	if (password.size() > 32)
@@ -133,7 +133,7 @@ template<class T>
 static BinaryData<> flate(
 	BinaryData<>	const&		data,
 	CompressionMethod const&	method	= CompressionMethod::ACM_ZIP,
-	uint8 const				level	= 9
+	uint8 const					level	= 9
 ) try {
 	std::string result;
 	switch (method) {
@@ -391,7 +391,8 @@ void Arch::pack(
 			// Get directory info
 			String dirInfo = dir.dump(-1, ' ', false, Nlohmann::error_handler_t::replace);
 			// Compress & encrypt directory info
-			BinaryData<> pdi = BinaryData<>(dirInfo.size());
+			BinaryData<> pdi;
+			pdi.resize(dirInfo.size(), 0);
 			MX::memcpy(pdi.data(), dirInfo.data(), dirInfo.size());
 			pdi = compress(pdi, comp, complvl);
 			pdi = encrypt(pdi, passhash, enc, dheader.block);
@@ -550,6 +551,9 @@ String Arch::FileArchive::getTextFile(String const& path) try {
 	assertOpen();
 	FileEntry fe = getFileEntry(path);
 	processFileEntry(fe);
+	String content;
+	content.resize(fe.data.size(), 0);
+	MX::memcpy(content.data(), fe.data.data(), content.size());
 	return String(List<char>(fe.data));
 } catch (Error::FailedAction const& e) {
 	throw File::FileLoadError(
@@ -615,7 +619,7 @@ void Arch::FileArchive::parseFileTree() {
 	default:
 	case 0:
 		// "dirHeaderSize" is located in the old "dirInfoSize" parameter
-		fs = String(header.dirHeaderSize, ' ');
+		fs = String().resize(header.dirHeaderSize, ' ');
 		archive.read(fs.data(), fs.size());
 		archive.seekg(0);
 		break;
@@ -624,18 +628,22 @@ void Arch::FileArchive::parseFileTree() {
 		archive.seekg(header.dirHeaderLoc);
 		archive.read((char*)&dh, header.dirHeaderSize);
 		if (!dh.compSize || !dh.uncSize) directoryTreeError();
-		_ARCDEBUGLN("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
-		_ARCDEBUGLN("        UNCOMPRESSED SIZE: ", dh.uncSize,			"B"	);
-		_ARCDEBUGLN("          COMPRESSED SIZE: ", dh.compSize,			"B"	);
-		BinaryData<> pfs(dh.compSize, 0);
+		DEBUGLN("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
+		DEBUGLN("        UNCOMPRESSED SIZE: ", dh.uncSize,			"B"	);
+		DEBUGLN("          COMPRESSED SIZE: ", dh.compSize,			"B"	);
+		BinaryData<> pfs;
+		pfs.resize(dh.compSize, 0);
 		archive.read((char*)pfs.data(), pfs.size());
 		archive.seekg(0);
+		DEBUGLN("Demangling tree data...");
 		demangleData(pfs, dh.block);
-		fs = String(List<char>(pfs));
+		fs.resize(pfs.size(), 0);
+		MX::memcpy(fs.data(), pfs.data(), fs.size());
 		if (fs.size() != dh.uncSize) directoryTreeError();
 		break;
 	}
 	try {
+		DEBUGLN("Parsing tree...");
 		fstruct = Nlohmann::parse(fs.std());
 	} catch (Nlohmann::exception const& e) {
 		throw File::FileLoadError(
@@ -703,15 +711,15 @@ Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path)
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (!fstruct["tree"].is_object())
 		directoryTreeError();
-	_ARCDEBUGLN("Getting file entry location...");
+	DEBUGLN("Getting file entry location...");
 	uint64		idx	= getFileEntryLocation(path.lower(), path);
 	_ARCDEBUGLN("ENTRY LOCATION: ", idx);
-	_ARCDEBUGLN("Getting file entry header...");
+	DEBUGLN("Getting file entry header...");
 	FileHeader	fh	= getFileEntryHeader(idx);
 	_ARCDEBUGLN("   UNCOMPRESSED SIZE: ", fh.uncSize,	"B"	);
 	_ARCDEBUGLN("     COMPRESSED SIZE: ", fh.compSize,	"B"	);
-	_ARCDEBUGLN("               CRC32: ", fh.crc	);
-	_ARCDEBUGLN("Getting file entry data...");
+	_ARCDEBUGLN("               CRC32: ", fh.crc			);
+	DEBUGLN("Getting file entry data...");
 	return Arch::FileArchive::FileEntry{idx, path, fh, getFileEntryData(idx, fh)};
 } catch (File::FileLoadError const& e) {
 	Error::rethrow(e);
@@ -724,7 +732,8 @@ Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path)
 
 BinaryData<> Arch::FileArchive::getFileEntryData(uint64 const index, FileHeader const& fh) try {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
-	BinaryData<> fd(fh.compSize, 0);
+	BinaryData<> fd;
+	fd.resize(fh.compSize, 0);
 	auto lp = archive.tellg();
 	archive.seekg(index + header.fileHeaderSize);
 	archive.read((char*)fd.data(), fh.compSize);
