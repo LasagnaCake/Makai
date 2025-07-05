@@ -3,6 +3,7 @@
 
 #include "listmap.hpp"
 #include "treemap.hpp"
+#include "hashmap.hpp"
 #include "agnostic.hpp"
 
 #endif
