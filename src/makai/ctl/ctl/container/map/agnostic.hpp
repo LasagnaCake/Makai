@@ -3,6 +3,7 @@
 
 #include "listmap.hpp"
 #include "treemap.hpp"
+#include "hashmap.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -28,7 +29,7 @@ using Collected = TreeCollected<TKey, TValue, TPair>;
 namespace Type::Container {
 	/// @brief Type MUST be one of the available associative containers.
 	template<class T>
-	concept Map = ListMap<T> || TreeMap<T>;
+	concept Map = ListMap<T> || TreeMap<T> || HashMap<T>;
 }
 
 CTL_NAMESPACE_END

@@ -1,34 +1,12 @@
-#ifndef CTL_CONTAINER_MAP_TREEMAP_H
-#define CTL_CONTAINER_MAP_TREEMAP_H
+#ifndef CTL_CONTAINER_MAP_HASHMAP_H
+#define CTL_CONTAINER_MAP_HASHMAP_H
 
-#include "../arguments.hpp"
-#include "../tree/avl.hpp"
-#include "../lists/list.hpp"
-#include "../../namespace.hpp"
-#include "../../templates.hpp"
-#include "../../typetraits/traits.hpp"
+#include "treemap.hpp"
 #include "../../algorithm/hash.hpp"
-#include "../../range/iterate.hpp"
-#include "../pair.hpp"
 
 CTL_NAMESPACE_BEGIN
 
-/// @brief Tags the deriving class as a collection of key-value pairs, stored in a tree structure.
-/// @tparam TKey Key type.
-/// @tparam TValue Value type.
-/// @tparam TPair<class, class> Pair type.
-/// @tparam TTree<class, class> Tree type.
-template<
-	class TKey,
-	class TValue,
-	template <class, class> class							TPair	= Pair,
-	template <class, class, template <class> class> class	TTree	= Tree::AVL
->
-struct TreeCollected: Paired<TKey, TValue, TPair> {
-	static_assert(Type::Container::PairLike<TPair<TKey, TValue>>, "Type is not a valid pair type!");
-};
-
-/// @brief Associative container comprised of key-value pairs.
+/// @brief Associative container comprised of key-value pairs, with hashed keys.
 /// @tparam TKey Key type.
 /// @tparam TValue Value type.
 /// @tparam TSize Size type.
@@ -37,28 +15,31 @@ struct TreeCollected: Paired<TKey, TValue, TPair> {
 template<
 	class TKey,
 	class TValue,
-	Type::Integer TSize = usize,
-	template <class> class									TCompare	= SimpleComparator,
-	template <class, class, template <class> class> class	TTree		= Tree::AVL
+	Type::Integer													THashKey	= usize,
+	template <class> class											TCompare	= SimpleComparator,
+	class															THasher		= Hasher,
+	template <class, class, class, template <class> class> class	TMap		= TreeMap
 >
-struct TreeMap:
-TreeCollected<TKey, TValue, KeyValuePair, TTree>,
-Derived<TTree<TKey, TValue, TCompare>>,
-SelfIdentified<TreeMap<TKey, TValue, TSize, TCompare, TTree>>,
-Indexed<TSize>,
-private TTree<TKey, TValue, TCompare> {
-	using Derived			= ::CTL::Derived<TTree<TKey, TValue, TCompare>>;
-	using TreeCollected		= ::CTL::TreeCollected<TKey, TValue, KeyValuePair, TTree>;
-	using SelfIdentified	= ::CTL::SelfIdentified<TreeMap<TKey, TValue, TSize, TCompare, TTree>>;
-	using Indexed			= ::CTL::Indexed<TSize>;
+struct HashMap:
+Derived<TMap<THashKey, TValue, THashKey, TCompare>>,
+SelfIdentified<HashMap<TKey, TValue, THashKey, TCompare, THasher, TMap>>,
+Indexed<THashKey>,
+private TMap<THashKey, TValue, THashKey, TCompare> {
+	using Derived			= ::CTL::Derived<TMap<usize, TValue, THashKey, TCompare>>;
+	using SelfIdentified	= ::CTL::SelfIdentified<HashMap<TKey, TValue, THashKey, TCompare, THasher, TMap>>;
+	using Indexed			= ::CTL::Indexed<THashKey>;
+
+	using HasherType = THasher;
 
 	using typename Derived::BaseType;
 
-	using
-		typename TreeCollected::KeyType,
-		typename TreeCollected::ValueType,
-		typename TreeCollected::PairType
-	;
+	using typename BaseType::ValueType;
+
+	using KeyType	= TKey;
+	using PairType	= KeyValuePair<KeyType, ValueType>;
+
+	using DataType		= KeyValuePair<KeyType const&, ValueType&>;
+	using ConstantType	= KeyValuePair<KeyType const&, ValueType const&>;
 
 	using typename SelfIdentified::SelfType;
 
@@ -73,65 +54,56 @@ private TTree<TKey, TValue, TCompare> {
 	using BaseType::clear;
 	using BaseType::empty;
 	using BaseType::allocator;
+	using BaseType::size;
 
-	using
-		typename BaseType::DataType,
-		typename BaseType::ConstantType
-	;
+	using BaseType::BaseType;
 
-	template<class TNode, bool R>
-	using IteratorType = typename BaseType::template NodeIterator<R, TNode>;
+	static_assert(Type::Algorithm::Hashable<TKey, THasher>, "Key type must be a hashable type!");
+
+	constexpr static SizeType hash(KeyType const& key) {
+		return HasherType::hash(key);
+	}
 
 	/// @brief Empty constructor (defaulted).
-	constexpr TreeMap()									= default;
+	constexpr HashMap()									= default;
 	/// @brief Copy constructor (defaulted).
-	constexpr TreeMap(TreeMap const& other)				= default;
+	constexpr HashMap(HashMap const& other)				= default;
 	/// @brief Move constructor (defaulted).
-	constexpr TreeMap(TreeMap&& other)					= default;
+	constexpr HashMap(HashMap&& other)					= default;
 	/// @brief Copy assignment operator (defaulted).
-	constexpr TreeMap& operator=(TreeMap const& other)	= default;
+	constexpr HashMap& operator=(HashMap const& other)	= default;
 	/// @brief Move assignment operator (defaulted).
-	constexpr TreeMap& operator=(TreeMap&& other)		= default;
+	constexpr HashMap& operator=(HashMap&& other)		= default;
 
 	/// @brief Constructs the container from a list of pairs.
 	/// @param values Values to add.
-	constexpr TreeMap(List<PairType> const& values) {insert(values);}
-
-	/// @brief Constructs the container from a range of key-value pairs.
-	/// @param begin Iterator to beginning of range.
-	/// @param end Iterator to end of range.
-	template <class TNode, bool R>
-	constexpr TreeMap(IteratorType<TNode, R> const& begin, IteratorType<TNode, R> const& end) {insert(begin, end);}
+	constexpr HashMap(List<PairType> const& values) {insert(values);}
 
 	/// @brief Constructs the container from a range of key-value pairs.
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
 	template<bool R>
-	constexpr TreeMap(Iterator<PairType, R> const& begin, Iterator<PairType, R> const& end)	{insert(begin, end);}
+	constexpr HashMap(Iterator<PairType, R> const& begin, Iterator<PairType, R> const& end)	{insert(begin, end);}
 
 	/// @brief Adds a set of key-value pairs to the container.
 	/// @param values Pairs to add.
 	/// @return Reference to self.
 	template <SizeType S>
-	constexpr TreeMap(As<PairType[S]> const& values) {insert(values);}
+	constexpr HashMap(As<PairType[S]> const& values) {insert(values);}
 
 	/// @brief Gets the value of the element that matches the given key.
 	/// @param key Key to look for.
 	/// @return Value of the element.
 	/// @throw OutOfBoundsException when key does not exist.
 	constexpr ValueType const& at(KeyType const& key) const {
-		if (auto const node = BaseType::find(key))
-			return node->value;
-		throw OutOfBoundsException("Key does not exist!");
+		return BaseType::at(hash(key));
 	}
 
 	/// @brief Gets the value of the element that matches the given key.
 	/// @param key Key to look for.
 	/// @return Value of the element.
 	constexpr ValueType& at(KeyType const& key) {
-		if (auto const node = BaseType::find(key))
-			return node->value;
-		return BaseType::insert(key)->value;
+		return BaseType::at(hash(key));
 	}
 
 	/// @brief Gets the value of the element that matches the given key.
@@ -149,10 +121,9 @@ private TTree<TKey, TValue, TCompare> {
 	/// @param pair Key-value pair to insert.
 	/// @return Reference to self.
 	constexpr SelfType& insert(PairType const& pair) {
-		if (auto const node = BaseType::insert(pair.key))
-			node->value = pair.value;
-		else throw FailedActionException("Failed to insert key-value pair!");
-		++count;
+		SizeType const id = hash(pair.front());
+		BaseType::insert({id, pair.back()});
+		names.insert({id, pair.front()});
 		return *this;
 	}
 
@@ -162,7 +133,7 @@ private TTree<TKey, TValue, TCompare> {
 	/// @note Existing values are updated.
 	constexpr SelfType& append(SelfType const& other) {
 		BaseType::append(other);
-		count += other.size();
+		names.append(other.names);
 		return *this;
 	}
 	
@@ -172,17 +143,6 @@ private TTree<TKey, TValue, TCompare> {
 	/// @note Only the most recent value for a key is kept.
 	constexpr SelfType& insert(List<PairType> const& values) {
 		for (auto const& v: values)
-			insert(v);
-		return *this;
-	}
-
-	/// @brief Adds a range of key-value pairs to the container.
-	/// @param begin Iterator to beginning of range.
-	/// @param end Iterator to end of range.
-	/// @return Reference to self.
-	template <class TNode, bool R>
-	constexpr SelfType& insert(IteratorType<TNode, R> const& begin, IteratorType<TNode, R> const& end) {
-		for (auto v : Range::iterate(begin, end))
 			insert(v);
 		return *this;
 	}
@@ -212,13 +172,11 @@ private TTree<TKey, TValue, TCompare> {
 	/// @param key Key to search for.
 	/// @return Reference to self.
 	constexpr SelfType& erase(KeyType const& key) {
-		if (BaseType::erase(key)) --count;
+		SizeType const id = hash(key);
+		BaseType::erase(id);
+		names.erase(id);
 		return *this;
 	}
-	
-	/// @brief Returns the amount of elements in the container.
-	/// @return Element count.
-	constexpr SizeType size() const {return count;}
 
 	/// @brief Returns whether the container contains a given key.
 	/// @param key Key to search for.
@@ -228,30 +186,22 @@ private TTree<TKey, TValue, TCompare> {
 	/// @brief Returns all keys in the container.
 	/// @return `List` of keys.
 	constexpr List<KeyType> keys() const {
-		List<KeyType> result;
-		result.reserve(count);
-		for (auto i: *this)
-			result.pushBack(i.front());
-		return result;
+		return names.values();
 	}
 
 	/// @brief Returns all values in the container.
 	/// @return `List` of values.
 	constexpr List<ValueType> values() const {
-		List<ValueType> result;
-		result.reserve(count);
-		for (auto i : *this)
-			result.pushBack(i.back());
-		return result;
+		return BaseType::values();
 	}
 
 	/// @brief Returns all key-value pairs in the container.
 	/// @return `List` of key-value pairs.
 	constexpr List<PairType> items() const {
 		List<PairType> result;
-		result.reserve(count);
+		result.reserve(size());
 		for (auto i : *this)
-			result.pushBack({i.front(), i.back()});
+			result.pushBack({names[i.front()], i.back()});
 		return result;
 	}
 
@@ -290,7 +240,7 @@ private TTree<TKey, TValue, TCompare> {
 	constexpr List<KeyType> matchIf(TPredicate const& predicate) {
 		List<KeyType> match;
 		for (auto v : *this)
-			if (predicate({v.key, v.value}))
+			if (predicate({names[v.key], v.value}))
 				match.pushBack(v.key);
 		return match;
 	}
@@ -302,7 +252,7 @@ private TTree<TKey, TValue, TCompare> {
 	constexpr List<KeyType> matchIfNot(TPredicate const& predicate) {
 		List<KeyType> match;
 		for (auto v : *this)
-			if (!predicate({v.key, v.value}))
+			if (!predicate({names[v.key], v.value}))
 				match.pushBack(v.key);
 		return match;
 	}
@@ -324,8 +274,7 @@ private TTree<TKey, TValue, TCompare> {
 	}
 
 private:
-	/// @brief Amount of elements in the container.
-	SizeType count = 0;
+	TMap<SizeType, KeyType, SizeType, TCompare> names;
 };
 
 /// @brief Container-specific type constraints.
@@ -333,26 +282,34 @@ namespace Type::Container {
 	/// @brief Implementation of type constraints.
 	namespace Impl {
 		template<class T>
-		struct IsTreeMap;
+		struct IsHashMap;
 
 		template<
-			template <class, class, class, template <class> class T3, template <class, class, template <class> class> class> class T0,
+			template <
+				class,
+				class,
+				class,
+				template <class> class,
+				class,
+				template <class, class, class, template <class> class> class
+			> class T0,
 			class T1,
 			class T2,
 			class T3,
 			template <class> class T4,
-			template <class, class, template <class> class> class T5
+			class T5,
+			template <class, class, class, template <class> class> class T6
 		>
-		struct IsTreeMap<T0<T1, T2, T3, T4, T5>>:
+		struct IsHashMap<T0<T1, T2, T3, T4, T5, T6>>:
 			BooleanConstant<
-				Type::Equal<T0<T1, T2, T3, T4, T5>,
-				::CTL::TreeMap<T1, T2, T3, T4, T5>
+				Type::Equal<T0<T1, T2, T3, T4, T5, T6>,
+				::CTL::HashMap<T1, T2, T3, T4, T5, T6>
 			>> {};
 	}
 
-	/// @brief Type must be `TreeMap`.
+	/// @brief Type must be `HashMap`.
 	template<class T>
-	concept TreeMap = Impl::IsTreeMap<T>::value;
+	concept HashMap = Impl::IsHashMap<T>::value;
 }
 
 CTL_NAMESPACE_END

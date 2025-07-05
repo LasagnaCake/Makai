@@ -360,7 +360,7 @@ struct Hasher {
 	/// @return Resulting hash.
 	template<class T>
 	constexpr static usize hash(ref<T const> const data, usize const size) {
-		return Impl::Hash::hash(data, size * sizeof(T), SEED);
+		return Impl::Hash::constHash(data, size * sizeof(T), SEED);
 	}
 
 	/// @brief Generates the hash for a given fixed array.
