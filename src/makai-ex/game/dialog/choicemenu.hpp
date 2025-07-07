@@ -50,7 +50,9 @@ namespace Makai::Ex::Game::Dialog {
 		void setChoice(ssize const newChoice) {
 			if (prevChoice == newChoice) return;
 			choice = newChoice;
-			choice = Math::wrapi<ssize>(choice, 0, options.size());
+			if (options.empty())
+				choice = 0;
+			else choice = Math::wrapi<ssize>(choice, 0, options.size());
 			onFocusChange(prevChoice, choice);
 			prevChoice = choice;
 		}
