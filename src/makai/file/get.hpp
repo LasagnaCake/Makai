@@ -67,7 +67,7 @@ namespace Makai::File {
 	/// @throw Makai::File::FileSaveError on file save errors.
 	template<Makai::Type::NonVoid T>
 	inline void saveBinary(String const& path, T* const data, usize const count) {
-		saveBinary(path, ByteSpan((ubyte*)data, count * sizeof(T)));
+		saveBinary(path, ByteSpan<>((ubyte*)data, count * sizeof(T)));
 	}
 
 	/// @brief Writes a binary file to disk.
