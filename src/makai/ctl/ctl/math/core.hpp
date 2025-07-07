@@ -258,6 +258,7 @@ namespace Math {
 	/// @return Wrapped value.
 	template<Type::Integer T = int>
 	constexpr T wrapi(T const val, T const min, T const max) {
+		if (!(max - min)) return min;
 		return ((val - min) % (max - min)) + min;
 	}
 
@@ -269,6 +270,7 @@ namespace Math {
 	/// @return Wrapped value.
 	template<Type::Number T = float>
 	constexpr T wrap(T const val, T const min, T const max) {
+		if ((max - min) == 0) return min;
 		return mod(val - min, max - min) + min;
 	}
 
