@@ -23,25 +23,32 @@ enum class ArchiveState {
 	FAS_OPEN
 };
 
-ArchiveState& state() {
+static ArchiveState& state() {
 	static ArchiveState s = ArchiveState::FAS_CLOSED;
 	return s;
 }
 
-FileArchive& archive() {
+static FileArchive& archive() {
 	static FileArchive arc;
 	return arc;
 }
 #endif
 
-[[noreturn]] void emptyPathError() {
-	throw Makai::File::FileLoadError(
+[[noreturn]] static void emptyPathError() {
+	throw Makai::Error::InvalidValue(
 		"File path is empty!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
 
-[[noreturn]] void fileLoadError(String const& path, String const& reason) {
+[[noreturn]] static void invalidPathError(String const& path) {
+	throw Makai::Error::InvalidValue(
+		"Path '" + path + "' contains invalid characters!",
+		CTL_CPP_UNKNOWN_SOURCE
+	);
+}
+
+[[noreturn]] static void fileLoadError(String const& path, String const& reason) {
 	throw Makai::File::FileLoadError(
 		"Could not load file '" + path + "'!",
 		reason,
@@ -50,7 +57,7 @@ FileArchive& archive() {
 	);
 }
 
-[[noreturn]] void fileSaveError(String const& path, String const& reason) {
+[[noreturn]] static void fileSaveError(String const& path, String const& reason) {
 	throw Makai::File::FileLoadError(
 		"Could not save file '" + path + "'!",
 		reason,
@@ -59,7 +66,19 @@ FileArchive& archive() {
 	);
 }
 
-void assertFileExists(String const& path) {
+constexpr static bool isInvalidPathChar(char const c) {
+	return c != '\0';
+}
+
+static void assertPathIsValid(String const& path) {
+	if (path.isNullOrSpaces())
+		emptyPathError();
+	if (!path.validate(isInvalidPathChar))
+		invalidPathError(path);
+}
+
+static void assertFileExists(String const& path) {
+	assertPathIsValid(path);
 	if (!OS::FS::exists(path))
 		fileLoadError(path, toString("File or directory '", path, "' does not exist!"));
 }
@@ -113,7 +132,7 @@ bool Makai::File::isArchiveAttached() {
 }
 
 #ifdef IMPL_ARCHIVE_
-void assertArchive(String const& path) {
+static void assertArchive(String const& path) {
 	if (!Makai::File::isArchiveAttached())
 		fileLoadError(path, "Archive is not attached!");
 }
@@ -155,7 +174,7 @@ void readFile(String const& path, T& buf) {
 */
 
 String Makai::File::loadText(String const& path) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	// Ensure directory exists
 	assertFileExists(path);
 	try {
@@ -183,7 +202,7 @@ String Makai::File::loadText(String const& path) {
 }
 
 BinaryData<> Makai::File::loadBinary(String const& path) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	// Ensure directory exists
 	assertFileExists(path);
 	try {
@@ -219,7 +238,7 @@ Makai::File::CSVData Makai::File::loadCSV(String const& path, char const delimit
 }
 
 void Makai::File::saveBinary(String const& path, CTL::ByteSpan<> const& data) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
 	try {
@@ -237,12 +256,12 @@ void Makai::File::saveBinary(String const& path, CTL::ByteSpan<> const& data) {
 }
 
 void Makai::File::saveBinary(String const& path, BinaryData<> const& data) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	Makai::File::saveBinary(path, ByteSpan<>((ubyte*)data.data(), data.size()));
 }
 
 void Makai::File::saveText(String const& path, String const& text) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
 	try {
@@ -260,7 +279,7 @@ void Makai::File::saveText(String const& path, String const& text) {
 }
 
 String Makai::File::loadTextFromArchive(String const& path) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
 	return archive().getTextFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
@@ -270,7 +289,7 @@ String Makai::File::loadTextFromArchive(String const& path) {
 }
 
 BinaryData<> Makai::File::loadBinaryFromArchive(String const& path) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
 	return archive().getBinaryFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
@@ -280,7 +299,7 @@ BinaryData<> Makai::File::loadBinaryFromArchive(String const& path) {
 }
 
 Makai::File::CSVData Makai::File::loadCSVFromArchive(String const& path, char const delimiter) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
 	return loadTextFromArchive(path).split(delimiter);
@@ -290,7 +309,7 @@ Makai::File::CSVData Makai::File::loadCSVFromArchive(String const& path, char co
 }
 
 String Makai::File::getText(String const& path) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	String res;
 	DEBUGLN("Getting text file '" + path + "'...");
@@ -319,7 +338,7 @@ String Makai::File::getText(String const& path) {
 }
 
 BinaryData<> Makai::File::getBinary(String const& path) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	BinaryData<> res;
 	DEBUGLN("Getting binary file '" + path + "'...");
@@ -348,7 +367,7 @@ BinaryData<> Makai::File::getBinary(String const& path) {
 }
 
 Makai::File::CSVData Makai::File::getCSV(String const& path, char const delimiter) {
-	if (path.empty()) emptyPathError();
+	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	CSVData res;
 	DEBUGLN("Getting CSV file '" + path + "'...");
