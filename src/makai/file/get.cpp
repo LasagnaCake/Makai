@@ -41,9 +41,17 @@ static FileArchive& archive() {
 	);
 }
 
-[[noreturn]] static void invalidPathError(String const& path) {
+[[noreturn]] static void invalidPathError(String const& path, String const& sanitized) {
 	throw Makai::Error::InvalidValue(
-		"Path '" + path + "' contains invalid characters!",
+		"Path '"+path+"' contains invalid characters!",
+		"(* are where invalid characters are)\n"+sanitized,
+		CTL_CPP_UNKNOWN_SOURCE
+	);
+}
+
+[[noreturn]] static void nullBoundPathError(String const& path) {
+	throw Makai::Error::InvalidValue(
+		"Path '" + path + "' contains null characters!",
 		CTL_CPP_UNKNOWN_SOURCE
 	);
 }
@@ -97,13 +105,22 @@ constexpr static bool isValidPathChar(char const c) {
 	);
 }
 
+static String sanitizedForDisplay(String path) {
+	for (char& c : path)
+		if (!isValidPathChar(c))
+			c = '*';
+	return path;
+}
+
 static void assertPathIsValid(String const& path) {
 	if (path.empty() || path.isNullOrSpaces())
 		emptyPathError();
 	if (path.size() == 1 && path.front() == '\0')
 		emptyPathError();
+	if (static_cast<usize>(path.find('\0')) < (path.size()-2))
+		nullBoundPathError(path.replaced('\0', '*'));
 	if (!path.validate(isValidPathChar))
-		invalidPathError(path);
+		invalidPathError(path, sanitizedForDisplay(path));
 }
 
 static void assertFileExists(String const& path) {
