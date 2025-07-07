@@ -34,6 +34,13 @@ FileArchive& archive() {
 }
 #endif
 
+[[noreturn]] void emptyPathError() {
+	throw Makai::File::FileLoadError(
+		"File path is empty!",
+		CTL_CPP_UNKNOWN_SOURCE
+	);
+}
+
 [[noreturn]] void fileLoadError(String const& path, String const& reason) {
 	throw Makai::File::FileLoadError(
 		"Could not load file '" + path + "'!",
@@ -148,6 +155,7 @@ void readFile(String const& path, T& buf) {
 */
 
 String Makai::File::loadText(String const& path) {
+	if (path.empty()) emptyPathError();
 	// Ensure directory exists
 	assertFileExists(path);
 	try {
@@ -175,6 +183,7 @@ String Makai::File::loadText(String const& path) {
 }
 
 BinaryData<> Makai::File::loadBinary(String const& path) {
+	if (path.empty()) emptyPathError();
 	// Ensure directory exists
 	assertFileExists(path);
 	try {
@@ -210,6 +219,7 @@ Makai::File::CSVData Makai::File::loadCSV(String const& path, char const delimit
 }
 
 void Makai::File::saveBinary(String const& path, CTL::ByteSpan<> const& data) {
+	if (path.empty()) emptyPathError();
 	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
 	try {
@@ -227,10 +237,12 @@ void Makai::File::saveBinary(String const& path, CTL::ByteSpan<> const& data) {
 }
 
 void Makai::File::saveBinary(String const& path, BinaryData<> const& data) {
+	if (path.empty()) emptyPathError();
 	Makai::File::saveBinary(path, ByteSpan<>((ubyte*)data.data(), data.size()));
 }
 
 void Makai::File::saveText(String const& path, String const& text) {
+	if (path.empty()) emptyPathError();
 	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
 	try {
@@ -248,6 +260,7 @@ void Makai::File::saveText(String const& path, String const& text) {
 }
 
 String Makai::File::loadTextFromArchive(String const& path) {
+	if (path.empty()) emptyPathError();
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
 	return archive().getTextFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
@@ -257,6 +270,7 @@ String Makai::File::loadTextFromArchive(String const& path) {
 }
 
 BinaryData<> Makai::File::loadBinaryFromArchive(String const& path) {
+	if (path.empty()) emptyPathError();
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
 	return archive().getBinaryFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
@@ -266,6 +280,7 @@ BinaryData<> Makai::File::loadBinaryFromArchive(String const& path) {
 }
 
 Makai::File::CSVData Makai::File::loadCSVFromArchive(String const& path, char const delimiter) {
+	if (path.empty()) emptyPathError();
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
 	return loadTextFromArchive(path).split(delimiter);
@@ -275,8 +290,10 @@ Makai::File::CSVData Makai::File::loadCSVFromArchive(String const& path, char co
 }
 
 String Makai::File::getText(String const& path) {
+	if (path.empty()) emptyPathError();
 	#ifdef IMPL_ARCHIVE_
 	String res;
+	DEBUGLN("Getting text file '" + path + "'...");
 	if (isArchiveAttached())
 		try {
 			DEBUGLN("[ARC] Loading text file...");
@@ -302,8 +319,10 @@ String Makai::File::getText(String const& path) {
 }
 
 BinaryData<> Makai::File::getBinary(String const& path) {
+	if (path.empty()) emptyPathError();
 	#ifdef IMPL_ARCHIVE_
 	BinaryData<> res;
+	DEBUGLN("Getting binary file '" + path + "'...");
 	if (isArchiveAttached())
 		try {
 			DEBUGLN("[ARC] Loading binary file...");
@@ -329,8 +348,10 @@ BinaryData<> Makai::File::getBinary(String const& path) {
 }
 
 Makai::File::CSVData Makai::File::getCSV(String const& path, char const delimiter) {
+	if (path.empty()) emptyPathError();
 	#ifdef IMPL_ARCHIVE_
 	CSVData res;
+	DEBUGLN("Getting CSV file '" + path + "'...");
 	if (isArchiveAttached())
 		try {
 			DEBUGLN("[ARC] Loading CSV file...");

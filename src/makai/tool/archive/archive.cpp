@@ -421,12 +421,12 @@ void Arch::pack(
 	} catch (Error::Generic const& e) {
 		_ARCDEBUGLN(e.report());
 		_ARCEXIT;
-	} catch (std::runtime_error const& e) {
+	} catch (std::exception const& e) {
 		_ARCDEBUGLN("ERROR: ", e.what());
 		_ARCEXIT;
 	}
 	#else
-	} catch (std::runtime_error const& e) {
+	} catch (std::exception const& e) {
 		throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 	}
 	#endif // ARCSYS_APPLICATION_
@@ -533,7 +533,7 @@ FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password)
 	// Set open flag
 	streamOpen = true;
 	return *this;
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
 
@@ -542,7 +542,7 @@ FileArchive& Arch::FileArchive::close() try {
 	if (!streamOpen) return *this;
 	streamOpen = false;
 	return *this;
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
 
@@ -723,7 +723,7 @@ Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path)
 	return Arch::FileArchive::FileEntry{idx, path, fh, getFileEntryData(idx, fh)};
 } catch (File::FileLoadError const& e) {
 	Error::rethrow(e);
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	throw File::FileLoadError(
 		"Failed at getting file entry '" + path + "'!",
 		e.what()
@@ -815,12 +815,12 @@ static void unpackV1(
 } catch (Error::Generic const& e) {
 	_ARCDEBUGLN(e.report());
 	_ARCEXIT;
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	_ARCDEBUGLN("ERROR: ", e.what());
 	_ARCEXIT;
 }
 #else
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
 #endif // ARCSYS_APPLICATION_
@@ -841,12 +841,12 @@ static void unpackV0(
 } catch (Error::Generic const& e) {
 	_ARCDEBUGLN(e.report());
 	_ARCEXIT;
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	_ARCDEBUGLN("ERROR: ", e.what());
 	_ARCEXIT;
 }
 #else
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
 #endif // ARCSYS_APPLICATION_
@@ -873,12 +873,12 @@ void Arch::unpack(
 } catch (Error::Generic const& e) {
 	_ARCDEBUGLN(e.report());
 	_ARCEXIT;
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	_ARCDEBUGLN("ERROR: ", e.what());
 	_ARCEXIT;
 }
 #else
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
 #endif // ARCSYS_APPLICATION_
@@ -936,7 +936,7 @@ BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& pas
 	}
 	// Return file
 	return fd;
-} catch (std::runtime_error const& e) {
+} catch (std::exception const& e) {
 	throw File::FileLoadError(
 		"Failed to load '" + path + "'!",
 		e.what(),
