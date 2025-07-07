@@ -15,8 +15,12 @@ namespace Makai::JSON {
 	namespace Extern {
 		/// @brief Base JSON library.
 		using Nlohmann = nlohmann::json;
+		/// @brief Underlying sorted JSON structure type.
+		using SortedData = nlohmann::json;
+		/// @brief Underlying ordered JSON structure type.
+		using OrderedData = nlohmann::ordered_json;
 		/// @brief Underlying JSON structure type.
-		using JSONData = nlohmann::ordered_json;
+		using JSONData = OrderedData;
 	}
 
 	/// @brief Underlying JSON structure type.
@@ -55,6 +59,7 @@ namespace Makai::JSON {
 			Nullable<String> tryGet(T& out) const try {
 				out = data.get<T>();
 				return nullptr;
+				return String("Value is not a number!");
 			} catch (Extern::Nlohmann::exception const& e) {
 				return String(e.what());
 			}
@@ -69,8 +74,9 @@ namespace Makai::JSON {
 			/// @param out Output of the value.
 			/// @return Whether the value was successfully acquired.
 			Nullable<String> tryGet(T& out) const try {
-				out = data.get<T>();
+				out = static_cast<T>(data.get<Decay::Enum::AsInteger<T>>());
 				return nullptr;
+				return String("Value is not an integer!");
 			} catch (Extern::Nlohmann::exception const& e) {
 				return String(e.what());
 			}
@@ -126,6 +132,8 @@ namespace Makai::JSON {
 		template<Impl::Accessible T>
 		inline T get() const {
 			T result;
+			if (isNull())
+				typeMismatchError<T>();
 			if (!tryGet<T>(result))
 				typeMismatchError<T>();
 			return result;
