@@ -768,7 +768,7 @@ namespace Makai::Ex::AVM::Compiler {
 							.pos	= opi,
 							.valPos	= vali
 						});
-						String const exit = getScopePath(nodes[curNode].match + "[choice:end]");
+						String const exit = getScopePath(nodes[curNode].match + "_" + path + ":[end]");
 						processChoice(opi, vali, exit, ppack.args, curNode, nodes);
 						++curNode;
 						return;
