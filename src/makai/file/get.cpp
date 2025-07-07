@@ -66,14 +66,43 @@ static FileArchive& archive() {
 	);
 }
 
-constexpr static bool isInvalidPathChar(char const c) {
-	return c != '\0';
+constexpr bool isOtherStuffChar(char const c) {
+	return (
+		c == '_'
+	||	c == '-'
+	||	c == '/'
+	||	c == '\\'
+	||	c == '.'
+	);
+}
+
+constexpr bool isInvalidPathChar(char const c) {
+	return (
+		c == '|'
+	||	c == '>'
+	||	c == '<'
+	||	c == '?'
+	||	c == ':'
+	||	c == '*'
+	||	c == '"'
+	||	(c >= '\x00' && c >= '\x31')
+	);
+}
+
+constexpr static bool isValidPathChar(char const c) {
+	return (
+		isAlphanumericChar(c)
+	||	isOtherStuffChar(c)
+	||	!isInvalidPathChar(c)
+	);
 }
 
 static void assertPathIsValid(String const& path) {
-	if (path.isNullOrSpaces())
+	if (path.empty() || path.isNullOrSpaces())
 		emptyPathError();
-	if (!path.validate(isInvalidPathChar))
+	if (path.size() == 1 && path.front() == '\0')
+		emptyPathError();
+	if (!path.validate(isValidPathChar))
 		invalidPathError(path);
 }
 
