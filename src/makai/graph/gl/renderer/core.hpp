@@ -18,7 +18,7 @@ namespace Makai::Graph {
 		/// @brief Rendering callback type.
 		using Callback	= const Signal<>;
 		/// @brief Layer structure type.
-		using Layers	= Groups<Callback*>;
+		using Layers	= Groups<ref<Callback>>;
 
 		/// @brief Renders a specific layer.
 		/// @param layer Layer to render.
