@@ -54,7 +54,8 @@ namespace Makai::Ex::Game::Dialog {
 				choice = 0;
 			else if (choice < 0)
 				choice = options.size() - 1;
-			else choice = Math::wrapi<ssize>(choice, 0, options.size());
+			else if (static_cast<usize>(choice) > options.size()-1)
+				choice = 0;
 			onFocusChange(prevChoice, choice);
 			prevChoice = choice;
 		}
