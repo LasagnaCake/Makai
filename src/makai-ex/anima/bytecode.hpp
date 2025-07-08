@@ -103,6 +103,16 @@ namespace Makai::Ex::AVM {
 		///
 		///		- MODE 1: Call with a series of parameters.
 		AVM_O_INVOKE,
+		/*
+		AVM_O_INVOKE_V2,
+		AVM_O_PUSH,
+		AVM_O_POP,
+		AVM_O_STORE,
+		AVM_O_SET,
+		AVM_O_MOVE,
+		AVM_O_SWAP,
+		AVM_O_OPERATE,
+		*/
 	};
 
 	/// @brief Argument substitution marker.
