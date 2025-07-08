@@ -12,7 +12,7 @@ CTL_NAMESPACE_BEGIN
 /// @tparam TValue Value type.
 /// @tparam TIndexOrSize Index or size type.
 template<class TKey, class TValue, Type::Integer TIndexOrSize = usize>
-using Map = TreeMap<TKey, TValue, TIndexOrSize>;
+using Map = ListMap<TKey, TValue, TIndexOrSize>;
 
 /// @brief Tags the deriving class as a collection of key-value pairs.
 /// @tparam TKey Key type.
