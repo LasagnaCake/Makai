@@ -92,7 +92,6 @@ constexpr bool isInvalidPathChar(char const c) {
 	||	c == '>'
 	||	c == '<'
 	||	c == '?'
-	||	c == ':'
 	||	c == '*'
 	||	c == '"'
 	||	(c >= '\x00' && c <= '\x31')
