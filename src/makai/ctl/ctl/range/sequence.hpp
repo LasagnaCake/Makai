@@ -32,13 +32,13 @@ namespace Range {
 				}
 
 			/// @brief Dereference operator overloading.
-			constexpr DataType operator*() const			{return value;					}
+			constexpr DataType operator*() const		{return value;					}
 			/// @brief Pre-increment operator overloading.
 			/// @return Reference to self.
-			constexpr SequenceIterator& operator++() const	{value += stride; return *this;	}
+			constexpr SequenceIterator& operator++()	{value += stride; return *this;	}
 			/// @brief Pre-decrement operator overloading.
 			/// @return Reference to self.
-			constexpr SequenceIterator& operator--() const	{value -= stride; return *this;	}
+			constexpr SequenceIterator& operator--()	{value -= stride; return *this;	}
 
 			/// @brief Returns whether one iterator has overshot another iterator.
 			/// @return Whether overshot happened.

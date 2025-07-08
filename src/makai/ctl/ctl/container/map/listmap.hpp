@@ -7,6 +7,7 @@
 #include "../../templates.hpp"
 #include "../../typetraits/traits.hpp"
 #include "../../algorithm/hash.hpp"
+#include "../../range/iterate.hpp"
 #include "../pair.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -43,14 +44,14 @@ template<
 >
 struct BaseListMap:
 	ListCollected<TKey, TValue, KeyValuePair>,
-	Derived<TList<KeyValuePair<TKey, TValue>, TIndex>>,
+	Derived<TList<KeyValuePair<TKey const, TValue>, TIndex>>,
 	SelfIdentified<BaseListMap<TKey, TValue, TIndex, SORT>>,
-	private TList<KeyValuePair<TKey, TValue>, TIndex> {
+	private TList<KeyValuePair<TKey const, TValue>, TIndex> {
 public:
 	/// @brief Whether the container is sorted by default.
 	constexpr static bool SORTED = SORT;
 
-	using Derived			= ::CTL::Derived<TList<KeyValuePair<TKey, TValue>, TIndex>>;
+	using Derived			= ::CTL::Derived<TList<KeyValuePair<TKey const, TValue>, TIndex>>;
 	using ListCollected		= ::CTL::ListCollected<TKey, TValue, KeyValuePair>;
 	using SelfIdentified	= ::CTL::SelfIdentified<BaseListMap<TKey, TValue, TIndex, SORTED>>;
 
@@ -58,9 +59,10 @@ public:
 
 	using
 		typename ListCollected::KeyType,
-		typename ListCollected::ValueType,
-		typename ListCollected::PairType
+		typename ListCollected::ValueType
 	;
+
+	using PairType = KeyValuePair<TKey const, TValue>;
 
 	using typename SelfIdentified::SelfType;
 
@@ -153,9 +155,9 @@ public:
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
-	constexpr BaseListMap(ArgumentListType const& values): BaseType(values) {
-		clean();
-		update();
+	constexpr BaseListMap(ArgumentListType const& values) {
+		for (auto& value : values)
+			insert(value);
 	}
 
 	/// @brief Constructs the container form a set of key-value pairs.
@@ -164,9 +166,9 @@ public:
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
 	template<SizeType N>
-	constexpr explicit BaseListMap(As<PairType[N]> const& values): BaseType(values) {
-		clean();
-		update();
+	constexpr explicit BaseListMap(As<PairType[N]> const& values) {
+		for (auto& value : values)
+			insert(value);
 	}
 
 	/// @brief Constructs the container form a set of key-value pairs.
@@ -178,19 +180,16 @@ public:
 	template<typename... Args>
 	constexpr BaseListMap(Args const&... args)
 	requires (... && Type::Convertible<Args, PairType>)
-	: BaseType(args...) {
-		clean();
-		update();
-	}
+	: BaseType(BaseType{args...}) {}
 
 	/// @brief Constructs the container form a list-like container of key-value pairs.
 	/// @param other List-like of key-value pairs to copy from.
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
-	constexpr BaseListMap(BaseType const& other): BaseType(other) {
-		clean();
-		update();
+	constexpr BaseListMap(BaseType const& other) {
+		for (auto& value : other)
+			insert(value);
 	}
 
 	/// @brief Constructs the container form a list-like of key-value pairs.
@@ -198,9 +197,9 @@ public:
 	/// @note
 	///		After insertion, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
-	constexpr BaseListMap(BaseType&& other): BaseType(CTL::move(other)) {
-		clean();
-		update();
+	constexpr BaseListMap(BaseType&& other) {
+		for (auto& value : other)
+			insert(value);
 	}
 
 	/// @brief Constructs the container from another of the same type.
@@ -215,16 +214,16 @@ public:
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
 	constexpr BaseListMap(IteratorType const& begin, IteratorType const& end): BaseType(begin, end) {
-		clean();
-		update();
+		for (auto& value : Range::iterate(begin, end))
+			insert(value);
 	}
 
 	/// @brief Constructs the container from a range of key-value pairs.
 	/// @param begin Reverse iterator to beginning of range.
 	/// @param end Reverse iterator to end of range.
 	constexpr BaseListMap(ReverseIteratorType const& begin, ReverseIteratorType const& end): BaseType(begin, end) {
-		clean();
-		update();
+		for (auto& value : Range::iterate(begin, end))
+			insert(value);
 	}
 
 	/// @brief Gets the value of the element that matches the given key.
@@ -242,10 +241,10 @@ public:
 	/// @param key Key to look for.
 	/// @return Reference to element's value.
 	constexpr ValueType& operator[](KeyType const& key) {
-		if (empty()) return BaseType::pushBack(PairType(key)).back().back();
+		if (empty()) return BaseType::pushBack({key}).back().back();
 		IndexType i = search(key);
 		while ((i = search(key)) == -1)
-			insert(PairType(key, ValueType()));
+			insert({key});
 		return BaseType::at(i).back();
 	}
 
@@ -353,7 +352,8 @@ public:
 			if (static_cast<SizeType>(pos) < size())
 				BaseType::insert(pair, Nearest::bsearch(begin(), end(), pair).lowest);
 			else BaseType::pushBack(pair);
-		}
+		} else
+			operator[](pair.key) = pair.value;
 		return *this;
 	}
 
@@ -373,9 +373,8 @@ public:
 	///		After appending, the container filters itself and removes duplicates keys.
 	///		Most recent key-value pair is kept.
 	constexpr SelfType& append(SelfType const& other) {
-		BaseType::appendBack(other);
-		clean();
-		update();
+		for (auto& value : other)
+			insert(value);
 		return *this;
 	}
 
@@ -417,26 +416,6 @@ public:
 	constexpr SelfType& insert(As<PairType[S]> const& values) {
 		return append(SelfType(values));
 	}
-
-private:
-	/*
-	constexpr static CompareType UNIQUE_VALUES(PairType const& a, PairType const& b) {
-		return a.key != b.key;
-	}
-	//*/
-
-	//*
-	constexpr static auto const	UNIQUE_VALUES	= [](PairType const& a, PairType const& b){return a.front() != b.front();};
-	
-	constexpr bool notInMap(PairType const& pair) const {
-		return !contains(pair.front());
-	}
-	//*/
-
-	constexpr void update() requires (SORTED)	{sort();	}
-	constexpr void update() requires (!SORTED)	{			}
-
-	constexpr void clean() {filter(UNIQUE_VALUES);}
 };
 
 #undef NOT_IN_MAP
