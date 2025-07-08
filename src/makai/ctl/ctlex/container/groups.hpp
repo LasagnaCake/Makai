@@ -63,9 +63,9 @@ public:
 		if (groups.empty()) return IdentifierListType();
 		IdentifierListType gs;
 		try {
-			for (auto const& group: groups)
-				if (group.value.find(obj) != -1)
-					gs.pushBack(group.key);
+			for (auto [id, group]: groups)
+				if (group.find(obj) != -1)
+					gs.pushBack(id);
 		} catch(...) {}
 		return gs;
 	}
