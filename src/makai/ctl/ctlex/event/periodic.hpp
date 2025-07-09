@@ -37,7 +37,7 @@ public:
 	void setManual() {
 		if (manual) return;
 		if (!events.empty())
-			events.eraseIf([&](auto const& e){return e == &update;});
+			events.eraseLike(&update);
 		manual = true;
 	}
 
@@ -51,7 +51,7 @@ public:
 	/// @brief Destructor.
 	virtual ~APeriodic() {
 		if (!manual && !events.empty())
-			events.eraseIf([&](auto const& e){return e == &update;});
+			events.eraseLike(&update);
 	}
 
 	/// @brief Called when the event needs to be fired. Must be implemented.
