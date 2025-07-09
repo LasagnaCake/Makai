@@ -217,10 +217,10 @@ namespace Makai::Ex::Game {
 
 		/// @brief Returns a view to the save's contents.
 		/// @return View to contents.
-		SaveView				view()	{return SaveView(data);	}
+		SaveView				view()			{return SaveView(data);	}
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		Makai::JSON::JSONValue	value()	{return data;			}
+		Makai::JSON::JSONValue	value()	const	{return data;			}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.
