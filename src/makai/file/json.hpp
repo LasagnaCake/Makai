@@ -20,7 +20,7 @@ namespace Makai::JSON {
 		/// @brief Underlying ordered JSON structure type.
 		using OrderedData = nlohmann::ordered_json;
 		/// @brief Underlying JSON structure type.
-		using JSONData = OrderedData;
+		using JSONData = SortedData;
 	}
 
 	/// @brief Underlying JSON structure type.
