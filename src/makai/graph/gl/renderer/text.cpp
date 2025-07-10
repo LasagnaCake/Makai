@@ -252,7 +252,8 @@ void Label::update() {
 	usize curLine = 0;
 	usize curChar = 0;
 	// Loop through each character and...
-	for (char c: text->content) {
+	for (char pc: text->content) {
+		usize c = CTL::bitcast<uchar>(pc);
 		// Check if max characters hasn't been reached
 		if (text->maxChars == 0 || ((llong(curChar) > llong(text->maxChars-1)) && (text->maxChars > -1))) break;
 		else curChar++;
