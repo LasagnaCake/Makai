@@ -138,7 +138,7 @@ namespace Impl {
 					default:	return base ? base : 8;
 				}
 			}
-			return 10;
+			return base ? base : 10;
 		}
 		
 		/// @brief Returns whether the given string is in the specified base.
