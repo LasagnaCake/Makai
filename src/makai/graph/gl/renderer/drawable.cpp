@@ -6,11 +6,12 @@ using namespace Makai; using namespace Makai::Graph;
 
 void ADrawable::render() {if (active) draw();}
 
+void ADrawable::doRender() {render();}
+
 ADrawable::ADrawable(bool const manual, usize const layer) {
 	if(!manual) setAuto(layer);
 	manualMode = manual;
 }
-
 
 ADrawable::ADrawable(bool const manual): ADrawable(manual, 0) {
 }
@@ -18,40 +19,40 @@ ADrawable::ADrawable(bool const manual): ADrawable(manual, 0) {
 ADrawable::~ADrawable() {
 	DEBUGLN("Removing from rendering layers...");
 	if(!manualMode)
-		RenderServer::layers.removeFromAll(&doRender);
+		RenderServer::layers.removeFromAll(this);
 	DEBUGLN("Finalizing...\n");
 }
 
 ADrawable& ADrawable::setManual() {
 	if(!manualMode)
-		RenderServer::layers.removeFromAll(&doRender);
+		RenderServer::layers.removeFromAll(this);
 	manualMode = true;
 	return *this;
 }
 
 ADrawable& ADrawable::setAuto(usize const renderLayer) {
 	if(manualMode)
-		RenderServer::layers.add(&doRender, renderLayer);
+		RenderServer::layers.add(this, renderLayer);
 	manualMode = false;
 	return *this;
 }
 
 ADrawable& ADrawable::setRenderLayer(usize const renderLayer) {
-	RenderServer::layers.removeFromAll(&doRender);
-	RenderServer::layers.add(&doRender, renderLayer);
+	RenderServer::layers.removeFromAll(this);
+	RenderServer::layers.add(this, renderLayer);
 	manualMode = false;
 	return *this;
 }
 
 ADrawable& ADrawable::addToRenderLayer(usize const renderLayer) {
-	RenderServer::layers.add(&doRender, renderLayer);
+	RenderServer::layers.add(this, renderLayer);
 	manualMode = false;
 	return *this;
 }
 
 ADrawable& ADrawable::removeFromRenderLayer(usize const renderLayer) {
-	RenderServer::layers.remove(&doRender, renderLayer);
-	if (RenderServer::layers.withObject(&doRender).empty())
+	RenderServer::layers.remove(this, renderLayer);
+	if (RenderServer::layers.withObject(this).empty())
 		manualMode = true;
 	return *this;
 }

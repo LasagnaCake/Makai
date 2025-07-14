@@ -10,6 +10,6 @@ void RenderServer::renderLayer(typename RenderServer::Layers::GroupType const& l
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("RenderServer::renderLayer");
 	#endif // MAKAILIB_DEBUG
-	for (auto draw: layer)
-		(*draw)();
+	for (auto entity: layer)
+		if (entity) entity->doRender();
 }

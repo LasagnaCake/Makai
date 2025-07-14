@@ -15,10 +15,18 @@ namespace Makai::Graph {
 
 	/// @brief Graphical renderer coordinator.
 	struct RenderServer {
-		/// @brief Rendering callback type.
-		using Callback	= const Signal<>;
+		/// @brief Rendering executor.
+		struct IEntity {
+			virtual ~IEntity() {}
+
+		protected:
+			virtual void doRender() = 0;
+
+			friend class RenderServer;
+		};
+
 		/// @brief Layer structure type.
-		using Layers	= Groups<ref<Callback>>;
+		using Layers	= Groups<ref<IEntity>>;
 
 		/// @brief Renders a specific layer.
 		/// @param layer Layer to render.
@@ -48,7 +56,7 @@ namespace Makai::Graph {
 	};
 
 	/// @brief Callback called when rendering.
-	using RenderCallback = typename RenderServer::Callback;
+	using IServerEntity = typename RenderServer::IEntity;
 }
 
 #endif // MAKAILIB_GRAPH_RENDERER_CORE_H

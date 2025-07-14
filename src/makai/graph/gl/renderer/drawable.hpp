@@ -12,7 +12,7 @@
 /// @brief Graphical facilities.
 namespace Makai::Graph {
 	/// @brief Drawable object interface.
-	class ADrawable: IVisible {
+	class ADrawable: IVisible, IServerEntity {
 	public:
 		/// @brief Constructs the drawable object.
 		/// @param manual Whether the object is manually rendered. By default, it is `falsie`.
@@ -62,8 +62,7 @@ namespace Makai::Graph {
 		virtual void draw() = 0;
 
 	private:
-		/// @brief Render callback wrapper.
-		RenderCallback const doRender = [&] {render();};
+		void doRender() override final;
 
 		/// @brief Whether the object is rendered manually.
 		bool manualMode = false;

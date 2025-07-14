@@ -11,10 +11,10 @@
 
 CTL_EX_NAMESPACE_BEGIN
 
-/// @brief Notification server.
+/// @brief Notifiable object abstract class.
 /// @tparam I Server ID.
-template<usize I>
-class NotificationServer {
+template<usize I = 0>
+class ANotifiable {
 public:
 	/// @brief Notification message interface.
 	struct IMessage {
@@ -25,160 +25,94 @@ public:
 	constexpr static usize ID = I;
 
 	/// @brief Message handle type.
-	typedef Reference<IMessage const>					MessageHandleType;
-	/// @brief Signal type.
-	typedef Signal<MessageHandleType const>				SignalType;
+	typedef Reference<IMessage const>	MessageHandleType;
 	/// @brief Signal list type.
-	typedef List<SignalType>							SignalList;
-	/// @brief Signal arguments type.
-	typedef Arguments<SignalType>						SignalArguments;
-	/// @brief Signal wrapper type.
-	typedef Functor<typename SignalType::FunctionType>	SignalWrapper;
+	typedef ref<ANotifiable>			ReceiverType;
+	/// @brief Signal list type.
+	typedef List<ReceiverType>			ReceiverList;
 	/// @brief Signal database type.
-	typedef Dictionary<List<SignalWrapper>>				SignalDatabase;
+	typedef Dictionary<ReceiverList>	SignalDatabase;
 
 	/// @brief Default constructor.
-	NotificationServer() {}
+	ANotifiable() {}
 
-	/// @brief Subscribes an action to a signal.
+	/// @brief Subscribes the object to a signal.
 	/// @param signal Signal name.
-	/// @param action Action to perform for the signal.
-	NotificationServer(String const& signal, SignalType const& action)					{subscribe(signal, action);		}
-	/// @brief Subscribes a series of actions to a signal.
-	/// @param signal Signal name.
-	/// @param action Actions to perform for the signal.
-	NotificationServer(String const& signal, SignalList const& actions)					{subscribe(signal, actions);	}
-	/// @brief Subscribes a series of actions to a signal.
-	/// @param signal Signal name.
-	/// @param action Actions to perform for the signal.
-	NotificationServer(String const& signal, SignalArguments const& actions)			{subscribe(signal, actions);	}
-
-	/// @brief Registers a series of signals.
-	/// @param signals Pairs of signals and their series of actions.
-	NotificationServer(Dictionary<SignalList> const& signals)							{subscribe(signals);			}
-	/// @brief Registers a series of signals.
-	/// @param signals Pairs of signals and their series of actions.
-	NotificationServer(Arguments<KeyValuePair<String, SignalList>> const& signals)		{subscribe(signals);			}
-	/// @brief Registers a series of signals.
-	/// @param signals Pairs of signals and their series of actions.
-	NotificationServer(Arguments<KeyValuePair<String, SignalArguments>> const& signals)	{subscribe(signals);			}
+	ANotifiable(String const& signal)		{subscribeTo(signal);	}
+	/// @brief Subscribes the object to a series of signals.
+	/// @param signals Signals to attach to.
+	ANotifiable(StringList const& signals)	{subscribeTo(signals);	}
 
 	/// @brief Destructor.
-	~NotificationServer() {
-		unsubscribeFromAll();
+	virtual ~ANotifiable() {unsubscribeFromAll();}
+
+	/// @brief Gets alled when this object receives a message. MUST be implemented.
+	/// @param event Signal that fired the message.
+	/// @param message Message associated with the signal.
+	virtual void onMessage(String const& signal, MessageHandleType const& message) = 0;
+
+	/// @brief Receives a message from a signal.
+	/// @param event Signal that fired the message.
+	/// @param message Message associated with the signal.
+	void receive(String const& signal, MessageHandleType const& message) {
+		onMessage(signal, message);
 	}
 
-	/// @brief Subscribes an action to a signal.
+	/// @brief Subscribes this object to a signal.
 	/// @param signal Signal name.
 	/// @param action Action for the signal.
 	/// @return Reference to self.
-	NotificationServer& subscribe(String const& signal, SignalType const& action) {
-		added[signal].pushBack(action);
-		db[signal].pushBack(action);
+	ANotifiable& subscribeTo(String const& signal) {
+		db[signal].pushBack(this);
+		added[signal] = true;
 		return *this;
 	}
 
-	/// @brief Subscribes a series of actions to a signal.
-	/// @param signal Signal name.
-	/// @param action Actions to perform for the signal.
+	/// @brief Subscribes this object to a series of signals.
+	/// @param signals Signals to attach to.
+	/// @param action Action for the signal.
 	/// @return Reference to self.
-	NotificationServer& subscribe(String const& signal, SignalList const& actions) {
-		for (SignalType const& a: actions) {
-			added[signal].pushBack(a);
-			db[signal].pushBack(a);
-		}
+	ANotifiable& subscribeTo(StringList const& signals) {
+		for (auto& signal: signals)
+			subscribeTo(signal, this);
 		return *this;
 	}
 
-	/// @brief Subscribes a series of actions to a signal.
-	/// @param signal Signal name.
-	/// @param action Actions to perform for the signal.
-	/// @return Reference to self.
-	NotificationServer& subscribe(String const& signal, SignalArguments const& actions) {
-		for (SignalType const& a: actions) {
-			added[signal].pushBack(a);
-			db[signal].pushBack(a);
-		}
-		return *this;
-	}
-
-	/// @brief Subscribes to a series of signals.
-	/// @param signals Pairs of signals and their series of actions.
-	/// @return Reference to self.
-	NotificationServer& subscribe(Dictionary<SignalList> const& signals) {
-		for (auto const& [name, actions]: signals)
-			subscribe(name, actions);
-		return *this;
-	}
-
-	/// @brief Subscribes to a series of signals.
-	/// @param signals Pairs of signals and their series of actions.
-	/// @return Reference to self.
-	NotificationServer& subscribe(Arguments<KeyValuePair<String, SignalList>> const& signals) {
-		for (auto const& [name, actions]: signals)
-			subscribe(name, actions);
-		return *this;
-	}
-
-	/// @brief Subscribes to a series of signals.
-	/// @param signals Pairs of signals and their series of actions.
-	/// @return Reference to self.
-	NotificationServer& subscribe(Arguments<KeyValuePair<String, SignalArguments>> const& signals) {
-		for (auto const& [name, actions]: signals)
-			subscribe(name, actions);
-		return *this;
-	}
-
-	/// @brief Unsubscribes all actions this object registered for a signal.
+	/// @brief Unsubscribes this object from a signal.
 	/// @param signal Signal to unsubscribe.
 	/// @return Reference to self.
-	NotificationServer& unsubscribe(String const& signal) {
-		if (db.contains(signal)) {
-			auto const& al = added[signal];
-			db[signal].eraseIf([&] (auto const& elem) {return al.find(elem) != -1;});
-		}
-		added[signal].clear();
+	ANotifiable& unsubscribeFrom(String const& signal) {
+		if (db.contains(signal) && added.contains(signal))
+			db[signal].eraseLike(this);
+		added.erase(signal);
 		return *this;
 	}
 
-	/// @brief Unsubscribes all actions this object registered for a series of signals.
+	/// @brief Unsubscribes this object from a series of signals.
 	/// @param signals Signals to unsubscribe.
 	/// @return Reference to self.
-	NotificationServer& unsubscribe(StringList const& signals) {
+	ANotifiable& unsubscribeFrom(StringList const& signals) {
 		for (String const& s: signals)
-			unsubscribe(s);
+			unsubscribeFrom(s);
 		return *this;
 	}
 
-	/// @brief Unsubscribes all actions this object registered for a series of signals.
-	/// @param signals Signals to unsubscribe.
-	/// @return Reference to self.
-	NotificationServer& unsubscribe(StringArguments const& signals) {
-		for (String const& s: signals)
-			unsubscribe(s);
-		return *this;
-	}
-
-	/// @brief Unsubscribes all actions this object registered for a series of signals.
+	/// @brief Unsubscribes this object from a series of signals.
 	/// @tparam ...Args Argument types. 
 	/// @param ...signals Signals to unsubscribe.
 	/// @return Reference to self.
 	template <typename... Args>
-	NotificationServer& unsubscribe(Args const&... signals)
-	requires (... && Type::Equal<Args, String>) {
+	ANotifiable& unsubscribeFrom(Args const&... signals)
+	requires (... && Type::Convertible<Args, String>) {
 		(..., unsubscribe(signals));
 		return *this;
 	}
 
-	/// @brief Unsubscribes all actions this object registered.
+	/// @brief Unsubscribes from all signals this object registere to.
 	/// @return Reference to self.
-	NotificationServer& unsubscribeFromAll() {
-		for (auto const& [name, lst]: db) {
-			if (!added.contains(name))
-				continue;
-			auto& al = added[name];
-			lst.eraseIf([&] (auto const& elem) {return al.find(elem) != -1;});
-		}
+	ANotifiable& unsubscribeFromAll() {
+		for (auto [name, isAdded]: added.items())
+			if (isAdded) unsubscribeFrom(name);
 		added.clear();
 		return *this;
 	}
@@ -188,22 +122,14 @@ public:
 	/// @param msg Message to pass.
 	static void broadcast(String const& signal, MessageHandleType const& msg = nullptr) {
 		if (db.contains(signal))
-			for (SignalWrapper& s: db[signal])
-				s(msg);
+			for (ReceiverType s: db[signal])
+				s->receive(signal, msg);
 	}
 
 	/// @brief Broadcasts a message to a series of signals.
 	/// @param signals Signals to broadcast.
 	/// @param msg Message to pass.
 	static void broadcast(StringList const& signals, MessageHandleType const& msg = nullptr) {
-		for (String const& s: signals)
-			broadcast(s, msg);
-	}
-
-	/// @brief Broadcasts a message to a series of signals.
-	/// @param signals Signals to broadcast.
-	/// @param msg Message to pass
-	static void broadcast(StringArguments const& signals, MessageHandleType const& msg = nullptr) {
 		for (String const& s: signals)
 			broadcast(s, msg);
 	}
@@ -215,50 +141,13 @@ public:
 			broadcast(sig, msg);
 	}
 
-	/// @brief Broadcasts a message to a signal.
-	/// @param signals Signal to broadcast.
-	/// @param msg Message to pass.
-	/// @return Reference to self.
-	NotificationServer& operator()(String const& signal, MessageHandleType const& msg = nullptr) const {
-		broadcast(signal, msg);
-		return *this;
-	}
-
-	/// @brief Broadcasts a message to a series of signals.
-	/// @param signals Signals to broadcast.
-	/// @param msg Message to pass
-	/// @return Reference to self.
-	NotificationServer& operator()(StringList const& signals, MessageHandleType const& msg = nullptr) const {
-		broadcast(signals, msg);
-		return *this;
-	}
-
-	/// @brief Broadcasts a message to a series of signals.
-	/// @param signals Signals to broadcast.
-	/// @param msg Message to pass
-	/// @return Reference to self.
-	NotificationServer& operator()(StringArguments const& signals, MessageHandleType const& msg = nullptr) const {
-		broadcast(signals, msg);
-		return *this;
-	}
-
-	/// @brief Broadcasts a series of notifications.
-	/// @param notifs Pairs of notifications and their message.
-	/// @return Reference to self.
-	NotificationServer& operator()(List<KeyValuePair<String, MessageHandleType>> const& notifs) const {
-		broadcast(notifs);
-		return *this;
-	}
-
 private:
-	/// @brief Notifications registered by this server.
-	SignalDatabase added;
+	/// @brief Signals this object is registered to.
+	Map<String, bool> added;
 
 	/// @brief All registered notifications.
 	inline static SignalDatabase db;
 };
-
-using Notifier = NotificationServer<0>;
 
 /// @brief Specialized notification handler.
 /// @tparam ...Args Message argument types.

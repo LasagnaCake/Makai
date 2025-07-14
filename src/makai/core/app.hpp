@@ -74,7 +74,7 @@ namespace Makai {
 	};
 
 	/// @brief Main application class.
-	struct App {
+	struct App: ANotifiable<> {
 	public:
 		/// @brief Initializes the application.
 		/// @param config Configuration.
@@ -216,6 +216,11 @@ namespace Makai {
 		/// @param delta Seconds between each logic cycle.
 		virtual void onUpdate(float delta)	{}
 
+		/// @brief Gets alled when this object receives a message.
+		/// @param event Signal that fired the message.
+		/// @param message Message associated with the signal.
+		void onMessage(String const& signal, MessageHandleType const& message) override {}
+
 		/// @brief Gets called at the end of the processing cycle, when the application was requested to close.
 		/// @return Whether the application should close.
 		virtual bool onAppClosureRequest() {return true;}
@@ -255,9 +260,6 @@ namespace Makai {
 
 		/// @brief Speed scale.
 		float speed = 1.0f;
-
-		/// @brief Notification handler.
-		Notifier notifier;
 
 	protected:
 		Graph::Base::BufferObject toBufferObject();
