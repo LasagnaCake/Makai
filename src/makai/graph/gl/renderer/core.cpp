@@ -10,7 +10,6 @@ void RenderServer::renderLayer(typename RenderServer::Layers::GroupType const& l
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("RenderServer::renderLayer");
 	#endif // MAKAILIB_DEBUG
-	// Same reason as APeriodic's behaviour
 	for (usize i = 0; i < layer.size(); ++i)
 		if (layer[i]) layer[i]->doRender();
 }
