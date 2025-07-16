@@ -26,9 +26,11 @@ public:
 	/// @brief Yields all available non-manual periodic events.
 	/// @param ...args Values to pass.
 	static void process(Args... args) {
-		if (events.size())
-			for(ref<APeriodic> event : events)
-				if (event) autoUpdate(*event, args...);
+		if (events.size()) {
+			// Done this way because the list may be modified during another object's update cycle
+			for(usize i = 0; i < events.size(); ++i)
+				if (events[i]) autoUpdate(*events[i], args...);
+		}
 	}
 
 	/// @brief Sets the periodic event to be manually executed.
