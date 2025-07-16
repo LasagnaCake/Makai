@@ -63,7 +63,7 @@ namespace Makai::Ex::Game::Dialog {
 		/// @brief Sets the list of choices to display.
 		/// @param choices Choice list.
 		void setOptions(StringList const& choices) {
-			options		= choices;
+			options		= CTL::copy(choices);
 			choice		= 0;
 			prevChoice	= 0;
 			clear();
