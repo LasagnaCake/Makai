@@ -769,7 +769,7 @@ namespace Makai::Ex::AVM::Compiler {
 							.valPos	= vali
 						});
 						String const exit = getScopePath("_Choice_"s + nodes[curNode].match + ":[end]");
-						processChoice(opi, vali, exit, ppack.args, curNode, nodes);
+						processChoice(opi, vali, exit, ppack.args, curNode, nodes, performing);
 						++curNode;
 						return;
 					}
@@ -995,8 +995,14 @@ namespace Makai::Ex::AVM::Compiler {
 			String const& exit,
 			StringList const& args,
 			usize& curNode,
-			List<Regex::Match> const& nodes
+			List<Regex::Match> const& nodes,
+			bool performing = true
 		) {
+			if (args.empty())
+				throw Error::InvalidValue(
+					toString("No targets provided for jump list!"),
+					MKEX_ANIMAC_SOURCE(fileName, nodes[curNode+2].position)
+				);
 			for (auto const& param: args) {
 				if (param == "...") {
 					throw Error::InvalidValue(
@@ -1020,13 +1026,30 @@ namespace Makai::Ex::AVM::Compiler {
 						.tags	= Token::CHOICE_BIT
 					});
 				} else if (param == "none") {
-					tokens.pushBack(Token{
-						.type	= Operation::AVM_O_JUMP,
-						.name	= exit,
-						.pos	= opi,
-						.valPos	= vali,
-						.tags	= Token::CHOICE_BIT
-					});
+					if (!performing)
+						tokens.pushBack(Token{
+							.type	= Operation::AVM_O_JUMP,
+							.name	= exit,
+							.pos	= opi,
+							.valPos	= vali,
+							.tags	= Token::CHOICE_BIT
+						});
+					else {
+						tokens.pushBack(Token{
+							.type	= Operation::AVM_O_HALT,
+							.mode	= 1,
+							.pos	= opi,
+							.valPos	= vali,
+							.tags	= Token::CHOICE_BIT
+						});
+						for (usize i = 0; i < 4; ++i)
+							tokens.pushBack(Token{
+								.type	= Operation::AVM_O_NEXT,
+								.pos	= opi,
+								.valPos	= vali,
+								.tags	= Token::CHOICE_BIT
+							});
+					}
 				} else if (param == "finish" || param == "terminate") {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_HALT,

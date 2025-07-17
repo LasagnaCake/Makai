@@ -93,7 +93,7 @@ namespace Makai::Ex::AVM {
 			if (isFinished || paused) return;
 			if (hasChoice && getInt() == -1) {
 				switch (onBack) {
-					case OnBackBehaviour::OBB_EXIT_BLOCK:	forceBlockExit(); forceBlockExit();					break;
+					case OnBackBehaviour::OBB_EXIT_BLOCK:	forceBlockExit();									break;
 					case OnBackBehaviour::OBB_TERMINATE:	stop();												break;
 					case OnBackBehaviour::OBB_ERROR:		setErrorAndStop(ErrorCode::AVM_EEC_INVALID_VALUE);	break;
 					case OnBackBehaviour::OBB_REPEAT_BLOCK:	jumpToBlockStart();									break;
