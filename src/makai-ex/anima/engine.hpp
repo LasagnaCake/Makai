@@ -441,9 +441,13 @@ namespace Makai::Ex::AVM {
 			}
 			uint64 range;
 			if (!operand64(range)) return;
-			if (spm & 0b1000)			storeState(current.op + range * JUMP_SIZE);
-			if ((spm & 0b0111) == 2)	current.op += Math::clamp<ssize>(current.integer, 0, range) * JUMP_SIZE;
-			else						current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
+			auto const choice = current.integer;
+			if (spm & 0b1000) storeState(current.op + range * JUMP_SIZE);
+			if ((spm & 0b0111) == 2) {
+				DEBUGLN("Jump ID: ", choice);
+				current.op += Math::clamp<ssize>(choice, 0, range) * JUMP_SIZE;
+			}
+			else current.op += rng.integer<usize>(0, range-1) * JUMP_SIZE;
 		}
 
 		void opGetValue() {
