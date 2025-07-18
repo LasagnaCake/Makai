@@ -13,6 +13,10 @@ namespace Extern = Makai::Extern;
 
 #define sdlSource ((Mix_Chunk*)source)
 
+Sound::~Sound() {
+	destroy();
+}
+
 void Sound::stopAll(usize const fade) {
 	if (fade)
 		Mix_FadeOutChannel(-1, fade);
@@ -120,7 +124,7 @@ void Sound::onCreate(Extern::Resource const& data) {
 	source = (Extern::Resource)Mix_LoadWAV_RW((SDL_RWops*)data, true);
 	if (!source)
 		throw Error::FailedAction(
-			"Could not load file!",
+			"Could not load audio source!",
 			String(Mix_GetError()),
 			CTL_CPP_PRETTY_SOURCE
 		);

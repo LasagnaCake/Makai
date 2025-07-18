@@ -40,7 +40,7 @@ schar Music::getVolume() {
 }
 
 Music::~Music() {
-	//destroy();
+	destroy();
 }
 
 void Music::play(int const loops, usize const fadeInTime) {

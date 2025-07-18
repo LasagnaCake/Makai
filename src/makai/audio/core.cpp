@@ -66,7 +66,7 @@ void Makai::Audio::open(
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}
-	Mix_AllocateChannels(audioTracks);
+	Mix_AllocateChannels(audioTracks + 2);
 	audioOpen = true;
 }
 
