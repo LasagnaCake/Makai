@@ -259,7 +259,7 @@ void App::run() {
 			// increment frame counter
 			frame++;
 			// Update audio system
-			Audio::updateAll();
+			Audio::Source::process();
 			#ifdef MAKAILIB_FRAME_DEPENDENT_PROCESS
 			// Increment cycle counter
 			cycle++;
