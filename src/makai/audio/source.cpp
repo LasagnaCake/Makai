@@ -147,9 +147,6 @@ void Source::setType(SourceType const type) {
 void Source::destroy() {
 	if (!(isOpen() && exists())) return;
 	stop();
-	queue.eraseIf([&] (QueueInfo const& info) {return info.content == data.raw();});
-	if (currentMusic == data.raw()) currentMusic = nullptr;
-	data.unbind();
 	created = false;
 };
 
@@ -354,7 +351,6 @@ void Source::crossFadeInto(uint const crossFadeTime, int const loops) {
 	if (data->active()) return;
 	if (cooldown) return;
 	if (data->type != SourceType::ST_MUSIC) return;
-	currentMusic = data.raw();
 	stopMusic(crossFadeTime);
 	playBasedOnType(*data, crossFadeTime, loops);
 	updateVolume();
