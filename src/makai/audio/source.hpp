@@ -80,6 +80,9 @@ namespace Makai::Audio {
 		/// @brief Returns whether the source is currently playing.
 		/// @return Whether source is playing.
 		bool playing() const;
+		/// @brief Returns whether the source is a music source.
+		/// @return Whether source is a music source.
+		bool isMusic() const;
 
 		/// @brief Stops all currently playing sources of a given type.
 		/// @param fadeOutTime Fade-out time in milliseconds.
@@ -175,6 +178,7 @@ namespace Makai::Audio {
 		/// @param fadeInTime Fade-in time in milliseconds.
 		/// @param loops How many times to loop for. `-1` to loop indefinitely. By default, it is zero.
 		void switchInto(uint const fadeOutTime, uint const fadeInTime, int const loops = 0) {
+			if (!isMusic()) return;
 			stopMusic(fadeOutTime);
 			queueMusic(fadeInTime, loops);
 		}

@@ -164,6 +164,10 @@ bool Source::playing() const {
 	return exists() && data->active();
 }
 
+bool Source::isMusic() const {
+	return exists() && data->type == SourceType::ST_MUSIC;
+}
+
 void Source::setMasterVolume(float const volume, SourceType const type) {
 	switch (type) {
 		// First few tracks are allocated for music, the rest is for sound
@@ -207,7 +211,7 @@ static void updateMusicQueue() {
 }
 
 void Source::process() {
-	APeriodicAudio::process();
+	APeriodicSource::process();
 	updateMusicQueue();
 }
 
@@ -278,7 +282,7 @@ void Source::unpause() {
 }
 
 inline static float volumeByDistance(float const distance) {
-	return Math::clamp<float>(1 - Math::sqrt<float>(space), 0, 1);
+	return CTL::Math::clamp<float>(1 - CTL::Math::sqrt<float>(distance), 0, 1);
 }
 
 void Source::updateVolume() {
@@ -286,7 +290,7 @@ void Source::updateVolume() {
 	data->volume = volume;
 	if (!spatial || (world.size.x == 0 && world.size.y == 0)) {
 		data->spaceVolume = 1;
-		Mix_VolumeChunk(data->source, source.data->sdlVolume());
+		Mix_VolumeChunk(data->source, data->sdlVolume());
 	} else if (world.size.x == 0) {
 		float const space = ((listener.position.y - position.y) / world.size.y);
 		data->spaceVolume = volumeByDistance(space);
@@ -294,9 +298,9 @@ void Source::updateVolume() {
 	} else if (world.size.y == 0) {
 		float const pan		= (listener.position.x - position.x) / world.size.x;
 		data->spaceVolume	= volumeByDistance(Math::abs(pan));
-		float const left	= Math::clamp<float>(-pan + 0.5, 0, 1);
-		float const right	= Math::clamp<float>(pan + 0.5, 0, 1);
-		Mix_SetPanning(data->track, Math::round(left * SDL_PAN_FACTOR), Math::round(right * SDL_PAN_FACTOR));
+		float const left	= Math::clamp<float>(-pan + 0.5, 0, 1) * SDL_PAN_FACTOR;
+		float const right	= Math::clamp<float>(pan + 0.5, 0, 1) * SDL_PAN_FACTOR;
+		Mix_SetPanning(data->track, Math::round(left), Math::round(right));
 		Mix_VolumeChunk(data->source, data->sdlVolume());
 	} else {
 		Vector2 const space = ((listener.position - position) / world.size);
@@ -306,10 +310,10 @@ void Source::updateVolume() {
 			Mix_VolumeChunk(data->source, data->sdlVolume());
 			return;
 		}
-		float const pan		= space.angle();
-		float const left	= Math::clamp<float>(Math::sin(pan) + 1, 0, 1);
-		float const right	= Math::clamp<float>(Math::cos(pan) + 1, 0, 1);
-		Mix_SetPanning(data->track, Math::round(left * SDL_PAN_FACTOR), Math::round(right * SDL_PAN_FACTOR));
+		float const pan		= Math::cos(space.angle());
+		float const left	= Math::clamp<float>(1 - pan, 0, 1) * SDL_PAN_FACTOR;
+		float const right	= Math::clamp<float>(1 + pan, 0, 1) * SDL_PAN_FACTOR;
+		Mix_SetPanning(data->track, Math::round(left), Math::round(right));
 		Mix_VolumeChunk(data->source, data->sdlVolume());
 	} 
 }

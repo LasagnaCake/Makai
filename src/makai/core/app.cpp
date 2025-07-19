@@ -58,7 +58,7 @@ appState(App::AppState::AS_CLOSED) {
 	DEBUGLN("Started!");
 	// Initialize sound system
 	DEBUGLN("Starting Audio System...");
-	Makai::Audio::open(config.audio.formats, config.audio.channels, config.audio.tracks);
+	Makai::Audio::open(config.audio.formats, config.audio.channels, config.audio.audioTracks, config.audio.musicTracks);
 	DEBUGLN("Started!");
 	// Create window and make active
 	DEBUGLN("Creating window...");

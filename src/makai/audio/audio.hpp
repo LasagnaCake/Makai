@@ -3,8 +3,6 @@
 
 #include "core.hpp"
 #include "source.hpp"
-#include "sound.hpp"
-#include "music.hpp"
 #include "update.hpp"
 
 namespace MkAudio = Makai::Audio;

@@ -1,15 +1,13 @@
 #ifndef MAKAILIB_AUDIO_UPDATE_HPP
 #define MAKAILIB_AUDIO_UPDATE_HPP
 
-#include "sound.hpp"
-#include "music.hpp"
+#include "source.hpp"
 
 /// @brief Audio facilities.
 namespace Makai::Audio {
 	/// @brief Updates the audio & music subsystem.
 	inline void updateAll() {
-		Music::update();
-		ASource::update();
+		Source::process();
 	}
 }
 
