@@ -59,10 +59,6 @@ struct QueueInfo {
 	int			loops;
 };
 
-List<QueueInfo> queue;
-
-SourceRef currentMusic = nullptr;
-
 usize currentMusicTrack = 0;
 usize currentAudioTrack = 0;
 
@@ -201,19 +197,8 @@ float Source::getMasterVolume(SourceType const type) {
 	return 0;
 }
 
-static void updateMusicQueue() {
-	if (queue.empty()) return;
-	if (currentMusic && currentMusic->active()) return;
-	auto const song = queue.front();
-	currentMusic = song.content;
-	if (song.content && song.content->type == SourceType::ST_MUSIC)
-		playMusic(*song.content, song.fadeInTime, song.loops);
-	queue.erase(0);
-}
-
 void Source::process() {
 	APeriodicSource::process();
-	updateMusicQueue();
 }
 
 void Source::masterStop(uint const fadeOutTime, SourceType const type) {
@@ -337,10 +322,6 @@ void Source::play(
 	if (!exists()) return;
 	if (!force && data->active()) return;
 	if (cooldown) return;
-	if (data->type == SourceType::ST_MUSIC) {
-		stopMusic();
-		currentMusic = data.raw();
-	}
 	playBasedOnType(*data, fadeInTime, loops);
 	updateVolume();
 }
@@ -382,11 +363,4 @@ void Source::crossFadeInto(uint const crossFadeTime, int const loops) {
 void Source::setSpatial(bool const spatial) {
 	this->spatial = spatial;
 	updateVolume();
-}
-
-void Source::queueMusic(uint const fadeInTime, int const loops) {
-	if (!exists()) return;
-	if (data->active()) return;
-	if (data->type != SourceType::ST_MUSIC) return;
-	queue.pushBack({data.raw(), fadeInTime, loops});
 }

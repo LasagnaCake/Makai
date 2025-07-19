@@ -128,9 +128,6 @@ namespace Makai::Audio {
 		/// @brief Gets the sound master volume.
 		static float getSoundMasterVolume()						{return getMasterVolume(SourceType::ST_SOUND);	}
 
-		/// @brief Queues the music for playback.
-		void queueMusic(uint const fadeInTime, int const loops);
-
 		/// @brief Plays the source.
 		/// @param loops How many times to loop for. `-1` to loop indefinitely. By default, it is zero.
 		/// @param fadeInTime Fade-in time in milliseconds. By default, it is zero.
@@ -172,16 +169,6 @@ namespace Makai::Audio {
 
 		/// @brief Unpauses the source, if it was playing.
 		void unpause();
-
-		/// @brief Fades out the current music playing, then fades into this one.
-		/// @param fadeOutTime Fade-out time in milliseconds.
-		/// @param fadeInTime Fade-in time in milliseconds.
-		/// @param loops How many times to loop for. `-1` to loop indefinitely. By default, it is zero.
-		void switchInto(uint const fadeOutTime, uint const fadeInTime, int const loops = 0) {
-			if (!isMusic()) return;
-			stopMusic(fadeOutTime);
-			queueMusic(fadeInTime, loops);
-		}
 
 		/// @brief Cross-fades the current music playing into this one.
 		/// @param crossfadeTime Cross-fade time in milliseconds.
