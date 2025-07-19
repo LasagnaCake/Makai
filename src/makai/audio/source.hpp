@@ -8,17 +8,29 @@
 
 /// @brief Audio facilities.
 namespace Makai::Audio {
-	/// @brief Playable source abstract class.
-	class APlayable;
+	/// @brief Playable audio source.
+	class Source;
 
 	/// @brief Audio periodic event.
-	using APeriodicAudio = APeriodic<APlayable>;
+	using APeriodicSource = APeriodic<Source>;
 
 	/// @brief Playable audio source.
-	class Source: APeriodicAudio {
+	class Source: APeriodicSource {
 	public:
 		/// @brief Audio source content.
 		struct Content;
+		
+		/// @brief Audio source world.
+		struct World {
+			/// @brief World size.
+			Vector2 size;
+		};
+
+		/// @brief Audio source listener.
+		struct Listener {
+			/// @brief Listener position.
+			Vector2 position;
+		};
 
 		/// @brief Audio source type
 		enum class SourceType {
@@ -65,7 +77,6 @@ namespace Makai::Audio {
 		/// @brief Returns whether the source exists.
 		/// @return Whether source exists.
 		bool exists() const;
-
 		/// @brief Returns whether the source is currently playing.
 		/// @return Whether source is playing.
 		bool playing() const;
@@ -80,12 +91,10 @@ namespace Makai::Audio {
 		/// @brief Unpauses all currently playing sources of a given type.
 		/// @param type Source type to execute operation on.
 		static void masterUnpause(SourceType const type);
-
 		/// @brief Sets the master volume for a source type.
 		/// @param volume Volume to set to.
 		/// @param type Source type to set master volume for.
 		static void setMasterVolume(float const volume, SourceType const type);
-
 		/// @brief Gets the master volume for a source type.
 		/// @param type Source type to het master volume for.
 		static float getMasterVolume(SourceType const type);
@@ -97,6 +106,11 @@ namespace Makai::Audio {
 		static void pauseAllSounds()							{masterPause(SourceType::ST_SOUND);				}
 		/// @brief Resumes all currently playing sounds.
 		static void resumeAllSounds()							{masterUnpause(SourceType::ST_SOUND);				}
+		/// @brief Sets the music master volume.
+		/// @param volume Volume to set to.
+		static void setMusicMasterVolume(float const volume)	{setMasterVolume(volume, SourceType::ST_MUSIC);	}
+		/// @brief Gets the music master volume.
+		static float getMusicMasterVolume()						{return getMasterVolume(SourceType::ST_MUSIC);	}
 
 		/// @brief Stops the currently-playing music.
 		/// @param fadeOutTime Fade-out time in milliseconds.
@@ -105,31 +119,14 @@ namespace Makai::Audio {
 		static void pauseMusic()								{masterPause(SourceType::ST_MUSIC);				}
 		/// @brief Resumes the currently-playing music.
 		static void resumeMusic()								{masterUnpause(SourceType::ST_MUSIC);				}
-
-		/// @brief Sets the music master volume.
-		/// @param volume Volume to set to.
-		static void setMusicMasterVolume(float const volume)	{setMasterVolume(volume, SourceType::ST_MUSIC);	}
-
-		/// @brief Gets the music master volume.
-		static float getMusicMasterVolume()						{return getMasterVolume(SourceType::ST_MUSIC);	}
-
 		/// @brief Sets the sound master volume.
 		/// @param volume Volume to set to.
 		static void setSoundMasterVolume(float const volume)	{setMasterVolume(volume, SourceType::ST_SOUND);	}
-
 		/// @brief Gets the sound master volume.
 		static float getSoundMasterVolume()						{return getMasterVolume(SourceType::ST_SOUND);	}
 
 		/// @brief Queues the music for playback.
 		void queueMusic(uint const fadeInTime, int const loops);
-
-		/// @brief Sets the volume of the source.
-		/// @param volume Volume to set.
-		void setVolume(float const volume);
-
-		/// @brief Returns the current volume of the source.
-		/// @return Current volume.
-		float getVolume() const;
 
 		/// @brief Plays the source.
 		/// @param loops How many times to loop for. `-1` to loop indefinitely. By default, it is zero.
@@ -167,46 +164,65 @@ namespace Makai::Audio {
 		/// @param fadeOutTime Fade-out time in milliseconds.
 		void stop(uint const fadeOutTime = 0);
 
-		/// @brief Pauses the source.
+		/// @brief Pauses the source, if it is playing.
 		void pause();
 
-		/// @brief Fades out the current music playing, then fades into this one.
-		/// @param fadeOutTime Fade-out time in milliseconds.
-		/// @param fadeInTime Fade-in time in milliseconds.
-		void switchInto(uint const fadeOutTime, uint const fadeInTime) {
-			switchInto(fadeOutTime, fadeInTime, 0);
-		}
+		/// @brief Unpauses the source, if it was playing.
+		void unpause();
 
 		/// @brief Fades out the current music playing, then fades into this one.
 		/// @param fadeOutTime Fade-out time in milliseconds.
 		/// @param fadeInTime Fade-in time in milliseconds.
-		/// @param loops How many times to loop for. `-1` to loop indefinitely.
-		void switchInto(uint const fadeOutTime, uint const fadeInTime, int const loops) {
+		/// @param loops How many times to loop for. `-1` to loop indefinitely. By default, it is zero.
+		void switchInto(uint const fadeOutTime, uint const fadeInTime, int const loops = 0) {
 			stopMusic(fadeOutTime);
 			queueMusic(fadeInTime, loops);
 		}
 
 		/// @brief Cross-fades the current music playing into this one.
 		/// @param crossfadeTime Cross-fade time in milliseconds.
-		void crossFadeInto(uint const crossFadeTime);
-
-		/// @brief Cross-fades the current music playing into this one.
-		/// @param crossfadeTime Cross-fade time in milliseconds.
-		void crossFadeInto(uint const crossFadeTime, int const loops);
+		/// @param loops How many times to loop for. `-1` to loop indefinitely. By default, it is zero.
+		void crossFadeInto(uint const crossFadeTime, int const loops = 0);
 
 		/// @brief Updates the audio source subsystem.
 		static void process();
+
+		/// @brief Sets whether the audio source is "spatial".
+		/// @param dimensional Whether audio source is "spatial".
+		/// @note
+		///		Simulates a "pseudo-spatial" audio implementation. Stereo-only.
+		///		For mono channels, it only changes the sound volume.
+		void setSpatial(bool const spatial = true);
+
+		/// @brief Source position in the audio world.
+		Vector2 position;
+
+		/// @brief Source volume.
+		float volume = 1;
+
+		/// @brief Audio source listener.
+		inline static Listener listener	= {.position	= {0, 0}};
+		/// @brief Audio source world.
+		inline static World world		= {.size		= {1, 1}};
 
 	protected:
 		/// @brief Called when the source is updated.
 		void onUpdate() override;
 
 	private:
+		void updateVolume();
+
 		/// @brief Sound data assocuated with the source.
 		Unique<Content> data;
 
 		/// @brief Whether the source was created.
 		bool created = false;
+
+		/// @brief Whether the source was playing in the previous cycle.
+		bool wasPlaying = false;
+
+		/// @brief Wether the audio source is spatial.
+		bool spatial = false;
 
 		/// @brief Time to wait before the source can be played again.
 		usize cooldown = 0;

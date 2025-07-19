@@ -14,11 +14,26 @@ using namespace Makai; using namespace Makai::Audio;
 
 using SourceType = Source::SourceType;
 
+constexpr float const SDL_VOLUME_FACTOR = 128.0;
+
+inline static int8 toSDLVolume(float const volume) {
+	return CTL::Math::round(CTL::Math::clamp<float>(volume, 0, 1) * SDL_VOLUME_FACTOR);
+}
+
 struct Audio::Source::Content {
 	BinaryData<>		file;
 	owner<Mix_Chunk>	source	= nullptr;
 	SourceType			type	= SourceType::ST_SOUND;
 	int					track	= -1;
+	float				volume = 1, spaceVolume = 1;
+
+	float trueVolume() {
+		return volume * spaceVolume;
+	}
+
+	uint8 sdlVolume() {
+		return toSDLVolume(trueVolume());
+	}
 
 	~Content() {
 		if (!isOpen()) return;
@@ -77,13 +92,13 @@ static uint nextMusicTrack(Source::Content& content) {
 static void playAudio(Source::Content& content, uint const fadeInTime, int const loops) {
 	if (fadeInTime)
 		Mix_FadeInChannel(nextAudioTrack(content), content.source, loops, fadeInTime);
-	else Mix_PlayCannel(nextAudioTrack(content), content.source, loops);
+	else Mix_PlayChannel(nextAudioTrack(content), content.source, loops);
 }
 
 static void playMusic(Source::Content& content, uint const fadeInTime, int const loops) {
 	if (fadeInTime)
 		Mix_FadeInChannel(nextMusicTrack(content), content.source, loops, fadeInTime);
-	else Mix_PlayCannel(nextMusicTrack(content), content.source, loops);
+	else Mix_PlayChannel(nextMusicTrack(content), content.source, loops);
 }
 
 static void playBasedOnType(Source::Content& content, uint const fadeInTime, int const loops) {
@@ -93,7 +108,7 @@ static void playBasedOnType(Source::Content& content, uint const fadeInTime, int
 	}
 }
 
-Source::Source(): APeriodicAudio() {
+Source::Source(): APeriodicSource() {
 }
 
 Source::Source(String const& path, SourceType const type): Source() {
@@ -149,22 +164,6 @@ bool Source::playing() const {
 	return exists() && data->active();
 }
 
-constexpr float const VOLUME_FACTOR = 128.0;
-
-inline static int8 toSDLVolume(float const volume) {
-	return CTL::Math::round(CTL::Math::clamp<float>(volume, 0, 1) * VOLUME_FACTOR);
-}
-
-void Source::setVolume(float const volume) {
-	if (!exists()) return;
-	Mix_VolumeChunk(data->source, toSDLVolume(volume));
-}
-
-float Source::getVolume() const {
-	if (!exists()) return 0;
-	return Mix_VolumeChunk(data->source, -1) / VOLUME_FACTOR;
-}
-
 void Source::setMasterVolume(float const volume, SourceType const type) {
 	switch (type) {
 		// First few tracks are allocated for music, the rest is for sound
@@ -186,14 +185,15 @@ float Source::getMasterVolume(SourceType const type) {
 		// First few tracks are allocated for music, the rest is for sound
 		case SourceType::ST_MUSIC: {
 			if (getMusicTrackCount() > 0)
-				return Mix_Volume(0, -1) / VOLUME_FACTOR;
+				return Mix_Volume(0, -1) / SDL_VOLUME_FACTOR;
 		} break;
 		case SourceType::ST_SOUND: {
 			if (getAudioTrackCount() > 0)
-				return Mix_Volume(getMusicTrackCount() + 1, -1) / VOLUME_FACTOR;
+				return Mix_Volume(getMusicTrackCount() + 1, -1) / SDL_VOLUME_FACTOR;
 			return 0;
 		} break;
 	}
+	return 0;
 }
 
 static void updateMusicQueue() {
@@ -201,7 +201,7 @@ static void updateMusicQueue() {
 	if (currentMusic && currentMusic->active()) return;
 	auto const song = queue.front();
 	currentMusic = song.content;
-	if (song.content)
+	if (song.content && song.content->type == SourceType::ST_MUSIC)
 		playMusic(*song.content, song.fadeInTime, song.loops);
 	queue.erase(0);
 }
@@ -217,7 +217,7 @@ void Source::masterStop(uint const fadeOutTime, SourceType const type) {
 		case SourceType::ST_MUSIC: {
 			auto const trackCount = getMusicTrackCount();
 			for (uint i = 0; i < trackCount; ++i)
-				if (fadeOutTime) Mix_HaltChannel(i, fadeOutTime);
+				if (fadeOutTime) Mix_FadeOutChannel(i, fadeOutTime);
 				else Mix_HaltChannel(i);
 		} break;
 		case SourceType::ST_SOUND: {
@@ -277,9 +277,51 @@ void Source::unpause() {
 	if (data->active()) Mix_Resume(data->track);
 }
 
+inline static float volumeByDistance(float const distance) {
+	return Math::clamp<float>(1 - Math::sqrt<float>(space), 0, 1);
+}
+
+void Source::updateVolume() {
+	constexpr float const SDL_PAN_FACTOR = 255;
+	data->volume = volume;
+	if (!spatial || (world.size.x == 0 && world.size.y == 0)) {
+		data->spaceVolume = 1;
+		Mix_VolumeChunk(data->source, source.data->sdlVolume());
+	} else if (world.size.x == 0) {
+		float const space = ((listener.position.y - position.y) / world.size.y);
+		data->spaceVolume = volumeByDistance(space);
+		Mix_VolumeChunk(data->source, data->sdlVolume());
+	} else if (world.size.y == 0) {
+		float const pan		= (listener.position.x - position.x) / world.size.x;
+		data->spaceVolume	= volumeByDistance(Math::abs(pan));
+		float const left	= Math::clamp<float>(-pan + 0.5, 0, 1);
+		float const right	= Math::clamp<float>(pan + 0.5, 0, 1);
+		Mix_SetPanning(data->track, Math::round(left * SDL_PAN_FACTOR), Math::round(right * SDL_PAN_FACTOR));
+		Mix_VolumeChunk(data->source, data->sdlVolume());
+	} else {
+		Vector2 const space = ((listener.position - position) / world.size);
+		data->spaceVolume	= volumeByDistance(space.length());
+		if (data->spaceVolume == 1) {
+			Mix_SetPanning(data->track, 255, 255);
+			Mix_VolumeChunk(data->source, data->sdlVolume());
+			return;
+		}
+		float const pan		= space.angle();
+		float const left	= Math::clamp<float>(Math::sin(pan) + 1, 0, 1);
+		float const right	= Math::clamp<float>(Math::cos(pan) + 1, 0, 1);
+		Mix_SetPanning(data->track, Math::round(left * SDL_PAN_FACTOR), Math::round(right * SDL_PAN_FACTOR));
+		Mix_VolumeChunk(data->source, data->sdlVolume());
+	} 
+}
+
 void Source::onUpdate() {
-	playedThisFrame = false;
 	if (cooldown > 0) --cooldown;
+	if (wasPlaying && !playing()) onPlaybackEnd();
+	if (!wasPlaying && playing()) onPlaybackStart();
+	wasPlaying = playing();
+	if (!wasPlaying) return;
+	if (spatial && world.size.x != 0 && world.size.y != 0)
+		updateVolume();
 }
 
 void Source::play(
@@ -295,6 +337,7 @@ void Source::play(
 		currentMusic = data.raw();
 	}
 	playBasedOnType(*data, fadeInTime, loops);
+	updateVolume();
 }
 
 void Source::playOnceThisFrame(
@@ -320,18 +363,25 @@ void Source::playOnceAndWait(
 	cooldown = cycles;
 }
 
-void Source::crossFadeInto(uint const crossfadeTime) {
+void Source::crossFadeInto(uint const crossFadeTime, int const loops) {
 	if (!exists()) return;
-	if (!force && data->active()) return;
+	if (data->active()) return;
 	if (cooldown) return;
+	if (data->type != SourceType::ST_MUSIC) return;
+	currentMusic = data.raw();
 	stopMusic(crossFadeTime);
-	playBasedOnType(content, fadeInTime, 0);
+	playBasedOnType(*data, crossFadeTime, loops);
+	updateVolume();
 }
 
-void Source::crossFadeInto(uint const crossfadeTime, int const loops) {
+void Source::setSpatial(bool const spatial) {
+	this->spatial = spatial;
+	updateVolume();
+}
+
+void Source::queueMusic(uint const fadeInTime, int const loops) {
 	if (!exists()) return;
-	if (!force && data->active()) return;
-	if (cooldown) return;
-	stopMusic(crossFadeTime);
-	playBasedOnType(content, fadeInTime, loops);
+	if (data->active()) return;
+	if (data->type != SourceType::ST_MUSIC) return;
+	queue.pushBack({data.raw(), fadeInTime, loops});
 }
