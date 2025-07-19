@@ -148,7 +148,7 @@ void Source::setType(SourceType const type) {
 };
 
 void Source::destroy() {
-	if (!exists()) return;
+	if (!(isOpen() && exists())) return;
 	stop();
 	queue.eraseIf([&] (QueueInfo const& info) {return info.content == data.raw();});
 	if (currentMusic == data.raw()) currentMusic = nullptr;
