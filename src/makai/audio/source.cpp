@@ -351,7 +351,7 @@ void Source::crossFadeInto(uint const crossFadeTime, int const loops) {
 	if (data->active()) return;
 	if (cooldown) return;
 	if (data->type != SourceType::ST_MUSIC) return;
-	stopMusic(crossFadeTime);
+	stopAllMusic(crossFadeTime);
 	playBasedOnType(*data, crossFadeTime, loops);
 	updateVolume();
 }
