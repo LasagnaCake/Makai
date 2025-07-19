@@ -112,8 +112,8 @@ struct TypeInfo<T>: NumberLimit<T>, Base::BasicInfo<T> {};
 
 /// @brief Type information.
 /// @tparam T Type.
-template<Type::Float T>
-struct TypeInfo<T>: Base::BasicInfo<T> {};
+template<Type::Real T>
+struct TypeInfo<T>: NumberLimit<T>, Base::BasicInfo<T> {};
 
 /// @brief Type information.
 /// @tparam T Type.

@@ -18,7 +18,7 @@ struct Audio::Source::Content {
 	BinaryData<>		file;
 	owner<Mix_Chunk>	source	= nullptr;
 	SourceType			type	= SourceType::ST_SOUND;
-	uint				track	= -1;
+	int					track	= -1;
 
 	~Content() {
 		if (!isOpen()) return;
@@ -76,14 +76,14 @@ static uint nextMusicTrack(Source::Content& content) {
 
 static void playAudio(Source::Content& content, uint const fadeInTime, int const loops) {
 	if (fadeInTime)
-		Mix_FadeInChunk(nextAudioTrack(content), content.source, loops, fadeInTime);
-	else Mix_PlayChunk(nextAudioTrack(content), content.source, loops);
+		Mix_FadeInChannel(nextAudioTrack(content), content.source, loops, fadeInTime);
+	else Mix_PlayCannel(nextAudioTrack(content), content.source, loops);
 }
 
 static void playMusic(Source::Content& content, uint const fadeInTime, int const loops) {
 	if (fadeInTime)
-		Mix_FadeInChunk(nextMusicTrack(content), content.source, loops, fadeInTime);
-	else Mix_PlayChunk(nextMusicTrack(content), content.source, loops);
+		Mix_FadeInChannel(nextMusicTrack(content), content.source, loops, fadeInTime);
+	else Mix_PlayCannel(nextMusicTrack(content), content.source, loops);
 }
 
 static void playBasedOnType(Source::Content& content, uint const fadeInTime, int const loops) {
@@ -118,7 +118,7 @@ void Source::create(String const& path, SourceType const type) {
 	data->type = type;
 	if (!data->source)
 		throw Error::FailedAction(
-			"Could not load audio file [", path, "]!",
+			toString("Could not load audio file [", path, "]!"),
 			String(Mix_GetError()),
 			CTL_CPP_PRETTY_SOURCE
 		);
@@ -126,7 +126,10 @@ void Source::create(String const& path, SourceType const type) {
 };
 
 void Source::setType(SourceType const type) {
-	if (data) data->type = type;
+	if (exists()) {
+		stop();
+		data->type = type;
+	}
 };
 
 void Source::destroy() {
@@ -148,9 +151,13 @@ bool Source::playing() const {
 
 constexpr float const VOLUME_FACTOR = 128.0;
 
+inline static int8 toSDLVolume(float const volume) {
+	return CTL::Math::round(CTL::Math::clamp<float>(volume, 0, 1) * VOLUME_FACTOR);
+}
+
 void Source::setVolume(float const volume) {
 	if (!exists()) return;
-	Mix_VolumeChunk(data->source, Math::round(Math::clamp<float>(volume, 0, 1) * VOLUME_FACTOR));
+	Mix_VolumeChunk(data->source, toSDLVolume(volume));
 }
 
 float Source::getVolume() const {
@@ -164,12 +171,12 @@ void Source::setMasterVolume(float const volume, SourceType const type) {
 		case SourceType::ST_MUSIC: {
 			auto const trackCount = getMusicTrackCount();
 			for (uint i = 0; i < trackCount; ++i)
-				Mix_Volume(i, volume);
+				Mix_Volume(i, toSDLVolume(volume));
 		} break;
 		case SourceType::ST_SOUND: {
 			auto const trackCount = getAudioTrackCount();
 			for (uint i = 0; i < trackCount; ++i)
-				Mix_Volume(i + getMusicTrackCount(), volume);
+				Mix_Volume(i + getMusicTrackCount(), toSDLVolume(volume));
 		} break;
 	}
 }
@@ -287,7 +294,7 @@ void Source::play(
 		stopMusic();
 		currentMusic = data.raw();
 	}
-	playBasedOnType(content, fadeInTime, loops);
+	playBasedOnType(*data, fadeInTime, loops);
 }
 
 void Source::playOnceThisFrame(
@@ -297,7 +304,7 @@ void Source::playOnceThisFrame(
 ) {
 	if (!exists()) return;
 	if (!force && data->active()) return;
-	playOnceAndWait(content, fadeInTime, loops, 1);
+	playOnceAndWait(loops, fadeInTime, force, 1);
 }
 
 void Source::playOnceAndWait(
@@ -309,7 +316,7 @@ void Source::playOnceAndWait(
 	if (!exists()) return;
 	if (!force && data->active()) return;
 	if (cooldown) return;
-	play(content, fadeInTime, loops);
+	play(loops, fadeInTime, force);
 	cooldown = cycles;
 }
 
