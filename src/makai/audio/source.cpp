@@ -41,6 +41,7 @@ struct Audio::Source::Content {
 	}
 
 	bool active() {
+		if (!isOpen())		return false;
 		if (!source)		return false;
 		if (track == -1)	return false;
 		return (
