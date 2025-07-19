@@ -104,29 +104,29 @@ namespace Makai::Audio {
 
 		/// @brief Stops all currently playing sounds.
 		/// @param fadeOutTime Fade-out time in milliseconds.
-		static void stopAllSounds(uint const fadeOutTime = 0)	{masterStop(fadeOutTime, SourceType::ST_SOUND);	}
+		inline static void stopAllSounds(uint const fadeOutTime = 0)	{masterStop(fadeOutTime, SourceType::ST_SOUND);	}
 		/// @brief Pauses all currently playing sounds.
-		static void pauseAllSounds()							{masterPause(SourceType::ST_SOUND);				}
+		inline static void pauseAllSounds()								{masterPause(SourceType::ST_SOUND);				}
 		/// @brief Resumes all currently playing sounds.
-		static void resumeAllSounds()							{masterUnpause(SourceType::ST_SOUND);				}
+		inline static void resumeAllSounds()							{masterUnpause(SourceType::ST_SOUND);				}
 		/// @brief Sets the music master volume.
 		/// @param volume Volume to set to.
-		static void setMusicMasterVolume(float const volume)	{setMasterVolume(volume, SourceType::ST_MUSIC);	}
+		inline static void setMusicMasterVolume(float const volume)		{setMasterVolume(volume, SourceType::ST_MUSIC);	}
 		/// @brief Gets the music master volume.
-		static float getMusicMasterVolume()						{return getMasterVolume(SourceType::ST_MUSIC);	}
+		inline static float getMusicMasterVolume()						{return getMasterVolume(SourceType::ST_MUSIC);	}
 
-		/// @brief Stops the currently-playing music.
+		/// @brief Stops all currently-playing music.
 		/// @param fadeOutTime Fade-out time in milliseconds.
-		static void stopMusic(uint const fadeOutTime = 0)		{masterStop(fadeOutTime, SourceType::ST_MUSIC);	}
-		/// @brief Pauses the currently-playing music.
-		static void pauseMusic()								{masterPause(SourceType::ST_MUSIC);				}
-		/// @brief Resumes the currently-playing music.
-		static void resumeMusic()								{masterUnpause(SourceType::ST_MUSIC);				}
+		inline static void stopAllMusic(uint const fadeOutTime = 0)	{masterStop(fadeOutTime, SourceType::ST_MUSIC);	}
+		/// @brief Pauses all currently-playing music.
+		inline static void pauseAllMusic()							{masterPause(SourceType::ST_MUSIC);				}
+		/// @brief Resumes all currently-playing music.
+		inline static void resumeAllMusic()							{masterUnpause(SourceType::ST_MUSIC);				}
 		/// @brief Sets the sound master volume.
 		/// @param volume Volume to set to.
-		static void setSoundMasterVolume(float const volume)	{setMasterVolume(volume, SourceType::ST_SOUND);	}
+		inline static void setSoundMasterVolume(float const volume)	{setMasterVolume(volume, SourceType::ST_SOUND);	}
 		/// @brief Gets the sound master volume.
-		static float getSoundMasterVolume()						{return getMasterVolume(SourceType::ST_SOUND);	}
+		inline static float getSoundMasterVolume()					{return getMasterVolume(SourceType::ST_SOUND);	}
 
 		/// @brief Plays the source.
 		/// @param loops How many times to loop for. `-1` to loop indefinitely. By default, it is zero.
