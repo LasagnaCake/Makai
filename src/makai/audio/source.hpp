@@ -108,7 +108,7 @@ namespace Makai::Audio {
 		/// @brief Pauses all currently playing sounds.
 		inline static void pauseAllSounds()								{masterPause(SourceType::ST_SOUND);				}
 		/// @brief Resumes all currently playing sounds.
-		inline static void resumeAllSounds()							{masterUnpause(SourceType::ST_SOUND);				}
+		inline static void resumeAllSounds()							{masterUnpause(SourceType::ST_SOUND);			}
 		/// @brief Sets the music master volume.
 		/// @param volume Volume to set to.
 		inline static void setMusicMasterVolume(float const volume)		{setMasterVolume(volume, SourceType::ST_MUSIC);	}
@@ -121,7 +121,7 @@ namespace Makai::Audio {
 		/// @brief Pauses all currently-playing music.
 		inline static void pauseAllMusic()							{masterPause(SourceType::ST_MUSIC);				}
 		/// @brief Resumes all currently-playing music.
-		inline static void resumeAllMusic()							{masterUnpause(SourceType::ST_MUSIC);				}
+		inline static void resumeAllMusic()							{masterUnpause(SourceType::ST_MUSIC);			}
 		/// @brief Sets the sound master volume.
 		/// @param volume Volume to set to.
 		inline static void setSoundMasterVolume(float const volume)	{setMasterVolume(volume, SourceType::ST_SOUND);	}
