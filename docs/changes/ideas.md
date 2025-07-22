@@ -8,16 +8,25 @@ For libraries: [`cute`](https://github.com/RandyGaul/cute_headers) & [stb](https
 
 ## Graphical Pipeline Options
 
-### SDL3's [GPU API](https://wiki.libsdl.org/SDL3/CategoryGPU)
+### SDL3's [GPU API](https://wiki.libsdl.org/SDL3/CategoryGPU) (Vulkan-Style)
 
 **Benefits:**
-- Easy(er) option
+- "Easy" option
 
 **Problems:**
-- Doesn't support old(ish) devices (at LEAST OpenGL 4.2)
-- Left-handed coordinate system - engine uses right-handed
-- How many features are dependent on OpenGL-specific stuff?
-- How many features that are used are unavailable on SDL3?
+- Requires migrating from SDL2 to SDL3
+- **Left-handed coordinate system!** - engine uses right-handed
+- Very recent library (SDL3)
+	- How many features are dependent on OpenGL-specific stuff?
+	- How many features that are used are unavailable on SDL3?
+
+### WebGPU Native ([WebGPU-Native](https://github.com/eliemichel/WebGPU-distribution) or [WebGPU-Cpp](https://github.com/eliemichel/WebGPU-Cpp) (more likely))
+
+**Benefits:**
+- Also an "easy" option
+
+**Problems:**
+- Very recent API
 
 ### Custom API
 
