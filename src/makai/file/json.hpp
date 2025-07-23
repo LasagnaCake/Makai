@@ -107,6 +107,16 @@ namespace Makai::JSON {
 	/// @brief JSON view.
 	class JSONView: public View<Extern::JSONData> {
 	public:
+		/// @brief JSON path.
+		struct Path {
+			/// @brief Constructs the path from a string.
+			constexpr explicit Path(String const& path):	path(path)			{}
+			/// @brief Constructs the path from a string.
+			constexpr explicit Path(String&& path):			path(move(path))	{}
+			/// @brief Path.
+			String const path;
+		};
+
 		/// @brief Constructs the JSON view.
 		/// @param data Reference to JSON value to view.
 		/// @param name JSON value name. By default, it is `"<anonymous>"`.
@@ -175,6 +185,17 @@ namespace Makai::JSON {
 		/// @return Constant view to member.
 		/// @throw Error::InvalidAction if data is not a JSON object.
 		JSONView const operator[](String const& key) const;
+
+		/// @brief JSON structure member access operator.
+		/// @param key Member to access.
+		/// @return View to member.
+		/// @throw Error::InvalidAction if path is not a valid path to data.
+		JSONView operator[](Path const& key);
+		/// @brief JSON structure member access operator.
+		/// @param key Member to access.
+		/// @return Constant view to member.
+		/// @throw Error::InvalidAction if path is not a valid path to data.
+		JSONView const operator[](Path const& key) const;
 
 		/// @brief JSON structure indexing operator.
 		/// @param key Index to access.

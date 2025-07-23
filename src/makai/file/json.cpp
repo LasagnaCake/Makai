@@ -1,4 +1,5 @@
 #include "json.hpp"
+#include <stdexcept>
 
 using Nlohmann = Makai::JSON::Extern::Nlohmann;
 
@@ -29,6 +30,41 @@ const Makai::JSON::JSONView Makai::JSON::JSONView::operator[](String const& key)
 		CTL_CPP_PRETTY_SOURCE
 	);
 	return Makai::JSON::JSONView(cdata[key.stdView()], name + "/" + key);
+}
+
+Makai::JSON::JSONView Makai::JSON::JSONView::operator[](Path const& key) {
+	if (isNull()) view() = Nlohmann::object();
+	else if (!isObject()) throw Error::InvalidAction(
+		"Parameter '" + name + "' is not an object!",
+		CTL_CPP_PRETTY_SOURCE
+	);
+	try {
+		auto const path = nlohmann::json_pointer<std::string>("/" + key.path.std());
+		return Makai::JSON::JSONView(cdata[path], name + "/" + key.path);
+	} catch (std::runtime_error const& e) {
+		throw Error::InvalidAction(
+			"Failed to get JSON data at path '"+key.path+"'!",
+			e.what(),
+			CTL_CPP_PRETTY_SOURCE
+		);
+	}
+}
+
+const Makai::JSON::JSONView Makai::JSON::JSONView::operator[](Path const& key) const {
+	if (!isObject()) throw Error::InvalidAction(
+		"Parameter '" + name + "' is not an object!",
+		CTL_CPP_PRETTY_SOURCE
+	);
+	try {
+		auto const path = nlohmann::json_pointer<std::string>("/" + key.path.std());
+		return Makai::JSON::JSONView(cdata[path], name + "/" + key.path);
+	} catch (std::runtime_error const& e) {
+		throw Error::InvalidAction(
+			"Failed to get JSON data at path '"+key.path+"'!",
+			e.what(),
+			CTL_CPP_PRETTY_SOURCE
+		);
+	}
 }
 
 Makai::JSON::JSONView Makai::JSON::JSONView::operator[](usize const index) {

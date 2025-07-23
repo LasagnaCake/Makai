@@ -36,6 +36,20 @@ namespace Makai::Ex::Game {
 			return JSONView::operator[](key);
 		}
 
+		/// @brief Member access operator.
+		/// @param key Member to get.
+		/// @return Const view to member.
+		SaveView const operator[](JSONView::Path const& key) const {
+			return JSONView::operator[](key);
+		}
+		
+		/// @brief Member access operator.
+		/// @param key Member to get.
+		/// @return View to member.
+		SaveView operator[](JSONView::Path const& key) {
+			return JSONView::operator[](key);
+		}
+
 		/// @brief Saves the current view's contents to disk.
 		/// @param path Path to save contents to.
 		/// @return Const reference to self.
