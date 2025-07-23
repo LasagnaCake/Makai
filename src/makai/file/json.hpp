@@ -21,6 +21,8 @@ namespace Makai::JSON {
 		using OrderedData = nlohmann::ordered_json;
 		/// @brief Underlying JSON structure type.
 		using JSONData = SortedData;
+		/// @brief Underlying JSON path type.
+		using JSONPath = nlohmann::json_pointer<std::string>;
 	}
 
 	/// @brief Underlying JSON structure type.
@@ -110,11 +112,18 @@ namespace Makai::JSON {
 		/// @brief JSON path.
 		struct Path {
 			/// @brief Constructs the path from a string.
-			constexpr explicit Path(String const& path):	path(path)			{}
+			constexpr explicit Path(String const& path):	value(path)			{}
 			/// @brief Constructs the path from a string.
-			constexpr explicit Path(String&& path):			path(move(path))	{}
+			constexpr explicit Path(String&& path):			value(move(path))	{}
+			/// @brief Returns the path as the underlying JSON path.
+			inline Extern::JSONPath path() const {
+				return nlohmann::json_pointer<std::string>("/" + value.std());
+			}
+			/// @brief Returns the path string.
+			constexpr String name() const {return value;}
+		private:
 			/// @brief Path.
-			String const path;
+			String const value;
 		};
 
 		/// @brief Constructs the JSON view.
@@ -246,6 +255,10 @@ namespace Makai::JSON {
 		/// @param key Member to check for.
 		/// @return Whether member exists.
 		inline bool has(String const& key) const {return view().contains(key.stdView()); }
+		/// @brief Returns whether the underlying JSON value has a given member.
+		/// @param key Member to check for.
+		/// @return Whether member exists.
+		inline bool has(Path const& key) const {return view().contains(key.path());}
 
 		/// @brief Returns a copy of the underlying JSON value.
 		inline operator Extern::JSONData() {return view();}

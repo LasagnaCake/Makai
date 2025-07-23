@@ -39,11 +39,10 @@ Makai::JSON::JSONView Makai::JSON::JSONView::operator[](Path const& key) {
 		CTL_CPP_PRETTY_SOURCE
 	);
 	try {
-		auto const path = nlohmann::json_pointer<std::string>("/" + key.path.std());
-		return Makai::JSON::JSONView(cdata[path], name + "/" + key.path);
+		return Makai::JSON::JSONView(view()[key.path()], name + "/" + key.name());
 	} catch (std::runtime_error const& e) {
 		throw Error::InvalidAction(
-			"Failed to get JSON data at path '"+key.path+"'!",
+			"Failed to get JSON data at path '"+key.name()+"'!",
 			e.what(),
 			CTL_CPP_PRETTY_SOURCE
 		);
@@ -56,11 +55,10 @@ const Makai::JSON::JSONView Makai::JSON::JSONView::operator[](Path const& key) c
 		CTL_CPP_PRETTY_SOURCE
 	);
 	try {
-		auto const path = nlohmann::json_pointer<std::string>("/" + key.path.std());
-		return Makai::JSON::JSONView(cdata[path], name + "/" + key.path);
+		return Makai::JSON::JSONView(cdata[key.path()], name + "/" + key.name());
 	} catch (std::runtime_error const& e) {
 		throw Error::InvalidAction(
-			"Failed to get JSON data at path '"+key.path+"'!",
+			"Failed to get JSON data at path '"+key.name()+"'!",
 			e.what(),
 			CTL_CPP_PRETTY_SOURCE
 		);
