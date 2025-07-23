@@ -135,10 +135,11 @@ namespace Makai::Ex::AVM {
 		/// @param values Values to pass to it.
 		/// @return Whether action was found.
 		virtual bool execute(usize const name, Parameters const& params) {
+			if (params.size())
 			switch (name) {
-				case (ConstHasher::hash("on-back")):	onBack		= getBehaviourByName(params[0]);	return true;
-				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params[0]);				return true;
-				case (ConstHasher::hash("delay")):		delay		= toUInt64(params[0]);				return true;
+				case (ConstHasher::hash("on-back")):	onBack		= getBehaviourByName(params.front());	return true;
+				case (ConstHasher::hash("autoplay")):	autoplay	= toBool(params.front());				return true;
+				case (ConstHasher::hash("delay")):		delay		= toUInt64(params.front());				return true;
 			}
 			return false;
 		}
