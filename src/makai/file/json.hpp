@@ -370,9 +370,9 @@ namespace Makai::JSON {
 			Nullable<String> tryGet(T& out) const
 			requires(Makai::Type::Equal<typename T::DataType, String>)
 			try {
-				auto const strings = data.get<std::vector<std::string>>();
-				out.clear();
-				for (auto const& str: strings) strings.pushBack(str);
+				out = T();
+				for (auto const& str: data.get<std::vector<std::string>>())
+					out.pushBack(str);
 				return nullptr;
 			} catch (Extern::Nlohmann::exception const& e) {
 				return String(e.what());
