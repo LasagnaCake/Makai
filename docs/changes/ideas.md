@@ -12,11 +12,12 @@ For libraries: [`cute`](https://github.com/RandyGaul/cute_headers) & [stb](https
 
 **Benefits:**
 - "Easy" option
+- (Potentially) makes it easier to target web (in the future, if a goal)
 
 **Problems:**
 - Requires migrating from SDL2 to SDL3
 - **Left-handed coordinate system!** - engine uses right-handed
-- Very recent library (SDL3)
+- VERY recent library (SDL3)
 	- How many features are dependent on OpenGL-specific stuff?
 	- How many features that are used are unavailable on SDL3?
 
@@ -27,6 +28,8 @@ For libraries: [`cute`](https://github.com/RandyGaul/cute_headers) & [stb](https
 
 **Problems:**
 - Very recent API
+- (May or may not) require porting code to WGSL
+	- Has nice features but... sintax is kinda ugly (´u\_u\`)
 
 ### Custom API
 
