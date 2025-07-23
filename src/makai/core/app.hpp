@@ -37,9 +37,11 @@ namespace Makai {
 				Makai::Audio::Format::AF_MP3
 			};
 			/// @brief Number of output channels to use. 1 → mono, 2 → stereo, and so on.
-			uint channels	= 2;
+			uint channels		= 2;
 			/// @brief Number of audio (non-music) tracks to open.
-			uint tracks		= 16;
+			uint audioTracks	= 16;
+			/// @brief Number of music tracks to open.
+			uint musicTracks	= 2;
 		};
 
 		/// @brief Renderer configuration.

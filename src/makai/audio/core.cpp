@@ -9,6 +9,8 @@
 
 bool audioOpen = false;
 
+uint audioTrackCount = 0, musicTrackCount = 0;
+
 void Makai::Audio::stopAll() {
 	Mix_HaltMusic();
 	Mix_HaltChannel(-1);
@@ -40,7 +42,8 @@ int getFlags(Formats const& formats) {
 void Makai::Audio::open(
 	Formats const&	formats,
 	uint const		channels,
-	uint const		audioTracks
+	uint const		audioTracks,
+	uint const		musicTracks
 ) {
 	if (audioOpen) return;
 	if (!Mix_Init(getFlags(formats))) {
@@ -66,17 +69,20 @@ void Makai::Audio::open(
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}
-	Mix_AllocateChannels(audioTracks);
+	Mix_AllocateChannels(audioTracks + musicTracks);
 	audioOpen = true;
+	audioTrackCount = audioTracks;
+	musicTrackCount = musicTracks;
 }
 
 void Makai::Audio::restart(
 	Formats const&	formats,
 	uint const		channels,
-	uint const		audioTracks
+	uint const		audioTracks,
+	uint const		musicTracks
 ) {
 	Makai::Audio::close();
-	Makai::Audio::open(formats, channels, audioTracks);
+	Makai::Audio::open(formats, channels, audioTracks, musicTracks);
 }
 
 void Makai::Audio::close() {
@@ -85,6 +91,16 @@ void Makai::Audio::close() {
 	Mix_CloseAudio();
 	Mix_Quit();
 	audioOpen = false;
+}
+
+uint Makai::Audio::getAudioTrackCount() {
+	if (!audioOpen) return 0;
+	return audioTrackCount;
+}
+
+uint Makai::Audio::getMusicTrackCount() {
+	if (!audioOpen) return 0;
+	return musicTrackCount;
 }
 
 bool Makai::Audio::isOpen() {

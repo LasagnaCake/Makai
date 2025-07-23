@@ -361,7 +361,7 @@ namespace Makai::JSON {
 			&&	Makai::Type::Different<typename T::DataType, JSONView>
 			&&	Makai::Type::Different<typename T::DataType, JSONValue>
 			) try {
-				out = T(data.get<std::vector<typename T::DataType>>());
+				out = static_cast<T>(data.get<std::vector<typename T::DataType>>());
 				return nullptr;
 			} catch (Extern::Nlohmann::exception const& e) {
 				return String(e.what());
@@ -370,7 +370,9 @@ namespace Makai::JSON {
 			Nullable<String> tryGet(T& out) const
 			requires(Makai::Type::Equal<typename T::DataType, String>)
 			try {
-				out = data.get<std::vector<std::string>>();
+				out = T();
+				for (auto const& str: data.get<std::vector<std::string>>())
+					out.pushBack(str);
 				return nullptr;
 			} catch (Extern::Nlohmann::exception const& e) {
 				return String(e.what());

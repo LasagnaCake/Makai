@@ -96,7 +96,7 @@ namespace Math {
 	/// @return Value in radians.
 	template<Type::Math::Operatable T = float>
 	constexpr T radians(T const& deg) requires Type::Arithmetic<T, float> {
-		return (T)(deg / DEGRAD);
+		return static_cast<T>(deg / DEGRAD);
 	}
 
 	/// @brief Converts the value, in radians, to degrees.
@@ -105,7 +105,7 @@ namespace Math {
 	/// @return Value in degrees.
 	template<Type::Math::Operatable T = float>
 	constexpr T degrees(T const& rad) requires Type::Arithmetic<T, float> {
-		return (T)(rad * DEGRAD);
+		return static_cast<T>(rad * DEGRAD);
 	}
 
 	/// @brief Linearly interpolates between two values.
@@ -116,7 +116,7 @@ namespace Math {
 	/// @return Result of the interpolation.
 	template<Type::Math::Operatable T = float>
 	constexpr T lerp(T const& from, T const& to, T const& by) {
-		return (T)(from + by * (to - from));
+		return static_cast<T>(from + by * (to - from));
 	}
 
 	/// Taken from Godot Engine, I think.
@@ -130,7 +130,7 @@ namespace Math {
 	constexpr T angleLerp(T const from, T const& to, T const& by) {
 		T dist	= fmod(to - from, TAU);
 		dist	= fmod(2.0 * dist, TAU) - dist;
-		return (T)(from + dist * by);
+		return static_cast<T>(from + dist * by);
 	}
 
 	/// @brief Steps a value, such that `step` is always a multiple of it.
@@ -141,7 +141,7 @@ namespace Math {
 	template<Type::Number T = float>
 	constexpr T step(T const val, T const& step) {
 		if (step != 0)
-			return (T)(floor(val / step + 0.5) * step);
+			return static_cast<T>(floor(val / step + 0.5) * step);
 		return val;
 	}
 
@@ -151,8 +151,12 @@ namespace Math {
 	/// @return Rounded value.
 	template<Type::Number T = float>
 	constexpr T floor(T const val) {
-		return (T)(::floor(val));
+		if constexpr (inCompileTime())
+			return static_cast<T>(static_cast<int128>(val));
+		else return static_cast<T>(::floor(val));
 	}
+
+	static_assert(compare<float>(floor(PI * 10e7), 314159265));
 
 	/// @brief Rounds a number down.
 	/// @tparam T Number type.
@@ -164,7 +168,7 @@ namespace Math {
 		// Get rounding factor
 		T zeros = pow<floatmax>(10, decimals);
 		// Floor it
-		return (T)(floor(val * zeros) / zeros);
+		return static_cast<T>(floor(val * zeros) / zeros);
 	}
 
 	/// @brief Rounds a number up.
@@ -173,20 +177,24 @@ namespace Math {
 	/// @return Rounded value.
 	template<Type::Number T = float>
 	constexpr T ceil(T const val) {
-		return (T)(::ceil(val));
+		if constexpr (inCompileTime())
+			return static_cast<T>(static_cast<int128>(val + (1.0 - Limit::STRIDE<T>)));
+		else return static_cast<T>(::ceil(val));
 	}
 
+	static_assert(compare<float>(ceil(PI * 10e7), 314159266));
+	
 	/// @brief Rounds a number up.
 	/// @tparam T Number type.
 	/// @param val Value to round.
 	/// @param decimals Decimal spaces to round up to.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T ceil(T const val, int const decimals) {
+	constexpr T ceil(T const val, ssize const decimals) {
 		// Get rounding factor
 		T zeros = pow<floatmax>(10, decimals);
 		// Ceil it
-		return (T)(::ceil(val * zeros) / zeros);
+		return static_cast<T>(ceil(val * zeros) / zeros);
 	}
 
 	/// @brief Rounds a number to the nearest integer.
@@ -196,7 +204,7 @@ namespace Math {
 	template<Type::Number T = float>
 	constexpr T round(T const val) {
 		// Add 1/2 & floor it
-		return (T)(::floor(val + 0.5));
+		return static_cast<T>(floor(val + 0.5));
 	}
 
 	/// @brief Rounds a number up to the nearest value.
@@ -205,21 +213,21 @@ namespace Math {
 	/// @param decimals Decimal spaces to round to.
 	/// @return Rounded value.
 	template<Type::Number T = float>
-	constexpr T round(T const val, int const decimals) {
+	constexpr T round(T const val, ssize const decimals) {
 		// Get rounding factor
 		T zeros = pow<floatmax>(10, decimals);
 		// Add 1/2 & floor it
-		return (T)(::floor((val + 0.5) * zeros) / zeros);
+		return static_cast<T>(floor((val + 0.5) * zeros) / zeros);
 	}
 	
 	template<Type::Number T = float>
 	constexpr T fmult(T const val, T const mult) {
-		return ::floor(val / (double)mult) * mult;
+		return floor(val / (double)mult) * mult;
 	}
 
 	template<Type::Number T = float>
 	constexpr T cmult(T const val, T const mult) {
-		return ::ceil(val / (double)mult) * mult;
+		return ceil(val / (double)mult) * mult;
 	}
 
 	/// @brief Returns the remainder of a division between two numbers.

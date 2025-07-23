@@ -28,13 +28,23 @@ namespace Makai::Audio {
 	/// @param formats Audio codecs to enable.
 	/// @param channels Number of output channels. 1 → mono, 2 → stereo, and so on.
 	/// @param audioTracks Number of audio (non-music) tracks.
-	void open(Formats const& formats, uint const channels = 2, uint const audioTracks = 16);
+	/// @param audioTracks Number of music tracks.
+	void open(Formats const& formats, uint const channels = 2, uint const audioTracks = 16, uint const musicTracks = 2);
 
 	/// @brief Restarts the audio subsystem.
 	/// @param formats Audio codecs to enable.
 	/// @param channels Number of output channels. 1 → mono, 2 → stereo, and so on.
 	/// @param audioTracks Number of audio (non-music) tracks.
-	void restart(Formats const& formats, uint const channels = 2, uint const audioTracks = 16);
+	/// @param audioTracks Number of music tracks.
+	void restart(Formats const& formats, uint const channels = 2, uint const audioTracks = 16, uint const musicTracks = 2);
+
+	/// @brief Returns the amount of tracks allocated for audio.
+	/// @return Audio track count.
+	uint getAudioTrackCount();
+
+	/// @brief Returns the amount of tracks allocated for music.
+	/// @return Music track count.
+	uint getMusicTrackCount();
 
 	/// @brief Closes the audio subsystem.
 	void close();
