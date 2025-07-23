@@ -846,8 +846,8 @@ namespace Makai::Ex::AVM::Compiler {
 					}
 					blocks.pushBack(entry);
 					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Stack: ", blocks.size());
-					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", blocks.join());
-					auto const end = blocks.join() + "[end]";
+					MAKAILIB_EX_ANIMA_COMPILER_DEBUGLN("Context: ", getCurrentScopePath());
+					auto const end = getCurrentScopePath() + "[end]";
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
 						.name	= end,
@@ -856,7 +856,7 @@ namespace Makai::Ex::AVM::Compiler {
 					});
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_NEXT,
-						.entry	= blocks.join(),
+						.entry	= getCurrentScopePath(),
 						.pos	= opi,
 						.valPos	= vali
 					});
@@ -878,7 +878,7 @@ namespace Makai::Ex::AVM::Compiler {
 						isInScene = blocks.back().back() == ':';
 						blocks.back().popBack();
 					}
-					auto const end = blocks.join() + "[end]";
+					auto const end = getCurrentScopePath() + "[end]";
 					blocks.popBack();
 					for (auto& fun: functions.stack)
 						if (fun.scope == blocks.size()) {
@@ -975,7 +975,7 @@ namespace Makai::Ex::AVM::Compiler {
 				case (ConstHasher::hash("repeat")): {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
-						.name	= blocks.empty() ? String(GLOBAL_BLOCK) : blocks.join(),
+						.name	= blocks.empty() ? String(GLOBAL_BLOCK) : getCurrentScopePath(),
 						.pos	= opi,
 						.valPos	= vali,
 						.tags	= Token::CHOICE_BIT
@@ -1020,7 +1020,7 @@ namespace Makai::Ex::AVM::Compiler {
 				if (param == "repeat") {
 					tokens.pushBack(Token{
 						.type	= Operation::AVM_O_JUMP,
-						.name	= blocks.empty() ? String(GLOBAL_BLOCK) : blocks.join(),
+						.name	= blocks.empty() ? String(GLOBAL_BLOCK) : getCurrentScopePath(),
 						.pos	= opi,
 						.valPos	= vali,
 						.tags	= Token::CHOICE_BIT
@@ -1121,9 +1121,17 @@ namespace Makai::Ex::AVM::Compiler {
 			return out & (COLOR_MASK | asByte({color[6], color[7]}));
 		}
 
-		constexpr String getScopePath(String const& val) {
+		constexpr String getCurrentScopePath() const {
 			String path;
-			switch (val.front()) {
+			path = blocks.join();
+			if (path.size() && (path.back() == '*' || path.back() == ':'))
+				path.popBack();
+			return path;
+		}
+
+		constexpr String getScopePath(String const& val) const {
+			String path;
+			switch (val.size() ? val.front() : '\0') {
 				case ':': {
 					path = val.substring(1);
 				} break;
