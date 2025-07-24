@@ -331,7 +331,7 @@ struct Span:
 		}
 	}
 
-	/// @brief Apllies a procedure to all elements of the `List`.
+	/// @brief Apllies a procedure to all elements of the `Span`.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
 	/// @return Reference to self.
@@ -340,16 +340,16 @@ struct Span:
 		return transform(fun);
 	}
 
-	/// @brief Returns a `List` of `transform`ed elements.
+	/// @brief Returns a `Span` of `transform`ed elements.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
-	/// @return List of transformed elements.
+	/// @return Span of transformed elements.
 	template <Type::Functional<TransformType> TProcedure>
 	constexpr SelfType operator|(TProcedure const& fun) const {
 		return transformed(fun);
 	}
 
-	/// @brief Apllies a procedure to the `List`.
+	/// @brief Apllies a procedure to the `Span`.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
 	/// @return Reference to self.
@@ -358,16 +358,16 @@ struct Span:
 		return fun(*this);
 	}
 	
-	/// @brief Returns a copy of the list, with the given procedure applied to it.
+	/// @brief Returns a copy of the span, with the given procedure applied to it.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
-	/// @return Transformed list.
+	/// @return Transformed span.
 	template <Type::Functional<SelfType(SelfType const&)> TProcedure>
 	constexpr SelfType operator|(TProcedure const& fun) const {
 		return fun(*this);
 	}
 
-	/// @brief Apllies a procedure to all elements of the `List`.
+	/// @brief Apllies a procedure to all elements of the `Span`.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
 	/// @return Reference to self.
@@ -378,13 +378,31 @@ struct Span:
 		return *this;
 	}
 
-	/// @brief Returns a `List` of `transform`ed elements.
+	/// @brief Returns a `Span` of `transform`ed elements.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
-	/// @return List of transformed elements.
+	/// @return Span of transformed elements.
 	template<Type::Functional<TransformType> TProcedure>
 	constexpr SelfType transformed(TProcedure const& fun) const {
 		return SelfType(*this).transform(fun);
+	}
+
+	
+	/// @brief Returns a `Span` containing all elements located between two indices.
+	/// @param start Starting index to copy from.
+	/// @param stop End index to stop copying from.
+	/// @return `Span` containing elements between `start` and `stop`.
+	/// @throw OutOfBoundsException when indices is bigger than `Span` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `Span`.
+	constexpr SelfType sliced(IndexType start, IndexType stop) const {
+		if (IndexType(count) < start) return SelfType();
+		assertIsInBounds(start);
+		wrapBounds(start, count);
+		if (IndexType(count) < stop) return sliced(start);
+		assertIsInBounds(stop);
+		wrapBounds(stop, count);
+		if (stop < start) return SelfType();
+		return SelfType(cbegin() + start, cbegin() + stop + 1);
 	}
 	
 private:
