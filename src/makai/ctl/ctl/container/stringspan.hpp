@@ -80,6 +80,14 @@ struct BaseStringSpan:
 	constexpr BaseStringSpan(SelfType const& other):
 		BaseType(other) {}
 
+	constexpr SelfType sliced(IndexType const start, IndexType const stop) const {
+		return BaseType::sliced(start, stop);
+	}
+
+	constexpr BaseString<TChar, TIndex> toString() const {
+		return BaseString<TChar, TIndex>(*this);
+	}
+
 private:
 	constexpr static SizeType endOf(ConstPointerType const start) {
 		ConstPointerType end = start;
