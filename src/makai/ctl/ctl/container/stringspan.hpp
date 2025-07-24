@@ -92,7 +92,7 @@ private:
 	constexpr static SizeType endOf(ConstPointerType const start) {
 		ConstPointerType end = start;
 		while(end) ++end;
-		return end - start + 1;
+		return end - start;
 	}
 };
 
