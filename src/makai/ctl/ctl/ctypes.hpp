@@ -103,6 +103,8 @@ typedef int64	llong;
 
 /// @brief Wide character.
 typedef wchar_t	wchar;
+/// @brief UTF-8 character.
+typedef char8_t u8char;
 
 /// @brief Signed byte.
 typedef int8	sbyte;
@@ -163,6 +165,8 @@ typedef void*	pointer;
 
 /// @brief "C-style" string.
 typedef char const*		cstring;
+/// @brief "C-style" UTF-8 string.
+typedef u8char const*	u8cstring;
 /// @brief "C-style" wide string.
 typedef wchar const*	cwstring;
 
