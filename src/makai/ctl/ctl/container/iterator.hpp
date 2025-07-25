@@ -239,7 +239,7 @@ namespace Type::Container {
 	/// @brief Type must have both `data()` and `size()` functions, that return `TPointer` and `TSize`, respectively.
 	template<class T, class TPointer, class TSize>
 	concept Bounded = requires (T t) {
-		{t.data()} -> Type::EqualOrConst<TPointer>;
+		{t.data()} -> Type::OneOf<ref<AsNonPointer<TPointer>>, ref<AsNonPointer<TPointer> const>>;
 		{t.size()} -> Type::Equal<TSize>;
 	};
 
