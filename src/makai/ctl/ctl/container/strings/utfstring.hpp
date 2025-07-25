@@ -24,6 +24,8 @@ namespace UTF {
 		/// @brief Character encoding byte size.
 		constexpr static usize const SIZE	= TYPE >> 3;
 
+		using STLType = char8_t;
+
 		/// @brief Code point mask (utf-8).
 		constexpr static uint32 const CODE_POINT_MASK_U8	= 0x0FFFFFFF;
 		/// @brief Character size mask (utf-8).
@@ -34,17 +36,20 @@ namespace UTF {
 		static_assert(TYPE != 16, "UTF-16 is currently unimplemented!");
 
 		/// @brief Empty constructor.
-		constexpr Character(): id(0)												{}
+		constexpr Character(): id(0)													{}
 		/// @brief Constructs the unicode character from an ASCII character.
-		constexpr Character(char const chr): id(chr | static_cast<uint32>(1 << 28))	{}
-		/// @brief Constructs the unicode character from an unicode character byte string.
+		constexpr Character(char const chr): id(chr | static_cast<uint32>(1 << 28))		{}
+		/// @brief Constructs the unicode character from a character byte string.
 		template<usize C>
-		constexpr Character(As<char const[C]> const& chr): Character(chr, chr + C)	{}
+		constexpr Character(As<char const[C]> const& chr): Character(chr, chr + C)		{}
+		/// @brief Constructs the unicode character from an unicode character literal.
+		template<usize C>
+		constexpr Character(As<STLType const[C]> const& chr): Character(chr, chr + C)	{}
 		/// @brief Constructs the unicode character from a set of bytes.
 		template<usize C>
-		constexpr Character(As<uint8 const[C]> const& chr): Character(chr, chr + C)	{}
+		constexpr Character(As<uint8 const[C]> const& chr): Character(chr, chr + C)		{}
 		/// @brief Constructs the unicode character from a given character ID.
-		constexpr explicit Character(uint32 const id): id(id)						{}
+		constexpr explicit Character(uint32 const id): id(id)							{}
 		/// @brief Constructs the unicode character from a character in a different encoding.
 		template<usize C>
 		constexpr explicit Character(Character<C> const& other)
@@ -69,7 +74,8 @@ namespace UTF {
 		constexpr usize size() const requires (TYPE == 32)	{return 4;										}
 
 		/// @brief Constructs the unicode character from a given range.
-		constexpr explicit Character(cstring begin, cstring const end)
+		template<class T>
+		constexpr explicit Character(ref<T const> begin, ref<T const> const end)
 		requires (TYPE == 8): Character() {
 			As<uint8[4]> buf = {0, 0, 0, 0};
 			if (begin >= end) return;
@@ -87,7 +93,8 @@ namespace UTF {
 		}
 
 		/// @brief Constructs the unicode character from a given range.
-		constexpr explicit Character(cstring bytes, cstring const end) 
+		template<class T>
+		constexpr explicit Character(ref<T const> bytes, ref<T const> const end) 
 		requires (TYPE == 32): Character() {
 			As<uint8[4]> buf = {0, 0, 0, 0};
 			if (bytes >= end) return;
@@ -97,7 +104,8 @@ namespace UTF {
 		}
 
 		/// @brief Converts the unicode character to its UTF code point equivalent.
-		constexpr void toBytes(As<char[4]>& out) const
+		template<class T>
+		constexpr void toBytes(As<T[4]>& out) const
 		requires (TYPE == 8) {
 			auto const cid = value();
 			auto sz = size();
@@ -113,30 +121,32 @@ namespace UTF {
 			switch (sz) {
 			default:
 			case 1:
-				out[0] = bitcast<char>(static_cast<uint8>(cid & 0b0111'1111));
+				out[0] = bitcast<T>(static_cast<uint8>(cid & 0b0111'1111));
 			break;
 			case 2:
-				out[0] = bitcast<char>(static_cast<uint8>(0b1100'0000 | ((cid & (0b0001'1111 << 6)) >> 6)));
-				out[1] = bitcast<char>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
+				out[0] = bitcast<T>(static_cast<uint8>(0b1100'0000 | ((cid & (0b0001'1111 << 6)) >> 6)));
+				out[1] = bitcast<T>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
 			break;
 			case 3:
-				out[0] = bitcast<char>(static_cast<uint8>(0b1110'0000 | ((cid & (0b0000'1111 << 12)) >> 12)));
-				out[1] = bitcast<char>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
-				out[2] = bitcast<char>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
+				out[0] = bitcast<T>(static_cast<uint8>(0b1110'0000 | ((cid & (0b0000'1111 << 12)) >> 12)));
+				out[1] = bitcast<T>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
+				out[2] = bitcast<T>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
 			break;
 			case 4:
-				out[0] = bitcast<char>(static_cast<uint8>(0b1111'0000 | ((cid & (0b0000'0111 << 18)) >> 18)));
-				out[1] = bitcast<char>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 12)) >> 12)));
-				out[2] = bitcast<char>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
-				out[3] = bitcast<char>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
+				out[0] = bitcast<T>(static_cast<uint8>(0b1111'0000 | ((cid & (0b0000'0111 << 18)) >> 18)));
+				out[1] = bitcast<T>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 12)) >> 12)));
+				out[2] = bitcast<T>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
+				out[3] = bitcast<T>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
 			break;
 			}
 		}
 
 		/// @brief Converts the unicode character to its UTF code point equivalent.
-		constexpr void toBytes(As<char[6]>& out) const
+		template<class T>
+		constexpr void toBytes(As<T[4]>& out) const
 		requires (TYPE == 32) {
-			out[0] = out[1] = out[2] = out[3] = 0;
+			for (usize i = 0; i < 4; ++i)
+				out[i] = 0;
 			for (usize i = 0; i < 4; ++i)
 				out[i] = bitcast<char>(static_cast<uint8>((id >> (i * 8)) & 0xFF));
 		}
@@ -201,7 +211,7 @@ namespace UTF {
 	namespace {
 		consteval bool doEncodeTest() {
 			auto const repc = "�";
-			As<char[4]> buf;
+			As<AsNormal<decltype(repc[0])>[4]> buf;
 			REP_CHAR<8>.toBytes(buf);
 			if (buf[0] != repc[0]) return false;
 			if (buf[1] != repc[1]) return false;
@@ -1450,6 +1460,25 @@ namespace UTF {
 			out.tighten();
 			return out;
 		}
+
+		/// @brief Converts the string to a different encoding.
+		/// @tparam NE New encoding.
+		/// @return String as new encoding.
+		template<usize NE>
+		constexpr UTFString<NE> toEncoding() const
+		requires (UTF != NE) {
+			UTFString<NE> out;
+			out.reserve(size());
+			for (auto const& ch: this)
+				out.pushBack(ch);
+			return out;
+		}
+
+		/// @brief Converts the string to a different encoding.
+		/// @tparam NE New encoding.
+		/// @return String as new encoding.
+		template<usize NE>
+		constexpr UTFString<NE> toEncoding() const requires (UTF == NE) {return *this;}
 
 	private:
 		[[noreturn]] void invalidNumberError(typename String::CStringType const& v) const {
