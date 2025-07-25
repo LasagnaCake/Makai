@@ -1599,10 +1599,6 @@ namespace UTF {
 		constexpr UTFString<NE> toEncoding() const requires (UTF == NE) {return *this;}
 
 	private:
-		[[noreturn]] void invalidNumberError(typename String::CStringType const& v) const {
-			throw InvalidValueException("Not a valid number!");
-		}
-
 		void assertIsInBounds(IndexType const index) const {
 			if (index >= 0 && usize(index) > (size()-1)) outOfBoundsError(index);
 		}
