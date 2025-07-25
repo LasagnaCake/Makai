@@ -87,7 +87,7 @@ namespace UTF {
 			while ((lead << sz) & 0b10000000 && sz < 4) ++sz;
 			for (usize i = 1; (i < sz && begin < end); ++i)
 				buf[i] = *begin++;
-			id = codePoint(buf, sz) | ((sz-1) << 28);
+			id = toScalar(buf, sz) | ((sz-1) << 28);
 		}
 
 		/// @brief Constructs the unicode character from a given range.
@@ -98,7 +98,7 @@ namespace UTF {
 			if (bytes >= end) return;
 			for (usize i = 1; (i < 4 && bytes < end); ++i)
 				buf[i] = *bytes++;
-			id = codePoint(buf, 4);
+			id = toScalar(buf, 4);
 		}
 
 		/// @brief Converts the unicode character to its UTF code point equivalent.
@@ -115,26 +115,26 @@ namespace UTF {
 				;
 			for (usize i = 0; i < 4; ++i)
 				out[i] = 0;
-			// This could be done in a loop, probably
+			// This could be done in WAY better ways, but brain is bricked
 			switch (sz) {
 			default:
 			case 1:
-				out[0] = bitcast<T>(static_cast<uint8>(cid & 0b0111'1111));
+				out[0] = recast<T>(cid & 0b0111'1111);
 			break;
 			case 2:
-				out[0] = bitcast<T>(static_cast<uint8>(0b1100'0000 | ((cid & (0b0001'1111 << 6)) >> 6)));
-				out[1] = bitcast<T>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
+				out[0] = recast<T>(0b1100'0000 | ((cid >> 6) & 0b0001'1111));
+				out[1] = recast<T>(0b1000'0000 | (cid & 0b0011'1111));
 			break;
 			case 3:
-				out[0] = bitcast<T>(static_cast<uint8>(0b1110'0000 | ((cid & (0b0000'1111 << 12)) >> 12)));
-				out[1] = bitcast<T>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
-				out[2] = bitcast<T>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
+				out[0] = recast<T>(0b1110'0000 | ((cid >> 12) & 0b0000'1111));
+				out[1] = recast<T>(0b1000'0000 | ((cid >> 6) & 0b0011'1111));
+				out[2] = recast<T>(0b1000'0000 | (cid & 0b0011'1111));
 			break;
 			case 4:
-				out[0] = bitcast<T>(static_cast<uint8>(0b1111'0000 | ((cid & (0b0000'0111 << 18)) >> 18)));
-				out[1] = bitcast<T>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 12)) >> 12)));
-				out[2] = bitcast<T>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
-				out[3] = bitcast<T>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
+				out[1] = recast<T>(0b1110'0000 | ((cid >> 18) & 0b0000'0111));
+				out[1] = recast<T>(0b1110'0000 | ((cid >> 12) & 0b0011'1111));
+				out[2] = recast<T>(0b1000'0000 | ((cid >> 6) & 0b0011'1111));
+				out[3] = recast<T>(0b1000'0000 | (cid & 0b0011'1111));
 			break;
 			}
 		}
@@ -150,34 +150,34 @@ namespace UTF {
 		}
 
 		/// @brief Converts an unicode code point to a scalar value.
-		constexpr static uint32 codePoint(As<uint8 const[4]> const& bytes, usize const sz) 
+		constexpr static uint32 toScalar(As<uint8 const[4]> const& bytes, usize const sz) 
 		requires (TYPE == 8) {
 			uint32 chr{0};
 			switch (sz) {
 			case 4:
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[0])) & 0b00000111) << 18;
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[1])) & 0b00111111) << 12;
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[2])) & 0b00111111) << 6;
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[3])) & 0b00111111);
+				chr |= (recast<uint32>(bytes[0]) & 0b00000111) << 18;
+				chr |= (recast<uint32>(bytes[1]) & 0b00111111) << 12;
+				chr |= (recast<uint32>(bytes[2]) & 0b00111111) << 6;
+				chr |= (recast<uint32>(bytes[3]) & 0b00111111);
 			break;
 			case 3:
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[0])) & 0b00001111) << 12;
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[1])) & 0b00111111) << 6;
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[2])) & 0b00111111);
+				chr |= (recast<uint32>(bytes[0]) & 0b00001111) << 12;
+				chr |= (recast<uint32>(bytes[1]) & 0b00111111) << 6;
+				chr |= (recast<uint32>(bytes[2]) & 0b00111111);
 			break;
 			case 2:
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[0])) & 0b00011111) << 6;
-				chr |= (bitcast<uint32>(static_cast<int32>(bytes[1])) & 0b00111111);
+				chr |= (recast<uint32>(bytes[0]) & 0b00011111) << 6;
+				chr |= (recast<uint32>(bytes[1]) & 0b00111111);
 			break;
 			case 1:
-				chr |= bitcast<uint32>(static_cast<int32>(bytes[1]));
+				chr |= recast<uint32>(bytes[1]);
 			break;
 			}
 			return chr & CODE_POINT_MASK_U8;
 		}
 
 		/// @brief Converts an unicode code point to a scalar value.
-		constexpr static uint32 codePoint(As<uint8 const[4]> const& bytes, usize const sz) 
+		constexpr static uint32 toScalar(As<uint8 const[4]> const& bytes, usize const sz) 
 		requires (TYPE == 32) {
 			return bitcast<uint32>(bytes);
 		}
@@ -189,6 +189,12 @@ namespace UTF {
 
 	private:
 		uint32 id = 0;
+
+		template<class TDst, class TSrc>
+		constexpr static TDst recast(TSrc const& src) {
+			using PassType = Meta::DualType<Type::Unsigned<TSrc>, AsUnsigned<TDst>, AsSigned<TDst>>;
+			return bitcast<TDst>(static_cast<PassType>(src));	
+		}
 
 		constexpr void updateCodeSize() requires (TYPE == 32) {}
 	};
@@ -1583,7 +1589,7 @@ namespace UTF {
 		/// @tparam NE New encoding.
 		/// @return String as new encoding.
 		template<usize NE>
-		constexpr UTFString<NE> toEncoding() const
+		constexpr UTFString<NE> toUTF() const
 		requires (UTF != NE) {
 			UTFString<NE> out;
 			out.reserve(size());
@@ -1596,7 +1602,14 @@ namespace UTF {
 		/// @tparam NE New encoding.
 		/// @return String as new encoding.
 		template<usize NE>
-		constexpr UTFString<NE> toEncoding() const requires (UTF == NE) {return *this;}
+		constexpr UTFString<NE> toUTF() const requires (UTF == NE) {return *this;}
+
+		/// @brief Converts the string to an UTF-8 string.
+		/// @return String as new encoding.
+		constexpr UTFString<8> toUTF8() const	{return toUTF<8>();		}
+		/// @brief Converts the string to an UTF-32 string.
+		/// @return String as new encoding.
+		constexpr UTFString<32> toUTF32() const	{return toUTF<32>();	}
 
 	private:
 		void assertIsInBounds(IndexType const index) const {
@@ -1616,21 +1629,20 @@ namespace UTF {
 		}
 	};
 
-	using U8String	= UTFString<8>;
-	using U16String	= UTFString<16>;
-	using U32String	= UTFString<32>;
+	template<usize S>
+	using UString	= UTFString<S>;
 
-	using U8Char	= typename UTFString<8>::DataType;
-	using U16Char	= typename UTFString<16>::DataType;
-	using U32Char	= typename UTFString<32>::DataType;
+	using U8String	= UString<8>;
+	using U32String	= UString<32>;
+
+	using U8Char	= typename UString<8>::DataType;
+	using U32Char	= typename UString<32>::DataType;
 }
 
 using UTF8String	= UTF::U8String;
-using UTF16String	= UTF::U16String;
 using UTF32String	= UTF::U32String;
 
 using UTF8Char	= UTF::U8Char;
-using UTF16Char	= UTF::U16Char;
 using UTF32Char	= UTF::U32Char;
 
 #pragma GCC diagnostic push
