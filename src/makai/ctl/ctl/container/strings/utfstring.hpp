@@ -405,9 +405,9 @@ namespace UTF {
 		/// @param end Iterator to end of range.
 		constexpr UTFString(ConstIteratorType const& begin, ConstIteratorType const& end) {
 			if (end <= begin) return;
-			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
+			BaseType::resize(end - begin + (*(end-1) == DataType('\0') ? 1 : 2));
 			BaseType::appendBack(begin, end);
-			if (BaseType::back() != '\0')
+			if (BaseType::back() != DataType('\0'))
 				BaseType::pushBack('\0');
 			BaseType::tighten();
 		}
@@ -417,9 +417,9 @@ namespace UTF {
 		/// @param end Reverse iterator to end of range.
 		constexpr UTFString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 			if (end <= begin) return;
-			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
+			BaseType::resize(end - begin + (*(end-1) == DataType('\0') ? 1 : 2));
 			BaseType::appendBack(begin, end);
-			if (BaseType::back() != '\0')
+			if (BaseType::back() != DataType('\0'))
 				BaseType::pushBack('\0');
 			BaseType::tighten();
 		}
@@ -1619,11 +1619,19 @@ namespace UTF {
 	using U8String	= UTFString<8>;
 	using U16String	= UTFString<16>;
 	using U32String	= UTFString<32>;
+
+	using U8Char	= typename UTFString<8>::DataType;
+	using U16Char	= typename UTFString<16>::DataType;
+	using U32Char	= typename UTFString<32>::DataType;
 }
 
 using UTF8String	= UTF::U8String;
 using UTF16String	= UTF::U16String;
 using UTF32String	= UTF::U32String;
+
+using UTF8Char	= UTF::U8Char;
+using UTF16Char	= UTF::U16Char;
+using UTF32Char	= UTF::U32Char;
 
 #pragma GCC diagnostic push
 #ifndef __clang__
@@ -1634,9 +1642,9 @@ using UTF32String	= UTF::U32String;
 /// @brief String literals.
 namespace Literals::Text::Unicode {
 	/// @brief CTL `UTF8String` literal.
-	constexpr UTF8String operator "" u8		(cstring cstr, usize sz)	{return UTF8String(cstr, sz);	}
+	constexpr UTF8String operator "" u8s	(cstring cstr, usize sz)	{return UTF8String(cstr, sz);	}
 	/// @brief CTL `UTF32String` literal.
-	constexpr UTF32String operator "" u32	(cstring cstr, usize sz)	{return UTF32String(cstr, sz);	}
+	constexpr UTF32String operator "" u32s	(cstring cstr, usize sz)	{return UTF32String(cstr, sz);	}
 }
 
 CTL_NAMESPACE_END

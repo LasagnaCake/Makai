@@ -2,6 +2,8 @@
 #include <ctlex/ctlex.hpp>
 
 using
+	CTL::UTF8String,
+	CTL::UTF8Char,
 	CTL::String,
 	CTL::BaseListMap,
 	CTL::OrderedMap,
@@ -14,7 +16,8 @@ using
 
 using namespace CTL::Literals::Text;
 
-void print(String const& str) {
+template<class T>
+void print(T const& str) {
 	DEBUGLN(
 		"S: ",
 		str.size(),
@@ -57,8 +60,8 @@ void print(List<T> const& lst) {
 	);
 }
 
-template<typename I, bool S>
-void printMap(BaseListMap<String, String, I, S> const& m) {
+template<class T, typename I, bool S>
+void printMap(BaseListMap<T, T, I, S> const& m) {
 	DEBUG(
 		"S: ",
 		m.size(),
@@ -72,8 +75,8 @@ void printMap(BaseListMap<String, String, I, S> const& m) {
 	DEBUGLN("];");
 }
 
-template<typename I>
-void printMap(TreeMap<String, String, I> const& m) {
+template<class T, typename I>
+void printMap(TreeMap<T, T, I> const& m) {
 	DEBUG("(M) ");
 	DEBUG(
 		"S: ",
@@ -86,8 +89,8 @@ void printMap(TreeMap<String, String, I> const& m) {
 	DEBUGLN("];");
 }
 
-template<typename I, bool S>
-void printMap(BaseListMap<String, String, I, S> const& m, String const& k) {
+template<typename T, typename I, bool S>
+void printMap(BaseListMap<T, T, I, S> const& m, T const& k) {
 	auto r = m.search(k);
 	if (r != -1)
 		CTL::Console::println("K: ", k, ", L: ", r, ", V: ", m[k]);
@@ -95,8 +98,8 @@ void printMap(BaseListMap<String, String, I, S> const& m, String const& k) {
 		CTL::Console::println("K: ", k, ", L: ", r);
 }
 
-template<typename I>
-void printMap(TreeMap<String, String, I> const& m, String const& k) {
+template<typename T, typename I>
+void printMap(TreeMap<T, T, I> const& m, T const& k) {
 	if (m.contains(k))
 		CTL::Console::println("K: ", k, ", V: ", m[k]);
 	else
@@ -117,9 +120,23 @@ void testString() {
 	sp.sort();							print(sp);
 }
 
-template<template<typename K, typename V> class TMap = ListMap>
+void testUTF8String() {
+	UTF8String str;						print(str);
+	str = "Henlo.";						print(str);
+	str += " You?";						print(str);
+	str = "O! " + str;					print(str);
+	print(str.sliced(2, -3));
+	str = "Impedance. Voltage. Current."s;
+	print(str);
+	auto sp = str.splitAtFirst(UTF8Char(' '));	print(sp);
+	sp = str.splitAtLast(UTF8Char(' '));		print(sp);
+	sp = str.split(UTF8Char(' '));				print(sp);
+	sp.sort();									print(sp);
+}
+
+template<template<typename K, typename V> class TMap = ListMap, class T = String>
 void testStringMap() {
-	using MapType = TMap<String, String>;
+	using MapType = TMap<T, T>;
 	DEBUGLN("<", TypeInfo<MapType>::name(), ">");
 	MapType mp = MapType({
 		{"Avocado", "Abacate"},
@@ -131,10 +148,10 @@ void testStringMap() {
 		{"Papaya", "Mamao"},
 	}); printMap(mp);
 	mp["Kiwi"] = "Kiwi";	printMap(mp);
-	printMap(mp, "Orange");
-	printMap(mp, "Papaya");
-	printMap(mp, "Grape");
-	printMap(mp, "Pineapple");
+	printMap(mp, T("Orange"));
+	printMap(mp, T("Orange"));
+	printMap(mp, T("Orange"));
+	printMap(mp, T("Orange"));
 	// ERROR: `OrderedMap` causes `AllocationFailure` here
 	//printMap(mp, "Avocado");
 	mp.insert({
@@ -174,6 +191,8 @@ int main() {
 	testStringMap<OrderedMap>();
 	testStringMap<TreeMap>();
 	testStringConversion();
+	DEBUGLN("Testing UTF-8 String...");
+	testUTF8String();
 	DEBUGLN("String test passed!");
 	return 0;
 }

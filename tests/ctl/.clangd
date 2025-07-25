@@ -1,0 +1,18 @@
+CompileFlags:
+  Add:
+   - -std=gnu++20
+   - -Wall
+   - -Wpedantic
+   - -fms-extensions
+   - -fcoroutines
+   - -m64
+   - -I../../src/makai/ctl
+Index:
+  Background: Skip
+Diagnostics:
+  UnusedIncludes: None
+Completion:
+  HeaderInsertion: Never
+  ArgumentLists: Delimiters
+InlayHints:
+  Enabled: False
