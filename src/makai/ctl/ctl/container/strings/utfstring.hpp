@@ -48,12 +48,15 @@ namespace UTF {
 		/// @brief Constructs the unicode character from a character in a different encoding.
 		template<usize C>
 		constexpr explicit Character(Character<C> const& other)
-		requires (C != TYPE): Character(other.data.id)								{}
+		requires (C != TYPE): Character(other.value())							{updateCodeSize();}
 		/// @brief Copy constructor.
 		constexpr Character(Character const& other): Character(other.id)		{}
 
 		/// @brief Returns the unicode scalar value for this character.
 		constexpr operator uint32() const {return value();}
+
+		/// @brief Returns the underlying ID for this character.
+		constexpr uint32 raw() const {return id;}
 
 		/// @brief Returns the unicode scalar value for this character.
 		constexpr uint32 value() const requires (TYPE == 8)		{return id & CODE_POINT_MASK_U8;	}
@@ -61,9 +64,9 @@ namespace UTF {
 		constexpr uint32 value() const requires (TYPE == 32)	{return id;							}
 
 		/// @brief Returns the unicode character size.
-		constexpr usize size() const requires (TYPE == 8)	{return (id & CODE_SIZE_MASK_U8) >> 28;	}
+		constexpr usize size() const requires (TYPE == 8)	{return ((id & CODE_SIZE_MASK_U8) >> 28) + 1;	}
 		/// @brief Returns the unicode character size.
-		constexpr usize size() const requires (TYPE == 32)	{return 4;								}
+		constexpr usize size() const requires (TYPE == 32)	{return 4;										}
 
 		/// @brief Constructs the unicode character from a given range.
 		constexpr explicit Character(cstring begin, cstring const end)
@@ -74,13 +77,13 @@ namespace UTF {
 			char const lead = *begin++;
 			buf[sz++] = lead;
 			if (!(lead & 0b10000000)) {
-				id = lead | 1 << 28;
+				id = lead;
 				return;
 			}
 			while ((lead << sz) & 0b10000000 && sz < 4) ++sz;
 			for (usize i = 1; (i < sz && begin < end); ++i)
 				buf[i] = *begin++;
-			id = codePoint(buf, sz) | (sz << 28);
+			id = codePoint(buf, sz) | ((sz-1) << 28);
 		}
 
 		/// @brief Constructs the unicode character from a given range.
@@ -104,27 +107,28 @@ namespace UTF {
 				+	bool(id & (1 << 12))
 				+	bool(id & (1 << 18))
 				;
-			MX::memzero(out, 4);
+			for (usize i = 0; i < 4; ++i)
+				out[i] = 0;
 			// This could be done in a loop, probably
 			switch (sz) {
 			default:
 			case 1:
-				out[0] = bitcast<char>(cid & 0b0111'1111);
+				out[0] = bitcast<char>(static_cast<uint8>(cid & 0b0111'1111));
 			break;
 			case 2:
-				out[0] = bitcast<char>(0b1100'0000 | ((cid & (0b0001'1111 << 6)) >> 6));
-				out[1] = bitcast<char>(0b1000'0000 | (cid & 0b0011'1111));
+				out[0] = bitcast<char>(static_cast<uint8>(0b1100'0000 | ((cid & (0b0001'1111 << 6)) >> 6)));
+				out[1] = bitcast<char>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
 			break;
 			case 3:
-				out[0] = bitcast<char>(0b1110'0000 | ((cid & (0b0000'1111 << 12)) >> 12));
-				out[1] = bitcast<char>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6));
-				out[2] = bitcast<char>(0b1000'0000 | (cid & 0b0011'1111));
+				out[0] = bitcast<char>(static_cast<uint8>(0b1110'0000 | ((cid & (0b0000'1111 << 12)) >> 12)));
+				out[1] = bitcast<char>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
+				out[2] = bitcast<char>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
 			break;
 			case 4:
-				out[0] = bitcast<char>(0b1111'0000 | ((cid & (0b0000'0111 << 18)) >> 18));
-				out[1] = bitcast<char>(0b1000'0000 | ((cid & (0b0011'1111 << 12)) >> 12));
-				out[2] = bitcast<char>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6));
-				out[3] = bitcast<char>(0b1000'0000 | (cid & 0b0011'1111));
+				out[0] = bitcast<char>(static_cast<uint8>(0b1111'0000 | ((cid & (0b0000'0111 << 18)) >> 18)));
+				out[1] = bitcast<char>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 12)) >> 12)));
+				out[2] = bitcast<char>(static_cast<uint8>(0b1000'0000 | ((cid & (0b0011'1111 << 6)) >> 6)));
+				out[3] = bitcast<char>(static_cast<uint8>(0b1000'0000 | (cid & 0b0011'1111)));
 			break;
 			}
 		}
@@ -177,13 +181,8 @@ namespace UTF {
 
 	private:
 		uint32 id = 0;
-		constexpr void updateCodeSize() {
-			id = static_cast<uint32>(
-			+	bool(id & (1 << 6))
-			+	bool(id & (1 << 12))
-			+	bool(id & (1 << 18))
-			) << 28;
-		}
+
+		constexpr void updateCodeSize() requires (TYPE == 32) {}
 	};
 
 	static_assert(sizeof(Character<8>) == sizeof(uint32));
@@ -194,7 +193,24 @@ namespace UTF {
 	template<usize S>
 	constexpr Character<S> const REP_CHAR = Character<S>(Character<8>("�"));
 
-	static_assert(REP_CHAR<8>.value());
+	static_assert(REP_CHAR<8>.value() == 0xFFFD);
+	static_assert(REP_CHAR<32>.value() == 0xFFFD);
+	static_assert(REP_CHAR<8>.size() == 3);
+	static_assert(REP_CHAR<32>.size() == 4);
+
+	namespace {
+		consteval bool doEncodeTest() {
+			auto const repc = "�";
+			As<char[4]> buf;
+			REP_CHAR<8>.toBytes(buf);
+			if (buf[0] != repc[0]) return false;
+			if (buf[1] != repc[1]) return false;
+			if (buf[2] != repc[2]) return false;
+			return true;
+		}
+	}
+
+	static_assert(doEncodeTest());
 
 	/// @brief Dynamic unicode strings.
 	/// @tparam UTF encoding. MUST be `8` or `32`.
