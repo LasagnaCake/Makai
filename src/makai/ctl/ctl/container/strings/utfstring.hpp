@@ -62,14 +62,14 @@ namespace UTF {
 		constexpr uint32 raw() const {return id;}
 
 		/// @brief Returns the unicode scalar value for this character.
-		constexpr uint32 value() const requires (TYPE == 8)		{return id & CODE_POINT_MASK_U8;	}
+		constexpr uint32 value() const requires (TYPE == 8)		{return id & CODE_POINT_MASK_U8;				}
 		/// @brief Returns the unicode scalar value for this character.
-		constexpr uint32 value() const requires (TYPE == 32)	{return id;							}
+		constexpr uint32 value() const requires (TYPE == 32)	{return id;										}
 
 		/// @brief Returns the unicode character size.
-		constexpr usize size() const requires (TYPE == 8)	{return ((id & CODE_SIZE_MASK_U8) >> 28) + 1;	}
+		constexpr usize size() const requires (TYPE == 8)		{return ((id & CODE_SIZE_MASK_U8) >> 28) + 1;	}
 		/// @brief Returns the unicode character size.
-		constexpr usize size() const requires (TYPE == 32)	{return 4;										}
+		constexpr usize size() const requires (TYPE == 32)		{return 4;										}
 
 		/// @brief Constructs the unicode character from a given range.
 		template<class T>
