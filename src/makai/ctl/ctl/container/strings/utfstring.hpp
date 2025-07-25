@@ -24,8 +24,6 @@ namespace UTF {
 		/// @brief Character encoding byte size.
 		constexpr static usize const SIZE	= TYPE >> 3;
 
-		using STLType = char8_t;
-
 		/// @brief Code point mask (utf-8).
 		constexpr static uint32 const CODE_POINT_MASK_U8	= 0x0FFFFFFF;
 		/// @brief Character size mask (utf-8).
@@ -44,7 +42,7 @@ namespace UTF {
 		constexpr Character(As<char const[C]> const& chr): Character(chr, chr + C)		{}
 		/// @brief Constructs the unicode character from an unicode character literal.
 		template<usize C>
-		constexpr Character(As<STLType const[C]> const& chr): Character(chr, chr + C)	{}
+		constexpr Character(As<u8char const[C]> const& chr): Character(chr, chr + C)	{}
 		/// @brief Constructs the unicode character from a set of bytes.
 		template<usize C>
 		constexpr Character(As<uint8 const[C]> const& chr): Character(chr, chr + C)		{}
@@ -355,7 +353,7 @@ namespace UTF {
 		/// @tparam S Size of array.
 		/// @param values Characters to add to `UTFString`.
 		template<SizeType S>
-		constexpr UTFString(As<typename DataType::STLType const[S]> const& values): UTFString(values, values + S) {}
+		constexpr UTFString(As<u8char const[S]> const& values): UTFString(values, values + S) {}
 
 		/// @brief Constructs an `UTFString` from a "C-style" range of characters.
 		/// @param start Start of range.
@@ -365,7 +363,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a "C-style" range of characters.
 		/// @param start Start of range.
 		/// @param size Size of range.
-		constexpr explicit UTFString(typename DataType::STLType const start, SizeType const size): UTFString(start, start + size) {}
+		constexpr explicit UTFString(u8char const start, SizeType const size): UTFString(start, start + size) {}
 
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
@@ -419,10 +417,10 @@ namespace UTF {
 			BaseType::tighten();
 		}
 
-		using U8IteratorType				= Iterator<typename DataType::STLType, false, SizeType>;
-		using U8ReverseIteratorType			= Iterator<typename DataType::STLType, true, SizeType>;
-		using U8ConstIteratorType			= Iterator<typename DataType::STLType const, false, SizeType>;
-		using U8ConstReverseIteratorType	= Iterator<typename DataType::STLType const, true, SizeType>;
+		using U8IteratorType				= Iterator<u8char, false, SizeType>;
+		using U8ReverseIteratorType			= Iterator<u8char, true, SizeType>;
+		using U8ConstIteratorType			= Iterator<u8char const, false, SizeType>;
+		using U8ConstReverseIteratorType	= Iterator<u8char const, true, SizeType>;
 
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
@@ -495,14 +493,14 @@ namespace UTF {
 		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
-		template<Type::Container::Bounded<ref<typename DataType::STLType>, SizeType> T>
+		template<Type::Container::Bounded<ref<u8char>, SizeType> T>
 		constexpr explicit UTFString(T const& other)
 		requires (!Type::Container::Ranged<T, U8IteratorType, U8ConstIteratorType>):
 			UTFString(other.data(), other.size()) {}
 
 		/// @brief Constructs an `UTFString` from a null-terminated string.
 		/// @param v String to copy from.
-		constexpr UTFString(cstring const& v) {
+		constexpr UTFString(cstring const v) {
 			SizeType len = 0;
 			while (v[len++] != '\0' && len <= MAX_SIZE);
 			BaseType::reserve(len);
@@ -510,6 +508,15 @@ namespace UTF {
 			BaseType::tighten();
 		}
 
+		/// @brief Constructs an `UTFString` from a null-terminated unicode string.
+		/// @param v String to copy from.
+		constexpr UTFString(ref<u8char const> const v) {
+			SizeType len = 0;
+			while (v[len++] != bitcast<u8char>('\0') && len <= MAX_SIZE);
+			BaseType::reserve(len);
+			BaseType::appendBack(BaseType(v, v+len));
+			BaseType::tighten();
+		}
 		
 		/// @brief Constructos an `UTFString` from a STL view analog.
 		/// @param str View to copy from.
