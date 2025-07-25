@@ -2,7 +2,7 @@
 #define CTL_REGEX_CORE_H
 
 #include "../namespace.hpp"
-#include "../container/string.hpp"
+#include "../container/strings/string.hpp"
 #include "../container/error.hpp"
 
 #pragma GCC diagnostic push

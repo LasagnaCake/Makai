@@ -2,7 +2,7 @@
 #define CTL_OS_SYSTEM_H
 
 #include "../namespace.hpp"
-#include "../container/string.hpp"
+#include "../container/strings/string.hpp"
 #include "../container/error.hpp"
 #include "../regex/core.hpp"
 #include "filesystem.hpp"

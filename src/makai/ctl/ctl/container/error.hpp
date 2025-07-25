@@ -1,7 +1,7 @@
 #ifndef CTL_CUSTOM_RUNTIME_ERRORS_H
 #define CTL_CUSTOM_RUNTIME_ERRORS_H
 
-#include "string.hpp"
+#include "strings/strings.hpp"
 #include "../cpperror.hpp"
 #include "../cpp/sourcefile.hpp"
 

@@ -3,7 +3,7 @@
 
 #include "../namespace.hpp"
 #include "map/map.hpp"
-#include "string.hpp"
+#include "strings/strings.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -29,7 +29,7 @@ using TreeDictionary	= TreeMap<String, TValue, TIndex>;
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.
 template<class TValue, Type::Integer TIndex = usize>
-using Dictionary		= TreeDictionary<TValue, TIndex>;
+using Dictionary		= ListDictionary<TValue, TIndex>;
 
 CTL_NAMESPACE_END
 

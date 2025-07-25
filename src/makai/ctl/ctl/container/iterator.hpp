@@ -89,6 +89,11 @@ public:
 	/// @param other `Iterator` to move from.
 	constexpr Iterator(SelfType&& other): iterand(CTL::move(other.iterand))			{}
 
+	/// @brief Copy assignment operator.
+	constexpr Iterator& operator=(Iterator const& other)	= default;
+	/// @brief Move assignment operator.
+	constexpr Iterator& operator=(Iterator&& other)			= default;
+
 	/// @brief Returns the underlying pointer.
 	/// @return Underlying pointer.
 	constexpr PointerType raw() const {return iterand;}
@@ -140,19 +145,19 @@ public:
 	/// @brief Subtracts an offset from the `Iterator`.
 	/// @param value The offset to subtract from.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator-(IndexType const value) const	{return offset(value);				}
+	constexpr SelfType operator-(IndexType const value) const	{return SelfType(offset(value));	}
 	/// @brief Subtracts an offset from the `Iterator`.
 	/// @param value The offset to subtract from.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator-(IndexType const value)			{return offset(value);				}
+	constexpr SelfType operator-(IndexType const value)			{return SelfType(offset(value));	}
 	/// @brief Adds an offset to the `Iterator`.
 	/// @param value The offset to add.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator+(IndexType const value) const	{return offset(-value);				}
+	constexpr SelfType operator+(IndexType const value) const	{return SelfType(offset(-value));	}
 	/// @brief Adds an offset to the `Iterator`.
 	/// @param value The offset to add.
 	/// @return Offset Resulting offset `Iterator`.
-	constexpr SelfType operator+(IndexType const value)			{return offset(-value);				}
+	constexpr SelfType operator+(IndexType const value)			{return SelfType(offset(-value));	}
 
 	/// @brief Constant iteratpr type conversion.
 	constexpr operator ConstSelfType() const requires(!CONSTANT)			{return iterand;}

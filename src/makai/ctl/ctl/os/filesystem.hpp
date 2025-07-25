@@ -3,7 +3,7 @@
 
 #include <filesystem>
 #include "../namespace.hpp"
-#include "../container/string.hpp"
+#include "../container/strings/string.hpp"
 #include "../container/error.hpp"
 #include "../algorithm/strconv.hpp"
 

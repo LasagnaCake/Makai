@@ -1,21 +1,21 @@
-#ifndef CTL_CONTAINER_STRING_H
-#define CTL_CONTAINER_STRING_H
+#ifndef CTL_CONTAINER_STRINGS_STRING_H
+#define CTL_CONTAINER_STRINGS_STRING_H
 
 #include <stdlib.h>
 #include <string_view>
 #include <string>
 
-#include "lists/list.hpp"
-#include "array.hpp"
-#include "pair.hpp"
-#include "arguments.hpp"
-#include "../typeinfo.hpp"
-#include "../cpperror.hpp"
-#include "../io/stream.hpp"
-#include "../algorithm/aton.hpp"
-#include "../algorithm/transform.hpp"
-#include "../algorithm/validate.hpp"
-#include "../typetraits/traits.hpp"
+#include "../lists/list.hpp"
+#include "../array.hpp"
+#include "../pair.hpp"
+#include "../arguments.hpp"
+#include "../../typeinfo.hpp"
+#include "../../cpperror.hpp"
+#include "../../io/stream.hpp"
+#include "../../algorithm/aton.hpp"
+#include "../../algorithm/transform.hpp"
+#include "../../algorithm/validate.hpp"
+#include "../../typetraits/traits.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -30,14 +30,14 @@ template<
 >
 struct BaseString:
 	private List<TChar, TIndex, TAlloc>,
-	public SelfIdentified<BaseString<TChar, TIndex>>,
-	public Derived<List<TChar, TIndex>>,
+	public SelfIdentified<BaseString<TChar, TIndex, TAlloc>>,
+	public Derived<List<TChar, TIndex, TAlloc>>,
 	public CStringable<TChar>,
 	public Streamable<TChar> {
 public:
 	using Iteratable		= ::CTL::Iteratable<TChar, TIndex>;
-	using SelfIdentified	= ::CTL::SelfIdentified<BaseString<TChar, TIndex>>;
-	using Derived			= ::CTL::Derived<List<TChar, TIndex>>;
+	using SelfIdentified	= ::CTL::SelfIdentified<BaseString<TChar, TIndex, TAlloc>>;
+	using Derived			= ::CTL::Derived<List<TChar, TIndex, TAlloc>>;
 	using Streamable		= ::CTL::Streamable<TChar>;
 	using CStringable		= ::CTL::CStringable<TChar>;
 
@@ -217,7 +217,7 @@ public:
 	/// @brief Destructor.
 	constexpr ~BaseString() {}
 	
-	/// @brief Constructs a `BaseString` from a null-terminated strin.
+	/// @brief Constructs a `BaseString` from a null-terminated string.
 	/// @param v String to copy from.
 	constexpr BaseString(CStringType const& v) {
 		SizeType len = 0;
@@ -1215,13 +1215,13 @@ public:
 	/// @brief String appending operator (null-terminated string).
 	/// @param value String to append.
 	/// @return Reference to self.
-	constexpr SelfType& operator+=(CStringType const& str)		{appendBack(SelfType(str)); return *this;	}
+	constexpr SelfType& operator+=(CStringType const& str)				{appendBack(SelfType(str)); return *this;	}
 	/// @brief String appending operator (char array).
 	/// @tparam S Array size.
 	/// @param value Char array to append.
 	/// @return Reference to self.
 	template<SizeType S>
-	constexpr SelfType& operator+=(As<ConstantType[S]> str)	{appendBack(str); return *this;				}
+	constexpr SelfType& operator+=(As<ConstantType[S]> str)				{appendBack(str); return *this;				}
 
 	/// @brief Returns a string, repeated a given amount of times.
 	/// @param times Amount of times to repeat.
@@ -1307,6 +1307,8 @@ public:
 		return data();
 	}
 
+	/// @brief Returns the string's size.
+	/// @return Size of string.
 	constexpr SizeType size() const {
 		return BaseType::size() - 1;
 	}

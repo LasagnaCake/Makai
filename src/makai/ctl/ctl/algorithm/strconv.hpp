@@ -2,7 +2,7 @@
 #define CTL_ALGORITHM_STRCONV_H
 
 #include "../namespace.hpp"
-#include "../container/string.hpp"
+#include "../container/strings/strings.hpp"
 
 CTL_NAMESPACE_BEGIN
 

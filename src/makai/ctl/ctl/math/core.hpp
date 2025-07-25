@@ -6,7 +6,7 @@
 #include "../namespace.hpp"
 #include "../typeinfo.hpp"
 #include "../ctypes.hpp"
-#include "../container/string.hpp"
+#include "../container/strings/strings.hpp"
 #include "../container/pair.hpp"
 #include "../container/function.hpp"
 

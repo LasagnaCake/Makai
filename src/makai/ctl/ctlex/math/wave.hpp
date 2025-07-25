@@ -2,7 +2,7 @@
 #define CTL_EX_MATH_WAVE_H
 
 #include "../../ctl/exnamespace.hpp"
-#include "../../ctl/container/string.hpp"
+#include "../../ctl/container/strings/string.hpp"
 #include "../../ctl/container/function.hpp"
 #include "../../ctl/math/core.hpp"
 

@@ -1,7 +1,7 @@
-#ifndef CTL_CONTAINER_STRINGREF_H
-#define CTL_CONTAINER_STRINGREF_H
+#ifndef CTL_CONTAINER_STRINGS_STRINGSPAN_H
+#define CTL_CONTAINER_STRINGS_STRINGSPAN_H
 
-#include "span.hpp"
+#include "../span.hpp"
 #include "string.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -42,7 +42,8 @@ struct BaseStringSpan:
 		BaseType::rbegin,
 		BaseType::rend,
 		BaseType::cbegin,
-		BaseType::cend
+		BaseType::cend,
+		BaseType::operator|
 	;
 
 	constexpr BaseStringSpan(): BaseType() {}

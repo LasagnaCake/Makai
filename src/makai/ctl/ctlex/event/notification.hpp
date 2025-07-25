@@ -4,7 +4,7 @@
 #include "../../ctl/exnamespace.hpp"
 #include "../../ctl/container/functor.hpp"
 #include "../../ctl/container/pointer/reference.hpp"
-#include "../../ctl/container/string.hpp"
+#include "../../ctl/container/strings/string.hpp"
 #include "../../ctl/container/map/map.hpp"
 #include "../../ctl/container/dictionary.hpp"
 #include "../../ctl/container/arguments.hpp"

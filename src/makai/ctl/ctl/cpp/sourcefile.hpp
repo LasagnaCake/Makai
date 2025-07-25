@@ -3,7 +3,7 @@
 
 #include "../namespace.hpp"
 
-#include "../container/string.hpp"
+#include "../container/strings/string.hpp"
 #include "../algorithm/strconv.hpp"
 
 CTL_NAMESPACE_BEGIN

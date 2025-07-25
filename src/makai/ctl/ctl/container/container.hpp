@@ -17,12 +17,12 @@
 #include "set.hpp"
 #include "setget.hpp"
 #include "span.hpp"
-#include "string.hpp"
 #include "tuple.hpp"
 #include "variant.hpp"
 #include "view.hpp"
 #include "map/map.hpp"
 #include "pointer/pointer.hpp"
 #include "lists/lists.hpp"
+#include "strings/strings.hpp"
 
 #endif // CTL_CONTAINER_H
