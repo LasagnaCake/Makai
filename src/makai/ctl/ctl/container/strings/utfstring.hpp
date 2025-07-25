@@ -363,7 +363,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a "C-style" range of characters.
 		/// @param start Start of range.
 		/// @param size Size of range.
-		constexpr explicit UTFString(u8char const start, SizeType const size): UTFString(start, start + size) {}
+		constexpr explicit UTFString(u8cstring const start, SizeType const size): UTFString(start, start + size) {}
 
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
@@ -510,7 +510,7 @@ namespace UTF {
 
 		/// @brief Constructs an `UTFString` from a null-terminated unicode string.
 		/// @param v String to copy from.
-		constexpr UTFString(ref<u8char const> const v) {
+		constexpr UTFString(u8cstring const v) {
 			SizeType len = 0;
 			while (v[len++] != bitcast<u8char>('\0') && len <= MAX_SIZE);
 			BaseType::reserve(len);
