@@ -121,10 +121,10 @@ void testString() {
 }
 
 void testUTF8String() {
-	UTF8String str;						print(str);
-	str = "Henlo.";						print(str);
-	str += " You?";						print(str);
-	str = "O! " + str;					print(str);
+	UTF8String str;								print(str);
+	str = "Henlo.";								print(str);
+	str += " You?";								print(str);
+	str = "O! " + str;							print(str);
 	print(str.sliced(2, -3));
 	str = "Impedance. Voltage. Current."s;
 	print(str);
