@@ -351,10 +351,21 @@ namespace UTF {
 		template<SizeType S>
 		constexpr UTFString(As<char const[S]> const& values): UTFString(values, values + S) {}
 
+		/// @brief Constructs the `UTFString` from a fixed array of characters.
+		/// @tparam S Size of array.
+		/// @param values Characters to add to `UTFString`.
+		template<SizeType S>
+		constexpr UTFString(As<typename DataType::STLType const[S]> const& values): UTFString(values, values + S) {}
+
 		/// @brief Constructs an `UTFString` from a "C-style" range of characters.
 		/// @param start Start of range.
 		/// @param size Size of range.
 		constexpr explicit UTFString(cstring const start, SizeType const size): UTFString(start, start + size) {}
+
+		/// @brief Constructs an `UTFString` from a "C-style" range of characters.
+		/// @param start Start of range.
+		/// @param size Size of range.
+		constexpr explicit UTFString(typename DataType::STLType const start, SizeType const size): UTFString(start, start + size) {}
 
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
@@ -408,6 +419,35 @@ namespace UTF {
 			BaseType::tighten();
 		}
 
+		using U8IteratorType				= Iterator<typename DataType::STLType, false, SizeType>;
+		using U8ReverseIteratorType			= Iterator<typename DataType::STLType, true, SizeType>;
+		using U8ConstIteratorType			= Iterator<typename DataType::STLType const, false, SizeType>;
+		using U8ConstReverseIteratorType	= Iterator<typename DataType::STLType const, true, SizeType>;
+
+		/// @brief Constructs an `UTFString` from a range of characters.
+		/// @param begin Iterator to beginning of range.
+		/// @param end Iterator to end of range.
+		constexpr UTFString(U8ConstIteratorType const& begin, U8ConstIteratorType const& end) {
+			if (end <= begin) return;
+			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
+			BaseType::appendBack(begin, end);
+			if (BaseType::back() != '\0')
+				BaseType::pushBack('\0');
+			BaseType::tighten();
+		}
+
+		/// @brief Constructs an `UTFString` from a range of characters.
+		/// @param begin Reverse iterator to beginning of range.
+		/// @param end Reverse iterator to end of range.
+		constexpr UTFString(U8ConstReverseIteratorType const& begin, U8ConstReverseIteratorType const& end) {
+			if (end <= begin) return;
+			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
+			BaseType::appendBack(begin, end);
+			if (BaseType::back() != '\0')
+				BaseType::pushBack('\0');
+			BaseType::tighten();
+		}
+
 		/// @brief Constructs an `UTFString` from a "C-style" range of characters.
 		/// @param start Start of range.
 		/// @param size Size of range.
@@ -435,7 +475,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString`, from a ranged object of (non-subclass) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
-		template<Type::Container::Ranged<typename String::IteratorType, ConstIteratorType> T>
+		template<Type::Container::Ranged<typename String::IteratorType, typename String::ConstIteratorType> T>
 		constexpr UTFString(T const& other): UTFString(other.begin(), other.end()) {}
 		
 		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
@@ -443,7 +483,21 @@ namespace UTF {
 		/// @param other Object to copy from.
 		template<Type::Container::Bounded<cstring, SizeType> T>
 		constexpr explicit UTFString(T const& other)
-		requires (!Type::Container::Ranged<T, typename String::IteratorType, ConstIteratorType>):
+		requires (!Type::Container::Ranged<T, typename String::IteratorType, typename String::ConstIteratorType>):
+			UTFString(other.data(), other.size()) {}
+
+		/// @brief Constructs an `UTFString`, from a ranged object of (non-subclass) type T.
+		/// @tparam T Ranged type.
+		/// @param other Object to copy from.
+		template<Type::Container::Ranged<U8IteratorType, U8ConstIteratorType> T>
+		constexpr UTFString(T const& other): UTFString(other.begin(), other.end()) {}
+		
+		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
+		/// @tparam T Ranged type.
+		/// @param other Object to copy from.
+		template<Type::Container::Bounded<ref<typename DataType::STLType const>, SizeType> T>
+		constexpr explicit UTFString(T const& other)
+		requires (!Type::Container::Ranged<T, U8IteratorType, U8ConstIteratorType>):
 			UTFString(other.data(), other.size()) {}
 
 		/// @brief Constructs an `UTFString` from a null-terminated string.
