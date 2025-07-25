@@ -24,8 +24,12 @@ namespace Makai::Graph {
 
 	/// @brief Font face data.
 	struct FontData {
-		/// @brief Font character sheet.
-		Texture2D	image;
+		struct Faces {
+			/// @brief Normal font character sheet.
+			Texture2D	normal;
+			/// @brief Emphasis font character sheet.
+			Texture2D	emphasis;
+		} faces;
 		/// @brief Font sheet character count.
 		Vector2		size	= Vector2(16);
 		/// @brief Font spacing.
@@ -89,58 +93,106 @@ namespace Makai::Graph {
 		LW_HYPHEN_WORD
 	};
 
-	/// @brief Text display data.
-	struct TextData {
-		/// @brief Text to display.
-		String		content		= "Hello\nWorld!";
-		/// @brief Text display rectangle.
-		TextRect	rect		= {40, 100};
-		/// @brief Text alignment (justification).
-		Vector2		textAlign	= 0;
-		/// @brief Text rectangle alignment.
-		Vector2		rectAlign	= 0;
-		/// @brief Character spacing modifier.
-		Vector2		spacing		= 0;
-		/// @brief Maximum displayed characters.
-		long		maxChars	= -1;
-		/// @brief Line wrapping mode.
-		LineWrap	lineWrap	= LineWrap::LW_CHARACTER;
+	namespace Base {
+		/// @brief Base text display data.
+		/// @tparam TString String type.
+		template<class TString>
+		struct TextData {
+			/// @brief Text to display.
+			TString		content		= "Hello\nWorld!";
+			/// @brief Text display rectangle.
+			TextRect	rect		= {40, 100};
+			/// @brief Text alignment (justification).
+			Vector2		textAlign	= 0;
+			/// @brief Text rectangle alignment.
+			Vector2		rectAlign	= 0;
+			/// @brief Character spacing modifier.
+			Vector2		spacing		= 0;
+			/// @brief Maximum displayed characters.
+			long		maxChars	= -1;
+			/// @brief Line wrapping mode.
+			LineWrap	lineWrap	= LineWrap::LW_CHARACTER;
 
-		/// @brief Comparison operator (defaulted).
-		constexpr bool operator==(TextData const& other) const			= default;
-		/// @brief Threeway comparison operator (defaulted).
-		constexpr ValueOrder operator<=>(TextData const& other) const	= default;
-	};
+			/// @brief Converts the text data to different encoding.
+			template <class T>
+			constexpr operator TextData<T>() const 
+			requires (Type::Different<T, TString>) {
+				return {toString(content), *this};
+			}
+
+			/// @brief Comparison operator (defaulted).
+			constexpr bool operator==(TextData const& other) const			= default;
+			/// @brief Threeway comparison operator (defaulted).
+			constexpr ValueOrder operator<=>(TextData const& other) const	= default;
+		};
+
+		/// @brief Base text display abstract class.
+		/// @tparam TString String type.
+		template<class TString>
+		class ALabel: public AGraphic {
+		public:
+			using ContentType	= TextData<TString>;
+			using VertexList	= List<Vertex>;
+
+			/// @brief Constructs the label.
+			/// @param layer Layer to register the object to. By default, it is layer zero.
+			/// @param manual Whether the object is manually rendered. By default, it is `false`.
+			ALabel(usize const& layer = 0, bool const manual = false): AGraphic(layer, manual) {}
+
+			/// @brief Destructor.
+			virtual ~ALabel() {}
+
+			/// @brief Font face to use.
+			FontFace					font;
+			/// @brief Text to display.
+			Instance<ContentType>		text		= new ContentType();
+			/// @brief Material to use. Texture effect gets ignored.
+			Material::ObjectMaterial	material;
+
+		protected:
+			virtual VertexList generate() = 0;
+
+		private:
+			/// @brief Underlying vertices to render.
+			VertexList vertices;
+
+			/// @brief Last text displayed.
+			Instance<ContentType> last = new TextData{"",{0,0}};
+
+			void draw() override {
+				// If text changed, update label
+				if (*text != *last) {
+					*last = *text;
+					vertices = generate();
+				}
+				// If no vertices, return
+				if (!vertices.size()) return;
+				// Set shader data
+				material.texture	= {{{true}, {font->faces.normal}}, material.texture.alphaClip};
+				material.blend		= {{{true}, {font->faces.emphasis}}, material.blend};
+				prepare();
+				material.use(shader);
+				// Display to screen
+				display(
+					vertices.data(), vertices.size(),
+					material.culling,
+					material.fill,
+					DisplayMode::ODM_TRIS,
+					material.instances.size()
+				);
+			}
+		};
+	}
 
 	/// @brief Text display.
-	class Label: public AGraphic {
-	public:
-		/// @brief Constructs the label.
-		/// @param layer Layer to register the object to. By default, it is layer zero.
-		/// @param manual Whether the object is manually rendered. By default, it is `false`.
-		Label(usize const& layer = 0, bool const manual = false): AGraphic(layer, manual) {}
+	class Label: public Base::ALabel<String> {VertexList generate() override;};
+	/// @brief Text display data.
+	using TextData = typename Base::ALabel<String>::ContentType;
 
-		/// @brief Destructor.
-		virtual ~Label() {}
-
-		/// @brief Font face to use.
-		FontFace					font;
-		/// @brief Text to display.
-		Instance<TextData>			text		= new TextData();
-		/// @brief Material to use. Texture effect gets ignored.
-		Material::ObjectMaterial	material;
-
-	private:
-		/// @brief Underlying vertices to render.
-		List<Vertex> vertices;
-
-		/// @brief Last text displayed.
-		Instance<TextData> last = new TextData{"",{0,0}};
-
-		void draw() override;
-
-		void update();
-	};
+	/// @brief UTF-8 text display.
+	class UTF8Label: public Base::ALabel<UTF8String> {VertexList generate() override;};
+	/// @brief UTF-8 Text display data.
+	using UTF8TextData = typename Base::ALabel<UTF8String>::ContentType;
 }
 
 #endif // MAKAILIB_GRAPH_RENDERER_TEXT_H

@@ -3,5 +3,6 @@
 
 #include "string.hpp"
 #include "stringspan.hpp"
+#include "utfstring.hpp"
 
 #endif

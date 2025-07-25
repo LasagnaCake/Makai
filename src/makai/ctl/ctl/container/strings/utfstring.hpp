@@ -232,10 +232,12 @@ namespace UTF {
 	struct UTFString:
 		private List<Character<UTF>, TIndex, TAlloc>,
 		public SelfIdentified<UTFString<UTF, TIndex, TAlloc>>,
-		public Derived<List<Character<UTF>, TIndex, TAlloc>> {
+		public Derived<List<Character<UTF>, TIndex, TAlloc>>,
+		public Streamable<char> {
 		using Iteratable		= ::CTL::Iteratable<Character<UTF>, TIndex>;
 		using SelfIdentified	= ::CTL::SelfIdentified<UTFString<UTF, TIndex, TAlloc>>;
 		using Derived			= ::CTL::Derived<List<Character<UTF>, TIndex, TAlloc>>;
+		using Streamable		= ::CTL::Streamable<char>;
 
 		using typename Derived::BaseType;
 
@@ -277,6 +279,11 @@ namespace UTF {
 
 		using
 			typename SelfIdentified::SelfType
+		;
+
+		using
+			typename Streamable::InputStreamType,
+			typename Streamable::OutputStreamType
 		;
 		
 		using
@@ -425,24 +432,28 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
 		/// @param end Iterator to end of range.
-		constexpr UTFString(U8ConstIteratorType const& begin, U8ConstIteratorType const& end) {
+		constexpr UTFString(U8ConstIteratorType begin, U8ConstIteratorType const& end) {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
-			BaseType::appendBack(begin, end);
-			if (BaseType::back() != '\0')
-				BaseType::pushBack('\0');
+			while (begin < end) {
+				BaseType::pushBack(Character<8>(begin.raw(), end.raw()));
+				begin = begin + BaseType::back().size();
+			}
+			if (*(end-1) != '\0') BaseType::pushBack('\0');
 			BaseType::tighten();
 		}
 
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Reverse iterator to beginning of range.
 		/// @param end Reverse iterator to end of range.
-		constexpr UTFString(U8ConstReverseIteratorType const& begin, U8ConstReverseIteratorType const& end) {
+		constexpr UTFString(U8ConstReverseIteratorType begin, U8ConstReverseIteratorType const& end) {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
-			BaseType::appendBack(begin, end);
-			if (BaseType::back() != '\0')
-				BaseType::pushBack('\0');
+			while (begin < end) {
+				BaseType::pushBack(Character<8>(begin.raw(), end.raw()));
+				begin = begin + BaseType::back().size();
+			}
+			if (*(end-1) != '\0') BaseType::pushBack('\0');
 			BaseType::tighten();
 		}
 
@@ -504,7 +515,7 @@ namespace UTF {
 			SizeType len = 0;
 			while (v[len++] != '\0' && len <= MAX_SIZE);
 			BaseType::reserve(len);
-			BaseType::appendBack(BaseType(v, v+len));
+			BaseType::appendBack(SelfType(v, v+len));
 			BaseType::tighten();
 		}
 
@@ -514,7 +525,7 @@ namespace UTF {
 			SizeType len = 0;
 			while (v[len++] != bitcast<u8char>('\0') && len <= MAX_SIZE);
 			BaseType::reserve(len);
-			BaseType::appendBack(BaseType(v, v+len));
+			BaseType::appendBack(SelfType(v, v+len));
 			BaseType::tighten();
 		}
 		
@@ -1395,18 +1406,32 @@ namespace UTF {
 		/// @return Resulting string.
 		constexpr SelfType replaced(List<Replacement, SizeType> const& reps) const	{return SelfType(*this).replace(reps);	}
 
+		/// @brief Stream insertion operator.
+		constexpr OutputStreamType& operator<<(OutputStreamType& o) const	{if (!empty()) o << toString(); return o;}
+		/// @brief Stream insertion operator.
+		constexpr OutputStreamType& operator<<(OutputStreamType& o)			{if (!empty()) o << toString(); return o;}
+		
+		/// @brief Stream insertion operator.
+		friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType& self)			{if (!self.empty()) o << self.toString(); return o;}
+		/// @brief Stream insertion operator.
+		friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType const& self)	{if (!self.empty()) o << self.toString(); return o;}
+
 		/// @brief Copy assignment operator (`UTFString`).
 		/// @param other `UTFString` to copy from.
 		/// @return Reference to self.
-		constexpr SelfType& operator=(SelfType const& other)						{BaseType::operator=(other); return *this;				}
+		constexpr SelfType& operator=(SelfType const& other)						{BaseType::operator=(other); return *this;					}
 		/// @brief Move assignment operator (`UTFString`).
 		/// @param other `UTFString` to move.
 		/// @return Reference to self.
-		constexpr SelfType& operator=(SelfType&& other)								{BaseType::operator=(CTL::move(other)); return *this;	}
+		constexpr SelfType& operator=(SelfType&& other)								{BaseType::operator=(CTL::move(other)); return *this;		}
 		/// @brief Copy assignment operator (null-terminated string).
 		/// @param other String to copy from.
 		/// @return Reference to self.
-		constexpr SelfType& operator=(typename String::CStringType const& other)	{BaseType::operator=(SelfType(other)); return *this;	}
+		constexpr SelfType& operator=(typename String::CStringType const& other)	{BaseType::operator=(SelfType(other)); return *this;		}
+		/// @brief Copy assignment operator (null-terminated unicode string).
+		/// @param other String to copy from.
+		/// @return Reference to self.
+		constexpr SelfType& operator=(u8cstring const& other)						{BaseType::operator=(UTFString<8>(other)); return *this;	}
 
 		/// @brief Equality comparison operator (char array).
 		/// @tparam S Array size.
@@ -1442,12 +1467,22 @@ namespace UTF {
 		/// @param value String to concatenate.
 		/// @return Resulting concatenated string.
 		constexpr SelfType operator+(typename String::CStringType const& str) const	{return (*this) + SelfType(str);}
+		/// @brief String concatenation operator (null-terminated string).
+		/// @param value String to concatenate.
+		/// @return Resulting concatenated string.
+		constexpr SelfType operator+(u8cstring const& str) const					{return (*this) + SelfType(str);}
 		/// @brief String concatenation operator (char array).
 		/// @tparam S Array size.
 		/// @param value Char array to concatenate.
 		/// @return Resulting concatenated string.
 		template<SizeType S>
 		constexpr SelfType operator+(As<char const[S]> const& str) const			{return (*this) + SelfType(str);}
+		/// @brief String concatenation operator (char array).
+		/// @tparam S Array size.
+		/// @param value Char array to concatenate.
+		/// @return Resulting concatenated string.
+		template<SizeType S>
+		constexpr SelfType operator+(As<u8char const[S]> const& str) const			{return (*this) + UTFString<8>(str);}
 
 		/// @brief String concatenation operator (character).
 		/// @param value Character to concatenate.
@@ -1460,6 +1495,11 @@ namespace UTF {
 		/// @param self `UTFString` to concatenate with.
 		/// @return Resulting concatenated string.
 		friend constexpr SelfType operator+(typename String::CStringType const& str, SelfType const& self)	{return SelfType(str) + (self);}
+		/// @brief String concatenation operator (null-terminated string).
+		/// @param value String to concatenate.
+		/// @param self `UTFString` to concatenate with.
+		/// @return Resulting concatenated string.
+		friend constexpr SelfType operator+(u8cstring const& str, SelfType const& self)						{return SelfType(str) + (self);}
 		/// @brief String concatenation operator (char array).
 		/// @tparam S Array size.
 		/// @param value Char array to concatenate.
@@ -1467,6 +1507,13 @@ namespace UTF {
 		/// @return Resulting concatenated string.
 		template<SizeType S>
 		friend constexpr SelfType operator+(As<char const[S]> const& str, SelfType const& self)				{return SelfType(str) + (self);}
+		/// @brief String concatenation operator (unicode char array).
+		/// @tparam S Array size.
+		/// @param value Char array to concatenate.
+		/// @param self `UTFString` to concatenate with.
+		/// @return Resulting concatenated string.
+		template<SizeType S>
+		friend constexpr SelfType operator+(As<u8char const[S]> const& str, SelfType const& self)			{return UTFString<8>(str) + (self);}
 		
 		/// @brief String appending operator (character).
 		/// @param value Caracter to append.
@@ -1475,17 +1522,27 @@ namespace UTF {
 		/// @brief String appending operator (`UTFString`).
 		/// @param value `UTFString` to append.
 		/// @return Reference to self.
-		constexpr SelfType& operator+=(SelfType const& other)					{appendBack(other); return *this;			}
+		constexpr SelfType& operator+=(SelfType const& other)					{appendBack(other); return *this;				}
 		/// @brief String appending operator (null-terminated string).
 		/// @param value String to append.
 		/// @return Reference to self.
-		constexpr SelfType& operator+=(typename String::CStringType const& str)	{appendBack(SelfType(str)); return *this;	}
+		constexpr SelfType& operator+=(typename String::CStringType const& str)	{appendBack(SelfType(str)); return *this;		}
+		/// @brief String appending operator (null-terminated string).
+		/// @param value String to append.
+		/// @return Reference to self.
+		constexpr SelfType& operator+=(u8cstring const& str)					{appendBack(SelfType(str)); return *this;		}
 		/// @brief String appending operator (char array).
 		/// @tparam S Array size.
 		/// @param value Char array to append.
 		/// @return Reference to self.
 		template<SizeType S>
-		constexpr SelfType& operator+=(As<ConstantType[S]> str)					{appendBack(str); return *this;				}
+		constexpr SelfType& operator+=(As<char const[S]> str)					{appendBack(str); return *this;					}
+		/// @brief String appending operator (unicode char array).
+		/// @tparam S Array size.
+		/// @param value Char array to append.
+		/// @return Reference to self.
+		template<SizeType S>
+		constexpr SelfType& operator+=(As<u8char const[S]> str)					{appendBack(UTFString<8>(str)); return *this;	}
 
 		/// @brief Returns the current size of the underlying character array.
 		/// @return Size of the underlying character array.
