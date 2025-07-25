@@ -481,7 +481,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
-		template<Type::Container::Bounded<cstring, SizeType> T>
+		template<Type::Container::Bounded<ref<char>, SizeType> T>
 		constexpr explicit UTFString(T const& other)
 		requires (!Type::Container::Ranged<T, typename String::IteratorType, typename String::ConstIteratorType>):
 			UTFString(other.data(), other.size()) {}
@@ -495,7 +495,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
-		template<Type::Container::Bounded<ref<typename DataType::STLType const>, SizeType> T>
+		template<Type::Container::Bounded<ref<typename DataType::STLType>, SizeType> T>
 		constexpr explicit UTFString(T const& other)
 		requires (!Type::Container::Ranged<T, U8IteratorType, U8ConstIteratorType>):
 			UTFString(other.data(), other.size()) {}
