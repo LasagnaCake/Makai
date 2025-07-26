@@ -193,20 +193,21 @@ constexpr List<usize> calculateIndices(T const& words, TextRect const& rect) {
 
 template<class T>
 List<usize> getTextLineWrapIndices(T& text) {
+	using Char = typename decltype(text.content)::DataType;
 	List<usize>	indices;
 	switch (text.lineWrap) {
 	case LineWrap::LW_CHARACTER:
 		break;
 	case LineWrap::LW_HYPHEN_WORD: {
 			indices = calculateIndices(
-				text.content.split({' ', '~', '\t', '-'}),
+				text.content.split({Char{' '}, Char{'~'}, Char{'\t'}, Char{'-'}}),
 				text.rect
 			);
 		}
 		break;
 	case LineWrap::LW_FULL_WORD: {
 			indices = calculateIndices(
-				text.content.split({' ', '~', '\t'}),
+				text.content.split({Char{' '}, Char{'~'}, Char{'\t'}}),
 				text.rect
 			);
 		}
