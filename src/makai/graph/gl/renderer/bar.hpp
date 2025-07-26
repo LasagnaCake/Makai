@@ -80,15 +80,17 @@ namespace Makai::Graph {
 	};
 
 	/// @brief Text label + progressbar combo.
-	/// @tparam T Bar type.
-	template<BarType T = RadialBar>
+	/// @tparam TBar Bar type.
+	template<BarType TBar = RadialBar, class TString = String>
 	struct LabeledBar {
 		/// @brief Bar type.
-		using BarType = T;
+		using BarType	= TBar;
+		/// @brief Label type.
+		using LabelType	= Label<TString>;
 		/// @brief Progressbar.
-		BarType	bar;
+		BarType		bar;
 		/// @brief Associated label.
-		Label	label;
+		LabelType	label;
 	};
 }
 

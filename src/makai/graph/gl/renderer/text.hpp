@@ -184,15 +184,33 @@ namespace Makai::Graph {
 		};
 	}
 
-	/// @brief Text display.
-	class Label: public Base::ALabel<String> {VertexList generate() override;};
-	/// @brief Text display data.
-	using TextData = typename Base::ALabel<String>::ContentType;
+	/// @brief `char` string text display.
+	class CharLabel: public Base::ALabel<String> {VertexList generate() override;};
+	/// @brief `char` string text display data.
+	using CharTextData = typename Base::ALabel<String>::ContentType;
 
-	/// @brief UTF-8 text display.
+	/// @brief UTF-8 string text display.
 	class UTF8Label: public Base::ALabel<UTF8String> {VertexList generate() override;};
-	/// @brief UTF-8 Text display data.
+	/// @brief UTF-8 string Text display data.
 	using UTF8TextData = typename Base::ALabel<UTF8String>::ContentType;
+
+	/// @brief Implementation details.
+	namespace Impl {
+		/// @brief Text display type wrapper.
+		/// @tparam T Text string type.
+		template<class T>
+		struct LabelType;
+
+		template<> struct LabelType<String>:		TypeContainer<CharLabel> {};
+		template<> struct LabelType<UTF8String>:	TypeContainer<UTF8Label> {};
+	}
+
+	/// @brief Text display.
+	/// @tparam T Text string type.
+	template<class T> using Label		= typename Impl::LabelType<T>::Type;
+	/// @brief Text display data.
+	/// @tparam T Text string type.
+	template<class T> using TextData	= typename Impl::LabelType<T>::Type::ContentType;
 }
 
 #endif // MAKAILIB_GRAPH_RENDERER_TEXT_H

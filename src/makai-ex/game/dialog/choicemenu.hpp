@@ -10,9 +10,9 @@ namespace Makai::Ex::Game::Dialog {
 	/// @brief Choice menu.
 	struct ChoiceMenu: IVisible, AUpdateable, Controllable {
 		/// @brief Options display.	
-		Graph::Label menu;
+		Graph::UTF8Label menu;
 		/// @brief Selection cursor display.
-		Graph::Label cursor;
+		Graph::UTF8Label cursor;
 
 		//// @brief Destructor.
 		virtual ~ChoiceMenu() {}

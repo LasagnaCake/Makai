@@ -10,9 +10,9 @@ namespace Makai::Ex::Game::Dialog {
 	/// @brief Dialog box.
 	struct Box: IVisible {
 		/// @brief Dialog box title.
-		Graph::Label	title;
+		Graph::UTF8Label	title;
 		/// @brief Dialog box text body.
-		Graph::Label	body;
+		Graph::UTF8Label	body;
 
 		/// @brief Dialog box render layers.
 		struct Layers {

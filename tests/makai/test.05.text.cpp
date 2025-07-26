@@ -6,7 +6,7 @@ struct TestApp: Makai::App {
 		loadDefaultShaders();
 	}
 	
-	Makai::Graph::Label label;
+	Makai::Graph::UTF8Label label;
 
 	Makai::Graph::Camera3D& camera = Makai::Graph::Global::camera;
 
