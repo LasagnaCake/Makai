@@ -95,7 +95,7 @@ FontData& FontFace::data() const {return *instance; }
 bool FontFace::exists() const	{return instance.exists() && (instance->faces.normal.exists() || instance->faces.emphasis.exists());	}
 FontFace::operator bool() const	{return exists();																						}
 
-template<Makai::Type::OneOf<TextData, UTF8TextData> T>
+template<Makai::Type::OneOf<CharTextData, UTF8TextData> T>
 List<float> getTextLineStarts(T const& text, FontData const& font, List<usize> const& breaks) {
 	List<float> result;
 	switch (text.lineWrap) {
@@ -144,7 +144,7 @@ List<float> getTextLineStarts(T const& text, FontData const& font, List<usize> c
 	return result;
 }
 
-template<Makai::Type::OneOf<TextData, UTF8TextData> T>
+template<Makai::Type::OneOf<CharTextData, UTF8TextData> T>
 Vector2 getTextRectStart(T const& text, FontData const& font) {
 	Vector2 rectPos = Vector2(text.rect.h, text.rect.v) * text.rectAlign;
 	rectPos += (text.spacing + font.spacing) * text.rectAlign * Vector2(1, -1);
@@ -215,9 +215,9 @@ List<usize> getTextLineWrapIndices(T& text) {
 	return indices;
 }
 
-Label::VertexList Label::generate() {
+CharLabel::VertexList CharLabel::generate() {
 	// Clear previous characters
-	Label::VertexList vertices;
+	CharLabel::VertexList vertices;
 	// If no text is present, return
 	if (!text) return vertices;
 	if (text->content.empty()) return vertices;
