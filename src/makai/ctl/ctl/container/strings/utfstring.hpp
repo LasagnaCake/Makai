@@ -85,8 +85,11 @@ namespace UTF {
 				return;
 			}
 			while ((lead << sz) & 0b10000000 && sz < 4) ++sz;
-			for (usize i = 1; (i < sz && begin < end); ++i)
+			for (usize i = 1; (i < sz && begin < end); ++i) {
+				if ((*begin & 0b11000000) != 0b10000000)
+					break;
 				buf[i] = *begin++;
+			}
 			id = toScalar(buf, sz) | ((sz-1) << 28);
 		}
 
@@ -1230,7 +1233,7 @@ namespace UTF {
 		constexpr List<SelfType, SizeType> split(DataType const& sep) const {
 			List<SelfType, SizeType> res;
 			SelfType buf;
-			for (ConstReferenceType v : *this) {
+			for (ConstReferenceType v: *this) {
 				if (v == sep) {
 					res.pushBack(buf);
 					buf.clear();
