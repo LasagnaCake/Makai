@@ -157,7 +157,7 @@ namespace Makai::Graph {
 			VertexList vertices;
 
 			/// @brief Last text displayed.
-			Instance<ContentType> last = new TextData{"",{0,0}};
+			Instance<ContentType> last = new ContentType{"",{0,0}};
 
 			void draw() override {
 				// If text changed, update label
