@@ -16,7 +16,7 @@ struct TestApp: Makai::App {
 		loadDefaultShaders();
 		DEBUGLN("1...");
 		label.font = Makai::Graph::FontData{
-			Makai::Graph::Texture2D("../tests/makai/files/TestFontGrid-lotuscoder.png"),
+			{Makai::Graph::Texture2D("../tests/makai/files/TestFontGrid-lotuscoder.png")},
 			16, 1
 		};
 		DEBUGLN("2...");
