@@ -369,7 +369,7 @@ void UTF8Label::generate() {
 		// Get character index
 		index = Math::max<int64>(c - 0x20, 0);
 		// Get character's top left UV index in the font texture
-		if (uv.y < font->size.y)
+		if (static_cast<int64>(index / font->size.x) < font->size.y)
 			uv = Vector2(
 				static_cast<int64>(index % int(font->size.x)),
 				static_cast<int64>(index / font->size.x)
