@@ -274,7 +274,7 @@ void CharLabel::generate() {
 		// If cursor has reach the rect's vertical limit, break
 		if(chrRect.v >= text->rect.v) break;
 		// If character is a control character, skip
-		if (c < static_cast<int64>(font->start)) continue;
+		if (c < font->start) continue;
 		// Get character index
 		index = Math::max<int64>(c - static_cast<int64>(font->start), 0);
 		// Get character's top left UV index in the font texture
@@ -366,7 +366,7 @@ void UTF8Label::generate() {
 		// If cursor has reach the rect's vertical limit, break
 		if(chrRect.v >= text->rect.v) break;
 		// If character below min range, skip
-		if (c < static_cast<int64>(font->start)) continue;
+		if (c < font->start) continue;
 		// Get character index
 		index = Math::max<int64>(c - static_cast<int64>(font->start), 0);
 		// Get character's top left UV index in the font texture
