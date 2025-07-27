@@ -153,28 +153,17 @@ namespace Makai::Graph {
 			enum class TextType {
 				TT_NORMAL,
 				TT_EMPHASIS,
-				TT_END
+				TT_MAX_TYPES
 			};
 
 			virtual void generate() = 0;
 
-			void setVertices(VertexList const& verts, TextType const type) {
-				switch (type) {
-					case TextType::TT_NORMAL:	normalText = verts;		break;
-					case TextType::TT_EMPHASIS:	emphasisText = verts;	break;
-				}
-			}
-
-			void clearVertices(TextType const type) {
-				switch (type) {
-					case TextType::TT_NORMAL:	normalText = {};	break;
-					case TextType::TT_EMPHASIS:	emphasisText = {};	break;
-				}
-			}
+			void setVertices(VertexList const& verts, TextType const type)	{getVertices(type) = verts;	}
+			void clearVertices(TextType const type)							{getVertices(type) = {};	}
 
 			void clearAllVertices() {
-				for (TextType type = TextType{0}; type < TextType::TT_MAX_TYPES; ++type)
-					clearVertices(type);
+				for (Decay::Enum::AsInteger<TextType> type = 0; type < enumcast(TextType::TT_MAX_TYPES); ++type)
+					clearVertices(static_cast<TextType>(type));
 			}
 
 		private:
@@ -194,8 +183,8 @@ namespace Makai::Graph {
 					generate();
 				}
 				prepare();
-				for (TextType type = TextType{0}; type < TextType::TT_MAX_TYPES; ++type)
-					showText(type);
+				for (Decay::Enum::AsInteger<TextType> type = 0; type < enumcast(TextType::TT_MAX_TYPES); ++type)
+					showText(static_cast<TextType>(type));
 			}
 
 			void setFont(TextType const type) {
@@ -204,6 +193,7 @@ namespace Makai::Graph {
 				switch (type) {
 					case TextType::TT_NORMAL:	material.texture.image = font->faces.normal;	break;
 					case TextType::TT_EMPHASIS:	material.texture.image = font->faces.emphasis;	break;
+					default: break;
 				}
 			}
 
@@ -211,6 +201,7 @@ namespace Makai::Graph {
 				switch (type) {
 					return	normalText;		break;
 					return	emphasisText;	break;
+					default: break;
 				}
 			}
 
