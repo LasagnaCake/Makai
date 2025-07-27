@@ -150,17 +150,31 @@ namespace Makai::Graph {
 			Material::ObjectMaterial	material;
 
 		protected:
+			/// @brief Text type.
 			enum class TextType {
 				TT_NORMAL,
 				TT_EMPHASIS,
 				TT_MAX_TYPES
 			};
 
+			/// @brief Called when text must be generated. MUST be implemented.
 			virtual void generate() = 0;
 
-			void setVertices(VertexList const& verts, TextType const type)	{getVertices(type) = verts;	}
-			void clearVertices(TextType const type)							{getVertices(type) = {};	}
+			/// @brief Sets the vertices for a particular text type.
+			/// @param verts Vertices to set.
+			/// @param type Type to set for.
+			void setVertices(VertexList const& verts, TextType const type) {
+				if (type < TextType::TT_MAX_TYPES)
+					getVertices(type) = verts;
+			}
+			/// @brief Clears stored vertices for a particular text type.
+			/// @param type Type to clear.
+			void clearVertices(TextType const type) {
+				if (type < TextType::TT_MAX_TYPES)
+					getVertices(type) = {};
+			}
 
+			/// @brief Clears stored vertices for all text types.
 			void clearAllVertices() {
 				for (Decay::Enum::AsInteger<TextType> type = 0; type < enumcast(TextType::TT_MAX_TYPES); ++type)
 					clearVertices(static_cast<TextType>(type));
@@ -199,19 +213,18 @@ namespace Makai::Graph {
 
 			VertexList& getVertices(TextType const type) {
 				switch (type) {
-					return	normalText;		break;
-					return	emphasisText;	break;
-					default: break;
+					case TextType::TT_NORMAL:	return	normalText;
+					case TextType::TT_EMPHASIS:	return	emphasisText;
+					default: return normalText;
 				}
 			}
 
 			void showText(TextType const type) {
-				// If no normal text, return
-				if (!normalText.size()) return;
+				auto& verts = getVertices(type);
+				if (verts.empty()) return;
 				// Set shader data
 				setFont(type);
 				material.use(shader);
-				auto& verts = getVertices(type);
 				// Display to screen
 				display(
 					verts.data(), verts.size(),

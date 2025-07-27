@@ -316,7 +316,7 @@ void UTF8Label::generate() {
 	// If no text is present, return
 	if (!text)					return;
 	if (text->content.empty())	return;
-	DEBUGLN("Generating text for '", text->content, "'...");
+	DEBUGLN("Generating text for (SIZE:", text->content.size(), ") '", text->content, "'...");
 	// The current character's position
 	Vector2		cursor;
 	TextRect	chrRect = {0,0};

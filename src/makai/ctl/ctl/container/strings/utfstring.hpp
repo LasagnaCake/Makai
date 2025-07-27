@@ -76,7 +76,7 @@ namespace UTF {
 		constexpr explicit Character(ref<T const> begin, ref<T const> const end)
 		requires (TYPE == 8): Character() {
 			As<uint8[4]> buf = {0, 0, 0, 0};
-			if (begin >= end) return;
+			if (end <= begin) return;
 			usize sz = 0;
 			char const lead = *begin++;
 			buf[sz++] = lead;
@@ -95,12 +95,12 @@ namespace UTF {
 
 		/// @brief Constructs the unicode character from a given range.
 		template<class T>
-		constexpr explicit Character(ref<T const> bytes, ref<T const> const end) 
+		constexpr explicit Character(ref<T const> begin, ref<T const> const end) 
 		requires (TYPE == 32): Character() {
 			As<uint8[4]> buf = {0, 0, 0, 0};
-			if (bytes >= end) return;
-			for (usize i = 1; (i < 4 && bytes < end); ++i)
-				buf[i] = *bytes++;
+			if (end <= begin) return;
+			for (usize i = 1; (i < 4 && begin < end); ++i)
+				buf[i] = *begin++;
 			id = toScalar(buf, 4);
 		}
 
@@ -384,7 +384,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
 		/// @param end Iterator to end of range.
-		constexpr UTFString(typename String::ConstIteratorType begin, typename String::ConstIteratorType const& end) {
+		constexpr UTFString(typename String::ConstIteratorType begin, typename String::ConstIteratorType const& end): BaseType() {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 			while (begin < end) {
@@ -398,7 +398,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Reverse iterator to beginning of range.
 		/// @param end Reverse iterator to end of range.
-		constexpr UTFString(typename String::ConstReverseIteratorType begin, typename String::ConstReverseIteratorType const& end) {
+		constexpr UTFString(typename String::ConstReverseIteratorType begin, typename String::ConstReverseIteratorType const& end): BaseType() {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 			while (begin < end) {
@@ -412,7 +412,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
 		/// @param end Iterator to end of range.
-		constexpr UTFString(ConstIteratorType const& begin, ConstIteratorType const& end) {
+		constexpr UTFString(ConstIteratorType const& begin, ConstIteratorType const& end): BaseType() {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == DataType('\0') ? 1 : 2));
 			BaseType::appendBack(begin, end);
@@ -424,7 +424,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Reverse iterator to beginning of range.
 		/// @param end Reverse iterator to end of range.
-		constexpr UTFString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
+		constexpr UTFString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end): BaseType() {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == DataType('\0') ? 1 : 2));
 			BaseType::appendBack(begin, end);
@@ -441,7 +441,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Iterator to beginning of range.
 		/// @param end Iterator to end of range.
-		constexpr UTFString(U8ConstIteratorType begin, U8ConstIteratorType const& end) {
+		constexpr UTFString(U8ConstIteratorType begin, U8ConstIteratorType const& end): BaseType() {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 			while (begin < end) {
@@ -455,7 +455,7 @@ namespace UTF {
 		/// @brief Constructs an `UTFString` from a range of characters.
 		/// @param begin Reverse iterator to beginning of range.
 		/// @param end Reverse iterator to end of range.
-		constexpr UTFString(U8ConstReverseIteratorType begin, U8ConstReverseIteratorType const& end) {
+		constexpr UTFString(U8ConstReverseIteratorType begin, U8ConstReverseIteratorType const& end): BaseType() {
 			if (end <= begin) return;
 			BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 			while (begin < end) {
@@ -1564,6 +1564,7 @@ namespace UTF {
 		/// @brief Returns the string's size.
 		/// @return Size of string.
 		constexpr SizeType size() const {
+			if (BaseType::empty()) return 0;
 			return BaseType::size() - 1;
 		}
 	
@@ -1578,6 +1579,7 @@ namespace UTF {
 		/// @return String as standard string.
 		constexpr String toString() const {
 			String out;
+			if (empty()) return out;
 			As<char[4]> buf;
 			out.reserve(size() * DataType::SIZE);
 			for (DataType const& ch: *this) {
@@ -1595,6 +1597,7 @@ namespace UTF {
 		constexpr UTFString<NE> toUTF() const
 		requires (UTF != NE) {
 			UTFString<NE> out;
+			if (empty()) return out;
 			out.reserve(size());
 			for (auto const& ch: this)
 				out.pushBack(ch);

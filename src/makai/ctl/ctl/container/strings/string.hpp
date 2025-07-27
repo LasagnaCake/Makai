@@ -172,7 +172,7 @@ public:
 	/// @brief Constructs a `BaseString` from a range of characters.
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
-	constexpr BaseString(ConstIteratorType const& begin, ConstIteratorType const& end) {
+	constexpr BaseString(ConstIteratorType const& begin, ConstIteratorType const& end): BaseType() {
 		if (end <= begin) return;
 		BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 		BaseType::appendBack(begin, end);
@@ -183,7 +183,7 @@ public:
 	/// @brief Constructs a `BaseString` from a range of characters.
 	/// @param begin Reverse iterator to beginning of range.
 	/// @param end Reverse iterator to end of range.
-	constexpr BaseString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
+	constexpr BaseString(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end): BaseType() {
 		if (end <= begin) return;
 		BaseType::resize(end - begin + (*(end-1) == '\0' ? 1 : 2));
 		BaseType::appendBack(begin, end);
@@ -1310,6 +1310,7 @@ public:
 	/// @brief Returns the string's size.
 	/// @return Size of string.
 	constexpr SizeType size() const {
+		if (BaseType::empty()) return 0;
 		return BaseType::size() - 1;
 	}
 	
