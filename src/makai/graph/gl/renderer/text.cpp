@@ -335,7 +335,7 @@ void UTF8Label::generate() {
 	usize curChar = 0;
 	// Loop through each character and...
 	for (UTF::Character<8> const& pc: text->content) {
-		usize c = pc.value();
+		auto c = pc.value();
 		// Check if max characters hasn't been reached
 		if (text->maxChars == 0 || ((llong(curChar) > llong(text->maxChars-1)) && (text->maxChars > -1))) break;
 		else curChar++;
@@ -369,14 +369,14 @@ void UTF8Label::generate() {
 		// Get character index
 		index = Math::max<int64>(c - 0x20, 0);
 		// Get character's top left UV index in the font texture
-		if (static_cast<int64>(index / font->size.x) < font->size.y)
-			uv = Vector2(
-				static_cast<int64>(index % int(font->size.x)),
-				static_cast<int64>(index / font->size.x)
-			);
-		else uv = Vector2(
-			static_cast<int64>(bitcast<uint8>('#') % int(font->size.x)),
-			static_cast<int64>(bitcast<uint8>('#') / font->size.x)
+		bool const inFontRange = index < font->size.x * font->size.y;
+		uv = inFontRange
+		?	Vector2(
+			static_cast<int64>(index % static_cast<int64>(font->size.x)),
+			static_cast<int64>(index / font->size.x)
+		):	Vector2(
+			static_cast<int64>((bitcast<uint8>('?') - 0x20) % static_cast<int64>(font->size.x)),
+			static_cast<int64>((bitcast<uint8>('?') - 0x20) / font->size.x)
 		);
 		// Get vertex positions
 		Vector2 pos[4] = {
@@ -393,7 +393,7 @@ void UTF8Label::generate() {
 			(uv + Vector2(1,1)) / font->size,
 		};
 		// Color indicator (for character errors)
-		Vector4 const charColor = uv.y < font->size.y ? Color::WHITE : Color::RED;
+		Vector4 const charColor = inFontRange ? Color::WHITE : Color::RED;
 		// Nightmare
 		vertices.pushBack(Vertex(pos[0], uvs[0], charColor));
 		vertices.pushBack(Vertex(pos[1], uvs[1], charColor));
