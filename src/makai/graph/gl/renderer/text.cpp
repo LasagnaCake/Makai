@@ -374,7 +374,7 @@ void UTF8Label::generate() {
 		bool const inFontRange = index < (font->size.x * font->size.y);
 		uv = inFontRange
 		?	Vector2(
-			static_cast<int64>(index % charStart),
+			static_cast<int64>(index % static_cast<int64>(font->size.x)),
 			static_cast<int64>(index / font->size.x)
 		):	Vector2(
 			static_cast<int64>((bitcast<uint8>('?') - charStart) % static_cast<int64>(font->size.x)),
