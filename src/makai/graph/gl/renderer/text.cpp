@@ -217,12 +217,13 @@ List<usize> getTextLineWrapIndices(T& text) {
 	return indices;
 }
 
-CharLabel::VertexList CharLabel::generate() {
+void CharLabel::generate() {
 	// Clear previous characters
+	clearAllVertices();
 	CharLabel::VertexList vertices;
 	// If no text is present, return
-	if (!text) return vertices;
-	if (text->content.empty()) return vertices;
+	if (!text)					return;
+	if (text->content.empty())	return;
 	DEBUGLN("Generating text for '", text->content, "'...");
 	// The current character's position
 	Vector2		cursor;
@@ -306,15 +307,16 @@ CharLabel::VertexList CharLabel::generate() {
 		cursor.x += text->spacing.x + font->spacing.x;
 		chrRect.h++;
 	}
-	return vertices;
+	setVertices(vertices, TextType::TT_NORMAL);
 }
 
-UTF8Label::VertexList UTF8Label::generate() {
+void UTF8Label::generate() {
 	// Clear previous characters
-	UTF8Label::VertexList vertices;
+	clearAllVertices();
+	CharLabel::VertexList vertices;
 	// If no text is present, return
-	if (!text) return vertices;
-	if (text->content.empty()) return vertices;
+	if (!text)					return;
+	if (text->content.empty())	return;
 	DEBUGLN("Generating text for '", text->content, "'...");
 	// The current character's position
 	Vector2		cursor;
@@ -398,5 +400,5 @@ UTF8Label::VertexList UTF8Label::generate() {
 		cursor.x += text->spacing.x + font->spacing.x;
 		chrRect.h++;
 	}
-	return vertices;
+	setVertices(vertices, TextType::TT_NORMAL);
 }
