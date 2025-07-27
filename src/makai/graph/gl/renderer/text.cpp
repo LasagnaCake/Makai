@@ -96,12 +96,13 @@ bool FontFace::exists() const	{return instance.exists() && (instance->faces.norm
 FontFace::operator bool() const	{return exists();																						}
 
 template<Makai::Type::OneOf<CharTextData, UTF8TextData> T>
-List<float> getTextLineStarts(T const& text, FontData const& font, List<usize> const& breaks) {
+List<float> getTextLineStarts(T& text, FontData const& font, List<usize> const& breaks) {
+	using Char = typename decltype(text.content)::DataType;
 	List<float> result;
 	switch (text.lineWrap) {
 	case LineWrap::LW_CHARACTER: {
 			// Separate text by newline characters
-			auto const lines = text.content.split(typename decltype(text.content)::DataType{'\n'});
+			auto const lines = text.content.split({Char{'\n'}});
 			// Calculate starting points
 			for (auto& l : lines) {
 				usize lineSize		= l.size();
@@ -200,14 +201,14 @@ List<usize> getTextLineWrapIndices(T& text) {
 		break;
 	case LineWrap::LW_HYPHEN_WORD: {
 			indices = calculateIndices(
-				text.content.split({Char{' '}, Char{'~'}, Char{'\t'}, Char{'-'}}),
+				text.content.split({' ', '~', '\t', '-'}),
 				text.rect
 			);
 		}
 		break;
 	case LineWrap::LW_FULL_WORD: {
 			indices = calculateIndices(
-				text.content.split({Char{' '}, Char{'~'}, Char{'\t'}}),
+				text.content.split({' ', '~', '\t'}),
 				text.rect
 			);
 		}
