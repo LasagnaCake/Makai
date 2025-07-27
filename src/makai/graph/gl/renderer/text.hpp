@@ -150,31 +150,80 @@ namespace Makai::Graph {
 			Material::ObjectMaterial	material;
 
 		protected:
-			virtual VertexList generate() = 0;
+			enum class TextType {
+				TT_NORMAL,
+				TT_EMPHASIS,
+				TT_END
+			};
+
+			virtual void generate() = 0;
+
+			void setVertices(VertexList const& verts, TextType const type) {
+				switch (type) {
+					case TextType::TT_NORMAL:	normalText = verts;		break;
+					case TextType::TT_EMPHASIS:	emphasisText = verts;	break;
+				}
+			}
+
+			void clearVertices(TextType const type) {
+				switch (type) {
+					case TextType::TT_NORMAL:	normalText = {};	break;
+					case TextType::TT_EMPHASIS:	emphasisText = {};	break;
+				}
+			}
+
+			void clearAllVertices() {
+				for (TextType type = TextType{0}; type < TextType::TT_MAX_TYPES; ++type)
+					clearVertices(type);
+			}
 
 		private:
-			/// @brief Underlying vertices to render.
-			VertexList vertices;
+			/// @brief Underlying normal text to render.
+			VertexList normalText;
+			/// @brief Underlying emphasis text to render.
+			VertexList emphasisText;
 
 			/// @brief Last text displayed.
 			Instance<ContentType> last = new ContentType{"",{0,0}};
 
 			void draw() override {
+				if (!font) return;
 				// If text changed, update label
-				if (*text != *last) {
+				if (text && (*text != *last)) {
 					*last = *text;
-					vertices = generate();
+					generate();
 				}
-				// If no vertices, return
-				if (!vertices.size()) return;
-				// Set shader data
-				material.texture	= {{{true}, {font->faces.normal}}, material.texture.alphaClip};
-				material.blend		= {{{true}, {font->faces.emphasis}}, material.blend};
 				prepare();
+				for (TextType type = TextType{0}; type < TextType::TT_MAX_TYPES; ++type)
+					showText(type);
+			}
+
+			void setFont(TextType const type) {
+				// Set font
+				material.texture.enabled = true;
+				switch (type) {
+					case TextType::TT_NORMAL:	material.texture.image = font->faces.normal;	break;
+					case TextType::TT_EMPHASIS:	material.texture.image = font->faces.emphasis;	break;
+				}
+			}
+
+			VertexList& getVertices(TextType const type) {
+				switch (type) {
+					return	normalText;		break;
+					return	emphasisText;	break;
+				}
+			}
+
+			void showText(TextType const type) {
+				// If no normal text, return
+				if (!normalText.size()) return;
+				// Set shader data
+				setFont(type);
 				material.use(shader);
+				auto& verts = getVertices(type);
 				// Display to screen
 				display(
-					vertices.data(), vertices.size(),
+					verts.data(), verts.size(),
 					material.culling,
 					material.fill,
 					DisplayMode::ODM_TRIS,
@@ -185,12 +234,12 @@ namespace Makai::Graph {
 	}
 
 	/// @brief `char` string text display.
-	class CharLabel: public Base::ALabel<String> {VertexList generate() override;};
+	class CharLabel: public Base::ALabel<String> {void generate() override;};
 	/// @brief `char` string text display data.
 	using CharTextData = typename Base::ALabel<String>::ContentType;
 
 	/// @brief UTF-8 string text display.
-	class UTF8Label: public Base::ALabel<UTF8String> {VertexList generate() override;};
+	class UTF8Label: public Base::ALabel<UTF8String> {void generate() override;};
 	/// @brief UTF-8 string Text display data.
 	using UTF8TextData = typename Base::ALabel<UTF8String>::ContentType;
 
