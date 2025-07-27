@@ -375,8 +375,8 @@ void UTF8Label::generate() {
 				static_cast<int64>(index / font->size.x)
 			);
 		else uv = Vector2(
-			(int64)(('#') % int(font->size.x)),
-			(int64)(('#') / font->size.x)
+			static_cast<int64>(bitcast<uint8>('#') % int(font->size.x)),
+			static_cast<int64>(bitcast<uint8>('#') / font->size.x)
 		);
 		// Get vertex positions
 		Vector2 pos[4] = {
