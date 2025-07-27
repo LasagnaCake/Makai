@@ -223,6 +223,7 @@ CharLabel::VertexList CharLabel::generate() {
 	// If no text is present, return
 	if (!text) return vertices;
 	if (text->content.empty()) return vertices;
+	DEBUGLN("Generating text for '", text->content, "'...");
 	// The current character's position
 	Vector2		cursor;
 	TextRect	chrRect = {0,0};
@@ -314,6 +315,7 @@ UTF8Label::VertexList UTF8Label::generate() {
 	// If no text is present, return
 	if (!text) return vertices;
 	if (text->content.empty()) return vertices;
+	DEBUGLN("Generating text for '", text->content, "'...");
 	// The current character's position
 	Vector2		cursor;
 	TextRect	chrRect = {0,0};
