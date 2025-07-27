@@ -1581,7 +1581,7 @@ namespace UTF {
 			String out;
 			if (empty()) return out;
 			As<char[5]> buf;
-			MX::memzero(buf, 0);
+			MX::memset(buf, 5, '\0');
 			out.reserve(size() * DataType::SIZE);
 			for (DataType const& ch: *this) {
 				ch.toBytes(buf);
