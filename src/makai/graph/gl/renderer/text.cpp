@@ -334,6 +334,7 @@ void UTF8Label::generate() {
 	// The current line and current character
 	usize curLine = 0;
 	usize curChar = 0;
+	auto const charStart = static_cast<int64>(font->start);
 	// Loop through each character and...
 	for (UTF::Character<8> const& pc: text->content) {
 		auto c = pc.value();
@@ -368,16 +369,16 @@ void UTF8Label::generate() {
 		// If character below min range, skip
 		if (c < font->start) continue;
 		// Get character index
-		index = Math::max<int64>(c - static_cast<int64>(font->start), 0);
+		index = Math::max<int64>(c - charStart, 0);
 		// Get character's top left UV index in the font texture
-		bool const inFontRange = index < font->size.x * font->size.y;
+		bool const inFontRange = index < (font->size.x * font->size.y);
 		uv = inFontRange
 		?	Vector2(
-			static_cast<int64>(index % static_cast<int64>(font->size.x)),
+			static_cast<int64>(index % charStart),
 			static_cast<int64>(index / font->size.x)
 		):	Vector2(
-			static_cast<int64>((bitcast<uint8>('?') - 0x20) % static_cast<int64>(font->size.x)),
-			static_cast<int64>((bitcast<uint8>('?') - 0x20) / font->size.x)
+			static_cast<int64>((bitcast<uint8>('?') - charStart) % static_cast<int64>(font->size.x)),
+			static_cast<int64>((bitcast<uint8>('?') - charStart) / font->size.x)
 		);
 		// Get vertex positions
 		Vector2 pos[4] = {
