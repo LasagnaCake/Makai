@@ -72,6 +72,7 @@ FontFace::FontFace(String const& path): FontFace() {
 		instance->faces.emphasis	= Texture2D::fromJSON(tx["emphasis"s], OS::FS::directoryFromPath(path));
 	instance->size					= fromJSONArrayV2(tx["size"s], 16);
 	instance->spacing				= fromJSONArrayV2(tx["spacing"s], 1);
+	instance->start					= tx["start"s].template get<usize>(0x20ull);
 }
 
 FontFace& FontFace::operator=(FontFace const& other) {
@@ -367,7 +368,7 @@ void UTF8Label::generate() {
 		// If character is a control character, skip
 		if (c < 0x20) continue;
 		// Get character index
-		index = Math::max<int64>(c - 0x20, 0);
+		index = Math::max<int64>(c - font->start, 0);
 		// Get character's top left UV index in the font texture
 		bool const inFontRange = index < font->size.x * font->size.y;
 		uv = inFontRange
