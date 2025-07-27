@@ -322,7 +322,7 @@ void UTF8Label::generate() {
 	Vector2		rectStart = getTextRectStart(*text, *font);
 	// The current character's top left UV index
 	Vector2 uv;
-	unsigned char index;
+	int64 index;
 	// The lines' starting positions (if applicable)
 	List<usize>	lineEnd = getTextLineWrapIndices(*text);
 	List<float>	lineStart = getTextLineStarts(*text, *font, lineEnd);
@@ -367,11 +367,16 @@ void UTF8Label::generate() {
 		// If character is a control character, skip
 		if (c < 0x20) continue;
 		// Get character index
-		index = Math::max<int>(c - 0x20, 0);
+		index = Math::max<int64>(c - 0x20, 0);
 		// Get character's top left UV index in the font texture
-		uv = Vector2(
-			(int)(index % int(font->size.x)),
-			(int)(index / font->size.x)
+		if (uv.y < font->size.y)
+			uv = Vector2(
+				static_cast<int64>(index % int(font->size.x)),
+				static_cast<int64>(index / font->size.x)
+			);
+		else uv = Vector2(
+			(int64)(('#') % int(font->size.x)),
+			(int64)(('#') / font->size.x)
 		);
 		// Get vertex positions
 		Vector2 pos[4] = {
@@ -387,13 +392,15 @@ void UTF8Label::generate() {
 			(uv + Vector2(0,1)) / font->size,
 			(uv + Vector2(1,1)) / font->size,
 		};
+		// Color indicator (for character errors)
+		Vector4 const charColor = uv.y < font->size.y ? Color::WHITE : Color::RED;
 		// Nightmare
-		vertices.pushBack(Vertex(pos[0], uvs[0]));
-		vertices.pushBack(Vertex(pos[1], uvs[1]));
-		vertices.pushBack(Vertex(pos[2], uvs[2]));
-		vertices.pushBack(Vertex(pos[1], uvs[1]));
-		vertices.pushBack(Vertex(pos[2], uvs[2]));
-		vertices.pushBack(Vertex(pos[3], uvs[3]));
+		vertices.pushBack(Vertex(pos[0], uvs[0], charColor));
+		vertices.pushBack(Vertex(pos[1], uvs[1], charColor));
+		vertices.pushBack(Vertex(pos[2], uvs[2], charColor));
+		vertices.pushBack(Vertex(pos[1], uvs[1], charColor));
+		vertices.pushBack(Vertex(pos[2], uvs[2], charColor));
+		vertices.pushBack(Vertex(pos[3], uvs[3], charColor));
 		// Increment cursor
 		cursor.x += text->spacing.x + font->spacing.x;
 		chrRect.h++;
