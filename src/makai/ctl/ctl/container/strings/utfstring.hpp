@@ -1580,7 +1580,8 @@ namespace UTF {
 		constexpr String toString() const {
 			String out;
 			if (empty()) return out;
-			As<char[4]> buf;
+			As<char[5]> buf;
+			MX::memzero(buf, 0);
 			out.reserve(size() * DataType::SIZE);
 			for (DataType const& ch: *this) {
 				ch.toBytes(buf);
