@@ -81,10 +81,7 @@ FontFace& FontFace::operator=(FontFace const& other) {
 }
 
 FontFace& FontFace::operator=(FontData const& font) {
-	instance = new FontData();
-	instance->faces		= font.faces;
-	instance->size		= font.size;
-	instance->spacing	= font.spacing;
+	instance = new FontData{font};
 	return *this;
 }
 
@@ -242,6 +239,9 @@ void CharLabel::generate() {
 	// The current line and current character
 	usize curLine = 0;
 	usize curChar = 0;
+	// Start and end of character set
+	auto const charStart	= static_cast<int64>(font->start);
+	auto const charEnd		= static_cast<int64>(font->size.x * font->size.y);
 	// Loop through each character and...
 	for (char pc: text->content) {
 		usize c = CTL::bitcast<uchar>(pc);
@@ -273,14 +273,20 @@ void CharLabel::generate() {
 		}
 		// If cursor has reach the rect's vertical limit, break
 		if(chrRect.v >= text->rect.v) break;
-		// If character is a control character, skip
+		// If character below min range (or a control character), skip
+		if (c < 0x20) continue;
 		if (c < font->start) continue;
 		// Get character index
-		index = Math::max<int64>(c - static_cast<int64>(font->start), 0);
+		index = Math::max<int64>(c - charStart, 0);
 		// Get character's top left UV index in the font texture
-		uv = Vector2(
-			static_cast<int64>(index % int(font->size.x)),
+		bool const inFontRange = index < charEnd;
+		uv = inFontRange
+		?	Vector2(
+			static_cast<int64>(index % static_cast<int64>(font->size.x)),
 			static_cast<int64>(index / font->size.x)
+		):	Vector2(
+			static_cast<int64>((bitcast<uint8>('?') - charStart) % static_cast<int64>(font->size.x)),
+			static_cast<int64>((bitcast<uint8>('?') - charStart) / font->size.x)
 		);
 		// Get vertex positions
 		Vector2 pos[4] = {
@@ -296,13 +302,15 @@ void CharLabel::generate() {
 			(uv + Vector2(0,1)) / font->size,
 			(uv + Vector2(1,1)) / font->size,
 		};
+		// Color indicator (for character errors)
+		Vector4 const charColor = inFontRange ? Color::WHITE : Color::RED;
 		// Nightmare
-		vertices.pushBack(Vertex(pos[0], uvs[0]));
-		vertices.pushBack(Vertex(pos[1], uvs[1]));
-		vertices.pushBack(Vertex(pos[2], uvs[2]));
-		vertices.pushBack(Vertex(pos[1], uvs[1]));
-		vertices.pushBack(Vertex(pos[2], uvs[2]));
-		vertices.pushBack(Vertex(pos[3], uvs[3]));
+		vertices.pushBack(Vertex(pos[0], uvs[0], charColor));
+		vertices.pushBack(Vertex(pos[1], uvs[1], charColor));
+		vertices.pushBack(Vertex(pos[2], uvs[2], charColor));
+		vertices.pushBack(Vertex(pos[1], uvs[1], charColor));
+		vertices.pushBack(Vertex(pos[2], uvs[2], charColor));
+		vertices.pushBack(Vertex(pos[3], uvs[3], charColor));
 		// Increment cursor
 		cursor.x += text->spacing.x + font->spacing.x;
 		chrRect.h++;
@@ -334,10 +342,12 @@ void UTF8Label::generate() {
 	// The current line and current character
 	usize curLine = 0;
 	usize curChar = 0;
-	auto const charStart = static_cast<int64>(font->start);
+	// Start and end of character set
+	auto const charStart	= static_cast<int64>(font->start);
+	auto const charEnd		= static_cast<int64>(font->size.x * font->size.y);
 	// Loop through each character and...
 	for (UTF::Character<8> const& pc: text->content) {
-		auto c = pc.value();
+		usize c = pc.value();
 		// Check if max characters hasn't been reached
 		if (text->maxChars == 0 || ((llong(curChar) > llong(text->maxChars-1)) && (text->maxChars > -1))) break;
 		else curChar++;
@@ -366,12 +376,13 @@ void UTF8Label::generate() {
 		}
 		// If cursor has reach the rect's vertical limit, break
 		if(chrRect.v >= text->rect.v) break;
-		// If character below min range, skip
+		// If character below min range (or a control character), skip
+		if (c < 0x20) continue;
 		if (c < font->start) continue;
 		// Get character index
 		index = Math::max<int64>(c - charStart, 0);
 		// Get character's top left UV index in the font texture
-		bool const inFontRange = index < (font->size.x * font->size.y);
+		bool const inFontRange = index < charEnd;
 		uv = inFontRange
 		?	Vector2(
 			static_cast<int64>(index % static_cast<int64>(font->size.x)),
