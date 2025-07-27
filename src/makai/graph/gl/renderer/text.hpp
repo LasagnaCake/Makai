@@ -34,7 +34,9 @@ namespace Makai::Graph {
 		Vector2		size	= Vector2(16);
 		/// @brief Font spacing.
 		Vector2		spacing	= Vector2(1);
-		/// @brief At which text character the font sheet starts.
+		/// @brief
+		///		At which text character the font sheet starts.
+		///		Any characters before this one get discarded.
 		usize		start	= 0x20;
 	};
 
