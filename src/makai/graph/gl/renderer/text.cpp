@@ -231,7 +231,7 @@ void CharLabel::generate() {
 	Vector2		rectStart = getTextRectStart(*text, *font);
 	// The current character's top left UV index
 	Vector2 uv;
-	unsigned char index;
+	int64 index;
 	// The lines' starting positions (if applicable)
 	List<usize>	lineEnd = getTextLineWrapIndices(*text);
 	List<float>	lineStart = getTextLineStarts(*text, *font, lineEnd);
@@ -274,13 +274,13 @@ void CharLabel::generate() {
 		// If cursor has reach the rect's vertical limit, break
 		if(chrRect.v >= text->rect.v) break;
 		// If character is a control character, skip
-		if (c < 0x20) continue;
+		if (c < static_cast<int64>(font->start)) continue;
 		// Get character index
-		index = Math::max<int>(c - 0x20, 0);
+		index = Math::max<int64>(c - static_cast<int64>(font->start), 0);
 		// Get character's top left UV index in the font texture
 		uv = Vector2(
-			(int)(index % int(font->size.x)),
-			(int)(index / font->size.x)
+			static_cast<int64>(index % int(font->size.x)),
+			static_cast<int64>(index / font->size.x)
 		);
 		// Get vertex positions
 		Vector2 pos[4] = {
@@ -365,10 +365,10 @@ void UTF8Label::generate() {
 		}
 		// If cursor has reach the rect's vertical limit, break
 		if(chrRect.v >= text->rect.v) break;
-		// If character is a control character, skip
-		if (c < 0x20) continue;
+		// If character below min range, skip
+		if (c < static_cast<int64>(font->start)) continue;
 		// Get character index
-		index = Math::max<int64>(c - font->start, 0);
+		index = Math::max<int64>(c - static_cast<int64>(font->start), 0);
 		// Get character's top left UV index in the font texture
 		bool const inFontRange = index < font->size.x * font->size.y;
 		uv = inFontRange
