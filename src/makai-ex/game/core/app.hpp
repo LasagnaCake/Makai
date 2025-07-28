@@ -21,8 +21,26 @@ namespace Makai::Ex::Game {
 
 	/// @brief Base game application.
 	struct App: Makai::App {
+		using SoundType = Audio::Engine::SoundType;
+
 		using Makai::App::App;
 
+		/// @brief Audio track container.
+		struct Tracks {
+			/// @brief Music track.
+			Audio::GroupInstance music;
+			/// @brief Sound effects track.
+			Audio::GroupInstance sfx;
+		};
+
+		/// @brief Audio tracks.
+		Tracks const tracks;
+
+		App(Config::App const& cfg):
+			Makai::App(cfg),
+			tracks{audio.createGroup(), audio.createGroup()} {}
+
+		/// @brief Layer material map.
 		using LayerMap = Map<usize, Graph::Material::BufferMaterial>;
 
 		/// @brief Destructor.
@@ -43,6 +61,22 @@ namespace Makai::Ex::Game {
 		/// @param layerID Layer currently being processed. 
 		void onLayerDrawBegin(usize const layerID) override {
 			layer = layers[layerID];
+		}
+
+		/// @brief Creates a sound in the SFX track.
+		/// @param path Path to audio file.
+		/// @param type Sound type. By default, it is `EST_PRELOADED`.
+		/// @return Sound instance, or `nullptr` on failure.
+		Audio::SoundInstance createSFX(String const& path, SoundType const type = SoundType::EST_PRELOADED) {
+			return audio.createSound(path, type, tracks.sfx);
+		}
+
+		/// @brief Creates a sound in the music track.
+		/// @param path Path to audio file.
+		/// @param type Sound type. By default, it is `EST_STREAMED`.
+		/// @return Sound instance, or `nullptr` on failure.
+		Audio::SoundInstance createMusic(String const& path, SoundType const type = SoundType::EST_STREAMED) {
+			return audio.createSound(path, type, tracks.music);
 		}
 	};
 }
