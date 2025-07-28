@@ -12,7 +12,7 @@ namespace Makai::Audio {
 	using APeriodicAudioEvent = APeriodic<Engine>;
 	
 	/// @brief Audio engine.
-	struct Engine: private Component<Engine>, public APeriodicAudioEvent, ILoud {
+	struct Engine: private Component<Engine>, APeriodicAudioEvent, ILoud {
 		using typename Component<Engine>::Resource;
 
 		/// @brief Engine sound.
@@ -81,7 +81,7 @@ namespace Makai::Audio {
 		using Component<Engine>::instance;
 	};
 
-	struct Engine::Group: Component<Engine::Group>, IClonable<Instance<Engine::Group>>, ILoud {
+	struct Engine::Group: private Component<Engine::Group>, IClonable<Instance<Engine::Group>>, ILoud {
 		using typename Component<Group>::Resource;
 
 		using Component<Group>::exists;
@@ -115,7 +115,7 @@ namespace Makai::Audio {
 		friend struct Engine::Resource;
 	};
 	
-	struct Engine::Sound: Component<Engine::Sound>, ILoud, IClonable<Instance<Engine::Sound>> {
+	struct Engine::Sound: private Component<Engine::Sound>, ILoud, IClonable<Instance<Engine::Sound>> {
 		using typename Component<Sound>::Resource;
 
 		using Component<Sound>::exists;
@@ -228,6 +228,21 @@ namespace Makai::Audio {
 		friend struct Engine;
 		friend struct Engine::Resource;
 	};
+
+	/// @brief Analog for `Engine::Sound`.
+	using Sound = Engine::Sound;
+	/// @brief Analog for `Engine::Group`.
+	using Group = Engine::Group;
+
+	/// @brief Analog for `Instance<Sound>`.
+	using SoundInstance	= Instance<Sound>;
+	/// @brief Analog for `Instance<Group>`.
+	using GroupInstance	= Instance<Group>;
+
+	/// @brief Analog for `Handle<Sound>`.
+	using SoundHandle	= Handle<Sound>;
+	/// @brief Analog for `Handle<Group>`.
+	using GroupHandle	= Handle<Group>;
 }
 
 #endif // MAKAILIB_AUDIO_ENGINE_H
