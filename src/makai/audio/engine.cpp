@@ -18,14 +18,6 @@ struct Engine::Resource {
 	Instance<Sound> createSound(BinaryData<> const& data, SoundType const mode, Handle<Group::Resource> const& group);
 	Instance<Group> createGroup(Handle<Group::Resource> const& parent);
 
-	usize toPCMFrames(float const time) const {
-		return (ma_engine_get_sample_rate(&engine) * time);
-	}
-
-	float toSeconds(usize const time) const {
-		return (static_cast<float>(time) / ma_engine_get_sample_rate(&engine));
-	}
-
 	Resource();
 
 	~Resource();
@@ -41,7 +33,7 @@ struct Engine::Sound::Resource: APeriodicSound {
 	ma_decoder_config	config;
 
 	BinaryData<>					data;
-	Instance<Engine::Resource>		engine;
+	Handle<Engine::Resource>		engine;
 	Handle<Engine::Group::Resource>	group;
 
 	SoundType type;
@@ -54,13 +46,21 @@ struct Engine::Sound::Resource: APeriodicSound {
 
 	bool canPlayAgain() const {return cooldown;}
 
+	usize toPCMFrames(float const time) const {
+		return (ma_engine_get_sample_rate(ma_sound_get_engine(&source)) * time);
+	}
+
+	float toSeconds(usize const time) const {
+		return (static_cast<float>(time) / ma_engine_get_sample_rate(ma_sound_get_engine(&source)));
+	}
+
 	~Resource();
 };
 
 struct Engine::Group::Resource: APeriodicGroup {
 	ma_sound_group		group;
 
-	Instance<Engine::Resource>	engine;
+	Handle<Engine::Resource>	engine;
 	Handle<Resource>			parent;
 	List<Instance<Resource>>	children;
 
@@ -248,13 +248,13 @@ Engine::Sound& Engine::Sound::setLooping(bool const loop) {
 
 Engine::Sound& Engine::Sound::setPlaybackTime(float const time) {
 	if (!exists()) return *this;
-	ma_sound_seek_to_pcm_frame(&instance->source, instance->engine->toPCMFrames(time));
+	ma_sound_seek_to_pcm_frame(&instance->source, instance->toPCMFrames(time));
 	return *this;
 }
 
 float Engine::Sound::getPlaybackTime() const {
 	if (!exists()) return 0;
-	return instance->engine->toSeconds(ma_sound_get_time_in_pcm_frames(&instance->source));
+	return instance->toSeconds(ma_sound_get_time_in_pcm_frames(&instance->source));
 }
 
 bool Engine::Sound::looping() {
@@ -280,7 +280,7 @@ float Engine::Sound::getVolume() const {
 
 Engine::Sound& Engine::Sound::fade(float const from, float const to, float const time) {
 	if (!exists()) return *this;
-	ma_sound_set_fade_in_pcm_frames(&instance->source, from, to, instance->engine->toPCMFrames(time));
+	ma_sound_set_fade_in_pcm_frames(&instance->source, from, to, instance->toPCMFrames(time));
 	return *this;
 }
 
@@ -291,12 +291,12 @@ Engine::Sound& Engine::Sound::setSpatial(bool const state) {
 }
 
 Instance<Engine::Sound> Engine::Sound::clone() const {
-	if (!exists()) return nullptr;
+	if (!exists() || !instance->engine) return nullptr;
 	return instance->engine->createSound(instance->data, instance->type, instance->group);
 }
 
 Instance<Engine::Group> Engine::Group::clone() const {
-	if (!exists()) return nullptr;
+	if (!exists() || !instance->engine) return nullptr;
 	return instance->engine->createGroup(instance->parent);
 }
 
