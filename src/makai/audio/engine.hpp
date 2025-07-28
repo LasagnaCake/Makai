@@ -142,6 +142,7 @@ namespace Makai::Audio {
 		/// @param loop Whether sound should loop indefinitely. By default, it is `false`.
 		/// @brief fadeIn Fade-in time, in seconds. By default, it is zero.
 		/// @brief cooldown Cooldown before sound can be played again, in cycles. By default, it is zero.
+		/// @return Reference to self.
 		Sound& play(
 			bool const	force		= false,
 			bool const	loop		= false,
@@ -149,6 +150,8 @@ namespace Makai::Audio {
 			usize const	cooldown	= 0
 		);
 		/// @brief Stops the sound.
+		/// @brief fadeOut Fade-out time, in seconds. By default, it is zero.
+		/// @return Reference to self.
 		Sound& stop(float const fadeOut = 0);
 
 		Sound& unpause();
