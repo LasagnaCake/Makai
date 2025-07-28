@@ -21,7 +21,7 @@ namespace Makai::Audio {
 	template <class T>
 	struct Component {
 		/// @brief Audio component resource. Implementation dependent on `T`.
-		/// @note Generally, it should be an opaque type.
+		/// @note Generally, it should be an opaque type. Hence why it has no definition.
 		struct Resource;
 
 		/// @brief Returns whether the component exists.

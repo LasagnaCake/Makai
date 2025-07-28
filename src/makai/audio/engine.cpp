@@ -41,7 +41,7 @@ struct Engine::Sound::Resource: APeriodicSound {
 	ma_decoder_config	config;
 
 	BinaryData<>					data;
-	Handle<Engine::Resource>		engine;
+	Instance<Engine::Resource>		engine;
 	Handle<Engine::Group::Resource>	group;
 
 	SoundType type;
@@ -60,7 +60,7 @@ struct Engine::Sound::Resource: APeriodicSound {
 struct Engine::Group::Resource: APeriodicGroup {
 	ma_sound_group		group;
 
-	Handle<Engine::Resource>	engine;
+	Instance<Engine::Resource>	engine;
 	Handle<Resource>			parent;
 	List<Instance<Resource>>	children;
 
@@ -195,9 +195,13 @@ void Engine::onUpdate() {
 }
 	
 
-Engine::Sound& Engine::Sound::start(bool const loop, float const fadeInTime, usize const cooldown) {
+Engine::Sound& Engine::Sound::start(bool const force, bool const loop, float const fadeInTime, usize const cooldown) {
 	if (!exists()) return *this;
 	if (!instance->canPlayAgain()) return * this;
+	if (playing()) {
+		if (!force) return *this;
+		stop();
+	}
 	setLooping(loop);
 	if (fadeInTime) {
 		setVolume(0);
@@ -258,6 +262,11 @@ bool Engine::Sound::looping() {
 	return ma_sound_is_looping(&instance->source) == MA_TRUE;
 }
 
+bool Engine::Sound::playing() {
+	if (!exists()) return false;
+	return ma_sound_is_playing(&instance->source) == MA_TRUE;
+}
+
 Engine::Sound& Engine::Sound::setVolume(float const volume) {
 	if (!exists()) return *this;
 	ma_sound_set_volume(&instance->source, volume);
@@ -289,4 +298,26 @@ Instance<Engine::Sound> Engine::Sound::clone() const {
 Instance<Engine::Group> Engine::Group::clone() const {
 	if (!exists()) return nullptr;
 	return instance->engine->createGroup(instance->parent);
+}
+
+Engine::Group& Engine::Group::setVolume(float const volume) {
+	if (!exists()) return *this;
+	ma_sound_group_set_volume(&instance->group, volume);
+	return *this;
+}
+
+float Engine::Group::getVolume() const {
+	if (!exists()) return 0;
+	return ma_sound_group_get_volume(&instance->group);
+}
+
+Engine& Engine::setVolume(float const volume) {
+	if (!exists()) return *this;
+	ma_engine_set_volume(&instance->engine, volume);
+	return *this;
+}
+
+float Engine::getVolume() const {
+	if (!exists()) return 0;
+	return ma_engine_get_volume(&instance->engine);
 }

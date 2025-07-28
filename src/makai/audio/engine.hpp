@@ -12,7 +12,7 @@ namespace Makai::Audio {
 	using APeriodicAudioEvent = APeriodic<Engine>;
 	
 	/// @brief Audio engine.
-	struct Engine: private Component<Engine>, public APeriodicAudioEvent {
+	struct Engine: private Component<Engine>, public APeriodicAudioEvent, ILoud {
 		using typename Component<Engine>::Resource;
 
 		/// @brief Engine sound.
@@ -53,8 +53,19 @@ namespace Makai::Audio {
 		/// @brief Updates the audio engine.
 		void onUpdate() override;
 
-		Instance<Group> createGroup(Handle<Group> const& parent);
+		/// @brief Sets the engine's master volume.
+		/// @param volume Volume to set to.
+		Engine&	setVolume(float const volume)	override final;
+		/// @brief Returns the engine's master volume.
+		/// @return Master volume.
+		float	getVolume() const				override final;
 
+		/// @brief Creates a sound group in the engine.
+		/// @param parent Group parent. By default, it is `nullptr` (i.e. none).
+		Instance<Group> createGroup(Handle<Group> const& parent = nullptr);
+
+		/// @brief Creates a sound in the engine.
+		/// @param parent Group parent. By default, it is `nullptr`.
 		Instance<Sound> createSound(
 			BinaryData<> const&		data,
 			SoundType const			mode	= SoundType::EST_PRELOADED,
@@ -67,7 +78,7 @@ namespace Makai::Audio {
 		using Component<Engine>::instance;
 	};
 
-	struct Engine::Group: Component<Engine::Group>, IClonable<Instance<Engine::Group>> {
+	struct Engine::Group: Component<Engine::Group>, IClonable<Instance<Engine::Group>>, ILoud {
 		using typename Component<Group>::Resource;
 
 		using Component<Group>::exists;
@@ -79,6 +90,9 @@ namespace Makai::Audio {
 
 		Instance<Group> clone() const override final;
 		Instance<Group> clone() override final {return constant(*this).clone();};
+
+		Group&	setVolume(float const volume)	override final;
+		float	getVolume() const				override final;
 
 	private:
 		Group();
@@ -99,9 +113,10 @@ namespace Makai::Audio {
 
 		Sound& setLooping(bool const state = false);
 		bool looping();
+		bool playing();
 
 		Sound& start() override final;
-		Sound& start(bool const loop, float const fadeIn = 0, usize const cooldown = 1);
+		Sound& start(bool const force, bool const loop, float const fadeIn = 0, usize const cooldown = 1);
 
 		Sound& play() override final;
 		Sound& pause() override final;
