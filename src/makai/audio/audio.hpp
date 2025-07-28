@@ -2,8 +2,8 @@
 #define MAKAILIB_AUDIO_H
 
 #include "core.hpp"
-#include "source.hpp"
-#include "update.hpp"
+#include "global.hpp"
+#include "engine.hpp"
 
 namespace MkAudio = Makai::Audio;
 

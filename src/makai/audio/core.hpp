@@ -5,21 +5,31 @@
 
 /// @brief Audio facilities. 
 namespace Makai::Audio {
+	/// @brief Interface for an object with volume controls.
 	struct ILoud {
+		/// @brief Destructor.
 		constexpr ~ILoud() {}
 
+		/// @brief Sets the current volume. MUST be implemented.
 		virtual void	setVolume(float const volume)	= 0;
+		/// @brief Returns the current volume. MUST be implemented.
 		virtual float	getVolume() const				= 0;
 	};
 
-	template <class T> struct Component {
+	/// @brief Audio component.
+	/// @tparam Component type.
+	template <class T>
+	struct Component {
+		/// @brief Audio component resource. Implementation dependent on `T`.
+		/// @note Generally, it should be an opaque type.
 		struct Resource;
-		
+
 		/// @brief Returns whether the component exists.
 		/// @return Whether component exists.
 		bool exists() const {return instance;}
 
 	protected:
+		/// @brief Resource instance.
 		Instance<Resource> instance;
 	};
 }

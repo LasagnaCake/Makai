@@ -6,23 +6,40 @@
 
 /// @brief Audio facilities. 
 namespace Makai::Audio {
+	/// @brief Audio engine.
 	struct Engine;
 
-	struct Engine: private Component<Engine> {
+	using APeriodicAudioEvent = APeriodic<Engine>;
+	
+	/// @brief Audio engine.
+	struct Engine: private Component<Engine>, public APeriodicAudioEvent {
 		using typename Component<Engine>::Resource;
 
+		/// @brief Engine sound.
 		struct Sound;
+		/// @brief Engine sound roup.
 		struct Group;
 
-		enum class LoadMode {
-			LM_STREAM,
-			LM_PRELOAD,
-			LM_PRELOAD_ASYNC
+		/// @brief Engine sound type.
+		enum class SoundType {
+			/// @brief Streamed sound, decoded on-the-fly. Better for music.
+			EST_STREAMED,
+			/// @brief Pre-decode the sound, in the current thread. Better for SFX.
+			EST_PRELOADED,
+			/// @brief Pre-decode the sound, in the background.
+			EST_PRELOADED_ASYNC
 		};
 
+		/// @brief Default constructor.
 		Engine();
 
+		/// @brief Destructor.
 		~Engine();
+
+		/// @brief Copy assignment operator (defaulted).
+		Engine& operator=(Engine const& other)	= default;
+		/// @brief Move assignment operator (defaulted).
+		Engine& operator=(Engine&& other)		= default;
 
 		/// @brief Stops all audio playback currently happening.
 		void stopAllSounds();
@@ -33,11 +50,14 @@ namespace Makai::Audio {
 		/// @brief Closes the audio engine.
 		void close();
 
+		/// @brief Updates the audio engine.
+		void onUpdate() override;
+
 		Instance<Group> createGroup(Handle<Group> const& parent);
 
 		Instance<Sound> createSound(
 			BinaryData<> const&		data,
-			LoadMode const			mode	= LoadMode::LM_PRELOAD,
+			SoundType const			mode	= SoundType::EST_PRELOADED,
 			Handle<Group> const&	group	= {nullptr}
 		);
 
@@ -46,45 +66,64 @@ namespace Makai::Audio {
 	private:
 		using Component<Engine>::instance;
 	};
-	
-	struct Engine::Group: Component<Engine::Group> {
+
+	struct Engine::Group: Component<Engine::Group>, IClonable<Instance<Engine::Group>> {
 		using typename Component<Group>::Resource;
 
 		using Component<Group>::exists;
 
-		~Group();
+		virtual ~Group();
+
+		Group& operator=(Group const& other)	= delete;
+		Group& operator=(Group&& other)			= delete;
+
+		Instance<Group> clone() const override final;
+		Instance<Group> clone() override final {return constant(*this).clone();};
 
 	private:
 		Group();
 		using Component<Engine::Group>::instance;
 		friend struct Engine;
+		friend struct Engine::Resource;
 	};
 	
-	struct Engine::Sound: Component<Engine::Sound>, IPlayable, ILoud {
+	struct Engine::Sound: Component<Engine::Sound>, IPlayable, ILoud, IClonable<Instance<Engine::Sound>> {
 		using typename Component<Sound>::Resource;
 
 		using Component<Sound>::exists;
 
-		void setLooping(bool const state = false);
+		virtual ~Sound();
+
+		Sound& operator=(Sound const& other)	= delete;
+		Sound& operator=(Sound&& other)			= delete;
+
+		Sound& setLooping(bool const state = false);
 		bool looping();
 
-		Sound& start() override;
-		Sound& start(bool const loop, usize const fadeIn = 0);
+		Sound& start() override final;
+		Sound& start(bool const loop, float const fadeIn = 0, usize const cooldown = 1);
 
-		Sound& play() override;
-		Sound& pause() override;
-		Sound& stop() override;
-		Sound& stop(usize const fadeOut);
+		Sound& play() override final;
+		Sound& pause() override final;
+		Sound& stop() override final;
+		Sound& stop(float const fadeOut);
 
-		void	setVolume(float const volume)	override;
-		float	getVolume() const				override;
+		Sound& setPlaybackTime(float const time);
+		float getPlaybackTime() const;
 
-		virtual ~Sound();
+		void	setVolume(float const volume)	override final;
+		float	getVolume() const				override final;
+
+		void setSpatial(bool const state);
+
+		Instance<Sound> clone() const override final;
+		Instance<Sound> clone() override final {return constant(*this).clone();};
 
 	private:
 		Sound();
 		using Component<Engine::Sound>::instance;
 		friend struct Engine;
+		friend struct Engine::Resource;
 	};
 }
 

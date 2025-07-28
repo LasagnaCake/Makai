@@ -6,7 +6,7 @@ override prefix := $(call concat, $(prefix), audio)
 INCLUDES := $(INC_MINIAUDIO)
 
 define MAKE_SUB
-	$(call compile-all, engine source)
+	$(call compile-all, engine global)
 endef
 
 .PHONY: debug release all

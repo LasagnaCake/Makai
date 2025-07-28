@@ -74,6 +74,7 @@ constexpr AsNonReference<T>		copy(T const& v)				{return static_cast<AsNonRefere
 /// @return Value as const reference.
 template <class T>
 constexpr AsConstant<T>&		constant(T& v)					{return v;										}
+template <class T> constexpr void constant(T const&& v) = delete;
 
 /// @brief Forwards references as either references or temporaries, depending on its type.
 /// @param v Value to decay.

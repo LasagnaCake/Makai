@@ -12,39 +12,75 @@ using namespace Makai;
 struct Engine::Resource {
 	ma_engine engine;
 
-	Resource() {
-		if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
-			throw Error::FailedAction(
-				"Failed to initialize audio engine!",
-				CTL_CPP_PRETTY_SOURCE
-			);
-		}
+	List<Instance<Sound::Resource>> sounds;
+	List<Instance<Group::Resource>>	groups;
+
+	Instance<Sound> createSound(BinaryData<> const& data, SoundType const mode, Handle<Group::Resource> const& group);
+	Instance<Group> createGroup(Handle<Group::Resource> const& parent);
+
+	usize toPCMFrames(float const time) const {
+		return (ma_engine_get_sample_rate(&engine) * time);
 	}
 
-	~Resource() {
-		ma_engine_uninit(&engine);
+	float toSeconds(usize const time) const {
+		return (static_cast<float>(time) / ma_engine_get_sample_rate(&engine));
 	}
+
+	Resource();
+
+	~Resource();
 };
+	
+using APeriodicGroup = APeriodic<Engine::Group::Resource>;
 
-struct Engine::Sound::Resource {
+using APeriodicSound = APeriodic<Engine::Sound::Resource>;
+
+struct Engine::Sound::Resource: APeriodicSound {
 	ma_sound			source;
 	ma_decoder			decoder;
 	ma_decoder_config	config;
 
-	BinaryData<>						data;
-	Instance<Engine::Resource>			engine;
-	Instance<Engine::Group::Resource>	group;
+	BinaryData<>					data;
+	Handle<Engine::Resource>		engine;
+	Handle<Engine::Group::Resource>	group;
+
+	SoundType type;
+	
+	usize cooldown = 0;
+
+	void update() {
+		if (cooldown) --cooldown;
+	}
+
+	bool canPlayAgain() const {return cooldown;}
 
 	~Resource();
 };
 
-struct Engine::Group::Resource {
+struct Engine::Group::Resource: APeriodicGroup {
 	ma_sound_group		group;
 
-	Instance<Resource>	parent;
+	Handle<Engine::Resource>	engine;
+	Handle<Resource>			parent;
+	List<Instance<Resource>>	children;
+
+	void update() {}
 
 	~Resource();
 };
+
+Engine::Resource::Resource()  {
+	if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
+		throw Error::FailedAction(
+			"Failed to initialize audio engine!",
+			CTL_CPP_PRETTY_SOURCE
+		);
+	}
+}
+
+Engine::Resource::~Resource() {
+	ma_engine_uninit(&engine);
+}
 
 Engine::Sound::Resource::~Resource() {
 	ma_sound_uninit(&source);
@@ -75,34 +111,47 @@ void Engine::close() {
 	instance.unbind();
 }
 
-static inline ma_uint32 modeFlags(Engine::LoadMode const mode) {
+static inline ma_uint32 modeFlags(Engine::SoundType const mode) {
 	switch (mode) {
-		case Engine::LoadMode::LM_STREAM:			return MA_SOUND_FLAG_STREAM;
-		case Engine::LoadMode::LM_PRELOAD:			return MA_SOUND_FLAG_DECODE;
-		case Engine::LoadMode::LM_PRELOAD_ASYNC:	return MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC;
+		case Engine::SoundType::EST_STREAMED:			return MA_SOUND_FLAG_STREAM;
+		case Engine::SoundType::EST_PRELOADED:			return MA_SOUND_FLAG_DECODE;
+		case Engine::SoundType::EST_PRELOADED_ASYNC:	return MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC;
 	}
 }
 
-Instance<Engine::Group> Engine::createGroup(Handle<Engine::Group> const& parent) {
-	if (!exists()) return nullptr;
-	Instance<Group> group	= new Group();
-	group->instance->parent	= parent->instance;
+Instance<Engine::Group> Engine::Resource::createGroup(Handle<Group::Resource> const& parent) {
+	Instance<Group> group = new Group();
+	group->instance->engine = this;
 	if (
 		ma_sound_group_init(
-			&instance->engine,
+			&engine,
 			0,
-			&parent->instance->group,
+			parent ? &parent->group : NULL,
 			&group->instance->group
 		) != MA_SUCCESS
 	) return nullptr;
+	if (parent) {
+		group->instance->parent	= parent;
+		parent->children.pushBack(group->instance);
+	}
+	return group;
 }
 
-Instance<Engine::Sound> Engine::createSound(BinaryData<> const& data, LoadMode const mode, Handle<Group> const& group) {
+Instance<Engine::Group> Engine::createGroup(Handle<Group> const& parent) {
 	if (!exists()) return nullptr;
+	return instance->createGroup(parent->instance);
+}
+
+Instance<Engine::Sound> Engine::Resource::createSound(
+	BinaryData<> const& data,
+	SoundType const type,
+	Handle<Group::Resource> const& group
+) {
 	Instance<Sound> sound = new Sound();
 	sound->instance->config = ma_decoder_config_init_default();
-	sound->instance->engine = instance;
-	sound->instance->group = group->instance;
+	sound->instance->engine = this;
+	sound->instance->group = group;
+	sound->instance->type = type;
 	if (
 		ma_decoder_init_memory(
 			sound->instance->data.data(),
@@ -110,27 +159,51 @@ Instance<Engine::Sound> Engine::createSound(BinaryData<> const& data, LoadMode c
 			&sound->instance->config,
 			&sound->instance->decoder
 		) != MA_SUCCESS
-	)
-		return nullptr;
+	) return nullptr;
 	if (
 		ma_sound_init_from_data_source(
-			&instance->engine,
+			&engine,
 			&sound->instance->decoder,
-			modeFlags(mode),
+			modeFlags(type) | MA_SOUND_FLAG_NO_SPATIALIZATION,
 			NULL,
 			&sound->instance->source
 		) != MA_SUCCESS
 	) return nullptr;
+	sounds.pushBack(sound->instance);
 	return sound;
 }
 
-Engine::Sound& Engine::Sound::start(bool const loop, usize const fadeIn) {
+Instance<Engine::Sound> Engine::createSound(BinaryData<> const& data, SoundType const type, Handle<Group> const& group) {
+	if (!exists()) return nullptr;
+	return instance->createSound(data, type, group->instance);
+}
+
+template<class T>
+static bool oneInstanceFilter(Instance<typename T::Resource> const& inst) {
+	return inst.count() < 2;
+}
+
+void Engine::onUpdate() {
+	for (auto& group: instance->groups)
+		if (group)
+			group->update();
+	for (auto& sound: instance->sounds)
+		if (sound)
+			sound->update();
+	instance->groups.filter(oneInstanceFilter<Group>);
+	instance->sounds.filter(oneInstanceFilter<Sound>);
+}
+	
+
+Engine::Sound& Engine::Sound::start(bool const loop, float const fadeIn, usize const cooldown) {
 	if (!exists()) return *this;
+	if (!instance->canPlayAgain()) return * this;
 	setLooping(loop);
-	if (!fadeIn)
-		play();
-	else
-		ma_sound_set_fade_in_milliseconds(&instance->source, 0, 1, fadeIn);
+	play();
+	if (fadeIn) {
+		ma_sound_set_fade_in_pcm_frames(&instance->source, 0, 1, instance->engine->toPCMFrames(fadeIn));
+	}
+	instance->cooldown = cooldown;
 	return *this;
 }
 
@@ -156,15 +229,27 @@ Engine::Sound& Engine::Sound::stop() {
 	return *this;
 }
 
-Engine::Sound& Engine::Sound::stop(usize const fadeOut) {
+Engine::Sound& Engine::Sound::stop(float const fadeOut) {
 	if (!exists()) return *this;
-	ma_sound_set_fade_in_milliseconds(&instance->source, -1, 0, fadeOut);
+	ma_sound_set_fade_in_pcm_frames(&instance->source, -1, 0, instance->engine->toPCMFrames(fadeOut));
 	return *this;
 }
 
-void Engine::Sound::setLooping(bool const loop) {
-	if (!exists()) return;
+Engine::Sound& Engine::Sound::setLooping(bool const loop) {
+	if (!exists()) return *this;
 	ma_sound_set_looping(&instance->source, loop ? MA_TRUE : MA_FALSE);
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::setPlaybackTime(float const time) {
+	if (!exists()) return *this;
+	ma_sound_seek_to_pcm_frame(&instance->source, instance->engine->toPCMFrames(time));
+	return *this;
+}
+
+float Engine::Sound::getPlaybackTime() const {
+	if (!exists()) return 0;
+	return instance->engine->toSeconds(ma_sound_get_time_in_pcm_frames(&instance->source));
 }
 
 bool Engine::Sound::looping() {
@@ -180,4 +265,18 @@ void Engine::Sound::setVolume(float const volume) {
 float Engine::Sound::getVolume() const {
 	if (!exists()) return 0;
 	return ma_sound_get_volume(&instance->source);
+}
+
+void Engine::Sound::setSpatial(bool const state) {
+	ma_sound_set_spatialization_enabled(&instance->source, state ? MA_TRUE : MA_FALSE);
+}
+
+Instance<Engine::Sound> Engine::Sound::clone() const {
+	if (!exists()) return nullptr;
+	return instance->engine->createSound(instance->data, instance->type, instance->group);
+}
+
+Instance<Engine::Group> Engine::Group::clone() const {
+	if (!exists()) return nullptr;
+	return instance->engine->createGroup(instance->parent);
 }
