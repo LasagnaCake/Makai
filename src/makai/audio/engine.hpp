@@ -33,7 +33,7 @@ namespace Makai::Audio {
 		/// @brief Closes the audio engine.
 		void close();
 
-		Instance<Group> createGroup(Handle<Engine::Group> const& parent);
+		Instance<Group> createGroup(Handle<Group> const& parent);
 
 		Instance<Sound> createSound(
 			BinaryData<> const&		data,
@@ -41,16 +41,16 @@ namespace Makai::Audio {
 			Handle<Group> const&	group	= {nullptr}
 		);
 
-		/// @brief Returns whether the audio engine is open.
-		/// @return Whether engine is open.
-		bool exists() const;
+		using Component<Engine>::exists;
 	
 	private:
 		using Component<Engine>::instance;
 	};
 	
 	struct Engine::Group: Component<Engine::Group> {
-		using typename Component<Engine::Group>::Resource;
+		using typename Component<Group>::Resource;
+
+		using Component<Group>::exists;
 
 		~Group();
 
@@ -60,10 +60,26 @@ namespace Makai::Audio {
 		friend struct Engine;
 	};
 	
-	struct Engine::Sound: Component<Engine::Sound> {
-		using typename Component<Engine::Sound>::Resource;
+	struct Engine::Sound: Component<Engine::Sound>, IPlayable, ILoud {
+		using typename Component<Sound>::Resource;
 
-		~Sound();
+		using Component<Sound>::exists;
+
+		void setLooping(bool const state = false);
+		bool looping();
+
+		Sound& start() override;
+		Sound& start(bool const loop, usize const fadeIn = 0);
+
+		Sound& play() override;
+		Sound& pause() override;
+		Sound& stop() override;
+		Sound& stop(usize const fadeOut);
+
+		void	setVolume(float const volume)	override;
+		float	getVolume() const				override;
+
+		virtual ~Sound();
 
 	private:
 		Sound();

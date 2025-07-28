@@ -71,10 +71,6 @@ void Engine::close() {
 	instance.unbind();
 }
 
-bool Engine::exists() const {
-	return instance;
-}
-
 static inline ma_uint32 modeFlags(Engine::LoadMode const mode) {
 	switch (mode) {
 		case Engine::LoadMode::LM_STREAM:			return MA_SOUND_FLAG_STREAM;
@@ -122,4 +118,62 @@ Instance<Engine::Sound> Engine::createSound(BinaryData<> const& data, LoadMode c
 		) != MA_SUCCESS
 	) return nullptr;
 	return sound;
+}
+
+Engine::Sound& Engine::Sound::start(bool const loop, usize const fadeIn) {
+	if (!exists()) return *this;
+	setLooping(loop);
+	if (!fadeIn)
+		play();
+	else
+		ma_sound_set_fade_in_milliseconds(&instance->source, 0, 1, fadeIn);
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::start() {
+	if (!exists()) return *this;
+	ma_sound_start(&instance->source);
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::play() {
+	if (!exists()) return *this;
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::pause() {
+	if (!exists()) return *this;
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::stop() {
+	if (!exists()) return *this;
+	ma_sound_stop(&instance->source);
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::stop(usize const fadeOut) {
+	if (!exists()) return *this;
+	ma_sound_set_fade_in_milliseconds(&instance->source, -1, 0, fadeOut);
+	return *this;
+}
+
+void Engine::Sound::setLooping(bool const loop) {
+	if (!exists()) return;
+	ma_sound_set_looping(&instance->source, loop ? MA_TRUE : MA_FALSE);
+}
+
+bool Engine::Sound::looping() {
+	if (!exists()) return false;
+	return ma_sound_is_looping(&instance->source) == MA_TRUE;
+}
+
+void Engine::Sound::setVolume(float const volume) {
+	if (!exists()) return;
+	ma_sound_set_volume(&instance->source, volume);
+}
+
+float Engine::Sound::getVolume() const {
+	if (!exists()) return 0;
+	return ma_sound_get_volume(&instance->source);
 }
