@@ -11,7 +11,7 @@ namespace Makai::Audio {
 		constexpr ~ILoud() {}
 
 		/// @brief Sets the current volume. MUST be implemented.
-		virtual void	setVolume(float const volume)	= 0;
+		virtual ILoud&	setVolume(float const volume)	= 0;
 		/// @brief Returns the current volume. MUST be implemented.
 		virtual float	getVolume() const				= 0;
 	};
