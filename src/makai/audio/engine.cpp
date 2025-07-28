@@ -48,7 +48,7 @@ struct Component<Engine::Sound>::Resource {
 		if (cooldown) --cooldown;
 	}
 
-	bool canPlayAgain() const {return cooldown;}
+	bool canPlayAgain() const {return !cooldown;}
 
 	usize toPCMFrames(float const time) const {
 		return (ma_engine_get_sample_rate(ma_sound_get_engine(&source)) * time);
@@ -153,6 +153,7 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 	Engine::SoundType const type,
 	Handle<Engine::Group::Resource> const& group
 ) {
+	if (data.empty()) return nullptr;
 	Instance<Engine::Sound> sound = new Engine::Sound();
 	sound->instance->config = ma_decoder_config_init(
 		ma_format_f32,
@@ -163,23 +164,34 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 	sound->instance->engine = this;
 	sound->instance->group = group;
 	sound->instance->type = type;
+	sound->instance->data = data;
+	DEBUGLN("Creating decoder...");
+	ma_result result;
 	if (
-		ma_decoder_init_memory(
+		(result = ma_decoder_init_memory(
 			sound->instance->data.data(),
 			sound->instance->data.size(),
 			&sound->instance->config,
 			&sound->instance->decoder
-		) != MA_SUCCESS
-	) return nullptr;
+		)) != MA_SUCCESS
+	) {
+		DEBUGLN("ERROR: ", int(result));
+		return nullptr;
+	}
+	DEBUGLN("Creating sound instance...");
 	if (
-		ma_sound_init_from_data_source(
+		(result = ma_sound_init_from_data_source(
 			&engine,
 			&sound->instance->decoder,
 			modeFlags(type) | MA_SOUND_FLAG_NO_SPATIALIZATION,
 			group ? &group->group : NULL,
 			&sound->instance->source
-		) != MA_SUCCESS
-	) return nullptr;
+		)) != MA_SUCCESS
+	) {
+		DEBUGLN("ERROR: ", int(result));
+		return nullptr;
+	}
+	DEBUGLN("Done!");
 	sounds.pushBack(sound->instance);
 	return sound;
 }
@@ -209,7 +221,7 @@ void Engine::onUpdate() {
 Engine::Sound& Engine::Sound::play(bool const force, bool const loop, float const fadeInTime, usize const cooldown) {
 	if (!exists()) return *this;
 	if (!instance->canPlayAgain()) return * this;
-	if (playing()) {
+	if (playing() || paused()) {
 		if (!force) return *this;
 		stop();
 	}
