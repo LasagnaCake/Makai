@@ -17,7 +17,7 @@ namespace Makai::Audio {
 
 		/// @brief Engine sound.
 		struct Sound;
-		/// @brief Engine sound roup.
+		/// @brief Engine sound group.
 		struct Group;
 
 		/// @brief Engine sound type.
@@ -33,11 +33,14 @@ namespace Makai::Audio {
 		/// @brief Default constructor.
 		Engine();
 
+		/// @brief Constructs and opens the engine.
+		Engine(bool const): Engine() {open();};
+
 		/// @brief Destructor.
 		~Engine();
 
-		/// @brief Copy assignment operator (defaulted).
-		Engine& operator=(Engine const& other)	= default;
+		/// @brief Copy assignment operator (deleted).
+		Engine& operator=(Engine const& other)	= delete;
 		/// @brief Move assignment operator (defaulted).
 		Engine& operator=(Engine&& other)		= default;
 
@@ -86,9 +89,9 @@ namespace Makai::Audio {
 		/// @brief Destructor.
 		virtual ~Group();
 	
-		/// @brief Copy assignment operator (defaulted).
+		/// @brief Copy assignment operator (deleted).
 		Group& operator=(Group const& other)	= delete;
-		/// @brief Move assignment operator (defaulted).
+		/// @brief Move assignment operator (deleted).
 		Group& operator=(Group&& other)			= delete;
 
 		/// @brief Creates a copy of the sound group.
@@ -120,27 +123,36 @@ namespace Makai::Audio {
 		/// @brief Destructor.
 		virtual ~Sound();
 
-		/// @brief Copy assignment operator (defaulted).
+		/// @brief Copy assignment operator (deleted).
 		Sound& operator=(Sound const& other)	= delete;
-		/// @brief Move assignment operator (defaulted).
+		/// @brief Move assignment operator (deleted).
 		Sound& operator=(Sound&& other)			= delete;
 
 		/// @brief Enables/disables looping.
 		/// @param Whether to enable (`true`) or disable (`false`) looping.
 		/// @return Reference to self.
 		Sound& setLooping(bool const state = true);
+		
 		/// @brief Returns whether the sound is set to loop.
 		/// @return Whether sound is set to loop.
-		bool looping();
+		bool looping() const;
 
 		/// @brief Returns whether sound is currently playing.
 		/// @return Whether sound is playing.
-		bool playing();
+		bool playing() const;
 
-		/// @brief Plays the sound.
+		/// @brief Returns whether sound is currently paused.
+		/// @return Whether sound is paused.
+		bool paused() const;
+
+		/// @brief Returns whether sound is currently fully stopped.
+		/// @return Whether sound is fully stopped.
+		bool stopped() const {return !(playing() || paused());}
+
+		/// @brief Plays the sound from the beginning.
 		/// @param force Whether to force sound to play from the start, if already playing. Does not ignore cooldown. By default, it is `false`.
 		/// @param loop Whether sound should loop indefinitely. By default, it is `false`.
-		/// @brief fadeIn Fade-in time, in seconds. By default, it is zero.
+		/// @brief fadeIn Fade-in duration, in seconds. By default, it is zero.
 		/// @brief cooldown Cooldown before sound can be played again, in cycles. By default, it is zero.
 		/// @return Reference to self.
 		Sound& play(
@@ -150,19 +162,45 @@ namespace Makai::Audio {
 			usize const	cooldown	= 0
 		);
 		/// @brief Stops the sound.
-		/// @brief fadeOut Fade-out time, in seconds. By default, it is zero.
+		/// @brief fadeOut Fade-out duration, in seconds. By default, it is zero.
 		/// @return Reference to self.
+		/// @note If audio must keep playing after fading out, use `fadeOut` instead.
 		Sound& stop(float const fadeOut = 0);
 
+		/// @brief Unpauses the sound.
+		/// @return Reference to self.
 		Sound& unpause();
+		/// @brief Pauses the sound.
+		/// @return Reference to self.
 		Sound& pause();
 
+		/// @brief Fades (but does not stop) the audio.
+		/// @param from Volume to fade from. Use `-1` for current volume.
+		/// @param from Volume to fade to. Use `-1` for current volume.
+		/// @param time Fade duration, in seconds.
+		/// @return Reference to self.
 		Sound&	fade(float const from, float const to, float const time);
+		/// @brief Fades (but does not stop) the audio, from its current volume, to another volume.
+		/// @param volume Volume to fade to. Use `-1` for current volume.
+		/// @param time Fade duration, in seconds.
+		/// @return Reference to self.
 		Sound&	fadeTo(float const volume, float const time)				{fade(-1, volume, time); return *this;	}
+		/// @brief Fades in (but does not stop) the audio.
+		/// @param time Fade duration, in seconds.
+		/// @return Reference to self.
 		Sound&	fadeIn(float const time)									{fadeTo(1, time); return *this;			}
+		/// @brief Fades out (but does not stop) the audio.
+		/// @param time Fade duration, in seconds.
+		/// @return Reference to self.
+		/// @note If audio must stop after fading audio, use `stop` instead.
 		Sound&	fadeOut(float const time)									{fadeTo(0, time); return *this;			}
 
+		/// @brief Sets the audio's current playback time.
+		/// @param time Playback time, in seconds.
+		/// @return Reference to self.
 		Sound&	setPlaybackTime(float const time);
+		/// @brief Returns the audio's current playback time.
+		/// @return Current playback time, in seconds.
 		float	getPlaybackTime() const;
 
 		/// @brief Sets the sound's volume.
@@ -172,6 +210,9 @@ namespace Makai::Audio {
 		/// @return Sound volume.
 		float	getVolume() const				override final;
 
+		/// @brief Enables/disables 3D spatial audio.
+		/// @return Reference to self.
+		/// @note Spatial audio is currently unimplemented! Currently does nothing.
 		Sound& setSpatial(bool const state);
 
 		/// @brief Creates a copy of the sound.

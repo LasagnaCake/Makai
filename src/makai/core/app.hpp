@@ -29,21 +29,6 @@ namespace Makai {
 			bool		fullscreen	= false;
 		};
 
-		/// @brief Audio configuration.
-		struct Audio {
-			/// @brief Audio formats to use.
-			Makai::Audio::Formats const& formats = {
-				Makai::Audio::Format::AF_OGG,
-				Makai::Audio::Format::AF_MP3
-			};
-			/// @brief Number of output channels to use. 1 → mono, 2 → stereo, and so on.
-			uint channels		= 2;
-			/// @brief Number of audio (non-music) tracks to open.
-			uint audioTracks	= 16;
-			/// @brief Number of music tracks to open.
-			uint musicTracks	= 2;
-		};
-
 		/// @brief Renderer configuration.
 		struct Renderer {
 			/// @brief
@@ -57,8 +42,6 @@ namespace Makai {
 		struct App {
 			/// @brief Window configuration.
 			Window		window;
-			/// @brief Audio configuration.
-			Audio		audio		= {};
 			/// @brief Renderer configuration.
 			Renderer	renderer	= {};
 		};
@@ -253,6 +236,9 @@ namespace Makai {
 
 		/// @brief Input manager.
 		Input::Manager input;
+
+		/// @brief Audio engine.
+		Audio::Engine audio;
 
 		/// @brief Maximum frame rate.
 		float maxFrameRate = 30.0;

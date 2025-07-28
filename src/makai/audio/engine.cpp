@@ -40,6 +40,8 @@ struct Engine::Sound::Resource: APeriodicSound {
 	
 	usize cooldown = 0;
 
+	bool paused = false;
+
 	void update() {
 		if (cooldown) --cooldown;
 	}
@@ -207,13 +209,24 @@ Engine::Sound& Engine::Sound::play(bool const force, bool const loop, float cons
 		setVolume(0);
 		fadeIn(fadeInTime);
 	}
+	instance->paused = false;
+	setPlaybackTime(0);
 	ma_sound_start(&instance->source);
 	instance->cooldown = cooldown;
 	return *this;
 }
 
 Engine::Sound& Engine::Sound::pause() {
-	if (!exists()) return *this;
+	if (!exists() || paused()) return *this;
+	ma_sound_start(&instance->source);
+	instance->paused = true;
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::unpause() {
+	if (!exists() || !paused()) return *this;
+	ma_sound_stop(&instance->source);
+	instance->paused = false;
 	return *this;
 }
 
@@ -242,14 +255,19 @@ float Engine::Sound::getPlaybackTime() const {
 	return instance->toSeconds(ma_sound_get_time_in_pcm_frames(&instance->source));
 }
 
-bool Engine::Sound::looping() {
+bool Engine::Sound::looping() const {
 	if (!exists()) return false;
 	return ma_sound_is_looping(&instance->source) == MA_TRUE;
 }
 
-bool Engine::Sound::playing() {
+bool Engine::Sound::playing() const {
 	if (!exists()) return false;
 	return ma_sound_is_playing(&instance->source) == MA_TRUE;
+}
+
+bool Engine::Sound::paused() const {
+	if (!exists()) return false;
+	return instance->paused;
 }
 
 Engine::Sound& Engine::Sound::setVolume(float const volume) {
@@ -271,7 +289,7 @@ Engine::Sound& Engine::Sound::fade(float const from, float const to, float const
 
 Engine::Sound& Engine::Sound::setSpatial(bool const state) {
 	if (!exists()) return *this;
-	ma_sound_set_spatialization_enabled(&instance->source, state ? MA_TRUE : MA_FALSE);
+	//ma_sound_set_spatialization_enabled(&instance->source, state ? MA_TRUE : MA_FALSE);
 	return *this;
 }
 
