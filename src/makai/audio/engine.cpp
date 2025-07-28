@@ -26,16 +26,6 @@ struct Engine::Resource {
 	}
 };
 
-struct Engine::Group::Resource {
-	ma_sound_group		group;
-
-	Instance<Resource>	parent;
-
-	~Resource() {
-		ma_sound_group_uninit(&group);
-	}
-};
-
 struct Engine::Sound::Resource {
 	ma_sound			source;
 	ma_decoder			decoder;
@@ -45,11 +35,25 @@ struct Engine::Sound::Resource {
 	Instance<Engine::Resource>			engine;
 	Instance<Engine::Group::Resource>	group;
 
-	~Resource() {
-		ma_sound_uninit(&source);
-		ma_decoder_uninit(&decoder);
-	}
+	~Resource();
 };
+
+struct Engine::Group::Resource {
+	ma_sound_group		group;
+
+	Instance<Resource>	parent;
+
+	~Resource();
+};
+
+Engine::Sound::Resource::~Resource() {
+	ma_sound_uninit(&source);
+	ma_decoder_uninit(&decoder);
+}
+
+Engine::Group::Resource::~Resource() {
+	ma_sound_group_uninit(&group);
+}
 
 Engine::Engine()			{			}
 Engine::~Engine()			{close();	}
