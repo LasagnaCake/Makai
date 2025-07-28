@@ -5,53 +5,11 @@
 
 /// @brief Audio facilities. 
 namespace Makai::Audio {
-	/// @brief Stops all audio playback currently happening.
-	void stopAll();
-
-	/// @brief Audio codec format.
-	enum class Format {
-		AF_NONE,
-		AF_MP3,
-		AF_OGG,
-		AF_MIDI,
-		AF_FLAC,
-		AF_MOD,
-		AF_OPUS,
-	//	AF_WAVPACK,
-		AF_MAX_FORMATS
+	template <class T> struct Component {
+		struct Resource;
+	protected:
+		Instance<Resource> instance;
 	};
-
-	/// @brief Audio format list.
-	using Formats = List<Format>;
-
-	/// @brief Opens the audio subsystem.
-	/// @param formats Audio codecs to enable.
-	/// @param channels Number of output channels. 1 → mono, 2 → stereo, and so on.
-	/// @param audioTracks Number of audio (non-music) tracks.
-	/// @param audioTracks Number of music tracks.
-	void open(Formats const& formats, uint const channels = 2, uint const audioTracks = 16, uint const musicTracks = 2);
-
-	/// @brief Restarts the audio subsystem.
-	/// @param formats Audio codecs to enable.
-	/// @param channels Number of output channels. 1 → mono, 2 → stereo, and so on.
-	/// @param audioTracks Number of audio (non-music) tracks.
-	/// @param audioTracks Number of music tracks.
-	void restart(Formats const& formats, uint const channels = 2, uint const audioTracks = 16, uint const musicTracks = 2);
-
-	/// @brief Returns the amount of tracks allocated for audio.
-	/// @return Audio track count.
-	uint getAudioTrackCount();
-
-	/// @brief Returns the amount of tracks allocated for music.
-	/// @return Music track count.
-	uint getMusicTrackCount();
-
-	/// @brief Closes the audio subsystem.
-	void close();
-
-	/// @brief Returns whether the audio subsystem is open.
-	/// @return Whether audio subsystem is open.
-	bool isOpen();
 }
 
 #endif // MAKAILIB_AUDIO_CORE_H

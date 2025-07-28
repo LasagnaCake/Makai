@@ -1,7 +1,7 @@
 ROOT := ../../..
 include $(ROOT)/make/core.make
 
-INCLUDES := $(INC_STB) $(INC_CUTE)
+INCLUDES := $(INC_STB) $(INC_CUTE) $(INC_MINIAUDIO)
 
 override prefix := $(call concat, $(prefix), impl)
 
@@ -21,10 +21,12 @@ all: debug release
 debug:
 	$(call compile, stb)
 	$(call compile, cute)
+	$(call compile, miniaudio)
 	$(MAKE_GLOADER_D)
 
 
 release:
 	$(call compile, stb)
 	$(call compile, cute)
+	$(call compile, miniaudio)
 	$(MAKE_GLOADER)

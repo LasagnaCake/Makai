@@ -3,10 +3,10 @@ include $(ROOT)/make/core.make
 
 override prefix := $(call concat, $(prefix), audio)
 
-INCLUDES := $(INC_SDL)
+INCLUDES := $(INC_MINIAUDIO)
 
 define MAKE_SUB
-	$(call compile-all, core source)
+	$(call compile-all, engine source)
 endef
 
 .PHONY: debug release all
