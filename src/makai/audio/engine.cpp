@@ -48,7 +48,7 @@ struct Component<Engine::Sound>::Resource {
 		if (cooldown) --cooldown;
 	}
 
-	bool canPlayAgain() const {return !cooldown;}
+	bool canPlayAgain() const {return !((ma_sound_is_playing(&source) != MA_TRUE) && cooldown);}
 
 	usize toPCMFrames(float const time) const {
 		return (ma_engine_get_sample_rate(ma_sound_get_engine(&source)) * time);
@@ -256,6 +256,7 @@ Engine::Sound& Engine::Sound::stop(float const fadeOutTime) {
 	if (fadeOutTime)
 		ma_sound_stop_with_fade_in_pcm_frames(&instance->source, instance->toPCMFrames(fadeOutTime));
 	else ma_sound_stop(&instance->source);
+	instance->cooldown = 0;
 	return *this;
 }
 
