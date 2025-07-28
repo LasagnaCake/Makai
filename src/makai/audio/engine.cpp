@@ -195,14 +195,15 @@ void Engine::onUpdate() {
 }
 	
 
-Engine::Sound& Engine::Sound::start(bool const loop, float const fadeIn, usize const cooldown) {
+Engine::Sound& Engine::Sound::start(bool const loop, float const fadeInTime, usize const cooldown) {
 	if (!exists()) return *this;
 	if (!instance->canPlayAgain()) return * this;
 	setLooping(loop);
-	play();
-	if (fadeIn) {
-		ma_sound_set_fade_in_pcm_frames(&instance->source, 0, 1, instance->engine->toPCMFrames(fadeIn));
+	if (fadeInTime) {
+		setVolume(0);
+		fadeIn(fadeInTime);
 	}
+	play();
 	instance->cooldown = cooldown;
 	return *this;
 }
@@ -229,9 +230,9 @@ Engine::Sound& Engine::Sound::stop() {
 	return *this;
 }
 
-Engine::Sound& Engine::Sound::stop(float const fadeOut) {
+Engine::Sound& Engine::Sound::stop(float const fadeOutTime) {
 	if (!exists()) return *this;
-	ma_sound_set_fade_in_pcm_frames(&instance->source, -1, 0, instance->engine->toPCMFrames(fadeOut));
+	fadeOut(fadeOutTime);
 	return *this;
 }
 
@@ -257,9 +258,10 @@ bool Engine::Sound::looping() {
 	return ma_sound_is_looping(&instance->source) == MA_TRUE;
 }
 
-void Engine::Sound::setVolume(float const volume) {
-	if (!exists()) return;
+Engine::Sound& Engine::Sound::setVolume(float const volume) {
+	if (!exists()) return *this;
 	ma_sound_set_volume(&instance->source, volume);
+	return *this;
 }
 
 float Engine::Sound::getVolume() const {
@@ -267,8 +269,16 @@ float Engine::Sound::getVolume() const {
 	return ma_sound_get_volume(&instance->source);
 }
 
-void Engine::Sound::setSpatial(bool const state) {
+Engine::Sound& Engine::Sound::fade(float const from, float const to, float const time) {
+	if (!exists()) return *this;
+	ma_sound_set_fade_in_pcm_frames(&instance->source, from, to, instance->engine->toPCMFrames(time));
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::setSpatial(bool const state) {
+	if (!exists()) return *this;
 	ma_sound_set_spatialization_enabled(&instance->source, state ? MA_TRUE : MA_FALSE);
+	return *this;
 }
 
 Instance<Engine::Sound> Engine::Sound::clone() const {
