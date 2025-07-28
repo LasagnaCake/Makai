@@ -195,7 +195,7 @@ void Engine::onUpdate() {
 }
 	
 
-Engine::Sound& Engine::Sound::start(bool const force, bool const loop, float const fadeInTime, usize const cooldown) {
+Engine::Sound& Engine::Sound::play(bool const force, bool const loop, float const fadeInTime, usize const cooldown) {
 	if (!exists()) return *this;
 	if (!instance->canPlayAgain()) return * this;
 	if (playing()) {
@@ -207,19 +207,8 @@ Engine::Sound& Engine::Sound::start(bool const force, bool const loop, float con
 		setVolume(0);
 		fadeIn(fadeInTime);
 	}
-	play();
-	instance->cooldown = cooldown;
-	return *this;
-}
-
-Engine::Sound& Engine::Sound::start() {
-	if (!exists()) return *this;
 	ma_sound_start(&instance->source);
-	return *this;
-}
-
-Engine::Sound& Engine::Sound::play() {
-	if (!exists()) return *this;
+	instance->cooldown = cooldown;
 	return *this;
 }
 
@@ -228,15 +217,11 @@ Engine::Sound& Engine::Sound::pause() {
 	return *this;
 }
 
-Engine::Sound& Engine::Sound::stop() {
-	if (!exists()) return *this;
-	ma_sound_stop(&instance->source);
-	return *this;
-}
-
 Engine::Sound& Engine::Sound::stop(float const fadeOutTime) {
 	if (!exists()) return *this;
-	fadeOut(fadeOutTime);
+	if (fadeOutTime)
+		ma_sound_stop_with_fade_in_pcm_frames(&instance->source, instance->toPCMFrames(fadeOutTime));
+	else ma_sound_stop(&instance->source);
 	return *this;
 }
 
