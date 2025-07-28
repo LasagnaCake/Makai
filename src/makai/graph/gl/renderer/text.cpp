@@ -56,11 +56,7 @@ inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaul
 
 FontFace::FontFace(): instance(new FontData()) {}
 
-FontFace::FontFace(FontData const& font): FontFace() {
-	instance->faces		= font.faces;
-	instance->size		= font.size;
-	instance->spacing	= font.spacing;
-}
+FontFace::FontFace(FontData const& font): instance(new FontData{font}) {}
 
 FontFace::FontFace(String const& path): FontFace() {
 	using namespace Makai::Literals::Text;
