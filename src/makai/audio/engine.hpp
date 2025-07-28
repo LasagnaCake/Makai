@@ -68,10 +68,24 @@ namespace Makai::Audio {
 		Instance<Group> createGroup(Handle<Group> const& parent = nullptr);
 
 		/// @brief Creates a sound in the engine.
+		/// @param data Sound file data.
+		/// @param type Sound type. By default, it is `EST_PRELOADED`.
 		/// @param parent Group parent. By default, it is `nullptr`.
+		/// @return Sound instance, or `nullptr` on failure.
 		Instance<Sound> createSound(
 			BinaryData<> const&		data,
-			SoundType const			mode	= SoundType::EST_PRELOADED,
+			SoundType const			type	= SoundType::EST_PRELOADED,
+			Handle<Group> const&	group	= {nullptr}
+		);
+
+		/// @brief Creates a sound in the engine.
+		/// @param file Sound file path.
+		/// @param type Sound type. By default, it is `EST_PRELOADED`.
+		/// @param parent Group parent. By default, it is `nullptr`.
+		/// @return Sound instance, or `nullptr` on failure.
+		Instance<Sound> createSound(
+			String const&			file,
+			SoundType const			type	= SoundType::EST_PRELOADED,
 			Handle<Group> const&	group	= {nullptr}
 		);
 

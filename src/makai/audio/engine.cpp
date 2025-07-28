@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include "../file/file.hpp"
 
 #if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__)
 #include <windows.h>
@@ -199,6 +200,10 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 Instance<Engine::Sound> Engine::createSound(BinaryData<> const& data, SoundType const type, Handle<Group> const& group) {
 	if (!exists()) return nullptr;
 	return instance->createSound(data, type, ((group) ? group->instance.asWeak() : nullptr));
+}
+
+Instance<Engine::Sound> Engine::createSound(String const& file, SoundType const type, Handle<Group> const& group) {
+	return createSound(File::getBinary(file), type, group);
 }
 
 template<class T>
