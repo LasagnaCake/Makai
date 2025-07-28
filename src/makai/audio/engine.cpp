@@ -48,7 +48,7 @@ struct Component<Engine::Sound>::Resource {
 		if (cooldown) --cooldown;
 	}
 
-	bool canPlayAgain() const {return !((ma_sound_is_playing(&source) != MA_TRUE) && cooldown);}
+	bool locked() const {return ((ma_sound_is_playing(&source) == MA_TRUE) && cooldown);}
 
 	usize toPCMFrames(float const time) const {
 		return (ma_engine_get_sample_rate(ma_sound_get_engine(&source)) * time);
@@ -220,7 +220,7 @@ void Engine::onUpdate() {
 
 Engine::Sound& Engine::Sound::play(bool const force, bool const loop, float const fadeInTime, usize const cooldown) {
 	if (!exists()) return *this;
-	if (!instance->canPlayAgain()) return * this;
+	if (instance->locked()) return * this;
 	if (playing() || paused()) {
 		if (!force) return *this;
 		stop();
