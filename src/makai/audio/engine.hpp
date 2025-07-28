@@ -108,13 +108,18 @@ namespace Makai::Audio {
 		Sound& stop() override final;
 		Sound& stop(float const fadeOut);
 
-		Sound& setPlaybackTime(float const time);
-		float getPlaybackTime() const;
+		Sound&	fade(float const from, float const to, float const time);
+		Sound&	fadeTo(float const volume, float const time)				{fade(-1, volume, time); return *this;	}
+		Sound&	fadeIn(float const time)									{fadeTo(1, time); return *this;			}
+		Sound&	fadeOut(float const time)									{fadeTo(0, time); return *this;			}
 
-		void	setVolume(float const volume)	override final;
+		Sound&	setPlaybackTime(float const time);
+		float	getPlaybackTime() const;
+
+		Sound&	setVolume(float const volume)	override final;
 		float	getVolume() const				override final;
 
-		void setSpatial(bool const state);
+		Sound& setSpatial(bool const state);
 
 		Instance<Sound> clone() const override final;
 		Instance<Sound> clone() override final {return constant(*this).clone();};
