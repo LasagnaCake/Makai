@@ -9,25 +9,27 @@
 using namespace Makai::Audio;
 using namespace Makai;
 
-struct Engine::Resource {
+template<>
+struct Component<Engine>::Resource {
 	ma_engine engine;
 
-	List<Instance<Sound::Resource>> sounds;
-	List<Instance<Group::Resource>>	groups;
+	List<Instance<Engine::Sound::Resource>> sounds;
+	List<Instance<Engine::Group::Resource>>	groups;
 
-	Instance<Sound> createSound(BinaryData<> const& data, SoundType const mode, Handle<Group::Resource> const& group);
-	Instance<Group> createGroup(Handle<Group::Resource> const& parent);
+	Instance<Engine::Sound> createSound(
+		BinaryData<> const&						data,
+		Engine::SoundType const					mode,
+		Handle<Engine::Group::Resource> const&	group
+	);
+	Instance<Engine::Group> createGroup(Handle<Engine::Group::Resource> const& parent);
 
 	Resource();
 
 	~Resource();
 };
-	
-using APeriodicGroup = APeriodic<Engine::Group::Resource>;
 
-using APeriodicSound = APeriodic<Engine::Sound::Resource>;
-
-struct Engine::Sound::Resource: APeriodicSound {
+template<>
+struct Component<Engine::Sound>::Resource {
 	ma_sound			source;
 	ma_decoder			decoder;
 	ma_decoder_config	config;
@@ -36,7 +38,7 @@ struct Engine::Sound::Resource: APeriodicSound {
 	Handle<Engine::Resource>		engine;
 	Handle<Engine::Group::Resource>	group;
 
-	SoundType type;
+	Engine::SoundType type;
 	
 	usize cooldown = 0;
 
@@ -59,7 +61,8 @@ struct Engine::Sound::Resource: APeriodicSound {
 	~Resource();
 };
 
-struct Engine::Group::Resource: APeriodicGroup {
+template<>
+struct Component<Engine::Group>::Resource {
 	ma_sound_group		group;
 
 	Handle<Engine::Resource>	engine;
@@ -93,12 +96,12 @@ Engine::Group::Resource::~Resource() {
 	ma_sound_group_uninit(&group);
 }
 
-Engine::Engine()			{			}
-Engine::~Engine()			{close();	}
-Engine::Sound::Sound()		{			}
-Engine::Sound::~Sound()		{			}
-Engine::Group::Group()		{			}
-Engine::Group::~Group()		{			}
+Engine::Engine()			{							}
+Engine::~Engine()			{close();					}
+Engine::Sound::Sound()		{instance = new Resource();	}
+Engine::Sound::~Sound()		{							}
+Engine::Group::Group()		{instance = new Resource();	}
+Engine::Group::~Group()		{							}
 
 void Engine::stopAllSounds() {
 }
@@ -119,10 +122,11 @@ static inline ma_uint32 modeFlags(Engine::SoundType const mode) {
 		case Engine::SoundType::EST_PRELOADED:			return MA_SOUND_FLAG_DECODE;
 		case Engine::SoundType::EST_PRELOADED_ASYNC:	return MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC;
 	}
+	return 0;
 }
 
-Instance<Engine::Group> Engine::Resource::createGroup(Handle<Group::Resource> const& parent) {
-	Instance<Group> group = new Group();
+Instance<Engine::Group> Engine::Resource::createGroup(Handle<Engine::Group::Resource> const& parent) {
+	Instance<Engine::Group> group = new Engine::Group();
 	group->instance->engine = this;
 	if (
 		ma_sound_group_init(
@@ -141,16 +145,21 @@ Instance<Engine::Group> Engine::Resource::createGroup(Handle<Group::Resource> co
 
 Instance<Engine::Group> Engine::createGroup(Handle<Group> const& parent) {
 	if (!exists()) return nullptr;
-	return instance->createGroup(parent->instance);
+	return instance->createGroup(((parent) ? parent->instance.asWeak() : nullptr));
 }
 
 Instance<Engine::Sound> Engine::Resource::createSound(
 	BinaryData<> const& data,
-	SoundType const type,
-	Handle<Group::Resource> const& group
+	Engine::SoundType const type,
+	Handle<Engine::Group::Resource> const& group
 ) {
-	Instance<Sound> sound = new Sound();
-	sound->instance->config = ma_decoder_config_init_default();
+	Instance<Engine::Sound> sound = new Engine::Sound();
+	sound->instance->config = ma_decoder_config_init(
+		ma_format_f32,
+		ma_engine_get_channels(&engine),
+		ma_engine_get_sample_rate(&engine)
+	);
+	sound->instance->config.encodingFormat = ma_encoding_format_unknown;
 	sound->instance->engine = this;
 	sound->instance->group = group;
 	sound->instance->type = type;
@@ -167,7 +176,7 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 			&engine,
 			&sound->instance->decoder,
 			modeFlags(type) | MA_SOUND_FLAG_NO_SPATIALIZATION,
-			NULL,
+			group ? &group->group : NULL,
 			&sound->instance->source
 		) != MA_SUCCESS
 	) return nullptr;
@@ -177,7 +186,7 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 
 Instance<Engine::Sound> Engine::createSound(BinaryData<> const& data, SoundType const type, Handle<Group> const& group) {
 	if (!exists()) return nullptr;
-	return instance->createSound(data, type, group->instance);
+	return instance->createSound(data, type, ((group) ? group->instance.asWeak() : nullptr));
 }
 
 template<class T>
