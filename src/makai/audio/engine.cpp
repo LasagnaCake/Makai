@@ -6,6 +6,7 @@
 #define SDL_MAIN_HANDLED
 #endif
 #include <miniaudio.h>
+#include <miniaudio_vorbis.h>
 
 using namespace Makai::Audio;
 using namespace Makai;
@@ -176,7 +177,7 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 			&sound->instance->decoder
 		)) != MA_SUCCESS
 	) {
-		DEBUGLN("ERROR: ", int(result));
+		DEBUGLN("ERROR: ", ma_result_description(result));
 		return nullptr;
 	}
 	DEBUGLN("Creating sound instance...");
@@ -189,7 +190,7 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 			&sound->instance->source
 		)) != MA_SUCCESS
 	) {
-		DEBUGLN("ERROR: ", int(result));
+		DEBUGLN("ERROR: ", ma_result_description(result));
 		return nullptr;
 	}
 	DEBUGLN("Done!");
