@@ -83,15 +83,26 @@ namespace Makai::Audio {
 
 		using Component<Group>::exists;
 
+		/// @brief Destructor.
 		virtual ~Group();
-
+	
+		/// @brief Copy assignment operator (defaulted).
 		Group& operator=(Group const& other)	= delete;
+		/// @brief Move assignment operator (defaulted).
 		Group& operator=(Group&& other)			= delete;
 
+		/// @brief Creates a copy of the sound group.
+		/// @return New copy of sound group.
 		Instance<Group> clone() const override final;
+		/// @brief Creates a copy of the sound group.
+		/// @return New copy of sound group.
 		Instance<Group> clone() override final {return constant(*this).clone();};
 
+		/// @brief Sets the sound group's volume.
+		/// @param volume Volume to set to.
 		Group&	setVolume(float const volume)	override final;
+		/// @brief Returns the sound group's volume.
+		/// @return Group volume.
 		float	getVolume() const				override final;
 
 	private:
@@ -101,27 +112,47 @@ namespace Makai::Audio {
 		friend struct Engine::Resource;
 	};
 	
-	struct Engine::Sound: Component<Engine::Sound>, IPlayable, ILoud, IClonable<Instance<Engine::Sound>> {
+	struct Engine::Sound: Component<Engine::Sound>, ILoud, IClonable<Instance<Engine::Sound>> {
 		using typename Component<Sound>::Resource;
 
 		using Component<Sound>::exists;
 
+		/// @brief Destructor.
 		virtual ~Sound();
 
+		/// @brief Copy assignment operator (defaulted).
 		Sound& operator=(Sound const& other)	= delete;
+		/// @brief Move assignment operator (defaulted).
 		Sound& operator=(Sound&& other)			= delete;
 
-		Sound& setLooping(bool const state = false);
+		/// @brief Enables/disables looping.
+		/// @param Whether to enable (`true`) or disable (`false`) looping.
+		/// @return Reference to self.
+		Sound& setLooping(bool const state = true);
+		/// @brief Returns whether the sound is set to loop.
+		/// @return Whether sound is set to loop.
 		bool looping();
+
+		/// @brief Returns whether sound is currently playing.
+		/// @return Whether sound is playing.
 		bool playing();
 
-		Sound& start() override final;
-		Sound& start(bool const force, bool const loop, float const fadeIn = 0, usize const cooldown = 1);
+		/// @brief Plays the sound.
+		/// @param force Whether to force sound to play from the start, if already playing. Does not ignore cooldown. By default, it is `false`.
+		/// @param loop Whether sound should loop indefinitely. By default, it is `false`.
+		/// @brief fadeIn Fade-in time, in seconds. By default, it is zero.
+		/// @brief cooldown Cooldown before sound can be played again, in cycles. By default, it is zero.
+		Sound& play(
+			bool const	force		= false,
+			bool const	loop		= false,
+			float const	fadeIn		= 0,
+			usize const	cooldown	= 0
+		);
+		/// @brief Stops the sound.
+		Sound& stop(float const fadeOut = 0);
 
-		Sound& play() override final;
-		Sound& pause() override final;
-		Sound& stop() override final;
-		Sound& stop(float const fadeOut);
+		Sound& unpause();
+		Sound& pause();
 
 		Sound&	fade(float const from, float const to, float const time);
 		Sound&	fadeTo(float const volume, float const time)				{fade(-1, volume, time); return *this;	}
@@ -131,12 +162,20 @@ namespace Makai::Audio {
 		Sound&	setPlaybackTime(float const time);
 		float	getPlaybackTime() const;
 
+		/// @brief Sets the sound's volume.
+		/// @param volume Volume to set to.
 		Sound&	setVolume(float const volume)	override final;
+		/// @brief Returns the sound's volume.
+		/// @return Sound volume.
 		float	getVolume() const				override final;
 
 		Sound& setSpatial(bool const state);
 
+		/// @brief Creates a copy of the sound.
+		/// @return New copy of sound group.
 		Instance<Sound> clone() const override final;
+		/// @brief Creates a copy of the sound.
+		/// @return New copy of sound group.
 		Instance<Sound> clone() override final {return constant(*this).clone();};
 
 	private:
