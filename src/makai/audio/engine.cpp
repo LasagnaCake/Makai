@@ -90,14 +90,17 @@ Engine::Resource::Resource()  {
 
 Engine::Resource::~Resource() {
 	ma_engine_uninit(&engine);
+	Instance<Engine::Resource>::detach(this);
 }
 
 Engine::Sound::Resource::~Resource() {
+	if (!engine) return;
 	ma_sound_uninit(&source);
 	ma_decoder_uninit(&decoder);
 }
 
 Engine::Group::Resource::~Resource() {
+	if (!engine) return;
 	ma_sound_group_uninit(&group);
 }
 
@@ -277,21 +280,19 @@ Engine::Sound& Engine::Sound::setLooping(bool const loop) {
 
 Engine::Sound& Engine::Sound::setLoopPoints(float const begin, float end) {
 	if (!exists() || begin < 0) return *this;
-	if (
-		end < 0
-	&&	(ma_sound_get_length_in_seconds(&instance->source, &end) != MA_SUCCESS)
-	)
+	ma_uint64 start = 0, stop = 0;
+	if (ma_sound_get_length_in_pcm_frames(&instance->source, &stop) != MA_SUCCESS)
 		return *this;
-	if (end <= begin) return *this;
+	--stop;
+	if (end >= 0)
+		stop = Math::min(instance->toPCMFrames(end), stop);
+	start = instance->toPCMFrames(begin);
+	if (stop <= start) return *this;
 	DEBUGLN("<loop>");
-	DEBUGLN("    BEGIN: ", begin);
-	DEBUGLN("    END:   ", end);
+	DEBUGLN("    BEGIN: ", begin, " (", start, ")");
+	DEBUGLN("    END:   ", end, " (", stop, ")");
 	DEBUGLN("</loop>");
-	ma_data_source_set_loop_point_in_pcm_frames(
-		&instance->source,
-		instance->toPCMFrames(begin),
-		instance->toPCMFrames(end)	
-	);
+	ma_data_source_set_loop_point_in_pcm_frames(&instance->decoder, start, stop);
 	return *this;
 }
 
