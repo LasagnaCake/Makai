@@ -142,11 +142,15 @@ namespace Makai::Audio {
 		/// @brief Move assignment operator (deleted).
 		Sound& operator=(Sound&& other)			= delete;
 
+		/// @brief Sets the loop points for the sound.
+		/// @param begin Start of the loop, in seconds.
+		/// @param end End of the loop, in seconds. Use `-1` to set to the end of the sound. By default, it is `-1`.
+		/// @return Reference to self.
+		Sound& setLoopPoints(float const begin, float const end = -1);
 		/// @brief Enables/disables looping.
 		/// @param Whether to enable (`true`) or disable (`false`) looping.
 		/// @return Reference to self.
 		Sound& setLooping(bool const state = true);
-		
 		/// @brief Returns whether the sound is set to loop.
 		/// @return Whether sound is set to loop.
 		bool looping() const;

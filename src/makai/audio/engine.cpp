@@ -6,7 +6,6 @@
 #define SDL_MAIN_HANDLED
 #endif
 #include <miniaudio.h>
-#include <miniaudio_vorbis.h>
 
 using namespace Makai::Audio;
 using namespace Makai;
@@ -269,6 +268,18 @@ Engine::Sound& Engine::Sound::stop(float const fadeOutTime) {
 Engine::Sound& Engine::Sound::setLooping(bool const loop) {
 	if (!exists()) return *this;
 	ma_sound_set_looping(&instance->source, loop ? MA_TRUE : MA_FALSE);
+	return *this;
+}
+
+Engine::Sound& Engine::Sound::setLoopPoints(float const begin, float end) {
+	if (begin < 0) return *this;
+	if (end < 0) ma_sound_get_length_in_seconds(&instance->source, &end);
+	if (end <= begin) return *this;
+	ma_data_source_set_loop_point_in_pcm_frames(
+		&instance->source,
+		instance->toPCMFrames(begin),
+		instance->toPCMFrames(end)	
+	);
 	return *this;
 }
 
