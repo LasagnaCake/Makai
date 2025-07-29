@@ -272,8 +272,12 @@ Engine::Sound& Engine::Sound::setLooping(bool const loop) {
 }
 
 Engine::Sound& Engine::Sound::setLoopPoints(float const begin, float end) {
-	if (begin < 0) return *this;
-	if (end < 0) ma_sound_get_length_in_seconds(&instance->source, &end);
+	if (!exists() || begin < 0) return *this;
+	if (
+		end < 0
+	&&	(ma_sound_get_length_in_seconds(&instance->source, &end) != MA_SUCCESS)
+	)
+		return *this;
 	if (end <= begin) return *this;
 	ma_data_source_set_loop_point_in_pcm_frames(
 		&instance->source,
