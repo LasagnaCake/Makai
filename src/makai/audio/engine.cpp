@@ -52,11 +52,15 @@ struct Component<Engine::Sound>::Resource {
 	bool locked() const {return ((ma_sound_is_playing(&source) == MA_TRUE) && cooldown);}
 
 	usize toPCMFrames(float const time) const {
-		return (ma_engine_get_sample_rate(ma_sound_get_engine(&source)) * time);
+		return getSampleRate() * time;
 	}
 
 	float toSeconds(usize const time) const {
-		return (static_cast<float>(time) / ma_engine_get_sample_rate(ma_sound_get_engine(&source)));
+		return time / static_cast<float>(getSampleRate());
+	}
+
+	ma_uint32 getSampleRate() const {
+		return ma_engine_get_sample_rate(ma_sound_get_engine(&source));
 	}
 
 	~Resource();
@@ -279,6 +283,10 @@ Engine::Sound& Engine::Sound::setLoopPoints(float const begin, float end) {
 	)
 		return *this;
 	if (end <= begin) return *this;
+	DEBUGLN("<loop>");
+	DEBUGLN("    BEGIN: ", begin);
+	DEBUGLN("    END:   ", end);
+	DEBUGLN("</loop>");
 	ma_data_source_set_loop_point_in_pcm_frames(
 		&instance->source,
 		instance->toPCMFrames(begin),

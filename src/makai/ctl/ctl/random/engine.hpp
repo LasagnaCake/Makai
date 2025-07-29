@@ -68,15 +68,15 @@ namespace Engine {
 		InternalEngine engine;
 
 		constexpr static usize startingSeed() {
-			if constexpr (inCompileTime())	return CTPRNG<usize>;
+			if constexpr (inCompileTime())	return ctsprng<usize>();
 			else							return OS::Time::now();
 		}
 	public:
 		/// @brief Constructs the engine with a given seed.
 		/// @param seed Seed to use.
-		constexpr Mersenne(usize const seed):	engine(seed)					{}
+		constexpr Mersenne(usize const seed):	engine(seed)				{}
 		/// @brief Constructs the engine with the seed being the current time.
-		constexpr Mersenne():					Mersenne(CTPRNG<usize>)	{}
+		constexpr Mersenne():					Mersenne(startingSeed())	{}
 
 		/// @brief Move constructor (defaulted).
 		constexpr Mersenne(Mersenne&& other)		= default;

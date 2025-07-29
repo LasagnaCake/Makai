@@ -93,7 +93,7 @@ namespace Impl {
 	}
 	
 	/// @brief Compile-time pseudo-random number.
-	constexpr usize PRNG = Random::CTPRNG<usize>;
+	constexpr usize PRNG = Random::ctsprng<usize>({});
 
 	/// @brief Returns a random filler character.
 	/// @param offset Offset.
