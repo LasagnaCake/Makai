@@ -46,19 +46,22 @@ constexpr ullong	toUnsignedLongLong(String const& s, uint8 const base = 0)	{retu
 
 /// @brief String-to-`float` conversion.
 /// @param s String to convert.
+/// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr float		toFloat(String const& s)		{return String::toNumber<float>(s);		}
+constexpr float		toFloat(String const& s, usize const base = 0)		{return String::toNumber<float>(s, base);	}
 /// @brief String-to-`double` conversion.
 /// @param s String to convert.
+/// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr double	toDouble(String const& s)		{return String::toNumber<double>(s);	}
+constexpr double	toDouble(String const& s, usize const base = 0)		{return String::toNumber<double>(s, base);	}
 /// @brief String-to-`long double` conversion.
 /// @param s String to convert.
+/// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr ldouble	toLongDouble(String const& s)	{return String::toNumber<ldouble>(s);	}
+constexpr ldouble	toLongDouble(String const& s, usize const base = 0)	{return String::toNumber<ldouble>(s, base);	}
 
 /// @brief String-to-`int8` conversion.
 /// @param s String to convert.
@@ -112,25 +115,28 @@ inline uint64	toUInt64(String const& s, uint64 const base = 0)	{return String::t
 
 /// @brief String-to-`float32` conversion.
 /// @param s String to convert.
+/// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-inline float32	toFloat32(String s)		{return toFloat(s);			}
+inline float32	toFloat32(String const& s, usize const base = 0)	{return toFloat(s, base);		}
 /// @brief String-to-`float64` conversion.
 /// @param s String to convert.
+/// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-inline float64	toFloat64(String s)		{return toDouble(s);		}
+inline float64	toFloat64(String const& s, usize const base = 0)	{return toDouble(s, base);		}
 /// @brief String-to-`float128` conversion.
 /// @param s String to convert.
+/// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-inline float128	toFloat128(String s)	{return toLongDouble(s);	}
+inline float128	toFloat128(String const& s, usize const base = 0)	{return toLongDouble(s, base);	}
 
 /// @brief String-to-`bool` conversion.
 /// @param s String to convert.
 /// @return Resulting value.
 /// @throw FailedActionException if conversion fails.
-inline float128	toBool(String s)	{return String::toNumber<bool>(s);	}
+inline float128	toBool(String const& s)	{return String::toNumber<bool>(s);	}
 
 /// @brief Number-to-string conversion.
 /// @tparam T Number type.

@@ -135,7 +135,7 @@ namespace Impl {
 					case 'b':	++c; return base ? base : 2;
 					case 'd':	++c; return base ? base : 10;
 					case 'o':	++c; return base ? base : 8;
-					default: return base ? base : 8;
+					default: break;
 				}
 			}
 			return base ? base : 10;
@@ -167,24 +167,25 @@ namespace Impl {
 /// @param str String to convert.
 /// @param size Size of string to convert.
 /// @param out Output of the conversion.
-/// @param base Base to convert from. If zero, then base is deduced.
+/// @param base Base to convert from. If zero, then base is deduced. By default, it is zero.
 /// @return Whether the operation was successful.
 /// @note
 ///		Valid base prefixes:
 ///		
-///		- `0b`:			Binary.
+///		- `0b`:	Binary.
 ///		
-///		- `0t`:			Trinary.
+///		- `0t`:	Trinary.
 ///		
-///		- `0q`:			Quaternary.
+///		- `0q`:	Quaternary.
 ///		
-///		- `0`, `0o`:	Octal.
+///		- `0o`:	Octal.
 ///		
-///		- `0d`:			Decimal.
+///		- `0d`:	Decimal.
 ///		
-///		- `0x`:			Hexadecimal.
+///		- `0x`:	Hexadecimal.
 ///		
-///		- `0y`:			Duotrigesimal.
+///		- `0y`:	Duotrigesimal.
+/// @warning "Implicit Octals" (octal values whose prefix are only `0`) are invalid, and are treated as decimal values!
 template<Type::Integer I, Type::ASCII T>
 constexpr bool atoi(ref<T const> const str, usize size, I& out, usize base = 0) {
 	// Copy string pointer
@@ -301,9 +302,12 @@ constexpr bool atof(ref<T const> const str, usize size, F& out, usize const base
 /// @tparam S Array size.
 /// @param str String to convert.
 /// @param out Output of the conversion.
+/// @param base Base to convert from. If zero, then base is deduced. By default, it is zero.
 /// @return Whether the operation was successful.
+/// @note Same base prefixes as `atoi`.
+/// @warning "Implicit Octals" (octal values whose prefix are only `0`) are invalid, and are treated as decimal values!
 template<Type::Real F, Type::ASCII T, usize S>
-constexpr bool atof(As<const T[S]> const& str, F& out) {
+constexpr bool atof(As<const T[S]> const& str, F& out, usize const base = 0) {
 	static_assert(S-1 > 0, "String cannot be empty!");
 	return ::CTL::atof<F, T>(str, S - 1, out);
 }
