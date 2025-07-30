@@ -1580,12 +1580,12 @@ namespace UTF {
 		constexpr String toString() const {
 			String out;
 			if (empty()) return out;
-			As<char[5]> buf;
-			MX::memset(buf, 5, '\0');
+			As<char[4]> buf;
+			MX::memset(buf, 4, '\0');
 			out.reserve(size() * DataType::SIZE);
 			for (DataType const& ch: *this) {
 				ch.toBytes(buf);
-				out.appendBack(static_cast<cstring>(buf));
+				out.appendBack(buf, buf + 4);
 			}
 			out.tighten();
 			return out;
