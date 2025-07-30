@@ -1394,7 +1394,7 @@ public:
 	/// @return Converted value as number.
 	/// @throw FailedActionException if conversion fails.
 	template<Type::Real T>
-	constexpr static T toNumber(SelfType const& str, usize const base) {
+	constexpr static T toNumber(SelfType const& str, usize const base = 0) {
 		T val = T();
 		if (!atof<T, DataType>(str.data(), str.size(), val, base))
 			throw FailedActionException("String-to-Float conversion failure!");
