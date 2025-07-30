@@ -25,20 +25,24 @@ namespace Makai::Ex::Game {
 
 		using Makai::App::App;
 
-		/// @brief Audio track container.
-		struct Tracks {
-			/// @brief Music track.
-			Audio::GroupInstance music;
-			/// @brief Sound effects track.
-			Audio::GroupInstance sfx;
+		/// @brief Audio track.
+		struct Track {
+			Audio::GroupInstance	instance;
+			SoundType				soundType = SoundType::EST_PRELOADED;
 		};
 
-		/// @brief Audio tracks.
-		Tracks const tracks;
+		/// @brief Audio tracks container.
+		using Tracks = Map<usize, Track>;
 
+		/// @brief Master track.
+		Audio::GroupInstance const master;
+		
+		/// @brief Audio tracks database.
+		Tracks tracks;
+
+		/// @brief constructor. Same parameters as `Makai::App`.
 		App(Config::App const& cfg):
-			Makai::App(cfg),
-			tracks{audio.createGroup(), audio.createGroup()} {}
+			Makai::App(cfg), master(audio.createGroup()) {}
 
 		/// @brief Layer material map.
 		using LayerMap = Map<usize, Graph::Material::BufferMaterial>;
@@ -63,20 +67,21 @@ namespace Makai::Ex::Game {
 			layer = layers[layerID];
 		}
 
-		/// @brief Creates a sound in the SFX track.
-		/// @param path Path to audio file.
-		/// @param type Sound type. By default, it is `EST_PRELOADED`.
-		/// @return Sound instance, or `nullptr` on failure.
-		Audio::SoundInstance createSFX(String const& path, SoundType const type = SoundType::EST_PRELOADED) {
-			return audio.createSound(path, type, tracks.sfx);
+		/// @brief Returns a track by a given ID. Creates the track, if it does not exist.
+		/// @param track Track to get.
+		/// @return Requested track.
+		Track& fetchTrack(usize const track) {
+			if (!tracks.contains(track)) tracks[track] = {audio.createGroup(master)};
+			return tracks[track];
 		}
 
-		/// @brief Creates a sound in the music track.
+		/// @brief Creates a sound on a given track.
 		/// @param path Path to audio file.
-		/// @param type Sound type. By default, it is `EST_STREAMED`.
+		/// @param trackID Track to assign audio to.
 		/// @return Sound instance, or `nullptr` on failure.
-		Audio::SoundInstance createMusic(String const& path, SoundType const type = SoundType::EST_STREAMED) {
-			return audio.createSound(path, type, tracks.music);
+		Audio::SoundInstance createOnTrack(String const& path, usize const trackID) {
+			auto const track = fetchTrack(trackID);
+			return audio.createSound(path, track.soundType, track.instance);
 		}
 	};
 }
