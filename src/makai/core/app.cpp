@@ -58,7 +58,7 @@ appState(App::AppState::AS_CLOSED) {
 	DEBUGLN("Started!");
 	// Initialize sound system
 	DEBUGLN("Starting Audio System...");
-	Makai::Audio::open(config.audio.formats, config.audio.channels, config.audio.audioTracks, config.audio.musicTracks);
+	audio.open();
 	DEBUGLN("Started!");
 	// Create window and make active
 	DEBUGLN("Creating window...");
@@ -115,7 +115,7 @@ appState(App::AppState::AS_CLOSED) {
 	// Setup camera
 	DEBUGLN("Setting starting camera...");
 	Graph::Global::camera.aspect	= Vector2(res.width, res.height);
-	Graph::Global::camera.fov		= 45deg;
+	Graph::Global::camera.fov		= Math::radians<float>(45);
 	DEBUGLN("creating default framebuffer...");
 	// Create framebuffer
 	framebuffer.create(res.width, res.height);
@@ -259,7 +259,7 @@ void App::run() {
 			// increment frame counter
 			frame++;
 			// Update audio system
-			Audio::Source::process();
+			Audio::APeriodicAudioEvent::process();
 			#ifdef MAKAILIB_FRAME_DEPENDENT_PROCESS
 			// Increment cycle counter
 			cycle++;
@@ -402,7 +402,7 @@ void App::finalize() {
 	Makai::Input::Manager::clearTargetWindow(window);
 	// Close sound system
 	DEBUGLN("Closing sound system...");
-	Makai::Audio::close();
+	audio.close();
 	DEBUGLN("Sound system closed!");
 	// Destroy buffers
 	DEBUGLN("Destroying frame buffers...");

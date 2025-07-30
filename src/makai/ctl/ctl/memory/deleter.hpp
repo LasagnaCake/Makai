@@ -18,7 +18,7 @@ namespace Impl {
 		/// @brief Deletes the given object.
 		/// @param obj Object to delete.
 		constexpr void operator()(DataType* const obj) const {
-			delete obj;
+			if (obj) delete obj;
 		}
 
 		/// @brief Deletes the given object.
@@ -27,7 +27,7 @@ namespace Impl {
 		template<class U>
 		constexpr void operator()(U* const obj) const
 		requires Type::Convertible<As<U[]>*, As<DataType[]>*> {
-			delete[] obj;
+			if (obj) delete[] obj;
 		}
 	};
 }

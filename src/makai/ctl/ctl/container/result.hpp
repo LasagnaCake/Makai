@@ -12,12 +12,14 @@ CTL_NAMESPACE_BEGIN
 /// @tparam TData Data type.
 /// @tparam TError Error type.
 /// @note `TError` must be a different type than `TData`.
-template<typename TData, Type::Different<TData> TError>
+template<Type::Safe TData, Type::Safe TError>
 class Result:
 public SelfIdentified<Result<TData, TError>>,
 public Typed<TData>,
 public Defaultable<TData> {
 public:
+	static_assert(Type::Different<TData, TError>, "TError type and TData must be different!");
+
 	using Typed				= Typed<TData>;
 	using SelfIdentified	= SelfIdentified<Result<TData, TError>>;
 
@@ -192,6 +194,9 @@ private:
 	union ResultWrapper {
 		DataType	value;
 		ErrorType	error;
+
+		constexpr ResultWrapper()	{}
+		constexpr ~ResultWrapper()	{}
 	};
 
 	ResultWrapper	result;

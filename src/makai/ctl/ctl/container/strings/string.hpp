@@ -1390,12 +1390,13 @@ public:
 	/// @brief String-to-float conversion.
 	///@tparam T Floating point type.
 	/// @param str String to convert.
+	/// @param base Base of the string. Will be used, if non-zero.
 	/// @return Converted value as number.
 	/// @throw FailedActionException if conversion fails.
 	template<Type::Real T>
-	constexpr static T toNumber(SelfType const& str) {
+	constexpr static T toNumber(SelfType const& str, usize const base = 0) {
 		T val = T();
-		if (!atof<T, DataType>(str.data(), str.size(), val))
+		if (!atof<T, DataType>(str.data(), str.size(), val, base))
 			throw FailedActionException("String-to-Float conversion failure!");
 		return val;
 	}

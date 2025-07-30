@@ -53,14 +53,15 @@ GL_LOADER_FLAG := -DMAKAILIB_GL_LOADER=MAKAILIB_USE_$(call upper,$(gl-loader))
 export libpath	= -I$(call path, $(ROOT)/lib/$(strip $(1)))
 export corepath	= -I$(call path, $(ROOT)/output/$(strip $(1)))
 
-export INC_SDL		= $(call libpath, SDL2-2.0.10/include)
-export INC_OPENGL	= $(call libpath, OpenGL/$(call upper,$(gl-loader))/include) $(GL_LOADER_FLAG)
-export INC_STB		= $(call libpath, stb)
-export INC_CUTE		= $(call libpath, cute_headers)
-export INC_CPPCODEC	= $(call libpath, cppcodec-0.2)
-export INC_CRYPTOPP	= $(call libpath, cryptopp/include)
-export INC_XML2JSON	= $(call libpath, xml2json/include)
-export INC_MAKAI	= $(call corepath, include)
+export INC_SDL			= $(call libpath, SDL2-2.0.10/include)
+export INC_OPENGL		= $(call libpath, OpenGL/$(call upper,$(gl-loader))/include) $(GL_LOADER_FLAG)
+export INC_STB			= $(call libpath, stb)
+export INC_CUTE			= $(call libpath, cute_headers)
+export INC_CPPCODEC		= $(call libpath, cppcodec-0.2)
+export INC_CRYPTOPP		= $(call libpath, cryptopp/include)
+export INC_XML2JSON		= $(call libpath, xml2json/include)
+export INC_MINIAUDIO	= $(call libpath, miniaudio) $(call libpath, minivorbis)
+export INC_MAKAI		= $(call corepath, include)
 
 FRAME_PTR := -fno-omit-frame-pointer
 

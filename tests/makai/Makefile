@@ -40,6 +40,7 @@ params = $(OS_LIBS) $(LIBREQS) \
 	$(call case, $(1), 04,$(GRAPHREQS))\
 	$(call case, $(1), 05,$(GRAPHREQS))\
 	$(call case, $(1), 06,$(GRAPHREQS))\
+	$(call case, $(1), 07,$(GRAPHREQS))\
 
 define mktest
 	@echo "$(strip $(2))"
@@ -54,6 +55,7 @@ define tests
 	$(call mktest, $(1), 04.input)
 	$(call mktest, $(1), 05.text)
 	$(call mktest, $(1), 06.armature)
+	$(call mktest, $(1), 07.sound)
 endef
 else
 define tests

@@ -5,53 +5,33 @@
 
 /// @brief Audio facilities. 
 namespace Makai::Audio {
-	/// @brief Stops all audio playback currently happening.
-	void stopAll();
+	/// @brief Interface for an object with volume controls.
+	struct ILoud {
+		/// @brief Destructor.
+		constexpr ~ILoud() {}
 
-	/// @brief Audio codec format.
-	enum class Format {
-		AF_NONE,
-		AF_MP3,
-		AF_OGG,
-		AF_MIDI,
-		AF_FLAC,
-		AF_MOD,
-		AF_OPUS,
-	//	AF_WAVPACK,
-		AF_MAX_FORMATS
+		/// @brief Sets the current volume. MUST be implemented.
+		virtual ILoud&	setVolume(float const volume)	= 0;
+		/// @brief Returns the current volume. MUST be implemented.
+		virtual float	getVolume() const				= 0;
 	};
 
-	/// @brief Audio format list.
-	using Formats = List<Format>;
+	/// @brief Audio component.
+	/// @tparam Component type.
+	template <class T>
+	struct Component {
+		/// @brief Audio component resource. Implementation dependent on `T`.
+		/// @note Generally, it should be an opaque type. Hence why it has no definition.
+		struct Resource;
 
-	/// @brief Opens the audio subsystem.
-	/// @param formats Audio codecs to enable.
-	/// @param channels Number of output channels. 1 → mono, 2 → stereo, and so on.
-	/// @param audioTracks Number of audio (non-music) tracks.
-	/// @param audioTracks Number of music tracks.
-	void open(Formats const& formats, uint const channels = 2, uint const audioTracks = 16, uint const musicTracks = 2);
+		/// @brief Returns whether the component exists.
+		/// @return Whether component exists.
+		bool exists() const {return instance;}
 
-	/// @brief Restarts the audio subsystem.
-	/// @param formats Audio codecs to enable.
-	/// @param channels Number of output channels. 1 → mono, 2 → stereo, and so on.
-	/// @param audioTracks Number of audio (non-music) tracks.
-	/// @param audioTracks Number of music tracks.
-	void restart(Formats const& formats, uint const channels = 2, uint const audioTracks = 16, uint const musicTracks = 2);
-
-	/// @brief Returns the amount of tracks allocated for audio.
-	/// @return Audio track count.
-	uint getAudioTrackCount();
-
-	/// @brief Returns the amount of tracks allocated for music.
-	/// @return Music track count.
-	uint getMusicTrackCount();
-
-	/// @brief Closes the audio subsystem.
-	void close();
-
-	/// @brief Returns whether the audio subsystem is open.
-	/// @return Whether audio subsystem is open.
-	bool isOpen();
+	protected:
+		/// @brief Resource instance.
+		Instance<Resource> instance;
+	};
 }
 
 #endif // MAKAILIB_AUDIO_CORE_H
