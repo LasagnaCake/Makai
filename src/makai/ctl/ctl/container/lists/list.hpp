@@ -711,6 +711,38 @@ public:
 		return sliced(0, start).appendBack(sliced(stop));
 	}
 
+	
+	/// @brief Replaces any element that matches, with the replacement.
+	/// @param val Element to match.
+	/// @param rep Replacement.
+	/// @return Reference to self.
+	constexpr SelfType& replace(DataType const& val, DataType const& rep) {
+		for (DataType& v: *this)
+			if (v == val) v = rep;
+		return *this;
+	}
+
+	/// @brief Replaces any element that matches the set, with the replacement.
+	/// @param values Element to match.
+	/// @param rep Replacement.
+	/// @return Reference to self.
+	constexpr SelfType& replace(SelfType const& values, DataType const& rep) {
+		for (DataType const& val: values)
+			replace(val, rep);
+		return *this;
+	}
+
+	/// @brief Returns a list with any element that matches the given one replaced.
+	/// @param val Element to match.
+	/// @param rep Replacement.
+	/// @return Resulting list.
+	constexpr SelfType replaced(DataType const& val, DataType const& rep) const		{return SelfType(*this).replace(val, rep);		}
+	/// @brief Returns a list with any element that matches the given ones replaced.
+	/// @param values Elements to match.
+	/// @param rep Replacement.
+	/// @return Resulting list.
+	constexpr SelfType replaced(SelfType const& values, DataType const& rep) const	{return SelfType(*this).replace(values, rep);	}
+
 	/// @brief Returns a `List` containing all elements starting from a given index.
 	/// @param start Starting index to copy from.
 	/// @return `List` containing elements starting from the given `start`.

@@ -28,16 +28,22 @@ public:
 	static void process(Args... args) {
 		if (events.size()) {
 			// Done this way because the list may be modified during another object's update cycle
-			for(usize i = 0; i < events.size(); ++i)
-				if (events[i]) autoUpdate(*events[i], args...);
+			for(auto const e: copy(events))
+				if (e) autoUpdate(*e, args...);
+			cleanup();
 		}
+	}
+
+	/// @brief Cleans the periodic events list.
+	static void cleanup() {
+		events.eraseLike(nullptr);
 	}
 
 	/// @brief Sets the periodic event to be manually executed.
 	void setManual() {
 		if (manual) return;
 		if (!events.empty())
-			events.eraseLike(this);
+			events.replace(this, nullptr);
 		manual = true;
 	}
 
@@ -51,7 +57,7 @@ public:
 	/// @brief Destructor.
 	virtual ~APeriodic() {
 		if (!manual && !events.empty())
-			events.eraseLike(this);
+			events.replace(this, nullptr);
 	}
 
 	/// @brief Returns whether the periodic event is manually executed.

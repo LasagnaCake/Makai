@@ -24,6 +24,8 @@ ADrawable::~ADrawable() {
 }
 
 ADrawable& ADrawable::setManual() {
+	for (auto const layer: RenderServer::layers.withObject(this))
+		RenderServer::layers.get(layer).replace(this, nullptr);
 	if(!manualMode)
 		RenderServer::layers.removeFromAll(this);
 	manualMode = true;
@@ -51,7 +53,7 @@ ADrawable& ADrawable::addToRenderLayer(usize const renderLayer) {
 }
 
 ADrawable& ADrawable::removeFromRenderLayer(usize const renderLayer) {
-	RenderServer::layers.remove(this, renderLayer);
+	RenderServer::layers.get(renderLayer).replace(this, nullptr);
 	if (RenderServer::layers.withObject(this).empty())
 		manualMode = true;
 	return *this;
