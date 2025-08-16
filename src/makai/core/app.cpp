@@ -478,17 +478,19 @@ void App::render() {
 				#endif
 				// Call onLayerDrawBegin function
 				onPostLayerClear(layer.key);
-				// Render layer
+				// Render layer to buffer
 				Makai::Graph::RenderServer::renderLayer(layer.value);
 				// Clear layer push flag
 				pushToFrame = false;
 				// Call onPreLayerDraw function
 				onPreLayerDraw(layer.key);
-				// Render layer buffer
+				// Push layer to framebuffer
 				#ifndef MAKAILIB_DO_NOT_USE_BUFFERS
 				if (pushToFrame) layerbuffer.render(framebuffer);
 				#endif // MAKAILIB_DO_NOT_USE_BUFFERS
 			}
+			// Prune layer for removed objects
+			layer.value.removeLike(nullptr);
 			// Call onLayerDrawEnd function
 			onLayerDrawEnd(layer.key);
 		}
