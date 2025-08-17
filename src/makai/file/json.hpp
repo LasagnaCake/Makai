@@ -107,7 +107,7 @@ namespace Makai::JSON {
 	};
 
 	/// @brief JSON view.
-	class JSONView: public View<Extern::JSONData> {
+	class JSONView: public View<JSONType> {
 	public:
 		/// @brief JSON path.
 		struct Path {
@@ -129,11 +129,11 @@ namespace Makai::JSON {
 		/// @brief Constructs the JSON view.
 		/// @param data Reference to JSON value to view.
 		/// @param name JSON value name. By default, it is `"<anonymous>"`.
-		JSONView(Extern::JSONData& data, String const& name = "<anonymous>");
+		JSONView(JSONType& data, String const& name = "<anonymous>");
 		/// @brief Constructs the JSON view.
 		/// @param data Const reference to JSON value to view.
 		/// @param name JSON value name. By default, it is `"<anonymous>"`.
-		JSONView(Extern::JSONData const& data, String const& name = "<anonymous>");
+		JSONView(JSONType const& data, String const& name = "<anonymous>");
 		/// @brief Copy constructor.
 		/// @param other `JSONView` to copy from.
 		JSONView(JSONView const& other);
@@ -142,7 +142,7 @@ namespace Makai::JSON {
 		JSONView(JSONView&& other);
 
 		/// @brief Returns a copy of the underlying JSON value.
-		Extern::JSONData json() const;
+		JSONType json() const;
 
 		/// @brief Returns the current value stored in the view.
 		/// @tparam T Value type.
@@ -251,6 +251,20 @@ namespace Makai::JSON {
 		/// @return Structure as string.
 		String toString(int const indent = -1, char const ch = '\t') const;
 
+		/// @brief JSON Binary format.
+		enum class BinaryFormat {
+			JBF_BJDATA,
+			JBF_BSON,
+			JBF_CBOR,
+			JBF_MESSAGEPACK,
+			JBF_UBJSON
+		};
+		
+		/// @brief Returns the underlying JSON value as a binary format.
+		/// @param format Binary format type. By default, it is `JBF_MESSAGEPACK`.
+		/// @return Structure as binary format.
+		BinaryData<> toBinary(BinaryFormat const format = BinaryFormat::JBF_MESSAGEPACK) const;
+
 		/// @brief Returns whether the underlying JSON value has a given member.
 		/// @param key Member to check for.
 		/// @return Whether member exists.
@@ -260,8 +274,13 @@ namespace Makai::JSON {
 		/// @return Whether member exists.
 		inline bool has(Path const& key) const {return view().contains(key.path());}
 
+		/// @brief Appends the data in another `JSONView` to this one. 
+		/// @param other Data to append to this one.
+		/// @return Reference to self.
+		JSONView& append(JSONView const& other);
+
 		/// @brief Returns a copy of the underlying JSON value.
-		inline operator Extern::JSONData() {return view();}
+		inline operator JSONType() {return view();}
 		
 		/// @brief Returns whether the JSON value is null.
 		/// @return Whether it is null.
@@ -355,11 +374,11 @@ namespace Makai::JSON {
 		/// @brief Constructs the JSON value.
 		/// @param name Value name.
 		/// @param data Value contents.
-		JSONValue(String const& name, Extern::JSONData const& data);
+		JSONValue(String const& name, JSONType const& data);
 
 		/// @brief Constructs the JSON value.
 		/// @param data Value contents.
-		JSONValue(Extern::JSONData const& data);
+		JSONValue(JSONType const& data);
 
 		/// @brief Constructs the JSON value.
 		/// @param view Value contents.
@@ -368,6 +387,12 @@ namespace Makai::JSON {
 		/// @brief Copy constructor.
 		/// @param other `JSONValue` to copy from.
 		JSONValue(JSONValue const& other);
+
+		/// @brief Returns the underlying JSON value as a binary format.
+		/// @param data Data to convert from.
+		/// @param format Binary format type. By default, it is `JBF_MESSAGEPACK`.
+		/// @return Structure as binary format.
+		static JSONValue fromBinary(BinaryData<> const& data, BinaryFormat const format = BinaryFormat::JBF_MESSAGEPACK);
 
 		/// @brief Empties the underlying JSON value.
 		/// @return Reference to self.
