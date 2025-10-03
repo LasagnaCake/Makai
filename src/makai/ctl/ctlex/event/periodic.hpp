@@ -28,8 +28,8 @@ public:
 	static void process(Args... args) {
 		if (events.size()) {
 			// Done this way because the list may be modified during another object's update cycle
-			for(auto const e: copy(events))
-				if (e) autoUpdate(*e, args...);
+			for(usize i = 0; i < events.size(); ++i)
+				if (events[i]) autoUpdate(*events[i], args...);
 			cleanup();
 		}
 	}

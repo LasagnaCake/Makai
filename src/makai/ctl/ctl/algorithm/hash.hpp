@@ -5,6 +5,7 @@
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
 #include "../typetraits/cast.hpp"
+#include "../typetraits/verify.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -111,7 +112,7 @@ namespace Impl::Hash {
 				usize k = *d1++;
 				mix(hash, k, m, r);
 			}
-			ref<byte const> d2 = (ref<byte const>)d2;
+			ref<byte const> d2 = (ref<byte const>)d1;
 			usize t = 0;
 			switch(sz & 7) {
 			case 7:		t ^= static_cast<usize>(d2[6]) << 48;
@@ -161,7 +162,7 @@ namespace Impl::Hash {
 
 		namespace Impl {
 			constexpr usize part(ref<char const> const data, usize const sz, usize const i) {
-				if (i > 7) __builtin_unreachable();
+				if (i > 7) unreachable();
 				return ((i < sz) ? (usize(data[i]) << i * 8) : 0);
 			}
 
@@ -192,7 +193,7 @@ namespace Impl::Hash {
 					return combine64(data, sz);
 				else if constexpr (sizeof(usize) == sizeof(uint32))
 					return combine32(data, sz);
-				else __builtin_unreachable();
+				else unreachable();
 			}
 
 			constexpr usize constHash(
@@ -251,7 +252,7 @@ namespace Impl::Hash {
 	constexpr usize constHash(ref<char const> const data, usize const sz, usize seed = 0) {
 		if constexpr (sizeof(usize) == sizeof(uint64))	
 			return Murmur2::constHash64(data, sz, seed);
-		else __builtin_unreachable();
+		else unreachable();
 	}
 
 	/// @brief Returns the default seed.

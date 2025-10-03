@@ -17,6 +17,12 @@ consteval bool inRunTime() noexcept {
 	return !inCompileTime();
 }
 
+/// @brief Declares a code path as unreachable.
+[[noreturn, gnu::always_inline]]
+inline void unreachable() {
+	__builtin_unreachable();
+}
+
 CTL_NAMESPACE_END
 
 #endif

@@ -6,17 +6,11 @@
 #include "../../ctl/container/lists/list.hpp"
 #include "../../ctl/container/functor.hpp"
 #include "../../ctl/interface/core.hpp"
-#include "../math/ease.hpp"
 #include "../event/timer.hpp"
+#include "tweenable.hpp"
+#include "interpolate.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
-
-/// @brief Tween-specific type constraints.
-namespace Type::Ex::Tween {
-	/// @brief Type must be operatable, and must be constructible from a single float.
-	template <typename T>
-	concept Tweenable = CTL::Type::Math::Operatable<T> && CTL::Type::Constructible<T, float>;
-}
 
 template <Type::Ex::Tween::Tweenable T = float>
 class Tween;
@@ -134,8 +128,8 @@ public:
 			step += delta;
 			// If begin != end, calculate step
 			if (from != to) {
-				factor = easeMode(float(step)/float(stop));
-				current = ::CTL::Math::lerp<T>(from, to, factor);
+				factor = (static_cast<float>(step)/static_cast<float>(stop));
+				current = interpolate<T>(from, to, factor, easeMode);
 			}
 			// Else, set target to end
 			else current = to;
@@ -403,8 +397,8 @@ public:
 			step += delta;
 			// If begin != end, calculate step
 			if (current.from != current.to) {
-				factor = current.ease(float(step)/float(current.step));
-				currentValue = ::CTL::Math::lerp<T>(current.from, current.to, factor);
+				factor = (static_cast<float>(step)/static_cast<float>(current.step));
+				current = interpolate<T>(current.from, current.to, factor, current.ease);
 			}
 			// Else, set target to end
 			currentValue = current.to;

@@ -13,6 +13,8 @@
 #include "../ctypes.hpp"
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
+#include "../typetraits/verify.hpp"
+#include <new>
 
 // One day... one day these will work without builtins...
 
@@ -212,9 +214,12 @@ namespace MX {
 	/// @return Pointer to start of allocated memory.
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
 	constexpr owner<void> malloc(usize const sz) {
-		if (!(sz + 1)) __builtin_unreachable();
+		if (!(sz + 1)) unreachable();
 		if (!sz) throw AllocationFailure();
-		auto* m = __builtin_malloc(sz);
+		pointer m = nullptr;
+		if constexpr (inCompileTime())
+			m = ::operator new(sz);
+		else m = __builtin_malloc(sz);
 		if (!m) throw AllocationFailure();
 		return m;
 	}
@@ -226,12 +231,8 @@ namespace MX {
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
 	template<Type::NonVoid T>
 	constexpr owner<T> malloc(usize const sz) {
-		if (!(sz + 1)) __builtin_unreachable();
-		if (!sz) throw AllocationFailure();
-		auto* m = __builtin_malloc(sz * sizeof(T));
-		if (!m) throw AllocationFailure();
 		//memzero(m, sz);
-		return (T*)m;
+		return static_cast<T*>(malloc(sz * sizeof(T)));
 	}
 	
 	/// @brief Allocates space for an element in the heap.
@@ -246,7 +247,11 @@ namespace MX {
 	/// @brief Frees memory allocated in the heap.
 	/// @param mem Pointer to allocated memory.
 	constexpr void free(pointer const mem) {
-		if (mem) return __builtin_free(mem);
+		if (mem) {
+			if constexpr (inCompileTime())
+				return ::operator delete(mem);
+			else return __builtin_free(mem);
+		}
 	}
 
 	/// @brief Frees memory allocated in the heap.
@@ -254,7 +259,7 @@ namespace MX {
 	/// @param mem Pointer to allocated memory.
 	template<Type::NonVoid T>
 	constexpr void free(owner<T> const mem) {
-		if (mem) return __builtin_free((pointer)mem);
+		free(static_cast<pointer>(mem));
 	}
 
 	/// @brief Reallocates memory allocated in the heap.
@@ -262,12 +267,16 @@ namespace MX {
 	/// @param sz New size in bytes.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	constexpr owner<void> realloc(owner<void> const mem, usize const sz) {
-		if (!(sz + 1)) __builtin_unreachable();
+		if (!(sz + 1)) unreachable();
 		if (!sz) {
 			free(mem);
 			return nullptr;
 		}
-		auto* m = __builtin_realloc(mem, sz);
+		pointer m = nullptr;
+		if constexpr (inCompileTime()) {
+			free(mem);
+			m = malloc(sz);
+		} else __builtin_realloc(mem, sz);
 		if (!m) throw AllocationFailure();
 		return m;
 	}
@@ -279,14 +288,7 @@ namespace MX {
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	template<Type::NonVoid T>
 	constexpr owner<T> realloc(owner<T> const mem, usize const sz) {
-		if (!(sz + 1)) __builtin_unreachable();
-		if (!sz) {
-			free(mem);
-			return nullptr;
-		}
-		auto* m = __builtin_realloc((pointer)mem, sz * sizeof(T));
-		if (!m) throw AllocationFailure();
-		return (T*)m;
+		return static_cast<owner<T>>(realloc(static_cast<pointer>(mem), sz * sizeof(T)));
 	}
 
 	/// @brief Destructs an object of a given type, if it exists.
@@ -311,7 +313,7 @@ namespace MX {
 	template<Type::NonVoid T, typename... Args>
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args) {
 		if (!mem) throw ConstructionFailure();
-		::new (static_cast<void*>(mem)) T(::CTL::forward<Args>(args)...);
+		::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
 		return mem;
 	}
 
@@ -362,7 +364,7 @@ namespace MX {
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
-		if (!(sz + 1)) __builtin_unreachable();
+		if (!(sz + 1)) unreachable();
 		T* start = dst;
 		try {
 			if (dst < src) {
@@ -398,7 +400,7 @@ namespace MX {
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
 	constexpr ref<T> objclear(ref<T> const mem, usize sz) {
-		if (!(sz + 1)) __builtin_unreachable();
+		if (!(sz + 1)) unreachable();
 		T* m = mem;
 		while (sz--)
 			destruct<T>(m++);

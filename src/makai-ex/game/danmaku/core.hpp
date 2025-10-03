@@ -15,45 +15,9 @@ namespace Makai::Ex::Game::Danmaku {
 	using CollisionServer = C2D::Server;
 
 	/// @brief Interpolatable property.
-	/// @tparam T Property type.
-	template<Type::Ex::Tween::Tweenable T>
-	struct Property {
-		/// @brief Current value.
-		T					value		= 0;
-		/// @brief Whether to interpolate the property.
-		bool				interpolate	= false;
-		/// @brief Starting value.
-		T					start		= 0;
-		/// @brief End value.
-		T					stop		= 0;
-		/// @brief Interpolation speed.
-		float				speed		= 0;
-		/// @brief Interpolation function.
-		Math::Ease::Mode	ease		= Math::Ease::linear;
-		/// @brief Current interpolation factor.
-		float				factor		= 0;
+	template <class T>
+	using Property = CTL::Ex::Property<T>;
 
-		/// @brief Updates the property, and returns its current value.
-		/// @return Current value after processing.
-		constexpr T next() {
-			if (!(interpolate && speed != 0))
-				return value;
-			factor = Math::clamp<float>(factor, 0, 1);
-			if (factor == 0)		value = start;
-			else if (factor < 1)	value = Math::lerp<T>(start, stop, ease(factor));
-			else					value = stop;
-			factor += speed;
-			return value;
-		}
-
-		/// @brief Reverses the property.
-		/// @return Reference to self.
-		constexpr Property& reverse() {
-			CTL::swap(start, stop);
-			factor = 1 - factor;
-			return *this;
-		}
-	};
 	/// @brief Pause state.
 	struct PauseState {
 		/// @brief Duration.

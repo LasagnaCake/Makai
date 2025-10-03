@@ -18,16 +18,13 @@ ADrawable::ADrawable(bool const manual): ADrawable(manual, 0) {
 
 ADrawable::~ADrawable() {
 	DEBUGLN("Removing from rendering layers...");
-	if(!manualMode)
-		RenderServer::layers.removeFromAll(this);
+	setManual();
 	DEBUGLN("Finalizing...\n");
 }
 
 ADrawable& ADrawable::setManual() {
 	for (auto const layer: RenderServer::layers.withObject(this))
 		RenderServer::layers.get(layer).replace(this, nullptr);
-	if(!manualMode)
-		RenderServer::layers.removeFromAll(this);
 	manualMode = true;
 	return *this;
 }
