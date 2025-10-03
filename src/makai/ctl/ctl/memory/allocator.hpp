@@ -20,6 +20,13 @@ namespace Type {
 			{t.resize(p, sz)}	-> Type::Equal<void>	;
 			{t.resized(p, sz)}	-> Type::Equal<TData*>	;
 		};
+
+		/// @brief Type must be a valid constant allocator for `TData`.
+		template<template <class> class T, class TData>
+		concept ConstantAllocator = requires (T<TData> t, usize sz, TData* p) {
+			{t.allocate(sz)}		-> Type::Equal<TData*>	;
+			{t.deallocate(p, sz)}	-> Type::Equal<void>	;
+		};
 	}
 }
 
@@ -30,6 +37,7 @@ struct HeapAllocator {
 	/// @brief Allocates memory on the heap.
 	/// @param sz Size of memory to allocate.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
+	[[nodiscard]]
 	constexpr pointer allocate(usize const sz)
 	requires Type::Void<T> {
 		if (!sz) return nullptr;
@@ -39,6 +47,7 @@ struct HeapAllocator {
 	/// @brief Allocates space for elements on the heap.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
+	[[nodiscard]]
 	constexpr owner<T> allocate(usize const sz)
 	requires Type::NonVoid<T> {
 		if (!sz) return nullptr;
@@ -47,6 +56,7 @@ struct HeapAllocator {
 
 	/// @brief Allocates space for a single element on the heap.
 	/// @return Pointer to allocated memory.
+	[[nodiscard]]
 	constexpr owner<T> allocate()
 	requires Type::NonVoid<T> {
 		return MX::malloc<T>();
@@ -54,14 +64,14 @@ struct HeapAllocator {
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
-	constexpr void deallocate(pointer const& mem)
+	constexpr void deallocate(pointer const& mem, usize const = 0)
 	requires Type::Void<T> {
 		return MX::free(mem);
 	}
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
-	constexpr void deallocate(owner<T> const mem)
+	constexpr void deallocate(owner<T> const mem, usize const = 0)
 	requires Type::NonVoid<T> {
 		return MX::free<T>(mem);
 	}
@@ -88,6 +98,7 @@ struct HeapAllocator {
 	/// @param mem Memory to resize.
 	/// @param sz New size.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
+	[[nodiscard]]
 	constexpr pointer resized(pointer const& mem, usize const sz)
 	requires Type::Void<T> {
 		if (!mem) return nullptr;
@@ -98,11 +109,46 @@ struct HeapAllocator {
 	/// @param mem Memory to resize.
 	/// @param sz New element count.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
+	[[nodiscard]]
 	constexpr owner<T> resized(owner<T> const mem, usize const sz)
 	requires Type::NonVoid<T> {
 		if (!mem) return nullptr;
 		return MX::realloc<T>(mem, sz);
 	}
+};
+
+/// @brief Compile-time allocator.
+/// @tparam T Type to handle memory for.
+template<class T>
+struct ConstantAllocator {
+	/// @brief Allocates space for elements on the heap.
+	/// @param sz Element count to allocate for.
+	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
+	[[nodiscard]]
+	constexpr owner<T> allocate(usize const sz)
+	requires Type::NonVoid<T> {
+		if (!sz) return nullptr;
+		return impl.allocate(sz);
+	}
+
+	/// @brief Allocates space for a single element on the heap.
+	/// @return Pointer to allocated memory.
+	[[nodiscard]]
+	constexpr owner<T> allocate()
+	requires Type::NonVoid<T> {
+		return impl.allocate(1);
+	}
+
+	/// @brief Deallocates allocated memory.
+	/// @param mem Pointer to allocated memory.
+	constexpr void deallocate(owner<T> const mem, usize const sz = 0)
+	requires Type::NonVoid<T> {
+		return impl.deallocate(mem, sz);
+	}
+
+private:
+	/// @brief Implementation.
+	std::allocator<T> impl;
 };
 
 /// @brief Tags the class as manually managing memory.
@@ -119,19 +165,59 @@ struct Allocatable {
 	using AllocatorTemplateType	= TAlloc<T>;
 };
 
+/// @brief Tags the class as manually managing compile-time memory.
+/// @tparam TData Type to handle memory for.
+template<class TData>
+struct ConstantAllocatable {
+	/// @brief Constant allocator type.
+	using ConstantAllocatorType			= ConstantAllocator<TData>;
+	/// @brief Constant allocator template.
+	/// @tparam T Type to handle memory for. By default, it is the same as the type to handle memory for.
+	template<class T = TData>
+	using ConstantAllocatorTemplateType	= ConstantAllocator<T>;
+};
+
+/// @brief Tags the class as manually managing memory, and is aware of evaluation contexts.
+/// @tparam TAlloc<class> Runtime allocator type. 
+/// @tparam TData Type to handle memory for.
+template<template <class> class TAlloc, class TData>
+requires Type::Memory::Allocator<TAlloc, TData>
+struct ContextAwareAllocatable:
+	Allocatable<TAlloc, TData>,
+	ConstantAllocatable<TData>  {
+	using Allocatable			= ::CTL::Allocatable<TAlloc, TData>;
+	using ConstantAllocatable	= ::CTL::ConstantAllocatable<TData>;
+
+	using
+		typename Allocatable::AllocatorType,
+		typename ConstantAllocatable::ConstantAllocatorType
+	;
+
+	/// @brief Context allocator type.
+	using ContextAllocatorType			= Meta::DualType<inCompileTime(), ConstantAllocatorType, AllocatorType>;
+	/// @brief Allocator template.
+	/// @tparam T Type to handle memory for. By default, it is the same as the type to handle memory for.
+	template<class T = TData>
+	using ContextAllocatorTemplateType	= Meta::DualType<
+		inCompileTime(),
+		typename Allocatable::template AllocatorTemplateType<T>,
+		typename ConstantAllocatable::template ConstantAllocatorTemplateType<T>
+	>;
+};
+
 /// @brief Automatically-managed memory slice.
 /// @tparam TData Type to handle memory for.
 template<typename TData = void, template <class> class TAlloc = HeapAllocator>
 struct MemorySlice:
 	Typed<TData>,
 	SelfIdentified<MemorySlice<TData, TAlloc>>,
-	Allocatable<TAlloc, TData> {
-	using SelfIdentified	= ::CTL::SelfIdentified<MemorySlice<TData, TAlloc>>;
-	using Allocatable		= ::CTL::Allocatable<TAlloc, TData>;
-	using Typed				= ::CTL::Typed<TData>;
+	ContextAwareAllocatable<TAlloc, TData> {
+	using SelfIdentified			= ::CTL::SelfIdentified<MemorySlice<TData, TAlloc>>;
+	using ContextAwareAllocatable	= ::CTL::Allocatable<TAlloc, TData>;
+	using Typed						= ::CTL::Typed<TData>;
 
 	using
-		typename Allocatable::AllocatorType
+		typename ContextAwareAllocatable::ContextAllocatorType
 	;
 
 	using typename SelfIdentified::SelfType;
@@ -183,25 +269,25 @@ protected:
 	constexpr void invoke(usize const sz) {
 		if (!sz) return;
 		if (!contents) contents = alloc.allocate(sz);
-		else alloc.resize(contents, sz);
+		else alloc.resize(contents, sz, length);
 		length = sz;
 	}
 
 	/// @brief Frees the memory managed by the slice.
 	constexpr void free() {
 		if (!contents) return;
-		alloc.deallocate(contents);
+		alloc.deallocate(contents, length);
 		contents	= nullptr;
 		length		= 0;
 	}
 
 private:
 	/// @brief Memory allocator.
-	AllocatorType	alloc;
+	ContextAllocatorType	alloc;
 	/// @brief Managed memory.
-	PointerType		contents	= nullptr;
+	PointerType				contents	= nullptr;
 	/// @brief Element count.
-	usize			length		= 0;
+	usize					length		= 0;
 };
 
 CTL_NAMESPACE_END

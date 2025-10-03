@@ -14,6 +14,7 @@
 #include "../../algorithm/search.hpp"
 #include "../../adapter/comparator.hpp"
 #include "../../memory/memory.hpp"
+#include <memory>
 
 CTL_NAMESPACE_BEGIN
 
@@ -53,13 +54,13 @@ struct List:
 	Iteratable<TData, TIndex>,
 	SelfIdentified<List<TData, TIndex>>,
 	ListInitializable<TData>,
-	Allocatable<TAlloc, TData>,
+	ContextAwareAllocatable<TAlloc, TData>,
 	Ordered {
 public:
-	using Iteratable		= ::CTL::Iteratable<TData, TIndex>;
-	using SelfIdentified	= ::CTL::SelfIdentified<List<TData, TIndex>>;
-	using ListInitializable	= ::CTL::ListInitializable<TData>;
-	using Allocatable		= ::CTL::Allocatable<TAlloc, TData>;
+	using Iteratable				= ::CTL::Iteratable<TData, TIndex>;
+	using SelfIdentified			= ::CTL::SelfIdentified<List<TData, TIndex>>;
+	using ListInitializable			= ::CTL::ListInitializable<TData>;
+	using ContextAwareAllocatable	= ::CTL::ContextAwareAllocatable<TAlloc, TData>;
 
 	using
 		typename Iteratable::DataType,
@@ -91,7 +92,7 @@ public:
 	;
 
 	using
-		typename Allocatable::AllocatorType
+		typename ContextAwareAllocatable::ContextAllocatorType
 	;
 
 	/// @brief Transformation function type.
@@ -1243,7 +1244,7 @@ public:
 
 	/// @brief Returns the associated allocator.
 	/// @return `List` allocator.
-	constexpr AllocatorType& allocator() {return alloc;}
+	constexpr ContextAllocatorType& allocator() {return alloc;		}
 
 	/// @brief `swap` algorithm for `List`.
 	/// @param a `List` to swap.
@@ -1292,7 +1293,7 @@ private:
 	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz) {
 		if (!p) return;
 		memdestruct(p, sz);
-		alloc.deallocate(p);
+		alloc.deallocate(p, sz);
 	}
 
 	constexpr owner<DataType> memcreate(SizeType const sz) {
@@ -1301,10 +1302,18 @@ private:
 
 	constexpr void memresize(ref<DataType>& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
 		if constexpr(Type::Standard<DataType>)
-			alloc.resize(data, sz);
+			if constexpr (inCompileTime()) {
+				auto tmp = alloc.allocate(sz);
+				MX::memcpy(tmp, data, sz < oldsz ? sz : oldsz);
+				alloc.deallocate(data, sz);
+				data = tmp;
+			} else alloc.resize(data, sz);
 		else {
 			if (!count) {
-				alloc.resize(data, sz);
+				if constexpr (inCompileTime()) {
+					alloc.deallocate(data, sz);
+					data = alloc.allocate(sz);
+				} else alloc.resize(data, sz);
 				return;
 			}
 			DataType* ndata = alloc.allocate(sz);
@@ -1337,9 +1346,9 @@ private:
 		magnitude = 0;
 		SizeType const order = (sizeof(SizeType) * 8)-1;
 		for (SizeType i = 1; i <= order; ++i) {
-			magnitude = 1 << (order - i);
+			magnitude = static_cast<SizeType>(1) << (order - i);
 			if ((maximum >> (order - i)) & 1) {
-				magnitude <<= 1;
+				magnitude <<= static_cast<SizeType>(1);
 				return *this;
 			}
 		}
@@ -1391,8 +1400,10 @@ private:
 	owner<DataType>	contents	= nullptr;
 
 	/// @brief Memory allocator.
-	AllocatorType	alloc;
+	ContextAllocatorType	alloc;
 };
+
+static_assert(List<int>().empty());
 
 /// @brief `List` analog for dynamic array of bytes.
 /// @tparam TIndex Index type. 

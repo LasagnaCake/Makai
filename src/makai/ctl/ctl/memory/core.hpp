@@ -14,7 +14,6 @@
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
 #include "../typetraits/verify.hpp"
-#include <new>
 
 // One day... one day these will work without builtins...
 
@@ -169,7 +168,7 @@ namespace MX {
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
 	constexpr T* memset(ref<T> const dst, int const val, usize const count) {
-		return (T*)memset((pointer)dst, val, count * sizeof(T));
+		return static_cast<ref<T>>(memset(static_cast<pointer>(dst), val, count * sizeof(T)));
 	}
 
 	/// @brief Sets every byte of data to a value.
@@ -179,7 +178,7 @@ namespace MX {
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
 	constexpr T* memset(ref<T> const dst, int const val) {
-		return (T*)memset((pointer)dst, val, sizeof(T));
+		return memset<T>(dst, val, 1);
 	}
 	
 	/// @brief Sets every byte of data to zero.
@@ -197,7 +196,7 @@ namespace MX {
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
 	constexpr ref<T> memzero(ref<T> const dst, usize const count) {
-		return (T*)memzero((pointer)dst, count * sizeof(T));
+		return static_cast<ref<T>>(memzero(static_cast<pointer>(dst), count * sizeof(T)));
 	}
 
 	/// @brief Sets every byte of data to zero.
@@ -206,19 +205,24 @@ namespace MX {
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
 	constexpr ref<T> memzero(ref<T> const dst) {
-		return (T*)memzero((pointer)dst, sizeof(T));
+		return memzero<T>(dst, 1);
 	}
 	
 	/// @brief Allocates space for a given size of bytes in the heap.
 	/// @param sz Byte size.
 	/// @return Pointer to start of allocated memory.
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
+	[[nodiscard]]
 	constexpr owner<void> malloc(usize const sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) throw AllocationFailure();
 		pointer m = nullptr;
 		if constexpr (inCompileTime())
-			m = ::operator new(sz);
+			#ifndef CTL_DO_NOT_USE_BUILTINS
+			m = __builtin_operator_new(sz);
+			#else
+			m = static_cast<owner<T>>(::operator new(sz));
+			#endif
 		else m = __builtin_malloc(sz);
 		if (!m) throw AllocationFailure();
 		return m;
@@ -230,9 +234,22 @@ namespace MX {
 	/// @return Pointer to start of allocated memory.
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
 	template<Type::NonVoid T>
-	constexpr owner<T> malloc(usize const sz) {
-		//memzero(m, sz);
-		return static_cast<T*>(malloc(sz * sizeof(T)));
+	[[nodiscard]]
+	constexpr owner<T> malloc(usize sz) {
+		if (!(sz + 1)) unreachable();
+		if (!sz) throw AllocationFailure();
+		if (__builtin_mul_overflow(sz, sizeof(T), &sz))
+			throw AllocationFailure();
+		owner<T> m = nullptr;
+		if constexpr (inCompileTime())
+			#ifndef CTL_DO_NOT_USE_BUILTINS
+			m = static_cast<owner<T>>(__builtin_operator_new(sz));
+			#else
+			m = static_cast<owner<T>>(::operator new(sz));
+			#endif
+		else m = __builtin_malloc(sz);
+		if (!m) throw AllocationFailure();
+		return m;
 	}
 	
 	/// @brief Allocates space for an element in the heap.
@@ -241,7 +258,7 @@ namespace MX {
 	/// @throw AllocationFailure if memory allocation fails.
 	template<Type::NonVoid T>
 	constexpr owner<T> malloc() {
-		return (T*)malloc<T>(1);
+		return malloc<T>(1);
 	}
 
 	/// @brief Frees memory allocated in the heap.
@@ -249,7 +266,11 @@ namespace MX {
 	constexpr void free(pointer const mem) {
 		if (mem) {
 			if constexpr (inCompileTime())
+				#ifndef CTL_DO_NOT_USE_BUILTINS
+				return __builtin_operator_delete(mem);
+				#else
 				return ::operator delete(mem);
+				#endif
 			else return __builtin_free(mem);
 		}
 	}
@@ -259,13 +280,22 @@ namespace MX {
 	/// @param mem Pointer to allocated memory.
 	template<Type::NonVoid T>
 	constexpr void free(owner<T> const mem) {
-		free(static_cast<pointer>(mem));
+		if (mem) {
+			if constexpr (inCompileTime())
+				#ifndef CTL_DO_NOT_USE_BUILTINS
+				return __builtin_operator_delete(mem);
+				#else
+				return ::operator delete(mem);
+				#endif
+			else return __builtin_free(mem);
+		}
 	}
 
 	/// @brief Reallocates memory allocated in the heap.
 	/// @param mem Memory to reallocate.
 	/// @param sz New size in bytes.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
+	[[nodiscard]]
 	constexpr owner<void> realloc(owner<void> const mem, usize const sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) {
@@ -287,6 +317,7 @@ namespace MX {
 	/// @param sz New count of elements.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	template<Type::NonVoid T>
+	[[nodiscard]]
 	constexpr owner<T> realloc(owner<T> const mem, usize const sz) {
 		return static_cast<owner<T>>(realloc(static_cast<pointer>(mem), sz * sizeof(T)));
 	}
@@ -335,6 +366,7 @@ namespace MX {
 	/// @param ...args Constructor arguments.
 	/// @return Pointer to created object.
 	template<Type::NonVoid T, typename... Args>
+	[[nodiscard]]
 	constexpr owner<T> create(Args&&... args) {
 		return construct<T>(malloc<T>(), ::CTL::forward<Args>(args)...);
 	}
