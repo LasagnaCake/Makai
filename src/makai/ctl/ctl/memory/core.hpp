@@ -36,7 +36,7 @@ namespace MX {
 		if (size == 1) *d = *s;
 		else while (size--) *d++ = *s++;
 		#else
-		if (!(size + 1)) __builtin_unreachable();
+		if (!(size + 1)) unreachable();
 		return __builtin_memcpy(dst, src, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
@@ -80,7 +80,7 @@ namespace MX {
 				*--d = *--s;
 		}
 		#else
-		if (!(size + 1)) __builtin_unreachable();
+		if (!(size + 1)) unreachable();
 		return __builtin_memmove(dst, src, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
@@ -119,7 +119,7 @@ namespace MX {
 				return s1[-1] < s2[-1] ? -1 : 1;
 		return 0;
 		#else
-		if (!(size + 1)) __builtin_unreachable();
+		if (!(size + 1)) unreachable();
 		return __builtin_memcmp(a, b, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
@@ -156,7 +156,7 @@ namespace MX {
 		while (size-- > 0)
 			*d++ = val;
 		#else
-		if (!(size + 1)) __builtin_unreachable();
+		if (!(size + 1)) unreachable();
 		return __builtin_memset(dst, val, size);
 		#endif // CTL_DO_NOT_USE_BUILTINS
 	}
