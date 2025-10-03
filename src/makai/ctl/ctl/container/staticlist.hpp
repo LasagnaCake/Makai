@@ -54,12 +54,12 @@ template<
 struct StaticList:
 	Iteratable<TData, TIndex>,
 	SelfIdentified<StaticList<TData, TIndex>>,
-	Allocatable<TAlloc, TData>,
+	ContextAwareAllocatable<TAlloc, TData>,
 	Ordered {
 public:
-	using Iteratable		= ::CTL::Iteratable<TData, TIndex>;
-	using SelfIdentified	= ::CTL::SelfIdentified<StaticList<TData, TIndex>>;
-	using Allocatable		= ::CTL::Allocatable<TAlloc, TData>;
+	using Iteratable				= ::CTL::Iteratable<TData, TIndex>;
+	using SelfIdentified			= ::CTL::SelfIdentified<StaticList<TData, TIndex>>;
+	using ContextAwareAllocatable	= ::CTL::ContextAwareAllocatable<TAlloc, TData>;
 
 	using
 		typename Iteratable::DataType,
@@ -87,7 +87,7 @@ public:
 	;
 
 	using
-		typename Allocatable::AllocatorType
+		typename ContextAwareAllocatable::ContextAllocatorType
 	;
 
 	using PredicateType	= Decay::AsFunction<bool(ConstReferenceType)>;
@@ -487,7 +487,7 @@ public:
 
 	/// @brief Returns the associated allocator.
 	/// @return `StaticList` allocator.
-	constexpr AllocatorType& allocator() {return alloc;}
+	constexpr ContextAllocatorType& allocator() {return alloc;}
 
 private:
 	using Iteratable::wrapBounds;
@@ -556,7 +556,7 @@ private:
 	owner<DataType>	contents	= nullptr;
 
 	/// @brief Memory allocator.
-	AllocatorType	alloc;
+	ContextAllocatorType	alloc;
 };
 
 CTL_NAMESPACE_END
