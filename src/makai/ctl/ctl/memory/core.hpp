@@ -216,14 +216,7 @@ namespace MX {
 	constexpr owner<void> malloc(usize const sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) throw AllocationFailure();
-		pointer m = nullptr;
-		if constexpr (inCompileTime())
-			#ifndef CTL_DO_NOT_USE_BUILTINS
-			m = __builtin_operator_new(sz);
-			#else
-			m = static_cast<owner<T>>(::operator new(sz));
-			#endif
-		else m = __builtin_malloc(sz);
+		pointer m = __builtin_malloc(sz);
 		if (!m) throw AllocationFailure();
 		return m;
 	}
@@ -240,14 +233,7 @@ namespace MX {
 		if (!sz) throw AllocationFailure();
 		if (__builtin_mul_overflow(sz, sizeof(T), &sz))
 			throw AllocationFailure();
-		owner<T> m = nullptr;
-		if constexpr (inCompileTime())
-			#ifndef CTL_DO_NOT_USE_BUILTINS
-			m = static_cast<owner<T>>(__builtin_operator_new(sz));
-			#else
-			m = static_cast<owner<T>>(::operator new(sz));
-			#endif
-		else m = __builtin_malloc(sz);
+		owner<T> m = __builtin_malloc(sz);
 		if (!m) throw AllocationFailure();
 		return m;
 	}
@@ -264,15 +250,7 @@ namespace MX {
 	/// @brief Frees memory allocated in the heap.
 	/// @param mem Pointer to allocated memory.
 	constexpr void free(pointer const mem) {
-		if (mem) {
-			if constexpr (inCompileTime())
-				#ifndef CTL_DO_NOT_USE_BUILTINS
-				return __builtin_operator_delete(mem);
-				#else
-				return ::operator delete(mem);
-				#endif
-			else return __builtin_free(mem);
-		}
+		if (mem) return __builtin_free(mem);
 	}
 
 	/// @brief Frees memory allocated in the heap.
@@ -280,15 +258,7 @@ namespace MX {
 	/// @param mem Pointer to allocated memory.
 	template<Type::NonVoid T>
 	constexpr void free(owner<T> const mem) {
-		if (mem) {
-			if constexpr (inCompileTime())
-				#ifndef CTL_DO_NOT_USE_BUILTINS
-				return __builtin_operator_delete(mem);
-				#else
-				return ::operator delete(mem);
-				#endif
-			else return __builtin_free(mem);
-		}
+		if (mem) return __builtin_free(mem);
 	}
 
 	/// @brief Reallocates memory allocated in the heap.
