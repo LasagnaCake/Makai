@@ -160,7 +160,7 @@ struct Allocatable {
 	/// @brief Allocator type.
 	using AllocatorType			= TAlloc<TData>;
 	/// @brief Allocator template.
-	/// @tparam T Type to handle memory for. By default, it is the same as the type to handle memory for.
+	/// @tparam T Type to handle memory for. By default, it is the same as the previous type to handle memory for.
 	template<class T = TData>
 	using AllocatorTemplateType	= TAlloc<T>;
 };
@@ -172,7 +172,7 @@ struct ConstantAllocatable {
 	/// @brief Constant allocator type.
 	using ConstantAllocatorType			= ConstantAllocator<TData>;
 	/// @brief Constant allocator template.
-	/// @tparam T Type to handle memory for. By default, it is the same as the type to handle memory for.
+	/// @tparam T Type to handle memory for. By default, it is the same as the previous type to handle memory for.
 	template<class T = TData>
 	using ConstantAllocatorTemplateType	= ConstantAllocator<T>;
 };
@@ -193,10 +193,13 @@ struct ContextAwareAllocatable:
 		typename ConstantAllocatable::ConstantAllocatorType
 	;
 
-	/// @brief Context allocator type.
+	/// @brief Context-dependent allocator type.
+	///	@note Changes depending on whether the class is in a compile-time context, or a run-time context.
 	using ContextAllocatorType			= Meta::DualType<inCompileTime(), ConstantAllocatorType, AllocatorType>;
-	/// @brief Allocator template.
-	/// @tparam T Type to handle memory for. By default, it is the same as the type to handle memory for.
+
+	/// @brief Context-dependent allocator template.
+	/// @tparam T Type to handle memory for. By default, it is the same as the previous type to handle memory for.
+	///	@note Changes depending on whether the class is in a compile-time context, or a run-time context.
 	template<class T = TData>
 	using ContextAllocatorTemplateType	= Meta::DualType<
 		inCompileTime(),
