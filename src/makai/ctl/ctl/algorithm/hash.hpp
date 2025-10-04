@@ -112,7 +112,10 @@ namespace Impl::Hash {
 				usize k = *d1++;
 				mix(hash, k, m, r);
 			}
-			ref<byte const> d2 = (ref<byte const>)d1;
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Winvalid-constexpr"
+			ref<byte const> d2 = reinterpret_cast<ref<byte const>>(d1);
+			#pragma GCC diagnostic pop
 			usize t = 0;
 			switch(sz & 7) {
 			case 7:		t ^= static_cast<usize>(d2[6]) << 48;
@@ -142,7 +145,7 @@ namespace Impl::Hash {
 			usize hash	= seed;
 			ref<byte const> dt = static_cast<ref<byte const>>(data);
 			while(sz >= 4) {
-				usize k = *(usize*)dt;
+				usize k = *reinterpret_cast<ref<usize const>>(dt);
 				mix(hash, k, m, r);
 				dt += 4;
 				sz -= 4;
@@ -267,7 +270,7 @@ namespace Impl::Hash {
 }
 
 /// @brief Static class used for generating compile-time string hashes.
-namespace ConstHasher {
+struct ConstHasher {
 	/// @brief Hasher seed.
 	constexpr static usize SEED = Impl::Hash::seed();
 
@@ -306,7 +309,7 @@ namespace ConstHasher {
 	requires (!Type::Iteratable<T>) {
 		return hash(value.data(), value.size());
 	}
-}
+};
 
 static_assert(ConstHasher::hash("Compile-time Magics!") != 0);
 
