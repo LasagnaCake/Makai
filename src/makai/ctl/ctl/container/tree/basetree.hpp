@@ -156,7 +156,7 @@ namespace Tree {
 		using ConstReverseIteratorType	= NodeIterator<true, Node const>;
 		
 		/// @brief Allocator type.
-		using AllocatorType = TAlloc<Node>;
+		using AllocatorType = typename ContextAwareAllocatable<TAlloc, Node>::ContextAllocatorType;
 
 		/// @brief Returns the associated allocator.
 		/// @return Associated allocator.
