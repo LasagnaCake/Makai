@@ -283,10 +283,6 @@ namespace UTF {
 		;
 
 		using
-			typename BaseType::AllocatorType
-		;
-
-		using
 			typename SelfIdentified::SelfType
 		;
 

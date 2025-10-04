@@ -76,10 +76,6 @@ public:
 	;
 
 	using
-		typename BaseType::AllocatorType
-	;
-
-	using
 		typename SelfIdentified::SelfType
 	;
 
