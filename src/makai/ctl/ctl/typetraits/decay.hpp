@@ -88,6 +88,18 @@ constexpr T&& forward(typename Impl::NonReferenceType<T>::Type& v)	{return stati
 template<class T>
 constexpr T&& forward(typename Impl::NonReferenceType<T>::Type&& v)	{return static_cast<T&&>(v);	}
 
+/// @brief Returns the address of an object.
+/// @param v Object to get address of.
+/// @return Address of value.
+template<class T>
+constexpr T* addressof(T& v) noexcept {return &v;}
+
+/// @brief Removes all meaning of an object. To be specific, removes `const`ness, `volatile`ness and type.
+/// @param v Object to remove meaning from.
+/// @return Pointer to memory associated with object, without any meaning attached.
+template<class T>
+constexpr pointer anull(T& v) noexcept {return const_cast<pointer>(static_cast<ref<void volatile const>>(addressof(v)));}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_TYPETRAITS_DECAY_H
