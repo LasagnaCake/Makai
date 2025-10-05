@@ -33,20 +33,10 @@ constexpr T toUpperChar(T const& c) noexcept {
 /// @param a Value to swap.
 /// @param b Value to swap with.
 template<class T>
-constexpr void swap(T& a, T& b) noexcept {
+constexpr void swap(T& a, T& b) {
 	T tmp = a;
 	a = b;
 	b = tmp;
-}
-
-/// @brief Reverses the given range of elements.
-/// @tparam T Element type.
-/// @param arr Pointer to beginning of range.
-/// @param sz Size of range.
-template<class T>
-constexpr void reverse(ref<T> const arr, usize const sz) noexcept {
-	for(usize i = 0; i < (sz/2); ++i)
-		swap(arr[i], arr[sz-1-i]);
 }
 
 /// @brief Reverses the bits for a given integer.

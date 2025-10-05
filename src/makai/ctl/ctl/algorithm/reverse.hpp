@@ -10,9 +10,19 @@ CTL_NAMESPACE_BEGIN
 /// @tparam T Iterator type.
 /// @param begin Iterator to beginning of range.
 /// @param end Iterator to end of range.
-template<Type::Container::Iterator T>
-void reverse(T const& begin, T const& end) {
-	return reverse(begin.raw(), end - begin);
+template<Type::ReferenceIterator T>
+void reverse(T begin, T const& end) {
+	for(usize i = 0; i < ((end - begin)/2); ++i)
+		swap(*(begin + i), *(end - i));
+}
+
+/// @brief Reverses the given range of elements.
+/// @tparam T Element type.
+/// @param arr Pointer to beginning of range.
+/// @param sz Size of range.
+template<class T>
+constexpr void reverse(ref<T> const arr, usize const sz) {
+	reverse(arr, arr + sz);
 }
 
 CTL_NAMESPACE_END

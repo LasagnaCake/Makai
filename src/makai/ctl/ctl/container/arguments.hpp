@@ -45,7 +45,7 @@ struct Arguments:
 	template<usize N>
 	constexpr Arguments(As<ConstantType[N]> const& data)
 	requires (N <= L): start(::new DataType[N]), length(N) {
-		MX::memcpy(start, data, N);
+		MX::objcopy(start, data, N);
 	}
 
 	/// @brief Constructs the argument list with a given parameter pack.
@@ -106,7 +106,7 @@ private:
 	/// @param size Array size.
 	constexpr Arguments(ConstPointerType data, usize size):
 	start(new DataType[size]), length(size) {
-		MX::memcpy(start, data, size);
+		MX::objcopy(start, data, size);
 	}
 
 	/// @brief Start of the argument list.

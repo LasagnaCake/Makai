@@ -37,7 +37,7 @@ namespace Type::Algorithm::Search {
 /// @param value Value to search for.
 /// @return Index of value, or `-1` if not found.
 template<
-	Type::Container::Iterator T,
+	Type::Iterator T,
 	Type::Signed TIndex = ssize,
 	class TData = typename T::DataType,
 	Type::Algorithm::Search::EqualityComparator<TData> TCompare = SimpleComparator<TData>
@@ -62,7 +62,7 @@ constexpr TIndex fsearch(T begin, T const& end, TData const& value) {
 /// @param value Value to search for.
 /// @return Index of value, or `-1` if not found.
 template<
-	Type::Container::Iterator T,
+	Type::Iterator T,
 	Type::Signed TIndex = ssize,
 	class TData = typename T::DataType,
 	Type::Algorithm::Search::EqualityComparator<TData> TCompare = SimpleComparator<TData>
@@ -85,7 +85,7 @@ constexpr TIndex rsearch(T const& begin, T end, TData const& value) {
 /// @param value Value to search for.
 /// @return Index of value, or `-1` if not found.
 template<
-	Type::Container::Iterator T,
+	Type::Iterator T,
 	Type::Signed TIndex = ssize,
 	class TData = typename T::DataType,
 	Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>
@@ -131,7 +131,7 @@ namespace Nearest {
 	/// @param value Value to search for.
 	/// @return Index of matches, or the nearest. Returns `-1` for both if range is empty or invalid.
 	template<
-		Type::Container::Iterator T,
+		Type::Iterator T,
 		Type::Signed TIndex = ssize,
 		class TData = typename T::DataType,
 		Type::Algorithm::Search::ThreewayComparator<TData> TCompare = SimpleComparator<TData>
@@ -167,7 +167,7 @@ namespace Nearest {
 	/// @param value Value to search for.
 	/// @return Index of matches, or the nearest. Returns `-1` for both if range is empty or invalid.
 	template<
-		Type::Container::Iterator T,
+		Type::Iterator T,
 		Type::Signed TIndex = ssize,
 		class TData = typename T::DataType,
 		Type::Algorithm::Search::ThreewayComparator<TData> TCompare = SimpleComparator<TData>
@@ -206,7 +206,7 @@ namespace Nearest {
 	///		Index of matches, or the nearest. Returns `-1` for both if
 	///		range is empty or invalid, or an invalid comparison happened.
 	template<
-		Type::Container::Iterator T,
+		Type::Iterator T,
 		Type::Signed TIndex = ssize,
 		class TData = typename T::DataType,
 		Type::Algorithm::Search::FullHouseComparator<TData> TCompare = SimpleComparator<TData>

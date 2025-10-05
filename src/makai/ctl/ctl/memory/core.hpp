@@ -312,9 +312,17 @@ namespace MX {
 	/// @return Pointer to constructed memory.
 	/// @throw ConstructionFailure if memory does not exist.
 	template<Type::NonVoid T, typename... Args>
-	constexpr ref<T> construct(ref<T> const mem, Args&&... args) {
+	constexpr ref<T> construct(ref<T> const mem, Args&&... args)
+	requires (Type::Constructible<T, Args...>) {
 		if (!mem) throw ConstructionFailure();
-		::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
+		if constexpr (inCompileTime()) {
+			if constexpr (Type::MoveAssignable<T>)
+				*mem = ::CTL::move(T(::CTL::forward<Args>(args)...));
+			else if constexpr (Type::CopyAssignable<T>)
+				*mem = ::CTL::copy(T(::CTL::forward<Args>(args)...));
+			else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
+				
+		} else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
 		return mem;
 	}
 
@@ -368,7 +376,10 @@ namespace MX {
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		T* start = dst;
-		try {
+		if constexpr (inCompileTime())
+			while (sz--)
+				construct(dst++, *src++);
+		else try {
 			if (dst < src) {
 				while (sz--) {
 					//*(dst++) = *(src++);

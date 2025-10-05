@@ -1301,13 +1301,8 @@ private:
 	}
 
 	constexpr void memresize(ref<DataType>& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
-		if constexpr(Type::Standard<DataType>)
-			if constexpr (inCompileTime()) {
-				auto tmp = alloc.allocate(sz);
-				MX::memcpy(tmp, data, sz < oldsz ? sz : oldsz);
-				alloc.deallocate(data, sz);
-				data = tmp;
-			} else alloc.resize(data, sz);
+		if constexpr(Type::Standard<DataType> && inRunTime())
+			alloc.resize(data, sz);
 		else {
 			if (!count) {
 				if constexpr (inCompileTime()) {
@@ -1325,7 +1320,7 @@ private:
 
 	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
 		if (!count) return;
-		if constexpr (Type::Standard<DataType>)
+		if constexpr (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
 	}

@@ -712,6 +712,45 @@ namespace Type {
 	/// @brief Type must NOT be constant.
 	template <class T>
 	concept NonConstant = Type::Different<T, T const>;
+
+	/// @brief Type must have a default (empty) constructor.
+	template <class T>
+	concept DefaultConstructible = Type::Constructible<T>;
+	
+	/// @brief Type must be copy constructible.
+	template <class T>
+	concept CopyConstructible = Type::Constructible<T, T const&>;
+
+	/// @brief Type must be move constructible.
+	template <class T>
+	concept MoveConstructible = Type::Constructible<T, T&&>;
+
+	/// @brief Type must be copy assignable.
+	template <class T>
+	concept CopyAssignable = requires (T a, T const& b) {a = b;};
+
+	/// @brief Type must be move assignable.
+	template <class T>
+	concept MoveAssignable = requires (T a, T&& b) {a = b;};
+	
+	/// @brief `*A` must be a valid operation.
+	template <typename A>
+	concept Dereferenciable = requires (A a) {*a;};
+
+	/// @brief Type must be some form of an iterator.
+	template <class T>
+	concept Iterator =
+		PreIncrementable<T>
+	&&	Addable<T, usize>
+	&&	Subtractable<T, usize>
+	&&	Subtractable<T, T>
+	&&	Comparable::NotEquals<T, T>
+	&&	Comparable::Equals<T, T>
+	;
+
+	/// @brief Type must be a reference iterator.
+	template <class T>
+	concept ReferenceIterator = Iterator<T> && Dereferenciable<T>;
 }
 
 CTL_NAMESPACE_END

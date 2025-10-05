@@ -1598,7 +1598,11 @@ public:
 	constexpr BaseStaticString(CStringType const& str) {
 		SizeType len = 0;
 		while (str[len++] != '\0' && len <= MAX_SIZE);
-		MX::memcpy(str, data(), (len < SIZE ? len : SIZE));
+		SizeType const sz = (len < SIZE ? len : SIZE);
+		if constexpr (inCompileTime())
+			for (SizeType i = 0; i < sz; ++i)
+				data()[i] = str[i];
+		else MX::memcpy(str, data(), sz);
 	}
 
 	/// @brief Returns a static substring, starting at a given point, and going for a given size.
@@ -1610,7 +1614,11 @@ public:
 		constexpr SizeType start	= wrapAround(BEGIN);
 		constexpr SizeType stop		= ((start + S) < SIZE) ? start + S : SIZE;
 		BaseStaticString<TChar, stop - start + 1, TIndex> result('\0');
-		MX::memcpy(result.data(), data() + start, stop - start);
+		SizeType const sz = stop - start;
+		if constexpr (inCompileTime())
+			for (SizeType i = 0; i < sz; ++i)
+				data()[i] = result.data()[i];
+		else MX::memcpy(result.data(), data() + start, sz);
 		return result;
 	}
 

@@ -114,6 +114,10 @@ template<class T> using AsReturn = typename Impl::ReturnType<T>::Type;
 /// @brief Enables the usage of the return type of member functions without going through the type's constructor.
 template<typename T> AsTemporary<T> declval();
 
+/// @brief Gets a given iterator type's underlying referenced value type.
+template<typename T>
+using AsIteratorValue = decltype(*declval<T>());
+
 CTL_NAMESPACE_END
 
 #endif // CTL_TYPETRAITS_CONVERTER_H

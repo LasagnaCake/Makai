@@ -240,7 +240,10 @@ struct MemorySlice:
 	/// @param other `MemorySlice` to copy from.
 	constexpr MemorySlice(SelfType const& other)	{
 		invoke(other.length);
-		if constexpr(Type::Standard<TData>)
+		if constexpr (inCompileTime())
+			for (usize i = 0; i < length; ++i)
+				contents[i] = other.contents[i];
+		else if constexpr(Type::Standard<TData>)
 			MX::memcpy<TData>(contents, other.contents, length);
 		else MX::objcopy<TData>(contents, other.contents, length);
 	}

@@ -237,6 +237,30 @@ public:
 		else			return (data() + i)->value;
 	}
 
+	/// @brief Gets the value of the element that matches the given key. If value does not exist, returns a fallback.
+	/// @param key Key to look for.
+	/// @param fallback Fallback value to return.
+	/// @return Value of the element, or fallback.
+	constexpr ValueType const& get(KeyType const& key, ValueType const& fallback = {}) const
+	requires (Type::DefaultConstructible<ValueType>) {
+		if (empty()) return fallback;
+		IndexType i = search(key);
+		if (i == -1)	return fallback;
+		else			return (data() + i)->value;
+	}
+	
+	/// @brief Gets the value of the element that matches the given key. If value does not exist, returns a fallback.
+	/// @param key Key to look for.
+	/// @param fallback Fallback value to return.
+	/// @return Value of the element, or fallback.
+	constexpr ValueType const& get(KeyType const& key, ValueType const& fallback) const
+	requires (!Type::DefaultConstructible<ValueType>) {
+		if (empty()) return fallback;
+		IndexType i = search(key);
+		if (i == -1)	return fallback;
+		else			return (data() + i)->value;
+	}
+
 	/// @brief Allows access to the value of the element that matches the given key. Creates one if key doesn't exist.
 	/// @param key Key to look for.
 	/// @return Reference to element's value.

@@ -24,11 +24,11 @@ namespace Type::Algorithm {
 	/// @brief Type must be an iterator, and its iterand must be sortable.
 	template <class T>
 	concept SortableIterator =
-		Type::Container::Iterator<T>
-	&&	Sortable<typename T::DataType>
+		Type::Iterator<T>
+	&&	Sortable<AsIteratorValue<T>>
 	;
 
-	static_assert(SortableIterator<Iterator<int>>);
+	static_assert(SortableIterator<::CTL::Iterator<int>>);
 }
 
 /// @brief Sorting algorithm implementations.
