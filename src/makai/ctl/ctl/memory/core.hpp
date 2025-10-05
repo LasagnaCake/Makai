@@ -297,6 +297,7 @@ namespace MX {
 	/// @param val Object to destruct.
 	/// @return Pointer to destructed object.
 	/// @note Does not delete the underlying memory.
+	/// @warning This WILL destruct an object at the given memory location, EVEN IF it is a pointer to constant memory!
 	template<Type::NonVoid T>
 	constexpr ref<T> destruct(ref<T> const val) {
 		if (!val) return nullptr;
@@ -311,18 +312,20 @@ namespace MX {
 	/// @param ...args Constructor arguments.
 	/// @return Pointer to constructed memory.
 	/// @throw ConstructionFailure if memory does not exist.
+	/// @warning This WILL construct an object at the given memory location, EVEN IF it is a pointer to constant memory!
 	template<Type::NonVoid T, typename... Args>
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args)
 	requires (Type::Constructible<T, Args...>) {
 		if (!mem) throw ConstructionFailure();
+		auto& obj = *mem;
 		if constexpr (inCompileTime()) {
 			if constexpr (Type::MoveAssignable<T>)
-				*mem = ::CTL::move(T(::CTL::forward<Args>(args)...));
+				obj = ::CTL::move(T(::CTL::forward<Args>(args)...));
 			else if constexpr (Type::CopyAssignable<T>)
-				*mem = ::CTL::copy(T(::CTL::forward<Args>(args)...));
-			else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
-				
-		} else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
+				obj = ::CTL::copy(T(::CTL::forward<Args>(args)...));
+			// We're dealing with eldrich horrors (non-standard shenanigans (i.e. `ListMap`)) if we got to this point
+			else ::new (anull(mem)) T(::CTL::forward<Args>(args)...);
+		} else ::new (anull(obj)) T(::CTL::forward<Args>(args)...);
 		return mem;
 	}
 
@@ -332,6 +335,7 @@ namespace MX {
 	/// @param mem Memory to reconstruct.
 	/// @param ...args Constructor arguments.
 	/// @return Pointer to reconstructed memory.
+	/// @warning This WILL construct an object at the given memory location, EVEN IF it is a pointer to constant memory!
 	template<Type::NonVoid T, typename... Args>
 	constexpr void reconstruct(ref<T> const mem, Args&&... args) {
 		destruct(mem);
