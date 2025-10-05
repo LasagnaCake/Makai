@@ -24,7 +24,7 @@ namespace Type::Algorithm {
 	/// @brief Type must be an iterator, and its iterand must be sortable.
 	template <class T>
 	concept SortableIterator =
-		Type::Iterator<T>
+		Type::ReferenceIterator<T>
 	&&	Sortable<AsIteratorValue<T>>
 	;
 
