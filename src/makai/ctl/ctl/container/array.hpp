@@ -304,7 +304,7 @@ private:
 	using Iteratable::wrapBounds;
 
 	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
-		if constexpr (Type::Standard<DataType>)
+		if (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
 	}
