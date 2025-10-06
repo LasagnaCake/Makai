@@ -629,7 +629,7 @@ public:
 		expand(end - begin);
 		BaseType::popBack();
 		BaseType::appendBack(begin, end);
-		pushBack('\0');
+		BaseType::pushBack('\0');
 		return *this;
 	}
 
