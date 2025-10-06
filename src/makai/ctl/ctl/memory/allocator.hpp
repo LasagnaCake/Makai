@@ -197,29 +197,47 @@ protected:
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
 	[[nodiscard, gnu::always_inline]]
-	constexpr AllocatedType contextAllocate(usize const sz) {
+	#ifdef CTL_EXPERIMENTAL_CONSTEXPR_ALLOCATOR
+	constexpr
+	#endif
+	AllocatedType contextAllocate(usize const sz) {
 		if (!sz) return nullptr;
+		#ifdef CTL_EXPERIMENTAL_CONSTEXPR_ALLOCATOR
 		if (inCompileTime())
 			return calloc.allocate(sz);
-		else return alloc.allocate(sz);
+		else
+		#endif
+		return alloc.allocate(sz);
 	}
 
 	/// @brief Allocates space for a single element on the heap.
 	/// @return Pointer to allocated memory.
 	[[nodiscard, gnu::always_inline]]
-	constexpr AllocatedType contextAallocate() {
+	#ifdef CTL_EXPERIMENTAL_CONSTEXPR_ALLOCATOR
+	constexpr
+	#endif
+	AllocatedType contextAallocate() {
+		#ifdef CTL_EXPERIMENTAL_CONSTEXPR_ALLOCATOR
 		if (inCompileTime())
 			return calloc.allocate();
-		else return alloc.allocate();
+		else
+		#endif
+		return alloc.allocate();
 	}
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
 	[[gnu::always_inline]]
-	constexpr void contextDeallocate(AllocatedType const mem, usize const sz = 0) {
+	#ifdef CTL_EXPERIMENTAL_CONSTEXPR_ALLOCATOR
+	constexpr
+	#endif
+	void contextDeallocate(AllocatedType const mem, usize const sz = 0) {
+		#ifdef CTL_EXPERIMENTAL_CONSTEXPR_ALLOCATOR
 		if (inCompileTime())
 			return calloc.deallocate(mem, sz);
-		else return alloc.deallocate(mem, sz);
+		else
+		#endif
+		return alloc.deallocate(mem, sz);
 	}
 
 private:

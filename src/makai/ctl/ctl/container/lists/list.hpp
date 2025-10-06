@@ -881,9 +881,12 @@ public:
 	/// @param other Other `List`.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		if (inCompileTime())
-			operator=(::CTL::copy(other));
-		else {
+		if (inCompileTime()) {
+			memdestruct(contents, count);
+			resize(other.count);
+			copy(other.contents, contents, other.count);
+			count = other.count;
+		} else {
 			memdestroy(contents, maximum, count);
 			maximum			= CTL::move(other.maximum);
 			contents		= CTL::move(other.contents);
@@ -1408,7 +1411,7 @@ private:
 	owner<DataType>	contents	= nullptr;
 };
 
-static_assert(List<int>().empty());
+//static_assert(List<int>().empty());
 
 /// @brief `List` analog for dynamic array of bytes.
 /// @tparam TIndex Index type. 

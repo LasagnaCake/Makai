@@ -1547,7 +1547,7 @@ typedef BaseString<char>	String;
 /// `BaseString` analog for a `wchar` string.
 typedef BaseString<wchar_t>	WideString;
 
-static_assert(String("Compile-time Magics!").size());
+//static_assert(String("Compile-time Magics!").size());
 
 /// @brief Static string of characters.
 /// @tparam TChar Character type.
@@ -1664,15 +1664,13 @@ template<usize N> using StaticWideString	= BaseStaticString<wchar_t,	N>;
 /// @brief String literals.
 namespace Literals::Text {
 	/// @brief CTL `String` literal.
-	template<char... TEXT>
-	consteval String operator "" s		()							{return String(TEXT...);					}
+	constexpr String operator "" s		(cstring cstr, usize sz)	{return String(cstr, sz);					}
 	/// @brief CTL `String` literal.
-	inline String operator "" s			(cwstring cstr, usize sz)	{return WideString(cstr, sz).toString();	}
-	template<char... TEXT>
+	constexpr String operator "" s		(cwstring cstr, usize sz)	{return WideString(cstr, sz).toString();	}
 	/// @brief CTL `WideString` literal.
-	consteval WideString operator "" ws	()							{return String(TEXT...).toWideString();		}
+	constexpr WideString operator "" ws	(cstring cstr, usize sz)	{return String(cstr, sz).toWideString();	}
 	/// @brief CTL `WideString` literal.
-	inline WideString operator "" ws	(cwstring cstr, usize sz)	{return WideString(cstr, sz);				}
+	constexpr WideString operator "" ws	(cwstring cstr, usize sz)	{return WideString(cstr, sz);				}
 }
 #pragma GCC diagnostic pop
 

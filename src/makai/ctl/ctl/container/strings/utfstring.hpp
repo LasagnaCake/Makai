@@ -1648,7 +1648,7 @@ using UTF32String	= UTF::U32String;
 using UTF8Char	= UTF::U8Char;
 using UTF32Char	= UTF::U32Char;
 
-static_assert(UTF8String("Compile-time Magics!").size());
+//static_assert(UTF8String("Compile-time Magics!").size());
 
 #pragma GCC diagnostic push
 #ifndef __clang__

@@ -233,7 +233,7 @@ namespace MX {
 		if (!sz) throw AllocationFailure();
 		if (__builtin_mul_overflow(sz, sizeof(T), &sz))
 			throw AllocationFailure();
-		owner<T> m = __builtin_malloc(sz);
+		owner<T> m = static_cast<owner<T>>(__builtin_malloc(sz));
 		if (!m) throw AllocationFailure();
 		return m;
 	}
