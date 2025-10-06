@@ -72,7 +72,7 @@ struct HeapAllocator {
 	/// @param mem Memory to resize.
 	/// @param sz New element count.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
-	[[nodiscard, deprecated, gnu::always_inline]]
+	[[deprecated, nodiscard, gnu::always_inline]]
 	owner<T> resized(owner<T> const mem, usize const sz) {
 		if (!mem) return nullptr;
 		return MX::realloc<T>(mem, sz);
