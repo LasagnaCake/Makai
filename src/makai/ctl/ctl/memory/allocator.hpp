@@ -36,14 +36,6 @@ template<Type::NonVoid T>
 struct HeapAllocator {
 	using DataType = T;
 
-	constexpr HeapAllocator()									= default;
-	constexpr HeapAllocator(HeapAllocator const&)				= default;
-	constexpr HeapAllocator(HeapAllocator&&)					= default;
-	constexpr HeapAllocator& operator=(HeapAllocator const&)	= default;
-	constexpr HeapAllocator& operator=(HeapAllocator&&)			= default;
-
-	constexpr ~HeapAllocator() {}
-
 	/// @brief Allocates space for elements on the heap.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
@@ -93,15 +85,7 @@ template<Type::NonVoid T>
 struct ConstantAllocator {
 	using DataType = T;
 
-	constexpr ConstantAllocator()										= default;
-	constexpr ConstantAllocator(ConstantAllocator const&)				= default;
-	constexpr ConstantAllocator(ConstantAllocator&&)					= default;
-	constexpr ConstantAllocator& operator=(ConstantAllocator const&)	= default;
-	constexpr ConstantAllocator& operator=(ConstantAllocator&&)			= default;
-
-	constexpr ~ConstantAllocator() {}
-
-	/// @brief Allocates space for elements on the heap.
+	/// @brief Allocates space for elements.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
 	[[nodiscard, gnu::always_inline]]
@@ -110,7 +94,7 @@ struct ConstantAllocator {
 		return impl.allocate(sz);
 	}
 
-	/// @brief Allocates space for a single element on the heap.
+	/// @brief Allocates space for a single element.
 	/// @return Pointer to allocated memory.
 	[[nodiscard, gnu::always_inline]]
 	consteval owner<T> allocate() {
@@ -145,62 +129,33 @@ struct Allocatable {
 
 /// @brief Tags the class as manually managing compile-time memory.
 /// @tparam TData Type to handle memory for.
-template<class TData>
+/// @tparam TAlloc<class> Constant allocator type. By default, it is `ConstantAllocator`.
+template<class TData, template <class> class TConstAlloc = ConstantAllocator>
 struct ConstantAllocatable {
 	/// @brief Constant allocator type.
-	using ConstantAllocatorType			= ConstantAllocator<TData>;
+	using ConstantAllocatorType			= TConstAlloc<TData>;
 	/// @brief Constant allocator template.
 	/// @tparam T Type to handle memory for. By default, it is the same as the previous type to handle memory for.
 	template<class T = TData>
-	using ConstantAllocatorTemplateType	= ConstantAllocator<T>;
+	using ConstantAllocatorTemplateType	= TConstAlloc<T>;
 };
 
-/// @brief Tags the class as manually managing memory, and is aware of evaluation contexts.
-/// @tparam TAlloc<class> Runtime allocator type. 
+/// @brief Context-aware memory allocator.
+/// @tparam TAlloc Runtime allocator type.
+/// @tparam TConstAlloc Compile-time Allocator type.
 /// @tparam TData Type to handle memory for.
-template<template <class> class TAlloc, class TData>
-requires Type::Memory::Allocator<TAlloc, TData>
-struct ContextAwareAllocatable:
-	Allocatable<TAlloc, TData>,
-	ConstantAllocatable<TData>  {
-	using Allocatable			= ::CTL::Allocatable<TAlloc, TData>;
-	using ConstantAllocatable	= ::CTL::ConstantAllocatable<TData>;
+template<template <class> class TAlloc, template <class> class TConstAlloc, class TData>
+struct ContextAllocator {
+	using DataType = TData;
 
-	constexpr ContextAwareAllocatable()												= default;
-	constexpr ContextAwareAllocatable(ContextAwareAllocatable const&)				= default;
-	constexpr ContextAwareAllocatable(ContextAwareAllocatable&&)					= default;
-	constexpr ContextAwareAllocatable& operator=(ContextAwareAllocatable const&)	= default;
-	constexpr ContextAwareAllocatable& operator=(ContextAwareAllocatable&&)			= default;
-
-	constexpr ~ContextAwareAllocatable() {}
-
-	using
-		typename Allocatable::AllocatorType,
-		typename ConstantAllocatable::ConstantAllocatorType
-	;
-
-	/// @brief Returns the associated allocator.
-	/// @return Allocator.
-	[[gnu::always_inline]]
-	constexpr auto allocator() const			{return alloc;}
-
-	/// @brief Returns the associated constant allocator.
-	/// @return Constant allocator.
-	[[gnu::always_inline]]
-	constexpr auto constantAllocator() const	{return calloc;}
-
-protected:
-	/// @brief Allocator return type.
-	using AllocatedType = owner<typename AllocatorType::DataType>;
-
-	/// @brief Allocates space for elements on the heap.
+	/// @brief Allocates space for elements.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
 	[[nodiscard, gnu::always_inline]]
 	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 	constexpr
 	#endif
-	AllocatedType contextAllocate(usize const sz) {
+	owner<TData> allocate(usize const sz) {
 		if (!sz) return nullptr;
 		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime())
@@ -210,13 +165,13 @@ protected:
 		return alloc.allocate(sz);
 	}
 
-	/// @brief Allocates space for a single element on the heap.
+	/// @brief Allocates space for a single element.
 	/// @return Pointer to allocated memory.
 	[[nodiscard, gnu::always_inline]]
 	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 	constexpr
 	#endif
-	AllocatedType contextAallocate() {
+	owner<TData> allocate() {
 		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime())
 			return calloc.allocate();
@@ -231,7 +186,7 @@ protected:
 	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 	constexpr
 	#endif
-	void contextDeallocate(AllocatedType const mem, usize const sz = 0) {
+	void deallocate(owner<TData> const mem, usize const sz = 0) {
 		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime())
 			return calloc.deallocate(mem, sz);
@@ -240,11 +195,54 @@ protected:
 		return alloc.deallocate(mem, sz);
 	}
 
+	/// @brief Returns the associated allocator.
+	/// @return Allocator.
+	[[gnu::always_inline]]
+	constexpr auto allocator() const	{return alloc;}
+	/// @brief Returns the associated allocator.
+	/// @return Allocator.
+	[[gnu::always_inline]]
+	constexpr auto& allocator() 		{return alloc;}
+
+	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
+	/// @brief Returns the associated constant allocator.
+	/// @return Constant allocator.
+	[[gnu::always_inline]]
+	constexpr auto constantAllocator() const	{return calloc;}
+	/// @brief Returns the associated constant allocator.
+	/// @return Constant allocator.
+	[[gnu::always_inline]]
+	constexpr auto& constantAllocator() 		{return calloc;}
+	#endif
+
 private:
+	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 	/// @brief Constant allocator.
-	ConstantAllocatorType	calloc;
+	TConstAlloc<TData>	calloc;
+	#endif
 	/// @brief Allocator.
-	AllocatorType			alloc;
+	TAlloc<TData>		alloc;
+};
+
+/// @brief Tags the class as manually managing memory, and is aware of evaluation contexts.
+/// @tparam TAlloc<class> Runtime allocator type. 
+/// @tparam TData Type to handle memory for.
+/// @tparam TAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
+template<template <class> class TAlloc, class TData, template <class> class TConstAlloc = ConstantAllocator>
+requires Type::Memory::Allocator<TAlloc, TData>
+struct ContextAwareAllocatable:
+	Allocatable<TAlloc, TData>,
+	ConstantAllocatable<TData, TConstAlloc>  {
+	using Allocatable			= ::CTL::Allocatable<TAlloc, TData>;
+	using ConstantAllocatable	= ::CTL::ConstantAllocatable<TData, TConstAlloc>;
+
+	using
+		typename Allocatable::AllocatorType,
+		typename ConstantAllocatable::ConstantAllocatorType
+	;
+
+	/// @brief Context-aware allocator type.
+	using ContextAllocatorType = ContextAllocator<TAlloc, TConstAlloc, TData>; 
 };
 
 /// @brief Automatically-managed memory slice.

@@ -485,14 +485,10 @@ public:
 		swap(a.count, b.count);
 	}
 
-protected:
-	using
-		ContextAwareAllocatable::contextAllocate,
-		ContextAwareAllocatable::contextDeallocate
-	;
-
 private:
 	using Iteratable::wrapBounds;
+
+	ContextAllocatorType alloc;
 
 	constexpr void dump() {
 		memdestroy(contents, count);
@@ -516,7 +512,7 @@ private:
 	}
 
 	constexpr owner<DataType> memcreate(SizeType const sz) {
-		return contextAllocate(sz);
+		return alloc.allocate(sz);
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {

@@ -92,7 +92,7 @@ public:
 	;
 
 	using
-		ContextAwareAllocatable::allocator
+		typename ContextAwareAllocatable::ContextAllocatorType
 	;
 
 	/// @brief Transformation function type.
@@ -1265,14 +1265,17 @@ public:
 		swap(a.magnitude, b.magnitude);
 	}
 
-protected:
-	using
-		ContextAwareAllocatable::contextAllocate,
-		ContextAwareAllocatable::contextDeallocate
-	;
+	/// @brief Returns the associated allocator.
+	/// @return Allocator.
+	constexpr auto allocator() const	{return alloc;}
+	/// @brief Returns the associated allocator.
+	/// @return Allocator.
+	constexpr auto& allocator()			{return alloc;}
 
 private:
 	using Iteratable::wrapBounds;
+
+	ContextAllocatorType alloc;
 
 	constexpr SelfType& squash(SizeType const i) {
 		if (!count) return *this;
@@ -1308,27 +1311,27 @@ private:
 	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz, SizeType const count) {
 		if (!p) return;
 		memdestruct(p, count);
-		contextDeallocate(p, sz);
+		alloc.deallocate(p, sz);
 	}
 
 	constexpr owner<DataType> memcreate(SizeType const sz) {
-		return contextAllocate(sz);
+		return alloc.allocate(sz);
 	}
 
 	constexpr void memresize(ref<DataType>& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
 		auto const newCount = count < sz ? count : sz;
 		if (Type::Standard<DataType> && inRunTime()) {
-			auto tmp = contextAllocate(sz);
+			auto tmp = alloc.allocate(sz);
 			MX::memcpy(tmp, data, newCount);
-			contextDeallocate(data, oldsz);
+			alloc.deallocate(data, oldsz);
 			data = tmp;
 		} else {
 			if (!count) {
-				contextDeallocate(data, oldsz);
-				data = contextAllocate(sz);
+				alloc.deallocate(data, oldsz);
+				data = alloc.allocate(sz);
 				return;
 			}
-			DataType* ndata = contextAllocate(sz);
+			DataType* ndata = alloc.allocate(sz);
 			if (count) copy(data, ndata, newCount);
 			memdestroy(data, oldsz, count);
 			data = ndata;

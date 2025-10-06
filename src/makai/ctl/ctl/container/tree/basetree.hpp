@@ -154,25 +154,19 @@ namespace Tree {
 		using ConstIteratorType			= NodeIterator<false, Node const>;
 		/// @brief Reverse const iterator type.
 		using ConstReverseIteratorType	= NodeIterator<true, Node const>;
-		
-		/// @brief Allocator type.
-		using AllocatorType			= typename ContextAwareAllocatable<TAlloc, Node>::AllocatorType;
-		/// @brief Constant allocator type.
-		using ConstantAllocatorType	= typename ContextAwareAllocatable<TAlloc, Node>::ConstantAllocatorType;
+
+		using AllocatorType = typename ContextAwareAllocatable<TAlloc, Node>::ContextAllocatorType;
 
 		/// @brief Returns the associated allocator.
-		/// @return Associated allocator.
-		constexpr auto& allocator() {
-			if (inCompileTime())
-				return calloc;
-			else return alloc;
-		}
+		/// @return Allocator.
+		constexpr AllocatorType allocator() const	{return alloc;}
+		/// @brief Returns the associated allocator.
+		/// @return Allocator.
+		constexpr AllocatorType& allocator() 		{return alloc;}
 
 	protected:
 		/// @brief Allocator.
-		AllocatorType	alloc;
-		/// @brief Constant allocator.
-		AllocatorType	calloc;
+		AllocatorType alloc;
 	};
 }
 
