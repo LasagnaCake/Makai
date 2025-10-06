@@ -1476,7 +1476,7 @@ private:
 		throw InvalidValueException("Not a valid number!");
 	}
 
-	void assertIsInBounds(IndexType const index) const {
+	constexpr void assertIsInBounds(IndexType const index) const {
 		if (index >= 0 && usize(index) > (size()-1)) outOfBoundsError(index);
 	}
 

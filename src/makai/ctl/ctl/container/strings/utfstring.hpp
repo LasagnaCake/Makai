@@ -1615,7 +1615,7 @@ namespace UTF {
 		constexpr UTFString<32> toUTF32() const	{return toUTF<32>();	}
 
 	private:
-		void assertIsInBounds(IndexType const index) const {
+		constexpr void assertIsInBounds(IndexType const index) const {
 			if (index >= 0 && usize(index) > (size()-1)) outOfBoundsError(index);
 		}
 

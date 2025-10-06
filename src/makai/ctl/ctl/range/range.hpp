@@ -3,5 +3,6 @@
 
 #include "iterate.hpp"
 #include "sequence.hpp"
+#include "expand.hpp"
 
 #endif

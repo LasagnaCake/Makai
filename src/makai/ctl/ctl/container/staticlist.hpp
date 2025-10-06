@@ -524,7 +524,7 @@ private:
 		return *this;
 	}
 
-	void assertIsInBounds(IndexType const index) const {
+	constexpr void assertIsInBounds(IndexType const index) const {
 		if (index > IndexType(count-1)) outOfBoundsError();
 	}
 

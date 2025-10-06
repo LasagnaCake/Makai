@@ -11,8 +11,8 @@ CTL_NAMESPACE_BEGIN
 /// @param begin Iterator to beginning of range.
 /// @param end Iterator to end of range.
 template<Type::ReferenceIterator T>
-void reverse(T begin, T const& end) {
-	for(usize i = 0; i < ((end - begin)/2); ++i)
+void reverse(T const& begin, T const& end) {
+	for(usize i = 0; i < (static_cast<usize>(end - begin)/2); ++i)
 		swap(*(begin + i), *(end - i));
 }
 
