@@ -163,17 +163,11 @@ public:
 	/// @brief Move constructor.
 	/// @param other `List` to move from.
 	constexpr List(SelfType&& other) {
-		if (inCompileTime()) {
-			invoke(other.maximum);
-			copy(other.contents, contents, other.count);
-			count = other.count;
-		} else {
-			maximum			= ::CTL::move(other.maximum);
-			contents		= ::CTL::move(other.contents);
-			count			= ::CTL::move(other.count);
-			magnitude		= ::CTL::move(other.magnitude);
-			other.contents	= nullptr;
-		}
+		maximum			= ::CTL::move(other.maximum);
+		contents		= ::CTL::move(other.contents);
+		count			= ::CTL::move(other.count);
+		magnitude		= ::CTL::move(other.magnitude);
+		other.contents	= nullptr;
 	}
 
 	/// @brief Constructs a `List` from a range of values.
@@ -1325,13 +1319,11 @@ private:
 			MX::memcpy(tmp, data, newCount);
 			alloc.deallocate(data, oldsz);
 			data = tmp;
+		} else if (!count) {
+			alloc.deallocate(data, oldsz);
+			data = alloc.allocate(sz);
 		} else {
-			if (!count) {
-				alloc.deallocate(data, oldsz);
-				data = alloc.allocate(sz);
-				return;
-			}
-			DataType* ndata = alloc.allocate(sz);
+			auto ndata = alloc.allocate(sz);
 			if (count) copy(data, ndata, newCount);
 			memdestroy(data, oldsz, count);
 			data = ndata;
@@ -1386,7 +1378,7 @@ private:
 	}
 
 	constexpr void assertIsInBounds(IndexType const index) const {
-		if (index > IndexType(count-1)) outOfBoundsError();
+		if (index > static_cast<IndexType>(count-1)) outOfBoundsError();
 	}
 
 	[[noreturn]] constexpr static void invalidSizeError() {
