@@ -13,7 +13,7 @@ GRAPHREQS	:= -lopengl32
 
 sinclude $(ROOT)/make/os-windows.make
 
-o?=g
+o?=3
 
 testcmd = @$(CXX) -O$(o) -o output/$(1)/test.$(2).$(1).exe test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
 
