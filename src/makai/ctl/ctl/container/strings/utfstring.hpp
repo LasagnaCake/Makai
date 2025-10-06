@@ -106,7 +106,7 @@ namespace UTF {
 
 		/// @brief Converts the unicode character to its UTF code point equivalent.
 		template<class T>
-		constexpr void toBytes(As<T[4]>& out) const
+		constexpr usize toBytes(As<T[4]>& out) const
 		requires (TYPE == 8) {
 			auto const cid = value();
 			auto sz = size();
@@ -140,16 +140,18 @@ namespace UTF {
 				out[3] = recast<T>(0b1000'0000 | (cid & 0b0011'1111));
 			break;
 			}
+			return sz;
 		}
 
 		/// @brief Converts the unicode character to its UTF code point equivalent.
 		template<class T>
-		constexpr void toBytes(As<T[4]>& out) const
+		constexpr usize toBytes(As<T[4]>& out) const
 		requires (TYPE == 32) {
 			for (usize i = 0; i < 4; ++i)
 				out[i] = 0;
 			for (usize i = 0; i < 4; ++i)
 				out[i] = bitcast<char>(static_cast<uint8>((id >> (i * 8)) & 0xFF));
+			return 4;
 		}
 
 		/// @brief Converts an unicode code point to a scalar value.
@@ -1580,8 +1582,8 @@ namespace UTF {
 			MX::memset(buf, 4, '\0');
 			out.reserve(size() * DataType::SIZE);
 			for (DataType const& ch: *this) {
-				ch.toBytes(buf);
-				out.appendBack(buf, buf + 4);
+				auto const sz = ch.toBytes(buf);
+				out.appendBack(buf, buf + sz);
 			}
 			out.tighten();
 			return out;
