@@ -139,7 +139,7 @@ public:
 	constexpr List(Args const&... args)
 	requires (... && Type::Convertible<Args, DataType>) {
 		invoke(sizeof...(Args));
-		(..., pushBack(static_cast<DataType>(args)));
+		(..., pushBack(args));
 	}
 
 	/// @brief Constructs the `List` from a fixed array of elements.
@@ -1316,9 +1316,10 @@ private:
 	}
 
 	constexpr void memresize(ref<DataType>& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
-		if constexpr(Type::Standard<DataType> && inRunTime()) {
+		auto const newCount = count < sz ? count : sz;
+		if (Type::Standard<DataType> && inRunTime()) {
 			auto tmp = contextAllocate(sz);
-			MX::memcpy(tmp, data, count);
+			MX::memcpy(tmp, data, newCount);
 			contextDeallocate(data, oldsz);
 			data = tmp;
 		} else {
@@ -1328,7 +1329,7 @@ private:
 				return;
 			}
 			DataType* ndata = contextAllocate(sz);
-			if (count) copy(data, ndata, count < sz ? count : sz);
+			if (count) copy(data, ndata, newCount);
 			memdestroy(data, oldsz, count);
 			data = ndata;
 		}
@@ -1336,7 +1337,7 @@ private:
 
 	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
 		if (!count) return;
-		if constexpr (Type::Standard<DataType> && inRunTime())
+		if (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
 	}
