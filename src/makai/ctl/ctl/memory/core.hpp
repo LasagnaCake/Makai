@@ -317,8 +317,11 @@ namespace MX {
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args)
 	requires (Type::Constructible<T, Args...>) {
 		if (!mem) throw ConstructionFailure();
+		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime()) std::construct_at(mem, args...);
-		else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
+		else
+		#endif
+		::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
 		return mem;
 	}
 
@@ -373,10 +376,13 @@ namespace MX {
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		T* start = dst;
+		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime())
 			while (sz--)
 				construct(dst++, *src++);
-		else try {
+		else
+		#endif
+		try {
 			if (dst < src) {
 				while (sz--) {
 					//*(dst++) = *(src++);
