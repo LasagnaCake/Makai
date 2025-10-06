@@ -317,15 +317,15 @@ namespace MX {
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args)
 	requires (Type::Constructible<T, Args...>) {
 		if (!mem) throw ConstructionFailure();
-		auto& obj = *mem;
 		if constexpr (inCompileTime()) {
+			auto& obj = *mem;
 			if constexpr (Type::MoveAssignable<T>)
 				obj = ::CTL::move(T(::CTL::forward<Args>(args)...));
 			else if constexpr (Type::CopyAssignable<T>)
 				obj = ::CTL::copy(T(::CTL::forward<Args>(args)...));
 			// We're dealing with eldrich horrors (non-standard shenanigans (i.e. `ListMap`)) if we got to this point
-			else ::new (anull(mem)) T(::CTL::forward<Args>(args)...);
-		} else ::new (anull(obj)) T(::CTL::forward<Args>(args)...);
+			else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
+		} else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
 		return mem;
 	}
 

@@ -57,6 +57,9 @@ namespace Impl::TypeName {
 	};
 }
 
+/// @brief Returns the name of a given type.
+/// @tparam T Type to get name for.
+/// @return Name of type.
 template <class T>
 constexpr typename Impl::TypeName::Solver<T>::ReturnType nameof() {
 	return Impl::TypeName::Solver<T>::name();
