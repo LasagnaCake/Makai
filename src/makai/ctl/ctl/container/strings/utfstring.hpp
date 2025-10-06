@@ -1523,7 +1523,7 @@ namespace UTF {
 		/// @brief String appending operator (character).
 		/// @param value Caracter to append.
 		/// @return Reference to self.
-		constexpr SelfType& operator+=(DataType const& value)					{pushBack(value); return *this;				}
+		constexpr SelfType& operator+=(DataType const& value)					{pushBack(value); return *this;					}
 		/// @brief String appending operator (`UTFString`).
 		/// @param value `UTFString` to append.
 		/// @return Reference to self.
