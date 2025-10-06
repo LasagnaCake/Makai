@@ -1659,11 +1659,9 @@ using UTF32Char	= UTF::U32Char;
 /// @brief String literals.
 namespace Literals::Text::Unicode {
 	/// @brief CTL `UTF8String` literal.
-	template<char... TEXT>
-	consteval UTF8String operator "" u8s	()	{return UTF8String(TEXT...);	}
-	template<char... TEXT>
+	constexpr UTF8String operator "" u8s	(cstring cstr, usize sz)	{return UTF8String(cstr, sz);	}
 	/// @brief CTL `UTF32String` literal.
-	consteval UTF32String operator "" u32s	()	{return UTF32String(TEXT...);	}
+	constexpr UTF32String operator "" u32s	(cstring cstr, usize sz)	{return UTF32String(cstr, sz);	}
 }
 
 CTL_NAMESPACE_END
