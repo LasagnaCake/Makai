@@ -12,7 +12,7 @@ sinclude $(ROOT)/make/os-windows.make
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
-o?=3
+o?=g
 
 enginecmd = @$(CXX) -O$(o) -o output/test.engine.exe test.engine.cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(strip $(1))
 
