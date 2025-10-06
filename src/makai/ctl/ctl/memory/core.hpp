@@ -273,7 +273,7 @@ namespace MX {
 			return nullptr;
 		}
 		pointer m = nullptr;
-		if constexpr (inCompileTime()) {
+		if (inCompileTime()) {
 			free(mem);
 			m = malloc(sz);
 		} else __builtin_realloc(mem, sz);
@@ -317,15 +317,8 @@ namespace MX {
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args)
 	requires (Type::Constructible<T, Args...>) {
 		if (!mem) throw ConstructionFailure();
-		if constexpr (inCompileTime()) {
-			auto& obj = *mem;
-			if constexpr (Type::MoveAssignable<T>)
-				obj = ::CTL::move(T(::CTL::forward<Args>(args)...));
-			else if constexpr (Type::CopyAssignable<T>)
-				obj = ::CTL::copy(T(::CTL::forward<Args>(args)...));
-			// We're dealing with eldrich horrors (non-standard shenanigans (i.e. `ListMap`)) if we got to this point
-			else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
-		} else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
+		if (inCompileTime()) std::construct_at(mem, args...);
+		else ::new (static_cast<pointer>(mem)) T(::CTL::forward<Args>(args)...);
 		return mem;
 	}
 
@@ -380,7 +373,7 @@ namespace MX {
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		T* start = dst;
-		if constexpr (inCompileTime())
+		if (inCompileTime())
 			while (sz--)
 				construct(dst++, *src++);
 		else try {

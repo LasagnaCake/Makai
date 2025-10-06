@@ -190,7 +190,11 @@ public:
 	/// @brief Constructs a `BaseString` from a "C-style" range of characters.
 	/// @param start Start of range.
 	/// @param size Size of range.
-	constexpr explicit BaseString(ConstPointerType const& start, SizeType const size): BaseString(start, start + size) {}
+	constexpr explicit BaseString(ConstPointerType const& start, SizeType const size): BaseType(size) {
+		BaseType::appendBack(start, start + size);
+		if (BaseType::back() != '\0')
+			BaseType::pushBack('\0');
+	}
 
 	/// @brief Constructs a `BaseString`, from a ranged object of (non-subclass) type T.
 	/// @tparam T Ranged type.
@@ -219,7 +223,7 @@ public:
 		SizeType len = 0;
 		while (v[len++] != '\0' && len <= MAX_SIZE);
 		BaseType::reserve(len);
-		BaseType::appendBack(BaseType(v, v+len));
+		BaseType::appendBack(v, v+len);
 	}
 
 	/// @brief Constructs a `BaseString` from a series of arguments.
@@ -1543,6 +1547,8 @@ typedef BaseString<char>	String;
 /// `BaseString` analog for a `wchar` string.
 typedef BaseString<wchar_t>	WideString;
 
+static_assert(String("Compile-time Magics!").size());
+
 /// @brief Static string of characters.
 /// @tparam TChar Character type.
 /// @tparam N String size.
@@ -1599,7 +1605,7 @@ public:
 		SizeType len = 0;
 		while (str[len++] != '\0' && len <= MAX_SIZE);
 		SizeType const sz = (len < SIZE ? len : SIZE);
-		if constexpr (inCompileTime())
+		if (inCompileTime())
 			for (SizeType i = 0; i < sz; ++i)
 				data()[i] = str[i];
 		else MX::memcpy(str, data(), sz);
@@ -1615,7 +1621,7 @@ public:
 		constexpr SizeType stop		= ((start + S) < SIZE) ? start + S : SIZE;
 		BaseStaticString<TChar, stop - start + 1, TIndex> result('\0');
 		SizeType const sz = stop - start;
-		if constexpr (inCompileTime())
+		if (inCompileTime())
 			for (SizeType i = 0; i < sz; ++i)
 				data()[i] = result.data()[i];
 		else MX::memcpy(result.data(), data() + start, sz);
@@ -1658,13 +1664,15 @@ template<usize N> using StaticWideString	= BaseStaticString<wchar_t,	N>;
 /// @brief String literals.
 namespace Literals::Text {
 	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cstring cstr, usize sz)	{return String(cstr, sz);					}
+	template<char... TEXT>
+	consteval String operator "" s		()							{return String(TEXT...);					}
 	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cwstring cstr, usize sz)	{return WideString(cstr, sz).toString();	}
+	inline String operator "" s			(cwstring cstr, usize sz)	{return WideString(cstr, sz).toString();	}
+	template<char... TEXT>
 	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cstring cstr, usize sz)	{return String(cstr, sz).toWideString();	}
+	consteval WideString operator "" ws	()							{return String(TEXT...).toWideString();		}
 	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cwstring cstr, usize sz)	{return WideString(cstr, sz);				}
+	inline WideString operator "" ws	(cwstring cstr, usize sz)	{return WideString(cstr, sz);				}
 }
 #pragma GCC diagnostic pop
 

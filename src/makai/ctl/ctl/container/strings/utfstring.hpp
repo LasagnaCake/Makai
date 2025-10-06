@@ -1424,19 +1424,19 @@ namespace UTF {
 		/// @brief Copy assignment operator (`UTFString`).
 		/// @param other `UTFString` to copy from.
 		/// @return Reference to self.
-		constexpr SelfType& operator=(SelfType const& other)						{BaseType::operator=(other); return *this;					}
+		constexpr SelfType& operator=(SelfType const& other)						{BaseType::operator=(other); return *this;				}
 		/// @brief Move assignment operator (`UTFString`).
 		/// @param other `UTFString` to move.
 		/// @return Reference to self.
-		constexpr SelfType& operator=(SelfType&& other)								{BaseType::operator=(CTL::move(other)); return *this;		}
+		constexpr SelfType& operator=(SelfType&& other)								{BaseType::operator=(CTL::move(other)); return *this;	}
 		/// @brief Copy assignment operator (null-terminated string).
 		/// @param other String to copy from.
 		/// @return Reference to self.
-		constexpr SelfType& operator=(typename String::CStringType const& other)	{BaseType::operator=(SelfType(other)); return *this;		}
+		constexpr SelfType& operator=(typename String::CStringType const& other)	{BaseType::operator=(SelfType(other)); return *this;	}
 		/// @brief Copy assignment operator (null-terminated unicode string).
 		/// @param other String to copy from.
 		/// @return Reference to self.
-		constexpr SelfType& operator=(u8cstring const& other)						{BaseType::operator=(UTFString<8>(other)); return *this;	}
+		constexpr SelfType& operator=(u8cstring const& cstr)						{BaseType::operator=(UTFString<8>(cstr)); return *this;	}
 
 		/// @brief Equality comparison operator (char array).
 		/// @tparam S Array size.
@@ -1648,6 +1648,8 @@ using UTF32String	= UTF::U32String;
 using UTF8Char	= UTF::U8Char;
 using UTF32Char	= UTF::U32Char;
 
+static_assert(UTF8String("Compile-time Magics!").size());
+
 #pragma GCC diagnostic push
 #ifndef __clang__
 #pragma GCC diagnostic ignored "-Wliteral-suffix"
@@ -1657,9 +1659,11 @@ using UTF32Char	= UTF::U32Char;
 /// @brief String literals.
 namespace Literals::Text::Unicode {
 	/// @brief CTL `UTF8String` literal.
-	constexpr UTF8String operator "" u8s	(cstring cstr, usize sz)	{return UTF8String(cstr, sz);	}
+	template<char... TEXT>
+	consteval UTF8String operator "" u8s	()	{return UTF8String(TEXT...);	}
+	template<char... TEXT>
 	/// @brief CTL `UTF32String` literal.
-	constexpr UTF32String operator "" u32s	(cstring cstr, usize sz)	{return UTF32String(cstr, sz);	}
+	consteval UTF32String operator "" u32s	()	{return UTF32String(TEXT...);	}
 }
 
 CTL_NAMESPACE_END

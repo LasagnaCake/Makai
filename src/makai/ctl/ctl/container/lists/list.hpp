@@ -92,7 +92,7 @@ public:
 	;
 
 	using
-		typename ContextAwareAllocatable::ContextAllocatorType
+		ContextAwareAllocatable::allocator
 	;
 
 	/// @brief Transformation function type.
@@ -139,7 +139,7 @@ public:
 	constexpr List(Args const&... args)
 	requires (... && Type::Convertible<Args, DataType>) {
 		invoke(sizeof...(Args));
-		(..., pushBack(args));
+		(..., pushBack(static_cast<DataType>(args)));
 	}
 
 	/// @brief Constructs the `List` from a fixed array of elements.
@@ -163,11 +163,17 @@ public:
 	/// @brief Move constructor.
 	/// @param other `List` to move from.
 	constexpr List(SelfType&& other) {
-		maximum			= ::CTL::move(other.maximum);
-		contents		= ::CTL::move(other.contents);
-		count			= ::CTL::move(other.count);
-		magnitude		= ::CTL::move(other.magnitude);
-		other.contents	= nullptr;
+		if (inCompileTime()) {
+			invoke(other.maximum);
+			copy(other.contents, contents, other.count);
+			count = other.count;
+		} else {
+			maximum			= ::CTL::move(other.maximum);
+			contents		= ::CTL::move(other.contents);
+			count			= ::CTL::move(other.count);
+			magnitude		= ::CTL::move(other.magnitude);
+			other.contents	= nullptr;
+		}
 	}
 
 	/// @brief Constructs a `List` from a range of values.
@@ -791,10 +797,7 @@ public:
 	/// @param other `List` to copy contents from.
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(SelfType const& other) {
-		expand(other.count);
-		copy(other.contents, contents + count, other.count);
-		count += other.count;
-		return *this;
+		return appendBack(other.begin(), other.end());
 	}
 
 	/// @brief Appends a list of elements to the end of the `List`.
@@ -817,7 +820,10 @@ public:
 	/// @param end Iterator pointing to end of range.
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(ConstIteratorType const& begin, ConstIteratorType const& end) {
-		return appendBack(SelfType(begin, end));
+		expand(end - begin);
+		copy(begin, contents + count, end - begin);
+		count += (end - begin);
+		return *this;
 	}
 
 	/// @brief Appends a range of elements to the end of the `List`.
@@ -875,12 +881,16 @@ public:
 	/// @param other Other `List`.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		memdestroy(contents, count);
-		maximum			= CTL::move(other.maximum);
-		contents		= CTL::move(other.contents);
-		count			= CTL::move(other.count);
-		magnitude		= CTL::move(other.magnitude);
-		other.contents	= nullptr;
+		if (inCompileTime())
+			operator=(::CTL::copy(other));
+		else {
+			memdestroy(contents, maximum, count);
+			maximum			= CTL::move(other.maximum);
+			contents		= CTL::move(other.contents);
+			count			= CTL::move(other.count);
+			magnitude		= CTL::move(other.magnitude);
+			other.contents	= nullptr;
+		}
 		return *this;
 	}
 
@@ -1242,10 +1252,6 @@ public:
 	/// @return Whether the current size matches the current capacity.
 	constexpr bool tight() const {return count == maximum;}
 
-	/// @brief Returns the associated allocator.
-	/// @return `List` allocator.
-	constexpr ContextAllocatorType& allocator() {return alloc;		}
-
 	/// @brief `swap` algorithm for `List`.
 	/// @param a `List` to swap.
 	/// @param b `List` to swap with.
@@ -1255,6 +1261,12 @@ public:
 		swap(a.count, b.count);
 		swap(a.magnitude, b.magnitude);
 	}
+
+protected:
+	using
+		ContextAwareAllocatable::contextAllocate,
+		ContextAwareAllocatable::contextDeallocate
+	;
 
 private:
 	using Iteratable::wrapBounds;
@@ -1276,7 +1288,7 @@ private:
 	}
 
 	constexpr void dump() {
-		memdestroy(contents, count);
+		memdestroy(contents, maximum, count);
 		contents	= nullptr;
 		maximum		= 0;
 		count		= 0;
@@ -1290,30 +1302,31 @@ private:
 		}
 	}
 
-	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz) {
+	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz, SizeType const count) {
 		if (!p) return;
-		memdestruct(p, sz);
-		alloc.deallocate(p, sz);
+		memdestruct(p, count);
+		contextDeallocate(p, sz);
 	}
 
 	constexpr owner<DataType> memcreate(SizeType const sz) {
-		return alloc.allocate(sz);
+		return contextAllocate(sz);
 	}
 
 	constexpr void memresize(ref<DataType>& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
-		if constexpr(Type::Standard<DataType> && inRunTime())
-			alloc.resize(data, sz);
-		else {
+		if constexpr(Type::Standard<DataType> && inRunTime()) {
+			auto tmp = contextAllocate(sz);
+			MX::memcpy(tmp, data, count);
+			contextDeallocate(data, oldsz);
+			data = tmp;
+		} else {
 			if (!count) {
-				if constexpr (inCompileTime()) {
-					alloc.deallocate(data, sz);
-					data = alloc.allocate(sz);
-				} else alloc.resize(data, sz);
+				contextDeallocate(data, oldsz);
+				data = contextAllocate(sz);
 				return;
 			}
-			DataType* ndata = alloc.allocate(sz);
+			DataType* ndata = contextAllocate(sz);
 			if (count) copy(data, ndata, count < sz ? count : sz);
-			memdestroy(data, count);
+			memdestroy(data, oldsz, count);
 			data = ndata;
 		}
 	}
@@ -1393,9 +1406,6 @@ private:
 	SizeType		count		= 0;
 	/// @brief Underlying array.
 	owner<DataType>	contents	= nullptr;
-
-	/// @brief Memory allocator.
-	ContextAllocatorType	alloc;
 };
 
 static_assert(List<int>().empty());

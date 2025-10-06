@@ -485,9 +485,11 @@ public:
 		swap(a.count, b.count);
 	}
 
-	/// @brief Returns the associated allocator.
-	/// @return `StaticList` allocator.
-	constexpr ContextAllocatorType& allocator() {return alloc;}
+protected:
+	using
+		ContextAwareAllocatable::contextAllocate,
+		ContextAwareAllocatable::contextDeallocate
+	;
 
 private:
 	using Iteratable::wrapBounds;
@@ -510,11 +512,11 @@ private:
 	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz) {
 		if (!p) return;
 		memdestruct(p, sz);
-		alloc.deallocate(p);
+		contextDeallocate(p, sz);
 	}
 
 	constexpr owner<DataType> memcreate(SizeType const sz) {
-		return alloc.allocate(sz);
+		return contextAllocate(sz);
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
@@ -554,9 +556,6 @@ private:
 	SizeType		count		= 0;
 	/// @brief Underlying array.
 	owner<DataType>	contents	= nullptr;
-
-	/// @brief Memory allocator.
-	ContextAllocatorType	alloc;
 };
 
 CTL_NAMESPACE_END

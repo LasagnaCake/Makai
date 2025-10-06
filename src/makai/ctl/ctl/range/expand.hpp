@@ -65,7 +65,7 @@ namespace Range {
 	/// @param end Iterator to end of range.
 	/// @return Expanded iterators.
 	template<Type::Iteratable T>
-	constexpr Impl::ExpansionWrapper<T> expand(T const& range) {
+	constexpr auto expand(T const& range) {
 		return expand(range.begin(), range.end());
 	}
 	/// @brief Expands a range with additional iteration information.
@@ -74,7 +74,7 @@ namespace Range {
 	/// @param end Iterator to end of range.
 	/// @return Expanded iterators.
 	template<Type::CIteratable T>
-	constexpr Impl::ExpansionWrapper<T> expand(T const& range)
+	constexpr auto expand(T const& range)
 	requires (!Type::Iteratable<T>) {
 		return expand(range.data(), range.data() + range.size());
 	}

@@ -8,13 +8,13 @@ namespace Makai::Popup {
 	/// @brief Default popup option buttons.
 	namespace Option {
 		/// @brief "Ok" button.
-		const StringList OK				= {"Ok"};
+		inline static StringList OK				= {"Ok"						};
 		/// @brief "Yes" button.
-		const StringList YES			= {"Yes"};
+		inline static StringList YES			= {"Yes"					};
 		/// @brief "Yes" and "No" button.
-		const StringList YES_NO			= {"Yes", "No"};
+		inline static StringList YES_NO			= {"Yes", "No"				};
 		/// @brief "Yes", "No" and "Cancel" button.
-		const StringList YES_NO_CANCEL	= {"Yes", "No", "Cancel"};
+		inline static StringList YES_NO_CANCEL	= {"Yes", "No", "Cancel"	};
 	}
 
 	/// @brief Popup type.

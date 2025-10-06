@@ -45,7 +45,7 @@ namespace Tree {
 		using typename BaseType::ConstIteratorType;
 		using typename BaseType::ConstReverseIteratorType;
 
-		using BaseType::alloc;
+		using BaseType::allocator;
 
 		/// @brief Empty constructor (defaulted).
 		constexpr AVL() = default;
@@ -214,7 +214,7 @@ namespace Tree {
 			auto const parent = findParent(key);
 			if (parent && ComparatorType::equals(parent->key, key))
 				return parent;
-			ref<Node> const node = MX::construct(alloc.allocate(), Node{cachedDepth(parent), 0, key});
+			ref<Node> const node = MX::construct(allocator().allocate(), Node{cachedDepth(parent), 0, key});
 			if (!parent)
 				return (root = node);
 			insertNode(node, parent, !ComparatorType::lesser(key, parent->key));
@@ -247,7 +247,7 @@ namespace Tree {
 		constexpr bool erase(KeyType const& key) {
 			if (auto node = find(key)) {
 				removeNode(node);
-				alloc.deallocate(MX::destruct(node));
+				allocator().deallocate(MX::destruct(node), 1);
 				return true;
 			}
 			return false;
@@ -376,7 +376,7 @@ namespace Tree {
 			if (!node) return;
 			traverseAndDelete(node->left());
 			traverseAndDelete(node->right());
-			alloc.deallocate(MX::destruct(node));
+			allocator().deallocate(MX::destruct(node), 1);
 		}
 
 		/// @brief Returns the leftmost node in the linked list.

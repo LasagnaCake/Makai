@@ -68,8 +68,8 @@ namespace Engine {
 		InternalEngine engine;
 
 		constexpr static usize startingSeed() {
-			if constexpr (inCompileTime())	return ctsprng<usize>();
-			else							return OS::Time::now();
+			if (inCompileTime())	return ctsprng<usize>();
+			else					return OS::Time::now();
 		}
 	public:
 		/// @brief Constructs the engine with a given seed.

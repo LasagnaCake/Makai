@@ -254,7 +254,7 @@ namespace OS::FS {
 			/// @param name Entry name.
 			/// @param path Relative path to entry.
 			/// @param children Directory contents.
-			constexpr Entry(String const& name, String const& path, List<Entry>	children):
+			constexpr Entry(String const& name, String const& path, List<Entry>	const& children):
 				ename(name),
 				epath(path),
 				children(children),

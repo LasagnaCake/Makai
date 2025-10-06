@@ -32,86 +32,56 @@ namespace Type {
 
 /// @brief Default allocator. Allocates from the heap, as the name implies.
 /// @tparam T Type to handle memory for.
-template<class T>
+template<Type::NonVoid T>
 struct HeapAllocator {
-	/// @brief Allocates memory on the heap.
-	/// @param sz Size of memory to allocate.
-	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
-	[[nodiscard]]
-	constexpr pointer allocate(usize const sz)
-	requires Type::Void<T> {
-		if (!sz) return nullptr;
-		return MX::malloc(sz);
-	}
+	using DataType = T;
+
+	constexpr HeapAllocator()									= default;
+	constexpr HeapAllocator(HeapAllocator const&)				= default;
+	constexpr HeapAllocator(HeapAllocator&&)					= default;
+	constexpr HeapAllocator& operator=(HeapAllocator const&)	= default;
+	constexpr HeapAllocator& operator=(HeapAllocator&&)			= default;
+
+	constexpr ~HeapAllocator() {}
 
 	/// @brief Allocates space for elements on the heap.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
-	[[nodiscard]]
-	constexpr owner<T> allocate(usize const sz)
-	requires Type::NonVoid<T> {
+	[[nodiscard, gnu::always_inline]]
+	owner<T> allocate(usize const sz) {
 		if (!sz) return nullptr;
 		return MX::malloc<T>(sz);
 	}
 
 	/// @brief Allocates space for a single element on the heap.
 	/// @return Pointer to allocated memory.
-	[[nodiscard]]
-	constexpr owner<T> allocate()
-	requires Type::NonVoid<T> {
+	[[nodiscard, gnu::always_inline]]
+	owner<T> allocate() {
 		return MX::malloc<T>();
 	}
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
-	constexpr void deallocate(pointer const& mem, usize const = 0)
-	requires Type::Void<T> {
-		return MX::free(mem);
-	}
-
-	/// @brief Deallocates allocated memory.
-	/// @param mem Pointer to allocated memory.
-	constexpr void deallocate(owner<T> const mem, usize const = 0)
-	requires Type::NonVoid<T> {
+	[[gnu::always_inline]]
+	void deallocate(owner<T> const mem, usize const = 0) {
 		return MX::free<T>(mem);
 	}
 
 	/// @brief Resizes allocated memory.
 	/// @param mem Memory to resize.
-	/// @param sz New size.
-	constexpr void resize(pointer& mem, usize const sz)
-	requires Type::Void<T> {
-		if (!mem) return;
-		mem = MX::realloc(mem, sz);
-	}
-
-	/// @brief Resizes allocated memory.
-	/// @param mem Memory to resize.
 	/// @param sz New element count.
-	constexpr void resize(ref<T>& mem, usize const sz)
-	requires Type::NonVoid<T> {
+	[[deprecated, gnu::always_inline]]
+	void resize(ref<T>& mem, usize const sz) {
 		if (!mem) return;
 		mem = MX::realloc<T>(mem, sz);
 	}
 
 	/// @brief Resizes allocated memory.
 	/// @param mem Memory to resize.
-	/// @param sz New size.
-	/// @return Pointer to new memory location, or `nullptr` if size is zero.
-	[[nodiscard]]
-	constexpr pointer resized(pointer const& mem, usize const sz)
-	requires Type::Void<T> {
-		if (!mem) return nullptr;
-		return MX::realloc(mem, sz);
-	}
-
-	/// @brief Resizes allocated memory.
-	/// @param mem Memory to resize.
 	/// @param sz New element count.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
-	[[nodiscard]]
-	constexpr owner<T> resized(owner<T> const mem, usize const sz)
-	requires Type::NonVoid<T> {
+	[[nodiscard, deprecated, gnu::always_inline]]
+	owner<T> resized(owner<T> const mem, usize const sz) {
 		if (!mem) return nullptr;
 		return MX::realloc<T>(mem, sz);
 	}
@@ -119,30 +89,38 @@ struct HeapAllocator {
 
 /// @brief Compile-time allocator.
 /// @tparam T Type to handle memory for.
-template<class T>
+template<Type::NonVoid T>
 struct ConstantAllocator {
+	using DataType = T;
+
+	constexpr ConstantAllocator()										= default;
+	constexpr ConstantAllocator(ConstantAllocator const&)				= default;
+	constexpr ConstantAllocator(ConstantAllocator&&)					= default;
+	constexpr ConstantAllocator& operator=(ConstantAllocator const&)	= default;
+	constexpr ConstantAllocator& operator=(ConstantAllocator&&)			= default;
+
+	constexpr ~ConstantAllocator() {}
+
 	/// @brief Allocates space for elements on the heap.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
-	[[nodiscard]]
-	constexpr owner<T> allocate(usize const sz)
-	requires Type::NonVoid<T> {
+	[[nodiscard, gnu::always_inline]]
+	consteval owner<T> allocate(usize const sz) {
 		if (!sz) return nullptr;
 		return impl.allocate(sz);
 	}
 
 	/// @brief Allocates space for a single element on the heap.
 	/// @return Pointer to allocated memory.
-	[[nodiscard]]
-	constexpr owner<T> allocate()
-	requires Type::NonVoid<T> {
+	[[nodiscard, gnu::always_inline]]
+	consteval owner<T> allocate() {
 		return impl.allocate(1);
 	}
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
-	constexpr void deallocate(owner<T> const mem, usize const sz = 0)
-	requires Type::NonVoid<T> {
+	[[gnu::always_inline]]
+	consteval void deallocate(owner<T> const mem, usize const sz = 0) {
 		return impl.deallocate(mem, sz);
 	}
 
@@ -188,24 +166,67 @@ struct ContextAwareAllocatable:
 	using Allocatable			= ::CTL::Allocatable<TAlloc, TData>;
 	using ConstantAllocatable	= ::CTL::ConstantAllocatable<TData>;
 
+	constexpr ContextAwareAllocatable()												= default;
+	constexpr ContextAwareAllocatable(ContextAwareAllocatable const&)				= default;
+	constexpr ContextAwareAllocatable(ContextAwareAllocatable&&)					= default;
+	constexpr ContextAwareAllocatable& operator=(ContextAwareAllocatable const&)	= default;
+	constexpr ContextAwareAllocatable& operator=(ContextAwareAllocatable&&)			= default;
+
+	constexpr ~ContextAwareAllocatable() {}
+
 	using
 		typename Allocatable::AllocatorType,
 		typename ConstantAllocatable::ConstantAllocatorType
 	;
 
-	/// @brief Context-dependent allocator type.
-	///	@note Changes depending on whether the class is in a compile-time context, or a run-time context.
-	using ContextAllocatorType			= Meta::DualType<inCompileTime(), ConstantAllocatorType, AllocatorType>;
+	/// @brief Returns the associated allocator.
+	/// @return Allocator.
+	[[gnu::always_inline]]
+	constexpr auto allocator() const			{return alloc;}
 
-	/// @brief Context-dependent allocator template.
-	/// @tparam T Type to handle memory for. By default, it is the same as the previous type to handle memory for.
-	///	@note Changes depending on whether the class is in a compile-time context, or a run-time context.
-	template<class T = TData>
-	using ContextAllocatorTemplateType	= Meta::DualType<
-		inCompileTime(),
-		typename Allocatable::template AllocatorTemplateType<T>,
-		typename ConstantAllocatable::template ConstantAllocatorTemplateType<T>
-	>;
+	/// @brief Returns the associated constant allocator.
+	/// @return Constant allocator.
+	[[gnu::always_inline]]
+	constexpr auto constantAllocator() const	{return calloc;}
+
+protected:
+	/// @brief Allocator return type.
+	using AllocatedType = owner<typename AllocatorType::DataType>;
+
+	/// @brief Allocates space for elements on the heap.
+	/// @param sz Element count to allocate for.
+	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
+	[[nodiscard, gnu::always_inline]]
+	constexpr AllocatedType contextAllocate(usize const sz) {
+		if (!sz) return nullptr;
+		if (inCompileTime())
+			return calloc.allocate(sz);
+		else return alloc.allocate(sz);
+	}
+
+	/// @brief Allocates space for a single element on the heap.
+	/// @return Pointer to allocated memory.
+	[[nodiscard, gnu::always_inline]]
+	constexpr AllocatedType contextAallocate() {
+		if (inCompileTime())
+			return calloc.allocate();
+		else return alloc.allocate();
+	}
+
+	/// @brief Deallocates allocated memory.
+	/// @param mem Pointer to allocated memory.
+	[[gnu::always_inline]]
+	constexpr void contextDeallocate(AllocatedType const mem, usize const sz = 0) {
+		if (inCompileTime())
+			return calloc.deallocate(mem, sz);
+		else return alloc.deallocate(mem, sz);
+	}
+
+private:
+	/// @brief Constant allocator.
+	ConstantAllocatorType	calloc;
+	/// @brief Allocator.
+	AllocatorType			alloc;
 };
 
 /// @brief Automatically-managed memory slice.
@@ -240,7 +261,7 @@ struct MemorySlice:
 	/// @param other `MemorySlice` to copy from.
 	constexpr MemorySlice(SelfType const& other)	{
 		invoke(other.length);
-		if constexpr (inCompileTime())
+		if (inCompileTime())
 			for (usize i = 0; i < length; ++i)
 				contents[i] = other.contents[i];
 		else if constexpr(Type::Standard<TData>)

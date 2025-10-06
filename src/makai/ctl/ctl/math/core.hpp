@@ -151,7 +151,7 @@ namespace Math {
 	/// @return Rounded value.
 	template<Type::Number T = float>
 	constexpr T floor(T const val) {
-		if constexpr (inCompileTime())
+		if (inCompileTime())
 			return static_cast<T>(static_cast<int128>(val));
 		else return static_cast<T>(::floor(val));
 	}
@@ -177,7 +177,7 @@ namespace Math {
 	/// @return Rounded value.
 	template<Type::Number T = float>
 	constexpr T ceil(T const val) {
-		if constexpr (inCompileTime())
+		if (inCompileTime())
 			return static_cast<T>(static_cast<int128>(val + (1.0 - Limit::STRIDE<T>)));
 		else return static_cast<T>(::ceil(val));
 	}
