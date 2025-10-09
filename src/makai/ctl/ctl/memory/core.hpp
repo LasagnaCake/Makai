@@ -47,6 +47,7 @@ namespace MX {
 	/// @param count Count of elements to copy.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
 	constexpr ref<T> memcpy(ref<T> const dst, ref<T const> const src, usize const count) {
 		return (T*)memcpy((pointer)dst, (pointer)src, count * sizeof(T));
 	}
@@ -57,6 +58,7 @@ namespace MX {
 	/// @param src Source.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
 	constexpr ref<T> memcpy(ref<T> const dst, ref<T const> const src) {
 		return (T*)memcpy((pointer)dst, (pointer)src, sizeof(T));
 	}
@@ -90,6 +92,7 @@ namespace MX {
 	/// @param src Source.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
 	constexpr ref<T> memmove(ref<T> const dst, ref<T const> const src) {
 		return (T*)memmove((pointer)dst, (pointer)src, sizeof(T));
 	}
@@ -101,6 +104,7 @@ namespace MX {
 	/// @param count Count of elements to copy.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
 	constexpr ref<T> memmove(ref<T> const dst, ref<T const> const src, usize const count) {
 		return (T*)memmove((pointer)dst, (pointer)src, count * sizeof(T));
 	}
@@ -130,6 +134,7 @@ namespace MX {
 	/// @param count Count of elements to compare.
 	/// @return Order between both spans of data.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
 	constexpr int memcmp(ref<T const> const a, ref<T const> const b, usize const count) {
 		return memcmp((pointer)a, (pointer)b, count * sizeof(T));
 	}
@@ -140,6 +145,7 @@ namespace MX {
 	/// @param b Data to compare with.
 	/// @return Order between both spans of data.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
 	constexpr int memcmp(ref<T const> const a, ref<T const> const b) {
 		return memcmp(a, b, 1);
 	}
@@ -167,6 +173,7 @@ namespace MX {
 	/// @param count Count of elements to set.
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1)]]
 	constexpr T* memset(ref<T> const dst, int const val, usize const count) {
 		return static_cast<ref<T>>(memset(static_cast<pointer>(dst), val, count * sizeof(T)));
 	}
@@ -177,6 +184,7 @@ namespace MX {
 	/// @param val Value to set each byte.
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1)]]
 	constexpr T* memset(ref<T> const dst, int const val) {
 		return memset<T>(dst, val, 1);
 	}
@@ -195,6 +203,7 @@ namespace MX {
 	/// @param count Count of elements to zero.
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1)]]
 	constexpr ref<T> memzero(ref<T> const dst, usize const count) {
 		return static_cast<ref<T>>(memzero(static_cast<pointer>(dst), count * sizeof(T)));
 	}
@@ -204,15 +213,37 @@ namespace MX {
 	/// @param dst Data to set.
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1)]]
 	constexpr ref<T> memzero(ref<T> const dst) {
 		return memzero<T>(dst, 1);
 	}
-	
+
+	/// @brief Frees memory allocated in the heap.
+	/// @param mem Pointer to allocated memory.
+	#ifdef __clang__
+	inline
+	#else
+	constexpr
+	#endif
+	void free(pointer const mem) {
+		if (mem) return __builtin_free(mem);
+	}
+
+	/// @brief Frees memory allocated in the heap.
+	/// @tparam T Type of data allocated.
+	/// @param mem Pointer to allocated memory.
+	template<Type::NonVoid T>
+	constexpr void free(owner<T> const mem) {
+		CTL_DEVMODE_OUT("Freeing memory...\n");
+		if (mem) return __builtin_free(mem);
+		CTL_DEVMODE_OUT("Memory freed\n");
+	}
+
 	/// @brief Allocates space for a given size of bytes in the heap.
 	/// @param sz Byte size.
 	/// @return Pointer to start of allocated memory.
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
-	[[nodiscard]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	constexpr owner<void> malloc(usize const sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) throw AllocationFailure();
@@ -227,7 +258,7 @@ namespace MX {
 	/// @return Pointer to start of allocated memory.
 	/// @throw AllocationFailure if size is zero, or memory allocation fails.
 	template<Type::NonVoid T>
-	[[nodiscard]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	constexpr owner<T> malloc(usize sz) {
 		CTL_DEVMODE_FN_DECL;
 		if (!(sz + 1)) unreachable();
@@ -248,31 +279,15 @@ namespace MX {
 	/// @return Pointer to start of allocated memory.
 	/// @throw AllocationFailure if memory allocation fails.
 	template<Type::NonVoid T>
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	constexpr owner<T> malloc() {
 		return malloc<T>(1);
 	}
-
-	/// @brief Frees memory allocated in the heap.
-	/// @param mem Pointer to allocated memory.
-	constexpr void free(pointer const mem) {
-		if (mem) return __builtin_free(mem);
-	}
-
-	/// @brief Frees memory allocated in the heap.
-	/// @tparam T Type of data allocated.
-	/// @param mem Pointer to allocated memory.
-	template<Type::NonVoid T>
-	constexpr void free(owner<T> const mem) {
-		CTL_DEVMODE_OUT("Freeing memory...\n");
-		if (mem) __builtin_free(mem);
-		CTL_DEVMODE_OUT("Memory freed\n");
-	}
-
 	/// @brief Reallocates memory allocated in the heap.
 	/// @param mem Memory to reallocate.
 	/// @param sz New size in bytes.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
-	[[nodiscard]]
+	[[nodiscard, gnu::nonnull(1)]]
 	constexpr owner<void> realloc(owner<void> const mem, usize const sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) {
@@ -283,7 +298,7 @@ namespace MX {
 		if (inCompileTime()) {
 			free(mem);
 			m = malloc(sz);
-		} else __builtin_realloc(mem, sz);
+		} else m = __builtin_realloc(mem, sz);
 		if (!m) throw AllocationFailure();
 		return m;
 	}
@@ -294,7 +309,7 @@ namespace MX {
 	/// @param sz New count of elements.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
 	template<Type::NonVoid T>
-	[[nodiscard]]
+	[[nodiscard, gnu::nonnull(1)]]
 	constexpr owner<T> realloc(owner<T> const mem, usize const sz) {
 		return static_cast<owner<T>>(realloc(static_cast<pointer>(mem), sz * sizeof(T)));
 	}
@@ -306,8 +321,8 @@ namespace MX {
 	/// @note Does not delete the underlying memory.
 	/// @warning This WILL destruct an object at the given memory location, EVEN IF it is a pointer to constant memory!
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1)]]
 	constexpr ref<T> destruct(ref<T> const val) {
-		if (!val) return nullptr;
 		val->~T();
 		return val;
 	}
@@ -321,9 +336,9 @@ namespace MX {
 	/// @throw ConstructionFailure if memory does not exist.
 	/// @warning This WILL construct an object at the given memory location, EVEN IF it is a pointer to constant memory!
 	template<Type::NonVoid T, typename... Args>
+	[[gnu::nonnull(1)]]
 	constexpr ref<T> construct(ref<T> const mem, Args&&... args)
 	requires (Type::Constructible<T, Args...>) {
-		if (!mem) throw ConstructionFailure();
 		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime()) std::construct_at(mem, args...);
 		else
@@ -340,6 +355,7 @@ namespace MX {
 	/// @return Pointer to reconstructed memory.
 	/// @warning This WILL construct an object at the given memory location, EVEN IF it is a pointer to constant memory!
 	template<Type::NonVoid T, typename... Args>
+	[[gnu::nonnull(1)]]
 	constexpr void reconstruct(ref<T> const mem, Args&&... args) {
 		destruct(mem);
 		construct(mem, ::CTL::forward<Args>(args)...);
@@ -368,6 +384,7 @@ namespace MX {
 	/// @param mem Memory to resize.
 	/// @param sz New count of elements.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1)]]
 	constexpr ref<T> resize(ref<T>& mem, usize const sz) {
 		return mem = realloc<T>(mem, sz);
 	}
@@ -380,9 +397,10 @@ namespace MX {
 	/// @param count Count of elements to copy.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
-		if (!(dst && src && sz)) return dst;
+		if (!sz) return dst;
 		T* start = dst;
 		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime())
@@ -423,9 +441,10 @@ namespace MX {
 	/// @param count Count of elements to clear.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
+	[[gnu::nonnull(1)]]
 	constexpr ref<T> objclear(ref<T> mem, usize sz) {
 		if (!(sz + 1)) unreachable();
-		if (!(sz && mem)) return mem;
+		if (!sz) return mem;
 		while (sz--)
 			destruct<T>(mem++);
 		return mem;

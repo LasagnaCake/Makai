@@ -12,6 +12,7 @@
 #include "number.hpp"
 #include "traits.hpp"
 #include "verify.hpp"
+#include "forcestate.hpp"
 #include "nameof.hpp"
 
 #endif // CTL_TYPETRAITS_H

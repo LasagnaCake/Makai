@@ -37,7 +37,7 @@ struct HeapAllocator {
 	/// @brief Allocates space for elements on the heap.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
-	[[nodiscard, gnu::always_inline]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	owner<T> allocate(usize const sz) {
 		if (!sz) return nullptr;
 		return MX::malloc<T>(sz);
@@ -45,14 +45,14 @@ struct HeapAllocator {
 
 	/// @brief Allocates space for a single element on the heap.
 	/// @return Pointer to allocated memory.
-	[[nodiscard, gnu::always_inline]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	owner<T> allocate() {
 		return MX::malloc<T>();
 	}
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
-	[[gnu::always_inline]]
+	[[gnu::nonnull(2)]]
 	void deallocate(owner<T> const mem, usize const = 0) {
 		return MX::free<T>(mem);
 	}
@@ -60,7 +60,7 @@ struct HeapAllocator {
 	/// @brief Resizes allocated memory.
 	/// @param mem Memory to resize.
 	/// @param sz New element count.
-	[[deprecated, gnu::always_inline]]
+	[[deprecated("Please use proper value reallocation instead!")]]
 	void resize(ref<T>& mem, usize const sz) {
 		if (!mem) return;
 		mem = MX::realloc<T>(mem, sz);
@@ -70,7 +70,7 @@ struct HeapAllocator {
 	/// @param mem Memory to resize.
 	/// @param sz New element count.
 	/// @return Pointer to new memory location, or `nullptr` if size is zero.
-	[[deprecated, nodiscard, gnu::always_inline]]
+	[[deprecated("Please use proper value reallocation instead!"), nodiscard, gnu::nonnull(2)]]
 	owner<T> resized(owner<T> const mem, usize const sz) {
 		if (!mem) return nullptr;
 		return MX::realloc<T>(mem, sz);
@@ -86,7 +86,7 @@ struct ConstantAllocator {
 	/// @brief Allocates space for elements.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
-	[[nodiscard, gnu::always_inline]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	consteval owner<T> allocate(usize const sz) {
 		if (!sz) return nullptr;
 		return impl.allocate(sz);
@@ -94,14 +94,14 @@ struct ConstantAllocator {
 
 	/// @brief Allocates space for a single element.
 	/// @return Pointer to allocated memory.
-	[[nodiscard, gnu::always_inline]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	consteval owner<T> allocate() {
 		return impl.allocate(1);
 	}
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
-	[[gnu::always_inline]]
+	[[gnu::nonnull(2)]]
 	consteval void deallocate(owner<T> const mem, usize const sz = 0) {
 		return impl.deallocate(mem, sz);
 	}
@@ -149,7 +149,7 @@ struct ContextAllocator {
 	/// @brief Allocates space for elements.
 	/// @param sz Element count to allocate for.
 	/// @return Pointer to allocated memory, or `nullptr` if size is zero.
-	[[nodiscard, gnu::always_inline]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 	constexpr
 	#endif
@@ -166,7 +166,7 @@ struct ContextAllocator {
 
 	/// @brief Allocates space for a single element.
 	/// @return Pointer to allocated memory.
-	[[nodiscard, gnu::always_inline]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 	constexpr
 	#endif
@@ -181,7 +181,7 @@ struct ContextAllocator {
 
 	/// @brief Deallocates allocated memory.
 	/// @param mem Pointer to allocated memory.
-	[[gnu::always_inline]]
+	[[gnu::nonnull(2)]]
 	#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 	constexpr
 	#endif
