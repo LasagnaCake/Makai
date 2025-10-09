@@ -19,7 +19,8 @@ CTL_NAMESPACE_BEGIN
 template<
 	class TData,
 	Type::Integer TIndex = usize,
-	template <class> class TAlloc = HeapAllocator
+	template <class> class TAlloc = HeapAllocator,
+	template <class> class TConstAlloc = ConstantAllocator
 >
 struct StaticList;
 
@@ -42,24 +43,26 @@ namespace Type::Container {
 /// @brief Static-sized, heap-allocated array of objects.
 /// @tparam TData Element type.
 /// @tparam TIndex Index type.
-/// @tparam TAlloc<class> Allocator type.
+/// @tparam TAlloc<class> Runtime allocator type. By default, it is `HeapAllocator`.
+/// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 /// @note
 ///		This list's capacity cannot automatically grow.
 ///		If capacity is changed (via `resize`), its previous contents are cleared.
 template<
 	class TData,
 	Type::Integer TIndex,
-	template <class> class TAlloc
+	template <class> class TAlloc,
+	template <class> class TConstAlloc
 >
 struct StaticList:
 	Iteratable<TData, TIndex>,
-	SelfIdentified<StaticList<TData, TIndex>>,
-	ContextAwareAllocatable<TAlloc, TData>,
+	SelfIdentified<StaticList<TData, TIndex, TAlloc, TConstAlloc>>,
+	ContextAwareAllocatable<TData, TAlloc, TConstAlloc>,
 	Ordered {
 public:
 	using Iteratable				= ::CTL::Iteratable<TData, TIndex>;
-	using SelfIdentified			= ::CTL::SelfIdentified<StaticList<TData, TIndex>>;
-	using ContextAwareAllocatable	= ::CTL::ContextAwareAllocatable<TAlloc, TData>;
+	using SelfIdentified			= ::CTL::SelfIdentified<StaticList<TData, TIndex, TAlloc, TConstAlloc>>;
+	using ContextAwareAllocatable	= ::CTL::ContextAwareAllocatable<TData, TAlloc, TConstAlloc>;
 
 	using
 		typename Iteratable::DataType,

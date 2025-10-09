@@ -19,7 +19,8 @@ namespace Tree {
 	/// @tparam TKey Node key type.
 	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
-	/// @tparam TAlloc<class> Allocator type. By default, it is `HeapAllocator`.
+	/// @tparam TAlloc<class> Runtime allocator type. By default, it is `HeapAllocator`.
+	/// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 	/// @tparam TNodeExtension Node extension type. By default, it is `Empty`.
 	template<
 		class TKey,
@@ -155,7 +156,7 @@ namespace Tree {
 		/// @brief Reverse const iterator type.
 		using ConstReverseIteratorType	= NodeIterator<true, Node const>;
 
-		using AllocatorType = typename ContextAwareAllocatable<TAlloc, Node>::ContextAllocatorType;
+		using AllocatorType = typename ContextAwareAllocatable<Node, TAlloc>::ContextAllocatorType;
 
 		/// @brief Returns the associated allocator.
 		/// @return Allocator.

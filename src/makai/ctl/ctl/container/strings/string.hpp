@@ -22,22 +22,24 @@ CTL_NAMESPACE_BEGIN
 /// @brief Dynamic string of characters.
 /// @tparam TChar Character type.
 /// @tparam TIndex Index type.
-/// @tparam TAlloc<class> Allocator type.
+/// @tparam TAlloc<class> Runtime allocator type. By default, it is `HeapAllocator`.
+/// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 template<
 	Type::ASCII TChar,
 	Type::Integer TIndex = usize,
-	template <class> class TAlloc = HeapAllocator
+	template <class> class TAlloc		= HeapAllocator,
+	template <class> class TConstAlloc	= ConstantAllocator
 >
 struct BaseString:
-	private List<TChar, TIndex, TAlloc>,
-	public SelfIdentified<BaseString<TChar, TIndex, TAlloc>>,
-	public Derived<List<TChar, TIndex, TAlloc>>,
+	private List<TChar, TIndex, TAlloc, TConstAlloc>,
+	public SelfIdentified<BaseString<TChar, TIndex, TAlloc, TConstAlloc>>,
+	public Derived<List<TChar, TIndex, TAlloc, TConstAlloc>>,
 	public CStringable<TChar>,
 	public Streamable<TChar> {
 public:
 	using Iteratable		= ::CTL::Iteratable<TChar, TIndex>;
-	using SelfIdentified	= ::CTL::SelfIdentified<BaseString<TChar, TIndex, TAlloc>>;
-	using Derived			= ::CTL::Derived<List<TChar, TIndex, TAlloc>>;
+	using SelfIdentified	= ::CTL::SelfIdentified<BaseString<TChar, TIndex, TAlloc, TConstAlloc>>;
+	using Derived			= ::CTL::Derived<List<TChar, TIndex, TAlloc, TConstAlloc>>;
 	using Streamable		= ::CTL::Streamable<TChar>;
 	using CStringable		= ::CTL::CStringable<TChar>;
 

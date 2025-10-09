@@ -88,21 +88,21 @@ namespace MX {
 	/// @tparam T Type of data to copy.
 	/// @param dst Destination.
 	/// @param src Source.
-	/// @param count Count of elements to copy.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
-	constexpr ref<T> memmove(ref<T> const dst, ref<T const> const src, usize const count) {
-		return (T*)memmove((pointer)dst, (pointer)src, count * sizeof(T));
+	constexpr ref<T> memmove(ref<T> const dst, ref<T const> const src) {
+		return (T*)memmove((pointer)dst, (pointer)src, sizeof(T));
 	}
 
 	/// @brief Copies data from one place to another, byte-by-byte, while respecting memory layout.
 	/// @tparam T Type of data to copy.
 	/// @param dst Destination.
 	/// @param src Source.
+	/// @param count Count of elements to copy.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
-	constexpr ref<T> memmove(ref<T> const dst, ref<T const> const src) {
-		return (T*)memmove((pointer)dst, (pointer)src, sizeof(T));
+	constexpr ref<T> memmove(ref<T> const dst, ref<T const> const src, usize const count) {
+		return (T*)memmove((pointer)dst, (pointer)src, count * sizeof(T));
 	}
 
 	/// @brief Compares two spans of data, byte-by-byte.
@@ -373,6 +373,7 @@ namespace MX {
 	template<Type::NonVoid T>
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
+		if (!(dst && src && sz)) return dst;
 		T* start = dst;
 		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime())
@@ -413,11 +414,11 @@ namespace MX {
 	/// @param count Count of elements to clear.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
-	constexpr ref<T> objclear(ref<T> const mem, usize sz) {
+	constexpr ref<T> objclear(ref<T> mem, usize sz) {
 		if (!(sz + 1)) unreachable();
-		T* m = mem;
+		if (!(sz && mem)) return mem;
 		while (sz--)
-			destruct<T>(m++);
+			destruct<T>(mem++);
 		return mem;
 	}
 }

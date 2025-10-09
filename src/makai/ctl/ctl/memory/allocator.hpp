@@ -14,18 +14,16 @@ namespace Type {
 	namespace Memory {
 		/// @brief Type must be a valid allocator for `TData`.
 		template<template <class> class T, class TData>
-		concept Allocator = requires (T<TData> t, usize sz, TData* p) {
-			{t.allocate(sz)}	-> Type::Equal<TData*>	;
-			{t.deallocate(p)}	-> Type::Equal<void>	;
-			{t.resize(p, sz)}	-> Type::Equal<void>	;
-			{t.resized(p, sz)}	-> Type::Equal<TData*>	;
+		concept Allocator = requires (T<TData> t, usize sz, owner<TData> p) {
+			{t.allocate(sz)}	-> Type::Equal<owner<TData>>	;
+			{t.deallocate(p)}	-> Type::Equal<void>		;
 		};
 
 		/// @brief Type must be a valid constant allocator for `TData`.
 		template<template <class> class T, class TData>
-		concept ConstantAllocator = requires (T<TData> t, usize sz, TData* p) {
-			{t.allocate(sz)}		-> Type::Equal<TData*>	;
-			{t.deallocate(p, sz)}	-> Type::Equal<void>	;
+		concept ConstantAllocator = requires (T<TData> t, usize sz, owner<TData> p) {
+			{t.allocate(sz)}		-> Type::Equal<owner<TData>>	;
+			{t.deallocate(p, sz)}	-> Type::Equal<void>			;
 		};
 	}
 }
@@ -225,10 +223,10 @@ private:
 };
 
 /// @brief Tags the class as manually managing memory, and is aware of evaluation contexts.
-/// @tparam TAlloc<class> Runtime allocator type. 
 /// @tparam TData Type to handle memory for.
+/// @tparam TAlloc<class> Runtime allocator type. 
 /// @tparam TAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
-template<template <class> class TAlloc, class TData, template <class> class TConstAlloc = ConstantAllocator>
+template<class TData, template <class> class TAlloc, template <class> class TConstAlloc = ConstantAllocator>
 requires Type::Memory::Allocator<TAlloc, TData>
 struct ContextAwareAllocatable:
 	Allocatable<TAlloc, TData>,
@@ -243,94 +241,6 @@ struct ContextAwareAllocatable:
 
 	/// @brief Context-aware allocator type.
 	using ContextAllocatorType = ContextAllocator<TAlloc, TConstAlloc, TData>; 
-};
-
-/// @brief Automatically-managed memory slice.
-/// @tparam TData Type to handle memory for.
-template<typename TData = void, template <class> class TAlloc = HeapAllocator>
-struct MemorySlice:
-	Typed<TData>,
-	SelfIdentified<MemorySlice<TData, TAlloc>>,
-	ContextAwareAllocatable<TAlloc, TData> {
-	using SelfIdentified			= ::CTL::SelfIdentified<MemorySlice<TData, TAlloc>>;
-	using ContextAwareAllocatable	= ::CTL::Allocatable<TAlloc, TData>;
-	using Typed						= ::CTL::Typed<TData>;
-
-	using
-		typename ContextAwareAllocatable::ContextAllocatorType
-	;
-
-	using typename SelfIdentified::SelfType;
-
-	using
-		typename Typed::DataType,
-		typename Typed::PointerType
-	;
-
-	/// @brief Default constructor.
-	constexpr MemorySlice()					{				}
-	/// @brief Constructs the memory slice with space for a number of elements.
-	/// @param sz Element count to allocate for.
-	constexpr MemorySlice(usize const sz)	{invoke(sz);	}
-
-	/// @brief Copy constructor (`MemorySlice`).
-	/// @param other `MemorySlice` to copy from.
-	constexpr MemorySlice(SelfType const& other)	{
-		invoke(other.length);
-		if (inCompileTime())
-			for (usize i = 0; i < length; ++i)
-				contents[i] = other.contents[i];
-		else if constexpr(Type::Standard<TData>)
-			MX::memcpy<TData>(contents, other.contents, length);
-		else MX::objcopy<TData>(contents, other.contents, length);
-	}
-
-	/// @brief Move constructor (`MemorySlice`).
-	/// @param other `MemorySlice` to move.
-	constexpr MemorySlice(SelfType&& other):
-		contents(::CTL::move(other.contents)),
-		length(::CTL::move(other.length)) {
-		other.contents = nullptr;
-	}
-
-	/// @brief Destructor.
-	constexpr ~MemorySlice() {free();}
-
-	/// @brief Returns the maximum element count of the memory slice.
-	/// @return Maxumum element count of memory slice.
-	constexpr usize size() const		{return length;							}
-	/// @brief Returns the size (in bytes) of the memory slice.
-	/// @return Size of the memory slice.
-	constexpr usize byteSize() const	{return length * sizeof (TData);		}
-	/// @brief Returns a pointer to the start of the memory slice.
-	/// @return Pointer to start of memory slice.
-	constexpr PointerType data() const	{return contents;						}
-
-protected:
-	/// @brief Allocates (or resizes) the memory slice.
-	/// @param sz Element count.
-	constexpr void invoke(usize const sz) {
-		if (!sz) return;
-		if (!contents) contents = alloc.allocate(sz);
-		else alloc.resize(contents, sz, length);
-		length = sz;
-	}
-
-	/// @brief Frees the memory managed by the slice.
-	constexpr void free() {
-		if (!contents) return;
-		alloc.deallocate(contents, length);
-		contents	= nullptr;
-		length		= 0;
-	}
-
-private:
-	/// @brief Memory allocator.
-	ContextAllocatorType	alloc;
-	/// @brief Managed memory.
-	PointerType				contents	= nullptr;
-	/// @brief Element count.
-	usize					length		= 0;
 };
 
 CTL_NAMESPACE_END

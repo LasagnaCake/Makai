@@ -234,20 +234,22 @@ namespace UTF {
 	/// @brief Dynamic unicode strings.
 	/// @tparam UTF encoding. MUST be `8` or `32`.
 	/// @tparam TIndex Index type.
-	/// @tparam TAlloc<class> Allocator type.
+	/// @tparam TAlloc<class> Runtime allocator type. By default, it is `HeapAllocator`.
+	/// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 	template<
 		usize UTF,
 		Type::Integer TIndex = usize,
-		template <class> class TAlloc = HeapAllocator
+		template <class> class TAlloc		= HeapAllocator,
+		template <class> class TConstAlloc	= ConstantAllocator
 	>
 	struct UTFString:
 		private List<Character<UTF>, TIndex, TAlloc>,
-		public SelfIdentified<UTFString<UTF, TIndex, TAlloc>>,
-		public Derived<List<Character<UTF>, TIndex, TAlloc>>,
+		public SelfIdentified<UTFString<UTF, TIndex, TAlloc, TConstAlloc>>,
+		public Derived<List<Character<UTF>, TIndex, TAlloc, TConstAlloc>>,
 		public Streamable<char> {
 		using Iteratable		= ::CTL::Iteratable<Character<UTF>, TIndex>;
-		using SelfIdentified	= ::CTL::SelfIdentified<UTFString<UTF, TIndex, TAlloc>>;
-		using Derived			= ::CTL::Derived<List<Character<UTF>, TIndex, TAlloc>>;
+		using SelfIdentified	= ::CTL::SelfIdentified<UTFString<UTF, TIndex, TAlloc, TConstAlloc>>;
+		using Derived			= ::CTL::Derived<List<Character<UTF>, TIndex, TAlloc, TConstAlloc>>;
 		using Streamable		= ::CTL::Streamable<char>;
 
 		using typename Derived::BaseType;

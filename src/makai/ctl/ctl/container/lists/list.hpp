@@ -14,14 +14,14 @@
 #include "../../algorithm/search.hpp"
 #include "../../adapter/comparator.hpp"
 #include "../../memory/memory.hpp"
-#include <memory>
 
 CTL_NAMESPACE_BEGIN
 
 template<
 	class TData,
 	Type::Integer TIndex = usize,
-	template <class> class TAlloc = HeapAllocator
+	template <class> class TAlloc		= HeapAllocator,
+	template <class> class TConstAlloc	= ConstantAllocator
 >
 struct List;
 
@@ -44,23 +44,25 @@ namespace Type::Container {
 /// @brief Dynamic array of objects.
 /// @tparam TData Element type.
 /// @tparam TIndex Index type.
-/// @tparam TAlloc<class> Allocator type.
+/// @tparam TAlloc<class> Runtime allocator type. By default, it is `HeapAllocator`.
+/// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 template<
 	class TData,
 	Type::Integer TIndex,
-	template <class> class TAlloc
+	template <class> class TAlloc,
+	template <class> class TConstAlloc
 >
 struct List:
 	Iteratable<TData, TIndex>,
-	SelfIdentified<List<TData, TIndex>>,
+	SelfIdentified<List<TData, TIndex, TAlloc, TConstAlloc>>,
 	ListInitializable<TData>,
-	ContextAwareAllocatable<TAlloc, TData>,
+	ContextAwareAllocatable<TData, TAlloc>,
 	Ordered {
 public:
 	using Iteratable				= ::CTL::Iteratable<TData, TIndex>;
-	using SelfIdentified			= ::CTL::SelfIdentified<List<TData, TIndex>>;
+	using SelfIdentified			= ::CTL::SelfIdentified<List<TData, TIndex, TAlloc, TConstAlloc>>;
 	using ListInitializable			= ::CTL::ListInitializable<TData>;
-	using ContextAwareAllocatable	= ::CTL::ContextAwareAllocatable<TAlloc, TData>;
+	using ContextAwareAllocatable	= ::CTL::ContextAwareAllocatable<TData, TAlloc, TConstAlloc>;
 
 	using
 		typename Iteratable::DataType,
@@ -121,7 +123,7 @@ public:
 	constexpr explicit List(SizeType const size, DataType const& fill) {
 		invoke(size);
 		for (usize i = 0; i < size; ++i)
-			contents[i] = fill;
+			contents.data()[i] = fill;
 		count = size;
 	}
 
@@ -148,26 +150,24 @@ public:
 	template<SizeType S>
 	constexpr List(As<ConstantType[S]> const& values) {
 		invoke(S);
-		copy(values, contents, S);
+		copy(values, contents.data(), S);
 		count = S;
 	}
 
 	/// @brief Copy constructor.
 	/// @param other `List` to copy from.
 	constexpr List(SelfType const& other) {
-		invoke(other.maximum);
-		copy(other.contents, contents, other.count);
+		invoke(other.contents.size());
+		copy(other.contents.data(), contents.data(), other.count);
 		count = other.count;
 	}
 
 	/// @brief Move constructor.
 	/// @param other `List` to move from.
 	constexpr List(SelfType&& other) {
-		maximum			= ::CTL::move(other.maximum);
-		contents		= ::CTL::move(other.contents);
-		count			= ::CTL::move(other.count);
-		magnitude		= ::CTL::move(other.magnitude);
-		other.contents	= nullptr;
+		contents	= ::CTL::move(other.contents);
+		count		= ::CTL::move(other.count);
+		magnitude	= ::CTL::move(other.magnitude);
 	}
 
 	/// @brief Constructs a `List` from a range of values.
@@ -179,7 +179,7 @@ public:
 	requires Type::Different<T2, DataType> {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
-		copy(begin, contents, end - begin);
+		copy(begin, contents.data(), end - begin);
 		count = end - begin;
 	}
 
@@ -203,7 +203,7 @@ public:
 	constexpr List(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
-		copy(begin, contents, end - begin);
+		copy(begin, contents.data(), end - begin);
 		count = end - begin;
 	}
 
@@ -267,9 +267,9 @@ public:
 	/// @return Reference to self.
 	template<class... Args>
 	constexpr SelfType& constructBack(Args... args) {
-		if (count >= maximum)
+		if (count >= contents.size())
 			increase();
-		MX::construct(contents+(count++), args...);
+		MX::construct(contents.data()+(count++), args...);
 		return *this;
 	}
 
@@ -277,9 +277,9 @@ public:
 	/// @param value Element to add.
 	/// @return Reference to self.
 	constexpr SelfType& pushBack(DataType const& value) {
-		if (count >= maximum)
+		if (count >= contents.size())
 			increase();
-		MX::construct(contents+(count++), value);
+		MX::construct(contents.data()+(count++), value);
 		return *this;
 	}
 
@@ -290,7 +290,7 @@ public:
 		if (empty()) emptyError();
 		DataType value = back();
 		count--;
-		if (count) MX::destruct<DataType>(contents+count);
+		if (count) MX::destruct<DataType>(contents.data()+count);
 		return value;
 	}
 
@@ -303,9 +303,9 @@ public:
 	constexpr SelfType& insert(DataType const& value, IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		if (count >= maximum) increase();
-		copy(&contents[index], &contents[index+1], count - index);
-		MX::construct(contents+index, value);
+		if (count >= contents.size()) increase();
+		copy(&contents.data()[index], &contents.data()[index+1], count - index);
+		MX::construct(contents.data()+index, value);
 		++count;
 		return *this;
 	}
@@ -320,8 +320,8 @@ public:
 		assertIsInBounds(index);
 		wrapBounds(index, count);
 		expand(other.count);
-		copy(&contents[index], &contents[index+other.count], count - index);
-		copy(other.contents, &contents[index], other.count);
+		copy(&contents.data()[index], &contents.data()[index+other.count], count - index);
+		copy(other.contents.data(), &contents.data()[index], other.count);
 		count += other.count;
 		return *this;
 	}
@@ -357,7 +357,7 @@ public:
 	/// 	but does not guarantee the capacity will be EXACTLY `count`.
 	///		For that, use `resize`.
 	constexpr SelfType& reserve(SizeType const count) {
-		while (count >= maximum)
+		while (count >= contents.size())
 			increase();
 		return *this;
 	}
@@ -370,9 +370,8 @@ public:
 	/// 	If you need the capacity to be AT LEAST `newSize`, use `reserve`.
 	constexpr SelfType& resize(SizeType const newSize) {
 		if (!newSize) return clear();
-		if (contents)	memresize(contents, newSize, maximum, count);
-		else			contents = memcreate(newSize);
-		maximum = newSize;
+		if (contents.size())	remake(newSize); 
+		else					contents.create(newSize);
 		if (count > newSize)
 			count = newSize;
 		recalculateMagnitude();
@@ -405,7 +404,7 @@ public:
 		reserve(count);
 		if (count > this->count) {
 			for (SizeType i = this->count; i < count; ++i)
-				contents[i] = fill;
+				contents.data()[i] = fill;
 			this->count = count;
 		}
 		return *this;
@@ -426,7 +425,7 @@ public:
 		resize(newSize);
 		if (newSize > count)
 			for (SizeType i = count; i < newSize; ++i)
-				contents[i] = fill;
+				contents.data()[i] = fill;
 		count = newSize;
 		return *this;
 	}
@@ -456,7 +455,7 @@ public:
 	/// @brief Reverses the `List`.
 	/// @return Reference to self.
 	constexpr SelfType& reverse() {
-		::CTL::reverse(contents, count);
+		::CTL::reverse(begin(), end());
 		return *this;
 	}
 
@@ -815,7 +814,7 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		expand(end - begin);
-		copy(begin, contents + count, end - begin);
+		copy(begin, contents.data() + count, end - begin);
 		count += (end - begin);
 		return *this;
 	}
@@ -835,7 +834,7 @@ public:
 	template<SizeType S>
 	constexpr SelfType& appendBack(As<DataType[S]> const& values) {
 		expand(S);
-		copy(values, contents + count, S);
+		copy(values, contents.data() + count, S);
 		count += S;
 		return *this;
 	}
@@ -846,7 +845,7 @@ public:
 	///		Does not free the underlying array held by the `List`.
 	///		To actually free the underlying array, call `dispose`. 
 	constexpr SelfType& clear() {
-		memdestruct(contents, count);
+		MX::objclear(contents.data(), count);
 		count = 0;
 		return *this;
 	}
@@ -864,9 +863,9 @@ public:
 	/// @param other Other `List`.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
-		memdestruct(contents, count);
+		MX::objclear(contents.data(), count);
 		resize(other.count);
-		copy(other.contents, contents, other.count);
+		copy(other.contents.data(), contents.data(), other.count);
 		count = other.count;
 		return *this;
 	}
@@ -876,66 +875,64 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
 		if (inCompileTime()) {
-			memdestruct(contents, count);
+			MX::objclear(contents.data(), count);
 			resize(other.count);
-			copy(other.contents, contents, other.count);
+			copy(other.contents.data(), contents.data(), other.count);
 			count = other.count;
 		} else {
-			memdestroy(contents, maximum, count);
-			maximum			= CTL::move(other.maximum);
-			contents		= CTL::move(other.contents);
-			count			= CTL::move(other.count);
-			magnitude		= CTL::move(other.magnitude);
-			other.contents	= nullptr;
+			destroy(count);
+			contents	= CTL::move(other.contents);
+			count		= CTL::move(other.count);
+			magnitude	= CTL::move(other.magnitude);
 		}
 		return *this;
 	}
 
 	/// @brief Returns a pointer to the underlying array.
 	/// @return Pointer to the underlying array.
-	constexpr PointerType		data()			{return contents;	}
+	constexpr PointerType		data()			{return contents.data();	}
 	/// @brief Returns a pointer to the underlying array.
 	/// @return Pointer to the underlying array.
-	constexpr ConstPointerType	data() const	{return contents;	}
+	constexpr ConstPointerType	data() const	{return contents.data();	}
 
 	/// @brief Returns an iterator to the beginning of the `List`.
 	/// @return Iterator to the beginning of the `List`.
-	constexpr IteratorType		begin()			{return contents;		}
+	constexpr IteratorType		begin()			{return contents.data();		}
 	/// @brief Returns an iterator to the end of the `List`.
 	/// @return Iterator to the end of the `List`.
-	constexpr IteratorType		end()			{return contents+count;	}
+	constexpr IteratorType		end()			{return contents.data()+count;	}
 	/// @brief Returns an iterator to the beginning of the `List`.
 	/// @return Iterator to the beginning of the `List`.
-	constexpr ConstIteratorType	begin() const	{return contents;		}
+	constexpr ConstIteratorType	begin() const	{return contents.data();		}
 	/// @brief Returns an iterator to the end of the `List`.
 	/// @return Iterator to the end of the `List`.
-	constexpr ConstIteratorType	end() const		{return contents+count;	}
+	constexpr ConstIteratorType	end() const		{return contents.data()+count;	}
 
 	/// @brief Returns a reverse iterator to the beginning of the `List`.
 	/// @return Reverse iterator to the beginning of the `List`.
-	constexpr ReverseIteratorType		rbegin()		{return ReverseIteratorType(contents+count);		}
+	constexpr ReverseIteratorType		rbegin()		{return ReverseIteratorType(contents.data()+count);			}
 	/// @brief Returns a reverse iterator to the end of the `List`.
 	/// @return Reverse iterator to the end of the `List`.
-	constexpr ReverseIteratorType		rend()			{return ReverseIteratorType(contents);				}
+	constexpr ReverseIteratorType		rend()			{return ReverseIteratorType(contents.data());				}
 	/// @brief Returns a reverse iterator to the beginning of the `List`.
 	/// @return Reverse iterator to the beginning of the `List`.
-	constexpr ConstReverseIteratorType	rbegin() const	{return ConstReverseIteratorType(contents+count);	}
+	constexpr ConstReverseIteratorType	rbegin() const	{return ConstReverseIteratorType(contents.data()+count);	}
 	/// @brief Returns a reverse iterator to the end of the `List`.
 	/// @return Reverse iterator to the end of the `List`.
-	constexpr ConstReverseIteratorType	rend() const	{return ConstReverseIteratorType(contents);			}
+	constexpr ConstReverseIteratorType	rend() const	{return ConstReverseIteratorType(contents.data());			}
 
 	/// @brief Returns a pointer to the beginning of the `List`.
 	/// @return Pointer to the beginning of the `List`.
-	constexpr PointerType	cbegin()			{return contents;		}
+	constexpr PointerType	cbegin()			{return contents.data();		}
 	/// @brief Returns a pointer to the end of the `List`.
 	/// @return Pointer to the end of the `List`.
-	constexpr PointerType	cend()				{return contents+count;	}
+	constexpr PointerType	cend()				{return contents.data()+count;	}
 	/// @brief Returns a pointer to the beginning of the `List`.
 	/// @return Pointer to the beginning of the `List`.
-	constexpr ConstPointerType	cbegin() const	{return contents;		}
+	constexpr ConstPointerType	cbegin() const	{return contents.data();		}
 	/// @brief Returns a pointer to the end of the `List`.
 	/// @return Pointer to the end of the `List`.
-	constexpr ConstPointerType	cend() const	{return contents+count;	}
+	constexpr ConstPointerType	cend() const	{return contents.data()+count;	}
 	
 	/// @brief Returns the value of the first element.
 	/// @return Reference to the first element.
@@ -962,7 +959,7 @@ public:
 		if (!count) emptyError();
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		return contents[index];
+		return contents.data()[index];
 	}
 
 	/// @brief Returns the value of the element at a given index.
@@ -973,7 +970,7 @@ public:
 		if (!count) emptyError();
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		return contents[index];
+		return contents.data()[index];
 	}
 
 	/// @brief Returns the value of the element at a given index.
@@ -992,7 +989,7 @@ public:
 	constexpr SizeType size() const		{return count;		}
 	/// @brief Returns the current size of the underlying array.
 	/// @return Size of the underlying array.
-	constexpr SizeType capacity() const	{return maximum;	}
+	constexpr SizeType capacity() const	{return contents.size();	}
 	/// @brief Returns whether the list is empty.
 	/// @return Whether the array is list.
 	constexpr SizeType empty() const	{return count == 0;	}
@@ -1024,7 +1021,7 @@ public:
 	requires (Type::Different<DataType, T2> && Type::Convertible<DataType, T2>) {
 		List<T2, SizeType> result(count);
 		for (usize i = 0; i < count; ++i)
-			result[i] = T2(contents[i]);
+			result[i] = T2(contents.data()[i]);
 		return result;
 	}
 
@@ -1040,7 +1037,7 @@ public:
 		while (result) {
 			if (i == count || i == other.count)
 				return count == other.count;
-			result = ComparatorType::equals(contents[i], other.contents[i]);
+			result = ComparatorType::equals(contents.data()[i], other.contents.data()[i]);
 			++i;
 		}
 		return result;
@@ -1058,7 +1055,7 @@ public:
 		while (result == Order::EQUAL) {
 			if (i == count || i == other.count)
 				return count <=> other.count;
-			result = ComparatorType::compare(contents[i], other.contents[i]);
+			result = ComparatorType::compare(contents.data()[i], other.contents.data()[i]);
 			++i;
 		}
 		return result;
@@ -1078,7 +1075,7 @@ public:
 			min		= (count < other.count ? count : other.count)
 		;
 		for (SizeType i = 0; i < max; ++i)
-			if (!ComparatorType::equals(contents[i], other.contents[i])) ++diff;
+			if (!ComparatorType::equals(contents.data()[i], other.contents.data()[i])) ++diff;
 		return diff + (max - min);
 	}
 
@@ -1189,10 +1186,10 @@ public:
 			bool miss = false;
 			for(SizeType j = count - 1; j >= 0; --j) {
 				if (i == j) break;
-				if ((miss = !compare(contents[i], contents[j])))
+				if ((miss = !compare(contents.data()[i], contents.data()[j])))
 					break;
 			}
-			if (!miss) result.pushBack(contents[i]);
+			if (!miss) result.pushBack(contents.data()[i]);
 		}
 		return result;
 	}
@@ -1212,7 +1209,7 @@ public:
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.pushBack(sep);
-			result.appendBack(contents[i]);
+			result.appendBack(contents.data()[i]);
 		}
 		return result;
 	}
@@ -1226,7 +1223,7 @@ public:
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.appendBack(sep);
-			result.appendBack(contents[i]);
+			result.appendBack(contents.data()[i]);
 		}
 		return result;
 	}
@@ -1237,7 +1234,7 @@ public:
 		if (!count) return DataType();
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
-			result.appendBack(contents[i]);
+			result.appendBack(contents.data()[i]);
 		}
 		return result;
 	}
@@ -1247,7 +1244,7 @@ public:
 
 	/// @brief Returns whether the current size matches the current capacity.
 	/// @return Whether the current size matches the current capacity.
-	constexpr bool tight() const {return count == maximum;}
+	constexpr bool tight() const {return count == contents.size();}
 
 	/// @brief `swap` algorithm for `List`.
 	/// @param a `List` to swap.
@@ -1261,10 +1258,7 @@ public:
 
 	/// @brief Returns the associated allocator.
 	/// @return Allocator.
-	constexpr auto allocator() const	{return alloc;}
-	/// @brief Returns the associated allocator.
-	/// @return Allocator.
-	constexpr auto& allocator()			{return alloc;}
+	constexpr auto allocator() const	{return contents.allocator();}
 
 private:
 	using Iteratable::wrapBounds;
@@ -1274,60 +1268,43 @@ private:
 	constexpr SelfType& squash(SizeType const i) {
 		if (!count) return *this;
 		if (count > 1 && i < count-1)
-			copy(contents + i + 1, contents + i, count-i-1);
-		MX::destruct(contents+count-1);
+			copy(contents.data() + i + 1, contents.data() + i, count-i-1);
+		MX::destruct(contents.data()+count-1);
 		return *this;
 	}
 
 	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
 		if (!count) return *this;
 		if (count > 1 && start < count-1)
-			copy(contents + start + amount, contents + start, count-(start+amount));
-		MX::objclear(contents+start, amount);
+			copy(contents.data() + start + amount, contents.data() + start, count-(start+amount));
+		MX::objclear(contents.data()+start, amount);
 		return *this;
 	}
 
 	constexpr void dump() {
-		memdestroy(contents, maximum, count);
-		contents	= nullptr;
-		maximum		= 0;
-		count		= 0;
+		destroy(count);
+		count = 0;
 	}
 
-	constexpr static void memdestruct(ref<DataType> const& p, SizeType const sz) {
-		if (!(sz && p)) return;
-		if constexpr (!Type::Standard<DataType>) {
-			for (auto i = p; i != (p+sz); ++i)
-				MX::destruct(i);
-		}
+	constexpr void destroy(SizeType const count) {
+		if (contents.size()) return;
+		MX::objclear(contents.data(), count);
+		contents.free();
 	}
 
-	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz, SizeType const count) {
-		if (!p) return;
-		memdestruct(p, count);
-		alloc.deallocate(p, sz);
-	}
-
-	constexpr owner<DataType> memcreate(SizeType const sz) {
-		return alloc.allocate(sz);
-	}
-
-	constexpr void memresize(ref<DataType>& data, SizeType const sz, SizeType const oldsz, SizeType const count) {
-		auto const newCount = count < sz ? count : sz;
-		if (Type::Standard<DataType> && inRunTime()) {
-			auto tmp = alloc.allocate(sz);
-			MX::memcpy(tmp, data, newCount);
-			alloc.deallocate(data, oldsz);
-			data = tmp;
-		} else if (!count) {
-			alloc.deallocate(data, oldsz);
-			data = alloc.allocate(sz);
-		} else {
-			auto ndata = alloc.allocate(sz);
-			if (count) copy(data, ndata, newCount);
-			memdestroy(data, oldsz, count);
-			data = ndata;
-		}
+	constexpr void remake(usize const newSize) {
+		auto const newCount = (count < newSize) ? count : newSize;
+		auto const COPY_FN = [&] (ref<DataType> const dst, ref<DataType const> const src) {
+			copy(src, dst, newCount);
+			MX::objclear(src, count);
+		};
+		if (!newSize) {
+			MX::objclear(contents.data(), count);
+			contents.free();
+		} else if (!newSize)
+			contents.resize(newSize);
+		else contents.resize(newSize, COPY_FN);
+		count = newCount;
 	}
 
 	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
@@ -1338,15 +1315,14 @@ private:
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
-		if (contents) return *this;
-		else contents = memcreate(size);
-		maximum = size;
+		if (contents.size()) return *this;
+		else contents.create(size);
 		recalculateMagnitude();
 		return *this;
 	}
 
 	constexpr SelfType& recalculateMagnitude() {
-		if (maximum == 0) {
+		if (contents.size() == 0) {
 			magnitude = 1;
 			return *this;
 		}
@@ -1354,7 +1330,7 @@ private:
 		SizeType const order = (sizeof(SizeType) * 8)-1;
 		for (SizeType i = 1; i <= order; ++i) {
 			magnitude = static_cast<SizeType>(1) << (order - i);
-			if ((maximum >> (order - i)) & 1) {
+			if ((contents.size() >> (order - i)) & 1) {
 				magnitude <<= static_cast<SizeType>(1);
 				return *this;
 			}
@@ -1398,13 +1374,11 @@ private:
 	}
 
 	/// @brief Next underlying array size.
-	SizeType		magnitude	= 1;
-	/// @brief True underlying array size.
-	SizeType		maximum		= 0;
+	SizeType						magnitude	= 1;
 	/// @brief Element count.
-	SizeType		count		= 0;
+	SizeType						count		= 0;
 	/// @brief Underlying array.
-	owner<DataType>	contents	= nullptr;
+	MemorySlice<DataType, TAlloc>	contents;
 };
 
 //static_assert(List<int>().empty());
