@@ -229,9 +229,16 @@ namespace MX {
 	template<Type::NonVoid T>
 	[[nodiscard]]
 	constexpr owner<T> malloc(usize sz) {
+		CTL_DEVMODE_FN_DECL;
 		if (!(sz + 1)) unreachable();
 		if (!sz) throw AllocationFailure();
+		CTL_DEVMODE_OUT("Allocating [");
+		CTL_DEVMODE_OUT(sz);
+		CTL_DEVMODE_OUT(" Element(s) : ");
+		CTL_DEVMODE_OUT(sz * sizeof(T));
+		CTL_DEVMODE_OUT(" Byte(s)]...\n");
 		owner<T> m = static_cast<owner<T>>(__builtin_malloc(sz * sizeof(T)));
+		CTL_DEVMODE_OUT("Allocated successfully\n");
 		if (!m) throw AllocationFailure();
 		return m;
 	}
@@ -256,7 +263,9 @@ namespace MX {
 	/// @param mem Pointer to allocated memory.
 	template<Type::NonVoid T>
 	constexpr void free(owner<T> const mem) {
-		if (mem) return __builtin_free(mem);
+		CTL_DEVMODE_OUT("Freeing memory...\n");
+		if (mem) __builtin_free(mem);
+		CTL_DEVMODE_OUT("Memory freed\n");
 	}
 
 	/// @brief Reallocates memory allocated in the heap.

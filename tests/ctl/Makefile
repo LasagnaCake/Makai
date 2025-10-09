@@ -1,12 +1,18 @@
 #CC	:= gcc
 #CXX	:= g++
 
+dev ?= 1
+
 LEAN := -static -s
 
 ROOT := ../..
 
+ifeq ($(dev), 1)
+DEVMODE := -DCTL_DEVMODE_DEBUG
+endif
+
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/src/makai/ctl
-DEBUGMODE := -DCTL_CONSOLE_OUT -Wall -Wpedantic
+DEBUGMODE := -DCTL_CONSOLE_OUT $(DEVMODE) -Wall -Wpedantic
 
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32

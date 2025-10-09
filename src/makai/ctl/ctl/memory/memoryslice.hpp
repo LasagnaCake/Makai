@@ -28,7 +28,8 @@ struct MemorySlice:
 
 	using
 		typename Typed::DataType,
-		typename Typed::PointerType
+		typename Typed::PointerType,
+		typename Typed::ConstPointerType
 	;
 
 	using CopyFunctionType = void(ref<DataType> const, ref<DataType const> const);
@@ -79,21 +80,25 @@ struct MemorySlice:
 
 	/// @brief Returns whether the memory slice is empty.
 	/// @return Whether memory slice is empty.
-	constexpr bool empty() const		{return !length;						}
+	constexpr bool empty() const			{return !length;						}
 	/// @brief Returns the maximum element count of the memory slice.
 	/// @return Maxumum element count of memory slice.
-	constexpr usize size() const		{return length;							}
+	constexpr usize size() const			{return length;							}
 	/// @brief Returns the size (in bytes) of the memory slice.
 	/// @return Size of the memory slice.
-	constexpr usize byteSize() const	{return length * sizeof (DataType);		}
+	constexpr usize byteSize() const		{return length * sizeof (DataType);		}
 	/// @brief Returns a pointer to the start of the memory slice.
 	/// @return Pointer to start of memory slice.
-	constexpr PointerType data() const	{return contents;						}
+	constexpr PointerType data() 			{return contents;						}
+	/// @brief Returns a pointer to the start of the memory slice.
+	/// @return Pointer to start of memory slice.
+	constexpr ConstPointerType data() const	{return contents;						}
 
 	/// @brief Allocates (or resizes) the memory slice.
 	/// @param sz Element count.
 	/// @return Reference to self.
 	constexpr SelfType& invoke(usize const sz) {
+		//CTL_DEVMODE_FN_DECL;
 		if (!sz) return *this;
 		resize(sz);
 		return *this;
@@ -106,6 +111,7 @@ struct MemorySlice:
 	/// @return Reference to self.
 	template <Type::Functional<CopyFunctionType> TCopyFunction>
 	constexpr SelfType& invoke(usize const sz, TCopyFunction const& copy) {
+		//CTL_DEVMODE_FN_DECL;
 		if (!sz) return *this;
 		resize(sz, copy);
 		return *this;
@@ -115,6 +121,7 @@ struct MemorySlice:
 	/// @param sz Element count.
 	/// @return Reference to self.
 	constexpr SelfType& create(usize const sz) {
+		CTL_DEVMODE_FN_DECL;
 		if (!sz || contents) return *this;
 		contents = alloc.allocate(sz);
 		length = sz;
@@ -125,6 +132,7 @@ struct MemorySlice:
 	/// @param sz Element count.
 	/// @return Reference to self.
 	constexpr SelfType& resize(usize const newSize) {
+		//CTL_DEVMODE_FN_DECL;
 		if (!newSize) return free();
 		if (!contents) return create(newSize);
 		auto temp = alloc.allocate(newSize);
@@ -141,6 +149,7 @@ struct MemorySlice:
 	/// @return Reference to self.
 	template <Type::Functional<CopyFunctionType> TCopyFunction>
 	constexpr SelfType& resize(usize const newSize, TCopyFunction const& copy) {
+		//CTL_DEVMODE_FN_DECL;
 		if (!newSize) return free();
 		if (!contents) return create(newSize);
 		auto temp = alloc.allocate(newSize);
@@ -154,6 +163,8 @@ struct MemorySlice:
 	/// @brief Frees the memory managed by the slice.
 	/// @return Reference to self.
 	constexpr SelfType& free() {
+		// Adding this debug line makes it stop fucking up memory somehow
+		//CTL_DEVMODE_FN_DECL;
 		if (!contents) return *this;
 		alloc.deallocate(contents, length);
 		contents	= nullptr;

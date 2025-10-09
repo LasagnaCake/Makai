@@ -154,6 +154,7 @@ struct ContextAllocator {
 	constexpr
 	#endif
 	owner<TData> allocate(usize const sz) {
+		CTL_DEVMODE_FN_DECL;
 		if (!sz) return nullptr;
 		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
 		if (inCompileTime())

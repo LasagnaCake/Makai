@@ -15,6 +15,8 @@
 #include "../../adapter/comparator.hpp"
 #include "../../memory/memory.hpp"
 
+#include <iostream>
+
 CTL_NAMESPACE_BEGIN
 
 template<
@@ -986,13 +988,13 @@ public:
 
 	/// @brief Returns the current element count.
 	/// @return Element count.
-	constexpr SizeType size() const		{return count;		}
+	constexpr SizeType size() const		{return count;				}
 	/// @brief Returns the current size of the underlying array.
 	/// @return Size of the underlying array.
 	constexpr SizeType capacity() const	{return contents.size();	}
 	/// @brief Returns whether the list is empty.
 	/// @return Whether the array is list.
-	constexpr SizeType empty() const	{return count == 0;	}
+	constexpr SizeType empty() const	{return count == 0;			}
 
 	/// @brief Equality operator.
 	/// @param other Other `List` to compare with.
@@ -1266,6 +1268,7 @@ private:
 	ContextAllocatorType alloc;
 
 	constexpr SelfType& squash(SizeType const i) {
+		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
 		if (count > 1 && i < count-1)
 			copy(contents.data() + i + 1, contents.data() + i, count-i-1);
@@ -1274,6 +1277,7 @@ private:
 	}
 
 	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
+		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
 		if (count > 1 && start < count-1)
 			copy(contents.data() + start + amount, contents.data() + start, count-(start+amount));
@@ -1282,17 +1286,20 @@ private:
 	}
 
 	constexpr void dump() {
+		CTL_DEVMODE_FN_DECL;
 		destroy(count);
 		count = 0;
 	}
 
 	constexpr void destroy(SizeType const count) {
-		if (contents.size()) return;
-		MX::objclear(contents.data(), count);
+		CTL_DEVMODE_FN_DECL;
+		if (contents.empty()) return;
+		if (count) MX::objclear(contents.data(), count);
 		contents.free();
 	}
 
 	constexpr void remake(usize const newSize) {
+		CTL_DEVMODE_FN_DECL;
 		auto const newCount = (count < newSize) ? count : newSize;
 		auto const COPY_FN = [&] (ref<DataType> const dst, ref<DataType const> const src) {
 			copy(src, dst, newCount);
@@ -1308,6 +1315,7 @@ private:
 	}
 
 	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+		CTL_DEVMODE_FN_DECL;
 		if (!count) return;
 		if (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
@@ -1315,6 +1323,7 @@ private:
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
+		CTL_DEVMODE_FN_DECL;
 		if (contents.size()) return *this;
 		else contents.create(size);
 		recalculateMagnitude();
@@ -1322,6 +1331,8 @@ private:
 	}
 
 	constexpr SelfType& recalculateMagnitude() {
+		CTL_DEVMODE_FN_DECL;
+		constexpr usize ONE = static_cast<SizeType>(1);
 		if (contents.size() == 0) {
 			magnitude = 1;
 			return *this;
@@ -1329,9 +1340,9 @@ private:
 		magnitude = 0;
 		SizeType const order = (sizeof(SizeType) * 8)-1;
 		for (SizeType i = 1; i <= order; ++i) {
-			magnitude = static_cast<SizeType>(1) << (order - i);
+			magnitude = ONE << (order - i);
 			if ((contents.size() >> (order - i)) & 1) {
-				magnitude <<= static_cast<SizeType>(1);
+				magnitude <<= ONE;
 				return *this;
 			}
 		}
@@ -1340,12 +1351,14 @@ private:
 	}
 
 	constexpr SelfType& increase() {
+		CTL_DEVMODE_FN_DECL;
 		if (magnitude == 0) atItsLimitError();
 		resize(magnitude);
 		return *this;
 	}
 
 	constexpr SelfType& grow(SizeType const count) {
+		CTL_DEVMODE_FN_DECL;
 		if (SizeType(this->count + count) < this->count)
 			atItsLimitError();
 		SizeType const newSize = this->count + count;
@@ -1354,6 +1367,7 @@ private:
 	}
 
 	constexpr void assertIsInBounds(IndexType const index) const {
+		CTL_DEVMODE_FN_DECL;
 		if (index > static_cast<IndexType>(count-1)) outOfBoundsError();
 	}
 
