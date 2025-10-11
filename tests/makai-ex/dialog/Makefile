@@ -15,7 +15,7 @@ sinclude $(ROOT)/make/os-windows.make
 
 NOCMD := -mwindows
 
-o?=2
+o?=3
 
 ifdef debug-release
 RELEASEMODE := $(DEBUGMODE)
