@@ -16,18 +16,18 @@ namespace Error {
 		struct NAME: public Generic {\
 			NAME (\
 				String const&			message,\
-				CPP::SourceFile const&	src			= CTL_CPP_DEFAULT_SOURCE\
+				CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
 			): Generic (#NAME, message, src.file, src.lineName(), src.function, "none", "none") {}\
 			NAME (\
 				String const&			message,\
 				String const&			info,\
-				CPP::SourceFile const&	src			= CTL_CPP_DEFAULT_SOURCE\
+				CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
 			): Generic (#NAME, message, src.file, src.lineName(), src.function, info, "none") {}\
 			NAME (\
 				String const&			message,\
 				String const&			info,\
 				String const&			callerInfo,\
-				CPP::SourceFile const&	src			= CTL_CPP_DEFAULT_SOURCE\
+				CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
 			): Generic (#NAME, message, src.file, src.lineName(), src.function, info, callerInfo) {}\
 		}
 
@@ -92,19 +92,41 @@ CTL_NAMESPACE_END
 	struct NAME: public ::CTL::Error::Generic {\
 		NAME (\
 			::CTL::String const&			message,\
-			::CTL::CPP::SourceFile const&	src			= CTL_CPP_DEFAULT_SOURCE\
+			::CTL::CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
 		): ::CTL::Error::Generic (#NAME, message, src.file, src.lineName(), src.function, "none", "none") {}\
 		NAME (\
 			::CTL::String const&			message,\
 			::CTL::String const&			info,\
-			::CTL::CPP::SourceFile const&	src			= CTL_CPP_DEFAULT_SOURCE\
+			::CTL::CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
 		): ::CTL::Error::Generic (#NAME, message, src.file, src.lineName(), src.function, info, "none") {}\
 		NAME (\
 			::CTL::String const&			message,\
 			::CTL::String const&			info,\
 			::CTL::String const&			callerInfo,\
-			::CTL::CPP::SourceFile const&	src			= CTL_CPP_DEFAULT_SOURCE\
+			::CTL::CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
 		): ::CTL::Error::Generic (#NAME, message, src.file, src.lineName(), src.function, info, callerInfo) {}\
+	}
+
+
+/// @brief Defines a custom error type from a base.
+/// @param NAME Class name.
+#define DEFINE_ERROR_TYPE_EX(NAME, BASE)\
+	struct NAME: public ::CTL::Error::BASE {\
+		NAME (\
+			::CTL::String const&			message,\
+			::CTL::CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
+		): BASE (#NAME ": " + message, src) {}\
+		NAME (\
+			::CTL::String const&			message,\
+			::CTL::String const&			info,\
+			::CTL::CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
+		): BASE (#NAME ": " + message, info, src) {}\
+		NAME (\
+			::CTL::String const&			message,\
+			::CTL::String const&			info,\
+			::CTL::String const&			callerInfo,\
+			::CTL::CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
+		): BASE (#NAME ": " + message, info, callerInfo, src) {}\
 	}
 
 #endif // CTL_CUSTOM_RUNTIME_ERRORS_H
