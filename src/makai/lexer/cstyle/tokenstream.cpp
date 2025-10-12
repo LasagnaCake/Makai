@@ -10,7 +10,7 @@ struct TokenStream::Lexer {
 };
 
 bool TokenStream::next() {
-	if (isFinished) return false;
+	if (!lexer || isFinished) return false;
 	if (stb_c_lexer_get_token(&lexer->lexer)) {
 		auto& lex = lexer->lexer;
 		switch (lex.token) {
@@ -19,8 +19,7 @@ bool TokenStream::next() {
 				stb_lex_location loc;
 				stb_c_lexer_get_location(&lex, lex.where_firstchar, &loc);
 				err = TokenStream::Error{
-					loc.line_number,
-					loc.line_offset,
+					position(),
 					String(lex.where_firstchar, lex.where_lastchar)
 				};
 				curToken.type = Token::Type::LTS_TT_INVALID;
@@ -48,12 +47,34 @@ bool TokenStream::next() {
 	return !isFinished;
 }
 
+TokenStream::Position TokenStream::position() const {
+	if (!lexer) return {
+		Limit::MAX<usize>,
+		Limit::MAX<usize>,
+		Limit::MAX<usize>
+	};
+	stb_lex_location loc;
+	auto& lex = lexer->lexer;
+	stb_c_lexer_get_location(&lex, lex.where_firstchar, &loc);
+	return {
+		location(),
+		static_cast<usize>(loc.line_number),
+		static_cast<usize>(loc.line_offset)
+	};
+}
+
+usize TokenStream::location() const {
+	if (!lexer) return -1;
+	auto& lex = lexer->lexer;
+	return static_cast<usize>(lex.where_firstchar - lex.input_stream);
+}
+
 void TokenStream::assertOK() const {
 	if (err)
 		throw TokenStream::InvalidToken(
 			toString(
 				"Invalid token \"", err.value().token, "\"!"
-				"\nAt line [", err.value().line,"], column [", err.value().column,"]"
+				"\nAt line [", err.value().where.line,"], column [", err.value().where.column,"]"
 			),
 			CTL_CPP_PRETTY_SOURCE
 		);
@@ -78,7 +99,7 @@ TokenStream& TokenStream::open(String const& source) {
 }
 
 TokenStream& TokenStream::close() {
-	if (lexer) return *this;
+	if (!lexer) return *this;
 	lexer.unbind();
 	isFinished = true;
 	return *this;

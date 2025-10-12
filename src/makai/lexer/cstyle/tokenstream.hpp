@@ -9,11 +9,20 @@ namespace Makai::Lexer::CStyle {
 	struct TokenStream {
 		DEFINE_ERROR_TYPE_EX(InvalidToken, InvalidValue);
 
+		/// @brief Token position in the stream.
+		struct Position {
+			/// @brief Index into the text.
+			usize at;
+			/// @brief Token line number.
+			usize line;
+			/// @brief Token column.
+			usize column;
+		};
+
 		/// @brief Token stream error.
 		struct Error {
-			usize	line;
-			usize	column;
-			String	token;
+			Position	where;
+			String		token;
 		};
 
 		/// @brief Token stream token.
@@ -80,7 +89,7 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_BIT_SHIFT_RIGHT_ASSIGN,
 			};
 
-			/// @brief Primitive value variant.
+			/// @brief Value literal variant.
 			struct Value {
 				/// @brief Value type.
 				enum class Type {
@@ -192,14 +201,6 @@ namespace Makai::Lexer::CStyle {
 				};
 			};
 
-			/// @brief A token position in a file.
-			struct Position {
-				/// @brief Token line number.
-				usize line;
-				/// @brief Token column.
-				usize column;
-			};
-
 			/// @brief Token type.
 			Type	type		= Type::LTS_TT_INVALID;
 			/// @brief Token value.
@@ -238,6 +239,14 @@ namespace Makai::Lexer::CStyle {
 		/// @return Current token.
 		constexpr Token current() const {return curToken;}
 
+		/// @brief Returns the token stream's current position, INCLUDING line & column number.
+		/// @return Current position.
+		Position position() const;
+
+		/// @brief Returns the token stream's current position, EXCLUDING line & column number.
+		/// @return Current position.
+		usize location() const;
+
 		/// @brief Returns whether the token stream has finished processing.
 		/// @return Whether stream is finished.
 		bool finished() const;
@@ -248,7 +257,7 @@ namespace Makai::Lexer::CStyle {
 		
 		/// @brief Returns whether the token stream has not encountered an error.
 		/// @return Whether stream has not encountered an error.
-		constexpr operator bool() const {return ok();}
+		operator bool() const {return finished();}
 
 		/// @brief Returns the current error.
 		/// @return Current error.

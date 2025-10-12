@@ -153,8 +153,10 @@ namespace Makai::JSON {
 		template<Impl::Accessible T>
 		inline T get() const {
 			T result;
-			if (isNull())
+			if (isNull() && Type::Different<T, nulltype>) {
+				err = "Value is null";
 				typeMismatchError<T>();
+			}
 			if (!tryGet<T>(result))
 				typeMismatchError<T>();
 			return result;
@@ -330,7 +332,7 @@ namespace Makai::JSON {
 		[[noreturn]] void typeMismatchError() const {
 			throw Error::FailedAction(
 				"Parameter '" + name + "' is not of type '"
-				+ TypeInfo<T>::name() + "'!",
+				+ nameof<T>() + "'!",
 				err,
 				CTL_CPP_PRETTY_SOURCE
 			);
