@@ -94,6 +94,29 @@ namespace Makai::Lexer::CStyle {
 				/// @brief Default constructor.
 				constexpr Value() {}
 
+				/// @brief Copy constructor.
+				constexpr Value(Value const& other)	{
+					switch (valType = other.valType) {
+						case (Type::LTS_TVT_INTEGER):	integer		= other.integer; break;
+						case (Type::LTS_TVT_REAL):		real		= other.real; break;
+						case (Type::LTS_TVT_STRING):	string		= other.string; break;
+						case (Type::LTS_TVT_CHARACTER): character	= other.character; break;
+						default: break;
+					}	
+				}
+
+				/// @brief Copy assignment operator.
+				constexpr Value& operator=(Value const& other)	{
+					switch (valType = other.valType) {
+						case (Type::LTS_TVT_INTEGER):	integer		= other.integer; break;
+						case (Type::LTS_TVT_REAL):		real		= other.real; break;
+						case (Type::LTS_TVT_STRING):	string		= other.string; break;
+						case (Type::LTS_TVT_CHARACTER): character	= other.character; break;
+						default: break;
+					}
+					return *this;
+				}
+
 				/// @brief Destructor.
 				constexpr ~Value() {
 					switch (valType) {
@@ -185,9 +208,27 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Lexer implementation.
 		struct Lexer;
+		
+		/// @brief Empty constructor.
+		TokenStream();
 
-		/// @brief Constructs the token stream from a source file's contents.
+		/// @brief Destructor.
+		~TokenStream();
+
+		/// @brief Opens the token stream.
+		/// @param source Source content to process.
+		/// @note Source is copied to an internal buffer, so there's no need to keep it around.
 		TokenStream(String const& source);
+
+		/// @brief Opens the token stream.
+		/// @param source Source content to process.
+		/// @return Reference to self.
+		/// @note Source is copied to an internal buffer, so there's no need to keep it around.
+		TokenStream& open(String const& source);
+
+		/// @brief Closes the token stream.
+		/// @return Reference to self.
+		TokenStream& close();
 
 		/// @brief Fetches the next token.
 		/// @return Whether no more tokens could be fetched.
@@ -195,22 +236,39 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Returns the current token.
 		/// @return Current token.
-		Token current() const;
+		constexpr Token current() const {return curToken;}
 
-		/// @brief Returns
+		/// @brief Returns whether the token stream has finished processing.
+		/// @return Whether stream is finished.
 		bool finished() const;
 
-		bool ok() const;
+		/// @brief Returns whether the token stream has not encountered an error.
+		/// @return Whether stream has not encountered an error.
+		constexpr bool ok() const {return !err.exists();}
+		
+		/// @brief Returns whether the token stream has not encountered an error.
+		/// @return Whether stream has not encountered an error.
+		constexpr operator bool() const {return ok();}
 
+		/// @brief Returns the current error.
+		/// @return Current error.
+		constexpr Nullable<Error> error() const {return err;}
+
+		/// @brief Asserts that the token stream has not encountered an error.
+		/// @throw InvalidToken If an error was encountered.
 		void assertOK() const;
 
 	private:
+		/// @brief Current fetched token.
 		Token curToken;
 
+		/// @brief Current error.
 		Nullable<Error> err;
 
+		/// @brief Whether token stream has finished processing.
 		bool isFinished = false;
 
+		/// @brief Lexer implementation.
 		Unique<Lexer> lexer;
 	};
 }

@@ -10,6 +10,7 @@ struct TokenStream::Lexer {
 };
 
 bool TokenStream::next() {
+	if (isFinished) return false;
 	if (stb_c_lexer_get_token(&lexer->lexer)) {
 		auto& lex = lexer->lexer;
 		switch (lex.token) {
@@ -58,11 +59,27 @@ void TokenStream::assertOK() const {
 		);
 }
 
-TokenStream::TokenStream(String const& source): lexer(new Lexer{{}, source}) {
+TokenStream::TokenStream(String const& source)	{open(source);	}
+TokenStream::TokenStream()						{				}
+TokenStream::~TokenStream()						{close();		}
+
+TokenStream& TokenStream::open(String const& source) {
+	if (lexer) return *this;
+	lexer.bind(new Lexer{{}, source});
 	lexer->buffer.resize(4096, '\0');
 	stb_c_lexer_init(
 		&lexer->lexer,
 		lexer->source.begin(), lexer->source.end(),
 		lexer->buffer.data(), lexer->buffer.size()
 	);
+	err = nullptr;
+	isFinished = false;
+	return *this;
+}
+
+TokenStream& TokenStream::close() {
+	if (lexer) return *this;
+	lexer.unbind();
+	isFinished = true;
+	return *this;
 }
