@@ -45,10 +45,10 @@ struct InvalidAccessFailure: CatastrophicFailure {
 	constexpr cstring what() const noexcept override {return "Invalid memory access";}
 };
 
-/// @brief Crashes the program.
+/// @brief Crashes the program. Effectively throws a catastrophic, non-recoverable crash.
 [[noreturn]]
 inline void panic() {
-	throw Crash();
+	throw nullptr;
 }
 
 CTL_NAMESPACE_END
