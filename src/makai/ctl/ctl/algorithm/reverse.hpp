@@ -13,7 +13,7 @@ CTL_NAMESPACE_BEGIN
 template<Type::ReferenceIterator T>
 void reverse(T const& begin, T const& end) {
 	for(usize i = 0; i < (static_cast<usize>(end - begin)/2); ++i)
-		swap(*(begin + i), *(end - i));
+		swap(*(begin + i), *(end - i - 1));
 }
 
 /// @brief Reverses the given range of elements.
