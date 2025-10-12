@@ -1,4 +1,5 @@
 #ifndef CTL_MEMORY_MEMORYSLICE_H
+#define CTL_MEMORY_MEMORYSLICE_H
 
 #include "allocator.hpp"
 
@@ -29,7 +30,9 @@ struct MemorySlice:
 	using
 		typename Typed::DataType,
 		typename Typed::PointerType,
-		typename Typed::ConstPointerType
+		typename Typed::ConstPointerType,
+		typename Typed::ReferenceType,
+		typename Typed::ConstReferenceType
 	;
 
 	using CopyFunctionType = void(ref<DataType> const, ref<DataType const> const);
@@ -53,7 +56,7 @@ struct MemorySlice:
 		other.contents = nullptr;
 	}
 	
-	/// @brief Move assignment operator (deleted).
+	/// @brief Copy assignment operator (deleted).
 	constexpr SelfType& operator=(SelfType const& other) = delete;
 
 	/// @brief Move assignment operator (`MemorySlice`).
@@ -93,6 +96,23 @@ struct MemorySlice:
 	/// @brief Returns a pointer to the start of the memory slice.
 	/// @return Pointer to start of memory slice.
 	constexpr ConstPointerType data() const	{return contents;						}
+
+
+	/// @brief Gets the element at the given index.
+	/// @param index Element index.
+	/// @return Element at given index.
+	/// @note Index wraps around if it is bigger than the current size.
+	constexpr DataType& operator[](usize const index) {
+		return contents[index % length];
+	}
+
+	/// @brief Gets the element at the given index.
+	/// @param index Element index.
+	/// @return Element at given index.
+	/// @note Index wraps around if it is bigger than the current size.
+	constexpr DataType operator[](usize const index) const {
+		return contents[index % length];
+	}
 
 	/// @brief Allocates (or resizes) the memory slice.
 	/// @param sz Element count.
@@ -135,10 +155,9 @@ struct MemorySlice:
 		//CTL_DEVMODE_FN_DECL;
 		if (!newSize) return free();
 		if (!contents) return create(newSize);
-		auto temp = alloc.allocate(newSize);
 		alloc.deallocate(contents, length);
-		contents	= temp;
-		length		= newSize;
+		contents = alloc.allocate(newSize);
+		length = newSize;
 		return *this;
 	}
 
