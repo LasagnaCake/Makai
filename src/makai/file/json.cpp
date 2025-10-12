@@ -152,6 +152,8 @@ Makai::JSON::JSONValue::JSONValue(Makai::JSON::JSONValue const& other): JSONValu
 
 Makai::JSON::JSONValue::JSONValue(Makai::JSON::JSONView const& view): JSONValue(view.getName(), view.json()) {}
 
+Makai::JSON::JSONValue::~JSONValue() {}
+
 Makai::JSON::JSONValue& Makai::JSON::JSONValue::clear() {
 	data = Nlohmann::object();
 	return *this;

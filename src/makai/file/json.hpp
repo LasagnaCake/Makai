@@ -3,7 +3,9 @@
 
 #define JSON_NO_IO
 #pragma GCC diagnostic push
+#ifndef __clang__
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #include "_lib/nlohmann/json.hpp"
 #pragma GCC diagnostic pop
 #include "../compat/ctl.hpp"
@@ -387,6 +389,9 @@ namespace Makai::JSON {
 		/// @brief Copy constructor.
 		/// @param other `JSONValue` to copy from.
 		JSONValue(JSONValue const& other);
+
+		/// @brief Destructor.
+		~JSONValue();
 
 		/// @brief Returns the underlying JSON value as a binary format.
 		/// @param data Data to convert from.
