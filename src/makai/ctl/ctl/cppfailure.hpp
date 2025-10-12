@@ -48,6 +48,7 @@ struct InvalidAccessFailure: CatastrophicFailure {
 /// @brief Crashes the program. Effectively throws a catastrophic, non-recoverable crash.
 [[noreturn]]
 inline void panic() {
+	// Parry this you fucking casual
 	throw nullptr;
 }
 
