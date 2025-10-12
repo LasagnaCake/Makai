@@ -126,7 +126,7 @@ public:
 	constexpr explicit List(SizeType const size, DataType const& fill) {
 		invoke(size);
 		for (usize i = 0; i < size; ++i)
-			contents.data()[i] = fill;
+			contents[i] = fill;
 		count = size;
 	}
 
@@ -307,7 +307,7 @@ public:
 		assertIsInBounds(index);
 		wrapBounds(index, count);
 		if (count >= contents.size()) increase();
-		copy(&contents.data()[index], &contents.data()[index+1], count - index);
+		copy(contents.data() + index, contents.data() + index + 1, count - index);
 		MX::construct(contents.data()+index, value);
 		++count;
 		return *this;
@@ -323,8 +323,8 @@ public:
 		assertIsInBounds(index);
 		wrapBounds(index, count);
 		expand(other.count);
-		copy(&contents.data()[index], &contents.data()[index+other.count], count - index);
-		copy(other.contents.data(), &contents.data()[index], other.count);
+		copy(contents.data() + index, contents.data() + index+other.count, count - index);
+		copy(other.contents.data(), contents.data() + index, other.count);
 		count += other.count;
 		return *this;
 	}
@@ -407,7 +407,7 @@ public:
 		reserve(count);
 		if (count > this->count) {
 			for (SizeType i = this->count; i < count; ++i)
-				contents.data()[i] = fill;
+				contents[i] = fill;
 			this->count = count;
 		}
 		return *this;
@@ -428,7 +428,7 @@ public:
 		resize(newSize);
 		if (newSize > count)
 			for (SizeType i = count; i < newSize; ++i)
-				contents.data()[i] = fill;
+				contents[i] = fill;
 		count = newSize;
 		return *this;
 	}
@@ -962,7 +962,7 @@ public:
 		if (!count) emptyError();
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		return contents.data()[index];
+		return contents[index];
 	}
 
 	/// @brief Returns the value of the element at a given index.
@@ -973,7 +973,7 @@ public:
 		if (!count) emptyError();
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		return contents.data()[index];
+		return contents[index];
 	}
 
 	/// @brief Returns the value of the element at a given index.
@@ -1024,7 +1024,7 @@ public:
 	requires (Type::Different<DataType, T2> && Type::Convertible<DataType, T2>) {
 		List<T2, SizeType> result(count);
 		for (usize i = 0; i < count; ++i)
-			result[i] = T2(contents.data()[i]);
+			result[i] = T2(contents[i]);
 		return result;
 	}
 
@@ -1040,7 +1040,7 @@ public:
 		while (result) {
 			if (i == count || i == other.count)
 				return count == other.count;
-			result = ComparatorType::equals(contents.data()[i], other.contents.data()[i]);
+			result = ComparatorType::equals(contents[i], other.contents[i]);
 			++i;
 		}
 		return result;
@@ -1058,7 +1058,7 @@ public:
 		while (result == Order::EQUAL) {
 			if (i == count || i == other.count)
 				return count <=> other.count;
-			result = ComparatorType::compare(contents.data()[i], other.contents.data()[i]);
+			result = ComparatorType::compare(contents[i], other.contents[i]);
 			++i;
 		}
 		return result;
@@ -1078,7 +1078,7 @@ public:
 			min		= (count < other.count ? count : other.count)
 		;
 		for (SizeType i = 0; i < max; ++i)
-			if (!ComparatorType::equals(contents.data()[i], other.contents.data()[i])) ++diff;
+			if (!ComparatorType::equals(contents[i], other.contents[i])) ++diff;
 		return diff + (max - min);
 	}
 
@@ -1189,10 +1189,10 @@ public:
 			bool miss = false;
 			for(SizeType j = count - 1; j >= 0; --j) {
 				if (i == j) break;
-				if ((miss = !compare(contents.data()[i], contents.data()[j])))
+				if ((miss = !compare(contents[i], contents[j])))
 					break;
 			}
-			if (!miss) result.pushBack(contents.data()[i]);
+			if (!miss) result.pushBack(contents[i]);
 		}
 		return result;
 	}
@@ -1212,7 +1212,7 @@ public:
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.pushBack(sep);
-			result.appendBack(contents.data()[i]);
+			result.appendBack(contents[i]);
 		}
 		return result;
 	}
@@ -1226,7 +1226,7 @@ public:
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
 			result.appendBack(sep);
-			result.appendBack(contents.data()[i]);
+			result.appendBack(contents[i]);
 		}
 		return result;
 	}
@@ -1237,7 +1237,7 @@ public:
 		if (!count) return DataType();
 		DataType result = front();
 		for (SizeType i = 1; i < count; ++i) {
-			result.appendBack(contents.data()[i]);
+			result.appendBack(contents[i]);
 		}
 		return result;
 	}
@@ -1309,7 +1309,7 @@ private:
 		if (!newSize) {
 			MX::objclear(contents.data(), count);
 			contents.free();
-		} else if (!newSize)
+		} else if (!newCount)
 			contents.resize(newSize);
 		else contents.resize(newSize, COPY_FN);
 		count = newCount;
