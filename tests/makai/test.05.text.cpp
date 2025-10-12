@@ -48,6 +48,7 @@ struct TestApp: Makai::App {
 };
 
 int main() {
+	DEBUGLN("Running app ", __FILE__, "...");
 	try {
 		TestApp app;
 		app.run();
