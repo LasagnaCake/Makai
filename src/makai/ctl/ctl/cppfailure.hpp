@@ -17,30 +17,36 @@ struct DebugCrash: Crash {};
 
 /// @brief Generic, potentially-recoverable failure.
 struct Failure {
-	virtual cstring what() const noexcept {return "Something happened!";}
+	constexpr virtual cstring what() const noexcept {return "Something happened!";}
 };
 
 /// @brief Irrecoverable failure. Catastrophic.
 struct CatastrophicFailure: Crash {
-	virtual cstring what() const noexcept {return "Something REALLY bad happened!";}
+	constexpr virtual cstring what() const noexcept {return "Something REALLY bad happened!";}
 };
 
 /// @brief Allocation failure. Catastrophic.
 struct AllocationFailure: CatastrophicFailure {
-	virtual cstring what() const noexcept {return "Memory allocation failed!";}
+	constexpr cstring what() const noexcept override {return "Memory allocation failed!";}
 };
 
 /// @brief Maximum size possible reached failure. Catastrophic.
 struct MaximumSizeFailure: CatastrophicFailure {
-	virtual cstring what() const noexcept {return "Maximum size reached!";}
+	constexpr cstring what() const noexcept override {return "Maximum size reached!";}
 };
 
 /// @brief Object construction failure. Catastrophic.
 struct ConstructionFailure: CatastrophicFailure {
-	virtual cstring what() const noexcept {return "Failed to construct type!";}
+	constexpr cstring what() const noexcept override {return "Failed to construct type!";}
+};
+
+/// @brief Invalid memory access failure. Catastrophic.
+struct InvalidAccessFailure: CatastrophicFailure {
+	constexpr cstring what() const noexcept override {return "Invalid memory access";}
 };
 
 /// @brief Crashes the program.
+[[noreturn]]
 inline void panic() {
 	throw Crash();
 }
