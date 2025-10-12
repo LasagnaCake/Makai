@@ -609,7 +609,8 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(SelfType const& other) {
 		expand(other.size());
-		BaseType::popBack();
+		if (BaseType::size())
+			BaseType::popBack();
 		BaseType::appendBack(other.begin(), other.end());
 		BaseType::pushBack('\0');
 		return *this;
@@ -629,7 +630,8 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		expand(end - begin);
-		BaseType::popBack();
+		if (BaseType::size())
+			BaseType::popBack();
 		BaseType::appendBack(begin, end);
 		BaseType::pushBack('\0');
 		return *this;
@@ -641,7 +643,8 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		expand(end - begin);
-		BaseType::popBack();
+		if (BaseType::size())
+			BaseType::popBack();
 		BaseType::appendBack(begin, end);
 		BaseType::pushBack('\0');
 		return *this;
@@ -655,11 +658,13 @@ public:
 	constexpr SelfType& appendBack(As<DataType[S]> const& values) {
 		if (values[S-1] == '\0') {
 			expand(S);
-			BaseType::popBack();
+			if (BaseType::size())
+				BaseType::popBack();
 			BaseType::appendBack(values);
 		} else {
 			expand(S+1);
-			BaseType::popBack();
+			if (BaseType::size())
+				BaseType::popBack();
 			BaseType::appendBack(values);
 			BaseType::pushBack('\0');
 		}
@@ -1231,8 +1236,8 @@ public:
 	constexpr SelfType operator*(IndexType const times) const {
 		if (times < 1) return SelfType();
 		if (times == 1) return *this;
-		SelfType result(size() * usize(times));
-		for (SizeType i = 0; i < usize(times); ++i)
+		SelfType result(size() * static_cast<usize>(times));
+		for (SizeType i = 0; i < static_cast<usize>(times); ++i)
 			result.appendBack(*this);
 		return result;
 	}
