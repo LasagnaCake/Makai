@@ -866,7 +866,7 @@ public:
 	/// @param other Other `List`.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
-		MX::objclear(contents.data(), count);
+		clear();
 		resize(other.count);
 		copy(other.contents.data(), contents.data(), other.count);
 		count = other.count;
@@ -878,7 +878,7 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
 		if (inCompileTime()) {
-			MX::objclear(contents.data(), count);
+			clear();
 			resize(other.count);
 			copy(other.contents.data(), contents.data(), other.count);
 			count = other.count;
