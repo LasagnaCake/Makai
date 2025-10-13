@@ -49,7 +49,7 @@
 #define STB_C_LEX_DEFINE_ALL_TOKEN_NAMES  N   // if Y, all CLEX_ token names are defined, even if never returned
                                               // leaving it as N should help you catch config bugs
 
-#define STB_C_LEX_DISCARD_PREPROCESSOR    Y   // discard C-preprocessor directives (e.g. after prepocess
+#define STB_C_LEX_DISCARD_PREPROCESSOR    N   // discard C-preprocessor directives (e.g. after prepocess
                                               // still have #line, #pragma, etc)
 
 #include <stb_c_lexer.h>
