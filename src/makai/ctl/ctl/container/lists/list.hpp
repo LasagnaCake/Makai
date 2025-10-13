@@ -360,7 +360,7 @@ public:
 	/// 	but does not guarantee the capacity will be EXACTLY `count`.
 	///		For that, use `resize`.
 	constexpr SelfType& reserve(SizeType const count) {
-		while (count >= contents.size())
+		while (contents.size() < count)
 			increase();
 		return *this;
 	}
