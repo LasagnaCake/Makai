@@ -351,6 +351,7 @@ namespace Makai::JSON {
 
 		friend class JSONValue;
 	};
+	
 	namespace Impl {
 		template<Type::Derived<JSONView> T>
 		struct JSONAttribute<T>: JSONReference {
