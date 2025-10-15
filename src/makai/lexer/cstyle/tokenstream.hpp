@@ -9,6 +9,7 @@ namespace Makai::Lexer::CStyle {
 	struct TokenStream {
 		DEFINE_ERROR_TYPE_EX(InvalidToken, InvalidValue);
 
+		/// @brief Default string literal buffer size.
 		constexpr static usize const DEFAULT_BUFFER_SIZE = 0x10000;
 
 		/// @brief Token position in the stream.
@@ -231,13 +232,13 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
-		/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
+		/// @param bufferSize Size of buffer to process string literals. By default, it is `DEFAULT_BUFFER_SIZE`.
 		/// @note Source is copied, so there's no need to keep it around.
 		TokenStream(String const& source, usize const bufferSize = DEFAULT_BUFFER_SIZE);
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
-		/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
+		/// @param bufferSize Size of buffer to process string literals. By default, it is `DEFAULT_BUFFER_SIZE`.
 		/// @return Reference to self.
 		/// @note Source is copied, so there's no need to keep it around.
 		TokenStream& open(String const& source, usize const bufferSize = DEFAULT_BUFFER_SIZE);
@@ -298,8 +299,8 @@ namespace Makai::Lexer::CStyle {
 
 	/// @brief Converts some source content to a list of tokens.
 	/// @param source Source content to process.
-	/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
-	/// @return Resulting tokens, or an error (if any).
+	/// @param bufferSize Size of buffer to process string literals. By default, it is `TokenStream::DEFAULT_BUFFER_SIZE`.
+	/// @return Resulting tokens, or an error (on failure).
 	Result<TokenStream::TokenList, TokenStream::Error>
 	tokenize(String const& source, usize const bufferSize = TokenStream::DEFAULT_BUFFER_SIZE);
 }
