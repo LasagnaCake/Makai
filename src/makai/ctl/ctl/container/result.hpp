@@ -96,29 +96,29 @@ public:
 	/// @brief Copy assignment operator (value).
 	/// @param value Value to store.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType const& value)						{result.value = value; state = ResultState::RS_OK; return *this;					}
+	constexpr SelfType& operator=(DataType const& value)						{destruct(); result.value = value; state = ResultState::RS_OK; return *this;					}
 	/// @brief Move assignment operator (value).
 	/// @param value Value to store.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType&& value)								{result.value = CTL::move(value); state = ResultState::RS_OK; return *this;			}
+	constexpr SelfType& operator=(DataType&& value)								{destruct(); result.value = CTL::move(value); state = ResultState::RS_OK; return *this;			}
 	/// @brief Copy assignment operator (error).
 	/// @param error Error to store.
 	/// @return Reference to self.
 	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr SelfType& operator=(ErrorType const& error) requires (!IMPLICIT)	{result.error = error; state = ResultState::RS_ERROR; return *this;					}
+	constexpr SelfType& operator=(ErrorType const& error) requires (!IMPLICIT)	{destruct(); result.error = error; state = ResultState::RS_ERROR; return *this;					}
 	/// @brief Move assignment operator (error).
 	/// @param error Error to store.
 	/// @return Reference to self.
 	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr SelfType& operator=(ErrorType&& error) requires (!IMPLICIT)		{result.error = CTL::move(error); state = ResultState::RS_ERROR; return *this;		}
+	constexpr SelfType& operator=(ErrorType&& error) requires (!IMPLICIT)		{destruct(); result.error = CTL::move(error); state = ResultState::RS_ERROR; return *this;		}
 	/// @brief Copy assignment operator (error).
 	/// @param other `Result` to copy from.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)						{result = other.result; state = other.state; return *this;							}
+	constexpr SelfType& operator=(SelfType const& other)						{destruct(); result = other.result; state = other.state; return *this;							}
 	/// @brief Move assignment operator (error).
 	/// @param other `Result` to move.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other)								{result = CTL::move(other.result); state = CTL::move(other.state); return *this;	}
+	constexpr SelfType& operator=(SelfType&& other)								{destruct(); result = CTL::move(other.result); state = CTL::move(other.state); return *this;	}
 
 	/// @brief Equality comparison operator (value).
 	/// @param value Value to compare.
@@ -185,7 +185,17 @@ public:
 	/// @return The stored error, or null if none.
 	constexpr Nullable<ErrorType>	error() const {return !ok() ? result.error : nullptr;	}
 
+	/// @brief Destructor.
+	constexpr ~Result() {destruct();}
+
 private:
+	constexpr void destruct() {
+		switch (state) {
+			case ResultState::RS_OK:	result.value.~DataType();
+			case ResultState::RS_ERROR:	result.error.~ErrorType();
+		}
+	}
+
 	enum class ResultState {
 		RS_OK,
 		RS_ERROR

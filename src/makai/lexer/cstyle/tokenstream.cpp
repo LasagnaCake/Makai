@@ -104,3 +104,13 @@ TokenStream& TokenStream::close() {
 	isFinished = true;
 	return *this;
 }
+
+Makai::Result<TokenStream::TokenList, TokenStream::Error>
+Makai::Lexer::CStyle::tokenize(Makai::String const& source, usize const bufferSize) {
+	TokenStream::TokenList result;
+	TokenStream stream{source, bufferSize};
+	while (stream.next())
+		result.pushBack(stream.current());
+	if (!stream.ok()) return *stream.error();
+	return result;
+}

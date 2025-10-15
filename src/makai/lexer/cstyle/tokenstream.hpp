@@ -9,6 +9,8 @@ namespace Makai::Lexer::CStyle {
 	struct TokenStream {
 		DEFINE_ERROR_TYPE_EX(InvalidToken, InvalidValue);
 
+		constexpr static usize const DEFAULT_BUFFER_SIZE = 0x10000;
+
 		/// @brief Token position in the stream.
 		struct Position {
 			/// @brief Index into the text.
@@ -116,6 +118,7 @@ namespace Makai::Lexer::CStyle {
 
 				/// @brief Copy assignment operator.
 				constexpr Value& operator=(Value const& other)	{
+					destruct();
 					switch (valType = other.valType) {
 						case (Type::LTS_TVT_INTEGER):	integer		= other.integer; break;
 						case (Type::LTS_TVT_REAL):		real		= other.real; break;
@@ -127,16 +130,11 @@ namespace Makai::Lexer::CStyle {
 				}
 
 				/// @brief Destructor.
-				constexpr ~Value() {
-					switch (valType) {
-						case Type::LTS_TVT_STRING:		string.~String(); break;
-						case Type::LTS_TVT_CHARACTER:	character.~UTF8Char(); break;
-						default: break;
-					}
-				}
+				constexpr ~Value() {destruct();}
 
 				/// @brief Assigns an integer value to the variant.
 				constexpr Value& operator=(ssize const v) {
+					destruct();
 					integer = v;
 					valType = Type::LTS_TVT_INTEGER;
 					return *this;
@@ -144,6 +142,7 @@ namespace Makai::Lexer::CStyle {
 				
 				/// @brief Assigns a floating-point value to the variant.
 				constexpr Value& operator=(double const v) {
+					destruct();
 					real = v;
 					valType = Type::LTS_TVT_REAL;
 					return *this;
@@ -151,6 +150,7 @@ namespace Makai::Lexer::CStyle {
 
 				/// @brief Assigns a string to the variant.
 				constexpr Value& operator=(String const& v) {
+					destruct();
 					string = v;
 					valType = Type::LTS_TVT_STRING;
 					return *this;
@@ -158,6 +158,7 @@ namespace Makai::Lexer::CStyle {
 				
 				/// @brief Assigns a UTF-8 character to the variant.
 				constexpr Value& operator=(UTF8Char const v) {
+					destruct();
 					character = v;
 					valType = Type::LTS_TVT_CHARACTER;
 					return *this;
@@ -199,6 +200,15 @@ namespace Makai::Lexer::CStyle {
 					/// @brief Character value, if a character literal.
 					UTF8Char	character;
 				};
+		
+				constexpr void destruct() {
+					switch (valType) {
+						case Type::LTS_TVT_STRING:		string.~String(); break;
+						case Type::LTS_TVT_CHARACTER:	character.~UTF8Char(); break;
+						default: break;
+					}
+					valType = Type::LTS_TVT_EMPTY;
+				}
 			};
 
 			/// @brief Token type.
@@ -206,6 +216,9 @@ namespace Makai::Lexer::CStyle {
 			/// @brief Token value.
 			Value	value;
 		};
+
+		/// @brief Token list.
+		using TokenList = List<Token>;
 
 		/// @brief Lexer implementation.
 		struct Lexer;
@@ -220,14 +233,14 @@ namespace Makai::Lexer::CStyle {
 		/// @param source Source content to process.
 		/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
 		/// @note Source is copied, so there's no need to keep it around.
-		TokenStream(String const& source, usize const bufferSize = 0x10000);
+		TokenStream(String const& source, usize const bufferSize = DEFAULT_BUFFER_SIZE);
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
 		/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
 		/// @return Reference to self.
 		/// @note Source is copied, so there's no need to keep it around.
-		TokenStream& open(String const& source, usize const bufferSize = 0x10000);
+		TokenStream& open(String const& source, usize const bufferSize = DEFAULT_BUFFER_SIZE);
 
 		/// @brief Closes the token stream.
 		/// @return Reference to self.
@@ -282,6 +295,13 @@ namespace Makai::Lexer::CStyle {
 		/// @brief Lexer implementation.
 		Unique<Lexer> lexer;
 	};
+
+	/// @brief Converts some source content to a list of tokens.
+	/// @param source Source content to process.
+	/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
+	/// @return Resulting tokens, or an error (if any).
+	Result<TokenStream::TokenList, TokenStream::Error>
+	tokenize(String const& source, usize const bufferSize = TokenStream::DEFAULT_BUFFER_SIZE);
 }
 
 #endif // MAKAILIB_LEXER_CORE_H
