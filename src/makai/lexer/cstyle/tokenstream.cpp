@@ -80,14 +80,14 @@ void TokenStream::assertOK() const {
 		);
 }
 
-TokenStream::TokenStream(String const& source)	{open(source);	}
-TokenStream::TokenStream()						{				}
-TokenStream::~TokenStream()						{close();		}
+TokenStream::TokenStream(String const& source, usize const bufferSize)	{open(source, bufferSize);	}
+TokenStream::TokenStream()												{							}
+TokenStream::~TokenStream()												{close();					}
 
-TokenStream& TokenStream::open(String const& source) {
+TokenStream& TokenStream::open(String const& source, usize const bufferSize) {
 	if (lexer) return *this;
 	lexer.bind(new Lexer{{}, source});
-	lexer->buffer.resize(4096, '\0');
+	lexer->buffer.resize(bufferSize, '\0');
 	stb_c_lexer_init(
 		&lexer->lexer,
 		lexer->source.begin(), lexer->source.end(),

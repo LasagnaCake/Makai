@@ -218,14 +218,16 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
-		/// @note Source is copied to an internal buffer, so there's no need to keep it around.
-		TokenStream(String const& source);
+		/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
+		/// @note Source is copied, so there's no need to keep it around.
+		TokenStream(String const& source, usize const bufferSize = 0x10000);
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
+		/// @param bufferSize Size of buffer to process string literals. By default, it is `65536`.
 		/// @return Reference to self.
-		/// @note Source is copied to an internal buffer, so there's no need to keep it around.
-		TokenStream& open(String const& source);
+		/// @note Source is copied, so there's no need to keep it around.
+		TokenStream& open(String const& source, usize const bufferSize = 0x10000);
 
 		/// @brief Closes the token stream.
 		/// @return Reference to self.
