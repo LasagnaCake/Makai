@@ -3,6 +3,9 @@
 #define STB_INCLUDE_IMPLEMENTATION
 #define STB_C_LEXER_IMPLEMENTATION
 #define STB_VORBIS_IMPLEMENTATION
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
+#pragma GCC diagnostic ignored "-Wunused-function"
 #include <stb_image.h>
 #include <stb_image_write.h>
 #include <stb_include.h>
@@ -53,3 +56,4 @@
                                               // still have #line, #pragma, etc)
 
 #include <stb_c_lexer.h>
+#pragma GCC diagnostic pop
