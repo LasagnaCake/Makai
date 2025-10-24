@@ -38,6 +38,9 @@ bool TokenStream::next() {
 			case (CLEX_dqstring): {
 				curToken.value = String(lex.string, lex.string_len);
 			} goto TheRestOfTheOwl;
+			case (CLEX_id): {
+				curToken.value = String(lex.string, lex.string_len);
+			} break;
 			default: {
 			TheRestOfTheOwl:
 				curToken.type = static_cast<Token::Type>((lex.token < 256) ? lex.token : lex.token - 1);
