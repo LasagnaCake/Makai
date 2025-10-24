@@ -872,7 +872,7 @@ namespace Data {
 		Value result = object();
 		#if defined(__GNUG__) && !defined(__clang__)
 		result[{"compiler"}][{"name"}]		= "gcc";
-		result[{"compiler"}][{"version"}]	= ::CTL::toString(__GNUC__, ".", __GNUC_MINOR__);
+		result[{"compiler"}][{"version"}]	= StringType(::CTL::toString(__GNUC__, ".", __GNUC_MINOR__));
 		#elif defined(__clang__)
 		result[{"compiler"}][{"name"}]		= "clang";
 		result[{"compiler"}][{"version"}]	= __clang_version__;
