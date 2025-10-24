@@ -22,6 +22,8 @@ namespace Range {
 			struct Wrapper {
 				/// @brief Pre-increment operator.
 				constexpr Wrapper& operator++(int)					{it.next(); return *this;	}
+				/// @brief Post-increment operator.
+				constexpr Wrapper& operator++()						{it.next(); return *this;	}
 				/// @brief Dereference operator.
 				constexpr T operator*() const
 				requires (requires (T it) {{it.value()} -> Type::Different<void>;	})

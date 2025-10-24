@@ -44,10 +44,12 @@ public:
 
 	/// @brief Copy constructor (`Result`).
 	/// @param other Other `Result` to copy from.
-	constexpr Result(SelfType const& other)						{result = other.result; state = other.state;						}
-	/// @brief Move constructor (`Result`).
-	/// @param other Other `Result` to move.
-	constexpr Result(SelfType&& other) 							{result = CTL::move(other.result); state = CTL::move(other.state);	}
+	constexpr Result(SelfType const& other) {
+		switch (state = other.state) {
+			case ResultState::RS_OK:	result.value = other.result.value;
+			case ResultState::RS_ERROR:	result.error = other.result.error;
+		}
+	}
 	/// @brief Copy constructor (value).
 	/// @param other Result value to copy.
 	constexpr Result(ConstReferenceType value)					{result.value = value; state = ResultState::RS_OK;					}
@@ -97,10 +99,6 @@ public:
 	/// @param value Value to store.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(DataType const& value)						{destruct(); result.value = value; state = ResultState::RS_OK; return *this;					}
-	/// @brief Move assignment operator (value).
-	/// @param value Value to store.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType&& value)								{destruct(); result.value = CTL::move(value); state = ResultState::RS_OK; return *this;			}
 	/// @brief Copy assignment operator (error).
 	/// @param error Error to store.
 	/// @return Reference to self.
@@ -114,11 +112,15 @@ public:
 	/// @brief Copy assignment operator (error).
 	/// @param other `Result` to copy from.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)						{destruct(); result = other.result; state = other.state; return *this;							}
-	/// @brief Move assignment operator (error).
-	/// @param other `Result` to move.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other)								{destruct(); result = CTL::move(other.result); state = CTL::move(other.state); return *this;	}
+	constexpr SelfType& operator=(SelfType const& other)						{
+		destruct();
+		switch (state = other.state) {
+			case ResultState::RS_OK:	result.value = other.result.value;
+			case ResultState::RS_ERROR:	result.error = other.result.error;
+		}
+		state = other.state;
+		return *this;
+	}
 
 	/// @brief Equality comparison operator (value).
 	/// @param value Value to compare.
@@ -194,9 +196,11 @@ private:
 			case ResultState::RS_OK:	result.value.~DataType();
 			case ResultState::RS_ERROR:	result.error.~ErrorType();
 		}
+		state = ResultState::RS_UNDEFINED;
 	}
 
 	enum class ResultState {
+		RS_UNDEFINED,
 		RS_OK,
 		RS_ERROR
 	};
@@ -210,7 +214,7 @@ private:
 	};
 
 	ResultWrapper	result;
-	ResultState		state;
+	ResultState		state	= ResultState::RS_UNDEFINED;
 };
 
 CTL_NAMESPACE_END

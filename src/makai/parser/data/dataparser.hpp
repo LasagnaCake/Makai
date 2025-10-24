@@ -11,7 +11,7 @@ namespace Makai::Parser::Data {
 		using ResultType = Result<Value, StringParseError>;
 
 		/// @brief Virtual destructor.
-		constexpr virtual ~IDataParser() {}
+		constexpr virtual ~IStringParser() {}
 
 		/// @brief Tries to parse a string. Must be implemented.
 		constexpr virtual ResultType tryParse(Value::StringType const& str) = 0;	
@@ -23,7 +23,7 @@ namespace Makai::Parser::Data {
 		using ResultType = Result<Value, ByteParseError>;
 
 		/// @brief Virtual destructor.
-		constexpr virtual ~IDataParser() {}
+		constexpr virtual ~IByteParser() {}
 
 		/// @brief Tries to parse a series of bytes. Must be implemented.
 		constexpr virtual ResultType tryParse(Value::ByteListType const& str) = 0;	

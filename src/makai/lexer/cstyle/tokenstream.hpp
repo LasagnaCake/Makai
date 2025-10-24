@@ -170,7 +170,7 @@ namespace Makai::Lexer::CStyle {
 				/// @return Value stored in the variant. Returns `nullptr` if value's type does not match the requested type `T`.
 				template <Type T>
 				constexpr Nullable<Meta::NthType<enumcast(T) - 1, ssize, double, String, UTF8Char>>
-				get() requires (T != Type::LTS_TVT_EMPTY) {
+				get() const requires (T != Type::LTS_TVT_EMPTY) {
 					if (valType == T) {
 						if constexpr (T == Type::LTS_TVT_INTEGER)			return integer;
 						else if constexpr (T == Type::LTS_TVT_REAL)			return real;

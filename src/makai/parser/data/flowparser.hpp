@@ -15,7 +15,7 @@ namespace Makai::Parser::Data {
 		/// @return Resulting value, or an error.
 		constexpr ResultType tryParse(Value::StringType const& str) override {
 			source = str;
-			lexer.open(String(str));
+			lexer.open(str.toString());
 			auto const result = parse(str);
 			lexer.close();
 			return result;
@@ -29,6 +29,7 @@ namespace Makai::Parser::Data {
 
 		ResultType parse(Value::StringType const& str) {
 			if (!lexer.next()) return Value();
+			auto const token = lexer.current();
 			switch (token.type) {
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
@@ -163,7 +164,7 @@ namespace Makai::Parser::Data {
 			return result;
 		}
 	
-		constexpr ParseError error(String const& what) const {
+		constexpr StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
 			return ParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};

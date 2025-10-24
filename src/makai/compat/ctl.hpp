@@ -41,6 +41,7 @@ namespace Makai {
     using Math::Transform3D;
 	using namespace Literals::Math;
 	using CTL::String, CTL::List, CTL::OrderedMap, CTL::ListMap, CTL::Map;
+	using namespace CTL::Data;
 }
 
 #endif // MAKAILIB_COMPAT_CTL_H
