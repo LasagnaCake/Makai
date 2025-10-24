@@ -142,7 +142,7 @@ public:
 	/// @param ...args Pack elements.
 	template<typename... Args>
 	constexpr List(Args const&... args)
-	requires (sizeof...(Args) > 1) {
+	requires (sizeof...(Args) > 2) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));
 	}
