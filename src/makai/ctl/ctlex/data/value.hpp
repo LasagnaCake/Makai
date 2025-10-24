@@ -422,8 +422,7 @@ namespace Data {
 		constexpr Value& operator[](ssize const index) {
 			if (isFalsy()) *this = array();
 			if (!isArray()) typeMismatchError("array");
-			while (index >= size())
-				extendArray(index);
+			extendArray(index);
 			return (*content.array)[index];
 		}
 		
@@ -465,7 +464,7 @@ namespace Data {
 		/// @throw Error::OutOfBounds If index is out of bounds.
 		constexpr Value operator[](ssize const index) const {
 			if (!isArray()) typeMismatchError("array");
-			else if (index >= size())
+			else if (index >= static_cast<ssize>(size()))
 				outOfBoundsError(index);
 			return read(index);
 		}
@@ -820,7 +819,7 @@ namespace Data {
 	}
 
 	constexpr void Value::extendArray(ssize const count) {
-		while (count < size())
+		while (count >= static_cast<ssize>(size()))
 			content.array->pushBack(nullptr);
 	}
 	
@@ -871,9 +870,9 @@ namespace Data {
 
 	constexpr Value Value::info()  {
 		Value result = object();
-		#if defined(__GCC__)
+		#if defined(__GNUG__) && !defined(__clang__)
 		result[{"compiler"}][{"name"}]		= "gcc";
-		result[{"compiler"}][{"version"}]	= ::CTL::toString(__GNUC__, ".", __GNUC_MINOR__, ".", __GNUC_PATCH_LEVEL__);
+		result[{"compiler"}][{"version"}]	= ::CTL::toString(__GNUC__, ".", __GNUC_MINOR__);
 		#elif defined(__clang__)
 		result[{"compiler"}][{"name"}]		= "clang";
 		result[{"compiler"}][{"version"}]	= __clang_version__;
