@@ -48,6 +48,7 @@ public:
 		switch (state = other.state) {
 			case ResultState::RS_OK:	result.value = other.result.value;
 			case ResultState::RS_ERROR:	result.error = other.result.error;
+			default: break;
 		}
 	}
 	/// @brief Copy constructor (value).
@@ -117,6 +118,7 @@ public:
 		switch (state = other.state) {
 			case ResultState::RS_OK:	result.value = other.result.value;
 			case ResultState::RS_ERROR:	result.error = other.result.error;
+			default: break;
 		}
 		state = other.state;
 		return *this;
@@ -180,12 +182,17 @@ public:
 	constexpr SelfType const& operator()(TFunction const& proc) const	
 	requires (!IMPLICIT) {return onError(proc);	}
 
+	/// @brief Return type.
+	/// @brief T Data type.
+	template <class T>
+	using ReturnType = Meta::DualType<Type::Constructible<T, nulltype>, T, Nullable<T>>;
+
 	/// @brief Returns the stored value, or null if none.
 	/// @return The stored value, or null if none.
-	constexpr Nullable<DataType>	value() const {return ok() ? result.value : nullptr;	}
+	constexpr ReturnType<DataType>	value() const {using R = ReturnType<DataType>; return ok() ? R(result.value) : R(nullptr);		}
 	/// @brief Returns the stored error, or null if none.
 	/// @return The stored error, or null if none.
-	constexpr Nullable<ErrorType>	error() const {return !ok() ? result.error : nullptr;	}
+	constexpr ReturnType<ErrorType>	error() const {using R = ReturnType<ErrorType>; return !ok() ? R(result.error) : R(nullptr);	}
 
 	/// @brief Destructor.
 	constexpr ~Result() {destruct();}
@@ -195,6 +202,7 @@ private:
 		switch (state) {
 			case ResultState::RS_OK:	result.value.~DataType();
 			case ResultState::RS_ERROR:	result.error.~ErrorType();
+			default: break;
 		}
 		state = ResultState::RS_UNDEFINED;
 	}

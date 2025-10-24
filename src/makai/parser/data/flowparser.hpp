@@ -47,8 +47,7 @@ namespace Makai::Parser::Data {
 				if (id == "null") return Value::null();
 				return Value(id);
 			}
-			default:
-				continue;
+			default: return Value();
 				//return error("Missing or invalid token!");
 			}
 		}
@@ -74,18 +73,18 @@ namespace Makai::Parser::Data {
 					auto const obj = parseObject();
 					if (obj)
 						result[result.size()] = obj.value();
-					else return obj.error();
+					else return obj.error().value();
 				} break;
 				case TokenType{'['}: {
 					auto const obj = parseArray();
 					if (obj)
 						result[result.size()] = obj.value();
-					else return obj.error();
+					else return obj.error().value();
 				} break;
 				case TokenType::LTS_TT_IDENTIFIER: {
 					auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 					if (id == "null") result[result.size()] = Value::null();
-					else result[result.size()] = id;
+					else result[result.size()] = Value::StringType(id);
 				} break;
 				default:
 					continue;
@@ -106,7 +105,7 @@ namespace Makai::Parser::Data {
 			bool inValue = false;
 			while (lexer.next()) {
 				auto const token = lexer.current();
-				if (token.type == '}')
+				if (token.type == TokenType{'}'})
 					break;
 				if (token.type == TokenType{':'}) continue;
 				if (inValue) {
@@ -125,18 +124,18 @@ namespace Makai::Parser::Data {
 						auto const obj = parseObject();
 						if (obj)
 							result[key] = obj.value();
-						else return obj.error();
+						else return obj.error().value();
 					} break;
 					case TokenType{'['}: {
 						auto const obj = parseArray();
 						if (obj)
 							result[key] = obj.value();
-						else return obj.error();
+						else return obj.error().value();
 					} break;
 					case TokenType::LTS_TT_IDENTIFIER: {
 						auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
-						if (id == "null") result[rkey] = Value::null();
-						else result[key] = id;
+						if (id == "null") result[key] = Value::null();
+						else result[key] = Value::StringType(id);
 					} break;
 					default:
 						continue;
@@ -150,7 +149,7 @@ namespace Makai::Parser::Data {
 					||	token.type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
 					||	token.type == TokenType::LTS_TT_IDENTIFIER
 					) {
-						key = token.template get<ValueType::LTS_TVT_STRING>().value();
+						key = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 						lexer.next();
 						inValue = true;
 					} else return error("Object key is not a string or identifier!");
@@ -167,14 +166,14 @@ namespace Makai::Parser::Data {
 		constexpr StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
-			return ParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};
+			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};
 		}
 		
 		/// @brief String source.
 		Value::StringType	source;
 		/// @brief Underlying lexer.
 		LexerType 			lexer;
-	}
+	};
 }
 
 #endif

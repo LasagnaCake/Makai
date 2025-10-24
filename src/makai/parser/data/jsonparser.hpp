@@ -15,7 +15,7 @@ namespace Makai::Parser::Data {
 		/// @return Resulting value, or an error.	
 		constexpr ResultType tryParse(Value::StringType const& str) override {
 			source = str;
-			lexer.open(String(str));
+			lexer.open(str.toString());
 			auto const result = parse(str);
 			lexer.close();
 			return result;
@@ -29,6 +29,7 @@ namespace Makai::Parser::Data {
 
 		ResultType parse(Value::StringType const& str) {
 			if (!lexer.next()) return Value();
+			auto const token = lexer.current();
 			switch (token.type) {
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
@@ -72,13 +73,13 @@ namespace Makai::Parser::Data {
 					auto const obj = parseObject();
 					if (obj)
 						result[result.size()] = obj.value();
-					else return obj.error();
+					else return obj.error().value();
 				} break;
 				case TokenType{'['}: {
 					auto const obj = parseArray();
 					if (obj)
 						result[result.size()] = obj.value();
-					else return obj.error();
+					else return obj.error().value();
 				} break;
 				case TokenType::LTS_TT_IDENTIFIER: {
 					auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
@@ -111,7 +112,7 @@ namespace Makai::Parser::Data {
 			bool inValue = false;
 			while (lexer.next()) {
 				auto const token = lexer.current();
-				if (token.type == '}')
+				if (token.type == TokenType{'}'})
 					break;
 				if (token.type == TokenType{':'}) continue;
 				if (inValue) {
@@ -130,17 +131,17 @@ namespace Makai::Parser::Data {
 						auto const obj = parseObject();
 						if (obj)
 							result[key] = obj.value();
-						else return obj.error();
+						else return obj.error().value();
 					} break;
 					case TokenType{'['}: {
 						auto const obj = parseArray();
 						if (obj)
 							result[key] = obj.value();
-						else return obj.error();
+						else return obj.error().value();
 					} break;
 					case TokenType::LTS_TT_IDENTIFIER: {
 						auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
-						if (id == "null") result[rkey] = Value::null();
+						if (id == "null") result[key] = Value::null();
 						else return error("Invalid/unsupported identifier!");
 					} break;
 					default:
@@ -161,7 +162,7 @@ namespace Makai::Parser::Data {
 						token.type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
 					||	token.type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
 					) {
-						key = token.template get<ValueType::LTS_TVT_STRING>().value();
+						key = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 						lexer.next();
 						if (lexer.current().type != TokenType{':'})
 							return error("Malformed object entry (separator colon)!");
@@ -177,17 +178,17 @@ namespace Makai::Parser::Data {
 			return result;
 		}
 	
-		constexpr ParseError error(String const& what) const {
+		constexpr StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
-			return ParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};
+			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};
 		}
 		
 		/// @brief String source.
 		Value::StringType	source;
 		/// @brief Underlying lexer.
 		LexerType 			lexer;
-	}
+	};
 }
 
 #endif
