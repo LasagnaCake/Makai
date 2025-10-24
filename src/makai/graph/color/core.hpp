@@ -1,5 +1,5 @@
-#ifndef MAKAILIB_GRAPH_COLOR_H
-#define MAKAILIB_GRAPH_COLOR_H
+#ifndef MAKAILIB_GRAPH_COLOR_CORE_H
+#define MAKAILIB_GRAPH_COLOR_CORE_H
 
 #include "../../compat/ctl.hpp"
 #include "../../file/json.hpp"

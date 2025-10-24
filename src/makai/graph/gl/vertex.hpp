@@ -2,7 +2,7 @@
 #define MAKAILIB_GRAPH_VERTEX_H
 
 #include "../../compat/ctl.hpp"
-#include "armature/armature.hpp"
+#include "../armature/armature.hpp"
 
 /// @brief Graphical facilites.
 namespace Makai::Graph {

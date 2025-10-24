@@ -3,7 +3,7 @@
 
 #include "../../../compat/ctl.hpp"
 
-#include "../armature/armature.hpp"
+#include "../../armature/armature.hpp"
 #include "../vertex.hpp"
 #include "../shader/shader.hpp"
 

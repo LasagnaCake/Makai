@@ -142,7 +142,7 @@ public:
 	/// @param ...args Pack elements.
 	template<typename... Args>
 	constexpr List(Args const&... args)
-	requires (... && Type::Convertible<Args, DataType>) {
+	requires (sizeof...(Args) > 1) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));
 	}
@@ -1306,12 +1306,9 @@ private:
 			copy(src, dst, newCount);
 			MX::objclear(src, count);
 		};
-		if (!newSize) {
-			MX::objclear(contents.data(), count);
-			contents.free();
-		} else if (!newCount)
-			contents.resize(newSize);
-		else contents.resize(newSize, COPY_FN);
+		if (!newSize)		dump();
+		else if (!newCount)	contents.resize(newSize);
+		else				contents.resize(newSize, COPY_FN);
 		count = newCount;
 	}
 

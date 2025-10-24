@@ -166,7 +166,7 @@ struct MemorySlice:
 	/// @param sz Element count.
 	/// @param copy Function to handle copying.
 	/// @return Reference to self.
-	template <Type::Functional<CopyFunctionType> TCopyFunction>
+	template <class TCopyFunction>
 	constexpr SelfType& resize(usize const newSize, TCopyFunction const& copy) {
 		//CTL_DEVMODE_FN_DECL;
 		if (!newSize) return free();

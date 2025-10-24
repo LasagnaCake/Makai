@@ -1,6 +1,7 @@
 #ifndef CTL_EX_H
 #define CTL_EX_H
 
+#include "data/data.hpp"
 #include "async/async.hpp"
 #include "async/co/co.hpp"
 #include "event/event.hpp"

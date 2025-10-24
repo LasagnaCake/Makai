@@ -1,7 +1,7 @@
 #include <sstream>
 
 #include "../../ctl/ctl.hpp"
-#include "color.hpp"
+#include "core.hpp"
 
 using namespace Makai; using namespace Makai::Graph;
 
