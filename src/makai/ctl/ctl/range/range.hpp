@@ -4,5 +4,6 @@
 #include "iterate.hpp"
 #include "sequence.hpp"
 #include "expand.hpp"
+#include "moderniterator.hpp"
 
 #endif

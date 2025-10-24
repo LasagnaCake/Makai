@@ -7,7 +7,7 @@
 
 CTL_NAMESPACE_BEGIN
 
-/// @brief Range-lated facilites.
+/// @brief Range-related facilites.
 namespace Range {
 	/// @brief Implementation details.
 	namespace Impl {

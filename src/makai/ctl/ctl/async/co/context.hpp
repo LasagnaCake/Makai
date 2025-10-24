@@ -16,7 +16,7 @@ CTL_NAMESPACE_BEGIN
 /// @brief Cooperative routine facilities.
 namespace Co {
 	/// @brief Coroutine context. Basically a `std::coroutine_handle`.
-	/// @tparam TReturn Promise type.
+	/// @tparam TPromise Promise type.
 	template<class TPromise = void>
 	using Context = std::coroutine_handle<TPromise>;
 }
