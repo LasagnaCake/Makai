@@ -142,7 +142,7 @@ public:
 	/// @param ...args Pack elements.
 	template<typename... Args>
 	constexpr List(Args const&... args)
-	requires (sizeof...(Args) > 2) {
+	requires (... && Type::Equal<Args, DataType>) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));
 	}
@@ -203,7 +203,7 @@ public:
 	/// @brief Constructs a `List` from a range of values.
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
-	constexpr List(ConstIteratorType const& begin, ConstIteratorType const& end) {
+	constexpr explicit List(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
 		copy(begin, contents.data(), end - begin);
@@ -213,7 +213,7 @@ public:
 	/// @brief Constructs a `List` from a range of elements.
 	/// @param begin Reverse iterator to beginning of range.
 	/// @param end Reverse iterator to end of range.
-	constexpr List(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
+	constexpr explicit List(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
 		for (auto i = begin; i != end; ++i)

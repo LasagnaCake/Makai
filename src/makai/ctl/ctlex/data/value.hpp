@@ -646,7 +646,7 @@ namespace Data {
 		}
 
 		/// @brief Object key-value pair list type.
-		using ObjectItemListType = List<KeyValuePair<StringType, Value>>;
+		using ObjectItemListType = List<KeyValuePair<StringType const, Value>>;
 
 		/// @brief Returns the object's contents as a list of key-value pairs.
 		/// @return Object contents, or empty list if not an object.
@@ -846,6 +846,7 @@ namespace Data {
 		if (isArray())	return content.array->size();
 		if (isBytes())	return content.bytes.size();
 		if (isObject())	return content.object->size();
+		return 0;
 	}
 
 	constexpr void swap(Value& a, Value& b) {
@@ -866,6 +867,7 @@ namespace Data {
 			if (v.isNull()) operator[](k) = nullptr;
 			else operator[](k).append(v);
 		}
+		return *this;
 	}
 
 	constexpr Value Value::info()  {
@@ -904,6 +906,16 @@ namespace Data {
 	constexpr bool Value::contains(Value::StringType const& key) const  {
 		if (!isObject()) return false;
 		return content.object->contains(key);
+	}
+
+	constexpr Value::ObjectItemListType Value::items() const  {
+		if (!isObject()) return {};
+		return content.object->items();
+	}
+
+	constexpr Value::ObjectKeyListType Value::keys() const  {
+		if (!isObject()) return {};
+		return content.object->keys();
 	}
 }
 

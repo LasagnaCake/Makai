@@ -5,9 +5,9 @@
 
 using namespace Makai;
 
-using namespace Data;
+using namespace Makai::Data;
 
-BinaryData<> Data::decode(String const& data, EncodingType const& encoding) try {
+BinaryData<> Makai::Data::decode(String const& data, EncodingType const& encoding) try {
 	std::vector<ubyte> result;
 	switch (encoding) {
 		case EncodingType::ET_BASE32: result = cppcodec::base32_rfc4648::decode<std::vector<ubyte>>(data.std()); break;
@@ -23,7 +23,7 @@ BinaryData<> Data::decode(String const& data, EncodingType const& encoding) try 
 	);
 }
 
-String Data::encode(BinaryData<> const& data, EncodingType const& encoding) try {
+String Makai::Data::encode(BinaryData<> const& data, EncodingType const& encoding) try {
 	switch (encoding) {
 		case EncodingType::ET_BASE32: return cppcodec::base32_rfc4648::encode<std::string>(data);
 		case EncodingType::ET_BASE64: return cppcodec::base64_rfc4648::encode<std::string>(data);
@@ -37,7 +37,7 @@ String Data::encode(BinaryData<> const& data, EncodingType const& encoding) try 
 	);
 }
 
-String Data::toString(EncodingType const& type) {
+String Makai::Data::toString(EncodingType const& type) {
 	switch (type) {
 		case EncodingType::ET_BASE32: return "base32";
 		case EncodingType::ET_BASE64: return "base64";
@@ -45,7 +45,7 @@ String Data::toString(EncodingType const& type) {
 	}
 }
 
-EncodingType Data::fromString(String const& type) {
+EncodingType Makai::Data::fromString(String const& type) {
 	if (type == "base32") return EncodingType::ET_BASE32;
 	if (type == "base64") return EncodingType::ET_BASE64;
 	throw Error::InvalidValue("Invalid encoding type of '" + type + "'!", CTL_CPP_PRETTY_SOURCE);
