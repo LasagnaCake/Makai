@@ -4,7 +4,6 @@
 #include "core.hpp"
 #include "global.hpp"
 #include "camera.hpp"
-#include "color.hpp"
 #include "image.hpp"
 #include "texture.hpp"
 #include "vertex.hpp"
@@ -12,7 +11,6 @@
 #include "shader/shader.hpp"
 #include "renderer/renderer.hpp"
 #include "material/material.hpp"
-#include "armature/armature.hpp"
 
 namespace MkGraph = Makai::Graph;
 

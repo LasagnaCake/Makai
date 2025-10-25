@@ -62,7 +62,7 @@ struct BitMask:
 	constexpr BitMask(Args const... args)
 	requires (
 		(sizeof...(Args) == SIZE)
-	&&	(... && Type::Convertible<Args, DataType>)
+	&&	(... && Type::CanBecome<Args, DataType>)
 	) {
 		MaskType mask = {static_cast<DataType>(args)...};
 		for (usize i = 0; i < SIZE; ++i)

@@ -64,7 +64,7 @@ namespace Makai::Ex::AVM::Compiler {
 		/// @return Concatenated regex.
 		template<class... Args>
 		constexpr String concat(String const& first, Args const&... args)
-		requires (... && Type::Convertible<Args, String>) {
+		requires (... && Type::CanBecome<Args, String>) {
 			return first + (... + ("|" + args));
 		}
 
@@ -313,7 +313,7 @@ namespace Makai::Ex::AVM::Compiler {
 			/// @param ...args Values to construct from.
 			template<class... Args>
 			constexpr explicit ParameterPack(Args const&... args)
-			requires (... && Type::Convertible<Args, String>):
+			requires (... && Type::CanBecome<Args, String>):
 				args(StringList{args...}) {}
 			
 			/// @brief Copy constructor (defaulted).

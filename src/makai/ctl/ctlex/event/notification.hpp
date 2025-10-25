@@ -103,7 +103,7 @@ public:
 	/// @return Reference to self.
 	template <typename... Args>
 	ANotifiable& unsubscribeFrom(Args const&... signals)
-	requires (... && Type::Convertible<Args, String>) {
+	requires (... && Type::CanBecome<Args, String>) {
 		(..., unsubscribe(signals));
 		return *this;
 	}

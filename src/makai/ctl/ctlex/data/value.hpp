@@ -689,7 +689,7 @@ namespace Data {
 		/// @return Reference to self.
 		template <class... Types>
 		constexpr Value merge(Value first, Types const&... rest)
-		requires (... && Type::Convertible<Types, Value>) {
+		requires (... && Type::CanBecome<Types, Value>) {
 			return first.append(rest...);
 		}
 		

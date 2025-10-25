@@ -142,7 +142,10 @@ public:
 	/// @param ...args Pack elements.
 	template<typename... Args>
 	constexpr List(Args const&... args)
-	requires (... && Type::Equal<Args, DataType>) {
+	requires (
+		(sizeof...(Args) > 0)
+	&&	(... && (Type::CanBecome<Args, DataType>))
+	) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));
 	}

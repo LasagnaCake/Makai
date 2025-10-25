@@ -96,7 +96,7 @@ public:
 	/// @param ...args Values to construct from.
 	template<typename... Args>
 	constexpr Array(Args const&... args)
-	requires (... && Type::Convertible<Args, DataType>): contents{static_cast<DataType>(args)...} {}
+	requires (... && Type::CanBecome<Args, DataType>): contents{static_cast<DataType>(args)...} {}
 
 	/// @brief Returns the element at the given index.
 	/// @param index Index of the element.

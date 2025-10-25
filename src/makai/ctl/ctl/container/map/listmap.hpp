@@ -179,7 +179,7 @@ public:
 	///		Most recent key-value pair is kept.
 	template<typename... Args>
 	constexpr BaseListMap(Args const&... args)
-	requires (... && Type::Convertible<Args, PairType>)
+	requires (... && Type::CanBecome<Args, PairType>)
 	: BaseType(BaseType{args...}) {}
 
 	/// @brief Constructs the container form a list-like container of key-value pairs.
