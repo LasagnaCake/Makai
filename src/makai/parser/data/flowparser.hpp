@@ -3,6 +3,8 @@
 
 #include "dataparser.hpp"
 
+CTL_DIAGBLOCK_BEGIN
+_Pragma("GCC diagnostic ignored \"-Wswitch\"")
 /// @brief Data format parsers.
 namespace Makai::Parser::Data {
 	/// @brief Fast Lazy Object Writing (FLOW) parser.
@@ -69,8 +71,6 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_REAL:
 					result[result.size()] = Value(token.value.template get<ValueType::LTS_TVT_REAL>().value());
 				break;
-				CTL_DIAGBLOCK_BEGIN
-				_Pragma("GCC diagnostic ignored \"-Wswitch\"")
 				case TokenType{'{'}: {
 					auto const obj = parseObject();
 					if (obj)
@@ -83,7 +83,6 @@ namespace Makai::Parser::Data {
 						result[result.size()] = obj.value();
 					else return obj.error().value();
 				} break;
-				CTL_DIAGBLOCK_END
 				case TokenType::LTS_TT_IDENTIFIER: {
 					auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 					if (id == "null") result[result.size()] = Value::null();
@@ -123,8 +122,6 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_REAL:
 						result[key] = Value(token.value.template get<ValueType::LTS_TVT_REAL>().value());
 					break;
-					CTL_DIAGBLOCK_BEGIN
-					_Pragma("GCC diagnostic ignored \"-Wswitch\"")
 					case TokenType{'{'}: {
 						auto const obj = parseObject();
 						if (obj)
@@ -137,7 +134,6 @@ namespace Makai::Parser::Data {
 							result[key] = obj.value();
 						else return obj.error().value();
 					} break;
-					CTL_DIAGBLOCK_END
 					case TokenType::LTS_TT_IDENTIFIER: {
 						auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 						if (id == "null") result[key] = Value::null();
@@ -181,5 +177,6 @@ namespace Makai::Parser::Data {
 		LexerType 			lexer;
 	};
 }
+CTL_DIAGBLOCK_END
 
 #endif
