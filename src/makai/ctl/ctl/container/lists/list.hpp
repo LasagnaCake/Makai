@@ -35,8 +35,19 @@ namespace Type::Container {
 		template<class T>
 		struct IsList;
 
-		template<template <class, class, template <class> class> class T0, class T1, class T2, template <class> class T3>
-		struct IsList<T0<T1, T2, T3>>: BooleanConstant<Type::Equal<T0<T1, T2, T3>, ::CTL::List<T1, T2, T3>>> {};
+		template<
+			template <
+				class,
+				class,
+				template <class> class,
+				template <class> class
+			> class T0,
+			class T1,
+			class T2,
+			template <class> class T3,
+			template <class> class T4
+		>
+		struct IsList<T0<T1, T2, T3, T4>>: BooleanConstant<Type::Equal<T0<T1, T2, T3, T4>, ::CTL::List<T1, T2, T3, T4>>> {};
 	}
 
 	/// Type must be `List`.
@@ -144,7 +155,7 @@ public:
 	constexpr List(Args const&... args)
 	requires (
 		(sizeof...(Args) > 0)
-	&&	(... && (Type::CanBecome<Args, DataType>))
+	&&	(... && (Type::Different<Args, SelfType> && Type::CanBecome<Args, DataType>))
 	) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));

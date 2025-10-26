@@ -1,9 +1,11 @@
 #ifndef CTL_EX_DATA_VALUE_H
 #define CTL_EX_DATA_VALUE_H
 
+#include "../../ctl/exnamespace.hpp"
 #include "../../ctl/container/container.hpp"
+#include "../../ctl/typetraits/enum.hpp"
 
-CTL_NAMESPACE_BEGIN
+CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Data exchange format facilities.
 namespace Data {
@@ -12,17 +14,17 @@ namespace Data {
 }
 
 /// @brief Data-specific type constraints.
-namespace Type::Data {
+namespace Type::Ex::Data {
 	/// @brief Type must be a serializable type.
 	template <class T>
 	concept Serializable = requires (T v) {
-			{v.serialize()} -> Type::Convertible<::CTL::Data::Value>;
+			{v.serialize()} -> ::CTL::Type::Convertible<::CTL::Ex::Data::Value>;
 	};
 
 	/// @brief Type must be a deserializable type.
 	template <class T>
 	concept Deserializable = requires (T v) {
-			{T::deserialize(declval<::CTL::Data::Value>())} -> Type::Convertible<T>;
+			{T::deserialize(declval<::CTL::Ex::Data::Value>())} -> Type::Convertible<T>;
 	};
 }
 
@@ -106,27 +108,30 @@ namespace Data {
 		constexpr Value(nulltype):	kind(Kind::DVT_NULL)		{}
 
 		/// @brief Constructs a boolean value.
-		constexpr Value(bool const value):			kind(Kind::DVT_BOOLEAN)		{content.integer = value;	}
+		constexpr Value(bool const value):			kind(Kind::DVT_BOOLEAN)			{content.integer = value;			}
 		/// @brief Constructs a signed integer value.
 		template <::CTL::Type::SignedInteger T>
-		constexpr Value(T const value):				kind(Kind::DVT_SIGNED)		{content.integer = value;	}
+		constexpr Value(T const value):				kind(Kind::DVT_SIGNED)			{content.integer = value;			}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Unsigned T>
-		constexpr Value(T const value):				kind(Kind::DVT_UNSIGNED)	{content.integer = value;	}
+		constexpr Value(T const value):				kind(Kind::DVT_UNSIGNED)		{content.integer = value;			}
+		/// @brief Constructs an unsigned integer value.
+		template <::CTL::Type::Enumerator T>
+		constexpr Value(T const value):				Value(enumcast(value))			{									}
 		/// @brief Constructs a real number value.
 		template <::CTL::Type::Real T>
-		constexpr Value(T const value):				kind(Kind::DVT_REAL)		{content.real = value;		}
+		constexpr Value(T const value):				kind(Kind::DVT_REAL)			{content.real = value;				}
 		/// @brief Constructs a string value.
-		constexpr Value(StringType const& value):	kind(Kind::DVT_STRING)		{content.string = value;	}
+		constexpr Value(StringType const& value):	kind(Kind::DVT_STRING)			{content.string = value;			}
 		/// @brief Constructs an array value.
-		constexpr Value(ArrayType const value):		kind(Kind::DVT_ARRAY)		{makeFromArray(value);		}
+		constexpr Value(ArrayType const value):		kind(Kind::DVT_ARRAY)			{makeFromArray(value);				}
 		/// @brief Constructs a byte list value.
-		constexpr Value(ByteListType const& value):	kind(Kind::DVT_BYTES)		{content.bytes = value;		}
+		constexpr Value(ByteListType const& value):	kind(Kind::DVT_BYTES)			{content.bytes = value;				}
 		/// @brief Constructs an object value.
-		constexpr Value(ObjectType const& value):	kind(Kind::DVT_OBJECT)		{makeFromObject(value);		}		
+		constexpr Value(ObjectType const& value):	kind(Kind::DVT_OBJECT)			{makeFromObject(value);				}		
 
 		/// @brief Constructs the value from a serializable value.
-		template <::CTL::Type::Data::Serializable T>
+		template <Type::Ex::Data::Serializable T>
 		constexpr Value(T const& value): Value(value.serialize()) {}
 
 		/// @brief Copy constructor.
@@ -231,6 +236,18 @@ namespace Data {
 			else return false;
 			return true;
 		}
+		
+		/// @brief Tries to get the value as a given type.
+		/// @tparam T value type.
+		/// @param out Output.
+		/// @return Whether value was successfully acquired.
+		template <::CTL::Type::Enumerator T>
+		constexpr bool tryGet(T& out) const  {
+			if (isInteger() || isBoolean())	out = static_cast<T>(content.integer);
+			else if (isReal())				out = static_cast<T>(content.real);
+			else return false;
+			return true;
+		}
 
 		/// @brief Tries to get the value as a given type.
 		/// @tparam T value type.
@@ -249,7 +266,7 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Equal<ArrayType> T>
 		constexpr bool tryGet(T& out) const {
-			if (isArray()) out = content.array;
+			if (isArray()) out = *content.array;
 			else return false;
 			return true;
 		}
@@ -271,7 +288,7 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Equal<ObjectType> T>
 		constexpr bool tryGet(T& out) const {
-			if (isObject()) out = content.object;
+			if (isObject()) out = *content.object;
 			else return false;
 			return true;
 		}
@@ -280,17 +297,44 @@ namespace Data {
 		/// @tparam T value type.
 		/// @param out Output.
 		/// @return Whether value was successfully acquired.
-		template <class T>
-		constexpr bool tryGet(List<T>& out) const
-		requires (::CTL::Type::Different<T, Value> && ::CTL::Type::Different<T, typename ByteListType::DataType>) {
+		template <Type::Container::List T>
+		constexpr bool tryGet(T& out) const
+		requires (
+			::CTL::Type::Different<typename T::DataType, Value>
+		&&	::CTL::Type::Different<typename T::DataType, typename ByteListType::DataType>
+		) {
+			using ElementType = typename T::DataType;
+			if (!isArray()) return false;
 			out.clear().reserve(size());
 			for (Value const& v: *content.array) {
-				T temp;
-				if (!v.template is<T>()) {
+				ElementType temp;
+				if (!v.template tryGet<ElementType>(temp)) {
 					out.clear();
 					return false;
 				}
 				out.pushBack(temp);
+			}
+			return true;
+		}
+
+		/// @brief Tries to get the value as a given type.
+		/// @tparam T value type.
+		/// @param out Output.
+		/// @return Whether value was successfully acquired.
+		template <Type::Container::Map T>
+		constexpr bool tryGet(T& out) const
+		requires (::CTL::Type::Different<typename T::ValueType, Value>) {
+			using ElementType = typename T::ValueType;
+			if (!isObject()) return false;
+			out.clear().reserve(size());
+			for (auto const& [k, v]: *content.object) {
+				ElementType temp;
+				if (!v.template tryGet<ElementType>(temp)) {
+					out.clear();
+					return false;
+				}
+				v.tryGet(temp);
+				out[k] = temp;
 			}
 			return true;
 		}
@@ -309,7 +353,7 @@ namespace Data {
 		/// @tparam T value type.
 		/// @param out Output.
 		/// @return Whether value was successfully acquired.
-		template <::CTL::Type::Data::Deserializable T>
+		template <Type::Ex::Data::Deserializable T>
 		constexpr bool tryGet(T& out) const {
 			out = T::deserialize(*this);
 			return true;
@@ -933,6 +977,6 @@ namespace Data {
 	}
 }
 
-CTL_NAMESPACE_END
+CTL_EX_NAMESPACE_END
 
 #endif

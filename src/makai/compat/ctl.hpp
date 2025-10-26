@@ -22,6 +22,11 @@ namespace Makai {
 		using namespace CTL::Ex::Co;
 		using namespace CTL::Co;
 	}
+	/// @brief Data processing facilities.
+	namespace Data {
+		using namespace CTL::Ex::Data;
+	//	using namespace CTL::Data;
+	}
 	#ifndef __clang__
 	namespace Type = Type;
 	#endif

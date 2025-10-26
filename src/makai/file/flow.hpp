@@ -9,6 +9,15 @@ namespace Makai::FLOW {
 	/// @brief Underlying FLOW structure type.
 	using Value = Data::Value;
 
+	/// @brief FLOW object type.
+	using Object	= Value::ObjectType;
+	/// @brief FLOW array type.
+	using Array		= Value::ArrayType;
+	/// @brief FLOW byte list type.
+	using ByteList	= Value::ByteListType;
+	/// @brief FLOW object entry type.
+	using Entry		= Value::ObjectType::PairType;
+
 	/// @brief Parses a FLOW string.
 	/// @param data String to parse.
 	/// @return String as FLOW value.

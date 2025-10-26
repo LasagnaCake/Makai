@@ -3,20 +3,20 @@
 
 #include "value.hpp"
 
-CTL_NAMESPACE_BEGIN
+CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Data-specific type constraints.
 namespace Type::Data {
 	/// @brief Type must be a valid string parser that returns `TError`.
 	template <class T, class TError>
 	concept StringParser = requires (T parser) {
-		{parser.tryParse(::CTL::Data::Value::StringType())} -> Type::Equal<Result<::CTL::Data::Value, TError>>;
+		{parser.tryParse(::CTL::Ex::Data::Value::StringType())} -> Type::Equal<Result<::CTL::Ex::Data::Value, TError>>;
 	};
 
 	/// @brief Type must be a valid byte parser that returns `TError`.
 	template <class T, class TError>
 	concept ByteParser = requires (T parser) {
-		{parser.tryParse(::CTL::Data::Value::ByteListType())} -> Type::Equal<Result<::CTL::Data::Value, TError>>;
+		{parser.tryParse(::CTL::Ex::Data::Value::ByteListType())} -> Type::Equal<Result<::CTL::Ex::Data::Value, TError>>;
 	};
 }
 
@@ -98,6 +98,6 @@ namespace Data {
 	}
 }
 
-CTL_NAMESPACE_END
+CTL_EX_NAMESPACE_END
 
 #endif

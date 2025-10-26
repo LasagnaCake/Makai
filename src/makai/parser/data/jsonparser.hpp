@@ -13,7 +13,7 @@ namespace Makai::Parser::Data {
 		/// @brief Tries to parse a JSON string.
 		/// @param str String to parse.
 		/// @return Resulting value, or an error.	
-		constexpr ResultType tryParse(Value::StringType const& str) override {
+		ResultType tryParse(Value::StringType const& str) override {
 			source = str;
 			lexer.open(str.toString());
 			auto const result = parse(str);

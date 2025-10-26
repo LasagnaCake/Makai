@@ -5,7 +5,7 @@
 
 /// @brief Data format parsers.
 namespace Makai::Parser::Data {
-	using namespace CTL::Data;
+	using namespace CTL::Ex::Data;
 	/// @brief String parser interface.
 	struct IStringParser {
 		/// @brief Result type.

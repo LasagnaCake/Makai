@@ -9,6 +9,15 @@ namespace Makai::JSON {
 	/// @brief Underlying JSON structure type.
 	using Value = Data::Value;
 
+	/// @brief JSON object type.
+	using Object	= Value::ObjectType;
+	/// @brief JSON array type.
+	using Array		= Value::ArrayType;
+	/// @brief JSON byte list type.
+	using ByteList	= Value::ByteListType;
+	/// @brief JSON object entry type.
+	using Entry		= Value::ObjectType::PairType;
+
 	/// @brief Parses a JSON string.
 	/// @param data String to parse.
 	/// @return String as JSON value.

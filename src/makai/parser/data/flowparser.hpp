@@ -13,7 +13,7 @@ namespace Makai::Parser::Data {
 		/// @brief Tries to parse a FLOW string.
 		/// @param str String to parse.
 		/// @return Resulting value, or an error.
-		constexpr ResultType tryParse(Value::StringType const& str) override {
+		ResultType tryParse(Value::StringType const& str) override {
 			source = str;
 			lexer.open(str.toString());
 			auto const result = parse(str);
@@ -69,6 +69,8 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_REAL:
 					result[result.size()] = Value(token.value.template get<ValueType::LTS_TVT_REAL>().value());
 				break;
+				CTL_DIAGBLOCK_BEGIN
+				_Pragma("GCC diagnostic ignored \"-Wswitch\"")
 				case TokenType{'{'}: {
 					auto const obj = parseObject();
 					if (obj)
@@ -81,6 +83,7 @@ namespace Makai::Parser::Data {
 						result[result.size()] = obj.value();
 					else return obj.error().value();
 				} break;
+				CTL_DIAGBLOCK_END
 				case TokenType::LTS_TT_IDENTIFIER: {
 					auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 					if (id == "null") result[result.size()] = Value::null();
@@ -120,6 +123,8 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_REAL:
 						result[key] = Value(token.value.template get<ValueType::LTS_TVT_REAL>().value());
 					break;
+					CTL_DIAGBLOCK_BEGIN
+					_Pragma("GCC diagnostic ignored \"-Wswitch\"")
 					case TokenType{'{'}: {
 						auto const obj = parseObject();
 						if (obj)
@@ -132,6 +137,7 @@ namespace Makai::Parser::Data {
 							result[key] = obj.value();
 						else return obj.error().value();
 					} break;
+					CTL_DIAGBLOCK_END
 					case TokenType::LTS_TT_IDENTIFIER: {
 						auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 						if (id == "null") result[key] = Value::null();
@@ -163,7 +169,7 @@ namespace Makai::Parser::Data {
 			return result;
 		}
 	
-		constexpr StringParseError error(String const& what) const {
+		StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
 			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};

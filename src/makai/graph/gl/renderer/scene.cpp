@@ -111,9 +111,9 @@ void Scene::saveToSceneFile(
 				integratedObjectBinaries,
 				integratedObjectTextures
 			);
-			objpaths.pushBack(JSON::JSONType{
-				{"source", OS::FS::concatenate(objname, objname + ".mrod").std()},
-				{"type", "MROD"}
+			objpaths.pushBack(JSON::Object{
+				JSON::Entry{"source", OS::FS::concatenate(objname, objname + ".mrod")},
+				JSON::Entry{"type", "MROD"}
 			});
 		} else {
 			if (!integratedObjectBinaries) {
@@ -121,7 +121,7 @@ void Scene::saveToSceneFile(
 				if (!wasBaked)
 					obj->bake();
 				File::saveBinary(OS::FS::concatenate(folderpath, objname + ".mesh"), obj->triangles.data(), obj->triangles.size());
-				file["mesh"]["data"] = {{"path", objname.std() + ".mesh"}};
+				file["mesh"]["data"] = {JSON::Entry{"path", objname + ".mesh"}};
 				if (!wasBaked)
 					obj->unbake();
 			}
@@ -139,22 +139,22 @@ void Scene::saveToSceneFile(
 				mdef["warp"] = Material::saveImageEffect(obj->material.warp, folderpath, "tx/warp.tga");
 				mdef["warp"]["channelX"] = mat.warp.channelX;
 				mdef["warp"]["channelY"] = mat.warp.channelY;
-				mdef["warp"]["trans"] = JSON::JSONType{
-					{"position",	{mat.warp.trans.position.x,	mat.warp.trans.position.y	}	},
-					{"rotation",	mat.warp.trans.rotation										},
-					{"scale",		{mat.warp.trans.scale.x,	mat.warp.trans.scale.y		}	}
+				mdef["warp"]["trans"] = JSON::Object{
+					JSON::Entry{"position",	JSON::Array{mat.warp.trans.position.x,	mat.warp.trans.position.y	}	},
+					JSON::Entry{"rotation",	mat.warp.trans.rotation													},
+					JSON::Entry{"scale",	JSON::Array{mat.warp.trans.scale.x,	mat.warp.trans.scale.y			}	}
 				};
 			}
 		}
 	}
 	if (!objpaths.empty()) {
-		file["data"] = {{"path", {}}};
+		file["data"] = JSON::Object{JSON::Entry{"path", {}}};
 		usize i = 0;
 		for (JSON::Value o: objpaths)
-			file["data"]["path"][i] = o.value();
+			file["data"]["path"][i] = o;
 	}
 	// convert to text
-	auto contents = file.toString(pretty ? 1 : -1);
+	auto contents = file.toString(pretty ? String{" "} : nullptr);
 	// Save definition file
 	File::saveText(OS::FS::concatenate(folder, name) + ".msd", contents);
 }
@@ -163,7 +163,7 @@ void Scene::extendFromDefinition(
 	JSON::Value const& def,
 	String const& sourcepath
 ) {
-	if (def.has("version") && def["version"].isNumber()) {
+	if (def.contains("version") && def["version"].isNumber()) {
 		// Do stuff for versions
 		switch (def["version"].get<usize>()) {
 			default:
@@ -234,28 +234,28 @@ void Scene::extendFromDefinitionV0(JSON::Value def, String const& sourcepath) {
 		// Get objects data
 		{
 			if (def["path"].isObject()) {
-				for(auto& obj: def["data"]["path"].get<List<JSON::JSONType>>()) {
+				for(auto& obj: def["data"]["path"].get<JSON::Array>()) {
 					auto r = createObject(
-						OS::FS::fileName(obj["source"].get<std::string>(), true)
+						OS::FS::fileName(obj["source"].get<String>(), true)
 					).value;
-					if (obj["type"].get<std::string>() == "MROD")
-						r->extendFromDefinitionFile(obj["source"].get<std::string>());
-					if (obj["type"].get<std::string>() == "MESH" || obj["type"].get<std::string>() == "MSBO") {
-						r->extendFromBinaryFile(obj["source"].get<std::string>());
+					if (obj["type"].get<String>() == "MROD")
+						r->extendFromDefinitionFile(obj["source"].get<String>());
+					if (obj["type"].get<String>() == "MESH" || obj["type"].get<String>() == "MSBO") {
+						r->extendFromBinaryFile(obj["source"].get<String>());
 					}
 					r->bake();
 				}
 			} else if (def["data"].isArray()) {
-				for(auto& obj: def["data"].get<List<JSON::JSONType>>()) {
+				for(auto& obj: def["data"].get<JSON::Array>()) {
 					auto r = createObject().value;
 					r->extendFromDefinition(
 						obj,
-						OS::FS::concatenate(sourcepath, String(obj.get<std::string>()))
+						OS::FS::concatenate(sourcepath, obj.get<String>())
 					);
 					r->bake();
 				}
 			} else if (def["data"].isObject()) {
-				auto objs = def["data"].json().items();
+				auto objs = def["data"].items();
 				for(auto const& [name, obj]: objs) {
 					DEBUGLN("[[ ", name," ]]");
 					auto r = createObject(name).value;
@@ -288,35 +288,35 @@ JSON::Value Scene::getSceneDefinition(
 		for (auto const& [name, obj]: getObjects())
 			def["data"][name] = obj->getObjectDefinition("base64", integratedObjectBinaries, integratedObjectTextures);
 	Camera3D cam = camera;
-	def["camera"] = JSON::JSONType{
-		{"eye",		{cam.eye.x, cam.eye.y, cam.eye.z}	},
-		{"at",		{cam.at.x, cam.at.y, cam.at.z}		},
-		{"up",		{cam.up.x, cam.up.y, cam.up.z}		},
-		{"aspect",	{cam.aspect.x, cam.aspect.y,}		},
-		{"fov",		cam.fov		},
-		{"zNear",	cam.zNear	},
-		{"zFar",	cam.zFar	},
-		{"ortho", {
-			{"strength",	cam.ortho.strength							},
-			{"origin",		{cam.ortho.origin.x, cam.ortho.origin.y}	},
-			{"size",		{cam.ortho.size.x, cam.ortho.size.y}		}
+	def["camera"] = JSON::Object{
+		JSON::Entry{"eye",		JSON::Array{cam.eye.x, cam.eye.y, cam.eye.z}	},
+		JSON::Entry{"at",		JSON::Array{cam.at.x, cam.at.y, cam.at.z}		},
+		JSON::Entry{"up",		JSON::Array{cam.up.x, cam.up.y, cam.up.z}		},
+		JSON::Entry{"aspect",	JSON::Array{cam.aspect.x, cam.aspect.y,}		},
+		JSON::Entry{"fov",		cam.fov		},
+		JSON::Entry{"zNear",	cam.zNear	},
+		JSON::Entry{"zFar",	cam.zFar	},
+		JSON::Entry{"ortho", JSON::Object{
+			JSON::Entry{"strength",	cam.ortho.strength									},
+			JSON::Entry{"origin",	JSON::Array{cam.ortho.origin.x, cam.ortho.origin.y}	},
+			JSON::Entry{"size",		JSON::Array{cam.ortho.size.x, cam.ortho.size.y}		}
 		}},
-		{"relativeToEye", cam.relativeToEye}
+		JSON::Entry{"relativeToEye", cam.relativeToEye}
 	};
 	#define _FOG_JSON_VALUE(FOG_TYPE)\
-		{#FOG_TYPE, {\
-			{"enabled", world.FOG_TYPE.enabled},\
-			{"color", Color::toHexCodeString(world.FOG_TYPE.color, false, true).std()},\
-			{"start", world.FOG_TYPE.start},\
-			{"stop", world.FOG_TYPE.stop},\
-			{"strength", world.FOG_TYPE.strength}\
+		JSON::Entry {#FOG_TYPE, JSON::Object {\
+			JSON::Entry{"enabled", world.FOG_TYPE.enabled},\
+			JSON::Entry{"color", Color::toHexCodeString(world.FOG_TYPE.color, false, true)},\
+			JSON::Entry{"start", world.FOG_TYPE.start},\
+			JSON::Entry{"stop", world.FOG_TYPE.stop},\
+			JSON::Entry{"strength", world.FOG_TYPE.strength}\
 		}}
-	def["world"] = JSON::JSONType{
+	def["world"] = JSON::Object {
 		_FOG_JSON_VALUE(nearFog),
 		_FOG_JSON_VALUE(farFog),
-		{"ambient", {
-			{"color", Color::toHexCodeString(world.ambient.color, true, true).std()},
-			{"strength", world.ambient.strength}
+		JSON::Entry{"ambient", JSON::Object {
+			JSON::Entry{"color", Color::toHexCodeString(world.ambient.color, true, true)},
+			JSON::Entry{"strength", world.ambient.strength}
 		}}
 	};
 	#undef _FOG_JSON_VALUE

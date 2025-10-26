@@ -14,6 +14,9 @@
 #define CTL_DEVMODE_OUT(CONTENT)
 #endif
 
+#define CTL_DIAGBLOCK_BEGIN _Pragma("GCC diagnostic push")
+#define CTL_DIAGBLOCK_END _Pragma("GCC diagnostic pop")
+
 /// @brief CTL core namespace.
 #define CTL_NAMESPACE_BEGIN	namespace CTL {
 /// @brief CTL core namespace.

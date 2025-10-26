@@ -295,7 +295,7 @@ void Arch::pack(
 		StringList files;
 		Value tree = dir["tree"];
 		tree = getStructure(fs::path(folderPath.std()), files, String(fs::path(folderPath.std()).stem().string()));
-		DEBUGLN("\n", dir.toFLOWString("  "));
+		DEBUGLN("\n", dir.toFLOWString(String{"  "}));
 		// Populate with temporary values
 		List<uint64> locations;
 		locations.resize(files.size(), 0);
@@ -381,7 +381,7 @@ void Arch::pack(
 		dir["tree"] = tree;
 		// Process directory structure
 		DEBUGLN("\nWriting directory structure...\n");
-		DEBUGLN("\n", dir.toFLOWString("  "));
+		DEBUGLN("\n", dir.toFLOWString(String{"  "}));
 		{
 			// Directory header
 			DirectoryHeader	dheader;

@@ -9,10 +9,10 @@ JSON::Value Material::saveImageEffect(Material::Effect::Image& effect, CTL::Stri
 	def.operator[]("enabled") = effect.enabled;
 	if (effect.image && effect.image.exists()) {
 		effect.image.saveToFile(OS::FS::concatenate(folder, path));
-		def.operator[]("image") = JSON::Extern::Value{
-			{"path", path},
-			{"minFilter", (uint)effect.image.minFilter()},
-			{"magFilter", (uint)effect.image.magFilter()}
+		def.operator[]("image") = JSON::Object{
+			JSON::Entry{"path", path},
+			JSON::Entry{"minFilter", (uint)effect.image.minFilter()},
+			JSON::Entry{"magFilter", (uint)effect.image.magFilter()}
 		};
 	} else def.operator[]("enabled") = false;
 	return def;
