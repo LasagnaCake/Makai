@@ -443,7 +443,7 @@ namespace MX {
 	template<Type::NonVoid T>
 	[[gnu::nonnull(1)]]
 	constexpr ref<T> objclear(ref<T> mem, usize sz) {
-		CTL_DEVMODE_FN_DECL
+		CTL_DEVMODE_FN_DECL;
 		if (!(sz + 1)) unreachable();
 		if (!sz) return mem;
 		while (sz--)
