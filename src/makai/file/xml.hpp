@@ -19,7 +19,7 @@ namespace Makai::XML {
 	///		
 	///		If there is only one tag of a given type, it results in a single object.
 	///		If there is more than one tag of a given type, it results in an array of objects.
-	JSON::JSONValue toJSON(String const& xml);
+	JSON::Value toJSON(String const& xml);
 }
 
 namespace MkXML = Makai::XML;

@@ -42,7 +42,7 @@ Vector4 Color::fromHexCodeString(String code) {
 	return fromHexCodeRGBA(toUInt32(code, 16));
 }
 
-Vector4 Color::fromJSON(JSON::JSONData const& v) {
+Vector4 Color::fromJSON(JSON::Value const& v) {
 	try {
 		if (v.isArray())
 			return Vector4(

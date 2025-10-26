@@ -1,13 +1,13 @@
 #include "scene.hpp"
 
-#include "../color.hpp"
+#include "../../color/color.hpp"
 
 using namespace Makai;
 using namespace Makai; using namespace Makai::Graph;
 using BaseType = Scene::BaseType;
 namespace JSON = Makai::JSON;
 
-inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaultValue = 0) {
+inline Vector2 fromJSONArrayV2(JSON::Value const& json, Vector2 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector2(
@@ -22,7 +22,7 @@ inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaul
 	}
 }
 
-inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaultValue = 0) {
+inline Vector3 fromJSONArrayV3(JSON::Value const& json, Vector3 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector3(
@@ -38,7 +38,7 @@ inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaul
 	}
 }
 
-inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaultValue = 0) {
+inline Vector4 fromJSONArrayV4(JSON::Value const& json, Vector4 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector4(
@@ -96,8 +96,8 @@ void Scene::saveToSceneFile(
 	bool const pretty
 
 ) {
-	JSON::JSONData file = getSceneDefinition(integratedObjects, integratedObjectBinaries, integratedObjectTextures);
-	List<JSON::JSONData> objpaths;
+	JSON::Value file = getSceneDefinition(integratedObjects, integratedObjectBinaries, integratedObjectTextures);
+	List<JSON::Value> objpaths;
 	OS::FS::makeDirectory(folder);
 	for (auto const& [objname, obj]: getObjects()) {
 		String folderpath	= OS::FS::concatenate(folder, objname);
@@ -150,7 +150,7 @@ void Scene::saveToSceneFile(
 	if (!objpaths.empty()) {
 		file["data"] = {{"path", {}}};
 		usize i = 0;
-		for (JSON::JSONData o: objpaths)
+		for (JSON::Value o: objpaths)
 			file["data"]["path"][i] = o.value();
 	}
 	// convert to text
@@ -160,7 +160,7 @@ void Scene::saveToSceneFile(
 }
 
 void Scene::extendFromDefinition(
-	JSON::JSONData const& def,
+	JSON::Value const& def,
 	String const& sourcepath
 ) {
 	if (def.has("version") && def["version"].isNumber()) {
@@ -172,7 +172,7 @@ void Scene::extendFromDefinition(
 	} else extendFromDefinitionV0(def, sourcepath);
 }
 
-void Scene::extendFromDefinitionV0(JSON::JSONData def, String const& sourcepath) {
+void Scene::extendFromDefinitionV0(JSON::Value def, String const& sourcepath) {
 	try {
 		Camera3D				cam;
 		Material::WorldMaterial	mat;
@@ -277,12 +277,12 @@ void Scene::extendFromDefinitionV0(JSON::JSONData def, String const& sourcepath)
 	}
 }
 
-JSON::JSONData Scene::getSceneDefinition(
+JSON::Value Scene::getSceneDefinition(
 	bool const integratedObjects,
 	bool const integratedObjectBinaries,
 	bool const integratedObjectTextures
 ) {
-	JSON::JSONData def;
+	JSON::Value def;
 	def["version"] = VERSION;
 	if (integratedObjects)
 		for (auto const& [name, obj]: getObjects())

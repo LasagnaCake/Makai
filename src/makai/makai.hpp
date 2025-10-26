@@ -8,6 +8,8 @@
 
 #include "core/core.hpp"
 #include "data/data.hpp"
+#include "parser/parser.hpp"
+#include "lexer/lexer.hpp"
 #include "file/file.hpp"
 #include "graph/graph.hpp"
 #include "audio/audio.hpp"

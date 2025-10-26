@@ -33,7 +33,7 @@ namespace Data {
 		/// @brief Real number type.
 		using RealType		= double;
 		/// @brief String type.
-		using StringType	= UTF8String;
+		using StringType	= String;
 		/// @brief Byte list type.
 		using ByteListType	= List<byte>;
 		/// @brief Array type.
@@ -88,7 +88,7 @@ namespace Data {
 				CompiledPath path;
 				path.nodes.reserve(rp.size());
 				for (auto node: rp)
-					if (node.validate([] (auto const& e) {return isNumberChar(static_cast<char>(e.value()));}))
+					if (node.validate([] (auto const& e) {return isNumberChar(static_cast<char>(e));}))
 						path.nodes.pushBack({toInt64(::CTL::toString(node)), ""});
 					else path.nodes.pushBack({Limit::MAX<ssize>, node});
 				return path;
@@ -196,6 +196,15 @@ namespace Data {
 		/// @brief Returns whether the type can be "coerced" to be a boolean.
 		/// @brief Only type that currently cannot be coerced is byte list.
 		constexpr bool isVerifiable() const	{return isTruthy() || isFalsy() || isPrimitive();				}
+
+		/// @brief Returns whether the value is an integer.
+		constexpr bool isInt() const		{return isInteger();	}
+		/// @brief Returns whether the value is a real number.
+		constexpr bool isFloat() const		{return isReal();		}
+		/// @brief Returns whether the value is a boolean.
+		constexpr bool isBool() const		{return isBoolean();	}
+		/// @brief Returns whether the value is undefined.
+		constexpr bool isDiscarded() const	{return isUndefined();	}
 
 		/// @brief Tries to get the value as a given type.
 		/// @tparam T value type.
@@ -419,7 +428,8 @@ namespace Data {
 		/// @return Element at given index.
 		/// @note If index does not exist, array is grown until index does.
 		/// @throw Error::InvalidType If value is not an array.
-		constexpr Value& operator[](ssize const index) {
+		template <Type::Integer T>
+		constexpr Value& operator[](T const index) {
 			if (isFalsy()) *this = array();
 			if (!isArray()) typeMismatchError("array");
 			extendArray(index);
@@ -431,7 +441,8 @@ namespace Data {
 		/// @return Element at given key.
 		/// @note If key does not exist, it is created.
 		/// @throw Error::InvalidType If value is not an object.
-		constexpr Value& operator[](StringType const& key) {
+		template <Type::CanBecome<StringType> T>
+		constexpr Value& operator[](T const& key) {
 			if (isFalsy()) *this = object();
 			if (!isObject()) typeMismatchError("object");
 			if (!contains(key)) read(key) = Value::undefined();
@@ -462,7 +473,8 @@ namespace Data {
 		/// @return Element at given index.
 		/// @throw Error::InvalidType If value is not an array.
 		/// @throw Error::OutOfBounds If index is out of bounds.
-		constexpr Value operator[](ssize const index) const {
+		template <Type::Integer T>
+		constexpr Value operator[](T const index) const {
 			if (!isArray()) typeMismatchError("array");
 			else if (index >= static_cast<ssize>(size()))
 				outOfBoundsError(index);
@@ -474,7 +486,8 @@ namespace Data {
 		/// @return Element at given key.
 		/// @throw Error::InvalidType If value is not an object.
 		/// @throw Error::NonexistentValue If key does not exist.
-		constexpr Value operator[](StringType const& key) const {
+		template <Type::CanBecome<StringType> T>
+		constexpr Value operator[](T const& key) const {
 			if (!isObject()) typeMismatchError("object");
 			else if (!contains(key))
 				missingKeyError(key);
@@ -773,6 +786,7 @@ namespace Data {
 				case Kind::DVT_ARRAY:		return "array";
 				case Kind::DVT_OBJECT:		return "object";
 			}
+			return "none";
 		}
 
 		constexpr static StringType escape(StringType const& str) {
@@ -873,32 +887,32 @@ namespace Data {
 	constexpr Value Value::info()  {
 		Value result = object();
 		#if defined(__GNUG__) && !defined(__clang__)
-		result[{"compiler"}][{"name"}]		= "gcc";
-		result[{"compiler"}][{"version"}]	= StringType(::CTL::toString(__GNUC__, ".", __GNUC_MINOR__));
+		result["compiler"]["name"]		= "gcc";
+		result["compiler"]["version"]	= StringType(::CTL::toString(__GNUC__, ".", __GNUC_MINOR__));
 		#elif defined(__clang__)
-		result[{"compiler"}][{"name"}]		= "clang";
-		result[{"compiler"}][{"version"}]	= __clang_version__;
+		result["compiler"]["name"]		= "clang";
+		result["compiler"]["name"]	= __clang_version__;
 		#else
 		#error "Unsupported compiler!"
 		#endif
-		result[{"cpp"}] = UTF8String(::CTL::toString(__cplusplus));
+		result["cpp"] = Value::StringType(::CTL::toString(__cplusplus));
 		#if defined(_WIN32) || defined(_WIN64)
-		result[{"os"}]	= "windows";
+		result["os"]	= "windows";
 		#elif defined(__linux__)
-		result[{"os"}]	= "linux";
+		result["os"]	= "linux";
 		#elif defined(__APPLE__) || defined(__MACH__)
-		result[{"os"}]	= "apple";
+		result["os"]	= "apple";
 		#elif defined(__unix__)
-		result[{"os"}]	= "unix";
+		result["os"]	= "unix";
 		#endif
 		#if defined(__x86_64__) || defined(_M_X64)
-		result[{"arch"}]	= "x64";
+		result["arch"]	= "x64";
 		#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
-		result[{"arch"}]	= "x86";
+		result["arch"]	= "x86";
 		#elif defined(__aarch64__) || defined(_M_ARM64)
-		result[{"arch"}]	= "arm64";
+		result["arch"]	= "arm64";
 		#else 
-		result[{"arch"}]	= "unknown";
+		result["arch"]	= "unknown";
 		#endif 
 		return result;
 	}

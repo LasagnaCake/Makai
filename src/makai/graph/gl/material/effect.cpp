@@ -4,12 +4,12 @@ using namespace Makai; using namespace Makai::Graph;
 
 namespace JSON = Makai::JSON;
 
-JSON::JSONData Material::saveImageEffect(Material::Effect::Image& effect, CTL::String const& folder, String const& path) {
-	JSON::JSONData def;
+JSON::Value Material::saveImageEffect(Material::Effect::Image& effect, CTL::String const& folder, String const& path) {
+	JSON::Value def;
 	def.operator[]("enabled") = effect.enabled;
 	if (effect.image && effect.image.exists()) {
 		effect.image.saveToFile(OS::FS::concatenate(folder, path));
-		def.operator[]("image") = JSON::Extern::JSONData{
+		def.operator[]("image") = JSON::Extern::Value{
 			{"path", path},
 			{"minFilter", (uint)effect.image.minFilter()},
 			{"magFilter", (uint)effect.image.magFilter()}
@@ -19,7 +19,7 @@ JSON::JSONData Material::saveImageEffect(Material::Effect::Image& effect, CTL::S
 }
 
 Material::Effect::Image Material::loadImageEffect(
-	JSON::JSONData effect,
+	JSON::Value effect,
 	CTL::String const& sourcepath,
 	Texture2D& texture
 ) {

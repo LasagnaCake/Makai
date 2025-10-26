@@ -121,7 +121,7 @@ namespace Makai::Ex::Game {
 
 		/// @brief Constructs the save file.
 		/// @param data Save file contents.
-		explicit Save(Makai::JSON::JSONValue const& data): data(data)	{}
+		explicit Save(Makai::JSON::Value const& data): data(data)	{}
 		/// @brief Constructs the save file.
 		/// @param data Save file contents.
 		explicit Save(Makai::JSON::JSONView const& data): data(data)	{}
@@ -234,7 +234,7 @@ namespace Makai::Ex::Game {
 		SaveView				view()			{return SaveView(data);	}
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		Makai::JSON::JSONValue	value()	const	{return data;			}
+		Makai::JSON::Value	value()	const	{return data;			}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.
@@ -256,7 +256,7 @@ namespace Makai::Ex::Game {
 
 	private:
 		/// @brief Save file contents.
-		Makai::JSON::JSONValue data = Makai::JSON::object();
+		Makai::JSON::Value data = Makai::JSON::object();
 	};
 }
 

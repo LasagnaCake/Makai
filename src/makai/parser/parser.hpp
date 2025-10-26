@@ -3,6 +3,6 @@
 
 #include "data/data.hpp"
 
-using MkParser = Makai::Parser;
+namespace MkParser = Makai::Parser;
 
 #endif

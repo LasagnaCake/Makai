@@ -10,7 +10,7 @@ INCLUDES := $(INC_XML2JSON)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, json xml slf get)
+	$(call compile-all, json flow xml slf get)
 endef
 
 all: debug release

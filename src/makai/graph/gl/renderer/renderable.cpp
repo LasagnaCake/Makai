@@ -9,7 +9,7 @@ using namespace Material;
 
 namespace JSON = Makai::JSON;
 
-inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaultValue = 0) {
+inline Vector2 fromJSONArrayV2(JSON::Value const& json, Vector2 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector2(
@@ -24,7 +24,7 @@ inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaul
 	}
 }
 
-inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaultValue = 0) {
+inline Vector3 fromJSONArrayV3(JSON::Value const& json, Vector3 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector3(
@@ -40,7 +40,7 @@ inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaul
 	}
 }
 
-inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaultValue = 0) {
+inline Vector4 fromJSONArrayV4(JSON::Value const& json, Vector4 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector4(
@@ -57,7 +57,7 @@ inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaul
 	}
 }
 
-inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitionFolder) {
+inline ObjectMaterial fromDefinition(JSON::Value def, String const& definitionFolder) {
 	ObjectMaterial mat;
 	Texture2D& texture		= mat.texture.image;
 	Texture2D& blend		= mat.blend.image;
@@ -168,13 +168,13 @@ inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitio
 	return mat;
 }
 
-inline JSON::JSONData toDefinition(
+inline JSON::Value toDefinition(
 	ObjectMaterial& mat,
 	String const& definitionFolder,
 	String const& texturesFolder,
 	bool integratedTextures
 ) {
-	JSON::JSONData def;
+	JSON::Value def;
 	// Define object
 	def = JSON::JSONType{
 		{"color", Color::toHexCodeString(mat.color, false, true)},
@@ -338,7 +338,7 @@ void Renderable::saveToDefinitionFile(
 	DEBUGLN(folder + "/" + name + ".mrod");
 	OS::FS::makeDirectory(OS::FS::concatenate(folder, texturesFolder));
 	// Get object definition
-	JSON::JSONData file = getObjectDefinition("base64", integratedBinary, integratedTextures);
+	JSON::Value file = getObjectDefinition("base64", integratedBinary, integratedTextures);
 	// If binary is in a different location, save there
 	if (!integratedBinary) {
 		File::saveBinary(binpath, triangles.data(), triangles.size());
@@ -378,7 +378,7 @@ void Renderable::draw() {
 }
 
 void Renderable::extendFromDefinition(
-	JSON::JSONData def,
+	JSON::Value def,
 	String const& sourcepath
 ) {
 	if (def.has("version") && def["version"].isNumber()) {
@@ -391,7 +391,7 @@ void Renderable::extendFromDefinition(
 }
 
 void Renderable::extendFromDefinitionV0(
-	JSON::JSONData def,
+	JSON::Value def,
 	String const& sourcepath
 ) {
 	// Component data
@@ -544,7 +544,7 @@ void Renderable::extendFromDefinitionV0(
 		}
 		armature.bake();
 		if (def["armature"]["names"].isObject()) {
-			JSON::JSONValue names = def["armature"]["names"];
+			JSON::Value names = def["armature"]["names"];
 			for (auto [name, bone]: names.get<Dictionary<usize>>()) {
 				armature.names[name] = bone;
 				DEBUGLN("Map [ '", name, "' -> ", bone, " ]");
@@ -555,8 +555,8 @@ void Renderable::extendFromDefinitionV0(
 	// Set blend data
 	if (def["blend"].isObject()) {
 		try {
-			JSON::JSONData bfun	= def["blend"]["function"];
-			JSON::JSONData beq	= def["blend"]["equation"];
+			JSON::Value bfun	= def["blend"]["function"];
+			JSON::Value beq	= def["blend"]["equation"];
 			if (bfun.isNumber()) {
 				BlendFunction bv = (BlendFunction)bfun.get<uint>();
 				blend.func = {bv, bv, bv, bv};
@@ -595,8 +595,8 @@ void Renderable::extendFromDefinitionV0(
 }
 
 template<usize S>
-inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
-	JSON::JSONData armature;
+inline JSON::Value getArmature(Vertebrate<S> const& vertebrate) {
+	JSON::Value armature;
 	auto rel = armature["relations"];
 	auto bones = armature["bones"];
 	bones = JSON::array();
@@ -617,7 +617,7 @@ inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
 	return armature;
 }
 
-JSON::JSONData Renderable::getObjectDefinition(
+JSON::Value Renderable::getObjectDefinition(
 	String const& encoding,
 	bool const integratedBinary,
 	bool const integratedTextures
@@ -629,7 +629,7 @@ JSON::JSONData Renderable::getObjectDefinition(
 	if (triangles.empty())
 		throw Error::InvalidValue("Renderable object is empty!", CTL_CPP_PRETTY_SOURCE);
 	// Create definition
-	JSON::JSONData def;
+	JSON::Value def;
 	// Save mesh components
 	def["mesh"] = JSON::JSONType{
 		{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz,i0,i1,i2,i3,w0,w1,w2,w3"}

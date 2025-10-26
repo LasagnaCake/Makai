@@ -138,7 +138,7 @@ namespace Makai::Graph::Color {
 	/// @brief Creates a color from a JSON value.
 	/// @param json JSON value.
 	/// @return Resulting color.
-	Vector4 fromJSON(JSON::JSONData const& json);
+	Vector4 fromJSON(JSON::Value const& json);
 
 	/// @brief Converts an RGBA hex code to an RGB one.
 	/// @param color Code to convert.

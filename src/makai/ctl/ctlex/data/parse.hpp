@@ -80,7 +80,7 @@ namespace Data {
 		auto const result = parser.tryParse(str);
 		if (result)
 			return result.value();
-		else result.error.raise();
+		else result.error().value().raise();
 	}
 
 	/// @brief Parses bytes with a given parser.
@@ -94,7 +94,7 @@ namespace Data {
 		auto const result = parser.tryParse(bytes);
 		if (result)
 			return result.value();
-		else result.error.raise();
+		else result.error().value().raise();
 	}
 }
 

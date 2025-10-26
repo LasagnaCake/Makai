@@ -23,7 +23,7 @@
 
 #pragma GCC diagnostic pop
 
-Makai::JSON::JSONValue Makai::XML::toJSON(Makai::String const& xml) {
+Makai::JSON::Value Makai::XML::toJSON(Makai::String const& xml) {
 	Makai::String json;
 	try {
 		json = xml2json(xml.cstr());

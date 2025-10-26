@@ -199,11 +199,11 @@ namespace Makai::Graph {
 	private:
 		void draw() override;
 
-		void extendFromDefinition(JSON::JSONData const& def, String const& sourcepath);
+		void extendFromDefinition(JSON::Value const& def, String const& sourcepath);
 
-		void extendFromDefinitionV0(JSON::JSONData def, String const& sourcepath);
+		void extendFromDefinitionV0(JSON::Value def, String const& sourcepath);
 
-		JSON::JSONData getSceneDefinition(
+		JSON::Value getSceneDefinition(
 			bool const integratedObjects		= true,
 			bool const integratedObjectBinaries	= true,
 			bool const integratedObjectTextures	= true
