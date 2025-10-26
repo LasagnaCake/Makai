@@ -64,11 +64,11 @@ namespace Data {
 			RealType			real;
 			StringType			string;
 			ByteListType		bytes;
-			Unique<ArrayType>	array;
-			Unique<ObjectType>	object;
+			owner<ArrayType>	array;
+			owner<ObjectType>	object;
 
-			constexpr Content() {}
-			constexpr ~Content() {}
+			constexpr Content()		{integer = 0;}
+			constexpr ~Content()	{}
 		};
 
 		/// @brief Compiled element path.
@@ -108,27 +108,27 @@ namespace Data {
 		constexpr Value(nulltype):	kind(Kind::DVK_NULL)		{}
 
 		/// @brief Constructs a boolean value.
-		constexpr Value(bool const value):			kind(Kind::DVK_BOOLEAN)			{content.integer = value;			}
+		constexpr Value(bool const value):			kind(Kind::DVK_BOOLEAN)			{content.integer = value;					}
 		/// @brief Constructs a signed integer value.
 		template <::CTL::Type::SignedInteger T>
-		constexpr Value(T const value):				kind(Kind::DVK_SIGNED)			{content.integer = value;			}
+		constexpr Value(T const value):				kind(Kind::DVK_SIGNED)			{content.integer = value;					}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Unsigned T>
-		constexpr Value(T const value):				kind(Kind::DVK_UNSIGNED)		{content.integer = value;			}
+		constexpr Value(T const value):				kind(Kind::DVK_UNSIGNED)		{content.integer = value;					}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Enumerator T>
-		constexpr Value(T const value):				Value(enumcast(value))			{									}
+		constexpr Value(T const value):				Value(enumcast(value))			{											}
 		/// @brief Constructs a real number value.
 		template <::CTL::Type::Real T>
-		constexpr Value(T const value):				kind(Kind::DVK_REAL)			{content.real = value;				}
+		constexpr Value(T const value):				kind(Kind::DVK_REAL)			{content.real = value;						}
 		/// @brief Constructs a string value.
-		constexpr Value(StringType const& value):	kind(Kind::DVK_STRING)			{content.string = value;			}
-		/// @brief Constructs an array value.
-		constexpr Value(ArrayType const value):		kind(Kind::DVK_ARRAY)			{makeFromArray(value);				}
+		constexpr Value(StringType const& value):	kind(Kind::DVK_STRING)			{content.string = value;					}
 		/// @brief Constructs a byte list value.
-		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{content.bytes = value;				}
+		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{content.bytes = value;						}
+		/// @brief Constructs an array value.
+		constexpr Value(ArrayType const value):		kind(Kind::DVK_ARRAY)			{content.array = new ArrayType(value);		}
 		/// @brief Constructs an object value.
-		constexpr Value(ObjectType const& value):	kind(Kind::DVK_OBJECT)			{makeFromObject(value);				}		
+		constexpr Value(ObjectType const& value):	kind(Kind::DVK_OBJECT)			{content.object = new ObjectType(value);	}		
 
 		/// @brief Constructs the value from a serializable value.
 		template <Type::Ex::Data::Serializable T>
@@ -146,12 +146,12 @@ namespace Data {
 			switch (kind = other.kind) {
 				case Kind::DVK_BOOLEAN:
 				case Kind::DVK_UNSIGNED:
-				case Kind::DVK_SIGNED:		content.integer	= other.content.integer;
-				case Kind::DVK_REAL:		content.real	= other.content.real;
-				case Kind::DVK_STRING:		MX::construct(&content.string,		other.content.string	);
-				case Kind::DVK_ARRAY:		makeFromArray(*other.content.array);
-				case Kind::DVK_BYTES:		MX::construct(&content.bytes,		other.content.bytes		);
-				case Kind::DVK_OBJECT:		makeFromObjectRef(other.content.object);
+				case Kind::DVK_SIGNED:		content.integer	= other.content.integer;					break;
+				case Kind::DVK_REAL:		content.real	= other.content.real;						break;
+				case Kind::DVK_STRING:		MX::construct(&content.string, other.content.string);		break;
+				case Kind::DVK_BYTES:		MX::construct(&content.bytes, other.content.bytes);			break;
+				case Kind::DVK_ARRAY:		content.array	= new ArrayType(*other.content.array);		break;
+				case Kind::DVK_OBJECT:		content.object	= new ObjectType(*other.content.object);	break;
 				default: break;
 			}
 			return *this;
@@ -216,6 +216,7 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Equal<bool> T>
 		constexpr bool tryGet(T& out) const {
+			if (!isVerifiable()) return false;
 			if (isFalsy())							out = false;
 			else if (isTruthy())					out = true;
 			else if (isInteger() || isBoolean())	out = content.integer;
@@ -263,9 +264,9 @@ namespace Data {
 		/// @tparam T value type.
 		/// @param out Output.
 		/// @return Whether value was successfully acquired.
-		template <::CTL::Type::Equal<ArrayType> T>
+		template <::CTL::Type::Equal<ByteListType> T>
 		constexpr bool tryGet(T& out) const {
-			if (isArray()) out = *content.array;
+			if (isBytes()) out = content.bytes;
 			else return false;
 			return true;
 		}
@@ -274,9 +275,9 @@ namespace Data {
 		/// @tparam T value type.
 		/// @param out Output.
 		/// @return Whether value was successfully acquired.
-		template <::CTL::Type::Equal<ByteListType> T>
+		template <::CTL::Type::Equal<ArrayType> T>
 		constexpr bool tryGet(T& out) const {
-			if (isBytes()) out = content.bytes;
+			if (isArray()) out = *content.array;
 			else return false;
 			return true;
 		}
@@ -572,8 +573,8 @@ namespace Data {
 			if (isInteger() && other.isInteger())	return (get<ssize>() <=> other.template get<ssize>());
 			if (isReal() && other.isReal())			return (get<double>() <=> other.template get<double>());
 			if (isString() && other.isString())		return (content.string <=> other.content.string);
-			if (isArray() && other.isArray())		return (content.array <=> other.content.array);
 			if (isBytes() && other.isBytes())		return (content.bytes <=> other.content.bytes);
+			if (isArray() && other.isArray())		return (*content.array <=> *other.content.array);
 			if (isObject() && other.isObject())		return compareWithRef(other.content.object);
 			// Le JavaScript
 			return (size() <=> other.size());
@@ -778,18 +779,14 @@ namespace Data {
 		/// @brief Value content.
 		Content	content;
 
-		constexpr void makeFromArray(ArrayType const& array);
 		constexpr void extendArray(ssize const sz);
-
-		constexpr void makeFromObject(ObjectType const& object);
-		constexpr void makeFromObjectRef(Unique<ObjectType> const& object);
 
 		constexpr Value& read(StringType const& key);
 		constexpr Value read(StringType const& key) const;
 		constexpr Value& read(ssize const index);
 		constexpr Value read(ssize const index) const;
 
-		constexpr OrderType compareWithRef(Unique<ObjectType> const& object) const;
+		constexpr OrderType compareWithRef(ref<ObjectType> const& object) const;
 
 		[[noreturn]] void typeMismatchError(String const& expectedType) const {
 			throw Error::InvalidType(
@@ -848,28 +845,16 @@ namespace Data {
 		constexpr void dump() {
 			switch (kind) {
 				default: break;
-				case Kind::DVK_STRING:	MX::destruct(&content.string);	break;
-				case Kind::DVK_BYTES:	MX::destruct(&content.bytes);	break;
-				case Kind::DVK_ARRAY:	content.array.unbind();			break;
-				case Kind::DVK_OBJECT:	content.object.unbind();		break;
+				case Kind::DVK_STRING:	MX::destruct(&content.string);						break;
+				case Kind::DVK_BYTES:	MX::destruct(&content.bytes);						break;
+				case Kind::DVK_ARRAY:	delete content.array; content.array = nullptr;		break;
+				case Kind::DVK_OBJECT:	delete content.object; content.object = nullptr;	break;
 			}
 			kind = Kind::DVK_UNDEFINED;
 		}
 	};
 
-	constexpr void Value::makeFromArray(Value::ArrayType const& value) {
-		content.array.bind(new ArrayType({value}));
-	}
-
-	constexpr void Value::makeFromObject(Value::ObjectType const& value) {
-		content.object.bind(new ObjectType(copy(value)));
-	}
-
-	constexpr void Value::makeFromObjectRef(Unique<Value::ObjectType> const& value) {
-		makeFromObject(*value);
-	}
-
-	constexpr Value::OrderType Value::compareWithRef(Unique<Value::ObjectType> const& value) const {
+	constexpr Value::OrderType Value::compareWithRef(ref<Value::ObjectType> const& value) const {
 		return Value::Order::EQUAL;
 	}
 
@@ -898,8 +883,8 @@ namespace Data {
 		if (isFalsy())	return 0;
 		if (isScalar())	return 1;
 		if (isString())	return content.string.size();
-		if (isArray())	return content.array->size();
 		if (isBytes())	return content.bytes.size();
+		if (isArray())	return content.array->size();
 		if (isObject())	return content.object->size();
 		return 0;
 	}
