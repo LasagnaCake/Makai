@@ -45,17 +45,17 @@ namespace Data {
 		
 		/// @brief Underlying value type.
 		enum class Kind {
-			DVT_UNDEFINED,
-			DVT_NULL,
-			DVT_NAN,
-			DVT_BOOLEAN,
-			DVT_SIGNED,
-			DVT_UNSIGNED,
-			DVT_REAL,
-			DVT_STRING,
-			DVT_ARRAY,
-			DVT_BYTES,
-			DVT_OBJECT
+			DVK_UNDEFINED,
+			DVK_NULL,
+			DVK_NAN,
+			DVK_BOOLEAN,
+			DVK_SIGNED,
+			DVK_UNSIGNED,
+			DVK_REAL,
+			DVK_STRING,
+			DVK_ARRAY,
+			DVK_BYTES,
+			DVK_OBJECT
 		};
 
 		/// @brief Underlying storage.
@@ -103,32 +103,32 @@ namespace Data {
 		};
 
 		/// @brief Empty constructor.
-		constexpr Value():			kind(Kind::DVT_UNDEFINED)	{}
+		constexpr Value():			kind(Kind::DVK_UNDEFINED)	{}
 		/// @brief Constructs a null value.
-		constexpr Value(nulltype):	kind(Kind::DVT_NULL)		{}
+		constexpr Value(nulltype):	kind(Kind::DVK_NULL)		{}
 
 		/// @brief Constructs a boolean value.
-		constexpr Value(bool const value):			kind(Kind::DVT_BOOLEAN)			{content.integer = value;			}
+		constexpr Value(bool const value):			kind(Kind::DVK_BOOLEAN)			{content.integer = value;			}
 		/// @brief Constructs a signed integer value.
 		template <::CTL::Type::SignedInteger T>
-		constexpr Value(T const value):				kind(Kind::DVT_SIGNED)			{content.integer = value;			}
+		constexpr Value(T const value):				kind(Kind::DVK_SIGNED)			{content.integer = value;			}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Unsigned T>
-		constexpr Value(T const value):				kind(Kind::DVT_UNSIGNED)		{content.integer = value;			}
+		constexpr Value(T const value):				kind(Kind::DVK_UNSIGNED)		{content.integer = value;			}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Enumerator T>
 		constexpr Value(T const value):				Value(enumcast(value))			{									}
 		/// @brief Constructs a real number value.
 		template <::CTL::Type::Real T>
-		constexpr Value(T const value):				kind(Kind::DVT_REAL)			{content.real = value;				}
+		constexpr Value(T const value):				kind(Kind::DVK_REAL)			{content.real = value;				}
 		/// @brief Constructs a string value.
-		constexpr Value(StringType const& value):	kind(Kind::DVT_STRING)			{content.string = value;			}
+		constexpr Value(StringType const& value):	kind(Kind::DVK_STRING)			{content.string = value;			}
 		/// @brief Constructs an array value.
-		constexpr Value(ArrayType const value):		kind(Kind::DVT_ARRAY)			{makeFromArray(value);				}
+		constexpr Value(ArrayType const value):		kind(Kind::DVK_ARRAY)			{makeFromArray(value);				}
 		/// @brief Constructs a byte list value.
-		constexpr Value(ByteListType const& value):	kind(Kind::DVT_BYTES)			{content.bytes = value;				}
+		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{content.bytes = value;				}
 		/// @brief Constructs an object value.
-		constexpr Value(ObjectType const& value):	kind(Kind::DVT_OBJECT)			{makeFromObject(value);				}		
+		constexpr Value(ObjectType const& value):	kind(Kind::DVK_OBJECT)			{makeFromObject(value);				}		
 
 		/// @brief Constructs the value from a serializable value.
 		template <Type::Ex::Data::Serializable T>
@@ -143,43 +143,42 @@ namespace Data {
 		/// @brief Copy assignment operator.
 		constexpr Value& operator=(Value const& other) {
 			dump();
-			kind = other.kind;
-			switch (kind) {
-				case Kind::DVT_BOOLEAN:
-				case Kind::DVT_UNSIGNED:
-				case Kind::DVT_SIGNED:		content.integer	= other.content.integer;
-				case Kind::DVT_REAL:		content.real	= other.content.real;
-				case Kind::DVT_STRING:		MX::construct(&content.string,		other.content.string	);
-				case Kind::DVT_ARRAY:		makeFromArray(*other.content.array);
-				case Kind::DVT_BYTES:		MX::construct(&content.bytes,		other.content.bytes		);
-				case Kind::DVT_OBJECT:		makeFromObjectRef(other.content.object);
+			switch (kind = other.kind) {
+				case Kind::DVK_BOOLEAN:
+				case Kind::DVK_UNSIGNED:
+				case Kind::DVK_SIGNED:		content.integer	= other.content.integer;
+				case Kind::DVK_REAL:		content.real	= other.content.real;
+				case Kind::DVK_STRING:		MX::construct(&content.string,		other.content.string	);
+				case Kind::DVK_ARRAY:		makeFromArray(*other.content.array);
+				case Kind::DVK_BYTES:		MX::construct(&content.bytes,		other.content.bytes		);
+				case Kind::DVK_OBJECT:		makeFromObjectRef(other.content.object);
 				default: break;
 			}
 			return *this;
 		}
 
 		/// @brief Returns whether the value is undefined.
-		constexpr bool isUndefined() const	{return kind == Kind::DVT_UNDEFINED;	}
+		constexpr bool isUndefined() const	{return kind == Kind::DVK_UNDEFINED;	}
 		/// @brief Returns whether the value is null.
-		constexpr bool isNull() const		{return kind == Kind::DVT_NULL;			}
+		constexpr bool isNull() const		{return kind == Kind::DVK_NULL;			}
 		/// @brief Returns whether the value is not a number.
-		constexpr bool isNaN() const		{return kind == Kind::DVT_NAN;			}
+		constexpr bool isNaN() const		{return kind == Kind::DVK_NAN;			}
 		/// @brief Returns whether the value is a boolean.
-		constexpr bool isBoolean() const	{return kind == Kind::DVT_BOOLEAN;		}
+		constexpr bool isBoolean() const	{return kind == Kind::DVK_BOOLEAN;		}
 		/// @brief Returns whether the value is a signed integer.
-		constexpr bool isSigned() const		{return kind == Kind::DVT_SIGNED;		}
+		constexpr bool isSigned() const		{return kind == Kind::DVK_SIGNED;		}
 		/// @brief Returns whether the value is an unsigned integer.
-		constexpr bool isUnsigned() const	{return kind == Kind::DVT_UNSIGNED;		}
+		constexpr bool isUnsigned() const	{return kind == Kind::DVK_UNSIGNED;		}
 		/// @brief Returns whether the value is a real number.
-		constexpr bool isReal() const		{return kind == Kind::DVT_REAL;			}
+		constexpr bool isReal() const		{return kind == Kind::DVK_REAL;			}
 		/// @brief Returns whether the value is a string.
-		constexpr bool isString() const		{return kind == Kind::DVT_STRING;		}
+		constexpr bool isString() const		{return kind == Kind::DVK_STRING;		}
 		/// @brief Returns whether the value is an array.
-		constexpr bool isArray() const		{return kind == Kind::DVT_ARRAY;		}
+		constexpr bool isArray() const		{return kind == Kind::DVK_ARRAY;		}
 		/// @brief Returns whether the value is a byte list.
-		constexpr bool isBytes() const		{return kind == Kind::DVT_BYTES;		}
+		constexpr bool isBytes() const		{return kind == Kind::DVK_BYTES;		}
 		/// @brief Returns whether the value is an object.
-		constexpr bool isObject() const		{return kind == Kind::DVT_OBJECT;		}
+		constexpr bool isObject() const		{return kind == Kind::DVK_OBJECT;		}
 
 		/// @brief Returns whether the value is an integer.
 		constexpr bool isInteger() const	{return isSigned() || !isUnsigned();										}
@@ -474,7 +473,7 @@ namespace Data {
 		/// @throw Error::InvalidType If value is not an array.
 		template <Type::Integer T>
 		constexpr Value& operator[](T const index) {
-			if (isFalsy()) *this = array();
+			if (isFalsy()) operator=(array());
 			if (!isArray()) typeMismatchError("array");
 			extendArray(index);
 			return (*content.array)[index];
@@ -487,9 +486,9 @@ namespace Data {
 		/// @throw Error::InvalidType If value is not an object.
 		template <Type::CanBecome<StringType> T>
 		constexpr Value& operator[](T const& key) {
-			if (isFalsy()) *this = object();
+			if (isFalsy()) operator=(object());
 			if (!isObject()) typeMismatchError("object");
-			if (!contains(key)) read(key) = Value::undefined();
+			if (!contains(key)) content.object->insert({key, Value::undefined()});
 			return read(key);
 		}
 
@@ -818,17 +817,17 @@ namespace Data {
 
 		constexpr static String enumAsString(Kind const& kind) {
 			switch (kind) {
-				case Kind::DVT_UNDEFINED:	return "undefined";
-				case Kind::DVT_NULL:		return "null";
-				case Kind::DVT_NAN:			return "NaN";
-				case Kind::DVT_BOOLEAN:		return "boolean";
-				case Kind::DVT_SIGNED:		return "signed";
-				case Kind::DVT_UNSIGNED:	return "unsigned";
-				case Kind::DVT_REAL:		return "real";
-				case Kind::DVT_STRING:		return "string";
-				case Kind::DVT_BYTES:		return "bytes";
-				case Kind::DVT_ARRAY:		return "array";
-				case Kind::DVT_OBJECT:		return "object";
+				case Kind::DVK_UNDEFINED:	return "undefined";
+				case Kind::DVK_NULL:		return "null";
+				case Kind::DVK_NAN:			return "NaN";
+				case Kind::DVK_BOOLEAN:		return "boolean";
+				case Kind::DVK_SIGNED:		return "signed";
+				case Kind::DVK_UNSIGNED:	return "unsigned";
+				case Kind::DVK_REAL:		return "real";
+				case Kind::DVK_STRING:		return "string";
+				case Kind::DVK_BYTES:		return "bytes";
+				case Kind::DVK_ARRAY:		return "array";
+				case Kind::DVK_OBJECT:		return "object";
 			}
 			return "none";
 		}
@@ -846,19 +845,17 @@ namespace Data {
 			return result + StringType("\"");
 		}
 
-		constexpr void dump();
-	};
-
-	constexpr void Value::dump() {
-		switch (kind) {
-			case Kind::DVT_STRING:	MX::destruct(&content.string);
-			case Kind::DVT_ARRAY:	MX::destruct(content.array.raw());
-			case Kind::DVT_BYTES:	MX::destruct(&content.bytes);
-			case Kind::DVT_OBJECT:	MX::destruct(content.object.raw());
-			default: break;
+		constexpr void dump() {
+			switch (kind) {
+				default: break;
+				case Kind::DVK_STRING:	MX::destruct(&content.string);	break;
+				case Kind::DVK_BYTES:	MX::destruct(&content.bytes);	break;
+				case Kind::DVK_ARRAY:	content.array.unbind();			break;
+				case Kind::DVK_OBJECT:	content.object.unbind();		break;
+			}
+			kind = Kind::DVK_UNDEFINED;
 		}
-		kind = Kind::DVT_UNDEFINED;
-	}
+	};
 
 	constexpr void Value::makeFromArray(Value::ArrayType const& value) {
 		content.array.bind(new ArrayType({value}));
