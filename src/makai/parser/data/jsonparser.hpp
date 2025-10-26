@@ -3,6 +3,8 @@
 
 #include "dataparser.hpp"
 
+CTL_DIAGBLOCK_BEGIN
+_Pragma("GCC diagnostic ignored \"-Wswitch\"")
 /// @brief Data format parsers.
 namespace Makai::Parser::Data {
 	/// @brief JavaScript Object Notation (JSON) parser.
@@ -178,7 +180,7 @@ namespace Makai::Parser::Data {
 			return result;
 		}
 	
-		constexpr StringParseError error(String const& what) const {
+		StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
 			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};
@@ -190,5 +192,6 @@ namespace Makai::Parser::Data {
 		LexerType 			lexer;
 	};
 }
+CTL_DIAGBLOCK_END
 
 #endif
