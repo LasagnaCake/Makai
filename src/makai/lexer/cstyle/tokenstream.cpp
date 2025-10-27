@@ -26,10 +26,10 @@ bool TokenStream::next() {
 				isFinished = true;
 			} break;
 			case (CLEX_charlit): {
-				curToken.value = UTF8Char(static_cast<uint32>(lex.int_number));
+				curToken.value = static_cast<uint32>(lex.int_number);
 			} goto TheRestOfTheOwl;
 			case (CLEX_intlit): {
-				curToken.value = static_cast<ssize>(lex.int_number);
+				curToken.value = lex.int_number < 0 ? static_cast<ssize>(lex.int_number) : static_cast<usize>(lex.int_number);
 			} goto TheRestOfTheOwl;
 			case (CLEX_floatlit): {
 				curToken.value = lex.real_number;

@@ -595,7 +595,8 @@ namespace Data {
 		/// @brief String padding.
 		struct Padding {
 			constexpr Padding(nulltype = nullptr): padding(false) {}
-			constexpr Padding(StringType const& pad): pad(""), followup(pad)									{}
+			template <Type::CanBecome <StringType> T>
+			constexpr Padding(T const& pad): pad(""), followup(pad)												{}
 			constexpr Padding(StringType const& pad, StringType const& followup): pad(pad), followup(followup)	{}
 
 			constexpr Padding next() const {if (*this) return {pad + followup, followup}; return{};}

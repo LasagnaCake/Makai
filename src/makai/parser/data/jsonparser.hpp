@@ -26,8 +26,6 @@ namespace Makai::Parser::Data {
 	private:
 		/// @brief Lexer token type.
 		using TokenType = LexerType::Token::Type;
-		/// @brief Lexer token value type.
-		using ValueType = LexerType::Token::Value::Type;
 
 		ResultType parse(Value::StringType const& str) {
 			if (!lexer.next()) return Value();
@@ -35,17 +33,15 @@ namespace Makai::Parser::Data {
 			switch (token.type) {
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-				return Value(token.value.template get<ValueType::LTS_TVT_STRING>().value());
 			case TokenType::LTS_TT_INTEGER:
-				return Value(token.value.template get<ValueType::LTS_TVT_INTEGER>().value());
 			case TokenType::LTS_TT_REAL:
-				return Value(token.value.template get<ValueType::LTS_TVT_REAL>().value());
+				return token.value;
 			case TokenType{'{'}:
 				return parseObject();
 			case TokenType{'['}:
 				return parseArray();
 			case TokenType::LTS_TT_IDENTIFIER: {
-				auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
+				auto const id = token.value.get<String>();
 				if (id == "null") return Value::null();
 				else if (id == "true") return Value(true);
 				else if (id == "false") return Value(false);
@@ -65,14 +61,9 @@ namespace Makai::Parser::Data {
 				switch (token.type) {
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-					result[result.size()] = Value(token.value.template get<ValueType::LTS_TVT_STRING>().value());
-				break;
 				case TokenType::LTS_TT_INTEGER:
-					result[result.size()] = Value(token.value.template get<ValueType::LTS_TVT_INTEGER>().value());
-				break;
 				case TokenType::LTS_TT_REAL:
-					result[result.size()] = Value(token.value.template get<ValueType::LTS_TVT_REAL>().value());
-				break;
+					result[result.size()] = token.value;
 				case TokenType{'{'}: {
 					auto const obj = parseObject();
 					if (obj)
@@ -86,7 +77,7 @@ namespace Makai::Parser::Data {
 					else return obj.error().value();
 				} break;
 				case TokenType::LTS_TT_IDENTIFIER: {
-					auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
+					auto const id = token.value.get<Value::StringType>();
 					if (id == "null") result[result.size()] = Value::null();
 					else if (id == "true") result[result.size()] = true;
 					else if (id == "false") result[result.size()] = false;
@@ -125,14 +116,9 @@ namespace Makai::Parser::Data {
 					switch (token.type) {
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-						result[key] = Value(token.value.template get<ValueType::LTS_TVT_STRING>().value());
-					break;
 					case TokenType::LTS_TT_INTEGER:
-						result[key] = Value(token.value.template get<ValueType::LTS_TVT_INTEGER>().value());
-					break;
 					case TokenType::LTS_TT_REAL:
-						result[key] = Value(token.value.template get<ValueType::LTS_TVT_REAL>().value());
-					break;
+						result[key] = token.value;
 					case TokenType{'{'}: {
 						auto const obj = parseObject();
 						if (obj)
@@ -146,10 +132,10 @@ namespace Makai::Parser::Data {
 						else return obj.error().value();
 					} break;
 					case TokenType::LTS_TT_IDENTIFIER: {
-						auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
+						auto const id = token.value.get<Value::StringType>();
 						if (id == "null") result[key] = Value::null();
-						else if (id == "true") result[key] = true;
-						else if (id == "false") result[key] = false;
+						else if (id == "true") result[key]	= true;
+						else if (id == "false") result[key]	= false;
 						else return error("Invalid/unsupported identifier!");
 					} break;
 					default:
@@ -170,7 +156,7 @@ namespace Makai::Parser::Data {
 						token.type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
 					||	token.type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
 					) {
-						key = token.value.template get<ValueType::LTS_TVT_STRING>().value();
+						key = token.value.get<Value::StringType>();
 						lexer.next();
 						if (lexer.current().type != TokenType{':'})
 							return error("Malformed object entry (separator colon)!");
