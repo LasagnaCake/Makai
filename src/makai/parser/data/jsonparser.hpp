@@ -43,8 +43,8 @@ namespace Makai::Parser::Data {
 			case TokenType::LTS_TT_IDENTIFIER: {
 				auto const id = token.value.get<String>();
 				if (id == "null") return Value::null();
-				else if (id == "true") return Value(true);
-				else if (id == "false") return Value(false);
+				else if (id == "true")	return Value(true);
+				else if (id == "false")	return Value(false);
 				return error("Invalid/unsupported identifier!");
 			}
 			default:
@@ -79,8 +79,8 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_IDENTIFIER: {
 					auto const id = token.value.get<Value::StringType>();
 					if (id == "null") result[result.size()] = Value::null();
-					else if (id == "true") result[result.size()] = true;
-					else if (id == "false") result[result.size()] = false;
+					else if (id == "true") result[result.size()]	= true;
+					else if (id == "false") result[result.size()]	= false;
 					else return error("Invalid/unsupported identifier!");
 				} break;
 				default:
