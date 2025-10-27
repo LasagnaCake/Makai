@@ -589,7 +589,26 @@ namespace Data {
 		constexpr friend void swap(Value& a, Value& b);
 
 		/// @brief String padding.
-		using Padding = Nullable<StringType>;
+		struct Padding {
+			constexpr Padding(nulltype = nullptr): padding(false) {}
+			constexpr Padding(StringType const& pad): pad(""), followup(pad)									{}
+			constexpr Padding(StringType const& pad, StringType const& followup): pad(pad), followup(followup)	{}
+
+			constexpr Padding next() const {if (*this) return {pad + followup, followup}; return{};}
+
+			constexpr operator bool() const			{return exists();	}
+			constexpr operator StringType() const	{return toString();	}
+
+			constexpr StringType toString() const	{return pad + followup;	}
+			constexpr bool exists() const			{return padding;		}
+
+			constexpr StringType base() const	{return pad;	}
+
+		private:
+			bool	padding = true;
+			String	pad;
+			String	followup;
+		};
 
 		/// @brief Converts the value to a JSON (JavaScript Object Notation) string.
 		/// @param pad Padding to use. By default, it is `nullptr`.
@@ -605,8 +624,8 @@ namespace Data {
 				return ::CTL::toString(content.integer);
 			if (isReal())
 				return ::CTL::toString(content.real);
-			StringType const lhs = pad ? StringType() : StringType("\n") + pad.value();
-			Padding const next = pad ? Padding{nullptr} : Padding{pad.value() + pad.value()};
+			StringType const NEWLINE = StringType("\n");
+			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
 			if (isBytes()) {
 				if (empty()) return "[]";
 				StringType result = "[";
@@ -618,15 +637,15 @@ namespace Data {
 				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
-					result += lhs + v.toJSONString(next) + ", ";
-				return result.sliced(0, -3) + lhs + StringType("]");
+					result += lhs + v.toJSONString(pad.next()) + ", ";
+				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("]");
 			}
 			if (isObject()) {
 				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto const& [k, v]: items())
-					result +=  lhs + escape(k) + ": " + v.toJSONString(next) + ", ";
-				return result.sliced(0, -3) + lhs + StringType("}");
+					result +=  lhs + escape(k) + ": " + v.toJSONString(pad.next()) + ", ";
+				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("}");
 			}
 			return StringType();
 		}
@@ -646,21 +665,21 @@ namespace Data {
 			if (isBytes())
 				// TODO: This
 				return "[]";
-			StringType const lhs = pad ? StringType() : StringType("\n") + pad.value();
-			Padding const next = pad ? Padding{nullptr} : Padding{pad.value() + pad.value()};
+			StringType const NEWLINE = StringType("\n");
+			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
 			if (isArray()) {
 				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
-					result += lhs + v.toFLOWString(next) + " ";
-				return result.sliced(0, -2) + lhs + StringType("]");
+					result += lhs + v.toFLOWString(pad.next()) + " ";
+				return result.sliced(0, -2) + (NEWLINE + pad.base()) + StringType("]");
 			}
 			if (isObject()) {
 				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto [k, v]: items())
-					result +=  lhs + escape(k) + " " + v.toFLOWString(next) + " ";
-				return result.sliced(0, -3) + lhs + StringType("}");
+					result +=  lhs + escape(k) + " " + v.toFLOWString(pad.next()) + " ";
+				return result.sliced(0, -2) + (NEWLINE + pad.base()) + StringType("}");
 			}
 			return StringType();
 		}
