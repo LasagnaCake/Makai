@@ -27,16 +27,16 @@ namespace Data {
 		/// @brief Error position.
 		struct Position {
 			/// @brief Point in the string the error occurred.
-			usize	at;
+			usize	at		= 0;
 			/// @brief Line in the file.
-			usize	line;
+			usize	line	= 0;
 			/// @brief Column in the file.
-			usize	column;
+			usize	column	= 0;
 		} position;
 		/// @brief Error message.
-		String				what;
+		String				what	= "Unknown error!";
 		/// @brief Content where the error occurred.		
-		Value::StringType	content;
+		Value::StringType	content = "none";
 
 		/// @brief Throws an exception detailing the error.
 		/// @throw Error::FailedAction.
@@ -80,7 +80,7 @@ namespace Data {
 		auto const result = parser.tryParse(str);
 		if (result)
 			return result.value();
-		else result.error().value().raise();
+		else result.error().orElse({}).raise();
 	}
 
 	/// @brief Parses bytes with a given parser.
