@@ -68,13 +68,13 @@ namespace Makai::Parser::Data {
 					auto const obj = parseObject();
 					if (obj)
 						result[result.size()] = obj.value();
-					else return obj.error().value();
+					else return obj.error().orElse({.what = "Unknown object error!"});
 				} break;
 				case TokenType{'['}: {
 					auto const obj = parseArray();
 					if (obj)
 						result[result.size()] = obj.value();
-					else return obj.error().value();
+					else return obj.error().orElse({.what = "Unknown array error!"});
 				} break;
 				case TokenType::LTS_TT_IDENTIFIER: {
 					auto const id = token.value.get<Value::StringType>();
@@ -123,13 +123,13 @@ namespace Makai::Parser::Data {
 						auto const obj = parseObject();
 						if (obj)
 							result[key] = obj.value();
-						else return obj.error().value();
+						else return obj.error().orElse({.what = "Unknown object error!"});
 					} break;
 					case TokenType{'['}: {
 						auto const obj = parseArray();
 						if (obj)
 							result[key] = obj.value();
-						else return obj.error().value();
+						else return obj.error().orElse({.what = "Unknown array error!"});
 					} break;
 					case TokenType::LTS_TT_IDENTIFIER: {
 						auto const id = token.value.get<Value::StringType>();
