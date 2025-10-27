@@ -49,7 +49,7 @@ int main() {
 		TestApp app;
 		app.run();
 	} catch (Makai::Error::Generic const& e) {
-		Makai::Popup::showError(e.what());
+		Makai::Popup::showError(e.report());
 	}
 	return 0;
 }
