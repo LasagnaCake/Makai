@@ -108,13 +108,16 @@ namespace Data {
 		constexpr Value(nulltype):	kind(Kind::DVK_NULL)		{}
 
 		/// @brief Constructs a boolean value.
-		constexpr Value(bool const value):			kind(Kind::DVK_BOOLEAN)			{content.integer = value;					}
+		template <::CTL::Type::Equal<bool> T>
+		constexpr Value(T const value):				kind(Kind::DVK_BOOLEAN)			{content.integer = value;					}
 		/// @brief Constructs a signed integer value.
 		template <::CTL::Type::SignedInteger T>
-		constexpr Value(T const value):				kind(Kind::DVK_SIGNED)			{content.integer = value;					}
+		constexpr Value(T const value)
+		requires (Type::Different<T, bool>):		kind(Kind::DVK_SIGNED)			{content.integer = value;					}
 		/// @brief Constructs an unsigned integer value.
-		template <::CTL::Type::Unsigned T>
-		constexpr Value(T const value):				kind(Kind::DVK_UNSIGNED)		{content.integer = value;					}
+		template <::CTL::Type::UnsignedInteger T>
+		constexpr Value(T const value)
+		requires (Type::Different<T, bool>):		kind(Kind::DVK_UNSIGNED)		{content.integer = value;					}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Enumerator T>
 		constexpr Value(T const value):				Value(enumcast(value))			{											}
@@ -122,9 +125,10 @@ namespace Data {
 		template <::CTL::Type::Real T>
 		constexpr Value(T const value):				kind(Kind::DVK_REAL)			{content.real = value;						}
 		/// @brief Constructs a string value.
-		constexpr Value(StringType const& value):	kind(Kind::DVK_STRING)			{content.string = value;					}
+		template <::CTL::Type::CanBecome<StringType> T>
+		constexpr Value(T const& value):			kind(Kind::DVK_STRING)			{MX::construct(&content.string, value);		}
 		/// @brief Constructs a byte list value.
-		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{content.bytes = value;						}
+		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{MX::construct(&content.bytes, value);		}
 		/// @brief Constructs an array value.
 		constexpr Value(ArrayType const value):		kind(Kind::DVK_ARRAY)			{content.array = new ArrayType(value);		}
 		/// @brief Constructs an object value.
@@ -656,9 +660,9 @@ namespace Data {
 		/// @note If padding is set to a string, newlines are added for each element.
 		constexpr StringType toFLOWString(Padding const& pad = nullptr) const {
 			if (isFalsy()) return "null";
-			if (isString())
-				return escape(content.string);
-			if (isBoolean() || isInteger())
+			if (isBoolean())
+				return content.integer ? "true" : "false";
+			if (isInteger())
 				return ::CTL::toString(content.integer);
 			if (isReal())
 				return ::CTL::toString(content.real);
@@ -909,12 +913,11 @@ namespace Data {
 	}
 
 	constexpr usize Value::size() const {
-		if (isFalsy())	return 0;
-		if (isScalar())	return 1;
 		if (isString())	return content.string.size();
 		if (isBytes())	return content.bytes.size();
 		if (isArray())	return content.array->size();
 		if (isObject())	return content.object->size();
+		if (isScalar())	return 1;
 		return 0;
 	}
 
