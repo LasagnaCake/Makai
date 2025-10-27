@@ -24,29 +24,29 @@ bool TokenStream::next() {
 				};
 				curToken.type = Token::Type::LTS_TT_INVALID;
 				isFinished = true;
+				goto Skip;
 			} break;
 			case (CLEX_charlit): {
 				curToken.value = static_cast<uint32>(lex.int_number);
-			} goto TheRestOfTheOwl;
+			} break;
 			case (CLEX_intlit): {
 				curToken.value = lex.int_number < 0 ? static_cast<ssize>(lex.int_number) : static_cast<usize>(lex.int_number);
-			} goto TheRestOfTheOwl;
+			} break;
 			case (CLEX_floatlit): {
 				curToken.value = lex.real_number;
-			} goto TheRestOfTheOwl;
+			} break;
 			case (CLEX_sqstring):
-			case (CLEX_dqstring): {
-				curToken.value = String(lex.string, lex.string_len);
-			} goto TheRestOfTheOwl;
+			case (CLEX_dqstring):
 			case (CLEX_id): {
-				curToken.value = String(lex.string, lex.string_len);
+				if (lex.string_len > 0)
+					curToken.value = String(lex.string, lex.string + lex.string_len);
+				else curToken.value.clear();
 			} break;
-			default: {
-			TheRestOfTheOwl:
-				curToken.type = static_cast<Token::Type>((lex.token < 256) ? lex.token : lex.token - 1);
-			} break;
+			default: break;
 		}
+		curToken.type = static_cast<Token::Type>((lex.token < 256) ? lex.token : lex.token - 1);
 	} else isFinished = true;
+Skip:
 	return !isFinished;
 }
 
