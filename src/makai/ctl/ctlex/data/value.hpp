@@ -181,15 +181,15 @@ namespace Data {
 		constexpr bool isObject() const		{return kind == Kind::DVK_OBJECT;		}
 
 		/// @brief Returns whether the value is an integer.
-		constexpr bool isInteger() const	{return isSigned() || !isUnsigned();										}
+		constexpr bool isInteger() const	{return isSigned() || isUnsigned();							}
 		/// @brief Returns whether the value is a number.
-		constexpr bool isNumber() const		{return isInteger() || isReal();											}
+		constexpr bool isNumber() const		{return isInteger() || isReal();							}
 		/// @brief Returns whether the value is a scalar type.
-		constexpr bool isScalar() const		{return isNumber() || isBoolean(); 											}
+		constexpr bool isScalar() const		{return isNumber() || isBoolean(); 							}
 		/// @brief Returns whether the value is a data primitive.
-		constexpr bool isPrimitive() const	{return isScalar() || isString() || isNull() || isBytes();					}
+		constexpr bool isPrimitive() const	{return isScalar() || isString() || isNull() || isBytes();	}
 		/// @brief Returns whether the value is a structured type (array or object).
-		constexpr bool isStructured() const {return isArray() || isObject();											}
+		constexpr bool isStructured() const {return isArray() || isObject();							}
 
 		/// @brief Returns whether the value is a "falsy" value.
 		/// @note Falsy values are: `undefined`, `null`, and empty strings.
@@ -564,7 +564,7 @@ namespace Data {
 		constexpr usize size() const;
 
 		/// @brief Returns whether the value is empty.
-		constexpr bool empty() const {return size() > 0;}
+		constexpr bool empty() const {return size() == 0;}
 
 		/// @brief Threeway comparison operator.
 		constexpr OrderType operator<=>(Value const& other) const {
@@ -599,28 +599,36 @@ namespace Data {
 			if (isFalsy()) return "null";
 			if (isString())
 				return escape(content.string);
-			if (isBoolean() || isInteger())
+			if (isBoolean())
+				return content.integer ? "true" : "false";
+			if (isInteger())
 				return ::CTL::toString(content.integer);
 			if (isReal())
 				return ::CTL::toString(content.real);
-			if (isBytes())
-				// TODO: This
-				return "[]";
-			StringType const lhs = pad ? StringType("") : StringType("\n") + pad.value();
+			StringType const lhs = pad ? StringType() : StringType("\n") + pad.value();
 			Padding const next = pad ? Padding{nullptr} : Padding{pad.value() + pad.value()};
+			if (isBytes()) {
+				if (empty()) return "[]";
+				StringType result = "[";
+				for (auto const& v: content.bytes)
+					result += lhs + ::CTL::toString(v) + ", ";
+				return result.sliced(0, -3) + lhs + StringType("]");
+			}
 			if (isArray()) {
+				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
 					result += lhs + v.toJSONString(next) + ", ";
-				return result.substring(0, -3) + lhs + StringType("]");
+				return result.sliced(0, -3) + lhs + StringType("]");
 			}
 			if (isObject()) {
+				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto const& [k, v]: items())
 					result +=  lhs + escape(k) + ": " + v.toJSONString(next) + ", ";
-				return result.substring(0, -3) + lhs + StringType("}");
+				return result.sliced(0, -3) + lhs + StringType("}");
 			}
-			return "";
+			return StringType();
 		}
 
 		/// @brief Converts the value to a FLOW (Fast Lazy Object Writing) string.
@@ -638,21 +646,23 @@ namespace Data {
 			if (isBytes())
 				// TODO: This
 				return "[]";
-			StringType const lhs = pad ? StringType("") : StringType("\n") + pad.value();
+			StringType const lhs = pad ? StringType() : StringType("\n") + pad.value();
 			Padding const next = pad ? Padding{nullptr} : Padding{pad.value() + pad.value()};
 			if (isArray()) {
+				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
 					result += lhs + v.toFLOWString(next) + " ";
-				return result.substring(0, -3) + lhs + StringType("]");
+				return result.sliced(0, -2) + lhs + StringType("]");
 			}
 			if (isObject()) {
+				if (empty()) return "{}";
 				StringType result = "{";
-				for (auto const& [k, v]: items())
+				for (auto [k, v]: items())
 					result +=  lhs + escape(k) + " " + v.toFLOWString(next) + " ";
-				return result.substring(0, -3) + lhs + StringType("}");
+				return result.sliced(0, -3) + lhs + StringType("}");
 			}
-			return "";
+			return StringType();
 		}
 
 		/// @brief String format type.
