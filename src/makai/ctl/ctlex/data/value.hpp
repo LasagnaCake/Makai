@@ -667,7 +667,13 @@ namespace Data {
 			if (isReal())
 				return ::CTL::toString(content.real);
 			if (isBytes()) {
-				StringType result = "#'";
+				StringType result = "#32'";
+				for (auto& b: content.bytes) {
+					auto bs = String::fromNumber<byte>(b, 32).substring(2);
+					if (bs.size() < 2)
+						bs = "0" + bs;
+					result += bs;
+				}
 				return result + "'";
 			}
 			StringType const NEWLINE = StringType("\n");

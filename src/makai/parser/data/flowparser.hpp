@@ -44,14 +44,48 @@ namespace Makai::Parser::Data {
 				return parseObject();
 			case TokenType{'['}:
 				return parseArray();
+			case TokenType{'!'}:
+				return parseBytes();
 			case TokenType::LTS_TT_IDENTIFIER: {
 				auto const id = token.value.template get<ValueType::LTS_TVT_STRING>().value();
 				if (id == "null") return Value::null();
+				else if (id == "true") return Value(true);
+				else if (id == "false") return Value(false);
 				return Value(id);
 			}
 			default: return Value();
 				//return error("Missing or invalid token!");
 			}
+		}
+
+		ResultType parseBytes() {
+			if (lexer.current().type != TokenType{'!'})
+				return error("String is not a valid byte string!");
+			if (!lexer.next() || lexer.current().type != TokenType::LTS_TT_INTEGER)
+				return error("Missing/Invalid byte string format specifier!");
+			usize const base = lexer.current().value.template get<ValueType::LTS_TVT_INTEGER>().value();
+			if (!lexer.next() || !(
+				lexer.current().type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
+			||	lexer.current().type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
+			)) return error("Missing/Invalid byte string contents!");
+			String const str = lexer.current().value.template get<ValueType::LTS_TVT_STRING>().value();
+			usize stride = 0;
+			switch (base) {
+				case 2:		stride = 8; break;
+				case 4:		stride = 4; break;
+				case 8:		stride = 3; break;
+				case 16:	stride = 2; break;
+				case 32:	stride = 2; break;
+				default: return error("Invalid string format specifier!");
+			}
+			if (str.size() % stride != 0) return error("String size is not a proper multiple for the given format specifier!");
+			usize start = 0;
+			auto result = Value::ByteListType();
+			while (start < str.size()) {
+				result.pushBack(String::toNumber<byte>(str.substring(start, start + stride), base));
+				start += stride;
+			}
+			return Value(result);
 		}
 
 		ResultType parseArray() {
@@ -79,6 +113,12 @@ namespace Makai::Parser::Data {
 				} break;
 				case TokenType{'['}: {
 					auto const obj = parseArray();
+					if (obj)
+						result[result.size()] = obj.value();
+					else return obj.error().value();
+				} break;
+				case TokenType{'!'}: {
+					auto const obj = parseBytes();
 					if (obj)
 						result[result.size()] = obj.value();
 					else return obj.error().value();
@@ -134,6 +174,12 @@ namespace Makai::Parser::Data {
 						auto const obj = parseArray();
 						if (obj)
 							result[key] = obj.value();
+						else return obj.error().value();
+					} break;
+					case TokenType{'!'}: {
+						auto const obj = parseBytes();
+						if (obj)
+							result[result.size()] = obj.value();
 						else return obj.error().value();
 					} break;
 					case TokenType::LTS_TT_IDENTIFIER: {
