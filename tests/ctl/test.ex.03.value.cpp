@@ -27,8 +27,8 @@ int main() {
 	};
 	DEBUGLN("Is object: ", val.isObject());
 	DEBUGLN("Result:\n");
-	DEBUGLN("<json>", val.toJSONString(Value::StringType{"    "}), "</json>\n");
-	DEBUGLN("<flow>", val.toFLOWString(Value::StringType{"    "}), "</flow>\n");
+	DEBUGLN("<json>", val.toJSONString(Value::StringType{"  "}), "</json>\n");
+	DEBUGLN("<flow>", val.toFLOWString(Value::StringType{"  "}), "</flow>\n");
 	DEBUGLN("Clearing...\n");
 	val.clear();
 	DEBUGLN("Test passed!");
