@@ -10,11 +10,11 @@ int main() {
 	DEBUGLN("Null...");
 	val["null"] = nullptr;
 	DEBUGLN("Boolean...");
-	val["bool"] = true;
+	val["bool"] = false;
 	DEBUGLN("Unsigned integer...");
 	val["uint"] = 1u;
 	DEBUGLN("Signed integer...");
-	val["int"] = 1;
+	val["int"] = -1;
 	DEBUGLN("String...");
 	val["str"] = "This is a string literal";
 	DEBUGLN("Array...");
