@@ -83,7 +83,6 @@ Since a version of (most of) them are bundled[^1], including your own version of
 | SDL2_Mixer | Audio backend                                       | Yes (Lib file[^3]) |
 | SDL2_Net   | Networking Backend                                  | Yes (Lib file[^3]) |
 | stb_image  | Image loading                                       | Yes (Implementation file[^2]) |
-| nlohmann::jsoncpp   | Multiple things                            | Yes (Header-only[^4]) |
 | xml2json   | XML-to-JSON conversion                              | Modified version only used internally, not required |
 | cppcodec   | Data encoding & decoding                            | Only used internally, not required |
 | CryptoPP   | Encryption, decryption, compression & decompression | Yes (Lib file[^3]) |
