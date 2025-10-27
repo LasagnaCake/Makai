@@ -3,7 +3,7 @@
 int main() {
 	DEBUGLN("Running app ", __FILE__, "...");
 	try {
-		Makai::FLOW::Value val = Makai::FLOW::parse(R"::(
+		Makai::String const str = R"::(
 			{
 				null_v null
 				bool_v false
@@ -28,7 +28,8 @@ int main() {
 					"key3" "value 3"
 				}
 			}
-		)::");
+		)::";
+		Makai::FLOW::Value val = Makai::FLOW::parse(str);
 		DEBUGLN(val.toFLOWString("  "));
 	} catch (Makai::Error::Generic const& e) {
 		Makai::Popup::showError(e.report());
