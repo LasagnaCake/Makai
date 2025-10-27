@@ -25,10 +25,11 @@ int main() {
 		Value::ObjectType::PairType{"key2", Value::ObjectType{Value::ObjectType::PairType{"subkey2", "val2"}}},
 		Value::ObjectType::PairType{"key3", "val3"}
 	};
-	DEBUGLN("\nResult:\n");
-	DEBUGLN("<json>", val.toJSONString(Value::StringType{"    "}), "</json>");
-	DEBUGLN("<flow>", val.toFLOWString(Value::StringType{"    "}), "</flow>");
-	DEBUGLN("\nClearing...\n");
+	DEBUGLN("Is object: ", val.isObject());
+	DEBUGLN("Result:\n");
+	DEBUGLN("<json>", val.toJSONString(Value::StringType{"    "}), "</json>\n");
+	DEBUGLN("<flow>", val.toFLOWString(Value::StringType{"    "}), "</flow>\n");
+	DEBUGLN("Clearing...\n");
 	val.clear();
 	DEBUGLN("Test passed!");
 	return 0;
