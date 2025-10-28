@@ -120,6 +120,7 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_REAL:
 						result[key] = token.value;
+					break;
 					case TokenType{'{'}: {
 						auto const obj = parseObject();
 						if (obj)
