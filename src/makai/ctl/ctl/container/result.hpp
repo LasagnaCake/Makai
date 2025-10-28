@@ -44,27 +44,14 @@ public:
 
 	/// @brief Copy constructor (`Result`).
 	/// @param other Other `Result` to copy from.
-	constexpr Result(SelfType const& other) {
-		switch (state = other.state) {
-			case ResultState::RS_OK:	result.value = other.result.value;
-			case ResultState::RS_ERROR:	result.error = other.result.error;
-			default: break;
-		}
-	}
+	constexpr Result(SelfType const& other) {operator=(other);}
 	/// @brief Copy constructor (value).
 	/// @param other Result value to copy.
-	constexpr Result(ConstReferenceType value)					{result.value = value; state = ResultState::RS_OK;					}
-	/// @brief Move constructor (value).
-	/// @param other Result value to move.
-	constexpr Result(TemporaryType value)						{result.value = CTL::move(value); state = ResultState::RS_OK;		}
+	constexpr Result(ConstReferenceType value)					{operator=(value);	}
 	/// @brief Copy constructor (Error).
 	/// @param other Error value to copy.
 	/// @note Explicit if error type to not be implicitly convertible to result type.
-	constexpr explicit(IMPLICIT) Result(ErrorType const& value)	{result.error = value; state = ResultState::RS_ERROR;				}
-	/// @brief Move constructor (Error).
-	/// @param other Error value to copy.
-	/// @note Explicit if error type to not be implicitly convertible to result type.
-	constexpr explicit(IMPLICIT) Result(ErrorType&& value)		{result.error = CTL::move(value); state = ResultState::RS_ERROR;	}
+	constexpr explicit(IMPLICIT) Result(ErrorType const& value)	{operator=(value);	}
 
 	/// @brief Runs the passed callable if there is a value.
 	/// @tparam TFunction Callable type.
@@ -99,28 +86,21 @@ public:
 	/// @brief Copy assignment operator (value).
 	/// @param value Value to store.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType const& value)						{destruct(); result.value = value; state = ResultState::RS_OK; return *this;					}
+	constexpr SelfType& operator=(DataType const& value)						{destruct(); MX::construct(&result.value, value); state = ResultState::RS_OK; return *this;		}
 	/// @brief Copy assignment operator (error).
 	/// @param error Error to store.
 	/// @return Reference to self.
 	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr SelfType& operator=(ErrorType const& error) requires (!IMPLICIT)	{destruct(); result.error = error; state = ResultState::RS_ERROR; return *this;					}
-	/// @brief Move assignment operator (error).
-	/// @param error Error to store.
-	/// @return Reference to self.
-	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr SelfType& operator=(ErrorType&& error) requires (!IMPLICIT)		{destruct(); result.error = CTL::move(error); state = ResultState::RS_ERROR; return *this;		}
+	constexpr SelfType& operator=(ErrorType const& error) requires (!IMPLICIT)	{destruct(); MX::construct(&result.error, error); state = ResultState::RS_ERROR; return *this;	}
 	/// @brief Copy assignment operator (error).
 	/// @param other `Result` to copy from.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)						{
-		destruct();
+	constexpr SelfType& operator=(SelfType const& other) {
 		switch (state = other.state) {
-			case ResultState::RS_OK:	result.value = other.result.value;
-			case ResultState::RS_ERROR:	result.error = other.result.error;
+			case ResultState::RS_OK:	operator=(other.result.value);
+			case ResultState::RS_ERROR: operator=(other.result.error);
 			default: break;
 		}
-		state = other.state;
 		return *this;
 	}
 
