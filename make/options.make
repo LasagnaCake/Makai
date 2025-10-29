@@ -26,7 +26,11 @@ export o?=2
 
 export math?=fast
 
-export gmake?=make
+ifdef compiler
+export compiler
+else
+export compiler:=msys2-gcc
+endif
 
 define HELP_MESSAGE
 Supported options:
