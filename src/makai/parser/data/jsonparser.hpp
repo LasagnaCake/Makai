@@ -115,8 +115,8 @@ namespace Makai::Parser::Data {
 				return error("String is not a valid JSON object!");
 			bool inValue = false;
 			while (lexer.next()) {
-				DEBUGLN(enumcast(token.type));
 				auto const token = lexer.current();
+				DEBUGLN(enumcast(token.type));
 				if (token.type == TokenType{'}'})
 					break;
 				if (token.type == TokenType{':'}) continue;
