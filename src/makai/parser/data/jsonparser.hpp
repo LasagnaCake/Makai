@@ -122,6 +122,7 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_REAL:
 						result[key] = token.value;
+					break;
 					case TokenType::LTS_TT_CHARACTER:
 						result[key] = toString(Cast::as<char>(token.value.get<ssize>()));
 					break;
@@ -156,7 +157,6 @@ namespace Makai::Parser::Data {
 						)
 					) return error("Malformed object or malformed entry (missing separator comma)!");
 					inValue = false;
-					break;
 				} else {
 					if (
 						token.type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
@@ -183,7 +183,7 @@ namespace Makai::Parser::Data {
 		StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
-			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(loc.column, 80)};
+			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()]};
 		}
 		
 		/// @brief String source.

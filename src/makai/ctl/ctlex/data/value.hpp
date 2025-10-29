@@ -4,6 +4,7 @@
 #include "../../ctl/exnamespace.hpp"
 #include "../../ctl/container/container.hpp"
 #include "../../ctl/typetraits/enum.hpp"
+#include "../../ctl/typetraits/nameof.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
 
@@ -850,7 +851,7 @@ namespace Data {
 
 		template <class T>
 		constexpr static String asKindName() {
-			return "T";
+			return nameof<T>();
 		}
 
 		constexpr static String enumAsString(Kind const& kind) {

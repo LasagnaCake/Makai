@@ -40,7 +40,7 @@ bool TokenStream::next() {
 			case (CLEX_id): {
 				if (lex.string_len > 0)
 					curToken.value = String(lex.string, lex.string + lex.string_len);
-				else curToken.value.clear();
+				else curToken.value = String();
 			} break;
 			default: break;
 		}
