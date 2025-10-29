@@ -36,6 +36,8 @@ namespace Makai::Parser::Data {
 			case TokenType::LTS_TT_INTEGER:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
+			case TokenType::LTS_TT_CHARACTER:
+				return Value(toString(Cast::as<char>(token.value.get<ssize>())));
 			case TokenType{'{'}:
 				return parseObject();
 			case TokenType{'['}:
@@ -48,7 +50,7 @@ namespace Makai::Parser::Data {
 				return error("Invalid/unsupported identifier!");
 			}
 			default:
-				return error("Missing or invalid token!");
+				return error("Missing or invalid token [" + toString(enumcast(token.type)) + "]!");
 			}
 		}
 
@@ -86,8 +88,10 @@ namespace Makai::Parser::Data {
 					else if (id == "false") result[result.size()]	= false;
 					else return error("Invalid/unsupported identifier!");
 				} break;
+				case TokenType{','}:
+					continue;
 				default:
-					return error("Missing or invalid token!");
+					return error("Missing or invalid token [" + toString(enumcast(token.type)) + "]!");
 				}
 				lexer.next();
 				if (
@@ -111,6 +115,7 @@ namespace Makai::Parser::Data {
 				return error("String is not a valid JSON object!");
 			bool inValue = false;
 			while (lexer.next()) {
+				DEBUGLN(enumcast(token.type));
 				auto const token = lexer.current();
 				if (token.type == TokenType{'}'})
 					break;
@@ -145,8 +150,11 @@ namespace Makai::Parser::Data {
 						else if (id == "false") result[key]	= false;
 						else return error("Invalid/unsupported identifier!");
 					} break;
+					case TokenType{','}:
+						inValue = false;
+						continue;
 					default:
-						return error("Missing or invalid token!");
+						return error("Missing or invalid token [" + toString(enumcast(token.type)) + "]!");
 					}
 					lexer.next();
 					if (
@@ -165,11 +173,12 @@ namespace Makai::Parser::Data {
 						key = token.value.get<Value::StringType>();
 					} else if (token.type == TokenType::LTS_TT_CHARACTER) {
 						key = (toString(Cast::as<char>(token.value.get<ssize>())));
-					} else return error("Object key is not a string!");
-						lexer.next();
-						inValue = true;
+					} else return error("Object key [" + toString(enumcast(token.type)) + "] is not a string!");
+					lexer.next();
 					if (lexer.current().type != TokenType{':'})
 						return error("Malformed object entry (separator colon)!");
+					inValue = true;
+					lexer.next();
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;
@@ -183,7 +192,7 @@ namespace Makai::Parser::Data {
 		StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
-			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()]};
+			return StringParseError{{loc.at, loc.line, loc.column+1}, what, lexer.tokenText()};
 		}
 		
 		/// @brief String source.

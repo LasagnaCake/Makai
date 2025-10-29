@@ -135,6 +135,10 @@ namespace Makai::Lexer::CStyle {
 		/// @return Current token.
 		constexpr Token current() const {return curToken;}
 
+		/// @brief Returns the current token's text.
+		/// @return Current token's text.
+		String tokenText() const;
+
 		/// @brief Returns the token stream's current position, INCLUDING line & column number.
 		/// @return Current position.
 		Position position() const;

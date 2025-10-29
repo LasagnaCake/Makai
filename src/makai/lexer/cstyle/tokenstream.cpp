@@ -50,6 +50,12 @@ Skip:
 	return !isFinished;
 }
 
+Makai::String TokenStream::tokenText() const {
+	if (!lexer) return "";
+	auto& lex = lexer->lexer;
+	return String(lex.where_firstchar, lex.where_lastchar);
+}
+
 TokenStream::Position TokenStream::position() const {
 	if (!lexer) return {
 		Limit::MAX<usize>,

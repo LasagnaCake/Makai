@@ -220,7 +220,7 @@ namespace Makai::Parser::Data {
 		StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
-			return StringParseError{{loc.at, loc.line, loc.column}, what, lines[loc.line % lines.size()].substring(1)};
+			return StringParseError{{loc.at, loc.line, loc.column+1}, what, lexer.tokenText()};
 		}
 		
 		/// @brief String source.
