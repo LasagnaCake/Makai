@@ -64,6 +64,8 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_REAL:
 					result[result.size()] = token.value;
+				case TokenType::LTS_TT_CHARACTER:
+					result[result.size()] = toString(Cast::as<char>(token.value.get<ssize>()));
 				break;
 				case TokenType{'{'}: {
 					auto const obj = parseObject();
@@ -120,6 +122,8 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_REAL:
 						result[key] = token.value;
+					case TokenType::LTS_TT_CHARACTER:
+						result[key] = toString(Cast::as<char>(token.value.get<ssize>()));
 					break;
 					case TokenType{'{'}: {
 						auto const obj = parseObject();
@@ -159,11 +163,13 @@ namespace Makai::Parser::Data {
 					||	token.type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
 					) {
 						key = token.value.get<Value::StringType>();
-						lexer.next();
-						if (lexer.current().type != TokenType{':'})
-							return error("Malformed object entry (separator colon)!");
-						inValue = true;
+					} else if (token.type == TokenType::LTS_TT_CHARACTER) {
+						key = (toString(Cast::as<char>(token.value.get<ssize>())));
 					} else return error("Object key is not a string!");
+						lexer.next();
+						inValue = true;
+					if (lexer.current().type != TokenType{':'})
+						return error("Malformed object entry (separator colon)!");
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;
