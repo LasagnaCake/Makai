@@ -150,6 +150,7 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_REAL:
+					case TokenType::LTS_TT_CHARACTER:
 						result[key] = token.value;
 					break;
 					case TokenType{'{'}: {
@@ -188,6 +189,7 @@ namespace Makai::Parser::Data {
 						token.type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
 					||	token.type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
 					||	token.type == TokenType::LTS_TT_IDENTIFIER
+					||	token.type == TokenType::LTS_TT_CHARACTER
 					) {
 						key = token.value.get<Value::StringType>();
 						lexer.next();
