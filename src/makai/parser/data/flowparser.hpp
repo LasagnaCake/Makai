@@ -192,7 +192,11 @@ namespace Makai::Parser::Data {
 						key = token.value.get<Value::StringType>();
 						lexer.next();
 						inValue = true;
-					} else return error("Object key is not a string or identifier!");
+					} else if (
+						token.type == TokenType::LTS_TT_INTEGER
+					||	token.type == TokenType::LTS_TT_REAL
+					) return error("Object key is not a string or identifier!");
+					else continue;
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;
