@@ -157,6 +157,7 @@ namespace Makai::Parser::Data {
 						return error("Missing or invalid token [" + toString(enumcast(token.type)) + "]!");
 					}
 					lexer.next();
+					DEBUGLN(enumcast(token.type));
 					if (
 						lexer.current().type != TokenType{','}
 					&&	!(
@@ -165,6 +166,7 @@ namespace Makai::Parser::Data {
 						)
 					) return error("Malformed object or malformed entry (missing separator comma)!");
 					inValue = false;
+					DEBUGLN(enumcast(token.type));
 				} else {
 					if (
 						token.type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
@@ -175,10 +177,12 @@ namespace Makai::Parser::Data {
 						key = (toString(Cast::as<char>(token.value.get<ssize>())));
 					} else return error("Object key [" + toString(enumcast(token.type)) + "] is not a string!");
 					lexer.next();
+					DEBUGLN(enumcast(token.type));
 					if (lexer.current().type != TokenType{':'})
 						return error("Malformed object entry (separator colon)!");
 					inValue = true;
 					lexer.next();
+					DEBUGLN(enumcast(token.type));
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;
