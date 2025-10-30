@@ -65,8 +65,7 @@ jobs:
   run-ctl-tests-debug:
     name: Run CTL Tests (DEBUG)
     runs-on: windows-latest
-    defaults:
-      needs: [build-ctl-tests-debug]
+    needs: [build-ctl-tests-debug]
     steps:
       - uses: actions/download-artifact@master
         with:
@@ -106,8 +105,7 @@ jobs:
   run-ctl-tests-release:
     name: Run CTL Tests (REOELEASE)
     runs-on: windows-latest
-    defaults:
-      needs: [build-ctl-tests-release]
+    needs: [build-ctl-tests-release]
     steps:
       - uses: actions/download-artifact@master
         with:
