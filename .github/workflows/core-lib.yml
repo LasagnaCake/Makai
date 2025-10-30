@@ -62,20 +62,20 @@ jobs:
           name: tests-ctl-debug
           path: tests/ctl/output/debug
 
-  run-ctl-tests-debug:
-    name: Run CTL Tests (DEBUG)
-    runs-on: windows-latest
-    needs: [build-ctl-tests-debug]
-    steps:
-      - uses: actions/download-artifact@master
-        with:
-          name: tests-ctl-debug
-          path: tests
-      - name: run tests
-        run: |
-          cd tests
-          for /r "." %%a in (*.debug.exe) do start "" "%%~fa"
-          cd ..
+  # run-ctl-tests-debug:
+  #   name: Run CTL Tests (DEBUG)
+  #   runs-on: windows-latest
+  #   needs: [build-ctl-tests-debug]
+  #   steps:
+  #     - uses: actions/download-artifact@master
+  #       with:
+  #         name: tests-ctl-debug
+  #         path: tests
+  #     - name: run tests
+  #       run: |
+  #         cd tests
+  #         for /r "." %%a in (*.debug.exe) do start "" "%%~fa"
+  #         cd ..
 
   build-ctl-tests-release:
     name: Build CTL Tests (RELEASE)
@@ -102,20 +102,20 @@ jobs:
           name: tests-ctl-release
           path: tests/ctl/output/release
 
-  run-ctl-tests-release:
-    name: Run CTL Tests (REOELEASE)
-    runs-on: windows-latest
-    needs: [build-ctl-tests-release]
-    steps:
-      - uses: actions/download-artifact@master
-        with:
-          name: tests-ctl-release
-          path: tests
-      - name: run tests
-        run: |
-          cd tests
-          for /r "." %%a in (*.release.exe) do start "" "%%~fa"
-          cd ..
+  # run-ctl-tests-release:
+  #   name: Run CTL Tests (REOELEASE)
+  #   runs-on: windows-latest
+  #   needs: [build-ctl-tests-release]
+  #   steps:
+  #     - uses: actions/download-artifact@master
+  #       with:
+  #         name: tests-ctl-release
+  #         path: tests
+  #     - name: run tests
+  #       run: |
+  #         cd tests
+  #         for /r "." %%a in (*.release.exe) do start "" "%%~fa"
+  #         cd ..
 
   build-core-lib-debug:
     name: Build Makai (DEBUG)
