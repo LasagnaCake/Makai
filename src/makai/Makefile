@@ -23,7 +23,7 @@ debug:
 	@echo "[-------------------------------------]"
 	@echo "[-------------------------------------]"
 	@echo ""
-	@$(CXX) --version
+	@$(CPP_COMPILER) --version
 	@echo ""
 	$(GET_TIME)
 	@echo ""
@@ -71,7 +71,7 @@ release:
 	@echo "[-------------------------------------]"
 	@echo "[-------------------------------------]"
 	@echo ""
-	@$(CXX) --version
+	@$(CPP_COMPILER) --version
 	@echo ""
 	$(GET_TIME)
 	@echo ""

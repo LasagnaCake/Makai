@@ -26,7 +26,11 @@ export o?=2
 
 export math?=fast
 
-export gmake?=make
+ifdef compiler
+export compiler
+else
+export compiler:=msys2-gcc
+endif
 
 define HELP_MESSAGE
 Supported options:
@@ -54,10 +58,9 @@ Supported [math] values (any other value will be interpreted as 'normal'):
 On the [subsystem] option:
 If not defined, compiles all subsystems.
 MUST be a (dot-separated) path to a file.
-For the graphical subsystem, MUST be "graph/" + name of subsystem.
 To compile EVERYTHING in a subsystem, use "*".
 Examples:
-	graph/gl.renderer.renderable
+	graph.gl.renderer.renderable
 	embed.shader
 	audio.*
 endef

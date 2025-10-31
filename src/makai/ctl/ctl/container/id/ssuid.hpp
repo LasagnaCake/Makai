@@ -63,20 +63,31 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 	/// @brief Equality comparison operator.
 	/// @param other `SSUID` to compare to.
 	/// @return Whether both `SSUID`s are equal.
-	constexpr bool operator==(SelfType const& other) const			{return equals(other);							}
+	constexpr bool operator==(SelfType const& other) const			{return equals(other);	}
 	/// @brief Threeway comparison operator.
 	/// @param other `SSUID` to compare to.
 	/// @return Order between `SSUID`s.
-	constexpr OrderType operator<=>(SelfType const& other) const	{return compare(other);							}
+	constexpr OrderType operator<=>(SelfType const& other) const	{return compare(other);	}
 
 	/// @brief Compares the `SSUID` with another.
 	/// @param other `SSUID` to compare to.
 	/// @return Whether both `SSUID`s are equal.
-	constexpr bool equals(SelfType const& other) const				{return MX::memcmp(id, other.id, SIZE) == 0;	}
+	constexpr bool equals(SelfType const& other) const {
+		for (usize i = 0; i < SIZE; ++i)
+			if (id[i] != other.id[i])
+				return false;
+		return true;
+	}
 	/// @brief Gets the order between the `SSUID` with another.
 	/// @param other `SSUID` to compare to.
 	/// @return Order between `SSUID`s.
-	constexpr OrderType compare(SelfType const& other) const		{return MX::memcmp(id, other.id, SIZE);			}
+	constexpr OrderType compare(SelfType const& other) const {
+		OrderType order = Order::EQUAL;
+		for (usize i = 0; i < SIZE; ++i)
+			if ((order = id[i] <=> other.id[i]) != Order::EQUAL)
+				return order;
+		return order;
+	}
 
 private:
 	constexpr SelfType& increment(SelfType const& other) {

@@ -6,9 +6,32 @@ define newline
 
 endef
 
-#export CC	?= gcc
-#export CXX	?= g++
-export LD	?= ld
+ifeq ($(compiler),msys2-gcc)
+export C_COMPILER	:=gcc
+export CPP_COMPILER	:=g++
+export GNU_MAKE		:=make
+endif
+ifeq ($(compiler),msys2-clang)
+export C_COMPILER	:=clang
+export CPP_COMPILER	:=clang++
+export GNU_MAKE		:=make
+endif
+ifeq ($(compiler),mingw)
+export C_COMPILER	:=mingw32-gcc
+export CPP_COMPILER	:=mingw32-g++
+export GNU_MAKE		:=mingw32-make
+endif
+ifeq ($(compiler),auto)
+export C_COMPILER	:=$(CC)
+export CPP_COMPILER	:=$(CXX)
+export GNU_MAKE		:=make
+endif
+ifndef compiler
+export C_COMPILER	:=$(CC)
+export CPP_COMPILER	:=$(CXX)
+export GNU_MAKE		:=make
+endif
+export LINKER		?=ld
 
 export lower =$(shell echo $(1) | tr A-Z a-z)
 export upper =$(shell echo $(1) | tr a-z A-Z)
@@ -70,7 +93,7 @@ DEBUG_CONFIG		= $(DEBUG_CONFIG_BASE)
 RELEASE_CONFIG_BASE	= $(COMPILER_CONFIG) $(OPTIMIZATIONS) $(FRAME_PTR) $(RELEASEMODE)
 RELEASE_CONFIG		= $(RELEASE_CONFIG_BASE) -O$(o)
 
-COMPILER = $(CXX) $(INCLUDES)
+COMPILER = $(CPP_COMPILER) $(INCLUDES)
 
 export NO_OP := @:
 
@@ -95,13 +118,13 @@ export GET_TIME
 
 export leave = $(subst $(space),,$(filter ../,$(subst /, ../ ,$(strip $(1)))))
 
-submake-impl = $(gmake) -C$(call path, $(1)) $@ prefix="$(strip $(2))"
+submake-impl = $(GNU_MAKE) -C$(call path, $(1)) $@ prefix="$(strip $(2))"
 
 submake-chain = $(call submake-impl, $(1), $(prefix))
 
 export submake = @$(call submake-impl, $(1), $(prefix))
 
-submake-any-impl = $(gmake) -C$(call path, $(1)) prefix="$(strip $(2))"
+submake-any-impl = $(GNU_MAKE) -C$(call path, $(1)) prefix="$(strip $(2))"
 
 export submake-any = @$(call submake-any-impl, $(1), $(prefix))
 
