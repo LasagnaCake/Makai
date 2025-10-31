@@ -23,14 +23,14 @@ MAKE_GLOADER	= $(CPP_COMPILER) $(INC_OPENGL) $(RELEASE_CONFIG_C) -c $(gl-loader)
 all: debug release
 
 debug:
-	$(MAKE_GLOADER_D)
+	@$(MAKE_GLOADER_D)
 	$(call compile, stb)
 	$(call compile, cute)
 	$(call compile, miniaudio)
 
 
 release:
-	$(MAKE_GLOADER)
+	@$(MAKE_GLOADER)
 	$(call compile, stb)
 	$(call compile, cute)
 	$(call compile, miniaudio)
