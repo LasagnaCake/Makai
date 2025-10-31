@@ -42,6 +42,9 @@ public:
 	/// @brief Whether `TError` can be implicitly convertible to `TData`.
 	constexpr static bool IMPLICIT = Type::Convertible<TError, TData>;
 
+	/// @brief Empty constructor (deleted).
+	constexpr Result() = delete;
+
 	/// @brief Copy constructor (`Result`).
 	/// @param other Other `Result` to copy from.
 	constexpr Result(SelfType const& other) {operator=(other);}
@@ -50,7 +53,7 @@ public:
 	constexpr Result(ConstReferenceType value)					{operator=(value);	}
 	/// @brief Copy constructor (Error).
 	/// @param other Error value to copy.
-	/// @note Explicit if error type to not be implicitly convertible to result type.
+	/// @note Explicit if error type is implicitly convertible to result type.
 	constexpr explicit(IMPLICIT) Result(ErrorType const& value)	{operator=(value);	}
 
 	/// @brief Runs the passed callable if there is a value.
@@ -96,10 +99,10 @@ public:
 	/// @param other `Result` to copy from.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
-		switch (state = other.state) {
+		switch (other.state) {
 			case ResultState::RS_OK:	operator=(other.result.value);
 			case ResultState::RS_ERROR: operator=(other.result.error);
-			default: break;
+			default: destruct(); break;
 		}
 		return *this;
 	}
@@ -107,16 +110,28 @@ public:
 	/// @brief Equality comparison operator (value).
 	/// @param value Value to compare.
 	/// @return Whether `Result` is equal to it.
-	constexpr bool operator==(DataType const& value) const							{if (!ok()) return false; return result.value == value;			}
+	constexpr bool operator==(DataType const& value) const {
+		if (state == ResultState::RS_UNDEFINED) return false;
+		return ok() ? result.value == value : false;
+	}
 	/// @brief Equality comparison operator (error).
 	/// @param error Error value to compare.
 	/// @return Whether `Result` is equal to it.
 	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr bool operator==(ErrorType const& error) const requires (!IMPLICIT)	{if (ok()) return false; return result.error == error;			}
+	constexpr bool operator==(ErrorType const& error) const requires (!IMPLICIT) {
+		if (state == ResultState::RS_UNDEFINED) return false;
+		return ok() ? false : result.error == error;
+	}
 	/// @brief Equality comparison operator (`Result`).
 	/// @param other Other `Result` to compare.
 	/// @return Whether objects are equal.
-	constexpr bool operator==(SelfType const& other) const							{return ok() ? other == result.value : other == result.error;	}
+	constexpr bool operator==(SelfType const& other) const {
+		switch (state) {
+			case ResultState::RS_ERROR:		return other == result.error;
+			case ResultState::RS_VALUE:		return other == result.value;	
+			default: return false;
+		}
+	}
 
 	/// @brief Returns whether there is an non-error value.
 	/// @return Whether there is an non-error value.
@@ -180,8 +195,8 @@ public:
 private:
 	constexpr void destruct() {
 		switch (state) {
-			case ResultState::RS_OK:	result.value.~DataType();
-			case ResultState::RS_ERROR:	result.error.~ErrorType();
+			case ResultState::RS_OK:	MX::destruct(&result.value);
+			case ResultState::RS_ERROR:	MX::destruct(&result.error);
 			default: break;
 		}
 		state = ResultState::RS_UNDEFINED;
