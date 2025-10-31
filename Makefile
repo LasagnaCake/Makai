@@ -159,18 +159,11 @@ extract-extern:
 	@rm -rf obj/extern
 	@mkdir -p obj/extern/sdl
 	@mkdir -p obj/extern/sdl-net
-	@mkdir -p obj/extern/sdl-mixer
 	@mkdir -p obj/extern/cryptopp
 	@echo "Extracting objects..."
 	@ar x $(SDL) --output "obj/extern/sdl"
 	@ar x $(SDLNET) --output "obj/extern/sdl-net"
-	@ar x $(SDLMIXER) --output "obj/extern/sdl-mixer"
 	@ar x $(CRYPTOPP) --output "obj/extern/cryptopp"
-
-rename-sdl-mixer:
-	@cd obj/extern/sdl-mixer
-	@echo "Renaming [sdl-mixer]..."
-	@for file in SDL2_mixer_dll_*.o; do mv -- "$$file" "$(THIRD_PARTY_PREFIX).sdl-mixer.$${file##*_}"; done
 
 rename-extern:
 	@echo "Renaming objects..."
@@ -179,9 +172,6 @@ rename-extern:
 	$(call addname, sdl)
 	@cd ../sdl-net
 	$(call addname, sdl-net)
-	@cd ../sdl-mixer
-	@echo "Renaming [sdl-mixer]..."
-	@for file in SDL2_mixer_dll_*.o; do mv -- "$$file" "$(THIRD_PARTY_PREFIX).sdl-mixer.$${file##*_}"; done
 	@cd ../cryptopp
 	$(call addname, cryptopp)
 	@cd ../../..
@@ -191,7 +181,6 @@ repack-extern:
 	@echo "Re-combining libraries..."
 	$(call repack, sdl)
 	$(call repack, sdl-net)
-	$(call repack, sdl-mixer)
 	$(call repack, cryptopp)
 	@cd ../..
 

@@ -7,31 +7,30 @@ define newline
 endef
 
 ifeq ($(compiler),msys2-gcc)
-export C_COMPILER	:=gcc
-export CPP_COMPILER	:=g++
-export GNU_MAKE		:=make
+C_COMPILER		?=gcc
+CPP_COMPILER	?=g++
 endif
 ifeq ($(compiler),msys2-clang)
-export C_COMPILER	:=clang
-export CPP_COMPILER	:=clang++
-export GNU_MAKE		:=make
+C_COMPILER		?=clang
+CPP_COMPILER	?=clang++
 endif
 ifeq ($(compiler),mingw)
-export C_COMPILER	:=mingw32-gcc
-export CPP_COMPILER	:=mingw32-g++
-export GNU_MAKE		:=mingw32-make
+C_COMPILER		?=mingw32-gcc
+CPP_COMPILER	?=mingw32-g++
 endif
 ifeq ($(compiler),auto)
-export C_COMPILER	:=$(CC)
-export CPP_COMPILER	:=$(CXX)
-export GNU_MAKE		:=make
+C_COMPILER		?=$(CC)
+CPP_COMPILER	?=$(CXX)
 endif
 ifndef compiler
-export C_COMPILER	:=$(CC)
-export CPP_COMPILER	:=$(CXX)
-export GNU_MAKE		:=make
+C_COMPILER		?=$(CC)
+CPP_COMPILER	?=$(CXX)
 endif
-export LINKER		?=ld
+LINKER			?=ld
+
+export C_COMPILER
+export CPP_COMPILER
+export LINKER
 
 export lower =$(shell echo $(1) | tr A-Z a-z)
 export upper =$(shell echo $(1) | tr a-z A-Z)
