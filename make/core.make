@@ -28,6 +28,11 @@ CPP_COMPILER	?=$(CXX)
 endif
 LINKER			?=ld
 
+ifndef gl-loader
+gl-loader:=glad
+export gl-loader
+endif
+
 export C_COMPILER
 export CPP_COMPILER
 export LINKER
