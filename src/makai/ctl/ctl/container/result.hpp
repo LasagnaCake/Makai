@@ -100,8 +100,8 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
 		switch (other.state) {
-			case ResultState::RS_OK:	operator=(other.result.value);
-			case ResultState::RS_ERROR: operator=(other.result.error);
+			case ResultState::RS_OK:	return operator=(other.result.value);
+			case ResultState::RS_ERROR: return operator=(other.result.error);
 			default: destruct(); break;
 		}
 		return *this;
@@ -195,8 +195,8 @@ public:
 private:
 	constexpr void destruct() {
 		switch (state) {
-			case ResultState::RS_OK:	MX::destruct(&result.value);
-			case ResultState::RS_ERROR:	MX::destruct(&result.error);
+			case ResultState::RS_OK:	MX::destruct(&result.value); break;
+			case ResultState::RS_ERROR:	MX::destruct(&result.error); break;
 			default: break;
 		}
 		state = ResultState::RS_UNDEFINED;

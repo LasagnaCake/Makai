@@ -31,9 +31,17 @@ namespace Makai::Parser::Data {
 			if (!lexer.next()) return Value();
 			auto const token = lexer.current();
 			switch (token.type) {
+			case TokenType{'-'}:
+				if (!lexer.next()) return error("Missing number value!");
+				if (lexer.current().value.isInteger())
+					return Value(-lexer.current().value.get<ssize>());
+				else if (lexer.current().value.isReal())
+					return Value(-lexer.current().value.get<double>());
+				else return error("Value is not a negative number!");
+			case TokenType::LTS_TT_INTEGER:
+				return Value(static_cast<usize>(token.value.get<usize>()));
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-			case TokenType::LTS_TT_INTEGER:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
 			case TokenType::LTS_TT_CHARACTER:
@@ -93,12 +101,20 @@ namespace Makai::Parser::Data {
 			while (lexer.next()) {
 				auto const token = lexer.current();
 				switch (token.type) {
+				case TokenType{'-'}:
+					if (!lexer.next()) return error("Missing number value!");
+					if (lexer.current().value.isInteger())
+						result[result.size()] = Value(-lexer.current().value.get<ssize>());
+					else if (lexer.current().value.isReal())
+						result[result.size()] = Value(-lexer.current().value.get<double>());
+					else return error("Value is not a negative number!");
+				break;
+				case TokenType::LTS_TT_INTEGER:
+					result[result.size()] = Value(static_cast<usize>(token.value.get<usize>()));
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_REAL:
-					result[result.size()] = token.value;
-				break;
+					return token.value;
 				case TokenType::LTS_TT_CHARACTER:
 					result[result.size()] = (toString(Cast::as<char>(token.value.get<ssize>())));
 				break;
@@ -151,11 +167,20 @@ namespace Makai::Parser::Data {
 				if (token.type == TokenType{':'}) continue;
 				if (inValue) {
 					switch (token.type) {
+					case TokenType{'-'}:
+						if (!lexer.next()) return error("Missing number value!");
+						if (lexer.current().value.isInteger())
+							result[key] = Value(-lexer.current().value.get<ssize>());
+						else if (lexer.current().value.isReal())
+							result[key] = Value(-lexer.current().value.get<double>());
+						else return error("Value is not a negative number!");
+					break;
+					case TokenType::LTS_TT_INTEGER:
+						result[key] = Value(static_cast<usize>(token.value.get<usize>()));
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_REAL:
-						result[key] = token.value;
+						return token.value;
 					case TokenType::LTS_TT_CHARACTER:
 						result[key] = (toString(Cast::as<char>(token.value.get<ssize>())));
 					break;
