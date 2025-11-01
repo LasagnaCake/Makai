@@ -18,7 +18,7 @@ namespace Makai::Parser::Data {
 		ResultType tryParse(Value::StringType const& str) override {
 			source = str;
 			lexer.open(str.toString());
-			auto const result = parse(str);
+			auto const result = parseValue();
 			lexer.close();
 			return result;
 		}
@@ -27,7 +27,7 @@ namespace Makai::Parser::Data {
 		/// @brief Lexer token type.
 		using TokenType = LexerType::Token::Type;
 
-		ResultType parse(Value::StringType const& str) {
+		ResultType parseValue() {
 			if (!lexer.next()) return Value();
 			auto const token = lexer.current();
 			switch (token.type) {
@@ -69,48 +69,13 @@ namespace Makai::Parser::Data {
 			while (lexer.next()) {
 				auto const token = lexer.current();
 				switch (token.type) {
-				case TokenType{'-'}:
-					if (!lexer.next()) return error("Missing number value!");
-					if (lexer.current().value.isInteger())
-						result[result.size()] = Value(-lexer.current().value.get<ssize>());
-					else if (lexer.current().value.isReal())
-						result[result.size()] = Value(-lexer.current().value.get<double>());
-					else return error("Value is not a negative number!");
-				break;
-				case TokenType::LTS_TT_INTEGER:
-					result[result.size()] = Value(static_cast<usize>(token.value.get<usize>()));
-				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
-				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-				case TokenType::LTS_TT_REAL:
-					return token.value;
-				case TokenType::LTS_TT_CHARACTER:
-					result[result.size()] = toString(Cast::as<char>(token.value.get<ssize>()));
-				break;
-				case TokenType{'{'}: {
-					auto const obj = parseObject();
-					if (obj)
-						result[result.size()] = obj.value();
-					else return obj.error().orElse({.what = "Unknown object error!"});
+				case TokenType{','}: break;
+				default: {
+					auto v = parseValue();
+					if (v) result[result.size()] = v.value();
+					else return v.error().value();
 				} break;
-				case TokenType{'['}: {
-					auto const obj = parseArray();
-					if (obj)
-						result[result.size()] = obj.value();
-					else return obj.error().orElse({.what = "Unknown array error!"});
-				} break;
-				case TokenType::LTS_TT_IDENTIFIER: {
-					auto const id = token.value.get<Value::StringType>();
-					if (id == "null") result[result.size()] = Value::null();
-					else if (id == "true") result[result.size()]	= true;
-					else if (id == "false") result[result.size()]	= false;
-					else return error("Invalid/unsupported identifier!");
-				} break;
-				case TokenType{','}:
-					continue;
-				default:
-					return error("Missing or invalid token [" + toString(enumcast(token.type)) + "]!");
 				}
-				lexer.next();
 				if (
 					lexer.current().type != TokenType{','}
 				&&	!(
@@ -133,57 +98,20 @@ namespace Makai::Parser::Data {
 			bool inValue = false;
 			while (lexer.next()) {
 				auto const token = lexer.current();
-				DEBUGLN(enumcast(token.type));
 				if (token.type == TokenType{'}'})
 					break;
 				if (token.type == TokenType{':'}) continue;
 				if (inValue) {
 					switch (token.type) {
-					case TokenType{'-'}:
-						if (!lexer.next()) return error("Missing number value!");
-						if (lexer.current().value.isInteger())
-							result[key] = Value(-lexer.current().value.get<ssize>());
-						else if (lexer.current().value.isReal())
-							result[key] = Value(-lexer.current().value.get<double>());
-						else return error("Value is not a negative number!");
-					break;
-					case TokenType::LTS_TT_INTEGER:
-						result[key] = Value(static_cast<usize>(token.value.get<usize>()));
-					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
-					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-					case TokenType::LTS_TT_REAL:
-						return token.value;
-					break;
-					case TokenType::LTS_TT_CHARACTER:
-						result[key] = toString(Cast::as<char>(token.value.get<ssize>()));
-					break;
-					case TokenType{'{'}: {
-						auto const obj = parseObject();
-						if (obj)
-							result[key] = obj.value();
-						else return obj.error().orElse({.what = "Unknown object error!"});
-					} break;
-					case TokenType{'['}: {
-						auto const obj = parseArray();
-						if (obj)
-							result[key] = obj.value();
-						else return obj.error().orElse({.what = "Unknown array error!"});
-					} break;
-					case TokenType::LTS_TT_IDENTIFIER: {
-						auto const id = token.value.get<Value::StringType>();
-						if (id == "null") result[key] = Value::null();
-						else if (id == "true") result[key]	= true;
-						else if (id == "false") result[key]	= false;
-						else return error("Invalid/unsupported identifier!");
-					} break;
 					case TokenType{','}:
 						inValue = false;
-						continue;
-					default:
-						return error("Missing or invalid token [" + toString(enumcast(token.type)) + "]!");
+						break;
+					default: {
+						auto v = parseValue();
+						if (v) result[key] = v.value();
+						else return v.error().value();
+					} break;
 					}
-					lexer.next();
-					DEBUGLN(enumcast(token.type));
 					if (
 						lexer.current().type != TokenType{','}
 					&&	!(
@@ -192,7 +120,6 @@ namespace Makai::Parser::Data {
 						)
 					) return error("Malformed object or malformed entry (missing separator comma)!");
 					inValue = false;
-					DEBUGLN(enumcast(token.type));
 				} else {
 					if (
 						token.type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
@@ -203,12 +130,10 @@ namespace Makai::Parser::Data {
 						key = (toString(Cast::as<char>(token.value.get<ssize>())));
 					} else return error("Object key [" + toString(enumcast(token.type)) + "] is not a string!");
 					lexer.next();
-					DEBUGLN(enumcast(token.type));
 					if (lexer.current().type != TokenType{':'})
 						return error("Malformed object entry (separator colon)!");
 					inValue = true;
-					lexer.next();
-					DEBUGLN(enumcast(token.type));
+					while (lexer.current().type == TokenType{','}) lexer.next();
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;
@@ -222,7 +147,7 @@ namespace Makai::Parser::Data {
 		ResultType error(String const& what) const {
 			auto const loc = lexer.position();
 			auto const lines = source.split('\n'); 
-			return StringParseError{{loc.at, loc.line, loc.column+1}, what, lexer.tokenText()};
+			return StringParseError{{loc.at, loc.line, loc.column+1}, what, lines[loc.line]};
 		}
 		
 		/// @brief String source.
