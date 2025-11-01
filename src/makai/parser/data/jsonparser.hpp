@@ -29,6 +29,9 @@ namespace Makai::Parser::Data {
 
 		ResultType parse(Value::StringType const& str) {
 			if (!lexer.next()) return Value();
+			do DEBUGLN("Token: ", enumcast(lexer.current().type), ", ", lexer.current().value.toString());
+			while (lexer.next());
+			return Value();
 			auto const token = lexer.current();
 			switch (token.type) {
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
