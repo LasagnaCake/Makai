@@ -18,7 +18,7 @@ namespace Makai::Parser::Data {
 		ResultType tryParse(Value::StringType const& str) override {
 			source = str;
 			lexer.open(str.toString());
-			auto const result = parse(str);
+			auto const result = parseValue();
 			lexer.close();
 			return result;
 		}
@@ -27,7 +27,7 @@ namespace Makai::Parser::Data {
 		/// @brief Lexer token type.
 		using TokenType = LexerType::Token::Type;
 
-		ResultType parse(Value::StringType const& str) {
+		ResultType parseValue() {
 			if (!lexer.next()) return Value();
 			auto const token = lexer.current();
 			switch (token.type) {
@@ -101,52 +101,14 @@ namespace Makai::Parser::Data {
 			while (lexer.next()) {
 				auto const token = lexer.current();
 				switch (token.type) {
-				case TokenType{'-'}:
-					if (!lexer.next()) return error("Missing number value!");
-					if (lexer.current().value.isInteger())
-						result[result.size()] = Value(-lexer.current().value.get<ssize>());
-					else if (lexer.current().value.isReal())
-						result[result.size()] = Value(-lexer.current().value.get<double>());
-					else return error("Value is not a negative number!");
-				break;
-				case TokenType::LTS_TT_INTEGER:
-					result[result.size()] = Value(static_cast<usize>(token.value.get<usize>()));
-				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
-				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-				case TokenType::LTS_TT_REAL:
-					return token.value;
-				case TokenType::LTS_TT_CHARACTER:
-					result[result.size()] = (toString(Cast::as<char>(token.value.get<ssize>())));
-				break;
-				case TokenType{'{'}: {
-					auto const obj = parseObject();
-					if (obj)
-						result[result.size()] = obj.value();
-					else return obj.error().orElse({.what = "Unknown object error!"});
+				case TokenType{']'}: break;
+				default: {
+					auto v = parseValue();
+					if (v) result[result.size()] = v.value();
+					else return v.error().value();
 				} break;
-				case TokenType{'['}: {
-					auto const obj = parseArray();
-					if (obj)
-						result[result.size()] = obj.value();
-					else return obj.error().orElse({.what = "Unknown array error!"});
-				} break;
-				case TokenType{'!'}: {
-					auto const obj = parseBytes();
-					if (obj)
-						result[result.size()] = obj.value();
-					else return obj.error().orElse({.what = "Unknown byte string error!"});
-				} break;
-				case TokenType::LTS_TT_IDENTIFIER: {
-					auto const id = token.value.get<Value::StringType>();
-					if (id == "null") result[result.size()] = Value::null();
-					else if (id == "true") result[result.size()] = true;
-					else if (id == "false") result[result.size()] = false;
-					else result[result.size()] = Value::StringType(id);
-				} break;
-				default:
-					continue;
-					//return error("Missing or invalid token!");
 				}
+				if (lexer.current().type == TokenType{']'}) break;
 			}
 			if (lexer.current().type != TokenType{']'})
 				return error("Missing closing bracket!");
@@ -167,51 +129,21 @@ namespace Makai::Parser::Data {
 				if (token.type == TokenType{':'}) continue;
 				if (inValue) {
 					switch (token.type) {
+					case TokenType{'}'}: break;
 					case TokenType{'-'}:
-						if (!lexer.next()) return error("Missing number value!");
-						if (lexer.current().value.isInteger())
-							result[key] = Value(-lexer.current().value.get<ssize>());
-						else if (lexer.current().value.isReal())
-							result[key] = Value(-lexer.current().value.get<double>());
-						else return error("Value is not a negative number!");
-					break;
 					case TokenType::LTS_TT_INTEGER:
-						result[key] = Value(static_cast<usize>(token.value.get<usize>()));
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 					case TokenType::LTS_TT_REAL:
-						return token.value;
 					case TokenType::LTS_TT_CHARACTER:
-						result[key] = (toString(Cast::as<char>(token.value.get<ssize>())));
-					break;
-					case TokenType{'{'}: {
-						auto const obj = parseObject();
-						if (obj)
-							result[key] = obj.value();
-						else return obj.error().orElse({.what = "Unknown object error!"});
-					} break;
+					case TokenType{'!'}:
+					case TokenType{'{'}:
 					case TokenType{'['}: {
-						auto const obj = parseArray();
-						if (obj)
-							result[key] = obj.value();
-						else return obj.error().orElse({.what = "Unknown array error!"});
+						auto v = parseValue();
+						if (v) result[result.size()] = v.value();
+						else return v.error().value();
 					} break;
-					case TokenType{'!'}: {
-						auto const obj = parseBytes();
-						if (obj)
-							result[result.size()] = obj.value();
-						else return obj.error().orElse({.what = "Unknown byte string error!"});
-					} break;
-					case TokenType::LTS_TT_IDENTIFIER: {
-						auto const id = token.value.get<Value::StringType>();
-						if (id == "null") result[key] = Value::null();
-						else if (id == "true") result[key]	= true;
-						else if (id == "false") result[key]	= false;
-						else result[key] = Value::StringType(id);
-					} break;
-					default:
-						continue;
-						//return error("Missing or invalid token!");
+					default: continue;
 					}
 					inValue = false;
 				} else {
