@@ -135,14 +135,11 @@ namespace Makai::Parser::Data {
 				// Get key
 				while (lexer.next()) {
 					auto const token = lexer.current();
-					DEBUGLN("ID: ", enumcast(token.type), " Key: ", token.value.toString());
 					switch (token.type) {
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 					case TokenType::LTS_TT_IDENTIFIER:
 						key = token.value.get<Value::StringType>();
-						if (key.empty()) return error("Missing key!");
-						else DEBUGLN("Key: ", key);
 					break;
 					case TokenType::LTS_TT_CHARACTER:
 						key = toString(Cast::as<char>(token.value.get<ssize>()));
@@ -161,7 +158,6 @@ namespace Makai::Parser::Data {
 				// Get value
 				while (lexer.next()) {
 					auto const token = lexer.current();
-					DEBUGLN("ID: ", enumcast(token.type), " Value: ", token.value.toString());
 					if (token.type == TokenType{'}'})
 						return error("Missing value for key \"" + key + "\"!");
 					switch (token.type) {
