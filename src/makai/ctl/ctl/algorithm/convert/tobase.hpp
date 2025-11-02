@@ -14,6 +14,38 @@ namespace Convert {
 		/// @tparam B Base to convert to.
 		template<Base B>
 		struct BinaryToStringConverter {
+			/// @brief Converts binary data to a string.
+			/// @param data Data to convert.
+			/// @return String.
+			constexpr static String convert(BinaryData<> const& data)
+			requires (B < Base::CB_BASE32) {
+				String result;
+				for (auto const b: data) {
+					switch (B) {
+						case Base::CB_BASE2:	result += String::fromNumber<byte>(b, 2);	break;
+						case Base::CB_BASE4:	result += String::fromNumber<byte>(b, 4);	break;
+						case Base::CB_BASE8:	result += String::fromNumber<byte>(b, 8);	break;
+						case Base::CB_BASE16:	result += String::fromNumber<byte>(b, 16);	break;
+					}
+				}
+				return result;
+			}
+
+			/// @brief Converts binary data to a string.
+			/// @param data Data to convert.
+			/// @return String.
+			constexpr static String convert(BinaryData<> const& data)
+			requires (B == Base::CB_BASE32) {
+				return "";
+			}
+			
+			/// @brief Converts binary data to a string.
+			/// @param data Data to convert.
+			/// @return String.
+			constexpr static String convert(BinaryData<> const& data)
+			requires (B == Base::CB_BASE64) {
+				return "";
+			}
 		};
 	}
 
