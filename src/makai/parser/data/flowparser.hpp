@@ -18,6 +18,7 @@ namespace Makai::Parser::Data {
 		ResultType tryParse(Value::StringType const& str) override {
 			source = str;
 			lexer.open(str.toString());
+			if (!lexer.next()) return Value();
 			auto const result = parseValue();
 			lexer.close();
 			return result;
@@ -28,7 +29,6 @@ namespace Makai::Parser::Data {
 		using TokenType = LexerType::Token::Type;
 
 		ResultType parseValue() {
-			if (!lexer.next()) return Value();
 			auto const token = lexer.current();
 			switch (token.type) {
 			case TokenType{'-'}:
@@ -88,7 +88,7 @@ namespace Makai::Parser::Data {
 				case 16:	return Value(Convert::fromBase<Convert::Base::CB_BASE16>(str));
 				case 32:	return Value(Convert::fromBase<Convert::Base::CB_BASE32>(str));
 				case 64:	return Value(Convert::fromBase<Convert::Base::CB_BASE64>(str));
-				default: return error("Invalid string format specifier!");
+				default:	return error("Invalid string format specifier!");
 			}
 		}
 
@@ -98,6 +98,7 @@ namespace Makai::Parser::Data {
 				return error("String is not a valid JSON array!");
 			while (lexer.next()) {
 				auto const token = lexer.current();
+				if (token.type == TokenType{']'}) break;
 				switch (token.type) {
 				case TokenType{']'}: break;
 				case TokenType{'-'}:
@@ -130,8 +131,7 @@ namespace Makai::Parser::Data {
 			bool inValue = false;
 			while (lexer.next()) {
 				auto const token = lexer.current();
-				if (token.type == TokenType{'}'})
-					break;
+				if (token.type == TokenType{'}'}) break;
 				if (token.type == TokenType{':'}) continue;
 				if (inValue) {
 					switch (token.type) {

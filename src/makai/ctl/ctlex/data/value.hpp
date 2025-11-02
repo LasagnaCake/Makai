@@ -5,6 +5,7 @@
 #include "../../ctl/container/container.hpp"
 #include "../../ctl/typetraits/enum.hpp"
 #include "../../ctl/typetraits/nameof.hpp"
+#include "../../ctl/algorithm/convert/convert.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
 
@@ -38,7 +39,7 @@ namespace Data {
 		/// @brief String type.
 		using StringType	= String;
 		/// @brief Byte list type.
-		using ByteListType	= List<byte>;
+		using ByteListType	= BinaryData<>;
 		/// @brief Array type.
 		using ArrayType		= List<Value>;
 		/// @brief Object type.
@@ -668,16 +669,8 @@ namespace Data {
 				return ::CTL::toString(content.integer);
 			if (isReal())
 				return ::CTL::toString(content.real);
-			if (isBytes()) {
-				StringType result = "#32'";
-				for (auto& b: content.bytes) {
-					auto bs = String::fromNumber<byte>(b, 32).substring(2);
-					if (bs.size() < 2)
-						bs = "0" + bs;
-					result += bs;
-				}
-				return result + "'";
-			}
+			if (isBytes())
+				return "!16'" + CTL::Convert::toBase<CTL::Convert::Base::CB_BASE16>(content.bytes) + "'";
 			StringType const NEWLINE = StringType("\n");
 			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
 			if (isArray()) {

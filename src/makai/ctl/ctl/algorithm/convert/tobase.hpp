@@ -34,6 +34,11 @@ namespace Convert {
 			/// @brief Converts binary data to a string.
 			/// @param data Data to convert.
 			/// @return String.
+			#ifdef __clang__
+			[[clang::unavailable("Unimplemented!")]]
+			#else
+			[[gnu::unavailable("Unimplemented!")]]
+			#endif
 			constexpr static String convert(BinaryData<> const& data)
 			requires (B == Base::CB_BASE32) {
 				return "";
@@ -42,6 +47,11 @@ namespace Convert {
 			/// @brief Converts binary data to a string.
 			/// @param data Data to convert.
 			/// @return String.
+			#ifdef __clang__
+			[[clang::unavailable("Unimplemented!")]]
+			#else
+			[[gnu::unavailable("Unimplemented!")]]
+			#endif
 			constexpr static String convert(BinaryData<> const& data)
 			requires (B == Base::CB_BASE64) {
 				return "";
@@ -54,11 +64,6 @@ namespace Convert {
 	/// @param bin Binary data to convert.
 	/// @return String.
 	template <Base B>
-	#ifdef __clang__
-	[[clang::unavailable("Unimplemented!")]]
-	#else
-	[[gnu::unavailable("Unimplemented!")]]
-	#endif
 	constexpr String toBase(BinaryData<> const& bin) {
 		return "";
 	}
