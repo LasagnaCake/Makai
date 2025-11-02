@@ -68,16 +68,18 @@ namespace Makai::Parser::Data {
 		ResultType parseBytes() {
 			if (lexer.current().type != TokenType{'!'})
 				return error("String is not a valid byte string!");
-			if ((!lexer.next()) || (
+			if (!lexer.next()) return error("Missing byte string format specifier!");
+			if (!(
 				lexer.current().type == TokenType::LTS_TT_INTEGER
-			||	lexer.current().type != TokenType::LTS_TT_REAL
+			||	lexer.current().type == TokenType::LTS_TT_REAL
 			))
-				return error("Missing/Invalid byte string format specifier!");
+				return error("Invalid byte string format specifier!");
 			usize const base = lexer.current().value;
-			if ((!lexer.next()) || !(
+			if (!lexer.next()) return error("Missing byte string contents!");
+			if (!(
 				lexer.current().type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
 			||	lexer.current().type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
-			)) return error("Missing/Invalid byte string contents!");
+			)) return error("Invalid byte string contents!");
 			String const str = lexer.current().value;
 			switch (base) {
 				case 2:		return Value(Convert::fromBase<Convert::Base::CB_BASE2>(str));
@@ -117,7 +119,6 @@ namespace Makai::Parser::Data {
 			}
 			if (lexer.current().type != TokenType{']'})
 				return error("Missing closing bracket!");
-			// lexer.next();
 			return result;
 		}
 
@@ -178,14 +179,12 @@ namespace Makai::Parser::Data {
 			}
 			if (lexer.current().type != TokenType{'}'})
 				return error("Missing closing curly bracket!");
-			// lexer.next();
 			return result;
 		}
 	
 		StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
-			auto const lines = source.split('\n'); 
-			return StringParseError{{loc.at, loc.line, loc.column+1}, what, lexer.tokenText()};
+			return StringParseError{{loc.at, loc.line, loc.column+1}, what, source.substring(loc.at).split('\n').front().substring(0, 20)};
 		}
 		
 		/// @brief String source.
