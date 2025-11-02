@@ -44,8 +44,8 @@ namespace Makai::Parser::Data {
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
-		//	case TokenType::LTS_TT_CHARACTER:
-		//		return Value(toString(Cast::as<char>(token.value.get<ssize>())));
+			case TokenType::LTS_TT_CHARACTER:
+				return Value(toString(Cast::as<char>(token.value.get<ssize>())));
 			case TokenType{'{'}:
 				return parseObject();
 			case TokenType{'['}:
@@ -125,17 +125,46 @@ namespace Makai::Parser::Data {
 
 		ResultType parseObject() {
 			Value result = Value::object();
-			Value::StringType key;
 			if (lexer.current().type != TokenType{'{'})
 				return error("String is not a valid JSON object!");
-			bool inValue = false;
-			while (lexer.next()) {
-				auto const token = lexer.current();
-				if (token.type == TokenType{'}'}) break;
-				if (token.type == TokenType{':'}) continue;
-				if (inValue) {
+			DEBUGLN("Object");
+			do {
+				Value::StringType key;
+				if (lexer.current().type == TokenType{'}'})
+					break;
+				// Get key
+				while (lexer.next()) {
+					auto const token = lexer.current();
+					DEBUGLN("ID: ", enumcast(token.type), " Key: ", token.value.toString());
 					switch (token.type) {
-					case TokenType{'}'}: return error("Missing value for key \"" + key + "\"!");
+					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_IDENTIFIER:
+						key = token.value.get<Value::StringType>();
+						if (key.empty()) return error("Missing key!");
+						else DEBUGLN("Key: ", key);
+					break;
+					case TokenType::LTS_TT_CHARACTER:
+						key = toString(Cast::as<char>(token.value.get<ssize>()));
+					break;
+					case TokenType::LTS_TT_INTEGER:
+					case TokenType::LTS_TT_REAL:
+					case TokenType{'!'}:
+					case TokenType{'{'}:
+					case TokenType{'['}:
+					case TokenType{'-'}:
+						return error("Object key is not a string or identifier!");
+					default: continue;
+					}
+					break;
+				}
+				// Get value
+				while (lexer.next()) {
+					auto const token = lexer.current();
+					DEBUGLN("ID: ", enumcast(token.type), " Value: ", token.value.toString());
+					if (token.type == TokenType{'}'})
+						return error("Missing value for key \"" + key + "\"!");
+					switch (token.type) {
 					case TokenType{'-'}:
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
@@ -151,32 +180,11 @@ namespace Makai::Parser::Data {
 					} break;
 					default: continue;
 					}
-					inValue = false;
-				} else {
-					switch (token.type) {
-					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
-					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-					case TokenType::LTS_TT_IDENTIFIER:
-						key = token.value.get<Value::StringType>();
 					break;
-				//	case TokenType::LTS_TT_CHARACTER:
-				//		key = toString(Cast::as<char>(token.value.get<ssize>()));
-				//	break;
-					case TokenType::LTS_TT_INTEGER:
-					case TokenType::LTS_TT_REAL:
-					case TokenType{'!'}:
-					case TokenType{'{'}:
-					case TokenType{'['}:
-					case TokenType{'-'}:
-						return error("Object key is not a string or identifier!");
-					default: continue;
-					case TokenType{'}'}: break;
-					}
-					inValue = true;
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;
-			}
+			} while (!lexer.finished());
 			if (lexer.current().type != TokenType{'}'})
 				return error("Missing closing curly bracket!");
 			return result;

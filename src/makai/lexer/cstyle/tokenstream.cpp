@@ -31,7 +31,9 @@ bool TokenStream::next() {
 				curToken.value = static_cast<uint32>(lex.int_number);
 			} break;
 			case (CLEX_intlit): {
-				curToken.value = lex.int_number < 0 ? static_cast<ssize>(lex.int_number) : static_cast<usize>(lex.int_number);
+				if (lex.int_number < 0)
+					curToken.value = static_cast<ssize>(lex.int_number);
+				else curToken.value = static_cast<usize>(lex.int_number);
 			} break;
 			case (CLEX_floatlit): {
 				curToken.value = lex.real_number;
@@ -45,7 +47,7 @@ bool TokenStream::next() {
 			} break;
 			default: break;
 		}
-		curToken.type = static_cast<Token::Type>((lex.token < 256) ? lex.token : lex.token - 1);
+		curToken.type = static_cast<Token::Type>((lex.token < 258) ? lex.token : lex.token - 2);
 	} else isFinished = true;
 Skip:
 	return !isFinished;
@@ -113,6 +115,10 @@ TokenStream& TokenStream::close() {
 	lexer.unbind();
 	isFinished = true;
 	return *this;
+}
+
+bool TokenStream::finished() const {
+	return isFinished;
 }
 
 Makai::Result<TokenStream::TokenList, TokenStream::Error>

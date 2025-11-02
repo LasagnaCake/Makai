@@ -158,8 +158,11 @@ public:
 		(sizeof...(Args) > 0)
 	&&	(... && (Type::Different<Args, SelfType> && Type::CanBecome<Args, DataType>))
 	#else
-		(sizeof...(Args) > 1)
-	&&	(... && (Type::Different<Args, SelfType>))
+		(sizeof...(Args) > 1) 
+	&&	(
+		(... && (Type::Standard<Args> && Type::CanBecome<Args, DataType>))
+	||	(... && (!Type::Standard<Args> && Type::Different<Args, SelfType>))
+	)
 	#endif
 	) {
 		invoke(sizeof...(Args));

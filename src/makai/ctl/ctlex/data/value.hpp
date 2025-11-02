@@ -701,7 +701,7 @@ namespace Data {
 		/// @param format String format to use. By default, it is `Format::DVF_JSON`.
 		/// @return Value as string.
 		/// @note If padding is set to a string, newlines are added for each element.
-		constexpr StringType toString(Padding const& pad = nullptr, Format const format = Format::DVF_JSON) {
+		constexpr StringType toString(Padding const& pad = nullptr, Format const format = Format::DVF_JSON) const {
 			switch (format) {
 				case Format::DVF_JSON: return toJSONString(pad);
 				case Format::DVF_FLOW: return toFLOWString(pad);
