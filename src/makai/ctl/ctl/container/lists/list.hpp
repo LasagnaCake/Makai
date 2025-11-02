@@ -154,8 +154,13 @@ public:
 	template<typename... Args>
 	constexpr List(Args const&... args)
 	requires (
+	#ifndef __clang__
 		(sizeof...(Args) > 0)
 	&&	(... && (Type::Different<Args, SelfType> && Type::CanBecome<Args, DataType>))
+	#else
+		(sizeof...(Args) > 1)
+	&&	(... && (Type::Different<Args, SelfType>))
+	#endif
 	) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));

@@ -44,8 +44,8 @@ namespace Makai::Parser::Data {
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
-			case TokenType::LTS_TT_CHARACTER:
-				return Value(toString(Cast::as<char>(token.value.get<ssize>())));
+		//	case TokenType::LTS_TT_CHARACTER:
+		//		return Value(toString(Cast::as<char>(token.value.get<ssize>())));
 			case TokenType{'{'}:
 				return parseObject();
 			case TokenType{'['}:
@@ -62,36 +62,32 @@ namespace Makai::Parser::Data {
 			default: return Value();
 				//return error("Missing or invalid token!");
 			}
+			return Value();
 		}
 
 		ResultType parseBytes() {
 			if (lexer.current().type != TokenType{'!'})
 				return error("String is not a valid byte string!");
-			if (!lexer.next() || lexer.current().type != TokenType::LTS_TT_INTEGER)
+			if ((!lexer.next()) || (
+				lexer.current().type == TokenType::LTS_TT_INTEGER
+			||	lexer.current().type != TokenType::LTS_TT_REAL
+			))
 				return error("Missing/Invalid byte string format specifier!");
 			usize const base = lexer.current().value;
-			if (!lexer.next() || !(
+			if ((!lexer.next()) || !(
 				lexer.current().type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
 			||	lexer.current().type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
 			)) return error("Missing/Invalid byte string contents!");
 			String const str = lexer.current().value;
-			usize stride = 0;
 			switch (base) {
-				case 2:		stride = 8; break;
-				case 4:		stride = 4; break;
-				case 8:		stride = 3; break;
-				case 16:	stride = 2; break;
-				case 32:	stride = 2; break;
+				case 2:		return Value(Convert::fromBase<Convert::Base::CB_BASE2>(str));
+				case 4:		return Value(Convert::fromBase<Convert::Base::CB_BASE4>(str));
+				case 8:		return Value(Convert::fromBase<Convert::Base::CB_BASE8>(str));
+				case 16:	return Value(Convert::fromBase<Convert::Base::CB_BASE16>(str));
+				case 32:	return Value(Convert::fromBase<Convert::Base::CB_BASE32>(str));
+				case 64:	return Value(Convert::fromBase<Convert::Base::CB_BASE64>(str));
 				default: return error("Invalid string format specifier!");
 			}
-			if (str.size() % stride != 0) return error("String size is not a proper multiple for the given format specifier!");
-			usize start = 0;
-			auto result = Value::ByteListType();
-			while (start < str.size()) {
-				result.pushBack(String::toNumber<byte>(str.substring(start, start + stride), base));
-				start += stride;
-			}
-			return Value(result);
 		}
 
 		ResultType parseArray() {
@@ -102,11 +98,20 @@ namespace Makai::Parser::Data {
 				auto const token = lexer.current();
 				switch (token.type) {
 				case TokenType{']'}: break;
-				default: {
+				case TokenType{'-'}:
+				case TokenType::LTS_TT_INTEGER:
+				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_REAL:
+				case TokenType::LTS_TT_CHARACTER:
+				case TokenType{'!'}:
+				case TokenType{'{'}:
+				case TokenType{'['}: {
 					auto v = parseValue();
 					if (v) result[result.size()] = v.value();
 					else return v.error().value();
 				} break;
+				default: continue;
 				}
 				if (lexer.current().type == TokenType{']'}) break;
 			}
@@ -129,7 +134,7 @@ namespace Makai::Parser::Data {
 				if (token.type == TokenType{':'}) continue;
 				if (inValue) {
 					switch (token.type) {
-					case TokenType{'}'}: break;
+					case TokenType{'}'}: return error("Missing value for key \"" + key + "\"!");
 					case TokenType{'-'}:
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
@@ -140,30 +145,33 @@ namespace Makai::Parser::Data {
 					case TokenType{'{'}:
 					case TokenType{'['}: {
 						auto v = parseValue();
-						if (v) result[result.size()] = v.value();
+						if (v) result[key] = v.value();
 						else return v.error().value();
 					} break;
 					default: continue;
 					}
 					inValue = false;
 				} else {
-					if (
-						token.type == TokenType::LTS_TT_SINGLE_QUOTE_STRING
-					||	token.type == TokenType::LTS_TT_DOUBLE_QUOTE_STRING
-					||	token.type == TokenType::LTS_TT_IDENTIFIER
-					) {
+					switch (token.type) {
+					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_IDENTIFIER:
 						key = token.value.get<Value::StringType>();
-						lexer.next();
-						inValue = true;
-					} else if (token.type == TokenType::LTS_TT_CHARACTER) {
-						key = toString(Cast::as<char>(token.value.get<ssize>()));
-						lexer.next();
-						inValue = true;
-					} else if (
-						token.type == TokenType::LTS_TT_INTEGER
-					||	token.type == TokenType::LTS_TT_REAL
-					) return error("Object key is not a string or identifier!");
-					else continue;
+					break;
+				//	case TokenType::LTS_TT_CHARACTER:
+				//		key = toString(Cast::as<char>(token.value.get<ssize>()));
+				//	break;
+					case TokenType::LTS_TT_INTEGER:
+					case TokenType::LTS_TT_REAL:
+					case TokenType{'!'}:
+					case TokenType{'{'}:
+					case TokenType{'['}:
+					case TokenType{'-'}:
+						return error("Object key is not a string or identifier!");
+					default: continue;
+					case TokenType{'}'}: break;
+					}
+					inValue = true;
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;

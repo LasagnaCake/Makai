@@ -5,11 +5,11 @@
 #include "bitwise.hpp"
 #include "format.hpp"
 #include "hash.hpp"
-#include "../memory/memory.hpp"
 #include "reverse.hpp"
 #include "sort.hpp"
 #include "strconv.hpp"
 #include "transform.hpp"
 #include "validate.hpp"
+#include "convert/convert.hpp"
 
 #endif // CTL_ALGORITHM_H
