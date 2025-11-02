@@ -17,7 +17,7 @@ int main() {
 					can also be
 					multi-line
 				"
-				byte_str !16"F0415EDCC99923CDD33124EEBBBAA9A4410000A"
+				byte_str !64"F0415EDCC99923CDD33124EEBBBAA9A4410000A"
 				array_v [1 2 4 8 16 32]
 				object_v {
 					key1 "value 1"
