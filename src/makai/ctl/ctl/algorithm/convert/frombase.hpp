@@ -22,7 +22,7 @@ namespace Convert {
 				usize start = 0;
 				BinaryData<> result;
 				while (start < str.size()) {
-					result.pushBack(String::toNumber<byte>(str.substring(start, start + 2).transform(toByteValue), stride(B)));
+					result.pushBack(String::toNumber<byte>(str.substring(start, start + 2), stride(B)));
 					start += stride(B);
 				}
 				return result;
@@ -37,31 +37,31 @@ namespace Convert {
 				usize current = 0;
 				BinaryData<> result;
 				while (current < str.size()) {
-					auto const section = str.substring(current, 8).upper().transform(toByteValue);
+					auto const section = str.substring(current, 8).upper().transform(toBase32Value);
 					result.expand(5);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[0]) & 0b11111) << 3);
-					if (section[1] == '=') break;
+					if (section[1] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[1]) & 0b11100) >> 2);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[1]) & 0b00011) << 6);
-					if (section[2] == '=') break;
+					if (section[2] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[2]) & 0b11111) << 1);
-					if (section[3] == '=') break;
+					if (section[3] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[3]) & 0b10000) >> 4);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[3]) & 0b01111) << 4);
-					if (section[4] == '=') break;
+					if (section[4] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[4]) & 0b11110) >> 1);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[4]) & 0b00001) << 7);
-					if (section[5] == '=') break;
+					if (section[5] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[5]) & 0b11111) << 2);
-					if (section[6] == '=') break;
+					if (section[6] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[6]) & 0b11000) >> 3);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[6]) & 0b00111) << 5);
-					if (section[7] == '=') break;
+					if (section[7] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[7]) & 0b11111));
 					current += 8;
 				}
@@ -77,19 +77,19 @@ namespace Convert {
 				usize current = 0;
 				BinaryData<> result;
 				while (current < str.size()) {
-					auto const section = str.substring(current, 4).transform(toByteValue);
+					auto const section = str.substring(current, 4).transform(toBase64Value);
 					result.expand(3);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[0]) & 0b111111) << 2);
-					if (section[1] == '=') break;
+					if (section[1] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[1]) & 0b110000) >> 4);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[1]) & 0b001111) << 4);
-					if (section[2] == '=') break;
+					if (section[2] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[2]) & 0b111100) >> 2);
 					result.pushBack(0);
 					result.back() |= ((Cast::as<uint8>(section[2]) & 0b000011) << 6);
-					if (section[3] == '=') break;
+					if (section[3] == 127) break;
 					result.back() |= ((Cast::as<uint8>(section[3]) & 0b111111));
 					current += 4;
 				}
@@ -97,10 +97,20 @@ namespace Convert {
 			}
 
 		private:
-			constexpr static char toByteValue(char const c) {
-				if (c >= 'a') return c - ('0' + 13);
-				if (c >= 'A') return c - ('0' + 7);
-				return c - '0';
+			constexpr static char toBase32Value(char c) {
+				if (c == '=') return 127;
+				c = toUpperChar(c);
+				if (c < 'A') return c - '0';
+				return c - 'A' + 10;
+			}
+
+			constexpr static char toBase64Value(char const c) {
+				if (c == '=') return 127;
+				if (c == '+' || c == '-') return 62;
+				if (c == '/' || c == '_') return 63;
+				if (c < 'A') return c - '0' + 52;
+				if (c < 'a') return c - 'A';
+				return c - 'a' + 26;
 			}
 
 			consteval static usize stride(Base const base) {
