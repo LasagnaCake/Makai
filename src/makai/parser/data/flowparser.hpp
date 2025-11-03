@@ -160,6 +160,7 @@ namespace Makai::Parser::Data {
 					auto const token = lexer.current();
 					if (token.type == TokenType{'}'})
 						return error("Missing value for key \"" + key + "\"!");
+					DEBUGLN("Type: ", enumcast(token.type), " Value: ", token.value.toString());
 					switch (token.type) {
 					case TokenType{'-'}:
 					case TokenType::LTS_TT_INTEGER:
