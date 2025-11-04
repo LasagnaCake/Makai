@@ -133,19 +133,16 @@ namespace Makai::Parser::Data {
 				if (lexer.current().type == TokenType{'}'})
 					break;
 				// Get key
-				bool exit = false;
-				while (lexer.next() && !exit) {
+				while (lexer.next()) {
 					auto const token = lexer.current();
 					switch (token.type) {
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 					case TokenType::LTS_TT_IDENTIFIER:
 						key = token.value.get<Value::StringType>();
-						exit = true;
 					break;
 					case TokenType::LTS_TT_CHARACTER:
 						key = toString(Cast::as<char>(token.value.get<ssize>()));
-						exit = true;
 					break;
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_REAL:
@@ -156,10 +153,10 @@ namespace Makai::Parser::Data {
 						return error("Object key is not a string or identifier!");
 					default: continue;
 					}
+					break;
 				}
-				exit = false;
 				// Get value
-				while (lexer.next() && !exit) {
+				while (lexer.next()) {
 					auto const token = lexer.current();
 					if (token.type == TokenType{'}'})
 						return error("Missing value for key \"" + key + "\"!");
@@ -177,10 +174,10 @@ namespace Makai::Parser::Data {
 						auto v = parseValue();
 						if (v) result[key] = v.value();
 						else return v.error().value();
-						exit = true;
 					} break;
 					default: continue;
 					}
+					break;
 				}
 				if (lexer.current().type == TokenType{'}'})
 					break;
