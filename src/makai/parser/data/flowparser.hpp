@@ -128,6 +128,7 @@ namespace Makai::Parser::Data {
 			if (lexer.current().type != TokenType{'{'})
 				return error("String is not a valid JSON object!");
 			DEBUGLN("Object");
+			lexer.next();
 			do {
 				Value::StringType key;
 				if (lexer.current().type == TokenType{'}'})
