@@ -157,10 +157,13 @@ namespace Makai::Parser::Data {
 					case TokenType{'['}:
 					case TokenType{'-'}:
 						return error("Object key is not a string or identifier!");
+					case TokenType{'}'}: break;
 					default: continue;
 					}
 					break;
 				}
+				if (lexer.current().type == TokenType{'}'})
+					break;
 				// Get value
 				while (lexer.next()) {
 					auto const token = lexer.current();
