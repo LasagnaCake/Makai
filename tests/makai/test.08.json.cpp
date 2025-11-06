@@ -11,6 +11,7 @@ int main() {
 				"uint_v": 1,
 				"dq_str": "String with double quotes",
 				"array_v": [1, 2, 4, 8, 16, 32],
+				"obj_array_v": [{}, {}, {}, {}, {}, {}],
 				"object_v": {
 					"key1": "value 1",
 					"key2": {
