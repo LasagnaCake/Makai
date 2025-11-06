@@ -622,7 +622,16 @@ namespace Data {
 		/// @return Value as JSON string.
 		/// @note If padding is set to a string, newlines are added for each element.
 		constexpr StringType toJSONString(Padding const& pad = nullptr) const {
-			return stringify(pad);
+			return stringify(
+				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
+					if (val.empty()) return "[]";
+					StringType result = "[";
+					for (auto const& v: val.content.bytes)
+						result += lhs + ::CTL::toString(v) + sep;
+					return result.sliced(0, -3) + lhs + StringType("]");
+				},
+				pad
+			);
 		}
 
 		/// @brief Converts the value to a FLOW (Fast Lazy Object Writing) string.
@@ -630,7 +639,14 @@ namespace Data {
 		/// @return Value as FLOW string.
 		/// @note If padding is set to a string, newlines are added for each element.
 		constexpr StringType toFLOWString(Padding const& pad = nullptr) const {
-			return stringify(pad, " ", " ");
+			return stringify(
+				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
+					return StringType("!64'" + Convert::toBase<Convert::Base::CB_BASE64>(val.content.bytes) + "'");
+				},
+				pad,
+				" ",
+				" "
+			);
 		}
 
 		/// @brief String format type.
@@ -752,7 +768,8 @@ namespace Data {
 		}
 
 	private:
-		constexpr StringType stringify(Padding const& pad, String const& sep = ", ", String const& assign = ": ") const {
+		template <Type::Functional<StringType(Value const&, String const&, String const&)> TToBytes>
+		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ") const {
 			if (isFalsy()) return "null";
 			if (isString())
 				return escape(content.string);
@@ -765,25 +782,21 @@ namespace Data {
 			StringType const NEWLINE = StringType("\n");
 			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
 			if (isBytes()) {
-				if (empty()) return "[]";
-				StringType result = "[";
-				for (auto const& v: content.bytes)
-					result += lhs + ::CTL::toString(v) + sep;
-				return result.sliced(0, -3) + lhs + StringType("]");
+				return toBytes(*this, lhs, sep);
 			}
 			if (isArray()) {
 				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
-					result += lhs + v.stringify(pad.next(), sep, assign) + sep;
-				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("]");
+					result += lhs + v.stringify(toBytes, pad.next(), sep, assign) + sep;
+				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("]");
 			}
 			if (isObject()) {
 				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto const& [k, v]: items())
-					result +=  lhs + escape(k) + assign + v.stringify(pad.next(), sep, assign) + sep;
-				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("}");
+					result +=  lhs + escape(k) + assign + v.stringify(toBytes, pad.next(), sep, assign) + sep;
+				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("}");
 			}
 			return StringType();
 		}
