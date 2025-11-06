@@ -641,7 +641,7 @@ namespace Data {
 		constexpr StringType toFLOWString(Padding const& pad = nullptr) const {
 			return stringify(
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
-					return StringType("!64'" + Convert::toBase<Convert::Base::CB_BASE64>(val.content.bytes) + "'");
+					return StringType("!64\"" + Convert::toBase<Convert::Base::CB_BASE64>(val.content.bytes) + "\"");
 				},
 				pad,
 				" ",
@@ -770,11 +770,11 @@ namespace Data {
 	private:
 		template <Type::Functional<StringType(Value const&, String const&, String const&)> TToBytes>
 		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ") const {
-			if (isFalsy()) return "null";
+			if (isFalsy()) return StringType("null");
 			if (isString())
 				return escape(content.string);
 			if (isBoolean())
-				return content.integer ? "true" : "false";
+				return content.integer ? StringType("true") : StringType("false");
 			if (isInteger())
 				return ::CTL::toString(content.integer);
 			if (isReal())
