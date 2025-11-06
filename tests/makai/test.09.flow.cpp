@@ -30,7 +30,8 @@ int main() {
 			}
 		)::";
 		Makai::FLOW::Value val = Makai::FLOW::parse(str);
-		DEBUGLN(val.toFLOWString("  "));
+		DEBUGLN("Has signed integer: ", val.contains("int_v") ? "true" : "false");
+		DEBUGLN(val.toJSONString("  "));
 	} catch (Makai::Error::Generic const& e) {
 		Makai::Popup::showError(e.report());
 	}
