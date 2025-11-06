@@ -28,16 +28,23 @@ namespace Makai::Parser::Data {
 		/// @brief Lexer token type.
 		using TokenType = LexerType::Token::Type;
 
+		ResultType parseNegativeNumber() {
+			if (!lexer.next()) return error("Missing number value!");
+			auto const token = lexer.current();
+			switch (token.type) {
+			case TokenType::LTS_TT_INTEGER:
+				return Value(-token.value.get<ssize>());
+			case TokenType::LTS_TT_REAL:
+				return Value(-token.value.get<double>());
+			default: return error("Value is not a negative number!");
+			}
+		}
+
 		ResultType parseValue() {
 			auto const token = lexer.current();
 			switch (token.type) {
 			case TokenType{'-'}:
-				if (!lexer.next()) return error("Missing number value!");
-				if (lexer.current().value.isInteger())
-					return Value(-lexer.current().value.get<ssize>());
-				else if (lexer.current().value.isReal())
-					return Value(-lexer.current().value.get<double>());
-				else return error("Value is not a negative number!");
+				return parseNegativeNumber();
 			case TokenType::LTS_TT_INTEGER:
 				return Value(static_cast<usize>(token.value.get<usize>()));
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
