@@ -22,10 +22,10 @@ namespace Convert {
 				String result;
 				for (auto const b: data) {
 					switch (B) {
-						case Base::CB_BASE2:	result += String::fromNumber<byte>(b, 2);	break;
-						case Base::CB_BASE4:	result += String::fromNumber<byte>(b, 4);	break;
-						case Base::CB_BASE8:	result += String::fromNumber<byte>(b, 8);	break;
-						case Base::CB_BASE16:	result += String::fromNumber<byte>(b, 16);	break;
+						case Base::CB_BASE2:	result += String::fromNumber<byte>(b, 2).substring(2);	break;
+						case Base::CB_BASE4:	result += String::fromNumber<byte>(b, 4).substring(2);	break;
+						case Base::CB_BASE8:	result += String::fromNumber<byte>(b, 8).substring(2);	break;
+						case Base::CB_BASE16:	result += String::fromNumber<byte>(b, 16).substring(2);	break;
 					}
 				}
 				return result;
