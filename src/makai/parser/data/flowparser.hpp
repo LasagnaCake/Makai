@@ -114,6 +114,7 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_REAL:
 				case TokenType::LTS_TT_CHARACTER:
+				case TokenType::LTS_TT_IDENTIFIER:
 				case TokenType{'!'}:
 				case TokenType{'{'}:
 				case TokenType{'['}: {
@@ -133,7 +134,6 @@ namespace Makai::Parser::Data {
 			Value result = Value::object();
 			if (lexer.current().type != TokenType{'{'})
 				return error("String is not a valid JSON object!");
-			DEBUGLN("Object");
 			do {
 				Value::StringType key;
 				if (lexer.current().type == TokenType{'}'})
@@ -173,6 +173,7 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 					case TokenType::LTS_TT_REAL:
 					case TokenType::LTS_TT_CHARACTER:
+					case TokenType::LTS_TT_IDENTIFIER:
 					case TokenType{'!'}:
 					case TokenType{'{'}:
 					case TokenType{'['}: {
