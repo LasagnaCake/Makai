@@ -23,6 +23,7 @@ int main() {
 		)::";
 		Makai::FLOW::Value val = Makai::JSON::parse(str);
 		DEBUGLN(val.toJSONString("  "));
+		DEBUGLN(val.toFLOWString("  "));
 	} catch (Makai::Error::Generic const& e) {
 		Makai::Popup::showError(e.report());
 	}

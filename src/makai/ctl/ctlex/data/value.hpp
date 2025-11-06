@@ -645,7 +645,8 @@ namespace Data {
 				},
 				pad,
 				" ",
-				" "
+				" ",
+				true
 			);
 		}
 
@@ -769,10 +770,10 @@ namespace Data {
 
 	private:
 		template <Type::Functional<StringType(Value const&, String const&, String const&)> TToBytes>
-		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ") const {
+		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ", bool unquotedIDs = false) const {
 			if (isFalsy()) return StringType("null");
 			if (isString())
-				return escape(content.string);
+				return escape(content.string, unquotedIDs);
 			if (isBoolean())
 				return content.integer ? StringType("true") : StringType("false");
 			if (isInteger())
@@ -795,7 +796,7 @@ namespace Data {
 				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto const& [k, v]: items())
-					result +=  lhs + escape(k) + assign + v.stringify(toBytes, pad.next(), sep, assign) + sep;
+					result +=  lhs + escape(k, unquotedIDs) + assign + v.stringify(toBytes, pad.next(), sep, assign) + sep;
 				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("}");
 			}
 			return StringType();
@@ -856,7 +857,8 @@ namespace Data {
 			return "none";
 		}
 
-		constexpr static StringType escape(StringType const& str) {
+		constexpr static StringType escape(StringType const& str, bool unquotedIDs) {
+			if (unquotedIDs && str.validate(isIdentifierNameChar<typename StringType::DataType>)) return str;
 			StringType result = "\"";
 			for (auto const& c: str) {
 				if (c == StringType::DataType{'\''})		result += "\\'";
