@@ -789,14 +789,14 @@ namespace Data {
 				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
-					result += lhs + v.stringify(toBytes, pad.next(), sep, assign) + sep;
+					result += lhs + v.stringify(toBytes, pad.next(), sep, assign, unquotedIDs) + sep;
 				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("]");
 			}
 			if (isObject()) {
 				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto const& [k, v]: items())
-					result +=  lhs + escape(k, unquotedIDs) + assign + v.stringify(toBytes, pad.next(), sep, assign) + sep;
+					result +=  lhs + escape(k, unquotedIDs) + assign + v.stringify(toBytes, pad.next(), sep, assign, unquotedIDs) + sep;
 				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("}");
 			}
 			return StringType();
