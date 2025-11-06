@@ -622,39 +622,7 @@ namespace Data {
 		/// @return Value as JSON string.
 		/// @note If padding is set to a string, newlines are added for each element.
 		constexpr StringType toJSONString(Padding const& pad = nullptr) const {
-			if (isFalsy()) return "null";
-			if (isString())
-				return escape(content.string);
-			if (isBoolean())
-				return content.integer ? "true" : "false";
-			if (isInteger())
-				return ::CTL::toString(content.integer);
-			if (isReal())
-				return ::CTL::toString(content.real);
-			StringType const NEWLINE = StringType("\n");
-			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
-			if (isBytes()) {
-				if (empty()) return "[]";
-				StringType result = "[";
-				for (auto const& v: content.bytes)
-					result += lhs + ::CTL::toString(v) + ", ";
-				return result.sliced(0, -3) + lhs + StringType("]");
-			}
-			if (isArray()) {
-				if (empty()) return "[]";
-				StringType result = "[";
-				for (auto const& v: *content.array)
-					result += lhs + v.toJSONString(pad.next()) + ", ";
-				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("]");
-			}
-			if (isObject()) {
-				if (empty()) return "{}";
-				StringType result = "{";
-				for (auto const& [k, v]: items())
-					result +=  lhs + escape(k) + ": " + v.toJSONString(pad.next()) + ", ";
-				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("}");
-			}
-			return StringType();
+			return stringify(pad);
 		}
 
 		/// @brief Converts the value to a FLOW (Fast Lazy Object Writing) string.
@@ -662,32 +630,7 @@ namespace Data {
 		/// @return Value as FLOW string.
 		/// @note If padding is set to a string, newlines are added for each element.
 		constexpr StringType toFLOWString(Padding const& pad = nullptr) const {
-			if (isFalsy()) return "null";
-			if (isBoolean())
-				return content.integer ? "true" : "false";
-			if (isInteger())
-				return ::CTL::toString(content.integer);
-			if (isReal())
-				return ::CTL::toString(content.real);
-			if (isBytes())
-				return "!16'" + CTL::Convert::toBase<CTL::Convert::Base::CB_BASE16>(content.bytes) + "'";
-			StringType const NEWLINE = StringType("\n");
-			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
-			if (isArray()) {
-				if (empty()) return "[]";
-				StringType result = "[";
-				for (auto const& v: *content.array)
-					result += lhs + v.toFLOWString(pad.next()) + " ";
-				return result.sliced(0, -2) + (NEWLINE + pad.base()) + StringType("]");
-			}
-			if (isObject()) {
-				if (empty()) return "{}";
-				StringType result = "{";
-				for (auto [k, v]: items())
-					result +=  lhs + escape(k) + " " + v.toFLOWString(pad.next()) + " ";
-				return result.sliced(0, -2) + (NEWLINE + pad.base()) + StringType("}");
-			}
-			return StringType();
+			return stringify(pad, " ", " ");
 		}
 
 		/// @brief String format type.
@@ -809,6 +752,42 @@ namespace Data {
 		}
 
 	private:
+		constexpr StringType stringify(Padding const& pad, String const& sep = ", ", String const& assign = ": ") const {
+			if (isFalsy()) return "null";
+			if (isString())
+				return escape(content.string);
+			if (isBoolean())
+				return content.integer ? "true" : "false";
+			if (isInteger())
+				return ::CTL::toString(content.integer);
+			if (isReal())
+				return ::CTL::toString(content.real);
+			StringType const NEWLINE = StringType("\n");
+			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
+			if (isBytes()) {
+				if (empty()) return "[]";
+				StringType result = "[";
+				for (auto const& v: content.bytes)
+					result += lhs + ::CTL::toString(v) + sep;
+				return result.sliced(0, -3) + lhs + StringType("]");
+			}
+			if (isArray()) {
+				if (empty()) return "[]";
+				StringType result = "[";
+				for (auto const& v: *content.array)
+					result += lhs + v.stringify(pad.next(), sep, assign) + sep;
+				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("]");
+			}
+			if (isObject()) {
+				if (empty()) return "{}";
+				StringType result = "{";
+				for (auto const& [k, v]: items())
+					result +=  lhs + escape(k) + assign + v.stringify(pad.next(), sep, assign) + sep;
+				return result.sliced(0, -3) + (NEWLINE + pad.base()) + StringType("}");
+			}
+			return StringType();
+		}
+
 		/// @brief Value type.
 		Kind	kind;
 		/// @brief Value content.
