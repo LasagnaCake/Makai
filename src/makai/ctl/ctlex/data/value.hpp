@@ -888,8 +888,9 @@ namespace Data {
 	}
 
 	constexpr void Value::extendArray(ssize const count) {
+		if (empty())content.array->pushBack(undefined());
 		while (count >= static_cast<ssize>(size()))
-			content.array->pushBack(nullptr);
+			content.array->pushBack(undefined());
 	}
 	
 	constexpr Value& Value::read(ssize const index) {
