@@ -107,7 +107,6 @@ namespace Makai::Parser::Data {
 				auto const token = lexer.current();
 				if (token.type == TokenType{']'}) break;
 				switch (token.type) {
-				case TokenType{']'}: break;
 				case TokenType{'-'}:
 				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
@@ -130,6 +129,7 @@ namespace Makai::Parser::Data {
 				return error("Missing closing bracket!");
 			return result;
 		}
+		
 		ResultType parseObject() {
 			Value result = Value::object();
 			if (lexer.current().type != TokenType{'{'})
@@ -141,6 +141,8 @@ namespace Makai::Parser::Data {
 				// Get key
 				while (lexer.next()) {
 					auto const token = lexer.current();
+					if (lexer.current().type == TokenType{'}'})
+						break;
 					switch (token.type) {
 					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
@@ -157,12 +159,11 @@ namespace Makai::Parser::Data {
 					case TokenType{'['}:
 					case TokenType{'-'}:
 						return error("Object key is not a string or identifier!");
-					case TokenType{'}'}: break;
 					default: continue;
 					}
 					break;
 				}
-				if (lexer.current().type == TokenType{'}'})
+				if (key.empty() && lexer.current().type == TokenType{'}'})
 					break;
 				// Get value
 				while (lexer.next()) {
