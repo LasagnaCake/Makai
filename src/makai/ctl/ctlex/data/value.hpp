@@ -769,6 +769,11 @@ namespace Data {
 		}
 
 	private:
+		/// @brief Value type.
+		Kind	kind;
+		/// @brief Value content.
+		Content	content;
+
 		template <Type::Functional<StringType(Value const&, String const&, String const&)> TToBytes>
 		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ", bool unquotedIDs = false) const {
 			if (isFalsy()) return StringType("null");
@@ -801,11 +806,6 @@ namespace Data {
 			}
 			return StringType();
 		}
-
-		/// @brief Value type.
-		Kind	kind;
-		/// @brief Value content.
-		Content	content;
 
 		constexpr void extendArray(ssize const sz);
 
@@ -876,8 +876,8 @@ namespace Data {
 				default: break;
 				case Kind::DVK_STRING:	MX::destruct(&content.string);						break;
 				case Kind::DVK_BYTES:	MX::destruct(&content.bytes);						break;
-				case Kind::DVK_ARRAY:	delete content.array; content.array = nullptr;		break;
-				case Kind::DVK_OBJECT:	delete content.object; content.object = nullptr;	break;
+				case Kind::DVK_ARRAY:	std::cout << "Deleting array...\n"; delete content.array; content.array = nullptr;	break;
+				case Kind::DVK_OBJECT:	std::cout << "Deleting object...\n"; delete content.object; content.object = nullptr;	break;
 			}
 			kind = Kind::DVK_UNDEFINED;
 		}

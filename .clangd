@@ -17,6 +17,7 @@ CompileFlags:
    - -Ilib/xml2json/include
    - -Ilib/miniaudio
    - -Ilib/minivorbis
+   - -Ilib/json2xml
 Index:
   Background: Skip
 Diagnostics:

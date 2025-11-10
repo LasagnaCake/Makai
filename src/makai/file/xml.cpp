@@ -20,13 +20,35 @@
 #define XML2JSON_ATTRIB_PREFIX		"@" 
 #define XML2JSON_ACCEPTS_NUMBERS	true
 #include <xml2json/xml2json.hpp>
+#include <json2xml.hpp>
 
 #pragma GCC diagnostic pop
 
-Makai::JSON::Value Makai::XML::toJSON(Makai::String const& xml) {
+Makai::JSON::Value Makai::XML::toValue(Makai::String const& xml) {
 	Makai::String json;
 	try {
 		json = xml2json(xml.cstr());
+	} catch (std::exception const& e) {
+		throw Error::FailedAction(
+			"Failed at converting XML to JSON!",
+			e.what(),
+			CTL_CPP_PRETTY_SOURCE
+		);
+	}
+	return Makai::JSON::parse(json);
+}
+
+
+Makai::String Makai::XML::fromValue(Makai::JSON::Value const& xml) {
+	try {
+		ert::JsonSaxConsumer consumer(4, XML2JSON_ATTRIB_PREFIX[0]);
+		bool success = nlohmann::json::sax_parse(xml.toJSONString().cstr(), &consumer);
+		if (!success)
+			throw Error::FailedAction(
+				"Failed at converting JSON to XML!",
+				CTL_CPP_PRETTY_SOURCE
+			);
+		return consumer.getXmlString();
 	} catch (std::exception const& e) {
 		throw Error::FailedAction(
 			"Failed at converting XML file!",
@@ -34,5 +56,4 @@ Makai::JSON::Value Makai::XML::toJSON(Makai::String const& xml) {
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}
-	return Makai::JSON::parse(json);
 }

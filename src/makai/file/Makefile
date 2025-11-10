@@ -3,7 +3,7 @@ include $(ROOT)/make/core.make
 
 override prefix := $(call concat, $(prefix), file)
 
-INCLUDES := $(INC_XML2JSON)
+INCLUDES := $(INC_XML2JSON) $(INC_JSON2XML)
 
 .PHONY: debug release all
 .ONESHELL:
