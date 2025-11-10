@@ -17,17 +17,12 @@ namespace Makai::Parser::Data {
 		/// @return Resulting value, or an error.
 		ResultType tryParse(Value::StringType const& str) override {
 			source = str;
-			// DEBUGLN("<source>\n",source,"\n</source>");
 			lexer.open(str.toString());
 			if (!lexer.next()) return Value();
 			auto const result = parseValue();
-			if (!lexer.finished()) return error("Malformed value!");
+			lexer.next();
+			if (!lexer.finished()) return error("Malformed value (extra unparsed data)!");
 			lexer.close();
-			// result.then(
-			// 	[] (auto const& v) {
-			// 		DEBUGLN("<json>\n",v.toJSONString(),"\n</json>");
-			// 	}
-			// );
 			return result;
 		}
 
