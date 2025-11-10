@@ -64,8 +64,8 @@ namespace Data {
 		union Content {
 			IntegerType			integer;
 			RealType			real;
-			StringType			string;
-			ByteListType		bytes;
+			owner<StringType>	string;
+			owner<ByteListType>	bytes;
 			owner<ArrayType>	array;
 			owner<ObjectType>	object;
 
@@ -128,9 +128,9 @@ namespace Data {
 		constexpr Value(T const value):				kind(Kind::DVK_REAL)			{content.real = value;						}
 		/// @brief Constructs a string value.
 		template <::CTL::Type::CanBecome<StringType> T>
-		constexpr Value(T const& value):			kind(Kind::DVK_STRING)			{MX::construct(&content.string, value);		}
+		constexpr Value(T const& value):			kind(Kind::DVK_STRING)			{content.string = new StringType(value);	}
 		/// @brief Constructs a byte list value.
-		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{MX::construct(&content.bytes, value);		}
+		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{content.bytes = new ByteListType(value);	}
 		/// @brief Constructs an array value.
 		constexpr Value(ArrayType const value):		kind(Kind::DVK_ARRAY)			{content.array = new ArrayType(value);		}
 		/// @brief Constructs an object value.
@@ -154,8 +154,8 @@ namespace Data {
 				case Kind::DVK_UNSIGNED:
 				case Kind::DVK_SIGNED:		content.integer	= other.content.integer;					break;
 				case Kind::DVK_REAL:		content.real	= other.content.real;						break;
-				case Kind::DVK_STRING:		MX::construct(&content.string, other.content.string);		break;
-				case Kind::DVK_BYTES:		MX::construct(&content.bytes, other.content.bytes);			break;
+				case Kind::DVK_STRING:		content.string	= new StringType(*other.content.string);	break;
+				case Kind::DVK_BYTES:		content.bytes	= new ByteListType(*other.content.bytes);	break;
 				case Kind::DVK_ARRAY:		content.array	= new ArrayType(*other.content.array);		break;
 				case Kind::DVK_OBJECT:		content.object	= new ObjectType(*other.content.object);	break;
 				default: break;
@@ -261,7 +261,7 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::OneOf<String, UTF8String> T>
 		constexpr bool tryGet(T& out) const {
-			if (isString()) out = content.string;
+			if (isString()) out = *content.string;
 			else return false;
 			return true;
 		}
@@ -272,7 +272,7 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Equal<ByteListType> T>
 		constexpr bool tryGet(T& out) const {
-			if (isBytes()) out = content.bytes;
+			if (isBytes()) out = *content.bytes;
 			else return false;
 			return true;
 		}
@@ -626,7 +626,7 @@ namespace Data {
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
 					if (val.empty()) return "[]";
 					StringType result = "[";
-					for (auto const& v: val.content.bytes)
+					for (auto const& v: *val.content.bytes)
 						result += lhs + ::CTL::toString(v) + sep;
 					return result.sliced(0, -3) + lhs + StringType("]");
 				},
@@ -641,7 +641,7 @@ namespace Data {
 		constexpr StringType toFLOWString(Padding const& pad = nullptr) const {
 			return stringify(
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
-					return StringType("!64\"" + Convert::toBase<Convert::Base::CB_BASE64>(val.content.bytes) + "\"");
+					return StringType("!64\"" + Convert::toBase<Convert::Base::CB_BASE64>(*val.content.bytes) + "\"");
 				},
 				pad,
 				" ",
@@ -778,7 +778,7 @@ namespace Data {
 		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ", bool unquotedIDs = false) const {
 			if (isFalsy()) return StringType("null");
 			if (isString())
-				return escape(content.string, unquotedIDs);
+				return escape(*content.string, unquotedIDs);
 			if (isBoolean())
 				return content.integer ? StringType("true") : StringType("false");
 			if (isInteger())
@@ -874,10 +874,10 @@ namespace Data {
 		constexpr void dump() {
 			switch (kind) {
 				default: break;
-				case Kind::DVK_STRING:	MX::destruct(&content.string);						break;
-				case Kind::DVK_BYTES:	MX::destruct(&content.bytes);						break;
-				case Kind::DVK_ARRAY:	std::cout << "Deleting array...\n"; delete content.array; content.array = nullptr;	break;
-				case Kind::DVK_OBJECT:	std::cout << "Deleting object...\n"; delete content.object; content.object = nullptr;	break;
+				case Kind::DVK_STRING:	if (content.string)	delete content.string;	content.string = nullptr;	break;
+				case Kind::DVK_BYTES:	if (content.bytes)	delete content.bytes;	content.bytes = nullptr;	break;
+				case Kind::DVK_ARRAY:	if (content.array)	delete content.array;	content.array = nullptr;	break;
+				case Kind::DVK_OBJECT:	if (content.object)	delete content.object;	content.object = nullptr;	break;
 			}
 			kind = Kind::DVK_UNDEFINED;
 		}
@@ -910,8 +910,8 @@ namespace Data {
 	}
 
 	constexpr usize Value::size() const {
-		if (isString())	return content.string.size();
-		if (isBytes())	return content.bytes.size();
+		if (isString())	return content.string->size();
+		if (isBytes())	return content.bytes->size();
 		if (isArray())	return content.array->size();
 		if (isObject())	return content.object->size();
 		if (isScalar())	return 1;
