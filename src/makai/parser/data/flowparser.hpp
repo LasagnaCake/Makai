@@ -120,7 +120,12 @@ namespace Makai::Parser::Data {
 				case TokenType{'{'}:
 				case TokenType{'['}: {
 					auto v = parseValue();
-					if (v) result[result.size()] = v.value();
+					if (v) {
+						auto const vv = v.value();
+						result[result.size()] = vv;
+						if (vv.isObject() && lexer.current().type == TokenType{']'})
+							lexer.next();
+					}
 					else return v.error().value();
 				} break;
 				default: continue;
@@ -184,7 +189,12 @@ namespace Makai::Parser::Data {
 					case TokenType{'{'}:
 					case TokenType{'['}: {
 						auto v = parseValue();
-						if (v) result[key] = v.value();
+						if (v) {
+							auto const vv = v.value();
+							result[result.size()] = vv;
+							if (vv.isObject() && lexer.current().type == TokenType{'}'})
+								lexer.next();
+						}
 						else return v.error().value();
 					} break;
 					default: continue;
