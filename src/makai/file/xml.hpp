@@ -30,6 +30,10 @@ namespace Makai::XML {
 	///		Does not support the rogue text `.content` property!
 	String			fromValue(JSON::Value const& value);
 	inline String	fromJSON(JSON::Value const& value)		{return fromValue(value);	}
+
+	
+	inline JSON::Value	fromXML(String const& xml)			{return toJSON(xml);		}
+	inline String		toXML(JSON::Value const& json)		{return fromJSON(json);		}
 }
 
 namespace MkXML = Makai::XML;
