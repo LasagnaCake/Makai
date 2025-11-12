@@ -191,7 +191,7 @@ namespace Makai::Parser::Data {
 						auto v = parseValue();
 						if (v) {
 							auto const vv = v.value();
-							result[result.size()] = vv;
+							result[key] = vv;
 							if (vv.isObject() && lexer.current().type == TokenType{'}'})
 								lexer.next();
 						}
