@@ -62,7 +62,7 @@ namespace Makai::Parser::Data {
 				return v;
 			}
 			case TokenType{'['}: {
-				auto v = parseObject();
+				auto v = parseArray();
 				if (v && lexer.current().type == TokenType{']'})
 						lexer.next();
 				return v;
@@ -76,8 +76,7 @@ namespace Makai::Parser::Data {
 				else if (id == "false") return Value(false);
 				return Value(id);
 			}
-			default: return Value();
-				//return error("Missing or invalid token!");
+			default: return Value::undefined();
 			}
 			return Value();
 		}
