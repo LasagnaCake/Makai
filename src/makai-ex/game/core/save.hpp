@@ -137,7 +137,7 @@ namespace Makai::Ex::Game {
 
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		JSON::Value	value()	const	{return copy<JSON::Value>(*this);	}
+		JSON::Value	value()	const	{return *static_cast<ref<JSON::Value const>>(this);	}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.
