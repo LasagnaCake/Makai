@@ -1,119 +1,11 @@
 #ifndef MAKAILIB_EX_GAME_CORE_SAVE_H
 #define MAKAILIB_EX_GAME_CORE_SAVE_H
 
+#include "makai/file/json.hpp"
 #include<makai/makai.hpp>
 
 /// @brief Game extensions.
 namespace Makai::Ex::Game {
-	/// @brief Save file view.
-	struct SaveView: public Makai::JSON::JSONView {
-		using JSONView::JSONView;
-		using JSONView::operator=;
-
-		/// @brief Copy constructor (`JSONView`).
-		/// @param other `JSONView` to copy from.
-		SaveView(JSONView const& other):	JSONView(other) {}
-		/// @brief Move constructor (`JSONView`).
-		/// @param other `JSONView` to move.
-		SaveView(JSONView&& other):			JSONView(other) {}
-
-		/// @brief Copy constructor (self) (defaulted).
-		SaveView(SaveView const&)	= default;
-		/// @brief Move constructor (self) (defaulted).
-		SaveView(SaveView&&)		= default;
-
-		/// @brief Member access operator.
-		/// @param key Member to get.
-		/// @return Const view to member.
-		SaveView const operator[](String const& key) const {
-			return JSONView::operator[](key);
-		}
-		
-		/// @brief Member access operator.
-		/// @param key Member to get.
-		/// @return View to member.
-		SaveView operator[](String const& key) {
-			return JSONView::operator[](key);
-		}
-
-		/// @brief Member access operator.
-		/// @param key Member to get.
-		/// @return Const view to member.
-		SaveView const operator[](JSONView::Path const& key) const {
-			return JSONView::operator[](key);
-		}
-		
-		/// @brief Member access operator.
-		/// @param key Member to get.
-		/// @return View to member.
-		SaveView operator[](JSONView::Path const& key) {
-			return JSONView::operator[](key);
-		}
-
-		/// @brief Saves the current view's contents to disk.
-		/// @param path Path to save contents to.
-		/// @return Const reference to self.
-		SaveView const& save(String const& path) const {
-			saveToFile(path);
-			return *this;
-		}
-
-		/// @brief Saves the current view's contents to disk.
-		/// @param path Path to save contents to.
-		/// @param pass File password.
-		/// @return Const reference to self.
-		SaveView const& save(String const& path, String const& pass) const {
-			saveToFile(path, pass);
-			return *this;
-		}
-
-		/// @brief Saves the current view's contents to disk.
-		/// @param path Path to save contents to.
-		/// @return Reference to self.
-		SaveView& save(String const& path) {
-			saveToFile(path);
-			return *this;
-		}
-		
-		/// @brief Saves the current view's contents to disk.
-		/// @param path Path to save contents to.
-		/// @param pass File password.
-		/// @return Reference to self.
-		SaveView& save(String const& path, String const& pass) {
-			saveToFile(path, pass);
-			return *this;
-		}
-
-		/// @brief Loads content from disk.
-		/// @param path Path to content to load.
-		/// @return Reference to self.
-		SaveView& load(String const& path) {
-			view() = Makai::File::getJSON(path);
-			return *this;
-		}
-
-		/// @brief Loads a content from disk.
-		/// @param path Path to content to load.
-		/// @param pass File password.
-		/// @return Reference to self.
-		SaveView& load(String const& path, String const& pass) {
-			view() = Makai::JSON::parse(Makai::Tool::Arch::loadEncryptedTextFile(path));
-			return *this;
-		}
-		/// @brief Returns whether there is content stored.
-		/// @return Whether contents exists.
-		bool exists() const {return isObject();}
-
-	private:
-		void saveToFile(String const& path) const {
-			if (exists()) Makai::File::saveText(path, toString());
-		}
-
-		void saveToFile(String const& path, String const& pass) const {
-			if (exists()) Makai::Tool::Arch::saveEncryptedTextFile(path, toString(), pass);
-		}
-	};
-
 	/// @brief Save file.
 	struct Save {
 		/// @brief Default constructor.
@@ -122,9 +14,6 @@ namespace Makai::Ex::Game {
 		/// @brief Constructs the save file.
 		/// @param data Save file contents.
 		explicit Save(Makai::JSON::Value const& data): data(data)	{}
-		/// @brief Constructs the save file.
-		/// @param data Save file contents.
-		explicit Save(Makai::JSON::JSONView const& data): data(data)	{}
 
 		/// @brief Loads a save file from disk.
 		/// @param path Path to save file.
@@ -148,7 +37,7 @@ namespace Makai::Ex::Game {
 		/// @brief Clears the object's contents.
 		/// @return Reference to self.
 		Save& clear() {
-			data = Makai::JSON::object();
+			data = Makai::JSON::Value::object();
 			return *this;
 		}
 
@@ -156,7 +45,7 @@ namespace Makai::Ex::Game {
 		/// @param path Path to save file.
 		/// @return Const reference to self.
 		Save const& save(String const& path) const {
-			SaveView(data).save(path);
+			saveToFile(path);
 			return *this;
 		}
 
@@ -166,7 +55,7 @@ namespace Makai::Ex::Game {
 		/// @param pass File password.
 		/// @return Const reference to self.
 		Save const& save(String const& path, String const& pass) const {
-			SaveView(data).save(path, pass);
+			saveToFile(path, pass);
 			return *this;
 		}
 
@@ -174,7 +63,7 @@ namespace Makai::Ex::Game {
 		/// @param path Path to save file.
 		/// @return Reference to self.
 		Save& save(String const& path) {
-			SaveView(data).save(path);
+			saveToFile(path);
 			return *this;
 		}
 
@@ -184,7 +73,7 @@ namespace Makai::Ex::Game {
 		/// @param pass File password.
 		/// @return Reference to self.
 		Save& save(String const& path, String const& pass) {
-			SaveView(data).save(path, pass);
+			saveToFile(path, pass);
 			return *this;
 		}
 
@@ -192,7 +81,7 @@ namespace Makai::Ex::Game {
 		/// @param path Path to save file. 
 		/// @return Reference to self.
 		Save& load(String const& path) {
-			SaveView(data).load(path);
+			data = File::getJSON(path);
 			return *this;
 		}
 
@@ -201,7 +90,7 @@ namespace Makai::Ex::Game {
 		/// @param pass File password.
 		/// @return Reference to self.
 		Save& load(String const& path, String const& pass) {
-			SaveView(data).load(path, pass);
+			data = JSON::parse(Tool::Arch::loadEncryptedTextFile(path));;
 			return *this;
 		}
 
@@ -218,29 +107,26 @@ namespace Makai::Ex::Game {
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return Const view to member.
-		SaveView const operator[](String const& key) const {
+		JSON::Value const operator[](String const& key) const {
 			return data[key];
 		}
 		
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return View to member.
-		SaveView operator[](String const& key) {
+		JSON::Value operator[](String const& key) {
 			return data[key];
 		}
 
-		/// @brief Returns a view to the save's contents.
-		/// @return View to contents.
-		SaveView				view()			{return SaveView(data);	}
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		Makai::JSON::Value	value()	const	{return data;			}
+		JSON::Value	value()	const	{return data;	}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.
 		/// @return Reference to self.
 		/// @note Value must be a JSON object.
-		Save& operator=(Makai::JSON::JSONView const& value) {
+		Save& operator=(Makai::JSON::Value const& value) {
 			if (!value.isObject())
 				throw Error::InvalidValue(
 					"Save value must be a JSON object!",
@@ -252,11 +138,23 @@ namespace Makai::Ex::Game {
 
 		/// @brief Returns whether there is a save stored.
 		/// @return Whether save exists.
-		bool exists() const {return data.isObject();}
+		constexpr bool exists() const		{return data.isObject();		}
+
+		/// @brief Converts the save to a string.
+		/// @return Save as string.
+		constexpr String toString() const	{return data.toJSONString();	}
 
 	private:
+		void saveToFile(String const& path) const {
+			if (exists()) File::saveText(path, toString());
+		}
+
+		void saveToFile(String const& path, String const& pass) const {
+			if (exists()) Tool::Arch::saveEncryptedTextFile(path, toString(), pass);
+		}
+
 		/// @brief Save file contents.
-		Makai::JSON::Value data = Makai::JSON::object();
+		Makai::JSON::Value data = JSON::Value::object();
 	};
 }
 
