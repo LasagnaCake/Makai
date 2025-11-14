@@ -1,18 +1,17 @@
 #ifndef CTL_CONTAINER_STATICLIST_H
 #define CTL_CONTAINER_STATICLIST_H
 
-#include "../templates.hpp"
-#include "../ctypes.hpp"
-#include "../cpperror.hpp"
-#include "../typetraits/traits.hpp"
-#include "arguments.hpp"
-#include "iterator.hpp"
-#include "function.hpp"
-#include "span.hpp"
-#include "../algorithm/sort.hpp"
-#include "../algorithm/reverse.hpp"
-#include "../adapter/comparator.hpp"
-#include "../memory/memory.hpp"
+#include "../../templates.hpp"
+#include "../../ctypes.hpp"
+#include "../../cpperror.hpp"
+#include "../../typetraits/traits.hpp"
+#include "../iterator.hpp"
+#include "../function.hpp"
+#include "../span.hpp"
+#include "../../algorithm/sort.hpp"
+#include "../../algorithm/reverse.hpp"
+#include "../../adapter/comparator.hpp"
+#include "../../memory/memory.hpp"
 
 CTL_NAMESPACE_BEGIN
 

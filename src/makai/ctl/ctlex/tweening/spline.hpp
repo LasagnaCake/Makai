@@ -4,7 +4,6 @@
 #include "../math/vector.hpp"
 #include "../../ctl/math/core.hpp"
 #include "../../ctl/container/lists/list.hpp"
-#include "../../ctl/container/arguments.hpp"
 #include "../../ctl/exnamespace.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
@@ -43,14 +42,6 @@ namespace Spline {
 		/// @brief Constructs the spline with a series of points.
 		/// @param ps Points to use.
 		constexpr Linear(List<T> const& ps): points(ps) {}
-
-		/// @brief Constructs the spline with a series of points.
-		/// @param ps Points to use.
-		constexpr Linear(Arguments<T> const& ps) {
-			points.resize(ps.size());
-			for (T& p: ps)
-				points.pushBack(p);
-		}
 
 		/// @brief Constructs the spline with an array of points.
 		/// @tparam N Array size.
@@ -102,14 +93,6 @@ namespace Spline {
 			/// @param secs Sections to use.
 			constexpr Spline(SectionList<T, N> const& secs) {
 				sections = secs;
-			}
-
-			/// @brief Constructs the spline from a series of sections.
-			/// @param secs Sections to use.
-			constexpr Spline(Arguments<Section<T, N>> const& secs) {
-				sections.resize(secs.size());
-				for (Section<T, N>& s: secs)
-					sections.pushBack(s);
 			}
 
 			/// @brief Constructs the spline from an array of point groups.
@@ -211,14 +194,6 @@ namespace Spline {
 			/// @param secs Sections to use.
 			constexpr Spline(SectionList<T> const& secs) {
 				sections = secs;
-			}
-
-			/// @brief Constructs the spline from a series of sections.
-			/// @param secs Sections to use.
-			constexpr Spline(Arguments<Section<T>> const& secs) {
-				sections.resize(secs.size());
-				for (Section<T>& s: secs)
-					sections.pushBack(s);
 			}
 
 			/// @brief Constructs the spline from an array of point groups.

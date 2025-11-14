@@ -8,7 +8,6 @@
 #include "../lists/list.hpp"
 #include "../array.hpp"
 #include "../pair.hpp"
-#include "../arguments.hpp"
 #include "../../typeinfo.hpp"
 #include "../../cpperror.hpp"
 #include "../../io/stream.hpp"
@@ -59,8 +58,7 @@ public:
 		typename BaseType::PointerType,
 		typename BaseType::ConstPointerType,
 		typename BaseType::ReferenceType,
-		typename BaseType::ConstReferenceType,
-		typename BaseType::ArgumentListType
+		typename BaseType::ConstReferenceType
 	;
 
 	using
@@ -1650,8 +1648,6 @@ public:
 
 /// @brief List of strings.
 typedef List<String>			StringList;
-/// @brief String arguments.
-typedef Arguments<String>		StringArguments;
 /// @brief Pair of strings.
 typedef Pair<String, String>	StringPair;
 

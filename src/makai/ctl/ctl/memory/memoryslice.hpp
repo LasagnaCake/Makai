@@ -2,6 +2,7 @@
 #define CTL_MEMORY_MEMORYSLICE_H
 
 #include "allocator.hpp"
+#include "../algorithm/transform.hpp"
 
 CTL_NAMESPACE_BEGIN
 

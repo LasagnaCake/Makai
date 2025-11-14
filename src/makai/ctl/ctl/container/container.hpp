@@ -1,7 +1,6 @@
 #ifndef CTL_CONTAINER_H
 #define CTL_CONTAINER_H
 
-#include "arguments.hpp"
 #include "array.hpp"
 #include "bind.hpp"
 #include "bitmask.hpp"
@@ -10,7 +9,6 @@
 #include "function.hpp"
 #include "functor.hpp"
 #include "iterator.hpp"
-#include "staticlist.hpp"
 #include "nullable.hpp"
 #include "pair.hpp"
 #include "result.hpp"

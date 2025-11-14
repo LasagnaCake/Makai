@@ -11,5 +11,6 @@
 #include "transform.hpp"
 #include "validate.hpp"
 #include "convert/convert.hpp"
+#include "swap.hpp"
 
 #endif // CTL_ALGORITHM_H

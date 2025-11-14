@@ -7,7 +7,6 @@
 #include "../cpperror.hpp"
 #include "../typetraits/traits.hpp"
 #include "iterator.hpp"
-#include "arguments.hpp"
 #include "../algorithm/sort.hpp"
 #include "../algorithm/reverse.hpp"
 #include "../memory/memory.hpp"

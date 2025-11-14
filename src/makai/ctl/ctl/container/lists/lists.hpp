@@ -2,5 +2,6 @@
 #define CTL_CONTAINER_LISTS_H
 
 #include "list.hpp"
+#include "staticlist.hpp"
 
 #endif
