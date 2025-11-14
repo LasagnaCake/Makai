@@ -6,13 +6,9 @@
 /// @brief Game extensions.
 namespace Makai::Ex::Game {
 	/// @brief Save file.
-	struct Save {
+	struct Save: JSON::Value {
 		/// @brief Default constructor.
 		Save() {}
-
-		/// @brief Constructs the save file.
-		/// @param data Save file contents.
-		explicit Save(Makai::JSON::Value const& data): data(data)	{}
 
 		/// @brief Loads a save file from disk.
 		/// @param path Path to save file.
@@ -36,7 +32,7 @@ namespace Makai::Ex::Game {
 		/// @brief Clears the object's contents.
 		/// @return Reference to self.
 		Save& clear() {
-			data = Makai::JSON::Value::object();
+			operator=(Makai::JSON::Value::object());
 			return *this;
 		}
 
@@ -80,7 +76,7 @@ namespace Makai::Ex::Game {
 		/// @param path Path to save file. 
 		/// @return Reference to self.
 		Save& load(String const& path) {
-			data = File::getJSON(path);
+			operator=(File::getJSON(path));
 			return *this;
 		}
 
@@ -89,7 +85,7 @@ namespace Makai::Ex::Game {
 		/// @param pass File password.
 		/// @return Reference to self.
 		Save& load(String const& path, String const& pass) {
-			data = JSON::parse(Tool::Arch::loadEncryptedTextFile(path));;
+			operator=(JSON::parse(Tool::Arch::loadEncryptedTextFile(path)));
 			return *this;
 		}
 
@@ -100,26 +96,48 @@ namespace Makai::Ex::Game {
 		/// @return Value, or fallback.
 		template<class T>
 		T get(String const& key, T const& fallback) {
-			return data[key].get<T>(fallback);
+			return operator[](key).get<T>(fallback);
+		}
+		
+		/// @brief Gets a value from the save.
+		/// @tparam T Value type.
+		/// @param key Member name.
+		/// @param fallback Fallback value.
+		/// @return Value, or fallback.
+		template<class T>
+		T get(T const& fallback) {
+			return Value::get<T>(fallback);
+		}
+
+		/// @brief Gets a value from the save.
+		/// @tparam T Value type.
+		/// @param key Member name.
+		/// @param fallback Fallback value.
+		/// @return Value, or fallback.
+		template<class T>
+		T get() {
+			return Value::get<T>();
 		}
 
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return Const view to member.
-		JSON::Value const operator[](String const& key) const {
-			return data[key];
+		template <class T>
+		Save const operator[](T const& key) const {
+			return Value::operator[](key);
 		}
 		
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return View to member.
-		JSON::Value operator[](String const& key) {
-			return data[key];
+		template <class T>
+		Value& operator[](T const& key) {
+			return Value::operator[](key);
 		}
 
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		JSON::Value	value()	const	{return data;	}
+		JSON::Value	value()	const	{return copy<JSON::Value>(*this);	}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.
@@ -131,17 +149,13 @@ namespace Makai::Ex::Game {
 					"Save value must be a JSON object!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			data = value;
+			Value::operator=(value);
 			return *this;
 		}
 
 		/// @brief Returns whether there is a save stored.
 		/// @return Whether save exists.
-		constexpr bool exists() const		{return data.isObject();		}
-
-		/// @brief Converts the save to a string.
-		/// @return Save as string.
-		constexpr String toString() const	{return data.toJSONString();	}
+		constexpr bool exists() const {return isObject();}
 
 	private:
 		void saveToFile(String const& path) const {
@@ -151,9 +165,6 @@ namespace Makai::Ex::Game {
 		void saveToFile(String const& path, String const& pass) const {
 			if (exists()) Tool::Arch::saveEncryptedTextFile(path, toString(), pass);
 		}
-
-		/// @brief Save file contents.
-		Makai::JSON::Value data = JSON::Value::object();
 	};
 }
 
