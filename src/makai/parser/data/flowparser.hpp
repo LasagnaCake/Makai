@@ -55,18 +55,10 @@ namespace Makai::Parser::Data {
 				return token.value;
 			case TokenType::LTS_TT_CHARACTER:
 				return Value(toString(Cast::as<char>(token.value.get<ssize>())));
-			case TokenType{'{'}: {
-				auto v = parseObject();
-				if (v && lexer.current().type == TokenType{'}'})
-						lexer.next();
-				return v;
-			}
-			case TokenType{'['}: {
-				auto v = parseArray();
-				if (v && lexer.current().type == TokenType{']'})
-						lexer.next();
-				return v;
-			}
+			case TokenType{'{'}:
+				return parseObject();
+			case TokenType{'['}:
+				return parseArray();
 			case TokenType{'!'}:
 				return parseBytes();
 			case TokenType::LTS_TT_IDENTIFIER: {
@@ -76,7 +68,8 @@ namespace Makai::Parser::Data {
 				else if (id == "false") return Value(false);
 				return Value(id);
 			}
-			default: return Value::undefined();
+			default: return Value();
+				//return error("Missing or invalid token!");
 			}
 			return Value();
 		}
@@ -126,9 +119,14 @@ namespace Makai::Parser::Data {
 				case TokenType{'!'}:
 				case TokenType{'{'}:
 				case TokenType{'['}: {
-						auto v = parseValue();
-						if (v) result[result.size()] = v.value();
-						else return v.error().value();
+					auto v = parseValue();
+					if (v) {
+						auto const vv = v.value();
+						result[result.size()] = vv;
+						if (vv.isArray() && lexer.current().type == TokenType{']'})
+							lexer.next();
+					}
+					else return v.error().value();
 				} break;
 				default: continue;
 				}
@@ -191,7 +189,12 @@ namespace Makai::Parser::Data {
 					case TokenType{'{'}:
 					case TokenType{'['}: {
 						auto v = parseValue();
-						if (v) result[key] = v.value();
+						if (v) {
+							auto const vv = v.value();
+							result[key] = vv;
+							if (vv.isObject() && lexer.current().type == TokenType{'}'})
+								lexer.next();
+						}
 						else return v.error().value();
 					} break;
 					default: continue;
