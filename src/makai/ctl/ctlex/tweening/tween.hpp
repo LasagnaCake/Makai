@@ -2,7 +2,6 @@
 #define CTL_EX_TWEENING_TWEEN_H
 
 #include "../../ctl/exnamespace.hpp"
-#include "../../ctl/container/arguments.hpp"
 #include "../../ctl/container/lists/list.hpp"
 #include "../../ctl/container/functor.hpp"
 #include "../../ctl/interface/core.hpp"
@@ -337,8 +336,6 @@ public:
 	typedef TweenStage<DataType>	Stage;
 	/// @brief Tween stage list type.
 	typedef List<Stage>				StageList;
-	/// @brief Tween stage argument list type.
-	typedef Arguments<Stage>		StageArguments;
 
 	using ATweenPeriodic::ATweenPeriodic;
 
@@ -346,14 +343,6 @@ public:
 	/// @param stages Stages to interpolate between.
 	/// @param manual Whether the tween is processed manually. By default, it is `false`.
 	TweenChain(StageList const& stages, bool const manual = false)
-	: ATweenPeriodic(manual) {
-		setInterpolation(stages);
-	}
-
-	/// @brief Constructs the tween with a set of stages.
-	/// @param stages Stages to interpolate between.
-	/// @param manual Whether the tween is processed manually. By default, it is `false`.
-	TweenChain(StageArguments const& stages, bool const manual = false)
 	: ATweenPeriodic(manual) {
 		setInterpolation(stages);
 	}
@@ -416,13 +405,6 @@ public:
 	TweenChain& setInterpolation(StageList const& stages) {
 		this->stages = stages;
 		return start();
-	}
-
-	/// @brief Sets the interpolation.
-	/// @param stages Stages to interpolate between.
-	/// @return Reference to self.
-	TweenChain& setInterpolation(StageArguments const& stages) {
-		return setInterpolation(StageList(stages));
 	}
 
 	/// @brief Sets the current tween step.

@@ -6,9 +6,36 @@ define newline
 
 endef
 
-#export CC	?= gcc
-#export CXX	?= g++
-export LD	?= ld
+ifeq ($(compiler),msys2-gcc)
+C_COMPILER		?=gcc
+CPP_COMPILER	?=g++
+endif
+ifeq ($(compiler),msys2-clang)
+C_COMPILER		?=clang
+CPP_COMPILER	?=clang++
+endif
+ifeq ($(compiler),mingw)
+C_COMPILER		?=mingw32-gcc
+CPP_COMPILER	?=mingw32-g++
+endif
+ifeq ($(compiler),auto)
+C_COMPILER		?=$(CC)
+CPP_COMPILER	?=$(CXX)
+endif
+ifndef compiler
+C_COMPILER		?=$(CC)
+CPP_COMPILER	?=$(CXX)
+endif
+LINKER			?=ld
+
+ifndef gl-loader
+gl-loader:=glad
+export gl-loader
+endif
+
+export C_COMPILER
+export CPP_COMPILER
+export LINKER
 
 export lower =$(shell echo $(1) | tr A-Z a-z)
 export upper =$(shell echo $(1) | tr a-z A-Z)
@@ -60,6 +87,7 @@ export INC_CUTE			= $(call libpath, cute_headers)
 export INC_CPPCODEC		= $(call libpath, cppcodec-0.2)
 export INC_CRYPTOPP		= $(call libpath, cryptopp/include)
 export INC_XML2JSON		= $(call libpath, xml2json/include)
+export INC_JSON2XML		= $(call libpath, json2xml)
 export INC_MINIAUDIO	= $(call libpath, miniaudio) $(call libpath, minivorbis)
 export INC_MAKAI		= $(call corepath, include)
 
@@ -70,7 +98,7 @@ DEBUG_CONFIG		= $(DEBUG_CONFIG_BASE)
 RELEASE_CONFIG_BASE	= $(COMPILER_CONFIG) $(OPTIMIZATIONS) $(FRAME_PTR) $(RELEASEMODE)
 RELEASE_CONFIG		= $(RELEASE_CONFIG_BASE) -O$(o)
 
-COMPILER = $(CXX) $(INCLUDES)
+COMPILER = $(CPP_COMPILER) $(INCLUDES)
 
 export NO_OP := @:
 
@@ -95,13 +123,13 @@ export GET_TIME
 
 export leave = $(subst $(space),,$(filter ../,$(subst /, ../ ,$(strip $(1)))))
 
-submake-impl = $(gmake) -C$(call path, $(1)) $@ prefix="$(strip $(2))"
+submake-impl = $(GNU_MAKE) -C$(call path, $(1)) $@ prefix="$(strip $(2))"
 
 submake-chain = $(call submake-impl, $(1), $(prefix))
 
 export submake = @$(call submake-impl, $(1), $(prefix))
 
-submake-any-impl = $(gmake) -C$(call path, $(1)) prefix="$(strip $(2))"
+submake-any-impl = $(GNU_MAKE) -C$(call path, $(1)) prefix="$(strip $(2))"
 
 export submake-any = @$(call submake-any-impl, $(1), $(prefix))
 

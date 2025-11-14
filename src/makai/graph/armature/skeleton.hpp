@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_GRAPH_ARMATURE_SKELETON_H
 #define MAKAILIB_GRAPH_ARMATURE_SKELETON_H
 
-#include "../../../compat/ctl.hpp"
+#include "../../compat/ctl.hpp"
 
 /// @brief Skeletal animation facilites.
 namespace Makai::Graph::Armature {

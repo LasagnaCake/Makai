@@ -92,7 +92,7 @@ void copyTexture(
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-Texture2D Texture2D::fromJSON(JSON::JSONData img, String const& sourcepath) {
+Texture2D Texture2D::fromJSON(JSON::Value img, String const& sourcepath) {
 	Texture2D texture;
 	if (img["data"].isObject() && img["data"]["path"].isString() && !img["data"]["path"].get<String>().empty()) {
 		texture.create(OS::FS::concatenate(sourcepath, img["path"].get<String>()));

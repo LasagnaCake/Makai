@@ -92,130 +92,10 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_BIT_SHIFT_RIGHT_ASSIGN,
 			};
 
-			/// @brief Value literal variant.
-			struct Value {
-				/// @brief Value type.
-				enum class Type {
-					LTS_TVT_EMPTY,
-					LTS_TVT_INTEGER,
-					LTS_TVT_REAL,
-					LTS_TVT_STRING,
-					LTS_TVT_CHARACTER,
-				};
-
-				/// @brief Default constructor.
-				constexpr Value() {}
-
-				/// @brief Copy constructor.
-				constexpr Value(Value const& other)	{
-					switch (valType = other.valType) {
-						case (Type::LTS_TVT_INTEGER):	integer		= other.integer; break;
-						case (Type::LTS_TVT_REAL):		real		= other.real; break;
-						case (Type::LTS_TVT_STRING):	string		= other.string; break;
-						case (Type::LTS_TVT_CHARACTER): character	= other.character; break;
-						default: break;
-					}	
-				}
-
-				/// @brief Copy assignment operator.
-				constexpr Value& operator=(Value const& other)	{
-					destruct();
-					switch (valType = other.valType) {
-						case (Type::LTS_TVT_INTEGER):	integer		= other.integer; break;
-						case (Type::LTS_TVT_REAL):		real		= other.real; break;
-						case (Type::LTS_TVT_STRING):	string		= other.string; break;
-						case (Type::LTS_TVT_CHARACTER): character	= other.character; break;
-						default: break;
-					}
-					return *this;
-				}
-
-				/// @brief Destructor.
-				constexpr ~Value() {destruct();}
-
-				/// @brief Assigns an integer value to the variant.
-				constexpr Value& operator=(ssize const v) {
-					destruct();
-					integer = v;
-					valType = Type::LTS_TVT_INTEGER;
-					return *this;
-				}
-				
-				/// @brief Assigns a floating-point value to the variant.
-				constexpr Value& operator=(double const v) {
-					destruct();
-					real = v;
-					valType = Type::LTS_TVT_REAL;
-					return *this;
-				}
-
-				/// @brief Assigns a string to the variant.
-				constexpr Value& operator=(String const& v) {
-					destruct();
-					string = v;
-					valType = Type::LTS_TVT_STRING;
-					return *this;
-				}
-				
-				/// @brief Assigns a UTF-8 character to the variant.
-				constexpr Value& operator=(UTF8Char const v) {
-					destruct();
-					character = v;
-					valType = Type::LTS_TVT_CHARACTER;
-					return *this;
-				}
-
-				/// @brief Returns the value stored in the variant, or `nullptr`.
-				/// @tparam T Type to get. Must be a valid `Type` enum value.
-				/// @return Value stored in the variant. Returns `nullptr` if value's type does not match the requested type `T`.
-				template <Type T>
-				constexpr Nullable<Meta::NthType<enumcast(T) - 1, ssize, double, String, UTF8Char>>
-				get() requires (T != Type::LTS_TVT_EMPTY) {
-					if (valType == T) {
-						if constexpr (T == Type::LTS_TVT_INTEGER)			return integer;
-						else if constexpr (T == Type::LTS_TVT_REAL)			return real;
-						else if constexpr (T == Type::LTS_TVT_STRING)		return string;
-						else if constexpr (T == Type::LTS_TVT_CHARACTER)	return character;
-					} else return nullptr;
-				}
-
-				/// @brief Returns the type of the value stored in the variant.
-				/// @return Type of value.
-				constexpr Type type() const		{return valType;						}
-
-				/// @brief Returns whether the variant is empty.
-				/// @return Whether variant is empty.
-				constexpr bool empty() const	{return valType == Type::LTS_TVT_EMPTY;	}
-
-			private:
-				/// @brief Current value type.
-				Type valType = Type::LTS_TVT_EMPTY;
-
-				union {
-					/// @brief Integer value, if an integer literal.
-					ssize		integer;
-					/// @brief Floating-point value, if a floating-point literal.
-					double		real;
-					/// @brief String value, if a string literal.
-					String		string;
-					/// @brief Character value, if a character literal.
-					UTF8Char	character;
-				};
-		
-				constexpr void destruct() {
-					switch (valType) {
-						case Type::LTS_TVT_STRING:		string.~String(); break;
-						case Type::LTS_TVT_CHARACTER:	character.~UTF8Char(); break;
-						default: break;
-					}
-					valType = Type::LTS_TVT_EMPTY;
-				}
-			};
-
 			/// @brief Token type.
-			Type	type		= Type::LTS_TT_INVALID;
+			Type		type		= Type::LTS_TT_INVALID;
 			/// @brief Token value.
-			Value	value;
+			Data::Value	value;
 		};
 
 		/// @brief Token list.
@@ -254,6 +134,10 @@ namespace Makai::Lexer::CStyle {
 		/// @brief Returns the current token.
 		/// @return Current token.
 		constexpr Token current() const {return curToken;}
+
+		/// @brief Returns the current token's text.
+		/// @return Current token's text.
+		String tokenText() const;
 
 		/// @brief Returns the token stream's current position, INCLUDING line & column number.
 		/// @return Current position.

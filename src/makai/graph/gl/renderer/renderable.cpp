@@ -9,7 +9,7 @@ using namespace Material;
 
 namespace JSON = Makai::JSON;
 
-inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaultValue = 0) {
+inline Vector2 fromJSONArrayV2(JSON::Value const& json, Vector2 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector2(
@@ -24,7 +24,7 @@ inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaul
 	}
 }
 
-inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaultValue = 0) {
+inline Vector3 fromJSONArrayV3(JSON::Value const& json, Vector3 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector3(
@@ -40,7 +40,7 @@ inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaul
 	}
 }
 
-inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaultValue = 0) {
+inline Vector4 fromJSONArrayV4(JSON::Value const& json, Vector4 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector4(
@@ -57,7 +57,7 @@ inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaul
 	}
 }
 
-inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitionFolder) {
+inline ObjectMaterial fromDefinition(JSON::Value def, String const& definitionFolder) {
 	ObjectMaterial mat;
 	Texture2D& texture		= mat.texture.image;
 	Texture2D& blend		= mat.blend.image;
@@ -150,7 +150,7 @@ inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitio
 		// Set instances
 		if (dmat["instances"].isArray()) {
 			mat.instances.clear();
-			for(auto& inst: dmat["instances"].json())
+			for(auto inst: dmat["instances"].get<JSON::Array>())
 				mat.instances.pushBack(fromJSONArrayV3(inst));
 		}
 		// Set culling, fill & view
@@ -168,42 +168,42 @@ inline ObjectMaterial fromDefinition(JSON::JSONData def, String const& definitio
 	return mat;
 }
 
-inline JSON::JSONData toDefinition(
+inline JSON::Value toDefinition(
 	ObjectMaterial& mat,
 	String const& definitionFolder,
 	String const& texturesFolder,
 	bool integratedTextures
 ) {
-	JSON::JSONData def;
+	JSON::Value def;
 	// Define object
-	def = JSON::JSONType{
-		{"color", Color::toHexCodeString(mat.color, false, true)},
-		{"shaded", mat.shaded},
-		{"illuminated", mat.illuminated},
-		{"hue", mat.hue},
-		{"saturation", mat.saturation},
-		{"luminosity", mat.luminosity},
-		{"brightness", mat.brightness},
-		{"contrast", mat.contrast},
-		{"uvShift", {mat.uvShift.x, mat.uvShift.y}},
-		{"negative", {
-			{"enabled", mat.negative.enabled},
-			{"strength", mat.negative.strength}
+	def = JSON::Object{
+		JSON::Entry{"color", Color::toHexCodeString(mat.color, false, true)},
+		JSON::Entry{"shaded", mat.shaded},
+		JSON::Entry{"illuminated", mat.illuminated},
+		JSON::Entry{"hue", mat.hue},
+		JSON::Entry{"saturation", mat.saturation},
+		JSON::Entry{"luminosity", mat.luminosity},
+		JSON::Entry{"brightness", mat.brightness},
+		JSON::Entry{"contrast", mat.contrast},
+		JSON::Entry{"uvShift", JSON::Array{mat.uvShift.x, mat.uvShift.y}},
+		JSON::Entry{"negative", JSON::Object{
+			JSON::Entry{"enabled", mat.negative.enabled},
+			JSON::Entry{"strength", mat.negative.strength}
 		}},
-		{"gradient", {
-			{"enabled", mat.gradient.enabled},
-			{"channel", mat.gradient.channel},
-			{"begin", Color::toHexCodeString(mat.gradient.begin, false, true)},
-			{"end", Color::toHexCodeString(mat.gradient.end, false, true)},
-			{"invert", mat.gradient.invert}
+		JSON::Entry{"gradient", JSON::Object{
+			JSON::Entry{"enabled", mat.gradient.enabled},
+			JSON::Entry{"channel", mat.gradient.channel},
+			JSON::Entry{"begin", Color::toHexCodeString(mat.gradient.begin, false, true)},
+			JSON::Entry{"end", Color::toHexCodeString(mat.gradient.end, false, true)},
+			JSON::Entry{"invert", mat.gradient.invert}
 		}},
-		{"debugView", (uint)mat.debug}
+		JSON::Entry{"debugView", (uint)mat.debug}
 	};
 	// Copy instances
-	def["instances"] = JSON::array();
+	def["instances"] = JSON::Value::array();
 	usize idx = 0;
 	for (Vector3& inst: mat.instances) {
-		def["instances"][idx] = JSON::JSONType{inst.x, inst.y, inst.z};
+		def["instances"][idx] = JSON::Array{inst.x, inst.y, inst.z};
 	}
 	// Set cull & fill
 	def["material"]["fill"]		= (uint)(mat.fill);
@@ -220,15 +220,15 @@ inline JSON::JSONData toDefinition(
 	}
 	// Set image parameters
 	def["texture"]["alphaClip"] = mat.texture.alphaClip;
-	def["blend"]["strength"] = JSON::JSONType{mat.blend.strength.x, mat.blend.strength.y, mat.blend.strength.z};
-	def["blend"]["equation"] = mat.blend.equation;
+	def["blend"]["strength"] = JSON::Array{mat.blend.strength.x, mat.blend.strength.y, mat.blend.strength.z};
+	def["blend"]["equation"] = enumcast(mat.blend.equation);
 	def["emission"]["strength"] = mat.emission.strength;
 	def["warp"]["channelX"] = mat.warp.channelX;
 	def["warp"]["channelY"] = mat.warp.channelY;
-	def["warp"]["trans"] = JSON::JSONType{
-		{"position",	{mat.warp.trans.position.x,	mat.warp.trans.position.y	}	},
-		{"rotation",	mat.warp.trans.rotation										},
-		{"scale",		{mat.warp.trans.scale.x,	mat.warp.trans.scale.y		}	}
+	def["warp"]["trans"]	= JSON::Object {
+		JSON::Entry{"position",	JSON::Array{mat.warp.trans.position.x,	mat.warp.trans.position.y	}	},
+		JSON::Entry{"rotation",	mat.warp.trans.rotation													},
+		JSON::Entry{"scale",	JSON::Array{mat.warp.trans.scale.x,		mat.warp.trans.scale.y		}	}
 	};
 	// Return definition
 	return def;
@@ -338,16 +338,16 @@ void Renderable::saveToDefinitionFile(
 	DEBUGLN(folder + "/" + name + ".mrod");
 	OS::FS::makeDirectory(OS::FS::concatenate(folder, texturesFolder));
 	// Get object definition
-	JSON::JSONData file = getObjectDefinition("base64", integratedBinary, integratedTextures);
+	JSON::Value file = getObjectDefinition("base64", integratedBinary, integratedTextures);
 	// If binary is in a different location, save there
 	if (!integratedBinary) {
 		File::saveBinary(binpath, triangles.data(), triangles.size());
-		file["mesh"]["data"] = JSON::JSONType{{"path", name + ".mesh"}};
+		file["mesh"]["data"] = JSON::Object{JSON::Entry{"path", name + ".mesh"}};
 	}
 	// Get material data
 	file["material"] = toDefinition(material, folder, texturesFolder, integratedTextures);
 	// convert to text
-	auto contents = file.toString(pretty ? 1 : -1);
+	auto contents = file.toString(pretty ? String{" "} : nullptr);
 	// Save definition file
 	File::saveText(folder + "/" + name + ".mrod", contents);
 }
@@ -378,10 +378,10 @@ void Renderable::draw() {
 }
 
 void Renderable::extendFromDefinition(
-	JSON::JSONData def,
+	JSON::Value def,
 	String const& sourcepath
 ) {
-	if (def.has("version") && def["version"].isNumber()) {
+	if (def.contains("version") && def["version"].isNumber()) {
 		// Do stuff for versions
 		switch (def["version"].get<usize>()) {
 			default:
@@ -391,7 +391,7 @@ void Renderable::extendFromDefinition(
 }
 
 void Renderable::extendFromDefinitionV0(
-	JSON::JSONData def,
+	JSON::Value def,
 	String const& sourcepath
 ) {
 	// Component data
@@ -535,7 +535,7 @@ void Renderable::extendFromDefinitionV0(
 					fromJSONArrayV3(def["armature"]["bones"][bone]["scale"], 1)
 				);
 			}
-			if (!def["armature"]["relations"].has(toString(bone))) continue;
+			if (!def["armature"]["relations"].contains(toString(bone))) continue;
 			auto children = def["armature"]["relations"][toString(bone)].get<List<usize>>({});
 			for (auto child: children) {
 				DEBUGLN("Relation [", bone, " -> ", child, "]");
@@ -544,7 +544,7 @@ void Renderable::extendFromDefinitionV0(
 		}
 		armature.bake();
 		if (def["armature"]["names"].isObject()) {
-			JSON::JSONValue names = def["armature"]["names"];
+			JSON::Value names = def["armature"]["names"];
 			for (auto [name, bone]: names.get<Dictionary<usize>>()) {
 				armature.names[name] = bone;
 				DEBUGLN("Map [ '", name, "' -> ", bone, " ]");
@@ -555,8 +555,8 @@ void Renderable::extendFromDefinitionV0(
 	// Set blend data
 	if (def["blend"].isObject()) {
 		try {
-			JSON::JSONData bfun	= def["blend"]["function"];
-			JSON::JSONData beq	= def["blend"]["equation"];
+			JSON::Value bfun	= def["blend"]["function"];
+			JSON::Value beq	= def["blend"]["equation"];
 			if (bfun.isNumber()) {
 				BlendFunction bv = (BlendFunction)bfun.get<uint>();
 				blend.func = {bv, bv, bv, bv};
@@ -595,29 +595,29 @@ void Renderable::extendFromDefinitionV0(
 }
 
 template<usize S>
-inline JSON::JSONData getArmature(Vertebrate<S> const& vertebrate) {
-	JSON::JSONData armature;
+inline JSON::Value getArmature(Vertebrate<S> const& vertebrate) {
+	JSON::Value armature;
 	auto rel = armature["relations"];
 	auto bones = armature["bones"];
-	bones = JSON::array();
+	bones = JSON::Value::array();
 	for (usize i = 0; i < vertebrate.MAX_BONES; ++i) {
 		auto const& trans = vertebrate.armature.rest[i];
-		bones[i] = JSON::JSONType{
-			{"position",	{trans.position.x,	trans.position.y,	trans.position.z	}	},
-			{"rotation",	{trans.rotation.x,	trans.rotation.y,	trans.rotation.z	}	},
-			{"scale",		{trans.scale.x,		trans.scale.y,		trans.scale.z		}	}
+		bones[i] = JSON::Object{
+			JSON::Entry{"position",	JSON::Array{trans.position.x,	trans.position.y,	trans.position.z	}	},
+			JSON::Entry{"rotation",	JSON::Array{trans.rotation.x,	trans.rotation.y,	trans.rotation.z	}	},
+			JSON::Entry{"scale",		JSON::Array{trans.scale.x,		trans.scale.y,		trans.scale.z		}	}
 		};
 		if (vertebrate.armature.isLeafBone(i)) continue;
 		auto const children = vertebrate.armature.childrenOf(i);
 		auto bone = rel[toString(i)];
-		bone = JSON::array();
+		bone = JSON::Value::array();
 		for (usize j = 0; j < children.size(); ++j)
 			bone[j] = children[j];
 	}
 	return armature;
 }
 
-JSON::JSONData Renderable::getObjectDefinition(
+JSON::Value Renderable::getObjectDefinition(
 	String const& encoding,
 	bool const integratedBinary,
 	bool const integratedTextures
@@ -629,10 +629,10 @@ JSON::JSONData Renderable::getObjectDefinition(
 	if (triangles.empty())
 		throw Error::InvalidValue("Renderable object is empty!", CTL_CPP_PRETTY_SOURCE);
 	// Create definition
-	JSON::JSONData def;
+	JSON::Value def;
 	// Save mesh components
-	def["mesh"] = JSON::JSONType{
-		{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz,i0,i1,i2,i3,w0,w1,w2,w3"}
+	def["mesh"] = JSON::Object{
+		JSON::Entry{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz,i0,i1,i2,i3,w0,w1,w2,w3"}
 	};
 	def["version"] = VERSION;
 	// If data is to be integrated into the JSON object, do so
@@ -647,24 +647,24 @@ JSON::JSONData Renderable::getObjectDefinition(
 		data.clear();
 	}
 	// Save transform data
-	def["trans"] = JSON::JSONType{
-		{"position",	{trans.position.x,	trans.position.y,	trans.position.z}	},
-		{"rotation",	{trans.rotation.x,	trans.rotation.y,	trans.rotation.z}	},
-		{"scale",		{trans.scale.x,		trans.scale.y,		trans.scale.z}		}
+	def["trans"] = JSON::Object{
+		JSON::Entry{"position",	JSON::Array{trans.position.x,	trans.position.y,	trans.position.z}	},
+		JSON::Entry{"rotation",	JSON::Array{trans.rotation.x,	trans.rotation.y,	trans.rotation.z}	},
+		JSON::Entry{"scale",		JSON::Array{trans.scale.x,		trans.scale.y,		trans.scale.z}		}
 	};
 	// Set active data
 	def["active"] = active;
 	// Set blend data
-	def["blend"] = JSON::JSONType{
-		{"function", {
-			{"srcColor", uint(blend.func.srcColor)},
-			{"dstColor", uint(blend.func.dstColor)},
-			{"srcAlpha", uint(blend.func.srcAlpha)},
-			{"dstAlpha", uint(blend.func.dstAlpha)}
+	def["blend"] = JSON::Object{
+		JSON::Entry{"function", JSON::Object{
+			JSON::Entry{"srcColor", enumcast(blend.func.srcColor)},
+			JSON::Entry{"dstColor", enumcast(blend.func.dstColor)},
+			JSON::Entry{"srcAlpha", enumcast(blend.func.srcAlpha)},
+			JSON::Entry{"dstAlpha", enumcast(blend.func.dstAlpha)}
 		}},
-		{"equation", {
-			{"color", uint(blend.eq.color)},
-			{"alpha", uint(blend.eq.alpha)}
+		JSON::Entry{"equation", JSON::Object{
+			JSON::Entry{"color", enumcast(blend.eq.color)},
+			JSON::Entry{"alpha", enumcast(blend.eq.alpha)}
 		}}
 	};
 	// Set armature

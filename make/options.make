@@ -13,20 +13,29 @@ endif
 ifdef gl-loader
 export gl-loader
 else
-export gl-loader:=glad
+gl-loader:=glad
+export gl-loader
 endif
 
 ifdef omp-threads
 export omp-threads
 else
-export omp-threads:=128
+omp-threads:=128
+export omp-threads
 endif
 
-export o?=2
+o?=2
+export o
 
-export math?=fast
+math?=fast
+export math
 
-export gmake?=make
+ifdef compiler
+export compiler
+else
+compiler:=msys2-gcc
+export compiler
+endif
 
 define HELP_MESSAGE
 Supported options:
@@ -54,14 +63,24 @@ Supported [math] values (any other value will be interpreted as 'normal'):
 On the [subsystem] option:
 If not defined, compiles all subsystems.
 MUST be a (dot-separated) path to a file.
-For the graphical subsystem, MUST be "graph/" + name of subsystem.
 To compile EVERYTHING in a subsystem, use "*".
 Examples:
-	graph/gl.renderer.renderable
+	graph.gl.renderer.renderable
 	embed.shader
 	audio.*
 endef
 export HELP_MESSAGE
 
-export MAKAISRC:=src/makai
-export MAKAIEXSRC:=src/makai-ex
+MAKAISRC:=src/makai
+MAKAIEXSRC:=src/makai-ex
+
+export MAKAISRC
+export MAKAIEXSRC
+
+ifdef gmake
+GNU_MAKE	?=$(gmake)
+else
+GNU_MAKE	?=make
+endif
+
+export GNU_MAKE

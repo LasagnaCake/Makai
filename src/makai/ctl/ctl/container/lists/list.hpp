@@ -6,13 +6,13 @@
 #include "../../cpperror.hpp"
 #include "../../typetraits/traits.hpp"
 #include "../../typetraits/forcestate.hpp"
-#include "../arguments.hpp"
 #include "../iterator.hpp"
 #include "../function.hpp"
 #include "../span.hpp"
 #include "../../algorithm/sort.hpp"
 #include "../../algorithm/reverse.hpp"
 #include "../../algorithm/search.hpp"
+#include "../../algorithm/transform.hpp"
 #include "../../adapter/comparator.hpp"
 #include "../../memory/memory.hpp"
 
@@ -35,8 +35,19 @@ namespace Type::Container {
 		template<class T>
 		struct IsList;
 
-		template<template <class, class, template <class> class> class T0, class T1, class T2, template <class> class T3>
-		struct IsList<T0<T1, T2, T3>>: BooleanConstant<Type::Equal<T0<T1, T2, T3>, ::CTL::List<T1, T2, T3>>> {};
+		template<
+			template <
+				class,
+				class,
+				template <class> class,
+				template <class> class
+			> class T0,
+			class T1,
+			class T2,
+			template <class> class T3,
+			template <class> class T4
+		>
+		struct IsList<T0<T1, T2, T3, T4>>: BooleanConstant<Type::Equal<T0<T1, T2, T3, T4>, ::CTL::List<T1, T2, T3, T4>>> {};
 	}
 
 	/// Type must be `List`.
@@ -58,13 +69,11 @@ template<
 struct List:
 	Iteratable<TData, TIndex>,
 	SelfIdentified<List<TData, TIndex, TAlloc, TConstAlloc>>,
-	ListInitializable<TData>,
 	ContextAwareAllocatable<TData, TAlloc>,
 	Ordered {
 public:
 	using Iteratable				= ::CTL::Iteratable<TData, TIndex>;
 	using SelfIdentified			= ::CTL::SelfIdentified<List<TData, TIndex, TAlloc, TConstAlloc>>;
-	using ListInitializable			= ::CTL::ListInitializable<TData>;
 	using ContextAwareAllocatable	= ::CTL::ContextAwareAllocatable<TData, TAlloc, TConstAlloc>;
 
 	using
@@ -93,10 +102,6 @@ public:
 	;
 
 	using
-		typename ListInitializable::ArgumentListType
-	;
-
-	using
 		typename ContextAwareAllocatable::ContextAllocatorType
 	;
 
@@ -110,6 +115,9 @@ public:
 
 	/// @brief Comparator type.
 	using ComparatorType = SimpleComparator<DataType>;
+
+	/// @brief Underlying storage type.
+	using StorageType = MemorySlice<DataType, TAlloc>;
 
 	/// Default constructor.
 	constexpr List(): count(0) {invoke(1);}
@@ -129,20 +137,24 @@ public:
 			contents[i] = fill;
 		count = size;
 	}
-
-	/// @brief Constructs the `List` with a given argument list.
-	/// @param values Values to add to `List`.
-	constexpr List(ArgumentListType const& values) {
-		invoke(values.size());
-		for (DataType const& v: values) pushBack(v);
-	}
 	
 	/// @brief Constructs the `List` with a parameter pack.
 	/// @tparam ...Args Parameter pack.
 	/// @param ...args Pack elements.
 	template<typename... Args>
 	constexpr List(Args const&... args)
-	requires (... && Type::Convertible<Args, DataType>) {
+	requires (
+	#ifndef __clang__
+		(sizeof...(Args) > 0)
+	&&	(... && (Type::Different<Args, SelfType> && Type::CanBecome<Args, DataType>))
+	#else
+		(sizeof...(Args) > 1) 
+	&&	(
+		(... && (Type::Standard<Args> && Type::CanBecome<Args, DataType>))
+	||	(... && (!Type::Standard<Args> && Type::Different<Args, SelfType>))
+	)
+	#endif
+	) {
 		invoke(sizeof...(Args));
 		(..., pushBack(args));
 	}
@@ -203,7 +215,7 @@ public:
 	/// @brief Constructs a `List` from a range of values.
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
-	constexpr List(ConstIteratorType const& begin, ConstIteratorType const& end) {
+	constexpr explicit List(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
 		copy(begin, contents.data(), end - begin);
@@ -213,7 +225,7 @@ public:
 	/// @brief Constructs a `List` from a range of elements.
 	/// @param begin Reverse iterator to beginning of range.
 	/// @param end Reverse iterator to end of range.
-	constexpr List(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
+	constexpr explicit List(ConstReverseIteratorType const& begin, ConstReverseIteratorType const& end) {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
 		for (auto i = begin; i != end; ++i)
@@ -796,13 +808,6 @@ public:
 		return appendBack(other.begin(), other.end());
 	}
 
-	/// @brief Appends a list of elements to the end of the `List`.
-	/// @param values List of elements to append.
-	/// @return Reference to self.
-	constexpr SelfType& appendBack(ArgumentListType const& values) {
-		return appendBack(SelfType(values));
-	}
-
 	/// @brief Appends a quantity of elements of a given value to the end of the `List`.
 	/// @param count Amount of elements to append.
 	/// @param fill Value of the elements.
@@ -1254,7 +1259,6 @@ public:
 	/// @param b `List` to swap with.
 	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
 		swap(a.contents, b.contents);
-		swap(a.maximum, b.maximum);
 		swap(a.count, b.count);
 		swap(a.magnitude, b.magnitude);
 	}
@@ -1302,16 +1306,15 @@ private:
 	constexpr void remake(usize const newSize) {
 		CTL_DEVMODE_FN_DECL;
 		auto const newCount = (count < newSize) ? count : newSize;
-		auto const COPY_FN = [&] (ref<DataType> const dst, ref<DataType const> const src) {
-			copy(src, dst, newCount);
-			MX::objclear(src, count);
-		};
-		if (!newSize) {
-			MX::objclear(contents.data(), count);
-			contents.free();
-		} else if (!newCount)
-			contents.resize(newSize);
-		else contents.resize(newSize, COPY_FN);
+		if (!newSize)		dump();
+		else if (!newCount)	contents.resize(newSize);
+		else {
+			StorageType buffer;
+			buffer.create(newSize);
+			copy(contents.data(), buffer.data(), newCount);
+			destroy(count);
+			swap(contents, buffer);
+		}
 		count = newCount;
 	}
 
@@ -1389,11 +1392,11 @@ private:
 	}
 
 	/// @brief Next underlying array size.
-	SizeType						magnitude	= 1;
+	SizeType	magnitude	= 1;
 	/// @brief Element count.
-	SizeType						count		= 0;
-	/// @brief Underlying array.
-	MemorySlice<DataType, TAlloc>	contents;
+	SizeType	count		= 0;
+	/// @brief Underlying storage.
+	StorageType	contents;
 };
 
 //static_assert(List<int>().empty());

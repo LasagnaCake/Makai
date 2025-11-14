@@ -8,9 +8,7 @@ prefix:=lib
 
 SDL			:= lib/SDL2-2.0.10/lib/libSDL2.dll.a
 SDLNET		:= lib/SDL2-2.0.10/lib/libSDL2_net.a
-SDLMIXER	:= lib/SDL2-2.0.10/lib/libSDL2_mixer.dll.a
 CRYPTOPP	:= lib/cryptopp/lib/libcryptopp.a
-GLEW		:= lib/OpenGL/GLEW/lib/libglew32.dll.a
 
 ifeq (,$(wildcard obj/extern/extern.3p.a))
 CREATE_LIB_3P := link-extern
@@ -70,10 +68,10 @@ debug: build-debug up-debug $(CREATE_LIB_3P) link-debug
 release: build-release up-release $(CREATE_LIB_3P) link-release
 
 build-debug:
-	@$(gmake) -C"$(MAKAISRC)" debug prefix="$(prefix)" $(SUBSYSTEM)
+	@$(GNU_MAKE) -C"$(MAKAISRC)" debug prefix="$(prefix)" $(SUBSYSTEM)
 
 build-release:
-	@$(gmake) -C"$(MAKAISRC)" release prefix="$(prefix)" $(SUBSYSTEM)
+	@$(GNU_MAKE) -C"$(MAKAISRC)" release prefix="$(prefix)" $(SUBSYSTEM)
 
 copy-headers:
 	@echo "Copying headers..."
@@ -159,18 +157,11 @@ extract-extern:
 	@rm -rf obj/extern
 	@mkdir -p obj/extern/sdl
 	@mkdir -p obj/extern/sdl-net
-	@mkdir -p obj/extern/sdl-mixer
 	@mkdir -p obj/extern/cryptopp
 	@echo "Extracting objects..."
 	@ar x $(SDL) --output "obj/extern/sdl"
 	@ar x $(SDLNET) --output "obj/extern/sdl-net"
-	@ar x $(SDLMIXER) --output "obj/extern/sdl-mixer"
 	@ar x $(CRYPTOPP) --output "obj/extern/cryptopp"
-
-rename-sdl-mixer:
-	@cd obj/extern/sdl-mixer
-	@echo "Renaming [sdl-mixer]..."
-	@for file in SDL2_mixer_dll_*.o; do mv -- "$$file" "$(THIRD_PARTY_PREFIX).sdl-mixer.$${file##*_}"; done
 
 rename-extern:
 	@echo "Renaming objects..."
@@ -179,9 +170,6 @@ rename-extern:
 	$(call addname, sdl)
 	@cd ../sdl-net
 	$(call addname, sdl-net)
-	@cd ../sdl-mixer
-	@echo "Renaming [sdl-mixer]..."
-	@for file in SDL2_mixer_dll_*.o; do mv -- "$$file" "$(THIRD_PARTY_PREFIX).sdl-mixer.$${file##*_}"; done
 	@cd ../cryptopp
 	$(call addname, cryptopp)
 	@cd ../../..
@@ -191,7 +179,6 @@ repack-extern:
 	@echo "Re-combining libraries..."
 	$(call repack, sdl)
 	$(call repack, sdl-net)
-	$(call repack, sdl-mixer)
 	$(call repack, cryptopp)
 	@cd ../..
 

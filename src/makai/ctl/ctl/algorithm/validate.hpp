@@ -146,6 +146,15 @@ constexpr bool isAlphanumericChar(TChar const& c) noexcept {
 	return isLetterChar(c) || isNumberChar(c);
 }
 
+/// @brief Returns whether the given character is a valid identifier name character.
+/// @tparam TChar Character type.
+/// @param c Character to check.
+/// @return Whether it is an identifier name character.
+template <Type::ASCII TChar>
+constexpr bool isIdentifierNameChar(TChar const& c) noexcept {
+	return isAlphanumericChar(c) || c == '_';
+}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_ALGORITHM_VALIDATE_H

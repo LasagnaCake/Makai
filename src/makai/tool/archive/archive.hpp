@@ -215,7 +215,7 @@ namespace Makai::Tool::Arch {
 		/// @param root Root name. By default, it is empty.
 		/// @return Archive file tree.
 		/// @throw Error::FailedAction on file tree acquisition failures.
-		JSON::JSONData getFileTree(String const& root = "") const;
+		JSON::Value getFileTree(String const& root = "") const;
 
 		/// @brief Gets the archive header for a given file archive.
 		/// @param path Path to archive to get header for.
@@ -237,7 +237,7 @@ namespace Makai::Tool::Arch {
 
 		void demangleData(BinaryData<>& data, uint8* const block) const;
 
-		void unpackLayer(JSON::Extern::JSONData const& layer, String const& path);
+		void unpackLayer(JSON::Value const& layer, String const& path);
 
 		void processFileEntry(FileEntry& entry) const;
 
@@ -252,17 +252,17 @@ namespace Makai::Tool::Arch {
 		void assertOpen() const;
 
 		/// @brief Whether there is an archive stream.
-		bool					streamOpen	= false;
+		bool			streamOpen	= false;
 		/// @brief Archive password.
-		String					pass;
+		String			pass;
 		/// @brief Archive stream.
-		DataStream				archive		= DataStream(nullptr);
+		DataStream		archive		= DataStream(nullptr);
 		/// @brief Archive header.
-		ArchiveHeader			header;
+		ArchiveHeader	header;
 		/// @brief Archive file structure.
-		JSON::Extern::JSONData	fstruct;
+		JSON::Value		fstruct;
 		/// @brief Synchronization barrier for thread safety.
-		mutable Mutex			sync;
+		mutable Mutex	sync;
 	};
 
 	/// @brief Reads an encrypted (single-file archive) text file from disk.

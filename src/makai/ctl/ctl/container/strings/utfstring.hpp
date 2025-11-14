@@ -268,8 +268,7 @@ namespace UTF {
 			typename BaseType::PointerType,
 			typename BaseType::ConstPointerType,
 			typename BaseType::ReferenceType,
-			typename BaseType::ConstReferenceType,
-			typename BaseType::ArgumentListType
+			typename BaseType::ConstReferenceType
 		;
 
 		using

@@ -8,7 +8,7 @@ namespace Makai::Graph {
 	public:
 		/// @brief Constructs the dummy.
 		/// @param layers Layers to insert the dummy in.
-		Dummy(Arguments<usize> const& layers) {
+		Dummy(List<usize> const& layers) {
 			for (usize const l : layers)
 				addToRenderLayer(l);
 		}

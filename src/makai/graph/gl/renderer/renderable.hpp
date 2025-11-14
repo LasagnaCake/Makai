@@ -131,16 +131,16 @@ namespace Makai::Graph {
 		void draw() override;
 
 		void extendFromDefinition(
-			JSON::JSONData def,
+			JSON::Value def,
 			String const& sourcepath
 		);
 
 		void extendFromDefinitionV0(
-			JSON::JSONData def,
+			JSON::Value def,
 			String const& sourcepath
 		);
 
-		JSON::JSONData getObjectDefinition(
+		JSON::Value getObjectDefinition(
 			String const& encoding			= "base64",
 			bool const integratedBinary		= true,
 			bool const integratedTextures	= true

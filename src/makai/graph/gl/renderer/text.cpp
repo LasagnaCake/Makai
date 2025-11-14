@@ -6,7 +6,7 @@ using namespace Makai; using namespace Makai::Graph;
 
 namespace JSON = Makai::JSON;
 
-inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaultValue = 0) {
+inline Vector2 fromJSONArrayV2(JSON::Value const& json, Vector2 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector2(
@@ -21,7 +21,7 @@ inline Vector2 fromJSONArrayV2(JSON::JSONData const& json, Vector2 const& defaul
 	}
 }
 
-inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaultValue = 0) {
+inline Vector3 fromJSONArrayV3(JSON::Value const& json, Vector3 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector3(
@@ -37,7 +37,7 @@ inline Vector3 fromJSONArrayV3(JSON::JSONData const& json, Vector3 const& defaul
 	}
 }
 
-inline Vector4 fromJSONArrayV4(JSON::JSONData const& json, Vector4 const& defaultValue = 0) {
+inline Vector4 fromJSONArrayV4(JSON::Value const& json, Vector4 const& defaultValue = 0) {
 	try {
 		if (json.isArray())
 			return Vector4(
@@ -60,11 +60,11 @@ FontFace::FontFace(FontData const& font): instance(new FontData{font}) {}
 
 FontFace::FontFace(String const& path): FontFace() {
 	using namespace Makai::Literals::Text;
-	JSON::JSONData tx				= File::getJSON(path);
-	if (tx.has("normal"s))
+	JSON::Value tx				= File::getJSON(path);
+	if (tx.contains("normal"s))
 		instance->faces.normal		= Texture2D::fromJSON(tx["normal"s], OS::FS::directoryFromPath(path));
 	else instance->faces.normal		= Texture2D::fromJSON(tx["image"s], OS::FS::directoryFromPath(path));
-	if (tx.has("emphasis"s))
+	if (tx.contains("emphasis"s))
 		instance->faces.emphasis	= Texture2D::fromJSON(tx["emphasis"s], OS::FS::directoryFromPath(path));
 	instance->size					= fromJSONArrayV2(tx["size"s], 16);
 	instance->spacing				= fromJSONArrayV2(tx["spacing"s], 1);

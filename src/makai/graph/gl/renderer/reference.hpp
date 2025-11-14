@@ -4,7 +4,7 @@
 #include "../../../compat/ctl.hpp"
 
 #include "../vertex.hpp"
-#include "../color.hpp"
+#include "../../color/color.hpp"
 
 namespace Makai::Graph {
 	/// @brief Renderable object.

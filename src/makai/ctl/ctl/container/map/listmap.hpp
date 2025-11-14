@@ -1,7 +1,6 @@
 #ifndef CTL_CONTAINER_MAP_LISTMAP_H
 #define CTL_CONTAINER_MAP_LISTMAP_H
 
-#include "../arguments.hpp"
 #include "../lists/list.hpp"
 #include "../../namespace.hpp"
 #include "../../templates.hpp"
@@ -67,7 +66,6 @@ public:
 	using typename SelfIdentified::SelfType;
 
 	using
-		typename BaseType::ArgumentListType,
 		typename BaseType::SizeType,
 		typename BaseType::IndexType,
 		typename BaseType::IteratorType,
@@ -150,16 +148,6 @@ public:
 	/// @param size Size to allocate.
 	constexpr BaseListMap(SizeType const size): BaseType(size) {}
 
-	/// @brief Constructs the container from a set of key-value pairs.
-	/// @param values Pairs to add.
-	/// @note
-	///		After insertion, the container filters itself and removes duplicates keys.
-	///		Most recent key-value pair is kept.
-	constexpr BaseListMap(ArgumentListType const& values) {
-		for (auto& value : values)
-			insert(value);
-	}
-
 	/// @brief Constructs the container form a set of key-value pairs.
 	/// @param values Pairs to add.
 	/// @note
@@ -179,7 +167,7 @@ public:
 	///		Most recent key-value pair is kept.
 	template<typename... Args>
 	constexpr BaseListMap(Args const&... args)
-	requires (... && Type::Convertible<Args, PairType>)
+	requires (... && Type::CanBecome<Args, PairType>)
 	: BaseType(BaseType{args...}) {}
 
 	/// @brief Constructs the container form a list-like container of key-value pairs.
@@ -408,15 +396,6 @@ public:
 		for (auto& value : other)
 			insert(value);
 		return *this;
-	}
-
-	/// @brief Adds a set of key-value pairs to the container.
-	/// @param values Pairs to add.
-	/// @return Reference to self.
-	///		After appending, the container filters itself and removes duplicates keys.
-	///		Most recent key-value pair is kept.
-	constexpr SelfType& insert(ArgumentListType const& values) {
-		return append(SelfType(values));
 	}
 
 	/// @brief Adds a range of key-value pairs to the container.

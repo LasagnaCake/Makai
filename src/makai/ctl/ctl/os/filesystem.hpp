@@ -76,13 +76,6 @@ namespace OS::FS {
 	}
 
 	/// @brief Creates a series of directories, while also creating their parents, if they don't exist.
-	/// @param dirs Directories to make.
-	inline void makeDirectory(StringArguments const& dirs) {
-		for (auto& d: dirs)
-			makeDirectory(d);
-	}
-
-	/// @brief Creates a series of directories, while also creating their parents, if they don't exist.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Directories to make.
 	template <typename... Args>
@@ -100,13 +93,6 @@ namespace OS::FS {
 	/// @brief Deletes a series of files/directories. If it is a directory, it also deletes its contents.
 	/// @param paths Elements to delete.
 	inline void remove(StringList const& paths) {
-		for (auto& d: paths)
-			remove(d);
-	}
-	
-	/// @brief Deletes a series of files/directories. If it is a directory, it also deletes its contents.
-	/// @param paths Elements to delete.
-	inline void remove(StringArguments const& paths) {
 		for (auto& d: paths)
 			remove(d);
 	}
@@ -135,18 +121,6 @@ namespace OS::FS {
 	/// @param path Paths to concatenate with.
 	/// @return Concatenated path.
 	constexpr String concatenate(String const& root, StringList const& paths) {
-		String res = root;
-		for(auto& path: paths) {
-			if (!path.empty()) res = concatenate(res, path);
-		}
-		return res;
-	}
-
-	/// @brief Sequentially concatenates a series of paths together.
-	/// @param root Path to concatenate.
-	/// @param path Paths to concatenate with.
-	/// @return Concatenated path.
-	constexpr String concatenate(String const& root, StringArguments const& paths) {
 		String res = root;
 		for(auto& path: paths) {
 			if (!path.empty()) res = concatenate(res, path);
@@ -349,7 +323,7 @@ namespace OS::FS {
 			/// @brief Returns the path of all files inside the directory, and subdirectories (if entry is a directory).
 			/// @return Path of all files inside the directory. If not a directory, returns own path.
 			constexpr StringList getAllFiles() const {
-				if (!folder) return StringList{epath};
+				if (!folder) return StringList().pushBack(epath);
 				StringList files;
 				for (Entry const& e: children) {
 					if (!e.folder)

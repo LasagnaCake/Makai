@@ -1,7 +1,7 @@
 ROOT := ../../../..
 include $(ROOT)/make/core.make
 
-override prefix := $(call concat, $(prefix), graph.gl)
+override prefix := $(call concat, $(prefix), gl)
 
 INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 
@@ -10,7 +10,7 @@ INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, core global vertex blend color image texture)
+	$(call compile-all, core global vertex blend image texture)
 	$(call submake-all, shader renderer material)
 endef
 

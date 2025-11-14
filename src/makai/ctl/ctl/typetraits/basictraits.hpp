@@ -4,6 +4,7 @@
 #include <typeinfo>
 
 #include "../ctypes.hpp"
+#include "containers.hpp"
 #include "converter.hpp"
 #include "../meta/logic.hpp"
 #include "../namespace.hpp"
@@ -163,11 +164,15 @@ namespace Type {
 
 		// cppreference
 		template<class T, class To> struct IsConvertible:	BooleanConstant<
+		#ifdef CTL_NO_BUILTINS
 			(
 				decltype(Partial::isReturnable<To>(0))::value
 			&&	decltype(Partial::isImplicit<T, To>(0))::value
 			)
 		||	TrueType::And<IsVoid<T>, IsVoid<To>>::value
+		#else
+			__is_convertible(T, To)
+		#endif
 		> {};
 
 		// cppreference
@@ -180,7 +185,11 @@ namespace Type {
 			}
 		struct IsNothrowConvertible<T, To>: TrueType {};
 
+		#ifdef CTL_NO_BUILTINS
 		template<typename T, typename... Args>	struct IsConstructible:	Partial::IsConstructible<VoidType<>, T, Args...>	{};
+		#else
+		template<typename T, typename... Args> struct IsConstructible: BooleanConstant<__is_constructible(T, Args...)> {};
+		#endif
 
 		template<class TFunction, typename F>
 		struct IsFunctional;
@@ -751,6 +760,10 @@ namespace Type {
 	/// @brief Type must be a reference iterator.
 	template <class T>
 	concept ReferenceIterator = Iterator<T> && Dereferenciable<T>;
+
+	/// @brief Type must be `To`, or be (implicitly) convertible to it.
+	template<class T, class To>
+	concept CanBecome = Type::Equal<T, To> || Type::Convertible<T, To>;
 }
 
 CTL_NAMESPACE_END

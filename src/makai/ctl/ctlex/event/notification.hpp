@@ -7,7 +7,6 @@
 #include "../../ctl/container/strings/string.hpp"
 #include "../../ctl/container/map/map.hpp"
 #include "../../ctl/container/dictionary.hpp"
-#include "../../ctl/container/arguments.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
 
@@ -103,7 +102,7 @@ public:
 	/// @return Reference to self.
 	template <typename... Args>
 	ANotifiable& unsubscribeFrom(Args const&... signals)
-	requires (... && Type::Convertible<Args, String>) {
+	requires (... && Type::CanBecome<Args, String>) {
 		(..., unsubscribe(signals));
 		return *this;
 	}

@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
+#include "swap.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -26,17 +27,6 @@ constexpr T toUpperChar(T const& c) noexcept {
 	if (c >= 'a' && c <= 'z')
 		return c + ('a' - 'A');
 	return c;
-}
-
-/// @brief Swaps two values.
-/// @tparam T Value type.
-/// @param a Value to swap.
-/// @param b Value to swap with.
-template<class T>
-constexpr void swap(T& a, T& b) {
-	T tmp = a;
-	a = b;
-	b = tmp;
 }
 
 /// @brief Reverses the bits for a given integer.

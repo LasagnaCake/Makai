@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), makai)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call submake-all,embed impl tool lexer file data audio graph/gl core)
+	$(call submake-all,embed impl tool lexer file data audio graph core)
 endef
 
 all: debug release
@@ -23,7 +23,7 @@ debug:
 	@echo "[-------------------------------------]"
 	@echo "[-------------------------------------]"
 	@echo ""
-	@$(CXX) --version
+	@$(CPP_COMPILER) --version
 	@echo ""
 	$(GET_TIME)
 	@echo ""
@@ -71,7 +71,7 @@ release:
 	@echo "[-------------------------------------]"
 	@echo "[-------------------------------------]"
 	@echo ""
-	@$(CXX) --version
+	@$(CPP_COMPILER) --version
 	@echo ""
 	$(GET_TIME)
 	@echo ""

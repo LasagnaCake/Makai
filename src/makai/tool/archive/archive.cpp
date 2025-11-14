@@ -38,8 +38,7 @@ using namespace Makai;
 namespace Arch = Makai::Tool::Arch;
 using namespace Arch;
 
-using Nlohmann = nlohmann::json;
-using Makai::JSON::Extern::JSONData;
+using Makai::JSON::Value;
 
 static CTL::Random::Engine::Secure& rng() {
 	static CTL::Random::Engine::Secure r;
@@ -220,8 +219,8 @@ BinaryData<> Arch::decompress(
 	return flate<Inflator>(data, method, level);
 }
 
-static JSONData getStructure(fs::path const& path, StringList& files, String const& root) {
-	JSONData dir = Nlohmann::object();
+static Value getStructure(fs::path const& path, StringList& files, String const& root) {
+	Value dir = Value::object();
 	for (auto const& e : fs::directory_iterator(path)) {
 		if (e.is_directory()) {
 			String dirname = String(e.path().stem().string());
@@ -237,36 +236,36 @@ static JSONData getStructure(fs::path const& path, StringList& files, String con
 	return dir;
 }
 
-static StringList getFileInfo(JSONData const& filestruct) {
+static StringList getFileInfo(Value const& filestruct) {
 	StringList res;
 	for (auto& [name, data]: filestruct.items()) {
-		if (data.is_string())
-			res.pushBack(data.get<std::string>());
-		else if (data.is_object() && !data.empty())
+		if (data.isString())
+			res.pushBack(data.get<String>());
+		else if (data.isObject() && !data.empty())
 			for (String& s: getFileInfo(data))
 				res.pushBack(s);
 	}
 	return res;
 }
 
-static void populateTree(JSONData& tree, String const& root = "") {
-	if (!tree.is_object())
+static void populateTree(Value& tree, String const& root = "") {
+	if (!tree.isObject())
 		throw Error::FailedAction("file tree is not a JSON object!", CTL_CPP_PRETTY_SOURCE);
 	for (auto& [name, data]: tree.items()) {
 		String path = OS::FS::concatenate(root, String(name));
-		if (data.is_string()) data = path;
-		else if (data.is_object()) populateTree(data, path);
+		if (data.isString()) data = path;
+		else if (data.isObject()) populateTree(data, path);
 		else throw Error::FailedAction("Invalid data type in file tree!", CTL_CPP_PRETTY_SOURCE);
 	}
 }
 
-static usize populateTree(JSONData& tree, List<uint64> const& values, usize const start = 0) {
-	if (!tree.is_object())
+static usize populateTree(Value& tree, List<uint64> const& values, usize const start = 0) {
+	if (!tree.isObject())
 		throw Error::FailedAction("file tree is not a JSON object!", CTL_CPP_PRETTY_SOURCE);
 	usize idx = start;
 	for (auto& [name, data]: tree.items()) {
-		if (data.is_string()) data = encoded(values[idx++]);
-		else if (data.is_object()) idx = populateTree(data, values, idx);
+		if (data.isString()) data = encoded(values[idx++]);
+		else if (data.isObject()) idx = populateTree(data, values, idx);
 		else throw Error::FailedAction("Invalid data type in file tree!", CTL_CPP_PRETTY_SOURCE);
 	}
 	return idx;
@@ -292,11 +291,11 @@ void Arch::pack(
 		DEBUGLN("FOLDER: ", folderPath, "\nARCHIVE: ", archivePath);
 		// Get file structure
 		DEBUGLN("Getting file structure...");
-		JSONData dir;
+		Value dir;
 		StringList files;
-		JSONData tree = dir["tree"];
+		Value tree = dir["tree"];
 		tree = getStructure(fs::path(folderPath.std()), files, String(fs::path(folderPath.std()).stem().string()));
-		DEBUGLN("\n", dir.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
+		DEBUGLN("\n", dir.toFLOWString(String{"  "}));
 		// Populate with temporary values
 		List<uint64> locations;
 		locations.resize(files.size(), 0);
@@ -382,14 +381,14 @@ void Arch::pack(
 		dir["tree"] = tree;
 		// Process directory structure
 		DEBUGLN("\nWriting directory structure...\n");
-		DEBUGLN("\n", dir.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
+		DEBUGLN("\n", dir.toFLOWString(String{"  "}));
 		{
 			// Directory header
 			DirectoryHeader	dheader;
 			// Generate header block
 			generateBlock(dheader.block);
 			// Get directory info
-			String dirInfo = dir.dump(-1, ' ', false, Nlohmann::error_handler_t::replace);
+			String dirInfo = dir.toFLOWString();
 			// Compress & encrypt directory info
 			BinaryData<> pdi;
 			pdi.resize(dirInfo.size(), 0);
@@ -575,10 +574,10 @@ BinaryData<> Arch::FileArchive::getBinaryFile(String const& path) try {
 	);
 }
 
-Makai::JSON::JSONData Arch::FileArchive::getFileTree(String const& root) const {
+Makai::JSON::Value Arch::FileArchive::getFileTree(String const& root) const {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	assertOpen();
-	JSONData dir = fstruct["tree"];
+	Value dir = fstruct["tree"];
 	populateTree((!root.empty()) ? dir[root] : dir, root);
 	return dir;
 }
@@ -601,7 +600,7 @@ ArchiveHeader Arch::FileArchive::getHeader(String const& path) {
 
 FileArchive& Arch::FileArchive::unpackTo(String const& path) {
 	if (!streamOpen) return *this;
-	JSONData ftree = getFileTree().json();
+	Value ftree = getFileTree();
 	_ARCDEBUGLN(ftree.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
 	unpackLayer(ftree, path);
 	return *this;
@@ -644,8 +643,8 @@ void Arch::FileArchive::parseFileTree() {
 	}
 	try {
 		DEBUGLN("Parsing tree...");
-		fstruct = Nlohmann::parse(fs.std());
-	} catch (Nlohmann::exception const& e) {
+		fstruct = Makai::JSON::parse(fs);
+	} catch (Error::FailedAction const& e) {
 		throw File::FileLoadError(
 			"Invalid or corrupted file structure!",
 			e.what()
@@ -673,13 +672,13 @@ void Arch::FileArchive::demangleData(BinaryData<>& data, uint8* const block) con
 	_ARCDEBUGLN("After decompression: ", data.size());
 }
 
-void Arch::FileArchive::unpackLayer(JSONData const& layer, String const& path) {
+void Arch::FileArchive::unpackLayer(Value const& layer, String const& path) {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	assertOpen();
 	List<KeyValuePair<String, String>> files;
 	for (auto& [name, data]: layer.items()) {
-		if (data.is_string()) files.pushBack(KeyValuePair<String, String>(name, data.get<std::string>()));
-		else if (data.is_object()) unpackLayer(data, path);
+		if (data.isString()) files.pushBack(KeyValuePair<String, String>(name, data.get<String>()));
+		else if (data.isObject()) unpackLayer(data, path);
 		else directoryTreeError();
 	}
 	for (auto& [name, data]: files) {
@@ -709,7 +708,7 @@ void Arch::FileArchive::processFileEntry(FileEntry& entry) const {
 
 Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path) try {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
-	if (!fstruct["tree"].is_object())
+	if (!fstruct["tree"].isObject())
 		directoryTreeError();
 	DEBUGLN("Getting file entry location...");
 	uint64		idx	= getFileEntryLocation(path.lower(), path);
@@ -761,10 +760,10 @@ FileHeader Arch::FileArchive::getFileEntryHeader(uint64 const index) try {
 	);
 }
 
-uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const& origpath) try {
+uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const& origpath) {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
-	List<JSONData> stack;
-	JSONData entry = fstruct["tree"];
+	List<Value> stack;
+	Value entry = fstruct["tree"];
 	DEBUGLN("Path: ", origpath);
 	DEBUGLN("Cleaned: ", Regex::replace(path, "[\\\\\\/]+", "/"));
 	// Loop through path and get entry location
@@ -774,23 +773,21 @@ uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const&
 				outOfArchiveBoundsError(origpath);
 			entry = stack.popBack();
 			continue;
-		} else if (entry.is_object()) {
+		} else if (entry.isObject()) {
 			for (auto [k, v]: entry.items())
 				if (String(k).lower() == fld) {
 					stack.pushBack(entry);
 					entry = v;
 					break;
 				}
-		} else if (entry.is_string() && String(entry.get<std::string>()).lower() == fld)
-			return decoded(entry.get<std::string>());
+		} else if (entry.isString() && String(entry.get<String>()).lower() == fld)
+			return decoded(entry.get<String>());
 		else doesNotExistError(fld);
 	}
 	// Try and get entry location
-	if (entry.is_string())
-		return decoded(entry.get<std::string>());
+	if (entry.isString())
+		return decoded(entry.get<String>());
 	else notAFileError(origpath);
-} catch (Nlohmann::exception const& e) {
-	doesNotExistError(origpath);
 }
 
 void Arch::FileArchive::assertOpen() const {

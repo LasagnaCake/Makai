@@ -42,26 +42,19 @@ public:
 	/// @brief Whether `TError` can be implicitly convertible to `TData`.
 	constexpr static bool IMPLICIT = Type::Convertible<TError, TData>;
 
+	/// @brief Empty constructor (deleted).
+	constexpr Result() = delete;
+
 	/// @brief Copy constructor (`Result`).
 	/// @param other Other `Result` to copy from.
-	constexpr Result(SelfType const& other)						{result = other.result; state = other.state;						}
-	/// @brief Move constructor (`Result`).
-	/// @param other Other `Result` to move.
-	constexpr Result(SelfType&& other) 							{result = CTL::move(other.result); state = CTL::move(other.state);	}
+	constexpr Result(SelfType const& other) {operator=(other);}
 	/// @brief Copy constructor (value).
 	/// @param other Result value to copy.
-	constexpr Result(ConstReferenceType value)					{result.value = value; state = ResultState::RS_OK;					}
-	/// @brief Move constructor (value).
-	/// @param other Result value to move.
-	constexpr Result(TemporaryType value)						{result.value = CTL::move(value); state = ResultState::RS_OK;		}
+	constexpr Result(ConstReferenceType value)					{operator=(value);	}
 	/// @brief Copy constructor (Error).
 	/// @param other Error value to copy.
-	/// @note Explicit if error type to not be implicitly convertible to result type.
-	constexpr explicit(IMPLICIT) Result(ErrorType const& value)	{result.error = value; state = ResultState::RS_ERROR;				}
-	/// @brief Move constructor (Error).
-	/// @param other Error value to copy.
-	/// @note Explicit if error type to not be implicitly convertible to result type.
-	constexpr explicit(IMPLICIT) Result(ErrorType&& value)		{result.error = CTL::move(value); state = ResultState::RS_ERROR;	}
+	/// @note Explicit if error type is implicitly convertible to result type.
+	constexpr explicit(IMPLICIT) Result(ErrorType const& value)	{operator=(value);	}
 
 	/// @brief Runs the passed callable if there is a value.
 	/// @tparam TFunction Callable type.
@@ -96,43 +89,49 @@ public:
 	/// @brief Copy assignment operator (value).
 	/// @param value Value to store.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType const& value)						{destruct(); result.value = value; state = ResultState::RS_OK; return *this;					}
-	/// @brief Move assignment operator (value).
-	/// @param value Value to store.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType&& value)								{destruct(); result.value = CTL::move(value); state = ResultState::RS_OK; return *this;			}
+	constexpr SelfType& operator=(DataType const& value)						{destruct(); MX::construct(&result.value, value); state = ResultState::RS_OK; return *this;		}
 	/// @brief Copy assignment operator (error).
 	/// @param error Error to store.
 	/// @return Reference to self.
 	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr SelfType& operator=(ErrorType const& error) requires (!IMPLICIT)	{destruct(); result.error = error; state = ResultState::RS_ERROR; return *this;					}
-	/// @brief Move assignment operator (error).
-	/// @param error Error to store.
-	/// @return Reference to self.
-	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr SelfType& operator=(ErrorType&& error) requires (!IMPLICIT)		{destruct(); result.error = CTL::move(error); state = ResultState::RS_ERROR; return *this;		}
+	constexpr SelfType& operator=(ErrorType const& error) requires (!IMPLICIT)	{destruct(); MX::construct(&result.error, error); state = ResultState::RS_ERROR; return *this;	}
 	/// @brief Copy assignment operator (error).
 	/// @param other `Result` to copy from.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other)						{destruct(); result = other.result; state = other.state; return *this;							}
-	/// @brief Move assignment operator (error).
-	/// @param other `Result` to move.
-	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other)								{destruct(); result = CTL::move(other.result); state = CTL::move(other.state); return *this;	}
+	constexpr SelfType& operator=(SelfType const& other) {
+		switch (other.state) {
+			case ResultState::RS_OK:	return operator=(other.result.value);
+			case ResultState::RS_ERROR: return operator=(other.result.error);
+			default: destruct(); break;
+		}
+		return *this;
+	}
 
 	/// @brief Equality comparison operator (value).
 	/// @param value Value to compare.
 	/// @return Whether `Result` is equal to it.
-	constexpr bool operator==(DataType const& value) const							{if (!ok()) return false; return result.value == value;			}
+	constexpr bool operator==(DataType const& value) const {
+		if (state == ResultState::RS_UNDEFINED) return false;
+		return ok() ? result.value == value : false;
+	}
 	/// @brief Equality comparison operator (error).
 	/// @param error Error value to compare.
 	/// @return Whether `Result` is equal to it.
 	/// @note Requires error type to not be implicitly convertible to result type.
-	constexpr bool operator==(ErrorType const& error) const requires (!IMPLICIT)	{if (ok()) return false; return result.error == error;			}
+	constexpr bool operator==(ErrorType const& error) const requires (!IMPLICIT) {
+		if (state == ResultState::RS_UNDEFINED) return false;
+		return ok() ? false : result.error == error;
+	}
 	/// @brief Equality comparison operator (`Result`).
 	/// @param other Other `Result` to compare.
 	/// @return Whether objects are equal.
-	constexpr bool operator==(SelfType const& other) const							{return ok() ? other == result.value : other == result.error;	}
+	constexpr bool operator==(SelfType const& other) const {
+		switch (state) {
+			case ResultState::RS_ERROR:		return other == result.error;
+			case ResultState::RS_VALUE:		return other == result.value;	
+			default: return false;
+		}
+	}
 
 	/// @brief Returns whether there is an non-error value.
 	/// @return Whether there is an non-error value.
@@ -178,12 +177,17 @@ public:
 	constexpr SelfType const& operator()(TFunction const& proc) const	
 	requires (!IMPLICIT) {return onError(proc);	}
 
+	/// @brief Return type.
+	/// @brief T Data type.
+	template <class T>
+	using ReturnType = Meta::DualType<Type::Constructible<T, nulltype>, T, Nullable<T>>;
+
 	/// @brief Returns the stored value, or null if none.
 	/// @return The stored value, or null if none.
-	constexpr Nullable<DataType>	value() const {return ok() ? result.value : nullptr;	}
+	constexpr ReturnType<DataType>	value() const {using R = ReturnType<DataType>; return ok() ? R(result.value) : R(nullptr);		}
 	/// @brief Returns the stored error, or null if none.
 	/// @return The stored error, or null if none.
-	constexpr Nullable<ErrorType>	error() const {return !ok() ? result.error : nullptr;	}
+	constexpr ReturnType<ErrorType>	error() const {using R = ReturnType<ErrorType>; return !ok() ? R(result.error) : R(nullptr);	}
 
 	/// @brief Destructor.
 	constexpr ~Result() {destruct();}
@@ -191,12 +195,15 @@ public:
 private:
 	constexpr void destruct() {
 		switch (state) {
-			case ResultState::RS_OK:	result.value.~DataType();
-			case ResultState::RS_ERROR:	result.error.~ErrorType();
+			case ResultState::RS_OK:	MX::destruct(&result.value); break;
+			case ResultState::RS_ERROR:	MX::destruct(&result.error); break;
+			default: break;
 		}
+		state = ResultState::RS_UNDEFINED;
 	}
 
 	enum class ResultState {
+		RS_UNDEFINED,
 		RS_OK,
 		RS_ERROR
 	};
@@ -210,7 +217,7 @@ private:
 	};
 
 	ResultWrapper	result;
-	ResultState		state;
+	ResultState		state	= ResultState::RS_UNDEFINED;
 };
 
 CTL_NAMESPACE_END

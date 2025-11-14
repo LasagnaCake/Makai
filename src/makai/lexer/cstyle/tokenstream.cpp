@@ -13,6 +13,7 @@ bool TokenStream::next() {
 	if (!lexer || isFinished) return false;
 	if (stb_c_lexer_get_token(&lexer->lexer)) {
 		auto& lex = lexer->lexer;
+		curToken.value = Makai::Data::Value();
 		switch (lex.token) {
 			case (CLEX_eof): isFinished = true; break;
 			case (CLEX_parse_error): {
@@ -24,27 +25,50 @@ bool TokenStream::next() {
 				};
 				curToken.type = Token::Type::LTS_TT_INVALID;
 				isFinished = true;
-			} break;
+				return !isFinished;
+			}
 			case (CLEX_charlit): {
-				curToken.value = UTF8Char(static_cast<uint32>(lex.int_number));
-			} goto TheRestOfTheOwl;
+				curToken.value = static_cast<uint32>(lex.int_number);
+				curToken.type = Token::Type::LTS_TT_CHARACTER;
+				return true;
+			}
 			case (CLEX_intlit): {
-				curToken.value = static_cast<ssize>(lex.int_number);
-			} goto TheRestOfTheOwl;
+				if (lex.int_number < 0)
+					curToken.value = static_cast<ssize>(lex.int_number);
+				else curToken.value = static_cast<usize>(lex.int_number);
+				curToken.type = Token::Type::LTS_TT_INTEGER;
+				return true;
+			}
 			case (CLEX_floatlit): {
 				curToken.value = lex.real_number;
-			} goto TheRestOfTheOwl;
-			case (CLEX_sqstring):
-			case (CLEX_dqstring): {
-				curToken.value = String(lex.string, lex.string_len);
-			} goto TheRestOfTheOwl;
+				curToken.type = Token::Type::LTS_TT_REAL;
+				return true;
+			}
+			case (CLEX_sqstring): curToken.type = Token::Type::LTS_TT_SINGLE_QUOTE_STRING; goto StringLiteral;
+			case (CLEX_dqstring): curToken.type = Token::Type::LTS_TT_DOUBLE_QUOTE_STRING; {
+		StringLiteral:
+				if (lex.string_len > 0)
+					curToken.value = String(lex.string, lex.string + lex.string_len);
+				else curToken.value = String();
+				return true;
+			}
+			case (CLEX_id): curToken.type = Token::Type::LTS_TT_IDENTIFIER; {
+				curToken.value = tokenText();
+				return true;
+			}
 			default: {
-			TheRestOfTheOwl:
-				curToken.type = static_cast<Token::Type>((lex.token < 256) ? lex.token : lex.token - 1);
-			} break;
+				curToken.type = static_cast<Token::Type>(lex.token);
+				return true;
+			}
 		}
 	} else isFinished = true;
 	return !isFinished;
+}
+
+Makai::String TokenStream::tokenText() const {
+	if (!lexer) return "";
+	auto& lex = lexer->lexer;
+	return String(lex.where_firstchar, lex.where_lastchar - lex.where_firstchar + 1);
 }
 
 TokenStream::Position TokenStream::position() const {
@@ -103,6 +127,10 @@ TokenStream& TokenStream::close() {
 	lexer.unbind();
 	isFinished = true;
 	return *this;
+}
+
+bool TokenStream::finished() const {
+	return isFinished;
 }
 
 Makai::Result<TokenStream::TokenList, TokenStream::Error>

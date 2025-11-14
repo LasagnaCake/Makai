@@ -66,6 +66,7 @@ define tests
 	$(call mktest, $(1), 16.bind)
 	$(call mktest, $(1), ex.01.obfuscator)
 	$(call mktest, $(1), ex.02.collision)
+	$(call mktest, $(1), ex.03.value)
 endef
 else
 define tests

@@ -130,7 +130,7 @@ int main() {
 		app.maxFrameRate = 60.0;
 		app.run();
 	} catch (Makai::Error::Generic const& e) {
-		Makai::Popup::showError(e.what());
+		Makai::Popup::showError(e.report());
 	}
 	return 0;
 }
