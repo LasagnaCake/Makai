@@ -1,7 +1,6 @@
 #ifndef MAKAILIB_EX_GAME_CORE_SAVE_H
 #define MAKAILIB_EX_GAME_CORE_SAVE_H
 
-#include "makai/file/json.hpp"
 #include<makai/makai.hpp>
 
 /// @brief Game extensions.
