@@ -323,7 +323,7 @@ namespace OS::FS {
 			/// @brief Returns the path of all files inside the directory, and subdirectories (if entry is a directory).
 			/// @return Path of all files inside the directory. If not a directory, returns own path.
 			constexpr StringList getAllFiles() const {
-				if (!folder) return StringList{epath};
+				if (!folder) return StringList().pushBack(epath);
 				StringList files;
 				for (Entry const& e: children) {
 					if (!e.folder)
