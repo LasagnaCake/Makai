@@ -21,7 +21,8 @@ namespace Makai::Parser::Data {
 			if (!lexer.next()) return Value();
 			auto const result = parseValue();
 			lexer.next();
-			//if (lexer.next()) return error("Malformed value (extra unparsed data)!");
+			if (!result) return result;
+			if (lexer.next()) return error("Malformed value (extra unparsed data)!");
 			//if (!lexer.finished()) return error("Malformed value (extra unparsed data)!");
 			lexer.close();
 			return result;
