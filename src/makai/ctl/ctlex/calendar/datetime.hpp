@@ -219,13 +219,14 @@ struct DateTime {
 		return toStamp().toString();
 	}
 
+	/// @brief Addition operator overloading.
 	constexpr DateTime operator+(DateTime const& other) const {
 		auto self = *this;
 		self += other;
 		return self;
 	}
 
-	
+	/// @brief Subtraction operator overloading.
 	constexpr DateTime operator-(DateTime const& other) const {
 		auto self = *this;
 		self -= other;
