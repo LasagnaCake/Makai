@@ -125,19 +125,6 @@ struct MemorySlice:
 		return *this;
 	}
 
-	/// @brief Allocates (or resizes) the memory slice.
-	/// @tparam TCopyFunction Copy function type.
-	/// @param sz Element count.
-	/// @param copy Function to handle copying.
-	/// @return Reference to self.
-	template <Type::Functional<CopyFunctionType> TCopyFunction>
-	constexpr SelfType& invoke(usize const sz, TCopyFunction const& copy) {
-		//CTL_DEVMODE_FN_DECL;
-		if (!sz) return *this;
-		resize(sz, copy);
-		return *this;
-	}
-
 	/// @brief Allocates the memory slice.
 	/// @param sz Element count.
 	/// @return Reference to self.
@@ -159,24 +146,6 @@ struct MemorySlice:
 		alloc.deallocate(contents, length);
 		contents = alloc.allocate(newSize);
 		length = newSize;
-		return *this;
-	}
-
-	/// @brief Resizes the memory slice.
-	/// @tparam TCopyFunction Copy function type.
-	/// @param sz Element count.
-	/// @param copy Function to handle copying.
-	/// @return Reference to self.
-	template <class TCopyFunction>
-	constexpr SelfType& resize(usize const newSize, TCopyFunction const& copy) {
-		//CTL_DEVMODE_FN_DECL;
-		if (!newSize) return free();
-		if (!contents) return create(newSize);
-		auto temp = alloc.allocate(newSize);
-		copy(temp, contents);
-		alloc.deallocate(contents, length);
-		contents	= temp;
-		length		= newSize;
 		return *this;
 	}
 
