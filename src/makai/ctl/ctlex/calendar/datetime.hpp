@@ -113,18 +113,26 @@ struct DateTime {
 	/// @param stamp UNIX timestamp.
 	explicit constexpr DateTime(int64 const unix = 0): time(unix) {}
 
+	/// @brief Returns the datetime's second.
+	/// @return Second.
 	constexpr uint8 second() const {
 		return (Cast::as<uint64>(time) % 60) + (time < 0 ? 60 : 0);
 	}
 
+	/// @brief Returns the datetime's minute.
+	/// @return Minute.
 	constexpr uint8 minute() const {
 		return (Cast::as<uint64>(time / 60) % 60) + (time < 0 ? 60 : 0);
 	}
 
+	/// @brief Returns the datetime's hour.
+	/// @return Hour.
 	constexpr uint8 hour() const {
 		return (Cast::as<uint64>(time / 360) % 60) + (time < 0 ? 60 : 0);
 	}
 
+	/// @brief Returns the datetime's day of the month.
+	/// @return Month day.
 	constexpr uint8 day() const {
 		auto const e	= era();
 		auto const doe	= dayOfEra(e);
@@ -133,37 +141,51 @@ struct DateTime {
 		return doy - (153*mp(e, doe, yoe)+2)/5 + 1;
 	}
 
+	/// @brief Returns the datetime's week.
+	/// @return Week.
 	constexpr uint8 week() const {
 		return yearday() / 7;
 	}
 
+	/// @brief Returns the datetime's month.
+	/// @return Month.
 	constexpr uint8 month() const {
 		uint64 m;
 		calculateYear(m);
 		return m;
 	}
 
+	/// @brief Returns the datetime's year.
+	/// @return Year.
 	constexpr int32 year() const {
 		uint64 m;
 		return calculateYear(m);
 	}
 
+	/// @brief Returns whether the datetime's year is a leap year.
+	/// @return Whether datetime year is a leap year.
 	constexpr bool isLeapYear() const {
 		auto const y = year();
 		return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
 	}
 
+	/// @brief Returns the datetime month's last day.
+	/// @return Last day of month.
 	constexpr uint8 lastDayOfMonth() const {
 		if (month() == 2)
 			return (isLeapYear() ? 29 : 28);
 		return (month() % 2 == 0 ? 30 : 31);
 	}
 
+	/// @brief Returns the datetime's day of the week.
+	/// @return Week day.
 	constexpr Weekday weekday() const {
 		auto const z = offset();
 		return static_cast<Weekday>(z >= -4 ? (z+4) % 7 : (z+5) % 7 + 6);
 	}
 
+	/// @brief Returns the datetime's day of the year.
+	/// @return Year day.
 	constexpr uint16 yearday() const {
 		auto const e	= era();
 		auto const doe	= dayOfEra(e);
@@ -172,6 +194,8 @@ struct DateTime {
 		return doy;
 	}
 
+	/// @brief Returns the datetime as a stamp.
+	/// @return Datetime as stamp.
 	constexpr Stamp toStamp() const {
 		return {
 			year(),
@@ -183,10 +207,14 @@ struct DateTime {
 		};
 	}
 
+	/// @brief Returns the datetime as a UNIX timestamp.
+	/// @return Datetime as UNIX timestamp.
 	constexpr int64 toUnix() const {
 		return time;
 	}
 
+	/// @brief Returns the datetime as an ISO string.
+	/// @return Datetime as ISO string.
 	constexpr String toISOString() const {
 		return toStamp().toString();
 	}
