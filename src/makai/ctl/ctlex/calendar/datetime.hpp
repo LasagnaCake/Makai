@@ -9,7 +9,7 @@ CTL_EX_NAMESPACE_BEGIN
 
 // Timestamp conversion stuff based off of here: https://howardhinnant.github.io/date_algorithms.html#civil_from_days
 
-/// @brief Date-time object.
+/// @brief Date and time object.
 struct DateTime {
 	/// @brief Weekday.
 	enum class Weekday {
@@ -41,17 +41,28 @@ struct DateTime {
 	constexpr static uint64 SECONDS_IN_MINUTE	= 60;
 	/// @brief How many seconds are in an hour.
 	constexpr static uint64 SECONDS_IN_HOUR		= SECONDS_IN_MINUTE * 360;
+	/// @brief How many seconds are in a day.
 	constexpr static uint64 SECONDS_IN_DAY		= SECONDS_IN_HOUR * 24;
+	/// @brief How many seconds are in a week.
 	constexpr static uint64 SECONDS_IN_WEEK		= SECONDS_IN_DAY * 7;
 
+	/// @brief Time stamp.
 	struct Stamp {
+		/// @brief Year.
 		int64	year		= 0;
+		/// @brief Month.
 		uint64	month:	4	= 0;
+		/// @brief Day.
 		uint64	day:	5	= 0;
+		/// @brief Hour.
 		uint64	hour:	6	= 0;
+		/// @brief Minute.
 		uint64	minute:	6	= 0;
+		/// @brief Second.
 		uint64	second:	6	= 0;
 
+		/// @brief Converts the time stamp to an ISO string.
+		/// @return Stamp as ISO string.
 		String toString() const {
 			String dt;
 			dt += ::CTL::toString(year)		+ "-";
@@ -64,6 +75,10 @@ struct DateTime {
 		}
 	};
 
+	/// @brief Constructs the object from a date.
+	/// @param year Date year.
+	/// @param month Date month.
+	/// @param day Date day.
 	constexpr explicit DateTime(int64 const year, uint8 const month, uint8 const day) {
 		if (((month % 12) + 1) == 2)
 			buildFromDate(year, (month % 12) + 1, (day % (isLeap(year) ? 29 : 28)) + 1);
@@ -71,6 +86,13 @@ struct DateTime {
 			buildFromDate(year, (month % 12) + 1, (day % ((month % 2 == 0) ? 30 : 31)) + 1);
 	}
 
+	/// @brief Constructs the object from a date and a time.
+	/// @param year Date year.
+	/// @param month Date month.
+	/// @param day Date day.
+	/// @param year Time hour.
+	/// @param month Time minute.
+	/// @param day Time second.
 	constexpr explicit DateTime(
 		int32 const year,
 		uint8 const month,
@@ -82,9 +104,13 @@ struct DateTime {
 		time += (hour % 60) * SECONDS_IN_HOUR + (minute % 60) * SECONDS_IN_MINUTE + (second % 60);
 	}
 
+	/// @brief Constructs the object from a datetime stamp.
+	/// @param stamp Date time stamp.
 	constexpr DateTime(Stamp const& time):
 		DateTime(time.year, time.month, time.day, time.hour, time.minute, time.second) {}
 
+	/// @brief Constructs the object from a UNIX timestamp.
+	/// @param stamp UNIX timestamp.
 	explicit constexpr DateTime(int64 const unix = 0): time(unix) {}
 
 	constexpr uint8 second() const {
@@ -248,6 +274,10 @@ struct DateTime {
 		return DateTime(OS::Time::Clock::sinceEpoch<OS::Time::Seconds>());
 	}
 
+	constexpr static DateTime epoch() {
+		return DateTime(0);
+	}
+
 	constexpr static DateTime fromISOString(String iso) {
 		iso = iso.replace({'\t', '\n'}, ' ').eraseLike(' ');
 		if (iso.find('T')) {
@@ -267,11 +297,11 @@ private:
 		DateTime dt;
 		auto components = date.split('-');
 		if (components.size() > 0)
-			dt.addYears(toInt64(components[0]));
+			dt.addYears(toInt64(components[0]) - epoch().year());
 		if (components.size() > 1)
-			dt.addMonths(toInt64(components[1]));
+			dt.addMonths(toInt64(components[1]) - epoch().month());
 		if (components.size() > 2)
-			dt.addDays(toInt64(components[2]));
+			dt.addDays(toInt64(components[2]) - epoch().day());
 		return dt;
 	}
 
