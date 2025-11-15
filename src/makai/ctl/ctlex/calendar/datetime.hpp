@@ -9,8 +9,10 @@ CTL_EX_NAMESPACE_BEGIN
 
 // Timestamp conversion stuff based off of here: https://howardhinnant.github.io/date_algorithms.html#civil_from_days
 
+/// @brief Date-time object.
 struct DateTime {
-	enum Weekday {
+	/// @brief Weekday.
+	enum class Weekday {
 		DW_SUNDAY = 1,
 		DW_MONDAY,
 		DW_TUESDAY,
@@ -19,7 +21,8 @@ struct DateTime {
 		DW_SATURDAY
 	};
 
-	enum Month {
+	/// @brief Month.
+	enum class Month {
 		DM_JANUARY = 1,
 		DM_FEBRUARY,
 		DM_MARCH,
@@ -34,17 +37,31 @@ struct DateTime {
 		DM_DECEMBER
 	};
 
-	constexpr static uint64 SECONDS_IN_HOUR	= 360;
-	constexpr static uint64 SECONDS_IN_DAY	= SECONDS_IN_HOUR * 24;
-	constexpr static uint64 SECONDS_IN_WEEK	= SECONDS_IN_DAY * 7;
+	/// @brief How many seconds are in a minute.
+	constexpr static uint64 SECONDS_IN_MINUTE	= 60;
+	/// @brief How many seconds are in an hour.
+	constexpr static uint64 SECONDS_IN_HOUR		= SECONDS_IN_MINUTE * 360;
+	constexpr static uint64 SECONDS_IN_DAY		= SECONDS_IN_HOUR * 24;
+	constexpr static uint64 SECONDS_IN_WEEK		= SECONDS_IN_DAY * 7;
 
 	struct Stamp {
-		int32	year		= 0;
-		uint32	month:	4	= 0;
-		uint32	day:	5	= 0;
-		uint32	hour:	6	= 0;
-		uint32	minute:	6	= 0;
-		uint32	second:	6	= 0;
+		int64	year		= 0;
+		uint64	month:	4	= 0;
+		uint64	day:	5	= 0;
+		uint64	hour:	6	= 0;
+		uint64	minute:	6	= 0;
+		uint64	second:	6	= 0;
+
+		String toString() const {
+			String dt;
+			dt += ::CTL::toString(year)		+ "-";
+			dt += ::CTL::toString(month)	+ "-";
+			dt += ::CTL::toString(day)		+ "T";
+			dt += ::CTL::toString(hour)		+ ":";
+			dt += ::CTL::toString(minute)	+ ":";
+			dt += ::CTL::toString(second)	+ "Z";
+			return dt;
+		}
 	};
 
 	constexpr explicit DateTime(int64 const year, uint8 const month, uint8 const day) {
@@ -62,24 +79,24 @@ struct DateTime {
 		uint8 const minute,
 		uint8 const second
 	): DateTime(year, month, day) {
-		time += (hour % 60) * SECONDS_IN_HOUR, (minute % 60) * 60 + (second % 60);
+		time += (hour % 60) * SECONDS_IN_HOUR + (minute % 60) * SECONDS_IN_MINUTE + (second % 60);
 	}
 
 	constexpr DateTime(Stamp const& time):
 		DateTime(time.year, time.month, time.day, time.hour, time.minute, time.second) {}
 
-	explicit constexpr DateTime(int64 const unix): time(unix) {}
+	explicit constexpr DateTime(int64 const unix = 0): time(unix) {}
 
 	constexpr uint8 second() const {
-		return time % 60 + (time < 0 ? 60 : 0);
+		return (Cast::as<uint64>(time) % 60) + (time < 0 ? 60 : 0);
 	}
 
 	constexpr uint8 minute() const {
-		return (time / 60) % 60 + (time < 0 ? 60 : 0);
+		return (Cast::as<uint64>(time / 60) % 60) + (time < 0 ? 60 : 0);
 	}
 
 	constexpr uint8 hour() const {
-		return (time / 360) % 60 + (time < 0 ? 60 : 0);
+		return (Cast::as<uint64>(time / 360) % 60) + (time < 0 ? 60 : 0);
 	}
 
 	constexpr uint8 day() const {
@@ -129,8 +146,23 @@ struct DateTime {
 		return doy;
 	}
 
+	constexpr Stamp toStamp() const {
+		return {
+			year(),
+			month(),
+			day(),
+			hour(),
+			minute(),
+			second()
+		};
+	}
+
 	constexpr int64 toUnix() const {
 		return time;
+	}
+
+	constexpr String toISOString() const {
+		return toStamp().toString();
 	}
 
 	constexpr DateTime operator+(DateTime const& other) const {
@@ -216,10 +248,62 @@ struct DateTime {
 		return DateTime(OS::Time::Clock::sinceEpoch<OS::Time::Seconds>());
 	}
 
+	constexpr static DateTime fromISOString(String iso) {
+		iso = iso.replace({'\t', '\n'}, ' ').eraseLike(' ');
+		if (iso.find('T')) {
+			auto components = iso.splitAtFirst('T');
+			return fromISODateString(components.front()) + fromISOTimeString(components.back());
+		} else if (iso.find(':') != -1)
+			return fromISOTimeString(iso);
+		else
+			return fromISODateString(iso);
+	}
+
 	/*constexpr String toString(String const& format) const {
 	}*/
 
 private:
+	constexpr static DateTime fromISODateString(String const& date) {
+		DateTime dt;
+		auto components = date.split('-');
+		if (components.size() > 0)
+			dt.addYears(toInt64(components[0]));
+		if (components.size() > 1)
+			dt.addMonths(toInt64(components[1]));
+		if (components.size() > 2)
+			dt.addDays(toInt64(components[2]));
+		return dt;
+	}
+
+	constexpr static DateTime fromISOTimeString(String const& time) {
+		if (time.rfind('Z') != -1)
+			return fromISOTimeString(time.substring(0, -2));
+		else if ((time.rfind('+') != -1) || (time.rfind('-') != -1)) {
+			auto components = time.splitAtLast({'+', '-'});
+			DateTime dt = fromISOTimeString(components.front());
+			auto zone = components.back().split(':');
+			int64 zoneSecs = 0;
+			if (components.size() > 0)
+				zoneSecs += toInt64(components[0]) * SECONDS_IN_HOUR;
+			if (components.size() > 1)
+				zoneSecs += toInt64(components[1]) * SECONDS_IN_MINUTE * CTL::Math::sign(zoneSecs);
+			if (components.size() > 2)
+				zoneSecs += toInt64(components[2]) * CTL::Math::sign(zoneSecs);
+			dt.addSeconds(zoneSecs);
+			return dt;
+		} else {
+			DateTime dt;
+			auto components = time.split(':');
+			if (components.size() > 0)
+				dt.addHours(toInt64(components[0]));
+			if (components.size() > 1)
+				dt.addMinutes(toInt64(components[1]));
+			if (components.size() > 2)
+				dt.addSeconds(toInt64(components[2]));
+			return dt;
+		}
+	}
+
 	constexpr void buildFromDate(int64 const year, uint8 month, uint8 const day) {
 		time = ((year - 1970) * 365.25) * SECONDS_IN_DAY;
 		bool leap = isLeap(year);
