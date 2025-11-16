@@ -81,9 +81,16 @@ String Arch::hashPassword(String const& str) {
 	return hash<SHA3_256>(str);
 }
 
-static void generateBlock(Arch::Block::Value& block) {
-	block.high	= rng().next();
-	block.low	= rng().next();
+Arch::Block Arch::Block::create() {
+	Arch::Block block;
+	if (rng().next() % 2) {
+		block.high	= rng().next();
+		block.low	= rng().next();
+	} else {
+		block.low	= rng().next();
+		block.high	= rng().next();
+	}
+	return block;
 }
 
 template<class T>
@@ -95,7 +102,7 @@ static BinaryData<> cbcTransform(
 	std::string result;
 	T tf;
 	uint8* iv = new uint8[16];
-	MX::memcpy(iv, block.data, 16);
+	MX::memcpy(iv, &block, 16);
 	while (password.size() < tf.MaxKeyLength())
 		password += " ";
 	if (password.size() > 32)
@@ -340,9 +347,9 @@ void Arch::pack(
 			BinaryData<> contents = File::loadBinary(fpath);
 			// Prepare header
 			FileHeader fheader;
-			fheader.uncSize = contents.size();			// Uncompressed file size
+			fheader.uncSize = contents.size();		// Uncompressed file size
 			// Generate block
-			generateBlock(fheader.block);				// Encryption block
+			fheader.block = Arch::Block::create();	// Encryption block
 			// Process file
 			if (!contents.empty()) {
 				contents = compress(
@@ -355,7 +362,7 @@ void Arch::pack(
 					contents,
 					passhash,
 					enc,
-					{.value = fheader.block}
+					fheader.block
 				);
 				DEBUGLN("After encryption: ", contents.size());
 			}
@@ -384,7 +391,7 @@ void Arch::pack(
 			// Directory header
 			DirectoryHeader	dheader;
 			// Generate header block
-			generateBlock(dheader.block);
+			dheader.block = Arch::Block::create();
 			// Get directory info
 			String dirInfo = dir.toFLOWString();
 			// Compress & encrypt directory info
@@ -392,7 +399,7 @@ void Arch::pack(
 			pdi.resize(dirInfo.size(), 0);
 			MX::memcpy(pdi.data(), dirInfo.data(), dirInfo.size());
 			pdi = compress(pdi, comp, complvl);
-			pdi = encrypt(pdi, passhash, enc, {.value = dheader.block});
+			pdi = encrypt(pdi, passhash, enc, dheader.block);
 			// Populate header
 			dheader.compSize	= pdi.size();
 			dheader.uncSize		= dirInfo.size();
@@ -633,7 +640,7 @@ void Arch::FileArchive::parseFileTree() {
 		archive.read((char*)pfs.data(), pfs.size());
 		archive.seekg(0);
 		DEBUGLN("Demangling tree data...");
-		demangleData(pfs, {.value = dh.block});
+		demangleData(pfs, dh.block);
 		fs.resize(pfs.size(), 0);
 		MX::memcpy(fs.data(), pfs.data(), fs.size());
 		if (fs.size() != dh.uncSize) directoryTreeError();
@@ -696,7 +703,7 @@ void Arch::FileArchive::unpackLayer(Value const& layer, String const& path) {
 void Arch::FileArchive::processFileEntry(FileEntry& entry) const {
 	BinaryData<> data = entry.data;
 	if (entry.header.uncSize == 0) return;
-	demangleData(data, {.value = entry.header.block});
+	demangleData(data, entry.header.block);
 	if (data.size() != entry.header.uncSize)
 		corruptedFileError(entry.path);
 	if (header.flags & Flags::SHOULD_CHECK_CRC_BIT && !true) // CRC currently not working
@@ -911,7 +918,7 @@ BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& pas
 			fd,
 			password,
 			(EncryptionMethod)header.encryption,
-			{.value = fh.block}
+			fh.block
 		);
 		fd = decompress(
 			fd,
@@ -981,9 +988,9 @@ void Arch::saveEncryptedBinaryFile(
 		BinaryData<> contents((uint8*)data, ((uint8*)data) + uncSize);
 		// Prepare header
 		FileHeader fheader;
-		fheader.uncSize = uncSize;		// Uncompressed file size
+		fheader.uncSize = uncSize;				// Uncompressed file size
 		// Generate block
-		generateBlock(fheader.block);	// Encryption block
+		fheader.block = Arch::Block::create();	// Encryption block
 		// Process file
 		if (!contents.empty()) {
 			contents = compress(
@@ -995,7 +1002,7 @@ void Arch::saveEncryptedBinaryFile(
 				contents,
 				password,
 				enc,
-				{.value = fheader.block}
+				fheader.block
 			);
 		}
 		fheader.compSize	= contents.size();	// Compressed file size
