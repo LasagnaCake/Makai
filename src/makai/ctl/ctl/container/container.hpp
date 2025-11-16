@@ -23,5 +23,7 @@
 #include "lists/lists.hpp"
 #include "strings/strings.hpp"
 #include "id/id.hpp"
+#include "nodegraph/nodegraph.hpp"
+#include "tree/tree.hpp"
 
 #endif // CTL_CONTAINER_H
