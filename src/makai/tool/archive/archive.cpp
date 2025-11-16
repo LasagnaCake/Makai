@@ -1015,7 +1015,7 @@ void Arch::saveEncryptedTextFile(
 	String const&				password,
 	EncryptionMethod const&		enc,
 	CompressionMethod const&	comp,
-	uint8 const				lvl
+	uint8 const					lvl
 ) {
 	saveEncryptedBinaryFile(path, data.data(), data.size(), password, enc, comp, lvl);
 }
@@ -1027,7 +1027,7 @@ void Arch::saveEncryptedBinaryFile(
 	String const&				password,
 	EncryptionMethod const&		enc,
 	CompressionMethod const&	comp,
-	uint8 const				lvl
+	uint8 const					lvl
 ) {
 	saveEncryptedBinaryFile<T>(path, data.data(), data.size(), password, enc, comp, lvl);
 }
@@ -1038,7 +1038,7 @@ void Arch::saveEncryptedTextFile(
 	String const&				password,
 	EncryptionMethod const&		enc,
 	CompressionMethod const&	comp,
-	uint8 const				lvl
+	uint8 const					lvl
 ) {
 	saveEncryptedBinaryFile(path, data.data(), data.size(), password, enc, comp, lvl);
 }
