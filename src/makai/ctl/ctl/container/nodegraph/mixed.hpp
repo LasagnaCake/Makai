@@ -245,10 +245,10 @@ namespace CTL::NodeGraph {
 			return *this;
 		}
 
-		/// @brief Returns all children of a given node.
+		/// @brief Returns all destinations of a given node.
 		/// @param node Node to get children.
 		/// @return Children of node.
-		constexpr List<TKey> childrenOf(TKey const& node) const {
+		constexpr List<TKey> startingFrom(TKey const& node) const {
 			List<TKey> children;
 			if (forward.contains(node)) {
 				children.resize(forward[node].size());
@@ -256,17 +256,6 @@ namespace CTL::NodeGraph {
 					if (child.value) children.pushBack(child.key);
 			}
 			return children;
-		}
-
-		/// @brief Returns the parent of a given node.
-		/// @param node Node to get parent.
-		/// @return Parent of node.
-		constexpr TKey parentOf(TKey const& node) const {
-			if (reverse.contains(node)) {
-				for (auto child : reverse[node])
-					if (child.value) return child.key;
-			}
-			return -1;
 		}
 
 		/// @brief Returns the amount of children a given node has.
@@ -284,7 +273,7 @@ namespace CTL::NodeGraph {
 		/// @brief Returns whether a node is a "root" node (i.e. has no parent).
 		/// @param node Node to check.
 		/// @return Whether node is a root node.
-		constexpr bool isRootBone(TKey const& node) const {
+		constexpr bool isRootNode(TKey const& node) const {
 			if (reverse.contains(node)) {
 				for (auto const& child : reverse[node])
 					if (child.value) return false;
@@ -293,9 +282,9 @@ namespace CTL::NodeGraph {
 		}
 
 		/// @brief Returns whether a node is a "leaf" node (i.e. has no children).
-		/// @param node Bone to check.
+		/// @param node Node to check.
 		/// @return Whether node is a leaf node.
-		constexpr bool isLeafBone(TKey const& node) const {
+		constexpr bool isLeafNode(TKey const& node) const {
 			if (forward.contains(node)) {
 				for (auto const& child : forward[node])
 					if (child.value) return false;
@@ -354,7 +343,7 @@ namespace CTL::NodeGraph {
 					current	= relation.value;
 					func(parent, current);
 					if (!isLeafBone(current)) {
-						for (auto& child: childrenOf(current))
+						for (auto& child: startingFrom(current))
 							stack.pushBack({current, child});
 					}
 				}
@@ -370,8 +359,8 @@ namespace CTL::NodeGraph {
 			while (!stack.empty()) {
 				if (stack.rfind(to) != -1) return true;
 				current = stack.popBack();
-				if (!isLeafBone(current))
-					stack.appendBack(childrenOf(current));
+				if (!isLeafNode(current))
+					stack.appendBack(startingFrom(current));
 			}
 			return false;
 		}
