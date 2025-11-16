@@ -340,9 +340,9 @@ void Arch::pack(
 			BinaryData<> contents = File::loadBinary(fpath);
 			// Prepare header
 			FileHeader fheader;
-			fheader.uncSize = contents.size();				// Uncompressed file size
+			fheader.uncSize = contents.size();			// Uncompressed file size
 			// Generate block
-			generateBlock(fheader.block.value);				// Encryption block
+			generateBlock(fheader.block);				// Encryption block
 			// Process file
 			if (!contents.empty()) {
 				contents = compress(
@@ -355,7 +355,7 @@ void Arch::pack(
 					contents,
 					passhash,
 					enc,
-					fheader.block
+					{.value = fheader.block}
 				);
 				DEBUGLN("After encryption: ", contents.size());
 			}
@@ -384,7 +384,7 @@ void Arch::pack(
 			// Directory header
 			DirectoryHeader	dheader;
 			// Generate header block
-			generateBlock(dheader.block.value);
+			generateBlock(dheader.block);
 			// Get directory info
 			String dirInfo = dir.toFLOWString();
 			// Compress & encrypt directory info
@@ -392,7 +392,7 @@ void Arch::pack(
 			pdi.resize(dirInfo.size(), 0);
 			MX::memcpy(pdi.data(), dirInfo.data(), dirInfo.size());
 			pdi = compress(pdi, comp, complvl);
-			pdi = encrypt(pdi, passhash, enc, dheader.block);
+			pdi = encrypt(pdi, passhash, enc, {.value = dheader.block});
 			// Populate header
 			dheader.compSize	= pdi.size();
 			dheader.uncSize		= dirInfo.size();
@@ -633,7 +633,7 @@ void Arch::FileArchive::parseFileTree() {
 		archive.read((char*)pfs.data(), pfs.size());
 		archive.seekg(0);
 		DEBUGLN("Demangling tree data...");
-		demangleData(pfs, dh.block);
+		demangleData(pfs, {.value = dh.block});
 		fs.resize(pfs.size(), 0);
 		MX::memcpy(fs.data(), pfs.data(), fs.size());
 		if (fs.size() != dh.uncSize) directoryTreeError();
@@ -696,7 +696,7 @@ void Arch::FileArchive::unpackLayer(Value const& layer, String const& path) {
 void Arch::FileArchive::processFileEntry(FileEntry& entry) const {
 	BinaryData<> data = entry.data;
 	if (entry.header.uncSize == 0) return;
-	demangleData(data, entry.header.block);
+	demangleData(data, {.value = entry.header.block});
 	if (data.size() != entry.header.uncSize)
 		corruptedFileError(entry.path);
 	if (header.flags & Flags::SHOULD_CHECK_CRC_BIT && !true) // CRC currently not working
@@ -911,7 +911,7 @@ BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& pas
 			fd,
 			password,
 			(EncryptionMethod)header.encryption,
-			fh.block
+			{.value = fh.block}
 		);
 		fd = decompress(
 			fd,
@@ -981,9 +981,9 @@ void Arch::saveEncryptedBinaryFile(
 		BinaryData<> contents((uint8*)data, ((uint8*)data) + uncSize);
 		// Prepare header
 		FileHeader fheader;
-		fheader.uncSize = uncSize;			// Uncompressed file size
+		fheader.uncSize = uncSize;		// Uncompressed file size
 		// Generate block
-		generateBlock(fheader.block.value);	// Encryption block
+		generateBlock(fheader.block);	// Encryption block
 		// Process file
 		if (!contents.empty()) {
 			contents = compress(
@@ -995,7 +995,7 @@ void Arch::saveEncryptedBinaryFile(
 				contents,
 				password,
 				enc,
-				fheader.block
+				{.value = fheader.block}
 			);
 		}
 		fheader.compSize	= contents.size();	// Compressed file size
