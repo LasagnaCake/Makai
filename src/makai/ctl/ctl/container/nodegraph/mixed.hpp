@@ -293,21 +293,21 @@ namespace CTL::NodeGraph {
 		}
 
 		/// @brief Returns all root nodes.
-		/// @return Root bones.
+		/// @return Root nodes.
 		constexpr List<TKey> roots() const {
 			List<TKey> roots;
 			for (auto const& i: forward)
-				if (isRootBone(i.key))
+				if (isRootNode(i.key))
 					roots.pushBack(i.key);
 			return roots;
 		}
 
-		/// @brief Returns all leaf bones.
-		/// @return Leaf bones.
+		/// @brief Returns all leaf nodes.
+		/// @return Leaf nodes.
 		constexpr List<TKey> leaves() const {
 			List<TKey> leaves;
 			for (auto const& i: reverse)
-				if (isLeafBone(i.key))
+				if (isLeafNode(i.key))
 					leaves.pushBack(i.key);
 			return leaves;
 		}
@@ -331,8 +331,8 @@ namespace CTL::NodeGraph {
 		/// @param Function to execure for every node in the tree.
 		template<Type::Functional<void(TKey const&, TKey const&, TValue const&)> TFunction>
 		constexpr void dfsTraverse(TFunction const& func) const {
-			List<TKey> boneRoots = roots();
-			for (auto const root : boneRoots) {
+			List<TKey> nodeRoots = roots();
+			for (auto const root : nodeRoots) {
 				List<KeyValuePair<TKey, TKey>> stack;
 				stack.pushBack({root, root});
 				TKey current;
@@ -342,7 +342,7 @@ namespace CTL::NodeGraph {
 					parent	= relation.key;
 					current	= relation.value;
 					func(parent, current);
-					if (!isLeafBone(current)) {
+					if (!isLeafNode(current)) {
 						for (auto& child: startingFrom(current))
 							stack.pushBack({current, child});
 					}
