@@ -55,7 +55,7 @@ namespace Makai::Tool::Arch {
 	/// @param data Data to encrypt.
 	/// @param password Password to use. Can be a hashed string. By default, it is empty.
 	/// @param method Encryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param block IV block. By default, it is set to zero.
+	/// @param block IV block. By default, it is set to all zeroes.
 	/// @return Encrypted data.
 	BinaryData<> encrypt(
 		BinaryData<> const&		data,
@@ -68,7 +68,7 @@ namespace Makai::Tool::Arch {
 	/// @param data Data to decrypt.
 	/// @param password Password to use. Can be a hashed string. By default, it is empty.
 	/// @param method Decryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param block IV block. By default, it is set to zero.
+	/// @param block IV block. By default, it is set to all zeroes.
 	/// @return Decrypted data.
 	BinaryData<> decrypt(
 		BinaryData<> const&		data,
@@ -101,19 +101,19 @@ namespace Makai::Tool::Arch {
 
 	/// @brief File entry header.
 	struct [[gnu::packed]] FileHeader {
-		uint64	uncSize;
-		uint64	compSize;
-		uint32	crc			= 0;
-		Block	block		= {};
+		uint64			uncSize;
+		uint64			compSize;
+		uint32			crc			= 0;
+		Block::Value	block		= {};
 		// Put new things BELOW this line
 	};
 
 	/// @brief Directory structure header.
 	struct [[gnu::packed]] DirectoryHeader {
-		uint64	uncSize;
-		uint64	compSize;
-		uint32	crc			= 0;
-		Block	block		= {};
+		uint64			uncSize;
+		uint64			compSize;
+		uint32			crc			= 0;
+		Block::Value	block		= {};
 	};
 	
 	/// @brief Archive file format current version.
