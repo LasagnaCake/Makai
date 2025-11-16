@@ -81,17 +81,21 @@ String Arch::hashPassword(String const& str) {
 	return hash<SHA3_256>(str);
 }
 
+static void generateBlock(Arch::Block::Value& block) {
+	block.high	= rng().next();
+	block.low	= rng().next();
+}
+
 template<class T>
 static BinaryData<> cbcTransform(
 	BinaryData<> const&		data,
 	String					password	= "",
-	uint8* const			block		= nullptr
+	Arch::Block const&		block		= {}
 ) try {
 	std::string result;
 	T tf;
 	uint8* iv = new uint8[16];
-	if (block != nullptr)	MX::memcpy(iv, block, 16);
-	else					MX::memset(iv, 0, 16);
+	MX::memcpy(iv, block.data, 16);
 	while (password.size() < tf.MaxKeyLength())
 		password += " ";
 	if (password.size() > 32)
@@ -161,7 +165,7 @@ template<typename T>
 static BinaryData<> cbcEncrypt(
 	BinaryData<> const&		data,
 	String const&			password	= "",
-	uint8* const			block		= nullptr
+	Arch::Block const&		block		= {}
 ) {
 	return cbcTransform<typename CBC_Mode<T>::Encryption>(data, password, block);
 }
@@ -170,7 +174,7 @@ template<typename T>
 static BinaryData<> cbcDecrypt(
 	BinaryData<> const&		data,
 	String const&			password	= "",
-	uint8* const			block		= nullptr
+	Arch::Block const&		block		= {}
 ) {
 	return cbcTransform<typename CBC_Mode<T>::Decryption>(data, password, block);
 }
@@ -179,7 +183,7 @@ BinaryData<> Arch::encrypt(
 	BinaryData<> const&		data,
 	String const&			password,
 	EncryptionMethod const&	method,
-	uint8* const			block
+	Arch::Block const&		block
 ) {
 	switch (method) {
 		default: throw Error::InvalidValue("Invalid encryption method!", CTL_CPP_PRETTY_SOURCE);
@@ -193,7 +197,7 @@ BinaryData<> Arch::decrypt(
 	BinaryData<> const&		data,
 	String const&			password,
 	EncryptionMethod const&	method,
-	uint8* const			block
+	Arch::Block const&		block
 ) {
 	switch (method) {
 		default: throw Error::InvalidValue("Invalid decryption method!", CTL_CPP_PRETTY_SOURCE);
@@ -271,12 +275,6 @@ static usize populateTree(Value& tree, List<uint64> const& values, usize const s
 	return idx;
 }
 
-static void generateBlock(As<uint8[16]>& block) {
-	uint64* b = (uint64*)block;
-	b[0] = rng().next();
-	b[1] = rng().next();
-}
-
 void Arch::pack(
 		String const& archivePath,
 		String const& folderPath,
@@ -344,7 +342,7 @@ void Arch::pack(
 			FileHeader fheader;
 			fheader.uncSize = contents.size();				// Uncompressed file size
 			// Generate block
-			generateBlock(fheader.block);					// Encryption block
+			generateBlock(fheader.block.value);				// Encryption block
 			// Process file
 			if (!contents.empty()) {
 				contents = compress(
@@ -386,7 +384,7 @@ void Arch::pack(
 			// Directory header
 			DirectoryHeader	dheader;
 			// Generate header block
-			generateBlock(dheader.block);
+			generateBlock(dheader.block.value);
 			// Get directory info
 			String dirInfo = dir.toFLOWString();
 			// Compress & encrypt directory info
@@ -653,7 +651,7 @@ void Arch::FileArchive::parseFileTree() {
 	_ARCDEBUGLN("File Structure:\n", fstruct.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
 }
 
-void Arch::FileArchive::demangleData(BinaryData<>& data, uint8* const block) const {
+void Arch::FileArchive::demangleData(BinaryData<>& data, Block const& block) const {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	_ARCDEBUGLN("Before decryption: ", data.size());
 	data = decrypt(
@@ -983,9 +981,9 @@ void Arch::saveEncryptedBinaryFile(
 		BinaryData<> contents((uint8*)data, ((uint8*)data) + uncSize);
 		// Prepare header
 		FileHeader fheader;
-		fheader.uncSize = uncSize;		// Uncompressed file size
+		fheader.uncSize = uncSize;			// Uncompressed file size
 		// Generate block
-		generateBlock(fheader.block);	// Encryption block
+		generateBlock(fheader.block.value);	// Encryption block
 		// Process file
 		if (!contents.empty()) {
 			contents = compress(
