@@ -32,30 +32,49 @@ namespace Makai::Tool::Arch {
 	/// @return Hashed string.
 	String hashPassword(String const& str);
 
+	/// @brief IV block.
+	struct Block {
+		/// @brief Block value.
+		struct Value {
+			/// @brief "Higher" side.
+			uint64 high;
+			/// @brief "Lower" side.
+			uint64 low;
+		};
+		union {
+			/// @brief Block value.
+			Value						value = {0, 0};
+			/// @brief Block data.
+			As<uint8[sizeof(Value)]>	data;
+		};
+	};
+
+	static_assert(sizeof(Block) == sizeof(Block::Value));
+
 	/// @brief Encrypts data.
 	/// @param data Data to encrypt.
 	/// @param password Password to use. Can be a hashed string. By default, it is empty.
 	/// @param method Encryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param block IV block. By default, it is `nullptr`.
+	/// @param block IV block. By default, it is set to zero.
 	/// @return Encrypted data.
 	BinaryData<> encrypt(
 		BinaryData<> const&		data,
 		String const&			password	= "",
 		EncryptionMethod const&	method		= EncryptionMethod::AEM_AES256,
-		uint8* const			block		= nullptr
+		Block const&			block		= {}
 	);
 
 	/// @brief Decrypts data.
 	/// @param data Data to decrypt.
 	/// @param password Password to use. Can be a hashed string. By default, it is empty.
 	/// @param method Decryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param block IV block. By default, it is `nullptr`.
+	/// @param block IV block. By default, it is set to zero.
 	/// @return Decrypted data.
 	BinaryData<> decrypt(
 		BinaryData<> const&		data,
 		String const&			password	= "",
 		EncryptionMethod const&	method		= EncryptionMethod::AEM_AES256,
-		uint8* const			block		= nullptr
+		Block const&			block		= {}
 	);
 
 	/// @brief Compresses data.
@@ -85,7 +104,7 @@ namespace Makai::Tool::Arch {
 		uint64	uncSize;
 		uint64	compSize;
 		uint32	crc			= 0;
-		uint8	block[16]	= {0};
+		Block	block		= {};
 		// Put new things BELOW this line
 	};
 
@@ -94,7 +113,7 @@ namespace Makai::Tool::Arch {
 		uint64	uncSize;
 		uint64	compSize;
 		uint32	crc			= 0;
-		uint8	block[16]	= {0};
+		Block	block		= {};
 	};
 	
 	/// @brief Archive file format current version.
@@ -235,7 +254,7 @@ namespace Makai::Tool::Arch {
 
 		void parseFileTree();
 
-		void demangleData(BinaryData<>& data, uint8* const block) const;
+		void demangleData(BinaryData<>& data, Block const& block) const;
 
 		void unpackLayer(JSON::Value const& layer, String const& path);
 
