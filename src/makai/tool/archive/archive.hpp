@@ -10,13 +10,13 @@
 namespace Makai::Tool::Arch {
 	using namespace CTL;
 	/// @brief Encryption method.
-	enum class EncryptionMethod: uint64 {
+	enum class EncryptionMethod: uint16 {
 		AEM_NONE,
 		AEM_AES256,
 	};
 
 	/// @brief Compression method.
-	enum class CompressionMethod: uint64 {
+	enum class CompressionMethod: uint16 {
 		ACM_NONE,
 		ACM_ZIP,
 	};
@@ -34,22 +34,14 @@ namespace Makai::Tool::Arch {
 
 	/// @brief IV block.
 	struct Block {
-		/// @brief Block value.
-		struct Value {
-			/// @brief "Higher" side.
-			uint64 high;
-			/// @brief "Lower" side.
-			uint64 low;
-		};
-		union {
-			/// @brief Block value.
-			Value						value = {0, 0};
-			/// @brief Block data.
-			As<uint8[sizeof(Value)]>	data;
-		};
+		/// @brief "Higher" side.
+		uint64 high;
+		/// @brief "Lower" side.
+		uint64 low;
+		/// @brief Creates an IV block with a cryptographically-secure random number.
+		/// @return IV block.
+		static Block create();
 	};
-
-	static_assert(sizeof(Block) == sizeof(Block::Value));
 
 	/// @brief Encrypts data.
 	/// @param data Data to encrypt.
@@ -101,19 +93,19 @@ namespace Makai::Tool::Arch {
 
 	/// @brief File entry header.
 	struct [[gnu::packed]] FileHeader {
-		uint64			uncSize;
-		uint64			compSize;
-		uint32			crc			= 0;
-		Block::Value	block		= {};
+		uint64	uncSize;
+		uint64	compSize;
+		uint32	crc			= 0;
+		Block	block		= {};
 		// Put new things BELOW this line
 	};
 
 	/// @brief Directory structure header.
 	struct [[gnu::packed]] DirectoryHeader {
-		uint64			uncSize;
-		uint64			compSize;
-		uint32			crc			= 0;
-		Block::Value	block		= {};
+		uint64	uncSize;
+		uint64	compSize;
+		uint32	crc			= 0;
+		Block	block		= {};
 	};
 	
 	/// @brief Archive file format current version.
@@ -133,8 +125,8 @@ namespace Makai::Tool::Arch {
 		uint64 dirHeaderSize	= sizeof(DirectoryHeader);
 		uint64	version			= ARCHIVE_VERSION;
 		uint64	minVersion		= ARCHIVE_MIN_VERSION;
-		uint16	encryption		= (uint16)EncryptionMethod::AEM_AES256;
-		uint16	compression		= (uint16)CompressionMethod::ACM_ZIP;
+		uint16	encryption		= enumcast(EncryptionMethod::AEM_AES256);
+		uint16	compression		= enumcast(CompressionMethod::ACM_ZIP);
 		uint8	level			= 9;
 		uint64	flags			= 0;
 		uint64	dirHeaderLoc	= 0;
@@ -251,7 +243,6 @@ namespace Makai::Tool::Arch {
 		bool isOpen() const;
 
 	private:
-
 		void parseFileTree();
 
 		void demangleData(BinaryData<>& data, Block const& block) const;
