@@ -4,6 +4,7 @@
 #include "../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Core {
+	/// @brief Data location.
 	enum class DataLocation: uint8 {
 		/// @brief Internal value.
 		AV2_DL_INTERNAL,
@@ -23,6 +24,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_TEMPORARY
 	};
 
+	/// @brief Data modifier.
 	enum class DataModifier: uint16 {
 		AV2_DM_REFERENCE	= 1 << 0,
 		AV2_DM_TEMPORARY	= 1 << 1,
@@ -34,10 +36,12 @@ namespace Makai::Anima::V2::Core {
 		AV2_DM_COMPILED		= 1 << 7
 	};
 
+	/// @brief Operator overloadings.
 	constexpr DataModifier operator|(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) | enumcast(b));	}
 	constexpr DataModifier operator&(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) & enumcast(b));	}
 	constexpr DataModifier operator~(DataModifier const& a)							{return Cast::as<DataModifier>(~enumcast(a));				}
 	
+	/// @brief Unary operator.
 	enum class UnaryOperator: uint8 {
 		AV2_UOP_NEGATE,
 		AV2_UOP_LOGIC_NOT,
@@ -48,6 +52,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_UOP_MOVE,
 	};
 	
+	/// @brief Binary operator.
 	enum class BinaryOperator: uint8 {
 		AV2_BOP_ADD,
 		AV2_BOP_SUB,
@@ -67,6 +72,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_BOP_MEMBER_ACCESS
 	};
 	
+	/// @brief Comparison operator.
 	enum class Comparator: uint8 {
 		AV2_OP_LESS_THAN,
 		AV2_OP_GREATER_THAN,
@@ -74,37 +80,46 @@ namespace Makai::Anima::V2::Core {
 		AV2_OP_THREEWAY
 	};
 	
+	/// @brief Instruction.
 	struct [[gnu::aligned(8)]] Instruction {
+		/// @brief Value declaration.
 		struct [[gnu::aligned(4)]] Declaration {
 			uint16 type;
 			uint16 modifiers;
 		};
-			
+		
+		/// @brief Value transfer.
 		struct [[gnu::aligned(4)]] Transfer {
 			DataLocation	from, to;
 			uint16			id;
 		};
 		
+		/// @brief Function invocation.
 		struct [[gnu::aligned(4)]] Invocation {
 			DataLocation	location;
 			uint8			argc;
 			
+			/// @brief Parameter declaration.
 			struct [[gnu::aligned(8)]] Parameter {
 				DataLocation	location;
-				uint32			id;
+				uint8			argument;
+				uint32			flags;
 			};
 		};
 		
+		/// @brief Comparison operator.
 		struct [[gnu::aligned(4)]] Comparison {
 			DataLocation	output;
 			Comparator		type;
 		};
 		
+		/// @brief Return result.
 		struct [[gnu::aligned(4)]] Result {
 			bool			ignore;
 			DataLocation	location;
 		};
-		
+
+		/// @brief Stack interaction.
 		struct [[gnu::aligned(4)]] StackInteraction {
 			DataLocation	location;
 		};
@@ -141,7 +156,8 @@ namespace Makai::Anima::V2::Core {
 		/// @brief Instruction "Type" (specification).
 		uint32	type;
 		
-		constexpr static Instruction fromValue(int64 const v) {
+		/// @brief Parses an instruction from a value.
+		constexpr static Instruction fromValue(uint64 const v) {
 			return CTL::bitcast<Instruction>(v);
 		}
 	};
