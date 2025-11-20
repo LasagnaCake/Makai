@@ -24,9 +24,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_LNOT	= '!',
 		};
 
-		void process() {
-
-		}
+		void process();
 
 	private:
 		void advance();

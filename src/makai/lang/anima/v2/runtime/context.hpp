@@ -12,13 +12,12 @@ namespace Makai::Anima::V2::Runtime {
 			usize	instruction	= 0;
 		};
 		using VariableBank = Map<ID::LUID, Data::Value>;
-		Pointers				pointers;
-		Data::Value::ArrayType	valueStack;
-		List<Pointers>			pointerStack;
-		VariableBank			globals;
-		VariableBank			locals;
-		VariableBank			arguments;
-		Data::Value				temporary;
+		Pointers								pointers;
+		Data::Value::ArrayType					valueStack;
+		List<Pointers>							pointerStack;
+		VariableBank							globals;
+		As<Data::Value[Core::REGISTER_COUNT]>	registers;
+		Data::Value								temporary;
 	};
 }
 

@@ -4,6 +4,8 @@
 #include "../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Core {
+	constexpr usize REGISTER_COUNT = 32;
+
 	/// @brief Data location.
 	enum class DataLocation: uint8 {
 		/// @brief Internal value.
@@ -16,13 +18,17 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_HEAP,
 		/// @brief Global variable.
 		AV2_DL_GLOBAL,
-		/// @brief Local variable.
-		AV2_DL_LOCAL,
 		/// @brief C++ value.	
 		AV2_DL_EXTERNAL,
 		/// @brief Temporary register.	
-		AV2_DL_TEMPORARY
+		AV2_DL_TEMPORARY,
+		/// @brief Register value.
+		AV2_DL_REGISTER,
 	};
+
+	constexpr DataLocation asRegister(usize const id) {
+		return Cast::as<DataLocation>(enumcast(DataLocation::AV2_DL_REGISTER) + id);
+	}
 
 	/// @brief Data modifier.
 	enum class DataModifier: uint16 {

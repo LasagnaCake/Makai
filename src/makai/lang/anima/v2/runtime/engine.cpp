@@ -6,6 +6,10 @@ namespace Core = Makai::Anima::V2::Core;
 
 using Makai::Data::Value;
 
+void Engine::process() {
+	
+}
+
 void Engine::advance() {
 	++context.pointers.instruction;
 	current = program.code[context.pointers.instruction];
