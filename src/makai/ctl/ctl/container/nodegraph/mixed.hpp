@@ -171,9 +171,12 @@ namespace CTL::NodeGraph {
 		constexpr Mixed& connect(TKey const& from, TKey const& to)
 		requires (Type::Void<TValue>) {
 			if (from == to) return *this;
-			forward[from][to]		= {};
-			if constexpr (!IS_DIRECTED)
-				reverse[from][to]	= {};
+			forward[from][to]	= {};
+			reverse[from][to]	= {};
+			if (!IS_DIRECTED) {
+				forward[to][from] = {};
+				reverse[to][from] = {};
+			}
 			return *this;
 		}
 		
@@ -193,9 +196,12 @@ namespace CTL::NodeGraph {
 		constexpr Mixed& connect(TKey const& from, TKey const& to, TValue const& weight = TValue())
 		requires (Type::NonVoid<TValue>) {
 			if (from == to) return *this;
-			forward[from][to]		= {weight};
-			if constexpr (!IS_DIRECTED)
-				reverse[from][to]	= {weight};
+			forward[from][to]	= {weight};
+			reverse[from][to]	= {weight};
+			if (!IS_DIRECTED) {
+				forward[to][from] = {weight};
+				reverse[to][from] = {weight};
+			}
 			return *this;
 		}
 
@@ -206,34 +212,27 @@ namespace CTL::NodeGraph {
 		constexpr Mixed& disconnect(TKey const& from, TKey const& to) {
 			if (from == to) return *this;
 			forward[from][to].exists = false;
-			if constexpr (!IS_DIRECTED)
-				reverse[from][to].exists = false;
+			reverse[from][to].exists = false;
+			if (!IS_DIRECTED) {
+				forward[to][from].exists = false;
+				reverse[to][from].exists = false;
+			}
 			return *this;
 		}
 
 		/// @brief Clears all connections going to the node.
 		/// @param node Node to clear connections from.
 		/// @return Reference to self.
-		constexpr Mixed& disconnect(TKey const& node)
-		requires (!IS_DIRECTED) {
+		constexpr Mixed& disconnect(TKey const& node) {
 			if (forward.contains(node))
-				for (auto child: forward[node])
-					reverse[child.key][node].exists() = false;
+				for (auto child: forward[node]) {
+					reverse[child.key][node].exists		= false;
+					if constexpr (!IS_DIRECTED) {
+						reverse[node][child.key].exists	= false;
+						forward[child.key][node].exists	= false;
+					}
+				}
 			forward[node].clear();
-			return *this;
-		}
-		
-		/// @brief Clears all connections of a given type associated with the node.
-		/// @param node Node to clear connections from.
-		/// @param forward Whether to clear connections going to (`false`), or starting from (`true`) the given node.
-		/// @return Reference to self.
-		constexpr Mixed& disconnect(TKey const& node, bool const parting)
-		requires (IS_DIRECTED) {
-			if (!parting) {
-				if (forward.contains(node))
-					for (auto child: forward[node])
-						reverse[child.key][node].exists() = false;
-			} else forward[node].clear();
 			return *this;
 		}
 
@@ -249,23 +248,23 @@ namespace CTL::NodeGraph {
 		/// @param node Node to get children.
 		/// @return Children of node.
 		constexpr List<TKey> startingFrom(TKey const& node) const {
-			List<TKey> children;
+			List<TKey> dest;
 			if (forward.contains(node)) {
-				children.resize(forward[node].size());
+				dest.resize(forward[node].size());
 				for (auto child : forward[node])
-					if (child.value) children.pushBack(child.key);
+					if (child.exists) dest.pushBack(child.key);
 			}
-			return children;
+			return dest;
 		}
 
-		/// @brief Returns the amount of children a given node has.
-		/// @param node Node to get children count.
+		/// @brief Returns the amount of neighbours a given node has.
+		/// @param node Node to get neighbour count.
 		/// @return Children count of node.
-		constexpr usize childrenCount(TKey const& node) const {
+		constexpr usize neighbourCount(TKey const& node) const {
 			usize count = 0;
 			if (forward.contains(node)) {
-				for (auto const& child : forward[node])
-					if (child.value) ++count;
+				for (auto const& dest : forward[node])
+					if (dest.exists) ++count;
 			}
 			return count;
 		}

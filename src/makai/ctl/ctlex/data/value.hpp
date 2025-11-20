@@ -216,6 +216,10 @@ namespace Data {
 		/// @brief Returns whether the value is undefined.
 		constexpr bool isDiscarded() const	{return isUndefined();	}
 
+		/// @brief Returns the value's type.
+		/// @return value type.
+		constexpr Kind type() const {return kind;}
+
 		/// @brief Tries to get the value as a given type.
 		/// @tparam T value type.
 		/// @param out Output.

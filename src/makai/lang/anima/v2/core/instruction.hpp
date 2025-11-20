@@ -1,0 +1,150 @@
+#ifndef MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
+#define MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
+
+#include "../../../../compat/ctl.hpp"
+
+namespace Makai::Anima::V2::Core {
+	enum class DataLocation: uint8 {
+		/// @brief Internal value.
+		AV2_DL_INTERNAL,
+		/// @brief Constant data.		
+		AV2_DL_CONST,
+		/// @brief Stack.
+		AV2_DL_STACK,
+		/// @brief Heap.
+		AV2_DL_HEAP,
+		/// @brief Global variable.
+		AV2_DL_GLOBAL,
+		/// @brief Local variable.
+		AV2_DL_LOCAL,
+		/// @brief C++ value.	
+		AV2_DL_EXTERNAL,
+		/// @brief Temporary register.	
+		AV2_DL_TEMPORARY
+	};
+
+	enum class DataModifier: uint16 {
+		AV2_DM_REFERENCE	= 1 << 0,
+		AV2_DM_TEMPORARY	= 1 << 1,
+		AV2_DM_POINTER		= 1 << 2,
+		AV2_DM_IN			= 1 << 3,
+		AV2_DM_OUT			= 1 << 4,
+		AV2_DM_CONST		= 1 << 5,
+		AV2_DM_COMPILEABLE	= 1 << 6,
+		AV2_DM_COMPILED		= 1 << 7
+	};
+
+	constexpr DataModifier operator|(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) | enumcast(b));	}
+	constexpr DataModifier operator&(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) & enumcast(b));	}
+	constexpr DataModifier operator~(DataModifier const& a)							{return Cast::as<DataModifier>(~enumcast(a));				}
+	
+	enum class UnaryOperator: uint8 {
+		AV2_UOP_NEGATE,
+		AV2_UOP_LOGIC_NOT,
+		AV2_UOP_BIT_NOT,
+		AV2_UOP_NEW,
+		AV2_UOP_DELETE,
+		AV2_UOP_COPY,
+		AV2_UOP_MOVE,
+	};
+	
+	enum class BinaryOperator: uint8 {
+		AV2_BOP_ADD,
+		AV2_BOP_SUB,
+		AV2_BOP_MUL,
+		AV2_BOP_DIV,
+		AV2_BOP_REM,
+		AV2_BOP_LOGIC_AND,
+		AV2_BOP_LOGIC_OR,
+		AV2_BOP_LOGIC_XOR,
+		AV2_BOP_BIT_AND,
+		AV2_BOP_BIT_OR,
+		AV2_BOP_BIT_XOR,
+		AV2_BOP_ARRAY_GET,
+		AV2_BOP_MEMBER_GET,
+		AV2_BOP_NULL_DECAY,
+		AV2_BOP_INDEX_ACCESS,
+		AV2_BOP_MEMBER_ACCESS
+	};
+	
+	enum class Comparator: uint8 {
+		AV2_OP_LESS_THAN,
+		AV2_OP_GREATER_THAN,
+		AV2_OP_EQUALS,
+		AV2_OP_THREEWAY
+	};
+	
+	struct [[gnu::aligned(8)]] Instruction {
+		struct [[gnu::aligned(4)]] Declaration {
+			uint16 type;
+			uint16 modifiers;
+		};
+			
+		struct [[gnu::aligned(4)]] Transfer {
+			DataLocation	from, to;
+			uint16			id;
+		};
+		
+		struct [[gnu::aligned(4)]] Invocation {
+			DataLocation	location;
+			uint8			argc;
+			
+			struct [[gnu::aligned(8)]] Parameter {
+				DataLocation	location;
+				uint32			id;
+			};
+		};
+		
+		struct [[gnu::aligned(4)]] Comparison {
+			DataLocation	output;
+			Comparator		type;
+		};
+		
+		struct [[gnu::aligned(4)]] Result {
+			bool			ignore;
+			DataLocation	location;
+		};
+		
+		struct [[gnu::aligned(4)]] StackInteraction {
+			DataLocation	location;
+		};
+		
+		enum class Name: uint32 {
+			/// @brief No-operation.
+			/// @param type 0 = Wastes a cycle; 1 = does not waste a cycle.
+			AV2_IN_NO_OP,
+			/// @brief Declare a global variable.
+			/// @param type `Declaration` = How to declare the variable.
+			AV2_GLOBAL,
+			/// @brief Copies a value from one location to another.
+			/// @param type `Transfer` = How to transfer the data.
+			AV2_COPY,
+			/// @brief Invokes a function.
+			/// @param type `Invocation` = How to invoke the function.
+			AV2_CALL,
+			/// @brief Pushes a value to the top of the stack.	
+			/// @param type `StackInteraction` = How to handle the value.	
+			AV2_STACK_PUSH,
+			/// @brief Pops a value from the top of the stack into a given location.	
+			/// @param type `StackInteraction` = How to handle the value.
+			AV2_STACK_POP,
+			/// @brief Clears the entire stack.
+			/// @param type Discarded.
+			AV2_STACK_CLEAR,
+			/// @brief Returns from a function.
+			/// @param type `Result` = How should the result be handled.
+			AV2_RETURN
+		};
+		
+		/// @brief Instruction "Name" (opcode).
+		Name	name;
+		/// @brief Instruction "Type" (specification).
+		uint32	type;
+		
+		constexpr static Instruction fromValue(int64 const v) {
+			return CTL::bitcast<Instruction>(v);
+		}
+	};
+}
+
+#endif
