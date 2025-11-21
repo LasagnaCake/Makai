@@ -50,9 +50,12 @@ void Engine::v2Invoke() {
 	Core::Instruction::Invocation invocation = bitcast<Core::Instruction::Invocation>(current.type);
 	if (invocation.location == Core::DataLocation::AV2_DL_INTERNAL)
 		return callBuiltIn(Cast::as<Engine::BuiltInFunction>(invocation.argc));
-	uint64 funcName;
 	advance();
-	funcName = bitcast<uint64>(current);
+	uint64 funcName = bitcast<uint64>(current);
+	auto fn = getValueFromLocation(invocation.location, funcName);
+	if (!fn.isUnsigned())
+		return crash(invalidFunctionEror(""));
+	else funcName = fn.get<uint64>();
 	context.valueStack.expand(invocation.argc, {});
 	for (usize i = 0; i < invocation.argc; ++i) {
 		advance();
@@ -61,7 +64,6 @@ void Engine::v2Invoke() {
 		context.valueStack[-invocation.argc+arg.argument] = consumeValue(arg.location);
 	}
 	context.pointers.function = invocation.argc;
-	funcName = consumeValue(invocation.location);
 	jumpTo(funcName, true);
 }
 
@@ -99,14 +101,30 @@ void Engine::jumpTo(usize const point, bool returnable) {
 }
 
 void Engine::returnBack() {
+	if (context.pointers.function) {
+		usize const end = context.valueStack.size() - 1;
+		usize const start = end - context.pointers.function;
+		context.valueStack.eraseRange(start, end);
+	}
 	context.pointers = context.pointerStack.popBack();
+}
+
+Makai::Data::Value Engine::fetchExternal(uint64 const valueID) {
+	return Value::undefined();
 }
 
 Makai::Data::Value Engine::fetchInternal(uint64 const valueID) {
 	static const Data::Value::ArrayType internals = {
 		Data::Value(false),
 		Data::Value(true),
-		Data::Value::null()
+		Data::Value::undefined(),
+		Data::Value::null(),
+		Data::Value(0u),
+		Data::Value(0d),
+		Data::Value(""),
+		Data::Value::array(),
+		Data::Value::bytes(),
+		Data::Value::object()
 	};
 	if (valueID >= internals.size()) return Data::Value::undefined();
 	return internals[valueID];

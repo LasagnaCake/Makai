@@ -39,6 +39,7 @@ namespace Makai::Anima::V2::Runtime {
 	private:
 		Engine::Error invalidInstructionEror();
 		Engine::Error invalidSourceEror(String const& description);
+		Engine::Error invalidFunctionEror(String const& description);
 
 		Data::Value consumeValue(Core::DataLocation const from);
 		Data::Value getValueFromLocation(Core::DataLocation const location, usize const id);
