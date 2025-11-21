@@ -711,7 +711,7 @@ public:
 	/// @note
 	///		Resizes the `List`.
 	///		If you need the `List` size to remain the same, use `remove`.
-	constexpr SizeType eraseRange(IndexType const start, IndexType const stop) {
+	constexpr SelfType& eraseRange(IndexType const start, IndexType const stop) {
 		count -= removeRange(start, stop);
 		return *this;
 	}
