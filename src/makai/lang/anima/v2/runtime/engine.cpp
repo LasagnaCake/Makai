@@ -2,7 +2,8 @@
 
 using Makai::Anima::V2::Runtime::Engine;
 
-namespace Core = Makai::Anima::V2::Core;
+namespace Core		= Makai::Anima::V2::Core;
+namespace Runtime	= Makai::Anima::V2::Runtime;
 
 using Makai::Data::Value;
 
@@ -24,29 +25,71 @@ bool Engine::process() {
 		case AV2_IN_NO_OP: break;
 		default: crash(invalidInstructionEror());
 	}
-	return true;
+	return !isFinished;
 }
 
 void Engine::crash(Engine::Error const& e) {
 	err = e;
-	v2Halt();
+	terminate();
+}
+
+void Engine::terminate() {
+	isFinished = true;
 }
 
 void Engine::v2Halt() {
-	isFinished = true;
+	terminate();
 }
 
 void Engine::advance() {
 	++context.pointers.instruction;
 	current = program.code[context.pointers.instruction];
-	crash(invalidSourceEror(""));
 }
 
 void Engine::v2Invoke() {
 	Core::Instruction::Invocation invocation = bitcast<Core::Instruction::Invocation>(current.type);
-	switch (invocation.location) {
-		default: 
+	if (invocation.location == Core::DataLocation::AV2_DL_INTERNAL)
+		return callBuiltIn(Cast::as<Engine::BuiltInFunction>(invocation.argc));
+	Function func;
+	advance();
+	func.name = bitcast<uint64>(current);
+	context.valueStack.expand(invocation.argc, {});
+	for (usize i = 0; i < invocation.argc; ++i) {
+		advance();
+		Function::Argument::Type arg;
+		arg = bitcast<Function::Argument::Type>(current);
+		context.valueStack[-invocation.argc+arg.argument] = consumeValue(arg.location);
 	}
+	context.pointers.function = invocation.argc;
+	func.name = consumeValue(invocation.location);
+	jumpTo(func.name, true);
+}
+
+Makai::Data::Value Engine::consumeValue(Core::DataLocation const from) {
+	if (
+		(from >= Core::asRegister(0) && from < Core::asRegister(Core::REGISTER_COUNT))
+	||	(from == Core::DataLocation::AV2_DL_TEMPORARY)
+	) return getValueFromLocation(from, 0);
+	advance();
+	return getValueFromLocation(from, bitcast<uint64>(current));
+}
+
+Makai::Data::Value Engine::getValueFromLocation(Core::DataLocation const loc, usize const id) {
+	if (loc >= Core::asRegister(0) && loc < Core::asRegister(Core::REGISTER_COUNT)) {
+		return context.registers[(enumcast(loc) - enumcast(Core::DataLocation::AV2_DL_REGISTER))];
+	}
+	switch (loc) {
+		case Core::DataLocation::AV2_DL_CONST:			return program.constants[id];
+		case Core::DataLocation::AV2_DL_STACK:			return context.valueStack[id];
+		case Core::DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-id];
+//		case Core::DataLocation::AV2_DL_HEAP:			{} break;
+		case Core::DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
+		case Core::DataLocation::AV2_DL_INTERNAL:		return fetchInternal(id);
+		case Core::DataLocation::AV2_DL_EXTERNAL:		return fetchExternal(id);
+		case Core::DataLocation::AV2_DL_TEMPORARY:		return context.temporary;
+		default: return Data::Value::undefined();
+	}
+	return Data::Value::undefined();
 }
 
 void Engine::jumpTo(usize const point, bool returnable) {
@@ -57,6 +100,16 @@ void Engine::jumpTo(usize const point, bool returnable) {
 
 void Engine::returnBack() {
 	context.pointers = context.pointerStack.popBack();
+}
+
+Makai::Data::Value Engine::fetchInternal(uint64 const valueID) {
+	static const Data::Value::ArrayType internals = {
+		Data::Value(false),
+		Data::Value(true),
+		Data::Value::null()
+	};
+	if (valueID >= internals.size()) return Data::Value::undefined();
+	return internals[valueID];
 }
 
 void Engine::callBuiltIn(BuiltInFunction const func) {

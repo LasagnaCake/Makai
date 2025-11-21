@@ -5,8 +5,8 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Program {
-		List<Data::Value>		types;
-		List<Data::Value>		constants;
+		Data::Value::ArrayType	types;
+		Data::Value::ArrayType	constants;
 		List<Core::Instruction>	code;
 		List<usize>				jumpTable;
 	};

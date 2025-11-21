@@ -4,6 +4,7 @@
 #include "../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Core {
+	/// @brief Register count.
 	constexpr usize REGISTER_COUNT = 32;
 
 	/// @brief Data location.
@@ -12,8 +13,10 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_INTERNAL,
 		/// @brief Constant data.		
 		AV2_DL_CONST,
-		/// @brief Stack.
+		/// @brief Absolute position in the stack.
 		AV2_DL_STACK,
+		/// @brief Offset from the top of the stack.
+		AV2_DL_STACK_OFFSET,
 		/// @brief Heap.
 		AV2_DL_HEAP,
 		/// @brief Global variable.
@@ -112,7 +115,6 @@ namespace Makai::Anima::V2::Core {
 			struct [[gnu::aligned(8)]] Parameter {
 				DataLocation	location;
 				uint8			argument;
-				uint32			flags;
 			};
 		};
 		

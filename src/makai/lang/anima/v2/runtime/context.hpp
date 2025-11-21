@@ -9,13 +9,13 @@ namespace Makai::Anima::V2::Runtime {
 		struct Pointers {
 			usize	offset		= 0;
 			usize	function	= 0;
-			usize	instruction	= 0;
+			usize	instruction	= -1;
 		};
-		using VariableBank = Map<ID::LUID, Data::Value>;
+		using VariableBank = Map<uint64, Data::Value>;
 		Pointers								pointers;
 		Data::Value::ArrayType					valueStack;
 		List<Pointers>							pointerStack;
-		VariableBank							globals;
+		Data::Value::ArrayType					globals;
 		As<Data::Value[Core::REGISTER_COUNT]>	registers;
 		Data::Value								temporary;
 	};

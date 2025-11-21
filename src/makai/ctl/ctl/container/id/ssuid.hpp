@@ -25,7 +25,7 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 	/// @brief Identifier size.
 	constexpr static usize SIZE = N;
 	/// @brief Identifier storage container type.
-	using InternalType = As<usize[SIZE]>;
+	using InternalType = As<uint64[SIZE]>;
 
 	/// @brief Addition operator overloading.
 	/// @param other `SSUID` to add.
@@ -89,7 +89,29 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 		return order;
 	}
 
+	constexpr static SSUID create(uint64 const value = 0) {
+		SSUID id;
+		id.id[0] = id;
+		return id;
+	}
+	
+	template <class... Types>
+	constexpr static SSUID create(Types const... values)
+	requires (
+		(... && Type::Convertible<Types, uint64>)
+	&&	sizeof...(Types) > 1
+	) {
+		return createInternal({values...});
+	}
+
 private:
+	constexpr static SSUID createInternal(InternalType const& value) {
+		SSUID id;
+		for (usize i = 0; i < SIZE; ++i)
+			id.id[SIZE-i-1] = value[i];
+		return id;
+	}
+
 	constexpr SelfType& increment(SelfType const& other) {
 		for (usize i = 0; i < SIZE; ++i)
 			increment(other.id[i], i);

@@ -3,6 +3,7 @@
 
 #include "context.hpp"
 #include "program.hpp"
+#include "function.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
@@ -12,7 +13,7 @@ namespace Makai::Anima::V2::Runtime {
 			Core::Instruction	instruction;
 		};
 
-		enum class BuiltInFunction {
+		enum class BuiltInFunction: char {
 			AV2_EBIF_ADD	= '+',
 			AV2_EBIF_SUB	= '-',
 			AV2_EBIF_MUL	= '*',
@@ -31,13 +32,22 @@ namespace Makai::Anima::V2::Runtime {
 
 		bool process();
 
+	protected:
+		virtual Data::Value fetchExternal(uint64 const valueID);
+
+		static Data::Value fetchInternal(uint64 const valueID);
+
 	private:
 		Engine::Error invalidInstructionEror();
 		Engine::Error invalidSourceEror(String const& description);
 
+		Data::Value consumeValue(Core::DataLocation const from);
+		Data::Value getValueFromLocation(Core::DataLocation const location, usize const id);
+
 		void crash(Engine::Error const& error);
 
 		void advance();
+		void terminate();
 
 		void v2Invoke();
 		void v2Global();
