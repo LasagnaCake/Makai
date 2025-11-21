@@ -3,7 +3,6 @@
 
 #include "context.hpp"
 #include "program.hpp"
-#include "function.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {

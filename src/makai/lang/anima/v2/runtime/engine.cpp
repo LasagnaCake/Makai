@@ -50,19 +50,19 @@ void Engine::v2Invoke() {
 	Core::Instruction::Invocation invocation = bitcast<Core::Instruction::Invocation>(current.type);
 	if (invocation.location == Core::DataLocation::AV2_DL_INTERNAL)
 		return callBuiltIn(Cast::as<Engine::BuiltInFunction>(invocation.argc));
-	Function func;
+	uint64 funcName;
 	advance();
-	func.name = bitcast<uint64>(current);
+	funcName = bitcast<uint64>(current);
 	context.valueStack.expand(invocation.argc, {});
 	for (usize i = 0; i < invocation.argc; ++i) {
 		advance();
-		Function::Argument::Type arg;
-		arg = bitcast<Function::Argument::Type>(current);
+		Core::Instruction::Invocation::Parameter arg;
+		arg = bitcast<decltype(arg)>(current);
 		context.valueStack[-invocation.argc+arg.argument] = consumeValue(arg.location);
 	}
 	context.pointers.function = invocation.argc;
-	func.name = consumeValue(invocation.location);
-	jumpTo(func.name, true);
+	funcName = consumeValue(invocation.location);
+	jumpTo(funcName, true);
 }
 
 Makai::Data::Value Engine::consumeValue(Core::DataLocation const from) {
