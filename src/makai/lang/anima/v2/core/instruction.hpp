@@ -26,6 +26,9 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_REGISTER,
 	};
 
+	/// @brief Returns the register for the given ID.
+	/// @param id ID to get register for.
+	/// @return Register for ID.
 	constexpr DataLocation asRegister(usize const id) {
 		return Cast::as<DataLocation>(enumcast(DataLocation::AV2_DL_REGISTER) + id);
 	}
@@ -136,25 +139,25 @@ namespace Makai::Anima::V2::Core {
 			AV2_IN_NO_OP,
 			/// @brief Declare a global variable.
 			/// @param type `Declaration` = How to declare the variable.
-			AV2_GLOBAL,
+			AV2_IN_GLOBAL,
 			/// @brief Copies a value from one location to another.
 			/// @param type `Transfer` = How to transfer the data.
-			AV2_COPY,
+			AV2_IN_COPY,
 			/// @brief Invokes a function.
 			/// @param type `Invocation` = How to invoke the function.
-			AV2_CALL,
+			AV2_IN_CALL,
 			/// @brief Pushes a value to the top of the stack.	
 			/// @param type `StackInteraction` = How to handle the value.	
-			AV2_STACK_PUSH,
+			AV2_IN_STACK_PUSH,
 			/// @brief Pops a value from the top of the stack into a given location.	
 			/// @param type `StackInteraction` = How to handle the value.
-			AV2_STACK_POP,
+			AV2_IN_STACK_POP,
 			/// @brief Clears the entire stack.
 			/// @param type Discarded.
-			AV2_STACK_CLEAR,
+			AV2_IN_STACK_CLEAR,
 			/// @brief Returns from a function.
 			/// @param type `Result` = How should the result be handled.
-			AV2_RETURN
+			AV2_IN_RETURN
 		};
 		
 		/// @brief Instruction "Name" (opcode).

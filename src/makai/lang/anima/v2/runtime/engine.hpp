@@ -6,6 +6,11 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
+		struct Error {
+			String				message;
+			usize				location;
+			Core::Instruction	instruction;
+		};
 
 		enum class BuiltInFunction {
 			AV2_EBIF_ADD	= '+',
@@ -27,6 +32,11 @@ namespace Makai::Anima::V2::Runtime {
 		void process();
 
 	private:
+		Engine::Error invalidInstructionEror();
+		Engine::Error invalidSourceEror(String const& description);
+
+		void crash(Engine::Error const& error);
+
 		void advance();
 
 		void v2Invoke();
@@ -38,15 +48,18 @@ namespace Makai::Anima::V2::Runtime {
 		void v2StackPop();
 		void v2StackClear();
 		void v2Return();
+		void v2Halt();
 
 		void callBuiltIn(BuiltInFunction const func);
 
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
+		bool				isFinished = false;
 		Program				program;
 		Context				context;
 		Core::Instruction	current;
+		Nullable<Error>		err;
 	};
 }
 

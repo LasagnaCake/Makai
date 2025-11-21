@@ -7,16 +7,35 @@ namespace Core = Makai::Anima::V2::Core;
 using Makai::Data::Value;
 
 void Engine::process() {
-	
+	if (isFinished) return;
+	do {
+		advance();
+	} while (current.name == Core::Instruction::Name::AV2_IN_NO_OP && current.type);
+	switch (current.name) {
+		using enum Core::Instruction::Name;
+		case AV2_IN_STACK_POP:		v2StackPop();	break;
+		case AV2_IN_STACK_PUSH:		v2StackPush();	break;
+		case AV2_IN_STACK_CLEAR:	v2StackClear();	break;
+		case AV2_IN_COPY:			v2Copy();		break;
+		case AV2_IN_RETURN: 		v2Return();		break;
+		case AV2_IN_GLOBAL:			v2Global();		break;
+		case AV2_IN_CALL:			v2Call();		break;
+		case AV2_IN_NO_OP:
+		default: crash(invalidInstructionEror());
+	}
 }
 
 void Engine::advance() {
 	++context.pointers.instruction;
 	current = program.code[context.pointers.instruction];
+	crash(invalidSourceEror(""));
 }
 
 void Engine::v2Invoke() {
 	Core::Instruction::Invocation invocation = bitcast<Core::Instruction::Invocation>(current.type);
+	switch (invocation.location) {
+		default: 
+	}
 }
 
 void Engine::jumpTo(usize const point, bool returnable) {
