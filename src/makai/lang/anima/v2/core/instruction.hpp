@@ -137,6 +137,9 @@ namespace Makai::Anima::V2::Core {
 			/// @brief No-operation.
 			/// @param type 0 = Wastes a cycle; 1 = does not waste a cycle.
 			AV2_IN_NO_OP,
+			/// @brief No-operation.
+			/// @param type `Result` = Where the result is located.
+			AV2_IN_HALT,
 			/// @brief Declare a global variable.
 			/// @param type `Declaration` = How to declare the variable.
 			AV2_IN_GLOBAL,

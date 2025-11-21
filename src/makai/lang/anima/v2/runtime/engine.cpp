@@ -6,13 +6,14 @@ namespace Core = Makai::Anima::V2::Core;
 
 using Makai::Data::Value;
 
-void Engine::process() {
-	if (isFinished) return;
+bool Engine::process() {
+	if (isFinished) return false;
 	do {
 		advance();
 	} while (current.name == Core::Instruction::Name::AV2_IN_NO_OP && current.type);
 	switch (current.name) {
 		using enum Core::Instruction::Name;
+		case AV2_IN_HALT:			v2Halt();		break;
 		case AV2_IN_STACK_POP:		v2StackPop();	break;
 		case AV2_IN_STACK_PUSH:		v2StackPush();	break;
 		case AV2_IN_STACK_CLEAR:	v2StackClear();	break;
@@ -20,9 +21,19 @@ void Engine::process() {
 		case AV2_IN_RETURN: 		v2Return();		break;
 		case AV2_IN_GLOBAL:			v2Global();		break;
 		case AV2_IN_CALL:			v2Call();		break;
-		case AV2_IN_NO_OP:
+		case AV2_IN_NO_OP: break;
 		default: crash(invalidInstructionEror());
 	}
+	return true;
+}
+
+void Engine::crash(Engine::Error const& e) {
+	err = e;
+	v2Halt();
+}
+
+void Engine::v2Halt() {
+	isFinished = true;
 }
 
 void Engine::advance() {
