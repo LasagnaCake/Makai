@@ -349,6 +349,47 @@ namespace CTL::NodeGraph {
 			}
 		}
 
+		/// @brief Returns all active connections in the graph.
+		/// @return active connections.
+		constexpr List<LeftRightPair<TKey, TKey>> connections() const 
+		requires (IS_DIRECTED) {
+			List<LeftRightPair<TKey, TKey>> result;
+			for (auto const& node: forward)
+				for (auto const& next: node.value)
+					if (next.value.exists)
+						result.pushBack({node.key, next.key});
+			return result;
+		}
+		
+		/// @brief Returns all active connections in the graph.
+		/// @return active connections.
+		constexpr List<LeftRightPair<TKey, TKey>> connections() const 
+		requires (!IS_DIRECTED) {
+			List<LeftRightPair<TKey, TKey>> result;
+			for (auto const& node: forward)
+				for (auto const& next: node.value) {
+					if (next.value.exists && result.rfind({next.key, node.key}) == -1)
+						result.pushBack({node.key, next.key});
+				}
+			return result;
+		}
+		
+		/// @brief Returns all active nodes in the graph.
+		/// @return active nodes.
+		constexpr List<TKey> nodes() const
+		requires (!IS_DIRECTED) {
+			return forward.keys();
+		}
+
+		/// @brief Returns all active nodes in the graph.
+		/// @return active nodes.
+		constexpr List<TKey> nodes() const
+		requires (IS_DIRECTED) {
+			List<TKey> result = forward.keys();
+			result.appendBack(reverse.keys().filter([&] (auto const& e) {return result.find(e) == -1;}));
+			return result;
+		}
+
 	private:
 		constexpr bool bridged(usize const from, usize const to) const {
 			if (from == to) return true;
