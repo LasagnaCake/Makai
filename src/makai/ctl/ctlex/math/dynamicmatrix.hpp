@@ -454,6 +454,34 @@ private:
 	MatrixType<>	matrix;
 };
 
+/// @brief `DynamicMatrix` analog.
+/// @tparam TData Data type.
+template<CTL::Type::Math::Operatable TData>
+using DynMat = DynamicMatrix<TData>;
+
+/// @brief `DynamicMatrix` analog.
+/// @tparam TData Data type.
+template<CTL::Type::Math::Operatable TData>
+using DMat = DynMat<TData>;
+
+/// @brief Dynamic `float` matrix.
+using DynMatf	= DynMat<float>;
+/// @brief Dynamic `double` matrix.
+using DynMatd	= DynMat<double>;
+/// @brief Dynamic `long double` matrix.
+using DynMatld	= DynMat<long double>;
+/// @brief Dynamic `int` matrix.
+using DynMati	= DynMat<int>;
+
+/// @brief Dynamic `float` matrix.
+using DMatf		= DMat<float>;
+/// @brief Dynamic `double` matrix.
+using DMatd		= DMat<double>;
+/// @brief Dynamic `long double` matrix.
+using DMatld	= DMat<long double>;
+/// @brief Dynamic `int` matrix.
+using DMati		= DMat<int>;
+
 }
 
 CTL_EX_NAMESPACE_END
