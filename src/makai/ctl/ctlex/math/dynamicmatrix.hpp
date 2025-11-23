@@ -457,12 +457,12 @@ private:
 /// @brief `DynamicMatrix` analog.
 /// @tparam TData Data type.
 template<CTL::Type::Math::Operatable TData>
-using DynMat = DynamicMatrix<TData>;
+using DynMat	= DynamicMatrix<TData>;
 
 /// @brief `DynamicMatrix` analog.
 /// @tparam TData Data type.
 template<CTL::Type::Math::Operatable TData>
-using DMat = DynMat<TData>;
+using DMat		= DynMat<TData>;
 
 /// @brief Dynamic `float` matrix.
 using DynMatf	= DynMat<float>;
