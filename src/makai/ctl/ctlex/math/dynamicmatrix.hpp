@@ -222,36 +222,63 @@ struct DynamicMatrix {
 	/// @tparam C Column count.
 	template<usize R, usize C>
 	constexpr explicit operator Matrix<R, C, DataType>() const	{return toMatrix<R, C>();	}
-
+	
+	/// @brief Addition assignment operator (value).
+	/// @param val Value to add to all cells.
+	/// @return Reference to self.
 	constexpr DynamicMatrix& operator+=(DataType const& other) {
 		for (auto& cell: matrix)
 			cell += other;
 		return *this;
 	}
 	
+	/// @brief Subtraction assignment operator (value).
+	/// @param val Value to subtract from all cells.
+	/// @return Reference to self.
 	constexpr DynamicMatrix& operator-=(DataType const& other) {
 		for (auto& cell: matrix)
 			cell -= other;
 		return *this;
 	}
 	
+	/// @brief Multiplication assignment operator (value).
+	/// @param val Value to mulitply to all cells.
+	/// @return Reference to self.
 	constexpr DynamicMatrix& operator*=(DataType const& other) {
 		for (auto& cell: matrix)
 			cell *= other;
 		return *this;
 	}
 	
+	/// @brief Division assignment operator (value).
+	/// @param val Value to divide from all cells.
+	/// @return Reference to self.
 	constexpr DynamicMatrix& operator/=(DataType const& other) {
 		for (auto& cell: matrix)
 			cell /= other;
 		return *this;
 	}
 
+	/// @brief Addition operator (value).
+	/// @param val Value to add to all cells.
+	/// @return Result of the operation.
 	constexpr DynamicMatrix operator+(DataType const& other) const {return copy(*this) += other;}
+	/// @brief Subtraction operator (value).
+	/// @param val Value to subtract from all cells.
+	/// @return Result of the operation.
 	constexpr DynamicMatrix operator-(DataType const& other) const {return copy(*this) -= other;}
+	/// @brief Multiplication operator (value).
+	/// @param val Value to multiply to all cells.
+	/// @return Result of the operation.
 	constexpr DynamicMatrix operator*(DataType const& other) const {return copy(*this) *= other;}
+	/// @brief Division operator (value).
+	/// @param val Value to divide from all cells.
+	/// @return Result of the operation.
 	constexpr DynamicMatrix operator/(DataType const& other) const {return copy(*this) /= other;}
 
+	/// @brief Addition operator (`DynamicMatrix`).
+	/// @param other Matrix to add.
+	/// @return Result of the operation.
 	constexpr DynamicMatrix operator+(DynamicMatrix const& other) const {
 		if (!canAddOrSubtractWith(other))
 			throw Error::FailedAction(
@@ -268,6 +295,9 @@ struct DynamicMatrix {
 		return result;
 	}
 	
+	/// @brief Subtraction operator (`DynamicMatrix`).
+	/// @param other Matrix to subtract.
+	/// @return Result of the operation.
 	constexpr DynamicMatrix operator-(DynamicMatrix const& other) const {
 		if (!canAddOrSubtractWith(other))
 			throw Error::FailedAction(
@@ -284,6 +314,9 @@ struct DynamicMatrix {
 		return result;
 	}
 	
+	/// @brief Multiplication operator (`DynamicMatrix`).
+	/// @param other Matrix to multiply.
+	/// @return Result of the operation.
 	constexpr DynamicMatrix operator*(DynamicMatrix const& other) const {
 		if (!canMultiplyWith(other))
 			throw Error::FailedAction(
@@ -305,21 +338,32 @@ struct DynamicMatrix {
 		return result;
 	}
 
+	/// @brief Addition assignment operator (`DynamicMatrix`).
+	/// @param mat Matrix to add.
+	/// @return Reference to self.
 	constexpr DynamicMatrix& operator+=(DynamicMatrix const& other) {return operator=(operator+(other));}
+	/// @brief Subtraction assignment operator (`DynamicMatrix`).
+	/// @param mat Matrix to subtract.
+	/// @return Reference to self.
 	constexpr DynamicMatrix& operator-=(DynamicMatrix const& other) {return operator=(operator-(other));}
+	/// @brief Multiplication assignment operator (`DynamicMatrix`).
+	/// @param mat Matrix to multiply.
+	/// @return Reference to self.
+	/// @note Requires a square matrix.
 	constexpr DynamicMatrix& operator*=(DynamicMatrix const& other) {return operator=(operator*(other));}
 
+	/// @brief Returns whether an addition/subtraction operation between this matrix and another matrix would be valid.
 	constexpr bool canAddOrSubtractWith(DynamicMatrix const& other) const {
 		return rows == other.rows && columns == other.columns;
 	}
 
+	/// @brief Returns whether a multiplication operation between this matrix and another matrix would be valid.
 	constexpr bool canMultiplyWith(DynamicMatrix const& other) const {
 		return rows == other.columns;
 	}
 
 	/// @brief Transposes the matrix.
 	/// @return Reference to self.
-	/// @note Requires matrix to be a square matrix.
 	constexpr DynamicMatrix& transpose() {
 		return operator=(transposed());
 	}
