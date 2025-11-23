@@ -189,7 +189,25 @@ struct DynamicMatrix {
 		DynamicMatrix result = DynamicMatrix(rows, columns);
 		for (usize i = 0; i < size(); ++i)
 			result.matrix[i] = matrix[i] + other.matrix[i];
+		return result;
 	}
+	
+	constexpr DynamicMatrix operator-(DynamicMatrix const& other) const {
+		if (!canAddOrSubtractWith(other))
+			throw Error::FailedAction(
+				"Cannot subtract matrices of different sizes!",
+				toString(
+					"Matrix A(r, c) -> [",rows,", ",columns,"]\n"
+					"Matrix B(r, c) -> [",other.rows,", ",other.columns,"]"
+				)
+			);
+		DynamicMatrix result = DynamicMatrix(rows, columns);
+		for (usize i = 0; i < size(); ++i)
+			result.matrix[i] = matrix[i] - other.matrix[i];
+		return result;
+	}
+	
+	constexpr DynamicMatrix operator*(DynamicMatrix const& other) const {}
 
 	constexpr bool canAddOrSubtractWith(DynamicMatrix const& other) const {
 		return size() == other.size();
