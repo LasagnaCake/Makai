@@ -25,7 +25,7 @@ namespace Makai::Graph::Material {
 		/// @brief Albedo tint.
 		Vector4	color				= Color::WHITE;
 		/// @brief Instances.
-		List<Vector3>	instances	= List<Vector3>().pushBack(Vec3(0, 0, 0));
+		List<Vector3>	instances	= List<Vector3>::from(Vec3(0, 0, 0));
 		/// @brief Face culling mode.
 		CullMode		culling		= CullMode::OCM_NONE;
 		/// @brief Face fill mode.

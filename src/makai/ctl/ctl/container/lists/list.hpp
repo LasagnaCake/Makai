@@ -1267,6 +1267,17 @@ public:
 	/// @return Allocator.
 	constexpr auto allocator() const	{return contents.allocator();}
 
+	/// @brief Constructs a list from a series of values.
+	/// @tparam Types... Element types.
+	/// @param values... Values to construct from.
+	/// @return Constructed list.
+	template<class... Types>
+	constexpr static SelfType from(Types const&... values) {
+		SelfType result;
+		(..., result.pushBack(values));
+		return result;
+	}
+
 private:
 	using Iteratable::wrapBounds;
 
