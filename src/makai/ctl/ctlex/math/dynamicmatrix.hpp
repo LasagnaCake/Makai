@@ -34,30 +34,81 @@ struct DynamicMatrix {
 	constexpr DynamicMatrix(DynamicMatrix const&)	= default;
 	/// @brief Move constructor (defaulted).
 	constexpr DynamicMatrix(DynamicMatrix&&)		= default;
-
-	/// @brief Constructs the matrix from another matrix.
-	/// @param matrix Matrix to construct from.
-	constexpr DynamicMatrix(MatrixType<> const matrix): matrix(matrix) {}
 	
 	/// @brief Constructs the matrix as a given size, with a given value in the diagonal.
 	/// @param rows Row count.
 	/// @param rows Column count.
 	/// @param value Diagonal value. By default, it is the default-constructed element type.
-	constexpr explicit DynamicMatrix(usize const rows, usize const columns, DataType const& value = DataType()) {
+	constexpr explicit DynamicMatrix(usize const rows, usize const columns, DataType const& value = DataType()):
+		rows(rows),
+		columns(columns) {
 		matrix.resize(rows * columns);
 		for (usize i = 0; i < rows; ++i) {
 			if (i >= columns) break;
-			SingleColumnType<> col{matrix.data() + i * columns, matrix.data() + ((i + 1) * columns - 1)};
+			auto col = at(i);
 			col[i] = value;
 		}
 	}
 
-	constexpr DynamicMatrix operator+(DynamicMatrix const& other) const {
-
+	/// @brief Returns the row at the given column.
+	/// @param index Index to match.
+	/// @return Row view.
+	/// @throws Error::InvalidValue if `index` is bigger than column count.
+	constexpr SingleColumnType<DataType> at(usize const index) {
+		if (index > columns)
+			throw Error::InvalidValue(
+				toString("Index of [", columns, "] is larger than column count of [",columns,"]!"),
+				CTL_CPP_PRETTY_SOURCE
+			);
+		return {matrix.begin() + index * columns, matrix.begin() + ((index + 1) * columns - 1)};
 	}
 
+	/// @brief Returns the row at the given column.
+	/// @param index Index to match.
+	/// @return Row view.
+	/// @throws Error::InvalidValue if `index` is bigger than column count.
+	constexpr SingleColumnType<const DataType> at(usize const index) const {
+		if (index > columns)
+			throw Error::InvalidValue(
+				toString("Index of [", columns, "] is larger than column count of [",columns,"]!"),
+				CTL_CPP_PRETTY_SOURCE
+			);
+		return {matrix.begin() + index * columns, matrix.begin() + ((index + 1) * columns - 1)};
+	}
+
+	/// @brief Array subscription operator.
+	/// @param index Index to match.
+	/// @return Row view.
+	/// @throws Error::InvalidValue if `index` is bigger than column count.
+	constexpr SingleColumnType<DataType> operator[](usize const index)  {
+		return at(index);
+	}
+
+	/// @brief Array subscription operator.
+	/// @param index Index to match.
+	/// @return Row view.
+	/// @throws Error::InvalidValue if `index` is bigger than column count.
+	constexpr SingleColumnType<const DataType> operator[](usize const index) const {
+		return at(index);
+	}
+
+	/// @brief Returns an iterator to the beginning of the matrix.
+	/// @return Iterator to beginning of matrix.
+	constexpr auto begin()			{return matrix.begin();	}
+	/// @brief Returns an iterator to the end of the matrix.
+	/// @return Iterator to end of matrix.
+	constexpr auto end()			{return matrix.end();	}
+	/// @brief Returns an iterator to the beginning of the matrix.
+	/// @return Iterator to beginning of matrix.
+	constexpr auto begin() const	{return matrix.begin();	}
+	/// @brief Returns an iterator to the end of the matrix.
+	/// @return Iterator to end of matrix.
+	constexpr auto end() const		{return matrix.end();	}
+
 private:
-	MatrixType<> matrix;
+	usize			rows;
+	usize			columns;
+	MatrixType<>	matrix;
 };
 
 }
