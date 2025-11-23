@@ -45,7 +45,7 @@ namespace Math {
 /// @brief Mathematical matrix. Column-major.
 /// @tparam R Row count.
 /// @tparam C Column count.
-/// @tparam T Matrix element type.
+/// @tparam TData Matrix element type.
 template<usize R, usize C, CTL::Type::Math::Operatable TData>
 class Matrix {
 public:
@@ -312,7 +312,7 @@ public:
 		return SelfType(1);
 	}
 
-	/// @brief Creates a matrix, with its bottom-right corner cell set to 0.
+	/// @brief Creates a matrix, with its bottom-right corner cell set to 1.
 	/// @return Prototype matrix.
 	/// @note Requires matrix to be a square matrix.
 	constexpr static SelfType prototype() requires (R == C) {
