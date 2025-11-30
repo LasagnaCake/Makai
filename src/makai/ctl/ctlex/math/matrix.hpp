@@ -827,6 +827,7 @@ public:
 			for (usize j = 0; j < R; j++)
 				data[i][j] = DataType(v[i][j]);
 		}
+		return *this;
 	}
 
 	/// @brief Assignment operator (array of values).
@@ -835,6 +836,7 @@ public:
 	constexpr SelfType& operator=(ArrayType<> const& v) {
 		for (usize i = 0; i < R*C; i++)
 			((DataType*)data)[i] = DataType(v[i]);
+		return *this;
 	}
 
 	/// @brief Addition assignment operator (value).
