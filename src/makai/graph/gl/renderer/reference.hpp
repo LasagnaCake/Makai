@@ -404,7 +404,7 @@ namespace Makai::Graph {
 		/// @param ref Reference to remove.
 		/// @note If successful, also destroys the reference.
 		template <ShapeRefType T>
-		void removeReference(Instance<T> const& ref) {
+		void removeReference(Instance<T> ref) {
 			if (!ref) return;
 			if (lockState) return;
 			removeReference(*ref);
@@ -418,7 +418,7 @@ namespace Makai::Graph {
 		/// @param ref Reference to remove.
 		/// @note If successful, also destroys the reference.
 		template <ShapeRefType T>
-		void unbindReference(Instance<T> const& ref) {
+		void unbindReference(Instance<T> ref) {
 			if (!ref) return;
 			if (lockState) return;
 			unbindReference(*ref);
