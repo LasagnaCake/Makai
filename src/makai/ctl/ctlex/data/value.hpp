@@ -529,7 +529,7 @@ namespace Data {
 		/// @throw Error::OutOfBounds If index is out of bounds.
 		template <Type::Integer T>
 		constexpr Value operator[](T const index) const {
-			if (!isArray()) typeMismatchError("array");
+			if (!isArray()) return undefined();
 			else if (index >= static_cast<ssize>(size()))
 				outOfBoundsError(index);
 			return read(index);
@@ -542,9 +542,9 @@ namespace Data {
 		/// @throw Error::NonexistentValue If key does not exist.
 		template <Type::CanBecome<StringType> T>
 		constexpr Value operator[](T const& key) const {
-			if (!isObject()) typeMismatchError("object");
+			if (!isObject()) return undefined();
 			else if (!contains(key))
-				missingKeyError(key);
+				return undefined();
 			return read(key);
 		}
 
@@ -554,9 +554,9 @@ namespace Data {
 		/// @throw Error::InvalidType If a node in the path is not the correct type.
 		/// @throw Error::InvalidType If value is not an object.
 		/// @throw Error::NonexistentValue If key does not exist.
-		constexpr Value const& operator[](CompiledPath path) const {
+		constexpr Value operator[](CompiledPath path) const {
 			if (path.nodes.empty()) return *this;
-			if (!isStructured()) typeMismatchError("array or object");
+			if (!isStructured()) return undefined();
 			auto const key = path.nodes.front();
 			path.nodes.remove(0);
 			if (isArray()) {
@@ -564,7 +564,7 @@ namespace Data {
 				return operator[](key.key).operator[](path);
 			} else {
 				if (key.value.empty()) typeMismatchError("object");
-				if (!contains(key.value)) missingKeyError(key.value);
+				if (!contains(key.value)) return undefined();
 				return operator[](key.value).operator[](path);
 			}
 		}
