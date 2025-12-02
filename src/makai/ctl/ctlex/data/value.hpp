@@ -881,6 +881,7 @@ namespace Data {
 				case Kind::DVK_BYTES:		return "bytes";
 				case Kind::DVK_ARRAY:		return "array";
 				case Kind::DVK_OBJECT:		return "object";
+				default: break;
 			}
 			return "none";
 		}
