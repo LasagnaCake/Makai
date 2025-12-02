@@ -104,10 +104,15 @@ namespace Data {
 			}
 		};
 
+		/// @brief not-a-number type.
+		struct NotANumber {};
+
 		/// @brief Empty constructor.
-		constexpr Value():			kind(Kind::DVK_UNDEFINED)	{}
+		constexpr Value():				kind(Kind::DVK_UNDEFINED)	{}
 		/// @brief Constructs a null value.
-		constexpr Value(nulltype):	kind(Kind::DVK_NULL)		{}
+		constexpr Value(nulltype):		kind(Kind::DVK_NULL)		{}
+		/// @brief Constructs a null value.
+		constexpr Value(NotANumber):	kind(Kind::DVK_NAN)			{}
 
 		/// @brief Constructs a boolean value.
 		template <::CTL::Type::Equal<bool> T>
@@ -141,10 +146,29 @@ namespace Data {
 		constexpr Value(T const& value): Value(value.serialize()) {}
 
 		/// @brief Copy constructor.
-		constexpr Value(Value const& other)	{operator=(other);}
+		constexpr Value(Value const& other)	{operator=(other);	}
+		/// @brief Move constructor.
+		constexpr Value(Value&& other)		{operator=(other);	}
 
 		/// @brief Destructor.
 		constexpr ~Value() {dump();}
+
+		/// @brief Move assignment operator.
+		constexpr Value& operator=(Value&& other) {
+			dump();
+			switch (kind = other.kind) {
+				case Kind::DVK_BOOLEAN:
+				case Kind::DVK_UNSIGNED:
+				case Kind::DVK_SIGNED:		content.integer	= other.content.integer;					break;
+				case Kind::DVK_REAL:		content.real	= other.content.real;						break;
+				case Kind::DVK_STRING:		content.string	= new StringType(*other.content.string);	break;
+				case Kind::DVK_BYTES:		content.bytes	= new ByteListType(*other.content.bytes);	break;
+				case Kind::DVK_ARRAY:		content.array	= new ArrayType(*other.content.array);		break;
+				case Kind::DVK_OBJECT:		content.object	= new ObjectType(*other.content.object);	break;
+				default: break;
+			}
+			return *this;
+		}
 
 		/// @brief Copy assignment operator.
 		constexpr Value& operator=(Value const& other) {
