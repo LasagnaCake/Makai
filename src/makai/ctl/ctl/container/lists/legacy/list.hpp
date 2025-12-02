@@ -14,6 +14,10 @@
 #include "../../../adapter/comparator.hpp"
 #include "../../../memory/memory.hpp"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 CTL_NAMESPACE_BEGIN
 
 template<
@@ -31,7 +35,18 @@ namespace Type::Container {
 		template<class T>
 		struct IsList;
 
-		template<template <class, class, template <class> class, template <class> class> class T0, class T1, class T2, template <class> class T3, template <class> class T4>
+		template<
+			template <
+				class,
+				class,
+				template <class> class,
+				template <class> class
+			> class T0,
+			class T1,
+			class T2,
+			template <class> class T3,
+			template <class> class T4
+		>
 		struct IsList<T0<T1, T2, T3, T4>>: BooleanConstant<Type::Equal<T0<T1, T2, T3, T4>, ::CTL::List<T1, T2, T3, T4>>> {};
 	}
 
@@ -1406,5 +1421,7 @@ using BinaryData = List<uint8, TIndex, TAlloc>;
 static_assert(Type::Container::List<List<int>>);
 
 CTL_NAMESPACE_END
+
+#pragma GCC diagnostic pop
 
 #endif // CTL_CONTAINER_LIST_H
