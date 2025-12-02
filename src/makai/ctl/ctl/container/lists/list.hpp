@@ -1303,6 +1303,7 @@ private:
 
 	constexpr void dump() {
 		CTL_DEVMODE_FN_DECL;
+		if (!count) return;
 		destroy(count);
 		count = 0;
 	}
