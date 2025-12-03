@@ -1,0 +1,6 @@
+#ifndef MAKAILIB_GRAPH_RENDERER_REFERENCE_H
+#define MAKAILIB_GRAPH_RENDERER_REFERENCE_H
+
+#include "core.hpp"
+
+#endif

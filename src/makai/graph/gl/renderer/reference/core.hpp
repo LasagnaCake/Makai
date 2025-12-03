@@ -1,0 +1,8 @@
+#ifndef MAKAILIB_GRAPH_RENDERER_REFERENCE_CORE_H
+#define MAKAILIB_GRAPH_RENDERER_REFERENCE_CORE_H
+
+namespace Makai::Graph {
+	
+}
+
+#endif
