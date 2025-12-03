@@ -66,7 +66,6 @@ namespace CTL::NodeGraph {
 			/// @brief Returns whether the connection exists.
 			/// @return Whether connection exists.
 			constexpr bool exists() const				{return graph.connected(from, to);			}
-		private:
 			/// @brief Starting point of the connection.
 			TKey const from;
 			/// @brief End point of the connection.
@@ -87,7 +86,6 @@ namespace CTL::NodeGraph {
 			/// @brief Returns whether the connection exists.
 			/// @return Whether connection exists.
 			constexpr bool exists() const				{return graph.connected(from, to);			}
-		private:
 			/// @brief Starting point of the connection.
 			TKey const from;
 			/// @brief End point of the connection.
@@ -109,7 +107,6 @@ namespace CTL::NodeGraph {
 			/// @brief Returns whether the connection exists.
 			/// @return Whether connection exists.
 			constexpr bool exists() const	{return graph.connected(from, to);	}
-		private:
 			/// @brief Starting point of the connection.
 			TKey const from;
 			/// @brief End point of the connection.
@@ -128,7 +125,6 @@ namespace CTL::NodeGraph {
 			/// @brief Returns whether the connection exists.
 			/// @return Whether connection exists.
 			constexpr bool exists() const	{return graph.connected(from, to);	}
-		private:
 			/// @brief Starting point of the connection.
 			TKey const from;
 			/// @brief End point of the connection.
