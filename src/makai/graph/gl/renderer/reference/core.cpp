@@ -3,10 +3,10 @@
 
 using namespace Makai::Graph::Ref;
 
-void IReference::destroy() {
+void AReference::destroy() {
 	parent.removeReference(*this);
 }
 
-void IReference::unbind() {
+void AReference::unbind() {
 	parent.unbindReference(*this);
 }

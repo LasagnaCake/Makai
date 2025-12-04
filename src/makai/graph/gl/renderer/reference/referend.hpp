@@ -82,13 +82,13 @@ namespace Makai::Graph::Ref {
 		void resetReferenceTransforms();
 
 	private:
-		void removeReference(IReference& ref);
-		void unbindReference(IReference& ref);
+		void removeReference(AReference& ref);
+		void unbindReference(AReference& ref);
 
 		/// @brief References bound to this object.
-		List<ref<IReference>>	references;
+		List<ref<AReference>>	references;
 
-		friend class IReference;
+		friend class AReference;
 
 		/// @brief Triangle bank to store triangles into. 
 		TriangleBank&	triangles;

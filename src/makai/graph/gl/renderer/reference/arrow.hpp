@@ -48,11 +48,11 @@ namespace Makai::Graph::Ref {
 		
 		/// @brief Resets transformations applied to the bound triangles.
 		/// @return Handle to self.
-		Handle<IReference> reset() override final;
+		Handle<AReference> reset() override final;
 
 		/// @brief Applies transformations to the bound triangles.
 		/// @return Handle to self.
-		Handle<IReference> transform() override final;
+		Handle<AReference> transform() override final;
 
 		/// @brief Sets the arrow's color.
 		/// @param col Color to set.

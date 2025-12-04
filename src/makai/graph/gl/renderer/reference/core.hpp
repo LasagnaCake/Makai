@@ -11,10 +11,10 @@ namespace Makai::Graph::Ref {
 	/// @brief Reference holder.
 	struct Referend;
 	/// @brief Reference holder shape reference interface.
-	struct IReference;
+	struct AReference;
 
 	/// @brief GReference holder shape reference interface.
-	struct IReference {
+	struct AReference {
 		/// @brief Triangle range associated with the reference.
 		struct BoundRange {
 			/// @brief Mesh containing bound triangles.
@@ -47,12 +47,12 @@ namespace Makai::Graph::Ref {
 		/// @brief Constructs the reference.
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
-		IReference(BoundRange const& triangles, Referend& parent):
+		AReference(BoundRange const& triangles, Referend& parent):
 			triangles(triangles),
 			parent(parent) {}
 
 		/// @brief Destructor.
-		virtual ~IReference() {destroy();}
+		virtual ~AReference() {destroy();}
 
 		/// @brief Bound triangle view type.
 		using Triangles = Span<Triangle const>;
@@ -75,10 +75,10 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Resets transformations applied to the bound triangles. Must be implemented.
 		/// @return Handle to self.
-		virtual Handle<IReference> reset()		= 0;
+		virtual Handle<AReference> reset()		= 0;
 		/// @brief Applies transformations to the bound triangles. Must be implemented.
 		/// @return Handle to self.
-		virtual Handle<IReference> transform()	= 0;
+		virtual Handle<AReference> transform()	= 0;
 		
 	protected:
 		friend struct Referend;
@@ -94,7 +94,7 @@ namespace Makai::Graph::Ref {
 
 	/// @brief Type must not be an empty reference.
 	template<class T>
-	concept NotEmpty		= Makai::Type::Different<T, IReference>;
+	concept NotEmpty		= Makai::Type::Different<T, AReference>;
 }
 
 #endif

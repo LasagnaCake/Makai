@@ -4,7 +4,7 @@
 using namespace Makai::Graph::Ref;
 
 Triangle::Triangle(
-	IReference::BoundRange const& tris,
+	AReference::BoundRange const& tris,
 	Referend& parent
 ): AShape<1>(tris, parent) {
 	// Setup trigon
@@ -90,7 +90,7 @@ Makai::Handle<Triangle> Triangle::setNormal(Vector3 const& n) {
 }
 
 /// Sets the triangle to its original state (last state set with setPosition).
-Makai::Handle<IReference> Triangle::reset() {
+Makai::Handle<AReference> Triangle::reset() {
 	As<Vertex&>
 		a	= (triangles[0].verts[0]),
 		b	= (triangles[0].verts[1]),
@@ -102,7 +102,7 @@ Makai::Handle<IReference> Triangle::reset() {
 	return this;
 }
 
-Makai::Handle<IReference> Triangle::transform() {
+Makai::Handle<AReference> Triangle::transform() {
 	As<Vertex&>
 		a	= (triangles[0].verts[0]),
 		b	= (triangles[0].verts[1]),

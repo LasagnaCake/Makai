@@ -104,7 +104,7 @@ Makai::Handle<Plane> Plane::setNormal(
 }
 
 /// Sets the plane to its original state (last state set with setPosition).
-Makai::Handle<IReference> Plane::reset() {
+Makai::Handle<AReference> Plane::reset() {
 	As<Vertex&>
 		tl	= (triangles[0].verts[0]),
 		tr1	= (triangles[0].verts[1]),
@@ -121,7 +121,7 @@ Makai::Handle<IReference> Plane::reset() {
 	return this;
 }
 
-Makai::Handle<IReference> Plane::transform() {
+Makai::Handle<AReference> Plane::transform() {
 	As<Vertex&>
 		tl	= (triangles[0].verts[0]),
 		tr1	= (triangles[0].verts[1]),

@@ -2,7 +2,7 @@
 
 using namespace Makai::Graph::Ref;
 
-Makai::Handle<IReference> Line::transform() {
+Makai::Handle<AReference> Line::transform() {
 	As<Vertex[4]> plane;
 	getBaseShape(plane);
 	Makai::Math::Mat4 tmat(local);
@@ -23,7 +23,7 @@ Makai::Handle<IReference> Line::transform() {
 	return this;
 }
 
-Makai::Handle<IReference> Line::reset() {
+Makai::Handle<AReference> Line::reset() {
 	for (auto& triangle: triangles)
 		for (auto& vert: triangle.verts)
 			vert.position = 0; 

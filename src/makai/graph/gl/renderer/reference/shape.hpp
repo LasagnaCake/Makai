@@ -8,7 +8,7 @@ namespace Makai::Graph::Ref {
 	/// @brief Generic shape reference.
 	/// @tparam N Triangle count.
 	template<usize N>
-	struct AShape: public IReference {
+	struct AShape: public AReference {
 		/// @brief Triangle count.
 		constexpr static usize SIZE = N;
 
@@ -20,17 +20,17 @@ namespace Makai::Graph::Ref {
 		AShape(
 			BoundRange const& triangles,
 			Referend& parent
-		): IReference(triangles, parent) {}
+		): AReference(triangles, parent) {}
 
 		/// @brief Destructor.
 		virtual ~AShape() {}
 
 		/// @brief Resets transformations applied to the bound triangles. Must be implemented.
 		/// @return Handle to self.
-		virtual Handle<IReference> reset()		= 0;
+		virtual Handle<AReference> reset()		= 0;
 		/// @brief Applies transformations to the bound triangles. Must be implemented.
 		/// @return Handle to self.
-		virtual Handle<IReference> transform()	= 0;
+		virtual Handle<AReference> transform()	= 0;
 
 		/// @brief Whether transformations should be applied.
 		bool fixed		= true;
@@ -39,6 +39,20 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Transformation.
 		Transform3D local;
+
+	private:
+
+		/// @brief Applies the local transformation matrix to all the vertices.
+		void applyTransform() {
+			Matrix4x4 tmat(local);
+			Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
+			for (auto& triangle: triangles)
+				for (auto& vert: verts) 
+					if (visible) {
+						vert.position	= tmat * Vector4(vert.position, 1);
+						vert.normal		= nmat * vert.normal;
+					} else vert.position = 0;
+		}
 	};
 
 	/// @brief Type must be a shape reference some kind.

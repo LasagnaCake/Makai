@@ -121,7 +121,7 @@ namespace Makai::Graph {
 
 	private:
 		friend class Scene;
-		friend struct Ref::IReference;
+		friend struct Ref::AReference;
 
 		/// @brief Whether the object has been baked.	
 		bool baked	= false;

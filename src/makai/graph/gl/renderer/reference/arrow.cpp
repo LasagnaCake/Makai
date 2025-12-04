@@ -2,12 +2,12 @@
 
 using namespace Makai::Graph::Ref;
 
-Makai::Handle<IReference> Arrow::reset() {
+Makai::Handle<AReference> Arrow::reset() {
 	setBaseShape();
 	return this;
 }
 
-Makai::Handle<IReference> Arrow::transform() {
+Makai::Handle<AReference> Arrow::transform() {
 	if (!fixed) return this;
 	setBaseShape();
 	Makai::Math::Mat4 tmat(local);

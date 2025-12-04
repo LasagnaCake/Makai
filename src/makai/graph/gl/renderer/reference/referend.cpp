@@ -2,14 +2,14 @@
 
 using namespace Makai::Graph::Ref;
 
-void Referend::removeReference(IReference& ref)  {
+void Referend::removeReference(AReference& ref)  {
 	if (lockState) return;
 	if (references.find(&ref) == -1) return;
 	triangles.removeRange(ref.triangles.start, ref.triangles.start + ref.triangles.count);
 	unbindReference(ref);
 }
 
-void Referend::unbindReference(IReference& ref)  {
+void Referend::unbindReference(AReference& ref)  {
 	if (lockState) return;
 	references.eraseLike(&ref);
 }
@@ -27,7 +27,7 @@ void Referend::resetReferenceTransforms() {
 void Referend::clearReferences() {
 	if (!references.empty())
 		for (auto ref: references) {
-			Instance<IReference> iref = ref;
+			Instance<AReference> iref = ref;
 			iref.release();
 			delete ref;
 		}
