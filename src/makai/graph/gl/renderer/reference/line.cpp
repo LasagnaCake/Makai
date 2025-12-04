@@ -24,6 +24,9 @@ Makai::Handle<IReference> Line::transform() {
 }
 
 Makai::Handle<IReference> Line::reset() {
+	for (auto& triangle: triangles)
+		for (auto& vert: triangle.verts)
+			vert.position = 0; 
 	return this;
 }
 
