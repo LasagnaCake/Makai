@@ -401,10 +401,10 @@ namespace Makai::Ex::Game::Danmaku {
 			for (usize i = 0; i < cfg.capacity; ++i) {
 				float const zoff = i / static_cast<float>(cfg.capacity);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
-				all.back().mainSprite = mainMesh.createReference<Graph::AnimatedPlaneRef>();
+				all.back().mainSprite = mainMesh.createReference<Graph::Ref::SpritePlane>();
 				all.back().mainSprite->local.position.z = -zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
-					all.back().glowSprite = glowMesh.createReference<Graph::AnimatedPlaneRef>();
+					all.back().glowSprite = glowMesh.createReference<Graph::Ref::SpritePlane>();
 					all.back().glowSprite->local.position.z = -zoff;
 				}
 				all.back().hideSprites();

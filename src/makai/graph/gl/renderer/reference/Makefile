@@ -1,7 +1,7 @@
-ROOT := ../../../../..
+ROOT := ../../../../../..
 include $(ROOT)/make/core.make
 
-override prefix := $(call concat, $(prefix), rd)
+override prefix := $(call concat, $(prefix), ref)
 
 INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 
@@ -10,8 +10,7 @@ INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, mode core drawable renderable bar text scene framebuffer)
-	$(call submake-all, reference)
+	$(call compile-all, arrow core line plane triangle referend slice)
 endef
 
 all: debug release

@@ -491,13 +491,13 @@ namespace Makai::Ex::Game::Danmaku {
 	/// @brief Sprite-mesh-referencing object component.
 	struct ReferencesSpriteMesh {
 		/// @brief Main sprites container.
-		Graph::ReferenceHolder& mainMesh;
+		Graph::Ref::Referend& mainMesh;
 	};
 
 	/// @brief Glow-sprite-mesh-referencing object component.
 	struct ReferencesGlowSpriteMesh	{
 		/// @brief Glow sprites container.
-		Graph::ReferenceHolder& glowMesh;
+		Graph::Ref::Referend& glowMesh;
 	};
 }
 

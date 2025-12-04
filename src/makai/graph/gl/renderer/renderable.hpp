@@ -14,7 +14,7 @@ namespace Makai::Graph {
 	class Scene;
 
 	/// @brief Renderable object.
-	class Renderable: public AGraphic, public ReferenceHolder, public Vertebrate<64> {
+	class Renderable: public AGraphic, public Ref::Referend, public Vertebrate<64> {
 	public:
 		/// @brief Latest renderable object definition file version supported.
 		constexpr static usize VERSION = 0;
@@ -121,7 +121,7 @@ namespace Makai::Graph {
 
 	private:
 		friend class Scene;
-		friend class IReference;
+		friend struct Ref::IReference;
 
 		/// @brief Whether the object has been baked.	
 		bool baked	= false;

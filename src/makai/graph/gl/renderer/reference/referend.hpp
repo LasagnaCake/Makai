@@ -1,13 +1,14 @@
 #ifndef MAKAILIB_GRAPH_RENDERER_REFERENCE_REFEREND_H
 #define MAKAILIB_GRAPH_RENDERER_REFERENCE_REFEREND_H
 
-#include "reference.hpp"
 #include "shape.hpp"
 
+/// @brief Graphical object references.
 namespace Makai::Graph::Ref {
+	/// @brief Reference holder.
 	struct Referend {
 		/// @brief Triangle storage container type.
-		using TriangleBank = List<Triangle>;
+		using TriangleBank = List<Makai::Graph::Triangle>;
 
 		/// @brief Constructs the reference holder.
 		/// @param triangles Reference to triangle bank.
@@ -85,7 +86,7 @@ namespace Makai::Graph::Ref {
 		void unbindReference(IReference& ref);
 
 		/// @brief References bound to this object.
-		List<IReference*>	references;
+		List<ref<IReference>>	references;
 
 		friend class IReference;
 

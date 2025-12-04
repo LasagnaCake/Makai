@@ -3,6 +3,7 @@
 
 #include "core.hpp"
 
+/// @brief Graphical object references.
 namespace Makai::Graph::Ref {
 	/// @brief Generic shape reference.
 	/// @tparam N Triangle count.

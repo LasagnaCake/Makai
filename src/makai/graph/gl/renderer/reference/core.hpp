@@ -6,13 +6,14 @@
 #include "../../vertex.hpp"
 #include "../../../color/color.hpp"
 
+/// @brief Graphical object references.
 namespace Makai::Graph::Ref {
-	/// @brief Graphical reference holder.
+	/// @brief Reference holder.
 	struct Referend;
-	/// @brief Graphical reference holder shape reference interface.
+	/// @brief Reference holder shape reference interface.
 	struct IReference;
 
-	/// @brief Graphical reference holder shape reference interface.
+	/// @brief GReference holder shape reference interface.
 	struct IReference {
 		/// @brief Triangle range associated with the reference.
 		struct BoundRange {
@@ -80,7 +81,7 @@ namespace Makai::Graph::Ref {
 		virtual Handle<IReference> transform()	= 0;
 		
 	protected:
-		friend class ReferenceHolder;
+		friend struct Referend;
 
 		/// @brief Bound triangles.
 		BoundRange const 	triangles;

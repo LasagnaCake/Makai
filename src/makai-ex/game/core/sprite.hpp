@@ -6,7 +6,7 @@
 /// @brief Game extensions.
 namespace Makai::Ex::Game {
 	/// @brief Animated sprite type.
-	using Sprite = Graph::AnimatedPlaneRef;
+	using Sprite = Graph::Ref::SpritePlane;
 
 	/// @brief Sprite instance type.
 	using SpriteInstance	= Makai::Instance<Sprite>;
@@ -14,14 +14,14 @@ namespace Makai::Ex::Game {
 	using SpriteHandle		= Makai::Handle<Sprite>;
 
 	/// @brief Three-patch (three-slice) shape reference.
-	struct ThreePatchRef: Graph::ShapeRef<6> {
+	struct ThreePatchRef: Graph::Ref::Shape<6> {
 		/// @brief Constructs the reference.
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
 		ThreePatchRef(
 			BoundRange const& triangles,
-			Graph::ReferenceHolder& parent
-		): ShapeRef<6>(triangles, parent) {
+			Graph::Ref::Referend& parent
+		): Ref::Shape<6>(triangles, parent) {
 			init(head, {0, 1});
 			init(body, {2, 3});
 			init(tail, {4, 5});
