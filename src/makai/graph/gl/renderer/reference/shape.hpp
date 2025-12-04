@@ -40,14 +40,13 @@ namespace Makai::Graph::Ref {
 		/// @brief Transformation.
 		Transform3D local;
 
-	private:
-
+	protected:
 		/// @brief Applies the local transformation matrix to all the vertices.
 		void applyTransform() {
 			Matrix4x4 tmat(local);
 			Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
 			for (auto& triangle: triangles)
-				for (auto& vert: verts) 
+				for (auto& vert: triangle.verts) 
 					if (visible) {
 						vert.position	= tmat * Vector4(vert.position, 1);
 						vert.normal		= nmat * vert.normal;

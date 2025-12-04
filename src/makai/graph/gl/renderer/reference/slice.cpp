@@ -1,19 +1,19 @@
-#include "slice.cpp"
+#include "slice.hpp"
 
 using namespace Makai::Graph::Ref;
 
-Slice<2>::setBaseShape() {
+void Slice<2>::setBaseShape() {
 	
 }
 
-Slice<3>::setBaseShape() {
+void Slice<3>::setBaseShape() {
 	
 }
 
-Slice<4>::setBaseShape() {
+void Slice<4>::setBaseShape() {
 	
 }
 
-Slice<9>::setBaseShape() {
+void Slice<9>::setBaseShape() {
 	
 }

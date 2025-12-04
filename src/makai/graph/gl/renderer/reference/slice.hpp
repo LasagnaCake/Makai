@@ -3,6 +3,7 @@
 
 #include "shape.hpp"
 
+/// @brief Graphical object references.
 namespace Makai::Graph::Ref {
 	template <usize N>
 	struct ASliceBase: AShape<N * 2> {
@@ -21,6 +22,9 @@ namespace Makai::Graph::Ref {
 
 	protected:
 		virtual void setBaseShape() = 0;
+	
+	private:
+		using AShape<N * 2>::applyTransform;
 	};
 
 	template <usize N> struct Slice;
