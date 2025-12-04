@@ -174,7 +174,8 @@ public:
 
 	/// @brief Constructs the matrix's main diagonal from a vector.
 	/// @param vec Vector to use.
-	constexpr Matrix(Vector2 const& vec) {
+	constexpr Matrix(Vector2 const& vec)
+	requires (Type::Different<DataType, Vector2>) {
 		static_assert(R >= 2 && C >= 1, "Matrix is not a valid representation of a 2D vector!");
 		data[C-1][R-1] = 1;
 		data[C-1][0] = vec.x;
@@ -183,7 +184,8 @@ public:
 
 	/// @brief Constructs the matrix's main diagonal from a vector.
 	/// @param vec Vector to use.
-	constexpr Matrix(Vector3 const& vec) {
+	constexpr Matrix(Vector3 const& vec)
+	requires (Type::Different<DataType, Vector3>) {
 		static_assert(R >= 3 && C >= 1, "Matrix is not a valid representation of a 3D vector!");
 		data[C-1][R-1] = 1;
 		data[C-1][0] = vec.x;
@@ -193,7 +195,8 @@ public:
 
 	/// @brief Constructs the matrix's main diagonal from a vector.
 	/// @param vec Vector to use.
-	constexpr Matrix(Vector4 const& vec) {
+	constexpr Matrix(Vector4 const& vec)
+	requires (Type::Different<DataType, Vector4>) {
 		static_assert(R >= 4 && C >= 1, "Matrix is not a valid representation of a 4D vector!");
 		data[C-1][R-1] = 1;
 		data[C-1][0] = vec.x;
@@ -657,7 +660,8 @@ public:
 	/// @param vec Vector to add.
 	/// @return Result of the operation.
 	/// @brief Requires matrix to be 2 x 1.
-	constexpr SelfType operator+(Vector2 const& vec) const {
+	constexpr SelfType operator+(Vector2 const& vec) const
+	requires (Type::Different<DataType, Vector2>) {
 		static_assert(R == 2 && C == 1, "Matrix size is invalid!");
 		return (*this) + SelfType(vec);
 	}
@@ -666,7 +670,8 @@ public:
 	/// @param vec Vector to add.
 	/// @return Result of the operation.
 	/// @brief Requires matrix to be 3 x 1.
-	constexpr SelfType operator+(Vector3 const& vec) const {
+	constexpr SelfType operator+(Vector3 const& vec) const
+	requires (Type::Different<DataType, Vector3>) {
 		static_assert(R == 3 && C == 1, "Matrix size is invalid!");
 		return (*this) + SelfType(vec);
 	}
@@ -675,7 +680,8 @@ public:
 	/// @param vec Vector to add.
 	/// @return Result of the operation.
 	/// @brief Requires matrix to be 4 x 1.
-	constexpr SelfType operator+(Vector4 const& vec) const {
+	constexpr SelfType operator+(Vector4 const& vec) const
+	requires (Type::Different<DataType, Vector4>) {
 		static_assert(R == 4 && C == 1, "Matrix size is invalid!");
 		return (*this) + SelfType(vec);
 	}
@@ -716,7 +722,8 @@ public:
 	/// @param vec Vector to subtract.
 	/// @return Result of the operation.
 	/// @brief Requires matrix to be 2 x 1.
-	constexpr SelfType operator-(Vector2 const& vec) const {
+	constexpr SelfType operator-(Vector2 const& vec) const
+	requires (Type::Different<DataType, Vector2>) {
 		static_assert(R == 2 && C == 1, "Matrix size is invalid!");
 		return (*this) - SelfType(vec);
 	}
@@ -725,7 +732,8 @@ public:
 	/// @param vec Vector to subtract.
 	/// @return Result of the operation.
 	/// @brief Requires matrix to be 3 x 1.
-	constexpr SelfType operator-(Vector3 const& vec) const {
+	constexpr SelfType operator-(Vector3 const& vec) const
+	requires (Type::Different<DataType, Vector3>) {
 		static_assert(R == 3 && C == 1, "Matrix size is invalid!");
 		return (*this) - SelfType(vec);
 	}
@@ -734,7 +742,8 @@ public:
 	/// @param vec Vector to subtract.
 	/// @return Result of the operation.
 	/// @brief Requires matrix to be 4 x 1.
-	constexpr SelfType operator-(Vector4 const& vec) const {
+	constexpr SelfType operator-(Vector4 const& vec) const
+	requires (Type::Different<DataType, Vector4>) {
 		static_assert(R == 4 && C == 1, "Matrix size is invalid!");
 		return (*this) - SelfType(vec);
 	}
@@ -770,7 +779,8 @@ public:
 	/// @param vec Vector to multiply.
 	/// @return Result of the operation.
 	/// @note Requires row count to be 2.
-	constexpr Matrix<R, 1, DataType> operator*(Vector2 const& vec) const {
+	constexpr Matrix<R, 1, DataType> operator*(Vector2 const& vec) const
+	requires (Type::Different<DataType, Vector2>) {
 		static_assert(R == 2, "Matrix row count is invalid!");
 		return (*this) * Matrix<R, 1, DataType>(vec);
 	}
@@ -779,7 +789,8 @@ public:
 	/// @param vec Vector to multiply.
 	/// @return Result of the operation.
 	/// @note Requires row count to be 3.
-	constexpr Matrix<R, 1, DataType> operator*(Vector3 const& vec) const {
+	constexpr Matrix<R, 1, DataType> operator*(Vector3 const& vec) const
+	requires (Type::Different<DataType, Vector3>) {
 		static_assert(R == 3, "Matrix row count is invalid!");
 		return (*this) * Matrix<R, 1, DataType>(vec);
 	}
@@ -788,7 +799,8 @@ public:
 	/// @param vec Vector to multiply.
 	/// @return Result of the operation.
 	/// @note Requires row count to be 4.
-	constexpr Matrix<R, 1, DataType> operator*(Vector4 const& vec) const {
+	constexpr Matrix<R, 1, DataType> operator*(Vector4 const& vec) const
+	requires (Type::Different<DataType, Vector4>) {
 		static_assert(R == 4, "Matrix row count is invalid!");
 		return (*this) * Matrix<R, 1, DataType>(vec);
 	}
@@ -798,7 +810,7 @@ public:
 	/// @return Result of the operation.
 	/// @note Requires matrix to be a valid 3D transformation matrix.
 	constexpr SelfType operator*(Transform3D const& trans) const
-	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C>  {
+	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		static_assert(R == 4, "Matrix is not a valid representation of a 3D transform!");
 		return (*this) * SelfType(trans);
 	}
@@ -863,7 +875,8 @@ public:
 	/// @param vec Vector to add.
 	/// @return Reference to self.
 	/// @note Requires matrix to be 2 x 1.
-	constexpr SelfType& operator+=(Vector2 const& vec) {
+	constexpr SelfType& operator+=(Vector2 const& vec)
+	requires (Type::Different<DataType, Vector2>) {
 		static_assert(R == 2 && C == 1, "Matrix size is invalid!");
 		return (*this) += SelfType(vec);
 	}
@@ -872,7 +885,8 @@ public:
 	/// @param vec Vector to add.
 	/// @return Reference to self.
 	/// @note Requires matrix to be 3 x 1.
-	constexpr SelfType& operator+=(Vector3 const& vec) {
+	constexpr SelfType& operator+=(Vector3 const& vec)
+	requires (Type::Different<DataType, Vector3>) {
 		static_assert(R == 3 && C == 1, "Matrix size is invalid!");
 		return (*this) += SelfType(vec);
 	}
@@ -881,7 +895,8 @@ public:
 	/// @param vec Vector to add.
 	/// @return Reference to self.
 	/// @note Requires matrix to be 4 x 1.
-	constexpr SelfType& operator+=(Vector4 const& vec) {
+	constexpr SelfType& operator+=(Vector4 const& vec)
+	requires (Type::Different<DataType, Vector4>) {
 		static_assert(R == 4 && C == 1, "Matrix size is invalid!");
 		return (*this) += SelfType(vec);
 	}
@@ -910,7 +925,8 @@ public:
 	/// @param vec Vector to subtract.
 	/// @return Reference to self.
 	/// @note Requires matrix to be 2 x 1.
-	constexpr SelfType& operator-=(Vector2 const& vec) {
+	constexpr SelfType& operator-=(Vector2 const& vec)
+	requires (Type::Different<DataType, Vector2>) {
 		static_assert(R == 2 && C == 1, "Matrix size is invalid!");
 		return (*this) -= SelfType(vec);
 	}
@@ -919,7 +935,8 @@ public:
 	/// @param vec Vector to subtract.
 	/// @return Reference to self.
 	/// @note Requires matrix to be 3 x 1.
-	constexpr SelfType operator-=(Vector3 const& vec) {
+	constexpr SelfType operator-=(Vector3 const& vec)
+	requires (Type::Different<DataType, Vector3>) {
 		static_assert(R == 3 && C == 1, "Matrix size is invalid!");
 		return (*this) -= SelfType(vec);
 	}
@@ -928,7 +945,8 @@ public:
 	/// @param vec Vector to subtract.
 	/// @return Reference to self.
 	/// @note Requires matrix to be 4 x 1.
-	constexpr SelfType& operator-=(Vector4 const& vec) {
+	constexpr SelfType& operator-=(Vector4 const& vec)
+	requires (Type::Different<DataType, Vector4>) {
 		static_assert(R == 4 && C == 1, "Matrix size is invalid!");
 		return (*this) -= SelfType(vec);
 	}

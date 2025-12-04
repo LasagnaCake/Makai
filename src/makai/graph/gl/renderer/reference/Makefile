@@ -10,7 +10,7 @@ INCLUDES := $(INC_SDL) $(INC_STB) $(INC_OPENGL)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, arrow core line plane triangle referend slice)
+	$(call compile-all, arrow core line plane triangle referend patch)
 endef
 
 all: debug release
