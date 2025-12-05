@@ -103,14 +103,14 @@ namespace Makai::Graph::Ref {
 	};
 	
 	/// @brief Legacy animation plane reference.
-	struct [[deprecated("Please use FractionSheetPlane instead!")]]
+	struct [[deprecated("Please use FractionTilePlane instead!")]]
 	LegacyAnimatedPlane: Plane {
 	public:
 		using Plane::Plane;
 		/// @brief Spritesheet frame.
 		Vector2 frame;
 		/// @brief Spritesheet size.
-		Vector2 size = Vector2::ONE();
+		Vector2 size = 1;
 
 	protected:
 		/// @brief Called when the reference's transforms are applied.
@@ -122,7 +122,7 @@ namespace Makai::Graph::Ref {
 	public:
 		using Plane::Plane;
 		/// @brief Spritesheet size.
-		Math::IntVector2 size;
+		Math::IntVector2 size = 1;
 	};
 	
 	/// @brief Basic spritesheet plane reference that supports fractioned sizes.
@@ -130,18 +130,7 @@ namespace Makai::Graph::Ref {
 	public:
 		using Plane::Plane;
 		/// @brief Spritesheet size.
-		Vector2 size;
-	};
-
-	/// @brief Tiled plane reference that supports fractioned sizes.
-	struct FractionTilePlane: FractionSheetPlane {
-	public:
-		/// @brief Tile.
-		Vector2 tile = Vector2::ONE();
-
-	protected:
-		/// @brief Called when the reference's transforms are applied.
-		void onTransform() override;
+		Vector2 size = 1;
 	};
 	
 	/// @brief Tiled plane reference.
@@ -149,6 +138,17 @@ namespace Makai::Graph::Ref {
 	public:
 		/// @brief Tile.
 		Math::IntVector2 tile;
+	protected:
+		/// @brief Called when the reference's transforms are applied.
+		void onTransform() override;
+	};
+
+	/// @brief Tiled plane reference that supports fractioned sizes & tiles.
+	struct FractionTilePlane: FractionSheetPlane {
+	public:
+		/// @brief Tile.
+		Vector2 tile;
+
 	protected:
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
@@ -166,7 +166,7 @@ namespace Makai::Graph::Ref {
 	
 	/// @brief Type must be a plane reference of some kind.
 	template<class T>
-	concept PlaneType	= Makai::Type::Derived<T, Plane>;
+	concept PlaneType = Makai::Type::Derived<T, Plane>;
 }
 
 #endif
