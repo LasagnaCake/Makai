@@ -3,7 +3,9 @@
 using namespace Makai::Graph::Ref;
 
 Makai::Handle<AReference> Arrow::reset() {
-	setBaseShape();
+	for (auto& triangle: triangles)
+		for (auto& vert: triangle.verts)
+			vert.position = 0; 
 	return this;
 }
 
@@ -14,6 +16,7 @@ Makai::Handle<AReference> Arrow::transform() {
 	Makai::Math::Mat3 nmat(tmat.transposed().inverted().truncated(3, 3));
 	for (auto& triangle: triangles)
 		for (auto& vert: triangle.verts) {
+			vert.normal = Makai::Vector3::FRONT();
 			if (visible) {
 				vert.position	= tmat * Makai::Math::Vector4(vert.position, 1);
 				vert.normal		= nmat * vert.normal;

@@ -9,20 +9,20 @@ Plane::Plane(
 	Referend& parent
 ): AShape<2>(tris, parent) {
 	// Setup plane
-	this->setOrigin(
+	setOrigin(
 		Vector3(-1.0, +1.0, 0.0),
 		Vector3(+1.0, +1.0, 0.0),
 		Vector3(-1.0, -1.0, 0.0),
 		Vector3(+1.0, -1.0, 0.0)
 	);
-	this->setUV(
+	setUV(
 		Vector2(+0.0, +1.0),
 		Vector2(+1.0, +1.0),
 		Vector2(+0.0, +0.0),
 		Vector2(+1.0, +0.0)
 	);
-	this->setColor();
-	this->setNormal(
+	setColor();
+	setNormal(
 		Vector3(+0.0, +0.0, -1.0)
 	);
 }

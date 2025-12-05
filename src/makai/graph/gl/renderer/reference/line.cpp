@@ -8,6 +8,7 @@ Makai::Handle<AReference> Line::transform() {
 	Makai::Math::Mat4 tmat(local);
 	Makai::Math::Mat3 nmat(tmat.transposed().inverted().truncated(3, 3));
 	for (auto& vert: plane) {
+		vert.normal = Makai::Vector3::FRONT();
 		if (visible) {
 			vert.position	= tmat * Makai::Math::Vector4(vert.position, 1);
 			vert.normal		= nmat * vert.normal;

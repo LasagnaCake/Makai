@@ -29,6 +29,9 @@ static void updatePatch(
 	for (usize i = 0; i < columns; ++i)
 		for (usize j = 0; j < rows; ++j)
 			updatePlane(triangles, shape, i, j, columns);
+	for (auto& tri: triangles)
+		for (auto& vert: tri.verts)
+			vert.normal = Makai::Vector3::FRONT();
 }
 
 static void offsetBy(
