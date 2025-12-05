@@ -36,15 +36,31 @@ namespace Meta {
 	template <usize N, typename... Types>
 	using NthType = typename Impl::NthInPack<N, Types...>::Type;
 
+	/// @brief Returns the Nth type in a series of types.
+	/// @tparam ...Types Types.
+	/// @tparam N Type to locate.
+	template <usize N, typename... Types>
+	using Select = NthType<N, Types...>;
+
 	/// @brief Returns the first type in a series of types.
 	/// @tparam ...Types Types.
 	template <typename... Types>
-	using FirstType = typename Impl::NthInPack<0, Types...>::Type;
+	using FirstType = Select<0, Types...>;
+
+	/// @brief Returns the first type in a series of types.
+	/// @tparam ...Types Types.
+	template <typename... Types>
+	using First = FirstType<Types...>;
 
 	/// @brief Returns the last type in a series of types.
 	/// @tparam ...Types Types.
 	template<typename... Types>
-	using LastType = typename Impl::NthInPack<sizeof...(Types)-1, Types...>::Type;
+	using LastType = Select<sizeof...(Types)-1, Types...>;
+
+	/// @brief Returns the last type in a series of types.
+	/// @tparam ...Types Types.
+	template<typename... Types>
+	using Last = LastType<Types...>;
 
 	/// @brief Creates a class that inherits all of the given types.
 	/// @tparam ...Types Types.

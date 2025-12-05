@@ -6,72 +6,187 @@
 
 /// @brief Graphical object references.
 namespace Makai::Graph::Ref {
+	/// @brief Implementation details.
+	namespace Impl {
+		/// @brief Builds a patch.
+		/// @param triangle Triangles to build patch on.
+		/// @param offset Offset to apply to the patch's position.
+		/// @param sizes Patch sizing details.
+		/// @param rows Patch row count.
+		/// @param columns Patch column count.
+		void makePatch(
+			AReference::BoundRange const&		triangles,
+			Makai::Vector3 const&				offset,
+			Span<Makai::Vector2 const> const&	sizes,
+			usize const							rows,
+			usize const							columns
+		);
+
+		/// @brief Sets a patch's UVs.
+		/// @param triangle Triangles in the patch.
+		/// @param uvs Patch UV details.
+		/// @param rows Patch row count.
+		/// @param columns Patch column count.
+		void setPatchUVs(
+			AReference::BoundRange const&		triangles,
+			Span<Makai::Vector2 const> const&	uvs,
+			usize const							rows,
+			usize const							columns
+		);
+
+		/// @brief Sets a patch's colors.
+		/// @param triangle Triangles in the patch.
+		/// @param colors Patch color details.
+		/// @param rows Patch row count.
+		/// @param columns Patch column count.
+		void setPatchColors(
+			AReference::BoundRange const&		triangles,
+			Span<Makai::Vector4 const> const&	colors,
+			usize const							rows,
+			usize const							columns
+		);
+	}
+
+	/// @brief Patch reference base.
+	/// @tparam R Row count.
+	/// @tparam C Column count.
 	template <usize R, usize C>
-	struct APatchBase: AShape<(R + C) * 2> {
-		static_assert(R  > 0 && C > 0, "Row & column count must not be zero!");
+	struct PatchBase: AShape<(R + C) * 2> {
+		using AShape<(R + C) * 2>::AShape;
+
+		/// @brief Row count.
+		constexpr static usize const ROWS		= R;
+		/// @brief Column count.
+		constexpr static usize const COLUMNS	= C;
+
+		static_assert(ROWS  > 0 && COLUMNS > 0, "Row & column count must not be zero!");
+		static_assert((ROWS != COLUMNS) || (ROWS > 1), "Patch cannot be 1 x 1!");
+
+		/// @brief Patch parameters.
+		/// @tparam T Parameter type.
 		template <class T>
-		using Parameters = As<T[C+1][R+1]>;
+		using Parameters = As<T[COLUMNS*2][ROWS*2]>;
 
-		using ScaleType = Meta::DualType<(R == 1), float, Vector2>;
+		/// @brief Patch scale type.
+		using ScaleType = Meta::If<(ROWS == 1), float, Vector2>;
+		
+		/// @brief Patch positions.
+		using Positions = As<Vector3[(COLUMNS+1)][(ROWS+1)]>;
+		
+		/// @brief Patch sizes.
+		using Sizes		= ScaleType[C];
+		/// @brief Patch UVs.
+		using UVs		= Parameters<Vector2>;
+		/// @brief Patch colors.
+		using Colors	= Parameters<Vector4>;
 
-		ScaleType			align = 0;
-		As<ScaleType[C]>	sizes;
-		Parameters<Vector2>	uvs;
-		Parameters<Vector4>	colors;
+		/// @brief Patch size for single-row types.
+		struct ShapeSize1D {
+			Sizes sizes		= {1};
+			float height	= 1;
+		};
+		
+		/// @brief Patch size for multi-row types.
+		struct ShapeSize2D {
+			Sizes sizes		= {1};
+		};
 
+		/// @brief Patch shape details.
+		struct Shape: Meta::If<(ROWS > 1), ShapeSize2D, ShapeSize1D> {
+			/// @brief Patch alignment against local origin.
+			ScaleType	align	= 0;
+			/// @brief Patch UVs.
+			UVs			uvs		= {0};
+			/// @brief Patch colors.
+			Colors		colors	= {1};
+		};
+
+		/// @brief Patch shape details.
+		Shape shape;
+
+		/// @brief Applies transformations to the bound triangles.
+		/// @return Handle to self.
 		Handle<AReference> transform() override final {
 			setBaseShape();
 			applyTransform();
 			return this;
 		}
 
+		/// @brief Resets transformations applied to the bound triangles.
+		/// @return Handle to self.
 		Handle<AReference> reset() override final {
-			setBaseShape();
-			applyTransform();
+			for (auto& triangle: triangles)
+				for (auto& vert: triangle.verts) 
+					vert.position = 0;
 			return this;
 		}
+		
+		/// @brief Returns the patch's total size.
+		/// @return Total size.
+		ScaleType size() const {
+			ScaleType totalSize = 0;
+			for (auto const& size: shape.sizes)
+				totalSize += size;
+			return totalSize;
+		}
 
-	protected:
-		virtual void setBaseShape() = 0;
-	
+		/// @brief Builds the patch.
+		/// @param triangles Triangles in the patch.
+		/// @param size Total patch size.
+		/// @param shape Patch shape details.
+		static void build(
+			AReference::BoundRange const&	triangles,
+			Makai::Vector3 const&			size,
+			Shape const&					shape
+		) {
+			if constexpr (Type::Derived<Shape, ShapeSize1D>) {
+				As<Vector2[C]> sizes;
+				for (usize i = 0; i < C; ++i) {
+					sizes[i].y = shape.height;
+					sizes[i].x = shape.sizes[i];
+					Impl::makePatch(triangles, -size * shape.align, sizes, ROWS, COLUMNS);
+				}
+			} else Impl::makePatch(triangles, -size * shape.align, shape.sizes, ROWS, COLUMNS);
+			Impl::setPatchUVs(triangles, shape.uvs, ROWS, COLUMNS);
+			Impl::setPatchColors(triangles, shape.colors, ROWS, COLUMNS);
+		}
+
 	private:
+		void setBaseShape() {
+			build(triangles, size(), shape);
+		}
+
 		using AShape<(R + C) * 2>::applyTransform;
+		using AShape<(R + C) * 2>::triangles;
 	};
 
+	/// @brief Patch reference.
 	template <usize R, usize C> struct Patch;
 
+	/// @brief Patch row reference.
 	template <usize N> using PatchRow		= Patch<1, N>;
+	/// @brief Patch square reference.
 	template <usize N> using PatchSquare	= Patch<N, N>;
 
-	template <> struct Patch<1, 1>: Plane {};
+	/// @brief 1x1 patch reference.
+	template <> struct Patch<1, 1>: Plane {using Plane::Plane;};
 
-	template <> struct Patch<1, 2>: APatchBase<1, 2> {
-		float align	= 0;
-	private:
-		void setBaseShape() override final;
-	};
+	/// @brief 2x1 patch reference.
+	template <> struct Patch<1, 2>: PatchBase<1, 2> {using PatchBase<1, 2>::PatchBase;};
+	/// @brief 3x1 patch reference.
+	template <> struct Patch<1, 3>: PatchBase<1, 3> {using PatchBase<1, 3>::PatchBase;};
+	/// @brief 2x2 patch reference.
+	template <> struct Patch<2, 2>: PatchBase<2, 2> {using PatchBase<2, 2>::PatchBase;};
+	/// @brief 3x3 patch reference.
+	template <> struct Patch<3, 3>: PatchBase<3, 3> {using PatchBase<3, 3>::PatchBase;};
 
-	template <> struct Patch<1, 3>: APatchBase<1, 3> {
-		float align	= 0;
-	private:
-		void setBaseShape() override final;
-	};
-	
-	template <> struct Patch<2, 2>: APatchBase<2, 2> {
-		Vector2 align = 0;
-	private:
-		void setBaseShape() override final;
-	};
-	
-	template <> struct Patch<3, 3>: APatchBase<3, 3> {
-		Vector2 align = 0;
-	private:
-		void setBaseShape() override final;
-	};
-
+	/// @brief "Two-Patch" reference.
 	using TwoPatch1D	= PatchRow<2>;
+	/// @brief "Three-Patch" reference.
 	using ThreePatch1D	= PatchRow<3>;
+	/// @brief "Four-Patch" reference.
 	using FourPatch2D	= PatchSquare<2>;
+	/// @brief "Nine-Patch" reference.
 	using NinePatch2D	= PatchSquare<3>;
 }
 

@@ -102,15 +102,63 @@ namespace Makai::Graph::Ref {
 		virtual void onTransform() {};
 	};
 	
-	/// @brief Spritesheet plane reference.
-	struct SpritePlane: Plane {
+	/// @brief Legacy animation plane reference.
+	struct [[deprecated("Please use FractionSheetPlane instead!")]]
+	LegacyAnimatedPlane: Plane {
 	public:
 		using Plane::Plane;
 		/// @brief Spritesheet frame.
 		Vector2 frame;
 		/// @brief Spritesheet size.
-		Vector2 size = Vector2(1);
+		Vector2 size = Vector2::ONE();
 
+	protected:
+		/// @brief Called when the reference's transforms are applied.
+		void onTransform() override;
+	};
+	
+	/// @brief Basic spritesheet plane reference.
+	struct SheetPlane: Plane {
+	public:
+		using Plane::Plane;
+		/// @brief Spritesheet size.
+		Math::IntVector2 size;
+	};
+	
+	/// @brief Basic spritesheet plane reference that supports fractioned sizes.
+	struct FractionSheetPlane: Plane {
+	public:
+		using Plane::Plane;
+		/// @brief Spritesheet size.
+		Vector2 size;
+	};
+
+	/// @brief Tiled plane reference that supports fractioned sizes.
+	struct FractionTilePlane: FractionSheetPlane {
+	public:
+		/// @brief Tile.
+		Vector2 tile = Vector2::ONE();
+
+	protected:
+		/// @brief Called when the reference's transforms are applied.
+		void onTransform() override;
+	};
+	
+	/// @brief Tiled plane reference.
+	struct TilePlane: SheetPlane {
+	public:
+		/// @brief Tile.
+		Math::IntVector2 tile;
+	protected:
+		/// @brief Called when the reference's transforms are applied.
+		void onTransform() override;
+	};
+	
+	/// @brief Animation plane reference.
+	struct AnimationPlane: SheetPlane {
+	public:
+		/// @brief Animation frame.
+		usize frame;
 	protected:
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;

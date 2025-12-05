@@ -47,6 +47,13 @@ namespace Meta {
 	/// @tparam TQualifier<class> Qualifier to apply.
 	template<class T, template <class> class TQualifier>
 	using Apply = typename Impl::ApplyType<T, TQualifier>::Type;
+
+	/// @brief Decays to either `TTrue` or `TFalse`, depending on the condition.
+	/// @tparam TTrue Type to decay to when `COND` is true.
+	/// @tparam TFalse Type to decay to when `COND` is false.
+	/// @tparam COND Condition to check for.
+	template<bool COND, class TTrue, class TFalse>
+	using If = Meta::DualType<COND, TTrue, TFalse>;
 }
 
 CTL_NAMESPACE_END

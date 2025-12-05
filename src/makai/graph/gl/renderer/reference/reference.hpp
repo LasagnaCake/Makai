@@ -7,7 +7,7 @@
 #include "triangle.hpp"
 #include "line.hpp"
 #include "arrow.hpp"
-#include "slice.hpp"
+#include "patch.hpp"
 #include "referend.hpp"
 
 #endif

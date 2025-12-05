@@ -53,11 +53,11 @@ Makai::Handle<Plane> Plane::setOrigin(Transform3D const& trans) {
 }
 
 Makai::Handle<Plane> Plane::setUV(
-		Vector2 const& tlUV,
-		Vector2 const& trUV,
-		Vector2 const& blUV,
-		Vector2 const& brUV
-	) {
+	Vector2 const& tlUV,
+	Vector2 const& trUV,
+	Vector2 const& blUV,
+	Vector2 const& brUV
+) {
 	origin[0].uv = (tlUV);
 	origin[1].uv = (trUV);
 	origin[2].uv = (blUV);
@@ -66,11 +66,11 @@ Makai::Handle<Plane> Plane::setUV(
 }
 
 Makai::Handle<Plane> Plane::setColor(
-		Vector4 const& tlCol,
-		Vector4 const& trCol,
-		Vector4 const& blCol,
-		Vector4 const& brCol
-	) {
+	Vector4 const& tlCol,
+	Vector4 const& trCol,
+	Vector4 const& blCol,
+	Vector4 const& brCol
+) {
 	origin[0].color = (tlCol);
 	origin[1].color = (trCol);
 	origin[2].color = (blCol);
@@ -96,9 +96,7 @@ Makai::Handle<Plane> Plane::setNormal(
 	return this;
 }
 
-Makai::Handle<Plane> Plane::setNormal(
-		Vector3 const& n
-	) {
+Makai::Handle<Plane> Plane::setNormal(Vector3 const& n) {
 	setNormal(n, n, n, n);
 	return this;
 }
@@ -151,13 +149,64 @@ Makai::Handle<AReference> Plane::transform() {
 	return this;
 }
 
-void SpritePlane::onTransform() {
+void LegacyAnimatedPlane::onTransform() {
 	if (size.x == 0 || size.y == 0)
 		setUV(0, 0, 0, 0);
-	else setUV(
-		(frame) / size,
-		(frame + Vector2(1, 0)) / size,
-		(frame + Vector2(0, 1)) / size,
-		(frame + Vector2(1)) / size
-	);
+	else {
+		Vector2 const f = frame / size;
+		setUV(
+			f,
+			f + (Vector2::RIGHT()	/ size),
+			f + (Vector2::UP()		/ size),
+			f + (Vector2::ONE()		/ size)
+		);
+	}
+}
+
+void FractionTilePlane::onTransform() {
+	if (size.x == 0 || size.y == 0)
+		setUV(0, 0, 0, 0);
+	else {
+		auto const sz = size;
+		Vector2 const f = tile / sz;
+		setUV(
+			f,
+			f + (Vector2::RIGHT()	/ sz),
+			f + (Vector2::UP()		/ sz),
+			f + (Vector2::ONE()		/ sz)
+		);
+	}
+}
+
+void TilePlane::onTransform() {
+	if (size.x == 0 || size.y == 0)
+		setUV(0, 0, 0, 0);
+	else {
+		auto const sz = size.toVector2();
+		Vector2 const f = tile.toVector2() / sz;
+		setUV(
+			f,
+			f + (Vector2::RIGHT()	/ sz),
+			f + (Vector2::UP()		/ sz),
+			f + (Vector2::ONE()		/ sz)
+		);
+	}
+}
+
+void AnimationPlane::onTransform() {
+	if (size.x == 0 || size.y == 0)
+		setUV(0, 0, 0, 0);
+	else {
+		Vector2 const f = Vector2(
+			frame % size.x,
+			Cast::as<float>(frame) / size.y
+		) / size.toVector2();
+		auto const sz = size.toVector2();
+		setUV(
+			f,
+			f + (Vector2::RIGHT()	/ sz),
+			f + (Vector2::UP()		/ sz),
+			f + (Vector2::ONE()		/ sz)
+		);
+	}
 }

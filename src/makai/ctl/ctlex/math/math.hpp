@@ -3,6 +3,7 @@
 
 #include "ease.hpp"
 #include "vector.hpp"
+#include "intvector.hpp"
 #include "matrix.hpp"
 #include "dynamicmatrix.hpp"
 #include "wave.hpp"

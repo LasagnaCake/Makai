@@ -406,7 +406,7 @@ struct Span:
 	}
 	
 private:
-	constexpr void assertExists() {
+	constexpr void assertExists() const {
 		if (!(contents && count))
 			throw NonexistentValueException("No element range bound to span!");
 	}
