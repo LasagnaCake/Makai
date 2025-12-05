@@ -653,8 +653,8 @@ public:
 	/// @return Absolute vector.
 	constexpr IntVector2 absolute() const {
 		return IntVector2(
-			abs(x),
-			abs(y)
+			CTL::Math::abs(x),
+			CTL::Math::abs(y)
 		);
 	}
 
@@ -666,7 +666,12 @@ public:
 
 	/// @brief Returns the integer vector as a `Vector2`.
 	/// @return Vector as `Vector2`.
-	constexpr Vector2 toVector2() const	{return {x, y};			}
+	constexpr Vector2 toVector2() const	{
+		return {
+			Cast::as<float>(x),
+			Cast::as<float>(y)
+		};
+	}
 
 	/// @brief Returns the integer vector as a `Vector2`.
 	/// @return Vector as `Vector2
@@ -1000,15 +1005,21 @@ public:
 	/// @return Absolute vector.
 	constexpr IntVector3 absolute() const {
 		return IntVector3(
-			abs(x),
-			abs(y),
-			abs(z)
+			CTL::Math::abs(x),
+			CTL::Math::abs(y),
+			CTL::Math::abs(z)
 		);
 	}
 
 	/// @brief Returns the integer vector as a `Vector3`.
 	/// @return Vector as `Vector3`.
-	constexpr Vector3 toVector3() const	{return {x, y, z};		}
+	constexpr Vector3 toVector3() const	{
+		return {
+			Cast::as<float>(x),
+			Cast::as<float>(y),
+			Cast::as<float>(z)
+		};
+	}
 
 	/// @brief Returns the integer vector as a `Vector3`.
 	/// @return Vector as `Vector3`.
@@ -1296,10 +1307,10 @@ public:
 	/// @return Absolute vector.
 	constexpr IntVector4 absolute() const {
 		return IntVector4(
-			abs(x),
-			abs(y),
-			abs(z),
-			abs(w)
+			CTL::Math::abs(x),
+			CTL::Math::abs(y),
+			CTL::Math::abs(z),
+			CTL::Math::abs(w)
 		);
 	}
 
@@ -1329,7 +1340,14 @@ public:
 
 	/// @brief Returns the integer vector as a `Vector4`.
 	/// @return Vector as `Vector4`.
-	constexpr Vector4 toVector4() const	{return {x, y, z, w};	}
+	constexpr Vector4 toVector4() const	{
+		return {
+			Cast::as<float>(x),
+			Cast::as<float>(y),
+			Cast::as<float>(z),
+			Cast::as<float>(w)
+		};
+	}
 
 	/// @brief Returns the integer vector as a `Vector4`.
 	/// @return Vector as `Vector4`.

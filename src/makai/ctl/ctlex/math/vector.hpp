@@ -652,8 +652,8 @@ class Vector2: Ordered {
 		/// @return Absolute vector.
 		constexpr Vector2 absolute() const {
 			return Vector2(
-				abs(x),
-				abs(y)
+				CTL::Math::abs(x),
+				CTL::Math::abs(y)
 			);
 		}
 
@@ -991,9 +991,9 @@ class Vector3: Ordered {
 		/// @return Absolute vector.
 		constexpr Vector3 absolute() const {
 			return Vector3(
-				abs(x),
-				abs(y),
-				abs(z)
+				CTL::Math::abs(x),
+				CTL::Math::abs(y),
+				CTL::Math::abs(z)
 			);
 		}
 };
@@ -1279,10 +1279,10 @@ class Vector4: Ordered {
 		/// @return Absolute vector.
 		constexpr Vector4 absolute() const {
 			return Vector4(
-				abs(x),
-				abs(y),
-				abs(z),
-				abs(w)
+				CTL::Math::abs(x),
+				CTL::Math::abs(y),
+				CTL::Math::abs(z),
+				CTL::Math::abs(w)
 			);
 		}
 

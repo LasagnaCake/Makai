@@ -148,7 +148,6 @@ namespace Makai::Graph::Ref {
 	public:
 		/// @brief Tile.
 		Vector2 tile;
-
 	protected:
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
