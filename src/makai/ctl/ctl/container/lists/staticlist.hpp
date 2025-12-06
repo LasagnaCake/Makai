@@ -510,7 +510,7 @@ private:
 	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz) {
 		if (!p) return;
 		memdestruct(p, sz);
-		contextDeallocate(p, sz);
+		alloc.deallocate(p, sz);
 	}
 
 	constexpr owner<DataType> memcreate(SizeType const sz) {

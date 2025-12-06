@@ -218,46 +218,48 @@ namespace Makai::Ex::Game::Danmaku {
 	};
 
 	/// @brief Sprite container interface.
-	struct ISpriteContainer {
+	struct ASpriteContainer {
 		/// @brief Sprite settings.
 		struct SpriteSetting {
-			/// @brief Sprite frame.
-			Vector2 frame		= 0;
-			/// @brief Sprite sheet size.
-			Vector2 sheetSize	= 16;
+			/// @brief Sprite tile.
+			Math::IntVector2 tile		= 0;
+			/// @brief Spritesheet size.
+			Math::IntVector2 sheetSize	= 16;
 		} sprite;
 
 		/// @brief Sets the sprite's rotation.
 		/// @param angle Rotation angle.
 		/// @return Reference to self.
-		virtual ISpriteContainer& setSpriteRotation(float const angle)	= 0;
+		virtual ASpriteContainer& setSpriteRotation(float const angle)	= 0;
 		/// @brief Returns the sprite's current rotation.
 		/// @return Current sprite rotation.
 		virtual float getSpriteRotation() const							= 0;
 		/// @brief Destructor.
-		virtual ~ISpriteContainer() {}
+		virtual ~ASpriteContainer() {}
 	};
+
+	using ISpriteContainer [[deprecated("Please use ASpriteContainer!")]] = ASpriteContainer;
 
 	/// @brief Three patch shape container component.
 	struct ThreePatchContainer {
 		/// @brief Three-patch frame settings.
 		struct PatchFrame {
 			/// @brief Head frame.
-			Vector2 head = Vector2(0, 0);
+			Math::IntVector2 head = {0, 0};
 			/// @brief Body frame.
-			Vector2 body = Vector2(1, 0);
+			Math::IntVector2 body = {1, 0};
 			/// @brief Tail frame.
-			Vector2 tail = Vector2(2, 0);
+			Math::IntVector2 tail = {2, 0};
 		};
 
 		/// @brief Three-patch shape settings.
 		struct PatchSetting {
 			/// @brief Frame settings.
-			PatchFrame	frame		= {};
+			PatchFrame			frame		= {};
 			/// @brief Sheet size.
-			Vector2		size		= Vector2(3, 8);
+			Math::IntVector2	size		= {3, 8};
 			/// @brief Whether sprite sheet is vertical.
-			bool		vertical	= false;
+			bool				vertical	= false;
 		} patch;
 	};
 

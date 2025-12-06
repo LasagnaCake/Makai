@@ -211,9 +211,9 @@ namespace Makai::Ex::Game::Danmaku {
 		float		internalRotation = 0;
 
 		/// @brief Main sprite.
-		SpriteInstance mainSprite	= nullptr;
+		TileInstance mainSprite	= nullptr;
 		/// @brief Glow sprite.
-		SpriteInstance glowSprite	= nullptr;
+		TileInstance glowSprite	= nullptr;
 
 		/// @brief Item acceleration.
 		Vector2 acceleration = 0;
@@ -251,10 +251,10 @@ namespace Makai::Ex::Game::Danmaku {
 			if (glowSprite) glowSprite->local.scale = 0;
 		}
 
-		void updateSprite(SpriteHandle const& sprite, bool glowSprite = false) {
+		void updateSprite(TileHandle const& sprite, bool glowSprite = false) {
 			if (!sprite) return;
 			sprite->visible = true;
-			sprite->frame	= this->sprite.frame;
+			sprite->tile	= this->sprite.tile;
 			sprite->size	= this->sprite.sheetSize;
 			if (rotateSprite)
 				sprite->local.rotation.z	= trans.rotation + internalRotation;
@@ -380,10 +380,10 @@ namespace Makai::Ex::Game::Danmaku {
 			for (usize i = 0; i < cfg.capacity; ++i) {
 				float const zoff = i / static_cast<float>(cfg.capacity);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
-				all.back().mainSprite = mainMesh.createReference<Graph::Ref::SpritePlane>();
+				all.back().mainSprite = mainMesh.createReference<Graph::Ref::TilePlane>();
 				all.back().mainSprite->local.position.z = -zoff;
 				if (&cfg.mainMesh != &cfg.glowMesh) {
-					all.back().glowSprite = glowMesh.createReference<Graph::Ref::SpritePlane>();
+					all.back().glowSprite = glowMesh.createReference<Graph::Ref::TilePlane>();
 					all.back().glowSprite->local.position.z = -zoff;
 				}
 				all.back().hideSprites();

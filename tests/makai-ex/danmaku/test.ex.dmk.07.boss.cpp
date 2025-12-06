@@ -300,13 +300,13 @@ struct TestPlayer: Danmaku::APlayer {
 		server(server) {
 		body.setRenderLayer(Danmaku::Render::Layer::PLAYER1_LAYER);
 		trans.position = board.center * Makai::Vector2(1, 1.5);
-		input.binds["player/up"] 	= {Makai::Input::KeyCode::KC_UP};
-		input.binds["player/down"]	= {Makai::Input::KeyCode::KC_DOWN};
-		input.binds["player/left"] 	= {Makai::Input::KeyCode::KC_LEFT};
-		input.binds["player/right"]	= {Makai::Input::KeyCode::KC_RIGHT};
-		input.binds["player/focus"]	= {Makai::Input::KeyCode::KC_LEFT_SHIFT};
-		input.binds["player/shot"] 	= {Makai::Input::KeyCode::KC_Z};
-		input.binds["player/bomb"] 	= {Makai::Input::KeyCode::KC_X};
+		input.binds["player/up"] 	= {{Makai::Input::KeyCode::KC_UP}			};
+		input.binds["player/down"]	= {{Makai::Input::KeyCode::KC_DOWN}			};
+		input.binds["player/left"] 	= {{Makai::Input::KeyCode::KC_LEFT}			};
+		input.binds["player/right"]	= {{Makai::Input::KeyCode::KC_RIGHT}		};
+		input.binds["player/focus"]	= {{Makai::Input::KeyCode::KC_LEFT_SHIFT}	};
+		input.binds["player/shot"] 	= {{Makai::Input::KeyCode::KC_Z}			};
+		input.binds["player/bomb"] 	= {{Makai::Input::KeyCode::KC_X}			};
 		velocity = {20, 10};
 		collision()->canCollide	= true;
 		collision()->shape		= collider.as<Danmaku::C2D::IBound2D>();

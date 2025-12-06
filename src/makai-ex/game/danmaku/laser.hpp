@@ -2,6 +2,7 @@
 #define MAKAILIB_EX_GAME_DANMAKU_LASER_H
 
 #include "core.hpp"
+#include "makai/graph/gl/renderer/reference/patch.hpp"
 #include "server.hpp"
 
 namespace Makai::Ex::Game::Danmaku {
@@ -223,23 +224,26 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->local.position		= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale			= trans.scale;
 			Vector4 const spriteColor = color.value * animColor * (fakeOut ? 1 : Graph::Color::alpha(toggleColor));
-			for (usize i: {0, 1, 2, 3}) {
-				Vector2 const uvOffset = Vector2(i&1, (i&2)>>1);
-				sprite->color.head[i] = spriteColor;
-				sprite->color.body[i] = spriteColor;
-				sprite->color.tail[i] = spriteColor;
-				sprite->uv.head[i] = (patch.frame.head + uvOffset) / patch.size;
-				sprite->uv.body[i] = (patch.frame.body + uvOffset) / patch.size;
-				sprite->uv.tail[i] = (patch.frame.tail + uvOffset) / patch.size;
+			for (usize i: {0, 2, 4}) {
+				sprite->shape.colors[i][0]		= spriteColor;
+				sprite->shape.colors[i][1]		= spriteColor;
+				sprite->shape.colors[i+1][0]	= spriteColor;
+				sprite->shape.colors[i+1][1]	= spriteColor;
+				sprite->shape.uvs[i][0]		= (patch.frame.head.toVector2() + Vector2(0, 0)) / patch.size.toVector2();
+				sprite->shape.uvs[i][1]		= (patch.frame.body.toVector2() + Vector2(0, 1)) / patch.size.toVector2();
+				sprite->shape.uvs[i+1][0]	= (patch.frame.head.toVector2() + Vector2(1, 0)) / patch.size.toVector2();
+				sprite->shape.uvs[i+1][1]	= (patch.frame.body.toVector2() + Vector2(1, 1)) / patch.size.toVector2();
 				if (patch.vertical) {
-					sprite->uv.head[i] = sprite->uv.head[i].yx();
-					sprite->uv.body[i] = sprite->uv.body[i].yx();
-					sprite->uv.tail[i] = sprite->uv.tail[i].yx();
+					sprite->shape.uvs[i][0]		= sprite->shape.uvs[i][0].yx();
+					sprite->shape.uvs[i][1]		= sprite->shape.uvs[i][1].yx();
+					sprite->shape.uvs[i+1][0]	= sprite->shape.uvs[i+1][0].yx();
+					sprite->shape.uvs[i+1][1]	= sprite->shape.uvs[i+1][1].yx();
 				}
 			}
-			sprite->size.head = radius.value.x;
-			sprite->size.tail = radius.value.x;
-			sprite->size.body = length.value;
+			sprite->shape.sizes[0]	= radius.value.x;
+			sprite->shape.sizes[1]	= length.value;
+			sprite->shape.sizes[2]	= radius.value.x;
+			sprite->shape.height	= radius.value.y;
 		}
 
 		void updateHitbox() {
@@ -354,7 +358,7 @@ namespace Makai::Ex::Game::Danmaku {
 			for (usize i = 0; i < cfg.capacity; ++i) {
 				float const zoff = i / static_cast<float>(cfg.capacity);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
-				all.back().sprite = mainMesh.createReference<ThreePatchRef>();
+				all.back().sprite = mainMesh.createReference<Graph::Ref::ThreePatch1D>();
 				all.back().sprite->local.position.z = -zoff;
 				all.back().sprite->visible = false;
 				all.back().setCollisionState(false);

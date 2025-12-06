@@ -14,19 +14,19 @@ Danmaku::PlayerConfig cfg = {board, playfield};
 
 struct TestPlayer: Danmaku::APlayer {
 	MkGraph::Renderable body;
-	Makai::Instance<Makai::Ex::Game::ThreePatchRef> sprite;
+	Makai::Instance<Makai::Graph::Ref::ThreePatch1D> sprite;
 
-	TestPlayer(): APlayer(cfg), sprite(body.createReference<Makai::Ex::Game::ThreePatchRef>()) {
+	TestPlayer(): APlayer(cfg), sprite(body.createReference<Makai::Graph::Ref::ThreePatch1D>()) {
 		body.setRenderLayer(Danmaku::Render::Layer::PLAYER1_LAYER);
 		trans.position = board.center;
-		sprite->size.head = 1;
-		sprite->size.body = 1;
-		sprite->size.tail = 1;
-		input.binds["player/up"] 	= {Makai::Input::KeyCode::KC_UP};
-		input.binds["player/down"]	= {Makai::Input::KeyCode::KC_DOWN};
-		input.binds["player/left"] 	= {Makai::Input::KeyCode::KC_LEFT};
-		input.binds["player/right"]	= {Makai::Input::KeyCode::KC_RIGHT};
-		input.binds["player/focus"]	= {Makai::Input::KeyCode::KC_LEFT_SHIFT};
+		sprite->shape.sizes[0] = 1;
+		sprite->shape.sizes[1] = 1;
+		sprite->shape.sizes[2] = 1;
+		input.binds["player/up"] 	= {{Makai::Input::KeyCode::KC_UP}			};
+		input.binds["player/down"]	= {{Makai::Input::KeyCode::KC_DOWN}			};
+		input.binds["player/left"] 	= {{Makai::Input::KeyCode::KC_LEFT}			};
+		input.binds["player/right"]	= {{Makai::Input::KeyCode::KC_RIGHT}		};
+		input.binds["player/focus"]	= {{Makai::Input::KeyCode::KC_LEFT_SHIFT}	};
 		velocity = {20, 10};
 	}
 
@@ -44,7 +44,7 @@ struct TestPlayer: Danmaku::APlayer {
 	void onUpdate(float delta, Makai::App& app) override {
 		if (!active) return;
 		APlayer::onUpdate(delta, app);
-		sprite->size.body = sin(app.getCurrentCycle() / 60.0) + 1;
+		sprite->shape.sizes[1] = sin(app.getCurrentCycle() / 60.0) + 1;
 		if (paused()) return;
 	}
 

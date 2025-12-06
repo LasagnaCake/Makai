@@ -147,8 +147,10 @@ namespace Makai::Graph::Ref {
 					Impl::makePatch(triangles, -size * shape.align, sizes, ROWS, COLUMNS);
 				}
 			} else Impl::makePatch(triangles, -size * shape.align, shape.sizes, ROWS, COLUMNS);
-			Impl::setPatchUVs(triangles, shape.uvs, ROWS, COLUMNS);
-			Impl::setPatchColors(triangles, shape.colors, ROWS, COLUMNS);
+			auto const su = Cast::as<ref<Vector2 const>>(shape.uvs);
+			auto const sc = Cast::as<ref<Vector4 const>>(shape.uvs);
+			Impl::setPatchUVs(triangles, su, ROWS, COLUMNS);
+			Impl::setPatchColors(triangles, sc, ROWS, COLUMNS);
 		}
 
 	private:
