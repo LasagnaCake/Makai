@@ -136,6 +136,7 @@ namespace Makai::Graph::Ref {
 	/// @brief Tiled plane reference.
 	struct TilePlane: SheetPlane {
 	public:
+		using SheetPlane::SheetPlane;
 		/// @brief Tile.
 		Math::IntVector2 tile;
 	protected:
@@ -146,6 +147,7 @@ namespace Makai::Graph::Ref {
 	/// @brief Tiled plane reference that supports fractioned sizes & tiles.
 	struct FractionTilePlane: FractionSheetPlane {
 	public:
+		using FractionSheetPlane::FractionSheetPlane;
 		/// @brief Tile.
 		Vector2 tile;
 	protected:
@@ -156,6 +158,7 @@ namespace Makai::Graph::Ref {
 	/// @brief Animation plane reference.
 	struct AnimationPlane: SheetPlane {
 	public:
+		using SheetPlane::SheetPlane;
 		/// @brief Animation frame.
 		usize frame;
 	protected:
