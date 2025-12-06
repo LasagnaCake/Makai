@@ -1311,9 +1311,10 @@ private:
 	constexpr void destroy(SizeType const count) {
 		CTL_DEVMODE_FN_DECL;
 		if (contents.empty()) return;
+		auto const sz = (count < contents.size()) ? count : contents.size();
 		if constexpr (!Type::Standard<DataType>) {
-			for (auto i = contents.data(); i != (contents.data()+contents.size()); ++i)
-				MX::destruct(i);
+			for (usize i = 0; i < sz; ++i)
+				MX::destruct(contents.data() + i);
 		}
 		contents.free();
 	}
@@ -1322,7 +1323,7 @@ private:
 		CTL_DEVMODE_FN_DECL;
 		auto const newCount = (count < newSize) ? count : newSize;
 		if (!newSize)		dump();
-		else if (!newCount)	contents.resize(newSize);
+		else if (!count)	contents.resize(newSize);
 		else {
 			StorageType buffer;
 			buffer.create(newSize);
