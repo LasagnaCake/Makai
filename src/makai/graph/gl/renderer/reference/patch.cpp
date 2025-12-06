@@ -72,7 +72,7 @@ void Impl::makePatch(
 	usize const columns
 ) {
 	Makai::List<Makai::Vector3> shape;
-	shape.resize((columns+1) * (rows+1));
+	shape.resize((columns+1) * (rows+1), {});
 	buildShape(shape, sizes, rows, columns);
 	offsetBy(shape, offset, rows, columns);
 	updatePatch(triangles, shape, rows, columns);
