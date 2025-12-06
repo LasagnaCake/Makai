@@ -1,7 +1,6 @@
 #ifndef MAKAILIB_GRAPH_RENDERER_REFERENCE_PATCH_H
 #define MAKAILIB_GRAPH_RENDERER_REFERENCE_PATCH_H
 
-#include "makai/ctl/ctl/typetraits/cast.hpp"
 #include "shape.hpp"
 #include "plane.hpp"
 
