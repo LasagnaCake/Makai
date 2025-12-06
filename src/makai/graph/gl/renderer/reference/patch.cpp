@@ -2,7 +2,7 @@
 
 using namespace Makai::Graph::Ref;
 
-#define INDEX(C, R) ((C) * columns + (R))
+#define INDEX(C, R) ((C) + (R) * rows)
 #define TRIANGLE_INDEX(C, R, T) INDEX((C), (R) + (T))
 
 static void updatePlane(
@@ -10,7 +10,7 @@ static void updatePlane(
 	Makai::List<Makai::Vector3>& shape,
 	usize const column,
 	usize const row,
-	usize const columns
+	usize const rows
 ) {
 	triangles[TRIANGLE_INDEX(column, row, 0)].verts[0].position	= shape[INDEX(column, row)];
 	triangles[TRIANGLE_INDEX(column, row, 0)].verts[1].position	= shape[INDEX(column, row+1)];
@@ -28,7 +28,7 @@ static void updatePatch(
 ) {
 	for (usize i = 0; i < columns; ++i)
 		for (usize j = 0; j < rows; ++j)
-			updatePlane(triangles, shape, i, j, columns);
+			updatePlane(triangles, shape, i, j, rows);
 	for (auto& tri: triangles)
 		for (auto& vert: tri.verts)
 			vert.normal = Makai::Vector3::FRONT();
@@ -83,7 +83,7 @@ static void updatePlaneUVs(
 	Makai::Span<Makai::Vector2 const> const& uvs,
 	usize const column,
 	usize const row,
-	usize const columns
+	usize const rows
 ) {
 	triangles[TRIANGLE_INDEX(column, row, 0)].verts[0].uv	= uvs[INDEX(column, row)];
 	triangles[TRIANGLE_INDEX(column, row, 0)].verts[1].uv	= uvs[INDEX(column, row+1)];
@@ -98,7 +98,7 @@ static void updatePlaneColors(
 	Makai::Span<Makai::Vector4 const> const& colors,
 	usize const column,
 	usize const row,
-	usize const columns
+	usize const rows
 ) {
 	triangles[TRIANGLE_INDEX(column, row, 0)].verts[0].color	= colors[INDEX(column, row)];
 	triangles[TRIANGLE_INDEX(column, row, 0)].verts[1].color	= colors[INDEX(column, row+1)];
@@ -116,7 +116,7 @@ void Impl::setPatchUVs(
 ) {
 	for (usize i = 0; i < columns; ++i)
 		for (usize j = 0; j < rows; ++j)
-			updatePlaneUVs(triangles, uvs, i, j, columns);
+			updatePlaneUVs(triangles, uvs, i, j, rows);
 }
 
 void Impl::setPatchColors(
@@ -127,5 +127,5 @@ void Impl::setPatchColors(
 ) {
 	for (usize i = 0; i < columns; ++i)
 		for (usize j = 0; j < rows; ++j)
-			updatePlaneColors(triangles, colors, i, j, columns);
+			updatePlaneColors(triangles, colors, i, j, rows);
 }
