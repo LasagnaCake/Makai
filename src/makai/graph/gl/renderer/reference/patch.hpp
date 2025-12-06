@@ -1,6 +1,7 @@
 #ifndef MAKAILIB_GRAPH_RENDERER_REFERENCE_PATCH_H
 #define MAKAILIB_GRAPH_RENDERER_REFERENCE_PATCH_H
 
+#include "makai/ctl/ctl/typetraits/cast.hpp"
 #include "shape.hpp"
 #include "plane.hpp"
 
@@ -15,11 +16,11 @@ namespace Makai::Graph::Ref {
 		/// @param rows Patch row count.
 		/// @param columns Patch column count.
 		void makePatch(
-			AReference::BoundRange const&		triangles,
-			Makai::Vector3 const&				offset,
-			Span<Makai::Vector2 const> const&	sizes,
-			usize const							rows,
-			usize const							columns
+			AReference::BoundRange const&	triangles,
+			Vector3 const&					offset,
+			ref<Vector2 const> const		sizes,
+			usize const						rows,
+			usize const						columns
 		);
 
 		/// @brief Sets a patch's UVs.
@@ -28,10 +29,10 @@ namespace Makai::Graph::Ref {
 		/// @param rows Patch row count.
 		/// @param columns Patch column count.
 		void setPatchUVs(
-			AReference::BoundRange const&		triangles,
-			Span<Makai::Vector2 const> const&	uvs,
-			usize const							rows,
-			usize const							columns
+			AReference::BoundRange const&	triangles,
+			ref<Vector2 const> const		uvs,
+			usize const						rows,
+			usize const						columns
 		);
 
 		/// @brief Sets a patch's colors.
@@ -40,10 +41,10 @@ namespace Makai::Graph::Ref {
 		/// @param rows Patch row count.
 		/// @param columns Patch column count.
 		void setPatchColors(
-			AReference::BoundRange const&		triangles,
-			Span<Makai::Vector4 const> const&	colors,
-			usize const							rows,
-			usize const							columns
+			AReference::BoundRange const&	triangles,
+			ref<Vector4 const> const		colors,
+			usize const						rows,
+			usize const						columns
 		);
 	}
 
@@ -139,8 +140,8 @@ namespace Makai::Graph::Ref {
 			Makai::Vector3 const&			size,
 			Shape const&					shape
 		) {
-			auto const su = Cast::as<ref<Vector2 const>>(shape.uvs);
-			auto const sc = Cast::as<ref<Vector4 const>>(shape.colors);
+			auto const su = Cast::rewrite<ref<Vector2 const>>(shape.uvs);
+			auto const sc = Cast::rewrite<ref<Vector4 const>>(shape.colors);
 			if constexpr (Type::Derived<Shape, ShapeSize1D>) {
 				As<Vector2[C]> sizes;
 				for (usize i = 0; i < C; ++i) {
@@ -149,7 +150,7 @@ namespace Makai::Graph::Ref {
 					Impl::makePatch(triangles, -size * shape.align, sizes, ROWS, COLUMNS);
 				}
 			} else {
-				auto const ss = Cast::as<ref<Vector2 const>>(shape.sizes);
+				auto const ss = Cast::rewrite<ref<Vector2 const>>(shape.sizes);
 				Impl::makePatch(triangles, -size * shape.align, ss, ROWS, COLUMNS);
 			}
 			Impl::setPatchUVs(triangles, su, ROWS, COLUMNS);
