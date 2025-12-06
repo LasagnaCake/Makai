@@ -3,7 +3,7 @@
 using namespace Makai::Graph::Ref;
 
 #define INDEX(C, R) ((C) + (R) * rows)
-#define TRIANGLE_INDEX(C, R, T) INDEX((C), (R) + (T))
+#define TRIANGLE_INDEX(C, R, T) INDEX((C) + (T), (R))
 
 static void updatePlane(
 	AReference::BoundRange const& triangles,
@@ -47,7 +47,7 @@ static void offsetBy(
 
 static void buildShape(
 	Makai::List<Makai::Vector3>& shape,
-	Makai::Span<Makai::Vector2 const> const& sizes,
+	ref<Makai::Vector2 const> const sizes,
 	usize const rows,
 	usize const columns
 ) {
@@ -67,7 +67,7 @@ static void buildShape(
 void Impl::makePatch(
 	AReference::BoundRange const& triangles,
 	Makai::Vector3 const& offset,
-	Makai::Span<Makai::Vector2 const> const& sizes,
+	ref<Makai::Vector2 const> const sizes,
 	usize const rows,
 	usize const columns
 ) {
@@ -80,7 +80,7 @@ void Impl::makePatch(
 
 static void updatePlaneUVs(
 	AReference::BoundRange const& triangles,
-	Makai::Span<Makai::Vector2 const> const& uvs,
+	ref<Makai::Vector2 const> const uvs,
 	usize const column,
 	usize const row,
 	usize const rows
@@ -95,7 +95,7 @@ static void updatePlaneUVs(
 
 static void updatePlaneColors(
 	AReference::BoundRange const& triangles,
-	Makai::Span<Makai::Vector4 const> const& colors,
+	ref<Makai::Vector4 const> const colors,
 	usize const column,
 	usize const row,
 	usize const rows
@@ -110,7 +110,7 @@ static void updatePlaneColors(
 
 void Impl::setPatchUVs(
 	AReference::BoundRange const& triangles,
-	Makai::Span<Makai::Vector2 const> const& uvs,
+	ref<Makai::Vector2 const> const uvs,
 	usize const rows,
 	usize const columns
 ) {
@@ -121,7 +121,7 @@ void Impl::setPatchUVs(
 
 void Impl::setPatchColors(
 	AReference::BoundRange const& triangles,
-	Makai::Span<Makai::Vector4 const> const& colors,
+	ref<Makai::Vector4 const> const colors,
 	usize const rows,
 	usize const columns
 ) {
