@@ -5,9 +5,6 @@
 
 /// @brief Game extensions.
 namespace Makai::Ex::Game {
-	/// @brief Legacy animated sprite type.
-	using LegacySprite	= Graph::Ref::LegacyAnimatedPlane;
-
 	/// @brief Animated sprite type.
 	using Sprite		= Graph::Ref::AnimationPlane;
 	/// @brief Tile sprite type.

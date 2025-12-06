@@ -102,21 +102,6 @@ namespace Makai::Graph::Ref {
 		virtual void onTransform() {};
 	};
 	
-	/// @brief Legacy animation plane reference.
-	struct [[deprecated("Please use FractionTilePlane instead!")]]
-	LegacyAnimatedPlane: Plane {
-	public:
-		using Plane::Plane;
-		/// @brief Spritesheet frame.
-		Vector2 frame;
-		/// @brief Spritesheet size.
-		Vector2 size = 1;
-
-	protected:
-		/// @brief Called when the reference's transforms are applied.
-		void onTransform() override;
-	};
-	
 	/// @brief Basic spritesheet plane reference.
 	struct SheetPlane: Plane {
 	public:

@@ -149,20 +149,6 @@ Makai::Handle<AReference> Plane::transform() {
 	return this;
 }
 
-void LegacyAnimatedPlane::onTransform() {
-	if (size.x == 0 || size.y == 0)
-		setUV(0, 0, 0, 0);
-	else {
-		Vector2 const f = frame / size;
-		setUV(
-			f,
-			f + (Vector2::RIGHT()	/ size),
-			f + (Vector2::UP()		/ size),
-			f + (Vector2::ONE()		/ size)
-		);
-	}
-}
-
 void FractionTilePlane::onTransform() {
 	if (size.x == 0 || size.y == 0)
 		setUV(0, 0, 0, 0);
