@@ -139,7 +139,6 @@ namespace Makai::Graph::Ref {
 			Makai::Vector3 const&			size,
 			Shape const&					shape
 		) {
-			auto const ss = Cast::as<ref<Vector2 const>>(shape.sizes);
 			auto const su = Cast::as<ref<Vector2 const>>(shape.uvs);
 			auto const sc = Cast::as<ref<Vector4 const>>(shape.colors);
 			if constexpr (Type::Derived<Shape, ShapeSize1D>) {
