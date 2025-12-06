@@ -139,6 +139,9 @@ namespace Makai::Graph::Ref {
 			Makai::Vector3 const&			size,
 			Shape const&					shape
 		) {
+			auto const ss = Cast::as<ref<Vector2 const>>(shape.sizes);
+			auto const su = Cast::as<ref<Vector2 const>>(shape.uvs);
+			auto const sc = Cast::as<ref<Vector4 const>>(shape.colors);
 			if constexpr (Type::Derived<Shape, ShapeSize1D>) {
 				As<Vector2[C]> sizes;
 				for (usize i = 0; i < C; ++i) {
@@ -146,9 +149,10 @@ namespace Makai::Graph::Ref {
 					sizes[i].x = shape.sizes[i];
 					Impl::makePatch(triangles, -size * shape.align, sizes, ROWS, COLUMNS);
 				}
-			} else Impl::makePatch(triangles, -size * shape.align, shape.sizes, ROWS, COLUMNS);
-			auto const su = Cast::as<ref<Vector2 const>>(shape.uvs);
-			auto const sc = Cast::as<ref<Vector4 const>>(shape.uvs);
+			} else {
+				auto const ss = Cast::as<ref<Vector2 const>>(shape.sizes);
+				Impl::makePatch(triangles, -size * shape.align, ss, ROWS, COLUMNS);
+			}
 			Impl::setPatchUVs(triangles, su, ROWS, COLUMNS);
 			Impl::setPatchColors(triangles, sc, ROWS, COLUMNS);
 		}
