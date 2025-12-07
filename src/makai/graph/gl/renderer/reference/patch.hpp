@@ -139,13 +139,15 @@ namespace Makai::Graph::Ref {
 			Impl::setPatchColors(triangles, sc, ROWS, COLUMNS);
 		}
 		
+		using AShape<(R + C) * 2>::fixed;
+		using AShape<(R + C) * 2>::visible;
+		
 	private:
 		/// @brief Applies transformations to the bound triangles.
 		void onTransform() override {
 			if (fixed) return;
 			setBaseShape();
 			applyTransform();
-			return this;
 		}
 
 		/// @brief Resets transformations applied to the bound triangles.
