@@ -31,7 +31,8 @@ namespace Makai::Graph::Ref {
 			if (lockState) throw Error::InvalidAction("Base object is locked!", CTL_CPP_PRETTY_SOURCE);
 			triangles.expand(count, {});
 			// Create shape
-			Unique<T> shape = Unique<T>::create({&triangles, triangles.size()-count, count}, *this);
+			Unique<T> shape;
+			shape.bind(new T({&triangles, triangles.size()-count, count}, *this));
 			// Add to reference list
 			references.pushBack(shape.raw());
 			// return shape
