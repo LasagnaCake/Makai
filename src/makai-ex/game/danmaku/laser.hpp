@@ -358,7 +358,7 @@ namespace Makai::Ex::Game::Danmaku {
 			for (usize i = 0; i < cfg.capacity; ++i) {
 				float const zoff = i / static_cast<float>(cfg.capacity);
 				all.constructBack(ConfigType{*this, cfg, cfg.colli, cfg.mask});
-				all.back().sprite = mainMesh.createReference<Graph::Ref::ThreePatch1D>();
+				all.back().sprite = mainMesh.create<Graph::Ref::ThreePatch1D>();
 				all.back().sprite->local.position.z = -zoff;
 				all.back().sprite->visible = false;
 				all.back().setCollisionState(false);
