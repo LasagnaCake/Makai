@@ -26,16 +26,9 @@ namespace Makai::Graph::Ref {
 		virtual ~AShape() {}
 
 		/// @brief Resets transformations applied to the bound triangles. Must be implemented.
-		/// @return Handle to self.
-		virtual Handle<AReference> reset()		= 0;
+		virtual void onReset()		= 0;
 		/// @brief Applies transformations to the bound triangles. Must be implemented.
-		/// @return Handle to self.
-		virtual Handle<AReference> transform()	= 0;
-
-		/// @brief Whether transformations should be applied.
-		bool fixed		= true;
-		/// @brief Whether the reference is visible.
-		bool visible	= true;
+		virtual void onTransform()	= 0;
 
 		/// @brief Transformation.
 		Transform3D local;
@@ -46,11 +39,10 @@ namespace Makai::Graph::Ref {
 			Matrix4x4 tmat(local);
 			Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
 			for (auto& triangle: triangles)
-				for (auto& vert: triangle.verts) 
-					if (visible) {
-						vert.position	= tmat * Vector4(vert.position, 1);
-						vert.normal		= nmat * vert.normal;
-					} else vert.position = 0;
+				for (auto& vert: triangle.verts) {
+					vert.position	= tmat * Vector4(vert.position, 1);
+					vert.normal		= nmat * vert.normal;
+				}
 		}
 	};
 

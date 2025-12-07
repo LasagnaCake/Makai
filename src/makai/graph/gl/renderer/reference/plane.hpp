@@ -24,8 +24,8 @@ namespace Makai::Graph::Ref {
 		/// @param trPos Top-right corner.
 		/// @param blPos Bottom-left corner.
 		/// @param brPos Bottom-right corner.
-		/// @return Handle to self.
-		Handle<Plane> setOrigin(
+		/// @return Reference to self.
+		Plane& setOrigin(
 			Vector3 const& tlPos = Vector3(-1, +1),
 			Vector3 const& trPos = Vector3(+1, +1),
 			Vector3 const& blPos = Vector3(-1, -1),
@@ -34,16 +34,16 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Transforms the plane's origin and normals by a given transform.
 		/// @param trans Transform to apply.
-		/// @return Handle to self.
-		Handle<Plane> setOrigin(Transform3D const& trans);
+		/// @return Reference to self.
+		Plane& setOrigin(Transform3D const& trans);
 
 		/// @brief Sets the plane's UV.
 		/// @param tlUV Top-left corner.
 		/// @param trUV Top-right corner.
 		/// @param blUV Bottom-left corner.
 		/// @param brUV Bottom-right corner.
-		/// @return Handle to self.
-		Handle<Plane> setUV(
+		/// @return Reference to self.
+		Plane& setUV(
 			Vector2 const& tlUV,
 			Vector2 const& trUV,
 			Vector2 const& blUV,
@@ -55,8 +55,8 @@ namespace Makai::Graph::Ref {
 		/// @param trCol Top-right corner.
 		/// @param blCol Bottom-left corner.
 		/// @param brCol Bottom-right corner.
-		/// @return Handle to self.
-		Handle<Plane> setColor(
+		/// @return Reference to self.
+		Plane& setColor(
 			Vector4 const& tlCol,
 			Vector4 const& trCol,
 			Vector4 const& blCol,
@@ -65,16 +65,16 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Sets the plane's color.
 		/// @param col Color to set.
-		/// @return Handle to self.
-		Handle<Plane> setColor(Vector4 const& col = Color::WHITE);
+		/// @return Reference to self.
+		Plane& setColor(Vector4 const& col = Color::WHITE);
 
 		/// @brief Sets the plane's normal.
 		/// @param tln Top-left corner.
 		/// @param trn Top-right corner.
 		/// @param bln Bottom-left corner.
 		/// @param brn Bottom-right corner.
-		/// @return Handle to self.
-		Handle<Plane> setNormal(
+		/// @return Reference to self.
+		Plane& setNormal(
 			Vector3 const& tln,
 			Vector3 const& trn,
 			Vector3 const& bln,
@@ -83,23 +83,17 @@ namespace Makai::Graph::Ref {
 		
 		/// @brief Sets the plane's normal.
 		/// @param n Normal to set.
-		/// @return Handle to self.
-		Handle<Plane> setNormal(Vector3 const& n);
+		/// @return Reference to self.
+		Plane& setNormal(Vector3 const& n);
 
 		/// @brief Resets transformations applied to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> reset() override final;
+		void onReset() override final;
 
 		/// @brief Applies transformations to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> transform() override final;
+		void onTransform() override;
 
 		/// @brief Vertex states pre-transformation.
 		Vertex	origin[4];
-
-	protected:
-		/// @brief Called when the reference's transforms are applied.
-		virtual void onTransform() {};
 	};
 	
 	/// @brief Basic spritesheet plane reference.
@@ -124,7 +118,7 @@ namespace Makai::Graph::Ref {
 		using SheetPlane::SheetPlane;
 		/// @brief Tile.
 		Math::IntVector2 tile;
-	protected:
+
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
 	};
@@ -135,7 +129,7 @@ namespace Makai::Graph::Ref {
 		using FractionSheetPlane::FractionSheetPlane;
 		/// @brief Tile.
 		Vector2 tile;
-	protected:
+
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
 	};
@@ -146,7 +140,7 @@ namespace Makai::Graph::Ref {
 		using SheetPlane::SheetPlane;
 		/// @brief Animation frame.
 		usize frame;
-	protected:
+
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
 	};

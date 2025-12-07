@@ -17,33 +17,46 @@ namespace Makai::Graph::Ref {
 	struct AReference {
 		/// @brief Triangle range associated with the reference.
 		struct BoundRange {
-			/// @brief Mesh containing bound triangles.
-			List<Triangle>& mesh;
+			using MeshReference = Reference<List<Triangle>>;
+
+			constexpr BoundRange(MeshReference const& mesh, usize const start, usize const count):
+				start(start),
+				count(count),
+				mesh(mesh) {}
+
 			/// @brief Start of bound range.
 			usize const start;
 			/// @brief Amount of triangles bound to the range.
 			usize const count;
 			/// @brief Returns an iterator to the beginning of the range.
 			/// @return Iterator to beginning of range.
-			constexpr auto begin() const	{return mesh.begin() + start;	}
+			constexpr auto begin() const	{return mesh->begin() + start;	}
 			/// @brief Returns an iterator to the end of the range.
 			/// @return Iterator to end of range.
 			constexpr auto end() const		{return begin() + count;		}
 			/// @brief Returns an iterator to the beginning of the range.
 			/// @return Iterator to beginning of range.
-			constexpr auto begin()			{return mesh.begin() + start;	}
+			constexpr auto begin()			{return mesh->begin() + start;	}
 			/// @brief Returns an iterator to the end of the range.
 			/// @return Iterator to end of range.
 			constexpr auto end()			{return begin() + count;		}
 			/// @brief Access operator.
 			/// @param index Triangle to get.
 			/// @return Reference to triangle.
-			constexpr Triangle& operator[](usize const index)		{return mesh[index+start];}
+			constexpr Triangle& operator[](usize const index)		{return (*mesh)[index+start];}
 			/// @brief Access operator.
 			/// @param index Triangle to get.
 			/// @return Reference to triangle.
-			constexpr Triangle& operator[](usize const index) const	{return mesh[index+start];}
+			constexpr Triangle& operator[](usize const index) const	{return (*mesh)[index+start];}
+
+			constexpr operator bool() const {return mesh;}
+
+		private:
+			friend struct Referend;
+			/// @brief Mesh containing bound triangles.
+			Reference<List<Triangle>> mesh;
 		};
+
 		/// @brief Constructs the reference.
 		/// @param triangles Triangles bound to the reference.
 		/// @param parent Parent renderable object.
@@ -52,7 +65,7 @@ namespace Makai::Graph::Ref {
 			parent(parent) {}
 
 		/// @brief Destructor.
-		virtual ~AReference() {destroy();}
+		virtual ~AReference();
 
 		/// @brief Bound triangle view type.
 		using Triangles = Span<Triangle const>;
@@ -60,7 +73,9 @@ namespace Makai::Graph::Ref {
 		/// @brief Returns a view to the triangles bound to the reference.
 		/// @return View to bound triangles.
 		Triangles getBoundTriangles() const {
-			return Triangles(triangles.begin(), triangles.end());
+			if (triangles)
+				return Triangles(triangles.begin(), triangles.end());
+			else return Triangles();
 		}
 
 		/// @brief Applies a function on every vertex in the reference.
@@ -73,23 +88,36 @@ namespace Makai::Graph::Ref {
 					f(vert);
 		}
 
-		/// @brief Resets transformations applied to the bound triangles. Must be implemented.
-		/// @return Handle to self.
-		virtual Handle<AReference> reset()		= 0;
-		/// @brief Applies transformations to the bound triangles. Must be implemented.
-		/// @return Handle to self.
-		virtual Handle<AReference> transform()	= 0;
+		/// @brief Resets transformations applied to the bound triangles.
+		/// @return Reference to self.
+		AReference& reset();
+		/// @brief Applies transformations to the bound triangles.
+		/// @return Reference to self.
+		AReference& transform();
+
+		/// @brief Unbinds the reference from its parent.
+		void unbind();
+
+		/// @brief Whether transforming/resetting should be forbidden.
+		bool fixed		= false;
+		/// @brief Whether the reference is visible.
+		bool visible	= true;
 		
 	protected:
+		/// @brief Called when transformations are resetted. Must be implemented.
+		/// @return Reference to self.
+		virtual void onReset()		= 0;
+		/// @brief Called when transformations are requested. Must be implemented.
+		/// @return Reference to self.
+		virtual void onTransform()	= 0;
+
 		friend struct Referend;
 
 		/// @brief Bound triangles.
-		BoundRange const 	triangles;
+		BoundRange	triangles;
 		/// @brief Parent renderable.
-		Referend& 			parent;
+		Referend&	parent;
 	private:
-		void destroy();
-		void unbind();
 	};
 
 	/// @brief Type must not be an empty reference.

@@ -2,7 +2,8 @@
 
 using namespace Makai::Graph::Ref;
 
-Makai::Handle<AReference> Line::transform() {
+void Line::onTransform() {
+	if (fixed) return;
 	As<Vertex[4]> plane;
 	getBaseShape(plane);
 	Makai::Math::Mat4 tmat(local);
@@ -21,14 +22,13 @@ Makai::Handle<AReference> Line::transform() {
 	triangles[1].verts[0] = plane[1];
 	triangles[1].verts[1] = plane[2];
 	triangles[1].verts[2] = plane[3];
-	return this;
 }
 
-Makai::Handle<AReference> Line::reset() {
+void Line::onReset() {
+	if (fixed) return;
 	for (auto& triangle: triangles)
 		for (auto& vert: triangle.verts)
 			vert.position = 0; 
-	return this;
 }
 
 void Line::getBaseShape(As<Vertex[4]>& vertices) {
@@ -42,4 +42,11 @@ void Line::getBaseShape(As<Vertex[4]>& vertices) {
 	vertices[1].position = rhsFrom * from.width + from.position;
 	vertices[2].position = lhsTo * to.width + to.position;
 	vertices[3].position = rhsTo * to.width + to.position;
+}
+
+Line& Line::setColor(Makai::Vector4 const& col) {
+	for (auto& triangle: triangles)
+		for (auto& vert: triangle.verts)
+			vert.color = col;
+	return *this;
 }

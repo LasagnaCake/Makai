@@ -19,67 +19,32 @@ namespace Makai::Graph::Ref {
 		): triangles(triangles), lockState(lockState) {}
 
 		/// @brief Destructor.
-		virtual ~Referend() {
-			clearReferences();
-		}
+		~Referend();
 
 		/// @brief Creates a shape reference bound to this object.
 		/// @tparam T Reference type.
 		/// @return Reference instance.
 		template<AShapeType T>
 		[[nodiscard]]
-		Instance<T> createReference() {
+		Unique<T> create() {
 			constexpr usize count = T::SIZE;
-			if (lockState) throw Error::InvalidAction("Renderable object is locked!", CTL_CPP_PRETTY_SOURCE);
+			if (lockState) throw Error::InvalidAction("Base object is locked!", CTL_CPP_PRETTY_SOURCE);
 			triangles.expand(count, {});
 			// Create shape
-			T* shape = new T({triangles, triangles.size()-count, count}, *this);
+			Unique<T> shape = Unique<T>::create({&triangles, triangles.size()-count, count}, *this);
 			// Add to reference list
-			references.pushBack(shape);
+			references.pushBack(shape.raw());
 			// return shape
 			return shape;
 		}
 
-		/// @brief
-		///		Destroys a reference and its associated triangles.
-		///		Will only execute if reference is associated with this object.
-		/// @tparam T Reference type.
-		/// @param ref Reference to remove.
-		/// @note If successful, also destroys the reference.
-		template <AShapeType T>
-		void removeReference(Instance<T> ref) {
-			if (!ref) return;
-			if (lockState) return;
-			removeReference(*ref);
-			auto const rp = ref.raw();
-			ref.release();
-			delete rp;
-		}
+		/// @brief Unbinds all bound references.
+		void clear();
 
-		/// @brief
-		///		Destroys a reference while keeping its associated triangles.
-		///		Will only execute if reference is associated with this object.
-		/// @tparam T Reference type.
-		/// @param ref Reference to remove.
-		/// @note If successful, also destroys the reference.
-		template <AShapeType T>
-		void unbindReference(Instance<T> ref) {
-			if (!ref) return;
-			if (lockState) return;
-			unbindReference(*ref);
-			auto const rp = ref.raw();
-			ref.release();
-			delete rp;
-		}
-
-		/// @brief Destroys all bound references.
-		void clearReferences();
-
-	protected:
 		/// @brief Transforms all bound references.
-		void transformReferences();
-		/// @brief Resets applied transformation in all bound references.
-		void resetReferenceTransforms();
+		void transformAll();
+		/// @brief Resets applied transformations in all bound references.
+		void resetAll();
 
 	private:
 		void removeReference(AReference& ref);
@@ -88,7 +53,7 @@ namespace Makai::Graph::Ref {
 		/// @brief References bound to this object.
 		List<ref<AReference>>	references;
 
-		friend class AReference;
+		friend struct AReference;
 
 		/// @brief Triangle bank to store triangles into. 
 		TriangleBank&	triangles;

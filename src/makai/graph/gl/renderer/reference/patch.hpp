@@ -103,23 +103,6 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Patch shape details.
 		Shape shape;
-
-		/// @brief Applies transformations to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> transform() override final {
-			setBaseShape();
-			applyTransform();
-			return this;
-		}
-
-		/// @brief Resets transformations applied to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> reset() override final {
-			for (auto& triangle: triangles)
-				for (auto& vert: triangle.verts) 
-					vert.position = 0;
-			return this;
-		}
 		
 		/// @brief Returns the patch's total size.
 		/// @return Total size.
@@ -155,8 +138,24 @@ namespace Makai::Graph::Ref {
 			Impl::setPatchUVs(triangles, su, ROWS, COLUMNS);
 			Impl::setPatchColors(triangles, sc, ROWS, COLUMNS);
 		}
-
+		
 	private:
+		/// @brief Applies transformations to the bound triangles.
+		void onTransform() override {
+			if (fixed) return;
+			setBaseShape();
+			applyTransform();
+			return this;
+		}
+
+		/// @brief Resets transformations applied to the bound triangles.
+		void onReset() override final {
+			if (fixed) return;
+			for (auto& triangle: triangles)
+				for (auto& vert: triangle.verts) 
+					vert.position = 0;
+		}
+
 		void setBaseShape() {
 			build(triangles, size(), shape);
 		}

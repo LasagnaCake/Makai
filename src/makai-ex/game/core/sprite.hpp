@@ -11,24 +11,32 @@ namespace Makai::Ex::Game {
 	using Tile			= Graph::Ref::TilePlane;
 
 	/// @brief Sprite instance type.
-	using SpriteInstance	= Makai::Instance<Sprite>;
+	using SpriteInstance	= Instance<Sprite>;
 	/// @brief Sprite handle type.
-	using SpriteHandle		= Makai::Handle<Sprite>;
+	using SpriteHandle		= Handle<Sprite>;
+	/// @brief Sprite unique pointer type.
+	using SpriteHolder		= Unique<Sprite>;
 
 	/// @brief Tile instance type.
-	using TileInstance		= Makai::Instance<Tile>;
+	using TileInstance		= Instance<Tile>;
 	/// @brief Tile handle type.
-	using TileHandle		= Makai::Handle<Tile>;
+	using TileHandle		= Handle<Tile>;
+	/// @brief Tile unique pointer type.
+	using TileHolder		= Unique<Tile>;
 
 	/// @brief Three-patch shape instance type.
 	using ThreePatchInstance	= Instance<Graph::Ref::ThreePatch1D>;
 	/// @brief Three-patch shape handle type.
 	using ThreePatchHandle		= Handle<Graph::Ref::ThreePatch1D>;
+	/// @brief Three-patch shape unique pointer type.
+	using ThreePatchHolder		= Unique<Graph::Ref::ThreePatch1D>;
 	
 	/// @brief Nine-patch shape instance type.
 	using NinePatchInstance		= Instance<Graph::Ref::NinePatch2D>;
 	/// @brief Nine-patch shape handle type.
 	using NinePatchHandle		= Handle<Graph::Ref::NinePatch2D>;
+	/// @brief Nine-patch shape unique pointer type.
+	using NinePatchHolder		= Unique<Graph::Ref::NinePatch2D>;
 }
 
 #endif

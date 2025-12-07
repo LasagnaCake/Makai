@@ -45,21 +45,19 @@ namespace Makai::Graph::Ref {
 		Body	body	= {1, 1, 1};
 		/// @brief Arrow tail shape.
 		Tip		tail	= {2, 1};
-		
-		/// @brief Resets transformations applied to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> reset() override final;
-
-		/// @brief Applies transformations to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> transform() override final;
 
 		/// @brief Sets the arrow's color.
 		/// @param col Color to set.
-		/// @return Handle to self.
-		Handle<Arrow> setColor(Vector4 const& col = Color::WHITE);
+		/// @return Reference to self.
+		Arrow& setColor(Vector4 const& col = Color::WHITE);
 
 	private:
+		/// @brief Resets transformations applied to the bound triangles.
+		void onReset() override final;
+
+		/// @brief Applies transformations to the bound triangles.
+		void onTransform() override final;
+
 		void setBaseShape();
 	};
 }

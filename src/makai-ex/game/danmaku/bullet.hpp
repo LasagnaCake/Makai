@@ -81,8 +81,8 @@ namespace Makai::Ex::Game::Danmaku {
 		void onUpdate(float delta) override {
 			if (isFree()) return;
 			AServerObject::onUpdate(delta);
-			updateSprite(mainSprite.asWeak());
-			updateSprite(glowSprite.asWeak(), true);
+			updateSprite(mainSprite.reference());
+			updateSprite(glowSprite.reference(), true);
 			updateHitbox();
 			animate();
 			if (paused()) return;
@@ -202,9 +202,9 @@ namespace Makai::Ex::Game::Danmaku {
 		AServer&	server;
 
 		/// @brief Main sprite.
-		TileInstance mainSprite	= nullptr;
+		TileHolder mainSprite	= TileHolder(nullptr);
 		/// @brief Glow sprite.
-		TileInstance glowSprite	= nullptr;
+		TileHolder glowSprite	= TileHolder(nullptr);
 
 		/// @brief Counter used for spawn/despawn timing purposes.
 		usize counter	= 0;
@@ -278,7 +278,7 @@ namespace Makai::Ex::Game::Danmaku {
 			if (glowSprite) glowSprite->local.scale = 0;
 		}
 
-		void updateSprite(TileHandle const& sprite, bool glowSprite = false) {
+		void updateSprite(Reference<Tile> const& sprite, bool glowSprite = false) {
 			if (!sprite) return;
 			sprite->visible = true;
 			sprite->tile	= this->sprite.tile;

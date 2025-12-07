@@ -2,6 +2,10 @@
 
 using namespace Makai::Graph::Ref;
 
+Referend::~Referend() {
+	clear();
+}
+
 void Referend::removeReference(AReference& ref)  {
 	if (lockState) return;
 	if (references.find(&ref) == -1) return;
@@ -11,25 +15,23 @@ void Referend::removeReference(AReference& ref)  {
 
 void Referend::unbindReference(AReference& ref)  {
 	if (lockState) return;
+	ref.triangles.mesh = nullptr;
 	references.eraseLike(&ref);
 }
 
-void Referend::transformReferences() {
+void Referend::transformAll() {
 	for (auto& shape: references)
 		shape->transform();
 }
 
-void Referend::resetReferenceTransforms() {
+void Referend::resetAll() {
 	for (auto& shape: references)
 		shape->reset();
 }
 
-void Referend::clearReferences() {
+void Referend::clear() {
 	if (!references.empty())
-		for (auto ref: references) {
-			Instance<AReference> iref = ref;
-			iref.release();
-			delete ref;
-		}
+		for (auto ref: references)
+			ref->triangles.mesh = nullptr;
 	references.clear();
 }

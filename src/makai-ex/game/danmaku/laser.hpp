@@ -198,7 +198,7 @@ namespace Makai::Ex::Game::Danmaku {
 		IToggleable::State nextState = IToggleable::State::TS_TOGGLED;
 
 		/// @brief Laser sprite.
-		ThreePatchInstance sprite	= nullptr;
+		ThreePatchHolder sprite	= ThreePatchHolder(nullptr);
 
 		/// @brief Current animation color.
 		Vector4 animColor = Graph::Color::WHITE;

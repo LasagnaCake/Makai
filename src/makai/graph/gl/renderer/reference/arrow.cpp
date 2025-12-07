@@ -2,15 +2,15 @@
 
 using namespace Makai::Graph::Ref;
 
-Makai::Handle<AReference> Arrow::reset() {
+void Arrow::onReset() {
+	if (fixed) return;
 	for (auto& triangle: triangles)
 		for (auto& vert: triangle.verts)
 			vert.position = 0; 
-	return this;
 }
 
-Makai::Handle<AReference> Arrow::transform() {
-	if (!fixed) return this;
+void Arrow::onTransform() {
+	if (fixed) return;
 	setBaseShape();
 	Makai::Math::Mat4 tmat(local);
 	Makai::Math::Mat3 nmat(tmat.transposed().inverted().truncated(3, 3));
@@ -23,7 +23,6 @@ Makai::Handle<AReference> Arrow::transform() {
 			}
 			else vert.position = 0; 
 		}
-	return this;
 }
 
 void Arrow::setBaseShape() {
@@ -45,9 +44,9 @@ void Arrow::setBaseShape() {
 	
 }
 
-Makai::Handle<Arrow> Arrow::setColor(Makai::Vector4 const& col) {
+Arrow& Arrow::setColor(Makai::Vector4 const& col) {
 	for (auto& triangle: triangles)
 		for (auto& vert: triangle.verts)
 			vert.color = col;
-	return this;
+	return *this;
 }

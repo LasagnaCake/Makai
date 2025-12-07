@@ -14,7 +14,7 @@ namespace Makai::Graph {
 	class Scene;
 
 	/// @brief Renderable object.
-	class Renderable: public AGraphic, public Ref::Referend, public Vertebrate<64> {
+	class Renderable: public AGraphic, public Vertebrate<64> {
 	public:
 		/// @brief Latest renderable object definition file version supported.
 		constexpr static usize VERSION = 0;
@@ -116,8 +116,21 @@ namespace Makai::Graph {
 			bool const pretty				= false
 		);
 
+		/// @brief Creates a shape reference bound to this object.
+		/// @tparam T Reference type.
+		/// @return Reference instance.
+		template<Ref::AShapeType T>
+		[[nodiscard]]
+		Unique<T> createReference() {
+			if (locked) throw Error::InvalidAction("Renderable object is locked!", CTL_CPP_PRETTY_SOURCE);
+			return references.create<T>();
+		}
+
 		/// @brief Triangles bound to this object.
 		List<Triangle> triangles;
+
+		/// @brief Reference bank.
+		Ref::Referend references;
 
 	private:
 		friend class Scene;

@@ -235,14 +235,14 @@ inline JSON::Value toDefinition(
 }
 
 Renderable::Renderable(usize const layer, bool const manual):
-AGraphic(layer, manual), Ref::Referend(triangles, locked) {
+AGraphic(layer, manual), references(triangles, locked) {
 }
 
 Renderable::Renderable(
 	List<Triangle>&& triangles,
 	usize const layer,
 	bool const manual
-): AGraphic(layer, manual), Ref::Referend(triangles, locked) {
+): AGraphic(layer, manual), references(triangles, locked) {
 	this->triangles = triangles;
 }
 
@@ -251,7 +251,7 @@ Renderable::Renderable(
 	usize const count,
 	usize const layer,
 	bool const manual
-): AGraphic(layer, manual), Ref::Referend(triangles, locked) {
+): AGraphic(layer, manual), references(triangles, locked) {
 	extend(vertices, count);
 }
 
@@ -302,20 +302,20 @@ void Renderable::extendFromDefinitionFile(String const& path) {
 
 void Renderable::bake() {
 	if (baked || locked) return;
-	transformReferences();
+	references.transformAll();
 	armature.bake();
 	baked = true;
 }
 
 void Renderable::unbake() {
 	if (!baked || locked) return;
-	resetReferenceTransforms();
+	references.resetAll();
 	armature.unbake();
 	baked = false;
 }
 
 void Renderable::clearData() {
-	clearReferences();
+	references.clear();
 	armature.clearAllRelations();
 }
 
@@ -342,7 +342,7 @@ void Renderable::saveToDefinitionFile(
 	// If binary is in a different location, save there
 	if (!integratedBinary) {
 		File::saveBinary(binpath, triangles.data(), triangles.size());
-		file["mesh"]["data"] = JSON::Object{JSON::Entry{"path", name + ".mesh"}};
+		file["mesh"]["data"] = JSON::Object().insert(JSON::Entry{"path", JSON::Value{name + ".mesh"}});
 	}
 	// Get material data
 	file["material"] = toDefinition(material, folder, texturesFolder, integratedTextures);
@@ -359,7 +359,7 @@ void Renderable::draw() {
 	// If no vertices, return
 	if (triangles.empty()) return;
 	// If object's not finalized, transform references
-	if (!baked && !locked) transformReferences();
+	if (!baked && !locked) references.transformAll();
 	// Set shader data
 	prepare();
 	applyArmature(shader);
@@ -374,7 +374,7 @@ void Renderable::draw() {
 		material.instances.size()
 	);
 	// If object's not finalized, reset references
-	if (!baked && !locked) resetReferenceTransforms();
+	if (!baked && !locked) references.resetAll();
 }
 
 void Renderable::extendFromDefinition(
@@ -631,9 +631,9 @@ JSON::Value Renderable::getObjectDefinition(
 	// Create definition
 	JSON::Value def;
 	// Save mesh components
-	def["mesh"] = JSON::Object{
+	def["mesh"] = JSON::Object().insert(
 		JSON::Entry{"components", "x,y,z,u,v,r,g,b,a,nx,ny,nz,i0,i1,i2,i3,w0,w1,w2,w3"}
-	};
+	);
 	def["version"] = VERSION;
 	// If data is to be integrated into the JSON object, do so
 	if (integratedBinary) {

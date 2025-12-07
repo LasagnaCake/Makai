@@ -22,8 +22,8 @@ namespace Makai::Graph::Ref {
 		/// @param aPos First vertex.
 		/// @param bPos Second vertex.
 		/// @param cPos Third vertex.
-		/// @return Handle to self.
-		Handle<Triangle> setOrigin(
+		/// @return Reference to self.
+		Triangle& setOrigin(
 			Vector3 const& aPos = Vector3(+0, +1),
 			Vector3 const& bPos = Vector3(-1, -1),
 			Vector3 const& cPos = Vector3(+1, -1)
@@ -31,15 +31,15 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Transforms the triangle's origin and normals by a given transform.
 		/// @param trans Transform to apply.
-		/// @return Handle to self.
-		Handle<Triangle> setOrigin(Transform3D const& trans);
+		/// @return Reference to self.
+		Triangle& setOrigin(Transform3D const& trans);
 
 		/// @brief Sets the triangle's UV.
 		/// @param aUV First vertex.
 		/// @param bUV Second vertex.
 		/// @param cUV Third vertex.
-		/// @return Handle to self.
-		Handle<Triangle> setUV(
+		/// @return Reference to self.
+		Triangle& setUV(
 			Vector2 const& aUV,
 			Vector2 const& bUV,
 			Vector2 const& cUV
@@ -49,16 +49,16 @@ namespace Makai::Graph::Ref {
 		/// @param aCol First vertex.
 		/// @param bCol Second vertex.
 		/// @param cCol Third vertex.
-		/// @return Handle to self.
-		Handle<Triangle> setColor(
+		/// @return Reference to self.
+		Triangle& setColor(
 			Vector4 const& aCol,
 			Vector4 const& bCol,
 			Vector4 const& cCol
 		);
 		/// @brief Sets the triangle's color.
 		/// @param col Color to set.
-		/// @return Handle to self.
-		Handle<Triangle> setColor(
+		/// @return Reference to self.
+		Triangle& setColor(
 			Vector4 const& col = Color::WHITE
 		);
 
@@ -66,8 +66,8 @@ namespace Makai::Graph::Ref {
 		/// @param an First vertex.
 		/// @param bn Second vertex.
 		/// @param cn Third vertex.
-		/// @return Handle to self.
-		Handle<Triangle> setNormal(
+		/// @return Reference to self.
+		Triangle& setNormal(
 			Vector3 const& an,
 			Vector3 const& bn,
 			Vector3 const& cn
@@ -75,25 +75,19 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Sets the triangle's normal.
 		/// @param n Normal to set.
-		/// @return Handle to self.
-		Handle<Triangle> setNormal(
+		/// @return Reference to self.
+		Triangle& setNormal(
 			Vector3 const& n
 		);
 
 		/// @brief Resets transformations applied to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> reset() override final;
+		void onReset() override final;
 
 		/// @brief Applies transformations to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> transform() override final;
+		void onTransform() override;
 
 		/// @brief Vertex states pre-transformation.
 		Vertex origin[3];
-
-	protected:
-		/// @brief Called when the reference's transforms are applied.
-		virtual void onTransform() {};
 	};
 
 	/// @brief Type must be a plane reference of some kind.

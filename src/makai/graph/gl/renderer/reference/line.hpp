@@ -22,14 +22,19 @@ namespace Makai::Graph::Ref {
 		/// @brief Line end.
 		Tip to;
 
-		/// @brief Applies transformations to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> transform() override final;
-		/// @brief Resets transformations applied to the bound triangles.
-		/// @return Handle to self.
-		Handle<AReference> reset() override final;
+		/// @brief Sets the line's color.
+		/// @param col Color to set.
+		/// @return Reference to self.
+		Line& setColor(Vector4 const& col = Color::WHITE);
 
 	private:
+		/// @brief Applies transformations to the bound triangles.
+		/// @return Reference to self.
+		void onTransform() override final;
+		/// @brief Resets transformations applied to the bound triangles.
+		/// @return Reference to self.
+		void onReset() override final;
+
 		void getBaseShape(As<Vertex[4]>& vertices);
 	};
 }
