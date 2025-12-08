@@ -23,7 +23,7 @@ struct MeshHolder {
 };
 
 struct TestItemServer: MeshHolder, BaseItemServer {
-	TestItemServer(): MeshHolder(), BaseItemServer({256, m, gm, ::board, ::playfield}) {}
+	TestItemServer(): MeshHolder(), BaseItemServer({256, m.references, gm.references, ::board, ::playfield}) {}
 };
 
 

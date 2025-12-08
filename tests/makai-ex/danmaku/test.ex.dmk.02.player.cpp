@@ -16,7 +16,7 @@ struct TestPlayer: Danmaku::APlayer {
 	MkGraph::Renderable body;
 	Makai::Instance<Makai::Graph::Ref::ThreePatch1D> sprite;
 
-	TestPlayer(): APlayer(cfg), sprite(body.createReference<Makai::Graph::Ref::ThreePatch1D>()) {
+	TestPlayer(): APlayer(cfg), sprite(body.references.create<Makai::Graph::Ref::ThreePatch1D>()) {
 		body.setRenderLayer(Danmaku::Render::Layer::PLAYER1_LAYER);
 		trans.position = board.center;
 		sprite->shape.sizes[0] = 1;

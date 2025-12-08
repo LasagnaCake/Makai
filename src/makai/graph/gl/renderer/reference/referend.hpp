@@ -38,6 +38,14 @@ namespace Makai::Graph::Ref {
 			// return shape
 			return shape;
 		}
+		/// @brief Creates a shape reference bound to this object.
+		/// @tparam T Reference type.
+		/// @return Reference instance.
+		template<AShapeType T>
+		[[nodiscard, deprecated("Function is deprecated! Please use `create` instead!")]]
+		Unique<T> createReference() {
+			return create<T>();
+		}
 
 		/// @brief Unbinds all bound references.
 		void clear();

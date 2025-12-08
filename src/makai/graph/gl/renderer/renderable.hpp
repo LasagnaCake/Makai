@@ -120,7 +120,7 @@ namespace Makai::Graph {
 		/// @tparam T Reference type.
 		/// @return Reference instance.
 		template<Ref::AShapeType T>
-		[[nodiscard]]
+		[[nodiscard, deprecated("Function is deprecated! Please use `references.create` instead!")]]
 		Unique<T> createReference() {
 			if (locked) throw Error::InvalidAction("Renderable object is locked!", CTL_CPP_PRETTY_SOURCE);
 			return references.create<T>();

@@ -23,7 +23,7 @@ struct MeshHolder {
 
 
 struct TestLaserServer: MeshHolder, BaseLaserServer {
-	TestLaserServer(): MeshHolder(), BaseLaserServer({32, gm, ::board, ::playfield}) {}
+	TestLaserServer(): MeshHolder(), BaseLaserServer({32, gm.references, ::board, ::playfield}) {}
 };
 
 struct TestApp: Makai::Ex::Game::App {

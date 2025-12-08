@@ -23,7 +23,7 @@ struct MeshHolder {
 };
 
 struct TestBulletServer: MeshHolder, BaseBulletServer {
-	TestBulletServer(): MeshHolder(), BaseBulletServer({1024, m, gm, ::board, ::playfield}) {}
+	TestBulletServer(): MeshHolder(), BaseBulletServer({1024, m.references, gm.references, ::board, ::playfield}) {}
 };
 
 Danmaku::Bullet::PromiseType btask(Danmaku::Bullet& bullet) {

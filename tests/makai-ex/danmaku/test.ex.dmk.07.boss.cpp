@@ -40,7 +40,7 @@ using BaseItemServer = Danmaku::ItemServer<>;
 struct TestItemServer: DoubleMeshHolder, BaseItemServer {
 	TestItemServer(usize const layer):
 		DoubleMeshHolder(layer),
-		BaseItemServer({256, m, gm, ::board, ::playfield, ITEM_CFG}) {}
+		BaseItemServer({256, m.references, gm.references, ::board, ::playfield, ITEM_CFG}) {}
 };
 
 // Bullet stuff
@@ -50,7 +50,7 @@ using BaseBulletServer = Danmaku::BulletServer<>;
 struct TestBulletServer: DoubleMeshHolder, BaseBulletServer {
 	TestBulletServer(usize const layer, Danmaku::BulletServerInstanceConfig const& cfg):
 		DoubleMeshHolder(layer),
-		BaseBulletServer({cfg.capacity, m, gm, ::board, ::playfield, cfg}) {}
+		BaseBulletServer({cfg.capacity, m.references, gm.references, ::board, ::playfield, cfg}) {}
 };
 
 constexpr Danmaku::BulletServerInstanceConfig ENEMY_BULLET_SERVER_CFG = {
@@ -74,7 +74,7 @@ using BaseLaserServer = Danmaku::LaserServer<>;
 struct TestLaserServer: GlowMeshHolder, BaseLaserServer {
 	TestLaserServer(usize const layer, Danmaku::LaserServerInstanceConfig const& cfg):
 		GlowMeshHolder(layer),
-		BaseLaserServer({cfg.capacity, gm, ::board, ::playfield, cfg}) {}
+		BaseLaserServer({cfg.capacity, gm.references, ::board, ::playfield, cfg}) {}
 };
 
 constexpr Danmaku::LaserServerInstanceConfig ENEMY_LASER_SERVER_CFG = {
@@ -160,7 +160,7 @@ struct TestBoss: Danmaku::ABoss, TestBossRegistry::Member {
 	laserServer(laserServer),
 	itemServer(itemServer) {
 		rng.setSeed(Makai::OS::Time::now());
-		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
+		sprite = mesh.references.create<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
 		setHealth(1000, 1000);
 		movement
@@ -296,7 +296,7 @@ struct TestPlayer: Danmaku::APlayer {
 
 	TestPlayer(TestBulletServer& server):
 		APlayer(cfg),
-		sprite(body.createReference<Makai::Ex::Game::Sprite>()),
+		sprite(body.references.create<Makai::Ex::Game::Sprite>()),
 		server(server) {
 		body.setRenderLayer(Danmaku::Render::Layer::PLAYER1_LAYER);
 		trans.position = board.center * Makai::Vector2(1, 1.5);

@@ -23,7 +23,7 @@ struct TestEnemy: Danmaku::AEnemy, TestRegistry::Member {
 
 	TestEnemy(usize const offset): AEnemy({::board, ::playfield}), offset(offset) {
 		trans.position = playfield.center;
-		sprite = mesh.createReference<Makai::Ex::Game::Sprite>();
+		sprite = mesh.references.create<Makai::Ex::Game::Sprite>();
 		mesh.setRenderLayer(Danmaku::Render::Layer::ENEMY1_LAYER);
 	}
 
