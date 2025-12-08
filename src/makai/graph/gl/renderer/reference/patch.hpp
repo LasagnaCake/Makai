@@ -52,7 +52,24 @@ namespace Makai::Graph::Ref {
 	/// @tparam C Column count.
 	template <usize R, usize C>
 	struct PatchBase: AShape<(R + C) * 2> {
-		using AShape<(R + C) * 2>::AShape;
+		using typename AShape<(R + C) * 2>::BoundRange;
+
+		/// @brief Constructs the reference.
+		/// @param triangles Triangles bound to the reference.
+		/// @param parent Parent renderable object.
+		PatchBase(
+			BoundRange const& triangles,
+			Referend& parent
+		): AShape<(R + C) * 2>(triangles, parent) {
+			for (auto& size: shape.sizes)
+				size = 1;
+			for (auto& cc: shape.colors)
+				for (auto& color: cc)
+					color = 1;
+			for (auto& uc: shape.uvs)
+				for (auto& uv: uc)
+					uv = 1;
+		}
 
 		/// @brief Row count.
 		constexpr static usize const ROWS		= R;
@@ -82,13 +99,13 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Patch size for single-row types.
 		struct ShapeSize1D {
-			Sizes sizes		= {1};
+			Sizes sizes;
 			float height	= 1;
 		};
 		
 		/// @brief Patch size for multi-row types.
 		struct ShapeSize2D {
-			Sizes sizes		= {1};
+			Sizes sizes;
 		};
 
 		/// @brief Patch shape details.
@@ -96,9 +113,9 @@ namespace Makai::Graph::Ref {
 			/// @brief Patch alignment against local origin.
 			ScaleType	align	= 0;
 			/// @brief Patch UVs.
-			UVs			uvs		= {0};
+			UVs			uvs;
 			/// @brief Patch colors.
-			Colors		colors	= {1};
+			Colors		colors;
 		};
 
 		/// @brief Patch shape details.
