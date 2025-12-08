@@ -49,7 +49,7 @@ namespace Makai::Graph::Ref {
 			/// @return Reference to triangle.
 			constexpr Triangle& operator[](usize const index) const	{return (*mesh)[index+start];}
 
-			constexpr operator bool() const {return mesh;}
+			constexpr operator bool() const {return mesh.exists();}
 
 		private:
 			friend struct Referend;
