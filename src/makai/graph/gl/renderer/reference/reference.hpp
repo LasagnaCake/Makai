@@ -10,4 +10,6 @@
 #include "patch.hpp"
 #include "referend.hpp"
 
+namespace MkRef = Makai::Graph::Ref;
+
 #endif
