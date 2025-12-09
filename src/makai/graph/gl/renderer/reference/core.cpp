@@ -4,8 +4,10 @@
 using namespace Makai::Graph::Ref;
 
 AReference::~AReference() {
+	DEBUGLN("Clearing reference...");
 	if (triangles)
 		parent.removeReference(*this);
+	DEBUGLN("Reference cleared!");
 }
 
 void AReference::unbind() {
