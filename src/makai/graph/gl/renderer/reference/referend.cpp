@@ -9,6 +9,7 @@ Referend::~Referend() {
 void Referend::removeReference(AReference& ref)  {
 	if (lockState) return;
 	if (references.find(&ref) == -1) return;
+	if (!ref.triangles) return;
 	triangles.removeRange(ref.triangles.start, ref.triangles.start + ref.triangles.count);
 	unbindReference(ref);
 }
