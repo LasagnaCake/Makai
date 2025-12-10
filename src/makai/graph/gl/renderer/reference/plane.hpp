@@ -100,6 +100,10 @@ namespace Makai::Graph::Ref {
 	struct SheetPlane: Plane {
 	public:
 		using Plane::Plane;
+
+		/// @brief Destructor.
+		virtual ~SheetPlane() {}
+
 		/// @brief Spritesheet size.
 		Math::IntVector2 size = 1;
 	};
@@ -108,6 +112,10 @@ namespace Makai::Graph::Ref {
 	struct FractionSheetPlane: Plane {
 	public:
 		using Plane::Plane;
+
+		/// @brief Destructor.
+		virtual ~FractionSheetPlane() {}
+
 		/// @brief Spritesheet size.
 		Vector2 size = 1;
 	};
@@ -116,8 +124,12 @@ namespace Makai::Graph::Ref {
 	struct TilePlane: SheetPlane {
 	public:
 		using SheetPlane::SheetPlane;
+
+		/// @brief Destructor.
+		virtual ~TilePlane() {}
+
 		/// @brief Tile.
-		Math::IntVector2 tile;
+		Math::IntVector2 tile = 0;
 
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
@@ -127,8 +139,12 @@ namespace Makai::Graph::Ref {
 	struct FractionTilePlane: FractionSheetPlane {
 	public:
 		using FractionSheetPlane::FractionSheetPlane;
+
+		/// @brief Destructor.
+		virtual ~FractionTilePlane() {}
+
 		/// @brief Tile.
-		Vector2 tile;
+		Vector2 tile = 0;
 
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
@@ -138,8 +154,27 @@ namespace Makai::Graph::Ref {
 	struct AnimationPlane: SheetPlane {
 	public:
 		using SheetPlane::SheetPlane;
+
+		/// @brief Destructor.
+		virtual ~AnimationPlane() {}
+
 		/// @brief Animation frame.
-		usize frame;
+		usize frame = 0;
+
+		/// @brief Called when the reference's transforms are applied.
+		void onTransform() override;
+	};
+	
+	/// @brief Animation plane reference that supports fractioned sizes & frames.
+	struct FractionAnimationPlane: FractionSheetPlane {
+	public:
+		using FractionSheetPlane::FractionSheetPlane;
+
+		/// @brief Destructor.
+		virtual ~FractionAnimationPlane() {}
+
+		/// @brief Animation frame.
+		float frame = 0;
 
 		/// @brief Called when the reference's transforms are applied.
 		void onTransform() override;
