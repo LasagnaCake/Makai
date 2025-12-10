@@ -197,3 +197,23 @@ void AnimationPlane::onTransform() {
 		);
 	}
 }
+
+void FractionAnimationPlane::onTransform() {
+	if (fixed) return;
+	Plane::onTransform();
+	if (size.x == 0 || size.y == 0)
+		setUV(0, 0, 0, 0);
+	else {
+		Vector2 const f = Vector2(
+			Math::mod(frame, size.x),
+			Cast::as<usize>(frame / size.y)
+		) / size;
+		auto const sz = size;
+		setUV(
+			f,
+			f + (Vector2::RIGHT()	/ sz),
+			f + (Vector2::UP()		/ sz),
+			f + (Vector2::ONE()		/ sz)
+		);
+	}
+}
