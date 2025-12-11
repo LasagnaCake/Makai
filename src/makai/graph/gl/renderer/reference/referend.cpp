@@ -13,7 +13,12 @@ void Referend::removeReference(AReference& ref)  {
 	// TODO: Figure out how to actually delete triangles
 	for (auto& triangle: ref.triangles)
 		triangle = {};
-	//triangles.eraseRange(ref.triangles.start, ref.triangles.start + ref.triangles.count);
+	/*
+	for (auto& r: references)
+		if (r->triangles.start >= ref.triangles.start)
+			r->triangles.start -= ref.triangles.count;
+	triangles.eraseRange(ref.triangles.start, ref.triangles.start + ref.triangles.count);
+	*/
 	unbindReference(ref);
 }
 
