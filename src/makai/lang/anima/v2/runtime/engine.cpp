@@ -47,15 +47,21 @@ void Engine::advance() {
 }
 
 void Engine::v2Invoke() {
+	// Get invocation
 	Core::Instruction::Invocation invocation = bitcast<Core::Instruction::Invocation>(current.type);
+	// If invocation is internal call, do so
 	if (invocation.location == Core::DataLocation::AV2_DL_INTERNAL)
 		return callBuiltIn(Cast::as<Engine::BuiltInFunction>(invocation.argc));
+	// Get function name (if not external function)
 	advance();
 	uint64 funcName = bitcast<uint64>(current);
-	auto fn = getValueFromLocation(invocation.location, funcName);
-	if (!fn.isUnsigned())
-		return crash(invalidFunctionEror(""));
-	else funcName = fn.get<uint64>();
+	if (invocation.location != Core::DataLocation::AV2_DL_EXTERNAL) {
+		auto fn = getValueFromLocation(invocation.location, funcName);
+		if (!fn.isUnsigned())
+			return crash(invalidFunctionEror("Invalid function name!"));
+		else funcName = fn.get<uint64>();
+	}
+	// Add arguments to stack
 	context.valueStack.expand(invocation.argc, {});
 	for (usize i = 0; i < invocation.argc; ++i) {
 		advance();
@@ -63,6 +69,35 @@ void Engine::v2Invoke() {
 		arg = bitcast<decltype(arg)>(current);
 		context.valueStack[-invocation.argc+arg.argument] = consumeValue(arg.location);
 	}
+	// If external function, invoke it
+	if (invocation.location == Core::DataLocation::AV2_DL_EXTERNAL) {
+		advance();
+		ssize returnType = Cast::as<ssize>(current.name);
+		auto const result = functions.invoke(
+			program.constants[funcName].toString(),
+			context.valueStack.sliced(-Cast::as<int>(invocation.argc), -1)
+		);
+		context.valueStack.eraseRange(Cast::as<int>(invocation.argc), -1);
+		// Check if return type matches expected type
+		if (
+			returnType != -1
+		&&	Cast::as<Value::Kind>(returnType) != result.type()
+		) {
+			if (
+				current.type == 0
+			||	(current.type == 1 && !result.isNull())
+			) return crash(
+				invalidFunctionEror(
+					"Invalid external function return type!"
+					"\nType is ["+Value::asNameString(result.type())+"]"
+					"\nExpected type is ["+Value::asNameString(Cast::as<Value::Kind>(returnType))+"]"
+				)
+			);
+		}
+		context.temporary = result;
+		return;
+	}
+	// Else, jump to function location
 	context.pointers.function = invocation.argc;
 	jumpTo(funcName, true);
 }

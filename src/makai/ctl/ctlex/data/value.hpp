@@ -47,7 +47,8 @@ namespace Data {
 		
 		/// @brief Underlying value type.
 		enum class Kind {
-			DVK_UNDEFINED,
+			DVK_VOID,
+			DVK_UNDEFINED  = DVK_VOID,
 			DVK_NULL,
 			DVK_NAN,
 			DVK_BOOLEAN,
@@ -615,7 +616,17 @@ namespace Data {
 		}
 
 		/// @brief Equality comparison operator.
-		constexpr bool operator==(Value const& other) const {return operator<=>(other) == Order::EQUAL;	}
+		constexpr bool operator==(Value const& other) const {
+			if (isFalsy() || other.isFalsy())		return isFalsy() == other.isFalsy();
+			if (isBoolean() && other.isBoolean())	return (get<bool>() == other.template get<bool>());
+			if (isInteger() && other.isInteger())	return (get<ssize>() == other.template get<ssize>());
+			if (isReal() && other.isReal())			return (get<double>() == other.template get<double>());
+			if (isString() && other.isString())		return (content.string == other.content.string);
+			if (isBytes() && other.isBytes())		return (content.bytes == other.content.bytes);
+			if (isArray() && other.isArray())		return (*content.array == *other.content.array);
+			if (isObject() && other.isObject())		return compareWithRef(other.content.object) == Order::EQUAL;
+			return false;
+		}
 		/// @brief Inequality comparison operator.
 		constexpr bool operator!=(Value const& other) const {return !operator==(other);					}
 
@@ -796,6 +807,27 @@ namespace Data {
 			}
 		}
 
+		/// @brief Returns the given kind as its name string.
+		/// @param kind Kind ID.
+		/// @return Name string.
+		constexpr static String asNameString(Kind const& kind) {
+			switch (kind) {
+				case Kind::DVK_UNDEFINED:	return "undefined";
+				case Kind::DVK_NULL:		return "null";
+				case Kind::DVK_NAN:			return "NaN";
+				case Kind::DVK_BOOLEAN:		return "boolean";
+				case Kind::DVK_SIGNED:		return "signed";
+				case Kind::DVK_UNSIGNED:	return "unsigned";
+				case Kind::DVK_REAL:		return "real";
+				case Kind::DVK_STRING:		return "string";
+				case Kind::DVK_BYTES:		return "bytes";
+				case Kind::DVK_ARRAY:		return "array";
+				case Kind::DVK_OBJECT:		return "object";
+				default: break;
+			}
+			return "none";
+		}
+
 	private:
 		/// @brief Value type.
 		Kind	kind;
@@ -847,7 +879,7 @@ namespace Data {
 		[[noreturn]] void typeMismatchError(String const& expectedType) const {
 			throw Error::InvalidType(
 				"Type mismatch!",
-				"Value type is [" + enumAsString(kind) + "],"
+				"Value type is [" + asNameString(kind) + "],"
 				"\nExpected type is [" + expectedType + "]"
 			);
 		}
@@ -866,24 +898,6 @@ namespace Data {
 		template <class T>
 		constexpr static String asKindName() {
 			return nameof<T>();
-		}
-
-		constexpr static String enumAsString(Kind const& kind) {
-			switch (kind) {
-				case Kind::DVK_UNDEFINED:	return "undefined";
-				case Kind::DVK_NULL:		return "null";
-				case Kind::DVK_NAN:			return "NaN";
-				case Kind::DVK_BOOLEAN:		return "boolean";
-				case Kind::DVK_SIGNED:		return "signed";
-				case Kind::DVK_UNSIGNED:	return "unsigned";
-				case Kind::DVK_REAL:		return "real";
-				case Kind::DVK_STRING:		return "string";
-				case Kind::DVK_BYTES:		return "bytes";
-				case Kind::DVK_ARRAY:		return "array";
-				case Kind::DVK_OBJECT:		return "object";
-				default: break;
-			}
-			return "none";
 		}
 
 		constexpr static StringType escape(StringType const& str, bool unquotedIDs) {

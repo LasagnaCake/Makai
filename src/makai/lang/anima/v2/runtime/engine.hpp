@@ -6,6 +6,53 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
+		using Value = Data::Value;
+
+		struct FunctionRegistry {
+			using ExternalFunction = Data::Value(Data::Value::ArrayType const&);
+
+			using UUID = ID::VLUID;
+
+			template <Type::Functional<ExternalFunction> TFunction>
+			constexpr UUID add(String const& name, TFunction const& func) {
+				auto const id = ++current;
+				functions[id] = func;
+				bind(name, id);
+				return id;
+			}
+			
+			constexpr void remove(UUID const& id) {
+				nameMap.filter([&] (auto const& e) {return e.value == id;});
+			}
+			
+			constexpr UUID bind(String const& name, UUID const& id) {
+				auto const prev = nameMap[name];
+				nameMap[name] = id;
+				return prev;
+			}
+
+			constexpr void unbind(String const& name, UUID const& id) {
+				nameMap.erase(name);
+				functions.erase(id);
+			}
+
+			constexpr void clear(String const& name) {
+				nameMap.erase(name);
+			}
+
+			constexpr Value invoke(String const& name, Value::ArrayType const& args) {
+				if (!nameMap.contains(name)) return Value::undefined();
+				Value::ArrayType result;
+				return functions[nameMap[name]](args);
+			}
+		
+		private:
+			Dictionary<UUID>						nameMap;
+			Map<UUID, Function<ExternalFunction>>	functions;
+
+			UUID current = UUID::create(0);
+		};
+
 		struct Error {
 			String				message;
 			usize				location;
@@ -29,20 +76,28 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_LNOT	= '!',
 		};
 
+		enum class Action {
+			AV2_EA_NULL,
+			AV2_EA_V1_COMMAND,
+			AV2_EA_EXTERN_CALL
+		};
+
 		bool process();
 
-	protected:
-		virtual Data::Value fetchExternal(uint64 const valueID);
+		FunctionRegistry functions;
 
-		static Data::Value fetchInternal(uint64 const valueID);
+	protected:
+		virtual Value fetchExternal(uint64 const valueID);
+
+		static Value fetchInternal(uint64 const valueID);
 
 	private:
 		Engine::Error invalidInstructionEror();
 		Engine::Error invalidSourceEror(String const& description);
 		Engine::Error invalidFunctionEror(String const& description);
 
-		Data::Value consumeValue(Core::DataLocation const from);
-		Data::Value getValueFromLocation(Core::DataLocation const location, usize const id);
+		Value consumeValue(Core::DataLocation const from);
+		Value getValueFromLocation(Core::DataLocation const location, usize const id);
 
 		void crash(Engine::Error const& error);
 
