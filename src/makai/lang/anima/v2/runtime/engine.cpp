@@ -129,6 +129,30 @@ Makai::Data::Value Engine::getValueFromLocation(Core::DataLocation const loc, us
 	return Data::Value::undefined();
 }
 
+Makai::Data::Value& Engine::accessValue(Core::DataLocation const from) {
+	if (
+		(from >= Core::asRegister(0) && from < Core::asRegister(Core::REGISTER_COUNT))
+	||	(from == Core::DataLocation::AV2_DL_TEMPORARY)
+	) return accessLocation(from, 0);
+	advance();
+	return accessLocation(from, bitcast<uint64>(current));
+}
+
+Makai::Data::Value& Engine::accessLocation(Core::DataLocation const loc, usize const id) {
+	if (loc >= Core::asRegister(0) && loc < Core::asRegister(Core::REGISTER_COUNT)) {
+		return context.registers[(enumcast(loc) - enumcast(Core::DataLocation::AV2_DL_REGISTER))];
+	}
+	switch (loc) {
+		case Core::DataLocation::AV2_DL_CONST:			return program.constants[id];
+		case Core::DataLocation::AV2_DL_STACK:			return context.valueStack[id];
+		case Core::DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
+//		case Core::DataLocation::AV2_DL_HEAP:			{} break;
+		case Core::DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
+		case Core::DataLocation::AV2_DL_TEMPORARY:		
+		default: return context.temporary;
+	}
+}
+
 void Engine::jumpTo(usize const point, bool returnable) {
 	if (returnable)
 		context.pointerStack.pushBack(context.pointers);
@@ -256,7 +280,7 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			Value::OrderType order = Value::Order::EQUAL;
 			if (a.type() == b.type())				order = a <=> b;
-			else if (a.isNumber() &&b.isNumber())	order = a.get<float>() <=> b.get<float>();
+			else if (a.isNumber() && b.isNumber())	order = a.get<double>() <=> b.get<double>();
 			else {
 				context.valueStack.pushBack(Value::undefined());
 				break;
@@ -267,4 +291,25 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			else context.valueStack.pushBack(Value::undefined());
 		} break;
 	}
+}
+
+void Engine::v2StackPush() {
+	auto const inter = Cast::bit<Core::Instruction::StackInteraction>(current.type);
+	auto const value = consumeValue(inter.location);
+	context.valueStack.pushBack(value);
+}
+
+void Engine::v2StackPop() {
+	auto const inter = Cast::bit<Core::Instruction::StackInteraction>(current.type);
+	auto& value = accessValue(inter.location);
+	value = context.valueStack.popBack();
+}
+
+void Engine::v2StackSwap() {
+	if (context.valueStack.size() >= 2)
+		Makai::swap(context.valueStack[-1], context.valueStack[-2]);
+}
+
+void Engine::v2StackClear() {
+	context.valueStack.clear();
 }

@@ -98,6 +98,9 @@ namespace Makai::Anima::V2::Runtime {
 
 		Value consumeValue(Core::DataLocation const from);
 		Value getValueFromLocation(Core::DataLocation const location, usize const id);
+		
+		Value& accessValue(Core::DataLocation const from);
+		Value& accessLocation(Core::DataLocation const location, usize const id);
 
 		void crash(Engine::Error const& error);
 
@@ -111,6 +114,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Negate();
 		void v2StackPush();
 		void v2StackPop();
+		void v2StackSwap();
 		void v2StackClear();
 		void v2Return();
 		void v2Halt();

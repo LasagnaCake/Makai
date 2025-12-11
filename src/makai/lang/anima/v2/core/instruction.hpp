@@ -135,6 +135,7 @@ namespace Makai::Anima::V2::Core {
 			DataLocation	location;
 		};
 		
+		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
 			/// @param type 0 = Wastes a cycle; 1 = does not waste a cycle.
@@ -157,6 +158,9 @@ namespace Makai::Anima::V2::Core {
 			/// @brief Pops a value from the top of the stack into a given location.	
 			/// @param type `StackInteraction` = How to handle the value.
 			AV2_IN_STACK_POP,
+			/// @brief Swaps the topmost two values of the stack.	
+			/// @param type Discarded.	
+			AV2_IN_STACK_SWAP,
 			/// @brief Clears the entire stack.
 			/// @param type Discarded.
 			AV2_IN_STACK_CLEAR,
