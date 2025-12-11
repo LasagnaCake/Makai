@@ -118,7 +118,7 @@ Makai::Data::Value Engine::getValueFromLocation(Core::DataLocation const loc, us
 	switch (loc) {
 		case Core::DataLocation::AV2_DL_CONST:			return program.constants[id];
 		case Core::DataLocation::AV2_DL_STACK:			return context.valueStack[id];
-		case Core::DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-id];
+		case Core::DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
 //		case Core::DataLocation::AV2_DL_HEAP:			{} break;
 		case Core::DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
 		case Core::DataLocation::AV2_DL_INTERNAL:		return fetchInternal(id);
@@ -154,6 +154,7 @@ Makai::Data::Value Engine::fetchInternal(uint64 const valueID) {
 		Data::Value(true),
 		Data::Value::undefined(),
 		Data::Value::null(),
+		Data::Value(Data::Value::NotANumber()),
 		Data::Value(0u),
 		Data::Value(0d),
 		Data::Value(""),
