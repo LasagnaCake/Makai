@@ -501,10 +501,8 @@ private:
 
 	constexpr static void memdestruct(ref<DataType> const& p, SizeType const sz) {
 		if (!(sz && p)) return;
-		if constexpr (!Type::Standard<DataType>) {
-			for (auto i = p; i != (p+sz); ++i)
-				MX::destruct(i);
-		}
+		if constexpr (!Type::Standard<DataType>)
+			MX::objclear(p, sz);
 	}
 
 	constexpr void memdestroy(owner<DataType> const& p, SizeType const sz) {
