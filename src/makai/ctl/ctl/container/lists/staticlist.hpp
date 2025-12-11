@@ -159,7 +159,7 @@ public:
 		if (empty()) emptyError();
 		DataType value = back();
 		count--;
-		if (count) MX::destruct<DataType>(contents+count);
+		MX::destruct<DataType>(contents+count);
 		return value;
 	}
 
