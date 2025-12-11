@@ -20,14 +20,11 @@ namespace Makai::Graph::Ref {
 			using MeshReference = Reference<List<Triangle>>;
 
 			constexpr BoundRange(MeshReference const& mesh, usize const start, usize const count):
-				start(start),
 				count(count),
+				start(start),
 				mesh(mesh) {}
-
-			/// @brief Start of bound range.
-			usize const start;
 			/// @brief Amount of triangles bound to the range.
-			usize const count;
+			usize const	count;
 			/// @brief Returns an iterator to the beginning of the range.
 			/// @return Iterator to beginning of range.
 			constexpr auto begin() const	{return mesh->begin() + start;	}
@@ -52,6 +49,9 @@ namespace Makai::Graph::Ref {
 			constexpr operator bool() const {return mesh.exists();}
 
 		private:
+			/// @brief Start of bound range.
+			usize start;
+
 			friend struct Referend;
 			/// @brief Mesh containing bound triangles.
 			Reference<List<Triangle>> mesh;
