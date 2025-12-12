@@ -10,5 +10,6 @@
 #include "container/container.hpp"
 #include "collision/collision.hpp"
 #include "calendar/calendar.hpp"
+#include "cli/cli.hpp"
 
 #endif // CTL_EX_H

@@ -175,21 +175,14 @@ namespace CTL::NodeGraph {
 			}
 			return *this;
 		}
-		
-		/// @brief Returns the weight for a given connection.
-		/// @param from Start node of connection to get value for.
-		/// @param to End node of connection to get value for.
-		/// @return Edge value.
-		constexpr TValue weight(TKey const& from, TKey const& to) const requires (Type::NonVoid<TValue>) {
-			return forward[from][to];
-		}
 
 		/// @brief Creates a connection between two nodes, if applicable.
 		/// @param from Node to connect from.
 		/// @param to Node to connect to.
 		/// @param weight Edge weight.
 		/// @return Reference to self.
-		constexpr Mixed& connect(TKey const& from, TKey const& to, TValue const& weight = TValue())
+		template <class TNonVoid = Meta::If<Type::Void<TValue>, int, TValue>>
+		constexpr Mixed& connect(TKey const& from, TKey const& to, TNonVoid const& weight = TNonVoid())
 		requires (Type::NonVoid<TValue>) {
 			if (from == to) return *this;
 			forward[from][to]	= {weight};
@@ -199,6 +192,14 @@ namespace CTL::NodeGraph {
 				reverse[to][from] = {weight};
 			}
 			return *this;
+		}
+		
+		/// @brief Returns the weight for a given connection.
+		/// @param from Start node of connection to get value for.
+		/// @param to End node of connection to get value for.
+		/// @return Edge value.
+		constexpr TValue weight(TKey const& from, TKey const& to) const requires (Type::NonVoid<TValue>) {
+			return forward[from][to];
 		}
 
 		/// @brief Removes a connection between two nodes, if applicable.
@@ -223,12 +224,12 @@ namespace CTL::NodeGraph {
 			if (forward.contains(node))
 				for (auto child: forward[node]) {
 					reverse[child.key][node].exists		= false;
-					if constexpr (!IS_DIRECTED) {
-						reverse[node][child.key].exists	= false;
+					if constexpr (!IS_DIRECTED)
 						forward[child.key][node].exists	= false;
-					}
 				}
 			forward[node].clear();
+			if constexpr (!IS_DIRECTED)
+				reverse[node].clear();
 			return *this;
 		}
 
