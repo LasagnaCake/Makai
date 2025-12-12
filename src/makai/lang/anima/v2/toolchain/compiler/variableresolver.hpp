@@ -1,12 +1,11 @@
-#ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_SCOPERESOLVER_H
-#define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_SCOPERESOLVER_H
+#ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_VARIABLERESOLVER_H
+#define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_VARIABLERESOLVER_H
 
 #include "../../../../../lexer/lexer.hpp"
 #include "resolver.hpp"
-#include "variableresolver.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler {
-	struct ScopeResolver: AResolver {
+	struct VariableResolver: AResolver {
 		using AResolver::AResolver;
 
 		virtual usize resolve(usize const start, ParseTree::Node& root) override;

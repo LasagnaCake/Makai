@@ -5,13 +5,14 @@
 
 namespace Makai::Anima::V2::Toolchain::Compiler {
 	struct AResolver {
-		using TokenList = Lexer::CStyle::TokenStream::TokenList;
+		using TokenStream	= Context::TokenStream;
+		using TokenList		= Context::TokenList;
 
 		AResolver(Context& ctx): context(ctx) {}
 
 		virtual ~AResolver() {}
 
-		virtual usize resolve(usize const start, ParseTree::Node::ID const& root) = 0;
+		virtual usize resolve(usize const start, ParseTree::Node& root) = 0;
 	
 	protected:
 		Context& context;
