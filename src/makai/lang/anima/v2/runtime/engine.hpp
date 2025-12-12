@@ -54,9 +54,9 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		struct Error {
-			String				message;
-			usize				location;
-			Core::Instruction	instruction;
+			String		message;
+			usize		location;
+			Instruction	instruction;
 		};
 
 		enum class BuiltInFunction: char {
@@ -96,11 +96,11 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error invalidSourceEror(String const& description);
 		Engine::Error invalidFunctionEror(String const& description);
 
-		Value consumeValue(Core::DataLocation const from);
-		Value getValueFromLocation(Core::DataLocation const location, usize const id);
+		Value consumeValue(DataLocation const from);
+		Value getValueFromLocation(DataLocation const location, usize const id);
 		
-		Value& accessValue(Core::DataLocation const from);
-		Value& accessLocation(Core::DataLocation const location, usize const id);
+		Value& accessValue(DataLocation const from);
+		Value& accessLocation(DataLocation const location, usize const id);
 
 		void crash(Engine::Error const& error);
 
@@ -124,11 +124,11 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
-		bool				isFinished = false;
-		Program				program;
-		Context				context;
-		Core::Instruction	current;
-		Nullable<Error>		err;
+		bool			isFinished = false;
+		Program			program;
+		Context			context;
+		Instruction		current;
+		Nullable<Error>	err;
 	};
 }
 

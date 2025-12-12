@@ -2,7 +2,8 @@
 
 using Makai::Anima::V2::Runtime::Engine;
 
-namespace Core		= Makai::Anima::V2::Core;
+using namespace Makai::Anima::V2;
+
 namespace Runtime	= Makai::Anima::V2::Runtime;
 
 using Makai::Data::Value;
@@ -11,9 +12,9 @@ bool Engine::process() {
 	if (isFinished) return false;
 	do {
 		advance();
-	} while (current.name == Core::Instruction::Name::AV2_IN_NO_OP && current.type);
+	} while (current.name == Instruction::Name::AV2_IN_NO_OP && current.type);
 	switch (current.name) {
-		using enum Core::Instruction::Name;
+		using enum Instruction::Name;
 		case AV2_IN_HALT:			v2Halt();		break;
 		case AV2_IN_STACK_POP:		v2StackPop();	break;
 		case AV2_IN_STACK_PUSH:		v2StackPush();	break;
@@ -48,14 +49,14 @@ void Engine::advance() {
 
 void Engine::v2Invoke() {
 	// Get invocation
-	Core::Instruction::Invocation invocation = bitcast<Core::Instruction::Invocation>(current.type);
+	Instruction::Invocation invocation = bitcast<Instruction::Invocation>(current.type);
 	// If invocation is internal call, do so
-	if (invocation.location == Core::DataLocation::AV2_DL_INTERNAL)
+	if (invocation.location == DataLocation::AV2_DL_INTERNAL)
 		return callBuiltIn(Cast::as<Engine::BuiltInFunction>(invocation.argc));
 	// Get function name (if not external function)
 	advance();
 	uint64 funcName = bitcast<uint64>(current);
-	if (invocation.location != Core::DataLocation::AV2_DL_EXTERNAL) {
+	if (invocation.location != DataLocation::AV2_DL_EXTERNAL) {
 		auto fn = getValueFromLocation(invocation.location, funcName);
 		if (!fn.isUnsigned())
 			return crash(invalidFunctionEror("Invalid function name!"));
@@ -65,12 +66,12 @@ void Engine::v2Invoke() {
 	context.valueStack.expand(invocation.argc, {});
 	for (usize i = 0; i < invocation.argc; ++i) {
 		advance();
-		Core::Instruction::Invocation::Parameter arg;
+		Instruction::Invocation::Parameter arg;
 		arg = bitcast<decltype(arg)>(current);
 		context.valueStack[-invocation.argc+arg.argument] = consumeValue(arg.location);
 	}
 	// If external function, invoke it
-	if (invocation.location == Core::DataLocation::AV2_DL_EXTERNAL) {
+	if (invocation.location == DataLocation::AV2_DL_EXTERNAL) {
 		advance();
 		ssize returnType = Cast::as<ssize>(current.name);
 		auto const result = functions.invoke(
@@ -102,53 +103,53 @@ void Engine::v2Invoke() {
 	jumpTo(funcName, true);
 }
 
-Makai::Data::Value Engine::consumeValue(Core::DataLocation const from) {
+Makai::Data::Value Engine::consumeValue(DataLocation const from) {
 	if (
-		(from >= Core::asRegister(0) && from < Core::asRegister(Core::REGISTER_COUNT))
-	||	(from == Core::DataLocation::AV2_DL_TEMPORARY)
+		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
+	||	(from == DataLocation::AV2_DL_TEMPORARY)
 	) return getValueFromLocation(from, 0);
 	advance();
 	return getValueFromLocation(from, bitcast<uint64>(current));
 }
 
-Makai::Data::Value Engine::getValueFromLocation(Core::DataLocation const loc, usize const id) {
-	if (loc >= Core::asRegister(0) && loc < Core::asRegister(Core::REGISTER_COUNT)) {
-		return context.registers[(enumcast(loc) - enumcast(Core::DataLocation::AV2_DL_REGISTER))];
+Makai::Data::Value Engine::getValueFromLocation(DataLocation const loc, usize const id) {
+	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
+		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
 	switch (loc) {
-		case Core::DataLocation::AV2_DL_CONST:			return program.constants[id];
-		case Core::DataLocation::AV2_DL_STACK:			return context.valueStack[id];
-		case Core::DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
-//		case Core::DataLocation::AV2_DL_HEAP:			{} break;
-		case Core::DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
-		case Core::DataLocation::AV2_DL_INTERNAL:		return fetchInternal(id);
-		case Core::DataLocation::AV2_DL_EXTERNAL:		return fetchExternal(id);
-		case Core::DataLocation::AV2_DL_TEMPORARY:		return context.temporary;
+		case DataLocation::AV2_DL_CONST:			return program.constants[id];
+		case DataLocation::AV2_DL_STACK:			return context.valueStack[id];
+		case DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
+//		case DataLocation::AV2_DL_HEAP:			{} break;
+		case DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
+		case DataLocation::AV2_DL_INTERNAL:		return fetchInternal(id);
+		case DataLocation::AV2_DL_EXTERNAL:		return fetchExternal(id);
+		case DataLocation::AV2_DL_TEMPORARY:		return context.temporary;
 		default: return Data::Value::undefined();
 	}
 	return Data::Value::undefined();
 }
 
-Makai::Data::Value& Engine::accessValue(Core::DataLocation const from) {
+Makai::Data::Value& Engine::accessValue(DataLocation const from) {
 	if (
-		(from >= Core::asRegister(0) && from < Core::asRegister(Core::REGISTER_COUNT))
-	||	(from == Core::DataLocation::AV2_DL_TEMPORARY)
+		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
+	||	(from == DataLocation::AV2_DL_TEMPORARY)
 	) return accessLocation(from, 0);
 	advance();
 	return accessLocation(from, bitcast<uint64>(current));
 }
 
-Makai::Data::Value& Engine::accessLocation(Core::DataLocation const loc, usize const id) {
-	if (loc >= Core::asRegister(0) && loc < Core::asRegister(Core::REGISTER_COUNT)) {
-		return context.registers[(enumcast(loc) - enumcast(Core::DataLocation::AV2_DL_REGISTER))];
+Makai::Data::Value& Engine::accessLocation(DataLocation const loc, usize const id) {
+	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
+		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
 	switch (loc) {
-		case Core::DataLocation::AV2_DL_CONST:			return program.constants[id];
-		case Core::DataLocation::AV2_DL_STACK:			return context.valueStack[id];
-		case Core::DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
-//		case Core::DataLocation::AV2_DL_HEAP:			{} break;
-		case Core::DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
-		case Core::DataLocation::AV2_DL_TEMPORARY:		
+		case DataLocation::AV2_DL_CONST:			return program.constants[id];
+		case DataLocation::AV2_DL_STACK:			return context.valueStack[id];
+		case DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
+//		case DataLocation::AV2_DL_HEAP:			{} break;
+		case DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
+		case DataLocation::AV2_DL_TEMPORARY:		
 		default: return context.temporary;
 	}
 }
@@ -294,13 +295,13 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 }
 
 void Engine::v2StackPush() {
-	auto const inter = Cast::bit<Core::Instruction::StackInteraction>(current.type);
+	auto const inter = Cast::bit<Instruction::StackInteraction>(current.type);
 	auto const value = consumeValue(inter.location);
 	context.valueStack.pushBack(value);
 }
 
 void Engine::v2StackPop() {
-	auto const inter = Cast::bit<Core::Instruction::StackInteraction>(current.type);
+	auto const inter = Cast::bit<Instruction::StackInteraction>(current.type);
 	auto& value = accessValue(inter.location);
 	value = context.valueStack.popBack();
 }

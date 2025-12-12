@@ -2,7 +2,7 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_CONTEXT_H
 
 #include "../../../../compat/ctl.hpp"
-#include "../core/instruction.hpp"
+#include "../instruction.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Context {
@@ -12,12 +12,12 @@ namespace Makai::Anima::V2::Runtime {
 			usize	instruction	= -1;
 		};
 		using VariableBank = Map<uint64, Data::Value>;
-		Pointers								pointers;
-		Data::Value::ArrayType					valueStack;
-		List<Pointers>							pointerStack;
-		Data::Value::ArrayType					globals;
-		As<Data::Value[Core::REGISTER_COUNT]>	registers;
-		Data::Value								temporary;
+		Pointers						pointers;
+		Data::Value::ArrayType			valueStack;
+		List<Pointers>					pointerStack;
+		Data::Value::ArrayType			globals;
+		As<Data::Value[REGISTER_COUNT]>	registers;
+		Data::Value						temporary;
 	};
 }
 

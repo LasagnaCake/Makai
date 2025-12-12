@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), makai)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call submake-all,embed impl tool lexer file data audio graph core)
+	$(call submake-all,embed impl tool lexer file data lang audio graph core)
 endef
 
 all: debug release

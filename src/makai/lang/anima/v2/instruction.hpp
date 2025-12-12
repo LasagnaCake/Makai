@@ -1,9 +1,9 @@
-#ifndef MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
-#define MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
+#ifndef MAKAILIB_ANIMA_V2_INSTRUCTION_H
+#define MAKAILIB_ANIMA_V2_INSTRUCTION_H
 
-#include "../../../../compat/ctl.hpp"
+#include "../../../compat/ctl.hpp"
 
-namespace Makai::Anima::V2::Core {
+namespace Makai::Anima::V2 {
 	/// @brief Register count.
 	constexpr usize REGISTER_COUNT = 32;
 
