@@ -11,7 +11,7 @@ void Referend::removeReference(AReference& ref)  {
 	if (references.find(&ref) == -1) return;
 	if (!ref.triangles) return;
 	for (auto& r: references)
-		if (r->triangles.start >= ref.triangles.start)
+		if (r != &ref && r->triangles.start >= ref.triangles.start)
 			r->triangles.start -= ref.triangles.count;
 	triangles.eraseRange(ref.triangles.start, ref.triangles.start + ref.triangles.count);
 	unbindReference(ref);
