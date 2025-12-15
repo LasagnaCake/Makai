@@ -94,14 +94,29 @@ namespace Makai::Anima::V2::Runtime {
 		FunctionRegistry functions;
 
 	protected:
-		virtual Value fetchExternal(uint64 const valueID);
+		virtual Value fetchExternal(String const& name);
 
-		static Value fetchInternal(uint64 const valueID);
+		Value fetchInternal(uint64 const valueID);
+
+		constexpr bool inStrictMode() const {return mode == ContextMode::AV2_CM_STRICT;}
+
+		void crash(Engine::Error const& error);
 
 	private:
 		Engine::Error invalidInstructionEror();
+		Engine::Error endOfProgramError();
+		Engine::Error invalidBinaryMathError(Instruction::BinaryMath const& math);
+		Engine::Error invalidUnaryMathError(Instruction::UnaryMath const& math);
+		Engine::Error invalidInternalValueError(uint64 const& id);
+		Engine::Error invalidLocationError(DataLocation const& loc);
 		Engine::Error invalidSourceEror(String const& description);
+		Engine::Error invalidDestinationEror(String const& description);
 		Engine::Error invalidFunctionEror(String const& description);
+		Engine::Error missingArgumentsError();
+
+		Engine::Error makeErrorHere(String const& message);
+
+		void pushUndefinedIfInLooseMode(String const& fname);
 
 		Value consumeValue(DataLocation const from);
 		Value getValueFromLocation(DataLocation const location, usize const id);
@@ -109,9 +124,7 @@ namespace Makai::Anima::V2::Runtime {
 		Value& accessValue(DataLocation const from);
 		Value& accessLocation(DataLocation const location, usize const id);
 
-		void crash(Engine::Error const& error);
-
-		void advance();
+		void advance(bool isRequired = false);
 		void terminate();
 
 		void v2Invoke();
@@ -126,14 +139,16 @@ namespace Makai::Anima::V2::Runtime {
 		void v2StackFlush();
 		void v2Return();
 		void v2Halt();
-		void v2Math();
+		void v2BinaryMath();
+		void v2UnaryMath();
 
 		void callBuiltIn(BuiltInFunction const func);
 
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
-		bool			isFinished = false;
+		bool			isFinished	= false;
+		ContextMode		mode		= ContextMode::AV2_CM_STRICT;
 		Program			program;
 		Context			context;
 		Instruction		current;

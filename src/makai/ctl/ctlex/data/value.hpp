@@ -7,6 +7,9 @@
 #include "../../ctl/typetraits/nameof.hpp"
 #include "../../ctl/algorithm/convert/convert.hpp"
 
+#include "../math/vector.hpp"
+#include "../math/matrix.hpp"
+
 CTL_EX_NAMESPACE_BEGIN
 
 /// @brief Data exchange format facilities.
@@ -31,7 +34,7 @@ namespace Type::Ex::Data {
 }
 
 namespace Data {
-	// TODO: Add `Vector` & `Matrix` support
+	// TODO: Add `Vector` (& `Matrix`?) support
 	struct Value: Ordered {
 		/// @brief Integer type.
 		using IntegerType	= ssize;
@@ -45,6 +48,8 @@ namespace Data {
 		using ArrayType		= List<Value>;
 		/// @brief Object type.
 		using ObjectType	= ListMap<StringType, Value>;
+		/// @brief Vector type.
+		using VectorType	= Math::Vector4;
 		
 		/// @brief Underlying value type.
 		enum class Kind {
@@ -59,7 +64,8 @@ namespace Data {
 			DVK_STRING,
 			DVK_ARRAY,
 			DVK_BYTES,
-			DVK_OBJECT
+			DVK_OBJECT,
+			DVK_VECTOR
 		};
 
 		/// @brief Underlying storage.
@@ -70,6 +76,7 @@ namespace Data {
 			owner<ByteListType>	bytes;
 			owner<ArrayType>	array;
 			owner<ObjectType>	object;
+			owner<VectorType>	vector;
 
 			constexpr Content()		{integer = 0;}
 			constexpr ~Content()	{}

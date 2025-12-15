@@ -118,6 +118,8 @@ struct LinkedList:
 
 private:
 	struct Node {
+		using DataType = DataType;
+
 		DataType	value;
 		ref<Node>	prev = nullptr;
 		ref<Node>	next = nullptr;
@@ -146,9 +148,10 @@ public:
 
 	template <bool R, bool C = false>
 	struct Iterator {
-		using NodeType = Meta::If<C, Node, Node const>;
+		using NodeType			= Meta::MakeConstIf<C,	Node>;
+		using LinkedListType	= Meta::MakeConstIf<C,	LinkedList>;
 
-		constexpr Iterator(ref<NodeType> const node, ref<LinkedList> const parent): current(&node), parent(parent) {}
+		constexpr Iterator(ref<NodeType> const node, ref<LinkedListType> const parent): current(node), parent(parent) {}
 
 		constexpr Iterator(Iterator const&)	= default;
 		constexpr Iterator(Iterator&&)		= default;
@@ -160,7 +163,7 @@ public:
 		constexpr Iterator operator++(int)	{auto prev = copy(*this); if constexpr (R) retreat(); else advance(); return prev;}
 		constexpr Iterator operator--(int)	{auto prev = copy(*this); if constexpr (R) advance(); else retreat(); return prev;}
 
-		constexpr DataType& operator*() const {
+		constexpr auto operator*() const {
 			if (!current) emptyError();
 			return current->value;
 		}
@@ -172,7 +175,7 @@ public:
 			return *current;
 		}
 		
-		constexpr LinkedList& list() const {
+		constexpr LinkedListType& list() const {
 			if (!parent) emptyError();
 			return *parent;
 		}
@@ -185,8 +188,8 @@ public:
 		void advance() {if (current && current->next) current = current->next;}
 		void retreat() {if (current && current->prev) current = current->prev;}
 
-		ref<NodeType>	current	= nullptr;
-		ref<LinkedList>	parent	= nullptr;
+		ref<NodeType>		current	= nullptr;
+		ref<LinkedListType>	parent	= nullptr;
 	};
 
 	template <bool A, bool B> friend struct Iterator;
@@ -200,11 +203,11 @@ public:
 	}
 
 	constexpr SelfType& pushBack(ConstReferenceType value) {
-		auto const node = new Node{value};
+		ref<Node> const node = new Node{value};
 		if (head == nullptr)
-			head = &node;
-		else Node::parent(*tail, node);
-		tail = &node;
+			head = node;
+		else Node::parent(*tail, *node);
+		tail = node;
 		++count;
 		return *this;
 	}
@@ -214,7 +217,7 @@ public:
 		--count;
 		auto value = tail->value;
 		if (tail && head != tail) {
-			auto const newTail = tail->prev;
+			ref<Node> const newTail = tail->prev;
 			Node::unlink(*tail);
 			delete tail;
 			tail = newTail;
@@ -224,11 +227,11 @@ public:
 	}
 	
 	constexpr SelfType& pushFront(ConstReferenceType value) {
-		auto const node = new Node{value};
+		ref<Node> const node = new Node{value};
 		if (tail == nullptr)
-			tail = &node;
-		else Node::parent(node, *head);
-		head = &node;
+			tail = node;
+		else Node::parent(*node, *head);
+		head = node;
 		++count;
 		return *this;
 	}
@@ -238,7 +241,7 @@ public:
 		--count;
 		auto value = head->value;
 		if (head && head != tail) {
-			auto const newHead = head->next;
+			ref<Node> const newHead = head->next;
 			Node::unlink(*head);
 			delete head;
 			head = newHead;
@@ -247,12 +250,22 @@ public:
 		return value;
 	}
 
-	constexpr DataType front() const {
+	constexpr ConstReferenceType front() const {
 		if (!head) emptyError();
 		return head->value;
 	}
 
-	constexpr DataType back() const {
+	constexpr ConstReferenceType back() const {
+		if (!tail) emptyError();
+		return tail->value;
+	}
+
+	constexpr ReferenceType front() {
+		if (!head) emptyError();
+		return head->value;
+	}
+
+	constexpr ReferenceType back() {
 		if (!tail) emptyError();
 		return tail->value;
 	}

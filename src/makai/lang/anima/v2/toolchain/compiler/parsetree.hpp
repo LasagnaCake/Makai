@@ -2,46 +2,39 @@
 #define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_PARSETREE_H
 
 #include "../../../../../lexer/lexer.hpp"
+#include "../../instruction.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler {
 	struct ParseTree {
 		struct Node {
 			enum class Type {
 				AV2_TC_PNT_INVALID	= -1,
-				AV2_TC_PNT_VAR_DECL,
+				AV2_TC_PNT_LOCAL_DECL,
+				AV2_TC_PNT_GLOBAL_DECL,
 				AV2_TC_PNT_FN_DECL,
-				AV2_TC_PNT_INLINE_EXPR,
-				AV2_TC_PNT_BLOCK_EXPR,
-				AV2_TC_PNT_ARITHMETIC,
+				AV2_TC_PNT_TYPE_DECL,
+				AV2_TC_PNT_EXPRESSION,
 				AV2_TC_PNT_FN_CALL,
+				AV2_TC_PNT_DIRECT_INST,
 				AV2_TC_PNT_OPERATOR
 			};
-			Type type;
+			Type		type;
 			Data::Value	value;
 
-			Instance<List<Node>> nodes = new List<Node>();
+			LinkedList<Node> children;
 
-			struct Accessor {
-				Reference<List<Node>>	nodes;
-				usize const				index;
-
-				constexpr operator Node&() const {return node();}
-				
-				constexpr Node& node() const {
-					return (*nodes)[index];
-				}
-			};
+			BinaryData<> compile() const;
 		};
 
-		constexpr Node::Accessor create() {
-			root.nodes->pushBack({});
-			return {root.nodes.reference(), root.nodes->size() - 1};
+		constexpr Node& create() {
+			return root.children.pushBack({}).back();
 		}
 		
-		constexpr Node::Accessor create(Node& parent) {
-			parent.nodes->pushBack({});
-			return {parent.nodes.reference(), parent.nodes->size() - 1};
+		constexpr Node& create(Node& parent) {
+			return parent.children.pushBack({}).back();
 		}
+
+		BinaryData<> compile() const;
 
 		Node root;
 	};

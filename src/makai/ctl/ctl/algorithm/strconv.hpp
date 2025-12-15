@@ -166,20 +166,6 @@ constexpr String toString(T const& value, bool const text = false) {
 	return String::fromNumber<bool>(value, text);
 }
 
-/// @brief Class-to-string conversion.
-/// @tparam T Class type.
-/// @param value Value to convert.
-/// @return Resulting string.
-/// @note Requires type to be implicitly convertible to string.
-template<class T>
-constexpr String toString(T const& value)
-requires (
-	Type::Convertible<T, String>
-&&	Type::Class<T>
-) {
-	return String(value);
-}
-
 /// @brief Conversion-specific type traits.
 namespace Type::Conversion {
 	/// @brief Class must have a `toString()` function.
@@ -187,6 +173,20 @@ namespace Type::Conversion {
 	concept ClassStringable = requires (T t) {
 		{t.toString()} -> Type::Equal<String>;
 	};
+}
+
+/// @brief Class-to-string conversion.
+/// @tparam T Class type.
+/// @param value Value to convert.
+/// @return Resulting string.
+/// @note Requires type to be implicitly convertible to string, and not possess a `toString` function.
+template<Type::CanBecome<String> T>
+constexpr String toString(T const& value)
+requires (
+	Type::Class<T>
+&& !Type::Conversion::ClassStringable<T>
+) {
+	return String(value);
 }
 
 /// @brief Class-to-string conversion.

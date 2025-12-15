@@ -29,6 +29,14 @@ namespace Makai::Anima::V2 {
 		AV2_DL_REGISTER,
 	};
 
+	/// @brief Execution context mode.
+	enum class ContextMode: uint8 {
+		/// @brief Strict.
+		AV2_CM_STRICT,
+		/// @brief Strict.
+		AV2_CM_LOOSE,
+	};
+
 	/// @brief Returns the register for the given ID.
 	/// @param id ID to get register for.
 	/// @return Register for ID.
@@ -94,16 +102,30 @@ namespace Makai::Anima::V2 {
 	
 	/// @brief Instruction.
 	struct [[gnu::aligned(8)]] Instruction {
+		/// @brief Stop mode.
+		struct [[gnu::aligned(4)]] Stop {
+			enum class Mode: uint8 {
+				AV2_ISM_NORMAL,
+				AV2_ISM_ERROR
+			};
+			Mode			mode;
+			DataLocation	source;
+		};
+
+		/// @brief Context mode.
+		struct [[gnu::aligned(4)]] Context {
+			ContextMode		mode;
+		};
+
 		/// @brief Value declaration.
 		struct [[gnu::aligned(4)]] Declaration {
-			uint16 type;
-			uint16 modifiers;
+		//	uint16 type;
+		//	uint16 modifiers;
 		};
 		
 		/// @brief Value transfer.
 		struct [[gnu::aligned(4)]] Transfer {
 			DataLocation	from, to;
-			uint16			id;
 		};
 		
 		/// @brief Function invocation.
@@ -117,6 +139,21 @@ namespace Makai::Anima::V2 {
 				uint8			argument;
 				uint32			id;
 			};
+		};
+		/// @brief Jump leap.
+		struct [[gnu::aligned(4)]] Leap {
+			enum class Type: uint8 {
+				AV2_ILT_UNCONDITIONAL,
+				AV2_ILT_IF_TRUTHY,
+				AV2_ILT_IF_FALSY,
+				AV2_ILT_IF_ZERO,
+				AV2_ILT_IF_NOT_ZERO,
+				AV2_ILT_IF_NEGATIVE,
+				AV2_ILT_IF_POSITIVE,
+			};
+			Type			type:		7;
+			bool			isDynamic:	1;
+			DataLocation	condition;
 		};
 		
 		/// @brief Comparison operator.
@@ -136,7 +173,14 @@ namespace Makai::Anima::V2 {
 			DataLocation	location;
 		};
 
-		/// @brief Math operation.
+		/// @brief Anima V1 operation.
+		struct [[gnu::aligned(4)]] V1Operation {
+			enum class Name: uint16 {};
+			uint16	mode:	4;
+			Name	name:	12;
+		};
+
+		/// @brief Binary math operation.
 		struct [[gnu::aligned(4)]] BinaryMath {
 			enum class Operation: uint8 {
 				AV2_IBM_OP_ADD,
@@ -145,49 +189,106 @@ namespace Makai::Anima::V2 {
 				AV2_IBM_OP_DIV,
 				AV2_IBM_OP_REM,
 				AV2_IBM_OP_POW,
+				AV2_IBM_OP_ATAN2,
+				AV2_IBM_OP_LOG,
 			};
 			Operation op;
 			DataLocation lhs, rhs, out;
+		};
+
+		/// @brief Unary math operation.
+		struct [[gnu::aligned(4)]] UnaryMath {
+			enum class Operation: uint8 {
+				AV2_IUM_OP_NEGATE,
+				AV2_IUM_OP_RECIPROCATE,
+				AV2_IUM_OP_SIN,
+				AV2_IUM_OP_COS,
+				AV2_IUM_OP_TAN,
+				AV2_IUM_OP_ASIN,
+				AV2_IUM_OP_ACOS,
+				AV2_IUM_OP_ATAN,
+				AV2_IUM_OP_SINH,
+				AV2_IUM_OP_COSH,
+				AV2_IUM_OP_TANH,
+				AV2_IUM_OP_LOG2,
+				AV2_IUM_OP_LOG10,
+				AV2_IUM_OP_LN,
+				AV2_IUM_OP_SQRT,
+			};
+			Operation op;
+			DataLocation v, out;
 		};
 		
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
 			/// @param type 0 = Wastes a cycle; 1 = does not waste a cycle.
+			/// @details `nop`
 			AV2_IN_NO_OP,
-			/// @brief No-operation.
-			/// @param type `Result` = Where the result is located.
+			/// @brief Halts execution.
+			/// @param type `Stop` = What kind of stop to do.
+			/// @details `halt [<source-id>]`
 			AV2_IN_HALT,
+			/// @brief Switches to a given execution context mode.
+			/// @param type `Context` = What kind of context to switch to.
+			/// @details `ctx`
+			AV2_IN_MODE,
 			/// @brief Declare a global variable.
 			/// @param type `Declaration` = How to declare the variable.
+			/// @details `global <name-id>`
 			AV2_IN_GLOBAL,
 			/// @brief Copies a value from one location to another.
 			/// @param type `Transfer` = How to transfer the data.
+			/// @details `copy [<from-id>] [<to-id>]`
 			AV2_IN_COPY,
 			/// @brief Invokes a function.
 			/// @param type `Invocation` = How to invoke the function.
+			/// @details `invoke [<func-id>] [<args> ...]`
 			AV2_IN_CALL,
+			/// @brief Executes a jump.
+			/// @param type `Leap` = How to jump.
+			/// @details `jump [<cond-id>] (<dynamic-to-src-id> | <to-id>)`
+			AV2_IN_JUMP,
 			/// @brief Pushes a value to the top of the stack.	
-			/// @param type `StackInteraction` = How to handle the value.	
-			AV2_IN_STACK_PUSH,
-			/// @brief Pops a value from the top of the stack into a given location.	
 			/// @param type `StackInteraction` = How to handle the value.
+			/// @details `push [<loc-id>]`
+			AV2_IN_STACK_PUSH,
+			/// @brief Pops a value from the top of the stack into a given location.
+			/// @param type `StackInteraction` = How to handle the value.
+			/// @details `push [<loc-id>]`
 			AV2_IN_STACK_POP,
 			/// @brief Swaps the topmost two values of the stack.	
-			/// @param type Discarded.	
+			/// @param type Discarded.
+			/// @details `swap`
 			AV2_IN_STACK_SWAP,
 			/// @brief Clears a given number of elements from the top of the stack.
 			/// @param type Amount of items to clear.
+			/// @details `clear`
 			AV2_IN_STACK_CLEAR,
 			/// @brief Clears the entire stack.
 			/// @param type Discarded.
+			/// @details `flush`
 			AV2_IN_STACK_FLUSH,
 			/// @brief Returns from a function.
 			/// @param type `Result` = How should the result be handled.
+			/// @details `ret [<result-id>]`
 			AV2_IN_RETURN,
+			/// @brief Executes a mathematical operation involving a binary operator.
+			/// @param type `BinaryMath` = How to process the math operation.
+			/// @details `bmath [<lhs-id>] [rhs-id] [out-id]`
+			AV2_IN_MATH_BOP,
 			/// @brief Executes a mathematical operation involving a unary operator.
-			/// @param type `MathOperation` = How to process the math operation.
-			AV2_IN_MATH_BOP
+			/// @param type `UnaryMath` = How to process the math operation.
+			/// @details `umath [<val-id>] [out-id]`
+			AV2_IN_MATH_UOP,
+			/// @brief Executes a Anima-V1 operation.
+			/// @param type `V1Operation` = How to process the instruction.
+			/// @details `v1_op <op-id>`
+			AV2_IN_V1_OP,
+			/// @brief Executes a Anima-V1 program in an Anima-V1 context.
+			/// @param type `V1Context` = Context parameters.
+			/// @details `v1_exec <op-id>`
+			AV2_IN_V1_CTX_EXEC,
 		};
 		
 		/// @brief Instruction "Name" (opcode).

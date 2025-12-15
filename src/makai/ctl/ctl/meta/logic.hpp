@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../typetraits/typecontainer.hpp"
+#include "../typetraits/converter.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -54,6 +55,13 @@ namespace Meta {
 	/// @tparam COND Condition to check for.
 	template<bool COND, class TTrue, class TFalse>
 	using If = Meta::DualType<COND, TTrue, TFalse>;
+
+	
+	/// @brief Decays to either `T const` or `T`, depending on the condition.
+	/// @tparam T Type to const-ify depending on condition.
+	/// @tparam COND Condition to check for.
+	template<bool COND, class T>
+	using MakeConstIf = Meta::DualType<COND, AsConstant<T>, T>;
 }
 
 CTL_NAMESPACE_END

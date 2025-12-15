@@ -12,6 +12,12 @@ namespace Makai::Parser::Data {
 		/// @brief Lexer type.
 		using LexerType = Lexer::CStyle::TokenStream;
 
+		using CustomTypeParser = ResultType(LexerType&, FLOWParser&);
+
+		constexpr static char const BINARY_IDENTIFIER			= '!';
+		constexpr static char const CUSTOM_TYPE_IDENTIFIER		= '$';
+		constexpr static char const INTERNAL_TYPE_IDENTIFIER	= '@';
+
 		/// @brief Tries to parse a FLOW string.
 		/// @param str String to parse.
 		/// @return Resulting value, or an error.
@@ -27,6 +33,14 @@ namespace Makai::Parser::Data {
 			lexer.close();
 			return result;
 		}
+
+		ResultType unknownTypeError() const {
+			return error("Unknown/unsupported custom type!");
+		}
+
+		Function<CustomTypeParser> customTypeParser = [&] (auto&, auto&) {
+			return unknownTypeError();
+		};
 
 	private:
 		/// @brief Lexer token type.
@@ -61,8 +75,10 @@ namespace Makai::Parser::Data {
 				return parseObject();
 			case TokenType{'['}:
 				return parseArray();
-			case TokenType{'!'}:
+			case TokenType{BINARY_IDENTIFIER}:
 				return parseBytes();
+			case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+				return customTypeParser(lexer, *this);
 			case TokenType::LTS_TT_IDENTIFIER: {
 				auto const id = token.value.get<Value::StringType>();
 				if (id == "null") return Value::null();
@@ -118,9 +134,10 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_REAL:
 				case TokenType::LTS_TT_CHARACTER:
 				case TokenType::LTS_TT_IDENTIFIER:
-				case TokenType{'!'}:
+				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{'{'}:
-				case TokenType{'['}: {
+				case TokenType{'['}:
+				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
 					auto v = parseValue();
 					if (v) {
 						auto const vv = v.value();
@@ -163,10 +180,11 @@ namespace Makai::Parser::Data {
 					break;
 					case TokenType::LTS_TT_INTEGER:
 					case TokenType::LTS_TT_REAL:
-					case TokenType{'!'}:
+					case TokenType{BINARY_IDENTIFIER}:
 					case TokenType{'{'}:
 					case TokenType{'['}:
 					case TokenType{'-'}:
+					case TokenType{CUSTOM_TYPE_IDENTIFIER}:
 						return error("Object key is not a string or identifier!");
 					default: continue;
 					}
@@ -187,9 +205,10 @@ namespace Makai::Parser::Data {
 					case TokenType::LTS_TT_REAL:
 					case TokenType::LTS_TT_CHARACTER:
 					case TokenType::LTS_TT_IDENTIFIER:
-					case TokenType{'!'}:
+					case TokenType{BINARY_IDENTIFIER}:
 					case TokenType{'{'}:
-					case TokenType{'['}: {
+					case TokenType{'['}:
+					case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
 						auto v = parseValue();
 						if (v) {
 							auto const vv = v.value();

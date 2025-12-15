@@ -17,6 +17,8 @@
 #define CTL_DIAGBLOCK_BEGIN _Pragma("GCC diagnostic push")
 #define CTL_DIAGBLOCK_END _Pragma("GCC diagnostic pop")
 
+#define CTL_DIAGBLOCK_IGNORE_SWITCH _Pragma("GCC diagnostic ignored \"-Wswitch\"")
+
 /// @brief CTL core namespace.
 #define CTL_NAMESPACE_BEGIN	namespace CTL {
 /// @brief CTL core namespace.

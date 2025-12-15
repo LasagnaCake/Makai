@@ -3,5 +3,6 @@
 
 #include "list.hpp"
 #include "staticlist.hpp"
+#include "linkedlist.hpp"
 
 #endif
