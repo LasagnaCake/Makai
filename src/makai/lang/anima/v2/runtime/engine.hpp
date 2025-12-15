@@ -74,6 +74,13 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_LAND	= 'a',
 			AV2_EBIF_LOR	= 'o',
 			AV2_EBIF_LNOT	= '!',
+			AV2_EBIF_SIN	= 's',
+			AV2_EBIF_COS	= 'c',
+			AV2_EBIF_TAN	= 't',
+			AV2_EBIF_ASIN	= 'S',
+			AV2_EBIF_ACOS	= 'C',
+			AV2_EBIF_ATAN	= 'T',
+			AV2_EBIF_ATAN2	= '2',
 		};
 
 		enum class Action {
@@ -119,6 +126,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2StackFlush();
 		void v2Return();
 		void v2Halt();
+		void v2Math();
 
 		void callBuiltIn(BuiltInFunction const func);
 

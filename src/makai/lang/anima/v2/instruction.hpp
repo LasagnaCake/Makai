@@ -115,6 +115,7 @@ namespace Makai::Anima::V2 {
 			struct [[gnu::aligned(8)]] Parameter {
 				DataLocation	location;
 				uint8			argument;
+				uint32			id;
 			};
 		};
 		
@@ -133,6 +134,20 @@ namespace Makai::Anima::V2 {
 		/// @brief Stack interaction.
 		struct [[gnu::aligned(4)]] StackInteraction {
 			DataLocation	location;
+		};
+
+		/// @brief Math operation.
+		struct [[gnu::aligned(4)]] BinaryMath {
+			enum class Operation: uint8 {
+				AV2_IBM_OP_ADD,
+				AV2_IBM_OP_SUB,
+				AV2_IBM_OP_MUL,
+				AV2_IBM_OP_DIV,
+				AV2_IBM_OP_REM,
+				AV2_IBM_OP_POW,
+			};
+			Operation op;
+			DataLocation lhs, rhs, out;
 		};
 		
 		/// @brief Instruction name.
@@ -169,7 +184,10 @@ namespace Makai::Anima::V2 {
 			AV2_IN_STACK_FLUSH,
 			/// @brief Returns from a function.
 			/// @param type `Result` = How should the result be handled.
-			AV2_IN_RETURN
+			AV2_IN_RETURN,
+			/// @brief Executes a mathematical operation involving a unary operator.
+			/// @param type `MathOperation` = How to process the math operation.
+			AV2_IN_MATH_BOP
 		};
 		
 		/// @brief Instruction "Name" (opcode).

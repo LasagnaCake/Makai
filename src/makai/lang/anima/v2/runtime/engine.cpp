@@ -117,14 +117,14 @@ Makai::Data::Value Engine::getValueFromLocation(DataLocation const loc, usize co
 		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
 	switch (loc) {
-		case DataLocation::AV2_DL_CONST:			return program.constants[id];
-		case DataLocation::AV2_DL_STACK:			return context.valueStack[id];
-		case DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
+		case DataLocation::AV2_DL_CONST:		return program.constants[id];
+		case DataLocation::AV2_DL_STACK:		return context.valueStack[id];
+		case DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id+1)];
 //		case DataLocation::AV2_DL_HEAP:			{} break;
-		case DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
+		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id];
 		case DataLocation::AV2_DL_INTERNAL:		return fetchInternal(id);
 		case DataLocation::AV2_DL_EXTERNAL:		return fetchExternal(id);
-		case DataLocation::AV2_DL_TEMPORARY:		return context.temporary;
+		case DataLocation::AV2_DL_TEMPORARY:	return context.temporary;
 		default: return Data::Value::undefined();
 	}
 	return Data::Value::undefined();
@@ -144,11 +144,10 @@ Makai::Data::Value& Engine::accessLocation(DataLocation const loc, usize const i
 		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
 	switch (loc) {
-		case DataLocation::AV2_DL_CONST:			return program.constants[id];
-		case DataLocation::AV2_DL_STACK:			return context.valueStack[id];
+		case DataLocation::AV2_DL_STACK:		return context.valueStack[id];
 		case DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id)];
 //		case DataLocation::AV2_DL_HEAP:			{} break;
-		case DataLocation::AV2_DL_GLOBAL:			return context.globals[id];
+		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id];
 		case DataLocation::AV2_DL_TEMPORARY:		
 		default: return context.temporary;
 	}
@@ -189,6 +188,23 @@ Makai::Data::Value Engine::fetchInternal(uint64 const valueID) {
 	};
 	if (valueID >= internals.size()) return Data::Value::undefined();
 	return internals[valueID];
+}
+
+void Engine::v2Math() {
+	Instruction::BinaryMath op = Cast::bit<Instruction::BinaryMath>(current.type);
+	auto const lhs = getValueFromLocation(op.lhs, 0);
+	auto const rhs = getValueFromLocation(op.rhs, 1);
+	if (lhs.isNumber() && rhs.isNumber()) {
+		auto& out = accessLocation(op.out, 0);
+		switch (op.op) {
+			case decltype(op.op)::AV2_IBM_OP_ADD: out = lhs.get<double>() + rhs.get<double>();
+			case decltype(op.op)::AV2_IBM_OP_SUB: out = lhs.get<double>() - rhs.get<double>();
+			case decltype(op.op)::AV2_IBM_OP_MUL: out = lhs.get<double>() * rhs.get<double>();
+			case decltype(op.op)::AV2_IBM_OP_DIV: out = lhs.get<double>() / rhs.get<double>();
+			case decltype(op.op)::AV2_IBM_OP_REM: out = Math::mod(lhs.get<double>(), rhs.get<double>());
+			case decltype(op.op)::AV2_IBM_OP_POW: out = Math::pow(lhs.get<double>(), rhs.get<double>());
+		}
+	}
 }
 
 void Engine::callBuiltIn(BuiltInFunction const func) {

@@ -31,6 +31,7 @@ namespace Type::Ex::Data {
 }
 
 namespace Data {
+	// TODO: Add `Vector` & `Matrix` support
 	struct Value: Ordered {
 		/// @brief Integer type.
 		using IntegerType	= ssize;
