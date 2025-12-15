@@ -6,7 +6,17 @@
 namespace Makai::Anima::V2::Toolchain::Compiler {
 	struct ParseTree {
 		struct Node {
-			using ID = ID::VLUID;
+			enum class Type {
+				AV2_TC_PNT_INVALID	= -1,
+				AV2_TC_PNT_VAR_DECL,
+				AV2_TC_PNT_FN_DECL,
+				AV2_TC_PNT_INLINE_EXPR,
+				AV2_TC_PNT_BLOCK_EXPR,
+				AV2_TC_PNT_ARITHMETIC,
+				AV2_TC_PNT_FN_CALL,
+				AV2_TC_PNT_OPERATOR
+			};
+			Type type;
 			Data::Value	value;
 
 			Instance<List<Node>> nodes = new List<Node>();
@@ -34,9 +44,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		}
 
 		Node root;
-
-	private:
-		Node::ID id = Node::ID::create(0);
 	};
 }
 

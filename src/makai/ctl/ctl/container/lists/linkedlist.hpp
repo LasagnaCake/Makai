@@ -116,6 +116,7 @@ struct LinkedList:
 	/// @brief Underlying storage type.
 	using StorageType = MemorySlice<DataType, TAlloc>;
 
+private:
 	struct Node {
 		DataType	value;
 		ref<Node>	prev = nullptr;
@@ -133,7 +134,7 @@ struct LinkedList:
 			right.prev	= &left;
 		}
 
-		constexpr static void parent(Node& child, Node& parent) {
+		constexpr static void parent(Node& parent, Node& child) {
 			if (parent.next) {
 				auto const next = parent.next;
 				link(child, *next);
@@ -141,6 +142,7 @@ struct LinkedList:
 			link(parent, child);
 		}
 	};
+public:
 
 	template <bool R, bool C = false>
 	struct Iterator {
@@ -165,15 +167,14 @@ struct LinkedList:
 
 		constexpr bool operator==(Iterator const& other) const {return current == other.current;}
 
-		constexpr void eraseFrom(LinkedList& from) requires (!C) {
-			if (parent != &from) return;
-			Node::unlink(*current);
-			if (current == from.head)
-				from.head = from.head->next;
-			if (current == from.tail)
-				from.tail = from.tail->prev;
-			delete current;
-			--from.count;
+		constexpr NodeType& node() const {
+			if (!current) emptyError();
+			return *current;
+		}
+		
+		constexpr LinkedList& list() const {
+			if (!parent) emptyError();
+			return *parent;
 		}
 
 	private:
@@ -198,11 +199,12 @@ struct LinkedList:
 		(..., pushBack(args));
 	}
 
-	constexpr SelfType& pushBack(DataType const& value) {
+	constexpr SelfType& pushBack(ConstReferenceType value) {
 		auto const node = new Node{value};
-		if (tail == nullptr)
-			head = tail = &node;
+		if (head == nullptr)
+			head = &node;
 		else Node::parent(*tail, node);
+		tail = &node;
 		++count;
 		return *this;
 	}
@@ -210,7 +212,7 @@ struct LinkedList:
 	constexpr DataType popBack() {
 		if (!count) emptyError();
 		--count;
-		auto const value = tail->value;
+		auto value = tail->value;
 		if (tail && head != tail) {
 			auto const newTail = tail->prev;
 			Node::unlink(*tail);
@@ -221,11 +223,12 @@ struct LinkedList:
 		return value;
 	}
 	
-	constexpr SelfType& pushFront(DataType const& value) {
+	constexpr SelfType& pushFront(ConstReferenceType value) {
 		auto const node = new Node{value};
-		if (head == nullptr)
-			head = tail = &node;
+		if (tail == nullptr)
+			tail = &node;
 		else Node::parent(node, *head);
+		head = &node;
 		++count;
 		return *this;
 	}
@@ -233,7 +236,7 @@ struct LinkedList:
 	constexpr DataType popFront() {
 		if (!count) emptyError();
 		--count;
-		auto const value = head->value;
+		auto value = head->value;
 		if (head && head != tail) {
 			auto const newHead = head->next;
 			Node::unlink(*head);
@@ -256,19 +259,36 @@ struct LinkedList:
 
 	constexpr usize size() const {return count;}
 
-	constexpr Iterator<false, false>	begin()			{return {head};		};
-	constexpr Iterator<false, false>	end()			{return {nullptr};	};
-	constexpr Iterator<false, true>		begin() const	{return {head};		};
-	constexpr Iterator<false, true>		end() const		{return {nullptr};	};
+	constexpr Iterator<false, false>	begin()			{return {head,		this};	};
+	constexpr Iterator<false, false>	end()			{return {nullptr,	this};	};
+	constexpr Iterator<false, true>		begin() const	{return {head,		this};	};
+	constexpr Iterator<false, true>		end() const		{return {nullptr,	this};	};
 	
-	constexpr Iterator<true, false>		rbegin()		{return {tail};		};
-	constexpr Iterator<true, false>		rend()			{return {nullptr};	};
-	constexpr Iterator<true, true>		rbegin() const	{return {tail};		};
-	constexpr Iterator<true, true>		rend() const	{return {nullptr};	};
+	constexpr Iterator<true, false>		rbegin()		{return {tail,		this};	};
+	constexpr Iterator<true, false>		rend()			{return {nullptr,	this};	};
+	constexpr Iterator<true, true>		rbegin() const	{return {tail,		this};	};
+	constexpr Iterator<true, true>		rend() const	{return {nullptr,	this};	};
 
 	template <bool R, bool C>
 	constexpr SelfType& erase(Iterator<R, C> const& at) {
-		at.eraseFrom(*this);
+		if (&at.list() != this) return *this;
+		Node::unlink(at.node());
+		if (&at.node() == head)
+			head = head->next;
+		if (&at.node() == tail)
+			tail = tail->prev;
+		delete &at.node();
+		--count;
+		return *this;
+	}
+
+	template <bool R, bool C>
+	constexpr SelfType& insert(Iterator<R, C> const& at, ConstReferenceType value) {
+		if (&at.list() != this) return *this;
+		if (at == (R ? rend() : end())) return *this;
+		auto const newNode = new Node{value};
+		Node::parent(*newNode, at.node());
+		if (&at.node() == head) head = newNode;
 		return *this;
 	}
 

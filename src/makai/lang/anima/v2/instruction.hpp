@@ -161,9 +161,12 @@ namespace Makai::Anima::V2 {
 			/// @brief Swaps the topmost two values of the stack.	
 			/// @param type Discarded.	
 			AV2_IN_STACK_SWAP,
+			/// @brief Clears a given number of elements from the top of the stack.
+			/// @param type Amount of items to clear.
+			AV2_IN_STACK_CLEAR,
 			/// @brief Clears the entire stack.
 			/// @param type Discarded.
-			AV2_IN_STACK_CLEAR,
+			AV2_IN_STACK_FLUSH,
 			/// @brief Returns from a function.
 			/// @param type `Result` = How should the result be handled.
 			AV2_IN_RETURN

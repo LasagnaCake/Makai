@@ -57,7 +57,7 @@ struct Typed<TData> {
 	/// @brief Temporary type.
 	using TemporaryType			= DataType&&;
 	/// @brief Const reference type.
-	using ConstReferenceType	= ConstantType&;
+	using ConstReferenceType	= Decay::Unwrap<DataType>;
 	/// @brief Pointer type.
 	using PointerType			= AsNonReference<DataType>*;
 	/// @brief Const pointer type.

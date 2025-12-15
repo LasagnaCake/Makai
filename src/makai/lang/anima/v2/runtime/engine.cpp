@@ -78,7 +78,7 @@ void Engine::v2Invoke() {
 			program.constants[funcName].toString(),
 			context.valueStack.sliced(-Cast::as<int>(invocation.argc), -1)
 		);
-		context.valueStack.eraseRange(Cast::as<int>(invocation.argc), -1);
+		context.valueStack.eraseRange(-Cast::as<int>(invocation.argc), -1);
 		// Check if return type matches expected type
 		if (
 			returnType != -1
@@ -312,5 +312,10 @@ void Engine::v2StackSwap() {
 }
 
 void Engine::v2StackClear() {
+	if (current.type)
+		context.valueStack.removeRange(-Math::max<int>(current.type, context.valueStack.size()));
+}
+
+void Engine::v2StackFlush() {
 	context.valueStack.clear();
 }

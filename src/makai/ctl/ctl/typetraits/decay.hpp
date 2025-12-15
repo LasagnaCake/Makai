@@ -55,6 +55,14 @@ namespace Decay {
 	/// @brief Decays function type to a proper C++ function type.
 	template<typename F>
 	using AsFunction = typename Impl::FunctionType<F>::Type;
+
+	/// @brief Decays type to either a reference, or const reference type.
+	template<class T>
+	using Unwrap = Meta::If<
+		Type::Reference<T> && Type::NonConstant<T>,
+		AsNormal<T>&,
+		AsReference<AsConstant<AsNormal<T>>>
+	>;
 };
 
 static_assert(Type::Equal<Decay::AsFunction<bool(void)>, bool()>, "Something's not correct...");
