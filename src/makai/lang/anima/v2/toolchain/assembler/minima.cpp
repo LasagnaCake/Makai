@@ -689,18 +689,22 @@ MINIMA_ASSEMBLE_FN(ErrorHalt) {
 		context.program.code.pushBack(Makai::Cast::bit<Instruction>(err.id));
 }
 
+// TODO: Global declarations
 MINIMA_ASSEMBLE_FN(Global) {
 	
 }
 
+// TODO: Anima-V1 support
 MINIMA_ASSEMBLE_FN(V1Operation) {
 	
 }
 
+// TODO: Anima-V1 support
 MINIMA_ASSEMBLE_FN(V1ContextExec) {
 	
 }
 
+// TODO: Anima-V1 support
 MINIMA_ASSEMBLE_FN(V1Expression) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed Anima-V1 expression!");
