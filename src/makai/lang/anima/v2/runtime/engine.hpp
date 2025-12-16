@@ -83,6 +83,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_ATAN		= 'T',
 			AV2_EBIF_ATAN2		= '2',
 			AV2_EBIF_INTERRUPT	= '.',
+			AV2_EBIF_READ		= ':',
 		};
 
 		enum class Action {

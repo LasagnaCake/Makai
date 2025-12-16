@@ -282,20 +282,20 @@ void Engine::v2UnaryMath() {
 	if (err) return;
 	if (v.isNumber()) {
 		switch (op.op) {
-			case decltype(op.op)::AV2_IUM_OP_NEGATE:		out = -v.get<double>();
-			case decltype(op.op)::AV2_IUM_OP_RECIPROCATE:	out = 1.0 / v.get<double>();
-			case decltype(op.op)::AV2_IUM_OP_SIN:			out = Math::sin(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_COS:			out = Math::cos(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_TAN:			out = Math::tan(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_ASIN:			out = asin(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_ACOS:			out = acos(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_ATAN:			out = Math::atan(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_SINH:			out = sinh(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_COSH:			out = cosh(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_TANH:			out = tanh(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_LOG2:			out = Math::log2(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_LOG10:			out = Math::log10(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_LN:			out = Math::log(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_NEGATE:	out = -v.get<double>();
+			case decltype(op.op)::AV2_IUM_OP_INVERSE:	out = 1.0 / v.get<double>();
+			case decltype(op.op)::AV2_IUM_OP_SIN:		out = Math::sin(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_COS:		out = Math::cos(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_TAN:		out = Math::tan(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_ASIN:		out = asin(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_ACOS:		out = acos(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_ATAN:		out = Math::atan(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_SINH:		out = sinh(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_COSH:		out = cosh(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_TANH:		out = tanh(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_LOG2:		out = Math::log2(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_LOG10:		out = Math::log10(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_LN:		out = Math::log(v.get<double>());
 			default: {
 				if (inStrictMode())
 					return crash(invalidUnaryMathError(op));
@@ -324,30 +324,35 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 	else switch (func) {
 		case BuiltInFunction::AV2_EBIF_ADD: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin add");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() + b.get<double>());
 			else pushUndefinedIfInLooseMode("builtin add");
 		} break;
 		case BuiltInFunction::AV2_EBIF_SUB: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin sub");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() - b.get<double>());
 			else pushUndefinedIfInLooseMode("builtin sub");
 		} break;
 		case BuiltInFunction::AV2_EBIF_MUL: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin mul");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() * b.get<double>());
 			else pushUndefinedIfInLooseMode("builtin mul");
 		} break;
 		case BuiltInFunction::AV2_EBIF_DIV: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin div");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() / b.get<double>());
 			else pushUndefinedIfInLooseMode("builtin div");
 		} break;
 		case BuiltInFunction::AV2_EBIF_REM: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin mod");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isNumber() && b.isNumber()) {
 				if (a.isUnsigned() && b.isUnsigned())
@@ -360,51 +365,60 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 		} break;
 		case BuiltInFunction::AV2_EBIF_LAND: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin logic and");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			context.valueStack.pushBack(a.get<bool>() && b.get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_LOR: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin logic or");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			context.valueStack.pushBack(a.get<bool>() || b.get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_LNOT: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin logic not");
+			if (err) break;
 			Value a = context.valueStack.popBack();
 			context.valueStack.pushBack(!a.get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_NEG: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin negate");
+			if (err) break;
 			Value a = context.valueStack.popBack();
 			if (a.isNumber()) context.valueStack.pushBack(-a.get<float>());
 			else pushUndefinedIfInLooseMode("builtin negate");
 		} break;
 		case BuiltInFunction::AV2_EBIF_AND: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise and");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isInteger() && b.isInteger()) context.valueStack.pushBack(a.get<usize>() & b.get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise and");
 		} break;
 		case BuiltInFunction::AV2_EBIF_OR: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise or");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isInteger() && b.isInteger()) context.valueStack.pushBack(a.get<usize>() | b.get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise or");
 		} break;
 		case BuiltInFunction::AV2_EBIF_XOR: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise xor");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isInteger() && b.isInteger()) context.valueStack.pushBack(a.get<usize>() ^ b.get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise xor");
 		} break;
 		case BuiltInFunction::AV2_EBIF_NOT: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin bitwise not");
+			if (err) break;
 			Value a = context.valueStack.popBack();
 			if (a.isInteger()) context.valueStack.pushBack(~a.get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise not");
 		} break;
 		case BuiltInFunction::AV2_EBIF_COMP: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin bitwise compare");
+			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			Value::OrderType order = Value::Order::EQUAL;
 			if (a.type() == b.type())				order = a <=> b;
@@ -419,8 +433,23 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			else pushUndefinedIfInLooseMode("builtin bitwise compare");
 		} break;
 		case BuiltInFunction::AV2_EBIF_INTERRUPT: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin interrupt");
-		}
+		} break;
+		case BuiltInFunction::AV2_EBIF_READ: {
+			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin indirect read");
+			if (err) break;
+			Value type	= context.valueStack.popBack();
+			Value id	= context.valueStack.popBack();
+			if (!(type.isUnsigned() && id.isUnsigned()))
+				pushUndefinedIfInLooseMode("builtin indirect read");
+			if (err) break;
+			auto const ti = type.get<usize>();
+			if (ti > Makai::Limit::MAX<uint8>) {
+				pushUndefinedIfInLooseMode("builtin indirect read");
+				break;
+			} else context.valueStack.pushBack(
+				getValueFromLocation(Cast::as<DataLocation>(ti), id)
+			);
+		} break;
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
 }

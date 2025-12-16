@@ -35,6 +35,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 		}
 
+		Dictionary<usize> globals;
+
 		Jumps		jumps;
 		TokenStream	stream;
 		Program		program;

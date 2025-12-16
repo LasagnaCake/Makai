@@ -214,7 +214,7 @@ namespace Makai::Anima::V2 {
 		struct [[gnu::aligned(4)]] UnaryMath {
 			enum class Operation: uint8 {
 				AV2_IUM_OP_NEGATE,
-				AV2_IUM_OP_RECIPROCATE,
+				AV2_IUM_OP_INVERSE,
 				AV2_IUM_OP_SIN,
 				AV2_IUM_OP_COS,
 				AV2_IUM_OP_TAN,
@@ -231,6 +231,12 @@ namespace Makai::Anima::V2 {
 			};
 			Operation op;
 			DataLocation v, out;
+		};
+
+		/// @brief Anima V1 operation.
+		struct [[gnu::aligned(4)]] WaitRequest {
+			DataLocation	val;
+			bool			falsy: 1;
 		};
 		
 		/// @brief Instruction name.
@@ -307,6 +313,14 @@ namespace Makai::Anima::V2 {
 			/// @param type `V1Context` = Context parameters.
 			/// @details `v1_exec <op-id>`
 			AV2_IN_V1_CTX_EXEC,
+			/// @brief Returns execution to the engine.
+			/// @param type Discarded.
+			/// @details `yield`
+			AV2_IN_YIELD,
+			/// @brief Awaits a given value to be in a certain state.
+			/// @param type `WaitRequest` = What to expect from the value.
+			/// @details `await [<loc-id>]`
+			AV2_IN_AWAIT,
 		};
 		
 		/// @brief Instruction "Name" (opcode).
