@@ -1278,6 +1278,15 @@ public:
 		return result;
 	}
 
+	constexpr List<byte, TIndex, TAlloc, TConstAlloc> toBytes()
+	requires (Type::Equal<DataType, AsNonReference<DataType>>) {
+		auto const start = reinterpret_cast<ref<byte const>>(data());
+		return List<byte, TIndex, TAlloc, TConstAlloc>(
+			start,
+			start + (size() * sizeof(DataType))
+		);
+	}
+
 private:
 	using Iteratable::wrapBounds;
 
@@ -1420,8 +1429,23 @@ private:
 /// @brief `List` analog for dynamic array of bytes.
 /// @tparam TIndex Index type. 
 /// @tparam TAlloc<class> Allocator type.
-template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator>
-using BinaryData = List<uint8, TIndex, TAlloc>;
+/// @tparam TConstAlloc<class> Constant allocator type.
+template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
+using BinaryData = List<byte, TIndex, TAlloc, TConstAlloc>;
+
+/// @brief `List` analog for dynamic array of bytes.
+/// @tparam TIndex Index type. 
+/// @tparam TAlloc<class> Allocator type.
+/// @tparam TConstAlloc<class> Constant allocator type.
+template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
+using ByteList = BinaryData<TIndex, TAlloc, TConstAlloc>;
+
+/// @brief `List` analog for dynamic array of bytes.
+/// @tparam TIndex Index type. 
+/// @tparam TAlloc<class> Allocator type.
+/// @tparam TConstAlloc<class> Constant allocator type.
+template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
+using Binary = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
 static_assert(Type::Container::List<List<int>>);
 

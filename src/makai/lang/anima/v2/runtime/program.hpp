@@ -14,6 +14,30 @@ namespace Makai::Anima::V2::Runtime {
 		List<Instruction>		code;
 		List<uint64>			jumpTable;
 		Labels					labels;
+
+		constexpr Data::Value serialize() {
+			Data::Value out;
+			out["types"]		= types;
+			out["constants"]	= constants;
+			out["jumps"]		= jumpTable.toBytes();
+			out["code"]			= code.toBytes();
+			out["labels"]		= out.object();
+			auto& outLabels = out["labels"];
+			outLabels["jumps"]		=
+			outLabels["globals"]	= out.object();
+			auto& outJumps		= outLabels["jumps"];
+			auto& outGlobals	= outLabels["globals"];
+			for (auto& [name, id]: labels.globals)
+				outGlobals[name] = id;
+			for (auto& [name, id]: labels.jumps)
+				outJumps[name] = id;
+			return out;
+		}
+
+		constexpr static Program deserialize(Data::Value const& v) {
+			Program prog;
+			return prog;
+		}
 	};
 }
 

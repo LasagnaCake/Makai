@@ -19,6 +19,7 @@ namespace Convert {
 			/// @return Binary data.
 			constexpr static BinaryData<> convert(String const& str)
 			requires (B < Base::CB_BASE32) {
+				if (str.empty()) return {};
 				usize start = 0;
 				BinaryData<> result;
 				while (start < str.size()) {
@@ -33,6 +34,7 @@ namespace Convert {
 			/// @return Binary data.
 			constexpr static BinaryData<> convert(String const& str)
 			requires (B == Base::CB_BASE32) {
+				if (str.empty()) return {};
 				if (str.size() % 8 != 0) return convert(str + String("=") * (str.size() % 8));
 				usize current = 0;
 				BinaryData<> result;
@@ -73,6 +75,7 @@ namespace Convert {
 			/// @return Binary data.
 			constexpr static BinaryData<> convert(String const& str)
 			requires (B == Base::CB_BASE64) {
+				if (str.empty()) return {};
 				if (str.size() % 4 != 0) return convert(str + String("=") * (str.size() % 4));
 				usize current = 0;
 				BinaryData<> result;

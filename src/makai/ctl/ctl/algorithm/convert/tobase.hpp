@@ -19,7 +19,8 @@ namespace Convert {
 			/// @return String.
 			constexpr static String convert(BinaryData<> const& data)
 			requires (B < Base::CB_BASE32) {
-				String result;
+				if (data.empty()) return "";
+				String result = "";
 				for (auto const b: data) {
 					switch (B) {
 						case Base::CB_BASE2:	result += String::fromNumber<byte>(b, 2).substring(2);	break;

@@ -409,6 +409,9 @@ MINIMA_ASSEMBLE_FN(StackPop) {
 		loc.id = -1;
 	}
 	else inst.type = Makai::Cast::bit<uint32>(Instruction::StackPop{loc.at, true});
+	if (
+		loc.at == DataLocation::AV2_DL_CONST
+	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant value!");
 	context.program.code.pushBack(inst);
 	if (loc.id < Makai::Limit::MAX<uint64>)
 		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
@@ -586,6 +589,10 @@ MINIMA_ASSEMBLE_FN(Compare) {
 	if (!(context.stream.next() && context.stream.current().type == Type::LTS_TT_LITTLE_ARROW))
 		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
 	auto const out = getDataLocation(context);
+	if (
+		out.at == DataLocation::AV2_DL_CONST
+	||	out.at == DataLocation::AV2_DL_INTERNAL
+	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed comparison!");
 	context.program.code.pushBack({
@@ -616,12 +623,16 @@ MINIMA_ASSEMBLE_FN(Copy) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed copy!");
 	auto const to = getDataLocation(context);
+	if (
+		to.at == DataLocation::AV2_DL_CONST
+	||	to.at == DataLocation::AV2_DL_INTERNAL
+	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
 	Instruction::Transfer tf = {
 		from.at,
 		to.at
 	};
 	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_COMPARE,
+		Instruction::Name::AV2_IN_COPY,
 		Makai::Cast::bit<uint32>(tf)
 	});
 	if (from.id < Makai::Limit::MAX<uint64>)
@@ -718,7 +729,75 @@ MINIMA_ASSEMBLE_FN(V1Expression) {
 }
 
 MINIMA_ASSEMBLE_FN(BinaryMath) {
-
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
+	auto const lhs = getDataLocation(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
+	auto const op = context.stream.current();
+	Instruction::BinaryMath bmath;
+	switch (op.type) {
+		case LTS_TT_IDENTIFIER: {
+			auto const id = op.value.get<Makai::String>();
+			if (id == "add")							bmath.op = decltype(bmath.op)::AV2_IBM_OP_ADD;
+			else if (id == "subtract" || id == "sub")	bmath.op = decltype(bmath.op)::AV2_IBM_OP_SUB;
+			else if (id == "multiply" || id == "mul")	bmath.op = decltype(bmath.op)::AV2_IBM_OP_MUL;
+			else if (id == "divide" || id == "div")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_DIV;
+			else if (id == "remainder" || id == "rem")	bmath.op = decltype(bmath.op)::AV2_IBM_OP_REM;
+			else if (id == "power" || id == "pow")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_POW;
+			else if (id == "atan2" || id == "a2")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_ATAN2;
+			else MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
+		} break;
+		case Type{'+'}: {
+			bmath.op = decltype(bmath.op)::AV2_IBM_OP_ADD;
+		} break;
+		case Type{'-'}: {
+			bmath.op = decltype(bmath.op)::AV2_IBM_OP_SUB;
+		} break;
+		case Type{'*'}: {
+			bmath.op = decltype(bmath.op)::AV2_IBM_OP_MUL;
+		} break;
+		case Type{'/'}: {
+			bmath.op = decltype(bmath.op)::AV2_IBM_OP_DIV;
+		} break;
+		case Type{'%'}: {
+			bmath.op = decltype(bmath.op)::AV2_IBM_OP_REM;
+		} break;
+		case Type{'^'}: {
+			bmath.op = decltype(bmath.op)::AV2_IBM_OP_POW;
+		} break;
+		case Type{'.'}: {
+			bmath.op = decltype(bmath.op)::AV2_IBM_OP_ATAN2;
+		} break;
+		default: MINIMA_ERROR(NonexistentValue, "Invalid binary math operator!");
+	}
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
+	auto const rhs = getDataLocation(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
+	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
+		MINIMA_ERROR(NonexistentValue, "Expected '->' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
+	auto const out = getDataLocation(context);
+	if (
+		out.at == DataLocation::AV2_DL_CONST
+	||	out.at == DataLocation::AV2_DL_INTERNAL
+	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
+	bmath.lhs = lhs.at;
+	bmath.rhs = rhs.at;
+	bmath.out = out.at;
+	context.program.code.pushBack({
+		Instruction::Name::AV2_IN_MATH_UOP,
+		Makai::Cast::bit<uint32>(bmath)
+	});
+	if (lhs.id < Makai::Limit::MAX<uint64>)
+		context.program.code.pushBack(Makai::Cast::bit<Instruction>(lhs.id));
+	if (rhs.id < Makai::Limit::MAX<uint64>)
+		context.program.code.pushBack(Makai::Cast::bit<Instruction>(rhs.id));
+	if (out.id < Makai::Limit::MAX<uint64>)
+		context.program.code.pushBack(Makai::Cast::bit<Instruction>(out.id));
 }
 
 MINIMA_ASSEMBLE_FN(UnaryMath) {
@@ -744,9 +823,32 @@ MINIMA_ASSEMBLE_FN(UnaryMath) {
 			else if (id == "log10" || id == "l10")		umath.op = decltype(umath.op)::AV2_IUM_OP_LOG10;
 			else if (id == "logn" || id == "ln")		umath.op = decltype(umath.op)::AV2_IUM_OP_LN;
 			else if (id == "sqrt")						umath.op = decltype(umath.op)::AV2_IUM_OP_SQRT;
+			else MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
 		} break;
+		case Type{'-'}: umath.op = decltype(umath.op)::AV2_IUM_OP_NEGATE;
+		case Type{'/'}: umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE;
 		default: MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
 	}
+	auto const v = getDataLocation(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
+	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
+		MINIMA_ERROR(NonexistentValue, "Expected '->' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
+	auto const out = getDataLocation(context);
+	if (
+		out.at == DataLocation::AV2_DL_CONST
+	||	out.at == DataLocation::AV2_DL_INTERNAL
+	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
+	context.program.code.pushBack({
+		Instruction::Name::AV2_IN_MATH_UOP,
+		Makai::Cast::bit<uint32>(umath)
+	});
+	if (v.id < Makai::Limit::MAX<uint64>)
+		context.program.code.pushBack(Makai::Cast::bit<Instruction>(v.id));
+	if (out.id < Makai::Limit::MAX<uint64>)
+		context.program.code.pushBack(Makai::Cast::bit<Instruction>(out.id));
 }
 
 MINIMA_ASSEMBLE_FN(Yield) {
@@ -871,7 +973,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "yield")											doYield(context);
 		else if (id == "await" || id == "wait")							doAwait(context);
 		else if (id == "read")											doIndirectRead(context);
-	}
+	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }
 
 void Minima::assemble() {

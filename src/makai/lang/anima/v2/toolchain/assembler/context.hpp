@@ -14,16 +14,20 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Dictionary<uint64>			labels;
 			Dictionary<List<uint64>>	unmapped;
 
-			constexpr void map(Program& program) {
+			constexpr StringList map(Program& program) {
+				StringList  stillUnmapped;
 				for (auto const& [label, jumps]: unmapped)
-					for (auto& jump: jumps)
-						program.code[jump] = Cast::bit<Instruction>(labels[label]);
+					if (labels.contains(label))
+						for (auto& jump: jumps)
+							program.code[jump] = Cast::bit<Instruction>(labels[label]);
+					else stillUnmapped.pushBack(label);
 				unmapped.clear();
+				return stillUnmapped;
 			}
 		};
 
-		constexpr void mapJumps() {
-			jumps.map(program);
+		constexpr StringList mapJumps() {
+			return jumps.map(program);
 		}
 
 		constexpr void addJumpTarget(String const& label) {
