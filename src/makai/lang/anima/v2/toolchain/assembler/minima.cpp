@@ -689,11 +689,6 @@ MINIMA_ASSEMBLE_FN(ErrorHalt) {
 		context.program.code.pushBack(Makai::Cast::bit<Instruction>(err.id));
 }
 
-// TODO: Global declarations
-MINIMA_ASSEMBLE_FN(Global) {
-	
-}
-
 // TODO: Anima-V1 support
 MINIMA_ASSEMBLE_FN(V1Operation) {
 	
@@ -870,7 +865,6 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "copy")											doCopy(context);
 		else if (id == "context" || id == "mode")						doContext(context);
 		else if (id == "loose" || id == "strict")						doImmediateContext(context);
-		else if (id == "global")										doGlobal(context);
 		else if (id == "dialog" || id == "diag" || id == "v1")			doV1Expression(context);
 		else if (id == "calculate" || id == "bmath" || id == "calc")	doBinaryMath(context);
 		else if (id == "umath")											doUnaryMath(context);

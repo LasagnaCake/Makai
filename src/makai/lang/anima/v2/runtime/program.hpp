@@ -5,10 +5,15 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Program {
+		struct Labels {
+			Dictionary<usize>	globals;
+			Dictionary<usize>	jumps;
+		};
 		Data::Value::ArrayType	types;
 		Data::Value::ArrayType	constants;
 		List<Instruction>		code;
 		List<uint64>			jumpTable;
+		Labels					labels;
 	};
 }
 

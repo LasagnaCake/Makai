@@ -131,7 +131,6 @@ namespace Makai::Anima::V2::Runtime {
 		void terminate();
 
 		void v2Invoke();
-		void v2Global();
 		void v2Copy();
 		void v2Call();
 		void v2Negate();
