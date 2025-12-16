@@ -120,12 +120,6 @@ namespace Makai::Anima::V2 {
 			ContextMode		mode;
 			bool			immediate:	1;
 		};
-
-		/// @brief Value declaration.
-		struct [[gnu::aligned(4)]] Declaration {
-		//	uint16 type;
-		//	uint16 modifiers;
-		};
 		
 		/// @brief Value transfer.
 		struct [[gnu::aligned(4)]] Transfer {
@@ -253,10 +247,6 @@ namespace Makai::Anima::V2 {
 			/// @param type `Context` = What kind of context to switch to.
 			/// @details `ctx`
 			AV2_IN_MODE,
-			/// @brief Declare a global variable.
-			/// @param type `Declaration` = How to declare the variable.
-			/// @details `global <name-id>`
-			AV2_IN_GLOBAL,
 			/// @brief Copies a value from one location to another.
 			/// @param type `Transfer` = How to transfer the data.
 			/// @details `copy [<from-id>] [<to-id>]`
