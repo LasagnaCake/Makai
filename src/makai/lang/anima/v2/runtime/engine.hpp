@@ -144,6 +144,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2BinaryMath();
 		void v2UnaryMath();
 		void v2SetContext();
+		void v2Compare();
 
 		void callBuiltIn(BuiltInFunction const func);
 

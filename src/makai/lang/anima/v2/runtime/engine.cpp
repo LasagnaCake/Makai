@@ -67,7 +67,7 @@ Engine::Error Engine::endOfProgramError() {
 }
 
 Engine::Error Engine::invalidInstructionEror() {
-	return makeErrorHere("Invalid instruction!");
+	return makeErrorHere("Invalid/Unsupported instruction!");
 }
 
 void Engine::advance(bool isRequired) {
