@@ -502,6 +502,33 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 	});
 }
 
+static Makai::Data::Value::Kind getReturnType(Context& context) {
+	using enum Makai::Data::Value::Kind;
+	constexpr auto const DVK_ANY = Makai::Cast::as<decltype(DVK_VOID)>(-1);
+	auto const ret = context.stream.current();
+	switch (ret.type) {
+		case LTS_TT_IDENTIFIER: {
+			auto const id = ret.value.get<Makai::String>();
+			if (id == "any")													return DVK_ANY;
+			else if (id == "void" || id == "undefined" || id == "_")			return DVK_VOID;
+			else if (id == "int" || id == "i")									return DVK_SIGNED;
+			else if (id == "uint" || id == "u")									return DVK_UNSIGNED;
+			else if (id == "float" || id == "real" || id == "f" || id == "r")	return DVK_REAL;
+			else if (id == "string" || id == "str" || id == "s")				return DVK_STRING;
+			else if (id == "array" || id == "arr" || id == "a")					return DVK_ARRAY;
+			else if (id == "binary" || id == "bytes" || id == "b")				return DVK_BYTES;
+			else if (id == "object" || id == "obj" || id == "o")				return DVK_OBJECT;
+			MINIMA_ERROR(InvalidValue, "Invalid/Unsupported return type!");
+		}
+		case Type{'?'}: return DVK_ANY;
+		case Type{'_'}: return DVK_VOID;
+		case Type{'+'}: return DVK_SIGNED;
+		case Type{'-'}: return DVK_UNSIGNED;
+		default: MINIMA_ERROR(InvalidValue, "Invalid/Unsupported return type!");
+	}
+	MINIMA_ERROR(InvalidValue, "Invalid/Unsupported return type!");
+}
+
 MINIMA_ASSEMBLE_FN(Call) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
@@ -510,22 +537,31 @@ MINIMA_ASSEMBLE_FN(Call) {
 		MINIMA_ERROR(InvalidValue, "Function call must be an identifier!");
 	auto fname = func.value.get<Makai::String>();
 	Instruction::Invocation invoke;
-	if (fname == "external" || fname == "extern" || fname == "out")
+	auto retType = Makai::Cast::as<Makai::Data::Value::Kind>(-2);
+	if (fname == "internal" || fname == "intern" || fname == "in")
 		return doInternalCall(context);
-	else if (fname == "internal" || fname == "intern" || fname == "in") {
-		invoke.location = DataLocation::AV2_DL_INTERNAL;
+	else if (fname == "external" || fname == "extern" || fname == "out") {
+		invoke.location = DataLocation::AV2_DL_EXTERNAL;
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 		auto const func = context.stream.current();
 		if (func.type != LTS_TT_IDENTIFIER)
 			MINIMA_ERROR(InvalidValue, "Function call must be an identifier!");
 		fname = func.value.get<Makai::String>();
+		if (!context.stream.next())
+			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
+		retType = getReturnType(context);
 	} else invoke.location = DataLocation::AV2_DL_CONST;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 	auto const funcID = context.program.code.size();
 	context.program.code.pushBack({});
-	context.addJumpTarget(fname);
+	if (invoke.location == DataLocation::AV2_DL_CONST)
+		context.addJumpTarget(fname);
+	else {
+		context.program.code.pushBack(Makai::Cast::bit<Instruction, uint64>(context.program.constants.size()));
+		context.program.constants.pushBack(fname);
+	}
 	if (func.type != Type{'('})
 		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
 	if (!context.stream.next())
@@ -540,6 +576,9 @@ MINIMA_ASSEMBLE_FN(Call) {
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 	}
+	if (invoke.location == DataLocation::AV2_DL_EXTERNAL) {
+
+	}
 	if (func.type != Type{')'})
 		MINIMA_ERROR(InvalidValue, "Expected ')' here!");
 	invoke.argc = argi;
@@ -547,6 +586,8 @@ MINIMA_ASSEMBLE_FN(Call) {
 		Instruction::Name::AV2_IN_CALL,
 		Makai::Cast::bit<uint32>(invoke)
 	};
+	if (retType != Makai::Cast::as<decltype(retType)>(-2))
+		context.program.code.pushBack(Makai::Cast::bit<Instruction, uint64>(Makai::enumcast(retType)));
 }
 
 MINIMA_ASSEMBLE_FN(Compare) {
@@ -562,24 +603,25 @@ MINIMA_ASSEMBLE_FN(Compare) {
 			using enum As<decltype(comp)>;
 			case LTS_TT_IDENTIFIER: {
 				auto const id = cmp.value.get<Makai::String>();
-				if (id == "equals" || id == "eq" || id == "is")				comp = AV2_OP_EQUALS;
+				if (id == "equals" || id == "eq")							comp = AV2_OP_EQUALS;
 				else if (id == "notequals" || id == "neq" || id == "not")	comp = AV2_OP_NOT_EQUALS;
 				else if (id == "less" || id == "lt")						comp = AV2_OP_LESS_THAN;
 				else if (id == "greater" || id == "gt")						comp = AV2_OP_GREATER_THAN;
 				else if (id == "lessequals" || id == "le")					comp = AV2_OP_LESS_EQUALS;
 				else if (id == "greaterequals" || id == "ge")				comp = AV2_OP_GREATER_EQUALS;
-				else if (id == "threeway" || id == "order")					comp = AV2_OP_THREEWAY;
+				else if (id == "threeway" || id == "order" || id == "ord")	comp = AV2_OP_THREEWAY;
+				else if (id == "typeof" || id == "is")						comp = AV2_OP_TYPE_COMPARE;
 				else MINIMA_ERROR(InvalidValue, "Invalid comparison type!");
 			} break;
-			case Type{':'}:								comp = AV2_OP_THREEWAY;			break;
-			case Type{'<'}:								comp = AV2_OP_LESS_THAN;		break;
-			case Type{'>'}:								comp = AV2_OP_GREATER_THAN;		break;
+			case Type{':'}:						comp = AV2_OP_THREEWAY;			break;
+			case Type{'<'}:						comp = AV2_OP_LESS_THAN;		break;
+			case Type{'>'}:						comp = AV2_OP_GREATER_THAN;		break;
 			case Type{'='}:
-			case Type::LTS_TT_COMPARE_EQUALS:			comp = AV2_OP_EQUALS;			break;
+			case LTS_TT_COMPARE_EQUALS:			comp = AV2_OP_EQUALS;			break;
 			case Type{'!'}:
-			case Type::LTS_TT_COMPARE_NOT_EQUALS:		comp = AV2_OP_NOT_EQUALS;		break;
-			case Type::LTS_TT_COMPARE_GREATER_EQUALS:	comp = AV2_OP_GREATER_EQUALS;	break;
-			case Type::LTS_TT_COMPARE_LESS_EQUALS:		comp = AV2_OP_LESS_EQUALS;		break;
+			case LTS_TT_COMPARE_NOT_EQUALS:		comp = AV2_OP_NOT_EQUALS;		break;
+			case LTS_TT_COMPARE_GREATER_EQUALS:	comp = AV2_OP_GREATER_EQUALS;	break;
+			case LTS_TT_COMPARE_LESS_EQUALS:	comp = AV2_OP_LESS_EQUALS;		break;
 			default: MINIMA_ERROR(InvalidValue, "Invalid comparator for comparison!");
 		}
 	}
@@ -698,34 +740,6 @@ MINIMA_ASSEMBLE_FN(ErrorHalt) {
 	});
 	if (err.id < Makai::Limit::MAX<uint64>)
 		context.program.code.pushBack(Makai::Cast::bit<Instruction>(err.id));
-}
-
-// TODO: Anima-V1 support
-MINIMA_ASSEMBLE_FN(V1Operation) {
-	
-}
-
-// TODO: Anima-V1 support
-MINIMA_ASSEMBLE_FN(V1ContextExec) {
-	
-}
-
-// TODO: Anima-V1 support
-MINIMA_ASSEMBLE_FN(V1Expression) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed Anima-V1 expression!");
-	auto const current = context.stream.current();
-	if (current.type == LTS_TT_IDENTIFIER) {
-		auto const id = current.value.get<Makai::String>();
-		if (id == "run" || id == "do") {}
-		else if (id == "line") {}
-		else if (id == "emote") {}
-		else if (id == "perform" || id == "do") {}
-		else if (id == "actor") {}
-		else if (id == "add") {
-
-		}
-	} else MINIMA_ERROR(InvalidValue, "Anima-V1 expression must be an identifier!");
 }
 
 MINIMA_ASSEMBLE_FN(BinaryMath) {
@@ -967,7 +981,6 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "copy")											doCopy(context);
 		else if (id == "context" || id == "mode")						doContext(context);
 		else if (id == "loose" || id == "strict")						doImmediateContext(context);
-		else if (id == "dialog" || id == "diag" || id == "v1")			doV1Expression(context);
 		else if (id == "calculate" || id == "bmath" || id == "calc")	doBinaryMath(context);
 		else if (id == "umath")											doUnaryMath(context);
 		else if (id == "yield")											doYield(context);
