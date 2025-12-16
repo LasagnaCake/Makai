@@ -100,7 +100,8 @@ namespace Makai::Anima::V2 {
 		AV2_OP_GREATER_THAN,
 		AV2_OP_LESS_EQUALS,
 		AV2_OP_GREATER_EQUALS,
-		AV2_OP_THREEWAY
+		AV2_OP_THREEWAY,
+		AV2_OP_TYPE_COMPARE,
 	};
 	
 	/// @brief Instruction.
@@ -179,13 +180,6 @@ namespace Makai::Anima::V2 {
 		struct [[gnu::aligned(4)]] StackPop {
 			DataLocation	location;
 			bool			discard:	1;
-		};
-
-		/// @brief Anima V1 operation.
-		struct [[gnu::aligned(4)]] V1Operation {
-			enum class Name: uint16 {};
-			uint16	mode:	4;
-			Name	name:	12;
 		};
 
 		/// @brief Binary math operation.
@@ -295,14 +289,6 @@ namespace Makai::Anima::V2 {
 			/// @param type `UnaryMath` = How to process the math operation.
 			/// @details `umath [<val-id>] [out-id]`
 			AV2_IN_MATH_UOP,
-			/// @brief Executes a Anima-V1 operation.
-			/// @param type `V1Operation` = How to process the instruction.
-			/// @details `v1_op <op-id>`
-			AV2_IN_V1_OP,
-			/// @brief Executes a Anima-V1 program in an Anima-V1 context.
-			/// @param type `V1Context` = Context parameters.
-			/// @details `v1_exec <op-id>`
-			AV2_IN_V1_CTX_EXEC,
 			/// @brief Returns execution to the engine.
 			/// @param type Discarded.
 			/// @details `yield`
