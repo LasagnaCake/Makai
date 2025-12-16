@@ -12,6 +12,8 @@ namespace Makai::Anima::V2::Runtime {
 			usize	instruction	= -1;
 		};
 		using VariableBank = Map<uint64, Data::Value>;
+		ContextMode						mode		= ContextMode::AV2_CM_STRICT;
+		ContextMode						prevMode	= ContextMode::AV2_CM_STRICT;
 		Pointers						pointers;
 		Data::Value::ArrayType			valueStack;
 		List<Pointers>					pointerStack;

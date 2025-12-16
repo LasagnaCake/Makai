@@ -94,9 +94,12 @@ namespace Makai::Anima::V2 {
 	
 	/// @brief Comparison operator.
 	enum class Comparator: uint8 {
+		AV2_OP_EQUALS,
+		AV2_OP_NOT_EQUALS,
 		AV2_OP_LESS_THAN,
 		AV2_OP_GREATER_THAN,
-		AV2_OP_EQUALS,
+		AV2_OP_LESS_EQUALS,
+		AV2_OP_GREATER_EQUALS,
 		AV2_OP_THREEWAY
 	};
 	
@@ -115,6 +118,7 @@ namespace Makai::Anima::V2 {
 		/// @brief Context mode.
 		struct [[gnu::aligned(4)]] Context {
 			ContextMode		mode;
+			bool			immediate:	1;
 		};
 
 		/// @brief Value declaration.
@@ -150,6 +154,10 @@ namespace Makai::Anima::V2 {
 				AV2_ILT_IF_NOT_ZERO,
 				AV2_ILT_IF_NEGATIVE,
 				AV2_ILT_IF_POSITIVE,
+				AV2_ILT_IF_NULL,
+				AV2_ILT_IF_NAN,
+				AV2_ILT_IF_UNDEFINED,
+				AV2_ILT_IF_NULL_OR_UNDEFINED,
 			};
 			Type			type:		7;
 			bool			isDynamic:	1;
@@ -158,19 +166,25 @@ namespace Makai::Anima::V2 {
 		
 		/// @brief Comparison operator.
 		struct [[gnu::aligned(4)]] Comparison {
-			DataLocation	output;
-			Comparator		type;
+			DataLocation	lhs, rhs, out;
+			Comparator		comp;
 		};
 		
 		/// @brief Return result.
 		struct [[gnu::aligned(4)]] Result {
-			bool			ignore;
+			DataLocation	location;
+			bool			ignore:		1;
+		};
+
+		/// @brief Stack push.
+		struct [[gnu::aligned(4)]] StackPush {
 			DataLocation	location;
 		};
 
-		/// @brief Stack interaction.
-		struct [[gnu::aligned(4)]] StackInteraction {
+		/// @brief Stack push.
+		struct [[gnu::aligned(4)]] StackPop {
 			DataLocation	location;
+			bool			discard:	1;
 		};
 
 		/// @brief Anima V1 operation.
@@ -241,20 +255,24 @@ namespace Makai::Anima::V2 {
 			/// @param type `Transfer` = How to transfer the data.
 			/// @details `copy [<from-id>] [<to-id>]`
 			AV2_IN_COPY,
+			/// @brief Performs a three-way comparison on two values.
+			/// @param type `Comparison` = How to compare.
+			/// @details `cmp [<lhs-id>] [<rhs-id>] [<out-id>]`
+			AV2_IN_COMPARE,
 			/// @brief Invokes a function.
 			/// @param type `Invocation` = How to invoke the function.
 			/// @details `invoke [<func-id>] [<args> ...]`
 			AV2_IN_CALL,
 			/// @brief Executes a jump.
 			/// @param type `Leap` = How to jump.
-			/// @details `jump [<cond-id>] (<dynamic-to-src-id> | <to-id>)`
+			/// @details `jump ([<dynamic-to-src-id>] [<cond-id>] | [<cond-id>] <to-id>)`
 			AV2_IN_JUMP,
 			/// @brief Pushes a value to the top of the stack.	
-			/// @param type `StackInteraction` = How to handle the value.
+			/// @param type `StackPush` = How to handle the value.
 			/// @details `push [<loc-id>]`
 			AV2_IN_STACK_PUSH,
 			/// @brief Pops a value from the top of the stack into a given location.
-			/// @param type `StackInteraction` = How to handle the value.
+			/// @param type `StackPop` = How to handle the value.
 			/// @details `push [<loc-id>]`
 			AV2_IN_STACK_POP,
 			/// @brief Swaps the topmost two values of the stack.	

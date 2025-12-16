@@ -59,28 +59,30 @@ namespace Makai::Anima::V2::Runtime {
 			Instruction	instruction;
 		};
 
-		enum class BuiltInFunction: char {
-			AV2_EBIF_ADD	= '+',
-			AV2_EBIF_SUB	= '-',
-			AV2_EBIF_MUL	= '*',
-			AV2_EBIF_DIV	= '/',
-			AV2_EBIF_MOD	= '%',
-			AV2_EBIF_COMP	= '=',
-			AV2_EBIF_NEG	= 'n',
-			AV2_EBIF_AND	= '&',
-			AV2_EBIF_OR		= '|',
-			AV2_EBIF_NOT	= '~',
-			AV2_EBIF_XOR	= '^',
-			AV2_EBIF_LAND	= 'a',
-			AV2_EBIF_LOR	= 'o',
-			AV2_EBIF_LNOT	= '!',
-			AV2_EBIF_SIN	= 's',
-			AV2_EBIF_COS	= 'c',
-			AV2_EBIF_TAN	= 't',
-			AV2_EBIF_ASIN	= 'S',
-			AV2_EBIF_ACOS	= 'C',
-			AV2_EBIF_ATAN	= 'T',
-			AV2_EBIF_ATAN2	= '2',
+		enum class BuiltInFunction: uint8 {
+			AV2_EBIF_ADD		= '+',
+			AV2_EBIF_SUB		= '-',
+			AV2_EBIF_MUL		= '*',
+			AV2_EBIF_DIV		= '/',
+			AV2_EBIF_POW		= 'p',
+			AV2_EBIF_REM		= '%',
+			AV2_EBIF_COMP		= '=',
+			AV2_EBIF_NEG		= 'n',
+			AV2_EBIF_AND		= '&',
+			AV2_EBIF_OR			= '|',
+			AV2_EBIF_NOT		= '~',
+			AV2_EBIF_XOR		= '^',
+			AV2_EBIF_LAND		= 'a',
+			AV2_EBIF_LOR		= 'o',
+			AV2_EBIF_LNOT		= '!',
+			AV2_EBIF_SIN		= 's',
+			AV2_EBIF_COS		= 'c',
+			AV2_EBIF_TAN		= 't',
+			AV2_EBIF_ASIN		= 'S',
+			AV2_EBIF_ACOS		= 'C',
+			AV2_EBIF_ATAN		= 'T',
+			AV2_EBIF_ATAN2		= '2',
+			AV2_EBIF_INTERRUPT	= '.',
 		};
 
 		enum class Action {
@@ -98,7 +100,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		Value fetchInternal(uint64 const valueID);
 
-		constexpr bool inStrictMode() const {return mode == ContextMode::AV2_CM_STRICT;}
+		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
 
@@ -141,6 +143,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Halt();
 		void v2BinaryMath();
 		void v2UnaryMath();
+		void v2SetContext();
 
 		void callBuiltIn(BuiltInFunction const func);
 
@@ -148,7 +151,6 @@ namespace Makai::Anima::V2::Runtime {
 		void returnBack();
 
 		bool			isFinished	= false;
-		ContextMode		mode		= ContextMode::AV2_CM_STRICT;
 		Program			program;
 		Context			context;
 		Instruction		current;

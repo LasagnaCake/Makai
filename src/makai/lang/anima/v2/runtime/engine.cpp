@@ -9,6 +9,9 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 using Makai::Data::Value;
 
 bool Engine::process() {
+	bool revertContext = false;
+	if (context.prevMode != context.mode)
+		revertContext = true;
 	if (isFinished) return false;
 	do {
 		advance();
@@ -27,6 +30,7 @@ bool Engine::process() {
 		case AV2_IN_NO_OP: break;
 		default: crash(invalidInstructionEror());
 	}
+	if (revertContext) context.mode = context.prevMode;
 	return !isFinished;
 }
 
@@ -342,7 +346,7 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() / b.get<double>());
 			else pushUndefinedIfInLooseMode("builtin div");
 		} break;
-		case BuiltInFunction::AV2_EBIF_MOD: {
+		case BuiltInFunction::AV2_EBIF_REM: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin mod");
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			if (a.isNumber() && b.isNumber()) {
@@ -414,19 +418,33 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			else if (order == Value::Order::LESS)		context.valueStack.pushBack(-1);
 			else pushUndefinedIfInLooseMode("builtin bitwise compare");
 		} break;
-		default: pushUndefinedIfInLooseMode("invalid builtin"); break;
+		case BuiltInFunction::AV2_EBIF_INTERRUPT: {
+			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin interrupt");
+		}
+		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
 }
 
+void Engine::v2SetContext() {
+	auto const ctx = Cast::bit<Instruction::Context>(current.type);
+	if (!ctx.immediate)
+		context.prevMode	= ctx.mode;
+	context.mode			= ctx.mode;
+}
+
 void Engine::v2StackPush() {
-	auto const inter = Cast::bit<Instruction::StackInteraction>(current.type);
+	auto const inter = Cast::bit<Instruction::StackPush>(current.type);
 	auto const value = consumeValue(inter.location);
 	if (err) return;
 	context.valueStack.pushBack(value);
 }
 
 void Engine::v2StackPop() {
-	auto const inter = Cast::bit<Instruction::StackInteraction>(current.type);
+	auto const inter = Cast::bit<Instruction::StackPop>(current.type);
+	if (inter.discard) {
+		context.valueStack.popBack();
+		return;
+	}
 	auto& value = accessValue(inter.location);
 	if (err) return;
 	value = context.valueStack.popBack();

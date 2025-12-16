@@ -8,7 +8,7 @@ namespace Makai::Anima::V2::Runtime {
 		Data::Value::ArrayType	types;
 		Data::Value::ArrayType	constants;
 		List<Instruction>		code;
-		List<usize>				jumpTable;
+		List<uint64>			jumpTable;
 	};
 }
 
