@@ -118,11 +118,11 @@ static Location getGlobal(Context& context) {
 		MINIMA_ERROR(InvalidValue, "Expected identifier for global variable name!");
 	auto const id = name.value.get<Makai::String>();
 	usize globalID = 0;
-	if (context.globals.contains(id))
-		globalID = context.globals[id];
+	if (context.program.labels.globals.contains(id))
+		globalID = context.program.labels.globals[id];
 	else {
-		globalID = context.globals.size();
-		context.globals[id] = globalID;
+		globalID = context.program.labels.globals.size();
+		context.program.labels.globals[id] = globalID;
 	}
 	return {
 		DataLocation::AV2_DL_GLOBAL,

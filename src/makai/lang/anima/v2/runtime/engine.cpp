@@ -152,11 +152,29 @@ Makai::Data::Value Engine::getValueFromLocation(DataLocation const loc, usize co
 		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
 	switch (loc) {
-		case DataLocation::AV2_DL_CONST:		return program.constants[id % program.constants.size()];
-		case DataLocation::AV2_DL_STACK:		return context.valueStack[id  % context.valueStack.size()];
-		case DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)];
+		case DataLocation::AV2_DL_CONST:
+			if (program.constants.empty()) {
+				if (inStrictMode())
+					crash(invalidLocationError(loc));
+				return Data::Value::undefined();
+			}
+			return program.constants[id % program.constants.size()];
+		case DataLocation::AV2_DL_STACK:
+			if (context.valueStack.empty()) {
+				if (inStrictMode())
+					crash(invalidLocationError(loc));
+				return Data::Value::undefined();
+			}
+			return context.valueStack[id  % context.valueStack.size()];
+		case DataLocation::AV2_DL_STACK_OFFSET:
+			if (context.valueStack.empty()) {
+				if (inStrictMode())
+					crash(invalidLocationError(loc));
+				return Data::Value::undefined();
+			}
+			return context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)];
 //		case DataLocation::AV2_DL_HEAP:			{} break;
-		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id % context.globals.size()];
+		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id];
 		case DataLocation::AV2_DL_INTERNAL:		return fetchInternal(id);
 		case DataLocation::AV2_DL_EXTERNAL:		return fetchExternal(program.constants[id].get<String>());
 		case DataLocation::AV2_DL_TEMPORARY:	return context.temporary;
@@ -185,10 +203,22 @@ Makai::Data::Value& Engine::accessLocation(DataLocation const loc, usize const i
 		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
 	switch (loc) {
-		case DataLocation::AV2_DL_STACK:		return context.valueStack[id % context.valueStack.size()];
-		case DataLocation::AV2_DL_STACK_OFFSET:	return context.valueStack[-Cast::as<ssize>(id % context.valueStack.size() + 1)];
+		case DataLocation::AV2_DL_STACK:
+			if (context.valueStack.empty()) {
+				if (inStrictMode())
+					crash(invalidLocationError(loc));
+				return context.temporary;
+			}
+			return context.valueStack[id % context.valueStack.size()];
+		case DataLocation::AV2_DL_STACK_OFFSET:
+			if (context.valueStack.empty()) {
+				if (inStrictMode())
+					crash(invalidLocationError(loc));
+				return context.temporary;
+			}
+			return context.valueStack[-Cast::as<ssize>(id % context.valueStack.size() + 1)];
 //		case DataLocation::AV2_DL_HEAP:			{} break;
-		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id  % context.globals.size()];
+		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id];
 		case DataLocation::AV2_DL_TEMPORARY:	return context.temporary;	
 		default: {
 			if (inStrictMode())
@@ -295,6 +325,7 @@ void Engine::v2UnaryMath() {
 			case decltype(op.op)::AV2_IUM_OP_LOG2:		out = Math::log2(v.get<double>());
 			case decltype(op.op)::AV2_IUM_OP_LOG10:		out = Math::log10(v.get<double>());
 			case decltype(op.op)::AV2_IUM_OP_LN:		out = Math::log(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_SQRT:		out = Math::sqrt(v.get<double>());
 			default: {
 				if (inStrictMode())
 					return crash(invalidUnaryMathError(op));
