@@ -1019,7 +1019,15 @@ MINIMA_ASSEMBLE_FN(Get) {
 	auto const from = getDataLocation(context); 
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const fieldID = getFieldPath(context);
+	if (context.stream.current().type != Type{'['})
+		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+	auto const field = getDataLocation(context); 
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+	if (context.stream.current().type != Type{']'})
+		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
 	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
@@ -1027,9 +1035,11 @@ MINIMA_ASSEMBLE_FN(Get) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
 	auto const to = getDataLocation(context);
-	get.from = from.at;
-	get.to = to.at;
-	context.addInstruction(fieldID);
+	get.from	= from.at;
+	get.to		= to.at;
+	get.field	= field.at;
+	if (field.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(field.id);
 	if (from.id < Makai::Limit::MAX<uint64>)
 		context.addInstruction(from.id);
 	if (to.id < Makai::Limit::MAX<uint64>)
@@ -1052,10 +1062,20 @@ MINIMA_ASSEMBLE_FN(Set) {
 	auto const from = getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	auto const fieldID = getFieldPath(context);
-	set.from = from.at;
-	set.to = to.at;
-	context.addInstruction(fieldID);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
+	if (context.stream.current().type != Type{'['})
+		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
+	auto const field = getDataLocation(context); 
+	if (context.stream.current().type != Type{']'})
+		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
+	set.from	= from.at;
+	set.to		= to.at;
+	set.field	= field.at;
+	if (field.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(field.id);
 	if (from.id < Makai::Limit::MAX<uint64>)
 		context.addInstruction(from.id);
 	if (to.id < Makai::Limit::MAX<uint64>)
@@ -1073,12 +1093,16 @@ MINIMA_ASSEMBLE_FN(Cast) {
 	auto const from	= getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
+	if (context.stream.current().type == Type{':'})
+		MINIMA_ERROR(InvalidValue, "Expected ':' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const type = getReturnType(context);
 	if (!(
 		type == decltype(type)::DVK_SIGNED
 	||	type == decltype(type)::DVK_UNSIGNED
 	||	type == decltype(type)::DVK_REAL
-	)) MINIMA_ERROR(NonexistentValue, "Casts can only happen to [int], [uint] and [real]!");
+	)) MINIMA_ERROR(InvalidValue, "Casts can only happen to [int], [uint] and [real]!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const to	= getDataLocation(context);
