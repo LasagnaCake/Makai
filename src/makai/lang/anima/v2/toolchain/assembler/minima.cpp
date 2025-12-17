@@ -153,22 +153,25 @@ static Location getConstantLocation(Minima::Context& context) {
 				DataLocation::AV2_DL_INTERNAL,
 				6
 			};
-		else  return {
-			DataLocation::AV2_DL_CONST,
-			context.program.constants.pushBack(
+		else {
+			Makai::Data::Value c = 
 				(
 					v.type == LTS_TT_INTEGER
 				?	v.value.get<ssize>()
 				:	v.value.get<double>()
 				)
 			*	(isNegative ? -1 : +1)
-			).size() - 1
-		};
+			;
+			auto i = context.program.constants.find(c);
+			if (i == -1)
+				i = context.program.constants.pushBack(c).size() - 1;
+			else return {DataLocation::AV2_DL_CONST, i};
+		}
 	}
-	return {
-		DataLocation::AV2_DL_CONST,
-		context.program.constants.pushBack(current.value).size() - 1
-	};
+	auto i = context.program.constants.find(current.value);
+	if (i == -1)
+		i = context.program.constants.pushBack(current.value).size() - 1;
+	else return {DataLocation::AV2_DL_CONST, i};
 }
 
 static Location getDataLocation(Minima::Context& context) {
@@ -920,57 +923,6 @@ MINIMA_ASSEMBLE_FN(Await) {
 	};
 }
 
-MINIMA_ASSEMBLE_FN(IndirectRead) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed indirect read!");
-	if (context.stream.current().type != Type{'('})
-		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
-	auto const at = context.stream.current();
-	DataLocation loc;
-	if (at.type == LTS_TT_IDENTIFIER) {
-		auto const id = at.value.get<Makai::String>();
-		if (id == "register" || id == "reg") {
-			loc = DataLocation::AV2_DL_REGISTER;
-		} else if (id == "stack") {
-			loc = DataLocation::AV2_DL_STACK;
-		} else if (id == "external" || id == "extern" || id == "out") {
-			loc = DataLocation::AV2_DL_EXTERNAL;
-		} else if (id == "global" || id == "g") {
-			loc = DataLocation::AV2_DL_GLOBAL;
-		} else if (id == "temporary" || id == "temp") {
-			loc = DataLocation::AV2_DL_TEMPORARY;
-		} else MINIMA_ERROR(InvalidValue, "Invalid location target!");
-	} else MINIMA_ERROR(InvalidValue, "Location target must be an identifier!");
-	auto const id = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed indirect read!");
-	if (context.stream.current().type != Type{')'})
-		MINIMA_ERROR(InvalidValue, "Expected ')' here!");
-	context.program.constants.pushBack(Makai::enumcast(loc));
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_STACK_PUSH,
-		Makai::Cast::bit<uint32, Instruction::StackPush>({
-			DataLocation::AV2_DL_CONST
-		})
-	});
-	context.program.code.pushBack(Makai::Cast::bit<Instruction, uint64>(context.program.constants.size() - 1));
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_STACK_PUSH,
-		Makai::Cast::bit<uint32, Instruction::StackPush>({
-			id.at
-		})
-	});
-	if (id.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(id.id));
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_CALL,
-		Makai::Cast::bit<uint32, Instruction::Invocation>({
-			.location = DataLocation::AV2_DL_INTERNAL,
-			.argc = ':'
-		})
-	});
-}
-
 uint64 getFieldPath(Context& context) {
 	if (context.stream.current().type != Type{'['})
 		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
@@ -1124,6 +1076,108 @@ MINIMA_ASSEMBLE_FN(Cast) {
 		context.addInstruction(to.id);
 }
 
+#define MINIMA_STR_OP(NAME) static Instruction::StringManipulation get##NAME##Operation(Context& context)
+
+MINIMA_STR_OP(BaseUnaryString) {
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (context.stream.current().type != Type{'('})	MINIMA_ERROR(InvalidValue, "Expected '(' here!");
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	auto const v = getDataLocation(context);
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (context.stream.current().type != Type{')'})	MINIMA_ERROR(InvalidValue, "Expected ')' here!");
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (v.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(v.id);
+	return {.lhs = v.at};
+}
+
+MINIMA_STR_OP(BaseBinaryString) {
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (context.stream.current().type != Type{'('})	MINIMA_ERROR(InvalidValue, "Expected '(' here!");
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	auto const lhs = getDataLocation(context);
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (context.stream.current().type != Type{':'})	MINIMA_ERROR(InvalidValue, "Expected ':' here!");
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	auto const rhs = getDataLocation(context);
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (context.stream.current().type != Type{')'})	MINIMA_ERROR(InvalidValue, "Expected ')' here!");
+	if (!context.stream.next())						MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (lhs.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(lhs.id);
+	if (rhs.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(rhs.id);
+	return {.lhs = lhs.at, .rhs = rhs.at};
+}
+
+MINIMA_STR_OP(StringRemove) {
+	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_REMOVE));
+	auto manip = getBaseUnaryStringOperation(context);
+	return manip;
+}
+
+MINIMA_STR_OP(StringJoin) {
+	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_JOIN));
+	auto manip = getBaseUnaryStringOperation(context);
+	return manip;
+}
+
+MINIMA_STR_OP(StringSplit) {
+	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_SPLIT));
+	auto manip = getBaseUnaryStringOperation(context);
+	return manip;
+}
+
+MINIMA_STR_OP(StringMatch) {
+	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_MATCH));
+	auto manip = getBaseUnaryStringOperation(context);
+	return manip;
+}
+
+MINIMA_STR_OP(StringSub) {
+	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_SUBSTRING));
+	auto manip = getBaseBinaryStringOperation(context);
+	return manip;
+}
+
+MINIMA_STR_OP(StringReplace) {
+	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_REPLACE));
+	auto manip = getBaseBinaryStringOperation(context);
+	return manip;
+}
+
+
+MINIMA_ASSEMBLE_FN(StringOperation) {
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	auto const op = context.stream.current();
+	if (op.type != LTS_TT_IDENTIFIER)
+		MINIMA_ERROR(InvalidValue, "String operation must be an identifier!");
+	auto const id = op.value.get<Makai::String>();
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	auto const src = getDataLocation(context);
+	auto const manipID = context.addNamedInstruction(Instruction::Name::AV2_IN_STR_OP);
+	Instruction::StringManipulation manip;
+	if (src.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(src.id);
+	if (id == "replace" || id == "rep")			manip = getStringReplaceOperation(context);
+	else if (id == "substring" || id == "sub")	manip = getStringSubOperation(context);
+	else if (id == "match")						manip = getStringMatchOperation(context);
+	else if (id == "split")						manip = getStringSplitOperation(context);
+	else if (id == "concat" || id == "join")	manip = getStringJoinOperation(context);
+	else if (id == "remove" || id == "rem")		manip = getStringRemoveOperation(context);
+	if (!context.stream.next())										MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)	MINIMA_ERROR(InvalidValue, "Expected '->' here!");
+	if (!context.stream.next())										MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	auto const out = getDataLocation(context);
+	if (out.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(out.id);
+	manip.src = src.at;
+	manip.out = out.at;
+	context.addInstructionType(manipID, manip);
+}
+
 MINIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	if (current.type == LTS_TT_IDENTIFIER) {
@@ -1151,6 +1205,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "convert" || id == "cast")						doCast(context);
 		else if (id == "read" || id == "get")							doGet(context);
 		else if (id == "write" || id == "set")							doSet(context);
+		else if (id == "string" || id == "str")							doStringOperation(context);
 		else MINIMA_ERROR(InvalidValue, "Invalid/Unsupported instruction!");
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }
