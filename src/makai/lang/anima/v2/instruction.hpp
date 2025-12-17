@@ -103,6 +103,14 @@ namespace Makai::Anima::V2 {
 		AV2_OP_THREEWAY,
 		AV2_OP_TYPE_COMPARE,
 	};
+	enum class StringOperation: uint8 {
+		AV2_OP_JOIN,
+		AV2_OP_SPLIT,
+		AV2_OP_REPLACE,
+		AV2_OP_REMOVE,
+		AV2_OP_SUBSTRING,
+		AV2_OP_MATCH,
+	};
 	
 	/// @brief Instruction.
 	struct [[gnu::aligned(8)]] Instruction {
@@ -245,16 +253,7 @@ namespace Makai::Anima::V2 {
 		
 		/// @brief String manipulation.
 		struct [[gnu::aligned(4)]] StringManipulation {
-			enum class Operation: uint8 {
-				AV2_ISM_OP_JOIN,
-				AV2_ISM_OP_SPLIT,
-				AV2_ISM_OP_REPLACE,
-				AV2_ISM_OP_REMOVE,
-				AV2_ISM_OP_SUBSTRING,
-				AV2_ISM_OP_MATCH,
-			};
-			DataLocation	src, dst;
-			Operation		op;
+			DataLocation	src, lhs, rhs, out;
 		};
 		
 		/// @brief Instruction name.
@@ -341,8 +340,8 @@ namespace Makai::Anima::V2 {
 			AV2_IN_CAST,
 			/// @brief Performs a string manipulation operation on a value.
 			/// @param type `StringManipulation` = How to manipulate the string.
-			/// @details `strmanip [<src-id>] [<dst-id>]`
-			AV2_IN_STRMANIP,
+			/// @details `str <op-id> [<src-id>] [<lhs-id>] [<rhs-id>] [<out-id>]`
+			AV2_IN_STR_OP,
 		};
 		
 		/// @brief Instruction "Name" (opcode).
