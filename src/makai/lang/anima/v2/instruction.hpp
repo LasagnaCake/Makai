@@ -315,11 +315,11 @@ namespace Makai::Anima::V2 {
 			AV2_IN_AWAIT,
 			/// @brief Gets the value of a field from an object.
 			/// @param type `GetRequest` = How to get the value.
-			/// @details `get [<from-id>] [<to-id>] <path-id>`
+			/// @details `get <path-id> [<from-id>] [<to-id>]`
 			AV2_IN_GET,
 			/// @brief Sets the value of a field in an object.
 			/// @param type `SetRequest` = How to set the value.
-			/// @details `set [<from-id>] [<to-id>] <path-id>`
+			/// @details `set <path-id> [<from-id>] [<to-id>]`
 			AV2_IN_SET,
 			/// @brief Casts a given type to another type.
 			/// @param type `Casting` = How to cast the value.

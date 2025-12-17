@@ -44,6 +44,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			program.code.pushBack({});
 			return program.code.size() - 1;
 		}
+		[[nodiscard]]
+		constexpr usize addNamedInstruction(Instruction::Name const name) {
+			program.code.pushBack({name});
+			return program.code.size() - 1;
+		}
 
 		template <class T>
 		constexpr usize addInstruction(T const& inst)
@@ -56,6 +61,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		constexpr static void addInstructionType(Instruction& inst, T const& type)
 		requires (sizeof(T) == sizeof(uint32)) {
 			inst.type = Cast::bit<uint32, T>(type);
+		}
+
+		template <class T>
+		constexpr void addInstructionType(usize const id, T const& type)
+		requires (sizeof(T) == sizeof(uint32)) {
+			addInstructionType(instruction(id), type);
 		}
 
 		constexpr Instruction& instruction(usize const i) {

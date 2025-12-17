@@ -52,7 +52,7 @@ namespace Data {
 		using VectorType	= Math::Vector4;
 		
 		/// @brief Underlying value type.
-		enum class Kind {
+		enum class Kind: int16 {
 			DVK_VOID,
 			DVK_UNDEFINED  = DVK_VOID,
 			DVK_NULL,

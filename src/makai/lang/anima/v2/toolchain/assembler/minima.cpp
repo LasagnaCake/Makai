@@ -961,29 +961,133 @@ MINIMA_ASSEMBLE_FN(IndirectRead) {
 	});
 }
 
+uint64 getFieldPath(Context& context) {
+	if (context.stream.current().type != Type{'['})
+		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
+	Makai::String path;
+	while (context.stream.next() && context.stream.current().type != Type{']'}) {
+		auto const sf = context.stream.current();
+		if (
+			sf.type == Type::LTS_TT_IDENTIFIER
+		||	sf.type == Type::LTS_TT_SINGLE_QUOTE_STRING
+		||	sf.type == Type::LTS_TT_DOUBLE_QUOTE_STRING
+		||	sf.type == Type::LTS_TT_INTEGER
+		||	sf.type == Type{'-'}
+		||	sf.type == Type{'+'}
+		) {
+			Makai::String node;
+			switch (sf.type) {
+				case LTS_TT_IDENTIFIER:
+				case LTS_TT_SINGLE_QUOTE_STRING:
+				case LTS_TT_DOUBLE_QUOTE_STRING: node = sf.value.get<Makai::String>(); break;
+				case LTS_TT_INTEGER: node = sf.value.toString(); break;
+				case Type{'-'}: {
+					if (!context.stream.next())
+						MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+					auto const index = context.stream.current();
+					if (index.type != LTS_TT_INTEGER)
+						MINIMA_ERROR(InvalidValue, "Index must be an integer!");
+					node = "-" + index.value.toString();
+				} break;
+				case Type{'+'}: {
+					if (!context.stream.next())
+						MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+					auto const index = context.stream.current();
+					if (index.type != LTS_TT_INTEGER)
+						MINIMA_ERROR(InvalidValue, "Index must be an integer!");
+					node = index.value.toString();
+				} break;
+			}
+			if (path.empty())	path = node;
+			else				path += "/" + node;
+		} else MINIMA_ERROR(InvalidValue, "Field must be identifier, string or integer!");
+	}
+	if (context.stream.current().type != Type{']'})
+		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
+	auto const fieldID = context.program.constants.size();
+	context.program.constants.pushBack(path);
+	return fieldID;
+}
+
 MINIMA_ASSEMBLE_FN(Get) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const getID = context.addEmptyInstruction();
-	context.instruction(getID).name = Instruction::Name::AV2_IN_GET;
+	auto const getID = context.addNamedInstruction(Instruction::Name::AV2_IN_GET);
+	Instruction::GetRequest get;
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+	auto const from = getDataLocation(context); 
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+	auto const fieldID = getFieldPath(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
+		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+	auto const to = getDataLocation(context);
+	get.from = from.at;
+	get.to = to.at;
+	context.addInstruction(fieldID);
+	if (from.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(from.id);
+	if (to.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(to.id);
+	context.addInstructionType(getID, get);
 }
 
 MINIMA_ASSEMBLE_FN(Set) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	auto const setID = context.addEmptyInstruction();
-	context.instruction(setID).name = Instruction::Name::AV2_IN_SET;
+	auto const setID = context.addNamedInstruction(Instruction::Name::AV2_IN_SET);
+	Instruction::SetRequest set;
+	auto const to = getDataLocation(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
+	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
+		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
+	auto const from = getDataLocation(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
+	auto const fieldID = getFieldPath(context);
+	set.from = from.at;
+	set.to = to.at;
+	context.addInstruction(fieldID);
+	if (from.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(from.id);
+	if (to.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(to.id);
+	context.addInstructionType(setID, set);
 }
 
 MINIMA_ASSEMBLE_FN(Cast) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	auto const castID = context.addEmptyInstruction();
-	context.instruction(castID).name = Instruction::Name::AV2_IN_CAST;
+	auto const castID = context.addNamedInstruction(Instruction::Name::AV2_IN_CAST);
 	// TODO: This
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const from	= getDataLocation(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const type = getReturnType(context);
+	if (!(
+		type == decltype(type)::DVK_SIGNED
+	||	type == decltype(type)::DVK_UNSIGNED
+	||	type == decltype(type)::DVK_REAL
+	)) MINIMA_ERROR(NonexistentValue, "Casts can only happen to [int], [uint] and [real]!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const to	= getDataLocation(context);
+	Instruction::Casting cast = {from.at, to.at, type};
+	context.addInstructionType(castID, cast);
+	if (from.id < Makai::Limit::MAX<usize>)
+		context.addInstruction(from.id);
+	if (to.id < Makai::Limit::MAX<usize>)
+		context.addInstruction(to.id);
 }
 
 MINIMA_ASSEMBLE_FN(Expression) {
