@@ -1118,7 +1118,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	if (current.type == LTS_TT_IDENTIFIER) {
 		auto const id = current.value.get<Makai::String>();
-		if (id == "jump")												doJump(context);
+		if (id == "jump" || id == "go")									doJump(context);
 		else if (id == "nop")											doNoOp(context);
 		else if (id == "swap")											doStackSwap(context);
 		else if (id == "flush")											doStackFlush(context);
@@ -1128,8 +1128,8 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "return" || id == "ret")							doReturn(context);
 		else if (id == "finish" || id == "end")							doEmptyReturn(context);
 		else if (id == "terminate" || id == "halt")						doHalt(context);
-		else if (id == "error")											doErrorHalt(context);
-		else if (id == "call" || id == "go")							doCall(context);
+		else if (id == "error" || id == "err")							doErrorHalt(context);
+		else if (id == "call" || id == "do")							doCall(context);
 		else if (id == "compare" || id == "cmp")						doCompare(context);
 		else if (id == "copy")											doCopy(context);
 		else if (id == "context" || id == "mode")						doContext(context);
