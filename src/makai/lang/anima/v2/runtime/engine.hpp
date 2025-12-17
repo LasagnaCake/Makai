@@ -85,6 +85,12 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_INTERRUPT	= '.',
 			AV2_EBIF_READ		= ':',
 			AV2_EBIF_PRINT		= '@',
+			AV2_EBIF_STR_JOIN	= '\'',
+			AV2_EBIF_STR_SPLIT	= ',',
+			AV2_EBIF_STR_REP	= '>',
+			AV2_EBIF_STR_REMOVE	= 'r',
+			AV2_EBIF_STR_SUB	= '"',
+			AV2_EBIF_STR_MATCH	= 'm',
 		};
 
 		enum class Action {

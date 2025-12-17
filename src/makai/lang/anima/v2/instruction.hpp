@@ -243,6 +243,20 @@ namespace Makai::Anima::V2 {
 			Data::Value::Kind	type;
 		};
 		
+		/// @brief String manipulation.
+		struct [[gnu::aligned(4)]] StringManipulation {
+			enum class Operation: uint8 {
+				AV2_ISM_OP_JOIN,
+				AV2_ISM_OP_SPLIT,
+				AV2_ISM_OP_REPLACE,
+				AV2_ISM_OP_REMOVE,
+				AV2_ISM_OP_SUBSTRING,
+				AV2_ISM_OP_MATCH,
+			};
+			DataLocation	src, dst;
+			Operation		op;
+		};
+		
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -255,7 +269,7 @@ namespace Makai::Anima::V2 {
 			AV2_IN_HALT,
 			/// @brief Switches to a given execution context mode.
 			/// @param type `Context` = What kind of context to switch to.
-			/// @details `ctx`
+			/// @details `mode`
 			AV2_IN_MODE,
 			/// @brief Copies a value from one location to another.
 			/// @param type `Transfer` = How to transfer the data.
@@ -263,11 +277,11 @@ namespace Makai::Anima::V2 {
 			AV2_IN_COPY,
 			/// @brief Performs a three-way comparison on two values.
 			/// @param type `Comparison` = How to compare.
-			/// @details `cmp [<lhs-id>] [<rhs-id>] [<out-id>]`
+			/// @details `compare [<lhs-id>] [<rhs-id>] [<out-id>]`
 			AV2_IN_COMPARE,
 			/// @brief Invokes a function.
 			/// @param type `Invocation` = How to invoke the function.
-			/// @details `invoke [<func-id>] [<args> ...]`
+			/// @details `call [<func-id>] [<args> ...]`
 			AV2_IN_CALL,
 			/// @brief Executes a jump.
 			/// @param type `Leap` = How to jump.
@@ -295,7 +309,7 @@ namespace Makai::Anima::V2 {
 			AV2_IN_STACK_FLUSH,
 			/// @brief Returns from a function.
 			/// @param type `Result` = How should the result be handled.
-			/// @details `ret [<result-id>]`
+			/// @details `return [<result-id>]`
 			AV2_IN_RETURN,
 			/// @brief Executes a mathematical operation involving a binary operator.
 			/// @param type `BinaryMath` = How to process the math operation.
@@ -321,10 +335,14 @@ namespace Makai::Anima::V2 {
 			/// @param type `SetRequest` = How to set the value.
 			/// @details `set [<path-id>] [<from-id>] [<to-id>]`
 			AV2_IN_SET,
-			/// @brief Casts a given type to another type.
+			/// @brief Casts a given value to another type.
 			/// @param type `Casting` = How to cast the value.
 			/// @details `cast [<src-id>] [<dst-id>]`
 			AV2_IN_CAST,
+			/// @brief Performs a string manipulation operation on a value.
+			/// @param type `StringManipulation` = How to manipulate the string.
+			/// @details `strmanip [<src-id>] [<dst-id>]`
+			AV2_IN_STRMANIP,
 		};
 		
 		/// @brief Instruction "Name" (opcode).
