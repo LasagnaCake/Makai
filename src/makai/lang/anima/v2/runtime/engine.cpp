@@ -490,6 +490,14 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 				getValueFromLocation(Cast::as<DataLocation>(ti), id)
 			);
 		} break;
+		case BuiltInFunction::AV2_EBIF_PRINT: {
+			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin print");
+			if (err) break;
+			Value what	= context.valueStack.popBack();
+			if (what.isString())
+				DEBUGLN(what.get<String>());
+			else DEBUGLN(what.toString());
+		} break;
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
 }

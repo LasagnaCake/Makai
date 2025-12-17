@@ -469,6 +469,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "atan2" || id == "a2")		invoke.argc = '2';
 			else if (id == "interrupt" || id == "stop")	invoke.argc = '.';
 			else if (id == "access" || id == "read")	invoke.argc = ':';
+			else if (id == "print" || id == "echo")		invoke.argc = '@';
 			else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 		}
 		case Type{'+'}:
@@ -481,7 +482,8 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 		case Type{'~'}:
 		case Type{'!'}:
 		case Type{'='}:
-		case Type{'.'}: {
+		case Type{'.'}:
+		case Type{'@'}: {
 			invoke.argc = Makai::Cast::as<uint8>(func.type);
 		} break;
 		case Type::LTS_TT_LOGIC_AND: {
@@ -1141,6 +1143,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "convert" || id == "cast")						doCast(context);
 		else if (id == "read" || id == "get")							doGet(context);
 		else if (id == "write" || id == "set")							doSet(context);
+		else MINIMA_ERROR(InvalidValue, "Invalid/Unsupported instruction!");
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }
 
