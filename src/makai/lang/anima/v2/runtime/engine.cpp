@@ -26,6 +26,16 @@ bool Engine::process() {
 		case AV2_IN_COPY:			v2Copy();		break;
 		case AV2_IN_RETURN: 		v2Return();		break;
 		case AV2_IN_CALL:			v2Call();		break;
+		case AV2_IN_GET:			v2Get();		break;
+		case AV2_IN_SET:			v2Set();		break;
+		case AV2_IN_CAST:			v2Cast();		break;
+		case AV2_IN_MATH_BOP:		v2BinaryMath();	break;
+		case AV2_IN_MATH_UOP:		v2UnaryMath();	break;
+		case AV2_IN_COMPARE:		v2Compare();	break;
+		case AV2_IN_MODE:			v2SetContext();	break;
+		case AV2_IN_JUMP:			v2Jump();		break;
+		case AV2_IN_AWAIT:			v2Await();		break;
+		case AV2_IN_YIELD:			v2Yield();		break;
 		case AV2_IN_NO_OP: break;
 		default: crash(invalidInstructionEror());
 	}
