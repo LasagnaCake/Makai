@@ -221,10 +221,26 @@ namespace Makai::Anima::V2 {
 			DataLocation v, out;
 		};
 
-		/// @brief Anima V1 operation.
+		/// @brief Wait request.
 		struct [[gnu::aligned(4)]] WaitRequest {
 			DataLocation	val;
 			bool			falsy: 1;
+		};
+
+		/// @brief Field get request.
+		struct [[gnu::aligned(4)]] GetRequest {
+			DataLocation	from, to;
+		};
+		
+		/// @brief Field set request.
+		struct [[gnu::aligned(4)]] SetRequest {
+			DataLocation	from, to;
+		};
+		
+		/// @brief Cast operation.
+		struct [[gnu::aligned(4)]] Casting {
+			DataLocation		src, dst;
+			Data::Value::Kind	type;
 		};
 		
 		/// @brief Instruction name.
@@ -263,7 +279,7 @@ namespace Makai::Anima::V2 {
 			AV2_IN_STACK_PUSH,
 			/// @brief Pops a value from the top of the stack into a given location.
 			/// @param type `StackPop` = How to handle the value.
-			/// @details `push [<loc-id>]`
+			/// @details `pop [<loc-id>]`
 			AV2_IN_STACK_POP,
 			/// @brief Swaps the topmost two values of the stack.	
 			/// @param type Discarded.
@@ -283,11 +299,11 @@ namespace Makai::Anima::V2 {
 			AV2_IN_RETURN,
 			/// @brief Executes a mathematical operation involving a binary operator.
 			/// @param type `BinaryMath` = How to process the math operation.
-			/// @details `bmath [<lhs-id>] [rhs-id] [out-id]`
+			/// @details `bop [<lhs-id>] [rhs-id] [out-id]`
 			AV2_IN_MATH_BOP,
 			/// @brief Executes a mathematical operation involving a unary operator.
 			/// @param type `UnaryMath` = How to process the math operation.
-			/// @details `umath [<val-id>] [out-id]`
+			/// @details `uop [<val-id>] [out-id]`
 			AV2_IN_MATH_UOP,
 			/// @brief Returns execution to the engine.
 			/// @param type Discarded.
@@ -297,6 +313,18 @@ namespace Makai::Anima::V2 {
 			/// @param type `WaitRequest` = What to expect from the value.
 			/// @details `await [<loc-id>]`
 			AV2_IN_AWAIT,
+			/// @brief Gets the value of a field from an object.
+			/// @param type `GetRequest` = How to get the value.
+			/// @details `get [<from-id>] [<to-id>] <path-id>`
+			AV2_IN_GET,
+			/// @brief Sets the value of a field in an object.
+			/// @param type `SetRequest` = How to set the value.
+			/// @details `set [<from-id>] [<to-id>] <path-id>`
+			AV2_IN_SET,
+			/// @brief Casts a given type to another type.
+			/// @param type `Casting` = How to cast the value.
+			/// @details `cast [<src-id>] [<dst-id>]`
+			AV2_IN_CAST,
 		};
 		
 		/// @brief Instruction "Name" (opcode).

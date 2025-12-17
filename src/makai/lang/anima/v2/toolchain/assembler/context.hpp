@@ -39,6 +39,29 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 		}
 
+		[[nodiscard]]
+		constexpr usize addEmptyInstruction() {
+			program.code.pushBack({});
+			return program.code.size() - 1;
+		}
+
+		template <class T>
+		constexpr usize addInstruction(T const& inst)
+		requires (sizeof(T) == sizeof(Instruction)) {
+			program.code.pushBack(Cast::bit<Instruction, T>(inst));
+			return program.code.size() - 1;
+		}
+
+		template <class T>
+		constexpr static void addInstructionType(Instruction& inst, T const& type)
+		requires (sizeof(T) == sizeof(uint32)) {
+			inst.type = Cast::bit<uint32, T>(type);
+		}
+
+		constexpr Instruction& instruction(usize const i) {
+			return program.code[i];
+		}
+
 		Jumps		jumps;
 		TokenStream	stream;
 		Program		program;

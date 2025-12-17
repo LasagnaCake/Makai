@@ -961,6 +961,31 @@ MINIMA_ASSEMBLE_FN(IndirectRead) {
 	});
 }
 
+MINIMA_ASSEMBLE_FN(Get) {
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
+	auto const getID = context.addEmptyInstruction();
+	context.instruction(getID).name = Instruction::Name::AV2_IN_GET;
+}
+
+MINIMA_ASSEMBLE_FN(Set) {
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
+	auto const setID = context.addEmptyInstruction();
+	context.instruction(setID).name = Instruction::Name::AV2_IN_SET;
+}
+
+MINIMA_ASSEMBLE_FN(Cast) {
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
+	auto const castID = context.addEmptyInstruction();
+	context.instruction(castID).name = Instruction::Name::AV2_IN_CAST;
+	// TODO: This
+	auto const from	= getDataLocation(context);
+	auto const type = getReturnType(context);
+	auto const to	= getDataLocation(context);
+}
+
 MINIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	if (current.type == LTS_TT_IDENTIFIER) {
@@ -985,7 +1010,9 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "umath")											doUnaryMath(context);
 		else if (id == "yield")											doYield(context);
 		else if (id == "await" || id == "wait")							doAwait(context);
-		else if (id == "read")											doIndirectRead(context);
+		else if (id == "convert" || id == "cast")						doCast(context);
+		else if (id == "read" || id == "get")							doGet(context);
+		else if (id == "write" || id == "set")							doSet(context);
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }
 
