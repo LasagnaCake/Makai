@@ -169,11 +169,11 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	if (context.stream.current().type != Type{'{'})
 		MAXIMA_ERROR(InvalidValue, "Expected '{' here!");
 	context.currentScope().result	= retType;
+	context.currentScope().label	= fid;
 	auto const baseName =
-		context.currentScope().label =
 		context.scopePath()
-	+	"_" + id + signature
-	+	"_" + Makai::toString(Makai::Cast::as<uint16>(retType))
+	+	signature
+	+	"_" + id
 	;
 	auto resolutionName = id;
 	auto fullName = baseName;
@@ -184,13 +184,18 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	auto const scopath = context.scopePath();
 	context.writeLine("clear ", context.currentScope().varc);
 	context.endScope();
+	// TODO: Proper overloading
 	auto subName = baseName;
-	for (auto& opt: optionals) {
+	Makai::String postscript = "";
+	for (auto& opt: Makai::Range::reverse(optionals)) {
 		auto const dvloc = "__" + context.scopePath() + "_" + opt.key + "_set_default" + signature;
+		Makai::String preamble = "";
 		context.startScope();
-		context.writeLine(subName, ":");
-		context.writeLine("call " + dvloc + "()");
-		subName += "_" + opt.value["type"].get<Makai::String>();
+		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
+		opt.value["declname"] = fullName;
+		preamble += Makai::toString(fullName, ":");
+		preamble += Makai::toString("call " + dvloc + "()");
+		postscript = preamble + postscript;
 		context.endScope();
 	}
 	if (optionals.size()) {
@@ -206,6 +211,8 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	if (overloads.contains(resolutionName))
 		MAXIMA_ERROR(InvalidValue, "Function with similar signature already exists!");
 	auto& overload	= overloads[resolutionName];
+	for (auto& opt: optionals)
+		fullName += "_" + opt.value["type"].get<Makai::String>();
 	overload["args"]		= args;
 	overload["full_name"]	= fullName;
 	overload["return"]		= Makai::enumcast(retType);
@@ -216,7 +223,7 @@ MAXIMA_ASSEMBLE_FN(Function) {
 		auto& overload	= overloads[resolutionName];
 		args[args.size()]		= opt.value;
 		overload["args"]		= args;
-		overload["full_name"]	= fullName;
+		overload["full_name"]	= opt.value["declname"];
 		overload["return"]		= Makai::enumcast(retType);
 	}
 }
@@ -610,7 +617,7 @@ MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall) {
 	auto const sym = context.symbol(id);
 	if (!sym().value["overloads"].contains(legalName))
 		MAXIMA_ERROR(InvalidValue, "Function overload does not exist!");
-	context.writeLine("call " + legalName + call);
+	context.writeLine("call " + sym().value["overloads"][legalName]["full_name"].get<Makai::String>() + call);
 }
 
 MAXIMA_ASSEMBLE_FN(Assembly) {
