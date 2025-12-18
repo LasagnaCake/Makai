@@ -239,7 +239,6 @@ MAXIMA_ASSEMBLE_FN(Scope) {
 MAXIMA_TYPED_ASSEMBLE_FN(ValueResolution) {
 	auto const current = context.stream.current();
 	switch (current.type) {
-		// TODO:This
 		case LTS_TT_IDENTIFIER: {
 			auto const id = current.value.get<Makai::String>();
 			auto result = doReservedValueResolution(context);
