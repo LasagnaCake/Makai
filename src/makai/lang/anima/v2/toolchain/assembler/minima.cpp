@@ -595,8 +595,8 @@ MINIMA_ASSEMBLE_FN(Call) {
 			MINIMA_ERROR(InvalidValue, "Maximum argument index is 255!");
 		if (argi.find(i) != -1)
 			MINIMA_ERROR(InvalidValue, "Duplicate argument!");
-		if (context.stream.current().type != Type{':'})
-			MINIMA_ERROR(InvalidValue, "Expected ':' here!");
+		if (context.stream.current().type != Type{'='})
+			MINIMA_ERROR(InvalidValue, "Expected '=' here!");
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 		Instruction::Invocation::Parameter param;
