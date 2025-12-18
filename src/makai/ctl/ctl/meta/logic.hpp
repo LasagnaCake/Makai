@@ -24,6 +24,9 @@ namespace Meta {
 		struct ApplyType {
 			using Type = typename A<T>::Type;
 		};
+
+		template<typename A, typename B>	struct IsEqual:			FalseType	{};
+		template<typename T>				struct IsEqual<T, T>:	TrueType	{};
 	}
 
 	/// @brief Logical `and`.
@@ -54,14 +57,20 @@ namespace Meta {
 	/// @tparam TFalse Type to decay to when `COND` is false.
 	/// @tparam COND Condition to check for.
 	template<bool COND, class TTrue, class TFalse>
-	using If = Meta::DualType<COND, TTrue, TFalse>;
+	using If = DualType<COND, TTrue, TFalse>;
 
 	
 	/// @brief Decays to either `T const` or `T`, depending on the condition.
 	/// @tparam T Type to const-ify depending on condition.
 	/// @tparam COND Condition to check for.
 	template<bool COND, class T>
-	using MakeConstIf = Meta::DualType<COND, AsConstant<T>, T>;
+	using MakeConstIf = If<COND, AsConstant<T>, T>;
+
+	/// @brief Decays to either `T const` or `T`, depending on whether `T` is const.
+	/// @tparam T Type to const-ify depending on itself.
+	/// @note This is to handle some wacky template interactions.
+	template<class T>
+	using MakeConstIfConst = MakeConstIf<Impl::IsEqual<T, T const>::value, T>;
 }
 
 CTL_NAMESPACE_END

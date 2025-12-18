@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
+#include "../meta/meta.hpp"
 #include "iterate.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -18,7 +19,7 @@ namespace Range {
 			/// @brief Expansion.
 			struct Expansion {
 				/// @brief Value.
-				AsIteratorValue<T>	value;
+				AsIteratorValue<T>&	value;
 				/// @brief Index.
 				usize				index;
 			};

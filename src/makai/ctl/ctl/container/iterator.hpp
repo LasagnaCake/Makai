@@ -100,17 +100,17 @@ public:
 
 	/// @brief Dereferences the operator.
 	/// @return Reference to underlying object.
-	constexpr ReferenceType operator*()	{return *iter();	}
+	constexpr ReferenceType operator*()			{return *iter();	}
 	/// @brief Dereferences the operator.
 	/// @return Pointer to underlying object.
-	constexpr PointerType operator->()	{return iter();		}
+	constexpr PointerType operator->()			{return iter();		}
 
 	/// @brief Dereferences the operator.
 	/// @return Const reference to underlying object.
-	constexpr ConstReferenceType operator*() const	{return *iter();	}
+	constexpr ReferenceType operator*() const	{return *iter();	}
 	/// @brief Dereferences the operator.
 	/// @return Pointer to underlying constant.
-	constexpr ConstPointerType operator->() const	{return iter();		}
+	constexpr PointerType operator->() const	{return iter();		}
 
 	/// @brief Pre-increments the operator.
 	/// @return Reference to self.

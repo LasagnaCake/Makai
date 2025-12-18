@@ -35,6 +35,7 @@ CTL_DIAGBLOCK_IGNORE_SWITCH
 
 MAXIMA_ASSEMBLE_FN(Scope);
 MAXIMA_ASSEMBLE_FN(Expression);
+MAXIMA_ASSEMBLE_FN(Return);
 MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall);
 MAXIMA_TYPED_ASSEMBLE_FN(Assignment);
 MAXIMA_TYPED_ASSEMBLE_FN(ReservedValueResolution);
@@ -43,14 +44,14 @@ MAXIMA_TYPED_ASSEMBLE_FN(ValueResolution);
 
 static bool isReserved(Makai::String const& keyword);
 
-static void doDefaultValue(Maxima::Context& context, Makai::String const& var, Type const endToken = Type{';'}) {
+static void doDefaultValue(Maxima::Context& context, Makai::String const& var, Makai::String const& uname) {
 	if (!context.stream.next())
 		MAXIMA_ERROR(NonexistentValue, "Malformed value definition!");
-	auto const dvloc = "__" + context.scopePath() + "_" + var + "_set_default" + context.uniqueName();
+	auto const dvloc = "__" + context.scopePath() + "_" + var + "_set_default" + uname;
 	context.getSymbolByName(var).value["default_setter"] = dvloc;
 	auto dv = dvloc + ":\n";
 	doValueResolution(context);
-	dv += "pop &["+ Makai::toString(context.getSymbolByName(var).value["stack_id"].get<uint64>()) +"]\nend\n";
+	dv += "push &["+ Makai::toString(context.getSymbolByName(var).value["stack_id"].get<uint64>()) +"]\nend\n";
 	context.ir = dv + context.ir;
 }
 
@@ -78,6 +79,18 @@ static Makai::Data::Value::Kind getType(Context& context) {
 	MAXIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
 }
 
+static Makai::String argname(Value::Kind const& type) {
+	if (type == DVK_ANY)			return "any";
+	if (Value::isScalar(type))		return "val";
+	if (Value::isString(type))		return "str";
+	if (Value::isArray(type))		return "arr";
+	if (Value::isBytes(type))		return "bin";
+	if (Value::isObject(type))		return "obj";
+	if (Value::isNull(type))		return "null";
+	if (Value::isUndefined(type))	return "void";
+	return "none";
+}
+
 MAXIMA_ASSEMBLE_FN(Function) {
 	if (!context.stream.next())
 		MAXIMA_ERROR(NonexistentValue, "Malformed function!");
@@ -96,7 +109,11 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	context.startScope();
 	CTL::Ex::Data::Value::Kind retType = DVK_ANY;
 	id += "_";
+	auto const signature = context.uniqueName();
+	Makai::List<Makai::KeyValuePair<Makai::String, Makai::String>> optionals;
+	bool inOptionalRegion = false;
 	while (context.stream.next() && context.stream.current().type != Type{')'}) {
+		bool isOptional = false;
 		auto const argn = context.stream.current();
 		if (argn.type != Type::LTS_TT_IDENTIFIER)
 			MAXIMA_ERROR(InvalidValue, "Argument name must be an identifier!");
@@ -115,7 +132,6 @@ MAXIMA_ASSEMBLE_FN(Function) {
 		auto const argt = getType(context);
 		if (argt == CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)
 			MAXIMA_ERROR(InvalidValue, "Invalid argument type!");
-		id += "_" + (argt != DVK_ANY ? Makai::toString(Makai::enumcast(argt)) : "any");
 		auto& var = context.currentScope().members[argID].value;
 		auto& arg = args[args.size()];
 		arg["name"] = argID;
@@ -124,8 +140,14 @@ MAXIMA_ASSEMBLE_FN(Function) {
 			MAXIMA_ERROR(NonexistentValue, "Malformed function argument list!");
 		if (context.stream.current().type == Type{')'})
 			break;
-		if (context.stream.current().type == Type{'='})
-			doDefaultValue(context, argID, Type{','});
+		if (context.stream.current().type == Type{'='}) {
+			isOptional = true;
+			inOptionalRegion = true;
+			doDefaultValue(context, argID, signature);
+			optionals.pushBack({argID, argname(argt)});
+		} else id += "_" + argname(argt);
+		if (inOptionalRegion && !isOptional)
+			MAXIMA_ERROR(NonexistentValue, "Missing value for optional argument!");
 		if (context.stream.current().type != Type{','})
 			MAXIMA_ERROR(InvalidValue, "Expected ',' here!");
 	}
@@ -143,23 +165,45 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	if (context.stream.current().type != Type{'{'})
 		MAXIMA_ERROR(InvalidValue, "Expected '{' here!");
 	context.currentScope().result	= retType;
-	auto const fullName = "__" + context.currentScope().label = context.scopePath() + "_" + id + context.uniqueName();
-	auto const ep = context.addJumpLabel(id, context.program.code.size());
-	context.currentScope().entry = ep;
-	context.ir += fullName + ":\n";
+	auto const baseName =
+		context.currentScope().label =
+		context.scopePath()
+	+	"_" + id + signature
+	+	"_" + Makai::toString(Makai::Cast::as<uint16>(retType))
+	;
+	auto fullName = baseName;
+	for (auto& opt: optionals)
+		fullName += "_" + opt.value;
+	context.writeLine(fullName, ":");
 	doScope(context);
-	context.ir += "clear " + Makai::toString(context.currentScope().varc) + "\n";
+	auto const scopath = context.scopePath();
+	context.writeLine("clear ", context.currentScope().varc);
 	context.endScope();
+	auto subName = baseName;
+	for (auto& opt: optionals) {
+		auto const dvloc = "__" + context.scopePath() + "_" + opt.key + "_set_default" + signature;
+		context.startScope();
+		context.writeLine(subName, ":");
+		context.writeLine("call " + dvloc + "()");
+		subName += "_" + opt.value;
+		context.endScope();
+	}
+	if (optionals.size()) {
+		context.writeLine("call " + fullName + "()");
+		context.writeLine("end");
+	}
 	if (!context.currentScope().contains(fid))
 		context.currentScope().addFunction(fid);
 	else if (context.currentScope().members[fid].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		MAXIMA_ERROR(InvalidValue, "Symbol with this name already exists!");
 	auto& mem = context.currentScope().members[fid];
 	auto& overloads	= mem.value["overloads"];
-	auto& overload	= overloads[overloads.size()];
+	if (overloads.contains(id))
+		MAXIMA_ERROR(InvalidValue, "Function with similar signature already exists!");
+	auto& overload	= overloads[id];
 	overload["args"]		= args;
 	overload["full_name"]	= fullName;
-	overload["entry"]		= ep;
+	overload["return"]		= Makai::enumcast(retType);
 }
 
 MAXIMA_ASSEMBLE_FN(Scope) {
@@ -430,17 +474,18 @@ void doVarDecl(Maxima::Context& context, Makai::String const& id, bool const isG
 			type = getType(context); 
 		} break;
 	}
-	if (!context.stream.next()) {
+	if (
+		!context.stream.next()
+	) {
 		if (type == Value::Kind::DVK_VOID)
 			MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
-		return;
 	}
 	if (context.stream.current().type == Type{'='}) {
 		if (!context.stream.next())
 			MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
 		doVarAssign(context, id, type, isGlobalVar, true);
 	}
-	else doExpression(context);
+	if (context.stream.current().type != Type{';'}) doExpression(context);
 }
 
 MAXIMA_ASSEMBLE_FN(VarDecl) {
@@ -512,6 +557,44 @@ MAXIMA_TYPED_ASSEMBLE_FN(Assignment) {
 
 MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall) {
 	// TODO: This
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (context.isReservedKeyword(id))
+		MAXIMA_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
+	if (!context.hasSymbol(id))
+		MAXIMA_ERROR(NonexistentValue, "Function does not exist!");
+	if (context.getSymbolByName(id).type != decltype(context.getSymbolByName(id).type)::AV2_TA_SMT_FUNCTION)
+		MAXIMA_ERROR(NonexistentValue, "Symbol was not declared a function!");
+	if (!context.stream.next())
+		MAXIMA_ERROR(NonexistentValue, "Malformed function call!");
+	if (context.stream.current().type != Type{'('})
+		MAXIMA_ERROR(InvalidValue, "Expected '(' here!");
+	usize pushes = 0;
+	Makai::List<Solution> args;
+	auto const start = context.currentScope().stackc + context.currentScope().varc;
+	auto legalName = id + "_";
+	while (context.stream.next()) {
+		if (context.stream.current().type == Type{')'}) break;
+		args.pushBack(doValueResolution(context));
+		legalName += "_" + argname(args.back().key);
+		if (args.back().value == ".") {
+			context.writeLine("push .");
+			args.back().value = Makai::toString("&[", start + pushes, "]");
+			++pushes;
+		}
+		if (!context.stream.next())
+			MAXIMA_ERROR(NonexistentValue, "Malformed function call!");
+		if (context.stream.current().type == Type{','})
+			MAXIMA_ERROR(InvalidValue, "Expected ',' here!");
+	}
+	if (context.stream.current().type != Type{')'})
+		MAXIMA_ERROR(InvalidValue, "Expected ')' here!");
+	Makai::String call = "(";
+	for (auto const& [arg, index]: Makai::Range::expand(args))
+		call += Makai::toString(index, ":", arg.value);
+	call += ")";
+	auto const sym = context.symbol(id);
+	if (!sym().value["overloads"].contains(legalName))
+		MAXIMA_ERROR(InvalidValue, "Function overload does not exist!");
 }
 
 MAXIMA_ASSEMBLE_FN(Assembly) {
@@ -541,6 +624,26 @@ MAXIMA_ASSEMBLE_FN(LooseContext) {
 	context.endScope();
 }
 
+MAXIMA_ASSEMBLE_FN(Return) {
+	// TODO: This
+	if (!context.stream.next())
+		MAXIMA_ERROR(NonexistentValue, "Malformed return!");
+	Solution result;
+	auto const expectedType = context.currentScope().result;
+	if (context.stream.current().type == Type{';'}) {
+		if (expectedType != Value::Kind::DVK_VOID)
+			MAXIMA_ERROR(NonexistentValue, "Missing return value!");
+	} else {
+		if (expectedType == Value::Kind::DVK_VOID)
+			MAXIMA_ERROR(InvalidValue, "Function does not return a value!");
+		result = doValueResolution(context);
+		if (
+			result.key != expectedType
+		&&	!Value::isNumber(stronger(result.key, expectedType))
+		) MAXIMA_ERROR(InvalidValue, "Return type does not match!");
+	}
+}
+
 MAXIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
@@ -550,6 +653,7 @@ MAXIMA_ASSEMBLE_FN(Expression) {
 			else if (id == "global" || id == "local")			doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
 			else if (id == "fatal")								doLooseContext(context);
+			else if (id == "return")							doReturn(context);
 			else if (context.hasSymbol(id)) {
 				auto const sym = context.symbol(id);
 				switch (sym().type) {
@@ -567,9 +671,12 @@ MAXIMA_ASSEMBLE_FN(Expression) {
 			doScope(context);
 			context.endScope();
 		}
+		case Type{'}'}:
+		case Type{';'}: break;
 		default: MAXIMA_ERROR(InvalidValue, "Invalid expression!");
 	}
-	MAXIMA_ERROR(InvalidValue, "Invalid expression!");
+	if (context.stream.current().type != Type{';'} || context.stream.current().type != Type{'}'})
+		MAXIMA_ERROR(InvalidValue, "Expected closure here!");
 }
 
 void Maxima::assemble() {
