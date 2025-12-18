@@ -195,6 +195,12 @@ static Location getDataLocation(Minima::Context& context) {
 				return {DataLocation::AV2_DL_INTERNAL, 3};
 			} else if (id == "undefined" || id == "void") {
 				return {DataLocation::AV2_DL_INTERNAL, 2};
+			} else if (id == "array" || id == "arr") {
+				return {DataLocation::AV2_DL_INTERNAL, 8};
+			} else if (id == "object" || id == "obj") {
+				return {DataLocation::AV2_DL_INTERNAL, 10};
+			} else if (id == "binary" || id == "bytes" || id == "bin") {
+				return {DataLocation::AV2_DL_INTERNAL, 9};
 			} else if (id == "nan") {
 				return {DataLocation::AV2_DL_INTERNAL, 4};
 			} else MINIMA_ERROR(InvalidValue, "Invalid token for data location!"); 

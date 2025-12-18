@@ -31,9 +31,9 @@ namespace Makai::Anima::V2 {
 
 	/// @brief Execution context mode.
 	enum class ContextMode: uint8 {
-		/// @brief Strict.
+		/// @brief Strict context.
 		AV2_CM_STRICT,
-		/// @brief Strict.
+		/// @brief Loose context.
 		AV2_CM_LOOSE,
 	};
 

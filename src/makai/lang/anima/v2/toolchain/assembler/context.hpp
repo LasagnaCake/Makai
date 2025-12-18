@@ -27,15 +27,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return members.contains(name);
 			}
 
-			constexpr uint64 addVariable(String const& name) {
-				if (members.contains(name))
-					return members[name].value.get<uint64>();
+			constexpr void addVariable(String const& name, bool const global = false) {
+				if (members.contains(name)) return;
 				members[name].value = Data::Value::object();
 				members[name] = {Member::Type::AV2_TA_SMT_VARIABLE};
-				members[name].value["stack_id"]	= stackc + varc++;
+				members[name].value["global"]	= global;
 				members[name].value["init"]		= false;
 				members[name].value["use"]		= false;
-				return varc-1;
+				if (!global)
+					members[name].value["stack_id"] = stackc + varc++;
 			}
 
 			constexpr void addFunction(String const& name) {
@@ -48,7 +48,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 			
 			uint64				entry	= 0;
-			Data::Value::Kind	result = Data::Value::Kind::DVK_UNDEFINED;
+			Data::Value::Kind	result	= Data::Value::Kind::DVK_UNDEFINED;
+			bool				secure	= true;
 			String				name;
 			String				label;
 			uint64				varc	= 0;
@@ -190,6 +191,41 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		inline String uniqueName() {
 			return Makai::toString("_", ir.size(), "_", rng.integer(), "_", Random::CTPRNG<uint64>);
+		}
+
+		constexpr static bool isReservedKeyword(String const& name) {
+			if (name == "any")												return true;
+			if (name == "null")												return true;
+			if (name == "nan")												return true;
+			if (name == "true" || name == "true")							return true;
+			if (name == "undefined" || name == "void")						return true;
+			if (name == "boolean" || name == "bool")						return true;
+			if (name == "signed" || name == "int")							return true;
+			if (name == "unsigned" || name == "uint")						return true;
+			if (name == "string" || name == "str")							return true;
+			if (name == "array" || name == "arr")							return true;
+			if (name == "object" || name == "struct")						return true;
+			if (name == "if" || name == "else")								return true;
+			if (name == "do" || name == "while")							return true;
+			if (name == "for" || name == "in")								return true;
+			if (name == "throw")											return true;
+			if (name == "switch" || name == "case")							return true;
+			if (name == "template" || name == "type")						return true;
+			if (name == "typeof" || name == "using")						return true;
+			if (name == "abstract" || name == "define")						return true;
+			if (name == "copy" || name == "move")							return true;
+			if (name == "context" || name == "strict" || name == "loose")	return true;
+			if (name == "dynamic" || name == "dyn")							return true;
+			if (name == "prop")												return true;
+			if (name == "const")											return true;
+			if (name == "as" || name == "is")								return true;
+			if (name == "function" || name == "func" || name == "fn")		return true;
+			if (name == "global" || name == "local")						return true;
+			if (name == "stack" || name == "register")						return true;
+			if (name == "temporary" || name == "register")					return true;
+			if (name == "minima" || name == "asm")							return true;
+			if (name == "await" || name == "async" || name == "yield")		return true;
+			return false;
 		}
 
 		List<Scope>				scope;
