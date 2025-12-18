@@ -458,7 +458,7 @@ MAXIMA_ASSEMBLE_FN(VarDecl) {
 	doVarDecl(context, id, isGlobalVar);
 }
 
-#define PREASSIGN [&] (Maxima::Context&, Solution& result) -> void
+#define PREASSIGN [=] (Maxima::Context& context, Solution& result) -> void
 
 MAXIMA_TYPED_ASSEMBLE_FN(Assignment) {
 	auto const id = context.stream.current().value.get<Makai::String>();
@@ -482,20 +482,20 @@ MAXIMA_TYPED_ASSEMBLE_FN(Assignment) {
 		case LTS_TT_MUL_ASSIGN:
 		case LTS_TT_DIV_ASSIGN:
 		case LTS_TT_MOD_ASSIGN: {
+			auto const sym = context.symbol(id);
+			Makai::String accessor;
+			if (sym().value["global"])
+				accessor = ":" + id;
+			else accessor = Makai::toString("&[", sym().value["stack_id"].get<uint64>(), "]");
+			Makai::String operation;
+			switch (current.type) {
+				case LTS_TT_ADD_ASSIGN: operation = " + "; break;
+				case LTS_TT_SUB_ASSIGN: operation = " - "; break;
+				case LTS_TT_MUL_ASSIGN: operation = " * "; break;
+				case LTS_TT_DIV_ASSIGN: operation = " / "; break;
+				case LTS_TT_MOD_ASSIGN: operation = " % "; break;
+			}
 			pre = PREASSIGN {
-				auto const sym = context.symbol(id);
-				Makai::String accessor;
-				if (sym().value["global"])
-					accessor = ":" + id;
-				else accessor = Makai::toString("&[", sym().value["stack_id"].get<uint64>(), "]");
-				Makai::String operation;
-				switch (current.type) {
-					case LTS_TT_ADD_ASSIGN: operation = " + "; break;
-					case LTS_TT_SUB_ASSIGN: operation = " - "; break;
-					case LTS_TT_MUL_ASSIGN: operation = " * "; break;
-					case LTS_TT_DIV_ASSIGN: operation = " / "; break;
-					case LTS_TT_MOD_ASSIGN: operation = " % "; break;
-				}
 				context.writeLine("calc ", accessor, operation, result.value, " -> .");
 				result.value = ".";
 			};
