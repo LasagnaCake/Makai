@@ -39,7 +39,7 @@ namespace Range {
 	template<class T>
 	constexpr Impl::IteratorWrapper<T> iterate(T const& begin, T const& end) {
 		return {begin, end};
-	}
+	}	
 }
 
 CTL_NAMESPACE_END

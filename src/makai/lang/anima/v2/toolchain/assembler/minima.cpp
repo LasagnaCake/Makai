@@ -130,6 +130,10 @@ static Location getGlobal(Context& context) {
 	};
 }
 
+static usize addConstant(Minima::Context& context, Makai::Data::Value const& value) {
+	return context.addConstant(value);
+}
+
 static Location getConstantLocation(Minima::Context& context) {
 	auto const current = context.stream.current();
 	if (
@@ -162,16 +166,10 @@ static Location getConstantLocation(Minima::Context& context) {
 				)
 			*	(isNegative ? -1 : +1)
 			;
-			auto i = context.program.constants.find(c);
-			if (i == -1)
-				i = context.program.constants.pushBack(c).size() - 1;
-			else return {DataLocation::AV2_DL_CONST, i};
+			return {DataLocation::AV2_DL_CONST, addConstant(context, c)};
 		}
 	}
-	auto i = context.program.constants.find(current.value);
-	if (i == -1)
-		i = context.program.constants.pushBack(current.value).size() - 1;
-	else return {DataLocation::AV2_DL_CONST, i};
+	return {DataLocation::AV2_DL_CONST, addConstant(context, current.value)};
 }
 
 static Location getDataLocation(Minima::Context& context) {
@@ -475,9 +473,9 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "print" || id == "echo")		invoke.argc = '@';
 			else if (id == "substring" || id == "sub")	invoke.argc = '"';
 			else if (id == "replace" || id == "rep")	invoke.argc = '>';
-			else if (id == "split")						invoke.argc = ',';
+			else if (id == "split" || id == "sep")		invoke.argc = ',';
 			else if (id == "concat" || id == "join")	invoke.argc = '\'';
-			else if (id == "match")						invoke.argc = 'm';
+			else if (id == "match" || id == "has")		invoke.argc = 'm';
 			else if (id == "remove")					invoke.argc = 'r';
 			else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 		}
@@ -515,31 +513,32 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 	});
 }
 
-static Makai::Data::Value::Kind getReturnType(Context& context) {
+static Makai::Data::Value::Kind getType(Context& context) {
 	using enum Makai::Data::Value::Kind;
 	constexpr auto const DVK_ANY = Makai::Cast::as<decltype(DVK_VOID)>(-1);
 	auto const ret = context.stream.current();
 	switch (ret.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = ret.value.get<Makai::String>();
-			if (id == "any")													return DVK_ANY;
-			else if (id == "void" || id == "undefined" || id == "_")			return DVK_VOID;
-			else if (id == "int" || id == "i")									return DVK_SIGNED;
-			else if (id == "uint" || id == "u")									return DVK_UNSIGNED;
-			else if (id == "float" || id == "real" || id == "f" || id == "r")	return DVK_REAL;
-			else if (id == "string" || id == "str" || id == "s")				return DVK_STRING;
-			else if (id == "array" || id == "arr" || id == "a")					return DVK_ARRAY;
-			else if (id == "binary" || id == "bytes" || id == "b")				return DVK_BYTES;
-			else if (id == "object" || id == "obj" || id == "o")				return DVK_OBJECT;
-			MINIMA_ERROR(InvalidValue, "Invalid/Unsupported return type!");
+			if (id == "any")														return DVK_ANY;
+			else if (id == "boolean" || id == "bool" || id == "b")					return DVK_BOOLEAN;
+			else if (id == "void" || id == "undefined" || id == "v")				return DVK_VOID;
+			else if (id == "int" || id == "i")										return DVK_SIGNED;
+			else if (id == "uint" || id == "u")										return DVK_UNSIGNED;
+			else if (id == "float" || id == "real" || id == "f" || id == "r")		return DVK_REAL;
+			else if (id == "string" || id == "text" || id == "str" || id == "s")	return DVK_STRING;
+			else if (id == "array" || id == "list" || id == "a")					return DVK_ARRAY;
+			else if (id == "binary" || id == "bytes" || id == "bin")				return DVK_BYTES;
+			else if (id == "object" || id == "struct" || id == "o")					return DVK_OBJECT;
+			MINIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
 		}
 		case Type{'?'}: return DVK_ANY;
 		case Type{'_'}: return DVK_VOID;
 		case Type{'+'}: return DVK_SIGNED;
 		case Type{'-'}: return DVK_UNSIGNED;
-		default: MINIMA_ERROR(InvalidValue, "Invalid/Unsupported return type!");
+		default: MINIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
 	}
-	MINIMA_ERROR(InvalidValue, "Invalid/Unsupported return type!");
+	MINIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
 }
 
 MINIMA_ASSEMBLE_FN(Call) {
@@ -563,7 +562,7 @@ MINIMA_ASSEMBLE_FN(Call) {
 		fname = func.value.get<Makai::String>();
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-		retType = getReturnType(context);
+		retType = getType(context);
 	} else invoke.location = DataLocation::AV2_DL_CONST;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
@@ -572,20 +571,33 @@ MINIMA_ASSEMBLE_FN(Call) {
 	if (invoke.location == DataLocation::AV2_DL_CONST)
 		context.addJumpTarget(fname);
 	else {
-		context.program.code.pushBack(Makai::Cast::bit<Instruction, uint64>(context.program.constants.size()));
-		context.program.constants.pushBack(fname);
+		context.addInstruction<uint64>(addConstant(context, fname));
 	}
 	if (func.type != Type{'('})
 		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-	usize argi = 0;
-	while (context.stream.current().type != Type{')'} && argi < 256) {
+	Makai::List<uint64> argi;
+	while (context.stream.current().type != Type{')'} && argi.size() < 256) {
+		if (!context.stream.next())
+			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
+		auto const argIndex = context.stream.current();
+		if (!argIndex.value.isUnsigned())
+			MINIMA_ERROR(InvalidValue, "Argument index must be an unsigned integer!");
+		auto const i = argIndex.value.get<uint64>();
+		if (i > 255)
+			MINIMA_ERROR(InvalidValue, "Maximum argument index is 255!");
+		if (argi.find(i) != -1)
+			MINIMA_ERROR(InvalidValue, "Duplicate argument!");
+		if (context.stream.current().type != Type{':'})
+			MINIMA_ERROR(InvalidValue, "Expected ':' here!");
+		if (!context.stream.next())
+			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 		Instruction::Invocation::Parameter param;
 		auto const loc = getDataLocation(context);
 		param.location	= loc.at;
 		param.id		= loc.id;
-		param.argument	= argi++;
+		param.argument	= i;
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 	}
@@ -594,7 +606,9 @@ MINIMA_ASSEMBLE_FN(Call) {
 	}
 	if (func.type != Type{')'})
 		MINIMA_ERROR(InvalidValue, "Expected ')' here!");
-	invoke.argc = argi;
+	for (auto& arg: argi)
+		if (arg > invoke.argc)
+		invoke.argc = invoke.argc;
 	context.program.code[funcID] = {
 		Instruction::Name::AV2_IN_CALL,
 		Makai::Cast::bit<uint32>(invoke)
@@ -617,7 +631,7 @@ MINIMA_ASSEMBLE_FN(Compare) {
 			case LTS_TT_IDENTIFIER: {
 				auto const id = cmp.value.get<Makai::String>();
 				if (id == "equals" || id == "eq")							comp = AV2_OP_EQUALS;
-				else if (id == "notequals" || id == "neq" || id == "not")	comp = AV2_OP_NOT_EQUALS;
+				else if (id == "notequals" || id == "not" || id == "ne")	comp = AV2_OP_NOT_EQUALS;
 				else if (id == "less" || id == "lt")						comp = AV2_OP_LESS_THAN;
 				else if (id == "greater" || id == "gt")						comp = AV2_OP_GREATER_THAN;
 				else if (id == "lessequals" || id == "le")					comp = AV2_OP_LESS_EQUALS;
@@ -923,54 +937,6 @@ MINIMA_ASSEMBLE_FN(Await) {
 	};
 }
 
-uint64 getFieldPath(Context& context) {
-	if (context.stream.current().type != Type{'['})
-		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
-	Makai::String path;
-	while (context.stream.next() && context.stream.current().type != Type{']'}) {
-		auto const sf = context.stream.current();
-		if (
-			sf.type == Type::LTS_TT_IDENTIFIER
-		||	sf.type == Type::LTS_TT_SINGLE_QUOTE_STRING
-		||	sf.type == Type::LTS_TT_DOUBLE_QUOTE_STRING
-		||	sf.type == Type::LTS_TT_INTEGER
-		||	sf.type == Type{'-'}
-		||	sf.type == Type{'+'}
-		) {
-			Makai::String node;
-			switch (sf.type) {
-				case LTS_TT_IDENTIFIER:
-				case LTS_TT_SINGLE_QUOTE_STRING:
-				case LTS_TT_DOUBLE_QUOTE_STRING: node = sf.value.get<Makai::String>(); break;
-				case LTS_TT_INTEGER: node = sf.value.toString(); break;
-				case Type{'-'}: {
-					if (!context.stream.next())
-						MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-					auto const index = context.stream.current();
-					if (index.type != LTS_TT_INTEGER)
-						MINIMA_ERROR(InvalidValue, "Index must be an integer!");
-					node = "-" + index.value.toString();
-				} break;
-				case Type{'+'}: {
-					if (!context.stream.next())
-						MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-					auto const index = context.stream.current();
-					if (index.type != LTS_TT_INTEGER)
-						MINIMA_ERROR(InvalidValue, "Index must be an integer!");
-					node = index.value.toString();
-				} break;
-			}
-			if (path.empty())	path = node;
-			else				path += "/" + node;
-		} else MINIMA_ERROR(InvalidValue, "Field must be identifier, string or integer!");
-	}
-	if (context.stream.current().type != Type{']'})
-		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
-	auto const fieldID = context.program.constants.size();
-	context.program.constants.pushBack(path);
-	return fieldID;
-}
-
 MINIMA_ASSEMBLE_FN(Get) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
@@ -1059,12 +1025,8 @@ MINIMA_ASSEMBLE_FN(Cast) {
 		MINIMA_ERROR(InvalidValue, "Expected ':' here!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	auto const type = getReturnType(context);
-	if (!(
-		type == decltype(type)::DVK_SIGNED
-	||	type == decltype(type)::DVK_UNSIGNED
-	||	type == decltype(type)::DVK_REAL
-	)) MINIMA_ERROR(InvalidValue, "Casts can only happen to [int], [uint] and [real]!");
+	auto const type = getType(context);
+	if (!context.isCastable(type)) MINIMA_ERROR(InvalidValue, "Casts can only happen to scalar types!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const to	= getDataLocation(context);
@@ -1150,23 +1112,23 @@ MINIMA_STR_OP(StringReplace) {
 MINIMA_ASSEMBLE_FN(StringOperation) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
+	auto const manipID = context.addNamedInstruction(Instruction::Name::AV2_IN_STR_OP);
+	auto const src = getDataLocation(context);
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
 	auto const op = context.stream.current();
 	if (op.type != LTS_TT_IDENTIFIER)
 		MINIMA_ERROR(InvalidValue, "String operation must be an identifier!");
 	auto const id = op.value.get<Makai::String>();
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
-	auto const src = getDataLocation(context);
-	auto const manipID = context.addNamedInstruction(Instruction::Name::AV2_IN_STR_OP);
 	Instruction::StringManipulation manip;
 	if (src.id < Makai::Limit::MAX<uint64>)
 		context.addInstruction(src.id);
-	if (id == "replace" || id == "rep")			manip = getStringReplaceOperation(context);
-	else if (id == "substring" || id == "sub")	manip = getStringSubOperation(context);
-	else if (id == "match")						manip = getStringMatchOperation(context);
-	else if (id == "split")						manip = getStringSplitOperation(context);
-	else if (id == "concat" || id == "join")	manip = getStringJoinOperation(context);
-	else if (id == "remove" || id == "rem")		manip = getStringRemoveOperation(context);
+	if (id == "replace" || id == "rep")							manip = getStringReplaceOperation(context);
+	else if (id == "substring" || id == "slice" || id == "sub")	manip = getStringSubOperation(context);
+	else if (id == "match" || id == "has")						manip = getStringMatchOperation(context);
+	else if (id == "split" || id == "sep")						manip = getStringSplitOperation(context);
+	else if (id == "concat" || id == "join" || id == "cat")		manip = getStringJoinOperation(context);
+	else if (id == "remove" || id == "rem")						manip = getStringRemoveOperation(context);
 	if (!context.stream.next())										MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
 	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)	MINIMA_ERROR(InvalidValue, "Expected '->' here!");
 	if (!context.stream.next())										MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
@@ -1176,6 +1138,18 @@ MINIMA_ASSEMBLE_FN(StringOperation) {
 	manip.src = src.at;
 	manip.out = out.at;
 	context.addInstructionType(manipID, manip);
+}
+
+MINIMA_ASSEMBLE_FN(Label) {
+	auto const name = context.stream.current();
+	if (name.type != LTS_TT_IDENTIFIER)
+		MINIMA_ERROR(InvalidValue, "Label name must be an identifier!");
+	if (!context.stream.next() && context.stream.current().type != Type{':'})
+		MINIMA_ERROR(NonexistentValue, "Malformed jump label!");
+	auto const id = name.value.get<Makai::String>();
+	context.jumps.labels[id] = context.program.code.size();
+	auto const nopID = context.addNamedInstruction(Instruction::Name::AV2_IN_NO_OP);
+	context.instruction(nopID).type = 1;
 }
 
 MINIMA_ASSEMBLE_FN(Expression) {
@@ -1206,12 +1180,14 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "read" || id == "get")							doGet(context);
 		else if (id == "write" || id == "set")							doSet(context);
 		else if (id == "string" || id == "str")							doStringOperation(context);
-		else MINIMA_ERROR(InvalidValue, "Invalid/Unsupported instruction!");
+		else doLabel(context);
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }
 
 void Minima::assemble() {
-	Minima::Program result;
 	while (context.stream.next()) doExpression(context);
+	auto const unmapped = context.mapJumps();
+	if (unmapped.size())
+		MINIMA_ERROR(NonexistentValue, "Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
 }
 CTL_DIAGBLOCK_END

@@ -353,6 +353,23 @@ namespace Makai::Anima::V2 {
 		constexpr static Instruction fromValue(uint64 const v) {
 			return CTL::bitcast<Instruction>(v);
 		}
+		template <class T>
+		constexpr void setType(T const& v) const
+		requires (sizeof(T) == 4) {
+			type = Cast::bit<decltype(type)>(v);
+		}
+
+		template <class T>
+		constexpr T getTypeAs() const
+		requires (sizeof(T) == 4) {
+			return Cast::bit<T>(type);
+		}
+
+		template <class T>
+		constexpr T as() const
+		requires (sizeof(T) == 8) {
+			return Cast::bit<T>(*this);
+		}
 	};
 }
 

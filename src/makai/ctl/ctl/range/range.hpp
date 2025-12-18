@@ -5,5 +5,6 @@
 #include "sequence.hpp"
 #include "expand.hpp"
 #include "moderniterator.hpp"
+#include "reverse.hpp"
 
 #endif

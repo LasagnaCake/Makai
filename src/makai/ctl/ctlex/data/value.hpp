@@ -58,8 +58,8 @@ namespace Data {
 			DVK_NULL,
 			DVK_NAN,
 			DVK_BOOLEAN,
-			DVK_SIGNED,
 			DVK_UNSIGNED,
+			DVK_SIGNED,
 			DVK_REAL,
 			DVK_STRING,
 			DVK_ARRAY,
@@ -195,40 +195,81 @@ namespace Data {
 			}
 			return *this;
 		}
+		
+		/// @brief Returns whether the type is undefined.
+		constexpr static bool isUndefined(Kind const kind)	{return kind == Kind::DVK_UNDEFINED;	}
+		/// @brief Returns whether the type is null.
+		constexpr static bool isNull(Kind const kind)		{return kind == Kind::DVK_NULL;			}
+		/// @brief Returns whether the type is not a number.
+		constexpr static bool isNaN(Kind const kind)		{return kind == Kind::DVK_NAN;			}
+		/// @brief Returns whether the type is a boolean.
+		constexpr static bool isBoolean(Kind const kind)	{return kind == Kind::DVK_BOOLEAN;		}
+		/// @brief Returns whether the type is a signed integer.
+		constexpr static bool isSigned(Kind const kind)		{return kind == Kind::DVK_SIGNED;		}
+		/// @brief Returns whether the type is an unsigned integer.
+		constexpr static bool isUnsigned(Kind const kind)	{return kind == Kind::DVK_UNSIGNED;		}
+		/// @brief Returns whether the type is a real number.
+		constexpr static bool isReal(Kind const kind)		{return kind == Kind::DVK_REAL;			}
+		/// @brief Returns whether the type is a string.
+		constexpr static bool isString(Kind const kind)		{return kind == Kind::DVK_STRING;		}
+		/// @brief Returns whether the type is an array.
+		constexpr static bool isArray(Kind const kind)		{return kind == Kind::DVK_ARRAY;		}
+		/// @brief Returns whether the type is a byte list.
+		constexpr static bool isBytes(Kind const kind)		{return kind == Kind::DVK_BYTES;		}
+		/// @brief Returns whether the type is an object.
+		constexpr static bool isObject(Kind const kind)		{return kind == Kind::DVK_OBJECT;		}
 
 		/// @brief Returns whether the value is undefined.
-		constexpr bool isUndefined() const	{return kind == Kind::DVK_UNDEFINED;	}
+		constexpr bool isUndefined() const	{return isUndefined(kind);	}
 		/// @brief Returns whether the value is null.
-		constexpr bool isNull() const		{return kind == Kind::DVK_NULL;			}
+		constexpr bool isNull() const		{return isNull(kind);		}
 		/// @brief Returns whether the value is not a number.
-		constexpr bool isNaN() const		{return kind == Kind::DVK_NAN;			}
+		constexpr bool isNaN() const		{return isNaN(kind);		}
 		/// @brief Returns whether the value is a boolean.
-		constexpr bool isBoolean() const	{return kind == Kind::DVK_BOOLEAN;		}
+		constexpr bool isBoolean() const	{return isBoolean(kind);	}
 		/// @brief Returns whether the value is a signed integer.
-		constexpr bool isSigned() const		{return kind == Kind::DVK_SIGNED;		}
+		constexpr bool isSigned() const		{return isSigned(kind);		}
 		/// @brief Returns whether the value is an unsigned integer.
-		constexpr bool isUnsigned() const	{return kind == Kind::DVK_UNSIGNED;		}
+		constexpr bool isUnsigned() const	{return isUnsigned(kind);	}
 		/// @brief Returns whether the value is a real number.
-		constexpr bool isReal() const		{return kind == Kind::DVK_REAL;			}
+		constexpr bool isReal() const		{return isReal(kind);		}
 		/// @brief Returns whether the value is a string.
-		constexpr bool isString() const		{return kind == Kind::DVK_STRING;		}
+		constexpr bool isString() const		{return isString(kind);		}
 		/// @brief Returns whether the value is an array.
-		constexpr bool isArray() const		{return kind == Kind::DVK_ARRAY;		}
+		constexpr bool isArray() const		{return isArray(kind);		}
 		/// @brief Returns whether the value is a byte list.
-		constexpr bool isBytes() const		{return kind == Kind::DVK_BYTES;		}
+		constexpr bool isBytes() const		{return isBytes(kind);		}
 		/// @brief Returns whether the value is an object.
-		constexpr bool isObject() const		{return kind == Kind::DVK_OBJECT;		}
+		constexpr bool isObject() const		{return isObject(kind);		}
+
+		/// @brief Returns whether the type is an integer.
+		constexpr static bool isInteger(Kind const kind)	{return isSigned(kind) || isUnsigned(kind);									}
+		/// @brief Returns whether the type is a number.
+		constexpr static bool isNumber(Kind const kind)		{return isInteger(kind) || isReal(kind);									}
+		/// @brief Returns whether the type is a scalar type.
+		constexpr static bool isScalar(Kind const kind)		{return isNumber(kind) || isBoolean(kind); 									}
+		/// @brief Returns whether the type is a data primitive.
+		constexpr static bool isPrimitive(Kind const kind)	{return isScalar(kind) || isString(kind) || isNull(kind) || isBytes(kind);	}
+		/// @brief Returns whether the type is a structured type (array or object).
+		constexpr static bool isStructured(Kind const kind) {return isArray(kind) || isObject(kind);									}
 
 		/// @brief Returns whether the value is an integer.
-		constexpr bool isInteger() const	{return isSigned() || isUnsigned();							}
+		constexpr bool isInteger() const	{return isInteger(kind);	}
 		/// @brief Returns whether the value is a number.
-		constexpr bool isNumber() const		{return isInteger() || isReal();							}
+		constexpr bool isNumber() const		{return isNumber(kind);		}
 		/// @brief Returns whether the value is a scalar type.
-		constexpr bool isScalar() const		{return isNumber() || isBoolean(); 							}
+		constexpr bool isScalar() const		{return isScalar(kind); 	}
 		/// @brief Returns whether the value is a data primitive.
-		constexpr bool isPrimitive() const	{return isScalar() || isString() || isNull() || isBytes();	}
+		constexpr bool isPrimitive() const	{return isPrimitive(kind);	}
 		/// @brief Returns whether the value is a structured type (array or object).
-		constexpr bool isStructured() const {return isArray() || isObject();							}
+		constexpr bool isStructured() const {return isStructured(kind);	}
+
+		/// @brief Returns whether the type is a "falsy" value.
+		constexpr static bool isFalsy(Kind const kind)			{return isNull(kind) || isUndefined(kind);										}
+		/// @brief Returns whether the type is a "truthy" value.
+		constexpr static bool isTruthy(Kind const kind)			{return isArray(kind) || isObject(kind);										}
+		/// @brief Returns whether the type can be "coerced" to be a boolean.
+		constexpr static bool isVerifiable(Kind const kind)		{return isTruthy(kind) || isFalsy(kind) || isPrimitive(kind) || isString(kind);	}
 
 		/// @brief Returns whether the value is a "falsy" value.
 		/// @note Falsy values are: `undefined`, `null`, and empty strings.
@@ -236,18 +277,27 @@ namespace Data {
 		/// @brief Returns whether the value is a "truthy" value.
 		/// @note Truthy values are: Arrays, objects & non-empty strings.
 		constexpr bool isTruthy() const		{return isArray() || isObject() || (isString() && size());		}
-		/// @brief Returns whether the type can be "coerced" to be a boolean.
+		/// @brief Returns whether the value can be "coerced" to be a boolean.
 		/// @brief Only type that currently cannot be coerced is byte list.
 		constexpr bool isVerifiable() const	{return isTruthy() || isFalsy() || isPrimitive();				}
 
 		/// @brief Returns whether the value is an integer.
-		constexpr bool isInt() const		{return isInteger();	}
+		constexpr static bool isInt(Kind const kind)		{return isInteger(kind);	}
 		/// @brief Returns whether the value is a real number.
-		constexpr bool isFloat() const		{return isReal();		}
+		constexpr static bool isFloat(Kind const kind)		{return isReal(kind);		}
 		/// @brief Returns whether the value is a boolean.
-		constexpr bool isBool() const		{return isBoolean();	}
+		constexpr static bool isBool(Kind const kind)		{return isBoolean(kind);	}
 		/// @brief Returns whether the value is undefined.
-		constexpr bool isDiscarded() const	{return isUndefined();	}
+		constexpr static bool isDiscarded(Kind const kind)	{return isUndefined(kind);	}
+
+		/// @brief Returns whether the value is an integer.
+		constexpr bool isInt() const		{return isInt(kind);		}
+		/// @brief Returns whether the value is a real number.
+		constexpr bool isFloat() const		{return isFloat(kind);		}
+		/// @brief Returns whether the value is a boolean.
+		constexpr bool isBool() const		{return isBool(kind);		}
+		/// @brief Returns whether the value is undefined.
+		constexpr bool isDiscarded() const	{return isDiscarded(kind);	}
 
 		/// @brief Returns the value's type.
 		/// @return value type.
