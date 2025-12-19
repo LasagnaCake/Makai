@@ -624,7 +624,7 @@ BREVE_TYPED_ASSEMBLE_FN(Assignment) {
 }
 
 BREVE_TYPED_ASSEMBLE_FN(FunctionCall) {
-	// TODO: This
+	// TODO: Add support for extern function calls
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
 		BREVE_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
