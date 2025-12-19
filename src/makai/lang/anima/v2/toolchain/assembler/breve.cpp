@@ -56,15 +56,14 @@ BREVE_TYPED_ASSEMBLE_FN(Internal);
 
 static bool isReserved(Makai::String const& keyword);
 
-static void doDefaultValue(Breve::Context& context, Makai::String const& var, Makai::String const& uname) {
+static Makai::String doDefaultValue(Breve::Context& context, Makai::String const& var, Makai::String const& uname) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed value definition!");
 	auto const dvloc = "__" + context.scopePath() + "_" + var + "_set_default" + uname;
 	context.getSymbolByName(var).value["default_setter"] = dvloc;
 	auto dv = dvloc + ":\n";
-	doValueResolution(context);
-	dv += "push &["+ Makai::toString(context.getSymbolByName(var).value["stack_id"].get<uint64>()) +"]\nend\n";
-	context.pre = dv + context.pre;
+	auto const vr = doValueResolution(context);
+	return dvloc + ":\npush" + vr.value;
 }
 
 constexpr auto const DVK_ANY = Context::DVK_ANY;
@@ -126,6 +125,7 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	CTL::Ex::Data::Value::Kind retType = DVK_ANY;
 	id += "_";
+	Makai::String gpre = "";
 	auto const signature = context.uniqueName();
 	Makai::List<Makai::KeyValuePair<Makai::String, Value>> optionals;
 	bool inOptionalRegion = false;
@@ -157,7 +157,7 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 		if (context.stream.current().type == Type{'='}) {
 			isOptional = true;
 			inOptionalRegion = true;
-			doDefaultValue(context, argID, signature);
+			gpre.appendBack(doDefaultValue(context, argID, signature));
 			optionals.pushBack({argID});
 			optionals.back().value["name"] = argID;
 			optionals.back().value["type"] = argname(argt);
@@ -192,25 +192,15 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 	;
 	auto resolutionName = id;
 	auto fullName = baseName;
+	context.writeGlobalPreamble(gpre, "call", fullName, "()");
+	context.writeGlobalPreamble("end");
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
 	Prototype const proto = {retType, fullName, fid};
 	auto subName = baseName;
-	Makai::String postscript = "";
 	for (auto& opt: Makai::Range::reverse(optionals)) {
-		auto const dvloc = "__" + context.scopePath() + "_" + opt.key + "_set_default" + signature;
-		Makai::String preamble = "";
-		context.startScope();
 		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
 		opt.value["declname"] = fullName;
-		preamble += Makai::toString(fullName, ":");
-		preamble += Makai::toString("call " + dvloc + "()");
-		postscript = preamble + postscript;
-		context.endScope();
-	}
-	if (optionals.size()) {
-		context.writeLine("call " + fullName + "()");
-		context.writeLine("end");
 	}
 	if (!context.currentScope().contains(fid))
 		context.currentScope().addFunction(fid);
@@ -221,12 +211,14 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 	if (overloads.contains(resolutionName))
 		BREVE_ERROR(InvalidValue, "Function with similar signature already exists!");
 	auto& overload	= overloads[resolutionName];
-	for (auto& opt: optionals)
+	for (auto& opt: optionals) {
 		fullName += "_" + opt.value["type"].get<Makai::String>();
+	}
 	overload["args"]		= args;
 	overload["full_name"]	= fullName;
 	overload["return"]		= Makai::enumcast(retType);
-	overload["extern"]		= isExtern;
+	overload["extern"]		= optionals.empty() ? isExtern : false;
+	usize i = 0;
 	for (auto& opt: optionals) {
 		resolutionName += "_" + opt.key;
 		if (overloads.contains(resolutionName))
@@ -236,12 +228,13 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 		overload["args"]		= args;
 		overload["full_name"]	= opt.value["declname"];
 		overload["return"]		= Makai::enumcast(retType);
-		overload["extern"]		= false;
+		overload["extern"]		= ++i < optionals.size() ? false : isExtern;
 	}
 	return proto;
 }
 
 BREVE_ASSEMBLE_FN(Function) {
+	context.startScope();
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const proto = doFunctionPrototype(context, false);
@@ -253,11 +246,25 @@ BREVE_ASSEMBLE_FN(Function) {
 }
 
 BREVE_ASSEMBLE_FN(ExternalFunction) {
+	context.startScope();
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed function!");
-	auto const proto = doFunctionPrototype(context);
+	auto const proto = doFunctionPrototype(context, true);
+	context.writeLine(proto.fullName, ":");
+	Makai::String args;
+	usize argc = 0;
+	for (auto const& [name, overload]: context.currentScope().members[proto.name].value["overloads"].items()) {
+		if (overload["extern"]) {
+			argc = overload["args"].size();
+			break;
+		}
+	}
+	if (argc) for (auto const i: Makai::range(argc))
+		args += Makai::toString(i, "= &[-", argc - (i + 1), "] ");
+	context.writeLine("call out", proto.name, "(", args, ")");
 	if (context.stream.current().type != Type{';'})
 		BREVE_ERROR(InvalidValue, "Expected ';' here!");
+	context.endScope();
 }
 
 BREVE_ASSEMBLE_FN(Scope) {
@@ -783,6 +790,27 @@ BREVE_ASSEMBLE_FN(Main) {
 }
 
 BREVE_ASSEMBLE_FN(Conditional) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+	auto const scopeName = context.scopePath() + context.uniqueName() + "_if";
+	auto const val = doValueResolution(context);
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+	context.startScope();
+	doExpression(context);
+	context.endScope();
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+	if (context.stream.current().type == LTS_TT_IDENTIFIER) {
+		auto const id = context.stream.current().value.get<Makai::String>();
+		if (id == "else") {
+			if (!context.stream.next())
+				BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+			context.startScope();
+			doExpression(context);
+			context.endScope();
+		} else doExpression(context);
+	}
 }
 
 BREVE_ASSEMBLE_FN(Expression) {
