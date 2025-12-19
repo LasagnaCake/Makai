@@ -690,6 +690,10 @@ MAXIMA_ASSEMBLE_FN(Return) {
 	}
 }
 
+MAXIMA_ASSEMBLE_FN(Main) {
+	
+}
+
 MAXIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
