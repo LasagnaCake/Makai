@@ -170,7 +170,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					varc = sc.varc;
 					break;
 				}
-			writeLine("clear", varc);
+			if (varc)
+				writeLine("clear", varc);
 		}
 
 		constexpr bool inFunction() const {
