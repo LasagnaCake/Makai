@@ -41,6 +41,7 @@ MAXIMA_ASSEMBLE_FN(ForLoop);
 MAXIMA_ASSEMBLE_FN(WhileLoop);
 MAXIMA_ASSEMBLE_FN(RepeatLoop);
 MAXIMA_ASSEMBLE_FN(DoLoop);
+MAXIMA_ASSEMBLE_FN(Main);
 MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall);
 MAXIMA_TYPED_ASSEMBLE_FN(Assignment);
 MAXIMA_TYPED_ASSEMBLE_FN(ReservedValueResolution);
@@ -526,7 +527,8 @@ void doVarDecl(Maxima::Context& context, Makai::String const& id, bool const isG
 			MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
 		doVarAssign(context, id, type, isGlobalVar, true);
 	}
-	if (context.stream.current().type != Type{';'}) doExpression(context);
+	if (context.stream.current().type != Type{';'})
+		MAXIMA_ERROR(InvalidValue, "Expected ';' here!");
 }
 
 MAXIMA_ASSEMBLE_FN(VarDecl) {
@@ -541,6 +543,8 @@ MAXIMA_ASSEMBLE_FN(VarDecl) {
 		MAXIMA_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
 	if (!context.stream.next())
 		MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
+	if (isGlobalVar)
+		context.writePreamble("push null");
 	doVarDecl(context, id, isGlobalVar);
 }
 
@@ -696,6 +700,11 @@ MAXIMA_ASSEMBLE_FN(Expression) {
 			else if (id == "minima" || id == "asm")				doAssembly(context);
 			else if (id == "fatal")								doLooseContext(context);
 			else if (id == "return")							doReturn(context);
+			else if (id == "if")								doConditional(context);
+			else if (id == "do")								doDoLoop(context);
+			else if (id == "for")								doForLoop(context);
+			else if (id == "repeat")							doRepeatLoop(context);
+			else if (id == "main")								doMain(context);
 			else if (context.hasSymbol(id)) {
 				auto const sym = context.symbol(id);
 				switch (sym().type) {
