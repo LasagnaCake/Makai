@@ -737,7 +737,7 @@ BREVE_ASSEMBLE_FN(Main) {
 		BREVE_ERROR(InvalidValue, "Expected '{' here!");
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed main!");
-	context.writeLine("__main:");
+	context.writeLine(context.mainScope, ":");
 	context.startScope();
 	doScope(context);
 	context.endScope();
@@ -792,7 +792,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 
 void Breve::assemble() {
 	context.startScope();
-	context.writeLine("jump __main");
+	context.writeLine("jump", context.mainScope);
 	while (context.stream.next()) doExpression(context);
 	context.writeLine("halt");
 	context.endScope();
