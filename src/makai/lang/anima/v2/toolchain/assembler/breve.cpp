@@ -49,6 +49,7 @@ BREVE_TYPED_ASSEMBLE_FN(FunctionCall);
 BREVE_TYPED_ASSEMBLE_FN(Assignment);
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
 BREVE_TYPED_ASSEMBLE_FN(BinaryOperation);
+BREVE_TYPED_ASSEMBLE_FN(UnaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(ValueResolution);
 
 static bool isReserved(Makai::String const& keyword);
@@ -298,14 +299,10 @@ BREVE_TYPED_ASSEMBLE_FN(ValueResolution) {
 			return doBinaryOperation(context);
 		} break;
 		case Type{'-'}:
-		case Type{'+'}: {
-			auto const negative = current.type == Type{'-'};
-			// TODO: this
-		} break;
+		case Type{'+'}:
 		case LTS_TT_DECREMENT:
 		case LTS_TT_INCREMENT: {
-			auto const negative = current.type == LTS_TT_DECREMENT;
-			// TODO: this
+			return doUnaryOperation(context);
 		} break;
 		case LTS_TT_SINGLE_QUOTE_STRING: 
 		case LTS_TT_DOUBLE_QUOTE_STRING:	return {Value::Kind::DVK_STRING,	current.value.toString()								};
