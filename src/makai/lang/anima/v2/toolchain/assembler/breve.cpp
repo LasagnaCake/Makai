@@ -601,9 +601,7 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed variable!");
 	if (!isGlobalVar) {
-		if (context.scope.size() > 1)
-			context.writeLine("push null");
-		else context.writePreamble("push null");
+		context.writeAdaptive("push null");
 	}
 	doVarDecl(context, id, isGlobalVar);
 }
