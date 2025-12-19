@@ -278,6 +278,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		String					ir;
 		Random::SecureGenerator	rng;
 		bool					hasMain		= false;
+		String const			mainScope	= "__main" + uniqueName();
 	};
 }
 
