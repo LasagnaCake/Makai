@@ -249,8 +249,6 @@ BREVE_ASSEMBLE_FN(Function) {
 		BREVE_ERROR(InvalidValue, "Expected '{' here!");
 	context.writeLine(proto.fullName, ":");
 	doScope(context);
-	auto const scopath = context.scopePath();
-	context.writeLine("clear ", context.currentScope().varc);
 	context.endScope();
 }
 
@@ -268,6 +266,8 @@ BREVE_ASSEMBLE_FN(Scope) {
 		if (current.type == Type{'}'}) break; 
 		else doExpression(context);
 	}
+	if (context.currentScope().varc)
+		context.writeLine("clear ", context.currentScope().varc);
 }
 
 BREVE_ASSEMBLE_FN(External) {
