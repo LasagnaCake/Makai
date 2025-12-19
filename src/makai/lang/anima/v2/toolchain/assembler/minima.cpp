@@ -1036,12 +1036,17 @@ MINIMA_ASSEMBLE_FN(Cast) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const type = getType(context);
-	if (!context.isCastable(type)) MINIMA_ERROR(InvalidValue, "Casts can only happen to scalar types!");
+	if (!context.isCastable(type)) MINIMA_ERROR(InvalidValue, "Casts can only happen to scalar types, string and [any]!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const to	= getDataLocation(context);
-	Instruction::Casting cast = {from.at, to.at, type};
-	context.addInstructionType(castID, cast);
+	if (type != context.DVK_ANY) {
+		Instruction::Casting cast = {from.at, to.at, type};
+		context.addInstructionType(castID, cast);
+	} else {
+		context.instruction(castID).name = Instruction::Name::AV2_IN_COPY;
+		context.addInstructionType(castID, Instruction::Transfer{from.at, to.at});
+	}
 	if (from.id < Makai::Limit::MAX<usize>)
 		context.addInstruction(from.id);
 	if (to.id < Makai::Limit::MAX<usize>)

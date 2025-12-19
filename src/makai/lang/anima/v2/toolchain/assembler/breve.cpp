@@ -44,7 +44,8 @@ BREVE_ASSEMBLE_FN(DoLoop);
 BREVE_ASSEMBLE_FN(Main);
 BREVE_ASSEMBLE_FN(Terminate);
 BREVE_ASSEMBLE_FN(Error);
-BREVE_ASSEMBLE_FN(ExternalFunction);
+BREVE_ASSEMBLE_FN(External);
+BREVE_ASSEMBLE_FN(Internal);
 BREVE_TYPED_ASSEMBLE_FN(FunctionCall);
 BREVE_TYPED_ASSEMBLE_FN(Assignment);
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
@@ -65,7 +66,7 @@ static void doDefaultValue(Breve::Context& context, Makai::String const& var, Ma
 	context.ir = dv + context.ir;
 }
 
-constexpr auto const DVK_ANY = Makai::Cast::as<decltype(Makai::Data::Value::Kind::DVK_VOID)>(-1);
+constexpr auto const DVK_ANY = Context::DVK_ANY;
 
 static Makai::Data::Value::Kind getType(Context& context) {
 	using enum Makai::Data::Value::Kind;
@@ -108,8 +109,6 @@ struct Prototype {
 };
 
 static Prototype doFunctionPrototype (Context& context, bool const isExtern = false) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
 		BREVE_ERROR(InvalidValue, "Function name must be an identifier!");
@@ -242,6 +241,8 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 }
 
 BREVE_ASSEMBLE_FN(Function) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const proto = doFunctionPrototype(context, false);
 	if (context.stream.current().type != Type{'{'})
 		BREVE_ERROR(InvalidValue, "Expected '{' here!");
@@ -253,6 +254,8 @@ BREVE_ASSEMBLE_FN(Function) {
 }
 
 BREVE_ASSEMBLE_FN(ExternalFunction) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const proto = doFunctionPrototype(context);
 	if (context.stream.current().type != Type{';'})
 		BREVE_ERROR(InvalidValue, "Expected ';' here!");
@@ -264,6 +267,35 @@ BREVE_ASSEMBLE_FN(Scope) {
 		if (current.type == Type{'}'}) break; 
 		else doExpression(context);
 	}
+}
+
+BREVE_ASSEMBLE_FN(External) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed external expression!");
+	if (context.stream.current().type != LTS_TT_IDENTIFIER)
+		BREVE_ERROR(NonexistentValue, "Expected keyword here!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (id == "function" || id == "func" || id == "fn") doExternalFunction(context);
+	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
+}
+
+BREVE_ASSEMBLE_FN(InternalPrint) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed print!");
+	// TODO: This
+	auto const v = doValueResolution(context);
+	context.writeLine("push", v.value);
+	context.writeLine("call in print");
+}
+
+BREVE_ASSEMBLE_FN(Internal) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed internal expression!");
+	if (context.stream.current().type != LTS_TT_IDENTIFIER)
+		BREVE_ERROR(NonexistentValue, "Expected keyword here!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (id == "print") doInternalPrint(context);
+	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
 }
 
 BREVE_TYPED_ASSEMBLE_FN(ValueResolution) {
@@ -385,9 +417,11 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			auto const id = opname.value.get<Makai::String>();
 			if (id == "as") {
 				if (!context.isCastable(rhs.key))
-					BREVE_ERROR(InvalidValue, "Casts can only happen to scalar types!");
-				context.writeLine("cast", lhs.value, ":", toTypeName(rhs.key), "-> .");
-				result = rhs.key;
+					BREVE_ERROR(InvalidValue, "Casts can only happen to scalar types, strings, and [any]!");
+				if (rhs.key != context.DVK_ANY) {
+					context.writeLine("cast", lhs.value, ":", toTypeName(rhs.key), "-> .");
+					result = rhs.key;
+				}
 			} else if (id == "if") {
 				if (!context.stream.next())
 					BREVE_ERROR(NonexistentValue, "Malformed operation!");
@@ -465,8 +499,8 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	}
 	if (context.stream.current().type != Type{')'})
 		BREVE_ERROR(InvalidValue, "Expected ')' here!");
-	for (usize i = 0; i < stackUsage; ++i)
-		context.writeLine("pop void");
+	if (stackUsage)
+		context.writeLine("clear", stackUsage);
 	return {result, "."};
 }
 
@@ -747,13 +781,17 @@ BREVE_ASSEMBLE_FN(Main) {
 		BREVE_ERROR(InvalidValue, "Expected '}' here!");
 }
 
+BREVE_ASSEMBLE_FN(WhileLoop) {
+}
+
 BREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = current.value.get<Makai::String>();
 			if (id == "function" || id == "func" || id == "fn")	doFunction(context);
-			else if (id == "extern" || id == "out")				doExternalFunction(context);
+			else if (id == "external" || id == "out")			doExternal(context);
+			else if (id == "internal" || id == "in")			doInternal(context);
 			else if (id == "global" || id == "local")			doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
 			else if (id == "fatal")								doLooseContext(context);

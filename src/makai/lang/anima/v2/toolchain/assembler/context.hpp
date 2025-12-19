@@ -77,6 +77,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 		};
 
+		constexpr static Data::Value::Kind DVK_ANY = Data::Value::Kind{-2};
+
 		constexpr StringList mapJumps() {
 			return jumps.map(program);
 		}
@@ -228,7 +230,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {
-			return Data::Value::isScalar(type);
+			return Data::Value::isScalar(type) || Data::Value::isString(type) || type == Data::Value::Kind{-2};
 		}
 
 		inline String uniqueName() {
