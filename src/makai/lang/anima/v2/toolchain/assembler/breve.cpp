@@ -45,13 +45,14 @@ BREVE_ASSEMBLE_FN(Main);
 BREVE_ASSEMBLE_FN(Terminate);
 BREVE_ASSEMBLE_FN(Error);
 BREVE_ASSEMBLE_FN(External);
-BREVE_ASSEMBLE_FN(Internal);
 BREVE_TYPED_ASSEMBLE_FN(FunctionCall);
 BREVE_TYPED_ASSEMBLE_FN(Assignment);
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
 BREVE_TYPED_ASSEMBLE_FN(BinaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(ValueResolution);
+BREVE_TYPED_ASSEMBLE_FN(InternalPrint);
+BREVE_TYPED_ASSEMBLE_FN(Internal);
 
 static bool isReserved(Makai::String const& keyword);
 
@@ -63,7 +64,7 @@ static void doDefaultValue(Breve::Context& context, Makai::String const& var, Ma
 	auto dv = dvloc + ":\n";
 	doValueResolution(context);
 	dv += "push &["+ Makai::toString(context.getSymbolByName(var).value["stack_id"].get<uint64>()) +"]\nend\n";
-	context.ir = dv + context.ir;
+	context.pre = dv + context.pre;
 }
 
 constexpr auto const DVK_ANY = Context::DVK_ANY;
@@ -279,22 +280,24 @@ BREVE_ASSEMBLE_FN(External) {
 	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
 }
 
-BREVE_ASSEMBLE_FN(InternalPrint) {
+BREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed print!");
 	// TODO: This
 	auto const v = doValueResolution(context);
 	context.writeLine("push", v.value);
 	context.writeLine("call in print");
+	context.writeLine("pop .");
+	return {Value::Kind::DVK_VOID, "."};
 }
 
-BREVE_ASSEMBLE_FN(Internal) {
+BREVE_TYPED_ASSEMBLE_FN(Internal) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed internal expression!");
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
 		BREVE_ERROR(NonexistentValue, "Expected keyword here!");
 	auto const id = context.stream.current().value.get<Makai::String>();
-	if (id == "print") doInternalPrint(context);
+	if (id == "print") return doInternalPrint(context);
 	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
 }
 
@@ -417,7 +420,7 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			auto const id = opname.value.get<Makai::String>();
 			if (id == "as") {
 				if (!context.isCastable(rhs.key))
-					BREVE_ERROR(InvalidValue, "Casts can only happen to scalar types, strings, and [any]!");
+					BREVE_ERROR(InvalidValue, "Casts can only happen between scalar types, strings, and [any]!");
 				if (rhs.key != context.DVK_ANY) {
 					context.writeLine("cast", lhs.value, ":", toTypeName(rhs.key), "-> .");
 					result = rhs.key;
@@ -556,8 +559,8 @@ void doVarAssign(
 	auto const sym = context.symbol(id);
 	preassign(context, result);
 	if (isGlobalVar)
-		context.writeLine("copy", result.value, "-> :", id);
-	else context.writeLine("copy", result.value, "-> &[", sym().value["stack_id"].get<uint64>(), "]");
+		context.writeAdaptive("copy", result.value, "-> :", id);
+	else context.writeAdaptive("copy", result.value, "-> &[", sym().value["stack_id"].get<uint64>(), "]");
 	sym().value["init"] = true;
 }
 
@@ -781,7 +784,7 @@ BREVE_ASSEMBLE_FN(Main) {
 		BREVE_ERROR(InvalidValue, "Expected '}' here!");
 }
 
-BREVE_ASSEMBLE_FN(WhileLoop) {
+BREVE_ASSEMBLE_FN(Conditional) {
 }
 
 BREVE_ASSEMBLE_FN(Expression) {
