@@ -254,6 +254,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		String					fileName;
 		String					ir;
 		Random::SecureGenerator	rng;
+		bool					hasMain		= false;
 	};
 }
 
