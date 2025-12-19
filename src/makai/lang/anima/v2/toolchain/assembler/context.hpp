@@ -170,7 +170,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					varc = sc.varc;
 					break;
 				}
-			writeLine("clear ", varc);
+			writeLine("clear", varc);
 		}
 
 		constexpr bool inFunction() const {
@@ -211,22 +211,26 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		template <class... Args>
 		constexpr void writeLine(Args const&... args) {
-			auto& content = scope.empty() ? ir : currentScope().code;
+			auto& content = scope.empty() ? code : currentScope().code;
 			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
 		constexpr void writePreamble(Args const&... args) {
-			if (scope.empty()) return;
-			auto& content = currentScope().pre;
+			auto& content = scope.empty() ? pre : currentScope().pre;
 			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
 		constexpr void writePostscript(Args const&... args) {
-			if (scope.empty()) return;
-			auto& content = currentScope().post;
+			auto& content = scope.empty() ? post : currentScope().post;
 			content = toString(toString(args, " ")..., "\n") + content;
+		}
+		
+		template <class... Args>
+		constexpr void writeAdaptive(Args const&... args) {
+			if (scope.size() < 1)	writePreamble(args...);
+			else					writeLine(args...);
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {
@@ -234,7 +238,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		inline String uniqueName() {
-			return Makai::toString("_", ir.size(), "_", rng.integer(), "_", Random::CTPRNG<uint64>);
+			return Makai::toString("_", code.size(), "_", rng.integer(), "_", Random::CTPRNG<uint64>);
+		}
+
+		constexpr String intermediate() const {
+			return pre + code + post;
 		}
 
 		constexpr static bool isReservedKeyword(String const& name) {
@@ -277,7 +285,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		TokenStream				stream;
 		Program					program;
 		String					fileName;
-		String					ir;
+		String					pre, code, post;
 		Random::SecureGenerator	rng;
 		bool					hasMain		= false;
 		String const			mainScope	= "__main" + uniqueName();
