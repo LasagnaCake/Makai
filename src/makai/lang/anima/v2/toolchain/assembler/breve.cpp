@@ -42,6 +42,9 @@ BREVE_ASSEMBLE_FN(WhileLoop);
 BREVE_ASSEMBLE_FN(RepeatLoop);
 BREVE_ASSEMBLE_FN(DoLoop);
 BREVE_ASSEMBLE_FN(Main);
+BREVE_ASSEMBLE_FN(Terminate);
+BREVE_ASSEMBLE_FN(Error);
+BREVE_ASSEMBLE_FN(ExternalFunction);
 BREVE_TYPED_ASSEMBLE_FN(FunctionCall);
 BREVE_TYPED_ASSEMBLE_FN(Assignment);
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
@@ -97,13 +100,21 @@ static Makai::String argname(Value::Kind const& type) {
 	return "none";
 }
 
-BREVE_ASSEMBLE_FN(Function) {
+struct Prototype {
+	Value::Kind		returnType;
+	Makai::String	fullName;
+	Makai::String	name;
+};
+
+static Prototype doFunctionPrototype (Context& context, bool const isExtern = false) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
 		BREVE_ERROR(InvalidValue, "Function name must be an identifier!");
 	auto const fid = fname.value.get<Makai::String>();
+	if (context.isReservedKeyword(fid))
+		BREVE_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
 	auto id = fid;
 	auto args = Makai::Data::Value::array();
 	if (!context.stream.next())
@@ -112,7 +123,6 @@ BREVE_ASSEMBLE_FN(Function) {
 		BREVE_ERROR(NonexistentValue, "Expected '(' here!");
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed function!");
-	context.startScope();
 	CTL::Ex::Data::Value::Kind retType = DVK_ANY;
 	id += "_";
 	auto const signature = context.uniqueName();
@@ -172,8 +182,6 @@ BREVE_ASSEMBLE_FN(Function) {
 		if (!context.stream.next())
 			BREVE_ERROR(NonexistentValue, "Malformed function!");
 	}
-	if (context.stream.current().type != Type{'{'})
-		BREVE_ERROR(InvalidValue, "Expected '{' here!");
 	context.currentScope().result	= retType;
 	context.currentScope().label	= fid;
 	auto const baseName =
@@ -185,12 +193,7 @@ BREVE_ASSEMBLE_FN(Function) {
 	auto fullName = baseName;
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
-	context.writeLine(fullName, ":");
-	doScope(context);
-	auto const scopath = context.scopePath();
-	context.writeLine("clear ", context.currentScope().varc);
-	context.endScope();
-	// TODO: Proper overloading
+	Prototype const proto = {retType, fullName, fid};
 	auto subName = baseName;
 	Makai::String postscript = "";
 	for (auto& opt: Makai::Range::reverse(optionals)) {
@@ -222,6 +225,7 @@ BREVE_ASSEMBLE_FN(Function) {
 	overload["args"]		= args;
 	overload["full_name"]	= fullName;
 	overload["return"]		= Makai::enumcast(retType);
+	overload["extern"]		= isExtern;
 	for (auto& opt: optionals) {
 		resolutionName += "_" + opt.key;
 		if (overloads.contains(resolutionName))
@@ -231,7 +235,26 @@ BREVE_ASSEMBLE_FN(Function) {
 		overload["args"]		= args;
 		overload["full_name"]	= opt.value["declname"];
 		overload["return"]		= Makai::enumcast(retType);
+		overload["extern"]		= false;
 	}
+	return proto;
+}
+
+BREVE_ASSEMBLE_FN(Function) {
+	auto const proto = doFunctionPrototype(context, false);
+	if (context.stream.current().type != Type{'{'})
+		BREVE_ERROR(InvalidValue, "Expected '{' here!");
+	context.writeLine(proto.fullName, ":");
+	doScope(context);
+	auto const scopath = context.scopePath();
+	context.writeLine("clear ", context.currentScope().varc);
+	context.endScope();
+}
+
+BREVE_ASSEMBLE_FN(ExternalFunction) {
+	auto const proto = doFunctionPrototype(context);
+	if (context.stream.current().type != Type{';'})
+		BREVE_ERROR(InvalidValue, "Expected ';' here!");
 }
 
 BREVE_ASSEMBLE_FN(Scope) {
@@ -640,7 +663,13 @@ BREVE_TYPED_ASSEMBLE_FN(FunctionCall) {
 	auto const sym = context.symbol(id);
 	if (!sym().value["overloads"].contains(legalName))
 		BREVE_ERROR(InvalidValue, "Function overload does not exist!");
-	context.writeLine("call", sym().value["overloads"][legalName]["full_name"].get<Makai::String>(), call);
+	auto const overload = sym().value["overloads"][legalName];
+	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
+	context.writeLine("clear", pushes);
+	return {
+		Makai::Cast::as<Value::Kind, int16>(overload["return"]),
+		"."
+	};
 }
 
 BREVE_ASSEMBLE_FN(Assembly) {
@@ -723,6 +752,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = current.value.get<Makai::String>();
 			if (id == "function" || id == "func" || id == "fn")	doFunction(context);
+			else if (id == "extern" || id == "out")				doExternalFunction(context);
 			else if (id == "global" || id == "local")			doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
 			else if (id == "fatal")								doLooseContext(context);
@@ -732,6 +762,8 @@ BREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "for")								doForLoop(context);
 			else if (id == "repeat")							doRepeatLoop(context);
 			else if (id == "main")								doMain(context);
+			else if (id == "terminate")							doTerminate(context);
+			else if (id == "error")								doError(context);
 			else if (context.hasSymbol(id)) {
 				auto const sym = context.symbol(id);
 				switch (sym().type) {
