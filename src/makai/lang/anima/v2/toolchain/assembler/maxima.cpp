@@ -691,7 +691,24 @@ MAXIMA_ASSEMBLE_FN(Return) {
 }
 
 MAXIMA_ASSEMBLE_FN(Main) {
-	
+	if (!context.stream.next())
+		MAXIMA_ERROR(NonexistentValue, "Malformed main!");
+	if (context.hasMain)
+		MAXIMA_ERROR(NonexistentValue, "Only one entrypoint is allowed!");
+	if (context.scope.size() > 1)
+		MAXIMA_ERROR(NonexistentValue, "Main can only be declared on the global scope!");
+	context.hasMain = true;
+	if (context.stream.current().type != Type{'{'})
+		MAXIMA_ERROR(InvalidValue, "Expected '{' here!");
+	if (!context.stream.next())
+		MAXIMA_ERROR(NonexistentValue, "Malformed main!");
+	context.writeLine("__main:");
+	context.startScope();
+	doScope(context);
+	context.endScope();
+	context.writeLine("halt");
+	if (context.stream.current().type != Type{'}'})
+		MAXIMA_ERROR(InvalidValue, "Expected '}' here!");
 }
 
 MAXIMA_ASSEMBLE_FN(Expression) {
@@ -735,9 +752,12 @@ MAXIMA_ASSEMBLE_FN(Expression) {
 }
 
 void Maxima::assemble() {
+	context.writeLine("jump __main");
 	context.startScope();
 	while (context.stream.next()) doExpression(context);
 	context.endScope();
+	if (!context.hasMain)
+		MAXIMA_ERROR(NonexistentValue, "Missing main entrypoint!");
 }
 
 CTL_DIAGBLOCK_END
