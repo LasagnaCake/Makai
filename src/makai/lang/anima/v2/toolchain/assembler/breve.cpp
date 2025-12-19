@@ -104,8 +104,9 @@ static Makai::String argname(Value::Kind const& type) {
 
 struct Prototype {
 	Value::Kind		returnType;
-	Makai::String	fullName;
 	Makai::String	name;
+	Makai::String	fullName;
+	Makai::String	entryPoint;
 };
 
 static Prototype doFunctionPrototype (Context& context, bool const isExtern = false) {
@@ -196,7 +197,7 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 	context.writeGlobalPreamble("end");
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
-	Prototype const proto = {retType, fullName, fid};
+	Prototype const proto = {retType, fid, fullName, resolutionName};
 	auto subName = baseName;
 	for (auto& opt: Makai::Range::reverse(optionals)) {
 		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
@@ -240,7 +241,7 @@ BREVE_ASSEMBLE_FN(Function) {
 	auto const proto = doFunctionPrototype(context, false);
 	if (context.stream.current().type != Type{'{'})
 		BREVE_ERROR(InvalidValue, "Expected '{' here!");
-	context.writeLine(proto.fullName, ":");
+	context.writeLine(proto.entryPoint, ":");
 	doScope(context);
 	context.endScope();
 }
@@ -250,7 +251,7 @@ BREVE_ASSEMBLE_FN(ExternalFunction) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const proto = doFunctionPrototype(context, true);
-	context.writeLine(proto.fullName, ":");
+	context.writeLine(proto.entryPoint, ":");
 	Makai::String args;
 	usize argc = 0;
 	for (auto const& [name, overload]: context.currentScope().members[proto.name].value["overloads"].items()) {
@@ -666,7 +667,6 @@ BREVE_TYPED_ASSEMBLE_FN(Assignment) {
 }
 
 BREVE_TYPED_ASSEMBLE_FN(FunctionCall) {
-	// TODO: Add support for extern function calls
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
 		BREVE_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
