@@ -210,27 +210,63 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		template <class... Args>
-		constexpr void writeLine(Args const&... args) {
-			auto& content = scope.empty() ? code : currentScope().code;
+		constexpr void writeGlobalLine(Args const&... args) {
+			auto& content = code;
 			content += toString(toString(args, " ")..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writeGlobalPreamble(Args const&... args) {
+			auto& content = pre;
+			content += toString(toString(args, " ")..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writeGlobalPostscript(Args const&... args) {
+			auto& content = post;
+			content += toString(toString(args, " ")..., "\n") + content;
+		}
+
+		template <class... Args>
+		constexpr void writeScopeLine(Args const&... args) {
+			auto& content = currentScope().code;
+			content += toString(toString(args, " ")..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writeScopePreamble(Args const&... args) {
+			auto& content = currentScope().pre;
+			content += toString(toString(args, " ")..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writeScopePostscript(Args const&... args) {
+			auto& content = currentScope().post;
+			content += toString(toString(args, " ")..., "\n") + content;
+		}
+
+		template <class... Args>
+		constexpr void writeLine(Args const&... args) {
+			if (scope.empty())	writeGlobalLine(args...);
+			else				writeScopeLine(args...);
 		}
 
 		template <class... Args>
 		constexpr void writePreamble(Args const&... args) {
-			auto& content = scope.empty() ? pre : currentScope().pre;
-			content += toString(toString(args, " ")..., "\n");
+			if (scope.empty())	writeGlobalPreamble(args...);
+			else				writeScopePreamble(args...);
 		}
 
 		template <class... Args>
 		constexpr void writePostscript(Args const&... args) {
-			auto& content = scope.empty() ? post : currentScope().post;
-			content = toString(toString(args, " ")..., "\n") + content;
+			if (scope.empty())	writeGlobalPostscript(args...);
+			else				writeScopePostscript(args...);
 		}
 		
 		template <class... Args>
 		constexpr void writeAdaptive(Args const&... args) {
-			if (scope.size() < 1)	writePreamble(args...);
-			else					writeLine(args...);
+			if (scope.size() > 1)	writeLine(args...);
+			else					writePreamble(args...);
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {
