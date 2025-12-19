@@ -563,8 +563,11 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 		BREVE_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed variable!");
-	if (isGlobalVar)
-		context.writePreamble("push null");
+	if (!isGlobalVar) {
+		if (context.scope.size() > 1)
+			context.writeLine("push null");
+		else context.writePreamble("push null");
+	}
 	doVarDecl(context, id, isGlobalVar);
 }
 
@@ -738,6 +741,7 @@ BREVE_ASSEMBLE_FN(Main) {
 	context.startScope();
 	doScope(context);
 	context.endScope();
+	context.writeLine("flush");
 	context.writeLine("halt");
 	if (context.stream.current().type != Type{'}'})
 		BREVE_ERROR(InvalidValue, "Expected '}' here!");
@@ -787,9 +791,10 @@ BREVE_ASSEMBLE_FN(Expression) {
 }
 
 void Breve::assemble() {
-	context.writeLine("jump __main");
 	context.startScope();
+	context.writeLine("jump __main");
 	while (context.stream.next()) doExpression(context);
+	context.writeLine("halt");
 	context.endScope();
 	if (!context.hasMain)
 		BREVE_ERROR(NonexistentValue, "Missing main entrypoint!");
