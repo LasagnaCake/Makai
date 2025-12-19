@@ -1,18 +1,18 @@
-#include "maxima.hpp"
+#include "breve.hpp"
 #include "context.hpp"
 
 using namespace Makai::Anima::V2::Toolchain::Assembler;
 namespace Runtime = Makai::Anima::V2::Runtime;
 using Instruction = Makai::Anima::V2::Instruction;
 using DataLocation = Makai::Anima::V2::DataLocation;
-using Type = Maxima::TokenStream::Token::Type;
+using Type = Breve::TokenStream::Token::Type;
 using enum Type;
 using Value = Makai::Data::Value;
 
 using Solution = Makai::KeyValuePair<Value::Kind, Makai::String>;
 
-#define MAXIMA_ASSEMBLE_FN(NAME) static void do##NAME (Maxima::Context& context)
-#define MAXIMA_TYPED_ASSEMBLE_FN(NAME) static Solution do##NAME (Maxima::Context& context)
+#define BREVE_ASSEMBLE_FN(NAME) static void do##NAME (Breve::Context& context)
+#define BREVE_TYPED_ASSEMBLE_FN(NAME) static Solution do##NAME (Breve::Context& context)
 
 template <class T>
 [[noreturn]] static void error(Makai::String what, Context& ctx) {
@@ -28,31 +28,31 @@ template <class T>
 	);
 }
 
-#define MAXIMA_ERROR(TYPE, WHAT) error<Makai::Error::TYPE>({WHAT}, context)
+#define BREVE_ERROR(TYPE, WHAT) error<Makai::Error::TYPE>({WHAT}, context)
 
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
-MAXIMA_ASSEMBLE_FN(Scope);
-MAXIMA_ASSEMBLE_FN(Expression);
-MAXIMA_ASSEMBLE_FN(Return);
-MAXIMA_ASSEMBLE_FN(Conditional);
-MAXIMA_ASSEMBLE_FN(ForLoop);
-MAXIMA_ASSEMBLE_FN(WhileLoop);
-MAXIMA_ASSEMBLE_FN(RepeatLoop);
-MAXIMA_ASSEMBLE_FN(DoLoop);
-MAXIMA_ASSEMBLE_FN(Main);
-MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall);
-MAXIMA_TYPED_ASSEMBLE_FN(Assignment);
-MAXIMA_TYPED_ASSEMBLE_FN(ReservedValueResolution);
-MAXIMA_TYPED_ASSEMBLE_FN(BinaryOperation);
-MAXIMA_TYPED_ASSEMBLE_FN(ValueResolution);
+BREVE_ASSEMBLE_FN(Scope);
+BREVE_ASSEMBLE_FN(Expression);
+BREVE_ASSEMBLE_FN(Return);
+BREVE_ASSEMBLE_FN(Conditional);
+BREVE_ASSEMBLE_FN(ForLoop);
+BREVE_ASSEMBLE_FN(WhileLoop);
+BREVE_ASSEMBLE_FN(RepeatLoop);
+BREVE_ASSEMBLE_FN(DoLoop);
+BREVE_ASSEMBLE_FN(Main);
+BREVE_TYPED_ASSEMBLE_FN(FunctionCall);
+BREVE_TYPED_ASSEMBLE_FN(Assignment);
+BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
+BREVE_TYPED_ASSEMBLE_FN(BinaryOperation);
+BREVE_TYPED_ASSEMBLE_FN(ValueResolution);
 
 static bool isReserved(Makai::String const& keyword);
 
-static void doDefaultValue(Maxima::Context& context, Makai::String const& var, Makai::String const& uname) {
+static void doDefaultValue(Breve::Context& context, Makai::String const& var, Makai::String const& uname) {
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed value definition!");
+		BREVE_ERROR(NonexistentValue, "Malformed value definition!");
 	auto const dvloc = "__" + context.scopePath() + "_" + var + "_set_default" + uname;
 	context.getSymbolByName(var).value["default_setter"] = dvloc;
 	auto dv = dvloc + ":\n";
@@ -80,9 +80,9 @@ static Makai::Data::Value::Kind getType(Context& context) {
 			else if (id == "object" || id == "struct")	return DVK_OBJECT;
 			else return DVK_VOID;
 		}
-		default: MAXIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
+		default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported type!");
 	}
-	MAXIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
+	BREVE_ERROR(InvalidValue, "Invalid/Unsupported type!");
 }
 
 static Makai::String argname(Value::Kind const& type) {
@@ -97,21 +97,21 @@ static Makai::String argname(Value::Kind const& type) {
 	return "none";
 }
 
-MAXIMA_ASSEMBLE_FN(Function) {
+BREVE_ASSEMBLE_FN(Function) {
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed function!");
+		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
-		MAXIMA_ERROR(InvalidValue, "Function name must be an identifier!");
+		BREVE_ERROR(InvalidValue, "Function name must be an identifier!");
 	auto const fid = fname.value.get<Makai::String>();
 	auto id = fid;
 	auto args = Makai::Data::Value::array();
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed function!");
+		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	if (context.stream.current().type != Type{'('})
-		MAXIMA_ERROR(NonexistentValue, "Expected '(' here!");
+		BREVE_ERROR(NonexistentValue, "Expected '(' here!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed function!");
+		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	context.startScope();
 	CTL::Ex::Data::Value::Kind retType = DVK_ANY;
 	id += "_";
@@ -122,25 +122,25 @@ MAXIMA_ASSEMBLE_FN(Function) {
 		bool isOptional = false;
 		auto const argn = context.stream.current();
 		if (argn.type != Type::LTS_TT_IDENTIFIER)
-			MAXIMA_ERROR(InvalidValue, "Argument name must be an identifier!");
+			BREVE_ERROR(InvalidValue, "Argument name must be an identifier!");
 		auto const argID = argn.value.get<Makai::String>();
 		if (context.isReservedKeyword(argID))
-			MAXIMA_ERROR(InvalidValue, "Argument name cannot be a reserved keyword!");
+			BREVE_ERROR(InvalidValue, "Argument name cannot be a reserved keyword!");
 		if (!context.currentScope().contains(argID))
 			context.currentScope().addVariable(argID);
-		else MAXIMA_ERROR(InvalidValue, "Argument with this name already exists!");
+		else BREVE_ERROR(InvalidValue, "Argument with this name already exists!");
 		if (!context.stream.next())
-			MAXIMA_ERROR(NonexistentValue, "Malformed function argument list!");
+			BREVE_ERROR(NonexistentValue, "Malformed function argument list!");
 		if (context.stream.current().type != Type{':'})
-			MAXIMA_ERROR(InvalidValue, "Expected ':' here!");
+			BREVE_ERROR(InvalidValue, "Expected ':' here!");
 		if (!context.stream.next())
-			MAXIMA_ERROR(NonexistentValue, "Malformed function argument list!");
+			BREVE_ERROR(NonexistentValue, "Malformed function argument list!");
 		auto const argt = getType(context);
 		if (argt == CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)
-			MAXIMA_ERROR(InvalidValue, "Invalid argument type!");
+			BREVE_ERROR(InvalidValue, "Invalid argument type!");
 		auto& var = context.currentScope().members[argID].value;
 		if (!context.stream.next())
-			MAXIMA_ERROR(NonexistentValue, "Malformed function argument list!");
+			BREVE_ERROR(NonexistentValue, "Malformed function argument list!");
 		if (context.stream.current().type == Type{')'})
 			break;
 		if (context.stream.current().type == Type{'='}) {
@@ -157,23 +157,23 @@ MAXIMA_ASSEMBLE_FN(Function) {
 			var["type"] = arg["type"] = argname(argt);
 		}
 		if (inOptionalRegion && !isOptional)
-			MAXIMA_ERROR(NonexistentValue, "Missing value for optional argument!");
+			BREVE_ERROR(NonexistentValue, "Missing value for optional argument!");
 		if (context.stream.current().type != Type{','})
-			MAXIMA_ERROR(InvalidValue, "Expected ',' here!");
+			BREVE_ERROR(InvalidValue, "Expected ',' here!");
 	}
 	if (context.stream.current().type != Type{')'})
-		MAXIMA_ERROR(InvalidValue, "Expected ')' here!");
+		BREVE_ERROR(InvalidValue, "Expected ')' here!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed function!");
+		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	if (context.stream.current().type == Type{':'}) {
 		if (!context.stream.next())
-			MAXIMA_ERROR(NonexistentValue, "Malformed function!");
+			BREVE_ERROR(NonexistentValue, "Malformed function!");
 		retType = getType(context);
 		if (!context.stream.next())
-			MAXIMA_ERROR(NonexistentValue, "Malformed function!");
+			BREVE_ERROR(NonexistentValue, "Malformed function!");
 	}
 	if (context.stream.current().type != Type{'{'})
-		MAXIMA_ERROR(InvalidValue, "Expected '{' here!");
+		BREVE_ERROR(InvalidValue, "Expected '{' here!");
 	context.currentScope().result	= retType;
 	context.currentScope().label	= fid;
 	auto const baseName =
@@ -211,11 +211,11 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	if (!context.currentScope().contains(fid))
 		context.currentScope().addFunction(fid);
 	else if (context.currentScope().members[fid].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
-		MAXIMA_ERROR(InvalidValue, "Symbol with this name already exists!");
+		BREVE_ERROR(InvalidValue, "Symbol with this name already exists!");
 	auto& mem = context.currentScope().members[fid];
 	auto& overloads	= mem.value["overloads"];
 	if (overloads.contains(resolutionName))
-		MAXIMA_ERROR(InvalidValue, "Function with similar signature already exists!");
+		BREVE_ERROR(InvalidValue, "Function with similar signature already exists!");
 	auto& overload	= overloads[resolutionName];
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
@@ -225,7 +225,7 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	for (auto& opt: optionals) {
 		resolutionName += "_" + opt.key;
 		if (overloads.contains(resolutionName))
-			MAXIMA_ERROR(InvalidValue, "Function with similar signature already exists!");
+			BREVE_ERROR(InvalidValue, "Function with similar signature already exists!");
 		auto& overload	= overloads[resolutionName];
 		args[args.size()]		= opt.value;
 		overload["args"]		= args;
@@ -234,7 +234,7 @@ MAXIMA_ASSEMBLE_FN(Function) {
 	}
 }
 
-MAXIMA_ASSEMBLE_FN(Scope) {
+BREVE_ASSEMBLE_FN(Scope) {
 	while (context.stream.next()) {
 		auto const current = context.stream.current();
 		if (current.type == Type{'}'}) break; 
@@ -242,7 +242,7 @@ MAXIMA_ASSEMBLE_FN(Scope) {
 	}
 }
 
-MAXIMA_TYPED_ASSEMBLE_FN(ValueResolution) {
+BREVE_TYPED_ASSEMBLE_FN(ValueResolution) {
 	auto const current = context.stream.current();
 	switch (current.type) {
 		case LTS_TT_IDENTIFIER: {
@@ -289,7 +289,7 @@ MAXIMA_TYPED_ASSEMBLE_FN(ValueResolution) {
 		case LTS_TT_CHARACTER: 				return {Value::Kind::DVK_STRING,	Makai::toString("'", current.value.get<char>(), "'")	};
 		case LTS_TT_INTEGER:				return {Value::Kind::DVK_UNSIGNED,	current.value.toString()								};
 		case LTS_TT_REAL:					return {Value::Kind::DVK_REAL,		current.value.toString()								};
-		default: MAXIMA_ERROR(InvalidValue, "Invalid expression!");
+		default: BREVE_ERROR(InvalidValue, "Invalid expression!");
 	}
 }
 
@@ -316,12 +316,12 @@ constexpr Makai::String toTypeName(Value::Kind t) {
 	}
 }
 
-static Value::Kind handleTernary(Maxima::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
+static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
 	auto const result = stronger(ifTrue.key, ifFalse.key);
 	if (Value::isUndefined(cond.key))
-		MAXIMA_ERROR(InvalidValue, "Invalid condition type!");
+		BREVE_ERROR(InvalidValue, "Invalid condition type!");
 	if (!Value::isVerifiable(cond.key))
-		MAXIMA_ERROR(InvalidValue, "Condition must be a verifiable type!");
+		BREVE_ERROR(InvalidValue, "Condition must be a verifiable type!");
 	auto const trueJump		= context.scopePath() + "_ternary_true"		+ context.uniqueName();
 	auto const falseJump	= context.scopePath() + "_ternary_false"	+ context.uniqueName();
 	auto const endJump		= context.scopePath() + "_ternary_end"		+ context.uniqueName();
@@ -336,9 +336,9 @@ static Value::Kind handleTernary(Maxima::Context& context, Solution const& cond,
 	return result;
 }
 
-MAXIMA_TYPED_ASSEMBLE_FN(BinaryOperation) {
+BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed operation!");
+		BREVE_ERROR(NonexistentValue, "Malformed operation!");
 	auto lhs = doValueResolution(context);
 	usize stackUsage = 0;
 	if (lhs.value == ".") {
@@ -347,10 +347,10 @@ MAXIMA_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		++stackUsage;
 	}
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed operation!");
+		BREVE_ERROR(NonexistentValue, "Malformed operation!");
 	auto const opname = context.stream.current();
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed operation!");
+		BREVE_ERROR(NonexistentValue, "Malformed operation!");
 	auto rhs = doValueResolution(context);
 	if (rhs.value == ".") {
 		context.writeLine("push .");
@@ -359,46 +359,46 @@ MAXIMA_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	}
 	auto result = stronger(lhs.key, rhs.key);
 	if (Value::isUndefined(lhs.key) || Value::isUndefined(rhs.key))
-		MAXIMA_ERROR(InvalidValue, "Invalid operand types!");
+		BREVE_ERROR(InvalidValue, "Invalid operand types!");
 	switch (opname.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = opname.value.get<Makai::String>();
 			if (id == "as") {
 				if (!context.isCastable(rhs.key))
-					MAXIMA_ERROR(InvalidValue, "Casts can only happen to scalar types!");
+					BREVE_ERROR(InvalidValue, "Casts can only happen to scalar types!");
 				context.writeLine("cast ", lhs.value, " : ", toTypeName(rhs.key), " -> .");
 				result = rhs.key;
 			} else if (id == "if") {
 				if (!context.stream.next())
-					MAXIMA_ERROR(NonexistentValue, "Malformed operation!");
+					BREVE_ERROR(NonexistentValue, "Malformed operation!");
 				if (
 					context.stream.current().type != LTS_TT_IDENTIFIER
 				&&	context.stream.current().value.get<Makai::String>() != "else"
-				) MAXIMA_ERROR(InvalidValue, "Expected 'else' here!");
+				) BREVE_ERROR(InvalidValue, "Expected 'else' here!");
 				if (!context.stream.next())
-					MAXIMA_ERROR(NonexistentValue, "Malformed operation!");
+					BREVE_ERROR(NonexistentValue, "Malformed operation!");
 				auto const elseVal = doValueResolution(context);
 				result = handleTernary(context, lhs, rhs, elseVal);
-			} else MAXIMA_ERROR(InvalidValue, "Invalid/Unsupported operation!");
+			} else BREVE_ERROR(InvalidValue, "Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
 			if (Value::isNumber(result)) context.writeLine("calc ", lhs.value, " + ", rhs.value, " -> .");
 			else if (Value::isString(lhs.key) && Value::isString(rhs.key))
 				context.writeLine("str cat ", lhs.value, " (", rhs.value, ") -> .");
-			else MAXIMA_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
+			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		} break;
 		case Type{'/'}: {
 			if (Value::isNumber(result)) context.writeLine("calc ", lhs.value, " / ", rhs.value, " -> .");
 			else if (Value::isString(result)) 
 				context.writeLine("str sep ", lhs.value, " (", rhs.value, ") -> .");
-			else MAXIMA_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
+			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		};
 		case Type{'-'}:
 		case Type{'*'}:
 		case Type{'%'}: {
 			auto const opstr = Makai::toString(Makai::Cast::as<char>(opname.type));
 			if (Value::isNumber(result)) context.writeLine("calc ", lhs.value, " ", opstr, " -> .");
-			else MAXIMA_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
+			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		} break;
 		case Type::LTS_TT_COMPARE_EQUALS:
 		case Type::LTS_TT_COMPARE_LESS_EQUALS:
@@ -420,37 +420,37 @@ MAXIMA_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		} break;
 		case Type{'['}: {
 			if (!Value::isObject(lhs.key))
-				MAXIMA_ERROR(InvalidValue, "Left-hand side MUST be an object!");
+				BREVE_ERROR(InvalidValue, "Left-hand side MUST be an object!");
 			if (!Value::isString(rhs.key))
-				MAXIMA_ERROR(InvalidValue, "Right-hand side MUST be a string!");
+				BREVE_ERROR(InvalidValue, "Right-hand side MUST be a string!");
 			context.writeLine("get &[", lhs.value, "][&[", rhs.value, "]] -> .");
 			result = DVK_ANY;
 			if (!context.stream.next())
-				MAXIMA_ERROR(NonexistentValue, "Malformed operation!");
+				BREVE_ERROR(NonexistentValue, "Malformed operation!");
 			if (context.stream.current().type != Type{']'})
-				MAXIMA_ERROR(InvalidValue, "Expected ']' here!");
+				BREVE_ERROR(InvalidValue, "Expected ']' here!");
 			if (!context.stream.next())
-				MAXIMA_ERROR(NonexistentValue, "Malformed operation!");
+				BREVE_ERROR(NonexistentValue, "Malformed operation!");
 		} break;
 		case Type{'='}: {
 			if (lhs.key != rhs.key) {
 				if (context.isCastable(result)) {
 					context.writeLine("cast ", rhs.value, " : ", toTypeName(lhs.key), " -> .");
 					context.writeLine("copy . -> ", lhs.value);
-				} else MAXIMA_ERROR(InvalidValue, "Types are not convertible to each other!");
+				} else BREVE_ERROR(InvalidValue, "Types are not convertible to each other!");
 			}
 			context.writeLine("copy ", rhs.value, " -> ", lhs.value);
 		}
-		default: MAXIMA_ERROR(InvalidValue, "Invalid/Unsupported operation!");
+		default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported operation!");
 	}
 	if (context.stream.current().type != Type{')'})
-		MAXIMA_ERROR(InvalidValue, "Expected ')' here!");
+		BREVE_ERROR(InvalidValue, "Expected ')' here!");
 	for (usize i = 0; i < stackUsage; ++i)
 		context.writeLine("pop void");
 	return {result, "."};
 }
 
-MAXIMA_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
+BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
 	auto const id = context.stream.current().value.get<Makai::String>();
 	auto t = getType(context);
 	if (t != Value::Kind::DVK_VOID) return {t, ""};
@@ -463,10 +463,10 @@ MAXIMA_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
 	return {t, id};
 }
 
-using PreAssignFunction = Makai::Functor<void(Maxima::Context&, Solution&)>;
+using PreAssignFunction = Makai::Functor<void(Breve::Context&, Solution&)>;
 
 void doVarAssign(
-	Maxima::Context& context,
+	Breve::Context& context,
 	Makai::String const& id,
 	Value::Kind const& type,
 	bool const isGlobalVar = false,
@@ -476,7 +476,7 @@ void doVarAssign(
 	auto result = doValueResolution(context);
 	if (result.key != type) {
 		if (context.isCastable(result.key))
-			MAXIMA_ERROR(InvalidValue, "Invalid expression type for assignment!");
+			BREVE_ERROR(InvalidValue, "Invalid expression type for assignment!");
 		context.writeLine("cast ", result.value, " : ", toTypeName(type), " -> .");
 		result.value = ".";
 	}
@@ -484,20 +484,20 @@ void doVarAssign(
 		if (context.currentScope().contains(id)) {
 			auto const sym = context.currentScope().members[id];
 			if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
-				MAXIMA_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
+				BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
 			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
-				MAXIMA_ERROR(InvalidValue, "Global variable expression does not match its prevoius type!");
+				BREVE_ERROR(InvalidValue, "Global variable expression does not match its prevoius type!");
 		} else {
 			if (context.currentScope().contains(id))
-				MAXIMA_ERROR(InvalidValue, "Variable already exists in current scope!");
+				BREVE_ERROR(InvalidValue, "Variable already exists in current scope!");
 			else context.currentScope().addVariable(id, isGlobalVar);
 		}
 	} else {
 		if (!context.hasSymbol(id))
-			MAXIMA_ERROR(InvalidValue, "Variable does not exist in the current scope!");
+			BREVE_ERROR(InvalidValue, "Variable does not exist in the current scope!");
 		auto const sym = context.currentScope().members[id];
 		if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
-			MAXIMA_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
+			BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
 	}
 	auto const sym = context.symbol(id);
 	preassign(context, result);
@@ -507,9 +507,9 @@ void doVarAssign(
 	sym().value["init"] = true;
 }
 
-void doVarDecl(Maxima::Context& context, Makai::String const& id, bool const isGlobalVar = false) {
+void doVarDecl(Breve::Context& context, Makai::String const& id, bool const isGlobalVar = false) {
 	if (context.stream.current().type != Type{':'})
-		MAXIMA_ERROR(InvalidValue, "Expected ':' here!");
+		BREVE_ERROR(InvalidValue, "Expected ':' here!");
 	auto type = DVK_ANY;
 	switch (context.stream.current().type) {
 		case Type{':'}: {
@@ -520,42 +520,42 @@ void doVarDecl(Maxima::Context& context, Makai::String const& id, bool const isG
 		!context.stream.next()
 	) {
 		if (type == Value::Kind::DVK_VOID)
-			MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
+			BREVE_ERROR(NonexistentValue, "Malformed variable!");
 	}
 	if (context.stream.current().type == Type{'='}) {
 		if (!context.stream.next())
-			MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
+			BREVE_ERROR(NonexistentValue, "Malformed variable!");
 		doVarAssign(context, id, type, isGlobalVar, true);
 	}
 	if (context.stream.current().type != Type{';'})
-		MAXIMA_ERROR(InvalidValue, "Expected ';' here!");
+		BREVE_ERROR(InvalidValue, "Expected ';' here!");
 }
 
-MAXIMA_ASSEMBLE_FN(VarDecl) {
+BREVE_ASSEMBLE_FN(VarDecl) {
 	bool const isGlobalVar = context.stream.current().value.get<Makai::String>() == "global";
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
+		BREVE_ERROR(NonexistentValue, "Malformed variable!");
 	auto const varname = context.stream.current();
 	if (varname.type != LTS_TT_IDENTIFIER)
-		MAXIMA_ERROR(InvalidValue, "Variable name must be an identifier!");
+		BREVE_ERROR(InvalidValue, "Variable name must be an identifier!");
 	auto const id = varname.value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
-		MAXIMA_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
+		BREVE_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
+		BREVE_ERROR(NonexistentValue, "Malformed variable!");
 	if (isGlobalVar)
 		context.writePreamble("push null");
 	doVarDecl(context, id, isGlobalVar);
 }
 
-#define PREASSIGN [=] (Maxima::Context& context, Solution& result) -> void
+#define PREASSIGN [=] (Breve::Context& context, Solution& result) -> void
 
-MAXIMA_TYPED_ASSEMBLE_FN(Assignment) {
+BREVE_TYPED_ASSEMBLE_FN(Assignment) {
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
-		MAXIMA_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
+		BREVE_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
+		BREVE_ERROR(NonexistentValue, "Malformed variable!");
 	auto const current = context.stream.current();
 	PreAssignFunction pre;
 	switch (current.type) {
@@ -592,7 +592,7 @@ MAXIMA_TYPED_ASSEMBLE_FN(Assignment) {
 		} break;
 	}
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed assignment!");
+		BREVE_ERROR(NonexistentValue, "Malformed assignment!");
 	auto const sym = context.symbol(id);
 	auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym().value["type"]);
 	auto const accessor	= Makai::toString("&[", sym().value["stack_id"].get<uint64>(), "]");
@@ -600,19 +600,19 @@ MAXIMA_TYPED_ASSEMBLE_FN(Assignment) {
 	doVarAssign(context, id, varType, false, false, pre);
 }
 
-MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall) {
+BREVE_TYPED_ASSEMBLE_FN(FunctionCall) {
 	// TODO: This
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
-		MAXIMA_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
+		BREVE_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
 	if (!context.hasSymbol(id))
-		MAXIMA_ERROR(NonexistentValue, "Function does not exist!");
+		BREVE_ERROR(NonexistentValue, "Function does not exist!");
 	if (context.getSymbolByName(id).type != decltype(context.getSymbolByName(id).type)::AV2_TA_SMT_FUNCTION)
-		MAXIMA_ERROR(NonexistentValue, "Symbol was not declared a function!");
+		BREVE_ERROR(NonexistentValue, "Symbol was not declared a function!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed function call!");
+		BREVE_ERROR(NonexistentValue, "Malformed function call!");
 	if (context.stream.current().type != Type{'('})
-		MAXIMA_ERROR(InvalidValue, "Expected '(' here!");
+		BREVE_ERROR(InvalidValue, "Expected '(' here!");
 	usize pushes = 0;
 	Makai::List<Solution> args;
 	auto const start = context.currentScope().stackc + context.currentScope().varc;
@@ -627,42 +627,42 @@ MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall) {
 			++pushes;
 		}
 		if (!context.stream.next())
-			MAXIMA_ERROR(NonexistentValue, "Malformed function call!");
+			BREVE_ERROR(NonexistentValue, "Malformed function call!");
 		if (context.stream.current().type == Type{','})
-			MAXIMA_ERROR(InvalidValue, "Expected ',' here!");
+			BREVE_ERROR(InvalidValue, "Expected ',' here!");
 	}
 	if (context.stream.current().type != Type{')'})
-		MAXIMA_ERROR(InvalidValue, "Expected ')' here!");
+		BREVE_ERROR(InvalidValue, "Expected ')' here!");
 	Makai::String call = "( ";
 	for (auto const& [arg, index]: Makai::Range::expand(args))
 		call += Makai::toString(index, "=", arg.value) + " ";
 	call += ")";
 	auto const sym = context.symbol(id);
 	if (!sym().value["overloads"].contains(legalName))
-		MAXIMA_ERROR(InvalidValue, "Function overload does not exist!");
+		BREVE_ERROR(InvalidValue, "Function overload does not exist!");
 	context.writeLine("call " + sym().value["overloads"][legalName]["full_name"].get<Makai::String>() + call);
 }
 
-MAXIMA_ASSEMBLE_FN(Assembly) {
+BREVE_ASSEMBLE_FN(Assembly) {
 	if (context.currentScope().secure)
-		MAXIMA_ERROR(NonexistentValue, "Assembly is only allowed in a [fatal] context!");
+		BREVE_ERROR(NonexistentValue, "Assembly is only allowed in a [fatal] context!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed assembly!");
+		BREVE_ERROR(NonexistentValue, "Malformed assembly!");
 	if (context.stream.current().type != Type{'{'})
-		MAXIMA_ERROR(NonexistentValue, "Expected '{' here!");
+		BREVE_ERROR(NonexistentValue, "Expected '{' here!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed assembly!");
+		BREVE_ERROR(NonexistentValue, "Malformed assembly!");
 	while (context.stream.current().type != Type{'}'}) {
 		context.writeLine(context.stream.tokenText());
 		context.stream.next();
 	}
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed variable!");
+		BREVE_ERROR(NonexistentValue, "Malformed variable!");
 }
 
-MAXIMA_ASSEMBLE_FN(LooseContext) {
+BREVE_ASSEMBLE_FN(LooseContext) {
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed context declaration!");
+		BREVE_ERROR(NonexistentValue, "Malformed context declaration!");
 	context.startScope();
 	context.currentScope().secure = false;
 	doExpression(context);
@@ -670,48 +670,48 @@ MAXIMA_ASSEMBLE_FN(LooseContext) {
 	context.endScope();
 }
 
-MAXIMA_ASSEMBLE_FN(Return) {
+BREVE_ASSEMBLE_FN(Return) {
 	// TODO: This
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed return!");
+		BREVE_ERROR(NonexistentValue, "Malformed return!");
 	Solution result;
 	auto const expectedType = context.currentScope().result;
 	if (context.stream.current().type == Type{';'}) {
 		if (expectedType != Value::Kind::DVK_VOID)
-			MAXIMA_ERROR(NonexistentValue, "Missing return value!");
+			BREVE_ERROR(NonexistentValue, "Missing return value!");
 	} else {
 		if (expectedType == Value::Kind::DVK_VOID)
-			MAXIMA_ERROR(InvalidValue, "Function does not return a value!");
+			BREVE_ERROR(InvalidValue, "Function does not return a value!");
 		result = doValueResolution(context);
 		if (
 			result.key != expectedType
 		&&	!Value::isNumber(stronger(result.key, expectedType))
-		) MAXIMA_ERROR(InvalidValue, "Return type does not match!");
+		) BREVE_ERROR(InvalidValue, "Return type does not match!");
 	}
 }
 
-MAXIMA_ASSEMBLE_FN(Main) {
+BREVE_ASSEMBLE_FN(Main) {
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed main!");
+		BREVE_ERROR(NonexistentValue, "Malformed main!");
 	if (context.hasMain)
-		MAXIMA_ERROR(NonexistentValue, "Only one entrypoint is allowed!");
+		BREVE_ERROR(NonexistentValue, "Only one entrypoint is allowed!");
 	if (context.scope.size() > 1)
-		MAXIMA_ERROR(NonexistentValue, "Main can only be declared on the global scope!");
+		BREVE_ERROR(NonexistentValue, "Main can only be declared on the global scope!");
 	context.hasMain = true;
 	if (context.stream.current().type != Type{'{'})
-		MAXIMA_ERROR(InvalidValue, "Expected '{' here!");
+		BREVE_ERROR(InvalidValue, "Expected '{' here!");
 	if (!context.stream.next())
-		MAXIMA_ERROR(NonexistentValue, "Malformed main!");
+		BREVE_ERROR(NonexistentValue, "Malformed main!");
 	context.writeLine("__main:");
 	context.startScope();
 	doScope(context);
 	context.endScope();
 	context.writeLine("halt");
 	if (context.stream.current().type != Type{'}'})
-		MAXIMA_ERROR(InvalidValue, "Expected '}' here!");
+		BREVE_ERROR(InvalidValue, "Expected '}' here!");
 }
 
-MAXIMA_ASSEMBLE_FN(Expression) {
+BREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
 		case LTS_TT_IDENTIFIER: {
@@ -731,33 +731,33 @@ MAXIMA_ASSEMBLE_FN(Expression) {
 				switch (sym().type) {
 					case decltype(sym().type)::AV2_TA_SMT_FUNCTION: doFunctionCall(context);
 					case decltype(sym().type)::AV2_TA_SMT_VARIABLE: doAssignment(context);
-					default: MAXIMA_ERROR(InvalidValue, "Invalid/Unsupported expression!");
+					default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
 				}
 			}
-			else MAXIMA_ERROR(InvalidValue, "Invalid/Unsupported expression!");
+			else BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
 		}
 		case Type{'{'}: {
 			if (!context.stream.next())
-				MAXIMA_ERROR(NonexistentValue, "Malformed expression!");
+				BREVE_ERROR(NonexistentValue, "Malformed expression!");
 			context.startScope();
 			doScope(context);
 			context.endScope();
 		}
 		case Type{'}'}:
 		case Type{';'}: break;
-		default: MAXIMA_ERROR(InvalidValue, "Invalid expression!");
+		default: BREVE_ERROR(InvalidValue, "Invalid expression!");
 	}
 	if (context.stream.current().type != Type{';'} || context.stream.current().type != Type{'}'})
-		MAXIMA_ERROR(InvalidValue, "Expected closure here!");
+		BREVE_ERROR(InvalidValue, "Expected closure here!");
 }
 
-void Maxima::assemble() {
+void Breve::assemble() {
 	context.writeLine("jump __main");
 	context.startScope();
 	while (context.stream.next()) doExpression(context);
 	context.endScope();
 	if (!context.hasMain)
-		MAXIMA_ERROR(NonexistentValue, "Missing main entrypoint!");
+		BREVE_ERROR(NonexistentValue, "Missing main entrypoint!");
 }
 
 CTL_DIAGBLOCK_END
