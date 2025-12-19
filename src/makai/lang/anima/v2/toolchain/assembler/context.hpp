@@ -50,6 +50,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			uint64				entry	= 0;
 			Data::Value::Kind	result	= Data::Value::Kind::DVK_UNDEFINED;
 			bool				secure	= true;
+			bool				isFunc	= true;
 			String				name;
 			String				label;
 			uint64				varc	= 0;
@@ -160,6 +161,28 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			writeLine(sc.pre, sc.code, sc.post);
 		}
 
+		constexpr void addFunctionExit() {
+			uint64 varc = 0;
+			for (auto& sc: Range::reverse(scope))
+				if (sc.isFunc) {
+					varc = sc.varc;
+					break;
+				}
+			writeLine("clear ", varc);
+		}
+
+		constexpr bool inFunction() const {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.isFunc) return true;
+			return false;
+		}
+
+		constexpr Scope& functionScope() {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.isFunc) return sc;
+			throw Error::FailedAction("Not in function scope!");
+		}
+
 		constexpr bool hasSymbol(String const& name) const {
 			for (auto const& sc: scope)
 				if (sc.contains(name)) return true;
@@ -187,21 +210,21 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <class... Args>
 		constexpr void writeLine(Args const&... args) {
 			auto& content = scope.empty() ? ir : currentScope().code;
-			content += toString(args..., "\n");
+			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
 		constexpr void writePreamble(Args const&... args) {
 			if (scope.empty()) return;
 			auto& content = currentScope().pre;
-			content += toString(args..., "\n");
+			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
 		constexpr void writePostscript(Args const&... args) {
 			if (scope.empty()) return;
 			auto& content = currentScope().post;
-			content = toString(args..., "\n") + content;
+			content = toString(toString(args, " ")..., "\n") + content;
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {

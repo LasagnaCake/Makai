@@ -325,14 +325,14 @@ static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, 
 	auto const trueJump		= context.scopePath() + "_ternary_true"		+ context.uniqueName();
 	auto const falseJump	= context.scopePath() + "_ternary_false"	+ context.uniqueName();
 	auto const endJump		= context.scopePath() + "_ternary_end"		+ context.uniqueName();
-	context.writeLine("jump if is " + cond.value + " " + trueJump);
-	context.writeLine("jump if not " + cond.value + " " + falseJump);
+	context.writeLine("jump if is", cond.value, trueJump);
+	context.writeLine("jump if not", cond.value, falseJump);
 	context.writeLine(trueJump + ":");
-	context.writeLine("copy " + ifTrue.value + "-> .");
-	context.writeLine("jump " + endJump);
+	context.writeLine("copy", ifTrue.value, "-> .");
+	context.writeLine("jump", endJump);
 	context.writeLine(falseJump + ":");
-	context.writeLine("copy " + ifFalse.value + "-> .");
-	context.writeLine("jump " + endJump);
+	context.writeLine("copy", ifFalse.value, "-> .");
+	context.writeLine("jump", endJump);
 	return result;
 }
 
@@ -366,7 +366,7 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			if (id == "as") {
 				if (!context.isCastable(rhs.key))
 					BREVE_ERROR(InvalidValue, "Casts can only happen to scalar types!");
-				context.writeLine("cast ", lhs.value, " : ", toTypeName(rhs.key), " -> .");
+				context.writeLine("cast", lhs.value, ":", toTypeName(rhs.key), "-> .");
 				result = rhs.key;
 			} else if (id == "if") {
 				if (!context.stream.next())
@@ -382,22 +382,22 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			} else BREVE_ERROR(InvalidValue, "Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
-			if (Value::isNumber(result)) context.writeLine("calc ", lhs.value, " + ", rhs.value, " -> .");
+			if (Value::isNumber(result)) context.writeLine("calc", lhs.value, "+", rhs.value, "-> .");
 			else if (Value::isString(lhs.key) && Value::isString(rhs.key))
-				context.writeLine("str cat ", lhs.value, " (", rhs.value, ") -> .");
+				context.writeLine("str cat", lhs.value, "(", rhs.value, ") -> .");
 			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		} break;
 		case Type{'/'}: {
-			if (Value::isNumber(result)) context.writeLine("calc ", lhs.value, " / ", rhs.value, " -> .");
+			if (Value::isNumber(result)) context.writeLine("calc", lhs.value, "/", rhs.value, "-> .");
 			else if (Value::isString(result)) 
-				context.writeLine("str sep ", lhs.value, " (", rhs.value, ") -> .");
+				context.writeLine("str sep", lhs.value, "(", rhs.value, ") -> .");
 			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		};
 		case Type{'-'}:
 		case Type{'*'}:
 		case Type{'%'}: {
 			auto const opstr = Makai::toString(Makai::Cast::as<char>(opname.type));
-			if (Value::isNumber(result)) context.writeLine("calc ", lhs.value, " ", opstr, " -> .");
+			if (Value::isNumber(result)) context.writeLine("calc", lhs.value, opstr, "-> .");
 			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		} break;
 		case Type::LTS_TT_COMPARE_EQUALS:
@@ -435,11 +435,11 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		case Type{'='}: {
 			if (lhs.key != rhs.key) {
 				if (context.isCastable(result)) {
-					context.writeLine("cast ", rhs.value, " : ", toTypeName(lhs.key), " -> .");
-					context.writeLine("copy . -> ", lhs.value);
+					context.writeLine("cast", rhs.value, ":", toTypeName(lhs.key), "-> .");
+					context.writeLine("copy . ->", lhs.value);
 				} else BREVE_ERROR(InvalidValue, "Types are not convertible to each other!");
 			}
-			context.writeLine("copy ", rhs.value, " -> ", lhs.value);
+			context.writeLine("copy", rhs.value, "->", lhs.value);
 		}
 		default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported operation!");
 	}
@@ -477,7 +477,7 @@ void doVarAssign(
 	if (result.key != type) {
 		if (context.isCastable(result.key))
 			BREVE_ERROR(InvalidValue, "Invalid expression type for assignment!");
-		context.writeLine("cast ", result.value, " : ", toTypeName(type), " -> .");
+		context.writeLine("cast", result.value, ":", toTypeName(type), "-> .");
 		result.value = ".";
 	}
 	if (isNewVar) {
@@ -502,8 +502,8 @@ void doVarAssign(
 	auto const sym = context.symbol(id);
 	preassign(context, result);
 	if (isGlobalVar)
-		context.writeLine("copy ", result.value, " -> :", id);
-	else context.writeLine("copy ", result.value, " -> &[", sym().value["stack_id"].get<uint64>(), "]");
+		context.writeLine("copy", result.value, "-> :", id);
+	else context.writeLine("copy", result.value, "-> &[", sym().value["stack_id"].get<uint64>(), "]");
 	sym().value["init"] = true;
 }
 
@@ -586,7 +586,7 @@ BREVE_TYPED_ASSEMBLE_FN(Assignment) {
 				case LTS_TT_MOD_ASSIGN: operation = " % "; break;
 			}
 			pre = PREASSIGN {
-				context.writeLine("calc ", accessor, operation, result.value, " -> .");
+				context.writeLine("calc", accessor, operation, result.value, "-> .");
 				result.value = ".";
 			};
 		} break;
@@ -640,7 +640,7 @@ BREVE_TYPED_ASSEMBLE_FN(FunctionCall) {
 	auto const sym = context.symbol(id);
 	if (!sym().value["overloads"].contains(legalName))
 		BREVE_ERROR(InvalidValue, "Function overload does not exist!");
-	context.writeLine("call " + sym().value["overloads"][legalName]["full_name"].get<Makai::String>() + call);
+	context.writeLine("call", sym().value["overloads"][legalName]["full_name"].get<Makai::String>(), call);
 }
 
 BREVE_ASSEMBLE_FN(Assembly) {
@@ -674,8 +674,10 @@ BREVE_ASSEMBLE_FN(Return) {
 	// TODO: This
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed return!");
+	if (!context.inFunction())
+		BREVE_ERROR(InvalidValue, "Returns can only be used in a function scope!\nFor other cases, use 'terminate' or 'error'.");
 	Solution result;
-	auto const expectedType = context.currentScope().result;
+	auto const expectedType = context.functionScope().result;
 	if (context.stream.current().type == Type{';'}) {
 		if (expectedType != Value::Kind::DVK_VOID)
 			BREVE_ERROR(NonexistentValue, "Missing return value!");
@@ -688,6 +690,10 @@ BREVE_ASSEMBLE_FN(Return) {
 		&&	!Value::isNumber(stronger(result.key, expectedType))
 		) BREVE_ERROR(InvalidValue, "Return type does not match!");
 	}
+	context.addFunctionExit();
+	if (expectedType == Value::Kind::DVK_VOID)
+		context.writeLine("end");
+	else context.writeLine("ret", result.value);
 }
 
 BREVE_ASSEMBLE_FN(Main) {
