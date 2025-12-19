@@ -856,6 +856,8 @@ MINIMA_ASSEMBLE_FN(UnaryMath) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = op.value.get<Makai::String>();
 			if (id == "negate" || id == "neg")			umath.op = decltype(umath.op)::AV2_IUM_OP_NEGATE;
+			else if (id == "increment" || id == "inc")	umath.op = decltype(umath.op)::AV2_IUM_OP_INCREMENT;
+			else if (id == "decrement" || id == "dec")	umath.op = decltype(umath.op)::AV2_IUM_OP_DECREMENT;
 			else if (id == "inverse" || id == "inv")	umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE;
 			else if (id == "sin")						umath.op = decltype(umath.op)::AV2_IUM_OP_SIN;
 			else if (id == "cos")						umath.op = decltype(umath.op)::AV2_IUM_OP_COS;
@@ -872,6 +874,8 @@ MINIMA_ASSEMBLE_FN(UnaryMath) {
 			else if (id == "sqrt")						umath.op = decltype(umath.op)::AV2_IUM_OP_SQRT;
 			else MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
 		} break;
+		case LTS_TT_DECREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_DECREMENT;
+		case LTS_TT_INCREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_INCREMENT;
 		case Type{'-'}: umath.op = decltype(umath.op)::AV2_IUM_OP_NEGATE;
 		case Type{'/'}: umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE;
 		default: MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");

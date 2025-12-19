@@ -36,6 +36,11 @@ CTL_DIAGBLOCK_IGNORE_SWITCH
 MAXIMA_ASSEMBLE_FN(Scope);
 MAXIMA_ASSEMBLE_FN(Expression);
 MAXIMA_ASSEMBLE_FN(Return);
+MAXIMA_ASSEMBLE_FN(Conditional);
+MAXIMA_ASSEMBLE_FN(ForLoop);
+MAXIMA_ASSEMBLE_FN(WhileLoop);
+MAXIMA_ASSEMBLE_FN(RepeatLoop);
+MAXIMA_ASSEMBLE_FN(DoLoop);
 MAXIMA_TYPED_ASSEMBLE_FN(FunctionCall);
 MAXIMA_TYPED_ASSEMBLE_FN(Assignment);
 MAXIMA_TYPED_ASSEMBLE_FN(ReservedValueResolution);
@@ -268,6 +273,21 @@ MAXIMA_TYPED_ASSEMBLE_FN(ValueResolution) {
 		case Type{'('}: {
 			return doBinaryOperation(context);
 		} break;
+		case Type{'-'}:
+		case Type{'+'}: {
+			auto const negative = current.type == Type{'-'};
+			// TODO: this
+		} break;
+		case LTS_TT_DECREMENT:
+		case LTS_TT_INCREMENT: {
+			auto const negative = current.type == LTS_TT_DECREMENT;
+			// TODO: this
+		} break;
+		case LTS_TT_SINGLE_QUOTE_STRING: 
+		case LTS_TT_DOUBLE_QUOTE_STRING:	return {Value::Kind::DVK_STRING,	current.value.toString()								};
+		case LTS_TT_CHARACTER: 				return {Value::Kind::DVK_STRING,	Makai::toString("'", current.value.get<char>(), "'")	};
+		case LTS_TT_INTEGER:				return {Value::Kind::DVK_UNSIGNED,	current.value.toString()								};
+		case LTS_TT_REAL:					return {Value::Kind::DVK_REAL,		current.value.toString()								};
 		default: MAXIMA_ERROR(InvalidValue, "Invalid expression!");
 	}
 }

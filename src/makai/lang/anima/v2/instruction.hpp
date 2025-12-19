@@ -210,6 +210,8 @@ namespace Makai::Anima::V2 {
 		struct [[gnu::aligned(4)]] UnaryMath {
 			enum class Operation: uint8 {
 				AV2_IUM_OP_NEGATE,
+				AV2_IUM_OP_INCREMENT,
+				AV2_IUM_OP_DECREMENT,
 				AV2_IUM_OP_INVERSE,
 				AV2_IUM_OP_SIN,
 				AV2_IUM_OP_COS,
