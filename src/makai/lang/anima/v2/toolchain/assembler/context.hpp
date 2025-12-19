@@ -55,6 +55,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			uint64				varc	= 0;
 			uint64				stackc	= 0;
 			Dictionary<Member>	members;
+			String				pre;
+			String				code;
+			String				post;
 		};
 
 		struct Jumps {
@@ -153,7 +156,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr void endScope() {
 			if (scope.empty()) return;
-			scope.popBack();
+			auto const sc = scope.popBack();
+			writeLine(sc.pre, sc.code, sc.post);
 		}
 
 		constexpr bool hasSymbol(String const& name) const {
@@ -182,7 +186,22 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		template <class... Args>
 		constexpr void writeLine(Args const&... args) {
-			ir += toString(args..., "\n");
+			auto& content = scope.empty() ? ir : currentScope().code;
+			content += toString(args..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writePreamble(Args const&... args) {
+			if (scope.empty()) return;
+			auto& content = currentScope().pre;
+			content += toString(args..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writePostscript(Args const&... args) {
+			if (scope.empty()) return;
+			auto& content = currentScope().post;
+			content = toString(args..., "\n") + content;
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {
