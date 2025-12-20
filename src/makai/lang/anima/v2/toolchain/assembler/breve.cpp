@@ -792,12 +792,19 @@ BREVE_ASSEMBLE_FN(Conditional) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
 	auto const scopeName = context.scopePath() + context.uniqueName() + "_if";
+	auto const ifTrue	= scopeName + "_true";
+	auto const ifFalse	= scopeName + "_false";
+	auto const endIf	= scopeName + "_end";
 	auto const val = doValueResolution(context);
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+	context.writeLine("jump if true", val.value, ifTrue);
+	context.writeLine("jump if false", val.value, ifFalse);
+	context.writeLine(ifTrue, ":");
 	context.startScope();
 	doExpression(context);
 	context.endScope();
+	context.writeLine("jump", endIf);
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
 	if (context.stream.current().type == LTS_TT_IDENTIFIER) {
@@ -805,11 +812,15 @@ BREVE_ASSEMBLE_FN(Conditional) {
 		if (id == "else") {
 			if (!context.stream.next())
 				BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+			context.writeLine(ifFalse, ":");
 			context.startScope();
 			doExpression(context);
 			context.endScope();
+			context.writeLine("jump", endIf);
 		} else doExpression(context);
 	}
+	context.writeLine(endIf, ":");
+	context.writeLine("next");
 }
 
 BREVE_ASSEMBLE_FN(ForLoop) {}
