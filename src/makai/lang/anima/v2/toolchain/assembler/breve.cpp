@@ -33,6 +33,7 @@ template <class T>
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
+BREVE_ASSEMBLE_FN(Module);
 BREVE_ASSEMBLE_FN(Scope);
 BREVE_ASSEMBLE_FN(Expression);
 BREVE_ASSEMBLE_FN(Return);
@@ -387,8 +388,8 @@ static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, 
 	auto const trueJump		= context.scopePath() + "_ternary_true"		+ context.uniqueName();
 	auto const falseJump	= context.scopePath() + "_ternary_false"	+ context.uniqueName();
 	auto const endJump		= context.scopePath() + "_ternary_end"		+ context.uniqueName();
-	context.writeLine("jump if is", cond.value, trueJump);
-	context.writeLine("jump if not", cond.value, falseJump);
+	context.writeLine("jump if true", cond.value, trueJump);
+	context.writeLine("jump if false", cond.value, falseJump);
 	context.writeLine(trueJump + ":");
 	context.writeLine("copy", ifTrue.value, "-> .");
 	context.writeLine("jump", endJump);
@@ -778,12 +779,10 @@ BREVE_ASSEMBLE_FN(Main) {
 		BREVE_ERROR(InvalidValue, "Expected '{' here!");
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed main!");
-	context.writeLine(context.mainScope, ":");
+	context.writeLine(context.main.entryPoint, ":");
 	context.startScope();
 	doScope(context);
 	context.endScope();
-	context.writeLine("flush");
-	context.writeLine("halt");
 	if (context.stream.current().type != Type{'}'})
 		BREVE_ERROR(InvalidValue, "Expected '}' here!");
 }
@@ -875,6 +874,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 			if (id == "function" || id == "func" || id == "fn")	doFunction(context);
 			else if (id == "external" || id == "out")			doExternal(context);
 			else if (id == "internal" || id == "in")			doInternal(context);
+			else if (id == "export" || id == "import")			doModule(context);
 			else if (id == "global" || id == "local")			doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
 			else if (id == "fatal")								doLooseContext(context);
@@ -921,11 +921,16 @@ BREVE_ASSEMBLE_FN(Expression) {
 }
 
 void Breve::assemble() {
-	context.startScope();
-	context.writeLine("jump", context.mainScope);
+	context.writeGlobalPreamble("call", context.main.pre, "()");
+	context.writeGlobalPreamble("call", context.main.entryPoint, "()");
+	context.writeGlobalPreamble("call", context.main.post, "()");
+	context.writeGlobalPreamble("clear");
+	context.writeGlobalPreamble("halt");
+	context.writeMainPreamble(context.main.preEntryPoint, ":");
+	context.writeMainPostscript(context.main.postEntryPoint, ":");
 	while (context.stream.next()) doExpression(context);
-	context.writeLine("halt");
-	context.endScope();
+	context.writeMainPreamble("end");
+	context.writeMainPostscript("end");
 	if (!context.hasMain)
 		BREVE_ERROR(NonexistentValue, "Missing main entrypoint!");
 }

@@ -46,6 +46,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				members[name] = {Member::Type::AV2_TA_SMT_FUNCTION};
 				return;
 			}
+
+			String compose() const {
+				return pre + code + post;
+			}
 			
 			uint64				entry	= 0;
 			Data::Value::Kind	result	= Data::Value::Kind::DVK_UNDEFINED;
@@ -149,6 +153,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr Scope& currentScope() {
+			if (scope.empty()) return global;
 			return scope.back();
 		}
 
@@ -159,8 +164,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr void endScope() {
 			if (scope.empty()) return;
-			auto const sc = scope.popBack();
-			writeLine(sc.pre, sc.code, sc.post);
+			writeLine(scope.popBack().compose());
 		}
 
 		constexpr void addFunctionExit() {
@@ -212,19 +216,31 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		template <class... Args>
 		constexpr void writeGlobalLine(Args const&... args) {
-			auto& content = code;
+			auto& content = global.code;
 			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
 		constexpr void writeGlobalPreamble(Args const&... args) {
-			auto& content = pre;
+			auto& content = main.pre;
+			content += toString(toString(args, " ")..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writeMainPostscript(Args const&... args) {
+			auto& content = main.post;
+			content += toString(toString(args, " ")..., "\n") + content;
+		}
+
+		template <class... Args>
+		constexpr void writeMainPreamble(Args const&... args) {
+			auto& content = global.pre;
 			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
 		constexpr void writeGlobalPostscript(Args const&... args) {
-			auto& content = post;
+			auto& content = global.post;
 			content += toString(toString(args, " ")..., "\n") + content;
 		}
 
@@ -266,8 +282,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		
 		template <class... Args>
 		constexpr void writeAdaptive(Args const&... args) {
-			if (scope.size() > 1)	writeLine(args...);
-			else					writePreamble(args...);
+			if (scope.size())	writeLine(args...);
+			else				writeMainPreamble(args...);
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {
@@ -275,11 +291,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		inline String uniqueName() {
-			return Makai::toString("_", code.size(), "_", rng.integer(), "_", Random::CTPRNG<uint64>);
+			return Makai::toString("_", currentScope().code.size(), "_", rng.integer(), "_", Random::CTPRNG<uint64>);
 		}
 
-		constexpr String intermediate() const {
-			return pre + code + post;
+		constexpr String compose() const {
+			return global.compose() + main.pre + main.post;
 		}
 
 		constexpr static bool isReservedKeyword(String const& name) {
@@ -317,15 +333,30 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return false;
 		}
 
+		Scope					global;
+
 		List<Scope>				scope;
 		Jumps					jumps;
 		TokenStream				stream;
 		Program					program;
 		String					fileName;
-		String					pre, code, post;
 		Random::SecureGenerator	rng;
+		
 		bool					hasMain		= false;
-		String const			mainScope	= "__main" + uniqueName();
+
+		struct SegmentedScope {
+			String	preEntryPoint;
+			String	entryPoint;
+			String	postEntryPoint;
+			String	pre;
+			String	post;
+		};
+
+		SegmentedScope main {
+			"__pre"		+ uniqueName(),
+			"__post"	+ uniqueName(),
+			"__main"	+ uniqueName()
+		};
 	};
 }
 
