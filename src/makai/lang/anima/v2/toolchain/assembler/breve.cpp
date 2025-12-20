@@ -110,7 +110,7 @@ struct Prototype {
 	Makai::String	entryPoint;
 };
 
-static Prototype doFunctionPrototype (Context& context, bool const isExtern = false) {
+static Prototype doFunctionPrototype(Context& context, bool const isExtern = false) {
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
 		BREVE_ERROR(InvalidValue, "Function name must be an identifier!");
@@ -236,7 +236,7 @@ static Prototype doFunctionPrototype (Context& context, bool const isExtern = fa
 }
 
 BREVE_ASSEMBLE_FN(Function) {
-	context.startScope();
+	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed function!");
 	auto const proto = doFunctionPrototype(context, false);
@@ -745,26 +745,30 @@ BREVE_ASSEMBLE_FN(Return) {
 	// TODO: This
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed return!");
-	if (!context.inFunction())
-		BREVE_ERROR(InvalidValue, "Returns can only be used in a function scope!\nFor other cases, use 'terminate' or 'error'.");
-	Solution result;
-	auto const expectedType = context.functionScope().result;
-	if (context.stream.current().type == Type{';'}) {
-		if (expectedType != Value::Kind::DVK_VOID)
-			BREVE_ERROR(NonexistentValue, "Missing return value!");
-	} else {
+	Solution result = {Value::Kind::DVK_VOID};
+	if (context.inFunction()) {
+		auto const expectedType = context.functionScope().result;
+		if (context.stream.current().type == Type{';'}) {
+			if (expectedType != Value::Kind::DVK_VOID)
+				BREVE_ERROR(NonexistentValue, "Missing return value!");
+		} else {
+			if (expectedType == Value::Kind::DVK_VOID)
+				BREVE_ERROR(InvalidValue, "Function does not return a value!");
+			result = doValueResolution(context);
+			if (
+				result.key != expectedType
+			&&	!Value::isNumber(stronger(result.key, expectedType))
+			) BREVE_ERROR(InvalidValue, "Return type does not match!");
+		}
+		context.addFunctionExit();
 		if (expectedType == Value::Kind::DVK_VOID)
-			BREVE_ERROR(InvalidValue, "Function does not return a value!");
-		result = doValueResolution(context);
-		if (
-			result.key != expectedType
-		&&	!Value::isNumber(stronger(result.key, expectedType))
-		) BREVE_ERROR(InvalidValue, "Return type does not match!");
+			context.writeLine("end");
+		else context.writeLine("ret", result.value);
+	} else {
+		if (context.stream.current().type != Type{';'})
+			BREVE_ERROR(InvalidValue, "Expected ';' here!");
+		context.writeLine("halt");
 	}
-	context.addFunctionExit();
-	if (expectedType == Value::Kind::DVK_VOID)
-		context.writeLine("end");
-	else context.writeLine("ret", result.value);
 }
 
 BREVE_ASSEMBLE_FN(Main) {
