@@ -291,7 +291,6 @@ BREVE_ASSEMBLE_FN(External) {
 BREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed print!");
-	// TODO: This
 	auto const v = doValueResolution(context);
 	context.writeLine("push", v.value);
 	context.writeLine("call in print");
@@ -811,6 +810,35 @@ BREVE_ASSEMBLE_FN(Conditional) {
 			context.endScope();
 		} else doExpression(context);
 	}
+}
+
+BREVE_ASSEMBLE_FN(ForLoop) {}
+
+BREVE_ASSEMBLE_FN(RepeatLoop) {}
+
+BREVE_ASSEMBLE_FN(DoLoop) {}
+
+BREVE_ASSEMBLE_FN(Terminate) {}
+
+BREVE_ASSEMBLE_FN(Error) {}
+
+BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
+	auto const current = context.stream.current();
+	switch (current.type) {
+		case Type{'-'}: {
+			
+		} break;
+		case Type{'+'}: {
+
+		} break;
+		case LTS_TT_DECREMENT: {
+
+		} break;
+		case LTS_TT_INCREMENT: {
+
+		} break;
+	}
+	return {};
 }
 
 BREVE_ASSEMBLE_FN(Expression) {
