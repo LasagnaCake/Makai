@@ -363,7 +363,7 @@ MINIMA_ASSEMBLE_FN(Jump) {
 MINIMA_ASSEMBLE_FN(NoOp) {
 	context.program.code.pushBack({
 		Instruction::Name::AV2_IN_NO_OP,
-		0
+		context.stream.current().value == Makai::Data::Value("next")
 	});
 }
 
@@ -1172,7 +1172,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 	if (current.type == LTS_TT_IDENTIFIER) {
 		auto const id = current.value.get<Makai::String>();
 		if (id == "jump" || id == "go")									doJump(context);
-		else if (id == "nop")											doNoOp(context);
+		else if (id == "nop" || id == "next")							doNoOp(context);
 		else if (id == "swap")											doStackSwap(context);
 		else if (id == "flush")											doStackFlush(context);
 		else if (id == "push")											doStackPush(context);
