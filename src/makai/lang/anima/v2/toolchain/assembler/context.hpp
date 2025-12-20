@@ -344,6 +344,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (name == "temporary" || name == "register")					return true;
 			if (name == "minima" || name == "asm")							return true;
 			if (name == "await" || name == "async" || name == "yield")		return true;
+			if (name == "export" || name == "inmort")						return true;
+			if (name == "main")												return true;
 			return false;
 		}
 
