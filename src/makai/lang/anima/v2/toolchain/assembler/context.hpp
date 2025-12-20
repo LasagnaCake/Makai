@@ -11,6 +11,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		using Program		= Runtime::Program;
 
 		struct Scope {
+			enum class Type {
+				AV2_TA_ST_NORMAL,
+				AV2_TA_ST_FUNCTION,
+				AV2_TA_ST_SWITCH,
+				AV2_TA_ST_LOOP,
+			};
+
 			struct Member {
 				enum class Type {
 					AV2_TA_SMT_VARIABLE,
@@ -54,7 +61,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			uint64				entry	= 0;
 			Data::Value::Kind	result	= Data::Value::Kind::DVK_UNDEFINED;
 			bool				secure	= true;
-			bool				isFunc	= true;
+			Type				type	= Type::AV2_TA_ST_NORMAL;
 			String				name;
 			String				label;
 			uint64				varc	= 0;
@@ -146,10 +153,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return i;
 		}
 
-		constexpr void startScope() {
+		constexpr void startScope(Scope::Type const type = Scope::Type::AV2_TA_ST_NORMAL) {
 			if (scope.size())
 				scope.pushBack({.stackc = currentScope().varc});
 			else scope.pushBack({});
+			scope.back().type = type;
 		}
 
 		constexpr Scope& currentScope() {
@@ -170,7 +178,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		constexpr void addFunctionExit() {
 			uint64 varc = 0;
 			for (auto& sc: Range::reverse(scope))
-				if (sc.isFunc) {
+				if (sc.type == Scope::Type::AV2_TA_ST_FUNCTION) {
 					varc = sc.varc;
 					break;
 				}
@@ -180,13 +188,19 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr bool inFunction() const {
 			for (auto& sc: Range::reverse(scope))
-				if (sc.isFunc) return true;
+				if (sc.type == Scope::Type::AV2_TA_ST_FUNCTION) return true;
+			return false;
+		}
+
+		constexpr bool inGlobalScope() const {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.type == Scope::Type::AV2_TA_ST_FUNCTION) return true;
 			return false;
 		}
 
 		constexpr Scope& functionScope() {
 			for (auto& sc: Range::reverse(scope))
-				if (sc.isFunc) return sc;
+				if (sc.type == Scope::Type::AV2_TA_ST_FUNCTION) return sc;
 			throw Error::FailedAction("Not in function scope!");
 		}
 
