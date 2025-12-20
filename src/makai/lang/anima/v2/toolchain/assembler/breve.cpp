@@ -824,21 +824,36 @@ BREVE_ASSEMBLE_FN(Error) {}
 
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 	auto const current = context.stream.current();
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed unary value!");
+	auto result = doValueResolution(context);
 	switch (current.type) {
 		case Type{'-'}: {
-			
+			if (!Value::isNumber(result.key))
+				BREVE_ERROR(NonexistentValue, "Negation can only happen on numbers!");
+			context.writeLine("umath -", result.value, "-> .");
+			result.value = ".";
 		} break;
 		case Type{'+'}: {
-
+			if (!Value::isNumber(result.key))
+				BREVE_ERROR(NonexistentValue, "Positration can only happen on numbers!");
+			context.writeLine("copy", result.value, "-> .");
+			result.value = ".";
 		} break;
 		case LTS_TT_DECREMENT: {
-
+			if (!Value::isNumber(result.key))
+				BREVE_ERROR(NonexistentValue, "Incrementation can only happen on numbers!");
+			context.writeLine("umath inc", result.value, "-> .");
+			result.value = ".";
 		} break;
 		case LTS_TT_INCREMENT: {
-
+			if (!Value::isNumber(result.key))
+				BREVE_ERROR(NonexistentValue, "Decrementation can only happen on numbers!");
+			context.writeLine("umath dec", result.value, "-> .");
+			result.value = ".";
 		} break;
 	}
-	return {};
+	return result;
 }
 
 BREVE_ASSEMBLE_FN(Expression) {
@@ -869,7 +884,16 @@ BREVE_ASSEMBLE_FN(Expression) {
 				}
 			}
 			else BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
-		}
+		} break;
+		case Type{'('}: {
+			doBinaryOperation(context);
+		} break;
+		case Type{'-'}:
+		case Type{'+'}:
+		case LTS_TT_DECREMENT:
+		case LTS_TT_INCREMENT: {
+			doUnaryOperation(context);
+		} break;
 		case Type{'{'}: {
 			if (!context.stream.next())
 				BREVE_ERROR(NonexistentValue, "Malformed expression!");
