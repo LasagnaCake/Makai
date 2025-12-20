@@ -742,33 +742,28 @@ BREVE_ASSEMBLE_FN(LooseContext) {
 }
 
 BREVE_ASSEMBLE_FN(Return) {
-	// TODO: This
+	if (!context.inFunction())
+		BREVE_ERROR(InvalidValue, "Cannot have returns outside of functions!");
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed return!");
 	Solution result = {Value::Kind::DVK_VOID};
-	if (context.inFunction()) {
-		auto const expectedType = context.functionScope().result;
-		if (context.stream.current().type == Type{';'}) {
-			if (expectedType != Value::Kind::DVK_VOID)
-				BREVE_ERROR(NonexistentValue, "Missing return value!");
-		} else {
-			if (expectedType == Value::Kind::DVK_VOID)
-				BREVE_ERROR(InvalidValue, "Function does not return a value!");
-			result = doValueResolution(context);
-			if (
-				result.key != expectedType
-			&&	!Value::isNumber(stronger(result.key, expectedType))
-			) BREVE_ERROR(InvalidValue, "Return type does not match!");
-		}
-		context.addFunctionExit();
-		if (expectedType == Value::Kind::DVK_VOID)
-			context.writeLine("end");
-		else context.writeLine("ret", result.value);
+	auto const expectedType = context.functionScope().result;
+	if (context.stream.current().type == Type{';'}) {
+		if (expectedType != Value::Kind::DVK_VOID)
+			BREVE_ERROR(NonexistentValue, "Missing return value!");
 	} else {
-		if (context.stream.current().type != Type{';'})
-			BREVE_ERROR(InvalidValue, "Expected ';' here!");
-		context.writeLine("halt");
+		if (expectedType == Value::Kind::DVK_VOID)
+			BREVE_ERROR(InvalidValue, "Function does not return a value!");
+		result = doValueResolution(context);
+		if (
+			result.key != expectedType
+		&&	!Value::isNumber(stronger(result.key, expectedType))
+		) BREVE_ERROR(InvalidValue, "Return type does not match!");
 	}
+	context.addFunctionExit();
+	if (expectedType == Value::Kind::DVK_VOID)
+		context.writeLine("end");
+	else context.writeLine("ret", result.value);
 }
 
 BREVE_ASSEMBLE_FN(Main) {
@@ -776,7 +771,7 @@ BREVE_ASSEMBLE_FN(Main) {
 		BREVE_ERROR(NonexistentValue, "Malformed main!");
 	if (context.hasMain)
 		BREVE_ERROR(NonexistentValue, "Only one entrypoint is allowed!");
-	if (context.scope.size() > 1)
+	if (!context.inGlobalScope())
 		BREVE_ERROR(NonexistentValue, "Main can only be declared on the global scope!");
 	context.hasMain = true;
 	if (context.stream.current().type != Type{'{'})
@@ -784,7 +779,7 @@ BREVE_ASSEMBLE_FN(Main) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed main!");
 	context.writeLine(context.main.entryPoint, ":");
-	context.startScope();
+	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	doScope(context);
 	context.endScope();
 	if (context.stream.current().type != Type{'}'})
@@ -868,6 +863,12 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 		} break;
 	}
 	return result;
+}
+
+BREVE_ASSEMBLE_FN(Module) {
+	if (!context.inGlobalScope())
+		BREVE_ERROR(InvalidValue, "Module imports/exports can only be declared in the global scope!");
+	auto const type = context.stream.current().value.get<Makai::String>();
 }
 
 BREVE_ASSEMBLE_FN(Expression) {
