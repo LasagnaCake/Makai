@@ -103,7 +103,7 @@ struct MemorySlice:
 	/// @param index Element index.
 	/// @return Element at given index.
 	/// @note Index wraps around if it is bigger than the current size.
-	constexpr DataType& operator[](usize const index) {
+	constexpr ReferenceType operator[](usize const index) {
 		return contents[index % length];
 	}
 
@@ -111,7 +111,7 @@ struct MemorySlice:
 	/// @param index Element index.
 	/// @return Element at given index.
 	/// @note Index wraps around if it is bigger than the current size.
-	constexpr DataType operator[](usize const index) const {
+	constexpr ConstReferenceType operator[](usize const index) const {
 		return contents[index % length];
 	}
 
