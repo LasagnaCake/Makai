@@ -896,6 +896,7 @@ BREVE_ASSEMBLE_FN(Namespace) {
 		if (!context.stream.next())
 			BREVE_ERROR(NonexistentValue, "Malformed namespace!");
 		if (context.stream.current().type == Type {'{'})
+			break;
 		if (context.stream.current().type != Type{'.'})
 			BREVE_ERROR(NonexistentValue, "Expected '.' here!!");
 	}
