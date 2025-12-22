@@ -16,6 +16,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				AV2_TA_ST_FUNCTION,
 				AV2_TA_ST_SWITCH,
 				AV2_TA_ST_LOOP,
+				AV2_TA_ST_NAMESPACE,
+				AV2_TA_ST_CLASS,
 			};
 
 			struct Member {
@@ -31,32 +33,47 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			};
 
 			constexpr bool contains(String const& name) const {
-				return members.contains(name);
+				return ns->members.contains(name);
 			}
 
 			constexpr void addVariable(String const& name, bool const global = false) {
-				if (members.contains(name)) return;
-				members[name].value = Data::Value::object();
-				members[name] = {Member::Type::AV2_TA_SMT_VARIABLE};
-				members[name].value["global"]	= global;
-				members[name].value["init"]		= false;
-				members[name].value["use"]		= false;
+				if (ns->members.contains(name)) return;
+				ns->members[name].value = Data::Value::object();
+				ns->members[name] = {Member::Type::AV2_TA_SMT_VARIABLE};
+				ns->members[name].value["global"]	= global;
+				ns->members[name].value["init"]		= false;
+				ns->members[name].value["use"]		= false;
 				if (!global)
-					members[name].value["stack_id"] = stackc + varc++;
+					ns->members[name].value["stack_id"] = stackc + varc++;
 			}
 
 			constexpr void addFunction(String const& name) {
-				if (members.contains(name))
+				if (ns->members.contains(name))
 					return;
-				members[name].value					= Data::Value::object();
-				members[name].value["overloads"]	= Data::Value::object();
-				members[name] = {Member::Type::AV2_TA_SMT_FUNCTION};
+				ns->members[name].value					= Data::Value::object();
+				ns->members[name].value["overloads"]	= Data::Value::object();
+				ns->members[name] = {Member::Type::AV2_TA_SMT_FUNCTION};
 				return;
 			}
 
 			String compose() const {
 				return pre + code + post;
 			}
+
+			struct Namespace {
+				String							name;
+				Dictionary<Instance<Namespace>>	children;
+				Dictionary<Scope::Member>		members;
+
+				constexpr void addChild(Instance<Namespace> const& ns) {
+					if (ns)
+						children[ns->name] = ns;
+				}
+
+				constexpr bool hasChild(String const& name) {
+					return children.contains(name);
+				}
+			};
 			
 			uint64				entry	= 0;
 			Data::Value::Kind	result	= Data::Value::Kind::DVK_UNDEFINED;
@@ -66,7 +83,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			String				label;
 			uint64				varc	= 0;
 			uint64				stackc	= 0;
-			Dictionary<Member>	members;
+			Instance<Namespace>	ns = new Namespace();
 			String				pre;
 			String				code;
 			String				post;
@@ -165,6 +182,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return scope.back();
 		}
 
+		constexpr Scope const& currentScope() const {
+			if (scope.empty()) return global;
+			return scope.back();
+		}
+
 		constexpr void addStackEntry(Instruction::StackPush const& entry) {
 			if (scope.empty()) return;
 			addInstructionType(addNamedInstruction(Instruction::Name::AV2_IN_STACK_PUSH), entry);
@@ -192,10 +214,19 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return false;
 		}
 
-		constexpr bool inGlobalScope() const {
+		constexpr bool inClass() const {
 			for (auto& sc: Range::reverse(scope))
-				if (sc.type == Scope::Type::AV2_TA_ST_FUNCTION) return true;
+				if (sc.type == Scope::Type::AV2_TA_ST_CLASS) return true;
 			return false;
+		}
+
+		constexpr bool inNamespace() const {
+			if (inGlobalScope()) return true;
+			else return currentScope().type == Scope::Type::AV2_TA_ST_NAMESPACE;
+		}
+
+		constexpr bool inGlobalScope() const {
+			return scope.empty();
 		}
 
 		constexpr Scope& functionScope() {
@@ -212,7 +243,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr Scope::Member& getSymbolByName(String const& name) {
 			for (auto& sc: Range::reverse(scope))
-				if (sc.contains(name)) return sc.members[name];
+				if (sc.contains(name)) return sc.ns->members[name];
 			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
 		}
 		
@@ -310,6 +341,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr String compose() const {
 			return global.compose() + main.pre + main.post;
+		}
+
+		constexpr Scope::Namespace& currentNamespace() {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.type == Scope::Type::AV2_TA_ST_NAMESPACE)
+					return *sc.ns;
+			return *global.ns;
 		}
 
 		constexpr static bool isReservedKeyword(String const& name) {

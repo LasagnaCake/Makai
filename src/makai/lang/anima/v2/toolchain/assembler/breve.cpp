@@ -34,6 +34,7 @@ CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
 BREVE_ASSEMBLE_FN(Module);
+BREVE_ASSEMBLE_FN(Namespace);
 BREVE_ASSEMBLE_FN(Scope);
 BREVE_ASSEMBLE_FN(Expression);
 BREVE_ASSEMBLE_FN(Return);
@@ -151,7 +152,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		auto const argt = getType(context);
 		if (argt == CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)
 			BREVE_ERROR(InvalidValue, "Invalid argument type!");
-		auto& var = context.currentScope().members[argID].value;
+		auto& var = context.currentScope().ns->members[argID].value;
 		if (!context.stream.next())
 			BREVE_ERROR(NonexistentValue, "Malformed function argument list!");
 		if (context.stream.current().type == Type{')'})
@@ -206,9 +207,9 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	}
 	if (!context.currentScope().contains(fid))
 		context.currentScope().addFunction(fid);
-	else if (context.currentScope().members[fid].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
+	else if (context.currentScope().ns->members[fid].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		BREVE_ERROR(InvalidValue, "Symbol with this name already exists!");
-	auto& mem = context.currentScope().members[fid];
+	auto& mem = context.currentScope().ns->members[fid];
 	auto& overloads	= mem.value["overloads"];
 	if (overloads.contains(resolutionName))
 		BREVE_ERROR(InvalidValue, "Function with similar signature already exists!");
@@ -255,7 +256,7 @@ BREVE_ASSEMBLE_FN(ExternalFunction) {
 	context.writeLine(proto.entryPoint, ":");
 	Makai::String args;
 	usize argc = 0;
-	for (auto const& [name, overload]: context.currentScope().members[proto.name].value["overloads"].items()) {
+	for (auto const& [name, overload]: context.currentScope().ns->members[proto.name].value["overloads"].items()) {
 		if (overload["extern"]) {
 			argc = overload["args"].size();
 			break;
@@ -547,7 +548,7 @@ void doVarAssign(
 	}
 	if (isNewVar) {
 		if (context.currentScope().contains(id)) {
-			auto const sym = context.currentScope().members[id];
+			auto const sym = context.currentScope().ns->members[id];
 			if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 				BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
 			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
@@ -560,7 +561,7 @@ void doVarAssign(
 	} else {
 		if (!context.hasSymbol(id))
 			BREVE_ERROR(InvalidValue, "Variable does not exist in the current scope!");
-		auto const sym = context.currentScope().members[id];
+		auto const sym = context.currentScope().ns->members[id];
 		if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 			BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
 	}
@@ -871,6 +872,44 @@ BREVE_ASSEMBLE_FN(Module) {
 	auto const type = context.stream.current().value.get<Makai::String>();
 }
 
+BREVE_ASSEMBLE_FN(Namespace) {
+	if (!context.inNamespace())
+		BREVE_ERROR(InvalidValue, "You can only declare sub-namespaces inside other namespaces!");
+	usize scopeCount = 0;
+	while (context.stream.current().type == Type{'.'}) {
+		if (!context.stream.next())
+			BREVE_ERROR(NonexistentValue, "Malformed namespace!");
+		if (context.stream.current().type != LTS_TT_IDENTIFIER)
+			BREVE_ERROR(NonexistentValue, "Expected identifier for namespace name!");
+		auto const id = context.stream.current().value.get<Makai::String>();
+		if (context.isReservedKeyword(id))
+			BREVE_ERROR(InvalidValue, "Namespace name cannot be a reserved keyword!");
+		if (context.currentNamespace().hasChild(id))
+			BREVE_ERROR(InvalidValue, "Namespace with this name already exists!");
+		auto& ns = context.currentNamespace();
+		context.startScope(Context::Scope::Type::AV2_TA_ST_NAMESPACE);
+		auto& scope = context.currentScope();
+		scope.name		=
+		scope.ns->name	= id;
+		ns.addChild(context.currentScope().ns);
+		++scopeCount;
+		if (!context.stream.next())
+			BREVE_ERROR(NonexistentValue, "Malformed namespace!");
+		if (context.stream.current().type == Type {'{'})
+		if (context.stream.current().type != Type{'.'})
+			BREVE_ERROR(NonexistentValue, "Expected '.' here!!");
+	}
+	if (context.stream.current().type != Type {'{'})
+		BREVE_ERROR(NonexistentValue, "Expected '{' here!");
+	doExpression(context);
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed namespace!");
+	if (context.stream.current().type != Type {'}'})
+		BREVE_ERROR(NonexistentValue, "Expected '}' here!");
+	while (scopeCount--)
+		context.endScope();
+}
+
 BREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
@@ -879,6 +918,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 			if (id == "function" || id == "func" || id == "fn")	doFunction(context);
 			else if (id == "external" || id == "out")			doExternal(context);
 			else if (id == "internal" || id == "in")			doInternal(context);
+			else if (id == "namespace" || id == "module")		doNamespace(context);
 			else if (id == "export" || id == "import")			doModule(context);
 			else if (id == "global" || id == "local")			doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
