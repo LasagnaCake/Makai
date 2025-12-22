@@ -945,25 +945,25 @@ public:
 	/// @brief Returns the value of the first element.
 	/// @return Reference to the first element.
 	/// @throw OutOfBoundsException when `List` is empty.
-	constexpr ReferenceType		front()			{return at(0);			}
+	constexpr ReferenceType			front()			{return at(0);			}
 	/// @brief Returns the value of the last element.
 	/// @return Reference to the last element.
 	/// @throw OutOfBoundsException when `List` is empty.
-	constexpr ReferenceType 	back()			{return at(count-1);	}
+	constexpr ReferenceType 		back()			{return at(count-1);	}
 	/// @brief Returns the value of the first element.
 	/// @return Value of the first element.
 	/// @throw OutOfBoundsException when `List` is empty.
-	constexpr DataType			front() const	{return at(0);			}
+	constexpr ConstReferenceType	front() const	{return at(0);			}
 	/// @brief Returns the value of the last element.
 	/// @return Value of the last element.
 	/// @throw OutOfBoundsException when `List` is empty.
-	constexpr DataType			back() const	{return at(count-1);	}
+	constexpr ConstReferenceType	back() const	{return at(count-1);	}
 
 	/// @brief Returns the value of the element at a given index.
 	/// @param index Index of the element.
 	/// @return Reference to the element.
 	/// @throw OutOfBoundsException when `List` is empty.
-	constexpr DataType& at(IndexType index) {
+	constexpr ReferenceType at(IndexType index) {
 		if (!count) emptyError();
 		assertIsInBounds(index);
 		wrapBounds(index, count);
@@ -974,7 +974,7 @@ public:
 	/// @param index Index of the element.
 	/// @return Value of the element.
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
-	constexpr DataType at(IndexType index) const {
+	constexpr ConstReferenceType at(IndexType index) const {
 		if (!count) emptyError();
 		assertIsInBounds(index);
 		wrapBounds(index, count);
@@ -985,12 +985,12 @@ public:
 	/// @param index Index of the element.
 	/// @return Reference to the element.
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
-	constexpr ReferenceType	operator[](IndexType index)			{return at(index);}
+	constexpr ReferenceType	operator[](IndexType index)						{return at(index);}
 	/// @brief Returns the value of the element at a given index.
 	/// @param index Index of the element.
 	/// @return Value of the element.
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
-	constexpr DataType operator[](IndexType const index) const	{return at(index);}
+	constexpr ConstReferenceType operator[](IndexType const index) const	{return at(index);}
 
 	/// @brief Returns the current element count.
 	/// @return Element count.
