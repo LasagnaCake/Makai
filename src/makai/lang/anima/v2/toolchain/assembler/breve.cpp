@@ -822,15 +822,25 @@ BREVE_ASSEMBLE_FN(Conditional) {
 	context.writeLine("next");
 }
 
-BREVE_ASSEMBLE_FN(ForLoop) {}
+BREVE_ASSEMBLE_FN(ForLoop) {
+	// TODO: This
+}
 
-BREVE_ASSEMBLE_FN(RepeatLoop) {}
+BREVE_ASSEMBLE_FN(RepeatLoop) {
+	// TODO: This
+}
 
-BREVE_ASSEMBLE_FN(DoLoop) {}
+BREVE_ASSEMBLE_FN(DoLoop) {
+	// TODO: This
+}
 
-BREVE_ASSEMBLE_FN(Terminate) {}
+BREVE_ASSEMBLE_FN(Terminate) {
+	// TODO: This
+}
 
-BREVE_ASSEMBLE_FN(Error) {}
+BREVE_ASSEMBLE_FN(Error) {
+	// TODO: This
+}
 
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 	auto const current = context.stream.current();
@@ -870,6 +880,7 @@ BREVE_ASSEMBLE_FN(Module) {
 	if (!context.inGlobalScope())
 		BREVE_ERROR(InvalidValue, "Module imports/exports can only be declared in the global scope!");
 	auto const type = context.stream.current().value.get<Makai::String>();
+	// TODO: This
 }
 
 BREVE_ASSEMBLE_FN(Namespace) {
