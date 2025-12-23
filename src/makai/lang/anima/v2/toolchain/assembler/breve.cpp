@@ -9,10 +9,13 @@ using Type = Breve::TokenStream::Token::Type;
 using enum Type;
 using Value = Makai::Data::Value;
 
-using Solution = Makai::KeyValuePair<Value::Kind, Makai::String>;
+using Solution			= Makai::KeyValuePair<Value::Kind, Makai::String>;
+using NamespaceMember	= Makai::KeyValuePair<Makai::String, Context::Scope::Member&>;
+using Namespace			= Makai::KeyValuePair<Makai::String, Context::Scope::Member&>;
 
 #define BREVE_ASSEMBLE_FN(NAME) static void do##NAME (Breve::Context& context)
 #define BREVE_TYPED_ASSEMBLE_FN(NAME) static Solution do##NAME (Breve::Context& context)
+#define BREVE_SYMBOL_ASSEMBLE_FN(NAME) static Solution do##NAME (Breve::Context& context, Context::Scope::Member& sym)
 
 template <class T>
 [[noreturn]] static void error(Makai::String what, Context& ctx) {
@@ -47,14 +50,15 @@ BREVE_ASSEMBLE_FN(Main);
 BREVE_ASSEMBLE_FN(Terminate);
 BREVE_ASSEMBLE_FN(Error);
 BREVE_ASSEMBLE_FN(External);
-BREVE_TYPED_ASSEMBLE_FN(FunctionCall);
-BREVE_TYPED_ASSEMBLE_FN(Assignment);
+BREVE_SYMBOL_ASSEMBLE_FN(Assignment);
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
 BREVE_TYPED_ASSEMBLE_FN(BinaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(InternalPrint);
 BREVE_TYPED_ASSEMBLE_FN(Internal);
 BREVE_TYPED_ASSEMBLE_FN(NamespaceResolution);
+
+static Solution doFunctionCall(Context& context, Context::Scope::Member const& symbol);
 
 static Solution doValueResolution(Context& context, bool idCanBeValue = false);
 
@@ -312,7 +316,7 @@ BREVE_TYPED_ASSEMBLE_FN(Internal) {
 	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
 }
 
-Makai::KeyValuePair<Makai::String, Context::Scope::Member&> resolveNamespaceMember(Context& context, Context::Scope::Namespace& ns) {
+NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespace& ns) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
 	if (context.stream.current().type != Type{'.'})
@@ -327,7 +331,7 @@ Makai::KeyValuePair<Makai::String, Context::Scope::Member&> resolveNamespaceMemb
 	return resolveNamespaceMember(context, *ns.children[id]);
 }
 
-Makai::KeyValuePair<Makai::String, Context::Scope::Member&> resolveNamespaceMember(Context& context) {
+NamespaceMember resolveNamespaceMember(Context& context) {
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
 		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
 	auto const id = context.stream.current().value.get<Makai::String>();
@@ -366,7 +370,7 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		// and members only exist in namespaces
 		// And these functions do not directly modify the namespace
 	if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
-		return doFunctionCall(context);
+		return doFunctionCall(context, sym);
 	}
 	else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
@@ -545,7 +549,6 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			}
 			context.writeLine("comp (", lhs.value, opstr, rhs.value, ") -> .");
 		} break;
-		case Type{'.'}:
 		case Type{'['}: {
 			if (!Value::isObject(lhs.key))
 				BREVE_ERROR(InvalidValue, "Left-hand side MUST be an object!");
@@ -553,14 +556,12 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				BREVE_ERROR(InvalidValue, "Right-hand side MUST be a string!");
 			context.writeLine("get &[", lhs.value, "][&[", rhs.value, "]] -> .");
 			result = DVK_ANY;
-			if (opname.type == Type{'['}) {
-				if (!context.stream.next())
-					BREVE_ERROR(NonexistentValue, "Malformed operation!");
-				if (context.stream.current().type != Type{']'})
-					BREVE_ERROR(InvalidValue, "Expected ']' here!");
-				if (!context.stream.next())
-					BREVE_ERROR(NonexistentValue, "Malformed operation!");
-			}
+			if (!context.stream.next())
+				BREVE_ERROR(NonexistentValue, "Malformed operation!");
+			if (context.stream.current().type != Type{']'})
+				BREVE_ERROR(InvalidValue, "Expected ']' here!");
+			if (!context.stream.next())
+				BREVE_ERROR(NonexistentValue, "Malformed operation!");
 		} break;
 		case Type{'='}: {
 			if (lhs.key != rhs.key) {
@@ -597,13 +598,13 @@ using PreAssignFunction = Makai::Functor<void(Breve::Context&, Solution&)>;
 
 void doVarAssign(
 	Breve::Context& context,
-	Makai::String const& id,
+	Context::Scope::Member& sym,
 	Value::Kind const& type,
 	bool const isGlobalVar = false,
 	bool const isNewVar = false,
 	PreAssignFunction const& preassign = {}
 ) {
-	if (context.currentNamespace().hasChild(id))
+	if (context.currentNamespace().hasChild(sym.value["name"]))
 		BREVE_ERROR(InvalidValue, "Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
 	if (result.key != type) {
@@ -613,35 +614,35 @@ void doVarAssign(
 		result.value = ".";
 	}
 	if (isNewVar) {
-		if (context.currentScope().contains(id)) {
-			auto const sym = context.currentScope().ns->members[id];
+		if (isGlobalVar) {
 			if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 				BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
 			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
 				BREVE_ERROR(InvalidValue, "Global variable expression does not match its prevoius type!");
 		} else {
-			if (context.currentScope().contains(id))
+			if (context.currentScope().contains(sym.value["name"]))
 				BREVE_ERROR(InvalidValue, "Variable already exists in current scope!");
-			else context.currentScope().addVariable(id, isGlobalVar);
+			else context.currentScope().addVariable(sym.value["name"], isGlobalVar);
 		}
 	} else {
-		if (!context.hasSymbol(id))
+		if (!context.hasSymbol(sym.value["name"]))
 			BREVE_ERROR(InvalidValue, "Variable does not exist in the current scope!");
-		auto const sym = context.currentScope().ns->members[id];
 		if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 			BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
 	}
-	auto const sym = context.symbol(id);
 	preassign(context, result);
 	if (isGlobalVar)
-		context.writeAdaptive("copy", result.value, "-> :", id);
-	else context.writeAdaptive("copy", result.value, "-> &[", sym().value["stack_id"].get<uint64>(), "]");
-	sym().value["init"] = true;
+		context.writeAdaptive("copy", result.value, "-> :", sym.value["name"]);
+	else context.writeAdaptive("copy", result.value, "-> &[", sym.value["stack_id"].get<uint64>(), "]");
+	sym.value["init"] = true;
 }
 
-void doVarDecl(Breve::Context& context, Makai::String const& id, bool const isGlobalVar = false) {
+void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const isGlobalVar = false) {
 	if (context.stream.current().type != Type{':'})
 		BREVE_ERROR(InvalidValue, "Expected ':' here!");
+	if (sym.value["decl"])
+		BREVE_ERROR(InvalidValue, "Redeclaration of already-declared symbol!");
+	else sym.value["decl"] = true;
 	auto type = DVK_ANY;
 	switch (context.stream.current().type) {
 		case Type{':'}: {
@@ -657,7 +658,7 @@ void doVarDecl(Breve::Context& context, Makai::String const& id, bool const isGl
 	if (context.stream.current().type == Type{'='}) {
 		if (!context.stream.next())
 			BREVE_ERROR(NonexistentValue, "Malformed variable!");
-		doVarAssign(context, id, type, isGlobalVar, true);
+		doVarAssign(context, sym, type, isGlobalVar, true);
 	}
 	if (context.stream.current().type != Type{';'})
 		BREVE_ERROR(InvalidValue, "Expected ';' here!");
@@ -678,25 +679,22 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 	if (!isGlobalVar) {
 		context.writeAdaptive("push null");
 	}
-	doVarDecl(context, id, isGlobalVar);
+	auto const sym = resolveNamespaceMember(context);
+	doVarDecl(context, sym.value, isGlobalVar);
 }
 
 #define PREASSIGN [=] (Breve::Context& context, Solution& result) -> void
 
-BREVE_TYPED_ASSEMBLE_FN(Assignment) {
-	auto const id = context.stream.current().value.get<Makai::String>();
-	if (context.isReservedKeyword(id))
-		BREVE_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
+BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed variable!");
 	auto const current = context.stream.current();
 	PreAssignFunction pre;
 	switch (current.type) {
 		case Type{':'}: {
-			doVarDecl(context, id, false);
-			auto const sym = context.symbol(id);
-			auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym().value["type"]);
-			auto const accessor	= Makai::toString("&[", sym().value["stack_id"].get<uint64>(), "]");
+			doVarDecl(context, sym, false);
+			auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
+			auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
 			return {varType, accessor};
 		}
 		case Type{'='}: break;
@@ -705,11 +703,10 @@ BREVE_TYPED_ASSEMBLE_FN(Assignment) {
 		case LTS_TT_MUL_ASSIGN:
 		case LTS_TT_DIV_ASSIGN:
 		case LTS_TT_MOD_ASSIGN: {
-			auto const sym = context.symbol(id);
 			Makai::String accessor;
-			if (sym().value["global"])
-				accessor = ":" + id;
-			else accessor = Makai::toString("&[", sym().value["stack_id"].get<uint64>(), "]");
+			if (sym.value["global"])
+				accessor = ":" + sym.value["name"].get<Makai::String>();
+			else accessor = Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
 			Makai::String operation;
 			switch (current.type) {
 				case LTS_TT_ADD_ASSIGN: operation = " + "; break;
@@ -726,21 +723,14 @@ BREVE_TYPED_ASSEMBLE_FN(Assignment) {
 	}
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed assignment!");
-	auto const sym = context.symbol(id);
-	auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym().value["type"]);
-	auto const accessor	= Makai::toString("&[", sym().value["stack_id"].get<uint64>(), "]");
+	auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
+	auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
 	return {varType, accessor};
-	doVarAssign(context, id, varType, false, false, pre);
+	doVarAssign(context, sym, varType, false, false, pre);
 }
 
-BREVE_TYPED_ASSEMBLE_FN(FunctionCall) {
+static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 	auto const id = context.stream.current().value.get<Makai::String>();
-	if (context.isReservedKeyword(id))
-		BREVE_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
-	if (!context.hasSymbol(id))
-		BREVE_ERROR(NonexistentValue, "Function does not exist!");
-	if (context.getSymbolByName(id).type != decltype(context.getSymbolByName(id).type)::AV2_TA_SMT_FUNCTION)
-		BREVE_ERROR(NonexistentValue, "Symbol was not declared a function!");
 	if (!context.stream.next())
 		BREVE_ERROR(NonexistentValue, "Malformed function call!");
 	if (context.stream.current().type != Type{'('})
@@ -769,10 +759,9 @@ BREVE_TYPED_ASSEMBLE_FN(FunctionCall) {
 	for (auto const& [arg, index]: Makai::Range::expand(args))
 		call += Makai::toString(index, "=", arg.value) + " ";
 	call += ")";
-	auto const sym = context.symbol(id);
-	if (!sym().value["overloads"].contains(legalName))
+	if (!sym.value["overloads"].contains(legalName))
 		BREVE_ERROR(InvalidValue, "Function overload does not exist!");
-	auto const overload = sym().value["overloads"][legalName];
+	auto const overload = sym.value["overloads"][legalName];
 	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
 	context.writeLine("clear", pushes);
 	return {
@@ -1017,10 +1006,17 @@ BREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "terminate")							doTerminate(context);
 			else if (id == "error")								doError(context);
 			else if (context.hasSymbol(id)) {
-				auto const sym = context.symbol(id);
-				switch (sym().type) {
-					case decltype(sym().type)::AV2_TA_SMT_FUNCTION: doFunctionCall(context);
-					case decltype(sym().type)::AV2_TA_SMT_VARIABLE: doAssignment(context);
+				auto& sym = context.getSymbolByName(id);
+				switch (sym.type) {
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym);
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym);
+					default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
+				}
+			} else if (context.hasNamespace(id)) {
+				auto const sym = resolveNamespaceMember(context);
+				switch (sym.value.type) {
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym.value);
 					default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
 				}
 			}

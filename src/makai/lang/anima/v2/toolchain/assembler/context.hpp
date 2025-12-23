@@ -38,21 +38,24 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			constexpr void addVariable(String const& name, bool const global = false) {
 				if (ns->members.contains(name)) return;
-				ns->members[name].value = Data::Value::object();
-				ns->members[name] = {Member::Type::AV2_TA_SMT_VARIABLE};
-				ns->members[name].value["global"]	= global;
-				ns->members[name].value["init"]		= false;
-				ns->members[name].value["use"]		= false;
+				ns->members[name] = {Member::Type::AV2_TA_SMT_VARIABLE,  Data::Value::object()};
+				auto& sym = ns->members[name].value;
+				sym["global"]	= global;
+				sym["name"]		= name;
+				sym["decl"]		= false;
+				sym["init"]		= false;
+				sym["use"]		= false;
 				if (!global)
-					ns->members[name].value["stack_id"] = stackc + varc++;
+					sym["stack_id"] = stackc + varc++;
 			}
 
 			constexpr void addFunction(String const& name) {
 				if (ns->members.contains(name))
 					return;
-				ns->members[name].value					= Data::Value::object();
-				ns->members[name].value["overloads"]	= Data::Value::object();
-				ns->members[name] = {Member::Type::AV2_TA_SMT_FUNCTION};
+				ns->members[name] = {Member::Type::AV2_TA_SMT_FUNCTION,  Data::Value::object()};
+				auto& sym = ns->members[name].value;
+				sym					= Data::Value::object();
+				sym["overloads"]	= Data::Value::object();
 				return;
 			}
 
