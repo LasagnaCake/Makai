@@ -1167,34 +1167,39 @@ MINIMA_ASSEMBLE_FN(Label) {
 	context.instruction(nopID).type = 1;
 }
 
+MINIMA_ASSEMBLE_FN(Indirect) {
+
+}
+
 MINIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	if (current.type == LTS_TT_IDENTIFIER) {
 		auto const id = current.value.get<Makai::String>();
-		if (id == "jump" || id == "go")									doJump(context);
-		else if (id == "nop" || id == "next")							doNoOp(context);
-		else if (id == "swap")											doStackSwap(context);
-		else if (id == "flush")											doStackFlush(context);
-		else if (id == "push")											doStackPush(context);
-		else if (id == "pop")											doStackPop(context);
-		else if (id == "clear")											doStackClear(context);
-		else if (id == "return" || id == "ret")							doReturn(context);
-		else if (id == "finish" || id == "end")							doEmptyReturn(context);
-		else if (id == "terminate" || id == "halt")						doHalt(context);
-		else if (id == "error" || id == "err")							doErrorHalt(context);
-		else if (id == "call" || id == "do")							doCall(context);
-		else if (id == "compare" || id == "cmp")						doCompare(context);
-		else if (id == "copy")											doCopy(context);
-		else if (id == "context" || id == "mode")						doContext(context);
-		else if (id == "loose" || id == "strict")						doImmediateContext(context);
-		else if (id == "calculate" || id == "bmath" || id == "calc")	doBinaryMath(context);
-		else if (id == "umath")											doUnaryMath(context);
-		else if (id == "yield")											doYield(context);
-		else if (id == "await" || id == "wait")							doAwait(context);
-		else if (id == "convert" || id == "cast")						doCast(context);
-		else if (id == "read" || id == "get")							doGet(context);
-		else if (id == "write" || id == "set")							doSet(context);
-		else if (id == "string" || id == "str")							doStringOperation(context);
+		if (id == "jump" || id == "go")							doJump(context);
+		else if (id == "nop" || id == "next")					doNoOp(context);
+		else if (id == "swap")									doStackSwap(context);
+		else if (id == "flush")									doStackFlush(context);
+		else if (id == "push")									doStackPush(context);
+		else if (id == "pop")									doStackPop(context);
+		else if (id == "clear")									doStackClear(context);
+		else if (id == "return" || id == "ret")					doReturn(context);
+		else if (id == "finish" || id == "end")					doEmptyReturn(context);
+		else if (id == "terminate" || id == "halt")				doHalt(context);
+		else if (id == "error" || id == "err")					doErrorHalt(context);
+		else if (id == "call" || id == "do")					doCall(context);
+		else if (id == "compare" || id == "cmp")				doCompare(context);
+		else if (id == "copy")									doCopy(context);
+		else if (id == "context" || id == "mode")				doContext(context);
+		else if (id == "loose" || id == "strict")				doImmediateContext(context);
+		else if (id == "binop" || id == "bmath" || id == "bop")	doBinaryMath(context);
+		else if (id == "unop"|| id == "uop")					doUnaryMath(context);
+		else if (id == "yield")									doYield(context);
+		else if (id == "await" || id == "wait")					doAwait(context);
+		else if (id == "convert" || id == "cast")				doCast(context);
+		else if (id == "read" || id == "get")					doGet(context);
+		else if (id == "write" || id == "set")					doSet(context);
+		else if (id == "indirect"  || id == "ref")				doIndirect(context);
+		else if (id == "string" || id == "str")					doStringOperation(context);
 		else doLabel(context);
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }

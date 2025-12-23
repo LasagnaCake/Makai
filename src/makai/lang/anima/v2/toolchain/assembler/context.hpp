@@ -241,10 +241,26 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return false;
 		}
 
+		constexpr bool hasNamespace(String const& name) const {
+			for (auto const& sc: scope)
+				if (sc.ns->name == name) return true;
+			for (auto& ns: global.ns->children)
+				if (ns.value->name == name) return true;
+			return false;
+		}
+
 		constexpr Scope::Member& getSymbolByName(String const& name) {
 			for (auto& sc: Range::reverse(scope))
 				if (sc.contains(name)) return sc.ns->members[name];
 			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
+		}
+
+		constexpr Scope::Namespace& getNamespaceByName(String const& name) {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.ns->name == name) return *sc.ns;
+			for (auto& ns: global.ns->children)
+				if (ns.value->name == name) return *ns.value;
+			throw Error::FailedAction("Context does not contain namespace '"+name+"'!");
 		}
 		
 		constexpr Function<Scope::Member&()> symbol(String const& name) {
@@ -327,8 +343,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		
 		template <class... Args>
 		constexpr void writeAdaptive(Args const&... args) {
-			if (scope.size())	writeLine(args...);
-			else				writeMainPreamble(args...);
+			if (inGlobalScope() || inNamespace())	writeMainPreamble(args...);
+			else									writeLine(args...);
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {

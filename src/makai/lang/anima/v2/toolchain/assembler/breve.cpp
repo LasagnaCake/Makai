@@ -52,9 +52,11 @@ BREVE_TYPED_ASSEMBLE_FN(Assignment);
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
 BREVE_TYPED_ASSEMBLE_FN(BinaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation);
-BREVE_TYPED_ASSEMBLE_FN(ValueResolution);
 BREVE_TYPED_ASSEMBLE_FN(InternalPrint);
 BREVE_TYPED_ASSEMBLE_FN(Internal);
+BREVE_TYPED_ASSEMBLE_FN(NamespaceResolution);
+
+static Solution doValueResolution(Context& context, bool idCanBeValue = false);
 
 static bool isReserved(Makai::String const& keyword);
 
@@ -310,34 +312,87 @@ BREVE_TYPED_ASSEMBLE_FN(Internal) {
 	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
 }
 
-BREVE_TYPED_ASSEMBLE_FN(ValueResolution) {
+Makai::KeyValuePair<Makai::String, Context::Scope::Member&> resolveNamespaceMember(Context& context, Context::Scope::Namespace& ns) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+	if (context.stream.current().type != Type{'.'})
+		BREVE_ERROR(NonexistentValue, "Expected '.' here!");
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+	if (context.stream.current().type != LTS_TT_IDENTIFIER)
+		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (ns.members.contains(id))
+		return {id, ns.members[id]};
+	return resolveNamespaceMember(context, *ns.children[id]);
+}
+
+Makai::KeyValuePair<Makai::String, Context::Scope::Member&> resolveNamespaceMember(Context& context) {
+	if (context.stream.current().type != LTS_TT_IDENTIFIER)
+		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	return resolveNamespaceMember(context, context.getNamespaceByName(id));
+}
+
+Context::Scope::Namespace& resolveNamespace(Context& context, Context::Scope::Namespace& ns) {
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+	if (context.stream.current().type != Type{'.'})
+		return ns;
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+	if (context.stream.current().type != LTS_TT_IDENTIFIER)
+		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (ns.members.contains(id))
+		BREVE_ERROR(NonexistentValue, "Not a namespace!");
+	else if (ns.children.contains(id))
+		return resolveNamespace(context, *ns.children[id]);
+	else BREVE_ERROR(NonexistentValue, "Namespace does not exist!");
+}
+
+Context::Scope::Namespace& resolveNamespace(Context& context) {
+	if (context.stream.current().type != LTS_TT_IDENTIFIER)
+		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	return resolveNamespace(context, context.getNamespaceByName(id));
+}
+
+static Solution resolveSymbol(Context& context, Makai::String const& id, Context::Scope::Member& sym) {
+	if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
+		return doFunctionCall(context);
+	}
+	else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
+		sym.value["use"] = true;
+		if (sym.value["global"]) {
+			return {
+				Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
+				":" + id
+			};
+		} else {
+			auto const stackID = sym.value["stack_id"].get<uint64>();
+			return {
+				Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
+				Makai::toString("&[", stackID, "]")
+			};
+		}
+	}
+}
+
+static Solution doValueResolution(Context& context, bool idCanBeValue) {
 	auto const current = context.stream.current();
 	switch (current.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = current.value.get<Makai::String>();
 			auto result = doReservedValueResolution(context);
 			if (result.key != Value::Kind::DVK_VOID) return result;
-			else if (context.hasSymbol(id)) {
-				auto const sym = context.symbol(id);
-				if (sym().type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
-					return doFunctionCall(context);
-				}
-				else if (sym().type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
-					sym().value["use"] = true;
-					if (sym().value["global"]) {
-						return {
-							Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym().value["type"]),
-							":" + id
-						};
-					} else {
-						auto const stackID = sym().value["stack_id"].get<uint64>();
-						return {
-							Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym().value["type"]),
-							Makai::toString("&[", stackID, "]")
-						};
-					}
-				}
-			}
+			else if (context.hasSymbol(id)) 
+				return resolveSymbol(context, id, context.getSymbolByName(id));
+			else if (context.hasNamespace(id)) {
+				auto const sym = resolveNamespaceMember(context);
+				return resolveSymbol(context, sym.key, sym.value);
+			} else if (idCanBeValue) return {Value::Kind::DVK_STRING, id};
+			else BREVE_ERROR(InvalidValue, "Identifire does not match any reserved value or member name!");
 		} break;
 		case Type{'('}: {
 			return doBinaryOperation(context);
@@ -448,13 +503,13 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			} else BREVE_ERROR(InvalidValue, "Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
-			if (Value::isNumber(result)) context.writeLine("calc", lhs.value, "+", rhs.value, "-> .");
+			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, "+", rhs.value, "-> .");
 			else if (Value::isString(lhs.key) && Value::isString(rhs.key))
 				context.writeLine("str cat", lhs.value, "(", rhs.value, ") -> .");
 			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		} break;
 		case Type{'/'}: {
-			if (Value::isNumber(result)) context.writeLine("calc", lhs.value, "/", rhs.value, "-> .");
+			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, "/", rhs.value, "-> .");
 			else if (Value::isString(result)) 
 				context.writeLine("str sep", lhs.value, "(", rhs.value, ") -> .");
 			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
@@ -463,7 +518,7 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		case Type{'*'}:
 		case Type{'%'}: {
 			auto const opstr = Makai::toString(Makai::Cast::as<char>(opname.type));
-			if (Value::isNumber(result)) context.writeLine("calc", lhs.value, opstr, "-> .");
+			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, opstr, "-> .");
 			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
 		} break;
 		case Type::LTS_TT_COMPARE_EQUALS:
@@ -484,6 +539,7 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			}
 			context.writeLine("comp (", lhs.value, opstr, rhs.value, ") -> .");
 		} break;
+		case Type{'.'}:
 		case Type{'['}: {
 			if (!Value::isObject(lhs.key))
 				BREVE_ERROR(InvalidValue, "Left-hand side MUST be an object!");
@@ -491,12 +547,14 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				BREVE_ERROR(InvalidValue, "Right-hand side MUST be a string!");
 			context.writeLine("get &[", lhs.value, "][&[", rhs.value, "]] -> .");
 			result = DVK_ANY;
-			if (!context.stream.next())
-				BREVE_ERROR(NonexistentValue, "Malformed operation!");
-			if (context.stream.current().type != Type{']'})
-				BREVE_ERROR(InvalidValue, "Expected ']' here!");
-			if (!context.stream.next())
-				BREVE_ERROR(NonexistentValue, "Malformed operation!");
+			if (opname.type == Type{'['}) {
+				if (!context.stream.next())
+					BREVE_ERROR(NonexistentValue, "Malformed operation!");
+				if (context.stream.current().type != Type{']'})
+					BREVE_ERROR(InvalidValue, "Expected ']' here!");
+				if (!context.stream.next())
+					BREVE_ERROR(NonexistentValue, "Malformed operation!");
+			}
 		} break;
 		case Type{'='}: {
 			if (lhs.key != rhs.key) {
@@ -539,6 +597,8 @@ void doVarAssign(
 	bool const isNewVar = false,
 	PreAssignFunction const& preassign = {}
 ) {
+	if (context.currentNamespace().hasChild(id))
+		BREVE_ERROR(InvalidValue, "Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
 	if (result.key != type) {
 		if (context.isCastable(result.key))
@@ -653,7 +713,7 @@ BREVE_TYPED_ASSEMBLE_FN(Assignment) {
 				case LTS_TT_MOD_ASSIGN: operation = " % "; break;
 			}
 			pre = PREASSIGN {
-				context.writeLine("calc", accessor, operation, result.value, "-> .");
+				context.writeLine("bop", accessor, operation, result.value, "-> .");
 				result.value = ".";
 			};
 		} break;
@@ -839,7 +899,12 @@ BREVE_ASSEMBLE_FN(Terminate) {
 }
 
 BREVE_ASSEMBLE_FN(Error) {
-	// TODO: This
+	if (context.inGlobalScope())
+		BREVE_ERROR(InvalidValue, "Errors cannot be thrown in the global scope!");
+	if (!context.stream.next())
+		BREVE_ERROR(NonexistentValue, "Malformed error!");
+	auto const err = doValueResolution(context);
+	context.writeLine("error", err.value);
 }
 
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
@@ -851,7 +916,7 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 		case Type{'-'}: {
 			if (!Value::isNumber(result.key))
 				BREVE_ERROR(NonexistentValue, "Negation can only happen on numbers!");
-			context.writeLine("umath -", result.value, "-> .");
+			context.writeLine("uop -", result.value, "-> .");
 			result.value = ".";
 		} break;
 		case Type{'+'}: {
@@ -863,13 +928,13 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 		case LTS_TT_DECREMENT: {
 			if (!Value::isNumber(result.key))
 				BREVE_ERROR(NonexistentValue, "Incrementation can only happen on numbers!");
-			context.writeLine("umath inc", result.value, "-> .");
+			context.writeLine("uop inc", result.value, "-> .");
 			result.value = ".";
 		} break;
 		case LTS_TT_INCREMENT: {
 			if (!Value::isNumber(result.key))
 				BREVE_ERROR(NonexistentValue, "Decrementation can only happen on numbers!");
-			context.writeLine("umath dec", result.value, "-> .");
+			context.writeLine("uop dec", result.value, "-> .");
 			result.value = ".";
 		} break;
 	}
@@ -897,6 +962,8 @@ BREVE_ASSEMBLE_FN(Namespace) {
 			BREVE_ERROR(InvalidValue, "Namespace name cannot be a reserved keyword!");
 		if (context.currentNamespace().hasChild(id))
 			BREVE_ERROR(InvalidValue, "Namespace with this name already exists!");
+		if (context.currentScope().contains(id))
+			BREVE_ERROR(InvalidValue, "Namespace name is also a symbol name!");
 		auto& ns = context.currentNamespace();
 		context.startScope(Context::Scope::Type::AV2_TA_ST_NAMESPACE);
 		auto& scope = context.currentScope();
