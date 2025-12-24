@@ -3,12 +3,12 @@
 
 using namespace Makai::Net::HTTP;
 
-static usize write(cstring src, usize count, usize size, ref<Makai::String> dst) {
+static usize write(cstring const src, usize const size, usize const count, ref<Makai::String> const dst) {
 	dst->appendBack(src, src + count * size);
 	return count * size;
 }
 
-static usize read(ref<char> dst, usize count, usize size, ref<Makai::String> src) {
+static usize read(ref<char> const dst, usize const size, usize const count, ref<Makai::String const> const src) {
 	auto const sz = count * size;
 	auto const trueSize = sz < src->size() ? sz : src->size();
 	Makai::MX::memcpy(dst, src->data(), trueSize);
