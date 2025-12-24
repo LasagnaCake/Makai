@@ -982,11 +982,11 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	ModuleResolution mod = resolveModuleName(context);
 	submodule.fileName = mod.path;
 	submodule.isModule = true;
-	submodule.stream.open(Makai::File::getText(mod.path));
+	submodule.stream.open(context.getModuleFile(mod.path));
 	submodule.main.preEntryPoint	+= "_" + mod.fullName;
 	submodule.main.entryPoint		+= "_" + mod.fullName;
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
-	submodule.global.stackc = submodule.global.stackc + ubmodule.global.varc;
+	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
 	assembler.assemble();
 	context.global.code += submodule.compose();

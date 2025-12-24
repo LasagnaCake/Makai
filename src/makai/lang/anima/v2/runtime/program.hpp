@@ -37,9 +37,9 @@ namespace Makai::Anima::V2::Runtime {
 		constexpr static Program deserialize(Data::Value const& v) {
 			Program prog;
 			if (v.contains("types") && v["types"].isArray())
-				prog.types		= v["types"];
+				prog.types		= v["types"].get<Data::Value::ArrayType>();
 			if (v.contains("constants") && v["constants"].isArray())
-				prog.constants	= v["constants"];
+				prog.constants	= v["constants"].get<Data::Value::ArrayType>();
 			return prog;
 		}
 	};

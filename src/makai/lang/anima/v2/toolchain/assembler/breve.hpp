@@ -5,6 +5,7 @@
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Breve: AAssembler {
+		using AAssembler::AAssembler;
 		void assemble() override;
 	};
 }

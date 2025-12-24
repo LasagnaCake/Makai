@@ -1,0 +1,959 @@
+commit 3a60ab56c11c45d1a2e121721b4838adfa55a776
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-23
+
+    Bump package and library versions
+
+commit 579a40da36a3ccae77cdc5af848695e8a5c7e7cc
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-23
+
+    Update AUTHORS
+
+commit 5b15e6154c60f90259d7b66190456aef592a2c5a
+Merge: d3fce25b 2d2f8c68
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-22
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-22
+
+    Merge pull request #1972 from ngtcp2/bump-aws-lc
+    
+    Bump aws-lc
+
+commit 2d2f8c68642d1213c99241d0f34f90cd9ba9b4f3
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-22
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-22
+
+    Bump aws-lc
+
+commit d3fce25b08e1a11ab750684e4119a4368420d05b
+Merge: 69ff62e6 f64c5498
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-22
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-22
+
+    Merge pull request #1971 from ngtcp2/bump-boringssl
+    
+    Bump boringssl
+
+commit f64c54986f2f8dd4a0285f2d0246e274d701dc0a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-22
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-22
+
+    Bump boringssl
+
+commit 69ff62e67a074240f3f17520b9b40081d59e0f9d
+Merge: aa894a7f 57278e3b
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-21
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-21
+
+    Merge pull request #1963 from dg0yt/crypto-targets
+    
+    Export CMake target for ngtcp2_crypto_ossl(_static)
+
+commit aa894a7f82e981cfd3e4bd10450b98f0e07d9a6f
+Merge: 61ee993a 5db5bf50
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-21
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-21
+
+    Merge pull request #1970 from targos/patch-1
+    
+    Include array in siphash example
+
+commit 5db5bf5002b7fbc1beec55eeff1f881cd3546190
+Author:     Michaël Zasso <targos@protonmail.com>
+AuthorDate: 2025-12-20
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-20
+
+    Include array in siphash example
+    
+    For `std::array`. Compilation fails on macOS with C++23 support otherwise.
+
+commit 61ee993af1d98ed7697cc3fb74990770b8158a14
+Merge: 485dc69d 450a2db6
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-16
+
+    Merge pull request #1968 from ngtcp2/dependabot/github_actions/actions/cache-5
+    
+    build(deps): bump actions/cache from 4 to 5
+
+commit 485dc69d78311d7405717ef5533701959c962521
+Merge: ed637533 3906ba22
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-16
+
+    Merge pull request #1969 from ngtcp2/dependabot/github_actions/actions/download-artifact-7
+    
+    build(deps): bump actions/download-artifact from 6 to 7
+
+commit ed6375330fb6f83819c1d1facca659b42f942ec4
+Merge: 80f43d98 dd69df8a
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-16
+
+    Merge pull request #1967 from ngtcp2/dependabot/github_actions/actions/upload-artifact-6
+    
+    build(deps): bump actions/upload-artifact from 5 to 6
+
+commit 3906ba229ed3dcb0a90148ca80b362134c8da787
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-12-15
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-15
+
+    build(deps): bump actions/download-artifact from 6 to 7
+    
+    Bumps [actions/download-artifact](https://github.com/actions/download-artifact) from 6 to 7.
+    - [Release notes](https://github.com/actions/download-artifact/releases)
+    - [Commits](https://github.com/actions/download-artifact/compare/v6...v7)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/download-artifact
+      dependency-version: '7'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 450a2db61b35370370b9663f152f5d9bfbf98b45
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-12-15
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-15
+
+    build(deps): bump actions/cache from 4 to 5
+    
+    Bumps [actions/cache](https://github.com/actions/cache) from 4 to 5.
+    - [Release notes](https://github.com/actions/cache/releases)
+    - [Changelog](https://github.com/actions/cache/blob/main/RELEASES.md)
+    - [Commits](https://github.com/actions/cache/compare/v4...v5)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/cache
+      dependency-version: '5'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit dd69df8aa729e6ad9007679b531f8e806df40600
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-12-15
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-15
+
+    build(deps): bump actions/upload-artifact from 5 to 6
+    
+    Bumps [actions/upload-artifact](https://github.com/actions/upload-artifact) from 5 to 6.
+    - [Release notes](https://github.com/actions/upload-artifact/releases)
+    - [Commits](https://github.com/actions/upload-artifact/compare/v5...v6)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/upload-artifact
+      dependency-version: '6'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 80f43d9810e81201523bd7e8f9c7f6d9a27df6d8
+Merge: 869c7af0 a9f7f944
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-14
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-14
+
+    Merge pull request #1962 from dg0yt/install-interface
+    
+    Revise libngtcp2 include dir setup
+
+commit 869c7af0fef73b17a0f5721261d99daa0a2058fd
+Merge: d9dcb438 cbc0ed55
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-08
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-08
+
+    Merge pull request #1964 from ngtcp2/pkg-config-require-libngtcp2
+    
+    Add libngtcp2 to pkg-config Requires.private
+
+commit cbc0ed555e2219e7670c43e3933e568cec2ce326
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-08
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-08
+
+    Add libngtcp2 to pkg-config Requires.private
+
+commit 57278e3b8be573627e8590b29187b2f172fc960c
+Author:     Kai Pastor <dg0yt@darc.de>
+AuthorDate: 2025-12-07
+Commit:     Kai Pastor <dg0yt@darc.de>
+CommitDate: 2025-12-07
+
+    Export ngtcp2_crypto_ossl(_static) targets
+    
+    Using the existing ${PROJECT_NAME}Targets which is
+    installed by the /lib directory.
+    Wrap individual ngtcp2_crypto_ossl_INCLUDE_DIRS into
+    BUILD_INTERFACE generator expressions.
+    The INSTALL_INTERFACE for includes is identical to the
+    public ngtcp2 link library, so it can be omitted here.
+    OpenSSL::SSL is a public link library of ossl crypt,
+    so it must be looked up with find_dependency in the
+    installed CMake config file.
+
+commit bb6fa6569b29c0d796b7e0a4e251c0414fe331d3
+Author:     Kai Pastor <dg0yt@darc.de>
+AuthorDate: 2025-12-07
+Commit:     Kai Pastor <dg0yt@darc.de>
+CommitDate: 2025-12-07
+
+    Revise ossl crypto link libraries
+    
+    In preparation for CMake config export:
+    Add the PUBLIC keyword for ngtcp2_crypto_ossl.
+    Add link libraries for ngtcp2_crypto_ossl_static.
+    Remove explicit include dirs exposed by ngtcp2(_static).
+    Switch to OpenSSL::SSL instead of OPENSSL_LIBRARIES
+    and remove the explicit use of OPENSSL_INCLUDE_DIRS.
+
+commit a9f7f9442cdec91fc5ddb085db7ce6396ac3c78c
+Author:     Kai Pastor <dg0yt@darc.de>
+AuthorDate: 2025-12-07
+Commit:     Kai Pastor <dg0yt@darc.de>
+CommitDate: 2025-12-07
+
+    Move generator expressions into ngtcp2_INCLUDE_DIRS
+
+commit 7f29bb4bfefc0eb2f2e900c044a3bf39d6017b93
+Author:     Kai Pastor <dg0yt@darc.de>
+AuthorDate: 2025-12-07
+Commit:     Kai Pastor <dg0yt@darc.de>
+CommitDate: 2025-12-07
+
+    Export include dirs as CMAKE_INSTALL_INCLUDEDIR
+    
+    The installation of includes follows CMAKE_INSTALL_INCLUDEDIR,
+    so this must be used also in the install interface.
+
+commit d9dcb438ef69bf376179583e5b858c354370c6ff
+Merge: fa02e7e2 752828e7
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-05
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-05
+
+    Merge pull request #1960 from ngtcp2/refactor-with-compound-literals
+    
+    Refactor with compound literals
+
+commit 752828e77af48ad77668cb57a3b384f7fefc3057
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    Refactor with compound literals
+
+commit fa02e7e238f0274b2c6ca4c3eb23fa91050092fa
+Merge: 1e982356 f4fc00cc
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-05
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-05
+
+    Merge pull request #1959 from ngtcp2/fuzz-add-missing-callback
+    
+    fuzz: Add begin_path_validation to read_write_pkt
+
+commit f4fc00ccbdd4a5881213de2199fb4f05a263c1ce
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    fuzz: Add begin_path_validation to read_write_pkt
+
+commit 1e982356bf5e5e9791adbe605b45d4001c60c382
+Merge: 5fc10fe6 b5ad1957
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-04
+
+    Merge pull request #1958 from ngtcp2/examples-recv-settings2
+    
+    examples: Adopt nghttp3_recv_settings2
+
+commit b5ad1957d0969a910b07271c55dd8b5f9266675a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-04
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-04
+
+    examples: Adopt nghttp3_recv_settings2
+
+commit 5fc10fe60639708e99cf27e7034092b9cd62c93b
+Merge: 95bd42e0 3776480a
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #1957 from ngtcp2/bump-urlparse
+    
+    Bump urlparse
+
+commit 3776480ab79340dc839263a81caad1e607d2309b
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-03
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    Bump urlparse
+
+commit 95bd42e06cf7a9a867c87836bbe9265725116c3b
+Merge: 5b23b7b1 973968b7
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #1956 from ngtcp2/ksl-remove-align
+    
+    ngtcp2_ksl: Remove alignment enforcement for keys
+
+commit 973968b723340efb9a948c0a97abd848940b0627
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-03
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    ngtcp2_ksl: Remove alignment enforcement for keys
+    
+    The intent to add this alignment is align key data to 8 bytes boundary
+    so that we can read uint64_t variable by pointer cast.  But it turns
+    out that aligning keys is useless.
+    
+    On 64-bit systems, uint8_t *keys is aligned to 8 bytes boundary, then
+    the actual keys following this field are aligned to 8 bytes too.
+    
+    On 32-bit systems, uint8_t *keys is aligned to 4 bytes boundary, then
+    the keys is also aligned to 4 bytes boundary.  On these systems,
+    64-bit integer is aligned to 4 bytes boundary as well, so no need to
+    care about the alignment.
+
+commit 5b23b7b169037e28343c57c3acae198d6ef485e8
+Merge: 52fc6411 b7f56d97
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #1955 from ngtcp2/examples-modernize-field-initializers
+    
+    examples: Modernize field initializers
+
+commit b7f56d97761f9e9e71cd6ae13776b74863a8f9d6
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    examples: Modernize field initializers
+
+commit 52fc64117ea279688669424a5337122826ce7b5a
+Merge: 143329e6 99adf35b
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #1954 from ngtcp2/examples-nodiscard
+    
+    examples: Add [[nodiscard]] to Address functions
+
+commit 99adf35ba65462347e67a9cddd26c4412ef81e23
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    examples: Add [[nodiscard]] to Address functions
+
+commit 143329e6c13b43a357f5d586f9598af2b9561bbc
+Merge: 11929523 a173eea6
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #1953 from ngtcp2/examples-compact-init
+    
+    examples: Make initialization form compact
+
+commit a173eea6b3822058383609052d1b8166dbccb8ce
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    examples: Make initialization form compact
+
+commit 11929523bb41c07467ba50f351d4bd59559b5337
+Merge: 72aec04e 0fce84bc
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #1952 from devkdas/fix-issue
+    
+    examples: Fix linker error in examplestest by adding shared.cc dependency
+
+commit 0fce84bc109b10eb4447d9120817f22d5138a258
+Author:     Karthik Das <92445174+devkdas@users.noreply.github.com>
+AuthorDate: 2025-12-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-02
+
+    examples: Fix linker error in examplestest by adding shared.cc dependency
+    
+    Fix undefined reference errors when building examplestest target
+    
+    The examplestest target was failing to link due to missing Address class
+    method implementations (size() and as_sockaddr()) that are called from
+    util.cc. These methods are implemented in shared.cc but were not included
+    in the examplestest_SOURCES.
+    
+    Changes:
+    - Add shared.cc and shared.h to examplestest_SOURCES
+    - Remove duplicate shared.cc/shared.h from ENABLE_EXAMPLE_WOLFSSL section
+      to avoid build conflicts
+    
+    This aligns examplestest with other targets (qtlsclient, qtlsserver, etc.)
+    that already include shared.cc through SERVER_SRCS or CLIENT_SRCS.
+    
+    Fixes linker errors:
+      undefined reference to `ngtcp2::Address::size() const'
+      undefined reference to `ngtcp2::Address::as_sockaddr() const'
+
+commit 72aec04ef84787cf2cfc270f73ce60ebfb915e3e
+Merge: 158cac71 499bd1ff
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-02
+
+    Merge pull request #1950 from ngtcp2/examples-add-as-ngtcp2-addr
+    
+    examples: Add as_ngtcp2_addr helper function
+
+commit 499bd1ffa404146da415e396ae690655be3fd357
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-02
+
+    examples: Add as_ngtcp2_addr helper function
+
+commit 158cac71a1c728186cb7ef42edfea172e437cdd5
+Merge: 95366aa9 7720d81c
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-02
+
+    Merge pull request #1949 from ngtcp2/examples-show-errors
+    
+    examples: Show error regardless of config.quiet
+
+commit 7720d81c09ba520b6398ed76a30dffbe1fd3cd72
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-02
+
+    examples: Show error regardless of config.quiet
+
+commit 95366aa94c71d48c7b3cd1b8a005969a64ba7dad
+Merge: f878e7a7 75f19143
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-02
+
+    Merge pull request #1948 from ngtcp2/examples-variant-sockaddr
+    
+    examples: Replace sockaddr_union with std::variant
+
+commit 75f19143890ce7c667e6e96a8bd1a9da2707c3bc
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-02
+
+    examples: Replace sockaddr_union with std::variant
+
+commit f878e7a78d50aecc30d3693335d7a095b01b95fe
+Merge: 1c62e8d5 8865bb2a
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-01
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-01
+
+    Merge pull request #1946 from ngtcp2/examples-variant-inaddr
+    
+    examples: Replace in_addr_union with std::variant
+
+commit 8865bb2a7173098ceceba9f72e4c2a0e261bdcd3
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-01
+
+    examples: Replace in_addr_union with std::variant
+
+commit 1c62e8d5e46c45025849c8323761d7a179003aa9
+Merge: 9c5b8755 81398d25
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-01
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-01
+
+    Merge pull request #1945 from ngtcp2/refactor-create-ack-frame
+    
+    acktr: Refactor ACK creation function
+
+commit 81398d259469f0dfbbf64b4866be10ee9ee993b3
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-01
+
+    acktr: Refactor ACK creation function
+    
+    - Return int to indicate success or failure
+    - Take ngtcp2_ack instead of ngtcp2_frame
+
+commit 9c5b875502b33ad65791ec1f472d5f270c369d7f
+Merge: 5205080f 9bd37c6f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-01
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-01
+
+    Merge pull request #1944 from ngtcp2/ksl-rework-key-storage
+    
+    ksl: Rework key storage to avoid struct hack
+
+commit 9bd37c6f1a55041a91616091dae56d90a85ff0d4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-01
+
+    ksl: Rework key storage to avoid struct hack
+
+commit 5205080f656e982ad58486047a4deef07dd23683
+Merge: c9e8ffbb 711f7776
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-01
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-01
+
+    Merge pull request #1943 from ngtcp2/rework-frame-union
+    
+    Rework ngtcp2_frame union to avoid potential UB
+
+commit 711f777652f1df5557ed0d635094a4fc6cee630f
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-30
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-30
+
+    Rework ngtcp2_frame union to avoid potential UB
+    
+    - Introduce ngtcp2_frame_hd to adopt Common Initial Sequence to avoid
+      UB when accessing the active field in ngtcp2_frame.
+    - Avoid struct hack in ngtcp2_frame.
+
+commit c9e8ffbb59fd5b446c57e1a8e82c3c13e73269c7
+Merge: e63e517c 144b44bf
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-30
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-30
+
+    Merge pull request #1942 from ngtcp2/rewrite-get-uvarint
+    
+    Rewrite get_uvarint
+
+commit 144b44bf5667a8097a334cc13fc74bf2284b19ab
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-30
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-30
+
+    Rewrite get_uvarint
+    
+    Rewrite get_uvarint to avoid possible UB.
+
+commit e63e517c142bc28b6294c8361c50fae1e8faa3c5
+Merge: e17033ed 990d8bb0
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-29
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-29
+
+    Merge pull request #1940 from ngtcp2/add-vec-drop
+    
+    Add ngtcp2_vec_drop
+
+commit 990d8bb0f8331392aaaeacafcca7ca4608a0d38f
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-29
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-29
+
+    Add ngtcp2_vec_drop
+
+commit e17033ed6c6198507f631b1ef9153cf1bf250308
+Merge: aa63020e 6bc25c74
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-29
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-29
+
+    Merge pull request #1939 from ngtcp2/examples-goodput-compute-in-double
+    
+    examples: Compute goodput in double
+
+commit 6bc25c748e3f492613b5ce815727eed5a7feef7f
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-29
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-29
+
+    examples: Compute goodput in double
+
+commit aa63020ee30e41cae9f77a94e7c1ac5a5a49d600
+Merge: 093fd04b c986734f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-29
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-29
+
+    Merge pull request #1938 from ngtcp2/examples-goodput-margin
+    
+    examples: Allow 5% margin for the expected goodput
+
+commit c986734f7d6af6ba4214ecd3a08ccc6762f5894c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-29
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-29
+
+    examples: Allow 5% margin for the expected goodput
+
+commit 093fd04bff135db2d62c0c252443baf0b3512166
+Merge: 577fc91d 96669e57
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-29
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-29
+
+    Merge pull request #1937 from ngtcp2/gha-matrix-with-object
+    
+    GHA: Simplify matrix with array of objects
+
+commit 96669e57f6f68c2a6e846ffbf73108f425662924
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-29
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-29
+
+    GHA: Simplify matrix with array of objects
+    
+    Instead of implicit grouping TLS stacks, specify them explicitly using
+    array of objects.
+    
+    Prefer ossl instead of openssl1 which is now deprecated and
+    unmaintained.
+
+commit 577fc91d34df26848eef99c1e33b36d4c3a8f449
+Merge: ab6f1b42 2427cb07
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #1936 from ngtcp2/gha-simplify-build-matrix
+    
+    GHA: Simplify build matrix with includes
+
+commit 2427cb07553d69b079fae5f2a1777faac5485d3e
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    GHA: Simplify build matrix with includes
+
+commit ab6f1b4269703dcc1ed517fc36c98ec3693651e0
+Merge: 8327e8d3 701129bd
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #1935 from ngtcp2/bbr-spurious-loss-backup
+    
+    bbr: More backups for spurious losses
+
+commit 701129bd3a722d4d186895757e62c3c81433354d
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    bbr: More backups for spurious losses
+    
+    Do the same thing as BBR TCP does on spurious losses.
+
+commit 8327e8d398748b0a005bb17a4214255d1bb5e8d7
+Merge: 9d1f4769 c00eaf0c
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #1934 from ngtcp2/gha-ubuntu-arm-include
+    
+    GHA: Specify ubuntu-arm in include
+
+commit c00eaf0c3c8a7fd9b2d2417b7451bffa303460c8
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    GHA: Specify ubuntu-arm in include
+
+commit 9d1f4769a036454615b21df37d78dcb048b24d38
+Merge: 137af1fd b120069a
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #1933 from ngtcp2/bbr-no-cwnd-reduction-on-congestion-event
+    
+    bbr: Remove CWND reduction on congestion event
+
+commit b120069ad02bf77eff6a3c2e6440faa9a9d85a40
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    bbr: Remove CWND reduction on congestion event
+    
+    Reducing CWND should be done on RTO.  The single congestion event
+    itself is not RTO.
+
+commit 137af1fdaefb22fa556c0f00f56d73895e6790f7
+Merge: 695cc97c d7a7bac8
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #1932 from ngtcp2/qlog-const-vec-pkt-type
+    
+    ngtcp2_qlog: Add const qualifier to vec_pkt_type*
+
+commit d7a7bac8e956df21adb9a6669901f5b26a305318
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    ngtcp2_qlog: Add const qualifier to vec_pkt_type*
+
+commit 695cc97c8009a4f5d7bd0e855863bf1d5ad39f7b
+Merge: 2e0cc01f dc58865e
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-26
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-26
+
+    Merge pull request #1930 from ngtcp2/update-rtt-on-largest-acked
+    
+    Update RTT when the largest packet number is acked
+
+commit dc58865e52f5a0a6a7d5e95efce497b5f8be7fb6
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-26
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-26
+
+    Update RTT when the largest packet number is acked
+    
+    This avoids inflating RTT due to packet reordering.
+
+commit 2e0cc01f8276fe6412c8c1866f6f22ce1278a7e6
+Merge: 19c547f6 573cb515
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-25
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-25
+
+    Merge pull request #1929 from ngtcp2/str-remove-redundant-assignment
+    
+    ngtcp2_str: Remove redundant assignment
+
+commit 573cb515357344d9948d71cb658a674707197e4f
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-25
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-25
+
+    ngtcp2_str: Remove redundant assignment
+
+commit 19c547f683fbfbc011862073201394412fc1b502
+Merge: 8f250ac1 fefbc904
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-25
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-25
+
+    Merge pull request #1928 from ngtcp2/log-add-missing-error-codes
+    
+    ngtcp2_log: Add missing error codes
+
+commit fefbc904d1f3d151d03ebd24949102ee67e7df3c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-25
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-25
+
+    ngtcp2_log: Add missing error codes
+
+commit 8f250ac1aa016a86d82ffad9ab9138d79ac8c98b
+Merge: 86e10492 d2114030
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-24
+
+    Merge pull request #1926 from ngtcp2/dependabot/github_actions/actions/checkout-6
+    
+    build(deps): bump actions/checkout from 5 to 6
+
+commit 86e1049298cc2bac0fa28785fabec9cdda9a0f95
+Merge: 35a5b4ed 081f317a
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-24
+
+    Merge pull request #1927 from ngtcp2/examples-lowcase
+    
+    examples: Generate lowcase_tbl and remove redundant cast
+
+commit 081f317ac25fce794851dd1f3c14310bfdd905e2
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-24
+
+    examples: Generate lowcase_tbl and remove redundant cast
+
+commit d2114030f9a530f782a31a28f9f7fe412adaa819
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-11-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-24
+
+    build(deps): bump actions/checkout from 5 to 6
+    
+    Bumps [actions/checkout](https://github.com/actions/checkout) from 5 to 6.
+    - [Release notes](https://github.com/actions/checkout/releases)
+    - [Changelog](https://github.com/actions/checkout/blob/main/CHANGELOG.md)
+    - [Commits](https://github.com/actions/checkout/compare/v5...v6)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/checkout
+      dependency-version: '6'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 35a5b4eda9366d3d17038983879e08ed6f31857f
+Merge: 26bde892 85f6cf67
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-23
+
+    Merge pull request #1925 from ngtcp2/gha-ubuntu-arm
+    
+    Gha ubuntu arm
+
+commit 85f6cf67ed0ddeb9948c2eee319144a8a183be2c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-23
+
+    examples: Fix build error on ubuntu-24.04-arm
+
+commit 5b5c49693f169c52b202044c4cfecba57477d289
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-23
+
+    GHA: Add ubuntu-24.04-arm builds
+
+commit 26bde89229abfec5e1093f587530ef9d3d230c79
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-23
+
+    Bump library version

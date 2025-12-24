@@ -1,0 +1,586 @@
+commit 4c54689c98d431bfe4d82bdcf2a67b9179a91cca
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-23
+
+    Bump package and library versions
+
+commit 67b64abf3bfa1bf6520c7abfb428c76cd7e40ff4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-23
+
+    Update AUTHORS
+
+commit 5ad029b002b884a2f129fb2fa53d39112e26412a
+Merge: a1a0551 afef207
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-23
+
+    Merge pull request #446 from ngtcp2/bump-sfparse
+    
+    Bump sfparse
+
+commit afef207f185ccde8e8c92edb1f6e9ae9fff54d22
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-23
+
+    Bump sfparse
+
+commit a1a055195755dc35d67e7d09003e3e9fd8246cee
+Merge: 29afb5e 6662934
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-17
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-17
+
+    Merge pull request #445 from ngtcp2/clarify-field-size-limits
+    
+    Clarify field size limits
+
+commit 666293424262e364e9981a0a0a7ab21ebe0110fa
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-17
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-17
+
+    Clarify field size limits
+
+commit 29afb5e7bb40db274fe6c716801772028c55210f
+Merge: 16cbce0 aab833f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-16
+
+    Merge pull request #444 from ngtcp2/remove-stream-tx-hstate
+    
+    Remove unused tx.hstate from nghttp3_stream
+
+commit aab833f64e498c21336d699d5952503ec532a425
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-16
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-16
+
+    Remove unused tx.hstate from nghttp3_stream
+
+commit 16cbce0fa8f1b4db0e2283c3613c01078ecd36dc
+Merge: 1f121f2 bf5da56
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-16
+
+    Merge pull request #443 from ngtcp2/missing-error-handling
+    
+    Fix missing error handling
+
+commit bf5da565744c5bed0fe51ca17aa47d25e38aa5cb
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-16
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-16
+
+    Fix missing error handling
+
+commit 1f121f2853a3ea10f9e66cbf203790ef8212691d
+Merge: 874045d d60a098
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-10
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-10
+
+    Merge pull request #441 from ngtcp2/nonzero-datalen
+    
+    datalen must not be zero
+
+commit d60a0986e8b5c65651aae8aebaa70c734d8571ea
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-10
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-10
+
+    datalen must not be zero
+
+commit 874045de8b2382706b22a458496e78f7938b9862
+Merge: d8af1b0 6e67286
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-10
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-10
+
+    Merge pull request #440 from ngtcp2/fix-enable-connect-protocol
+    
+    Fix ENABLE_CONNECT_PROTOCOL setting handling
+
+commit 6e6728669a896235fbaa7b9f5099c76052a08b62
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-10
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-10
+
+    Fix ENABLE_CONNECT_PROTOCOL setting handling
+    
+    Previously, client ignores ENABLE_CONNECT_PROTOCOL, and server records
+    it.  This is incorrect.  The correct behavior is that only client
+    should record ENABLE_CONNECT_PROTOCOL, and server should ignore it.
+
+commit d8af1b09656de6e5b826b605870428d97b6abe8a
+Merge: 50168bd a94a6c6
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-05
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-05
+
+    Merge pull request #437 from ngtcp2/port-ngtcp2-changes
+    
+    Port ngtcp2 changes
+
+commit a94a6c662de6f5c230a5f74ba4d57ba7f4c94e93
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    unreachable: Port ngtcp2 changes
+
+commit 916ebd000ec5fb15cbcd71f0727ea6de7ce04d91
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    balloc: Port ngtcp2 changes
+
+commit 6318fad49672ddaade020c960a4973ab6b3601cb
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    range: Port ngtcp2 changes
+
+commit da7fdb883144cc2bfaf7331db5060073bd1883c4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    idtr: Port ngtcp2 changes
+
+commit 140930151dc387be727d285bb9d96eee401194c5
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    gaptr: Port ngtcp2 changes
+
+commit 50168bd7e4f2fb6899702838e5da4935c24d41ba
+Merge: 7733429 b770539
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-05
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-05
+
+    Merge pull request #436 from ngtcp2/simplify-iv-assignment
+    
+    stream: Simplify settings entry assignment
+
+commit b770539a729b172a5831d26325ab60f253f8a93b
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    stream: Simplify settings entry assignment
+
+commit 7733429f4cbc9056aaa1602f805001e81b0bfbbe
+Merge: 3273159 675a37c
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-05
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-05
+
+    Merge pull request #435 from ngtcp2/refactor-compound-literals
+    
+    Refactor with compound literals
+
+commit 675a37c6b7f6c2e11aaa74d669d6ea2c3c38e0fe
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    Refactor with compound literals
+
+commit 32731596529709cf53053e112081b5ab18e1ee1e
+Merge: 14344c2 79759dd
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-05
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-05
+
+    Merge pull request #434 from ngtcp2/remove-tnode-num-children
+    
+    tnode: Remove unused num_children
+
+commit 79759dd74ca1ea73090f63cc2b36cd90ac4a3db5
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-05
+
+    tnode: Remove unused num_children
+
+commit 14344c249a31d7c18c8d9cc3bbb14ec0ac917239
+Merge: 1616ab8 d2909f4
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-04
+
+    Merge pull request #433 from ngtcp2/fuzz-add-new-callbacks
+    
+    fuzz: Add new callbacks
+
+commit d2909f46b60b2c32a54064c155331116be9fe4d5
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-04
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-04
+
+    fuzz: Add new callbacks
+
+commit 1616ab835061d7cdd2ef114bc3ddb917ce269611
+Merge: fcba09a 4afe254
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-04
+
+    Merge pull request #432 from ngtcp2/proto-settings
+    
+    Add nghttp3_recv_settings2 and deprecate nghttp3_recv_settings
+
+commit 4afe25483548c958a6149ff9051524e13c722335
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-04
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-04
+
+    Add nghttp3_recv_settings2 and deprecate nghttp3_recv_settings
+    
+    When nghttp3_recv_settings was introduced, nghttp3_settings just
+    contained values that could be sent or received in HTTP/3 SETTINGS
+    frame except for a single field.  The choice of the struct was just a
+    convenience.
+    
+    Since then we have added more fields to nghttp3_settings that are not
+    send or received in SETTINGS frame because nghttp3_settings is the
+    configuration for nghttp3_conn object, not just for HTTP/3 SETTINGS
+    values.  Now it is apparent that nghttp3_settings is not appropriate
+    for use when notifying the contents of received SETTINGS frame.
+    
+    To fix this issue, this commit adds new struct named
+    nghttp3_proto_settings which only contains HTTP/3 SETTINGS values that
+    this library can recognize.  New callback function
+    nghttp3_recv_settings2 is also added to notify the incoming SETTINGS
+    to the application with this new struct.
+    
+    nghttp3_recv_setting is now deprecated in favor of
+    nghttp3_recv_settings2.  The new HTTP/3 settings that might be added
+    in the future will not be notified with this deprecated callback.
+
+commit fcba09a7993384a2800a2ec17d264f2aef0837c9
+Merge: 113801f 3492354
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #431 from ngtcp2/bump-sfparse
+    
+    Bump sfparse
+
+commit 34923544523575d3b91c3617165b5cb1e53dab01
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-03
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    Bump sfparse
+
+commit 113801f5c008cc4e2bf00ee51e1c0e10720f1f0f
+Merge: af031d3 b7e3633
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #430 from ngtcp2/port-ngtcp2-ksl
+    
+    Port ngtcp2_ksl changes
+
+commit b7e36337d8b38047cb16087051636fc97bf41e59
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-03
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    Port ngtcp2_ksl changes
+
+commit af031d3555c345256dc18bd453ebfb4cae498646
+Merge: c57bbb8 c9ca7db
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #429 from ngtcp2/rewrite-get-varint
+    
+    Rewrite nghttp3_get_varint
+
+commit c9ca7db576cbfbc6dd5f5f1267963dbc68d48c16
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-03
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    Rewrite nghttp3_get_varint
+
+commit c57bbb8a08630da993b262cefe54eedfadc98e0b
+Merge: 6c75190 c0e14ef
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #428 from ngtcp2/tests-refactor
+    
+    tests: Refactor
+
+commit c0e14ef818c98df579e983b44fca20211ac002dd
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-03
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    tests: Refactor
+    
+    - Fix invalid casts
+    - Add const to ngtcp2_frame * parameter for ngtcp2_write_frame*
+      functions
+
+commit 6c751901888e5385d4c01badfdb7653e360b7bc3
+Merge: bbb6ffb 04fbdc7
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-12-03
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-12-03
+
+    Merge pull request #427 from ngtcp2/rework-frame-union
+    
+    Rework nghttp3_frame union to avoid potential UB
+
+commit 04fbdc70a47b34b30256eb2d52761362135d0cf8
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-12-03
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-12-03
+
+    Rework nghttp3_frame union to avoid potential UB
+    
+    - Introduce nghttp3_frame_hd to adopt Common Initial Sequence to avoid
+      UB when accessing the active field in nghttp3_frame.
+    - Avoid struct hack in nghttp3_settings.
+
+commit bbb6ffb0e33a332941d809b14b89c2ac89044a00
+Merge: 2064d40 efbb5c1
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #422 from ngtcp2/gha-simplify-build-matrix
+    
+    GHA: Simplify build matrix with includes
+
+commit efbb5c1f0f3859047088cacc9e70788710e4dd30
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    GHA: Simplify build matrix with includes
+
+commit 2064d40256fafeabc5a9fd1a587c5f18fdb05083
+Merge: d1ba5fe d68b1f2
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #421 from ngtcp2/gha-ubuntu-arm-include
+    
+    GHA: Specify ubuntu-arm in include
+
+commit d68b1f20a5be71ce893af4a87b60c8482192814b
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    GHA: Specify ubuntu-arm in include
+
+commit d1ba5fe4e72fa55c5dbacff3339530ca01a03729
+Merge: f7a73ec 57127f8
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-28
+
+    Merge pull request #420 from ngtcp2/more-designated-init
+    
+    More use of designated initializers
+
+commit 57127f8719065f836e5770d6e85e2820c009ca10
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-28
+
+    More use of designated initializers
+
+commit f7a73ec9dc2fbea2e3173541aa8c285dced65bc2
+Merge: 24c2f07 1b152d6
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-26
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-26
+
+    Merge pull request #419 from ngtcp2/dependabot/github_actions/actions/checkout-6
+    
+    Bump actions/checkout from 5 to 6
+
+commit 1b152d63ee245f5a4f81d0e2ba8325d8849b1200
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-11-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-24
+
+    Bump actions/checkout from 5 to 6
+    
+    Bumps [actions/checkout](https://github.com/actions/checkout) from 5 to 6.
+    - [Release notes](https://github.com/actions/checkout/releases)
+    - [Changelog](https://github.com/actions/checkout/blob/main/CHANGELOG.md)
+    - [Commits](https://github.com/actions/checkout/compare/v5...v6)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/checkout
+      dependency-version: '6'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 24c2f07726502cc7be17441fb58d63ac51df0749
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-24
+
+    Bump library version due to the patch release
+
+commit 8d4325510d736495b637401d3a5d3d1fa5eb0c81
+Merge: 31a6e16 824c080
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-24
+
+    Merge pull request #417 from ngtcp2/bump-munit
+    
+    Bump munit
+
+commit 824c08083f2d258b6a45dc1d936e6756d45d1754
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-24
+
+    Bump munit
+
+commit 31a6e1684a6c4e4099aa4a257ab8207bd6391e1c
+Merge: 1bdee97 38b9687
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-23
+
+    Merge pull request #416 from ngtcp2/avoid-char-for-http-lookup-table
+    
+    nghttp3_http: Use int8_t for the lookup tables consistently
+
+commit 38b96876dd03f41e1ab7bc133c7abbb984d56f2a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-23
+
+    nghttp3_http: Use int8_t for the lookup tables consistently
+
+commit 1bdee97fb1874d7654c9aa5722f9b30341906ff1
+Merge: c106214 44a750e
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-23
+
+    Merge pull request #415 from ngtcp2/gha-ubuntu-arm
+    
+    GHA: Add ubuntu-24.04-arm builds
+
+commit 44a750ec15ea1c53c2efd7a456bdd8b9708ff82e
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-23
+
+    GHA: Add ubuntu-24.04-arm builds
+
+commit c106214db58724aef744d929cbaa251848dc6a4c
+Merge: 056b852 5815ac6
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-11-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-11-23
+
+    Merge pull request #414 from ngtcp2/fix-header-name-check
+    
+    Fix header name validation on a platform where char is unsigned
+
+commit 5815ac6f53ba9311e8d76ec343bbb5cabc7a7ea7
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-23
+
+    Fix header name validation on a platform where char is unsigned
+
+commit 056b85248ccb94ed698b21ffc5ab06413f94ed1a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-11-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-11-23
+
+    Bump package version

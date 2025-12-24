@@ -383,9 +383,21 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				error<Error::NonexistentValue>("Unexpected end-of-file!");
 		}
 
+		String getModuleFile(String const& path) const {
+			for (auto const& source: sourcePaths) {
+				auto const fullName = source + "/" + path + ".bv";
+				if (OS::FS::exists(source) && OS::FS::exists(fullName))
+					return Makai::File::loadText(fullName);
+				else try {
+					return Makai::File::loadTextFromArchive(fullName);
+				} catch (...) {}
+			}
+			error<Error::NonexistentValue>("Module file '"+path+"' does not exist or could not be found!");
+		}
+
 		template <Type::Derived<Error::Generic> E = Error::InvalidValue>
 		[[noreturn]]
-		void error(String const& what) {
+		void error(String const& what) const {
 			auto const pos = stream.position();
 			throw E(
 				Makai::toString(
@@ -434,6 +446,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (name == "main")												return true;
 			return false;
 		}
+
+		StringList				sourcePaths;
 
 		Scope					global;
 

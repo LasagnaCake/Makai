@@ -10,6 +10,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		using Program		= Runtime::Program;
 		using Context		= Context;
 
+		virtual  ~AAssembler() {}
+
 		AAssembler(Context& ctx): context(ctx) {}
 
 		virtual void assemble() = 0;

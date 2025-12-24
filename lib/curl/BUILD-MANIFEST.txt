@@ -1,0 +1,15 @@
+.clang 21.1.8
+.mingw-w64 13.0.0-1
+zlibng 2.3.2 https://github.com/zlib-ng/zlib-ng/archive/refs/tags/2.3.2.tar.gz
+zstd 1.5.7 https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
+brotli 1.2.0 https://github.com/google/brotli/archive/v1.2.0.tar.gz
+psl 2025-10-16 https://raw.githubusercontent.com/publicsuffix/list/399792921792cacc483219997697443b49b6976f/public_suffix_list.dat
+libpsl 0.21.5 https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.gz
+nghttp3 1.14.0 https://github.com/ngtcp2/nghttp3/releases/download/v1.14.0/nghttp3-1.14.0.tar.xz
+libressl 4.2.1 https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-4.2.1.tar.gz
+ngtcp2 1.19.0 https://github.com/ngtcp2/ngtcp2/releases/download/v1.19.0/ngtcp2-1.19.0.tar.xz
+nghttp2 1.68.0 https://github.com/nghttp2/nghttp2/releases/download/v1.68.0/nghttp2-1.68.0.tar.xz
+libssh2 1.11.1 https://libssh2.org/download/libssh2-1.11.1.tar.xz
+cacert 2025-12-02 https://curl.se/ca/cacert-2025-12-02.pem
+curl 8.17.0 https://curl.se/download/curl-8.17.0.tar.xz
+trurl 0.16.1 https://curl.se/trurl/dl/trurl-0.16.1.tar.gz
