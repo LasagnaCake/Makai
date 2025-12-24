@@ -2,6 +2,8 @@
 #include "context.hpp"
 
 using namespace Makai::Anima::V2::Toolchain::Assembler;
+using namespace Makai::Error;
+
 namespace Runtime = Makai::Anima::V2::Runtime;
 using Instruction = Makai::Anima::V2::Instruction;
 using DataLocation = Makai::Anima::V2::DataLocation;
@@ -9,29 +11,17 @@ using Type = Breve::TokenStream::Token::Type;
 using enum Type;
 using Value = Makai::Data::Value;
 
-using Solution			= Makai::KeyValuePair<Value::Kind, Makai::String>;
+struct Solution {
+	Value::Kind		type;
+	Makai::String	value;
+	Makai::String	source;
+};
+
 using NamespaceMember	= Makai::KeyValuePair<Makai::String, Context::Scope::Member&>;
-using Namespace			= Makai::KeyValuePair<Makai::String, Context::Scope::Member&>;
 
 #define BREVE_ASSEMBLE_FN(NAME) static void do##NAME (Breve::Context& context)
 #define BREVE_TYPED_ASSEMBLE_FN(NAME) static Solution do##NAME (Breve::Context& context)
 #define BREVE_SYMBOL_ASSEMBLE_FN(NAME) static Solution do##NAME (Breve::Context& context, Context::Scope::Member& sym)
-
-template <class T>
-[[noreturn]] static void error(Makai::String what, Context& ctx) {
-	auto const pos = ctx.stream.position();
-	throw T(
-		Makai::toString(
-			"At:\nLINE: ", pos.line,
-			"\nCOLUMN: ", pos.column,
-			"\n", ctx.stream.tokenText()
-		),
-		what,
-		Makai::CPP::SourceFile{"n/a", pos.line, ctx.fileName}
-	);
-}
-
-#define BREVE_ERROR(TYPE, WHAT) error<Makai::Error::TYPE>({WHAT}, context)
 
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
@@ -50,23 +40,21 @@ BREVE_ASSEMBLE_FN(Main);
 BREVE_ASSEMBLE_FN(Terminate);
 BREVE_ASSEMBLE_FN(Error);
 BREVE_ASSEMBLE_FN(External);
-BREVE_SYMBOL_ASSEMBLE_FN(Assignment);
+
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
 BREVE_TYPED_ASSEMBLE_FN(BinaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(InternalPrint);
 BREVE_TYPED_ASSEMBLE_FN(Internal);
-BREVE_TYPED_ASSEMBLE_FN(NamespaceResolution);
 
-static Solution doFunctionCall(Context& context, Context::Scope::Member const& symbol);
+BREVE_SYMBOL_ASSEMBLE_FN(Assignment);
+
+static Solution doFunctionCall(Context& context, Context::Scope::Member& symbol);
 
 static Solution doValueResolution(Context& context, bool idCanBeValue = false);
 
-static bool isReserved(Makai::String const& keyword);
-
 static Makai::String doDefaultValue(Breve::Context& context, Makai::String const& var, Makai::String const& uname) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed value definition!");
+	context.fetchNext();
 	auto const dvloc = "__" + context.scopePath() + "_" + var + "_set_default" + uname;
 	context.getSymbolByName(var).value["default_setter"] = dvloc;
 	auto dv = dvloc + ":\n";
@@ -93,9 +81,9 @@ static Makai::Data::Value::Kind getType(Context& context) {
 			else if (id == "object" || id == "struct")	return DVK_OBJECT;
 			else return DVK_VOID;
 		}
-		default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported type!");
+		default: context.error<InvalidValue>("Invalid/Unsupported type!");
 	}
-	BREVE_ERROR(InvalidValue, "Invalid/Unsupported type!");
+	context.error<InvalidValue>("Invalid/Unsupported type!");
 }
 
 static Makai::String argname(Value::Kind const& type) {
@@ -120,18 +108,16 @@ struct Prototype {
 static Prototype doFunctionPrototype(Context& context, bool const isExtern = false) {
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
-		BREVE_ERROR(InvalidValue, "Function name must be an identifier!");
+		context.error<InvalidValue>("Function name must be an identifier!");
 	auto const fid = fname.value.get<Makai::String>();
 	if (context.isReservedKeyword(fid))
-		BREVE_ERROR(InvalidValue, "Function name cannot be a reserved keyword!");
+		context.error<InvalidValue>("Function name cannot be a reserved keyword!");
 	auto id = fid;
 	auto args = Makai::Data::Value::array();
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed function!");
+	context.fetchNext();
 	if (context.stream.current().type != Type{'('})
-		BREVE_ERROR(NonexistentValue, "Expected '(' here!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed function!");
+		context.error<NonexistentValue>("Expected '(' here!");
+	context.fetchNext();
 	CTL::Ex::Data::Value::Kind retType = DVK_ANY;
 	id += "_";
 	Makai::String gpre = "";
@@ -142,25 +128,22 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		bool isOptional = false;
 		auto const argn = context.stream.current();
 		if (argn.type != Type::LTS_TT_IDENTIFIER)
-			BREVE_ERROR(InvalidValue, "Argument name must be an identifier!");
+			context.error<InvalidValue>("Argument name must be an identifier!");
 		auto const argID = argn.value.get<Makai::String>();
 		if (context.isReservedKeyword(argID))
-			BREVE_ERROR(InvalidValue, "Argument name cannot be a reserved keyword!");
+			context.error<InvalidValue>("Argument name cannot be a reserved keyword!");
 		if (!context.currentScope().contains(argID))
 			context.currentScope().addVariable(argID);
-		else BREVE_ERROR(InvalidValue, "Argument with this name already exists!");
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed function argument list!");
+		else context.error<InvalidValue>("Argument with this name already exists!");
+		context.fetchNext();
 		if (context.stream.current().type != Type{':'})
-			BREVE_ERROR(InvalidValue, "Expected ':' here!");
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed function argument list!");
+			context.error<InvalidValue>("Expected ':' here!");
+		context.fetchNext();
 		auto const argt = getType(context);
 		if (argt == CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)
-			BREVE_ERROR(InvalidValue, "Invalid argument type!");
+			context.error<InvalidValue>("Invalid argument type!");
 		auto& var = context.currentScope().ns->members[argID].value;
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed function argument list!");
+		context.fetchNext();
 		if (context.stream.current().type == Type{')'})
 			break;
 		if (context.stream.current().type == Type{'='}) {
@@ -177,20 +160,17 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 			var["type"] = arg["type"] = argname(argt);
 		}
 		if (inOptionalRegion && !isOptional)
-			BREVE_ERROR(NonexistentValue, "Missing value for optional argument!");
+			context.error<NonexistentValue>("Missing value for optional argument!");
 		if (context.stream.current().type != Type{','})
-			BREVE_ERROR(InvalidValue, "Expected ',' here!");
+			context.error<InvalidValue>("Expected ',' here!");
 	}
 	if (context.stream.current().type != Type{')'})
-		BREVE_ERROR(InvalidValue, "Expected ')' here!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed function!");
+		context.error<InvalidValue>("Expected ')' here!");
+	context.fetchNext();
 	if (context.stream.current().type == Type{':'}) {
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed function!");
+		context.fetchNext();
 		retType = getType(context);
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed function!");
+		context.fetchNext();
 	}
 	context.currentScope().result	= retType;
 	context.currentScope().label	= fid;
@@ -214,11 +194,11 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	if (!context.currentScope().contains(fid))
 		context.currentScope().addFunction(fid);
 	else if (context.currentScope().ns->members[fid].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
-		BREVE_ERROR(InvalidValue, "Symbol with this name already exists!");
+		context.error<InvalidValue>("Symbol with this name already exists!");
 	auto& mem = context.currentScope().ns->members[fid];
 	auto& overloads	= mem.value["overloads"];
 	if (overloads.contains(resolutionName))
-		BREVE_ERROR(InvalidValue, "Function with similar signature already exists!");
+		context.error<InvalidValue>("Function with similar signature already exists!");
 	auto& overload	= overloads[resolutionName];
 	for (auto& opt: optionals) {
 		fullName += "_" + opt.value["type"].get<Makai::String>();
@@ -231,7 +211,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	for (auto& opt: optionals) {
 		resolutionName += "_" + opt.key;
 		if (overloads.contains(resolutionName))
-			BREVE_ERROR(InvalidValue, "Function with similar signature already exists!");
+			context.error<InvalidValue>("Function with similar signature already exists!");
 		auto& overload	= overloads[resolutionName];
 		args[args.size()]		= opt.value;
 		overload["args"]		= args;
@@ -244,11 +224,10 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 
 BREVE_ASSEMBLE_FN(Function) {
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed function!");
+	context.fetchNext();
 	auto const proto = doFunctionPrototype(context, false);
 	if (context.stream.current().type != Type{'{'})
-		BREVE_ERROR(InvalidValue, "Expected '{' here!");
+		context.error<InvalidValue>("Expected '{' here!");
 	context.writeLine(proto.entryPoint, ":");
 	doScope(context);
 	context.endScope();
@@ -256,8 +235,7 @@ BREVE_ASSEMBLE_FN(Function) {
 
 BREVE_ASSEMBLE_FN(ExternalFunction) {
 	context.startScope();
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed function!");
+	context.fetchNext();
 	auto const proto = doFunctionPrototype(context, true);
 	context.writeLine(proto.entryPoint, ":");
 	Makai::String args;
@@ -272,7 +250,7 @@ BREVE_ASSEMBLE_FN(ExternalFunction) {
 		args += Makai::toString(i, "= &[-", argc - (i + 1), "] ");
 	context.writeLine("call out", proto.name, "(", args, ")");
 	if (context.stream.current().type != Type{';'})
-		BREVE_ERROR(InvalidValue, "Expected ';' here!");
+		context.error<InvalidValue>("Expected ';' here!");
 	context.endScope();
 }
 
@@ -287,18 +265,16 @@ BREVE_ASSEMBLE_FN(Scope) {
 }
 
 BREVE_ASSEMBLE_FN(External) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed external expression!");
+	context.fetchNext();
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
-		BREVE_ERROR(NonexistentValue, "Expected keyword here!");
+		context.error<NonexistentValue>("Expected keyword here!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (id == "function" || id == "func" || id == "fn") doExternalFunction(context);
-	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
+	else context.error<NonexistentValue>("Invalid keyword!");
 }
 
 BREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed print!");
+	context.fetchNext();
 	auto const v = doValueResolution(context);
 	context.writeLine("push", v.value);
 	context.writeLine("call in print");
@@ -307,24 +283,21 @@ BREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 }
 
 BREVE_TYPED_ASSEMBLE_FN(Internal) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed internal expression!");
+	context.fetchNext();
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
-		BREVE_ERROR(NonexistentValue, "Expected keyword here!");
+		context.error<NonexistentValue>("Expected keyword here!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (id == "print") return doInternalPrint(context);
-	else BREVE_ERROR(NonexistentValue, "Invalid keyword!");
+	else context.error<NonexistentValue>("Invalid keyword!");
 }
 
 NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespace& ns) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+	context.fetchNext();
 	if (context.stream.current().type != Type{'.'})
-		BREVE_ERROR(NonexistentValue, "Expected '.' here!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+		context.error<NonexistentValue>("Expected '.' here!");
+	context.fetchNext();
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
-		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+		context.error<NonexistentValue>("Namespace name must be an identifier!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (ns.members.contains(id))
 		return {id, ns.members[id]};
@@ -333,31 +306,29 @@ NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespa
 
 NamespaceMember resolveNamespaceMember(Context& context) {
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
-		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+		context.error<NonexistentValue>("Namespace name must be an identifier!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	return resolveNamespaceMember(context, context.getNamespaceByName(id));
 }
 
 Context::Scope::Namespace& resolveNamespace(Context& context, Context::Scope::Namespace& ns) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+	context.fetchNext();
 	if (context.stream.current().type != Type{'.'})
 		return ns;
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed namespace resolution!");
+	context.fetchNext();
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
-		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+		context.error<NonexistentValue>("Namespace name must be an identifier!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (ns.members.contains(id))
-		BREVE_ERROR(NonexistentValue, "Not a namespace!");
+		context.error<NonexistentValue>("Not a namespace!");
 	else if (ns.children.contains(id))
 		return resolveNamespace(context, *ns.children[id]);
-	else BREVE_ERROR(NonexistentValue, "Namespace does not exist!");
+	else context.error<NonexistentValue>("Namespace does not exist!");
 }
 
 Context::Scope::Namespace& resolveNamespace(Context& context) {
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
-		BREVE_ERROR(NonexistentValue, "Namespace name must be an identifier!");
+		context.error<NonexistentValue>("Namespace name must be an identifier!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	return resolveNamespace(context, context.getNamespaceByName(id));
 }
@@ -395,14 +366,14 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = current.value.get<Makai::String>();
 			auto result = doReservedValueResolution(context);
-			if (result.key != Value::Kind::DVK_VOID) return result;
+			if (result.type != Value::Kind::DVK_VOID) return result;
 			else if (context.hasSymbol(id)) 
 				return resolveSymbol(context, id, context.getSymbolByName(id));
 			else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				return resolveSymbol(context, sym.key, sym.value);
 			} else if (idCanBeValue) return {Value::Kind::DVK_STRING, id};
-			else BREVE_ERROR(InvalidValue, "Identifire does not match any reserved value or member name!");
+			else context.error<InvalidValue>("Identifire does not match any reserved value or member name!");
 		} break;
 		case Type{'('}: {
 			return doBinaryOperation(context);
@@ -418,7 +389,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		case LTS_TT_CHARACTER: 				return {Value::Kind::DVK_STRING,	Makai::toString("'", current.value.get<char>(), "'")	};
 		case LTS_TT_INTEGER:				return {Value::Kind::DVK_UNSIGNED,	current.value.toString()								};
 		case LTS_TT_REAL:					return {Value::Kind::DVK_REAL,		current.value.toString()								};
-		default: BREVE_ERROR(InvalidValue, "Invalid expression!");
+		default: context.error<InvalidValue>("Invalid expression!");
 	}
 }
 
@@ -446,11 +417,11 @@ constexpr Makai::String toTypeName(Value::Kind t) {
 }
 
 static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
-	auto const result = stronger(ifTrue.key, ifFalse.key);
-	if (Value::isUndefined(cond.key))
-		BREVE_ERROR(InvalidValue, "Invalid condition type!");
-	if (!Value::isVerifiable(cond.key))
-		BREVE_ERROR(InvalidValue, "Condition must be a verifiable type!");
+	auto const result = stronger(ifTrue.type, ifFalse.type);
+	if (Value::isUndefined(cond.type))
+		context.error<InvalidValue>("Invalid condition type!");
+	if (!Value::isVerifiable(cond.type))
+		context.error<InvalidValue>("Condition must be a verifiable type!");
 	auto const trueJump		= context.scopePath() + "_ternary_true"		+ context.uniqueName();
 	auto const falseJump	= context.scopePath() + "_ternary_false"	+ context.uniqueName();
 	auto const endJump		= context.scopePath() + "_ternary_end"		+ context.uniqueName();
@@ -466,8 +437,7 @@ static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, 
 }
 
 BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed operation!");
+	context.fetchNext();
 	auto lhs = doValueResolution(context);
 	usize stackUsage = 0;
 	if (lhs.value == ".") {
@@ -475,61 +445,66 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		lhs.value = "&[-0]";
 		++stackUsage;
 	}
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed operation!");
+	context.fetchNext();
 	auto const opname = context.stream.current();
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed operation!");
+	if (
+		opname.type == LTS_TT_INCREMENT
+	||	opname.type == LTS_TT_DECREMENT
+	) {
+		Makai::String const op = opname.type == LTS_TT_INCREMENT ? "inc" : "dec";
+		context.writeLine("copy", lhs.value, "-> .");
+		context.writeLine("uop inc", lhs.value, "->", lhs.value);
+		return {lhs.type, ".", lhs.value};
+	}
+	context.fetchNext();
 	auto rhs = doValueResolution(context);
 	if (rhs.value == ".") {
 		context.writeLine("push .");
 		rhs.value = "&[-0]";
 		if (stackUsage++) lhs.value = "&[-1]";
 	}
-	auto result = stronger(lhs.key, rhs.key);
-	if (Value::isUndefined(lhs.key) || Value::isUndefined(rhs.key))
-		BREVE_ERROR(InvalidValue, "Invalid operand types!");
+	auto result = stronger(lhs.type, rhs.type);
+	if (Value::isUndefined(lhs.type) || Value::isUndefined(rhs.type))
+		context.error<InvalidValue>("Invalid operand types!");
 	switch (opname.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = opname.value.get<Makai::String>();
 			if (id == "as") {
-				if (!context.isCastable(rhs.key))
-					BREVE_ERROR(InvalidValue, "Casts can only happen between scalar types, strings, and [any]!");
-				if (rhs.key != context.DVK_ANY) {
-					context.writeLine("cast", lhs.value, ":", toTypeName(rhs.key), "-> .");
-					result = rhs.key;
+				if (!context.isCastable(rhs.type))
+					context.error<InvalidValue>("Casts can only happen between scalar types, strings, and [any]!");
+				if (rhs.type != context.DVK_ANY) {
+					context.writeLine("cast", lhs.value, ":", toTypeName(rhs.type), "-> .");
+					result = rhs.type;
 				}
 			} else if (id == "if") {
-				if (!context.stream.next())
-					BREVE_ERROR(NonexistentValue, "Malformed operation!");
+				context.fetchNext();
 				if (
 					context.stream.current().type != LTS_TT_IDENTIFIER
 				&&	context.stream.current().value.get<Makai::String>() != "else"
-				) BREVE_ERROR(InvalidValue, "Expected 'else' here!");
-				if (!context.stream.next())
-					BREVE_ERROR(NonexistentValue, "Malformed operation!");
+				) context.error<InvalidValue>("Expected 'else' here!");
+				context.fetchNext();
 				auto const elseVal = doValueResolution(context);
 				result = handleTernary(context, lhs, rhs, elseVal);
-			} else BREVE_ERROR(InvalidValue, "Invalid/Unsupported operation!");
+			} else context.error<InvalidValue>("Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
 			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, "+", rhs.value, "-> .");
-			else if (Value::isString(lhs.key) && Value::isString(rhs.key))
+			else if (Value::isString(lhs.type) && Value::isString(rhs.type))
 				context.writeLine("str cat", lhs.value, "(", rhs.value, ") -> .");
-			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
+			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
 		case Type{'/'}: {
 			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, "/", rhs.value, "-> .");
 			else if (Value::isString(result)) 
 				context.writeLine("str sep", lhs.value, "(", rhs.value, ") -> .");
-			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
+			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		};
 		case Type{'-'}:
 		case Type{'*'}:
 		case Type{'%'}: {
 			auto const opstr = Makai::toString(Makai::Cast::as<char>(opname.type));
 			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, opstr, "-> .");
-			else BREVE_ERROR(InvalidValue, "Invalid expression type(s) for operation!");
+			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
 		case Type::LTS_TT_COMPARE_EQUALS:
 		case Type::LTS_TT_COMPARE_LESS_EQUALS:
@@ -550,32 +525,30 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.writeLine("comp (", lhs.value, opstr, rhs.value, ") -> .");
 		} break;
 		case Type{'['}: {
-			if (!Value::isObject(lhs.key))
-				BREVE_ERROR(InvalidValue, "Left-hand side MUST be an object!");
-			if (!Value::isString(rhs.key))
-				BREVE_ERROR(InvalidValue, "Right-hand side MUST be a string!");
+			if (!Value::isObject(lhs.type))
+				context.error<InvalidValue>("Left-hand side MUST be an object!");
+			if (!Value::isString(rhs.type))
+				context.error<InvalidValue>("Right-hand side MUST be a string!");
 			context.writeLine("get &[", lhs.value, "][&[", rhs.value, "]] -> .");
 			result = DVK_ANY;
-			if (!context.stream.next())
-				BREVE_ERROR(NonexistentValue, "Malformed operation!");
+			context.fetchNext();
 			if (context.stream.current().type != Type{']'})
-				BREVE_ERROR(InvalidValue, "Expected ']' here!");
-			if (!context.stream.next())
-				BREVE_ERROR(NonexistentValue, "Malformed operation!");
+				context.error<InvalidValue>("Expected ']' here!");
+			context.fetchNext();
 		} break;
 		case Type{'='}: {
-			if (lhs.key != rhs.key) {
+			if (lhs.type != rhs.type) {
 				if (context.isCastable(result)) {
-					context.writeLine("cast", rhs.value, ":", toTypeName(lhs.key), "-> .");
+					context.writeLine("cast", rhs.value, ":", toTypeName(lhs.type), "-> .");
 					context.writeLine("copy . ->", lhs.value);
-				} else BREVE_ERROR(InvalidValue, "Types are not convertible to each other!");
+				} else context.error<InvalidValue>("Types are not convertible to each other!");
 			}
 			context.writeLine("copy", rhs.value, "->", lhs.value);
 		}
-		default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported operation!");
+		default: context.error<InvalidValue>("Invalid/Unsupported operation!");
 	}
 	if (context.stream.current().type != Type{')'})
-		BREVE_ERROR(InvalidValue, "Expected ')' here!");
+		context.error<InvalidValue>("Expected ')' here!");
 	if (stackUsage)
 		context.writeLine("clear", stackUsage);
 	return {result, "."};
@@ -605,30 +578,30 @@ void doVarAssign(
 	PreAssignFunction const& preassign = {}
 ) {
 	if (context.currentNamespace().hasChild(sym.value["name"]))
-		BREVE_ERROR(InvalidValue, "Symbol name is also a namespace name!");
+		context.error<InvalidValue>("Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
-	if (result.key != type) {
-		if (context.isCastable(result.key))
-			BREVE_ERROR(InvalidValue, "Invalid expression type for assignment!");
-		context.writeLine("cast", result.value, ":", toTypeName(type), "-> .");
+	if (result.type != type) {
+		if (context.isCastable(result.type))
+			context.error<InvalidValue>("Invalid expression type for assignment!");
+		context.writeAdaptive("cast", result.value, ":", toTypeName(type), "-> .");
 		result.value = ".";
 	}
 	if (isNewVar) {
 		if (isGlobalVar) {
 			if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
-				BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
+				context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
 			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
-				BREVE_ERROR(InvalidValue, "Global variable expression does not match its prevoius type!");
+				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
 		} else {
 			if (context.currentScope().contains(sym.value["name"]))
-				BREVE_ERROR(InvalidValue, "Variable already exists in current scope!");
+				context.error<InvalidValue>("Variable already exists in current scope!");
 			else context.currentScope().addVariable(sym.value["name"], isGlobalVar);
 		}
 	} else {
 		if (!context.hasSymbol(sym.value["name"]))
-			BREVE_ERROR(InvalidValue, "Variable does not exist in the current scope!");
+			context.error<InvalidValue>("Variable does not exist in the current scope!");
 		if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
-			BREVE_ERROR(InvalidValue, "Symbol has already been defined as a different type in a previous scope!");
+			context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
 	}
 	preassign(context, result);
 	if (isGlobalVar)
@@ -639,9 +612,9 @@ void doVarAssign(
 
 void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const isGlobalVar = false) {
 	if (context.stream.current().type != Type{':'})
-		BREVE_ERROR(InvalidValue, "Expected ':' here!");
+		context.error<InvalidValue>("Expected ':' here!");
 	if (sym.value["decl"])
-		BREVE_ERROR(InvalidValue, "Redeclaration of already-declared symbol!");
+		context.error<InvalidValue>("Redeclaration of already-declared symbol!");
 	else sym.value["decl"] = true;
 	auto type = DVK_ANY;
 	switch (context.stream.current().type) {
@@ -653,29 +626,26 @@ void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const 
 		!context.stream.next()
 	) {
 		if (type == Value::Kind::DVK_VOID)
-			BREVE_ERROR(NonexistentValue, "Malformed variable!");
+			context.error<NonexistentValue>("Malformed variable!");
 	}
 	if (context.stream.current().type == Type{'='}) {
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed variable!");
+		context.fetchNext();
 		doVarAssign(context, sym, type, isGlobalVar, true);
 	}
 	if (context.stream.current().type != Type{';'})
-		BREVE_ERROR(InvalidValue, "Expected ';' here!");
+		context.error<InvalidValue>("Expected ';' here!");
 }
 
 BREVE_ASSEMBLE_FN(VarDecl) {
 	bool const isGlobalVar = context.stream.current().value.get<Makai::String>() == "global";
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed variable!");
+	context.fetchNext();
 	auto const varname = context.stream.current();
 	if (varname.type != LTS_TT_IDENTIFIER)
-		BREVE_ERROR(InvalidValue, "Variable name must be an identifier!");
+		context.error<InvalidValue>("Variable name must be an identifier!");
 	auto const id = varname.value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
-		BREVE_ERROR(InvalidValue, "Variable name cannot be a reserved keyword!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed variable!");
+		context.error<InvalidValue>("Variable name cannot be a reserved keyword!");
+	context.fetchNext();
 	if (!isGlobalVar) {
 		context.writeAdaptive("push null");
 	}
@@ -686,8 +656,7 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 #define PREASSIGN [=] (Breve::Context& context, Solution& result) -> void
 
 BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed variable!");
+	context.fetchNext();
 	auto const current = context.stream.current();
 	PreAssignFunction pre;
 	switch (current.type) {
@@ -721,8 +690,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 			};
 		} break;
 	}
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed assignment!");
+	context.fetchNext();
 	auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
 	auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
 	return {varType, accessor};
@@ -731,10 +699,9 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 
 static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 	auto const id = context.stream.current().value.get<Makai::String>();
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed function call!");
+	context.fetchNext();
 	if (context.stream.current().type != Type{'('})
-		BREVE_ERROR(InvalidValue, "Expected '(' here!");
+		context.error<InvalidValue>("Expected '(' here!");
 	usize pushes = 0;
 	Makai::List<Solution> args;
 	auto const start = context.currentScope().stackc + context.currentScope().varc;
@@ -742,25 +709,24 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 	while (context.stream.next()) {
 		if (context.stream.current().type == Type{')'}) break;
 		args.pushBack(doValueResolution(context));
-		legalName += "_" + argname(args.back().key);
+		legalName += "_" + argname(args.back().type);
 		if (args.back().value == ".") {
 			context.writeLine("push .");
 			args.back().value = Makai::toString("&[", start + pushes, "]");
 			++pushes;
 		}
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed function call!");
+		context.fetchNext();
 		if (context.stream.current().type == Type{','})
-			BREVE_ERROR(InvalidValue, "Expected ',' here!");
+			context.error<InvalidValue>("Expected ',' here!");
 	}
 	if (context.stream.current().type != Type{')'})
-		BREVE_ERROR(InvalidValue, "Expected ')' here!");
+		context.error<InvalidValue>("Expected ')' here!");
 	Makai::String call = "( ";
 	for (auto const& [arg, index]: Makai::Range::expand(args))
 		call += Makai::toString(index, "=", arg.value) + " ";
 	call += ")";
 	if (!sym.value["overloads"].contains(legalName))
-		BREVE_ERROR(InvalidValue, "Function overload does not exist!");
+		context.error<InvalidValue>("Function overload does not exist!");
 	auto const overload = sym.value["overloads"][legalName];
 	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
 	context.writeLine("clear", pushes);
@@ -772,24 +738,20 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 
 BREVE_ASSEMBLE_FN(Assembly) {
 	if (context.currentScope().secure)
-		BREVE_ERROR(NonexistentValue, "Assembly is only allowed in a [fatal] context!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed assembly!");
+		context.error<NonexistentValue>("Assembly is only allowed in a [fatal] context!");
+	context.fetchNext();
 	if (context.stream.current().type != Type{'{'})
-		BREVE_ERROR(NonexistentValue, "Expected '{' here!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed assembly!");
+		context.error<NonexistentValue>("Expected '{' here!");
+	context.fetchNext();
 	while (context.stream.current().type != Type{'}'}) {
 		context.writeLine(context.stream.tokenText());
 		context.stream.next();
 	}
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed variable!");
+	context.fetchNext();
 }
 
 BREVE_ASSEMBLE_FN(LooseContext) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed context declaration!");
+	context.fetchNext();
 	context.startScope();
 	context.currentScope().secure = false;
 	doExpression(context);
@@ -799,22 +761,21 @@ BREVE_ASSEMBLE_FN(LooseContext) {
 
 BREVE_ASSEMBLE_FN(Return) {
 	if (!context.inFunction())
-		BREVE_ERROR(InvalidValue, "Cannot have returns outside of functions!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed return!");
+		context.error<InvalidValue>("Cannot have returns outside of functions!");
+	context.fetchNext();
 	Solution result = {Value::Kind::DVK_VOID};
 	auto const expectedType = context.functionScope().result;
 	if (context.stream.current().type == Type{';'}) {
 		if (expectedType != Value::Kind::DVK_VOID)
-			BREVE_ERROR(NonexistentValue, "Missing return value!");
+			context.error<NonexistentValue>("Missing return value!");
 	} else {
 		if (expectedType == Value::Kind::DVK_VOID)
-			BREVE_ERROR(InvalidValue, "Function does not return a value!");
+			context.error<InvalidValue>("Function does not return a value!");
 		result = doValueResolution(context);
 		if (
-			result.key != expectedType
-		&&	!Value::isNumber(stronger(result.key, expectedType))
-		) BREVE_ERROR(InvalidValue, "Return type does not match!");
+			result.type != expectedType
+		&&	!Value::isNumber(stronger(result.type, expectedType))
+		) context.error<InvalidValue>("Return type does not match!");
 	}
 	context.addFunctionExit();
 	if (expectedType == Value::Kind::DVK_VOID)
@@ -823,35 +784,33 @@ BREVE_ASSEMBLE_FN(Return) {
 }
 
 BREVE_ASSEMBLE_FN(Main) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed main!");
+	context.fetchNext();
 	if (context.hasMain)
-		BREVE_ERROR(NonexistentValue, "Only one entrypoint is allowed!");
+		context.error<NonexistentValue>("Only one entrypoint is allowed!");
 	if (!context.inGlobalScope())
-		BREVE_ERROR(NonexistentValue, "Main can only be declared on the global scope!");
+		context.error<NonexistentValue>("Main can only be declared on the global scope!");
 	context.hasMain = true;
 	if (context.stream.current().type != Type{'{'})
-		BREVE_ERROR(InvalidValue, "Expected '{' here!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed main!");
+		context.error<InvalidValue>("Expected '{' here!");
+	context.fetchNext();
 	context.writeLine(context.main.entryPoint, ":");
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	doScope(context);
 	context.endScope();
 	if (context.stream.current().type != Type{'}'})
-		BREVE_ERROR(InvalidValue, "Expected '}' here!");
+		context.error<InvalidValue>("Expected '}' here!");
 }
 
 BREVE_ASSEMBLE_FN(Conditional) {
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+	if (!context.inFunction())
+		context.error<InvalidValue>("Cannot have branches outside of functions!");
+	context.fetchNext();
 	auto const scopeName = context.scopePath() + context.uniqueName() + "_if";
 	auto const ifTrue	= scopeName + "_true";
 	auto const ifFalse	= scopeName + "_false";
 	auto const endIf	= scopeName + "_end";
 	auto const val = doValueResolution(context);
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+	context.fetchNext();
 	context.writeLine("jump if true", val.value, ifTrue);
 	context.writeLine("jump if false", val.value, ifFalse);
 	context.writeLine(ifTrue, ":");
@@ -859,13 +818,11 @@ BREVE_ASSEMBLE_FN(Conditional) {
 	doExpression(context);
 	context.endScope();
 	context.writeLine("jump", endIf);
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+	context.fetchNext();
 	if (context.stream.current().type == LTS_TT_IDENTIFIER) {
 		auto const id = context.stream.current().value.get<Makai::String>();
 		if (id == "else") {
-			if (!context.stream.next())
-				BREVE_ERROR(NonexistentValue, "Malformed conditional!");
+			context.fetchNext();
 			context.writeLine(ifFalse, ":");
 			context.startScope();
 			doExpression(context);
@@ -882,55 +839,113 @@ BREVE_ASSEMBLE_FN(ForLoop) {
 }
 
 BREVE_ASSEMBLE_FN(RepeatLoop) {
-	// TODO: This
+	if (!context.inFunction())
+		context.error<InvalidValue>("Cannot have loops outside of functions!");
+	context.fetchNext();
+	auto const times = doValueResolution(context);
+	auto const loopStart	= context.scopePath() + context.uniqueName() + "_repeat";
+	auto const loopEnd		= loopStart + "_end";
+	auto const tmpVar		= loopStart + "_tmpvar";
+	context.writeLine(loopStart, ":");
+	context.fetchNext();
+	if (times.type == Value::Kind::DVK_VOID) {
+		context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
+		doExpression(context);
+		context.writeLine("jump", loopStart);
+		context.endScope();
+	} else if (times.type == Value::Kind::DVK_UNSIGNED) {
+		context.writeLine("push", times.value);
+		context.currentScope().addVariable(tmpVar);
+		auto const stackID = context.currentScope().ns->members[tmpVar].value["stack_id"].get<uint64>();
+		context.startScope();
+		doExpression(context);
+		context.writeLine("uop dec &[", stackID, "] -> &[", stackID, "]");
+		context.writeLine("jump if pos &[", stackID, "]", loopStart);
+		context.endScope();
+	}
+	else context.error<InvalidValue>("Expected unsigned integer or void here!");
+	context.writeLine(loopEnd, ":");
 }
 
 BREVE_ASSEMBLE_FN(DoLoop) {
-	// TODO: This
+	if (!context.inFunction())
+		context.error<InvalidValue>("Cannot have loops outside of functions!");
+	auto const uname = context.scopePath() + context.uniqueName() + "_do";
+	context.fetchNext();
+	context.writeLine(uname, ":");
+	context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
+	doExpression(context);
+	context.endScope();
+	context.fetchNext();
+	if (
+		context.stream.current().type != LTS_TT_IDENTIFIER
+	||	context.stream.current().value.get<Makai::String>() != "while"
+	) context.error<InvalidValue>("Expected 'while' here!");
+	auto const cond = doValueResolution(context);
+	if (!Value::isVerifiable(cond.type))
+		context.error<InvalidValue>("Condition result must be a verifiable type!");
+	context.writeLine("jump if true", cond.value, uname);
+}
+
+BREVE_ASSEMBLE_FN(WhileLoop) {
+	if (!context.inFunction())
+		context.error<InvalidValue>("Cannot have loops outside of functions!");
+	auto const uname = context.scopePath() + context.uniqueName() + "_do";
+	auto const loopend = uname + "_end";
+	context.fetchNext();
+	auto const cond = doValueResolution(context);
+	if (!Value::isVerifiable(cond.type))
+		context.error<InvalidValue>("Condition result must be a verifiable type!");
+	context.writeLine(uname, ":");
+	context.writeLine("jump if false", cond.value, loopend);
+	context.fetchNext();
+	context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
+	doExpression(context);
+	context.endScope();
+	context.writeLine("jump if true", cond.value, uname);
+	context.writeLine(loopend, ":");
 }
 
 BREVE_ASSEMBLE_FN(Terminate) {
-	// TODO: This
+	context.writeLine("halt");
 }
 
 BREVE_ASSEMBLE_FN(Error) {
 	if (context.inGlobalScope())
-		BREVE_ERROR(InvalidValue, "Errors cannot be thrown in the global scope!");
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed error!");
+		context.error<InvalidValue>("Errors cannot be thrown in the global scope!");
+	context.fetchNext();
 	auto const err = doValueResolution(context);
 	context.writeLine("error", err.value);
 }
 
 BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 	auto const current = context.stream.current();
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed unary value!");
+	context.fetchNext();
 	auto result = doValueResolution(context);
 	switch (current.type) {
 		case Type{'-'}: {
-			if (!Value::isNumber(result.key))
-				BREVE_ERROR(NonexistentValue, "Negation can only happen on numbers!");
+			if (!Value::isNumber(result.type))
+				context.error<NonexistentValue>("Negation can only happen on numbers!");
 			context.writeLine("uop -", result.value, "-> .");
+			//result.source = result.value;
 			result.value = ".";
 		} break;
 		case Type{'+'}: {
-			if (!Value::isNumber(result.key))
-				BREVE_ERROR(NonexistentValue, "Positration can only happen on numbers!");
+			if (!Value::isNumber(result.type))
+				context.error<NonexistentValue>("Positration can only happen on numbers!");
 			context.writeLine("copy", result.value, "-> .");
+			//result.source = result.value;
 			result.value = ".";
 		} break;
 		case LTS_TT_DECREMENT: {
-			if (!Value::isNumber(result.key))
-				BREVE_ERROR(NonexistentValue, "Incrementation can only happen on numbers!");
-			context.writeLine("uop inc", result.value, "-> .");
-			result.value = ".";
+			if (!Value::isNumber(result.type))
+				context.error<NonexistentValue>("Incrementation can only happen on numbers!");
+			context.writeLine("uop inc", result.value, "->", result.value);
 		} break;
 		case LTS_TT_INCREMENT: {
-			if (!Value::isNumber(result.key))
-				BREVE_ERROR(NonexistentValue, "Decrementation can only happen on numbers!");
-			context.writeLine("uop dec", result.value, "-> .");
-			result.value = ".";
+			if (!Value::isNumber(result.type))
+				context.error<NonexistentValue>("Decrementation can only happen on numbers!");
+			context.writeLine("uop dec", result.value, "->", result.value);
 		} break;
 	}
 	return result;
@@ -938,27 +953,26 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 
 BREVE_ASSEMBLE_FN(Module) {
 	if (!context.inGlobalScope())
-		BREVE_ERROR(InvalidValue, "Module imports/exports can only be declared in the global scope!");
+		context.error<InvalidValue>("Module imports/exports can only be declared in the global scope!");
 	auto const type = context.stream.current().value.get<Makai::String>();
 	// TODO: This
 }
 
 BREVE_ASSEMBLE_FN(Namespace) {
 	if (!context.inNamespace())
-		BREVE_ERROR(InvalidValue, "You can only declare sub-namespaces inside other namespaces!");
+		context.error<InvalidValue>("You can only declare sub-namespaces inside other namespaces!");
 	usize scopeCount = 0;
 	while (context.stream.current().type == Type{'.'}) {
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed namespace!");
+		context.fetchNext();
 		if (context.stream.current().type != LTS_TT_IDENTIFIER)
-			BREVE_ERROR(NonexistentValue, "Expected identifier for namespace name!");
+			context.error<NonexistentValue>("Expected identifier for namespace name!");
 		auto const id = context.stream.current().value.get<Makai::String>();
 		if (context.isReservedKeyword(id))
-			BREVE_ERROR(InvalidValue, "Namespace name cannot be a reserved keyword!");
+			context.error<InvalidValue>("Namespace name cannot be a reserved keyword!");
 		if (context.currentNamespace().hasChild(id))
-			BREVE_ERROR(InvalidValue, "Namespace with this name already exists!");
+			context.error<InvalidValue>("Namespace with this name already exists!");
 		if (context.currentScope().contains(id))
-			BREVE_ERROR(InvalidValue, "Namespace name is also a symbol name!");
+			context.error<InvalidValue>("Namespace name is also a symbol name!");
 		auto& ns = context.currentNamespace();
 		context.startScope(Context::Scope::Type::AV2_TA_ST_NAMESPACE);
 		auto& scope = context.currentScope();
@@ -966,20 +980,18 @@ BREVE_ASSEMBLE_FN(Namespace) {
 		scope.ns->name	= id;
 		ns.addChild(context.currentScope().ns);
 		++scopeCount;
-		if (!context.stream.next())
-			BREVE_ERROR(NonexistentValue, "Malformed namespace!");
+		context.fetchNext();
 		if (context.stream.current().type == Type {'{'})
 			break;
 		if (context.stream.current().type != Type{'.'})
-			BREVE_ERROR(NonexistentValue, "Expected '.' here!!");
+			context.error<NonexistentValue>("Expected '.' here!!");
 	}
 	if (context.stream.current().type != Type {'{'})
-		BREVE_ERROR(NonexistentValue, "Expected '{' here!");
+		context.error<NonexistentValue>("Expected '{' here!");
 	doExpression(context);
-	if (!context.stream.next())
-		BREVE_ERROR(NonexistentValue, "Malformed namespace!");
+	context.fetchNext();
 	if (context.stream.current().type != Type {'}'})
-		BREVE_ERROR(NonexistentValue, "Expected '}' here!");
+		context.error<NonexistentValue>("Expected '}' here!");
 	while (scopeCount--)
 		context.endScope();
 }
@@ -1000,6 +1012,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "return")							doReturn(context);
 			else if (id == "if")								doConditional(context);
 			else if (id == "do")								doDoLoop(context);
+			else if (id == "while")								doWhileLoop(context);
 			else if (id == "for")								doForLoop(context);
 			else if (id == "repeat")							doRepeatLoop(context);
 			else if (id == "main")								doMain(context);
@@ -1010,17 +1023,17 @@ BREVE_ASSEMBLE_FN(Expression) {
 				switch (sym.type) {
 					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym);
 					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym);
-					default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
+					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				switch (sym.value.type) {
 					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);
 					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym.value);
-					default: BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
+					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			}
-			else BREVE_ERROR(InvalidValue, "Invalid/Unsupported expression!");
+			else context.error<InvalidValue>("Invalid/Unsupported expression!");
 		} break;
 		case Type{'('}: {
 			doBinaryOperation(context);
@@ -1029,21 +1042,20 @@ BREVE_ASSEMBLE_FN(Expression) {
 		case Type{'+'}:
 		case LTS_TT_DECREMENT:
 		case LTS_TT_INCREMENT: {
-			doUnaryOperation(context);
+			auto const result = doUnaryOperation(context);
 		} break;
 		case Type{'{'}: {
-			if (!context.stream.next())
-				BREVE_ERROR(NonexistentValue, "Malformed expression!");
+			context.fetchNext();
 			context.startScope();
 			doScope(context);
 			context.endScope();
 		}
 		case Type{'}'}:
 		case Type{';'}: break;
-		default: BREVE_ERROR(InvalidValue, "Invalid expression!");
+		default: context.error<InvalidValue>("Invalid expression!");
 	}
-	if (context.stream.current().type != Type{';'} || context.stream.current().type != Type{'}'})
-		BREVE_ERROR(InvalidValue, "Expected closure here!");
+//	if (context.stream.current().type != Type{';'} || context.stream.current().type != Type{'}'})
+//		context.error<InvalidValue>("Expected closure here!");
 }
 
 void Breve::assemble() {
@@ -1058,7 +1070,7 @@ void Breve::assemble() {
 	context.writeMainPreamble("end");
 	context.writeMainPostscript("end");
 	if (!context.hasMain)
-		BREVE_ERROR(NonexistentValue, "Missing main entrypoint!");
+		context.error<NonexistentValue>("Missing main entrypoint!");
 }
 
 CTL_DIAGBLOCK_END
