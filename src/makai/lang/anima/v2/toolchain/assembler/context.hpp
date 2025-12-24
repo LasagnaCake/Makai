@@ -369,6 +369,26 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return *global.ns;
 		}
 
+		void fetchNext() {
+			if (!stream.next())
+				error<Error::NonexistentValue>("Unexpected end-of-file!");
+		}
+
+		template <Type::Derived<Error::Generic> E = Error::InvalidValue>
+		[[noreturn]]
+		void error(String const& what) {
+			auto const pos = stream.position();
+			throw E(
+				Makai::toString(
+					"At:\nLINE: ", pos.line,
+					"\nCOLUMN: ", pos.column,
+					"\n", stream.tokenText()
+				),
+				what,
+				Makai::CPP::SourceFile{"n/a", pos.line, fileName}
+			);
+		}
+
 		constexpr static bool isReservedKeyword(String const& name) {
 			if (name == "any")												return true;
 			if (name == "null")												return true;
