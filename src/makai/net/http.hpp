@@ -2,7 +2,6 @@
 #define MAKAILIB_NET_HTTP_H
 
 #include "../compat/ctl.hpp"
-#include "../data/data.hpp"
 
 namespace Makai::Net::HTTP {
 	struct Response {
