@@ -22,16 +22,9 @@ Project Project::deserializeV1(Project& proj, Data::Value const& value) {
 	proj.sources.pushBack("");
 	for (auto path: value["sources"].get<Data::Value::ArrayType>())
 		proj.sources.pushBack(path.get<String>());
-	if (value["modules"].isArray())
-		for (auto path: value["modules"].get<Data::Value::ArrayType>()) {
-			if (path.isString())
-					proj.modules.pushBack({path.get<String>(), "latest"});
-			else if (path.isObject())
-				proj.modules.pushBack({path["source"], path["version"]});
-		}
-	else if (value["modules"].isObject()) {
+	if (value["modules"].isObject()) {
 		for (auto [name, ver]: value["modules"].get<Data::Value::ObjectType>()) {
-			if (Regex::contains(name, "http(s?)\\:\\/\\/"))
+			if (Regex::contains(name, "^https?:\\/\\/"))
 				proj.modules.pushBack({name, ver});
 			else resolver(proj, name);
 		}
