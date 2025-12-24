@@ -93,18 +93,7 @@ void Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj) {
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
 		return;
 	else context.fileName = proj.main.path;
-	context.stream.open(proj.main.source);
-	Unique<AAssembler> assembler;
-	switch (proj.main.type) {
-		case Project::File::Type::AV2_TC_PFT_BREVE:		assembler.bind(new Breve(context));		break;
-		case Project::File::Type::AV2_TC_PFT_MINIMA:	assembler.bind(new Minima(context));	break;
-	}
-	assembler->assemble();
-	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE) {
-		AAssembler::Context asmContext;
-		asmContext.stream.open(context.compose());
-		assembler.bind(new Minima(asmContext));
-		assembler->assemble();
-		context.program = asmContext.program;
-	}
+	build<Breve>(context, proj.main.source);
+	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE)
+		build<Minima>(context, context.compose());
 }

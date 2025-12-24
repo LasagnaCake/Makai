@@ -107,6 +107,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		context.stream.open(source);
 		TAsm assembler(context);
 		assembler.assemble();
+		context.stream.close();
 	}
 
 	void buildProject(Project const& proj);

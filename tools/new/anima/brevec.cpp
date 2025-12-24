@@ -3,7 +3,7 @@
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
-	cfg["output"]	= "out.anp";
+	cfg["output"]	= "out";
 	cfg["ir"]		= false;
 	return cfg;
 }
@@ -16,7 +16,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 
 int main(int argc, char** argv) {
 	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
-	auto cfg = cli.parse(configBase());
 	translationBase(cli.tl);
+	auto cfg = cli.parse(configBase());
 	return 0;
 }
