@@ -1,14 +1,14 @@
-ROOT := ../../../../../..
+ROOT := ../../../../../../..
 include $(ROOT)/make/core.make
 
-override prefix := $(call concat, $(prefix), rt)
+override prefix := $(call concat, $(prefix), asm)
 
 .PHONY: debug release all
 .ONESHELL:
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, engine)
+	$(call compile-all, minima breve)
 endef
 
 all: debug release

@@ -951,11 +951,51 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 	return result;
 }
 
-BREVE_ASSEMBLE_FN(Module) {
+struct ModuleResolution {
+	Makai::String path;
+	Makai::String module;
+};
+
+ModuleResolution resolveModuleName(Context& context) {
+	Makai::String path		= "";
+	Makai::String modname	= "";
+	while (true) {
+		context.fetchNext();
+		if (context.stream.current().type != LTS_TT_IDENTIFIER)
+			context.error<InvalidValue>("Expected module name here!");
+		auto const node = context.stream.current().value.get<Makai::String>();
+		path += "/" + node;
+		modname += "_" + node;
+		context.fetchNext();
+		if (context.stream.current().type != Type{'.'}) break;
+	}
+	return {path, module};
+}
+
+BREVE_ASSEMBLE_FN(ModuleImport) {
 	if (!context.inGlobalScope())
 		context.error<InvalidValue>("Module imports/exports can only be declared in the global scope!");
-	auto const type = context.stream.current().value.get<Makai::String>();
-	// TODO: This
+	Context submodule;
+	ModuleResolution mod = resolveModuleName(context);
+	submodule.fileName = mod.path;
+	submodule.isModule = true;
+	submodule.stream.open(Makai::File::getText(mod.path));
+	submodule.main.preEntryPoint	+= "_" + mod.module;
+	submodule.main.entryPoint		+= "_" + mod.module;
+	submodule.main.postEntryPoint	+= "_" + mod.module;
+	Breve assembler(submodule);
+	assembler.assemble();
+	context.global.code += submodule.compose();
+	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
+	context.writeMainPreamble("call", submodule.main.entryPoint, "()");
+	context.writeMainPreamble("call", submodule.main.postEntryPoint, "()");
+	context.importModule(module.global);
+}
+
+BREVE_ASSEMBLE_FN(UsingDeclaration) {
+	context.fetchNext();
+	auto ns = resolveNamespace(context);
+	context.currentNamespace().append(ns);
 }
 
 BREVE_ASSEMBLE_FN(Namespace) {
@@ -1005,7 +1045,8 @@ BREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "external" || id == "out")			doExternal(context);
 			else if (id == "internal" || id == "in")			doInternal(context);
 			else if (id == "namespace" || id == "module")		doNamespace(context);
-			else if (id == "export" || id == "import")			doModule(context);
+			else if (id == "import")							doModuleImport(context);
+			else if (id == "using")								doUsingDeclaration(context);
 			else if (id == "global" || id == "local")			doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
 			else if (id == "fatal")								doLooseContext(context);
@@ -1059,11 +1100,13 @@ BREVE_ASSEMBLE_FN(Expression) {
 }
 
 void Breve::assemble() {
-	context.writeGlobalPreamble("call", context.main.pre, "()");
-	context.writeGlobalPreamble("call", context.main.entryPoint, "()");
-	context.writeGlobalPreamble("call", context.main.post, "()");
-	context.writeGlobalPreamble("clear");
-	context.writeGlobalPreamble("halt");
+	if (!context.isModule) {
+		context.writeGlobalPreamble("call", context.main.pre, "()");
+		context.writeGlobalPreamble("call", context.main.entryPoint, "()");
+		context.writeGlobalPreamble("call", context.main.post, "()");
+		context.writeGlobalPreamble("clear");
+		context.writeGlobalPreamble("halt");
+	}
 	context.writeMainPreamble(context.main.preEntryPoint, ":");
 	context.writeMainPostscript(context.main.postEntryPoint, ":");
 	while (context.stream.next()) doExpression(context);

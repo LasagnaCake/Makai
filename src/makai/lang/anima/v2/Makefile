@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), v2)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call submake-all, runtime)
+	$(call submake-all, runtime toolchain)
 endef
 
 all: debug release

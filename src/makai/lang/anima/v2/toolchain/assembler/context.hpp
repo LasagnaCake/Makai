@@ -69,12 +69,21 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Dictionary<Scope::Member>		members;
 
 				constexpr void addChild(Instance<Namespace> const& ns) {
-					if (ns)
-						children[ns->name] = ns;
+					if (ns && !hasChild(ns->name)) children[ns->name] = ns;
 				}
 
 				constexpr bool hasChild(String const& name) {
 					return children.contains(name);
+				}
+
+				constexpr bool append(Namespace const& ns) {
+					for (auto const [name, child]: ns.children)
+						if (!hasChild(name))
+							children[name] = child;
+					for (auto const [name, child]: ns.members)
+						if (!members.contains(name))
+							members[name] = child;
+					return true;
 				}
 			};
 			
@@ -436,6 +445,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Random::SecureGenerator	rng;
 		
 		bool					hasMain		= false;
+		bool					isModule	= false;
 
 		struct SegmentedScope {
 			String	preEntryPoint;
@@ -444,6 +454,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			String	pre;
 			String	post;
 		};
+
+		void importModule(Scope::Namespace& ns) {
+			global.ns->append(ns);
+			global.ns->addChild(new Scope::Namespace{"Import"});
+			global.ns->children["Import"]->addChild(ns);
+		}
 
 		SegmentedScope main {
 			"__pre"		+ uniqueName(),
