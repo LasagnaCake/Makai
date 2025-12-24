@@ -8,6 +8,10 @@ CTL_EX_NAMESPACE_BEGIN
 
 namespace CLI {
 	struct Parser {
+		using Translation = Dictionary<String>;
+
+		Translation tl;
+
 		struct OptionStream {
 			using Option = KeyValuePair<String, Data::Value>;
 
@@ -26,7 +30,7 @@ namespace CLI {
 			constexpr Option value() {
 				Option opt;
 				opt.key = args[current];
-				if (opt.key.size() < 2) return {};
+				if (opt.key.size() < 2) return opt;
 				if (opt.key.front() == '-') {
 					if (isLowercaseChar(opt.key[1]) || opt.key[1] == '-') {
 						opt.key = opt.key.substring(1 + (opt.key[1] == '-'));
@@ -55,9 +59,16 @@ namespace CLI {
 
 		constexpr Data::Value parse(Data::Value const& base = Data::Value::object()) {
 			Data::Value result = base.isObject() ? base : Data::Value::object();
+			if (!(result.contains("__args") && result["__args"].isArray()))
+				result["__args"] = Data::Value::array();
 			while (stream.next()) {
 				auto [key, value] = stream.value();
-				result[key] = value;
+				while (tl.contains(key))
+					key = tl[key];
+				if (value.empty()) {
+					auto& args = result["__args"];
+					args[args.size()] = key;
+				} else result[key] = value;
 			}
 			return result;
 		}
