@@ -9,6 +9,7 @@ static usize write(cstring const src, usize const size, usize const count, ref<M
 }
 
 static usize read(ref<char> const dst, usize const size, usize const count, ref<Makai::String> const src) {
+	if (src->empty()) return 0;
 	auto const sz = count * size;
 	auto const trueSize = sz < src->size() ? sz : src->size();
 	if (!trueSize) return 0;
@@ -22,14 +23,15 @@ Response Makai::Net::HTTP::fetch(Makai::String const& url, Request const& reques
 	auto const curl = curl_easy_init();
 	if (!curl) throw Makai::Error::FailedAction("Failed to initialize cURL!", CTL_CPP_PRETTY_SOURCE);
 	String err = String(CURL_ERROR_SIZE, '\0');
-	String readData = request.data;
+	String reqdat;
+	if (request.data.size()) reqdat = request.data;
 	Response resp;
 	curl_easy_setopt(curl, CURLOPT_URL, url.cstr());
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, err.cstr());
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
 	curl_easy_setopt(curl, CURLOPT_READFUNCTION, read);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &resp.content);
-	curl_easy_setopt(curl, CURLOPT_READDATA, &readData);
+	curl_easy_setopt(curl, CURLOPT_READDATA, &reqdat);
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA, &resp.header);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/7.42.0");
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
