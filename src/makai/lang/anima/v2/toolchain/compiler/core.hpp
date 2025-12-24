@@ -91,7 +91,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			result["modules"]	= Data::Value::object();
 			auto& pkgModules = result["modules"];
 			for (auto const& mod: modules)
-				pkgSources[mod.source] = mod.version;
+				pkgModules[mod.source] = mod.version;
 			return result;
 		}
 
