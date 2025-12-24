@@ -455,10 +455,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			String	post;
 		};
 
-		void importModule(Scope::Namespace& ns) {
-			global.ns->append(ns);
-			global.ns->addChild(new Scope::Namespace{"Import"});
-			global.ns->children["Import"]->addChild(ns);
+		void importModule(Instance<Scope::Namespace> const& ns) {
+			global.ns->addChild(ns);
+			global.ns->addChild(new Scope::Namespace{"__imports"});
+			global.ns->children["__imports"]->addChild(ns);
 		}
 
 		SegmentedScope main {
