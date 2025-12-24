@@ -3,6 +3,8 @@ include $(ROOT)/make/core.make
 
 override prefix := $(call concat, $(prefix), net)
 
+INCLUDES := $(INC_CURL)
+
 .PHONY: debug release all
 .ONESHELL:
 .SHELLFLAGS = -ec

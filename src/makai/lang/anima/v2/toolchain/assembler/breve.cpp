@@ -26,7 +26,7 @@ using NamespaceMember	= Makai::KeyValuePair<Makai::String, Context::Scope::Membe
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
-BREVE_ASSEMBLE_FN(Module);
+BREVE_ASSEMBLE_FN(ModuleImport);
 BREVE_ASSEMBLE_FN(Namespace);
 BREVE_ASSEMBLE_FN(Scope);
 BREVE_ASSEMBLE_FN(Expression);
@@ -342,8 +342,7 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		// And these functions do not directly modify the namespace
 	if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
 		return doFunctionCall(context, sym);
-	}
-	else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
+	} else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
 		if (sym.value["global"]) {
 			return {
@@ -357,7 +356,7 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 				Makai::toString("&[", stackID, "]")
 			};
 		}
-	}
+	} else context.error<InvalidValue>("Invalid symbol type for operation");
 }
 
 static Solution doValueResolution(Context& context, bool idCanBeValue) {

@@ -17,21 +17,7 @@ struct Location {
 	uint64			id;
 };
 
-template <class T>
-[[noreturn]] static void error(Makai::String what, Context& ctx) {
-	auto const pos = ctx.stream.position();
-	throw T(
-		Makai::toString(
-			"At:\nLINE: ", pos.line,
-			"\nCOLUMN: ", pos.column,
-			"\n", ctx.stream.tokenText()
-		),
-		what,
-		Makai::CPP::SourceFile{"n/a", pos.line, ctx.fileName}
-	);
-}
-
-#define MINIMA_ERROR(TYPE, WHAT) error<Makai::Error::TYPE>({WHAT}, context)
+#define MINIMA_ERROR(TYPE, WHAT) context.error<Makai::Error::TYPE>(WHAT)
 
 static Location getStack(Minima::Context& context) {
 	if (!context.stream.next())
@@ -41,7 +27,7 @@ static Location getStack(Minima::Context& context) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed stack index!");
 	auto v = context.stream.current();
-	bool fromTheBack;
+	bool fromTheBack = false;
 	if (
 		v.type == Type{'+'}
 	||	v.type == Type{'-'}
@@ -81,7 +67,7 @@ static Location getRegister(Minima::Context& context) {
 		MINIMA_ERROR(InvalidValue, "Register index must be an integer!");
 	if (v.value.get<usize>() > 31)
 		MINIMA_ERROR(InvalidValue, "Register index must be between 0 and 31!");
-	Location loc{Makai::Anima::V2::asRegister(v.value.get<ssize>() + (fromTheBack ? Makai::Anima::V2::REGISTER_COUNT : 0)), -1};
+	Location loc{Makai::Anima::V2::asRegister(v.value.get<ssize>() + (fromTheBack ? Makai::Anima::V2::REGISTER_COUNT : 0)), uint64(-1)};
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed register index!");
 	if (context.stream.current().type != Type{']'})
@@ -186,7 +172,7 @@ static Location getDataLocation(Minima::Context& context) {
 			} else if (id == "global" || id == "g") {
 				return getGlobal(context);
 			} else if (id == "temporary" || id == "temp") {
-				return {DataLocation::AV2_DL_TEMPORARY, -1};
+				return {DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
 			} else if (id == "true") {
 				return {DataLocation::AV2_DL_INTERNAL, 1};
 			} else if (id == "false") {
@@ -214,7 +200,7 @@ static Location getDataLocation(Minima::Context& context) {
 		case Type{':'}:
 			return getGlobal(context);
 		case Type{'.'}:
-			return {DataLocation::AV2_DL_TEMPORARY, -1};
+			return {DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
 		case Type{'?'}:
 			return {DataLocation::AV2_DL_INTERNAL, 2};
 		case Type{'+'}:

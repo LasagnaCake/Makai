@@ -59,7 +59,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return;
 			}
 
-			String compose() const {
+			constexpr String compose() const {
 				return pre + code + post;
 			}
 
@@ -77,10 +77,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				}
 
 				constexpr bool append(Namespace const& ns) {
-					for (auto const [name, child]: ns.children)
+					for (auto const& [name, child]: ns.children)
 						if (!hasChild(name))
 							children[name] = child;
-					for (auto const [name, child]: ns.members)
+					for (auto const& [name, child]: ns.members)
 						if (!members.contains(name))
 							members[name] = child;
 					return true;
@@ -406,7 +406,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					"\n", stream.tokenText()
 				),
 				what,
-				Makai::CPP::SourceFile{"n/a", pos.line, fileName}
+				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), fileName}
 			);
 		}
 

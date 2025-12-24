@@ -32,7 +32,7 @@ Program Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj)
 	context.stream.open(proj.main.source);
 	Unique<AAssembler> assembler;
 	switch (proj.main.type) {
-		case Project::File::Type::AV2_TC_PFT_BREVE:		assembler.bind(new Breve(context));	break;
+		case Project::File::Type::AV2_TC_PFT_BREVE:		assembler.bind(new Breve(context));		break;
 		case Project::File::Type::AV2_TC_PFT_MINIMA:	assembler.bind(new Minima(context));	break;
 	}
 	assembler->assemble();

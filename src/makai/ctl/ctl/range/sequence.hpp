@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
+#include "../typetraits/cast.hpp"
 #include "../cpperror.hpp"
 #include "iterate.hpp"
 
@@ -71,7 +72,7 @@ namespace Range {
 	/// @param step Stride between steps.
 	/// @return Sequence.
 	template<Type::Number T>
-	constexpr Impl::SequenceWrapper<T> sequence(T const begin, T const end, T const step) {
+	constexpr Impl::SequenceWrapper<T> sequence(T const begin, T const end, AsSigned<T> const step) {
 		if (!step) throw InvalidValueException("Step cannot be zero!");
 		return {{begin, step}, {end, step}};
 	}
@@ -84,8 +85,8 @@ namespace Range {
 	template<Type::Number T>
 	constexpr Impl::SequenceWrapper<T> sequence(T const begin, T const end) {
 		if (begin < end)
-			return sequence<T>(begin, end, -1);
-		return sequence<T>(begin, end, 1);
+			return sequence<T>(begin, end, 1);
+		return sequence<T>(begin, end, -1);
 	}
 
 	/// @brief returns a numeric sequence from `0` to `end`.
@@ -105,7 +106,7 @@ namespace Range {
 /// @param step Stride between steps.
 /// @return Sequence.
 template<Type::Number T>
-constexpr auto range(T const begin, T const end, T const step) {
+constexpr auto range(T const begin, T const end, AsSigned<T> const step) {
 	return Range::sequence<T>(begin, end, step);
 }
 
