@@ -51,7 +51,7 @@ static void downloadModules(AAssembler::Context& context, Project const& project
 		for (auto module: cache["modules"].get<FLOW::Value::ArrayType>())
 			context.sourcePaths.pushBack(module.get<String>());
 	} else {
-		OS::FS::makeDirectory("module");
+		OS::FS::makeDirectory(String("module"));
 		if (project.modules.empty()) return;
 		auto cache = FLOW::Value::object();
 		cache["modules"] = FLOW::Value::array();

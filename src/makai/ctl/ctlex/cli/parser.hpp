@@ -29,7 +29,7 @@ namespace CLI {
 				if (opt.key.size() < 2) return {};
 				if (opt.key.front() == '-') {
 					if (isLowercaseChar(opt.key[1]) || opt.key[1] == '-') {
-						opt.key = opt.key.substring(2);
+						opt.key = opt.key.substring(1 + (opt.key[1] == '-'));
 						++current;
 						if (current >= count)
 							opt.value = Data::Value::undefined();

@@ -592,6 +592,7 @@ MINIMA_ASSEMBLE_FN(Call) {
 		param.argument	= i;
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
+		context.addInstruction(param);
 	}
 	if (invoke.location == DataLocation::AV2_DL_EXTERNAL) {
 
