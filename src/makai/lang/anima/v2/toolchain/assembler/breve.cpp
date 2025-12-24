@@ -953,23 +953,26 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 
 struct ModuleResolution {
 	Makai::String path;
-	Makai::String module;
+	Makai::String fullName;
+	Makai::String head;
 };
 
 ModuleResolution resolveModuleName(Context& context) {
 	Makai::String path		= "";
-	Makai::String modname	= "";
+	Makai::String fullName	= "";
+	Makai::String head		= "";
 	while (true) {
 		context.fetchNext();
 		if (context.stream.current().type != LTS_TT_IDENTIFIER)
 			context.error<InvalidValue>("Expected module name here!");
 		auto const node = context.stream.current().value.get<Makai::String>();
 		path += "/" + node;
-		modname += "_" + node;
+		fullName += "_" + node;
+		head = node;
 		context.fetchNext();
 		if (context.stream.current().type != Type{'.'}) break;
 	}
-	return {path, module};
+	return {path, fullName, head};
 }
 
 BREVE_ASSEMBLE_FN(ModuleImport) {
@@ -980,16 +983,17 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.fileName = mod.path;
 	submodule.isModule = true;
 	submodule.stream.open(Makai::File::getText(mod.path));
-	submodule.main.preEntryPoint	+= "_" + mod.module;
-	submodule.main.entryPoint		+= "_" + mod.module;
-	submodule.main.postEntryPoint	+= "_" + mod.module;
+	submodule.main.preEntryPoint	+= "_" + mod.fullName;
+	submodule.main.entryPoint		+= "_" + mod.fullName;
+	submodule.main.postEntryPoint	+= "_" + mod.fullName;
 	Breve assembler(submodule);
 	assembler.assemble();
 	context.global.code += submodule.compose();
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
 	context.writeMainPreamble("call", submodule.main.entryPoint, "()");
 	context.writeMainPreamble("call", submodule.main.postEntryPoint, "()");
-	context.importModule(module.global);
+	submodule.global.ns->name = mod.head;
+	context.importModule(submodule.global.ns);
 }
 
 BREVE_ASSEMBLE_FN(UsingDeclaration) {
