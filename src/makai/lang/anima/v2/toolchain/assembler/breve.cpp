@@ -986,6 +986,7 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.main.preEntryPoint	+= "_" + mod.fullName;
 	submodule.main.entryPoint		+= "_" + mod.fullName;
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
+	submodule.global.stackc = submodule.global.stackc + ubmodule.global.varc;
 	Breve assembler(submodule);
 	assembler.assemble();
 	context.global.code += submodule.compose();
