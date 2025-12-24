@@ -404,6 +404,7 @@ constexpr Makai::String toTypeName(Value::Kind t) {
 	switch (t) {
 		case DVK_ANY:						return "any";
 		case Value::Kind::DVK_UNDEFINED:	return "v";
+		case Value::Kind::DVK_NULL:			return "null";
 		case Value::Kind::DVK_BOOLEAN:		return "b";
 		case Value::Kind::DVK_UNSIGNED:		return "u";
 		case Value::Kind::DVK_SIGNED:		return "i";
@@ -413,6 +414,7 @@ constexpr Makai::String toTypeName(Value::Kind t) {
 		case Value::Kind::DVK_BYTES:		return "bin";
 		case Value::Kind::DVK_VECTOR:		return "vec";
 	}
+	return "v";
 }
 
 static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
