@@ -54,7 +54,7 @@ static Location getRegister(Minima::Context& context) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed register index!");
 	auto v = context.stream.current();
-	bool fromTheBack;
+	bool fromTheBack = false;
 	if (
 		v.type == Type{'+'}
 	||	v.type == Type{'-'}
