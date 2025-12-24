@@ -108,7 +108,7 @@ public:
 //		BaseType::end,
 //		BaseType::rbegin,
 		BaseType::rend,
-		BaseType::front
+		BaseType::front,
 //		BaseType::back,
 //		BaseType::transformed,
 //		BaseType::validate,
@@ -120,7 +120,8 @@ public:
 //		BaseType::capacity,
 //		BaseType::appendBack,
 //		BaseType::pushBack,
-//		BaseType::popBack
+//		BaseType::popBack,
+		BaseType::toBytes
 	;
 
 	/// @brief Default constructor.

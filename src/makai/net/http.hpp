@@ -6,10 +6,9 @@
 namespace Makai::Net::HTTP {
 	struct Response {
 		enum class Status {
-			MN_HRS_OK,
-			MN_HRS_CURL_ERROR,
+			MN_HRS_CURL_ERROR	= 1,
 			MN_HRS_HTTP_START	= 100,
-			MN_HRS_HTTP_OK		= 200,
+			MN_HRS_OK			= 200,
 		};
 		Status	status	= Status::MN_HRS_OK;
 		double	time;

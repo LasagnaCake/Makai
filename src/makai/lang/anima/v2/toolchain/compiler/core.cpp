@@ -1,12 +1,19 @@
 #include "core.hpp"
+#include "../../../../../net/net.hpp"
+#include "../../../../../tool/tool.hpp"
 
 using namespace Makai;
 using namespace Makai::Anima::V2::Runtime;
 using namespace Makai::Anima::V2::Toolchain::Compiler;
 using namespace Makai::Anima::V2::Toolchain::Assembler;
 
-Project Project::deserializeV2(Data::Value const& value) {
-	Project proj;
+SourceResolver resolver;
+
+void Makai::Anima::V2::Toolchain::Compiler::setModuleSourceResolver(SourceResolver const& r) {
+	resolver = r;
+}
+
+Project Project::deserializeV1(Project& proj, Data::Value const& value) {
 	auto const type = value["type"].get<String>();
 	if (type == "executable" || type == "exe")		proj.type = Type::AV2_TC_PT_EXECUTABLE;
 	else if (type == "program" || type == "prg")	proj.type = Type::AV2_TC_PT_PROGRAM;
@@ -15,24 +22,84 @@ Project Project::deserializeV2(Data::Value const& value) {
 	proj.sources.pushBack("");
 	for (auto path: value["sources"].get<Data::Value::ArrayType>())
 		proj.sources.pushBack(path.get<String>());
-	for (auto path: value["modules"].get<Data::Value::ArrayType>())
-		if (path.isString())
-			proj.modules.pushBack({path.get<String>(), "latest"});
-		else if (path.isObject()) {
-			// TODO: This
+	if (value["modules"].isArray())
+		for (auto path: value["modules"].get<Data::Value::ArrayType>()) {
+			if (path.isString())
+					proj.modules.pushBack({path.get<String>(), "latest"});
+			else if (path.isObject())
+				proj.modules.pushBack({path["source"], path["version"]});
 		}
+	else if (value["modules"].isObject()) {
+		for (auto [name, ver]: value["modules"].get<Data::Value::ObjectType>()) {
+			if (Regex::contains(name, "http(s?)\\:\\/\\/"))
+				proj.modules.pushBack({name, ver});
+			else resolver(proj, name);
+		}
+	}
 	return proj;
 }
 
-void downloadModules(AAssembler::Context& context, Project const& project) {
-	
+static void downloadModules(AAssembler::Context& context, Project const& project, String const& root);
+
+void buildModule(AAssembler::Context& context, Project const& proj, String const& root) {
+	context.sourcePaths.appendBack(
+		proj.sources.transformed(
+			[&] (String const& source) {
+				return root + "/module/" + proj.name + "/" + source;
+			}
+		)
+	);
+	downloadModules(context, proj, root + "/module/" + proj.name);
 }
 
-Program Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj) {
+static void downloadModules(AAssembler::Context& context, Project const& project, String const& root) {
+	if (OS::FS::exists("cache.flow")) {
+		auto const cache = File::getFLOW(root + "/cache.flow");
+		for (auto module: cache["modules"].get<FLOW::Value::ArrayType>())
+			context.sourcePaths.pushBack(module.get<String>());
+	} else {
+		OS::FS::makeDirectory("module");
+		if (project.modules.empty()) return;
+		auto cache = FLOW::Value::object();
+		cache["modules"] = FLOW::Value::array();
+		for (auto& module: project.modules) {
+			auto const info = Net::HTTP::fetch(
+				module.source, {
+					.type = Net::HTTP::Request::Type::MN_HRT_GET,
+					.data = module.version
+				}
+			);
+			if (info.status != Net::HTTP::Response::Status::MN_HRS_OK)
+				throw Error::FailedAction("Failed to fetch module from source '"+module.source+"'!");
+			else {
+				auto const data = FLOW::parse(info.content);
+				auto package		= data["package"].get<FLOW::Value::ByteListType>();
+				auto const name		= data["name"].get<String>();
+				MemoryBuffer membuf{Cast::rewrite<ref<char>>(package.data()), package.size()};
+				Tool::Arch::FileArchive arch{membuf};
+				auto modpath = cache["modules"][cache["modules"].size()];
+				modpath = root + "/module/" + name;
+				arch.unpackTo(modpath);
+				context.sourcePaths.pushBack(modpath);
+				auto modproj = Project::deserialize(Makai::File::getFLOW(modpath.get<String>() + "/project.flow"));
+				if (modproj.language.major > project.language.major)
+					throw Error::InvalidValue("Module language major version is greater than main project language major version!");
+				modproj.type = decltype(modproj.type)::AV2_TC_PT_MODULE;
+				modproj.name = name;
+				buildModule(context, modproj, root + "/module/" + name);
+			}
+		}
+		File::saveText(root + "/cache.flow", cache.toFLOWString());
+	}
+}
+
+void Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj) {
 	AAssembler::Context context;
-	context.fileName = proj.main.path;
 	context.sourcePaths = proj.sources;
-	downloadModules(context, proj);
+	downloadModules(context, proj, ".");
+	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
+		return;
+	else context.fileName = proj.main.path;
 	context.stream.open(proj.main.source);
 	Unique<AAssembler> assembler;
 	switch (proj.main.type) {
@@ -47,5 +114,4 @@ Program Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj)
 		assembler->assemble();
 		context.program = asmContext.program;
 	}
-	return context.program;
 }

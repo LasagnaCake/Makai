@@ -1278,7 +1278,7 @@ public:
 		return result;
 	}
 
-	constexpr List<byte, TIndex, TAlloc, TConstAlloc> toBytes()
+	constexpr List<byte, TIndex, TAlloc, TConstAlloc> toBytes() const
 	requires (Type::Equal<DataType, AsNonReference<DataType>>) {
 		auto const start = reinterpret_cast<ref<byte const>>(data());
 		return List<byte, TIndex, TAlloc, TConstAlloc>(
