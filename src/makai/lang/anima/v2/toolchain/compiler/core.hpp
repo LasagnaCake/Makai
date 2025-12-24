@@ -22,10 +22,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			String	source;
 		};
 
-		Type		type		= Type::AV2_TC_PT_EXECUTABLE;
-		File		main;
-		StringList	sources;
-		StringList	modules;
+		struct Module {
+			String version;
+			String source;
+		};
+
+		Type			type		= Type::AV2_TC_PT_EXECUTABLE;
+		File			main;
+		StringList		sources;
+		List<Module>	modules;
 
 		static Project deserialize(Data::Value const& value) {
 			if (!value.contains("version")) return deserializeV2(value);

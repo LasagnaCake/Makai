@@ -16,7 +16,11 @@ Project Project::deserializeV2(Data::Value const& value) {
 	for (auto path: value["sources"].get<Data::Value::ArrayType>())
 		proj.sources.pushBack(path.get<String>());
 	for (auto path: value["modules"].get<Data::Value::ArrayType>())
-		proj.modules.pushBack(path.get<String>());
+		if (path.isString())
+			proj.modules.pushBack({path.get<String>(), "latest"});
+		else if (path.isObject()) {
+			// TODO: This
+		}
 	return proj;
 }
 
