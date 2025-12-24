@@ -20,10 +20,15 @@ Project Project::deserializeV2(Data::Value const& value) {
 	return proj;
 }
 
+void downloadModules(AAssembler::Context& context, Project const& project) {
+	
+}
+
 Program Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj) {
 	AAssembler::Context context;
 	context.fileName = proj.main.path;
 	context.sourcePaths = proj.sources;
+	downloadModules(context, proj);
 	context.stream.open(proj.main.source);
 	Unique<AAssembler> assembler;
 	switch (proj.main.type) {
