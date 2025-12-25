@@ -71,8 +71,9 @@ int main(int argc, char** argv) try {
 			proj.main.type = getFileType(cfg["lang"]);
 			proj.main.path = proj.name + "/src/main." + getFileExtension(proj.main.type);
 			proj.sources.pushBack("src");
-			Makai::File::saveText(proj.main.path, "import core;\n\nmain {\n\t// Main code goes here...\n}");
-			Makai::File::saveText(proj.name + "project.flow", proj.serialize().toFLOWString());
+			proj.sources.pushBack(Makai::OS::FS::sourceLocation() + "/breve/lib");
+			Makai::File::saveText(proj.main.path, "import core.all;\n\nmain {\n\t// Main code goes here...\n}");
+			Makai::File::saveText(proj.name + "/project.flow", proj.serialize().toFLOWString());
 		}
 	}
 	return 0;
