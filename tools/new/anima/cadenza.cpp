@@ -1,4 +1,3 @@
-#include "makai/lang/anima/v2/toolchain/compiler/core.hpp"
 #include <makai/makai.hpp>
 
 using namespace Makai::Anima::V2;
@@ -39,7 +38,7 @@ static Makai::String getFileExtension(Compiler::Project::File::Type const& type)
 	return "";
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
 	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
@@ -63,7 +62,10 @@ int main(int argc, char** argv) {
 			projBase["type"] = cfg["type"];
 			auto proj = Compiler::Project::deserialize(projBase);
 			proj.name = cfg["name"].get<Makai::String>();
+			if (Makai::OS::FS::exists(proj.name))
+				throw Makai::Error::FailedAction("Project '"+proj.name+"' already exists in this folder!");
 			Makai::OS::FS::makeDirectory(proj.name);
+			proj.package = {0, 0, 1};
 			proj.main.type = getFileType(cfg["lang"]);
 			proj.main.path = proj.name + "/src/main." + getFileExtension(proj.main.type);
 			proj.sources.pushBack("src");
@@ -72,4 +74,10 @@ int main(int argc, char** argv) {
 		}
 	}
 	return 0;
+} catch (Makai::Error::Generic const& e) {
+	DEBUGLN(e.report());
+	return -1;
+} catch (Makai::Exception const& e) {
+	DEBUGLN(e.what());
+	return -1;
 }
