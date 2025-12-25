@@ -3,5 +3,6 @@
 
 #include "value.hpp"
 #include "parse.hpp"
+#include "version.hpp"
 
 #endif

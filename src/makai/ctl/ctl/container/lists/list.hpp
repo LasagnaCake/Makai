@@ -1286,6 +1286,15 @@ public:
 			start + (size() * sizeof(DataType))
 		);
 	}
+	
+	constexpr List<sbyte, TIndex, TAlloc, TConstAlloc> toSignedBytes() const
+	requires (Type::Equal<DataType, AsNonReference<DataType>>) {
+		auto const start = reinterpret_cast<ref<sbyte const>>(data());
+		return List<sbyte, TIndex, TAlloc, TConstAlloc>(
+			start,
+			start + (size() * sizeof(DataType))
+		);
+	}
 
 private:
 	using Iteratable::wrapBounds;

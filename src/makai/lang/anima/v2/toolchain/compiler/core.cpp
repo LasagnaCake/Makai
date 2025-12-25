@@ -86,7 +86,7 @@ static void downloadModules(AAssembler::Context& context, Project const& project
 	}
 }
 
-void Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj) {
+void Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj, bool const onlyUpToIntermediate) {
 	AAssembler::Context context;
 	context.sourcePaths = proj.sources;
 	downloadModules(context, proj, ".");
@@ -94,6 +94,6 @@ void Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj) {
 		return;
 	else context.fileName = proj.main.path;
 	build<Breve>(context, proj.main.source);
-	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE)
+	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE && !onlyUpToIntermediate)
 		build<Minima>(context, context.compose());
 }

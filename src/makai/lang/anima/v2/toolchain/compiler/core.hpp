@@ -6,6 +6,11 @@
 
 namespace Makai::Anima::V2::Toolchain::Compiler {
 	struct Project {
+		using Version = Data::Version;
+
+		constexpr static Version const CONCERTO_VER	= {1};
+		constexpr static Version const LANG_VER		= Runtime::Program::LANG_VER;
+
 		enum class Type {
 			AV2_TC_PT_EXECUTABLE,
 			AV2_TC_PT_PROGRAM,
@@ -26,32 +31,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			String version;
 			String source;
 		};
-
-		struct Version {
-			usize major = 0;
-			usize minor = 0;
-			usize patch = 0;
-
-			constexpr static Version deserialize(Data::Value const& value) {
-				Version ver;
-				if (value.isString()) {
-					StringList verv = value.get<String>().split('.');
-					if (verv.size() > 0) ver.major = toUInt64(verv[0]);
-					if (verv.size() > 1) ver.minor = toUInt64(verv[1]);
-					if (verv.size() > 2) ver.patch = toUInt64(verv[2]);
-				}
-				return ver;
-			}
-
-			constexpr Data::Value serialize() const {
-				Data::Value ver;
-				ver = toString(major, ".", minor, ".", patch);
-				return ver;
-			}
-		};
-
-		constexpr static Version const CONCERTO_VER	= {2, 0, 0};
-		constexpr static Version const LANG_VER		= {1, 0, 0};
 
 
 		String			name;
@@ -110,7 +89,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		context.stream.close();
 	}
 
-	void buildProject(Project const& proj);
+	void buildProject(Project const& proj, bool const onlyUpToIntermediate = false);
 }
 
 #endif

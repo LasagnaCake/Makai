@@ -22,6 +22,8 @@ int main(int argc, char** argv) {
 
 	} else {
 		Makai::Anima::V2::Toolchain::Compiler::Project proj;
+		proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
+		
 	}
 	return 0;
 }
