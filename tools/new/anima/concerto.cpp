@@ -102,7 +102,7 @@ namespace Command {
 
 	static void doRefresh(Makai::Data::Value& cfg) {
 		DEBUGLN("Refreshing project...");
-		Makai::OS::FS::remove("cache.flow", "modules");
+		Makai::OS::FS::remove("cache.flow", "module");
 		Compiler::Project proj;
 		Assembler::Context ctx;
 		proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
@@ -127,6 +127,10 @@ namespace Command {
 		DEBUGLN("Removing module...");
 		auto proj = Makai::File::getFLOW("project.flow");
 		proj["modules"][cfg["name"].get<Makai::String>()] = proj.undefined();
+		Makai::File::saveText("project.flow", proj.toFLOWString());
+		proj = Makai::File::getFLOW("cache.flow");
+		proj["modules"][cfg["name"].get<Makai::String>()] = proj.undefined();
+		Makai::File::saveText("cache.flow", proj.toFLOWString());
 		DEBUGLN("Done!");
 	}
 }
