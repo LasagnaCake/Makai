@@ -69,6 +69,10 @@ namespace Command {
 		Makai::File::saveText(proj.main.path, "import core.all;\n\nmain {\n\t// Main code goes here...\n}");
 		Makai::File::saveText(proj.name + "/project.flow", proj.serialize().toFLOWString());
 	}
+
+	static void doUpdate(Makai::Data::Value& cfg) {
+		Makai::OS::FS::remove("cache.flow", "modules");
+	}
 }
 
 int main(int argc, char** argv) try {
@@ -82,6 +86,7 @@ int main(int argc, char** argv) try {
 		auto const command = cfg["__args"][0].get<Makai::String>();
 		if (command == "build")			Command::doBuild(cfg);
 		else if (command == "create")	Command::doCreate(cfg);
+		else if (command == "update")	Command::doUpdate(cfg);
 	}
 	return 0;
 } catch (Makai::Error::Generic const& e) {
