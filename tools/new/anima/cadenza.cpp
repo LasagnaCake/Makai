@@ -54,11 +54,10 @@ int main(int argc, char** argv) {
 				proj.main.source = Makai::File::getText(proj.main.path);
 			Compiler::buildProject(ctx, proj, cfg["ir"]);
 			auto const outName = Makai::Regex::replace(cfg["output"], "${name}", proj.name);
-			if (cfg["ir"]) {
-				Makai::File::saveText(outName + ".min", ctx.compose());
-			} else {
-				Makai::File::saveText(outName + ".anp", ctx.program.serialize().toFLOWString());
-			}
+			Makai::OS::FS::makeDirectory(Makai::String("output"));
+			if (cfg["ir"])
+				Makai::File::saveText("output/" + outName + ".min", ctx.compose());
+			else Makai::File::saveText("output/" + outName + ".anp", ctx.program.serialize().toFLOWString());
 		} else if (command == "create") {
 			Makai::Data::Value projBase = Compiler::Project();
 			projBase["type"] = cfg["type"];
@@ -67,6 +66,7 @@ int main(int argc, char** argv) {
 			Makai::OS::FS::makeDirectory(proj.name);
 			proj.main.type = getFileType(cfg["lang"]);
 			proj.main.path = proj.name + "/src/main." + getFileExtension(proj.main.type);
+			proj.sources.pushBack("src");
 			Makai::File::saveText(proj.main.path, "import core;\n\nmain {\n\t// Main code goes here...\n}");
 			Makai::File::saveText(proj.name + "project.flow", proj.serialize().toFLOWString());
 		}
