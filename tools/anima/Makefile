@@ -1,7 +1,7 @@
 #CC 	?= gcc
 #CXX ?= g++
 
-ROOT	:= ../../..
+ROOT	:= ../..
 
 LEAN := -static -s
 
@@ -47,42 +47,21 @@ endef
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-all: debug release
+all: compiler
 
-debug:
+compiler:
 	@echo ""
 	@echo "[--- START ---]"
 	$(GET_TIME)
 	
 	@echo "[1/2] compiling [$@]..."
-	$(COMPILER) $(DEBUGCOMPCFG) -c arcpack.cpp -o arcpack.$@.o
-	$(COMPILER) $(DEBUGCOMPCFG) -c arcunpack.cpp -o arcunpack.$@.o
-	$(COMPILER) $(DEBUGCOMPCFG) -c arcgen.cpp -o arcgen.$@.o
+	$(COMPILER) $(COMPCFG) -c packer.cpp -o packer.o
+	$(COMPILER) $(COMPCFG) -c concerto.cpp -o concerto.o
+	$(COMPILER) $(COMPCFG) -c minimac.cpp -o minimac.o
 
-	$(LINKER) -o arcpack.$@.exe arcpack.$@.o $(DEBUGEXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o arcunpack.$@.exe arcunpack.$@.o $(DEBUGEXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o arcgen.$@.exe arcgen.$@.o $(DEBUGEXTRAOBJS) $(LINKCFG)
-
-	@echo "Done!"
-	
-	$(GET_TIME)
-	@echo "[--- END ---]"
-	@echo 
-
-
-release:
-	@echo ""
-	@echo "[--- START ---]"
-	$(GET_TIME)
-	
-	@echo "[1/2] compiling [$@]..."
-	$(COMPILER) $(COMPCFG) -c arcpack.cpp -o arcpack.$@.o
-	$(COMPILER) $(COMPCFG) -c arcunpack.cpp -o arcunpack.$@.o
-	$(COMPILER) $(COMPCFG) -c arcgen.cpp -o arcgen.$@.o
-
-	$(LINKER) -o arcpack.exe arcpack.$@.o $(EXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o arcunpack.exe arcunpack.$@.o $(EXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o arcgen.exe arcgen.$@.o $(EXTRAOBJS)  $(LINKCFG)
+	$(LINKER) -o packer.exe packer.o $(DEBUGEXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o concerto.exe concerto.o $(DEBUGEXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o minimac.exe minimac.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 
 	@echo "Done!"
 	
