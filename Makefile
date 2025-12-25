@@ -214,5 +214,7 @@ copy-tooling:
 	@cd tools/anima
 	$(call refmove, *.exe, ../../output/bin)
 	@cd ../../dll/network
-	$(call refmove, cygcurl-4.dll, ../../output/bin)
+	$(call refmove, libcurl-4.dll, ../../output/bin)
+	@cd ../security
+	$(call refmove, *.dll, ../../output/bin)
 	@cd ../..
