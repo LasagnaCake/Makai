@@ -72,6 +72,10 @@ namespace Command {
 
 	static void doUpdate(Makai::Data::Value& cfg) {
 		Makai::OS::FS::remove("cache.flow", "modules");
+		Compiler::Project proj;
+		Assembler::Context ctx;
+		proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
+		Compiler::downloadProjectModules(ctx, proj);
 	}
 }
 
