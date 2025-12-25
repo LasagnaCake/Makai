@@ -54,7 +54,9 @@ package-lib:
 	@7z a -tzip mingw64.zip bin lib include -r -mem=AES256
 	@cd ..
 
-ship-it: clear-output all package-lib
+it: clear-output all tooling
+
+ship-it: lib package-lib
 
 all: build-all up-all link-all
 
@@ -199,6 +201,8 @@ combine-extern:
 
 link-extern: extract-extern rename-extern repack-extern combine-extern
 	@echo "Done!"
+
+tooling: build-tooling copy-tooling
 
 build-tooling:
 	@cd tools/anima
