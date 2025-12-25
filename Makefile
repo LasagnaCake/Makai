@@ -51,7 +51,7 @@ clear-output:
 
 package-lib:
 	@cd output
-	@7z a -tzip mingw64.zip lib include -r -mem=AES256
+	@7z a -tzip mingw64.zip bin lib include -r -mem=AES256
 	@cd ..
 
 ship-it: clear-output all package-lib
@@ -200,7 +200,11 @@ combine-extern:
 link-extern: extract-extern rename-extern repack-extern combine-extern
 	@echo "Done!"
 
-tooling:
+build-tooling:
 	@cd tools/anima
 	@make
 	@cd ../..
+
+copy-tooling:
+	@mkdir -p output/bin
+	$(call refmove, tools/anima/*.exe, output/bin)
