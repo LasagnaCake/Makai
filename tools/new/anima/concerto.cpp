@@ -112,7 +112,7 @@ namespace Command {
 
 	static void doAdd(Makai::Data::Value& cfg) {
 		DEBUGLN("Adding module...");
-		Compiler::Project proj;
+		Compiler::Project proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
 		Assembler::Context ctx;
 		auto cache = Makai::FLOW::Value::object();
 		if (Makai::OS::FS::exists("cache.flow"))
@@ -120,6 +120,13 @@ namespace Command {
 		else cache["modules"] = Makai::FLOW::Value::array();
 		Compiler::fetchModule(ctx, proj, {cfg["name"], cfg["ver"]}, ".", cache);
 		Makai::File::saveText("cache.flow", cache.toFLOWString("\t"));
+		DEBUGLN("Done!");
+	}
+
+	static void doRemove(Makai::Data::Value& cfg) {
+		DEBUGLN("Removing module...");
+		auto proj = Makai::File::getFLOW("project.flow");
+		proj["modules"][cfg["name"].get<Makai::String>()] = proj.undefined();
 		DEBUGLN("Done!");
 	}
 }
@@ -134,10 +141,11 @@ int main(int argc, char** argv) try {
 		if (cfg["__args"].empty())
 			throw Makai::Error::NonexistentValue("Missing command!");
 		auto const command = cfg["__args"][0].get<Makai::String>();
-		if (command == "build")			Command::doBuild(cfg);
-		else if (command == "create")	Command::doCreate(cfg);
-		else if (command == "refresh")	Command::doRefresh(cfg);
-		else if (command == "add")		Command::doAdd(cfg);
+		if		(command == "build"		)	Command::doBuild(cfg);
+		else if	(command == "create"	)	Command::doCreate(cfg);
+		else if	(command == "refresh"	)	Command::doRefresh(cfg);
+		else if	(command == "add"		)	Command::doAdd(cfg);
+		else if	(command == "remove"	)	Command::doRemove(cfg);
 	}
 	return 0;
 } catch (Makai::Error::Generic const& e) {
