@@ -41,7 +41,7 @@ namespace Makai::Anima::V2::Runtime {
 			return out;
 		}
 
-		constexpr static Program deserialize(Data::Value const& v) {
+		static Program deserialize(Data::Value const& v) {
 			Program prog;
 			if (v.contains("version"))
 				prog.language = v["version"];
@@ -53,7 +53,7 @@ namespace Makai::Anima::V2::Runtime {
 			return prog;
 		}
 
-		constexpr static void deserializeV2(Program& prog, Data::Value const& v) {
+		static void deserializeV2(Program& prog, Data::Value const& v) {
 			if (v.contains("types") && v["types"].isArray())
 				prog.types		= v["types"].get<Data::Value::ArrayType>();
 			if (v.contains("constants") && v["constants"].isArray())
