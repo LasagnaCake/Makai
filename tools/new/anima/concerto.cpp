@@ -127,10 +127,10 @@ namespace Command {
 		DEBUGLN("Removing module...");
 		auto proj = Makai::File::getFLOW("project.flow");
 		proj["modules"][cfg["name"].get<Makai::String>()] = proj.undefined();
-		Makai::File::saveText("project.flow", proj.toFLOWString());
+		Makai::File::saveText("project.flow", proj.toFLOWString("\t"));
 		proj = Makai::File::getFLOW("cache.flow");
 		proj["modules"][cfg["name"].get<Makai::String>()] = proj.undefined();
-		Makai::File::saveText("cache.flow", proj.toFLOWString());
+		Makai::File::saveText("cache.flow", proj.toFLOWString("\t"));
 		DEBUGLN("Done!");
 	}
 }
