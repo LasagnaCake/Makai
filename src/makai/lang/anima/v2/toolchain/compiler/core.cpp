@@ -24,6 +24,7 @@ Project Project::deserializeV1(Project& proj, Data::Value const& value) {
 		proj.sources.pushBack(path.get<String>());
 	if (value["modules"].isObject()) {
 		for (auto [name, ver]: value["modules"].get<Data::Value::ObjectType>()) {
+			if (ver.isFalsy()) continue;
 			if (Regex::contains(name, "^https?:\\/\\/"))
 				proj.modules.pushBack({name, ver});
 			else resolver(proj, name, ver);
