@@ -388,7 +388,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				auto const fullName = source + "/" + path + ".bv";
 				if (OS::FS::exists(source) && OS::FS::exists(fullName))
 					return Makai::File::loadText(fullName);
-				else try {
+				else if (File::isArchiveAttached()) try {
 					return Makai::File::loadTextFromArchive(fullName);
 				} catch (...) {}
 			}
