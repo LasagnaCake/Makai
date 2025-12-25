@@ -7,6 +7,10 @@
 #include "../container/error.hpp"
 #include "../algorithm/strconv.hpp"
 
+#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+#include <libloaderapi.h>
+#endif
+
 CTL_NAMESPACE_BEGIN
 
 /// @brief Filesystem-related facilities.
@@ -425,6 +429,32 @@ namespace OS::FS {
 		/// @brief Head of the file tree.
 		Entry tree;
 	};
+
+	/// @brief Returns the executable's current working directory.
+	/// @return Current working directory.
+	inline String currentDirectory() {
+		return std::filesystem::current_path().string();
+	}
+
+	/// @brief Resolves a path to its absolute path.
+	/// @param path Path to resolve.
+	/// @return Absolute path.
+	inline String resolve(String const& path) {
+		return std::filesystem::canonical(path.std()).string();
+	}
+
+	/// @brief Returns the executable's storage directory.
+	/// @return Location of executable.
+	inline String sourceLocation() {
+		#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+		String src = String(1024, '\0');
+		GetModuleFileName(NULL, src.data(), src.size());
+		src = src.sliced(0, src.find('\0')).replace('\\', '/').splitAtLast('/').front();
+		return resolve(src.size() ? src : ".");
+		#else
+		return resolve("/proc/self/exe");
+		#endif
+	}
 }
 
 CTL_NAMESPACE_END
