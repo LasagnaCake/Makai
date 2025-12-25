@@ -56,7 +56,7 @@ package-lib:
 
 it: clear-output all tooling
 
-ship-it: lib package-lib
+ship-it: it package-lib
 
 all: build-all up-all link-all
 
@@ -211,4 +211,8 @@ build-tooling:
 
 copy-tooling:
 	@mkdir -p output/bin
-	$(call refmove, tools/anima/*.exe, output/bin)
+	@cd tools/anima
+	$(call refmove, *.exe, ../../output/bin)
+	@cd ../../dll/network
+	$(call refmove, cygcurl-4.dll, ../../output/bin)
+	@cd ../..
