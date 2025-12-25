@@ -5,7 +5,7 @@ ROOT	:= ../../..
 
 LEAN := -static -s
 
-COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions -DCURL_STATICLIB
+COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions
 LINKER_CONFIG	:= -static-libstdc++ -static-libgcc -m64 -fms-extensions
 
 ifdef openmp
@@ -55,9 +55,11 @@ compiler:
 	$(GET_TIME)
 	
 	@echo "[1/2] compiling [$@]..."
+	$(COMPILER) $(COMPCFG) -c packer.cpp -o packer.o
 	$(COMPILER) $(COMPCFG) -c concerto.cpp -o concerto.o
 	$(COMPILER) $(COMPCFG) -c minimac.cpp -o minimac.o
 
+	$(LINKER) -o packer.exe packer.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 	$(LINKER) -o concerto.exe concerto.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 	$(LINKER) -o minimac.exe minimac.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 
