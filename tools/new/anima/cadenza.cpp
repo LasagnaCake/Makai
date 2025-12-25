@@ -44,6 +44,8 @@ int main(int argc, char** argv) try {
 	auto cfg = cli.parse(configBase());
 	if (cfg["help"]) {
 	} else {
+		if (cfg["__args"].empty())
+			throw Makai::Error::NonexistentValue("Missing command!");
 		auto const command = cfg["__args"][0].get<Makai::String>();
 		if (command == "build") {
 			Compiler::Project proj;
