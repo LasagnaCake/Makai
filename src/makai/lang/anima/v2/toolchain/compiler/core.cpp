@@ -92,7 +92,7 @@ void Makai::Anima::V2::Toolchain::Compiler::buildProject(AAssembler::Context& co
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
 		return;
 	else context.fileName = proj.main.path;
-	build<Breve>(context, proj.main.source);
+	build<Breve>(context, proj.main.source.empty() ? Makai::File::getText(proj.main.path) : proj.main.source);
 	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE && !onlyUpToIntermediate)
 		build<Minima>(context, context.compose());
 }
