@@ -77,7 +77,7 @@ namespace Command {
 		keyfile += CTL::toString(
 			"constinit static CTL::Ex::ObfuscatedStaticString<",
 			sz
-			,"> const passkey = CTL::Ex::ObfuscatedStaticString<",
+			,"> const PASS_KEY = CTL::Ex::ObfuscatedStaticString<",
 			sz
 			,">(\""
 		);
