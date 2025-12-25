@@ -1,5 +1,7 @@
 #include <makai/makai.hpp>
 
+constexpr auto const VER = Makai::Data::Version{1};
+
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
@@ -9,9 +11,10 @@ static Makai::Data::Value configBase() {
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
-	tl["H"] = "help";
-	tl["o"] = "output";
-	tl["p"] = "pass";
+	tl["help"]	= "H";
+	tl["h"]		= "H";
+	tl["o"]		= "output";
+	tl["p"]		= "pass";
 }
 
 CTL::String escape(char const c) {
@@ -34,6 +37,10 @@ CTL::String escape(char const c) {
 CTL::Random::SecureGenerator srng;
 
 namespace Command {
+	static void doHelpMessage() {
+		DEBUGLN("Anima Packer - V" + VER.serialize().get<Makai::String>());
+	}
+
 	static void doPack(Makai::Data::Value const& cfg) {
 		DEBUGLN("Packing archive...");
 		if (cfg["__args"].size() < 2)
@@ -97,11 +104,13 @@ namespace Command {
 }
 
 int main(int argc, char** argv) try {
+	DEBUGLN("Initializing...");
 	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
-	if (cfg["help"]) {
-	} else {
+	if (cfg["help"])
+		Command::doHelpMessage();
+	else {
 		if (cfg["__args"].empty())
 			throw Makai::Error::NonexistentValue("Missing command!");
 		auto const command = cfg["__args"][0].get<Makai::String>();

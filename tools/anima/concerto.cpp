@@ -5,6 +5,8 @@ using namespace Makai::Anima::V2;
 
 using namespace Toolchain;
 
+constexpr auto const VER = Makai::Data::Version{1};
+
 auto const projectDatabase() {
 	auto const path = Makai::OS::FS::sourceLocation() + "sources/db.flow";
 	Makai::Data::Value db;
@@ -34,7 +36,8 @@ static Makai::Data::Value configBase() {
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
-	tl["H"] = "help";
+	tl["help"] = "H";
+	tl["h"] = "H";
 	tl["I"] = "ir";
 	tl["o"] = "output";
 	tl["n"] = "name";
@@ -59,6 +62,10 @@ static Makai::String getFileExtension(Compiler::Project::File::Type const& type)
 }
 
 namespace Command {
+	static void doHelpMessage() {
+		DEBUGLN("Anima Concerto - V" + VER.serialize().get<Makai::String>());
+	}
+
 	static void doBuild(Makai::Data::Value& cfg) {
 		DEBUGLN("Building project...");
 		Compiler::Project proj;
@@ -137,12 +144,14 @@ namespace Command {
 }
 
 int main(int argc, char** argv) try {
+	DEBUGLN("Initializing...");
 	Compiler::setModuleSourceResolver(resolveSource);
 	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
-	if (cfg["help"]) {
-	} else {
+	if (cfg["help"])
+		Command::doHelpMessage();
+	else {
 		if (cfg["__args"].empty())
 			throw Makai::Error::NonexistentValue("Missing command!");
 		auto const command = cfg["__args"][0].get<Makai::String>();
