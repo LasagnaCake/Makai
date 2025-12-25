@@ -89,6 +89,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		context.stream.close();
 	}
 	
+	void fetchModule(
+		Assembler::Context& context,
+		Project const& project,
+		Project::Module const& module,
+		String const& root,
+		Data::Value& cache
+	);
+
 	void downloadProjectModules(Assembler::Context& context, Project const& proj);
 
 	void buildProject(Assembler::Context& context, Project const& proj, bool const onlyUpToIntermediate = false);

@@ -45,6 +45,40 @@ void buildModule(AAssembler::Context& context, Project const& proj, String const
 	downloadModules(context, proj, root + "/module/" + proj.name);
 }
 
+void Makai::Anima::V2::Toolchain::Compiler::fetchModule(
+	AAssembler::Context& context,
+	Project const& project,
+	Project::Module const& module,
+	String const& root,
+	Data::Value& cache
+) {
+	auto const info = Net::HTTP::fetch(
+		module.source, {
+			.type = Net::HTTP::Request::Type::MN_HRT_GET,
+			.data = module.version
+		}
+	);
+	if (info.status != Net::HTTP::Response::Status::MN_HRS_OK)
+		throw Error::FailedAction("Failed to fetch module from source '"+module.source+"'!");
+	else {
+		auto const data = FLOW::parse(info.content);
+		auto package		= data["package"].get<FLOW::Value::ByteListType>();
+		auto const name		= data["name"].get<String>();
+		MemoryBuffer membuf{Cast::rewrite<ref<char>>(package.data()), package.size()};
+		Tool::Arch::FileArchive arch{membuf};
+		auto modpath = cache["modules"][cache["modules"].size()];
+		modpath = root + "/module/" + name;
+		arch.unpackTo(modpath);
+		context.sourcePaths.pushBack(modpath);
+		auto modproj = Project::deserialize(Makai::File::getFLOW(modpath.get<String>() + "/project.flow"));
+		if (modproj.language.major > project.language.major)
+			throw Error::InvalidValue("Module language major version is greater than main project language major version!");
+		modproj.type = decltype(modproj.type)::AV2_TC_PT_MODULE;
+		modproj.name = name;
+		buildModule(context, modproj, root + "/module/" + name);
+	}
+}
+
 static void downloadModules(AAssembler::Context& context, Project const& project, String const& root) {
 	if (OS::FS::exists("cache.flow")) {
 		auto const cache = File::getFLOW(root + "/cache.flow");
@@ -55,33 +89,8 @@ static void downloadModules(AAssembler::Context& context, Project const& project
 		if (project.modules.empty()) return;
 		auto cache = FLOW::Value::object();
 		cache["modules"] = FLOW::Value::array();
-		for (auto& module: project.modules) {
-			auto const info = Net::HTTP::fetch(
-				module.source, {
-					.type = Net::HTTP::Request::Type::MN_HRT_GET,
-					.data = module.version
-				}
-			);
-			if (info.status != Net::HTTP::Response::Status::MN_HRS_OK)
-				throw Error::FailedAction("Failed to fetch module from source '"+module.source+"'!");
-			else {
-				auto const data = FLOW::parse(info.content);
-				auto package		= data["package"].get<FLOW::Value::ByteListType>();
-				auto const name		= data["name"].get<String>();
-				MemoryBuffer membuf{Cast::rewrite<ref<char>>(package.data()), package.size()};
-				Tool::Arch::FileArchive arch{membuf};
-				auto modpath = cache["modules"][cache["modules"].size()];
-				modpath = root + "/module/" + name;
-				arch.unpackTo(modpath);
-				context.sourcePaths.pushBack(modpath);
-				auto modproj = Project::deserialize(Makai::File::getFLOW(modpath.get<String>() + "/project.flow"));
-				if (modproj.language.major > project.language.major)
-					throw Error::InvalidValue("Module language major version is greater than main project language major version!");
-				modproj.type = decltype(modproj.type)::AV2_TC_PT_MODULE;
-				modproj.name = name;
-				buildModule(context, modproj, root + "/module/" + name);
-			}
-		}
+		for (auto& module: project.modules)
+			fetchModule(context, project, module, root, cache);
 		File::saveText(root + "/cache.flow", cache.toFLOWString("\t"));
 	}
 }

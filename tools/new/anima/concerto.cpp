@@ -1,3 +1,4 @@
+#include "makai/file/flow.hpp"
 #include <makai/makai.hpp>
 
 using namespace Makai::Anima::V2;
@@ -28,6 +29,7 @@ static Makai::Data::Value configBase() {
 	cfg["name"]		= "project";
 	cfg["type"]		= "program";
 	cfg["lang"]		= "breve";
+	cfg["ver"]		= "latest";
 	return cfg;
 }
 
@@ -38,6 +40,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["n"] = "name";
 	tl["t"] = "type";
 	tl["l"] = "lang";
+	tl["v"] = "ver";
 }
 
 static Compiler::Project::File::Type getFileType(Makai::String const& name) {
@@ -106,6 +109,19 @@ namespace Command {
 		Compiler::downloadProjectModules(ctx, proj);
 		DEBUGLN("Done!");
 	}
+
+	static void doAdd(Makai::Data::Value& cfg) {
+		DEBUGLN("Adding module...");
+		Compiler::Project proj;
+		Assembler::Context ctx;
+		auto cache = Makai::FLOW::Value::object();
+		if (Makai::OS::FS::exists("cache.flow"))
+			cache = Makai::File::getFLOW("cache.flow");
+		else cache["modules"] = Makai::FLOW::Value::array();
+		Compiler::fetchModule(ctx, proj, {cfg["name"], cfg["ver"]}, ".", cache);
+		Makai::File::saveText("cache.flow", cache.toFLOWString("\t"));
+		DEBUGLN("Done!");
+	}
 }
 
 int main(int argc, char** argv) try {
@@ -121,6 +137,7 @@ int main(int argc, char** argv) try {
 		if (command == "build")			Command::doBuild(cfg);
 		else if (command == "create")	Command::doCreate(cfg);
 		else if (command == "refresh")	Command::doRefresh(cfg);
+		else if (command == "add")		Command::doAdd(cfg);
 	}
 	return 0;
 } catch (Makai::Error::Generic const& e) {
