@@ -89,7 +89,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		context.stream.close();
 	}
 
-	void buildProject(Project const& proj, bool const onlyUpToIntermediate = false);
+	void buildProject(Assembler::Context& context, Project const& proj, bool const onlyUpToIntermediate = false);
 }
 
 #endif

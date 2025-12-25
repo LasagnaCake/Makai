@@ -86,8 +86,7 @@ static void downloadModules(AAssembler::Context& context, Project const& project
 	}
 }
 
-void Makai::Anima::V2::Toolchain::Compiler::buildProject(Project const& proj, bool const onlyUpToIntermediate) {
-	AAssembler::Context context;
+void Makai::Anima::V2::Toolchain::Compiler::buildProject(AAssembler::Context& context, Project const& proj, bool const onlyUpToIntermediate) {
 	context.sourcePaths = proj.sources;
 	downloadModules(context, proj, ".");
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
