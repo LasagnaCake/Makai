@@ -3,7 +3,7 @@
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
-	cfg["output"]	= "out";
+	cfg["output"]	= "${name}";
 	cfg["ir"]		= false;
 	return cfg;
 }
@@ -18,5 +18,10 @@ int main(int argc, char** argv) {
 	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
+	if (cfg["help"]) {
+
+	} else {
+		Makai::Anima::V2::Toolchain::Compiler::Project proj;
+	}
 	return 0;
 }
