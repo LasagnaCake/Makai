@@ -9,6 +9,7 @@ prefix:=lib
 SDL			:= lib/SDL2-2.0.10/lib/libSDL2.dll.a
 SDLNET		:= lib/SDL2-2.0.10/lib/libSDL2_net.a
 CRYPTOPP	:= lib/cryptopp/lib/libcryptopp.a
+CURL		:= lib/curl/lib/libcurl.a
 
 ifeq (,$(wildcard obj/extern/extern.3p.a))
 CREATE_LIB_3P := link-extern
@@ -142,13 +143,13 @@ THIRD_PARTY_PREFIX := lib.3p
 
 define addname
 	@echo "Renaming [$(strip $(1))]..."
-	@for file in *.o; do mv $$file $(THIRD_PARTY_PREFIX).$(strip $(1)).$$file; done
+	@for file in *.o*; do mv $$file $(THIRD_PARTY_PREFIX).$(strip $(1)).$$file; done
 endef
 
 define repack
 	@echo "Repacking [$(strip $(1))]..."
 	@cd $(strip $(1))
-	@ar rcvs ../$(THIRD_PARTY_PREFIX).$(strip $(1)).a *.o
+	@ar rcvs ../$(THIRD_PARTY_PREFIX).$(strip $(1)).a *.o*
 	@cd ..
 endef
 
@@ -158,10 +159,15 @@ extract-extern:
 	@mkdir -p obj/extern/sdl
 	@mkdir -p obj/extern/sdl-net
 	@mkdir -p obj/extern/cryptopp
-	@echo "Extracting objects..."
+	@mkdir -p obj/extern/curl
+	@echo "Extracting SDL..."
 	@ar x $(SDL) --output "obj/extern/sdl"
+	@echo "Extracting SDL-Net..."
 	@ar x $(SDLNET) --output "obj/extern/sdl-net"
+	@echo "Extracting CryptoPP..."
 	@ar x $(CRYPTOPP) --output "obj/extern/cryptopp"
+	@echo "Extracting cURL..."
+	@ar x $(CURL) --output "obj/extern/curl"
 
 rename-extern:
 	@echo "Renaming objects..."
@@ -172,6 +178,8 @@ rename-extern:
 	$(call addname, sdl-net)
 	@cd ../cryptopp
 	$(call addname, cryptopp)
+	@cd ../curl
+	$(call addname, curl)
 	@cd ../../..
 
 repack-extern:
@@ -180,6 +188,7 @@ repack-extern:
 	$(call repack, sdl)
 	$(call repack, sdl-net)
 	$(call repack, cryptopp)
+	$(call repack, curl)
 	@cd ../..
 
 combine-extern:

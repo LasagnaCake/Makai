@@ -2,5 +2,6 @@ create obj/extern/extern.3p.a
 addlib obj/extern/lib.3p.sdl.a
 addlib obj/extern/lib.3p.sdl-net.a
 addlib obj/extern/lib.3p.cryptopp.a
+addlib obj/extern/lib.3p.curl.a
 save
 end

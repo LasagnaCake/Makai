@@ -71,7 +71,7 @@ void Makai::Anima::V2::Toolchain::Compiler::fetchModule(
 		modpath = root + "/module/" + name;
 		arch.unpackTo(modpath);
 		context.sourcePaths.pushBack(modpath);
-		auto modproj = Project::deserialize(Makai::File::getFLOW(modpath.get<String>() + "/project.flow"));
+		auto modproj = Project::deserialize(Makai::File::getFLOW(OS::FS::resolve(modpath.get<String>() + "/project.flow")));
 		if (modproj.language.major > project.language.major)
 			throw Error::InvalidValue("Module language major version is greater than main project language major version!");
 		modproj.type = decltype(modproj.type)::AV2_TC_PT_MODULE;
@@ -82,17 +82,17 @@ void Makai::Anima::V2::Toolchain::Compiler::fetchModule(
 
 static void downloadModules(AAssembler::Context& context, Project const& project, String const& root) {
 	if (OS::FS::exists("cache.flow")) {
-		auto const cache = File::getFLOW(root + "/cache.flow");
+		auto const cache = File::getFLOW(OS::FS::resolve(root + "/cache.flow"));
 		for (auto module: cache["modules"].get<FLOW::Value::ArrayType>())
 			context.sourcePaths.pushBack(module.get<String>());
 	} else {
-		OS::FS::makeDirectory(String("module"));
+		OS::FS::makeDirectory(OS::FS::resolve(root + "/module"));
 		if (project.modules.empty()) return;
 		auto cache = FLOW::Value::object();
 		cache["modules"] = FLOW::Value::array();
 		for (auto& module: project.modules)
 			fetchModule(context, project, module, root, cache);
-		File::saveText(root + "/cache.flow", cache.toFLOWString("\t"));
+		File::saveText(OS::FS::resolve(root + "/cache.flow"), cache.toFLOWString("\t"));
 	}
 }
 
@@ -106,7 +106,7 @@ void Makai::Anima::V2::Toolchain::Compiler::buildProject(AAssembler::Context& co
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
 		return;
 	else context.fileName = proj.main.path;
-	build<Breve>(context, proj.main.source.empty() ? Makai::File::getText(proj.main.path) : proj.main.source);
+	build<Breve>(context, proj.main.source.empty() ? Makai::File::getText(OS::FS::resolve(proj.main.path)) : proj.main.source);
 	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE && !onlyUpToIntermediate)
 		build<Minima>(context, context.compose());
 }

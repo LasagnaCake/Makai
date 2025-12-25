@@ -46,6 +46,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static Compiler::Project::File::Type getFileType(Makai::String const& name) {
 	if (name == "breve" || name == "bv")	return Compiler::Project::File::Type::AV2_TC_PFT_BREVE;
 	if (name == "minima" || name == "min")	return Compiler::Project::File::Type::AV2_TC_PFT_MINIMA;
+	return Compiler::Project::File::Type::AV2_TC_PFT_BREVE;
 }
 
 static Makai::String getFileExtension(Compiler::Project::File::Type const& type) {
