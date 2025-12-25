@@ -60,17 +60,22 @@ namespace Command {
 		proj.name = cfg["name"].get<Makai::String>();
 		if (Makai::OS::FS::exists(proj.name))
 			throw Makai::Error::FailedAction("Project '"+proj.name+"' already exists in this folder!");
+		if (proj.type == decltype(proj.type)::AV2_TC_PT_EXECUTABLE)
+			throw Makai::Error::FailedAction("Standalone executable projects are curently unimplemented, sorry :/");
 		Makai::OS::FS::makeDirectory(proj.name);
 		proj.package = {0, 0, 1};
 		proj.main.type = getFileType(cfg["lang"]);
-		proj.main.path = proj.name + "/src/main." + getFileExtension(proj.main.type);
+		proj.main.path = "src/main." + getFileExtension(proj.main.type);
 		proj.sources.pushBack("src");
 		proj.sources.pushBack(Makai::OS::FS::sourceLocation() + "/breve/lib");
-		Makai::File::saveText(proj.main.path, "import core.all;\n\nmain {\n\t// Main code goes here...\n}");
+		if (proj.type != decltype(proj.type)::AV2_TC_PT_MODULE)
+			Makai::File::saveText(proj.name + "/" + proj.main.path, "import core.all;\n\nmain {\n\t// Main code goes here...\n}");
+		else Makai::File::saveText(proj.name + "/all.bv", "// Full imports goes here...");
 		Makai::File::saveText(proj.name + "/project.flow", proj.serialize().toFLOWString());
+		Makai::File::saveText(proj.name + "/.gitignore", "output/\nmodule/\ncache.flow\n*.anp");
 	}
 
-	static void doUpdate(Makai::Data::Value& cfg) {
+	static void doRefresh(Makai::Data::Value& cfg) {
 		Makai::OS::FS::remove("cache.flow", "modules");
 		Compiler::Project proj;
 		Assembler::Context ctx;
@@ -90,7 +95,7 @@ int main(int argc, char** argv) try {
 		auto const command = cfg["__args"][0].get<Makai::String>();
 		if (command == "build")			Command::doBuild(cfg);
 		else if (command == "create")	Command::doCreate(cfg);
-		else if (command == "update")	Command::doUpdate(cfg);
+		else if (command == "refresh")	Command::doRefresh(cfg);
 	}
 	return 0;
 } catch (Makai::Error::Generic const& e) {
