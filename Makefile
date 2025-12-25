@@ -9,7 +9,7 @@ prefix:=lib
 SDL			:= lib/SDL2-2.0.10/lib/libSDL2.dll.a
 SDLNET		:= lib/SDL2-2.0.10/lib/libSDL2_net.a
 CRYPTOPP	:= lib/cryptopp/lib/libcryptopp.a
-CURL		:= lib/curl/lib/libcurl.a
+CURL		:= lib/curl/lib/libcurl.dll.a
 
 ifeq (,$(wildcard obj/extern/extern.3p.a))
 CREATE_LIB_3P := link-extern
