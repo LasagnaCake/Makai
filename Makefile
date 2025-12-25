@@ -199,3 +199,8 @@ combine-extern:
 
 link-extern: extract-extern rename-extern repack-extern combine-extern
 	@echo "Done!"
+
+tooling:
+	@cd tools/anima
+	@make
+	@cd ../..
