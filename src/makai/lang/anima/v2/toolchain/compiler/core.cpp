@@ -26,7 +26,7 @@ Project Project::deserializeV1(Project& proj, Data::Value const& value) {
 		for (auto [name, ver]: value["modules"].get<Data::Value::ObjectType>()) {
 			if (Regex::contains(name, "^https?:\\/\\/"))
 				proj.modules.pushBack({name, ver});
-			else resolver(proj, name);
+			else resolver(proj, name, ver);
 		}
 	}
 	return proj;
@@ -82,7 +82,7 @@ static void downloadModules(AAssembler::Context& context, Project const& project
 				buildModule(context, modproj, root + "/module/" + name);
 			}
 		}
-		File::saveText(root + "/cache.flow", cache.toFLOWString());
+		File::saveText(root + "/cache.flow", cache.toFLOWString("\t"));
 	}
 }
 

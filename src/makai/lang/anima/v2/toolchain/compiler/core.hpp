@@ -77,7 +77,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		static Project deserializeV1(Project& project, Data::Value const& value);
 	};
 
-	using SourceResolver = Functor<void(Project& project, String const& name)>;
+	using SourceResolver = Functor<void(Project& project, String const& name, String const& ver)>;
 
 	void setModuleSourceResolver(SourceResolver const& resolver);
 	
