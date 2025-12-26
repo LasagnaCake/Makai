@@ -98,7 +98,7 @@ namespace Command {
 		Makai::Data::Value projBase = Compiler::Project();
 		projBase["type"] = cfg["type"];
 		auto proj = Compiler::Project::deserialize(projBase);
-		proj.name = cfg["__args"][0].get<Makai::String>();
+		proj.name = cfg["__args"][1].get<Makai::String>();
 		if (Makai::OS::FS::exists(proj.name))
 			throw Makai::Error::FailedAction("Project '"+proj.name+"' already exists in this folder!");
 		if (proj.type == decltype(proj.type)::AV2_TC_PT_EXECUTABLE)
@@ -137,7 +137,7 @@ namespace Command {
 		if (Makai::OS::FS::exists("cache.flow"))
 			cache = Makai::File::getFLOW("cache.flow");
 		else cache["modules"] = Makai::FLOW::Value::array();
-		Compiler::fetchModule(ctx, proj, {cfg["__args"][0], cfg["ver"]}, ".", cache);
+		Compiler::fetchModule(ctx, proj, {cfg["__args"][1], cfg["ver"]}, ".", cache);
 		Makai::File::saveText("cache.flow", cache.toFLOWString("\t"));
 		DEBUGLN("Done!");
 	}
