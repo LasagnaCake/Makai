@@ -102,6 +102,7 @@ void Makai::Anima::V2::Toolchain::Compiler::downloadProjectModules(AAssembler::C
 
 void Makai::Anima::V2::Toolchain::Compiler::buildProject(AAssembler::Context& context, Project const& proj, bool const onlyUpToIntermediate) {
 	context.sourcePaths = proj.sources;
+	context.sourcePaths.pushBack(Makai::OS::FS::sourceLocation() + "/breve/lib");
 	downloadProjectModules(context, proj);
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
 		return;

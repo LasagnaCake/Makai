@@ -95,20 +95,23 @@ namespace Command {
 		if (cfg["__args"].size() < 2)
 			throw Makai::Error::NonexistentValue("Missing project name!");
 		DEBUGLN("Creating project...");
-		Makai::Data::Value projBase = Compiler::Project();
-		projBase["type"] = cfg["type"];
-		auto proj = Compiler::Project::deserialize(projBase);
+		auto proj = Compiler::Project();
+		{
+			auto const pt = cfg["type"].get<Makai::String>();
+			if		(pt == "executable" || pt == "exe"	) proj.type = decltype(proj.type)::AV2_TC_PT_EXECUTABLE;
+			else if	(pt == "program" || pt == "prg"		) proj.type = decltype(proj.type)::AV2_TC_PT_PROGRAM;
+			else if	(pt == "module" || pt == "mod"		) proj.type = decltype(proj.type)::AV2_TC_PT_MODULE;
+		}
 		proj.name = cfg["__args"][1].get<Makai::String>();
 		if (Makai::OS::FS::exists(proj.name))
 			throw Makai::Error::FailedAction("Project '"+proj.name+"' already exists in this folder!");
 		if (proj.type == decltype(proj.type)::AV2_TC_PT_EXECUTABLE)
 			throw Makai::Error::FailedAction("Standalone executable projects are curently unimplemented, sorry :/");
 		Makai::OS::FS::makeDirectory(proj.name);
-		proj.package = {0, 0, 1};
+		proj.package = {.patch = 1};
 		proj.main.type = getFileType(cfg["lang"]);
 		proj.main.path = "src/main." + getFileExtension(proj.main.type);
 		proj.sources.pushBack("src");
-		proj.sources.pushBack(Makai::OS::FS::sourceLocation() + "/breve/lib");
 		if (proj.type != decltype(proj.type)::AV2_TC_PT_MODULE)
 			Makai::File::saveText(proj.name + "/" + proj.main.path, "import core.all;\n\nmain {\n\t// Main code goes here...\n}");
 		else Makai::File::saveText(proj.name + "/all.bv", "// Full imports goes here...");

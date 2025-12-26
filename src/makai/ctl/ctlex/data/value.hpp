@@ -959,7 +959,12 @@ namespace Data {
 		}
 
 		constexpr static StringType escape(StringType const& str, bool unquotedIDs) {
-			if (unquotedIDs && str.validate(isIdentifierNameChar<typename StringType::DataType>)) return str;
+			if (str.empty()) return "\"\"";
+			if (
+				unquotedIDs
+			&&	str.validate(isIdentifierNameChar<typename StringType::DataType>)
+			&&	!isNumberChar(str.front())
+			) return str;
 			StringType result = "\"";
 			for (auto const& c: str) {
 				if (c == StringType::DataType{'\''})		result += "\\'";

@@ -47,7 +47,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			project.concerto = Version::deserialize(value["concerto_version"]);
 			switch (project.concerto.major) {
 				case 1: return deserializeV1(project, value);
-				default: throw Error::InvalidValue("Unsupported project version!");
+				default: throw Error::InvalidValue("Unsupported project version!\nGiven version is ", project.concerto.serialize().toFLOWString());
 			}
 		}
 
