@@ -10,6 +10,7 @@ SDL			:= lib/SDL2-2.0.10/lib/libSDL2.dll.a
 SDLNET		:= lib/SDL2-2.0.10/lib/libSDL2_net.a
 CRYPTOPP	:= lib/cryptopp/lib/libcryptopp.a
 CURL		:= lib/curl/lib/libcurl.dll.a
+#OPENSSL		:= lib/openssl/lib/openssl.dll.a
 
 ifeq (,$(wildcard obj/extern/extern.3p.a))
 CREATE_LIB_3P := link-extern
@@ -47,6 +48,7 @@ help:
 clear-output:
 	@rm -rf output/*
 	@rm -rf obj/debug/*
+	@rm -rf obj/extern/*
 	@rm -rf obj/release/*
 
 package-lib:
@@ -170,6 +172,8 @@ extract-extern:
 	@ar x $(CRYPTOPP) --output "obj/extern/cryptopp"
 	@echo "Extracting cURL..."
 	@ar x $(CURL) --output "obj/extern/curl"
+#	@echo "Extracting OpenSSL..."
+#	@ar x $(OPENSSL) --output "obj/extern/openssl"
 
 rename-extern:
 	@echo "Renaming objects..."
@@ -182,6 +186,8 @@ rename-extern:
 	$(call addname, cryptopp)
 	@cd ../curl
 	$(call addname, curl)
+#	@cd ../openssl
+#	$(call addname, openssl)
 	@cd ../../..
 
 repack-extern:
@@ -191,6 +197,7 @@ repack-extern:
 	$(call repack, sdl-net)
 	$(call repack, cryptopp)
 	$(call repack, curl)
+#	$(call repack, openssl)
 	@cd ../..
 
 combine-extern:
@@ -210,6 +217,7 @@ build-tooling:
 	@cd ../..
 
 copy-tooling:
+	@echo "Copying tooling..."
 	@mkdir -p output/bin
 	@cd tools/anima
 	$(call refmove, *.exe, ../../output/bin)

@@ -1,5 +1,5 @@
-#include "makai/file/flow.hpp"
 #include <makai/makai.hpp>
+#include "base.cc"
 
 using namespace Makai::Anima::V2;
 
@@ -28,7 +28,6 @@ static Makai::Data::Value configBase() {
 	cfg["help"]		= false;
 	cfg["output"]	= "${name}";
 	cfg["ir"]		= false;
-	cfg["name"]		= "project";
 	cfg["type"]		= "program";
 	cfg["lang"]		= "breve";
 	cfg["ver"]		= "latest";
@@ -36,14 +35,13 @@ static Makai::Data::Value configBase() {
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
-	tl["help"] = "H";
-	tl["h"] = "H";
-	tl["I"] = "ir";
-	tl["o"] = "output";
-	tl["n"] = "name";
-	tl["t"] = "type";
-	tl["l"] = "lang";
-	tl["v"] = "ver";
+	tl["H"]		= "help";
+	tl["I"]		= "ir";
+	tl["Ir"]	= "ir";
+	tl["o"]		= "output";
+	tl["t"]		= "type";
+	tl["l"]		= "lang";
+	tl["v"]		= "ver";
 }
 
 static Compiler::Project::File::Type getFileType(Makai::String const& name) {
@@ -64,12 +62,21 @@ static Makai::String getFileExtension(Compiler::Project::File::Type const& type)
 namespace Command {
 	static void doHelpMessage() {
 		DEBUGLN("Anima Concerto - V" + VER.serialize().get<Makai::String>());
+		DEBUGLN("Available commands:");
+		DEBUGLN("build <target> [-Ir] [--output <name>]");
+		DEBUGLN("create <name> [--type <type>] [--lang <lang>]");
+		DEBUGLN("refresh");
+		DEBUGLN("add <module> [--ver <version>]");
+		DEBUGLN("remove <module>");
 	}
 
 	static void doBuild(Makai::Data::Value& cfg) {
+		if (cfg["__args"].size() < 2)
+			throw Makai::Error::NonexistentValue("Missing target!");
 		DEBUGLN("Building project...");
 		Compiler::Project proj;
 		Assembler::Context ctx;
+		Compiler::setModuleSourceResolver(resolveSource);
 		proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
 		if (proj.type == decltype(proj.type)::AV2_TC_PT_MODULE)
 			return;
@@ -85,11 +92,13 @@ namespace Command {
 	}
 
 	static void doCreate(Makai::Data::Value& cfg) {
+		if (cfg["__args"].size() < 2)
+			throw Makai::Error::NonexistentValue("Missing project name!");
 		DEBUGLN("Creating project...");
 		Makai::Data::Value projBase = Compiler::Project();
 		projBase["type"] = cfg["type"];
 		auto proj = Compiler::Project::deserialize(projBase);
-		proj.name = cfg["name"].get<Makai::String>();
+		proj.name = cfg["__args"][0].get<Makai::String>();
 		if (Makai::OS::FS::exists(proj.name))
 			throw Makai::Error::FailedAction("Project '"+proj.name+"' already exists in this folder!");
 		if (proj.type == decltype(proj.type)::AV2_TC_PT_EXECUTABLE)
@@ -119,6 +128,8 @@ namespace Command {
 	}
 
 	static void doAdd(Makai::Data::Value& cfg) {
+		if (cfg["__args"].size() < 2)
+			throw Makai::Error::NonexistentValue("Missing project name!");
 		DEBUGLN("Adding module...");
 		Compiler::Project proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
 		Assembler::Context ctx;
@@ -126,7 +137,7 @@ namespace Command {
 		if (Makai::OS::FS::exists("cache.flow"))
 			cache = Makai::File::getFLOW("cache.flow");
 		else cache["modules"] = Makai::FLOW::Value::array();
-		Compiler::fetchModule(ctx, proj, {cfg["name"], cfg["ver"]}, ".", cache);
+		Compiler::fetchModule(ctx, proj, {cfg["__args"][0], cfg["ver"]}, ".", cache);
 		Makai::File::saveText("cache.flow", cache.toFLOWString("\t"));
 		DEBUGLN("Done!");
 	}
@@ -144,9 +155,7 @@ namespace Command {
 }
 
 int main(int argc, char** argv) try {
-	DEBUGLN("Initializing...");
-	Compiler::setModuleSourceResolver(resolveSource);
-	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
+	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
 	if (cfg["help"])

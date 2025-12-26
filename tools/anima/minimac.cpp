@@ -1,4 +1,5 @@
 #include <makai/makai.hpp>
+#include "base.cc"
 
 constexpr auto const VER = Makai::Data::Version{1};
 
@@ -10,14 +11,12 @@ static Makai::Data::Value configBase() {
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
-	tl["help"]	= "H";
-	tl["h"]		= "H";
-	tl["o"]		= "output";
+	tl["H"]	= "help";
+	tl["o"]	= "output";
 }
 
 int main(int argc, char** argv) try {
-	DEBUGLN("Initializing...");
-	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
+	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
 	return 0;

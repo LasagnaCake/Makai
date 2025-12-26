@@ -1,4 +1,5 @@
 #include <makai/makai.hpp>
+#include "base.cc"
 
 constexpr auto const VER = Makai::Data::Version{1};
 
@@ -11,10 +12,9 @@ static Makai::Data::Value configBase() {
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
-	tl["help"]	= "H";
-	tl["h"]		= "H";
-	tl["o"]		= "output";
-	tl["p"]		= "pass";
+	tl["H"]	= "help";
+	tl["o"]	= "output";
+	tl["p"]	= "pass";
 }
 
 CTL::String escape(char const c) {
@@ -39,6 +39,10 @@ CTL::Random::SecureGenerator srng;
 namespace Command {
 	static void doHelpMessage() {
 		DEBUGLN("Anima Packer - V" + VER.serialize().get<Makai::String>());
+		DEBUGLN("Available commands:");
+		DEBUGLN("pack <folder> [--password <password>] [--output <archive>]");
+		DEBUGLN("unpack <archive> [--password <password>] [--output <folder>]");
+		DEBUGLN("keygen <file> [--password <password>]");
 	}
 
 	static void doPack(Makai::Data::Value const& cfg) {
@@ -104,8 +108,7 @@ namespace Command {
 }
 
 int main(int argc, char** argv) try {
-	DEBUGLN("Initializing...");
-	Makai::CLI::Parser cli(argc, ref<cstring>(argv));
+	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
 	if (cfg["help"])

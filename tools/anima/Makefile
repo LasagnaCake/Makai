@@ -22,7 +22,7 @@ sinclude $(ROOT)/make/os-windows.make
 INCLUDES	:= -I$(ROOT)/lib/cryptopp/include -I$(ROOT)/lib/cppcodec-0.2 -I$(ROOT)/output/include
 LIBRARIES	:= $(OS_LIBS)
 
-DEBUGMODE		:= -DMAKAILIB_DEBUG -DCTL_CONSOLE_OUT -DNDEBUG
+DEBUGMODE		:= 
 DEBUGCOMPCFG	:= $(COMPILER_CONFIG) -Wall -Wpedantic -Og -ggdb3 -fno-omit-frame-pointer $(DEBUGMODE)
 DEBUGLINKCFG	:= $(LINKER_CONFIG) -Og $(LIBRARIES)
 
@@ -33,7 +33,7 @@ COMPILER	:= @$(CXX) $(INCLUDES)
 LINKER		:= @$(CXX)
 
 DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
-EXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
+EXTRAOBJS := $(ROOT)/output/lib/libmakai.a
 
 LIBNAME	:= archive
 
@@ -47,9 +47,9 @@ endef
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-all: compiler
+all: tooling
 
-compiler:
+tooling:
 	@echo ""
 	@echo "[--- START ---]"
 	$(GET_TIME)
@@ -59,9 +59,9 @@ compiler:
 	$(COMPILER) $(COMPCFG) -c concerto.cpp -o concerto.o
 	$(COMPILER) $(COMPCFG) -c minimac.cpp -o minimac.o
 
-	$(LINKER) -o packer.exe packer.o $(DEBUGEXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o concerto.exe concerto.o $(DEBUGEXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o minimac.exe minimac.o $(DEBUGEXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o packer.exe packer.o $(EXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o concerto.exe concerto.o $(EXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o minimac.exe minimac.o $(EXTRAOBJS) $(LINKCFG)
 
 	@echo "Done!"
 	

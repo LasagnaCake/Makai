@@ -15,19 +15,17 @@ namespace CLI {
 		struct OptionStream {
 			using Option = KeyValuePair<String, Data::Value>;
 
-			constexpr OptionStream(usize const argc, ref<cstring> const argv):
+			constexpr OptionStream(usize const argc, ref<ref<char>> const argv):
 				count(argc),
 				args(argv),
-				current(1) {}
+				current(0) {}
 
 			constexpr bool next() {
-				if (current >= count)
-					return false;
-				++current;
-				return true;
+				return ++current < count;
 			}
 
 			constexpr Option value() {
+				if (current >= count) return {};
 				Option opt;
 				opt.key = args[current];
 				if (opt.key.size() < 2) return opt;
@@ -49,13 +47,13 @@ namespace CLI {
 
 		private:
 			usize			count;
-			ref<cstring>	args;
+			ref<ref<char>>	args;
 			usize			current;
 		};
 
 		constexpr Parser(OptionStream const& stream): stream(stream) {}
 
-		constexpr Parser(usize const argc, ref<cstring> const argv): stream(argc, argv) {}
+		constexpr Parser(usize const argc, ref<ref<char>> const argv): stream(argc, argv) {}
 
 		constexpr Data::Value parse(Data::Value const& base = Data::Value::object()) {
 			Data::Value result = base.isObject() ? base : Data::Value::object();
@@ -63,6 +61,7 @@ namespace CLI {
 				result["__args"] = Data::Value::array();
 			while (stream.next()) {
 				auto [key, value] = stream.value();
+				if (key.empty()) continue;
 				while (tl.contains(key))
 					key = tl[key];
 				if (value.empty()) {
