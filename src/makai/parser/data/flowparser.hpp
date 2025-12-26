@@ -84,6 +84,8 @@ namespace Makai::Parser::Data {
 				if (id == "null") return Value::null();
 				else if (id == "true") return Value(true);
 				else if (id == "false") return Value(false);
+				else if (id == "nan") return Value(Value::NotANumber());
+				else if (id == "undefined") return Value::undefined();
 				return Value(id);
 			}
 			default: return Value();
