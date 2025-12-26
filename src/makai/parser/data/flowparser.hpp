@@ -122,7 +122,7 @@ namespace Makai::Parser::Data {
 		ResultType parseArray() {
 			Value result = Value::array();
 			if (lexer.current().type != TokenType{'['})
-				return error("String is not a valid JSON array!");
+				return error("String is not a valid FLOW array!");
 			while (lexer.next()) {
 				auto const token = lexer.current();
 				if (token.type == TokenType{']'}) break;
@@ -159,7 +159,7 @@ namespace Makai::Parser::Data {
 		ResultType parseObject() {
 			Value result = Value::object();
 			if (lexer.current().type != TokenType{'{'})
-				return error("String is not a valid JSON object!");
+				return error("String is not a valid FLOW object!");
 			do {
 				Value::StringType key;
 				if (lexer.current().type == TokenType{'}'})
