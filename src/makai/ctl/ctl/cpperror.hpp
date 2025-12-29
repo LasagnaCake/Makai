@@ -239,20 +239,83 @@ public:
 		)
 	{}
 
+	enum class ReportType {
+		ERT_XML,
+		ERT_FLOW,
+		ERT_JSON
+	};
+
 	/// @brief Generates a detailed report of the exception.
+	/// @param type Report format type. By default, it is XML.
 	/// @return Detailed report.
-	DataType report() const noexcept {
+	DataType report(ReportType const type = ReportType::ERT_XML) const noexcept {
+		auto const base = "!!! AN ERROR HAS OCCURRED !!!\n\n";
+		return base + toString(type);
+	}
+
+	/// @brief Generates a detailed report of the exception as a given format-compatible string.
+	/// @param type Report format type. By default, it is XML.
+	/// @return Detailed report.
+	DataType toString(ReportType const type = ReportType::ERT_XML) const noexcept {
+		switch (type) {
+			case ReportType::ERT_XML:	return toXMLString();
+			case ReportType::ERT_FLOW:	return toFLOWString();
+			case ReportType::ERT_JSON:	return toJSONString();
+		}
+		return "";
+	}
+
+	/// @brief Generates a detailed report of the exception as an XML-compatible string.
+	/// @return Detailed report.
+	DataType toXMLString() const noexcept {
 		DataType result = (
-			"!!! AN ERROR HAS OCCURRED !!!\n\n"
-			"<error>\n\n"
-		+	type + ": " + message + "\n\n"
-			"Caller: " + caller + "\n"
-			"File: " + file + "\n"
-			"Line: " + line + "\n"
-			"\n[General Information]\n" + info + "\n"
-			"\n[Caller Information]\n" + callerInfo + "\n"
+			"<error type=\"" + type + "\">\n"
+			"  <message>" + message + "</message>\n"
+			"  <detail>" + info + "</detail>\n"
+			"  <source file=\"" + file + "\" line=\"" + line + "\">\n"
+			"    <caller>" + caller + "</caller>\n"
+			"    <detail>" + callerInfo + "</detail>\n"
+			"  </source>\n"
+			"</error>\n"
 		);
-		result += "\n</error>";
+		return result;
+	}
+
+	/// @brief Generates a detailed report of the exception as a FLOW-compatible string.
+	/// @return Detailed report.
+	DataType toFLOWString() const noexcept {
+		DataType result = (
+			"{\n"
+			"  type " + type + "\n"
+			"  what \"" + message + "\"\n"
+			"  detail \"" + info + "\"\n"
+			"  source {\n"
+			"    caller " + caller + "\n"
+			"    file \"" + file + "\"\n"
+			"    line " + line + "\n"
+			"    detail \"" + callerInfo + "\"\n"
+			"  }\n"
+			"}"
+		);
+		return result;
+	}
+
+	/// @brief Generates a detailed report of the exception as a JSON-compatible string.
+	/// @return Detailed report.
+	DataType toJSONString() const noexcept {
+		DataType result = (
+			"{\n"
+			"  \"type\": \"" + type + "\"\n"
+			"  \"what\": \"" + message + "\"\n"
+			"  \"detail\": \"" + info + "\"\n"
+			"  \"source\": {\n"
+			"    \"caller\": \"" + caller + "\"\n"
+			"    \"file\": \"" + file + "\"\n"
+			"    \"line\": \"" + line + "\"\n"
+			"    \"detail\": \"" + callerInfo + "\"\n"
+			"  }\n"
+			"}"
+		);
 		return result;
 	}
 
