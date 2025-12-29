@@ -60,7 +60,6 @@ namespace Makai::Parser::Data {
 
 		ResultType parseValue() {
 			auto const token = lexer.current();
-			DEBUGLN("Token: '", lexer.tokenText(), "'");
 			switch (token.type) {
 			case TokenType{'-'}:
 				return parseNegativeNumber();
@@ -128,7 +127,6 @@ namespace Makai::Parser::Data {
 				return error("String is not a valid FLOW array!");
 			while (lexer.next()) {
 				auto const token = lexer.current();
-				DEBUGLN("Element: '", lexer.tokenText(), "'");
 				if (token.type == TokenType{']'}) return result;
 				switch (token.type) {
 				case TokenType{'-'}:
