@@ -87,7 +87,10 @@ namespace Command {
 		Makai::OS::FS::makeDirectory(Makai::String("output"));
 		if (cfg["ir"])
 			Makai::File::saveText("output/" + outName + ".min", ctx.compose());
-		else Makai::File::saveText("output/" + outName + ".anp", ctx.program.serialize().toFLOWString("\t"));
+		else {
+			bool const debug = cfg["__args"][1].get<Makai::String>("");
+			Makai::File::saveText("output/" + outName + ".anp", ctx.program.serialize(debug).toFLOWString("\t"));
+		}
 		DEBUGLN("Done!");
 	}
 
