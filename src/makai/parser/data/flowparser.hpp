@@ -163,6 +163,8 @@ namespace Makai::Parser::Data {
 		ResultType parseKeyValuePair() {
 			Value result = Value::object();
 			Value::StringType key;
+			if (lexer.current().type == TokenType{'}'})
+				return result;
 			// Get key
 			do {
 				auto const token = lexer.current();
@@ -238,8 +240,6 @@ namespace Makai::Parser::Data {
 					for (auto [k, v]: v.value().items())
 						result[k] = v;
 				} else return v.error().value();
-				if (lexer.current().type == TokenType{'}'})
-					return result;
 			}
 			if (lexer.current().type != TokenType{'}'})
 				return error("Missing closing curly bracket!");
