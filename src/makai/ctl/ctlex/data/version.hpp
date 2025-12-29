@@ -20,7 +20,7 @@ namespace Data {
 					.get<String>()
 					.eraseIf(isNullOrSpaceChar<char>)
 					.split('.')
-					.eraseIf([] (auto& e) {return e.isNullOrSpaces();})
+					.filter([] (auto& e) {return !e.isNullOrSpaces();})
 				;
 				if (verv.size() > 0) ver.major		= toUInt64(verv[0]);
 				if (verv.size() > 1) ver.minor		= toUInt64(verv[1]);
