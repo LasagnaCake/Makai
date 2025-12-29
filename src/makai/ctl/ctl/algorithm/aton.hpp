@@ -122,7 +122,7 @@ namespace Impl {
 		/// @tparam T Character type.
 		/// @param c Pointer to character to check.
 		/// @param base Base override. Will be returned instead if it is not zero.
-		/// @return Base of the character identifier. If no match is found, returns 8.
+		/// @return Base of the character identifier. If no match is found, returns 10.
 		template<Type::ASCII T>
 		constexpr ssize getBaseAndConsume(ref<T const>& c, usize const base) {
 			if (c[0] == '0') {
@@ -192,8 +192,10 @@ constexpr bool atoi(ref<T const> const str, usize size, I& out, usize base = 0) 
 	ref<T const> s = str;
 	// If string is size 1, try and convert digit
 	if (size == 1) {
-		if (Impl::A2I::isDigitInBase(str[0], base) || base == 0)
-			return Impl::A2I::toDigit(str[0]);
+		if (Impl::A2I::isDigitInBase(str[0], base) || base == 0) {
+			out = Impl::A2I::toDigit(str[0]);
+			return true;
+		}
 		else return false;
 	}
 	// If size is 2, first character is a sign, and is in base, convert number to digit
