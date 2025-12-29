@@ -439,8 +439,17 @@ namespace OS::FS {
 	/// @brief Resolves a path to its absolute path.
 	/// @param path Path to resolve.
 	/// @return Absolute path.
-	inline String resolve(String const& path) {
+	inline String absolute(String const& path) {
+		return std::filesystem::absolute(path.std()).string();
+	}
+
+	/// @brief Resolves a path to an existing item.
+	/// @param path Path to resolve.
+	/// @return Canonical path to item.
+	inline String resolve(String const& path) try {
 		return std::filesystem::canonical(path.std()).string();
+	} catch (std::filesystem::filesystem_error const& e) {
+		throw InvalidValueException(e.what());
 	}
 
 	/// @brief Returns the executable's storage directory.

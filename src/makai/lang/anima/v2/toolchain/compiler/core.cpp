@@ -22,7 +22,8 @@ Project Project::deserializeV1(Project& proj, Data::Value const& value) {
 	proj.main.path = value["main"].get<String>();
 	proj.sources.pushBack(String(""));
 	for (auto path: value["sources"].get<Data::Value::ArrayType>())
-		proj.sources.pushBack(path.get<String>());
+		if (!value.isString()) continue;
+		else proj.sources.pushBack(path.get<String>());
 	if (value["modules"].isObject()) {
 		for (auto [name, ver]: value["modules"].get<Data::Value::ObjectType>()) {
 			if (ver.isFalsy()) continue;
@@ -72,7 +73,7 @@ void Makai::Anima::V2::Toolchain::Compiler::fetchModule(
 		modpath = root + "/module/" + name;
 		arch.unpackTo(modpath);
 		context.sourcePaths.pushBack(modpath);
-		auto modproj = Project::deserialize(Makai::File::getFLOW(OS::FS::resolve(modpath.get<String>() + "/project.flow")));
+		auto modproj = Project::deserialize(Makai::File::getFLOW(OS::FS::absolute(modpath.get<String>() + "/project.flow")));
 		if (modproj.language.major > project.language.major)
 			throw Error::InvalidValue("Module language major version is greater than main project language major version!");
 		modproj.type = decltype(modproj.type)::AV2_TC_PT_MODULE;
@@ -83,17 +84,17 @@ void Makai::Anima::V2::Toolchain::Compiler::fetchModule(
 
 static void downloadModules(AAssembler::Context& context, Project const& project, String const& root) {
 	if (OS::FS::exists("cache.flow")) {
-		auto const cache = File::getFLOW(OS::FS::resolve(root + "/cache.flow"));
+		auto const cache = File::getFLOW(OS::FS::absolute(root + "/cache.flow"));
 		for (auto module: cache["modules"].get<FLOW::Value::ArrayType>())
 			context.sourcePaths.pushBack(module.get<String>());
 	} else {
-		OS::FS::makeDirectory(OS::FS::resolve(root + "/module"));
+		OS::FS::makeDirectory(OS::FS::absolute(root + "/module"));
 		if (project.modules.empty()) return;
 		auto cache = FLOW::Value::object();
 		cache["modules"] = FLOW::Value::array();
 		for (auto& module: project.modules)
 			fetchModule(context, project, module, root, cache);
-		File::saveText(OS::FS::resolve(root + "/cache.flow"), cache.toFLOWString("\t"));
+		File::saveText(OS::FS::absolute(root + "/cache.flow"), cache.toFLOWString("\t"));
 	}
 }
 
@@ -108,7 +109,7 @@ void Makai::Anima::V2::Toolchain::Compiler::buildProject(AAssembler::Context& co
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
 		return;
 	else context.fileName = proj.main.path;
-	build<Breve>(context, proj.main.source.empty() ? Makai::File::getText(OS::FS::resolve(proj.main.path)) : proj.main.source);
+	build<Breve>(context, proj.main.source.empty() ? Makai::File::getText(OS::FS::absolute(proj.main.path)) : proj.main.source);
 	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE && !onlyUpToIntermediate)
 		build<Minima>(context, context.compose());
 }
