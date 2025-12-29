@@ -168,7 +168,6 @@ namespace Makai::Parser::Data {
 			// Get key
 			do {
 				auto const token = lexer.current();
-				DEBUGLN("Key: '", lexer.tokenText(), "'");
 				if (lexer.current().type == TokenType{'}'})
 					return result;
 				switch (token.type) {
@@ -198,7 +197,6 @@ namespace Makai::Parser::Data {
 			// Get value
 			do {
 				auto const token = lexer.current();
-				DEBUGLN("Value: '", lexer.tokenText(), "'");
 				if (token.type == TokenType{'}'})
 					return error("Missing value for key \"" + key + "\"!");
 				switch (token.type) {
