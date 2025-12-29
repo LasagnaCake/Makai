@@ -88,7 +88,7 @@ namespace Command {
 		if (cfg["ir"])
 			Makai::File::saveText("output/" + outName + ".min", ctx.compose());
 		else {
-			bool const debug = cfg["__args"][1].get<Makai::String>("");
+			bool const debug = cfg["__args"][1].get<Makai::String>("") == "debug";
 			Makai::File::saveText("output/" + outName + ".anp", ctx.program.serialize(debug).toFLOWString("\t"));
 		}
 		DEBUGLN("Done!");
