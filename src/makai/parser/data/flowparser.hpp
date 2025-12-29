@@ -88,6 +88,9 @@ namespace Makai::Parser::Data {
 				else if (id == "undefined") return Value::undefined();
 				return Value(id);
 			}
+			case TokenType{'}'}:
+			case TokenType{']'}:
+				return error("Unexpected closure!");
 			default: return Value();
 				//return error("Missing or invalid token!");
 			}

@@ -894,7 +894,9 @@ namespace Data {
 
 		template <Type::Functional<StringType(Value const&, String const&, String const&)> TToBytes>
 		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ", bool unquotedIDs = false) const {
-			if (isFalsy()) return StringType("null");
+			if (isUndefined()) return "undefined";
+			if (isNull()) return "null";
+			if (isNaN()) return "nan";
 			if (isString())
 				return escape(*content.string, unquotedIDs);
 			if (isBoolean())

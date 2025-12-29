@@ -98,6 +98,26 @@ static Makai::String argname(Value::Kind const& type) {
 	return "none";
 }
 
+constexpr Makai::String toTypeName(Value::Kind t) {
+	if (t < DVK_ANY) {
+		t = Makai::Cast::as<Value::Kind>(Makai::Math::abs(Makai::enumcast(t)) - 2);
+	}
+	switch (t) {
+		case DVK_ANY:						return "any";
+		case Value::Kind::DVK_UNDEFINED:	return "v";
+		case Value::Kind::DVK_NULL:			return "null";
+		case Value::Kind::DVK_BOOLEAN:		return "b";
+		case Value::Kind::DVK_UNSIGNED:		return "u";
+		case Value::Kind::DVK_SIGNED:		return "i";
+		case Value::Kind::DVK_REAL:			return "r";
+		case Value::Kind::DVK_ARRAY:		return "a";
+		case Value::Kind::DVK_OBJECT:		return "o";
+		case Value::Kind::DVK_BYTES:		return "bin";
+		case Value::Kind::DVK_VECTOR:		return "vec";
+	}
+	return "v";
+}
+
 struct Prototype {
 	Value::Kind		returnType;
 	Makai::String	name;
@@ -248,7 +268,8 @@ BREVE_ASSEMBLE_FN(ExternalFunction) {
 	}
 	if (argc) for (auto const i: Makai::range(argc))
 		args += Makai::toString(i, "= &[-", argc - (i + 1), "] ");
-	context.writeLine("call out", proto.name, "(", args, ")");
+	auto const fname = toString(context.namespacePath("_"), "_", proto.name);
+	context.writeLine("call out", fname, toTypeName(proto.returnType), "(", args, ")");
 	if (context.stream.current().type != Type{';'})
 		context.error<InvalidValue>("Expected ';' here!");
 	context.endScope();
@@ -395,26 +416,6 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 constexpr Value::Kind stronger(Value::Kind const a, Value::Kind const b) {
 	if (a == b) return a;
 	return a > b ? a : b;
-}
-
-constexpr Makai::String toTypeName(Value::Kind t) {
-	if (t < DVK_ANY) {
-		t = Makai::Cast::as<Value::Kind>(Makai::Math::abs(Makai::enumcast(t)) - 2);
-	}
-	switch (t) {
-		case DVK_ANY:						return "any";
-		case Value::Kind::DVK_UNDEFINED:	return "v";
-		case Value::Kind::DVK_NULL:			return "null";
-		case Value::Kind::DVK_BOOLEAN:		return "b";
-		case Value::Kind::DVK_UNSIGNED:		return "u";
-		case Value::Kind::DVK_SIGNED:		return "i";
-		case Value::Kind::DVK_REAL:			return "r";
-		case Value::Kind::DVK_ARRAY:		return "a";
-		case Value::Kind::DVK_OBJECT:		return "o";
-		case Value::Kind::DVK_BYTES:		return "bin";
-		case Value::Kind::DVK_VECTOR:		return "vec";
-	}
-	return "v";
 }
 
 static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
@@ -1008,6 +1009,7 @@ BREVE_ASSEMBLE_FN(Namespace) {
 	if (!context.inNamespace())
 		context.error<InvalidValue>("You can only declare sub-namespaces inside other namespaces!");
 	usize scopeCount = 0;
+	auto ns = context.currentNamespaceRef();
 	while (context.stream.current().type == Type{'.'}) {
 		context.fetchNext();
 		if (context.stream.current().type != LTS_TT_IDENTIFIER)
@@ -1015,18 +1017,20 @@ BREVE_ASSEMBLE_FN(Namespace) {
 		auto const id = context.stream.current().value.get<Makai::String>();
 		if (context.isReservedKeyword(id))
 			context.error<InvalidValue>("Namespace name cannot be a reserved keyword!");
-		if (context.currentNamespace().hasChild(id))
-			context.error<InvalidValue>("Namespace with this name already exists!");
 		if (context.currentScope().contains(id))
 			context.error<InvalidValue>("Namespace name is also a symbol name!");
-		auto& ns = context.currentNamespace();
 		context.startScope(Context::Scope::Type::AV2_TA_ST_NAMESPACE);
 		auto& scope = context.currentScope();
 		scope.name		=
 		scope.ns->name	= id;
-		ns.addChild(context.currentScope().ns);
 		++scopeCount;
 		context.fetchNext();
+		if (context.currentNamespace().hasChild(id))
+			ns = context.currentNamespace().children[id];
+		else {
+			ns->addChild(context.currentScope().ns);
+			ns = context.currentNamespaceRef();
+		}
 		if (context.stream.current().type == Type {'{'})
 			break;
 		if (context.stream.current().type != Type{'.'})
@@ -1042,12 +1046,35 @@ BREVE_ASSEMBLE_FN(Namespace) {
 		context.endScope();
 }
 
+BREVE_ASSEMBLE_FN(Signal) {
+	context.fetchNext();
+	if (!context.hasToken(LTS_TT_IDENTIFIER))
+		context.error<NonexistentValue>("Signal name must be an identifier!");
+	auto const name = context.stream.current().value.get<Makai::String>();
+	if (context.isReservedKeyword(name))
+		context.error<NonexistentValue>("Signal name cannot be a reserved keyword!");
+	auto const fullName = context.namespacePath("_") + "_" + name;
+	context.currentScope().addFunction(name);
+	auto& overloads = context.getSymbolByName(name).value["overloads"];
+	auto& overload = overloads[fullName];
+	overload["args"]		= Value::array();
+	overload["full_name"]	= "_signal" + fullName;
+	overload["return"]		= Value::Kind::DVK_VOID;
+	overload["extern"]		= false;
+	context.writeLine("_signal" + fullName, ":");
+	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
+	doExpression(context);
+	context.writeLine("end");
+	context.endScope();
+}
+
 BREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = current.value.get<Makai::String>();
 			if (id == "function" || id == "func" || id == "fn")	doFunction(context);
+			else if (id == "signal")							doSignal(context);
 			else if (id == "external" || id == "out")			doExternal(context);
 			else if (id == "internal" || id == "in")			doInternal(context);
 			else if (id == "namespace" || id == "module")		doNamespace(context);

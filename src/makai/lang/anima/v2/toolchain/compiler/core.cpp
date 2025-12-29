@@ -14,12 +14,13 @@ void Makai::Anima::V2::Toolchain::Compiler::setModuleSourceResolver(SourceResolv
 }
 
 Project Project::deserializeV1(Project& proj, Data::Value const& value) {
+	DEBUGLN(value.toFLOWString("  "));
 	auto const type = value["type"].get<String>();
 	if (type == "executable" || type == "exe")		proj.type = Type::AV2_TC_PT_EXECUTABLE;
 	else if (type == "program" || type == "prg")	proj.type = Type::AV2_TC_PT_PROGRAM;
 	else if (type == "module" || type == "mod")		proj.type = Type::AV2_TC_PT_MODULE;
 	proj.main.path = value["main"].get<String>();
-	proj.sources.pushBack("");
+	proj.sources.pushBack(String(""));
 	for (auto path: value["sources"].get<Data::Value::ArrayType>())
 		proj.sources.pushBack(path.get<String>());
 	if (value["modules"].isObject()) {

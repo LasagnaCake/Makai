@@ -280,10 +280,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr String scopePath() const {
+			return namespacePath("_");
+		}
+		
+		constexpr String namespacePath(String const& sep = ".") const {
 			String path;
 			for (auto& sc: scope)
 				if (path.empty()) path = sc.name;
-				else path += "_" + sc.name;
+				else if (sc.name.size()) path += sep + sc.name;
 			return path;
 		}
 
@@ -377,10 +381,22 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					return *sc.ns;
 			return *global.ns;
 		}
+		
+
+		constexpr Handle<Scope::Namespace> currentNamespaceRef() {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.type == Scope::Type::AV2_TA_ST_NAMESPACE)
+					return sc.ns;
+			return global.ns;
+		}
 
 		void fetchNext() {
 			if (!stream.next())
 				error<Error::NonexistentValue>("Unexpected end-of-file!");
+		}
+
+		bool hasToken(TokenStream::Token::Type const type) {
+			return stream.current().type == type;
 		}
 
 		String getModuleFile(String const& path) const {
