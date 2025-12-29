@@ -31,11 +31,15 @@ namespace Data {
 		}
 
 		constexpr Data::Value serialize() const {
-			Data::Value ver;
+			// Ugly, but works :/
 			if (hotfix)
-				ver = toString(major, ".", minor, ".", patch, ".", hotfix);
-			else ver = toString(major, ".", minor, ".", patch);
-			return ver;
+				return toString(major, ".", minor, ".", patch, ".", hotfix);
+			else if (patch)
+				return toString(major, ".", minor, ".", patch);
+			else if (minor)
+				return toString(major, ".", minor);
+			else
+				return toString(major);
 		}
 	};
 }
