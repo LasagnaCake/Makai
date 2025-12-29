@@ -15,12 +15,11 @@ namespace Data {
 		constexpr static Version deserialize(Data::Value const& value) {
 			Version ver;
 			if (value.isString()) {
-				StringList verv = 
+				StringList const verv = 
 					value
 					.get<String>()
-					.eraseIf(isNullOrSpaceChar<char>)
 					.split('.')
-					.filter([] (auto& e) {return !e.isNullOrSpaces();})
+					.filtered([] (auto& e) {return !e.isNullOrSpaces();})
 				;
 				if (verv.size() > 0) ver.major		= toUInt64(verv[0], 10);
 				if (verv.size() > 1) ver.minor		= toUInt64(verv[1], 10);
@@ -36,10 +35,7 @@ namespace Data {
 				return toString(major, ".", minor, ".", patch, ".", hotfix);
 			else if (patch)
 				return toString(major, ".", minor, ".", patch);
-			else if (minor)
-				return toString(major, ".", minor);
-			else
-				return toString(major);
+			else return toString(major, ".", minor);
 		}
 	};
 }
