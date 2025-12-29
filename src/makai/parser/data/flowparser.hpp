@@ -60,6 +60,7 @@ namespace Makai::Parser::Data {
 
 		ResultType parseValue() {
 			auto const token = lexer.current();
+			DEBUGLN("Token: '", lexer.tokenText(), "'");
 			switch (token.type) {
 			case TokenType{'-'}:
 				return parseNegativeNumber();
@@ -127,7 +128,8 @@ namespace Makai::Parser::Data {
 				return error("String is not a valid FLOW array!");
 			while (lexer.next()) {
 				auto const token = lexer.current();
-				if (token.type == TokenType{']'}) break;
+				DEBUGLN("Element: '", lexer.tokenText(), "'");
+				if (token.type == TokenType{']'}) return result;
 				switch (token.type) {
 				case TokenType{'-'}:
 				case TokenType::LTS_TT_INTEGER:
@@ -144,17 +146,83 @@ namespace Makai::Parser::Data {
 					if (v) {
 						auto const vv = v.value();
 						result[result.size()] = vv;
-						if (vv.isArray() && lexer.current().type == TokenType{']'})
+						if (result[result.size()].isArray() && lexer.current().type == TokenType{']'})
 							lexer.next();
 					}
 					else return v.error().value();
 				} break;
 				default: continue;
 				}
-				if (lexer.current().type == TokenType{']'}) break;
+				if (token.type == TokenType{']'}) return result;
 			}
 			if (lexer.current().type != TokenType{']'})
 				return error("Missing closing bracket!");
+			return result;
+		}
+
+		ResultType parseKeyValuePair() {
+			Value result = Value::object();
+			Value::StringType key;
+			// Get key
+			do {
+				auto const token = lexer.current();
+				DEBUGLN("Key: '", lexer.tokenText(), "'");
+				if (lexer.current().type == TokenType{'}'})
+					return result;
+				switch (token.type) {
+				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_IDENTIFIER:
+					key = token.value.get<Value::StringType>();
+				break;
+				case TokenType::LTS_TT_CHARACTER:
+					key = toString(Cast::as<char>(token.value.get<ssize>()));
+				break;
+				case TokenType::LTS_TT_INTEGER:
+				case TokenType::LTS_TT_REAL:
+				case TokenType{BINARY_IDENTIFIER}:
+				case TokenType{'{'}:
+				case TokenType{'['}:
+				case TokenType{'-'}:
+				case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+					return error("Object key is not a string or identifier!");
+				default: continue;
+				}
+				break;
+			} while (lexer.next());
+			lexer.next();
+			if (lexer.current().type == TokenType{'}'})
+				return error("Missing value for key \"" + key + "\"!");
+			// Get value
+			do {
+				auto const token = lexer.current();
+				DEBUGLN("Value: '", lexer.tokenText(), "'");
+				if (token.type == TokenType{'}'})
+					return error("Missing value for key \"" + key + "\"!");
+				switch (token.type) {
+				case TokenType{'-'}:
+				case TokenType::LTS_TT_INTEGER:
+				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_REAL:
+				case TokenType::LTS_TT_CHARACTER:
+				case TokenType::LTS_TT_IDENTIFIER:
+				case TokenType{BINARY_IDENTIFIER}:
+				case TokenType{'{'}:
+				case TokenType{'['}:
+				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
+					auto const v = parseValue();
+					if (v) {
+						auto const vv = v.value();
+						result[key] = vv;
+						return result;
+					}
+					else return v.error().value();
+				} break;
+				default: continue;
+				}
+				break;
+			} while (lexer.next());
 			return result;
 		}
 		
@@ -162,71 +230,17 @@ namespace Makai::Parser::Data {
 			Value result = Value::object();
 			if (lexer.current().type != TokenType{'{'})
 				return error("String is not a valid FLOW object!");
-			do {
-				Value::StringType key;
+			while (lexer.next()) {
 				if (lexer.current().type == TokenType{'}'})
-					break;
-				// Get key
-				while (lexer.next()) {
-					auto const token = lexer.current();
-					if (lexer.current().type == TokenType{'}'})
-						break;
-					switch (token.type) {
-					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
-					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-					case TokenType::LTS_TT_IDENTIFIER:
-						key = token.value.get<Value::StringType>();
-					break;
-					case TokenType::LTS_TT_CHARACTER:
-						key = toString(Cast::as<char>(token.value.get<ssize>()));
-					break;
-					case TokenType::LTS_TT_INTEGER:
-					case TokenType::LTS_TT_REAL:
-					case TokenType{BINARY_IDENTIFIER}:
-					case TokenType{'{'}:
-					case TokenType{'['}:
-					case TokenType{'-'}:
-					case TokenType{CUSTOM_TYPE_IDENTIFIER}:
-						return error("Object key is not a string or identifier!");
-					default: continue;
-					}
-					break;
-				}
-				if (key.empty() && lexer.current().type == TokenType{'}'})
-					break;
-				// Get value
-				while (lexer.next()) {
-					auto const token = lexer.current();
-					if (token.type == TokenType{'}'})
-						return error("Missing value for key \"" + key + "\"!");
-					switch (token.type) {
-					case TokenType{'-'}:
-					case TokenType::LTS_TT_INTEGER:
-					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
-					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-					case TokenType::LTS_TT_REAL:
-					case TokenType::LTS_TT_CHARACTER:
-					case TokenType::LTS_TT_IDENTIFIER:
-					case TokenType{BINARY_IDENTIFIER}:
-					case TokenType{'{'}:
-					case TokenType{'['}:
-					case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
-						auto v = parseValue();
-						if (v) {
-							auto const vv = v.value();
-							result[key] = vv;
-							if (vv.isObject() && lexer.current().type == TokenType{'}'})
-								lexer.next();
-						}
-						else return v.error().value();
-					} break;
-					default: continue;
-					}
-					break;
-				}
+					return result;
+				auto const v = parseKeyValuePair();
+				if (v) {
+					for (auto [k, v]: v.value().items())
+						result[k] = v;
+				} else return v.error().value();
 				if (lexer.current().type == TokenType{'}'})
-					break;
-			} while (!lexer.finished());
+					return result;
+			}
 			if (lexer.current().type != TokenType{'}'})
 				return error("Missing closing curly bracket!");
 			return result;

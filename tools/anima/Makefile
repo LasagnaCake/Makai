@@ -59,9 +59,9 @@ tooling:
 	$(COMPILER) $(COMPCFG) -c concerto.cpp -o concerto.o
 	$(COMPILER) $(COMPCFG) -c minimac.cpp -o minimac.o
 
-	$(LINKER) -o packer.exe packer.o $(EXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o concerto.exe concerto.o $(EXTRAOBJS) $(LINKCFG)
-	$(LINKER) -o minimac.exe minimac.o $(EXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o packer.exe packer.o $(DEBUGEXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o concerto.exe concerto.o $(DEBUGEXTRAOBJS) $(LINKCFG)
+	$(LINKER) -o minimac.exe minimac.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 
 	@echo "Done!"
 	

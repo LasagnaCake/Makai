@@ -21,7 +21,7 @@ namespace Makai::Anima::V2::Runtime {
 		List<uint64>			jumpTable;
 		Labels					labels;
 
-		constexpr Data::Value serialize() const {
+		constexpr Data::Value serialize(bool const keepLabels = true) const {
 			Data::Value out;
 			out["types"]		= types;
 			out["constants"]	= constants;
@@ -29,15 +29,17 @@ namespace Makai::Anima::V2::Runtime {
 			out["code"]			= code.toBytes();
 			out["labels"]		= out.object();
 			out["version"]		= language;
-			auto& outLabels = out["labels"];
-			outLabels["jumps"]		=
-			outLabels["globals"]	= out.object();
-			auto& outJumps		= outLabels["jumps"];
-			auto& outGlobals	= outLabels["globals"];
-			for (auto& [name, id]: labels.globals)
-				outGlobals[name] = id;
-			for (auto& [name, id]: labels.jumps)
-				outJumps[name] = id;
+			if (keepLabels) {
+				auto& outLabels = out["labels"];
+				outLabels["jumps"]		=
+				outLabels["globals"]	= out.object();
+				auto& outJumps		= outLabels["jumps"];
+				auto& outGlobals	= outLabels["globals"];
+				for (auto& [name, id]: labels.globals)
+					outGlobals[name] = id;
+				for (auto& [name, id]: labels.jumps)
+					outJumps[name] = id;
+			}
 			return out;
 		}
 
@@ -62,12 +64,17 @@ namespace Makai::Anima::V2::Runtime {
 			auto const jumps	= v["jumps"].get<Data::Value::ByteListType>();
 			prog.code		= decltype(prog.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 			prog.jumpTable	= decltype(prog.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
-			auto const jumpLabels	= v["labels"]["jumps"];
-			auto const globalLabels	= v["labels"]["globals"];
-			for (auto [label, id]: jumpLabels.items())
-				prog.labels.jumps[label]	= id;
-			for (auto [label, id]: globalLabels.items())
-				prog.labels.globals[label]	= id;
+			if (!v.contains("labels")) return;
+			if (v["labels"].contains("jumps")) {
+				auto const jumpLabels	= v["labels"]["jumps"];
+				for (auto [label, id]: jumpLabels.items())
+					prog.labels.jumps[label]	= id;
+			}
+			if (v["labels"].contains("globals")) {
+				auto const globalLabels	= v["labels"]["globals"];
+				for (auto [label, id]: globalLabels.items())
+					prog.labels.globals[label]	= id;
+			}
 		}
 	};
 }

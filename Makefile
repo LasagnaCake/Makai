@@ -56,7 +56,7 @@ package-lib:
 	@7z a -tzip mingw64.zip bin lib include -r -mem=AES256
 	@cd ..
 
-it: clear-output all tooling
+it: clear-output link-extern all tooling
 
 ship-it: it package-lib
 
