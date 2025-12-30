@@ -43,28 +43,31 @@ define GET_TIME
 @echo ""
 endef
 
-.PHONY: debug release all
+.PHONY: debug release all tooling packer concerto minimac finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
+tooling: prologue packer concerto minimac finale
+
 all: tooling
 
-tooling:
+prologue:
 	@echo ""
-	@echo "[--- START ---]"
-	$(GET_TIME)
-	
-	@echo "[1/2] compiling [$@]..."
-	$(COMPILER) $(COMPCFG) -c packer.cpp -o packer.o
-	$(COMPILER) $(COMPCFG) -c concerto.cpp -o concerto.o
-	$(COMPILER) $(COMPCFG) -c minimac.cpp -o minimac.o
 
+packer:
+	@echo "[$@]"
+	$(COMPILER) $(COMPCFG) -c packer.cpp -o packer.o
 	$(LINKER) -o packer.exe packer.o $(DEBUGEXTRAOBJS) $(LINKCFG)
+
+concerto:
+	@echo "[$@]"
+	$(COMPILER) $(COMPCFG) -c concerto.cpp -o concerto.o
 	$(LINKER) -o concerto.exe concerto.o $(DEBUGEXTRAOBJS) $(LINKCFG)
+
+minimac:
+	@echo "[$@]"
+	$(COMPILER) $(COMPCFG) -c minimac.cpp -o minimac.o
 	$(LINKER) -o minimac.exe minimac.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 
-	@echo "Done!"
-	
-	$(GET_TIME)
-	@echo "[--- END ---]"
+finale:
 	@echo 

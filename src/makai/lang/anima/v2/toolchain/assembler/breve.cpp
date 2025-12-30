@@ -324,7 +324,9 @@ NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespa
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (ns.members.contains(id))
 		return {id, ns.members[id]};
-	return resolveNamespaceMember(context, *ns.children[id]);
+	else if (ns.children.contains(id))
+		return resolveNamespaceMember(context, *ns.children[id]);
+	else context.error<NonexistentValue>("Symbol does not exist!");
 }
 
 NamespaceMember resolveNamespaceMember(Context& context) {
@@ -367,7 +369,6 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		return doFunctionCall(context, sym);
 	} else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
-	//	DEBUGLN("\n\n", sym.value.toFLOWString("  "), "\n\n");
 		if (sym.value["global"]) {
 			if (sym.value.contains("type"))
 				return {
@@ -376,7 +377,7 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 				};
 			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		} else {
-			auto const stackID = sym.value["stack_id"].get<uint64>();
+			auto const stackID = context.stackIndex(sym);
 			if (sym.value.contains("type"))
 				return {
 					Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
@@ -617,7 +618,7 @@ void doVarAssign(
 	preassign(context, result);
 	if (isGlobalVar)
 		context.writeAdaptive("copy", result.value, "-> :", sym.value["name"]);
-	else context.writeAdaptive("copy", result.value, "-> &[", sym.value["stack_id"].get<uint64>(), "]");
+	else context.writeAdaptive("copy", result.value, "-> &[", context.stackIndex(sym), "]");
 	sym.value["init"] = true;
 }
 
@@ -674,7 +675,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 			doVarDecl(context, sym, false);
 			if (sym.value.contains("type")) {
 				auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
-				auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
+				auto const accessor	= Makai::toString("&[", context.stackIndex(sym), "]");
 				return {varType, accessor};
 			} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		}
@@ -687,7 +688,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 			Makai::String accessor;
 			if (sym.value["global"])
 				accessor = ":" + sym.value["name"].get<Makai::String>();
-			else accessor = Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
+			else accessor = Makai::toString("&[", context.stackIndex(sym), "]");
 			Makai::String operation;
 			switch (current.type) {
 				case LTS_TT_ADD_ASSIGN: operation = " + "; break;
@@ -705,7 +706,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 	context.fetchNext();
 	if (sym.value.contains("type")) {
 		auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
-		auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
+		auto const accessor	= Makai::toString("&[", context.stackIndex(sym), "]");
 		doVarAssign(context, sym, varType, false, false, pre);
 		return {varType, accessor};
 	} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
@@ -872,7 +873,7 @@ BREVE_ASSEMBLE_FN(RepeatLoop) {
 	} else if (times.type == Value::Kind::DVK_UNSIGNED) {
 		context.writeLine("push", times.value);
 		context.currentScope().addVariable(tmpVar);
-		auto const stackID = context.currentScope().ns->members[tmpVar].value["stack_id"].get<uint64>();
+		auto const stackID = context.stackIndex(context.currentScope().ns->members[tmpVar]);
 		context.startScope();
 		doExpression(context);
 		context.writeLine("uop dec &[", stackID, "] -> &[", stackID, "]");
@@ -1086,6 +1087,12 @@ BREVE_ASSEMBLE_FN(Signal) {
 	context.writeLine("end");
 }
 
+BREVE_ASSEMBLE_FN(Yield) {
+	if (context.inFunction())
+		context.error<InvalidValue>("Can only yield inside functions!");
+	else context.writeLine("yield");
+}
+
 BREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
@@ -1109,6 +1116,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "repeat")							doRepeatLoop(context);
 			else if (id == "main")								doMain(context);
 			else if (id == "terminate")							doTerminate(context);
+			else if (id == "yield")								doYield(context);
 			else if (id == "error")								doError(context);
 			else if (context.hasSymbol(id)) {
 				auto& sym = context.getSymbolByName(id);

@@ -86,9 +86,8 @@ namespace Command {
 		auto const outName = Makai::Regex::replace(cfg["output"], "\\$\\{name\\}", proj.name);
 		Makai::OS::FS::makeDirectory(Makai::String("output"));
 		if (cfg["ir"]) {
-			auto prg = Makai::Regex::replace(ctx.compose(), "(\n(\\s+))+", "\n");
-			prg = Makai::Regex::replace(prg, "\\s+", " ");
-			prg = Makai::Regex::replace(prg, "(\n\\s)+", "\n");
+			auto prg = Makai::Regex::replace(ctx.compose(), "([\\n\\r\\f][\\t\\ ]*)([\\n\\r\\f][\\t\\ ]*)+", "\n\n");
+			prg = Makai::Regex::replace(prg, "[\\t\\ ]+", " ");
 			Makai::File::saveText("output/" + outName + ".min", prg);
 		}
 		else {

@@ -69,7 +69,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Dictionary<Scope::Member>		members;
 
 				constexpr void addChild(Instance<Namespace> const& ns) {
-					if (ns && !hasChild(ns->name)) children[ns->name] = ns;
+					if (!ns) return;
+					if (hasChild(ns->name))
+							for (auto [name, child]: ns->children)
+								children[ns->name]->addChild(child);
+					else children[ns->name] = ns;
 				}
 
 				constexpr bool hasChild(String const& name) {
@@ -80,6 +84,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					for (auto const& [name, child]: ns.children)
 						if (!hasChild(name))
 							children[name] = child;
+						else if (child && child != children[name])
+							for (auto [gname, gchild]: child->children)
+								children[name]->addChild(gchild);
 					for (auto const& [name, child]: ns.members)
 						if (!members.contains(name))
 							members[name] = child;
@@ -477,6 +484,19 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return false;
 		}
 
+		constexpr uint64 stackSize() const {
+			return currentScope().stackc + currentScope().varc;
+		}
+
+		constexpr uint64 absoluteStackID(Scope::Member const& sym) {
+			auto const sid = stackSize() - (sym.value["stack_id"].get<uint64>() + 1);
+			return sid;
+		}
+
+		constexpr String stackIndex(Scope::Member const& sym) {
+			return toString("-", absoluteStackID(sym));
+		}
+
 		StringList				sourcePaths;
 
 		Scope					global;
@@ -500,6 +520,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		};
 
 		void importModule(Instance<Scope::Namespace> const& ns) {
+			if (!ns) return;
 			global.ns->addChild(ns);
 			global.ns->addChild(new Scope::Namespace{"__imports"});
 			global.ns->children["__imports"]->addChild(ns);
