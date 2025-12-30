@@ -116,8 +116,11 @@ void Engine::v2Invoke() {
 	if (invocation.location == DataLocation::AV2_DL_EXTERNAL) {
 		advance(true);
 		ssize returnType = Cast::as<ssize>(current.name);
+		auto const fn = program.constants[funcName].toString();
+		if (inStrictMode() && !functions.has(fn))
+			return crash(invalidFunctionEror("Function [" + fn + "] does not exist!"));
 		auto const result = functions.invoke(
-			program.constants[funcName].toString(),
+			fn,
 			context.valueStack.sliced(-Cast::as<int>(invocation.argc), -1)
 		);
 		context.valueStack.eraseRange(-Cast::as<int>(invocation.argc), -1);
@@ -184,10 +187,10 @@ Makai::Data::Value Engine::getValueFromLocation(DataLocation const loc, usize co
 			}
 			return context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)];
 //		case DataLocation::AV2_DL_HEAP:			{} break;
-		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id];
-		case DataLocation::AV2_DL_INTERNAL:		return fetchInternal(id);
-		case DataLocation::AV2_DL_EXTERNAL:		return fetchExternal(program.constants[id].get<String>());
-		case DataLocation::AV2_DL_TEMPORARY:	return context.temporary;
+		case DataLocation::AV2_DL_GLOBAL:		return global(id);
+		case DataLocation::AV2_DL_INTERNAL:		return internal(id);
+		case DataLocation::AV2_DL_EXTERNAL:		return external(program.constants[id].get<String>());
+		case DataLocation::AV2_DL_TEMPORARY:	return temporary();
 		default: {
 			if (inStrictMode())
 				crash(invalidLocationError(loc));
@@ -228,12 +231,12 @@ Makai::Data::Value& Engine::accessLocation(DataLocation const loc, usize const i
 			}
 			return context.valueStack[-Cast::as<ssize>(id % context.valueStack.size() + 1)];
 //		case DataLocation::AV2_DL_HEAP:			{} break;
-		case DataLocation::AV2_DL_GLOBAL:		return context.globals[id];
-		case DataLocation::AV2_DL_TEMPORARY:	return context.temporary;	
+		case DataLocation::AV2_DL_GLOBAL:		return global(id);
+		case DataLocation::AV2_DL_TEMPORARY:	return temporary();	
 		default: {
 			if (inStrictMode())
 				crash(invalidLocationError(loc));
-			return context.temporary;
+			return temporary();
 		}
 	}
 	if (inStrictMode())
@@ -241,10 +244,27 @@ Makai::Data::Value& Engine::accessLocation(DataLocation const loc, usize const i
 	return context.temporary;
 }
 
+Value& Engine::temporary() {
+	return context.temporary;
+}
+
+Value& Engine::global(uint64 const id) {
+	return context.globals[id];
+}
+
 void Engine::jumpTo(usize const point, bool returnable) {
 	if (returnable)
 		context.pointerStack.pushBack(context.pointers);
 	context.pointers.instruction = point;
+}
+
+bool Engine::hasSignal(String const& signal) {
+	return program.ani.in.contains(signal);
+}
+
+void Engine::fire(String const& signal) {
+	if (hasSignal(signal))
+		jumpTo(program.jumpTable[program.ani.in[signal]], true);
 }
 
 void Engine::returnBack() {
@@ -256,11 +276,11 @@ void Engine::returnBack() {
 	context.pointers = context.pointerStack.popBack();
 }
 
-Makai::Data::Value Engine::fetchExternal(String const& name) {
+Makai::Data::Value Engine::external(String const& name) {
 	return Value::undefined();
 }
 
-Makai::Data::Value Engine::fetchInternal(uint64 const valueID) {
+Makai::Data::Value Engine::internal(uint64 const valueID) {
 	static const Data::Value::ArrayType internals = {
 		Data::Value(false),
 		Data::Value(true),

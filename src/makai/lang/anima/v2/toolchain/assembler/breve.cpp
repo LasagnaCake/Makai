@@ -268,7 +268,7 @@ BREVE_ASSEMBLE_FN(ExternalFunction) {
 	}
 	if (argc) for (auto const i: Makai::range(argc))
 		args += Makai::toString(i, "= &[-", argc - (i + 1), "] ");
-	auto const fname = toString(context.namespacePath("_"), "_", proto.name);
+	auto const fname = toString("\"", context.namespacePath("."), ".", proto.name, "\"");
 	context.writeLine("call out", fname, toTypeName(proto.returnType), "(", args, ")");
 	if (context.stream.current().type != Type{';'})
 		context.error<InvalidValue>("Expected ';' here!");
@@ -1058,10 +1058,10 @@ BREVE_ASSEMBLE_FN(Signal) {
 	auto& overloads = context.getSymbolByName(name).value["overloads"];
 	auto& overload = overloads[fullName];
 	overload["args"]		= Value::array();
-	overload["full_name"]	= "_signal" + fullName;
+	overload["full_name"]	= "hook _signal" + fullName;
 	overload["return"]		= Value::Kind::DVK_VOID;
 	overload["extern"]		= false;
-	context.writeLine("_signal" + fullName, ":");
+	context.writeLine("hook _signal" + fullName, ":");
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	doExpression(context);
 	context.writeLine("end");

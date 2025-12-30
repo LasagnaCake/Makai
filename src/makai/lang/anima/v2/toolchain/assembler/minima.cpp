@@ -542,15 +542,16 @@ MINIMA_ASSEMBLE_FN(Call) {
 	auto fname = func.value.get<Makai::String>();
 	Instruction::Invocation invoke;
 	auto retType = Makai::Cast::as<Makai::Data::Value::Kind>(-2);
-	if (fname == "internal" || fname == "intern" || fname == "in")
+	if (fname == "internal" || fname == "intern" || fname == "in") {
 		return doInternalCall(context);
+	}
 	else if (fname == "external" || fname == "extern" || fname == "out") {
 		invoke.location = DataLocation::AV2_DL_EXTERNAL;
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 		auto const func = context.stream.current();
-		if (func.type != LTS_TT_IDENTIFIER)
-			MINIMA_ERROR(InvalidValue, "Function call must be an identifier!");
+		if (!func.value.isString())
+			MINIMA_ERROR(InvalidValue, "External call name must be a string!");
 		fname = func.value.get<Makai::String>();
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
@@ -560,9 +561,9 @@ MINIMA_ASSEMBLE_FN(Call) {
 		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 	auto const funcID = context.program.code.size();
 	context.program.code.pushBack({});
-	if (invoke.location == DataLocation::AV2_DL_CONST)
+	if (invoke.location == DataLocation::AV2_DL_CONST) {
 		context.addJumpTarget(fname);
-	else {
+	} else {
 		context.addInstruction<uint64>(addConstant(context, fname));
 	}
 	if (func.type != Type{'('})
@@ -1150,12 +1151,22 @@ MINIMA_ASSEMBLE_FN(Label) {
 		MINIMA_ERROR(NonexistentValue, "Malformed jump label!");
 	auto const id = name.value.get<Makai::String>();
 	context.jumps.labels[id] = context.program.code.size();
+	context.program.jumpTable.pushBack(context.program.code.size());
 	auto const nopID = context.addNamedInstruction(Instruction::Name::AV2_IN_NO_OP);
 	context.instruction(nopID).type = 1;
 }
 
 MINIMA_ASSEMBLE_FN(Indirect) {
+	// TODO: This (what was this supposed to be, again?)
+}
 
+MINIMA_ASSEMBLE_FN(Hook) {
+	context.fetchNext();
+	if (!context.hasToken(LTS_TT_IDENTIFIER))
+		MINIMA_ERROR(InvalidValue, "Hook must be an identifier!");
+	auto const hookName = context.stream.current().value;
+	context.program.ani.in[hookName] = 0;
+	doLabel(context);
 }
 
 MINIMA_ASSEMBLE_FN(Expression) {
@@ -1186,6 +1197,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "read" || id == "get")					doGet(context);
 		else if (id == "write" || id == "set")					doSet(context);
 		else if (id == "indirect"  || id == "ref")				doIndirect(context);
+		else if (id == "in")									doHook(context);
 		else if (id == "string" || id == "str")					doStringOperation(context);
 		else doLabel(context);
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
@@ -1196,5 +1208,8 @@ void Minima::assemble() {
 	auto const unmapped = context.mapJumps();
 	if (unmapped.size())
 		MINIMA_ERROR(NonexistentValue, "Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
+	for (auto& [id, loc]: context.program.labels.jumps)
+		if (context.program.ani.in.contains(id))
+			context.program.ani.in[id] = context.program.labels.jumps[id];
 }
 CTL_DIAGBLOCK_END

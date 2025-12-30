@@ -280,7 +280,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr String scopePath() const {
-			return namespacePath("_");
+			return "_" + namespacePath("_");
 		}
 		
 		constexpr String namespacePath(String const& sep = ".") const {

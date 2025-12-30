@@ -41,9 +41,13 @@ namespace Makai::Anima::V2::Runtime {
 			}
 
 			constexpr Value invoke(String const& name, Value::ArrayType const& args) {
-				if (!nameMap.contains(name)) return Value::undefined();
+				if (!has(name)) return Value::undefined();
 				Value::ArrayType result;
 				return functions[nameMap[name]](args);
+			}
+
+			constexpr bool has(String const& name) const {
+				return nameMap.contains(name);
 			}
 		
 		private:
@@ -104,13 +108,19 @@ namespace Makai::Anima::V2::Runtime {
 		FunctionRegistry functions;
 
 	protected:
-		virtual Value fetchExternal(String const& name);
-
-		Value fetchInternal(uint64 const valueID);
+		virtual Value	external	(String const& name		);
+		Value			internal	(uint64 const valueID	);
+		Value&			temporary	(						);
+		Value&			global		(uint64 const globalID	);
 
 		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
+		
+		bool hasFunction(String const& name);
+
+		bool hasSignal(String const& name);
+		void fire(String const& signal);
 
 	private:
 		Engine::Error invalidInstructionEror();

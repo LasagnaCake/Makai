@@ -218,10 +218,12 @@ build-tooling:
 
 copy-tooling:
 	@echo "Copying tooling..."
-	@mkdir -p output/bin
+	@mkdir -p output/bin/anima/breve/lib
 	@cd tools/anima
 	$(call refmove, *.exe, ../../output/bin)
-	@cd ../../dll/network
+	@cd stdlib
+	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
+	@cd ../../../dll/network
 	$(call refmove, libcurl-4.dll, ../../output/bin)
 	@cd ../security
 	$(call refmove, *.dll, ../../output/bin)
