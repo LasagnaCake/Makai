@@ -502,8 +502,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		SegmentedScope main {
 			"__pre"		+ uniqueName(),
-			"__post"	+ uniqueName(),
-			"__main"	+ uniqueName()
+			"__main"	+ uniqueName(),
+			"__post"	+ uniqueName()
 		};
 	};
 }
