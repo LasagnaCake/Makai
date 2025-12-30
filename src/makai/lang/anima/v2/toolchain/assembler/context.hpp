@@ -363,6 +363,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			else									writeLine(args...);
 		}
 
+		template <class... Args>
+		constexpr void writeFinale(Args const&... args) {
+			auto& content = finale;
+			content += toString(toString(args, " ")..., "\n") + content;
+		}
+
 		constexpr static bool isCastable(Data::Value::Kind const type) {
 			return Data::Value::isScalar(type) || Data::Value::isString(type) || type == Data::Value::Kind{-2};
 		}
@@ -373,7 +379,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr String compose() const {
-			return global.compose() + main.pre + main.post;
+			return global.compose() + main.pre + main.post + finale;
 		}
 
 		constexpr Scope::Namespace& currentNamespace() {
@@ -504,6 +510,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			"__main"	+ uniqueName(),
 			"__post"	+ uniqueName()
 		};
+
+		String finale;
 
 		inline static ID::VLUID uuid = ID::VLUID::create(0);
 	};
