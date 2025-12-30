@@ -391,7 +391,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		void fetchNext() {
-			if (!stream.next())
+			stream.next();
+			if (stream.finished())
 				error<Error::NonexistentValue>("Unexpected end-of-file!");
 		}
 

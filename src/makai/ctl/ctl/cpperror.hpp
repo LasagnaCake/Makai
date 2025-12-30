@@ -270,11 +270,13 @@ public:
 	DataType toXMLString() const noexcept {
 		DataType result = (
 			"<error type=\"" + type + "\">\n"
-			"  <message>" + message + "</message>\n"
-			"  <detail>" + info + "</detail>\n"
+			"  <message>\n" + message + "\n"
+			"  </message>\n"
+			"  <detail>\n" + info + "\n</detail>\n"
 			"  <source file=\"" + file + "\" line=\"" + line + "\">\n"
 			"    <caller>" + caller + "</caller>\n"
-			"    <detail>" + callerInfo + "</detail>\n"
+			"    <detail>\n" + callerInfo+ "\n"
+			"    </detail>\n"
 			"  </source>\n"
 			"</error>\n"
 		);

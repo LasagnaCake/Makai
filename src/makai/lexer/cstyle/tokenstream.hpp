@@ -128,7 +128,7 @@ namespace Makai::Lexer::CStyle {
 		TokenStream& close();
 
 		/// @brief Fetches the next token.
-		/// @return Whether no more tokens could be fetched.
+		/// @return Whether there is data to parse.
 		bool next();
 
 		/// @brief Returns the current token.
