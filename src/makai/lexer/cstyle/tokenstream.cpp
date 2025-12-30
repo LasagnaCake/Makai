@@ -1,6 +1,7 @@
 #include "tokenstream.hpp"
 #include <stb_c_lexer.h>
 
+using namespace Makai::Lexer;
 using namespace Makai::Lexer::CStyle;
 
 struct TokenStream::Lexer {
@@ -108,7 +109,7 @@ TokenStream::TokenStream(String const& source, usize const bufferSize)	{open(sou
 TokenStream::TokenStream()												{							}
 TokenStream::~TokenStream()												{close();					}
 
-TokenStream& TokenStream::open(String const& source, usize const bufferSize) {
+CStyle::TokenStream& TokenStream::open(String const& source, usize const bufferSize) {
 	if (lexer) return *this;
 	lexer.bind(new Lexer{{}, source});
 	lexer->buffer.resize(bufferSize, '\0');
@@ -122,7 +123,7 @@ TokenStream& TokenStream::open(String const& source, usize const bufferSize) {
 	return *this;
 }
 
-TokenStream& TokenStream::close() {
+CStyle::TokenStream& TokenStream::close() {
 	if (!lexer) return *this;
 	lexer.unbind();
 	isFinished = true;
