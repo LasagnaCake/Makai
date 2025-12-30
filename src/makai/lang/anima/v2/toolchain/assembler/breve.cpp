@@ -1004,7 +1004,7 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	assembler.context.fileName		= mod.path;
 	assembler.context.sourcePaths	= context.sourcePaths;
 	assembler.assemble();
-	context.global.code += submodule.compose();
+	context.writeGlobalPostscript(submodule.compose());
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
 	context.writeMainPreamble("call", submodule.main.entryPoint, "()");
 	context.writeMainPreamble("call", submodule.main.postEntryPoint, "()");
