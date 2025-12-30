@@ -299,7 +299,6 @@ BREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 	auto const v = doValueResolution(context);
 	context.writeLine("push", v.value);
 	context.writeLine("call in print");
-	context.writeLine("pop .");
 	return {Value::Kind::DVK_VOID, "."};
 }
 
