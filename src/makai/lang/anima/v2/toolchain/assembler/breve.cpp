@@ -793,7 +793,6 @@ BREVE_ASSEMBLE_FN(Main) {
 	context.hasMain = true;
 	if (context.stream.current().type != Type{'{'})
 		context.error<InvalidValue>("Expected '{' here!");
-	context.fetchNext();
 	context.writeLine(context.main.entryPoint, ":");
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	doScope(context);
@@ -1122,7 +1121,6 @@ BREVE_ASSEMBLE_FN(Expression) {
 			auto const result = doUnaryOperation(context);
 		} break;
 		case Type{'{'}: {
-			context.fetchNext();
 			context.startScope();
 			doScope(context);
 			context.endScope();
