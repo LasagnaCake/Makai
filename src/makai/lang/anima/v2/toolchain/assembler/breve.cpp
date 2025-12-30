@@ -163,23 +163,24 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 			context.error<InvalidValue>("Invalid argument type!");
 		auto& var = context.currentScope().ns->members[argID].value;
 		context.fetchNext();
-		if (context.stream.current().type == Type{')'})
-			break;
 		if (context.stream.current().type == Type{'='}) {
 			isOptional = true;
 			inOptionalRegion = true;
 			gpre.appendBack(doDefaultValue(context, argID, signature));
 			optionals.pushBack({argID});
 			optionals.back().value["name"] = argID;
-			optionals.back().value["type"] = argname(argt);
+			optionals.back().value["type"] = Makai::enumcast(argt);
 		} else {
 			id += "_" + argname(argt);
 			auto& arg = args[args.size()];
 			arg["name"] = argID;
-			var["type"] = arg["type"] = argname(argt);
+			var["type"] = Makai::enumcast(argt); 
+			arg["type"] = Makai::enumcast(argt);
 		}
 		if (inOptionalRegion && !isOptional)
 			context.error<NonexistentValue>("Missing value for optional argument!");
+		if (context.stream.current().type == Type{')'})
+			break;
 		if (context.stream.current().type != Type{','})
 			context.error<InvalidValue>("Expected ',' here!");
 	}
@@ -363,13 +364,14 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		return doFunctionCall(context, sym);
 	} else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
+		DEBUGLN("\n\n", sym.value.toFLOWString("  "), "\n\n");
 		if (sym.value["global"]) {
 			if (sym.value.contains("type"))
 				return {
 					Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
 					":" + id
 				};
-			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
+			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		} else {
 			auto const stackID = sym.value["stack_id"].get<uint64>();
 			if (sym.value.contains("type"))
@@ -377,7 +379,7 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 					Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
 					Makai::toString("&[", stackID, "]")
 				};
-			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
+			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		}
 	} else context.error<InvalidValue>("Invalid symbol type for operation");
 }
@@ -595,7 +597,7 @@ void doVarAssign(
 			if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 				context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
 			else if (!sym.value.contains("type"))
-				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing global variable type!");
+				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing global variable type!");
 			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
 				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
 		} else {
@@ -628,6 +630,7 @@ void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const 
 			type = getType(context); 
 		} break;
 	}
+	sym.value["type"] = Makai::enumcast(type);
 	if (
 		!context.stream.next()
 	) {
@@ -638,8 +641,6 @@ void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const 
 		context.fetchNext();
 		doVarAssign(context, sym, type, isGlobalVar, true);
 	}
-	if (context.stream.current().type != Type{';'})
-		context.error<InvalidValue>("Expected ';' here!");
 }
 
 BREVE_ASSEMBLE_FN(VarDecl) {
@@ -672,7 +673,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 				auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
 				auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
 				return {varType, accessor};
-			} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
+			} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		}
 		case Type{'='}: break;
 		case LTS_TT_ADD_ASSIGN:
@@ -704,7 +705,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 		auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
 		doVarAssign(context, sym, varType, false, false, pre);
 		return {varType, accessor};
-	} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
+	} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 }
 
 static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
@@ -745,7 +746,7 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 			Makai::Cast::as<Value::Kind, int16>(overload["return"]),
 			"."
 		};
-	else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing return type!");
+	else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
 }
 
 BREVE_ASSEMBLE_FN(Assembly) {
@@ -1053,7 +1054,8 @@ BREVE_ASSEMBLE_FN(Namespace) {
 	if (context.stream.current().type != Type {'{'})
 		context.error<NonexistentValue>("Expected '{' here!");
 	doExpression(context);
-	context.fetchNext();
+	if (context.stream.current().type != Type {'}'})
+		context.fetchNext();
 	if (context.stream.current().type != Type {'}'})
 		context.error<NonexistentValue>("Expected '}' here!");
 	while (scopeCount--)
@@ -1140,8 +1142,6 @@ BREVE_ASSEMBLE_FN(Expression) {
 		case Type{';'}: break;
 		default: context.error<InvalidValue>("Invalid expression!");
 	}
-//	if (context.stream.current().type != Type{';'} || context.stream.current().type != Type{'}'})
-//		context.error<InvalidValue>("Expected closure here!");
 }
 
 void Breve::assemble() {
