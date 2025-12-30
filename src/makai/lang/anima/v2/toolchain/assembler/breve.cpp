@@ -1002,9 +1002,9 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
 	assembler.assemble();
-	context.writeGlobalPostscript(submodule.compose());
+	context.writeFinale(submodule.compose());
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
-	context.writeMainPreamble("call", submodule.main.postEntryPoint, "()");
+	context.writeMainPostscript("call", submodule.main.postEntryPoint, "()");
 	submodule.global.ns->name = mod.head;
 	context.importModule(submodule.global.ns);
 }
