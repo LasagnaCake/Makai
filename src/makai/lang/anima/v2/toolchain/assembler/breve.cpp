@@ -989,7 +989,8 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
 	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
-	assembler.context.fileName = mod.path;
+	assembler.context.fileName		= mod.path;
+	assembler.context.sourcePaths	= context.sourcePaths;
 	assembler.assemble();
 	context.global.code += submodule.compose();
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
@@ -1010,7 +1011,10 @@ BREVE_ASSEMBLE_FN(Namespace) {
 		context.error<InvalidValue>("You can only declare sub-namespaces inside other namespaces!");
 	usize scopeCount = 0;
 	auto ns = context.currentNamespaceRef();
-	while (context.stream.current().type == Type{'.'}) {
+	while (
+		context.stream.current().type == Type{'.'}
+	||	context.stream.current().type == LTS_TT_IDENTIFIER
+	) {
 		context.fetchNext();
 		if (context.stream.current().type != LTS_TT_IDENTIFIER)
 			context.error<NonexistentValue>("Expected identifier for namespace name!");

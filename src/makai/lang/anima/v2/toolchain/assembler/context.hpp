@@ -391,8 +391,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		void fetchNext() {
-			stream.next();
-			if (stream.finished())
+			if (!stream.next())
 				error<Error::NonexistentValue>("Unexpected end-of-file!");
 		}
 
@@ -401,15 +400,20 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		String getModuleFile(String const& path) const {
+			DEBUGLN("Locating module '"+path+"'...");
 			for (auto const& source: sourcePaths) {
 				auto const fullName = source + "/" + path + ".bv";
-				DEBUGLN("Searching for: '"+fullName+"'");
-				if (OS::FS::exists(source) && OS::FS::exists(fullName))
+				DEBUGLN("  Searching for: '"+fullName+"'");
+				if (OS::FS::exists(source) && OS::FS::exists(fullName)) {
+					DEBUGLN("Found!");
 					return Makai::File::loadText(fullName);
-				else if (File::isArchiveAttached()) try {
-					return Makai::File::loadTextFromArchive(fullName);
+				} else if (File::isArchiveAttached()) try {
+					auto const f = Makai::File::loadTextFromArchive(fullName);
+					DEBUGLN("Found!");
+					return f;
 				} catch (...) {}
 			}
+			DEBUGLN("Not found");
 			error<Error::NonexistentValue>("Module file '"+path+"' does not exist or could not be found!");
 		}
 
@@ -461,6 +465,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (name == "minima" || name == "asm")							return true;
 			if (name == "await" || name == "async" || name == "yield")		return true;
 			if (name == "export" || name == "inmort")						return true;
+			if (name == "signal")											return true;
 			if (name == "main")												return true;
 			return false;
 		}
