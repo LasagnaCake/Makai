@@ -1,5 +1,5 @@
 namespace Core.IO {
-	out func print(text: string): void {
+	func print(text: string): void {
 		in print text;
 	}
 }

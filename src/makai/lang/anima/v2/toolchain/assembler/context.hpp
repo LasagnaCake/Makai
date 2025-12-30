@@ -402,6 +402,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		String getModuleFile(String const& path) const {
 			for (auto const& source: sourcePaths) {
 				auto const fullName = source + "/" + path + ".bv";
+				DEBUGLN("Searching for: '"+fullName+"'");
 				if (OS::FS::exists(source) && OS::FS::exists(fullName))
 					return Makai::File::loadText(fullName);
 				else if (File::isArchiveAttached()) try {
@@ -419,7 +420,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Makai::toString(
 					"At:\nLINE: ", pos.line,
 					"\nCOLUMN: ", pos.column,
-					"\n", stream.tokenText()
+					"\n--> [", stream.tokenText(), "]"
 				),
 				what,
 				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), fileName}
