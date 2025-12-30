@@ -85,8 +85,12 @@ namespace Command {
 		Compiler::buildProject(ctx, proj, cfg["ir"]);
 		auto const outName = Makai::Regex::replace(cfg["output"], "\\$\\{name\\}", proj.name);
 		Makai::OS::FS::makeDirectory(Makai::String("output"));
-		if (cfg["ir"])
-			Makai::File::saveText("output/" + outName + ".min", Regex::replace(ctx.compose(), "\n+", "\n"));
+		if (cfg["ir"]) {
+			auto prg = Makai::Regex::replace(ctx.compose(), "(\n(\\s+))+", "\n");
+			prg = Makai::Regex::replace(prg, "\\s+", " ");
+			prg = Makai::Regex::replace(prg, "(\n\\s)+", "\n");
+			Makai::File::saveText("output/" + outName + ".min", prg);
+		}
 		else {
 			bool const debug = cfg["__args"][1].get<Makai::String>("") == "debug";
 			Makai::File::saveText("output/" + outName + ".anp", ctx.program.serialize(debug).toFLOWString("\t"));
