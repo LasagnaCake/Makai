@@ -51,7 +51,7 @@ namespace Command {
 			throw Makai::Error::NonexistentValue("Missing folder name!");
 		auto const packName = Makai::Regex::replace(
 			cfg["output"],
-			"${name}",
+			"\\$\\{name\\}",
 			cfg["__args"][1]
 				.get<Makai::String>()
 				.replace('\\', '/')
@@ -68,7 +68,7 @@ namespace Command {
 			throw Makai::Error::NonexistentValue("Missing archive name!");
 		auto const packName = Makai::Regex::replace(
 			cfg["output"],
-			"${name}(\\.pack)?",
+			"\\$\\{name\\}(\\.pack)?",
 			Makai::OS::FS::fileName(cfg["__args"][1], true)
 		);
 		Makai::Tool::Arch::unpack(cfg["__args"][0], cfg["output"], cfg["password"]);

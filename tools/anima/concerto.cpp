@@ -83,7 +83,7 @@ namespace Command {
 		if (proj.main.source.empty() && proj.main.path.size())
 			proj.main.source = Makai::File::getText(proj.main.path);
 		Compiler::buildProject(ctx, proj, cfg["ir"]);
-		auto const outName = Makai::Regex::replace(cfg["output"], "${name}", proj.name);
+		auto const outName = Makai::Regex::replace(cfg["output"], "\\$\\{name\\}", proj.name);
 		Makai::OS::FS::makeDirectory(Makai::String("output"));
 		if (cfg["ir"])
 			Makai::File::saveText("output/" + outName + ".min", ctx.compose());
