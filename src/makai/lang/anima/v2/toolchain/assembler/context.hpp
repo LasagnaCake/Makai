@@ -292,14 +292,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		template <class... Args>
-		constexpr void writeGlobalLine(Args const&... args) {
-			auto& content = global.code;
-			content += toString(toString(args, " ")..., "\n");
-		}
-
-		template <class... Args>
-		constexpr void writeGlobalPreamble(Args const&... args) {
-			auto& content = global.pre;
+		constexpr void writeMainPreamble(Args const&... args) {
+			auto& content = main.pre;
 			content += toString(toString(args, " ")..., "\n");
 		}
 
@@ -310,7 +304,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		template <class... Args>
-		constexpr void writeMainPreamble(Args const&... args) {
+		constexpr void writeGlobalLine(Args const&... args) {
+			auto& content = global.code;
+			content += toString(toString(args, " ")..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writeGlobalPreamble(Args const&... args) {
 			auto& content = global.pre;
 			content += toString(toString(args, " ")..., "\n");
 		}
