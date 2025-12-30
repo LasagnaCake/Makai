@@ -1110,8 +1110,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym.value);
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
-			}
-			else context.error<InvalidValue>("Invalid/Unsupported expression!");
+			} else context.error<InvalidValue>("Invalid/Unsupported expression!");
 		} break;
 		case Type{'('}: {
 			doBinaryOperation(context);
