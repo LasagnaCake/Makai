@@ -1000,6 +1000,7 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
 	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
+	assembler.context.isModule		= submodule.isModule;
 	assembler.context.fileName		= mod.path;
 	assembler.context.sourcePaths	= context.sourcePaths;
 	assembler.assemble();
@@ -1157,7 +1158,7 @@ void Breve::assemble() {
 	while (context.stream.next()) doExpression(context);
 	context.writeMainPreamble("end");
 	context.writeMainPostscript("end");
-	if (!context.hasMain)
+	if (!context.isModule && !context.hasMain)
 		context.error<NonexistentValue>("Missing main entrypoint!");
 }
 
