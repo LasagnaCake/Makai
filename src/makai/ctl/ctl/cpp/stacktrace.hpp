@@ -37,7 +37,7 @@ namespace CPP::Stack {
 		#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
 		__declspec(noinline) static Trace capture() {
     		HANDLE proc = GetCurrentProcess();
-			SymInitialize(process, NULL, TRUE);
+			SymInitialize(proc, NULL, TRUE);
 			As<pointer[MAX_FRAMES]> stack;
 			auto const n = CaptureStackBackTrace(0, MAX_FRAMES, stack, NULL);
 			As<char[(sizeof(SYMBOL_INFO) + Frame::SIZE + 1) * sizeof(TCHAR)]> buf;
