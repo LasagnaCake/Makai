@@ -364,16 +364,20 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 	} else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
 		if (sym.value["global"]) {
-			return {
-				Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
-				":" + id
-			};
+			if (sym.value.contains("type"))
+				return {
+					Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
+					":" + id
+				};
+			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
 		} else {
 			auto const stackID = sym.value["stack_id"].get<uint64>();
-			return {
-				Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
-				Makai::toString("&[", stackID, "]")
-			};
+			if (sym.value.contains("type"))
+				return {
+					Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
+					Makai::toString("&[", stackID, "]")
+				};
+			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
 		}
 	} else context.error<InvalidValue>("Invalid symbol type for operation");
 }
@@ -590,6 +594,8 @@ void doVarAssign(
 		if (isGlobalVar) {
 			if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 				context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
+			else if (!sym.value.contains("type"))
+				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing global variable type!");
 			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
 				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
 		} else {
@@ -662,9 +668,11 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 	switch (current.type) {
 		case Type{':'}: {
 			doVarDecl(context, sym, false);
-			auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
-			auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
-			return {varType, accessor};
+			if (sym.value.contains("type")) {
+				auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
+				auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
+				return {varType, accessor};
+			} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
 		}
 		case Type{'='}: break;
 		case LTS_TT_ADD_ASSIGN:
@@ -691,10 +699,12 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 		} break;
 	}
 	context.fetchNext();
-	auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
-	auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
-	return {varType, accessor};
-	doVarAssign(context, sym, varType, false, false, pre);
+	if (sym.value.contains("type")) {
+		auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
+		auto const accessor	= Makai::toString("&[", sym.value["stack_id"].get<uint64>(), "]");
+		doVarAssign(context, sym, varType, false, false, pre);
+		return {varType, accessor};
+	} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing variable type!");
 }
 
 static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
@@ -730,10 +740,12 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 	auto const overload = sym.value["overloads"][legalName];
 	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
 	context.writeLine("clear", pushes);
-	return {
-		Makai::Cast::as<Value::Kind, int16>(overload["return"]),
-		"."
-	};
+	if (overload.contains("return"))
+		return {
+			Makai::Cast::as<Value::Kind, int16>(overload["return"]),
+			"."
+		};
+	else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + "INTERNAL ERROR: Missing return type!");
 }
 
 BREVE_ASSEMBLE_FN(Assembly) {
