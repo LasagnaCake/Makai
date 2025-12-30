@@ -364,7 +364,7 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		return doFunctionCall(context, sym);
 	} else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
-		DEBUGLN("\n\n", sym.value.toFLOWString("  "), "\n\n");
+	//	DEBUGLN("\n\n", sym.value.toFLOWString("  "), "\n\n");
 		if (sym.value["global"]) {
 			if (sym.value.contains("type"))
 				return {
