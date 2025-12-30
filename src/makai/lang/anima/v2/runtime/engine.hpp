@@ -107,6 +107,11 @@ namespace Makai::Anima::V2::Runtime {
 
 		FunctionRegistry functions;
 
+		virtual void print(Data::Value const& value);
+
+		bool hasSignal(String const& name);
+		void fire(String const& signal);
+
 	protected:
 		virtual Value	external	(String const& name		);
 		Value			internal	(uint64 const valueID	);
@@ -118,9 +123,6 @@ namespace Makai::Anima::V2::Runtime {
 		void crash(Engine::Error const& error);
 		
 		bool hasFunction(String const& name);
-
-		bool hasSignal(String const& name);
-		void fire(String const& signal);
 
 	private:
 		Engine::Error invalidInstructionEror();

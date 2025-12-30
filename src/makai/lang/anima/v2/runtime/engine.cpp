@@ -513,13 +513,17 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 		case BuiltInFunction::AV2_EBIF_PRINT: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin print");
 			if (err) break;
-			Value what	= context.valueStack.popBack();
-			if (what.isString())
-				DEBUGLN(what.get<String>());
-			else DEBUGLN(what.toString());
+			Value what = context.valueStack.popBack();
+			print(what);
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
+}
+
+void Engine::print(Value const& what) {
+	if (what.isString())
+		DEBUGLN(what.get<String>());
+	else DEBUGLN(what.toString());
 }
 
 void Engine::v2SetContext() {

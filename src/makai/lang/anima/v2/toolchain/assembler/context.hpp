@@ -60,7 +60,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 
 			constexpr String compose() const {
-				return pre + code + post;
+				return pre + "\n" + code + "\n" + post + "\n";
 			}
 
 			struct Namespace {
@@ -206,7 +206,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr void endScope() {
 			if (scope.empty()) return;
-			writeLine(scope.popBack().compose());
+			writeLine(scope.popBack().compose(), "");
 		}
 
 		constexpr void addFunctionExit() {
@@ -379,7 +379,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr String compose() const {
-			return global.compose() + main.pre + main.post + finale;
+			return global.compose() + "\n" + main.pre + "\n" + main.post + "\n" + finale;
 		}
 
 		constexpr Scope::Namespace& currentNamespace() {

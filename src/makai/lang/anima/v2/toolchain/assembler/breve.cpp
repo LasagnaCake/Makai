@@ -201,8 +201,10 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	;
 	auto resolutionName = context.namespacePath("_") + "_" + id;
 	auto fullName = baseName;
-	context.writeGlobalPreamble(gpre, "call", fullName, "()");
-	context.writeGlobalPreamble("end");
+	if (optionals.size()) {
+		context.writeGlobalPreamble(gpre, "call", fullName, "()");
+		context.writeGlobalPreamble("end");
+	}
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
 	Prototype const proto = {retType, fid, fullName, resolutionName};
@@ -248,7 +250,7 @@ BREVE_ASSEMBLE_FN(Function) {
 	auto const proto = doFunctionPrototype(context, false);
 	if (context.stream.current().type != Type{'{'})
 		context.error<InvalidValue>("Expected '{' here!");
-	context.writeLine(proto.entryPoint, ":");
+	context.writeLine(proto.fullName, ":");
 	doScope(context);
 	context.writeLine("end");
 	context.endScope();
@@ -258,7 +260,7 @@ BREVE_ASSEMBLE_FN(ExternalFunction) {
 	context.startScope();
 	context.fetchNext();
 	auto const proto = doFunctionPrototype(context, true);
-	context.writeLine(proto.entryPoint, ":");
+	context.writeLine(proto.fullName, ":");
 	Makai::String args;
 	usize argc = 0;
 	for (auto const& [name, overload]: context.currentScope().ns->members[proto.name].value["overloads"].items()) {
