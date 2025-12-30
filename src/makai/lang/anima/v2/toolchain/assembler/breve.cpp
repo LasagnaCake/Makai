@@ -199,7 +199,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	+	signature
 	+	"_" + id
 	;
-	auto resolutionName = id;
+	auto resolutionName = context.namespacePath("_") + "_" + id;
 	auto fullName = baseName;
 	context.writeGlobalPreamble(gpre, "call", fullName, "()");
 	context.writeGlobalPreamble("end");

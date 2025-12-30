@@ -26,6 +26,11 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 	constexpr static usize SIZE = N;
 	/// @brief Identifier storage container type.
 	using InternalType = As<uint64[SIZE]>;
+	
+	/// @brief Array subsctipt operator overloading.
+	/// @param i Index of value.
+	/// @return Value at index.
+	constexpr uint64 operator[](usize const i) const {if (i < SIZE) return id[i]; return 0;}
 
 	/// @brief Addition operator overloading.
 	/// @param other `SSUID` to add.

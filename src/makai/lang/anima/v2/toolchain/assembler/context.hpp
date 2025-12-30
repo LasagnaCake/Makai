@@ -368,7 +368,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		inline String uniqueName() {
-			return Makai::toString("_", currentScope().code.size(), "_", rng.integer(), "_", Random::CTPRNG<uint64>);
+			static ID::VLUID id = ID::VLUID::create(0);
+			id++;
+			return Makai::toString("_", currentScope().code.size(), "_", id[3], "_", id[2], "_", id[1], "_", id[0]);
 		}
 
 		constexpr String compose() const {
