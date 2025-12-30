@@ -992,21 +992,18 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 		context.error<InvalidValue>("Module imports/exports can only be declared in the global scope!");
 	Context submodule;
 	ModuleResolution mod = resolveModuleName(context);
-	submodule.fileName = mod.path;
-	submodule.isModule = true;
+	submodule.fileName		= mod.path;
+	submodule.isModule		= true;
+	submodule.sourcePaths	= context.sourcePaths;
 	submodule.stream.open(context.getModuleFile(mod.path));
 	submodule.main.preEntryPoint	+= "_" + mod.fullName;
 	submodule.main.entryPoint		+= "_" + mod.fullName;
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
 	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
-	assembler.context.isModule		= submodule.isModule;
-	assembler.context.fileName		= mod.path;
-	assembler.context.sourcePaths	= context.sourcePaths;
 	assembler.assemble();
 	context.writeGlobalPostscript(submodule.compose());
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
-	context.writeMainPreamble("call", submodule.main.entryPoint, "()");
 	context.writeMainPreamble("call", submodule.main.postEntryPoint, "()");
 	submodule.global.ns->name = mod.head;
 	context.importModule(submodule.global.ns);
@@ -1147,9 +1144,9 @@ BREVE_ASSEMBLE_FN(Expression) {
 
 void Breve::assemble() {
 	if (!context.isModule) {
-		context.writeGlobalPreamble("call", context.main.pre, "()");
+		context.writeGlobalPreamble("call", context.main.preEntryPoint, "()");
 		context.writeGlobalPreamble("call", context.main.entryPoint, "()");
-		context.writeGlobalPreamble("call", context.main.post, "()");
+		context.writeGlobalPreamble("call", context.main.postEntryPoint, "()");
 		context.writeGlobalPreamble("clear");
 		context.writeGlobalPreamble("halt");
 	}

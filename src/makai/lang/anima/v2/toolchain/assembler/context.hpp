@@ -299,7 +299,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		template <class... Args>
 		constexpr void writeGlobalPreamble(Args const&... args) {
-			auto& content = main.pre;
+			auto& content = global.pre;
 			content += toString(toString(args, " ")..., "\n");
 		}
 
@@ -367,10 +367,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return Data::Value::isScalar(type) || Data::Value::isString(type) || type == Data::Value::Kind{-2};
 		}
 
-		inline String uniqueName() {
-			static ID::VLUID id = ID::VLUID::create(0);
-			id++;
-			return Makai::toString("_", currentScope().code.size(), "_", id[3], "_", id[2], "_", id[1], "_", id[0]);
+		inline static String uniqueName() {
+			uuid++;
+			return Makai::toString("_", uuid[3], uuid[2], uuid[1], uuid[0]);
 		}
 
 		constexpr String compose() const {
@@ -505,6 +504,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			"__main"	+ uniqueName(),
 			"__post"	+ uniqueName()
 		};
+
+		inline static ID::VLUID uuid = ID::VLUID::create(0);
 	};
 }
 
