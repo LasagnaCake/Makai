@@ -300,7 +300,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <class... Args>
 		constexpr void writeMainPostscript(Args const&... args) {
 			auto& content = main.post;
-			content += toString(toString(args, " ")..., "\n") + content;
+			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
@@ -318,7 +318,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <class... Args>
 		constexpr void writeGlobalPostscript(Args const&... args) {
 			auto& content = global.post;
-			content += toString(toString(args, " ")..., "\n") + content;
+			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
@@ -336,7 +336,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <class... Args>
 		constexpr void writeScopePostscript(Args const&... args) {
 			auto& content = currentScope().post;
-			content += toString(toString(args, " ")..., "\n") + content;
+			content += toString(toString(args, " ")..., "\n");
 		}
 
 		template <class... Args>
@@ -375,7 +375,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		inline static String uniqueName() {
 			uuid++;
-			return Makai::toString("_", uuid[3], uuid[2], uuid[1], uuid[0]);
+			return Makai::toString("_i", uuid[3], "i", uuid[2], "i", uuid[1], "i", uuid[0]);
 		}
 
 		constexpr String compose() const {

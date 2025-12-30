@@ -250,6 +250,7 @@ BREVE_ASSEMBLE_FN(Function) {
 		context.error<InvalidValue>("Expected '{' here!");
 	context.writeLine(proto.entryPoint, ":");
 	doScope(context);
+	context.writeLine("end");
 	context.endScope();
 }
 
@@ -809,6 +810,7 @@ BREVE_ASSEMBLE_FN(Main) {
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	doScope(context);
 	context.endScope();
+	context.writeLine("end");
 	if (context.stream.current().type != Type{'}'})
 		context.error<InvalidValue>("Expected '}' here!");
 }
@@ -1078,8 +1080,8 @@ BREVE_ASSEMBLE_FN(Signal) {
 	context.writeLine("hook _signal" + fullName, ":");
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	doExpression(context);
-	context.writeLine("end");
 	context.endScope();
+	context.writeLine("end");
 }
 
 BREVE_ASSEMBLE_FN(Expression) {
@@ -1147,7 +1149,7 @@ void Breve::assemble() {
 		context.writeGlobalPreamble("call", context.main.preEntryPoint, "()");
 		context.writeGlobalPreamble("call", context.main.entryPoint, "()");
 		context.writeGlobalPreamble("call", context.main.postEntryPoint, "()");
-		context.writeGlobalPreamble("clear");
+		context.writeGlobalPreamble("flush");
 		context.writeGlobalPreamble("halt");
 	}
 	context.writeMainPreamble(context.main.preEntryPoint, ":");
