@@ -1,11 +1,14 @@
 #ifndef CTL_CPPFAILURE_H
 #define CTL_CPPFAILURE_H
 
+#include "cpp/stacktrace.hpp"
 #include "namespace.hpp"
 #include "ctypes.hpp"
 #include <stdexcept>
 
 CTL_NAMESPACE_BEGIN
+
+using TraceableException = CPP::Stack::Traceable<255>;
 
 /// @brief Program crash. Catastrophic.
 struct Crash {};
@@ -16,12 +19,12 @@ template<usize I>
 struct DebugCrash: Crash {};
 
 /// @brief Generic, potentially-recoverable failure.
-struct Failure {
+struct Failure: TraceableException {
 	constexpr virtual cstring what() const noexcept {return "Something happened!";}
 };
 
 /// @brief Irrecoverable failure. Catastrophic.
-struct CatastrophicFailure: Crash {
+struct CatastrophicFailure: Crash, TraceableException {
 	constexpr virtual cstring what() const noexcept {return "Something REALLY bad happened!";}
 };
 

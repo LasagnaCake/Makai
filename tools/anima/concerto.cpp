@@ -182,8 +182,10 @@ int main(int argc, char** argv) try {
 	return 0;
 } catch (Makai::Error::Generic const& e) {
 	DEBUGLN(e.report());
+	DEBUGLN("\n[[ STACKTRACE ]]\n\n", Makai::CPP::Stack::format(e.trace), "\n");
 	return -1;
 } catch (Makai::Exception const& e) {
 	DEBUGLN(e.what());
+	DEBUGLN("\n[[ STACKTRACE ]]\n\n", Makai::CPP::Stack::format(e.trace), "\n");
 	return -1;
 }
