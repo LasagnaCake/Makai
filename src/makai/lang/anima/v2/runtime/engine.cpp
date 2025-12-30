@@ -477,20 +477,20 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			else pushUndefinedIfInLooseMode("builtin bitwise not");
 		} break;
 		case BuiltInFunction::AV2_EBIF_COMP: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin bitwise compare");
+			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin threeway compare");
 			if (err) break;
 			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			Value::OrderType order = Value::Order::EQUAL;
 			if (a.type() == b.type())				order = a <=> b;
 			else if (a.isNumber() && b.isNumber())	order = a.get<double>() <=> b.get<double>();
 			else {
-				pushUndefinedIfInLooseMode("builtin bitwise compare");
+				pushUndefinedIfInLooseMode("builtin threeway compare");
 				break;
 			}
 			if (order == Value::Order::EQUAL)			context.valueStack.pushBack(0);
 			else if (order == Value::Order::GREATER)	context.valueStack.pushBack(1);
 			else if (order == Value::Order::LESS)		context.valueStack.pushBack(-1);
-			else pushUndefinedIfInLooseMode("builtin bitwise compare");
+			else pushUndefinedIfInLooseMode("builtin threeway compare");
 		} break;
 		case BuiltInFunction::AV2_EBIF_INTERRUPT: {
 		} break;
