@@ -15,6 +15,9 @@ void Makai::Anima::V2::Toolchain::Compiler::setModuleSourceResolver(SourceResolv
 
 Project Project::deserializeV1(Project& proj, Data::Value const& value) {
 	auto const type = value["type"].get<String>();
+	if (value.contains("name"))
+		proj.name = value["name"].get<Makai::String>();
+	else proj.name = "project";
 	if (type == "executable" || type == "exe")		proj.type = Type::AV2_TC_PT_EXECUTABLE;
 	else if (type == "program" || type == "prg")	proj.type = Type::AV2_TC_PT_PROGRAM;
 	else if (type == "module" || type == "mod")		proj.type = Type::AV2_TC_PT_MODULE;
