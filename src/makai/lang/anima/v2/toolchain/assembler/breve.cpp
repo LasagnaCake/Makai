@@ -137,7 +137,6 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	context.fetchNext();
 	if (context.stream.current().type != Type{'('})
 		context.error<NonexistentValue>("Expected '(' here!");
-	context.fetchNext();
 	CTL::Ex::Data::Value::Kind retType = DVK_ANY;
 	id += "_";
 	Makai::String gpre = "";
@@ -392,7 +391,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 				auto const sym = resolveNamespaceMember(context);
 				return resolveSymbol(context, sym.key, sym.value);
 			} else if (idCanBeValue) return {Value::Kind::DVK_STRING, id};
-			else context.error<InvalidValue>("Identifire does not match any reserved value or member name!");
+			else context.error<InvalidValue>("Identifier does not match any reserved value or member name!");
 		} break;
 		case Type{'('}: {
 			return doBinaryOperation(context);
