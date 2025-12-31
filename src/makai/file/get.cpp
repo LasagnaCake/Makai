@@ -83,6 +83,10 @@ constexpr bool isOtherStuffChar(char const c) {
 	||	c == '/'
 	||	c == '\\'
 	||	c == '.'
+	||	c == ' '
+	||	c == '('
+	||	c == ')'
+	||	c == '+'
 	);
 }
 
@@ -99,10 +103,9 @@ constexpr bool isInvalidPathChar(char const c) {
 }
 
 constexpr static bool isValidPathChar(char const c) {
-	return (
+	return !isInvalidPathChar(c) && (
 		isAlphanumericChar(c)
 	||	isOtherStuffChar(c)
-	||	!isInvalidPathChar(c)
 	);
 }
 
