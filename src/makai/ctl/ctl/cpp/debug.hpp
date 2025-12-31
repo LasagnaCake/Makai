@@ -23,6 +23,8 @@ namespace CPP::Debug {
 		}
 	}
 
+	/// @brief Detects whether or not the program is running on a debugger.
+	/// @return Whether debugger is present.
 	inline bool hasDebugger() {
 		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 		return IsDebuggerPresent();
@@ -30,6 +32,7 @@ namespace CPP::Debug {
 		return false;
 		#endif
 	}
+
 	/// @brief Traceable function. Can be used in debugging.
 	[[gnu::noinline, maybe_unused]] static void trace()			{			}
 	/// @brief Emits a breakpoint.
@@ -38,7 +41,9 @@ namespace CPP::Debug {
 	/// @brief Traceable object.
 	struct Traceable {
 		/// @brief Constructor.
-		Traceable() {trace();}
+		inline Traceable() {if (trap) breakpoint(); else trace();}
+
+		inline static bool trap = false;
 	};
 }
 

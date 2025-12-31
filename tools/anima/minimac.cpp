@@ -1,5 +1,5 @@
+#include <debugapi.h>
 #include <makai/makai.hpp>
-#include "base.cc"
 
 constexpr auto const VER = Makai::Data::Version{1};
 
@@ -16,6 +16,8 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 }
 
 int main(int argc, char** argv) try {
+	if (CTL::CPP::Debug::hasDebugger())
+		CTL::CPP::Debug::Traceable::trap = true;
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());

@@ -164,6 +164,8 @@ namespace Command {
 }
 
 int main(int argc, char** argv) try {
+	if (CTL::CPP::Debug::hasDebugger())
+		CTL::CPP::Debug::Traceable::trap = true;
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
