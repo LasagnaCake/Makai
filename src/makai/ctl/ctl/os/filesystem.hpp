@@ -7,7 +7,7 @@
 #include "../container/error.hpp"
 #include "../algorithm/strconv.hpp"
 
-#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 #include <libloaderapi.h>
 #endif
 
@@ -25,7 +25,7 @@ namespace OS::FS {
 		PS_WINDOWS	= '\\'
 	};
 
-	#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+	#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 	/// @brief Path separator that the system uses.
 	constexpr PathSeparator SEPARATOR = PathSeparator::PS_WINDOWS;
 	#else
@@ -455,7 +455,7 @@ namespace OS::FS {
 	/// @brief Returns the executable's storage directory.
 	/// @return Location of executable.
 	inline String sourceLocation() {
-		#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 		String src = String(1024, '\0');
 		GetModuleFileName(NULL, src.data(), src.size());
 		src = src.sliced(0, src.find('\0')).replace('\\', '/').splitAtLast('/').front();

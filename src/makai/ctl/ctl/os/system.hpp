@@ -7,7 +7,7 @@
 #include "../regex/core.hpp"
 #include "filesystem.hpp"
 
-#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 #include <windows.h>
 #include <winapifamily.h>
 #include <commdlg.h>
@@ -22,7 +22,7 @@ namespace OS {
 	namespace {
 		inline String sanitizedArgument(String arg) {
 			arg = Regex::replace(arg, "\\\\+", "\\\\");
-			#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+			#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 			arg = Regex::replace(arg, "\\\\+\"", "\\\"");
 			return "\"" + arg + "\"";
 			#else
@@ -42,7 +42,7 @@ namespace OS {
 	inline int launch(String const& path, String const& directory = "", StringList args = StringList()) {
 		if (!FS::exists(path))
 			throw Error::InvalidValue("File [" + path + "] does not exist!", CTL_CPP_PRETTY_SOURCE);
-		#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 		String prgArgs = "";
 		if (!args.empty())
 			for (String const& arg: args)

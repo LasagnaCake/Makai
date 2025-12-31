@@ -24,10 +24,34 @@
 /// @brief CTL core namespace.
 #define CTL_NAMESPACE_END	}
 
+#define CTL_OS_UNKNOWN (0)
+#define CTL_OS_WINDOWS (1)
+#define CTL_OS_UNIX (2)
+
+#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+#define CTL_TARGET_OS (CTL_OS_WINDOWS)
+#else
+#define CTL_TARGET_OS (CTL_OS_UNIX)
+#endif
+
 /// @brief Core library.
 namespace CTL {}
 
 CTL_NAMESPACE_BEGIN
+
+enum class OperatingSystem {
+	OS_WINDOWS = CTL_OS_WINDOWS,
+	OS_UNIX = CTL_OS_UNIX
+};
+
+/// @brief Target operating system.
+constexpr auto const TARGET_OS =
+	#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
+	OperatingSystem::OS_WINDOWS
+	#else
+	OperatingSystem::OS_UNIX
+	#endif
+;
 
 /// @brief Core library.
 namespace CTL = ::CTL;

@@ -1,7 +1,7 @@
 #ifndef CTL_RANDOM_ENGINE_H
 #define CTL_RANDOM_ENGINE_H
 
-#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 #include <windows.h>
 //#include <bcrypt.h>
 #else
@@ -115,7 +115,7 @@ namespace Engine {
 		}
 	};
 
-	#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
+	#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 	/// @brief Secure random engine.
 	struct Secure: Base::ISecureEngine {
 	private:

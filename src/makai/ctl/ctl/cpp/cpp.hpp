@@ -2,5 +2,6 @@
 #define CTL_CPP_H
 
 #include "sourcefile.hpp"
+#include "debug.hpp"
 
 #endif

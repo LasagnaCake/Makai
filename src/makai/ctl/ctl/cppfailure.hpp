@@ -2,10 +2,13 @@
 #define CTL_CPPFAILURE_H
 
 #include "namespace.hpp"
+#include "cpp/debug.hpp"
 #include "ctypes.hpp"
 #include <stdexcept>
 
 CTL_NAMESPACE_BEGIN
+
+namespace {struct Untraceable {};}
 
 /// @brief Program crash. Catastrophic.
 struct Crash {};
@@ -16,12 +19,12 @@ template<usize I>
 struct DebugCrash: Crash {};
 
 /// @brief Generic, potentially-recoverable failure.
-struct Failure {
+struct Failure: CPP::Debug::Traceable {
 	constexpr virtual cstring what() const noexcept {return "Something happened!";}
 };
 
 /// @brief Irrecoverable failure. Catastrophic.
-struct CatastrophicFailure: Crash {
+struct CatastrophicFailure: Crash, CPP::Debug::Traceable {
 	constexpr virtual cstring what() const noexcept {return "Something REALLY bad happened!";}
 };
 
@@ -50,7 +53,7 @@ struct InvalidAccessFailure: CatastrophicFailure {
 [[noreturn]]
 inline void panic() {
 	// Parry this you fucking casual
-	throw nullptr;
+	throw Untraceable{};
 }
 
 CTL_NAMESPACE_END
