@@ -22,5 +22,6 @@
 #include "staticvalue.hpp"
 #include "templates.hpp"
 #include "typeinfo.hpp"
+#include "cpp/cpp.hpp"
 
 #endif // CTL_H

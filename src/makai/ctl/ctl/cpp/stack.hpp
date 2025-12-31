@@ -13,11 +13,11 @@ namespace CPP::Stack {
 		if (!(trace.frames && trace.count)) return "";
 		String result;
 		for (usize i = 0; i < trace.count; ++i) {
-			result += "at " + trace.frames[i].info;
+			result += "at " + toString(trace.frames[i].info);
 			if (trace.frames[i].line != -1) {
 				result += ": line " + toString(trace.frames[i].line);
-				result += "(in " + trace.frames[i].file + ")";
-			} else result += ": address " + String::fromNumber(trace.frames[i].address, 16);
+				result += "(in " + toString(trace.frames[i].file) + ")";
+			} else result += ": address[" +toString(trace.frames[i].address) + "]";
 			result += "\n";
 		}
 		return result;
