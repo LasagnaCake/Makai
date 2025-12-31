@@ -17,7 +17,7 @@ namespace CPP::Stack {
 			if (trace.frames[i].line != -1) {
 				result += " in Line:[" + toString(trace.frames[i].line) + "]";
 				result += " (in File:[" + String(trace.frames[i].file) + "])";
-			} else result += " -> at Address:[" +String(trace.frames[i].address) + "]";
+			} else result += " -> at Address:[" + toString(trace.frames[i].address) + "]";
 			result += "\n";
 		}
 		return result;
