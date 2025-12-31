@@ -30,6 +30,11 @@ namespace CPP::Stack {
 		owner<Frame const> const		frames	= nullptr;
 		usize const						count	= 0;
 
+		Trace() {}
+
+		Trace(Trace const& other):	Trace(other.frames, other.count, true) {}
+		Trace(Trace&& other):		Trace(other.frames, other.count, true) {}
+
 		~Trace() {
 			delete[] frames;
 		}
@@ -66,6 +71,15 @@ namespace CPP::Stack {
 		[[gnu::unavailable("Unimplemented for non-Windows systems!")]]
 		static Trace capture() {}
 		#endif
+
+	private:
+		Trace(owner<Frame const> const frames, usize const count): frames(frames), count(count) {}
+		
+		Trace(owner<Frame const> const frames, usize const count, bool): Trace(new Frame[count]{}, frames, count) {}
+
+		Trace(owner<Frame> const frames, owner<Frame const> const source, usize const count): Trace(frames, count) {
+			__builtin_memmove(frames, source ,count);
+		}
 	};
 
 	template <usize F = 256>

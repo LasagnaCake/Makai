@@ -56,17 +56,17 @@ prologue:
 
 packer:
 	@echo "[$@]"
-	$(COMPILER) $(COMPCFG) -c packer.cpp -o packer.o
+	$(COMPILER) $(DEBUGCOMPCFG) -c packer.cpp -o packer.o
 	$(LINKER) -o packer.exe packer.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 
 concerto:
 	@echo "[$@]"
-	$(COMPILER) $(COMPCFG) -c concerto.cpp -o concerto.o
+	$(COMPILER) $(DEBUGCOMPCFG) -c concerto.cpp -o concerto.o
 	$(LINKER) -o concerto.exe concerto.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 
 minimac:
 	@echo "[$@]"
-	$(COMPILER) $(COMPCFG) -c minimac.cpp -o minimac.o
+	$(COMPILER) $(DEBUGCOMPCFG) -c minimac.cpp -o minimac.o
 	$(LINKER) -o minimac.exe minimac.o $(DEBUGEXTRAOBJS) $(LINKCFG)
 
 finale:

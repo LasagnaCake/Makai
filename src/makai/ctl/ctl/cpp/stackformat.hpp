@@ -1,5 +1,5 @@
-#ifndef CTL_CPP_STACK_H
-#define CTL_CPP_STACK_H
+#ifndef CTL_CPP_STACKFORMAT_H
+#define CTL_CPP_STACKFORMAT_H
 
 #include "stacktrace.hpp"
 #include "../container/strings/string.hpp"

@@ -1,5 +1,4 @@
 #include <makai/makai.hpp>
-#include <makai/ctl/ctl/cpp/stack.hpp>
 #include "base.cc"
 
 using namespace Makai::Anima::V2;

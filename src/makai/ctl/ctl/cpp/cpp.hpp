@@ -3,6 +3,6 @@
 
 #include "sourcefile.hpp"
 #include "stacktrace.hpp"
-#include "stack.hpp"
+#include "stackformat.hpp"
 
 #endif
