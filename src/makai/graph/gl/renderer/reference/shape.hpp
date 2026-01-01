@@ -39,14 +39,15 @@ namespace Makai::Graph::Ref {
 		Matrix4x4 matrix() const {
 			auto lt = local;
 			if (billboard) {
+				auto& cam = Global::camera;
 				Vector3 target = Global::camera.eye;
+				Vector3 offset = Global::camera.at;
 				if (!Global::camera.relativeToEye) {
-					target += (Global::camera.at - Global::camera.eye).normalized();
-				} else target += Global::camera.at.normalized();
-				if (billboard.x)
-					lt.rotation.x = local.position.yz().angleTo(Global::camera.eye.yz());
-				if (billboard.y)
-					lt.rotation.y = local.position.xz().angleTo(Global::camera.eye.xz());
+					offset = (offset - cam.eye).normalized();
+				} else offset = offset.normalized();
+				target += offset * cam.zNear;
+				if (billboard.x) lt.rotation.x = local.position.yz().angleTo(target.yz());
+				if (billboard.y) lt.rotation.y = local.position.xz().angleTo(target.xz());
 			}
 			return lt;
 		}
