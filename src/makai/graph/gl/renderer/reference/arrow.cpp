@@ -12,17 +12,7 @@ void Arrow::onReset() {
 void Arrow::onTransform() {
 	if (fixed) return;
 	setBaseShape();
-	Makai::Math::Mat4 tmat(local);
-	Makai::Math::Mat3 nmat(tmat.transposed().inverted().truncated(3, 3));
-	for (auto& triangle: triangles)
-		for (auto& vert: triangle.verts) {
-			vert.normal = Makai::Vector3::FRONT();
-			if (visible) {
-				vert.position	= tmat * Makai::Math::Vector4(vert.position, 1);
-				vert.normal		= nmat * vert.normal;
-			}
-			else vert.position = 0; 
-		}
+	applyTransform();
 }
 
 void Arrow::setBaseShape() {

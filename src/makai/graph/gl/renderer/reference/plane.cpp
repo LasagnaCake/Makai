@@ -131,7 +131,7 @@ void Plane::onTransform() {
 	;
 	// Calculate transformed vertices
 	Vertex plane[4] = {origin[0], origin[1], origin[2], origin[3]};
-	Matrix4x4 tmat(local);
+	Matrix4x4 tmat(matrix());
 	Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
 	for (Graph::Vertex& vert: plane) {
 		vert.position	= tmat * Vector4(vert.position, 1);

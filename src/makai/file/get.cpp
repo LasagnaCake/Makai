@@ -103,7 +103,7 @@ constexpr bool isInvalidPathChar(char const c) {
 }
 
 constexpr static bool isValidPathChar(char const c) {
-	return !isInvalidPathChar(c) && (
+	return (
 		isAlphanumericChar(c)
 	||	isOtherStuffChar(c)
 	);

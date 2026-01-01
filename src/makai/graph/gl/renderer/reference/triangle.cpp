@@ -112,7 +112,7 @@ void Triangle::onTransform() {
 	// Calculate transformed vertices
 	Vertex tri[3] = {origin[0], origin[1], origin[2]};
 	if (visible) {
-		Matrix4x4 tmat(local);
+		Matrix4x4 tmat(matrix());
 		Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
 		for (Graph::Vertex& vert: tri) {
 			vert.position	= tmat * Vector4(vert.position, 1);

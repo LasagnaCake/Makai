@@ -31,12 +31,29 @@ namespace Makai::Graph::Ref {
 		virtual void onTransform()	= 0;
 
 		/// @brief Transformation.
-		Transform3D local;
+		Transform3D	local;
+		/// @brief Whether billboarding is enabled.
+		Billboard	billboard;
 
 	protected:
+		Matrix4x4 matrix() const {
+			auto lt = local;
+			if (billboard) {
+				Vector3 target = Global::camera.eye;
+				if (!Global::camera.relativeToEye) {
+					target += (Global::camera.at - Global::camera.eye).normalized();
+				} else target += Global::camera.at.normalized();
+				if (billboard.x)
+					lt.rotation.x = local.position.yz().angleTo(Global::camera.eye.yz());
+				if (billboard.y)
+					lt.rotation.y = local.position.xz().angleTo(Global::camera.eye.xz());
+			}
+			return lt;
+		}
+
 		/// @brief Applies the local transformation matrix to all the vertices.
 		void applyTransform() {
-			Matrix4x4 tmat(local);
+			Matrix4x4 tmat(matrix());
 			Matrix3x3 nmat(tmat.transposed().inverted().truncated(3, 3));
 			for (auto& triangle: triangles)
 				for (auto& vert: triangle.verts) {

@@ -6,7 +6,7 @@ void Line::onTransform() {
 	if (fixed) return;
 	As<Vertex[4]> plane;
 	getBaseShape(plane);
-	Makai::Math::Mat4 tmat(local);
+	Makai::Math::Mat4 tmat(matrix());
 	Makai::Math::Mat3 nmat(tmat.transposed().inverted().truncated(3, 3));
 	for (auto& vert: plane) {
 		vert.normal = Makai::Vector3::FRONT();

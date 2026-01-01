@@ -5,6 +5,7 @@
 
 #include "../../vertex.hpp"
 #include "../../../color/color.hpp"
+#include "../../global.hpp"
 
 /// @brief Graphical object references.
 namespace Makai::Graph::Ref {
@@ -97,6 +98,15 @@ namespace Makai::Graph::Ref {
 
 		/// @brief Unbinds the reference from its parent.
 		void unbind();
+
+		/// @brief Billboard settings.
+		struct Billboard {
+			bool x = false;
+			bool y = false;
+
+			/// @brief Returns whether billboard is enabled.
+			constexpr operator bool() const {return x || y ;}
+		};
 
 		/// @brief Whether transforming/resetting should be forbidden.
 		bool fixed		= false;
