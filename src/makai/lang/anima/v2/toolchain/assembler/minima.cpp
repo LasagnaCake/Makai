@@ -78,22 +78,16 @@ static Location getRegister(Minima::Context& context) {
 static Location getExtern(Context& context) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Missing external location name!");
-	if (context.stream.current().type != Type{'['})
-		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Missing external location name!");
 	auto const name = context.stream.current();
-	if (
-		name.type != LTS_TT_INTEGER
-	) MINIMA_ERROR(InvalidValue, "Expected integer for external location ID!");
-	else return {
+	if (!(
+		name.type == LTS_TT_IDENTIFIER
+	||	name.type == LTS_TT_SINGLE_QUOTE_STRING
+	||	name.type == LTS_TT_DOUBLE_QUOTE_STRING
+	)) MINIMA_ERROR(InvalidValue, "Expected name for external location!");
+	return {
 		DataLocation::AV2_DL_EXTERNAL,
-		name.value.get<usize>()
+		context.addConstant(name.value.get<Makai::String>())
 	};
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Missing external location name!");
-	if (context.stream.current().type != Type{'['})
-		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
 }
 
 static Location getGlobal(Context& context) {
@@ -469,6 +463,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "concat" || id == "join")	invoke.argc = '\'';
 			else if (id == "match" || id == "has")		invoke.argc = 'm';
 			else if (id == "remove")					invoke.argc = 'r';
+			else if (id == "sizeof")					invoke.argc = '#';
 			else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 		}
 		case Type{'+'}:
@@ -1013,7 +1008,6 @@ MINIMA_ASSEMBLE_FN(Cast) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const castID = context.addNamedInstruction(Instruction::Name::AV2_IN_CAST);
-	// TODO: This
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const from	= getDataLocation(context);

@@ -516,6 +516,12 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			Value what = context.valueStack.popBack();
 			print(what);
 		} break;
+		case BuiltInFunction::AV2_EBIF_SIZEOF: {
+			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin sizeof");
+			if (err) break;
+			Value val = context.valueStack.popBack();
+			context.valueStack.pushBack(val.size());
+		} break;
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
 }

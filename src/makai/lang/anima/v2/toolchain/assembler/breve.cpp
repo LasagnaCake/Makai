@@ -288,12 +288,21 @@ BREVE_ASSEMBLE_FN(Scope) {
 		context.writeLine("clear ", context.currentScope().varc);
 }
 
+BREVE_ASSEMBLE_FN(ExternalValue) {
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (context.currentScope().contains(id))
+		context.error<FailedAction>("Symbol with this name already exists in this scope!");
+	// TODO: The rest of the owl
+}
+
 BREVE_ASSEMBLE_FN(External) {
 	context.fetchNext();
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
 		context.error<NonexistentValue>("Expected keyword here!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (id == "function" || id == "func" || id == "fn") doExternalFunction(context);
+	else if (!context.isReservedKeyword(id))
+		doExternalValue(context);
 	else context.error<NonexistentValue>("Invalid keyword!");
 }
 
@@ -400,6 +409,13 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				return resolveSymbol(context, sym.key, sym.value);
+			} else if (id == "sizeof") {
+				context.fetchNext();
+				auto result = doValueResolution(context);
+				context.writeLine("push", result.source);
+				context.writeLine("call in sizeof");
+				context.writeLine("pop .");
+				return {Value::Kind::DVK_UNSIGNED, "."};
 			} else if (idCanBeValue) return {Value::Kind::DVK_STRING, id};
 			else context.error<InvalidValue>("Identifier does not match any reserved value or member name!");
 		} break;
@@ -428,6 +444,8 @@ constexpr Value::Kind stronger(Value::Kind const a, Value::Kind const b) {
 
 static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
 	auto const result = stronger(ifTrue.type, ifFalse.type);
+	if (!Value::isNumber(result) && ifTrue.type != ifFalse.type)
+		context.error<InvalidValue>("Types must match, or be similar!");
 	if (Value::isUndefined(cond.type))
 		context.error<InvalidValue>("Invalid condition type!");
 	if (!Value::isVerifiable(cond.type))
@@ -535,11 +553,14 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.writeLine("comp (", lhs.value, opstr, rhs.value, ") -> .");
 		} break;
 		case Type{'['}: {
-			if (!Value::isObject(lhs.type))
-				context.error<InvalidValue>("Left-hand side MUST be an object!");
-			if (!Value::isString(rhs.type))
-				context.error<InvalidValue>("Right-hand side MUST be a string!");
-			context.writeLine("get &[", lhs.value, "][&[", rhs.value, "]] -> .");
+			if (Value::isObject(lhs.type)) {
+				if (!Value::isString(rhs.type))
+					context.error<InvalidValue>("Right-hand side MUST be a string!");
+			} else if (Value::isArray(lhs.type)) {
+				if (!Value::isInteger(rhs.type))
+					context.error<InvalidValue>("Right-hand side MUST be an integer!");
+			} else context.error<InvalidValue>("Left-hand side MUST be an object or an array!");
+			context.writeLine("get ", lhs.value, "[", rhs.value, "] -> .");
 			result = DVK_ANY;
 			context.fetchNext();
 			if (context.stream.current().type != Type{']'})
@@ -585,7 +606,8 @@ void doVarAssign(
 	Value::Kind const& type,
 	bool const isGlobalVar = false,
 	bool const isNewVar = false,
-	PreAssignFunction const& preassign = {}
+	PreAssignFunction const& preassign = {},
+	PreAssignFunction const& postassign = {}
 ) {
 	if (context.currentNamespace().hasChild(sym.value["name"]))
 		context.error<InvalidValue>("Symbol name is also a namespace name!");
@@ -620,6 +642,7 @@ void doVarAssign(
 		context.writeAdaptive("copy", result.value, "-> :", sym.value["name"]);
 	else context.writeAdaptive("copy", result.value, "-> &[", context.stackIndex(sym), "]");
 	sym.value["init"] = true;
+	postassign(context, result);
 }
 
 void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const isGlobalVar = false) {
@@ -664,12 +687,16 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 	doVarDecl(context, sym.value, isGlobalVar);
 }
 
-#define PREASSIGN [=] (Breve::Context& context, Solution& result) -> void
+#define ASSIGN_FN [=] (Breve::Context& context, Solution& result) -> void
+
+BREVE_SYMBOL_ASSEMBLE_FN(SubscriptAssignment) {
+	// TODO: This
+}
 
 BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 	context.fetchNext();
 	auto const current = context.stream.current();
-	PreAssignFunction pre;
+	PreAssignFunction pre, post;
 	switch (current.type) {
 		case Type{':'}: {
 			doVarDecl(context, sym, false);
@@ -679,29 +706,30 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 				return {varType, accessor};
 			} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		}
+		case Type{'['}: {
+			return doSubscriptAssignment(context, sym);
+		} break;
 		case Type{'='}: break;
 		case LTS_TT_ADD_ASSIGN:
 		case LTS_TT_SUB_ASSIGN:
 		case LTS_TT_MUL_ASSIGN:
 		case LTS_TT_DIV_ASSIGN:
 		case LTS_TT_MOD_ASSIGN: {
-			Makai::String accessor;
-			if (sym.value["global"])
-				accessor = ":" + sym.value["name"].get<Makai::String>();
-			else accessor = Makai::toString("&[", context.stackIndex(sym), "]");
+			Makai::String const accessor = context.varAccessor(sym);
 			Makai::String operation;
 			switch (current.type) {
-				case LTS_TT_ADD_ASSIGN: operation = " + "; break;
-				case LTS_TT_SUB_ASSIGN: operation = " - "; break;
-				case LTS_TT_MUL_ASSIGN: operation = " * "; break;
-				case LTS_TT_DIV_ASSIGN: operation = " / "; break;
-				case LTS_TT_MOD_ASSIGN: operation = " % "; break;
+				case LTS_TT_ADD_ASSIGN: operation = "+"; break;
+				case LTS_TT_SUB_ASSIGN: operation = "-"; break;
+				case LTS_TT_MUL_ASSIGN: operation = "*"; break;
+				case LTS_TT_DIV_ASSIGN: operation = "/"; break;
+				case LTS_TT_MOD_ASSIGN: operation = "%"; break;
 			}
-			pre = PREASSIGN {
+			pre = ASSIGN_FN {
 				context.writeLine("bop", accessor, operation, result.value, "-> .");
 				result.value = ".";
 			};
 		} break;
+		default: context.error<InvalidValue>("Invalid assignment operation");
 	}
 	context.fetchNext();
 	if (sym.value.contains("type")) {

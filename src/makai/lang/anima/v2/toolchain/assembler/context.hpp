@@ -497,6 +497,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return toString("-", absoluteStackID(sym));
 		}
 
+		constexpr String varAccessor(Scope::Member const& sym) {
+			if (sym.value["extern"])
+				return "@" + sym.value["name"].get<String>();
+			if (sym.value["global"])
+				return ":" + sym.value["name"].get<String>();
+			return stackIndex(sym);
+		}
+
 		StringList				sourcePaths;
 
 		Scope					global;

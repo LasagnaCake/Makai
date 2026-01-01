@@ -42,12 +42,20 @@ namespace Makai::Anima::V2::Runtime {
 
 			constexpr Value invoke(String const& name, Value::ArrayType const& args) {
 				if (!has(name)) return Value::undefined();
-				Value::ArrayType result;
-				return functions[nameMap[name]](args);
+				return invoke(nameMap[name], args);
+			}
+
+			constexpr Value invoke(UUID const& id, Value::ArrayType const& args) {
+				if (!has(id)) return Value::undefined();
+				return functions[id](args);
 			}
 
 			constexpr bool has(String const& name) const {
 				return nameMap.contains(name);
+			}
+
+			constexpr bool has(UUID const& id) const {
+				return functions.contains(id);
 			}
 		
 		private:
@@ -95,6 +103,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_STR_REMOVE	= 'r',
 			AV2_EBIF_STR_SUB	= '"',
 			AV2_EBIF_STR_MATCH	= 'm',
+			AV2_EBIF_SIZEOF		= '#',
 		};
 
 		enum class Action {
