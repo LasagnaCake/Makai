@@ -14,6 +14,16 @@ namespace Convert {
 		/// @tparam B Base to convert to.
 		template<Base B>
 		struct BinaryToStringConverter {
+			constexpr static String convert(byte b)
+			requires (B < Base::CB_BASE32) {
+				constexpr auto base = (1 << (enumcast(B) + 1));
+				String s;
+				auto const c = (b % base) + '0';
+				do s += Cast::as<char>(c < 0x3A ? c : c + (0x40 - 0x3A));
+				while (b /= base);
+				return String(stride(B) - s.size(), '0') + s;
+			}
+
 			/// @brief Converts binary data to a string.
 			/// @param data Data to convert.
 			/// @return String.
@@ -21,14 +31,8 @@ namespace Convert {
 			requires (B < Base::CB_BASE32) {
 				if (data.empty()) return "";
 				String result = "";
-				for (auto const b: data) {
-					switch (B) {
-						case Base::CB_BASE2:	result += String::fromNumber<byte>(b, 2).substring(2);	break;
-						case Base::CB_BASE4:	result += String::fromNumber<byte>(b, 4).substring(2);	break;
-						case Base::CB_BASE8:	result += String::fromNumber<byte>(b, 8).substring(2);	break;
-						case Base::CB_BASE16:	result += String::fromNumber<byte>(b, 16).substring(2);	break;
-					}
-				}
+				for (auto const b: data)
+					result += convert(b);
 				return result;
 			}
 
@@ -56,6 +60,18 @@ namespace Convert {
 			constexpr static String convert(BinaryData<> const& data)
 			requires (B == Base::CB_BASE64) {
 				return "";
+			}
+
+		private:
+			consteval static usize stride(Base const base) {
+				switch (base) {
+					case Base::CB_BASE2:	return 8; break;
+					case Base::CB_BASE4:	return 4; break;
+					case Base::CB_BASE8:	return 3; break;
+					case Base::CB_BASE16:	return 2; break;
+					default: break;
+				}
+				return 0;
 			}
 		};
 	}
