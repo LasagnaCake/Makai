@@ -85,7 +85,6 @@ Since a version of (most of) them are bundled[^1], including your own version of
 | stb_image  | Image loading                                       | Yes (Implementation file[^2]) |
 | xml2json   | XML-to-JSON conversion                              | Modified version only used internally, not required |
 | json2xml   | JSON-to-XML conversion                              | Modified version only used internally, not required |
-| cppcodec   | Data encoding & decoding                            | Only used internally, not required |
 | CryptoPP   | Encryption, decryption, compression & decompression | Yes (Lib file[^3]) |
 
 ## Documentation

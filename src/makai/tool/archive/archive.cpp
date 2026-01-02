@@ -3,8 +3,6 @@
 #include <cryptopp/modes.h>
 #include <cryptopp/sha3.h>
 #include <cryptopp/randpool.h>
-#include <cppcodec/base64_rfc4648.hpp>
-#include <cppcodec/base32_rfc4648.hpp>
 
 #include <algorithm>
 #include <fstream>

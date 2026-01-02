@@ -29,6 +29,11 @@ namespace Convert {
 		constexpr auto const chs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 		return chs[b % 64];
 	}
+
+	constexpr char toBase85Char(word const w) {
+		constexpr auto const chs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
+		return chs[w % 64];
+	}
 }
 
 CTL_NAMESPACE_END

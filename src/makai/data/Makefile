@@ -3,7 +3,7 @@ include $(ROOT)/make/core.make
 
 override prefix := $(call concat, $(prefix), data)
 
-INCLUDES := $(INC_CPPCODEC) $(INC_CRYPTOPP)
+INCLUDES := $(INC_CRYPTOPP)
 
 .PHONY: debug release all
 .ONESHELL:
