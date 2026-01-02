@@ -267,6 +267,7 @@ static void doConditionalLeapType(Context& context, Instruction::Leap& leap) {
 		} break;
 		default: MINIMA_ERROR(InvalidValue, "Unexpected token!");
 	}
+	context.fetchNext();
 	auto const loc = getDataLocation(context);
 	leap.condition = loc.at;
 	if (loc.id < Makai::Limit::MAX<uint64>)
