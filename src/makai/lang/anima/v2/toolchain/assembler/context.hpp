@@ -502,7 +502,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return "@" + sym.value["name"].get<String>();
 			if (sym.value["global"])
 				return ":" + sym.value["name"].get<String>();
-			return stackIndex(sym);
+			return "&[" + stackIndex(sym) + "]";
+		}
+
+		String intermediate() const {
+			auto prg = Makai::Regex::replace(compose(), "([\\n\\r\\f][\\t\\ ]*)([\\n\\r\\f][\\t\\ ]*)+", "\n\n");
+			prg = Makai::Regex::replace(prg, "[\\t\\ ]+", " ");
+			return prg;
 		}
 
 		StringList				sourcePaths;

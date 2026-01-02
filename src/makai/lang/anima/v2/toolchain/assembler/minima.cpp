@@ -561,8 +561,7 @@ MINIMA_ASSEMBLE_FN(Call) {
 	} else {
 		context.addInstruction<uint64>(addConstant(context, fname));
 	}
-	DEBUGLN("Type:", Makai::enumcast(func.type));
-	if (func.type != Type{'('})
+	if (!context.hasToken(Type{'('}))
 		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
@@ -594,7 +593,7 @@ MINIMA_ASSEMBLE_FN(Call) {
 	if (invoke.location == DataLocation::AV2_DL_EXTERNAL) {
 
 	}
-	if (func.type != Type{')'})
+	if (!context.hasToken(Type{')'}))
 		MINIMA_ERROR(InvalidValue, "Expected ')' here!");
 	for (auto& arg: argi)
 		if (arg > invoke.argc)
@@ -777,7 +776,7 @@ MINIMA_ASSEMBLE_FN(BinaryMath) {
 			else if (id == "remainder" || id == "rem")	bmath.op = decltype(bmath.op)::AV2_IBM_OP_REM;
 			else if (id == "power" || id == "pow")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_POW;
 			else if (id == "atan2" || id == "a2")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_ATAN2;
-			else MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
+			else MINIMA_ERROR(NonexistentValue, "Invalid binary math operator!");
 		} break;
 		case Type{'+'}: {
 			bmath.op = decltype(bmath.op)::AV2_IBM_OP_ADD;
@@ -864,9 +863,11 @@ MINIMA_ASSEMBLE_FN(UnaryMath) {
 		case Type{'/'}: umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE;
 		default: MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
 	}
+	context.fetchNext();
 	auto const v = getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
+	DEBUGLN("Token: ", Makai::enumcast(context.stream.current().type));
 	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
 		MINIMA_ERROR(NonexistentValue, "Expected '->' here!");
 	if (!context.stream.next())

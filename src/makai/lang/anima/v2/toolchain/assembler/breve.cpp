@@ -378,22 +378,10 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		return doFunctionCall(context, sym);
 	} else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
-		if (sym.value["global"]) {
-			if (sym.value.contains("type"))
-				return {
-					Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
-					":" + id
-				};
-			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
-		} else {
-			auto const stackID = context.stackIndex(sym);
-			if (sym.value.contains("type"))
-				return {
-					Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]),
-					Makai::toString("&[", stackID, "]")
-				};
-			else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
-		}
+		if (!sym.value.contains("type"))
+			context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
+		auto const type = Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]);
+		return {type, context.varAccessor(sym)};
 	} else context.error<InvalidValue>("Invalid symbol type for operation");
 }
 
@@ -482,14 +470,16 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		Makai::String const op = opname.type == LTS_TT_INCREMENT ? "inc" : "dec";
 		context.writeLine("copy", lhs.value, "-> .");
 		context.writeLine("uop inc", lhs.value, "->", lhs.value);
+		if (stackUsage)
+			context.writeLine("clear", stackUsage);
 		return {lhs.type, ".", lhs.value};
 	}
 	context.fetchNext();
 	auto rhs = doValueResolution(context);
 	if (rhs.value == ".") {
 		context.writeLine("push .");
-		rhs.value = "&[-0]";
-		if (stackUsage++) lhs.value = "&[-1]";
+		if (stackUsage++)	lhs.value = "&[-1]";
+		else				rhs.value = "&[-0]";
 	}
 	auto result = stronger(lhs.type, rhs.type);
 	if (Value::isUndefined(lhs.type) || Value::isUndefined(rhs.type))

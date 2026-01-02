@@ -111,7 +111,10 @@ void Makai::Anima::V2::Toolchain::Compiler::buildProject(AAssembler::Context& co
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
 		return;
 	else context.fileName = proj.main.path;
-	build<Breve>(context, proj.main.source.empty() ? Makai::File::getText(OS::FS::absolute(proj.main.path)) : proj.main.source);
+	auto const src = proj.main.source.empty() ? Makai::File::getText(OS::FS::absolute(proj.main.path)) : proj.main.source;
+	if (proj.main.type == Project::File::Type::AV2_TC_PFT_MINIMA)
+		return build<Minima>(context, src);
+	build<Breve>(context, src);
 	if (proj.main.type == Project::File::Type::AV2_TC_PFT_BREVE && !onlyUpToIntermediate)
-		build<Minima>(context, context.compose());
+		build<Minima>(context, context.intermediate());
 }

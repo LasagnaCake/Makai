@@ -58,7 +58,7 @@ bool TokenStream::next() {
 				return true;
 			}
 			default: {
-				curToken.type = static_cast<Token::Type>(lex.token);
+				curToken.type = static_cast<Token::Type>(lex.token - 2);
 				return true;
 			}
 		}
