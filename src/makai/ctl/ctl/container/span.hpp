@@ -424,6 +424,13 @@ private:
 template<usize S = DYNAMIC_SIZE, Type::Integer TIndex = usize, ExtentSize EXTENT = ExtentSize::CES_AUTO>
 using ByteSpan = Span<uint8, S, TIndex, EXTENT>;
 
+/// @brief `Span` analog for a viewable set of constant bytes.
+/// @tparam S Span size.
+/// @tparam TIndex Index type.
+/// @tparam EXTENT Extent size deduction.
+template<usize S = DYNAMIC_SIZE, Type::Integer TIndex = usize, ExtentSize EXTENT = ExtentSize::CES_AUTO>
+using ConstByteSpan = Span<uint8 const, S, TIndex, EXTENT>;
+
 CTL_NAMESPACE_END
 
 #endif // CTL_CONTAINER_SPAN_H

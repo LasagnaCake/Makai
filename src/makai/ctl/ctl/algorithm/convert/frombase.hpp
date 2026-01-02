@@ -1,8 +1,8 @@
 #ifndef CTL_ALGORITHM_CONVERT_FROMBASE_H
 #define CTL_ALGORITHM_CONVERT_FROMBASE_H
 
-#include "../../container/strings/strings.hpp"
 #include "base.hpp"
+#include "core.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -23,8 +23,8 @@ namespace Convert {
 				usize start = 0;
 				BinaryData<> result;
 				while (start < str.size()) {
-					result.pushBack(String::toNumber<byte>(str.substring(start, start + 2), stride(B)));
-					start += stride(B);
+					result.pushBack(String::toNumber<byte>(str.substring(start, start + 2), strideof(B)));
+					start += strideof(B);
 				}
 				return result;
 			}
@@ -114,17 +114,6 @@ namespace Convert {
 				if (c < 'A') return c - '0' + 52;
 				if (c < 'a') return c - 'A';
 				return c - 'a' + 26;
-			}
-
-			consteval static usize stride(Base const base) {
-				switch (base) {
-					case Base::CB_BASE2:	return 8; break;
-					case Base::CB_BASE4:	return 4; break;
-					case Base::CB_BASE8:	return 3; break;
-					case Base::CB_BASE16:	return 2; break;
-					default: break;
-				}
-				return 0;
 			}
 		};
 	}
