@@ -869,7 +869,6 @@ MINIMA_ASSEMBLE_FN(UnaryMath) {
 	auto const v = getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
-	DEBUGLN("Token: ", Makai::enumcast(context.stream.current().type));
 	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
 		MINIMA_ERROR(NonexistentValue, "Expected '->' here!");
 	if (!context.stream.next())
