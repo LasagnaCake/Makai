@@ -561,6 +561,7 @@ MINIMA_ASSEMBLE_FN(Call) {
 	} else {
 		context.addInstruction<uint64>(addConstant(context, fname));
 	}
+	DEBUGLN("Type:", Makai::enumcast(func.type));
 	if (func.type != Type{'('})
 		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
 	if (!context.stream.next())

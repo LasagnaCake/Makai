@@ -488,13 +488,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return currentScope().stackc + currentScope().varc;
 		}
 
-		constexpr uint64 absoluteStackID(Scope::Member const& sym) {
+		constexpr uint64 relativeStackOffset(Scope::Member const& sym) {
 			auto const sid = stackSize() - (sym.value["stack_id"].get<uint64>() + 1);
 			return sid;
 		}
 
 		constexpr String stackIndex(Scope::Member const& sym) {
-			return toString("-", absoluteStackID(sym));
+			return "-" + toString(relativeStackOffset(sym));
 		}
 
 		constexpr String varAccessor(Scope::Member const& sym) {

@@ -1116,7 +1116,7 @@ BREVE_ASSEMBLE_FN(Signal) {
 }
 
 BREVE_ASSEMBLE_FN(Yield) {
-	if (context.inFunction())
+	if (!context.inFunction())
 		context.error<InvalidValue>("Can only yield inside functions!");
 	else context.writeLine("yield");
 }

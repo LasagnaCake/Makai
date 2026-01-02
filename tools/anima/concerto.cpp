@@ -119,7 +119,7 @@ namespace Command {
 		proj.main.path = "src/main." + getFileExtension(proj.main.type);
 		proj.sources.pushBack("src");
 		if (proj.type != decltype(proj.type)::AV2_TC_PT_MODULE)
-			Makai::File::saveText(proj.name + "/" + proj.main.path, "import core.all;\n\nmain {\n\t// Main code goes here...\n}");
+			Makai::File::saveText(proj.name + "/" + proj.main.path, "import core.all;\n\nmain {\n\t// Main code goes here...\n\tcore.IO.print(\"Hello, world!\");\n}");
 		else Makai::File::saveText(proj.name + "/all.bv", "// Full imports goes here...");
 		Makai::File::saveText(proj.name + "/project.flow", proj.serialize().toFLOWString("\t"));
 		Makai::File::saveText(proj.name + "/.gitignore", "output/\nmodule/\ncache.flow\n*.anp");

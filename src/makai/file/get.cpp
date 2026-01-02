@@ -87,6 +87,7 @@ constexpr bool isOtherStuffChar(char const c) {
 	||	c == '('
 	||	c == ')'
 	||	c == '+'
+	||	c == ':'
 	);
 }
 
