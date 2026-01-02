@@ -66,7 +66,7 @@ namespace Convert {
 	/// @return String.
 	template <Base B>
 	constexpr String toBase(BinaryData<> const& bin) {
-		return "";
+		return Impl::BinaryToStringConverter<B>::convert(bin);
 	}
 }
 

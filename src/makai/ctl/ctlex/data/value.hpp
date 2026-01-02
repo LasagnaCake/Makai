@@ -738,7 +738,7 @@ namespace Data {
 		constexpr StringType toFLOWString(Padding const& pad = nullptr) const {
 			return stringify(
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
-					return StringType("!64\"" + Convert::toBase<Convert::Base::CB_BASE64>(*val.content.bytes) + "\"");
+					return StringType("!16\"" + Convert::toBase<Convert::Base::CB_BASE16>(*val.content.bytes) + "\"");
 				},
 				pad,
 				" ",

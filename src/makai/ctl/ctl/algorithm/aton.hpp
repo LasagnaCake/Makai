@@ -327,7 +327,7 @@ constexpr bool atof(As<const T[S]> const& str, F& out, usize const base = 0) {
 template<Type::Integer I, Type::ASCII T>
 constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base = 10) {
 	// Digits
-	cstring const digits = "0123456789abcdef""ghijklmnopqrstuv";
+	cstring const digits = "0123456789abcdefghijklmnopqrstuv";
 	// If empty buffer, or buffer is too small for a non-decimal base
 	if ((!bufSize) || (bufSize < 4 && base != 10))
 		return -1;

@@ -326,13 +326,15 @@ MINIMA_ASSEMBLE_FN(Jump) {
 			if (id == "dynamic" || id == "dyn") {
 				doDynamicLeap(context, leap);
 			} else doLeapType(context, leap);
-		}
-		case Type{'&'}: doDynamicLeap(context, leap);
+		} break;
+		case Type{'&'}:
+			doDynamicLeap(context, leap);
+		break;
 		default: {
 			if (!context.stream.next())
 				MINIMA_ERROR(NonexistentValue, "Malformed jump!");
 			doLeapType(context, leap);
-		}
+		} break;
 	}
 	context.program.code[index] = {
 		Instruction::Name::AV2_IN_JUMP,

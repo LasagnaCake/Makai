@@ -91,11 +91,11 @@ namespace Makai::Anima::V2::Runtime {
 			out["constants"]	= constants;
 			out["jumps"]		= jumpTable.toBytes();
 			out["code"]			= code.toBytes();
-			out["labels"]		= out.object();
 			out["version"]		= language;
 			if (keepLabels) {
+				out["labels"]	= out.object();
 				auto& outLabels = out["labels"];
-				outLabels["jumps"]		=
+				outLabels["jumps"]		= out.object();
 				outLabels["globals"]	= out.object();
 				auto& outJumps		= outLabels["jumps"];
 				auto& outGlobals	= outLabels["globals"];
