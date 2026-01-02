@@ -285,11 +285,10 @@ void doLeapType(Context& context, Instruction::Leap& leap) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = loc.value.get<Makai::String>();
 			if (id == "if") doConditionalLeapType(context, leap);
-			else goto TheRestOfTheLeap; 
+			break;
 		}
 		default: MINIMA_ERROR(InvalidValue, "Unexpected token!");
 	}
-	TheRestOfTheLeap:
 	if (!leap.isDynamic) {
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed jump!");
