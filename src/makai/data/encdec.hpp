@@ -9,7 +9,11 @@ namespace Makai::Data {
 	enum class EncodingType {
 		ET_UNKNOWN = -1,
 		ET_BASE32,
-		ET_BASE64
+		ET_BASE64,
+		ET_BASE2,
+		ET_BASE4,
+		ET_BASE8,
+		ET_BASE16
 	};
 
 	/// @brief Decodes the given data in a given encoding scheme.

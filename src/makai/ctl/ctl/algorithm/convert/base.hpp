@@ -14,8 +14,6 @@ namespace Convert {
 		CB_BASE16,
 		CB_BASE32,
 		CB_BASE64,
-		//CB_BASE85,
-		//CB_UUENCODE,
 	};
 }
 
