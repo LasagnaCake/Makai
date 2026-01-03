@@ -1064,7 +1064,9 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
 	context.writeMainPostscript("call", submodule.main.postEntryPoint, "()");
 	submodule.global.ns->name = mod.head;
-	context.importModule(submodule.global.ns);
+	if (submodule.global.ns->hasChild(mod.head))
+		context.importModule(submodule.global.ns->children[mod.head]);
+	else context.importModule(submodule.global.ns);
 }
 
 BREVE_ASSEMBLE_FN(UsingDeclaration) {
