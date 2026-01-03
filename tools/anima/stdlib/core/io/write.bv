@@ -1,5 +1,5 @@
 namespace IO {
-	func print(text: string): void {
+	func write(text: string): void {
 		in print text;
 	}
 }

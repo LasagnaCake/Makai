@@ -1,2 +1,2 @@
-import core.io.print;
+import core.io.write;
 import core.async.wait;
