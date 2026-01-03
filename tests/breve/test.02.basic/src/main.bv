@@ -1,8 +1,6 @@
 import core.all;
 
-using core;
-
 main {
 	// Main code goes here...
-	core.IO.print("Hello, world!");
+	core.IO.write("Hello, world!");
 }
