@@ -404,7 +404,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 				context.writeLine("call in sizeof");
 				context.writeLine("pop .");
 				return {Value::Kind::DVK_UNSIGNED, "."};
-			} else if (idCanBeValue) return {Value::Kind::DVK_STRING, id};
+			} else if (idCanBeValue) return {Value::Kind::DVK_STRING, "\"" + id + "\""};
 			else context.error<InvalidValue>("Identifier does not match any reserved value or member name!");
 		} break;
 		case Type{'('}: {
@@ -478,8 +478,8 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	auto rhs = doValueResolution(context);
 	if (rhs.value == ".") {
 		context.writeLine("push .");
-		if (stackUsage++)	lhs.value = "&[-1]";
-		else				rhs.value = "&[-0]";
+		rhs.value = "&[-0]";
+		if (stackUsage++) lhs.value = "&[-1]";
 	}
 	auto result = stronger(lhs.type, rhs.type);
 	if (Value::isUndefined(lhs.type) || Value::isUndefined(rhs.type))
@@ -681,6 +681,41 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 
 BREVE_SYMBOL_ASSEMBLE_FN(SubscriptAssignment) {
 	// TODO: This
+	auto const accessor = context.varAccessor(sym);
+	context.fetchNext();
+	auto nameOrID = doValueResolution(context);
+	usize stackUsage = 0;
+	if (nameOrID.value == ".") {
+		context.writeLine("push .");
+		nameOrID.value = "&[-0]";
+		++stackUsage;
+	}
+	auto const type = Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]);
+	switch (type) {
+		case Value::Kind::DVK_OBJECT: {
+			if (nameOrID.type != Value::Kind::DVK_STRING)
+				context.error<InvalidValue>("Object subscription location must be a string!");
+		} break;
+		case Value::Kind::DVK_ARRAY: {
+			if (!Value::isInteger(nameOrID.type))
+				context.error<InvalidValue>("Array subscription location must be an integer!");
+		} break;
+		default: context.error<InvalidValue>("Subscription is only allowed in objects and arrays!");
+	}
+	context.fetchNext();
+	if (!context.hasToken(Type{'='}))
+		context.error<InvalidValue>("Expected '=' here!");
+	context.fetchNext();
+	auto v = doValueResolution(context);
+	if (v.value == ".") {
+		context.writeLine("push .");
+		v.value = "&[-0]";
+		if (stackUsage++) nameOrID.value = "&[-1]";
+	}
+	context.writeLine("set", v.value, "->", accessor, "[", nameOrID.value, "]");
+	context.writeLine("copy", v.value, "-> .");
+	if (stackUsage) context.writeLine("clear", stackUsage);
+	return {type, "."};
 }
 
 BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
