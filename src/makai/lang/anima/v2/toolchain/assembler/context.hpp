@@ -535,6 +535,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		void importModule(Instance<Scope::Namespace> const& ns) {
 			if (!ns) return;
+			if (ns->name.empty())
+				error<Error::FailedAction>("INTERNAL ERROR: Missing namespace name!");
 			global.ns->addChild(ns);
 			global.ns->addChild(new Scope::Namespace{"__imports"});
 			global.ns->children["__imports"]->addChild(ns);

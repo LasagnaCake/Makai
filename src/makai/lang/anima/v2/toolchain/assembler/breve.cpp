@@ -1037,7 +1037,8 @@ ModuleResolution resolveModuleName(Context& context) {
 		auto const node = context.stream.current().value.get<Makai::String>();
 		path += "/" + node;
 		fullName += "_" + node;
-		head = node;
+		if (head.empty())
+			head = node;
 		context.fetchNext();
 		if (context.stream.current().type != Type{'.'}) break;
 	}

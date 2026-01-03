@@ -5,6 +5,8 @@ ROOT	:= ../..
 
 LEAN := -static -s
 
+debug := 1
+
 COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions
 LINKER_CONFIG	:= -static-libstdc++ -static-libgcc -m64 -fms-extensions
 
@@ -43,6 +45,16 @@ define GET_TIME
 @echo ""
 endef
 
+ifdef debug
+CFG := $(DEBUGCOMPCFG)
+LK := $(DEBUGLINKCFG)
+OBJ := $(DEBUGEXTRAOBJS)
+else
+CFG := $(COMPCFG)
+LK := $(LINKCFG)
+OBJ := $(EXTRAOBJS)
+endif
+
 .PHONY: debug release all tooling packer concerto minimac finale
 .ONESHELL:
 .SHELLFLAGS = -ec
@@ -56,18 +68,18 @@ prologue:
 
 packer:
 	@echo "[$@]"
-	$(COMPILER) $(DEBUGCOMPCFG) -c packer.cpp -o packer.o
-	$(LINKER) -o packer.exe packer.o $(DEBUGEXTRAOBJS) $(DEBUGLINKCFG)
+	$(COMPILER) $(CFG) -c packer.cpp -o packer.o
+	$(LINKER) -o packer.exe packer.o $(OBJ) $(LK)
 
 concerto:
 	@echo "[$@]"
-	$(COMPILER) $(DEBUGCOMPCFG) -c concerto.cpp -o concerto.o
-	$(LINKER) -o concerto.exe concerto.o $(DEBUGEXTRAOBJS) $(DEBUGLINKCFG)
+	$(COMPILER) $(CFG) -c concerto.cpp -o concerto.o
+	$(LINKER) -o concerto.exe concerto.o $(OBJ) $(LK)
 
 minimac:
 	@echo "[$@]"
-	$(COMPILER) $(DEBUGCOMPCFG) -c minimac.cpp -o minimac.o
-	$(LINKER) -o minimac.exe minimac.o $(DEBUGEXTRAOBJS) $(DEBUGLINKCFG)
+	$(COMPILER) $(CFG) -c minimac.cpp -o minimac.o
+	$(LINKER) -o minimac.exe minimac.o $(OBJ) $(LK)
 
 finale:
 	@echo 
