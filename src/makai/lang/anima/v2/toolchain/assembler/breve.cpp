@@ -680,7 +680,6 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 #define ASSIGN_FN [=] (Breve::Context& context, Solution& result) -> void
 
 BREVE_SYMBOL_ASSEMBLE_FN(SubscriptAssignment) {
-	// TODO: This
 	auto const accessor = context.varAccessor(sym);
 	context.fetchNext();
 	auto nameOrID = doValueResolution(context);
