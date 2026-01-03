@@ -52,7 +52,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			constexpr void addFunction(String const& name) {
 				if (ns->members.contains(name))
 					return;
-				ns->members[name] = {Member::Type::AV2_TA_SMT_FUNCTION,  Data::Value::object()};
+				ns->members[name] = {Member::Type::AV2_TA_SMT_FUNCTION, Data::Value::object()};
 				auto& sym = ns->members[name].value;
 				sym					= Data::Value::object();
 				sym["overloads"]	= Data::Value::object();
