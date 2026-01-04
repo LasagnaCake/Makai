@@ -336,6 +336,7 @@ NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespa
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
 		context.error<NonexistentValue>("Namespace name must be an identifier!");
 	auto const id = context.stream.current().value.get<Makai::String>();
+	DEBUGLN("Looking for: ", id);
 	if (ns.members.contains(id))
 		return {id, ns.members[id]};
 	else if (ns.children.contains(id))
