@@ -261,7 +261,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr bool hasNamespace(String const& name) const {
-			for (auto const& sc: scope)
+			for (auto const& sc: Range::reverse(scope))
 				if (sc.ns->name == name) return true;
 			for (auto& ns: global.ns->children)
 				if (ns.value->name == name) return true;
