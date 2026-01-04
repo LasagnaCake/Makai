@@ -324,6 +324,11 @@ BREVE_TYPED_ASSEMBLE_FN(Internal) {
 }
 
 NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespace& ns) {
+	DEBUGLN("Namespace:", ns.name);
+	for (auto const& mem : ns.children.keys())
+		DEBUGLN("  - Namespace: ", mem);
+	for (auto const& mem : ns.members.keys())
+		DEBUGLN("  - Member: ", mem);
 	context.fetchNext();
 	if (context.stream.current().type != Type{'.'})
 		context.error<NonexistentValue>("Expected '.' here!");
