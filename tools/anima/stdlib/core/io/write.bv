@@ -2,4 +2,9 @@ namespace IO {
 	func write(text: string): void {
 		in print text;
 	}
+
+	func writeLine(text: string): void {
+		write(text);
+		write("\n");
+	}
 }
