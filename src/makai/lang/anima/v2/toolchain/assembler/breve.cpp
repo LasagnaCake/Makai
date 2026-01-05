@@ -119,10 +119,11 @@ constexpr Makai::String toTypeName(Value::Kind t) {
 }
 
 struct Prototype {
-	Value::Kind		returnType;
-	Makai::String	name;
-	Makai::String	fullName;
-	Makai::String	entryPoint;
+	Value::Kind									returnType;
+	Makai::String								name;
+	Makai::String								fullName;
+	Makai::String								entryPoint;
+	Makai::Instance<Context::Scope::Namespace>	ns;
 };
 
 static Prototype doFunctionPrototype(Context& context, bool const isExtern = false) {
@@ -207,7 +208,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	}
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
-	Prototype const proto = {retType, fid, fullName, resolutionName};
+	Prototype const proto = {retType, fid, fullName, resolutionName, context.currentScope().ns};
 	auto subName = baseName;
 	for (auto& opt: Makai::Range::reverse(optionals)) {
 		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
@@ -245,15 +246,29 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 }
 
 BREVE_ASSEMBLE_FN(Function) {
-	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	context.fetchNext();
+	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	auto const proto = doFunctionPrototype(context, false);
-	if (context.stream.current().type != Type{'{'})
-		context.error<InvalidValue>("Expected '{' here!");
 	context.writeLine(proto.fullName, ":");
-	doScope(context);
+	if (context.stream.current().type == Type{'{'})
+		doScope(context);
+	else if (context.stream.current().type == LTS_TT_BIG_ARROW) {
+		auto const v = doValueResolution(context);
+		if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
+			context.error("Return types do not match!");
+		if (proto.returnType != v.type) {
+			context.writeLine("cast", v.value, "as", toTypeName(proto.returnType), "-> .");
+			context.writeLine("ret .");
+		}
+		else context.writeLine("ret", v.value);
+	}
+	else context.error("Expected '{' or '=>' here!");
 	context.writeLine("end");
 	context.endScope();
+	if (!context.currentScope().contains(proto.name))
+		context.currentScope().ns->members[proto.name] = proto.ns->members[proto.name];
+	else if (context.currentScope().ns->members[proto.name].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
+		context.error<InvalidValue>("Symbol with this name already exists!");
 }
 
 BREVE_ASSEMBLE_FN(ExternalFunction) {
