@@ -255,8 +255,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr bool hasSymbol(String const& name) const {
-			for (auto const& sc: Range::reverse(scope))
+			for (auto const& sc: Range::reverse(scope)) {
 				if (sc.contains(name)) return true;
+			}
 			return false;
 		}
 
