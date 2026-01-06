@@ -22,27 +22,57 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			struct Member {
 				enum class Type {
+					AV2_TA_SMT_UNKNOWN,
 					AV2_TA_SMT_VARIABLE,
 					AV2_TA_SMT_FUNCTION,
 					AV2_TA_SMT_CLASS,
 					AV2_TA_SMT_TYPE,
 				};
 
-				Type		type;
-				Data::Value	value;
+				enum class Declaration {
+					AV2_TA_SMD_UNDECLARED,
+					AV2_TA_SMD_DECLARED,
+					AV2_TA_SMD_INTERNAL,
+					AV2_TA_SMD_EXTERNAL,
+				};
+
+				Type		type	= Type::AV2_TA_SMT_UNKNOWN;
+				String		name;
+				Data::Value	value	= Data::Value::object();
+				Declaration	decl	= Declaration::AV2_TA_SMD_UNDECLARED;
+
+				constexpr bool declared() const {return decl != Declaration::AV2_TA_SMD_UNDECLARED;}
+
+				constexpr void declare() {
+					decl = Declaration::AV2_TA_SMD_DECLARED;
+				}
+
+				constexpr void declareSpecial(bool const external) {
+					if (external)
+						decl = Declaration::AV2_TA_SMD_EXTERNAL;
+					else decl = Declaration::AV2_TA_SMD_INTERNAL;
+				}
 			};
 
 			constexpr bool contains(String const& name) const {
 				return ns->members.contains(name);
 			}
 
+			constexpr Instance<Member> addMember(String const& name) {
+				if (ns->members.contains(name)) return ns->members[name];
+				auto mem			= new Member{.name = name};
+				auto& sym			= mem->value;
+				sym["name"]			= name;
+				ns->members[name]	= mem;
+				return mem;
+			}
+
 			constexpr void addVariable(String const& name, bool const global = false) {
 				if (ns->members.contains(name)) return;
-				ns->members[name] = {Member::Type::AV2_TA_SMT_VARIABLE,  Data::Value::object()};
-				auto& sym = ns->members[name].value;
+				auto mem = addMember(name);
+				mem->type = Member::Type::AV2_TA_SMT_VARIABLE;
+				auto& sym = mem->value;
 				sym["global"]	= global;
-				sym["name"]		= name;
-				sym["decl"]		= false;
 				sym["init"]		= false;
 				sym["use"]		= false;
 				if (!global)
@@ -50,12 +80,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 
 			constexpr void addFunction(String const& name) {
-				if (ns->members.contains(name))
-					return;
-				ns->members[name] = {Member::Type::AV2_TA_SMT_FUNCTION, Data::Value::object()};
-				auto& sym = ns->members[name].value;
-				sym					= Data::Value::object();
-				sym["overloads"]	= Data::Value::object();
+				if (ns->members.contains(name)) return;
+				auto mem = addMember(name);
+				mem->type = Member::Type::AV2_TA_SMT_FUNCTION;
+				auto& sym = mem->value;
+				sym["overloads"] = sym.object();
 				return;
 			}
 
@@ -64,9 +93,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 
 			struct Namespace {
-				String							name;
-				Dictionary<Instance<Namespace>>	children;
-				Dictionary<Scope::Member>		members;
+				String								name;
+				Dictionary<Instance<Namespace>>		children;
+				Dictionary<Instance<Scope::Member>>	members;
 
 				constexpr void addChild(Instance<Namespace> const& ns) {
 					if (!ns) return;
@@ -271,7 +300,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr Scope::Member& getSymbolByName(String const& name) {
 			for (auto& sc: Range::reverse(scope))
-				if (sc.contains(name)) return sc.ns->members[name];
+				if (sc.contains(name)) return *sc.ns->members[name];
 			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
 		}
 
@@ -522,6 +551,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Program					program;
 		String					fileName;
 		Random::SecureGenerator	rng;
+
+		List<Instance<Scope::Member>> functions;
 		
 		bool					hasMain		= false;
 		bool					isModule	= false;

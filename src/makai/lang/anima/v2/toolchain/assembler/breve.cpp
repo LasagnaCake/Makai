@@ -122,11 +122,10 @@ struct Prototype {
 	Value::Kind									returnType;
 	Makai::String								name;
 	Makai::String								fullName;
-	Makai::String								entryPoint;
-	Makai::Instance<Context::Scope::Namespace>	ns;
+	Makai::Instance<Context::Scope::Member>		function;
 };
 
-static Prototype doFunctionPrototype(Context& context, bool const isExtern = false) {
+static Prototype doFunctionPrototype(Context& context, bool const isExtern = false, bool const declared = false) {
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
 		context.error<InvalidValue>("Function name must be an identifier!");
@@ -162,7 +161,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		auto const argt = getType(context);
 		if (argt == CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)
 			context.error<InvalidValue>("Invalid argument type!");
-		auto& var = context.currentScope().ns->members[argID].value;
+		auto& var = context.currentScope().ns->members[argID]->value;
 		context.fetchNext();
 		if (context.stream.current().type == Type{'='}) {
 			isOptional = true;
@@ -200,7 +199,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	+	signature
 	+	"_" + id
 	;
-	auto resolutionName = context.namespacePath("_") + "_" + id;
+	auto resolutionName = id;
 	auto fullName = baseName;
 	if (optionals.size()) {
 		context.writeGlobalPreamble(gpre, "call", fullName, "()");
@@ -208,7 +207,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	}
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
-	Prototype const proto = {retType, fid, fullName, resolutionName, context.currentScope().ns};
+	Prototype proto = {retType, fid, fullName};
 	auto subName = baseName;
 	for (auto& opt: Makai::Range::reverse(optionals)) {
 		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
@@ -216,10 +215,11 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	}
 	if (!context.currentScope().contains(fid))
 		context.currentScope().addFunction(fid);
-	else if (context.currentScope().ns->members[fid].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
+	else if (context.currentScope().ns->members[fid]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error<InvalidValue>("Symbol with this name already exists!");
-	auto& mem = context.currentScope().ns->members[fid];
-	auto& overloads	= mem.value["overloads"];
+	auto mem = context.currentScope().ns->members[fid];
+	proto.function = mem;
+	auto& overloads	= mem->value["overloads"];
 	if (overloads.contains(resolutionName))
 		context.error<InvalidValue>("Function with similar signature already exists!");
 	auto& overload	= overloads[resolutionName];
@@ -227,6 +227,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		fullName += "_" + opt.value["type"].get<Makai::String>();
 	}
 	overload["args"]		= args;
+	overload["decl"]		= declared;
 	overload["full_name"]	= fullName;
 	overload["return"]		= Makai::enumcast(retType);
 	overload["extern"]		= optionals.empty() ? isExtern : false;
@@ -238,21 +239,23 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		auto& overload	= overloads[resolutionName];
 		args[args.size()]		= opt.value;
 		overload["args"]		= args;
+		overload["decl"]		= true;
 		overload["full_name"]	= opt.value["declname"];
 		overload["return"]		= Makai::enumcast(retType);
 		overload["extern"]		= ++i < optionals.size() ? false : isExtern;
 	}
+	context.functions.pushBack(mem);
 	return proto;
 }
 
 BREVE_ASSEMBLE_FN(Function) {
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
-	auto const proto = doFunctionPrototype(context, false);
+	auto const proto = doFunctionPrototype(context, false, true);
 	context.writeLine(proto.fullName, ":");
-	if (context.stream.current().type == Type{'{'})
+	if (context.stream.current().type == Type{'{'}) {
 		doScope(context);
-	else if (context.stream.current().type == LTS_TT_BIG_ARROW) {
+	} else if (context.stream.current().type == LTS_TT_BIG_ARROW) {
 		auto const v = doValueResolution(context);
 		if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
@@ -261,24 +264,23 @@ BREVE_ASSEMBLE_FN(Function) {
 			context.writeLine("ret .");
 		}
 		else context.writeLine("ret", v.value);
-	}
-	else context.error("Expected '{' or '=>' here!");
+	} else context.error("Expected '{' or '=>' here!");
 	context.writeLine("end");
 	context.endScope();
 	if (!context.currentScope().contains(proto.name))
-		context.currentScope().ns->members[proto.name] = proto.ns->members[proto.name];
-	else if (context.currentScope().ns->members[proto.name].type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
+		context.currentScope().ns->members[proto.name] = proto.function;
+	else if (context.currentScope().ns->members[proto.name]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error<InvalidValue>("Symbol with this name already exists!");
 }
 
 BREVE_ASSEMBLE_FN(ExternalFunction) {
 	context.startScope();
 	context.fetchNext();
-	auto const proto = doFunctionPrototype(context, true);
+	auto const proto = doFunctionPrototype(context, true, true);
 	context.writeLine(proto.fullName, ":");
 	Makai::String args;
 	usize argc = 0;
-	for (auto const& [name, overload]: context.currentScope().ns->members[proto.name].value["overloads"].items()) {
+	for (auto const& [name, overload]: context.currentScope().ns->members[proto.name]->value["overloads"].items()) {
 		if (overload["extern"]) {
 			argc = overload["args"].size();
 			break;
@@ -353,7 +355,7 @@ NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespa
 	auto const id = context.stream.current().value.get<Makai::String>();
 	DEBUGLN("Looking for: ", id);
 	if (ns.members.contains(id))
-		return {id, ns.members[id]};
+		return {id, *ns.members[id]};
 	else if (ns.children.contains(id))
 		return resolveNamespaceMember(context, *ns.children[id]);
 	else context.error<NonexistentValue>("Symbol does not exist!");
@@ -620,7 +622,7 @@ void doVarAssign(
 	PreAssignFunction const& preassign = {},
 	PreAssignFunction const& postassign = {}
 ) {
-	if (context.currentNamespace().hasChild(sym.value["name"]))
+	if (context.currentNamespace().hasChild(sym.name))
 		context.error<InvalidValue>("Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
 	if (result.type != type) {
@@ -638,19 +640,19 @@ void doVarAssign(
 			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
 				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
 		} else {
-			if (context.currentScope().contains(sym.value["name"]))
+			if (context.currentScope().contains(sym.name))
 				context.error<InvalidValue>("Variable already exists in current scope!");
-			else context.currentScope().addVariable(sym.value["name"], isGlobalVar);
+			else context.currentScope().addVariable(sym.name, isGlobalVar);
 		}
 	} else {
-		if (!context.hasSymbol(sym.value["name"]))
+		if (!context.hasSymbol(sym.name))
 			context.error<InvalidValue>("Variable does not exist in the current scope!");
 		if (sym.type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 			context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
 	}
 	preassign(context, result);
 	if (isGlobalVar)
-		context.writeAdaptive("copy", result.value, "-> :", sym.value["name"]);
+		context.writeAdaptive("copy", result.value, "-> :", sym.name);
 	else context.writeAdaptive("copy", result.value, "-> &[", context.stackIndex(sym), "]");
 	sym.value["init"] = true;
 	postassign(context, result);
@@ -659,9 +661,9 @@ void doVarAssign(
 void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const isGlobalVar = false) {
 	if (context.stream.current().type != Type{':'})
 		context.error<InvalidValue>("Expected ':' here!");
-	if (sym.value["decl"])
+	if (sym.declared())
 		context.error<InvalidValue>("Redeclaration of already-declared symbol!");
-	else sym.value["decl"] = true;
+	else sym.declare();
 	auto type = DVK_ANY;
 	switch (context.stream.current().type) {
 		case Type{':'}: {
@@ -774,7 +776,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 				result.value = ".";
 			};
 		} break;
-		default: context.error<InvalidValue>("Invalid assignment operation");
+		default: context.error<InvalidValue>("Invalid assignment operation!");
 	}
 	context.fetchNext();
 	if (sym.value.contains("type")) {
@@ -786,7 +788,7 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 }
 
 static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
-	auto const id = context.stream.current().value.get<Makai::String>();
+	auto const id = sym.name;
 	context.fetchNext();
 	if (context.stream.current().type != Type{'('})
 		context.error<InvalidValue>("Expected '(' here!");
@@ -804,7 +806,8 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 			++pushes;
 		}
 		context.fetchNext();
-		if (context.stream.current().type == Type{','})
+		if (context.stream.current().type == Type{')'}) break;
+		else if (context.stream.current().type != Type{','})
 			context.error<InvalidValue>("Expected ',' here!");
 	}
 	if (context.stream.current().type != Type{')'})
@@ -813,6 +816,8 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 	for (auto const& [arg, index]: Makai::Range::expand(args))
 		call += Makai::toString(index, "=", arg.value) + " ";
 	call += ")";
+	DEBUGLN("Overloads: [", sym.value["overloads"].get<Value::ObjectType>().keys().join("], ["), "]");
+	DEBUGLN("Looking for: [", legalName, "]");
 	if (!sym.value["overloads"].contains(legalName))
 		context.error<InvalidValue>("Function overload does not exist!");
 	auto const overload = sym.value["overloads"][legalName];
@@ -946,7 +951,7 @@ BREVE_ASSEMBLE_FN(RepeatLoop) {
 	} else if (times.type == Value::Kind::DVK_UNSIGNED) {
 		context.writeLine("push", times.value);
 		context.currentScope().addVariable(tmpVar);
-		auto const stackID = context.stackIndex(context.currentScope().ns->members[tmpVar]);
+		auto const stackID = context.stackIndex(*context.currentScope().ns->members[tmpVar]);
 		context.startScope();
 		doExpression(context);
 		context.writeLine("uop dec &[", stackID, "] -> &[", stackID, "]");
@@ -1153,7 +1158,7 @@ BREVE_ASSEMBLE_FN(Signal) {
 	auto& overloads = context.getSymbolByName(name).value["overloads"];
 	auto& overload = overloads[fullName];
 	overload["args"]		= Value::array();
-	overload["full_name"]	= "hook _signal" + fullName;
+	overload["full_name"]	= "_signal" + fullName;
 	overload["return"]		= Value::Kind::DVK_VOID;
 	overload["extern"]		= false;
 	context.writeLine("hook _signal" + fullName, ":");
@@ -1197,15 +1202,15 @@ BREVE_ASSEMBLE_FN(Expression) {
 			else if (context.hasSymbol(id)) {
 				auto& sym = context.getSymbolByName(id);
 				switch (sym.type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym);
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym);
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym);		break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				switch (sym.value.type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym.value);
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym.value);	break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else context.error<InvalidValue>("Invalid/Unsupported expression ["+id+"]!");
