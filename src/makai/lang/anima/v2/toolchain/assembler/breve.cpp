@@ -824,7 +824,8 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 		context.error<InvalidValue>("Function overload does not exist!");
 	auto const overload = sym.value["overloads"][legalName];
 	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
-	context.writeLine("clear", pushes);
+	if (pushes)
+		context.writeLine("clear", pushes);
 	if (overload.contains("return"))
 		return {
 			Makai::Cast::as<Value::Kind, int16>(overload["return"]),
