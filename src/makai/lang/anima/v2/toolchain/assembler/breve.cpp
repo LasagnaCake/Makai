@@ -267,9 +267,11 @@ BREVE_ASSEMBLE_FN(Function) {
 	} else context.error("Expected '{' or '=>' here!");
 	context.writeLine("end");
 	context.endScope();
-	if (!context.currentScope().contains(proto.name))
-		context.currentScope().ns->members[proto.name] = proto.function;
-	else if (context.currentScope().ns->members[proto.name]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
+	auto ns = context.currentNamespaceRef();
+	if (context.inFunction()) ns = context.currentScope().ns;
+	if (!ns->members.contains(proto.name))
+		ns->members[proto.name] = proto.function;
+	else if (ns->members[proto.name]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error<InvalidValue>("Symbol with this name already exists!");
 }
 
