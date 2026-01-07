@@ -261,8 +261,7 @@ BREVE_ASSEMBLE_FN(Function) {
 		if (proto.returnType != v.type) {
 			context.writeLine("cast", v.value, "as", toTypeName(proto.returnType), "-> .");
 			context.writeLine("ret .");
-		}
-		else context.writeLine("ret", v.value);
+		} else context.writeLine("ret", v.value);
 	} else context.error("Expected '{' or '=>' here!");
 	context.writeLine("end");
 	context.endScope();
@@ -1088,7 +1087,7 @@ BREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
 	assembler.assemble();
-	context.writeFinale(submodule.compose());
+	context.writeFinale(submodule.intermediate());
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
 	context.writeMainPostscript("call", submodule.main.postEntryPoint, "()");
 	submodule.global.ns->name = mod.head;
