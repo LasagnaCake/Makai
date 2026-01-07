@@ -103,6 +103,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_STR_REMOVE	= 'r',
 			AV2_EBIF_STR_SUB	= '"',
 			AV2_EBIF_STR_MATCH	= 'm',
+			AV2_EBIF_STR_FORMAT	= '$',
 			AV2_EBIF_SIZEOF		= '#',
 		};
 
