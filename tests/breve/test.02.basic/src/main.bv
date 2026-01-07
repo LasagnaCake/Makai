@@ -2,5 +2,5 @@ import core;
 
 main {
 	// Main code goes here...
-	core.IO.write("Hello, world!");
+	core.IO.writeLine("Hello, world!");
 }
