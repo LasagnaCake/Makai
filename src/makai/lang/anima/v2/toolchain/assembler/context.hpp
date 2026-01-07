@@ -20,6 +20,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				AV2_TA_ST_CLASS,
 			};
 
+			struct Namespace;
+
 			struct Member {
 				enum class Type {
 					AV2_TA_SMT_UNKNOWN,
@@ -40,6 +42,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				String		name;
 				Data::Value	value	= Data::Value::object();
 				Declaration	decl	= Declaration::AV2_TA_SMD_UNDECLARED;
+
+				Instance<Namespace> ns;
 
 				constexpr bool declared() const {return decl != Declaration::AV2_TA_SMD_UNDECLARED;}
 
