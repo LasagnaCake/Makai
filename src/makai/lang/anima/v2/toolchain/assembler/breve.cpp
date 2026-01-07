@@ -268,7 +268,9 @@ BREVE_ASSEMBLE_FN(Function) {
 		doScope(context);
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		auto const v = doValueResolution(context);
-		if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
+		if (proto.returnType == Value::Kind::DVK_VOID)
+			context.writeLine("ret void");
+		else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
 		if (proto.returnType != v.type) {
 			context.writeLine("cast", v.value, "as", toTypeName(proto.returnType), "-> .");
@@ -553,7 +555,10 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			else if (Value::isString(result)) 
 				context.writeLine("str sep", lhs.value, "(", rhs.value, ") -> .");
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
-		};
+		} break;
+		case Type{','}: {
+			return rhs;
+		} break;
 		case Type{'-'}:
 		case Type{'*'}:
 		case Type{'%'}: {
@@ -615,13 +620,13 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
 	auto const id = context.stream.current().value.get<Makai::String>();
 	auto t = getType(context);
-	if (t != Value::Kind::DVK_VOID) return {t, ""};
+	if (t != Value::Kind::DVK_VOID) return {t, id};
 	if (id == "true" || id == "false")		t = Value::Kind::DVK_BOOLEAN;
 	else if (id == "null")					t = Value::Kind::DVK_NULL;
 	else if (id == "nan")					t = Value::Kind::DVK_NAN;
 	else if (id == "array" || id == "arr")	t = Value::Kind::DVK_ARRAY;
 	else if (id == "object" || id == "obj")	t = Value::Kind::DVK_OBJECT;
-	else return {Value::Kind::DVK_VOID, ""};
+	else return {Value::Kind::DVK_VOID, id};
 	return {t, id};
 }
 
