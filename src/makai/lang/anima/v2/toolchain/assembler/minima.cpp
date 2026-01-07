@@ -565,18 +565,19 @@ MINIMA_ASSEMBLE_FN(Call) {
 	}
 	if (!context.hasToken(Type{'('}))
 		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 	Makai::List<uint64> argi;
 	while (context.stream.current().type != Type{')'} && argi.size() < 256) {
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 		auto const argIndex = context.stream.current();
+		if (argIndex.type == Type{')'}) break;
 		if (!argIndex.value.isUnsigned())
 			MINIMA_ERROR(InvalidValue, "Argument index must be an unsigned integer!");
 		auto const i = argIndex.value.get<uint64>();
 		if (i > 255)
 			MINIMA_ERROR(InvalidValue, "Maximum argument index is 255!");
+		if (!context.stream.next())
+			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
 		if (argi.find(i) != -1)
 			MINIMA_ERROR(InvalidValue, "Duplicate argument!");
 		if (context.stream.current().type != Type{'='})
@@ -1148,6 +1149,7 @@ MINIMA_ASSEMBLE_FN(Label) {
 		MINIMA_ERROR(NonexistentValue, "Malformed jump label!");
 	auto const id = name.value.get<Makai::String>();
 	context.jumps.labels[id] = context.program.code.size();
+	context.program.labels.jumps[id] = context.program.jumpTable.size();
 	context.program.jumpTable.pushBack(context.program.code.size());
 	auto const nopID = context.addNamedInstruction(Instruction::Name::AV2_IN_NO_OP);
 	context.instruction(nopID).type = 1;
