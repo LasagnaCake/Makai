@@ -403,7 +403,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <class... Args>
 		constexpr void writeFinale(Args const&... args) {
 			auto& content = finale;
-			content += toString(toString(args, " ")..., "\n") + content;
+			content += toString(toString(args, " ")..., "\n");
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {
