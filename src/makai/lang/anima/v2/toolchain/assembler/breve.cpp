@@ -213,11 +213,10 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
 		opt.value["declname"] = fullName;
 	}
-	if (!context.currentScope().contains(fid))
-		context.currentScope().addFunction(fid);
-	else if (context.currentScope().ns->members[fid]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
-		context.error<InvalidValue>("Symbol with this name already exists!");
-	auto mem = context.currentScope().ns->members[fid];
+	Makai::Instance<Context::Scope::Member> mem = new Context::Scope::Member{
+		.type = Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION,
+		.name = fid
+	};
 	proto.function = mem;
 	auto& overloads	= mem->value["overloads"];
 	if (overloads.contains(resolutionName))

@@ -1,4 +1,4 @@
-import core.all;
+import core;
 
 main {
 	// Main code goes here...
