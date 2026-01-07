@@ -174,6 +174,17 @@ using VLUID	= SSUID<4>;
 /// @brief Extremely Large Unique IDentifier.
 using ELUID	= SSUID<8>;
 
+template <class _ = void, Type::OneOf<LUID, VLUID, ELUID> TID = VLUID>
+struct Identifiable {
+	using IdentifierType = TID;
+
+	constexpr IdentifierType id() const {return thisID;}
+
+private:
+	IdentifierType thisID = (all++);
+	static inline ID::VLUID all = decltype(all)::create(0);
+};
+
 }
 
 CTL_NAMESPACE_END
