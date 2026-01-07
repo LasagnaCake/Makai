@@ -77,7 +77,7 @@ namespace Makai::Anima::V2::Runtime {
 			}
 		};
 
-		Version					language;
+		Version					language	= LANG_VER;
 		Data::Value::ArrayType	types;
 		Data::Value::ArrayType	constants;
 		List<Instruction>		code;
