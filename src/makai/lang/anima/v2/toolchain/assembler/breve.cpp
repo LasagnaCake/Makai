@@ -122,10 +122,11 @@ struct Prototype {
 	Value::Kind									returnType;
 	Makai::String								name;
 	Makai::String								fullName;
+	Makai::String								resolution;
 	Makai::Instance<Context::Scope::Member>		function;
 };
 
-static Prototype doFunctionPrototype(Context& context, bool const isExtern = false, bool const declared = false) {
+static Prototype doFunctionPrototype(Context& context, bool const isExtern = false, Makai::Handle<Context::Scope::Namespace> const ns = nullptr) {
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
 		context.error<InvalidValue>("Function name must be an identifier!");
@@ -213,27 +214,35 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
 		opt.value["declname"] = fullName;
 	}
-	Makai::Instance<Context::Scope::Member> mem = new Context::Scope::Member{
-		.type = Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION,
-		.name = fid
-	};
+	Makai::Instance<Context::Scope::Member> mem;
+	if (ns && ns->members.contains(fid)) {
+		if (ns->members[fid]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
+			context.error("Non-function symbol with this name was already declared!");
+		mem = context.currentScope().ns->members[fid];
+	} else {
+		mem = new Context::Scope::Member{
+			.type = Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION,
+			.name = fid
+		};
+	}
 	proto.function = mem;
+	proto.resolution = resolutionName;
 	auto& overloads	= mem->value["overloads"];
-	if (overloads.contains(resolutionName))
+	if (overloads.contains(resolutionName) && overloads[resolutionName]["decl"])
 		context.error<InvalidValue>("Function with similar signature already exists!");
 	auto& overload	= overloads[resolutionName];
 	for (auto& opt: optionals) {
 		fullName += "_" + opt.value["type"].get<Makai::String>();
 	}
 	overload["args"]		= args;
-	overload["decl"]		= declared;
+	overload["decl"]		= true;
 	overload["full_name"]	= fullName;
 	overload["return"]		= Makai::enumcast(retType);
 	overload["extern"]		= optionals.empty() ? isExtern : false;
 	usize i = 0;
 	for (auto& opt: optionals) {
 		resolutionName += "_" + opt.key;
-		if (overloads.contains(resolutionName))
+		if (overloads.contains(resolutionName) && overloads[resolutionName]["decl"])
 			context.error<InvalidValue>("Function with similar signature already exists!");
 		auto& overload	= overloads[resolutionName];
 		args[args.size()]		= opt.value;
@@ -248,13 +257,16 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 }
 
 BREVE_ASSEMBLE_FN(Function) {
+	auto ns = context.currentNamespaceRef();
+	if (context.inFunction()) ns = context.currentScope().ns;
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
-	auto const proto = doFunctionPrototype(context, false, true);
+	auto const proto = doFunctionPrototype(context, false, ns);
+	context.currentScope().ns->members[proto.name] = proto.function;
 	context.writeLine(proto.fullName, ":");
-	if (context.stream.current().type == Type{'{'}) {
+	if (context.hasToken(Type{'{'})) {
 		doScope(context);
-	} else if (context.stream.current().type == LTS_TT_BIG_ARROW) {
+	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		auto const v = doValueResolution(context);
 		if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
@@ -262,11 +274,11 @@ BREVE_ASSEMBLE_FN(Function) {
 			context.writeLine("cast", v.value, "as", toTypeName(proto.returnType), "-> .");
 			context.writeLine("ret .");
 		} else context.writeLine("ret", v.value);
-	} else context.error("Expected '{' or '=>' here!");
+	} else if (context.hasToken(Type{';'})) {
+		proto.function->value["overloads"][proto.resolution] = false;
+	} else context.error("Expected ';', '{' or '=>' here!");
 	context.writeLine("end");
 	context.endScope();
-	auto ns = context.currentNamespaceRef();
-	if (context.inFunction()) ns = context.currentScope().ns;
 	if (!ns->members.contains(proto.name))
 		ns->members[proto.name] = proto.function;
 	else if (ns->members[proto.name]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
@@ -274,9 +286,11 @@ BREVE_ASSEMBLE_FN(Function) {
 }
 
 BREVE_ASSEMBLE_FN(ExternalFunction) {
-	context.startScope();
+	auto ns = context.currentNamespaceRef();
+	if (context.inFunction()) ns = context.currentScope().ns;
+	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	context.fetchNext();
-	auto const proto = doFunctionPrototype(context, true, true);
+	auto const proto = doFunctionPrototype(context, true, ns);
 	context.writeLine(proto.fullName, ":");
 	Makai::String args;
 	usize argc = 0;
