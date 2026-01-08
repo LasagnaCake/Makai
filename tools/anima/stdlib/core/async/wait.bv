@@ -1,5 +1,5 @@
 namespace Async {
 	func wait(cycles: uint): void {
-		repeat cycles yield;
+		repeat _: cycles yield;
 	}
 }

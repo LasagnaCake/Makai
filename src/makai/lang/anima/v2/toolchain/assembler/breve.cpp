@@ -668,10 +668,6 @@ void doVarAssign(
 				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing global variable type!");
 			else if (isGlobalVar && sym.value["global"] && sym.base != type)
 				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
-		} else {
-			if (context.currentScope().contains(sym.name))
-				context.error<InvalidValue>("Variable already exists in current scope!");
-			else context.currentScope().addVariable(sym.name, isGlobalVar);
 		}
 	} else {
 		if (!context.hasSymbol(sym.name))
@@ -697,6 +693,7 @@ void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const 
 	sym.base = type;
 	switch (context.stream.current().type) {
 		case Type{':'}: {
+			context.fetchNext();
 			type = getType(context); 
 		} break;
 	}
@@ -706,6 +703,7 @@ void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const 
 		if (type == context.getBasicType("void"))
 			context.error<NonexistentValue>("Malformed variable!");
 	}
+	sym.base = type;
 	if (context.stream.current().type == Type{'='}) {
 		context.fetchNext();
 		doVarAssign(context, sym, type, isGlobalVar, true);
@@ -722,11 +720,13 @@ static void doVarDecl(Context& context, bool const overrideAsLocal = false) {
 	auto const id = varname.value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
 		context.error<InvalidValue>("Variable name cannot be a reserved keyword!");
-	context.fetchNext();
 	if (!isGlobalVar) {
 		context.writeAdaptive("push null");
 	}
-	auto const sym = resolveSymbolPath(context);
+	if (context.currentScope().contains(id))
+		context.error("Symbol with this name already exists in the current scope!");
+	auto const sym = context.currentScope().addVariable(id, isGlobalVar);
+	context.fetchNext();
 	doVarDecl(context, *sym, isGlobalVar);
 }
 
@@ -976,29 +976,42 @@ BREVE_ASSEMBLE_FN(RepeatLoop) {
 	if (!context.inFunction())
 		context.error<InvalidValue>("Cannot have loops outside of functions!");
 	context.fetchNext();
-	auto const times = doValueResolution(context);
 	auto const loopStart	= context.scopePath() + context.uniqueName() + "_repeat";
 	auto const loopEnd		= loopStart + "_end";
 	auto const tmpVar		= loopStart + "_tmpvar";
 	context.writeLine(loopStart, ":");
 	context.fetchNext();
-	if (times.type == context.getBasicType("void")) {
+	if (context.hasToken(Type{'{'})) {
 		context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
 		doExpression(context);
 		context.writeLine("jump", loopStart);
 		context.endScope();
-	} else if (times.type == context.getBasicType("uint")) {
-		context.writeLine("push", times.value);
-		context.currentScope().addVariable(tmpVar);
-		auto const stackID = context.stackIndex(*context.currentScope().ns->members[tmpVar]);
-		context.writeLine("jump if zero &[", stackID, "]", loopEnd);
+	} else if (context.hasToken(LTS_TT_IDENTIFIER)) {
+		auto const id = context.stream.current().value.get<Makai::String>();
+		if (context.currentScope().contains(id))
+			context.error("Symbol with this name was already declared in this scope!");
+		context.fetchNext();
+		if (!context.hasToken(Type{':'}))
+			context.error("Expected ':' here!");
+		context.fetchNext();
+		auto const times = doValueResolution(context);
+		if (!context.isInteger(times.type))
+			context.error("Loop count must be an integer!");
 		context.startScope();
+		auto const var = context.currentScope().addVariable(id);
+		var->base = context.getBasicType("uint");
+		auto const stackID = context.stackIndex(*var);
+		context.writeLine("jump if zero &[", stackID, "]", loopEnd);
+		context.writeLine("push", times.value);
+		if (!context.isUnsigned(times.type))
+			context.writeLine("cast &[-0]: uint -> &[-0]");
+		context.fetchNext();
 		doExpression(context);
 		context.writeLine("uop dec &[", stackID, "] -> &[", stackID, "]");
 		context.writeLine("jump if pos &[", stackID, "]", loopStart);
+		context.writeLine("pop void");
 		context.endScope();
-	}
-	else context.error<InvalidValue>("Expected unsigned integer or void here!");
+	} else context.error("Invalid expression!");
 	context.writeLine(loopEnd, ":");
 }
 

@@ -1025,6 +1025,10 @@ MINIMA_ASSEMBLE_FN(Cast) {
 	if (!context.isCastable(type)) MINIMA_ERROR(InvalidValue, "Casts can only happen to scalar types, string and [any]!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
+	if (!context.hasToken(LTS_TT_LITTLE_ARROW))
+		context.error("Expected '->' here!");
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const to	= getDataLocation(context);
 	if (type != context.DVK_ANY) {
 		Instruction::Casting cast = {from.at, to.at, type};

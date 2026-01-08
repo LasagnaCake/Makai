@@ -3,11 +3,9 @@ import core;
 type Integer = int;
 
 main {
-	i: int = 0;
-	repeat 10 {
-		repeat i
+	repeat i : 10 {
+		repeat _ : i
 			core.IO.write("*");
 		core.IO.writeLine("*");
-		++i;
 	}
 }

@@ -501,6 +501,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return Data::Value::isInteger(type->value["type"]);
 		}
 
+		constexpr static bool isUnsigned(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isUnsigned(type->value["type"]);
+		}
+
 		constexpr static bool isVerifiable(Instance<Context::Scope::Member> const& type) {
 			if (isBasicType(type)) return false;
 			return Data::Value::isVerifiable(type->value["type"]);
