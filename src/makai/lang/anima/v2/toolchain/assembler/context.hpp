@@ -318,14 +318,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr Scope::Member& getSymbolByName(String const& name) {
-			for (auto& sc: Range::reverse(scope))
-				if (sc.contains(name)) return *sc.ns->members[name];
-			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
+			return *getSymbolRefByName(name);
 		}
 
 		constexpr Instance<Scope::Member> getSymbolRefByName(String const& name) {
 			for (auto& sc: Range::reverse(scope))
 				if (sc.contains(name)) return sc.ns->members[name];
+			if (global.contains(name)) return global.ns->members[name];
 			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
 		}
 
@@ -346,11 +345,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr Scope::Namespace& getNamespaceByName(String const& name) {
-			for (auto& sc: Range::reverse(scope))
-				if (sc.ns->name == name) return *sc.ns;
-			for (auto& ns: global.ns->children)
-				if (ns.value->name == name) return *ns.value;
-			throw Error::FailedAction("Context does not contain namespace '"+name+"'!");
+			return *getNamespaceRefByName(name);
 		}
 
 		constexpr Instance<Scope::Namespace> getNamespaceRefByName(String const& name) {
