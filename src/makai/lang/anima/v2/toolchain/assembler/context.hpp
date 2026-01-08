@@ -572,9 +572,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (name == "boolean" || name == "bool")						return true;
 			if (name == "signed" || name == "int")							return true;
 			if (name == "unsigned" || name == "uint")						return true;
-			if (name == "string" || name == "str")							return true;
-			if (name == "array" || name == "arr")							return true;
-			if (name == "object" || name == "struct")						return true;
+			if (name == "string" || name == "text")							return true;
+			if (name == "binary" || name == "bytes")						return true;
+			if (name == "array" || name == "list")							return true;
+			if (name == "object" || name == "data")							return true;
 			if (name == "if" || name == "else")								return true;
 			if (name == "do" || name == "while")							return true;
 			if (name == "for" || name == "in")								return true;
@@ -595,7 +596,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (name == "temporary" || name == "register")					return true;
 			if (name == "minima" || name == "asm")							return true;
 			if (name == "await" || name == "async" || name == "yield")		return true;
-			if (name == "export" || name == "inmort")						return true;
+			if (name == "export" || name == "import")						return true;
 			if (name == "signal")											return true;
 			if (name == "main")												return true;
 			return false;
