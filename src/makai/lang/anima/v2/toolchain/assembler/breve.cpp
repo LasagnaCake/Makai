@@ -12,9 +12,9 @@ using enum Type;
 using Value = Makai::Data::Value;
 
 struct Solution {
-	Value::Kind		type;
-	Makai::String	value;
-	Makai::String	source;
+	Makai::Instance<Context::Scope::Member>		type;
+	Makai::String								value;
+	Makai::String								source;
 };
 
 using NamespaceMember	= Makai::KeyValuePair<Makai::String, Context::Scope::Member&>;
@@ -47,9 +47,10 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation);
 BREVE_TYPED_ASSEMBLE_FN(InternalPrint);
 BREVE_TYPED_ASSEMBLE_FN(Internal);
 
-BREVE_SYMBOL_ASSEMBLE_FN(Assignment);
+BREVE_SYMBOL_ASSEMBLE_FN(MemberCall);
+BREVE_SYMBOL_ASSEMBLE_FN(VariableAction);
 
-static Solution doFunctionCall(Context& context, Context::Scope::Member& symbol);
+static Solution doFunctionCall(Context& context, Context::Scope::Member& symbol, Makai::String const& self = "");
 
 static Solution doValueResolution(Context& context, bool idCanBeValue = false);
 
@@ -64,38 +65,19 @@ static Makai::String doDefaultValue(Breve::Context& context, Makai::String const
 
 constexpr auto const DVK_ANY = Context::DVK_ANY;
 
-static Makai::Data::Value::Kind getType(Context& context) {
+static Makai::Instance<Context::Scope::Member> getType(Context& context) {
 	using enum Makai::Data::Value::Kind;
 	auto const ret = context.stream.current();
 	switch (ret.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = ret.value.get<Makai::String>();
-			if (id == "any")							return DVK_ANY;
-			else if (id == "undefined" || id == "void")	return DVK_VOID;
-			else if (id == "signed" || id == "int")		return DVK_SIGNED;
-			else if (id == "unsigned" || id == "uint")	return DVK_UNSIGNED;
-			else if (id == "float" || id == "real")		return DVK_REAL;
-			else if (id == "string" || id == "str")		return DVK_STRING;
-			else if (id == "array" || id == "arr")		return DVK_ARRAY;
-			else if (id == "binary" || id == "bytes")	return DVK_BYTES;
-			else if (id == "object" || id == "struct")	return DVK_OBJECT;
-			else return DVK_VOID;
+			if (!context.hasSymbol(id))
+				context.error<InvalidValue>("Unknown type!");
+			return context.getSymbolRefByName(id);
 		}
 		default: context.error<InvalidValue>("Invalid/Unsupported type!");
 	}
 	context.error<InvalidValue>("Invalid/Unsupported type!");
-}
-
-static Makai::String argname(Value::Kind const& type) {
-	if (type == DVK_ANY)			return "any";
-	if (Value::isScalar(type))		return "val";
-	if (Value::isString(type))		return "str";
-	if (Value::isArray(type))		return "arr";
-	if (Value::isBytes(type))		return "bin";
-	if (Value::isObject(type))		return "obj";
-	if (Value::isNull(type))		return "null";
-	if (Value::isUndefined(type))	return "void";
-	return "none";
 }
 
 constexpr Makai::String toTypeName(Value::Kind t) {
@@ -118,8 +100,12 @@ constexpr Makai::String toTypeName(Value::Kind t) {
 	return "v";
 }
 
+constexpr Makai::String toTypeName(Makai::Instance<Context::Scope::Member> t) {
+	return t->name;
+}
+
 struct Prototype {
-	Value::Kind									returnType;
+	Makai::Instance<Context::Scope::Member>		returnType;
 	Makai::String								name;
 	Makai::String								fullName;
 	Makai::String								resolution;
@@ -138,7 +124,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	context.fetchNext();
 	if (context.stream.current().type != Type{'('})
 		context.error<NonexistentValue>("Expected '(' here!");
-	CTL::Ex::Data::Value::Kind retType = DVK_ANY;
+	auto retType = context.getSymbolRefByName("any");
 	id += "_";
 	Makai::String gpre = "";
 	auto const signature = context.uniqueName();
@@ -160,7 +146,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 			context.error<InvalidValue>("Expected ':' here!");
 		context.fetchNext();
 		auto const argt = getType(context);
-		if (argt == CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)
+		if (argt->value["base"] == Value(Makai::enumcast(CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)))
 			context.error<InvalidValue>("Invalid argument type!");
 		auto& var = context.currentScope().ns->members[argID]->value;
 		context.fetchNext();
@@ -170,13 +156,13 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 			gpre.appendBack(doDefaultValue(context, argID, signature));
 			optionals.pushBack({argID});
 			optionals.back().value["name"] = argID;
-			optionals.back().value["type"] = Makai::enumcast(argt);
+			optionals.back().value["type"] = argt->name;
 		} else {
-			id += "_" + argname(argt);
+			id += "_" + argt->name.toString();
 			auto& arg = args[args.size()];
 			arg["name"] = argID;
-			var["type"] = Makai::enumcast(argt); 
-			arg["type"] = Makai::enumcast(argt);
+			var["type"] = argt->name; 
+			arg["type"] = argt->name;
 		}
 		if (inOptionalRegion && !isOptional)
 			context.error<NonexistentValue>("Missing value for optional argument!");
@@ -237,7 +223,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	overload["args"]		= args;
 	overload["decl"]		= true;
 	overload["full_name"]	= fullName;
-	overload["return"]		= Makai::enumcast(retType);
+	overload["return"]		= retType->name;
 	overload["extern"]		= optionals.empty() ? isExtern : false;
 	usize i = 0;
 	for (auto& opt: optionals) {
@@ -249,7 +235,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		overload["args"]		= args;
 		overload["decl"]		= true;
 		overload["full_name"]	= opt.value["declname"];
-		overload["return"]		= Makai::enumcast(retType);
+		overload["return"]		= retType->name;
 		overload["extern"]		= ++i < optionals.size() ? false : isExtern;
 	}
 	context.functions.pushBack(mem);
@@ -268,7 +254,7 @@ BREVE_ASSEMBLE_FN(Function) {
 		doScope(context);
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		auto const v = doValueResolution(context);
-		if (proto.returnType == Value::Kind::DVK_VOID)
+		if (!proto.returnType || proto.returnType == context.getSymbolRefByName("void"))
 			context.writeLine("ret void");
 		else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
@@ -305,7 +291,9 @@ BREVE_ASSEMBLE_FN(ExternalFunction) {
 	if (argc) for (auto const i: Makai::range(argc))
 		args += Makai::toString(i, "= &[-", argc - (i + 1), "] ");
 	auto const fname = toString("\"", context.namespacePath("."), ".", proto.name, "\"");
-	context.writeLine("call out", fname, toTypeName(proto.returnType), "(", args, ")");
+	if (proto.returnType->value["basic"])
+		context.writeLine("call out", fname, toTypeName(proto.returnType), "(", args, ")");
+	else context.error("External functions can only return basic types!");
 	if (context.stream.current().type != Type{';'})
 		context.error<InvalidValue>("Expected ';' here!");
 	context.endScope();
@@ -344,7 +332,7 @@ BREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 	auto const v = doValueResolution(context);
 	context.writeLine("push", v.value);
 	context.writeLine("call in print");
-	return {Value::Kind::DVK_VOID, "."};
+	return {context.getBasicType("void"), "."};
 }
 
 BREVE_TYPED_ASSEMBLE_FN(Internal) {
@@ -417,9 +405,9 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		return doFunctionCall(context, sym);
 	} else if (sym.type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym.value["use"] = true;
-		if (!sym.value.contains("type"))
+		if (!sym.base)
 			context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
-		auto const type = Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]);
+		auto const type = sym.base;
 		return {type, context.varAccessor(sym)};
 	} else context.error<InvalidValue>("Invalid symbol type for operation");
 }
@@ -430,7 +418,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = current.value.get<Makai::String>();
 			auto result = doReservedValueResolution(context);
-			if (result.type != Value::Kind::DVK_VOID) return result;
+			if (result.type != context.getBasicType("void")) return result;
 			else if (context.hasSymbol(id)) 
 				return resolveSymbol(context, id, context.getSymbolByName(id));
 			else if (context.hasNamespace(id)) {
@@ -442,8 +430,8 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 				context.writeLine("push", result.source);
 				context.writeLine("call in sizeof");
 				context.writeLine("pop .");
-				return {Value::Kind::DVK_UNSIGNED, "."};
-			} else if (idCanBeValue) return {Value::Kind::DVK_STRING, "\"" + id + "\""};
+				return {context.getBasicType("uint"), "."};
+			} else if (idCanBeValue) return {context.getBasicType("str"), "\"" + id + "\""};
 			else context.error<InvalidValue>("Identifier does not match any reserved value or member name!");
 		} break;
 		case Type{'('}: {
@@ -456,10 +444,10 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			return doUnaryOperation(context);
 		} break;
 		case LTS_TT_SINGLE_QUOTE_STRING: 
-		case LTS_TT_DOUBLE_QUOTE_STRING:	return {Value::Kind::DVK_STRING,	current.value.toString()								};
-		case LTS_TT_CHARACTER: 				return {Value::Kind::DVK_STRING,	Makai::toString("'", current.value.get<char>(), "'")	};
-		case LTS_TT_INTEGER:				return {Value::Kind::DVK_UNSIGNED,	current.value.toString()								};
-		case LTS_TT_REAL:					return {Value::Kind::DVK_REAL,		current.value.toString()								};
+		case LTS_TT_DOUBLE_QUOTE_STRING:	return {context.getBasicType("str"),	current.value.toString()								};
+		case LTS_TT_CHARACTER: 				return {context.getBasicType("str"),	Makai::toString("'", current.value.get<char>(), "'")	};
+		case LTS_TT_INTEGER:				return {context.getBasicType("int"),	current.value.toString()								};
+		case LTS_TT_REAL:					return {context.getBasicType("real"),	current.value.toString()								};
 		default: context.error<InvalidValue>("Invalid expression!");
 	}
 }
@@ -469,13 +457,21 @@ constexpr Value::Kind stronger(Value::Kind const a, Value::Kind const b) {
 	return a > b ? a : b;
 }
 
-static Value::Kind handleTernary(Breve::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
+constexpr Makai::Instance<Context::Scope::Member> stronger(Makai::Instance<Context::Scope::Member> const& a, Makai::Instance<Context::Scope::Member> const& b) {
+	if (a == b) return a;
+	if (!a->value["basic"]) return a;
+	if (!b->value["basic"]) return b;
+	auto const res = stronger(Makai::Cast::as<Value::Kind>(a->value["type"]), Makai::Cast::as<Value::Kind>(b->value["type"]));
+	return res == Makai::Cast::as<Value::Kind>(a->value["type"]) ? a : b;
+}
+
+static auto handleTernary(Breve::Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
 	auto const result = stronger(ifTrue.type, ifFalse.type);
-	if (!Value::isNumber(result) && ifTrue.type != ifFalse.type)
+	if (context.isNumber(result) && ifTrue.type != ifFalse.type)
 		context.error<InvalidValue>("Types must match, or be similar!");
-	if (Value::isUndefined(cond.type))
+	if (context.isUndefined(cond.type))
 		context.error<InvalidValue>("Invalid condition type!");
-	if (!Value::isVerifiable(cond.type))
+	if (!context.isVerifiable(cond.type))
 		context.error<InvalidValue>("Condition must be a verifiable type!");
 	auto const trueJump		= context.scopePath() + "_ternary_true"		+ context.uniqueName();
 	auto const falseJump	= context.scopePath() + "_ternary_false"	+ context.uniqueName();
@@ -521,7 +517,15 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		if (stackUsage++) lhs.value = "&[-1]";
 	}
 	auto result = stronger(lhs.type, rhs.type);
-	if (Value::isUndefined(lhs.type) || Value::isUndefined(rhs.type))
+	if (
+		opname.type != Type{','}
+	&&	lhs.type->value["basic"]
+	&&	rhs.type->value["basic"]
+	&& (
+		Value::isUndefined(lhs.type->value["type"])
+	||	Value::isUndefined(rhs.type->value["type"])
+	)
+	)
 		context.error<InvalidValue>("Invalid operand types!");
 	switch (opname.type) {
 		case LTS_TT_IDENTIFIER: {
@@ -529,7 +533,7 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			if (id == "as") {
 				if (!context.isCastable(rhs.type))
 					context.error<InvalidValue>("Casts can only happen between scalar types, strings, and [any]!");
-				if (rhs.type != context.DVK_ANY) {
+				if (rhs.type != context.getBasicType("any")) {
 					context.writeLine("cast", lhs.value, ":", toTypeName(rhs.type), "-> .");
 					result = rhs.type;
 				}
@@ -545,14 +549,14 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			} else context.error<InvalidValue>("Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
-			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, "+", rhs.value, "-> .");
-			else if (Value::isString(lhs.type) && Value::isString(rhs.type))
+			if (context.isNumber(result)) context.writeLine("bop", lhs.value, "+", rhs.value, "-> .");
+			else if (context.isString(lhs.type) && context.isString(rhs.type))
 				context.writeLine("str cat", lhs.value, "(", rhs.value, ") -> .");
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
 		case Type{'/'}: {
-			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, "/", rhs.value, "-> .");
-			else if (Value::isString(result)) 
+			if (context.isNumber(result)) context.writeLine("bop", lhs.value, "/", rhs.value, "-> .");
+			else if (context.isString(result)) 
 				context.writeLine("str sep", lhs.value, "(", rhs.value, ") -> .");
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
@@ -563,7 +567,7 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		case Type{'*'}:
 		case Type{'%'}: {
 			auto const opstr = Makai::toString(Makai::Cast::as<char>(opname.type));
-			if (Value::isNumber(result)) context.writeLine("bop", lhs.value, opstr, "-> .");
+			if (context.isNumber(result)) context.writeLine("bop", lhs.value, opstr, "-> .");
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
 		case Type::LTS_TT_COMPARE_EQUALS:
@@ -585,15 +589,15 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.writeLine("comp (", lhs.value, opstr, rhs.value, ") -> .");
 		} break;
 		case Type{'['}: {
-			if (Value::isObject(lhs.type)) {
-				if (!Value::isString(rhs.type))
+			if (context.isObject(lhs.type)) {
+				if (!context.isString(rhs.type))
 					context.error<InvalidValue>("Right-hand side MUST be a string!");
-			} else if (Value::isArray(lhs.type)) {
-				if (!Value::isInteger(rhs.type))
+			} else if (context.isArray(lhs.type)) {
+				if (!context.isInteger(rhs.type))
 					context.error<InvalidValue>("Right-hand side MUST be an integer!");
 			} else context.error<InvalidValue>("Left-hand side MUST be an object or an array!");
 			context.writeLine("get ", lhs.value, "[", rhs.value, "] -> .");
-			result = DVK_ANY;
+			result = context.getBasicType("any");
 			context.fetchNext();
 			if (context.stream.current().type != Type{']'})
 				context.error<InvalidValue>("Expected ']' here!");
@@ -620,13 +624,6 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 BREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
 	auto const id = context.stream.current().value.get<Makai::String>();
 	auto t = getType(context);
-	if (t != Value::Kind::DVK_VOID) return {t, id};
-	if (id == "true" || id == "false")		t = Value::Kind::DVK_BOOLEAN;
-	else if (id == "null")					t = Value::Kind::DVK_NULL;
-	else if (id == "nan")					t = Value::Kind::DVK_NAN;
-	else if (id == "array" || id == "arr")	t = Value::Kind::DVK_ARRAY;
-	else if (id == "object" || id == "obj")	t = Value::Kind::DVK_OBJECT;
-	else return {Value::Kind::DVK_VOID, id};
 	return {t, id};
 }
 
@@ -635,7 +632,7 @@ using PreAssignFunction = Makai::Functor<void(Breve::Context&, Solution&)>;
 void doVarAssign(
 	Breve::Context& context,
 	Context::Scope::Member& sym,
-	Value::Kind const& type,
+	Makai::Instance<Context::Scope::Member> const& type,
 	bool const isGlobalVar = false,
 	bool const isNewVar = false,
 	PreAssignFunction const& preassign = {},
@@ -656,7 +653,7 @@ void doVarAssign(
 				context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
 			else if (!sym.value.contains("type"))
 				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing global variable type!");
-			else if (isGlobalVar && sym.value["global"] && Makai::Cast::as<Value::Kind, int16>(sym.value["type"]) != type)
+			else if (isGlobalVar && sym.value["global"] && sym.base != type)
 				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
 		} else {
 			if (context.currentScope().contains(sym.name))
@@ -683,17 +680,17 @@ void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const 
 	if (sym.declared())
 		context.error<InvalidValue>("Redeclaration of already-declared symbol!");
 	else sym.declare();
-	auto type = DVK_ANY;
+	auto type = context.getBasicType("any");
+	sym.base = type;
 	switch (context.stream.current().type) {
 		case Type{':'}: {
 			type = getType(context); 
 		} break;
 	}
-	sym.value["type"] = Makai::enumcast(type);
 	if (
 		!context.stream.next()
 	) {
-		if (type == Value::Kind::DVK_VOID)
+		if (type == context.getBasicType("void"))
 			context.error<NonexistentValue>("Malformed variable!");
 	}
 	if (context.stream.current().type == Type{'='}) {
@@ -731,17 +728,19 @@ BREVE_SYMBOL_ASSEMBLE_FN(SubscriptAssignment) {
 		nameOrID.value = "&[-0]";
 		++stackUsage;
 	}
-	auto const type = Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.value["type"]);
+	if (!context.isBasicType(sym.base))
+		context.error<InvalidValue>("Subscription is only allowed in basic objects and arrays!");
+	auto const type = Makai::Cast::as<Makai::Data::Value::Kind, int16>(sym.base->value["type"]);
 	switch (type) {
 		case Value::Kind::DVK_OBJECT: {
-			if (nameOrID.type != Value::Kind::DVK_STRING)
+			if (nameOrID.type != context.getBasicType("text"))
 				context.error<InvalidValue>("Object subscription location must be a string!");
 		} break;
 		case Value::Kind::DVK_ARRAY: {
-			if (!Value::isInteger(nameOrID.type))
+			if (!context.isInteger(nameOrID.type))
 				context.error<InvalidValue>("Array subscription location must be an integer!");
 		} break;
-		default: context.error<InvalidValue>("Subscription is only allowed in objects and arrays!");
+		default: context.error<InvalidValue>("Subscription is only allowed in basic objects and arrays!");
 	}
 	context.fetchNext();
 	if (!context.hasToken(Type{'='}))
@@ -756,25 +755,28 @@ BREVE_SYMBOL_ASSEMBLE_FN(SubscriptAssignment) {
 	context.writeLine("set", v.value, "->", accessor, "[", nameOrID.value, "]");
 	context.writeLine("copy", v.value, "-> .");
 	if (stackUsage) context.writeLine("clear", stackUsage);
-	return {type, "."};
+	return {sym.base, "."};
 }
 
-BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
+BREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 	context.fetchNext();
 	auto const current = context.stream.current();
 	PreAssignFunction pre, post;
 	switch (current.type) {
 		case Type{':'}: {
 			doVarDecl(context, sym, false);
-			if (sym.value.contains("type")) {
-				auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
+			if (sym.base) {
+				auto const varType	= sym.base;
 				auto const accessor	= Makai::toString("&[", context.stackIndex(sym), "]");
-				return {varType, accessor};
+				return {sym.base, accessor};
 			} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		}
 		case Type{'['}: {
 			return doSubscriptAssignment(context, sym);
 		} break;
+		case Type{'.'}: {
+			return doMemberCall(context, sym);
+		}
 		case Type{'='}: break;
 		case LTS_TT_ADD_ASSIGN:
 		case LTS_TT_SUB_ASSIGN:
@@ -798,15 +800,14 @@ BREVE_SYMBOL_ASSEMBLE_FN(Assignment) {
 		default: context.error<InvalidValue>("Invalid assignment operation!");
 	}
 	context.fetchNext();
-	if (sym.value.contains("type")) {
-		auto const varType	= Makai::Cast::as<Value::Kind, int16>(sym.value["type"]);
+	if (sym.base) {
 		auto const accessor	= Makai::toString("&[", context.stackIndex(sym), "]");
-		doVarAssign(context, sym, varType, false, false, pre);
-		return {varType, accessor};
+		doVarAssign(context, sym, sym.base, false, false, pre);
+		return {sym.base, accessor};
 	} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 }
 
-static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
+static Solution doFunctionCall(Context& context, Context::Scope::Member& sym, Makai::String const& self) {
 	auto const id = sym.name;
 	context.fetchNext();
 	if (context.stream.current().type != Type{'('})
@@ -818,7 +819,7 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 	while (context.stream.next()) {
 		if (context.stream.current().type == Type{')'}) break;
 		args.pushBack(doValueResolution(context));
-		legalName += "_" + argname(args.back().type);
+		legalName += "_" + args.back().type->name;
 		if (args.back().value == ".") {
 			context.writeLine("push .");
 			args.back().value = Makai::toString("&[", start + pushes, "]");
@@ -832,8 +833,11 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 	if (context.stream.current().type != Type{')'})
 		context.error<InvalidValue>("Expected ')' here!");
 	Makai::String call = "( ";
-	for (auto const& [arg, index]: Makai::Range::expand(args))
-		call += Makai::toString(index, "=", arg.value) + " ";
+	usize index = 0;
+	if (self.size())
+		call += Makai::toString(index++, "=", self) + " ";
+	for (auto const& arg: args)
+		call += Makai::toString(index++, "=", arg.value) + " ";
 	call += ")";
 	DEBUGLN("Overloads: [", sym.value["overloads"].get<Value::ObjectType>().keys().join("], ["), "]");
 	DEBUGLN("Looking for: [", legalName, "]");
@@ -845,7 +849,7 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym) {
 		context.writeLine("clear", pushes);
 	if (overload.contains("return"))
 		return {
-			Makai::Cast::as<Value::Kind, int16>(overload["return"]),
+			context.getSymbolRefByName(overload["return"]),
 			"."
 		};
 	else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
@@ -878,22 +882,22 @@ BREVE_ASSEMBLE_FN(Return) {
 	if (!context.inFunction())
 		context.error<InvalidValue>("Cannot have returns outside of functions!");
 	context.fetchNext();
-	Solution result = {Value::Kind::DVK_VOID};
+	Solution result = {context.getBasicType("void")};
 	auto const expectedType = context.functionScope().result;
 	if (context.stream.current().type == Type{';'}) {
-		if (expectedType != Value::Kind::DVK_VOID)
+		if (expectedType != context.getBasicType("void"))
 			context.error<NonexistentValue>("Missing return value!");
 	} else {
-		if (expectedType == Value::Kind::DVK_VOID)
+		if (expectedType == context.getBasicType("void"))
 			context.error<InvalidValue>("Function does not return a value!");
 		result = doValueResolution(context);
 		if (
 			result.type != expectedType
-		&&	!Value::isNumber(stronger(result.type, expectedType))
+		&&	!context.isNumber(stronger(result.type, expectedType))
 		) context.error<InvalidValue>("Return type does not match!");
 	}
 	context.addFunctionExit();
-	if (expectedType == Value::Kind::DVK_VOID)
+	if (expectedType == context.getBasicType("void"))
 		context.writeLine("end");
 	else context.writeLine("ret", result.value);
 }
@@ -963,12 +967,12 @@ BREVE_ASSEMBLE_FN(RepeatLoop) {
 	auto const tmpVar		= loopStart + "_tmpvar";
 	context.writeLine(loopStart, ":");
 	context.fetchNext();
-	if (times.type == Value::Kind::DVK_VOID) {
+	if (times.type == context.getBasicType("void")) {
 		context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
 		doExpression(context);
 		context.writeLine("jump", loopStart);
 		context.endScope();
-	} else if (times.type == Value::Kind::DVK_UNSIGNED) {
+	} else if (times.type == context.getBasicType("uint")) {
 		context.writeLine("push", times.value);
 		context.currentScope().addVariable(tmpVar);
 		auto const stackID = context.stackIndex(*context.currentScope().ns->members[tmpVar]);
@@ -997,7 +1001,7 @@ BREVE_ASSEMBLE_FN(DoLoop) {
 	||	context.stream.current().value.get<Makai::String>() != "while"
 	) context.error<InvalidValue>("Expected 'while' here!");
 	auto const cond = doValueResolution(context);
-	if (!Value::isVerifiable(cond.type))
+	if (!context.isVerifiable(cond.type))
 		context.error<InvalidValue>("Condition result must be a verifiable type!");
 	context.writeLine("jump if true", cond.value, uname);
 }
@@ -1009,7 +1013,7 @@ BREVE_ASSEMBLE_FN(WhileLoop) {
 	auto const loopend = uname + "_end";
 	context.fetchNext();
 	auto const cond = doValueResolution(context);
-	if (!Value::isVerifiable(cond.type))
+	if (!context.isVerifiable(cond.type))
 		context.error<InvalidValue>("Condition result must be a verifiable type!");
 	context.writeLine(uname, ":");
 	context.writeLine("jump if false", cond.value, loopend);
@@ -1039,26 +1043,26 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 	auto result = doValueResolution(context);
 	switch (current.type) {
 		case Type{'-'}: {
-			if (!Value::isNumber(result.type))
+			if (!context.isNumber(result.type))
 				context.error<NonexistentValue>("Negation can only happen on numbers!");
 			context.writeLine("uop -", result.value, "-> .");
 			//result.source = result.value;
 			result.value = ".";
 		} break;
 		case Type{'+'}: {
-			if (!Value::isNumber(result.type))
+			if (!context.isNumber(result.type))
 				context.error<NonexistentValue>("Positration can only happen on numbers!");
 			context.writeLine("copy", result.value, "-> .");
 			//result.source = result.value;
 			result.value = ".";
 		} break;
 		case LTS_TT_DECREMENT: {
-			if (!Value::isNumber(result.type))
+			if (!context.isNumber(result.type))
 				context.error<NonexistentValue>("Incrementation can only happen on numbers!");
 			context.writeLine("uop inc", result.value, "->", result.value);
 		} break;
 		case LTS_TT_INCREMENT: {
-			if (!Value::isNumber(result.type))
+			if (!context.isNumber(result.type))
 				context.error<NonexistentValue>("Decrementation can only happen on numbers!");
 			context.writeLine("uop dec", result.value, "->", result.value);
 		} break;
@@ -1194,6 +1198,19 @@ BREVE_ASSEMBLE_FN(Yield) {
 	else context.writeLine("yield");
 }
 
+BREVE_SYMBOL_ASSEMBLE_FN(MemberCall) {
+	auto const ns = sym.base->ns;
+	context.fetchNext();
+	if (!context.hasToken(LTS_TT_IDENTIFIER))
+		context.error("Member name must be an identifier!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (!ns->members.contains(id))
+		context.error<NonexistentValue>("Member call does not exist!");
+	auto const memcall = ns->members[id];
+	auto const ret = doFunctionCall(context, *memcall, memcall->value["static"] ? "" : context.varAccessor(sym));
+	return ret;
+}
+
 BREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
@@ -1223,14 +1240,14 @@ BREVE_ASSEMBLE_FN(Expression) {
 				auto& sym = context.getSymbolByName(id);
 				switch (sym.type) {
 					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym);		break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, sym);	break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				switch (sym.value.type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doAssignment(context, sym.value);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);		break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, sym.value);	break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else context.error<InvalidValue>("Invalid/Unsupported expression ["+id+"]!");

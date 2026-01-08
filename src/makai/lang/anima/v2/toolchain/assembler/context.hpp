@@ -38,10 +38,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					AV2_TA_SMD_EXTERNAL,
 				};
 
-				Type		type	= Type::AV2_TA_SMT_UNKNOWN;
-				String		name;
-				Data::Value	value	= Data::Value::object();
-				Declaration	decl	= Declaration::AV2_TA_SMD_UNDECLARED;
+				Type				type	= Type::AV2_TA_SMT_UNKNOWN;
+				String				name;
+				Data::Value			value	= Data::Value::object();
+				Declaration			decl	= Declaration::AV2_TA_SMD_UNDECLARED;
+				Instance<Member>	base	= nullptr;
 
 				Instance<Namespace> ns;
 
@@ -64,7 +65,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			constexpr Instance<Member> addMember(String const& name) {
 				if (ns->members.contains(name)) return ns->members[name];
-				auto mem			= new Member{.name = name};
+				auto mem			= new Member{.name = name, .ns = new Namespace()};
 				auto& sym			= mem->value;
 				sym["name"]			= name;
 				ns->members[name]	= mem;
@@ -90,6 +91,18 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				auto& sym = mem->value;
 				sym["overloads"] = sym.object();
 				return;
+			}
+
+			constexpr Instance<Scope::Member> addTypeDefinition(String const& name, Nullable<Data::Value::Kind> const type = null) {
+				if (ns->members.contains(name)) return ns->members[name];
+				auto mem = addMember(name);
+				mem->type = Member::Type::AV2_TA_SMT_TYPE;
+				auto& sym = mem->value;
+				if (type) {
+					sym["basic"]	= true;
+					sym["type"]		= type.value();
+				}
+				return mem;
 			}
 
 			constexpr String compose() const {
@@ -128,7 +141,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			};
 			
 			uint64				entry	= 0;
-			Data::Value::Kind	result	= Data::Value::Kind::DVK_UNDEFINED;
+			Instance<Member>	result	= nullptr;
 			bool				secure	= true;
 			Type				type	= Type::AV2_TA_ST_NORMAL;
 			String				name;
@@ -157,7 +170,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 		};
 
-		constexpr static Data::Value::Kind DVK_ANY = Data::Value::Kind{-2};
+		constexpr static Data::Value::Kind DVK_ANY	= Data::Value::Kind{-2};
+		constexpr static Data::Value::Kind DVK_DECL	= Data::Value::Kind{-3};
 
 		constexpr StringList mapJumps() {
 			return jumps.map(program);
@@ -308,6 +322,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
 		}
 
+		constexpr Instance<Scope::Member> getSymbolRefByName(String const& name) {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.contains(name)) return sc.ns->members[name];
+			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
+		}
+
 		constexpr Scope::Namespace& getNamespaceByName(String const& name) {
 			for (auto& sc: Range::reverse(scope))
 				if (sc.ns->name == name) return *sc.ns;
@@ -411,7 +431,54 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr static bool isCastable(Data::Value::Kind const type) {
-			return Data::Value::isScalar(type) || Data::Value::isString(type) || type == Data::Value::Kind{-2};
+			return Data::Value::isScalar(type) || Data::Value::isString(type) || type == DVK_ANY;
+		}
+
+		constexpr static bool isCastable(Instance<Scope::Member> const type) {
+			if (type->base->value["basic"]) {
+				auto const t = Cast::as<Data::Value::Kind>(type->base->value["type"].get<int64>());
+				return Data::Value::isScalar(t) || Data::Value::isString(t) || t == DVK_ANY;
+			}
+			return false;
+		}
+
+		constexpr static bool isBasicType(Instance<Context::Scope::Member> const& type) {
+			return type->value["basic"];
+		}
+
+		constexpr static bool isUndefined(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isUndefined(type->value["type"]);
+		}
+
+		constexpr static bool isNumber(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isNumber(type->value["type"]);
+		}
+
+		constexpr static bool isString(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isString(type->value["type"]);
+		}
+
+		constexpr static bool isObject(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isObject(type->value["type"]);
+		}
+
+		constexpr static bool isArray(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isArray(type->value["type"]);
+		}
+
+		constexpr static bool isInteger(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isInteger(type->value["type"]);
+		}
+
+		constexpr static bool isVerifiable(Instance<Context::Scope::Member> const& type) {
+			if (isBasicType(type)) return false;
+			return Data::Value::isVerifiable(type->value["type"]);
 		}
 
 		inline static String uniqueName() {
@@ -543,6 +610,31 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			auto prg = Makai::Regex::replace(compose(), "([\\n\\r\\f][\\t\\ ]*)([\\n\\r\\f][\\t\\ ]*)+", "\n\n");
 			prg = Makai::Regex::replace(prg, "[\\t\\ ]+", " ");
 			return prg;
+		}
+
+		constexpr Instance<Scope::Member> getBasicType(String const& name) {
+			return global.ns->members[name];
+		}
+
+		Context() {
+			auto const voidT	= global.addTypeDefinition("void", Data::Value::Kind::DVK_VOID);
+			auto const nullT	= global.addTypeDefinition("null", Data::Value::Kind::DVK_NULL);
+			auto const intT		= global.addTypeDefinition("int", Data::Value::Kind::DVK_SIGNED);
+			auto const uintT	= global.addTypeDefinition("uint", Data::Value::Kind::DVK_UNSIGNED);
+			auto const floatT	= global.addTypeDefinition("float", Data::Value::Kind::DVK_REAL);
+			auto const stringT	= global.addTypeDefinition("string", Data::Value::Kind::DVK_STRING);
+			auto const bytesT	= global.addTypeDefinition("bytes", Data::Value::Kind::DVK_BYTES);
+			auto const arrayT	= global.addTypeDefinition("array", Data::Value::Kind::DVK_ARRAY);
+			auto const objectT	= global.addTypeDefinition("object", Data::Value::Kind::DVK_OBJECT);
+			auto const anyT		= global.addTypeDefinition("any", DVK_ANY);
+			global.ns->members["unsigned"]	= uintT;
+			global.ns->members["signed"]	= intT;
+			global.ns->members["real"]		= floatT;
+			global.ns->members["text"]		= stringT;
+			global.ns->members["binary"]	= bytesT;
+			global.ns->members["list"]		= arrayT;
+			global.ns->members["data"]		= objectT;
+			global.ns->members["nil"]		= nullT;
 		}
 
 		StringList				sourcePaths;

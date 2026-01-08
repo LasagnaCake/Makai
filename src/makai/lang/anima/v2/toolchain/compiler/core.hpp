@@ -40,6 +40,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		List<Module>	modules;
 
 		Version			package, language = LANG_VER, concerto = CONCERTO_VER;
+		bool			local		= false;
 
 		static Project deserialize(Data::Value const& value) {
 			Project project;

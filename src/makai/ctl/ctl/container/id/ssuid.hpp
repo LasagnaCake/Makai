@@ -182,7 +182,7 @@ struct Identifiable {
 
 private:
 	IdentifierType thisID = (all++);
-	static inline ID::VLUID all = decltype(all)::create(0);
+	static inline IdentifierType all = IdentifierType::create(0);
 };
 
 }
