@@ -712,9 +712,10 @@ void doVarDecl(Breve::Context& context, Context::Scope::Member& sym, bool const 
 	}
 }
 
-BREVE_ASSEMBLE_FN(VarDecl) {
-	bool const isGlobalVar = context.stream.current().value.get<Makai::String>() == "global";
-	context.fetchNext();
+static void doVarDecl(Context& context, bool const overrideAsLocal = false) {
+	bool const isGlobalVar = overrideAsLocal ? false : context.stream.current().value.get<Makai::String>() == "global";
+	if (!overrideAsLocal)
+		context.fetchNext();
 	auto const varname = context.stream.current();
 	if (varname.type != LTS_TT_IDENTIFIER)
 		context.error<InvalidValue>("Variable name must be an identifier!");
@@ -1288,7 +1289,7 @@ BREVE_ASSEMBLE_FN(Expression) {
 					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, *sym.value);	break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
-			} else context.error<InvalidValue>("Invalid/Unsupported expression ["+id+"]!");
+			} else doVarDecl(context, true);
 		} break;
 		case Type{'('}: {
 			doBinaryOperation(context);
