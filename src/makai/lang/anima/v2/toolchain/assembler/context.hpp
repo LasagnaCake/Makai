@@ -72,8 +72,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return mem;
 			}
 
-			constexpr void addVariable(String const& name, bool const global = false) {
-				if (ns->members.contains(name)) return;
+			constexpr Instance<Member> addVariable(String const& name, bool const global = false) {
+				if (ns->members.contains(name)) return ns->members[name];
 				auto mem = addMember(name);
 				mem->type = Member::Type::AV2_TA_SMT_VARIABLE;
 				auto& sym = mem->value;
@@ -82,6 +82,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				sym["use"]		= false;
 				if (!global)
 					sym["stack_id"] = stackc + varc++;
+				return mem;
 			}
 
 			constexpr void addFunction(String const& name) {
@@ -306,6 +307,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				if (sc.contains(name)) return true;
 			}
 			if (global.contains(name)) return true;
+			return false;
+		}
+
+		constexpr bool hasType(String const& name) const {
+			for (auto const& sc: Range::reverse(scope)) {
+				if (sc.contains(name) && sc.ns->members[name]->type == Scope::Member::Type::AV2_TA_SMT_TYPE) return true;
+			}
+			if (global.contains(name) && global.ns->members[name]->type == Scope::Member::Type::AV2_TA_SMT_TYPE) return true;
 			return false;
 		}
 
@@ -648,6 +657,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			global.ns->members["signed"]	= intT;
 			global.ns->members["real"]		= floatT;
 			global.ns->members["text"]		= stringT;
+			global.ns->members["str"]		= stringT;
 			global.ns->members["binary"]	= bytesT;
 			global.ns->members["list"]		= arrayT;
 			global.ns->members["data"]		= objectT;

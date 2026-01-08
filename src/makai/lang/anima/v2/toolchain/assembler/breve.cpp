@@ -17,7 +17,7 @@ struct Solution {
 	Makai::String								source;
 };
 
-using NamespaceMember	= Makai::KeyValuePair<Makai::String, Context::Scope::Member&>;
+using NamespaceMember	= Makai::KeyValuePair<Makai::String, Makai::Instance<Context::Scope::Member>>;
 
 #define BREVE_ASSEMBLE_FN(NAME) static void do##NAME (Breve::Context& context)
 #define BREVE_TYPED_ASSEMBLE_FN(NAME) static Solution do##NAME (Breve::Context& context)
@@ -71,8 +71,8 @@ static Makai::Instance<Context::Scope::Member> getType(Context& context) {
 	switch (ret.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = ret.value.get<Makai::String>();
-			if (!context.hasSymbol(id))
-				context.error<InvalidValue>("Unknown type!");
+			if (!context.hasType(id))
+				return context.getBasicType("void");
 			return context.getSymbolRefByName(id);
 		}
 		default: context.error<InvalidValue>("Invalid/Unsupported type!");
@@ -138,18 +138,19 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		auto const argID = argn.value.get<Makai::String>();
 		if (context.isReservedKeyword(argID))
 			context.error<InvalidValue>("Argument name cannot be a reserved keyword!");
-		if (!context.currentScope().contains(argID))
-			context.currentScope().addVariable(argID);
-		else context.error<InvalidValue>("Argument with this name already exists!");
+		if (context.currentScope().contains(argID))
+			context.error<InvalidValue>("Argument with this name already exists!");
+		auto const var = context.currentScope().addVariable(argID);
 		context.fetchNext();
 		if (context.stream.current().type != Type{':'})
 			context.error<InvalidValue>("Expected ':' here!");
 		context.fetchNext();
 		auto const argt = getType(context);
+		DEBUGLN("Type: ", argt->name);
 		if (argt->value["base"] == Value(Makai::enumcast(CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)))
 			context.error<InvalidValue>("Invalid argument type!");
-		auto& var = context.currentScope().ns->members[argID]->value;
 		context.fetchNext();
+		var->base = argt;
 		if (context.stream.current().type == Type{'='}) {
 			isOptional = true;
 			inOptionalRegion = true;
@@ -160,9 +161,9 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		} else {
 			id += "_" + argt->name.toString();
 			auto& arg = args[args.size()];
-			arg["name"] = argID;
-			var["type"] = argt->name; 
-			arg["type"] = argt->name;
+			arg["name"]			= argID;
+			var->value["type"]	= argt->name; 
+			arg["type"]			= argt->name;
 		}
 		if (inOptionalRegion && !isOptional)
 			context.error<NonexistentValue>("Missing value for optional argument!");
@@ -359,7 +360,7 @@ NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespa
 	auto const id = context.stream.current().value.get<Makai::String>();
 	DEBUGLN("Looking for: ", id);
 	if (ns.members.contains(id))
-		return {id, *ns.members[id]};
+		return {id, ns.members[id]};
 	else if (ns.children.contains(id))
 		return resolveNamespaceMember(context, *ns.children[id]);
 	else context.error<NonexistentValue>("Symbol does not exist!");
@@ -408,8 +409,20 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Context
 		if (!sym.base)
 			context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 		auto const type = sym.base;
+		DEBUGLN("Value type: ", type->name);
 		return {type, context.varAccessor(sym)};
 	} else context.error<InvalidValue>("Invalid symbol type for operation");
+}
+
+Makai::Instance<Context::Scope::Member> resolveSymbolPath(Context& context) {
+	if (!context.hasToken(LTS_TT_IDENTIFIER))
+		context.error("Type name must be an identifier!");
+	auto const id = context.stream.current().value.get<Makai::String>();
+	if (context.hasSymbol(id))
+		return context.getSymbolRefByName(id);
+	else if (context.hasNamespace(id))
+		return resolveNamespaceMember(context).value;
+	else context.error("Symbol with this name does not exist!");
 }
 
 static Solution doValueResolution(Context& context, bool idCanBeValue) {
@@ -423,7 +436,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 				return resolveSymbol(context, id, context.getSymbolByName(id));
 			else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
-				return resolveSymbol(context, sym.key, sym.value);
+				return resolveSymbol(context, sym.key, *sym.value);
 			} else if (id == "sizeof") {
 				context.fetchNext();
 				auto result = doValueResolution(context);
@@ -431,7 +444,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 				context.writeLine("call in sizeof");
 				context.writeLine("pop .");
 				return {context.getBasicType("uint"), "."};
-			} else if (idCanBeValue) return {context.getBasicType("str"), "\"" + id + "\""};
+			} else if (idCanBeValue) return {context.getBasicType("string"), "\"" + id + "\""};
 			else context.error<InvalidValue>("Identifier does not match any reserved value or member name!");
 		} break;
 		case Type{'('}: {
@@ -444,8 +457,8 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			return doUnaryOperation(context);
 		} break;
 		case LTS_TT_SINGLE_QUOTE_STRING: 
-		case LTS_TT_DOUBLE_QUOTE_STRING:	return {context.getBasicType("str"),	current.value.toString()								};
-		case LTS_TT_CHARACTER: 				return {context.getBasicType("str"),	Makai::toString("'", current.value.get<char>(), "'")	};
+		case LTS_TT_DOUBLE_QUOTE_STRING:	return {context.getBasicType("string"),	current.value.toString()								};
+		case LTS_TT_CHARACTER: 				return {context.getBasicType("string"),	Makai::toString("'", current.value.get<char>(), "'")	};
 		case LTS_TT_INTEGER:				return {context.getBasicType("int"),	current.value.toString()								};
 		case LTS_TT_REAL:					return {context.getBasicType("real"),	current.value.toString()								};
 		default: context.error<InvalidValue>("Invalid expression!");
@@ -713,7 +726,7 @@ BREVE_ASSEMBLE_FN(VarDecl) {
 		context.writeAdaptive("push null");
 	}
 	auto const sym = resolveNamespaceMember(context);
-	doVarDecl(context, sym.value, isGlobalVar);
+	doVarDecl(context, *sym.value, isGlobalVar);
 }
 
 #define ASSIGN_FN [=] (Breve::Context& context, Solution& result) -> void
@@ -819,6 +832,7 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym, Ma
 	while (context.stream.next()) {
 		if (context.stream.current().type == Type{')'}) break;
 		args.pushBack(doValueResolution(context));
+		DEBUGLN("Argument type: ", args.back().type->name);
 		legalName += "_" + args.back().type->name;
 		if (args.back().value == ".") {
 			context.writeLine("push .");
@@ -976,6 +990,7 @@ BREVE_ASSEMBLE_FN(RepeatLoop) {
 		context.writeLine("push", times.value);
 		context.currentScope().addVariable(tmpVar);
 		auto const stackID = context.stackIndex(*context.currentScope().ns->members[tmpVar]);
+		context.writeLine("jump if zero &[", stackID, "]", loopEnd);
 		context.startScope();
 		doExpression(context);
 		context.writeLine("uop dec &[", stackID, "] -> &[", stackID, "]");
@@ -1211,6 +1226,27 @@ BREVE_SYMBOL_ASSEMBLE_FN(MemberCall) {
 	return ret;
 }
 
+BREVE_ASSEMBLE_FN(TypeDefinition) {
+	context.fetchNext();
+	if (!context.hasToken(LTS_TT_IDENTIFIER))
+		context.error("Type name must be an identifier!");
+	auto const name = context.stream.current().value.get<Makai::String>();
+	if (context.currentScope().contains(name))
+		context.error("Symbol with this name already exists in the current scope!");
+	context.fetchNext();
+	if (!context.hasToken(Type{'='}))
+		context.error("Expected '=' here!");
+	context.fetchNext();
+	auto const sym = resolveSymbolPath(context);
+	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
+		context.error("Type definition must be another type!");
+	context.currentScope().ns->members[name] = sym;
+}
+
+BREVE_ASSEMBLE_FN(TypeExtension) {
+
+}
+
 BREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	switch (current.type) {
@@ -1236,6 +1272,8 @@ BREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "terminate")							doTerminate(context);
 			else if (id == "yield")								doYield(context);
 			else if (id == "error")								doError(context);
+			else if (id == "type")								doTypeDefinition(context);
+			else if (id == "extend")							doTypeExtension(context);
 			else if (context.hasSymbol(id)) {
 				auto& sym = context.getSymbolByName(id);
 				switch (sym.type) {
@@ -1245,9 +1283,9 @@ BREVE_ASSEMBLE_FN(Expression) {
 				}
 			} else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
-				switch (sym.value.type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);		break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, sym.value);	break;
+				switch (sym.value->type) {
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, *sym.value);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, *sym.value);	break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else context.error<InvalidValue>("Invalid/Unsupported expression ["+id+"]!");
