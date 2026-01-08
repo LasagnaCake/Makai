@@ -1,10 +1,10 @@
 namespace IO {
-	func write(text: string): void {
-		in print text;
+	func write(content: string): void {
+		in print content;
 	}
 
-	func writeLine(text: string): void {
-		write(text);
+	func writeLine(content: string): void {
+		write(content);
 		write("\n");
 	}
 }
