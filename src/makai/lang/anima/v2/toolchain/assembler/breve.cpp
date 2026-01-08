@@ -124,7 +124,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	context.fetchNext();
 	if (context.stream.current().type != Type{'('})
 		context.error<NonexistentValue>("Expected '(' here!");
-	auto retType = context.getSymbolRefByName("any");
+	auto retType = context.getBasicType("any");
 	id += "_";
 	Makai::String gpre = "";
 	auto const signature = context.uniqueName();
@@ -254,7 +254,7 @@ BREVE_ASSEMBLE_FN(Function) {
 		doScope(context);
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		auto const v = doValueResolution(context);
-		if (!proto.returnType || proto.returnType == context.getSymbolRefByName("void"))
+		if (!proto.returnType || proto.returnType == context.getBasicType("void"))
 			context.writeLine("ret void");
 		else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
@@ -849,7 +849,7 @@ static Solution doFunctionCall(Context& context, Context::Scope::Member& sym, Ma
 		context.writeLine("clear", pushes);
 	if (overload.contains("return"))
 		return {
-			context.getSymbolRefByName(overload["return"]),
+			context.resolveSymbol(overload["return"]),
 			"."
 		};
 	else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");

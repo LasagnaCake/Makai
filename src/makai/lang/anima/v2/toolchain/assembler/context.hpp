@@ -328,6 +328,22 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
 		}
 
+		constexpr Instance<Scope::Member> resolveSymbol(String const& name) {
+			if (name.empty()) return nullptr;
+			auto path = name.split('.').reverse();
+			if (path.size() == 1) return getSymbolRefByName(path.back());
+			auto ns = getNamespaceRefByName(path.popBack());
+			while (path.size() > 1) {
+				auto const next = path.popBack();
+				if (ns->hasChild(next))
+					ns = ns->children[next];
+				else error<Error::NonexistentValue>("Namespace ["+next+"] does not exist!");
+			}
+			if (!ns->members.contains(path.back()))
+				error<Error::NonexistentValue>("Symbol ["+path.back()+"] on namespace [" + ns->name + "] does not exist!");
+			return ns->members[path.back()];
+		}
+
 		constexpr Scope::Namespace& getNamespaceByName(String const& name) {
 			for (auto& sc: Range::reverse(scope))
 				if (sc.ns->name == name) return *sc.ns;
@@ -335,9 +351,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				if (ns.value->name == name) return *ns.value;
 			throw Error::FailedAction("Context does not contain namespace '"+name+"'!");
 		}
-		
-		constexpr Function<Scope::Member&()> symbol(String const& name) {
-			return [&, name] () -> auto& {return getSymbolByName(name);};
+
+		constexpr Instance<Scope::Namespace> getNamespaceRefByName(String const& name) {
+			for (auto& sc: Range::reverse(scope))
+				if (sc.ns->name == name) return sc.ns;
+			for (auto& ns: global.ns->children)
+				if (ns.value->name == name) return ns.value;
+			throw Error::FailedAction("Context does not contain namespace '"+name+"'!");
 		}
 
 		constexpr String scopePath() const {
@@ -617,16 +637,16 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		Context() {
-			auto const voidT	= global.addTypeDefinition("void", Data::Value::Kind::DVK_VOID);
-			auto const nullT	= global.addTypeDefinition("null", Data::Value::Kind::DVK_NULL);
-			auto const intT		= global.addTypeDefinition("int", Data::Value::Kind::DVK_SIGNED);
-			auto const uintT	= global.addTypeDefinition("uint", Data::Value::Kind::DVK_UNSIGNED);
-			auto const floatT	= global.addTypeDefinition("float", Data::Value::Kind::DVK_REAL);
-			auto const stringT	= global.addTypeDefinition("string", Data::Value::Kind::DVK_STRING);
-			auto const bytesT	= global.addTypeDefinition("bytes", Data::Value::Kind::DVK_BYTES);
-			auto const arrayT	= global.addTypeDefinition("array", Data::Value::Kind::DVK_ARRAY);
-			auto const objectT	= global.addTypeDefinition("object", Data::Value::Kind::DVK_OBJECT);
-			auto const anyT		= global.addTypeDefinition("any", DVK_ANY);
+			auto const voidT	= global.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
+			auto const nullT	= global.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
+			auto const intT		= global.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
+			auto const uintT	= global.addTypeDefinition("uint",		Data::Value::Kind::DVK_UNSIGNED	);
+			auto const floatT	= global.addTypeDefinition("float",		Data::Value::Kind::DVK_REAL		);
+			auto const stringT	= global.addTypeDefinition("string",	Data::Value::Kind::DVK_STRING	);
+			auto const bytesT	= global.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
+			auto const arrayT	= global.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
+			auto const objectT	= global.addTypeDefinition("object",	Data::Value::Kind::DVK_OBJECT	);
+			auto const anyT		= global.addTypeDefinition("any",		DVK_ANY							);
 			global.ns->members["unsigned"]	= uintT;
 			global.ns->members["signed"]	= intT;
 			global.ns->members["real"]		= floatT;

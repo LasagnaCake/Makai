@@ -178,6 +178,7 @@ int main(int argc, char** argv) try {
 		else if	(command == "refresh"	)	Command::doRefresh(cfg);
 		else if	(command == "add"		)	Command::doAdd(cfg);
 		else if	(command == "remove"	)	Command::doRemove(cfg);
+		else throw Makai::Error::InvalidValue("Invalid command [" + command + "]!");
 	}
 	return 0;
 } catch (Makai::Error::Generic const& e) {
