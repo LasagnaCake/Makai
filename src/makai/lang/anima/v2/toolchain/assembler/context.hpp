@@ -305,6 +305,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			for (auto const& sc: Range::reverse(scope)) {
 				if (sc.contains(name)) return true;
 			}
+			if (global.contains(name)) return true;
 			return false;
 		}
 
