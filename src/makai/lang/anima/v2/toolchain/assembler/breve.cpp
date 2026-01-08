@@ -726,8 +726,8 @@ static void doVarDecl(Context& context, bool const overrideAsLocal = false) {
 	if (!isGlobalVar) {
 		context.writeAdaptive("push null");
 	}
-	auto const sym = resolveNamespaceMember(context);
-	doVarDecl(context, *sym.value, isGlobalVar);
+	auto const sym = resolveSymbolPath(context);
+	doVarDecl(context, *sym, isGlobalVar);
 }
 
 #define ASSIGN_FN [=] (Breve::Context& context, Solution& result) -> void
