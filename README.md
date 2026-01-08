@@ -74,18 +74,19 @@ For the old system, se the `legacy-system` branch.
 Inclusion of these on your project are not required, and **strictly forbidden** (except OpenGL, which is **required**).
 Since a version of (most of) them are bundled[^1], including your own version of those *will* cause issues.
 
-| Name       | Purpose                                             | Bundled? |
-|:----------:|-----------------------------------------------------|:-:|
-| SDL2       | Window & Input handling                             | Yes (Lib file[^3]) |
-| GL3W | OpenGL Wrangling | Yes ("Implementation" file[^6]) |
-| GLAD | OpenGL Wrangling | Yes ("Implementation" file[^6]) |
-| OpenGL     | Graphics backend                                    | No |
-| miniaudio  | Audio backend                                       | Yes (Implementation file[^2]) |
-| SDL2_Net   | Networking Backend                                  | Yes (Lib file[^3]) |
-| stb_image  | Image loading                                       | Yes (Implementation file[^2]) |
+| Name       | Purpose                                             | Bundled?                                            |
+|:----------:|-----------------------------------------------------|:---------------------------------------------------:|
+| SDL2       | Window & Input handling                             | Yes (Lib file[^3])                                  |
+| GL3W       | OpenGL Wrangling                                    | Yes ("Implementation" file[^6])                     |
+| GLAD       | OpenGL Wrangling                                    | Yes ("Implementation" file[^6])                     |
+| OpenGL     | Graphics backend                                    | No                                                  |
+| miniaudio  | Audio backend                                       | Yes (Implementation file[^2])                       |
+| SDL2_Net   | TCP/UDP backend                                     | Yes (Lib file[^3])                                  |
+| cURL       | Networking backend                                  | Yes (Lib file[^3])                                  |
+| stb_image  | Image loading                                       | Yes (Implementation file[^2])                       |
 | xml2json   | XML-to-JSON conversion                              | Modified version only used internally, not required |
 | json2xml   | JSON-to-XML conversion                              | Modified version only used internally, not required |
-| CryptoPP   | Encryption, decryption, compression & decompression | Yes (Lib file[^3]) |
+| CryptoPP   | Encryption, decryption, compression & decompression | Yes (Lib file[^3])                                  |
 
 ## Documentation
 
