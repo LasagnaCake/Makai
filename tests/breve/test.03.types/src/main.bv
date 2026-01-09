@@ -3,9 +3,13 @@ import core;
 type Integer = int;
 
 main {
+	count: Integer = 0;
 	repeat i : 10 {
-		repeat _ : i
+		repeat _ : i {
 			core.IO.write("*");
+			++count;
+		}
 		core.IO.writeLine("*");
 	}
+	core.IO.writeLine("Count: " + core.Convert.toString(count));
 }

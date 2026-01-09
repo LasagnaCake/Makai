@@ -1,10 +1,13 @@
-namespace IO {
-	func write(content: string): void {
-		in print content;
-	}
+import core.convert.tostring;
 
-	func writeLine(content: string): void {
-		write(content);
-		write("\n");
+namespace IO {
+	namespace Impl {
+		func write(content: string): void {
+			in print content;
+		}
 	}
+	
+	macro write(...content) -> {Impl.write(Convert.toString(#content))}
+
+	macro writeLine(...content) -> {write(Convert.toString(#content), "\n")}
 }

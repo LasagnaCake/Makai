@@ -1,0 +1,13 @@
+namespace Convert {
+	func toString(value: any): string {
+		if (value is int)
+			return (value as string);
+		else return in stringify value;
+	}
+
+	macro toString(...values) -> with sizeof values {
+		0 -> ""
+		1 -> {Impl.toString((#[0:values] as any))}
+		* -> {(Impl.toString((#[0:values] as any)) + toString(#[[1:]: values]))}
+	}
+}

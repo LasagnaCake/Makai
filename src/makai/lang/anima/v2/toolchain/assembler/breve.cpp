@@ -112,6 +112,27 @@ struct Prototype {
 	Makai::Instance<Context::Scope::Member>		function;
 };
 
+struct Template {
+	usize index;
+};
+
+using TemplateMap = Makai::Dictionary<Template>;
+
+static TemplateMap doTemplates(Context& context) {
+	TemplateMap tmap;
+	context.fetchNext();
+	while (!context.hasToken(Type{'>'})) {
+		if (context.hasToken(Type{'>'})) break;
+		if (!context.hasToken(LTS_TT_IDENTIFIER))
+			context.error("Expected identifier here!");
+		tmap[context.getToken<Makai::String>()] = {.index = tmap.size()};
+		context.fetchNext();
+		if (context.hasToken(Type{'>'})) break;
+	}
+	context.fetchNext();
+	return tmap;
+}
+
 static Prototype doFunctionPrototype(Context& context, bool const isExtern = false, Makai::Handle<Context::Scope::Namespace> const ns = nullptr) {
 	auto const fname = context.stream.current();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
@@ -122,7 +143,10 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	auto id = fid;
 	auto args = Makai::Data::Value::array();
 	context.fetchNext();
-	if (context.stream.current().type != Type{'('})
+	TemplateMap templates;
+	if (context.stream.current().type == Type{'<'})
+		templates = doTemplates(context);
+	else if (context.stream.current().type != Type{'('})
 		context.error<NonexistentValue>("Expected '(' here!");
 	auto retType = context.getBasicType("any");
 	id += "_";
@@ -145,9 +169,12 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		if (context.stream.current().type != Type{':'})
 			context.error<InvalidValue>("Expected ':' here!");
 		context.fetchNext();
-		auto const argt = getType(context);
+		Makai::Instance<Context::Scope::Member> argt;
+		if (templates.contains(context.getToken<Makai::String>())) {
+			// TODO: Template resolution
+		} else argt = getType(context);
 		DEBUGLN("Type: ", argt->name);
-		if (argt->value["base"] == Value(Makai::enumcast(CTL::Ex::Data::Value::Kind::DVK_UNDEFINED)))
+		if (context.isUndefined(argt))
 			context.error<InvalidValue>("Invalid argument type!");
 		context.fetchNext();
 		var->base = argt;
@@ -187,7 +214,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	+	signature
 	+	"_" + id
 	;
-	auto resolutionName = id;
+	auto resolutionName = templates.size() ? "template:" + id : id;
 	auto fullName = baseName;
 	if (optionals.size()) {
 		context.writeGlobalPreamble(gpre, "call", fullName, "()");
@@ -336,12 +363,21 @@ BREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 	return {context.getBasicType("void"), "."};
 }
 
+BREVE_TYPED_ASSEMBLE_FN(InternalStringify) {
+	context.fetchNext();
+	auto const v = doValueResolution(context);
+	context.writeLine("push", v.value);
+	context.writeLine("call in stringify");
+	return {context.getBasicType("void"), "."};
+}
+
 BREVE_TYPED_ASSEMBLE_FN(Internal) {
 	context.fetchNext();
 	if (context.stream.current().type != LTS_TT_IDENTIFIER)
 		context.error<NonexistentValue>("Expected keyword here!");
 	auto const id = context.stream.current().value.get<Makai::String>();
 	if (id == "print") return doInternalPrint(context);
+	if (id == "stringify") return doInternalStringify(context);
 	else context.error<NonexistentValue>("Invalid keyword!");
 }
 
@@ -522,6 +558,22 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.writeLine("clear", stackUsage);
 		return {lhs.type, ".", lhs.value};
 	}
+	if (opname.type == LTS_TT_IDENTIFIER) {
+		auto const id = context.getToken<Makai::String>();
+		if (id == "is") {
+			context.fetchNext();
+			if (!context.hasToken(LTS_TT_IDENTIFIER))
+				context.error("Expected type name here!");
+			auto const type = resolveSymbolPath(context);
+			if (type->type == Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
+				context.error("Symbol is not a type!");
+			context.writeLine("push", lhs.value);
+			context.writeLine("call in tname");
+			context.writeLine("comp ( &[-0] = \"", type->name, "\") -> .");
+			context.writeLine("pop void");
+			return {context.getBasicType("bool"), "."};
+		}
+	}
 	context.fetchNext();
 	auto rhs = doValueResolution(context);
 	if (rhs.value == ".") {
@@ -591,13 +643,13 @@ BREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		case Type{':'}: {
 			Makai::String opstr;
 			switch (opname.type) {
-				case Type::LTS_TT_COMPARE_EQUALS:			opstr = " = ";	break;
-				case Type::LTS_TT_COMPARE_NOT_EQUALS:		opstr = " ! ";	break;
-				case Type::LTS_TT_COMPARE_LESS_EQUALS:		opstr = " le ";	break;
-				case Type::LTS_TT_COMPARE_GREATER_EQUALS:	opstr = " ge ";	break;
-				case Type{'<'}:								opstr = " < ";	break;
-				case Type{'>'}:								opstr = " > ";	break;
-				case Type{':'}:								opstr = " : ";	break;
+				case Type::LTS_TT_COMPARE_EQUALS:			opstr = "=";	break;
+				case Type::LTS_TT_COMPARE_NOT_EQUALS:		opstr = "!";	break;
+				case Type::LTS_TT_COMPARE_LESS_EQUALS:		opstr = "le";	break;
+				case Type::LTS_TT_COMPARE_GREATER_EQUALS:	opstr = "ge";	break;
+				case Type{'<'}:								opstr = "<";	break;
+				case Type{'>'}:								opstr = ">";	break;
+				case Type{':'}:								opstr = ":";	break;
 			}
 			context.writeLine("comp (", lhs.value, opstr, rhs.value, ") -> .");
 		} break;

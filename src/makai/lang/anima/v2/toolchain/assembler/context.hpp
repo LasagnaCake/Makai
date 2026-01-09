@@ -637,6 +637,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return "&[" + stackIndex(sym) + "]";
 		}
 
+		template <class T>
+		constexpr T getToken() const {
+			return stream.current().value.template get<T>();
+		}
+
 		String intermediate() const {
 			auto prg = Makai::Regex::replace(compose(), "([\\n\\r\\f][\\t\\ ]*)([\\n\\r\\f][\\t\\ ]*)+", "\n\n");
 			prg = Makai::Regex::replace(prg, "[\\t\\ ]+", " ");
