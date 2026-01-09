@@ -995,8 +995,8 @@ BREVE_ASSEMBLE_FN(RepeatLoop) {
 			context.error("Expected ':' here!");
 		context.fetchNext();
 		auto const times = doValueResolution(context);
-		if (!context.isInteger(times.type))
-			context.error("Loop count must be an integer!");
+		if (!context.isUnsigned(times.type))
+			context.error("Loop count must be an unsigned integer!");
 		context.startScope();
 		auto const var = context.currentScope().addVariable(id);
 		var->base = context.getBasicType("uint");
