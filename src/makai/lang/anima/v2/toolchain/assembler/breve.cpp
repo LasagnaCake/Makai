@@ -1076,6 +1076,7 @@ BREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 			context.writeLine("uop -", result.value, "-> .");
 			//result.source = result.value;
 			result.value = ".";
+			result.type = context.getBasicType("int");
 		} break;
 		case Type{'+'}: {
 			if (!context.isNumber(result.type))
@@ -1211,7 +1212,7 @@ BREVE_ASSEMBLE_FN(Signal) {
 	auto& overload = overloads[fullName];
 	overload["args"]		= Value::array();
 	overload["full_name"]	= "_signal" + fullName;
-	overload["return"]		= Value::Kind::DVK_VOID;
+	overload["return"]		= "void";
 	overload["extern"]		= false;
 	context.writeLine("hook _signal" + fullName, ":");
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
