@@ -472,42 +472,42 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr static bool isUndefined(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isUndefined(type->value["type"]);
 		}
 
 		constexpr static bool isNumber(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isNumber(type->value["type"]);
 		}
 
 		constexpr static bool isString(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isString(type->value["type"]);
 		}
 
 		constexpr static bool isObject(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isObject(type->value["type"]);
 		}
 
 		constexpr static bool isArray(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isArray(type->value["type"]);
 		}
 
 		constexpr static bool isInteger(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isInteger(type->value["type"]);
 		}
 
 		constexpr static bool isUnsigned(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isUnsigned(type->value["type"]);
 		}
 
 		constexpr static bool isVerifiable(Instance<Context::Scope::Member> const& type) {
-			if (isBasicType(type)) return false;
+			if (!isBasicType(type)) return false;
 			return Data::Value::isVerifiable(type->value["type"]);
 		}
 
