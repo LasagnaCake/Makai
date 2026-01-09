@@ -459,7 +459,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		case LTS_TT_SINGLE_QUOTE_STRING: 
 		case LTS_TT_DOUBLE_QUOTE_STRING:	return {context.getBasicType("string"),	current.value.toString()								};
 		case LTS_TT_CHARACTER: 				return {context.getBasicType("string"),	Makai::toString("'", current.value.get<char>(), "'")	};
-		case LTS_TT_INTEGER:				return {context.getBasicType("int"),	current.value.toString()								};
+		case LTS_TT_INTEGER:				return {context.getBasicType("uint"),	current.value.toString()								};
 		case LTS_TT_REAL:					return {context.getBasicType("real"),	current.value.toString()								};
 		default: context.error<InvalidValue>("Invalid expression!");
 	}
