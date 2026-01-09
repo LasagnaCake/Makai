@@ -975,7 +975,6 @@ BREVE_ASSEMBLE_FN(ForLoop) {
 BREVE_ASSEMBLE_FN(RepeatLoop) {
 	if (!context.inFunction())
 		context.error<InvalidValue>("Cannot have loops outside of functions!");
-	context.fetchNext();
 	auto const loopStart	= context.scopePath() + context.uniqueName() + "_repeat";
 	auto const loopEnd		= loopStart + "_end";
 	auto const tmpVar		= loopStart + "_tmpvar";
