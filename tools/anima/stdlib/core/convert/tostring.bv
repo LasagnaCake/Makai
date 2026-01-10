@@ -1,13 +1,13 @@
 namespace Convert {
-	func toString(value: any): string {
-		if (value is int)
-			return (value as string);
-		else return in stringify value;
+	namespace Impl {
+		macro toString: string => {($value)} => {(($value as string) if ($value is int) else in stringify $value)}
 	}
 
-	macro toString(...values) -> with sizeof values {
-		0 -> ""
-		1 -> {Impl.toString((#[0:values] as any))}
-		* -> {(Impl.toString((#[0:values] as any)) + toString(#[[1:]: values]))}
+	macro toString: string {
+		{()}					=> {""																			}
+		{($value)}				=> {core.Convert.Impl.toString($value)											}
+		{($first, $[...]rest)}	=> {(core.Convert.Impl.toString($first) + core.Convert.toString($[..., rest]))	}
 	}
 }
+
+macro toString: string => ($[...]values) => {core.Convert.toString($[..., values])}

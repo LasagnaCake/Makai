@@ -7,8 +7,8 @@
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Context {
-		using TokenStream	= Lexer::CStyle::TokenStream;
-		using Program		= Runtime::Program;
+		using Tokenizer	= Lexer::CStyle::TokenStream;
+		using Program	= Runtime::Program;
 
 		struct Scope {
 			enum class Type {
@@ -25,6 +25,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Member {
 				enum class Type {
 					AV2_TA_SMT_UNKNOWN,
+					AV2_TA_SMT_MACRO,
 					AV2_TA_SMT_VARIABLE,
 					AV2_TA_SMT_FUNCTION,
 					AV2_TA_SMT_CLASS,
@@ -43,6 +44,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Data::Value			value	= Data::Value::object();
 				Declaration			decl	= Declaration::AV2_TA_SMD_UNDECLARED;
 				Instance<Member>	base	= nullptr;
+				ID::VLUID			id		= all++;
 
 				Instance<Namespace> ns;
 
@@ -57,6 +59,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						decl = Declaration::AV2_TA_SMD_EXTERNAL;
 					else decl = Declaration::AV2_TA_SMD_INTERNAL;
 				}
+			private:
+				static inline ID::VLUID all = ID::VLUID::create(0);
 			};
 
 			constexpr bool contains(String const& name) const {
@@ -139,6 +143,54 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 							members[name] = child;
 					return true;
 				}
+			};
+
+			struct Value {
+				using Resolver	= Function<String()>;
+				Instance<Scope::Member>		type;
+				Makai::String				source;
+				Resolver					resolver;
+
+				constexpr Makai::String resolve() const {
+					return resolver.invoke();
+				}
+			};
+
+			struct Macro {
+				using Arguments = List<String>;
+				using Stack		= List<Data::Value>;
+
+				struct Context {
+					Arguments	args;
+					Stack		stack;
+					usize		index;
+					Value		result;
+
+					template <class... Args>
+					constexpr void write(Args const&... args) {
+						result.resolver = [=, resolve=result.resolver] {return resolve() + toString(toString(args, " ")...);};
+					}
+
+					template <class... Args>
+					constexpr void writeLine(Args const&... args) {
+						result.resolver = [=, resolve=result.resolver] {return resolve() + toString(toString(args, " ")..., "\n");};
+					}
+				};
+				
+				using Action	= Functor<void(Context&)>;
+
+				bool variadic	= false;
+
+				Value resolve(Arguments args) {
+					Context ctx {args};
+					for (auto& action: actions) {
+						action.invoke(ctx);
+						++ctx.index;
+					}
+					return ctx.result;
+				}
+
+				List<Action> actions;
 			};
 			
 			uint64				entry	= 0;
@@ -368,6 +420,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		constexpr String scopePath() const {
 			return "_" + namespacePath("_");
 		}
+
+		template <class... Args>
+		constexpr void write(Args const&... args) {
+			auto& content = global.code;
+			content += toString(toString(args, " ")...);
+		}
 		
 		constexpr String namespacePath(String const& sep = ".") const {
 			String path;
@@ -536,12 +594,31 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		void fetchNext() {
-			if (!stream.next())
+			if (!nextToken())
 				error<Error::NonexistentValue>("Unexpected end-of-file!");
 		}
 
-		bool hasToken(TokenStream::Token::Type const type) {
-			return stream.current().type == type;
+		bool nextToken() {
+			if (append.hasTokens()) {
+				append.next();
+				return true;
+			}
+			return stream.next();
+		}
+
+		bool hasToken(Tokenizer::Token::Type const type) {
+			return currentToken().type == type;
+		}
+
+		Tokenizer::Token currentToken() const {
+			if (append.hasTokens())
+				return append.current();
+			return stream.current();
+		}
+
+		template <class T>
+		T getValue() const {
+			return currentToken().value.template get<T>();
 		}
 
 		String getModuleFile(String const& path) const {
@@ -620,26 +697,23 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return currentScope().stackc + currentScope().varc;
 		}
 
-		constexpr uint64 relativeStackOffset(Scope::Member const& sym) {
-			auto const sid = stackSize() - (sym.value["stack_id"].get<uint64>() + 1);
+		constexpr uint64 relativeStackOffset(Instance<Scope::Member> const& sym) {
+			auto const sid = stackSize() - (sym->value["stack_id"].get<uint64>() + 1);
 			return sid;
 		}
 
-		constexpr String stackIndex(Scope::Member const& sym) {
+		constexpr String stackIndex(Instance<Scope::Member> const& sym) {
 			return "-" + toString(relativeStackOffset(sym));
 		}
 
-		constexpr String varAccessor(Scope::Member const& sym) {
-			if (sym.value["extern"])
-				return "@" + sym.value["name"].get<String>();
-			if (sym.value["global"])
-				return ":" + sym.value["name"].get<String>();
-			return "&[" + stackIndex(sym) + "]";
-		}
-
-		template <class T>
-		constexpr T getToken() const {
-			return stream.current().value.template get<T>();
+		constexpr Scope::Value::Resolver varAccessor(Instance<Scope::Member> const& sym) {
+			return [&, sym] {
+				if (sym->value["extern"])
+					return "@" + sym->value["name"].get<String>();
+				if (sym->value["global"])
+					return ":" + sym->value["name"].get<String>();
+				return "&[" + stackIndex(sym) + "]";
+			};
 		}
 
 		String intermediate() const {
@@ -674,13 +748,25 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			global.ns->members["nil"]		= nullT;
 		}
 
+		struct Appendix {
+			List<Tokenizer::Token>	cache;
+
+			constexpr void add(Tokenizer::Token const& tok)	{cache.pushBack(tok);								}
+			constexpr bool hasTokens() const				{return ct < cache.size();							}
+			constexpr bool next()							{if (ct < cache.size()) return ++ct; return false;	}
+			constexpr Tokenizer::Token current() const		{return cache[ct-1];								}
+		
+		private:
+			usize					ct = 0;
+		};
+
 		StringList				sourcePaths;
 
 		Scope					global;
-
 		List<Scope>				scope;
 		Jumps					jumps;
-		TokenStream				stream;
+		Tokenizer				stream;
+		Appendix				append;
 		Program					program;
 		String					fileName;
 		Random::SecureGenerator	rng;

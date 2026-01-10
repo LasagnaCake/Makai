@@ -11,5 +11,5 @@ main {
 		}
 		core.IO.writeLine("*");
 	}
-	core.IO.writeLine("Count: " + core.Convert.toString(count));
+	core.IO.writeLine("Count: ", core.Convert.toString(count));
 }
