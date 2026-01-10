@@ -240,8 +240,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				struct Context {
 					Arguments	args;
 					Stack		stack;
+					Result		result;
+					usize		vaCount = 0;
 				
 					Arguments consume(StaticRule const& rule) {
+						if (rule.empty() || args.empty()) return {};
 						usize count = rule.size() < args.size() ? rule.size() : args.size();
 						Arguments result;
 						usize i = 0;
@@ -253,8 +256,22 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						return result;
 					}
 				};
-				
-				using Transformation	= Function<Result(Context&)>;
+
+				struct Transformation {
+					using Action = Function<void(Context&)>;
+					
+					List<Action> actions;
+
+					constexpr Transformation& apply(Context& ctx) {
+						for (auto& action: actions)
+							action(ctx);
+						return *this;
+					}
+
+					constexpr Result result(Context& ctx) const {
+						return ctx.result;
+					}
+				};
 
 				using StaticExpressions		= Map<StaticRule, Transformation>;
 				using VariadicExpressions	= Map<Rule, Transformation>;
@@ -267,21 +284,23 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				StaticExpressions	exprs;
 				VariadicExpressions	variadics;
 
-				struct Variable {
-					Tokenizer::TokenList tokens;
-					Tokenizer::TokenList separator;
+				struct Entry {
+					Tokenizer::TokenList pre;
+					Tokenizer::TokenList main;
+					Tokenizer::TokenList post;
 					bool variadic = false;
 				};
 
-				Makai::Dictionary<Variable> variables;
+				Makai::Dictionary<Instance<Entry>>	variables;
+				List<Instance<Entry>>				entries;
 
 				Nullable<Result> resolve(Arguments const& args) {
 					Context ctx{.args = args};
 					Rule const rule = {args.toList<Axiom>()};
 					if (exprs.contains(rule.base))
-						return exprs[rule.base].invoke(ctx);
+						return exprs[rule.base].apply(ctx).result(ctx);
 					else if (variadics.contains(rule))
-						return variadics[rule].invoke(ctx);
+						return variadics[rule].apply(ctx).result(ctx);
 					else return null;
 				}
 			};
