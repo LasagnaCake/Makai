@@ -1,17 +1,17 @@
 import core.convert.tostring;
 
-namespace IO {
-	namespace Impl {
-		func write(content: string): void {
-			in print content;
-		}
-
-		func writeLine(content: string): void {
-			in print content;
-			in print "\n";
-		}
+namespace IO.Impl {
+	func write(content: string): void {
+		in print content;
 	}
-	
+
+	func writeLine(content: string): void {
+		in print content;
+		in print "\n";
+	}
+}
+
+namespace IO {
 	macro write		=> ($[, $content]) => {core.IO.Impl.write(core.Convert.toString($[, $content]))		}
 	macro writeLine	=> ($[, $content]) => {core.IO.Impl.writeLine(core.Convert.toString($[, $content]))	}
 }

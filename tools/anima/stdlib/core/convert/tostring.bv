@@ -1,8 +1,8 @@
-namespace Convert {
-	namespace Impl {
-		macro toString => ($value) => {($value if ($value is string) else in stringify ($value as any))}
-	}
+namespace Convert.Impl {
+	macro toString => ($value) => {($value if ($value is string) else in stringify ($value as any))}
+}
 
+namespace Convert {
 	macro toString {
 		()					=> {""																	}
 		($value)			=> {core.Convert.Impl.toString($value)									}

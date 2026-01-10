@@ -1544,14 +1544,14 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 	auto const name = context.getValue<Makai::String>();
 	context.fetchNext();
 	Makai::Instance<Context::Scope::Macro> macro = new Context::Scope::Macro();
-	if (context.hasToken(LTS_TT_BIG_ARROW)) {
-		while (!context.hasToken(Type{'{'})) {
+	if (context.hasToken(Type{'{'})) {
+		while (!context.hasToken(Type{'}'})) {
 			auto const expr = doMacroExpression(context, *macro);
 			if (expr.rule.variadic)
 				macro->vaexprs[expr.rule] = expr.transform;
 			else macro->exprs[expr.rule.base] = expr.transform;
 		}
-	} else if (context.hasToken(Type{'{'})) {
+	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		auto const expr = doMacroExpression(context, *macro);
 		if (expr.rule.variadic)
 			macro->vaexprs[expr.rule] = expr.transform;
