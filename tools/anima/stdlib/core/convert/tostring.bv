@@ -1,6 +1,6 @@
 namespace Convert {
 	namespace Impl {
-		macro toString: string => ($value) => {(($value as string) if ($value is int) else in stringify $value)}
+		macro toString: string => ($value) => {($value if ($value is string) else in stringify $value)}
 	}
 
 	macro toString {
