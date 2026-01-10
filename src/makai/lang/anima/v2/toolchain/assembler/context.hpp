@@ -69,10 +69,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			constexpr Instance<Member> addMember(String const& name) {
 				if (ns->members.contains(name)) return ns->members[name];
-				auto mem			= new Member{.name = name, .ns = new Namespace()};
-				auto& sym			= mem->value;
-				sym["name"]			= name;
-				ns->members[name]	= mem;
+				Instance<Member> mem	= new Member{.name = name, .ns = new Namespace()};
+				auto& sym				= mem->value;
+				sym["name"]				= name;
+				ns->members[name]		= mem;
 				return mem;
 			}
 
@@ -155,11 +155,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Value {
 				using Resolver	= Function<String()>;
 				Instance<Scope::Member>		type;
-				Makai::String				source;
 				Resolver					resolver;
+				Resolver					source		= resolveTo(".");
 
 				constexpr Makai::String resolve() const {
 					return resolver.invoke();
+				}
+
+				constexpr Makai::String resolveSource() const {
+					return source.invoke();
 				}
 			};
 
@@ -637,7 +641,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr static bool isCastable(Instance<Scope::Member> const type) {
-			if (type->base->value["basic"]) {
+			if (!type) return false;
+			if (isBasicType(type)) {
 				auto const t = Cast::as<Data::Value::Kind>(type->base->value["type"].get<int64>());
 				return Data::Value::isScalar(t) || Data::Value::isString(t) || t == DVK_ANY;
 			}
@@ -645,6 +650,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr static bool isBasicType(Instance<Context::Scope::Member> const& type) {
+			if (!type) return false;
 			return type->value["basic"];
 		}
 
@@ -929,6 +935,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		String finale;
 
 		inline static ID::VLUID uuid = ID::VLUID::create(0);
+
+		constexpr static Scope::Value::Resolver resolveTo(String const& value) {
+			return [=] {return value;};
+		}
 	};
 }
 
