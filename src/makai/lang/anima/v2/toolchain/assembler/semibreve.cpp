@@ -1314,6 +1314,7 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 	Context::Scope::Macro::Rule rule;
 	if (!context.hasToken(Type{'('}))
 		context.error("Expected '(' here!");
+	usize start = 0;
 	while (!context.hasToken(Type{')'})) {
 		context.fetchNext();
 		if (context.hasToken(Type{')'})) break;
@@ -1329,7 +1330,9 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 					auto const varID = context.getValue<Makai::String>();
 					auto& var = macro.variables[varID];
 					var = new Context::Scope::Macro::Entry();
+					var->pre.appendBack(rule.base.toList<Context::Tokenizer::Token>().sliced(start));
 					var->main.pushBack({LTS_TT_IDENTIFIER});
+					start = rule.base.size();
 				} continue;
 				case Type{'['}: {
 					rule.base.popBack();
@@ -1380,9 +1383,9 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 				} continue;
 				default: context.error("Invalid macro expansion!");
 			}
-		} else {
-			if (context.hasToken(Type{'('}))
-				context.error("'(' must always be preceded by '$'!");
+		} else if (context.hasToken(Type{'('}))
+			context.error("Unescaped '(' here!");
+		else {
 			rule.base.pushBack({context.currentToken()});
 			switch (rule.base.back().type) {
 			case LTS_TT_IDENTIFIER:
@@ -1445,8 +1448,11 @@ static void doMacroSpecialVariadicExpansion(Context& context, Context::Scope::Ma
 				case LTS_TT_IDENTIFIER: break;
 			}
 			break;
-		} else if (context.hasToken(Type{']'}))
+		}
+		else if (context.hasToken(Type{']'}))
 			context.error("Invalid variadic expansion (missing variable)!");
+		else if (context.hasToken(Type{'['}))
+			context.error("Unescaped '[' here!");
 		else result.pushBack(context.currentToken());
 		context.fetchNext();
 	}
@@ -1504,6 +1510,8 @@ static Context::Scope::Macro::Transformation doMacroTransformation(Context& cont
 				} break;
 			}
 		}
+		if (context.hasToken(Type{'{'}))
+			context.error("Unescaped '{' here!");
 		result.pushBack(context.currentToken());
 	}
 	if (!context.hasToken(Type{'}'}))
@@ -1539,10 +1547,14 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 		context.error("Expected macro name here!");
 	auto const name = context.getValue<Makai::String>();
 	context.fetchNext();
+	Context::Scope::Macro macro;
 	if (context.hasToken(LTS_TT_BIG_ARROW)) {
 
 	} else if (context.hasToken(Type{'{'})) {
-
+		auto const expr = doMacroExpression(context, macro);
+		if (expr.rule.variadic)
+			macro.vaexprs[expr.rule] = expr.transform;
+		else macro.exprs[expr.rule.base] = expr.transform;
 	} else context.error("Expected '=>' or '{' here!");
 }
 
