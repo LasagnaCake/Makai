@@ -1295,6 +1295,23 @@ public:
 			start + (size() * sizeof(DataType))
 		);
 	}
+	
+	template <class TNew>
+	constexpr List<TNew, TIndex, TAlloc, TConstAlloc> toList() const 
+	requires (Type::CanBecome<DataType, TNew> || Type::Constructible<TNew, DataType>) {
+		List<TNew, TIndex, TAlloc, TConstAlloc> result;
+		for (auto const& elem: *this)
+			result.pushBack(TNew(elem));
+		return result;
+	}
+
+	template <class TNew, Type::Functional<TNew(DataType const&)> TConvert>
+	constexpr List<TNew, TIndex, TAlloc, TConstAlloc> toList(TConvert const& conv) const {
+		List<TNew, TIndex, TAlloc, TConstAlloc> result;
+		for (auto const& elem: *this)
+			result.pushBack(conv(elem));
+		return result;
+	}
 
 private:
 	using Iteratable::wrapBounds;

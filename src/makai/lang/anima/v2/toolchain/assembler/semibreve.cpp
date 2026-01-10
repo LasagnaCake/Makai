@@ -1306,14 +1306,145 @@ SEMIBREVE_ASSEMBLE_FN(TypeDefinition) {
 	context.currentScope().ns->members[name] = sym;
 }
 
-SEMIBREVE_TYPED_ASSEMBLE_FN(TypeExtension) {
+SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 }
 
-SEMIBREVE_TYPED_ASSEMBLE_FN(MacroFunction) {
+struct MacroState {
+	struct Variable {
+		Context::Tokenizer::TokenList tokens;
+		Context::Tokenizer::TokenList separator;
+		bool variadic = false;
+	};
+
+	Makai::Dictionary<Variable> variables;
+};
+
+static Context::Scope::Macro::Rule doMacroRule(Context& context, MacroState& state) {
+	Context::Scope::Macro::Rule rule;
+	if (!context.hasToken(Type{'('}))
+		context.error("Expected '(' here!");
+	while (!context.hasToken(Type{')'})) {
+		context.fetchNext();
+		if (context.hasToken(Type{')'})) break;
+		if (context.hasToken(Type{'$'})) {
+			context.fetchNext();
+			auto const ct = context.currentToken().type;
+			rule.base.pushBack({{ct}});
+			switch (context.currentToken().type) {
+				case Type{'$'}:
+				case Type{')'}:
+				case Type{'('}: continue;
+				case LTS_TT_IDENTIFIER: {
+					auto const varID = context.getValue<Makai::String>();
+					auto& var = state.variables[varID];
+					var.tokens.pushBack({LTS_TT_IDENTIFIER});
+				} continue;
+				case Type{'['}: {
+					rule.base.popBack();
+					rule.variadic = true;
+					while (!context.hasToken(Type{']'})) {
+						context.fetchNext();
+						if (context.hasToken(Type{']'})) break;
+						else if (context.hasToken(Type{'$'})) {
+							switch (context.currentToken().type) {
+								case Type{'$'}:
+								case Type{'['}:
+								case Type{']'}: continue;
+								case LTS_TT_IDENTIFIER: {
+									auto const varID = context.getValue<Makai::String>();
+									auto& var = state.variables[varID];
+									var.tokens.pushBack({LTS_TT_IDENTIFIER});
+									var.separator.appendBack(rule.separator.toList<Context::Tokenizer::Token>());
+									rule.expectant.pushBack({context.currentToken()});
+									context.fetchNext();
+									if (!context.hasToken(Type{']'}))
+										context.error("Expected ']' here!");
+									break;
+								} continue;
+								default: context.error("Invalid macro expansion!");
+							}
+						} else {
+							if (context.hasToken(Type{'['}))
+								context.error("'[' must always be preceded by '$'!");
+							rule.separator.pushBack({context.currentToken()}); continue;
+							switch (rule.separator.back().type) {
+							case LTS_TT_IDENTIFIER:
+							case LTS_TT_SINGLE_QUOTE_STRING:
+							case LTS_TT_DOUBLE_QUOTE_STRING:
+							case LTS_TT_INTEGER:
+							case LTS_TT_REAL:
+							case LTS_TT_CHARACTER:
+								rule.separator.back().strict = true;
+							default: break;
+							}
+						}
+						if (context.hasToken(Type{']'})) break;
+					}
+					context.fetchNext();
+					if (!context.hasToken(Type{')'}))
+						context.error("Expected ')' here!");
+					break;
+				} continue;
+				default: context.error("Invalid macro expansion!");
+			}
+		} else {
+			if (context.hasToken(Type{'('}))
+				context.error("'(' must always be preceded by '$'!");
+			rule.base.pushBack({context.currentToken()});
+			switch (rule.base.back().type) {
+			case LTS_TT_IDENTIFIER:
+			case LTS_TT_SINGLE_QUOTE_STRING:
+			case LTS_TT_DOUBLE_QUOTE_STRING:
+			case LTS_TT_INTEGER:
+			case LTS_TT_REAL:
+			case LTS_TT_CHARACTER:
+				rule.base.back().strict = true;
+			default: break;
+			}
+		}
+	}
+	if (!context.hasToken(Type{')'}))
+		context.error("Expected ')' here!");
+	return rule;
+}
+
+static Context::Scope::Macro::Transformation doMacroTransformation(Context& context, MacroState& state)	{
+
+}
+
+static Context::Scope::Macro::Expression doMacroExpression(Context& context) {
+	MacroState state;
+	Context::Scope::Macro::Expression expr;
+	context.fetchNext();
+	if (!context.hasToken(Type{'('}))
+		context.error("Expected '(' here!");
+	expr.rule = doMacroRule(context, state);
+	if (!context.hasToken(Type{')'}))
+		context.error("Expected ')' here!");
+	context.fetchNext();
+	if (!context.hasToken(LTS_TT_BIG_ARROW))
+		context.error("Expected '=>' here!");
+	context.fetchNext();
+	if (!context.hasToken(Type{'{'}))
+		context.error("Expected '{' here!");
+	expr.transform = doMacroTransformation(context, state);
+	if (!context.hasToken(Type{'}'}))
+		context.error("Expected '}' here!");
+	context.fetchNext();
+	return expr;
+}
+
+SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 	context.fetchNext();
 	if (!context.hasToken(LTS_TT_IDENTIFIER))
 		context.error("Expected macro name here!");
 	auto const name = context.getValue<Makai::String>();
+	context.fetchNext();
+	if (context.hasToken(LTS_TT_BIG_ARROW)) {
+
+	} else if (context.hasToken(Type{'{'})) {
+
+	} else context.error("Expected '=>' or '{' here!");
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {

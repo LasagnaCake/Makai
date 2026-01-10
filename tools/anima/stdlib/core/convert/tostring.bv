@@ -4,8 +4,9 @@ namespace Convert {
 	}
 
 	macro toString {
-		{()}					=> {""																			}
-		{($value)}				=> {core.Convert.Impl.toString($[value])										}
-		{($first $[* , rest])}	=> {(core.Convert.Impl.toString($[first]) + core.Convert.toString($[* , rest]))	}
+		()						=> {""																		}
+		($value)				=> {core.Convert.Impl.toString($value)											}
+		($first , $[, $rest])	=> {(core.Convert.Impl.toString($first) + core.Convert.toString($[, $rest]))	}
+		($[+ $values])			=> {core.Convert.toString($[, $values])											}
 	}
 }

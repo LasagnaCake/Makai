@@ -157,40 +157,99 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			};
 
 			struct Macro {
-				using Arguments = List<String>;
-				using Stack		= List<Data::Value>;
+				struct Axiom: Tokenizer::Token {
+					bool strict = false;
+
+					constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
+						if (!strict) return type <=> other.type;
+						Ordered::OrderType order = type <=> other.type;
+						if (order == Ordered::Order::EQUAL) return value <=> other.value;
+						else return order;
+					}
+
+					constexpr bool operator==(Axiom const& other) const {
+						if (!strict) return type == other.type;
+						if (type == other.type) return true;
+						return value == other.value;
+					}
+				};
+
+				using StaticRule	= List<Axiom>;
+				using Stack			= Tokenizer::TokenList;
+				using Arguments		= Tokenizer::TokenList;
+				using Result		= Tokenizer::TokenList;
 
 				struct Context {
 					Arguments	args;
 					Stack		stack;
-					usize		index;
-					Value		result;
-
-					template <class... Args>
-					constexpr void write(Args const&... args) {
-						result.resolver = [=, resolve=result.resolver] {return resolve() + toString(toString(args, " ")...);};
-					}
-
-					template <class... Args>
-					constexpr void writeLine(Args const&... args) {
-						result.resolver = [=, resolve=result.resolver] {return resolve() + toString(toString(args, " ")..., "\n");};
-					}
 				};
 				
-				using Action	= Functor<void(Context&)>;
+				using Transformation	= Function<Result(Context&)>;
 
-				bool variadic	= false;
+				using StaticExpressions	= Map<StaticRule, Transformation>;
 
-				Value resolve(Arguments args) {
-					Context ctx {args};
-					for (auto& action: actions) {
-						action.invoke(ctx);
-						++ctx.index;
+				struct Rule {
+					StaticRule	base;
+					StaticRule	separator;
+					StaticRule	expectant;
+					bool		variadic	= false;
+
+					constexpr Ordered::OrderType operator<=>(StaticRule const& other) const {
+						if (!variadic) return base <=> other;
+						Ordered::OrderType order = Ordered::Order::EQUAL;
+						usize count = base.size() < other.size() ? base.size() : other.size();
+						for (usize i = 0; i < count; ++i) {
+							if ((order = base[i] <=> other[i]) != Ordered::Order::EQUAL)
+								return order;
+						}
+						if (other.size() < base.size()) return Ordered::Order::GREATER;
+						usize previous = count;
+						while (true) {
+							count = (previous + separator.size()) < other.size() ? (previous + separator.size()) : other.size();
+							for (usize i = 0; i < (count-previous); ++i) {
+							if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
+								return order;
+							}
+							count = (previous + expectant.size()) < other.size() ? (previous + expectant.size()) : other.size();
+							for (usize i = 0; i < (count-previous); ++i) {
+							if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
+								return order;
+							}
+							if (count == other.size())
+								return order;
+						}
+						return order;
 					}
-					return ctx.result;
-				}
 
-				List<Action> actions;
+					constexpr Ordered::OrderType operator<=>(Rule const& other) const {
+						if (!other.variadic) return operator<=>(other.base);
+						Ordered::OrderType order = base <=> other.base;
+						if (order != Ordered::Order::EQUAL) return order;
+						order = separator <=> other.separator;
+						if (order != Ordered::Order::EQUAL) return order;
+						return expectant <=> other.expectant;
+					}
+				};
+
+				using VariadicExpressions	= Map<Rule, Transformation>;
+
+				struct Expression {
+					Rule			rule;
+					Transformation	transform;
+				};
+
+				StaticExpressions	exprs;
+				VariadicExpressions	variadics;
+
+				Nullable<Result> resolve(Arguments const& args) {
+					Context ctx{.args = args};
+					Rule const rule = {args.toList<Axiom>()};
+					if (exprs.contains(rule.base))
+						return exprs[rule.base].invoke(ctx);
+					else if (variadics.contains(rule))
+						return variadics[rule].invoke(ctx);
+					else return null;
+				}
 			};
 			
 			uint64				entry	= 0;
