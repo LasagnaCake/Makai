@@ -202,6 +202,17 @@ public:
 		(..., pushBack(args));
 	}
 
+	template<class... Args>
+	constexpr SelfType& constructBack(Args... args) {
+		ref<Node> const node = new Node{args...};
+		if (head == nullptr)
+			head = node;
+		else Node::parent(*tail, *node);
+		tail = node;
+		++count;
+		return *this;
+	}
+
 	constexpr SelfType& pushBack(ConstReferenceType value) {
 		ref<Node> const node = new Node{value};
 		if (head == nullptr)
