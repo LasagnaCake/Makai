@@ -1543,7 +1543,12 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 	context.fetchNext();
 	Context::Scope::Macro macro;
 	if (context.hasToken(LTS_TT_BIG_ARROW)) {
-		// TODO: The rest of the owl
+		while (!context.hasToken(Type{'{'})) {
+			auto const expr = doMacroExpression(context, macro);
+			if (expr.rule.variadic)
+				macro.vaexprs[expr.rule] = expr.transform;
+			else macro.exprs[expr.rule.base] = expr.transform;
+		}
 	} else if (context.hasToken(Type{'{'})) {
 		auto const expr = doMacroExpression(context, macro);
 		if (expr.rule.variadic)
