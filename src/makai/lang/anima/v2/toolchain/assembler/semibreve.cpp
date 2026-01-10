@@ -1409,7 +1409,19 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, MacroState& sta
 }
 
 static Context::Scope::Macro::Transformation doMacroTransformation(Context& context, MacroState& state)	{
-
+	Context::Scope::Macro::Result result;
+	Context::Scope::Macro::Transformation transform = [] (auto&) {return decltype(result){};};
+	if (!context.hasToken(Type{'{'}))
+		context.error("Expected '{' here!");
+	while (!context.hasToken(Type{'}'})) {
+		context.fetchNext();
+		if (context.hasToken(Type{'}'}))
+			break;
+		// TODO: This
+	}
+	if (!context.hasToken(Type{'}'}))
+		context.error("Expected '}' here!");
+	return transform;
 }
 
 static Context::Scope::Macro::Expression doMacroExpression(Context& context) {
