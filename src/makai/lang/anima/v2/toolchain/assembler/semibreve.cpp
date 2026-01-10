@@ -1307,19 +1307,10 @@ SEMIBREVE_ASSEMBLE_FN(TypeDefinition) {
 }
 
 SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
+
 }
 
-struct MacroState {
-	struct Variable {
-		Context::Tokenizer::TokenList tokens;
-		Context::Tokenizer::TokenList separator;
-		bool variadic = false;
-	};
-
-	Makai::Dictionary<Variable> variables;
-};
-
-static Context::Scope::Macro::Rule doMacroRule(Context& context, MacroState& state) {
+static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope::Macro& macro) {
 	Context::Scope::Macro::Rule rule;
 	if (!context.hasToken(Type{'('}))
 		context.error("Expected '(' here!");
@@ -1336,7 +1327,7 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, MacroState& sta
 				case Type{'('}: continue;
 				case LTS_TT_IDENTIFIER: {
 					auto const varID = context.getValue<Makai::String>();
-					auto& var = state.variables[varID];
+					auto& var = macro.variables[varID];
 					var.tokens.pushBack({LTS_TT_IDENTIFIER});
 				} continue;
 				case Type{'['}: {
@@ -1352,7 +1343,7 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, MacroState& sta
 								case Type{']'}: continue;
 								case LTS_TT_IDENTIFIER: {
 									auto const varID = context.getValue<Makai::String>();
-									auto& var = state.variables[varID];
+									auto& var = macro.variables[varID];
 									var.tokens.pushBack({LTS_TT_IDENTIFIER});
 									var.separator.appendBack(rule.separator.toList<Context::Tokenizer::Token>());
 									rule.expectant.pushBack({context.currentToken()});
@@ -1408,7 +1399,19 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, MacroState& sta
 	return rule;
 }
 
-static Context::Scope::Macro::Transformation doMacroTransformation(Context& context, MacroState& state)	{
+static Context::Scope::Macro::Transformation doMacroSingleExpansion(Context& context, Context::Scope::Macro& macro) {
+
+}
+
+static Context::Scope::Macro::Transformation doMacroVariadicExpansion(Context& context, Context::Scope::Macro& macro) {
+
+}
+
+static Context::Scope::Macro::Transformation doMacroVariableExpansion(Context& context, Context::Scope::Macro& macro) {
+
+}
+
+static Context::Scope::Macro::Transformation doMacroTransformation(Context& context, Context::Scope::Macro& macro) {
 	Context::Scope::Macro::Result result;
 	Context::Scope::Macro::Transformation transform = [] (auto&) {return decltype(result){};};
 	if (!context.hasToken(Type{'{'}))
@@ -1418,19 +1421,19 @@ static Context::Scope::Macro::Transformation doMacroTransformation(Context& cont
 		if (context.hasToken(Type{'}'}))
 			break;
 		// TODO: This
+
 	}
 	if (!context.hasToken(Type{'}'}))
 		context.error("Expected '}' here!");
 	return transform;
 }
 
-static Context::Scope::Macro::Expression doMacroExpression(Context& context) {
-	MacroState state;
+static Context::Scope::Macro::Expression doMacroExpression(Context& context, Context::Scope::Macro& macro) {
 	Context::Scope::Macro::Expression expr;
 	context.fetchNext();
 	if (!context.hasToken(Type{'('}))
 		context.error("Expected '(' here!");
-	expr.rule = doMacroRule(context, state);
+	expr.rule = doMacroRule(context, macro);
 	if (!context.hasToken(Type{')'}))
 		context.error("Expected ')' here!");
 	context.fetchNext();
@@ -1439,7 +1442,7 @@ static Context::Scope::Macro::Expression doMacroExpression(Context& context) {
 	context.fetchNext();
 	if (!context.hasToken(Type{'{'}))
 		context.error("Expected '{' here!");
-	expr.transform = doMacroTransformation(context, state);
+	expr.transform = doMacroTransformation(context, macro);
 	if (!context.hasToken(Type{'}'}))
 		context.error("Expected '}' here!");
 	context.fetchNext();
