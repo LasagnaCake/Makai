@@ -282,7 +282,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				};
 
 				StaticExpressions	exprs;
-				VariadicExpressions	variadics;
+				VariadicExpressions	vaexprs;
 
 				struct Entry {
 					Tokenizer::TokenList pre;
@@ -299,8 +299,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					Rule const rule = {args.toList<Axiom>()};
 					if (exprs.contains(rule.base))
 						return exprs[rule.base].apply(ctx).result(ctx);
-					else if (variadics.contains(rule))
-						return variadics[rule].apply(ctx).result(ctx);
+					else if (vaexprs.contains(rule))
+						return vaexprs[rule].apply(ctx).result(ctx);
 					else return null;
 				}
 			};
