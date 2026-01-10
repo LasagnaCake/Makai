@@ -1518,7 +1518,6 @@ static Context::Scope::Macro::Transformation doMacroTransformation(Context& cont
 
 static Context::Scope::Macro::Expression doMacroExpression(Context& context, Context::Scope::Macro& macro) {
 	Context::Scope::Macro::Expression expr;
-	context.fetchNext();
 	if (!context.hasToken(Type{'('}))
 		context.error("Expected '(' here!");
 	expr.rule = doMacroRule(context, macro);
@@ -1545,6 +1544,7 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 	context.fetchNext();
 	Makai::Instance<Context::Scope::Macro> macro = new Context::Scope::Macro();
 	if (context.hasToken(Type{'{'})) {
+		context.fetchNext();
 		while (!context.hasToken(Type{'}'})) {
 			auto const expr = doMacroExpression(context, *macro);
 			if (expr.rule.variadic)
@@ -1552,6 +1552,7 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 			else macro->exprs[expr.rule.base] = expr.transform;
 		}
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
+		context.fetchNext();
 		auto const expr = doMacroExpression(context, *macro);
 		if (expr.rule.variadic)
 			macro->vaexprs[expr.rule] = expr.transform;
