@@ -49,7 +49,8 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(MemberCall);
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction);
 
 static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self = "");
-static Solution doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self = "");
+
+static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self = "");
 
 static Solution doValueResolution(Context& context, bool idCanBeValue = false);
 
@@ -433,7 +434,8 @@ Context::Scope::Namespace& resolveNamespace(Context& context) {
 // TODO: Apply this solution to the rest of the assembler
 static Solution resolveSymbol(Context& context, Makai::String const& id, Makai::Instance<Context::Scope::Member> const& sym) {
 	if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_MACRO) {
-		return doMacroExpansion(context, sym);
+		doMacroExpansion(context, sym);
+		return doValueResolution(context);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
 		return doFunctionCall(context, sym);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
@@ -899,7 +901,7 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 	for (auto const& arg: args)
 		call += Makai::toString(index++, "=", arg.resolve()) + " ";
 	call += ")";
-	DEBUGLN("Overloads: [", sym.value["overloads"].get<Value::ObjectType>().keys().join("], ["), "]");
+	DEBUGLN("Overloads: [", sym->value["overloads"].get<Value::ObjectType>().keys().join("], ["), "]");
 	DEBUGLN("Looking for: [", legalName, "]");
 	if (!sym->value["overloads"].contains(legalName))
 		context.error<InvalidValue>("Function overload does not exist!");
@@ -1541,20 +1543,47 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 		context.error("Expected macro name here!");
 	auto const name = context.getValue<Makai::String>();
 	context.fetchNext();
-	Context::Scope::Macro macro;
+	Makai::Instance<Context::Scope::Macro> macro = new Context::Scope::Macro();
 	if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		while (!context.hasToken(Type{'{'})) {
-			auto const expr = doMacroExpression(context, macro);
+			auto const expr = doMacroExpression(context, *macro);
 			if (expr.rule.variadic)
-				macro.vaexprs[expr.rule] = expr.transform;
-			else macro.exprs[expr.rule.base] = expr.transform;
+				macro->vaexprs[expr.rule] = expr.transform;
+			else macro->exprs[expr.rule.base] = expr.transform;
 		}
 	} else if (context.hasToken(Type{'{'})) {
-		auto const expr = doMacroExpression(context, macro);
+		auto const expr = doMacroExpression(context, *macro);
 		if (expr.rule.variadic)
-			macro.vaexprs[expr.rule] = expr.transform;
-		else macro.exprs[expr.rule.base] = expr.transform;
+			macro->vaexprs[expr.rule] = expr.transform;
+		else macro->exprs[expr.rule.base] = expr.transform;
 	} else context.error("Expected '=>' or '{' here!");
+	context.macros[context.currentScope().addMacro(name)->id] = macro;
+}
+
+
+static void doMacroExpansion(
+	Context& context,
+	Makai::Instance<Context::Scope::Member> const& symbol,
+	Makai::String const& self
+) {
+	Context::Scope::Macro::Arguments args;
+	context.fetchNext();
+	if (!context.hasToken(Type{'('}))
+		context.error("Expected '(' here!");
+	while(!context.hasToken(Type{')'})) {
+		context.fetchNext();
+		if (context.hasToken(Type{')'})) break;
+		else if (context.hasToken(Type{'$'})) {
+			context.fetchNext();
+			args.pushBack(context.currentToken());
+		} else args.pushBack(context.currentToken());
+	}
+	if (!context.hasToken(Type{')'}))
+		context.error("Expected ')' here!");
+	auto macro = context.getMacro(symbol);
+	if (auto result = macro->resolve(args))
+		context.append.add(result.value());
+	else context.error<NonexistentValue>("Failed to expand macro!");
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {

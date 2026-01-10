@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), asm)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, minima breve)
+	$(call compile-all, minima semibreve breve)
 endef
 
 all: debug release

@@ -98,6 +98,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return;
 			}
 
+			constexpr Instance<Scope::Member> addMacro(String const& name) {
+				if (ns->members.contains(name)) return ns->members[name];
+				auto mem = addMember(name);
+				mem->type = Member::Type::AV2_TA_SMT_MACRO;
+				return mem;
+			}
+
 			constexpr Instance<Scope::Member> addTypeDefinition(String const& name, Nullable<Data::Value::Kind> const type = null) {
 				if (ns->members.contains(name)) return ns->members[name];
 				auto mem = addMember(name);
@@ -861,12 +868,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		struct Appendix {
-			List<Tokenizer::Token>	cache;
-
-			constexpr void add(Tokenizer::Token const& tok)	{cache.pushBack(tok);								}
-			constexpr bool hasTokens() const				{return ct < cache.size();							}
-			constexpr bool next()							{if (ct < cache.size()) return ++ct; return false;	}
-			constexpr Tokenizer::Token current() const		{return cache[ct-1];								}
+			Tokenizer::TokenList	cache;
+			
+			constexpr void add(Tokenizer::Token const& tok)			{cache.pushBack(tok);								}
+			constexpr void add(Tokenizer::TokenList const& toks)	{cache.appendBack(toks);							}
+			constexpr bool hasTokens() const						{return ct < cache.size();							}
+			constexpr bool next()									{if (ct < cache.size()) return ++ct; return false;	}
+			constexpr Tokenizer::Token current() const				{return cache[ct-1];								}
 		
 		private:
 			usize					ct = 0;
@@ -884,6 +892,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Random::SecureGenerator	rng;
 
 		List<Instance<Scope::Member>> functions;
+
+		Map<ID::VLUID, Instance<Scope::Macro>> macros;
+
+		constexpr Instance<Scope::Macro> getMacro(Instance<Scope::Member> const& macro) const {
+			if (!macros.contains(macro->id)) return nullptr;
+			return macros[macro->id];
+		}
 		
 		bool					hasMain		= false;
 		bool					isModule	= false;
