@@ -432,11 +432,6 @@ Context::Scope::Namespace& resolveNamespace(Context& context) {
 
 // TODO: Apply this solution to the rest of the assembler
 static Solution resolveSymbol(Context& context, Makai::String const& id, Makai::Instance<Context::Scope::Member> const& sym) {
-	// TODO: Add value resolution to account for symbol
-	// TODO: Ensure symbol reference does not get borked
-		// NOTE: Might be moot point since namespace data is stored as shared pointer,
-		// and members only exist in namespaces
-		// And these functions do not directly modify the namespace
 	if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_MACRO) {
 		return doMacroExpansion(context, sym);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
@@ -1494,7 +1489,6 @@ static Context::Scope::Macro::Transformation doMacroTransformation(Context& cont
 		if (context.hasToken(Type{'}'}))
 			break;
 		if (context.hasToken(Type{'$'})) {
-			// TODO: The rest of the owl
 			transform.actions.pushBack(macroAppend(result));
 			result.clear();
 			context.fetchNext();
@@ -1549,7 +1543,7 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 	context.fetchNext();
 	Context::Scope::Macro macro;
 	if (context.hasToken(LTS_TT_BIG_ARROW)) {
-
+		// TODO: The rest of the owl
 	} else if (context.hasToken(Type{'{'})) {
 		auto const expr = doMacroExpression(context, macro);
 		if (expr.rule.variadic)
