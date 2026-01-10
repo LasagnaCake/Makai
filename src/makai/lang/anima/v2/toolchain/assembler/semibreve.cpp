@@ -1328,7 +1328,8 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 				case LTS_TT_IDENTIFIER: {
 					auto const varID = context.getValue<Makai::String>();
 					auto& var = macro.variables[varID];
-					var.tokens.pushBack({LTS_TT_IDENTIFIER});
+					var = new Context::Scope::Macro::Entry();
+					var->main.pushBack({LTS_TT_IDENTIFIER});
 				} continue;
 				case Type{'['}: {
 					rule.base.popBack();
@@ -1344,8 +1345,9 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 								case LTS_TT_IDENTIFIER: {
 									auto const varID = context.getValue<Makai::String>();
 									auto& var = macro.variables[varID];
-									var.tokens.pushBack({LTS_TT_IDENTIFIER});
-									var.separator.appendBack(rule.separator.toList<Context::Tokenizer::Token>());
+									var = new Context::Scope::Macro::Entry();
+									var->main.pushBack({LTS_TT_IDENTIFIER});
+									var->pre.appendBack(rule.separator.toList<Context::Tokenizer::Token>());
 									rule.expectant.pushBack({context.currentToken()});
 									context.fetchNext();
 									if (!context.hasToken(Type{']'}))
@@ -1399,32 +1401,114 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 	return rule;
 }
 
-static Context::Scope::Macro::Transformation doMacroSingleExpansion(Context& context, Context::Scope::Macro& macro) {
-
+static Context::Scope::Macro::Transformation::Action macroAppend(Context::Scope::Macro::Result const& init) {
+	return [init] (auto& ctx) {ctx.result.appendBack(init);};
 }
 
-static Context::Scope::Macro::Transformation doMacroVariadicExpansion(Context& context, Context::Scope::Macro& macro) {
-
+static void doMacroSingleExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
+	auto const id = context.getValue<Makai::String>();
+	auto& var = macro.variables[id];
+	transform.actions.pushBack(
+		[var] (auto& ctx) {
+			ctx.consume(var->pre.toList<Context::Scope::Macro::Axiom>());
+			ctx.result.appendBack(ctx.consume(var->main.toList<Context::Scope::Macro::Axiom>()));
+			ctx.consume(var->post.toList<Context::Scope::Macro::Axiom>());
+		}
+	);
 }
 
-static Context::Scope::Macro::Transformation doMacroVariableExpansion(Context& context, Context::Scope::Macro& macro) {
+static void doMacroStandardVariadicExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
+	auto const id = context.getValue<Makai::String>();
+	auto& var = macro.variables[id];
+	transform.actions.pushBack(
+		[var] (auto& ctx) {
+			while (ctx.args.size()) {
+				if (ctx.vaCount++)
+					ctx.result.appendBack(ctx.consume(var->pre.toList<Context::Scope::Macro::Axiom>()));
+				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Scope::Macro::Axiom>()));
+				ctx.result.appendBack(ctx.consume(var->post.toList<Context::Scope::Macro::Axiom>()));
+			}
+		}
+	);
+}
 
+static void doMacroSpecialVariadicExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
+	Context::Scope::Macro::Result result;
+	context.fetchNext();
+	while (!context.hasToken(Type{'$'})) {
+		if (context.hasToken(Type{'$'})) {
+			context.fetchNext();
+			switch (context.currentToken().type) {
+				case Type{'$'}:
+				case Type{'['}:
+				case Type{']'}: result.pushBack(context.currentToken()); context.fetchNext(); continue;
+				case LTS_TT_IDENTIFIER: break;
+			}
+			break;
+		} else if (context.hasToken(Type{']'}))
+			context.error("Invalid variadic expansion (missing variable)!");
+		else result.pushBack(context.currentToken());
+		context.fetchNext();
+	}
+	auto const id = context.getValue<Makai::String>();
+	auto& var = macro.variables[id];
+	transform.actions.pushBack(
+		[var, appendix = result] (auto& ctx) {
+			while (ctx.args.size()) {
+				if (ctx.vaCount++)
+					ctx.result.appendBack(appendix);
+				ctx.consume(var->pre.toList<Context::Scope::Macro::Axiom>());
+				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Scope::Macro::Axiom>()));
+				ctx.consume(var->post.toList<Context::Scope::Macro::Axiom>());
+			}
+		}
+	);
+	context.fetchNext();
+	if (!context.hasToken(Type{']'}))
+		context.error("Expected ']' here!");
+}
+
+static void doMacroVariableExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
+	auto const id = context.getValue<Makai::String>();
+	if (!macro.variables.contains(id))
+		context.error("Macro variable does not exist!");
+	auto& var = macro.variables[id];
+	if (var->variadic)
+		doMacroStandardVariadicExpansion(context, macro, transform);
+	else doMacroSingleExpansion(context, macro, transform);
 }
 
 static Context::Scope::Macro::Transformation doMacroTransformation(Context& context, Context::Scope::Macro& macro) {
 	Context::Scope::Macro::Result result;
-	Context::Scope::Macro::Transformation transform = [] (auto&) {return decltype(result){};};
+	Context::Scope::Macro::Transformation transform;
 	if (!context.hasToken(Type{'{'}))
 		context.error("Expected '{' here!");
 	while (!context.hasToken(Type{'}'})) {
 		context.fetchNext();
 		if (context.hasToken(Type{'}'}))
 			break;
-		// TODO: This
-
+		if (context.hasToken(Type{'$'})) {
+			// TODO: The rest of the owl
+			transform.actions.pushBack(macroAppend(result));
+			result.clear();
+			context.fetchNext();
+			switch (context.currentToken().type) {
+				case Type{'$'}:
+				case Type{'{'}:
+				case Type{'}'}: result.pushBack(context.currentToken()); break;
+				case LTS_TT_IDENTIFIER: {
+					doMacroVariableExpansion(context, macro, transform);
+				} break;
+				case Type{'['}: {
+					doMacroSpecialVariadicExpansion(context, macro, transform);
+				} break;
+			}
+		}
+		result.pushBack(context.currentToken());
 	}
 	if (!context.hasToken(Type{'}'}))
 		context.error("Expected '}' here!");
+	transform.actions.pushBack(macroAppend(result));
 	return transform;
 }
 
