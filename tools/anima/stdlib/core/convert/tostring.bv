@@ -3,11 +3,11 @@ namespace Convert {
 		macro toString: string => {($value)} => {(($value as string) if ($value is int) else in stringify $value)}
 	}
 
-	macro toString: string {
+	macro toString {
 		{()}					=> {""																			}
 		{($value)}				=> {core.Convert.Impl.toString($value)											}
 		{($first, $[...]rest)}	=> {(core.Convert.Impl.toString($first) + core.Convert.toString($[..., rest]))	}
 	}
 }
 
-macro toString: string => ($[...]values) => {core.Convert.toString($[..., values])}
+macro toString => ($[...]values) => {core.Convert.toString($[..., values])}

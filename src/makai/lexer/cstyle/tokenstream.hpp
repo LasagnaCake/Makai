@@ -90,6 +90,8 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_BIT_SHIFT_LEFT_ASSIGN,
 				/// @brief Bitwise shift right assignment (`>>=`).
 				LTS_TT_BIT_SHIFT_RIGHT_ASSIGN,
+				/// @brief Maximum token types.
+				LTS_TT_MAX_TOKEN_TYPES,
 			};
 
 			/// @brief Token type.
