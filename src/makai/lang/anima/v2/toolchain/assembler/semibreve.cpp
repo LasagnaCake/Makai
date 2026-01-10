@@ -1236,7 +1236,7 @@ SEMIBREVE_ASSEMBLE_FN(Namespace) {
 	}
 	if (context.currentToken().type != Type {'{'})
 		context.error<NonexistentValue>("Expected '{' here!");
-	doExpression(context);
+	doScope(context);
 	if (context.currentToken().type != Type {'}'})
 		context.fetchNext();
 	if (context.currentToken().type != Type {'}'})
