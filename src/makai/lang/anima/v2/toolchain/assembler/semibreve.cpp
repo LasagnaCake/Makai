@@ -1556,6 +1556,8 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 		if (expr.rule.variadic)
 			macro->vaexprs[expr.rule] = expr.transform;
 		else macro->exprs[expr.rule.base] = expr.transform;
+		if (!context.hasToken(Type{';'}))
+			context.error("Expected ';' here!");
 	} else context.error("Expected '=>' or '{' here!");
 	context.macros[context.currentScope().addMacro(name)->id] = macro;
 }
