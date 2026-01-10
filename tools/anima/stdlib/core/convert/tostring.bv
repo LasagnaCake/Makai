@@ -9,5 +9,3 @@ namespace Convert {
 		{($first, $[...]rest)}	=> {(core.Convert.Impl.toString($first) + core.Convert.toString($[..., rest]))	}
 	}
 }
-
-macro toString => ($[...]values) => {core.Convert.toString($[..., values])}
