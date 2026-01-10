@@ -172,21 +172,20 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						if (type == other.type) return true;
 						return value == other.value;
 					}
+
+					constexpr Ordered::OrderType operator<=>(Tokenizer::Token const& other) const {
+						return operator<=>(Axiom{other});
+					}
+
+					constexpr bool operator==(Tokenizer::Token const& other) const {
+						return operator==(Axiom{other});
+					}
 				};
 
 				using StaticRule	= List<Axiom>;
 				using Stack			= Tokenizer::TokenList;
 				using Arguments		= Tokenizer::TokenList;
 				using Result		= Tokenizer::TokenList;
-
-				struct Context {
-					Arguments	args;
-					Stack		stack;
-				};
-				
-				using Transformation	= Function<Result(Context&)>;
-
-				using StaticExpressions	= Map<StaticRule, Transformation>;
 
 				struct Rule {
 					StaticRule	base;
@@ -205,11 +204,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						if (other.size() < base.size()) return Ordered::Order::GREATER;
 						usize previous = count;
 						while (true) {
+							previous = count;
 							count = (previous + separator.size()) < other.size() ? (previous + separator.size()) : other.size();
 							for (usize i = 0; i < (count-previous); ++i) {
 							if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
 								return order;
 							}
+							previous = count;
 							count = (previous + expectant.size()) < other.size() ? (previous + expectant.size()) : other.size();
 							for (usize i = 0; i < (count-previous); ++i) {
 							if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
@@ -229,8 +230,33 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						if (order != Ordered::Order::EQUAL) return order;
 						return expectant <=> other.expectant;
 					}
+
+					template <class T>
+					constexpr bool operator==(T const& other) const {
+						return (*this <=> other) == Ordered::Order::EQUAL;
+					}
 				};
 
+				struct Context {
+					Arguments	args;
+					Stack		stack;
+				
+					Arguments consume(StaticRule const& rule) {
+						usize count = rule.size() < args.size() ? rule.size() : args.size();
+						Arguments result;
+						usize i = 0;
+						for (; i < count; ++i) {
+							if (rule[i] != args[i]) break;
+							result.pushBack(rule[i]);
+						}
+						args.removeRange(0, i);
+						return result;
+					}
+				};
+				
+				using Transformation	= Function<Result(Context&)>;
+
+				using StaticExpressions		= Map<StaticRule, Transformation>;
 				using VariadicExpressions	= Map<Rule, Transformation>;
 
 				struct Expression {
@@ -240,6 +266,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 				StaticExpressions	exprs;
 				VariadicExpressions	variadics;
+
+				struct Variable {
+					Tokenizer::TokenList tokens;
+					Tokenizer::TokenList separator;
+					bool variadic = false;
+				};
+
+				Makai::Dictionary<Variable> variables;
 
 				Nullable<Result> resolve(Arguments const& args) {
 					Context ctx{.args = args};
