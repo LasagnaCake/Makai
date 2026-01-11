@@ -1583,6 +1583,7 @@ static void doMacroExpansion(
 	if (!context.hasToken(Type{')'}))
 		context.error("Expected ')' here!");
 	auto macro = context.getMacro(symbol);
+	if (!macro) context.error<NonexistentValue>("Macro does not exist!");
 	if (auto result = macro->resolve(args))
 		context.append.add(result.value());
 	else context.error<NonexistentValue>("Failed to expand macro!");
