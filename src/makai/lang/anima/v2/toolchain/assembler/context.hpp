@@ -643,7 +643,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		constexpr static bool isCastable(Instance<Scope::Member> const type) {
 			if (!type) return false;
 			if (isBasicType(type)) {
-				auto const t = Cast::as<Data::Value::Kind>(type->base->value["type"].get<int64>());
+				auto const t = Cast::as<Data::Value::Kind>(type->value["type"].get<int64>());
 				return Data::Value::isScalar(t) || Data::Value::isString(t) || t == DVK_ANY;
 			}
 			return false;

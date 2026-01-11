@@ -705,7 +705,7 @@ void doVarAssign(
 		context.error<InvalidValue>("Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
 	if (result.type != type) {
-		if (context.isCastable(result.type))
+		if (!(context.isCastable(result.type) && context.isCastable(type)))
 			context.error<InvalidValue>("Invalid expression type for assignment!");
 		context.writeAdaptive("cast", result.resolve(), ":", toTypeName(type), "-> .");
 		result.resolver = context.resolveTo(".");
