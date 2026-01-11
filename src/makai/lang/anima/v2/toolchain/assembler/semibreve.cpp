@@ -1147,26 +1147,29 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 struct ModuleResolution {
 	Makai::String path;
 	Makai::String fullName;
+	Makai::String sourceName;
 	Makai::String head;
 };
 
 ModuleResolution resolveModuleName(Context& context) {
-	Makai::String path		= "";
-	Makai::String fullName	= "";
-	Makai::String head		= "";
+	Makai::String path			= "";
+	Makai::String fullName		= "";
+	Makai::String sourceName	= "";
+	Makai::String head			= "";
 	while (true) {
 		context.fetchNext();
 		if (context.currentToken().type != LTS_TT_IDENTIFIER)
 			context.error<InvalidValue>("Expected module name here!");
 		auto const node = context.currentToken().value.get<Makai::String>();
-		path += "/" + node;
-		fullName += "_" + node;
+		path		+= "/" + node;
+		fullName	+= "_" + node;
+		sourceName	+= "." + node;
 		if (head.empty())
 			head = node;
 		context.fetchNext();
 		if (context.currentToken().type != Type{'.'}) break;
 	}
-	return {path, fullName, head};
+	return {path, fullName, sourceName, head};
 }
 
 SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
@@ -1174,6 +1177,8 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 		context.error<InvalidValue>("Module imports/exports can only be declared in the global scope!");
 	Context submodule;
 	ModuleResolution mod = resolveModuleName(context);
+	if (context.hasModule(mod.sourceName)) return;
+	context.registerModule(mod.sourceName);
 	submodule.fileName		= mod.path;
 	submodule.isModule		= true;
 	submodule.sourcePaths	= context.sourcePaths;
@@ -1306,8 +1311,8 @@ SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 
 }
 
-static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope::Macro& macro) {
-	Context::Scope::Macro::Rule rule;
+static Context::Macro::Rule doMacroRule(Context& context, Context::Macro& macro) {
+	Context::Macro::Rule rule;
 	if (!context.hasToken(Type{'('}))
 		context.error("Expected '(' here!");
 	usize start = 0;
@@ -1325,7 +1330,7 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 				case LTS_TT_IDENTIFIER: {
 					auto const varID = context.getValue<Makai::String>();
 					auto& var = macro.variables[varID];
-					var = new Context::Scope::Macro::Entry();
+					var = new Context::Macro::Entry();
 					var->pre.appendBack(rule.base.toList<Context::Tokenizer::Token>().sliced(start));
 					var->main.pushBack({LTS_TT_IDENTIFIER});
 					start = rule.base.size();
@@ -1344,7 +1349,7 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 								case LTS_TT_IDENTIFIER: {
 									auto const varID = context.getValue<Makai::String>();
 									auto& var = macro.variables[varID];
-									var = new Context::Scope::Macro::Entry();
+									var = new Context::Macro::Entry();
 									var->main.pushBack({LTS_TT_IDENTIFIER});
 									var->pre.appendBack(rule.separator.toList<Context::Tokenizer::Token>());
 									rule.expectant.pushBack({context.currentToken()});
@@ -1400,39 +1405,39 @@ static Context::Scope::Macro::Rule doMacroRule(Context& context, Context::Scope:
 	return rule;
 }
 
-static Context::Scope::Macro::Transformation::Action macroAppend(Context::Scope::Macro::Result const& init) {
+static Context::Macro::Transformation::Action macroAppend(Context::Macro::Result const& init) {
 	return [init] (auto& ctx) {ctx.result.appendBack(init);};
 }
 
-static void doMacroSingleExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
+static void doMacroSingleExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
 	auto const id = context.getValue<Makai::String>();
 	auto& var = macro.variables[id];
 	transform.actions.pushBack(
 		[var] (auto& ctx) {
-			ctx.consume(var->pre.toList<Context::Scope::Macro::Axiom>());
-			ctx.result.appendBack(ctx.consume(var->main.toList<Context::Scope::Macro::Axiom>()));
-			ctx.consume(var->post.toList<Context::Scope::Macro::Axiom>());
+			ctx.consume(var->pre.toList<Context::Macro::Axiom>());
+			ctx.result.appendBack(ctx.consume(var->main.toList<Context::Macro::Axiom>()));
+			ctx.consume(var->post.toList<Context::Macro::Axiom>());
 		}
 	);
 }
 
-static void doMacroStandardVariadicExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
+static void doMacroStandardVariadicExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
 	auto const id = context.getValue<Makai::String>();
 	auto& var = macro.variables[id];
 	transform.actions.pushBack(
 		[var] (auto& ctx) {
 			while (ctx.args.size()) {
 				if (ctx.vaCount++)
-					ctx.result.appendBack(ctx.consume(var->pre.toList<Context::Scope::Macro::Axiom>()));
-				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Scope::Macro::Axiom>()));
-				ctx.result.appendBack(ctx.consume(var->post.toList<Context::Scope::Macro::Axiom>()));
+					ctx.result.appendBack(ctx.consume(var->pre.toList<Context::Macro::Axiom>()));
+				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Macro::Axiom>()));
+				ctx.result.appendBack(ctx.consume(var->post.toList<Context::Macro::Axiom>()));
 			}
 		}
 	);
 }
 
-static void doMacroSpecialVariadicExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
-	Context::Scope::Macro::Result result;
+static void doMacroSpecialVariadicExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
+	Context::Macro::Result result;
 	context.fetchNext();
 	while (!context.hasToken(Type{'$'})) {
 		if (context.hasToken(Type{'$'})) {
@@ -1459,9 +1464,9 @@ static void doMacroSpecialVariadicExpansion(Context& context, Context::Scope::Ma
 			while (ctx.args.size()) {
 				if (ctx.vaCount++)
 					ctx.result.appendBack(appendix);
-				ctx.consume(var->pre.toList<Context::Scope::Macro::Axiom>());
-				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Scope::Macro::Axiom>()));
-				ctx.consume(var->post.toList<Context::Scope::Macro::Axiom>());
+				ctx.consume(var->pre.toList<Context::Macro::Axiom>());
+				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Macro::Axiom>()));
+				ctx.consume(var->post.toList<Context::Macro::Axiom>());
 			}
 		}
 	);
@@ -1470,7 +1475,7 @@ static void doMacroSpecialVariadicExpansion(Context& context, Context::Scope::Ma
 		context.error("Expected ']' here!");
 }
 
-static void doMacroVariableExpansion(Context& context, Context::Scope::Macro& macro, Context::Scope::Macro::Transformation& transform) {
+static void doMacroVariableExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
 	auto const id = context.getValue<Makai::String>();
 	if (!macro.variables.contains(id))
 		context.error("Macro variable does not exist!");
@@ -1480,9 +1485,9 @@ static void doMacroVariableExpansion(Context& context, Context::Scope::Macro& ma
 	else doMacroSingleExpansion(context, macro, transform);
 }
 
-static Context::Scope::Macro::Transformation doMacroTransformation(Context& context, Context::Scope::Macro& macro) {
-	Context::Scope::Macro::Result result;
-	Context::Scope::Macro::Transformation transform;
+static Context::Macro::Transformation doMacroTransformation(Context& context, Context::Macro& macro) {
+	Context::Macro::Result result;
+	Context::Macro::Transformation transform;
 	if (!context.hasToken(Type{'{'}))
 		context.error("Expected '{' here!");
 	while (!context.hasToken(Type{'}'})) {
@@ -1515,8 +1520,8 @@ static Context::Scope::Macro::Transformation doMacroTransformation(Context& cont
 	return transform;
 }
 
-static Context::Scope::Macro::Expression doMacroExpression(Context& context, Context::Scope::Macro& macro) {
-	Context::Scope::Macro::Expression expr;
+static Context::Macro::Expression doMacroExpression(Context& context, Context::Macro& macro) {
+	Context::Macro::Expression expr;
 	if (!context.hasToken(Type{'('}))
 		context.error("Expected '(' here!");
 	expr.rule = doMacroRule(context, macro);
@@ -1541,7 +1546,7 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 		context.error("Expected macro name here!");
 	auto const name = context.getValue<Makai::String>();
 	context.fetchNext();
-	Makai::Instance<Context::Scope::Macro> macro = new Context::Scope::Macro();
+	Makai::Instance<Context::Macro> macro = new Context::Macro();
 	if (context.hasToken(Type{'{'})) {
 		context.fetchNext();
 		while (!context.hasToken(Type{'}'})) {
@@ -1559,7 +1564,10 @@ SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
 		if (!context.hasToken(Type{';'}))
 			context.error("Expected ';' here!");
 	} else context.error("Expected '=>' or '{' here!");
-	context.macros[context.currentScope().addMacro(name)->id] = macro;
+	auto const symac = context.currentScope().addMacro(name);
+	symac->macro = macro;
+	auto const macroID = symac->value["id"].get<Makai::String>();
+	context.macros[macroID] = macro;
 }
 
 
@@ -1568,7 +1576,7 @@ static void doMacroExpansion(
 	Makai::Instance<Context::Scope::Member> const& symbol,
 	Makai::String const& self
 ) {
-	Context::Scope::Macro::Arguments args;
+	Context::Macro::Arguments args;
 	context.fetchNext();
 	if (!context.hasToken(Type{'('}))
 		context.error("Expected '(' here!");

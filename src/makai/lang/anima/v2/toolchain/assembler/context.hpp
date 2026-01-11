@@ -10,6 +10,155 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		using Tokenizer	= Lexer::CStyle::TokenStream;
 		using Program	= Runtime::Program;
 
+		struct Macro {
+			struct Axiom: Tokenizer::Token {
+				bool strict = false;
+
+				constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
+					if (!strict) return type <=> other.type;
+					Ordered::OrderType order = type <=> other.type;
+					if (order == Ordered::Order::EQUAL) return value <=> other.value;
+					else return order;
+				}
+
+				constexpr bool operator==(Axiom const& other) const {
+					if (!strict) return type == other.type;
+					if (type == other.type) return true;
+					return value == other.value;
+				}
+
+				constexpr Ordered::OrderType operator<=>(Tokenizer::Token const& other) const {
+					return operator<=>(Axiom{other});
+				}
+
+				constexpr bool operator==(Tokenizer::Token const& other) const {
+					return operator==(Axiom{other});
+				}
+			};
+
+			using StaticRule	= List<Axiom>;
+			using Stack			= Tokenizer::TokenList;
+			using Arguments		= Tokenizer::TokenList;
+			using Result		= Tokenizer::TokenList;
+
+			struct Rule {
+				StaticRule	base;
+				StaticRule	separator;
+				StaticRule	expectant;
+				bool		variadic	= false;
+
+				constexpr Ordered::OrderType operator<=>(StaticRule const& other) const {
+					if (!variadic) return base <=> other;
+					Ordered::OrderType order = Ordered::Order::EQUAL;
+					usize count = base.size() < other.size() ? base.size() : other.size();
+					for (usize i = 0; i < count; ++i) {
+						if ((order = base[i] <=> other[i]) != Ordered::Order::EQUAL)
+							return order;
+					}
+					if (other.size() < base.size()) return Ordered::Order::GREATER;
+					usize previous = count;
+					while (true) {
+						previous = count;
+						count = (previous + separator.size()) < other.size() ? (previous + separator.size()) : other.size();
+						for (usize i = 0; i < (count-previous); ++i) {
+						if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
+							return order;
+						}
+						previous = count;
+						count = (previous + expectant.size()) < other.size() ? (previous + expectant.size()) : other.size();
+						for (usize i = 0; i < (count-previous); ++i) {
+						if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
+							return order;
+						}
+						if (count == other.size())
+							return order;
+					}
+					return order;
+				}
+
+				constexpr Ordered::OrderType operator<=>(Rule const& other) const {
+					if (!other.variadic) return operator<=>(other.base);
+					Ordered::OrderType order = base <=> other.base;
+					if (order != Ordered::Order::EQUAL) return order;
+					order = separator <=> other.separator;
+					if (order != Ordered::Order::EQUAL) return order;
+					return expectant <=> other.expectant;
+				}
+
+				template <class T>
+				constexpr bool operator==(T const& other) const {
+					return (*this <=> other) == Ordered::Order::EQUAL;
+				}
+			};
+
+			struct Context {
+				Arguments	args;
+				Stack		stack;
+				Result		result;
+				usize		vaCount = 0;
+			
+				Arguments consume(StaticRule const& rule) {
+					if (rule.empty() || args.empty()) return {};
+					usize count = rule.size() < args.size() ? rule.size() : args.size();
+					Arguments result;
+					usize i = 0;
+					for (; i < count; ++i) {
+						if (rule[i] != args[i]) break;
+						result.pushBack(rule[i]);
+					}
+					args.removeRange(0, i);
+					return result;
+				}
+			};
+
+			struct Transformation {
+				using Action = Function<void(Context&)>;
+				
+				List<Action> actions;
+
+				constexpr Transformation& apply(Context& ctx) {
+					for (auto& action: actions)
+						action(ctx);
+					return *this;
+				}
+
+				constexpr Result result(Context& ctx) const {
+					return ctx.result;
+				}
+			};
+
+			using StaticExpressions		= Map<StaticRule, Transformation>;
+			using VariadicExpressions	= Map<Rule, Transformation>;
+
+			struct Expression {
+				Rule			rule;
+				Transformation	transform;
+			};
+
+			StaticExpressions	exprs;
+			VariadicExpressions	vaexprs;
+
+			struct Entry {
+				Tokenizer::TokenList pre;
+				Tokenizer::TokenList main;
+				Tokenizer::TokenList post;
+				bool variadic = false;
+			};
+
+			Makai::Dictionary<Instance<Entry>>	variables;
+			List<Instance<Entry>>				entries;
+
+			Nullable<Result> resolve(Arguments const& args) {
+				Context ctx{.args = args};
+				Rule const rule = {args.toList<Axiom>()};
+				if (exprs.contains(rule.base))
+					return exprs[rule.base].apply(ctx).result(ctx);
+				else if (vaexprs.contains(rule))
+					return vaexprs[rule].apply(ctx).result(ctx);
+				else return null;
+			}
+		};
+
 		struct Scope {
 			enum class Type {
 				AV2_TA_ST_NORMAL,
@@ -47,6 +196,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				ID::VLUID			id		= all++;
 
 				Instance<Namespace> ns;
+				Instance<Macro>		macro;
 
 				constexpr bool declared() const {return decl != Declaration::AV2_TA_SMD_UNDECLARED;}
 
@@ -102,6 +252,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				if (ns->members.contains(name)) return ns->members[name];
 				auto mem = addMember(name);
 				mem->type = Member::Type::AV2_TA_SMT_MACRO;
+				mem->value["id"] = toString("ID_", mem->id[0], "i", mem->id[1], "i", mem->id[2], "i", mem->id[3]);
 				return mem;
 			}
 
@@ -164,155 +315,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 				constexpr Makai::String resolveSource() const {
 					return source.invoke();
-				}
-			};
-
-			struct Macro {
-				struct Axiom: Tokenizer::Token {
-					bool strict = false;
-
-					constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
-						if (!strict) return type <=> other.type;
-						Ordered::OrderType order = type <=> other.type;
-						if (order == Ordered::Order::EQUAL) return value <=> other.value;
-						else return order;
-					}
-
-					constexpr bool operator==(Axiom const& other) const {
-						if (!strict) return type == other.type;
-						if (type == other.type) return true;
-						return value == other.value;
-					}
-
-					constexpr Ordered::OrderType operator<=>(Tokenizer::Token const& other) const {
-						return operator<=>(Axiom{other});
-					}
-
-					constexpr bool operator==(Tokenizer::Token const& other) const {
-						return operator==(Axiom{other});
-					}
-				};
-
-				using StaticRule	= List<Axiom>;
-				using Stack			= Tokenizer::TokenList;
-				using Arguments		= Tokenizer::TokenList;
-				using Result		= Tokenizer::TokenList;
-
-				struct Rule {
-					StaticRule	base;
-					StaticRule	separator;
-					StaticRule	expectant;
-					bool		variadic	= false;
-
-					constexpr Ordered::OrderType operator<=>(StaticRule const& other) const {
-						if (!variadic) return base <=> other;
-						Ordered::OrderType order = Ordered::Order::EQUAL;
-						usize count = base.size() < other.size() ? base.size() : other.size();
-						for (usize i = 0; i < count; ++i) {
-							if ((order = base[i] <=> other[i]) != Ordered::Order::EQUAL)
-								return order;
-						}
-						if (other.size() < base.size()) return Ordered::Order::GREATER;
-						usize previous = count;
-						while (true) {
-							previous = count;
-							count = (previous + separator.size()) < other.size() ? (previous + separator.size()) : other.size();
-							for (usize i = 0; i < (count-previous); ++i) {
-							if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
-								return order;
-							}
-							previous = count;
-							count = (previous + expectant.size()) < other.size() ? (previous + expectant.size()) : other.size();
-							for (usize i = 0; i < (count-previous); ++i) {
-							if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
-								return order;
-							}
-							if (count == other.size())
-								return order;
-						}
-						return order;
-					}
-
-					constexpr Ordered::OrderType operator<=>(Rule const& other) const {
-						if (!other.variadic) return operator<=>(other.base);
-						Ordered::OrderType order = base <=> other.base;
-						if (order != Ordered::Order::EQUAL) return order;
-						order = separator <=> other.separator;
-						if (order != Ordered::Order::EQUAL) return order;
-						return expectant <=> other.expectant;
-					}
-
-					template <class T>
-					constexpr bool operator==(T const& other) const {
-						return (*this <=> other) == Ordered::Order::EQUAL;
-					}
-				};
-
-				struct Context {
-					Arguments	args;
-					Stack		stack;
-					Result		result;
-					usize		vaCount = 0;
-				
-					Arguments consume(StaticRule const& rule) {
-						if (rule.empty() || args.empty()) return {};
-						usize count = rule.size() < args.size() ? rule.size() : args.size();
-						Arguments result;
-						usize i = 0;
-						for (; i < count; ++i) {
-							if (rule[i] != args[i]) break;
-							result.pushBack(rule[i]);
-						}
-						args.removeRange(0, i);
-						return result;
-					}
-				};
-
-				struct Transformation {
-					using Action = Function<void(Context&)>;
-					
-					List<Action> actions;
-
-					constexpr Transformation& apply(Context& ctx) {
-						for (auto& action: actions)
-							action(ctx);
-						return *this;
-					}
-
-					constexpr Result result(Context& ctx) const {
-						return ctx.result;
-					}
-				};
-
-				using StaticExpressions		= Map<StaticRule, Transformation>;
-				using VariadicExpressions	= Map<Rule, Transformation>;
-
-				struct Expression {
-					Rule			rule;
-					Transformation	transform;
-				};
-
-				StaticExpressions	exprs;
-				VariadicExpressions	vaexprs;
-
-				struct Entry {
-					Tokenizer::TokenList pre;
-					Tokenizer::TokenList main;
-					Tokenizer::TokenList post;
-					bool variadic = false;
-				};
-
-				Makai::Dictionary<Instance<Entry>>	variables;
-				List<Instance<Entry>>				entries;
-
-				Nullable<Result> resolve(Arguments const& args) {
-					Context ctx{.args = args};
-					Rule const rule = {args.toList<Axiom>()};
-					if (exprs.contains(rule.base))
-						return exprs[rule.base].apply(ctx).result(ctx);
-					else if (vaexprs.contains(rule))
-						return vaexprs[rule].apply(ctx).result(ctx);
-					else return null;
 				}
 			};
 			
@@ -735,6 +737,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return currentToken().type == type;
 		}
 
+		constexpr bool hasModule(String const& fullName) {
+			return modules.contains(fullName);
+		}
+
+		constexpr void registerModule(String const& fullName) {
+			modules[fullName] = true;	
+		}
+
 		Tokenizer::Token currentToken() const {
 			if (append.hasTokens())
 				return append.current();
@@ -897,13 +907,18 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		String					fileName;
 		Random::SecureGenerator	rng;
 
+		Dictionary<bool>		modules;
+
 		List<Instance<Scope::Member>> functions;
 
-		Map<ID::VLUID, Instance<Scope::Macro>> macros;
+		Dictionary<Instance<Macro>> macros;
 
-		constexpr Instance<Scope::Macro> getMacro(Instance<Scope::Member> const& macro) const {
-			if (!macros.contains(macro->id)) return nullptr;
-			return macros[macro->id];
+		constexpr Instance<Macro> getMacro(Instance<Scope::Member> const& macro) const {
+			if (macro->type != Scope::Member::Type::AV2_TA_SMT_MACRO) return nullptr;
+			if (macro->macro) return macro->macro;
+			auto const macroID = macro->value["id"].get<Makai::String>();
+			if (!macros.contains(macroID)) return nullptr;
+			return macros[macroID];
 		}
 		
 		bool					hasMain		= false;
