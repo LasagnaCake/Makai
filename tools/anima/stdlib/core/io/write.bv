@@ -2,16 +2,16 @@
 
 namespace IO {
 	namespace Impl {
-		func write(content: string): void {
-			in print content;
+		func write(what: string): void {
+			in print what;
 		}
 
-		func writeLine(content: string): void {
-			in print content;
+		func writeLine(what: string): void {
+			in print what;
 			in print "\n";
 		}
 	}
 	
-	macro write		=> {($content:*{, $content:expr})}	=> {core.IO.Impl.write(core.Convert.toString($content:{, $content}))		};
-	macro writeLine	=> {($content:*{, $contenst:expr})}	=> {core.IO.Impl.writeLine(core.Convert.toString($content:{, $content}))	};
+	macro write		=> {($what:*{, $what:expr})}	=> {core.IO.Impl.write(core.Convert.toString($:*content{,}))		};
+	macro writeLine	=> {($what:*{, $what:expr})}	=> {core.IO.Impl.writeLine(core.Convert.toString($:*content{,}))	};
 }
