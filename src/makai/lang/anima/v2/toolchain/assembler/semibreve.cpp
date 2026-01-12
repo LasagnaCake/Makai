@@ -1332,7 +1332,7 @@ static void doMacroVariableExpansion(Context& context, Context::Macro& macro, Co
 static Context::Macro::Transformation doMacroTransformation(Context& context, Context::Macro& macro) {
 }
 
-static Context::Macro::Expression doMacroExpression(Context& context, Context::Macro& macro) {
+static void doMacroExpression(Context& context, Context::Macro& macro) {
 }
 
 SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
@@ -1344,6 +1344,21 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 		context.error("Expected macro name here!");
 	auto const name = context.getValue<Makai::String>();
 	Makai::Instance<Context::Macro> macro = new Context::Macro();
+	auto const macroDecl = context.currentScope().addMacro(name);
+	macroDecl->macro = macro;
+	context.fetchNext();
+	switch (context.currentToken().type) {
+		case (LTS_TT_BIG_ARROW): {
+			context.fetchNext();
+		} break;
+		case (Type{'{'}): {
+			context.fetchNext();
+			while (!context.hasToken(Type{'}'})) {
+
+			}
+		} break;
+		default: context.error("Expected '{' or '=>' here!");
+	}
 }
 
 static void doMacroExpansion(
