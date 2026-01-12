@@ -1,12 +1,12 @@
 namespace Convert {
 	namespace Impl {
-		macro toString => {($:value)} => {($:value if ($:value is string) else in stringify ($:value as any))};
+		macro toString => {($value:expr)} => {($value if ($value is string) else in stringify ($value as any))};
 	}
 	
 	macro toString {
-		{()}						=> {""																		}
-		{($:value)}					=> {core.Convert.Impl.toString($:value)										}
-		{($:first $:[, $:rest])}	=> {(core.Convert.Impl.toString($:first) + core.Convert.toString($:rest))	}
-		{($:[+ $:values])}			=> {core.Convert.toString($:[, $:values])									}
+		{()}									=> {""																	}
+		{($value:expr)}							=> {core.Convert.Impl.toString($value)									}
+		{($first:expr $rest:vargs{, > $:expr})}	=> {(core.Convert.Impl.toString($first) + core.Convert.toString($rest))	}
+		{($values:vargs{+ > $:expr})}			=> {core.Convert.toString($first $[rest: {, $rest}])					}
 	}
 }

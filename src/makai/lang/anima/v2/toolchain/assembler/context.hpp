@@ -54,6 +54,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						AV2_TA_SM_RMT_COUNT,
 						AV2_TA_SM_RMT_ALL_OF,
 						AV2_TA_SM_RMT_ANY_OF,
+						AV2_TA_SM_RMT_EXPRESSION,
 						AV2_TA_SM_RMT_VA_BEGIN,
 						AV2_TA_SM_RMT_VA_END,
 					}	type = Type::AV2_TA_SM_RMT_ALL_OF;
@@ -71,44 +72,44 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					List<Axiom>	match;
 				};
 
-				Bank<String>	variables;
-				List<Match>		matches;
-				Bank<Section>	sections;
+				Bank<String>			variables;
+				List<Instance<Match>>	matches;
+				Bank<Instance<Section>>	sections;
 
-				constexpr Section& addSection(Match const& match) {
+				constexpr Instance<Section> addSection(Match const& match) {
 					return sections[match.id];
 				}
 
-				constexpr Match& add(Match const match) {
-					return matches.pushBack(match).back();
+				constexpr Instance<Match> createMatch() {
+					return matches.pushBack({}).back();
 				}
 
 				using MatchResult = Nullable<Arguments>;
 
 				constexpr MatchResult match(Arguments const& args, usize const match) {
 					if (match >= matches.size()) return null;
-					auto& matchInfo = matches[match];
+					auto matchInfo = matches[match];
 					if (
-						matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
-					||	matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_END
+						matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
+					||	matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_END
 					) return null;
 					Arguments result;
-					auto& rule = sections[matchInfo.id];
-					if (!matchInfo.atMost && rule.count < args.size()) return null;
-					auto const count = matchInfo.atMost ? rule.count : Math::min(rule.count, args.size());
-					switch (matchInfo.type) {
+					auto rule = sections[matchInfo->id];
+					if (!matchInfo->atMost && rule->count < args.size()) return null;
+					auto const count = matchInfo->atMost ? rule->count : Math::min(rule->count, args.size());
+					switch (matchInfo->type) {
 						case Match::Type::AV2_TA_SM_RMT_COUNT: {
 							return args.sliced(0, count);
 						} break;
 						case Match::Type::AV2_TA_SM_RMT_ALL_OF: {
 							for (usize i = 0; i < count; ++i) {
-								if (args[i] != rule.match[i]) return matchInfo.atMost ? MatchResult{result} : MatchResult{null};
+								if (args[i] != rule->match[i]) return matchInfo->atMost ? MatchResult{result} : MatchResult{null};
 								result.pushBack(args[i]);
 							}
 						} break;
 						case Match::Type::AV2_TA_SM_RMT_ANY_OF: {
 							for (usize i = 0; i < count; ++i) {
-								if (rule.match.find({args[i]}) != -1) return matchInfo.atMost ? MatchResult{result} : MatchResult{null};
+								if (rule->match.find({args[i]}) != -1) return matchInfo->atMost ? MatchResult{result} : MatchResult{null};
 								result.pushBack(args[i]);
 							}
 						} break;
@@ -123,22 +124,22 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					if (match >= matches.size()) return null;
 					auto& matchInfo = matches[match];
 					if (
-						matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
-					||	matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_END
+						matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
+					||	matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_END
 					) return null;
-					auto& rule = sections[matchInfo.id];
-					if (!matchInfo.atMost && rule.count < args.size()) return null;
-					auto const count = matchInfo.atMost ? rule.count : Math::min(rule.count, args.size());
-					switch (matchInfo.type) {
+					auto rule = sections[matchInfo->id];
+					if (!matchInfo->atMost && rule->count < args.size()) return null;
+					auto const count = matchInfo->atMost ? rule->count : Math::min(rule->count, args.size());
+					switch (matchInfo->type) {
 						case Match::Type::AV2_TA_SM_RMT_COUNT:return null; break;
 						case Match::Type::AV2_TA_SM_RMT_ALL_OF: {
 							for (usize i = 0; i < count; ++i) {
-								if (args[i] != rule.match[i]) return matchInfo.atMost ? MatchCount{i} : null;
+								if (args[i] != rule->match[i]) return matchInfo->atMost ? MatchCount{i} : null;
 							}
 						} break;
 						case Match::Type::AV2_TA_SM_RMT_ANY_OF: {
 							for (usize i = 0; i < count; ++i)
-								if (rule.match.find({args[i]}) != -1) return matchInfo.atMost ? MatchCount{i} : null;
+								if (rule->match.find({args[i]}) != -1) return matchInfo->atMost ? MatchCount{i} : null;
 						} break;
 						default: break;
 					}
@@ -153,10 +154,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					MatchCount	mc		= null;
 					for (usize i = 0; i < matches.size(); ++i) {
 						if (count >= args.size()) break;
-						if (matches[i].type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
+						if (matches[i]->type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
 							va.begin = i+1;
 							vaRegion = true;
-						} else if (matches[i].type == Match::Type::AV2_TA_SM_RMT_VA_END) {
+						} else if (matches[i]->type == Match::Type::AV2_TA_SM_RMT_VA_END) {
 							va.end = i-1;
 							vaRegion = false;
 							doVariadic = true;
@@ -202,8 +203,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						for (usize a = va.begin; a < va.end; ++a) {
 							toks = consume(a);
 							if (!toks) break;
-							if (rule.variables.contains(rule.matches[a].id))
-								variables[rule.variables[rule.matches[a].id]].tokens.pushBack(toks.value());
+							if (rule.variables.contains(rule.matches[a]->id))
+								variables[rule.variables[rule.matches[a]->id]].tokens.pushBack(toks.value());
 						}
 						if (!toks) break;
 					}	
@@ -215,19 +216,19 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					for (usize i = 0; i < rule.matches.size(); ++i) {
 						auto& match = rule.matches[i];
 						if (input.empty()) break;
-						if (match.type == Rule::Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
+						if (match->type == Rule::Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
 							va.begin = i+1;
 							vaRegion = true;
-						} else if (match.type == Rule::Match::Type::AV2_TA_SM_RMT_VA_END) {
+						} else if (match->type == Rule::Match::Type::AV2_TA_SM_RMT_VA_END) {
 							va.end = i-1;
 							vaRegion = false;
 							parseVariadic(va);
 						}
 						if (vaRegion) continue;
-						else if (rule.variables.contains(match.id)) {
+						else if (rule.variables.contains(match->id)) {
 							auto const toks = consume(i);
 							if (toks)
-								variables[rule.variables[match.id]].tokens.pushBack(toks.value());
+								variables[rule.variables[match->id]].tokens.pushBack(toks.value());
 							else break;
 						} else if (!consume(i)) break;
 					}

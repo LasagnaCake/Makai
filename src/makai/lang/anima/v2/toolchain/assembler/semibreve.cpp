@@ -1312,6 +1312,38 @@ SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 }
 
 static Context::Macro::Rule doMacroRule(Context& context, Context::Macro& macro) {
+	Context::Macro::Rule rule;
+	auto match	= rule.createMatch();
+	auto sec	= rule.addSection(*match);
+	while (!context.hasToken(Type{'}'})) {
+		context.fetchNext();
+		if (context.hasToken(Type{'}'})) break;
+		else if (context.hasToken(Type{'$'})) {
+			context.fetchNext();
+			switch (context.currentToken().type) {
+				case Type{'$'}:
+				case Type{'{'}:
+				case Type{'}'}: sec->match.pushBack({context.currentToken()}); break;
+				case LTS_TT_IDENTIFIER: {
+
+				} break;
+				case Type{':'}: {
+
+				} break;
+				default: context.error("Invalid macro expression!");
+			}
+		} else {
+			sec->match.pushBack({context.currentToken()});
+			switch (context.currentToken().type) {
+				case LTS_TT_IDENTIFIER:
+				case LTS_TT_INTEGER:
+				case LTS_TT_REAL:
+				case LTS_TT_SINGLE_QUOTE_STRING:
+				case LTS_TT_DOUBLE_QUOTE_STRING: sec->match.back().strict = true;
+			}
+		}
+	}
+	return rule;
 }
 
 static Context::Macro::Transformation::Action macroAppend(Context::Macro::Result const& init) {
@@ -1333,9 +1365,11 @@ static Context::Macro::Transformation doMacroTransformation(Context& context, Co
 }
 
 static void doMacroExpression(Context& context, Context::Macro& macro) {
-}
-
-SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
+	context.fetchNext(); if (!context.hasToken(Type{'{'})) context.error("Expected '{' here!");
+	auto const rule = doMacroRule(context, macro);
+	context.fetchNext(); if (!context.hasToken(Type{'}'})) context.error("Expected '}' here!");
+	context.fetchNext(); if (!context.hasToken(Type{'{'})) context.error("Expected '{' here!");
+	context.fetchNext(); if (!context.hasToken(Type{'}'})) context.error("Expected '}' here!");
 }
 
 SEMIBREVE_ASSEMBLE_FN(Macro) {
@@ -1348,14 +1382,15 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 	macroDecl->macro = macro;
 	context.fetchNext();
 	switch (context.currentToken().type) {
+		case (Type{'='}): {
+			context.fetchNext();
+		} break;
 		case (LTS_TT_BIG_ARROW): {
 			context.fetchNext();
 		} break;
 		case (Type{'{'}): {
-			context.fetchNext();
-			while (!context.hasToken(Type{'}'})) {
-
-			}
+			while (!context.hasToken(Type{'}'})) 
+				doMacroExpression(context, *macro);
 		} break;
 		default: context.error("Expected '{' or '=>' here!");
 	}

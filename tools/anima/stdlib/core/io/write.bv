@@ -12,6 +12,6 @@ namespace IO {
 		}
 	}
 	
-	macro write		=> {($:[, $:content])} => {core.IO.Impl.write(core.Convert.toString($:content))		};
-	macro writeLine	=> {($:[, $:content])} => {core.IO.Impl.writeLine(core.Convert.toString($:content))	};
+	macro write		=> {($content:vargs{, > $:expr})} => {core.IO.Impl.write(core.Convert.toString($content))		};
+	macro writeLine	=> {($content:vargs{, > $:expr})} => {core.IO.Impl.writeLine(core.Convert.toString($content))	};
 }
