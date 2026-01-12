@@ -36,78 +36,201 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				}
 			};
 
-			using StaticRule	= List<Axiom>;
 			using Stack			= Tokenizer::TokenList;
 			using Arguments		= Tokenizer::TokenList;
 			using Result		= Tokenizer::TokenList;
 
-			struct Rule {
-				StaticRule	base;
-				StaticRule	separator;
-				StaticRule	expectant;
-				bool		variadic	= false;
+			struct Rule: ID::Identifiable<Rule> {
+				struct VariadicRegion {
+					usize begin;
+					usize end;
 
-				constexpr Ordered::OrderType operator<=>(StaticRule const& other) const {
-					if (!variadic) return base <=> other;
-					Ordered::OrderType order = Ordered::Order::EQUAL;
-					usize count = base.size() < other.size() ? base.size() : other.size();
-					for (usize i = 0; i < count; ++i) {
-						if ((order = base[i] <=> other[i]) != Ordered::Order::EQUAL)
-							return order;
-					}
-					if (other.size() < base.size()) return Ordered::Order::GREATER;
-					usize previous = count;
-					while (true) {
-						previous = count;
-						count = (previous + separator.size()) < other.size() ? (previous + separator.size()) : other.size();
-						for (usize i = 0; i < (count-previous); ++i) {
-						if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
-							return order;
-						}
-						previous = count;
-						count = (previous + expectant.size()) < other.size() ? (previous + expectant.size()) : other.size();
-						for (usize i = 0; i < (count-previous); ++i) {
-						if ((order = separator[i] <=> other[i+previous]) != Ordered::Order::EQUAL)
-							return order;
-						}
-						if (count == other.size())
-							return order;
-					}
-					return order;
-				}
+					constexpr usize size() const {return end - begin;}
+				};
 
-				constexpr Ordered::OrderType operator<=>(Rule const& other) const {
-					if (!other.variadic) return operator<=>(other.base);
-					Ordered::OrderType order = base <=> other.base;
-					if (order != Ordered::Order::EQUAL) return order;
-					order = separator <=> other.separator;
-					if (order != Ordered::Order::EQUAL) return order;
-					return expectant <=> other.expectant;
-				}
+				struct Match {
+					using ID = ID::VLUID;
+					enum class Type {
+						AV2_TA_SM_RMT_COUNT,
+						AV2_TA_SM_RMT_ALL_OF,
+						AV2_TA_SM_RMT_ANY_OF,
+						AV2_TA_SM_RMT_VA_BEGIN,
+						AV2_TA_SM_RMT_VA_END,
+					}	type = Type::AV2_TA_SM_RMT_ALL_OF;
+					ID	id		= all++;
+					bool atMost	= false;
+				private:
+					static inline ID all = ID::create(0);
+				};
 
 				template <class T>
-				constexpr bool operator==(T const& other) const {
-					return (*this <=> other) == Ordered::Order::EQUAL;
+				using Bank = Map<Match::ID, T>;
+
+				struct Section {
+					usize		count;
+					List<Axiom>	match;
+				};
+
+				Bank<String>	variables;
+				List<Match>		matches;
+				Bank<Section>	sections;
+
+				constexpr Section& addSection(Match const& match) {
+					return sections[match.id];
+				}
+
+				constexpr Match& add(Match const match) {
+					return matches.pushBack(match).back();
+				}
+
+				using MatchResult = Nullable<Arguments>;
+
+				constexpr MatchResult match(Arguments const& args, usize const match) {
+					if (match >= matches.size()) return null;
+					auto& matchInfo = matches[match];
+					if (
+						matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
+					||	matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_END
+					) return null;
+					Arguments result;
+					auto& rule = sections[matchInfo.id];
+					if (!matchInfo.atMost && rule.count < args.size()) return null;
+					auto const count = matchInfo.atMost ? rule.count : Math::min(rule.count, args.size());
+					switch (matchInfo.type) {
+						case Match::Type::AV2_TA_SM_RMT_COUNT: {
+							return args.sliced(0, count);
+						} break;
+						case Match::Type::AV2_TA_SM_RMT_ALL_OF: {
+							for (usize i = 0; i < count; ++i) {
+								if (args[i] != rule.match[i]) return matchInfo.atMost ? MatchResult{result} : MatchResult{null};
+								result.pushBack(args[i]);
+							}
+						} break;
+						case Match::Type::AV2_TA_SM_RMT_ANY_OF: {
+							for (usize i = 0; i < count; ++i) {
+								if (rule.match.find({args[i]}) != -1) return matchInfo.atMost ? MatchResult{result} : MatchResult{null};
+								result.pushBack(args[i]);
+							}
+						} break;
+						default: break;
+					}
+					return result;
+				}
+
+				using MatchCount = Nullable<usize>;
+
+				constexpr MatchCount fits(Arguments const& args, usize const match) const {
+					if (match >= matches.size()) return null;
+					auto& matchInfo = matches[match];
+					if (
+						matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
+					||	matchInfo.type == Match::Type::AV2_TA_SM_RMT_VA_END
+					) return null;
+					auto& rule = sections[matchInfo.id];
+					if (!matchInfo.atMost && rule.count < args.size()) return null;
+					auto const count = matchInfo.atMost ? rule.count : Math::min(rule.count, args.size());
+					switch (matchInfo.type) {
+						case Match::Type::AV2_TA_SM_RMT_COUNT:return null; break;
+						case Match::Type::AV2_TA_SM_RMT_ALL_OF: {
+							for (usize i = 0; i < count; ++i) {
+								if (args[i] != rule.match[i]) return matchInfo.atMost ? MatchCount{i} : null;
+							}
+						} break;
+						case Match::Type::AV2_TA_SM_RMT_ANY_OF: {
+							for (usize i = 0; i < count; ++i)
+								if (rule.match.find({args[i]}) != -1) return matchInfo.atMost ? MatchCount{i} : null;
+						} break;
+						default: break;
+					}
+					return true;
+				}
+
+				constexpr bool fits(Arguments const& args) const {
+					bool vaRegion	= false;
+					bool doVariadic	= false;
+					VariadicRegion	va;
+					usize		count	= 0;
+					MatchCount	mc		= null;
+					for (usize i = 0; i < matches.size(); ++i) {
+						if (count >= args.size()) break;
+						if (matches[i].type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
+							va.begin = i+1;
+							vaRegion = true;
+						} else if (matches[i].type == Match::Type::AV2_TA_SM_RMT_VA_END) {
+							va.end = i-1;
+							vaRegion = false;
+							doVariadic = true;
+						}
+						if (vaRegion) continue;
+						else if (doVariadic) {
+							while (true) {
+								for (usize i = va.begin; i < va.end; ++i) {
+									if (!(mc = fits(args.sliced(count), i))) break;
+									else count += mc.value();
+								}
+								if (!mc) break;
+							}	
+						} else if (!(mc = fits(args.sliced(count), i))) return false;
+						else count += mc.value();
+					}
+					return true;
 				}
 			};
 
 			struct Context {
-				Arguments	args;
-				Stack		stack;
-				Result		result;
-				usize		vaCount = 0;
+				Arguments		input;
+				Stack			stack;
+				Result			result;
+				Rule			rule;
+
+				struct Variable {
+					List<Arguments>	tokens;
+				};
+
+				Dictionary<Variable> variables;
 			
-				Arguments consume(StaticRule const& rule) {
-					if (rule.empty() || args.empty()) return {};
-					usize count = rule.size() < args.size() ? rule.size() : args.size();
-					Arguments result;
-					usize i = 0;
-					for (; i < count; ++i) {
-						if (rule[i] != args[i]) break;
-						result.pushBack(rule[i]);
-					}
-					args.removeRange(0, i);
+				Rule::MatchResult consume(usize const match) {
+					auto const result = rule.match(input, match);
+					if (result)
+						input.removeRange(result.value().size());
 					return result;
+				}
+
+				void parseVariadic(Rule::VariadicRegion const& va) {
+					while (true) {
+						Rule::MatchResult toks;
+						for (usize a = va.begin; a < va.end; ++a) {
+							toks = consume(a);
+							if (!toks) break;
+							if (rule.variables.contains(rule.matches[a].id))
+								variables[rule.variables[rule.matches[a].id]].tokens.pushBack(toks.value());
+						}
+						if (!toks) break;
+					}	
+				}
+
+				void parse() {
+					bool vaRegion	= false;
+					Rule::VariadicRegion va;
+					for (usize i = 0; i < rule.matches.size(); ++i) {
+						auto& match = rule.matches[i];
+						if (input.empty()) break;
+						if (match.type == Rule::Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
+							va.begin = i+1;
+							vaRegion = true;
+						} else if (match.type == Rule::Match::Type::AV2_TA_SM_RMT_VA_END) {
+							va.end = i-1;
+							vaRegion = false;
+							parseVariadic(va);
+						}
+						if (vaRegion) continue;
+						else if (rule.variables.contains(match.id)) {
+							auto const toks = consume(i);
+							if (toks)
+								variables[rule.variables[match.id]].tokens.pushBack(toks.value());
+							else break;
+						} else if (!consume(i)) break;
+					}
 				}
 			};
 
@@ -127,16 +250,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				}
 			};
 
-			using StaticExpressions		= Map<StaticRule, Transformation>;
-			using VariadicExpressions	= Map<Rule, Transformation>;
+			using Expressions	= Map<typename Rule::IdentifierType, Transformation>;
 
 			struct Expression {
 				Rule			rule;
 				Transformation	transform;
 			};
 
-			StaticExpressions	exprs;
-			VariadicExpressions	vaexprs;
+			Expressions	exprs;
+			List<Rule>	rules;
 
 			struct Entry {
 				Tokenizer::TokenList pre;
@@ -149,13 +271,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			List<Instance<Entry>>				entries;
 
 			Nullable<Result> resolve(Arguments const& args) {
-				Context ctx{.args = args};
-				Rule const rule = {args.toList<Axiom>()};
-				if (exprs.contains(rule.base))
-					return exprs[rule.base].apply(ctx).result(ctx);
-				else if (vaexprs.contains(rule))
-					return vaexprs[rule].apply(ctx).result(ctx);
-				else return null;
+				for (auto& rule: rules) if (rule.fits(args)) {
+					Context ctx{.input = args, .rule = rule};
+					ctx.parse();
+					return exprs[rule.id()].apply(ctx).result(ctx);
+				}
+				return null;
 			}
 		};
 

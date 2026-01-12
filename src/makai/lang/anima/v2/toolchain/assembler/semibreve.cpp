@@ -1308,268 +1308,43 @@ SEMIBREVE_ASSEMBLE_FN(TypeDefinition) {
 }
 
 SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
-
+	// TODO: This
 }
 
 static Context::Macro::Rule doMacroRule(Context& context, Context::Macro& macro) {
-	Context::Macro::Rule rule;
-	if (!context.hasToken(Type{'('}))
-		context.error("Expected '(' here!");
-	usize start = 0;
-	while (!context.hasToken(Type{')'})) {
-		context.fetchNext();
-		if (context.hasToken(Type{')'})) break;
-		if (context.hasToken(Type{'$'})) {
-			context.fetchNext();
-			auto const ct = context.currentToken().type;
-			rule.base.pushBack({{ct}});
-			switch (context.currentToken().type) {
-				case Type{'$'}:
-				case Type{')'}:
-				case Type{'('}: continue;
-				case LTS_TT_IDENTIFIER: {
-					auto const varID = context.getValue<Makai::String>();
-					auto& var = macro.variables[varID];
-					var = new Context::Macro::Entry();
-					var->pre.appendBack(rule.base.toList<Context::Tokenizer::Token>().sliced(start));
-					var->main.pushBack({LTS_TT_IDENTIFIER});
-					start = rule.base.size();
-				} continue;
-				case Type{'['}: {
-					rule.base.popBack();
-					rule.variadic = true;
-					while (!context.hasToken(Type{']'})) {
-						context.fetchNext();
-						if (context.hasToken(Type{']'})) break;
-						else if (context.hasToken(Type{'$'})) {
-							switch (context.currentToken().type) {
-								case Type{'$'}:
-								case Type{'['}:
-								case Type{']'}: continue;
-								case LTS_TT_IDENTIFIER: {
-									auto const varID = context.getValue<Makai::String>();
-									auto& var = macro.variables[varID];
-									var = new Context::Macro::Entry();
-									var->main.pushBack({LTS_TT_IDENTIFIER});
-									var->pre.appendBack(rule.separator.toList<Context::Tokenizer::Token>());
-									rule.expectant.pushBack({context.currentToken()});
-									context.fetchNext();
-									if (!context.hasToken(Type{']'}))
-										context.error("Expected ']' here!");
-									break;
-								} continue;
-								default: context.error("Invalid macro expansion!");
-							}
-						} else {
-							if (context.hasToken(Type{'['}))
-								context.error("'[' must always be preceded by '$'!");
-							rule.separator.pushBack({context.currentToken()}); continue;
-							switch (rule.separator.back().type) {
-							case LTS_TT_IDENTIFIER:
-							case LTS_TT_SINGLE_QUOTE_STRING:
-							case LTS_TT_DOUBLE_QUOTE_STRING:
-							case LTS_TT_INTEGER:
-							case LTS_TT_REAL:
-							case LTS_TT_CHARACTER:
-								rule.separator.back().strict = true;
-							default: break;
-							}
-						}
-						if (context.hasToken(Type{']'})) break;
-					}
-					context.fetchNext();
-					if (!context.hasToken(Type{')'}))
-						context.error("Expected ')' here!");
-					break;
-				} continue;
-				default: context.error("Invalid macro expansion!");
-			}
-		} else if (context.hasToken(Type{'('}))
-			context.error("Unescaped '(' here!");
-		else {
-			rule.base.pushBack({context.currentToken()});
-			switch (rule.base.back().type) {
-			case LTS_TT_IDENTIFIER:
-			case LTS_TT_SINGLE_QUOTE_STRING:
-			case LTS_TT_DOUBLE_QUOTE_STRING:
-			case LTS_TT_INTEGER:
-			case LTS_TT_REAL:
-			case LTS_TT_CHARACTER:
-				rule.base.back().strict = true;
-			default: break;
-			}
-		}
-	}
-	if (!context.hasToken(Type{')'}))
-		context.error("Expected ')' here!");
-	return rule;
 }
 
 static Context::Macro::Transformation::Action macroAppend(Context::Macro::Result const& init) {
-	return [init] (auto& ctx) {ctx.result.appendBack(init);};
 }
 
 static void doMacroSingleExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
-	auto const id = context.getValue<Makai::String>();
-	auto& var = macro.variables[id];
-	transform.actions.pushBack(
-		[var] (auto& ctx) {
-			ctx.consume(var->pre.toList<Context::Macro::Axiom>());
-			ctx.result.appendBack(ctx.consume(var->main.toList<Context::Macro::Axiom>()));
-			ctx.consume(var->post.toList<Context::Macro::Axiom>());
-		}
-	);
 }
 
 static void doMacroStandardVariadicExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
-	auto const id = context.getValue<Makai::String>();
-	auto& var = macro.variables[id];
-	transform.actions.pushBack(
-		[var] (auto& ctx) {
-			while (ctx.args.size()) {
-				if (ctx.vaCount++)
-					ctx.result.appendBack(ctx.consume(var->pre.toList<Context::Macro::Axiom>()));
-				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Macro::Axiom>()));
-				ctx.result.appendBack(ctx.consume(var->post.toList<Context::Macro::Axiom>()));
-			}
-		}
-	);
 }
 
 static void doMacroSpecialVariadicExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
-	Context::Macro::Result result;
-	context.fetchNext();
-	while (!context.hasToken(Type{'$'})) {
-		if (context.hasToken(Type{'$'})) {
-			context.fetchNext();
-			switch (context.currentToken().type) {
-				case Type{'$'}:
-				case Type{'['}:
-				case Type{']'}: result.pushBack(context.currentToken()); context.fetchNext(); continue;
-				case LTS_TT_IDENTIFIER: break;
-			}
-			break;
-		}
-		else if (context.hasToken(Type{']'}))
-			context.error("Invalid variadic expansion (missing variable)!");
-		else if (context.hasToken(Type{'['}))
-			context.error("Unescaped '[' here!");
-		else result.pushBack(context.currentToken());
-		context.fetchNext();
-	}
-	auto const id = context.getValue<Makai::String>();
-	auto& var = macro.variables[id];
-	transform.actions.pushBack(
-		[var, appendix = result] (auto& ctx) {
-			while (ctx.args.size()) {
-				if (ctx.vaCount++)
-					ctx.result.appendBack(appendix);
-				ctx.consume(var->pre.toList<Context::Macro::Axiom>());
-				ctx.result.appendBack(ctx.consume(var->main.toList<Context::Macro::Axiom>()));
-				ctx.consume(var->post.toList<Context::Macro::Axiom>());
-			}
-		}
-	);
-	context.fetchNext();
-	if (!context.hasToken(Type{']'}))
-		context.error("Expected ']' here!");
 }
 
 static void doMacroVariableExpansion(Context& context, Context::Macro& macro, Context::Macro::Transformation& transform) {
-	auto const id = context.getValue<Makai::String>();
-	if (!macro.variables.contains(id))
-		context.error("Macro variable does not exist!");
-	auto& var = macro.variables[id];
-	if (var->variadic)
-		doMacroStandardVariadicExpansion(context, macro, transform);
-	else doMacroSingleExpansion(context, macro, transform);
 }
 
 static Context::Macro::Transformation doMacroTransformation(Context& context, Context::Macro& macro) {
-	Context::Macro::Result result;
-	Context::Macro::Transformation transform;
-	if (!context.hasToken(Type{'{'}))
-		context.error("Expected '{' here!");
-	while (!context.hasToken(Type{'}'})) {
-		context.fetchNext();
-		if (context.hasToken(Type{'}'}))
-			break;
-		if (context.hasToken(Type{'$'})) {
-			transform.actions.pushBack(macroAppend(result));
-			result.clear();
-			context.fetchNext();
-			switch (context.currentToken().type) {
-				case Type{'$'}:
-				case Type{'{'}:
-				case Type{'}'}: result.pushBack(context.currentToken()); break;
-				case LTS_TT_IDENTIFIER: {
-					doMacroVariableExpansion(context, macro, transform);
-				} break;
-				case Type{'['}: {
-					doMacroSpecialVariadicExpansion(context, macro, transform);
-				} break;
-			}
-		}
-		if (context.hasToken(Type{'{'}))
-			context.error("Unescaped '{' here!");
-		result.pushBack(context.currentToken());
-	}
-	if (!context.hasToken(Type{'}'}))
-		context.error("Expected '}' here!");
-	transform.actions.pushBack(macroAppend(result));
-	return transform;
 }
 
 static Context::Macro::Expression doMacroExpression(Context& context, Context::Macro& macro) {
-	Context::Macro::Expression expr;
-	if (!context.hasToken(Type{'('}))
-		context.error("Expected '(' here!");
-	expr.rule = doMacroRule(context, macro);
-	if (!context.hasToken(Type{')'}))
-		context.error("Expected ')' here!");
-	context.fetchNext();
-	if (!context.hasToken(LTS_TT_BIG_ARROW))
-		context.error("Expected '=>' here!");
-	context.fetchNext();
-	if (!context.hasToken(Type{'{'}))
-		context.error("Expected '{' here!");
-	expr.transform = doMacroTransformation(context, macro);
-	if (!context.hasToken(Type{'}'}))
-		context.error("Expected '}' here!");
-	context.fetchNext();
-	return expr;
 }
 
 SEMIBREVE_ASSEMBLE_FN(MacroFunction) {
+}
+
+SEMIBREVE_ASSEMBLE_FN(Macro) {
 	context.fetchNext();
 	if (!context.hasToken(LTS_TT_IDENTIFIER))
 		context.error("Expected macro name here!");
 	auto const name = context.getValue<Makai::String>();
-	context.fetchNext();
 	Makai::Instance<Context::Macro> macro = new Context::Macro();
-	if (context.hasToken(Type{'{'})) {
-		context.fetchNext();
-		while (!context.hasToken(Type{'}'})) {
-			auto const expr = doMacroExpression(context, *macro);
-			if (expr.rule.variadic)
-				macro->vaexprs[expr.rule] = expr.transform;
-			else macro->exprs[expr.rule.base] = expr.transform;
-		}
-	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
-		context.fetchNext();
-		auto const expr = doMacroExpression(context, *macro);
-		if (expr.rule.variadic)
-			macro->vaexprs[expr.rule] = expr.transform;
-		else macro->exprs[expr.rule.base] = expr.transform;
-		if (!context.hasToken(Type{';'}))
-			context.error("Expected ';' here!");
-	} else context.error("Expected '=>' or '{' here!");
-	auto const symac = context.currentScope().addMacro(name);
-	symac->macro = macro;
-	auto const macroID = symac->value["id"].get<Makai::String>();
-	context.macros[macroID] = macro;
 }
-
 
 static void doMacroExpansion(
 	Context& context,
@@ -1624,7 +1399,7 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "error")								doError(context);
 			else if (id == "type")								doTypeDefinition(context);
 			else if (id == "extend")							doTypeExtension(context);
-			else if (id == "macro")								doMacroFunction(context);
+			else if (id == "macro")								doMacro(context);
 			else if (context.hasSymbol(id)) {
 				auto sym = context.getSymbolRefByName(id);
 				switch (sym->type) {
