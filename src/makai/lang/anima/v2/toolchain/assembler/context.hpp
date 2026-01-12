@@ -94,8 +94,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					||	matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_END
 					) return null;
 					Arguments result;
-					if (!rule->count) return Arguments();
 					auto rule = sections[matchInfo->id];
+					if (!rule->count) return Arguments();
 					if (!matchInfo->atMost && rule->count < args.size()) return null;
 					auto const count = matchInfo->atMost ? rule->count : Math::min(rule->count, args.size());
 					switch (matchInfo->type) {
