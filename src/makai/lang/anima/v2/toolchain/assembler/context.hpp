@@ -13,6 +13,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		struct Macro {
 			struct Axiom: Tokenizer::Token {
 				bool strict = false;
+				String token;
 
 				constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
 					if (!strict) return type <=> other.type;
