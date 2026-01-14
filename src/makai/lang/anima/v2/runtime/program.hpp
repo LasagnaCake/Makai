@@ -45,15 +45,18 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		struct NativeInterface {
-			Label		in;
-			StringList	out;
+			Label					in;
+			StringList				out;
+			Dictionary<StringList>	shared;
 
 			constexpr Data::Value serialize() const {
 				auto result = Data::Value::object();
-				result["in"]	= result.object();
-				result["out"]	= result.array();
-				auto& signals	= result["in"];
-				auto& externs	= result["out"];
+				result["shared"]	= result.object();
+				result["in"]		= result.object();
+				result["out"]		= result.array();
+				auto& signals		= result["in"];
+				auto& externs		= result["out"];
+				auto& sharedLibs	= result["shared"];
 				for (auto& [name, id]: in)
 					signals[name] = id;
 				for (auto& name: out)

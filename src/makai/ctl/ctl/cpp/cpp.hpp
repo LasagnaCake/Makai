@@ -3,5 +3,6 @@
 
 #include "sourcefile.hpp"
 #include "debug.hpp"
+#include "library.hpp"
 
 #endif
