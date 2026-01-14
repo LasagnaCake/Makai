@@ -175,6 +175,7 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_BIT_XOR_ASSIGN:			return "^=";
 					case Type::LTS_TT_BIT_SHIFT_LEFT_ASSIGN:	return "<<=";
 					case Type::LTS_TT_BIT_SHIFT_RIGHT_ASSIGN:	return ">>=";
+					default: return "";
 				}
 			}
 		};
