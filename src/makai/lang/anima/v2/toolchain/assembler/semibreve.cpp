@@ -1330,10 +1330,122 @@ SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 	// TODO: This
 }
 
-static void doMacroRule(Context& context, Context::Macro::Rule::Match& base) {
+static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
+	auto const varType = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "rule type").getString();
+	if (varType == "expr") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_EXPRESSION;
+	} else {
+		context.error("Invalid rule type!");
+	}
+}
+
+static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
+	context.expectToken(Type{'{'});
+	while (!context.hasToken(Type{'}'})) {
+		if (context.fetchNext().hasToken(Type{'}'})) break;
+		auto const sub = base.addSubMatch();
+		switch (context.currentToken().type) {
+			case Type{'$'}: {
+				context.fetchNext();
+				switch (context.currentToken().type) {
+					case LTS_TT_IDENTIFIER: {
+						auto const varName = context.getValue<Makai::String>();
+						context.fetchNext().expectToken(Type{':'});
+						doMacroRuleType(context, rule, *sub);
+						rule.variables[sub->id()] = varName;
+					} break;
+					case Type{'$'}:
+					case Type{'*'}:
+					case Type{'{'}:
+					case Type{'}'}: sub->tokens.pushBack(context.currentToken()); break;
+					default: break;
+				}
+			} break;
+			case Type{'*'}: {
+				sub->variadic = true;
+				context.fetchNext();
+				doMacroRule(context, rule, *sub);
+			} break;
+			case Type{'{'}: {
+				doMacroRule(context, rule, *sub);
+			} break;
+			case Type{'#'}: {
+				doMacroRuleType(context, rule, *sub);
+			} break;
+			default: {
+				sub->tokens.pushBack(context.currentToken());
+			} break;
+		}
+	}
+	context.expectToken(Type{'}'});
+}
+
+Makai::Instance<Context::Macro::Transformation> macroApply(Context::Macro::Result const& values) {
+	return new Context::Macro::Transformation{
+		.pre = [=] (Context::Macro::Context& context) {
+			context.result.appendBack(values);
+		}
+	};
+}
+
+static Makai::Instance<Context::Macro::Transformation> doMacroTransform(
+	Context& context,
+	Context::Macro::Rule& rule,
+	Context::Macro::Transformation& base
+) {
+	Context::Macro::Result result;
+	while (!context.hasToken(Type{'}'})) {
+		if (context.fetchNext().hasToken(Type{'}'})) break;
+		switch (context.currentToken().type) {
+			case Type{'$'}: {
+				if (result.size())
+					base.sub.pushBack(macroApply(result));
+				result.clear();
+				context.fetchNext();
+				switch (context.currentToken().type) {
+					case LTS_TT_IDENTIFIER: {
+						auto const varName = context.getValue<Makai::String>();
+						if (rule.variables.values().find(varName) == -1)
+							context.error("Macro variable does not exist!");
+						base.newTransform()->pre = [varName] (Context::Macro::Context& context) {
+							context.result.appendBack(context.variables[varName].tokens.join());
+						};
+					} break;
+					case Type{'*'}: {
+						auto const varName = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "macro variable name").getString();
+						if (rule.variables.values().find(varName) == -1)
+							context.error("Macro variable does not exist!");
+						context.fetchNext().expectToken(Type{'{'});
+						Context::Macro::Transformation tf;
+						doMacroTransform(context, rule, tf);
+						context.expectToken(Type{'}'});
+						base.newTransform()->pre = 
+							[varName, tf] (Context::Macro::Context& ctx) {
+								Context::Macro::Context subctx = ctx;
+								tf.apply(subctx);
+								ctx.result.appendBack(ctx.variables[varName].tokens.join(ctx.result));
+							}
+						;
+					} break;
+					default: context.error("Invalid macro expansion!");
+				}
+			} break;
+			default: result.pushBack(context.currentToken());
+		}
+	}
+	if (result.size())
+		base.sub.pushBack(macroApply(result));
+}
+
+static Context::Macro::Expression doMacroExpression(Context& context, Context::Macro& macro) {
+	Context::Macro::Expression expr;
+	context.expectToken(Type{'{'});
+	doMacroRule(context, expr.rule, *expr.rule.root);
+	context.expectToken(Type{'}'});
 	context.fetchNext().expectToken(Type{'{'});
-	// TODO: This
-	context.fetchNext().expectToken(Type{'}'});
+	doMacroTransform(context, expr.rule, expr.transform);
+	context.expectToken(Type{'}'});
+	return expr;
 }
 
 SEMIBREVE_ASSEMBLE_FN(Macro) {

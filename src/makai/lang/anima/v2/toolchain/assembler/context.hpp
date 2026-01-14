@@ -213,13 +213,21 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			};
 
 			struct Transformation {
-				using Action = Function<void(Context&)>;
+				using Action = Functor<void(Context&)>;
 				
-				List<Action> actions;
+				Action							pre;
+				List<Instance<Transformation>>	sub;
+				Action							post;
+
+				constexpr Instance<Transformation> newTransform() {
+					return new Transformation();
+				}
 
 				constexpr Transformation& apply(Context& ctx) {
-					for (auto& action: actions)
-						action(ctx);
+					pre(ctx);
+					for (auto& action: sub)
+						action->apply(ctx);
+					post(ctx);
 					return *this;
 				}
 
