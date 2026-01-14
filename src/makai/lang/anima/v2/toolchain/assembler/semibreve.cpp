@@ -531,6 +531,23 @@ static auto handleTernary(Context& context, Solution const& cond, Solution const
 	context.writeLine(falseJump + ":");
 	context.writeLine("copy", ifFalse.resolve(), "-> .");
 	context.writeLine("jump", endJump);
+	context.writeLine(endJump + ":");
+	return result;
+}
+
+static auto handleNullCoalescence(Context& context, Solution const& value, Solution const& elseValue) {
+	auto const result = stronger(value.type, elseValue.type);
+	if (context.isNumber(result) && value.type != elseValue.type)
+		context.error<InvalidValue>("Types must match, or be similar!");
+	auto const falseJump	= context.scopePath() + "_nc_false"	+ context.uniqueName();
+	auto const endJump		= context.scopePath() + "_nc_end"	+ context.uniqueName();
+	context.writeLine("jump if false", elseValue.resolve(), falseJump);
+	context.writeLine("copy", value.resolve(), "-> .");
+	context.writeLine("jump", endJump);
+	context.writeLine(falseJump + ":");
+	context.writeLine("copy", elseValue.resolve(), "-> .");
+	context.writeLine("jump", endJump);
+	context.writeLine(endJump + ":");
 	return result;
 }
 
@@ -609,6 +626,8 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				context.fetchNext();
 				auto const elseVal = doValueResolution(context);
 				result = handleTernary(context, lhs, rhs, elseVal);
+			} else if (id == "else" || id == "or") {
+				result = handleNullCoalescence(context, lhs, rhs);
 			} else context.error<InvalidValue>("Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
@@ -924,7 +943,7 @@ SEMIBREVE_ASSEMBLE_FN(Assembly) {
 		context.error<NonexistentValue>("Expected '{' here!");
 	context.fetchNext();
 	while (context.currentToken().type != Type{'}'}) {
-		context.writeLine(context.stream.tokenText());
+		context.writeLine(context.currentToken().token);
 		context.fetchNext();
 	}
 	context.fetchNext();
@@ -1311,8 +1330,29 @@ SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 	// TODO: This
 }
 
+static void doMacroRule(Context& context, Context::Macro::Rule::Match& base) {
+	context.fetchNext().expectToken(Type{'{'});
+	// TODO: This
+	context.fetchNext().expectToken(Type{'}'});
+}
+
 SEMIBREVE_ASSEMBLE_FN(Macro) {
 	// TODO: This
+	context.fetchNext();
+	auto const name = context.fetchToken(LTS_TT_IDENTIFIER, "macro name").getString();
+	auto const macro = (context.currentScope().addMacro(name)->macro = new Context::Macro());
+	switch (context.fetchNext().currentToken().type) {
+		case LTS_TT_BIG_ARROW: {
+			// TODO: This
+		} break;
+		case Type{'{'}: {
+			// TODO: This
+		} break;
+		case Type{'='}: {
+			macro->simple = true;
+			// TODO: This
+		} break;
+	}
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
@@ -1391,6 +1431,7 @@ void Semibreve::assemble() {
 	}
 	context.writeMainPreamble(context.main.preEntryPoint, ":");
 	context.writeMainPostscript(context.main.postEntryPoint, ":");
+	context.cache();
 	while (context.nextToken()) doExpression(context);
 	context.writeMainPreamble("end");
 	context.writeMainPostscript("end");

@@ -201,6 +201,7 @@ namespace Makai::Anima::V2 {
 				AV2_IBM_OP_POW,
 				AV2_IBM_OP_ATAN2,
 				AV2_IBM_OP_LOG,
+				AV2_IBM_OP_ELSE,
 			};
 			Operation op;
 			DataLocation lhs, rhs, out;

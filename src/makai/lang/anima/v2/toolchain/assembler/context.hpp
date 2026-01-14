@@ -42,142 +42,150 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			using Result		= Tokenizer::TokenList;
 
 			struct Rule: ID::Identifiable<Rule> {
-				struct VariadicRegion {
-					usize begin;
-					usize end;
-
-					constexpr usize size() const {return end - begin;}
-				};
-
-				struct Match {
-					using ID = ID::VLUID;
+				struct Match: Identifiable<Match> {
 					enum class Type {
-						AV2_TA_SM_RMT_COUNT,
-						AV2_TA_SM_RMT_ALL_OF,
+						AV2_TA_SM_RMT_WHATEVER,
 						AV2_TA_SM_RMT_ANY_OF,
-						AV2_TA_SM_RMT_EXPRESSION,
-						AV2_TA_SM_RMT_VA_BEGIN,
-						AV2_TA_SM_RMT_VA_END,
-					}	type = Type::AV2_TA_SM_RMT_ALL_OF;
-					ID	id		= all++;
-					bool atMost	= false;
+						AV2_TA_SM_RMT_EXPRESSION
+					}	type = Type::AV2_TA_SM_RMT_ANY_OF;
+					bool					variadic	= false;
+					usize					count		= 1;
+					List<Axiom>				tokens;
+					List<Instance<Match>>	matches;
+
+					using Count		= Nullable<usize>;
+					using Result	= Nullable<Arguments>;
+					
+					constexpr Instance<Match> addSubMatch() {
+						return matches.pushBack(new Match()).back();
+					}
+
+					using Callback = Functor<void(Match const&, Arguments const&)>;
+
+					constexpr Result match(Arguments const& args, Callback const& call = {}) const {
+						Arguments result;
+						if (!count) return Arguments();
+						if (matches.size()) return matchGroup(args, call);
+						if (!variadic && count < args.size()) return null;
+						auto const sz = (!variadic) ? count : Math::min(count, args.size());
+						switch (type) {
+							case Type::AV2_TA_SM_RMT_WHATEVER: {
+								return args.sliced(0, sz);
+							} break;
+							case Type::AV2_TA_SM_RMT_ANY_OF: {
+								for (usize i = 0; i < sz; ++i) {
+									if (tokens.find({args[i]}) != -1)
+										result.pushBack(args[i]);
+									else if (variadic)
+										return result;
+									else return null;
+								}
+							} break;
+							case Type::AV2_TA_SM_RMT_EXPRESSION: {
+								if (expressionSolver)
+									result = expressionSolver(args).value();
+							} break;
+							default: break;
+						}
+						call.invoke(*this, result);
+						return result;
+					}
+
+					constexpr Count fit(Arguments const& args) const {
+						if (auto const result = match(args))
+							return result.value().size();
+						return null;
+					}
+
+					constexpr static Arguments solveExpression(Arguments const& args) {
+						Arguments result;
+						usize prev = 0;
+						for (usize i = 0; i < args.size();) {
+							using Type = Tokenizer::Token::Type;
+							if (isDelimeter(args[i].type)) break;
+							switch (args[i].type) {
+								case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'}));
+								case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'}));
+								case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'}));
+								default: result.pushBack(args[i]);
+							}
+							i += result.size() - prev;
+							prev = result.size();
+						}
+						return result;
+					}
+					
+					constexpr static Arguments solveParameterPack(Arguments const& args, Tokenizer::Token::Type const end) {
+						Arguments result;
+						usize prev	= 0;
+						usize i		= 1;
+						result.pushBack(args.front());
+						while (i < args.size()) {
+							using Type = Tokenizer::Token::Type;
+							if (args[i].type == end) break;
+							switch (args[i].type) {
+								case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'}));
+								case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'}));
+								case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'}));
+								default: result.appendBack(solveExpression(args.sliced(i)));
+							}
+							i += result.size() - prev;
+							prev = result.size();
+						}
+						if (i < args.size())
+							result.pushBack(args[i]);
+						return result;
+					}
+
+					static inline Functor<Result(Arguments const&)> expressionSolver = 
+						[] (Arguments const& args) -> Result {
+							return solveExpression(args);
+						}
+					;
+
 				private:
-					static inline ID all = ID::create(0);
+					constexpr Result matchGroup(Arguments const& args, Callback const& call = {}) const {
+						if (matches.empty()) return null;
+						Arguments result;
+						if (!count) return Arguments();
+						auto const sz = (!variadic) ? count : Math::min(count, args.size());
+						usize tokenStart	= 0;
+						usize matchCount	= 0;
+						Result mr;
+						do {
+							if (++matchCount > sz) break;
+							for (auto& match: matches) {
+								if (tokenStart >= args.size()) {
+									mr = variadic ? Result{Arguments()} : null;
+									break;
+								}
+								mr = match->match(args.sliced(tokenStart), call);
+								if (!mr) break;
+								tokenStart += mr.value().size();
+								result.appendBack(mr.value());
+							}
+							if (!mr) break;
+						} while (true);
+						if (!matchCount)
+							return null;
+						if (variadic || matchCount == sz)
+							return result;
+						return null;
+					}
 				};
 
 				template <class T>
-				using Bank = Map<Match::ID, T>;
+				using Bank = Map<Match::IdentifierType, T>;
 
-				struct Section {
-					usize		count;
-					List<Axiom>	match;
-				};
+				Bank<String>	variables;
+				Instance<Match>	root		= new Match();
 
-				Bank<String>			variables;
-				List<Instance<Match>>	matches;
-				Bank<Instance<Section>>	sections;
-
-				constexpr Instance<Section> addSection(Match const& match) {
-					return sections[match.id];
+				constexpr Match::Count fit(Arguments const& args) const {
+					return root ? root->fit(args) : null;
 				}
-
-				constexpr Instance<Match> createMatch() {
-					return matches.pushBack({}).back();
-				}
-
-				using MatchResult = Nullable<Arguments>;
-
-				constexpr MatchResult match(Arguments const& args, usize const match) {
-					if (match >= matches.size()) return null;
-					auto matchInfo = matches[match];
-					if (
-						matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
-					||	matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_END
-					) return null;
-					Arguments result;
-					auto rule = sections[matchInfo->id];
-					if (!rule->count) return Arguments();
-					if (!matchInfo->atMost && rule->count < args.size()) return null;
-					auto const count = matchInfo->atMost ? rule->count : Math::min(rule->count, args.size());
-					switch (matchInfo->type) {
-						case Match::Type::AV2_TA_SM_RMT_COUNT: {
-							return args.sliced(0, count);
-						} break;
-						case Match::Type::AV2_TA_SM_RMT_ALL_OF: {
-							for (usize i = 0; i < count; ++i) {
-								if (args[i] != rule->match[i]) return matchInfo->atMost ? MatchResult{result} : MatchResult{null};
-								result.pushBack(args[i]);
-							}
-						} break;
-						case Match::Type::AV2_TA_SM_RMT_ANY_OF: {
-							for (usize i = 0; i < count; ++i) {
-								if (rule->match.find({args[i]}) != -1) return matchInfo->atMost ? MatchResult{result} : MatchResult{null};
-								result.pushBack(args[i]);
-							}
-						} break;
-						default: break;
-					}
-					return result;
-				}
-
-				using MatchCount = Nullable<usize>;
-
-				constexpr MatchCount fits(Arguments const& args, usize const match) const {
-					if (match >= matches.size()) return null;
-					auto& matchInfo = matches[match];
-					if (
-						matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN
-					||	matchInfo->type == Match::Type::AV2_TA_SM_RMT_VA_END
-					) return null;
-					auto rule = sections[matchInfo->id];
-					if (!rule->count) return MatchCount{0ull};
-					if (!matchInfo->atMost && rule->count < args.size()) return null;
-					auto const count = matchInfo->atMost ? rule->count : Math::min(rule->count, args.size());
-					switch (matchInfo->type) {
-						case Match::Type::AV2_TA_SM_RMT_COUNT:return null; break;
-						case Match::Type::AV2_TA_SM_RMT_ALL_OF: {
-							for (usize i = 0; i < count; ++i) {
-								if (args[i] != rule->match[i]) return matchInfo->atMost ? MatchCount{i} : null;
-							}
-						} break;
-						case Match::Type::AV2_TA_SM_RMT_ANY_OF: {
-							for (usize i = 0; i < count; ++i)
-								if (rule->match.find({args[i]}) != -1) return matchInfo->atMost ? MatchCount{i} : null;
-						} break;
-						default: break;
-					}
-					return true;
-				}
-
-				constexpr bool fits(Arguments const& args) const {
-					bool vaRegion	= false;
-					bool doVariadic	= false;
-					VariadicRegion	va;
-					usize		count	= 0;
-					MatchCount	mc		= null;
-					for (usize i = 0; i < matches.size(); ++i) {
-						if (count >= args.size()) break;
-						if (matches[i]->type == Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
-							va.begin = i+1;
-							vaRegion = true;
-						} else if (matches[i]->type == Match::Type::AV2_TA_SM_RMT_VA_END) {
-							va.end = i-1;
-							vaRegion = false;
-							doVariadic = true;
-						}
-						if (vaRegion) continue;
-						else if (doVariadic) {
-							while (true) {
-								for (usize i = va.begin; i < va.end; ++i) {
-									if (!(mc = fits(args.sliced(count), i))) break;
-									else count += mc.value();
-								}
-								if (!mc) break;
-							}	
-						} else if (!(mc = fits(args.sliced(count), i))) return false;
-						else count += mc.value();
-					}
-					return true;
+				
+				constexpr Match::Result match(Arguments const& args, Match::Callback const& call = {}) const {
+					return root ? root->match(args, call) : null;
 				}
 			};
 
@@ -192,49 +200,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				};
 
 				Dictionary<Variable> variables;
-			
-				Rule::MatchResult consume(usize const match) {
-					auto const result = rule.match(input, match);
-					if (result)
-						input.removeRange(result.value().size());
-					return result;
-				}
-
-				void parseVariadic(Rule::VariadicRegion const& va) {
-					while (true) {
-						Rule::MatchResult toks;
-						for (usize a = va.begin; a < va.end; ++a) {
-							toks = consume(a);
-							if (!toks) break;
-							if (rule.variables.contains(rule.matches[a]->id))
-								variables[rule.variables[rule.matches[a]->id]].tokens.pushBack(toks.value());
-						}
-						if (!toks) break;
-					}	
-				}
 
 				void parse() {
-					bool vaRegion	= false;
-					Rule::VariadicRegion va;
-					for (usize i = 0; i < rule.matches.size(); ++i) {
-						auto& match = rule.matches[i];
-						if (input.empty()) break;
-						if (match->type == Rule::Match::Type::AV2_TA_SM_RMT_VA_BEGIN) {
-							va.begin = i+1;
-							vaRegion = true;
-						} else if (match->type == Rule::Match::Type::AV2_TA_SM_RMT_VA_END) {
-							va.end = i-1;
-							vaRegion = false;
-							parseVariadic(va);
+					auto const result = rule.match(
+						input,
+						[&] (Rule::Match const& match, Arguments const& result) {
+							if (rule.variables.contains(match.id()))
+								variables[rule.variables[match.id()]].tokens.pushBack(result);
 						}
-						if (vaRegion) continue;
-						else if (rule.variables.contains(match->id)) {
-							auto const toks = consume(i);
-							if (toks)
-								variables[rule.variables[match->id]].tokens.pushBack(toks.value());
-							else break;
-						} else if (!consume(i)) break;
-					}
+					);
 				}
 			};
 
@@ -254,31 +228,27 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				}
 			};
 
-			using Expressions	= Map<typename Rule::IdentifierType, Transformation>;
-
 			struct Expression {
 				Rule			rule;
 				Transformation	transform;
 			};
 
+			using Expressions	= List<Expression>;
+
 			Expressions	exprs;
-			List<Rule>	rules;
 
-			struct Entry {
-				Tokenizer::TokenList pre;
-				Tokenizer::TokenList main;
-				Tokenizer::TokenList post;
-				bool variadic = false;
-			};
-
-			Makai::Dictionary<Instance<Entry>>	variables;
-			List<Instance<Entry>>				entries;
+			bool simple = false;
 
 			Nullable<Result> resolve(Arguments const& args) {
-				for (auto& rule: rules) if (rule.fits(args)) {
-					Context ctx{.input = args, .rule = rule};
+				if (simple) {
+					if (exprs.empty()) return null;
+					Context ctx{.input = args, .rule = exprs.front().rule};
 					ctx.parse();
-					return exprs[rule.id()].apply(ctx).result(ctx);
+					return exprs.front().transform.apply(ctx).result(ctx);
+				} else for (auto& expr: exprs) if (expr.rule.fit(args)) {
+					Context ctx{.input = args, .rule = expr.rule};
+					ctx.parse();
+					return expr.transform.apply(ctx).result(ctx);
 				}
 				return null;
 			}
@@ -845,9 +815,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return global.ns;
 		}
 
-		void fetchNext() {
+		Context& fetchNext() {
 			if (!nextToken())
 				error<Error::NonexistentValue>("Unexpected end-of-file!");
+			return *this;
 		}
 
 		bool nextToken() {
@@ -856,6 +827,24 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return true;
 			}
 			return stream.next();
+		}
+		
+		Data::Value fetchToken(Tokenizer::Token::Type const tok) {
+			return fetchToken(tok, "'" + Tokenizer::Token::asName(tok) + "'");
+		}
+
+		void expectToken(Tokenizer::Token::Type const tok) {
+			return expectToken(tok, "'" + Tokenizer::Token::asName(tok) + "'");
+		}
+
+		Data::Value fetchToken(Tokenizer::Token::Type const tok, String const& what) {
+			expectToken(tok, what);
+			return currentToken().value;
+		}
+
+		void expectToken(Tokenizer::Token::Type const tok, String const& what) {
+			if (!hasToken(Tokenizer::Token::Type{tok}))
+				error("Expected " + what + " here!");
 		}
 
 		bool hasToken(Tokenizer::Token::Type const type) {
@@ -870,10 +859,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			modules[fullName] = true;	
 		}
 
-		Tokenizer::Token currentToken() const {
+		Macro::Axiom currentToken() const {
 			if (append.hasTokens())
 				return append.current();
-			return stream.current();
+			return {{stream.current()}, true, stream.tokenText()};
 		}
 
 		template <class T>
@@ -1009,13 +998,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		struct Appendix {
-			Tokenizer::TokenList	cache;
+			List<Macro::Axiom>	cache;
 			
-			constexpr void add(Tokenizer::Token const& tok)			{cache.pushBack(tok);								}
-			constexpr void add(Tokenizer::TokenList const& toks)	{cache.appendBack(toks);							}
+			constexpr void add(Macro::Axiom const& tok)				{cache.pushBack(tok);								}
+			constexpr void add(List<Macro::Axiom> const& toks)		{cache.appendBack(toks);							}
 			constexpr bool hasTokens() const						{return ct < cache.size();							}
 			constexpr bool next()									{if (ct < cache.size()) return ++ct; return false;	}
-			constexpr Tokenizer::Token current() const				{return cache[ct-1];								}
+			constexpr Macro::Axiom current() const					{return cache[ct-1];								}
 		
 		private:
 			usize					ct = 0;
@@ -1071,6 +1060,22 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			"__main"	+ uniqueName(),
 			"__post"	+ uniqueName()
 		};
+
+		constexpr static bool isDelimeter(Tokenizer::Token::Type const& type) {
+			using Type = Tokenizer::Token::Type;
+			switch (type) {
+				case (Type{','}):
+				case (Type{';'}): return true;
+				default: return false;
+			}
+		}
+
+		constexpr void cache() {
+			while (!stream.finished()) {
+				stream.next();
+				append.add({{stream.current()}, true, stream.tokenText()});
+			}
+		}
 
 		String finale;
 

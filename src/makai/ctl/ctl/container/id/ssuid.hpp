@@ -174,14 +174,16 @@ using VLUID	= SSUID<4>;
 /// @brief Extremely Large Unique IDentifier.
 using ELUID	= SSUID<8>;
 
-template <class _ = void, Type::OneOf<LUID, VLUID, ELUID> TID = VLUID>
+template <class TTarget = void, Type::OneOf<uint8, uint16, uint32, uint64, LUID, VLUID, ELUID> TID = VLUID>
 struct Identifiable {
-	using IdentifierType = TID;
+	using TargetType		= TTarget;
+	using IdentifierType	= TID;
 
 	constexpr IdentifierType id() const {return thisID;}
 
 private:
-	IdentifierType thisID = (all++);
+	using StorageType = Meta::If<Type::Constant<TargetType>, IdentifierType const, IdentifierType>;
+	StorageType thisID = (all++);
 	static inline IdentifierType all = IdentifierType::create(0);
 };
 

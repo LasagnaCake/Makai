@@ -556,6 +556,18 @@ namespace Data {
 			return out;
 		}
 
+		constexpr AsUnsigned<IntegerType>	getUnsigned() const	{return get<AsUnsigned<IntegerType>>();	}
+		constexpr IntegerType				getSigned() const	{return get<IntegerType>();				}
+		constexpr StringType				getString() const	{return get<StringType>();				}
+		constexpr ArrayType					getArray() const	{return get<ArrayType>();				}
+		constexpr ByteListType				getBytes() const	{return get<ByteListType>();			}
+
+		constexpr AsUnsigned<IntegerType>	getUnsigned(AsUnsigned<IntegerType> const fallback) const	{return get<AsUnsigned<IntegerType>>(fallback);	}
+		constexpr IntegerType				getSigned(IntegerType const fallback) const					{return get<IntegerType>(fallback);				}
+		constexpr StringType				getString(StringType const& fallback) const					{return get<StringType>(fallback);				}
+		constexpr ArrayType					getArray(ArrayType const& fallback) const					{return get<ArrayType>(fallback);				}
+		constexpr ByteListType				getBytes(ByteListType const& fallback) const				{return get<ByteListType>(fallback);			}
+
 		/// @brief Returns the value as a given type (Implicit conversion).
 		template <class T>
 		constexpr operator T() const {return get<T>();}

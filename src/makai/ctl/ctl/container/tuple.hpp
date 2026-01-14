@@ -83,7 +83,7 @@ namespace Impl {
 		/// @brief Nth element type.
 		/// @tparam I Type index.
 		template<usize I>
-		using TupleType = typename DataTypes::Type<I>;
+		using TupleType = typename DataTypes::template Type<I>;
 
 		/// @brief Default constructor (defaulted).
 		constexpr Tuple()				= default;
@@ -128,6 +128,12 @@ namespace Impl {
 		/// @tparam INDEX Element index.
 		/// @return Reference to element.
 		template<usize I> constexpr TupleType<I> const& get() const requires (I == 0)	{return value;}
+
+		template <usize... N>
+		constexpr Tuple<TupleType<N>...> reduced() const requires (sizeof...(N) > 0) {
+			return Tuple<TupleType<N>...>(get<N>()...);
+		}
+
 	private:
 		/// @brief Tuple value.
 		DataType value;
@@ -216,7 +222,7 @@ using IntegerPack = Impl::Builtin::MakePack<N>;
 /// @tparam T Tuple type.
 /// @tparam N Element type.
 template<class T, usize N>
-using TupleType = typename T::TupleType<N>;
+using TupleType = typename T::template TupleType<N>;
 
 /// @brief Gets the Nth element in a given tuple.
 /// @tparam I Element index.
