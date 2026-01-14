@@ -1356,7 +1356,7 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 		if (context.fetchNext().hasToken(Type{'}'})) break;
 		auto const sub = base.addSubMatch();
 		switch (context.currentToken().type) {
-			case Type{'$'}: {
+			case Type{'^'}: {
 				context.fetchNext();
 				switch (context.currentToken().type) {
 					case LTS_TT_IDENTIFIER: {
@@ -1365,7 +1365,7 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 						doMacroRuleType(context, rule, *sub);
 						rule.variables[sub->id()] = varName;
 					} break;
-					case Type{'$'}:
+					case Type{'^'}:
 					case Type{'*'}:
 					case Type{'{'}:
 					case Type{'}'}: sub->tokens.pushBack(context.currentToken()); break;
@@ -1408,7 +1408,7 @@ static void doMacroTransform(
 	while (!context.hasToken(Type{'}'})) {
 		if (context.fetchNext().hasToken(Type{'}'})) break;
 		switch (context.currentToken().type) {
-			case Type{'$'}: {
+			case Type{'^'}: {
 				if (result.size())
 					base.sub.pushBack(macroApply(result));
 				result.clear();
@@ -1453,6 +1453,7 @@ static Context::Macro::Expression doMacroExpression(Context& context, Context::M
 	context.expectToken(Type{'{'});
 	doMacroRule(context, expr.rule, *expr.rule.root);
 	context.expectToken(Type{'}'});
+	context.fetchNext().expectToken(LTS_TT_BIG_ARROW);
 	context.fetchNext().expectToken(Type{'{'});
 	doMacroTransform(context, expr.rule, expr.transform);
 	context.expectToken(Type{'}'});
