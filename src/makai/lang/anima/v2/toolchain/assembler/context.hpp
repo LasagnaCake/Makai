@@ -883,7 +883,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Macro::Axiom currentToken() const {
 			if (append.hasTokens())
 				return append.current();
-			return {{stream.current()}, true, stream.tokenText()};
+			return {{stream.current()}, true, stream.tokenText(), stream.position()};
 		}
 
 		template <class T>
