@@ -1380,20 +1380,20 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 	context.expectToken(Type{'}'});
 }
 
-Makai::Instance<Context::Macro::Transformation> macroApply(Context::Macro::Result const& values) {
+Makai::Instance<Context::Macro::Transformation> macroApply(Context::Macro::Arguments const& values) {
 	return new Context::Macro::Transformation{
 		.pre = [=] (Context::Macro::Context& context) {
-			context.result.appendBack(values);
+			context.result.value.appendBack(values);
 		}
 	};
 }
 
-static Makai::Instance<Context::Macro::Transformation> doMacroTransform(
+static void doMacroTransform(
 	Context& context,
 	Context::Macro::Rule& rule,
 	Context::Macro::Transformation& base
 ) {
-	Context::Macro::Result result;
+	Context::Macro::Arguments result;
 	while (!context.hasToken(Type{'}'})) {
 		if (context.fetchNext().hasToken(Type{'}'})) break;
 		switch (context.currentToken().type) {
@@ -1408,7 +1408,7 @@ static Makai::Instance<Context::Macro::Transformation> doMacroTransform(
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
 						base.newTransform()->pre = [varName] (Context::Macro::Context& context) {
-							context.result.appendBack(context.variables[varName].tokens.join());
+							context.result.value.appendBack(context.variables[varName].tokens.join());
 						};
 					} break;
 					case Type{'*'}: {
@@ -1423,7 +1423,7 @@ static Makai::Instance<Context::Macro::Transformation> doMacroTransform(
 							[varName, tf] (Context::Macro::Context& ctx) {
 								Context::Macro::Context subctx = ctx;
 								tf.apply(subctx);
-								ctx.result.appendBack(ctx.variables[varName].tokens.join(ctx.result));
+								ctx.result.value.appendBack(ctx.variables[varName].tokens.join(ctx.result.value));
 							}
 						;
 					} break;
@@ -1449,7 +1449,6 @@ static Context::Macro::Expression doMacroExpression(Context& context, Context::M
 }
 
 SEMIBREVE_ASSEMBLE_FN(Macro) {
-	// TODO: This
 	context.fetchNext();
 	auto const name = context.fetchToken(LTS_TT_IDENTIFIER, "macro name").getString();
 	auto const macro = (context.currentScope().addMacro(name)->macro = new Context::Macro());
@@ -1471,6 +1470,14 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 			// TODO: This
 		} break;
 	}
+}
+
+static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self) {
+	auto const result = symbol->macro->resolve(context.append.cache);
+	if (!result)
+		context.error("No viable macro rules match the given expression!");
+	auto rv = result.value();
+	context.append.cache = rv.value.appendBack(context.append.cache.sliced(rv.match.size()));
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
