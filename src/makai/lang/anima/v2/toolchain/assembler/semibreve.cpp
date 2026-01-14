@@ -1455,10 +1455,16 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 	auto const macro = (context.currentScope().addMacro(name)->macro = new Context::Macro());
 	switch (context.fetchNext().currentToken().type) {
 		case LTS_TT_BIG_ARROW: {
-			// TODO: This
+			context.fetchNext().expectToken(Type{'{'});
+			macro->exprs.pushBack(doMacroExpression(context, *macro));
 		} break;
 		case Type{'{'}: {
-			// TODO: This
+			while (!context.hasToken(Type{'{'})) {
+				if (context.fetchNext().hasToken(Type{'}'})) break;
+				macro->exprs.pushBack(doMacroExpression(context, *macro));
+			}
+			if (macro->exprs.empty())
+				context.error<NonexistentValue>("Macro is empty!");
 		} break;
 		case Type{'='}: {
 			macro->simple = true;
