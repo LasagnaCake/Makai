@@ -327,6 +327,16 @@ SEMIBREVE_ASSEMBLE_FN(ExternalFunction) {
 	context.endScope();
 }
 
+SEMIBREVE_ASSEMBLE_FN(SharedFunction) {
+	context.fetchNext().expectToken(Type{'['});
+	auto const file		= context.fetchNext().fetchToken(LTS_TT_SINGLE_QUOTE_STRING).getString();
+	context.fetchNext().expectToken(Type{':'});
+	auto const function	= context.fetchNext().fetchToken(LTS_TT_SINGLE_QUOTE_STRING).getString();
+	context.fetchNext().expectToken(Type{']'});
+	context.program.ani.shared[file][function] = true;
+	doExternalFunction(context);
+}
+
 SEMIBREVE_ASSEMBLE_FN(Scope) {
 	while (context.nextToken()) {
 		auto const current = context.currentToken();
@@ -350,6 +360,7 @@ SEMIBREVE_ASSEMBLE_FN(External) {
 		context.error<NonexistentValue>("Expected keyword here!");
 	auto const id = context.currentToken().value.get<Makai::String>();
 	if (id == "function" || id == "func" || id == "fn") doExternalFunction(context);
+	if (id == "shared") doSharedFunction(context);
 	else if (!context.isReservedKeyword(id))
 		doExternalValue(context);
 	else context.error<NonexistentValue>("Invalid keyword!");

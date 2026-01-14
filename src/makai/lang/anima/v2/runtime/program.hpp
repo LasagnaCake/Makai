@@ -45,9 +45,9 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		struct NativeInterface {
-			Label					in;
-			StringList				out;
-			Dictionary<StringList>	shared;
+			Label							in;
+			StringList						out;
+			Dictionary<Dictionary<bool>>	shared;
 
 			constexpr Data::Value serialize() const {
 				auto result = Data::Value::object();
@@ -61,6 +61,8 @@ namespace Makai::Anima::V2::Runtime {
 					signals[name] = id;
 				for (auto& name: out)
 					externs[externs.size()] = name;
+				for (auto& [lib, funcs]: shared)
+					sharedLibs[lib] = funcs.keys().toList<Data::Value>();
 				return result;
 			}
 
@@ -75,6 +77,12 @@ namespace Makai::Anima::V2::Runtime {
 					auto const externs	= v["out"];
 					for (auto const& e: externs.get<Data::Value::ArrayType>())
 						ani.out.pushBack(e);
+				}
+				if (v.contains("shared")) {
+					auto const sharedLibs	= v["shared"];
+					for (auto [lib, funcs]: sharedLibs.items())
+						for (auto const& f: funcs.getArray().toList<String>())
+							ani.shared[lib][f] = true;
 				}
 				return ani;
 			}

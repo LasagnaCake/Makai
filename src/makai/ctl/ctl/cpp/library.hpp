@@ -4,6 +4,7 @@
 #include "../namespace.hpp"
 #include "../container/strings/strings.hpp"
 #include "../container/pointer/pointer.hpp"
+#include "../container/error.hpp"
 
 #if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 #include <libloaderapi.h>
@@ -17,8 +18,16 @@ namespace CPP {
 	struct Library {
 		struct Module {
 		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
-			Module (String const& path)					{lib = LoadLibrary(path.cstr());					}
+			Module (String const& path) {
+				lib = LoadLibrary(path.cstr());
+				if (!lib) throw Error::FailedAction(
+					"Failed to load library '"+path+"'!",
+					CTL_CPP_PRETTY_SOURCE
+				);
+			}
+
 			~Module()									{if (lib) FreeLibrary(lib);							}
+			
 			pointer function(String const& name) const	{return (pointer)GetProcAddress(lib, name.cstr());	}
 		private:
 			HMODULE lib = nullptr;
