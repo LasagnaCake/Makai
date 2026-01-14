@@ -1469,7 +1469,7 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 			macro->exprs.pushBack(doMacroExpression(context, *macro));
 		} break;
 		case Type{'{'}: {
-			while (!context.hasToken(Type{'{'})) {
+			while (!context.hasToken(Type{'}'})) {
 				if (context.fetchNext().hasToken(Type{'}'})) break;
 				macro->exprs.pushBack(doMacroExpression(context, *macro));
 			}
