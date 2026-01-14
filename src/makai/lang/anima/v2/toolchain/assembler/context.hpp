@@ -231,6 +231,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					return *this;
 				}
 
+				constexpr void apply(Context& ctx) const {
+					pre(ctx);
+					for (auto& action: sub)
+						action->apply(ctx);
+					post(ctx);
+				}
+
 				constexpr Result result(Context& ctx) const {
 					return ctx.result;
 				}
