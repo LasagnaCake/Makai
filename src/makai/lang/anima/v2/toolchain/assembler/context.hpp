@@ -1091,7 +1091,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 		}
 
-		constexpr void cache() {
+		void cache() {
 			while (stream.next()) {
 				append.add({{stream.current()}, true, stream.tokenText(), stream.position()});
 			}
