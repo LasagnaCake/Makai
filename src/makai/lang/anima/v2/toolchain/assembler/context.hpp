@@ -14,6 +14,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Axiom: Tokenizer::Token {
 				bool strict = false;
 				String token;
+				Tokenizer::Position position;
 
 				constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
 					if (!strict) return type <=> other.type;
@@ -911,12 +912,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <Type::Derived<Error::Generic> E = Error::InvalidValue>
 		[[noreturn]]
 		void error(String const& what) const {
-			auto const pos = stream.position();
+			auto const pos = currentToken().position;
 			throw E(
 				Makai::toString(
 					"At:\nLINE: ", pos.line,
 					"\nCOLUMN: ", pos.column,
-					"\n--> [", stream.tokenText(), "]"
+					"\n--> [", currentToken().token, "]"
 				),
 				what,
 				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), fileName}
@@ -1092,7 +1093,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr void cache() {
 			while (stream.next()) {
-				append.add({{stream.current()}, true, stream.tokenText()});
+				append.add({{stream.current()}, true, stream.tokenText(), stream.position()});
 			}
 		}
 
