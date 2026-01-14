@@ -46,7 +46,7 @@
 #define STB_C_LEX_MULTILINE_DSTRINGS   Y  // allow newlines in double-quoted strings
 #define STB_C_LEX_MULTILINE_SSTRINGS   Y  // allow newlines in single-quoted strings
 #define STB_C_LEX_USE_STDLIB           Y  // use strtod,strtol for parsing #s; otherwise inaccurate hack
-#define STB_C_LEX_DOLLAR_IDENTIFIER    Y  // allow $ as an identifier character
+#define STB_C_LEX_DOLLAR_IDENTIFIER    N  // allow $ as an identifier character
 #define STB_C_LEX_FLOAT_NO_DECIMAL     Y  // allow floats that have no decimal point if they have an exponent
 
 #define STB_C_LEX_DEFINE_ALL_TOKEN_NAMES  N   // if Y, all CLEX_ token names are defined, even if never returned
