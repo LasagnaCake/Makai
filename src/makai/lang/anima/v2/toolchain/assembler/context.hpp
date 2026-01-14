@@ -37,9 +37,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				}
 			};
 
-			using Stack			= Tokenizer::TokenList;
-			using Arguments		= Tokenizer::TokenList;
-			using Result		= Tokenizer::TokenList;
+			using Stack			= List<Axiom>;
+			using Arguments		= List<Axiom>;
+			
+			struct Result {
+				Arguments	match;
+				List<Axiom>	value;
+			};
 
 			struct Rule: ID::Identifiable<Rule> {
 				struct Match: Identifiable<Match> {
@@ -202,13 +206,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Dictionary<Variable> variables;
 
 				void parse() {
-					auto const result = rule.match(
+					auto const match = rule.match(
 						input,
 						[&] (Rule::Match const& match, Arguments const& result) {
 							if (rule.variables.contains(match.id()))
 								variables[rule.variables[match.id()]].tokens.pushBack(result);
 						}
 					);
+					result.match = match.orElse({});
 				}
 			};
 
@@ -1086,8 +1091,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr void cache() {
-			while (!stream.finished()) {
-				stream.next();
+			while (stream.next()) {
 				append.add({{stream.current()}, true, stream.tokenText()});
 			}
 		}
