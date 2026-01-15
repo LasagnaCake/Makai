@@ -1457,7 +1457,6 @@ static Context::Macro::Expression doMacroExpression(Context& context, Context::M
 	context.fetchNext().expectToken(Type{'{'});
 	doMacroTransform(context, expr.rule, expr.transform);
 	context.expectToken(Type{'}'});
-	DEBUGLN("Here!");
 	return expr;
 }
 
