@@ -1352,7 +1352,7 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 
 static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
 	context.expectToken(Type{'{'});
-	while (!context.hasToken(Type{'}'})) {
+	while (true) {
 		if (context.fetchNext().hasToken(Type{'}'})) break;
 		auto const sub = base.addSubMatch();
 		switch (context.currentToken().type) {
@@ -1405,7 +1405,7 @@ static void doMacroTransform(
 	Context::Macro::Transformation& base
 ) {
 	Context::Macro::Arguments result;
-	while (!context.hasToken(Type{'}'})) {
+	while (true) {
 		if (context.fetchNext().hasToken(Type{'}'})) break;
 		switch (context.currentToken().type) {
 			case Type{'$'}: {
@@ -1457,6 +1457,7 @@ static Context::Macro::Expression doMacroExpression(Context& context, Context::M
 	context.fetchNext().expectToken(Type{'{'});
 	doMacroTransform(context, expr.rule, expr.transform);
 	context.expectToken(Type{'}'});
+	DEBUGLN("Here!");
 	return expr;
 }
 
@@ -1470,7 +1471,7 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 			macro->exprs.pushBack(doMacroExpression(context, *macro));
 		} break;
 		case Type{'{'}: {
-			while (!context.hasToken(Type{'}'})) {
+			while (true) {
 				if (context.fetchNext().hasToken(Type{'}'})) break;
 				macro->exprs.pushBack(doMacroExpression(context, *macro));
 			}
