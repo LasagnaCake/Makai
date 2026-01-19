@@ -765,6 +765,13 @@ namespace Data {
 						result += lhs + ::CTL::toString(v) + sep;
 					return result.sliced(0, -3) + lhs + StringType("]");
 				},
+				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
+					StringType result = "[";
+					for (usize i = 0; i < IdentifierType::SIZE; ++i) {
+						result += lhs + ::CTL::toString((*val.content.id)[i]) + sep;
+					}
+					return result.sliced(0, -3) + lhs + StringType("]");
+				},
 				pad
 			);
 		}
@@ -777,6 +784,14 @@ namespace Data {
 			return stringify(
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
 					return StringType("!64\"" + Convert::toBase<Convert::Base::CB_BASE64>(*val.content.bytes) + "\"");
+				},
+				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
+					auto const& id = *val.content.id;
+					StringType result = "#[";
+					result += ::CTL::toString(id[0]);
+					for (usize i = 1; i < IdentifierType::SIZE; ++i)
+						result += ::CTL::toString("-", id[i]);
+					return result + "]";
 				},
 				pad,
 				" ",
@@ -932,8 +947,10 @@ namespace Data {
 		/// @brief Value content.
 		Content	content;
 
-		template <Type::Functional<StringType(Value const&, String const&, String const&)> TToBytes>
-		constexpr StringType stringify(TToBytes toBytes, Padding const& pad, String const& sep = ", ", String const& assign = ": ", bool unquotedIDs = false) const {
+		using Converter = StringType(Value const&, String const&, String const&);
+
+		template <Type::Functional<Converter> TConv1, Type::Functional<Converter> TConv2>
+		constexpr StringType stringify(TConv1 const& toBytes, TConv2 const& toID, Padding const& pad, String const& sep = ", ", String const& assign = ": ", bool unquotedIDs = false) const {
 			if (isUndefined()) return "undefined";
 			if (isNull()) return "null";
 			if (isNaN()) return "nan";
@@ -954,16 +971,18 @@ namespace Data {
 				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
-					result += lhs + v.stringify(toBytes, pad.next(), sep, assign, unquotedIDs) + sep;
+					result += lhs + v.stringify(toBytes, toID, pad.next(), sep, assign, unquotedIDs) + sep;
 				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("]");
 			}
 			if (isObject()) {
 				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto const& [k, v]: items())
-					result +=  lhs + escape(k, unquotedIDs) + assign + v.stringify(toBytes, pad.next(), sep, assign, unquotedIDs) + sep;
+					result +=  lhs + escape(k, unquotedIDs) + assign + v.stringify(toBytes, toID, pad.next(), sep, assign, unquotedIDs) + sep;
 				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("}");
 			}
+			if (isIdentifier())
+				return toID(*this, lhs, sep);
 			return StringType();
 		}
 
@@ -1058,11 +1077,12 @@ namespace Data {
 	}
 
 	constexpr usize Value::size() const {
-		if (isString())	return content.string->size();
-		if (isBytes())	return content.bytes->size();
-		if (isArray())	return content.array->size();
-		if (isObject())	return content.object->size();
-		if (isScalar())	return 1;
+		if (isString())		return content.string->size();
+		if (isBytes())		return content.bytes->size();
+		if (isArray())		return content.array->size();
+		if (isObject())		return content.object->size();
+		if (isIdentifier())	return 4;
+		if (isScalar())		return 1;
 		return 0;
 	}
 
