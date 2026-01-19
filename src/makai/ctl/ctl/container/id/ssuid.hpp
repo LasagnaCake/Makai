@@ -108,6 +108,12 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 	) {
 		return createInternal({values...});
 	}
+	
+	template <usize N2>
+	constexpr static SSUID create(As<uint64[N2]> const& values)
+	requires (N2 == N) {
+		return createInternal(values);
+	}
 
 private:
 	constexpr static SSUID createInternal(InternalType const& value) {

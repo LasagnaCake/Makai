@@ -14,7 +14,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Axiom: Tokenizer::Token {
 				bool strict = false;
 				String token;
-				Tokenizer::Position position;
+				Tokenizer::Position position = {0, 0};
 
 				constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
 					if (!strict) return type <=> other.type;
@@ -75,11 +75,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						auto const sz = (!variadic) ? count : Math::min(count, args.size());
 						switch (type) {
 							case Type::AV2_TA_SM_RMT_WHATEVER: {
+								DEBUGLN("WHATEVER");
 								return args.sliced(0, sz);
 							} break;
 							case Type::AV2_TA_SM_RMT_ANY_OF: {
+								DEBUGLN("TOKEN");
 								for (usize i = 0; i < sz; ++i) {
-									if (tokens.find({args[i]}) != -1)
+									if (tokens.find(args[i]) != -1)
 										result.pushBack(args[i]);
 									else if (variadic)
 										return result;
@@ -87,10 +89,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								}
 							} break;
 							case Type::AV2_TA_SM_RMT_EXPRESSION: {
+								DEBUGLN("EXPRESSION");
 								if (expressionSolver)
 									result = expressionSolver(args).value();
 							} break;
-							default: break;
 						}
 						call.invoke(*this, result);
 						return result;
@@ -107,13 +109,16 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						usize prev = 0;
 						for (usize i = 0; i < args.size();) {
 							using Type = Tokenizer::Token::Type;
-							if (isDelimeter(args[i].type)) break;
-							switch (args[i].type) {
-								case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'}));
-								case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'}));
-								case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'}));
-								default: result.pushBack(args[i]);
-							}
+							if (isScopeStarter(args[i].type)) {
+								switch (args[i].type) {
+									case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'})); break;
+									case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'})); break;
+									case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'})); break;
+									default: break;
+								}
+							} else if (isExpressionToken(args[i].type))
+								result.pushBack(args[i]);
+							else break;
 							i += result.size() - prev;
 							prev = result.size();
 						}
@@ -150,6 +155,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 				private:
 					constexpr Result matchGroup(Arguments const& args, Callback const& call = {}) const {
+						DEBUGLN("Group");
 						if (matches.empty()) return null;
 						Arguments result;
 						if (!count) return Arguments();
@@ -158,7 +164,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						usize matchCount	= 0;
 						Result mr;
 						do {
-							if (++matchCount > sz) break;
+							if (matchCount++ > sz) break;
 							for (auto& match: matches) {
 								if (tokenStart >= args.size()) {
 									mr = variadic ? Result{Arguments()} : null;
@@ -206,7 +212,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 				Dictionary<Variable> variables;
 
-				void parse() {
+				void parse(Assembler::Context& context) {
 					auto const match = rule.match(
 						input,
 						[&] (Rule::Match const& match, Arguments const& result) {
@@ -214,7 +220,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								variables[rule.variables[match.id()]].tokens.pushBack(result);
 						}
 					);
-					result.match = match.orElse({});
+					if (match)
+						result.match = match.value();
+					else context.error<Error::FailedAction>("Macro expansion failure!");
 				}
 			};
 
@@ -260,16 +268,20 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			bool simple = false;
 
-			Nullable<Result> resolve(Arguments const& args) {
+			Nullable<Result> resolve(Arguments const& args, Assembler::Context& context) {
 				if (simple) {
 					if (exprs.empty()) return null;
 					Context ctx{.input = args, .rule = exprs.front().rule};
-					ctx.parse();
+					ctx.parse(context);
 					return exprs.front().transform.apply(ctx).result(ctx);
-				} else for (auto& expr: exprs) if (expr.rule.fit(args)) {
-					Context ctx{.input = args, .rule = expr.rule};
-					ctx.parse();
-					return expr.transform.apply(ctx).result(ctx);
+				} else {
+					usize i = 0;
+					for (auto& expr: exprs) if (expr.rule.fit(args)) {
+						DEBUGLN("Found matching rule: ", i);
+						Context ctx{.input = args, .rule = expr.rule};
+						ctx.parse(context);
+						return expr.transform.apply(ctx).result(ctx);
+					} else ++i;
 				}
 				return null;
 			}
@@ -1019,16 +1031,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		struct Appendix {
-			List<Macro::Axiom>	cache;
+			List<Macro::Axiom> cache = List<Macro::Axiom>::from(Macro::Axiom());
 			
-			constexpr void add(Macro::Axiom const& tok)				{cache.pushBack(tok);								}
-			constexpr void add(List<Macro::Axiom> const& toks)		{cache.appendBack(toks);							}
-			constexpr bool hasTokens() const						{return ct < cache.size();							}
-			constexpr bool next()									{if (ct < cache.size()) return ++ct; return false;	}
-			constexpr Macro::Axiom current() const					{return cache[ct-1];								}
-		
-		private:
-			usize					ct = 0;
+			constexpr void add(Macro::Axiom const& tok)				{cache.pushBack(tok);												}
+			constexpr void add(List<Macro::Axiom> const& toks)		{cache.appendBack(toks);											}
+			constexpr bool hasTokens() const						{return cache.size() > 1;											}
+			constexpr bool next()									{if (cache.size() > 1) {cache.erase(0); return true;} return false;	}
+			constexpr Macro::Axiom current() const					{return cache.front();												}
 		};
 
 		StringList				sourcePaths;
@@ -1087,6 +1096,40 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			switch (type) {
 				case (Type{','}):
 				case (Type{';'}): return true;
+				default: return false;
+			}
+		}
+
+		constexpr static bool isBlockEnd(Tokenizer::Token::Type const& type) {
+			using Type = Tokenizer::Token::Type;
+			switch (type) {
+				case (Type{'}'}):
+				case (Type{']'}):
+				case (Type{')'}): return true;
+				default: return false;
+			}
+		}
+
+		constexpr static bool isExpressionToken(Tokenizer::Token::Type const& type) {
+			using Type = Tokenizer::Token::Type;
+			switch (type) {
+				case (Type::LTS_TT_IDENTIFIER):
+				case (Type::LTS_TT_SINGLE_QUOTE_STRING):
+				case (Type::LTS_TT_DOUBLE_QUOTE_STRING):
+				case (Type::LTS_TT_INTEGER):
+				case (Type::LTS_TT_REAL):
+				case (Type{'.'}): return true;
+				default: return false;
+			}
+		}
+
+		constexpr static bool isScopeStarter(Tokenizer::Token::Type const& type) {
+			using Type = Tokenizer::Token::Type;
+			switch (type) {
+				case (Type{'{'}):
+				case (Type{'('}):
+				case (Type{'['}):
+				return true;
 				default: return false;
 			}
 		}

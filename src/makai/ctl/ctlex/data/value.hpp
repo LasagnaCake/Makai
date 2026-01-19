@@ -37,19 +37,21 @@ namespace Data {
 	// TODO: Add `Vector` (& `Matrix`?) support
 	struct Value: Ordered {
 		/// @brief Integer type.
-		using IntegerType	= ssize;
+		using IntegerType		= ssize;
 		/// @brief Real number type.
-		using RealType		= double;
+		using RealType			= double;
 		/// @brief String type.
-		using StringType	= String;
+		using StringType		= String;
 		/// @brief Byte list type.
-		using ByteListType	= BinaryData<>;
+		using ByteListType		= BinaryData<>;
 		/// @brief Array type.
-		using ArrayType		= List<Value>;
+		using ArrayType			= List<Value>;
 		/// @brief Object type.
-		using ObjectType	= ListMap<StringType, Value>;
+		using ObjectType		= ListMap<StringType, Value>;
 		/// @brief Vector type.
-		using VectorType	= Math::Vector4;
+		using VectorType		= Math::Vector4;
+		/// @brief Vector type.
+		using IdentifierType	= ID::VLUID;
 		
 		/// @brief Underlying value type.
 		enum class Kind: int16 {
@@ -65,18 +67,20 @@ namespace Data {
 			DVK_ARRAY,
 			DVK_BYTES,
 			DVK_OBJECT,
-			DVK_VECTOR
+			DVK_VECTOR,
+			DVK_IDENTIFIER
 		};
 
 		/// @brief Underlying storage.
 		union Content {
-			IntegerType			integer;
-			RealType			real;
-			owner<StringType>	string;
-			owner<ByteListType>	bytes;
-			owner<ArrayType>	array;
-			owner<ObjectType>	object;
-			owner<VectorType>	vector;
+			IntegerType				integer;
+			RealType				real;
+			owner<StringType>		string;
+			owner<ByteListType>		bytes;
+			owner<ArrayType>		array;
+			owner<ObjectType>		object;
+			owner<VectorType>		vector;
+			owner<IdentifierType>	id;
 
 			constexpr Content()		{integer = 0;}
 			constexpr ~Content()	{}
@@ -133,22 +137,24 @@ namespace Data {
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::UnsignedInteger T>
 		constexpr Value(T const value)
-		requires (Type::Different<T, bool>):		kind(Kind::DVK_UNSIGNED)		{content.integer = value;					}
+		requires (Type::Different<T, bool>):			kind(Kind::DVK_UNSIGNED)		{content.integer = value;					}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Enumerator T>
-		constexpr Value(T const value):				Value(enumcast(value))			{											}
+		constexpr Value(T const value):					Value(enumcast(value))			{											}
 		/// @brief Constructs a real number value.
 		template <::CTL::Type::Real T>
-		constexpr Value(T const value):				kind(Kind::DVK_REAL)			{content.real = value;						}
+		constexpr Value(T const value):					kind(Kind::DVK_REAL)			{content.real = value;						}
 		/// @brief Constructs a string value.
 		template <::CTL::Type::CanBecome<StringType> T>
-		constexpr Value(T const& value):			kind(Kind::DVK_STRING)			{content.string = new StringType(value);	}
+		constexpr Value(T const& value):				kind(Kind::DVK_STRING)			{content.string = new StringType(value);	}
 		/// @brief Constructs a byte list value.
-		constexpr Value(ByteListType const& value):	kind(Kind::DVK_BYTES)			{content.bytes = new ByteListType(value);	}
+		constexpr Value(ByteListType const& value):		kind(Kind::DVK_BYTES)			{content.bytes = new ByteListType(value);	}
 		/// @brief Constructs an array value.
-		constexpr Value(ArrayType const value):		kind(Kind::DVK_ARRAY)			{content.array = new ArrayType(value);		}
+		constexpr Value(ArrayType const value):			kind(Kind::DVK_ARRAY)			{content.array = new ArrayType(value);		}
 		/// @brief Constructs an object value.
-		constexpr Value(ObjectType const& value):	kind(Kind::DVK_OBJECT)			{content.object = new ObjectType(value);	}		
+		constexpr Value(ObjectType const& value):		kind(Kind::DVK_OBJECT)			{content.object = new ObjectType(value);	}
+		/// @brief Constructs an identifier value.
+		constexpr Value(IdentifierType const& value):	kind(Kind::DVK_IDENTIFIER)		{content.id = new IdentifierType(value);	}
 
 		/// @brief Constructs the value from a serializable value.
 		template <Type::Ex::Data::Serializable T>
@@ -174,6 +180,7 @@ namespace Data {
 				case Kind::DVK_BYTES:		content.bytes	= new ByteListType(*other.content.bytes);	break;
 				case Kind::DVK_ARRAY:		content.array	= new ArrayType(*other.content.array);		break;
 				case Kind::DVK_OBJECT:		content.object	= new ObjectType(*other.content.object);	break;
+				case Kind::DVK_IDENTIFIER:	content.id		= new IdentifierType(*other.content.id);	break;
 				default: break;
 			}
 			return *this;
@@ -191,6 +198,7 @@ namespace Data {
 				case Kind::DVK_BYTES:		content.bytes	= new ByteListType(*other.content.bytes);	break;
 				case Kind::DVK_ARRAY:		content.array	= new ArrayType(*other.content.array);		break;
 				case Kind::DVK_OBJECT:		content.object	= new ObjectType(*other.content.object);	break;
+				case Kind::DVK_IDENTIFIER:	content.id		= new IdentifierType(*other.content.id);	break;
 				default: break;
 			}
 			return *this;
@@ -218,6 +226,8 @@ namespace Data {
 		constexpr static bool isBytes(Kind const kind)		{return kind == Kind::DVK_BYTES;		}
 		/// @brief Returns whether the type is an object.
 		constexpr static bool isObject(Kind const kind)		{return kind == Kind::DVK_OBJECT;		}
+		/// @brief Returns whether the type is an identifier.
+		constexpr static bool isIdentifier(Kind const kind)	{return kind == Kind::DVK_IDENTIFIER;	}
 
 		/// @brief Returns whether the value is undefined.
 		constexpr bool isUndefined() const	{return isUndefined(kind);	}
@@ -241,6 +251,8 @@ namespace Data {
 		constexpr bool isBytes() const		{return isBytes(kind);		}
 		/// @brief Returns whether the value is an object.
 		constexpr bool isObject() const		{return isObject(kind);		}
+		/// @brief Returns whether the value is an identifier.
+		constexpr bool isIdentifier() const	{return isIdentifier(kind);	}
 
 		/// @brief Returns whether the type is an integer.
 		constexpr static bool isInteger(Kind const kind)	{return isSigned(kind) || isUnsigned(kind);									}
@@ -390,6 +402,17 @@ namespace Data {
 		/// @tparam T value type.
 		/// @param out Output.
 		/// @return Whether value was successfully acquired.
+		template <::CTL::Type::Equal<IdentifierType> T>
+		constexpr bool tryGet(T& out) const {
+			if (isIdentifier()) out = *content.id;
+			else return false;
+			return true;
+		}
+
+		/// @brief Tries to get the value as a given type.
+		/// @tparam T value type.
+		/// @param out Output.
+		/// @return Whether value was successfully acquired.
 		template <Type::Container::List T>
 		constexpr bool tryGet(T& out) const
 		requires (
@@ -467,6 +490,7 @@ namespace Data {
 			else if constexpr (Type::Equal<T, ArrayType>)			return isArray();
 			else if constexpr (Type::Equal<T, ByteListType>)		return isBytes();
 			else if constexpr (Type::Equal<T, ObjectType>)			return isObject();
+			else if constexpr (Type::Equal<T, IdentifierType>)		return isIdentifier();
 			else if constexpr (Type::Equal<T, Value>)				return true;
 			else return false;
 		}
@@ -556,17 +580,19 @@ namespace Data {
 			return out;
 		}
 
-		constexpr AsUnsigned<IntegerType>	getUnsigned() const	{return get<AsUnsigned<IntegerType>>();	}
-		constexpr IntegerType				getSigned() const	{return get<IntegerType>();				}
-		constexpr StringType				getString() const	{return get<StringType>();				}
-		constexpr ArrayType					getArray() const	{return get<ArrayType>();				}
-		constexpr ByteListType				getBytes() const	{return get<ByteListType>();			}
+		constexpr AsUnsigned<IntegerType>	getUnsigned() const		{return get<AsUnsigned<IntegerType>>();	}
+		constexpr IntegerType				getSigned() const		{return get<IntegerType>();				}
+		constexpr StringType				getString() const		{return get<StringType>();				}
+		constexpr ArrayType					getArray() const		{return get<ArrayType>();				}
+		constexpr ByteListType				getBytes() const		{return get<ByteListType>();			}
+		constexpr IdentifierType			getIdentifier() const	{return get<IdentifierType>();			}
 
 		constexpr AsUnsigned<IntegerType>	getUnsigned(AsUnsigned<IntegerType> const fallback) const	{return get<AsUnsigned<IntegerType>>(fallback);	}
 		constexpr IntegerType				getSigned(IntegerType const fallback) const					{return get<IntegerType>(fallback);				}
 		constexpr StringType				getString(StringType const& fallback) const					{return get<StringType>(fallback);				}
 		constexpr ArrayType					getArray(ArrayType const& fallback) const					{return get<ArrayType>(fallback);				}
 		constexpr ByteListType				getBytes(ByteListType const& fallback) const				{return get<ByteListType>(fallback);			}
+		constexpr IdentifierType			getIdentifier(IdentifierType const& fallback) const			{return get<IdentifierType>(fallback);			}
 
 		/// @brief Returns the value as a given type (Implicit conversion).
 		template <class T>
@@ -779,25 +805,27 @@ namespace Data {
 		}
 
 		/// @brief Creates an undefined value.
-		constexpr static Value undefined()		{return Value();		}
+		constexpr static Value undefined()		{return Value();			}
 		/// @brief Creates a null value.
-		constexpr static Value null()			{return nullptr;		}
+		constexpr static Value null()			{return nullptr;			}
 		/// @brief Creates a boolean value.
-		constexpr static Value boolean()		{return false;			}
+		constexpr static Value boolean()		{return false;				}
 		/// @brief Creates a signed integer value.
-		constexpr static Value signedInt()		{return 0;				}
+		constexpr static Value signedInt()		{return 0;					}
 		/// @brief Creates an unsigned integer value.
-		constexpr static Value unsignedInt()	{return 0u;				}
+		constexpr static Value unsignedInt()	{return 0u;					}
 		/// @brief Creates a real number value.
-		constexpr static Value real()			{return 0d;				}
+		constexpr static Value real()			{return 0d;					}
 		/// @brief Creates a string value.
-		constexpr static Value string()			{return StringType();	}
+		constexpr static Value string()			{return StringType();		}
 		/// @brief Creates an array value.
-		constexpr static Value array()			{return ArrayType();	}
+		constexpr static Value array()			{return ArrayType();		}
 		/// @brief Creates a byte list value.
-		constexpr static Value bytes()			{return ByteListType();	}
+		constexpr static Value bytes()			{return ByteListType();		}
 		/// @brief Creates an object value.
 		constexpr static Value object();
+		/// @brief Creates an identifier value.
+		constexpr static Value identifier()		{return IdentifierType();	}
 
 		/// @brief Empties the value.
 		/// @return Reference to self.

@@ -394,10 +394,6 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(Internal) {
 
 NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespace& ns) {
 	DEBUGLN("Namespace:", ns.name);
-	for (auto const& mem : ns.children.keys())
-		DEBUGLN("  - Namespace: ", mem);
-	for (auto const& mem : ns.members.keys())
-		DEBUGLN("  - Member: ", mem);
 	context.fetchNext();
 	if (context.currentToken().type != Type{'.'})
 		context.error<NonexistentValue>("Expected '.' here!");
@@ -1374,6 +1370,7 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 			} break;
 			case Type{'*'}: {
 				sub->variadic = true;
+				sub->count = -1;
 				context.fetchNext();
 				doMacroRule(context, rule, *sub);
 			} break;
@@ -1485,10 +1482,12 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 }
 
 static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self) {
-	auto const result = symbol->macro->resolve(context.append.cache);
+	auto const result = symbol->macro->resolve(context.append.cache, context);
 	if (!result)
 		context.error("No viable macro rules match the given expression!");
 	auto rv = result.value();
+	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
+	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
 	context.append.cache = rv.value.appendBack(context.append.cache.sliced(rv.match.size()));
 }
 

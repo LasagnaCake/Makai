@@ -15,6 +15,7 @@ namespace Makai::Parser::Data {
 		using CustomTypeParser = ResultType(LexerType&, FLOWParser&);
 
 		constexpr static char const BINARY_IDENTIFIER			= '!';
+		constexpr static char const ID_IDENTIFIER				= '#';
 		constexpr static char const CUSTOM_TYPE_IDENTIFIER		= '$';
 		constexpr static char const INTERNAL_TYPE_IDENTIFIER	= '@';
 
@@ -77,6 +78,8 @@ namespace Makai::Parser::Data {
 				return parseArray();
 			case TokenType{BINARY_IDENTIFIER}:
 				return parseBytes();
+			case TokenType{ID_IDENTIFIER}:
+				return parseIdentifier();
 			case TokenType{CUSTOM_TYPE_IDENTIFIER}:
 				return customTypeParser(lexer, *this);
 			case TokenType::LTS_TT_IDENTIFIER: {
@@ -95,6 +98,27 @@ namespace Makai::Parser::Data {
 				//return error("Missing or invalid token!");
 			}
 			return Value();
+		}
+		
+		ResultType parseIdentifier() {
+			if (lexer.current().type != TokenType{'!'})
+				return error("This is not an identifier!");
+			if (!lexer.next()) return error("Missing identifier value!");
+			if (lexer.current().type != TokenType{'['})
+				return error("Expected '[' here!");
+			As<uint64[Value::IdentifierType::SIZE]> id;
+			if (!lexer.next()) return error("Missing identifier value!");
+			for (usize i = 0; i < Value::IdentifierType::SIZE; ++i) {
+				if (lexer.current().type != TokenType::LTS_TT_INTEGER)
+					return error("Invalid identifier!");
+				id[i] = lexer.current().value.getUnsigned();
+				if (!lexer.next()) return error("Missing identifier value!");
+				if (lexer.current().type == TokenType{'-'} && !lexer.next())
+					return error("Missing identifier value!");
+			}
+			if (lexer.current().type != TokenType{']'})
+				return error("Expected ']' here!");
+			return Value(Value::IdentifierType::create(id));
 		}
 
 		ResultType parseBytes() {
@@ -140,6 +164,7 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_CHARACTER:
 				case TokenType::LTS_TT_IDENTIFIER:
 				case TokenType{BINARY_IDENTIFIER}:
+				case TokenType{ID_IDENTIFIER}:
 				case TokenType{'{'}:
 				case TokenType{'['}:
 				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
