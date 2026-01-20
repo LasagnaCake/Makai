@@ -80,9 +80,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 							} break;
 							case Type::AV2_TA_SM_RMT_ANY_OF: {
 								DEBUGLN("TOKEN");
-								DEBUGLN("Tokens: [", tokens.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(", ")"]");
+								DEBUGLN("Tokens: [", tokens.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(", "), "]");
 								for (usize i = 0; i < sz; ++i) {
-									DEBUGLN("[", Tokenizer::asName(args[i].type), "]");
+									DEBUGLN("[", Tokenizer::Token::asName(args[i].type), "]");
 									if (tokens.find(args[i]) != -1)
 										result.pushBack(args[i]);
 									else if (variadic)
@@ -174,11 +174,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 									break;
 								}
 								mr = match->match(args.sliced(tokenStart), call);
-								if (!mr) break;
+								if (!mr || mr.value().empty()) break;
 								tokenStart += mr.value().size();
 								result.appendBack(mr.value());
 							}
-							if (!mr) break;
+							if (!mr || mr.value().empty()) break;
 							++matchCount;
 						} while (true);
 						if (!matchCount)
