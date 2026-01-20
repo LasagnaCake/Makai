@@ -1368,6 +1368,7 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 					doMacroRuleType(context, rule, base);
 					rule.variables[base.id()] = varName;
 				} break;
+				case Type{'?'}:
 				case Type{'$'}:
 				case Type{'*'}:
 				case Type{'{'}:
@@ -1378,6 +1379,12 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 		case Type{'*'}: {
 			base.variadic	= true;
 			base.count		= -1;
+			context.fetchNext();
+			doMacroRule(context, rule, *base.addSubMatch());
+		} break;
+		case Type{'?'}: {
+			base.variadic	= true;
+			base.count		= 1;
 			context.fetchNext();
 			doMacroRule(context, rule, *base.addSubMatch());
 		} break;
