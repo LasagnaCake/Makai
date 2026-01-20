@@ -1485,6 +1485,7 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 }
 
 static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self) {
+	context.fetchNext();
 	auto const result = symbol->macro->resolve(context.append.cache, context);
 	if (!result)
 		context.error("No viable macro rules match the given expression!");
