@@ -94,6 +94,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								DEBUGLN("EXPRESSION");
 								if (expressionSolver)
 									result = expressionSolver(args).value();
+								DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 							} break;
 						}
 						call.invoke(*this, result);
@@ -167,7 +168,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						Result mr;
 						do {
 							DEBUGLN("Sub-Match");
-							if (matchCount > sz) break;
+							if (++matchCount > sz) break;
 							for (auto& match: matches) {
 								if (tokenStart >= args.size()) {
 									mr = variadic ? Result{Arguments()} : null;
@@ -179,7 +180,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								result.appendBack(mr.value());
 							}
 							if (!mr || mr.value().empty()) break;
-							++matchCount;
 						} while (true);
 						if (!matchCount)
 							return null;

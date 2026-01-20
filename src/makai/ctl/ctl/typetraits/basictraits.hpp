@@ -764,6 +764,11 @@ namespace Type {
 	/// @brief Type must be `To`, or be (implicitly) convertible to it.
 	template<class T, class To>
 	concept CanBecome = Type::Equal<T, To> || Type::Convertible<T, To>;
+
+	
+	/// @brief Type must match a given rule.
+	template <class T, template <class> class TRule>
+	concept Matches = TRule<T>::value;
 }
 
 CTL_NAMESPACE_END

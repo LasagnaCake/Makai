@@ -26,16 +26,22 @@ namespace Base {
 		constexpr static bool SECURE = false;
 
 		/// @brief Default constructor.
-		constexpr Generator(): engine()					{}
+		constexpr Generator(): engine()					{						}
 		/// @brief Constructs the generator from a seed.
 		/// @param seed Seed to use.
-		constexpr Generator(usize const seed)			{engine.setSeed(seed);						}
+		constexpr Generator(usize const seed)			{engine.setSeed(seed);	}
 		/// @brief Copy constructor.
 		/// @param other `Generator` to copy from.
-		constexpr Generator(Generator const& other) 	{engine.setSeed(other.engine.getSeed());	}
+		constexpr Generator(Generator const& other)		= delete;
 		/// @brief Move constructor.
 		/// @param other `Generator` to move.
 		constexpr Generator(Generator&& other)			= default;
+
+		/// @brief Copy assignment operator (deleted).
+		Generator& operator=(Generator const& other)	= delete;
+		/// @brief Move constructor.
+		/// @param other `Generator` to move.
+		Generator& operator=(Generator&& other)			= default;
 
 		/// @brief Returns a random floating point number between 0 and 1.
 		/// @tparam T Floating point type.
@@ -88,6 +94,7 @@ namespace Base {
 
 		/// @brief Default constructor.
 		Generator(): engine()							{}
+		Generator(usize const): Generator()				{}
 
 		/// @brief Copy constructor (deleted).
 		Generator(Generator const& other)				= delete;

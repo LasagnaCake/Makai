@@ -2,5 +2,6 @@
 #define CTL_CONTAINER_ID_H
 
 #include "ssuid.hpp"
+#include "generator.hpp"
 
 #endif
