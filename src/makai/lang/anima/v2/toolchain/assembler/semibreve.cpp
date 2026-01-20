@@ -1346,7 +1346,9 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 	}
 }
 
-static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
+static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base);
+
+static void doMacroRuleGroup(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
 	context.expectToken(Type{'{'});
 	while (true) {
 		if (context.fetchNext().hasToken(Type{'}'})) break;
@@ -1369,13 +1371,11 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 				}
 			} break;
 			case Type{'*'}: {
-				sub->variadic = true;
-				sub->count = -1;
-				context.fetchNext();
-				doMacroRule(context, rule, *sub);
+				base.variadic	= true;
+				base.count		= -1;
 			} break;
 			case Type{'{'}: {
-				doMacroRule(context, rule, *sub);
+				doMacroRuleGroup(context, rule, *sub);
 			} break;
 			case Type{'#'}: {
 				doMacroRuleType(context, rule, *sub);
@@ -1386,6 +1386,40 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 		}
 	}
 	context.expectToken(Type{'}'});
+}
+
+static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
+	switch (context.currentToken().type) {
+		case Type{'$'}: {
+			context.fetchNext();
+			switch (context.currentToken().type) {
+				case LTS_TT_IDENTIFIER: {
+					auto const varName = context.getValue<Makai::String>();
+					context.fetchNext().expectToken(Type{':'});
+					doMacroRuleType(context, rule, base);
+					rule.variables[base.id()] = varName;
+				} break;
+				case Type{'$'}:
+				case Type{'*'}:
+				case Type{'{'}:
+				case Type{'}'}: base.tokens.pushBack(context.currentToken()); break;
+				default: break;
+			}
+		} break;
+		case Type{'*'}: {
+			base.variadic	= true;
+			base.count		= -1;
+		} break;
+		case Type{'{'}: {
+			doMacroRuleGroup(context, rule, base);
+		} break;
+		case Type{'#'}: {
+			doMacroRuleType(context, rule, base);
+		} break;
+		default: {
+			base.tokens.pushBack(context.currentToken());
+		} break;
+	}
 }
 
 Makai::Instance<Context::Macro::Transformation> macroApply(Context::Macro::Arguments const& values) {
@@ -1447,9 +1481,7 @@ static void doMacroTransform(
 
 static Context::Macro::Expression doMacroExpression(Context& context, Context::Macro& macro) {
 	Context::Macro::Expression expr;
-	context.expectToken(Type{'{'});
 	doMacroRule(context, expr.rule, *expr.rule.root);
-	context.expectToken(Type{'}'});
 	context.fetchNext().expectToken(LTS_TT_BIG_ARROW);
 	context.fetchNext().expectToken(Type{'{'});
 	doMacroTransform(context, expr.rule, expr.transform);
