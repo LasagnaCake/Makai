@@ -1352,38 +1352,7 @@ static void doMacroRuleGroup(Context& context, Context::Macro::Rule& rule, Conte
 	context.expectToken(Type{'{'});
 	while (true) {
 		if (context.fetchNext().hasToken(Type{'}'})) break;
-		auto const sub = base.addSubMatch();
-		switch (context.currentToken().type) {
-			case Type{'$'}: {
-				context.fetchNext();
-				switch (context.currentToken().type) {
-					case LTS_TT_IDENTIFIER: {
-						auto const varName = context.getValue<Makai::String>();
-						context.fetchNext().expectToken(Type{':'});
-						doMacroRuleType(context, rule, *sub);
-						rule.variables[sub->id()] = varName;
-					} break;
-					case Type{'$'}:
-					case Type{'*'}:
-					case Type{'{'}:
-					case Type{'}'}: sub->tokens.pushBack(context.currentToken()); break;
-					default: break;
-				}
-			} break;
-			case Type{'*'}: {
-				base.variadic	= true;
-				base.count		= -1;
-			} break;
-			case Type{'{'}: {
-				doMacroRuleGroup(context, rule, *sub);
-			} break;
-			case Type{'#'}: {
-				doMacroRuleType(context, rule, *sub);
-			} break;
-			default: {
-				sub->tokens.pushBack(context.currentToken());
-			} break;
-		}
+		doMacroRule(context, rule, *base.addSubMatch());
 	}
 	context.expectToken(Type{'}'});
 }
@@ -1411,7 +1380,7 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 			base.count		= -1;
 		} break;
 		case Type{'{'}: {
-			doMacroRuleGroup(context, rule, base);
+			doMacroRuleGroup(context, rule, *base.addSubMatch());
 		} break;
 		case Type{'#'}: {
 			doMacroRuleType(context, rule, base);
