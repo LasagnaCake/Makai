@@ -12,6 +12,6 @@ namespace IO {
 		}
 	}
 	
-	macro write		=> {(*{$what:expr ,})}	=> {core.IO.Impl.write(core.Convert.toString($*what{,}))		};
-	macro writeLine	=> {(*{$what:expr ,})}	=> {core.IO.Impl.writeLine(core.Convert.toString($*what{,}))	};
+	macro write		=> {(*{$what:expr ?,})}	=> {core.IO.Impl.write(core.Convert.toString($*what{,}))		};
+	macro writeLine	=> {(*{$what:expr ?,})}	=> {core.IO.Impl.writeLine(core.Convert.toString($*what{,}))	};
 }
