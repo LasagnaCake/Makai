@@ -9,7 +9,7 @@ namespace Makai::Anima::V2::Runtime {
 		using Value = Data::Value;
 
 		struct FunctionRegistry {
-			using ExternalFunction = Data::Value(Data::Value::ArrayType const&);
+			using ExternalFunction = Data::Value(List<Context::Storage> const&);
 
 			using UUID = ID::VLUID;
 
@@ -40,12 +40,12 @@ namespace Makai::Anima::V2::Runtime {
 				nameMap.erase(name);
 			}
 
-			constexpr Value invoke(String const& name, Value::ArrayType const& args) {
+			constexpr Value invoke(String const& name, List<Context::Storage> const& args) {
 				if (!has(name)) return Value::undefined();
 				return invoke(nameMap[name], args);
 			}
 
-			constexpr Value invoke(UUID const& id, Value::ArrayType const& args) {
+			constexpr Value invoke(UUID const& id, List<Context::Storage> const& args) {
 				if (!has(id)) return Value::undefined();
 				return functions[id](args);
 			}
@@ -124,10 +124,10 @@ namespace Makai::Anima::V2::Runtime {
 		void fire(String const& signal);
 
 	protected:
-		virtual Value	external	(String const& name		);
-		Value			internal	(uint64 const valueID	);
-		Value&			temporary	(						);
-		Value&			global		(uint64 const globalID	);
+		virtual Context::Storage	external	(String const& name, bool const byRef	);
+		Context::Storage			internal	(uint64 const valueID					);
+		Context::Storage			temporary	(										);
+		Context::Storage			global		(uint64 const globalID					);
 
 		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
 
@@ -136,6 +136,8 @@ namespace Makai::Anima::V2::Runtime {
 		bool hasFunction(String const& name);
 
 	private:
+		bool yield();
+
 		Engine::Error invalidInstructionEror();
 		Engine::Error endOfProgramError();
 		Engine::Error invalidBinaryMathError(Instruction::BinaryMath const& math);
@@ -145,17 +147,18 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error invalidSourceEror(String const& description);
 		Engine::Error invalidDestinationEror(String const& description);
 		Engine::Error invalidFunctionEror(String const& description);
+		Engine::Error invalidComparisonEror(String const& description);
 		Engine::Error missingArgumentsError();
 
 		Engine::Error makeErrorHere(String const& message);
 
 		void pushUndefinedIfInLooseMode(String const& fname);
 
-		Value consumeValue(DataLocation const from);
-		Value getValueFromLocation(DataLocation const location, usize const id);
+		Context::Storage consumeValue(DataLocation const from);
+		Context::Storage getValueFromLocation(DataLocation const location, usize const id);
 		
-		Value& accessValue(DataLocation const from);
-		Value& accessLocation(DataLocation const location, usize const id);
+		Context::Storage accessValue(DataLocation const from);
+		Context::Storage accessLocation(DataLocation const location, usize const id);
 
 		void advance(bool isRequired = false);
 		void terminate();
@@ -188,6 +191,7 @@ namespace Makai::Anima::V2::Runtime {
 		void returnBack();
 
 		bool			isFinished	= false;
+		bool			paused		= false;
 		Program			program;
 		Context			context;
 		Instruction		current;

@@ -9,6 +9,7 @@
 namespace Makai::Anima::V2::Runtime {
 	constexpr auto const SHARED_FUNCTION_PREFIX = ANIMA_V2_SHARED_FN_NAME_PREFIX;
 	struct Context {
+		using Storage = Instance<Data::Value>;
 		using ExternalFunctionType = Data::Value(Data::Value::ArrayType);
 		using SharedFunction = CPP::Library::Function<ExternalFunctionType>;
 		struct Pointers {
@@ -17,14 +18,14 @@ namespace Makai::Anima::V2::Runtime {
 			usize	instruction	= -1;
 		};
 		using VariableBank = Map<uint64, Data::Value>;
-		ContextMode						mode		= ContextMode::AV2_CM_STRICT;
-		ContextMode						prevMode	= ContextMode::AV2_CM_STRICT;
-		Pointers						pointers;
-		Data::Value::ArrayType			valueStack;
-		List<Pointers>					pointerStack;
-		Data::Value::ArrayType			globals;
-		As<Data::Value[REGISTER_COUNT]>	registers;
-		Data::Value						temporary;
+		ContextMode					mode		= ContextMode::AV2_CM_STRICT;
+		ContextMode					prevMode	= ContextMode::AV2_CM_STRICT;
+		Pointers					pointers;
+		List<Storage>				valueStack;
+		List<Pointers>				pointerStack;
+		Map<usize, Storage>			globals;
+		As<Storage[REGISTER_COUNT]>	registers;
+		Storage						temporary = Storage::create();
 		struct SharedSpace {
 			Dictionary<SharedFunction>	functions;
 			Dictionary<CPP::Library>	libraries;
@@ -54,7 +55,7 @@ namespace Makai::Anima::V2::Runtime {
 }
 #define ANIMA_V2_SHARED_FN_DECL extern "C" __stdcall
 #define ANIMA_V2_SHARED_FN(NAME, EXPORT)\
-	Makai::Data::Value NAME(Makai::Data::Value::ArrayType) asm(ANIMA_V2_SHARED_FN_NAME_PREFIX EXPORT);\
-	Makai::Data::Value NAME(Makai::Data::Value::ArrayType args)
+	Makai::Data::Value NAME(Makai::List<Makai::Instance<Makai::Data::Value>> const&) asm(ANIMA_V2_SHARED_FN_NAME_PREFIX EXPORT);\
+	Makai::Data::Value NAME(Makai::List<Makai::Instance<Makai::Data::Value>> const& args)
 
 #endif

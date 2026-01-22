@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include "context.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -8,7 +9,7 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 
 using Makai::Data::Value;
 
-bool Engine::process() {
+bool Engine::yield() {
 	bool revertContext = false;
 	if (context.prevMode != context.mode)
 		revertContext = true;
@@ -43,6 +44,12 @@ bool Engine::process() {
 	return !isFinished;
 }
 
+bool Engine::process() {
+	paused = false;
+	while (Engine::process() && !paused) {}
+	return isFinished;
+}
+
 void Engine::crash(Engine::Error const& e) {
 	err = e;
 	terminate();
@@ -52,18 +59,56 @@ void Engine::terminate() {
 	isFinished = true;
 }
 
+void Engine::v2Get() {
+	Instruction::GetRequest get;
+}
+
+void Engine::v2Set() {
+	Instruction::SetRequest set;
+}
+
+void Engine::v2Yield() {
+	paused = true;
+}
+
+void Engine::v2Compare() {
+	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
+	auto const lhs = consumeValue(comp.lhs);
+	auto const rhs = consumeValue(comp.rhs);
+	auto const out = accessValue(comp.out);
+	Value::OrderType order = Value::Order::EQUAL;
+	if (lhs->type() == rhs->type())					order = *lhs <=> *rhs;
+	else if (lhs->isNumber() && rhs->isNumber())	order = lhs->get<double>() <=> lhs->get<double>();
+	else if (inStrictMode())
+		invalidComparisonEror("Types do not match!");
+	else {
+		*out = Value::undefined();
+		return;
+	}
+	if (order == Value::Order::EQUAL)			*out = 0l;
+	else if (order == Value::Order::GREATER)	*out = 1l;
+	else if (order == Value::Order::LESS)		*out = -1l;
+	else if (inStrictMode())
+		invalidComparisonEror("Failed to compare types!");
+	else {
+		*out = Value::undefined();
+		return;
+	}
+}
+
 void Engine::v2Halt() {
 	Instruction::Stop stop = bitcast<Instruction::Stop>(current.type);
 	switch (stop.mode) {
 		case Instruction::Stop::Mode::AV2_ISM_NORMAL:	return terminate();
-		case Instruction::Stop::Mode::AV2_ISM_ERROR:	{
+		case Instruction::Stop::Mode::AV2_ISM_ERROR: {
 			auto const v = consumeValue(stop.source);
 			if (err) return;
-			return crash(makeErrorHere("PROGRAM_ERROR: " + v.toString()));
+			return crash(makeErrorHere("PROGRAM_ERROR: " + v->toString()));
 		};
 		default: terminate();
 	};
 }
+
 Engine::Error Engine::makeErrorHere(String const& message) {
 	return {
 		message,
@@ -89,6 +134,19 @@ void Engine::advance(bool isRequired) {
 	else terminate();
 }
 
+void Engine::v2Return() {
+	Instruction::Result res = bitcast<Instruction::Result>(current.type);
+	if (!res.ignore)
+		*temporary() = *accessValue(res.location);
+}
+
+void Engine::v2Copy() {
+	Instruction::Transfer tf = bitcast<Instruction::Transfer>(current.type);
+	auto const from	= consumeValue(tf.from);
+	auto const to	= accessValue(tf.to);
+	*to = *from;
+}
+
 void Engine::v2Invoke() {
 	// Get invocation
 	Instruction::Invocation invocation = bitcast<Instruction::Invocation>(current.type);
@@ -100,9 +158,9 @@ void Engine::v2Invoke() {
 	uint64 funcName = bitcast<uint64>(current);
 	if (invocation.location != DataLocation::AV2_DL_EXTERNAL) {
 		auto fn = getValueFromLocation(invocation.location, funcName);
-		if (!fn.isUnsigned())
+		if (!fn->isUnsigned())
 			return crash(invalidFunctionEror("Invalid function name!"));
-		else funcName = fn.get<uint64>();
+		else funcName = fn->get<uint64>();
 	}
 	// Add arguments to stack
 	context.valueStack.expand(invocation.argc, {});
@@ -143,7 +201,7 @@ void Engine::v2Invoke() {
 				)
 			);
 		}
-		context.temporary = result;
+		context.temporary = context.temporary.create(result);
 		return;
 	}
 	// Else, jump to function location
@@ -151,7 +209,7 @@ void Engine::v2Invoke() {
 	jumpTo(funcName, true);
 }
 
-Makai::Data::Value Engine::consumeValue(DataLocation const from) {
+Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
 	if (
 		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
 	||	(from == DataLocation::AV2_DL_TEMPORARY)
@@ -160,49 +218,54 @@ Makai::Data::Value Engine::consumeValue(DataLocation const from) {
 	return getValueFromLocation(from, bitcast<uint64>(current));
 }
 
-Makai::Data::Value Engine::getValueFromLocation(DataLocation const loc, usize const id) {
+static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bool const byRef) {
+	return byRef ? v : new Value(*v);
+}
+
+Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, usize const id) {
+	bool byRef = (loc & DataLocation::AV2_DL_BY_REF) == DataLocation::AV2_DL_BY_REF;
 	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
-		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
+		return accessor(context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef);
 	}
 	switch (loc) {
 		case DataLocation::AV2_DL_CONST:
 			if (program.constants.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
-				return Data::Value::undefined();
+				return new Value(Value::undefined());
 			}
-			return program.constants[id % program.constants.size()];
+			return Runtime::Context::Storage::create(program.constants[id % program.constants.size()]);
 		case DataLocation::AV2_DL_STACK:
 			if (context.valueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
-				return Data::Value::undefined();
+				return new Value(Value::undefined());
 			}
-			return context.valueStack[id  % context.valueStack.size()];
+			return accessor(context.valueStack[id  % context.valueStack.size()], byRef);
 		case DataLocation::AV2_DL_STACK_OFFSET:
 			if (context.valueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
-				return Data::Value::undefined();
+				return new Value(Value::undefined());
 			}
-			return context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)];
+			return accessor(context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)], byRef);
 //		case DataLocation::AV2_DL_HEAP:			{} break;
 		case DataLocation::AV2_DL_GLOBAL:		return global(id);
 		case DataLocation::AV2_DL_INTERNAL:		return internal(id);
-		case DataLocation::AV2_DL_EXTERNAL:		return external(program.constants[id].get<String>());
-		case DataLocation::AV2_DL_TEMPORARY:	return temporary();
+		case DataLocation::AV2_DL_EXTERNAL:		return external(program.constants[id].get<String>(), byRef);
+		case DataLocation::AV2_DL_TEMPORARY:	return accessor(temporary(), byRef);
 		default: {
 			if (inStrictMode())
 				crash(invalidLocationError(loc));
-			return Data::Value::undefined();
+			return new Value(Value::undefined());
 		}
 	}
 	if (inStrictMode())
 		crash(invalidLocationError(loc));
-	return Data::Value::undefined();
+	return new Value(Value::undefined());
 }
 
-Makai::Data::Value& Engine::accessValue(DataLocation const from) {
+Runtime::Context::Storage Engine::accessValue(DataLocation const from) {
 	if (
 		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
 	||	(from == DataLocation::AV2_DL_TEMPORARY)
@@ -211,7 +274,7 @@ Makai::Data::Value& Engine::accessValue(DataLocation const from) {
 	return accessLocation(from, bitcast<uint64>(current));
 }
 
-Makai::Data::Value& Engine::accessLocation(DataLocation const loc, usize const id) {
+Runtime::Context::Storage Engine::accessLocation(DataLocation const loc, usize const id) {
 	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
 		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
@@ -244,11 +307,11 @@ Makai::Data::Value& Engine::accessLocation(DataLocation const loc, usize const i
 	return context.temporary;
 }
 
-Value& Engine::temporary() {
+Runtime::Context::Storage Engine::temporary() {
 	return context.temporary;
 }
 
-Value& Engine::global(uint64 const id) {
+Runtime::Context::Storage Engine::global(uint64 const id) {
 	return context.globals[id];
 }
 
@@ -276,11 +339,11 @@ void Engine::returnBack() {
 	context.pointers = context.pointerStack.popBack();
 }
 
-Makai::Data::Value Engine::external(String const& name) {
-	return Value::undefined();
+Runtime::Context::Storage Engine::external(String const& name, bool const byRef) {
+	return Runtime::Context::Storage::create(Value::undefined());
 }
 
-Makai::Data::Value Engine::internal(uint64 const valueID) {
+Runtime::Context::Storage Engine::internal(uint64 const valueID) {
 	static const Data::Value::ArrayType internals = {
 		Data::Value(false),
 		Data::Value(true),
@@ -297,9 +360,9 @@ Makai::Data::Value Engine::internal(uint64 const valueID) {
 	if (valueID >= internals.size()) {
 		if (inStrictMode())
 			crash(invalidInternalValueError(valueID));
-		return Data::Value::undefined();
+		return new Value(Value::undefined());
 	}
-	return internals[valueID];
+	return new Value(internals[valueID]);
 }
 
 void Engine::v2BinaryMath() {
@@ -308,28 +371,28 @@ void Engine::v2BinaryMath() {
 	if (err) return;
 	auto const rhs	= consumeValue(op.rhs);
 	if (err) return;
-	auto& out		= accessValue(op.out);
+	auto out		= accessValue(op.out);
 	if (err) return;
-	if (lhs.isNumber() && rhs.isNumber()) {
+	if (lhs->isNumber() && rhs->isNumber()) {
 		switch (op.op) {
-			case decltype(op.op)::AV2_IBM_OP_ADD:	out = lhs.get<double>() + rhs.get<double>();
-			case decltype(op.op)::AV2_IBM_OP_SUB:	out = lhs.get<double>() - rhs.get<double>();
-			case decltype(op.op)::AV2_IBM_OP_MUL:	out = lhs.get<double>() * rhs.get<double>();
-			case decltype(op.op)::AV2_IBM_OP_DIV:	out = lhs.get<double>() / rhs.get<double>();
-			case decltype(op.op)::AV2_IBM_OP_REM:	out = Math::mod(lhs.get<double>(), rhs.get<double>());
-			case decltype(op.op)::AV2_IBM_OP_POW:	out = Math::pow(lhs.get<double>(), rhs.get<double>());
-			case decltype(op.op)::AV2_IBM_OP_ATAN2:	out = Math::atan2(lhs.get<double>(), rhs.get<double>());
-			case decltype(op.op)::AV2_IBM_OP_LOG:	out = Math::logn(lhs.get<double>(), rhs.get<double>());
+			case decltype(op.op)::AV2_IBM_OP_ADD:	*out = lhs->get<double>() + rhs->get<double>();
+			case decltype(op.op)::AV2_IBM_OP_SUB:	*out = lhs->get<double>() - rhs->get<double>();
+			case decltype(op.op)::AV2_IBM_OP_MUL:	*out = lhs->get<double>() * rhs->get<double>();
+			case decltype(op.op)::AV2_IBM_OP_DIV:	*out = lhs->get<double>() / rhs->get<double>();
+			case decltype(op.op)::AV2_IBM_OP_REM:	*out = Math::mod(lhs->get<double>(), rhs->get<double>());
+			case decltype(op.op)::AV2_IBM_OP_POW:	*out = Math::pow(lhs->get<double>(), rhs->get<double>());
+			case decltype(op.op)::AV2_IBM_OP_ATAN2:	*out = Math::atan2(lhs->get<double>(), rhs->get<double>());
+			case decltype(op.op)::AV2_IBM_OP_LOG:	*out = Math::logn(lhs->get<double>(), rhs->get<double>());
 			default: {
 				if (inStrictMode())
 					return crash(invalidBinaryMathError(op));
-				out = Value::undefined();
+				*out = Value::undefined();
 			}
 		}
 	} else {
 		if (inStrictMode())
 			return crash(invalidBinaryMathError(op));
-		out = Value::undefined();
+		*out = Value::undefined();
 	}
 }
 
@@ -337,159 +400,159 @@ void Engine::v2UnaryMath() {
 	Instruction::UnaryMath op = Cast::bit<Instruction::UnaryMath>(current.type);
 	auto const v	= consumeValue(op.v);
 	if (err) return;
-	auto& out		= accessValue(op.out);
+	auto out		= accessValue(op.out);
 	if (err) return;
-	if (v.isNumber()) {
+	if (v->isNumber()) {
 		switch (op.op) {
-			case decltype(op.op)::AV2_IUM_OP_NEGATE:	out = -v.get<double>();
-			case decltype(op.op)::AV2_IUM_OP_INVERSE:	out = 1.0 / v.get<double>();
-			case decltype(op.op)::AV2_IUM_OP_SIN:		out = Math::sin(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_COS:		out = Math::cos(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_TAN:		out = Math::tan(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_ASIN:		out = asin(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_ACOS:		out = acos(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_ATAN:		out = Math::atan(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_SINH:		out = sinh(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_COSH:		out = cosh(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_TANH:		out = tanh(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_LOG2:		out = Math::log2(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_LOG10:		out = Math::log10(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_LN:		out = Math::log(v.get<double>());
-			case decltype(op.op)::AV2_IUM_OP_SQRT:		out = Math::sqrt(v.get<double>());
+			case decltype(op.op)::AV2_IUM_OP_NEGATE:	*out = -v->get<double>();
+			case decltype(op.op)::AV2_IUM_OP_INVERSE:	*out = 1.0 / v->get<double>();
+			case decltype(op.op)::AV2_IUM_OP_SIN:		*out = Math::sin(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_COS:		*out = Math::cos(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_TAN:		*out = Math::tan(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_ASIN:		*out = asin(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_ACOS:		*out = acos(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_ATAN:		*out = Math::atan(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_SINH:		*out = sinh(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_COSH:		*out = cosh(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_TANH:		*out = tanh(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_LOG2:		*out = Math::log2(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_LOG10:		*out = Math::log10(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_LN:		*out = Math::log(v->get<double>());
+			case decltype(op.op)::AV2_IUM_OP_SQRT:		*out = Math::sqrt(v->get<double>());
 			default: {
 				if (inStrictMode())
 					return crash(invalidUnaryMathError(op));
-				out = Value::undefined();
+				*out = Value::undefined();
 			}
 		}
 	} else {
 		if (inStrictMode())
 			return crash(invalidUnaryMathError(op));
-		out = Value::undefined();
+		*out = Value::undefined();
 	}
 }
 
 void Engine::pushUndefinedIfInLooseMode(String const& fname) {
 	if (inStrictMode())
 		return crash(invalidFunctionEror("Failed operation for function \""+fname+"\"!"));
-	context.valueStack.pushBack(Value::undefined());
+	context.valueStack.pushBack(new Value(Value::undefined()));
 }
 
 void Engine::callBuiltIn(BuiltInFunction const func) {
 	if (context.valueStack.empty()) {
 		if (inStrictMode())
 			return crash(missingArgumentsError());
-		else context.valueStack.pushBack(Value::undefined());
+		else context.valueStack.pushBack(new Value(Value::undefined()));
 	}
 	else switch (func) {
 		case BuiltInFunction::AV2_EBIF_ADD: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin add");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() + b.get<double>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() + b->get<double>()));
 			else pushUndefinedIfInLooseMode("builtin add");
 		} break;
 		case BuiltInFunction::AV2_EBIF_SUB: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin sub");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() - b.get<double>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() - b->get<double>()));
 			else pushUndefinedIfInLooseMode("builtin sub");
 		} break;
 		case BuiltInFunction::AV2_EBIF_MUL: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin mul");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() * b.get<double>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() * b->get<double>()));
 			else pushUndefinedIfInLooseMode("builtin mul");
 		} break;
 		case BuiltInFunction::AV2_EBIF_DIV: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin div");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isNumber() && b.isNumber()) context.valueStack.pushBack(a.get<double>() / b.get<double>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() / b->get<double>()));
 			else pushUndefinedIfInLooseMode("builtin div");
 		} break;
 		case BuiltInFunction::AV2_EBIF_REM: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin mod");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isNumber() && b.isNumber()) {
-				if (a.isUnsigned() && b.isUnsigned())
-					context.valueStack.pushBack(a.get<usize>() % b.get<usize>());
-				else if (a.isSigned() && b.isSigned())
-					context.valueStack.pushBack(a.get<ssize>() % b.get<ssize>());
-				else context.valueStack.pushBack(Math::mod(a.get<double>(), b.get<double>()));
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isNumber() && b->isNumber()) {
+				if (a->isUnsigned() && b->isUnsigned())
+					context.valueStack.pushBack(new Value(a->get<usize>() % b->get<usize>()));
+				else if (a->isSigned() && b->isSigned())
+					context.valueStack.pushBack(new Value(a->get<ssize>() % b->get<ssize>()));
+				else context.valueStack.pushBack(new Value(Math::mod(a->get<double>(), b->get<double>())));
 			}
 			else pushUndefinedIfInLooseMode("builtin mod");
 		} break;
 		case BuiltInFunction::AV2_EBIF_LAND: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin logic and");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			context.valueStack.pushBack(a.get<bool>() && b.get<bool>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			context.valueStack.pushBack(new Value(a->get<bool>() && b->get<bool>()));
 		} break;
 		case BuiltInFunction::AV2_EBIF_LOR: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin logic or");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			context.valueStack.pushBack(a.get<bool>() || b.get<bool>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			context.valueStack.pushBack(new Value(a->get<bool>() || b->get<bool>()));
 		} break;
 		case BuiltInFunction::AV2_EBIF_LNOT: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin logic not");
 			if (err) break;
-			Value a = context.valueStack.popBack();
-			context.valueStack.pushBack(!a.get<bool>());
+			auto a = context.valueStack.popBack();
+			context.valueStack.pushBack(new Value(!a->get<bool>()));
 		} break;
 		case BuiltInFunction::AV2_EBIF_NEG: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin negate");
 			if (err) break;
-			Value a = context.valueStack.popBack();
-			if (a.isNumber()) context.valueStack.pushBack(-a.get<float>());
+			auto a = context.valueStack.popBack();
+			if (a->isNumber()) context.valueStack.pushBack(new Value(-a->get<float>()));
 			else pushUndefinedIfInLooseMode("builtin negate");
 		} break;
 		case BuiltInFunction::AV2_EBIF_AND: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise and");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isInteger() && b.isInteger()) context.valueStack.pushBack(a.get<usize>() & b.get<usize>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isInteger() && b->isInteger()) context.valueStack.pushBack(new Value(a->get<usize>() & b->get<usize>()));
 			else pushUndefinedIfInLooseMode("builtin bitwise and");
 		} break;
 		case BuiltInFunction::AV2_EBIF_OR: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise or");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isInteger() && b.isInteger()) context.valueStack.pushBack(a.get<usize>() | b.get<usize>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isInteger() && b->isInteger()) context.valueStack.pushBack(new Value(a->get<usize>() | b->get<usize>()));
 			else pushUndefinedIfInLooseMode("builtin bitwise or");
 		} break;
 		case BuiltInFunction::AV2_EBIF_XOR: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise xor");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a.isInteger() && b.isInteger()) context.valueStack.pushBack(a.get<usize>() ^ b.get<usize>());
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			if (a->isInteger() && b->isInteger()) context.valueStack.pushBack(new Value(a->get<usize>() ^ b->get<usize>()));
 			else pushUndefinedIfInLooseMode("builtin bitwise xor");
 		} break;
 		case BuiltInFunction::AV2_EBIF_NOT: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin bitwise not");
 			if (err) break;
-			Value a = context.valueStack.popBack();
-			if (a.isInteger()) context.valueStack.pushBack(~a.get<usize>());
+			auto a = context.valueStack.popBack();
+			if (a->isInteger()) context.valueStack.pushBack(new Value(~a->get<usize>()));
 			else pushUndefinedIfInLooseMode("builtin bitwise not");
 		} break;
 		case BuiltInFunction::AV2_EBIF_COMP: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin threeway compare");
 			if (err) break;
-			Value a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
 			Value::OrderType order = Value::Order::EQUAL;
-			if (a.type() == b.type())				order = a <=> b;
-			else if (a.isNumber() && b.isNumber())	order = a.get<double>() <=> b.get<double>();
+			if (a->type() == b->type())					order = *a <=> *b;
+			else if (a->isNumber() && b->isNumber())	order = a->get<double>() <=> b->get<double>();
 			else {
 				pushUndefinedIfInLooseMode("builtin threeway compare");
 				break;
 			}
-			if (order == Value::Order::EQUAL)			context.valueStack.pushBack(0);
-			else if (order == Value::Order::GREATER)	context.valueStack.pushBack(1);
-			else if (order == Value::Order::LESS)		context.valueStack.pushBack(-1);
+			if (order == Value::Order::EQUAL)			context.valueStack.pushBack(new Value(0l));
+			else if (order == Value::Order::GREATER)	context.valueStack.pushBack(new Value(1l));
+			else if (order == Value::Order::LESS)		context.valueStack.pushBack(new Value(-1l));
 			else pushUndefinedIfInLooseMode("builtin threeway compare");
 		} break;
 		case BuiltInFunction::AV2_EBIF_INTERRUPT: {
@@ -497,12 +560,12 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 		case BuiltInFunction::AV2_EBIF_READ: {
 			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin indirect read");
 			if (err) break;
-			Value type	= context.valueStack.popBack();
-			Value id	= context.valueStack.popBack();
-			if (!(type.isUnsigned() && id.isUnsigned()))
+			auto type	= context.valueStack.popBack();
+			auto id		= context.valueStack.popBack();
+			if (!(type->isUnsigned() && id->isUnsigned()))
 				pushUndefinedIfInLooseMode("builtin indirect read");
 			if (err) break;
-			auto const ti = type.get<usize>();
+			auto const ti = type->get<usize>();
 			if (ti > Makai::Limit::MAX<uint8>) {
 				pushUndefinedIfInLooseMode("builtin indirect read");
 				break;
@@ -513,14 +576,14 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 		case BuiltInFunction::AV2_EBIF_PRINT: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin print");
 			if (err) break;
-			Value what = context.valueStack.popBack();
-			print(what);
+			auto what = context.valueStack.popBack();
+			print(*what);
 		} break;
 		case BuiltInFunction::AV2_EBIF_SIZEOF: {
 			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin sizeof");
 			if (err) break;
-			Value val = context.valueStack.popBack();
-			context.valueStack.pushBack(val.size());
+			auto val = context.valueStack.popBack();
+			context.valueStack.pushBack(new Value(val->size()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
@@ -552,9 +615,9 @@ void Engine::v2StackPop() {
 		context.valueStack.popBack();
 		return;
 	}
-	auto& value = accessValue(inter.location);
+	auto value = accessValue(inter.location);
 	if (err) return;
-	value = context.valueStack.popBack();
+	*value = *context.valueStack.popBack();
 }
 
 void Engine::v2StackSwap() {

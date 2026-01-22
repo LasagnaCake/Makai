@@ -27,7 +27,21 @@ namespace Makai::Anima::V2 {
 		AV2_DL_TEMPORARY,
 		/// @brief Register value.
 		AV2_DL_REGISTER,
+		/// @brief Location modifier: By reference.
+		AV2_DL_BY_REF = 0x80,
 	};
+
+	constexpr DataLocation operator|(DataLocation const& a, DataLocation const& b) {
+		return Cast::as<DataLocation>(enumcast(a) | enumcast(b));
+	}
+
+	constexpr DataLocation operator&(DataLocation const& a, DataLocation const& b) {
+		return Cast::as<DataLocation>(enumcast(a) & enumcast(b));
+	}
+
+	constexpr DataLocation operator~(DataLocation const& a) {
+		return Cast::as<DataLocation>(enumcast(a));
+	}
 
 	/// @brief Execution context mode.
 	enum class ContextMode: uint8 {

@@ -19,9 +19,24 @@ struct Location {
 
 #define MINIMA_ERROR(TYPE, WHAT) context.error<Makai::Error::TYPE>(WHAT)
 
+static DataLocation getLoadType(Context& context) {
+	DataLocation locAt = DataLocation{0};
+	if (context.stream.current().type == LTS_TT_IDENTIFIER) {
+		auto const id = context.getValue<Makai::String>();
+		if (id == "reference" || id == "ref")
+			locAt = DataLocation::AV2_DL_BY_REF;
+		else if (id == "value" || id == "copy")
+			locAt = DataLocation{0};
+		context.fetchNext();
+	}
+	return locAt;
+}
+
 static Location getStack(Minima::Context& context) {
+	Location loc;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Missing stack index!");
+	loc.at = getLoadType(context);
 	if (context.stream.current().type != Type{'['})
 		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
 	if (!context.stream.next())
@@ -38,7 +53,11 @@ static Location getStack(Minima::Context& context) {
 	}
 	if ((v = context.stream.current()).type != Type::LTS_TT_INTEGER)
 		MINIMA_ERROR(InvalidValue, "Stack index must be an integer!");
-	Location loc{(fromTheBack ? DataLocation::AV2_DL_STACK_OFFSET : DataLocation::AV2_DL_STACK), v.value.get<usize>()};
+	loc = {
+		loc.at
+	|	(fromTheBack ? DataLocation::AV2_DL_STACK_OFFSET : DataLocation::AV2_DL_STACK),
+		v.value.get<usize>()
+	};
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed stack index!");
 	if (context.stream.current().type != Type{']'})
@@ -47,8 +66,10 @@ static Location getStack(Minima::Context& context) {
 }
 
 static Location getRegister(Minima::Context& context) {
+	Location loc;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Missing register index!");
+	loc.at = getLoadType(context);
 	if (context.stream.current().type != Type{'['})
 		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
 	if (!context.stream.next())
@@ -67,7 +88,11 @@ static Location getRegister(Minima::Context& context) {
 		MINIMA_ERROR(InvalidValue, "Register index must be an integer!");
 	if (v.value.get<usize>() > 31)
 		MINIMA_ERROR(InvalidValue, "Register index must be between 0 and 31!");
-	Location loc{Makai::Anima::V2::asRegister(v.value.get<ssize>() + (fromTheBack ? Makai::Anima::V2::REGISTER_COUNT : 0)), uint64(-1)};
+	loc = {
+		loc.at
+	|	Makai::Anima::V2::asRegister(v.value.get<ssize>() + (fromTheBack ? Makai::Anima::V2::REGISTER_COUNT : 0)),
+		uint64(-1)
+	};
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed register index!");
 	if (context.stream.current().type != Type{']'})
@@ -79,13 +104,14 @@ static Location getExtern(Context& context) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Missing external location name!");
 	auto const name = context.stream.current();
+	DataLocation locAt = getLoadType(context);
 	if (!(
 		name.type == LTS_TT_IDENTIFIER
 	||	name.type == LTS_TT_SINGLE_QUOTE_STRING
 	||	name.type == LTS_TT_DOUBLE_QUOTE_STRING
 	)) MINIMA_ERROR(InvalidValue, "Expected name for external location!");
 	return {
-		DataLocation::AV2_DL_EXTERNAL,
+		locAt | DataLocation::AV2_DL_EXTERNAL,
 		context.addConstant(name.value.get<Makai::String>())
 	};
 }
@@ -94,6 +120,7 @@ static Location getGlobal(Context& context) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Missing global variable name!");
 	auto const name = context.stream.current();
+	DataLocation locAt = getLoadType(context);
 	if (name.type != LTS_TT_IDENTIFIER)
 		MINIMA_ERROR(InvalidValue, "Expected identifier for global variable name!");
 	auto const id = name.value.get<Makai::String>();
@@ -105,7 +132,7 @@ static Location getGlobal(Context& context) {
 		context.program.labels.globals[id] = globalID;
 	}
 	return {
-		DataLocation::AV2_DL_GLOBAL,
+		locAt| DataLocation::AV2_DL_GLOBAL,
 		globalID
 	};
 }
@@ -166,7 +193,7 @@ static Location getDataLocation(Minima::Context& context) {
 			} else if (id == "global" || id == "g") {
 				return getGlobal(context);
 			} else if (id == "temporary" || id == "temp") {
-				return {DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
+				return {getLoadType(context) | DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
 			} else if (id == "true") {
 				return {DataLocation::AV2_DL_INTERNAL, 1};
 			} else if (id == "false") {
@@ -194,7 +221,7 @@ static Location getDataLocation(Minima::Context& context) {
 		case Type{':'}:
 			return getGlobal(context);
 		case Type{'.'}:
-			return {DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
+			return {getLoadType(context) | DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
 		case Type{'?'}:
 			return {DataLocation::AV2_DL_INTERNAL, 2};
 		case Type{'+'}:
