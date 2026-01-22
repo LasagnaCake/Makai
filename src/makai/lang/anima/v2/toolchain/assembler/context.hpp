@@ -167,9 +167,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						usize matchCount	= 0;
 						Result mr;
 						do {
-							DEBUGLN("Sub-Match");
 							if (++matchCount > sz) break;
+							DEBUGLN("Matching BEGIN");
 							for (auto& match: matches) {
+								DEBUGLN("Sub-Match");
 								if (tokenStart >= args.size()) {
 									mr = variadic ? Result{Arguments()} : null;
 									break;
@@ -179,8 +180,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								tokenStart += mr.value().size();
 								result.appendBack(mr.value());
 							}
+							DEBUGLN("Matching END");
 							if (!mr || mr.value().empty()) break;
 						} while (true);
+						DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 						if (!matchCount)
 							return null;
 						if (variadic || matchCount == sz)
@@ -1069,8 +1072,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return macros[macroID];
 		}
 		
-		bool					hasMain		= false;
-		bool					isModule	= false;
+		bool	hasMain		= false;
+		bool	isModule	= false;
 
 		struct SegmentedScope {
 			String	preEntryPoint;
