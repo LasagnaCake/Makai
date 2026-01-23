@@ -631,6 +631,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				if (sc.contains(name)) return true;
 			}
 			if (global.contains(name)) return true;
+			if (basics.s.contains(name)) return true;
 			return false;
 		}
 
@@ -639,6 +640,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				if (sc.contains(name) && sc.ns->members[name]->type == Scope::Member::Type::AV2_TA_SMT_TYPE) return true;
 			}
 			if (global.contains(name) && global.ns->members[name]->type == Scope::Member::Type::AV2_TA_SMT_TYPE) return true;
+			if (basics.s.contains(name) && basics.s.ns->members[name]->type == Scope::Member::Type::AV2_TA_SMT_TYPE) return true;
 			return false;
 		}
 
@@ -658,6 +660,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			for (auto& sc: Range::reverse(scope))
 				if (sc.contains(name)) return sc.ns->members[name];
 			if (global.contains(name)) return global.ns->members[name];
+			if (basics.s.contains(name)) return basics.s.ns->members[name];
 			throw Error::FailedAction("Context does not contain symbol '"+name+"'!");
 		}
 
@@ -916,7 +919,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (append.hasTokens())
 				tok = append.current();
 			else tok = {{stream.current()}, true, stream.tokenText(), stream.position()};
-			DEBUGLN("Token := ", Context::Tokenizer::Token::asName(tok.type));
+			if (tok.type == Macro::Axiom::Type::LTS_TT_IDENTIFIER)
+				DEBUGLN("Token := ID:[", tok.value.getString(), "]");
+			else DEBUGLN("Token := ", Context::Tokenizer::Token::asName(tok.type));
 			return tok;
 		}
 
@@ -1043,26 +1048,34 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		} &out;
 
 		struct BasicTypes {
-		private:
+			BasicTypes(): s() {
+				voidT	= s.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
+				nullT	= s.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
+				intT	= s.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
+				uintT	= s.addTypeDefinition("uint",		Data::Value::Kind::DVK_UNSIGNED	);
+				floatT	= s.addTypeDefinition("float",		Data::Value::Kind::DVK_REAL		);
+				stringT	= s.addTypeDefinition("string",		Data::Value::Kind::DVK_STRING	);
+				bytesT	= s.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
+				arrayT	= s.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
+				objectT	= s.addTypeDefinition("object",		Data::Value::Kind::DVK_OBJECT	);
+				anyT	= s.addTypeDefinition("any",		DVK_ANY							);
+			}
+
 			Scope s;
 
-			friend struct Context;
-		public:
-			BasicTypes() {}
-
-			Instance<Scope::Member>  const voidT	= s.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
-			Instance<Scope::Member>  const nullT	= s.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
-			Instance<Scope::Member>  const intT		= s.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
-			Instance<Scope::Member>  const uintT	= s.addTypeDefinition("uint",		Data::Value::Kind::DVK_UNSIGNED	);
-			Instance<Scope::Member>  const floatT	= s.addTypeDefinition("float",		Data::Value::Kind::DVK_REAL		);
-			Instance<Scope::Member>  const stringT	= s.addTypeDefinition("string",		Data::Value::Kind::DVK_STRING	);
-			Instance<Scope::Member>  const bytesT	= s.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
-			Instance<Scope::Member>  const arrayT	= s.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
-			Instance<Scope::Member>  const objectT	= s.addTypeDefinition("object",		Data::Value::Kind::DVK_OBJECT	);
-			Instance<Scope::Member>  const anyT		= s.addTypeDefinition("any",		DVK_ANY							);
+			Instance<Scope::Member> voidT;
+			Instance<Scope::Member> nullT;
+			Instance<Scope::Member> intT;
+			Instance<Scope::Member> uintT;
+			Instance<Scope::Member> floatT;
+			Instance<Scope::Member> stringT;
+			Instance<Scope::Member> bytesT;
+			Instance<Scope::Member> arrayT;
+			Instance<Scope::Member> objectT;
+			Instance<Scope::Member> anyT;
 		};
 
-		inline static BasicTypes basics;
+		inline static BasicTypes const basics;
 
 		Context(MessageOutput& out = defaultWriter): out(out) {
 			global.ns->members["unsigned"]	= basics.uintT;
