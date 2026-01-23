@@ -16,7 +16,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Axiom: Tokenizer::Token {
 				bool strict = false;
 				String token;
-				Tokenizer::Position position = {0, 0};
+				Tokenizer::Position position = {0, 0, 0};
 
 				constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
 					if (!strict) return type <=> other.type;
