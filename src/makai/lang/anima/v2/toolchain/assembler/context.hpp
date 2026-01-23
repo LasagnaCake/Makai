@@ -10,6 +10,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		using Tokenizer	= Lexer::CStyle::TokenStream;
 		using Program	= Runtime::Program;
 
+		DEFINE_ERROR_TYPE_EX(MacroError, InvalidValue);
+
 		struct Macro {
 			struct Axiom: Tokenizer::Token {
 				bool strict = false;
@@ -75,12 +77,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						auto const sz = (!variadic) ? count : Math::min(count, args.size());
 						switch (type) {
 							case Type::AV2_TA_SM_RMT_WHATEVER: {
-								DEBUGLN("::: WHATEVER");
+								if (inRunTime()) DEBUGLN("::: WHATEVER");
 								return args.sliced(0, sz);
 							} break;
 							case Type::AV2_TA_SM_RMT_ANY_OF: {
-								DEBUGLN("::: TOKEN");
-								DEBUGLN("Tokens: [", tokens.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(", "), "]");
+								if (inRunTime()) DEBUGLN("::: TOKEN");
+								if (inRunTime()) DEBUGLN("Tokens: [", tokens.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(", "), "]");
 								for (usize i = 0; i < sz; ++i) {
 									DEBUGLN("[", Tokenizer::Token::asName(args[i].type), "]");
 									if (tokens.find(args[i]) != -1)
@@ -91,10 +93,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								}
 							} break;
 							case Type::AV2_TA_SM_RMT_EXPRESSION: {
-								DEBUGLN("::: EXPRESSION");
+								if (inRunTime()) DEBUGLN("::: EXPRESSION");
 								if (expressionSolver)
 									result = expressionSolver(args).value();
-								DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
+								if (inRunTime()) DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 							} break;
 						}
 						call.invoke(*this, result);
@@ -158,7 +160,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 				private:
 					constexpr Result matchGroup(Arguments const& args, Callback const& call = {}) const {
-						DEBUGLN("::: GROUP");
+						if (inRunTime()) DEBUGLN("::: GROUP");
 						if (matches.empty()) return null;
 						Arguments result;
 						if (!count) return Arguments();
@@ -168,31 +170,31 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						Result mr;
 						do {
 							if (++matchCount > sz) break;
-							DEBUGLN("<match>");
+							if (inRunTime()) DEBUGLN("<match>");
 							for (auto& match: matches) {
-								DEBUGLN("<sub-match>");
+								if (inRunTime()) DEBUGLN("<sub-match>");
 								if (tokenStart >= args.size()) {
 									mr = variadic ? Result{result} : null;
 									break;
 								}
 								mr = match->match(args.sliced(tokenStart), call);
-								DEBUGLN("</sub-match>");
+								if (inRunTime()) DEBUGLN("</sub-match>");
 								if (!mr) break;
 								auto const v = mr.value();
-								DEBUGLN("Total match count: ", v.size());
+								if (inRunTime()) DEBUGLN("Total match count: ", v.size());
 								if (v.empty()) break;
 								tokenStart += v.size();
 								result.appendBack(v);
 							}
-							DEBUGLN("</match>");
+							if (inRunTime()) DEBUGLN("</match>");
 							if (!mr || mr.value().empty()) break;
 						} while (true);
-						DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
+						if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 						if (!matchCount)
 							return null;
-						DEBUGLN("Variadic match? ", variadic);
-						DEBUGLN("Match size: ", sz);
-						DEBUGLN("Total: ", matchCount);
+						if (inRunTime()) DEBUGLN("Variadic match? ", variadic);
+						if (inRunTime()) DEBUGLN("Match size: ", sz);
+						if (inRunTime()) DEBUGLN("Total: ", matchCount);
 						if (variadic || matchCount == sz)
 							return result;
 						return null;
@@ -1025,7 +1027,17 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return global.ns->members[name];
 		}
 
-		Context() {
+		struct Writer {
+			virtual void write(String const& str)		{DEBUG(str);				}
+			virtual void writeLine(String const& str)	{write(str); write("\n");	}
+
+			template <class... Args>
+			void write(Args const&... args) requires (sizeof...(Args) > 1)		{(..., write(toString(args)));				}
+			template <class... Args>
+			void writeLine(Args const&... args) requires (sizeof...(Args) > 1)	{(..., write(toString(args))); write("\n");	}
+		} &writer;
+
+		Context(Writer& writer = defaultWriter): writer(writer) {
 			auto const voidT	= global.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
 			auto const nullT	= global.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
 			auto const intT		= global.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
@@ -1164,6 +1176,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		constexpr static Scope::Value::Resolver resolveTo(String const& value) {
 			return [=] {return value;};
 		}
+
+	private:
+		inline static Writer defaultWriter;
 	};
 }
 

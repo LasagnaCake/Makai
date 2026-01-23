@@ -1429,11 +1429,12 @@ static void doMacroTransform(
 							context.error("Macro variable does not exist!");
 						DEBUGLN("--- Transform::Variable: [", varName, "]");
 						base.newTransform()->pre = [varName = Makai::copy(varName)] (Context::Macro::Context& context) {
-							DEBUGLN("--- SIMPLE APPLICATION");
+							DEBUGLN("--- SIMPLE VARIABLE EXPANSION");
 							DEBUGLN("--- Apply::Variable: [", varName, "]");
 							auto toks = context.variables[varName].tokens;
 							DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
-							context.result.value.appendBack(toks.join());
+							for (auto& tok: toks)
+								context.result.value.appendBack(tok);
 						};
 					} break;
 					case Type{'*'}: {
@@ -1447,16 +1448,35 @@ static void doMacroTransform(
 						context.expectToken(Type{'}'});
 						base.newTransform()->pre = 
 							[varName = Makai::copy(varName), tf] (Context::Macro::Context& ctx) {
-								DEBUGLN("--- COMPLEX APPLICATION");
+								DEBUGLN("--- COMPLEX VARIABLE EXPANSION");
 								Context::Macro::Context subctx = ctx;
 								tf.apply(subctx);
 								DEBUGLN("--- Apply::Variable: [", varName, "]");
 								auto toks = ctx.variables[varName].tokens;
 								DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
-								ctx.result.value.appendBack(toks.join(/*ctx.result.value*/));
+								usize i = 0;
+								for (auto& tok: toks) {
+									ctx.result.value.appendBack(tok);
+									if (i++) ctx.result.value.appendBack(subctx.result.match);
+								}
 							}
 						;
 					} break;
+					case Type{'!'}: {
+						auto const msgt = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "message type").getString();
+						auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
+						if (msgt == "error" || msgt == "err")
+							base.newTransform()->pre = [msgv, &context] (auto&) {
+								context.error<Context::MacroError>(msgv);
+							};
+						else if (msgt == "warning" || msgt == "warn")
+							base.newTransform()->pre = [msgv, &context] (auto&) {
+								context.writer.writeLine("Warning: ", msgv);
+								context.writer.writeLine("At: ", context.currentToken().position.line);
+								context.writer.writeLine("Column: ", context.currentToken().position.column);
+							};
+						else context.error("Invalid message type!");
+					}
 					default: context.error("Invalid macro expansion!");
 				}
 			} break;

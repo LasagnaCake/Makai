@@ -1,4 +1,4 @@
-// import core.convert.tostring;
+import core.convert.tostring;
 
 namespace IO {
 	namespace Impl {
@@ -13,12 +13,14 @@ namespace IO {
 	}
 	
 	macro write {
-		{($what:expr)}					=> {core.IO.Impl.write(core.Convert.toString($*what{,})) }
-		{($what:expr *{, $what:expr})}	=> {core.IO.Impl.write(core.Convert.toString($*what{,})) }
+		{()}							=> {$!error "write requires more than one argument!"		}
+		{($what:expr)}					=> {core.IO.Impl.write(core.Convert.toString($*what{,}))	}
+		{($what:expr *{, $what:expr})}	=> {core.IO.Impl.write(core.Convert.toString($*what{,}))	}
 	}
 	
 	macro writeLine {
-		{($what:expr)}					=> {core.IO.Impl.writeLine(core.Convert.toString($*what{,})) }
-		{($what:expr *{, $what:expr})}	=> {core.IO.Impl.writeLine(core.Convert.toString($*what{,})) }
+		{()}							=> {$!error "writeLine requires more than one argument!"		}
+		{($what:expr)}					=> {core.IO.Impl.writeLine(core.Convert.toString($*what{,}))	}
+		{($what:expr *{, $what:expr})}	=> {core.IO.Impl.writeLine(core.Convert.toString($*what{,}))	}
 	}
 }
