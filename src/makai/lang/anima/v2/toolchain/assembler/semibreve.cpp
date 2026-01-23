@@ -634,11 +634,9 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 					result = rhs.type;
 				}
 			} else if (id == "if") {
-				context.fetchNext();
-				if (
-					context.currentToken().type != LTS_TT_IDENTIFIER
-				&&	context.currentToken().value.get<Makai::String>() != "else"
-				) context.error<InvalidValue>("Expected 'else' here!");
+				context.fetchNext().expectToken(LTS_TT_IDENTIFIER);
+				if (context.getValue<Makai::String>() != "else")
+					context.error("Expected 'else' here!");
 				context.fetchNext();
 				auto const elseVal = doValueResolution(context);
 				result = handleTernary(context, rhs, lhs, elseVal);
