@@ -173,7 +173,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 		argt = getType(context);
 		DEBUGLN("Type: ", argt->name);
 		if (context.isUndefined(argt))
-			context.error<InvalidValue>("Invalid argument type!");
+			context.error<InvalidValue>("Invalid argument type ["+argt->name+"]!");
 		context.fetchNext();
 		var->base = argt;
 		if (context.currentToken().type == Type{'='}) {
@@ -438,6 +438,7 @@ Context::Scope::Namespace& resolveNamespace(Context& context) {
 
 // TODO: Apply this solution to the rest of the assembler
 static Solution resolveSymbol(Context& context, Makai::String const& id, Makai::Instance<Context::Scope::Member> const& sym) {
+	DEBUGLN("Resolving symbol...");
 	if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_MACRO) {
 		doMacroExpansion(context, sym);
 		return doValueResolution(context);
@@ -465,6 +466,7 @@ Makai::Instance<Context::Scope::Member> resolveSymbolPath(Context& context) {
 }
 
 static Solution doValueResolution(Context& context, bool idCanBeValue) {
+	DEBUGLN("Value resolution");
 	auto const current = context.currentToken();
 	switch (current.type) {
 		case LTS_TT_IDENTIFIER: {
@@ -511,7 +513,7 @@ constexpr Value::Kind stronger(Value::Kind const a, Value::Kind const b) {
 
 constexpr Makai::Instance<Context::Scope::Member> stronger(Context& context, Makai::Instance<Context::Scope::Member> const& a, Makai::Instance<Context::Scope::Member> const& b) {
 	if (a == b) return a;
-	if (!a || !b) context.error("Value types mysteriously disappeared!");
+	if (!a || !b) context.error("INTERNAL ERROR: Value types mysteriously disappeared!");
 	if (!a->value["basic"]) return a;
 	if (!b->value["basic"]) return b;
 	auto const res = stronger(Makai::Cast::as<Value::Kind>(a->value["type"]), Makai::Cast::as<Value::Kind>(b->value["type"]));
@@ -558,6 +560,7 @@ static auto handleNullCoalescence(Context& context, Solution const& value, Solut
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
+	DEBUGLN("Binary operation");
 	context.fetchNext();
 	auto lhs = doValueResolution(context);
 	usize stackUsage = 0;
@@ -582,6 +585,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	if (opname.type == LTS_TT_IDENTIFIER) {
 		auto const id = context.getValue<Makai::String>();
 		if (id == "is") {
+			DEBUGLN("Type checking!");
 			context.fetchNext();
 			if (!context.hasToken(LTS_TT_IDENTIFIER))
 				context.error("Expected type name here!");
@@ -602,6 +606,8 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		rhs.resolver = context.resolveTo("&[-0]");
 		if (stackUsage++) rhs.resolver = context.resolveTo("&[-1]");
 	}
+	DEBUGLN("LHS? ", lhs.type.exists());
+	DEBUGLN("RHS? ", rhs.type.exists());
 	auto result = stronger(context, lhs.type, rhs.type);
 	if (
 		opname.type != Type{','}
@@ -631,7 +637,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				) context.error<InvalidValue>("Expected 'else' here!");
 				context.fetchNext();
 				auto const elseVal = doValueResolution(context);
-				result = handleTernary(context, lhs, rhs, elseVal);
+				result = handleTernary(context, rhs, lhs, elseVal);
 			} else if (id == "else" || id == "or") {
 				result = handleNullCoalescence(context, lhs, rhs);
 			} else context.error<InvalidValue>("Invalid/Unsupported operation!");
@@ -1136,6 +1142,7 @@ SEMIBREVE_ASSEMBLE_FN(Error) {
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
+	DEBUGLN("Unary operation");
 	auto const current = context.currentToken();
 	context.fetchNext();
 	auto result = doValueResolution(context);
@@ -1216,6 +1223,7 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
 	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
+	// TODO: Properly fix import loops
 	submodule.modules.append(context.modules);
 	assembler.assemble();
 	context.writeFinale(submodule.intermediate());
