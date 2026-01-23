@@ -1453,7 +1453,7 @@ static void doMacroTransform(
 								DEBUGLN("--- Apply::Variable: [", varName, "]");
 								auto toks = ctx.variables[varName].tokens;
 								DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
-								ctx.result.value.appendBack(toks.join(ctx.result.value));
+								ctx.result.value.appendBack(toks.join(/*ctx.result.value*/));
 							}
 						;
 					} break;
