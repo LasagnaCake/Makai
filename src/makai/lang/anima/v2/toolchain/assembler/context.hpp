@@ -1028,7 +1028,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr Instance<Scope::Member> getBasicType(String const& name) {
-			return global.ns->members[name];
+			return basics.s.ns->members[name];
 		}
 
 		struct MessageOutput {
@@ -1045,6 +1045,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		struct BasicTypes {
 		private:
 			Scope s;
+
+			friend struct Context;
 		public:
 			BasicTypes() {}
 
