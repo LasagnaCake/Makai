@@ -1203,7 +1203,10 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 		context.error<InvalidValue>("Module imports/exports can only be declared in the global scope!");
 	Context submodule;
 	ModuleResolution mod = resolveModuleName(context);
-	if (context.hasModule(mod.sourceName)) return;
+	if (context.hasModule(mod.sourceName)) {
+		context.out.writeLine("Module '", mod.sourceName, "' already loaded - importing not needed...");
+		return;
+	}
 	context.registerModule(mod.sourceName);
 	submodule.fileName		= mod.path;
 	submodule.isModule		= true;
@@ -1214,6 +1217,7 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
 	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
 	Breve assembler(submodule);
+	submodule.modules.append(context.modules);
 	assembler.assemble();
 	context.writeFinale(submodule.intermediate());
 	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
@@ -1222,6 +1226,7 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 	if (submodule.global.ns->hasChild(mod.head))
 		context.importModule(submodule.global.ns->children[mod.head]);
 	else context.importModule(submodule.global.ns);
+	context.modules.append(submodule.modules);
 }
 
 SEMIBREVE_ASSEMBLE_FN(UsingDeclaration) {
@@ -1471,12 +1476,12 @@ static void doMacroTransform(
 							};
 						else if (msgt == "warning" || msgt == "warn")
 							base.newTransform()->pre = [msgv, &context] (auto&) {
-								context.writer.writeLine("Warning: ", msgv);
-								context.writer.writeLine("At: ", context.currentToken().position.line);
-								context.writer.writeLine("Column: ", context.currentToken().position.column);
+								context.out.writeLine("Warning: ", msgv);
+								context.out.writeLine("At: ", context.currentToken().position.line);
+								context.out.writeLine("Column: ", context.currentToken().position.column);
 							};
 						else context.error("Invalid message type!");
-					}
+					} break;
 					default: context.error("Invalid macro expansion!");
 				}
 			} break;
@@ -1529,7 +1534,9 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	auto rv = result.value();
 	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
 	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
-	context.append.cache = rv.value.appendBack(context.append.cache.sliced(rv.match.size()));
+	rv.value.appendBack(context.append.cache.sliced(rv.match.size()));
+	rv.value.insert(Context::Macro::Axiom(), 0);
+	context.append.cache = rv.value;
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
