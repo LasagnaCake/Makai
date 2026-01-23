@@ -1535,8 +1535,8 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	if (!result)
 		context.error("No viable macro rules match the given expression!");
 	auto rv = result.value();
-	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
-	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
+	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (elem.token + " ") : elem.token;}).join());
+	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (elem.token + " ") : elem.token;}).join());
 	auto const pc = context.append.cache.sliced(rv.match.size());
 	context.append.cache.clear().appendBack(rv.value).appendBack(pc);
 }

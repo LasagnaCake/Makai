@@ -153,6 +153,7 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_CHARACTER:				return "<character>";
 					case Type::LTS_TT_SINGLE_QUOTE_STRING:		return "<single-quote string>";
 					case Type::LTS_TT_DOUBLE_QUOTE_STRING:		return "<double-quote string>";
+					case Type::LTS_TT_IDENTIFIER:				return "<identifier>";
 					case Type::LTS_TT_COMPARE_EQUALS:			return "==";
 					case Type::LTS_TT_COMPARE_NOT_EQUALS:		return "!=";
 					case Type::LTS_TT_COMPARE_GREATER_EQUALS:	return ">=";
