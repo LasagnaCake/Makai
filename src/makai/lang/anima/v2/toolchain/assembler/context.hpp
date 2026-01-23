@@ -75,11 +75,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						auto const sz = (!variadic) ? count : Math::min(count, args.size());
 						switch (type) {
 							case Type::AV2_TA_SM_RMT_WHATEVER: {
-								DEBUGLN("WHATEVER");
+								DEBUGLN("::: WHATEVER");
 								return args.sliced(0, sz);
 							} break;
 							case Type::AV2_TA_SM_RMT_ANY_OF: {
-								DEBUGLN("TOKEN");
+								DEBUGLN("::: TOKEN");
 								DEBUGLN("Tokens: [", tokens.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(", "), "]");
 								for (usize i = 0; i < sz; ++i) {
 									DEBUGLN("[", Tokenizer::Token::asName(args[i].type), "]");
@@ -91,7 +91,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								}
 							} break;
 							case Type::AV2_TA_SM_RMT_EXPRESSION: {
-								DEBUGLN("EXPRESSION");
+								DEBUGLN("::: EXPRESSION");
 								if (expressionSolver)
 									result = expressionSolver(args).value();
 								DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
@@ -158,7 +158,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 				private:
 					constexpr Result matchGroup(Arguments const& args, Callback const& call = {}) const {
-						DEBUGLN("Group");
+						DEBUGLN("::: GROUP");
 						if (matches.empty()) return null;
 						Arguments result;
 						if (!count) return Arguments();
@@ -168,24 +168,31 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						Result mr;
 						do {
 							if (++matchCount > sz) break;
-							DEBUGLN("Matching BEGIN");
+							DEBUGLN("<match>");
 							for (auto& match: matches) {
-								DEBUGLN("Sub-Match");
+								DEBUGLN("<sub-match>");
 								if (tokenStart >= args.size()) {
-									mr = variadic ? Result{Arguments()} : null;
+									mr = variadic ? Result{result} : null;
 									break;
 								}
 								mr = match->match(args.sliced(tokenStart), call);
-								if (!mr || mr.value().empty()) break;
-								tokenStart += mr.value().size();
-								result.appendBack(mr.value());
+								DEBUGLN("</sub-match>");
+								if (!mr) break;
+								auto const v = mr.value();
+								DEBUGLN("Total match count: ", v.size());
+								if (v.empty()) break;
+								tokenStart += v.size();
+								result.appendBack(v);
 							}
-							DEBUGLN("Matching END");
+							DEBUGLN("</match>");
 							if (!mr || mr.value().empty()) break;
 						} while (true);
 						DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 						if (!matchCount)
 							return null;
+						DEBUGLN("Variadic match? ", variadic);
+						DEBUGLN("Match size: ", sz);
+						DEBUGLN("Total: ", matchCount);
 						if (variadic || matchCount == sz)
 							return result;
 						return null;
@@ -223,8 +230,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					auto const match = rule.match(
 						input,
 						[&] (Rule::Match const& match, Arguments const& result) {
-							if (rule.variables.contains(match.id()))
+							if (rule.variables.contains(match.id())) {
+								DEBUGLN("--- Variable: [", rule.variables[match.id()], "]");
 								variables[rule.variables[match.id()]].tokens.pushBack(result);
+							}
 						}
 					);
 					if (match)
