@@ -1042,26 +1042,36 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			virtual void display(String const& str)	{DEBUG(str);	}
 		} &out;
 
+		struct BasicTypes {
+		private:
+			Scope s;
+		public:
+			BasicTypes() {}
+
+			Instance<Scope::Member>  const voidT	= s.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
+			Instance<Scope::Member>  const nullT	= s.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
+			Instance<Scope::Member>  const intT		= s.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
+			Instance<Scope::Member>  const uintT	= s.addTypeDefinition("uint",		Data::Value::Kind::DVK_UNSIGNED	);
+			Instance<Scope::Member>  const floatT	= s.addTypeDefinition("float",		Data::Value::Kind::DVK_REAL		);
+			Instance<Scope::Member>  const stringT	= s.addTypeDefinition("string",		Data::Value::Kind::DVK_STRING	);
+			Instance<Scope::Member>  const bytesT	= s.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
+			Instance<Scope::Member>  const arrayT	= s.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
+			Instance<Scope::Member>  const objectT	= s.addTypeDefinition("object",		Data::Value::Kind::DVK_OBJECT	);
+			Instance<Scope::Member>  const anyT		= s.addTypeDefinition("any",		DVK_ANY							);
+		};
+
+		inline static BasicTypes basics;
+
 		Context(MessageOutput& out = defaultWriter): out(out) {
-			auto const voidT	= global.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
-			auto const nullT	= global.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
-			auto const intT		= global.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
-			auto const uintT	= global.addTypeDefinition("uint",		Data::Value::Kind::DVK_UNSIGNED	);
-			auto const floatT	= global.addTypeDefinition("float",		Data::Value::Kind::DVK_REAL		);
-			auto const stringT	= global.addTypeDefinition("string",	Data::Value::Kind::DVK_STRING	);
-			auto const bytesT	= global.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
-			auto const arrayT	= global.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
-			auto const objectT	= global.addTypeDefinition("object",	Data::Value::Kind::DVK_OBJECT	);
-			auto const anyT		= global.addTypeDefinition("any",		DVK_ANY							);
-			global.ns->members["unsigned"]	= uintT;
-			global.ns->members["signed"]	= intT;
-			global.ns->members["real"]		= floatT;
-			global.ns->members["text"]		= stringT;
-			global.ns->members["str"]		= stringT;
-			global.ns->members["binary"]	= bytesT;
-			global.ns->members["list"]		= arrayT;
-			global.ns->members["data"]		= objectT;
-			global.ns->members["nil"]		= nullT;
+			global.ns->members["unsigned"]	= basics.uintT;
+			global.ns->members["signed"]	= basics.intT;
+			global.ns->members["real"]		= basics.floatT;
+			global.ns->members["text"]		= basics.stringT;
+			global.ns->members["str"]		= basics.stringT;
+			global.ns->members["binary"]	= basics.bytesT;
+			global.ns->members["list"]		= basics.arrayT;
+			global.ns->members["data"]		= basics.objectT;
+			global.ns->members["nil"]		= basics.nullT;
 		}
 
 		struct Appendix {
@@ -1183,6 +1193,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 	private:
+
 		inline static MessageOutput defaultWriter;
 	};
 }

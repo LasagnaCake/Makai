@@ -511,8 +511,9 @@ constexpr Value::Kind stronger(Value::Kind const a, Value::Kind const b) {
 	return a > b ? a : b;
 }
 
-constexpr Makai::Instance<Context::Scope::Member> stronger(Makai::Instance<Context::Scope::Member> const& a, Makai::Instance<Context::Scope::Member> const& b) {
+constexpr Makai::Instance<Context::Scope::Member> stronger(Context& context, Makai::Instance<Context::Scope::Member> const& a, Makai::Instance<Context::Scope::Member> const& b) {
 	if (a == b) return a;
+	if (!a || !b) context.error("Value types mysteriously disappeared!");
 	if (!a->value["basic"]) return a;
 	if (!b->value["basic"]) return b;
 	auto const res = stronger(Makai::Cast::as<Value::Kind>(a->value["type"]), Makai::Cast::as<Value::Kind>(b->value["type"]));
@@ -520,7 +521,7 @@ constexpr Makai::Instance<Context::Scope::Member> stronger(Makai::Instance<Conte
 }
 
 static auto handleTernary(Context& context, Solution const& cond, Solution const& ifTrue, Solution const& ifFalse) {
-	auto const result = stronger(ifTrue.type, ifFalse.type);
+	auto const result = stronger(context, ifTrue.type, ifFalse.type);
 	if (context.isNumber(result) && ifTrue.type != ifFalse.type)
 		context.error<InvalidValue>("Types must match, or be similar!");
 	if (context.isUndefined(cond.type))
@@ -543,7 +544,7 @@ static auto handleTernary(Context& context, Solution const& cond, Solution const
 }
 
 static auto handleNullCoalescence(Context& context, Solution const& value, Solution const& elseValue) {
-	auto const result = stronger(value.type, elseValue.type);
+	auto const result = stronger(context, value.type, elseValue.type);
 	if (context.isNumber(result) && value.type != elseValue.type)
 		context.error<InvalidValue>("Types must match, or be similar!");
 	auto const falseJump	= context.scopePath() + "_nc_false"	+ context.uniqueName();
@@ -587,7 +588,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			if (!context.hasToken(LTS_TT_IDENTIFIER))
 				context.error("Expected type name here!");
 			auto const type = resolveSymbolPath(context);
-			if (type->type == Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
+			if (type->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
 				context.error("Symbol is not a type!");
 			context.writeLine("push", lhs.resolve());
 			context.writeLine("call in tname");
@@ -603,7 +604,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		rhs.resolver = context.resolveTo("&[-0]");
 		if (stackUsage++) rhs.resolver = context.resolveTo("&[-1]");
 	}
-	auto result = stronger(lhs.type, rhs.type);
+	auto result = stronger(context, lhs.type, rhs.type);
 	if (
 		opname.type != Type{','}
 	&&	lhs.type->value["basic"]
@@ -980,7 +981,7 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 		result = doValueResolution(context);
 		if (
 			result.type != expectedType
-		&&	!context.isNumber(stronger(result.type, expectedType))
+		&&	!context.isNumber(stronger(context, result.type, expectedType))
 		) context.error<InvalidValue>("Return type does not match!");
 	}
 	context.addFunctionExit();
@@ -1535,8 +1536,8 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	if (!result)
 		context.error("No viable macro rules match the given expression!");
 	auto rv = result.value();
-	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (elem.token + " ") : elem.token;}).join());
-	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (elem.token + " ") : elem.token;}).join());
+	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
+	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
 	auto const pc = context.append.cache.sliced(rv.match.size());
 	context.append.cache.clear().appendBack(rv.value).appendBack(pc);
 }
