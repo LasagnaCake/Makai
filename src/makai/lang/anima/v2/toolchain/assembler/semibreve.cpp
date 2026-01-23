@@ -1428,8 +1428,12 @@ static void doMacroTransform(
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
 						DEBUGLN("--- Transform::Variable: [", varName, "]");
-						base.newTransform()->pre = [varName] (Context::Macro::Context& context) {
-							context.result.value.appendBack(context.variables[varName].tokens.join());
+						base.newTransform()->pre = [varName = Makai::copy(varName)] (Context::Macro::Context& context) {
+							DEBUGLN("--- SIMPLE APPLICATION");
+							DEBUGLN("--- Apply::Variable: [", varName, "]");
+							auto toks = context.variables[varName].tokens;
+							DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
+							context.result.value.appendBack(toks.join());
 						};
 					} break;
 					case Type{'*'}: {
@@ -1442,12 +1446,14 @@ static void doMacroTransform(
 						doMacroTransform(context, rule, tf);
 						context.expectToken(Type{'}'});
 						base.newTransform()->pre = 
-							[varName, tf] (Context::Macro::Context& ctx) {
+							[varName = Makai::copy(varName), tf] (Context::Macro::Context& ctx) {
+								DEBUGLN("--- COMPLEX APPLICATION");
 								Context::Macro::Context subctx = ctx;
 								tf.apply(subctx);
-								DEBUGLN("--- Transform::Variable: [", varName, "]");
-								DEBUGLN("--- Transform::Value: [", ctx.variables[varName].tokens.join(ctx.result.value).toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join(), "]");
-								ctx.result.value.appendBack(ctx.variables[varName].tokens.join(ctx.result.value));
+								DEBUGLN("--- Apply::Variable: [", varName, "]");
+								auto toks = ctx.variables[varName].tokens;
+								DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
+								ctx.result.value.appendBack(toks.join(ctx.result.value));
 							}
 						;
 					} break;
