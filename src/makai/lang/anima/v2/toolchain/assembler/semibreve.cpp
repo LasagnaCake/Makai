@@ -170,9 +170,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 			context.error<InvalidValue>("Expected ':' here!");
 		context.fetchNext();
 		Makai::Instance<Context::Scope::Member> argt;
-		if (templates.contains(context.getValue<Makai::String>())) {
-			// TODO: Template resolution
-		} else argt = getType(context);
+		argt = getType(context);
 		DEBUGLN("Type: ", argt->name);
 		if (context.isUndefined(argt))
 			context.error<InvalidValue>("Invalid argument type!");
