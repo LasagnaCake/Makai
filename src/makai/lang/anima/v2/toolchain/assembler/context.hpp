@@ -912,9 +912,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		Macro::Axiom currentToken() const {
+			Macro::Axiom tok;
 			if (append.hasTokens())
-				return append.current();
-			return {{stream.current()}, true, stream.tokenText(), stream.position()};
+				tok = append.current();
+			else tok = {{stream.current()}, true, stream.tokenText(), stream.position()};
+			DEBUGLN("Token := ", Context::Tokenizer::Token::asName(tok.type));
+			return tok;
 		}
 
 		template <class T>
@@ -923,21 +926,21 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		String getModuleFile(String const& path) const {
-			writer.writeLine("Locating module '", path, "'...");
+			out.writeLine("Locating module '", path, "'...");
 			for (auto const& source: sourcePaths) {
 				auto const fullName = source + "/" + path + ".bv";
-				writer.write("  Searching for: '", fullName, "'... ");
+				out.write("  Searching for: '", fullName, "'... ");
 				if (OS::FS::exists(source) && OS::FS::exists(fullName)) {
-					writer.writeLine("Found!");
+					out.writeLine("Found!");
 					return Makai::File::loadText(fullName);
 				} else if (File::isArchiveAttached()) try {
 					auto const f = Makai::File::loadTextFromArchive(fullName);
-					writer.writeLine("Found!");
+					out.writeLine("Found!");
 					return f;
 				} catch (...) {}
-				writer.writeLine("Not found");
+				out.writeLine("Not found");
 			}
-			writer.writeLine("No matching modules found");
+			out.writeLine("No matching modules found");
 			error<Error::NonexistentValue>("Module file '"+path+"' does not exist or could not be found!");
 		}
 
@@ -1028,17 +1031,18 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return global.ns->members[name];
 		}
 
-		struct Writer {
-			virtual void write(String const& str)		{DEBUG(str);				}
-			virtual void writeLine(String const& str)	{write(str); write("\n");	}
+		struct MessageOutput {
 
 			template <class... Args>
-			void write(Args const&... args) requires (sizeof...(Args) > 1)		{(..., write(toString(args)));				}
+			void write(Args const&... args)		{(..., display(toString(args)));				}
 			template <class... Args>
-			void writeLine(Args const&... args) requires (sizeof...(Args) > 1)	{(..., write(toString(args))); write("\n");	}
-		} &writer;
+			void writeLine(Args const&... args)	{(..., display(toString(args))); display("\n");	}
 
-		Context(Writer& writer = defaultWriter): writer(writer) {
+		protected:
+			virtual void display(String const& str)	{DEBUG(str);	}
+		} &out;
+
+		Context(MessageOutput& out = defaultWriter): out(out) {
 			auto const voidT	= global.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
 			auto const nullT	= global.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
 			auto const intT		= global.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
@@ -1179,7 +1183,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 	private:
-		inline static Writer defaultWriter;
+		inline static MessageOutput defaultWriter;
 	};
 }
 
