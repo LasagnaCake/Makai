@@ -9,7 +9,7 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 
 using Makai::Data::Value;
 
-bool Engine::yield() {
+bool Engine::yieldCycle() {
 	bool revertContext = false;
 	if (context.prevMode != context.mode)
 		revertContext = true;
@@ -38,7 +38,7 @@ bool Engine::yield() {
 		case AV2_IN_AWAIT:			v2Await();		break;
 		case AV2_IN_YIELD:			v2Yield();		break;
 		case AV2_IN_NO_OP: break;
-		default: crash(invalidInstructionEror());
+		default: crash(invalidInstructionError());
 	}
 	if (revertContext) context.mode = context.prevMode;
 	return !isFinished;
@@ -46,7 +46,9 @@ bool Engine::yield() {
 
 bool Engine::process() {
 	paused = false;
-	while (Engine::process() && !paused) {}
+	if (wait) return isFinished;
+	else wait.clear();
+	while (Engine::yieldCycle() && !paused) {}
 	return isFinished;
 }
 
@@ -61,6 +63,21 @@ void Engine::terminate() {
 
 void Engine::v2Get() {
 	Instruction::GetRequest get;
+	auto const src		= consumeValue(get.from);
+	auto const field	= consumeValue(get.field);
+	auto const dst		= accessValue(get.to);
+	if (!src->isStructured()) return crash(invalidSourceError("Source value is not an array or object!"));
+	if (src->isArray()) {
+		if (!field->isNumber())
+			return crash(invalidFieldError("Expected number for array index!"));
+		auto const i = src->getSigned();
+		*dst = (*src)[i];
+	} else if (src->isObject()) {
+		if (!field->isString())
+			return crash(invalidFieldError("Expected string for object field!"));
+		auto const k = src->getString();
+		*dst = (*src)[k];
+	} else return crash(invalidSourceError("Source value is not an array or object!"));
 }
 
 void Engine::v2Set() {
@@ -69,6 +86,12 @@ void Engine::v2Set() {
 
 void Engine::v2Yield() {
 	paused = true;
+}
+
+void Engine::v2Await() {
+	Instruction::WaitRequest req = bitcast<Instruction::WaitRequest>(current.type);
+	wait.type = req.wait;
+	wait.condition = consumeValue(req.val);
 }
 
 void Engine::v2Compare() {
@@ -80,7 +103,7 @@ void Engine::v2Compare() {
 	if (lhs->type() == rhs->type())					order = *lhs <=> *rhs;
 	else if (lhs->isNumber() && rhs->isNumber())	order = lhs->get<double>() <=> lhs->get<double>();
 	else if (inStrictMode())
-		invalidComparisonEror("Types do not match!");
+		return crash(invalidComparisonError("Types do not match!"));
 	else {
 		*out = Value::undefined();
 		return;
@@ -89,7 +112,7 @@ void Engine::v2Compare() {
 	else if (order == Value::Order::GREATER)	*out = 1l;
 	else if (order == Value::Order::LESS)		*out = -1l;
 	else if (inStrictMode())
-		invalidComparisonEror("Failed to compare types!");
+		return crash(invalidComparisonError("Failed to compare types!"));
 	else {
 		*out = Value::undefined();
 		return;
@@ -121,8 +144,44 @@ Engine::Error Engine::endOfProgramError() {
 	return makeErrorHere("Program has reached an unexpected end!");
 }
 
-Engine::Error Engine::invalidInstructionEror() {
+Engine::Error Engine::invalidInstructionError() {
 	return makeErrorHere("Invalid/Unsupported instruction!");
+}
+
+Engine::Error Engine::invalidBinaryMathError(String const& description) {
+	return makeErrorHere("INVALID BINARY MATH: " + description);
+}
+
+Engine::Error Engine::invalidUnaryMathError(String const& description) {
+	return makeErrorHere("INVALID UNARYs MATH: " + description);
+}
+
+Engine::Error Engine::invalidInternalValueError(uint64 const id) {
+	return makeErrorHere(CTL::toString("Internal value of ID [", id, "] does not exist!"));
+}
+
+Engine::Error Engine::invalidSourceError(String const& description) {
+	return makeErrorHere("INVALID SOURCE: " + description);
+}
+
+Engine::Error Engine::invalidDestinationError(String const& description) {
+	return makeErrorHere("INVALID DESTINATION: " + description);
+}
+
+Engine::Error Engine::invalidFunctionError(String const& description) {
+	return makeErrorHere("INVALID FUNCTION: " + description);
+}
+
+Engine::Error Engine::invalidComparisonError(String const& description) {
+	return makeErrorHere("INVALID COMPARISON: " + description);
+}
+
+Engine::Error Engine::invalidFieldError(String const& description) {
+	return makeErrorHere("INVALID FIELD: " + description);
+}
+
+Engine::Error Engine::missingArgumentsError() {
+	return makeErrorHere("Missing arguments for built-in function!");
 }
 
 void Engine::advance(bool isRequired) {
@@ -159,7 +218,7 @@ void Engine::v2Invoke() {
 	if (invocation.location != DataLocation::AV2_DL_EXTERNAL) {
 		auto fn = getValueFromLocation(invocation.location, funcName);
 		if (!fn->isUnsigned())
-			return crash(invalidFunctionEror("Invalid function name!"));
+			return crash(invalidFunctionError("Invalid function name!"));
 		else funcName = fn->get<uint64>();
 	}
 	// Add arguments to stack
@@ -176,7 +235,7 @@ void Engine::v2Invoke() {
 		ssize returnType = Cast::as<ssize>(current.name);
 		auto const fn = program.constants[funcName].toString();
 		if (inStrictMode() && !functions.has(fn))
-			return crash(invalidFunctionEror("Function [" + fn + "] does not exist!"));
+			return crash(invalidFunctionError("Function [" + fn + "] does not exist!"));
 		auto const result = functions.invoke(
 			fn,
 			context.valueStack.sliced(-Cast::as<int>(invocation.argc), -1)
@@ -194,7 +253,7 @@ void Engine::v2Invoke() {
 				||	(current.type == 1 && !result.isNull())
 				)
 			) return crash(
-				invalidFunctionEror(
+				invalidFunctionError(
 					"Invalid external function return type!"
 					"\nType is ["+Value::asNameString(result.type())+"]"
 					"\nExpected type is ["+Value::asNameString(Cast::as<Value::Kind>(returnType))+"]"
@@ -385,13 +444,13 @@ void Engine::v2BinaryMath() {
 			case decltype(op.op)::AV2_IBM_OP_LOG:	*out = Math::logn(lhs->get<double>(), rhs->get<double>());
 			default: {
 				if (inStrictMode())
-					return crash(invalidBinaryMathError(op));
+					return crash(invalidBinaryMathError("Invalid/Unsupported operator!"));
 				*out = Value::undefined();
 			}
 		}
 	} else {
 		if (inStrictMode())
-			return crash(invalidBinaryMathError(op));
+			return crash(invalidBinaryMathError("Both values are not numbers!"));
 		*out = Value::undefined();
 	}
 }
@@ -421,20 +480,20 @@ void Engine::v2UnaryMath() {
 			case decltype(op.op)::AV2_IUM_OP_SQRT:		*out = Math::sqrt(v->get<double>());
 			default: {
 				if (inStrictMode())
-					return crash(invalidUnaryMathError(op));
+					return crash(invalidUnaryMathError("Invalid/Unsupported operator!"));
 				*out = Value::undefined();
 			}
 		}
 	} else {
 		if (inStrictMode())
-			return crash(invalidUnaryMathError(op));
+			return crash(invalidUnaryMathError("Value is not a number!"));
 		*out = Value::undefined();
 	}
 }
 
 void Engine::pushUndefinedIfInLooseMode(String const& fname) {
 	if (inStrictMode())
-		return crash(invalidFunctionEror("Failed operation for function \""+fname+"\"!"));
+		return crash(invalidFunctionError("Failed operation for function \""+fname+"\"!"));
 	context.valueStack.pushBack(new Value(Value::undefined()));
 }
 

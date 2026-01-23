@@ -136,18 +136,19 @@ namespace Makai::Anima::V2::Runtime {
 		bool hasFunction(String const& name);
 
 	private:
-		bool yield();
+		bool yieldCycle();
 
-		Engine::Error invalidInstructionEror();
+		Engine::Error invalidInstructionError();
 		Engine::Error endOfProgramError();
-		Engine::Error invalidBinaryMathError(Instruction::BinaryMath const& math);
-		Engine::Error invalidUnaryMathError(Instruction::UnaryMath const& math);
-		Engine::Error invalidInternalValueError(uint64 const& id);
+		Engine::Error invalidBinaryMathError(String const& description);
+		Engine::Error invalidUnaryMathError(String const& description);
+		Engine::Error invalidInternalValueError(uint64 const id);
 		Engine::Error invalidLocationError(DataLocation const& loc);
-		Engine::Error invalidSourceEror(String const& description);
-		Engine::Error invalidDestinationEror(String const& description);
-		Engine::Error invalidFunctionEror(String const& description);
-		Engine::Error invalidComparisonEror(String const& description);
+		Engine::Error invalidSourceError(String const& description);
+		Engine::Error invalidDestinationError(String const& description);
+		Engine::Error invalidFunctionError(String const& description);
+		Engine::Error invalidComparisonError(String const& description);
+		Engine::Error invalidFieldError(String const& description);
 		Engine::Error missingArgumentsError();
 
 		Engine::Error makeErrorHere(String const& message);
@@ -190,12 +191,30 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
-		bool			isFinished	= false;
-		bool			paused		= false;
-		Program			program;
-		Context			context;
-		Instruction		current;
-		Nullable<Error>	err;
+		struct WaitState {
+			Context::Storage				condition;
+			Instruction::WaitRequest::Wait	type;
+
+			constexpr void clear() {if (condition) condition = nullptr;}
+
+			constexpr bool waiting() const {
+				if (!condition) return false;
+				switch (type) {
+					case Instruction::WaitRequest::Wait::AV2_IUM_WRW_TRUTHY:	return !*condition;
+					case Instruction::WaitRequest::Wait::AV2_IUM_WRW_FALSY:		return *condition;
+				}
+				return false;
+			}
+
+			constexpr operator bool() const {return waiting();}
+		} wait;
+
+		bool				isFinished	= false;
+		bool				paused		= false;
+		Program				program;
+		Context				context;
+		Instruction			current;
+		Nullable<Error>		err;
 	};
 }
 

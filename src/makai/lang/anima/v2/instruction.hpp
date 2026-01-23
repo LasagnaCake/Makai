@@ -248,8 +248,13 @@ namespace Makai::Anima::V2 {
 
 		/// @brief Wait request.
 		struct [[gnu::aligned(4)]] WaitRequest {
+			enum class Wait: uint8 {
+				AV2_IUM_WRW_TRUTHY,
+				AV2_IUM_WRW_FALSY
+			};
+
 			DataLocation	val;
-			bool			falsy: 1;
+			Wait			wait;
 		};
 
 		/// @brief Field get request.

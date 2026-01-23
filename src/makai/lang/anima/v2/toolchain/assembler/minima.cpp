@@ -935,7 +935,7 @@ static void doTruthyAwait(Context& context, Instruction::WaitRequest& wait) {
 }
 
 static void doFalsyAwait(Context& context, Instruction::WaitRequest& wait) {
-	wait.falsy = true;
+	wait.wait = decltype(wait.wait)::AV2_IUM_WRW_FALSY;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed await!");
 	doTruthyAwait(context, wait);
@@ -945,7 +945,7 @@ MINIMA_ASSEMBLE_FN(Await) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed await!");
 	auto const await = context.stream.current();
-	Instruction::WaitRequest wait {.falsy = false};
+	Instruction::WaitRequest wait {.wait = decltype(wait.wait)::AV2_IUM_WRW_TRUTHY};
 	auto const awaitID = context.program.code.size();
 		context.program.code.pushBack({});
 	switch (await.type) {
