@@ -79,7 +79,16 @@ namespace OS {
 		for (String& arg: args)
 			prgArgs.pushBack(arg.cstr());
 		prgArgs.pushBack(NULL);
-		return execv(path.cstr(), prgArgs.data());
+		auto const pid = getpid();
+		auto cpid = pid;
+		fork();
+		if (pid != getpid())
+			return execv(path.cstr(), prgArgs.data());
+		else {
+			int result;
+			wait(&result);
+			return result;
+		}
 		#endif
 	}
 }
