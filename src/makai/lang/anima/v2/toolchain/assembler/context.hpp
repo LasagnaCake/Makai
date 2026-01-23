@@ -923,20 +923,21 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		String getModuleFile(String const& path) const {
-			DEBUGLN("Locating module '"+path+"'...");
+			writer.writeLine("Locating module '", path, "'...");
 			for (auto const& source: sourcePaths) {
 				auto const fullName = source + "/" + path + ".bv";
-				DEBUGLN("  Searching for: '"+fullName+"'");
+				writer.write("  Searching for: '", fullName, "'... ");
 				if (OS::FS::exists(source) && OS::FS::exists(fullName)) {
-					DEBUGLN("Found!");
+					writer.writeLine("Found!");
 					return Makai::File::loadText(fullName);
 				} else if (File::isArchiveAttached()) try {
 					auto const f = Makai::File::loadTextFromArchive(fullName);
-					DEBUGLN("Found!");
+					writer.writeLine("Found!");
 					return f;
 				} catch (...) {}
+				writer.writeLine("Not found");
 			}
-			DEBUGLN("Not found");
+			writer.writeLine("No matching modules found");
 			error<Error::NonexistentValue>("Module file '"+path+"' does not exist or could not be found!");
 		}
 
