@@ -1051,6 +1051,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			BasicTypes(): s() {
 				voidT	= s.addTypeDefinition("void",		Data::Value::Kind::DVK_VOID		);
 				nullT	= s.addTypeDefinition("null",		Data::Value::Kind::DVK_NULL		);
+				boolT	= s.addTypeDefinition("bool",		Data::Value::Kind::DVK_BOOLEAN	);
 				intT	= s.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
 				uintT	= s.addTypeDefinition("uint",		Data::Value::Kind::DVK_UNSIGNED	);
 				floatT	= s.addTypeDefinition("float",		Data::Value::Kind::DVK_REAL		);
@@ -1064,6 +1065,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Scope s;
 
 			Instance<Scope::Member> voidT;
+			Instance<Scope::Member> boolT;
 			Instance<Scope::Member> nullT;
 			Instance<Scope::Member> intT;
 			Instance<Scope::Member> uintT;
