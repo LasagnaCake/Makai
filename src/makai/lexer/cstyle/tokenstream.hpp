@@ -148,11 +148,11 @@ namespace Makai::Lexer::CStyle {
 				if (type < Type::LTS_TT_INTEGER) return toString(Cast::as<char>(type));
 				if (type >= Type::LTS_TT_MAX_TOKEN_TYPES) return "INVALID_TOKEN";
 				switch (type) {
-					case Type::LTS_TT_INTEGER:					return "integer";
-					case Type::LTS_TT_REAL:						return "real";
-					case Type::LTS_TT_CHARACTER:				return "character";
-					case Type::LTS_TT_SINGLE_QUOTE_STRING:		return "single-quote string";
-					case Type::LTS_TT_DOUBLE_QUOTE_STRING:		return "double-quote string";
+					case Type::LTS_TT_INTEGER:					return "<integer>";
+					case Type::LTS_TT_REAL:						return "<real>";
+					case Type::LTS_TT_CHARACTER:				return "<character>";
+					case Type::LTS_TT_SINGLE_QUOTE_STRING:		return "<single-quote string>";
+					case Type::LTS_TT_DOUBLE_QUOTE_STRING:		return "<double-quote string>";
 					case Type::LTS_TT_COMPARE_EQUALS:			return "==";
 					case Type::LTS_TT_COMPARE_NOT_EQUALS:		return "!=";
 					case Type::LTS_TT_COMPARE_GREATER_EQUALS:	return ">=";

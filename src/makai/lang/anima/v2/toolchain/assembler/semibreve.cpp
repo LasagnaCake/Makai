@@ -1427,6 +1427,7 @@ static void doMacroTransform(
 						auto const varName = context.getValue<Makai::String>();
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
+						DEBUGLN("--- Transform::Variable: [", varName, "]");
 						base.newTransform()->pre = [varName] (Context::Macro::Context& context) {
 							context.result.value.appendBack(context.variables[varName].tokens.join());
 						};
@@ -1435,6 +1436,7 @@ static void doMacroTransform(
 						auto const varName = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "macro variable name").getString();
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
+						DEBUGLN("--- Transform::Variable: [", varName, "]");
 						context.fetchNext().expectToken(Type{'{'});
 						Context::Macro::Transformation tf;
 						doMacroTransform(context, rule, tf);
@@ -1443,6 +1445,8 @@ static void doMacroTransform(
 							[varName, tf] (Context::Macro::Context& ctx) {
 								Context::Macro::Context subctx = ctx;
 								tf.apply(subctx);
+								DEBUGLN("--- Transform::Variable: [", varName, "]");
+								DEBUGLN("--- Transform::Value: [", ctx.variables[varName].tokens.join(ctx.result.value).toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join(), "]");
 								ctx.result.value.appendBack(ctx.variables[varName].tokens.join(ctx.result.value));
 							}
 						;

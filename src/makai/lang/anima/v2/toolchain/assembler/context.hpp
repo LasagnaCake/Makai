@@ -232,6 +232,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						[&] (Rule::Match const& match, Arguments const& result) {
 							if (rule.variables.contains(match.id())) {
 								DEBUGLN("--- Variable: [", rule.variables[match.id()], "]");
+								DEBUGLN("--- Match: [", result.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join(), "]");
 								variables[rule.variables[match.id()]].tokens.pushBack(result);
 							}
 						}
@@ -250,7 +251,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Action							post;
 
 				constexpr Instance<Transformation> newTransform() {
-					return new Transformation();
+					return sub.pushBack(new Transformation()).back();
 				}
 
 				constexpr Transformation& apply(Context& ctx) {
