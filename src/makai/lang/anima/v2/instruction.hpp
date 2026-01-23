@@ -28,7 +28,8 @@ namespace Makai::Anima::V2 {
 		/// @brief Register value.
 		AV2_DL_REGISTER,
 		/// @brief Location modifier: By reference.
-		AV2_DL_BY_REF = 0x80,
+		AV2_DLM_BY_REF	= 0b10000000,
+		AV2_DLM_MOVE	= 0b01000000,
 	};
 
 	constexpr DataLocation operator|(DataLocation const& a, DataLocation const& b) {

@@ -126,8 +126,8 @@ namespace Makai::Anima::V2::Runtime {
 	protected:
 		virtual Context::Storage	external	(String const& name, bool const byRef	);
 		Context::Storage			internal	(uint64 const valueID					);
-		Context::Storage			temporary	(										);
-		Context::Storage			global		(uint64 const globalID					);
+		Context::Storage&			temporary	(										);
+		Context::Storage&			global		(uint64 const globalID					);
 
 		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
 
@@ -158,8 +158,8 @@ namespace Makai::Anima::V2::Runtime {
 		Context::Storage consumeValue(DataLocation const from);
 		Context::Storage getValueFromLocation(DataLocation const location, usize const id);
 		
-		Context::Storage accessValue(DataLocation const from);
-		Context::Storage accessLocation(DataLocation const location, usize const id);
+		Context::Storage& accessValue(DataLocation const from);
+		Context::Storage& accessLocation(DataLocation const location, usize const id);
 
 		void advance(bool isRequired = false);
 		void terminate();

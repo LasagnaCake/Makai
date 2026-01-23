@@ -65,7 +65,8 @@ void Engine::v2Get() {
 	Instruction::GetRequest get;
 	auto const src		= consumeValue(get.from);
 	auto const field	= consumeValue(get.field);
-	auto const dst		= accessValue(get.to);
+	auto& dst			= accessValue(get.to);
+	if (!dst) dst = new Value();
 	if (!src->isStructured()) return crash(invalidSourceError("Source value is not an array or object!"));
 	if (src->isArray()) {
 		if (!field->isNumber())
@@ -96,9 +97,9 @@ void Engine::v2Await() {
 
 void Engine::v2Compare() {
 	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
-	auto const lhs = consumeValue(comp.lhs);
-	auto const rhs = consumeValue(comp.rhs);
-	auto const out = accessValue(comp.out);
+	auto const lhs	= consumeValue(comp.lhs);
+	auto const rhs	= consumeValue(comp.rhs);
+	auto& out		= accessValue(comp.out);
 	Value::OrderType order = Value::Order::EQUAL;
 	if (lhs->type() == rhs->type())					order = *lhs <=> *rhs;
 	else if (lhs->isNumber() && rhs->isNumber())	order = lhs->get<double>() <=> lhs->get<double>();
@@ -196,14 +197,14 @@ void Engine::advance(bool isRequired) {
 void Engine::v2Return() {
 	Instruction::Result res = bitcast<Instruction::Result>(current.type);
 	if (!res.ignore)
-		*temporary() = *accessValue(res.location);
+		temporary() = accessValue(res.location);
 }
 
 void Engine::v2Copy() {
 	Instruction::Transfer tf = bitcast<Instruction::Transfer>(current.type);
 	auto const from	= consumeValue(tf.from);
-	auto const to	= accessValue(tf.to);
-	*to = *from;
+	auto& to		= accessValue(tf.to);
+	to = from;
 }
 
 void Engine::v2Invoke() {
@@ -277,14 +278,15 @@ Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
 	return getValueFromLocation(from, bitcast<uint64>(current));
 }
 
-static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bool const byRef) {
-	return byRef ? v : new Value(*v);
+static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bool const noCopy) {
+	return noCopy ? v : new Value(*v);
 }
 
 Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, usize const id) {
-	bool byRef = (loc & DataLocation::AV2_DL_BY_REF) == DataLocation::AV2_DL_BY_REF;
+	bool byRef	= (loc & Cast::as<DataLocation>(0b11000000)) == DataLocation::AV2_DLM_BY_REF;
+	bool byMove	= (loc & Cast::as<DataLocation>(0b11000000)) == DataLocation::AV2_DLM_MOVE;
 	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
-		return accessor(context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef);
+		return accessor(context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef | byMove);
 	}
 	switch (loc) {
 		case DataLocation::AV2_DL_CONST:
@@ -294,25 +296,38 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 				return new Value(Value::undefined());
 			}
 			return Runtime::Context::Storage::create(program.constants[id % program.constants.size()]);
-		case DataLocation::AV2_DL_STACK:
+		case DataLocation::AV2_DL_STACK: {
 			if (context.valueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
 				return new Value(Value::undefined());
 			}
-			return accessor(context.valueStack[id  % context.valueStack.size()], byRef);
-		case DataLocation::AV2_DL_STACK_OFFSET:
+			auto& loc = context.valueStack[id  % context.valueStack.size()];
+			auto const v = loc;
+			if (byMove) loc = new Value();
+			return accessor(v, byRef);
+		}
+		case DataLocation::AV2_DL_STACK_OFFSET: {
 			if (context.valueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
 				return new Value(Value::undefined());
 			}
-			return accessor(context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)], byRef);
+			auto& loc = context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)];
+			auto const v = loc;
+			if (byMove) loc = new Value();
+			return accessor(v, byRef);
+		}
 //		case DataLocation::AV2_DL_HEAP:			{} break;
 		case DataLocation::AV2_DL_GLOBAL:		return global(id);
 		case DataLocation::AV2_DL_INTERNAL:		return internal(id);
 		case DataLocation::AV2_DL_EXTERNAL:		return external(program.constants[id].get<String>(), byRef);
-		case DataLocation::AV2_DL_TEMPORARY:	return accessor(temporary(), byRef);
+		case DataLocation::AV2_DL_TEMPORARY: {
+			auto& loc = temporary();
+			auto const v = loc;
+			if (byMove) loc = new Value();
+			return accessor(v, byRef);
+		}
 		default: {
 			if (inStrictMode())
 				crash(invalidLocationError(loc));
@@ -324,16 +339,22 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	return new Value(Value::undefined());
 }
 
-Runtime::Context::Storage Engine::accessValue(DataLocation const from) {
+Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 	if (
 		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
 	||	(from == DataLocation::AV2_DL_TEMPORARY)
-	) return accessLocation(from, 0);
+	) {
+		auto& loc = accessLocation(from, 0);
+		if (!loc) loc = new Value();
+		return loc;
+	}
 	advance(true);
-	return accessLocation(from, bitcast<uint64>(current));
+	auto& loc = accessLocation(from, bitcast<uint64>(current));
+	if (!loc) loc = new Value();
+	return loc;
 }
 
-Runtime::Context::Storage Engine::accessLocation(DataLocation const loc, usize const id) {
+Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
 	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
 		return context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
@@ -366,11 +387,11 @@ Runtime::Context::Storage Engine::accessLocation(DataLocation const loc, usize c
 	return context.temporary;
 }
 
-Runtime::Context::Storage Engine::temporary() {
+Runtime::Context::Storage& Engine::temporary() {
 	return context.temporary;
 }
 
-Runtime::Context::Storage Engine::global(uint64 const id) {
+Runtime::Context::Storage& Engine::global(uint64 const id) {
 	return context.globals[id];
 }
 
@@ -430,7 +451,7 @@ void Engine::v2BinaryMath() {
 	if (err) return;
 	auto const rhs	= consumeValue(op.rhs);
 	if (err) return;
-	auto out		= accessValue(op.out);
+	auto& out		= accessValue(op.out);
 	if (err) return;
 	if (lhs->isNumber() && rhs->isNumber()) {
 		switch (op.op) {
@@ -459,7 +480,7 @@ void Engine::v2UnaryMath() {
 	Instruction::UnaryMath op = Cast::bit<Instruction::UnaryMath>(current.type);
 	auto const v	= consumeValue(op.v);
 	if (err) return;
-	auto out		= accessValue(op.out);
+	auto& out		= accessValue(op.out);
 	if (err) return;
 	if (v->isNumber()) {
 		switch (op.op) {
@@ -674,9 +695,9 @@ void Engine::v2StackPop() {
 		context.valueStack.popBack();
 		return;
 	}
-	auto value = accessValue(inter.location);
+	auto& value = accessValue(inter.location);
 	if (err) return;
-	*value = *context.valueStack.popBack();
+	value = context.valueStack.popBack();
 }
 
 void Engine::v2StackSwap() {

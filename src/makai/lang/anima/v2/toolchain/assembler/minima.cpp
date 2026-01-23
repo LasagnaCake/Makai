@@ -24,7 +24,9 @@ static DataLocation getLoadType(Context& context) {
 	if (context.stream.current().type == LTS_TT_IDENTIFIER) {
 		auto const id = context.getValue<Makai::String>();
 		if (id == "reference" || id == "ref")
-			locAt = DataLocation::AV2_DL_BY_REF;
+			locAt = DataLocation::AV2_DLM_BY_REF;
+		else if (id == "move")
+			locAt = DataLocation::AV2_DLM_MOVE;
 		else if (id == "value" || id == "copy")
 			locAt = DataLocation{0};
 		context.fetchNext();
