@@ -1537,12 +1537,8 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	auto rv = result.value();
 	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
 	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
-	Context::Macro::Axiom ax;
-	ax.type = LTS_TT_SEMICOLON;
-	ax.token = ";";
-	ax.position = {CTL::Limit::MAX<usize>,CTL::Limit::MAX<usize>, CTL::Limit::MAX<usize>};
 	auto const pc = context.append.cache.sliced(rv.match.size());
-	context.append.cache.clear().pushBack(ax).appendBack(rv.value).appendBack(pc);
+	context.append.cache.clear().appendBack(rv.value).appendBack(pc);
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
@@ -1576,17 +1572,17 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			else if (context.hasSymbol(id)) {
 				auto sym = context.getSymbolRefByName(id);
 				switch (sym->type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION:	doFunctionCall(context, sym);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE:	doVariableAction(context, sym);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym); doExpression(context);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION:	doFunctionCall(context, sym);							break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE:	doVariableAction(context, sym);							break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				switch (sym.value->type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym.value);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);		break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, sym.value);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym.value); doExpression(context);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);								break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, sym.value);							break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else doVarDecl(context, true);
