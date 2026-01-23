@@ -1520,8 +1520,11 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 				context.error<NonexistentValue>("Macro is empty!");
 		} break;
 		case Type{'='}: {
+			context.fetchNext();
 			macro->simple = true;
-			// TODO: This
+			Context::Macro::Expression expr;
+			doMacroTransform(context, expr.rule, expr.transform);
+			macro->exprs.pushBack(expr);
 		} break;
 	}
 }
@@ -1534,9 +1537,12 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	auto rv = result.value();
 	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
 	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join());
-	rv.value.appendBack(context.append.cache.sliced(rv.match.size()));
-	rv.value.insert(Context::Macro::Axiom(), 0);
-	context.append.cache = rv.value;
+	Context::Macro::Axiom ax;
+	ax.type = LTS_TT_SEMICOLON;
+	ax.token = ";";
+	ax.position = {CTL::Limit::MAX<usize>,CTL::Limit::MAX<usize>, CTL::Limit::MAX<usize>};
+	auto const pc = context.append.cache.sliced(rv.match.size());
+	context.append.cache.clear().pushBack(ax).appendBack(rv.value).appendBack(pc);
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
