@@ -146,7 +146,7 @@ namespace Makai::Lexer::CStyle {
 
 			constexpr static String asName(Type const type) {
 				if (type < Type::LTS_TT_INTEGER) return toString(Cast::as<char>(type));
-				if (type >= Type::LTS_TT_MAX_TOKEN_TYPES) return "INVALID_TOKEN";
+				if (type >= Type::LTS_TT_MAX_TOKEN_TYPES) return "<!INVALID TOKEN>";
 				switch (type) {
 					case Type::LTS_TT_INTEGER:					return "<integer>";
 					case Type::LTS_TT_REAL:						return "<real>";
@@ -175,7 +175,7 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_BIT_XOR_ASSIGN:			return "^=";
 					case Type::LTS_TT_BIT_SHIFT_LEFT_ASSIGN:	return "<<=";
 					case Type::LTS_TT_BIT_SHIFT_RIGHT_ASSIGN:	return ">>=";
-					default: return "";
+					default: return "<!UNKNOWN>";
 				}
 			}
 		};
