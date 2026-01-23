@@ -562,6 +562,7 @@ static auto handleNullCoalescence(Context& context, Solution const& value, Solut
 SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	DEBUGLN("Binary operation");
 	context.fetchNext();
+	DEBUGLN("LHS: ", context.currentToken().token);
 	auto lhs = doValueResolution(context);
 	usize stackUsage = 0;
 	if (lhs.resolve() == ".") {
@@ -589,6 +590,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.fetchNext();
 			if (!context.hasToken(LTS_TT_IDENTIFIER))
 				context.error("Expected type name here!");
+			DEBUGLN("T:", context.currentToken().token);
 			auto const type = resolveSymbolPath(context);
 			if (type->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
 				context.error("Symbol is not a type!");
@@ -598,8 +600,10 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.writeLine("pop void");
 			return {context.getBasicType("bool"), context.resolveTo(".")};
 		}
+		DEBUGLN("Unspecialized thingamabob, moving on...");
 	}
 	context.fetchNext();
+	DEBUGLN("RHS: ", context.currentToken().token);
 	auto rhs = doValueResolution(context);
 	if (rhs.resolve() == ".") {
 		context.writeLine("push .");
