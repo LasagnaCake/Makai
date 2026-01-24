@@ -1374,10 +1374,10 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
 		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-	} else if (varType == "sq_string") {
+	} else if (varType == "sqstring") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
-	} else if (varType == "dq_string") {
+	} else if (varType == "dqstring") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
 	} else if (varType == "int") {
