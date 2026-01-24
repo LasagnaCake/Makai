@@ -273,12 +273,17 @@ Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
 	if (
 		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
 	||	(from == DataLocation::AV2_DL_TEMPORARY)
-	) return getValueFromLocation(from, 0);
+	) {
+		auto const store = getValueFromLocation(from, 0);
+		if (!store) return new Value();
+	}
 	advance(true);
-	return getValueFromLocation(from, bitcast<uint64>(current));
+	auto const store = getValueFromLocation(from, bitcast<uint64>(current));
+	if (!store) return new Value();
 }
 
 static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bool const noCopy) {
+	if (!v) return new Value();
 	return noCopy ? v : new Value(*v);
 }
 
@@ -304,7 +309,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			}
 			auto& loc = context.valueStack[id  % context.valueStack.size()];
 			auto const v = loc;
-			if (byMove) loc = new Value();
+			if (byMove) loc = nullptr;
 			return accessor(v, byRef);
 		}
 		case DataLocation::AV2_DL_STACK_OFFSET: {
@@ -315,7 +320,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			}
 			auto& loc = context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)];
 			auto const v = loc;
-			if (byMove) loc = new Value();
+			if (byMove) loc = nullptr;
 			return accessor(v, byRef);
 		}
 //		case DataLocation::AV2_DL_HEAP:			{} break;
@@ -325,7 +330,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 		case DataLocation::AV2_DL_TEMPORARY: {
 			auto& loc = temporary();
 			auto const v = loc;
-			if (byMove) loc = new Value();
+			if (byMove) loc = nullptr;
 			return accessor(v, byRef);
 		}
 		default: {
@@ -697,7 +702,11 @@ void Engine::v2StackPop() {
 	}
 	auto& value = accessValue(inter.location);
 	if (err) return;
-	value = context.valueStack.popBack();
+	if (
+		(inter.location & DataLocation::AV2_DLM_BY_REF) == DataLocation::AV2_DLM_BY_REF
+	||	(inter.location & DataLocation::AV2_DLM_MOVE) == DataLocation::AV2_DLM_MOVE
+	) value = context.valueStack.popBack();
+	else *value = *context.valueStack.popBack();
 }
 
 void Engine::v2StackSwap() {

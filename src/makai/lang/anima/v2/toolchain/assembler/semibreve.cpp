@@ -369,7 +369,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 	auto const v = doValueResolution(context);
 	context.writeLine("push", v.resolve());
 	context.writeLine("call in print");
-	return {context.getBasicType("void"), context.resolveTo(".")};
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(InternalStringify) {
@@ -377,7 +377,8 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(InternalStringify) {
 	auto const v = doValueResolution(context);
 	context.writeLine("push", v.resolve());
 	context.writeLine("call in stringify");
-	return {context.getBasicType("void"), context.resolveTo(".")};
+	context.writeLine("pop move .");
+	return {context.getBasicType("string"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(Internal) {
@@ -483,8 +484,17 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 				auto result = doValueResolution(context);
 				context.writeLine("push", result.resolve());
 				context.writeLine("call in sizeof");
-				context.writeLine("pop .");
-				return {context.getBasicType("uint"), context.resolveTo(".")};
+				context.writeLine("pop move .");
+				return {context.getBasicType("uint"), context.resolveTo("move .")};
+			} else if (id == "in") {
+				return doInternal(context);
+			} else if (id == "move" || id == "copy" || id == "ref") {
+				context.fetchNext();
+				auto v = doValueResolution(context);
+				if (v.resolve().back() == '.' && id == "ref")
+					context.error("Cannot have pass-by-reference on temporary values!");
+				v.resolver = context.changeSemantic(v.resolver, id);
+				return v;
 			} else if (idCanBeValue) return {context.getBasicType("string"), context.resolveTo("\"" + id + "\"")};
 			else context.error<InvalidValue>("Identifier does not match any reserved value or member name!");
 		} break;
@@ -565,9 +575,9 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	DEBUGLN("LHS: ", context.currentToken().token);
 	auto lhs = doValueResolution(context);
 	usize stackUsage = 0;
-	if (lhs.resolve() == ".") {
-		context.writeLine("push .");
-		lhs.resolver = context.resolveTo("&[-0]");
+	if (lhs.resolve().back() == '.') {
+		context.writeLine("push move .");
+		lhs.resolver = context.resolveTo("move &[-0]");
 		++stackUsage;
 	}
 	context.fetchNext();
@@ -581,7 +591,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		context.writeLine("uop inc", lhs.resolve(), "->", lhs.resolve());
 		if (stackUsage)
 			context.writeLine("clear", stackUsage);
-		return {lhs.type, lhs.resolver, context.resolveTo(".")};
+		return {lhs.type, lhs.resolver};
 	}
 	if (opname.type == LTS_TT_IDENTIFIER) {
 		auto const id = context.getValue<Makai::String>();
@@ -598,17 +608,17 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.writeLine("call in tname");
 			context.writeLine("comp ( &[-0] = \"", type->name, "\") -> .");
 			context.writeLine("pop void");
-			return {context.getBasicType("bool"), context.resolveTo(".")};
+			return {context.getBasicType("bool"), context.resolveTo("move .")};
 		}
 		DEBUGLN("Unspecialized thingamabob, moving on...");
 	}
 	context.fetchNext();
 	DEBUGLN("RHS: ", context.currentToken().token);
 	auto rhs = doValueResolution(context);
-	if (rhs.resolve() == ".") {
-		context.writeLine("push .");
-		rhs.resolver = context.resolveTo("&[-0]");
-		if (stackUsage++) rhs.resolver = context.resolveTo("&[-1]");
+	if (rhs.resolve().back() == '.') {
+		context.writeLine("push move .");
+		rhs.resolver = context.resolveTo("move &[-0]");
+		if (stackUsage++) lhs.resolver = context.resolveTo("move &[-1]");
 	}
 	DEBUGLN("LHS? ", lhs.type.exists());
 	DEBUGLN("RHS? ", rhs.type.exists());
@@ -634,7 +644,8 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 					result = rhs.type;
 				}
 			} else if (id == "if") {
-				context.fetchNext().expectToken(LTS_TT_IDENTIFIER);
+				context.fetchNext();
+				context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "else");
 				if (context.getValue<Makai::String>() != "else")
 					context.error("Expected 'else' here!");
 				context.fetchNext();
@@ -710,11 +721,12 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		}
 		default: context.error<InvalidValue>("Invalid/Unsupported operation!");
 	}
+	context.fetchNext();
 	if (context.currentToken().type != Type{')'})
 		context.error<InvalidValue>("Expected ')' here!");
 	if (stackUsage)
 		context.writeLine("clear", stackUsage);
-	return {result, context.resolveTo(".")};
+	return {result, context.resolveTo("move .")};
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
@@ -741,7 +753,7 @@ void doVarAssign(
 		if (!(context.isCastable(result.type) && context.isCastable(type)))
 			context.error<InvalidValue>("Invalid expression type for assignment!");
 		context.writeAdaptive("cast", result.resolve(), ":", toTypeName(type), "-> .");
-		result.resolver = context.resolveTo(".");
+		result.resolver = context.resolveTo("move .");
 	}
 	if (isNewVar) {
 		if (isGlobalVar) {
@@ -761,7 +773,7 @@ void doVarAssign(
 	preassign(context, result);
 	if (isGlobalVar)
 		context.writeAdaptive("copy", result.resolve(), "-> :", sym->name);
-	else context.writeAdaptive("copy", result.resolve(), "->", context.varAccessor(sym).invoke());
+	else context.writeAdaptive("copy", result.resolve(), "->", context.varAccessor(sym)->resolve());
 	sym->value["init"] = true;
 	postassign(context, result);
 }
@@ -847,10 +859,10 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(SubscriptAssignment) {
 		v.resolver = context.resolveTo("&[-0]");
 		if (stackUsage++) nameOrID.resolver = context.resolveTo("&[-1]");
 	}
-	context.writeLine("set", v.resolve(), "->", accessor.invoke(), "[", nameOrID.resolve(), "]");
+	context.writeLine("set", v.resolve(), "->", accessor->resolve(), "[", nameOrID.resolve(), "]");
 	context.writeLine("copy", v.resolve(), "-> .");
 	if (stackUsage) context.writeLine("clear", stackUsage);
-	return {sym->base, context.resolveTo(".")};
+	return {sym->base, context.resolveTo("move .")};
 }
 
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
@@ -877,7 +889,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 		case LTS_TT_MUL_ASSIGN:
 		case LTS_TT_DIV_ASSIGN:
 		case LTS_TT_MOD_ASSIGN: {
-			Makai::String const accessor = context.varAccessor(sym).invoke();
+			Makai::String const accessor = context.varAccessor(sym)->resolve();
 			Makai::String operation;
 			switch (current.type) {
 				case LTS_TT_ADD_ASSIGN: operation = "+"; break;
@@ -888,7 +900,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 			}
 			pre = ASSIGN_FN {
 				context.writeLine("bop", accessor, operation, result.resolve(), "-> .");
-				result.resolver = context.resolveTo(".");
+				result.resolver = context.resolveTo("move .");
 			};
 		} break;
 		default: context.error<InvalidValue>("Invalid assignment operation!");
@@ -914,9 +926,9 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 		args.pushBack(doValueResolution(context));
 		DEBUGLN("Argument type: ", args.back().type->name);
 		legalName += "_" + args.back().type->name;
-		if (args.back().resolve() == ".") {
-			context.writeLine("push .");
-			args.back().resolver = context.resolveTo(Makai::toString("&[", start + pushes, "]"));
+		if (args.back().resolve().back() == '.') {
+			context.writeLine("push move .");
+			args.back().resolver = context.resolveTo(Makai::toString("move &[", start + pushes, "]"));
 			++pushes;
 		}
 		context.fetchNext();
@@ -944,7 +956,7 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 	if (overload.contains("return"))
 		return {
 			context.resolveSymbol(overload["return"]),
-			context.resolveTo(".")
+			context.resolveTo("move .")
 		};
 	else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
 }
@@ -1078,14 +1090,14 @@ SEMIBREVE_ASSEMBLE_FN(RepeatLoop) {
 		context.startScope();
 		auto const var = context.currentScope().addVariable(id);
 		var->base = context.getBasicType("uint");
-		context.writeLine("jump if zero", context.varAccessor(var).invoke(), loopEnd);
+		context.writeLine("jump if zero", context.varAccessor(var)->resolve(), loopEnd);
 		context.writeLine("push", times.resolve());
 		if (!context.isUnsigned(times.type))
 			context.writeLine("cast &[-0]: uint -> &[-0]");
 		context.fetchNext();
 		doExpression(context);
-		context.writeLine("uop dec ", context.varAccessor(var).invoke(), " -> ", context.varAccessor(var).invoke());
-		context.writeLine("jump if pos", context.varAccessor(var).invoke(), loopStart);
+		context.writeLine("uop dec ", context.varAccessor(var)->resolve(), " -> ", context.varAccessor(var)->resolve());
+		context.writeLine("jump if pos", context.varAccessor(var)->resolve(), loopStart);
 		context.writeLine("pop void");
 		context.endScope();
 	} else context.error("Invalid expression!");
@@ -1154,7 +1166,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 				context.error<NonexistentValue>("Negation can only happen on numbers!");
 			context.writeLine("uop -", result.resolve(), "-> .");
 			//result.source = result.value;
-			result.resolver = context.resolveTo(".");
+			result.resolver = context.resolveTo("move .");
 			result.type = context.getBasicType("int");
 		} break;
 		case Type{'+'}: {
@@ -1162,17 +1174,17 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 				context.error<NonexistentValue>("Positration can only happen on numbers!");
 			context.writeLine("copy", result.resolve(), "-> .");
 			//result.source = result.value;
-			result.resolver = context.resolveTo(".");
+			result.resolver = context.resolveTo("move .");
 		} break;
 		case LTS_TT_DECREMENT: {
 			if (!context.isNumber(result.type))
 				context.error<NonexistentValue>("Incrementation can only happen on numbers!");
-			context.writeLine("uop inc", result.resolve(), "->", result.resolve());
+			context.writeLine("uop inc ref", result.resolve(), "->", result.resolve());
 		} break;
 		case LTS_TT_INCREMENT: {
 			if (!context.isNumber(result.type))
 				context.error<NonexistentValue>("Decrementation can only happen on numbers!");
-			context.writeLine("uop dec", result.resolve(), "->", result.resolve());
+			context.writeLine("uop dec ref", result.resolve(), "->", result.resolve());
 		} break;
 	}
 	return result;
@@ -1326,7 +1338,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(MemberCall) {
 	if (!ns->members.contains(id))
 		context.error<NonexistentValue>("Member call does not exist!");
 	auto const memcall = ns->members[id];
-	auto const ret = doFunctionCall(context, memcall, memcall->value["static"] ? "" : context.varAccessor(sym).invoke());
+	auto const ret = doFunctionCall(context, memcall, memcall->value["static"] ? "" : context.varAccessor(sym)->resolve());
 	return ret;
 }
 

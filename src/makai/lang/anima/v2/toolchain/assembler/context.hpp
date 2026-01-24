@@ -451,17 +451,47 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			};
 
 			struct Value {
+				struct IResolver {
+					constexpr virtual String resolve() const = 0;
+					constexpr virtual ~IResolver() {}
+				};
+
+				struct DirectResolver: IResolver {
+					String	value;
+
+					constexpr DirectResolver(String const& value): value(value) {}
+
+					constexpr String resolve() const override {
+						if (inRunTime()) DEBUGLN("Direct Resolver");
+						return value;
+					}
+				};
+
+				struct SemanticReplacer: IResolver {
+					Instance<IResolver>	prev;
+					String				semantic;
+
+					constexpr SemanticReplacer(Instance<IResolver> const& prev, String const& semantic): prev(prev), semantic(semantic) {}
+
+					String resolve() const override {
+						if (inRunTime()) DEBUGLN("Semantic Replacer");
+						auto pv = prev->resolve();
+						pv = CTL::Regex::replace(pv, "copy|move|ref", "");
+						return semantic + " " + pv;
+					}
+				};
+
 				using Resolver	= Function<String()>;
 				Instance<Scope::Member>		type;
-				Resolver					resolver;
-				Resolver					source		= resolveTo(".");
+				Instance<IResolver>			resolver	= new DirectResolver("move .");
+				Instance<IResolver>			source		= new DirectResolver("move .");
 
-				constexpr Makai::String resolve() const {
-					return resolver.invoke();
+				constexpr String resolve() const {
+					return resolver->resolve();
 				}
 
-				constexpr Makai::String resolveSource() const {
-					return source.invoke();
+				constexpr String resolveSource() const {
+					return source->resolve();
 				}
 			};
 			
@@ -1016,14 +1046,24 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return "-" + toString(relativeStackOffset(sym));
 		}
 
-		constexpr Scope::Value::Resolver varAccessor(Instance<Scope::Member> const& sym) {
-			return [&, sym] {
+		struct VariableAccessor: Scope::Value::IResolver {
+			Context& context;
+			Instance<Scope::Member> sym;
+
+			constexpr VariableAccessor(Context& context, Instance<Scope::Member> const& sym): context(context), sym(sym) {}
+
+			constexpr String resolve() const override {
+				if (inRunTime()) DEBUGLN("Variable Accessor");
 				if (sym->value["extern"])
 					return "@" + sym->value["name"].get<String>();
 				if (sym->value["global"])
 					return ":" + sym->value["name"].get<String>();
-				return "&[" + stackIndex(sym) + "]";
-			};
+				return "&[" + context.stackIndex(sym) + "]";
+			}
+		};
+
+		constexpr Instance<Scope::Value::IResolver> varAccessor(Instance<Scope::Member> const& sym) {
+			return new VariableAccessor(*this, sym);
 		}
 
 		String intermediate() const {
@@ -1205,8 +1245,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		inline static ID::VLUID uuid = ID::VLUID::create(0);
 
-		constexpr static Scope::Value::Resolver resolveTo(String const& value) {
-			return [=] {return value;};
+		constexpr static Instance<Scope::Value::IResolver> resolveTo(String const& value) {
+			return new Scope::Value::DirectResolver(value);
+		}
+
+		constexpr static Instance<Scope::Value::IResolver> changeSemantic(Instance<Scope::Value::IResolver> const& resolver, String const& semantic) {
+			return new Scope::Value::SemanticReplacer(resolver, semantic);
 		}
 
 	private:
