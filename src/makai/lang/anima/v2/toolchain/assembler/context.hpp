@@ -949,9 +949,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (append.hasTokens())
 				tok = append.current();
 			else tok = {{stream.current()}, true, stream.tokenText(), stream.position()};
-			if (tok.type == Macro::Axiom::Type::LTS_TT_IDENTIFIER)
-				DEBUGLN("Token := ID:[", tok.value.getString(), "]");
-			else DEBUGLN("Token := ", Context::Tokenizer::Token::asName(tok.type));
+			// if (tok.type == Macro::Axiom::Type::LTS_TT_IDENTIFIER)
+			// 	DEBUGLN("Token := ID:[", tok.value.getString(), "]");
+			// else DEBUGLN("Token := ", Context::Tokenizer::Token::asName(tok.type));
 			return tok;
 		}
 

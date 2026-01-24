@@ -913,7 +913,10 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 }
 
 static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope::Member> const& sym, Makai::String const& self) {
+	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
+		context.error("INTERNAL ERROR: Symbol type mismatch!");
 	auto const id = sym->name;
+	DEBUGLN(">>> >>> Function: ", id);
 	context.fetchNext();
 	if (context.currentToken().type != Type{'('})
 		context.error<InvalidValue>("Expected '(' here!");
@@ -1367,6 +1370,29 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 	auto const varType = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "rule type").getString();
 	if (varType == "expr") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_EXPRESSION;
+	} else if (varType == "string") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+	} else if (varType == "sq_string") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+	} else if (varType == "dq_string") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+	} else if (varType == "int") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
+	} else if (varType == "real") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_REAL}});
+	} else if (varType == "number") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
+		base.tokens.pushBack({{.type = LTS_TT_REAL}});
+	}  else if (varType == "char") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
 	} else {
 		context.error("Invalid rule type!");
 	}
