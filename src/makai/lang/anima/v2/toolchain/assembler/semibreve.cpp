@@ -608,7 +608,25 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.writeLine("call in tname");
 			context.writeLine("comp ( &[-0] = \"", type->name, "\") -> .");
 			context.writeLine("pop void");
+			context.fetchNext().expectToken(Type{')'});
+			if (stackUsage) context.writeLine("clear", stackUsage);
 			return {context.getBasicType("bool"), context.resolveTo("move .")};
+		} else if (id == "as") {
+			context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "type name");
+			Solution sol{.type = getType(context)};
+			if (lhs.type == sol.type)
+				sol = lhs;
+			else if (!context.isCastable(sol.type))
+				context.error<InvalidValue>("Casts can only happen between scalar types, strings, and [any]!");
+			else if (sol.type != context.getBasicType("any")) {
+				context.writeLine("cast", lhs.resolve(), ":", toTypeName(sol.type), "-> .");
+				sol.resolver = context.resolveTo("move .");
+			} else {
+				sol.type = context.getBasicType("any");
+			}
+			context.fetchNext().expectToken(Type{')'});
+			if (stackUsage) context.writeLine("clear", stackUsage);
+			return sol;
 		}
 		DEBUGLN("Unspecialized thingamabob, moving on...");
 	}
@@ -636,23 +654,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	switch (opname.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = opname.value.get<Makai::String>();
-			if (id == "as") {
-				if (lhs.type == rhs.type) {
-					context.fetchNext().expectToken(Type{')'});
-					if (stackUsage) context.writeLine("clear", stackUsage);
-					return lhs;
-				}
-				if (!context.isCastable(rhs.type))
-					context.error<InvalidValue>("Casts can only happen between scalar types, strings, and [any]!");
-				if (rhs.type != context.getBasicType("any")) {
-					context.writeLine("cast", lhs.resolve(), ":", toTypeName(rhs.type), "-> .");
-					result = rhs.type;
-				} else {
-					context.fetchNext().expectToken(Type{')'});
-					if (stackUsage) context.writeLine("clear", stackUsage);
-					return {.type = context.getBasicType("any"), .resolver = lhs.resolver, .source = lhs.source};
-				}
-			} else if (id == "if") {
+			if (id == "if") {
 				context.fetchNext();
 				context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "else");
 				if (context.getValue<Makai::String>() != "else")
