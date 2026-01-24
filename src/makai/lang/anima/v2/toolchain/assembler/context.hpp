@@ -189,7 +189,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 							//if (inRunTime()) DEBUGLN("</match>");
 							if (!mr || mr.value().empty()) break;
 						} while (true);
-						if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
+						//if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 						if (!matchCount)
 							return null;
 						//if (inRunTime()) DEBUGLN("Variadic match? ", variadic);
@@ -234,8 +234,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						input,
 						[&] (Rule::Match const& match, Arguments const& result) {
 							if (rule.variables.contains(match.id())) {
-								DEBUGLN("--- Variable: [", rule.variables[match.id()], "]");
-								DEBUGLN("--- Match: [", result.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join(), "]");
+								//DEBUGLN("--- Variable: [", rule.variables[match.id()], "]");
+								//DEBUGLN("--- Match: [", result.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join(), "]");
 								variables[rule.variables[match.id()]].tokens.pushBack(result);
 							}
 						}
