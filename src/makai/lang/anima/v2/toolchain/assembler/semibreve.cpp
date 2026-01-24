@@ -99,9 +99,13 @@ constexpr Makai::String toTypeName(Value::Kind t) {
 	}
 	return "v";
 }
-
 constexpr Makai::String toTypeName(Makai::Instance<Context::Scope::Member> t) {
 	return t->name;
+}
+
+constexpr Makai::String toTypeID(Makai::Instance<Context::Scope::Member> t) {
+	if (t->value["basic"]) return t->name;
+	return t->value["descriptor"].getString(t->name);
 }
 
 struct Prototype {
@@ -606,7 +610,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				context.error("Symbol is not a type!");
 			context.writeLine("push", lhs.resolve());
 			context.writeLine("call in tname");
-			context.writeLine("comp ( &[-0] = \"", type->name, "\") -> .");
+			context.writeLine("comp ( &[-0] = \"", toTypeID(type), "\") -> .");
 			context.writeLine("pop void");
 			context.fetchNext().expectToken(Type{')'});
 			if (stackUsage) context.writeLine("clear", stackUsage);
@@ -616,7 +620,9 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			Solution sol{.type = getType(context)};
 			if (lhs.type == sol.type)
 				sol = lhs;
-			else if (!context.isCastable(sol.type))
+			else if (lhs.type->value["operators"]["as " + toTypeID(sol.type)]) {
+				// TODO: Operators
+			} else if (!context.isCastable(sol.type))
 				context.error<InvalidValue>("Casts can only happen between scalar types, strings, and [any]!");
 			else if (sol.type != context.getBasicType("any")) {
 				context.writeLine("cast", lhs.resolve(), ":", toTypeName(sol.type), "-> .");
@@ -938,8 +944,8 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 	while (context.nextToken()) {
 		if (context.currentToken().type == Type{')'}) break;
 		args.pushBack(doValueResolution(context));
-		DEBUGLN("Argument type: ", args.back().type->name);
-		legalName += "_" + args.back().type->name;
+		DEBUGLN("Argument type: ", toTypeID(args.back().type));
+		legalName += "_" + toTypeID(args.back().type);
 		if (args.back().resolve().back() == '.') {
 			context.writeLine("push move .");
 			args.back().resolver = context.resolveTo(Makai::toString("move &[", start + pushes, "]"));
