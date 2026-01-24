@@ -290,8 +290,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Nullable<Result> resolve(Arguments const& args, Assembler::Context& context) {
 				if (simple) {
 					if (exprs.empty()) return null;
-					Context ctx{.input = args, .rule = exprs.front().rule};
-					ctx.parse(context);
+					Context ctx{.input = args};
 					return exprs.front().transform.apply(ctx).result(ctx);
 				} else {
 					usize i = 0;

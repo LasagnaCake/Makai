@@ -1536,17 +1536,25 @@ static void doMacroTransform(
 					} break;
 					case Type{'!'}: {
 						auto const msgt = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "message type").getString();
-						auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
-						if (msgt == "error" || msgt == "err")
+						if (msgt == "error" || msgt == "err"){
+							auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
 							base.newTransform()->pre = [msgv, &context] (auto&) {
 								context.error<Context::MacroError>(msgv);
 							};
-						else if (msgt == "warning" || msgt == "warn")
+						} else if (msgt == "warning" || msgt == "warn") {
+							auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
 							base.newTransform()->pre = [msgv, &context] (auto&) {
 								context.out.writeLine("Warning: ", msgv);
 								context.out.writeLine("At: ", context.currentToken().position.line);
 								context.out.writeLine("Column: ", context.currentToken().position.column);
 							};
+						} else if (msgt == "message" || msgt == "msg") {
+							auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
+							base.newTransform()->pre = [msgv, &context] (auto&) {
+								auto content = Makai::Regex::replace(msgv, "${line}", Makai::toString(context.currentToken().position.line));
+								context.out.writeLine("Message: ", content);
+							};
+						}
 						else context.error("Invalid message type!");
 					} break;
 					default: context.error("Invalid macro expansion!");
