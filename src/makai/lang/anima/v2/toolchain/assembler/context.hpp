@@ -369,7 +369,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Instance<Member> mem	= new Member{.name = name, .ns = new Namespace()};
 				auto& sym				= mem->value;
 				sym["name"]				= name;
+				sym["descriptor"]		= this->name + "_" + name + uniqueName();
 				ns->members[name]		= mem;
+				sym["operators"]		= sym.object();
 				return mem;
 			}
 
