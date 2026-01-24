@@ -6,13 +6,13 @@ main {
 	count: Integer = 0;
 	repeat i : 10 {
 		repeat _ : i {
-			core.Debug.LINE;
+			core.Breve.Compiler.Message.ALL;
 			core.IO.write("*");
 			++count;
 		}
-		core.Debug.LINE;
+		core.Breve.Compiler.Message.ALL;
 		core.IO.writeLine("*");
 	}
-	core.Debug.LINE;
+	core.Breve.Info.ALL;
 	core.IO.writeLine("Count: ", count);
 }

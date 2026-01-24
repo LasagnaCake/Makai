@@ -1,3 +1,0 @@
-namespace Debug {
-	macro LINE = {$!message "[]::[ LINE=${line} ]::[]"}
-}

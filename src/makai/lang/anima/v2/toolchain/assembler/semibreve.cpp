@@ -1480,6 +1480,85 @@ Makai::Instance<Context::Macro::Transformation> macroApply(Context::Macro::Argum
 	};
 }
 
+struct IExpandAfter {
+	using Instance = Makai::Instance<IExpandAfter>;
+	virtual Makai::String expand(Context::Macro::Context& context) const = 0;
+
+	virtual ~IExpandAfter() {}
+};
+
+struct ExpandToValue: IExpandAfter {
+	
+	Makai::String expand(Context::Macro::Context& context) const {
+		return value;
+	}
+
+	ExpandToValue(Makai::String const& value): value(value) {}
+
+private:
+	Makai::String value;
+};
+
+struct ExpandToVariable: IExpandAfter {
+	
+	Makai::String expand(Context::Macro::Context& context) const {
+		if (!context.variables.contains(var)) return "";
+		Makai::String result;
+		for (auto& toks: context.variables[var].tokens) {
+			for (auto& tok: toks) {
+				switch (tok.type) {
+					case LTS_TT_SINGLE_QUOTE_STRING:
+					case LTS_TT_DOUBLE_QUOTE_STRING:
+					case LTS_TT_IDENTIFIER:
+						result += tok.value.getString();
+					default: result += tok.token;
+				}
+			}
+		}
+		return result;
+	}
+
+	ExpandToVariable(Makai::String const& var): var(var) {}
+
+private:
+	Makai::String var;
+};
+
+struct ExpansionGroup: IExpandAfter {
+	Makai::List<Instance> sub;
+
+	Makai::String expand(Context::Macro::Context& context) const {
+		Makai::String result = "";
+		for (auto& s: sub)
+			result += s->expand(context);
+		return result;
+	}
+};
+
+static ExpansionGroup::Instance doExpansionGroup(Context& context) {
+	auto content = new ExpansionGroup();
+	switch(context.currentToken().type) {
+		case LTS_TT_SINGLE_QUOTE_STRING:
+		case LTS_TT_DOUBLE_QUOTE_STRING:
+			content->sub.pushBack(new ExpandToValue(context.getValue<Makai::String>()));
+		break;
+		case Type{'$'}: {
+			
+		} break;
+		case Type{'*'}: {
+			context.fetchNext().expectToken(Type{'('});
+			while (!context.hasToken(Type{')'})) {
+				if (context.fetchNext().hasToken(Type{')'}))
+					break;
+				content->sub.pushBack(doExpansionGroup(context));
+			}
+			context.expectToken(Type{')'});
+		} break;
+		default: context.error("Invalid immediate expansion!");
+	}
+	return content;
+}
+
 static void doMacroTransform(
 	Context& context,
 	Context::Macro::Rule& rule,
@@ -1537,22 +1616,24 @@ static void doMacroTransform(
 					case Type{'!'}: {
 						auto const msgt = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "message type").getString();
 						if (msgt == "error" || msgt == "err"){
-							auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
-							base.newTransform()->pre = [msgv, &context] (auto&) {
-								context.error<Context::MacroError>(msgv);
+							auto const msgv = doExpansionGroup(context.fetchNext());
+							base.newTransform()->pre = [msgv] (auto& ctx) {
+								ctx.baseContext.template error<Context::MacroError>(msgv->expand(ctx));
 							};
 						} else if (msgt == "warning" || msgt == "warn") {
-							auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
-							base.newTransform()->pre = [msgv, &context] (auto&) {
-								context.out.writeLine("Warning: ", msgv);
-								context.out.writeLine("At: ", context.currentToken().position.line);
-								context.out.writeLine("Column: ", context.currentToken().position.column);
+							auto const msgv = doExpansionGroup(context.fetchNext());
+							base.newTransform()->pre = [msgv] (auto& ctx) {
+								ctx.baseContext.out.writeLine("Warning: ", msgv->expand(ctx));
+								ctx.baseContext.out.writeLine("At: ", ctx.baseContext.currentToken().position.line);
+								ctx.baseContext.out.writeLine("Column: ", ctx.baseContext.currentToken().position.column);
 							};
 						} else if (msgt == "message" || msgt == "msg") {
-							auto const msgv = context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING).getString();
-							base.newTransform()->pre = [msgv, &context] (auto&) {
-								auto content = Makai::Regex::replace(msgv, "${line}", Makai::toString(context.currentToken().position.line));
-								context.out.writeLine("Message: ", content);
+							auto const msgv = doExpansionGroup(context.fetchNext());
+							base.newTransform()->pre = [msgv] (auto& ctx) {
+								auto content = msgv->expand(ctx);
+								content = Makai::Regex::replace(content, "\\$\\{LINE\\}", Makai::toString(ctx.baseContext.currentToken().position.line));
+								content = Makai::Regex::replace(content, "\\$\\{FILE\\}", Makai::toString(ctx.baseContext.fileName));
+								ctx.baseContext.out.writeLine("Message: ", content);
 							};
 						}
 						else context.error("Invalid message type!");
