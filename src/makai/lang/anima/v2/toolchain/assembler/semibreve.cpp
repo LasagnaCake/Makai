@@ -1535,7 +1535,7 @@ struct ExpansionGroup: IExpandAfter {
 	}
 };
 
-static ExpansionGroup::Instance doExpansionGroup(Context& context) {
+static ExpansionGroup::Instance doExpansionGroup(Context& context, Context::Macro::Rule& rule) {
 	auto content = new ExpansionGroup();
 	switch(context.currentToken().type) {
 		case LTS_TT_SINGLE_QUOTE_STRING:
@@ -1543,14 +1543,21 @@ static ExpansionGroup::Instance doExpansionGroup(Context& context) {
 			content->sub.pushBack(new ExpandToValue(context.getValue<Makai::String>()));
 		break;
 		case Type{'$'}: {
-			
+			switch (context.fetchNext().currentToken().type) {
+				case LTS_TT_IDENTIFIER: {
+					auto const varID = context.getValue<Makai::String>();
+					if (rule.variables.values().find(varID) == -1)
+						context.error("Macro variable does not exist!");
+					content->sub.pushBack(new ExpandToVariable(varID));
+				} break;
+			}
 		} break;
-		case Type{'*'}: {
+		case Type{'+'}: {
 			context.fetchNext().expectToken(Type{'('});
 			while (!context.hasToken(Type{')'})) {
 				if (context.fetchNext().hasToken(Type{')'}))
 					break;
-				content->sub.pushBack(doExpansionGroup(context));
+				content->sub.pushBack(doExpansionGroup(context, rule));
 			}
 			context.expectToken(Type{')'});
 		} break;
@@ -1578,12 +1585,12 @@ static void doMacroTransform(
 						auto const varName = context.getValue<Makai::String>();
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
-						DEBUGLN("--- Transform::Variable: [", varName, "]");
+						//DEBUGLN("--- Transform::Variable: [", varName, "]");
 						base.newTransform()->pre = [varName = Makai::copy(varName)] (Context::Macro::Context& context) {
-							DEBUGLN("--- SIMPLE VARIABLE EXPANSION");
-							DEBUGLN("--- Apply::Variable: [", varName, "]");
+							//DEBUGLN("--- SIMPLE VARIABLE EXPANSION");
+							//DEBUGLN("--- Apply::Variable: [", varName, "]");
 							auto toks = context.variables[varName].tokens;
-							DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
+							//DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
 							for (auto& tok: toks)
 								context.result.value.appendBack(tok);
 						};
@@ -1592,19 +1599,19 @@ static void doMacroTransform(
 						auto const varName = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "macro variable name").getString();
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
-						DEBUGLN("--- Transform::Variable: [", varName, "]");
+						//DEBUGLN("--- Transform::Variable: [", varName, "]");
 						context.fetchNext().expectToken(Type{'{'});
 						Context::Macro::Transformation tf;
 						doMacroTransform(context, rule, tf);
 						context.expectToken(Type{'}'});
 						base.newTransform()->pre = 
 							[varName = Makai::copy(varName), tf] (Context::Macro::Context& ctx) {
-								DEBUGLN("--- COMPLEX VARIABLE EXPANSION");
+								//DEBUGLN("--- COMPLEX VARIABLE EXPANSION");
 								Context::Macro::Context subctx = ctx;
 								tf.apply(subctx);
-								DEBUGLN("--- Apply::Variable: [", varName, "]");
+								//DEBUGLN("--- Apply::Variable: [", varName, "]");
 								auto toks = ctx.variables[varName].tokens;
-								DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
+								//DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
 								usize i = 0;
 								for (auto& tok: toks) {
 									ctx.result.value.appendBack(tok);
@@ -1613,22 +1620,34 @@ static void doMacroTransform(
 							}
 						;
 					} break;
+					case Type{'='}: {
+						auto const toks = doExpansionGroup(context.fetchNext(), rule);
+						base.newTransform()->pre = [toks] (auto& ctx) {
+							auto const stream = toks->expand(ctx);
+							Context::Tokenizer tz;
+							Makai::List<Context::Macro::Axiom> appendix;
+							tz.open(stream);
+							while (tz.next())
+								appendix.pushBack({{tz.current()}, true, tz.tokenText(), tz.position()});
+							ctx.result.value.appendBack(appendix);
+						};
+					} break;
 					case Type{'!'}: {
 						auto const msgt = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "message type").getString();
 						if (msgt == "error" || msgt == "err"){
-							auto const msgv = doExpansionGroup(context.fetchNext());
+							auto const msgv = doExpansionGroup(context.fetchNext(), rule);
 							base.newTransform()->pre = [msgv] (auto& ctx) {
 								ctx.baseContext.template error<Context::MacroError>(msgv->expand(ctx));
 							};
 						} else if (msgt == "warning" || msgt == "warn") {
-							auto const msgv = doExpansionGroup(context.fetchNext());
+							auto const msgv = doExpansionGroup(context.fetchNext(), rule);
 							base.newTransform()->pre = [msgv] (auto& ctx) {
 								ctx.baseContext.out.writeLine("Warning: ", msgv->expand(ctx));
 								ctx.baseContext.out.writeLine("At: ", ctx.baseContext.currentToken().position.line);
 								ctx.baseContext.out.writeLine("Column: ", ctx.baseContext.currentToken().position.column);
 							};
 						} else if (msgt == "message" || msgt == "msg") {
-							auto const msgv = doExpansionGroup(context.fetchNext());
+							auto const msgv = doExpansionGroup(context.fetchNext(), rule);
 							base.newTransform()->pre = [msgv] (auto& ctx) {
 								auto content = msgv->expand(ctx);
 								content = Makai::Regex::replace(content, "\\$\\{LINE\\}", Makai::toString(ctx.baseContext.currentToken().position.line));
@@ -1691,8 +1710,8 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	if (!result)
 		context.error("No viable macro rules match the given expression!");
 	auto rv = result.value();
-	DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
-	DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
+	//DEBUGLN("Match: ", rv.match.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
+	//DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
 	auto const pc = context.append.cache.sliced(rv.match.size());
 	context.append.cache.clear().appendBack(rv.value).appendBack(pc);
 }
