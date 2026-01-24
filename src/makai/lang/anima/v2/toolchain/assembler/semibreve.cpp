@@ -934,7 +934,7 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 			args.back().resolver = context.resolveTo(Makai::toString("move &[", start + pushes, "]"));
 			++pushes;
 		}
-		context.fetchNext();
+		//context.fetchNext();
 		if (context.currentToken().type == Type{')'}) break;
 		else if (context.currentToken().type != Type{','})
 			context.error<InvalidValue>("Expected ',' here!");
