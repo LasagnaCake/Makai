@@ -1424,7 +1424,11 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 				case Type{'$'}:
 				case Type{'*'}:
 				case Type{'{'}:
-				case Type{'}'}: base.tokens.pushBack(context.currentToken()); break;
+				case Type{'}'}:
+				case Type{'['}:
+				case Type{']'}:
+				case Type{'('}:
+				case Type{')'}: base.tokens.pushBack(context.currentToken()); break;
 				default: break;
 			}
 		} break;
