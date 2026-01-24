@@ -356,6 +356,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						decl = Declaration::AV2_TA_SMD_EXTERNAL;
 					else decl = Declaration::AV2_TA_SMD_INTERNAL;
 				}
+
+				constexpr String descriptor() const {
+					if (value["basic"]) return name;
+					else return value["descriptor"].getString(name);
+				}
 			private:
 				static inline ID::VLUID all = ID::VLUID::create(0);
 			};
