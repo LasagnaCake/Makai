@@ -104,8 +104,7 @@ constexpr Makai::String toTypeName(Makai::Instance<Context::Scope::Member> t) {
 }
 
 constexpr Makai::String toTypeID(Makai::Instance<Context::Scope::Member> t) {
-	if (t->value["basic"]) return t->name;
-	return t->value["descriptor"].getString(t->name);
+	return t->descriptor();
 }
 
 struct Prototype {
