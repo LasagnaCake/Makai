@@ -637,8 +637,11 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = opname.value.get<Makai::String>();
 			if (id == "as") {
-				if (lhs.type == rhs.type)
+				if (lhs.type == rhs.type) {
+					context.fetchNext().expectToken(Type{')'});
+					if (stackUsage) context.writeLine("clear", stackUsage);
 					return lhs;
+				}
 				if (!context.isCastable(rhs.type))
 					context.error<InvalidValue>("Casts can only happen between scalar types, strings, and [any]!");
 				if (rhs.type != context.getBasicType("any")) {
@@ -646,8 +649,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 					result = rhs.type;
 				} else {
 					context.fetchNext().expectToken(Type{')'});
-					if (stackUsage)
-						context.writeLine("clear", stackUsage);
+					if (stackUsage) context.writeLine("clear", stackUsage);
 					return {.type = context.getBasicType("any"), .resolver = lhs.resolver, .source = lhs.source};
 				}
 			} else if (id == "if") {
