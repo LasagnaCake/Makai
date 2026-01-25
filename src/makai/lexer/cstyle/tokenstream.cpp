@@ -14,7 +14,7 @@ bool TokenStream::next() {
 	if (!lexer || isFinished) return false;
 	if (stb_c_lexer_get_token(&lexer->lexer)) {
 		auto& lex = lexer->lexer;
-		curToken.value = Makai::Data::Value();
+		curToken.value = Makai::Data::Value::undefined();
 		switch (lex.token) {
 			case (CLEX_eof): isFinished = true; break;
 			case (CLEX_parse_error): {

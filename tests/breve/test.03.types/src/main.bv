@@ -9,12 +9,12 @@ main {
 			core.Breve.Compiler.Message.ALL;
 			core.IO.write("*");
 			core.Breve.Compiler.Message.ALL;
-			++;count
+			++count;
 		}
 		core.Breve.Compiler.Message.ALL;
 		core.IO.writeLine("*");
 		core.Breve.Compiler.Message.ALL;
 	}
-	core.Breve.Info.ALL;
+	core.Breve.Compiler.Message.ALL;
 	core.IO.writeLine("Count: ", count);
 }
