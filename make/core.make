@@ -89,6 +89,8 @@ export INC_CRYPTOPP		= $(call libpath, cryptopp/include)
 export INC_XML2JSON		= $(call libpath, xml2json/include)
 export INC_JSON2XML		= $(call libpath, json2xml)
 export INC_MINIAUDIO	= $(call libpath, miniaudio) $(call libpath, minivorbis)
+export INC_WEBGPU		= $(call libpath, wgpu-native/windows-x86_64/include)
+
 export INC_MAKAI		= $(call corepath, include)
 
 FRAME_PTR := -fno-omit-frame-pointer

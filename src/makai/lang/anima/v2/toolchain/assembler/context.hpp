@@ -99,9 +99,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								//if (inRunTime()) DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 							} break;
 						}
-						if (inRunTime()) DEBUGLN("Variadic match? ", variadic);
-						if (inRunTime()) DEBUGLN("Match size: ", sz);
-						if (inRunTime()) DEBUGLN("Total: ", result.size());
+						if (inRunTime()) DEBUGLN("--- Variadic match? ", variadic);
+						if (inRunTime()) DEBUGLN("--- Match size: ", sz);
+						if (inRunTime()) DEBUGLN("--- Total: ", result.size());
 						call.invoke(*this, result);
 						return result;
 					}
@@ -195,9 +195,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						//if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 						if (!matchCount)
 							return null;
-						if (inRunTime()) DEBUGLN("Variadic match? ", variadic);
-						if (inRunTime()) DEBUGLN("Match size: ", sz);
-						if (inRunTime()) DEBUGLN("Total: ", matchCount);
+						if (inRunTime()) DEBUGLN("--- Variadic match? ", variadic);
+						if (inRunTime()) DEBUGLN("--- Match size: ", sz);
+						if (inRunTime()) DEBUGLN("--- Total: ", matchCount);
 						if (variadic || matchCount == sz)
 							return result;
 						return null;
