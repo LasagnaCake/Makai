@@ -29,7 +29,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					if (!strict) return type == other.type;
 					if (type == other.type)
 						return value == other.value;
-					return false;
+					else return false;
 				}
 
 				constexpr Ordered::OrderType operator<=>(Tokenizer::Token const& other) const {
