@@ -88,7 +88,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 									if (tokens.find(args[i]) != -1)
 										result.pushBack(args[i]);
 									else if (variadic)
-										return result;
+										break;
 									else return null;
 								}
 							} break;
@@ -99,6 +99,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								//if (inRunTime()) DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 							} break;
 						}
+						if (inRunTime()) DEBUGLN("Variadic match? ", variadic);
+						if (inRunTime()) DEBUGLN("Match size: ", sz);
+						if (inRunTime()) DEBUGLN("Total: ", result.size());
 						call.invoke(*this, result);
 						return result;
 					}
@@ -192,9 +195,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						//if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 						if (!matchCount)
 							return null;
-						//if (inRunTime()) DEBUGLN("Variadic match? ", variadic);
-						//if (inRunTime()) DEBUGLN("Match size: ", sz);
-						//if (inRunTime()) DEBUGLN("Total: ", matchCount);
+						if (inRunTime()) DEBUGLN("Variadic match? ", variadic);
+						if (inRunTime()) DEBUGLN("Match size: ", sz);
+						if (inRunTime()) DEBUGLN("Total: ", matchCount);
 						if (variadic || matchCount == sz)
 							return result;
 						return null;
@@ -295,12 +298,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					return exprs.front().transform.apply(ctx).result(ctx);
 				} else {
 					usize i = 0;
-					for (auto& expr: exprs) if (expr.rule.fit(args)) {
-						DEBUGLN("Found matching rule: ", i);
-						Context ctx{.input = args, .rule = expr.rule, .baseContext = context};
-						ctx.parse();
-						return expr.transform.apply(ctx).result(ctx);
-					} else ++i;
+					for (auto& expr: exprs)
+						if (expr.rule.fit(args)) {
+							DEBUGLN("Found matching rule: ", i);
+							Context ctx{.input = args, .rule = expr.rule, .baseContext = context};
+							ctx.parse();
+							return expr.transform.apply(ctx).result(ctx);
+						} else ++i;
 				}
 				return null;
 			}

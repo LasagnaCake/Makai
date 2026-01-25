@@ -8,10 +8,12 @@ main {
 		repeat _ : i {
 			core.Breve.Compiler.Message.ALL;
 			core.IO.write("*");
-			++count;
+			core.Breve.Compiler.Message.ALL;
+			++;count
 		}
 		core.Breve.Compiler.Message.ALL;
 		core.IO.writeLine("*");
+		core.Breve.Compiler.Message.ALL;
 	}
 	core.Breve.Info.ALL;
 	core.IO.writeLine("Count: ", count);

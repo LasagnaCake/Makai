@@ -1714,6 +1714,11 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	//DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
 	auto const pc = context.append.cache.sliced(rv.match.size());
 	context.append.cache.clear().appendBack(rv.value).appendBack(pc);
+	DEBUGLN("<state>");
+	for (auto const& tok: context.append.cache) {
+		DEBUG(tok.token, " ");
+	}
+	DEBUGLN("</state>");
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
