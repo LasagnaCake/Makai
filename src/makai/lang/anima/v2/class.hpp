@@ -58,19 +58,18 @@ namespace Makai::Anima::V2 {
 
 		Data::Value create(Context& context, Data::Value obj = Data::Value::object()) {
 			obj.append(context.types[base]->create(context, obj));
-			obj["::type"] = name;
-			obj["::base"] = context.types[base]->name;
+			obj["::type"] = id;
 			auto& f = obj["::fields"];
 			auto& m = obj["::methods"];
 			for (auto& field: fields)
 				if (!f.contains(field->name)) {
-					f[field->name]["id"]	= field->id;
-					f[field->name]["type"]	= field->type;
+					f[field->name]["::value"]	= context.types[field->type]->create(context);
+					f[field->name]["::id"]		= field->id;
+					f[field->name]["::type"]	= field->type;
 				}
-			for (auto& method: methods) {
-				m[method->name]["id"]		= method->id;
-				m[method->name]["static"]	= method->isStatic;
-			}
+			for (auto& method: methods)
+				if (context.functions[method->id]->location)
+					m[method->name]	= context.functions[method->id]->location.value();
 			for (auto& prop: properties) {
 				if (prop->getter && context.functions[prop->getter.value()]->location) {
 					auto g = context.functions[prop->getter.value()];
