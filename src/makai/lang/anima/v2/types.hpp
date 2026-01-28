@@ -5,7 +5,7 @@
 
 namespace Makai::Anima::V2::Types {
 	namespace Functions {
-		inline Class::Function::Instance toString();
+		inline Class::Function::Instance stringify();
 		inline Class::Function::Instance nameof();
 		inline Class::Function::Instance baseof();
 	}
@@ -158,7 +158,7 @@ namespace Makai::Anima::V2::Types {
 }
 
 namespace Makai::Anima::V2::Types::Functions {
-	inline Class::Function::Instance toString() {
+	inline Class::Function::Instance stringify() {
 		static Class::Function::Instance f = [] {
 			auto f = new Class::Function();
 			f->result = String()->id;
@@ -191,7 +191,7 @@ namespace Makai::Anima::V2::Types::Methods {
 	inline Class::Method::Instance toString() {
 		static Class::Method::Instance m = [] {
 			auto m = new Class::Method();
-			m->id = Functions::toString()->id;
+			m->id = Functions::stringify()->id;
 			return m;
 		} ();
 		return m;
