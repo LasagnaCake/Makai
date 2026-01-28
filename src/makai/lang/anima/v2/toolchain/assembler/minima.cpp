@@ -497,6 +497,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "match" || id == "has")			invoke.argc = 'm';
 			else if (id == "remove")						invoke.argc = 'r';
 			else if (id == "sizeof")						invoke.argc = '#';
+			else if (id == "array")							invoke.argc = '[';
 			else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 		}
 		case Type{'+'}:

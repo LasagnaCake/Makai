@@ -39,6 +39,7 @@ SEMIBREVE_ASSEMBLE_FN(Terminate);
 SEMIBREVE_ASSEMBLE_FN(Error);
 SEMIBREVE_ASSEMBLE_FN(External);
 
+SEMIBREVE_TYPED_ASSEMBLE_FN(ArrayDeclaration);
 SEMIBREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution);
 SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation);
 SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation);
@@ -503,6 +504,9 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		} break;
 		case Type{'('}: {
 			return doBinaryOperation(context);
+		} break;
+		case Type{'['}: {
+			return doArrayDeclaration(context);
 		} break;
 		case Type{'-'}:
 		case Type{'+'}:
@@ -1207,6 +1211,23 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
 		} break;
 	}
 	return result;
+}
+
+SEMIBREVE_TYPED_ASSEMBLE_FN(ArrayDeclaration) {
+	usize count = 0;
+	while (!context.hasToken(Type{']'})) {
+		context.fetchNext();
+		if (context.hasToken(Type{']'})) break;
+		context.writeLine("push", doValueResolution(context).resolve());
+		++count;
+	}
+	if (count) {
+		context.writeLine("push", count);
+		context.writeLine("call in array");
+		context.writeLine("pop .");
+		return {context.getBasicType("array"), context.resolveTo("move .")};
+	}
+	return {context.getBasicType("array"), context.resolveTo("arr")};
 }
 
 struct ModuleResolution {

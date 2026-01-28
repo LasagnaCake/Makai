@@ -162,6 +162,10 @@ namespace Makai::Anima::V2 {
 				uint32			id;
 			};
 		};
+		
+		/// @brief Function invocation.
+		struct [[gnu::aligned(4)]] ReferenceCall: Invocation {};
+
 		/// @brief Jump leap.
 		struct [[gnu::aligned(4)]] Leap {
 			enum class Type: uint8 {
@@ -279,6 +283,11 @@ namespace Makai::Anima::V2 {
 			DataLocation	src, lhs, rhs, out;
 		};
 		
+		/// @brief Object.
+		struct [[gnu::aligned(4)]] Object {
+			DataLocation	desc, out;
+		};
+		
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -365,6 +374,14 @@ namespace Makai::Anima::V2 {
 			/// @param type `StringManipulation` = How to manipulate the string.
 			/// @details `str <op-id> [<src-id>] [<lhs-id>] [<rhs-id>] [<out-id>]`
 			AV2_IN_STR_OP,
+			/// @brief Creates an object based on an object descriptor.
+			/// @param type `Object` = How to create the object.
+			/// @details `new [<desc-id>] [<loc-id>]`
+			AV2_IN_NEW_OBJ,
+			/// @brief Dinamically calls a function.
+			/// @param type `Invocation` = How to call the function.
+			/// @details `rcall [<src-func-id>] [<args> ...]`
+			AV2_IN_DYN_CALL,
 		};
 		
 		/// @brief Instruction "Name" (opcode).
