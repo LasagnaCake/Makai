@@ -1695,6 +1695,13 @@ static void doMacroTransform(
 							ctx.result.value.appendBack(appendix);
 						};
 					} break;
+					case Type{':'}: {
+						auto const toks = doExpansionGroup(context.fetchNext(), rule);
+						base.newTransform()->pre = [toks] (auto& ctx) {
+							auto const v = toks->expand(ctx);
+							ctx.result.value.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING, .value = v}});
+						};
+					} break;
 					case Type{'!'}: {
 						auto const msgt = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "message type").getString();
 						if (msgt == "error" || msgt == "err"){
