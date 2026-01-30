@@ -234,7 +234,7 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	if (ns && ns->members.contains(fid)) {
 		if (ns->members[fid]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 			context.error("Non-function symbol with this name was already declared!");
-		mem = context.currentScope().ns->members[fid];
+		mem = ns->members[fid];
 	} else {
 		mem = new Context::Scope::Member{
 			.type = Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION,
