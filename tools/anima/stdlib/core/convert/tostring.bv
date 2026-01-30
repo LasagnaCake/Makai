@@ -1,14 +1,8 @@
 namespace Convert {
-	namespace Impl {
-		macro toString {
-			{$($value:string$)}	=> {$value							}
-			{$($value:expr$)}	=> {in stringify ($value as any)	}
-		}
-	}
-	
 	macro toString {
 		{$($)}								=> {""																	}
-		{$($value:expr$)}					=> {core.Convert.Impl.toString($value)									}
+		{$($value:string$)}					=> {$value																}
+		{$($value:expr$)}					=> {in stringify ($value as any)										}
 		{$($first:expr *{, $rest:expr}$)}	=> {(core.Convert.toString($first) + core.Convert.toString($*rest{,}))	}
 		{$($first:expr *{+ $rest:expr}$)}	=> {core.Convert.toString($first, $*rest{,})							}
 	}
