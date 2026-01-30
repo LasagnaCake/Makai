@@ -938,7 +938,7 @@ static void doTruthyAwait(Context& context, Instruction::WaitRequest& wait) {
 }
 
 static void doFalsyAwait(Context& context, Instruction::WaitRequest& wait) {
-	wait.wait = decltype(wait.wait)::AV2_IUM_WRW_FALSY;
+	wait.wait = decltype(wait.wait)::AV2_IWRW_FALSY;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed await!");
 	doTruthyAwait(context, wait);
@@ -948,7 +948,7 @@ MINIMA_ASSEMBLE_FN(Await) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed await!");
 	auto const await = context.stream.current();
-	Instruction::WaitRequest wait {.wait = decltype(wait.wait)::AV2_IUM_WRW_TRUTHY};
+	Instruction::WaitRequest wait {.wait = decltype(wait.wait)::AV2_IWRW_TRUTHY};
 	auto const awaitID = context.program.code.size();
 		context.program.code.pushBack({});
 	switch (await.type) {
@@ -1204,6 +1204,70 @@ MINIMA_ASSEMBLE_FN(Hook) {
 	doLabel(context);
 }
 
+MINIMA_ASSEMBLE_FN(RandomNumber) {
+	context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG operation");
+	auto id = context.currentValue().getString();
+	Instruction::Randomness rng;
+	if (id == "seed") {
+		auto const seed = getDataLocation(context);
+		auto const inst = context.addNamedInstruction(Instruction::Name::AV2_IN_RANDOM);
+		rng.flags = Instruction::Randomness::Flags::AV2_IRF_SET_SEED;
+		rng.num = seed.at;
+		context.addInstructionType(inst, rng);
+		context.addInstruction(seed.id);
+		return;
+	}
+	auto const inst = context.addNamedInstruction(Instruction::Name::AV2_IN_RANDOM);
+	rng.flags = Instruction::Randomness::Flags::AV2_IRF_SET_SEED;
+	bool secure = false;
+	if (id == "secure" || id == "safe" || id == "srng") {
+		secure = false;
+	} else if (id == "pseudo" || id == "fast" || id == "prng") {
+		secure = true;
+	} else context.error("Invalid RNG operation!");
+	context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG operation");
+	id = context.currentValue().getString();
+	if (id == "float" || id == "real" || id == "f") {
+		rng.type = decltype(rng.type)::AV2_IRT_REAL;
+	} else if (id == "signed" || id == "int" || id == "i") {
+		rng.type = decltype(rng.type)::AV2_IRT_INT;
+	} else if (id == "unsigned" || id == "uint" || id == "u") {
+		rng.type = decltype(rng.type)::AV2_IRT_UINT;
+	} else context.error("Invalid RNG operation!");
+	context.fetchNext();
+	auto const numdef = context.addEmptyInstruction();
+	Instruction::Randomness::Number numDecl;
+	Location num;
+	switch (context.currentToken().type) {
+		case Type{'('}: {
+			auto const lo = getDataLocation(context.fetchNext());
+			context.fetchNext().expectToken(Type{':'});
+			auto const hi = getDataLocation(context.fetchNext());
+			context.fetchNext().expectToken(Type{')'});
+			if (lo.id < Makai::Limit::MAX<uint64>)
+				context.addInstruction(lo.id);
+			if (hi.id < Makai::Limit::MAX<uint64>)
+				context.addInstruction(hi.id);
+			rng.flags = decltype(rng.flags)::AV2_IRF_BOUNDED;
+			context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
+			num = getDataLocation(context.fetchNext());
+		} break;
+		case LTS_TT_LITTLE_ARROW: {
+			num = getDataLocation(context.fetchNext());
+		} break;
+		default: context.error("Invalid RNG operation!");
+	}
+	if (secure)
+		rng.flags = Makai::Cast::as<decltype(rng.flags)>(
+			Makai::enumcast(decltype(rng.flags)::AV2_IRF_BOUNDED)
+		|	Makai::enumcast(rng.flags)
+		);
+	context.instruction(numdef) = Makai::bitcast<Instruction>(numDecl);
+	context.addInstructionType(inst, rng);
+	if (num.id < Makai::Limit::MAX<uint64>)
+		context.addInstruction(num.id);
+}
+
 MINIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	if (current.type == LTS_TT_IDENTIFIER) {
@@ -1234,6 +1298,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "indirect"  || id == "ref")				doIndirect(context);
 		else if (id == "in")									doHook(context);
 		else if (id == "string" || id == "str")					doStringOperation(context);
+		else if (id == "random" || id == "rng")					doRandomNumber(context);
 		else doLabel(context);
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }

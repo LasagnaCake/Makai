@@ -254,8 +254,8 @@ namespace Makai::Anima::V2 {
 		/// @brief Wait request.
 		struct [[gnu::aligned(4)]] WaitRequest {
 			enum class Wait: uint8 {
-				AV2_IUM_WRW_TRUTHY,
-				AV2_IUM_WRW_FALSY
+				AV2_IWRW_TRUTHY,
+				AV2_IWRW_FALSY
 			};
 
 			DataLocation	val;
@@ -286,6 +286,30 @@ namespace Makai::Anima::V2 {
 		/// @brief Object.
 		struct [[gnu::aligned(4)]] Object {
 			DataLocation	desc, out;
+		};
+		
+		/// @brief Randomness.
+		struct [[gnu::aligned(4)]] Randomness {
+			enum class Type: uint8 {
+				AV2_IRT_INT,
+				AV2_IRT_UINT,
+				AV2_IRT_REAL,
+			};
+			
+			enum class Flags: uint8 {
+				AV2_IRF_NONE		= 0,
+				AV2_IRF_SECURE		= 1 << 0,
+				AV2_IRF_BOUNDED		= 1 << 1,
+				AV2_IRF_SET_SEED	= 1 << 2,
+			};
+
+			Type			type;
+			Flags			flags = Flags::AV2_IRF_NONE;
+			DataLocation	num;
+
+			struct [[gnu::aligned(8)]] Number {
+				DataLocation	lo, hi;
+			};
 		};
 		
 		/// @brief Instruction name.
@@ -382,6 +406,10 @@ namespace Makai::Anima::V2 {
 			/// @param type `Invocation` = How to call the function.
 			/// @details `rcall [<src-func-id>] [<args> ...]`
 			AV2_IN_DYN_CALL,
+			/// @brief Generates a random number.
+			/// @param type `Randomness` = How to generate the number.
+			/// @details `rng [<num:Number> [<lo-id>] [<hi-id>]] [<num-id>]`
+			AV2_IN_RANDOM,
 		};
 		
 		/// @brief Instruction "Name" (opcode).

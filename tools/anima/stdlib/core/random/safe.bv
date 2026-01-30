@@ -1,0 +1,42 @@
+namespace Random.Safe {
+	macro get {
+		{as $type:id} => {
+			out: $type = 0;
+			fatal asm {
+				rng safe $type -> &[0]
+			}
+			return out
+		}
+		{[$lo:int : $hi:int] as $type:id} => {
+			out: $type = 0;
+			fatal asm {
+				rng safe $type (&[$lo] : &[$hi]) -> &[0]
+			};
+			return out
+		}
+	}
+
+	func getInt(): int {
+		get as int;
+	}
+
+	func getUInt(): uint {
+		get as uint;
+	}
+
+	func getReal(): real {
+		get as real;
+	}
+
+	func getInt(lo: int, hi: int): int {
+		get [1 : 0] as int;
+	}
+
+	func getUInt(lo: uint, hi: uint): uint {
+		get [1 : 0] as uint;
+	}
+
+	func getReal(lo: real, hi: real): real {
+		get [1 : 0] as real;
+	}
+}

@@ -980,7 +980,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		template <class T>
 		T getValue() const {
-			return currentToken().value.template get<T>();
+			return currentValue().template get<T>();
+		}
+
+		Data::Value currentValue() const {
+			return currentToken().value;
 		}
 
 		String getModuleFile(String const& path) const {
