@@ -1716,7 +1716,7 @@ static void doMacroTransform(
 						else context.error("Invalid message type!");
 					} break;
 					case Type{'{'}:
-					case Type{'}'}: result.pushBack(context.currentToken());
+					case Type{'}'}: result.pushBack(context.currentToken()); break;
 					default: context.error("Invalid macro expansion!");
 				}
 			} break;
