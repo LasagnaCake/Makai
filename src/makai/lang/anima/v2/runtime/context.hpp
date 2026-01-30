@@ -4,14 +4,20 @@
 #include "../../../../compat/ctl.hpp"
 #include "../instruction.hpp"
 
-#define ANIMA_V2_SHARED_FN_NAME_PREFIX "anima/v2/env/share/fn/"
+#define ANIMA_V2_SHARED_FN_NAME_PREFIX "anima/env/share/"
 
 namespace Makai::Anima::V2::Runtime {
 	constexpr auto const SHARED_FUNCTION_PREFIX = ANIMA_V2_SHARED_FN_NAME_PREFIX;
 	struct Context {
+		struct IInvokable {
+			using Value = Instance<Data::Value>;
+
+			virtual ~IInvokable() {}
+
+			virtual Value invoke(List<Value> const& args) = 0;
+		};
+
 		using Storage = Instance<Data::Value>;
-		using ExternalFunctionType = Data::Value(Data::Value::ArrayType);
-		using SharedFunction = CPP::Library::Function<ExternalFunctionType>;
 		struct Pointers {
 			usize	offset		= 0;
 			usize	function	= 0;
@@ -27,35 +33,46 @@ namespace Makai::Anima::V2::Runtime {
 		As<Storage[REGISTER_COUNT]>	registers;
 		Storage						temporary = Storage::create();
 		struct SharedSpace {
-			Dictionary<SharedFunction>	functions;
+			using Function	= Instance<IInvokable>;
+
+			struct Namespace {
+				Dictionary<Function>	functions;
+			};
+
+			using LibraryCall = void(Namespace*);
+
+			Dictionary<Namespace>		ns;
 			Dictionary<CPP::Library>	libraries;
 
-			void cache(String const& lib, String const& fname) {
-				if (!functions.contains(fname) && libraries.contains(lib))
-					functions[fname] = libraries[lib].function<ExternalFunctionType>(fname);
+			~SharedSpace() {
+				for (auto& [name, lib] : libraries) {
+					auto const exit = lib.function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/exit");
+					if (exit) exit(&ns[name]);
+				}	
 			}
 
 			void addLibrary(String const& name, String const& libpath) {
 				if (!libraries.contains(name))
 					libraries[name].open(libpath);
+				auto const init = libraries[name].function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/init");
+				if (init) init(&ns[name]);
 			}
 
-			SharedFunction fetch(String const& fname) {
-				if (functions.contains(fname))
-					return functions[fname];
-				return {};
-			}
-
-			SharedFunction fetch(String const& lib, String const& fname) {
-				cache(lib, fname);
-				return functions[fname];
+			Function fetch(String const& lib, String const& fname) {
+				if (libraries.contains(lib) && ns[lib].functions.contains(fname))
+					return ns[lib].functions[fname];
+				return nullptr;
 			}
 		} shared;
 	};
 }
-#define ANIMA_V2_SHARED_FN_DECL extern "C" __stdcall
-#define ANIMA_V2_SHARED_FN(NAME, EXPORT)\
-	Makai::Data::Value NAME(Makai::List<Makai::Instance<Makai::Data::Value>> const&) asm(ANIMA_V2_SHARED_FN_NAME_PREFIX EXPORT);\
-	Makai::Data::Value NAME(Makai::List<Makai::Instance<Makai::Data::Value>> const& args)
+
+#define ANIMA_V2_SHARED_LIB_DECL extern "C" __stdcall
+#define ANIMA_V2_SHARED_LIB_CALL(NAME, EXPORT)\
+	ANIMA_V2_SHARED_LIB_DECL void NAME(Makai::Anima::V2::Runtime::Context::SharedSpace::Library*) asm(ANIMA_V2_SHARED_FN_NAME_PREFIX EXPORT);\
+	ANIMA_V2_SHARED_LIB_DECL void NAME(Makai::Anima::V2::Runtime::Context::SharedSpace::Library*)
+
+#define ANIMA_V2_SHARED_INIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_entryPoint, "init")
+#define ANIMA_V2_SHARED_EXIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_exitPoint, "exit")
 
 #endif
