@@ -2,17 +2,8 @@ import core.convert.tostring;
 
 namespace IO {
 	namespace Impl {
-		func write(what: string): void {
-			in print what;
-		}
-
-		func writeLine(what: string): void {
-			in print what;
-			in print "\n";
-		}
-
-		//macro write		=> {$($what:expr$)} => {in print $what					}
-		//macro writeLine	=> {$($what:expr$)} => {in print $what; in print "\n"	}
+		macro write		=> {$($what:expr$)} => {in print $what					}
+		macro writeLine	=> {$($what:expr$)} => {in print $what; in print "\n"	}
 	}
 	
 	macro write {
