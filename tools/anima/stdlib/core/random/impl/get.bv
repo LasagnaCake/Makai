@@ -11,7 +11,7 @@ namespace Random.Impl {
 			out: $type = 0;
 			fatal asm {
 				rng $src $type (&[$lo] : &[$hi]) -> &[0]
-			};
+			}
 			return out
 		}
 	}
