@@ -2,26 +2,26 @@ import core.random.impl.get;
 
 namespace Random.Safe {
 	func getInt(): int {
-		Impl.get safe as int;
+		core.Random.Impl.get safe as int;
 	}
 
 	func getUInt(): uint {
-		Impl.get safe as uint;
+		core.Random.Impl.get safe as uint;
 	}
 
 	func getReal(): real {
-		Impl.get safe as real;
+		core.Random.Impl.get safe as real;
 	}
 
 	func getInt(lo: int, hi: int): int {
-		Impl.get safe [1 : 0] as int;
+		core.Random.Impl.get safe [1 : 0] as int;
 	}
 
 	func getUInt(lo: uint, hi: uint): uint {
-		Impl.get safe [1 : 0] as uint;
+		core.Random.Impl.get safe [1 : 0] as uint;
 	}
 
 	func getReal(lo: real, hi: real): real {
-		Impl.get safe [1 : 0] as real;
+		core.Random.Impl.get safe [1 : 0] as real;
 	}
 }

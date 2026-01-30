@@ -1414,6 +1414,11 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 	} else if (varType == "id") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
+	} else if (varType == "name") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
+		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
 	} else if (varType == "sqstring") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
@@ -1430,8 +1435,16 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
 		base.tokens.pushBack({{.type = LTS_TT_REAL}});
-	}  else if (varType == "char") {
+	} else if (varType == "char") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
+	} else if (varType == "val") {
+		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
+		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
+		base.tokens.pushBack({{.type = LTS_TT_REAL}});
 		base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
 	} else {
 		context.error("Invalid rule type!");

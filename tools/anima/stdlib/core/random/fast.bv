@@ -2,26 +2,26 @@ import core.random.impl.get;
 
 namespace Random.Fast {
 	func getInt(): int {
-		Impl.get fast as int;
+		core.Random.Impl.get fast as int;
 	}
 
 	func getUInt(): uint {
-		Impl.get fast as uint;
+		core.Random.Impl.get fast as uint;
 	}
 
 	func getReal(): real {
-		Impl.get fast as real;
+		core.Random.Impl.get fast as real;
 	}
 
 	func getInt(lo: int, hi: int): int {
-		Impl.get fast [1 : 0] as int;
+		core.Random.Impl.get fast [1 : 0] as int;
 	}
 
 	func getUInt(lo: uint, hi: uint): uint {
-		Impl.get fast [1 : 0] as uint;
+		core.Random.Impl.get fast [1 : 0] as uint;
 	}
 
 	func getReal(lo: real, hi: real): real {
-		Impl.get fast [1 : 0] as real;
+		core.Random.Impl.get fast [1 : 0] as real;
 	}
 }
