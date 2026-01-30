@@ -200,8 +200,8 @@ namespace Makai::Anima::V2::Runtime {
 			constexpr bool waiting() const {
 				if (!condition) return false;
 				switch (type) {
-					case Instruction::WaitRequest::Wait::AV2_IUM_WRW_TRUTHY:	return !*condition;
-					case Instruction::WaitRequest::Wait::AV2_IUM_WRW_FALSY:		return *condition;
+					case Instruction::WaitRequest::Wait::AV2_IWRW_TRUTHY:	return !*condition;
+					case Instruction::WaitRequest::Wait::AV2_IWRW_FALSY:	return *condition;
 				}
 				return false;
 			}

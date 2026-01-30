@@ -1,0 +1,18 @@
+namespace Random.Impl {
+	macro get {
+		{$src:id as $type:id} => {
+			out: $type = 0;
+			fatal asm {
+				rng $src $type -> &[0]
+			}
+			return out
+		}
+		{$src:id $[$lo:int : $hi:int$] as $type:id} => {
+			out: $type = 0;
+			fatal asm {
+				rng $src $type (&[$lo] : &[$hi]) -> &[0]
+			};
+			return out
+		}
+	}
+}

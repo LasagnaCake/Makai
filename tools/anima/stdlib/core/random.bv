@@ -1,0 +1,2 @@
+import core.random.safe;
+import core.random.fast;
