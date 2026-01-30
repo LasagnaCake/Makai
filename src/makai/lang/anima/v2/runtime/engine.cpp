@@ -216,7 +216,8 @@ void Engine::v2Invoke() {
 	// Get function name (if not external function)
 	advance(true);
 	uint64 funcName = bitcast<uint64>(current);
-	if (invocation.location != DataLocation::AV2_DL_EXTERNAL) {
+	auto const isExtern = (invocation.location & DataLocation::AV2_DL_EXTERNAL) == DataLocation::AV2_DL_EXTERNAL;
+	if (!isExtern) {
 		auto fn = getValueFromLocation(invocation.location, funcName);
 		if (!fn->isUnsigned())
 			return crash(invalidFunctionError("Invalid function name!"));
@@ -231,37 +232,50 @@ void Engine::v2Invoke() {
 		context.valueStack[-invocation.argc+arg.argument] = consumeValue(arg.location);
 	}
 	// If external function, invoke it
-	if (invocation.location == DataLocation::AV2_DL_EXTERNAL) {
+	if (isExtern) {
 		advance(true);
 		ssize returnType = Cast::as<ssize>(current.name);
 		auto const fn = program.constants[funcName].toString();
-		if (inStrictMode() && !functions.has(fn))
-			return crash(invalidFunctionError("Function [" + fn + "] does not exist!"));
-		auto const result = functions.invoke(
-			fn,
-			context.valueStack.sliced(-Cast::as<int>(invocation.argc), -1)
-		);
+		auto const args = context.valueStack.sliced(-Cast::as<int>(invocation.argc), -1);
+		Context::Storage result = new Value();
+		// Invoke from appropriate source
+		if ((invocation.location & DataLocation::AV2_DLM_BY_REF) == DataLocation::AV2_DLM_BY_REF) {
+			auto const ns = fn.splitAtFirst('/');
+			if (
+				inStrictMode()
+			&&	!context.shared.libraries.contains(ns.front())
+			&&	!context.shared.has(ns.front(), ns.back())
+			)
+				return crash(invalidFunctionError("Shared library function [" + fn + "] does not exist, or its library is not loaded!"));
+			result = context.shared.fetch(ns.front(), ns.back())->invoke(args);
+		} else {
+			if (inStrictMode() && !functions.has(fn))
+				return crash(invalidFunctionError("Function [" + fn + "] does not exist!"));
+			result = functions.invoke(fn, args);
+		}
 		context.valueStack.eraseRange(-Cast::as<int>(invocation.argc), -1);
+		if (!result)
+			result = new Value();
 		// Check if return type matches expected type
 		if (
 			returnType != -1
-		&&	Cast::as<Value::Kind>(returnType) != result.type()
+		&&	Cast::as<Value::Kind>(returnType) != result->type()
 		) {
 			if (
 				inStrictMode()
 			&&	(
 					current.type == 0
-				||	(current.type == 1 && !result.isNull())
+				||	(current.type == 1 && !result->isNull())
 				)
 			) return crash(
 				invalidFunctionError(
 					"Invalid external function return type!"
-					"\nType is ["+Value::asNameString(result.type())+"]"
+					"\nType is ["+Value::asNameString(result->type())+"]"
 					"\nExpected type is ["+Value::asNameString(Cast::as<Value::Kind>(returnType))+"]"
 				)
 			);
 		}
-		context.temporary = context.temporary.create(result);
+		context.temporary = result;
 		return;
 	}
 	// Else, jump to function location

@@ -41,12 +41,13 @@ namespace CPP {
 
 		template <class TReturn, class... TArgs>
 		struct Function<TReturn(TArgs...)> {
+			using Result = Meta::If<Type::Void<TReturn>, TReturn, Nullable<TReturn>>;
 			
-			inline Nullable<TReturn> invoke(TArgs... args) const {
+			inline Result invoke(TArgs... args) const {
 				return func(args...);
 			}
 
-			inline Nullable<TReturn> operator()(TArgs... args) const {
+			inline Result operator()(TArgs... args) const {
 				return invoke(args...);
 			}
 

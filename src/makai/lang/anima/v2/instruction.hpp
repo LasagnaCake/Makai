@@ -402,10 +402,6 @@ namespace Makai::Anima::V2 {
 			/// @param type `Object` = How to create the object.
 			/// @details `new [<desc-id>] [<loc-id>]`
 			AV2_IN_NEW_OBJ,
-			/// @brief Dinamically calls a function.
-			/// @param type `Invocation` = How to call the function.
-			/// @details `rcall [<src-func-id>] [<args> ...]`
-			AV2_IN_DYN_CALL,
 			/// @brief Generates a random number.
 			/// @param type `Randomness` = How to generate the number.
 			/// @details `rng [<num:Number> [<lo-id>] [<hi-id>]] [<num-id>]`

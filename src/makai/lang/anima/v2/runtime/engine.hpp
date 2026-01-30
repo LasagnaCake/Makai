@@ -9,7 +9,7 @@ namespace Makai::Anima::V2::Runtime {
 		using Value = Data::Value;
 
 		struct FunctionRegistry {
-			using ExternalFunction = Data::Value(List<Context::Storage> const&);
+			using ExternalFunction = Context::Storage(List<Context::Storage> const&);
 
 			using UUID = ID::VLUID;
 
@@ -40,13 +40,13 @@ namespace Makai::Anima::V2::Runtime {
 				nameMap.erase(name);
 			}
 
-			constexpr Value invoke(String const& name, List<Context::Storage> const& args) {
-				if (!has(name)) return Value::undefined();
+			constexpr Context::Storage invoke(String const& name, List<Context::Storage> const& args) {
+				if (!has(name)) return new Value();
 				return invoke(nameMap[name], args);
 			}
 
-			constexpr Value invoke(UUID const& id, List<Context::Storage> const& args) {
-				if (!has(id)) return Value::undefined();
+			constexpr Context::Storage invoke(UUID const& id, List<Context::Storage> const& args) {
+				if (!has(id)) return new Value();
 				return functions[id](args);
 			}
 

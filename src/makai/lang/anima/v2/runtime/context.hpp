@@ -9,15 +9,14 @@
 namespace Makai::Anima::V2::Runtime {
 	constexpr auto const SHARED_FUNCTION_PREFIX = ANIMA_V2_SHARED_FN_NAME_PREFIX;
 	struct Context {
-		struct IInvokable {
-			using Value = Instance<Data::Value>;
+		using Storage = Instance<Data::Value>;
 
+		struct IInvokable {
 			virtual ~IInvokable() {}
 
-			virtual Value invoke(List<Value> const& args) = 0;
+			virtual Storage invoke(List<Storage> const& args) = 0;
 		};
 
-		using Storage = Instance<Data::Value>;
 		struct Pointers {
 			usize	offset		= 0;
 			usize	function	= 0;
@@ -62,6 +61,10 @@ namespace Makai::Anima::V2::Runtime {
 				if (libraries.contains(lib) && ns[lib].functions.contains(fname))
 					return ns[lib].functions[fname];
 				return nullptr;
+			}
+
+			bool has(String const& lib, String const& fname) {
+				return libraries.contains(lib) && ns[lib].functions.contains(fname);
 			}
 		} shared;
 	};

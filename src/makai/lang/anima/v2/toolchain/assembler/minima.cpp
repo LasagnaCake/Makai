@@ -1235,22 +1235,25 @@ MINIMA_ASSEMBLE_FN(RandomNumber) {
 		rng.type = decltype(rng.type)::AV2_IRT_UINT;
 	} else context.error("Invalid RNG operation!");
 	context.fetchNext();
-	auto const numdef = context.addEmptyInstruction();
-	Instruction::Randomness::Number numDecl;
 	Location num;
 	switch (context.currentToken().type) {
 		case Type{'('}: {
+			auto const numdef = context.addEmptyInstruction();
+			Instruction::Randomness::Number numDecl = {};
 			auto const lo = getDataLocation(context.fetchNext());
 			context.fetchNext().expectToken(Type{':'});
 			auto const hi = getDataLocation(context.fetchNext());
 			context.fetchNext().expectToken(Type{')'});
+			rng.flags = decltype(rng.flags)::AV2_IRF_BOUNDED;
+			context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
+			num = getDataLocation(context.fetchNext());
+			numDecl.lo = lo.at;
+			numDecl.hi = hi.at;
+			context.addInstruction(numDecl);
 			if (lo.id < Makai::Limit::MAX<uint64>)
 				context.addInstruction(lo.id);
 			if (hi.id < Makai::Limit::MAX<uint64>)
 				context.addInstruction(hi.id);
-			rng.flags = decltype(rng.flags)::AV2_IRF_BOUNDED;
-			context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
-			num = getDataLocation(context.fetchNext());
 		} break;
 		case LTS_TT_LITTLE_ARROW: {
 			num = getDataLocation(context.fetchNext());
@@ -1259,10 +1262,9 @@ MINIMA_ASSEMBLE_FN(RandomNumber) {
 	}
 	if (secure)
 		rng.flags = Makai::Cast::as<decltype(rng.flags)>(
-			Makai::enumcast(decltype(rng.flags)::AV2_IRF_BOUNDED)
+			Makai::enumcast(decltype(rng.flags)::AV2_IRF_SECURE)
 		|	Makai::enumcast(rng.flags)
 		);
-	context.instruction(numdef) = Makai::bitcast<Instruction>(numDecl);
 	context.addInstructionType(inst, rng);
 	if (num.id < Makai::Limit::MAX<uint64>)
 		context.addInstruction(num.id);
