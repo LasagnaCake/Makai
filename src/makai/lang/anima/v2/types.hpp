@@ -167,6 +167,7 @@ namespace Makai::Anima::V2::Types::Functions {
 		} ();
 		return f;
 	}
+	
 	inline Class::Function::Instance nameof() {
 		static Class::Function::Instance f = [] {
 			auto f = new Class::Function();
@@ -176,6 +177,7 @@ namespace Makai::Anima::V2::Types::Functions {
 		} ();
 		return f;
 	}
+
 	inline Class::Function::Instance baseof() {
 		static Class::Function::Instance f = [] {
 			auto f = new Class::Function();
@@ -196,6 +198,7 @@ namespace Makai::Anima::V2::Types::Methods {
 		} ();
 		return m;
 	}
+
 	inline Class::Method::Instance typeName() {
 		static Class::Method::Instance m = [] {
 			auto m = new Class::Method();
@@ -204,6 +207,7 @@ namespace Makai::Anima::V2::Types::Methods {
 		} ();
 		return m;
 	}
+
 	inline Class::Method::Instance baseName() {
 		static Class::Method::Instance m = [] {
 			auto m = new Class::Method();

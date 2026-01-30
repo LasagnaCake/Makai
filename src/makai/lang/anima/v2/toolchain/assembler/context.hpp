@@ -72,6 +72,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 					constexpr Result match(Arguments const& args, Callback const& call = {}) const {
 						Arguments result;
+						if (args.empty()) return variadic ? Result{Arguments()} : null;
 						if (!count) return Arguments();
 						if (matches.size()) return matchGroup(args, call);
 						if (!variadic && count >= args.size()) return null;
@@ -154,7 +155,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'}));
 								case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'}));
 								case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'}));
-								default: result.appendBack(solveExpression(args.sliced(i)));
+								default: result.pushBack(args[i]);
 							}
 							i += result.size() - prev;
 							prev = result.size();
@@ -186,10 +187,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 							for (auto& match: matches) {
 								//if (inRunTime()) DEBUGLN("<sub-match>");
 								if (tokenStart >= args.size()) {
-									mr = variadic ? Result{result} : null;
+									if (result.empty() || !variadic) return null;
+									mr = Result{result};
 									break;
 								}
-								mr = match->match(args.sliced(tokenStart), call);
+								else mr = match->match(args.sliced(tokenStart), call);
 								//if (inRunTime()) DEBUGLN("</sub-match>");
 								if (!mr) break;
 								auto const v = mr.value();

@@ -1,0 +1,5 @@
+namespace Breve.Compiler.Random {
+	macro INT	= {$=-}
+	macro UINT	= {$=+}
+	macro REAL	= {$=#}
+}

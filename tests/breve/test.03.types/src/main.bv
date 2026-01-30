@@ -6,15 +6,15 @@ main {
 	count: Integer = 0;
 	repeat i : 10 {
 		repeat _ : i {
-			core.Breve.Compiler.Message.ALL;
+			core.Breve.Compiler.Message.STATE;
 			core.IO.write("*");
-			core.Breve.Compiler.Message.ALL;
+			core.Breve.Compiler.Message.STATE;
 			++count;
 		}
-		core.Breve.Compiler.Message.ALL;
+		core.Breve.Compiler.Message.STATE;
 		core.IO.writeLine("*");
-		core.Breve.Compiler.Message.ALL;
+		core.Breve.Compiler.Message.STATE;
 	}
-	core.Breve.Compiler.Message.ALL;
+	core.Breve.Compiler.Message.STATE;
 	core.IO.writeLine("Count: ", count);
 }

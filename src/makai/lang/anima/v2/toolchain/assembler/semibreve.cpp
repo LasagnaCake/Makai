@@ -1573,7 +1573,7 @@ static ExpansionGroup::Instance doExpansionGroup(Context& context, Context::Macr
 				} break;
 			}
 		} break;
-		case Type{'+'}: {
+		case Type{'*'}: {
 			context.fetchNext().expectToken(Type{'('});
 			while (!context.hasToken(Type{')'})) {
 				if (context.fetchNext().hasToken(Type{')'}))
@@ -1582,7 +1582,32 @@ static ExpansionGroup::Instance doExpansionGroup(Context& context, Context::Macr
 			}
 			context.expectToken(Type{')'});
 		} break;
-		default: context.error("Invalid immediate expansion!");
+		case Type{':'}: {
+			context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "macro/namespace");
+			auto const symbol = resolveSymbolPath(context);
+			if (symbol->type != decltype(symbol->type)::AV2_TA_SMT_MACRO)
+				context.error("Only macros can be immediately expanded!");
+			auto const result = symbol->macro->resolve(context.append.cache, context);
+			if (!result)
+				context.error("No viable macro rules match the given expression!");
+			auto rv = result.value();
+			context.append.cache = context.append.cache.sliced(rv.match.size());
+			Makai::String expt = " ";
+			for (auto& v: rv.value) {
+				expt += v.token + " ";
+			}
+			content->sub.pushBack(new ExpandToValue(expt));
+		} break;
+		case Type{'+'}: {
+			content->sub.pushBack(new ExpandToValue(Makai::toString(context.rng.integer<uint64>())));
+		} break;
+		case Type{'-'}: {
+			content->sub.pushBack(new ExpandToValue(Makai::toString(context.rng.integer<int64>())));
+		} break;
+		case Type{'#'}: {
+			content->sub.pushBack(new ExpandToValue(Makai::toString(context.rng.real<double>())));
+		} break;
+		default: context.error("Invalid tokenization!");
 	}
 	return content;
 }
@@ -1622,21 +1647,35 @@ static void doMacroTransform(
 							context.error("Macro variable does not exist!");
 						//DEBUGLN("--- Transform::Variable: [", varName, "]");
 						context.fetchNext().expectToken(Type{'{'});
-						Context::Macro::Transformation tf;
-						doMacroTransform(context, rule, tf);
+						Makai::Instance<Context::Macro::Transformation> tf = tf.create();
+						doMacroTransform(context, rule, *tf);
 						context.expectToken(Type{'}'});
+						DEBUGLN("-------------------------------- Are we here yet?");
+						[&context, &tf] {
+							Context::Macro::Context testCtx = {.baseContext = context};
+							tf->apply(testCtx);
+							DEBUGLN("<separator>");
+							DEBUG("[ ");
+							for (auto& tok: testCtx.result.value)
+								DEBUG(tok.token, " ");
+							DEBUGLN("]");
+							DEBUGLN("</separator>");
+						} ();
+						DEBUGLN("-------------------------------- We are here!");
 						base.newTransform()->pre = 
-							[varName = Makai::copy(varName), tf] (Context::Macro::Context& ctx) {
+							[varName = Makai::copy(varName), tf = Makai::copy(tf)] (Context::Macro::Context& ctx) {
 								//DEBUGLN("--- COMPLEX VARIABLE EXPANSION");
-								Context::Macro::Context subctx = ctx;
-								tf.apply(subctx);
+								Context::Macro::Context subctx = {ctx};
+								subctx.result = {};
+								tf->apply(subctx);
 								//DEBUGLN("--- Apply::Variable: [", varName, "]");
 								auto toks = ctx.variables[varName].tokens;
 								//DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
 								usize i = 0;
 								for (auto& tok: toks) {
+									if (i) ctx.result.value.appendBack(subctx.result.value);
 									ctx.result.value.appendBack(tok);
-									if (i++) ctx.result.value.appendBack(subctx.result.match);
+									++i;
 								}
 							}
 						;
