@@ -1238,7 +1238,6 @@ MINIMA_ASSEMBLE_FN(RandomNumber) {
 	Location num;
 	switch (context.currentToken().type) {
 		case Type{'('}: {
-			auto const numdef = context.addEmptyInstruction();
 			Instruction::Randomness::Number numDecl = {};
 			auto const lo = getDataLocation(context.fetchNext());
 			context.fetchNext().expectToken(Type{':'});

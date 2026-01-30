@@ -77,7 +77,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						if (matches.size()) return matchGroup(args, call);
 						if (!variadic && count >= args.size()) return null;
 						auto const sz = (!variadic) ? count : Math::min(count, args.size());
-						DEBUGLN(">>> $--- Variadic match? ", variadic);
+						// DEBUGLN(">>> $--- Variadic match? ", variadic);
 						switch (type) {
 							case Type::AV2_TA_SM_RMT_WHATEVER: {
 								//if (inRunTime()) DEBUGLN("::: WHATEVER");
@@ -109,9 +109,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								//if (inRunTime()) DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 							} break;
 						}
-						DEBUGLN("$--- Variadic match? ", variadic);
-						DEBUGLN("$--- Match size: ", sz);
-						DEBUGLN("$--- Total: ", result.size());
+						// DEBUGLN("$--- Variadic match? ", variadic);
+						// DEBUGLN("$--- Match size: ", sz);
+						// DEBUGLN("$--- Total: ", result.size());
 						call.invoke(*this, result);
 						return result;
 					}
@@ -181,7 +181,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						usize tokenStart	= 0;
 						usize matchCount	= 0;
 						Result mr;
-						DEBUGLN(">>> .--- Variadic match? ", variadic);
+						// DEBUGLN(">>> .--- Variadic match? ", variadic);
 						do {
 							//if (inRunTime()) DEBUGLN("<match>");
 							for (auto& match: matches) {
@@ -207,9 +207,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						//if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 						if (!matchCount)
 							return null;
-						DEBUGLN(".--- Variadic match? ", variadic);
-						DEBUGLN(".--- Match size: ", sz);
-						DEBUGLN(".--- Total: ", matchCount);
+						// DEBUGLN(".--- Variadic match? ", variadic);
+						// DEBUGLN(".--- Match size: ", sz);
+						// DEBUGLN(".--- Total: ", matchCount);
 						if (variadic || matchCount >= sz)
 							return result;
 						return null;

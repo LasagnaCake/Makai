@@ -577,9 +577,9 @@ static auto handleNullCoalescence(Context& context, Solution const& value, Solut
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
-	DEBUGLN("Binary operation");
+	// DEBUGLN("Binary operation");
 	context.fetchNext();
-	DEBUGLN("LHS: ", context.currentToken().token);
+	// DEBUGLN("LHS: ", context.currentToken().token);
 	auto lhs = doValueResolution(context);
 	usize stackUsage = 0;
 	if (lhs.resolve().back() == '.') {
@@ -603,11 +603,11 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 	if (opname.type == LTS_TT_IDENTIFIER) {
 		auto const id = context.getValue<Makai::String>();
 		if (id == "is") {
-			DEBUGLN("Type checking!");
+			// DEBUGLN("Type checking!");
 			context.fetchNext();
 			if (!context.hasToken(LTS_TT_IDENTIFIER))
 				context.error("Expected type name here!");
-			DEBUGLN("T:", context.currentToken().token);
+			// DEBUGLN("T:", context.currentToken().token);
 			auto const type = resolveSymbolPath(context);
 			if (type->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
 				context.error("Symbol is not a type!");
@@ -637,18 +637,18 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			if (stackUsage) context.writeLine("clear", stackUsage);
 			return sol;
 		}
-		DEBUGLN("Unspecialized thingamabob, moving on...");
+		// DEBUGLN("Unspecialized thingamabob, moving on...");
 	}
 	context.fetchNext();
-	DEBUGLN("RHS: ", context.currentToken().token);
+	// DEBUGLN("RHS: ", context.currentToken().token);
 	auto rhs = doValueResolution(context);
 	if (rhs.resolve().back() == '.') {
 		context.writeLine("push move .");
 		rhs.resolver = context.resolveTo("move &[-0]");
 		if (stackUsage++) lhs.resolver = context.resolveTo("move &[-1]");
 	}
-	DEBUGLN("LHS? ", lhs.type.exists());
-	DEBUGLN("RHS? ", rhs.type.exists());
+	// DEBUGLN("LHS? ", lhs.type.exists());
+	// DEBUGLN("RHS? ", rhs.type.exists());
 	auto result = stronger(context, lhs.type, rhs.type);
 	if (
 		opname.type != Type{','}
@@ -1179,7 +1179,7 @@ SEMIBREVE_ASSEMBLE_FN(Error) {
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
-	DEBUGLN("Unary operation");
+	// DEBUGLN("Unary operation");
 	auto const current = context.currentToken();
 	context.fetchNext();
 	auto result = doValueResolution(context);
@@ -1653,18 +1653,6 @@ static void doMacroTransform(
 						Makai::Instance<Context::Macro::Transformation> tf = tf.create();
 						doMacroTransform(context, rule, *tf);
 						context.expectToken(Type{'}'});
-						DEBUGLN("-------------------------------- Are we here yet?");
-						[&context, &tf] {
-							Context::Macro::Context testCtx = {.baseContext = context};
-							tf->apply(testCtx);
-							DEBUGLN("<separator>");
-							DEBUG("[ ");
-							for (auto& tok: testCtx.result.value)
-								DEBUG(tok.token, " ");
-							DEBUGLN("]");
-							DEBUGLN("</separator>");
-						} ();
-						DEBUGLN("-------------------------------- We are here!");
 						base.newTransform()->pre = 
 							[varName = Makai::copy(varName), tf = Makai::copy(tf)] (Context::Macro::Context& ctx) {
 								//DEBUGLN("--- COMPLEX VARIABLE EXPANSION");
@@ -1784,11 +1772,11 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	//DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
 	auto const pc = context.append.cache.sliced(rv.match.size());
 	context.append.cache.clear().appendBack(rv.value).appendBack(pc);
-	DEBUGLN("<state>");
-	for (auto const& tok: context.append.cache) {
-		DEBUG(tok.token, " ");
-	}
-	DEBUGLN("</state>");
+	// DEBUGLN("<state>");
+	// for (auto const& tok: context.append.cache) {
+	// 	DEBUG(tok.token, " ");
+	// }
+	// DEBUGLN("</state>");
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
