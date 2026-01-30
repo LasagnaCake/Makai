@@ -46,7 +46,7 @@ namespace Makai::Anima::V2::Runtime {
 
 			~SharedSpace() {
 				for (auto& [name, lib] : libraries) {
-					auto const exit = lib.function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/exit");
+					auto const exit = lib.function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/v2/exit");
 					if (exit) exit(&ns[name]);
 				}	
 			}
@@ -54,7 +54,7 @@ namespace Makai::Anima::V2::Runtime {
 			void addLibrary(String const& name, String const& libpath) {
 				if (!libraries.contains(name))
 					libraries[name].open(libpath);
-				auto const init = libraries[name].function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/init");
+				auto const init = libraries[name].function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/v2/init");
 				if (init) init(&ns[name]);
 			}
 
@@ -72,7 +72,7 @@ namespace Makai::Anima::V2::Runtime {
 	ANIMA_V2_SHARED_LIB_DECL void NAME(Makai::Anima::V2::Runtime::Context::SharedSpace::Library*) asm(ANIMA_V2_SHARED_FN_NAME_PREFIX EXPORT);\
 	ANIMA_V2_SHARED_LIB_DECL void NAME(Makai::Anima::V2::Runtime::Context::SharedSpace::Library*)
 
-#define ANIMA_V2_SHARED_INIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_entryPoint, "init")
-#define ANIMA_V2_SHARED_EXIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_exitPoint, "exit")
+#define ANIMA_V2_SHARED_INIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_entryPoint, "v2/init")
+#define ANIMA_V2_SHARED_EXIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_exitPoint, "v2/exit")
 
 #endif
