@@ -1,42 +1,44 @@
 namespace Random.Fast {
-	macro get {
-		{as $type:id} => {
-			out: $type = 0;
-			fatal asm {
-				rng fast $type -> &[0]
+	namespace Impl {
+		macro get {
+			{as $type:id} => {
+				out: $type = 0;
+				fatal asm {
+					rng fast $type -> &[0]
+				}
+				return out
 			}
-			return out
-		}
-		{[$lo:int : $hi:int] as $type:id} => {
-			out: $type = 0;
-			fatal asm {
-				rng fast $type (&[$lo] : &[$hi]) -> &[0]
-			};
-			return out
+			{$[$lo:int : $hi:int$] as $type:id} => {
+				out: $type = 0;
+				fatal asm {
+					rng fast $type (&[$lo] : &[$hi]) -> &[0]
+				};
+				return out
+			}
 		}
 	}
 
 	func getInt(): int {
-		get as int;
+		Impl.get as int;
 	}
 
 	func getUInt(): uint {
-		get as uint;
+		Impl.get as uint;
 	}
 
 	func getReal(): real {
-		get as real;
+		Impl.get as real;
 	}
 
 	func getInt(lo: int, hi: int): int {
-		get [1 : 0] as int;
+		Impl.get [1 : 0] as int;
 	}
 
 	func getUInt(lo: uint, hi: uint): uint {
-		get [1 : 0] as uint;
+		Impl.get [1 : 0] as uint;
 	}
 
 	func getReal(lo: real, hi: real): real {
-		get [1 : 0] as real;
+		Impl.get [1 : 0] as real;
 	}
 }
