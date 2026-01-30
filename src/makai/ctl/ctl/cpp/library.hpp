@@ -5,6 +5,8 @@
 #include "../container/strings/strings.hpp"
 #include "../container/pointer/pointer.hpp"
 #include "../container/error.hpp"
+#include "../container/nullable.hpp"
+#include "../container/functor.hpp"
 #include "sourcefile.hpp"
 
 #if (CTL_TARGET_OS == CTL_OS_WINDOWS)
@@ -40,20 +42,17 @@ namespace CPP {
 		template <class TReturn, class... TArgs>
 		struct Function<TReturn(TArgs...)> {
 			
-			TReturn invoke(TArgs... args) const {
-				if (lib)
-					return func(args...);
-				throw Error::FailedAction(
-					"Function '" +name+ "' does not exist!",
-					CTL_CPP_PRETTY_SOURCE
-				);
+			inline Nullable<TReturn> invoke(TArgs... args) const {
+				return func(args...);
 			}
 
-			TReturn operator()(TArgs... args) const	{
+			inline Nullable<TReturn> operator()(TArgs... args) const {
 				return invoke(args...);
 			}
 
-			constexpr Function() noexcept {}
+			inline constexpr Function() noexcept {}
+
+			inline constexpr operator bool() const noexcept {return func.exists();}
 
 		private:
 			friend struct Library;
@@ -61,7 +60,7 @@ namespace CPP {
 				func(*func),
 				lib(lib),
 				name(name) {}
-			::CTL::Function<TReturn(TArgs...)>	func;
+			::CTL::Functor<TReturn(TArgs...)>	func;
 			Instance<Module>					lib;
 			String								name;
 		};
