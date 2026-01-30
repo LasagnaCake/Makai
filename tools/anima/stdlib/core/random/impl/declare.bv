@@ -1,0 +1,21 @@
+namespace Random.Impl {
+	macro declfn => {$name:expr <$src:expr> : $type:expr} => {
+		func $name (): $type ${
+			fatal asm ${
+				rng $src $type -> .
+			$}
+		$}
+
+		func $name (lo: $type, hi: $type): $type ${
+			fatal asm ${
+				rng $src $type (&[-1] : &[-0]) -> .
+			$}
+		$}
+	}
+
+	macro declare => {$src:expr} => {
+		core.Random.Impl.declfn getSigned <$src>: int;
+		core.Random.Impl.declfn getUnsigned <$src>: uint;
+		core.Random.Impl.declfn getReal <$src>: real;
+	}
+}

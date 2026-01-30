@@ -1,27 +1,5 @@
-import core.random.impl.get;
+import core.random.impl.declare;
 
 namespace Random.Fast {
-	func getInt(): int {
-		core.Random.Impl.get fast as int;
-	}
-
-	func getUInt(): uint {
-		core.Random.Impl.get fast as uint;
-	}
-
-	func getReal(): real {
-		core.Random.Impl.get fast as real;
-	}
-
-	func getInt(lo: int, hi: int): int {
-		core.Random.Impl.get fast [1 : 0] as int;
-	}
-
-	func getUInt(lo: uint, hi: uint): uint {
-		core.Random.Impl.get fast [1 : 0] as uint;
-	}
-
-	func getReal(lo: real, hi: real): real {
-		core.Random.Impl.get fast [1 : 0] as real;
-	}
+	core.Random.Impl.declare fast;
 }
