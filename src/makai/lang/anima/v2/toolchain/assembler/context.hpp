@@ -379,6 +379,26 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					if (value["basic"]) return name;
 					else return value["descriptor"].getString(name);
 				}
+
+				constexpr bool isGlobalVar() const {
+					return value["src"].getString("") == "global";
+				}
+
+				constexpr bool isLocalVar() const {
+					return value["src"].getString("") == "stack";
+				}
+
+				constexpr bool isRegisterVar() const {
+					return value["src"].getString("") == "reg";
+				}
+
+				constexpr bool isTemporaryVar() const {
+					return value["src"].getString("") == "temp";
+				}
+
+				constexpr bool isExternalVar() const {
+					return value["src"].getString("") == "out";
+				}
 			private:
 				static inline ID::VLUID all = ID::VLUID::create(0);
 			};
@@ -398,15 +418,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return mem;
 			}
 
-			constexpr Instance<Member> addVariable(String const& name, bool const global = false) {
+			constexpr Instance<Member> addVariable(String const& name, String const& type = "stack") {
 				if (ns->members.contains(name)) return ns->members[name];
 				auto mem = addMember(name);
 				mem->type = Member::Type::AV2_TA_SMT_VARIABLE;
 				auto& sym = mem->value;
-				sym["global"]	= global;
+				sym["src"]		= type;
 				sym["init"]		= false;
 				sym["use"]		= false;
-				if (!global)
+				if (type == "stack")
 					sym["stack_id"] = stackc + varc++;
 				return mem;
 			}
@@ -1083,11 +1103,16 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			constexpr String resolve() const override {
 				if (inRunTime()) DEBUGLN("Variable Accessor");
-				if (sym->value["extern"])
-					return "@" + sym->value["name"].get<String>();
-				if (sym->value["global"])
-					return ":" + sym->value["name"].get<String>();
-				return "&[" + context.stackIndex(sym) + "]";
+				if (sym->isTemporaryVar())
+					return ".";
+				if (sym->isRegisterVar())
+					return "reg[" + sym->value["register_id"].toString() + "]";
+				if (sym->isExternalVar())
+					return "out " + sym->value["name"].get<String>();
+				if (sym->isGlobalVar())
+					return "global " + sym->value["name"].get<String>();
+				if (sym->isLocalVar())
+					return "stack[" + context.stackIndex(sym) + "]";
 			}
 		};
 

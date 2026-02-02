@@ -761,7 +761,7 @@ void doVarAssign(
 	Context& context,
 	Makai::Instance<Context::Scope::Member> const& sym,
 	Makai::Instance<Context::Scope::Member> const& type,
-	bool const isGlobalVar = false,
+	Makai::String const& sourceType,
 	bool const isNewVar = false,
 	PreAssignFunction const& preassign = {},
 	PreAssignFunction const& postassign = {}
@@ -776,12 +776,12 @@ void doVarAssign(
 		result.resolver = context.resolveTo("move .");
 	}
 	if (isNewVar) {
-		if (isGlobalVar) {
+		if (sourceType != "stack") {
 			if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
-				context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
+				context.error<InvalidValue>("Symbol has already been previously defined as a different class!");
 			else if (!sym->value.contains("type"))
 				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing global variable type!");
-			else if (isGlobalVar && sym->value["global"] && sym->base != type)
+			else if ((sourceType != "stack") && (!sym->isLocalVar()) && sym->base != type)
 				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
 		}
 	} else {
@@ -791,14 +791,12 @@ void doVarAssign(
 			context.error<InvalidValue>("Symbol has already been defined as a different type in a previous scope!");
 	}
 	preassign(context, result);
-	if (isGlobalVar)
-		context.writeAdaptive("copy", result.resolve(), "-> :", sym->name);
-	else context.writeAdaptive("copy", result.resolve(), "->", context.varAccessor(sym)->resolve());
+	context.writeAdaptive("copy", result.resolve(), "->", context.varAccessor(sym)->resolve());
 	sym->value["init"] = true;
 	postassign(context, result);
 }
 
-void doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& sym, bool const isGlobalVar = false) {
+void doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& sym, Makai::String const& varType) {
 	if (context.currentToken().type != Type{':'})
 		context.error<InvalidValue>("Expected ':' here!");
 	if (sym->declared())
@@ -819,12 +817,27 @@ void doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& 
 	sym->base = type;
 	if (context.currentToken().type == Type{'='}) {
 		context.fetchNext();
-		doVarAssign(context, sym, type, isGlobalVar, true);
+		doVarAssign(context, sym, type, varType, true);
 	}
 }
 
+static Makai::String reclass(Context& context, Makai::String const& varType) {
+	if (varType == "local")		return "stack";
+	if (varType == "register")	return "reg";
+	if (varType == "temporary")	return "temp";
+	if (varType == "local")		return "stack";
+	if (varType == "global")	return "global";
+	context.error("Invalid variable source!");
+}
+
 static void doVarDecl(Context& context, bool const overrideAsLocal = false) {
-	bool const isGlobalVar = overrideAsLocal ? false : context.currentToken().value.get<Makai::String>() == "global";
+	Makai::String varType = overrideAsLocal ? "local" : context.currentValue().getString();
+	usize regID = -1;
+	if (varType == "register") {
+		context.fetchNext().expectToken(Type{'['});
+		regID = context.fetchNext().fetchToken(LTS_TT_INTEGER, "Register ID").getUnsigned();
+		context.fetchNext().expectToken(Type{']'});
+	}
 	if (!overrideAsLocal)
 		context.fetchNext();
 	auto const varname = context.currentToken();
@@ -833,14 +846,16 @@ static void doVarDecl(Context& context, bool const overrideAsLocal = false) {
 	auto const id = varname.value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
 		context.error<InvalidValue>("Variable name cannot be a reserved keyword!");
-	if (!isGlobalVar) {
+	if (varType == "stack") {
 		context.writeAdaptive("push null");
 	}
 	if (context.currentScope().contains(id))
 		context.error("Symbol with this name already exists in the current scope!");
-	auto const sym = context.currentScope().addVariable(id, isGlobalVar);
+	auto const sym = context.currentScope().addVariable(id, reclass(context, varType));
+	if (regID < Makai::Limit::MAX<usize>)
+		sym->value["register_id"] = regID;
 	context.fetchNext();
-	doVarDecl(context, sym, isGlobalVar);
+	doVarDecl(context, sym, varType);
 }
 
 #define ASSIGN_FN [=] (Context& context, Solution& result) -> void
@@ -891,7 +906,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 	PreAssignFunction pre, post;
 	switch (current.type) {
 		case Type{':'}: {
-			doVarDecl(context, sym, false);
+			doVarDecl(context, sym, sym->value["src"].getString("stack"));
 			if (sym->base) {
 				auto const varType	= sym->base;
 				return {sym->base, context.varAccessor(sym)};
@@ -927,7 +942,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 	}
 	context.fetchNext();
 	if (sym->base) {
-		doVarAssign(context, sym, sym->base, false, false, pre);
+		doVarAssign(context, sym, sym->base, sym->value["src"].getString("stack"), false, pre);
 		return {.type = sym->base, .resolver = context.varAccessor(sym)};
 	} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 }
@@ -1799,6 +1814,15 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	DEBUGLN("\n</state>");
 }
 
+static bool isVariableDeclarator(Makai::String const& what) {
+	return (
+		what == "global"
+	||	what == "local"
+	||	what == "register"
+	||	what == "temporary"
+	);
+}
+
 SEMIBREVE_ASSEMBLE_FN(Expression) {
 	auto const current = context.currentToken();
 	switch (current.type) {
@@ -1811,7 +1835,7 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "namespace" || id == "module")		doNamespace(context);
 			else if (id == "import")							doModuleImport(context);
 			else if (id == "using")								doUsingDeclaration(context);
-			else if (id == "global" || id == "local")			doVarDecl(context);
+			else if (isVariableDeclarator(id))					doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
 			else if (id == "fatal")								doLooseContext(context);
 			else if (id == "return")							doReturn(context);

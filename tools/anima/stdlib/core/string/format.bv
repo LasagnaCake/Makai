@@ -28,4 +28,14 @@ namespace String {
 			str is stack[-1] (stack[-0]) -> .
 		}
 	}
+
+	macro join {
+		{$($)}											=> {""														}
+		{$($value:expr$)}								=> {$value													}
+		{$($first:expr *{, $rest:expr}$)}				=> {($first + core.String.join($*rest{,}))					}
+		{$[$]$()}										=> {""														}
+		{$[$sep:expr$]$()}								=> {""														}
+		{$[$sep:expr$]$($value:expr)}					=> {$value													}
+		{$[$sep:expr$]$($first:expr *{, $rest:expr}$)}	=> {(($first + $sep) + core.String.join[$sep]($*rest{,}))	}
+	}
 }
