@@ -1209,9 +1209,17 @@ MINIMA_ASSEMBLE_FN(RandomNumber) {
 	auto id = context.currentValue().getString();
 	Instruction::Randomness rng;
 	if (id == "seed") {
+		context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG seed operation");
+		auto const op = context.currentValue().getString();
+		context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
+		context.fetchNext();
 		auto const seed = getDataLocation(context);
 		auto const inst = context.addNamedInstruction(Instruction::Name::AV2_IN_RANDOM);
-		rng.flags = Instruction::Randomness::Flags::AV2_IRF_SET_SEED;
+		if (op == "set")
+			rng.flags = Instruction::Randomness::Flags::AV2_IRF_SET_SEED;
+		else if (op == "get")
+			rng.flags = Instruction::Randomness::Flags::AV2_IRF_GET_SEED;
+		else context.error("Invalid RNG seed operation!");
 		rng.num = seed.at;
 		context.addInstructionType(inst, rng);
 		context.addInstruction(seed.id);

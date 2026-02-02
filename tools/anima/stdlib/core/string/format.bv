@@ -1,0 +1,10 @@
+namespace String {
+	func split(what: str, sep: str): str {
+		fatal asm {
+			push stack[-1]
+			push stack[-0]
+			in str sep
+			pop .
+		}
+	}
+}

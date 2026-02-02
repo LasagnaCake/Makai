@@ -301,6 +301,7 @@ namespace Makai::Anima::V2 {
 				AV2_IRF_SECURE		= 1 << 0,
 				AV2_IRF_BOUNDED		= 1 << 1,
 				AV2_IRF_SET_SEED	= 1 << 2,
+				AV2_IRF_GET_SEED	= 1 << 3,
 			};
 
 			Type			type;

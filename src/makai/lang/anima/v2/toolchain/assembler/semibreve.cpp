@@ -1672,11 +1672,16 @@ static void doMacroTransform(
 								Context::Macro::Context subctx = {ctx};
 								subctx.result = {};
 								tf->apply(subctx);
+								DEBUG("Separator: [ ");
+								for (auto& tok: subctx.result.value)
+									DEBUG(tok.token, " ");
+								DEBUGLN("]");
 								//DEBUGLN("--- Apply::Variable: [", varName, "]");
 								auto toks = ctx.variables[varName].tokens;
 								//DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
 								usize i = 0;
 								for (auto& tok: toks) {
+									DEBUGLN(i);
 									if (i) ctx.result.value.appendBack(subctx.result.value);
 									ctx.result.value.appendBack(tok);
 									++i;
@@ -1787,11 +1792,11 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 	//DEBUGLN("Result: ", rv.value.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.type == LTS_TT_IDENTIFIER ? (" " + elem.token) : elem.token;}).join());
 	auto const pc = context.append.cache.sliced(rv.match.size());
 	context.append.cache.clear().appendBack(rv.value).appendBack(pc);
-	// DEBUGLN("<state>");
-	// for (auto const& tok: context.append.cache) {
-	// 	DEBUG(tok.token, " ");
-	// }
-	// DEBUGLN("</state>");
+	DEBUGLN("<state>");
+	for (auto const& tok: context.append.cache) {
+		DEBUG(tok.token, " ");
+	}
+	DEBUGLN("\n</state>");
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {

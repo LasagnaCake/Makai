@@ -1,5 +1,37 @@
-import core.random.impl.declare;
-
 namespace Random.Fast {
-	core.Random.Impl.declare fast;
+	func getInt(): int {
+		fatal asm {
+			rng fast i -> .
+		}
+	}
+
+	func getInt(lo: int, hi: int): int {
+		fatal asm {
+			rng fast i (stack[-1] : stack[-0]) -> .
+		}
+	}
+
+	func getUInt(): uint {
+		fatal asm {
+			rng fast u -> .
+		}
+	}
+
+	func getUInt(lo: uint, hi: uint): uint {
+		fatal asm {
+			rng fast u (stack[-1] : stack[-0]) -> .
+		}
+	}
+
+	func getReal(): real {
+		fatal asm {
+			rng fast r -> .
+		}
+	}
+
+	func getReal(lo: real, hi: real): real {
+		fatal asm {
+			rng fast r (stack[-1] : stack[-0]) -> .
+		}
+	}
 }

@@ -152,10 +152,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 							using Type = Tokenizer::Token::Type;
 							if (args[i].type == end) break;
 							switch (args[i].type) {
-								case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'}));
-								case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'}));
-								case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'}));
-								default: result.pushBack(args[i]);
+								case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'})); break;
+								case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'})); break;
+								case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'})); break;
+								default: DEBUGLN(args[i].token); result.pushBack(args[i]); break;
 							}
 							i += result.size() - prev;
 							prev = result.size();

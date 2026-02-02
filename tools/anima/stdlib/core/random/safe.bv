@@ -1,5 +1,37 @@
-import core.random.impl.declare;
-
 namespace Random.Safe {
-	core.Random.Impl.declare safe;
+	func getInt(): int {
+		fatal asm {
+			rng safe i -> .
+		}
+	}
+
+	func getInt(lo: int, hi: int): int {
+		fatal asm {
+			rng safe i (stack[-1] : stack[-0]) -> .
+		}
+	}
+
+	func getUInt(): uint {
+		fatal asm {
+			rng safe u -> .
+		}
+	}
+
+	func getUInt(lo: uint, hi: uint): uint {
+		fatal asm {
+			rng safe u (stack[-1] : stack[-0]) -> .
+		}
+	}
+
+	func getReal(): real {
+		fatal asm {
+			rng safe r -> .
+		}
+	}
+
+	func getReal(lo: real, hi: real): real {
+		fatal asm {
+			rng safe r (stack[-1] : stack[-0]) -> .
+		}
+	}
 }
