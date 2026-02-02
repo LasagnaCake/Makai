@@ -1,10 +1,31 @@
 namespace String {
 	func split(what: str, sep: str): str {
 		fatal asm {
-			push stack[-1]
-			push stack[-0]
-			in str sep
-			pop .
+			str sep stack[-1] (stack[-0]) -> .
+		}
+	}
+
+	func replace(what: str, match: str, rep: str): str {
+		fatal asm {
+			str rep stack[-2] (stack[-1] : stack[-0]) -> .
+		}
+	}
+
+	func remove(what: str, match: str): str {
+		fatal asm {
+			str rem stack[-1] (stack[-0]) -> .
+		}
+	}
+
+	func contains(what: str, match: str): str {
+		fatal asm {
+			str has stack[-1] (stack[-0]) -> .
+		}
+	}
+
+	func matches(what: str, match: str): str {
+		fatal asm {
+			str is stack[-1] (stack[-0]) -> .
 		}
 	}
 }

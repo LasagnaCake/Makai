@@ -280,6 +280,15 @@ namespace Makai::Anima::V2 {
 		
 		/// @brief String manipulation.
 		struct [[gnu::aligned(4)]] StringManipulation {
+			enum class Operation: uint64 {
+				AV2_ISSM_REPLACE,
+				AV2_ISSM_SLICE,
+				AV2_ISSM_MATCH,
+				AV2_ISSM_CONTAINS,
+				AV2_ISSM_SPLIT,
+				AV2_ISSM_JOIN,
+				AV2_ISSM_REMOVE,
+			};
 			DataLocation	src, lhs, rhs, out;
 		};
 		
@@ -311,6 +320,27 @@ namespace Makai::Anima::V2 {
 			struct [[gnu::aligned(8)]] Number {
 				DataLocation	lo, hi;
 			};
+		};
+		
+		/// @brief Structured operation.
+		struct [[gnu::aligned(4)]] Structure {
+			enum class Type: uint8 {
+				AV2_IST_ARRAY_PUSH,
+				AV2_IST_ARRAY_POP,
+				AV2_IST_ARRAY_REVERSE,
+				AV2_IST_ARRAY_SUBSET_UNTIL,
+				AV2_IST_ARRAY_REMOVE_INDEX,
+				AV2_IST_ARRAY_REMOVE_LIKE,
+				AV2_IST_ARRAY_FUZZY_SEARCH,
+				AV2_IST_OBJECT_HAS_KEY = 0x1 << 6,
+				AV2_IST_OBJECT_REMOVE_KEY,
+				AV2_IST_OBJECT_FILTER_BY_VALUE,
+				AV2_IST_OBJECT_FUZZY_SEARCH,
+				AV2_IST_OBJECT_KEYS,
+				AV2_IST_OBJECT_VALUES,
+				AV2_IST_OBJECT_ITEMS,
+			} type;
+			DataLocation	src, val, out;
 		};
 		
 		/// @brief Instruction name.
@@ -383,11 +413,11 @@ namespace Makai::Anima::V2 {
 			/// @param type `WaitRequest` = What to expect from the value.
 			/// @details `await [<loc-id>]`
 			AV2_IN_AWAIT,
-			/// @brief Gets the value of a field from an object.
+			/// @brief Gets the value of a field from an object or array.
 			/// @param type `GetRequest` = How to get the value.
 			/// @details `get [<path-id>] [<from-id>] [<to-id>]`
 			AV2_IN_GET,
-			/// @brief Sets the value of a field in an object.
+			/// @brief Sets the value of a field in an object or array.
 			/// @param type `SetRequest` = How to set the value.
 			/// @details `set [<path-id>] [<from-id>] [<to-id>]`
 			AV2_IN_SET,
@@ -407,6 +437,10 @@ namespace Makai::Anima::V2 {
 			/// @param type `Randomness` = How to generate the number.
 			/// @details `rng [<num:Number> [<lo-id>] [<hi-id>]] [<num-id>]`
 			AV2_IN_RANDOM,
+			/// @brief Performs a structured operation on a value.
+			/// @param type `Structure` = Operation details.
+			/// @details `struct [<src-id>] [<val-id>] [<out-id>]`
+			AV2_IN_STRUCT_OP,
 		};
 		
 		/// @brief Instruction "Name" (opcode).

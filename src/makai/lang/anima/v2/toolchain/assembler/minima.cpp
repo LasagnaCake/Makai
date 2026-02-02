@@ -1133,6 +1133,12 @@ MINIMA_STR_OP(StringMatch) {
 	return manip;
 }
 
+MINIMA_STR_OP(StringContains) {
+	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_MATCH));
+	auto manip = getBaseUnaryStringOperation(context);
+	return manip;
+}
+
 MINIMA_STR_OP(StringSub) {
 	context.addInstruction(Makai::Cast::as<uint64>(Makai::Anima::V2::StringOperation::AV2_OP_SUBSTRING));
 	auto manip = getBaseBinaryStringOperation(context);
@@ -1150,6 +1156,7 @@ MINIMA_ASSEMBLE_FN(StringOperation) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
 	auto const manipID = context.addNamedInstruction(Instruction::Name::AV2_IN_STR_OP);
+	auto const opID = context.addEmptyInstruction();
 	auto const src = getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
@@ -1160,12 +1167,16 @@ MINIMA_ASSEMBLE_FN(StringOperation) {
 	Instruction::StringManipulation manip;
 	if (src.id < Makai::Limit::MAX<uint64>)
 		context.addInstruction(src.id);
-	if (id == "replace" || id == "rep")							manip = getStringReplaceOperation(context);
-	else if (id == "substring" || id == "slice" || id == "sub")	manip = getStringSubOperation(context);
-	else if (id == "match" || id == "has")						manip = getStringMatchOperation(context);
-	else if (id == "split" || id == "sep")						manip = getStringSplitOperation(context);
-	else if (id == "concat" || id == "join" || id == "cat")		manip = getStringJoinOperation(context);
-	else if (id == "remove" || id == "rem")						manip = getStringRemoveOperation(context);
+	Instruction::StringManipulation::Operation sop = Instruction::StringManipulation::Operation::AV2_ISSM_JOIN;
+	using enum Instruction::StringManipulation::Operation;
+	if (id == "replace" || id == "rep")							{sop = AV2_ISSM_REPLACE; manip = getStringReplaceOperation(context);	}
+	else if (id == "substring" || id == "slice" || id == "sub")	{sop = AV2_ISSM_SLICE; manip = getStringSubOperation(context);			}
+	else if (id == "contains" || id == "has")					{sop = AV2_ISSM_CONTAINS; manip = getStringContainsOperation(context);	}
+	else if (id == "match" || id == "is")						{sop = AV2_ISSM_MATCH; manip = getStringMatchOperation(context);		}
+	else if (id == "split" || id == "sep")						{sop = AV2_ISSM_SPLIT; manip = getStringSplitOperation(context);		}
+	else if (id == "concat" || id == "join" || id == "cat")		{sop = AV2_ISSM_JOIN; manip = getStringJoinOperation(context);			}
+	else if (id == "remove" || id == "rem")						{sop = AV2_ISSM_REMOVE; manip = getStringRemoveOperation(context);		}
+	else context.error("Invalid string operation!");
 	if (!context.stream.next())										MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
 	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)	MINIMA_ERROR(InvalidValue, "Expected '->' here!");
 	if (!context.stream.next())										MINIMA_ERROR(NonexistentValue, "Malformed string operation!");
@@ -1175,6 +1186,7 @@ MINIMA_ASSEMBLE_FN(StringOperation) {
 	manip.src = src.at;
 	manip.out = out.at;
 	context.addInstructionType(manipID, manip);
+	context.instruction(opID) = CTL::bitcast<Instruction>(sop);
 }
 
 MINIMA_ASSEMBLE_FN(Label) {
@@ -1193,6 +1205,7 @@ MINIMA_ASSEMBLE_FN(Label) {
 
 MINIMA_ASSEMBLE_FN(Indirect) {
 	// TODO: This (what was this supposed to be, again?)
+	// "Indirect" reads & writes (i.e. uhhhhhhhhhhhh)
 }
 
 MINIMA_ASSEMBLE_FN(Hook) {
@@ -1277,6 +1290,14 @@ MINIMA_ASSEMBLE_FN(RandomNumber) {
 		context.addInstruction(num.id);
 }
 
+MINIMA_ASSEMBLE_FN(StructuredOperation) {
+	// TODO: Structured operations
+}
+
+MINIMA_ASSEMBLE_FN(Instantiation) {
+	// TODO: Instantiation
+}
+
 MINIMA_ASSEMBLE_FN(Expression) {
 	auto const current = context.stream.current();
 	if (current.type == LTS_TT_IDENTIFIER) {
@@ -1308,6 +1329,8 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "in")									doHook(context);
 		else if (id == "string" || id == "str")					doStringOperation(context);
 		else if (id == "random" || id == "rng")					doRandomNumber(context);
+		else if (id == "struct" || id == "data")				doStructuredOperation(context);
+		else if (id == "new")									doInstantiation(context);
 		else doLabel(context);
 	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
 }
