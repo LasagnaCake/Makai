@@ -147,7 +147,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					
 					constexpr static Arguments solveParameterPack(Arguments const& args, Tokenizer::Token::Type const end) {
 						Arguments result;
-						usize prev	= 0;
+						usize prev	= 1;
 						usize i		= 1;
 						result.pushBack(args.front());
 						while (i < args.size()) {
