@@ -134,8 +134,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 									case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'})); break;
 									default: break;
 								}
-							} else if (isExpressionToken(args[i].type))
+							} else if (isExpressionToken(args[i].type)) {
 								result.pushBack(args[i]);
+								DEBUGLN("$ -> ", i, ":", args[i].token); 
+							}
 							else break;
 							i += result.size() - prev;
 							prev = result.size();
@@ -155,7 +157,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'})); break;
 								case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'})); break;
 								case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'})); break;
-								default: DEBUGLN(args[i].token); result.pushBack(args[i]); break;
+								default: DEBUGLN(". -> ", i, ":", args[i].token); result.pushBack(args[i]); break;
 							}
 							i += result.size() - prev;
 							prev = result.size();
