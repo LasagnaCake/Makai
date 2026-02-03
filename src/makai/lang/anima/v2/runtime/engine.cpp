@@ -537,6 +537,7 @@ void Engine::pushUndefinedIfInLooseMode(String const& fname) {
 	context.valueStack.pushBack(new Value(Value::undefined()));
 }
 
+// TODO: Move from using the stack to using the registers
 void Engine::callBuiltIn(BuiltInFunction const func) {
 	if (context.valueStack.empty()) {
 		if (inStrictMode())
