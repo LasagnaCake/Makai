@@ -1483,8 +1483,9 @@ SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 		while (!context.hasToken(Type{'}'})) {
 			context.fetchNext();
 			if (context.hasToken(Type{'}'})) break;
-			auto const id = context.currentValue().getString();
-			doTypeExtensionFunction(context, sym);
+			if (context.hasToken(LTS_TT_IDENTIFIER))
+				doTypeExtensionFunction(context, sym);
+			else context.error("Invalid extension!");
 		}
 	} else if (context.hasToken(LTS_TT_IDENTIFIER))
 		doTypeExtensionFunction(context, sym);
