@@ -534,7 +534,7 @@ void Engine::v2UnaryMath() {
 void Engine::pushUndefinedIfInLooseMode(String const& fname) {
 	if (inStrictMode())
 		return crash(invalidFunctionError("Failed operation for function \""+fname+"\"!"));
-	context.valueStack.pushBack(new Value(Value::undefined()));
+	context.temporary = new Value(Value::undefined());
 }
 
 // TODO: Move from using the stack to using the registers
@@ -546,76 +546,66 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 	}
 	else switch (func) {
 		case BuiltInFunction::AV2_EBIF_ADD: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin add");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() + b->get<double>()));
+			auto a = context.registers[0], b = context.registers[1];
+			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() + b->get<double>());
 			else pushUndefinedIfInLooseMode("builtin add");
 		} break;
 		case BuiltInFunction::AV2_EBIF_SUB: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin sub");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() - b->get<double>()));
+			auto a = context.registers[0], b = context.registers[1];
+			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() - b->get<double>());
 			else pushUndefinedIfInLooseMode("builtin sub");
 		} break;
 		case BuiltInFunction::AV2_EBIF_MUL: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin mul");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() * b->get<double>()));
+			auto a = context.registers[0], b = context.registers[1];
+			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() * b->get<double>());
 			else pushUndefinedIfInLooseMode("builtin mul");
 		} break;
 		case BuiltInFunction::AV2_EBIF_DIV: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin div");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a->isNumber() && b->isNumber()) context.valueStack.pushBack(new Value(a->get<double>() / b->get<double>()));
+			auto a = context.registers[0], b = context.registers[1];
+			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() / b->get<double>());
 			else pushUndefinedIfInLooseMode("builtin div");
 		} break;
 		case BuiltInFunction::AV2_EBIF_REM: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin mod");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			auto a = context.registers[0], b = context.registers[1];
 			if (a->isNumber() && b->isNumber()) {
 				if (a->isUnsigned() && b->isUnsigned())
-					context.valueStack.pushBack(new Value(a->get<usize>() % b->get<usize>()));
+					context.temporary = new Value(a->get<usize>() % b->get<usize>());
 				else if (a->isSigned() && b->isSigned())
-					context.valueStack.pushBack(new Value(a->get<ssize>() % b->get<ssize>()));
-				else context.valueStack.pushBack(new Value(Math::mod(a->get<double>(), b->get<double>())));
+					context.temporary = new Value(a->get<ssize>() % b->get<ssize>());
+				else context.temporary = new Value(Math::mod(a->get<double>(), b->get<double>()));
 			}
 			else pushUndefinedIfInLooseMode("builtin mod");
 		} break;
 		case BuiltInFunction::AV2_EBIF_LAND: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin logic and");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			context.valueStack.pushBack(new Value(a->get<bool>() && b->get<bool>()));
+			auto a = context.registers[0], b = context.registers[1];
+			context.temporary = new Value(a->get<bool>() && b->get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_LOR: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin logic or");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			context.valueStack.pushBack(new Value(a->get<bool>() || b->get<bool>()));
+			auto a = context.registers[0], b = context.registers[1];
+			context.temporary = new Value(a->get<bool>() || b->get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_LNOT: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin logic not");
 			if (err) break;
-			auto a = context.valueStack.popBack();
-			context.valueStack.pushBack(new Value(!a->get<bool>()));
+			auto a = context.registers[0];
+			context.temporary = new Value(!a->get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_NEG: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin negate");
 			if (err) break;
-			auto a = context.valueStack.popBack();
-			if (a->isNumber()) context.valueStack.pushBack(new Value(-a->get<float>()));
+			auto a = context.registers[0];
+			if (a->isNumber()) context.temporary = new Value(-a->get<double>());
 			else pushUndefinedIfInLooseMode("builtin negate");
 		} break;
 		case BuiltInFunction::AV2_EBIF_AND: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise and");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a->isInteger() && b->isInteger()) context.valueStack.pushBack(new Value(a->get<usize>() & b->get<usize>()));
+			auto a = context.registers[0], b = context.registers[0];
+			if (a->isInteger() && b->isInteger()) context.temporary = new Value(a->get<usize>() & b->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise and");
 		} break;
 		case BuiltInFunction::AV2_EBIF_OR: {
