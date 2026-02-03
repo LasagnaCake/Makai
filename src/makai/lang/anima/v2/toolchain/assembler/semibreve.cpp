@@ -1011,7 +1011,7 @@ static Solution doFunctionCall(
 	Makai::String call = "( ";
 	usize index = 0;
 	if (self)
-		call += Makai::toString(index++, "=", context.varAccessor(self)->resolve()) + " ";
+		call += Makai::toString(index++, "=", context.changeSemantic(context.varAccessor(self), "ref")->resolve()) + " ";
 	for (auto const& arg: args)
 		call += Makai::toString(index++, "=", arg.resolve()) + " ";
 	call += ")";
