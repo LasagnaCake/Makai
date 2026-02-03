@@ -137,7 +137,12 @@ static TemplateMap doTemplates(Context& context) {
 	return tmap;
 }
 
-static Prototype doFunctionPrototype(Context& context, bool const isExtern = false, Makai::Handle<Context::Scope::Namespace> const ns = nullptr) {
+static Prototype doFunctionPrototype(
+	Context& context,
+	bool const isExtern = false,
+	Makai::Handle<Context::Scope::Namespace> const ns = nullptr,
+	Makai::Instance<Context::Scope::Member> const& selfType = nullptr
+) {
 	auto const fname = context.currentToken();
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
 		context.error<InvalidValue>("Function name must be an identifier!");
@@ -158,6 +163,15 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	auto const signature = context.uniqueName();
 	Makai::List<Makai::KeyValuePair<Makai::String, Value>> optionals;
 	bool inOptionalRegion = false;
+	if (selfType) {
+		auto const var = context.currentScope().addVariable("self");
+		id += "_" + selfType->name.toString();
+		auto& arg = args[args.size()];
+		var->base = selfType;
+		arg["name"]			= "self";
+		var->value["type"]	= selfType->name; 
+		arg["type"]			= selfType->name;
+	}
 	while (context.nextToken() && context.currentToken().type != Type{')'}) {
 		bool isOptional = false;
 		auto const argn = context.currentToken();
@@ -272,12 +286,15 @@ static Prototype doFunctionPrototype(Context& context, bool const isExtern = fal
 	return proto;
 }
 
-SEMIBREVE_ASSEMBLE_FN(Function) {
+static Solution doFunction(
+	Context& context,
+	Makai::Instance<Context::Scope::Member> const& selfType = nullptr
+) {
 	auto ns = context.currentNamespaceRef();
 	if (context.inFunction()) ns = context.currentScope().ns;
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
-	auto const proto = doFunctionPrototype(context, false, ns);
+	auto const proto = doFunctionPrototype(context, false, ns, selfType);
 	context.currentScope().ns->members[proto.name] = proto.function;
 	context.writeLine(proto.fullName, ":");
 	if (context.hasToken(Type{'{'})) {
@@ -462,10 +479,10 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Makai::
 		auto const type = sym->base;
 		DEBUGLN("Value type: ", type->name);
 		return {type, context.varAccessor(sym)};
-	} else context.error<InvalidValue>("Invalid symbol type for operation");
+	} else context.error<InvalidValue>("Invalid symbol type for operation!");
 }
 
-Makai::Instance<Context::Scope::Member> resolveSymbolPath(Context& context) {
+static Makai::Instance<Context::Scope::Member> resolveSymbolPath(Context& context) {
 	if (!context.hasToken(LTS_TT_IDENTIFIER))
 		context.error("Type name must be an identifier!");
 	auto const id = context.currentToken().value.get<Makai::String>();
@@ -1439,8 +1456,40 @@ SEMIBREVE_ASSEMBLE_FN(TypeDefinition) {
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
+SEMIBREVE_SYMBOL_ASSEMBLE_FN(TypeExtensionFunction) {
+	auto const id = context.currentValue().getString();
+	if (id == "global") {
+		context.fetchNext();
+		if (id == "function" || id == "func" || id == "fn") doFunction(context);
+		else context.error("Invalid extension!");
+	}
+	else if (id == "function" || id == "func" || id == "fn") doFunction(context, sym);
+	else context.error("Invalid extension!");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
+}
+
 SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 	// TODO: This
+	auto const sym = resolveSymbolPath(context.fetchNext());
+	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
+		context.error("Symbol is not a type!");
+	if (context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "'with'").getString() != "with")
+		context.error("Expected 'with' here!");
+	context.startScope();
+	context.currentScope().name = context.scopePath() + "_" + sym->name;
+	context.currentScope().ns = sym->ns;
+	context.fetchNext();
+	if (context.hasToken(Type{'{'})) {
+		while (!context.hasToken(Type{'}'})) {
+			context.fetchNext();
+			if (context.hasToken(Type{'}'})) break;
+			auto const id = context.currentValue().getString();
+			doTypeExtensionFunction(context, sym);
+		}
+	} else if (context.hasToken(LTS_TT_IDENTIFIER))
+		doTypeExtensionFunction(context, sym);
+	else context.error("Invalid extension!");
+	context.endScope();
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
