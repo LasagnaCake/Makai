@@ -1300,11 +1300,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		inline static ID::VLUID uuid = ID::VLUID::create(0);
 
-		constexpr static Instance<Scope::Value::IResolver> resolveTo(String const& value) {
+		using Resolver = Instance<Scope::Value::IResolver>;
+
+		constexpr static Resolver resolveTo(String const& value) {
 			return new Scope::Value::DirectResolver(value);
 		}
 
-		constexpr static Instance<Scope::Value::IResolver> changeSemantic(Instance<Scope::Value::IResolver> const& resolver, String const& semantic) {
+		constexpr static Resolver changeSemantic(Resolver const& resolver, String const& semantic) {
 			return new Scope::Value::SemanticReplacer(resolver, semantic);
 		}
 

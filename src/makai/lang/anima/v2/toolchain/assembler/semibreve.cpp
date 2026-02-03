@@ -49,7 +49,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(Internal);
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(MemberCall);
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction);
 
-static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self = "");
+static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::Instance<Context::Scope::Member> const& self = nullptr);
 
 static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self = "");
 
@@ -264,6 +264,7 @@ static Prototype doFunctionPrototype(
 	for (auto& opt: optionals) {
 		fullName += "_" + opt.value["type"].get<Makai::String>();
 	}
+	overload["static"]		= !selfType.exists();
 	overload["args"]		= args;
 	overload["decl"]		= true;
 	overload["full_name"]	= fullName;
@@ -276,6 +277,7 @@ static Prototype doFunctionPrototype(
 			context.error<InvalidValue>("Function with similar signature already exists!");
 		auto& overload	= overloads[resolutionName];
 		args[args.size()]		= opt.value;
+		overload["static"]		= !selfType.exists();
 		overload["args"]		= args;
 		overload["decl"]		= true;
 		overload["full_name"]	= opt.value["declname"];
@@ -972,7 +974,11 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 	} else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 }
 
-static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope::Member> const& sym, Makai::String const& self) {
+static Solution doFunctionCall(
+	Context& context,
+	Makai::Instance<Context::Scope::Member> const& sym,
+	Makai::Instance<Context::Scope::Member> const& self
+) {
 	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error("INTERNAL ERROR: Symbol type mismatch!");
 	auto const id = sym->name;
@@ -984,6 +990,7 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 	Makai::List<Solution> args;
 	auto const start = context.currentScope().stackc + context.currentScope().varc;
 	auto legalName = id + "_";
+	if (self) legalName += self->base->name + "_";
 	while (context.nextToken()) {
 		if (context.currentToken().type == Type{')'}) break;
 		args.pushBack(doValueResolution(context));
@@ -1003,8 +1010,8 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 		context.error<InvalidValue>("Expected ')' here!");
 	Makai::String call = "( ";
 	usize index = 0;
-	if (self.size())
-		call += Makai::toString(index++, "=", self) + " ";
+	if (self)
+		call += Makai::toString(index++, "=", context.varAccessor(self)->resolve()) + " ";
 	for (auto const& arg: args)
 		call += Makai::toString(index++, "=", arg.resolve()) + " ";
 	call += ")";
@@ -1434,7 +1441,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(MemberCall) {
 	if (!ns->members.contains(id))
 		context.error<NonexistentValue>("Member call does not exist!");
 	auto const memcall = ns->members[id];
-	auto const ret = doFunctionCall(context, memcall, memcall->value["static"] ? "" : "ref " + context.varAccessor(sym)->resolve());
+	auto const ret = doFunctionCall(context, memcall, sym);
 	return ret;
 }
 
