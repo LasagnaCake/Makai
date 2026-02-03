@@ -17,7 +17,7 @@ using Solution = Context::Scope::Value;
 
 using NamespaceMember	= Makai::KeyValuePair<Makai::String, Makai::Instance<Context::Scope::Member>>;
 
-#define SEMIBREVE_ASSEMBLE_FN(NAME) static void do##NAME (Context& context)
+#define SEMIBREVE_ASSEMBLE_FN(NAME) static Solution do##NAME (Context& context)
 #define SEMIBREVE_TYPED_ASSEMBLE_FN(NAME) static Solution do##NAME (Context& context)
 #define SEMIBREVE_SYMBOL_ASSEMBLE_FN(NAME) static Solution do##NAME (Context& context, Makai::Instance<Context::Scope::Member> const& sym)
 
@@ -301,6 +301,7 @@ SEMIBREVE_ASSEMBLE_FN(Function) {
 		ns->members[proto.name] = proto.function;
 	else if (ns->members[proto.name]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error<InvalidValue>("Symbol with this name already exists!");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(ExternalFunction) {
@@ -327,6 +328,7 @@ SEMIBREVE_ASSEMBLE_FN(ExternalFunction) {
 	if (context.currentToken().type != Type{';'})
 		context.error<InvalidValue>("Expected ';' here!");
 	context.endScope();
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(SharedFunction) {
@@ -336,17 +338,19 @@ SEMIBREVE_ASSEMBLE_FN(SharedFunction) {
 	auto const function	= context.fetchNext().fetchToken(LTS_TT_SINGLE_QUOTE_STRING).getString();
 	context.fetchNext().expectToken(Type{']'});
 	context.program.ani.shared[file][function] = true;
-	doExternalFunction(context);
+	return doExternalFunction(context);
 }
 
 SEMIBREVE_ASSEMBLE_FN(Scope) {
+	Solution result = {context.getBasicType("void"), context.resolveTo("move .")};
 	while (context.nextToken()) {
 		auto const current = context.currentToken();
 		if (current.type == Type{'}'}) break; 
-		else doExpression(context);
+		else result = doExpression(context);
 	}
 	if (context.currentScope().varc)
 		context.writeLine("clear ", context.currentScope().varc);
+	return result;
 }
 
 SEMIBREVE_ASSEMBLE_FN(ExternalValue) {
@@ -354,6 +358,7 @@ SEMIBREVE_ASSEMBLE_FN(ExternalValue) {
 	if (context.currentScope().contains(id))
 		context.error<FailedAction>("Symbol with this name already exists in this scope!");
 	// TODO: The rest of the owl
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(External) {
@@ -366,6 +371,7 @@ SEMIBREVE_ASSEMBLE_FN(External) {
 	else if (!context.isReservedKeyword(id))
 		doExternalValue(context);
 	else context.error<NonexistentValue>("Invalid keyword!");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
@@ -757,7 +763,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
 
 using PreAssignFunction = Makai::Functor<void(Context&, Solution&)>;
 
-void doVarAssign(
+Solution doVarAssign(
 	Context& context,
 	Makai::Instance<Context::Scope::Member> const& sym,
 	Makai::Instance<Context::Scope::Member> const& type,
@@ -794,9 +800,10 @@ void doVarAssign(
 	context.writeAdaptive("copy", result.resolve(), "->", context.varAccessor(sym)->resolve());
 	sym->value["init"] = true;
 	postassign(context, result);
+	return {type, context.varAccessor(sym)};
 }
 
-void doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& sym, Makai::String const& varType) {
+static Solution doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& sym, Makai::String const& varType) {
 	if (context.currentToken().type != Type{':'})
 		context.error<InvalidValue>("Expected ':' here!");
 	if (sym->declared())
@@ -817,8 +824,9 @@ void doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& 
 	sym->base = type;
 	if (context.currentToken().type == Type{'='}) {
 		context.fetchNext();
-		doVarAssign(context, sym, type, varType, true);
+		return doVarAssign(context, sym, type, varType, true);
 	}
+	return {type, context.varAccessor(sym)};
 }
 
 static Makai::String reclass(Context& context, Makai::String const& varType) {
@@ -830,7 +838,7 @@ static Makai::String reclass(Context& context, Makai::String const& varType) {
 	context.error("Invalid variable source!");
 }
 
-static void doVarDecl(Context& context, bool const overrideAsLocal = false) {
+static Solution doVarDecl(Context& context, bool const overrideAsLocal = false) {
 	Makai::String varType = overrideAsLocal ? "local" : context.currentValue().getString();
 	usize regID = -1;
 	if (varType == "register") {
@@ -855,7 +863,7 @@ static void doVarDecl(Context& context, bool const overrideAsLocal = false) {
 	if (regID < Makai::Limit::MAX<usize>)
 		sym->value["register_id"] = regID;
 	context.fetchNext();
-	doVarDecl(context, sym, varType);
+	return doVarDecl(context, sym, varType);
 }
 
 #define ASSIGN_FN [=] (Context& context, Solution& result) -> void
@@ -991,12 +999,12 @@ static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope:
 	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
 	if (pushes)
 		context.writeLine("clear", pushes);
-	if (overload.contains("return"))
-		return {
-			context.resolveSymbol(overload["return"]),
-			context.resolveTo("move .")
-		};
-	else context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
+	if (!overload.contains("return"))
+		context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
+	return {
+		context.resolveSymbol(overload["return"]),
+		context.resolveTo("move .")
+	};
 }
 
 SEMIBREVE_ASSEMBLE_FN(Assembly) {
@@ -1011,15 +1019,17 @@ SEMIBREVE_ASSEMBLE_FN(Assembly) {
 		context.fetchNext();
 	}
 	context.fetchNext();
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(LooseContext) {
 	context.fetchNext();
 	context.startScope();
 	context.currentScope().secure = false;
-	doExpression(context);
+	auto const result = doExpression(context);
 	context.currentScope().secure = true;
 	context.endScope();
+	return result;
 }
 
 SEMIBREVE_ASSEMBLE_FN(Return) {
@@ -1044,6 +1054,7 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 	if (expectedType == context.getBasicType("void"))
 		context.writeLine("end");
 	else context.writeLine("ret", result.resolve());
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(Main) {
@@ -1062,6 +1073,7 @@ SEMIBREVE_ASSEMBLE_FN(Main) {
 	context.writeLine("end");
 	if (context.currentToken().type != Type{'}'})
 		context.error<InvalidValue>("Expected '}' here!");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(Conditional) {
@@ -1095,10 +1107,12 @@ SEMIBREVE_ASSEMBLE_FN(Conditional) {
 	}
 	context.writeLine(endIf, ":");
 	context.writeLine("next");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(ForLoop) {
 	// TODO: This
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(RepeatLoop) {
@@ -1109,9 +1123,10 @@ SEMIBREVE_ASSEMBLE_FN(RepeatLoop) {
 	auto const tmpVar		= loopStart + "_tmpvar";
 	context.writeLine(loopStart, ":");
 	context.fetchNext();
+	Solution result;
 	if (context.hasToken(Type{'{'})) {
 		context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
-		doExpression(context);
+		result = doExpression(context);
 		context.writeLine("jump", loopStart);
 		context.endScope();
 	} else if (context.hasToken(LTS_TT_IDENTIFIER)) {
@@ -1133,13 +1148,14 @@ SEMIBREVE_ASSEMBLE_FN(RepeatLoop) {
 		if (!context.isUnsigned(times.type))
 			context.writeLine("cast &[-0]: uint -> &[-0]");
 		context.fetchNext();
-		doExpression(context);
+		result = doExpression(context);
 		context.writeLine("uop dec ", context.varAccessor(var)->resolve(), " -> ", context.varAccessor(var)->resolve());
 		context.writeLine("jump if pos", context.varAccessor(var)->resolve(), loopStart);
 		context.writeLine("pop void");
 		context.endScope();
 	} else context.error("Invalid expression!");
 	context.writeLine(loopEnd, ":");
+	return result;
 }
 
 SEMIBREVE_ASSEMBLE_FN(DoLoop) {
@@ -1149,7 +1165,7 @@ SEMIBREVE_ASSEMBLE_FN(DoLoop) {
 	context.fetchNext();
 	context.writeLine(uname, ":");
 	context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
-	doExpression(context);
+	auto const result = doExpression(context);
 	context.endScope();
 	context.fetchNext();
 	if (
@@ -1160,6 +1176,7 @@ SEMIBREVE_ASSEMBLE_FN(DoLoop) {
 	if (!context.isVerifiable(cond.type))
 		context.error<InvalidValue>("Condition result must be a verifiable type!");
 	context.writeLine("jump if true", cond.resolve(), uname);
+	return result;
 }
 
 SEMIBREVE_ASSEMBLE_FN(WhileLoop) {
@@ -1175,14 +1192,16 @@ SEMIBREVE_ASSEMBLE_FN(WhileLoop) {
 	context.writeLine("jump if false", cond.resolve(), loopend);
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_LOOP);
-	doExpression(context);
+	auto const result = doExpression(context);
 	context.endScope();
 	context.writeLine("jump if true", cond.resolve(), uname);
 	context.writeLine(loopend, ":");
+	return result;
 }
 
 SEMIBREVE_ASSEMBLE_FN(Terminate) {
 	context.writeLine("halt");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(Error) {
@@ -1191,6 +1210,7 @@ SEMIBREVE_ASSEMBLE_FN(Error) {
 	context.fetchNext();
 	auto const err = doValueResolution(context);
 	context.writeLine("error", err.resolve());
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(UnaryOperation) {
@@ -1239,7 +1259,6 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(ArrayDeclaration) {
 	if (count) {
 		context.writeLine("push", count);
 		context.writeLine("call in array");
-		context.writeLine("pop .");
 		return {context.getBasicType("array"), context.resolveTo("move .")};
 	}
 	return {context.getBasicType("array"), context.resolveTo("arr")};
@@ -1280,7 +1299,7 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 	ModuleResolution mod = resolveModuleName(context);
 	if (context.hasModule(mod.sourceName)) {
 		context.out.writeLine("Module '", mod.sourceName, "' already loaded - importing not needed...");
-		return;
+		return {context.getBasicType("void"), context.resolveTo("move .")};
 	}
 	context.registerModule(mod.sourceName);
 	submodule.fileName		= mod.path;
@@ -1303,12 +1322,14 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 		context.importModule(submodule.global.ns->children[mod.head]);
 	else context.importModule(submodule.global.ns);
 	context.modules.append(submodule.modules);
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(UsingDeclaration) {
 	context.fetchNext();
 	auto ns = resolveNamespace(context);
 	context.currentNamespace().append(ns);
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(Namespace) {
@@ -1354,6 +1375,7 @@ SEMIBREVE_ASSEMBLE_FN(Namespace) {
 		context.error<NonexistentValue>("Expected '}' here!");
 	while (scopeCount--)
 		context.endScope();
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(Signal) {
@@ -1376,12 +1398,14 @@ SEMIBREVE_ASSEMBLE_FN(Signal) {
 	doExpression(context);
 	context.endScope();
 	context.writeLine("end");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(Yield) {
 	if (!context.inFunction())
 		context.error<InvalidValue>("Can only yield inside functions!");
 	else context.writeLine("yield");
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(MemberCall) {
@@ -1412,10 +1436,12 @@ SEMIBREVE_ASSEMBLE_FN(TypeDefinition) {
 	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
 		context.error("Type definition must be another type!");
 	context.currentScope().ns->members[name] = sym;
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 	// TODO: This
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
@@ -1795,6 +1821,7 @@ SEMIBREVE_ASSEMBLE_FN(Macro) {
 			macro->exprs.pushBack(expr);
 		} break;
 	}
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self) {
@@ -1835,9 +1862,9 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "namespace" || id == "module")		doNamespace(context);
 			else if (id == "import")							doModuleImport(context);
 			else if (id == "using")								doUsingDeclaration(context);
-			else if (isVariableDeclarator(id))					doVarDecl(context);
+			else if (isVariableDeclarator(id))					return doVarDecl(context);
 			else if (id == "minima" || id == "asm")				doAssembly(context);
-			else if (id == "fatal")								doLooseContext(context);
+			else if (id == "fatal")								return doLooseContext(context);
 			else if (id == "return")							doReturn(context);
 			else if (id == "if")								doConditional(context);
 			else if (id == "do")								doDoLoop(context);
@@ -1854,39 +1881,41 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			else if (context.hasSymbol(id)) {
 				auto sym = context.getSymbolRefByName(id);
 				switch (sym->type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym); doExpression(context);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION:	doFunctionCall(context, sym);							break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE:	doVariableAction(context, sym);							break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym); return doExpression(context);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION:	return doFunctionCall(context, sym);							break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE:	return doVariableAction(context, sym);							break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
 			} else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				switch (sym.value->type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym.value); doExpression(context);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: doFunctionCall(context, sym.value);								break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: doVariableAction(context, sym.value);							break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym.value); return doExpression(context);	break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: return doFunctionCall(context, sym.value);							break;
+					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: return doVariableAction(context, sym.value);						break;
 					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
 				}
-			} else doVarDecl(context, true);
+			} else return doVarDecl(context, true);
 		} break;
 		case Type{'('}: {
-			doBinaryOperation(context);
+			return doBinaryOperation(context);
 		} break;
 		case Type{'-'}:
 		case Type{'+'}:
 		case LTS_TT_DECREMENT:
 		case LTS_TT_INCREMENT: {
-			auto const result = doUnaryOperation(context);
+			return doUnaryOperation(context);
 		} break;
 		case Type{'{'}: {
 			context.startScope();
-			doScope(context);
+			auto const result = doScope(context);
 			context.endScope();
+			return result;
 		}
 		case Type{'}'}:
 		case Type{';'}: break;
 		default: context.error<InvalidValue>("Invalid expression!");
 	}
+	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 void Semibreve::assemble() {

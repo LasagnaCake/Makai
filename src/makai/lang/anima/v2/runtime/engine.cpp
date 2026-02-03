@@ -2,7 +2,6 @@
 #include "context.hpp"
 #include "../../../../../makai/net/net.hpp"
 #include "../../../../../makai/file/flow.hpp"
-#include "makai/net/http.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -540,7 +539,6 @@ void Engine::pushUndefinedIfInLooseMode(String const& fname) {
 	context.temporary = new Value(Value::undefined());
 }
 
-// TODO: Move from using the stack to using the registers
 void Engine::callBuiltIn(BuiltInFunction const func) {
 	if (context.valueStack.empty()) {
 		if (inStrictMode())
@@ -674,7 +672,7 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			auto url	= context.registers[0];
 			auto type	= context.registers[1];
 			auto data	= context.registers[2];
-			if (url->isString() && type->isString())
+			if (url->isString() && type->isString() && data)
 				context.temporary = new Value(onHTTPRequest(url->getString(), type->getString().upper(), *data));
 			else pushUndefinedIfInLooseMode("builtin HTTP request");
 		} break;

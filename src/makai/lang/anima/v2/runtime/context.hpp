@@ -17,6 +17,11 @@ namespace Makai::Anima::V2::Runtime {
 			virtual Storage invoke(List<Storage> const& args) = 0;
 		};
 
+		Context() {
+			for (auto& reg: registers)
+				reg = new Data::Value();
+		}
+
 		struct Pointers {
 			usize	offset		= 0;
 			usize	function	= 0;
