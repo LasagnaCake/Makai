@@ -67,7 +67,14 @@ namespace Command {
 		DEBUGLN("create <name> [--type <type>] [--lang <lang>]");
 		DEBUGLN("refresh");
 		DEBUGLN("add <module> [--ver <version>]");
+		DEBUGLN("connect <resolver> [-G]");
 		DEBUGLN("remove <module>");
+	}
+
+	static void doConnect(Makai::Data::Value& cfg) {
+		if (cfg["__args"].size() < 2)
+			throw Makai::Error::NonexistentValue("Missing target!");
+		// TODO: Package source resolvers
 	}
 
 	static void doBuild(Makai::Data::Value& cfg) {
