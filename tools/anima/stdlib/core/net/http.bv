@@ -22,10 +22,10 @@ namespace Net.HTTP {
 	}
 
 	macro declare => {$type:id : $req:str;} => {
-		macro $type {
+		macro $type ${
 			${$$url:str;$}						=> ${core.Net.HTTP.Impl.request($$url, $req);			$}
 			${$$url:str $$$($$data:expr$$$);$}	=> ${core.Net.HTTP.Impl.request($$url, $req, $$data);	$}
-		}
+		$}
 	}
 
 	declare get:	"GET";
