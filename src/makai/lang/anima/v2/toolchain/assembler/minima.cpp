@@ -491,7 +491,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "access" || id == "read")		invoke.argc = ':';
 			else if (id == "print" || id == "echo")			invoke.argc = '@';
 			else if (id == "sizeof")						invoke.argc = '#';
-			else if (id == "string" || id == "str") {
+			else if (id == "string" || id == "str" || id == "s") {
 				invoke.argc	= '"';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
 				if (op == "new")							invoke.mod = '.';
@@ -504,29 +504,33 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "remove" || op == "del")		invoke.mod = '-';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			}
-			else if (id == "array" || id == "arr") {
+			else if (id == "array" || id == "arr" || id == "a") {
 				invoke.argc	= '[';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
 				if (op == "new")							invoke.mod = '.';
-				else if (op == "slice" || op == "sub")		invoke.mod = '_';
-				else if (op == "push")						invoke.mod = '<';
-				else if (op == "pop")						invoke.mod = '>';
 				else if (op == "remove" || op == "del")		invoke.mod = '-';
+				else if (op == "concat" || op == "join")	invoke.mod = '+';
 				else if (op == "like")						invoke.mod = '=';
 				else if (op == "unlike")					invoke.mod = '!';
+				else if (op == "slice" || op == "sub")		invoke.mod = '_';
 				else if (op == "find")						invoke.mod = 'f';
 				else if (op == "fuzz")						invoke.mod = 'F';
+				else if (op == "push")						invoke.mod = '<';
+				else if (op == "pop")						invoke.mod = '>';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			}
-			else if (id == "object" || id == "data") {
+			else if (id == "object" || id == "obj" || id == "o") {
 				invoke.argc	= '{';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
 				if (op == "has")							invoke.mod = ':';
 				else if (op == "remove" || op == "del")		invoke.mod = '-';
+				else if (op == "concat" || op == "join")	invoke.mod = '+';
 				else if (op == "like")						invoke.mod = '=';
 				else if (op == "unlike")					invoke.mod = '!';
-				else if (op == "find")						invoke.mod = 'f';
-				else if (op == "fuzz")						invoke.mod = 'F';
+				else if (op == "findkey" || op == "fink")	invoke.mod = 'f';
+				else if (op == "fuzzkey" || op == "fuzk")	invoke.mod = 'F';
+				else if (op == "findval" || op == "finv")	invoke.mod = 'x';
+				else if (op == "fuzzval" || op == "fuzv")	invoke.mod = 'X';
 				else if (op == "keys" || op == "k")			invoke.mod = 'k';
 				else if (op == "values" || op == "v")		invoke.mod = 'v';
 				else if (op == "items" || op == "i")		invoke.mod = 'i';
