@@ -5,7 +5,6 @@ namespace Net.HTTP {
 			copy move stack[-1] -> reg[1]
 			copy move null -> reg[2]
 			call in http
-			copy move reg[0] -> .
 		}
 	}
 
@@ -15,7 +14,6 @@ namespace Net.HTTP {
 			copy move stack[-1] -> reg[1]
 			copy move stack[-0] -> reg[2]
 			call in http
-			copy move reg[0] -> .
 		}
 	}
 
