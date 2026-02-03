@@ -3,7 +3,7 @@ namespace Net.HTTP {
 		fatal asm {
 			copy move stack[-2] -> reg[0]
 			copy move stack[-1] -> reg[1]
-			copy move null -> reg[2]
+			copy move "" -> reg[2]
 			call in http
 		}
 	}
@@ -30,4 +30,5 @@ namespace Net.HTTP {
 	declare patch:	"PATCH";
 	declare update:	"UPDATE";
 	declare delete:	"DELETE";
+	declare head:	"HEAD";
 }

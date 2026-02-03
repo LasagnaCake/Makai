@@ -72,40 +72,41 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInFunction: uint8 {
-			AV2_EBIF_ADD		= '+',
-			AV2_EBIF_SUB		= '-',
-			AV2_EBIF_MUL		= '*',
-			AV2_EBIF_DIV		= '/',
-			AV2_EBIF_POW		= 'p',
-			AV2_EBIF_REM		= '%',
-			AV2_EBIF_COMP		= '=',
-			AV2_EBIF_NEG		= 'n',
-			AV2_EBIF_AND		= '&',
-			AV2_EBIF_OR			= '|',
-			AV2_EBIF_NOT		= '~',
-			AV2_EBIF_XOR		= '^',
-			AV2_EBIF_LAND		= 'a',
-			AV2_EBIF_LOR		= 'o',
-			AV2_EBIF_LNOT		= '!',
-			AV2_EBIF_SIN		= 's',
-			AV2_EBIF_COS		= 'c',
-			AV2_EBIF_TAN		= 't',
-			AV2_EBIF_ASIN		= 'S',
-			AV2_EBIF_ACOS		= 'C',
-			AV2_EBIF_ATAN		= 'T',
-			AV2_EBIF_ATAN2		= '2',
-			AV2_EBIF_INTERRUPT	= '.',
-			AV2_EBIF_READ		= ':',
-			AV2_EBIF_PRINT		= '@',
-			AV2_EBIF_TOSTRING	= '_',
-			AV2_EBIF_STR_JOIN	= '\'',
-			AV2_EBIF_STR_SPLIT	= ',',
-			AV2_EBIF_STR_REP	= '>',
-			AV2_EBIF_STR_REMOVE	= 'r',
-			AV2_EBIF_STR_SUB	= '"',
-			AV2_EBIF_STR_MATCH	= 'm',
-			AV2_EBIF_STR_FORMAT	= '$',
-			AV2_EBIF_SIZEOF		= '#',
+			AV2_EBIF_ADD			= '+',
+			AV2_EBIF_SUB			= '-',
+			AV2_EBIF_MUL			= '*',
+			AV2_EBIF_DIV			= '/',
+			AV2_EBIF_POW			= 'p',
+			AV2_EBIF_REM			= '%',
+			AV2_EBIF_COMP			= '=',
+			AV2_EBIF_NEG			= 'n',
+			AV2_EBIF_AND			= '&',
+			AV2_EBIF_OR				= '|',
+			AV2_EBIF_NOT			= '~',
+			AV2_EBIF_XOR			= '^',
+			AV2_EBIF_LAND			= 'a',
+			AV2_EBIF_LOR			= 'o',
+			AV2_EBIF_LNOT			= '!',
+			AV2_EBIF_SIN			= 's',
+			AV2_EBIF_COS			= 'c',
+			AV2_EBIF_TAN			= 't',
+			AV2_EBIF_ASIN			= 'S',
+			AV2_EBIF_ACOS			= 'C',
+			AV2_EBIF_ATAN			= 'T',
+			AV2_EBIF_ATAN2			= '2',
+			AV2_EBIF_INTERRUPT		= '.',
+			AV2_EBIF_READ			= ':',
+			AV2_EBIF_PRINT			= '@',
+			AV2_EBIF_TOSTRING		= '_',
+			AV2_EBIF_STR_JOIN		= '\'',
+			AV2_EBIF_STR_SPLIT		= ',',
+			AV2_EBIF_STR_REP		= '>',
+			AV2_EBIF_STR_REMOVE		= 'r',
+			AV2_EBIF_STR_SUB		= '"',
+			AV2_EBIF_STR_MATCH		= 'm',
+			AV2_EBIF_STR_FORMAT		= '$',
+			AV2_EBIF_SIZEOF			= '#',
+			AV2_EBIF_HTTP_REQUEST	= 'H',
 		};
 
 		enum class Action {
@@ -118,7 +119,8 @@ namespace Makai::Anima::V2::Runtime {
 
 		FunctionRegistry functions;
 
-		virtual void print(Data::Value const& value);
+		virtual void		onPrint(Data::Value const& value);
+		virtual Data::Value	onHTTPRequest(String const& url, String const& action, Data::Value const& value);
 
 		bool hasSignal(String const& name);
 		void fire(String const& signal);
@@ -149,6 +151,7 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error invalidFunctionError(String const& description);
 		Engine::Error invalidComparisonError(String const& description);
 		Engine::Error invalidFieldError(String const& description);
+		Engine::Error invalidFetchRequest(String const& description);
 		Engine::Error missingArgumentsError();
 
 		Engine::Error makeErrorHere(String const& message);

@@ -1,5 +1,8 @@
 #include "engine.hpp"
 #include "context.hpp"
+#include "../../../../../makai/net/net.hpp"
+#include "../../../../../makai/file/flow.hpp"
+#include "makai/net/http.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -604,35 +607,31 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 		} break;
 		case BuiltInFunction::AV2_EBIF_AND: {
 			if (err) break;
-			auto a = context.registers[0], b = context.registers[0];
+			auto a = context.registers[0], b = context.registers[1];
 			if (a->isInteger() && b->isInteger()) context.temporary = new Value(a->get<usize>() & b->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise and");
 		} break;
 		case BuiltInFunction::AV2_EBIF_OR: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise or");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a->isInteger() && b->isInteger()) context.valueStack.pushBack(new Value(a->get<usize>() | b->get<usize>()));
+			auto a = context.registers[0], b = context.registers[1];
+			if (a->isInteger() && b->isInteger()) context.temporary = new Value(a->get<usize>() | b->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise or");
 		} break;
 		case BuiltInFunction::AV2_EBIF_XOR: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin bitwise xor");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
-			if (a->isInteger() && b->isInteger()) context.valueStack.pushBack(new Value(a->get<usize>() ^ b->get<usize>()));
+			auto a = context.registers[0], b = context.registers[1];
+			if (a->isInteger() && b->isInteger()) context.temporary = new Value(a->get<usize>() ^ b->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise xor");
 		} break;
 		case BuiltInFunction::AV2_EBIF_NOT: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin bitwise not");
 			if (err) break;
-			auto a = context.valueStack.popBack();
-			if (a->isInteger()) context.valueStack.pushBack(new Value(~a->get<usize>()));
+			auto a = context.registers[0];
+			if (a->isInteger()) context.temporary = new Value(~a->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise not");
 		} break;
 		case BuiltInFunction::AV2_EBIF_COMP: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin threeway compare");
 			if (err) break;
-			auto a = context.valueStack.popBack(), b = context.valueStack.popBack();
+			auto a = context.registers[0], b = context.registers[1];
 			Value::OrderType order = Value::Order::EQUAL;
 			if (a->type() == b->type())					order = *a <=> *b;
 			else if (a->isNumber() && b->isNumber())	order = a->get<double>() <=> b->get<double>();
@@ -640,18 +639,17 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 				pushUndefinedIfInLooseMode("builtin threeway compare");
 				break;
 			}
-			if (order == Value::Order::EQUAL)			context.valueStack.pushBack(new Value(0l));
-			else if (order == Value::Order::GREATER)	context.valueStack.pushBack(new Value(1l));
-			else if (order == Value::Order::LESS)		context.valueStack.pushBack(new Value(-1l));
+			if (order == Value::Order::EQUAL)			context.temporary = new Value(0l);
+			else if (order == Value::Order::GREATER)	context.temporary = new Value(1l);
+			else if (order == Value::Order::LESS)		context.temporary = new Value(-1l);
 			else pushUndefinedIfInLooseMode("builtin threeway compare");
 		} break;
 		case BuiltInFunction::AV2_EBIF_INTERRUPT: {
 		} break;
 		case BuiltInFunction::AV2_EBIF_READ: {
-			if (context.valueStack.size() < 2) pushUndefinedIfInLooseMode("builtin indirect read");
 			if (err) break;
-			auto type	= context.valueStack.popBack();
-			auto id		= context.valueStack.popBack();
+			auto type	= context.registers[0];
+			auto id		= context.registers[1];
 			if (!(type->isUnsigned() && id->isUnsigned()))
 				pushUndefinedIfInLooseMode("builtin indirect read");
 			if (err) break;
@@ -659,30 +657,57 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			if (ti > Makai::Limit::MAX<uint8>) {
 				pushUndefinedIfInLooseMode("builtin indirect read");
 				break;
-			} else context.valueStack.pushBack(
-				getValueFromLocation(Cast::as<DataLocation>(ti), id)
-			);
+			} else context.temporary = getValueFromLocation(Cast::as<DataLocation>(ti), id);
 		} break;
 		case BuiltInFunction::AV2_EBIF_PRINT: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin print");
 			if (err) break;
-			auto what = context.valueStack.popBack();
-			print(*what);
+			auto what = context.registers[0];
+			onPrint(*what);
 		} break;
 		case BuiltInFunction::AV2_EBIF_SIZEOF: {
-			if (context.valueStack.size() < 1) pushUndefinedIfInLooseMode("builtin sizeof");
 			if (err) break;
-			auto val = context.valueStack.popBack();
-			context.valueStack.pushBack(new Value(val->size()));
+			auto val = context.registers[0];
+			context.temporary = new Value(val->size());
+		} break;
+		case BuiltInFunction::AV2_EBIF_HTTP_REQUEST: {
+			if (err) break;
+			auto url	= context.registers[0];
+			auto type	= context.registers[1];
+			auto data	= context.registers[2];
+			if (url->isString() && type->isString())
+				context.temporary = new Value(onHTTPRequest(url->getString(), type->getString().upper(), *data));
+			else pushUndefinedIfInLooseMode("builtin HTTP request");
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
 }
 
-void Engine::print(Value const& what) {
+void Engine::onPrint(Value const& what) {
 	if (what.isString())
 		DEBUGLN(what.get<String>());
 	else DEBUGLN(what.toString());
+}
+
+Value Engine::onHTTPRequest(String const& url, String const& action, Value const& data) {
+	using namespace Makai::Net::HTTP;
+	Request req;
+	if (action == "GET")			req.type = Request::Type::MN_HRT_GET;
+	else if (action == "POST")		req.type = Request::Type::MN_HRT_POST;
+	else if (action == "PUT")		req.type = Request::Type::MN_HRT_PUT;
+	else if (action == "HEAD")		req.type = Request::Type::MN_HRT_HEAD;
+	else if (action == "PATCH")		req.type = Request::Type::MN_HRT_PATCH;
+	else if (action == "DELETE")	req.type = Request::Type::MN_HRT_DELETE;
+	else if (action == "UPDATE")	req.type = Request::Type::MN_HRT_UPDATE;
+	else crash(invalidFetchRequest(action));
+	req.data = data.toString();
+	auto resp = Makai::Net::HTTP::fetch(url, req);
+	Value respObj = respObj.object();
+	respObj["status"]	= enumcast(resp.status);
+	respObj["content"]	= resp.content;
+	respObj["time"]		= resp.time;
+	respObj["header"]	= resp.header;
+	respObj["source"]	= resp.source;
+	return respObj;
 }
 
 void Engine::v2SetContext() {

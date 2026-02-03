@@ -1393,7 +1393,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(MemberCall) {
 	if (!ns->members.contains(id))
 		context.error<NonexistentValue>("Member call does not exist!");
 	auto const memcall = ns->members[id];
-	auto const ret = doFunctionCall(context, memcall, memcall->value["static"] ? "" : context.varAccessor(sym)->resolve());
+	auto const ret = doFunctionCall(context, memcall, memcall->value["static"] ? "" : "ref " + context.varAccessor(sym)->resolve());
 	return ret;
 }
 
