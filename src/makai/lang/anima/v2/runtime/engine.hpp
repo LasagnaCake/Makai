@@ -131,18 +131,18 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInObjectOperation: uint8 {
-			AV2_EBI_AO_REPLACE				= ':',
-			AV2_EBI_SO_REMOVE				= '-',
-			AV2_EBI_AO_JOIN					= '+',
-			AV2_EBI_AO_LIKE					= '=',
-			AV2_EBI_AO_UNLIKE				= '!',
-			AV2_EBI_AO_FIND_BY_KEY			= 'f',
-			AV2_EBI_AO_FUZZY_FIND_BY_KEY	= 'F',
-			AV2_EBI_AO_FIND_BY_VALUE		= 'x',
-			AV2_EBI_AO_FUZZY_FIND_BY_VALUE	= 'X',
-			AV2_EBI_AO_KEYS					= 'k',
-			AV2_EBI_AO_VALUES				= 'v',
-			AV2_EBI_AO_ITEMIZE				= 'i',
+			AV2_EBI_OO_REPLACE				= ':',
+			AV2_EBI_OO_REMOVE				= '-',
+			AV2_EBI_OO_JOIN					= '+',
+			AV2_EBI_OO_LIKE					= '=',
+			AV2_EBI_OO_UNLIKE				= '!',
+			AV2_EBI_OO_FIND_BY_KEY			= 'f',
+			AV2_EBI_OO_FUZZY_FIND_BY_KEY	= 'F',
+			AV2_EBI_OO_FIND_BY_VALUE		= 'x',
+			AV2_EBI_OO_FUZZY_FIND_BY_VALUE	= 'X',
+			AV2_EBI_OO_KEYS					= 'k',
+			AV2_EBI_OO_VALUES				= 'v',
+			AV2_EBI_OO_ITEMS				= 'i',
 		};
 
 		enum class Action {
