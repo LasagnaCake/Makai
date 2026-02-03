@@ -154,6 +154,7 @@ namespace Makai::Anima::V2 {
 		struct [[gnu::aligned(4)]] Invocation {
 			DataLocation	location;
 			uint8			argc;
+			uint8			mod = 0;
 			
 			/// @brief Parameter declaration.
 			struct [[gnu::aligned(8)]] Parameter {
@@ -322,27 +323,6 @@ namespace Makai::Anima::V2 {
 			};
 		};
 		
-		/// @brief Structured operation.
-		struct [[gnu::aligned(4)]] Structure {
-			enum class Type: uint8 {
-				AV2_IST_ARRAY_PUSH,
-				AV2_IST_ARRAY_POP,
-				AV2_IST_ARRAY_REVERSE,
-				AV2_IST_ARRAY_SUBSET_UNTIL,
-				AV2_IST_ARRAY_REMOVE_INDEX,
-				AV2_IST_ARRAY_REMOVE_LIKE,
-				AV2_IST_ARRAY_FUZZY_SEARCH,
-				AV2_IST_OBJECT_HAS_KEY = 0x1 << 6,
-				AV2_IST_OBJECT_REMOVE_KEY,
-				AV2_IST_OBJECT_FILTER_BY_VALUE,
-				AV2_IST_OBJECT_FUZZY_SEARCH,
-				AV2_IST_OBJECT_KEYS,
-				AV2_IST_OBJECT_VALUES,
-				AV2_IST_OBJECT_ITEMS,
-			} type;
-			DataLocation	src, val, out;
-		};
-		
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -437,10 +417,6 @@ namespace Makai::Anima::V2 {
 			/// @param type `Randomness` = How to generate the number.
 			/// @details `rng [<num:Number> [<lo-id>] [<hi-id>]] [<num-id>]`
 			AV2_IN_RANDOM,
-			/// @brief Performs a structured operation on a value.
-			/// @param type `Structure` = Operation details.
-			/// @details `struct [<src-id>] [<val-id>] [<out-id>]`
-			AV2_IN_STRUCT_OP,
 		};
 		
 		/// @brief Instruction "Name" (opcode).

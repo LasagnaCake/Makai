@@ -98,15 +98,31 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_READ			= ':',
 			AV2_EBIF_PRINT			= '@',
 			AV2_EBIF_TOSTRING		= '_',
-			AV2_EBIF_STR_JOIN		= '\'',
-			AV2_EBIF_STR_SPLIT		= ',',
-			AV2_EBIF_STR_REP		= '>',
-			AV2_EBIF_STR_REMOVE		= 'r',
-			AV2_EBIF_STR_SUB		= '"',
 			AV2_EBIF_STR_MATCH		= 'm',
 			AV2_EBIF_STR_FORMAT		= '$',
 			AV2_EBIF_SIZEOF			= '#',
 			AV2_EBIF_HTTP_REQUEST	= 'H',
+			AV2_EBIF_STRING_OP		= '"',
+			AV2_EBIF_ARRAY_OP		= '[',
+			AV2_EBIF_OBJECT_OP		= '{',
+		};
+		
+		enum class BuiltInStringOperation: uint8 {
+			AV2_EBI_SO_SLICE	= '_',
+			AV2_EBI_SO_REPLACE	= ':',
+			AV2_EBI_SO_SPLIT	= '/',
+			AV2_EBI_SO_JOIN		= '+',
+			AV2_EBI_SO_MATCHES	= '=',
+			AV2_EBI_SO_CONTAINS	= 'f',
+			AV2_EBI_SO_REMOVE	= '-',
+		};
+
+		enum class BuiltInArrayOperation: uint8 {
+
+		};
+
+		enum class BuiltInObjectOperation: uint8 {
+
 		};
 
 		enum class Action {
@@ -190,6 +206,10 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Yield();
 
 		void callBuiltIn(BuiltInFunction const func);
+		
+		void callBuiltInStringOp(BuiltInFunction const func);
+		void callBuiltInArrayOp(BuiltInFunction const func);
+		void callBuiltInObjectOp(BuiltInFunction const func);
 
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();

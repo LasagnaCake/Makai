@@ -676,8 +676,20 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 				context.temporary = new Value(onHTTPRequest(url->getString(), type->getString().upper(), *data));
 			else pushUndefinedIfInLooseMode("builtin HTTP request");
 		} break;
+		case BuiltInFunction::AV2_EBIF_STRING_OP: return callBuiltInStringOp(func);
+		case BuiltInFunction::AV2_EBIF_ARRAY_OP: return callBuiltInArrayOp(func);
+		case BuiltInFunction::AV2_EBIF_OBJECT_OP: return callBuiltInObjectOp(func);
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
+}
+
+void Engine::callBuiltInStringOp(BuiltInFunction const func) {
+}
+
+void Engine::callBuiltInArrayOp(BuiltInFunction const func) {
+}
+
+void Engine::callBuiltInObjectOp(BuiltInFunction const func) {
 }
 
 void Engine::onPrint(Value const& what) {
