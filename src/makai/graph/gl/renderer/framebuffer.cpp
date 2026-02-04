@@ -66,8 +66,8 @@ Graph::Base::ABuffer& Graph::Base::ABuffer::render(Base::ABuffer const& target) 
 }
 
 Graph::DrawBuffer::DrawBuffer(
-	unsigned int const width,
-	unsigned int const height
+	uint32 const width,
+	uint32 const height
 ): Base::ABuffer() {
 	create(width, height);
 }

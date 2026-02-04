@@ -113,9 +113,9 @@ namespace Makai::Graph {
 
 	private:
 		/// @brief Vertex array.
-		uint32 vao;
+		uint vao;
 		/// @brief Vertex buffer.
-		uint32 vbo;
+		uint vbo;
 	};
 
 	/// @brief Type must be a graphic object.

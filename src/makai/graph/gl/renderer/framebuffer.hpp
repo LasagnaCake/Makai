@@ -192,9 +192,9 @@ namespace Makai::Graph {
 		/// @brief Buffer storage.
 		Storage buffer;
 		/// @brief Vertex array.
-		uint32 vao;
+		uint vao;
 		/// @brief Vertex buffer.
-		uint32 vbo;
+		uint vbo;
 	};
 
 	/// @brief Frame buffer.
