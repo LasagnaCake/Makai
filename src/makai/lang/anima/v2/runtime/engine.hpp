@@ -144,12 +144,6 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBI_OO_ITEMS				= 'i',
 		};
 
-		enum class Action {
-			AV2_EA_NULL,
-			AV2_EA_V1_COMMAND,
-			AV2_EA_EXTERN_CALL
-		};
-
 		bool process();
 
 		FunctionRegistry functions;
