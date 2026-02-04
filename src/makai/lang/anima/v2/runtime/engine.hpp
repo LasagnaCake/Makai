@@ -113,14 +113,14 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBI_SO_SPLIT	= '/',
 			AV2_EBI_SO_JOIN		= '+',
 			AV2_EBI_SO_MATCHES	= '=',
-			AV2_EBI_SO_CONTAINS	= 'f',
+			AV2_EBI_SO_CONTAINS	= '@',
 			AV2_EBI_SO_REMOVE	= '-',
+			AV2_EBI_SO_FIND		= 'f',
 		};
 
 		enum class BuiltInArrayOperation: uint8 {
 			AV2_EBI_AO_SLICE			= '_',
 			AV2_EBI_SO_REMOVE			= '-',
-			AV2_EBI_AO_REPLACE			= ':',
 			AV2_EBI_AO_JOIN				= '+',
 			AV2_EBI_AO_FILTER_LIKE		= '=',
 			AV2_EBI_AO_FILTER_UNLIKE	= '!',
@@ -131,7 +131,6 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInObjectOperation: uint8 {
-			AV2_EBI_OO_REPLACE				= ':',
 			AV2_EBI_OO_REMOVE				= '-',
 			AV2_EBI_OO_JOIN					= '+',
 			AV2_EBI_OO_LIKE					= '=',

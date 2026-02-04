@@ -73,7 +73,7 @@ void Uniform::setArray(int const* const values, usize const count, usize const o
 	this->offset = count;
 }
 
-void Uniform::setArray(uint32 const* const values, usize const count, usize const offset) const {
+void Uniform::setArray(uint const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
 	glUniform1uiv(getUniform() + offset, count, values);
 	this->offset = count;
