@@ -5,7 +5,7 @@ namespace Array {
 			copy move stack[-2] -> register[0]
 			copy move stack[-1] -> register[1]
 			copy move stack[-0] -> register[2]
-			call in arr slice
+			call in arr sub
 		}
 		return move out;
 	}
@@ -81,11 +81,11 @@ namespace Array {
 	}
 }
 
-extend array with func slice(begin: int, end: int): array	=> Array.slice(ref self, move begin, move end);
-extend array with func like(val: any): array				=> Array.like(ref self, move val);
-extend array with func unlike(val: any): array				=> Array.unlike(ref self, move val);
-extend array with func find(val: any): array				=> Array.find(ref self, move val);
-extend array with func fuzz(val: any): array				=> Array.fuzz(ref self, move val);
-extend array with func push(val: any): array				=> ref Array.push(ref self, move val);
-extend array with func pop(): any							=> ref Array.pop(ref self);
-extend array with func remove(val: any): array				=> ref Array.remove(ref self, move val);
+extend arr with func slice(begin: int, end: int): arr	=> Array.slice(ref self, move begin, move end);
+extend arr with func like(val: any): arr				=> Array.like(ref self, move val);
+extend arr with func unlike(val: any): arr				=> Array.unlike(ref self, move val);
+extend arr with func find(val: any): arr				=> Array.find(ref self, move val);
+extend arr with func fuzz(val: any): arr				=> Array.fuzz(ref self, move val);
+extend arr with func push(val: any): arr				=> ref Array.push(ref self, move val);
+extend arr with func pop(): any							=> ref Array.pop(ref self);
+extend arr with func remove(val: any): arr				=> ref Array.remove(ref self, move val);

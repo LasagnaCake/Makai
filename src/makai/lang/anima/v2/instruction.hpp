@@ -11,7 +11,7 @@ namespace Makai::Anima::V2 {
 	enum class DataLocation: uint8 {
 		/// @brief Internal value.
 		AV2_DL_INTERNAL,
-		/// @brief Constant data.		
+		/// @brief Constant data.
 		AV2_DL_CONST,
 		/// @brief Absolute position in the stack.
 		AV2_DL_STACK,
@@ -21,9 +21,9 @@ namespace Makai::Anima::V2 {
 		AV2_DL_HEAP,
 		/// @brief Global variable.
 		AV2_DL_GLOBAL,
-		/// @brief C++ value.	
+		/// @brief C++ value.
 		AV2_DL_EXTERNAL,
-		/// @brief Temporary register.	
+		/// @brief Temporary register.
 		AV2_DL_TEMPORARY,
 		/// @brief Register value.
 		AV2_DL_REGISTER,
@@ -75,7 +75,7 @@ namespace Makai::Anima::V2 {
 	constexpr DataModifier operator|(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) | enumcast(b));	}
 	constexpr DataModifier operator&(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) & enumcast(b));	}
 	constexpr DataModifier operator~(DataModifier const& a)							{return Cast::as<DataModifier>(~enumcast(a));				}
-	
+
 	/// @brief Unary operator.
 	enum class UnaryOperator: uint8 {
 		AV2_UOP_NEGATE,
@@ -86,7 +86,7 @@ namespace Makai::Anima::V2 {
 		AV2_UOP_COPY,
 		AV2_UOP_MOVE,
 	};
-	
+
 	/// @brief Binary operator.
 	enum class BinaryOperator: uint8 {
 		AV2_BOP_ADD,
@@ -106,7 +106,7 @@ namespace Makai::Anima::V2 {
 		AV2_BOP_INDEX_ACCESS,
 		AV2_BOP_MEMBER_ACCESS
 	};
-	
+
 	/// @brief Comparison operator.
 	enum class Comparator: uint8 {
 		AV2_OP_EQUALS,
@@ -126,7 +126,7 @@ namespace Makai::Anima::V2 {
 		AV2_OP_SUBSTRING,
 		AV2_OP_MATCH,
 	};
-	
+
 	/// @brief Instruction.
 	struct [[gnu::aligned(8)]] Instruction {
 		/// @brief Stop mode.
@@ -144,18 +144,18 @@ namespace Makai::Anima::V2 {
 			ContextMode		mode;
 			bool			immediate:	1;
 		};
-		
+
 		/// @brief Value transfer.
 		struct [[gnu::aligned(4)]] Transfer {
 			DataLocation	from, to;
 		};
-		
+
 		/// @brief Function invocation.
 		struct [[gnu::aligned(4)]] Invocation {
 			DataLocation	location;
 			uint8			argc;
 			uint8			mod = 0;
-			
+
 			/// @brief Parameter declaration.
 			struct [[gnu::aligned(8)]] Parameter {
 				DataLocation	location;
@@ -163,7 +163,7 @@ namespace Makai::Anima::V2 {
 				uint32			id;
 			};
 		};
-		
+
 		/// @brief Function invocation.
 		struct [[gnu::aligned(4)]] ReferenceCall: Invocation {};
 
@@ -186,13 +186,13 @@ namespace Makai::Anima::V2 {
 			bool			isDynamic:	1;
 			DataLocation	condition;
 		};
-		
+
 		/// @brief Comparison operator.
 		struct [[gnu::aligned(4)]] Comparison {
 			DataLocation	lhs, rhs, out;
 			Comparator		comp;
 		};
-		
+
 		/// @brief Return result.
 		struct [[gnu::aligned(4)]] Result {
 			DataLocation	location;
@@ -267,18 +267,18 @@ namespace Makai::Anima::V2 {
 		struct [[gnu::aligned(4)]] GetRequest {
 			DataLocation	from, to, field;
 		};
-		
+
 		/// @brief Field set request.
 		struct [[gnu::aligned(4)]] SetRequest {
 			DataLocation	from, to, field;
 		};
-		
+
 		/// @brief Cast operation.
 		struct [[gnu::aligned(4)]] Casting {
 			DataLocation		src, dst;
 			Data::Value::Kind	type;
 		};
-		
+
 		/// @brief String manipulation.
 		struct [[gnu::aligned(4)]] StringManipulation {
 			enum class Operation: uint64 {
@@ -292,12 +292,12 @@ namespace Makai::Anima::V2 {
 			};
 			DataLocation	src, lhs, rhs, out;
 		};
-		
+
 		/// @brief Object.
 		struct [[gnu::aligned(4)]] Object {
 			DataLocation	desc, out;
 		};
-		
+
 		/// @brief Randomness.
 		struct [[gnu::aligned(4)]] Randomness {
 			enum class Type: uint8 {
@@ -305,7 +305,7 @@ namespace Makai::Anima::V2 {
 				AV2_IRT_UINT,
 				AV2_IRT_REAL,
 			};
-			
+
 			enum class Flags: uint8 {
 				AV2_IRF_NONE		= 0,
 				AV2_IRF_SECURE		= 1 << 0,
@@ -322,7 +322,7 @@ namespace Makai::Anima::V2 {
 				DataLocation	lo, hi;
 			};
 		};
-		
+
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -353,7 +353,7 @@ namespace Makai::Anima::V2 {
 			/// @param type `Leap` = How to jump.
 			/// @details `jump ([<dynamic-to-src-id>] [<cond-id>] | [<cond-id>] <to-id>)`
 			AV2_IN_JUMP,
-			/// @brief Pushes a value to the top of the stack.	
+			/// @brief Pushes a value to the top of the stack.
 			/// @param type `StackPush` = How to handle the value.
 			/// @details `push [<loc-id>]`
 			AV2_IN_STACK_PUSH,
@@ -361,7 +361,7 @@ namespace Makai::Anima::V2 {
 			/// @param type `StackPop` = How to handle the value.
 			/// @details `pop [<loc-id>]`
 			AV2_IN_STACK_POP,
-			/// @brief Swaps the topmost two values of the stack.	
+			/// @brief Swaps the topmost two values of the stack.
 			/// @param type Discarded.
 			/// @details `swap`
 			AV2_IN_STACK_SWAP,
@@ -418,12 +418,12 @@ namespace Makai::Anima::V2 {
 			/// @details `rng [<num:Number> [<lo-id>] [<hi-id>]] [<num-id>]`
 			AV2_IN_RANDOM,
 		};
-		
+
 		/// @brief Instruction "Name" (opcode).
 		Name	name;
 		/// @brief Instruction "Type" (specification).
 		uint32	type;
-		
+
 		/// @brief Parses an instruction from a value.
 		constexpr static Instruction fromValue(uint64 const v) {
 			return CTL::bitcast<Instruction>(v);
