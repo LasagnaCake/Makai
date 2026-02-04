@@ -19,8 +19,8 @@ namespace Net.HTTP {
 
 	macro declare => {$type:id : $req:string;} => {
 		macro $type ${
-			${$$url:string;$}				=> ${core.Net.HTTP.request($$url, $req);			$}
-			${$$url:str = $$value:expr;$}	=> ${core.Net.HTTP.request($$url, $req, $$value);	$}
+			${$$url:string;$}					=> ${core.Net.HTTP.request($$url, $req);			$}
+			${$$url:string = $$value:expr;$}	=> ${core.Net.HTTP.request($$url, $req, $$value);	$}
 		$}
 	}
 
