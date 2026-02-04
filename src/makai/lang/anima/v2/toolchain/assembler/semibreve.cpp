@@ -1503,7 +1503,7 @@ SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 
 static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
 	auto const varType = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "rule type").getString();
-	if (varType == "expr") {
+	if (varType == "expr" || varType == "expression") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_EXPRESSION;
 	} else if (varType == "str" || varType == "string") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
