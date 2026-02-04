@@ -7,14 +7,20 @@ using namespace Toolchain;
 
 constexpr auto const VER = Makai::Data::Version{1};
 
-auto const projectDatabase() {
-	auto const path = Makai::OS::FS::sourceLocation() + "sources/db.flow";
+static Makai::Data::Value const fetchSources(Makai::String const& path) {
 	Makai::Data::Value db;
-	if (Makai::OS::FS::exists(path))
-		db = Makai::File::getFLOW(path);
-	if (!Makai::OS::FS::exists(path))
-		Makai::File::saveText(path, db.toFLOWString("\t"));
+	if (Makai::OS::FS::exists(path)) {
+		Makai::OS::FS::FileTree tree(path);
+		for (auto const& f: tree.tree.getAllFiles())
+			db.append(Makai::File::getFLOW(f));
+	}
 	return db;
+}
+
+static Makai::Data::Value const projectDatabase() {
+	auto const path			= Makai::OS::FS::sourceLocation() + "sources";
+	auto const localPath	= "proj/sources";
+	return Makai::Data::Value::merge(fetchSources(path), fetchSources(localPath));
 }
 
 static void resolveSource(Compiler::Project& project, Makai::String const& name, Makai::String const& version) {
@@ -60,6 +66,16 @@ static Makai::String getFileExtension(Compiler::Project::File::Type const& type)
 }
 
 namespace Command {
+	namespace Source {
+		static void doAdd(Makai::Data::Value& cfg) {
+
+		}
+
+		static void doRemove(Makai::Data::Value& cfg) {
+
+		}
+	}
+
 	static void doHelpMessage() {
 		DEBUGLN("Anima Concerto - V" + VER.serialize().get<Makai::String>());
 		DEBUGLN("Available commands:");
@@ -67,14 +83,17 @@ namespace Command {
 		DEBUGLN("create <name> [--type <type>] [--lang <lang>]");
 		DEBUGLN("refresh");
 		DEBUGLN("add <module> [--ver <version>]");
-		DEBUGLN("connect <resolver> [-G]");
+		DEBUGLN("source <action> [<url>] [-G]");
 		DEBUGLN("remove <module>");
 	}
 
-	static void doConnect(Makai::Data::Value& cfg) {
+	static void doSource(Makai::Data::Value& cfg) {
 		if (cfg["__args"].size() < 2)
 			throw Makai::Error::NonexistentValue("Missing target!");
-		// TODO: Package source resolvers
+		// TODO: Package sources
+		auto const command = cfg["__args"][1].getString();
+		if (command == "add")		Source::doAdd(cfg);
+		if (command == "remove")	Source::doRemove(cfg);
 	}
 
 	static void doBuild(Makai::Data::Value& cfg) {
@@ -185,6 +204,7 @@ int main(int argc, char** argv) try {
 		else if	(command == "refresh"	)	Command::doRefresh(cfg);
 		else if	(command == "add"		)	Command::doAdd(cfg);
 		else if	(command == "remove"	)	Command::doRemove(cfg);
+		else if	(command == "source"	)	Command::doSource(cfg);
 		else throw Makai::Error::InvalidValue("Invalid command [" + command + "]!");
 	}
 	return 0;

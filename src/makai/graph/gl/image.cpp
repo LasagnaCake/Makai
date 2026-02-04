@@ -121,17 +121,17 @@ void Image::unbind(ImageTarget const& target) {
 	glBindTexture(convert(target), 0);
 }
 
-Image& Image::use(uchar const slot, ImageTarget const& target) {
+Image& Image::use(uint8 const slot, ImageTarget const& target) {
 	set(id, slot, target);
 	return *this;
 }
 
-Image const& Image::use(uchar const slot, ImageTarget const& target) const {
+Image const& Image::use(uint8 const slot, ImageTarget const& target) const {
 	set(id, slot, target);
 	return *this;
 }
 
-void Image::set(uint const image, uchar const slot, ImageTarget const& target) {
+void Image::set(uint const image, uint8 const slot, ImageTarget const& target) {
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("Image::set");
 	#endif // MAKAILIB_DEBUG
@@ -139,11 +139,11 @@ void Image::set(uint const image, uchar const slot, ImageTarget const& target) {
 	glBindTexture(convert(target), image);
 }
 
-Image& Image::operator()(uchar const slot, ImageTarget const& target) {
+Image& Image::operator()(uint8 const slot, ImageTarget const& target) {
 	return use(slot);
 }
 
-Image const& Image::operator()(uchar const slot, ImageTarget const& target) const {
+Image const& Image::operator()(uint8 const slot, ImageTarget const& target) const {
 	return use(slot);
 }
 
@@ -178,7 +178,7 @@ Image2D& Image2D::create(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uchar* const			data,
+	uint8* const			data,
 	ComponentLayout const&	layout
 ) {
 	if (exists()) return *this;
@@ -193,7 +193,7 @@ Image2D& Image2D::make(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uchar* const			data,
+	uint8* const			data,
 	ComponentLayout const&	layout
 ) {
 	destroy();
@@ -282,7 +282,7 @@ Image2D* Image2D::newImage(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uchar* const			data,
+	uint8* const			data,
 	ComponentLayout const&	layout,
 	ImageTarget const&		target
 ) {
@@ -298,7 +298,7 @@ Image2D* Image2D::newImage(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uchar* const			data,
+	uint8* const			data,
 	ComponentLayout const&	layout,
 	ImageTarget const&		target
 ) {
@@ -347,7 +347,7 @@ Image2D* Image2D::newImage(
 void Image2D::saveImageToFile(String const& path, uint8 const quality, ImageFileType type) const {
 	if (!exists()) return;
 	ImageData imgdat = getData();
-	uchar channels = 0;
+	uint8 channels = 0;
 	switch (imgdat.format) {
 		case ImageFormat::IF_D:
 		case ImageFormat::IF_R:		channels = 1;	break;

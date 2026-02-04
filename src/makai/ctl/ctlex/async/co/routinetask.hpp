@@ -96,8 +96,8 @@ namespace Co {
 		/// @brief Whether to repeatedly fire the event.
 		bool	repeat	= false;
 		/// @brief The amount of times to repeat for. If less than 0, loops indefinitely.
-		llong	loops	= -1;
-	
+		ssize	loops	= -1;
+
 	protected:
 		/// @brief Task to process. Must be implemented.
 		/// @return Promise to task result.

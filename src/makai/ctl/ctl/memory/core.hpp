@@ -188,7 +188,7 @@ namespace MX {
 	constexpr T* memset(ref<T> const dst, int const val) {
 		return memset<T>(dst, val, 1);
 	}
-	
+
 	/// @brief Sets every byte of data to zero.
 	/// @param dst Data to set.
 	/// @param size Size in bytes.
@@ -273,7 +273,7 @@ namespace MX {
 		if (!m) throw AllocationFailure();
 		return m;
 	}
-	
+
 	/// @brief Allocates space for an element in the heap.
 	/// @tparam T Type of data to allocate for.
 	/// @return Pointer to start of allocated memory.
@@ -389,7 +389,7 @@ namespace MX {
 		return mem = realloc<T>(mem, sz);
 	}
 
-	
+
 	/// @brief Safely copies data from one place to another, respecting the type's constructor.
 	/// @tparam T Type of data to copy.
 	/// @param dst Destination.

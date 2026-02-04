@@ -24,6 +24,12 @@ omp-threads:=128
 export omp-threads
 endif
 
+ifdef os
+export os
+else
+export os:=win
+endif
+
 o?=2
 export o
 

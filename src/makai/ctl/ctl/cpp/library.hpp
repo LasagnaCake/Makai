@@ -33,16 +33,24 @@ namespace CPP {
 		private:
 			HMODULE lib = nullptr;
 		#else
+		Module (String const& path) {
+			lib = dlopen(path.cstr(), RTLD_LAZY | RTLD_LOCAL);
+		}
+
+		~Module()									{if (lib) dlclose(lib);						}
+		pointer function(String const& name) const	{return (pointer)dlsym(lib, name.cstr());	}
+		private:
+			pointer lib = nullptr;
 		#endif
 		};
-		
+
 		template <class T>
 		struct Function;
 
 		template <class TReturn, class... TArgs>
 		struct Function<TReturn(TArgs...)> {
 			using Result = Meta::If<Type::Void<TReturn>, TReturn, Nullable<TReturn>>;
-			
+
 			inline Result invoke(TArgs... args) const {
 				return func(args...);
 			}
@@ -80,7 +88,7 @@ namespace CPP {
 			if (!f) return {};
 			return {*f, lib, name};
 		}
-	
+
 	private:
 		Instance<Module> lib;
 	};

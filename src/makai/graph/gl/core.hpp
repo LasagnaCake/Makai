@@ -3,7 +3,7 @@
 
 #include "../../compat/ctl.hpp"
 
-#define SUGGEST_NVIDIA_GPU extern "C" __declspec(dllexport) ulong NvOptimusEnablement = 1
+#define SUGGEST_NVIDIA_GPU extern "C" __declspec(dllexport) uint32 NvOptimusEnablement = 1
 #define SUGGEST_AMD_GPU extern "C" __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1
 
 #define SUGGEST_DEDICATED_GPU SUGGEST_NVIDIA_GPU; SUGGEST_AMD_GPU

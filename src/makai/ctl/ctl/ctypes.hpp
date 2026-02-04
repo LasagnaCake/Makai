@@ -2,6 +2,7 @@
 #define CTL_EXTENDED_TYPES_H
 
 #include <ctype.h>
+#include "meta/if.hpp"
 
 #if		INTPTR_MAX == INT64_MAX
 /// @brief CPU architecture.
@@ -24,36 +25,14 @@
 #define X86
 #endif
 
-/// @brief 8-bit unsigned integer.
-typedef unsigned char		uint8;
-/// @brief 16-bit unsigned integer.
-typedef unsigned short		uint16;
-/// @brief 32-bit unsigned integer.
-typedef unsigned long	   	uint32;
-/// @brief 64-bit unsigned integer.
-typedef unsigned long long	uint64;
-#if		CPU_ARCH == 64
-/// @brief Unsigned integer of maximum architecture size.
-typedef	uint64				uintmax;
-#elif	CPU_ARCH == 32
-/// @brief Unsigned integer of maximum architecture size.
-typedef	uint32				uintmax;
-#elif	CPU_ARCH == 16
-/// @brief Unsigned integer of maximum architecture size.
-typedef	uint16				uintmax;
-#else
-/// @brief Unsigned integer of maximum architecture size.
-typedef	uint8				uintmax;
-#endif
-
 /// @brief 8-bit signed integer.
 typedef signed char			int8;
 /// @brief 16-bit signed integer.
 typedef signed short		int16;
 /// @brief 32-bit signed integer.
-typedef signed long			int32;
+using int32 = CTL::Meta::If<(CTL_TARGET_OS == CTL_OS_WINDOWS), long, int>;
 /// @brief 64-bit signed integer.
-typedef signed long long	int64;
+using int64 = CTL::Meta::If<(CTL_TARGET_OS == CTL_OS_WINDOWS), long long, long>;
 #if		CPU_ARCH == 64
 /// @brief Signed integer of maximum architecture size.
 typedef	int64				intmax;
@@ -66,6 +45,28 @@ typedef	int16				intmax;
 #else
 /// @brief Signed integer of maximum architecture size.
 typedef	int8				intmax;
+#endif
+
+/// @brief 8-bit unsigned integer.
+typedef unsigned char		uint8;
+/// @brief 16-bit unsigned integer.
+typedef unsigned short		uint16;
+/// @brief 32-bit unsigned integer.
+using uint32 = CTL::Meta::If<(CTL_TARGET_OS == CTL_OS_WINDOWS), unsigned long, unsigned int>;
+/// @brief 64-bit unsigned integer.
+using uint64 = CTL::Meta::If<(CTL_TARGET_OS == CTL_OS_WINDOWS), unsigned long long, unsigned long>;
+#if		CPU_ARCH == 64
+/// @brief Unsigned integer of maximum architecture size.
+typedef	uint64				uintmax;
+#elif	CPU_ARCH == 32
+/// @brief Unsigned integer of maximum architecture size.
+typedef	uint32				uintmax;
+#elif	CPU_ARCH == 16
+/// @brief Unsigned integer of maximum architecture size.
+typedef	uint16				uintmax;
+#else
+/// @brief Unsigned integer of maximum architecture size.
+typedef	uint8				uintmax;
 #endif
 
 /// @brief 32-bit floating point number.
@@ -82,24 +83,8 @@ typedef	float64				floatmax;
 typedef	float32				floatmax;
 #endif
 
-/// @brief Unsigned character.
-typedef uint8			uchar;
-/// @brief Unsigned 16-bit integer.
-typedef uint16			ushort;
-/// @brief Unsigned integer.
-typedef unsigned int	uint;
-/// @brief Unsigned 32-bit integer.
-typedef uint32			ulong;
-/// @brief Unsigned 64-bit integer.
-typedef uint64			ullong;
-
 /// @brief Quadruple-precision floating point number.
 typedef float128	ldouble;
-
-/// @brief Signed character.
-typedef int8	schar;
-/// @brief Signed 64-bit integer.
-typedef int64	llong;
 
 /// @brief Wide character.
 typedef wchar_t	wchar;
@@ -150,7 +135,10 @@ typedef uint8	usize;
 typedef int8	ssize;
 #endif
 
-static_assert(sizeof(usize) == sizeof(size_t), "Size mismatch!");
+typedef uint64 litsize;
+
+typedef unsigned long long	litint;
+typedef long double			litfloat;
 
 #if CPU_ARCH == 64
 /// @brief Signed 128-bit integer.

@@ -12,26 +12,26 @@ namespace Impl {
 	template<class T> struct SignedType;
 
 	template<>	struct UnsignedType<char>:					TypeContainer<unsigned char>		{};
-	template<>	struct UnsignedType<short>:					TypeContainer<unsigned int>			{};
-	template<>	struct UnsignedType<int>:					TypeContainer<unsigned short>		{};
+	template<>	struct UnsignedType<short>:					TypeContainer<unsigned short>		{};
+	template<>	struct UnsignedType<int>:					TypeContainer<unsigned int>			{};
 	template<>	struct UnsignedType<long>:					TypeContainer<unsigned long>		{};
 	template<>	struct UnsignedType<long long>:				TypeContainer<unsigned long long>	{};
 
 	template<>	struct UnsignedType<unsigned char>:			TypeContainer<unsigned char>		{};
-	template<>	struct UnsignedType<unsigned short>:		TypeContainer<unsigned int>			{};
-	template<>	struct UnsignedType<unsigned int>:			TypeContainer<unsigned short>		{};
+	template<>	struct UnsignedType<unsigned short>:		TypeContainer<unsigned short>		{};
+	template<>	struct UnsignedType<unsigned int>:			TypeContainer<unsigned int>			{};
 	template<>	struct UnsignedType<unsigned long>:			TypeContainer<unsigned long>		{};
 	template<>	struct UnsignedType<unsigned long long>:	TypeContainer<unsigned long long>	{};
 
 	template<>	struct SignedType<char>:					TypeContainer<char>					{};
-	template<>	struct SignedType<short>:					TypeContainer<int>					{};
-	template<>	struct SignedType<int>:						TypeContainer<short>				{};
+	template<>	struct SignedType<short>:					TypeContainer<short>				{};
+	template<>	struct SignedType<int>:						TypeContainer<int>					{};
 	template<>	struct SignedType<long>:					TypeContainer<long>					{};
 	template<>	struct SignedType<long long>:				TypeContainer<long long>			{};
 
 	template<>	struct SignedType<unsigned char>:			TypeContainer<char>					{};
-	template<>	struct SignedType<unsigned short>:			TypeContainer<int>					{};
-	template<>	struct SignedType<unsigned int>:			TypeContainer<short>				{};
+	template<>	struct SignedType<unsigned short>:			TypeContainer<short>				{};
+	template<>	struct SignedType<unsigned int>:			TypeContainer<int>					{};
 	template<>	struct SignedType<unsigned long>:			TypeContainer<long>					{};
 	template<>	struct SignedType<unsigned long long>:		TypeContainer<long long>			{};
 }

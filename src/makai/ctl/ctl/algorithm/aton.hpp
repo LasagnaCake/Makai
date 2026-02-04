@@ -62,10 +62,10 @@ namespace Impl {
 				default:	return +1;
 			}
 		}
-		
+
 		/// @brief Shifts a value by a given base, and appends another value to it.
 		/// @tparam T Integer type.
-		/// @param val Target to append to. 
+		/// @param val Target to append to.
 		/// @param base Base to shift by.
 		/// @param digit Value to append.
 		/// @return Reference to target.
@@ -140,7 +140,7 @@ namespace Impl {
 			}
 			return base ? base : 10;
 		}
-		
+
 		/// @brief Returns whether the given string is in the specified base.
 		/// @tparam T Character type.
 		/// @param str string to check.
@@ -171,19 +171,19 @@ namespace Impl {
 /// @return Whether the operation was successful.
 /// @note
 ///		Valid base prefixes:
-///		
+///
 ///		- `0b`:	Binary.
-///		
+///
 ///		- `0t`:	Trinary.
-///		
+///
 ///		- `0q`:	Quaternary.
-///		
+///
 ///		- `0o`:	Octal.
-///		
+///
 ///		- `0d`:	Decimal.
-///		
+///
 ///		- `0x`:	Hexadecimal.
-///		
+///
 ///		- `0y`:	Duotrigesimal.
 /// @warning "Implicit Octals" (octal values whose prefix are only `0`) are invalid, and are treated as decimal values!
 template<Type::Integer I, Type::ASCII T>
@@ -234,19 +234,19 @@ constexpr bool atoi(ref<T const> const str, usize size, I& out, usize base = 0) 
 /// @return Whether the operation was successful.
 /// @note
 ///		Valid base prefixes:
-///		
+///
 ///		- `0b`:	Binary.
-///		
+///
 ///		- `0t`:	Trinary.
-///		
+///
 ///		- `0q`:	Quaternary.
-///		
+///
 ///		- `0o`:	Octal.
-///		
+///
 ///		- `0d`:	Decimal.
-///		
+///
 ///		- `0x`:	Hexadecimal.
-///		
+///
 ///		- `0y`:	Duotrigesimal.
 /// @warning "Implicit Octals" (octal values whose prefix are only `0`) are invalid, and are treated as decimal values!
 template<Type::Integer I, Type::ASCII T, usize S>

@@ -33,21 +33,21 @@ struct IEEEFloat<64> {
 /// @brief Mathematical constants.
 namespace Constants {
 	/// @brief Approximate value of the square root of 2, to the first 64 decimal places.
-	constexpr const ldouble	SQRT2	= 1.4142135623730950488016887242096980785696718753769480731766797380;
+	constexpr const litfloat	SQRT2	= 1.4142135623730950488016887242096980785696718753769480731766797380;
 	/// @brief Approximate value of the square root of 3, to the first 64 decimal places.
-	constexpr const ldouble	SQRT3	= 1.7320508075688772935274463415058723669428052538103806280558069795;
+	constexpr const litfloat	SQRT3	= 1.7320508075688772935274463415058723669428052538103806280558069795;
 	/// @brief Approximate value of the natural logarithm of 2, to the first 64 decimal places.
-	constexpr const ldouble	LN2		= 0.6931471805599453094172321214581765680755001343602552541206800095;
+	constexpr const litfloat	LN2		= 0.6931471805599453094172321214581765680755001343602552541206800095;
 	/// @brief Approximate value of the natural logarithm of 10, to the first 64 decimal places.
-	constexpr const ldouble LN10	= 2.3025850929940456840179914546843642076011014886287729760333279010;
+	constexpr const litfloat LN10	= 2.3025850929940456840179914546843642076011014886287729760333279010;
 	/// @brief Approximate value of pi, to the first 64 decimal places.
-	constexpr const ldouble	PI		= 3.1415926535897932384626433832795028841971693993751058209749445923;
+	constexpr const litfloat	PI		= 3.1415926535897932384626433832795028841971693993751058209749445923;
 	/// @brief Approximate value of tau (double of pi), to the first 64 decimal places.
-	constexpr const ldouble	TAU		= 6.2831853071795864769252867665590057683943387987502116419498891846;
+	constexpr const litfloat	TAU		= 6.2831853071795864769252867665590057683943387987502116419498891846;
 	/// @brief Approximate value of euler's constant, to the first 64 decimal places.
-	constexpr const ldouble	EULER	= 2.7182818284590452353602874713526624977572470936999595749669676277;
+	constexpr const litfloat	EULER	= 2.7182818284590452353602874713526624977572470936999595749669676277;
 	/// @brief Approximate value of the golden ratio, to the first 64 decimal places.
-	constexpr const ldouble	PHI		= 1.6180339887498948482045868343656381177203091798057628621354486227;
+	constexpr const litfloat	PHI		= 1.6180339887498948482045868343656381177203091798057628621354486227;
 }
 
 /// @brief Returns if `a` is between `b - epsilon` and `b + epsilon`.
@@ -94,7 +94,7 @@ namespace {
 /// @return euler's number raised to the given value.
 template<Type::Real F = double>
 constexpr F exp(F const value, usize precision = sizeof(F) * 4) {
-	if constexpr (CTL_MATH_CAN_BUILTIN(exp)) {	
+	if constexpr (CTL_MATH_CAN_BUILTIN(exp)) {
 		if constexpr (Type::Equal<F, float>)
 			return __builtin_expf(value);
 		else if constexpr (Type::Equal<F, double>)
@@ -120,7 +120,7 @@ static_assert(compare<double>(exp<double>(1.0), Constants::EULER));
 /// @return Natural logarithm of number.
 template<Type::Real F = double>
 constexpr F log(F value, F const precision = sizeof(F) * 4) {
-	if constexpr(CTL_MATH_CAN_BUILTIN(log)) {	
+	if constexpr(CTL_MATH_CAN_BUILTIN(log)) {
 		if (!value) return 0;
 		if constexpr (Type::Equal<F, float>)
 			return __builtin_logf(value);
@@ -258,7 +258,7 @@ static_assert(compare<double>(sqrt<double>(4.0), 2));
 /// @return Remainder.
 template<Type::Real F = double>
 constexpr F fmod(F const val, F const mod) {
-	if constexpr (CTL_MATH_CAN_BUILTIN(fmod)) {	
+	if constexpr (CTL_MATH_CAN_BUILTIN(fmod)) {
 		if constexpr (Type::Equal<F, float>)
 			return __builtin_fmodf(val, mod);
 		else if constexpr (Type::Equal<F, double>)
@@ -420,7 +420,7 @@ constexpr F sin(F const angle) {
 			return __builtin_sin(angle);
 		else
 			return __builtin_sinl(angle);
-	} else {	
+	} else {
 		return Impl::Trigonometry::sin<F>(angle);
 	}
 }
@@ -456,7 +456,7 @@ constexpr F tan(F const angle) {
 			return __builtin_tan(angle);
 		else
 			return __builtin_tanl(angle);
-	} else {	
+	} else {
 		F s, c;
 		sincos<F>(angle, s, c);
 		return s / c;
@@ -483,22 +483,22 @@ namespace Literals::Numbers {
 	#else
 	#pragma GCC diagnostic ignored "-Wuser-defined-literals"
 	#endif
-	constexpr ldouble operator "" sqrt2(ullong v)	{return static_cast<ldouble>(v) * Math::Constants::SQRT2;	}
-	constexpr ldouble operator "" sqrt2(ldouble v)	{return v * Math::Constants::SQRT2;							}
-	constexpr ldouble operator "" sqrt3(ullong v)	{return static_cast<ldouble>(v) * Math::Constants::SQRT3;	}
-	constexpr ldouble operator "" sqrt3(ldouble v)	{return v * Math::Constants::SQRT3;							}
-	constexpr ldouble operator "" ln2(ullong v)		{return static_cast<ldouble>(v) * Math::Constants::LN2;		}
-	constexpr ldouble operator "" ln2(ldouble v)	{return v * Math::Constants::LN10;							}
-	constexpr ldouble operator "" ln10(ullong v)	{return static_cast<ldouble>(v) * Math::Constants::LN2;		}
-	constexpr ldouble operator "" ln10(ldouble v)	{return v * Math::Constants::LN10;							}
-	constexpr ldouble operator "" pi(ullong v)		{return static_cast<ldouble>(v) * Math::Constants::PI;		}
-	constexpr ldouble operator "" pi(ldouble v)		{return v * Math::Constants::PI;							}
-	constexpr ldouble operator "" tau(ullong v)		{return static_cast<ldouble>(v) * Math::Constants::TAU;		}
-	constexpr ldouble operator "" tau(ldouble v)	{return v * Math::Constants::TAU;							}
-	constexpr ldouble operator "" euler(ullong v)	{return static_cast<ldouble>(v) * Math::Constants::EULER;	}
-	constexpr ldouble operator "" euler(ldouble v)	{return v * Math::Constants::EULER;							}
-	constexpr ldouble operator "" phi(ullong v)		{return static_cast<ldouble>(v) * Math::Constants::PHI;		}
-	constexpr ldouble operator "" phi(ldouble v)	{return v *Math:: Constants::PHI;							}
+	constexpr litfloat operator "" sqrt2(litint v)		{return static_cast<litfloat>(v) * Math::Constants::SQRT2;	}
+	constexpr litfloat operator "" sqrt2(litfloat v)	{return v * Math::Constants::SQRT2;							}
+	constexpr litfloat operator "" sqrt3(litint v)		{return static_cast<litfloat>(v) * Math::Constants::SQRT3;	}
+	constexpr litfloat operator "" sqrt3(litfloat v)	{return v * Math::Constants::SQRT3;							}
+	constexpr litfloat operator "" ln2(litint v)		{return static_cast<litfloat>(v) * Math::Constants::LN2;	}
+	constexpr litfloat operator "" ln2(litfloat v)		{return v * Math::Constants::LN10;							}
+	constexpr litfloat operator "" ln10(litint v)		{return static_cast<litfloat>(v) * Math::Constants::LN2;	}
+	constexpr litfloat operator "" ln10(litfloat v)		{return v * Math::Constants::LN10;							}
+	constexpr litfloat operator "" pi(litint v)			{return static_cast<litfloat>(v) * Math::Constants::PI;		}
+	constexpr litfloat operator "" pi(litfloat v)		{return v * Math::Constants::PI;							}
+	constexpr litfloat operator "" tau(litint v)		{return static_cast<litfloat>(v) * Math::Constants::TAU;	}
+	constexpr litfloat operator "" tau(litfloat v)		{return v * Math::Constants::TAU;							}
+	constexpr litfloat operator "" euler(litint v)		{return static_cast<litfloat>(v) * Math::Constants::EULER;	}
+	constexpr litfloat operator "" euler(litfloat v)	{return v * Math::Constants::EULER;							}
+	constexpr litfloat operator "" phi(litint v)		{return static_cast<litfloat>(v) * Math::Constants::PHI;	}
+	constexpr litfloat operator "" phi(litfloat v)		{return v *Math:: Constants::PHI;							}
 	#pragma GCC diagnostic pop
 }
 
@@ -511,21 +511,21 @@ CTL_NAMESPACE_END
 #pragma GCC diagnostic ignored "-Wuser-defined-literals"
 #endif
 /// @brief Custom floating point literal.
-constexpr float			operator "" f(unsigned long long v)		{return v;	}
+constexpr float			operator "" f(litint v)		{return v;	}
 /// @brief Custom floating point literal.
-constexpr float			operator "" F(unsigned long long v)		{return v;	}
+constexpr float			operator "" F(litint v)		{return v;	}
 /// @brief Custom double precision point literal.
-constexpr double		operator "" d(unsigned long long v)		{return v;	}
+constexpr double		operator "" d(litint v)		{return v;	}
 /// @brief Custom double precision point literal.
-constexpr double		operator "" D(unsigned long long v)		{return v;	}
+constexpr double		operator "" D(litint v)		{return v;	}
 /// @brief Custom quadruple precision point literal.
-constexpr long double	operator "" ld(long double v)			{return v;	}
+constexpr long double	operator "" ld(litfloat v)	{return v;	}
 /// @brief Custom quadruple precision point literal.
-constexpr long double	operator "" LD(long double v)			{return v;	}
+constexpr long double	operator "" LD(litfloat v)	{return v;	}
 /// @brief Custom quadruple precision point literal.
-constexpr long double	operator "" ld(unsigned long long v)	{return v;	}
+constexpr long double	operator "" ld(litint v)	{return v;	}
 /// @brief Custom quadruple precision point literal.
-constexpr long double	operator "" LD(unsigned long long v)	{return v;	}
+constexpr long double	operator "" LD(litint v)	{return v;	}
 
 using namespace CTL::Math::Constants;
 

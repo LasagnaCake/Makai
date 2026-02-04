@@ -143,7 +143,7 @@ struct StateMachine {
 	/// @param to State to end up in.
 	/// @param priority Priority of path. By default, it is the lowest possible priority (`0`).
 	/// @return Reference to self.
-	constexpr StateMachine& setPath(StateType const& from, StateType const& to, PriorityType const priority = 0ull) {
+	constexpr StateMachine& setPath(StateType const& from, StateType const& to, PriorityType const priority = Cast::as<usize>(0)) {
 		forward[from][to] = priority;
 		reverse[to][from] = priority;
 		return *this;
@@ -166,7 +166,7 @@ struct StateMachine {
 
 	/// @brief Current state.
 	StateType	current;
-	
+
 private:
 	constexpr static StateType getStateByBehaviour(
 		StateMap const& map,
@@ -194,7 +194,7 @@ private:
 		}
 		return currentState;
 	}
-	
+
 	constexpr static StateType firstMatch(StateMap const& map, usize const& priority, StateType const& startState) {
 		StateType currentState = startState;
 		for (auto const& [state, id]: map)
@@ -204,7 +204,7 @@ private:
 			}
 		return currentState;
 	}
-	
+
 	constexpr static StateType lastMatch(StateMap const& map, usize const& priority, StateType const& startState) {
 		StateType currentState = startState;
 		for (auto const& [state, id]: map)

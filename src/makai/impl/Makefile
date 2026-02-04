@@ -1,7 +1,7 @@
 ROOT := ../../..
 include $(ROOT)/make/core.make
 
-INCLUDES := $(INC_STB) $(INC_CUTE) $(INC_MINIAUDIO)
+INCLUDES := $(INC_STB) $(INC_CUTE) $(INC_SDL) $(INC_MINIAUDIO)
 
 override prefix := $(call concat, $(prefix), impl)
 

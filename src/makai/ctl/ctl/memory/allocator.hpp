@@ -7,6 +7,8 @@
 #include "../templates.hpp"
 #include "core.hpp"
 
+#include <memory>
+
 CTL_NAMESPACE_BEGIN
 
 namespace Type {
@@ -112,7 +114,7 @@ private:
 };
 
 /// @brief Tags the class as manually managing memory.
-/// @tparam TAlloc<class> Allocator type. 
+/// @tparam TAlloc<class> Allocator type.
 /// @tparam TData Type to handle memory for.
 template<template <class> class TAlloc, class TData>
 requires Type::Memory::Allocator<TAlloc, TData>
@@ -225,7 +227,7 @@ private:
 
 /// @brief Tags the class as manually managing memory, and is aware of evaluation contexts.
 /// @tparam TData Type to handle memory for.
-/// @tparam TAlloc<class> Runtime allocator type. 
+/// @tparam TAlloc<class> Runtime allocator type.
 /// @tparam TAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 template<class TData, template <class> class TAlloc, template <class> class TConstAlloc = ConstantAllocator>
 requires Type::Memory::Allocator<TAlloc, TData>
@@ -241,7 +243,7 @@ struct ContextAwareAllocatable:
 	;
 
 	/// @brief Context-aware allocator type.
-	using ContextAllocatorType = ContextAllocator<TAlloc, TConstAlloc, TData>; 
+	using ContextAllocatorType = ContextAllocator<TAlloc, TConstAlloc, TData>;
 };
 
 CTL_NAMESPACE_END

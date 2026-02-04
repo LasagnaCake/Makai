@@ -1,18 +1,18 @@
 #ifndef CTL_RANDOM_ENGINE_H
 #define CTL_RANDOM_ENGINE_H
 
-#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
-#include <windows.h>
-//#include <bcrypt.h>
-#else
-#endif
-
 #include "../os/time.hpp"
 #include "../typeinfo.hpp"
 #include "../meta/logic.hpp"
 #include "../typetraits/verify.hpp"
 #include "ctprng.hpp"
 #include "mersenne.hpp"
+
+#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
+#include <windows.h>
+//#include <bcrypt.h>
+#else
+#endif
 
 CTL_NAMESPACE_BEGIN
 
@@ -95,8 +95,8 @@ namespace Engine {
 		/// @brief Destructor.
 		virtual ~Mersenne() {}
 
-		/// @brief 
-		/// @return 
+		/// @brief
+		/// @return
 		constexpr virtual usize getSeed() final {
 			return engine.getSeed();
 		}
@@ -192,10 +192,26 @@ namespace Engine {
 	/// @brief Secure random engine.
 	/// @warning Currently unimplemented!
 	struct Secure: Base::ISecureEngine {
+		/// @brief Default constructor.
+		Secure() {}
+
+		/// @brief Move constructor.
+		/// @param other `Secure` engine to move.
+		Secure(Secure&& other)					= default;
+		/// @brief Copy constructor (deleted).
+		Secure(Secure const& other)				= delete;
+
+		/// @brief Move constructor.
+		/// @param other `Secure` engine to move.
+		Secure& operator=(Secure&& other)		= default;
+		/// @brief Copy constructor (deleted).
+		Secure& operator=(Secure const& other)	= delete;
+
+		/// @brief Destructor.
+		virtual ~Secure() {}
 		/// @brief Generates a new random number.
 		/// @return Generated number.
-		/// @warning Currently unimplemented! Returns zero.
-		virtual usize next() final {return 0;}
+		virtual usize next() final {return system("/dev/urandom");}
 	};
 	#endif
 }

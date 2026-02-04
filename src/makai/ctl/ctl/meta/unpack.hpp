@@ -5,7 +5,7 @@
 #include "../typetraits/decay.hpp"
 #include "../container/tuple.hpp"
 
-CTL_NAMESPACE_BEGIN	
+CTL_NAMESPACE_BEGIN
 
 namespace Meta::Unpack {
 	namespace Impl {
@@ -25,7 +25,7 @@ namespace Meta::Unpack {
 			using All		= Tuple<Types...>;
 		};
 	}
-	
+
 	template <class T, usize N>
 	using Type = typename Impl::Unpack<T>::template Type<N>;
 	template <class T>

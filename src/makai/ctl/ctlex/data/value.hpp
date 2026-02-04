@@ -52,7 +52,7 @@ namespace Data {
 		using VectorType		= Math::Vector4;
 		/// @brief Vector type.
 		using IdentifierType	= ID::VLUID;
-		
+
 		/// @brief Underlying value type.
 		enum class Kind: int16 {
 			DVK_VOID,
@@ -91,12 +91,12 @@ namespace Data {
 			/// @brief Path breakdown.
 			List<KeyValuePair<ssize, StringType>> nodes;
 		};
-		
+
 		/// @brief Element path.
 		struct Path {
-			/// @brief Path.	
+			/// @brief Path.
 			StringType value;
-			
+
 			/// @brief Returns the path as a compiled path.
 			/// @return Compiled path.
 			constexpr CompiledPath compiled() const {
@@ -203,7 +203,7 @@ namespace Data {
 			}
 			return *this;
 		}
-		
+
 		/// @brief Returns whether the type is undefined.
 		constexpr static bool isUndefined(Kind const kind)	{return kind == Kind::DVK_UNDEFINED;	}
 		/// @brief Returns whether the type is null.
@@ -334,14 +334,14 @@ namespace Data {
 		/// @param out Output.
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Number T>
-		constexpr bool tryGet(T& out) const 
+		constexpr bool tryGet(T& out) const
 		requires ::CTL::Type::Different<T, bool> {
 			if (isInteger() || isBoolean())	out = content.integer;
 			else if (isReal())				out = content.real;
 			else return false;
 			return true;
 		}
-		
+
 		/// @brief Tries to get the value as a given type.
 		/// @tparam T value type.
 		/// @param out Output.
@@ -610,7 +610,7 @@ namespace Data {
 			extendArray(index);
 			return (*content.array)[index];
 		}
-		
+
 		/// @brief Object element access operator.
 		/// @param key Element key.
 		/// @return Element at given key.
@@ -642,7 +642,7 @@ namespace Data {
 				return operator[](key.value).operator[](path);
 			}
 		}
-		
+
 		/// @brief Object element access operator.
 		/// @param index Element index.
 		/// @return Element at given index.
@@ -855,7 +855,7 @@ namespace Data {
 		/// @brief Returns the object's contents as a list of key-value pairs.
 		/// @return Object contents, or empty list if not an object.
 		constexpr ObjectItemListType items() const;
-	
+
 		/// @brief Object key list type.
 		using ObjectKeyListType = List<StringType>;
 
@@ -867,15 +867,6 @@ namespace Data {
 		/// @param other Value to append.
 		/// @return Reference to self.
 		constexpr Value& append(Value const& other);
-
-		/// @brief Appends a series of values into this one.
-		/// @param values Values to append.
-		/// @return Reference to self.
-		constexpr Value& append(List<Value> const& values) {
-			for (auto const& v: values)
-				append(v);
-			return *this;			
-		}
 
 		/// @brief Appends a series of values into this one.
 		/// @param values... Values to append.
@@ -892,11 +883,11 @@ namespace Data {
 		/// @param rest... Other values to merge.
 		/// @return Reference to self.
 		template <class... Types>
-		constexpr Value merge(Value first, Types const&... rest)
+		static constexpr Value merge(Value first, Types const&... rest)
 		requires (... && Type::CanBecome<Types, Value>) {
 			return first.append(rest...);
 		}
-		
+
 		/// @brief Returns compiler, OS and architecture information as a value.
 		/// @return Information.
 		constexpr static Value info();
@@ -1059,11 +1050,11 @@ namespace Data {
 		while (count >= static_cast<ssize>(size()))
 			content.array->pushBack(undefined());
 	}
-	
+
 	constexpr Value& Value::read(ssize const index) {
 		return content.array->operator[](index);
 	}
-	
+
 	constexpr Value Value::read(ssize const index) const {
 		return content.array->operator[](index);
 	}
@@ -1071,7 +1062,7 @@ namespace Data {
 	constexpr Value& Value::read(Value::StringType const& key) {
 		return content.object->operator[](key);
 	}
-	
+
 	constexpr Value Value::read(Value::StringType const& key) const {
 		return content.object->operator[](key);
 	}
@@ -1134,9 +1125,9 @@ namespace Data {
 		result["arch"]	= "x86";
 		#elif defined(__aarch64__) || defined(_M_ARM64)
 		result["arch"]	= "arm64";
-		#else 
+		#else
 		result["arch"]	= "unknown";
-		#endif 
+		#endif
 		return result;
 	}
 

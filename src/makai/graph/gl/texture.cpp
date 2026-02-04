@@ -103,7 +103,7 @@ Texture2D Texture2D::fromJSON(JSON::Value img, String const& sourcepath) {
 	} else if (img["data"].isString() && !img["data"].get<String>().empty()) {
 		List<ubyte> data = Makai::Data::decode(img["data"].get<String>(), Makai::Data::fromString((String)img["encoding"]));
 		int w, h, nc;
-		uchar* imgdat = stbi_load_from_memory(
+		uint8* imgdat = stbi_load_from_memory(
 			data.data(),
 			data.size(),
 			&w,
@@ -139,7 +139,7 @@ Texture2D::Texture2D(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uchar* const			data,
+	uint8* const			data,
 	ComponentLayout const&	layout
 ): Texture2D::Texture2D() {
 	create(
@@ -192,7 +192,7 @@ Texture2D& Texture2D::create(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uchar* const			data,
+	uint8* const			data,
 	ComponentLayout const&	layout
 ) {
 	if (exists()) return *this;
@@ -232,7 +232,7 @@ Texture2D& Texture2D::create(
 	int imgWidth, imgHeight;
 	int nrChannels;
 	BinaryData<> imgdat = File::getBinary(path);
-	uchar* data = stbi_load_from_memory(imgdat.data(), imgdat.size(), &imgWidth, &imgHeight, &nrChannels, 4);
+	uint8* data = stbi_load_from_memory(imgdat.data(), imgdat.size(), &imgWidth, &imgHeight, &nrChannels, 4);
 	imgdat.clear();
 	if (data) {
 		create(
@@ -327,7 +327,7 @@ Texture2D& Texture2D::make(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uchar* const			data,
+	uint8* const			data,
 	ComponentLayout const&	layout
 ) {
 	destroy();
@@ -487,21 +487,21 @@ Image2D::Attributes Texture2D::attributes() const {
 	return image->attributes;
 }
 
-Texture2D& Texture2D::enable(uchar const slot) {
+Texture2D& Texture2D::enable(uint8 const slot) {
 	image->use(slot);
 	return *this;
 }
 
-Texture2D const& Texture2D::enable(uchar const slot) const {
+Texture2D const& Texture2D::enable(uint8 const slot) const {
 	image->use(slot);
 	return *this;
 }
 
-Texture2D& Texture2D::operator()(uchar const slot) {
+Texture2D& Texture2D::operator()(uint8 const slot) {
 	return enable(slot);
 }
 
-Texture2D const& Texture2D::operator()(uchar const slot) const {
+Texture2D const& Texture2D::operator()(uint8 const slot) const {
 	return enable(slot);
 }
 

@@ -91,7 +91,7 @@ template<class T> using AsTemporary	= typename Impl::TemporaryType<T>::Type;
 
 /// @brief Adds `const` qualifier to type.
 template<class T> using AsConstant		= typename Impl::ConstantType<T>::Type;
-/// @brief Adds `volatile` qualifier to type. 
+/// @brief Adds `volatile` qualifier to type.
 template<class T> using AsVolatile		= typename Impl::VolatileType<T>::Type;
 /// @brief Adds `const` and `volatile` qualifier to type.
 template<class T> using AsConstVolatile	= typename Impl::ConstVolatileType<T>::Type;
@@ -102,10 +102,10 @@ template<class T> using AsArrayElement = typename Impl::ArrayElementType<T>::Typ
 /// @brief Gets the underlying element of a C-style array-of-arrays type.
 template<class T> using AsNonExtent	= typename Impl::NonExtentType<T>::Type;
 
-/// @brief Makes a C-style array type from a given type. 
+/// @brief Makes a C-style array type from a given type.
 template<class T> using AsArray	= typename Impl::ArrayType<T>::Type;
 
-/// @brief Makes a C-style fixed array type from a given type. 
+/// @brief Makes a C-style fixed array type from a given type.
 template<class T, usize N> using AsFixedArray = typename Impl::FixedArrayType<T, N>::Type;
 
 /// @brief Gets the return type of a function type.

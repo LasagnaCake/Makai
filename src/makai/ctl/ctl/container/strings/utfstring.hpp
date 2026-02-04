@@ -95,7 +95,7 @@ namespace UTF {
 
 		/// @brief Constructs the unicode character from a given range.
 		template<class T>
-		constexpr explicit Character(ref<T const> begin, ref<T const> const end) 
+		constexpr explicit Character(ref<T const> begin, ref<T const> const end)
 		requires (TYPE == 32): Character() {
 			As<uint8[4]> buf = {0, 0, 0, 0};
 			if (end <= begin) return;
@@ -155,7 +155,7 @@ namespace UTF {
 		}
 
 		/// @brief Converts an unicode code point to a scalar value.
-		constexpr static uint32 toScalar(As<uint8 const[4]> const& bytes, usize const sz) 
+		constexpr static uint32 toScalar(As<uint8 const[4]> const& bytes, usize const sz)
 		requires (TYPE == 8) {
 			uint32 chr{0};
 			switch (sz) {
@@ -182,7 +182,7 @@ namespace UTF {
 		}
 
 		/// @brief Converts an unicode code point to a scalar value.
-		constexpr static uint32 toScalar(As<uint8 const[4]> const& bytes, usize const sz) 
+		constexpr static uint32 toScalar(As<uint8 const[4]> const& bytes, usize const sz)
 		requires (TYPE == 32) {
 			return bitcast<uint32>(bytes);
 		}
@@ -198,7 +198,7 @@ namespace UTF {
 		template<class TDst, class TSrc>
 		constexpr static TDst recast(TSrc const& src) {
 			using PassType = Meta::DualType<Type::Unsigned<TSrc>, AsUnsigned<TDst>, AsSigned<TDst>>;
-			return bitcast<TDst>(static_cast<PassType>(src));	
+			return bitcast<TDst>(static_cast<PassType>(src));
 		}
 
 		constexpr void updateCodeSize() requires (TYPE == 32) {}
@@ -293,7 +293,7 @@ namespace UTF {
 			typename Streamable::InputStreamType,
 			typename Streamable::OutputStreamType
 		;
-		
+
 		using
 	//		BaseType::BaseType,
 			BaseType::allocator,
@@ -477,7 +477,7 @@ namespace UTF {
 		constexpr UTFString(T const& other)
 		requires (!Type::Subclass<T, SelfType>):
 			UTFString(other.begin(), other.end()) {}
-		
+
 		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
@@ -488,13 +488,13 @@ namespace UTF {
 		&&	!Type::Container::Ranged<T, IteratorType, ConstIteratorType>
 		): UTFString(other.data(), other.size()) {}
 
-		
+
 		/// @brief Constructs an `UTFString`, from a ranged object of (non-subclass) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
 		template<Type::Container::Ranged<typename String::IteratorType, typename String::ConstIteratorType> T>
 		constexpr UTFString(T const& other): UTFString(other.begin(), other.end()) {}
-		
+
 		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
@@ -508,7 +508,7 @@ namespace UTF {
 		/// @param other Object to copy from.
 		template<Type::Container::Ranged<U8IteratorType, U8ConstIteratorType> T>
 		constexpr UTFString(T const& other): UTFString(other.begin(), other.end()) {}
-		
+
 		/// @brief Constructs an `UTFString`, from a bounded object of (non-list) type T.
 		/// @tparam T Ranged type.
 		/// @param other Object to copy from.
@@ -536,7 +536,7 @@ namespace UTF {
 			BaseType::appendBack(SelfType(v, v+len));
 			BaseType::tighten();
 		}
-		
+
 		/// @brief Constructos an `UTFString` from a STL view analog.
 		/// @param str View to copy from.
 		constexpr UTFString(typename String::STDViewType const& str):	UTFString(&*str.begin(), &*str.end())	{}
@@ -547,7 +547,7 @@ namespace UTF {
 		/// @brief Destructor.
 		constexpr ~UTFString() {}
 
-		/// @brief Adds a new character to the end of the `UTFString`. 
+		/// @brief Adds a new character to the end of the `UTFString`.
 		/// @param value Character to add.
 		/// @return Reference to self.
 		constexpr SelfType& pushBack(DataType const& value) {
@@ -592,7 +592,7 @@ namespace UTF {
 			BaseType::insert(BaseType(other.begin(), other.end()), index);
 			return *this;
 		}
-		
+
 		/// @brief Inserts a given character, a given amount of times, at a specified index in the `UTFString`.
 		/// @param value Character to be inserted.
 		/// @param count Amount of times to insert the character.
@@ -687,7 +687,7 @@ namespace UTF {
 			BaseType::back() = '\0';
 			return *this;
 		}
-		
+
 		/// @brief Resizes the `UTFString`, so the capacity is of a given size, then sets current size to it.
 		/// @param newSize New `UTFString` size.
 		/// @param fill Character to use as fill.
@@ -704,7 +704,7 @@ namespace UTF {
 			BaseType::back() = '\0';
 			return *this;
 		}
-		
+
 		/// @brief
 		///		Expands the `UTFString`, such that it can hold AT LEAST the current size,
 		///		plus a given `count`.
@@ -782,7 +782,7 @@ namespace UTF {
 			wrapBounds(index);
 			return BaseType::remove(index);
 		}
-		
+
 		/// @brief Removes characters that match a given character.
 		/// @param value Character to match.
 		/// @return Count of characters removed.
@@ -794,13 +794,13 @@ namespace UTF {
 			if (value == '\0') BaseType::back() = '\0';
 			return count;
 		}
-		
+
 		/// @brief Removes characters that do not match a given character.
 		/// @param value Character to match.
 		/// @return Count of characters removed.
 		/// @note
 		///		Does not resize `UTFString`, merely moves it to the end, and destructs it.
-		///		If you need the `UTFString` size to change, use `erase`. 
+		///		If you need the `UTFString` size to change, use `erase`.
 		constexpr SizeType removeUnlike(DataType const& value) {
 			SizeType count = BaseType::removeUnlike(value) - (value == '\0');
 			if (value == '\0') BaseType::back() = '\0';
@@ -813,7 +813,7 @@ namespace UTF {
 		/// @return Count of characters removed.
 		/// @note
 		///		Does not resize `UTFString`, merely moves it to the end, and destructs it.
-		///		If you need the `UTFString` size to change, use `erase`. 
+		///		If you need the `UTFString` size to change, use `erase`.
 		template<class TPredicate>
 		constexpr SizeType removeIf(TPredicate const& predicate) {
 			SizeType count = BaseType::removeIf(predicate);
@@ -828,7 +828,7 @@ namespace UTF {
 		/// @return Count of characters removed.
 		/// @note
 		///		Does not resize `UTFString`, merely moves it to the end, and destructs it.
-		///		If you need the `UTFString` size to change, use `erase`. 
+		///		If you need the `UTFString` size to change, use `erase`.
 		template<class TPredicate>
 		constexpr SizeType removeIfNot(TPredicate const& predicate) {
 			SizeType count = BaseType::removeIfNot(predicate);
@@ -843,7 +843,7 @@ namespace UTF {
 		/// @throw OutOfBoundsException when index is bigger than `UTFString` size.
 		/// @note
 		///		Resizes the `UTFString`.
-		///		If you need the `UTFString` size to remain the same, use `remove`. 
+		///		If you need the `UTFString` size to remain the same, use `remove`.
 		constexpr SelfType& erase(IndexType const index) {
 			assertIsInBounds(index);
 			wrapBounds(index);
@@ -983,12 +983,12 @@ namespace UTF {
 			}
 			return *this;
 		}
-		
+
 		/// @brief Clears the `UTFString`.
 		/// @return Reference to self.
 		/// @note
 		///		Does not free the underlying character array held by the `UTFString`.
-		///		To actually free the underlying character array, call `dispose`. 
+		///		To actually free the underlying character array, call `dispose`.
 		constexpr SelfType& clear() {
 			BaseType::clear();
 			BaseType::pushBack('\0');
@@ -997,7 +997,7 @@ namespace UTF {
 
 		/// @brief Frees the underlying character array held by the `UTFString`.
 		/// @return Reference to self.
-		/// @note To not free the underlying character array, call `clear`. 
+		/// @note To not free the underlying character array, call `clear`.
 		constexpr SelfType& dispose() {
 			BaseType::dump();
 			return *this;
@@ -1021,7 +1021,7 @@ namespace UTF {
 		/// @brief Returns a reverse iterator to the beginning of the `UTFString`.
 		/// @return Reverse iterator to the beginning of the `UTFString`.
 		constexpr ConstReverseIteratorType	rbegin() const	{return ConstReverseIteratorType(data()+size());	}
-		
+
 		/// @brief Returns the last character.
 		/// @return Last character.
 		/// @throw OutOfBoundsException when `UTFString` is empty.
@@ -1030,7 +1030,7 @@ namespace UTF {
 		/// @return Last character.
 		/// @throw OutOfBoundsException when `UTFString` is empty.
 		constexpr DataType 			back() const	{return at(size()-1);	}
-		
+
 		/// @brief Returns the character at a given index.
 		/// @param index Index of the character.
 		/// @return Reference to the character.
@@ -1050,7 +1050,7 @@ namespace UTF {
 			wrapBounds(index);
 			return BaseType::at(index);
 		}
-		
+
 		/// @brief Returns the character at a given index.
 		/// @param index Index of the character.
 		/// @return Reference to the character.
@@ -1143,7 +1143,7 @@ namespace UTF {
 		constexpr SelfType& operator|=(TProcedure const& fun) {
 			return fun(*this);
 		}
-		
+
 		/// @brief Returns a copy of the `UTFString`, with the given procedure applied to it.
 		/// @tparam TProcedure Procedure type.
 		/// @param fun Procedure to apply.
@@ -1211,7 +1211,7 @@ namespace UTF {
 			}
 			return result;
 		}
-		
+
 		/// @brief Returns the current `UTFString`, divided at a given index.
 		/// @param index The index to use as pivot.
 		/// @return A `List`  containing the two halves of this `UTFString`.
@@ -1244,7 +1244,7 @@ namespace UTF {
 			if (res.empty()) res.pushBack(*this);
 			return res;
 		}
-		
+
 		/// @brief Splits the string by a series of separators.
 		/// @param seps Separators.
 		/// @return List of split strings.
@@ -1263,7 +1263,7 @@ namespace UTF {
 			if (res.empty()) res.pushBack(*this);
 			return res;
 		}
-	
+
 		/// @brief Splits the string at the first character that matches the separator.
 		/// @param sep Separator.
 		/// @return List of split strings.
@@ -1329,7 +1329,7 @@ namespace UTF {
 			}
 			return res;
 		}
-	
+
 		/// @brief Returns a substring, starting at a given point.
 		/// @param start Start of new string.
 		/// @return Resulting substring.
@@ -1347,7 +1347,7 @@ namespace UTF {
 			while (start < 0) start += size();
 			return sliced(start, start + length);
 		}
-		
+
 		/// @brief Replaces any character that matches, with the replacement.
 		/// @param val Character to match.
 		/// @param rep Replacement.
@@ -1418,7 +1418,7 @@ namespace UTF {
 		constexpr OutputStreamType& operator<<(OutputStreamType& o) const	{if (!empty()) o << toString(); return o;}
 		/// @brief Stream insertion operator.
 		constexpr OutputStreamType& operator<<(OutputStreamType& o)			{if (!empty()) o << toString(); return o;}
-		
+
 		/// @brief Stream insertion operator.
 		friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType& self)			{if (!self.empty()) o << self.toString(); return o;}
 		/// @brief Stream insertion operator.
@@ -1461,7 +1461,7 @@ namespace UTF {
 		/// @param str String to compare with.
 		/// @return Order between objects.
 		constexpr OrderType operator<=>(typename String::CStringType const& str) const		{return *this <=> SelfType(str);		}
-		
+
 		/// @brief String concatenation operator (character).
 		/// @param value Character to concatenate.
 		/// @return Resulting concatenated string.
@@ -1522,7 +1522,7 @@ namespace UTF {
 		/// @return Resulting concatenated string.
 		template<SizeType S>
 		friend constexpr SelfType operator+(As<u8char const[S]> const& str, SelfType const& self)			{return UTFString<8>(str) + (self);}
-		
+
 		/// @brief String appending operator (character).
 		/// @param value Caracter to append.
 		/// @return Reference to self.
@@ -1559,14 +1559,14 @@ namespace UTF {
 		/// @brief Returns whether the string is empty.
 		/// @return Whether the string is empty.
 		constexpr SizeType empty() const	{return size() == 0;				}
-		
+
 		/// @brief Returns the string's size.
 		/// @return Size of string.
 		constexpr SizeType size() const {
 			if (BaseType::empty()) return 0;
 			return BaseType::size() - 1;
 		}
-	
+
 		/// @brief Swap algorithm for `UTFString`.
 		/// @param a `UTFString` to swap.
 		/// @param b `UTFString` to swap with.
@@ -1662,9 +1662,9 @@ using UTF32Char	= UTF::U32Char;
 /// @brief String literals.
 namespace Literals::Text::Unicode {
 	/// @brief CTL `UTF8String` literal.
-	constexpr UTF8String operator "" u8s	(cstring cstr, usize sz)	{return UTF8String(cstr, sz);	}
+	constexpr UTF8String operator "" u8s	(cstring cstr, litsize sz)	{return UTF8String(cstr, sz);	}
 	/// @brief CTL `UTF32String` literal.
-	constexpr UTF32String operator "" u32s	(cstring cstr, usize sz)	{return UTF32String(cstr, sz);	}
+	constexpr UTF32String operator "" u32s	(cstring cstr, litsize sz)	{return UTF32String(cstr, sz);	}
 }
 
 CTL_NAMESPACE_END

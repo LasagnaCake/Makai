@@ -240,9 +240,9 @@ void CharLabel::generate() {
 	auto const charEnd		= static_cast<int64>(font->size.x * font->size.y);
 	// Loop through each character and...
 	for (char pc: text->content) {
-		usize c = CTL::bitcast<uchar>(pc);
+		usize c = CTL::bitcast<uint8>(pc);
 		// Check if max characters hasn't been reached
-		if (text->maxChars == 0 || ((llong(curChar) > llong(text->maxChars-1)) && (text->maxChars > -1))) break;
+		if (text->maxChars == 0 || ((ssize(curChar) > ssize(text->maxChars-1)) && (text->maxChars > -1))) break;
 		else curChar++;
 		// Check if character is newline
 		bool
@@ -345,7 +345,7 @@ void UTF8Label::generate() {
 	for (UTF::Character<8> const& pc: text->content) {
 		usize c = pc.value();
 		// Check if max characters hasn't been reached
-		if (text->maxChars == 0 || ((llong(curChar) > llong(text->maxChars-1)) && (text->maxChars > -1))) break;
+		if (text->maxChars == 0 || ((ssize(curChar) > ssize(text->maxChars-1)) && (text->maxChars > -1))) break;
 		else curChar++;
 		// Check if character is newline
 		bool

@@ -12,7 +12,8 @@
 #include <winapifamily.h>
 #include <commdlg.h>
 #else
-
+#include <unistd.h>
+#include <sys/wait.h>
 #endif
 
 CTL_NAMESPACE_BEGIN
@@ -75,15 +76,15 @@ namespace OS {
 		return (int)res;
 		#else
 		List<const char*> prgArgs;
-		prgArgs.pushBack(FS::fileName(path));
+		auto const fname = FS::fileName(path);
+		prgArgs.pushBack(fname.cstr());
 		for (String& arg: args)
 			prgArgs.pushBack(arg.cstr());
 		prgArgs.pushBack(NULL);
 		auto const pid = getpid();
-		auto cpid = pid;
 		fork();
 		if (pid != getpid())
-			return execv(path.cstr(), prgArgs.data());
+			return execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
 		else {
 			int result;
 			wait(&result);

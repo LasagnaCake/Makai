@@ -29,7 +29,7 @@ public:
 	usize delay = 0;
 
 	/// @brief The amount of times to repeat for. If less than zero, loops indefinitely.
-	llong loops = -1;
+	ssize loops = -1;
 
 	/// @brief Constructs the timer.
 	/// @param delay Time between signal events.
@@ -58,7 +58,7 @@ public:
 
 	/// @brief Event to fire.
 	virtual void onEvent() = 0;
-	
+
 	/// @brief Yields a cycle.
 	/// @param delta Delta between cycles.
 	void onUpdate(usize delta) override final {

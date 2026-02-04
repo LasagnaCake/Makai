@@ -51,23 +51,23 @@ namespace Makai::Graph {
 		/// @param slot Image slot to bind to. By default, it is slot zero.
 		/// @param target Image type to enable. By default, it is `IT_TEXTURE_2D`.
 		/// @return Reference to self.
-		Image&			use(uchar const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D);
+		Image&			use(uint8 const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D);
 		/// @brief Enables the image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.
 		/// @param target Image type to enable. By default, it is `IT_TEXTURE_2D`.
 		/// @return Const reference to self.
-		Image const&	use(uchar const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D) const;
+		Image const&	use(uint8 const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D) const;
 
 		/// @brief Enables the image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.
 		/// @param target Image type to enable. By default, it is `IT_TEXTURE_2D`.
 		/// @return Reference to self.
-		Image&			operator()(uchar const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D);
+		Image&			operator()(uint8 const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D);
 		/// @brief Enables the image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.
 		/// @param target Image type to enable. By default, it is `IT_TEXTURE_2D`.
 		/// @return Const reference to self.
-		Image const&	operator()(uchar const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D) const;
+		Image const&	operator()(uint8 const slot = 0, ImageTarget const& target = ImageTarget::IT_TEXTURE_2D) const;
 
 		/// @brief Enables an image to be used in the shader.
 		/// @param image Image ID.
@@ -75,7 +75,7 @@ namespace Makai::Graph {
 		/// @param target Image type to enable. By default, it is `IT_TEXTURE_2D`.
 		static void set(
 			uint const			image,
-			uchar const			slot,
+			uint8 const			slot,
 			ImageTarget const&	target = ImageTarget::IT_TEXTURE_2D
 		);
 
@@ -242,7 +242,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uchar* const			data		= nullptr,
+			uint8* const			data		= nullptr,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO
 		);
 
@@ -263,7 +263,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uchar* const			data		= nullptr,
+			uint8* const			data		= nullptr,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO
 		);
 
@@ -334,7 +334,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uchar* const			data		= NULL,
+			uint8* const			data		= NULL,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO,
 			ImageTarget const&		target		= ImageTarget::IT_TEXTURE_2D
 		);
@@ -359,7 +359,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uchar* const			data		= NULL,
+			uint8* const			data		= NULL,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO,
 			ImageTarget const&		target		= ImageTarget::IT_TEXTURE_2D
 		);

@@ -21,7 +21,7 @@ namespace Makai::Ex::Game::Danmaku {
 	/// @brief Pause state.
 	struct PauseState {
 		/// @brief Duration.
-		llong	time	= -1;
+		ssize	time	= -1;
 		/// @brief Whether pause is enabled.
 		bool	enabled	= false;
 	};
@@ -134,8 +134,8 @@ namespace Makai::Ex::Game::Danmaku {
 		usize spawnTime		= 5;
 		/// @brief Despawn time.
 		usize despawnTime	= 5;
-		
-		/// @brief Spawns the object. Must be implemented. 
+
+		/// @brief Spawns the object. Must be implemented.
 		virtual AGameObject& spawn()	= 0;
 		/// @brief Despawns the object. Must be implemented.
 		virtual AGameObject& despawn()	= 0;
@@ -158,7 +158,7 @@ namespace Makai::Ex::Game::Danmaku {
 			while (!delay && task)
 				delay = task.next();
 		}
-		
+
 		/// @brief Returns whether the object is currently paused.
 		/// @return Whether object is currently paused.
 		bool paused() const {
@@ -188,7 +188,7 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		/// @brief Coroutine task that does nothing.
-		/// @return Promise to coroutine. 
+		/// @return Promise to coroutine.
 		static PromiseType doNothing() {co_return 1;}
 
 		/// @brief Whether the object is currently active.
@@ -350,7 +350,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Destructor.
 		virtual ~IToggleable() {}
 	protected:
-		/// @brief Current toggle state.	
+		/// @brief Current toggle state.
 		State toggleState = State::TS_UNTOGGLED;
 	};
 

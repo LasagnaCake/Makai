@@ -204,7 +204,7 @@ public:
 	constexpr BaseString(T const& other)
 	requires (!Type::Subclass<T, SelfType>):
 		BaseString(other.begin(), other.end()) {}
-	
+
 	/// @brief Constructs a `BaseString`, from a bounded object of (non-list) type T.
 	/// @tparam T Ranged type.
 	/// @param other Object to copy from.
@@ -217,7 +217,7 @@ public:
 
 	/// @brief Destructor.
 	constexpr ~BaseString() {}
-	
+
 	/// @brief Constructs a `BaseString` from a null-terminated string.
 	/// @param v String to copy from.
 	constexpr BaseString(CStringType const& v) {
@@ -242,8 +242,8 @@ public:
 	/// @brief Constructos a `BaseString` from a STL string analog.
 	/// @param str View to copy from.
 	constexpr BaseString(STDStringType const& str):	BaseString(&*str.begin(), &*str.end())	{}
-	
-	/// @brief Adds a new character to the end of the `BaseString`. 
+
+	/// @brief Adds a new character to the end of the `BaseString`.
 	/// @param value Character to add.
 	/// @return Reference to self.
 	constexpr SelfType& pushBack(DataType const& value) {
@@ -262,7 +262,7 @@ public:
 		BaseType::back() = '\0';
 		return value;
 	}
-	
+
 	/// @brief Inserts a character at a specified index in the `BaseString`.
 	/// @param value Character to insert.
 	/// @param index Index of which to insert in.
@@ -288,7 +288,7 @@ public:
 		BaseType::insert(BaseType(other.begin(), other.end()), index);
 		return *this;
 	}
-	
+
 	/// @brief Inserts a given character, a given amount of times, at a specified index in the `BaseString`.
 	/// @param value Character to be inserted.
 	/// @param count Amount of times to insert the character.
@@ -368,7 +368,7 @@ public:
 		BaseType::back() = '\0';
 		return *this;
 	}
-	
+
 	/// @brief Resizes the `BaseString`, so the capacity is of a given size, then sets current size to it.
 	/// @param newSize New `BaseString` size.
 	/// @param fill Character to use as fill.
@@ -385,7 +385,7 @@ public:
 		BaseType::back() = '\0';
 		return *this;
 	}
-	
+
 	/// @brief
 	///		Expands the `BaseString`, such that it can hold AT LEAST the current size,
 	///		plus a given `count`.
@@ -463,7 +463,7 @@ public:
 		wrapBounds(index);
 		return BaseType::remove(index);
 	}
-	
+
 	/// @brief Removes characters that match a given character.
 	/// @param value Character to match.
 	/// @return Count of characters removed.
@@ -475,13 +475,13 @@ public:
 		if (value == '\0') BaseType::back() = '\0';
 		return count;
 	}
-	
+
 	/// @brief Removes characters that do not match a given character.
 	/// @param value Character to match.
 	/// @return Count of characters removed.
 	/// @note
 	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
-	///		If you need the `BaseString` size to change, use `erase`. 
+	///		If you need the `BaseString` size to change, use `erase`.
 	constexpr SizeType removeUnlike(DataType const& value) {
 		SizeType count = BaseType::removeUnlike(value) - (value == '\0');
 		if (value == '\0') BaseType::back() = '\0';
@@ -494,7 +494,7 @@ public:
 	/// @return Count of characters removed.
 	/// @note
 	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
-	///		If you need the `BaseString` size to change, use `erase`. 
+	///		If you need the `BaseString` size to change, use `erase`.
 	template<class TPredicate>
 	constexpr SizeType removeIf(TPredicate const& predicate) {
 		SizeType count = BaseType::removeIf(predicate);
@@ -509,7 +509,7 @@ public:
 	/// @return Count of characters removed.
 	/// @note
 	///		Does not resize `BaseString`, merely moves it to the end, and destructs it.
-	///		If you need the `BaseString` size to change, use `erase`. 
+	///		If you need the `BaseString` size to change, use `erase`.
 	template<class TPredicate>
 	constexpr SizeType removeIfNot(TPredicate const& predicate) {
 		SizeType count = BaseType::removeIfNot(predicate);
@@ -524,7 +524,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `BaseString` size.
 	/// @note
 	///		Resizes the `BaseString`.
-	///		If you need the `BaseString` size to remain the same, use `remove`. 
+	///		If you need the `BaseString` size to remain the same, use `remove`.
 	constexpr SelfType& erase(IndexType const index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
@@ -674,7 +674,7 @@ public:
 	/// @return Reference to self.
 	/// @note
 	///		Does not free the underlying character array held by the `BaseString`.
-	///		To actually free the underlying character array, call `dispose`. 
+	///		To actually free the underlying character array, call `dispose`.
 	constexpr SelfType& clear() {
 		BaseType::clear();
 		BaseType::pushBack('\0');
@@ -683,7 +683,7 @@ public:
 
 	/// @brief Frees the underlying character array held by the `BaseString`.
 	/// @return Reference to self.
-	/// @note To not free the underlying character array, call `clear`. 
+	/// @note To not free the underlying character array, call `clear`.
 	constexpr SelfType& dispose() {
 		BaseType::dump();
 		return *this;
@@ -707,7 +707,7 @@ public:
 	/// @brief Returns a reverse iterator to the beginning of the `BaseString`.
 	/// @return Reverse iterator to the beginning of the `BaseString`.
 	constexpr ConstReverseIteratorType	rbegin() const	{return ConstReverseIteratorType(data()+size());	}
-	
+
 	/// @brief Returns the last character.
 	/// @return Last character.
 	/// @throw OutOfBoundsException when `BaseString` is empty.
@@ -716,7 +716,7 @@ public:
 	/// @return Last character.
 	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr DataType 			back() const	{return at(size()-1);	}
-	
+
 	/// @brief Returns the character at a given index.
 	/// @param index Index of the character.
 	/// @return Reference to the character.
@@ -747,7 +747,7 @@ public:
 	/// @return Character.
 	/// @throw OutOfBoundsException when `BaseString` is empty.
 	constexpr DataType operator[](IndexType const index) const	{return at(index);}
-	
+
 	/// @brief Returns the current size of the underlying character array.
 	/// @return Size of the underlying character array.
 	constexpr SizeType capacity() const	{return BaseType::capacity() - 1;	}
@@ -836,7 +836,7 @@ public:
 	constexpr SelfType& operator|=(TProcedure const& fun) {
 		return fun(*this);
 	}
-	
+
 	/// @brief Returns a copy of the `BaseString`, with the given procedure applied to it.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
@@ -963,7 +963,7 @@ public:
 		if (res.empty()) res.pushBack(*this);
 		return res;
 	}
-	
+
 	/// @brief Splits the string by a series of separators.
 	/// @param seps Separators.
 	/// @return List of split strings.
@@ -982,7 +982,7 @@ public:
 		if (res.empty()) res.pushBack(*this);
 		return res;
 	}
-	
+
 	/// @brief Splits the string at the first character that matches the separator.
 	/// @param sep Separator.
 	/// @return List of split strings.
@@ -1048,7 +1048,7 @@ public:
 		}
 		return res;
 	}
-	
+
 	/// @brief Replaces any character that matches, with the replacement.
 	/// @param val Character to match.
 	/// @param rep Replacement.
@@ -1120,7 +1120,7 @@ public:
 	constexpr OutputStreamType& operator<<(OutputStreamType& o) const	{if (!empty()) o << cstr(); return o;}
 	/// @brief Stream insertion operator.
 	constexpr OutputStreamType& operator<<(OutputStreamType& o)			{if (!empty()) o << cstr(); return o;}
-	
+
 	/// @brief Stream insertion operator.
 	friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType& self)			{if (!self.empty()) o << self.cstr(); return o;}
 	/// @brief Stream insertion operator.
@@ -1136,7 +1136,7 @@ public:
 			appendBack(buf, i.gcount());
 		return i;
 	}
-	
+
 	/// @brief Reads from an input stream until a null character is reached.
 	/// @param i Input stream.
 	/// @return Input stream.
@@ -1209,7 +1209,7 @@ public:
 	/// @return Resulting concatenated string.
 	template<SizeType S>
 	friend constexpr SelfType operator+(As<ConstantType[S]> const& str, SelfType const& self)	{return SelfType(str) + (self);}
-	
+
 	/// @brief String appending operator (character).
 	/// @param value Caracter to append.
 	/// @return Reference to self.
@@ -1252,7 +1252,7 @@ public:
 			appendBack(copy);
 		return *this;
 	}
-	
+
 	/// @brief Equality comparison operator (char array).
 	/// @tparam S Array size.
 	/// @param str Array to compare with.
@@ -1288,7 +1288,7 @@ public:
 			result[i] = data()[i];
 		return result;
 	}
-	
+
 	/// @brief Returns a substring, starting at a given point.
 	/// @param start Start of new string.
 	/// @return Resulting substring.
@@ -1306,7 +1306,7 @@ public:
 		while (start < 0) start += size();
 		return sliced(start, start + length);
 	}
-	
+
 	/// @brief Returns the string as a "c-style" string.
 	/// @return Pointer to beginning of the "c-style" string.
 	constexpr CStringType cstr() const {
@@ -1319,7 +1319,7 @@ public:
 		if (BaseType::empty()) return 0;
 		return BaseType::size() - 1;
 	}
-	
+
 
 	/// @brief Returns the string as lowercase.
 	/// @return Lowercase string.
@@ -1366,7 +1366,7 @@ public:
 	/// @return String as `wchar` string.
 	constexpr SelfType toWideString() const
 	requires Type::Equal<DataType, wchar> {return *this;}
-	
+
 	/// @brief String-to-boolean conversion.
 	///@tparam T Boolean type (`bool`).
 	/// @param str String to convert.
@@ -1385,14 +1385,14 @@ public:
 	/// @return Converted value as number.
 	/// @throw FailedActionException if conversion fails.
 	template<Type::Integer T>
-	constexpr static T toNumber(SelfType const& str, T const& base = 0) 
+	constexpr static T toNumber(SelfType const& str, T const& base = 0)
 	requires Type::Different<T, bool> {
 		T val = T();
 		if (!atoi<T, DataType>(str.data(), str.size(), val, base))
 			throw FailedActionException("String-to-Integer conversion failure!");
 		return val;
 	}
-	
+
 	/// @brief String-to-float conversion.
 	///@tparam T Floating point type.
 	/// @param str String to convert.
@@ -1668,13 +1668,13 @@ template<usize N> using StaticWideString	= BaseStaticString<wchar_t,	N>;
 /// @brief String literals.
 namespace Literals::Text {
 	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cstring cstr, usize sz)	{return String(cstr, sz);					}
+	constexpr String operator "" s		(cstring cstr, litsize sz)	{return String(cstr, sz);					}
 	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cwstring cstr, usize sz)	{return WideString(cstr, sz).toString();	}
+	constexpr String operator "" s		(cwstring cstr, litsize sz)	{return WideString(cstr, sz).toString();	}
 	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cstring cstr, usize sz)	{return String(cstr, sz).toWideString();	}
+	constexpr WideString operator "" ws	(cstring cstr, litsize sz)	{return String(cstr, sz).toWideString();	}
 	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cwstring cstr, usize sz)	{return WideString(cstr, sz);				}
+	constexpr WideString operator "" ws	(cwstring cstr, litsize sz)	{return WideString(cstr, sz);				}
 }
 #pragma GCC diagnostic pop
 

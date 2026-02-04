@@ -1,0 +1,30 @@
+CompileFlags:
+  # Add: [-std=gnu++20, -Wall, -Wpedantic, -fms-extensions, -fconcepts, -fcoroutines, -m64, -Ioutput/include]
+  Add:
+    - -std=gnu++20
+    - -Wall
+    - -Wpedantic
+    - -fms-extensions
+    - -fcoroutines
+    - -m64
+    - -I../../output/include
+Index:
+  Background: Skip
+Diagnostics:
+  UnusedIncludes: None
+Completion:
+  HeaderInsertion: Never
+  ArgumentLists: Delimiters
+InlayHints:
+  Enabled: False
+# If:
+#   PathMatch: src/makai/.*\.(c|cc|cpp)
+#   CompileFlags:
+#     Add:
+#       - -Ilib/SDL2-2.0.10/include
+#       - -Ilib/OpenGL/GLAD/include
+#       - -Ilib/stb
+#       - -Ilib/cute_headers
+#       - -Ilib/cppcodec-0.2
+#       - -Ilib/cryptopp/include
+#       - -Ilib/xml2json/include

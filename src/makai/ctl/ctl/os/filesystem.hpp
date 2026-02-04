@@ -220,7 +220,7 @@ namespace OS::FS {
 		struct Entry {
 			/// @brief Default constructor.
 			constexpr Entry() {}
-			
+
 			/// @brief Constructs a path entry as a file.
 			/// @param name Entry name.
 			/// @param path Relative path to entry.
@@ -245,7 +245,7 @@ namespace OS::FS {
 				epath(other.epath),
 				children(other.children),
 				folder(other.folder) {}
-			
+
 			/// @brief Move constructor.
 			/// @param other `Entry` to move.
 			constexpr Entry(Entry&& other):
@@ -393,7 +393,7 @@ namespace OS::FS {
 		/// @brief Returns the head of the file tree.
 		/// @return Head of the file tree.
 		constexpr operator Entry() const {return tree;}
-		
+
 		/// @brief Builds a directory structure for a path.
 		/// @param path Path to entry.
 		/// @return Directory structure. If path does not lead to a folder, simply returns an entry for that file.
@@ -407,7 +407,7 @@ namespace OS::FS {
 				getFolderContents(path)
 			);
 		}
-		
+
 		/// @brief Returns the contents of a folder.
 		/// @param folder Folder to get the contents of.
 		/// @return Contents of the folder. If path does not lead to a folder, returns an empty list.

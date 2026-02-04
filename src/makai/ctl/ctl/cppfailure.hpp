@@ -4,7 +4,6 @@
 #include "namespace.hpp"
 #include "cpp/debug.hpp"
 #include "ctypes.hpp"
-#include <stdexcept>
 
 CTL_NAMESPACE_BEGIN
 

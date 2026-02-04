@@ -11,38 +11,38 @@ CTL_NAMESPACE_BEGIN
 /// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr int		toInt(String const& s, uint8 const base = 0)				{return String::toNumber<int>(s, base);		}
+constexpr int		toInt(String const& s, uint8 const base = 0)				{return String::toNumber<int>(s, base);			}
 /// @brief String-to-`long` conversion.
 /// @param s String to convert.
 /// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr long		toLong(String const& s, uint8 const base = 0)				{return String::toNumber<long>(s, base);	}
+constexpr long		toLong(String const& s, uint8 const base = 0)				{return String::toNumber<long>(s, base);		}
 /// @brief String-to-`long long` conversion.
 /// @param s String to convert.
 /// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr llong		toLongLong(String const& s, uint8 const base = 0)			{return String::toNumber<llong>(s, base);	}
+constexpr long long	toLongLong(String const& s, uint8 const base = 0)			{return String::toNumber<long long>(s, base);	}
 
 /// @brief String-to-`unsigned int` conversion.
 /// @param s String to convert.
 /// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr uint		toUnsignedInt(String const& s, uint8 const base = 0)		{return String::toNumber<uint>(s, base);	}
+constexpr unsigned int			toUnsignedInt(String const& s, uint8 const base = 0)		{return String::toNumber<uint>(s, base);	}
 /// @brief String-to-`unsigned long` conversion.
 /// @param s String to convert.
 /// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr ulong		toUnsignedLong(String const& s, uint8 const base = 0)		{return String::toNumber<ulong>(s, base);	}
+constexpr unsigned long			toUnsignedLong(String const& s, uint8 const base = 0)		{return String::toNumber<ulong>(s, base);	}
 /// @brief String-to-`unsigned long long` conversion.
 /// @param s String to convert.
 /// @param base Base of number string. Will be used, if non-zero.
 /// @return Resulting number.
 /// @throw FailedActionException if conversion fails.
-constexpr ullong	toUnsignedLongLong(String const& s, uint8 const base = 0)	{return String::toNumber<ullong>(s, base);	}
+constexpr unsigned long long	toUnsignedLongLong(String const& s, uint8 const base = 0)	{return String::toNumber<litint>(s, base);	}
 
 /// @brief String-to-`float` conversion.
 /// @param s String to convert.

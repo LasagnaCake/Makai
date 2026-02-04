@@ -33,7 +33,7 @@ namespace Makai::Graph {
 
 		/// @brief Default constructor.
 		Texture2D(): image(new Image2D()) {}
-		
+
 		/// @brief Default constructor.
 		Texture2D(nulltype): Texture2D() {}
 
@@ -53,7 +53,7 @@ namespace Makai::Graph {
 			Image2D::ImageFormat const&		format		= Image2D::ImageFormat::IF_RGBA,
 			Image2D::FilterMode const&		magFilter	= Image2D::FilterMode::FM_SMOOTH,
 			Image2D::FilterMode const&		minFilter	= Image2D::FilterMode::FM_SMS,
-			uchar* const					data		= NULL,
+			uint8* const					data		= NULL,
 			Image2D::ComponentLayout const&	layout		= Image2D::ComponentLayout::CL_AUTO
 		);
 
@@ -114,7 +114,7 @@ namespace Makai::Graph {
 			Image2D::ImageFormat const&		format		= Image2D::ImageFormat::IF_RGBA,
 			Image2D::FilterMode const&		magFilter	= Image2D::FilterMode::FM_SMOOTH,
 			Image2D::FilterMode const&		minFilter	= Image2D::FilterMode::FM_SMS,
-			uchar* const					data		= NULL,
+			uint8* const					data		= NULL,
 			Image2D::ComponentLayout const&	layout		= Image2D::ComponentLayout::CL_AUTO
 		);
 
@@ -141,7 +141,7 @@ namespace Makai::Graph {
 
 		/// @brief Instances the image from another texture.
 		/// @param other Texture to get instance from.
-		/// @return Reference to self. 
+		/// @return Reference to self.
 		/// @note Does nothing if underlying image already exists.
 		Texture2D& create(
 			Texture2D const& other
@@ -155,7 +155,7 @@ namespace Makai::Graph {
 		/// @param endY Ending Y position.
 		/// @param filter Whether to apply a linear filter to the image. By default, it is `false`.
 		/// @return Reference to self.
-		/// @note Does nothing if underlying image already exists. 
+		/// @note Does nothing if underlying image already exists.
 		Texture2D& create(
 			Texture2D const& other,
 			uint const startX,
@@ -190,7 +190,7 @@ namespace Makai::Graph {
 			Image2D::ImageFormat const&		format		= Image2D::ImageFormat::IF_RGBA,
 			Image2D::FilterMode const&		magFilter	= Image2D::FilterMode::FM_SMOOTH,
 			Image2D::FilterMode const&		minFilter	= Image2D::FilterMode::FM_SMS,
-			uchar* const					data		= NULL,
+			uint8* const					data		= NULL,
 			Image2D::ComponentLayout const&	layout		= Image2D::ComponentLayout::CL_AUTO
 		);
 
@@ -215,7 +215,7 @@ namespace Makai::Graph {
 
 		/// @brief Instances the image from another texture.
 		/// @param other Texture to get instance from.
-		/// @return Reference to self. 
+		/// @return Reference to self.
 		Texture2D& make(
 			Texture2D const& other
 		);
@@ -327,22 +327,22 @@ namespace Makai::Graph {
 
 		/// @brief Enables the underlying image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.
-		/// @return Reference to self. 
-		Texture2D& enable(uchar const slot = 0);
+		/// @return Reference to self.
+		Texture2D& enable(uint8 const slot = 0);
 
 		/// @brief Enables the underlying image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.
 		/// @return Const reference to self.
-		Texture2D const& enable(uchar const slot = 0) const;
+		Texture2D const& enable(uint8 const slot = 0) const;
 
 		/// @brief Enables the underlying image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.
-		/// @return Reference to self. 
-		Texture2D&			operator()(uchar const slot = 0);
+		/// @return Reference to self.
+		Texture2D&			operator()(uint8 const slot = 0);
 		/// @brief Enables the underlying image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.
 		/// @return Const reference to self.
-		Texture2D const&	operator()(uchar const slot = 0) const;
+		Texture2D const&	operator()(uint8 const slot = 0) const;
 
 		/// @brief Returns the underlying image's ID.
 		/// @return Image ID.

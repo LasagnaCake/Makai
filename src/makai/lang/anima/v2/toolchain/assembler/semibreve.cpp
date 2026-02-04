@@ -169,7 +169,7 @@ static Prototype doFunctionPrototype(
 		auto& arg = args[args.size()];
 		var->base = selfType;
 		arg["name"]			= "self";
-		var->value["type"]	= selfType->name; 
+		var->value["type"]	= selfType->name;
 		arg["type"]			= selfType->name;
 	}
 	while (context.nextToken() && context.currentToken().type != Type{')'}) {
@@ -205,7 +205,7 @@ static Prototype doFunctionPrototype(
 			id += "_" + argt->name.toString();
 			auto& arg = args[args.size()];
 			arg["name"]			= argID;
-			var->value["type"]	= argt->name; 
+			var->value["type"]	= argt->name;
 			arg["type"]			= argt->name;
 		}
 		if (inOptionalRegion && !isOptional)
@@ -364,7 +364,7 @@ SEMIBREVE_ASSEMBLE_FN(Scope) {
 	Solution result = {context.getBasicType("void"), context.resolveTo("move .")};
 	while (context.nextToken()) {
 		auto const current = context.currentToken();
-		if (current.type == Type{'}'}) break; 
+		if (current.type == Type{'}'}) break;
 		else result = doExpression(context);
 	}
 	if (context.currentScope().varc)
@@ -503,7 +503,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			auto const id = current.value.get<Makai::String>();
 			auto result = doReservedValueResolution(context);
 			if (result.type != context.getBasicType("void")) return result;
-			else if (context.hasSymbol(id)) 
+			else if (context.hasSymbol(id))
 				return resolveSymbol(context, id, context.getSymbolRefByName(id));
 			else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
@@ -539,7 +539,7 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		case LTS_TT_INCREMENT: {
 			return doUnaryOperation(context);
 		} break;
-		case LTS_TT_SINGLE_QUOTE_STRING: 
+		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:	return {context.getBasicType("string"),	context.resolveTo(current.value.toString())								};
 		case LTS_TT_CHARACTER: 				return {context.getBasicType("string"),	context.resolveTo(Makai::toString("'", current.value.get<char>(), "'"))	};
 		case LTS_TT_INTEGER:				return {context.getBasicType("uint"),	context.resolveTo(current.value.toString())								};
@@ -708,7 +708,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		} break;
 		case Type{'/'}: {
 			if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), "/", rhs.resolve(), "-> .");
-			else if (context.isString(result)) 
+			else if (context.isString(result))
 				context.writeLine("str sep", lhs.resolve(), "(", rhs.resolve(), ") -> .");
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
@@ -833,7 +833,7 @@ static Solution doVarDecl(Context& context, Makai::Instance<Context::Scope::Memb
 	switch (context.currentToken().type) {
 		case Type{':'}: {
 			context.fetchNext();
-			type = getType(context); 
+			type = getType(context);
 		} break;
 	}
 	if (!context.nextToken()) {
@@ -1623,7 +1623,7 @@ struct IExpandAfter {
 };
 
 struct ExpandToValue: IExpandAfter {
-	
+
 	Makai::String expand(Context::Macro::Context& context) const {
 		return value;
 	}
@@ -1635,7 +1635,7 @@ private:
 };
 
 struct ExpandToVariable: IExpandAfter {
-	
+
 	Makai::String expand(Context::Macro::Context& context) const {
 		if (!context.variables.contains(var)) return "";
 		Makai::String result;
@@ -1764,7 +1764,7 @@ static void doMacroTransform(
 						Makai::Instance<Context::Macro::Transformation> tf = tf.create();
 						doMacroTransform(context, rule, *tf);
 						context.expectToken(Type{'}'});
-						base.newTransform()->pre = 
+						base.newTransform()->pre =
 							[varName = Makai::copy(varName), tf = Makai::copy(tf)] (Context::Macro::Context& ctx) {
 								//DEBUGLN("--- COMPLEX VARIABLE EXPANSION");
 								Context::Macro::Context subctx = {ctx};

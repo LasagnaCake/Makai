@@ -1,6 +1,6 @@
 sinclude options.make
 
-export space := 
+export space :=
 
 define newline
 

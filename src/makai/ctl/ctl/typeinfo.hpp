@@ -87,11 +87,12 @@ template<> struct NumberLimit<uint32>:	ValueLimit<uint32,	0xFFFFFFFF,			1,	0				
 /// @brief Number limit.
 template<> struct NumberLimit<uint64>:	ValueLimit<uint64,	0xFFFFFFFFFFFFFFFF,	1,	0					>	{};
 
+#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 /// @brief Number limit.
 template<> struct NumberLimit<int>:		NumberLimit<Meta::DualType<sizeof(int) == sizeof(int32),	int32,	int16>>		{};
 /// @brief Number limit.
 template<> struct NumberLimit<uint>:	NumberLimit<Meta::DualType<sizeof(uint) == sizeof(uint32),	uint32,	uint16>>	{};
-
+#endif
 
 /// @brief Number limit.
 template<> struct NumberLimit<float>:	ValueLimit<float,	__FLT_MAX__,	__FLT_MIN__,	-__FLT_MAX__>	{};
