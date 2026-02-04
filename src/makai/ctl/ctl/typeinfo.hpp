@@ -1,6 +1,7 @@
 #ifndef CTL_TYPE_INFO_H
 #define CTL_TYPE_INFO_H
 
+#include "algorithm/bitwise.hpp"
 #include "typetraits/traits.hpp"
 #include "meta/logic.hpp"
 #include "typetraits/enum.hpp"
@@ -89,9 +90,9 @@ template<> struct NumberLimit<uint64>:	ValueLimit<uint64,	0xFFFFFFFFFFFFFFFF,	1,
 
 #if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 /// @brief Number limit.
-template<> struct NumberLimit<int>:		NumberLimit<Meta::DualType<sizeof(int) == sizeof(int32),	int32,	int16>>		{};
+template<> struct NumberLimit<int>:				NumberLimit<Meta::Select<bitWidth(sizeof(int)), int8, int16, int32, int64>>	{};
 /// @brief Number limit.
-template<> struct NumberLimit<uint>:	NumberLimit<Meta::DualType<sizeof(uint) == sizeof(uint32),	uint32,	uint16>>	{};
+template<> struct NumberLimit<unsigned int>:	NumberLimit<Meta::Select<bitWidth(sizeof(int)), int8, int16, int32, int64>>	{};
 #endif
 
 /// @brief Number limit.
