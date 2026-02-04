@@ -41,7 +41,7 @@ namespace Makai::Graph::API {
 	/// @param height Viewport height.
 	/// @param x Viewport start X position.
 	/// @param y Viewport start Y position.
-	void setViewport(uint const width, uint const height, uint const x = 0, uint const y = 0);
+	void setViewport(uint32 const width, uint32 const height, uint32 const x = 0, uint32 const y = 0);
 
 	/// @brief Returns whether the device has the required graphical API version.
 	/// @return Whether device has required API version.

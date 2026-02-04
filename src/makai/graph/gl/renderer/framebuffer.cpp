@@ -12,7 +12,7 @@ namespace ImageSlot {
 
 using namespace Makai; using namespace Makai::Graph;
 
-Graph::Base::ABuffer::ABuffer(uint const width, uint const height) {
+Graph::Base::ABuffer::ABuffer(uint32 const width, uint32 const height) {
 	create(width, height);
 }
 
@@ -27,7 +27,7 @@ Graph::Base::ABuffer& Graph::Base::ABuffer::destroy() {
 	return *this;
 }
 
-Graph::Base::ABuffer& Graph::Base::ABuffer::create(uint const width, uint const height) {
+Graph::Base::ABuffer& Graph::Base::ABuffer::create(uint32 const width, uint32 const height) {
 	if (created) return *this;
 	else created = true;
 	glGenFramebuffers(1, &id);
@@ -55,9 +55,9 @@ Graph::Base::ABuffer& Graph::Base::ABuffer::disable() {
 
 bool Graph::Base::ABuffer::exists() const		{return created;	}
 
-uint Graph::Base::ABuffer::getWidth() const		{return width;		}
-uint Graph::Base::ABuffer::getHeight() const	{return height;		}
-uint Graph::Base::ABuffer::getID() const		{return id;			}
+uint32 Graph::Base::ABuffer::getWidth() const	{return width;		}
+uint32 Graph::Base::ABuffer::getHeight() const	{return height;		}
+uint32 Graph::Base::ABuffer::getID() const		{return id;			}
 
 Graph::Base::ABuffer& Graph::Base::ABuffer::render(Base::ABuffer const& target) {
 	if (!exists()) return *this;
@@ -88,7 +88,7 @@ Graph::DrawBuffer& Graph::DrawBuffer::destroy() {
 	return *this;
 }
 
-inline void makeColorTexture(Graph::Texture2D& tex, uint const width, uint const height, GLuint const attachment) {
+inline void makeColorTexture(Graph::Texture2D& tex, uint32 const width, uint32 const height, GLuint const attachment) {
 	tex.create(
 		width,
 		height,
@@ -108,7 +108,7 @@ inline void makeColorTexture(Graph::Texture2D& tex, uint const width, uint const
 	);
 }
 
-Graph::DrawBuffer& Graph::DrawBuffer::create(uint const width, uint const height) {
+Graph::DrawBuffer& Graph::DrawBuffer::create(uint32 const width, uint32 const height) {
 	if (exists()) return *this;
 	Base::ABuffer::create(width, height);
 	glBindFramebuffer(GL_FRAMEBUFFER, getID());

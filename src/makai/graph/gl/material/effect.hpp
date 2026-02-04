@@ -191,19 +191,19 @@ namespace Makai::Graph::Material {
 		/// @brief Displacement effect.
 		struct Warp: Image, Transformable2D {
 			/// @brief Color channel to use for horizontal displaement.
-			uint channelX = 0;
+			uint32 channelX = 0;
 			/// @brief Color channel to use for vertical displaement.
-			uint channelY = 1;
+			uint32 channelY = 1;
 		};
 
 		// Object Material Effects
-		
+
 		/// @brief Texture effect.
 		struct Texture: Image {
 			/// @brief Texture alpha clip.
 			float alphaClip = 0.1;
 		};
-		
+
 		/// @brief Blend equation the blend texture uses.
 		/// @details
 		///		Layout (from LSB to MSB):
@@ -219,7 +219,7 @@ namespace Makai::Graph::Material {
 		///		- Next bit: Whether to clamp the result between 0 and 1.
 		///
 		///		- Next bit: Whether to swap source and destination.
-		enum class BlendTextureEquation: uint {
+		enum class BlendTextureEquation: uint32 {
 			BTE_MUL				= 0x00,
 			BTE_DIV				= 0x01,
 			BTE_ADD				= 0x02,

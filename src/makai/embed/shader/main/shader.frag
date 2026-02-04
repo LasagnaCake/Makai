@@ -28,7 +28,7 @@ struct BlendTextureEffect {
 	bool		enabled;
 	sampler2D 	image;
 	vec3		strength;
-	uint		equation;
+	uint32		equation;
 };
 
 struct NormalMapEffect {
@@ -45,8 +45,8 @@ struct EmissionEffect {
 struct WarpEffect {
 	bool		enabled;
 	sampler2D	image;
-	uint		channelX;
-	uint		channelY;
+	uint32		channelX;
+	uint32		channelY;
 };
 
 uniform vec4 albedo = vec4(1);
@@ -104,7 +104,7 @@ uniform float	brightness	= 0;
 uniform float	contrast	= 1;
 
 // [ DEBUG MODE ]
-uniform uint	debugView	= 0;
+uniform uint32	debugView	= 0;
 
 uniform AmbientData		ambient		= AmbientData(vec3(1), 1);
 uniform LightEffect		lights		= LightEffect(false);
@@ -194,7 +194,7 @@ vec4 applyBrightnessAndContrast(vec4 color) {
 	return vec4(((res - 0.5f) * max(contrast, 0)) + 0.5f, color.a);
 }
 
-vec3 equate(vec3 a, vec3 b, uint mode) {
+vec3 equate(vec3 a, vec3 b, uint32 mode) {
 	switch (mode & 0x0Fu) {
 		case 0x00: return a * b;
 		case 0x01: return a / b;
@@ -213,8 +213,8 @@ void main(void) {
 	vec2 texelUV = fragUV;
 
 	if (warp.enabled) {
-		uint wcx = clamp(warp.channelX, 0u, 3u);
-		uint wcy = clamp(warp.channelY, 0u, 3u);
+		uint32 wcx = clamp(warp.channelX, 0u, 3u);
+		uint32 wcy = clamp(warp.channelY, 0u, 3u);
 		vec4 warpFac = texture(warp.image, warpUV);
 		vec2 warpCoord = vec2(warpFac[wcx], warpFac[wcy]) * 2 - 1;
 		texelUV = fragUV + warpCoord;
@@ -227,8 +227,8 @@ void main(void) {
 		bool reverse	= bool(blendTexture.equation & 0x200u);
 		vec3 blend		= bool(blendTexture.equation & 0x40u) ? vec3(1) : texture(blendTexture.image, texelUV).rgb;
 		vec3 source		= bool(blendTexture.equation & 0x80u) ? vec3(1) : color.rgb;
-		vec3 src		= (reverse) ? blend : source; 
-		vec3 dst		= (reverse) ? source : blend; 
+		vec3 src		= (reverse) ? blend : source;
+		vec3 dst		= (reverse) ? source : blend;
 		vec3 result		= vec3(0);
 		switch (blendTexture.equation & 0x30u) {
 			// Default equations
@@ -252,9 +252,9 @@ void main(void) {
 	if (normalMap.enabled) {
 		vec4 tn = texture(normalMap.image, texelUV);
 		normal = tn.rgb * tn.a;
-		normal = normalize(normal * 2.0 - 1.0 + normal);  
+		normal = normalize(normal * 2.0 - 1.0 + normal);
 	}
-	
+
 	color.xyz *= calculateLights(fragCoord3D, normal) * getShadingColor(fragCoord3D, normal);
 
 	color *= albedo;

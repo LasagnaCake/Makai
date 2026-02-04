@@ -16,7 +16,7 @@ using FilterMode		= Image2D::FilterMode;
 
 using ImageData			= Image2D::ImageData;
 
-constexpr uint convert(Image::ImageTarget const& target) {
+constexpr uint32 convert(Image::ImageTarget const& target) {
 	switch (target) {
 		case Image::ImageTarget::IT_TEXTURE_2D: return GL_TEXTURE_2D;
 	}
@@ -33,7 +33,7 @@ constexpr ImageFileType fromFileExtension(String const& path) {
 	return ImageFileType::IFT_INVALID;
 }
 
-constexpr uint convert(ComponentType const& type) {
+constexpr uint32 convert(ComponentType const& type) {
 	switch (type) {
 		default:
 		case ComponentType::CT_UBYTE:		return GL_UNSIGNED_BYTE;
@@ -48,7 +48,7 @@ constexpr uint convert(ComponentType const& type) {
 	}
 }
 
-constexpr uint convert(ImageFormat const& type) {
+constexpr uint32 convert(ImageFormat const& type) {
 	switch (type) {
 		case ImageFormat::IF_D:		return GL_DEPTH_COMPONENT;
 		case ImageFormat::IF_R:		return GL_RED;
@@ -60,7 +60,7 @@ constexpr uint convert(ImageFormat const& type) {
 	}
 }
 
-constexpr uint convert(ComponentLayout const& type) {
+constexpr uint32 convert(ComponentLayout const& type) {
 	switch (type) {
 		default:
 		case ComponentLayout::CL_AUTO:		return 0;
@@ -75,7 +75,7 @@ constexpr uint convert(ComponentLayout const& type) {
 	}
 }
 
-constexpr uint convert(FilterMode const& type) {
+constexpr uint32 convert(FilterMode const& type) {
 	switch (type) {
 		default:
 		case FilterMode::FM_NEAREST:	return GL_NEAREST;
@@ -131,7 +131,7 @@ Image const& Image::use(uint8 const slot, ImageTarget const& target) const {
 	return *this;
 }
 
-void Image::set(uint const image, uint8 const slot, ImageTarget const& target) {
+void Image::set(uint32 const image, uint8 const slot, ImageTarget const& target) {
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("Image::set");
 	#endif // MAKAILIB_DEBUG
@@ -155,11 +155,11 @@ CTL::ValueOrder Image::operator<=>(Image const& other) const {
 	return id <=> other.id;
 }
 
-Image::operator uint() const {
+Image::operator uint32() const {
 	return id;
 }
 
-uint Image::getID() const {
+uint32 Image::getID() const {
 	return id;
 }
 
@@ -172,8 +172,8 @@ Image::operator bool() const {
 }
 
 Image2D& Image2D::create(
-	uint const				width,
-	uint const				height,
+	uint32 const			width,
+	uint32 const			height,
 	ComponentType const&	type,
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
@@ -187,8 +187,8 @@ Image2D& Image2D::create(
 }
 
 Image2D& Image2D::make(
-	uint const				width,
-	uint const				height,
+	uint32 const			width,
+	uint32 const			height,
 	ComponentType const&	type,
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
@@ -276,8 +276,8 @@ Image2D const& Image2D::saveToFile(String const& path, ImageFileType const& type
 }
 
 Image2D* Image2D::newImage(
-	uint const				width,
-	uint const				height,
+	uint32 const			width,
+	uint32 const			height,
 	ComponentType const&	type,
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
@@ -292,8 +292,8 @@ Image2D* Image2D::newImage(
 
 Image2D* Image2D::newImage(
 	Image2D* const			image,
-	uint const				width,
-	uint const				height,
+	uint32 const			width,
+	uint32 const			height,
 	ComponentType const&	type,
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
@@ -317,7 +317,7 @@ Image2D* Image2D::newImage(
 		minFilter,
 		magFilter
 	};
-	uint cl = convert(layout);
+	uint32 cl = convert(layout);
 	if (!cl) cl = convert(format);
 	// Bind image data
 	glTexImage2D(

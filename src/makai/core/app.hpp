@@ -13,9 +13,9 @@ namespace Makai {
 	/// @brief Resolution.
 	struct Resolution {
 		/// @brief Width.
-		uint width;
+		uint32 width;
 		/// @brief Height.
-		uint height;
+		uint32 height;
 	};
 
 	namespace Config {

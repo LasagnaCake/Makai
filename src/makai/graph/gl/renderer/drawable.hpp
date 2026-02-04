@@ -22,7 +22,7 @@ namespace Makai::Graph {
 		/// @param manual Whether the object is manually rendered.
 		/// @param layer Layer to register the object to.
 		ADrawable(bool const manual, usize const layer);
-		
+
 		/// @brief Destructor.
 		virtual ~ADrawable();
 
@@ -47,7 +47,7 @@ namespace Makai::Graph {
 		/// @param renderLayer Layer to register the object to.
 		/// @return Reference to self.
 		ADrawable& removeFromRenderLayer(usize const renderLayer);
-		
+
 		/// @brief Renders the object to the screen.
 		void render();
 
@@ -110,12 +110,12 @@ namespace Makai::Graph {
 
 		/// @brief Prepares the object to render.
 		void prepare();
-	
+
 	private:
 		/// @brief Vertex array.
-		uint vao;
+		uint32 vao;
 		/// @brief Vertex buffer.
-		uint vbo;
+		uint32 vbo;
 	};
 
 	/// @brief Type must be a graphic object.

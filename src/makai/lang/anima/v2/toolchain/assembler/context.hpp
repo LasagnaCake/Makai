@@ -43,7 +43,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			using Stack			= List<Axiom>;
 			using Arguments		= List<Axiom>;
-			
+
 			struct Result {
 				Arguments	match;
 				List<Axiom>	value;
@@ -63,7 +63,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 					using Count		= Nullable<usize>;
 					using Result	= Nullable<Arguments>;
-					
+
 					constexpr Instance<Match> addSubMatch() {
 						return matches.pushBack(new Match()).back();
 					}
@@ -136,7 +136,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 								}
 							} else if (isExpressionToken(args[i].type)) {
 								result.pushBack(args[i]);
-								DEBUGLN("$ -> ", i, ":", args[i].token); 
+								DEBUGLN("$ -> ", i, ":", args[i].token);
 							}
 							else break;
 							i += result.size() - prev;
@@ -144,7 +144,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						}
 						return result;
 					}
-					
+
 					constexpr static Arguments solveParameterPack(Arguments const& args, Tokenizer::Token::Type const end) {
 						Arguments result;
 						usize prev	= 1;
@@ -167,7 +167,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						return result;
 					}
 
-					static inline Functor<Result(Arguments const&)> expressionSolver = 
+					static inline Functor<Result(Arguments const&)> expressionSolver =
 						[] (Arguments const& args) -> Result {
 							return solveExpression(args);
 						}
@@ -227,7 +227,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				constexpr Match::Count fit(Arguments const& args) const {
 					return root ? root->fit(args) : null;
 				}
-				
+
 				constexpr Match::Result match(Arguments const& args, Match::Callback const& call = {}) const {
 					return root ? root->match(args, call) : null;
 				}
@@ -265,7 +265,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			struct Transformation {
 				using Action = Functor<void(Context&)>;
-				
+
 				Action							pre;
 				List<Instance<Transformation>>	sub;
 				Action							post;
@@ -539,7 +539,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					return source->resolve();
 				}
 			};
-			
+
 			uint64				entry	= 0;
 			Instance<Member>	result	= nullptr;
 			bool				secure	= true;
@@ -776,7 +776,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			auto& content = global.code;
 			content += toString(toString(args, " ")...);
 		}
-		
+
 		constexpr String namespacePath(String const& sep = ".") const {
 			String path;
 			for (auto& sc: scope)
@@ -850,7 +850,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (scope.empty())	writeGlobalPostscript(args...);
 			else				writeScopePostscript(args...);
 		}
-		
+
 		template <class... Args>
 		constexpr void writeAdaptive(Args const&... args) {
 			if (inGlobalScope() || inNamespace())	writeMainPreamble(args...);
@@ -936,7 +936,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					return *sc.ns;
 			return *global.ns;
 		}
-		
+
 
 		constexpr Handle<Scope::Namespace> currentNamespaceRef() {
 			for (auto& sc: Range::reverse(scope))
@@ -958,7 +958,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 			return stream.next();
 		}
-		
+
 		Data::Value fetchToken(Tokenizer::Token::Type const tok) {
 			return fetchToken(tok, "'" + Tokenizer::Token::asName(tok) + "'");
 		}
@@ -986,7 +986,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		constexpr void registerModule(String const& fullName) {
-			modules[fullName] = true;	
+			modules[fullName] = true;
 		}
 
 		Macro::Axiom currentToken() const {
@@ -1188,7 +1188,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		struct Appendix {
 			List<Macro::Axiom> cache = List<Macro::Axiom>::from(Macro::Axiom());
-			
+
 			constexpr void add(Macro::Axiom const& tok)				{cache.pushBack(tok);												}
 			constexpr void add(List<Macro::Axiom> const& toks)		{cache.appendBack(toks);											}
 			constexpr bool hasTokens() const						{return cache.size() > 1;											}
@@ -1220,7 +1220,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (!macros.contains(macroID)) return nullptr;
 			return macros[macroID];
 		}
-		
+
 		bool	hasMain		= false;
 		bool	isModule	= false;
 

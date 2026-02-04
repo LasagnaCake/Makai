@@ -25,7 +25,7 @@ struct Transform3D {
 
 struct Armature {
 	mat4 bones[MAX_BONES];
-	uint boneCount;
+	uint32 boneCount;
 };
 
 out vec3 fragCoord3D;
@@ -58,7 +58,7 @@ void withArmatureAndTransforms(inout vec4 position, inout vec3 normal) {
 	vec4 totalPosition = position;
 	vec3 totalNormal = normal;
 	const vec4 normalWeights = normalize(boneWeights);
-	for (uint i = 0; i < 4; ++i) {
+	for (uint32 i = 0; i < 4; ++i) {
 		if (boneIndices[i] == -2) break;
 		if (boneIndices[i] > MAX_BONES) {
 			withTransform(position, normal);

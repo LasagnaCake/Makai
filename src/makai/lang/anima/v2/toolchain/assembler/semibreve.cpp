@@ -1287,7 +1287,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(ArrayDeclaration) {
 		++count;
 	}
 	if (count) {
-		context.writeLine("push", count);
+		context.writeLine("copy", count, "-> register[0]");
 		context.writeLine("call in array");
 		return {context.getBasicType("array"), context.resolveTo("move .")};
 	}

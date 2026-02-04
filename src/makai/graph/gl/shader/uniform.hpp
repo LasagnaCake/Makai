@@ -9,7 +9,7 @@ namespace Makai::Graph {
 	/// @brief Decays the enumerator type to a valid shader integer type.
 	/// @tparam T Enum type to decay.
 	template<Type::Enumerator T>
-	using ShaderEnum = Meta::DualType<Type::Unsigned<T>, uint, int>;
+	using ShaderEnum = Meta::DualType<Type::Unsigned<T>, uint32, int>;
 
 	/// @brief Shader uniform access interface.
 	struct Uniform {
@@ -19,7 +19,7 @@ namespace Makai::Graph {
 		/// @brief Constructs the uniform.
 		/// @param name Uniform name.
 		/// @param id Shader ID.
-		Uniform(String const& name, uint const id);
+		Uniform(String const& name, uint32 const id);
 
 		/// @brief Sets the uniform.
 		/// @param value Value to set.
@@ -37,7 +37,7 @@ namespace Makai::Graph {
 		/// @param value Value to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void set(uint const value, usize const offset = 0) const;
+		void set(uint32 const value, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param value Value to set.
@@ -93,7 +93,7 @@ namespace Makai::Graph {
 		/// @param count Count of values to set.
 		/// @param offset Uniform location offset. By default, it is zero.
 		/// @warning `offset` should NEVER be used directly!
-		void setArray(uint const* const values, usize const count, usize const offset = 0) const;
+		void setArray(uint32 const* const values, usize const count, usize const offset = 0) const;
 
 		/// @brief Sets the uniform.
 		/// @param values Values to set.
@@ -193,7 +193,7 @@ namespace Makai::Graph {
 			for (T const& val: values)
 				func(val, Uniform(name, id, location + offset), i++);
 		}
-		
+
 		/// @brief Sets the uniform.
 		/// @tparam T Value type.
 		/// @param value Value to set.
@@ -220,8 +220,8 @@ namespace Makai::Graph {
 	private:
 		constexpr Uniform(
 			String  const& _name,
-			uint const _id,
-			uint const _location
+			uint32 const _id,
+			uint32 const _location
 		): name(_name), id(_id), location(_location) {}
 
 		template<typename T>
@@ -242,14 +242,14 @@ namespace Makai::Graph {
 			offset += this->offset;
 		}
 
-		uint getUniformArray(usize const offset) const;
+		uint32 getUniformArray(usize const offset) const;
 
-		uint getUniform() const;
+		uint32 getUniform() const;
 
-		uint getUniform(String const& append) const;
+		uint32 getUniform(String const& append) const;
 
 		/// @brief Shader associated with the uniform.
-		uint const id;
+		uint32 const id;
 		/// @brief Uniform location.
 		intmax const location;
 

@@ -74,7 +74,7 @@ namespace Makai::Graph {
 		/// @param slot Image slot to bind to.
 		/// @param target Image type to enable. By default, it is `IT_TEXTURE_2D`.
 		static void set(
-			uint const			image,
+			uint32 const		image,
 			uint8 const			slot,
 			ImageTarget const&	target = ImageTarget::IT_TEXTURE_2D
 		);
@@ -90,10 +90,10 @@ namespace Makai::Graph {
 
 		/// @brief Returns the image's ID.
 		/// @return Image ID.
-		explicit operator uint() const;
+		explicit operator uint32() const;
 		/// @brief Returns the image's ID.
 		/// @return Image ID.
-		uint getID() const;
+		uint32 getID() const;
 
 		/// @brief Returns whether the image exists.
 		/// @return Whether image exists.
@@ -104,7 +104,7 @@ namespace Makai::Graph {
 
 	private:
 		/// @brief Image ID.
-		uint id = 0;
+		uint32 id = 0;
 	};
 
 	/// @brief 2D image.
@@ -204,9 +204,9 @@ namespace Makai::Graph {
 		/// @brief Image attributes.
 		struct Attributes {
 			/// @brief Width.
-			uint width;
+			uint32 width;
 			/// @brief Height.
-			uint height;
+			uint32 height;
 			/// @brief Component type.
 			ComponentType	type;
 			/// @brief Image format.
@@ -236,8 +236,8 @@ namespace Makai::Graph {
 		/// @param layout Component layout. By default, it is automatically deduced.
 		/// @return Reference to self.
 		Image2D& create(
-			uint const				width,
-			uint const				height,
+			uint32 const			width,
+			uint32 const			height,
 			ComponentType const&	type		= ComponentType::CT_UBYTE,
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
@@ -257,8 +257,8 @@ namespace Makai::Graph {
 		/// @param layout Component layout. By default, it is automatically deduced.
 		/// @return Reference to self.
 		Image2D& make(
-			uint const				width,
-			uint const				height,
+			uint32 const			width,
+			uint32 const			height,
 			ComponentType const&	type		= ComponentType::CT_UBYTE,
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
@@ -328,8 +328,8 @@ namespace Makai::Graph {
 		/// @return Created image.
 		[[nodiscard]]
 		static Image2D* newImage(
-			uint const				width,
-			uint const				height,
+			uint32 const			width,
+			uint32 const			height,
 			ComponentType const&	type		= ComponentType::CT_UBYTE,
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
@@ -353,8 +353,8 @@ namespace Makai::Graph {
 		/// @return Passed pointer.
 		static Image2D* newImage(
 			Image2D* const			image,
-			uint const				width,
-			uint const				height,
+			uint32 const			width,
+			uint32 const			height,
 			ComponentType const&	type		= ComponentType::CT_UBYTE,
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,

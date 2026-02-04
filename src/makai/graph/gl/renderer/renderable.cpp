@@ -100,7 +100,7 @@ inline ObjectMaterial fromDefinition(JSON::Value def, String const& definitionFo
 			mat.blend.image		= fx.image;
 			mat.blend.strength	= fromJSONArrayV3(dmat["texture"]["strength"], 0);
 			if (dmat["blend"]["equation"].isNumber())
-				mat.blend.equation	= (Effect::BlendTextureEquation)dmat["blend"]["equation"].get<uint>();
+				mat.blend.equation	= (Effect::BlendTextureEquation)dmat["blend"]["equation"].get<uint32>();
 		}
 		// Set normal map texture
 		if (dmat["normalMap"].isObject()) {
@@ -197,7 +197,7 @@ inline JSON::Value toDefinition(
 			JSON::Entry{"end", Color::toHexCodeString(mat.gradient.end, false, true)},
 			JSON::Entry{"invert", mat.gradient.invert}
 		}},
-		JSON::Entry{"debugView", (uint)mat.debug}
+		JSON::Entry{"debugView", (uint32)mat.debug}
 	};
 	// Copy instances
 	def["instances"] = JSON::Value::array();
@@ -206,8 +206,8 @@ inline JSON::Value toDefinition(
 		def["instances"][idx] = JSON::Array{inst.x, inst.y, inst.z};
 	}
 	// Set cull & fill
-	def["material"]["fill"]		= (uint)(mat.fill);
-	def["material"]["culling"]	= (uint)(mat.culling);
+	def["material"]["fill"]		= (uint32)(mat.fill);
+	def["material"]["culling"]	= (uint32)(mat.culling);
 	// Save image texture
 	if (!integratedTextures) {
 		def["warp"]		= saveImageEffect(mat.warp, definitionFolder, texturesFolder + "/warp.tga");
@@ -558,28 +558,28 @@ void Renderable::extendFromDefinitionV0(
 			JSON::Value bfun	= def["blend"]["function"];
 			JSON::Value beq	= def["blend"]["equation"];
 			if (bfun.isNumber()) {
-				BlendFunction bv = (BlendFunction)bfun.get<uint>();
+				BlendFunction bv = (BlendFunction)bfun.get<uint32>();
 				blend.func = {bv, bv, bv, bv};
 			} else if (bfun.isObject()) {
 				if (bfun["src"].isNumber()) {
-					blend.func.srcColor = blend.func.srcAlpha = (BlendFunction)bfun["src"].get<uint>();
+					blend.func.srcColor = blend.func.srcAlpha = (BlendFunction)bfun["src"].get<uint32>();
 				} else {
-					blend.func.srcColor = (BlendFunction)bfun["srcColor"].get<uint>();
-					blend.func.srcAlpha = (BlendFunction)bfun["srcAlpha"].get<uint>();
+					blend.func.srcColor = (BlendFunction)bfun["srcColor"].get<uint32>();
+					blend.func.srcAlpha = (BlendFunction)bfun["srcAlpha"].get<uint32>();
 				}
 				if (bfun["dst"].isNumber()) {
-					blend.func.dstColor = blend.func.dstAlpha = (BlendFunction)bfun["dst"].get<uint>();
+					blend.func.dstColor = blend.func.dstAlpha = (BlendFunction)bfun["dst"].get<uint32>();
 				} else {
-					blend.func.dstColor = (BlendFunction)bfun["dstColor"].get<uint>();
-					blend.func.dstAlpha = (BlendFunction)bfun["dstAlpha"].get<uint>();
+					blend.func.dstColor = (BlendFunction)bfun["dstColor"].get<uint32>();
+					blend.func.dstAlpha = (BlendFunction)bfun["dstAlpha"].get<uint32>();
 				}
 			}
 			if (beq.isNumber()) {
-				BlendEquation bv = (BlendEquation)beq.get<uint>();
+				BlendEquation bv = (BlendEquation)beq.get<uint32>();
 				blend.eq = {bv, bv};
 			} else if (beq.isObject()) {
-					blend.eq.color = (BlendEquation)beq["color"].get<uint>();
-					blend.eq.alpha = (BlendEquation)beq["alpha"].get<uint>();
+					blend.eq.color = (BlendEquation)beq["color"].get<uint32>();
+					blend.eq.alpha = (BlendEquation)beq["alpha"].get<uint32>();
 			}
 		} catch (std::exception const& e) {
 			throw Error::FailedAction(

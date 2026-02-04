@@ -21,7 +21,7 @@ namespace Makai::Graph::Pipeline {
 		bool			exists() const;
 		/// @brief Returns the pipeline stage's ID.
 		/// @return Pipeline stage ID.
-		uint			id() const;
+		uint32			id() const;
 		/// @brief Returns the pipeline stage's type.
 		/// @return Pipeline stage type.
 		SLF::ShaderType	type() const;

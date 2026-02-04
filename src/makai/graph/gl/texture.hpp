@@ -47,8 +47,8 @@ namespace Makai::Graph {
 		/// @param data Image contents. By default, it is `nullptr`.
 		/// @param layout Component layout. By default, it is automatically deduced.
 		Texture2D(
-			uint const						width,
-			uint const						height,
+			uint32 const					width,
+			uint32 const					height,
 			Image2D::ComponentType const&	type		= Image2D::ComponentType::CT_UBYTE,
 			Image2D::ImageFormat const&		format		= Image2D::ImageFormat::IF_RGBA,
 			Image2D::FilterMode const&		magFilter	= Image2D::FilterMode::FM_SMOOTH,
@@ -89,10 +89,10 @@ namespace Makai::Graph {
 		/// @param filter Whether to apply a linear filter to the image. By default, it is `false`.
 		Texture2D(
 			Texture2D const& other,
-			uint const startX,
-			uint const startY,
-			uint const endX,
-			uint const endY,
+			uint32 const startX,
+			uint32 const startY,
+			uint32 const endX,
+			uint32 const endY,
 			bool const filter = false
 		);
 
@@ -108,8 +108,8 @@ namespace Makai::Graph {
 		/// @return Reference to self.
 		/// @note Does nothing if underlying image already exists.
 		Texture2D& create(
-			uint const						width,
-			uint const						height,
+			uint32 const					width,
+			uint32 const					height,
 			Image2D::ComponentType const&	type		= Image2D::ComponentType::CT_UBYTE,
 			Image2D::ImageFormat const&		format		= Image2D::ImageFormat::IF_RGBA,
 			Image2D::FilterMode const&		magFilter	= Image2D::FilterMode::FM_SMOOTH,
@@ -158,10 +158,10 @@ namespace Makai::Graph {
 		/// @note Does nothing if underlying image already exists.
 		Texture2D& create(
 			Texture2D const& other,
-			uint const startX,
-			uint const startY,
-			uint const endX,
-			uint const endY,
+			uint32 const startX,
+			uint32 const startY,
+			uint32 const endX,
+			uint32 const endY,
 			bool const filter = false
 		);
 
@@ -184,8 +184,8 @@ namespace Makai::Graph {
 		/// @param layout Component layout. By default, it is automatically deduced.
 		/// @return Reference to self.
 		Texture2D& make(
-			uint const						width,
-			uint const						height,
+			uint32 const					width,
+			uint32 const					height,
 			Image2D::ComponentType const&	type		= Image2D::ComponentType::CT_UBYTE,
 			Image2D::ImageFormat const&		format		= Image2D::ImageFormat::IF_RGBA,
 			Image2D::FilterMode const&		magFilter	= Image2D::FilterMode::FM_SMOOTH,
@@ -230,10 +230,10 @@ namespace Makai::Graph {
 		/// @return Reference to self.
 		Texture2D& make(
 			Texture2D const& other,
-			uint const startX,
-			uint const startY,
-			uint const endX,
-			uint const endY,
+			uint32 const startX,
+			uint32 const startY,
+			uint32 const endX,
+			uint32 const endY,
 			bool const filter = false
 		);
 
@@ -274,10 +274,10 @@ namespace Makai::Graph {
 		/// @return Reference to self.
 		Texture2D& copyFrom(
 			Texture2D const& other,
-			uint const startX,
-			uint const startY,
-			uint const endX,
-			uint const endY,
+			uint32 const startX,
+			uint32 const startY,
+			uint32 const endX,
+			uint32 const endY,
 			bool const filter = false
 		);
 
@@ -346,7 +346,7 @@ namespace Makai::Graph {
 
 		/// @brief Returns the underlying image's ID.
 		/// @return Image ID.
-		uint getID() const;
+		uint32 getID() const;
 
 		/// @brief Returns the underlying image's contents.
 		/// @return Image contents.

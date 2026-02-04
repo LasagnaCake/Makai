@@ -11,8 +11,8 @@ JSON::Value Material::saveImageEffect(Material::Effect::Image& effect, CTL::Stri
 		effect.image.saveToFile(OS::FS::concatenate(folder, path));
 		def.operator[]("image") = JSON::Object{
 			JSON::Entry{"path", path},
-			JSON::Entry{"minFilter", (uint)effect.image.minFilter()},
-			JSON::Entry{"magFilter", (uint)effect.image.magFilter()}
+			JSON::Entry{"minFilter", (uint32)effect.image.minFilter()},
+			JSON::Entry{"magFilter", (uint32)effect.image.magFilter()}
 		};
 	} else def.operator[]("enabled") = false;
 	return def;

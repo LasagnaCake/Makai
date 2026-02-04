@@ -40,7 +40,7 @@ namespace Makai::Graph {
 			auto const bones = armature.matrices();
 			auto const uniform = shader[name + ".bones[0]"];
 			uniform.setArray(bones.data(), bones.size());
-			shader[name + ".boneCount"].set(static_cast<uint>(bones.size()));
+			shader[name + ".boneCount"].set(static_cast<uint32>(bones.size()));
 		}
 	};
 }

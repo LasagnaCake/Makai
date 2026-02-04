@@ -234,7 +234,7 @@ void Makai::Graph::API::open() {
 	#endif // MAKAILIB_DEBUG
 }
 
-void Makai::Graph::API::setViewport(uint const width, uint const height, uint const x, uint const y) {
+void Makai::Graph::API::setViewport(uint32 const width, uint32 const height, uint32 const x, uint32 const y) {
 	glViewport(x, y, width, height);
 }
 

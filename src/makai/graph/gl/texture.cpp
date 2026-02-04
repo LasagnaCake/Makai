@@ -17,7 +17,7 @@ using ComponentType		= Image2D::ComponentType;
 using ComponentLayout	= Image2D::ComponentLayout;
 using ImageTarget		= Image::ImageTarget;
 
-constexpr uint convert(WrapMode const& mode) {
+constexpr uint32 convert(WrapMode const& mode) {
 	switch (mode) {
 		default:
 		case WrapMode::WM_REPEAT:			return GL_REPEAT;
@@ -27,7 +27,7 @@ constexpr uint convert(WrapMode const& mode) {
 	}
 }
 
-constexpr uint convert(FilterMode const& type) {
+constexpr uint32 convert(FilterMode const& type) {
 	switch (type) {
 		default:
 		case FilterMode::FM_NEAREST:	return GL_NEAREST;
@@ -39,9 +39,9 @@ constexpr uint convert(FilterMode const& type) {
 	}
 }
 
-uint createCopyBuffer() {
+uint32 createCopyBuffer() {
 	DEBUGLN("Creating copy buffer...");
-	uint id = 0;
+	uint32 id = 0;
 	glGenFramebuffers(1, &id);
 	return id;
 }
@@ -49,18 +49,18 @@ uint createCopyBuffer() {
 void copyTexture(
 	Image2D* const		src,
 	Image2D* const		dst,
-	uint const			srcStartX,
-	uint const			srcStartY,
-	uint const			srcEndX,
-	uint const			srcEndY,
-	uint const			dstStartX,
-	uint const			dstStartY,
-	uint const			dstEndX,
-	uint const			dstEndY,
+	uint32 const		srcStartX,
+	uint32 const		srcStartY,
+	uint32 const		srcEndX,
+	uint32 const		srcEndY,
+	uint32 const		dstStartX,
+	uint32 const		dstStartY,
+	uint32 const		dstEndX,
+	uint32 const		dstEndY,
 	FilterMode const&	filter = FilterMode::FM_NEAREST
 ) {
 	if (!src || !dst) return;
-	static uint const fb = createCopyBuffer();
+	static uint32 const fb = createCopyBuffer();
 	DEBUGLN("Binding copy buffer...");
 	glBindFramebuffer(GL_FRAMEBUFFER, fb);
 	DEBUGLN("Binding source...");
@@ -133,8 +133,8 @@ Texture2D Texture2D::fromJSON(JSON::Value img, String const& sourcepath) {
 }
 
 Texture2D::Texture2D(
-	uint const				width,
-	uint const				height,
+	uint32 const			width,
+	uint32 const			height,
 	ComponentType const&	type,
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
@@ -176,18 +176,18 @@ Texture2D::Texture2D(
 
 Texture2D::Texture2D(
 	Texture2D const& other,
-	uint const startX,
-	uint const startY,
-	uint const endX,
-	uint const endY,
+	uint32 const startX,
+	uint32 const startY,
+	uint32 const endX,
+	uint32 const endY,
 	bool const filter
 ): Texture2D::Texture2D() {
 	create(other, startX, startY, endX, endY, filter);
 }
 
 Texture2D& Texture2D::create(
-	uint const				width,
-	uint const				height,
+	uint32 const			width,
+	uint32 const			height,
 	ComponentType const&	type,
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
@@ -285,14 +285,14 @@ Texture2D& Texture2D::create(
 
 Texture2D& Texture2D::create(
 	Texture2D const& other,
-	uint const startX,
-	uint const startY,
-	uint const endX,
-	uint const endY,
+	uint32 const startX,
+	uint32 const startY,
+	uint32 const endX,
+	uint32 const endY,
 	bool const filter
 ) {
 	if (exists()) return *this;
-	uint w, h;
+	uint32 w, h;
 	w = Math::max(startX, endX) - Math::min(startX, endX);
 	h = Math::max(startY, endY) - Math::min(startY, endY);
 	create(
@@ -321,8 +321,8 @@ Texture2D& Texture2D::clear() {
 }
 
 Texture2D& Texture2D::make(
-	uint const				width,
-	uint const				height,
+	uint32 const			width,
+	uint32 const			height,
 	ComponentType const&	type,
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
@@ -363,10 +363,10 @@ Texture2D& Texture2D::make(
 
 Texture2D& Texture2D::make(
 	Texture2D const& other,
-	uint const startX,
-	uint const startY,
-	uint const endX,
-	uint const endY,
+	uint32 const startX,
+	uint32 const startY,
+	uint32 const endX,
+	uint32 const endY,
 	bool const filter
 ) {
 	destroy();
@@ -404,10 +404,10 @@ ValueOrder Texture2D::operator<=>(Texture2D const& other) const	{return *image <
 
 Texture2D& Texture2D::copyFrom(
 	Texture2D const& other,
-	uint const startX,
-	uint const startY,
-	uint const endX,
-	uint const endY,
+	uint32 const startX,
+	uint32 const startY,
+	uint32 const endX,
+	uint32 const endY,
 	bool const filter
 ) {
 	if (!exists()) return *this;
@@ -505,7 +505,7 @@ Texture2D const& Texture2D::operator()(uint8 const slot) const {
 	return enable(slot);
 }
 
-uint Texture2D::getID() const {
+uint32 Texture2D::getID() const {
 	if (!exists()) return 0;
 	return image->getID();
 }

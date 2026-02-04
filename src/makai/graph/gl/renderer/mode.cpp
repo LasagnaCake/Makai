@@ -5,7 +5,7 @@
 using namespace Makai;
 using namespace Makai; using namespace Makai::Graph;
 
-uint convert(DisplayMode const& mode) {
+uint32 convert(DisplayMode const& mode) {
 	switch (mode) {
 		case DisplayMode::ODM_POINTS:			return GL_POINTS;
 		case DisplayMode::ODM_LINE_STRIP:		return GL_LINE_STRIP;
@@ -42,6 +42,6 @@ void Makai::Graph::setCullMode(CullMode const& mode) {
 	}
 }
 
-uint Makai::Graph::getGLDisplayMode(DisplayMode const& mode) {
+uint32 Makai::Graph::getGLDisplayMode(DisplayMode const& mode) {
 	return convert(mode);
 }

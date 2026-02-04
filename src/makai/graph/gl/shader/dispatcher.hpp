@@ -23,7 +23,7 @@ namespace Makai::Graph::Pipeline {
 		bool exists() const;
 		/// @brief Returns the pipeline dispatcher's ID.
 		/// @return Pipeline dispatcher ID.
-		uint id() const;
+		uint32 id() const;
 
 		Dispatcher();
 		~Dispatcher();

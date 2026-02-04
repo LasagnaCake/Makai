@@ -20,11 +20,11 @@ namespace Makai::Graph {
 		/// @brief Basic buffer object.
 		struct BufferObject {
 			/// @brief Underlying API ID.
-			uint id		= 0;
+			uint32 id		= 0;
 			/// @brief Buffer width.
-			uint width	= 0;
+			uint32 width	= 0;
 			/// @brief Buffer height.
-			uint height	= 0;
+			uint32 height	= 0;
 		};
 
 		/// @brief Basic screen buffer.
@@ -37,25 +37,25 @@ namespace Makai::Graph {
 			/// @param width Buffer width.
 			/// @param height Buffer height.
 			ABuffer(
-				uint const width,
-				uint const height
+				uint32 const width,
+				uint32 const height
 			);
 
 			/// @brief Destructor.
 			virtual ~ABuffer();
-			
+
 			/// @brief Destroys the buffer.
 			/// @return Reference to self.
 			virtual ABuffer& destroy();
-			
+
 			/// @brief Creates the buffer with a given width and height.
 			/// @param width Buffer width.
 			/// @param height Buffer height.
 			virtual ABuffer& create(
-				uint const width,
-				uint const height
+				uint32 const width,
+				uint32 const height
 			);
-			
+
 			/// @brief Renders the buffer to another buffer.
 			/// @param target Buffer to render to.
 			/// @return Reference to self.
@@ -81,7 +81,7 @@ namespace Makai::Graph {
 			/// @brief Returns whether the buffer exists.
 			/// @return Whether buffer exists.
 			bool exists() const;
-			
+
 			/// @brief Returns the buffer as a buffer object.
 			/// @return Buffer as buffer object.
 			BufferObject data() const;
@@ -89,13 +89,13 @@ namespace Makai::Graph {
 		protected:
 			/// @brief Returns the buffer's width.
 			/// @return Buffer width.
-			uint getWidth() const;
+			uint32 getWidth() const;
 			/// @brief Returns the buffer's height.
 			/// @return Buffer height.
-			uint getHeight() const;
+			uint32 getHeight() const;
 			/// @brief Returns the buffer's underlying API ID.
 			/// @return Underlying API ID.
-			uint getID() const;
+			uint32 getID() const;
 
 		private:
 			/// @brief Whether buffer exists.
@@ -125,8 +125,8 @@ namespace Makai::Graph {
 		/// @param width Buffer width.
 		/// @param height Buffer height.
 		DrawBuffer(
-			uint const width,
-			uint const height
+			uint32 const width,
+			uint32 const height
 		);
 
 		/// @brief Destructor.
@@ -140,8 +140,8 @@ namespace Makai::Graph {
 		/// @param width Buffer width.
 		/// @param height Buffer height.
 		DrawBuffer& create(
-			uint const width,
-			uint const height
+			uint32 const width,
+			uint32 const height
 		) override;
 
 		/// @brief Enables the buffer.
@@ -192,9 +192,9 @@ namespace Makai::Graph {
 		/// @brief Buffer storage.
 		Storage buffer;
 		/// @brief Vertex array.
-		uint vao;
+		uint32 vao;
 		/// @brief Vertex buffer.
-		uint vbo;
+		uint32 vbo;
 	};
 
 	/// @brief Frame buffer.

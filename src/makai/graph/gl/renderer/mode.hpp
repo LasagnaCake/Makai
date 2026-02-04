@@ -52,7 +52,7 @@ namespace Makai::Graph {
 	/// @brief Gets the graphical display mode as the associated OpenGL enum value.
 	/// @param mode Mode to convert.
 	/// @return Mode as OpenGL enum value.
-	uint getGLDisplayMode(DisplayMode const& mode = DisplayMode::ODM_TRIS);
+	uint32 getGLDisplayMode(DisplayMode const& mode = DisplayMode::ODM_TRIS);
 }
 
 #endif // MAKAILIB_GRAPH_MODE_H

@@ -4,7 +4,7 @@
 
 using namespace Makai; using namespace Makai::Graph;
 
-Uniform::Uniform(String const& _name, uint const _id):
+Uniform::Uniform(String const& _name, uint32 const _id):
 	name(_name),
 	id(_id),
 	location(glGetUniformLocation(_id, _name.cstr()))
@@ -22,7 +22,7 @@ void Uniform::set(int const value, usize const offset) const {
 	++this->offset;
 }
 
-void Uniform::set(uint const value, usize const offset) const {
+void Uniform::set(uint32 const value, usize const offset) const {
 	this->offset = 0;
 	glUniform1ui(getUniform() + offset, value);
 	++this->offset;
@@ -73,7 +73,7 @@ void Uniform::setArray(int const* const values, usize const count, usize const o
 	this->offset = count;
 }
 
-void Uniform::setArray(uint const* const values, usize const count, usize const offset) const {
+void Uniform::setArray(uint32 const* const values, usize const count, usize const offset) const {
 	this->offset = 0;
 	glUniform1uiv(getUniform() + offset, count, values);
 	this->offset = count;
@@ -115,15 +115,15 @@ void Uniform::setArray(Matrix4x4 const* const values, usize const count, usize c
 	this->offset = count;
 }
 
-uint Uniform::getUniformArray(usize const offset) const {
+uint32 Uniform::getUniformArray(usize const offset) const {
 	return location + offset + this->offset;
 }
 
-uint Uniform::getUniform() const {
+uint32 Uniform::getUniform() const {
 	return location + offset;
 }
 
-uint Uniform::getUniform(String const& append) const {
+uint32 Uniform::getUniform(String const& append) const {
 	return glGetUniformLocation(id, (name + append).cstr());
 }
 

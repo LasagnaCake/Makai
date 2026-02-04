@@ -51,7 +51,7 @@ uniform bool useWave		= false;
 uniform vec2 waveAmplitude	= vec2(1);
 uniform vec2 waveFrequency	= vec2(1);
 uniform vec2 waveShift		= vec2(1);
-uniform uint waveShape		= 0;
+uniform uint32 waveShape	= 0;
 uniform float waveLOD		= 4;
 
 // [ SCREEN PRISM ]
@@ -59,7 +59,7 @@ uniform bool usePrism		= false;
 uniform vec2 prismAmplitude	= vec2(1);
 uniform vec2 prismFrequency	= vec2(1);
 uniform vec2 prismShift		= vec2(1);
-uniform uint prismShape		= 0;
+uniform uint32 prismShape	= 0;
 uniform float prismLOD		= 4;
 
 // [ SCREEN POLAR DISTORTION ]
@@ -74,8 +74,8 @@ uniform bool	polarWarpFishEye		= true;
 // [ TEXTURE WARPING ]
 uniform bool		useWarp			= false;
 uniform sampler2D	warpTexture;
-uniform uint		warpChannelX	=	0;
-uniform uint		warpChannelY	=	1;
+uniform uint32		warpChannelX	=	0;
+uniform uint32		warpChannelY	=	1;
 
 // [ SCREEN RAINBOW EFFECT ]
 uniform bool	useRainbow			= false;
@@ -102,13 +102,13 @@ uniform vec2	noiseScale				= vec2(1);
 uniform vec2	noiseOffset				= vec2(0);
 uniform float	noiseStrength			= 1;
 uniform float	noiseSeed				= 1;
-uniform uint	noiseType				= 0;
-uniform uint	noiseBlendSrcColorFunc	= 1;
-uniform uint	noiseBlendDstColorFunc	= 1;
-uniform uint	noiseBlendColorEq		= 1;
-uniform uint	noiseBlendSrcAlphaFunc	= 1;
-uniform uint	noiseBlendDstAlphaFunc	= 1;
-uniform uint	noiseBlendAlphaEq		= 1;
+uniform uint32	noiseType				= 0;
+uniform uint32	noiseBlendSrcColorFunc	= 1;
+uniform uint32	noiseBlendDstColorFunc	= 1;
+uniform uint32	noiseBlendColorEq		= 1;
+uniform uint32	noiseBlendSrcAlphaFunc	= 1;
+uniform uint32	noiseBlendDstAlphaFunc	= 1;
+uniform uint32	noiseBlendAlphaEq		= 1;
 
 // [ HSLBC MODIFIERS ]
 uniform float	hue			= 0;
@@ -118,7 +118,7 @@ uniform float	brightness	= 0;
 uniform float	contrast	= 1;
 
 // [ DEBUG SETTINGS ]
-uniform uint	debugView	= 0;
+uniform uint32	debugView	= 0;
 
 #ifndef PI
 #define PI 3.1415926535
@@ -287,7 +287,7 @@ float supernoise(vec2 xy, float seed) {
 	return goldnoise(vec2(simplenoise(xy), simplenoise(xy.yx)), seed);
 }
 
-float pattern(float t, uint shape, float lod) {
+float pattern(float t, uint32 shape, float lod) {
 	switch (shape) {
 		// Square wave
 		default:
@@ -318,7 +318,7 @@ float pattern(float t, uint shape, float lod) {
 	}
 }
 
-vec2 patternV2(vec2 t, uint shape, float lod) {
+vec2 patternV2(vec2 t, uint32 shape, float lod) {
 	return vec2(pattern(t.x, shape, lod), pattern(t.y, shape, lod));
 }
 
@@ -338,7 +338,7 @@ vec4 applyBrightnessAndContrast(vec4 color) {
 	return vec4(((res - 0.5f) * max(contrast, 0)) + 0.5f, color.a);
 }
 
-float rand(vec2 xy, uint type, float seed){
+float rand(vec2 xy, uint32 type, float seed){
     switch (type) {
     	default:
     	// Simple Noise
@@ -352,7 +352,7 @@ float rand(vec2 xy, uint type, float seed){
 
 
 #define VBLEND_FUNC_DEFINE(T)			\
-T vblendfunc(T src, T dst, uint func) {	\
+T vblendfunc(T src, T dst, uint32 func) {	\
 	switch (func) {						\
 		default:						\
 		case 0x00: return T(0);			\
@@ -365,7 +365,7 @@ T vblendfunc(T src, T dst, uint func) {	\
 }
 
 #define VBLEND_EQ_DEFINE(T)						\
-T vblendeq(T a, T b, uint eq) {					\
+T vblendeq(T a, T b, uint32 eq) {					\
 	switch (eq) {								\
 		default:								\
 		case 0x00: return a + b;				\
@@ -386,7 +386,7 @@ T vblendeq(T a, T b, uint eq) {					\
 }
 
 #define VBLEND_DEFINE(T)															\
-T vblend(T src, T dst, uint srcf, uint dstf, uint eq) {								\
+T vblend(T src, T dst, uint32 srcf, uint32 dstf, uint32 eq) {								\
 	return vblendeq(vblendfunc(src, dst, srcf), vblendfunc(src, dst, dstf), eq);	\
 }
 
@@ -407,7 +407,7 @@ VBLEND_DEFINE(vec3)
 VBLEND_DEFINE(vec4)
 
 
-vec4 blendNoise(vec4 color, float noise, uint srcColorFunc, uint dstColorFunc, uint colorEq, uint srcAlphaFunc, uint dstAlphaFunc, uint alphaEq) {
+vec4 blendNoise(vec4 color, float noise, uint32 srcColorFunc, uint32 dstColorFunc, uint32 colorEq, uint32 srcAlphaFunc, uint32 dstAlphaFunc, uint32 alphaEq) {
 	return vec4(
 		vblend(color.rgb, noise.xxx, srcColorFunc, dstColorFunc, colorEq),
 		vblend(color.a, noise.x, srcAlphaFunc, dstAlphaFunc, alphaEq)
@@ -431,7 +431,7 @@ vec4 applyNoise(vec4 color, vec2 uv) {
 }
 
 void main() {
-	// Screen wave	
+	// Screen wave
 	vec2 wave = vec2(0);
 	if (useWave) {
 		wave = (fragUV.yx * waveFrequency) * TAU + waveShift;
@@ -491,7 +491,7 @@ void main() {
 	if (color.w <= 0) discard;
 
 	color = applyHSL(color);
-	
+
 	color = applyBrightnessAndContrast(color);
 
 	FragColor = mix(color, vec4(polarWarpColor.xyz, polarWarpColor.w * color.w), pfac * polarWarpTintStrength);

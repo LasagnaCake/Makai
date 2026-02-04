@@ -92,7 +92,7 @@ struct Pipeline::Stage::StageProgram {
 	bool		created	= false;
 };
 
-uint Pipeline::Stage::id() const			{return instance->id;		}
+uint32 Pipeline::Stage::id() const			{return instance->id;		}
 ShaderType Pipeline::Stage::type() const	{return instance->type;		}
 bool Pipeline::Stage::exists() const		{return instance->created;	}
 

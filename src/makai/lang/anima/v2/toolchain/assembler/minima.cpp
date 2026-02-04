@@ -167,7 +167,7 @@ static Location getConstantLocation(Minima::Context& context) {
 				6
 			};
 		else {
-			Makai::Data::Value c = 
+			Makai::Data::Value c =
 				(
 					v.type == LTS_TT_INTEGER
 				?	v.value.get<ssize>()
@@ -212,7 +212,7 @@ static Location getDataLocation(Minima::Context& context) {
 				return {DataLocation::AV2_DL_INTERNAL, 9};
 			} else if (id == "nan") {
 				return {DataLocation::AV2_DL_INTERNAL, 4};
-			} else MINIMA_ERROR(InvalidValue, "Invalid token for data location!"); 
+			} else MINIMA_ERROR(InvalidValue, "Invalid token for data location!");
 		} break;
 		case Type{'@'}:
 			return getExtern(context);
@@ -409,7 +409,7 @@ MINIMA_ASSEMBLE_FN(StackPush) {
 		MINIMA_ERROR(NonexistentValue, "Malformed stack push!");
 	auto const loc = getDataLocation(context);
 	Instruction inst = {
-		Instruction::Name::AV2_IN_STACK_PUSH, 
+		Instruction::Name::AV2_IN_STACK_PUSH,
 		Makai::Cast::bit<uint32>(Instruction::StackPush{loc.at})
 	};
 	context.program.code.pushBack(inst);
@@ -1011,14 +1011,14 @@ MINIMA_ASSEMBLE_FN(Get) {
 	Instruction::GetRequest get;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const from = getDataLocation(context); 
+	auto const from = getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
 	if (context.stream.current().type != Type{'['})
 		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const field = getDataLocation(context); 
+	auto const field = getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
 	if (context.stream.current().type != Type{']'})
@@ -1063,7 +1063,7 @@ MINIMA_ASSEMBLE_FN(Set) {
 		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	auto const field = getDataLocation(context); 
+	auto const field = getDataLocation(context);
 	if (context.stream.current().type != Type{']'})
 		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
 	set.from	= from.at;
