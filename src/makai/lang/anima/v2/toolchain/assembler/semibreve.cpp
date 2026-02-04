@@ -544,6 +544,12 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		case LTS_TT_CHARACTER: 				return {context.getBasicType("string"),	context.resolveTo(Makai::toString("'", current.value.get<char>(), "'"))	};
 		case LTS_TT_INTEGER:				return {context.getBasicType("uint"),	context.resolveTo(current.value.toString())								};
 		case LTS_TT_REAL:					return {context.getBasicType("real"),	context.resolveTo(current.value.toString())								};
+		case Type{'{'}: {
+			context.startScope();
+			auto const result = doScope(context);
+			context.endScope();
+			return result;
+		}
 		default: context.error<InvalidValue>("Invalid expression!");
 	}
 }

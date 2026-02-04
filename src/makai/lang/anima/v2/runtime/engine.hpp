@@ -20,11 +20,11 @@ namespace Makai::Anima::V2::Runtime {
 				bind(name, id);
 				return id;
 			}
-			
+
 			constexpr void remove(UUID const& id) {
 				nameMap.filter([&] (auto const& e) {return e.value == id;});
 			}
-			
+
 			constexpr UUID bind(String const& name, UUID const& id) {
 				auto const prev = nameMap[name];
 				nameMap[name] = id;
@@ -57,7 +57,7 @@ namespace Makai::Anima::V2::Runtime {
 			constexpr bool has(UUID const& id) const {
 				return functions.contains(id);
 			}
-		
+
 		private:
 			Dictionary<UUID>						nameMap;
 			Map<UUID, Function<ExternalFunction>>	functions;
@@ -106,7 +106,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_ARRAY_OP		= '[',
 			AV2_EBIF_OBJECT_OP		= '{',
 		};
-		
+
 		enum class BuiltInStringOperation: uint8 {
 			AV2_EBI_SO_SLICE	= '_',
 			AV2_EBI_SO_REPLACE	= ':',
@@ -170,7 +170,7 @@ namespace Makai::Anima::V2::Runtime {
 		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
-		
+
 		bool hasFunction(String const& name);
 
 	private:
@@ -196,7 +196,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		Context::Storage consumeValue(DataLocation const from);
 		Context::Storage getValueFromLocation(DataLocation const location, usize const id);
-		
+
 		Context::Storage& accessValue(DataLocation const from);
 		Context::Storage& accessLocation(DataLocation const location, usize const id);
 
@@ -226,7 +226,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Yield();
 
 		void callBuiltIn(BuiltInFunction const func);
-		
+
 		void callBuiltInStringOp(BuiltInFunction const func);
 		void callBuiltInArrayOp(BuiltInFunction const func);
 		void callBuiltInObjectOp(BuiltInFunction const func);
