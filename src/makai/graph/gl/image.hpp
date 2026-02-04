@@ -104,7 +104,7 @@ namespace Makai::Graph {
 
 	private:
 		/// @brief Image ID.
-		uint32 id = 0;
+		uint id = 0;
 	};
 
 	/// @brief 2D image.

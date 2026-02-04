@@ -140,6 +140,8 @@ typedef uint64 litsize;
 typedef unsigned long long	litint;
 typedef long double			litfloat;
 
+typedef unsigned int uint;
+
 #if CPU_ARCH == 64
 /// @brief Signed 128-bit integer.
 typedef __int128_t	int128;

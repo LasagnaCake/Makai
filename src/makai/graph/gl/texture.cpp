@@ -41,7 +41,7 @@ constexpr uint32 convert(FilterMode const& type) {
 
 uint32 createCopyBuffer() {
 	DEBUGLN("Creating copy buffer...");
-	uint32 id = 0;
+	uint id = 0;
 	glGenFramebuffers(1, &id);
 	return id;
 }

@@ -20,7 +20,7 @@ namespace Makai::Graph {
 		/// @brief Basic buffer object.
 		struct BufferObject {
 			/// @brief Underlying API ID.
-			uint32 id		= 0;
+			uint id			= 0;
 			/// @brief Buffer width.
 			uint32 width	= 0;
 			/// @brief Buffer height.
