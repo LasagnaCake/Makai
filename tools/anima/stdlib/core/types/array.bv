@@ -1,0 +1,91 @@
+namespace Array {
+	func slice(what: arr, begin: int, end: int): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-2] -> register[0]
+			copy move stack[-1] -> register[1]
+			copy move stack[-0] -> register[2]
+			call in arr slice
+		}
+		return move out;
+	}
+
+	func like(what: arr, val: any): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr like
+		}
+		return move out;
+	}
+
+	func unlike(what: arr, val: any): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr unlike
+		}
+		return move out;
+	}
+
+	func fuzz(what: arr, val: any): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr fuzz
+		}
+		return move out;
+	}
+
+	func find(what: arr, val: any): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr find
+		}
+		return out;
+	}
+
+	func remove(what: arr, i: int): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr del
+		}
+		return ref out;
+	}
+
+	func push(what: arr, val: any): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr push
+		}
+		return ref out;
+	}
+
+	func pop(what: arr): any {
+		temporary out: any = (null as any);
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr pop
+		}
+		return ref out;
+	}
+}
+
+extend array with func slice(begin: int, end: int): array	=> Array.slice(ref self, move begin, move end);
+extend array with func like(val: any): array				=> Array.like(ref self, move val);
+extend array with func unlike(val: any): array				=> Array.unlike(ref self, move val);
+extend array with func find(val: any): array				=> Array.find(ref self, move val);
+extend array with func fuzz(val: any): array				=> Array.fuzz(ref self, move val);
+extend array with func push(val: any): array				=> ref Array.push(ref self, move val);
+extend array with func pop(): any							=> ref Array.pop(ref self);
+extend array with func remove(val: any): array				=> ref Array.remove(ref self, move val);

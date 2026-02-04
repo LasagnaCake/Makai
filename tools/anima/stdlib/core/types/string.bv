@@ -1,0 +1,103 @@
+namespace String {
+	func slice(what: str, begin: int, end: int): str {
+		temporary out: str = "";
+		fatal asm {
+			copy move stack[-2] -> register[0]
+			copy move stack[-1] -> register[1]
+			copy move stack[-0] -> register[2]
+			call in str slice
+		}
+		return move sout;
+	}
+
+	func split(what: str, sep: str): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in str sep
+			copy move register[0] -> .
+		}
+		return move out;
+	}
+
+	func replace(what: str, match: str, rep: str): str {
+		temporary out: bool = "";
+		fatal asm {
+			copy move stack[-2] -> register[0]
+			copy move stack[-1] -> register[1]
+			copy move stack[-0] -> register[2]
+			call in str rep
+		}
+		return move out;
+	}
+
+	func remove(what: str, match: str): str {
+		temporary out: str = "";
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in str del
+		}
+		return move out;
+	}
+
+	func contains(what: str, match: str): bool {
+		temporary out: bool = false;
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in str has
+		}
+		return move out;
+	}
+
+	func matches(what: str, match: str): bool {
+		temporary out: bool = false;
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in str is
+		}
+		return move out;
+	}
+
+	func find(what: str, match: str): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in str find
+		}
+		return move out;
+	}
+
+	func fuzz(what: str, match: str): arr {
+		temporary out: arr = [];
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in str fuzz
+		}
+		return move out;
+	}
+
+	macro join {
+		{$($)}											=> {""														}
+		{$($value:expr$)}								=> {$value													}
+		{$($first:expr *{, $rest:expr}$)}				=> {($first + core.String.join($*rest{,}))					}
+		{$[$]$($)}										=> {""														}
+		{$[$sep:expr$]$()}								=> {""														}
+		{$[$sep:expr$]$($value:expr)}					=> {$value													}
+		{$[$sep:expr$]$($first:expr *{, $rest:expr}$)}	=> {(($first + $sep) + core.String.join[$sep]($*rest{,}))	}
+	}
+}
+
+extend string with func slice(begin: int, end: int): str	=> String.slice(ref self, move begin, move end);
+extend string with func split(sep: str): arr				=> String.split(ref self, move sep);
+extend string with func replace(match: str, rep: str): str	=> String.replace(ref self, match, move rep);
+extend string with func remove(match: str): str				=> String.remove(ref self, move match);
+extend string with func contains(match: str): bool			=> String.contains(ref self, move match);
+extend string with func matches(match: str): bool			=> String.matches(ref self, move match);
+extend string with func find(match: str): arr				=> String.find(ref self, move match);
+extend string with func fuzz(match: str): arr				=> String.fuzz(ref self, move match);
