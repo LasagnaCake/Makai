@@ -42,8 +42,8 @@ static Makai::Data::Value configBase() {
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]		= "help";
-	tl["I"]		= "ir";
-	tl["Ir"]	= "ir";
+	tl["Asm"]	= "asm";
+	tl["Min"]	= "asm";
 	tl["o"]		= "output";
 	tl["t"]		= "type";
 	tl["l"]		= "lang";
@@ -74,12 +74,16 @@ namespace Command {
 		static void doRemove(Makai::Data::Value& cfg) {
 
 		}
+
+		static void doList(Makai::Data::Value& cfg) {
+
+		}
 	}
 
 	static void doHelpMessage() {
 		DEBUGLN("Anima Concerto - V" + VER.serialize().get<Makai::String>());
 		DEBUGLN("Available commands:");
-		DEBUGLN("build <target> [-Ir] [--output <name>]");
+		DEBUGLN("build <target> [-Asm,-Min] [--output <name>]");
 		DEBUGLN("create <name> [--type <type>] [--lang <lang>]");
 		DEBUGLN("refresh");
 		DEBUGLN("add <module> [--ver <version>]");
@@ -92,8 +96,9 @@ namespace Command {
 			throw Makai::Error::NonexistentValue("Missing target!");
 		// TODO: Package sources
 		auto const command = cfg["__args"][1].getString();
-		if (command == "add")		Source::doAdd(cfg);
-		if (command == "remove")	Source::doRemove(cfg);
+		if (command == "add")			Source::doAdd(cfg);
+		else if (command == "remove")	Source::doRemove(cfg);
+		else if (command == "list")		Source::doList(cfg);
 	}
 
 	static void doBuild(Makai::Data::Value& cfg) {
@@ -108,7 +113,7 @@ namespace Command {
 			return;
 		if (proj.main.source.empty() && proj.main.path.size())
 			proj.main.source = Makai::File::getText(proj.main.path);
-		Compiler::buildProject(ctx, proj, cfg["ir"]);
+		Compiler::buildProject(ctx, proj, cfg["asm"]);
 		auto const outName = Makai::Regex::replace(cfg["output"], "\\$\\{name\\}", proj.name);
 		Makai::OS::FS::makeDirectory(Makai::String("output"));
 		if (cfg["ir"]) {
