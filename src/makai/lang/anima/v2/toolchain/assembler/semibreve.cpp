@@ -1505,11 +1505,11 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 	auto const varType = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "rule type").getString();
 	if (varType == "expr") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_EXPRESSION;
-	} else if (varType == "string") {
+	} else if (varType == "str" || varType == "string") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
 		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-	} else if (varType == "id") {
+	} else if (varType == "id" || varType == "identifier") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
 	} else if (varType == "name") {
@@ -1517,26 +1517,26 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
 		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
 		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-	} else if (varType == "sqstring") {
+	} else if (varType == "sqstr" || varType == "sqstring") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
-	} else if (varType == "dqstring") {
+	} else if (varType == "dqstr" || varType == "dqstring") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-	} else if (varType == "int") {
+	} else if (varType == "int" || varType == "integer") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
 	} else if (varType == "real") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_REAL}});
-	} else if (varType == "number") {
+	} else if (varType == "number" || varType == "num") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
 		base.tokens.pushBack({{.type = LTS_TT_REAL}});
-	} else if (varType == "char") {
+	} else if (varType == "char" || varType == "character") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
-	} else if (varType == "val") {
+	} else if (varType == "value") {
 		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
 		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
