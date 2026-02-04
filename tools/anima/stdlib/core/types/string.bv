@@ -72,16 +72,6 @@ namespace String {
 		return move out;
 	}
 
-	func fuzz(what: str, match: str): arr {
-		temporary out: arr;
-		fatal asm {
-			copy move stack[-1] -> register[0]
-			copy move stack[-0] -> register[1]
-			call in str fuzz
-		}
-		return move out;
-	}
-
 	macro join {
 		{$($)}											=> {""														}
 		{$($value:expr$)}								=> {$value													}
@@ -100,4 +90,5 @@ extend str with func remove(match: str): str			=> String.remove(ref self, move m
 extend str with func contains(match: str): bool			=> String.contains(ref self, move match);
 extend str with func matches(match: str): bool			=> String.matches(ref self, move match);
 extend str with func find(match: str): arr				=> String.find(ref self, move match);
-extend str with func fuzz(match: str): arr				=> String.fuzz(ref self, move match);
+
+extend str with func clone(): str => copy self;

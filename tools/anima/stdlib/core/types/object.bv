@@ -1,0 +1,4 @@
+namespace Object {
+}
+
+extend data with func clone(): data => copy self;

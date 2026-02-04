@@ -47,7 +47,7 @@ namespace Array {
 			copy move stack[-0] -> register[1]
 			call in arr find
 		}
-		return out;
+		return move out;
 	}
 
 	func remove(what: arr, i: int): arr {
@@ -79,6 +79,16 @@ namespace Array {
 		}
 		return ref out;
 	}
+
+	func join(what: arr): arr {
+		temporary out: arr;
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arr join
+		}
+		return ref out;
+	}
 }
 
 extend arr with func slice(begin: int, end: int): arr	=> Array.slice(ref self, move begin, move end);
@@ -89,3 +99,6 @@ extend arr with func fuzz(val: any): arr				=> Array.fuzz(ref self, move val);
 extend arr with func push(val: any): arr				=> ref Array.push(ref self, move val);
 extend arr with func pop(): any							=> ref Array.pop(ref self);
 extend arr with func remove(val: any): arr				=> ref Array.remove(ref self, move val);
+extend arr with func join(val: any): arr				=> ref Array.join(ref self, move val);
+
+extend arr with func clone(): arr => copy self;
