@@ -810,8 +810,8 @@ Solution doVarAssign(
 		if (sourceType != "stack") {
 			if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
 				context.error<InvalidValue>("Symbol has already been previously defined as a different class!");
-			else if (!sym->value.contains("type"))
-				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing global variable type!");
+			else if (!sym->base)
+				context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
 			else if ((sourceType != "stack") && (!sym->isLocalVar()) && sym->base != type)
 				context.error<InvalidValue>("Global variable expression does not match its prevoius type!");
 		}

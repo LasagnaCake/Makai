@@ -1,6 +1,6 @@
 namespace String {
 	func slice(what: str, begin: int, end: int): str {
-		temporary out: str = "";
+		temporary out: str;
 		fatal asm {
 			copy move stack[-2] -> register[0]
 			copy move stack[-1] -> register[1]
@@ -11,7 +11,7 @@ namespace String {
 	}
 
 	func split(what: str, sep: str): arr {
-		temporary out: arr = [];
+		temporary out: arr;
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -22,7 +22,7 @@ namespace String {
 	}
 
 	func replace(what: str, match: str, rep: str): str {
-		temporary out: bool = "";
+		temporary out: bool;
 		fatal asm {
 			copy move stack[-2] -> register[0]
 			copy move stack[-1] -> register[1]
@@ -33,7 +33,7 @@ namespace String {
 	}
 
 	func remove(what: str, match: str): str {
-		temporary out: str = "";
+		temporary out: str;
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -43,7 +43,7 @@ namespace String {
 	}
 
 	func contains(what: str, match: str): bool {
-		temporary out: bool = false;
+		temporary out: bool;
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -53,7 +53,7 @@ namespace String {
 	}
 
 	func matches(what: str, match: str): bool {
-		temporary out: bool = false;
+		temporary out: bool;
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -63,7 +63,7 @@ namespace String {
 	}
 
 	func find(what: str, match: str): arr {
-		temporary out: arr = [];
+		temporary out: arr;
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -73,7 +73,7 @@ namespace String {
 	}
 
 	func fuzz(what: str, match: str): arr {
-		temporary out: arr = [];
+		temporary out: arr;
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
