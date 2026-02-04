@@ -64,7 +64,7 @@ void Engine::terminate() {
 }
 
 void Engine::v2Get() {
-	Instruction::GetRequest get;
+	Instruction::GetRequest get = bitcast<Instruction::GetRequest>(current.type);
 	auto const src		= consumeValue(get.from);
 	auto const field	= consumeValue(get.field);
 	auto& dst			= accessValue(get.to);
@@ -296,6 +296,7 @@ Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
 	advance(true);
 	auto const store = getValueFromLocation(from, bitcast<uint64>(current));
 	if (!store) return new Value();
+	return store;
 }
 
 static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bool const noCopy) {
