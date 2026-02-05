@@ -787,8 +787,11 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
 	auto const id = context.currentToken().value.get<Makai::String>();
-	auto t = getType(context);
-	return {t, context.resolveTo(id)};
+	if (context.isBasicType(id)) {
+		auto t = getType(context);
+		return {t, context.resolveTo(id)};
+	}
+	else return {context.getBasicType("void"), "move ."}
 }
 
 using PreAssignFunction = Makai::Functor<void(Context&, Solution&)>;
