@@ -791,7 +791,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(ReservedValueResolution) {
 		auto t = getType(context);
 		return {t, context.resolveTo(id)};
 	}
-	else return {context.getBasicType("void"), "move ."}
+	else return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 using PreAssignFunction = Makai::Functor<void(Context&, Solution&)>;
