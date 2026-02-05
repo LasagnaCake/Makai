@@ -1131,6 +1131,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return basics.s.ns->members[name];
 		}
 
+		constexpr bool isBasicType(String const& name) const {
+			return basics.s.ns->members.contains(name);
+		}
+
 		struct MessageOutput {
 
 			template <class... Args>
