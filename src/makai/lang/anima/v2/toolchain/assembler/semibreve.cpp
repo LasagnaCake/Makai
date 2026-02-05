@@ -72,9 +72,11 @@ static Makai::Instance<Context::Scope::Member> getType(Context& context) {
 	switch (ret.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = ret.value.get<Makai::String>();
-			if (!context.hasType(id))
-				return context.getBasicType("void");
-			return context.getSymbolRefByName(id);
+			if (context.isBasicType(id))
+				return context.getBasicType(id);
+			if (context.hasType(id))
+				return context.getSymbolRefByName(id);
+			context.error<InvalidValue>("Invalid/Unsupported type!");
 		}
 		default: context.error<InvalidValue>("Invalid/Unsupported type!");
 	}
