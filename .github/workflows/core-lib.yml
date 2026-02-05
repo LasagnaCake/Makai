@@ -187,9 +187,9 @@ jobs:
       with:
         name: lib-release
         path: output
-    - name: make tooling gmake=mingw32-make
+    - name: make tooling
       run: |
-        make tooling gmake=mingw32-make
+        mingw32-make tooling gmake=mingw32-make
     - uses: actions/upload-artifact@master
       with:
         name: tooling
