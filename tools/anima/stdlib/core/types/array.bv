@@ -91,11 +91,11 @@ namespace Array {
 	}
 }
 
-extend arr with func slice(begin: int, end: int): arr	=> Array.slice(ref self, move begin, move end);
-extend arr with func like(val: any): arr				=> Array.like(ref self, move val);
-extend arr with func unlike(val: any): arr				=> Array.unlike(ref self, move val);
-extend arr with func find(val: any): arr				=> Array.find(ref self, move val);
-extend arr with func fuzz(val: any): arr				=> Array.fuzz(ref self, move val);
+extend arr with func slice(begin: int, end: int): arr	=> move Array.slice(ref self, move begin, move end);
+extend arr with func like(val: any): arr				=> move Array.like(ref self, move val);
+extend arr with func unlike(val: any): arr				=> move Array.unlike(ref self, move val);
+extend arr with func find(val: any): arr				=> move Array.find(ref self, move val);
+extend arr with func fuzz(val: any): arr				=> move Array.fuzz(ref self, move val);
 extend arr with func push(val: any): arr				=> ref Array.push(ref self, move val);
 extend arr with func pop(): any							=> ref Array.pop(ref self);
 extend arr with func remove(val: any): arr				=> ref Array.remove(ref self, move val);
