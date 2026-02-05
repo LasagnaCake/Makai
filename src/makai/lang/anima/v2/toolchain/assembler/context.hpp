@@ -1052,10 +1052,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (name == "boolean" || name == "bool")						return true;
 			if (name == "signed" || name == "int")							return true;
 			if (name == "unsigned" || name == "uint")						return true;
-			if (name == "string" || name == "text")							return true;
-			if (name == "binary" || name == "bytes")						return true;
-			if (name == "array" || name == "list")							return true;
-			if (name == "object" || name == "data")							return true;
+			if (name == "string" || name == "str")							return true;
+			if (name == "binary" || name == "bin")							return true;
+			if (name == "array" || name == "arr")							return true;
+			if (name == "object" || name == "obj")							return true;
 			if (name == "if" || name == "else")								return true;
 			if (name == "do" || name == "while")							return true;
 			if (name == "for" || name == "in")								return true;
@@ -1178,11 +1178,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			global.ns->members["unsigned"]	= basics.uintT;
 			global.ns->members["signed"]	= basics.intT;
 			global.ns->members["real"]		= basics.floatT;
-			global.ns->members["text"]		= basics.stringT;
 			global.ns->members["str"]		= basics.stringT;
-			global.ns->members["binary"]	= basics.bytesT;
-			global.ns->members["list"]		= basics.arrayT;
-			global.ns->members["data"]		= basics.objectT;
+			global.ns->members["bin"]		= basics.bytesT;
+			global.ns->members["arr"]		= basics.arrayT;
+			global.ns->members["obj"]		= basics.objectT;
 			global.ns->members["nil"]		= basics.nullT;
 		}
 

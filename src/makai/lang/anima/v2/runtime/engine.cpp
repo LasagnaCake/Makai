@@ -84,7 +84,10 @@ void Engine::v2Get() {
 }
 
 void Engine::v2Set() {
-	Instruction::SetRequest set;
+	Instruction::SetRequest set = bitcast<Instruction::SetRequest>(current.type);
+	auto const src		= consumeValue(set.from);
+	auto const field	= consumeValue(set.field);
+	auto& dst			= accessValue(set.to);
 }
 
 void Engine::v2Yield() {
@@ -397,7 +400,7 @@ Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize 
 			return context.valueStack[-Cast::as<ssize>(id % context.valueStack.size() + 1)];
 //		case DataLocation::AV2_DL_HEAP:			{} break;
 		case DataLocation::AV2_DL_GLOBAL:		return global(id);
-		case DataLocation::AV2_DL_TEMPORARY:	return temporary();	
+		case DataLocation::AV2_DL_TEMPORARY:	return temporary();
 		default: {
 			if (inStrictMode())
 				crash(invalidLocationError(loc));

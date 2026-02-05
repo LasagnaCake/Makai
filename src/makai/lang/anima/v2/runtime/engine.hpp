@@ -131,10 +131,9 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInObjectOperation: uint8 {
-			AV2_EBI_OO_REMOVE				= '-',
+			AV2_EBI_OO_REMOVE_BY_KEY		= 'd',
+			AV2_EBI_OO_REMOVE_BY_VALUE		= 'D',
 			AV2_EBI_OO_JOIN					= '+',
-			AV2_EBI_OO_LIKE					= '=',
-			AV2_EBI_OO_UNLIKE				= '!',
 			AV2_EBI_OO_FIND_BY_KEY			= 'f',
 			AV2_EBI_OO_FUZZY_FIND_BY_KEY	= 'F',
 			AV2_EBI_OO_FIND_BY_VALUE		= 'x',
