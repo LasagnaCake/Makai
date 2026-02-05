@@ -1048,7 +1048,6 @@ SEMIBREVE_ASSEMBLE_FN(Assembly) {
 		context.writeLine(context.currentToken().token);
 		context.fetchNext();
 	}
-	context.fetchNext();
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
