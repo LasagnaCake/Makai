@@ -163,6 +163,38 @@ jobs:
         name: lib-release
         path: output
         
+  build-tooling:
+    name: Build Tooling
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    needs: [build-core-lib-debug, build-core-lib-release]
+#    needs: install-gcc
+    steps:
+    - uses: actions/checkout@v4
+    # Hellspawn BEGIN
+    - uses: msys2/setup-msys2@v2
+      with:
+        install: git mingw-w64-x86_64-toolchain
+        cache: false
+    # Hellspawn END
+    - uses: actions/download-artifact@master
+      with:
+        name: lib-debug
+        path: output
+    - uses: actions/download-artifact@master
+      with:
+        name: lib-release
+        path: output
+    - name: make tooling gmake=mingw32-make
+      run: |
+        make tooling gmake=mingw32-make
+    - uses: actions/upload-artifact@master
+      with:
+        name: tooling
+        path: output/bin
+        
   build-lib-tests-debug:
     name: Build API Tests (DEBUG)
     runs-on: windows-latest
