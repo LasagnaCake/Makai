@@ -297,6 +297,8 @@ static Solution doFunction(
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	auto const proto = doFunctionPrototype(context, false, ns, selfType);
+	context.currentScope().result = proto.returnType;
+	context.functionScope().result = proto.returnType;
 	context.currentScope().ns->members[proto.name] = proto.function;
 	context.writeLine(proto.fullName, ":");
 	if (context.hasToken(Type{'{'})) {
@@ -329,6 +331,7 @@ SEMIBREVE_ASSEMBLE_FN(ExternalFunction) {
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	context.fetchNext();
 	auto const proto = doFunctionPrototype(context, true, ns);
+	context.currentScope().result = proto.returnType;
 	context.writeLine(proto.fullName, ":");
 	Makai::String args;
 	usize argc = 0;
