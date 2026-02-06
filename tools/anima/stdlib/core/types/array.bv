@@ -57,7 +57,7 @@ namespace Array {
 			copy ref stack[-0] -> register[1]
 			call in arr del
 		}
-		return ref out;
+		return move out;
 	}
 
 	func push(what: arr, val: any): arr {
@@ -98,7 +98,7 @@ extend arr with func find(val: any): arr				=> move Array.find(ref self, move va
 extend arr with func fuzz(val: any): arr				=> move Array.fuzz(ref self, move val);
 extend arr with func push(val: any): arr				=> ref Array.push(ref self, move val);
 extend arr with func pop(): any							=> ref Array.pop(ref self);
-extend arr with func remove(val: any): arr				=> ref Array.remove(ref self, move val);
+extend arr with func remove(i: int): arr				=> ref Array.remove(ref self, move i);
 extend arr with func join(val: any): arr				=> ref Array.join(ref self, move val);
 
 extend arr with func clone(): arr => copy self;
