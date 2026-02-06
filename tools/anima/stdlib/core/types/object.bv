@@ -9,6 +9,10 @@ namespace Object {
 		return ref out;
 	}
 
+	func at(what: obj, key: str): any {
+		return move (ref what[move key]);
+	}
+
 	func remove(what: obj, key: str): obj {
 		temporary out: obj;
 		fatal asm {
@@ -40,7 +44,9 @@ namespace Object {
 	}
 
 	func find(what: obj, key: str): arr {
-		return ref [ref what[ref key]];
+		if has(ref what, ref key)
+			return move [at(ref obj, ref key)];
+		else return [];
 	}
 
 	func fuzz(what: obj, key: str): arr {
@@ -108,7 +114,8 @@ extend obj with func find(key: str): arr		=> move Object.find(ref self, move key
 extend obj with func fuzz(key: str): arr		=> move Object.fuzz(ref self, move key);
 extend obj with func keysOf(val: obj): arr		=> move Object.keysOf(ref self, move val);
 extend obj with func fuzzyKeysOf(val: str): arr	=> move Object.fuzzyKeysOf(ref self, move val);
-extend obj with func has(key: str): bool		=> move Object.contains(ref self, move key);
+extend obj with func has(key: str): bool		=> move Object.has(ref self, move key);
+extend obj with func at(key: str): any			=> move Object.at(ref self, move key);
 
 extend obj with func keys(): arr	=> move Object.keys(ref self);
 extend obj with func values(): arr	=> move Object.values(ref self);

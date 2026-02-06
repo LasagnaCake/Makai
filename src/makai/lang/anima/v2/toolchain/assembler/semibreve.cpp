@@ -763,7 +763,6 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.fetchNext();
 			if (context.currentToken().type != Type{']'})
 				context.error<InvalidValue>("Expected ']' here!");
-			context.fetchNext();
 		} break;
 		case Type{'='}: {
 			if (lhs.type != rhs.type) {
