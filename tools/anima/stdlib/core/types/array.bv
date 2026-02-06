@@ -104,6 +104,6 @@ extend arr with func push(val: any): arr				=> ref Array.push(ref self, move val
 extend arr with func pop(): any							=> ref Array.pop(ref self);
 extend arr with func remove(i: int): arr				=> ref Array.remove(ref self, move i);
 extend arr with func join(other: arr): arr				=> ref Array.join(ref self, move other);
-extend obj with func at(i: int): any					=> move Array.at(ref self, move i);
+extend arr with func at(i: int): any					=> move Array.at(ref self, move i);
 
 extend arr with func clone(): arr => copy self;

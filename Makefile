@@ -213,7 +213,7 @@ tooling: build-tooling copy-tooling
 
 build-tooling:
 	@cd tools/anima
-	@$(gmake)
+	$(GNU_MAKE)
 	@cd ../..
 
 copy-tooling:

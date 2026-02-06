@@ -509,8 +509,11 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			auto const id = current.value.get<Makai::String>();
 			auto result = doReservedValueResolution(context);
 			if (result.type != context.getBasicType("void")) return result;
-			else if (context.hasSymbol(id))
-				return resolveSymbol(context, id, context.getSymbolRefByName(id));
+			else if (context.hasSymbol(id)) {
+				auto sym = resolveSymbol(context, id, context.getSymbolRefByName(id));
+				context.fetchNext();
+				return sym;
+			}
 			else if (context.hasNamespace(id)) {
 				auto const sym = resolveNamespaceMember(context);
 				return resolveSymbol(context, sym.key, sym.value);
@@ -693,16 +696,12 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		Value::isUndefined(lhs.type->value["type"])
 	||	Value::isUndefined(rhs.type->value["type"])
 	)
-	)
-		context.error<InvalidValue>("Invalid operand types!");
+	) context.error<InvalidValue>("Invalid operand types!");
 	switch (opname.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = opname.value.get<Makai::String>();
 			if (id == "if") {
-				context.fetchNext();
 				context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "else");
-				if (context.getValue<Makai::String>() != "else")
-					context.error("Expected 'else' here!");
 				context.fetchNext();
 				auto const elseVal = doValueResolution(context);
 				result = handleTernary(context, rhs, lhs, elseVal);
@@ -1037,6 +1036,7 @@ static Solution doFunctionCall(
 		context.writeLine("clear", pushes);
 	if (!overload.contains("return"))
 		context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
+	context.fetchNext();
 	return {
 		context.resolveSymbol(overload["return"]),
 		context.resolveTo("move .")
@@ -1089,6 +1089,7 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 	if (expectedType == context.getBasicType("void"))
 		context.writeLine("end");
 	else context.writeLine("ret", result.resolve());
+	context.fetchNext();
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
@@ -1440,6 +1441,7 @@ SEMIBREVE_ASSEMBLE_FN(Yield) {
 	if (!context.inFunction())
 		context.error<InvalidValue>("Can only yield inside functions!");
 	else context.writeLine("yield");
+	context.fetchNext();
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
@@ -1984,6 +1986,8 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 		case Type{';'}: break;
 		default: context.error<InvalidValue>("Invalid expression!");
 	}
+	if (!(context.hasToken(Type{';'}) || context.hasToken(Type{'}'})))
+		context.error("Expected ';' or '}' here!");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 

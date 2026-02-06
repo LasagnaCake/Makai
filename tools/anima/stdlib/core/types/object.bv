@@ -44,9 +44,11 @@ namespace Object {
 	}
 
 	func find(what: obj, key: str): arr {
-		if has(ref what, ref key)
-			return move [at(ref obj, ref key)];
-		else return [];
+		return (
+			move [at(ref what, ref key)]
+			if has(ref what, ref key)
+			else []
+		);
 	}
 
 	func fuzz(what: obj, key: str): arr {
@@ -59,7 +61,7 @@ namespace Object {
 		return ref out;
 	}
 
-	func keysOf(what: obj, key: str): arr {
+	func keysOf(what: obj, val: any): arr {
 		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
@@ -69,7 +71,7 @@ namespace Object {
 		return ref out;
 	}
 
-	func fuzzKeysOf(what: obj, key: str): arr {
+	func fuzzyKeysOf(what: obj, val: any): arr {
 		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
@@ -112,7 +114,7 @@ extend obj with func removeValue(val: any): obj	=> ref Object.removeValue(ref se
 extend obj with func join(other: obj): obj		=> ref Object.join(ref self, move other);
 extend obj with func find(key: str): arr		=> move Object.find(ref self, move key);
 extend obj with func fuzz(key: str): arr		=> move Object.fuzz(ref self, move key);
-extend obj with func keysOf(val: obj): arr		=> move Object.keysOf(ref self, move val);
+extend obj with func keysOf(val: any): arr		=> move Object.keysOf(ref self, move val);
 extend obj with func fuzzyKeysOf(val: str): arr	=> move Object.fuzzyKeysOf(ref self, move val);
 extend obj with func has(key: str): bool		=> move Object.has(ref self, move key);
 extend obj with func at(key: str): any			=> move Object.at(ref self, move key);
