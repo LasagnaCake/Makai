@@ -1,6 +1,16 @@
 namespace Object {
+	func has(what: obj, key: str): bool {
+		temporary out: bool;
+		fatal asm {
+			copy ref stack[-1] -> register[0]
+			copy ref stack[-0] -> register[1]
+			call in obj has
+		}
+		return ref out;
+	}
+
 	func remove(what: obj, key: str): obj {
-		temporary out: arr;
+		temporary out: obj;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
@@ -10,7 +20,7 @@ namespace Object {
 	}
 
 	func removeValue(what: obj, val: any): obj {
-		temporary out: arr;
+		temporary out: obj;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
@@ -20,7 +30,7 @@ namespace Object {
 	}
 
 	func join(what: obj, other: obj): obj {
-		temporary out: arr;
+		temporary out: obj;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
@@ -98,6 +108,7 @@ extend obj with func find(key: str): arr		=> move Object.find(ref self, move key
 extend obj with func fuzz(key: str): arr		=> move Object.fuzz(ref self, move key);
 extend obj with func keysOf(val: obj): arr		=> move Object.keysOf(ref self, move val);
 extend obj with func fuzzyKeysOf(val: str): arr	=> move Object.fuzzyKeysOf(ref self, move val);
+extend obj with func has(key: str): bool		=> move Object.contains(ref self, move key);
 
 extend obj with func keys(): arr	=> move Object.keys(ref self);
 extend obj with func values(): arr	=> move Object.values(ref self);

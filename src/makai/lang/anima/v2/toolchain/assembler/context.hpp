@@ -1079,6 +1079,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			if (name == "export" || name == "import")						return true;
 			if (name == "signal")											return true;
 			if (name == "main")												return true;
+			if (name == "self")												return true;
 			return false;
 		}
 

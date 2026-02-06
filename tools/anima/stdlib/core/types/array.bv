@@ -80,7 +80,7 @@ namespace Array {
 		return ref out;
 	}
 
-	func join(what: arr): arr {
+	func join(what: arr, other: arr): arr {
 		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
@@ -99,6 +99,6 @@ extend arr with func fuzz(val: any): arr				=> move Array.fuzz(ref self, move va
 extend arr with func push(val: any): arr				=> ref Array.push(ref self, move val);
 extend arr with func pop(): any							=> ref Array.pop(ref self);
 extend arr with func remove(i: int): arr				=> ref Array.remove(ref self, move i);
-extend arr with func join(val: any): arr				=> ref Array.join(ref self, move val);
+extend arr with func join(other: arr): arr				=> ref Array.join(ref self, move other);
 
 extend arr with func clone(): arr => copy self;
