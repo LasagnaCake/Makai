@@ -306,6 +306,7 @@ static Solution doFunction(
 	if (context.hasToken(Type{'{'})) {
 		doScope(context);
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
+		context.fetchNext();
 		auto const v = doValueResolution(context);
 		if (!proto.returnType || proto.returnType == context.getBasicType("void"))
 			context.writeLine("ret void");
@@ -525,8 +526,6 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			} else if (id == "move" || id == "copy" || id == "ref") {
 				context.fetchNext();
 				auto v = doValueResolution(context);
-				if (v.resolve().back() == '.' && id == "ref")
-					context.error("Cannot have pass-by-reference on temporary values!");
 				v.resolver = context.changeSemantic(v.resolver, id);
 				return v;
 			} else if (idCanBeValue) return {context.getBasicType("string"), context.resolveTo("\"" + id + "\"")};

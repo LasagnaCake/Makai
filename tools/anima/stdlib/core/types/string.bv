@@ -21,7 +21,7 @@ namespace String {
 	}
 
 	func replace(what: str, match: str, rep: str): str {
-		temporary out: bool;
+		temporary out: str;
 		fatal asm {
 			copy ref stack[-2] -> register[0]
 			copy ref stack[-1] -> register[1]
