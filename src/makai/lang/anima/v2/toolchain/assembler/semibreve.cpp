@@ -1594,10 +1594,12 @@ static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Contex
 				base.tokens.pushBack({{.type = LTS_TT_COMPARE_NOT_EQUALS}});
 				base.tokens.pushBack({{.type = Type{'>'}}});
 				base.tokens.pushBack({{.type = Type{'<'}}});
+			} else if (varType == "assignop") {
+				base.tokens.pushBack({{.type = Type{'='}}});
+				// TODO: The rest
 			} else if (varType == "otherop") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = Type{'@'}}});
-				base.tokens.pushBack({{.type = Type{'='}}});
 				base.tokens.pushBack({{.type = Type{':'}}});
 			} else {
 				context.error("Invalid rule type!");
