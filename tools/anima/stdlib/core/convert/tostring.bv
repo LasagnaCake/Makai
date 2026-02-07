@@ -4,6 +4,6 @@ namespace Convert {
 		{$($value:string$)}					=> {$value																}
 		{$($value:expr$)}					=> {in stringify ($value as any)										}
 		{$($first:expr *{, $rest:expr}$)}	=> {(core.Convert.toString($first) + core.Convert.toString($*rest{,}))	}
-		{$($first:expr *{+ $rest:expr}$)}	=> {core.Convert.toString($first, $*rest{,})							}
+		{$($first:expr *{$+ $rest:expr}$)}	=> {core.Convert.toString($first, $*rest{,})							}
 	}
 }
