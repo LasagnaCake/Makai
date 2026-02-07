@@ -1515,50 +1515,117 @@ SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
 }
 
 static void doMacroRuleType(Context& context, Context::Macro::Rule& rule, Context::Macro::Rule::Match& base) {
-	auto const varType = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "rule type").getString();
-	if (varType == "expr" || varType == "expression") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_EXPRESSION;
-	} else if (varType == "str" || varType == "string") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
-		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-	} else if (varType == "id" || varType == "identifier") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
-	} else if (varType == "name") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
-		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
-		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-	} else if (varType == "sqstr" || varType == "sqstring") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
-	} else if (varType == "dqstr" || varType == "dqstring") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-	} else if (varType == "int" || varType == "integer") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
-	} else if (varType == "real") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_REAL}});
-	} else if (varType == "number" || varType == "num") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
-		base.tokens.pushBack({{.type = LTS_TT_REAL}});
-	} else if (varType == "char" || varType == "character") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
-	} else if (varType == "value") {
-		base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-		base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
-		base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
-		base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
-		base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
-		base.tokens.pushBack({{.type = LTS_TT_REAL}});
-		base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
-	} else {
-		context.error("Invalid rule type!");
+	context.fetchNext();
+	switch (context.currentToken().type) {
+		case LTS_TT_IDENTIFIER: {
+			auto const varType = context.getValue<Makai::String>();
+			if (varType == "expr" || varType == "expression") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_EXPRESSION;
+			} else if (varType == "str" || varType == "string") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+			} else if (varType == "id" || varType == "identifier") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
+			} else if (varType == "name") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
+				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+			} else if (varType == "sqstr" || varType == "sqstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+			} else if (varType == "dqstr" || varType == "dqstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+			} else if (varType == "int" || varType == "integer") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
+			} else if (varType == "real") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_REAL}});
+			} else if (varType == "number" || varType == "num") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
+				base.tokens.pushBack({{.type = LTS_TT_REAL}});
+			} else if (varType == "char" || varType == "character") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
+			} else if (varType == "value") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
+				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
+				base.tokens.pushBack({{.type = LTS_TT_REAL}});
+				base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
+			} else if (varType == "mathop") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = Type{'+'}}});
+				base.tokens.pushBack({{.type = Type{'-'}}});
+				base.tokens.pushBack({{.type = Type{'*'}}});
+				base.tokens.pushBack({{.type = Type{'/'}}});
+				base.tokens.pushBack({{.type = Type{'%'}}});
+			} else if (varType == "binop") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = Type{'^'}}});
+				base.tokens.pushBack({{.type = Type{'|'}}});
+				base.tokens.pushBack({{.type = Type{'&'}}});
+				base.tokens.pushBack({{.type = Type{'~'}}});
+			} else if (varType == "logicop") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = Type{'!'}}});
+				base.tokens.pushBack({{.type = LTS_TT_LOGIC_AND}});
+				base.tokens.pushBack({{.type = LTS_TT_LOGIC_OR}});
+			} else if (varType == "arrow") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_LITTLE_ARROW}});
+				base.tokens.pushBack({{.type = LTS_TT_BIG_ARROW}});
+			} else if (varType == "incdec") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_INCREMENT}});
+				base.tokens.pushBack({{.type = LTS_TT_DECREMENT}});
+			} else if (varType == "compare") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_COMPARE_LESS_EQUALS}});
+				base.tokens.pushBack({{.type = LTS_TT_COMPARE_GREATER_EQUALS}});
+				base.tokens.pushBack({{.type = LTS_TT_COMPARE_EQUALS}});
+				base.tokens.pushBack({{.type = LTS_TT_COMPARE_NOT_EQUALS}});
+				base.tokens.pushBack({{.type = Type{'>'}}});
+				base.tokens.pushBack({{.type = Type{'<'}}});
+			} else if (varType == "otherop") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = Type{'@'}}});
+				base.tokens.pushBack({{.type = Type{'='}}});
+				base.tokens.pushBack({{.type = Type{':'}}});
+			} else {
+				context.error("Invalid rule type!");
+			}
+		} break;
+		case Type{'['}: {
+			base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+			while (true) {
+				if (context.fetchNext().hasToken(Type{']'}))
+					break;
+				switch (context.currentToken().type) {
+					case Type{'$'}: {
+						context.fetchNext();
+						base.tokens.pushBack(context.currentToken());
+					} break;
+					case Type{'@'}: {
+						doMacroRuleType(context, rule, base);
+					} break;
+					default: {
+						base.tokens.pushBack(context.currentToken());
+					} break;
+				}
+			}
+		} break;
+		default: {
+			base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+			base.tokens.pushBack(context.currentToken());
+		} break;
 	}
 }
 
@@ -1621,6 +1688,24 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 		} break;
 		case Type{'{'}: {
 			doMacroRuleGroup(context, rule, *base.addSubMatch());
+		} break;
+		case Type{'['}: {
+			while (true) {
+				if (context.fetchNext().hasToken(Type{']'}))
+					break;
+				switch (context.currentToken().type) {
+					case Type{'$'}: {
+						context.fetchNext();
+						base.tokens.pushBack(context.currentToken());
+					} break;
+					case Type{'@'}: {
+						doMacroRuleType(context, rule, base);
+					} break;
+					default: {
+						base.tokens.pushBack(context.currentToken());
+					} break;
+				}
+			}
 		} break;
 		case Type{'@'}: {
 			doMacroRuleType(context, rule, base);
