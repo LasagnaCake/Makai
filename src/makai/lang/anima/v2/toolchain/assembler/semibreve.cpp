@@ -1656,6 +1656,7 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 				case Type{'+'}:
 				case Type{'@'}:
 				case Type{'?'}:
+				case Type{'#'}:
 				case Type{'$'}:
 				case Type{'*'}:
 				case Type{'{'}:
