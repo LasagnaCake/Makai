@@ -1669,23 +1669,34 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 		} break;
 		case Type{'*'}: {
 			base.variadic	= true;
+			base.minimum	= 0;
 			base.count		= -1;
 			context.fetchNext();
 			doMacroRule(context, rule, *base.addSubMatch());
 		} break;
 		case Type{'?'}: {
 			base.variadic	= true;
+			base.minimum	= 0;
 			base.count		= 1;
 			context.fetchNext();
 			doMacroRule(context, rule, *base.addSubMatch());
 		} break;
 		case Type{'+'}: {
-			context.fetchNext().expectToken(LTS_TT_INTEGER, "max match count");
-			base.count	= context.getValue<usize>();
-			if (context.fetchNext().hasToken(Type{'*'})) {
-				base.variadic	= true;
-				context.fetchNext();
-			}
+			base.variadic	= true;
+			base.minimum	= 1;
+			base.count		= -1;
+			context.fetchNext();
+			doMacroRule(context, rule, *base.addSubMatch());
+		}
+		case Type{'#'}: {
+			base.variadic	= true;
+			context.fetchNext().expectToken(Type{'['});
+			context.fetchNext().expectToken(LTS_TT_INTEGER, "minimum match count");
+			base.minimum	= context.getValue<usize>();
+			context.fetchNext().expectToken(Type{':'});
+			context.fetchNext().expectToken(LTS_TT_INTEGER, "maximum match count");
+			base.count		= context.getValue<usize>();
+			context.fetchNext().expectToken(Type{']'});
 			doMacroRule(context, rule, *base.addSubMatch());
 		} break;
 		case Type{'{'}: {
