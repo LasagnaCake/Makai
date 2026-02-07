@@ -1695,9 +1695,12 @@ static void doMacroRule(Context& context, Context::Macro::Rule& rule, Context::M
 			context.fetchNext().expectToken(LTS_TT_INTEGER, "minimum match count");
 			base.minimum	= context.getValue<usize>();
 			context.fetchNext().expectToken(Type{':'});
-			context.fetchNext().expectToken(LTS_TT_INTEGER, "maximum match count");
-			base.count		= context.getValue<usize>();
-			context.fetchNext().expectToken(Type{']'});
+			base.count		= -1;
+			if (!context.fetchNext().hasToken(Type{']'})) {
+				context.expectToken(LTS_TT_INTEGER, "maximum match count");
+				base.count = context.getValue<usize>();
+				context.fetchNext().expectToken(Type{']'});
+			}
 			doMacroRule(context, rule, *base.addSubMatch());
 		} break;
 		case Type{'{'}: {
