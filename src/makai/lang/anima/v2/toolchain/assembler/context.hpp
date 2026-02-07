@@ -57,6 +57,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						AV2_TA_SM_RMT_EXPRESSION
 					}	type = Type::AV2_TA_SM_RMT_ANY_OF;
 					bool					variadic	= false;
+					usize					minimum		= 1;
 					usize					count		= 1;
 					List<Axiom>				tokens;
 					List<Instance<Match>>	matches;
@@ -81,6 +82,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 						switch (type) {
 							case Type::AV2_TA_SM_RMT_WHATEVER: {
 								//if (inRunTime()) DEBUGLN("::: WHATEVER");
+								if (sz < minimum)
+									return null;
 								return args.sliced(0, sz);
 							} break;
 							case Type::AV2_TA_SM_RMT_ANY_OF: {
@@ -97,9 +100,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 											continue;
 										}
 									}
-									if (next)			continue;
-									else if (variadic)	break;
-									else				return null;
+									if (next)							continue;
+									else if (variadic && i >= minimum)	break;
+									else								return null;
 								}
 							} break;
 							case Type::AV2_TA_SM_RMT_EXPRESSION: {
@@ -207,7 +210,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 							if (++matchCount >= sz) break;
 						} while (true);
 						//if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
-						if (!matchCount)
+						if (matchCount < minimum)
 							return null;
 						// DEBUGLN(".--- Variadic match? ", variadic);
 						// DEBUGLN(".--- Match size: ", sz);
