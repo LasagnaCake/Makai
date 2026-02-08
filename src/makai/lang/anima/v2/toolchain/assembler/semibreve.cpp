@@ -149,6 +149,7 @@ static Prototype doFunctionPrototype(
 	if (fname.type != Type::LTS_TT_IDENTIFIER)
 		context.error<InvalidValue>("Function name must be an identifier!");
 	auto const fid = fname.value.get<Makai::String>();
+	DEBUGLN("Name: [", fid, "]");
 	if (context.isReservedKeyword(fid))
 		context.error<InvalidValue>("Function name cannot be a reserved keyword!");
 	auto id = fid;
