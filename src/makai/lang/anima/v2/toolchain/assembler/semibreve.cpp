@@ -141,14 +141,12 @@ static TemplateMap doTemplates(Context& context) {
 
 static Prototype doFunctionPrototype(
 	Context& context,
+	Makai::String const& fname,
 	bool const isExtern = false,
 	Makai::Handle<Context::Scope::Namespace> const ns = nullptr,
 	Makai::Instance<Context::Scope::Member> const& selfType = nullptr
 ) {
-	auto const fname = context.currentToken();
-	if (fname.type != Type::LTS_TT_IDENTIFIER)
-		context.error<InvalidValue>("Function name must be an identifier!");
-	auto const fid = fname.value.get<Makai::String>();
+	auto const& fid = fname;
 	DEBUGLN("Name: [", fid, "]");
 	if (context.isReservedKeyword(fid))
 		context.error<InvalidValue>("Function name cannot be a reserved keyword!");
@@ -301,7 +299,8 @@ static Solution doFunction(
 	DEBUGLN("Expected Namespace: [", ns->name, "]");
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
-	auto const proto = doFunctionPrototype(context, false, ns, selfType);
+	auto const fname = context.fetchToken(LTS_TT_IDENTIFIER, "function name").getString();
+	auto const proto = doFunctionPrototype(context, fname, false, ns, selfType);
 	context.currentScope().result = proto.returnType;
 	context.functionScope().result = proto.returnType;
 	context.currentScope().ns->members[proto.name] = proto.function;
@@ -339,7 +338,8 @@ SEMIBREVE_ASSEMBLE_FN(ExternalFunction) {
 	if (context.inFunction()) ns = context.currentScope().ns;
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	context.fetchNext();
-	auto const proto = doFunctionPrototype(context, true, ns);
+	auto const animaName = context.fetchToken(LTS_TT_IDENTIFIER, "function name").getString();
+	auto const proto = doFunctionPrototype(context, animaName, true, ns);
 	context.currentScope().result = proto.returnType;
 	context.writeLine(proto.fullName, ":");
 	Makai::String args;

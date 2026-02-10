@@ -181,6 +181,13 @@ static Location getConstantLocation(Minima::Context& context) {
 	return {DataLocation::AV2_DL_CONST, addConstant(context, current.value)};
 }
 
+static Location getLabelLocation(Minima::Context& context) {
+	auto const current = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "label name").getString();
+	if (!context.jumps.labels.contains(current))
+		context.error("Jump target has not been declared yet!");
+	return {DataLocation::AV2_DL_CONST, addConstant(context, context.jumps.labels[current])};
+}
+
 static Location getDataLocation(Minima::Context& context) {
 	auto const current = context.stream.current();
 	switch (current.type) {
@@ -188,6 +195,8 @@ static Location getDataLocation(Minima::Context& context) {
 			auto const id = current.value.get<Makai::String>();
 			if (id == "register" || id == "reg") {
 				return getRegister(context);
+			} else if (id == "placeof") {
+				return getLabelLocation(context);
 			} else if (id == "stack") {
 				return getStack(context);
 			} else if (id == "external" || id == "extern" || id == "out") {
@@ -214,6 +223,8 @@ static Location getDataLocation(Minima::Context& context) {
 				return {DataLocation::AV2_DL_INTERNAL, 4};
 			} else MINIMA_ERROR(InvalidValue, "Invalid token for data location!");
 		} break;
+		case Type{'*'}:
+			return getLabelLocation(context);
 		case Type{'@'}:
 			return getExtern(context);
 		case Type{'$'}:
