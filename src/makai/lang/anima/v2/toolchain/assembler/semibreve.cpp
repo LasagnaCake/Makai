@@ -379,6 +379,8 @@ SEMIBREVE_ASSEMBLE_FN(Scope) {
 		if (current.type == Type{'}'}) break;
 		else result = doExpression(context);
 	}
+	if (!context.hasToken(Type{'}'}))
+		context.error("Expected '}' here!");
 	if (context.currentScope().varc)
 		context.writeLine("clear ", context.currentScope().varc);
 	return result;
