@@ -1163,6 +1163,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				arrayT	= s.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
 				objectT	= s.addTypeDefinition("object",		Data::Value::Kind::DVK_OBJECT	);
 				anyT	= s.addTypeDefinition("any",		DVK_ANY							);
+				callT	= s.addTypeDefinition("call",		null);
 			}
 
 			Scope s;
@@ -1178,6 +1179,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Instance<Scope::Member> arrayT;
 			Instance<Scope::Member> objectT;
 			Instance<Scope::Member> anyT;
+			Instance<Scope::Member> callT;
 		};
 
 		inline static BasicTypes const basics;
