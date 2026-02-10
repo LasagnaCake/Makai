@@ -107,6 +107,34 @@ namespace Object {
 		}
 		return ref out;
 	}
+
+	macro add {
+		{$($what:id$) : ${${$key:str : $value:expr$}$}} => {
+			$what[$key] : ${$value$};
+		}
+
+		{$($what:id$) : ${${$first:expr$} *{, ${$rest: expr$}}$}} => {
+			core.Object.add ($what) : {${$first$}}
+			core.Object.add ($what) : {${$*rest{$},${}$}}
+		}
+	}
+
+	macro new {
+		{${${$first:expr$}$}} => {
+			${
+				_ = obj;
+				core.Object.add (_) ${${$first$}$}
+				_;
+			$}
+		}
+		{${${$first:expr$} *{, ${$rest: expr$}}$}} => {
+			${
+				_ = obj;
+				core.Object.add (_) ${${$first$}, ${$*rest{$},${}$}$}
+				_;
+			$}
+		}
+	}
 }
 
 extend obj with func remove(key: str): obj		=> ref Object.remove(ref self, move key);

@@ -298,6 +298,7 @@ static Solution doFunction(
 ) {
 	auto ns = context.currentNamespaceRef();
 	if (context.inFunction()) ns = context.currentScope().ns;
+	DEBUGLN("Expected Namespace: [", ns->name, "]");
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	auto const proto = doFunctionPrototype(context, false, ns, selfType);
@@ -305,6 +306,7 @@ static Solution doFunction(
 	context.functionScope().result = proto.returnType;
 	context.currentScope().ns->members[proto.name] = proto.function;
 	context.writeLine(proto.fullName, ":");
+	DEBUGLN("<function>");
 	if (context.hasToken(Type{'{'})) {
 		doScope(context);
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
@@ -321,12 +323,14 @@ static Solution doFunction(
 	} else if (context.hasToken(Type{';'})) {
 		proto.function->value["overloads"][proto.resolution] = false;
 	} else context.error("Expected ';', '{' or '=>' here!");
+	DEBUGLN("</function>");
 	context.writeLine("end");
 	context.endScope();
 	if (!ns->members.contains(proto.name))
 		ns->members[proto.name] = proto.function;
 	else if (ns->members[proto.name]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error<InvalidValue>("Symbol with this name already exists!");
+	DEBUGLN("Function Declared Inside: [", ns->name, "]");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
