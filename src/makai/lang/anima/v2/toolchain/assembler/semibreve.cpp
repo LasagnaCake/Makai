@@ -1083,6 +1083,8 @@ SEMIBREVE_ASSEMBLE_FN(Assembly) {
 		context.writeLine(context.currentToken().token);
 		context.fetchNext();
 	}
+	if (context.currentToken().type != Type{'}'})
+		context.error<NonexistentValue>("Expected '}' here!");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
