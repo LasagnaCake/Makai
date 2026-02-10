@@ -428,7 +428,14 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(Internal) {
 }
 
 NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespace& ns) {
-	DEBUGLN("Namespace:", ns.name);
+	DEBUGLN("Namespace: ", ns.name);
+	DEBUGLN("\nMembers {");
+	for (auto& mem: ns.members)
+		DEBUGLN("    ", mem.key);
+	DEBUGLN("\n}\n\nSub-Namespaces {");
+	for (auto& mem: ns.children)
+		DEBUGLN("    ", mem.key);
+	DEBUGLN("}");
 	context.fetchNext();
 	if (context.currentToken().type != Type{'.'})
 		context.error<NonexistentValue>("Expected '.' here!");
@@ -478,7 +485,7 @@ static Solution resolveSymbol(Context& context, Makai::String const& id, Makai::
 	DEBUGLN("Resolving symbol...");
 	if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_MACRO) {
 		doMacroExpansion(context, sym);
-		return doValueResolution(context);
+		return doExpression(context);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
 		return doFunctionCall(context, sym);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
