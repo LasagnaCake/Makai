@@ -242,6 +242,7 @@ static Prototype doFunctionPrototype(
 	for (auto& opt: optionals)
 		fullName += "_" + opt.value["type"].get<Makai::String>();
 	Prototype proto = {retType, fid, fullName};
+	proto.name = fid;
 	auto subName = baseName;
 	for (auto& opt: Makai::Range::reverse(optionals)) {
 		fullName = fullName.sliced(0, -(opt.value["type"].get<Makai::String>().size() + 2));
@@ -432,7 +433,7 @@ NamespaceMember resolveNamespaceMember(Context& context, Context::Scope::Namespa
 	DEBUGLN("\nMembers {");
 	for (auto& mem: ns.members)
 		DEBUGLN("    ", mem.key);
-	DEBUGLN("\n}\n\nSub-Namespaces {");
+	DEBUGLN("}\n\nSub-Namespaces {");
 	for (auto& mem: ns.children)
 		DEBUGLN("    ", mem.key);
 	DEBUGLN("}");
