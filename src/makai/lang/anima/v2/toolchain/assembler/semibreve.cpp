@@ -872,9 +872,21 @@ static Makai::String reclass(Context& context, Makai::String const& varType) {
 static Solution doVarDecl(Context& context, bool const overrideAsLocal = false) {
 	Makai::String varType = overrideAsLocal ? "local" : context.currentValue().getString();
 	usize regID = -1;
+	Makai::String sourceName = "";
 	if (varType == "register") {
 		context.fetchNext().expectToken(Type{'['});
 		regID = context.fetchNext().fetchToken(LTS_TT_INTEGER, "Register ID").getUnsigned();
+		context.fetchNext().expectToken(Type{']'});
+	}
+	if (varType == "global") {
+		context.fetchNext().expectToken(Type{'['});
+		context.fetchNext();
+		switch (context.currentToken().type) {
+			case (LTS_TT_SINGLE_QUOTE_STRING):
+			case (LTS_TT_IDENTIFIER):
+			case (LTS_TT_DOUBLE_QUOTE_STRING): sourceName = context.getValue<Makai::String>();break;
+			default: context.error("Expected variable source name here!");
+		}
 		context.fetchNext().expectToken(Type{']'});
 	}
 	if (!overrideAsLocal)
@@ -885,7 +897,7 @@ static Solution doVarDecl(Context& context, bool const overrideAsLocal = false) 
 	auto const id = varname.value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
 		context.error<InvalidValue>("Variable name cannot be a reserved keyword!");
-	if (varType == "stack") {
+	if (varType == "local") {
 		context.writeAdaptive("push null");
 	}
 	if (context.currentScope().contains(id))
@@ -893,6 +905,8 @@ static Solution doVarDecl(Context& context, bool const overrideAsLocal = false) 
 	auto const sym = context.currentScope().addVariable(id, reclass(context, varType));
 	if (regID < Makai::Limit::MAX<usize>)
 		sym->value["register_id"] = regID;
+	if (sourceName.size())
+		sym->value["source_name"] = sourceName;
 	context.fetchNext();
 	return doVarDecl(context, sym, varType);
 }
