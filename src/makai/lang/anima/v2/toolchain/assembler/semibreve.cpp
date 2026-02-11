@@ -379,6 +379,7 @@ SEMIBREVE_ASSEMBLE_FN(Scope) {
 		auto const current = context.currentToken();
 		if (current.type == Type{'}'}) break;
 		else result = doExpression(context);
+		DEBUGLN("Token: [", context.currentToken().token, "]");
 	}
 	if (!context.hasToken(Type{'}'}))
 		context.error("Expected '}' here!");
@@ -1135,7 +1136,6 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 	if (expectedType == context.getBasicType("void"))
 		context.writeLine("end");
 	else context.writeLine("ret", result.resolve());
-	context.fetchNext();
 	DEBUGLN("</return>");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
