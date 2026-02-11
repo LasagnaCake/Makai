@@ -312,6 +312,7 @@ static Solution doFunction(
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		context.fetchNext();
 		auto const v = doValueResolution(context);
+		context.fetchNext().expectToken(Type{';'});
 		if (!proto.returnType || proto.returnType == context.getBasicType("void"))
 			context.writeLine("ret void");
 		else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
