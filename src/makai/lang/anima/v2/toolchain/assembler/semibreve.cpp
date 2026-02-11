@@ -179,6 +179,7 @@ static Prototype doFunctionPrototype(
 		if (argn.type != Type::LTS_TT_IDENTIFIER)
 			context.error<InvalidValue>("Argument name must be an identifier!");
 		auto const argID = argn.value.get<Makai::String>();
+		DEBUGLN("Argument: [", argID, "]");
 		if (context.isReservedKeyword(argID))
 			context.error<InvalidValue>("Argument name cannot be a reserved keyword!");
 		if (context.currentScope().contains(argID))
@@ -817,6 +818,7 @@ Solution doVarAssign(
 	PreAssignFunction const& preassign = {},
 	PreAssignFunction const& postassign = {}
 ) {
+	DEBUGLN("<assign>");
 	if (context.currentNamespace().hasChild(sym->name))
 		context.error<InvalidValue>("Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
@@ -847,10 +849,12 @@ Solution doVarAssign(
 	context.writeAdaptive("copy", result.resolve(), "->", context.varAccessor(sym)->resolve());
 	sym->value["init"] = true;
 	postassign(context, result);
+	DEBUGLN("</assign>");
 	return {type, context.varAccessor(sym)};
 }
 
 static Solution doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& sym, Makai::String const& varType) {
+	DEBUGLN("<decl>");
 	if (context.currentToken().type != Type{':'})
 		context.error<InvalidValue>("Expected ':' here!");
 	if (sym->declared())
@@ -872,10 +876,12 @@ static Solution doVarDecl(Context& context, Makai::Instance<Context::Scope::Memb
 		sym->base = type;
 	if (context.currentToken().type == Type{'='}) {
 		context.fetchNext();
+		DEBUGLN("</decl>");
 		return doVarAssign(context, sym, type, varType, true);
 	} else if (!type) {
 		context.error("Invalid variable declaration!\nEither declare a type, or assign it a value.");
 	}
+	DEBUGLN("</decl>");
 	return {type, context.varAccessor(sym)};
 }
 
@@ -1084,10 +1090,12 @@ SEMIBREVE_ASSEMBLE_FN(Assembly) {
 	if (context.currentToken().type != Type{'{'})
 		context.error<NonexistentValue>("Expected '{' here!");
 	context.fetchNext();
+	DEBUGLN("<assembly>");
 	while (context.currentToken().type != Type{'}'}) {
 		context.writeLine(context.currentToken().token);
 		context.fetchNext();
 	}
+	DEBUGLN("</assembly>");
 	if (context.currentToken().type != Type{'}'})
 		context.error<NonexistentValue>("Expected '}' here!");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
@@ -1106,6 +1114,7 @@ SEMIBREVE_ASSEMBLE_FN(LooseContext) {
 SEMIBREVE_ASSEMBLE_FN(Return) {
 	if (!context.inFunction())
 		context.error<InvalidValue>("Cannot have returns outside of functions!");
+	DEBUGLN("<return>");
 	context.fetchNext();
 	Solution result = {context.getBasicType("void")};
 	auto const expectedType = context.functionScope().result;
@@ -1116,6 +1125,7 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 		if (expectedType == context.getBasicType("void"))
 			context.error<InvalidValue>("Function does not return a value!");
 		result = doValueResolution(context);
+		context.expectToken(Type{';'});
 		if (
 			result.type != expectedType
 		&&	!context.isNumber(stronger(context, result.type, expectedType))
@@ -1126,6 +1136,7 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 		context.writeLine("end");
 	else context.writeLine("ret", result.resolve());
 	context.fetchNext();
+	DEBUGLN("</return>");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
