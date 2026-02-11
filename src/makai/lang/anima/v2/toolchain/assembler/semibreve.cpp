@@ -811,7 +811,7 @@ using PreAssignFunction = Makai::Functor<void(Context&, Solution&)>;
 Solution doVarAssign(
 	Context& context,
 	Makai::Instance<Context::Scope::Member> const& sym,
-	Makai::Instance<Context::Scope::Member> const& type,
+	Makai::Instance<Context::Scope::Member> type,
 	Makai::String const& sourceType,
 	bool const isNewVar = false,
 	PreAssignFunction const& preassign = {},
@@ -820,6 +820,8 @@ Solution doVarAssign(
 	if (context.currentNamespace().hasChild(sym->name))
 		context.error<InvalidValue>("Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
+	if (type == nullptr)
+		type = (sym->base = result.type);
 	if (result.type != type) {
 		if (!(context.isCastable(result.type) && context.isCastable(type)))
 			context.error<InvalidValue>("Invalid expression type for assignment!");
@@ -854,7 +856,7 @@ static Solution doVarDecl(Context& context, Makai::Instance<Context::Scope::Memb
 	if (sym->declared())
 		context.error<InvalidValue>("Redeclaration of already-declared symbol!");
 	else sym->declare();
-	auto type = context.getBasicType("any");
+	Makai::Instance<Context::Scope::Member> type = nullptr;
 	sym->base = type;
 	switch (context.currentToken().type) {
 		case Type{':'}: {
@@ -866,10 +868,13 @@ static Solution doVarDecl(Context& context, Makai::Instance<Context::Scope::Memb
 		if (type == context.getBasicType("void"))
 			context.error<NonexistentValue>("Malformed variable!");
 	}
-	sym->base = type;
+	if (type)
+		sym->base = type;
 	if (context.currentToken().type == Type{'='}) {
 		context.fetchNext();
 		return doVarAssign(context, sym, type, varType, true);
+	} else if (!type) {
+		context.error("Invalid variable declaration!\nEither declare a type, or assign it a value.");
 	}
 	return {type, context.varAccessor(sym)};
 }
@@ -892,7 +897,7 @@ static Solution doVarDecl(Context& context, bool const overrideAsLocal = false) 
 		regID = context.fetchNext().fetchToken(LTS_TT_INTEGER, "Register ID").getUnsigned();
 		context.fetchNext().expectToken(Type{']'});
 	}
-	if (varType == "global") {
+	if (varType == "global" || varType == "out") {
 		context.fetchNext().expectToken(Type{'['});
 		context.fetchNext();
 		switch (context.currentToken().type) {

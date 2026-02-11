@@ -1111,10 +1111,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					return ".";
 				if (sym->isRegisterVar())
 					return "reg[" + sym->value["register_id"].toString() + "]";
-				if (sym->isExternalVar())
-					return "out " + sym->value["name"].get<String>();
 				if (sym->isGlobalVar())
-					return "global " + sym->value["source_name"].get<String>();
+					return "global " + sym->value["source_name"].toString();
+				if (sym->isExternalVar())
+					return "out " + sym->value["source_name"].toString();
 				if (sym->isLocalVar())
 					return "stack[" + context.stackIndex(sym) + "]";
 				context.error("Invalid variable type!\n Type is: ["+sym->value["src"].getString("")+"]");
