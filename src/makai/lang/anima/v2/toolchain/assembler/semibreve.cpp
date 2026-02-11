@@ -528,7 +528,6 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			if (result.type != context.getBasicType("void")) return result;
 			else if (context.hasSymbol(id)) {
 				auto sym = resolveSymbol(context, id, context.getSymbolRefByName(id));
-				context.fetchNext();
 				return sym;
 			}
 			else if (context.hasNamespace(id)) {
@@ -1126,7 +1125,7 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 		if (expectedType == context.getBasicType("void"))
 			context.error<InvalidValue>("Function does not return a value!");
 		result = doValueResolution(context);
-		context.expectToken(Type{';'});
+		context.fetchNext().expectToken(Type{';'});
 		if (
 			result.type != expectedType
 		&&	!context.isNumber(stronger(context, result.type, expectedType))
