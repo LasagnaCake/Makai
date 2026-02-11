@@ -1077,7 +1077,7 @@ static Solution doFunctionCall(
 		context.writeLine("clear", pushes);
 	if (!overload.contains("return"))
 		context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
-	context.fetchNext();
+	//context.fetchNext();
 	return {
 		context.resolveSymbol(overload["return"]),
 		context.resolveTo("move .")
@@ -1519,6 +1519,7 @@ SEMIBREVE_ASSEMBLE_FN(TypeDefinition) {
 	auto const sym = resolveSymbolPath(context);
 	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
 		context.error("Type definition must be another type!");
+	context.fetchNext();
 	context.currentScope().ns->members[name] = sym;
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
@@ -2144,7 +2145,11 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 		}
 		case Type{'}'}:
 		case Type{';'}: break;
-		default: context.error<InvalidValue>("Invalid expression!");
+		default: {
+			auto const v = doValueResolution(context);
+			context.fetchNext();
+			return v;
+		}
 	}
 	if (!(context.hasToken(Type{';'}) || context.hasToken(Type{'}'})))
 		context.error("Expected ';' or '}' here!");

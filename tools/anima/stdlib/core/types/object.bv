@@ -109,7 +109,7 @@ namespace Object {
 	}
 
 	func deserialize(what: str): obj {
-		temporary out: str;
+		temporary out: obj;
 		fatal asm {
 			copy ref stack[-0] -> register[0]
 			call in obj parse
@@ -126,7 +126,7 @@ extend obj with func join(other: obj): obj		=> ref Object.join(ref self, move ot
 extend obj with func find(key: str): arr		=> move Object.find(ref self, move key);
 extend obj with func fuzz(key: str): arr		=> move Object.fuzz(ref self, move key);
 extend obj with func keysOf(val: any): arr		=> move Object.keysOf(ref self, move val);
-extend obj with func fuzzyKeysOf(val: str): arr	=> move Object.fuzzyKeysOf(ref self, move val);
+extend obj with func fuzzyKeysOf(val: any): arr	=> move Object.fuzzyKeysOf(ref self, move val);
 extend obj with func has(key: str): bool		=> move Object.has(ref self, move key);
 extend obj with func at(key: str): any			=> move Object.at(ref self, move key);
 
@@ -134,6 +134,6 @@ extend obj with func keys(): arr		=> move Object.keys(ref self);
 extend obj with func values(): arr		=> move Object.values(ref self);
 extend obj with func items(): arr		=> move Object.items(ref self);
 extend obj with func serialize(): str	=> move Object.serialize(ref self);
-extend obj with func toString(): str	=> in stringify what;
+extend obj with func toString(): str	=> in stringify self;
 
 extend obj with func clone(): obj => copy self;
