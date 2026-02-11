@@ -90,4 +90,5 @@ extend str with func contains(match: str): bool			=> move String.contains(ref se
 extend str with func matches(match: str): bool			=> move String.matches(ref self, move match);
 extend str with func find(match: str): arr				=> move String.find(ref self, move match);
 
-extend str with func clone(): str => copy self;
+extend str with func toString(): str	=> copy self;
+extend str with func clone(): str		=> copy self;
