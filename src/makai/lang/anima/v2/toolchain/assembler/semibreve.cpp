@@ -2146,10 +2146,11 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 		case Type{'}'}:
 		case Type{';'}: break;
 		default: {
+			DEBUGLN("Token: ['", current.token, "']");
 			auto const v = doValueResolution(context);
-			context.fetchNext();
+			context.fetchNext().expectToken(Type{';'});
 			return v;
-		}
+		} break;
 	}
 	if (!(context.hasToken(Type{';'}) || context.hasToken(Type{'}'})))
 		context.error("Expected ';' or '}' here!");
