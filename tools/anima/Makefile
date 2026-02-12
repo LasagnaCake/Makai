@@ -59,7 +59,7 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer concerto minimac arte finale
+tooling: prologue packer concerto minimac arte anima finale
 
 all: tooling
 
@@ -84,9 +84,11 @@ minimac:
 arte:
 	@echo "[$@]"
 	$(COMPILER) $(COMPCFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
-	$(LINKER) -o carte.exe carte.o $(OBJ) $(LINKCFG) -mwindows
 	$(COMPILER) $(COMPCFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
+	$(LINKER) -o carte.exe carte.o $(OBJ) $(LINKCFG) -mwindows
 	$(LINKER) -o warte.exe warte.o $(OBJ) $(LINKCFG)
+
+anima:
 	$(COMPILER) $(COMPCFG) -c anima.cpp -o anima.o
 	$(LINKER) -o anima.exe anima.o $(OBJ) $(LINKCFG)
 
