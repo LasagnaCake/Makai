@@ -13,7 +13,7 @@ struct Main {
 	/// @brief Called when program runs.
 	/// @param args Arguments passed to program.
 	static void run(Makai::Data::Value const& args);
-	
+
 	/// @brief Actual main implementation.
 	inline static int run(int argc, char** argv) try {
 		if (Makai::CPP::Debug::hasDebugger())
@@ -35,6 +35,6 @@ struct Main {
 };
 
 /// @brief Implements the function.
-#define main(ARGS_NAME) int main(int argc, char** argv) {return Main::run(argc, argv)} void Main::run(Makai::Data::Value const& ARGS_NAME)
+#define main(ARGS_NAME) int main(int argc, char** argv) {return Main::run(argc, argv);} void Main::run(Makai::Data::Value const& ARGS_NAME)
 
 #endif
