@@ -221,7 +221,13 @@ static Location getDataLocation(Minima::Context& context) {
 				return {DataLocation::AV2_DL_INTERNAL, 9};
 			} else if (id == "nan") {
 				return {DataLocation::AV2_DL_INTERNAL, 4};
-			} else MINIMA_ERROR(InvalidValue, "Invalid token for data location!");
+			} else {
+				auto const lt = getLoadType(context);
+				auto dloc = getDataLocation(context);
+				dloc.at &= ~(DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE);
+				dloc.at |= lt;
+				return dloc;
+			};
 		} break;
 		case Type{'*'}:
 			return getLabelLocation(context);
@@ -1093,12 +1099,10 @@ MINIMA_ASSEMBLE_FN(Cast) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const castID = context.addNamedInstruction(Instruction::Name::AV2_IN_CAST);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
 	auto const from	= getDataLocation(context);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	if (context.stream.current().type == Type{':'})
+	if (context.stream.current().type != Type{':'})
 		MINIMA_ERROR(InvalidValue, "Expected ':' here!");
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
