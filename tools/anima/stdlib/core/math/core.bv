@@ -1,0 +1,5 @@
+namespace Math {
+	func pow(x: real, e: real): real	=> move (x pow e);
+	func mod(x: real, d: real): real	=> move (x mod d);
+	func atan2(x: real, y: real): real	=> move (x atan2 y);
+}
