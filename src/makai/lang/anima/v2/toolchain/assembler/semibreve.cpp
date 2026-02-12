@@ -644,9 +644,9 @@ static auto handleNullCoalescence(Context& context, Solution const& value, Solut
 }
 
 SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
-	// DEBUGLN("Binary operation");
+	DEBUGLN("Binary operation");
 	context.fetchNext();
-	// DEBUGLN("LHS: ", context.currentToken().token);
+	DEBUGLN("LHS: ", context.currentToken().token);
 	auto lhs = doValueResolution(context);
 	usize stackUsage = 0;
 	if (lhs.resolve().back() == '.') {
@@ -708,7 +708,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		} else context.error("Unknown operator!");
 	}
 	context.fetchNext();
-	// DEBUGLN("RHS: ", context.currentToken().token);
+	DEBUGLN("RHS: ", context.currentToken().token);
 	auto rhs = doValueResolution(context);
 	if (rhs.resolve().back() == '.') {
 		context.writeLine("push move .");
