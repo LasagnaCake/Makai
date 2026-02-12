@@ -2104,7 +2104,7 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			if (id == "function" || id == "func" || id == "fn")	doFunction(context);
 			else if (id == "signal")							doSignal(context);
 			else if (id == "external" || id == "out")			doExternal(context);
-			else if (id == "internal" || id == "in")			doInternal(context);
+			else if (id == "internal" || id == "in")			return doInternal(context);
 			else if (id == "namespace" || id == "module")		doNamespace(context);
 			else if (id == "import")							doModuleImport(context);
 			else if (id == "using")								doUsingDeclaration(context);
