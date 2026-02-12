@@ -703,8 +703,9 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.fetchNext().expectToken(Type{')'});
 			if (stackUsage) context.writeLine("clear", stackUsage);
 			return sol;
-		}
-		// DEBUGLN("Unspecialized thingamabob, moving on...");
+		} else if (id == "if" || id == "or") {
+			// Do nothing
+		} else context.error("Unknown operator!");
 	}
 	context.fetchNext();
 	// DEBUGLN("RHS: ", context.currentToken().token);
