@@ -690,10 +690,11 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			Solution sol{.type = getType(context)};
 			if (lhs.type == sol.type)
 				sol = lhs;
-			else if (lhs.type->value["operators"]["as " + toTypeID(sol.type)]) {
-				// TODO: Operators
+			else if (lhs.type->value["operator"].contains("as " + toTypeID(sol.type))) {
+				context.writeLine("call", lhs.type->value["operator"]["as" + toTypeID(sol.type)], "( 0 :", lhs.resolve(), ")");
+				sol.resolver = context.resolveTo("move .");
 			} else if (!context.isCastable(sol.type))
-				context.error<InvalidValue>("Casts can only happen between scalar types, strings, and [any]!");
+				context.error<InvalidValue>("Casts can only happen between scalar types, strings, [any], and types with casting implemented!");
 			else if (sol.type != context.getBasicType("any")) {
 				context.writeLine("cast", lhs.resolve(), ":", toTypeName(sol.type), "-> .");
 				sol.resolver = context.resolveTo("move .");
@@ -1540,6 +1541,14 @@ SEMIBREVE_ASSEMBLE_FN(TypeDefinition) {
 	context.currentScope().ns->members[name] = sym;
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
+static Solution doProperty(
+	Context& context,
+	Makai::Instance<Context::Scope::Member> const& selfType
+) {
+	// TODO: Property
+
+	return {context.getBasicType("void"), context.resolveTo("move .")};
+}
 
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(TypeExtensionFunction) {
 	auto const id = context.currentValue().getString();
@@ -1549,6 +1558,7 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(TypeExtensionFunction) {
 		else context.error("Invalid extension!");
 	}
 	else if (id == "function" || id == "func" || id == "fn") doFunction(context, sym);
+	else if (id == "property" || id == "prop") doProperty(context, sym);
 	else context.error("Invalid extension!");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
@@ -1887,7 +1897,7 @@ static ExpansionGroup::Instance doExpansionGroup(Context& context, Context::Macr
 			}
 			context.expectToken(Type{')'});
 		} break;
-		case Type{':'}: {
+		case Type{'#'}: {
 			context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "macro/namespace");
 			auto const symbol = resolveSymbolPath(context);
 			if (symbol->type != decltype(symbol->type)::AV2_TA_SMT_MACRO)
