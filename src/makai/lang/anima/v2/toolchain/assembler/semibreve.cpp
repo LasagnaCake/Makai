@@ -301,19 +301,25 @@ static Solution doFunction(
 	context.fetchNext();
 	context.startScope(Context::Scope::Type::AV2_TA_ST_FUNCTION);
 	auto const fname = context.fetchToken(LTS_TT_IDENTIFIER, "function name").getString();
-	auto const proto = doFunctionPrototype(context, fname, false, ns, selfType);
-	context.currentScope().result = proto.returnType;
-	context.functionScope().result = proto.returnType;
-	context.currentScope().ns->members[proto.name] = proto.function;
+	auto proto = doFunctionPrototype(context, fname, false, ns, selfType);
+	if (proto.returnType) {
+		context.currentScope().result = proto.returnType;
+		context.functionScope().result = proto.returnType;
+		context.currentScope().ns->members[proto.name] = proto.function;
+	}
 	context.writeLine(proto.fullName, ":");
 	DEBUGLN("<function>");
 	if (context.hasToken(Type{'{'})) {
-		doScope(context);
+		auto const r = doScope(context);
+		if (!context.functionScope().result)
+			proto.returnType = r.type;
 	} else if (context.hasToken(LTS_TT_BIG_ARROW)) {
 		context.fetchNext();
 		auto const v = doValueResolution(context);
 		context.fetchNext().expectToken(Type{';'});
-		if (!proto.returnType || proto.returnType == context.getBasicType("void"))
+		if (!proto.returnType)
+			proto.returnType = v.type;
+		else if (proto.returnType == context.getBasicType("void"))
 			context.writeLine("ret void");
 		else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
@@ -324,6 +330,9 @@ static Solution doFunction(
 	} else if (context.hasToken(Type{';'})) {
 		proto.function->value["overloads"][proto.resolution] = false;
 	} else context.error("Expected ';', '{' or '=>' here!");
+	context.currentScope().result = proto.returnType;
+	context.functionScope().result = proto.returnType;
+	context.currentScope().ns->members[proto.name] = proto.function;
 	DEBUGLN("</function>");
 	context.writeLine("end");
 	context.endScope();
@@ -1118,7 +1127,9 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 	DEBUGLN("<return>");
 	context.fetchNext();
 	Solution result = {context.getBasicType("void")};
-	auto const expectedType = context.functionScope().result;
+	auto expectedType = context.functionScope().result;
+	if (!expectedType)
+		context.functionScope().result = expectedType = result.type;
 	if (context.currentToken().type == Type{';'}) {
 		if (expectedType != context.getBasicType("void"))
 			context.error<NonexistentValue>("Missing return value!");
