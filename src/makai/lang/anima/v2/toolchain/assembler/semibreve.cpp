@@ -381,7 +381,7 @@ SEMIBREVE_ASSEMBLE_FN(SharedFunction) {
 	context.fetchNext().expectToken(Type{':'});
 	auto const function	= context.fetchNext().fetchToken(LTS_TT_SINGLE_QUOTE_STRING).getString();
 	context.fetchNext().expectToken(Type{']'});
-	context.program.ani.shared[file][function] = true;
+	context.program.ani.shared[file] = file;
 	return doExternalFunction(context);
 }
 
