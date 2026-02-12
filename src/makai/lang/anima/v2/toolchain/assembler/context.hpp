@@ -931,9 +931,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr String compose() {
 			if (main.pre.empty()) main.preEntryPoint = "";
-			else main.pre = context.main.preEntryPoint, ":\n" + main.pre + "end"
+			else main.pre = main.preEntryPoint, ":\n" + main.pre + "end";
 			if (main.post.empty()) main.postEntryPoint = "";
-			else main.post = context.main.postEntryPoint, ":\n" + main.post + "end"
+			else main.post = main.postEntryPoint, ":\n" + main.post + "end";
 			return global.compose() + "\n" + main.pre + "\n" + main.post + "\n" + finale;
 		}
 
