@@ -1909,8 +1909,11 @@ static ExpansionGroup::Instance doExpansionGroup(Context& context, Context::Macr
 		case Type{'-'}: {
 			content->sub.pushBack(new ExpandToValue(Makai::toString(context.rng.integer<int64>())));
 		} break;
-		case Type{'#'}: {
+		case Type{'~'}: {
 			content->sub.pushBack(new ExpandToValue(Makai::toString(context.rng.real<double>())));
+		} break;
+		case Type{'@'}: {
+			content->sub.pushBack(new ExpandToValue(context.uniqueName()));
 		} break;
 		default: context.error("Invalid tokenization!");
 	}
