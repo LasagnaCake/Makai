@@ -741,6 +741,9 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			} else if (id == "pow") {
 				if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), id, lhs.resolve(), "-> .");
 				else context.error<InvalidValue>("Invalid expression type(s) for operation!");
+			} else if (id == "mod") {
+				if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), "rem", lhs.resolve(), "-> .");
+				else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 			} else context.error<InvalidValue>("Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
