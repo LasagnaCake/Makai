@@ -3,7 +3,7 @@
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
-	void onPrint(Data::Value const& value) override {
+	void onPrint(Makai::Data::Value const& value) override {
 		#ifdef ARTE_CLI
 		if (value.isString())
 			std::cout << value.getString();
@@ -13,5 +13,5 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 }
 
 main(args) {
-	Makai::Anima::V2::Runtime::Engine engine;
+	ARTE engine;
 }
