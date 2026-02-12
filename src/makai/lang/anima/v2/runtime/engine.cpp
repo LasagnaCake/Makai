@@ -59,10 +59,6 @@ void Engine::crash(Engine::Error const& e) {
 	terminate();
 }
 
-void Engine::terminate() {
-	isFinished = true;
-}
-
 void Engine::v2Get() {
 	Instruction::GetRequest get = bitcast<Instruction::GetRequest>(current.type);
 	auto const src		= consumeValue(get.from);
@@ -699,10 +695,31 @@ void Engine::callBuiltInObjectOp(BuiltInFunction const func) {
 	// TODO: This
 }
 
+void Engine::terminate() {
+	isFinished = true;
+
+}
+
+void Engine::reset() {
+	terminate();
+	context		= {};
+	current		= {};
+	err			= {};
+}
+
+void Engine::load(Program const& prog) {
+	reset();
+	program = prog;
+}
+
+void Engine::execute() {
+	isFinished	= false;
+}
+
 void Engine::onPrint(Value const& what) {
 	if (what.isString())
-		DEBUGLN(what.get<String>());
-	else DEBUGLN(what.toString());
+		DEBUGLN(what.getString());
+	else DEBUGLN(what.toFLOWString());
 }
 
 Value Engine::onHTTPRequest(String const& url, String const& action, Value const& data) {

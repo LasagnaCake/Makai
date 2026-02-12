@@ -425,7 +425,7 @@ SEMIBREVE_ASSEMBLE_FN(External) {
 SEMIBREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 	context.fetchNext();
 	auto const v = doValueResolution(context);
-	context.writeLine("copy ref ", v.resolve(), " -> $[0]");
+	context.writeLine("copy ref ", v.resolve(), " -> register[0]");
 	context.writeLine("call in print");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
@@ -433,9 +433,9 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(InternalPrint) {
 SEMIBREVE_TYPED_ASSEMBLE_FN(InternalStringify) {
 	context.fetchNext();
 	auto const v = doValueResolution(context);
-	context.writeLine("copy ref ", v.resolve(), " -> $[0]");
+	context.writeLine("copy ref ", v.resolve(), " -> register[0]");
 	context.writeLine("call in stringify");
-	context.writeLine("copy move $[0] -> .");
+	context.writeLine("copy move register[0] -> .");
 	return {context.getBasicType("string"), context.resolveTo("move .")};
 }
 

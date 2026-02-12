@@ -3,6 +3,7 @@
 
 #include "../../../../compat/ctl.hpp"
 #include "../instruction.hpp"
+#include "program.hpp"
 
 #define ANIMA_V2_SHARED_FN_NAME_PREFIX "anima/env/share/"
 
@@ -27,7 +28,9 @@ namespace Makai::Anima::V2::Runtime {
 			usize	function	= 0;
 			usize	instruction	= -1;
 		};
+
 		using VariableBank = Map<uint64, Data::Value>;
+
 		ContextMode					mode		= ContextMode::AV2_CM_STRICT;
 		ContextMode					prevMode	= ContextMode::AV2_CM_STRICT;
 		Pointers					pointers;
@@ -36,6 +39,7 @@ namespace Makai::Anima::V2::Runtime {
 		Map<usize, Storage>			globals;
 		As<Storage[REGISTER_COUNT]>	registers;
 		Storage						temporary = Storage::create();
+
 		struct SharedSpace {
 			using Function	= Instance<IInvokable>;
 
@@ -52,7 +56,7 @@ namespace Makai::Anima::V2::Runtime {
 				for (auto& [name, lib] : libraries) {
 					auto const exit = lib.function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/v2/exit");
 					if (exit) exit(&ns[name]);
-				}	
+				}
 			}
 
 			void addLibrary(String const& name, String const& libpath) {
@@ -72,6 +76,10 @@ namespace Makai::Anima::V2::Runtime {
 				return libraries.contains(lib) && ns[lib].functions.contains(fname);
 			}
 		} shared;
+
+		void prepare(Program const& program) {
+
+		}
 	};
 }
 

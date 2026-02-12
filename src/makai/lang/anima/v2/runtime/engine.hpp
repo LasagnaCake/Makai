@@ -153,6 +153,11 @@ namespace Makai::Anima::V2::Runtime {
 		bool hasSignal(String const& name);
 		void fire(String const& signal);
 
+		void terminate();
+		void reset();
+		void load(Program const& program);
+		void execute();
+
 	protected:
 		virtual Context::Storage	external	(String const& name, bool const byRef	);
 		Context::Storage			internal	(uint64 const valueID					);
@@ -193,7 +198,6 @@ namespace Makai::Anima::V2::Runtime {
 		Context::Storage& accessLocation(DataLocation const location, usize const id);
 
 		void advance(bool isRequired = false);
-		void terminate();
 
 		void v2Invoke();
 		void v2Copy();

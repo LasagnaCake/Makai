@@ -224,8 +224,8 @@ static Location getDataLocation(Minima::Context& context) {
 			} else {
 				auto const lt = getLoadType(context);
 				auto dloc = getDataLocation(context);
-				dloc.at &= ~(DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE);
-				dloc.at |= lt;
+				dloc.at = dloc.at & ~(DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE);
+				dloc.at = dloc.at | lt;
 				return dloc;
 			};
 		} break;
@@ -764,10 +764,7 @@ MINIMA_ASSEMBLE_FN(Copy) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed copy!");
 	auto const from = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed copy!");
-	if (!(context.stream.next() && context.stream.current().type == Type::LTS_TT_LITTLE_ARROW))
-		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
+	context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed copy!");
 	auto const to = getDataLocation(context);
