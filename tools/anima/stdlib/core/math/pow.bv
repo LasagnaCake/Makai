@@ -1,9 +1,0 @@
-namespace Math {
-	func pow(x: real, e: real): real {
-		temporary out: real;
-		fatal asm {
-			bop (stack[-1] pow stack[-0]) -> .
-		}
-		return out;
-	}
-}
