@@ -83,8 +83,8 @@ minimac:
 
 arte:
 	@echo "[$@]"
-	$(COMPILER) $(COMPCFG) -c carte.cpp -o carte.o -DARTE_CLI -mwindows
-	$(LINKER) -o artec.exe carte.o $(OBJ) $(LINKCFG) -mwindows
+	$(COMPILER) $(COMPCFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
+	$(LINKER) -o carte.exe carte.o $(OBJ) $(LINKCFG) -mwindows
 	$(COMPILER) $(COMPCFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
 	$(LINKER) -o warte.exe warte.o $(OBJ) $(LINKCFG)
 	$(COMPILER) $(COMPCFG) -c anima.cpp -o anima.o
