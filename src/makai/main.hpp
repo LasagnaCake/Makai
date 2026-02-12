@@ -8,7 +8,7 @@ struct Main {
 	/// @brief Whether to show a dialog box on error.
 	inline static bool showDialogOnError		= true;
 	/// @brief Base arguments to add to main function.
-	inline static Makai::Data::Value baseArgs	= baseArgs.object();
+	inline static Makai::Data::Value baseArgs	= Makai::Data::Value::object();
 
 	/// @brief Called when program runs.
 	/// @param args Arguments passed to program.
