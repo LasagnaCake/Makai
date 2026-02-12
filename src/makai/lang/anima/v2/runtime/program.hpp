@@ -45,12 +45,13 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		struct NativeInterface {
-			Label						in;
-			StringList					out;
 			struct SharedLibrary {
 				String				path;
 				Dictionary<String>	functions;
 			};
+
+			Label						in;
+			StringList					out;
 			Dictionary<SharedLibrary>	shared;
 
 			constexpr Data::Value serialize() const {
