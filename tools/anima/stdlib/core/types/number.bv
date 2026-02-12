@@ -18,3 +18,8 @@ extend real with floor():		real	=> move Number.floor(ref self);
 extend real with ceil():		real	=> move Number.ceil(ref self);
 extend real with round():		real	=> move Number.round(ref self);
 extend real with pow(e: real):	real	=> move (ref self pow move e);
+extend real with mod(e: real):	real	=> move (ref self mod move e);
+
+extend int with		toString():	str		=> move in stringify ref self;
+extend uint with	toString():	str		=> move in stringify ref self;
+extend real with	toString():	str		=> move in stringify ref self;

@@ -134,6 +134,6 @@ extend obj with func keys(): arr		=> move Object.keys(ref self);
 extend obj with func values(): arr		=> move Object.values(ref self);
 extend obj with func items(): arr		=> move Object.items(ref self);
 extend obj with func serialize(): str	=> move Object.serialize(ref self);
-extend obj with func toString(): str	=> in stringify self;
+extend obj with func toString(): str	=> move in stringify ref self;
 
 extend obj with func clone(): obj => copy self;
