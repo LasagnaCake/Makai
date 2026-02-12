@@ -738,7 +738,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				result = handleTernary(context, rhs, lhs, elseVal);
 			} else if (id == "or") {
 				result = handleNullCoalescence(context, lhs, rhs);
-			} else if (id == "pow") {
+			} else if (id == "pow" || id == "atan2") {
 				if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), id, lhs.resolve(), "-> .");
 				else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 			} else if (id == "mod") {
