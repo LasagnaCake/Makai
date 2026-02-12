@@ -329,6 +329,8 @@ static Solution doFunction(
 		} else context.writeLine("ret", v.resolve());
 	} else if (context.hasToken(Type{';'})) {
 		proto.function->value["overloads"][proto.resolution] = false;
+		if (!proto.returnType)
+			context.error<NonexistentValue>("Forward-declared functions must have their return types declared!");
 	} else context.error("Expected ';', '{' or '=>' here!");
 	context.currentScope().result = proto.returnType;
 	context.functionScope().result = proto.returnType;
