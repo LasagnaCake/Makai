@@ -7,14 +7,14 @@ namespace Number {
     func floor(what: real):			real	=> move (what as int);
 	func ceil(what: real):			real	=> move floor((what + 1));
 	func round(what: real):			real	=> move floor((what + 0.5));
-	func pow(what: real, e: real):	real	=> move floor((what + 0.5));
 }
 
 extend int with negate():	int		=> move Number.negate(ref self);
 extend int with abs():		int		=> move Number.abs(ref self);
 
-extend real with negate():	real	=> move Number.negate(ref self);
-extend real with abs():		real	=> move Number.abs(ref self);
-extend real with floor():	real	=> move Number.floor(ref self);
-extend real with ceil():	real	=> move Number.ceil(ref self);
-extend real with round():	real	=> move Number.round(ref self);
+extend real with negate():		real	=> move Number.negate(ref self);
+extend real with abs():			real	=> move Number.abs(ref self);
+extend real with floor():		real	=> move Number.floor(ref self);
+extend real with ceil():		real	=> move Number.ceil(ref self);
+extend real with round():		real	=> move Number.round(ref self);
+extend real with pow(e: real):	real	=> move (ref self pow move e);
