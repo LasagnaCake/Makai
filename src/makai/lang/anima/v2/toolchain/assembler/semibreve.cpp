@@ -2162,7 +2162,7 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 		default: {
 			DEBUGLN("Token: ['", current.token, "']");
 			auto const v = doValueResolution(context);
-			context.fetchNext().expectToken(Type{';'});
+			context.fetchNext();
 			return v;
 		} break;
 	}
