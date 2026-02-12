@@ -389,9 +389,10 @@ SEMIBREVE_ASSEMBLE_FN(Scope) {
 	Solution result = {context.getBasicType("void"), context.resolveTo("move .")};
 	while (context.nextToken()) {
 		auto const current = context.currentToken();
+		DEBUGLN("Scope Begin: [", context.currentToken().token, "]");
 		if (current.type == Type{'}'}) break;
 		else result = doExpression(context);
-		DEBUGLN("Token: [", context.currentToken().token, "]");
+		DEBUGLN("Scope End: [", context.currentToken().token, "]");
 	}
 	if (!context.hasToken(Type{'}'}))
 		context.error("Expected '}' here!");
