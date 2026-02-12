@@ -1407,14 +1407,16 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 	submodule.main.preEntryPoint	+= "_" + mod.fullName;
 	submodule.main.entryPoint		+= "_" + mod.fullName;
 	submodule.main.postEntryPoint	+= "_" + mod.fullName;
-	submodule.global.stackc = submodule.global.stackc + submodule.global.varc;
+	submodule.global.stackc = context.global.stackc + context.global.varc;
 	Breve assembler(submodule);
 	// TODO: Properly fix import loops
 	submodule.modules.append(context.modules);
 	assembler.assemble();
 	context.writeFinale(submodule.intermediate());
-	context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
-	context.writeMainPostscript("call", submodule.main.postEntryPoint, "()");
+	if (submodule.main.preEntryPoint.size())
+		context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
+	if (submodule.main.postEntryPoint.size())
+		context.writeMainPostscript("call", submodule.main.postEntryPoint, "()");
 	submodule.global.ns->name = mod.head;
 	if (submodule.global.ns->hasChild(mod.head))
 		context.importModule(submodule.global.ns->children[mod.head]);
@@ -2161,10 +2163,7 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 		case Type{'}'}:
 		case Type{';'}: break;
 		default: {
-			DEBUGLN("Token: ['", current.token, "']");
-			auto const v = doValueResolution(context);
-			context.fetchNext();
-			return v;
+			return doValueResolution(context);
 		} break;
 	}
 	if (!(context.hasToken(Type{';'}) || context.hasToken(Type{'}'})))
@@ -2180,12 +2179,12 @@ void Semibreve::assemble() {
 		context.writeGlobalPreamble("flush");
 		context.writeGlobalPreamble("halt");
 	}
-	context.writeMainPreamble(context.main.preEntryPoint, ":");
-	context.writeMainPostscript(context.main.postEntryPoint, ":");
+	//context.writeMainPreamble(context.main.preEntryPoint, ":");
+	//context.writeMainPostscript(context.main.postEntryPoint, ":");
 	context.cache();
 	while (context.nextToken()) doExpression(context);
-	context.writeMainPreamble("end");
-	context.writeMainPostscript("end");
+	//context.writeMainPreamble("end");
+	//context.writeMainPostscript("end");
 	if (!context.isModule && !context.hasMain)
 		context.error<NonexistentValue>("Missing main entrypoint!");
 }

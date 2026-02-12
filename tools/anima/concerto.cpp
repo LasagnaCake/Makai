@@ -116,7 +116,7 @@ namespace Command {
 		Compiler::buildProject(ctx, proj, cfg["asm"]);
 		auto const outName = Makai::Regex::replace(cfg["output"], "\\$\\{name\\}", proj.name);
 		Makai::OS::FS::makeDirectory(Makai::String("output"));
-		if (cfg["ir"]) {
+		if (cfg["asm"]) {
 			Makai::File::saveText("output/" + outName + ".min", ctx.intermediate());
 		}
 		else {

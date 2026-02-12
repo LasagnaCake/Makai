@@ -929,7 +929,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return Makai::toString("_i", uuid[3], "i", uuid[2], "i", uuid[1], "i", uuid[0]);
 		}
 
-		constexpr String compose() const {
+		constexpr String compose() {
+			if (main.pre.empty()) main.preEntryPoint = "";
+			else main.pre = context.main.preEntryPoint, ":\n" + main.pre + "end"
+			if (main.post.empty()) main.postEntryPoint = "";
+			else main.post = context.main.postEntryPoint, ":\n" + main.post + "end"
 			return global.compose() + "\n" + main.pre + "\n" + main.post + "\n" + finale;
 		}
 
@@ -1125,7 +1129,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return new VariableAccessor(*this, sym);
 		}
 
-		String intermediate() const {
+		String intermediate() {
 			auto prg = Makai::Regex::replace(compose(), "([\\n\\r\\f][\\t\\ ]*)([\\n\\r\\f][\\t\\ ]*)+", "\n\n");
 			prg = Makai::Regex::replace(prg, "[\\t\\ ]+", " ");
 			return prg;
