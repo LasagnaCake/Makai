@@ -704,7 +704,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.fetchNext().expectToken(Type{')'});
 			if (stackUsage) context.writeLine("clear", stackUsage);
 			return sol;
-		} else if (id == "if" || id == "or") {
+		} else if (id == "if" || id == "or" || id == "pow") {
 			// Do nothing
 		} else context.error("Unknown operator!");
 	}
@@ -736,8 +736,11 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				context.fetchNext();
 				auto const elseVal = doValueResolution(context);
 				result = handleTernary(context, rhs, lhs, elseVal);
-			} else if (id == "else" || id == "or") {
+			} else if (id == "or") {
 				result = handleNullCoalescence(context, lhs, rhs);
+			} else if (id == "pow") {
+				if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), id, lhs.resolve(), "-> .");
+				else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 			} else context.error<InvalidValue>("Invalid/Unsupported operation!");
 		} break;
 		case Type{'+'}: {
@@ -759,7 +762,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		case Type{'*'}:
 		case Type{'%'}: {
 			auto const opstr = Makai::toString(Makai::Cast::as<char>(opname.type));
-			if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), opstr, "-> .");
+			if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), opstr, rhs.resolve(), "-> .");
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
 		case Type::LTS_TT_COMPARE_EQUALS:
