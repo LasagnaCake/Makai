@@ -118,14 +118,6 @@ namespace Makai::Anima::V2 {
 		AV2_OP_THREEWAY,
 		AV2_OP_TYPE_COMPARE,
 	};
-	enum class StringOperation: uint8 {
-		AV2_OP_JOIN,
-		AV2_OP_SPLIT,
-		AV2_OP_REPLACE,
-		AV2_OP_REMOVE,
-		AV2_OP_SUBSTRING,
-		AV2_OP_MATCH,
-	};
 
 	/// @brief Instruction.
 	struct [[gnu::aligned(8)]] Instruction {
@@ -273,20 +265,6 @@ namespace Makai::Anima::V2 {
 			Data::Value::Kind	type;
 		};
 
-		/// @brief String manipulation.
-		struct [[gnu::aligned(4)]] StringManipulation {
-			enum class Operation: uint64 {
-				AV2_ISSM_REPLACE,
-				AV2_ISSM_SLICE,
-				AV2_ISSM_MATCH,
-				AV2_ISSM_CONTAINS,
-				AV2_ISSM_SPLIT,
-				AV2_ISSM_JOIN,
-				AV2_ISSM_REMOVE,
-			};
-			DataLocation	src, lhs, rhs, out;
-		};
-
 		/// @brief Object.
 		struct [[gnu::aligned(4)]] Object {
 			DataLocation	desc, out;
@@ -399,10 +377,6 @@ namespace Makai::Anima::V2 {
 			/// @param type `Casting` = How to cast the value.
 			/// @details `cast [<src-id>] [<dst-id>]`
 			AV2_IN_CAST,
-			/// @brief Performs a string manipulation operation on a value.
-			/// @param type `StringManipulation` = How to manipulate the string.
-			/// @details `str <op-id> [<src-id>] [<lhs-id>] [<rhs-id>] [<out-id>]`
-			AV2_IN_STR_OP,
 			/// @brief Creates an object based on an object descriptor.
 			/// @param type `Object` = How to create the object.
 			/// @details `new [<desc-id>] [<loc-id>]`

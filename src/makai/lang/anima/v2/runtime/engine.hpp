@@ -185,6 +185,7 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error invalidComparisonError(String const& description);
 		Engine::Error invalidFieldError(String const& description);
 		Engine::Error invalidFetchRequest(String const& description);
+		Engine::Error invalidCast(String const& description);
 		Engine::Error invalidJump();
 		Engine::Error missingArgumentsError();
 

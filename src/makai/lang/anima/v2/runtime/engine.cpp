@@ -197,9 +197,7 @@ void Engine::advance(bool isRequired) {
 }
 
 void Engine::v2Return() {
-	Instruction::Result res = bitcast<Instruction::Result>(current.type);
-	if (!res.ignore)
-		temporary() = accessValue(res.location);
+	returnBack();
 }
 
 void Engine::v2Copy() {
@@ -824,5 +822,35 @@ void Engine::v2Jump() {
 }
 
 void Engine::v2Cast() {
-
+	Instruction::Casting op = current.getTypeAs<Instruction::Casting>();
+	auto const src = consumeValue(op.src);
+	auto const dst = accessValue(op.dst);
+	if (src->isNumber())
+		switch (op.type) {
+			case Data::Value::Kind::DVK_BOOLEAN:	*dst = src->getBoolean();	return;
+			case Data::Value::Kind::DVK_UNSIGNED:	*dst = src->getUnsigned();	return;
+			case Data::Value::Kind::DVK_SIGNED:		*dst = src->getSigned();	return;
+			case Data::Value::Kind::DVK_REAL:		*dst = src->getReal();		return;
+			case Data::Value::Kind::DVK_STRING:		*dst = src->toString();		return;
+			default: break;
+		}
+	else if (src->isString()) {
+		switch (op.type) {
+			case Data::Value::Kind::DVK_BOOLEAN:	*dst = toBool(src->getString());	return;
+			case Data::Value::Kind::DVK_UNSIGNED:	*dst = toUInt64(src->getString());	return;
+			case Data::Value::Kind::DVK_SIGNED:		*dst = toInt64(src->getString());	return;
+			case Data::Value::Kind::DVK_REAL:		*dst = toDouble(src->getString());	return;
+			case Data::Value::Kind::DVK_STRING:		*dst = *src;						return;
+			default: break;
+		}
+	}
+	crash(
+		invalidCast(
+			"Cannot cast from ["
+		+	Data::Value::asNameString(src->type())
+		+	"] to ["
+		+	Data::Value::asNameString(op.type)
+		+	"]!"
+		)
+	);
 }
