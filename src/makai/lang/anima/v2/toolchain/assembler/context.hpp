@@ -1118,15 +1118,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			constexpr String resolve() const override {
 				if (inRunTime()) DEBUGLN("Variable Accessor");
 				if (sym->isTemporaryVar())
-					return ".";
+					return "ref .";
 				if (sym->isRegisterVar())
-					return "reg[" + sym->value["register_id"].toString() + "]";
+					return "ref reg[" + sym->value["register_id"].toString() + "]";
 				if (sym->isGlobalVar())
-					return "global " + sym->value["source_name"].toString();
+					return "ref global " + sym->value["source_name"].toString();
 				if (sym->isExternalVar())
-					return "out " + sym->value["source_name"].toString();
+					return "ref out " + sym->value["source_name"].toString();
 				if (sym->isLocalVar())
-					return "stack[" + context.stackIndex(sym) + "]";
+					return "ref stack[" + context.stackIndex(sym) + "]";
 				context.error("Invalid variable type!\n Type is: ["+sym->value["src"].getString("")+"]");
 			}
 		};
