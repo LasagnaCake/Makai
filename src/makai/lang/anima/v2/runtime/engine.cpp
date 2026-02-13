@@ -575,7 +575,7 @@ void Engine::pushUndefinedIfInLooseMode(String const& fname) {
 	context.temporary = new Value(Value::undefined());
 }
 
-void Engine::callBuiltIn(BuiltInFunction const func) {
+void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 	if (context.valueStack.empty()) {
 		if (inStrictMode())
 			return crash(missingArgumentsError());
@@ -716,22 +716,37 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 				context.temporary = new Value(onHTTPRequest(url->getString(), type->getString().upper(), *data));
 			else pushUndefinedIfInLooseMode("builtin HTTP request");
 		} break;
-		case BuiltInFunction::AV2_EBIF_STRING_OP: return callBuiltInStringOp(func);
-		case BuiltInFunction::AV2_EBIF_ARRAY_OP: return callBuiltInArrayOp(func);
-		case BuiltInFunction::AV2_EBIF_OBJECT_OP: return callBuiltInObjectOp(func);
+		case BuiltInFunction::AV2_EBIF_STRING_OP:	return callBuiltInStringOp(BuiltInStringOperation(op));
+		case BuiltInFunction::AV2_EBIF_ARRAY_OP:	return callBuiltInArrayOp(BuiltInArrayOperation(op));
+		case BuiltInFunction::AV2_EBIF_OBJECT_OP:	return callBuiltInObjectOp(BuiltInObjectOperation(op));
+		case BuiltInFunction::AV2_EBIF_VEC2_OP:		return callBuiltInVector2Op(BuiltInVectorOperation(op));
+		case BuiltInFunction::AV2_EBIF_VEC3_OP:		return callBuiltInVector3Op(BuiltInVectorOperation(op));
+		case BuiltInFunction::AV2_EBIF_VEC4_OP:		return callBuiltInVector4Op(BuiltInVectorOperation(op));
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
 }
 
-void Engine::callBuiltInStringOp(BuiltInFunction const func) {
+void Engine::callBuiltInStringOp(BuiltInStringOperation const func) {
 	// TODO: This
 }
 
-void Engine::callBuiltInArrayOp(BuiltInFunction const func) {
+void Engine::callBuiltInArrayOp(BuiltInArrayOperation const func) {
 	// TODO: This
 }
 
-void Engine::callBuiltInObjectOp(BuiltInFunction const func) {
+void Engine::callBuiltInObjectOp(BuiltInObjectOperation const func) {
+	// TODO: This
+}
+
+void Engine::callBuiltInVector2Op(BuiltInVectorOperation const func) {
+	// TODO: This
+}
+
+void Engine::callBuiltInVector3Op(BuiltInVectorOperation const func) {
+	// TODO: This
+}
+
+void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 	// TODO: This
 }
 

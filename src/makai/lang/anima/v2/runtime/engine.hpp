@@ -146,6 +146,16 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBI_OO_ITEMS				= 'i',
 		};
 
+		enum class BuiltInVectorOperation: uint8 {
+			AV2_EBI_VO_NEW		= '.',
+			AV2_EBI_VO_VEC_NEW	= '=',
+			AV2_EBI_VO_CROSS	= 'x',
+			AV2_EBI_VO_FCROSS	= 'X',
+			AV2_EBI_VO_DOT		= '*',
+			AV2_EBI_VO_TAN		= '/',
+			AV2_EBI_VO_ANGLE	= 'a',
+		};
+
 		bool process();
 
 		FunctionRegistry functions;
@@ -225,11 +235,14 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Await();
 		void v2Yield();
 
-		void callBuiltIn(BuiltInFunction const func);
+		void callBuiltIn(BuiltInFunction const func, uint8 const op);
 
-		void callBuiltInStringOp(BuiltInFunction const func);
-		void callBuiltInArrayOp(BuiltInFunction const func);
-		void callBuiltInObjectOp(BuiltInFunction const func);
+		void callBuiltInStringOp(BuiltInStringOperation const func);
+		void callBuiltInArrayOp(BuiltInArrayOperation const func);
+		void callBuiltInObjectOp(BuiltInObjectOperation const func);
+		void callBuiltInVector2Op(BuiltInVectorOperation const func);
+		void callBuiltInVector3Op(BuiltInVectorOperation const func);
+		void callBuiltInVector4Op(BuiltInVectorOperation const func);
 
 		void jumpBy(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);

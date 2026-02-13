@@ -507,7 +507,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (id == "fcross")	invoke.mod = 'X';
 				else if (id == "tan") {
 					if (id == "vec2")
-						invoke.mod = 't';
+						invoke.mod = '/';
 					else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 				}
 				else if (id == "angle") {
