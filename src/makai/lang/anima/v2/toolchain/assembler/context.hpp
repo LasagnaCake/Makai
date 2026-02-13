@@ -1166,6 +1166,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				bytesT	= s.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
 				arrayT	= s.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
 				objectT	= s.addTypeDefinition("object",		Data::Value::Kind::DVK_OBJECT	);
+				vectorT	= s.addTypeDefinition("vector",		Data::Value::Kind::DVK_VECTOR	);
 				anyT	= s.addTypeDefinition("any",		DVK_ANY							);
 			}
 
@@ -1181,6 +1182,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Instance<Scope::Member> bytesT;
 			Instance<Scope::Member> arrayT;
 			Instance<Scope::Member> objectT;
+			Instance<Scope::Member> vectorT;
 			Instance<Scope::Member> anyT;
 		};
 
@@ -1195,6 +1197,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			global.ns->members["arr"]		= basics.arrayT;
 			global.ns->members["obj"]		= basics.objectT;
 			global.ns->members["nil"]		= basics.nullT;
+			global.ns->members["vec"]		= basics.vectorT;
 		}
 
 		struct Appendix {
