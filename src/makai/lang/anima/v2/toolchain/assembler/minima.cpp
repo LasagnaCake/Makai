@@ -457,19 +457,8 @@ MINIMA_ASSEMBLE_FN(StackPop) {
 }
 
 MINIMA_ASSEMBLE_FN(Return) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed return!");
-	auto loc = getDataLocation(context);
-	Instruction::Result res = {loc.at, true};
 	Instruction inst = {Instruction::Name::AV2_IN_RETURN};
-	if (loc.at == DataLocation::AV2_DL_INTERNAL && loc.id == 2) {
-		res.ignore = true;
-		loc.id = -1;
-	}
-	inst.type = Makai::Cast::bit<uint32>(res);
 	context.program.code.pushBack(inst);
-	if (loc.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
 }
 
 MINIMA_ASSEMBLE_FN(EmptyReturn) {
@@ -1363,8 +1352,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "push")									doStackPush(context);
 		else if (id == "pop")									doStackPop(context);
 		else if (id == "clear")									doStackClear(context);
-		else if (id == "return" || id == "ret")					doReturn(context);
-		else if (id == "finish" || id == "end")					doEmptyReturn(context);
+		else if (id == "return" || id == "ret" || id == "end")	doReturn(context);
 		else if (id == "terminate" || id == "halt")				doHalt(context);
 		else if (id == "error" || id == "err")					doErrorHalt(context);
 		else if (id == "call" || id == "do")					doCall(context);

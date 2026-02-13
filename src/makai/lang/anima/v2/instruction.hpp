@@ -193,12 +193,6 @@ namespace Makai::Anima::V2 {
 			Comparator		comp;
 		};
 
-		/// @brief Return result.
-		struct [[gnu::aligned(4)]] Result {
-			DataLocation	location;
-			bool			ignore:		1;
-		};
-
 		/// @brief Stack push.
 		struct [[gnu::aligned(4)]] StackPush {
 			DataLocation	location;
@@ -374,8 +368,8 @@ namespace Makai::Anima::V2 {
 			/// @details `flush`
 			AV2_IN_STACK_FLUSH,
 			/// @brief Returns from a function.
-			/// @param type `Result` = How should the result be handled.
-			/// @details `return [<result-id>]`
+			/// @param type Discarded.
+			/// @details `return`
 			AV2_IN_RETURN,
 			/// @brief Executes a mathematical operation involving a binary operator.
 			/// @param type `BinaryMath` = How to process the math operation.

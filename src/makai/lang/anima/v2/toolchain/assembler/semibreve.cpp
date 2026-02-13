@@ -320,13 +320,16 @@ static Solution doFunction(
 		if (!proto.returnType)
 			proto.returnType = v.type;
 		else if (proto.returnType == context.getBasicType("void"))
-			context.writeLine("ret void");
+			context.writeLine("ret");
 		else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
 		if (proto.returnType != v.type) {
 			context.writeLine("cast", v.resolve(), "as", toTypeName(proto.returnType), "-> .");
-			context.writeLine("ret .");
-		} else context.writeLine("ret", v.resolve());
+			context.writeLine("ret");
+		} else {
+			context.writeLine("copy", v.resolve(), "-> .");
+			context.writeLine("ret");
+		}
 	} else if (context.hasToken(Type{';'})) {
 		proto.function->value["overloads"][proto.resolution] = false;
 		if (!proto.returnType)

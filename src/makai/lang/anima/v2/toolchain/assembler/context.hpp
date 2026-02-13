@@ -588,6 +588,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				program.code.pushBack({});
 			}
 		}
+
 		constexpr uint64 addJumpLabel(String const& label, uint64 const to) {
 			if (jumps.labels.contains(label)) {
 				return jumps.labels[label];

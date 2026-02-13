@@ -282,7 +282,7 @@ void Engine::v2Invoke() {
 	}
 	// Else, jump to function location
 	context.pointers.function = invocation.argc;
-	jumpTo(funcName, true);
+	jumpBy(funcName, true);
 }
 
 Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
@@ -423,7 +423,7 @@ void Engine::jumpTo(usize const point, bool returnable) {
 	context.pointers.instruction = point;
 }
 
-void Engine::JumpBy(usize const tableID, bool returnable) {
+void Engine::jumpBy(usize const tableID, bool returnable) {
 	if (tableID < program.jumpTable.size())
 		jumpTo(program.jumpTable[tableID], false);
 	else crash(invalidJump());
@@ -821,4 +821,8 @@ void Engine::v2Jump() {
 		case decltype(op.type)::AV2_ILT_IF_NULL_OR_UNDEFINED:		if (cond->isNull() || cond->isUndefined())		jumpBy(to, false); break;
 		default: break;
 	}
+}
+
+void Engine::v2Cast() {
+
 }
