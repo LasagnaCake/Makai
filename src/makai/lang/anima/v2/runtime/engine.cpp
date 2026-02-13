@@ -849,7 +849,7 @@ void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 				pushUndefinedIfInLooseMode("builtin vec4 dot");
 			else context.temporary = new Value(context.registers[0]->getVector().dot(context.registers[1]->getVector()));
 		} break;
-		default: pushUndefinedIfInLooseMode("invalid builtin vec3"); break;
+		default: pushUndefinedIfInLooseMode("invalid builtin vec4"); break;
 	}
 }
 
