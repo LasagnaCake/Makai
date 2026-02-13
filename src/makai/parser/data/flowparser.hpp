@@ -52,7 +52,7 @@ namespace Makai::Parser::Data {
 			auto const token = lexer.current();
 			switch (token.type) {
 			case TokenType::LTS_TT_INTEGER:
-				return Value(-token.value.get<ssize>());
+				return Value(-token.value.get<int64>());
 			case TokenType::LTS_TT_REAL:
 				return Value(-token.value.get<double>());
 			default: return error("Value is not a negative number!");
@@ -96,13 +96,13 @@ namespace Makai::Parser::Data {
 			case TokenType{'-'}:
 				return parseNegativeNumber();
 			case TokenType::LTS_TT_INTEGER:
-				return Value(static_cast<usize>(token.value.get<usize>()));
+				return Value(static_cast<usize>(token.value.get<uint64>()));
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
 			case TokenType::LTS_TT_CHARACTER:
-				return Value(toString(Cast::as<char>(token.value.get<ssize>())));
+				return Value(toString(Cast::as<char>(token.value.get<int64>())));
 			case TokenType{'{'}:
 				return parseObject();
 			case TokenType{'['}:
@@ -234,7 +234,7 @@ namespace Makai::Parser::Data {
 					key = token.value.get<Value::StringType>();
 				break;
 				case TokenType::LTS_TT_CHARACTER:
-					key = toString(Cast::as<char>(token.value.get<ssize>()));
+					key = toString(Cast::as<char>(token.value.get<int64>()));
 				break;
 				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_REAL:
