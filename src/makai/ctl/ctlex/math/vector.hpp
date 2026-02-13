@@ -516,7 +516,7 @@ class Vector2: Ordered {
 		}
 
 		/// @brief Gets the normalized vector.
-		/// @returns Normalized vector.	
+		/// @returns Normalized vector.
 		constexpr Vector2 normalized() const {
 			if (*this != 0)
 				return *this / length();
@@ -668,7 +668,7 @@ class Vector2: Ordered {
 class Vector3: Ordered {
 	public:
 		using Ordered::OrderType, Ordered::Order;
-		
+
 		/// @brief Vector components.
 		union {
 			struct {float x, y, z;		};
@@ -1286,6 +1286,12 @@ class Vector4: Ordered {
 			);
 		}
 
+		/// @brief Returns the X and Y components.
+		/// @return X andY components.
+		constexpr Vector2 xy() const {
+			return Vector2(x, y);
+		}
+
 		/// @brief Returns the X, Y and Z components.
 		/// @return X, Y and Z components.
 		constexpr Vector3 xyz() const {
@@ -1606,7 +1612,7 @@ template<
 	Type::Ex::Math::Vector::Vector T,
 	Type::Ex::Math::Vector::Vectorable T2 = T
 >
-constexpr T angleLerp(T const& from, T const& to, T2 const& by) 
+constexpr T angleLerp(T const& from, T const& to, T2 const& by)
 requires (Type::Equal<T, T2> || Type::Number<T2>) {
 	T dist = (to - from) % TAU;
 	dist = ((dist * 2.0) % TAU) - dist;

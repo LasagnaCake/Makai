@@ -231,7 +231,7 @@ void Engine::v2Call() {
 	Instruction::Invocation invocation = bitcast<Instruction::Invocation>(current.type);
 	// If invocation is internal call, do so
 	if (invocation.location == DataLocation::AV2_DL_INTERNAL)
-		return callBuiltIn(Cast::as<Engine::BuiltInFunction>(invocation.argc));
+		return callBuiltIn(Cast::as<Engine::BuiltInFunction>(invocation.argc), invocation.mod);
 	// Get function name (if not external function)
 	advance(true);
 	uint64 funcName = bitcast<uint64>(current);
@@ -739,15 +739,118 @@ void Engine::callBuiltInObjectOp(BuiltInObjectOperation const func) {
 }
 
 void Engine::callBuiltInVector2Op(BuiltInVectorOperation const func) {
-	// TODO: This
+	switch (func) {
+		case BuiltInVectorOperation::AV2_EBI_VO_NEW: {
+			if (!context.registers[0]->isNumber())
+				pushUndefinedIfInLooseMode("builtin vec2 new");
+			else context.temporary = new Value(Value::VectorType(context.registers[0]->getReal()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_VEC_NEW: {
+			if (!(context.registers[0]->isNumber() && context.registers[1]->isNumber()))
+				pushUndefinedIfInLooseMode("builtin vec2 vnew");
+			else context.temporary = new Value(
+				Value::VectorType(
+					context.registers[0]->getReal(),
+					context.registers[1]->getReal(),
+					0
+				)
+			);
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_CROSS:
+		case BuiltInVectorOperation::AV2_EBI_VO_FCROSS: {
+			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec2 (f)cross");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().fcross(context.registers[1]->getVector().xy()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_DOT: {
+			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec2 dot");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().dot(context.registers[1]->getVector().xy()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_TAN: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec2 tan");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().tangent());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_ANGLE: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec2 angle2");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().angle());
+		} break;
+		default: pushUndefinedIfInLooseMode("invalid builtin vec2"); break;
+	}
 }
 
 void Engine::callBuiltInVector3Op(BuiltInVectorOperation const func) {
-	// TODO: This
+	switch (func) {
+		case BuiltInVectorOperation::AV2_EBI_VO_NEW: {
+			if (!(context.registers[0]->isNumber()))
+				pushUndefinedIfInLooseMode("builtin vec2 new");
+			else context.temporary = new Value(Value::VectorType(context.registers[0]->getReal()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_VEC_NEW: {
+			if (!(context.registers[0]->isNumber() && context.registers[1]->isNumber() && context.registers[2]->isNumber()))
+				pushUndefinedIfInLooseMode("builtin vec2 vnew");
+			else context.temporary = new Value(
+				Value::VectorType(
+					context.registers[0]->getReal(),
+					context.registers[1]->getReal(),
+					context.registers[2]->getReal()
+				)
+			);
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_CROSS:{
+			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec2 cross");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().cross(context.registers[1]->getVector().xyz()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_FCROSS: {
+			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec3 fcross");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().fcross(context.registers[1]->getVector().xyz()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_DOT: {
+			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec3 dot");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().dot(context.registers[1]->getVector().xyz()));
+		} break;
+		default: pushUndefinedIfInLooseMode("invalid builtin vec3"); break;
+	}
 }
 
 void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 	// TODO: This
+	switch (func) {
+		case BuiltInVectorOperation::AV2_EBI_VO_NEW: {
+			if (!(context.registers[0]->isNumber()))
+				pushUndefinedIfInLooseMode("builtin vec4 new");
+			else context.temporary = new Value(Value::VectorType(context.registers[0]->getReal()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_VEC_NEW: {
+			if (!(context.registers[0]->isNumber() && context.registers[1]->isNumber() && context.registers[2]->isNumber() && context.registers[3]->isNumber()))
+				pushUndefinedIfInLooseMode("builtin vec4 vnew");
+			else context.temporary = new Value(
+				Value::VectorType(
+					context.registers[0]->getReal(),
+					context.registers[1]->getReal(),
+					context.registers[2]->getReal(),
+					context.registers[3]->getReal()
+				)
+			);
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_CROSS:
+		case BuiltInVectorOperation::AV2_EBI_VO_FCROSS: {
+			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec4 (f)cross");
+			else context.temporary = new Value(context.registers[0]->getVector().fcross(context.registers[1]->getVector()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_DOT: {
+			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec4 dot");
+			else context.temporary = new Value(context.registers[0]->getVector().dot(context.registers[1]->getVector()));
+		} break;
+		default: pushUndefinedIfInLooseMode("invalid builtin vec3"); break;
+	}
 }
 
 void Engine::terminate() {
