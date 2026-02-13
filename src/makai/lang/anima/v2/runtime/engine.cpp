@@ -226,7 +226,7 @@ void Engine::v2Copy() {
 	to = from;
 }
 
-void Engine::v2Invoke() {
+void Engine::v2Call() {
 	// Get invocation
 	Instruction::Invocation invocation = bitcast<Instruction::Invocation>(current.type);
 	// If invocation is internal call, do so

@@ -201,7 +201,6 @@ namespace Makai::Anima::V2::Runtime {
 
 		void advance(bool isRequired = false);
 
-		void v2Invoke();
 		void v2Copy();
 		void v2Call();
 		void v2Negate();
