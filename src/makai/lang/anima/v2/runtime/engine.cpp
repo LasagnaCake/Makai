@@ -774,8 +774,41 @@ void Engine::callBuiltInVector2Op(BuiltInVectorOperation const func) {
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_ANGLE: {
 			if (!(context.registers[0]->isAlgebraic()))
-				pushUndefinedIfInLooseMode("builtin vec2 angle2");
+				pushUndefinedIfInLooseMode("builtin vec2 angle");
 			else context.temporary = new Value(context.registers[0]->getVector().xy().angle());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_NORMAL: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec2 normal");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().normalize());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec4 len");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().length());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH_SQUARED: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec2 len2");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().lengthSquared());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_TRI_CROSS: {
+			if (!(
+				context.registers[0]->isAlgebraic()
+			&&	context.registers[1]->isAlgebraic()
+			&&	context.registers[2]->isAlgebraic()
+			))
+				pushUndefinedIfInLooseMode("builtin vec2 tri");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().tri(context.registers[1]->getVector().xy(), context.registers[2]->getVector().xy()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_INVERSE_TRI_CROSS: {
+			if (!(
+				context.registers[0]->isAlgebraic()
+			&&	context.registers[1]->isAlgebraic()
+			&&	context.registers[2]->isAlgebraic()
+			))
+				pushUndefinedIfInLooseMode("builtin vec2 itri");
+			else context.temporary = new Value(context.registers[0]->getVector().xy().itri(context.registers[1]->getVector().xy(), context.registers[2]->getVector().xy()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin vec2"); break;
 	}
@@ -814,6 +847,44 @@ void Engine::callBuiltInVector3Op(BuiltInVectorOperation const func) {
 				pushUndefinedIfInLooseMode("builtin vec3 dot");
 			else context.temporary = new Value(context.registers[0]->getVector().xyz().dot(context.registers[1]->getVector().xyz()));
 		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_ANGLE: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec3 angle");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().angle());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_NORMAL: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec3 normal");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().normalize());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec3 len");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().length());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH_SQUARED: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec3 len2");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().lengthSquared());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_TRI_CROSS: {
+			if (!(
+				context.registers[0]->isAlgebraic()
+			&&	context.registers[1]->isAlgebraic()
+			&&	context.registers[2]->isAlgebraic()
+			))
+				pushUndefinedIfInLooseMode("builtin vec3 tri");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().tri(context.registers[1]->getVector().xyz(), context.registers[2]->getVector().xyz()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_INVERSE_TRI_CROSS: {
+			if (!(
+				context.registers[0]->isAlgebraic()
+			&&	context.registers[1]->isAlgebraic()
+			&&	context.registers[2]->isAlgebraic()
+			))
+				pushUndefinedIfInLooseMode("builtin vec3 itri");
+			else context.temporary = new Value(context.registers[0]->getVector().xyz().itri(context.registers[1]->getVector().xyz(), context.registers[2]->getVector().xyz()));
+		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin vec3"); break;
 	}
 }
@@ -848,6 +919,39 @@ void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 			if (!(context.registers[0]->isAlgebraic() && context.registers[1]->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec4 dot");
 			else context.temporary = new Value(context.registers[0]->getVector().dot(context.registers[1]->getVector()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_NORMAL: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec4 normal");
+			else context.temporary = new Value(context.registers[0]->getVector().normalize());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec4 len");
+			else context.temporary = new Value(context.registers[0]->getVector().length());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH_SQUARED: {
+			if (!(context.registers[0]->isAlgebraic()))
+				pushUndefinedIfInLooseMode("builtin vec4 len2");
+			else context.temporary = new Value(context.registers[0]->getVector().lengthSquared());
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_TRI_CROSS: {
+			if (!(
+				context.registers[0]->isAlgebraic()
+			&&	context.registers[1]->isAlgebraic()
+			&&	context.registers[2]->isAlgebraic()
+			))
+				pushUndefinedIfInLooseMode("builtin vec4 tri");
+			else context.temporary = new Value(context.registers[0]->getVector().tri(context.registers[1]->getVector(), context.registers[2]->getVector()));
+		} break;
+		case BuiltInVectorOperation::AV2_EBI_VO_INVERSE_TRI_CROSS: {
+			if (!(
+				context.registers[0]->isAlgebraic()
+			&&	context.registers[1]->isAlgebraic()
+			&&	context.registers[2]->isAlgebraic()
+			))
+				pushUndefinedIfInLooseMode("builtin vec4 itri");
+			else context.temporary = new Value(context.registers[0]->getVector().itri(context.registers[1]->getVector(), context.registers[2]->getVector()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin vec4"); break;
 	}
