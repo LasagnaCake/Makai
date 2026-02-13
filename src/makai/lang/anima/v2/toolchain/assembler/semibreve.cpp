@@ -505,22 +505,52 @@ Context::Scope::Namespace& resolveNamespace(Context& context) {
 	return resolveNamespace(context, context.getNamespaceByName(id));
 }
 
-// TODO: Apply this solution to the rest of the assembler
-static Solution resolveSymbol(Context& context, Makai::String const& id, Makai::Instance<Context::Scope::Member> const& sym) {
+static Solution resolveSymbol(
+	Context& context,
+	Makai::String const& id,
+	Makai::Instance<Context::Scope::Member> const& sym,
+	Makai::Instance<Context::Scope::Member> const& source = nullptr
+);
+
+static Solution tryAndResolveMemberCall(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::Instance<Context::Scope::Member> const& type) {
+	if (context.fetchNext().hasToken(Type{'.'})) {
+		auto const memsym = resolveNamespaceMember(context, *symbol->ns).value;
+		return resolveSymbol(context, symbol->name, memsym);
+	}
+	context.append.cache.insert(Context::Macro::Axiom{}, 0);
+	if (symbol->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
+		return {type, context.varAccessor(symbol)};
+	else if (symbol->type == Context::Scope::Member::Type::AV2_TA_SMT_TYPE) {
+		if (context.isBasicType(symbol))
+			return {type, context.resolveTo(symbol->name)};
+		else context.error("Cannot have initializations for non-basic types!");
+	}
+}
+
+static Solution resolveSymbol(
+	Context& context,
+	Makai::String const& id,
+	Makai::Instance<Context::Scope::Member> const& sym,
+	Makai::Instance<Context::Scope::Member> const& source
+) {
 	DEBUGLN("Resolving symbol...");
+	Makai::Instance<Context::Scope::Member> type;
 	if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_MACRO) {
 		doMacroExpansion(context, sym);
 		return doExpression(context);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
+		if (source) try {
+			return doFunctionCall(context, sym, source);
+		} catch (Makai::Error::InvalidValue const&) {}
 		return doFunctionCall(context, sym);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym->value["use"] = true;
 		if (!sym->base)
 			context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing variable type!");
-		auto const type = sym->base;
-		DEBUGLN("Value type: ", type->name);
-		return {type, context.varAccessor(sym)};
+		type = sym->base;
 	} else context.error<InvalidValue>("Invalid symbol type for operation!");
+	DEBUGLN("Value type: ", type->name);
+	return tryAndResolveMemberCall(context, sym, type);
 }
 
 static Makai::Instance<Context::Scope::Member> resolveSymbolPath(Context& context) {
@@ -534,6 +564,11 @@ static Makai::Instance<Context::Scope::Member> resolveSymbolPath(Context& contex
 	else context.error("Symbol with this name does not exist!");
 }
 
+static Solution doSymbolResolution(Context& context) {
+	auto sym = resolveSymbolPath(context);
+	return resolveSymbol(context, sym->name, sym);
+}
+
 static Solution doValueResolution(Context& context, bool idCanBeValue) {
 	DEBUGLN("Value resolution");
 	auto const current = context.currentToken();
@@ -542,14 +577,9 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			auto const id = current.value.get<Makai::String>();
 			auto result = doReservedValueResolution(context);
 			if (result.type != context.getBasicType("void")) return result;
-			else if (context.hasSymbol(id)) {
-				auto sym = resolveSymbol(context, id, context.getSymbolRefByName(id));
-				return sym;
-			}
-			else if (context.hasNamespace(id)) {
-				auto const sym = resolveNamespaceMember(context);
-				return resolveSymbol(context, sym.key, sym.value);
-			} else if (id == "sizeof") {
+			else if (context.hasSymbol(id) || context.hasNamespace(id))
+				return doSymbolResolution(context);
+			else if (id == "sizeof") {
 				context.fetchNext();
 				auto result = doValueResolution(context);
 				context.writeLine("push", result.resolve());
@@ -2157,23 +2187,9 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "type")								doTypeDefinition(context);
 			else if (id == "extend")							doTypeExtension(context);
 			else if (id == "macro")								doMacro(context);
-			else if (context.hasSymbol(id)) {
-				auto sym = context.getSymbolRefByName(id);
-				switch (sym->type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym); return doExpression(context);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION:	return doFunctionCall(context, sym);							break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE:	return doVariableAction(context, sym);							break;
-					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
-				}
-			} else if (context.hasNamespace(id)) {
-				auto const sym = resolveNamespaceMember(context);
-				switch (sym.value->type) {
-					case Context::Scope::Member::Type::AV2_TA_SMT_MACRO:	doMacroExpansion(context, sym.value); return doExpression(context);	break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION: return doFunctionCall(context, sym.value);							break;
-					case Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE: return doVariableAction(context, sym.value);						break;
-					default: context.error<InvalidValue>("Invalid/Unsupported expression!");
-				}
-			} else return doVarDecl(context, true);
+			else if (context.hasSymbol(id) || context.hasNamespace(id)) {
+				return doSymbolResolution(context);
+			} return doVarDecl(context, true);
 		} break;
 		case Type{'('}: {
 			return doBinaryOperation(context);
