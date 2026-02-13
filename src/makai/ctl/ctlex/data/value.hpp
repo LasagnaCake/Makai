@@ -36,8 +36,10 @@ namespace Type::Ex::Data {
 namespace Data {
 	// TODO: Add `Vector` (& `Matrix`?) support
 	struct Value: Ordered {
-		/// @brief Integer type.
-		using IntegerType		= ssize;
+		/// @brief Signed integer type.
+		using SignedType		= int64;
+		/// @brief Unsigned integer type.
+		using UnsignedType		= uint64;
 		/// @brief Real number type.
 		using RealType			= double;
 		/// @brief String type.
@@ -73,7 +75,8 @@ namespace Data {
 
 		/// @brief Underlying storage.
 		union Content {
-			IntegerType				integer;
+			SignedType				signedInt;
+			UnsignedType			unsignedInt;
 			RealType				real;
 			owner<StringType>		string;
 			owner<ByteListType>		bytes;
@@ -82,7 +85,7 @@ namespace Data {
 			owner<VectorType>		vector;
 			owner<IdentifierType>	id;
 
-			constexpr Content()		{integer = 0;}
+			constexpr Content()		{unsignedInt = 0;}
 			constexpr ~Content()	{}
 		};
 
@@ -129,15 +132,15 @@ namespace Data {
 
 		/// @brief Constructs a boolean value.
 		template <::CTL::Type::Equal<bool> T>
-		constexpr Value(T const value):				kind(Kind::DVK_BOOLEAN)			{content.integer = value;					}
+		constexpr Value(T const value):				kind(Kind::DVK_BOOLEAN)				{content.unsignedInt = value;				}
 		/// @brief Constructs a signed integer value.
 		template <::CTL::Type::SignedInteger T>
 		constexpr Value(T const value)
-		requires (Type::Different<T, bool>):		kind(Kind::DVK_SIGNED)			{content.integer = value;					}
+		requires (Type::Different<T, bool>):			kind(Kind::DVK_SIGNED)			{content.signedInt = value;					}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::UnsignedInteger T>
 		constexpr Value(T const value)
-		requires (Type::Different<T, bool>):			kind(Kind::DVK_UNSIGNED)		{content.integer = value;					}
+		requires (Type::Different<T, bool>):			kind(Kind::DVK_UNSIGNED)		{content.unsignedInt = value;				}
 		/// @brief Constructs an unsigned integer value.
 		template <::CTL::Type::Enumerator T>
 		constexpr Value(T const value):					Value(enumcast(value))			{											}
@@ -155,6 +158,8 @@ namespace Data {
 		constexpr Value(ObjectType const& value):		kind(Kind::DVK_OBJECT)			{content.object = new ObjectType(value);	}
 		/// @brief Constructs an identifier value.
 		constexpr Value(IdentifierType const& value):	kind(Kind::DVK_IDENTIFIER)		{content.id = new IdentifierType(value);	}
+		/// @brief Constructs a vector value.
+		constexpr Value(VectorType const& value):		kind(Kind::DVK_VECTOR)			{content.vector = new VectorType(value);	}
 
 		/// @brief Constructs the value from a serializable value.
 		template <Type::Ex::Data::Serializable T>
@@ -173,14 +178,15 @@ namespace Data {
 			dump();
 			switch (kind = other.kind) {
 				case Kind::DVK_BOOLEAN:
-				case Kind::DVK_UNSIGNED:
-				case Kind::DVK_SIGNED:		content.integer	= other.content.integer;					break;
-				case Kind::DVK_REAL:		content.real	= other.content.real;						break;
-				case Kind::DVK_STRING:		content.string	= new StringType(*other.content.string);	break;
-				case Kind::DVK_BYTES:		content.bytes	= new ByteListType(*other.content.bytes);	break;
-				case Kind::DVK_ARRAY:		content.array	= new ArrayType(*other.content.array);		break;
-				case Kind::DVK_OBJECT:		content.object	= new ObjectType(*other.content.object);	break;
-				case Kind::DVK_IDENTIFIER:	content.id		= new IdentifierType(*other.content.id);	break;
+				case Kind::DVK_UNSIGNED:	content.unsignedInt	= other.content.unsignedInt;				break;
+				case Kind::DVK_SIGNED:		content.signedInt	= other.content.signedInt;					break;
+				case Kind::DVK_REAL:		content.real		= other.content.real;						break;
+				case Kind::DVK_STRING:		content.string		= new StringType(*other.content.string);	break;
+				case Kind::DVK_BYTES:		content.bytes		= new ByteListType(*other.content.bytes);	break;
+				case Kind::DVK_ARRAY:		content.array		= new ArrayType(*other.content.array);		break;
+				case Kind::DVK_OBJECT:		content.object		= new ObjectType(*other.content.object);	break;
+				case Kind::DVK_IDENTIFIER:	content.id			= new IdentifierType(*other.content.id);	break;
+				case Kind::DVK_VECTOR:		content.vector		= new VectorType(*other.content.vector);	break;
 				default: break;
 			}
 			return *this;
@@ -191,14 +197,15 @@ namespace Data {
 			dump();
 			switch (kind = other.kind) {
 				case Kind::DVK_BOOLEAN:
-				case Kind::DVK_UNSIGNED:
-				case Kind::DVK_SIGNED:		content.integer	= other.content.integer;					break;
+				case Kind::DVK_UNSIGNED:	content.unsignedInt	= other.content.unsignedInt;			break;
+				case Kind::DVK_SIGNED:		content.signedInt	= other.content.signedInt;				break;
 				case Kind::DVK_REAL:		content.real	= other.content.real;						break;
 				case Kind::DVK_STRING:		content.string	= new StringType(*other.content.string);	break;
 				case Kind::DVK_BYTES:		content.bytes	= new ByteListType(*other.content.bytes);	break;
 				case Kind::DVK_ARRAY:		content.array	= new ArrayType(*other.content.array);		break;
 				case Kind::DVK_OBJECT:		content.object	= new ObjectType(*other.content.object);	break;
 				case Kind::DVK_IDENTIFIER:	content.id		= new IdentifierType(*other.content.id);	break;
+				case Kind::DVK_VECTOR:		content.vector	= new VectorType(*other.content.vector);	break;
 				default: break;
 			}
 			return *this;
@@ -228,6 +235,8 @@ namespace Data {
 		constexpr static bool isObject(Kind const kind)		{return kind == Kind::DVK_OBJECT;		}
 		/// @brief Returns whether the type is an identifier.
 		constexpr static bool isIdentifier(Kind const kind)	{return kind == Kind::DVK_IDENTIFIER;	}
+		/// @brief Returns whether the type is a vector.
+		constexpr static bool isVector(Kind const kind)		{return kind == Kind::DVK_VECTOR;		}
 
 		/// @brief Returns whether the value is undefined.
 		constexpr bool isUndefined() const	{return isUndefined(kind);	}
@@ -253,6 +262,8 @@ namespace Data {
 		constexpr bool isObject() const		{return isObject(kind);		}
 		/// @brief Returns whether the value is an identifier.
 		constexpr bool isIdentifier() const	{return isIdentifier(kind);	}
+		/// @brief Returns whether the value is an identifier.
+		constexpr bool isVector() const		{return isVector(kind);		}
 
 		/// @brief Returns whether the type is an integer.
 		constexpr static bool isInteger(Kind const kind)	{return isSigned(kind) || isUnsigned(kind);									}
@@ -324,7 +335,8 @@ namespace Data {
 			if (!isVerifiable()) return false;
 			if (isFalsy())							out = false;
 			else if (isTruthy())					out = true;
-			else if (isInteger() || isBoolean())	out = content.integer;
+			else if (isUnsigned() || isBoolean())	out = content.unsignedInt;
+			else if (isSigned())					out = content.signedInt;
 			else if (isReal())						out = content.real;
 			return true;
 		}
@@ -336,8 +348,9 @@ namespace Data {
 		template <::CTL::Type::Number T>
 		constexpr bool tryGet(T& out) const
 		requires ::CTL::Type::Different<T, bool> {
-			if (isInteger() || isBoolean())	out = content.integer;
-			else if (isReal())				out = content.real;
+			if (isUnsigned() || isBoolean())	out = content.unsignedInt;
+			else if (isSigned())				out = content.signedInt;
+			else if (isReal())					out = content.real;
 			else return false;
 			return true;
 		}
@@ -348,8 +361,9 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Enumerator T>
 		constexpr bool tryGet(T& out) const  {
-			if (isInteger() || isBoolean())	out = static_cast<T>(content.integer);
-			else if (isReal())				out = static_cast<T>(content.real);
+			if (isUnsigned() || isBoolean())	out = static_cast<T>(content.unsignedInt);
+			if (isSigned())						out = static_cast<T>(content.signedInt);
+			else if (isReal())					out = static_cast<T>(content.real);
 			else return false;
 			return true;
 		}
@@ -405,6 +419,17 @@ namespace Data {
 		template <::CTL::Type::Equal<IdentifierType> T>
 		constexpr bool tryGet(T& out) const {
 			if (isIdentifier()) out = *content.id;
+			else return false;
+			return true;
+		}
+
+		/// @brief Tries to get the value as a given type.
+		/// @tparam T value type.
+		/// @param out Output.
+		/// @return Whether value was successfully acquired.
+		template <::CTL::Type::Equal<VectorType> T>
+		constexpr bool tryGet(T& out) const {
+			if (isVector()) out = *content.vector;
 			else return false;
 			return true;
 		}
@@ -491,6 +516,7 @@ namespace Data {
 			else if constexpr (Type::Equal<T, ByteListType>)		return isBytes();
 			else if constexpr (Type::Equal<T, ObjectType>)			return isObject();
 			else if constexpr (Type::Equal<T, IdentifierType>)		return isIdentifier();
+			else if constexpr (Type::Equal<T, VectorType>)			return isVector();
 			else if constexpr (Type::Equal<T, Value>)				return true;
 			else return false;
 		}
@@ -580,19 +606,23 @@ namespace Data {
 			return out;
 		}
 
-		constexpr AsUnsigned<IntegerType>	getUnsigned() const		{return get<AsUnsigned<IntegerType>>();	}
-		constexpr IntegerType				getSigned() const		{return get<IntegerType>();				}
-		constexpr StringType				getString() const		{return get<StringType>();				}
-		constexpr ArrayType					getArray() const		{return get<ArrayType>();				}
-		constexpr ByteListType				getBytes() const		{return get<ByteListType>();			}
-		constexpr IdentifierType			getIdentifier() const	{return get<IdentifierType>();			}
+		constexpr UnsignedType				getUnsigned() const		{return get<UnsignedType>();	}
+		constexpr SignedType				getSigned() const		{return get<SignedType>();		}
+		constexpr RealType					getReal() const			{return get<RealType>();		}
+		constexpr StringType				getString() const		{return get<StringType>();		}
+		constexpr ArrayType					getArray() const		{return get<ArrayType>();		}
+		constexpr ByteListType				getBytes() const		{return get<ByteListType>();	}
+		constexpr IdentifierType			getIdentifier() const	{return get<IdentifierType>();	}
+		constexpr VectorType				getVector() const		{return get<VectorType>();		}
 
-		constexpr AsUnsigned<IntegerType>	getUnsigned(AsUnsigned<IntegerType> const fallback) const	{return get<AsUnsigned<IntegerType>>(fallback);	}
-		constexpr IntegerType				getSigned(IntegerType const fallback) const					{return get<IntegerType>(fallback);				}
-		constexpr StringType				getString(StringType const& fallback) const					{return get<StringType>(fallback);				}
-		constexpr ArrayType					getArray(ArrayType const& fallback) const					{return get<ArrayType>(fallback);				}
-		constexpr ByteListType				getBytes(ByteListType const& fallback) const				{return get<ByteListType>(fallback);			}
-		constexpr IdentifierType			getIdentifier(IdentifierType const& fallback) const			{return get<IdentifierType>(fallback);			}
+		constexpr UnsignedType		getUnsigned(UnsignedType const fallback) const		{return get<UnsignedType>(fallback);	}
+		constexpr SignedType		getSigned(SignedType const fallback) const			{return get<SignedType>(fallback);				}
+		constexpr RealType			getReal(RealType const fallback) const				{return get<RealType>(fallback);				}
+		constexpr StringType		getString(StringType const& fallback) const			{return get<StringType>(fallback);				}
+		constexpr ArrayType			getArray(ArrayType const& fallback) const			{return get<ArrayType>(fallback);				}
+		constexpr ByteListType		getBytes(ByteListType const& fallback) const		{return get<ByteListType>(fallback);			}
+		constexpr IdentifierType	getIdentifier(IdentifierType const& fallback) const	{return get<IdentifierType>(fallback);			}
+		constexpr VectorType		getVector(VectorType const& fallback) const			{return get<VectorType>(fallback);				}
 
 		/// @brief Returns the value as a given type (Implicit conversion).
 		template <class T>
@@ -699,28 +729,34 @@ namespace Data {
 
 		/// @brief Threeway comparison operator.
 		constexpr OrderType operator<=>(Value const& other) const {
-			if (isFalsy() || other.isFalsy())		return isFalsy() <=> other.isFalsy();
-			if (isBoolean() && other.isBoolean())	return (get<bool>() <=> other.template get<bool>());
-			if (isInteger() && other.isInteger())	return (get<ssize>() <=> other.template get<ssize>());
-			if (isReal() && other.isReal())			return (get<double>() <=> other.template get<double>());
-			if (isString() && other.isString())		return (content.string <=> other.content.string);
-			if (isBytes() && other.isBytes())		return (content.bytes <=> other.content.bytes);
-			if (isArray() && other.isArray())		return (*content.array <=> *other.content.array);
-			if (isObject() && other.isObject())		return compareWithRef(other.content.object);
+			if (isFalsy() || other.isFalsy())			return isFalsy() <=> other.isFalsy();
+			if (isBoolean() && other.isBoolean())		return (get<bool>() <=> other.template get<bool>());
+			if (isUnsigned() && other.isUnsigned())		return (get<UnsignedType>() <=> other.template get<UnsignedType>());
+			if (isInteger() && other.isInteger())		return (get<SignedType>() <=> other.template get<SignedType>());
+			if (isReal() && other.isReal())				return (get<RealType>() <=> other.template get<RealType>());
+			if (isString() && other.isString())			return (content.string <=> other.content.string);
+			if (isBytes() && other.isBytes())			return (content.bytes <=> other.content.bytes);
+			if (isArray() && other.isArray())			return (*content.array <=> *other.content.array);
+			if (isObject() && other.isObject())			return compareWithRef(other.content.object);
+			if (isVector() && other.isVector())			return (*content.vector <=> *other.content.vector);
+			if (isIdentifier() && other.isIdentifier())	return (*content.id <=> *other.content.id);
 			// Le JavaScript
 			return (size() <=> other.size());
 		}
 
 		/// @brief Equality comparison operator.
 		constexpr bool operator==(Value const& other) const {
-			if (isFalsy() || other.isFalsy())		return isFalsy() == other.isFalsy();
-			if (isBoolean() && other.isBoolean())	return (get<bool>() == other.template get<bool>());
-			if (isInteger() && other.isInteger())	return (get<ssize>() == other.template get<ssize>());
-			if (isReal() && other.isReal())			return (get<double>() == other.template get<double>());
-			if (isString() && other.isString())		return (content.string == other.content.string);
-			if (isBytes() && other.isBytes())		return (content.bytes == other.content.bytes);
-			if (isArray() && other.isArray())		return (*content.array == *other.content.array);
-			if (isObject() && other.isObject())		return compareWithRef(other.content.object) == Order::EQUAL;
+			if (isFalsy() || other.isFalsy())			return isFalsy() == other.isFalsy();
+			if (isBoolean() && other.isBoolean())		return (get<bool>() == other.template get<bool>());
+			if (isUnsigned() && other.isUnsigned())		return (get<UnsignedType>() == other.template get<UnsignedType>());
+			if (isInteger() && other.isInteger())		return (get<SignedType>() == other.template get<SignedType>());
+			if (isReal() && other.isReal())				return (get<RealType>() == other.template get<RealType>());
+			if (isString() && other.isString())			return (content.string == other.content.string);
+			if (isBytes() && other.isBytes())			return (content.bytes == other.content.bytes);
+			if (isArray() && other.isArray())			return (*content.array == *other.content.array);
+			if (isVector() && other.isVector())			return (*content.vector == *other.content.vector);
+			if (isIdentifier() && other.isIdentifier())	return (*content.id == *other.content.id);
+			if (isObject() && other.isObject())			return compareWithRef(other.content.object) == Order::EQUAL;
 			return false;
 		}
 		/// @brief Inequality comparison operator.
@@ -772,6 +808,12 @@ namespace Data {
 					}
 					return result.sliced(0, -3) + lhs + StringType("]");
 				},
+				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
+					StringType result = "[";
+					for (usize i = 0; i < 4; ++i)
+						result += lhs + ::CTL::toString((*val.content.vector)[i]) + sep;
+					return result.sliced(0, -3) + lhs + StringType("]");
+				},
 				pad
 			);
 		}
@@ -790,8 +832,16 @@ namespace Data {
 					StringType result = "#[";
 					result += ::CTL::toString(id[0]);
 					for (usize i = 1; i < IdentifierType::SIZE; ++i)
-						result += ::CTL::toString("-", id[i]);
+						result += ::CTL::toString(" ", id[i]);
 					return result + "]";
+				},
+				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
+					auto const& vec = *val.content.vector;
+					StringType result = "(";
+					result += ::CTL::toString(vec[0]);
+					for (usize i = 1; i < 4; ++i)
+						result += ::CTL::toString(" ", vec[i]);
+					return result + ")";
 				},
 				pad,
 				" ",
@@ -940,17 +990,27 @@ namespace Data {
 
 		using Converter = StringType(Value const&, String const&, String const&);
 
-		template <Type::Functional<Converter> TConv1, Type::Functional<Converter> TConv2>
-		constexpr StringType stringify(TConv1 const& toBytes, TConv2 const& toID, Padding const& pad, String const& sep = ", ", String const& assign = ": ", bool unquotedIDs = false) const {
+		template <Type::Functional<Converter> TConv1, Type::Functional<Converter> TConv2, Type::Functional<Converter> TConv3>
+		constexpr StringType stringify(
+			TConv1 const& toBytes,
+			TConv2 const& toID,
+			TConv3 const& toVector,
+			Padding const& pad,
+			String const& sep = ", ",
+			String const& assign = ": ",
+			bool unquotedIDs = false
+		) const {
 			if (isUndefined()) return "undefined";
 			if (isNull()) return "null";
 			if (isNaN()) return "nan";
 			if (isString())
 				return escape(*content.string, unquotedIDs);
 			if (isBoolean())
-				return content.integer ? StringType("true") : StringType("false");
-			if (isInteger())
-				return ::CTL::toString(content.integer);
+				return content.unsignedInt ? StringType("true") : StringType("false");
+			if (isUnsigned())
+				return ::CTL::toString(content.unsignedInt);
+			if (isSigned())
+				return ::CTL::toString(content.signedInt);
 			if (isReal())
 				return ::CTL::toString(content.real);
 			StringType const NEWLINE = StringType("\n");
@@ -962,18 +1022,20 @@ namespace Data {
 				if (empty()) return "[]";
 				StringType result = "[";
 				for (auto const& v: *content.array)
-					result += lhs + v.stringify(toBytes, toID, pad.next(), sep, assign, unquotedIDs) + sep;
+					result += lhs + v.stringify(toBytes, toID, toVector, pad.next(), sep, assign, unquotedIDs) + sep;
 				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("]");
 			}
 			if (isObject()) {
 				if (empty()) return "{}";
 				StringType result = "{";
 				for (auto const& [k, v]: items())
-					result +=  lhs + escape(k, unquotedIDs) + assign + v.stringify(toBytes, toID, pad.next(), sep, assign, unquotedIDs) + sep;
+					result +=  lhs + escape(k, unquotedIDs) + assign + v.stringify(toBytes, toID, toVector, pad.next(), sep, assign, unquotedIDs) + sep;
 				return result.sliced(0, -(sep.size() + 1)) + (NEWLINE + pad.base()) + StringType("}");
 			}
 			if (isIdentifier())
 				return toID(*this, lhs, sep);
+			if (isVector())
+				return toVector(*this, lhs, sep);
 			return StringType();
 		}
 
