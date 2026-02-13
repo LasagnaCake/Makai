@@ -49,7 +49,12 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(Internal);
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(MemberCall);
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction);
 
-static Solution doFunctionCall(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::Instance<Context::Scope::Member> const& self = nullptr);
+static Solution doFunctionCall(
+	Context& context,
+	Makai::Instance<Context::Scope::Member> const& symbol,
+	Makai::Instance<Context::Scope::Member> const& self = nullptr,
+	bool const looseSelf = false
+);
 
 static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::String const& self = "");
 
@@ -510,13 +515,13 @@ static Solution resolveSymbol(
 	Makai::String const& id,
 	Makai::Instance<Context::Scope::Member> const& sym,
 	Makai::Instance<Context::Scope::Member> const& source = nullptr,
-	bool forceResolution = true
+	bool looseSource = false
 );
 
 static Solution tryAndResolveSubfield(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::Instance<Context::Scope::Member> const& type) {
 	if (context.fetchNext().hasToken(Type{'.'})) {
 		auto const member = resolveNamespaceMember(context, *symbol->ns).value;
-		return resolveSymbol(context, symbol->name, member, symbol, false);
+		return resolveSymbol(context, symbol->name, member, symbol, true);
 	}
 	context.append.cache.insert(Context::Macro::Axiom{}, 0);
 	if (symbol->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
@@ -533,7 +538,7 @@ static Solution resolveSymbol(
 	Makai::String const& id,
 	Makai::Instance<Context::Scope::Member> const& sym,
 	Makai::Instance<Context::Scope::Member> const& source,
-	bool forceResolution
+	bool looseSource
 ) {
 	DEBUGLN("Resolving symbol...");
 	Makai::Instance<Context::Scope::Member> type;
@@ -541,14 +546,7 @@ static Solution resolveSymbol(
 		doMacroExpansion(context, sym);
 		return doExpression(context);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
-		if (forceResolution)
-			return doFunctionCall(context, sym, source);
-		else {
-			if (source) try {
-				return doFunctionCall(context, sym, source);
-			} catch (Makai::Error::InvalidValue const&) {}
-			return doFunctionCall(context, sym);
-		}
+		return doFunctionCall(context, sym, source, source->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym->value["use"] = true;
 		if (!sym->base)
@@ -1096,7 +1094,8 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(VariableAction) {
 static Solution doFunctionCall(
 	Context& context,
 	Makai::Instance<Context::Scope::Member> const& sym,
-	Makai::Instance<Context::Scope::Member> const& self
+	Makai::Instance<Context::Scope::Member> const& self,
+	bool const looseSelf
 ) {
 	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error("INTERNAL ERROR: Symbol type mismatch!");
@@ -1109,6 +1108,7 @@ static Solution doFunctionCall(
 	Makai::List<Solution> args;
 	auto const start = context.currentScope().stackc + context.currentScope().varc;
 	auto legalName = id + "_";
+	auto globalLegalName = legalName;
 	if (self) legalName += self->base->name + "_";
 	while (context.nextToken()) {
 		if (context.currentToken().type == Type{')'}) break;
@@ -1136,12 +1136,14 @@ static Solution doFunctionCall(
 	call += ")";
 	DEBUGLN("Overloads: [", sym->value["overloads"].get<Value::ObjectType>().keys().join("], ["), "]");
 	DEBUGLN("Looking for: [", legalName, "]");
-	if (!sym->value["overloads"].contains(legalName))
+	if (!sym->value["overloads"].contains(legalName) || (looseSelf && !sym->value["overloads"].contains(globalLegalName)))
 		context.error<InvalidValue>("Function overload does not exist!");
+	else if (!sym->value["overloads"].contains(legalName)) globalLegalName = legalName;
 	auto const overload = sym->value["overloads"][legalName];
 	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
 	if (pushes)
-		context.writeLine("clear", pushes);
+		context.writeLine("clear", pushes)
+		;
 	if (!overload.contains("return"))
 		context.error<FailedAction>(Makai::toString("[", __LINE__, "]") + " INTERNAL ERROR: Missing return type!");
 	//context.fetchNext();

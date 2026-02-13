@@ -88,3 +88,6 @@ namespace Vector {
 extend vec with func angle2():													real	=> move Vector.angle2(ref self);
 extend vec with global func new(v: real):										vec		=> move Vector.new(move v);
 extend vec with global func new(x: real, y: real, z: real = 0, w: real = 0):	vec		=> move Vector.new(move x, move y, move z, move w);
+
+extend vec with func toString()	str => move in stringify ref self;
+extend vec with func clone()	vec => copy self;
