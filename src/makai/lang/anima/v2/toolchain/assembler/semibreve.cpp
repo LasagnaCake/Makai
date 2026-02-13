@@ -706,7 +706,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			context.fetchNext().expectToken(Type{')'});
 			if (stackUsage) context.writeLine("clear", stackUsage);
 			return sol;
-		} else if (id == "if" || id == "or" || id == "pow") {
+		} else if (id == "if" || id == "or" || id == "pow" || id == "atan2" || id == "mod") {
 			// Do nothing
 		} else context.error("Unknown operator!");
 	}
@@ -798,15 +798,17 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 			if (context.isObject(lhs.type)) {
 				if (!context.isString(rhs.type))
 					context.error<InvalidValue>("Right-hand side MUST be a string!");
+				result = context.getBasicType("any");
 			} else if (context.isArray(lhs.type)) {
 				if (!context.isInteger(rhs.type))
 					context.error<InvalidValue>("Right-hand side MUST be an integer!");
+				result = context.getBasicType("any");
 			}  else if (context.isVector(lhs.type)) {
 				if (!context.isInteger(rhs.type))
 					context.error<InvalidValue>("Right-hand side MUST be an integer!");
+				result = context.getBasicType("real");
 			} else context.error<InvalidValue>("Left-hand side MUST be an object, array or vectors!");
 			context.writeLine("get ", lhs.resolve(), "[", rhs.resolve(), "] -> .");
-			result = context.getBasicType("any");
 		} break;
 		case Type{'='}: {
 			if (lhs.type != rhs.type) {
