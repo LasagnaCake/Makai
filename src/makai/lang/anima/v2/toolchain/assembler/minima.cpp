@@ -500,8 +500,10 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "vec2" || id == "vec3" || id == "vec4") {
 				invoke.argc	= id.back();
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "vector operation").getString();
-				if (op == "cross")			invoke.mod = 'x';
-				else if (id == "dot")		invoke.mod = '.';
+				if (op == "new")			invoke.mod = '.';
+				else if (op == "vnew")		invoke.mod = '=';
+				else if (op == "cross")		invoke.mod = 'x';
+				else if (id == "dot")		invoke.mod = '*';
 				else if (id == "fcross")	invoke.mod = 'X';
 				else if (id == "tan") {
 					if (id == "vec2")

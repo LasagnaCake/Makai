@@ -105,6 +105,9 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_STRING_OP		= '"',
 			AV2_EBIF_ARRAY_OP		= '[',
 			AV2_EBIF_OBJECT_OP		= '{',
+			AV2_EBIF_VEC2_OP		= '2',
+			AV2_EBIF_VEC3_OP		= '3',
+			AV2_EBIF_VEC4_OP		= '4',
 		};
 
 		enum class BuiltInStringOperation: uint8 {

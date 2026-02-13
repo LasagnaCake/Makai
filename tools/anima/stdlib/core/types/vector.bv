@@ -67,6 +67,24 @@ namespace Vector {
 			call in vec4 dot
 		}
 	}
+	// Generic vectors
+	func new(v: real): vec {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in vec4 new
+		}
+	}
+	func new(x: real, y: real, z: real = 0, w: real = 0): vec {
+		fatal asm {
+			copy move stack[-3] -> register[0]
+			copy move stack[-2] -> register[1]
+			copy move stack[-1] -> register[2]
+			copy move stack[-0] -> register[3]
+			call in vec4 vnew
+		}
+	}
 }
 
-extend vec with func angle2(): real => move Vector.angle2(ref self);
+extend vec with func angle2():													real	=> move Vector.angle2(ref self);
+extend vec with global func new(v: real):										vec		=> move Vector.new(move v);
+extend vec with global func new(x: real, y: real, z: real = 0, w: real = 0):	vec		=> move Vector.new(move x, move y, move z, move w);
