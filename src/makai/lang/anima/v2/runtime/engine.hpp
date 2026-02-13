@@ -147,13 +147,18 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInVectorOperation: uint8 {
-			AV2_EBI_VO_NEW		= '.',
-			AV2_EBI_VO_VEC_NEW	= '=',
-			AV2_EBI_VO_CROSS	= 'x',
-			AV2_EBI_VO_FCROSS	= 'X',
-			AV2_EBI_VO_DOT		= '*',
-			AV2_EBI_VO_TAN		= '/',
-			AV2_EBI_VO_ANGLE	= 'a',
+			AV2_EBI_VO_NEW					= '.',
+			AV2_EBI_VO_VEC_NEW				= '=',
+			AV2_EBI_VO_CROSS				= 'x',
+			AV2_EBI_VO_FCROSS				= 'X',
+			AV2_EBI_VO_DOT					= '*',
+			AV2_EBI_VO_TAN					= '/',
+			AV2_EBI_VO_ANGLE				= 'a',
+			AV2_EBI_VO_NORMAL				= 'n',
+			AV2_EBI_VO_LENGTH				= 'l',
+			AV2_EBI_VO_LENGTH_SQUARED		= 'L',
+			AV2_EBI_VO_TRI_CROSS			= 't',
+			AV2_EBI_VO_INVERSE_TRI_CROSS	= 'T',
 		};
 
 		bool process();
