@@ -45,7 +45,7 @@ define GET_TIME
 @echo ""
 endef
 
-ifdef debug
+ifeq ($(debug),1)
 CFG := $(DEBUGCOMPCFG)
 LK := $(DEBUGLINKCFG)
 OBJ := $(DEBUGEXTRAOBJS)
