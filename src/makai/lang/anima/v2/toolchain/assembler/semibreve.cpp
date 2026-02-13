@@ -509,13 +509,14 @@ static Solution resolveSymbol(
 	Context& context,
 	Makai::String const& id,
 	Makai::Instance<Context::Scope::Member> const& sym,
-	Makai::Instance<Context::Scope::Member> const& source = nullptr
+	Makai::Instance<Context::Scope::Member> const& source = nullptr,
+	bool forceResolution = true
 );
 
-static Solution tryAndResolveMemberCall(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::Instance<Context::Scope::Member> const& type) {
+static Solution tryAndResolveSubfield(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::Instance<Context::Scope::Member> const& type) {
 	if (context.fetchNext().hasToken(Type{'.'})) {
-		auto const memsym = resolveNamespaceMember(context, *symbol->ns).value;
-		return resolveSymbol(context, symbol->name, memsym);
+		auto const member = resolveNamespaceMember(context, *symbol->ns).value;
+		return resolveSymbol(context, symbol->name, member, symbol, false);
 	}
 	context.append.cache.insert(Context::Macro::Axiom{}, 0);
 	if (symbol->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
@@ -531,7 +532,8 @@ static Solution resolveSymbol(
 	Context& context,
 	Makai::String const& id,
 	Makai::Instance<Context::Scope::Member> const& sym,
-	Makai::Instance<Context::Scope::Member> const& source
+	Makai::Instance<Context::Scope::Member> const& source,
+	bool forceResolution
 ) {
 	DEBUGLN("Resolving symbol...");
 	Makai::Instance<Context::Scope::Member> type;
@@ -539,10 +541,14 @@ static Solution resolveSymbol(
 		doMacroExpansion(context, sym);
 		return doExpression(context);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
-		if (source) try {
+		if (forceResolution)
 			return doFunctionCall(context, sym, source);
-		} catch (Makai::Error::InvalidValue const&) {}
-		return doFunctionCall(context, sym);
+		else {
+			if (source) try {
+				return doFunctionCall(context, sym, source);
+			} catch (Makai::Error::InvalidValue const&) {}
+			return doFunctionCall(context, sym);
+		}
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym->value["use"] = true;
 		if (!sym->base)
@@ -550,7 +556,7 @@ static Solution resolveSymbol(
 		type = sym->base;
 	} else context.error<InvalidValue>("Invalid symbol type for operation!");
 	DEBUGLN("Value type: ", type->name);
-	return tryAndResolveMemberCall(context, sym, type);
+	return tryAndResolveSubfield(context, sym, type);
 }
 
 static Makai::Instance<Context::Scope::Member> resolveSymbolPath(Context& context) {
