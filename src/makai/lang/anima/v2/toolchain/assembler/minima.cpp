@@ -1144,6 +1144,7 @@ MINIMA_ASSEMBLE_FN(Hook) {
 MINIMA_ASSEMBLE_FN(RandomNumber) {
 	context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG operation");
 	auto id = context.currentValue().getString();
+	DEBUGLN("RNG Action: [", id, "]");
 	Instruction::Randomness rng;
 	if (id == "seed") {
 		context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG seed operation");

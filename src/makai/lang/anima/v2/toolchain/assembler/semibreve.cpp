@@ -319,17 +319,16 @@ static Solution doFunction(
 		context.fetchNext().expectToken(Type{';'});
 		if (!proto.returnType)
 			proto.returnType = v.type;
-		else if (proto.returnType == context.getBasicType("void"))
-			context.writeLine("ret");
-		else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
+		else if (proto.returnType == context.getBasicType("void")) {
+			// Do jack shit
+		} else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
 		if (proto.returnType != v.type) {
 			context.writeLine("cast", v.resolve(), "as", toTypeName(proto.returnType), "-> .");
-			context.writeLine("ret");
 		} else {
 			context.writeLine("copy", v.resolve(), "-> .");
-			context.writeLine("ret");
 		}
+		context.writeLine("end");
 	} else if (context.hasToken(Type{';'})) {
 		proto.function->value["overloads"][proto.resolution] = false;
 		if (!proto.returnType)
@@ -751,14 +750,20 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		} break;
 		case Type{'+'}: {
 			if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), "+", rhs.resolve(), "-> .");
-			else if (context.isString(lhs.type) && context.isString(rhs.type))
-				context.writeLine("str cat", lhs.resolve(), "(", rhs.resolve(), ") -> .");
+			else if (context.isString(lhs.type) && context.isString(rhs.type)) {
+				context.writeLine("copy", lhs.resolve(), "-> register[0]");
+				context.writeLine("copy", rhs.resolve(), "-> register[1]");
+				context.writeLine("call in str join");
+			}
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
 		case Type{'/'}: {
 			if (context.isNumber(result)) context.writeLine("bop", lhs.resolve(), "/", rhs.resolve(), "-> .");
-			else if (context.isString(result))
-				context.writeLine("str sep", lhs.resolve(), "(", rhs.resolve(), ") -> .");
+			else if (context.isString(result)) {
+				context.writeLine("copy", lhs.resolve(), "-> register[0]");
+				context.writeLine("copy", rhs.resolve(), "-> register[1]");
+				context.writeLine("call in str sep");
+			}
 			else context.error<InvalidValue>("Invalid expression type(s) for operation!");
 		} break;
 		case Type{','}: {
@@ -1158,9 +1163,9 @@ SEMIBREVE_ASSEMBLE_FN(Return) {
 		) context.error<InvalidValue>("Return type does not match!");
 	}
 	context.addFunctionExit();
-	if (expectedType == context.getBasicType("void"))
-		context.writeLine("end");
-	else context.writeLine("ret", result.resolve());
+	if (expectedType != context.getBasicType("void"))
+		context.writeLine("copy", result.resolve(), "-> .");
+	context.writeLine("end");
 	DEBUGLN("</return>");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }

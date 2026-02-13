@@ -61,7 +61,7 @@ namespace Array {
 	}
 
 	func at(what: arr, i: int): any {
-		return move (ref what[move i]);
+		return move (ref what: move i);
 	}
 
 	func push(what: arr, val: any): arr {

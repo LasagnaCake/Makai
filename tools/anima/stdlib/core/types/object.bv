@@ -10,7 +10,7 @@ namespace Object {
 	}
 
 	func at(what: obj, key: str): any {
-		return move (ref what[move key]);
+		return move (ref what: move key);
 	}
 
 	func remove(what: obj, key: str): obj {
