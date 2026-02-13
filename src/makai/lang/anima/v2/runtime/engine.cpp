@@ -728,14 +728,27 @@ void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 
 void Engine::callBuiltInStringOp(BuiltInStringOperation const func) {
 	// TODO: This
+	switch (func) {
+		case BuiltInStringOperation::AV2_EBI_SO_CONTAINS: {
+		} break;
+		case BuiltInStringOperation::AV2_EBI_SO_FIND: {} break;
+		case BuiltInStringOperation::AV2_EBI_SO_JOIN: {} break;
+		case BuiltInStringOperation::AV2_EBI_SO_REMOVE: {} break;
+		case BuiltInStringOperation::AV2_EBI_SO_REPLACE: {} break;
+		case BuiltInStringOperation::AV2_EBI_SO_SLICE: {} break;
+		case BuiltInStringOperation::AV2_EBI_SO_SPLIT: {} break;
+		case BuiltInStringOperation::AV2_EBI_SO_MATCHES: {} break;
+	}
 }
 
 void Engine::callBuiltInArrayOp(BuiltInArrayOperation const func) {
 	// TODO: This
+	switch (func) {}
 }
 
 void Engine::callBuiltInObjectOp(BuiltInObjectOperation const func) {
 	// TODO: This
+	switch (func) {}
 }
 
 void Engine::callBuiltInVector2Op(BuiltInVectorOperation const func) {
