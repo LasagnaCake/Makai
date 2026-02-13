@@ -182,8 +182,8 @@ namespace Makai::Anima::V2 {
 				AV2_ILT_IF_UNDEFINED,
 				AV2_ILT_IF_NULL_OR_UNDEFINED,
 			};
-			Type			type:		7;
-			bool			isDynamic:	1;
+			Type			type;
+			DataLocation	source;
 			DataLocation	condition;
 		};
 

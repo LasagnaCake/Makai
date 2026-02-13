@@ -1,4 +1,5 @@
 #include "minima.hpp"
+#include "makai/lang/anima/v2/instruction.hpp"
 
 using namespace Makai::Anima::V2::Toolchain::Assembler;
 namespace Runtime = Makai::Anima::V2::Runtime;
@@ -316,13 +317,16 @@ static void doConditionalLeapType(Context& context, Instruction::Leap& leap) {
 	context.fetchNext();
 	auto const loc = getDataLocation(context);
 	leap.condition = loc.at;
-	if (loc.id < Makai::Limit::MAX<uint64>)
+	if (leap.condition == DataLocation::AV2_DL_CONST) {
+		leap.type = Instruction::Leap::Type::AV2_ILT_IF_TRUTHY;
+		if (loc.id == 0) leap.condition = DataLocation::AV2_DL_INTERNAL;
+	} else if (loc.id < Makai::Limit::MAX<uint64>)
 		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
 }
 
 void doLeapType(Context& context, Instruction::Leap& leap) {
 	auto loc = context.stream.current();
-	if (!leap.isDynamic && loc.type == Type{';'})
+	if ((leap.source == DataLocation::AV2_DL_CONST) && loc.type == Type{';'})
 		MINIMA_ERROR(NonexistentValue, "Malformed jump!");
 	switch (loc.type) {
 		case Type{'?'}: {
@@ -335,7 +339,7 @@ void doLeapType(Context& context, Instruction::Leap& leap) {
 		}
 		default: MINIMA_ERROR(InvalidValue, "Unexpected token!");
 	}
-	if (!leap.isDynamic) {
+	if (leap.source == DataLocation::AV2_DL_CONST) {
 		if (!context.stream.next())
 			MINIMA_ERROR(NonexistentValue, "Malformed jump!");
 		auto const name = context.stream.current();
@@ -346,11 +350,10 @@ void doLeapType(Context& context, Instruction::Leap& leap) {
 }
 
 void doDynamicLeap(Context& context, Instruction::Leap& leap) {
-	leap.isDynamic = true;
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed jump!");
 	auto const loc = getDataLocation(context);
-	leap.condition = loc.at;
+	leap.source = loc.at;
 	if (loc.id < Makai::Limit::MAX<uint64>)
 		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
 	doLeapType(context, leap);
@@ -360,8 +363,9 @@ MINIMA_ASSEMBLE_FN(Jump) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed jump!");
 	Instruction::Leap leap = {
-		.type = Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
-		.isDynamic = false
+		.type		= Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
+		.source		= Makai::Anima::V2::DataLocation::AV2_DL_CONST,
+		.condition	= Makai::Anima::V2::DataLocation::AV2_DL_CONST
 	};
 	auto const index = context.program.code.size();
 	context.program.code.pushBack({});

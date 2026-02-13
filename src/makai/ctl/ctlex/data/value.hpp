@@ -606,6 +606,7 @@ namespace Data {
 			return out;
 		}
 
+		constexpr bool						getBoolean() const		{return get<bool>();			}
 		constexpr UnsignedType				getUnsigned() const		{return get<UnsignedType>();	}
 		constexpr SignedType				getSigned() const		{return get<SignedType>();		}
 		constexpr RealType					getReal() const			{return get<RealType>();		}
@@ -615,7 +616,8 @@ namespace Data {
 		constexpr IdentifierType			getIdentifier() const	{return get<IdentifierType>();	}
 		constexpr VectorType				getVector() const		{return get<VectorType>();		}
 
-		constexpr UnsignedType		getUnsigned(UnsignedType const fallback) const		{return get<UnsignedType>(fallback);	}
+		constexpr bool				geBoolean(UnsignedType const fallback) const		{return get<bool>(fallback);					}
+		constexpr UnsignedType		getUnsigned(UnsignedType const fallback) const		{return get<UnsignedType>(fallback);			}
 		constexpr SignedType		getSigned(SignedType const fallback) const			{return get<SignedType>(fallback);				}
 		constexpr RealType			getReal(RealType const fallback) const				{return get<RealType>(fallback);				}
 		constexpr StringType		getString(StringType const& fallback) const			{return get<StringType>(fallback);				}

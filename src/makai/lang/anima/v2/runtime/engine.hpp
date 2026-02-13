@@ -185,6 +185,7 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error invalidComparisonError(String const& description);
 		Engine::Error invalidFieldError(String const& description);
 		Engine::Error invalidFetchRequest(String const& description);
+		Engine::Error invalidJump();
 		Engine::Error missingArgumentsError();
 
 		Engine::Error makeErrorHere(String const& message);
@@ -227,6 +228,7 @@ namespace Makai::Anima::V2::Runtime {
 		void callBuiltInArrayOp(BuiltInFunction const func);
 		void callBuiltInObjectOp(BuiltInFunction const func);
 
+		void jumpBy(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 

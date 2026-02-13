@@ -15,5 +15,6 @@
 #include "graph/graph.hpp"
 #include "audio/audio.hpp"
 #include "tool/tool.hpp"
+#include "net/net.hpp"
 
 #endif // MAKAILIB_H

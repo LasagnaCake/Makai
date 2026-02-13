@@ -2,6 +2,7 @@
 #include "context.hpp"
 #include "../../../../../makai/net/net.hpp"
 #include "../../../../../makai/file/flow.hpp"
+#include "makai/lang/anima/v2/instruction.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -422,6 +423,12 @@ void Engine::jumpTo(usize const point, bool returnable) {
 	context.pointers.instruction = point;
 }
 
+void Engine::JumpBy(usize const tableID, bool returnable) {
+	if (tableID < program.jumpTable.size())
+		jumpTo(program.jumpTable[tableID], false);
+	else crash(invalidJump());
+}
+
 bool Engine::hasSignal(String const& signal) {
 	return program.ani.in.contains(signal);
 }
@@ -785,4 +792,33 @@ void Engine::v2StackClear() {
 
 void Engine::v2StackFlush() {
 	context.valueStack.clear();
+}
+
+void Engine::v2Jump() {
+	Instruction::Leap op = current.getTypeAs<Instruction::Leap>();
+	usize to = 0;
+	if (op.source == DataLocation::AV2_DL_CONST) {
+		advance(true);
+		to = current.as<usize>();
+	} else to = consumeValue(op.source)->getUnsigned();
+	if (op.type == Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL)
+		return jumpBy(to, false);
+	if (
+		op.type == Instruction::Leap::Type::AV2_ILT_IF_TRUTHY
+	&&	op.condition == DataLocation::AV2_DL_INTERNAL
+	) return;
+	auto const cond = consumeValue(op.condition);
+	switch (op.type) {
+		case decltype(op.type)::AV2_ILT_IF_FALSY:					if (cond->isFalsy())							jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_TRUTHY:					if (cond->isTruthy())							jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_NAN:						if (cond->isNaN())								jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_NEGATIVE:				if (cond->isNumber() && cond->getReal() < 0)	jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_POSITIVE:				if (cond->isNumber() && cond->getReal() > 0)	jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_ZERO:					if (cond->isNumber() && cond->getReal() == 0)	jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_NOT_ZERO:				if (cond->isNumber() && cond->getReal() != 0)	jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_NULL:					if (cond->isNull())								jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_UNDEFINED:				if (cond->isUndefined())						jumpBy(to, false); break;
+		case decltype(op.type)::AV2_ILT_IF_NULL_OR_UNDEFINED:		if (cond->isNull() || cond->isUndefined())		jumpBy(to, false); break;
+		default: break;
+	}
 }
