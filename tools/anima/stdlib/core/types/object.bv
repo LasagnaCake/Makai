@@ -1,12 +1,10 @@
 namespace Object {
 	func has(what: obj, key: str): bool {
-		temporary out: bool;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in obj has
 		}
-		return ref out;
 	}
 
 	func at(what: obj, key: str): any {
@@ -14,33 +12,27 @@ namespace Object {
 	}
 
 	func remove(what: obj, key: str): obj {
-		temporary out: obj;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in obj delk
 		}
-		return ref out;
 	}
 
 	func removeValue(what: obj, val: any): obj {
-		temporary out: obj;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in obj delv
 		}
-		return ref out;
 	}
 
 	func join(what: obj, other: obj): obj {
-		temporary out: obj;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in obj join
 		}
-		return ref out;
 	}
 
 	func find(what: obj, key: str): arr {
@@ -52,51 +44,41 @@ namespace Object {
 	}
 
 	func fuzz(what: obj, key: str): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in obj fuzk
 		}
-		return ref out;
 	}
 
 	func keysOf(what: obj, val: any): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in obj finv
 		}
-		return ref out;
 	}
 
 	func fuzzyKeysOf(what: obj, val: any): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in obj fuzv
 		}
-		return ref out;
 	}
 
 	func keys(what: obj): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-0] -> register[0]
 			call in obj k
 		}
-		return ref out;
 	}
 
 	func values(what: obj): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-0] -> register[0]
 			call in obj v
 		}
-		return ref out;
 	}
 
 	func items(what: obj): arr {
@@ -109,12 +91,10 @@ namespace Object {
 	}
 
 	func deserialize(what: str): obj {
-		temporary out: obj;
 		fatal asm {
 			copy ref stack[-0] -> register[0]
 			call in obj parse
 		}
-		return ref out;
 	}
 
 	func serialize(what: obj): str => in stringify what;

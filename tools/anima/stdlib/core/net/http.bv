@@ -1,24 +1,20 @@
 namespace Net.HTTP {
 	func request(url: str, action: str): obj {
-		temporary out: obj;
 		fatal asm {
 			copy move stack[-2] -> reg[0]
 			copy move stack[-1] -> reg[1]
 			copy move "" -> reg[2]
 			call in http
 		}
-		return move out;
 	}
 
 	func request(url: str, action: str, data: obj): obj {
-		temporary out: obj;
 		fatal asm {
 			copy move stack[-2] -> reg[0]
 			copy move stack[-1] -> reg[1]
 			copy move stack[-0] -> reg[2]
 			call in http
 		}
-		return move out;
 	}
 
 	macro declare => {$type:id : $req:string;} => {

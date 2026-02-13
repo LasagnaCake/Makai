@@ -1,43 +1,35 @@
 namespace Array {
 	func slice(what: arr, begin: int, end: int): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-2] -> register[0]
 			copy ref stack[-1] -> register[1]
 			copy ref stack[-0] -> register[2]
 			call in arr sub
 		}
-		return move out;
 	}
 
 	func like(what: arr, val: any): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in arr like
 		}
-		return move out;
 	}
 
 	func unlike(what: arr, val: any): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in arr unlike
 		}
-		return move out;
 	}
 
 	func fuzz(what: arr, val: any): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in arr fuzz
 		}
-		return move out;
 	}
 
 	func find(what: arr, val: any): arr {
@@ -51,13 +43,11 @@ namespace Array {
 	}
 
 	func remove(what: arr, i: int): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in arr del
 		}
-		return move out;
 	}
 
 	func at(what: arr, i: int): any {
@@ -65,33 +55,27 @@ namespace Array {
 	}
 
 	func push(what: arr, val: any): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in arr push
 		}
-		return ref out;
 	}
 
 	func pop(what: arr): any {
-		temporary out: any;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in arr pop
 		}
-		return ref out;
 	}
 
 	func join(what: arr, other: arr): arr {
-		temporary out: arr;
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
 			call in arr join
 		}
-		return ref out;
 	}
 }
 

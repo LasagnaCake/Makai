@@ -2,17 +2,71 @@ namespace Vector {
 	// 2D vectors
 	func angle2(what: vec):			real	=> move (move (ref what: 0) atan2 move (ref what: 1));
 	func tan2(what: vec):		    real	=> move (move (ref what: 0) / move (ref what: 1));
-	func cross2(a: vec, b: vec):	vec		=> move (move a cross2 move b);
-	func fcross2(a: vec, b: vec):	vec		=> move (move a cross2 move b);
-	func dot2(a: vec, b: vec):		real	=> move (move a dot2 move b);
+	func cross2(a: vec, b: vec): vec {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec c2
+		}
+	}
+	func fcross2(a: vec, b: vec): vec {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec c2
+		}
+	}
+	func dot2(a: vec, b: vec): real => {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec d2
+		}
+	}
 	// 3D vectors
-	func dot3(a: vec, b: vec):		real	=> move (move a dot3 move b);
-	func cross3(a: vec, b: vec):	vec		=> move (move a cross3 move b);
-	func fcross3(a: vec, b: vec):	vec		=> move (move a fcross3 move b);
+	func cross3(a: vec, b: vec): vec {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec c3
+		}
+	}
+	func fcross3(a: vec, b: vec): vec {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec fc3
+		}
+	}
+	func dot3(a: vec, b: vec): real => {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec d3
+		}
+	}
 	// 4D vectors
-	func dot4(a: vec, b: vec):		real	=> move (move a dot4 move b);
-	func cross4(a: vec, b: vec):	vec		=> move (move a cross4 move b);
-	func fcross4(a: vec, b: vec):	vec		=> move (move a cross4 move b);
+	func cross4(a: vec, b: vec): vec {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec c4
+		}
+	}
+	func fcross4(a: vec, b: vec): vec {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec c4
+		}
+	}
+	func dot4(a: vec, b: vec): real => {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in vec d4
+		}
+	}
 }
 
 extend vec with func angle2(): real => move Vector.angle2(ref self);
