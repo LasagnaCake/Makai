@@ -35,6 +35,6 @@ struct Main {
 };
 
 /// @brief Implements the function.
-#define main(ARGS_NAME) int main(int argc, char** argv) {return Main::run(argc, argv);} void Main::run(Makai::Data::Value const& ARGS_NAME)
+#define main(ARGS_NAME) int main(int argc, char** argv) {return Main::run(static_cast<usize>(argc), argv);} void Main::run(Makai::Data::Value const& ARGS_NAME)
 
 #endif
