@@ -5,7 +5,7 @@ ROOT	:= ../..
 
 LEAN := -static -s
 
-debug := 1
+debug := 0
 
 COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions
 LINKER_CONFIG	:= -static-libstdc++ -static-libgcc -m64 -fms-extensions

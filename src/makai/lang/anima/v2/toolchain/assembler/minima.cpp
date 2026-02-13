@@ -1,5 +1,4 @@
 #include "minima.hpp"
-#include "makai/lang/anima/v2/instruction.hpp"
 
 using namespace Makai::Anima::V2::Toolchain::Assembler;
 namespace Runtime = Makai::Anima::V2::Runtime;

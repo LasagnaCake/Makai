@@ -2,7 +2,6 @@
 #include "context.hpp"
 #include "../../../../../makai/net/net.hpp"
 #include "../../../../../makai/file/flow.hpp"
-#include "makai/lang/anima/v2/instruction.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -66,7 +65,7 @@ void Engine::v2Get() {
 	auto const field	= consumeValue(get.field);
 	auto& dst			= accessValue(get.to);
 	if (!dst) dst = new Value();
-	if (!src->isStructured()) return crash(invalidSourceError("Source value is not an array or object!"));
+	if (!src->isStructured()) return crash(invalidSourceError("Source value is not a structured type!"));
 	if (src->isArray()) {
 		if (!field->isNumber())
 			return crash(invalidFieldError("Expected number for array index!"));
@@ -77,7 +76,11 @@ void Engine::v2Get() {
 			return crash(invalidFieldError("Expected string for object field!"));
 		auto const k = src->getString();
 		*dst = (*src)[k];
-	} else return crash(invalidSourceError("Source value is not an array or object!"));
+	} else if (src->isVector() && field->isUnsigned()) {
+		if (!field->isNumber())
+			return crash(invalidFieldError("Expected number for vector component index!"));
+		*dst = src->getVector()[field->getUnsigned()];
+	} else return crash(invalidSourceError("Source value is not an array, object or vector!"));
 }
 
 void Engine::v2Set() {
@@ -85,6 +88,22 @@ void Engine::v2Set() {
 	auto const src		= consumeValue(set.from);
 	auto const field	= consumeValue(set.field);
 	auto& dst			= accessValue(set.to);
+	if (!dst) dst = new Value();
+	if (!src->isStructured()) return crash(invalidSourceError("Source value is not a structured type!"));
+	if (src->isObject()) {
+		if (!field->isString())
+			return crash(invalidFieldError("Expected string for object field!"));
+		(*dst)[field->getString()] = (*src);
+	} else if (src->isArray() && field->isInteger()) {
+		if (!field->isNumber())
+			return crash(invalidFieldError("Expected number for array index!"));
+		(*dst)[field->getSigned()] = (*src);
+	} else if (src->isVector() && field->isUnsigned()) {
+		auto vec = dst->getVector();
+		auto const c = field->getUnsigned();
+		vec[c] = src;
+		*dst = vec;
+	} else return crash(invalidSourceError("Source value is not an array, object or vector!"));
 }
 
 void Engine::v2Yield() {
@@ -853,4 +872,20 @@ void Engine::v2Cast() {
 		+	"]!"
 		)
 	);
+}
+
+Engine::Error Engine::invalidLocationError(DataLocation const& loc) {
+	return makeErrorHere("Invalid data location for instruction!");
+}
+
+Engine::Error Engine::invalidFetchRequest(String const& description) {
+	return makeErrorHere(description);
+}
+
+Engine::Error Engine::invalidCast(String const& description) {
+	return makeErrorHere(description);
+}
+
+Engine::Error Engine::invalidJump() {
+	return makeErrorHere("Jump target does not exist!");
 }

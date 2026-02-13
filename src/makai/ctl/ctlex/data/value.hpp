@@ -274,7 +274,7 @@ namespace Data {
 		/// @brief Returns whether the type is a data primitive.
 		constexpr static bool isPrimitive(Kind const kind)	{return isScalar(kind) || isString(kind) || isNull(kind) || isBytes(kind);	}
 		/// @brief Returns whether the type is a structured type (array or object).
-		constexpr static bool isStructured(Kind const kind) {return isArray(kind) || isObject(kind);									}
+		constexpr static bool isStructured(Kind const kind) {return isArray(kind) || isObject(kind) || isVector(kind);					}
 
 		/// @brief Returns whether the value is an integer.
 		constexpr bool isInteger() const	{return isInteger(kind);	}
