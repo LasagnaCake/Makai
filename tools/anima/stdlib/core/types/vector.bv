@@ -16,7 +16,7 @@ namespace Vector {
 			call in vec2 fcross
 		}
 	}
-	func dot2(a: vec, b: vec): real => {
+	func dot2(a: vec, b: vec): real {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -38,7 +38,7 @@ namespace Vector {
 			call in vec3 fcross
 		}
 	}
-	func dot3(a: vec, b: vec): real => {
+	func dot3(a: vec, b: vec): real {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -60,7 +60,7 @@ namespace Vector {
 			call in vec4 fcross
 		}
 	}
-	func dot4(a: vec, b: vec): real => {
+	func dot4(a: vec, b: vec): real {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
