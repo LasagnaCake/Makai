@@ -514,6 +514,18 @@ void Engine::v2BinaryMath() {
 				*out = Value::undefined();
 			}
 		}
+	} else if (lhs->isAlgebraic() && rhs->isAlgebraic()) {
+		switch (op.op) {
+			case decltype(op.op)::AV2_IBM_OP_ADD:	*out = lhs->getVector() + rhs->getVector();
+			case decltype(op.op)::AV2_IBM_OP_SUB:	*out = lhs->getVector() - rhs->getVector();
+			case decltype(op.op)::AV2_IBM_OP_MUL:	*out = lhs->getVector() * rhs->getVector();
+			case decltype(op.op)::AV2_IBM_OP_DIV:	*out = lhs->getVector() / rhs->getVector();
+			default: {
+				if (inStrictMode())
+					return crash(invalidBinaryMathError("Invalid/Unsupported operator!"));
+				*out = Value::undefined();
+			}
+		}
 	} else {
 		if (inStrictMode())
 			return crash(invalidBinaryMathError("Both values are not numbers!"));
@@ -574,24 +586,28 @@ void Engine::callBuiltIn(BuiltInFunction const func) {
 			if (err) break;
 			auto a = context.registers[0], b = context.registers[1];
 			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() + b->get<double>());
+			else if (a->isAlgebraic() && b->isAlgebraic()) context.temporary = new Value(a->getVector() + b->getVector());
 			else pushUndefinedIfInLooseMode("builtin add");
 		} break;
 		case BuiltInFunction::AV2_EBIF_SUB: {
 			if (err) break;
 			auto a = context.registers[0], b = context.registers[1];
 			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() - b->get<double>());
+			else if (a->isAlgebraic() && b->isAlgebraic()) context.temporary = new Value(a->getVector() - b->getVector());
 			else pushUndefinedIfInLooseMode("builtin sub");
 		} break;
 		case BuiltInFunction::AV2_EBIF_MUL: {
 			if (err) break;
 			auto a = context.registers[0], b = context.registers[1];
 			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() * b->get<double>());
+			else if (a->isAlgebraic() && b->isAlgebraic()) context.temporary = new Value(a->getVector() * b->getVector());
 			else pushUndefinedIfInLooseMode("builtin mul");
 		} break;
 		case BuiltInFunction::AV2_EBIF_DIV: {
 			if (err) break;
 			auto a = context.registers[0], b = context.registers[1];
 			if (a->isNumber() && b->isNumber()) context.temporary = new Value(a->get<double>() / b->get<double>());
+			else if (a->isAlgebraic() && b->isAlgebraic()) context.temporary = new Value(a->getVector() / b->getVector());
 			else pushUndefinedIfInLooseMode("builtin div");
 		} break;
 		case BuiltInFunction::AV2_EBIF_REM: {

@@ -273,8 +273,10 @@ namespace Data {
 		constexpr static bool isScalar(Kind const kind)		{return isNumber(kind) || isBoolean(kind); 									}
 		/// @brief Returns whether the type is a data primitive.
 		constexpr static bool isPrimitive(Kind const kind)	{return isScalar(kind) || isString(kind) || isNull(kind) || isBytes(kind);	}
-		/// @brief Returns whether the type is a structured type (array or object).
-		constexpr static bool isStructured(Kind const kind) {return isArray(kind) || isObject(kind) || isVector(kind);					}
+		/// @brief Returns whether the type is a structured type (array, object or vector).
+		constexpr static bool isStructured(Kind const kind)	{return isArray(kind) || isObject(kind) || isVector(kind);					}
+		/// @brief Returns whether the type is an algebraic type (number or vector).
+		constexpr static bool isAlgebraic(Kind const kind)	{return isScalar(kind) || isVector(kind);									}
 
 		/// @brief Returns whether the value is an integer.
 		constexpr bool isInteger() const	{return isInteger(kind);	}
@@ -284,8 +286,10 @@ namespace Data {
 		constexpr bool isScalar() const		{return isScalar(kind); 	}
 		/// @brief Returns whether the value is a data primitive.
 		constexpr bool isPrimitive() const	{return isPrimitive(kind);	}
-		/// @brief Returns whether the value is a structured type (array or object).
+		/// @brief Returns whether the value is a structured type (array, object or vector).
 		constexpr bool isStructured() const {return isStructured(kind);	}
+		/// @brief Returns whether the type is an algebraic type (number or vector).
+		constexpr bool isAlgebraic() const	{return isAlgebraic(kind);	}
 
 		/// @brief Returns whether the type is a "falsy" value.
 		constexpr static bool isFalsy(Kind const kind)			{return isNull(kind) || isUndefined(kind);										}
@@ -429,7 +433,8 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Equal<VectorType> T>
 		constexpr bool tryGet(T& out) const {
-			if (isVector()) out = *content.vector;
+			if (isVector())			out = *content.vector;
+			else if (isNumber())	out = get<RealType>();
 			else return false;
 			return true;
 		}
