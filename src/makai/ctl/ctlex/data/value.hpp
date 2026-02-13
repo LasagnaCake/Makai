@@ -360,9 +360,9 @@ namespace Data {
 		/// @param out Output.
 		/// @return Whether value was successfully acquired.
 		template <::CTL::Type::Enumerator T>
-		constexpr bool tryGet(T& out) const  {
+		constexpr bool tryGet(T& out) const {
 			if (isUnsigned() || isBoolean())	out = static_cast<T>(content.unsignedInt);
-			if (isSigned())						out = static_cast<T>(content.signedInt);
+			else if (isSigned())				out = static_cast<T>(content.signedInt);
 			else if (isReal())					out = static_cast<T>(content.real);
 			else return false;
 			return true;
@@ -508,6 +508,7 @@ namespace Data {
 			if constexpr (Type::Equal<T, bool>)						return isBoolean();
 			else if constexpr (Type::Equal<T, nulltype>)			return isNull();
 			else if constexpr (Type::Equal<T, void>)				return isUndefined();
+			else if constexpr (Type::Enumerator<T>)					return isInteger();
 			else if constexpr (Type::Unsigned<T>)					return isUnsigned();
 			else if constexpr (Type::Signed<T>)						return isSigned();
 			else if constexpr (Type::Real<T>)						return isReal();
@@ -606,15 +607,15 @@ namespace Data {
 			return out;
 		}
 
-		constexpr bool						getBoolean() const		{return get<bool>();			}
-		constexpr UnsignedType				getUnsigned() const		{return get<UnsignedType>();	}
-		constexpr SignedType				getSigned() const		{return get<SignedType>();		}
-		constexpr RealType					getReal() const			{return get<RealType>();		}
-		constexpr StringType				getString() const		{return get<StringType>();		}
-		constexpr ArrayType					getArray() const		{return get<ArrayType>();		}
-		constexpr ByteListType				getBytes() const		{return get<ByteListType>();	}
-		constexpr IdentifierType			getIdentifier() const	{return get<IdentifierType>();	}
-		constexpr VectorType				getVector() const		{return get<VectorType>();		}
+		constexpr bool				getBoolean() const		{return get<bool>();			}
+		constexpr UnsignedType		getUnsigned() const		{return get<UnsignedType>();	}
+		constexpr SignedType		getSigned() const		{return get<SignedType>();		}
+		constexpr RealType			getReal() const			{return get<RealType>();		}
+		constexpr StringType		getString() const		{return get<StringType>();		}
+		constexpr ArrayType			getArray() const		{return get<ArrayType>();		}
+		constexpr ByteListType		getBytes() const		{return get<ByteListType>();	}
+		constexpr IdentifierType	getIdentifier() const	{return get<IdentifierType>();	}
+		constexpr VectorType		getVector() const		{return get<VectorType>();		}
 
 		constexpr bool				geBoolean(UnsignedType const fallback) const		{return get<bool>(fallback);					}
 		constexpr UnsignedType		getUnsigned(UnsignedType const fallback) const		{return get<UnsignedType>(fallback);			}
@@ -735,7 +736,7 @@ namespace Data {
 			if (isBoolean() && other.isBoolean())		return (get<bool>() <=> other.template get<bool>());
 			if (isUnsigned() && other.isUnsigned())		return (get<UnsignedType>() <=> other.template get<UnsignedType>());
 			if (isInteger() && other.isInteger())		return (get<SignedType>() <=> other.template get<SignedType>());
-			if (isReal() && other.isReal())				return (get<RealType>() <=> other.template get<RealType>());
+			if (isNumber() && other.isNumber())			return (get<RealType>() <=> other.template get<RealType>());
 			if (isString() && other.isString())			return (content.string <=> other.content.string);
 			if (isBytes() && other.isBytes())			return (content.bytes <=> other.content.bytes);
 			if (isArray() && other.isArray())			return (*content.array <=> *other.content.array);
@@ -752,7 +753,7 @@ namespace Data {
 			if (isBoolean() && other.isBoolean())		return (get<bool>() == other.template get<bool>());
 			if (isUnsigned() && other.isUnsigned())		return (get<UnsignedType>() == other.template get<UnsignedType>());
 			if (isInteger() && other.isInteger())		return (get<SignedType>() == other.template get<SignedType>());
-			if (isReal() && other.isReal())				return (get<RealType>() == other.template get<RealType>());
+			if (isNumber() && other.isNumber())			return (get<RealType>() == other.template get<RealType>());
 			if (isString() && other.isString())			return (content.string == other.content.string);
 			if (isBytes() && other.isBytes())			return (content.bytes == other.content.bytes);
 			if (isArray() && other.isArray())			return (*content.array == *other.content.array);
