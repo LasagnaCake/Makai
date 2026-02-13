@@ -6,21 +6,21 @@ namespace Vector {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec c2
+			call in vec2 cross
 		}
 	}
 	func fcross2(a: vec, b: vec): vec {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec c2
+			call in vec2 fcross
 		}
 	}
 	func dot2(a: vec, b: vec): real => {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec d2
+			call in vec2 dot
 		}
 	}
 	// 3D vectors
@@ -28,21 +28,21 @@ namespace Vector {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec c3
+			call in vec3 cross
 		}
 	}
 	func fcross3(a: vec, b: vec): vec {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec fc3
+			call in vec3 fcross
 		}
 	}
 	func dot3(a: vec, b: vec): real => {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec d3
+			call in vec3 dot
 		}
 	}
 	// 4D vectors
@@ -50,21 +50,21 @@ namespace Vector {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec c4
+			call in vec4 cross
 		}
 	}
 	func fcross4(a: vec, b: vec): vec {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec c4
+			call in vec4 fcross
 		}
 	}
 	func dot4(a: vec, b: vec): real => {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in vec d4
+			call in vec4 dot
 		}
 	}
 }
