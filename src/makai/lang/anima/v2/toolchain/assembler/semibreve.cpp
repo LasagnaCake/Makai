@@ -203,6 +203,7 @@ static Prototype doFunctionPrototype(
 			optionals.pushBack({argID});
 			optionals.back().value["name"] = argID;
 			optionals.back().value["type"] = argt->name;
+			context.fetchNext();
 		} else {
 			id += "_" + argt->name.toString();
 			auto& arg = args[args.size()];
