@@ -10,7 +10,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		else std::cout << value.toFLOWString();
 		#endif
 	}
-}
+};
 
 main(args) {
 	ARTE engine;
