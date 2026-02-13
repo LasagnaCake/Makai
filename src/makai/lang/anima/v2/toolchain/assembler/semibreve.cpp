@@ -773,7 +773,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		case Type::LTS_TT_COMPARE_GREATER_EQUALS:
 		case Type{'<'}:
 		case Type{'>'}:
-		case Type{':'}: {
+		case Type{'~'}: {
 			Makai::String opstr;
 			switch (opname.type) {
 				case Type::LTS_TT_COMPARE_EQUALS:			opstr = "=";	break;
@@ -782,23 +782,23 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				case Type::LTS_TT_COMPARE_GREATER_EQUALS:	opstr = "ge";	break;
 				case Type{'<'}:								opstr = "<";	break;
 				case Type{'>'}:								opstr = ">";	break;
-				case Type{':'}:								opstr = ":";	break;
+				case Type{'~'}:								opstr = ":";	break;
 			}
 			context.writeLine("comp (", lhs.resolve(), opstr, rhs.resolve(), ") -> .");
 		} break;
-		case Type{'['}: {
+		case Type{':'}: {
 			if (context.isObject(lhs.type)) {
 				if (!context.isString(rhs.type))
 					context.error<InvalidValue>("Right-hand side MUST be a string!");
 			} else if (context.isArray(lhs.type)) {
 				if (!context.isInteger(rhs.type))
 					context.error<InvalidValue>("Right-hand side MUST be an integer!");
-			} else context.error<InvalidValue>("Left-hand side MUST be an object or an array!");
+			}  else if (context.isVector(lhs.type)) {
+				if (!context.isInteger(rhs.type))
+					context.error<InvalidValue>("Right-hand side MUST be an integer!");
+			} else context.error<InvalidValue>("Left-hand side MUST be an object, array or vectors!");
 			context.writeLine("get ", lhs.resolve(), "[", rhs.resolve(), "] -> .");
 			result = context.getBasicType("any");
-			context.fetchNext();
-			if (context.currentToken().type != Type{']'})
-				context.error<InvalidValue>("Expected ']' here!");
 		} break;
 		case Type{'='}: {
 			if (lhs.type != rhs.type) {

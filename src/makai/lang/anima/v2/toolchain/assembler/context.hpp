@@ -904,6 +904,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return Data::Value::isObject(type->value["type"]);
 		}
 
+		constexpr static bool isVector(Instance<Context::Scope::Member> const& type) {
+			if (!isBasicType(type)) return false;
+			return Data::Value::isVector(type->value["type"]);
+		}
+
 		constexpr static bool isArray(Instance<Context::Scope::Member> const& type) {
 			if (!isBasicType(type)) return false;
 			return Data::Value::isArray(type->value["type"]);
