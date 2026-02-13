@@ -497,6 +497,24 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "print" || id == "echo")			invoke.argc = '@';
 			else if (id == "sizeof")						invoke.argc = '#';
 			else if (id == "http")							invoke.argc = 'H';
+			else if (id == "vec2" || id == "vec3" || id == "vec4") {
+				invoke.argc	= id.back();
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "vector operation").getString();
+				if (op == "cross")			invoke.mod = 'x';
+				else if (id == "dot")		invoke.mod = '.';
+				else if (id == "fcross")	invoke.mod = 'X';
+				else if (id == "tan") {
+					if (id == "vec2")
+						invoke.mod = 't';
+					else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+				}
+				else if (id == "angle") {
+					if (id == "vec2" || id == "vec3")
+						invoke.mod = 'a';
+					else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+				}
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			}
 			else if (id == "string" || id == "str" || id == "s") {
 				invoke.argc	= '"';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
@@ -525,8 +543,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "push")						invoke.mod = '<';
 				else if (op == "pop")						invoke.mod = '>';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			}
-			else if (id == "object" || id == "obj" || id == "o") {
+			} else if (id == "object" || id == "obj" || id == "o") {
 				invoke.argc	= '{';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
 				if (op == "has")								invoke.mod = ':';
