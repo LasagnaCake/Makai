@@ -45,9 +45,9 @@ namespace Object {
 
 	func find(what: obj, key: str): arr {
 		return (
-			move [at(ref what, ref key)]
-			if has(ref what, ref key)
-			else []
+			move [move at(ref what, ref key)]
+			if move has(ref what, ref key)
+			else move []
 		);
 	}
 
