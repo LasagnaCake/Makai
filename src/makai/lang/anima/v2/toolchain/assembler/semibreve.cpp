@@ -578,10 +578,10 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 			return doUnaryOperation(context);
 		} break;
 		case LTS_TT_SINGLE_QUOTE_STRING:
-		case LTS_TT_DOUBLE_QUOTE_STRING:	return {context.getBasicType("string"),	context.resolveTo(current.value.toString())								};
-		case LTS_TT_CHARACTER: 				return {context.getBasicType("string"),	context.resolveTo(Makai::toString("'", current.value.get<char>(), "'"))	};
-		case LTS_TT_INTEGER:				return {context.getBasicType("uint"),	context.resolveTo(current.value.toString())								};
-		case LTS_TT_REAL:					return {context.getBasicType("real"),	context.resolveTo(current.value.toString())								};
+		case LTS_TT_DOUBLE_QUOTE_STRING:	DEBUGLN("Constant: STR");	return {context.getBasicType("string"),	context.resolveTo(current.value.toString())								};
+		case LTS_TT_CHARACTER: 				DEBUGLN("Constant: STR");	return {context.getBasicType("string"),	context.resolveTo(Makai::toString("'", current.value.get<char>(), "'"))	};
+		case LTS_TT_INTEGER:				DEBUGLN("Constant: INT");	return {context.getBasicType("uint"),	context.resolveTo(current.value.toString())								};
+		case LTS_TT_REAL:					DEBUGLN("Constant: REAL");	return {context.getBasicType("real"),	context.resolveTo(current.value.toString())								};
 		case Type{'{'}: {
 			context.startScope();
 			auto const result = doScope(context);
@@ -718,8 +718,8 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 		rhs.resolver = context.resolveTo("move &[-0]");
 		if (stackUsage++) lhs.resolver = context.resolveTo("move &[-1]");
 	}
-	// DEBUGLN("LHS? ", lhs.type.exists());
-	// DEBUGLN("RHS? ", rhs.type.exists());
+	DEBUGLN("LHS? ", lhs.type.exists());
+	DEBUGLN("RHS? ", rhs.type.exists());
 	auto result = stronger(context, lhs.type, rhs.type);
 	if (
 		opname.type != Type{','}

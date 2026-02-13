@@ -1,3 +1,5 @@
+import core.types.number;
 import core.types.string;
 import core.types.array;
 import core.types.object;
+import core.types.vector;

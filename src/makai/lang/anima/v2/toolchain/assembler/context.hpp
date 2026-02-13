@@ -1167,7 +1167,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				boolT	= s.addTypeDefinition("bool",		Data::Value::Kind::DVK_BOOLEAN	);
 				intT	= s.addTypeDefinition("int",		Data::Value::Kind::DVK_SIGNED	);
 				uintT	= s.addTypeDefinition("uint",		Data::Value::Kind::DVK_UNSIGNED	);
-				floatT	= s.addTypeDefinition("float",		Data::Value::Kind::DVK_REAL		);
+				realT	= s.addTypeDefinition("real",		Data::Value::Kind::DVK_REAL		);
 				stringT	= s.addTypeDefinition("string",		Data::Value::Kind::DVK_STRING	);
 				bytesT	= s.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
 				arrayT	= s.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
@@ -1183,7 +1183,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Instance<Scope::Member> nullT;
 			Instance<Scope::Member> intT;
 			Instance<Scope::Member> uintT;
-			Instance<Scope::Member> floatT;
+			Instance<Scope::Member> realT;
 			Instance<Scope::Member> stringT;
 			Instance<Scope::Member> bytesT;
 			Instance<Scope::Member> arrayT;
@@ -1197,7 +1197,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Context(MessageOutput& out = defaultWriter): out(out) {
 			global.ns->members["unsigned"]	= basics.uintT;
 			global.ns->members["signed"]	= basics.intT;
-			global.ns->members["real"]		= basics.floatT;
+			global.ns->members["float"]		= basics.realT;
 			global.ns->members["str"]		= basics.stringT;
 			global.ns->members["bin"]		= basics.bytesT;
 			global.ns->members["arr"]		= basics.arrayT;

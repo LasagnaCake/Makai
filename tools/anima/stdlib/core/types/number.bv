@@ -1,12 +1,12 @@
 namespace Number {
-	func negate(what: int):		int		=> move -what;
-	func abs(what: int):		int		=> move (what if (what > 0) else move negate(ref what));
+	func negate(what: int):		int		=> move -ref what;
+	func abs(what: int):		int		=> move (ref what if (ref what > 0) else move negate(ref what));
 
-	func negate(what: real):	real	=> move -what;
-	func abs(what: real):		real	=> move (move what if (what > 0) else move negate(ref what));
+	func negate(what: real):	real	=> move -ref what;
+	func abs(what: real):		real	=> move (ref what if (ref what > 0) else move negate(ref what));
 	func floor(what: real):		real	=> move (what as int);
-	func ceil(what: real):		real	=> move floor((what + 1));
-	func round(what: real):		real	=> move floor((what + 0.5));
+	func ceil(what: real):		real	=> move floor(move (move what + 1));
+	func round(what: real):		real	=> move floor(move (move what + 0.5));
 }
 
 extend int with func negate():	int		=> move Number.negate(ref self);

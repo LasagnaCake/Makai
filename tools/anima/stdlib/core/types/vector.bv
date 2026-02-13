@@ -1,7 +1,7 @@
 namespace Vector {
 	// 2D vectors
-	func angle2(what: vec):			real	=> move (move (what: 0) atan2 move (what: 1));
-	func tan2(what: vec):		    real	=> move (move (what: 0) / move (what: 1));
+	func angle2(what: vec):			real	=> move (move (ref what: 0) atan2 move (ref what: 1));
+	func tan2(what: vec):		    real	=> move (move (ref what: 0) / move (ref what: 1));
 	func cross2(a: vec, b: vec):	vec		=> move (move a cross2 move b);
 	func fcross2(a: vec, b: vec):	vec		=> move (move a cross2 move b);
 	func dot2(a: vec, b: vec):		real	=> move (move a dot2 move b);
