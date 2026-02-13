@@ -1173,13 +1173,13 @@ MINIMA_ASSEMBLE_FN(RandomNumber) {
 	} else context.error("Invalid RNG operation!");
 	context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG operation");
 	id = context.currentValue().getString();
-	if (id == "float" || id == "real" || id == "f") {
+	if (id == "float" || id == "real" || id == "r") {
 		rng.type = decltype(rng.type)::AV2_IRT_REAL;
 	} else if (id == "signed" || id == "int" || id == "i") {
 		rng.type = decltype(rng.type)::AV2_IRT_INT;
 	} else if (id == "unsigned" || id == "uint" || id == "u") {
 		rng.type = decltype(rng.type)::AV2_IRT_UINT;
-	} else context.error("Invalid RNG operation!");
+	} else context.error("Invalid RNG generation type!");
 	context.fetchNext();
 	Location num;
 	switch (context.currentToken().type) {
