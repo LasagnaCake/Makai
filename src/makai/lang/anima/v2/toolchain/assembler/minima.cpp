@@ -460,10 +460,6 @@ MINIMA_ASSEMBLE_FN(Return) {
 	context.program.code.pushBack(inst);
 }
 
-MINIMA_ASSEMBLE_FN(EmptyReturn) {
-	context.program.code.pushBack({Instruction::Name::AV2_IN_RETURN, 0});
-}
-
 MINIMA_ASSEMBLE_FN(InternalCall) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed internal call!");

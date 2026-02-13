@@ -17,6 +17,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			AV2_TC_PT_MODULE,
 		};
 
+		enum class Mode {
+			AV2_TC_PM_CONSOLE,
+			AV2_TC_PM_WINDOW,
+			AV2_TC_PM_WORKER,
+		};
+
 		struct File {
 			enum class Type {
 				AV2_TC_PFT_MINIMA,
@@ -35,6 +41,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 
 		String			name;
 		Type			type		= Type::AV2_TC_PT_EXECUTABLE;
+		Mode			mode		= Mode::AV2_TC_PM_CONSOLE;
 		File			main;
 		StringList		sources;
 		List<Module>	modules;
@@ -63,6 +70,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 				case Type::AV2_TC_PT_PROGRAM:		result["type"] = "program";		break;
 				case Type::AV2_TC_PT_MODULE:		result["type"] = "module";		break;
 			}
+			switch (mode) {
+				case Mode::AV2_TC_PM_CONSOLE:	result["type"] = "console";	break;
+				case Mode::AV2_TC_PM_WINDOW:	result["type"] = "window";	break;
+				case Mode::AV2_TC_PM_WORKER:	result["type"] = "worker";	break;
+			}
 			result["main"]		= main.path;
 			result["sources"]	= Data::Value::array();
 			auto& pkgSources = result["sources"];
@@ -81,7 +93,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 	using SourceResolver = Functor<void(Project& project, String const& name, String const& ver)>;
 
 	void setModuleSourceResolver(SourceResolver const& resolver);
-	
+
 	template<Type::Derived<Assembler::AAssembler> TAsm = Assembler::Breve>
 	inline void build(Assembler::Context& context, Makai::String const& source) {
 		context.stream.open(source);
@@ -89,7 +101,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		assembler.assemble();
 		context.stream.close();
 	}
-	
+
 	void fetchModule(
 		Assembler::Context& context,
 		Project const& project,

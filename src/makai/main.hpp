@@ -18,7 +18,7 @@ struct Main {
 	inline static int run(int argc, char** argv) try {
 		if (Makai::CPP::Debug::hasDebugger())
 			Makai::CPP::Debug::Traceable::trap = true;
-		Makai::CLI::Parser parser{argc, argv};
+		Makai::CLI::Parser parser{static_cast<usize>(argc), argv};
 		run(parser.parse(baseArgs));
 		return 0;
 	} catch (Makai::Error::Generic const& e) {
@@ -35,6 +35,6 @@ struct Main {
 };
 
 /// @brief Implements the function.
-#define main(ARGS_NAME) int main(int argc, char** argv) {return Main::run(static_cast<usize>(argc), argv);} void Main::run(Makai::Data::Value const& ARGS_NAME)
+#define main(ARGS_NAME) int main(int argc, char** argv) {return Main::run(argc, argv);} void Main::run(Makai::Data::Value const& ARGS_NAME)
 
 #endif

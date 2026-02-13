@@ -37,6 +37,7 @@ static Makai::Data::Value configBase() {
 	cfg["type"]		= "program";
 	cfg["lang"]		= "breve";
 	cfg["ver"]		= "latest";
+	cfg["mode"]		= "cli";
 	return cfg;
 }
 
@@ -44,10 +45,12 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]		= "help";
 	tl["Asm"]	= "asm";
 	tl["Min"]	= "asm";
+	tl["M"]		= "asm";
 	tl["o"]		= "output";
 	tl["t"]		= "type";
 	tl["l"]		= "lang";
 	tl["v"]		= "ver";
+	tl["m"]		= "mode";
 }
 
 static Compiler::Project::File::Type getFileType(Makai::String const& name) {
@@ -84,7 +87,7 @@ namespace Command {
 		DEBUGLN("Anima Concerto - V" + VER.serialize().get<Makai::String>());
 		DEBUGLN("Available commands:");
 		DEBUGLN("build <target> [-Asm,-Min] [--output <name>]");
-		DEBUGLN("create <name> [--type <type>] [--lang <lang>]");
+		DEBUGLN("create <name> [--type <type>] [--lang <lang>] [--mode <mode>]");
 		DEBUGLN("refresh");
 		DEBUGLN("add <module> [--ver <version>]");
 		DEBUGLN("source <action> [<url>] [-G]");
@@ -136,6 +139,12 @@ namespace Command {
 			if		(pt == "executable" || pt == "exe"	) proj.type = decltype(proj.type)::AV2_TC_PT_EXECUTABLE;
 			else if	(pt == "program" || pt == "prg"		) proj.type = decltype(proj.type)::AV2_TC_PT_PROGRAM;
 			else if	(pt == "module" || pt == "mod"		) proj.type = decltype(proj.type)::AV2_TC_PT_MODULE;
+		}
+		{
+			auto const pt = cfg["mode"].get<Makai::String>();
+			if		(pt == "console" || pt == "cli"	) proj.mode = decltype(proj.mode)::AV2_TC_PM_CONSOLE;
+			else if	(pt == "window" || pt == "win"	) proj.mode = decltype(proj.mode)::AV2_TC_PM_WINDOW;
+			else if	(pt == "worker" || pt == "bg"	) proj.mode = decltype(proj.mode)::AV2_TC_PM_WORKER;
 		}
 		proj.name = cfg["__args"][1].get<Makai::String>();
 		if (Makai::OS::FS::exists(proj.name))

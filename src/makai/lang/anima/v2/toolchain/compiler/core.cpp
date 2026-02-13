@@ -21,6 +21,10 @@ Project Project::deserializeV1(Project& proj, Data::Value const& value) {
 	if (type == "executable" || type == "exe")		proj.type = Type::AV2_TC_PT_EXECUTABLE;
 	else if (type == "program" || type == "prg")	proj.type = Type::AV2_TC_PT_PROGRAM;
 	else if (type == "module" || type == "mod")		proj.type = Type::AV2_TC_PT_MODULE;
+	auto const mode = value["mode"].get<String>("cli");
+	if (mode == "console" || mode == "cli")			proj.mode = Mode::AV2_TC_PM_CONSOLE;
+	else if (mode == "window" || mode == "win")		proj.mode = Mode::AV2_TC_PM_WINDOW;
+	else if (mode == "worker" || mode == "bg")		proj.mode = Mode::AV2_TC_PM_WORKER;
 	proj.main.path = value["main"].get<String>();
 	proj.sources.pushBack(String(""));
 	for (auto path: value["sources"].get<Data::Value::ArrayType>())
