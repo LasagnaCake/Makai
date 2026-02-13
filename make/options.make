@@ -33,6 +33,10 @@ endif
 o?=2
 export o
 
+ifdef debug-tooling
+export debug-tooling
+endif
+
 math?=fast
 export math
 

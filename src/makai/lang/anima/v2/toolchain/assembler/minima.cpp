@@ -496,6 +496,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "access" || id == "read")		invoke.argc = ':';
 			else if (id == "print" || id == "echo")			invoke.argc = '@';
 			else if (id == "sizeof")						invoke.argc = '#';
+			else if (id == "http")							invoke.argc = 'H';
 			else if (id == "string" || id == "str" || id == "s") {
 				invoke.argc	= '"';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
@@ -506,6 +507,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "concat" || op == "join")	invoke.mod = '+';
 				else if (op == "match" || op == "is")		invoke.mod = '=';
 				else if (op == "contains" || op == "has")	invoke.mod = 'f';
+				else if (op == "find" || op == "in")		invoke.mod = 'i';
 				else if (op == "remove" || op == "del")		invoke.mod = '-';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			}

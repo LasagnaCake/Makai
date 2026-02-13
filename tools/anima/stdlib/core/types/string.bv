@@ -66,7 +66,7 @@ namespace String {
 		fatal asm {
 			copy ref stack[-1] -> register[0]
 			copy ref stack[-0] -> register[1]
-			call in str find
+			call in str in
 		}
 		return move out;
 	}
