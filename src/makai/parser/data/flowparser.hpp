@@ -59,6 +59,37 @@ namespace Makai::Parser::Data {
 			}
 		}
 
+		ResultType parseVector() {
+			if (lexer.current().type != TokenType{'('})
+				return error("This is not a vector!");
+			if (!lexer.next()) return error("Missing vectir value!");
+			Vector4 vec;
+			float mult = 1;
+			for (usize i = 0; i < 4; ++i) {
+				while (true) {
+					if (!lexer.next()) return error("Missing identifier value!");
+					if (lexer.current().type == TokenType{')'}) continue;
+					if (lexer.current().type == TokenType{'-'}) {
+						mult *= -1;
+						continue;
+					}
+					if (lexer.current().type == TokenType{'+'}) continue;
+					if (
+						lexer.current().type == TokenType::LTS_TT_INTEGER
+					||	lexer.current().type == TokenType::LTS_TT_REAL
+					) {
+						vec[i] = lexer.current().value.getReal() * mult;
+						mult = 1;
+						break;
+					}
+					return error("Expected number here!");
+				}
+			}
+			if (lexer.current().type != TokenType{')'})
+				return error("Expected ')' here!");
+			return Value(vec);
+		}
+
 		ResultType parseValue() {
 			auto const token = lexer.current();
 			switch (token.type) {
@@ -76,6 +107,8 @@ namespace Makai::Parser::Data {
 				return parseObject();
 			case TokenType{'['}:
 				return parseArray();
+			case TokenType{'('}:
+				return parseVector();
 			case TokenType{BINARY_IDENTIFIER}:
 				return parseBytes();
 			case TokenType{ID_IDENTIFIER}:
@@ -99,9 +132,9 @@ namespace Makai::Parser::Data {
 			}
 			return Value();
 		}
-		
+
 		ResultType parseIdentifier() {
-			if (lexer.current().type != TokenType{'!'})
+			if (lexer.current().type != TokenType{ID_IDENTIFIER})
 				return error("This is not an identifier!");
 			if (!lexer.next()) return error("Missing identifier value!");
 			if (lexer.current().type != TokenType{'['})
@@ -113,8 +146,6 @@ namespace Makai::Parser::Data {
 					return error("Invalid identifier!");
 				id[i] = lexer.current().value.getUnsigned();
 				if (!lexer.next()) return error("Missing identifier value!");
-				if (lexer.current().type == TokenType{'-'} && !lexer.next())
-					return error("Missing identifier value!");
 			}
 			if (lexer.current().type != TokenType{']'})
 				return error("Expected ']' here!");
@@ -251,7 +282,7 @@ namespace Makai::Parser::Data {
 			} while (lexer.next());
 			return result;
 		}
-		
+
 		ResultType parseObject() {
 			Value result = Value::object();
 			if (lexer.current().type != TokenType{'{'})
@@ -269,12 +300,12 @@ namespace Makai::Parser::Data {
 				return error("Missing closing curly bracket!");
 			return result;
 		}
-	
+
 		StringParseError error(String const& what) const {
 			auto const loc = lexer.position();
 			return StringParseError{{loc.at, loc.line, loc.column+1}, what, source.substring(loc.at).split('\n').front().substring(0, 20)};
 		}
-		
+
 		/// @brief String source.
 		Value::StringType	source;
 		/// @brief Underlying lexer.
