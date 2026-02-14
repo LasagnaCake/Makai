@@ -723,7 +723,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				context.error("Symbol is not a type!");
 			context.writeLine("push", lhs.resolve());
 			context.writeLine("call in tname");
-			context.writeLine("cmp ( &[-0] = \"", toTypeID(type), "\") -> .");
+			context.writeLine("cmp &[-0] = \"", toTypeID(type), "\" -> .");
 			context.writeLine("pop void");
 			context.fetchNext().expectToken(Type{')'});
 			if (stackUsage) context.writeLine("clear", stackUsage);
@@ -833,7 +833,7 @@ SEMIBREVE_TYPED_ASSEMBLE_FN(BinaryOperation) {
 				case Type{'>'}:								opstr = ">";	break;
 				case Type{'~'}:								opstr = ":";	break;
 			}
-			context.writeLine("cmp (", lhs.resolve(), opstr, rhs.resolve(), ") -> .");
+			context.writeLine("cmp ", lhs.resolve(), opstr, rhs.resolve(), " -> .");
 		} break;
 		case Type{':'}: {
 			if (context.isObject(lhs.type)) {
