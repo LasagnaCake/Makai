@@ -77,7 +77,7 @@ namespace Vector {
 			call in vec4 dot
 		}
 	}
-	// Generic vectors
+	// Generic vector functions
 	func new(v: real): vec {
 		fatal asm {
 			copy move stack[-0] -> register[0]
