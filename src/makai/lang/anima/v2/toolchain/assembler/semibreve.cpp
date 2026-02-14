@@ -244,8 +244,9 @@ static Prototype doFunctionPrototype(
 		context.writeGlobalPreamble(gpre, "call", fullName, "()");
 		context.writeGlobalPreamble("end");
 	}
-	for (auto& opt: optionals)
+	for (auto& opt: optionals) {
 		fullName += "_" + opt.value["type"].get<Makai::String>();
+	}
 	Prototype proto = {retType, fid, fullName};
 	proto.name = fid;
 	auto subName = baseName;
@@ -281,7 +282,7 @@ static Prototype doFunctionPrototype(
 	overload["extern"]		= optionals.empty() ? isExtern : false;
 	usize i = 0;
 	for (auto& opt: optionals) {
-		resolutionName += "_" + opt.key;
+		resolutionName += "_" + opt.value["type"].get<Makai::String>();
 		if (overloads.contains(resolutionName) && overloads[resolutionName]["decl"])
 			context.error<InvalidValue>("Function with similar signature already exists!");
 		auto& overload	= overloads[resolutionName];
