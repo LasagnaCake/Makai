@@ -1613,8 +1613,8 @@ static Solution doProperty(
 SEMIBREVE_SYMBOL_ASSEMBLE_FN(TypeExtensionFunction) {
 	auto const id = context.currentValue().getString();
 	if (id == "global") {
-		context.fetchNext();
-		if (id == "function" || id == "func" || id == "fn") doFunction(context);
+		auto const t = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "global enxtension type").getString();
+		if (t == "function" || t == "func" || t == "fn") doFunction(context);
 		else context.error("Invalid extension!");
 	}
 	else if (id == "function" || id == "func" || id == "fn") doFunction(context, sym);
@@ -1624,7 +1624,6 @@ SEMIBREVE_SYMBOL_ASSEMBLE_FN(TypeExtensionFunction) {
 }
 
 SEMIBREVE_ASSEMBLE_FN(TypeExtension) {
-	// TODO: This
 	auto const sym = resolveSymbolPath(context.fetchNext());
 	if (sym->type != Context::Scope::Member::Type::AV2_TA_SMT_TYPE)
 		context.error("Symbol is not a type!");
