@@ -535,7 +535,7 @@ static Solution tryAndResolveSubfield(Context& context, Makai::Instance<Context:
 		if (context.isBasicType(symbol))
 			return {type, context.resolveTo(symbol->name)};
 		else context.error("Cannot have initializations for non-basic types!");
-	}
+	} else context.error("Invalid symbol!");
 }
 
 static Solution resolveSymbol(
@@ -2202,7 +2202,7 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 			else if (id == "macro")								doMacro(context);
 			else if (context.hasSymbol(id) || context.hasNamespace(id)) {
 				return doSymbolResolution(context);
-			} return doVarDecl(context, true);
+			} else return doVarDecl(context, true);
 		} break;
 		case Type{'('}: {
 			return doBinaryOperation(context);
