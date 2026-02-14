@@ -344,6 +344,7 @@ void doLeapType(Context& context, Instruction::Leap& leap) {
 		auto const name = context.stream.current();
 		if (name.type != LTS_TT_IDENTIFIER)
 			MINIMA_ERROR(InvalidValue, "Expected identifier for jump label!");
+		DEBUGLN("Target: ", name.value.get<Makai::String>());
 		context.addJumpTarget(name.value.get<Makai::String>());
 	}
 }
