@@ -744,6 +744,7 @@ MINIMA_ASSEMBLE_FN(Compare) {
 	auto const rhs = getDataLocation(context);
 	if (!(context.stream.next() && context.stream.current().type == Type::LTS_TT_LITTLE_ARROW))
 		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
+	context.fetchNext();
 	auto const out = getDataLocation(context);
 	if (
 		out.at == DataLocation::AV2_DL_CONST
