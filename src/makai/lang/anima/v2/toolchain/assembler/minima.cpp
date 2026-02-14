@@ -507,7 +507,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (id == "fcross")	invoke.mod = 'X';
 				else if (id == "tan") {
 					if (id == "vec2")
-						invoke.mod = '/';
+						invoke.mod = 't';
 					else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 				}
 				else if (id == "angle") {
@@ -952,10 +952,10 @@ MINIMA_ASSEMBLE_FN(UnaryMath) {
 			else if (id == "sqrt")						umath.op = decltype(umath.op)::AV2_IUM_OP_SQRT;
 			else MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
 		} break;
-		case LTS_TT_DECREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_DECREMENT;
-		case LTS_TT_INCREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_INCREMENT;
-		case Type{'-'}: umath.op = decltype(umath.op)::AV2_IUM_OP_NEGATE;
-		case Type{'/'}: umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE;
+		case LTS_TT_DECREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_DECREMENT; break;
+		case LTS_TT_INCREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_INCREMENT; break;
+		case Type{'-'}: umath.op = decltype(umath.op)::AV2_IUM_OP_NEGATE; break;
+		case Type{'/'}: umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE; break;
 		default: MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
 	}
 	context.fetchNext();
