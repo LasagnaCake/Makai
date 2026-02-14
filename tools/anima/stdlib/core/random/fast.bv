@@ -7,7 +7,7 @@ namespace Random.Fast {
 
 	func getInt(lo: int, hi: int): int {
 		fatal asm {
-			rng fast i (ref stack[-1] : ref stack[-0]) -> .
+			rng fast i (move stack[-1] : move stack[-0]) -> .
 		}
 	}
 
@@ -19,7 +19,7 @@ namespace Random.Fast {
 
 	func getUInt(lo: uint, hi: uint): uint {
 		fatal asm {
-			rng fast u (ref stack[-1] : ref stack[-0]) -> .
+			rng fast u (move stack[-1] : move stack[-0]) -> .
 		}
 	}
 
@@ -31,7 +31,7 @@ namespace Random.Fast {
 
 	func getReal(lo: real, hi: real): real {
 		fatal asm {
-			rng fast r (ref stack[-1] : ref stack[-0]) -> .
+			rng fast r (move stack[-1] : move stack[-0]) -> .
 		}
 	}
 }

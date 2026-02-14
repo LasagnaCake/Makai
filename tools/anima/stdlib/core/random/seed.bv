@@ -1,7 +1,7 @@
 namespace Random {
 	func setSeed(seed: uint): void {
 		fatal asm {
-			rng seed set -> stack[-0]
+			rng seed set -> move stack[-0]
 		}
 	}
 

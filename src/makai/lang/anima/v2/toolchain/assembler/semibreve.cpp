@@ -522,6 +522,11 @@ static Solution tryAndResolveSubfield(Context& context, Makai::Instance<Context:
 	if (context.fetchNext().hasToken(Type{'.'})) {
 		auto const member = resolveNamespaceMember(context, *symbol->ns).value;
 		return resolveSymbol(context, symbol->name, member, symbol, true);
+	} else if (
+		context.hasToken(LTS_TT_INCREMENT)
+	||	context.hasToken(LTS_TT_DECREMENT)
+	) {
+		// TODO: Post-decrement
 	}
 	context.append.cache.insert(Context::Macro::Axiom{}, 0);
 	if (symbol->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)

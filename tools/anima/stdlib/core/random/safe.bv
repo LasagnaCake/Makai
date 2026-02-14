@@ -7,7 +7,7 @@ namespace Random.Safe {
 
 	func getInt(lo: int, hi: int): int {
 		fatal asm {
-			rng safe i (ref stack[-1] : ref stack[-0]) -> .
+			rng safe i (move stack[-1] : move stack[-0]) -> .
 		}
 	}
 
@@ -19,7 +19,7 @@ namespace Random.Safe {
 
 	func getUInt(lo: uint, hi: uint): uint {
 		fatal asm {
-			rng safe u (ref stack[-1] : ref stack[-0]) -> .
+			rng safe u (move stack[-1] : move stack[-0]) -> .
 		}
 	}
 
@@ -31,7 +31,7 @@ namespace Random.Safe {
 
 	func getReal(lo: real, hi: real): real {
 		fatal asm {
-			rng safe r (ref stack[-1] : ref stack[-0]) -> .
+			rng safe r (move stack[-1] : move stack[-0]) -> .
 		}
 	}
 }

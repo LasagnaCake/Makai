@@ -1,58 +1,58 @@
 namespace String {
 	func slice(what: str, begin: int, end: int): str {
 		fatal asm {
-			copy ref stack[-2] -> register[0]
-			copy ref stack[-1] -> register[1]
-			copy ref stack[-0] -> register[2]
+			copy move stack[-2] -> register[0]
+			copy move stack[-1] -> register[1]
+			copy move stack[-0] -> register[2]
 			call in str sub
 		}
 	}
 
 	func split(what: str, sep: str): arr {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in str sep
 		}
 	}
 
 	func replace(what: str, match: str, rep: str): str {
 		fatal asm {
-			copy ref stack[-2] -> register[0]
-			copy ref stack[-1] -> register[1]
-			copy ref stack[-0] -> register[2]
+			copy move stack[-2] -> register[0]
+			copy move stack[-1] -> register[1]
+			copy move stack[-0] -> register[2]
 			call in str rep
 		}
 	}
 
 	func remove(what: str, match: str): str {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in str del
 		}
 	}
 
 	func contains(what: str, match: str): bool {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in str has
 		}
 	}
 
 	func matches(what: str, match: str): bool {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in str is
 		}
 	}
 
 	func find(what: str, match: str): arr {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in str in
 		}
 	}

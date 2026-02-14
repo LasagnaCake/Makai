@@ -1,8 +1,8 @@
 namespace Object {
 	func has(what: obj, key: str): bool {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in obj has
 		}
 	}
@@ -13,24 +13,24 @@ namespace Object {
 
 	func remove(what: obj, key: str): obj {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in obj delk
 		}
 	}
 
 	func removeValue(what: obj, val: any): obj {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in obj delv
 		}
 	}
 
 	func join(what: obj, other: obj): obj {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in obj join
 		}
 	}
@@ -45,38 +45,38 @@ namespace Object {
 
 	func fuzz(what: obj, key: str): arr {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in obj fuzk
 		}
 	}
 
 	func keysOf(what: obj, val: any): arr {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in obj finv
 		}
 	}
 
 	func fuzzyKeysOf(what: obj, val: any): arr {
 		fatal asm {
-			copy ref stack[-1] -> register[0]
-			copy ref stack[-0] -> register[1]
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
 			call in obj fuzv
 		}
 	}
 
 	func keys(what: obj): arr {
 		fatal asm {
-			copy ref stack[-0] -> register[0]
+			copy move stack[-0] -> register[0]
 			call in obj k
 		}
 	}
 
 	func values(what: obj): arr {
 		fatal asm {
-			copy ref stack[-0] -> register[0]
+			copy move stack[-0] -> register[0]
 			call in obj v
 		}
 	}
@@ -84,7 +84,7 @@ namespace Object {
 	func items(what: obj): arr {
 		temporary out: arr;
 		fatal asm {
-			copy ref stack[-0] -> register[0]
+			copy move stack[-0] -> register[0]
 			call in obj i
 		}
 		return ref out;
@@ -92,7 +92,7 @@ namespace Object {
 
 	func deserialize(what: str): obj {
 		fatal asm {
-			copy ref stack[-0] -> register[0]
+			copy move stack[-0] -> register[0]
 			call in obj parse
 		}
 	}
