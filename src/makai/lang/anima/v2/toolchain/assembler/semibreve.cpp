@@ -551,7 +551,7 @@ static Solution resolveSymbol(
 		doMacroExpansion(context, sym);
 		return doExpression(context);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION) {
-		return doFunctionCall(context, sym, source, source->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE);
+		return doFunctionCall(context, sym, source, source && source->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE);
 	} else if (sym->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE) {
 		sym->value["use"] = true;
 		if (!sym->base)
