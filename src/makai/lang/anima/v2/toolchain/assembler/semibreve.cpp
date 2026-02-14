@@ -891,6 +891,11 @@ Solution doVarAssign(
 	PreAssignFunction const& postassign = {}
 ) {
 	DEBUGLN("<assign>");
+	if (isNewVar && sourceType == "stack") {
+		if (context.isBasicType(type))
+			context.writeAdaptive("push", type->name);
+		else context.writeAdaptive("push void");
+	}
 	if (context.currentNamespace().hasChild(sym->name))
 		context.error<InvalidValue>("Symbol name is also a namespace name!");
 	auto result = doValueResolution(context);
@@ -994,9 +999,6 @@ static Solution doVarDecl(Context& context, bool const overrideAsLocal = false) 
 	auto const id = varname.value.get<Makai::String>();
 	if (context.isReservedKeyword(id))
 		context.error<InvalidValue>("Variable name cannot be a reserved keyword!");
-	if (varType == "local") {
-		context.writeAdaptive("push null");
-	}
 	if (context.currentScope().contains(id))
 		context.error("Symbol with this name already exists in the current scope!");
 	auto const sym = context.currentScope().addVariable(id, reclass(context, varType));
