@@ -8,7 +8,7 @@ namespace Object {
 	}
 
 	func at(what: obj, key: str): any {
-		return move (ref what: move key);
+		return (ref what: key);
 	}
 
 	func remove(what: obj, key: str): obj {
@@ -37,9 +37,9 @@ namespace Object {
 
 	func find(what: obj, key: str): arr {
 		return (
-			move [move at(ref what, ref key)]
-			if move has(ref what, ref key)
-			else move []
+			[at(ref what, ref key)]
+			if has(ref what, ref key)
+			else []
 		);
 	}
 
@@ -100,20 +100,20 @@ namespace Object {
 	func serialize(what: obj): str => in stringify what;
 }
 
-extend obj with func remove(key: str): obj		=> ref Object.remove(ref self, move key);
-extend obj with func removeValue(val: any): obj	=> ref Object.removeValue(ref self, move val);
-extend obj with func join(other: obj): obj		=> ref Object.join(ref self, move other);
-extend obj with func find(key: str): arr		=> move Object.find(ref self, move key);
-extend obj with func fuzz(key: str): arr		=> move Object.fuzz(ref self, move key);
-extend obj with func keysOf(val: any): arr		=> move Object.keysOf(ref self, move val);
-extend obj with func fuzzyKeysOf(val: any): arr	=> move Object.fuzzyKeysOf(ref self, move val);
-extend obj with func has(key: str): bool		=> move Object.has(ref self, move key);
-extend obj with func at(key: str): any			=> move Object.at(ref self, move key);
+extend obj with func remove(key: str): obj		=> ref Object.remove(ref self, key);
+extend obj with func removeValue(val: any): obj	=> ref Object.removeValue(ref self, val);
+extend obj with func join(other: obj): obj		=> ref Object.join(ref self, other);
+extend obj with func find(key: str): arr		=> Object.find(ref self, key);
+extend obj with func fuzz(key: str): arr		=> Object.fuzz(ref self, key);
+extend obj with func keysOf(val: any): arr		=> Object.keysOf(ref self, val);
+extend obj with func fuzzyKeysOf(val: any): arr	=> Object.fuzzyKeysOf(ref self, val);
+extend obj with func has(key: str): bool		=> Object.has(ref self, key);
+extend obj with func at(key: str): any			=> Object.at(ref self, key);
 
-extend obj with func keys(): arr		=> move Object.keys(ref self);
-extend obj with func values(): arr		=> move Object.values(ref self);
-extend obj with func items(): arr		=> move Object.items(ref self);
-extend obj with func serialize(): str	=> move Object.serialize(ref self);
-extend obj with func toString(): str	=> move in stringify ref self;
+extend obj with func keys(): arr		=> Object.keys(ref self);
+extend obj with func values(): arr		=> Object.values(ref self);
+extend obj with func items(): arr		=> Object.items(ref self);
+extend obj with func serialize(): str	=> Object.serialize(ref self);
+extend obj with func toString(): str	=> in stringify ref self;
 
 extend obj with func clone(): obj => copy self;

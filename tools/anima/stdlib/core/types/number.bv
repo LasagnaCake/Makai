@@ -1,29 +1,29 @@
 namespace Number {
-	func negate(what: int):		int		=> move -ref what;
-	func abs(what: int):		int		=> move (ref what if (ref what > 0) else move negate(ref what));
+	func negate(what: int):		int		=> -ref what;
+	func abs(what: int):		int		=> (ref what if (ref what > 0) else negate(ref what));
 
-	func negate(what: real):	real	=> move -ref what;
-	func abs(what: real):		real	=> move (ref what if (ref what > 0) else move negate(ref what));
-	func floor(what: real):		real	=> move (what as int);
-	func ceil(what: real):		real	=> move floor(move (move what + 1));
-	func round(what: real):		real	=> move floor(move (move what + 0.5));
+	func negate(what: real):	real	=> -ref what;
+	func abs(what: real):		real	=> (ref what if (ref what > 0) else negate(ref what));
+	func floor(what: real):		real	=> (what as int);
+	func ceil(what: real):		real	=> floor((what + 1));
+	func round(what: real):		real	=> floor((what + 0.5));
 }
 
-extend int with func negate():	int		=> move Number.negate(ref self);
-extend int with func abs():		int		=> move Number.abs(ref self);
+extend int with func negate():	int		=> Number.negate(ref self);
+extend int with func abs():		int		=> Number.abs(ref self);
 
-extend real with func negate():		real	=> move Number.negate(ref self);
-extend real with func abs():		real	=> move Number.abs(ref self);
-extend real with func floor():		real	=> move Number.floor(ref self);
-extend real with func ceil():		real	=> move Number.ceil(ref self);
-extend real with func round():		real	=> move Number.round(ref self);
-extend real with func pow(e: real):	real	=> move (ref self pow move e);
-extend real with func mod(e: real):	real	=> move (ref self mod move e);
+extend real with func negate():		real	=> Number.negate(ref self);
+extend real with func abs():		real	=> Number.abs(ref self);
+extend real with func floor():		real	=> Number.floor(ref self);
+extend real with func ceil():		real	=> Number.ceil(ref self);
+extend real with func round():		real	=> Number.round(ref self);
+extend real with func pow(e: real):	real	=> (ref self pow e);
+extend real with func mod(e: real):	real	=> (ref self mod e);
 
 extend int with		func clone():	int		=> copy self;
 extend uint with	func clone():	uint	=> copy self;
 extend real with	func clone():	real	=> copy self;
 
-extend int with		func toString():	str		=> move in stringify ref self;
-extend uint with	func toString():	str		=> move in stringify ref self;
-extend real with	func toString():	str		=> move in stringify ref self;
+extend int with		func toString():	str		=> in stringify ref self;
+extend uint with	func toString():	str		=> in stringify ref self;
+extend real with	func toString():	str		=> in stringify ref self;

@@ -39,7 +39,7 @@ namespace Array {
 			copy ref stack[-0] -> register[1]
 			call in arr find
 		}
-		return move out;
+		return out;
 	}
 
 	func remove(what: arr, i: int): arr {
@@ -51,7 +51,7 @@ namespace Array {
 	}
 
 	func at(what: arr, i: int): any {
-		return move (ref what: move i);
+		return (ref what: i);
 	}
 
 	func push(what: arr, val: any): arr {
@@ -79,17 +79,17 @@ namespace Array {
 	}
 }
 
-extend arr with func slice(begin: int, end: int): arr	=> move Array.slice(ref self, move begin, move end);
-extend arr with func like(val: any): arr				=> move Array.like(ref self, move val);
-extend arr with func unlike(val: any): arr				=> move Array.unlike(ref self, move val);
-extend arr with func find(val: any): arr				=> move Array.find(ref self, move val);
-extend arr with func fuzz(val: any): arr				=> move Array.fuzz(ref self, move val);
-extend arr with func push(val: any): arr				=> ref Array.push(ref self, move val);
+extend arr with func slice(begin: int, end: int): arr	=> Array.slice(ref self, begin, end);
+extend arr with func like(val: any): arr				=> Array.like(ref self, val);
+extend arr with func unlike(val: any): arr				=> Array.unlike(ref self, val);
+extend arr with func find(val: any): arr				=> Array.find(ref self, val);
+extend arr with func fuzz(val: any): arr				=> Array.fuzz(ref self, val);
+extend arr with func push(val: any): arr				=> ref Array.push(ref self, val);
 extend arr with func pop(): any							=> ref Array.pop(ref self);
-extend arr with func remove(i: int): arr				=> ref Array.remove(ref self, move i);
-extend arr with func join(other: arr): arr				=> ref Array.join(ref self, move other);
-extend arr with func at(i: int): any					=> move Array.at(ref self, move i);
+extend arr with func remove(i: int): arr				=> ref Array.remove(ref self, i);
+extend arr with func join(other: arr): arr				=> ref Array.join(ref self, other);
+extend arr with func at(i: int): any					=> Array.at(ref self, i);
 
-extend arr with func toString(): str	=> move in stringify ref self;
+extend arr with func toString(): str	=> in stringify ref self;
 
 extend arr with func clone(): arr	=> copy self;

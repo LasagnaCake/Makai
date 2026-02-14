@@ -68,13 +68,13 @@ namespace String {
 	}
 }
 
-extend str with func slice(begin: int, end: int): str	=> move String.slice(ref self, move begin, move end);
-extend str with func split(sep: str): arr				=> move String.split(ref self, move sep);
-extend str with func replace(match: str, rep: str): str	=> move String.replace(ref self, match, move rep);
-extend str with func remove(match: str): str			=> move String.remove(ref self, move match);
-extend str with func contains(match: str): bool			=> move String.contains(ref self, move match);
-extend str with func matches(match: str): bool			=> move String.matches(ref self, move match);
-extend str with func find(match: str): arr				=> move String.find(ref self, move match);
+extend str with func slice(begin: int, end: int): str	=> String.slice(ref self, begin, end);
+extend str with func split(sep: str): arr				=> String.split(ref self, sep);
+extend str with func replace(match: str, rep: str): str	=> String.replace(ref self, match, rep);
+extend str with func remove(match: str): str			=> String.remove(ref self, match);
+extend str with func contains(match: str): bool			=> String.contains(ref self, match);
+extend str with func matches(match: str): bool			=> String.matches(ref self, match);
+extend str with func find(match: str): arr				=> String.find(ref self, match);
 
 extend str with func toString(): str	=> copy self;
 extend str with func clone(): str		=> copy self;
