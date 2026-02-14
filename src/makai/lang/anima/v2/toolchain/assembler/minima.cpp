@@ -373,15 +373,14 @@ MINIMA_ASSEMBLE_FN(Jump) {
 	switch (loc.type) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = loc.value.get<Makai::String>();
-			if (id == "dynamic" || id == "dyn")
+			if (id == "dynamic" || id == "dyn") {
 				doDynamicLeap(context, leap);
-			else if (id == "if")
+				break;
+			} else if (id == "if")
 				doConditionalLeapType(context, leap);
-			else {
-				auto const name = context.fetchToken(LTS_TT_IDENTIFIER, "jump target").getString();
-				DEBUGLN("Target: ", name);
-				context.addJumpTarget(name);
-			}
+			auto const name = context.fetchToken(LTS_TT_IDENTIFIER, "jump target").getString();
+			DEBUGLN("Target: ", name);
+			context.addJumpTarget(name);
 		} break;
 		case Type{'&'}:
 			doDynamicLeap(context, leap);
