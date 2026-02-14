@@ -99,5 +99,5 @@ extend vec with func angle2():													real	=> Vector.angle2(ref self);
 extend vec with global func new(v: real):										vec		=> Vector.new(v);
 extend vec with global func new(x: real, y: real, z: real = 0, w: real = 0):	vec		=> Vector.new(x, y, z, w);
 
-extend vec with func toString()	str => in stringify ref self;
-extend vec with func clone()	vec => copy move self;
+extend vec with func toString():	str => in stringify ref self;
+extend vec with func clone():		vec => copy move self;
