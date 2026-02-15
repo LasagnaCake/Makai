@@ -376,8 +376,10 @@ MINIMA_ASSEMBLE_FN(Jump) {
 			if (id == "dynamic" || id == "dyn") {
 				doDynamicLeap(context, leap);
 				break;
-			} else if (id == "if")
+			} else if (id == "if") {
 				doConditionalLeapType(context, leap);
+				context.fetchNext();
+			}
 			auto const name = context.fetchToken(LTS_TT_IDENTIFIER, "jump target").getString();
 			DEBUGLN("Target: ", name);
 			context.addJumpTarget(name);
