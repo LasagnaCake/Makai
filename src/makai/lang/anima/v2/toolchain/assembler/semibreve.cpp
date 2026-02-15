@@ -331,7 +331,7 @@ static Solution doFunction(
 		} else if (proto.returnType != v.type && !(context.isCastable(proto.returnType) && context.isCastable(v.type)))
 			context.error("Return types do not match!");
 		if (proto.returnType != v.type) {
-			context.writeLine("cast", v.resolve(), "as", toTypeName(proto.returnType), "-> .");
+			context.writeLine("cast", v.resolve(), ":", toTypeName(proto.returnType), "-> .");
 		} else {
 			context.writeLine("copy", v.resolve(), "-> .");
 		}
@@ -621,8 +621,8 @@ static Solution doValueResolution(Context& context, bool idCanBeValue) {
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:	DEBUGLN("Constant: STR");	return {context.getBasicType("string"),	context.resolveTo(current.value.toString())								};
 		case LTS_TT_CHARACTER: 				DEBUGLN("Constant: STR");	return {context.getBasicType("string"),	context.resolveTo(Makai::toString("'", current.value.get<char>(), "'"))	};
-		case LTS_TT_INTEGER:				DEBUGLN("Constant: INT");	return {context.getBasicType("uint"),	context.resolveTo(current.value.toString())								};
-		case LTS_TT_REAL:					DEBUGLN("Constant: REAL");	return {context.getBasicType("real"),	context.resolveTo(current.value.toString())								};
+		case LTS_TT_INTEGER:				DEBUGLN("Constant: INT");	return {context.getBasicType("uint"),	context.resolveTo(current.token)										};
+		case LTS_TT_REAL:					DEBUGLN("Constant: REAL");	return {context.getBasicType("real"),	context.resolveTo(current.token)										};
 		case Type{'{'}: {
 			context.startScope();
 			auto const result = doScope(context);
