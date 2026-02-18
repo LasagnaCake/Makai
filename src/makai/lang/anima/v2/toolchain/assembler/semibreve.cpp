@@ -66,7 +66,7 @@ static Makai::String doDefaultValue(Context& context, Makai::String const& var, 
 	context.getSymbolByName(var).value["default_setter"] = dvloc;
 	auto dv = dvloc + ":\n";
 	auto const vr = doValueResolution(context);
-	return dvloc + ":\npush" + vr.resolve();
+	return dvloc + ":\npush " + vr.resolve() + "\n";
 }
 
 constexpr auto const DVK_ANY = Context::DVK_ANY;
