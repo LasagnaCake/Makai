@@ -122,6 +122,7 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInArrayOperation: uint8 {
+			AV2_EBI_AO_NEW				= '.',
 			AV2_EBI_AO_SLICE			= '_',
 			AV2_EBI_SO_REMOVE			= '-',
 			AV2_EBI_AO_JOIN				= '+',
@@ -134,6 +135,8 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInObjectOperation: uint8 {
+			AV2_EBI_OO_NEW					= '.',
+			AV2_EBI_OO_PARSE				= '{',
 			AV2_EBI_OO_REMOVE_BY_KEY		= 'd',
 			AV2_EBI_OO_REMOVE_BY_VALUE		= 'D',
 			AV2_EBI_OO_JOIN					= '+',

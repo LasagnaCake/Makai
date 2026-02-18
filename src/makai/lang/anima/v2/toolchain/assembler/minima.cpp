@@ -558,20 +558,19 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else if (id == "object" || id == "obj" || id == "o") {
 				invoke.argc	= '{';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
-				if (op == "has")								invoke.mod = ':';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "object operation").getString();
+				if (op == "new")								invoke.mod = '.';
+				else if (op == "has")							invoke.mod = ':';
 				else if (op == "removekey" || op == "delk")		invoke.mod = '-';
 				else if (op == "removevalue" || op == "delv")	invoke.mod = '/';
 				else if (op == "concat" || op == "join")		invoke.mod = '+';
-				else if (op == "like")							invoke.mod = '=';
-				else if (op == "unlike")						invoke.mod = '!';
 				else if (op == "findkey" || op == "fink")		invoke.mod = 'f';
 				else if (op == "fuzzkey" || op == "fuzk")		invoke.mod = 'F';
 				else if (op == "findval" || op == "finv")		invoke.mod = 'x';
 				else if (op == "fuzzval" || op == "fuzv")		invoke.mod = 'X';
 				else if (op == "keys" || op == "k")				invoke.mod = 'k';
 				else if (op == "values" || op == "v")			invoke.mod = 'v';
-				else if (op == "items" || op == "i")			invoke.mod = 'i';
+				else if (op == "parse" || op == "make")			invoke.mod = '{';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			}
 			else MINIMA_ERROR(InvalidValue, "Invalid internal call!");

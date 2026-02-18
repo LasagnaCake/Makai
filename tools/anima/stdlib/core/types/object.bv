@@ -82,12 +82,10 @@ namespace Object {
 	}
 
 	func items(what: obj): arr {
-		temporary out: arr;
 		fatal asm {
 			copy move stack[-0] -> register[0]
 			call in obj i
 		}
-		return ref out;
 	}
 
 	func deserialize(what: str): obj {
