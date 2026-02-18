@@ -570,6 +570,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "fuzzval" || op == "fuzv")		invoke.mod = 'X';
 				else if (op == "keys" || op == "k")				invoke.mod = 'k';
 				else if (op == "values" || op == "v")			invoke.mod = 'v';
+				else if (op == "items" || op == "i")			invoke.mod = 'i';
 				else if (op == "parse" || op == "make")			invoke.mod = '{';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			}
