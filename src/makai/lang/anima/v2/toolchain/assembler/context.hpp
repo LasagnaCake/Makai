@@ -862,8 +862,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		template <class... Args>
-		constexpr void writeFinale(Args const&... args) {
-			auto& content = finale;
+		constexpr void writeProlog(Args const&... args) {
+			auto& content = prolog;
+			content += toString(toString(args, " ")..., "\n");
+		}
+
+		template <class... Args>
+		constexpr void writeEpilog(Args const&... args) {
+			auto& content = epilog;
 			content += toString(toString(args, " ")..., "\n");
 		}
 
@@ -940,7 +946,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			else main.pre = main.preEntryPoint, ":\n" + main.pre + "end";
 			if (main.post.empty()) main.postEntryPoint = "";
 			else main.post = main.postEntryPoint, ":\n" + main.post + "end";
-			return global.compose() + "\n" + main.pre + "\n" + main.post + "\n" + finale;
+			return prolog + global.compose() + "\n" + main.pre + "\n" + main.post + "\n" + epilog;
 		}
 
 		constexpr Scope::Namespace& currentNamespace() {
@@ -1316,7 +1322,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 		}
 
-		String finale;
+		String prolog;
+		String epilog;
 
 		inline static ID::VLUID uuid = ID::VLUID::create(0);
 
