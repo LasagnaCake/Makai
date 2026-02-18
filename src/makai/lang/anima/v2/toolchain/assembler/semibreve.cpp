@@ -244,12 +244,12 @@ static Prototype doFunctionPrototype(
 	;
 	auto resolutionName = templates.size() ? "template:" + id : id;
 	auto fullName = baseName;
+	for (auto& opt: optionals) {
+		fullName += "_" + opt.value["type"].get<Makai::String>();
+	}
 	if (optionals.size()) {
 		context.writeGlobalPreamble(gpre, "call", fullName, "()");
 		context.writeGlobalPreamble("end");
-	}
-	for (auto& opt: optionals) {
-		fullName += "_" + opt.value["type"].get<Makai::String>();
 	}
 	Prototype proto = {retType, fid, fullName};
 	proto.name = fid;
