@@ -60,13 +60,15 @@ static void doMacroExpansion(Context& context, Makai::Instance<Context::Scope::M
 
 static Solution doValueResolution(Context& context, bool idCanBeValue = false);
 
-static Makai::String doDefaultValue(Context& context, Makai::String const& var, Makai::String const& uname) {
+
+
+static Makai::KeyValuePair<Makai::String, Makai::String> doDefaultValue(Context& context, Makai::String const& var, Makai::String const& uname) {
 	context.fetchNext();
 	auto const dvloc = "__" + context.scopePath() + "_" + var + "_set_default" + uname;
 	context.getSymbolByName(var).value["default_setter"] = dvloc;
 	auto dv = dvloc + ":\n";
 	auto const vr = doValueResolution(context);
-	return dvloc + ":\npush " + vr.resolve() + "\n";
+	return {dvloc, dvloc + ":\npush " + vr.resolve() + "\n"};
 }
 
 constexpr auto const DVK_ANY = Context::DVK_ANY;
@@ -204,10 +206,12 @@ static Prototype doFunctionPrototype(
 		if (context.currentToken().type == Type{'='}) {
 			isOptional = true;
 			inOptionalRegion = true;
-			gpre.appendBack(doDefaultValue(context, argID, signature));
+			auto const dval = doDefaultValue(context, argID, signature);
+			gpre.appendBack(dval.value);
 			optionals.pushBack({argID});
 			optionals.back().value["name"] = argID;
 			optionals.back().value["type"] = argt->name;
+			optionals.back().value["call"] = dval.key;
 			context.fetchNext();
 		} else {
 			id += "_" + argt->name.toString();
@@ -278,6 +282,7 @@ static Prototype doFunctionPrototype(
 	overload["args"]		= args;
 	overload["decl"]		= true;
 	overload["full_name"]	= fullName;
+	overload["call"]		= fullName;
 	overload["return"]		= retType->name;
 	overload["extern"]		= optionals.empty() ? isExtern : false;
 	usize i = 0;
@@ -291,6 +296,7 @@ static Prototype doFunctionPrototype(
 		overload["args"]		= args;
 		overload["decl"]		= true;
 		overload["full_name"]	= opt.value["declname"];
+		overload["call"]		= opt.value["call"];
 		overload["return"]		= retType->name;
 		overload["extern"]		= ++i < optionals.size() ? false : isExtern;
 	}
@@ -1148,7 +1154,7 @@ static Solution doFunctionCall(
 		context.error<InvalidValue>("Function overload does not exist!");
 	else if (!sym->value["overloads"].contains(legalName)) globalLegalName = legalName;
 	auto const overload = sym->value["overloads"][legalName];
-	context.writeLine("call", overload["full_name"].get<Makai::String>(), call);
+	context.writeLine("call", overload["call"].get<Makai::String>(), call);
 	if (pushes)
 		context.writeLine("clear", pushes)
 		;
@@ -1476,7 +1482,7 @@ SEMIBREVE_ASSEMBLE_FN(ModuleImport) {
 	// TODO: Properly fix import loops
 	submodule.modules.append(context.modules);
 	assembler.assemble();
-	context.writeFinale(submodule.intermediate());
+	context.writeEpilog(submodule.intermediate());
 	if (submodule.main.preEntryPoint.size())
 		context.writeMainPreamble("call", submodule.main.preEntryPoint, "()");
 	if (submodule.main.postEntryPoint.size())
@@ -2233,19 +2239,21 @@ SEMIBREVE_ASSEMBLE_FN(Expression) {
 }
 
 void Semibreve::assemble() {
-	if (!context.isModule) {
-		context.writeGlobalPreamble("call", context.main.preEntryPoint, "()");
-		context.writeGlobalPreamble("call", context.main.entryPoint, "()");
-		context.writeGlobalPreamble("call", context.main.postEntryPoint, "()");
-		context.writeGlobalPreamble("flush");
-		context.writeGlobalPreamble("halt");
-	}
 	//context.writeMainPreamble(context.main.preEntryPoint, ":");
 	//context.writeMainPostscript(context.main.postEntryPoint, ":");
 	context.cache();
 	while (context.nextToken()) doExpression(context);
 	//context.writeMainPreamble("end");
 	//context.writeMainPostscript("end");
+	if (!context.isModule) {
+		if (context.main.pre.size())
+			context.writeProlog("call", context.main.preEntryPoint, "()");
+		context.writeProlog("call", context.main.entryPoint, "()");
+		if (context.main.post.size())
+			context.writeProlog("call", context.main.postEntryPoint, "()");
+		context.writeProlog("flush");
+		context.writeProlog("halt");
+	}
 	if (!context.isModule && !context.hasMain)
 		context.error<NonexistentValue>("Missing main entrypoint!");
 }
