@@ -514,18 +514,12 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				if (op == "new")			invoke.mod = '.';
 				else if (op == "vnew")		invoke.mod = '=';
 				else if (op == "cross")		invoke.mod = 'x';
-				else if (id == "dot")		invoke.mod = '*';
-				else if (id == "fcross")	invoke.mod = 'X';
-				else if (id == "tan") {
-					if (id == "vec2")
-						invoke.mod = 't';
-					else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-				}
-				else if (id == "angle") {
-					if (id == "vec2" || id == "vec3")
-						invoke.mod = 'a';
-					else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-				}
+				else if (op == "dot")		invoke.mod = '*';
+				else if (op == "fcross")	invoke.mod = 'X';
+				else if (op == "tan" && id == "vec2")
+					invoke.mod = 't';
+				else if (op == "angle" && (id == "vec2" || id == "vec3"))
+					invoke.mod = 'a';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			}
 			else if (id == "string" || id == "str" || id == "s") {
