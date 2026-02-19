@@ -2,6 +2,8 @@
 #include "context.hpp"
 #include "../../../../../makai/net/net.hpp"
 #include "../../../../../makai/file/flow.hpp"
+#include "../../../../../makai/data/data.hpp"
+#include "../../../../../makai/tool/tool.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -716,12 +718,16 @@ void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 				context.temporary = new Value(onHTTPRequest(url->getString(), type->getString().upper(), *data));
 			else pushUndefinedIfInLooseMode("builtin HTTP request");
 		} break;
-		case BuiltInFunction::AV2_EBIF_STRING_OP:	return callBuiltInStringOp(BuiltInStringOperation(op));
-		case BuiltInFunction::AV2_EBIF_ARRAY_OP:	return callBuiltInArrayOp(BuiltInArrayOperation(op));
-		case BuiltInFunction::AV2_EBIF_OBJECT_OP:	return callBuiltInObjectOp(BuiltInObjectOperation(op));
-		case BuiltInFunction::AV2_EBIF_VEC2_OP:		return callBuiltInVector2Op(BuiltInVectorOperation(op));
-		case BuiltInFunction::AV2_EBIF_VEC3_OP:		return callBuiltInVector3Op(BuiltInVectorOperation(op));
-		case BuiltInFunction::AV2_EBIF_VEC4_OP:		return callBuiltInVector4Op(BuiltInVectorOperation(op));
+		case BuiltInFunction::AV2_EBIF_STRING_OP:		return callBuiltInStringOp(BuiltInStringOperation(op));
+		case BuiltInFunction::AV2_EBIF_ARRAY_OP:		return callBuiltInArrayOp(BuiltInArrayOperation(op));
+		case BuiltInFunction::AV2_EBIF_OBJECT_OP:		return callBuiltInObjectOp(BuiltInObjectOperation(op));
+		case BuiltInFunction::AV2_EBIF_VEC2_OP:			return callBuiltInVector2Op(BuiltInVectorOperation(op));
+		case BuiltInFunction::AV2_EBIF_VEC3_OP:			return callBuiltInVector3Op(BuiltInVectorOperation(op));
+		case BuiltInFunction::AV2_EBIF_VEC4_OP:			return callBuiltInVector4Op(BuiltInVectorOperation(op));
+		case BuiltInFunction::AV2_EBIF_OS_OP:			return callBuiltInOSOp(BuiltInOSOperation(op));
+		case BuiltInFunction::AV2_EBIF_FS_OP:			return callBuiltInFSOp(BuiltInFSOperation(op));
+		case BuiltInFunction::AV2_EBIF_ARCHIVE_OP:		return callBuiltInArchiveOp(BuiltInArchiveOperation(op));
+		case BuiltInFunction::AV2_EBIF_CRYPTOGRAPY_OP:	return callBuiltInCryptographyOp(BuiltInCryptographyOperation(op));
 		default: pushUndefinedIfInLooseMode("invalid or unsupported builtin"); break;
 	}
 }
@@ -967,6 +973,41 @@ void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 			else context.temporary = new Value(context.registers[0]->getVector().itri(context.registers[1]->getVector(), context.registers[2]->getVector()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin vec4"); break;
+	}
+}
+
+void Engine::callBuiltInOSOp(BuiltInOSOperation const func) {
+	// TODO: This
+	switch (func) {}
+}
+
+void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
+	// TODO: This
+	switch (func) {}
+}
+
+void Engine::callBuiltInArchiveOp(BuiltInArchiveOperation const func) {
+	// TODO: This
+	switch (func) {}
+}
+
+void Engine::callBuiltInCryptographyOp(BuiltInCryptographyOperation const func) {
+	// TODO: This
+	switch (func) {
+		case BuiltInCryptographyOperation::AV2_EBI_EO_ENCODE: {
+			if (!(
+				context.registers[0]->isBytes()
+			&&	context.registers[1]->isString()
+			)) pushUndefinedIfInLooseMode("builtin crypt encode");
+			else context.temporary = new Value(Makai::Data::encode(context.registers[0]->getBytes(), Makai::Data::fromString(context.registers[1]->getString())));
+		} break;
+		case BuiltInCryptographyOperation::AV2_EBI_EO_DECODE: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isString()
+			)) pushUndefinedIfInLooseMode("builtin crypt decode");
+			else context.temporary = new Value(Makai::Data::decode(context.registers[0]->getString(), Makai::Data::fromString(context.registers[1]->getString())));
+		} break;
 	}
 }
 
