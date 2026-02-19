@@ -13,10 +13,11 @@ namespace IO.Archive {
 		}
 	}
 
-	func new(dir: str, key: str): bool {
+	func new(src: str, dst: str, key: str): bool {
 		fatal asm {
-			copy move stack[-1] -> register[0]
-			copy move stack[-0] -> register[1]
+			copy move stack[-2] -> register[0]
+			copy move stack[-1] -> register[1]
+			copy move stack[-0] -> register[2]
 			call in arch new
 		}
 	}

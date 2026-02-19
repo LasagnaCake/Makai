@@ -978,17 +978,197 @@ void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 
 void Engine::callBuiltInOSOp(BuiltInOSOperation const func) {
 	// TODO: This
-	switch (func) {}
+	switch (func) {
+		case BuiltInOSOperation::AV2_EBI_OSO_RUN_EXECUTABLE: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isArray()
+			&&	context.registers[2]->isString()
+			))
+			context.temporary = new Value(
+				Makai::OS::launch(
+					context.registers[0]->getString(),
+					context.registers[2]->getString(),
+					context.registers[2]->getArray().toList<Makai::String>(
+						[&] (Value const& e) -> Makai::String {
+							return e.isString() ? e.getString() : e.toString();
+						}
+					)
+				)
+			);
+		} break;
+		default: pushUndefinedIfInLooseMode("invalid builtin os");
+	}
 }
 
 void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 	// TODO: This
-	switch (func) {}
+	switch (func) {
+		case BuiltInFSOperation::AV2_EBI_FSO_GET_BINARY: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin get bin");
+			else try {
+				context.temporary = new Value(Makai::File::getBinary(context.registers[0]->getString()));
+			} catch (...) {
+				context.temporary = new Value(null);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_GET_TEXT: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin get text");
+			else try {
+				context.temporary = new Value(Makai::File::getText(context.registers[0]->getString()));
+			} catch (...) {
+				context.temporary = new Value(null);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_GET_JSON: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin get json");
+			else try {
+				context.temporary = new Value(Makai::File::getJSON(context.registers[0]->getString()));
+			} catch (...) {
+				context.temporary = new Value(null);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_GET_FLOW: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin get flow");
+			else try {
+				context.temporary = new Value(Makai::File::getFLOW(context.registers[0]->getString()));
+			} catch (...) {
+				context.temporary = new Value(null);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_BINARY: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isBytes()
+			))
+				pushUndefinedIfInLooseMode("invalid builtin save bin");
+			else try {
+				Makai::File::saveBinary(context.registers[0]->getString(), context.registers[0]->getBytes());
+				context.temporary = new Value(true);
+			} catch (...) {
+				context.temporary = new Value(false);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_TEXT: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isString()
+			))
+				pushUndefinedIfInLooseMode("invalid builtin save text");
+			else try {
+				Makai::File::saveBinary(context.registers[0]->getString(), context.registers[0]->getString());
+				context.temporary = new Value(true);
+			} catch (...) {
+				context.temporary = new Value(false);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_JSON: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isObject()
+			))
+				pushUndefinedIfInLooseMode("invalid builtin save json");
+			else try {
+				Makai::File::saveText(context.registers[0]->getString(), context.registers[0]->toString());
+				context.temporary = new Value(true);
+			} catch (...) {
+				context.temporary = new Value(false);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_FLOW: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isObject()
+			))
+				pushUndefinedIfInLooseMode("invalid builtin save flow");
+			else try {
+				Makai::File::saveText(context.registers[0]->getString(), context.registers[0]->toString());
+				context.temporary = new Value(true);
+			} catch (...) {
+				context.temporary = new Value(false);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_HAS_PATH: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin has path");
+			else context.temporary = new Value(Makai::OS::FS::exists(context.registers[0]->getString()));
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_IS_DIR: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin is dir");
+			else context.temporary = new Value(Makai::OS::FS::isDirectory(context.registers[0]->getString()));
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_MAKE_DIR: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin make dir");
+			else try {
+				Makai::OS::FS::makeDirectory(context.registers[0]->getString());
+				context.temporary = new Value(true);
+			} catch (...) {
+				context.temporary = new Value(false);
+			}
+		} break;
+		case BuiltInFSOperation::AV2_EBI_FSO_DELETE: {
+			if (!context.registers[0]->isString())
+				pushUndefinedIfInLooseMode("invalid builtin fs delete");
+			else try {
+				Makai::OS::FS::remove(context.registers[0]->getString());
+				context.temporary = new Value(true);
+			} catch (...) {
+				context.temporary = new Value(false);
+			}
+		} break;
+		default: pushUndefinedIfInLooseMode("invalid builtin fs");
+	}
 }
 
 void Engine::callBuiltInArchiveOp(BuiltInArchiveOperation const func) {
 	// TODO: This
-	switch (func) {}
+	switch (func) {
+		case BuiltInArchiveOperation::AV2_EBI_AFO_NEW: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isString()
+			&&	context.registers[2]->isString()
+			)) pushUndefinedIfInLooseMode("builtin arch new");
+			else {
+				try {
+					Makai::Tool::Arch::pack(context.registers[1]->getString(), context.registers[0]->getString(), context.registers[2]->getString());
+					context.temporary = new Value(true);
+				} catch (...) {
+					context.temporary = new Value(false);
+				}
+
+			}
+		} break;
+		case BuiltInArchiveOperation::AV2_EBI_AFO_LOAD: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isString()
+			)) pushUndefinedIfInLooseMode("builtin arch load");
+			else {
+				try {
+					Makai::File::attachArchive(context.registers[0]->getString(), context.registers[1]->getString());
+					context.temporary = new Value(true);
+				} catch (...) {
+					context.temporary = new Value(false);
+				}
+			}
+		} break;
+		case BuiltInArchiveOperation::AV2_EBI_AFO_UNLOAD: {
+			try {
+				Makai::File::detachArchive();
+				context.temporary = new Value(true);
+			} catch (...) {
+				context.temporary = new Value(false);
+			}
+		} break;
+		default: pushUndefinedIfInLooseMode("invalid builtin arch"); break;
+	}
 }
 
 void Engine::callBuiltInCryptographyOp(BuiltInCryptographyOperation const func) {
@@ -1012,16 +1192,23 @@ void Engine::callBuiltInCryptographyOp(BuiltInCryptographyOperation const func) 
 			if (!(
 				context.registers[0]->isString()
 			&&	context.registers[1]->isString()
-			)) pushUndefinedIfInLooseMode("builtin crypt decode");
+			)) pushUndefinedIfInLooseMode("builtin crypt encrypt");
 			else context.temporary = new Value(Makai::Tool::Arch::encrypt(context.registers[0]->getBytes(), context.registers[1]->getString()));
 		} break;
 		case BuiltInCryptographyOperation::AV2_EBI_EO_DECRYPT: {
 			if (!(
 				context.registers[0]->isString()
 			&&	context.registers[1]->isString()
-			)) pushUndefinedIfInLooseMode("builtin crypt decode");
+			)) pushUndefinedIfInLooseMode("builtin crypt decrypt");
 			else context.temporary = new Value(Makai::Tool::Arch::decrypt(context.registers[0]->getBytes(), context.registers[1]->getString()));
 		} break;
+		case BuiltInCryptographyOperation::AV2_EBI_EO_HASH: {
+			if (!(
+				context.registers[0]->isString()
+			)) pushUndefinedIfInLooseMode("builtin crypt hash");
+			else context.temporary = new Value(Makai::Tool::Arch::hashPassword(context.registers[0]->getString()));
+		} break;
+		default: pushUndefinedIfInLooseMode("invalid builtin crypt"); break;
 	}
 }
 

@@ -6,7 +6,7 @@ namespace IO.FS {
 		}
 	}
 
-	func saveText(path: str, what: str): void {
+	func saveText(path: str, what: str): bool {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -21,7 +21,7 @@ namespace IO.FS {
 		}
 	}
 
-	func saveBytes(path: str, what: bin): void {
+	func saveBytes(path: str, what: bin): bool {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -36,7 +36,7 @@ namespace IO.FS {
 		}
 	}
 
-	func saveJSON(path: str, what: obj): void {
+	func saveJSON(path: str, what: obj): bool {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -51,7 +51,7 @@ namespace IO.FS {
 		}
 	}
 
-	func saveFLOW(path: str, what: obj): void {
+	func saveFLOW(path: str, what: obj): bool {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
@@ -84,22 +84,6 @@ namespace IO.FS {
 		fatal asm {
 			copy move stack[-0] -> register[0]
 			call in fs del
-		}
-	}
-
-	func copyTo(from: str, to: str): bool {
-		fatal asm {
-			copy move stack[-1] -> register[0]
-			copy move stack[-0] -> register[1]
-			call in fs copy
-		}
-	}
-
-	func moveTo(from: str, to: str): bool {
-		fatal asm {
-			copy move stack[-1] -> register[0]
-			copy move stack[-0] -> register[1]
-			call in fs move
 		}
 	}
 }

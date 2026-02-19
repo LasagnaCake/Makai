@@ -570,8 +570,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			} else if (id == "os") {
 				invoke.argc	= '\n';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "OS operation").getString();
-				if (op == "bv")			invoke.mod = 'e';
-				else if (op == "exe")	invoke.mod = 'E';
+				if (op == "exe")		invoke.mod = 'E';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else if (id == "fs") {
 				invoke.argc	= '\t';
@@ -588,8 +587,6 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				if (op == "isdir")		invoke.mod = '\\';
 				if (op == "has")		invoke.mod = '.';
 				if (op == "del")		invoke.mod = 'r';
-				if (op == "copy")		invoke.mod = 'c';
-				if (op == "move")		invoke.mod = 'm';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else if (id == "arch") {
 				invoke.argc	= '\v';

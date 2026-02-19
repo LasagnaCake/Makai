@@ -1,16 +1,9 @@
 namespace IO.OS {
-	func run(name: str, args: arr): int {
+	func launch(name: str, args: arr, at: str = ""): int {
 		fatal asm {
-			copy move stack[-1] -> register[0];
-			copy move stack[-0] -> register[1];
-			call in os bv
-		}
-	}
-
-	func exec(name: str, args: arr): int {
-		fatal asm {
-			copy move stack[-1] -> register[0];
-			copy move stack[-0] -> register[1];
+			copy move stack[-2] -> register[0];
+			copy move stack[-1] -> register[1];
+			copy move stack[-0] -> register[2];
 			call in os exe
 		}
 	}

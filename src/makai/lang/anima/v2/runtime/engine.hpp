@@ -169,7 +169,6 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		enum class BuiltInOSOperation: uint8 {
-			AV2_EBI_OSO_RUN_BREVE			= 'e',
 			AV2_EBI_OSO_RUN_EXECUTABLE		= 'E',
 		};
 
@@ -182,7 +181,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBI_FSO_SAVE_JSON	= 'J',
 			AV2_EBI_FSO_GET_FLOW	= 'o',
 			AV2_EBI_FSO_SAVE_FLOW	= 'O',
-			AV2_EBI_FSO_MKAKE_DIR	= '/',
+			AV2_EBI_FSO_MAKE_DIR	= '/',
 			AV2_EBI_FSO_IS_DIR		= '\\',
 			AV2_EBI_FSO_HAS_PATH	= '.',
 			AV2_EBI_FSO_DELETE		= 'r',

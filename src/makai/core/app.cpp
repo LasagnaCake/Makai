@@ -4,13 +4,17 @@
 
 //#include "../graph/gl/glapiloader.cc"
 
-#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__)
+#include "../compat/ctl.hpp"
+
+#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 #include <windows.h>
 #include <dwmapi.h>
 #define SDL_MAIN_HANDLED
-#endif
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
+#else
+#include <SDL2/SDL.h>
+#endif
 
 #include <SDL2/SDL_mixer.h>
 
@@ -370,6 +374,7 @@ void App::setBorderless(bool const borderless) {
 }
 
 void App::enableClearWindow() {
+	#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 	SDL_SysWMinfo wmInfo;
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdlWindow, &wmInfo);
@@ -385,6 +390,7 @@ void App::enableClearWindow() {
 	blur.fTransitionOnMaximized = FALSE;
 	DwmEnableBlurBehindWindow(hWnd, &blur);
 	DeleteObject(region);
+	#endif
 }
 
 void App::skipDrawingThisLayer() {skipLayer = true;}
