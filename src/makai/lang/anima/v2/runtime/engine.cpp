@@ -1008,6 +1008,20 @@ void Engine::callBuiltInCryptographyOp(BuiltInCryptographyOperation const func) 
 			)) pushUndefinedIfInLooseMode("builtin crypt decode");
 			else context.temporary = new Value(Makai::Data::decode(context.registers[0]->getString(), Makai::Data::fromString(context.registers[1]->getString())));
 		} break;
+		case BuiltInCryptographyOperation::AV2_EBI_EO_ENCRYPT: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isString()
+			)) pushUndefinedIfInLooseMode("builtin crypt decode");
+			else context.temporary = new Value(Makai::Tool::Arch::encrypt(context.registers[0]->getBytes(), context.registers[1]->getString()));
+		} break;
+		case BuiltInCryptographyOperation::AV2_EBI_EO_DECRYPT: {
+			if (!(
+				context.registers[0]->isString()
+			&&	context.registers[1]->isString()
+			)) pushUndefinedIfInLooseMode("builtin crypt decode");
+			else context.temporary = new Value(Makai::Tool::Arch::decrypt(context.registers[0]->getBytes(), context.registers[1]->getString()));
+		} break;
 	}
 }
 
