@@ -574,7 +574,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "exe")	invoke.mod = 'E';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else if (id == "fs") {
-				invoke.argc	= '\v';
+				invoke.argc	= '\t';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Filesystem operation").getString();
 				if (op == "getb")		invoke.mod = 'b';
 				if (op == "saveb")		invoke.mod = 'B';
