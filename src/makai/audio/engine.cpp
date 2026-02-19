@@ -40,7 +40,7 @@ struct Component<Engine::Sound>::Resource {
 	Handle<Engine::Group::Resource>	group;
 
 	Engine::SoundType type;
-	
+
 	usize cooldown = 0;
 
 	bool paused = false;
@@ -228,7 +228,7 @@ void Engine::onUpdate() {
 	instance->groups.filter(oneInstanceFilter<Group>);
 	instance->sounds.filter(oneInstanceFilter<Sound>);
 }
-	
+
 
 Engine::Sound& Engine::Sound::play(bool const force, bool const loop, float const fadeInTime, usize const cooldown) {
 	if (!exists()) return *this;
@@ -285,7 +285,7 @@ Engine::Sound& Engine::Sound::setLoopPoints(float const begin, float end) {
 		return *this;
 	--stop;
 	if (end >= 0)
-		stop = Math::min(instance->toPCMFrames(end), stop);
+		stop = Math::min<uint64>(instance->toPCMFrames(end), stop);
 	start = instance->toPCMFrames(begin);
 	if (stop <= start) return *this;
 	DEBUGLN("<loop>");
