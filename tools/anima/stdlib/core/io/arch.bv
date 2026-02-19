@@ -1,0 +1,23 @@
+namespace Archive {
+	func load(path: str, key: str): bool {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arch load
+		}
+	}
+
+	func unload(): bool {
+		fatal asm {
+			call in arch unload
+		}
+	}
+
+	func new(dir: str, key: str): bool {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in arch new
+		}
+	}
+}

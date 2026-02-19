@@ -1,4 +1,4 @@
-namespace IO.File {
+namespace IO.FS {
 	func getText(path: str): str {
 		fatal asm {
 			copy move stack[-0] -> register[0]
@@ -59,11 +59,47 @@ namespace IO.File {
 		}
 	}
 
-	func setArchive(path: str, passkey: str): bool {
+	func mkdir(path: str): bool {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs mkdir
+		}
+	}
+
+	func isdir(path: str): bool {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs isdir
+		}
+	}
+
+	func exists(path: str): bool {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs has
+		}
+	}
+
+	func delete(path: str): bool {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs del
+		}
+	}
+
+	func copyTo(from: str, to: str): bool {
 		fatal asm {
 			copy move stack[-1] -> register[0]
 			copy move stack[-0] -> register[1]
-			call in fs arch
+			call in fs copy
+		}
+	}
+
+	func moveTo(from: str, to: str): bool {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in fs move
 		}
 	}
 }

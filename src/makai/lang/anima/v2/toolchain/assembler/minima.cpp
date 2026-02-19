@@ -574,7 +574,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "exe")	invoke.mod = 'E';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else if (id == "fs") {
-				invoke.argc	= '\t';
+				invoke.argc	= '\v';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Filesystem operation").getString();
 				if (op == "getb")		invoke.mod = 'b';
 				if (op == "saveb")		invoke.mod = 'B';
@@ -584,14 +584,28 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				if (op == "savej")		invoke.mod = 'J';
 				if (op == "geto")		invoke.mod = 'o';
 				if (op == "saveo")		invoke.mod = 'O';
-				if (op == "arch")		invoke.mod = 'a';
+				if (op == "mkdir")		invoke.mod = '/';
+				if (op == "isdir")		invoke.mod = '\\';
+				if (op == "has")		invoke.mod = '.';
+				if (op == "del")		invoke.mod = 'r';
+				if (op == "copy")		invoke.mod = 'c';
+				if (op == "move")		invoke.mod = 'm';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else if (id == "arch") {
+				invoke.argc	= '\v';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Archive operation").getString();
+				if (op == "load")		invoke.mod = '<';
+				if (op == "unload")		invoke.mod = '>';
+				if (op == "new")		invoke.mod = '.';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else if (id == "crypt") {
 				invoke.argc	= '?';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Cryptographical operation").getString();
-				if (op == "enc")	invoke.mod = 'e';
-				if (op == "dec")	invoke.mod = 'd';
-				if (op == "hash")	invoke.mod = 'h';
+				if (op == "encode")		invoke.mod = 'e';
+				if (op == "decode")		invoke.mod = 'd';
+				if (op == "encrypt")	invoke.mod = 'E';
+				if (op == "decrypt")	invoke.mod = 'D';
+				if (op == "hash")		invoke.mod = 'h';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 		}

@@ -1,6 +1,22 @@
 namespace Crypt.Key {
 	func decode(key: str): str {
+		fatal asm {
+			copy move stack[-0]	-> register[0]
+			copy move "base64"	-> register[1]
+			call in crypt decode
+		}
 	}
 
-	macro make => {$key:str} => {$=%($key)}
+	func make(key: str): str {
+		fatal asm {
+			copy move stack[-0]	-> register[0]
+			copy move "sha256"	-> register[1]
+			call in crypt hash
+			copy move .			-> register[0]
+			copy move "base64"	-> register[1]
+			call in crypt encode
+		}
+	}
+
+	macro compile => {$key:str} => {$=%($key)}
 }

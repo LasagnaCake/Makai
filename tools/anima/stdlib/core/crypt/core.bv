@@ -1,10 +1,41 @@
 namespace Crypt {
-	func encode(what: bin, enc: str): bin {
+	func encode(what: bin, algo: str = "base64"): bin {
+		fatal asm {
+			copy move stack[-1]	-> register[0]
+			copy move stack[-0]	-> register[1]
+			call in crypt encode
+		}
 	}
 
-	func decode(what: bin, dec: str): bin {
+	func decode(what: bin, algo: str = "base64"): bin {
+		fatal asm {
+			copy move stack[-1]	-> register[0]
+			copy move stack[-0]	-> register[1]
+			call in crypt decode
+		}
 	}
 
-	func hash(what: bin, algo: str): bin {
+	func encrypt(what: bin, algo: str = "sha256"): bin {
+		fatal asm {
+			copy move stack[-1]	-> register[0]
+			copy move stack[-0]	-> register[1]
+			call in crypt encrypt
+		}
+	}
+
+	func decrypt(what: bin, algo: str = "sha256"): bin {
+		fatal asm {
+			copy move stack[-1]	-> register[0]
+			copy move stack[-0]	-> register[1]
+			call in crypt decrypt
+		}
+	}
+
+	func hash(what: bin, algo: str = "sha256"): bin {
+		fatal asm {
+			copy move stack[-1]	-> register[0]
+			copy move stack[-0]	-> register[1]
+			call in crypt hash
+		}
 	}
 }
