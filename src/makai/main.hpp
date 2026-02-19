@@ -10,8 +10,11 @@ struct Main {
 	/// @brief Base arguments to add to main function.
 	inline static Makai::Data::Value baseArgs	= Makai::Data::Value::object();
 
+	/// @brief Called before the program runs.
+	static void init(Makai::CLI::Parser& parser);
+
 	/// @brief Called when program runs.
-	/// @param args Arguments passed to program.
+	/// @param args Arguments passed to the program.
 	static void run(Makai::Data::Value const& args);
 
 	/// @brief Actual main implementation.
@@ -35,6 +38,7 @@ struct Main {
 };
 
 /// @brief Implements the function.
-#define main(ARGS_NAME) int main(int argc, char** argv) {return Main::run(argc, argv);} void Main::run(Makai::Data::Value const& ARGS_NAME)
+#define MakaiInit(PARSER_NAME) void Main::init(Makai::CLI::Parser& PARSER_NAME)
+#define MakaiMain(ARGS_NAME) int main(int argc, char** argv) {return Main::run(argc, argv);} void Main::run(Makai::Data::Value const& ARGS_NAME)
 
 #endif

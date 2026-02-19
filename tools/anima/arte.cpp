@@ -29,8 +29,25 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 };
 
-main(args) {
+static Makai::Data::Value configBase() {
+	Makai::Data::Value cfg;
+	cfg["help"]		= false;
+	cfg["output"]	= "out.anp";
+	return cfg;
+}
+
+static void translationBase(Makai::CLI::Parser::Translation& tl) {
+	tl["H"]	= "help";
+	tl["o"]	= "output";
+}
+
+MakaiInit(cli) {
+	translationBase(cli.tl);
+	baseArgs = configBase();
+}
+
+MakaiMain(args) {
 	ARTE engine;
-	engine.httpRequestsEnabled = args["http"].get<bool>(false);
+	engine.httpRequestsEnabled = args["Http"].get<bool>(false);
 	engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 }
