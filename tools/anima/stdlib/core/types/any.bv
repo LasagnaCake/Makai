@@ -10,4 +10,4 @@ namespace Any {
 }
 
 extend any with global func deserialize(what: str): any	=> Any.deserialize(what);
-extend any with global func serialize(): str			=> Any.serialize(ref self);
+extend any with func serialize(): str					=> Any.serialize(ref self);

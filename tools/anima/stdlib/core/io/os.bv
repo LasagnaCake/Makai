@@ -1,6 +1,6 @@
 namespace IO.OS {
 	func run(name: str, args: arr): int {
-		asm fatal {
+		fatal asm {
 			copy move stack[-1] -> register[0];
 			copy move stack[-0] -> register[1];
 			call in os bv
@@ -8,7 +8,7 @@ namespace IO.OS {
 	}
 
 	func exec(name: str, args: arr): int {
-		asm fatal {
+		fatal asm {
 			copy move stack[-1] -> register[0];
 			copy move stack[-0] -> register[1];
 			call in os exe
