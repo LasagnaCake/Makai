@@ -3,19 +3,21 @@
 
 using namespace Makai::Net::HTTP;
 
-static usize write(cstring const src, usize const size, usize const count, ref<Makai::String> const dst) {
-	dst->appendBack(src, src + count * size);
-	return count * size;
-}
+namespace Wrap {
+	static usize httpWrite(cstring const src, usize const size, usize const count, ref<Makai::String> const dst) {
+		dst->appendBack(src, src + count * size);
+		return count * size;
+	}
 
-static usize read(ref<char> const dst, usize const size, usize const count, ref<Makai::String> const src) {
-	if (src->empty()) return 0;
-	auto const sz = count * size;
-	auto const trueSize = sz < src->size() ? sz : src->size();
-	if (!trueSize) return 0;
-	Makai::MX::memcpy(dst, src->data(), trueSize);
-	*src = src->substring(trueSize);
-	return trueSize;
+	static usize httpRead(ref<char> const dst, usize const size, usize const count, ref<Makai::String> const src) {
+		if (src->empty()) return 0;
+		auto const sz = count * size;
+		auto const trueSize = sz < src->size() ? sz : src->size();
+		if (!trueSize) return 0;
+		Makai::MX::memcpy(dst, src->data(), trueSize);
+		*src = src->substring(trueSize);
+		return trueSize;
+	}
 }
 
 // Based off of https://gist.github.com/whoshuu/2dc858b8730079602044
@@ -28,8 +30,8 @@ Response Makai::Net::HTTP::fetch(Makai::String const& url, Request const& reques
 	Response resp;
 	curl_easy_setopt(curl, CURLOPT_URL, url.cstr());
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, err.cstr());
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
-	curl_easy_setopt(curl, CURLOPT_READFUNCTION, read);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Wrap::httpWrite);
+	curl_easy_setopt(curl, CURLOPT_READFUNCTION, Wrap::httpRead);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &resp.content);
 	curl_easy_setopt(curl, CURLOPT_READDATA, &reqdat);
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA, &resp.header);
@@ -61,7 +63,7 @@ Response Makai::Net::HTTP::fetch(Makai::String const& url, Request const& reques
 	}
 	if (request.ssl.size())
 		curl_easy_setopt(curl, CURLOPT_CAINFO, request.ssl.cstr());
-	else curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+	else curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 	auto const result = curl_easy_perform(curl);
 	if (result != CURLE_OK) {
 		resp.status = Response::Status::MN_HRS_CURL_ERROR;
