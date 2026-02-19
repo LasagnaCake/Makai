@@ -108,6 +108,10 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBIF_VEC2_OP		= '2',
 			AV2_EBIF_VEC3_OP		= '3',
 			AV2_EBIF_VEC4_OP		= '4',
+			AV2_EBIF_OS_OP			= '\n',
+			AV2_EBIF_FS_OP			= '\t',
+			AV2_EBIF_ARCHIVE_OP		= '\v',
+			AV2_EBIF_CRYPTOGRAPY_OP	= '?',
 		};
 
 		enum class BuiltInStringOperation: uint8 {
@@ -162,6 +166,42 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBI_VO_LENGTH_SQUARED		= 'L',
 			AV2_EBI_VO_TRI_CROSS			= 't',
 			AV2_EBI_VO_INVERSE_TRI_CROSS	= 'T',
+		};
+
+		enum class BuiltInOSOperation: uint8 {
+			AV2_EBI_OSO_RUN_BREVE			= 'e',
+			AV2_EBI_OSO_RUN_EXECUTABLE		= 'E',
+		};
+
+		enum class BuiltInFSOperation: uint8 {
+			AV2_EBI_FSO_GET_BINARY	= 'b',
+			AV2_EBI_FSO_SAVE_BINARY	= 'B',
+			AV2_EBI_FSO_GET_TEXT	= 't',
+			AV2_EBI_FSO_SAVE_TEXT	= 'T',
+			AV2_EBI_FSO_GET_JSON	= 'j',
+			AV2_EBI_FSO_SAVE_JSON	= 'J',
+			AV2_EBI_FSO_GET_FLOW	= 'o',
+			AV2_EBI_FSO_SAVE_FLOW	= 'O',
+			AV2_EBI_FSO_MKAKE_DIR	= '/',
+			AV2_EBI_FSO_IS_DIR		= '\\',
+			AV2_EBI_FSO_HAS_PATH	= '.',
+			AV2_EBI_FSO_DELETE		= 'r',
+			AV2_EBI_FSO_COPY		= 'c',
+			AV2_EBI_FSO_MOVE		= 'm',
+		};
+
+		enum class BuiltInArchiveOperation: uint8 {
+			AV2_EBI_AFO_LOAD	= '<',
+			AV2_EBI_AFO_UNLOAD	= '>',
+			AV2_EBI_AFO_NEW		= '.',
+		};
+
+		enum class BuiltInCryptograpyOperation: uint8 {
+			AV2_EBI_EO_ENCODE	= 'e',
+			AV2_EBI_EO_DECODE	= 'd',
+			AV2_EBI_EO_ENCRYPT	= 'E',
+			AV2_EBI_EO_DECRYPT	= 'D',
+			AV2_EBI_EO_HASH		= 'h',
 		};
 
 		bool process();
