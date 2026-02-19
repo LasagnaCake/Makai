@@ -196,7 +196,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_EBI_AFO_NEW		= '.',
 		};
 
-		enum class BuiltInCryptograpyOperation: uint8 {
+		enum class BuiltInCryptographyOperation: uint8 {
 			AV2_EBI_EO_ENCODE	= 'e',
 			AV2_EBI_EO_DECODE	= 'd',
 			AV2_EBI_EO_ENCRYPT	= 'E',
@@ -291,6 +291,10 @@ namespace Makai::Anima::V2::Runtime {
 		void callBuiltInVector2Op(BuiltInVectorOperation const func);
 		void callBuiltInVector3Op(BuiltInVectorOperation const func);
 		void callBuiltInVector4Op(BuiltInVectorOperation const func);
+		void callBuiltInOSOp(BuiltInOSOperation const func);
+		void callBuiltInFSOp(BuiltInFSOperation const func);
+		void callBuiltInArchiveOp(BuiltInArchiveOperation const func);
+		void callBuiltInCryptographyOp(BuiltInCryptographyOperation const func);
 
 		void jumpBy(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);
