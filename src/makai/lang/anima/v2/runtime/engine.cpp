@@ -1060,7 +1060,7 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 			))
 				pushUndefinedIfInLooseMode("invalid builtin save text");
 			else try {
-				Makai::File::saveBinary(context.registers[0]->getString(), context.registers[0]->getString());
+				Makai::File::saveBinary(context.registers[0]->getString(), context.registers[0]->getBytes());
 				context.temporary = new Value(true);
 			} catch (...) {
 				context.temporary = new Value(false);
