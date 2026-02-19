@@ -1,4 +1,4 @@
-namespace Archive {
+namespace IO.Archive {
 	func load(path: str, key: str): bool {
 		fatal asm {
 			copy move stack[-1] -> register[0]
