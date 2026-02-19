@@ -14,9 +14,13 @@ ifeq ($(compiler),msys2-clang)
 C_COMPILER		?=clang
 CPP_COMPILER	?=clang++
 endif
-ifeq ($(compiler),mingw)
+ifeq ($(compiler),mingw-win)
 C_COMPILER		?=mingw32-gcc
 CPP_COMPILER	?=mingw32-g++
+endif
+ifeq ($(compiler),mingw-linux)
+C_COMPILER		?=x86_64-w64-mingw32-gcc
+CPP_COMPILER	?=x86_64-w64-mingw32-g++
 endif
 ifeq ($(compiler),auto)
 C_COMPILER		?=$(CC)
