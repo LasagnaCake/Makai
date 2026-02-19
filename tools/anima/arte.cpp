@@ -32,13 +32,13 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
-	cfg["output"]	= "out.anp";
 	return cfg;
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
-	tl["H"]	= "help";
-	tl["o"]	= "output";
+	tl["H"]		= "help";
+	tl["N"]		= "net";
+	tl["Net"]	= "net";
 }
 
 MakaiInit(cli) {
@@ -48,6 +48,6 @@ MakaiInit(cli) {
 
 MakaiMain(args) {
 	ARTE engine;
-	engine.httpRequestsEnabled = args["Http"].get<bool>(false);
+	engine.httpRequestsEnabled = args["net"].get<bool>(false);
 	engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 }
