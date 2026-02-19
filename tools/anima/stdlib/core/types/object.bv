@@ -114,4 +114,6 @@ extend obj with func items(): arr		=> Object.items(ref self);
 extend obj with func serialize(): str	=> Object.serialize(ref self);
 extend obj with func toString(): str	=> in stringify ref self;
 
+extend obj with global func deserialize(what: str): obj => Object.deserialize(what);
+
 extend obj with func clone(): obj => copy self;

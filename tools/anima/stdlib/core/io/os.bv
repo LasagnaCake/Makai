@@ -1,0 +1,17 @@
+namespace IO.OS {
+	func run(name: str, args: arr): int {
+		asm fatal {
+			copy move stack[-1] -> register[0];
+			copy move stack[-0] -> register[1];
+			call in os bv
+		}
+	}
+
+	func exec(name: str, args: arr): int {
+		asm fatal {
+			copy move stack[-1] -> register[0];
+			copy move stack[-0] -> register[1];
+			call in os exe
+		}
+	}
+}

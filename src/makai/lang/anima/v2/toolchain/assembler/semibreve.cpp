@@ -2,6 +2,7 @@
 #include "breve.hpp"
 #include "context.hpp"
 #include "core.hpp"
+#include "makai/data/hash.hpp"
 
 using namespace Makai::Anima::V2::Toolchain::Assembler;
 using namespace Makai::Error;
@@ -1939,6 +1940,18 @@ struct ExpansionGroup: IExpandAfter {
 	}
 };
 
+struct ExpandToEncryption: IExpandAfter {
+	Instance base;
+
+	Makai::String expand(Context::Macro::Context& context) const {
+		Makai::String result = base->expand(context);
+		return Makai::Data::encode(
+			Makai::Data::hashed(result.toBytes()),
+			Makai::Data::EncodingType::ET_BASE64
+		);
+	}
+};
+
 static ExpansionGroup::Instance doExpansionGroup(Context& context, Context::Macro::Rule& rule) {
 	auto content = new ExpansionGroup();
 	switch(context.currentToken().type) {
@@ -1955,6 +1968,19 @@ static ExpansionGroup::Instance doExpansionGroup(Context& context, Context::Macr
 					content->sub.pushBack(new ExpandToVariable(varID));
 				} break;
 			}
+		} break;
+		case Type{'%'}: {
+			context.fetchNext().expectToken(Type{'('});
+			auto pre = new ExpansionGroup();
+			while (!context.hasToken(Type{')'})) {
+				if (context.fetchNext().hasToken(Type{')'}))
+					break;
+				pre->sub.pushBack(doExpansionGroup(context, rule));
+			}
+			auto const enc = new ExpandToEncryption();
+			enc->base = pre;
+			content->sub.pushBack(enc);
+			context.expectToken(Type{')'});
 		} break;
 		case Type{'*'}: {
 			context.fetchNext().expectToken(Type{'('});

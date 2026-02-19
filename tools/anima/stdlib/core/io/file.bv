@@ -1,0 +1,69 @@
+namespace IO.File {
+	func getText(path: str): str {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs gett
+		}
+	}
+
+	func saveText(path: str, what: str): void {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in fs savet
+		}
+	}
+
+	func getBytes(path: str): bin {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs getb
+		}
+	}
+
+	func saveBytes(path: str, what: bin): void {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in fs saveb
+		}
+	}
+
+	func getJSON(path: str): obj {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs getj
+		}
+	}
+
+	func saveJSON(path: str, what: obj): void {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in fs savej
+		}
+	}
+
+	func getFLOW(path: str): obj {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in fs geto
+		}
+	}
+
+	func saveFLOW(path: str, what: obj): void {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in fs saveo
+		}
+	}
+
+	func setArchive(path: str, passkey: str): bool {
+		fatal asm {
+			copy move stack[-1] -> register[0]
+			copy move stack[-0] -> register[1]
+			call in fs arch
+		}
+	}
+}

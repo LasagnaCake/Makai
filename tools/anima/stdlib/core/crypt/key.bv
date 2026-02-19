@@ -1,0 +1,6 @@
+namespace Crypt.Key {
+	func decode(key: str): str {
+	}
+
+	macro make	=> {$key:str} => {$=%($key)}
+}

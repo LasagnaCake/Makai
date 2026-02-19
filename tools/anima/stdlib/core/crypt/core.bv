@@ -1,0 +1,10 @@
+namespace Crypt {
+	func encode(what: bin, enc: str): bin {
+	}
+
+	func decode(what: bin, dec: str): bin {
+	}
+
+	func hash(what: bin, algo: str): bin {
+	}
+}

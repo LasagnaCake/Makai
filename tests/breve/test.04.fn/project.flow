@@ -1,0 +1,12 @@
+{
+	concerto_version "1.0" 
+	language_version "2.0" 
+	main "src/main.bv" 
+	modules {} 
+	name "test.04.fn" 
+	package_version "0.0.1" 
+	sources [
+		src
+	] 
+	type console
+}

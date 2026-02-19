@@ -1,0 +1,13 @@
+namespace Any {
+	func deserialize(what: str): any {
+		fatal asm {
+			copy move stack[-0] -> register[0]
+			call in destrfy
+		}
+	}
+
+	func serialize(what: any): str => in stringify what;
+}
+
+extend any with global func deserialize(what: str): any	=> Any.deserialize(what);
+extend any with global func serialize(): str			=> Any.serialize(ref self);
