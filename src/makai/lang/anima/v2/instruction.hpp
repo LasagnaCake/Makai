@@ -17,8 +17,6 @@ namespace Makai::Anima::V2 {
 		AV2_DL_STACK,
 		/// @brief Offset from the top of the stack.
 		AV2_DL_STACK_OFFSET,
-		/// @brief Heap.
-		AV2_DL_HEAP,
 		/// @brief Global variable.
 		AV2_DL_GLOBAL,
 		/// @brief C++ value.
@@ -27,6 +25,8 @@ namespace Makai::Anima::V2 {
 		AV2_DL_TEMPORARY,
 		/// @brief Register value.
 		AV2_DL_REGISTER,
+		/// @brief Last register.
+		AV2_DL_LAST_REGISTER = AV2_DL_REGISTER + 31,
 		/// @brief Location modifier: By reference.
 		AV2_DLM_BY_REF	= 0b10000000,
 		AV2_DLM_MOVE	= 0b01000000,
@@ -58,34 +58,6 @@ namespace Makai::Anima::V2 {
 	constexpr DataLocation asRegister(usize const id) {
 		return Cast::as<DataLocation>(enumcast(DataLocation::AV2_DL_REGISTER) + id);
 	}
-
-	/// @brief Data modifier.
-	enum class DataModifier: uint16 {
-		AV2_DM_REFERENCE	= 1 << 0,
-		AV2_DM_TEMPORARY	= 1 << 1,
-		AV2_DM_POINTER		= 1 << 2,
-		AV2_DM_IN			= 1 << 3,
-		AV2_DM_OUT			= 1 << 4,
-		AV2_DM_CONST		= 1 << 5,
-		AV2_DM_COMPILEABLE	= 1 << 6,
-		AV2_DM_COMPILED		= 1 << 7
-	};
-
-	/// @brief Operator overloadings.
-	constexpr DataModifier operator|(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) | enumcast(b));	}
-	constexpr DataModifier operator&(DataModifier const& a, DataModifier const& b)	{return Cast::as<DataModifier>(enumcast(a) & enumcast(b));	}
-	constexpr DataModifier operator~(DataModifier const& a)							{return Cast::as<DataModifier>(~enumcast(a));				}
-
-	/// @brief Unary operator.
-	enum class UnaryOperator: uint8 {
-		AV2_UOP_NEGATE,
-		AV2_UOP_LOGIC_NOT,
-		AV2_UOP_BIT_NOT,
-		AV2_UOP_NEW,
-		AV2_UOP_DELETE,
-		AV2_UOP_COPY,
-		AV2_UOP_MOVE,
-	};
 
 	/// @brief Binary operator.
 	enum class BinaryOperator: uint8 {
