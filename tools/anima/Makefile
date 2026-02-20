@@ -19,7 +19,7 @@ export o?=3
 
 OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize $(LEAN)
 
-sinclude $(ROOT)/make/os-windows.make
+sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
@@ -73,28 +73,28 @@ prologue:
 packer:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c packer.cpp -o packer.o
-	$(LINKER) -o packer.exe packer.o $(OBJ) $(LK)
+	$(LINKER) -o packer$(EXEC_TYPE) packer.o $(OBJ) $(LK)
 
 concerto:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c concerto.cpp -o concerto.o
-	$(LINKER) -o concerto.exe concerto.o $(OBJ) $(LK)
+	$(LINKER) -o concerto$(EXEC_TYPE) concerto.o $(OBJ) $(LK)
 
 minimac:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c minimac.cpp -o minimac.o
-	$(LINKER) -o minimac.exe minimac.o $(OBJ) $(LK)
+	$(LINKER) -o minimac$(EXEC_TYPE) minimac.o $(OBJ) $(LK)
 
 arte:
 	@echo "[$@]"
 	$(COMPILER) $(COMPCFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
 	$(COMPILER) $(COMPCFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
-	$(LINKER) -o carte.exe carte.o $(OBJ) $(LINKCFG) -mwindows
-	$(LINKER) -o warte.exe warte.o $(OBJ) $(LINKCFG)
+	$(LINKER) -o carte$(EXEC_TYPE) carte.o $(OBJ) $(LINKCFG) -mwindows
+	$(LINKER) -o warte$(EXEC_TYPE) warte.o $(OBJ) $(LINKCFG)
 
 anima:
 	$(COMPILER) $(COMPCFG) -c anima.cpp -o anima.o
-	$(LINKER) -o anima.exe anima.o $(OBJ) $(LINKCFG)
+	$(LINKER) -o anima$(EXEC_TYPE) anima.o $(OBJ) $(LINKCFG)
 
 finale:
 	@echo 

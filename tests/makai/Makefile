@@ -11,11 +11,11 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
 
-sinclude $(ROOT)/make/os-windows.make
+sinclude $(ROOT)/make/os.make
 
 o?=3
 
-testcmd = @$(CXX) -O$(o) -o output/$(1)/test.$(2).$(1).exe test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
+testcmd = @$(CXX) -O$(o) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
 
 NOCMD := -mwindows
 

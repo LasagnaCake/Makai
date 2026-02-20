@@ -17,11 +17,11 @@ DEBUGMODE := -DCTL_CONSOLE_OUT $(DEVMODE) -Wall -Wpedantic
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
 
-sinclude $(ROOT)/make/os-windows.make
+sinclude $(ROOT)/make/os.make
 
 o?=3
 
-testcmd = @$(CXX) -O$(o) -o output/$(1)/test.$(2).$(1).exe test.$(2).cpp $(COMPILER_CONFIG)
+testcmd = @$(CXX) -O$(o) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(COMPILER_CONFIG)
 
 #NOCMD := -mwindows
 

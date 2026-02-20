@@ -1,2 +1,2 @@
 #!/bin/sh
-gdb ../../../output/bin/concerto.exe
+gdb ../../../output/bin/concerto*

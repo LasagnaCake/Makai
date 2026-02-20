@@ -1,4 +1,4 @@
-CONCERTO := ../../output/bin/concerto.exe
+CONCERTO := ../../output/bin/concerto*
 
 project:
 	$(CONCERTO) create $(name)
