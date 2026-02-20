@@ -1142,6 +1142,7 @@ static Solution doFunctionCall(
 	auto legalName = id + "_";
 	auto globalLegalName = legalName;
 	if (self) legalName += "_" + self->base->name;
+	Makai::List<Makai::KeyValuePair<usize, usize>> pushStackAdditions;
 	while (context.nextToken()) {
 		if (context.currentToken().type == Type{')'}) break;
 		args.pushBack(doValueResolution(context));
@@ -1149,7 +1150,7 @@ static Solution doFunctionCall(
 		legalName += "_" + toTypeID(args.back().type);
 		if (args.back().resolve().back() == '.') {
 			context.writeLine("push move .");
-			args.back().resolver = context.resolveTo(Makai::toString("move &[", start + pushes, "]"));
+			pushStackAdditions.pushBack({args.size()-1, pushes + 1});
 			++pushes;
 		}
 		context.fetchNext();
@@ -1159,6 +1160,9 @@ static Solution doFunctionCall(
 	}
 	if (context.currentToken().type != Type{')'})
 		context.error<InvalidValue>("Expected ')' here!");
+	for (auto& add: pushStackAdditions) {
+			args[add.key].resolver = context.resolveTo(Makai::toString("move &[-", (pushes - add.value), "]"));
+	}
 	Makai::String call = "( ";
 	usize index = 0;
 	if (self)
