@@ -582,12 +582,7 @@ void Engine::pushUndefinedIfInLooseMode(String const& fname) {
 }
 
 void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
-	if (context.valueStack.empty()) {
-		if (inStrictMode())
-			return crash(missingArgumentsError());
-		else context.valueStack.pushBack(new Value(Value::undefined()));
-	}
-	else switch (func) {
+	switch (func) {
 		case BuiltInFunction::AV2_EBIF_ADD: {
 			if (err) break;
 			auto a = context.registers[0], b = context.registers[1];
