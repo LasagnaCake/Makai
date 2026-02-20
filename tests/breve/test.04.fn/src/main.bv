@@ -1,6 +1,13 @@
 import core.all;
 
+func add(a: real, b: real): real	=> (a + b);
+func add(a: int, b: int): int		=> (a + b);
+
 main {
-	// Main code goes here...
-	core.IO.writeLine("Hello, world!");
+	repeat i: 10
+		repeat j: 10
+			core.IO.writeLine(i, " + ", j, " = ", add(i,j))
+	repeat i: 10
+		repeat j: 10
+			core.IO.writeLine(i, " - ", j, " = ", add(i,j.negate()));
 }
