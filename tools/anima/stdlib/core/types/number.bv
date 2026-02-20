@@ -9,8 +9,10 @@ namespace Number {
 	func round(what: real):		real	=> floor((what + 0.5));
 }
 
-extend int with func negate():	int		=> Number.negate(ref self);
-extend int with func abs():		int		=> Number.abs(ref self);
+extend int with func negate():	int	=> Number.negate(ref self);
+extend int with func abs():		int	=> Number.abs(ref self);
+
+extend uint with func negate():	int	=> Number.negate((ref self as int));
 
 extend real with func negate():		real	=> Number.negate(ref self);
 extend real with func abs():		real	=> Number.abs(ref self);
