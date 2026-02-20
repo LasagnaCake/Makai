@@ -1168,7 +1168,7 @@ static Solution doFunctionCall(
 	call += ")";
 	DEBUGLN("Overloads: [", sym->value["overloads"].get<Value::ObjectType>().keys().join("], ["), "]");
 	DEBUGLN("Looking for: [", legalName, "]");
-	if (!sym->value["overloads"].contains(legalName) || (looseSelf && !sym->value["overloads"].contains(globalLegalName)))
+	if (!(sym->value["overloads"].contains(legalName) || (looseSelf && !sym->value["overloads"].contains(globalLegalName))))
 		context.error<InvalidValue>("Function overload does not exist!");
 	else if (!sym->value["overloads"].contains(legalName)) globalLegalName = legalName;
 	auto const overload = sym->value["overloads"][legalName];
