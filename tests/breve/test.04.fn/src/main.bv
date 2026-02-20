@@ -6,8 +6,8 @@ func add(a: int, b: int): int		=> (a + b);
 main {
 	repeat i: 10
 		repeat j: 10
-			core.IO.writeLine(i, " + ", j, " = ", add(i,j))
+			core.IO.writeLine(i, " + ", j, " = ", add(i, j))
 	repeat i: 10
 		repeat j: 10
-			core.IO.writeLine(i, " - ", j, " = ", add(i,j.negate()));
+			core.IO.writeLine(i, " - ", j, " = ", add(i, j.negate()));
 }
