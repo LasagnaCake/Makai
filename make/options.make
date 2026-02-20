@@ -93,4 +93,19 @@ else
 GNU_MAKE	?=make
 endif
 
+ifeq ($(os),win)
+LIBFILE_SRC ?=win64
+endif
+ifeq ($(os),linux)
+LIBFILE_SRC ?=gnu64
+endif
+ifeq ($(os),apple)
+LIBFILE_SRC ?=apl64
+endif
+ifndef os
+LIBFILE_SRC ?=win64
+endif
+
+export LIBFILE_SRC
+
 export GNU_MAKE

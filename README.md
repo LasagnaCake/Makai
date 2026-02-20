@@ -61,7 +61,8 @@ For the old system, se the `legacy-system` branch.
 
 1. Clone the repository (or just download it);
 2. Enter the repository via command line (whichever has GCC);
-3. Run `make all`;
+3. Run `make it`;
+  - If you'd like to not pack in the non-header-only libraries together, you can passs in `lite=1` as an argument. 
 4. Done! The result is located in the generated `output/` folder.
 
 > [!note]
@@ -71,22 +72,28 @@ For the old system, se the `legacy-system` branch.
 
 ## Libraries used
 
+In older versions of the framework, these libraries came bundled inside the main ones.
+
+Since version 2.0, there is a version of Makai that comes without some libraries (those that are not "header-only"). Those that are not included in this "lite" version are marked in the table below with an asterisk(\*).
+
 Inclusion of these on your project are not required, and **strictly forbidden** (except OpenGL, which is **required**).
 Since a version of (most of) them are bundled[^1], including your own version of those *will* cause issues.
 
 | Name       | Purpose                                             | Bundled?                                            |
 |:----------:|-----------------------------------------------------|:---------------------------------------------------:|
-| SDL2       | Window & Input handling                             | Yes (Lib file[^3])                                  |
+| SDL2       | Window & Input handling                             | \*Yes (Lib file[^3])                                |
 | GL3W       | OpenGL Wrangling                                    | Yes ("Implementation" file[^6])                     |
 | GLAD       | OpenGL Wrangling                                    | Yes ("Implementation" file[^6])                     |
 | OpenGL     | Graphics backend                                    | No                                                  |
 | miniaudio  | Audio backend                                       | Yes (Implementation file[^2])                       |
-| SDL2_Net   | TCP/UDP backend                                     | Yes (Lib file[^3])                                  |
-| cURL       | Networking backend                                  | Yes (Lib file[^3])                                  |
+| SDL2_Net   | TCP/UDP backend                                     | \*Yes (Lib file[^3])                                |
+| cURL       | Networking backend                                  | \*Yes (Lib file[^3])                                |
 | stb_image  | Image loading                                       | Yes (Implementation file[^2])                       |
 | xml2json   | XML-to-JSON conversion                              | Modified version only used internally, not required |
 | json2xml   | JSON-to-XML conversion                              | Modified version only used internally, not required |
-| CryptoPP   | Encryption, decryption, compression & decompression | Yes (Lib file[^3])                                  |
+| CryptoPP   | Encryption, decryption, compression & decompression | \*Yes (Lib file[^3])                                |
+
+\* Only bundled in the "full" library package, not the "lite" version.
 
 ## Documentation
 
@@ -102,7 +109,7 @@ see [Issues](Issues.txt).
 
 See [TODO](docs/changes/TODO.md).
 
-[^1]: I.E. specified bundled libraries. Located in the `lib` folder.
+[^1]: I.E. specified bundled libraries.
 
 [^2]: Implementation part of header-only libraries. Implementations are located under `src/new/impl/`. 
 

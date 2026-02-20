@@ -6,14 +6,22 @@ endef
 
 prefix:=lib
 
-SDL			:= lib/SDL2-2.0.10/lib/libSDL2.dll.a
-SDLNET		:= lib/SDL2-2.0.10/lib/libSDL2_net.a
-CRYPTOPP	:= lib/cryptopp/lib/libcryptopp.a
-CURL		:= lib/curl/lib/libcurl.dll.a
-#OPENSSL		:= lib/openssl/lib/openssl.dll.a
+SDL			:= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2.dll.a
+SDLNET		:= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
+CRYPTOPP	:= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
+CURL		:= lib/curl/lib/$(LIBFILE_SRC)/libcurl.dll.a
+#OPENSSL		:= lib/openssl/lib/$(LIBFILE_SRC)/openssl.dll.a
+
+ifeq ($(lite),1)
+LINK_EXTERN :=
+EXTERN_AR_STEP :=:
+else
+LINK_EXTERN :=link-extern
+EXTERN_AR_STEP :=ar
+endif
 
 ifeq (,$(wildcard obj/extern/extern.3p.a))
-CREATE_LIB_3P := link-extern
+CREATE_LIB_3P :=$(LINK_EXTERN)
 endif
 
 CONFIG := -static #--static-libstdc++ --static-libgcc
@@ -56,7 +64,7 @@ package-lib:
 	@7z a -tzip mingw64.zip bin lib include -r -mem=AES256
 	@cd ..
 
-it: clear-output link-extern all tooling
+it: clear-output $(LINK_EXTERN) all tooling
 
 ship-it: it package-lib
 
@@ -122,7 +130,7 @@ link-debug:
 	@echo "Building library..."
 	@ar rcvs output/lib/libmakai.debug.a obj/debug/*.debug.o
 	@echo "Adding externals..."
-	@ar -M <makelib.debug.mri
+	@$(EXTERN_AR_STEP) -M <makelib.debug.mri
 	@echo "Finalizing..."
 	@ranlib output/lib/libmakai.debug.a
 	@rm -rf output/lib/st*
@@ -136,7 +144,7 @@ link-release:
 	@echo "Building library..."
 	@ar rcvs output/lib/libmakai.a obj/release/*.release.o
 	@echo "Adding externals..."
-	@ar -M <makelib.release.mri
+	@$(EXTERN_AR_STEP) -M <makelib.release.mri
 	@echo "Finalizing..."
 	@ranlib output/lib/libmakai.a
 	@rm -rf output/lib/st*
