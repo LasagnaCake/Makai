@@ -146,7 +146,11 @@ void Engine::v2Compare() {
 void Engine::v2Halt() {
 	Instruction::Stop stop = bitcast<Instruction::Stop>(current.type);
 	switch (stop.mode) {
-		case Instruction::Stop::Mode::AV2_ISM_NORMAL:	return terminate();
+		case Instruction::Stop::Mode::AV2_ISM_WITH_VALUE: {
+			auto const v = consumeValue(stop.source);
+			context.result = *v;
+		}
+		case Instruction::Stop::Mode::AV2_ISM_EMPTY: return terminate();
 		case Instruction::Stop::Mode::AV2_ISM_ERROR: {
 			auto const v = consumeValue(stop.source);
 			if (err) return;

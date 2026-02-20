@@ -40,6 +40,8 @@ namespace Makai::Anima::V2::Runtime {
 		As<Storage[REGISTER_COUNT]>	registers;
 		Storage						temporary = Storage::create();
 
+		Data::Value					result;
+
 		struct SharedSpace {
 			using Function	= Instance<IInvokable>;
 

@@ -32,7 +32,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
-	cfg["net"]		= false;
+	cfg["net"]		= true;
 	return cfg;
 }
 

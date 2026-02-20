@@ -124,7 +124,8 @@ namespace Makai::Anima::V2 {
 		/// @brief Stop mode.
 		struct [[gnu::aligned(4)]] Stop {
 			enum class Mode: uint8 {
-				AV2_ISM_NORMAL,
+				AV2_ISM_EMPTY,
+				AV2_ISM_WITH_VALUE,
 				AV2_ISM_ERROR
 			};
 			Mode			mode;
