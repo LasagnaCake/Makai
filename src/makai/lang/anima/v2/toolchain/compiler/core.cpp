@@ -117,6 +117,7 @@ void Makai::Anima::V2::Toolchain::Compiler::buildProject(AAssembler::Context& co
 	if (proj.type == Project::Type::AV2_TC_PT_MODULE)
 		return;
 	else context.fileName = proj.main.path;
+	context.program.showCommandLine = proj.mode == Project::Mode::AV2_TC_PM_CONSOLE;
 	auto const src = proj.main.source.empty() ? Makai::File::getText(OS::FS::absolute(proj.main.path)) : proj.main.source;
 	if (proj.main.type == Project::File::Type::AV2_TC_PFT_MINIMA)
 		return build<Minima>(context, src);

@@ -94,6 +94,7 @@ namespace Makai::Anima::V2::Runtime {
 		List<uint64>			jumpTable;
 		Labels					labels;
 		NativeInterface			ani;
+		bool					showCommandLine = true;
 
 		constexpr Data::Value serialize(bool const keepLabels = true) const {
 			Data::Value out;
@@ -114,7 +115,8 @@ namespace Makai::Anima::V2::Runtime {
 				for (auto& [name, id]: labels.jumps)
 					outJumps[name] = id;
 			}
-			out["ani"]			= ani;
+			out["ani"]	= ani;
+			out["cli"]	= showCommandLine;
 			return out;
 		}
 
@@ -143,6 +145,8 @@ namespace Makai::Anima::V2::Runtime {
 				prog.labels = Labels::deserialize(v["labels"]);
 			if (v.contains("ani"))
 				prog.labels = Labels::deserialize(v["ani"]);
+			if (v.contains("cli"))
+				prog.showCommandLine = v["cli"].get<bool>(true);
 		}
 	};
 }
