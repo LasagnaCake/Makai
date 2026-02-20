@@ -22,7 +22,11 @@ OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-af
 sinclude $(ROOT)/make/os-windows.make
 
 INCLUDES	:= -I$(ROOT)/output/include
+ifeq ($(from-lite),1)
+LIBRARIES	:= $(OS_LIBS) -lsdl2 -lcryptopp -lcurl -lsdl2-net
+else
 LIBRARIES	:= $(OS_LIBS)
+endif
 
 DEBUGMODE		:= -DMAKAILIB_DEBUG
 DEBUGCOMPCFG	:= $(COMPILER_CONFIG) -Wall -Wpedantic -Og -ggdb3 -fno-omit-frame-pointer $(DEBUGMODE)

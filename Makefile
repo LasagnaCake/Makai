@@ -221,7 +221,7 @@ tooling: build-tooling copy-tooling
 
 build-tooling:
 	@cd tools/anima
-	$(GNU_MAKE) debug=$(debug-tooling)
+	$(GNU_MAKE) debug=$(debug-tooling) from-lite=$(lite)
 	@cd ../..
 
 copy-tooling:
