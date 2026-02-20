@@ -358,6 +358,8 @@ static Solution doFunction(
 		ns->members[proto.name] = proto.function;
 	else if (ns->members[proto.name]->type != Context::Scope::Member::Type::AV2_TA_SMT_FUNCTION)
 		context.error<InvalidValue>("Symbol with this name already exists!");
+	if (selfType && !selfType->ns->members.contains(proto.name))
+		selfType->ns->members[proto.name] = proto.function;
 	DEBUGLN("Function Declared Inside: [", ns->name, "]");
 	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
@@ -528,13 +530,19 @@ static Solution resolveSymbol(
 
 static Solution tryAndResolveSubfield(Context& context, Makai::Instance<Context::Scope::Member> const& symbol, Makai::Instance<Context::Scope::Member> const& type) {
 	if (context.fetchNext().hasToken(Type{'.'})) {
-		auto const member = resolveNamespaceMember(context, *symbol->ns).value;
+		context.append.cache.insert(Context::Macro::Axiom{}, 0);
+		auto const member = resolveNamespaceMember(
+			context,
+			symbol->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE
+			? *symbol->base->ns
+			: *symbol->ns
+		).value;
 		return resolveSymbol(context, symbol->name, member, symbol, true);
 	} else if (
 		context.hasToken(LTS_TT_INCREMENT)
 	||	context.hasToken(LTS_TT_DECREMENT)
 	) {
-		// TODO: Post-decrement
+		// TODO: Post-(increment/decrement)
 	}
 	context.append.cache.insert(Context::Macro::Axiom{}, 0);
 	if (symbol->type == Context::Scope::Member::Type::AV2_TA_SMT_VARIABLE)
