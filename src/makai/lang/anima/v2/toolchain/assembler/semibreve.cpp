@@ -939,34 +939,43 @@ Solution doVarAssign(
 
 static Solution doVarDecl(Context& context, Makai::Instance<Context::Scope::Member> const& sym, Makai::String const& varType) {
 	DEBUGLN("<decl>");
-	if (context.currentToken().type != Type{':'})
-		context.error<InvalidValue>("Expected ':' here!");
-	if (sym->declared())
-		context.error<InvalidValue>("Redeclaration of already-declared symbol!");
-	else sym->declare();
 	Makai::Instance<Context::Scope::Member> type = nullptr;
-	sym->base = type;
-	switch (context.currentToken().type) {
-		case Type{':'}: {
-			context.fetchNext();
-			type = getType(context);
-		} break;
-	}
-	if (!context.nextToken()) {
-		if (type == context.getBasicType("void"))
-			context.error<NonexistentValue>("Malformed variable!");
-	}
-	if (type)
+	if (context.currentToken().type == Type{'='}) {
+		DEBUGLN("</decl>");
+		context.fetchNext();
+		doVarAssign(context, sym, type, varType, true);
+		return {sym->base, context.varAccessor(sym)};
+	} else {
+		if (context.currentToken().type != Type{':'})
+			context.error<InvalidValue>("Expected ':' here!");
+		if (sym->declared())
+			context.error<InvalidValue>("Redeclaration of already-declared symbol!");
+		else sym->declare();
 		sym->base = type;
+		switch (context.currentToken().type) {
+			case Type{':'}: {
+				context.fetchNext();
+				type = getType(context);
+			} break;
+		}
+		if (!context.nextToken()) {
+			if (type == context.getBasicType("void"))
+				context.error<NonexistentValue>("Malformed variable!");
+		}
+		if (type)
+			sym->base = type;
+	}
 	if (context.currentToken().type == Type{'='}) {
 		context.fetchNext();
 		DEBUGLN("</decl>");
 		return doVarAssign(context, sym, type, varType, true);
-	} else if (!type) {
+	} else if (!sym->base) {
 		context.error("Invalid variable declaration!\nEither declare a type, or assign it a value.");
-	}
+	} else if (context.isBasicType(type))
+		context.writeAdaptive("push", type->name);
+	else context.writeAdaptive("push void");
 	DEBUGLN("</decl>");
-	return {type, context.varAccessor(sym)};
+	return {sym->base, context.varAccessor(sym)};
 }
 
 static Makai::String reclass(Context& context, Makai::String const& varType) {
