@@ -6,12 +6,12 @@ func add(a: int, b: int): int		=> (a + b);
 main {
 	repeat i: 10
 		repeat j: 10 {
-			result = add((i as int), (j as int));
-			core.IO.writeLine(i, " + ", j, " = ", result);
+			result = add((ref i as int), (ref j as int));
+			core.IO.writeLine(ref i, " + ", ref j, " = ", result);
 		}
 	repeat i: 10
 		repeat j: 10 {
-			result = add((i as int), j.negate());
-			core.IO.writeLine(i, " - ", j, " = ", result);
+			result = add((ref i as int), j.negate());
+			core.IO.writeLine(ref i, " - ", ref j, " = ", result);
 		}
 }
