@@ -895,6 +895,19 @@ MINIMA_ASSEMBLE_FN(ErrorHalt) {
 		context.program.code.pushBack(Makai::Cast::bit<Instruction>(err.id));
 }
 
+MINIMA_ASSEMBLE_FN(ExitHalt) {
+	auto const v = getDataLocation(context);
+	context.program.code.pushBack({
+		Instruction::Name::AV2_IN_HALT,
+		Makai::Cast::bit<uint32>(Instruction::Stop{
+			Instruction::Stop::Mode::AV2_ISM_WITH_VALUE,
+			v.at
+		})
+	});
+	if (v.id < Makai::Limit::MAX<uint64>)
+		context.program.code.pushBack(Makai::Cast::bit<Instruction>(v.id));
+}
+
 MINIMA_ASSEMBLE_FN(BinaryMath) {
 	if (!context.stream.next())
 		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
@@ -1299,6 +1312,7 @@ MINIMA_ASSEMBLE_FN(Expression) {
 		else if (id == "return" || id == "ret" || id == "end")	doReturn(context);
 		else if (id == "terminate" || id == "halt")				doHalt(context);
 		else if (id == "error" || id == "err")					doErrorHalt(context);
+		else if (id == "exit")									doExitHalt(context);
 		else if (id == "call" || id == "do")					doCall(context);
 		else if (id == "compare" || id == "cmp")				doCompare(context);
 		else if (id == "copy")									doCopy(context);

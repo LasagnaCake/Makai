@@ -218,9 +218,7 @@ namespace Makai::Anima::V2::Runtime {
 		void load(Program const& program);
 		void execute();
 
-		Data::Value result() const {
-			return context.result;
-		}
+		Data::Value result() const {return context.result;}
 
 	protected:
 		virtual Context::Storage	external	(String const& name, bool const byRef	);
