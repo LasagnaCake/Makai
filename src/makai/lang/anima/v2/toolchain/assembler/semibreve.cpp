@@ -1141,7 +1141,7 @@ static Solution doFunctionCall(
 	auto const start = context.currentScope().stackc + context.currentScope().varc;
 	auto legalName = id + "_";
 	auto globalLegalName = legalName;
-	if (self) legalName += self->base->name + "_";
+	if (self) legalName += "_" + self->base->name;
 	while (context.nextToken()) {
 		if (context.currentToken().type == Type{')'}) break;
 		args.pushBack(doValueResolution(context));
