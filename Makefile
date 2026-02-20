@@ -6,11 +6,11 @@ endef
 
 prefix:=lib
 
-SDL			:= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2.dll.a
-SDLNET		:= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
-CRYPTOPP	:= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
-CURL		:= lib/curl/lib/$(LIBFILE_SRC)/libcurl.dll.a
-#OPENSSL		:= lib/openssl/lib/$(LIBFILE_SRC)/openssl.dll.a
+SDL			= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2.dll.a
+SDLNET		= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
+CRYPTOPP	= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
+CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl.dll.a
+#OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl.dll.a
 
 ifeq ($(lite),1)
 LINK_EXTERN :=
