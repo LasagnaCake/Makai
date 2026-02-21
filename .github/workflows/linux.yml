@@ -110,8 +110,8 @@ jobs:
     needs: [build-core-lib-debug, build-core-lib-release]
 #    needs: install-gcc
     steps:
-      - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+    - name: Install libraries
+      run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
     - uses: actions/checkout@v4
     - uses: actions/download-artifact@master
       with:
