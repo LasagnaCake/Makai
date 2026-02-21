@@ -33,6 +33,6 @@ MakaiMain(args) {
 		Makai::StringList::from(
 			"--net", Makai::toString(args["net"].get<bool>()),
 			"--help", Makai::toString(args["net"].get<bool>())
-		);
+		)
 	);
 }
