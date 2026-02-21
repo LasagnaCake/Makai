@@ -8,7 +8,11 @@ ROOT := ../../..
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic -Og
 
-LIBREQS		:= -static-libstdc++ -static-libgcc -lcryptopp -lcurl -lSDL2 -lSDL2_net
+ifeq($(from-lite),1)
+LITEREQS := -lcryptopp -lcurl -lSDL2 -lSDL2_net
+endif
+
+LIBREQS		:= -static-libstdc++ -static-libgcc $(LITEREQS)
 GRAPHREQS	:= -lopengl32
 
 export os ?=win

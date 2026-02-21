@@ -178,7 +178,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make debug os=linux
+          make debug os=linux from-lite=1
           cd ../..
       - uses: actions/upload-artifact@master
         with:
@@ -208,7 +208,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make release os=linux
+          make release os=linux from-lite=1
           cd ../..
       - uses: actions/upload-artifact@master
         with:
