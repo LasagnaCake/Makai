@@ -23,7 +23,7 @@ endif
 ifeq ($(os),win)
 define MOVE_DLL
 	@cd res
-	$(call refmove, *.dll, ../../output/lib)
+	$(call refmove, *.dll, ../output/lib)
 	@cd ..
 endef
 endif
@@ -69,7 +69,7 @@ clear-output:
 
 package-lib:
 	@cd output
-	@7z a -tzip mingw64.zip bin lib include -r -mem=AES256
+	@7z a -tzip $(os)-$(compiler).zip bin lib include -r -mem=AES256
 	@cd ..
 
 it: clear-output $(LINK_EXTERN) all tooling

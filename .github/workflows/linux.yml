@@ -1,0 +1,174 @@
+name: Linux CI
+
+# ...at least it's working.
+# I do not want to mess with this EVER AGAIN.
+
+on:
+  schedule:
+    - cron: '30 9 * * 1'
+#  push:
+#    branches: [ "!legacy-system" ]
+  workflow_dispatch:
+  workflow_call:
+#  pull_request:
+#    types: [ "closed" ]
+#    branches: [ "main" ]
+
+jobs: 
+  prep-cryptopp:
+    name: Prepare CryptoPP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache
+        id: cryp-cache
+        uses: actions/cache@v5
+        with:
+            path: cryptopp
+            key: ${{ runner.os }}-cryp-cache
+      - name: Fetch library
+        if: steps.cryp-cache.outputs.cache-hit != 'true'
+        run: |
+            wget https://github.com/cryptopp-modern/cryptopp-modern/releases/download/2026.2.0/cryptopp-modern-2026.2.0.zip
+            unzip -q cryptopp-modern-2026.2.0.zip -d cryptopp
+            cd cryptopp
+      - name: Build library
+        run: sudo make
+
+  ship-it-lite:
+    name: Ship the library (LITE ver.)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install libraries
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+      - uses: actions/checkout@v4
+      - name: ship it
+        run: make ship-it os=linux lite=1
+      - uses: actions/upload-artifact@master
+        with:
+          name: linux-gcc
+          path: output/linux-gcc.zip
+
+  build-ctl-tests-debug:
+    name: Build CTL Tests (DEBUG)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: make tests
+        run: |
+          cd tests/ctl
+          make debug
+          cd ../..
+      - uses: actions/upload-artifact@master
+        with:
+          name: tests-ctl-debug
+          path: tests/ctl/output/debug
+
+  build-ctl-tests-release:
+    name: Build CTL Tests (RELEASE)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: make tests
+        run: |
+          cd tests/ctl
+          make release
+          cd ../..
+      - uses: actions/upload-artifact@master
+        with:
+          name: tests-ctl-release
+          path: tests/ctl/output/release
+
+  build-core-lib-debug:
+    name: Build Makai (DEBUG)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: make debug
+      run: |
+        make debug os=linux lite=1
+    - uses: actions/upload-artifact@master
+      with:
+        name: lib-debug
+        path: output
+
+  build-core-lib-release:
+    name: Build Makai (DEBUG)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: make debug
+      run: |
+        make release os=linux lite=1
+    - uses: actions/upload-artifact@master
+      with:
+        name: lib-release
+        path: output
+        
+  build-tooling:
+    name: Build Tooling
+    runs-on: ubuntu-latest
+    needs: [build-core-lib-debug, build-core-lib-release]
+#    needs: install-gcc
+    steps:
+      - name: Install libraries
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+    - uses: actions/checkout@v4
+    - uses: actions/download-artifact@master
+      with:
+        name: lib-debug
+        path: output
+    - uses: actions/download-artifact@master
+      with:
+        name: lib-release
+        path: output
+    - name: make tooling
+      run: |
+        make tooling os=linux lite=1
+    - uses: actions/upload-artifact@master
+      with:
+        name: tooling
+        path: output/bin
+        
+  build-lib-tests-debug:
+    name: Build API Tests (DEBUG)
+    runs-on: ubuntu-latest
+    needs: [build-core-lib-debug]
+    steps:
+      - name: Install libraries
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-debug
+          path: output
+      - name: make tests
+        run: |
+          cd tests/makai
+          make debug
+          cd ../.. 
+      - uses: actions/upload-artifact@master
+        with:
+          name: tests-api-debug
+          path: tests/makai/output/debug
+
+  build-lib-tests-debug:
+    name: Build API Tests (RELEASE)
+    runs-on: ubuntu-latest
+    needs: [build-core-lib-debug]
+    steps:
+      - name: Install libraries
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-debug
+          path: output
+      - name: make tests
+        run: |
+          cd tests/makai
+          make release
+          cd ../.. 
+      - uses: actions/upload-artifact@master
+        with:
+          name: tests-api-release
+          path: tests/makai/output/release

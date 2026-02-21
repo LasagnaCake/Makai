@@ -25,10 +25,12 @@ endif
 ifeq ($(compiler),auto)
 C_COMPILER		?=$(CC)
 CPP_COMPILER	?=$(CXX)
+compiler :=$(cc)
 endif
 ifndef compiler
 C_COMPILER		?=$(CC)
 CPP_COMPILER	?=$(CXX)
+compiler :=$(CC)
 endif
 LINKER			?=ld
 

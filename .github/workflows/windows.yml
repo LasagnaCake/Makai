@@ -1,4 +1,4 @@
-name: Core Library CI
+name: Windows CI
 
 # ...at least it's working.
 # I do not want to mess with this EVER AGAIN.
@@ -36,6 +36,28 @@ jobs:
   #       gcc --version
   #       g++ --version
   #       mingw32-make --version
+  ship-it-lite:
+    name: Ship the library (LITE ver.)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+#    needs: install-gcc
+    steps:
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - name: make tests
+        run: |
+          mingw32-make ship-it gmake=mingw32-make
+      - uses: actions/upload-artifact@master
+        with:
+          name: win-msys2
+          path: output/win-msys2.zip
 
   build-ctl-tests-debug:
     name: Build CTL Tests (DEBUG)
