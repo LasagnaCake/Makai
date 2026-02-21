@@ -92,7 +92,7 @@ jobs:
         path: output
 
   build-core-lib-release:
-    name: Build Makai (DEBUG)
+    name: Build Makai (RELEASE)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
