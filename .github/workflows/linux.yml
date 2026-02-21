@@ -5,16 +5,16 @@ name: Linux CI
 
 on:
   schedule:
-    - cron: '30 9 * * 1'
-#  push:
-#    branches: [ "!legacy-system" ]
+    - cron: "30 9 * * 1"
+  #  push:
+  #    branches: [ "!legacy-system" ]
   workflow_dispatch:
   workflow_call:
 #  pull_request:
 #    types: [ "closed" ]
 #    branches: [ "main" ]
 
-jobs: 
+jobs:
   prep-cryptopp:
     name: Prepare CryptoPP
     runs-on: ubuntu-latest
@@ -23,21 +23,27 @@ jobs:
         id: cryp-cache
         uses: actions/cache@v5
         with:
-            path: cryptopp
-            key: ${{ runner.os }}-cryp-cache
+          path: cryptopp
+          key: ${{ runner.os }}-cryp-cache
       - name: Fetch & build library
         if: steps.cryp-cache.outputs.cache-hit != 'true'
         run: |
-            wget https://cryptopp.com/cryptopp890.zip
-            unzip -q cryptopp890.zip -d cryptopp
-            cd cryptopp
-            sudo make
+          wget https://cryptopp.com/cryptopp890.zip
+          unzip -q cryptopp890.zip -d cryptopp
+          cd cryptopp
+          sudo make
 
   ship-it-lite:
     name: Ship the library (LITE ver.)
     runs-on: ubuntu-latest
     needs: [prep-cryptopp]
     steps:
+      - name: Cache
+        id: cryp-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: cryptopp
+          key: ${{ runner.os }}-cryp-cache
       - name: Install libraries
         run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
@@ -89,65 +95,77 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prep-cryptopp]
     steps:
-    - uses: actions/checkout@v4
-    - name: Install OpenGL
-      run: sudo apt install libgl1-mesa-dev
-    - name: make debug
-      run: |
-        make debug os=linux lite=1
-    - uses: actions/upload-artifact@master
-      with:
-        name: lib-debug
-        path: output
+      - uses: actions/checkout@v4
+      - name: Install OpenGL
+        run: sudo apt install libgl1-mesa-dev
+      - name: make debug
+        run: |
+          make debug os=linux lite=1
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-debug
+          path: output
 
   build-core-lib-release:
     name: Build Makai (RELEASE)
     runs-on: ubuntu-latest
     needs: [prep-cryptopp]
     steps:
-    - uses: actions/checkout@v4
-    - name: Install OpenGL
-      run: sudo apt install libgl1-mesa-dev
-    - name: make debug
-      run: |
-        make release os=linux lite=1
-    - uses: actions/upload-artifact@master
-      with:
-        name: lib-release
-        path: output
-        
+      - uses: actions/checkout@v4
+      - name: Install OpenGL
+        run: sudo apt install libgl1-mesa-dev
+      - name: make debug
+        run: |
+          make release os=linux lite=1
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-release
+          path: output
+
   build-tooling:
     name: Build Tooling
     runs-on: ubuntu-latest
     needs: [build-core-lib-debug, build-core-lib-release]
-#    needs: install-gcc
+    #    needs: install-gcc
     steps:
-    - name: Install libraries
-      run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
-    - name: Install OpenGL
-      run: sudo apt install libgl1-mesa-dev
-    - uses: actions/checkout@v4
-    - uses: actions/download-artifact@master
-      with:
-        name: lib-debug
-        path: output
-    - uses: actions/download-artifact@master
-      with:
-        name: lib-release
-        path: output
-    - name: make tooling os=linux lite=1
-      run: |
-        make tooling os=linux lite=1
-    - uses: actions/upload-artifact@master
-      with:
-        name: tooling
-        path: output/bin
+      - name: Cache
+        id: cryp-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: cryptopp
+          key: ${{ runner.os }}-cryp-cache
+      - name: Install libraries
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
+      - name: Install OpenGL
+        run: sudo apt install libgl1-mesa-dev
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-debug
+          path: output
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-release
+          path: output
+      - name: make tooling os=linux lite=1
+        run: |
+          make tooling os=linux lite=1
+      - uses: actions/upload-artifact@master
+        with:
+          name: tooling
+          path: output/bin
 
   build-lib-tests-debug:
     name: Build API Tests (DEBUG)
     runs-on: ubuntu-latest
     needs: [build-core-lib-debug]
     steps:
+      - name: Cache
+        id: cryp-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: cryptopp
+          key: ${{ runner.os }}-cryp-cache
       - name: Install libraries
         run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
@@ -161,7 +179,7 @@ jobs:
         run: |
           cd tests/makai
           make debug os=linux
-          cd ../.. 
+          cd ../..
       - uses: actions/upload-artifact@master
         with:
           name: tests-api-debug
@@ -172,6 +190,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-core-lib-debug]
     steps:
+      - name: Cache
+        id: cryp-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: cryptopp
+          key: ${{ runner.os }}-cryp-cache
       - name: Install libraries
         run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
@@ -185,7 +209,7 @@ jobs:
         run: |
           cd tests/makai
           make release os=linux
-          cd ../.. 
+          cd ../..
       - uses: actions/upload-artifact@master
         with:
           name: tests-api-release
