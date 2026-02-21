@@ -188,7 +188,7 @@ jobs:
   build-lib-tests-release:
     name: Build API Tests (RELEASE)
     runs-on: ubuntu-latest
-    needs: [build-core-lib-debug]
+    needs: [build-core-lib-release]
     steps:
       - name: Cache
         id: cryp-cache
