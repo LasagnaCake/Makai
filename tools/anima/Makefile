@@ -23,7 +23,7 @@ sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
-LIBRARIES	:= $(OS_LIBS) -lcryptopp -lcurl -lSDL2 -lSDL2_net
+LIBRARIES	:= $(OS_LIBS) -lcryptopp -lcurl -lSDL2 -lSDL2_net `pkg-config --libs libcurl`
 else
 LIBRARIES	:= $(OS_LIBS)
 endif

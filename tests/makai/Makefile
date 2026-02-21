@@ -9,7 +9,7 @@ COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/outp
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
 ifeq($(from-lite),1)
-LITEREQS := -lcryptopp -lcurl -lSDL2 -lSDL2_net
+LITEREQS := -lcryptopp -lcurl -lSDL2 -lSDL2_net `pkg-config --libs libcurl`
 endif
 
 LIBREQS		:= -static-libstdc++ -static-libgcc $(LITEREQS)
