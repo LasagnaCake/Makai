@@ -54,6 +54,18 @@ For 7-zip: mingw-w64-x86_64-7zip
 In a single line: pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-7zip
 ```
 
+### Linux
+
+The linux build currently only supports the lite version.
+
+- GCC (13+) 
+- Make
+- libgl1-mesa-dev
+- libsdl2-dev
+- libsdl2-net-dev
+- libcurl4-openssl-dev
+- cryptopp
+
 ## How to use
 
 For the old system, se the `legacy-system` branch.
@@ -63,6 +75,7 @@ For the old system, se the `legacy-system` branch.
 1. Clone the repository (or just download it);
 2. Enter the repository via command line (whichever has GCC);
 3. Run `make it`;
+  - If not on windows, set your OS via the `os` option.
   - If you'd like to not pack in the non-header-only libraries together, you can passs in `lite=1` as an argument. 
 4. Done! The result is located in the generated `output/` folder.
 
