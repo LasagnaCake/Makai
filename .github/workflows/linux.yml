@@ -31,7 +31,7 @@ jobs:
             wget https://cryptopp.com/cryptopp890.zip
             unzip -q cryptopp890.zip -d cryptopp
             cd cryptopp
-        run: sudo make
+            sudo make
 
   ship-it-lite:
     name: Ship the library (LITE ver.)
