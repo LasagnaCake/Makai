@@ -67,9 +67,15 @@ clear-output:
 	@rm -rf obj/extern/*
 	@rm -rf obj/release/*
 
+ifeq ($(lite),1)
+BUILDTYPE:=lite
+else
+BUILDTYPE:=full
+endif
+
 package-lib:
 	@cd output
-	@7z a -tzip $(os)-$(compiler).zip bin lib include -r -mem=AES256
+	@7z a -tzip $(os)-$(compiler)-$(BUILDTYPE).zip bin lib include -r -mem=AES256
 	@cd ..
 
 it: clear-output $(LINK_EXTERN) all tooling

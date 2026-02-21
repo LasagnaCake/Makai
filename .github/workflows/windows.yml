@@ -56,8 +56,8 @@ jobs:
           mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
       - uses: actions/upload-artifact@master
         with:
-          name: win-msys2-gcc
-          path: output/win-msys2-gcc.zip
+          name: windows-builds
+          path: output/win-*.zip
 
   build-ctl-tests-debug:
     name: Build CTL Tests (DEBUG)

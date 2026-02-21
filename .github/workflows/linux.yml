@@ -53,8 +53,8 @@ jobs:
         run: make ship-it os=linux lite=1
       - uses: actions/upload-artifact@master
         with:
-          name: linux-gcc
-          path: output/linux-gcc.zip
+          name: linux-builds
+          path: output/linux-*.zip
 
   build-ctl-tests-debug:
     name: Build CTL Tests (DEBUG)
