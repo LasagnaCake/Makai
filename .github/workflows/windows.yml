@@ -53,11 +53,11 @@ jobs:
       - name: make ship-it
         run: |
           pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
-          mingw32-make ship-it gmake=mingw32-make os=win
+          mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
       - uses: actions/upload-artifact@master
         with:
-          name: win-msys2
-          path: output/win-msys2.zip
+          name: win-msys2-gcc
+          path: output/win-msys2-gcc.zip
 
   build-ctl-tests-debug:
     name: Build CTL Tests (DEBUG)
