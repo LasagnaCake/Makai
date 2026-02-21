@@ -128,7 +128,7 @@ jobs:
       with:
         name: tooling
         path: output/bin
-        
+
   build-lib-tests-debug:
     name: Build API Tests (DEBUG)
     runs-on: ubuntu-latest
