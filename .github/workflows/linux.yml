@@ -28,8 +28,8 @@ jobs:
       - name: Fetch library
         if: steps.cryp-cache.outputs.cache-hit != 'true'
         run: |
-            wget https://github.com/cryptopp-modern/cryptopp-modern/releases/download/2026.2.0/cryptopp-modern-2026.2.0.zip
-            unzip -q cryptopp-modern-2026.2.0.zip -d cryptopp
+            wget https://cryptopp.com/cryptopp890.zip
+            unzip -q cryptopp890.zip -d cryptopp
             cd cryptopp
       - name: Build library
         run: sudo make
@@ -40,7 +40,7 @@ jobs:
     needs: [prep-cryptopp]
     steps:
       - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
@@ -124,7 +124,7 @@ jobs:
 #    needs: install-gcc
     steps:
     - name: Install libraries
-      run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+      run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
     - name: Install OpenGL
       run: sudo apt install libgl1-mesa-dev
     - uses: actions/checkout@v4
@@ -150,7 +150,7 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
@@ -174,7 +174,7 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
