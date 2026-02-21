@@ -72,8 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-    - name: Install OpenGL
-      run: sudo apt install libgl1-mesa-dev
+      - name: Install OpenGL
+        run: sudo apt install libgl1-mesa-dev
       - name: make tests
         run: |
           cd tests/ctl
