@@ -1,6 +1,10 @@
 #CC	:= gcc
 #CXX	:= g++
 
+export os ?=win
+
+o?=3
+
 LEAN := -static -s
 
 ROOT := ../../..
@@ -13,13 +17,11 @@ LITEREQS := -lcryptopp -lcurl -lSDL2 -lSDL2_net
 endif
 
 LIBREQS		:= -static-libstdc++ -static-libgcc $(LITEREQS)
+ifeq($((os),win)
 GRAPHREQS	:= -lopengl32
-
-export os ?=win
+endif
 
 sinclude $(ROOT)/make/os.make
-
-o?=3
 
 testcmd = @$(CXX) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
 
