@@ -40,6 +40,8 @@ jobs:
     steps:
       - name: Install libraries
         run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+      - name: Install OpenGL
+        run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
       - name: ship it
         run: make ship-it os=linux lite=1
@@ -53,10 +55,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+    - name: Install OpenGL
+      run: sudo apt install libgl1-mesa-dev
       - name: make tests
         run: |
           cd tests/ctl
-          make debug
+          make debug os=linux
           cd ../..
       - uses: actions/upload-artifact@master
         with:
@@ -68,10 +72,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+    - name: Install OpenGL
+      run: sudo apt install libgl1-mesa-dev
       - name: make tests
         run: |
           cd tests/ctl
-          make release
+          make release os=linux
           cd ../..
       - uses: actions/upload-artifact@master
         with:
@@ -83,6 +89,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Install OpenGL
+      run: sudo apt install libgl1-mesa-dev
     - name: make debug
       run: |
         make debug os=linux lite=1
@@ -96,6 +104,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Install OpenGL
+      run: sudo apt install libgl1-mesa-dev
     - name: make debug
       run: |
         make release os=linux lite=1
@@ -112,6 +122,8 @@ jobs:
     steps:
     - name: Install libraries
       run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+    - name: Install OpenGL
+      run: sudo apt install libgl1-mesa-dev
     - uses: actions/checkout@v4
     - uses: actions/download-artifact@master
       with:
@@ -121,7 +133,7 @@ jobs:
       with:
         name: lib-release
         path: output
-    - name: make tooling
+    - name: make tooling os=linux lite=1
       run: |
         make tooling os=linux lite=1
     - uses: actions/upload-artifact@master
@@ -136,6 +148,8 @@ jobs:
     steps:
       - name: Install libraries
         run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+      - name: Install OpenGL
+        run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
@@ -144,7 +158,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make debug
+          make debug os=linux
           cd ../.. 
       - uses: actions/upload-artifact@master
         with:
@@ -158,6 +172,8 @@ jobs:
     steps:
       - name: Install libraries
         run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev
+      - name: Install OpenGL
+        run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
@@ -166,7 +182,7 @@ jobs:
       - name: make tests
         run: |
           cd tests/makai
-          make release
+          make release os=linux
           cd ../.. 
       - uses: actions/upload-artifact@master
         with:

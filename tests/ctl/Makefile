@@ -17,6 +17,8 @@ DEBUGMODE := -DCTL_CONSOLE_OUT $(DEVMODE) -Wall -Wpedantic
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
 
+export os ?=win
+
 sinclude $(ROOT)/make/os.make
 
 o?=3

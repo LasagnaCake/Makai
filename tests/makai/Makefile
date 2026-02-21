@@ -11,6 +11,8 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 LIBREQS		:= -static-libstdc++ -static-libgcc
 GRAPHREQS	:= -lopengl32
 
+export os ?=win
+
 sinclude $(ROOT)/make/os.make
 
 o?=3
