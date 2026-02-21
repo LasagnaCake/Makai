@@ -20,6 +20,14 @@ LINK_EXTERN :=link-extern
 EXTERN_AR_STEP :=ar
 endif
 
+ifeq ($(os),win)
+define MOVE_DLL
+	@cd res
+	$(call refmove, *.dll, ../../output/lib)
+	@cd ..
+endef
+endif
+
 ifeq (,$(wildcard obj/extern/extern.3p.a))
 CREATE_LIB_3P :=$(LINK_EXTERN)
 endif
@@ -134,6 +142,7 @@ link-debug:
 	@echo "Finalizing..."
 	@ranlib output/lib/libmakai.debug.a
 	@rm -rf output/lib/st*
+	$(MOVE_DLL)
 	@echo "Done!"
 	@echo 
 
@@ -148,6 +157,7 @@ link-release:
 	@echo "Finalizing..."
 	@ranlib output/lib/libmakai.a
 	@rm -rf output/lib/st*
+	$(MOVE_DLL)
 	@echo "Done!"
 	@echo 
 
@@ -224,15 +234,21 @@ build-tooling:
 	$(GNU_MAKE) debug=$(debug-tooling) from-lite=$(lite)
 	@cd ../..
 
-copy-tooling:
-	@echo "Copying tooling..."
-	@mkdir -p output/bin/anima/breve/lib
-	@cd tools/anima
-	$(call refmove, *.exe, ../../output/bin)
-	@cd stdlib
-	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
+ifeq ($(os),win)
+define MOVE_DLL_TOOLS
 	@cd ../../../dll/network
 	$(call refmove, libcurl-4.dll, ../../output/bin)
 	@cd ../security
 	$(call refmove, *.dll, ../../output/bin)
 	@cd ../..
+endef
+endif
+
+copy-tooling:
+	@echo "Copying tooling..."
+	@mkdir -p output/bin/anima/breve/lib
+	@cd tools/anima
+	$(GNU_MAKE) mk-push
+	@cd stdlib
+	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
+	$(MOVE_DLL_TOOLS)

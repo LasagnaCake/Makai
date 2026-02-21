@@ -1248,7 +1248,10 @@ Value Engine::onHTTPRequest(String const& url, String const& action, Value const
 	else if (action == "PATCH")		req.type = Request::Type::MN_HRT_PATCH;
 	else if (action == "DELETE")	req.type = Request::Type::MN_HRT_DELETE;
 	else if (action == "UPDATE")	req.type = Request::Type::MN_HRT_UPDATE;
-	else crash(invalidFetchRequest(action));
+	else if (inStrictMode()) {
+        crash(invalidFetchRequest(action));
+        return Value();
+    } else return Value();
 	req.data = data.toString();
 	auto resp = Makai::Net::HTTP::fetch(url, req);
 	Value respObj = respObj.object();

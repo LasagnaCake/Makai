@@ -23,7 +23,7 @@ sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
-LIBRARIES	:= $(OS_LIBS) -lsdl2 -lcryptopp -lcurl -lsdl2-net
+LIBRARIES	:= $(OS_LIBS) -lsdl -lcryptopp -lcurl -lsdl_net
 else
 LIBRARIES	:= $(OS_LIBS)
 endif
@@ -95,6 +95,13 @@ arte:
 anima:
 	$(COMPILER) $(COMPCFG) -c anima.cpp -o anima.o
 	$(LINKER) -o anima$(EXEC_TYPE) anima.o $(OBJ) $(LINKCFG)
+
+mk-push:
+	cp carte ../../output/bin
+	cp warte ../../output/bin
+	cp minimac ../../output/bin
+	cp concerto ../../output/bin
+	cp anima ../../output/bin
 
 finale:
 	@echo 
