@@ -49,7 +49,7 @@ jobs:
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
-      - name: ship it
+      - name: make ship-it
         run: make ship-it os=linux lite=1
       - uses: actions/upload-artifact@master
         with:
