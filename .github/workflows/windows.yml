@@ -52,7 +52,7 @@ jobs:
       # Hellspawn END
       - name: make ship-it
         run: |
-          pacman -S mingw-w64-x86_64-7zip
+          yes | pacman -S mingw-w64-x86_64-7zip
           mingw32-make ship-it gmake=mingw32-make os=win
       - uses: actions/upload-artifact@master
         with:
