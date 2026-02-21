@@ -5,17 +5,16 @@ name: Windows CI
 
 on:
   schedule:
-    - cron: '30 9 * * 1'
-#  push:
-#    branches: [ "!legacy-system" ]
+    - cron: "30 9 * * 1"
+  #  push:
+  #    branches: [ "!legacy-system" ]
   workflow_dispatch:
   workflow_call:
 #  pull_request:
 #    types: [ "closed" ]
 #    branches: [ "main" ]
 
-jobs: 
-
+jobs:
   # install-gcc:
   #   name: Install Latest GCC Via MSYS2
   #   runs-on: windows-latest
@@ -42,7 +41,7 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-#    needs: install-gcc
+    #    needs: install-gcc
     steps:
       - uses: actions/checkout@v4
       # Hellspawn BEGIN
@@ -51,8 +50,9 @@ jobs:
           install: git mingw-w64-x86_64-toolchain
           cache: false
       # Hellspawn END
-      - name: make tests
+      - name: make ship-it
         run: |
+          sudo pacman -S mingw-w64-x86_64-7zip
           mingw32-make ship-it gmake=mingw32-make os=win
       - uses: actions/upload-artifact@master
         with:
@@ -65,7 +65,7 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-#    needs: install-gcc
+    #    needs: install-gcc
     steps:
       - uses: actions/checkout@v4
       # Hellspawn BEGIN
@@ -105,7 +105,7 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-#    needs: install-gcc
+    #    needs: install-gcc
     steps:
       - uses: actions/checkout@v4
       # Hellspawn BEGIN
@@ -145,22 +145,22 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-#    needs: install-gcc
+    #    needs: install-gcc
     steps:
-    - uses: actions/checkout@v4
-    # Hellspawn BEGIN
-    - uses: msys2/setup-msys2@v2
-      with:
-        install: git mingw-w64-x86_64-toolchain
-        cache: false
-    # Hellspawn END
-    - name: make debug gmake=mingw32-make
-      run: |
-        mingw32-make debug gmake=mingw32-make os=win
-    - uses: actions/upload-artifact@master
-      with:
-        name: lib-debug
-        path: output
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - name: make debug gmake=mingw32-make
+        run: |
+          mingw32-make debug gmake=mingw32-make os=win
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-debug
+          path: output
 
   build-core-lib-release:
     name: Build Makai (RELEASE)
@@ -168,23 +168,23 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-#    needs: install-gcc
+    #    needs: install-gcc
     steps:
-    - uses: actions/checkout@v4
-    # Hellspawn BEGIN
-    - uses: msys2/setup-msys2@v2
-      with:
-        install: git mingw-w64-x86_64-toolchain
-        cache: false
-    # Hellspawn END
-    - name: make release
-      run: |
-        mingw32-make release gmake=mingw32-make os=win
-    - uses: actions/upload-artifact@master
-      with:
-        name: lib-release
-        path: output
-        
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - name: make release
+        run: |
+          mingw32-make release gmake=mingw32-make os=win
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-release
+          path: output
+
   build-tooling:
     name: Build Tooling
     runs-on: windows-latest
@@ -192,31 +192,31 @@ jobs:
       run:
         shell: msys2 {0}
     needs: [build-core-lib-debug, build-core-lib-release]
-#    needs: install-gcc
+    #    needs: install-gcc
     steps:
-    - uses: actions/checkout@v4
-    # Hellspawn BEGIN
-    - uses: msys2/setup-msys2@v2
-      with:
-        install: git mingw-w64-x86_64-toolchain
-        cache: false
-    # Hellspawn END
-    - uses: actions/download-artifact@master
-      with:
-        name: lib-debug
-        path: output
-    - uses: actions/download-artifact@master
-      with:
-        name: lib-release
-        path: output
-    - name: make tooling
-      run: |
-        mingw32-make tooling gmake=mingw32-make os=win
-    - uses: actions/upload-artifact@master
-      with:
-        name: tooling
-        path: output/bin
-        
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-debug
+          path: output
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-release
+          path: output
+      - name: make tooling
+        run: |
+          mingw32-make tooling gmake=mingw32-make os=win
+      - uses: actions/upload-artifact@master
+        with:
+          name: tooling
+          path: output/bin
+
   build-lib-tests-debug:
     name: Build API Tests (DEBUG)
     runs-on: windows-latest
@@ -240,7 +240,7 @@ jobs:
         run: |
           cd tests/makai
           mingw32-make debug gmake=mingw32-make os=win
-          cd ../.. 
+          cd ../..
       - uses: actions/upload-artifact@master
         with:
           name: tests-api-debug
@@ -269,7 +269,7 @@ jobs:
         run: |
           cd tests/makai
           mingw32-make release gmake=mingw32-make os=win
-          cd ../.. 
+          cd ../..
       - uses: actions/upload-artifact@master
         with:
           name: tests-api-release
