@@ -31,8 +31,8 @@ MakaiMain(args) {
 		,
 		CTL::OS::FS::currentDirectory(),
 		Makai::StringList::from(
-			"--net", args["net"]
-			"--help", args["help"]
+			"--net", Makai::toString(args["net"].get<bool>()),
+			"--help", Makai::toString(args["net"].get<bool>())
 		);
 	);
 }
