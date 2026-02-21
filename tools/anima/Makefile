@@ -23,7 +23,7 @@ sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
-LIBRARIES	:= $(OS_LIBS) -lSDL -lcryptopp -lcurl -lSDL_net
+LIBRARIES	:= $(OS_LIBS) -lcryptopp -lcurl -lSDL2 -lSDL2_net
 else
 LIBRARIES	:= $(OS_LIBS)
 endif
