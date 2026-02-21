@@ -12,12 +12,12 @@ ROOT := ../../..
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic -Og
 
-ifeq($(from-lite),1)
+ifeq ($(from-lite),1)
 LITEREQS := -lcryptopp -lcurl -lSDL2 -lSDL2_net `pkg-config --libs libcurl`
 endif
 
 LIBREQS		:= -static-libstdc++ -static-libgcc $(LITEREQS)
-ifeq($((os),win)
+ifeq ($((os),win)
 GRAPHREQS	:= -lopengl32
 endif
 

@@ -8,7 +8,7 @@ ROOT := ../..
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
-ifeq($(from-lite),1)
+ifeq ($(from-lite),1)
 LITEREQS := -lcryptopp -lcurl -lSDL2 -lSDL2_net `pkg-config --libs libcurl`
 endif
 
