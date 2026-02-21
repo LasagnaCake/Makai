@@ -45,7 +45,7 @@ jobs:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
       - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
+        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
       - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
+        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
@@ -167,7 +167,7 @@ jobs:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
       - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
+        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
@@ -197,7 +197,7 @@ jobs:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
       - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
+        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
       - name: Install OpenGL
         run: sudo apt install libgl1-mesa-dev
       - uses: actions/checkout@v4
