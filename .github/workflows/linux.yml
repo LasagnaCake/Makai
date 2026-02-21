@@ -25,13 +25,12 @@ jobs:
         with:
             path: cryptopp
             key: ${{ runner.os }}-cryp-cache
-      - name: Fetch library
+      - name: Fetch & build library
         if: steps.cryp-cache.outputs.cache-hit != 'true'
         run: |
             wget https://cryptopp.com/cryptopp890.zip
             unzip -q cryptopp890.zip -d cryptopp
             cd cryptopp
-      - name: Build library
         run: sudo make
 
   ship-it-lite:
