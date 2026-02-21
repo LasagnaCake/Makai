@@ -37,7 +37,7 @@ jobs:
   #       g++ --version
   #       mingw32-make --version
   ship-it-lite:
-    name: Ship the library (LITE ver.)
+    name: Ship the library (FULL ver.)
     runs-on: windows-latest
     defaults:
       run:
