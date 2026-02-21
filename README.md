@@ -1,6 +1,7 @@
 # Makai: A C++20 3D (+"2D") application & game framework library
 
-[![Core Library CI](https://github.com/LasagnaCake/MakaiLib/actions/workflows/core-lib.yml/badge.svg)](https://github.com/LasagnaCake/MakaiLib/actions/workflows/core-lib.yml)
+[![Windows CI](https://github.com/LasagnaCake/Makai/actions/workflows/windows.yml/badge.svg)](https://github.com/LasagnaCake/Makai/actions/workflows/windows.yml)
+[![Linux CI](https://github.com/LasagnaCake/Makai/actions/workflows/linux.yml/badge.svg)](https://github.com/LasagnaCake/Makai/actions/workflows/linux.yml)
 
 ## Table of contents
 
