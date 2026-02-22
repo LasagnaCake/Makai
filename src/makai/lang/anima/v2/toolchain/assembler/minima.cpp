@@ -498,6 +498,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 			else if (id == "cos")							invoke.argc = 'c';
 			else if (id == "tan")							invoke.argc = 't';
 			else if (id == "stringify" || id == "strify")	invoke.argc = '_';
+			else if (id == "destrfy" || id == "parse")		invoke.argc = '\0';
 			else if (id == "typename" || id == "tname")		invoke.argc = 'i';
 			else if (id == "arcsin" || id == "asin")		invoke.argc = 'S';
 			else if (id == "arccos" || id == "acos")		invoke.argc = 'C';
@@ -521,8 +522,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "angle" && (id == "vec2" || id == "vec3"))
 					invoke.mod = 'a';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			}
-			else if (id == "string" || id == "str" || id == "s") {
+			} else if (id == "string" || id == "str" || id == "s") {
 				invoke.argc	= '"';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
 				if (op == "new")							invoke.mod = '.';
@@ -535,8 +535,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "find" || op == "in")		invoke.mod = 'i';
 				else if (op == "remove" || op == "del")		invoke.mod = '-';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			}
-			else if (id == "array" || id == "arr" || id == "a") {
+			} 	else if (id == "array" || id == "arr" || id == "a") {
 				invoke.argc	= '[';
 				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
 				if (op == "new")							invoke.mod = '.';

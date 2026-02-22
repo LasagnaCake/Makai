@@ -3,6 +3,7 @@
 #include "../../../../../makai/net/net.hpp"
 #include "../../../../../makai/file/flow.hpp"
 #include "../../../../../makai/data/data.hpp"
+#include "../../../../../makai/parser/parser.hpp"
 #include "../../../../../makai/tool/tool.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
@@ -716,6 +717,25 @@ void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 			if (url->isString() && type->isString() && data)
 				context.temporary = new Value(onHTTPRequest(url->getString(), type->getString().upper(), *data));
 			else pushUndefinedIfInLooseMode("builtin HTTP request");
+		} break;
+		case BuiltInFunction::AV2_EBIF_TO_STRING: {
+			if (err) break;
+			context.temporary = new Value(context.registers[0]->isString() ? context.registers[0]->getString() : context.registers[0]->toFLOWString());
+		} break;
+		case BuiltInFunction::AV2_EBIF_FROM_STRING: {
+			if (err) break;
+			if (context.registers[0]->isString()) try{
+				Makai::Parser::Data::FLOWParser parser;
+				parser.tryParse(
+					context.registers[0]->getString()
+				).then(
+					[&] (auto const& e) {context.temporary = new Value(e);}
+				).onError(
+					[&] (auto const& e) {pushUndefinedIfInLooseMode("builtin from-string");}
+				);
+			} catch (...) {
+				pushUndefinedIfInLooseMode("builtin from-string");
+			} else pushUndefinedIfInLooseMode("builtin from-string");
 		} break;
 		case BuiltInFunction::AV2_EBIF_STRING_OP:		return callBuiltInStringOp(BuiltInStringOperation(op));
 		case BuiltInFunction::AV2_EBIF_ARRAY_OP:		return callBuiltInArrayOp(BuiltInArrayOperation(op));
