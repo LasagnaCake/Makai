@@ -605,7 +605,7 @@ MINIMA_ASSEMBLE_FN(InternalCall) {
 				else if (op == "hash")		invoke.mod = 'h';
 				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
 			} else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-		}
+		} break;
 		case Type{'+'}:
 		case Type{'-'}:
 		case Type{'*'}:
