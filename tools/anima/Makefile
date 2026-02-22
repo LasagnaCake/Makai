@@ -102,6 +102,7 @@ mk-push:
 	cp minimac ../../output/bin
 	cp concerto ../../output/bin
 	cp anima ../../output/bin
+	cp packer ../../output/bin
 
 finale:
 	@echo 

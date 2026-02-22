@@ -8,6 +8,7 @@ static Makai::Data::Value configBase() {
 	cfg["help"]		= false;
 	cfg["output"]	= "${name}.pack";
 	cfg["pass"]		= "password";
+	cfg["type"]		= "base64";
 	return cfg;
 }
 
@@ -15,6 +16,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]	= "help";
 	tl["o"]	= "output";
 	tl["p"]	= "pass";
+	tl["t"]	= "type";
 }
 
 CTL::String escape(char const c) {
@@ -42,7 +44,7 @@ namespace Command {
 		DEBUGLN("Available commands:");
 		DEBUGLN("pack <folder> [--password <password>] [--output <archive>]");
 		DEBUGLN("unpack <archive> [--password <password>] [--output <folder>]");
-		DEBUGLN("keygen <file> [--password <password>]");
+		DEBUGLN("keygen <file> [--password <password>] [--type <type>]");
 	}
 
 	static void doPack(Makai::Data::Value const& cfg) {
@@ -84,7 +86,7 @@ namespace Command {
 			"#ifndef ", pkid, "_H\n",
 			"#define ", pkid, "_H\n",
 			"#include <makai/makai.hpp>\n"
-		); 
+		);
 		keyfile += CTL::toString(
 			"constinit static CTL::Ex::ObfuscatedStaticString<",
 			sz
@@ -94,15 +96,19 @@ namespace Command {
 		);
 		CTL::String const passhash = Makai::Tool::Arch::hashPassword(cfg["password"]);
 		DEBUGLN("Password hash size: ", passhash.size());
-		for (char const c: passhash) {
-			std::stringstream stream;
-			stream << std::hex << (unsigned int)(unsigned char)(c);
-			std::string code = stream.str();
-			keyfile += CTL::String("\\x") + (code.size()<2?"0":"") + CTL::String(code);
+		if (cfg["type"].getString() == "embed") {
+			for (char const c: passhash) {
+				std::stringstream stream;
+				stream << std::hex << (unsigned int)(unsigned char)(c);
+				std::string code = stream.str();
+				keyfile += CTL::String("\\x") + (code.size()<2?"0":"") + CTL::String(code);
+			}
+			keyfile += "\");\n";
+			keyfile += "#endif\n";
+			Makai::File::saveText((cfg["__args"].size() < 2) ? "key.256.h" : cfg["__args"][1], keyfile);
+		} else if (cfg["type"].getString() == "base64") {
+			Makai::File::saveText((cfg["__args"].size() < 2) ? "key.txt" : cfg["__args"][1], Makai::Data::encode(passhash.toBytes(), Makai::Data::EncodingType::ET_BASE64));
 		}
-		keyfile += "\");\n";
-		keyfile += "#endif\n";
-		Makai::File::saveText((cfg["__args"].size() < 2) ? "key.256.h" : cfg["__args"][1], keyfile);
 		DEBUGLN("Key generated!");
 	}
 }
