@@ -64,7 +64,10 @@ The linux build currently only supports the lite version.
 - libsdl2-dev
 - libsdl2-net-dev
 - libcurl4-openssl-dev
-- cryptopp
+- libcrypto++-dev
+- libssl-dev
+- libgss-dev
+- libnghttp2-dev
 
 ## How to use
 
