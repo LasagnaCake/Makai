@@ -3,4 +3,4 @@ export OS_LIBS := -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomd
 export EXEC_TYPE :=.exe
 endif
 
-export LITE_BUILD_REQS := -lcryptopp -lSDL2 -lSDL2_net -Bdynamic -lcurl
+export LITE_BUILD_REQS := -lcryptopp -lSDL2 -lSDL2_net -lcurl $(pkg-config --libs curl)
