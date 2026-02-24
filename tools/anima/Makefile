@@ -74,28 +74,28 @@ prologue:
 packer:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c packer.cpp -o packer.o
-	$(LINKER) -o packer$(EXEC_TYPE) packer.o $(OBJ) $(LK)
+	$(LINKER) $(LK) -o packer$(EXEC_TYPE) packer.o $(OBJ)
 
 concerto:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c concerto.cpp -o concerto.o
-	$(LINKER) -o concerto$(EXEC_TYPE) concerto.o $(OBJ) $(LK)
+	$(LINKER) $(LK) -o concerto$(EXEC_TYPE) concerto.o $(OBJ)
 
 minimac:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c minimac.cpp -o minimac.o
-	$(LINKER) -o minimac$(EXEC_TYPE) minimac.o $(OBJ) $(LK)
+	$(LINKER) $(LK) -o minimac$(EXEC_TYPE) minimac.o $(OBJ)
 
 arte:
 	@echo "[$@]"
 	$(COMPILER) $(COMPCFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
 	$(COMPILER) $(COMPCFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
-	$(LINKER) -o carte$(EXEC_TYPE) carte.o $(OBJ) $(LINKCFG) -mwindows
-	$(LINKER) -o warte$(EXEC_TYPE) warte.o $(OBJ) $(LINKCFG)
+	$(LINKER) $(LK) -mwindows -o carte$(EXEC_TYPE) carte.o $(OBJ)
+	$(LINKER) $(LK) -o warte$(EXEC_TYPE) warte.o $(OBJ)
 
 anima:
 	$(COMPILER) $(COMPCFG) -c anima.cpp -o anima.o
-	$(LINKER) -o anima$(EXEC_TYPE) anima.o $(OBJ) $(LINKCFG)
+	$(LINKER) $(LK) -o anima$(EXEC_TYPE) anima.o $(OBJ)
 
 mk-push:
 	cp carte ../../output/bin

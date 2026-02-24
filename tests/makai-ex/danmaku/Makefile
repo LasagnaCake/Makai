@@ -23,7 +23,7 @@ endif
 
 sinclude $(ROOT)/make/os.make
 
-testcmd = @$(CXX) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
+testcmd = @$(CXX) $(COMPILER_CONFIG) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
 
 NOCMD := -mwindows
 
@@ -44,6 +44,11 @@ case = $(if $(findstring $(strip $(2)),$(strip $(1))),$(3))
 params = $(OS_LIBS) $(LIBREQS) $(GRAPHREQS) \
 	$(call case, $(1), 01,)\
 	$(call case, $(1), 02,)\
+	$(call case, $(1), 03,)\
+	$(call case, $(1), 04,)\
+	$(call case, $(1), 05,)\
+	$(call case, $(1), 06,)\
+	$(call case, $(1), 07,)\
 
 define mktest
 	@echo "$(strip $(2))"

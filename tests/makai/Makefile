@@ -21,7 +21,7 @@ sinclude $(ROOT)/make/os.make
 
 o?=3
 
-testcmd = @$(CXX) -O$(o) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(COMPILER_CONFIG) $(ROOT)/output/lib/$(3)
+testcmd = @$(CXX) $(COMPILER_CONFIG) -O$(o) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
 
 NOCMD := -mwindows
 
