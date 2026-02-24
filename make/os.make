@@ -5,4 +5,4 @@ endif
 
 export lite-libs = $(foreach lib,$(1), $(shell pkg-config --libs --shared $(lib)))
 export lite-prissy-libs = $(foreach lib,$(1), $(shell pkg-config --libs --static $(lib)))
-export LITE_BUILD_REQS := -shared $(call lite-libs, libcrypto++ sdl2 SDL2_net) $(call lite-libs, libcurl)
+export LITE_BUILD_REQS := -shared $(call lite-libs, libcrypto++ sdl2 SDL2_net libcurl)
