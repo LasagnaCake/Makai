@@ -257,6 +257,11 @@ copy-tooling:
 	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
 	$(MOVE_DLL_TOOLS)
 
+export clean-libname = $(subst dec,,$(subst _krb5,,$(subst lber,ldap2,$(subst api,,$(1)))))
+export lite-solver-pass1 = $(foreach lib,$(foreach lib,$(1), $(patsubst -l%,%,$(shell pkg-config --libs-only-l --static $(lib)))), lib$(call clean-libname,$(lib))-dev)
+export lite-solver-pass2 = $(subst libz-dev,zlib1g-dev,$(subst libcurl-dev,,$(subst nettle,nettle*,$(subst gnutls,gnutls*,$(call lite-solver-pass1,$(1))))))
+export lite-solver = $(call lite-solver-pass2,$(1))
 configure-ubuntu:
 	sudo apt update
-	sudo apt install --yes libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+	sudo apt install --yes libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-gnutls-dev
+	sudo apt install --yes $(call lite-solver,libcurl)

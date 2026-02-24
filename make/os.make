@@ -3,4 +3,6 @@ export OS_LIBS := -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomd
 export EXEC_TYPE :=.exe
 endif
 
-export LITE_BUILD_REQS := -Bdynamic -lcryptopp -lSDL2 -lSDL2_net -lgnutls-openssl $(shell pkg-config --libs libcurl)
+export lite-libs = $(foreach lib,$(1), $(shell pkg-config --libs --shared $(lib)))
+export lite-prissy-libs = $(foreach lib,$(1), $(shell pkg-config --libs --static $(lib)))
+export LITE_BUILD_REQS := -shared $(call lite-libs, libcrypto++ sdl2 SDL2_net) $(call lite-libs, libcurl)

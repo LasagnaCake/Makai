@@ -3,12 +3,17 @@
 
 ROOT	:= ../..
 
-LEAN := -static -s
+LEAN := -s
 
 debug := 0
 
+ifeq ($(from-lite),1)
+else
+ADDCONF := -static -static-libstdc++ -static-libgcc
+endif
+
 COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions
-LINKER_CONFIG	:= -static-libstdc++ -static-libgcc -m64 -fms-extensions
+LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
 
 ifdef openmp
 USE_OPENMP := -fopenmp -openmp -ftree-parallelize-loops=128
@@ -74,28 +79,28 @@ prologue:
 packer:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c packer.cpp -o packer.o
-	$(LINKER) $(LK) -o packer$(EXEC_TYPE) packer.o $(OBJ)
+	$(LINKER) $(LK) -o packer$(EXEC_TYPE) packer.o $(OBJ) $(LK)
 
 concerto:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c concerto.cpp -o concerto.o
-	$(LINKER) $(LK) -o concerto$(EXEC_TYPE) concerto.o $(OBJ)
+	$(LINKER) $(LK) -o concerto$(EXEC_TYPE) concerto.o $(OBJ) $(LK)
 
 minimac:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c minimac.cpp -o minimac.o
-	$(LINKER) $(LK) -o minimac$(EXEC_TYPE) minimac.o $(OBJ)
+	$(LINKER) $(LK) -o minimac$(EXEC_TYPE) minimac.o $(OBJ) $(LK)
 
 arte:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
 	$(COMPILER) $(CFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
-	$(LINKER) $(LK) -mwindows -o carte$(EXEC_TYPE) carte.o $(OBJ)
-	$(LINKER) $(LK) -o warte$(EXEC_TYPE) warte.o $(OBJ)
+	$(LINKER) $(LK) -mwindows -o carte$(EXEC_TYPE) carte.o $(OBJ) $(LK)
+	$(LINKER) $(LK) -o warte$(EXEC_TYPE) warte.o $(OBJ) $(LK)
 
 anima:
 	$(COMPILER) $(CFG) -c anima.cpp -o anima.o
-	$(LINKER) $(LK) -o anima$(EXEC_TYPE) anima.o $(OBJ)
+	$(LINKER) $(LK) -o anima$(EXEC_TYPE) anima.o $(OBJ) $(LK)
 
 mk-push:
 	cp carte$(EXEC_TYPE) ../../output/bin

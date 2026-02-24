@@ -1,7 +1,7 @@
 #CC	:= gcc
 #CXX	:= g++
 
-LEAN := -static -s
+LEAN := -s
 
 ROOT := ../..
 
@@ -10,10 +10,14 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
 ifeq ($(from-lite),1)
 LITEREQS := $(LITE_BUILD_REQS)
+else
+LITEREQS := -static -static-libstdc++ -static-libgcc
 endif
 
-LIBREQS		:= -static-libstdc++ -static-libgcc $(LITEREQS)
+LIBREQS		:= $(LITEREQS)
+ifeq ($((os),win)
 GRAPHREQS	:= -lopengl32
+endif
 
 export os ?=win
 

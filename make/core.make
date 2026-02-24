@@ -48,7 +48,11 @@ export upper =$(shell echo $(1) | tr a-z A-Z)
 
 export concat =$(strip $(1)).$(strip $(2))
 
+ifeq ($(lite),1)
+export LEAN := -s
+else
 export LEAN := -static -s
+endif
 
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fconcepts-diagnostics-depth=4 -fcoroutines -fms-extensions
 
@@ -87,11 +91,12 @@ export libpath	= -I$(call path, $(ROOT)/lib/$(strip $(1)))
 export corepath	= -I$(call path, $(ROOT)/output/$(strip $(1)))
 
 ifeq ($(lite),1)
-export INC_CURL			:= $(shell pkg-config --cflags libcurl)
-export INC_SDL			:= $(shell pkg-config --cflags sdl2)
-export INC_SDL_NET		:= $(shell pkg-config --cflags SDL2_net)
-export INC_CRYPTOPP		:= $(shell pkg-config --cflags libcrypto++)
-#export INC_WEBGPU		:= $(shell pkg-config --cflags libwgpu-native)
+export litepath = $(shell pkg-config --cflags $(1))
+export INC_CURL			:= $(call litepath, libcurl)
+export INC_SDL			:= $(call litepath, sdl2)
+export INC_SDL_NET		:= $(call litepath, SDL2_net)
+export INC_CRYPTOPP		:= $(call litepath, libcrypto++)
+#export INC_WEBGPU		:= $(call litepath, libwgpu-native)
 else
 export INC_CURL			= $(call libpath, curl/include)
 export INC_SDL			= $(call libpath, SDL2-2.0.10/include)
