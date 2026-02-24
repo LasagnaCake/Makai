@@ -19,36 +19,20 @@ jobs:
     name: Prepare Environment
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Cache
-        id: env-cache
-        uses: actions/cache@v5
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          path: ${{ runner.temp }}/env
-          key: ${{ runner.os }}-build-env
-      - uses: airvzxf/cache-anything-new-action@v1.0.1
-        with:
-          script: bash/precache.sh
-          is_cached: ${{ steps.env-cache.outputs.cache-hit }}
-          cache: ${{ runner.temp }}/env
-          snapshot: /
-          exclude: "/boot /data /dev /mnt /proc /run /sys"
-      - name: Install Dependencies
-        if: steps.env-cache.outputs.cache-hit != 'true'
-        run: sudo make configure-ubuntu
-        shell: bash
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          version: 1.0
 
   ship-it-lite:
     name: Ship the library (LITE ver.)
     runs-on: ubuntu-latest
     needs: [prepare]
     steps:
-      - uses: actions/cache/restore@v5
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          path: |
-            /usr/include
-            /usr/lib
-          key: ${{ runner.os }}-build-env
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          version: 1.0
       - uses: actions/checkout@v4
       - name: make ship-it
         run: make ship-it os=linux lite=1
@@ -92,10 +76,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prepare]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v5
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          key: ${{ runner.os }}-build-env
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          version: 1.0
+      - uses: actions/checkout@v4
       - name: make debug
         run: |
           make debug os=linux lite=1
@@ -109,13 +94,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prepare]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v5
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          path: |
-            /usr/include
-            /usr/lib
-          key: ${{ runner.os }}-build-env
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          version: 1.0
+      - uses: actions/checkout@v4
       - name: make debug
         run: |
           make release os=linux lite=1
@@ -130,12 +113,10 @@ jobs:
     needs: [build-core-lib-debug, build-core-lib-release]
     #    needs: install-gcc
     steps:
-      - uses: actions/cache/restore@v5
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          path: |
-            /usr/include
-            /usr/lib
-          key: ${{ runner.os }}-build-env
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
@@ -158,12 +139,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-core-lib-debug]
     steps:
-      - uses: actions/cache/restore@v5
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          path: |
-            /usr/include
-            /usr/lib
-          key: ${{ runner.os }}-build-env
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
@@ -184,12 +163,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-core-lib-release]
     steps:
-      - uses: actions/cache/restore@v5
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          path: |
-            /usr/include
-            /usr/lib
-          key: ${{ runner.os }}-build-env
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
