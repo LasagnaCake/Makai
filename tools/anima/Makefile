@@ -38,8 +38,8 @@ LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LIBRARIES) $(LEAN)
 COMPILER	:= $(CXX) $(INCLUDES)
 LINKER		:= $(CXX)
 
-DEBUGEXTRAOBJS := -L$(ROOT)/output/lib/libmakai.debug.a
-EXTRAOBJS := -L$(ROOT)/output/lib/libmakai.a
+DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
+EXTRAOBJS := $(ROOT)/output/lib/libmakai.a
 
 LIBNAME	:= archive
 
@@ -74,28 +74,28 @@ prologue:
 packer:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c packer.cpp -o packer.o
-	$(LINKER) $(LK) $(OBJ) -o packer$(EXEC_TYPE) packer.o
+	$(LINKER) $(LK) -o packer$(EXEC_TYPE) packer.o $(OBJ)
 
 concerto:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c concerto.cpp -o concerto.o
-	$(LINKER) $(LK) $(OBJ) -o concerto$(EXEC_TYPE) concerto.o
+	$(LINKER) $(LK) -o concerto$(EXEC_TYPE) concerto.o $(OBJ)
 
 minimac:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c minimac.cpp -o minimac.o
-	$(LINKER) $(LK) $(OBJ) -o minimac$(EXEC_TYPE) minimac.o
+	$(LINKER) $(LK) -o minimac$(EXEC_TYPE) minimac.o $(OBJ)
 
 arte:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
 	$(COMPILER) $(CFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
-	$(LINKER) $(LK) $(OBJ) -mwindows -o carte$(EXEC_TYPE) carte.o
-	$(LINKER) $(LK) $(OBJ) -o warte$(EXEC_TYPE) warte.o
+	$(LINKER) $(LK) -mwindows -o carte$(EXEC_TYPE) carte.o $(OBJ)
+	$(LINKER) $(LK) -o warte$(EXEC_TYPE) warte.o $(OBJ)
 
 anima:
 	$(COMPILER) $(CFG) -c anima.cpp -o anima.o
-	$(LINKER) $(LK) $(OBJ) -o anima$(EXEC_TYPE) anima.o
+	$(LINKER) $(LK) -o anima$(EXEC_TYPE) anima.o $(OBJ)
 
 mk-push:
 	cp carte ../../output/bin
