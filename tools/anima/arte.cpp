@@ -52,5 +52,5 @@ MakaiMain(args) {
 	engine.httpRequestsEnabled = args["net"].get<bool>(false);
 	engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 	engine.execute();
-	while (!engine.process()) {};
+	while (engine.process()) {};
 }
