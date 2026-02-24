@@ -35,8 +35,8 @@ DEBUGLINKCFG	:= $(LINKER_CONFIG) -Og $(LIBRARIES)
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) $(DEBUGMODE)
 LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LIBRARIES) $(LEAN)
 
-COMPILER	:= @$(CXX) $(INCLUDES)
-LINKER		:= @$(CXX)
+COMPILER	:= $(CXX) $(INCLUDES)
+LINKER		:= $(CXX)
 
 DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
 EXTRAOBJS := $(ROOT)/output/lib/libmakai.a
@@ -69,6 +69,7 @@ all: tooling
 
 prologue:
 	@echo ""
+	@echo "libraries: $(LIBRARIES)"
 
 packer:
 	@echo "[$@]"

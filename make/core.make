@@ -86,16 +86,25 @@ GL_LOADER_FLAG := -DMAKAILIB_GL_LOADER=MAKAILIB_USE_$(call upper,$(gl-loader))
 export libpath	= -I$(call path, $(ROOT)/lib/$(strip $(1)))
 export corepath	= -I$(call path, $(ROOT)/output/$(strip $(1)))
 
+ifeq ($(lite),1)
+export INC_CURL			:= $(shell pkg-config --cflags libcurl)
+export INC_SDL			:= $(shell pkg-config --cflags sdl2)
+export INC_SDL_NET		:= $(shell pkg-config --cflags SDL2_net)
+export INC_CRYPTOPP		:= $(shell pkg-config --cflags libcrypto++)
+#export INC_WEBGPU		:= $(shell pkg-config --cflags libwgpu-native)
+else
+export INC_CURL			= $(call libpath, curl/include)
 export INC_SDL			= $(call libpath, SDL2-2.0.10/include)
+export INC_CRYPTOPP		= $(call libpath, cryptopp/include)
+export INC_WEBGPU		= $(call libpath, wgpu-native/windows-x86_64/include)
+endif
+
 export INC_OPENGL		= $(call libpath, OpenGL/$(call upper,$(gl-loader))/include) $(GL_LOADER_FLAG)
 export INC_STB			= $(call libpath, stb)
 export INC_CUTE			= $(call libpath, cute_headers)
-export INC_CURL			= $(call libpath, curl/include)
-export INC_CRYPTOPP		= $(call libpath, cryptopp/include)
 export INC_XML2JSON		= $(call libpath, xml2json/include)
 export INC_JSON2XML		= $(call libpath, json2xml)
 export INC_MINIAUDIO	= $(call libpath, miniaudio) $(call libpath, minivorbis)
-export INC_WEBGPU		= $(call libpath, wgpu-native/windows-x86_64/include)
 
 export INC_MAKAI		= $(call corepath, include)
 
