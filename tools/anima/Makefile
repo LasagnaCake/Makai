@@ -98,12 +98,12 @@ anima:
 	$(LINKER) $(LK) -o anima$(EXEC_TYPE) anima.o $(OBJ)
 
 mk-push:
-	cp carte ../../output/bin
-	cp warte ../../output/bin
-	cp minimac ../../output/bin
-	cp concerto ../../output/bin
-	cp anima ../../output/bin
-	cp packer ../../output/bin
+	cp carte$(EXEC_TYPE) ../../output/bin
+	cp warte$(EXEC_TYPE) ../../output/bin
+	cp minimac$(EXEC_TYPE) ../../output/bin
+	cp concerto$(EXEC_TYPE) ../../output/bin
+	cp anima$(EXEC_TYPE) ../../output/bin
+	cp packer$(EXEC_TYPE) ../../output/bin
 
 finale:
 	@echo 
