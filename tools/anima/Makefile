@@ -32,7 +32,7 @@ DEBUGMODE		:= -DMAKAILIB_DEBUG
 DEBUGCOMPCFG	:= $(COMPILER_CONFIG) -Wall -Wpedantic -Og -ggdb3 -fno-omit-frame-pointer $(DEBUGMODE)
 DEBUGLINKCFG	:= $(LINKER_CONFIG) -Og $(LIBRARIES)
 
-COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) $(DEBUGMODE)
+COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
 LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LIBRARIES) $(LEAN)
 
 COMPILER	:= $(CXX) $(INCLUDES)
@@ -88,13 +88,13 @@ minimac:
 
 arte:
 	@echo "[$@]"
-	$(COMPILER) $(COMPCFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
-	$(COMPILER) $(COMPCFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
+	$(COMPILER) $(CFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
+	$(COMPILER) $(CFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
 	$(LINKER) $(LK) $(OBJ) -mwindows -o carte$(EXEC_TYPE) carte.o
 	$(LINKER) $(LK) $(OBJ) -o warte$(EXEC_TYPE) warte.o
 
 anima:
-	$(COMPILER) $(COMPCFG) -c anima.cpp -o anima.o
+	$(COMPILER) $(CFG) -c anima.cpp -o anima.o
 	$(LINKER) $(LK) $(OBJ) -o anima$(EXEC_TYPE) anima.o
 
 mk-push:
