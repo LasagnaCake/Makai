@@ -49,7 +49,7 @@ export upper =$(shell echo $(1) | tr a-z A-Z)
 export concat =$(strip $(1)).$(strip $(2))
 
 ifeq ($(lite),1)
-export LEAN := -s
+export LEAN := -fPIC -shared -s
 else
 export LEAN := -static -s
 endif
