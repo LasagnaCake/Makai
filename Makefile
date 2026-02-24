@@ -260,4 +260,5 @@ copy-tooling:
 	$(MOVE_DLL_TOOLS)
 
 configure-ubuntu:
+	sudo apt update
 	sudo apt install --yes libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
