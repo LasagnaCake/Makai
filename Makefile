@@ -242,9 +242,7 @@ build-tooling:
 
 ifeq ($(os),win)
 define MOVE_DLL_TOOLS
-	@cd ../../../dll/network
-	$(call refmove, libcurl-4.dll, ../../output/bin)
-	@cd ../security
+	@cd ../../../dll/current
 	$(call refmove, *.dll, ../../output/bin)
 	@cd ../..
 endef
