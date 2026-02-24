@@ -259,5 +259,5 @@ copy-tooling:
 	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
 	$(MOVE_DLL_TOOLS)
 
-lite-requirements-ubuntu:
+configure-ubuntu:
 	echo y | sudo apt install libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev

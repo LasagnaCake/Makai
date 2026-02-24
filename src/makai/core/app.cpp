@@ -16,8 +16,6 @@
 #include <SDL2/SDL.h>
 #endif
 
-#include <SDL2/SDL_mixer.h>
-
 #define sdlWindow ((SDL_Window*)window)
 
 #include "../file/slf.hpp"

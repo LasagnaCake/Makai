@@ -15,28 +15,9 @@ on:
 #    branches: [ "main" ]
 
 jobs:
-  prep-cryptopp:
-    name: Prepare CryptoPP
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache
-        id: cryp-cache
-        uses: actions/cache@v5
-        with:
-          path: cryptopp
-          key: ${{ runner.os }}-cryp-cache
-      - name: Fetch & build library
-        if: steps.cryp-cache.outputs.cache-hit != 'true'
-        run: |
-          wget https://cryptopp.com/cryptopp890.zip
-          unzip -q cryptopp890.zip -d cryptopp
-          cd cryptopp
-          sudo make
-
   ship-it-lite:
     name: Ship the library (LITE ver.)
     runs-on: ubuntu-latest
-    needs: [prep-cryptopp]
     steps:
       - name: Cache
         id: cryp-cache
@@ -44,10 +25,8 @@ jobs:
         with:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
-      - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - uses: actions/checkout@v4
       - name: make ship-it
         run: make ship-it os=linux lite=1
@@ -61,8 +40,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - name: make tests
         run: |
           cd tests/ctl
@@ -78,8 +57,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - name: make tests
         run: |
           cd tests/ctl
@@ -96,8 +75,8 @@ jobs:
     needs: [prep-cryptopp]
     steps:
       - uses: actions/checkout@v4
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - name: make debug
         run: |
           make debug os=linux lite=1
@@ -112,8 +91,8 @@ jobs:
     needs: [prep-cryptopp]
     steps:
       - uses: actions/checkout@v4
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - name: make debug
         run: |
           make release os=linux lite=1
@@ -134,10 +113,8 @@ jobs:
         with:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
-      - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
@@ -166,10 +143,8 @@ jobs:
         with:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
-      - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
@@ -196,10 +171,8 @@ jobs:
         with:
           path: cryptopp
           key: ${{ runner.os }}-cryp-cache
-      - name: Install libraries
-        run: cd cryptopp ; sudo make install ; sudo apt update ; sudo apt install libsdl2-dev libsdl2-net-dev libsdl2-2.0-0 libsdl2-net-2.0-0 libcurl4-openssl-dev ; cd ..
-      - name: Install OpenGL
-        run: sudo apt install libgl1-mesa-dev
+      - name: Install Libraries
+        run: sudo make configure-ubuntu
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
