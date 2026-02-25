@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
           version: 1.0
 
   ship-it-lite:
@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
           version: 1.0
       - uses: actions/checkout@v4
       - name: make ship-it
@@ -78,7 +78,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
           version: 1.0
       - uses: actions/checkout@v4
       - name: make debug
@@ -96,10 +96,10 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
           version: 1.0
       - uses: actions/checkout@v4
-      - name: make debug
+      - name: make release
         run: |
           make release os=linux lite=1
       - uses: actions/upload-artifact@master
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
@@ -141,7 +141,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
@@ -165,12 +165,12 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libgss-dev libnghttp2-dev libldap-dev
+          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
         with:
-          name: lib-debug
+          name: lib-release
           path: output
       - name: make tests
         run: |
