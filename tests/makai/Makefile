@@ -16,7 +16,7 @@ LITEREQS := -static -static-libstdc++ -static-libgcc
 endif
 
 LIBREQS		:= $(LITEREQS)
-ifeq ($((os),win)
+ifeq ($(os),win)
 GRAPHREQS	:= -lopengl32
 endif
 
