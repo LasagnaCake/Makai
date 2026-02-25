@@ -109,8 +109,8 @@ arte:
 	$(LINKER) $(LK) -o arte$(EXEC_TYPE) arte.o $(OBJ) $(LK) $(WINFLAG)
 
 mk-push:
-	cp arte-c$(EXEC_TYPE) ../../output/bin
-	cp arte-w$(EXEC_TYPE) ../../output/bin
+	cp arte.c$(EXEC_TYPE) ../../output/bin
+	cp arte.w$(EXEC_TYPE) ../../output/bin
 	cp minimac$(EXEC_TYPE) ../../output/bin
 	cp concerto$(EXEC_TYPE) ../../output/bin
 	cp arte$(EXEC_TYPE) ../../output/bin
