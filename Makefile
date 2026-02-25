@@ -35,7 +35,7 @@ endef
 LINUX_FULL_PRE := :
 else
 ifeq ($(os),linux)
-LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/linux64/libcryptopp.a.zip -d lib/cryptopp/lib/linux64/
+LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/linux64/libcryptopp.a.zip -d lib/cryptopp/lib/linux64/ ;
 endif
 endif
 
@@ -203,7 +203,7 @@ endif
 
 extract-extern:
 	@echo "Creating lib folder..."
-	$(LINUX_FULL_PRE);
+	$(LINUX_FULL_PRE)
 	@rm -rf obj/extern
 	@mkdir -p obj/extern/sdl
 	@mkdir -p obj/extern/sdl-net
