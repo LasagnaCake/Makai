@@ -101,11 +101,11 @@ minimac:
 
 arte:
 	@echo "[$@]"
-	$(COMPILER) $(CFG) -c arte.cpp -o arte-c.o -DARTE_CLI
-	$(COMPILER) $(CFG) -c arte.cpp -o arte-w.o -DARTE_NO_CLI $(WINFLAG)
+	$(COMPILER) $(CFG) -c arte.cpp -o arte.c.o -DARTE_CLI
+	$(COMPILER) $(CFG) -c arte.cpp -o arte.w.o -DARTE_NO_CLI $(WINFLAG)
 	$(COMPILER) $(CFG) -c anima.cpp -o arte.o $(WINFLAG)
-	$(LINKER) $(LK) -o arte-c$(EXEC_TYPE) arte-c.o $(OBJ) $(LK)
-	$(LINKER) $(LK) -o arte-w$(EXEC_TYPE) arte-w.o $(OBJ) $(LK) $(WINFLAG)
+	$(LINKER) $(LK) -o arte-c$(EXEC_TYPE) arte.c.o $(OBJ) $(LK)
+	$(LINKER) $(LK) -o arte-w$(EXEC_TYPE) arte.w.o $(OBJ) $(LK) $(WINFLAG)
 	$(LINKER) $(LK) -o arte$(EXEC_TYPE) arte.o $(OBJ) $(LK) $(WINFLAG)
 
 mk-push:
