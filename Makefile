@@ -240,11 +240,9 @@ rename-extern:
 
 ifeq ($(os),win)
 define DOCURL-REPACK
-	@cd ../curl
-	$(call addname, curl)
+	$(call repack, curl)
 endef
-#	@cd ../openssl
-#	$(call addname, openssl)
+#	$(call repack, openssl)
 endif
 
 repack-extern:
