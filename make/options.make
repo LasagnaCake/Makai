@@ -97,10 +97,10 @@ ifeq ($(os),win)
 LIBFILE_SRC ?=win64
 endif
 ifeq ($(os),linux)
-LIBFILE_SRC ?=gnu64
+LIBFILE_SRC ?=linux64
 endif
 ifeq ($(os),apple)
-LIBFILE_SRC ?=apl64
+LIBFILE_SRC ?=apple64
 endif
 ifndef os
 LIBFILE_SRC ?=win64

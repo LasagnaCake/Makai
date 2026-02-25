@@ -6,11 +6,17 @@ endef
 
 prefix:=lib
 
-SDL			= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2.dll.a
+ifeq ($(os),linux)
+LIBFILE_TYPE :=.a
+else
+LIBFILE_TYPE :=.dll.a
+endif
+
+SDL			= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2$(LIBFILE_TYPE)
 SDLNET		= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
 CRYPTOPP	= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
-CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl.dll.a
-#OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl.dll.a
+CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl$(LIBFILE_TYPE)
+#OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl$(LIBFILE_TYPE)
 
 ifeq ($(lite),1)
 LINK_EXTERN :=
@@ -26,13 +32,10 @@ define MOVE_DLL
 	$(call refmove, *.dll, ../output/lib)
 	@cd ..
 endef
-define LINUX_FULL_PRE
-endef
+LINUX_FULL_PRE := :
 else
 ifeq ($(os),linux)
-define LINUX_FULL_PRE
-    @unzip lib/cryptopp/lib/linux64/cryptopp.a.zip lib/cryptopp/lib/linux64/
-endef
+LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/linux64/libcryptopp.a.zip -d lib/cryptopp/lib/linux64/
 endif
 endif
 
@@ -191,7 +194,7 @@ endef
 
 extract-extern:
 	@echo "Creating lib folder..."
-    $(LINUX_FULL_PRE)
+	$(LINUX_FULL_PRE);
 	@rm -rf obj/extern
 	@mkdir -p obj/extern/sdl
 	@mkdir -p obj/extern/sdl-net
