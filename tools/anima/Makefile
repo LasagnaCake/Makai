@@ -7,7 +7,7 @@ LEAN := -s
 
 debug := 0
 
-ADDCONF := -static -static-libstdc++ -static-libgcc
+ADDCONF := -static-libstdc++ -static-libgcc
 
 COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions $(LQQ)
 LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
@@ -43,7 +43,7 @@ COMPILER	:= $(CXX) $(INCLUDES)
 ifeq ($(os),linux)
 LINKER		:= $(CXX)
 else
-LINKER		:= $(CXX)
+LINKER		:= $(CXX) -static
 endif
 
 DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
@@ -103,7 +103,7 @@ arte:
 	$(COMPILER) $(CFG) -c arte.cpp -o art.o -DARTE_CLI
 	$(COMPILER) $(CFG) -c arte.cpp -o artw.o -DARTE_NO_CLI $(WINFLAG)
 	$(LINKER) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
-	$(LINKER) -o artw$(EXEC_TYPE) artw.o $(OBJ)$(LK) $(WINFLAG)
+	$(LINKER) -o artw$(EXEC_TYPE) artw.o $(OBJ) $(LK) $(WINFLAG)
 
 mk-push:
 	cp art$(EXEC_TYPE) ../../output/bin

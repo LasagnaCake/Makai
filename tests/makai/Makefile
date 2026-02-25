@@ -14,10 +14,10 @@ ifeq ($(from-lite),1)
 LITEREQS := $(LITE_BUILD_REQS)
 endif
 
-LIBREQS		:= $(LITEREQS) -static -static-libstdc++ -static-libgcc
+LIBREQS		:= $(LITEREQS) -static-libstdc++ -static-libgcc
 
 ifeq ($(os),win)
-GRAPHREQS	:= -lopengl32
+GRAPHREQS	:= -lopengl32 -static
 NOCMD 		:= -mwindows
 endif
 

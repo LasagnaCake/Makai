@@ -1,11 +1,12 @@
+link-static = $(foreach lib,$(1), $(shell pkg-config --libs $(lib)))
+
 ifeq ($(os),win)
+link-shared = $(foreach lib,$(1), $(shell pkg-config --libs "$(strip $(lib)).dll"))
 export OS_LIBS := -lole32 -loleaut32 -limm32 -lwinmm -lversion -lpowrprof -lcomdlg32 -lsetupapi -lgdi32 -ldwmapi -lbcrypt -ldbghelp
 export EXEC_TYPE :=.exe
 endif
 ifeq ($(os),linux)
-export OS_LIBS := -L:libcurl.so -L:libsdl2.so
+link-shared = $(foreach lib,$(1), -l:$(strip $(lib)).so)
+export OS_LIBS := $(call link-shared, libcurl libSDL2)
 endif
-
-export lite-static = $(foreach lib,$(1), $(shell pkg-config --libs $(lib)))
-export lite-shared = $(foreach lib,$(1), -l:$(lib).so)
-export LITE_BUILD_REQS := -shared $(call lite-static, libcrypto++ SDL2_net) $(call ) $(call lite-shared, libcurl, libsdl2)
+export LITE_BUILD_REQS := -shared $(call link-static, libcrypto++ SDL2_net) $(call link-shared, libcurl libSDL2)
