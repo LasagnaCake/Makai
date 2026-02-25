@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
+          packages: libgl1-mesa-dev
           version: 1.0
 
   ship-it-lite:
@@ -31,11 +31,11 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
+          packages: libgl1-mesa-dev
           version: 1.0
       - uses: actions/checkout@v4
       - name: make ship-it
-        run: make ship-it os=linux lite=1
+        run: make ship-it os=linux
       - uses: actions/upload-artifact@master
         with:
           name: linux-builds
@@ -78,12 +78,12 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
+          packages: libgl1-mesa-dev
           version: 1.0
       - uses: actions/checkout@v4
       - name: make debug
         run: |
-          make debug os=linux lite=1
+          make debug os=linux
       - uses: actions/upload-artifact@master
         with:
           name: lib-debug
@@ -96,12 +96,12 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
+          packages: libgl1-mesa-dev
           version: 1.0
       - uses: actions/checkout@v4
       - name: make release
         run: |
-          make release os=linux lite=1
+          make release os=linux
       - uses: actions/upload-artifact@master
         with:
           name: lib-release
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
+          packages: libgl1-mesa-dev
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
@@ -126,9 +126,9 @@ jobs:
         with:
           name: lib-release
           path: output
-      - name: make tooling os=linux lite=1
+      - name: make tooling os=linux
         run: |
-          make tooling os=linux lite=1
+          make tooling os=linux
       - uses: actions/upload-artifact@master
         with:
           name: tooling
@@ -142,7 +142,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
+          packages: libgl1-mesa-dev
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
@@ -167,7 +167,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev libcrypto++-dev
+          packages: libgl1-mesa-dev
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
