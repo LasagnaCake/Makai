@@ -35,7 +35,7 @@ endef
 LINUX_FULL_PRE := :
 else
 ifeq ($(os),linux)
-LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/linux64/libcryptopp.a.zip -d lib/cryptopp/lib/linux64/ ;
+LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/linux64/libcryptopp.a.zip -d lib/cryptopp/lib/linux64/
 endif
 endif
 
@@ -193,7 +193,9 @@ define repack
 endef
 
 ifeq ($(os),win)
-define DOCURL-EXTRACT
+define DO-EXTRACT
+	@echo "Extracting SDL..."
+	@ar x $(SDL) --output "obj/extern/sdl"
 	@echo "Extracting cURL..."
 	@ar x $(CURL) --output "obj/extern/curl"
 endef
@@ -209,16 +211,16 @@ extract-extern:
 	@mkdir -p obj/extern/sdl-net
 	@mkdir -p obj/extern/cryptopp
 	@mkdir -p obj/extern/curl
-	@echo "Extracting SDL..."
-	@ar x $(SDL) --output "obj/extern/sdl"
 	@echo "Extracting SDL-Net..."
 	@ar x $(SDLNET) --output "obj/extern/sdl-net"
 	@echo "Extracting CryptoPP..."
 	@ar x $(CRYPTOPP) --output "obj/extern/cryptopp"
-	$(DOCURL-EXTRACT);
+	$(DO-EXTRACT)
 
 ifeq ($(os),win)
-define DOCURL-RENAME
+define DO-RENAME
+	@cd ../sdl
+	$(call addname, sdl)
 	@cd ../curl
 	$(call addname, curl)
 endef
@@ -229,18 +231,17 @@ endif
 rename-extern:
 	@echo "Renaming objects..."
 	@cd obj/extern
-	@cd sdl
-	$(call addname, sdl)
-	@cd ../sdl-net
+	@cd sdl-net
 	$(call addname, sdl-net)
 	@cd ../cryptopp
 	$(call addname, cryptopp)
-	$(DOCURL-RENAME)
+	$(DO-RENAME)
 	@cd ../../..
 
 ifeq ($(os),win)
-define DOCURL-REPACK
+define DO-REPACK
 	$(call repack, curl)
+	$(call repack, sdl)
 endef
 #	$(call repack, openssl)
 endif
@@ -248,16 +249,15 @@ endif
 repack-extern:
 	@cd obj/extern
 	@echo "Re-combining libraries..."
-	$(call repack, sdl)
 	$(call repack, sdl-net)
 	$(call repack, cryptopp)
-	$(DOCURL-REPACK);
+	$(DO-REPACK)
 	@cd ../..
 
 ifeq ($(os),win)
 MRI :=makelib.extern.mri
 else
-MRI :=makelib.extern.nocurl.mri
+MRI :=makelib.extern.noshared.mri
 endif
 
 combine-extern:
