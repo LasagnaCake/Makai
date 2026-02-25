@@ -45,7 +45,11 @@ COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
 LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LIBRARIES) $(LEAN)
 
 COMPILER	:= $(CXX) $(INCLUDES)
+ifeq ($(os),linux)
+LINKER		:= $(CXX) -dynamic -L:libcurl.so
+else
 LINKER		:= $(CXX)
+endif
 
 DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
 EXTRAOBJS := $(ROOT)/output/lib/libmakai.a

@@ -192,6 +192,15 @@ define repack
 	@cd ..
 endef
 
+ifeq ($(os),win)
+define DOCURL-EXTRACT
+	@echo "Extracting cURL..."
+	@ar x $(CURL) --output "obj/extern/curl"
+endef
+#	@echo "Extracting OpenSSL..."
+#	@ar x $(OPENSSL) --output "obj/extern/openssl"
+endif
+
 extract-extern:
 	@echo "Creating lib folder..."
 	$(LINUX_FULL_PRE);
@@ -206,10 +215,16 @@ extract-extern:
 	@ar x $(SDLNET) --output "obj/extern/sdl-net"
 	@echo "Extracting CryptoPP..."
 	@ar x $(CRYPTOPP) --output "obj/extern/cryptopp"
-	@echo "Extracting cURL..."
-	@ar x $(CURL) --output "obj/extern/curl"
-#	@echo "Extracting OpenSSL..."
-#	@ar x $(OPENSSL) --output "obj/extern/openssl"
+	$(DOCURL-EXTRACT);
+
+ifeq ($(os),win)
+define DOCURL-RENAME
+	@cd ../curl
+	$(call addname, curl)
+endef
+#	@cd ../openssl
+#	$(call addname, openssl)
+endif
 
 rename-extern:
 	@echo "Renaming objects..."
@@ -220,11 +235,17 @@ rename-extern:
 	$(call addname, sdl-net)
 	@cd ../cryptopp
 	$(call addname, cryptopp)
+	$(DOCURL-RENAME)
+	@cd ../../..
+
+ifeq ($(os),win)
+define DOCURL-REPACK
 	@cd ../curl
 	$(call addname, curl)
+endef
 #	@cd ../openssl
 #	$(call addname, openssl)
-	@cd ../../..
+endif
 
 repack-extern:
 	@cd obj/extern
@@ -232,13 +253,18 @@ repack-extern:
 	$(call repack, sdl)
 	$(call repack, sdl-net)
 	$(call repack, cryptopp)
-	$(call repack, curl)
-#	$(call repack, openssl)
+	$(DOCURL-REPACK);
 	@cd ../..
+
+ifeq ($(os),win)
+MRI :=makelib.extern.mri
+else
+MRI :=makelib.extern.nocurl.mri
+endif
 
 combine-extern:
 	@echo "Combining files..."
-	@ar -M <makelib.extern.mri
+	@ar -M <$(MRI)
 	@ranlib obj/extern/extern.3p.a
 	@rm -rf obj/extern/st*
 
