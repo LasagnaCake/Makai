@@ -26,6 +26,14 @@ define MOVE_DLL
 	$(call refmove, *.dll, ../output/lib)
 	@cd ..
 endef
+define LINUX_FULL_PRE
+endef
+else
+ifeq ($(os),linux)
+define LINUX_FULL_PRE
+    @unzip lib/cryptopp/lib/linux64/cryptopp.a.zip lib/cryptopp/lib/linux64/
+endef
+endif
 endif
 
 ifeq (,$(wildcard obj/extern/extern.3p.a))
@@ -183,6 +191,7 @@ endef
 
 extract-extern:
 	@echo "Creating lib folder..."
+    $(LINUX_FULL_PRE)
 	@rm -rf obj/extern
 	@mkdir -p obj/extern/sdl
 	@mkdir -p obj/extern/sdl-net
