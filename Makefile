@@ -263,4 +263,4 @@ copy-tooling:
 #export lite-solver = $(call lite-solver-pass2,$(1))
 configure-ubuntu:
 	sudo apt update
-	sudo apt install --yes libgl1-mesa-dev libsdl2-dev libsdl2-net-dev libcurl4-openssl-dev
+	sudo apt install --yes libgl1-mesa-dev
