@@ -37,7 +37,7 @@ DEBUGCOMPCFG	:= $(COMPILER_CONFIG) -Wall -Wpedantic -Og -ggdb3 -fno-omit-frame-p
 DEBUGLINKCFG	:= $(LINKER_CONFIG) -Og $(LIBRARIES)
 
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
-LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LIBRARIES) $(LEAN)
+LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LEAN) $(LIBRARIES)
 
 COMPILER	:= $(CXX) $(INCLUDES)
 ifeq ($(os),linux)
@@ -86,24 +86,24 @@ prologue:
 packer:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c packer.cpp -o packer.o
-	$(LINKER) $(LK) -o packer$(EXEC_TYPE) packer.o $(OBJ) $(LK)
+	$(LINKER) -o packer$(EXEC_TYPE) packer.o $(OBJ) $(LK)
 
 concerto:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c concerto.cpp -o concerto.o
-	$(LINKER) $(LK) -o concerto$(EXEC_TYPE) concerto.o $(OBJ) $(LK)
+	$(LINKER) -o concerto$(EXEC_TYPE) concerto.o $(OBJ) $(LK)
 
 minimac:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c minimac.cpp -o minimac.o
-	$(LINKER) $(LK) -o minimac$(EXEC_TYPE) minimac.o $(OBJ) $(LK)
+	$(LINKER) -o minimac$(EXEC_TYPE) minimac.o $(OBJ) $(LK)
 
 arte:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c arte.cpp -o art.o -DARTE_CLI
 	$(COMPILER) $(CFG) -c arte.cpp -o artw.o -DARTE_NO_CLI $(WINFLAG)
-	$(LINKER) $(LK) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
-	$(LINKER) $(LK) -o artw$(EXEC_TYPE) artw.o $(OBJ) $(LK) $(WINFLAG)
+	$(LINKER) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
+	$(LINKER) -o artw$(EXEC_TYPE) artw.o $(OBJ) $(WINFLAG) $(LK)
 
 mk-push:
 	cp art$(EXEC_TYPE) ../../output/bin
