@@ -1,4 +1,3 @@
-#include <debugapi.h>
 #include <makai/makai.hpp>
 
 constexpr auto const VER = Makai::Data::Version{1};

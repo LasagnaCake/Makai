@@ -14,6 +14,7 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic -O
 
 ifeq ($(from-lite),1)
 LITEREQS := $(LITE_BUILD_REQS)
+LQQ := -fPIC
 else
 LITEREQS := -static -static-libstdc++ -static-libgcc
 endif
@@ -25,7 +26,7 @@ endif
 
 sinclude $(ROOT)/make/os.make
 
-testcmd = @$(CXX) $(COMPILER_CONFIG) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
+testcmd = @$(CXX) $(COMPILER_CONFIG)  $(LQQ) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
 
 NOCMD := -mwindows
 

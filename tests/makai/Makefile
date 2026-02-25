@@ -9,7 +9,8 @@ COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/outp
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
 ifeq ($(from-lite),1)
-LITEREQS := $(LITE_BUILD_REQS)
+LITEREQS := $(LITE_BUILD_REQS) -fPIC
+LQQ := -fPIC
 else
 LITEREQS := -static -static-libstdc++ -static-libgcc
 endif
@@ -25,7 +26,7 @@ sinclude $(ROOT)/make/os.make
 
 o?=3
 
-testcmd = @$(CXX) $(COMPILER_CONFIG) -O$(o) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
+testcmd = @$(CXX) $(COMPILER_CONFIG) $(LQQ) -O$(o) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
 
 NOCMD := -mwindows
 

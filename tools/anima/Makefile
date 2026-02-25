@@ -8,11 +8,13 @@ LEAN := -s
 debug := 0
 
 ifeq ($(from-lite),1)
+ADDCONF := -fPIC
+LQQ := -fPIC
 else
 ADDCONF := -static -static-libstdc++ -static-libgcc
 endif
 
-COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions
+COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions $(LQQ)
 LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
 
 ifdef openmp
@@ -23,6 +25,8 @@ endif
 export o?=3
 
 OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize $(LEAN)
+
+export os ?=win
 
 sinclude $(ROOT)/make/os.make
 
@@ -64,11 +68,15 @@ LK := $(LINKCFG)
 OBJ := $(EXTRAOBJS)
 endif
 
-.PHONY: debug release all tooling packer concerto minimac finale
+ifeq ($(os),win)
+WINFLAG := -mwindows
+endif
+
+.PHONY: debug release all tooling packer concerto minimac arte finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer concerto minimac arte anima finale
+tooling: prologue packer concerto arte minimac finale
 
 all: tooling
 
@@ -93,21 +101,19 @@ minimac:
 
 arte:
 	@echo "[$@]"
-	$(COMPILER) $(CFG) -c arte.cpp -o carte.o -DARTE_CLI -mwindows
-	$(COMPILER) $(CFG) -c arte.cpp -o warte.o -DARTE_NO_CLI
-	$(LINKER) $(LK) -mwindows -o carte$(EXEC_TYPE) carte.o $(OBJ) $(LK)
-	$(LINKER) $(LK) -o warte$(EXEC_TYPE) warte.o $(OBJ) $(LK)
-
-anima:
-	$(COMPILER) $(CFG) -c anima.cpp -o anima.o
-	$(LINKER) $(LK) -o anima$(EXEC_TYPE) anima.o $(OBJ) $(LK)
+	$(COMPILER) $(CFG) -c arte.cpp -o arte-c.o -DARTE_CLI
+	$(COMPILER) $(CFG) -c arte.cpp -o arte-w.o -DARTE_NO_CLI $(WINFLAG)
+	$(COMPILER) $(CFG) -c anima.cpp -o arte.o $(WINFLAG)
+	$(LINKER) $(LK) -o arte-c$(EXEC_TYPE) arte-c.o $(OBJ) $(LK)
+	$(LINKER) $(LK) -o arte-w$(EXEC_TYPE) arte-w.o $(OBJ) $(LK) $(WINFLAG)
+	$(LINKER) $(LK) -o arte$(EXEC_TYPE) arte.o $(OBJ) $(LK) $(WINFLAG)
 
 mk-push:
-	cp carte$(EXEC_TYPE) ../../output/bin
-	cp warte$(EXEC_TYPE) ../../output/bin
+	cp arte-c$(EXEC_TYPE) ../../output/bin
+	cp arte-w$(EXEC_TYPE) ../../output/bin
 	cp minimac$(EXEC_TYPE) ../../output/bin
 	cp concerto$(EXEC_TYPE) ../../output/bin
-	cp anima$(EXEC_TYPE) ../../output/bin
+	cp arte$(EXEC_TYPE) ../../output/bin
 	cp packer$(EXEC_TYPE) ../../output/bin
 
 finale:
