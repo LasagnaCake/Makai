@@ -20,13 +20,12 @@ LIBREQS		:= $(LITEREQS) -static -static-libstdc++ -static-libgcc
 
 ifeq ($(os),win)
 GRAPHREQS	:= -lopengl32
+NOCMD 		:= -mwindows
 endif
 
 sinclude $(ROOT)/make/os.make
 
 testcmd = @$(CXX) $(COMPILER_CONFIG)  $(LQQ) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
-
-NOCMD := -mwindows
 
 ifdef debug-release
 RELEASEMODE := $(DEBUGMODE)

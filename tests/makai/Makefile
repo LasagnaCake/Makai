@@ -18,6 +18,7 @@ LIBREQS		:= $(LITEREQS) -static -static-libstdc++ -static-libgcc
 
 ifeq ($(os),win)
 GRAPHREQS	:= -lopengl32
+NOCMD 		:= -mwindows
 endif
 
 sinclude $(ROOT)/make/os.make
@@ -25,8 +26,6 @@ sinclude $(ROOT)/make/os.make
 o?=3
 
 testcmd = @$(CXX) $(COMPILER_CONFIG) $(LQQ) -O$(o) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
-
-NOCMD := -mwindows
 
 ifdef debug-release
 RELEASEMODE := $(DEBUGMODE)
