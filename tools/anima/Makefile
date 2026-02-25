@@ -7,12 +7,7 @@ LEAN := -s
 
 debug := 0
 
-ifeq ($(from-lite),1)
-ADDCONF := -fPIC
-LQQ := -fPIC
-else
 ADDCONF := -static -static-libstdc++ -static-libgcc
-endif
 
 COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions $(LQQ)
 LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
@@ -46,7 +41,7 @@ LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LIBRARIES) $(LEAN)
 
 COMPILER	:= $(CXX) $(INCLUDES)
 ifeq ($(os),linux)
-LINKER		:= $(CXX) -dynamic -L:libcurl.so
+LINKER		:= $(CXX)
 else
 LINKER		:= $(CXX)
 endif

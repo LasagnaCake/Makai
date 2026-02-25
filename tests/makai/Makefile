@@ -5,22 +5,20 @@ LEAN := -s
 
 ROOT := ../..
 
+export os ?=win
+
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fms-extensions -fcoroutines -I$(ROOT)/output/include
 DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic
 
 ifeq ($(from-lite),1)
-LITEREQS := $(LITE_BUILD_REQS) -fPIC
-LQQ := -fPIC
-else
-LITEREQS := -static -static-libstdc++ -static-libgcc
+LITEREQS := $(LITE_BUILD_REQS)
 endif
 
-LIBREQS		:= $(LITEREQS)
+LIBREQS		:= $(LITEREQS) -static -static-libstdc++ -static-libgcc
+
 ifeq ($(os),win)
 GRAPHREQS	:= -lopengl32
 endif
-
-export os ?=win
 
 sinclude $(ROOT)/make/os.make
 

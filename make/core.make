@@ -48,11 +48,7 @@ export upper =$(shell echo $(1) | tr a-z A-Z)
 
 export concat =$(strip $(1)).$(strip $(2))
 
-ifeq ($(lite),1)
-export LEAN := -fPIC -shared -s
-else
 export LEAN := -static -s
-endif
 
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fconcepts-diagnostics-depth=4 -fcoroutines -fms-extensions
 
@@ -90,20 +86,11 @@ GL_LOADER_FLAG := -DMAKAILIB_GL_LOADER=MAKAILIB_USE_$(call upper,$(gl-loader))
 export libpath	= -I$(call path, $(ROOT)/lib/$(strip $(1)))
 export corepath	= -I$(call path, $(ROOT)/output/$(strip $(1)))
 
-ifeq ($(lite),1)
-export litepath = $(shell pkg-config --cflags $(1))
-export INC_CURL			:= $(call litepath, libcurl)
-export INC_SDL			:= $(call litepath, sdl2)
-export INC_SDL_NET		:= $(call litepath, SDL2_net)
-export INC_CRYPTOPP		:= $(call litepath, libcrypto++)
-#export INC_WEBGPU		:= $(call litepath, libwgpu-native)
-else
 export INC_CURL			= $(call libpath, curl/include)
 export INC_SDL			= $(call libpath, SDL2-2.0.10/include)
+export INC_SDL_NET		= $(call libpath, SDL2-2.0.10/include)
 export INC_CRYPTOPP		= $(call libpath, cryptopp/include)
 export INC_WEBGPU		= $(call libpath, wgpu-native/windows-x86_64/include)
-endif
-
 export INC_OPENGL		= $(call libpath, OpenGL/$(call upper,$(gl-loader))/include) $(GL_LOADER_FLAG)
 export INC_STB			= $(call libpath, stb)
 export INC_CUTE			= $(call libpath, cute_headers)

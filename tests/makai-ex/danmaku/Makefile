@@ -14,12 +14,10 @@ DEBUGMODE := -DMAKAILIB_DEBUG -fconcepts-diagnostics-depth=4 -Wall -Wpedantic -O
 
 ifeq ($(from-lite),1)
 LITEREQS := $(LITE_BUILD_REQS)
-LQQ := -fPIC
-else
-LITEREQS := -static -static-libstdc++ -static-libgcc
 endif
 
-LIBREQS		:= $(LITEREQS)
+LIBREQS		:= $(LITEREQS) -static -static-libstdc++ -static-libgcc
+
 ifeq ($(os),win)
 GRAPHREQS	:= -lopengl32
 endif
