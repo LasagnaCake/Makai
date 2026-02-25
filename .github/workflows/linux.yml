@@ -24,6 +24,23 @@ jobs:
           packages: libgl1-mesa-dev
           version: 1.0
 
+  ship-it-full:
+    name: Ship the library (FULL ver.)
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    steps:
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libgl1-mesa-dev
+          version: 1.0
+      - uses: actions/checkout@v4
+      - name: make ship-it
+        run: make ship-it os=linux
+      - uses: actions/upload-artifact@master
+        with:
+          name: linux-builds
+          path: output/linux-*.zip
+
   ship-it-lite:
     name: Ship the library (LITE ver.)
     runs-on: ubuntu-latest
@@ -35,7 +52,7 @@ jobs:
           version: 1.0
       - uses: actions/checkout@v4
       - name: make ship-it
-        run: make ship-it os=linux
+        run: make ship-it os=linux lite=1
       - uses: actions/upload-artifact@master
         with:
           name: linux-builds

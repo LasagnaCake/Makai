@@ -100,19 +100,16 @@ minimac:
 
 arte:
 	@echo "[$@]"
-	$(COMPILER) $(CFG) -c arte.cpp -o arte.c.o -DARTE_CLI
-	$(COMPILER) $(CFG) -c arte.cpp -o arte.w.o -DARTE_NO_CLI $(WINFLAG)
-	$(COMPILER) $(CFG) -c anima.cpp -o arte.o $(WINFLAG)
-	$(LINKER) $(LK) -o arte.c$(EXEC_TYPE) arte.c.o $(OBJ) $(LK)
-	$(LINKER) $(LK) -o arte.w$(EXEC_TYPE) arte.w.o $(OBJ) $(LK) $(WINFLAG)
-	$(LINKER) $(LK) -o arte$(EXEC_TYPE) arte.o $(OBJ) $(LK) $(WINFLAG)
+	$(COMPILER) $(CFG) -c arte.cpp -o art.o -DARTE_CLI
+	$(COMPILER) $(CFG) -c arte.cpp -o artw.o -DARTE_NO_CLI $(WINFLAG)
+	$(LINKER) $(LK) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
+	$(LINKER) $(LK) -o artw$(EXEC_TYPE) artw.o $(OBJ) $(LK) $(WINFLAG)
 
 mk-push:
-	cp arte.c$(EXEC_TYPE) ../../output/bin
-	cp arte.w$(EXEC_TYPE) ../../output/bin
+	cp art$(EXEC_TYPE) ../../output/bin
+	cp artw$(EXEC_TYPE) ../../output/bin
 	cp minimac$(EXEC_TYPE) ../../output/bin
 	cp concerto$(EXEC_TYPE) ../../output/bin
-	cp arte$(EXEC_TYPE) ../../output/bin
 	cp packer$(EXEC_TYPE) ../../output/bin
 
 finale:

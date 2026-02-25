@@ -35,7 +35,7 @@ jobs:
   #       gcc --version
   #       g++ --version
   #       mingw32-make --version
-  ship-it-lite:
+  ship-it-full:
     name: Ship the library (FULL ver.)
     runs-on: windows-latest
     defaults:
@@ -54,6 +54,30 @@ jobs:
         run: |
           pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
           mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
+      - uses: actions/upload-artifact@master
+        with:
+          name: windows-builds
+          path: output/win-*.zip
+
+  ship-it-lite:
+    name: Ship the library (LITE ver.)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    #    needs: install-gcc
+    steps:
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - name: make ship-it
+        run: |
+          pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
+          mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc lite=1
       - uses: actions/upload-artifact@master
         with:
           name: windows-builds
