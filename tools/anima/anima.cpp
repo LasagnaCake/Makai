@@ -24,7 +24,7 @@ MakaiMain(args) {
 	auto const prog = Makai::Anima::V2::Runtime::Program::deserialize(f);
 	CTL::OS::launch(
 		CTL::OS::FS::sourceLocation()
-	+	"/" + (prog.showCommandLine ? "carte" : "warte")
+	+	"/" + (prog.showCommandLine ? "arte.c" : "arte.w")
 	#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 	+	".exe"
 	#endif
