@@ -56,18 +56,12 @@ In a single line: pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-7zi
 
 ### Linux
 
-The linux build currently only supports the lite version.
+> [!note]
+> If using the library on linux, your code must be linked against `libsdl2.so` and `libcurl.so` for both *lite* and *full* versions.
 
 - GCC (13+) 
 - Make
 - libgl1-mesa-dev
-- libsdl2-dev
-- libsdl2-net-dev
-- libcurl4-openssl-dev
-- libcrypto++-dev
-- libssl-dev
-- libgss-dev
-- libnghttp2-dev
 
 ## How to use
 
