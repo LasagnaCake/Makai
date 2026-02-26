@@ -42,7 +42,7 @@ LINUX_FULL_PRE := :
 OS_DEPENDENT_LIBS := cryptopp:$(CRYPTOPP) sdl2:$(SDL) sdl2-net:$(SDLNET) curl:$(SDL)
 else
 ifeq ($(os),linux)
-LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/linux64/libcryptopp.a.zip -d lib/cryptopp/lib/linux64/
+LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/$(os)64/libcryptopp.a.zip -d lib/cryptopp/lib/$(os)64/
 OS_DEPENDENT_LIBS := cryptopp:$(CRYPTOPP)
 endif
 endif
