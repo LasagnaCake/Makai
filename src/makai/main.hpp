@@ -30,8 +30,9 @@ namespace Makai {
 		/// @tparam TArgs... argument types.
 		/// @param args... what to print.
 		template <class... TArgs>
-		constexpr void write(TArgs const&... args) const {
-			(write(args), ...);
+		constexpr void write(TArgs const&... args) const
+		requires ((sizeof...(TArgs) > 1) || (Type::Different<Meta::First<TArgs...>, String>)) {
+			(write(toString(args)), ...);
 		}
 
 		/// @brief Prints a series of values to the command line, followed by a new line.
