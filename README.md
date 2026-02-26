@@ -57,7 +57,7 @@ In a single line: pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-7zi
 ### Linux
 
 > [!note]
-> If using the library on linux, your code must be linked against `libsdl2.so` and `libcurl.so` for both *lite* and *full* versions.
+> If using the library on linux, your code must be linked against `libSDL2.so`, `libSDL2_net.so` and `libcurl.so` for both *lite* and *full* versions.
 
 - GCC (13+) 
 - Make
@@ -79,13 +79,17 @@ For the old system, se the `legacy-system` branch.
 > [!note]
 > If `../../../lib/xml2json/[...]: warning: floating constant exceeds range of 'float' [-Woverflow]` appears while compiling for release, ignore it - it's a third-party library issue.
 
+### Using the library
+
+1. Use the appropriate library version, depending on whether it is in debug mode, or release mode.
+
 ### Note
 
-## Libraries used
+## Dependencies
 
 In older versions of the framework, these libraries came bundled inside the main ones.
 
-Since version 2.0, there is a version of Makai that comes without some libraries (those that are not "header-only"). Those that are not included in this "lite" version are marked in the table below with an asterisk(\*). **SDL2 and cURL are not included in linux builds.**
+Since version 2.0, there is a version of Makai that comes without some libraries. Those that are not included in this "lite" version are marked in the table below with an asterisk (\*). **Some libraries are not bundled depending on the operating system**, and for that, se the requirements for the respective OS.
 
 Inclusion of these on your project are not required, and **strictly forbidden** (except OpenGL, which is **required**).
 Since a version of (most of) them are bundled[^1], including your own version of those *will* cause issues.
@@ -104,7 +108,7 @@ Since a version of (most of) them are bundled[^1], including your own version of
 | json2xml   | JSON-to-XML conversion                              | Modified version only used internally, not required |
 | CryptoPP   | Encryption, decryption, compression & decompression | \*Yes (Lib file[^3])                                |
 
-\* Only bundled in the "full" library package, not the "lite" version. For linux builds, cURL and SDL2 are not provided.
+\* Only bundled in the "full" library package, not the "lite" version.
 
 ## Documentation
 
