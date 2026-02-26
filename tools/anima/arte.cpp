@@ -57,8 +57,8 @@ struct ARTEMain: Makai::AMain {
 
 	void run(Makai::Data::Value const& args) override {
 		ARTE engine;
-		engine.httpRequestsEnabled = args["net"].getBoolean(false);
-		if (args["help"]) {
+		engine.httpRequestsEnabled = args.fetch("net", false);
+		if (args.fetch("help", false)) {
 			DEBUGLN("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			DEBUGLN("Available commands:");
 			DEBUGLN("art <program> [-N]");
