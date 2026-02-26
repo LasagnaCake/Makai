@@ -12,6 +12,12 @@ else
 LIBFILE_TYPE :=.dll.a
 endif
 
+ifndef os
+LIBFILE_SRC ?=win64
+else
+LIBFILE_SRC ?=$(os)64
+endif
+
 SDL			= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2$(LIBFILE_TYPE)
 SDLNET		= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
 CRYPTOPP	= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
@@ -33,9 +39,11 @@ define MOVE_DLL
 	@cd ..
 endef
 LINUX_FULL_PRE := :
+OS_DEPENDENT_LIBS := cryptopp:$(CRYPTOPP) sdl2:$(SDL) sdl2-net:$(SDLNET) curl:$(SDL)
 else
 ifeq ($(os),linux)
 LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/linux64/libcryptopp.a.zip -d lib/cryptopp/lib/linux64/
+OS_DEPENDENT_LIBS := cryptopp:$(CRYPTOPP)
 endif
 endif
 
@@ -46,6 +54,7 @@ endif
 CONFIG := -static #--static-libstdc++ --static-libgcc
 
 include make/options.make
+include make/basis.make
 
 .PHONY: clear-output package-lib build-debug build-release up-debug up-release link-debug link-release build-all up-all link-all debug release copy-headers copy-ex-headers copy-o-debug copy-o-release all help link-extern
 .ONESHELL:
@@ -178,95 +187,17 @@ link-release:
 	@echo "Done!"
 	@echo 
 
-THIRD_PARTY_PREFIX := lib.3p
-
-define addname
-	@echo "Renaming [$(strip $(1))]..."
-	@for file in *.o*; do mv $$file $(THIRD_PARTY_PREFIX).$(strip $(1)).$$file; done
-endef
-
-define repack
-	@echo "Repacking [$(strip $(1))]..."
-	@cd $(strip $(1))
-	@ar rcvs ../$(THIRD_PARTY_PREFIX).$(strip $(1)).a *.o*
-	@cd ..
-endef
-
-ifeq ($(os),win)
-define DO-EXTRACT
-	@echo "Extracting SDL..."
-	@ar x $(SDL) --output "obj/extern/sdl"
-	@echo "Extracting cURL..."
-	@ar x $(CURL) --output "obj/extern/curl"
-endef
-#	@echo "Extracting OpenSSL..."
-#	@ar x $(OPENSSL) --output "obj/extern/openssl"
-endif
-
-extract-extern:
-	@echo "Creating lib folder..."
-	$(LINUX_FULL_PRE)
-	@rm -rf obj/extern
-	@mkdir -p obj/extern/sdl
-	@mkdir -p obj/extern/sdl-net
-	@mkdir -p obj/extern/cryptopp
-	@mkdir -p obj/extern/curl
-	@echo "Extracting SDL-Net..."
-	@ar x $(SDLNET) --output "obj/extern/sdl-net"
-	@echo "Extracting CryptoPP..."
-	@ar x $(CRYPTOPP) --output "obj/extern/cryptopp"
-	$(DO-EXTRACT)
-
-ifeq ($(os),win)
-define DO-RENAME
-	@cd ../sdl
-	$(call addname, sdl)
-	@cd ../curl
-	$(call addname, curl)
-endef
-#	@cd ../openssl
-#	$(call addname, openssl)
-endif
-
-rename-extern:
-	@echo "Renaming objects..."
-	@cd obj/extern
-	@cd sdl-net
-	$(call addname, sdl-net)
-	@cd ../cryptopp
-	$(call addname, cryptopp)
-	$(DO-RENAME)
-	@cd ../../..
-
-ifeq ($(os),win)
-define DO-REPACK
-	$(call repack, curl)
-	$(call repack, sdl)
-endef
-#	$(call repack, openssl)
-endif
-
-repack-extern:
-	@cd obj/extern
-	@echo "Re-combining libraries..."
-	$(call repack, sdl-net)
-	$(call repack, cryptopp)
-	$(DO-REPACK)
-	@cd ../..
-
-ifeq ($(os),win)
-MRI :=makelib.extern.mri
-else
-MRI :=makelib.extern.noshared.mri
-endif
-
 combine-extern:
 	@echo "Combining files..."
 	@ar -M <$(MRI)
 	@ranlib obj/extern/extern.3p.a
 	@rm -rf obj/extern/st*
 
-link-extern: extract-extern rename-extern repack-extern combine-extern
+link-extern:
+	@echo "Packing libraries..."
+	@echo "Libraries: $(OS_DEPENDENT_LIBS)";
+	$(call pack-extern, $(OS_DEPENDENT_LIBS))
+	$(call combine-extern)
 	@echo "Done!"
 
 tooling: build-tooling copy-tooling

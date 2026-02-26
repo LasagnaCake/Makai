@@ -93,12 +93,6 @@ else
 GNU_MAKE	?=make
 endif
 
-ifndef os
-LIBFILE_SRC ?=win64
-else
-LIBFILE_SRC ?=$(os)64
-endif
-
 export LIBFILE_SRC
 
 export GNU_MAKE

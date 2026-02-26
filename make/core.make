@@ -1,10 +1,13 @@
 sinclude options.make
 
 export space :=
+export sep :=,
 
 define newline
 
 endef
+
+export apply = $(foreach $(v),$(2),$(call $(1),$(v)))
 
 ifeq ($(compiler),msys2-gcc)
 C_COMPILER		?=gcc
