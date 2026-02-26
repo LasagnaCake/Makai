@@ -53,11 +53,11 @@ struct ARTEMain: Makai::AMain {
 		showDialogOnError = false;
 	}
 
-	void write(Makai::String const& what) override {DEBUG(what);}
+	void write(Makai::String const& what) const override {DEBUG(what);}
 
 	void run(Makai::Data::Value const& args) override {
 		ARTE engine;
-		engine.httpRequestsEnabled = args["net"].get<bool>(false);
+		engine.httpRequestsEnabled = args["net"].getBoolean(false);
 		if (args["help"]) {
 			DEBUGLN("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			DEBUGLN("Available commands:");
