@@ -1,6 +1,8 @@
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 
+constexpr auto const VER = Makai::Data::Version{1};
+
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	bool httpRequestsEnabled = false;
 
@@ -29,28 +31,39 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 };
 
-static Makai::Data::Value configBase() {
-	Makai::Data::Value cfg;
-	cfg["help"]		= false;
-	cfg["net"]		= true;
-	return cfg;
-}
+struct ARTEMain: Makai::AMain {
+	static Makai::Data::Value configBase() {
+		Makai::Data::Value cfg;
+		cfg["help"]		= false;
+		cfg["net"]		= true;
+		return cfg;
+	}
 
-static void translationBase(Makai::CLI::Parser::Translation& tl) {
-	tl["H"]		= "help";
-	tl["N"]		= "net";
-	tl["Net"]	= "net";
-}
+	static void translationBase(Makai::CLI::Parser::Translation& tl) {
+		tl["H"]		= "help";
+		tl["N"]		= "net";
+		tl["Net"]	= "net";
+	}
 
-MakaiInit(cli) {
-	translationBase(cli.tl);
-	baseArgs = configBase();
-}
+	ARTEMain(Makai::CLI::Parser& cli): Main(cli) {
+		translationBase(cli.tl);
+		baseArgs = configBase();
+		showDialogOnError = false;
+	}
 
-MakaiMain(args) {
-	ARTE engine;
-	engine.httpRequestsEnabled = args["net"].get<bool>(false);
-	engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
-	engine.execute();
-	while (engine.process()) {};
-}
+	virtual void run(Makai::Data::Value const& args) {
+		ARTE engine;
+		engine.httpRequestsEnabled = args["net"].get<bool>(false);
+		if (args["help"]) {
+			DEBUGLN("Anima RunTime - V" + VER.serialize().get<Makai::String>());
+			DEBUGLN("Available commands:");
+			DEBUGLN("art <program> [-N]");
+		} else {
+			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
+			engine.execute();
+			while (engine.process()) {};
+		}
+	}
+};
+
+Makai_bindMain(ARTEMain);
