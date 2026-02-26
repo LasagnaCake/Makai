@@ -66,6 +66,12 @@ struct ARTEMain: Makai::AMain {
 			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 			engine.execute();
 			while (engine.process()) {};
+			engine.error().then([&] (auto const& e) {
+				writeLine("!!! ERROR !!!");
+				writeLine("At bytecode offset ", e.location);
+				writeLine("Message: [", e.location, "]");
+				return e;
+			});
 		}
 	}
 };
