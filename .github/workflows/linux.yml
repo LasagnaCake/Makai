@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
           version: 1.0
       - uses: actions/checkout@v4
       - name: make ship-it
@@ -113,7 +113,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
+          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
           version: 1.0
       - uses: actions/checkout@v4
       - name: make release
