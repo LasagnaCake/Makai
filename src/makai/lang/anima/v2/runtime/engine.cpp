@@ -24,7 +24,7 @@ bool Engine::yieldCycle() {
 		advance();
 	} while (current.name == Instruction::Name::AV2_IN_NO_OP && current.type);
 	if (isFinished) return false;
-	DEBUGLN("Instruction:", Instruction::asString(instruction.name));
+	DEBUGLN("Instruction:", Instruction::asString(current.name));
 	switch (current.name) {
 		using enum Instruction::Name;
 		case AV2_IN_HALT:			v2Halt();		break;
