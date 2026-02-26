@@ -89,7 +89,7 @@ For the old system, se the `legacy-system` branch.
 
 In older versions of the framework, these libraries came bundled inside the main ones.
 
-Since version 2.0, there is a version of Makai that comes without some libraries. Those that are not included in this "lite" version are marked in the table below with an asterisk (\*). **Some libraries are not bundled depending on the operating system**, and for that, se the requirements for the respective OS.
+Since version 2.0, there is a version of Makai that comes without some libraries. Those that are not included in this "lite" version are marked in the table below with an asterisk (\*). **Some libraries are not bundled whatsoever depending on the operating system**, and for that, se the requirements for your respective OS.
 
 Inclusion of these on your project are not required, and **strictly forbidden** (except OpenGL, which is **required**).
 Since a version of (most of) them are bundled[^1], including your own version of those *will* cause issues.
@@ -108,7 +108,7 @@ Since a version of (most of) them are bundled[^1], including your own version of
 | json2xml   | JSON-to-XML conversion                              | Modified version only used internally, not required |
 | CryptoPP   | Encryption, decryption, compression & decompression | \*Yes (Lib file[^3])                                |
 
-\* Only bundled in the "full" library package, not the "lite" version.
+\* Only bundled in the "full" library package, not the "lite" version. May vary between OSes.
 
 ## Documentation
 
