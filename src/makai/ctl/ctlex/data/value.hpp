@@ -588,6 +588,29 @@ namespace Data {
 			}
 		}
 
+		/// @brief Fetches a sub-element.
+		/// @tparam TWhere Key, index or path type.
+		/// @param where Key, index or path to element.
+		/// @return Element at given path, or `undefined`.
+		template <class TWhere>
+		constexpr Value fetch(TWhere const where) const {
+			Value out = undefined();
+			tryFetch(out, where);
+			return out;
+		}
+
+		/// @brief Fetches a sub-element of a given type.
+		/// @tparam TData sub-element type.
+		/// @tparam TWhere Key, index or path type.
+		/// @param where Key, index or path to element.
+		/// @param fallback Value to return if element does not exist.
+		/// @return Value at given path, or fallback.
+		template <class TData, class TWhere>
+		constexpr TData fetch(TWhere const where, TData const& fallback) const {
+			tryFetch(fallback, where);
+			return fallback;
+		}
+
 		/// @brief Returns the value as a given type.
 		/// @tparam T value type.
 		/// @return Value as `T`.
@@ -622,7 +645,7 @@ namespace Data {
 		constexpr IdentifierType	getIdentifier() const	{return get<IdentifierType>();	}
 		constexpr VectorType		getVector() const		{return get<VectorType>();		}
 
-		constexpr bool				geBoolean(UnsignedType const fallback) const		{return get<bool>(fallback);					}
+		constexpr bool				geBoolean(bool const fallback) const				{return get<bool>(fallback);					}
 		constexpr UnsignedType		getUnsigned(UnsignedType const fallback) const		{return get<UnsignedType>(fallback);			}
 		constexpr SignedType		getSigned(SignedType const fallback) const			{return get<SignedType>(fallback);				}
 		constexpr RealType			getReal(RealType const fallback) const				{return get<RealType>(fallback);				}
