@@ -1,5 +1,0 @@
-create obj/extern/extern.3p.a
-addlib obj/extern/lib.3p.sdl-net.a
-addlib obj/extern/lib.3p.cryptopp.a
-save
-end
