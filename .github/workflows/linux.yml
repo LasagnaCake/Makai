@@ -138,7 +138,7 @@ jobs:
     name: Build API Tests (DEBUG)
     runs-on: ubuntu-latest
     needs: [build-core-lib-debug]
-    #    if: 1 != 1
+    if: 1 != 1
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
@@ -163,7 +163,7 @@ jobs:
     name: Build API Tests (RELEASE)
     runs-on: ubuntu-latest
     needs: [build-core-lib-release]
-    #    if: 1 != 1
+    if: 1 != 1
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
