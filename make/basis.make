@@ -5,7 +5,7 @@ os ?=win
 export apply = $(foreach arg,$(2),$(call $(1),$(arg)))
 
 ifeq ($(os),win)
-define MAKAI_EXTERN_MRI
+define MAKAILIB_EXTERN_MRI
 create obj/extern/extern.3p.a
 addlib obj/extern/$(THIRD_PARTY_PREFIX).sdl.a
 addlib obj/extern/$(THIRD_PARTY_PREFIX).sdl-net.a
