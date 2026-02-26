@@ -35,16 +35,19 @@ define combine-extern
 	@echo "Finishing touches..."
 	@ranlib obj/extern/extern.3p.a
 	@rm -rf obj/extern/st*
+
 endef
 
 define addname
 	@echo "Renaming [$(strip $(1))]..."
 	@for file in *.o*; do mv $$file $(THIRD_PARTY_PREFIX).$(strip $(1)).$$file; done
+
 endef
 
 define repack
 	@echo "Repacking [$(strip $(1))]..."
 	@ar rcvs ../$(THIRD_PARTY_PREFIX).$(strip $(1)).a *.o*
+
 endef
 
 define pack-lib
@@ -57,6 +60,7 @@ define pack-lib
     @echo "Finalizing..."
 	@cd ../../..
 	@echo "Done!"
+
 endef
 
 lib-name =$(firstword $(subst :, ,$(1)))
