@@ -365,7 +365,7 @@ namespace Makai::Anima::V2 {
 		/// @brief Instruction "Type" (specification).
 		uint32	type;
 
-		constexpr static String nameof(Name const& name) {
+		constexpr static String asString(Name const& name) {
 			switch (name) {
 				case Name::AV2_IN_NO_OP:		return "nop";
 				case Name::AV2_IN_HALT:			return "halt";
