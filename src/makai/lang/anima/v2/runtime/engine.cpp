@@ -219,6 +219,7 @@ Engine::Error Engine::missingArgumentsError() {
 }
 
 void Engine::advance(bool isRequired) {
+	DEBUGLN("Advancing...");
 	++context.pointers.instruction;
 	if (context.pointers.instruction < program.code.size())
 		current = program.code[context.pointers.instruction];
