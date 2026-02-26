@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libcurl4-openssl-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
           version: 1.0
 
   ship-it-full:
@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libcurl4-openssl-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
           version: 1.0
       - uses: actions/checkout@v4
       - name: make ship-it
@@ -95,7 +95,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libcurl4-openssl-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
           version: 1.0
       - uses: actions/checkout@v4
       - name: make debug
@@ -113,7 +113,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libcurl4-openssl-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
           version: 1.0
       - uses: actions/checkout@v4
       - name: make release
@@ -132,7 +132,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libcurl4-openssl-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
@@ -159,7 +159,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libcurl4-openssl-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
@@ -184,7 +184,7 @@ jobs:
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libgl1-mesa-dev libsdl2-dev libcurl4-openssl-dev
+          packages: libgl1-mesa-dev libSDL2-2.0-0 curl
           version: 1.0
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@master
