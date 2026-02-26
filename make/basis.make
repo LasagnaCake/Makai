@@ -20,6 +20,7 @@ ifeq ($(os),linux)
 define MAKAILIB_EXTERN_MRI
 create obj/extern/extern.3p.a
 addlib obj/extern/$(THIRD_PARTY_PREFIX).cryptopp.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).sdl-net.a
 save
 end
 endef
