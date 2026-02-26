@@ -365,6 +365,33 @@ namespace Makai::Anima::V2 {
 		/// @brief Instruction "Type" (specification).
 		uint32	type;
 
+		constexpr static String nameof(Name const& name) {
+			switch (name) {
+				case Name::AV2_IN_NO_OP:		return "nop";
+				case Name::AV2_IN_HALT:			return "halt";
+				case Name::AV2_IN_MODE:			return "mode";
+				case Name::AV2_IN_COPY:			return "copy";
+				case Name::AV2_IN_COMPARE:		return "compare";
+				case Name::AV2_IN_CALL:			return "call";
+				case Name::AV2_IN_JUMP:			return "jump";
+				case Name::AV2_IN_STACK_PUSH:	return "push";
+				case Name::AV2_IN_STACK_POP:	return "pop";
+				case Name::AV2_IN_STACK_CLEAR:	return "clear";
+				case Name::AV2_IN_STACK_FLUSH:	return "flush";
+				case Name::AV2_IN_RETURN:		return "return";
+				case Name::AV2_IN_MATH_BOP:		return "bop";
+				case Name::AV2_IN_MATH_UOP:		return "uop";
+				case Name::AV2_IN_YIELD:		return "yield";
+				case Name::AV2_IN_AWAIT:		return "await";
+				case Name::AV2_IN_GET:			return "get";
+				case Name::AV2_IN_SET:			return "set";
+				case Name::AV2_IN_CAST:			return "cast";
+				case Name::AV2_IN_NEW_OBJ:		return "new";
+				case Name::AV2_IN_RANDOM:		return "rng";
+				default: return "UNKNOWN";
+			}
+		}
+
 		/// @brief Parses an instruction from a value.
 		constexpr static Instruction fromValue(uint64 const v) {
 			return CTL::bitcast<Instruction>(v);

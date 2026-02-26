@@ -59,13 +59,15 @@ struct ARTEMain: Makai::AMain {
 		ARTE engine;
 		engine.httpRequestsEnabled = args.fetch("net", false);
 		if (args.fetch("help", false)) {
-			DEBUGLN("Anima RunTime - V" + VER.serialize().get<Makai::String>());
-			DEBUGLN("Available commands:");
-			DEBUGLN("art <program> [-N]");
+			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
+			writeLine("Available commands:");
+			writeLine("art <program> [-N]");
 		} else {
 			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 			engine.execute();
-			while (engine.process()) {};
+			while (engine.process()) {
+				writeLine("Frame!");
+			};
 			engine.error().then([&] (auto const& e) {
 				writeLine("!!! ERROR !!!");
 				writeLine("At bytecode offset ", e.location);

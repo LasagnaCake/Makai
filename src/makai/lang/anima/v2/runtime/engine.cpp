@@ -20,9 +20,11 @@ bool Engine::yieldCycle() {
 		revertContext = true;
 	if (isFinished) return false;
 	do {
+		DEBUGLN("Next instruction, please!");
 		advance();
 	} while (current.name == Instruction::Name::AV2_IN_NO_OP && current.type);
 	if (isFinished) return false;
+	DEBUGLN("Instruction:", Instruction::asString(instruction.name));
 	switch (current.name) {
 		using enum Instruction::Name;
 		case AV2_IN_HALT:			v2Halt();		break;
@@ -51,7 +53,10 @@ bool Engine::yieldCycle() {
 
 bool Engine::process() {
 	paused = false;
-	if (wait) return isFinished;
+	if (wait) {
+		DEBUGLN("Waiting...");
+		return isFinished;
+	}
 	else wait.clear();
 	while (Engine::yieldCycle() && !paused) {}
 	return isFinished;
