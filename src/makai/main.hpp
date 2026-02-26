@@ -20,6 +20,28 @@ namespace Makai {
 		/// @brief Destructor.
 		virtual ~AMain() {}
 
+		/// @brief Prints a string of text to the command-line.
+		/// @param what what to print.
+		virtual void write(Makai::String const& what) const {
+			DEBUG(what);
+		}
+
+		/// @brief Prints a series of values to the command line.
+		/// @tparam TArgs... argument types.
+		/// @param args... what to print.
+		template <class... TArgs>
+		constexpr void write(TArgs const&... args) const {
+			(write(args), ...);
+		}
+
+		/// @brief Prints a series of values to the command line, followed by a new line.
+		/// @tparam TArgs... argument types.
+		/// @param args... what to print.
+		template <class... TArgs>
+		constexpr void writeLine(TArgs const&... args) const {
+			(write(toString(args)), ..., write("\n"));
+		}
+
 		/// @brief Called when program runs.
 		/// @param args Arguments passed to the program, as parsed by the CLI parser.
 		virtual void run(Data::Value const& args) = 0;
@@ -33,12 +55,12 @@ namespace Makai {
 		} catch (Makai::Error::Generic const& e) {
 			if (showDialogOnError)
 				Makai::Popup::showError(e.report());
-			else DEBUGLN(e.what());
+			else writeLine(e.what());
 			return -1;
 		} catch (Makai::Exception const& e) {
 			if (showDialogOnError)
 				Makai::Popup::showError(e.what());
-			else DEBUGLN(e.what());
+			else writeLine(e.what());
 			return -1;
 		}
 
@@ -53,6 +75,6 @@ namespace Makai {
 }
 
 /// @brief Implements main.
-#define Makai_bindMain(MAIN_APP_TYPE) int main(int argc, char** argv) {return Makai::Main::main<MAIN_APP_TYPE>(argc, argv);}
+#define Makai_bindMain(MAIN_APP_TYPE) int main(int argc, char** argv) {return Makai::AMain::main<MAIN_APP_TYPE>(argc, argv);}
 
 #endif
