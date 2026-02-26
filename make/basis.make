@@ -54,6 +54,7 @@ define pack-lib
 	@cd obj/extern/$(strip $(1))
 	$(call addname, $(strip $(1)))
 	$(call repack, $(strip $(1)))
+    @echo "Done!"
 	@cd ../../..
 endef
 
