@@ -195,6 +195,7 @@ combine-extern:
 
 link-extern:
 	@echo "Packing libraries..."
+	$(LINUX_FULL_PRE)
 	@echo "Libraries: $(OS_DEPENDENT_LIBS)";
 	$(call pack-extern, $(OS_DEPENDENT_LIBS))
 	$(call combine-extern)
