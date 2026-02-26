@@ -180,6 +180,7 @@ jobs:
       # Hellspawn END
       - name: make debug gmake=mingw32-make
         run: |
+          mingw32-make link-extern gmake=mingw32-make os=win
           mingw32-make debug gmake=mingw32-make os=win
       - uses: actions/upload-artifact@master
         with:
@@ -203,6 +204,7 @@ jobs:
       # Hellspawn END
       - name: make release
         run: |
+          mingw32-make link-extern gmake=mingw32-make os=win
           mingw32-make release gmake=mingw32-make os=win
       - uses: actions/upload-artifact@master
         with:
