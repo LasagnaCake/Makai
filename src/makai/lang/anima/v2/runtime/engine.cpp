@@ -933,7 +933,6 @@ void Engine::callBuiltInVector3Op(BuiltInVectorOperation const func) {
 }
 
 void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
-	// TODO: This
 	switch (func) {
 		case BuiltInVectorOperation::AV2_EBI_VO_NEW: {
 			if (!(context.registers[0]->isNumber()))
@@ -1026,7 +1025,6 @@ void Engine::callBuiltInOSOp(BuiltInOSOperation const func) {
 }
 
 void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
-	// TODO: This
 	switch (func) {
 		case BuiltInFSOperation::AV2_EBI_FSO_GET_BINARY: {
 			if (!context.registers[0]->isString())
@@ -1151,7 +1149,6 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 }
 
 void Engine::callBuiltInArchiveOp(BuiltInArchiveOperation const func) {
-	// TODO: This
 	switch (func) {
 		case BuiltInArchiveOperation::AV2_EBI_AFO_NEW: {
 			if (!(
