@@ -1,6 +1,8 @@
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 
+#include "base.cc"
+
 constexpr auto const VER = Makai::Data::Version{1};
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
@@ -45,13 +47,15 @@ struct ARTEMain: Makai::AMain {
 		tl["Net"]	= "net";
 	}
 
-	ARTEMain(Makai::CLI::Parser& cli): Main(cli) {
+	ARTEMain(Makai::CLI::Parser& cli): AMain(cli) {
 		translationBase(cli.tl);
 		baseArgs = configBase();
 		showDialogOnError = false;
 	}
 
-	virtual void run(Makai::Data::Value const& args) {
+	void write(Makai::String const& what) override {DEBUG(what);}
+
+	void run(Makai::Data::Value const& args) override {
 		ARTE engine;
 		engine.httpRequestsEnabled = args["net"].get<bool>(false);
 		if (args["help"]) {
