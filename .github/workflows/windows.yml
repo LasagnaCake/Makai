@@ -59,6 +59,31 @@ jobs:
           name: windows-builds
           path: output/win-*.zip
 
+  build-ctl-tests-debug:
+    name: Build CTL Tests (DEBUG)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    #    needs: install-gcc
+    steps:
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - name: make tests
+        run: |
+          cd tests/ctl
+          mingw32-make debug gmake=mingw32-make os=win
+          cd ../..
+      - uses: actions/upload-artifact@master
+        with:
+          name: tests-ctl-debug
+          path: tests/ctl/output/debug
+
   # run-ctl-tests-debug:
   #   name: Run CTL Tests (DEBUG)
   #   runs-on: windows-latest
