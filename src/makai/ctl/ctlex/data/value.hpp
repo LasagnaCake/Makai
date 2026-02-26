@@ -606,7 +606,7 @@ namespace Data {
 		/// @param fallback Value to return if element does not exist.
 		/// @return Value at given path, or fallback.
 		template <class TData, class TWhere>
-		constexpr TData fetch(TWhere const where, TData const& fallback) const {
+		constexpr TData fetch(TWhere const where, TData fallback) const {
 			tryFetch(fallback, where);
 			return fallback;
 		}
@@ -645,7 +645,7 @@ namespace Data {
 		constexpr IdentifierType	getIdentifier() const	{return get<IdentifierType>();	}
 		constexpr VectorType		getVector() const		{return get<VectorType>();		}
 
-		constexpr bool				geBoolean(bool const fallback) const				{return get<bool>(fallback);					}
+		constexpr bool				getBoolean(bool const fallback) const				{return get<bool>(fallback);					}
 		constexpr UnsignedType		getUnsigned(UnsignedType const fallback) const		{return get<UnsignedType>(fallback);			}
 		constexpr SignedType		getSigned(SignedType const fallback) const			{return get<SignedType>(fallback);				}
 		constexpr RealType			getReal(RealType const fallback) const				{return get<RealType>(fallback);				}
@@ -991,6 +991,10 @@ namespace Data {
 				return operator[](key.value).contains(path);
 			}
 		}
+
+		/// @brief Returns whether the value contains a given key or path.
+		template <class T>
+		constexpr bool has(T const& keyOrPath) const {return contains(keyOrPath);}
 
 		/// @brief Returns the given kind as its name string.
 		/// @param kind Kind ID.
