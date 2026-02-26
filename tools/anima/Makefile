@@ -27,9 +27,9 @@ sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
-LIBRARIES	:= $(OS_LIBS) $(LITE_BUILD_REQS)
+LIBRARIES	:= $(OS_LIBS) $(ADDLIBS) $(LITE_BUILD_REQS)
 else
-LIBRARIES	:= $(OS_LIBS)
+LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
 
 DEBUGMODE		:= -DMAKAILIB_DEBUG
