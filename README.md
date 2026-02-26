@@ -57,7 +57,7 @@ In a single line: pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-7zi
 ### Linux
 
 > [!note]
-> If using the library on linux, your code must be linked against `libSDL2.so`, `libSDL2_net.so` and `libcurl.so` for both *lite* and *full* versions.
+> If using the library on linux, your code must be linked against `libSDL2.so` and `libcurl.so` for both *lite* and *full* versions.
 
 - GCC (13+) 
 - Make
