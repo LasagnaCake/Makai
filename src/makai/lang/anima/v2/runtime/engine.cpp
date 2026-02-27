@@ -344,12 +344,13 @@ static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bo
 }
 
 Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, usize const id) {
-	bool byRef	= (loc & Cast::as<DataLocation>(0b11000000)) == DataLocation::AV2_DLM_BY_REF;
-	bool byMove	= (loc & Cast::as<DataLocation>(0b11000000)) == DataLocation::AV2_DLM_MOVE;
-	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
+	auto const place = loc & Cast::as<DataLocation>(~0b11000000);
+	auto const mod = loc & Cast::as<DataLocation>(0b11000000);
+	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
+	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
+	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT))
 		return accessor(context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef | byMove);
-	}
-	switch (loc & Cast::as<DataLocation>(~0b11000000)) {
+	switch (place) {
 		case DataLocation::AV2_DL_CONST:
 			if (program.constants.empty()) {
 				if (inStrictMode())
