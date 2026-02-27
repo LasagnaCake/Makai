@@ -23,10 +23,10 @@ namespace Makai::Anima::V2 {
 		AV2_DL_EXTERNAL,
 		/// @brief Temporary register.
 		AV2_DL_TEMPORARY,
-		/// @brief Register value.
+		/// @brief Register value (First register).
 		AV2_DL_REGISTER,
 		/// @brief Last register.
-		AV2_DL_LAST_REGISTER = AV2_DL_REGISTER + 31,
+		AV2_DL_LAST_REGISTER = AV2_DL_REGISTER + (REGISTER_COUNT - 1),
 		/// @brief Location modifier: By reference.
 		AV2_DLM_BY_REF	= 0b10000000,
 		AV2_DLM_MOVE	= 0b01000000,
@@ -55,8 +55,24 @@ namespace Makai::Anima::V2 {
 	/// @brief Returns the register for the given ID.
 	/// @param id ID to get register for.
 	/// @return Register for ID.
-	constexpr DataLocation asRegister(usize const id) {
+	constexpr DataLocation asRegister(byte const id) {
 		return Cast::as<DataLocation>(enumcast(DataLocation::AV2_DL_REGISTER) + id);
+	}
+
+	/// @brief Returns the data location without modifiers.
+	constexpr DataLocation asPlace(DataLocation const loc) {
+		return (loc & ~(DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE));
+	}
+
+	/// @brief Returns the modifiers for a data location.
+	constexpr DataLocation asModifiers(DataLocation const loc) {
+		return (loc & (DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE));
+	}
+
+	/// @brief Returns whether the data location is a register.
+	constexpr bool isRegister(DataLocation const loc) {
+		auto const place = asPlace(loc);
+		return place >= DataLocation::AV2_DL_REGISTER && place <= DataLocation::AV2_DL_LAST_REGISTER;
 	}
 
 	/// @brief Binary operator.

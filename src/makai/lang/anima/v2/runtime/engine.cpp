@@ -326,8 +326,8 @@ void Engine::v2Call() {
 
 Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
 	if (
-		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
-	||	(from == DataLocation::AV2_DL_TEMPORARY)
+		(isRegister(from))
+	||	(asPlace(from) == DataLocation::AV2_DL_TEMPORARY)
 	) {
 		auto const store = getValueFromLocation(from, 0);
 		if (!store) return new Value();
@@ -344,11 +344,11 @@ static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bo
 }
 
 Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, usize const id) {
-	auto const place = loc & Cast::as<DataLocation>(~0b11000000);
-	auto const mod = loc & Cast::as<DataLocation>(0b11000000);
+	auto const place = asPlace(loc);
+	auto const mod = asModifiers(loc);
 	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
 	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
-	if (place >= asRegister(0) && place < asRegister(REGISTER_COUNT))
+	if (isRegister(place))
 		return accessor(context.registers[(enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef | byMove);
 	switch (place) {
 		case DataLocation::AV2_DL_CONST:
@@ -403,8 +403,8 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 
 Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 	if (
-		(from >= asRegister(0) && from < asRegister(REGISTER_COUNT))
-	||	(from == DataLocation::AV2_DL_TEMPORARY)
+		(isRegister(from))
+	||	(asPlace(from) == DataLocation::AV2_DL_TEMPORARY)
 	) {
 		auto& loc = accessLocation(from, 0);
 		if (!loc) loc = new Value();
@@ -417,8 +417,8 @@ Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 }
 
 Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
-	auto const place = loc & Cast::as<DataLocation>(~0b11000000);
-	if (place >= asRegister(0) && place < asRegister(REGISTER_COUNT)) {
+	auto const place = loc & Cast::as<DataLocation>(~0b11000000u);
+	if (isRegister(place)) {
 		return context.registers[(enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
 	switch (place) {
