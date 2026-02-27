@@ -61,6 +61,12 @@ Supported options:
 
 >   subsystem     = [ string ]       : Which subsystem/file to compile         ( DEF: undefined    )
 
+>   lite          = [ flag ]         : Whether to bundle specific libraries    ( DEF: undefined    )
+
+>   os            = [ string ]       : Target OS to compile for                ( DEF: win          )
+>   compiler      = [ string ]       : Compiler toolchain to use               ( DEF: auto         )
+>   gmake         = [ string ]       : Name of GNU Make executable             ( DEF: make         )
+
 Supported [gl-loader] values:
 > glad
 > gl3w
@@ -69,6 +75,17 @@ Supported [math] values (any other value will be interpreted as 'normal'):
 > fast
 > safe
 > normal
+
+Supported [os] values:
+> win (Windows)
+> linux (Linux)
+
+Supported [compiler] values:
+> msys2-gcc
+> msys2-clang
+> mingw-win
+> mingw-linux
+> auto
 
 On the [subsystem] option:
 If not defined, compiles all subsystems.
