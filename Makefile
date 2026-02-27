@@ -98,7 +98,7 @@ package-lib:
 	@7z a -tzip $(os)-$(compiler)-$(BUILDTYPE).zip bin lib include -r -mem=AES256
 	@cd ..
 
-it: clear-output $(LINK_EXTERN) all tooling
+it: clear-output copy-headers copy-ex-headers $(LINK_EXTERN) all tooling
 
 ship-it: it package-lib
 
