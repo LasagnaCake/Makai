@@ -53,6 +53,7 @@ Supported options:
 >   omp-threads   = [ number ]       : How many threads openmp should use      ( DEF: 128          )
 
 >   deug-release  = [ flag ]         : Whether enable debugging in release lib ( DEF: undefined    )
+>   deug-tooling  = [ flag ]         : Whether enable debugging in tooling     ( DEF: undefined    )
 
 >   gl-loader     = [ string ]       : Which GL loading API to use             ( DEF: glad         )
 
