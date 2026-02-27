@@ -1405,7 +1405,7 @@ void Engine::v2Cast() {
 }
 
 Engine::Error Engine::invalidLocationError(DataLocation const& loc) {
-	return makeErrorHere("Invalid data location for instruction!");
+	return makeErrorHere("Invalid data location for instruction ["+ toString(enumcast(loc)) + "]!");
 }
 
 Engine::Error Engine::invalidFetchRequest(String const& description) {
