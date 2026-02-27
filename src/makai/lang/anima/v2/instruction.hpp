@@ -71,8 +71,11 @@ namespace Makai::Anima::V2 {
 
 	/// @brief Returns whether the data location is a register.
 	constexpr bool isRegister(DataLocation const loc) {
-		auto const place = asPlace(loc);
-		return place >= DataLocation::AV2_DL_REGISTER && place <= DataLocation::AV2_DL_LAST_REGISTER;
+		auto const place = enumcast(asPlace(loc));
+		return
+			place >= enumcast(DataLocation::AV2_DL_REGISTER)
+		&&	place <= enumcast(DataLocation::AV2_DL_LAST_REGISTER)
+		;
 	}
 
 	/// @brief Binary operator.
