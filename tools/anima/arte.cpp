@@ -71,6 +71,7 @@ struct ARTEMain: Makai::AMain {
 			engine.error().then([&] (auto const& e) {
 				writeLine("!!! ERROR !!!");
 				writeLine("At bytecode offset ", e.location);
+				writeLine("At instruction ", Makai::Anima::V2::Instruction::asString(e.instruction.name));
 				writeLine("Message: [", e.message, "]");
 				return e;
 			});
