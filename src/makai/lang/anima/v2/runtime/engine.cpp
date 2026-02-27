@@ -352,8 +352,8 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
 	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
 	if (isRegister(place))
-		return accessor(context.registers[(enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef | byMove);
-	switch (place) {
+		return accessor(context.registers[(enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef || byMove);
+	else switch (place) {
 		case DataLocation::AV2_DL_CONST:
 			if (program.constants.empty()) {
 				if (inStrictMode())
@@ -378,7 +378,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 					crash(invalidLocationError(loc));
 				return new Value(Value::undefined());
 			}
-			auto& loc = context.valueStack[-Cast::as<ssize>(id  % context.valueStack.size() +1)];
+			auto& loc = context.valueStack[-Cast::as<ssize>(id % context.valueStack.size() + 1)];
 			auto const v = loc;
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef);
@@ -424,7 +424,7 @@ Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize 
 	if (isRegister(place)) {
 		return context.registers[(enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
-	switch (place) {
+	else switch (place) {
 		case DataLocation::AV2_DL_STACK:
 			if (context.valueStack.empty()) {
 				if (inStrictMode())
