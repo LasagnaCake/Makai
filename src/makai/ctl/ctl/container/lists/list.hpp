@@ -52,7 +52,7 @@ namespace Type::Container {
 
 	/// Type must be `List`.
 	template<class T>
-	concept List = Impl::IsList<T>::value; 
+	concept List = Impl::IsList<T>::value;
 }
 
 /// @brief Dynamic array of objects.
@@ -137,7 +137,7 @@ public:
 			contents[i] = fill;
 		count = size;
 	}
-	
+
 	/// @brief Constructs the `List` with a parameter pack.
 	/// @tparam ...Args Parameter pack.
 	/// @param ...args Pack elements.
@@ -148,7 +148,7 @@ public:
 		(sizeof...(Args) > 0)
 	&&	(... && (Type::Different<Args, SelfType> && Type::CanBecome<Args, DataType>))
 	#else
-		(sizeof...(Args) > 1) 
+		(sizeof...(Args) > 1)
 	&&	(
 		(... && (Type::Standard<Args> && Type::CanBecome<Args, DataType>))
 	||	(... && (!Type::Standard<Args> && Type::Different<Args, SelfType>))
@@ -211,7 +211,7 @@ public:
 			pushBack(*i);
 		count = end - begin;
 	}
-	
+
 	/// @brief Constructs a `List` from a range of values.
 	/// @param begin Iterator to beginning of range.
 	/// @param end Iterator to end of range.
@@ -276,7 +276,7 @@ public:
 	/// Destructor.
 	constexpr ~List() {dump();}
 
-	/// @brief Constructs and adds new element to the end of the `List`. 
+	/// @brief Constructs and adds new element to the end of the `List`.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Values to pass to constructor.
 	/// @return Reference to self.
@@ -288,7 +288,7 @@ public:
 		return *this;
 	}
 
-	/// @brief Adds a new element to the end of the `List`. 
+	/// @brief Adds a new element to the end of the `List`.
 	/// @param value Element to add.
 	/// @return Reference to self.
 	constexpr SelfType& pushBack(DataType const& value) {
@@ -385,7 +385,7 @@ public:
 	/// 	If you need the capacity to be AT LEAST `newSize`, use `reserve`.
 	constexpr SelfType& resize(SizeType const newSize) {
 		if (!newSize) return clear();
-		if (contents.size())	remake(newSize); 
+		if (contents.size())	remake(newSize);
 		else					contents.create(newSize);
 		if (count > newSize)
 			count = newSize;
@@ -459,9 +459,9 @@ public:
 		while (count-- > 0) pushBack(fill);
 		return *this;
 	}
-	
+
 	/// @brief Ensures the current capacity is EXACTLY the current size.
-	/// @return Reference to self. 
+	/// @return Reference to self.
 	constexpr SelfType& tighten() {
 		resize(count);
 		return *this;
@@ -564,7 +564,7 @@ public:
 	/// @return Count of elements removed.
 	/// @note
 	///		Does not resize `List`, merely moves it to the end, and destructs it.
-	///		If you need the `List` size to change, use `erase`. 
+	///		If you need the `List` size to change, use `erase`.
 	constexpr SizeType removeUnlike(DataType const& value)
 	requires Type::Comparator::Equals<DataType, DataType> {
 		if (empty()) return 0;
@@ -587,7 +587,7 @@ public:
 	/// @return Count of elements removed.
 	/// @note
 	///		Does not resize `List`, merely moves it to the end, and destructs it.
-	///		If you need the `List` size to change, use `erase`. 
+	///		If you need the `List` size to change, use `erase`.
 	template<class TPredicate>
 	constexpr SizeType removeIf(TPredicate const& predicate) {
 		if (empty()) return 0;
@@ -610,7 +610,7 @@ public:
 	/// @return Count of elements removed.
 	/// @note
 	///		Does not resize `List`, merely moves it to the end, and destructs it.
-	///		If you need the `List` size to change, use `erase`. 
+	///		If you need the `List` size to change, use `erase`.
 	template<class TPredicate>
 	constexpr SizeType removeIfNot(TPredicate const& predicate) {
 		if (empty()) return 0;
@@ -633,7 +633,7 @@ public:
 	/// @return Count of elements removed.
 	/// @note
 	///		Does not resize `List`, merely moves it to the end, and destructs it.
-	///		If you need the `List` size to change, use `erase`. 
+	///		If you need the `List` size to change, use `erase`.
 	constexpr SizeType removeRange(IndexType start, IndexType stop = -1) {
 		if (empty()) return 0;
 		assertIsInBounds(start);
@@ -651,7 +651,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note
 	///		Resizes the `List`.
-	///		If you need the `List` size to remain the same, use `remove`. 
+	///		If you need the `List` size to remain the same, use `remove`.
 	constexpr SelfType& erase(IndexType const index) {
 		if (empty()) return *this;
 		remove(index);
@@ -664,7 +664,7 @@ public:
 	/// @return Count of elements removed.
 	/// @note
 	///		Resizes the `List`.
-	///		If you need the `List` size to remain the same, use `remove`. 
+	///		If you need the `List` size to remain the same, use `remove`.
 	constexpr SelfType& eraseLike(DataType const& value) {
 		count -= removeLike(value);
 		return *this;
@@ -726,7 +726,7 @@ public:
 		return sliced(0, start).appendBack(sliced(stop));
 	}
 
-	
+
 	/// @brief Replaces any element that matches, with the replacement.
 	/// @param val Element to match.
 	/// @param rep Replacement.
@@ -851,7 +851,7 @@ public:
 	/// @return Reference to self.
 	/// @note
 	///		Does not free the underlying array held by the `List`.
-	///		To actually free the underlying array, call `dispose`. 
+	///		To actually free the underlying array, call `dispose`.
 	constexpr SelfType& clear() {
 		MX::objclear(contents.data(), count);
 		count = 0;
@@ -860,7 +860,7 @@ public:
 
 	/// @brief Frees the underlying array held by the `List`.
 	/// @return Reference to self.
-	/// @note To not free the underlying array, call `clear`. 
+	/// @note To not free the underlying array, call `clear`.
 	constexpr SelfType& dispose() {
 		dump();
 		recalculateMagnitude();
@@ -941,7 +941,7 @@ public:
 	/// @brief Returns a pointer to the end of the `List`.
 	/// @return Pointer to the end of the `List`.
 	constexpr ConstPointerType	cend() const	{return contents.data()+count;	}
-	
+
 	/// @brief Returns the value of the first element.
 	/// @return Reference to the first element.
 	/// @throw OutOfBoundsException when `List` is empty.
@@ -1113,7 +1113,7 @@ public:
 	constexpr SelfType& operator|=(TProcedure const& fun) {
 		return fun(*this);
 	}
-	
+
 	/// @brief Returns a copy of the list, with the given procedure applied to it.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
@@ -1286,7 +1286,7 @@ public:
 			start + (size() * sizeof(DataType))
 		);
 	}
-	
+
 	constexpr List<sbyte, TIndex, TAlloc, TConstAlloc> toSignedBytes() const
 	requires (Type::Equal<DataType, AsNonReference<DataType>>) {
 		auto const start = reinterpret_cast<ref<sbyte const>>(data());
@@ -1295,9 +1295,9 @@ public:
 			start + (size() * sizeof(DataType))
 		);
 	}
-	
+
 	template <class TNew>
-	constexpr List<TNew, TIndex, TAlloc, TConstAlloc> toList() const 
+	constexpr List<TNew, TIndex, TAlloc, TConstAlloc> toList() const
 	requires (Type::CanBecome<DataType, TNew> || Type::Constructible<TNew, DataType>) {
 		List<TNew, TIndex, TAlloc, TConstAlloc> result;
 		for (auto const& elem: *this)
@@ -1407,7 +1407,8 @@ private:
 
 	constexpr SelfType& increase() {
 		CTL_DEVMODE_FN_DECL;
-		if (magnitude == 0) atItsLimitError();
+		if (!magnitude && count) atItsLimitError();
+		else if (!magnitude) resize(1);
 		resize(magnitude);
 		return *this;
 	}
@@ -1453,21 +1454,21 @@ private:
 //static_assert(List<int>().empty());
 
 /// @brief `List` analog for dynamic array of bytes.
-/// @tparam TIndex Index type. 
+/// @tparam TIndex Index type.
 /// @tparam TAlloc<class> Allocator type.
 /// @tparam TConstAlloc<class> Constant allocator type.
 template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using BinaryData = List<byte, TIndex, TAlloc, TConstAlloc>;
 
 /// @brief `List` analog for dynamic array of bytes.
-/// @tparam TIndex Index type. 
+/// @tparam TIndex Index type.
 /// @tparam TAlloc<class> Allocator type.
 /// @tparam TConstAlloc<class> Constant allocator type.
 template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using ByteList = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
 /// @brief `List` analog for dynamic array of bytes.
-/// @tparam TIndex Index type. 
+/// @tparam TIndex Index type.
 /// @tparam TAlloc<class> Allocator type.
 /// @tparam TConstAlloc<class> Constant allocator type.
 template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>

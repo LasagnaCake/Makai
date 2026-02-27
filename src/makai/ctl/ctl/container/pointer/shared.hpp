@@ -37,7 +37,7 @@ namespace Base {
 			/// @brief Default constructor.
 			constexpr ReferenceData() = default;
 
-			/// @brief Basic constructor. 
+			/// @brief Basic constructor.
 			constexpr ReferenceData(bool const exists, int64 const count = 0): exists(exists), count(count) {}
 		};
 
@@ -128,7 +128,7 @@ public:
 
 	/// @brief Default constructor.
 	constexpr Shared() {}
-	
+
 	/// @brief Move constructor (strong pointer).
 	/// @param other Strong pointer to bind.
 	constexpr Shared(NewPointerType<false>&& other)			{CTL_PTR_ASSERT_STRONG_MOVE;	bind(other);}
@@ -194,7 +194,7 @@ public:
 		attach(ptr.ref);
 		return (*this);
 	}
-	
+
 	/// @brief Removes the pointer as a reference to a bound object.
 	/// @return Reference to self.
 	constexpr SelfType& unbind() {
@@ -248,7 +248,7 @@ public:
 	/// @return Whether this pointer is the sole owner of the bound object.
 	/// @note Requires shared pointer type to be strong.
 	constexpr bool unique() const requires (!WEAK) {return count() == 1;}
-	
+
 	/// @brief Returns whether the object exists.
 	/// @return Whether the object exists.
 	constexpr bool operator()() const {return exists();}
@@ -290,7 +290,7 @@ public:
 	/// @brief Returns a `Reference` to the underlying data.
 	/// @return `Reference` to underlying data.
 	constexpr Reference<DataType> reference() const {return	raw();}
-	
+
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	/// @note Conversion is explicit if shared pointer type is strong.
@@ -312,7 +312,7 @@ public:
 	/// @brief Returns whether the bound object doesn't exist.
 	/// @return Whether the bound object doesn't exist.
 	constexpr bool operator!() const	{return	!exists();			}
-	
+
 	/// @brief Equality comparison operator (raw pointer).
 	/// @param obj Raw pointer to compare to.
 	/// @return Whether they're equal.
@@ -321,7 +321,7 @@ public:
 	/// @param obj Raw pointer to compare to.
 	/// @return Order between objects.
 	constexpr OrderType operator<=>(PointerType const& obj) const	{return	ref <=> obj;		}
-	
+
 	/// @brief Equality comparison operator (`Shared`).
 	/// @param obj `Shared` to compare to.
 	/// @return Whether they're equal.
@@ -362,7 +362,7 @@ public:
 	/// @brief Dereference operator.
 	/// @return Reference to underlying object.
 	constexpr ReferenceType operator*() const		{return value();		}
-	
+
 	/// @brief Creates a shared pointer.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Arguments to pass to object construtor.

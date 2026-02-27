@@ -17,7 +17,7 @@ template <usize N>
 struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 	using Ordered			= ::CTL::Ordered;
 	using SelfIdentified	= ::CTL::SelfIdentified<SSUID<N>>;
-	
+
 	using typename Ordered::OrderType;
 
 	using typename SelfIdentified::SelfType;
@@ -26,7 +26,7 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 	constexpr static usize SIZE = N;
 	/// @brief Identifier storage container type.
 	using InternalType = As<uint64[SIZE]>;
-	
+
 	/// @brief Array subsctipt operator overloading.
 	/// @param i Index of value.
 	/// @return Value at index.
@@ -99,7 +99,7 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 		id.id[0] = id;
 		return id;
 	}
-	
+
 	template <class... Types>
 	constexpr static SSUID create(Types const... values)
 	requires (
@@ -108,7 +108,7 @@ struct SSUID: Ordered, SelfIdentified<SSUID<N>> {
 	) {
 		return createInternal({values...});
 	}
-	
+
 	template <usize N2>
 	constexpr static SSUID create(As<uint64[N2]> const& values)
 	requires (N2 == N) {
