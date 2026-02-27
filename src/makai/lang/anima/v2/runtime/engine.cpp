@@ -418,7 +418,7 @@ Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 }
 
 Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
-	auto const place = asPlace(place);
+	auto const place = asPlace(loc);
 	if (isRegister(place)) {
 		return context.registers[(enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
