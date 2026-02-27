@@ -257,8 +257,9 @@ void Engine::v2Call() {
 	// Get function name (if not external function)
 	advance(true);
 	uint64 funcName = bitcast<uint64>(current);
-	auto const isExtern = (invocation.location & DataLocation::AV2_DL_EXTERNAL) == DataLocation::AV2_DL_EXTERNAL;
-	if (!isExtern) {
+	auto const isExtern	= (invocation.location & DataLocation::AV2_DL_EXTERNAL) == DataLocation::AV2_DL_EXTERNAL;
+	auto const isConst	= (invocation.location & DataLocation::AV2_DL_CONST) == DataLocation::AV2_DL_CONST;
+	if (!(isExtern || isConst)) {
 		auto fn = getValueFromLocation(invocation.location, funcName);
 		if (!fn->isUnsigned())
 			return crash(invalidFunctionError("Invalid function name!"));
@@ -417,7 +418,7 @@ Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 }
 
 Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
-	auto const place = loc & Cast::as<DataLocation>(~0b11000000u);
+	auto const place = asPlace(place);
 	if (isRegister(place)) {
 		return context.registers[(enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))];
 	}
