@@ -349,7 +349,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	if (loc >= asRegister(0) && loc < asRegister(REGISTER_COUNT)) {
 		return accessor(context.registers[(enumcast(loc) - enumcast(DataLocation::AV2_DL_REGISTER))], byRef | byMove);
 	}
-	switch (loc) {
+	switch (loc & Cast::as<DataLocation>(~0b11000000)) {
 		case DataLocation::AV2_DL_CONST:
 			if (program.constants.empty()) {
 				if (inStrictMode())
