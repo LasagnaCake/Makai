@@ -9,6 +9,7 @@
 - [Supported Operating Systems](#Supported-Operating-Systems)
 - [Requirements](#Requirements)
 - - [Windows](#Windows)
+- - [Linux](#Linux)
 - [How to Use](#How-to-Use)
 - - [Note](#Note)
 - [Libraries Used](#Libraries-Used)
