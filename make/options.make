@@ -48,6 +48,13 @@ export compiler
 endif
 
 define HELP_MESSAGE
+Supported compilation targets:
+> it      : Debug Library + Release Library + Tooling
+> all     : Debug Library + Release Library
+> debug   : Debug Library
+> release : Release Library
+> tooling : Tooling (Requires library to be built)
+
 Supported options:
 >   openmp        = [ flag ]         : Whether openmp should be enabled        ( DEF: undefined    )
 >   omp-threads   = [ number ]       : How many threads openmp should use      ( DEF: 128          )
