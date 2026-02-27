@@ -59,7 +59,8 @@ bool Engine::process() {
 	}
 	else wait.clear();
 	while (Engine::yieldCycle() && !paused) {}
-	return isFinished;
+	DEBUGLN("Done processing for now!");
+	return !isFinished;
 }
 
 void Engine::crash(Engine::Error const& e) {
@@ -225,7 +226,10 @@ void Engine::advance(bool isRequired) {
 		current = program.code[context.pointers.instruction];
 	else if (isRequired)
 		crash(endOfProgramError());
-	else terminate();
+	else {
+		DEBUGLN("End of program reached!");
+		terminate();
+	}
 }
 
 void Engine::v2Return() {
@@ -1235,6 +1239,7 @@ void Engine::callBuiltInCryptographyOp(BuiltInCryptographyOperation const func) 
 }
 
 void Engine::terminate() {
+	DEBUGLN("Terminating...");
 	isFinished = true;
 
 }
