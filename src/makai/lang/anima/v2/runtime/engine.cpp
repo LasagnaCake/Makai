@@ -243,7 +243,9 @@ void Engine::v2Return() {
 
 void Engine::v2Copy() {
 	Instruction::Transfer tf = bitcast<Instruction::Transfer>(current.type);
+	DEBUGLN("Reading source...");
 	auto const from	= consumeValue(tf.from);
+	DEBUGLN("Writing to destination...");
 	auto& to		= accessValue(tf.to);
 	to = from;
 }
