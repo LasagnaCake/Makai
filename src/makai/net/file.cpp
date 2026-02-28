@@ -12,3 +12,7 @@ Makai::String Makai::Net::File::fetchText(Makai::String const& url) {
 		);
 	return result.content;
 }
+
+Makai::Binary<> Makai::Net::File::fetchBinary(Makai::String const& url) {
+	return Makai::Net::File::fetchText(url).toBytes();
+}

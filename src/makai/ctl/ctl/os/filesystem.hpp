@@ -101,6 +101,16 @@ namespace OS::FS {
 			remove(d);
 	}
 
+	/// @brief Copies a file/directory. If it is a directory, it also copies its contents.
+	/// @param from Source to copy from.
+	/// @param to Destination to copy to.
+	inline void copy(String const& from, String const& to) {
+		std::error_code ec;
+		fs::copy(from.cstr(), to.cstr(), fs::copy_options::update_existing | fs::copy_options::recursive, ec);
+		if (ec)
+			throw Error::FailedAction("Could not copy file(s)!", ec.message());
+	}
+
 	/// @brief Deletes a series of files/directories. If it is a directory, it also deletes its contents.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Elements to delete.
@@ -449,7 +459,7 @@ namespace OS::FS {
 	inline String resolve(String const& path) try {
 		return std::filesystem::canonical(path.std()).string();
 	} catch (std::filesystem::filesystem_error const& e) {
-		throw InvalidValueException(e.what());
+		throw Error::InvalidValue(e.what());
 	}
 
 	/// @brief Returns the executable's storage directory.

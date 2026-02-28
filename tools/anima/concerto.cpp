@@ -33,7 +33,7 @@ static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
 	cfg["output"]	= "${name}";
-	cfg["ir"]		= false;
+	cfg["asm"]		= false;
 	cfg["type"]		= "program";
 	cfg["lang"]		= "breve";
 	cfg["ver"]		= "latest";
@@ -199,6 +199,49 @@ namespace Command {
 		Makai::File::saveText("cache.flow", proj.toFLOWString("\t"));
 		DEBUGLN("Done!");
 	}
+
+	static void doUpdate(Makai::Data::Value& cfg) {
+		auto const instPath = Makai::OS::FS::sourceLocation();
+		if (cfg.fetch("mode").getString() == "clean") {
+			Makai::Thread::wait(1000);
+			DEBUGLN("Cleaning up...");
+			Makai::OS::FS::remove(instPath + "/tmp");
+			DEBUGLN("Done!");
+		} else if (cfg.fetch("mode").getString() == "unpack") {
+			Makai::Thread::wait(1000);
+			DEBUGLN("Installing...");
+			Makai::OS::FS::copy(cfg.fetch("__args")[1].getString(), instPath);
+			DEBUGLN("Done!");
+		} else {
+			DEBUGLN("Updating...");
+			auto const meta = Makai::File::getFLOW(instPath + "/config/meta.flow");
+			auto const update = Makai::FLOW::parse(Makai::Net::File::fetchText(meta.fetch("source").getString("")));
+			auto content = update.fetch("content").getBytes();
+			Makai::MemoryBuffer buf{Makai::Cast::rewrite<ref<char>>(content.data()), content.size()};
+			Makai::Tool::Arch::FileArchive fa{
+				buf,
+				Makai::Tool::Arch::hashPassword(
+					update.fetch("key").getString() + "/"
+				+	update.fetch("version").getString() + "/"
+				+	meta.fetch("key").getString()
+				)
+			};
+			fa.unpackTo(instPath + "/tmp/" + update.fetch("version").getString().replace(':', '-'));
+			Makai::OS::launchAsync(
+				instPath
+			+	"/tmp/"
+			+	update.fetch("version").getString().replace(':', '-')
+			+	"concerto"
+			#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
+			+	".exe"
+			#endif
+			,
+			"",
+			Makai::StringList::from("update", instPath, "--mode", "unpack")
+			);
+		}
+		DEBUGLN("Done!");
+	}
 }
 
 int main(int argc, char** argv) try {
@@ -219,6 +262,7 @@ int main(int argc, char** argv) try {
 		else if	(command == "add"		)	Command::doAdd(cfg);
 		else if	(command == "remove"	)	Command::doRemove(cfg);
 		else if	(command == "source"	)	Command::doSource(cfg);
+		else if	(command == "update"	)	Command::doUpdate(cfg);
 		else throw Makai::Error::InvalidValue("Invalid command [" + command + "]!");
 	}
 	return 0;

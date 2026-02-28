@@ -28,7 +28,7 @@ struct Thread:
 	/// @brief Move constructor.
 	/// @param other `Thread` to move.
 	Thread(SelfType&& other) noexcept:	BaseType((BaseType&&)CTL::move(other)), exect(CTL::move(other.exect))	{}
-	/// @brief Copy constructor (deleted). 
+	/// @brief Copy constructor (deleted).
 	Thread(SelfType const& other)		= delete;
 
 	/// @brief Destructor.
@@ -78,7 +78,7 @@ struct Thread:
 		/// @brief Binds a token to an execution source.
 		/// @param source Source to bind to.
 		constexpr ExecutionToken(ExecutionSource& source):			source(&source)	{}
-		/// @brief Deleted. 
+		/// @brief Deleted.
 		constexpr ExecutionToken(ref<ExecutionSource> const source)	= delete;
 		/// @brief Deleted.
 		constexpr ExecutionToken(ExecutionSource&& source)			= delete;
@@ -157,7 +157,7 @@ struct Thread:
 	ID id() const noexcept {
 		return thread::get_id();
 	}
-	
+
 	/// @brief Returns the current thread's ID.
 	/// @return The ID of the current thread.
 	static ID current() noexcept {
@@ -176,7 +176,7 @@ struct Thread:
 	static void wait(usize const time) {
 		std::this_thread::sleep_for<T>(time);
 	}
-	
+
 	/// @brief Attaches the thread to the called thread, waiting for its execution to finish.
 	SelfType& join() {
 		thread::join();

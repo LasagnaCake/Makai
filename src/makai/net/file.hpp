@@ -4,7 +4,8 @@
 #include "../compat/ctl.hpp"
 
 namespace Makai::Net::File {
-	String fetchText(String const& url);
+	String		fetchText(String const& url);
+	Binary<>	fetchBinary(String const& url);
 }
 
 #endif
