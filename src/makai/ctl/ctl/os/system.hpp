@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../container/strings/string.hpp"
+#include "../container/pointer/shared.hpp"
 #include "../container/error.hpp"
 #include "../regex/core.hpp"
 #include "filesystem.hpp"
@@ -67,7 +68,7 @@ namespace OS {
 			(LPSTARTUPINFOA)&sInfo,
 			&pInfo
 		);
-		if (!proc) throw Error::FailedAction(toString("could not find '", path,"!"), CTL_CPP_PRETTY_SOURCE);
+		if (!proc) throw Error::FailedAction(toString("could not run '", path,"!"), CTL_CPP_PRETTY_SOURCE);
 		proc = WaitForSingleObject(pInfo.hProcess, INFINITE);
 		DWORD res;
 		GetExitCodeProcess(pInfo.hProcess, &res);
@@ -90,6 +91,55 @@ namespace OS {
 			wait(&result);
 			return result;
 		}
+		#endif
+	}
+
+	/// @brief Launches an executable in a different process.
+	/// @param path Path to executable.
+	/// @param directory Directory to run in. By default, it is the same directory as the executable.
+	/// @param args Arguments to pass to executable. By default, it is empty.
+	/// @note Running the program in a separate directory is currently only supported on Windows.
+	inline void launchAsync(String const& path, String const& directory = "", StringList args = StringList()) {
+		if (!FS::exists(path))
+			throw Error::InvalidValue("File [" + path + "] does not exist!", CTL_CPP_PRETTY_SOURCE);
+		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
+		String prgArgs = "";
+		if (!args.empty())
+			for (String const& arg: args)
+				prgArgs += sanitizedArgument(arg) + " ";
+		prgArgs = sanitizedArgument(path) + (args.empty() ? "" : (" " + prgArgs));
+		// This is a nightmare, but the other option pops up a command prompt.
+		STARTUPINFOA sInfo;
+		PROCESS_INFORMATION pInfo;
+		memset(&sInfo, 0, sizeof(sInfo));
+		sInfo.cb = sizeof(sInfo);
+		memset(&pInfo, 0, sizeof(pInfo));
+		auto proc = CreateProcessA(
+			(LPCSTR)path.cstr(),
+			(LPSTR)prgArgs.cstr(),
+			NULL,
+			NULL,
+			FALSE,
+			0,
+			NULL,
+			(LPCSTR)directory.empty() ? NULL : directory.cstr(),
+			(LPSTARTUPINFOA)&sInfo,
+			&pInfo
+		);
+		if (!proc) throw Error::FailedAction(toString("could not run '", path,"!"), CTL_CPP_PRETTY_SOURCE);
+		CloseHandle(pInfo.hProcess);
+		CloseHandle(pInfo.hThread);
+		#else
+		List<const char*> prgArgs;
+		auto const fname = FS::fileName(path);
+		prgArgs.pushBack(fname.cstr());
+		for (String& arg: args)
+			prgArgs.pushBack(arg.cstr());
+		prgArgs.pushBack(NULL);
+		auto const pid = getpid();
+		fork();
+		if (pid != getpid())
+			execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
 		#endif
 	}
 }
