@@ -461,7 +461,7 @@ namespace OS::FS {
 		src = src.sliced(0, src.find('\0')).replace('\\', '/').splitAtLast('/').front();
 		return resolve(src.size() ? src : ".");
 		#else
-		return resolve("/proc/self/exe");
+		return resolve("/proc/self/exe").splitAtLast('/').front();
 		#endif
 	}
 }
