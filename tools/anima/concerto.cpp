@@ -7,7 +7,7 @@ using namespace Toolchain;
 
 constexpr auto const VER = Makai::Data::Version{1};
 
-constinit auto const METAPASS = Makai::ObfuscatedStaticString<Makai::Random::CTPRNG<usize> % 32  + 32>(
+constinit auto const METAPASS = Makai::ObfuscatedStaticString<Makai::Random::CTPRNG<usize> % 32  + 64>(
 	"Moriarty and the Unnamed Catharsis ~ Microcosm Genesis"
 );
 
