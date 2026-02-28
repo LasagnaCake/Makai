@@ -238,12 +238,12 @@ namespace Command {
 	static void doUpdate(Makai::Data::Value& cfg) {
 		auto const instPath = Makai::OS::FS::sourceLocation();
 		if (cfg.fetch("mode").getString() == "clean") {
-			Makai::Thread::wait(1000);
+			Makai::Thread::wait<Makai::OS::Time::Millis>(1000);
 			DEBUGLN("Cleaning up...");
 			Makai::OS::FS::remove(instPath + "/tmp");
 			DEBUGLN("Done!");
 		} else if (cfg.fetch("mode").getString() == "unpack") {
-			Makai::Thread::wait(1000);
+			Makai::Thread::wait<Makai::OS::Time::Millis>(1000);
 			DEBUGLN("Installing...");
 			auto const upPath = cfg.fetch("__args")[1].getString();
 			Makai::OS::FS::copy(upPath, instPath);
