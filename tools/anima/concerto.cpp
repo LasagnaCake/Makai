@@ -210,7 +210,17 @@ namespace Command {
 		} else if (cfg.fetch("mode").getString() == "unpack") {
 			Makai::Thread::wait(1000);
 			DEBUGLN("Installing...");
-			Makai::OS::FS::copy(cfg.fetch("__args")[1].getString(), instPath);
+			auto const upPath = cfg.fetch("__args")[1].getString();
+			Makai::OS::FS::copy(upPath, instPath);
+			Makai::OS::launchAsync(
+				upPath
+			+	"concerto"
+			#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
+			+	".exe"
+			#endif
+				,"",
+				Makai::StringList::from("update", "--mode", "clean")
+			);
 			DEBUGLN("Done!");
 		} else {
 			DEBUGLN("Updating...");
