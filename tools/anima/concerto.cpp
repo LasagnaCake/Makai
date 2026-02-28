@@ -7,6 +7,18 @@ using namespace Toolchain;
 
 constexpr auto const VER = Makai::Data::Version{1};
 
+constinit auto const METAPASS = Makai::ObfuscatedStaticString<Makai::Random::CTPRNG<usize> % 32  + 32>(
+	"Moriarty and the Unnamed Catharsis ~ Microcosm Genesis"
+);
+
+constexpr auto const METAINFO = R"###(
+	{
+		key		**{{key}}
+		source	"concerto.animart.dev"
+		version	**{{version}}
+	}
+)###";
+
 static Makai::Data::Value const fetchSources(Makai::String const& path) {
 	Makai::Data::Value db;
 	if (Makai::OS::FS::exists(path)) {
@@ -83,6 +95,27 @@ namespace Command {
 		}
 	}
 
+	static void doInitialize(Makai::Data::Value& cfg) {
+		auto const instPath = Makai::OS::FS::sourceLocation();
+		Makai::File::saveText(
+			instPath + "/config/meta.flow",
+			Makai::Regex::replace(
+				Makai::Regex::replace(
+					METAINFO,
+					R"(\*\*\{\{version\}\})",
+					VER.serialize().toFLOWString()
+				),
+				R"(\*\*\{\{key\}\})",
+				"\"" + Makai::Data::encode(
+					Makai::Tool::Arch::hashPassword(
+						METAPASS.deobfuscated()
+					).toBytes(),
+					Makai::Data::EncodingType::ET_BASE64
+				) + "\""
+			)
+		);
+	}
+
 	static void doHelpMessage() {
 		DEBUGLN("Anima Concerto - V" + VER.serialize().get<Makai::String>());
 		DEBUGLN("Available commands:");
@@ -92,6 +125,8 @@ namespace Command {
 		DEBUGLN("add <module> [--ver <version>]");
 		DEBUGLN("source <action> [<url>] [-G]");
 		DEBUGLN("remove <module>");
+		DEBUGLN("update");
+		DEBUGLN("init");
 	}
 
 	static void doSource(Makai::Data::Value& cfg) {
@@ -273,6 +308,7 @@ int main(int argc, char** argv) try {
 		else if	(command == "remove"	)	Command::doRemove(cfg);
 		else if	(command == "source"	)	Command::doSource(cfg);
 		else if	(command == "update"	)	Command::doUpdate(cfg);
+		else if	(command == "init"		)	Command::doInitialize(cfg);
 		else throw Makai::Error::InvalidValue("Invalid command [" + command + "]!");
 	}
 	return 0;
