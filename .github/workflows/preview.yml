@@ -109,10 +109,10 @@ jobs:
   publish:
     name: Publish pre-release
     needs:
-      - ship-it-windows-lite
-      - ship-it-windows-full
-      - ship-it-linux-lite
-      - ship-it-linux-full
+      - ship-it-lite-win
+      - ship-it-full-win
+      - ship-it-lite-linux
+      - ship-it-full-linux
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@master
