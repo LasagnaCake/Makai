@@ -982,7 +982,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return fetchToken(tok, "'" + Tokenizer::Token::asName(tok) + "'");
 		}
 
-		void expectToken(Tokenizer::Token::Type const tok) {
+		Context& expectToken(Tokenizer::Token::Type const tok) {
 			return expectToken(tok, "'" + Tokenizer::Token::asName(tok) + "'");
 		}
 
@@ -991,9 +991,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return currentToken().value;
 		}
 
-		void expectToken(Tokenizer::Token::Type const tok, String const& what) {
+		Context& expectToken(Tokenizer::Token::Type const tok, String const& what) {
 			if (!hasToken(Tokenizer::Token::Type{tok}))
 				error("Expected " + what + " here!");
+			return *this;
 		}
 
 		bool hasToken(Tokenizer::Token::Type const type) {

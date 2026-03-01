@@ -1095,11 +1095,27 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 
 Makai::Data::Value onFileGetRequest(BuiltInFSOperation const op) {
 	switch (func) {
-
+		case BuiltInFSOperation::AV2_EBI_FSO_GET_BINARY: {
+			if (!(
+				iregister(0)->isString()
+			)) pushUndefinedIfInLooseMode("builtin file get text");
+		} break;
 	}
 }
 
 Makai::Data::Value onFileSaveRequest(BuiltInFSOperation const op) {
+	switch (func) {
+
+	}
+}
+
+Makai::Data::Value onFilesystemRequest(BuiltInFSOperation const op) {
+	switch (func) {
+
+	}
+}
+
+Makai::Data::Value onArchiveRequest(BuiltInArchiveOperation const op) {
 	switch (func) {
 
 	}
@@ -1115,7 +1131,7 @@ void Engine::callBuiltInArchiveOp(BuiltInArchiveOperation const func) {
 			&&	iregister(1)->isString()
 			&&	iregister(2)->isString()
 			)) pushUndefinedIfInLooseMode("builtin arch op");
-			else onArchiveRequest(iregister(0)->getString(), iregister(1)->getString(), iregister(2)->getString());
+			else onArchiveRequest(func);
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin arch"); break;
 	}
