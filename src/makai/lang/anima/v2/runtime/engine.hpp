@@ -211,6 +211,14 @@ namespace Makai::Anima::V2::Runtime {
 		virtual void		onPrint(Data::Value const& value);
 		virtual Data::Value	onHTTPRequest(String const& url, String const& action, Data::Value const& value);
 
+		virtual Data::Value	onFileGetRequest(BuiltInFSOperation const op);
+		virtual void		onFileSaveRequest(BuiltInFSOperation const op);
+
+		virtual int		onSystemRequest(BuiltInOSOperation const op);
+		virtual bool	onFilesystemRequest(BuiltInFSOperation const op);
+
+		virtual bool	onArchiveRequest(BuiltInArchiveOperation const op);
+
 		bool hasSignal(String const& name);
 		void fire(String const& signal);
 
@@ -227,6 +235,7 @@ namespace Makai::Anima::V2::Runtime {
 		Context::Storage			internal	(uint64 const valueID					);
 		Context::Storage&			temporary	(										);
 		Context::Storage&			global		(uint64 const globalID					);
+		Context::Storage&			register	(uint64 const registerID				);
 
 		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
 

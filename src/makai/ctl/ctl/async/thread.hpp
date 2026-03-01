@@ -174,7 +174,7 @@ struct Thread:
 	/// @param time Time to sleep for.
 	template<class T = OS::Time::Millis>
 	static void wait(usize const time) {
-		std::this_thread::sleep_for<T>(T{time});
+		std::this_thread::sleep_for(T{time});
 	}
 
 	/// @brief Attaches the thread to the called thread, waiting for its execution to finish.
