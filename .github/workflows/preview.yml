@@ -1,0 +1,129 @@
+name: Preview Builds CI
+
+# ...at least it's working.
+# I do not want to mess with this EVER AGAIN.
+
+on:
+  schedule:
+    - cron: "30 9 * * 1"
+  #  push:
+  #    branches: [ "!legacy-system" ]
+  workflow_dispatch:
+  workflow_call:
+#  pull_request:
+#    types: [ "closed" ]
+#    branches: [ "main" ]
+
+jobs:
+  prepare-linux:
+    name: Prepare Environment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
+          version: 1.0
+
+  ship-it-full-linux:
+    name: Ship the library (FULL ver.) (Linux)
+    runs-on: ubuntu-latest
+    needs: [prepare-linux]
+    steps:
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
+          version: 1.0
+      - uses: actions/checkout@v4
+      - name: make ship-it
+        run: make ship-it os=linux
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-linux-full
+          path: output/linux-*.zip
+
+  ship-it-lite-linux:
+    name: Ship the library (FULL ver.) (Linux)
+    runs-on: ubuntu-latest
+    needs: [prepare-linux]
+    steps:
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
+          version: 1.0
+      - uses: actions/checkout@v4
+      - name: make ship-it
+        run: make ship-it os=linux lite=1 skip-tooling=1
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-linux-lite
+          path: output/linux-*.zip
+
+  ship-it-full-win:
+    name: Ship the library (FULL ver.) (Windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    #    needs: install-gcc
+    steps:
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - name: make ship-it
+        run: |
+          pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
+          mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-windows-full
+          path: output/win-*.zip
+
+  ship-it-lite-win:
+    name: Ship the library (FULL ver.) (Windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    #    needs: install-gcc
+    steps:
+      - uses: actions/checkout@v4
+      # Hellspawn BEGIN
+      - uses: msys2/setup-msys2@v2
+        with:
+          install: git mingw-w64-x86_64-toolchain
+          cache: false
+      # Hellspawn END
+      - name: make ship-it
+        run: |
+          pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
+          mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc lite=1 skip-tooling=1
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-windows-lite
+          path: output/win-*.zip
+
+  publish:
+    name: Publish pre-release
+    needs: ship-it*
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-*
+          path: output
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - name: Post
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: preview-${{steps.date.output.date}}
+          prerelease: true
+          files: output/*.zip
+          name: Preview Snapshot ${{steps.date.output.date}}
+          body: |
+            Automatically-generated preview via GitHub action.
