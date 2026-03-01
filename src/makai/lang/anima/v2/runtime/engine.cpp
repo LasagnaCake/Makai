@@ -1023,7 +1023,7 @@ void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 void Engine::callBuiltInOSOp(BuiltInOSOperation const func) {
 	switch (func) {
 		case BuiltInOSOperation::AV2_EBI_OSO_RUN_EXECUTABLE: {
-			temporary()(new Value(onSystemRequest(func)));
+			temporary() = new Value(onSystemRequest(func));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin os");
 	}
