@@ -235,7 +235,7 @@ namespace Makai::Anima::V2::Runtime {
 		Context::Storage			internal	(uint64 const valueID					);
 		Context::Storage&			temporary	(										);
 		Context::Storage&			global		(uint64 const globalID					);
-		Context::Storage&			register	(uint64 const registerID				);
+		Context::Storage&			iregister	(uint64 const registerID				);
 
 		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
 

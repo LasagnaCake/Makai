@@ -354,7 +354,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
 	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
 	if (isRegister(place))
-		return accessor(register((enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))), byRef || byMove);
+		return accessor(iregister((enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER))), byRef || byMove);
 	else switch (place) {
 		case DataLocation::AV2_DL_CONST:
 			if (program.constants.empty()) {
@@ -424,7 +424,7 @@ Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
 	auto const place = asPlace(loc);
 	if (isRegister(place)) {
-		return register((enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER)));
+		return iregister((enumcast(place) - enumcast(DataLocation::AV2_DL_REGISTER)));
 	}
 	else switch (place) {
 		case DataLocation::AV2_DL_STACK:
@@ -463,7 +463,7 @@ Runtime::Context::Storage& Engine::global(uint64 const id) {
 	return context.globals[id];
 }
 
-Runtime::Context::Storage& Engine::register(uint64 const id) {
+Runtime::Context::Storage& Engine::iregister(uint64 const id) {
 	return context.registers[id % Makai::Anima::V2::REGISTER_COUNT];
 }
 
@@ -612,35 +612,35 @@ void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 	switch (func) {
 		case BuiltInFunction::AV2_EBIF_ADD: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isNumber() && b->isNumber()) temporary() = new Value(a->get<double>() + b->get<double>());
 			else if (a->isAlgebraic() && b->isAlgebraic()) temporary() = new Value(a->getVector() + b->getVector());
 			else pushUndefinedIfInLooseMode("builtin add");
 		} break;
 		case BuiltInFunction::AV2_EBIF_SUB: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isNumber() && b->isNumber()) temporary() = new Value(a->get<double>() - b->get<double>());
 			else if (a->isAlgebraic() && b->isAlgebraic()) temporary() = new Value(a->getVector() - b->getVector());
 			else pushUndefinedIfInLooseMode("builtin sub");
 		} break;
 		case BuiltInFunction::AV2_EBIF_MUL: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isNumber() && b->isNumber()) temporary() = new Value(a->get<double>() * b->get<double>());
 			else if (a->isAlgebraic() && b->isAlgebraic()) temporary() = new Value(a->getVector() * b->getVector());
 			else pushUndefinedIfInLooseMode("builtin mul");
 		} break;
 		case BuiltInFunction::AV2_EBIF_DIV: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isNumber() && b->isNumber()) temporary() = new Value(a->get<double>() / b->get<double>());
 			else if (a->isAlgebraic() && b->isAlgebraic()) temporary() = new Value(a->getVector() / b->getVector());
 			else pushUndefinedIfInLooseMode("builtin div");
 		} break;
 		case BuiltInFunction::AV2_EBIF_REM: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isNumber() && b->isNumber()) {
 				if (a->isUnsigned() && b->isUnsigned())
 					temporary() = new Value(a->get<usize>() % b->get<usize>());
@@ -652,52 +652,52 @@ void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 		} break;
 		case BuiltInFunction::AV2_EBIF_LAND: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			temporary() = new Value(a->get<bool>() && b->get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_LOR: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			temporary() = new Value(a->get<bool>() || b->get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_LNOT: {
 			if (err) break;
-			auto a = register(0);
+			auto a = iregister(0);
 			temporary() = new Value(!a->get<bool>());
 		} break;
 		case BuiltInFunction::AV2_EBIF_NEG: {
 			if (err) break;
-			auto a = register(0);
+			auto a = iregister(0);
 			if (a->isNumber()) temporary() = new Value(-a->get<double>());
 			else pushUndefinedIfInLooseMode("builtin negate");
 		} break;
 		case BuiltInFunction::AV2_EBIF_AND: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isInteger() && b->isInteger()) temporary() = new Value(a->get<usize>() & b->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise and");
 		} break;
 		case BuiltInFunction::AV2_EBIF_OR: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isInteger() && b->isInteger()) temporary() = new Value(a->get<usize>() | b->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise or");
 		} break;
 		case BuiltInFunction::AV2_EBIF_XOR: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			if (a->isInteger() && b->isInteger()) temporary() = new Value(a->get<usize>() ^ b->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise xor");
 		} break;
 		case BuiltInFunction::AV2_EBIF_NOT: {
 			if (err) break;
-			auto a = register(0);
+			auto a = iregister(0);
 			if (a->isInteger()) temporary() = new Value(~a->get<usize>());
 			else pushUndefinedIfInLooseMode("builtin bitwise not");
 		} break;
 		case BuiltInFunction::AV2_EBIF_COMP: {
 			if (err) break;
-			auto a = register(0), b = register(1);
+			auto a = iregister(0), b = iregister(1);
 			Value::OrderType order = Value::Order::EQUAL;
 			if (a->type() == b->type())					order = *a <=> *b;
 			else if (a->isNumber() && b->isNumber())	order = a->get<double>() <=> b->get<double>();
@@ -714,8 +714,8 @@ void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 		} break;
 		case BuiltInFunction::AV2_EBIF_READ: {
 			if (err) break;
-			auto type	= register(0);
-			auto id		= register(1);
+			auto type	= iregister(0);
+			auto id		= iregister(1);
 			if (!(type->isUnsigned() && id->isUnsigned()))
 				pushUndefinedIfInLooseMode("builtin indirect read");
 			if (err) break;
@@ -727,33 +727,33 @@ void Engine::callBuiltIn(BuiltInFunction const func, uint8 const op) {
 		} break;
 		case BuiltInFunction::AV2_EBIF_PRINT: {
 			if (err) break;
-			auto what = register(0);
+			auto what = iregister(0);
 			onPrint(*what);
 		} break;
 		case BuiltInFunction::AV2_EBIF_SIZEOF: {
 			if (err) break;
-			auto val = register(0);
+			auto val = iregister(0);
 			temporary() = new Value(val->size());
 		} break;
 		case BuiltInFunction::AV2_EBIF_HTTP_REQUEST: {
 			if (err) break;
-			auto url	= register(0);
-			auto type	= register(1);
-			auto data	= register(2);
+			auto url	= iregister(0);
+			auto type	= iregister(1);
+			auto data	= iregister(2);
 			if (url->isString() && type->isString() && data)
 				temporary() = new Value(onHTTPRequest(url->getString(), type->getString().upper(), *data));
 			else pushUndefinedIfInLooseMode("builtin HTTP request");
 		} break;
 		case BuiltInFunction::AV2_EBIF_TO_STRING: {
 			if (err) break;
-			temporary() = new Value(register(0)->isString() ? register(0)->getString() : register(0)->toFLOWString());
+			temporary() = new Value(iregister(0)->isString() ? iregister(0)->getString() : iregister(0)->toFLOWString());
 		} break;
 		case BuiltInFunction::AV2_EBIF_FROM_STRING: {
 			if (err) break;
-			if (register(0)->isString()) try{
+			if (iregister(0)->isString()) try{
 				Makai::Parser::Data::FLOWParser parser;
 				parser.tryParse(
-					register(0)->getString()
+					iregister(0)->getString()
 				).then(
 					[&] (auto const& e) {temporary() = new Value(e);}
 				).onError(
@@ -805,74 +805,74 @@ void Engine::callBuiltInObjectOp(BuiltInObjectOperation const func) {
 void Engine::callBuiltInVector2Op(BuiltInVectorOperation const func) {
 	switch (func) {
 		case BuiltInVectorOperation::AV2_EBI_VO_NEW: {
-			if (!register(0)->isNumber())
+			if (!iregister(0)->isNumber())
 				pushUndefinedIfInLooseMode("builtin vec2 new");
-			else temporary() = new Value(Value::VectorType(register(0)->getReal()));
+			else temporary() = new Value(Value::VectorType(iregister(0)->getReal()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_VEC_NEW: {
-			if (!(register(0)->isNumber() && register(1)->isNumber()))
+			if (!(iregister(0)->isNumber() && iregister(1)->isNumber()))
 				pushUndefinedIfInLooseMode("builtin vec2 vnew");
 			else temporary() = new Value(
 				Value::VectorType(
-					register(0)->getReal(),
-					register(1)->getReal(),
+					iregister(0)->getReal(),
+					iregister(1)->getReal(),
 					0
 				)
 			);
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_CROSS:
 		case BuiltInVectorOperation::AV2_EBI_VO_FCROSS: {
-			if (!(register(0)->isAlgebraic() && register(1)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic() && iregister(1)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec2 (f)cross");
-			else temporary() = new Value(register(0)->getVector().xy().fcross(register(1)->getVector().xy()));
+			else temporary() = new Value(iregister(0)->getVector().xy().fcross(iregister(1)->getVector().xy()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_DOT: {
-			if (!(register(0)->isAlgebraic() && register(1)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic() && iregister(1)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec2 dot");
-			else temporary() = new Value(register(0)->getVector().xy().dot(register(1)->getVector().xy()));
+			else temporary() = new Value(iregister(0)->getVector().xy().dot(iregister(1)->getVector().xy()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_TAN: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec2 tan");
-			else temporary() = new Value(register(0)->getVector().xy().tangent());
+			else temporary() = new Value(iregister(0)->getVector().xy().tangent());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_ANGLE: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec2 angle");
-			else temporary() = new Value(register(0)->getVector().xy().angle());
+			else temporary() = new Value(iregister(0)->getVector().xy().angle());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_NORMAL: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec2 normal");
-			else temporary() = new Value(register(0)->getVector().xy().normalize());
+			else temporary() = new Value(iregister(0)->getVector().xy().normalize());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec4 len");
-			else temporary() = new Value(register(0)->getVector().xy().length());
+			else temporary() = new Value(iregister(0)->getVector().xy().length());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH_SQUARED: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec2 len2");
-			else temporary() = new Value(register(0)->getVector().xy().lengthSquared());
+			else temporary() = new Value(iregister(0)->getVector().xy().lengthSquared());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_TRI_CROSS: {
 			if (!(
-				register(0)->isAlgebraic()
-			&&	register(1)->isAlgebraic()
-			&&	register(2)->isAlgebraic()
+				iregister(0)->isAlgebraic()
+			&&	iregister(1)->isAlgebraic()
+			&&	iregister(2)->isAlgebraic()
 			))
 				pushUndefinedIfInLooseMode("builtin vec2 tri");
-			else temporary() = new Value(register(0)->getVector().xy().tri(register(1)->getVector().xy(), register(2)->getVector().xy()));
+			else temporary() = new Value(iregister(0)->getVector().xy().tri(iregister(1)->getVector().xy(), iregister(2)->getVector().xy()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_INVERSE_TRI_CROSS: {
 			if (!(
-				register(0)->isAlgebraic()
-			&&	register(1)->isAlgebraic()
-			&&	register(2)->isAlgebraic()
+				iregister(0)->isAlgebraic()
+			&&	iregister(1)->isAlgebraic()
+			&&	iregister(2)->isAlgebraic()
 			))
 				pushUndefinedIfInLooseMode("builtin vec2 itri");
-			else temporary() = new Value(register(0)->getVector().xy().itri(register(1)->getVector().xy(), register(2)->getVector().xy()));
+			else temporary() = new Value(iregister(0)->getVector().xy().itri(iregister(1)->getVector().xy(), iregister(2)->getVector().xy()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin vec2"); break;
 	}
@@ -881,73 +881,73 @@ void Engine::callBuiltInVector2Op(BuiltInVectorOperation const func) {
 void Engine::callBuiltInVector3Op(BuiltInVectorOperation const func) {
 	switch (func) {
 		case BuiltInVectorOperation::AV2_EBI_VO_NEW: {
-			if (!(register(0)->isNumber()))
+			if (!(iregister(0)->isNumber()))
 				pushUndefinedIfInLooseMode("builtin vec2 new");
-			else temporary() = new Value(Value::VectorType(register(0)->getReal()));
+			else temporary() = new Value(Value::VectorType(iregister(0)->getReal()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_VEC_NEW: {
-			if (!(register(0)->isNumber() && register(1)->isNumber() && register(2)->isNumber()))
+			if (!(iregister(0)->isNumber() && iregister(1)->isNumber() && iregister(2)->isNumber()))
 				pushUndefinedIfInLooseMode("builtin vec2 vnew");
 			else temporary() = new Value(
 				Value::VectorType(
-					register(0)->getReal(),
-					register(1)->getReal(),
-					register(2)->getReal()
+					iregister(0)->getReal(),
+					iregister(1)->getReal(),
+					iregister(2)->getReal()
 				)
 			);
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_CROSS:{
-			if (!(register(0)->isAlgebraic() && register(1)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic() && iregister(1)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec2 cross");
-			else temporary() = new Value(register(0)->getVector().xyz().cross(register(1)->getVector().xyz()));
+			else temporary() = new Value(iregister(0)->getVector().xyz().cross(iregister(1)->getVector().xyz()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_FCROSS: {
-			if (!(register(0)->isAlgebraic() && register(1)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic() && iregister(1)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec3 fcross");
-			else temporary() = new Value(register(0)->getVector().xyz().fcross(register(1)->getVector().xyz()));
+			else temporary() = new Value(iregister(0)->getVector().xyz().fcross(iregister(1)->getVector().xyz()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_DOT: {
-			if (!(register(0)->isAlgebraic() && register(1)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic() && iregister(1)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec3 dot");
-			else temporary() = new Value(register(0)->getVector().xyz().dot(register(1)->getVector().xyz()));
+			else temporary() = new Value(iregister(0)->getVector().xyz().dot(iregister(1)->getVector().xyz()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_ANGLE: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec3 angle");
-			else temporary() = new Value(register(0)->getVector().xyz().angle());
+			else temporary() = new Value(iregister(0)->getVector().xyz().angle());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_NORMAL: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec3 normal");
-			else temporary() = new Value(register(0)->getVector().xyz().normalize());
+			else temporary() = new Value(iregister(0)->getVector().xyz().normalize());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec3 len");
-			else temporary() = new Value(register(0)->getVector().xyz().length());
+			else temporary() = new Value(iregister(0)->getVector().xyz().length());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH_SQUARED: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec3 len2");
-			else temporary() = new Value(register(0)->getVector().xyz().lengthSquared());
+			else temporary() = new Value(iregister(0)->getVector().xyz().lengthSquared());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_TRI_CROSS: {
 			if (!(
-				register(0)->isAlgebraic()
-			&&	register(1)->isAlgebraic()
-			&&	register(2)->isAlgebraic()
+				iregister(0)->isAlgebraic()
+			&&	iregister(1)->isAlgebraic()
+			&&	iregister(2)->isAlgebraic()
 			))
 				pushUndefinedIfInLooseMode("builtin vec3 tri");
-			else temporary() = new Value(register(0)->getVector().xyz().tri(register(1)->getVector().xyz(), register(2)->getVector().xyz()));
+			else temporary() = new Value(iregister(0)->getVector().xyz().tri(iregister(1)->getVector().xyz(), iregister(2)->getVector().xyz()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_INVERSE_TRI_CROSS: {
 			if (!(
-				register(0)->isAlgebraic()
-			&&	register(1)->isAlgebraic()
-			&&	register(2)->isAlgebraic()
+				iregister(0)->isAlgebraic()
+			&&	iregister(1)->isAlgebraic()
+			&&	iregister(2)->isAlgebraic()
 			))
 				pushUndefinedIfInLooseMode("builtin vec3 itri");
-			else temporary() = new Value(register(0)->getVector().xyz().itri(register(1)->getVector().xyz(), register(2)->getVector().xyz()));
+			else temporary() = new Value(iregister(0)->getVector().xyz().itri(iregister(1)->getVector().xyz(), iregister(2)->getVector().xyz()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin vec3"); break;
 	}
@@ -956,65 +956,65 @@ void Engine::callBuiltInVector3Op(BuiltInVectorOperation const func) {
 void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 	switch (func) {
 		case BuiltInVectorOperation::AV2_EBI_VO_NEW: {
-			if (!(register(0)->isNumber()))
+			if (!(iregister(0)->isNumber()))
 				pushUndefinedIfInLooseMode("builtin vec4 new");
-			else temporary() = new Value(Value::VectorType(register(0)->getReal()));
+			else temporary() = new Value(Value::VectorType(iregister(0)->getReal()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_VEC_NEW: {
-			if (!(register(0)->isNumber() && register(1)->isNumber() && register(2)->isNumber() && register(3)->isNumber()))
+			if (!(iregister(0)->isNumber() && iregister(1)->isNumber() && iregister(2)->isNumber() && iregister(3)->isNumber()))
 				pushUndefinedIfInLooseMode("builtin vec4 vnew");
 			else temporary() = new Value(
 				Value::VectorType(
-					register(0)->getReal(),
-					register(1)->getReal(),
-					register(2)->getReal(),
-					register(3)->getReal()
+					iregister(0)->getReal(),
+					iregister(1)->getReal(),
+					iregister(2)->getReal(),
+					iregister(3)->getReal()
 				)
 			);
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_CROSS:
 		case BuiltInVectorOperation::AV2_EBI_VO_FCROSS: {
-			if (!(register(0)->isAlgebraic() && register(1)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic() && iregister(1)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec4 (f)cross");
-			else temporary() = new Value(register(0)->getVector().fcross(register(1)->getVector()));
+			else temporary() = new Value(iregister(0)->getVector().fcross(iregister(1)->getVector()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_DOT: {
-			if (!(register(0)->isAlgebraic() && register(1)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic() && iregister(1)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec4 dot");
-			else temporary() = new Value(register(0)->getVector().dot(register(1)->getVector()));
+			else temporary() = new Value(iregister(0)->getVector().dot(iregister(1)->getVector()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_NORMAL: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec4 normal");
-			else temporary() = new Value(register(0)->getVector().normalize());
+			else temporary() = new Value(iregister(0)->getVector().normalize());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec4 len");
-			else temporary() = new Value(register(0)->getVector().length());
+			else temporary() = new Value(iregister(0)->getVector().length());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_LENGTH_SQUARED: {
-			if (!(register(0)->isAlgebraic()))
+			if (!(iregister(0)->isAlgebraic()))
 				pushUndefinedIfInLooseMode("builtin vec4 len2");
-			else temporary() = new Value(register(0)->getVector().lengthSquared());
+			else temporary() = new Value(iregister(0)->getVector().lengthSquared());
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_TRI_CROSS: {
 			if (!(
-				register(0)->isAlgebraic()
-			&&	register(1)->isAlgebraic()
-			&&	register(2)->isAlgebraic()
+				iregister(0)->isAlgebraic()
+			&&	iregister(1)->isAlgebraic()
+			&&	iregister(2)->isAlgebraic()
 			))
 				pushUndefinedIfInLooseMode("builtin vec4 tri");
-			else temporary() = new Value(register(0)->getVector().tri(register(1)->getVector(), register(2)->getVector()));
+			else temporary() = new Value(iregister(0)->getVector().tri(iregister(1)->getVector(), iregister(2)->getVector()));
 		} break;
 		case BuiltInVectorOperation::AV2_EBI_VO_INVERSE_TRI_CROSS: {
 			if (!(
-				register(0)->isAlgebraic()
-			&&	register(1)->isAlgebraic()
-			&&	register(2)->isAlgebraic()
+				iregister(0)->isAlgebraic()
+			&&	iregister(1)->isAlgebraic()
+			&&	iregister(2)->isAlgebraic()
 			))
 				pushUndefinedIfInLooseMode("builtin vec4 itri");
-			else temporary() = new Value(register(0)->getVector().itri(register(1)->getVector(), register(2)->getVector()));
+			else temporary() = new Value(iregister(0)->getVector().itri(iregister(1)->getVector(), iregister(2)->getVector()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin vec4"); break;
 	}
@@ -1034,15 +1034,15 @@ int Engine::onSystemRequest(BuiltInOSOperation const func) {
 		case BuiltInOSOperation::AV2_EBI_OSO_RUN_EXECUTABLE: {
 			temporary()(new Value(onSystemRequest(func)));
 			if (!(
-				register(0)->isString()
-			&&	register(1)->isArray()
-			&&	register(2)->isString()
+				iregister(0)->isString()
+			&&	iregister(1)->isArray()
+			&&	iregister(2)->isString()
 			))
 			temporary() = new Value(
 				Makai::OS::launch(
-					register(0)->getString(),
-					register(2)->getString(),
-					register(2)->getArray().toList<Makai::String>(
+					iregister(0)->getString(),
+					iregister(2)->getString(),
+					iregister(2)->getArray().toList<Makai::String>(
 						[&] (Value const& e) -> Makai::String {
 							return e.isString() ? e.getString() : e.toString();
 						}
@@ -1060,7 +1060,7 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 		case BuiltInFSOperation::AV2_EBI_FSO_GET_JSON:
 		case BuiltInFSOperation::AV2_EBI_FSO_GET_TEXT:
 		case BuiltInFSOperation::AV2_EBI_FSO_GET_FLOW: {
-			if (!register(0)->isString())
+			if (!iregister(0)->isString())
 				pushUndefinedIfInLooseMode("builtin get file");
 			else try {
 				temporary() = new Value(onFileGetRequest(func));
@@ -1073,8 +1073,8 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_JSON:
 		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_FLOW: {
 			if (!(
-				register(0)->isString()
-			&&	register(1)->isBytes()
+				iregister(0)->isString()
+			&&	iregister(1)->isBytes()
 			))
 				pushUndefinedIfInLooseMode("builtin save file");
 			else onFileSaveRequest(func);
@@ -1085,7 +1085,7 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 		case BuiltInFSOperation::AV2_EBI_FSO_DELETE:
 		case BuiltInFSOperation::AV2_EBI_FSO_COPY:
 		case BuiltInFSOperation::AV2_EBI_FSO_MOVE: {
-			if (!register(0)->isString())
+			if (!iregister(0)->isString())
 				pushUndefinedIfInLooseMode("builtin fs op");
 			else temporary() = new Value(onFilesystemRequest(func));
 		} break;
@@ -1111,11 +1111,11 @@ void Engine::callBuiltInArchiveOp(BuiltInArchiveOperation const func) {
 		case BuiltInArchiveOperation::AV2_EBI_AFO_LOAD:
 		case BuiltInArchiveOperation::AV2_EBI_AFO_UNLOAD: {
 			if (!(
-				register(0)->isString()
-			&&	register(1)->isString()
-			&&	register(2)->isString()
+				iregister(0)->isString()
+			&&	iregister(1)->isString()
+			&&	iregister(2)->isString()
 			)) pushUndefinedIfInLooseMode("builtin arch op");
-			else onArchiveRequest(register(0)->getString(), register(1)->getString(), register(2)->getString());
+			else onArchiveRequest(iregister(0)->getString(), iregister(1)->getString(), iregister(2)->getString());
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin arch"); break;
 	}
@@ -1126,37 +1126,37 @@ void Engine::callBuiltInCryptographyOp(BuiltInCryptographyOperation const func) 
 	switch (func) {
 		case BuiltInCryptographyOperation::AV2_EBI_EO_ENCODE: {
 			if (!(
-				register(0)->isBytes()
-			&&	register(1)->isString()
+				iregister(0)->isBytes()
+			&&	iregister(1)->isString()
 			)) pushUndefinedIfInLooseMode("builtin crypt encode");
-			else temporary() = new Value(Makai::Data::encode(register(0)->getBytes(), Makai::Data::fromString(register(1)->getString())));
+			else temporary() = new Value(Makai::Data::encode(iregister(0)->getBytes(), Makai::Data::fromString(iregister(1)->getString())));
 		} break;
 		case BuiltInCryptographyOperation::AV2_EBI_EO_DECODE: {
 			if (!(
-				register(0)->isString()
-			&&	register(1)->isString()
+				iregister(0)->isString()
+			&&	iregister(1)->isString()
 			)) pushUndefinedIfInLooseMode("builtin crypt decode");
-			else temporary() = new Value(Makai::Data::decode(register(0)->getString(), Makai::Data::fromString(register(1)->getString())));
+			else temporary() = new Value(Makai::Data::decode(iregister(0)->getString(), Makai::Data::fromString(iregister(1)->getString())));
 		} break;
 		case BuiltInCryptographyOperation::AV2_EBI_EO_ENCRYPT: {
 			if (!(
-				register(0)->isString()
-			&&	register(1)->isString()
+				iregister(0)->isString()
+			&&	iregister(1)->isString()
 			)) pushUndefinedIfInLooseMode("builtin crypt encrypt");
-			else temporary() = new Value(Makai::Tool::Arch::encrypt(register(0)->getBytes(), register(1)->getString()));
+			else temporary() = new Value(Makai::Tool::Arch::encrypt(iregister(0)->getBytes(), iregister(1)->getString()));
 		} break;
 		case BuiltInCryptographyOperation::AV2_EBI_EO_DECRYPT: {
 			if (!(
-				register(0)->isString()
-			&&	register(1)->isString()
+				iregister(0)->isString()
+			&&	iregister(1)->isString()
 			)) pushUndefinedIfInLooseMode("builtin crypt decrypt");
-			else temporary() = new Value(Makai::Tool::Arch::decrypt(register(0)->getBytes(), register(1)->getString()));
+			else temporary() = new Value(Makai::Tool::Arch::decrypt(iregister(0)->getBytes(), iregister(1)->getString()));
 		} break;
 		case BuiltInCryptographyOperation::AV2_EBI_EO_HASH: {
 			if (!(
-				register(0)->isString()
+				iregister(0)->isString()
 			)) pushUndefinedIfInLooseMode("builtin crypt hash");
-			else temporary() = new Value(Makai::Tool::Arch::hashPassword(register(0)->getString()));
+			else temporary() = new Value(Makai::Tool::Arch::hashPassword(iregister(0)->getString()));
 		} break;
 		default: pushUndefinedIfInLooseMode("invalid builtin crypt"); break;
 	}
