@@ -117,7 +117,19 @@ jobs:
     steps:
       - uses: actions/download-artifact@master
         with:
-          name: lib-*
+          name: lib-linux-full
+          path: output
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-linux-lite
+          path: output
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-windows-full
+          path: output
+      - uses: actions/download-artifact@master
+        with:
+          name: lib-windows-lite
           path: output
       - name: Get current date
         id: date
