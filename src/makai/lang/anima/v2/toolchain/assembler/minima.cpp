@@ -9,6 +9,9 @@ using enum Type;
 
 using Context = Minima::Context;
 
+#define MINIMA_ASSEMBLE_FN(NAME) static void do##NAME (Minima::Context& context)
+#define MINIMA_ERROR(TYPE, WHAT) context.error<Makai::Error::TYPE>(WHAT)
+
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
@@ -24,34 +27,34 @@ struct Location {
 	}
 
 	constexpr Location& operator|=(Location const& other) {
-		source |= other.source;
+		source = source | other.source;
 		id = other.id;
 		return *this;
 	}
 };
 
 static DataLocation getLoadType(Context& context, DataLocation const prev) {
-	DataLocation locAt = asLocation(prev);
+	DataLocation locAt = asPlace(prev);
 	if (context.hasToken(LTS_TT_IDENTIFIER)) {
 		auto const id = context.getValue<Makai::String>();
 		if (id == "reference" || id == "ref")
-			locAt |= DataLocation::AV2_DLM_BY_REF;
+			locAt = locAt | DataLocation::AV2_DLM_BY_REF;
 		else if (id == "move")
-			locAt |= DataLocation::AV2_DLM_MOVE;
+			locAt = locAt | DataLocation::AV2_DLM_MOVE;
 		else if (id == "value" || id == "copy")
-			locAt |= DataLocation{0};
+			locAt = locAt | DataLocation{0};
 		context.fetchNext();
 	}
 	return locAt;
 }
 
-static DataLocation getStack(Context& context) {
+static Location getStack(Context& context) {
 	Location loc;
 	context
 		.fetchNext()
 		.expectToken(Type{'['})
 	;
-	context.fetchNext()
+	context.fetchNext();
 	bool backshots = false;
 	while (
 		context.hasToken(Type{'-'})
@@ -62,12 +65,12 @@ static DataLocation getStack(Context& context) {
 		context.fetchNext();
 	}
 	loc.id = context.fetchToken(LTS_TT_INTEGER, "stack index").getUnsigned();
-	loc.source |= (
-		fromTheBack
+	loc.source = loc.source | (
+		backshots
 	?	DataLocation::AV2_DL_STACK_OFFSET
 	:	DataLocation::AV2_DL_STACK
 	);
-	context.fetchNext().expectToken(Type[']']);
+	context.fetchNext().expectToken(Type{']'});
 	return loc;
 }
 
@@ -111,11 +114,11 @@ static Location getGlobal(Context& context) {
 			.getString()
 	;
 	uint64 globalID = 0;
-	if (context.program.labels.globals.contains(id))
-		globalID = context.program.labels.globals[id];
+	if (context.program.labels.globals.contains(name))
+		globalID = context.program.labels.globals[name];
 	else {
 		globalID = context.program.labels.globals.size();
-		context.program.labels.globals[id] = globalID;
+		context.program.labels.globals[name] = globalID;
 	}
 	return {
 		DataLocation::AV2_DL_GLOBAL,
@@ -159,9 +162,178 @@ static Location getConstantLocation(Context& context) {
 			default: context.error("Invalid constant!");
 		}
 	}
+	context.error("Invalid constant!");
 }
 
-static Location getLabelLocation(Minima::Context& context) {
+MINIMA_ASSEMBLE_FN(InternalCall) {
+	if (!context.stream.next())
+		MINIMA_ERROR(NonexistentValue, "Malformed internal call!");
+	auto const func = context.stream.current();
+	Instruction::Invocation invoke{DataLocation::AV2_DL_INTERNAL, 0};
+	switch (func.type) {
+		case LTS_TT_IDENTIFIER: {
+			auto const id = func.value.get<Makai::String>();
+			if (id == "add")								invoke.argc = '+';
+			else if (id == "subtract" || id == "sub")		invoke.argc = '-';
+			else if (id == "multiply" || id == "mul")		invoke.argc = '*';
+			else if (id == "divide" || id == "div")			invoke.argc = '/';
+			else if (id == "power" || id == "pow")			invoke.argc = 'p';
+			else if (id == "remainder" || id == "rem")		invoke.argc = '%';
+			else if (id == "compare" || id == "cmp")		invoke.argc = '=';
+			else if (id == "negate" || id == "neg")			invoke.argc = 'n';
+			else if (id == "band")							invoke.argc = '&';
+			else if (id == "bor")							invoke.argc = '|';
+			else if (id == "bxor")							invoke.argc = '^';
+			else if (id == "bnot")							invoke.argc = '~';
+			else if (id == "land" || id == "and")			invoke.argc = 'a';
+			else if (id == "lor" || id == "or")				invoke.argc = 'o';
+			else if (id == "lnot" || id == "not")			invoke.argc = '!';
+			else if (id == "sin")							invoke.argc = 's';
+			else if (id == "cos")							invoke.argc = 'c';
+			else if (id == "tan")							invoke.argc = 't';
+			else if (id == "stringify" || id == "strify")	invoke.argc = '_';
+			else if (id == "destrfy" || id == "parse")		invoke.argc = '\0';
+			else if (id == "typename" || id == "tname")		invoke.argc = 'i';
+			else if (id == "arcsin" || id == "asin")		invoke.argc = 'S';
+			else if (id == "arccos" || id == "acos")		invoke.argc = 'C';
+			else if (id == "arctan" || id == "atan")		invoke.argc = 'T';
+			else if (id == "atan2" || id == "a2")			invoke.argc = '2';
+			else if (id == "interrupt" || id == "stop")		invoke.argc = '.';
+			else if (id == "access" || id == "read")		invoke.argc = ':';
+			else if (id == "print" || id == "echo")			invoke.argc = '@';
+			else if (id == "sizeof")						invoke.argc = '#';
+			else if (id == "http")							invoke.argc = 'H';
+			else if (id == "vec2" || id == "vec3" || id == "vec4") {
+				invoke.argc	= id.back();
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "vector operation").getString();
+				if (op == "new")			invoke.mod = '.';
+				else if (op == "vnew")		invoke.mod = '=';
+				else if (op == "cross")		invoke.mod = 'x';
+				else if (op == "dot")		invoke.mod = '*';
+				else if (op == "fcross")	invoke.mod = 'X';
+				else if (op == "tan" && id == "vec2")
+					invoke.mod = 't';
+				else if (op == "angle" && (id == "vec2" || id == "vec3"))
+					invoke.mod = 'a';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else if (id == "string" || id == "str" || id == "s") {
+				invoke.argc	= '"';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
+				if (op == "new")							invoke.mod = '.';
+				else if (id == "slice" || op == "sub")		invoke.mod = '_';
+				else if (op == "replace" || op == "rep")	invoke.mod = ':';
+				else if (op == "split" || op == "sep")		invoke.mod = '/';
+				else if (op == "concat" || op == "join")	invoke.mod = '+';
+				else if (op == "match" || op == "is")		invoke.mod = '=';
+				else if (op == "contains" || op == "has")	invoke.mod = 'f';
+				else if (op == "find" || op == "in")		invoke.mod = 'i';
+				else if (op == "remove" || op == "del")		invoke.mod = '-';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} 	else if (id == "array" || id == "arr" || id == "a") {
+				invoke.argc	= '[';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
+				if (op == "new")							invoke.mod = '.';
+				else if (op == "remove" || op == "del")		invoke.mod = '-';
+				else if (op == "concat" || op == "join")	invoke.mod = '+';
+				else if (op == "like")						invoke.mod = '=';
+				else if (op == "unlike")					invoke.mod = '!';
+				else if (op == "slice" || op == "sub")		invoke.mod = '_';
+				else if (op == "find")						invoke.mod = 'f';
+				else if (op == "fuzz")						invoke.mod = 'F';
+				else if (op == "push")						invoke.mod = '<';
+				else if (op == "pop")						invoke.mod = '>';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else if (id == "object" || id == "obj" || id == "o") {
+				invoke.argc	= '{';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "object operation").getString();
+				if (op == "new")								invoke.mod = '.';
+				else if (op == "has")							invoke.mod = ':';
+				else if (op == "removekey" || op == "delk")		invoke.mod = '-';
+				else if (op == "removevalue" || op == "delv")	invoke.mod = '/';
+				else if (op == "concat" || op == "join")		invoke.mod = '+';
+				else if (op == "findkey" || op == "fink")		invoke.mod = 'f';
+				else if (op == "fuzzkey" || op == "fuzk")		invoke.mod = 'F';
+				else if (op == "findval" || op == "finv")		invoke.mod = 'x';
+				else if (op == "fuzzval" || op == "fuzv")		invoke.mod = 'X';
+				else if (op == "keys" || op == "k")				invoke.mod = 'k';
+				else if (op == "values" || op == "v")			invoke.mod = 'v';
+				else if (op == "items" || op == "i")			invoke.mod = 'i';
+				else if (op == "parse" || op == "make")			invoke.mod = '{';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else if (id == "os") {
+				invoke.argc	= '\n';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "OS operation").getString();
+				if (op == "exe")		invoke.mod = 'E';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else if (id == "fs") {
+				invoke.argc	= '\t';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Filesystem operation").getString();
+				if (op == "getb")		invoke.mod = 'b';
+				else if (op == "saveb")	invoke.mod = 'B';
+				else if (op == "gett")	invoke.mod = 't';
+				else if (op == "savet")	invoke.mod = 'T';
+				else if (op == "getj")	invoke.mod = 'j';
+				else if (op == "savej")	invoke.mod = 'J';
+				else if (op == "geto")	invoke.mod = 'o';
+				else if (op == "saveo")	invoke.mod = 'O';
+				else if (op == "mkdir")	invoke.mod = '/';
+				else if (op == "isdir")	invoke.mod = '\\';
+				else if (op == "has")	invoke.mod = '.';
+				else if (op == "del")	invoke.mod = 'r';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else if (id == "arch") {
+				invoke.argc	= '\v';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Archive operation").getString();
+				if (op == "load")			invoke.mod = '<';
+				else if (op == "unload")	invoke.mod = '>';
+				else if (op == "new")		invoke.mod = '.';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else if (id == "crypt") {
+				invoke.argc	= '?';
+				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Cryptographical operation").getString();
+				if (op == "encode")			invoke.mod = 'e';
+				else if (op == "decode")	invoke.mod = 'd';
+				else if (op == "encrypt")	invoke.mod = 'E';
+				else if (op == "decrypt")	invoke.mod = 'D';
+				else if (op == "hash")		invoke.mod = 'h';
+				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+			} else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
+		} break;
+		case Type{'+'}:
+		case Type{'-'}:
+		case Type{'*'}:
+		case Type{'/'}:
+		case Type{'%'}:
+		case Type{'&'}:
+		case Type{'|'}:
+		case Type{'~'}:
+		case Type{'!'}:
+		case Type{'='}:
+		case Type{'.'}:
+		case Type{'@'}:
+		case Type{'>'}:
+		case Type{','}: {
+			invoke.argc = Makai::Cast::as<uint8>(func.type);
+		} break;
+		case Type::LTS_TT_LOGIC_AND: {
+			invoke.argc = 'a';
+		} break;
+		case Type::LTS_TT_LOGIC_OR: {
+			invoke.argc = 'o';
+		} break;
+		case Type::LTS_TT_COMPARE_EQUALS: {
+			invoke.argc = '=';
+		} break;
+		default:
+			MINIMA_ERROR(InvalidValue, "Invalid internal function call!");
+	}
+	context.program.code.pushBack({
+		Instruction::Name::AV2_IN_CALL,
+		Makai::Cast::bit<uint32>(invoke)
+	});
+}
+
+static Location getLabelLocation(Context& context) {
 	auto const current =
 		context
 			.fetchNext()
@@ -170,7 +342,7 @@ static Location getLabelLocation(Minima::Context& context) {
 	;
 	if (!context.jumps.labels.contains(current))
 		context.error("Jump target has not been declared yet!");
-	return {DataLocation::AV2_DL_CONST, addConstant(context, context.jumps.labels[current])};
+	return {DataLocation::AV2_DL_CONST, context.addConstant(context.jumps.labels[current])};
 }
 
 static Location getDataLocation(Context& context) {
@@ -185,7 +357,7 @@ static Location getDataLocation(Context& context) {
 		) {
 			if (!hasLoadType) {
 				hasLoadType = true;
-				loc.source = getLoadType(context);
+				loc.source = getLoadType(context, DataLocation{0});
 			}
 			context.fetchNext();
 			continue;
@@ -198,7 +370,7 @@ static Location getDataLocation(Context& context) {
 			else if (id == "placeof")					loc |= getLabelLocation(context);
 			else if (id == "stack")						loc |= getStack(context);
 			else if (id == "global" || id == "g")		loc |= getGlobal(context);
-			else if (id == "external" || id == "out")	loc |= getExternal(context);
+			else if (id == "external" || id == "out")	loc |= getExtern(context);
 			else if (id == "temporary" || id == "temp")	loc |= {DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
 			else if (id == "false")						loc |= {DataLocation::AV2_DL_INTERNAL, 0};
 			else if (id == "true")						loc |= {DataLocation::AV2_DL_INTERNAL, 1};
@@ -509,7 +681,7 @@ MINIMA_ASSEMBLE_FN(Call) {
 	if (invoke.location == DataLocation::AV2_DL_CONST) {
 		context.addJumpTarget(fname);
 	} else {
-		context.addInstruction<uint64>(addConstant(context, fname));
+		context.addInstruction<uint64>(context.addConstant(fname));
 	}
 	if (!context.hasToken(Type{'('}))
 		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
