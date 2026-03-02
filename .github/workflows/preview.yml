@@ -42,7 +42,7 @@ jobs:
           path: output/linux-*.zip
 
   ship-it-lite-linux:
-    name: Ship the library (FULL ver.) (Linux)
+    name: Ship the library (LITE ver.) (Linux)
     runs-on: ubuntu-latest
     needs: [prepare-linux]
     steps:
@@ -83,7 +83,7 @@ jobs:
           path: output/win-*.zip
 
   ship-it-lite-win:
-    name: Ship the library (FULL ver.) (Windows)
+    name: Ship the library (LITE ver.) (Windows)
     runs-on: windows-latest
     defaults:
       run:
