@@ -1020,7 +1020,7 @@ void Engine::callBuiltInVector4Op(BuiltInVectorOperation const func) {
 	}
 }
 
-void Engine::callBuiltInOSOp(BuiltInOSOperation const func) {
+void Engine::callBuiltInOSOp(Engine::BuiltInOSOperation const func) {
 	switch (func) {
 		case BuiltInOSOperation::AV2_EBI_OSO_RUN_EXECUTABLE: {
 			temporary() = new Value(onSystemRequest(func));
@@ -1029,10 +1029,9 @@ void Engine::callBuiltInOSOp(BuiltInOSOperation const func) {
 	}
 }
 
-int Engine::onSystemRequest(BuiltInOSOperation const func) {
+int Engine::onSystemRequest(Engine::BuiltInOSOperation const func) {
 	switch (func) {
 		case BuiltInOSOperation::AV2_EBI_OSO_RUN_EXECUTABLE: {
-			temporary()(new Value(onSystemRequest(func)));
 			if (!(
 				iregister(0)->isString()
 			&&	iregister(1)->isArray()
@@ -1054,12 +1053,12 @@ int Engine::onSystemRequest(BuiltInOSOperation const func) {
 	}
 }
 
-void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
+void Engine::callBuiltInFSOp(Engine::BuiltInFSOperation const func) {
 	switch (func) {
-		case BuiltInFSOperation::AV2_EBI_FSO_GET_BINARY:
-		case BuiltInFSOperation::AV2_EBI_FSO_GET_JSON:
-		case BuiltInFSOperation::AV2_EBI_FSO_GET_TEXT:
-		case BuiltInFSOperation::AV2_EBI_FSO_GET_FLOW: {
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_GET_BINARY:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_GET_JSON:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_GET_TEXT:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_GET_FLOW: {
 			if (!iregister(0)->isString())
 				pushUndefinedIfInLooseMode("builtin get file");
 			else try {
@@ -1068,10 +1067,10 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 				temporary() = new Value(null);
 			}
 		} break;
-		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_BINARY:
-		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_TEXT:
-		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_JSON:
-		case BuiltInFSOperation::AV2_EBI_FSO_SAVE_FLOW: {
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_SAVE_BINARY:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_SAVE_TEXT:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_SAVE_JSON:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_SAVE_FLOW: {
 			if (!(
 				iregister(0)->isString()
 			&&	iregister(1)->isBytes()
@@ -1079,12 +1078,12 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 				pushUndefinedIfInLooseMode("builtin save file");
 			else onFileSaveRequest(func);
 		} break;
-		case BuiltInFSOperation::AV2_EBI_FSO_HAS_PATH:
-		case BuiltInFSOperation::AV2_EBI_FSO_IS_DIR:
-		case BuiltInFSOperation::AV2_EBI_FSO_MAKE_DIR:
-		case BuiltInFSOperation::AV2_EBI_FSO_DELETE:
-		case BuiltInFSOperation::AV2_EBI_FSO_COPY:
-		case BuiltInFSOperation::AV2_EBI_FSO_MOVE: {
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_HAS_PATH:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_IS_DIR:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_MAKE_DIR:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_DELETE:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_COPY:
+		case Engine::BuiltInFSOperation::AV2_EBI_FSO_MOVE: {
 			if (!iregister(0)->isString())
 				pushUndefinedIfInLooseMode("builtin fs op");
 			else temporary() = new Value(onFilesystemRequest(func));
@@ -1093,7 +1092,7 @@ void Engine::callBuiltInFSOp(BuiltInFSOperation const func) {
 	}
 }
 
-Makai::Data::Value onFileGetRequest(BuiltInFSOperation const op) {
+Makai::Data::Value Engine::onFileGetRequest(Engine::BuiltInFSOperation const op) {
 	switch (func) {
 		case BuiltInFSOperation::AV2_EBI_FSO_GET_BINARY: {
 			if (!(
@@ -1103,19 +1102,19 @@ Makai::Data::Value onFileGetRequest(BuiltInFSOperation const op) {
 	}
 }
 
-Makai::Data::Value onFileSaveRequest(BuiltInFSOperation const op) {
+Makai::Data::Value Engine::onFileSaveRequest(Engine::BuiltInFSOperation const op) {
 	switch (func) {
 
 	}
 }
 
-Makai::Data::Value onFilesystemRequest(BuiltInFSOperation const op) {
+Makai::Data::Value Engine::onFilesystemRequest(Engine::BuiltInFSOperation const op) {
 	switch (func) {
 
 	}
 }
 
-Makai::Data::Value onArchiveRequest(BuiltInArchiveOperation const op) {
+Makai::Data::Value Engine::onArchiveRequest(Engine::BuiltInArchiveOperation const op) {
 	switch (func) {
 
 	}
@@ -1123,9 +1122,9 @@ Makai::Data::Value onArchiveRequest(BuiltInArchiveOperation const op) {
 
 void Engine::callBuiltInArchiveOp(BuiltInArchiveOperation const func) {
 	switch (func) {
-		case BuiltInArchiveOperation::AV2_EBI_AFO_NEW:
-		case BuiltInArchiveOperation::AV2_EBI_AFO_LOAD:
-		case BuiltInArchiveOperation::AV2_EBI_AFO_UNLOAD: {
+		case Engine::BuiltInArchiveOperation::AV2_EBI_AFO_NEW:
+		case Engine::BuiltInArchiveOperation::AV2_EBI_AFO_LOAD:
+		case Engine::BuiltInArchiveOperation::AV2_EBI_AFO_UNLOAD: {
 			if (!(
 				iregister(0)->isString()
 			&&	iregister(1)->isString()
