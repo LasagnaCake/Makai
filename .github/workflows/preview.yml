@@ -126,7 +126,11 @@ jobs:
         with:
           tag_name: preview-${{steps.date.output.date}}
           prerelease: true
-          files: output/*.zip
+          files: |
+            output/lib-linux-full.zip
+            output/lib-linux-lite.zip
+            output/lib-windows-full.zip
+            output/lib-windows-lite.zip
           name: Preview Snapshot ${{steps.date.output.date}}
           body: |
             Automatically-generated preview via GitHub action.
