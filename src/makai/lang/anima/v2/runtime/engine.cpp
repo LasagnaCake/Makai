@@ -1102,19 +1102,19 @@ Makai::Data::Value Engine::onFileGetRequest(Engine::BuiltInFSOperation const fun
 	}
 }
 
-Makai::Data::Value Engine::onFileSaveRequest(Engine::BuiltInFSOperation const func) {
+void Engine::onFileSaveRequest(Engine::BuiltInFSOperation const func) {
 	switch (func) {
 
 	}
 }
 
-Makai::Data::Value Engine::onFilesystemRequest(Engine::BuiltInFSOperation const func) {
+bool Engine::onFilesystemRequest(Engine::BuiltInFSOperation const func) {
 	switch (func) {
 
 	}
 }
 
-Makai::Data::Value Engine::onArchiveRequest(Engine::BuiltInArchiveOperation const op) {
+bool Engine::onArchiveRequest(Engine::BuiltInArchiveOperation const func) {
 	switch (func) {
 
 	}
