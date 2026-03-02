@@ -1092,7 +1092,7 @@ void Engine::callBuiltInFSOp(Engine::BuiltInFSOperation const func) {
 	}
 }
 
-Makai::Data::Value Engine::onFileGetRequest(Engine::BuiltInFSOperation const op) {
+Makai::Data::Value Engine::onFileGetRequest(Engine::BuiltInFSOperation const func) {
 	switch (func) {
 		case BuiltInFSOperation::AV2_EBI_FSO_GET_BINARY: {
 			if (!(
@@ -1102,13 +1102,13 @@ Makai::Data::Value Engine::onFileGetRequest(Engine::BuiltInFSOperation const op)
 	}
 }
 
-Makai::Data::Value Engine::onFileSaveRequest(Engine::BuiltInFSOperation const op) {
+Makai::Data::Value Engine::onFileSaveRequest(Engine::BuiltInFSOperation const func) {
 	switch (func) {
 
 	}
 }
 
-Makai::Data::Value Engine::onFilesystemRequest(Engine::BuiltInFSOperation const op) {
+Makai::Data::Value Engine::onFilesystemRequest(Engine::BuiltInFSOperation const func) {
 	switch (func) {
 
 	}
