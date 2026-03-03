@@ -1,34 +1,30 @@
-#ifndef MAKAILIB_ANIMA_V2_INSTRUCTION_H
-#define MAKAILIB_ANIMA_V2_INSTRUCTION_H
+#ifndef MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
+#define MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
 
-#include "../../../compat/ctl.hpp"
+#include "../../../../compat/ctl.hpp"
 
-namespace Makai::Anima::V2 {
-	/// @brief Register count.
-	constexpr usize REGISTER_COUNT = 32;
-
+namespace Makai::Anima::V2::Core {
 	/// @brief Data location.
 	enum class DataLocation: uint8 {
 		/// @brief Internal value.
 		AV2_DL_INTERNAL,
 		/// @brief Constant data.
 		AV2_DL_CONST,
-		/// @brief Absolute position in the stack.
+		/// @brief Absolute position in the global stack.
 		AV2_DL_STACK,
-		/// @brief Offset from the top of the stack.
+		/// @brief Offset from the top of the global stack.
 		AV2_DL_STACK_OFFSET,
 		/// @brief Global variable.
 		AV2_DL_GLOBAL,
-		/// @brief C++ value.
+		/// @brief Implemetation-defined value.
 		AV2_DL_EXTERNAL,
-		/// @brief Temporary register.
+		/// @brief Temporary store.
 		AV2_DL_TEMPORARY,
-		/// @brief Register value (First register).
-		AV2_DL_REGISTER,
-		/// @brief Last register.
-		AV2_DL_LAST_REGISTER = AV2_DL_REGISTER + (REGISTER_COUNT - 1),
+		/// @brief Scope-local value.
+		AV2_DL_LOCAL,
 		/// @brief Location modifier: By reference.
 		AV2_DLM_BY_REF	= 0b10000000,
+		/// @brief Location modifier: By move.
 		AV2_DLM_MOVE	= 0b01000000,
 	};
 
@@ -52,13 +48,6 @@ namespace Makai::Anima::V2 {
 		AV2_CM_LOOSE,
 	};
 
-	/// @brief Returns the register for the given ID.
-	/// @param id ID to get register for.
-	/// @return Register for ID.
-	constexpr DataLocation asRegister(byte const id) {
-		return Cast::as<DataLocation>(enumcast(DataLocation::AV2_DL_REGISTER) + id);
-	}
-
 	/// @brief Returns the data location without modifiers.
 	constexpr DataLocation asPlace(DataLocation const loc) {
 		return (loc & ~(DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE));
@@ -67,15 +56,6 @@ namespace Makai::Anima::V2 {
 	/// @brief Returns the modifiers for a data location.
 	constexpr DataLocation asModifiers(DataLocation const loc) {
 		return (loc & (DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE));
-	}
-
-	/// @brief Returns whether the data location is a register.
-	constexpr bool isRegister(DataLocation const loc) {
-		auto const place = enumcast(asPlace(loc));
-		return
-			place >= enumcast(DataLocation::AV2_DL_REGISTER)
-		&&	place <= enumcast(DataLocation::AV2_DL_LAST_REGISTER)
-		;
 	}
 
 	/// @brief Binary operator.
@@ -96,6 +76,26 @@ namespace Makai::Anima::V2 {
 		AV2_BOP_NULL_DECAY,
 		AV2_BOP_INDEX_ACCESS,
 		AV2_BOP_MEMBER_ACCESS
+	};
+
+	enum class UnaryOperator: uint8 {
+		AV2_UOP_NEGATE,
+		AV2_UOP_INCREMENT,
+		AV2_UOP_DECREMENT,
+		AV2_UOP_INVERSE,
+		AV2_UOP_SIN,
+		AV2_UOP_COS,
+		AV2_UOP_TAN,
+		AV2_UOP_ASIN,
+		AV2_UOP_ACOS,
+		AV2_UOP_ATAN,
+		AV2_UOP_SINH,
+		AV2_UOP_COSH,
+		AV2_UOP_TANH,
+		AV2_UOP_LOG2,
+		AV2_UOP_LOG10,
+		AV2_UOP_LN,
+		AV2_UOP_SQRT,
 	};
 
 	/// @brief Comparison operator.
@@ -119,14 +119,13 @@ namespace Makai::Anima::V2 {
 				AV2_ISM_WITH_VALUE,
 				AV2_ISM_ERROR
 			};
-			Mode			mode;
-			DataLocation	source;
+			Mode	mode;
 		};
 
 		/// @brief Context mode.
 		struct [[gnu::aligned(4)]] Context {
-			ContextMode		mode;
-			bool			immediate:	1;
+			ContextMode	mode;
+			bool		immediate:	1;
 		};
 
 		/// @brief Value transfer.
@@ -136,20 +135,14 @@ namespace Makai::Anima::V2 {
 
 		/// @brief Function invocation.
 		struct [[gnu::aligned(4)]] Invocation {
-			DataLocation	location;
-			uint8			argc;
-			uint8			mod = 0;
-
-			/// @brief Parameter declaration.
-			struct [[gnu::aligned(8)]] Parameter {
-				DataLocation	location;
-				uint8			argument;
-				uint32			id;
+			enum class Type: uint8 {
+				AV2_IIT_STATIC,
+				AV2_IIT_DYNAMIC,
+				AV2_IIT_EXTERNAL,
 			};
+			Type	type;
+			uint8	argc;
 		};
-
-		/// @brief Function invocation.
-		struct [[gnu::aligned(4)]] ReferenceCall: Invocation {};
 
 		/// @brief Jump leap.
 		struct [[gnu::aligned(4)]] Leap {
@@ -166,14 +159,12 @@ namespace Makai::Anima::V2 {
 				AV2_ILT_IF_UNDEFINED,
 				AV2_ILT_IF_NULL_OR_UNDEFINED,
 			};
-			Type			type;
-			DataLocation	source;
-			DataLocation	condition;
+			Type	type;
+			bool	dyn: 1;
 		};
 
 		/// @brief Comparison operator.
 		struct [[gnu::aligned(4)]] Comparison {
-			DataLocation	lhs, rhs, out;
 			Comparator		comp;
 		};
 
@@ -189,77 +180,20 @@ namespace Makai::Anima::V2 {
 		};
 
 		/// @brief Binary math operation.
-		struct [[gnu::aligned(4)]] BinaryMath {
-			enum class Operation: uint8 {
-				AV2_IBM_OP_ADD,
-				AV2_IBM_OP_SUB,
-				AV2_IBM_OP_MUL,
-				AV2_IBM_OP_DIV,
-				AV2_IBM_OP_REM,
-				AV2_IBM_OP_POW,
-				AV2_IBM_OP_ATAN2,
-				AV2_IBM_OP_LOG,
-				AV2_IBM_OP_ELSE,
-			};
-			Operation op;
-			DataLocation lhs, rhs, out;
+		struct [[gnu::aligned(4)]] BinaryOperation {
+			BinaryOperator op;
+			bool global: 1;
 		};
 
 		/// @brief Unary math operation.
-		struct [[gnu::aligned(4)]] UnaryMath {
-			enum class Operation: uint8 {
-				AV2_IUM_OP_NEGATE,
-				AV2_IUM_OP_INCREMENT,
-				AV2_IUM_OP_DECREMENT,
-				AV2_IUM_OP_INVERSE,
-				AV2_IUM_OP_SIN,
-				AV2_IUM_OP_COS,
-				AV2_IUM_OP_TAN,
-				AV2_IUM_OP_ASIN,
-				AV2_IUM_OP_ACOS,
-				AV2_IUM_OP_ATAN,
-				AV2_IUM_OP_SINH,
-				AV2_IUM_OP_COSH,
-				AV2_IUM_OP_TANH,
-				AV2_IUM_OP_LOG2,
-				AV2_IUM_OP_LOG10,
-				AV2_IUM_OP_LN,
-				AV2_IUM_OP_SQRT,
-			};
-			Operation op;
-			DataLocation v, out;
-		};
-
-		/// @brief Wait request.
-		struct [[gnu::aligned(4)]] WaitRequest {
-			enum class Wait: uint8 {
-				AV2_IWRW_TRUTHY,
-				AV2_IWRW_FALSY
-			};
-
-			DataLocation	val;
-			Wait			wait;
-		};
-
-		/// @brief Field get request.
-		struct [[gnu::aligned(4)]] GetRequest {
-			DataLocation	from, to, field;
-		};
-
-		/// @brief Field set request.
-		struct [[gnu::aligned(4)]] SetRequest {
-			DataLocation	from, to, field;
+		struct [[gnu::aligned(4)]] UnaryOperation {
+			UnaryOperator op;
+			bool global: 1;
 		};
 
 		/// @brief Cast operation.
 		struct [[gnu::aligned(4)]] Casting {
-			DataLocation		src, dst;
 			Data::Value::Kind	type;
-		};
-
-		/// @brief Object.
-		struct [[gnu::aligned(4)]] Object {
-			DataLocation	desc, out;
 		};
 
 		/// @brief Randomness.
@@ -278,13 +212,8 @@ namespace Makai::Anima::V2 {
 				AV2_IRF_GET_SEED	= 1 << 3,
 			};
 
-			Type			type;
-			Flags			flags = Flags::AV2_IRF_NONE;
-			DataLocation	num;
-
-			struct [[gnu::aligned(8)]] Number {
-				DataLocation	lo, hi;
-			};
+			Type	type;
+			Flags	flags = Flags::AV2_IRF_NONE;
 		};
 
 		/// @brief Instruction name.
@@ -295,7 +224,7 @@ namespace Makai::Anima::V2 {
 			AV2_IN_NO_OP,
 			/// @brief Halts execution.
 			/// @param type `Stop` = What kind of stop to do.
-			/// @details `halt [<source-id>]`
+			/// @details `halt`
 			AV2_IN_HALT,
 			/// @brief Switches to a given execution context mode.
 			/// @param type `Context` = What kind of context to switch to.
@@ -306,16 +235,16 @@ namespace Makai::Anima::V2 {
 			/// @details `copy [<from-id>] [<to-id>]`
 			AV2_IN_COPY,
 			/// @brief Performs a three-way comparison on two values.
-			/// @param type `Comparison` = How to compare.
-			/// @details `compare [<lhs-id>] [<rhs-id>] [<out-id>]`
+			/// @param type Comparator to use.
+			/// @details `compare`
 			AV2_IN_COMPARE,
 			/// @brief Invokes a function.
 			/// @param type `Invocation` = How to invoke the function.
-			/// @details `call [<func-id>] [<args> ...]`
+			/// @details `call <func-id>`
 			AV2_IN_CALL,
 			/// @brief Executes a jump.
 			/// @param type `Leap` = How to jump.
-			/// @details `jump ([<dynamic-to-src-id>] [<cond-id>] | [<cond-id>] <to-id>)`
+			/// @details `jump [<to-id>]`
 			AV2_IN_JUMP,
 			/// @brief Pushes a value to the top of the stack.
 			/// @param type `StackPush` = How to handle the value.
@@ -329,7 +258,7 @@ namespace Makai::Anima::V2 {
 			/// @param type Discarded.
 			/// @details `swap`
 			AV2_IN_STACK_SWAP,
-			/// @brief Clears a given number of elements from the top of the stack.
+			/// @brief Clears a given number of elements from the top of the global stack.
 			/// @param type Amount of items to clear.
 			/// @details `clear`
 			AV2_IN_STACK_CLEAR,
@@ -341,42 +270,34 @@ namespace Makai::Anima::V2 {
 			/// @param type Discarded.
 			/// @details `return`
 			AV2_IN_RETURN,
-			/// @brief Executes a mathematical operation involving a binary operator.
-			/// @param type `BinaryMath` = How to process the math operation.
-			/// @details `bop [<lhs-id>] [rhs-id] [out-id]`
-			AV2_IN_MATH_BOP,
-			/// @brief Executes a mathematical operation involving a unary operator.
-			/// @param type `UnaryMath` = How to process the math operation.
-			/// @details `uop [<val-id>] [out-id]`
-			AV2_IN_MATH_UOP,
+			/// @brief Executes an operation involving a binary operator.
+			/// @param type `BinaryOperation` = How to operate.
+			/// @details `bop`
+			AV2_IN_BOP,
+			/// @brief Executes an operation involving a unary operator.
+			/// @param type `UnaryOperation` = How to operate.
+			/// @details `uop`
+			AV2_IN_UOP,
 			/// @brief Returns execution to the engine.
 			/// @param type Discarded.
 			/// @details `yield`
 			AV2_IN_YIELD,
-			/// @brief Awaits a given value to be in a certain state.
-			/// @param type `WaitRequest` = What to expect from the value.
-			/// @details `await [<loc-id>]`
-			AV2_IN_AWAIT,
-			/// @brief Gets the value of a field from an object or array.
-			/// @param type `GetRequest` = How to get the value.
-			/// @details `get [<path-id>] [<from-id>] [<to-id>]`
-			AV2_IN_GET,
-			/// @brief Sets the value of a field in an object or array.
-			/// @param type `SetRequest` = How to set the value.
-			/// @details `set [<path-id>] [<from-id>] [<to-id>]`
-			AV2_IN_SET,
 			/// @brief Casts a given value to another type.
 			/// @param type `Casting` = How to cast the value.
-			/// @details `cast [<src-id>] [<dst-id>]`
+			/// @details `cast`
 			AV2_IN_CAST,
-			/// @brief Creates an object based on an object descriptor.
-			/// @param type `Object` = How to create the object.
-			/// @details `new [<desc-id>] [<loc-id>]`
-			AV2_IN_NEW_OBJ,
 			/// @brief Generates a random number.
 			/// @param type `Randomness` = How to generate the number.
-			/// @details `rng [<num:Number> [<lo-id>] [<hi-id>]] [<num-id>]`
+			/// @details `rng`
 			AV2_IN_RANDOM,
+			/// @brief Declares a new scope.
+			/// @param type How many values to reference from the global stack in the scope-local stack.
+			/// @details `scope`
+			AV2_IN_SCOPE_PUSH,
+			/// @brief Pops the current scope off the stack.
+			/// @param type Discarded.
+			/// @details `unscope`
+			AV2_IN_SCOPE_POP,
 		};
 
 		/// @brief Instruction "Name" (opcode).
@@ -398,15 +319,13 @@ namespace Makai::Anima::V2 {
 				case Name::AV2_IN_STACK_CLEAR:	return "clear";
 				case Name::AV2_IN_STACK_FLUSH:	return "flush";
 				case Name::AV2_IN_RETURN:		return "return";
-				case Name::AV2_IN_MATH_BOP:		return "bop";
-				case Name::AV2_IN_MATH_UOP:		return "uop";
+				case Name::AV2_IN_BOP:			return "bop";
+				case Name::AV2_IN_UOP:			return "uop";
 				case Name::AV2_IN_YIELD:		return "yield";
-				case Name::AV2_IN_AWAIT:		return "await";
-				case Name::AV2_IN_GET:			return "get";
-				case Name::AV2_IN_SET:			return "set";
 				case Name::AV2_IN_CAST:			return "cast";
-				case Name::AV2_IN_NEW_OBJ:		return "new";
 				case Name::AV2_IN_RANDOM:		return "rng";
+				case Name::AV2_IN_SCOPE_PUSH:	return "scope";
+				case Name::AV2_IN_SCOPE_POP:	return "unscope";
 				default: return "UNKNOWN";
 			}
 		}

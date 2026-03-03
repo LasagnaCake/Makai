@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_RUNTIME_PROGRAM_H
 #define MAKAILIB_ANIMA_V2_RUNTIME_PROGRAM_H
 
-#include "../instruction.hpp"
+#include "../core/instruction.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Program {
@@ -90,7 +90,7 @@ namespace Makai::Anima::V2::Runtime {
 		Version					language	= LANG_VER;
 		Data::Value::ArrayType	types;
 		Data::Value::ArrayType	constants;
-		List<Instruction>		code;
+		List<Core::Instruction>	code;
 		List<uint64>			jumpTable;
 		Labels					labels;
 		NativeInterface			ani;
@@ -139,7 +139,7 @@ namespace Makai::Anima::V2::Runtime {
 				prog.constants	= v["constants"].get<Data::Value::ArrayType>();
 			auto const code		= v["code"].get<Data::Value::ByteListType>();
 			auto const jumps	= v["jumps"].get<Data::Value::ByteListType>();
-			prog.code		= decltype(prog.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
+			prog.code		= decltype(prog.code){ref<Core::Instruction>(code.data()), ref<Core::Instruction>(code.data()) + (code.size() / sizeof(Core::Instruction))};
 			prog.jumpTable	= decltype(prog.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 			if (v.contains("labels"))
 				prog.labels = Labels::deserialize(v["labels"]);

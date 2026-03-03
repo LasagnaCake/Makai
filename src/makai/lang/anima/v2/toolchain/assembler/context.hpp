@@ -3,7 +3,7 @@
 
 #include "../../../../../lexer/lexer.hpp"
 #include "../../runtime/program.hpp"
-#include "../../instruction.hpp"
+#include "../../core/instruction.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Context {
@@ -566,7 +566,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				for (auto const& [label, jumps]: unmapped)
 					if (labels.contains(label))
 						for (auto& jump: jumps)
-							program.code[jump] = Cast::bit<Instruction>(labels[label]);
+							program.code[jump] = Cast::bit<Core::Instruction>(labels[label]);
 					else stillUnmapped.pushBack(label);
 				unmapped.clear();
 				return stillUnmapped;
@@ -582,7 +582,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		constexpr void addJumpTarget(String const& label) {
 			if (jumps.labels.contains(label)) {
-				program.code.pushBack(Makai::Cast::bit<Instruction>(jumps.labels[label]));
+				program.code.pushBack(Makai::Cast::bit<Core::Instruction>(jumps.labels[label]));
 			} else {
 				jumps.unmapped[label].pushBack(program.code.size());
 				program.code.pushBack({});
@@ -605,20 +605,20 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return program.code.size() - 1;
 		}
 		[[nodiscard]]
-		constexpr usize addNamedInstruction(Instruction::Name const name) {
+		constexpr usize addNamedInstruction(Core::Instruction::Name const name) {
 			program.code.pushBack({name});
 			return program.code.size() - 1;
 		}
 
 		template <class T>
 		constexpr usize addInstruction(T const& inst)
-		requires (sizeof(T) == sizeof(Instruction)) {
-			program.code.pushBack(Cast::bit<Instruction, T>(inst));
+		requires (sizeof(T) == sizeof(Core::Instruction)) {
+			program.code.pushBack(Cast::bit<Core::Instruction, T>(inst));
 			return program.code.size() - 1;
 		}
 
 		template <class T>
-		constexpr static void addInstructionType(Instruction& inst, T const& type)
+		constexpr static void addInstructionType(Core::Instruction& inst, T const& type)
 		requires (sizeof(T) == sizeof(uint32)) {
 			inst.type = Cast::bit<uint32, T>(type);
 		}
@@ -629,7 +629,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			addInstructionType(instruction(id), type);
 		}
 
-		constexpr Instruction& instruction(usize const i) {
+		constexpr Core::Instruction& instruction(usize const i) {
 			return program.code[i];
 		}
 
@@ -657,9 +657,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return scope.back();
 		}
 
-		constexpr void addStackEntry(Instruction::StackPush const& entry) {
+		constexpr void addStackEntry(Core::Instruction::StackPush const& entry) {
 			if (scope.empty()) return;
-			addInstructionType(addNamedInstruction(Instruction::Name::AV2_IN_STACK_PUSH), entry);
+			addInstructionType(addNamedInstruction(Core::Instruction::Name::AV2_IN_STACK_PUSH), entry);
 		}
 
 		constexpr void endScope() {
