@@ -115,8 +115,7 @@ namespace Makai::Anima::V2::Core {
 		/// @brief Stop mode.
 		struct [[gnu::aligned(4)]] Stop {
 			enum class Mode: uint8 {
-				AV2_ISM_EMPTY,
-				AV2_ISM_WITH_VALUE,
+				AV2_ISM_NORMAL,
 				AV2_ISM_ERROR
 			};
 			Mode	mode;
@@ -187,9 +186,15 @@ namespace Makai::Anima::V2::Core {
 			bool global: 1;
 		};
 
-		/// @brief Cast operation.
-		struct [[gnu::aligned(4)]] Casting {
-			Data::Value::Kind	type;
+		/// @brief Blitting.
+		struct [[gnu::aligned(4)]] Blitting {
+			enum class Type: uint8 {
+				AV2_IBT_COPY,
+				AV2_IBT_REFERENCE,
+				AV2_IBT_MOVE
+			};
+			Type type:			7;
+			bool fromGlobal:	1;
 		};
 
 		/// @brief Randomness.
@@ -255,13 +260,17 @@ namespace Makai::Anima::V2::Core {
 			/// @details `swap`
 			AV2_IN_STACK_SWAP,
 			/// @brief Clears a given number of elements from the top of the global stack.
-			/// @param type Amount of items to clear.
-			/// @details `clear`
+			/// @param type Discarded.
+			/// @details `clear <count>`
 			AV2_IN_STACK_CLEAR,
-			/// @brief Clears the entire stack.
+			/// @brief Clears the entire global stack.
 			/// @param type Discarded.
 			/// @details `flush`
 			AV2_IN_STACK_FLUSH,
+			/// @brief Copies a set of values from the scope-local stack to the global stack.
+			/// @param type `Blitting` = how to blit the values.
+			/// @details `blit <count>`
+			AV2_IN_STACK_BLIT,
 			/// @brief Returns from a function.
 			/// @param type Discarded.
 			/// @details `return`
@@ -279,7 +288,7 @@ namespace Makai::Anima::V2::Core {
 			/// @details `yield`
 			AV2_IN_YIELD,
 			/// @brief Casts a given value to another type.
-			/// @param type `Casting` = How to cast the value.
+			/// @param type New type ID of value.
 			/// @details `cast`
 			AV2_IN_CAST,
 			/// @brief Generates a random number.
@@ -287,7 +296,7 @@ namespace Makai::Anima::V2::Core {
 			/// @details `rng`
 			AV2_IN_RANDOM,
 			/// @brief Declares a new scope.
-			/// @param type How many values to reference from the global stack in the scope-local stack.
+			/// @param type Size of scope-local stack.
 			/// @details `scope`
 			AV2_IN_SCOPE_PUSH,
 			/// @brief Pops the current scope off the stack.

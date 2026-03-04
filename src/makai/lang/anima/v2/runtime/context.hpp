@@ -37,7 +37,6 @@ namespace Makai::Anima::V2::Runtime {
 		List<Storage>				valueStack;
 		List<Pointers>				pointerStack;
 		Map<usize, Storage>			globals;
-		As<Storage[REGISTER_COUNT]>	registers;
 		Storage						temporary = Storage::create();
 
 		Data::Value					result;

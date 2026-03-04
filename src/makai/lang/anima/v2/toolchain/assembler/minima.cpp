@@ -299,25 +299,59 @@ static void doNoOp(Context& context) {
 }
 
 static void doStackSwap(Context& context) {
-	context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_SWAP);
+	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_SWAP);
 }
 
 static void doStackFlush(Context& context) {
-	context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_FLUSH);
+	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_FLUSH);
 }
 
 static void doStackPush(Context& context) {
-
+	context.fetchNext();
+	auto const src = getDataLocation(context);
 }
 
 static void doStackPop(Context& context) {
+	context.fetchNext();
+	auto const dst = getDataLocation(context);
+}
 
+static void doStackBlit(Context& context) {
+	Instruction::Blitting blit {.type = Instruction::Blitting::Type::AV2_IBT_COPY};
+	auto const src = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "blit source").getString();
+	if (src == "local" || src == "l")
+		blit.fromGlobal = false;
+	else if (src == "global" || src == "g")
+		blit.fromGlobal = false;
+	else context.error("Invalid blit source!");
+	context.fetchNext();
+	if (context.currentToken().type == LTS_TT_IDENTIFIER) {
+	}
+	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER).getUnsigned();
+	context.addInstructionType(
+		context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_BLIT),
+		blit
+	);
+	context.addInstruction(count);
+}
+
+static void doReturn(Context& context) {
+	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_RETURN);
 }
 
 static void doStackClear(Context& context) {
+	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_CLEAR);
+	context.addInstruction(context.fetchNext().fetchToken(LTS_TT_INTEGER).getUnsigned());
+}
+
+static void doHalt(Context& context, bool const error = false) {
 	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_CLEAR),
-		Makai::Cast::as<uint32>(context.fetchNext().fetchToken(LTS_TT_INTEGER).getUnsigned())
+		context.addNamedInstruction(Instruction::Name::AV2_IN_HALT),
+		Instruction::Stop{
+			error
+		?	Instruction::Stop::Mode::AV2_ISM_ERROR
+		:	Instruction::Stop::Mode::AV2_ISM_NORMAL
+		}
 	);
 }
 
@@ -331,10 +365,10 @@ static void doExpression(Context& context) {
 	else if (id == "push")									doStackPush(context);
 	else if (id == "pop")									doStackPop(context);
 	else if (id == "clear")									doStackClear(context);
+	else if (id == "blit")									doStackBlit(context);
 	else if (id == "return" || id == "ret" || id == "end")	doReturn(context);
 	else if (id == "terminate" || id == "halt")				doHalt(context);
-	else if (id == "error" || id == "err")					doErrorHalt(context);
-	else if (id == "exit")									doExitHalt(context);
+	else if (id == "error" || id == "err")					doHalt(context, true);
 	else if (id == "call" || id == "do")					doCall(context);
 	else if (id == "compare" || id == "cmp")				doCompare(context);
 	else if (id == "copy")									doCopy(context);
