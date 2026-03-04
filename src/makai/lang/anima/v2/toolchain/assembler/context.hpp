@@ -1235,6 +1235,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Appendix				append;
 		Program					program;
 		String					fileName;
+		String					sourceDir;
 		Random::SecureGenerator	rng;
 
 		Dictionary<bool>		modules;
@@ -1345,7 +1346,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Method: ID::Identifiable<Method const, uint64> {
 				uint64			retType;
 				List<uint64>	argTypes;
-				bool			out = false;
+				bool			out		= false;
+				bool			local	= false;
 				String			entry;
 			};
 

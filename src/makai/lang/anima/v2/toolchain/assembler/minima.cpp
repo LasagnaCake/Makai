@@ -288,21 +288,14 @@ static void doCall(Context& context, bool dynamic = false) {
 	Instruction::Invocation invoke {.dynamic = dynamic};
 	if (!dynamic) {
 		auto id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "call expression").getString();
-		if (id == "out") {
-			invoke.external = true;
-			id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "call target").getString();
-		}
 		context.addInstructionType(
 			context.addNamedInstruction(Instruction::Name::AV2_IN_CALL),
 			invoke
 		);
 		if (context.minima.methods.contains(id))
-			context.addJumpTarget(id);
+			context.addJumpTarget(context.minima.methods[id]->entry);
 		else context.error("Method with this name does not exist!");
 	} else {
-		if (context.fetchNext().hasToken(LTS_TT_IDENTIFIER) && context.getValue<Makai::String>() == "out")
-			invoke.external = true;
-		else context.append.pad();
 		context.addInstructionType(
 			context.addNamedInstruction(Instruction::Name::AV2_IN_CALL),
 			invoke
@@ -514,6 +507,7 @@ static void doCast(Context& context, bool const dyn = false) {
 
 static void doRandomNumber(Context& context) {
 	// TODO: This
+
 }
 
 static void doLabel(Context& context) {
@@ -606,9 +600,25 @@ static void declareType(Context& context) {
 		else context.error("Redeclaration of previously-declared type!");
 }
 
-static void declareMethod(Context& context) {
+static void getMethodVisibility(Context& context, Context::Minima::Method& method) {
+	while (context.fetchNext().hasToken(LTS_TT_IDENTIFIER)) {
+		auto const vis = context.fetchToken(LTS_TT_IDENTIFIER, "visibility").getString();
+		if (vis == "out")
+			method.out = true;
+		else if (vis == "local")
+			method.local = true;
+		else if (vis == "global")
+			method.local = false;
+		else if (vis == "in")
+			method.out = false;
+		else break;
+	}
+}
+
+static void declareMethod(Context& context, bool forward = false) {
 	auto const method = new Context::Minima::Method();
-	auto id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "return type").getString();
+	getMethodVisibility(context, *method);
+	auto id = context.fetchToken(LTS_TT_IDENTIFIER, "return type").getString();
 	if (context.minima.types.contains(id))
 		method->retType = context.minima.types[id]->id();
 	else context.error("Return type does not exist!");
@@ -621,7 +631,8 @@ static void declareMethod(Context& context) {
 		else context.error("Argument type does not exist!");
 	}
 	auto const name = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "function name").getString();
-	doLabel(context);
+	if (!forward) doLabel(context);
+	method->entry = name;
 	if (!context.minima.types.contains(name))
 		context.minima.methods[name] = method;
 	else context.error("Redeclaration of previously-declared method!");
@@ -632,15 +643,20 @@ static void declareModule(Context& context) {
 }
 
 static void declareAppend(Context& context) {
-	auto const mod = Makai::File::getText(context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING, "file name").getString() + ".min");
+	auto const path = (
+		context.sourceDir
+	+	context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING, "file name").getString()
+	).replace('\\', '/');
+	auto const mod = Makai::File::getText(path);
 	Context ctx;
-	ctx.minima = context.minima;
-	ctx.program = context.program;
+	ctx.minima	= context.minima;
+	ctx.program	= context.program;
 	ctx.stream.open(mod);
+	ctx.sourceDir = path.splitAtLast('/').front();
 	Minima subm(ctx);
 	subm.assemble();
-	context.program = ctx.program;
-	context.minima = ctx.minima;
+	context.minima	= ctx.minima;
+	context.program	= ctx.program;
 }
 
 static void doDeclaration(Context& context) {
@@ -648,9 +664,11 @@ static void doDeclaration(Context& context) {
 	if (decl == "hook") {
 		auto const hook = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "hook name").getString();
 		doLabel(context);
-		context.program.ani.in[hook] = -1;
+		context.program.ani.in[hook] = context.program.labels.jumps[hook];
 	} else if (decl == "fn")
 		declareMethod(context);
+	else if (decl == "def")
+		declareMethod(context, true);
 	else if (decl == "type")
 		declareType(context);
 	else if (decl == "module")

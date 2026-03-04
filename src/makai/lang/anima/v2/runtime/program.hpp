@@ -2,6 +2,7 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_PROGRAM_H
 
 #include "../core/instruction.hpp"
+#include "../core/basictype.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Program {
@@ -10,6 +11,25 @@ namespace Makai::Anima::V2::Runtime {
 		constexpr static Version const LANG_VER = {2};
 
 		using Label = Dictionary<usize>;
+
+		struct Method {
+			uint64			retType;
+			List<uint64>	argTypes;
+			bool			out = false;
+			uint64			entry;
+		};
+
+		struct Type {
+			struct Flags {
+				constexpr static uint64 const AV2_CMTF_BASIC	= 1 << 0;
+				constexpr static uint64 const AV2_CMTF_NULLABLE	= 1 << 1;
+				constexpr static uint64 const AV2_CMTF_ARRAY	= 1 << 2;
+			};
+
+			uint64				flags	= 0;
+			Core::BasicType		basic	= Core::BasicType::AV2_BT_VOID;
+			Nullable<uint64>	base	= null;
+		};
 
 		struct Labels {
 			Label	globals;
@@ -88,17 +108,17 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		Version					language	= LANG_VER;
-		Data::Value::ArrayType	types;
 		Data::Value::ArrayType	constants;
 		List<Core::Instruction>	code;
 		List<uint64>			jumpTable;
 		Labels					labels;
 		NativeInterface			ani;
 		bool					showCommandLine = true;
+		List<Method>			methods;
+		List<Type>				types;
 
 		constexpr Data::Value serialize(bool const keepLabels = true) const {
 			Data::Value out;
-			out["types"]		= types;
 			out["constants"]	= constants;
 			out["jumps"]		= jumpTable.toBytes();
 			out["code"]			= code.toBytes();
