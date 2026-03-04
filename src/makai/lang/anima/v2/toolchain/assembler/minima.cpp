@@ -281,6 +281,7 @@ static void doJump(Context& context, bool dynamic = false) {
 
 static void doCall(Context& context, bool dynamic = false) {
 	context.fetchNext();
+	// TODO: This
 }
 
 static void doDynamic(Context& context) {
@@ -353,6 +354,10 @@ static void doHalt(Context& context, bool const error = false) {
 		:	Instruction::Stop::Mode::AV2_ISM_NORMAL
 		}
 	);
+}
+
+static void doCompare(Context& context) {
+
 }
 
 static void doExpression(Context& context) {
