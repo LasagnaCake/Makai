@@ -507,7 +507,13 @@ static void doCast(Context& context, bool const dyn = false) {
 
 static void doRandomNumber(Context& context) {
 	// TODO: This
+	Instruction::Randomness rng;
+	auto id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "RNG operation").getString();
+	if (id == "setseed")		rng.setSeed	= true;
+	else if (id == "getseed")	rng.getSeed	= true;
+	else if (id == "safe" || id == "fast") {
 
+	} else context.error("Invalid RNG operation!");
 }
 
 static void doLabel(Context& context) {
