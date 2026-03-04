@@ -71,11 +71,9 @@ namespace Makai::Anima::V2::Core {
 		AV2_BOP_BIT_AND,
 		AV2_BOP_BIT_OR,
 		AV2_BOP_BIT_XOR,
-		AV2_BOP_ARRAY_GET,
-		AV2_BOP_MEMBER_GET,
+		AV2_BOP_ELEMENT_ACCESS,
+		AV2_BOP_MEMBER_ACCESS,
 		AV2_BOP_NULL_DECAY,
-		AV2_BOP_INDEX_ACCESS,
-		AV2_BOP_MEMBER_ACCESS
 	};
 
 	enum class UnaryOperator: uint8 {
@@ -107,7 +105,6 @@ namespace Makai::Anima::V2::Core {
 		AV2_OP_LESS_EQUALS,
 		AV2_OP_GREATER_EQUALS,
 		AV2_OP_THREEWAY,
-		AV2_OP_TYPE_COMPARE,
 	};
 
 	/// @brief Instruction.
@@ -136,7 +133,6 @@ namespace Makai::Anima::V2::Core {
 		struct [[gnu::aligned(4)]] Invocation {
 			bool	dynamic:	1;
 			bool	external:	1;
-			uint16	argc;
 		};
 
 		/// @brief Jump leap.
@@ -164,26 +160,18 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		/// @brief Stack push.
-		struct [[gnu::aligned(4)]] StackPush {
+		struct [[gnu::aligned(4)]] StackPushPop {
 			DataLocation	location;
-		};
-
-		/// @brief Stack push.
-		struct [[gnu::aligned(4)]] StackPop {
-			DataLocation	location;
-			bool			discard:	1;
 		};
 
 		/// @brief Binary math operation.
 		struct [[gnu::aligned(4)]] BinaryOperation {
 			BinaryOperator op;
-			bool global: 1;
 		};
 
 		/// @brief Unary math operation.
 		struct [[gnu::aligned(4)]] UnaryOperation {
 			UnaryOperator op;
-			bool global: 1;
 		};
 
 		/// @brief Blitting.
@@ -193,8 +181,18 @@ namespace Makai::Anima::V2::Core {
 				AV2_IBT_REFERENCE,
 				AV2_IBT_MOVE
 			};
-			Type type:			7;
-			bool fromGlobal:	1;
+			Type 	type:		7;
+			bool	fromGlobal:	1;
+			uint16	offset;
+		};
+
+		struct [[gnu::aligned(4)]] Binding {
+			uint16	src;
+			uint16	dst;
+		};
+
+		struct [[gnu::aligned(4)]] Casting {
+			bool dynamic: 1;
 		};
 
 		/// @brief Randomness.
@@ -241,18 +239,18 @@ namespace Makai::Anima::V2::Core {
 			AV2_IN_COMPARE,
 			/// @brief Invokes a function.
 			/// @param type `Invocation` = How to invoke the function.
-			/// @details `call <func-id>`
+			/// @details `call [<func-id>]`
 			AV2_IN_CALL,
 			/// @brief Executes a jump.
 			/// @param type `Leap` = How to jump.
 			/// @details `jump [<to-id>]`
 			AV2_IN_JUMP,
 			/// @brief Pushes a value to the top of the global stack.
-			/// @param type `StackPush` = How to handle the value.
+			/// @param type `StackPushPop` = How to handle the value.
 			/// @details `push [<loc-id>]`
 			AV2_IN_STACK_PUSH,
 			/// @brief Pops a value from the top of the global stack into a given location.
-			/// @param type `StackPop` = How to handle the value.
+			/// @param type `StackPushPop` = How to handle the value.
 			/// @details `pop [<loc-id>]`
 			AV2_IN_STACK_POP,
 			/// @brief Swaps the topmost two values of the global stack.
@@ -267,7 +265,7 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `flush`
 			AV2_IN_STACK_FLUSH,
-			/// @brief Copies a set of values from the scope-local stack to the global stack.
+			/// @brief Copies a set of values from one stack to another.
 			/// @param type `Blitting` = how to blit the values.
 			/// @details `blit <count>`
 			AV2_IN_STACK_BLIT,
@@ -288,8 +286,8 @@ namespace Makai::Anima::V2::Core {
 			/// @details `yield`
 			AV2_IN_YIELD,
 			/// @brief Casts a given value to another type.
-			/// @param type New type ID of value.
-			/// @details `cast`
+			/// @param type `Casting` = How to do the cast.
+			/// @details `cast [<type-id>]`
 			AV2_IN_CAST,
 			/// @brief Generates a random number.
 			/// @param type `Randomness` = How to generate the number.
@@ -297,15 +295,15 @@ namespace Makai::Anima::V2::Core {
 			AV2_IN_RANDOM,
 			/// @brief Declares a new scope.
 			/// @param type Size of scope-local stack.
-			/// @details `scope`
+			/// @details `enter`
 			AV2_IN_SCOPE_ENTER,
 			/// @brief Pops the current scope off the stack.
 			/// @param type Discarded.
-			/// @details `unscope`
+			/// @details `exit`
 			AV2_IN_SCOPE_EXIT,
-			/// @brief Binds a range of top-most values in the global stack to a range of bottom-most places in the local stack.
-			/// @param type Amount of values to bind.
-			/// @details `scope`
+			/// @brief Binds a range of values in the global stack to a range of places in the local stack.
+			/// @param type `Binding` = how to bind the values.
+			/// @details `bind <count>`
 			AV2_IN_SCOPE_BIND,
 		};
 

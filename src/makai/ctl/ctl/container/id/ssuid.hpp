@@ -188,9 +188,14 @@ struct Identifiable {
 	constexpr IdentifierType id() const {return thisID;}
 
 private:
+	constexpr static IdentifierType first() {
+		if constexpr (sizeof(TID) <= 8) return 0;
+		else return IdentifierType::create(0);
+	}
+
 	using StorageType = Meta::If<Type::Constant<TargetType>, IdentifierType const, IdentifierType>;
 	StorageType thisID = (all++);
-	static inline IdentifierType all = IdentifierType::create(0);
+	static inline IdentifierType all = first();
 };
 
 }

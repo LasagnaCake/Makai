@@ -1,11 +1,10 @@
-#ifndef MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
-#define MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
-
-#include "instruction.hpp"
+#ifndef MAKAILIB_ANIMA_V2_CORE_BASICTYPE_H
+#define MAKAILIB_ANIMA_V2_CORE_BASICTYPE_H
 
 namespace Makai::Anima::V2::Core {
 	enum class BasicType {
 		AV2_BT_VOID,
+		AV2_BT_ANY,
 		AV2_BT_NULL,
 		AV2_BT_BOOL,
 		AV2_BT_INT,

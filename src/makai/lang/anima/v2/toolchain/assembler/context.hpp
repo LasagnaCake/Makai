@@ -4,6 +4,7 @@
 #include "../../../../../lexer/lexer.hpp"
 #include "../../runtime/program.hpp"
 #include "../../core/instruction.hpp"
+#include "../../core/basictype.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Context {
@@ -17,6 +18,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				bool strict = false;
 				String token;
 				Tokenizer::Position position = {0, 0, 0};
+				String sourceFile;
 
 				constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
 					if (!strict) return type <=> other.type;
@@ -657,7 +659,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return scope.back();
 		}
 
-		constexpr void addStackEntry(Core::Instruction::StackPush const& entry) {
+		constexpr void addStackEntry(Core::Instruction::StackPushPop const& entry) {
 			if (scope.empty()) return;
 			addInstructionType(addNamedInstruction(Core::Instruction::Name::AV2_IN_STACK_PUSH), entry);
 		}
@@ -1059,7 +1061,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					"\n--> [", currentToken().token, "]"
 				),
 				what,
-				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), fileName}
+				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), currentToken().sourceFile.size() ? currentToken().sourceFile : fileName}
 			);
 		}
 
@@ -1177,8 +1179,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				realT	= s.addTypeDefinition("real",		Data::Value::Kind::DVK_REAL		);
 				stringT	= s.addTypeDefinition("string",		Data::Value::Kind::DVK_STRING	);
 				bytesT	= s.addTypeDefinition("bytes",		Data::Value::Kind::DVK_BYTES	);
-				arrayT	= s.addTypeDefinition("array",		Data::Value::Kind::DVK_ARRAY	);
-				objectT	= s.addTypeDefinition("object",		Data::Value::Kind::DVK_OBJECT	);
 				vectorT	= s.addTypeDefinition("vector",		Data::Value::Kind::DVK_VECTOR	);
 				anyT	= s.addTypeDefinition("any",		DVK_ANY							);
 			}
@@ -1193,8 +1193,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Instance<Scope::Member> realT;
 			Instance<Scope::Member> stringT;
 			Instance<Scope::Member> bytesT;
-			Instance<Scope::Member> arrayT;
-			Instance<Scope::Member> objectT;
 			Instance<Scope::Member> vectorT;
 			Instance<Scope::Member> anyT;
 		};
@@ -1207,8 +1205,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			global.ns->members["float"]		= basics.realT;
 			global.ns->members["str"]		= basics.stringT;
 			global.ns->members["bin"]		= basics.bytesT;
-			global.ns->members["arr"]		= basics.arrayT;
-			global.ns->members["obj"]		= basics.objectT;
 			global.ns->members["nil"]		= basics.nullT;
 			global.ns->members["vec"]		= basics.vectorT;
 		}
@@ -1326,7 +1322,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		void cache() {
 			while (stream.next()) {
-				append.add({{stream.current()}, true, stream.tokenText(), stream.position()});
+				append.add({{stream.current()}, true, stream.tokenText(), stream.position(), fileName});
 			}
 		}
 
@@ -1344,6 +1340,30 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		constexpr static Resolver changeSemantic(Resolver const& resolver, String const& semantic) {
 			return new Scope::Value::SemanticReplacer(resolver, semantic);
 		}
+
+		struct Minima {
+			struct Method: ID::Identifiable<Method const, uint64> {
+				uint64			retType;
+				List<uint64>	argTypes;
+				bool			out = false;
+				String			entry;
+			};
+
+			struct Type: ID::Identifiable<Type const, uint64> {
+				struct Flags {
+					constexpr static uint64 const AV2_CMTF_BASIC	= 1 << 0;
+					constexpr static uint64 const AV2_CMTF_NULLABLE	= 1 << 1;
+					constexpr static uint64 const AV2_CMTF_ARRAY	= 1 << 2;
+				};
+
+				uint64				flags	= 0;
+				Core::BasicType		basic	= Core::BasicType::AV2_BT_VOID;
+				Nullable<uint64>	base	= null;
+			};
+
+			Dictionary<Instance<Type>>		types;
+			Dictionary<Instance<Method>>	methods;
+		} minima;
 
 	private:
 
