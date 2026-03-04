@@ -298,11 +298,15 @@ namespace Makai::Anima::V2::Core {
 			/// @brief Declares a new scope.
 			/// @param type Size of scope-local stack.
 			/// @details `scope`
-			AV2_IN_SCOPE_PUSH,
+			AV2_IN_SCOPE_ENTER,
 			/// @brief Pops the current scope off the stack.
 			/// @param type Discarded.
 			/// @details `unscope`
-			AV2_IN_SCOPE_POP,
+			AV2_IN_SCOPE_EXIT,
+			/// @brief Binds a range of top-most values in the global stack to a range of bottom-most places in the local stack.
+			/// @param type Amount of values to bind.
+			/// @details `scope`
+			AV2_IN_SCOPE_BIND,
 		};
 
 		/// @brief Instruction "Name" (opcode).
@@ -329,8 +333,9 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_YIELD:		return "yield";
 				case Name::AV2_IN_CAST:			return "cast";
 				case Name::AV2_IN_RANDOM:		return "rng";
-				case Name::AV2_IN_SCOPE_PUSH:	return "scope";
-				case Name::AV2_IN_SCOPE_POP:	return "unscope";
+				case Name::AV2_IN_SCOPE_ENTER:	return "enter";
+				case Name::AV2_IN_SCOPE_EXIT:	return "exit";
+				case Name::AV2_IN_SCOPE_BIND:	return "bind";
 				default: return "UNKNOWN";
 			}
 		}
