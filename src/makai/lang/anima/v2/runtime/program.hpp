@@ -13,6 +13,7 @@ namespace Makai::Anima::V2::Runtime {
 		using Label = Dictionary<usize>;
 
 		struct Method {
+			String			name;
 			uint64			retType;
 			List<uint64>	argTypes;
 			bool			out = false;
@@ -26,9 +27,10 @@ namespace Makai::Anima::V2::Runtime {
 				constexpr static uint64 const AV2_CMTF_ARRAY	= 1 << 2;
 			};
 
-			uint64				flags	= 0;
-			Core::BasicType		basic	= Core::BasicType::AV2_BT_VOID;
-			Nullable<uint64>	base	= null;
+			String						name;
+			uint64						flags	= 0;
+			Nullable<Core::BasicType>	basic	= Core::BasicType::AV2_BT_VOID;
+			Nullable<uint64>			base	= null;
 		};
 
 		struct Labels {

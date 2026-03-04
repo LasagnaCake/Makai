@@ -1358,11 +1358,14 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					constexpr static uint64 const AV2_CMTF_ARRAY	= 1 << 2;
 				};
 
-				uint64				flags	= 0;
-				Core::BasicType		basic	= Core::BasicType::AV2_BT_VOID;
-				Nullable<uint64>	base	= null;
+				uint64						flags	= 0;
+				Nullable<Core::BasicType>	basic	= Core::BasicType::AV2_BT_VOID;
+				Nullable<uint64>			base	= null;
 			};
 
+			bool							canImport	= false;
+			Nullable<String>				parentModule;
+			Nullable<String>				module;
 			Dictionary<Instance<Type>>		types;
 			Dictionary<Instance<Method>>	methods;
 		} minima;

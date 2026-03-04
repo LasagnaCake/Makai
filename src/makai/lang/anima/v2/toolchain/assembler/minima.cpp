@@ -506,13 +506,15 @@ static void doCast(Context& context, bool const dyn = false) {
 }
 
 static void doRandomNumber(Context& context) {
-	// TODO: This
 	Instruction::Randomness rng;
 	auto id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "RNG operation").getString();
 	if (id == "setseed")		rng.setSeed	= true;
 	else if (id == "getseed")	rng.getSeed	= true;
 	else if (id == "safe" || id == "fast") {
-
+		rng.secure = id == "safe";
+		if (context.fetchNext().hasToken(LTS_TT_IDENTIFIER) && context.getValue<Makai::String>() == "bounded")
+			rng.bounded = true;
+		else context.append.pad();
 	} else context.error("Invalid RNG operation!");
 }
 
@@ -645,10 +647,20 @@ static void declareMethod(Context& context, bool forward = false) {
 }
 
 static void declareModule(Context& context) {
-	// TODO: This
+	if (context.minima.module)
+		context.error("Redeclaration of module name!");
+	auto const name =
+		context
+			.fetchNext()
+			.fetchToken(LTS_TT_IDENTIFIER, "module name")
+			.getString()
+	;
+	context.minima.module = name;
 }
 
-static void declareAppend(Context& context) {
+static void declareImport(Context& context) {
+	if (!context.minima.canImport)
+		context.error("Import statements are disabled!");
 	auto const path = (
 		context.sourceDir
 	+	context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING, "file name").getString()
@@ -657,11 +669,19 @@ static void declareAppend(Context& context) {
 	Context ctx;
 	ctx.minima	= context.minima;
 	ctx.program	= context.program;
+	ctx.minima.methods.filter(
+		[] (auto const& e) {
+			return !e.value->local;
+		}
+	);
+	ctx.minima.module = null;
+	ctx.minima.parentModule = context.minima.module ? context.minima.module : context.minima.parentModule;
 	ctx.stream.open(mod);
 	ctx.sourceDir = path.splitAtLast('/').front();
 	Minima subm(ctx);
 	subm.assemble();
-	context.minima	= ctx.minima;
+	context.minima.methods.append(ctx.minima.methods);
+	context.minima.types.append(ctx.minima.types);
 	context.program	= ctx.program;
 }
 
@@ -679,8 +699,8 @@ static void doDeclaration(Context& context) {
 		declareType(context);
 	else if (decl == "module")
 		declareModule(context);
-	else if (decl == "append")
-		declareAppend(context);
+	else if (decl == "import")
+		declareImport(context);
 	else context.error("Invalid declaration!");
 }
 
@@ -724,5 +744,35 @@ void Minima::assemble() {
 	for (auto& [id, loc]: context.program.labels.jumps)
 		if (context.program.ani.in.contains(id))
 			context.program.ani.in[id] = context.program.labels.jumps[id];
+	context.minima.methods.filter(
+		[] (auto const& e) {
+			return !e.value->local;
+		}
+	);
+	if (!(context.minima.module || context.minima.parentModule)) {
+		context.program.types.resize(context.minima.types.size(), {});
+		for (auto& [name, type]: context.minima.types) {
+			auto& decl = context.program.types[type->id()];
+			decl = {
+				.name	= name,
+				.flags	= type->flags
+			};
+			if (type->basic)
+				decl.basic = *type->basic;
+			if (type->base)
+				decl.base = *type->base;
+		}
+		context.program.methods.resize(context.minima.types.size(), {});
+		for (auto& [name, method]: context.minima.methods) {
+			auto& decl = context.program.methods[method->id()];
+			decl = {
+				.name		= name,
+				.retType	= method->retType,
+				.argTypes	= method->argTypes,
+				.out		= method->out,
+				.entry		= context.program.labels.jumps[method->entry]
+			};
+		}
+	}
 }
 CTL_DIAGBLOCK_END
