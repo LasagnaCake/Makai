@@ -135,13 +135,9 @@ namespace Makai::Anima::V2::Core {
 
 		/// @brief Function invocation.
 		struct [[gnu::aligned(4)]] Invocation {
-			enum class Type: uint8 {
-				AV2_IIT_STATIC,
-				AV2_IIT_DYNAMIC,
-				AV2_IIT_EXTERNAL,
-			};
-			Type	type;
-			uint8	argc;
+			bool	dynamic:	1;
+			bool	external:	1;
+			uint16	argc;
 		};
 
 		/// @brief Jump leap.
@@ -246,15 +242,15 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Leap` = How to jump.
 			/// @details `jump [<to-id>]`
 			AV2_IN_JUMP,
-			/// @brief Pushes a value to the top of the stack.
+			/// @brief Pushes a value to the top of the global stack.
 			/// @param type `StackPush` = How to handle the value.
 			/// @details `push [<loc-id>]`
 			AV2_IN_STACK_PUSH,
-			/// @brief Pops a value from the top of the stack into a given location.
+			/// @brief Pops a value from the top of the global stack into a given location.
 			/// @param type `StackPop` = How to handle the value.
 			/// @details `pop [<loc-id>]`
 			AV2_IN_STACK_POP,
-			/// @brief Swaps the topmost two values of the stack.
+			/// @brief Swaps the topmost two values of the global stack.
 			/// @param type Discarded.
 			/// @details `swap`
 			AV2_IN_STACK_SWAP,

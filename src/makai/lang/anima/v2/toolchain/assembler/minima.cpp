@@ -2,8 +2,8 @@
 
 using namespace Makai::Anima::V2::Toolchain::Assembler;
 namespace Runtime = Makai::Anima::V2::Runtime;
-using Instruction = Makai::Anima::V2::Core::Instruction;
-using DataLocation = Makai::Anima::V2::Core::DataLocation;
+using Instruction = Makai::Anima::V2::Instruction;
+using DataLocation = Makai::Anima::V2::DataLocation;
 using Type = Minima::TokenStream::Token::Type;
 using enum Type;
 
@@ -237,28 +237,94 @@ static Location getDataLocation(Context& context) {
 	return loc;
 }
 
-static void doDynamicJump(Context& context) {
-
-}
-
-static void doConditionalJump(Context& context) {
-
-}
-
-static void doJump(Context& context) {
-	context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "jump expression");
-	auto const jt = context.getValue<Makai::String>();
-	if (jt == "dyn")
-		doDynamicJump(context);
-	else if (jt == "if") {
-
+static void doConditionalJump(Context& context, bool dynamic = false) {
+	context.fetchNext();
+	Instruction::Leap leap{.dyn = dynamic};
+	switch (context.currentToken().type) {
+		case LTS_TT_IDENTIFIER: {
+			auto const id = context.getValue<Makai::String>();
+			if (id == "zero" || id == "z")				leap.type = Instruction::Leap::AV2_ILT_IF_ZERO;
+			else if (id == "nonZero" || id == "nz")		leap.type = Instruction::Leap::AV2_ILT_IF_NOT_ZERO;
+			else if (id == "negative" || id == "n")		leap.type = Instruction::Leap::AV2_ILT_IF_NEGATIVE;
+			else if (id == "positive" || id == "p")		leap.type = Instruction::Leap::AV2_ILT_IF_POSITIVE;
+			else if (id == "true" || id == "t")			leap.type = Instruction::Leap::AV2_ILT_IF_TRUTHY;
+			else if (id == "false" || id == "f")		leap.type = Instruction::Leap::AV2_ILT_IF_FALSY;
+			else if (id == "null" || id == "nil")		leap.type = Instruction::Leap::AV2_ILT_IF_NULL;
+			else if (id == "void" || id == "v")			leap.type = Instruction::Leap::AV2_ILT_IF_UNDEFINED;
+			else if (id == "nilOrVoid" || id == "_")	leap.type = Instruction::Leap::AV2_ILT_IF_NULL_OR_UNDEFINED;
+		}
 	}
+	if (!dynamic)
+		context.addJumpTarget(context.fetchNext.fetchToken(LTS_TT_IDENTIFIER, "jump expression").getString());
+}
+
+static void doJump(Context& context, bool dynamic = false) {
+	context.fetchNext();
+	if (!dynamic) context.expectToken(LTS_TT_IDENTIFIER, "jump expression");
+	else if (!context.hasToken(LTS_TT_IDENTIFIER)) {
+		context.append.pad(1);
+		context.addInstructionType(
+			context.addNamedInstruction(Instruction::Name::AV2_IN_JUMP),
+			Instruction::Leap{
+				Instruction::Leap::AV2_ILT_UNCONDITIONAL,
+				true
+			}
+		);
+	}
+	auto const jt = context.getValue<Makai::String>();
+	if (jt == "if")
+		doConditionalJump(context, dynamic);
+	else if (!dynamic)
+		context.addJumpTarget(jt);
+	else context.error("Invalid jump instruction!");
+}
+
+static void doCall(Context& context, bool dynamic = false) {
+	context.fetchNext();
+}
+
+static void doDynamic(Context& context) {
+	auto const id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "dynamic operation").getString();
+	if (id == "jump" || id == "go")
+		doJump(context, true);
+	else if (id == "call" || id == "do")
+		doCall(context, true);
+}
+
+static void doNoOp(Context& context) {
+	context.addInstructionType(
+		context.addNamedInstruction(Instruction::Name::AV2_IN_NO_OP),
+		Makai::Cast::as<uint32>(context.currentValue().getString() == "next")
+	);
+}
+
+static void doStackSwap(Context& context) {
+	context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_SWAP);
+}
+
+static void doStackFlush(Context& context) {
+	context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_FLUSH);
+}
+
+static void doStackPush(Context& context) {
+
+}
+
+static void doStackPop(Context& context) {
+
+}
+
+static void doStackClear(Context& context) {
+	context.addInstructionType(
+		context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_CLEAR),
+		Makai::Cast::as<uint32>(context.fetchNext().fetchToken(LTS_TT_INTEGER).getUnsigned())
+	);
 }
 
 static void doExpression(Context& context) {
-	auto const current = context.stream.current();
-	auto const id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "instruction name").getString();
+	auto const id = context.fetchToken(LTS_TT_IDENTIFIER, "instruction name").getString();
 	if (id == "jump" || id == "go")							doJump(context);
+	if (id == "dyn")										doDynamic(context);
 	else if (id == "nop" || id == "next")					doNoOp(context);
 	else if (id == "swap")									doStackSwap(context);
 	else if (id == "flush")									doStackFlush(context);

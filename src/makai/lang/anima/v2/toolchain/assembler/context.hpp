@@ -1216,6 +1216,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		struct Appendix {
 			List<Macro::Axiom> cache = List<Macro::Axiom>::from(Macro::Axiom());
 
+			constexpr void pad(usize const amount = 1) {
+				if (amount == 1)
+					cache.insert(Macro::Axiom{}, 0);
+				else if (amount > 1)
+					cache.insert(List<Macro::Axiom>().resize(amount, Macro::Axiom{}), 0);
+			}
+
 			constexpr void add(Macro::Axiom const& tok)				{cache.pushBack(tok);												}
 			constexpr void add(List<Macro::Axiom> const& toks)		{cache.appendBack(toks);											}
 			constexpr bool hasTokens() const						{return cache.size() > 1;											}
