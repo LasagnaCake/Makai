@@ -211,8 +211,11 @@ namespace Makai::Anima::V2::Core {
 				AV2_IRF_GET_SEED	= 1 << 3,
 			};
 
-			Type	type;
-			Flags	flags = Flags::AV2_IRF_NONE;
+			Type	type:		2;
+			bool	secure:		1;
+			bool	bounded:	1;
+			bool	getSeed:	1;
+			bool	setSeed:	1;
 		};
 
 		/// @brief Instruction name.
