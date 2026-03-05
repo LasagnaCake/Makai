@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_CORE_VALUE_H
 #define MAKAILIB_ANIMA_V2_CORE_VALUE_H
 
-#include "instruction.hpp"
+#include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
 	struct Value {
@@ -13,12 +13,33 @@ namespace Makai::Anima::V2::Core {
 			return (sizeof(T) >= sizeof(byte));
 		}
 
-		template <class T> constexpr Span<T>	span() const requires (sized<T>())	{return Span<T>(data<T>(), size<T>());				}
+		template <class T>
+		constexpr Value(T const& v)
+		requires (sized<T>() && Type::CopyConstructible<T>) {
+			operator=(v);
+		}
 
-		template <class T> constexpr ref<T>		data() const requires (sized<T>())	{return reinterpret_cast<ref<T>>(content.data());	}
-		template <class T> constexpr usize		size() const requires (sized<T>())	{return content.size() / sizeof(T);					}
+		template <class T>
+		constexpr Value(T&& v)
+		requires (sized<T>() && Type::MoveConstructible<T>) {
+			operator=(move(v));
+		}
 
-		template <class T> constexpr T&			as() const requires (sized<T>())	{return *data<T>();									}
+		constexpr Value(Value const& other) {
+			operator=(other);
+		}
+
+		constexpr Value(Value&& other) = default;
+
+		template <class T> constexpr Span<T>		span() requires (sized<T>())		{return Span<T>(data<T>(), size<T>());			}
+		template <class T> constexpr Span<T const>	span() const requires (sized<T>())	{return Span<T const>(data<T>(), size<T>());	}
+
+		template <class T> constexpr ref<T>			data() requires (sized<T>())		{return reinterpret_cast<ref<T>>(content.data());		}
+		template <class T> constexpr ref<T const>	data() const requires (sized<T>())	{return reinterpret_cast<ref<T const>>(content.data());	}
+		template <class T> constexpr usize			size() const requires (sized<T>())	{return content.size() / sizeof(T);						}
+
+		template <class T> constexpr T&			as() requires (sized<T>())			{return *data<T>();	}
+		template <class T> constexpr T const&	as() const requires (sized<T>())	{return *data<T>();	}
 
 		template <Type::Different<Value> T>
 		constexpr Value& operator=(T const& value)
@@ -36,6 +57,13 @@ namespace Makai::Anima::V2::Core {
 			return *this;
 		}
 
+		constexpr Value& operator=(Value const& other) {
+			if (other.clone)
+				operator=(other.clone.value().invoke());
+			return *this;
+		}
+		constexpr Value& operator=(Value&&) = default;
+
 		template <class T> constexpr bool fits() const requires (sized<T>()) {return sizeof(T) == content.size();}
 
 	private:
@@ -47,14 +75,21 @@ namespace Makai::Anima::V2::Core {
 			destruct = [&] () {
 				MX::destruct<T>(data<T>());
 			};
+			if constexpr (Type::CopyConstructible<T>) {
+				clone = [&] {
+					return Value(as<T>());
+				};
+			} else clone = null;
 		}
 
-		Functor<void()> destruct;
+		Functor<void()>				destruct;
+		Nullable<Function<Value()>>	clone;
 	};
 
 	struct Object {
 		using Reference = Instance<Value>;
-		List<Reference> fields;
+		List<Reference>			fields;
+		Instance<Definition>	type;
 	};
 }
 

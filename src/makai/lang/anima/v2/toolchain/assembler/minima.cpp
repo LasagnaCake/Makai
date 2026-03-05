@@ -13,30 +13,36 @@ CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
 constexpr scstring INTERJECT = R"ASM(
-	@type Void [basic<void>];
-	@type Any [basic<any> value];
-	@type Bool [basic<bool> derived<Any> value];
-	@type Null [basic<nil> derived<Any> nil];
-	@type Int [basic<int> derived<Any> value];
-	@type UInt [basic<uint> derived<Any> value];
-	@type Real [basic<real> derived<Any> value];
-	@type String [basic<str> derived<Any> nil];
-	@type Bytes [basic<bin> derived<Any> nil];
-	@type Vector [basic<vec> derived<Any> value];
-	@type BoolArray [array<Bool> nil];
-	@type IntArray [array<Int> nil];
-	@type UIntArray [array<UInt> nil];
-	@type RealArray [array<Real> nil];
-	@type StringArray [array<String> nil];
-	@type VectorArray [array<Vector> nil];
-	@alias bool:	Bool
+	@type Void [basic<void> empty]
+	@type Any [basic<any>]
+	@type Bool [basic<bool> derived<Any> value]
+	@type Null [basic<nil> derived<Any> nil empty]
+	@type Int [basic<int> derived<Any> value]
+	@type UInt [basic<uint> derived<Any> value]
+	@type Real [basic<real> derived<Any> value]
+	@type String [basic<str> derived<Any> nil]
+	@type Bytes [basic<bin> derived<Any> nil]
+	@type Vector [basic<vec> derived<Any> value]
+	@type Object [derived<Any> nil dyn struct]
+	@type AnyArray [array<Any> nil]
+	@type BoolArray [array<Bool> nil]
+	@type IntArray [array<Int> nil]
+	@type UIntArray [array<UInt> nil]
+	@type RealArray [array<Real> nil]
+	@type StringArray [array<String> nil]
+	@type VectorArray [array<Vector> nil]
+	@type ObjectArray [array<Object> nil]
 	@alias void:	Void
+	@alias any:		Any
+	@alias bool:	Bool
 	@alias int:		Int
 	@alias uint:	UInt
 	@alias real:	Real
 	@alias string:	String
 	@alias bytes:	Bytes
 	@alias vector:	Vector
+	@alias object:	Object
+	@alias array:	AnyArray
 )ASM";
 
 struct Location {
@@ -568,11 +574,11 @@ static void declareType(Context& context) {
 			if (context.fetchNext().hasToken(Type{']'})) break;
 			auto const flag = context.fetchToken(LTS_TT_IDENTIFIER, "type flag").getString();
 			if (flag == "basic") {
-				type->flags |= TypeInfo::Flags::AV2_TF_BASIC;
+				type->flags |= Definition::Flags::AV2_DF_BASIC;
 				auto const basic =
 					context
 						.fetchNext()
-						.expectToken(Type{'['})
+						.expectToken(Type{'<'})
 						.fetchNext()
 						.fetchToken(LTS_TT_IDENTIFIER, "basic type")
 						.getString()
@@ -587,18 +593,18 @@ static void declareType(Context& context) {
 				else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
 				else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
 				else context.error("Invalid basic type!");
-				context.fetchNext().expectToken(Type{']'});
+				context.fetchNext().expectToken(Type{'>'});
 			}
-			else if (flag == "nil") type->flags |= TypeInfo::Flags::AV2_TF_NULLABLE;
+			else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
 			else if (flag == "derived") {
-				if (type->flags | TypeInfo::Flags::AV2_TF_ARRAY)
+				if (type->flags | Definition::Flags::AV2_DF_ARRAY)
 					context.error("Type cannot be both a derived type and an array type!");
 				if (type->base)
 					context.error("Redeclaration of base type!");
 				auto const base =
 					context
 						.fetchNext()
-						.expectToken(Type{'['})
+						.expectToken(Type{'<'})
 						.fetchNext()
 						.fetchToken(LTS_TT_IDENTIFIER, "base type")
 						.getString()
@@ -606,15 +612,15 @@ static void declareType(Context& context) {
 				if (context.minima.types.contains(base))
 					type->base = context.minima.types[base]->id();
 				else context.error("Base type does not exist!");
-				context.fetchNext().expectToken(Type{']'});
+				context.fetchNext().expectToken(Type{'>'});
 			} else if (flag == "array") {
-				type->flags |= TypeInfo::Flags::AV2_TF_ARRAY;
+				type->flags |= Definition::Flags::AV2_DF_ARRAY;
 				if (type->base)
 					context.error("Redeclaration of element type!");
 				auto const base =
 					context
 						.fetchNext()
-						.expectToken(Type{'['})
+						.expectToken(Type{'<'})
 						.fetchNext()
 						.fetchToken(LTS_TT_IDENTIFIER, "element type")
 						.getString()
@@ -622,13 +628,40 @@ static void declareType(Context& context) {
 				if (context.minima.types.contains(base))
 					type->base = context.minima.types[base]->id();
 				else context.error("Element type does not exist!");
-				context.fetchNext().expectToken(Type{']'});
-			} else if (flag == "value") {
-				type->flags |= TypeInfo::Flags::AV2_TF_VALUE;
+				context.fetchNext().expectToken(Type{'>'});
+			} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
+			else if (flag == "empty")	type->flags |= Definition::Flags::AV2_DF_EMPTY;
+			else if (flag == "dyn")		type->flags |= Definition::Flags::AV2_DF_DYNAMIC;
+			else if (flag == "struct")	type->flags |= Definition::Flags::AV2_DF_STRUCTURE;
+			else if (flag == "align") {
+				type->alignment =
+					context
+						.fetchNext()
+						.expectToken(Type{'('})
+						.fetchNext()
+						.fetchToken(LTS_TT_INTEGER, "byte alignment")
+						.getUnsigned()
+				;
+				context.fetchNext().expectToken(Type{')'});
+			} else if (flag == "fields") {
+				if (type->fields.size())
+					context.error("Redeclaration of type fields are not allowed!");
+				else if (
+					type->flags & (
+						Definition::Flags::AV2_DF_DYNAMIC
+					|	Definition::Flags::AV2_DF_ARRAY
+					|	Definition::Flags::AV2_DF_BASIC
+					)
+				) context.error("Cannot declare fields on basic, array and dynamic types!");
+				context.fetchNext().expectToken(Type{'['}).fetchNext();
+				while (true) {
+					if (context.fetchNext().hasToken(Type{']'})) break;
+					auto const field = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "field type");
+					if (!context.minima.types.contains(field))
+						context.error("Field type does not exist!");
+					type->fields.pushBack(context.minima.types[field]->id());
+				}
 			} else context.error("Invalid flag!");
-		}
-		while (true) {
-			if (context.fetchNext().hasToken(Type{';'})) break;
 		}
 		if (!context.minima.types.contains(name))
 			context.minima.types[name] = type;

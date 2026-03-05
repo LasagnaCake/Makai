@@ -80,16 +80,16 @@ void Engine::v2Compare() {
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Types do not match!"));
 	else {
-		*out = Value::undefined();
+		context.globalValueStack.pushBack(new Value());
 		return;
 	}
-	if (order == Value::Order::EQUAL)			*out = 0l;
-	else if (order == Value::Order::GREATER)	*out = 1l;
-	else if (order == Value::Order::LESS)		*out = -1l;
+	if (order == Value::Order::EQUAL)			context.globalValueStack.pushBack(new Value(0l));
+	else if (order == Value::Order::GREATER)	context.globalValueStack.pushBack(new Value(1l));
+	else if (order == Value::Order::LESS)		context.globalValueStack.pushBack(new Value(-1l));
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Failed to compare types!"));
 	else {
-		*out = Value::undefined();
+		context.globalValueStack.pushBack(new Value());
 		return;
 	}
 }

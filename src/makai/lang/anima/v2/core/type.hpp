@@ -17,17 +17,22 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_VECTOR,
 	};
 
-	struct TypeInfo {
+	struct Definition {
 		struct Flags {
-			constexpr static uint64 const AV2_TF_BASIC		= 1 << 0;
-			constexpr static uint64 const AV2_TF_NULLABLE	= 1 << 1;
-			constexpr static uint64 const AV2_TF_ARRAY		= 1 << 2;
-			constexpr static uint64 const AV2_TF_VALUE		= 1 << 3;
+			constexpr static uint64 const AV2_DF_BASIC		= 1 << 0;
+			constexpr static uint64 const AV2_DF_NULLABLE	= 1 << 1;
+			constexpr static uint64 const AV2_DF_EMPTY		= 1 << 2;
+			constexpr static uint64 const AV2_DF_ARRAY		= 1 << 3;
+			constexpr static uint64 const AV2_DF_VALUE		= 1 << 4;
+			constexpr static uint64 const AV2_DF_STRUCTURE	= 1 << 5;
+			constexpr static uint64 const AV2_DF_DYNAMIC	= 1 << 6;
 		};
 		StringList					names;
-		uint64						flags	= 0;
-		Nullable<Core::BasicType>	basic	= Core::BasicType::AV2_BT_VOID;
-		Nullable<uint64>			base	= null;
+		uint64						flags		= 0;
+		Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
+		Instance<Definition>		base		= nullptr;
+		uint64						byteSize	= 0;
+		uint64						alignment	= 1;
 	};
 }
 
