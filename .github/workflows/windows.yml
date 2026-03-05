@@ -49,7 +49,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         env:
           msys2: ${{ steps.prep.outputs.msys2-location }}
-        run: echo "$env:msys2" > cache/msys2
+        run: touch cache/msys2 ; echo "$env:msys2" > cache/msys2
 
   ship-it-full:
     name: Ship the library (FULL ver.)
