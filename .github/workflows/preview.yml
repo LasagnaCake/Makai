@@ -127,7 +127,7 @@ jobs:
           tag_name: preview-${{steps.date.output.date}}
           prerelease: true
           files: |
-            output/*.zip
+            **/*.zip
           name: Preview Snapshot ${{steps.date.output.date}}
           body: |
             Automatically-generated preview via GitHub action.
