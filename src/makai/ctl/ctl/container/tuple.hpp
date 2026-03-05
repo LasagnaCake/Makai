@@ -25,7 +25,7 @@ namespace Impl {
 		using typename Typed::DataType;
 
 		constexpr static bool NON_CONST_TUPLE = Type::NonConstant<T>;
-		
+
 		/// @brief Nth element type.
 		/// @tparam I Type index.
 		template<usize I>
@@ -49,7 +49,7 @@ namespace Impl {
 		/// @tparam INDEX Element index.
 		/// @return Reference to element.
 		template<usize I>
-		constexpr DataType& get() 
+		constexpr DataType& get()
 		requires (I == 0) {
 			return value;
 		}
@@ -201,7 +201,7 @@ using IndexTuple = Impl::IndexTuplePack<0, I...>;
 /// @brief Builtins demangler.
 namespace Impl::Builtin {
 #if defined(__clang__)
-	namespace {	
+	namespace {
 		template <class T, usize... V>
 		using IntegerPackWrapper = IndexTuple<V...>;
 	}
@@ -251,6 +251,26 @@ constexpr TupleType<Tuple<Types...>, I> const& get(Tuple<Types...> const& tuple)
 template<usize I, usize... V>
 consteval usize get(IndexTuple<V...> const& tuple) {
 	return tuple.template get<I>();
+}
+
+template <class TFunc> struct TupleCall;
+
+template <class TReturn, class... TArgs>
+struct TupleCall<TReturn(TArgs...)> {
+	template <Type::Functional<TReturn(TArgs...)> T>
+	constexpr static TReturn invoke(T const& f, Tuple<TArgs...>& args) {
+		return call(f, IntegerPack<sizeof...(TArgs)>());
+	}
+
+	template <Type::Functional<TReturn(TArgs...)> T, usize... N>
+	constexpr static TReturn invoke(T const& f, Tuple<TArgs...>& args, IndexTuple<N...>) {
+		return f(args.template get<N>()...);
+	}
+};
+
+template <class TReturn, class... TArgs>
+constexpr TReturn invoke(Type::Functional<TReturn(TArgs...)> auto f, Tuple<TArgs...>& args) {
+	return TupleCall<TReturn(TArgs...)>::invoke(f, args);
 }
 
 CTL_NAMESPACE_END

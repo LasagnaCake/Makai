@@ -15,13 +15,13 @@ namespace Makai::Anima::V2::Core {
 
 		constexpr Value() noexcept {}
 
-		template <class T>
+		template <Type::Different<Value> T>
 		constexpr Value(T const& v)
 		requires (sized<T>() && Type::CopyConstructible<T>) {
 			operator=(v);
 		}
 
-		template <class T>
+		template <Type::Different<Value> T>
 		constexpr Value(T&& v)
 		requires (sized<T>() && Type::MoveConstructible<T>) {
 			operator=(move(v));
@@ -89,10 +89,15 @@ namespace Makai::Anima::V2::Core {
 	};
 
 	struct Object {
-		using Reference = Instance<Value>;
+		using Reference = Instance<Object>;
 		List<Reference>			fields;
 		Instance<Definition>	type;
+		Value					value;
 	};
+
+	namespace Impl {
+		template <class T> struct AsConstructor;
+	}
 }
 
 #endif

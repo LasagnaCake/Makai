@@ -392,21 +392,43 @@ static void doStackClear(Context& context) {
 }
 
 static void doFieldGet(Context& context, bool const dyn = false) {
-	auto const field = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "field ID").getUnsigned();
+	// TODO: The rest of this
+	if (!dyn) {
+		auto const field =
+		context
+			.fetchNext()
+			.expectToken(Type{'['})
+			.fetchNext()
+			.fetchToken(LTS_TT_IDENTIFIER, "field ID")
+			.getUnsigned()
+		;
+		context.fetchNext().expectToken(Type{']'});
+	}
 }
 
 static void doArrayAt(Context& context, bool const dyn = false) {
-	auto const index = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "field ID").getUnsigned();
+	// TODO: The rest of this
+	if (!dyn) {
+		auto const index =
+			context
+				.fetchNext()
+				.expectToken(Type{'['})
+				.fetchNext()
+				.fetchToken(LTS_TT_IDENTIFIER, "array index")
+				.getUnsigned()
+		;
+		context.fetchNext().expectToken(Type{']'});
+	}
 }
 
-static void doSize(Context& context, bool const inBytes = false) {
+static void doSizeOf(Context& context, bool const inBytes = false) {
 	context.addInstructionType(
 		context.addNamedInstruction(Instruction::Name::AV2_IN_SIZEOF),
 		Makai::Cast::as<uint32>(inBytes)
 	);
 }
 
-static void doType(Context& context) {
+static void doTypeGet(Context& context) {
 	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_TYPEOF);
 }
 
@@ -574,6 +596,11 @@ static void doDynamic(Context& context) {
 		doCall(context, true);
 	else if (id == "cast")
 		doCast(context, true);
+	else if (id == "field" || id == "get")
+		doFieldGet(context, true);
+	else if (id == "index" || id == "at")
+		doArrayAt(context, true);
+	else context.error("Invalid dynamic operation!");
 }
 
 static void declareType(Context& context) {
@@ -821,9 +848,9 @@ static void doExpression(Context& context) {
 	else if (id == "unop"|| id == "uop")		doUnaryOperation(context);
 	else if (id == "index" || id == "at")		doArrayAt(context);
 	else if (id == "field" || id == "get")		doFieldGet(context);
-	else if (id == "count")						doSize(context);
-	else if (id == "size")						doSize(context, true);
-	else if (id == "type")						doSize(context);
+	else if (id == "count")						doSizeOf(context);
+	else if (id == "size")						doSizeOf(context, true);
+	else if (id == "type")						doTypeGet(context);
 	else if (id == "yield")						doYield(context);
 	else if (id == "cast")						doCast(context);
 	else if (id == "random" || id == "rng")		doRandomNumber(context);

@@ -7,7 +7,7 @@ namespace Makai::Anima::V2::Core {
 	struct Method {
 		Instance<Definition>		retType;
 		List<Instance<Definition>>	argTypes;
-		bool						local = false;
+		bool						out = false;
 		String						name;
 	};
 }

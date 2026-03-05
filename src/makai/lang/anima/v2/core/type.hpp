@@ -27,12 +27,14 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_STRUCTURE	= 1 << 5;
 			constexpr static uint64 const AV2_DF_DYNAMIC	= 1 << 6;
 		};
-		StringList					names;
+		StringList					aliases;
 		uint64						flags		= 0;
 		Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
 		Instance<Definition>		base		= nullptr;
 		uint64						byteSize	= 0;
 		uint64						alignment	= 1;
+
+		using Database = List<Instance<Definition>>;
 	};
 }
 
