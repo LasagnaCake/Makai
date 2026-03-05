@@ -156,7 +156,7 @@ namespace Makai::Anima::V2::Core {
 
 		/// @brief Comparison operator.
 		struct [[gnu::aligned(4)]] Comparison {
-			Comparator		comp;
+			Comparator	comp;
 		};
 
 		/// @brief Stack push.

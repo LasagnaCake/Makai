@@ -4,7 +4,7 @@
 #include "../../../../../lexer/lexer.hpp"
 #include "../../runtime/program.hpp"
 #include "../../core/instruction.hpp"
-#include "../../core/basictype.hpp"
+#include "../../core/type.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Context {
@@ -1352,12 +1352,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			};
 
 			struct Type: ID::Identifiable<Type const, uint64> {
-				struct Flags {
-					constexpr static uint64 const AV2_CMTF_BASIC	= 1 << 0;
-					constexpr static uint64 const AV2_CMTF_NULLABLE	= 1 << 1;
-					constexpr static uint64 const AV2_CMTF_ARRAY	= 1 << 2;
-				};
-
 				uint64						flags	= 0;
 				Nullable<Core::BasicType>	basic	= Core::BasicType::AV2_BT_VOID;
 				Nullable<uint64>			base	= null;

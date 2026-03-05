@@ -2,13 +2,12 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_CONTEXT_H
 
 #include "../../../../compat/ctl.hpp"
-#include "../instruction.hpp"
+#include "../core/instruction.hpp"
 #include "program.hpp"
 
 #define ANIMA_V2_SHARED_FN_NAME_PREFIX "anima/env/share/"
 
 namespace Makai::Anima::V2::Runtime {
-	constexpr auto const SHARED_FUNCTION_PREFIX = ANIMA_V2_SHARED_FN_NAME_PREFIX;
 	struct Context {
 		using Storage = Instance<Data::Value>;
 
@@ -18,28 +17,26 @@ namespace Makai::Anima::V2::Runtime {
 			virtual Storage invoke(List<Storage> const& args) = 0;
 		};
 
-		Context() {
-			for (auto& reg: registers)
-				reg = new Data::Value();
-		}
-
 		struct Pointers {
 			usize	offset		= 0;
 			usize	function	= 0;
 			usize	instruction	= -1;
 		};
 
+		struct Scope {
+			List<Storage>		localStack;
+			Core::ContextMode	mode		= Core::ContextMode::AV2_CM_STRICT;
+			Core::ContextMode	prevMode	= Core::ContextMode::AV2_CM_STRICT;
+		};
+
 		using VariableBank = Map<uint64, Data::Value>;
 
-		ContextMode					mode		= ContextMode::AV2_CM_STRICT;
-		ContextMode					prevMode	= ContextMode::AV2_CM_STRICT;
-		Pointers					pointers;
-		List<Storage>				valueStack;
-		List<Pointers>				pointerStack;
-		Map<usize, Storage>			globals;
-		Storage						temporary = Storage::create();
-
-		Data::Value					result;
+		Pointers			pointers;
+		List<Storage>		globalValueStack;
+		List<Pointers>		pointerStack;
+		List<Scope>			scopeStack;
+		Map<usize, Storage>	globals;
+		Storage				temporary = Storage::create();
 
 		struct SharedSpace {
 			using Function	= Instance<IInvokable>;
@@ -55,7 +52,7 @@ namespace Makai::Anima::V2::Runtime {
 
 			~SharedSpace() {
 				for (auto& [name, lib] : libraries) {
-					auto const exit = lib.function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/v2/exit");
+					auto const exit = lib.function<LibraryCall>(toString(ANIMA_V2_SHARED_FN_NAME_PREFIX) + "/v2/exit");
 					if (exit) exit(&ns[name]);
 				}
 			}
@@ -63,7 +60,7 @@ namespace Makai::Anima::V2::Runtime {
 			void addLibrary(String const& name, String const& libpath) {
 				if (!libraries.contains(name))
 					libraries[name].open(libpath);
-				auto const init = libraries[name].function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/v2/init");
+				auto const init = libraries[name].function<LibraryCall>(toString(ANIMA_V2_SHARED_FN_NAME_PREFIX) + "/v2/init");
 				if (init) init(&ns[name]);
 			}
 

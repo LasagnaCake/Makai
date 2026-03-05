@@ -2,7 +2,7 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_PROGRAM_H
 
 #include "../core/instruction.hpp"
-#include "../core/basictype.hpp"
+#include "../core/type.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Program {
@@ -12,7 +12,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		using Label = Dictionary<usize>;
 
-		struct Method {
+		struct MethodRef {
 			String			name;
 			uint64			retType;
 			List<uint64>	argTypes;
@@ -20,14 +20,8 @@ namespace Makai::Anima::V2::Runtime {
 			uint64			entry;
 		};
 
-		struct Type {
-			struct Flags {
-				constexpr static uint64 const AV2_CMTF_BASIC	= 1 << 0;
-				constexpr static uint64 const AV2_CMTF_NULLABLE	= 1 << 1;
-				constexpr static uint64 const AV2_CMTF_ARRAY	= 1 << 2;
-			};
-
-			String						name;
+		struct TypeRef {
+			StringList					names;
 			uint64						flags	= 0;
 			Nullable<Core::BasicType>	basic	= Core::BasicType::AV2_BT_VOID;
 			Nullable<uint64>			base	= null;
@@ -116,8 +110,8 @@ namespace Makai::Anima::V2::Runtime {
 		Labels					labels;
 		NativeInterface			ani;
 		bool					showCommandLine = true;
-		List<Method>			methods;
-		List<Type>				types;
+		List<MethodRef>			methods;
+		List<TypeRef>			types;
 
 		constexpr Data::Value serialize(bool const keepLabels = true) const {
 			Data::Value out;
@@ -155,8 +149,6 @@ namespace Makai::Anima::V2::Runtime {
 		}
 
 		static void deserializeV2(Program& prog, Data::Value const& v) {
-			if (v.contains("types") && v["types"].isArray())
-				prog.types		= v["types"].get<Data::Value::ArrayType>();
 			if (v.contains("constants") && v["constants"].isArray())
 				prog.constants	= v["constants"].get<Data::Value::ArrayType>();
 			auto const code		= v["code"].get<Data::Value::ByteListType>();

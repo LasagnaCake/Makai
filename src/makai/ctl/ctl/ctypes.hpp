@@ -202,6 +202,10 @@ template<class T> using in		= T const&;
 /// @brief Syntatic sugar for `T&`. Indicates a variable is a reference that can be read from, and written to.
 template<class T> using inout	= T&;
 
+using scstring		= As<char const[]> const;
+using scwstring		= As<wchar const[]> const;
+using su8cstring	= As<u8char const[]> const;
+
 /// @brief Null value. Syntatic sugar for `nullptr`.
 constexpr nulltype const null{};
 

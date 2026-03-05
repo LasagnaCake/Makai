@@ -12,11 +12,15 @@ using namespace Makai::Anima::V2;
 
 namespace Runtime	= Makai::Anima::V2::Runtime;
 
+using namespace Core;
+
 using Makai::Data::Value;
 
 bool Engine::yieldCycle() {
 	bool revertContext = false;
-	if (context.prevMode != context.mode)
+	if (context.scopeStack.empty())
+		context.scopeStack.pushBack({});
+	if (context.scopeStack.back().prevMode != context.scopeStack.back().mode)
 		revertContext = true;
 	if (isFinished) return false;
 	do {
@@ -24,7 +28,7 @@ bool Engine::yieldCycle() {
 		advance();
 	} while (current.name == Instruction::Name::AV2_IN_NO_OP && current.type);
 	if (isFinished) return false;
-	DEBUGLN("Instruction:", Instruction::asString(current.name));
+	DEBUGLN("Instruction: ", Instruction::asString(current.name));
 	switch (current.name) {
 		using enum Instruction::Name;
 		case AV2_IN_HALT:			v2Halt();		break;
@@ -34,30 +38,22 @@ bool Engine::yieldCycle() {
 		case AV2_IN_COPY:			v2Copy();		break;
 		case AV2_IN_RETURN: 		v2Return();		break;
 		case AV2_IN_CALL:			v2Call();		break;
-		case AV2_IN_GET:			v2Get();		break;
-		case AV2_IN_SET:			v2Set();		break;
 		case AV2_IN_CAST:			v2Cast();		break;
-		case AV2_IN_MATH_BOP:		v2BinaryMath();	break;
-		case AV2_IN_MATH_UOP:		v2UnaryMath();	break;
+		case AV2_IN_BOP:			v2BinaryOp();	break;
+		case AV2_IN_UOP:			v2UnaryOp();	break;
 		case AV2_IN_COMPARE:		v2Compare();	break;
 		case AV2_IN_MODE:			v2SetContext();	break;
 		case AV2_IN_JUMP:			v2Jump();		break;
-		case AV2_IN_AWAIT:			v2Await();		break;
 		case AV2_IN_YIELD:			v2Yield();		break;
 		case AV2_IN_NO_OP: break;
 		default: crash(invalidInstructionError());
 	}
-	if (revertContext) context.mode = context.prevMode;
+	if (revertContext) context.scopeStack.back().mode = context.scopeStack.back().prevMode;
 	return !isFinished;
 }
 
 bool Engine::process() {
 	paused = false;
-	if (wait) {
-		DEBUGLN("Waiting...");
-		return isFinished;
-	}
-	else wait.clear();
 	while (Engine::yieldCycle() && !paused) {}
 	DEBUGLN("Done processing for now!");
 	return !isFinished;
@@ -68,68 +64,16 @@ void Engine::crash(Engine::Error const& e) {
 	terminate();
 }
 
-void Engine::v2Get() {
-	Instruction::GetRequest get = bitcast<Instruction::GetRequest>(current.type);
-	auto const src		= consumeValue(get.from);
-	auto const field	= consumeValue(get.field);
-	auto& dst			= accessValue(get.to);
-	if (!dst) dst = new Value();
-	if (!src->isStructured()) return crash(invalidSourceError("Source value is not a structured type!"));
-	if (src->isArray()) {
-		if (!field->isNumber())
-			return crash(invalidFieldError("Expected number for array index!"));
-		auto const i = src->getSigned();
-		*dst = (*src)[i];
-	} else if (src->isObject()) {
-		if (!field->isString())
-			return crash(invalidFieldError("Expected string for object field!"));
-		auto const k = src->getString();
-		*dst = (*src)[k];
-	} else if (src->isVector() && field->isUnsigned()) {
-		if (!field->isNumber())
-			return crash(invalidFieldError("Expected number for vector component index!"));
-		*dst = src->getVector()[field->getUnsigned()];
-	} else return crash(invalidSourceError("Source value is not an array, object or vector!"));
-}
-
-void Engine::v2Set() {
-	Instruction::SetRequest set = bitcast<Instruction::SetRequest>(current.type);
-	auto const src		= consumeValue(set.from);
-	auto const field	= consumeValue(set.field);
-	auto& dst			= accessValue(set.to);
-	if (!dst) dst = new Value();
-	if (!src->isStructured()) return crash(invalidSourceError("Source value is not a structured type!"));
-	if (src->isObject()) {
-		if (!field->isString())
-			return crash(invalidFieldError("Expected string for object field!"));
-		(*dst)[field->getString()] = (*src);
-	} else if (src->isArray() && field->isInteger()) {
-		if (!field->isNumber())
-			return crash(invalidFieldError("Expected number for array index!"));
-		(*dst)[field->getSigned()] = (*src);
-	} else if (src->isVector() && field->isUnsigned()) {
-		auto vec = dst->getVector();
-		auto const c = field->getUnsigned();
-		vec[c] = src;
-		*dst = vec;
-	} else return crash(invalidSourceError("Source value is not an array, object or vector!"));
-}
-
 void Engine::v2Yield() {
 	paused = true;
 }
 
-void Engine::v2Await() {
-	Instruction::WaitRequest req = bitcast<Instruction::WaitRequest>(current.type);
-	wait.type = req.wait;
-	wait.condition = consumeValue(req.val);
-}
-
 void Engine::v2Compare() {
 	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
-	auto const lhs	= consumeValue(comp.lhs);
-	auto const rhs	= consumeValue(comp.rhs);
-	auto& out		= accessValue(comp.out);
+	if (context.globalValueStack.size() < 2)
+		return crash(invalidSourceError("Missing values to compare!"));
+	auto lhs	= context.globalValueStack.popBack();
+	auto rhs	= context.globalValueStack.popBack();
 	Value::OrderType order = Value::Order::EQUAL;
 	if (lhs->type() == rhs->type())					order = *lhs <=> *rhs;
 	else if (lhs->isNumber() && rhs->isNumber())	order = lhs->get<double>() <=> lhs->get<double>();
@@ -153,13 +97,8 @@ void Engine::v2Compare() {
 void Engine::v2Halt() {
 	Instruction::Stop stop = bitcast<Instruction::Stop>(current.type);
 	switch (stop.mode) {
-		case Instruction::Stop::Mode::AV2_ISM_WITH_VALUE: {
-			auto const v = consumeValue(stop.source);
-			context.result = *v;
-		}
-		case Instruction::Stop::Mode::AV2_ISM_EMPTY: return terminate();
-		case Instruction::Stop::Mode::AV2_ISM_ERROR: {
-			auto const v = consumeValue(stop.source);
+		case Core::Instruction::Stop::Mode::AV2_ISM_ERROR: {
+			auto const v = consumeValue(DataLocation::AV2_DL_TEMPORARY);
 			if (err) return;
 			return crash(makeErrorHere("PROGRAM_ERROR: " + v->toString()));
 		};

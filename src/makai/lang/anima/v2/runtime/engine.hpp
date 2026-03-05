@@ -66,9 +66,9 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		struct Error {
-			String		message;
-			usize		location;
-			Instruction	instruction;
+			String				message;
+			usize				location;
+			Core::Instruction	instruction;
 		};
 
 		enum class BuiltInFunction: uint8 {
@@ -227,7 +227,6 @@ namespace Makai::Anima::V2::Runtime {
 		void load(Program const& program);
 		void execute();
 
-		Data::Value		result() const	{return context.result;	}
 		Nullable<Error>	error() const	{return err;			}
 
 	protected:
@@ -237,7 +236,7 @@ namespace Makai::Anima::V2::Runtime {
 		Context::Storage&			global		(uint64 const globalID					);
 		Context::Storage&			iregister	(uint64 const registerID				);
 
-		constexpr bool inStrictMode() const {return context.mode == ContextMode::AV2_CM_STRICT;}
+		constexpr bool inStrictMode() const {return context.scopeStack.back().mode == Core::ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
 
@@ -251,7 +250,7 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error invalidBinaryMathError(String const& description);
 		Engine::Error invalidUnaryMathError(String const& description);
 		Engine::Error invalidInternalValueError(uint64 const id);
-		Engine::Error invalidLocationError(DataLocation const& loc);
+		Engine::Error invalidLocationError(Core::DataLocation const& loc);
 		Engine::Error invalidSourceError(String const& description);
 		Engine::Error invalidDestinationError(String const& description);
 		Engine::Error invalidFunctionError(String const& description);
@@ -266,11 +265,11 @@ namespace Makai::Anima::V2::Runtime {
 
 		void pushUndefinedIfInLooseMode(String const& fname);
 
-		Context::Storage consumeValue(DataLocation const from);
-		Context::Storage getValueFromLocation(DataLocation const location, usize const id);
+		Context::Storage consumeValue(Core::DataLocation const from);
+		Context::Storage getValueFromLocation(Core::DataLocation const location, usize const id);
 
-		Context::Storage& accessValue(DataLocation const from);
-		Context::Storage& accessLocation(DataLocation const location, usize const id);
+		Context::Storage& accessValue(Core::DataLocation const from);
+		Context::Storage& accessLocation(Core::DataLocation const location, usize const id);
 
 		void advance(bool isRequired = false);
 
@@ -284,8 +283,8 @@ namespace Makai::Anima::V2::Runtime {
 		void v2StackFlush();
 		void v2Return();
 		void v2Halt();
-		void v2BinaryMath();
-		void v2UnaryMath();
+		void v2BinaryOp();
+		void v2UnaryOp();
 		void v2SetContext();
 		void v2Compare();
 		void v2Get();
@@ -312,29 +311,11 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
-		struct WaitState {
-			Context::Storage				condition;
-			Instruction::WaitRequest::Wait	type;
-
-			constexpr void clear() {if (condition) condition = nullptr;}
-
-			constexpr bool waiting() const {
-				if (!condition) return false;
-				switch (type) {
-					case Instruction::WaitRequest::Wait::AV2_IWRW_TRUTHY:	return !*condition;
-					case Instruction::WaitRequest::Wait::AV2_IWRW_FALSY:	return *condition;
-				}
-				return false;
-			}
-
-			constexpr operator bool() const {return waiting();}
-		} wait;
-
 		bool				isFinished	= false;
 		bool				paused		= false;
 		Program				program;
 		Context				context;
-		Instruction			current;
+		Core::Instruction	current;
 		Nullable<Error>		err;
 	};
 }
