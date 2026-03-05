@@ -15,44 +15,52 @@ on:
 #    branches: [ "main" ]
 
 jobs:
-  # install-gcc:
-  #   name: Install Latest GCC Via MSYS2
-  #   runs-on: windows-latest
-  #   defaults:
-  #     run:
-  #       shell: msys2 {0}
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v4
-  #   - name: Install MSYS2
-  #     uses: msys2/setup-msys2@v2
-  #     with:
-  #       msystem: MINGW64
-  #       update: true
-  #       install: git mingw-w64-x86_64-toolchain
-  #   - name: Verify GCC Installation
-  #     run: |
-  #       gcc --version
-  #       g++ --version
-  #       mingw32-make --version
+  prepare:
+    name: Install Latest GCC Via MSYS2
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        id: prep
+        with:
+          msystem: MINGW64
+          update: true
+          cache: true
+          install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-7zip
+      - name: Verify GCC Installation
+        run: |
+          gcc --version
+          g++ --version
+          mingw32-make --version
+      - name: Memorize environment
+        env:
+          msys2: ${{ steps.prep.outputs.msys2-location }}
+        run: echo "$env:msys2" > cache/msys2
+      - uses: actions/cache@v4
+        with: |
+          cache/msys2
+          ${{env.msys2}}
+        key: windows-msys2
+
   ship-it-full:
     name: Ship the library (FULL ver.)
     runs-on: windows-latest
     defaults:
       run:
         shell: msys2 {0}
-    #    needs: install-gcc
+    needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - name: make ship-it
         run: |
-          pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
           mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
       - uses: actions/upload-artifact@master
         with:
@@ -65,15 +73,12 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    #    needs: install-gcc
+    needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - name: make tests
         run: |
           cd tests/ctl
@@ -105,15 +110,12 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    #    needs: install-gcc
+    needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - name: make tests
         run: |
           cd tests/ctl
@@ -125,7 +127,7 @@ jobs:
           path: tests/ctl/output/release
 
   # run-ctl-tests-release:
-  #   name: Run CTL Tests (REOELEASE)
+  #   name: Run CTL Tests (RELEASE)
   #   runs-on: windows-latest
   #   needs: [build-ctl-tests-release]
   #   steps:
@@ -145,15 +147,12 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    #    needs: install-gcc
+    needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - name: make debug gmake=mingw32-make
         run: |
           mingw32-make link-extern gmake=mingw32-make os=win
@@ -169,15 +168,12 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    #    needs: install-gcc
+    needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - name: make release
         run: |
           mingw32-make link-extern gmake=mingw32-make os=win
@@ -194,15 +190,11 @@ jobs:
       run:
         shell: msys2 {0}
     needs: [build-core-lib-debug, build-core-lib-release]
-    #    needs: install-gcc
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -228,12 +220,9 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -257,12 +246,9 @@ jobs:
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/cache/restore@v4
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
+          key: windows-msys2
       - uses: actions/download-artifact@master
         with:
           name: lib-release
