@@ -24,7 +24,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        id: cache
+        with: |
+          cache/msys2
+          ${{env.msys2}}
+        key: windows-msys2
       - name: Install MSYS2
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         id: prep
         with:
@@ -38,14 +45,10 @@ jobs:
           g++ --version
           mingw32-make --version
       - name: Memorize environment
+        if: steps.cache.outputs.cache-hit != 'true'
         env:
           msys2: ${{ steps.prep.outputs.msys2-location }}
         run: echo "$env:msys2" > cache/msys2
-      - uses: actions/cache@v4
-        with: |
-          cache/msys2
-          ${{env.msys2}}
-        key: windows-msys2
 
   ship-it-full:
     name: Ship the library (FULL ver.)
