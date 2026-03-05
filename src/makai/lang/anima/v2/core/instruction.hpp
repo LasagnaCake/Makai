@@ -10,15 +10,15 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_INTERNAL,
 		/// @brief Constant data.
 		AV2_DL_CONST,
-		/// @brief Absolute position in the global stack.
+		/// @brief Value in absolute position in the global stack.
 		AV2_DL_STACK,
-		/// @brief Offset from the top of the global stack.
+		/// @brief Value in offset from the top of the global stack.
 		AV2_DL_STACK_OFFSET,
-		/// @brief Global variable.
+		/// @brief Global value.
 		AV2_DL_GLOBAL,
 		/// @brief Implemetation-defined value.
 		AV2_DL_EXTERNAL,
-		/// @brief Temporary store.
+		/// @brief Temporary value.
 		AV2_DL_TEMPORARY,
 		/// @brief Scope-local value.
 		AV2_DL_LOCAL,
@@ -71,9 +71,6 @@ namespace Makai::Anima::V2::Core {
 		AV2_BOP_BIT_AND,
 		AV2_BOP_BIT_OR,
 		AV2_BOP_BIT_XOR,
-		AV2_BOP_ELEMENT_ACCESS,
-		AV2_BOP_MEMBER_ACCESS,
-		AV2_BOP_NULL_DECAY,
 	};
 
 	enum class UnaryOperator: uint8 {
@@ -160,7 +157,7 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		/// @brief Stack push.
-		struct [[gnu::aligned(4)]] StackPushPop {
+		struct [[gnu::aligned(4)]] StackPush {
 			DataLocation	location;
 		};
 
@@ -192,6 +189,10 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Casting {
+			bool dynamic: 1;
+		};
+
+		struct [[gnu::aligned(4)]] Field {
 			bool dynamic: 1;
 		};
 
@@ -249,12 +250,11 @@ namespace Makai::Anima::V2::Core {
 			/// @details `jump [<to-id>]`
 			AV2_IN_JUMP,
 			/// @brief Pushes a value to the top of the global stack.
-			/// @param type `StackPushPop` = How to handle the value.
+			/// @param type `StackPush` = How to handle the value.
 			/// @details `push [<loc-id>]`
 			AV2_IN_STACK_PUSH,
-			/// @brief Pops a value from the top of the global stack into a given location.
-			/// @param type `StackPushPop` = How to handle the value.
-			/// @details `pop [<loc-id>]`
+			/// @brief Pops a value from the top of the global stack.
+			/// @details `pop`
 			AV2_IN_STACK_POP,
 			/// @brief Swaps the topmost two values of the global stack.
 			/// @param type Discarded.
@@ -308,6 +308,18 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Binding` = how to bind the values.
 			/// @details `bind <count>`
 			AV2_IN_SCOPE_BIND,
+			/// @brief Gets a reference of a given field from an object.
+			/// @param type `Field` = how to access the field.
+			/// @details `get <count>`
+			AV2_IN_FIELD_GET,
+			/// @brief Gets the size of a value.
+			/// @param type 0 = element count, 1 = in bytes.
+			/// @details `size`
+			AV2_IN_SIZEOF,
+			/// @brief Gets the type of a value.
+			/// @param type Discarded.
+			/// @details `type`
+			AV2_IN_TYPEOF,
 		};
 
 		/// @brief Instruction "Name" (opcode).

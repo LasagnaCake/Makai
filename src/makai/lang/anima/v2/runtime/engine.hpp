@@ -9,60 +9,12 @@ namespace Makai::Anima::V2::Runtime {
 		using Value = Data::Value;
 
 		struct FunctionRegistry {
-			using ExternalFunction = Context::Storage(List<Context::Storage> const&);
+			template <class T> struct Function;
 
-			using UUID = ID::VLUID;
+			template <class TReturn, class... TArgs>
+			struct Function<TReturn(TArgs...)> {
 
-			template <Type::Functional<ExternalFunction> TFunction>
-			constexpr UUID add(String const& name, TFunction const& func) {
-				auto const id = ++current;
-				functions[id] = func;
-				bind(name, id);
-				return id;
-			}
-
-			constexpr void remove(UUID const& id) {
-				nameMap.filter([&] (auto const& e) {return e.value == id;});
-			}
-
-			constexpr UUID bind(String const& name, UUID const& id) {
-				auto const prev = nameMap[name];
-				nameMap[name] = id;
-				return prev;
-			}
-
-			constexpr void unbind(String const& name, UUID const& id) {
-				nameMap.erase(name);
-				functions.erase(id);
-			}
-
-			constexpr void clear(String const& name) {
-				nameMap.erase(name);
-			}
-
-			constexpr Context::Storage invoke(String const& name, List<Context::Storage> const& args) {
-				if (!has(name)) return new Value();
-				return invoke(nameMap[name], args);
-			}
-
-			constexpr Context::Storage invoke(UUID const& id, List<Context::Storage> const& args) {
-				if (!has(id)) return new Value();
-				return functions[id](args);
-			}
-
-			constexpr bool has(String const& name) const {
-				return nameMap.contains(name);
-			}
-
-			constexpr bool has(UUID const& id) const {
-				return functions.contains(id);
-			}
-
-		private:
-			Dictionary<UUID>						nameMap;
-			Map<UUID, Function<ExternalFunction>>	functions;
-
-			UUID current = UUID::create(0);
+			};
 		};
 
 		struct Error {
@@ -71,153 +23,9 @@ namespace Makai::Anima::V2::Runtime {
 			Core::Instruction	instruction;
 		};
 
-		enum class BuiltInFunction: uint8 {
-			AV2_EBIF_ADD			= '+',
-			AV2_EBIF_SUB			= '-',
-			AV2_EBIF_MUL			= '*',
-			AV2_EBIF_DIV			= '/',
-			AV2_EBIF_POW			= 'p',
-			AV2_EBIF_REM			= '%',
-			AV2_EBIF_COMP			= '=',
-			AV2_EBIF_NEG			= 'n',
-			AV2_EBIF_AND			= '&',
-			AV2_EBIF_OR				= '|',
-			AV2_EBIF_NOT			= '~',
-			AV2_EBIF_XOR			= '^',
-			AV2_EBIF_LAND			= 'a',
-			AV2_EBIF_LOR			= 'o',
-			AV2_EBIF_LNOT			= '!',
-			AV2_EBIF_SIN			= 's',
-			AV2_EBIF_COS			= 'c',
-			AV2_EBIF_TAN			= 't',
-			AV2_EBIF_ASIN			= 'S',
-			AV2_EBIF_ACOS			= 'C',
-			AV2_EBIF_ATAN			= 'T',
-			AV2_EBIF_ATAN2			= '2',
-			AV2_EBIF_INTERRUPT		= '.',
-			AV2_EBIF_READ			= ':',
-			AV2_EBIF_PRINT			= '@',
-			AV2_EBIF_TO_STRING		= '_',
-			AV2_EBIF_FROM_STRING	= '\0',
-			AV2_EBIF_STR_MATCH		= 'm',
-			AV2_EBIF_STR_FORMAT		= '$',
-			AV2_EBIF_SIZEOF			= '#',
-			AV2_EBIF_HTTP_REQUEST	= 'H',
-			AV2_EBIF_STRING_OP		= '"',
-			AV2_EBIF_ARRAY_OP		= '[',
-			AV2_EBIF_OBJECT_OP		= '{',
-			AV2_EBIF_VEC2_OP		= '2',
-			AV2_EBIF_VEC3_OP		= '3',
-			AV2_EBIF_VEC4_OP		= '4',
-			AV2_EBIF_OS_OP			= '\n',
-			AV2_EBIF_FS_OP			= '\t',
-			AV2_EBIF_ARCHIVE_OP		= '\v',
-			AV2_EBIF_CRYPTOGRAPY_OP	= '?',
-		};
-
-		enum class BuiltInStringOperation: uint8 {
-			AV2_EBI_SO_SLICE	= '_',
-			AV2_EBI_SO_REPLACE	= ':',
-			AV2_EBI_SO_SPLIT	= '/',
-			AV2_EBI_SO_JOIN		= '+',
-			AV2_EBI_SO_MATCHES	= '=',
-			AV2_EBI_SO_CONTAINS	= '@',
-			AV2_EBI_SO_REMOVE	= '-',
-			AV2_EBI_SO_FIND		= 'f',
-		};
-
-		enum class BuiltInArrayOperation: uint8 {
-			AV2_EBI_AO_NEW				= '.',
-			AV2_EBI_AO_SLICE			= '_',
-			AV2_EBI_SO_REMOVE			= '-',
-			AV2_EBI_AO_JOIN				= '+',
-			AV2_EBI_AO_FILTER_LIKE		= '=',
-			AV2_EBI_AO_FILTER_UNLIKE	= '!',
-			AV2_EBI_AO_FIND				= 'f',
-			AV2_EBI_AO_FUZZY_FIND		= 'F',
-			AV2_EBI_AO_PUSH				= '<',
-			AV2_EBI_AO_POP				= '>',
-		};
-
-		enum class BuiltInObjectOperation: uint8 {
-			AV2_EBI_OO_NEW					= '.',
-			AV2_EBI_OO_PARSE				= '{',
-			AV2_EBI_OO_REMOVE_BY_KEY		= 'd',
-			AV2_EBI_OO_REMOVE_BY_VALUE		= 'D',
-			AV2_EBI_OO_JOIN					= '+',
-			AV2_EBI_OO_FIND_BY_KEY			= 'f',
-			AV2_EBI_OO_FUZZY_FIND_BY_KEY	= 'F',
-			AV2_EBI_OO_FIND_BY_VALUE		= 'x',
-			AV2_EBI_OO_FUZZY_FIND_BY_VALUE	= 'X',
-			AV2_EBI_OO_KEYS					= 'k',
-			AV2_EBI_OO_VALUES				= 'v',
-			AV2_EBI_OO_ITEMS				= 'i',
-		};
-
-		enum class BuiltInVectorOperation: uint8 {
-			AV2_EBI_VO_NEW					= '.',
-			AV2_EBI_VO_VEC_NEW				= '=',
-			AV2_EBI_VO_CROSS				= 'x',
-			AV2_EBI_VO_FCROSS				= 'X',
-			AV2_EBI_VO_DOT					= '*',
-			AV2_EBI_VO_TAN					= '/',
-			AV2_EBI_VO_ANGLE				= 'a',
-			AV2_EBI_VO_NORMAL				= 'n',
-			AV2_EBI_VO_LENGTH				= 'l',
-			AV2_EBI_VO_LENGTH_SQUARED		= 'L',
-			AV2_EBI_VO_TRI_CROSS			= 't',
-			AV2_EBI_VO_INVERSE_TRI_CROSS	= 'T',
-		};
-
-		enum class BuiltInOSOperation: uint8 {
-			AV2_EBI_OSO_RUN_EXECUTABLE		= 'E',
-		};
-
-		enum class BuiltInFSOperation: uint8 {
-			AV2_EBI_FSO_GET_BINARY	= 'b',
-			AV2_EBI_FSO_SAVE_BINARY	= 'B',
-			AV2_EBI_FSO_GET_TEXT	= 't',
-			AV2_EBI_FSO_SAVE_TEXT	= 'T',
-			AV2_EBI_FSO_GET_JSON	= 'j',
-			AV2_EBI_FSO_SAVE_JSON	= 'J',
-			AV2_EBI_FSO_GET_FLOW	= 'o',
-			AV2_EBI_FSO_SAVE_FLOW	= 'O',
-			AV2_EBI_FSO_MAKE_DIR	= '/',
-			AV2_EBI_FSO_IS_DIR		= '\\',
-			AV2_EBI_FSO_HAS_PATH	= '.',
-			AV2_EBI_FSO_DELETE		= 'r',
-			AV2_EBI_FSO_COPY		= 'c',
-			AV2_EBI_FSO_MOVE		= 'm',
-		};
-
-		enum class BuiltInArchiveOperation: uint8 {
-			AV2_EBI_AFO_LOAD	= '<',
-			AV2_EBI_AFO_UNLOAD	= '>',
-			AV2_EBI_AFO_NEW		= '.',
-		};
-
-		enum class BuiltInCryptographyOperation: uint8 {
-			AV2_EBI_EO_ENCODE	= 'e',
-			AV2_EBI_EO_DECODE	= 'd',
-			AV2_EBI_EO_ENCRYPT	= 'E',
-			AV2_EBI_EO_DECRYPT	= 'D',
-			AV2_EBI_EO_HASH		= 'h',
-		};
-
 		bool process();
 
 		FunctionRegistry functions;
-
-		virtual void		onPrint(Data::Value const& value);
-		virtual Data::Value	onHTTPRequest(String const& url, String const& action, Data::Value const& value);
-
-		virtual Data::Value	onFileGetRequest(BuiltInFSOperation const op);
-		virtual void		onFileSaveRequest(BuiltInFSOperation const op);
-
-		virtual int		onSystemRequest(BuiltInOSOperation const op);
-		virtual bool	onFilesystemRequest(BuiltInFSOperation const op);
-
-		virtual bool	onArchiveRequest(BuiltInArchiveOperation const op);
 
 		bool hasSignal(String const& name);
 		void fire(String const& signal);
@@ -293,19 +101,6 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Jump();
 		void v2Await();
 		void v2Yield();
-
-		void callBuiltIn(BuiltInFunction const func, uint8 const op);
-
-		void callBuiltInStringOp(BuiltInStringOperation const func);
-		void callBuiltInArrayOp(BuiltInArrayOperation const func);
-		void callBuiltInObjectOp(BuiltInObjectOperation const func);
-		void callBuiltInVector2Op(BuiltInVectorOperation const func);
-		void callBuiltInVector3Op(BuiltInVectorOperation const func);
-		void callBuiltInVector4Op(BuiltInVectorOperation const func);
-		void callBuiltInOSOp(BuiltInOSOperation const func);
-		void callBuiltInFSOp(BuiltInFSOperation const func);
-		void callBuiltInArchiveOp(BuiltInArchiveOperation const func);
-		void callBuiltInCryptographyOp(BuiltInCryptographyOperation const func);
 
 		void jumpBy(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);

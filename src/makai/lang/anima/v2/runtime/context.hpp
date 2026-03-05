@@ -3,13 +3,14 @@
 
 #include "../../../../compat/ctl.hpp"
 #include "../core/instruction.hpp"
+#include "../core/value.hpp"
 #include "program.hpp"
 
 #define ANIMA_V2_SHARED_FN_NAME_PREFIX "anima/env/share/"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Context {
-		using Storage = Instance<Data::Value>;
+		using Storage = Instance<Core::Value>;
 
 		struct IInvokable {
 			virtual ~IInvokable() {}

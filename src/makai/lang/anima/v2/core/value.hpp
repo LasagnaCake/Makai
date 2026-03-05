@@ -13,6 +13,8 @@ namespace Makai::Anima::V2::Core {
 			return (sizeof(T) >= sizeof(byte));
 		}
 
+		constexpr Value() noexcept {}
+
 		template <class T>
 		constexpr Value(T const& v)
 		requires (sized<T>() && Type::CopyConstructible<T>) {
