@@ -18,7 +18,7 @@ jobs:
   prepare:
     name: Install Latest GCC Via MSYS2
     runs-on: windows-latest
-    defaults: &msys2
+    defaults:
       run:
         shell: msys2 {0}
     steps:
@@ -179,7 +179,7 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
-      - *prepare
+      - uses: ./.github/actions/setup/msys2
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
