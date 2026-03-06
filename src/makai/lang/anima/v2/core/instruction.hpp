@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
 #define MAKAILIB_ANIMA_V2_CORE_INSTRUCTION_H
 
-#include "../../../../compat/ctl.hpp"
+#include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
 	/// @brief Data location.
@@ -57,41 +57,6 @@ namespace Makai::Anima::V2::Core {
 	constexpr DataLocation asModifiers(DataLocation const loc) {
 		return (loc & (DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE));
 	}
-
-	/// @brief Binary operator.
-	enum class BinaryOperator: uint8 {
-		AV2_BOP_ADD,
-		AV2_BOP_SUB,
-		AV2_BOP_MUL,
-		AV2_BOP_DIV,
-		AV2_BOP_REM,
-		AV2_BOP_LOGIC_AND,
-		AV2_BOP_LOGIC_OR,
-		AV2_BOP_LOGIC_XOR,
-		AV2_BOP_BIT_AND,
-		AV2_BOP_BIT_OR,
-		AV2_BOP_BIT_XOR,
-	};
-
-	enum class UnaryOperator: uint8 {
-		AV2_UOP_NEGATE,
-		AV2_UOP_INCREMENT,
-		AV2_UOP_DECREMENT,
-		AV2_UOP_INVERSE,
-		AV2_UOP_SIN,
-		AV2_UOP_COS,
-		AV2_UOP_TAN,
-		AV2_UOP_ASIN,
-		AV2_UOP_ACOS,
-		AV2_UOP_ATAN,
-		AV2_UOP_SINH,
-		AV2_UOP_COSH,
-		AV2_UOP_TANH,
-		AV2_UOP_LOG2,
-		AV2_UOP_LOG10,
-		AV2_UOP_LN,
-		AV2_UOP_SQRT,
-	};
 
 	/// @brief Comparison operator.
 	enum class Comparator: uint8 {

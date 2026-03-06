@@ -4,6 +4,7 @@
 #include "../../../../compat/ctl.hpp"
 #include "../core/instruction.hpp"
 #include "../core/value.hpp"
+#include "../core/context.hpp"
 #include "program.hpp"
 
 #define ANIMA_V2_SHARED_FN_NAME_PREFIX "anima/env/share/"
@@ -38,6 +39,7 @@ namespace Makai::Anima::V2::Runtime {
 		List<Scope>			scopeStack;
 		Map<usize, Storage>	globals;
 		Storage				temporary = Storage::create();
+		Core::Context		art;
 
 		struct SharedSpace {
 			using Function	= Instance<IInvokable>;

@@ -603,6 +603,26 @@ static void doDynamic(Context& context) {
 	else context.error("Invalid dynamic operation!");
 }
 
+static void declareTypeFields(Context& context, Context::Minima::Type& type) {
+	if (type.fields.size())
+		context.error("Redeclaration of type fields are not allowed!");
+	else if (
+		type.flags & (
+			Definition::Flags::AV2_DF_DYNAMIC
+		|	Definition::Flags::AV2_DF_ARRAY
+		|	Definition::Flags::AV2_DF_BASIC
+		)
+	) context.error("Cannot declare fields on basic, array and dynamic types!");
+	context.fetchNext().expectToken(Type{'['}).fetchNext();
+	while (true) {
+		if (context.fetchNext().hasToken(Type{']'})) break;
+		auto const field = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "field type");
+		if (!context.minima.types.contains(field))
+			context.error("Field type does not exist!");
+		type.fields.pushBack(context.minima.types[field].id());
+	}
+}
+
 static void declareType(Context& context) {
 	auto const name = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "type name").getString();
 		auto const type = new Context::Minima::Type();
@@ -681,23 +701,7 @@ static void declareType(Context& context) {
 				;
 				context.fetchNext().expectToken(Type{')'});
 			} else if (flag == "fields") {
-				if (type->fields.size())
-					context.error("Redeclaration of type fields are not allowed!");
-				else if (
-					type->flags & (
-						Definition::Flags::AV2_DF_DYNAMIC
-					|	Definition::Flags::AV2_DF_ARRAY
-					|	Definition::Flags::AV2_DF_BASIC
-					)
-				) context.error("Cannot declare fields on basic, array and dynamic types!");
-				context.fetchNext().expectToken(Type{'['}).fetchNext();
-				while (true) {
-					if (context.fetchNext().hasToken(Type{']'})) break;
-					auto const field = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "field type");
-					if (!context.minima.types.contains(field))
-						context.error("Field type does not exist!");
-					type->fields.pushBack(context.minima.types[field]->id());
-				}
+				declareTypeFields(context, *type);
 			} else context.error("Invalid flag!");
 		}
 		if (!context.minima.types.contains(name))

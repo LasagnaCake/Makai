@@ -75,7 +75,7 @@ void Engine::v2Compare() {
 	auto lhs	= context.globalValueStack.popBack();
 	auto rhs	= context.globalValueStack.popBack();
 	Value::OrderType order = Value::Order::EQUAL;
-	if (lhs->type() == rhs->type())					order = *lhs <=> *rhs;
+	if (lhs->type == rhs->type)						order = *lhs <=> *rhs;
 	else if (lhs->isNumber() && rhs->isNumber())	order = lhs->get<double>() <=> lhs->get<double>();
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Types do not match!"));

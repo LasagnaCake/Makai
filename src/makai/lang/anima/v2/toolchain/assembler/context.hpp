@@ -659,11 +659,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return scope.back();
 		}
 
-		constexpr void addStackEntry(Core::Instruction::StackPushPop const& entry) {
-			if (scope.empty()) return;
-			addInstructionType(addNamedInstruction(Core::Instruction::Name::AV2_IN_STACK_PUSH), entry);
-		}
-
 		constexpr void endScope() {
 			if (scope.empty()) return;
 			writeLine(scope.popBack().compose(), "");

@@ -6,7 +6,8 @@
 #include "value.hpp"
 
 namespace Makai::Anima::V2::Core::Meta {
-	struct Any {};
+	struct Void	{};
+	struct Any	{};
 
 	namespace Impl {
 		template <class T> struct ARTTI;
@@ -28,15 +29,17 @@ namespace Makai::Anima::V2::Core::Meta {
 			return [] (Object const& obj) -> T {return T{};};
 		}
 
-		template<> struct ARTTI<void> {
+		template<> struct ARTTI<Void> {
 			constexpr static scstring ART_NAME = "void";
 
-			constexpr static Function<void(Object const&)> constructor() {
-				return [] (Object const&) {};
+			constexpr static Function<Void(Object const&)> constructor() {
+				return toEmpty<Void>();
 			}
 
 			constexpr static Function<Object(Definition::Database&, nulltype&)> converter() {
-				return [] (Definition::Database&, nulltype&) -> Object {return Object();};
+				return [] (Definition::Database&, nulltype&) -> Object {
+					return Object();
+				};
 			}
 		};
 
@@ -98,12 +101,6 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
-		template<Type::OneOf<Data::Value> T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = "object";
-			constexpr static auto constructor() {
-			}
-		};
-
 		template<Type::OneOf<Vector2, Vector3, Vector4> T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "vector";
 			constexpr static auto constructor() {
@@ -150,7 +147,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 			template <usize... N>
 			constexpr static Type make(ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {tup.template get<N>()...};
+				return {ARTTI<Makai::Meta::Select<N, Types...>>::converter()(tup.template get<N>())...};
 			}
 		};
 	};
@@ -177,7 +174,7 @@ namespace Makai::Anima::V2::Core::Meta {
 	}
 
 	template <class... Types>
-	constexpr Tuple<Types...> fromArguments(List<Object> const& args) {
+	constexpr Tuple<Types...> toArguments(List<Object> const& args) {
 		return typename Impl::ObjectTupleToArguments<Types...>::make(
 			typename Impl::ListToTuple<Types...>::make()
 		);

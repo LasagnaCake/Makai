@@ -269,8 +269,8 @@ struct TupleCall<TReturn(TArgs...)> {
 };
 
 template <class TReturn, class... TArgs>
-constexpr TReturn invoke(Type::Functional<TReturn(TArgs...)> auto f, Tuple<TArgs...>& args) {
-	return TupleCall<TReturn(TArgs...)>::invoke(f, args);
+constexpr TReturn invokeFromTuple(Type::Functional<TReturn(TArgs...)> auto f, Tuple<TArgs...>& args) {
+	return typename TupleCall<TReturn(TArgs...)>::invoke(f, args);
 }
 
 CTL_NAMESPACE_END

@@ -4,7 +4,43 @@
 #include "../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Core {
+	/// @brief Binary operator.
+	enum class BinaryOperator: uint8 {
+		AV2_BOP_ADD,
+		AV2_BOP_SUB,
+		AV2_BOP_MUL,
+		AV2_BOP_DIV,
+		AV2_BOP_REM,
+		AV2_BOP_LOGIC_AND,
+		AV2_BOP_LOGIC_OR,
+		AV2_BOP_LOGIC_XOR,
+		AV2_BOP_BIT_AND,
+		AV2_BOP_BIT_OR,
+		AV2_BOP_BIT_XOR,
+	};
+
+	enum class UnaryOperator: uint8 {
+		AV2_UOP_NEGATE,
+		AV2_UOP_INCREMENT,
+		AV2_UOP_DECREMENT,
+		AV2_UOP_INVERSE,
+		AV2_UOP_SIN,
+		AV2_UOP_COS,
+		AV2_UOP_TAN,
+		AV2_UOP_ASIN,
+		AV2_UOP_ACOS,
+		AV2_UOP_ATAN,
+		AV2_UOP_SINH,
+		AV2_UOP_COSH,
+		AV2_UOP_TANH,
+		AV2_UOP_LOG2,
+		AV2_UOP_LOG10,
+		AV2_UOP_LN,
+		AV2_UOP_SQRT,
+	};
+
 	enum class BasicType {
+		AV2_BT_NOT_A_BASIC_TYPE = -1,
 		AV2_BT_VOID,
 		AV2_BT_ANY,
 		AV2_BT_NULL,
@@ -16,6 +52,8 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_BYTES,
 		AV2_BT_VECTOR,
 	};
+
+	struct Method;
 
 	struct Definition {
 		struct Flags {
@@ -29,12 +67,31 @@ namespace Makai::Anima::V2::Core {
 		};
 		StringList					aliases;
 		uint64						flags		= 0;
-		Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
+		Nullable<BasicType>			basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
 		Instance<Definition>		base		= nullptr;
 		uint64						byteSize	= 0;
 		uint64						alignment	= 1;
 
-		using Database = List<Instance<Definition>>;
+		struct Database {
+			using Type = Instance<Definition>;
+			using StorageType = List<Type>;
+
+			Type byAlias(String const& alias) {
+				for (auto& type: types) {
+					if (type->aliases.find(alias) != -1)
+						return type;
+				}
+				return nullptr;
+			};
+
+			Type byID(uint64 const id) {
+				if (id < types.size())
+					return types[id];
+				return nullptr;
+			};
+
+			StorageType types;
+		};
 	};
 }
 

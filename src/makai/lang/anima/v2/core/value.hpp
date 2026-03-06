@@ -93,6 +93,7 @@ namespace Makai::Anima::V2::Core {
 		List<Reference>			fields;
 		Instance<Definition>	type;
 		Value					value;
+		Map<uint64, uint64>		vtable;
 	};
 
 	namespace Impl {
