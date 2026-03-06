@@ -118,16 +118,13 @@ jobs:
       - uses: actions/download-artifact@master
         with:
           path: output
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
       - name: Post
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: preview-${{steps.date.output.date}}
+          tag_name: preview-${{vars.TODAY}}
           prerelease: true
           files: |
             **/*.zip
-          name: Preview Snapshot ${{steps.date.output.date}}
+          name: Preview Snapshot ${{vars.TODAY}}
           body: |
             Automatically-generated preview via GitHub action.
