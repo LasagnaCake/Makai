@@ -15,4 +15,5 @@ runs:
         cache: true
         install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-7zip make
     - name: Alias GNU Make
+      shell: msys2 {0}
       run: alias make=ming32-make
