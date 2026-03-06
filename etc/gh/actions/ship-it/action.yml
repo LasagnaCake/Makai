@@ -8,7 +8,7 @@ runs:
   using: composite
   steps:
     - name: Call actual implementation
-    - uses: LasagnaCake/Makai/etc/gh/actions/ship-it/impl@main
+      uses: LasagnaCake/Makai/etc/gh/actions/ship-it/impl@main
       with:
         os: ${{case(runner.os == 'Windows', 'win', 'linux')}}
         env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
