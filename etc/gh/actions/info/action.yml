@@ -14,10 +14,14 @@ outputs:
   lite:
     value: ${{steps.env.output.lite}}
   date:
-    value: ${{steps.date.output.today}}
+    value: ${{steps.env.output.today}}
 runs:
   using: composite
   steps:
+    - name: Check if in valid OS
+      if: (runner.os != 'Windows' && runner.os != 'Linux')
+      run: echo "::error unsupported operating system [${{runner.os}}]!"
+      shell: bash
     - name: Get environment info
       id: env
       run: |
@@ -26,12 +30,4 @@ runs:
         echo "env=${{case(runner.os == 'Windows', 'msys2', 'linux')}}" >> $GITHUB_OUTPUT
         echo "shell=${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}" >> $GITHUB_OUTPUT
         echo "lite=${{case(inputs.type == 'lite', '1', '0')}}" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: Get today's date
-      id: date
-      run: echo "today=$(date +%Y%m%d%H%M)" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: Get today's date
-      if: (runner.os != 'Windows' && runner.os != 'Linux')
-      run: echo "::error unsupported operating system [${{runner.os}}]!"
       shell: bash
