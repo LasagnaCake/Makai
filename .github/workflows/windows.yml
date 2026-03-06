@@ -18,7 +18,7 @@ jobs:
   prepare:
     name: Install Latest GCC Via MSYS2
     runs-on: windows-latest
-    defaults:
+    defaults: &msys2
       run:
         shell: msys2 {0}
     steps:
