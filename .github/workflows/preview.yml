@@ -16,13 +16,13 @@ on:
 
 jobs:
   prepare-linux:
-    name: Prepare Environment
+    name: Prepare Linux
     runs-on: ubuntu-latest
     steps:
       - uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
 
   prepare-msys2:
-    name: Prepare Environment
+    name: Prepare MSYS2
     runs-on: windows-latest
     steps:
       - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
