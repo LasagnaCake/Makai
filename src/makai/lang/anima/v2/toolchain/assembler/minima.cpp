@@ -471,7 +471,7 @@ static void doScopeBind(Context& context) {
 	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER, "bind count").getUnsigned();
 	context.fetchNext().expectToken(Type{':'}).fetchNext().expectToken(Type{'['}).fetchNext();
 	auto const src = context.fetchToken(LTS_TT_INTEGER, "global stack top offset").getUnsigned();
-	context.fetchNext().expectToken(Type{LTS_TT_LITTLE_ARROW}).fetchNext();
+	context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW).fetchNext();
 	auto const dst = context.fetchToken(LTS_TT_INTEGER, "local stack bottom offset").getUnsigned();
 	context.fetchNext().expectToken(Type{']'}).fetchNext();
 	context.addInstructionType(
