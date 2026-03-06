@@ -48,19 +48,19 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <Type::Derived<Error::Generic> E = Error::InvalidValue>
 		[[noreturn]]
 		void error(String const& what) const {
-			auto const pos = tokens.back().position;
+			auto const pos = current().position;
 			throw E(
 				Makai::toString(
 					"At:\nLINE: ", pos.line,
 					"\nCOLUMN: ", pos.column,
-					"\n--> [", tokens.back().token, "]"
+					"\n--> [", current().token, "]"
 				),
 				what,
-				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), tokens.back().sourceFile.size() ? tokens.back().sourceFile : fileName}
+				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), tokens.back().sourceFile}
 			);
 		}
 
-		struct MessageOutput {
+		struct Messager {
 			template <class... Args>
 			void write(Args const&... args)		{(..., display(toString(args)));				}
 			template <class... Args>
@@ -70,23 +70,28 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			virtual void display(String const& str)	{DEBUG(str);	}
 		};
 
-		MessageOutput&	out;
+		Messager& out;
 
-		BaseContext(MessageOutput& out = defaultWriter): out(out) {}
+		BaseContext(Messager& out = defaultWriter): out(out) {}
 
 		BaseContext& next() {
 			if (tokens.empty())
 				error("Unexpected end-of-file!");
 			tokens.popBack();
+			if (tokens.empty())
+				error("Unexpected end-of-file!");
 			return *this;
 		}
+
+		Axiom& current() 				{return tokens.back();}
+		Axiom const& current() const	{return tokens.back();}
 
 		BaseContext& append(Input const& content) {
 			tokens.insert(content.reversed(), 0);
 			return *this;
 		}
 
-		BaseContext& pad(Input const& content) {
+		BaseContext& put(Input const& content) {
 			tokens.appendBack(content.reversed());
 			return *this;
 		}
@@ -94,7 +99,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		BaseContext& pad(usize const count) {
 			if (!count) return *this;
 			if (count == 1) tokens.pushBack({});
-			else tokens.appendBack(Input().resize(count, {}));
+			else put(Input().resize(count, {}));
 			return *this;
 		}
 
@@ -104,17 +109,33 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		void expect(Axiom::Type const& type, String const& what) {
 			if (!has(type))
-				error();
+				error("Expected " + what + " here!");
 		}
 
-		bool get(Axiom::Type const& type, String const& what) {
-			return tokens.back().type == type;
+		Data::Value& get(Axiom::Type const& type, String const& what) {
+			if (!has(type))
+				error("Expected " + what + " here!");
+			return current().value;
 		}
+
+		void expect(Axiom::Type const& type) {
+			expect(type, "'" + Axiom::asName(type) + "'");
+		}
+
+		bool get(Axiom::Type const& type) {
+			return get(type, "'" + Axiom::asName(type) + "'");
+		}
+
+		Data::Value value() const {
+			return current().value;
+		}
+
+		String filename;
 
 	private:
 		Input tokens;
 
-		inline static MessageOutput defaultWriter;
+		inline static Messager defaultWriter;
 	};
 }
 

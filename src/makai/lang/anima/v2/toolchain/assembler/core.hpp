@@ -11,11 +11,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		virtual  ~AAssembler() {}
 
-		AAssembler(Context& ctx): context(ctx) {}
+		AAssembler(BaseContext& ctx): context(ctx) {}
 
 		virtual void assemble() = 0;
 
-		Context& context;
+		BaseContext& context;
 	};
 }
 

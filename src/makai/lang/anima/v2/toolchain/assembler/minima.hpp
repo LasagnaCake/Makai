@@ -7,6 +7,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Minima: AAssembler {
 		struct Context: BaseContext {
 			struct Minima {
+				Program program;
+
 				struct Method: ID::Identifiable<Method const, uint64> {
 					uint64			retType;
 					List<uint64>	argTypes;
