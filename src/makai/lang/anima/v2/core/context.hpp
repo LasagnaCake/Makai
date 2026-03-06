@@ -32,7 +32,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <class TReturn, class... TArgs>
 		struct ExternalMethodResolver<TReturn(TArgs...)> {
-			static_assert((... && Type::EqualOrConst<TArgs, AsNonReference<TArgs>>), "Arument type(s) cannot be a reference!");
+			static_assert((... && Makai::Type::EqualOrConst<TArgs, AsNonReference<TArgs>>), "Arument type(s) cannot be a reference!");
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
 
@@ -51,7 +51,7 @@ namespace Makai::Anima::V2::Core {
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
-						if constexpr (Type::Void<TReturn>)
+						if constexpr (Makai::Type::Void<TReturn>)
 							invoke(f, toArguments<TArgs...>(args));
 						else return converter<TReturn>()(types, invokeFromTuple(f, toArguments<TArgs...>(args)));
 					}
@@ -77,19 +77,19 @@ namespace Makai::Anima::V2::Core {
 			externalMethods.erase(name);
 		}
 
-		bool hasExternalMethod(String const& name) {
+		bool hasExternalMethod(String const& name) const {
 			return externalMethods.contains(name);
 		}
 
 		Result<Object, Error> invokeExternalMethod(
 			String const& name,
 			List<Object> const& args
-		) const {
+		) {
 			if (!(
 				hasExternalMethod(name)
 			&&	externalMethods[name].invoker
 			)) return Error::AV2_CCE_MISSING_METHOD;
-			return externalMethods[name].invoker->invoke(types, externalMethods[name], args)
+			return externalMethods[name].invoker->invoke(types, externalMethods[name], args);
 		}
 
 		Definition::Database		types;

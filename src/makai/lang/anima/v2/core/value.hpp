@@ -15,15 +15,15 @@ namespace Makai::Anima::V2::Core {
 
 		constexpr Value() noexcept {}
 
-		template <Type::Different<Value> T>
+		template <Makai::Type::Different<Value> T>
 		constexpr Value(T const& v)
-		requires (sized<T>() && Type::CopyConstructible<T>) {
+		requires (sized<T>() && Makai::Type::CopyConstructible<T>) {
 			operator=(v);
 		}
 
-		template <Type::Different<Value> T>
+		template <Makai::Type::Different<Value> T>
 		constexpr Value(T&& v)
-		requires (sized<T>() && Type::MoveConstructible<T>) {
+		requires (sized<T>() && Makai::Type::MoveConstructible<T>) {
 			operator=(move(v));
 		}
 
@@ -43,17 +43,17 @@ namespace Makai::Anima::V2::Core {
 		template <class T> constexpr T&			as() requires (sized<T>())			{return *data<T>();	}
 		template <class T> constexpr T const&	as() const requires (sized<T>())	{return *data<T>();	}
 
-		template <Type::Different<Value> T>
+		template <Makai::Type::Different<Value> T>
 		constexpr Value& operator=(T const& value)
-		requires (sized<T>() && Type::CopyConstructible<T>) {
+		requires (sized<T>() && Makai::Type::CopyConstructible<T>) {
 			prepare<T>();
 			as<T>() = value;
 			return *this;
 		}
 
-		template <Type::Different<Value> T>
+		template <Makai::Type::Different<Value> T>
 		constexpr Value& operator=(T&& value)
-		requires (sized<T>() && Type::MoveConstructible<T>) {
+		requires (sized<T>() && Makai::Type::MoveConstructible<T>) {
 			prepare<T>();
 			as<T>() = move(value);
 			return *this;
@@ -61,7 +61,7 @@ namespace Makai::Anima::V2::Core {
 
 		constexpr Value& operator=(Value const& other) {
 			if (other.clone)
-				operator=(other.clone.value().invoke());
+				operator=(other.clone.value().invoke(*this));
 			return *this;
 		}
 		constexpr Value& operator=(Value&&) = default;
@@ -71,15 +71,15 @@ namespace Makai::Anima::V2::Core {
 	private:
 		friend class Object;
 
-		template <Type::Different<Value> T>
+		template <Makai::Type::Different<Value> T>
 		void prepare() {
-			destruct();
+			destruct(*this);
 			content.free();
 			content.create(sizeof(T));
 			destruct = [] (Value& self) {
 				MX::destruct<T>(self.template data<T>());
 			};
-			if constexpr (Type::CopyConstructible<T>) {
+			if constexpr (Makai::Type::CopyConstructible<T>) {
 				clone = [] (Value& self) {
 					return Value(self.template as<T>());
 				};
@@ -96,6 +96,8 @@ namespace Makai::Anima::V2::Core {
 		Instance<Definition>	type;
 		Value					value;
 		Map<uint64, uint64>		vtable;
+
+		~Object();
 
 		uint64 resolveMethod(uint64 const id);
 

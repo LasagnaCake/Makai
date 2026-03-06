@@ -62,6 +62,7 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_VALUE		= 1 << 4;
 			constexpr static uint64 const AV2_DF_STRUCTURE	= 1 << 5;
 			constexpr static uint64 const AV2_DF_DYNAMIC	= 1 << 6;
+			constexpr static uint64 const AV2_DF_CLONABLE	= 1 << 7;
 		};
 		StringList					aliases;
 		uint64						flags		= 0;
@@ -92,7 +93,7 @@ namespace Makai::Anima::V2::Core {
 			StorageType types;
 		};
 
-		Functor<void(ref<byte>)>								construct;
+		Functor<void(ref<byte const>)>							construct;
 		Functor<void(ref<byte>)>								destruct;
 		Nullable<Function<void(ref<byte>, ref<byte const>)>>	clone;
 	};

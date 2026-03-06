@@ -5,7 +5,7 @@
 
 namespace Makai::Anima::V2::Core {
 	struct Method;
-	struct Type;
+	struct Definition;
 	struct Value;
 	struct Object;
 }

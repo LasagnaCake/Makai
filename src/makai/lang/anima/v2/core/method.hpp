@@ -11,7 +11,7 @@ namespace Makai::Anima::V2::Core {
 		bool						out = false;
 
 		struct Database {
-			using Type = Instance<Definition>;
+			using Type = Instance<Method>;
 			using StorageType = List<Type>;
 
 			StorageType byAlias(String const& alias) {

@@ -14,9 +14,9 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template <class T>
 		concept ARTType = requires {
-			{T::ART_NAME}		-> Type::Equal<scstring>;
-			{T::constructor()}	-> Type::Functional<T(Object)>;
-			{T::converter()}	-> Type::Functional<Object(Definition::Database&, Makai::Meta::If<Type::Void<T>, nulltype, T> const&)>;
+			{T::ART_NAME}		-> Makai::Type::Equal<scstring>;
+			{T::constructor()}	-> Makai::Type::Functional<T(Object)>;
+			{T::converter()}	-> Makai::Type::Functional<Object(Definition::Database&, Makai::Meta::If<Makai::Type::Void<T>, nulltype, T> const&)>;
 		};
 
 		template <class T>
@@ -66,42 +66,42 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
-		template<Type::SignedInteger T> struct ARTTI<T> {
+		template<Makai::Type::SignedInteger T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "int";
 			constexpr static auto constructor() {
 				return toValue<int64>();
 			}
 		};
 
-		template<Type::UnsignedInteger T> struct ARTTI<T> {
+		template<Makai::Type::UnsignedInteger T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "uint";
 			constexpr static auto constructor() {
 				return toValue<uint64>();
 			}
 		};
 
-		template<Type::Real T> struct ARTTI<T> {
+		template<Makai::Type::Real T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "real";
 			constexpr static auto constructor() {
 				return toValue<double>();
 			}
 		};
 
-		template<Type::Equal<Binary<>> T> struct ARTTI<T> {
+		template<Makai::Type::Equal<Binary<>> T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "bytes";
 			constexpr static auto constructor() {
 				return toValue<Binary<>>();
 			}
 		};
 
-		template<Type::OneOf<String, UTF8String> T> struct ARTTI<T> {
+		template<Makai::Type::OneOf<String, UTF8String> T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "string";
 			constexpr static auto constructor() {
 				return toValue<UTF8String>();
 			}
 		};
 
-		template<Type::OneOf<Vector2, Vector3, Vector4> T> struct ARTTI<T> {
+		template<Makai::Type::OneOf<Vector2, Vector3, Vector4> T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "vector";
 			constexpr static auto constructor() {
 				return toValue<Vector4>();
