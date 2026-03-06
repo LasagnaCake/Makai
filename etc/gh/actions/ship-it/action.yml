@@ -6,20 +6,11 @@ inputs:
     default: lite
 runs:
   using: composite
-  env:
-    os: ${{case(runner.os == 'Windows', 'win', 'linux')}}
-    basis: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
-    shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
-    lite: ${{case(inputs.type == 'lite', '1', '0')}}
   steps:
-    - name: Prepare environment
-    - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{env.basis}}@main
-    - uses: actions/checkout@v4
-    - name: Build library
-      run: make ship-it os=${{env.os}} lite=${{env.lite}} skip-tooling=${{env.lite}}
-      shell: ${{env.shell}}
-    - name: Upload artifact
-      uses: actions/upload-artifact@master
+    - name: Call actual implementation
+    - uses: LasagnaCake/Makai/etc/gh/actions/ship-it/impl@main
       with:
-        name: lib-${{env.os}}-${{inputs.type}}
-        path: output/${{env.os}}-*.zip
+        os: ${{case(runner.os == 'Windows', 'win', 'linux')}}
+        env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
+        shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+        lite: ${{case(inputs.type == 'lite', true, false)}}
