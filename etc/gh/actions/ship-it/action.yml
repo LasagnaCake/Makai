@@ -13,7 +13,7 @@ runs:
         type: ${{inputs.type}}
       id: info
     - name: Prepare environment
-    - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{steps.info.output.env}}@main
+      uses: LasagnaCake/Makai/etc/gh/actions/setup/${{steps.info.output.env}}@main
     - uses: actions/checkout@v4
     - name: Build library
       run: make ship-it os=${{inputs.os}} lite=${{steps.info.output.lite}} skip-tooling=${{steps.info.output.lite}}

@@ -72,19 +72,20 @@ jobs:
       - ship-it-full-linux
     runs-on: ubuntu-latest
     steps:
+      - name: Get environment info
+        uses: LasagnaCake/Makai/etc/gh/actions/meta/info@main
+        id: info
       - uses: actions/download-artifact@master
         with:
           path: output
-      - name: Get today's date
-        run: echo "TODAY=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
       - name: Post
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: preview-${{env.TODAY}}
+          tag_name: preview-${{steps.info.output.today}}
           prerelease: true
           draft: false
           files: |
             **/*.zip
-          name: Preview Snapshot ${{env.TODAY}}
+          name: Preview Snapshot ${{steps.info.output.today}}
           body: |
             Automatically-generated preview via GitHub action.
