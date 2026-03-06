@@ -32,8 +32,8 @@ runs:
       uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
     - uses: actions/checkout@v4
     - name: Build library
-      run: make ship-it os="${{steps.info.outputs.os}}" lite="${{steps.info.outputs.lite}}" skip-tooling="${{steps.info.output.lite}}"
-      shell: ${{steps.info.output.shell}}
+      run: make ship-it os="${{steps.info.outputs.os}}" lite="${{steps.info.outputs.lite}}" skip-tooling="${{steps.info.outputs.lite}}"
+      shell: ${{steps.info.outputs.shell}}
     - name: Upload artifact
       uses: actions/upload-artifact@master
       with:
