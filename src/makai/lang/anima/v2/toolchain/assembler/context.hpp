@@ -56,7 +56,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					"\n--> [", current().token, "]"
 				),
 				what,
-				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), tokens.back().sourceFile}
+				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), current().sourceFile}
 			);
 		}
 
