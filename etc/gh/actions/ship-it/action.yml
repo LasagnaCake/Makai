@@ -4,14 +4,17 @@ inputs:
     description: "Build type"
     required: false
     default: lite
+  os:
+    description: "Target OS"
+    required: true
   env:
-    os: ${{case(runner.os == 'Windows', 'win', 'linux')}};
-    env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}};
-    shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+    os: ${{case(inputs.os == 'Windows', 'win', 'linux')}};
+    env: ${{case(inputs.os == 'Windows', 'msys2', 'linux')}};
+    shell: ${{case(inputs.os == 'Windows', 'msys2 {0}', 'bash')}}
   ship-it:
     shell: ${{env.shell}}
-    name: Ship the library (${{inputs.type}} ver. -> ${{runner.os}})
     steps:
+      - name: Prepare environment
       - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{env.env}}@main
       - uses: actions/checkout@v4
       - name: make ship-it
