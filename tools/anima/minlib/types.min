@@ -31,5 +31,3 @@
 @alias vec:		Vector
 @alias obj:		Object
 @alias arr:		AnyArray
-
-@import "" 'Aliasukami\'sdadasdsa'
