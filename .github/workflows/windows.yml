@@ -22,7 +22,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - name: Verify GCC Installation
         run: |
           gcc --version
@@ -36,7 +36,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - name: make ship-it
         run: |
           make ship-it os=win compiler=msys2-gcc
@@ -52,7 +52,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - name: make tests
         run: |
           cd tests/ctl
@@ -85,7 +85,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - name: make tests
         run: |
           cd tests/ctl
@@ -118,7 +118,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - name: make debug gmake=mingw32-make
         run: |
           make link-extern os=win
@@ -135,7 +135,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - name: make release
         run: |
           make link-extern os=win
@@ -152,7 +152,7 @@ jobs:
     needs: [build-core-lib-debug, build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -176,7 +176,7 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -198,7 +198,7 @@ jobs:
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup/msys2
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
       - uses: actions/download-artifact@master
         with:
           name: lib-release
