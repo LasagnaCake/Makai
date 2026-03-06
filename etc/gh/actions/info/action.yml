@@ -13,7 +13,7 @@ outputs:
     value: ${{steps.info.outputs.env}}
   shell:
     description: "Shell to Use"
-    value: ${{steps.info.output.shell}}
+    value: ${{steps.info.outputs.shell}}
   lite:
     description: "Whether Building LITE Version"
     value: ${{steps.info.outputs.lite}}
