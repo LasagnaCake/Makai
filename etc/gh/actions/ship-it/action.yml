@@ -6,14 +6,14 @@ inputs:
     default: lite
 runs:
   using: composite
+  env:
+    os: ${{case(runner.os == 'Windows', 'win', 'linux')}}
+    env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
+    shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+    lite: ${{case(inputs.type == 'lite', '1', '0')}}
   steps:
-    - shell: ${{env.shell}}
-      env:
-        os: ${{case(runner.os == 'Windows', 'win', 'linux')}}
-        env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
-        shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
-        lite: ${{case(inputs.type == 'lite', '1', '0')}}
-      name: Ship the library (${{inputs.type}} ver. -> ${{runner.os}})
+    - name: Ship the library (${{inputs.type}} ver. -> ${{runner.os}})
+      shell: ${{env.shell}}
       steps:
         - name: Prepare environment
         - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{env.env}}@main
