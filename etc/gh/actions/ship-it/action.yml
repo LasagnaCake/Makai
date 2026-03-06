@@ -8,7 +8,7 @@ runs:
   using: composite
   steps:
     - name: Get environment info
-      uses: LasagnaCake/Makai/etc/gh/actions/meta/info@main
+      uses: LasagnaCake/Makai/etc/gh/actions/info@main
       with:
         type: ${{inputs.type}}
       id: info
@@ -20,7 +20,7 @@ runs:
       uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
     - uses: actions/checkout@v4
     - name: Build library
-      run: make ship-it os=${{inputs.os}} lite=${{steps.info.output.lite}} skip-tooling=${{steps.info.output.lite}}
+      run: make ship-it os=${{steps.info.output.os}} lite=${{steps.info.output.lite}} skip-tooling=${{steps.info.output.lite}}
       shell: ${{steps.info.output.shell}}
     - name: Upload artifact
       uses: actions/upload-artifact@master

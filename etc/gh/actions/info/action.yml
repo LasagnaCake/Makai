@@ -1,4 +1,4 @@
-name: Pass environment info down
+name: Get environment info
 inputs:
   type:
     description: "Build type"
