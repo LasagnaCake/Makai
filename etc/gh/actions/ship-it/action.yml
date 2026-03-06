@@ -14,11 +14,15 @@ runs:
         type: ${{inputs.type}}
     - name: View environment info
       run: |
-        echo "today: [${{steps.info.output.today}}]"
-        echo "os: [${{steps.info.output.os}}]"
-        echo "env: [${{steps.info.output.env}}]"
-        echo "shell: [${{steps.info.output.shell}}]"
-        echo "lite? [${{steps.info.output.lite}}]"
+        echo "today: [${{steps.info.outputs.today}}]"
+        echo "os: [${{steps.info.outputs.os}}]"
+        echo "env: [${{steps.info.outputs.env}}]"
+        echo "shell: [${{steps.info.outputs.shell}}]"
+        echo "lite? [${{steps.info.outputs.lite}}]"
+      shell: bash
+    - name: Check if got info
+      if: steps.info.outputs.success
+      run: echo "::error  ::'Failed to get environment info!'"
       shell: bash
     - name: Prepare environment
       if: runner.os == 'Windows'
@@ -28,10 +32,10 @@ runs:
       uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
     - uses: actions/checkout@v4
     - name: Build library
-      run: make ship-it os="${{steps.info.output.os}}" lite="${{steps.info.output.lite}}" skip-tooling="${{steps.info.output.lite}}"
+      run: make ship-it os="${{steps.info.outputs.os}}" lite="${{steps.info.outputs.lite}}" skip-tooling="${{steps.info.output.lite}}"
       shell: ${{steps.info.output.shell}}
     - name: Upload artifact
       uses: actions/upload-artifact@master
       with:
-        name: lib-${{steps.info.output.os}}-${{inputs.type}}
-        path: output/${{inputs.os}}-*.zip
+        name: lib-${{steps.info.outputs.os}}-${{inputs.type}}
+        path: output/${{steps.info.outputs.os}}-*.zip
