@@ -6,23 +6,32 @@ inputs:
     default: lite
 outputs:
   os:
-    value: ${{case(runner.os == 'Windows', 'win', 'linux')}}
+    value: ${{steps.env.output.os}}
   env:
-    value: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
+    value: ${{steps.env.output.env}}
   shell:
-    value: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+    value: ${{steps.env.output.shell}}
   lite:
-    value: ${{case(inputs.type == 'lite', '1', '0')}}
+    value: ${{steps.env.output.lite}}
   date:
     value: ${{steps.date.output.today}}
 runs:
   using: composite
   steps:
+    - name: Get environment info
+      id: env
+      run: |
+        echo "today=$(date +%Y%m%d%H%M)" >> $GITHUB_OUTPUT
+        echo "os=${{case(runner.os == 'Windows', 'win', 'linux')}}" >> $GITHUB_OUTPUT
+        echo "env=${{case(runner.os == 'Windows', 'msys2', 'linux')}}" >> $GITHUB_OUTPUT
+        echo "shell=${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}" >> $GITHUB_OUTPUT
+        echo "lite=${{case(inputs.type == 'lite', '1', '0')}}" >> $GITHUB_OUTPUT
+      shell: bash
     - name: Get today's date
       id: date
       run: echo "today=$(date +%Y%m%d%H%M)" >> $GITHUB_OUTPUT
       shell: bash
     - name: Get today's date
-      if: runner.os != 'Windows' && runner.os != 'Linux'
+      if: (runner.os != 'Windows' && runner.os != 'Linux')
       run: echo "::error unsupported operating system [${{runner.os}}]!"
       shell: bash
