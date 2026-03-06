@@ -6,15 +6,15 @@ inputs:
     default: lite
 outputs:
   os:
-    value: ${{steps.env.output.os}}
+    value: ${{steps.info.output.os}}
   env:
-    value: ${{steps.env.output.env}}
+    value: ${{steps.info.output.env}}
   shell:
-    value: ${{steps.env.output.shell}}
+    value: ${{steps.info.output.shell}}
   lite:
-    value: ${{steps.env.output.lite}}
+    value: ${{steps.info.output.lite}}
   date:
-    value: ${{steps.env.output.today}}
+    value: ${{steps.info.output.today}}
 runs:
   using: composite
   steps:
@@ -23,7 +23,7 @@ runs:
       run: echo "::error unsupported operating system [${{runner.os}}]!"
       shell: bash
     - name: Get environment info
-      id: env
+      id: info
       run: |
         echo "today=$(date +%Y%m%d%H%M)" >> $GITHUB_OUTPUT
         echo "os=${{case(runner.os == 'Windows', 'win', 'linux')}}" >> $GITHUB_OUTPUT
