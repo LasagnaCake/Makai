@@ -48,15 +48,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		template <Type::Derived<Error::Generic> E = Error::InvalidValue>
 		[[noreturn]]
 		void error(String const& what) const {
-			auto const pos = current().position;
+			auto const pos = token().position;
 			throw E(
 				Makai::toString(
 					"At:\nLINE: ", pos.line,
 					"\nCOLUMN: ", pos.column,
-					"\n--> [", current().token, "]"
+					"\n--> [", token().token, "]"
 				),
 				what,
-				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), current().sourceFile}
+				Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), token().sourceFile}
 			);
 		}
 
@@ -83,8 +83,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return *this;
 		}
 
-		Axiom& current() 				{return tokens.back();}
-		Axiom const& current() const	{return tokens.back();}
+		Axiom& token() 				{return tokens.back();}
+		Axiom const& token() const	{return tokens.back();}
 
 		BaseContext& append(Input const& content) {
 			tokens.insert(content.reversed(), 0);
@@ -116,7 +116,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Data::Value& get(Axiom::Type const& type, String const& what) {
 			if (!has(type))
 				error("Expected " + what + " here!");
-			return current().value;
+			return token().value;
 		}
 
 		BaseContext& expectNext(Axiom::Type const& type, String const& what) {
@@ -144,10 +144,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		Data::Value value() const {
-			return current().value;
+			return token().value;
 		}
 
-		String filename;
+		struct FileInfo {
+			String name;
+			String source;
+		} file;
 
 	private:
 		Input tokens;

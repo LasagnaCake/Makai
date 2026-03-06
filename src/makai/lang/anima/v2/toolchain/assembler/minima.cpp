@@ -34,7 +34,7 @@ struct Location {
 	}
 
 	constexpr void addID(Context& context) const {
-		if (hasID()) context.code.add(id.value());
+		if (hasID()) context.add(id.value());
 	}
 };
 
@@ -96,11 +96,11 @@ static Location getLocal(Context& context) {
 static Location getExtern(Context& context) {
 	context.next();
 	uint64 externID = 0;
-	switch (context.current().type) {
+	switch (context.token().type) {
 		case LTS_TT_IDENTIFIER:
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
-			externID = context.minima.addConstant(context.value().getString());
+			externID = context.addConstant(context.value().getString());
 		break;
 		default: context.error("Expected external location name here!");
 	}
@@ -113,7 +113,7 @@ static Location getGlobal(Context& context) {
 			.getNext(LTS_TT_IDENTIFIER, "global name")
 			.getString()
 	;
-	uint64 globalID = context.minima.addGlobal(name);
+	uint64 globalID = context.addGlobal(name);
 	return {
 		DataLocation::AV2_DL_GLOBAL,
 		globalID
@@ -121,7 +121,7 @@ static Location getGlobal(Context& context) {
 }
 
 static Location getConstantLocation(Context& context) {
-	auto type = context.current().type;
+	auto type = context.token().type;
 	bool isNumber = false;
 	bool negated = false;
 	while (
@@ -131,27 +131,27 @@ static Location getConstantLocation(Context& context) {
 		isNumber = true;
 		if (type == Type{'-'})
 			negated = !negated;
-		type = context.next().current().type;
+		type = context.next().token().type;
 	}
 	Location loc {.source = DataLocation::AV2_DL_CONST};
 	if (isNumber) {
-		switch (context.current().type) {
+		switch (context.token().type) {
 			case LTS_TT_INTEGER:
-				loc.id = context.minima.addConstant(context.value().getSigned() * (negated ? -1 : +1));
+				loc.id = context.addConstant(context.value().getSigned() * (negated ? -1 : +1));
 			break;
 			case LTS_TT_REAL:
-				loc.id = context.minima.addConstant(context.value().getReal() * (negated ? -1 : +1));
+				loc.id = context.addConstant(context.value().getReal() * (negated ? -1 : +1));
 			break;
 			default: context.error("Expected number here!");
 		}
 	} else {
-		switch (context.current().type) {
+		switch (context.token().type) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
 			case LTS_TT_INTEGER:
 			case LTS_TT_REAL:
 			case LTS_TT_CHARACTER:
-				loc.id = context.minima.addConstant(context.value());
+				loc.id = context.addConstant(context.value());
 			break;
 			default: context.error("Invalid constant!");
 		}
@@ -165,16 +165,14 @@ static Location getLabelLocation(Context& context) {
 			.getNext(LTS_TT_IDENTIFIER, "label name")
 			.getString()
 	;
-	if (!context.minima.jumps.labels.contains(current))
-		context.error("Jump target has not been declared yet!");
-	return {DataLocation::AV2_DL_CONST, context.minima.addConstant(context.minima.jumps.labels[current])};
+	return {DataLocation::AV2_DL_CONST, context.getJumpTarget(current)};
 }
 
 static Location getDataLocation(Context& context) {
 	Location loc;
 	bool hasLoadType = false;
-	while (context.hasToken(LTS_TT_IDENTIFIER)) {
-		auto const lt = context.getValue<Makai::String>();
+	while (context.has(LTS_TT_IDENTIFIER)) {
+		auto const lt = context.value().getString();
 		if (
 			lt == "move"
 		||	lt == "ref"
@@ -184,13 +182,13 @@ static Location getDataLocation(Context& context) {
 				hasLoadType = true;
 				loc.source = getLoadType(context, DataLocation{0});
 			}
-			context.fetchNext();
+			context.next();
 			continue;
 		} else break;
 	}
-	switch (context.currentToken().type) {
+	switch (context.token().type) {
 		case LTS_TT_IDENTIFIER: {
-			auto const id = context.getValue<Makai::String>();
+			auto const id = context.value().getString();
 			if (id == "local" || id == "arg")			loc |= getLocal(context);
 			else if (id == "placeof")					loc |= getLabelLocation(context);
 			else if (id == "stack")						loc |= getStack(context);
@@ -233,11 +231,11 @@ static Location getDataLocation(Context& context) {
 }
 
 static void doConditionalJump(Context& context, bool dynamic = false) {
-	context.fetchNext();
+	context.next();
 	Instruction::Leap leap{.dyn = dynamic};
-	switch (context.currentToken().type) {
+	switch (context.token().type) {
 		case LTS_TT_IDENTIFIER: {
-			auto const id = context.getValue<Makai::String>();
+			auto const id = context.value().getString();
 			if (id == "zero" || id == "z")				leap.type = Instruction::Leap::Type::AV2_ILT_IF_ZERO;
 			else if (id == "nonzero" || id == "nz")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NOT_ZERO;
 			else if (id == "negative" || id == "n")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NEGATIVE;
@@ -250,23 +248,23 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 		}
 	}
 	if (!dynamic)
-		context.addJumpTarget(context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "jump expression").getString());
+		context.addJumpTarget(context.getNext(LTS_TT_IDENTIFIER, "jump expression").getString());
 }
 
 static void doJump(Context& context, bool dynamic = false) {
-	context.fetchNext();
-	if (!dynamic) context.expectToken(LTS_TT_IDENTIFIER, "jump expression");
-	else if (!context.hasToken(LTS_TT_IDENTIFIER)) {
-		context.append.pad(1);
-		context.addInstructionType(
-			context.addNamedInstruction(Instruction::Name::AV2_IN_JUMP),
+	context.getNext();
+	if (!dynamic) context.expect(LTS_TT_IDENTIFIER, "jump expression");
+	else if (!context.has(LTS_TT_IDENTIFIER)) {
+		context.pad(1);
+		context.add(
+			Instruction::Name::AV2_IN_JUMP,
 			Instruction::Leap{
 				Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
 				true
 			}
 		);
 	}
-	auto const jt = context.getValue<Makai::String>();
+	auto const jt = context.value().getString();
 	if (jt == "if")
 		doConditionalJump(context, dynamic);
 	else if (!dynamic)
@@ -277,75 +275,75 @@ static void doJump(Context& context, bool dynamic = false) {
 static void doCall(Context& context, bool dynamic = false) {
 	Instruction::Invocation invoke {.dynamic = dynamic};
 	if (!dynamic) {
-		auto id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "call expression").getString();
-		context.addInstructionType(
-			context.addNamedInstruction(Instruction::Name::AV2_IN_CALL),
+		auto id = context.getNext(LTS_TT_IDENTIFIER, "call expression").getString();
+		context.add(
+			Instruction::Name::AV2_IN_CALL,
 			invoke
 		);
-		if (context.minima.methods.contains(id))
-			context.addJumpTarget(context.minima.methods[id]->entry);
+		if (context.methods.contains(id))
+			context.addJumpTarget(context.methods[id]->entry);
 		else context.error("Method with this name does not exist!");
 	} else {
-		context.addInstructionType(
-			context.addNamedInstruction(Instruction::Name::AV2_IN_CALL),
+		context.add(
+			Instruction::Name::AV2_IN_CALL,
 			invoke
 		);
 	}
 }
 
 static void doNoOp(Context& context) {
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_NO_OP),
-		Makai::Cast::as<uint32>(context.currentValue().getString() == "next")
+	context.add(
+		Instruction::Name::AV2_IN_NO_OP,
+		Makai::Cast::as<uint32>(context.value().getString() == "next")
 	);
 }
 
 static void doStackSwap(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_SWAP);
+	context.add(Instruction::Name::AV2_IN_STACK_SWAP);
 }
 
 static void doStackFlush(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_FLUSH);
+	context.add(Instruction::Name::AV2_IN_STACK_FLUSH);
 }
 
 static void doStackPush(Context& context) {
-	context.fetchNext();
+	context.next();
 	auto const src = getDataLocation(context);
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_PUSH),
+	context.add(
+		Instruction::Name::AV2_IN_STACK_PUSH,
 		Instruction::StackPush{src.source}
 	);
 	src.addID(context);
 }
 
 static void doStackPop(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_POP);
+	context.add(Instruction::Name::AV2_IN_STACK_POP);
 }
 
 static void doStackBlit(Context& context) {
 	Instruction::Blitting blit {.type = Instruction::Blitting::Type::AV2_IBT_COPY};
-	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER).getUnsigned();
-	context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW).fetchNext();
-	auto const src = context.fetchToken(LTS_TT_IDENTIFIER, "blit source").getString();
+	auto const count = context.getNext(LTS_TT_INTEGER).getUnsigned();
+	context.expectNext(LTS_TT_LITTLE_ARROW);
+	auto const src = context.getNext(LTS_TT_IDENTIFIER, "blit source").getString();
 	if (src == "local" || src == "l")
 		blit.fromGlobal = true;
 	else if (src == "global" || src == "g")
 		blit.fromGlobal = false;
 	else context.error("Invalid blit source!");
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_BLIT),
+	context.add(
+		Instruction::Name::AV2_IN_STACK_BLIT,
 		blit
 	);
-	context.addInstruction(count);
+	context.add(count);
 }
 
 static void doReturn(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_RETURN);
+	context.add(Instruction::Name::AV2_IN_RETURN);
 }
 
 static void doStackClear(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_STACK_CLEAR);
-	context.addInstruction(context.fetchNext().fetchToken(LTS_TT_INTEGER).getUnsigned());
+	context.add(Instruction::Name::AV2_IN_STACK_CLEAR);
+	context.add(context.getNext(LTS_TT_INTEGER).getUnsigned());
 }
 
 static void doFieldGet(Context& context, bool const dyn = false) {
@@ -353,13 +351,11 @@ static void doFieldGet(Context& context, bool const dyn = false) {
 	if (!dyn) {
 		auto const field =
 		context
-			.fetchNext()
-			.expectToken(Type{'['})
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "field ID")
+			.expectNext(Type{'['})
+			.getNext(LTS_TT_IDENTIFIER, "field ID")
 			.getUnsigned()
 		;
-		context.fetchNext().expectToken(Type{']'});
+		context.expectNext(Type{']'});
 	}
 }
 
@@ -368,30 +364,28 @@ static void doArrayAt(Context& context, bool const dyn = false) {
 	if (!dyn) {
 		auto const index =
 			context
-				.fetchNext()
-				.expectToken(Type{'['})
-				.fetchNext()
-				.fetchToken(LTS_TT_IDENTIFIER, "array index")
+				.expectNext(Type{'['})
+				.getNext(LTS_TT_IDENTIFIER, "array index")
 				.getUnsigned()
 		;
-		context.fetchNext().expectToken(Type{']'});
+		context.expectNext(Type{']'});
 	}
 }
 
 static void doSizeOf(Context& context, bool const inBytes = false) {
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_SIZEOF),
-		Makai::Cast::as<uint32>(inBytes)
+	context.add(
+		Instruction::Name::AV2_IN_SIZEOF,
+		inBytes
 	);
 }
 
 static void doTypeGet(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_TYPEOF);
+	context.add(Instruction::Name::AV2_IN_TYPEOF);
 }
 
 static void doHalt(Context& context, bool const error = false) {
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_HALT),
+	context.add(
+		Instruction::Name::AV2_IN_HALT,
 		Instruction::Stop{
 			error
 		?	Instruction::Stop::Mode::AV2_ISM_ERROR
@@ -401,7 +395,7 @@ static void doHalt(Context& context, bool const error = false) {
 }
 
 static void doCompare(Context& context) {
-	auto const id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "comparison").getString();
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "comparison").getString();
 	Instruction::Comparison cmp;
 	if (id == "less" || id == "l")					cmp.comp = Comparator::AV2_OP_LESS_THAN;
 	else if (id == "greater" || id == "g")			cmp.comp = Comparator::AV2_OP_GREATER_THAN;
@@ -413,64 +407,65 @@ static void doCompare(Context& context) {
 }
 
 static void doScopeEnter(Context& context) {
-	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER, "scope-local stack size");
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_SCOPE_ENTER),
-		Makai::Cast::as<uint32>(count)
+	auto const count = context.getNext(LTS_TT_INTEGER, "scope-local stack size");
+	context.add(
+		Instruction::Name::AV2_IN_SCOPE_ENTER,
+		count
 	);
 }
 
 static void doScopeExit(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_SCOPE_EXIT);
+	context.add(Instruction::Name::AV2_IN_SCOPE_EXIT);
 }
 
 static void doScopeBind(Context& context) {
-	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER, "bind count").getUnsigned();
-	context.fetchNext().expectToken(Type{':'}).fetchNext().expectToken(Type{'['}).fetchNext();
-	auto const src = context.fetchToken(LTS_TT_INTEGER, "global stack top offset").getUnsigned();
-	context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW).fetchNext();
-	auto const dst = context.fetchToken(LTS_TT_INTEGER, "local stack bottom offset").getUnsigned();
-	context.fetchNext().expectToken(Type{']'}).fetchNext();
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_SCOPE_BIND),
+	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
+	context.expectNext(Type{':'}).expectNext(Type{'['});
+	auto const src = context.getNext(LTS_TT_INTEGER, "global stack top offset").getUnsigned();
+	context.expectNext(LTS_TT_LITTLE_ARROW);
+	auto const dst = context.getNext(LTS_TT_INTEGER, "local stack bottom offset").getUnsigned();
+	context.expectNext(Type{']'});
+	context.add(
+		Instruction::Name::AV2_IN_SCOPE_BIND,
 		Instruction::Binding {
 			src,
 			dst
 		}
 	);
-	context.addInstruction(count);
+	context.add(count);
 }
 
 static void doScopeBring(Context& context) {
-	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER, "bind count").getUnsigned();
-	context.fetchNext().expectToken(Type{'['}).fetchNext();
-	auto const src = context.fetchToken(LTS_TT_INTEGER, "source scope").getUnsigned();
-	auto const offset = context.fetchNext().expectToken(Type{'['}).fetchToken(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
-	context.fetchNext().expectToken(Type{']'}).fetchNext().expectToken(Type{LTS_TT_LITTLE_ARROW}).fetchNext();
-	auto const dst = context.fetchToken(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
-	context.fetchNext().expectToken(Type{']'});
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_SCOPE_BRING),
+	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
+	context.expectNext(Type{'['});
+	auto const src = context.getNext(LTS_TT_INTEGER, "source scope").getUnsigned();
+	auto const offset = context.expectNext(Type{'['}).getNext(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
+	context.expectNext(Type{']'}).expectNext(Type{LTS_TT_LITTLE_ARROW});
+	auto const dst = context.getNext(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
+	context.expectNext(Type{']'});
+	context.add(
+		Instruction::Name::AV2_IN_SCOPE_BRING,
 		Instruction::Binding {
 			offset,
 			dst
 		}
 	);
-	context.addInstruction(src);
-	context.addInstruction(count);
+	context.add(src);
+	context.add(count);
 }
 
 
 static void doCopy(Context& context) {
-	auto const src = getDataLocation(context.fetchNext());
-	context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
-	auto const dst = getDataLocation(context.fetchNext());
+	context.next();
+	auto const src = getDataLocation(context);
+	context.expectNext(LTS_TT_LITTLE_ARROW).next();
+	auto const dst = getDataLocation(context);
 	Instruction::Transfer tf {
 		src.source,
 		dst.source
 	};
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_COPY),
+	context.add(
+		Instruction::Name::AV2_IN_COPY,
 		tf
 	);
 	src.addID(context);
@@ -478,20 +473,20 @@ static void doCopy(Context& context) {
 }
 
 static void doContext(Context& context, bool immediate = false) {
-	auto const mode = context.fetchToken(LTS_TT_IDENTIFIER, "context").getString();
+	auto const mode = context.get(LTS_TT_IDENTIFIER, "context").getString();
 	Instruction::Context ctx{.immediate = immediate};
 	if (mode == "loose")		ctx.mode = ContextMode::AV2_CM_LOOSE;
 	else if (mode == "strict")	ctx.mode = ContextMode::AV2_CM_STRICT;
 	else context.error("Invalid context!");
-	context.addInstructionType(
-		context.addNamedInstruction(Instruction::Name::AV2_IN_MODE),
+	context.add(
+		Instruction::Name::AV2_IN_MODE,
 		ctx
 	);
 }
 
 static void doBinaryOperation(Context& context) {
 	Instruction::BinaryOperation bop;
-	auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "binary operation name").getString();
+	auto const op = context.getNext(LTS_TT_IDENTIFIER, "binary operation name").getString();
 	if (op == "add")			bop.op = BinaryOperator::AV2_BOP_ADD;
 	else if (op == "sub")		bop.op = BinaryOperator::AV2_BOP_SUB;
 	else if (op == "mul")		bop.op = BinaryOperator::AV2_BOP_MUL;
@@ -507,7 +502,7 @@ static void doBinaryOperation(Context& context) {
 
 static void doUnaryOperation(Context& context) {
 	Instruction::UnaryOperation bop;
-	auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "unary operation name").getString();
+	auto const op = context.getNext(LTS_TT_IDENTIFIER, "unary operation name").getString();
 	if (op == "neg")		bop.op = UnaryOperator::AV2_UOP_NEGATE;
 	else if (op == "inc")	bop.op = UnaryOperator::AV2_UOP_INCREMENT;
 	else if (op == "dec")	bop.op = UnaryOperator::AV2_UOP_DECREMENT;
@@ -528,19 +523,19 @@ static void doUnaryOperation(Context& context) {
 }
 
 static void doYield(Context& context) {
-	auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_YIELD);
+	context.add(Instruction::Name::AV2_IN_YIELD);
 }
 
 static void doCast(Context& context, bool const dyn = false) {
 	if (!dyn) {
-		auto const type = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "type name").getString();
-		if (context.minima.types.contains(type)) {
-			auto const _ = context.addNamedInstruction(Instruction::Name::AV2_IN_CAST);
-			context.addInstruction(context.minima.types[type]->id());
+		auto const type = context.getNext(LTS_TT_IDENTIFIER, "type name").getString();
+		if (context.types.contains(type)) {
+			context.add(Instruction::Name::AV2_IN_CAST);
+			context.add(context.types[type]->id());
 		} else context.error("Type with this name does not exist!");
 	} else {
-		context.addInstructionType(
-			context.addNamedInstruction(Instruction::Name::AV2_IN_CAST),
+		context.add(
+			Instruction::Name::AV2_IN_CAST,
 			Instruction::Casting{.dynamic = true}
 		);
 	}
@@ -548,25 +543,25 @@ static void doCast(Context& context, bool const dyn = false) {
 
 static void doRandomNumber(Context& context) {
 	Instruction::Randomness rng;
-	auto id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "RNG operation").getString();
+	auto id = context.getNext(LTS_TT_IDENTIFIER, "RNG operation").getString();
 	if (id == "setseed")		rng.setSeed					= true;
 	else if (id == "getseed")	rng.getSeed					= true;
 	else if (id == "reseed")	rng.setSeed = rng.getSeed	= true;
 	else if (id == "safe" || id == "fast") {
 		rng.secure = id == "safe";
-		if (context.fetchNext().hasToken(LTS_TT_IDENTIFIER) && context.getValue<Makai::String>() == "bounded")
+		if (context.getNext(LTS_TT_IDENTIFIER) && context.value().getString() == "bounded")
 			rng.bounded = true;
-		else context.append.pad();
+		else context.pad(1);
 	} else context.error("Invalid RNG operation!");
 }
 
 static void doLabel(Context& context) {
-	auto const name = context.fetchToken(LTS_TT_IDENTIFIER, "label name").getString();
+	auto const name = context.get(LTS_TT_IDENTIFIER, "label name").getString();
 	context.program.labels.jumps[name] = context.program.code.size();
 }
 
 static void doDynamic(Context& context) {
-	auto const id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "dynamic operation").getString();
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "dynamic operation").getString();
 	if (id == "jump" || id == "go")
 		doJump(context, true);
 	else if (id == "call" || id == "do")
@@ -580,7 +575,7 @@ static void doDynamic(Context& context) {
 	else context.error("Invalid dynamic operation!");
 }
 
-static void declareTypeFields(Context& context, Context::Minima::Type& type) {
+static void declareTypeFields(Context& context, Context::Decl& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
 	else if (
@@ -590,31 +585,29 @@ static void declareTypeFields(Context& context, Context::Minima::Type& type) {
 		|	Definition::Flags::AV2_DF_BASIC
 		)
 	) context.error("Cannot declare fields on basic, array and dynamic types!");
-	context.fetchNext().expectToken(Type{'['}).fetchNext();
+	context.expectNext(Type{'['});
 	while (true) {
-		if (context.fetchNext().hasToken(Type{']'})) break;
-		auto const field = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "field type");
-		if (!context.minima.types.contains(field))
+		if (context.next().has(Type{']'})) break;
+		auto const field = context.get(LTS_TT_IDENTIFIER, "field type");
+		if (!context.types.contains(field))
 			context.error("Field type does not exist!");
-		type.fields.pushBack(context.minima.types[field]->id());
+		type.fields.pushBack(context.types[field]->id());
 	}
 }
 
 static void declareType(Context& context) {
-	auto const name = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "type name").getString();
-		auto const type = new Context::Minima::Type();
-		context.fetchNext().expectToken(Type{'['});
+	auto const name = context.getNext(LTS_TT_IDENTIFIER, "type name").getString();
+		auto const type = new Context::Decl();
+		context.expectNext(Type{'['});
 		while (true) {
-			if (context.fetchNext().hasToken(Type{']'})) break;
-			auto const flag = context.fetchToken(LTS_TT_IDENTIFIER, "type flag").getString();
+			if (context.next().has(Type{']'})) break;
+			auto const flag = context.get(LTS_TT_IDENTIFIER, "type flag").getString();
 			if (flag == "basic") {
 				type->flags |= Definition::Flags::AV2_DF_BASIC;
 				auto const basic =
 					context
-						.fetchNext()
-						.expectToken(Type{'<'})
-						.fetchNext()
-						.fetchToken(LTS_TT_IDENTIFIER, "basic type")
+						.expectNext(Type{'<'})
+						.getNext(LTS_TT_IDENTIFIER, "basic type")
 						.getString()
 				;
 				if (basic == "void")		type->basic = BasicType::AV2_BT_VOID;
@@ -627,7 +620,7 @@ static void declareType(Context& context) {
 				else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
 				else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
 				else context.error("Invalid basic type!");
-				context.fetchNext().expectToken(Type{'>'});
+				context.expectNext(Type{'>'});
 			}
 			else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
 			else if (flag == "derived") {
@@ -637,32 +630,28 @@ static void declareType(Context& context) {
 					context.error("Redeclaration of base type!");
 				auto const base =
 					context
-						.fetchNext()
-						.expectToken(Type{'<'})
-						.fetchNext()
-						.fetchToken(LTS_TT_IDENTIFIER, "base type")
+						.expectNext(Type{'<'})
+						.getNext(LTS_TT_IDENTIFIER, "base type")
 						.getString()
 				;
-				if (context.minima.types.contains(base))
-					type->base = context.minima.types[base]->id();
+				if (context.types.contains(base))
+					type->base = context.types[base]->id();
 				else context.error("Base type does not exist!");
-				context.fetchNext().expectToken(Type{'>'});
+				context.expectNext(Type{'>'});
 			} else if (flag == "array") {
 				type->flags |= Definition::Flags::AV2_DF_ARRAY;
 				if (type->base)
 					context.error("Redeclaration of element type!");
 				auto const base =
 					context
-						.fetchNext()
-						.expectToken(Type{'<'})
-						.fetchNext()
-						.fetchToken(LTS_TT_IDENTIFIER, "element type")
+						.expectNext(Type{'<'})
+						.getNext(LTS_TT_IDENTIFIER, "element type")
 						.getString()
 				;
-				if (context.minima.types.contains(base))
-					type->base = context.minima.types[base]->id();
+				if (context.types.contains(base))
+					type->base = context.types[base]->id();
 				else context.error("Element type does not exist!");
-				context.fetchNext().expectToken(Type{'>'});
+				context.expectNext(Type{'>'});
 			} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
 			else if (flag == "empty")	type->flags |= Definition::Flags::AV2_DF_EMPTY;
 			else if (flag == "dyn")		type->flags |= Definition::Flags::AV2_DF_DYNAMIC;
@@ -670,43 +659,39 @@ static void declareType(Context& context) {
 			else if (flag == "align") {
 				type->alignment =
 					context
-						.fetchNext()
-						.expectToken(Type{'('})
-						.fetchNext()
-						.fetchToken(LTS_TT_INTEGER, "byte alignment")
+						.expectNext(Type{'('})
+						.getNext(LTS_TT_INTEGER, "byte alignment")
 						.getUnsigned()
 				;
-				context.fetchNext().expectToken(Type{')'});
+				context.expectNext(Type{')'});
 			} else if (flag == "fields") {
 				declareTypeFields(context, *type);
 			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
 			else context.error("Invalid flag!");
 		}
-		if (!context.minima.types.contains(name))
-			context.minima.types[name] = type;
+		if (!context.types.contains(name))
+			context.types[name] = type;
 		else context.error("Redeclaration of previously-declared type!");
 }
 
 static void declareAlias(Context& context) {
-	auto const name = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "alias name");
-	if (context.minima.types.contains(name))
+	auto const name = context.getNext(LTS_TT_IDENTIFIER, "alias name").getString();
+	if (context.types.contains(name))
 		context.error("Type name is already in use!");
 	auto const type =
 		context
-			.fetchNext()
-			.expectToken(Type{':'})
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "aliased type name")
+			.expectNext(Type{':'})
+			.getNext(LTS_TT_IDENTIFIER, "aliased type name")
 			.getString()
 	;
-	if (!context.minima.types.contains(type))
+	if (!context.types.contains(type))
 		context.error("Type to be aliased does not exist!");
-	context.minima.types[name] = context.minima.types[type];
+	context.types[name] = context.types[type];
 }
 
-static void getMethodVisibility(Context& context, Context::Minima::Method& method) {
-	while (context.fetchNext().hasToken(LTS_TT_IDENTIFIER)) {
-		auto const vis = context.fetchToken(LTS_TT_IDENTIFIER, "visibility").getString();
+static void getMethodVisibility(Context& context, Context::Method& method) {
+	while (context.next().has(LTS_TT_IDENTIFIER)) {
+		auto const vis = context.get(LTS_TT_IDENTIFIER, "visibility").getString();
 		if (vis == "out")
 			method.out = true;
 		else if (vis == "local")
@@ -720,64 +705,64 @@ static void getMethodVisibility(Context& context, Context::Minima::Method& metho
 }
 
 static void declareMethod(Context& context, bool forward = false) {
-	auto const method = new Context::Minima::Method();
+	auto const method = new Context::Method();
 	getMethodVisibility(context, *method);
-	auto id = context.fetchToken(LTS_TT_IDENTIFIER, "return type").getString();
-	if (context.minima.types.contains(id))
-		method->retType = context.minima.types[id]->id();
+	auto id = context.get(LTS_TT_IDENTIFIER, "return type").getString();
+	if (context.types.contains(id))
+		method->retType = context.types[id]->id();
 	else context.error("Return type does not exist!");
-	context.fetchNext().expectToken(Type{'('});
+	context.expectNext(Type{'('});
 	while (true) {
-		if (context.fetchNext().hasToken(Type{')'})) break;
-		id = context.fetchToken(LTS_TT_IDENTIFIER, "agument type").getString();
-		if (context.minima.types.contains(id))
-			method->argTypes.pushBack(context.minima.types[id]->id());
+		if (context.next().has(Type{')'})) break;
+		id = context.get(LTS_TT_IDENTIFIER, "agument type").getString();
+		if (context.types.contains(id))
+			method->argTypes.pushBack(context.types[id]->id());
 		else context.error("Argument type does not exist!");
 	}
-	auto const name = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "function name").getString();
+	auto const name = context.getNext(LTS_TT_IDENTIFIER, "function name").getString();
 	if (!forward) doLabel(context);
 	method->entry = name;
-	if (!context.minima.types.contains(name))
-		context.minima.methods[name] = method;
+	if (!context.types.contains(name))
+		context.methods[name] = method;
 	else context.error("Redeclaration of previously-declared method!");
 }
 
 static void declareModule(Context& context) {
-	if (context.minima.module)
+	if (context.module)
 		context.error("Redeclaration of module name!");
 	auto const name =
 		context
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "module name")
+			.getNext(LTS_TT_IDENTIFIER, "module name")
 			.getString()
 	;
-	context.minima.module = name;
+	context.module = name;
 }
 
 static void declareImport(Context& context) {
-	if (!context.minima.canImport)
+	if (context.imports == Context::ImportAction::AV2_TA_MCIA_ERROR)
 		context.error("Import statements are disabled!");
+	else if (context.imports == Context::ImportAction::AV2_TA_MCIA_SKIP)
+		return;
 	auto const path = (
-		context.sourceDir
-	+	context.fetchNext().fetchToken(LTS_TT_DOUBLE_QUOTE_STRING, "file name").getString()
+		context.file.source
+	+	context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "file name").getString()
 	).replace('\\', '/');
 	auto const mod = Makai::File::getText(path);
 	Context ctx;
-	ctx.minima	= context.minima;
+	ctx	= context;
 	ctx.program	= context.program;
-	ctx.minima.methods.filter(
+	ctx.methods.filter(
 		[] (auto const& e) {
 			return !e.value->local;
 		}
 	);
-	ctx.minima.module = null;
-	ctx.minima.parentModule = context.minima.module ? context.minima.module : context.minima.parentModule;
-	ctx.stream.open(mod);
-	ctx.sourceDir = path.splitAtLast('/').front();
+	ctx.module = null;
+	ctx.parentModule = context.module ? context.module : context.parentModule;
+	ctx.file.source = path.splitAtLast('/').front();
 	Minima subm(ctx);
 	subm.assemble();
-	context.minima.methods.append(ctx.minima.methods);
-	context.minima.types.append(ctx.minima.types);
+	context.methods.append(ctx.methods);
+	context.types.append(ctx.types);
 	context.program	= ctx.program;
 }
 
@@ -848,14 +833,14 @@ void Minima::assemble() {
 	for (auto& [id, loc]: context.program.labels.jumps)
 		if (context.program.ani.in.contains(id))
 			context.program.ani.in[id] = context.program.labels.jumps[id];
-	context.minima.methods.filter(
+	context.methods.filter(
 		[] (auto const& e) {
 			return !e.value->local;
 		}
 	);
-	if (!(context.minima.module || context.minima.parentModule)) {
-		context.program.types.resize(context.minima.types.size(), {});
-		for (auto& [name, type]: context.minima.types) {
+	if (!(context.module || context.parentModule)) {
+		context.program.types.resize(context.types.size(), {});
+		for (auto& [name, type]: context.types) {
 			auto& decl = context.program.types[type->id()];
 			if (decl.aliases.size()) {
 				decl.aliases.pushBack(name);
@@ -870,8 +855,8 @@ void Minima::assemble() {
 			if (type->base)
 				decl.base = *type->base;
 		}
-		context.program.methods.resize(context.minima.methods.size(), {});
-		for (auto& [name, method]: context.minima.methods) {
+		context.program.methods.resize(context.methods.size(), {});
+		for (auto& [name, method]: context.methods) {
 			auto& decl = context.program.methods.pushBack({}).back();
 			decl = {
 				.id			= method->id(),
@@ -883,7 +868,7 @@ void Minima::assemble() {
 			};
 		}
 		decltype (context.program.methods) temp;
-		temp.resize(context.minima.methods.size(), {});
+		temp.resize(context.methods.size(), {});
 		for (auto& method: context.program.methods)
 			temp[method.id] = method;
 		context.program.methods = temp;
