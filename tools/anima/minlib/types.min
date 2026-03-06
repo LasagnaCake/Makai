@@ -18,6 +18,7 @@
 @type StringArray [array<String> nil]
 @type VectorArray [array<Vector> nil]
 @type ObjectArray [array<Object> nil]
+
 // Aliases
 @alias void:	Void
 @alias any:		Any
@@ -25,8 +26,10 @@
 @alias int:		Int
 @alias uint:	UInt
 @alias real:	Real
-@alias string:	String
-@alias bytes:	Bytes
-@alias vector:	Vector
-@alias object:	Object
-@alias array:	AnyArray
+@alias str:		String
+@alias bin:		Bytes
+@alias vec:		Vector
+@alias obj:		Object
+@alias arr:		AnyArray
+
+@import "" 'Aliasukami\'sdadasdsa'
