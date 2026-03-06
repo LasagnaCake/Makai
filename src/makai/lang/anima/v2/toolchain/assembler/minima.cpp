@@ -573,8 +573,9 @@ static void doCast(Context& context, bool const dyn = false) {
 static void doRandomNumber(Context& context) {
 	Instruction::Randomness rng;
 	auto id = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "RNG operation").getString();
-	if (id == "setseed")		rng.setSeed	= true;
-	else if (id == "getseed")	rng.getSeed	= true;
+	if (id == "setseed")		rng.setSeed					= true;
+	else if (id == "getseed")	rng.getSeed					= true;
+	else if (id == "reseed")	rng.setSeed = rng.getSeed	= true;
 	else if (id == "safe" || id == "fast") {
 		rng.secure = id == "safe";
 		if (context.fetchNext().hasToken(LTS_TT_IDENTIFIER) && context.getValue<Makai::String>() == "bounded")
@@ -878,13 +879,13 @@ void Minima::assemble() {
 		context.program.types.resize(context.minima.types.size(), {});
 		for (auto& [name, type]: context.minima.types) {
 			auto& decl = context.program.types[type->id()];
-			if (decl.names.size()) {
-				decl.names.pushBack(name);
+			if (decl.aliases.size()) {
+				decl.aliases.pushBack(name);
 				continue;
 			}
 			decl = {
-				.names	= Makai::StringList::from(name),
-				.flags	= type->flags
+				.aliases	= Makai::StringList::from(name),
+				.flags		= type->flags
 			};
 			if (type->basic)
 				decl.basic = *type->basic;
