@@ -18,19 +18,22 @@ jobs:
   prepare:
     name: Install Latest GCC Via MSYS2
     runs-on: windows-latest
-    defaults: &env-msys2
+    defaults: &msys2
       run:
         shell: msys2 {0}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install MSYS2
+      # Hellspawn BEGIN
+      - &prepare
+        name: Install MSYS2
         uses: msys2/setup-msys2@v2
-        with: &prepare-msys2
+        with:
           msystem: MINGW64
           update: true
           cache: true
           install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-7zip
+      # Hellspawn END
       - name: Verify GCC Installation
         run: |
           gcc --version
@@ -40,13 +43,11 @@ jobs:
   ship-it-full:
     name: Ship the library (FULL ver.)
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
+    defaults: *msys2
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - *prepare
       - name: make ship-it
         run: |
           mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
@@ -58,11 +59,11 @@ jobs:
   build-ctl-tests-debug:
     name: Build CTL Tests (DEBUG)
     runs-on: windows-latest
-    defaults: *env-msys2
+    defaults: *msys2
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - uses: *prepare
       - name: make tests
         run: |
           cd tests/ctl
@@ -91,11 +92,11 @@ jobs:
   build-ctl-tests-release:
     name: Build CTL Tests (RELEASE)
     runs-on: windows-latest
-    defaults: *env-msys2
+    defaults: *msys2
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - *prepare
       - name: make tests
         run: |
           cd tests/ctl
@@ -124,11 +125,11 @@ jobs:
   build-core-lib-debug:
     name: Build Makai (DEBUG)
     runs-on: windows-latest
-    defaults: *env-msys2
+    defaults: *msys2
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - *prepare
       - name: make debug gmake=mingw32-make
         run: |
           mingw32-make link-extern gmake=mingw32-make os=win
@@ -141,11 +142,11 @@ jobs:
   build-core-lib-release:
     name: Build Makai (RELEASE)
     runs-on: windows-latest
-    defaults: *env-msys2
+    defaults: *msys2
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - *prepare
       - name: make release
         run: |
           mingw32-make link-extern gmake=mingw32-make os=win
@@ -158,11 +159,11 @@ jobs:
   build-tooling:
     name: Build Tooling
     runs-on: windows-latest
-    defaults: *env-msys2
+    defaults: *msys2
     needs: [build-core-lib-debug, build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - *prepare
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -181,11 +182,12 @@ jobs:
 
   build-lib-tests-debug:
     name: Build API Tests (DEBUG)
-    runs-on: *env-msys2
+    runs-on: windows-latest
+    defaults: *msys2
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - *prepare
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -202,11 +204,12 @@ jobs:
 
   build-lib-tests-release:
     name: Build API Tests (RELEASE)
-    runs-on: *env-msys2
+    runs-on: windows-latest
+    defaults: *msys2
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      - *prepare-msys2
+      - *prepare
       - uses: actions/download-artifact@master
         with:
           name: lib-release
