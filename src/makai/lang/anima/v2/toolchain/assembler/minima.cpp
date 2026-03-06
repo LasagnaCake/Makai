@@ -639,7 +639,7 @@ static void declareTypeFields(Context& context, Context::Minima::Type& type) {
 		auto const field = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "field type");
 		if (!context.minima.types.contains(field))
 			context.error("Field type does not exist!");
-		type.fields.pushBack(context.minima.types[field].id());
+		type.fields.pushBack(context.minima.types[field]->id());
 	}
 }
 
@@ -722,7 +722,8 @@ static void declareType(Context& context) {
 				context.fetchNext().expectToken(Type{')'});
 			} else if (flag == "fields") {
 				declareTypeFields(context, *type);
-			} else context.error("Invalid flag!");
+			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
+			else context.error("Invalid flag!");
 		}
 		if (!context.minima.types.contains(name))
 			context.minima.types[name] = type;
@@ -913,23 +914,21 @@ void Minima::assemble() {
 				decl.base = *type->base;
 		}
 		context.program.methods.resize(context.minima.methods.size(), {});
-		for (auto& [name, aliases]: context.minima.methods) {
-			for (auto& method: aliases) {
-				auto& decl = context.program.methods.pushBack({}).back();
-				decl = {
-					.id			= method->id(),
-					.name		= name,
-					.retType	= method->retType,
-					.argTypes	= method->argTypes,
-					.out		= method->out,
-					.entry		= context.program.labels.jumps[method->entry]
-				};
-			}
+		for (auto& [name, method]: context.minima.methods) {
+			auto& decl = context.program.methods.pushBack({}).back();
+			decl = {
+				.id			= method->id(),
+				.name		= name,
+				.retType	= method->retType,
+				.argTypes	= method->argTypes,
+				.out		= method->out,
+				.entry		= context.program.labels.jumps[method->entry]
+			};
 		}
 		decltype (context.program.methods) temp;
 		temp.resize(context.minima.methods.size(), {});
 		for (auto& method: context.program.methods)
-			temp[method->id()] = method;
+			temp[method.id] = method;
 		context.program.methods = temp;
 	}
 }

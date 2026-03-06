@@ -8,8 +8,8 @@ using namespace Makai::Anima::V2::Toolchain::Assembler;
 using namespace Makai::Error;
 
 namespace Runtime = Makai::Anima::V2::Runtime;
-using Instruction = Makai::Anima::V2::Instruction;
-using DataLocation = Makai::Anima::V2::DataLocation;
+using Instruction = Makai::Anima::V2::Core::Instruction;
+using DataLocation = Makai::Anima::V2::Core::DataLocation;
 using Type = AAssembler::TokenStream::Token::Type;
 using enum Type;
 using Value = Makai::Data::Value;
@@ -2228,61 +2228,6 @@ static bool isVariableDeclarator(Makai::String const& what) {
 }
 
 SEMIBREVE_ASSEMBLE_FN(Expression) {
-	auto const current = context.currentToken();
-	switch (current.type) {
-		case LTS_TT_IDENTIFIER: {
-			auto const id = current.value.get<Makai::String>();
-			if (id == "function" || id == "func" || id == "fn")	doFunction(context);
-			else if (id == "signal")							doSignal(context);
-			else if (id == "external" || id == "out")			doExternal(context);
-			else if (id == "internal" || id == "in")			return doInternal(context);
-			else if (id == "namespace" || id == "module")		doNamespace(context);
-			else if (id == "import")							doModuleImport(context);
-			else if (id == "using")								doUsingDeclaration(context);
-			else if (isVariableDeclarator(id))					return doVarDecl(context);
-			else if (id == "minima" || id == "asm")				doAssembly(context);
-			else if (id == "fatal")								return doLooseContext(context);
-			else if (id == "return")							doReturn(context);
-			else if (id == "if")								doConditional(context);
-			else if (id == "do")								doDoLoop(context);
-			else if (id == "while")								doWhileLoop(context);
-			else if (id == "for")								doForLoop(context);
-			else if (id == "repeat")							doRepeatLoop(context);
-			else if (id == "main")								doMain(context);
-			else if (id == "terminate")							doTerminate(context);
-			else if (id == "yield")								doYield(context);
-			else if (id == "error")								doError(context);
-			else if (id == "type")								doTypeDefinition(context);
-			else if (id == "extend")							doTypeExtension(context);
-			else if (id == "macro")								doMacro(context);
-			else if (context.hasSymbol(id) || context.hasNamespace(id)) {
-				return doSymbolResolution(context);
-			} else return doVarDecl(context, true);
-		} break;
-		case Type{'('}: {
-			return doBinaryOperation(context);
-		} break;
-		case Type{'-'}:
-		case Type{'+'}:
-		case LTS_TT_DECREMENT:
-		case LTS_TT_INCREMENT: {
-			return doUnaryOperation(context);
-		} break;
-		case Type{'{'}: {
-			context.startScope();
-			auto const result = doScope(context);
-			context.endScope();
-			return result;
-		}
-		case Type{'}'}:
-		case Type{';'}: break;
-		default: {
-			return doValueResolution(context);
-		} break;
-	}
-	if (!(context.hasToken(Type{';'}) || context.hasToken(Type{'}'})))
-		context.error("Expected ';' or '}' here!");
-	return {context.getBasicType("void"), context.resolveTo("move .")};
 }
 
 void Semibreve::assemble() {

@@ -1355,11 +1355,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				List<uint64>				operators;
 			};
 
-			bool								canImport	= false;
-			Nullable<String>					parentModule;
-			Nullable<String>					module;
-			Dictionary<Instance<Type>>			types;
-			Dictionary<List<Instance<Method>>>	methods;
+			bool							canImport	= false;
+			Nullable<String>				parentModule;
+			Nullable<String>				module;
+			Dictionary<Instance<Type>>		types;
+			Dictionary<Instance<Method>>	methods;
 		} minima;
 
 	private:

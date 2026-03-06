@@ -1,13 +1,16 @@
 #  `@type`
 
 ```
-@type <name> [<attributes>...]
+@type <name> [<attributes> ...]
 ```
 
 Specifies an ART type with the given series of attributes.
 
 > [!note]
 > `array` and `derived` cannot be specified in the same type.
+
+> [!note]
+> If an attribute requires a specific type, that type must be previously-declared.
 
 ## Attributes
 
@@ -23,6 +26,11 @@ Specifies that the type can be a null value.
 
 Specifies that the type is an analog for a ART basic type.
 
+> [!note]
+> Basic types also imply:
+> - `value`
+> - `copy`
+
 ### `derived< <type-name> >`
 
 Specifies that the type inherits attributes from another type.
@@ -33,7 +41,7 @@ Specifies that the type is an array of a given type.
 
 ### `dyn`
 
-Specifies that the type's size is not known at creation time.
+Specifies that the type's size and contents aren't known at creation time.
 
 ### `struct`
 
@@ -41,13 +49,13 @@ Specifies that the type contains sub-fields.
 
 ### `value`
 
-Specifies that the type's contents should be stored sequentially in-memory, and not as an array of references.
+Specifies that the type's contents are stored sequentially in-memory, and not as an array of references.
 
-If specified, any field/index access will always result in a copy of the value.
+If specified, any field/index access will always result in a copy of the value in that location. Thusly, `value array`s, while being more space-efficient, are also slower.
 
 ### `copy`
 
-Specifies that the type's contents can be trivially-copied.
+Specifies that the type's contents can be trivially-cloned.
 
 ### `align( <size> )`
 

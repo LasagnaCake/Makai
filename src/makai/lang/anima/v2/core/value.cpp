@@ -13,6 +13,7 @@ Object::Storage Object::getAtIndex(uint64 const index) const {
 		return null;
 	if (type->flags & Definition::Flags::AV2_DF_VALUE) {
 		if (!(type->flags & Definition::Flags::AV2_DF_CLONABLE)) return null;
+		auto const cloner = type->base->clone.value();
 		auto& arr = value.content;
 		if (!(index < arr.size())) return null;
 		auto const elem = new Object();
@@ -20,17 +21,18 @@ Object::Storage Object::getAtIndex(uint64 const index) const {
 		auto const sz		= type->byteSize;
 		elem->value.content.invoke(sz);
 		type->base->construct(start);
-		type->base->clone.value().invoke(elem->value.content.data(), start);
+		cloner.invoke(elem->value.content.data(), start);
 		elem->value.destruct = [f = type->base->destruct] (Value& self) {
 			f(self.content.data());
 		};
 		if (type->base->clone)
-			elem->value.clone = [f = type->base->clone, sz] (Value& self) -> Value {
+			elem->value.clone = [f = cloner, sz] (Value& self) -> Value {
 				Value v;
 				v.content.invoke(sz);
-				f(v.content.data(), e);
+				f.invoke(v.content.data(), self.content.data());
 				v.destruct	= self.destruct;
 				v.clone		= self.clone;
+				return v;
 			};
 	}
 	return index < fields.size() ? fields[index] : null;
