@@ -69,36 +69,42 @@ namespace Makai::Anima::V2::Core {
 		template <class T> constexpr bool fits() const requires (sized<T>()) {return sizeof(T) == content.size();}
 
 	private:
+		friend class Object;
+
 		template <Type::Different<Value> T>
 		void prepare() {
 			destruct();
 			content.free();
 			content.create(sizeof(T));
-			destruct = [&] () {
-				MX::destruct<T>(data<T>());
+			destruct = [] (Value& self) {
+				MX::destruct<T>(self.template data<T>());
 			};
 			if constexpr (Type::CopyConstructible<T>) {
-				clone = [&] {
-					return Value(as<T>());
+				clone = [] (Value& self) {
+					return Value(self.template as<T>());
 				};
 			} else clone = null;
 		}
 
-		Functor<void()>				destruct;
-		Nullable<Function<Value()>>	clone;
+		Functor<void(Value&)>				destruct;
+		Nullable<Function<Value(Value&)>>	clone;
 	};
 
 	struct Object {
-		using Reference = Instance<Object>;
-		List<Reference>			fields;
+		using Storage = Instance<Object>;
+		List<Storage>			fields;
 		Instance<Definition>	type;
 		Value					value;
 		Map<uint64, uint64>		vtable;
-	};
 
-	namespace Impl {
-		template <class T> struct AsConstructor;
-	}
+		uint64 resolveMethod(uint64 const id);
+
+		Storage getAtIndex(uint64 const index) const;
+		bool setAtIndex(uint64 const index, Storage const& value);
+		Storage field(uint64 const id) const;
+
+		Storage clone();
+	};
 }
 
 #endif

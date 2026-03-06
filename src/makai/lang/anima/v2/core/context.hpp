@@ -9,6 +9,7 @@
 namespace Makai::Anima::V2::Core {
 	struct Context {
 		enum class Error {
+			AV2_CCE_MISSING_METHOD,
 			AV2_CCE_MISSING_ART_TYPE,
 			AV2_CCE_MISSING_ARGS,
 		};
@@ -23,8 +24,8 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct ExternalMethod: Method {
-			ExternalInvocation	invoker;
-			usize				argc;
+			Instance<ExternalInvocation>	invoker;
+			usize							argc;
 		};
 
 		template <class T> struct ExternalMethodResolver;
@@ -43,21 +44,24 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static ExternalInvocation invoker(Function<TFunc> const& f) {
-				return [f] (Definition::Database& types, ExternalMethod& method, List<Object> const& args) {
-					if (!types.byAlias(artnameof<TReturn>()))
-						return Error::AV2_CCE_MISSING_ART_TYPE;
-					if (args.size() < method.argc)
-						return Error::AV2_CCE_MISSING_ARGS;
-					if constexpr (Type::Void<TReturn>)
-						invoke(f, toArguments<TArgs...>(args));
-					else return converter<TReturn>()(types, invokeFromTuple(f, toArguments<TArgs...>(args)));
-				};
+			constexpr static Instance<ExternalInvocation> invoker(Function<TFunc> const& f) {
+				return new ExternalInvocation(
+					[f] (Definition::Database& types, ExternalMethod& method, List<Object> const& args) {
+						if (types.byAlias(artnameof<TReturn>()).empty())
+							return Error::AV2_CCE_MISSING_ART_TYPE;
+						if (args.size() < method.argc)
+							return Error::AV2_CCE_MISSING_ARGS;
+						if constexpr (Type::Void<TReturn>)
+							invoke(f, toArguments<TArgs...>(args));
+						else return converter<TReturn>()(types, invokeFromTuple(f, toArguments<TArgs...>(args)));
+					}
+				);
 			}
 		};
 
 		template <class TFunc>
-		void addExternalMethod(String const& name, TFunc const& f) {
+		bool addExternalMethod(String const& name, TFunc const& f) {
+			if (hasExternalMethod(name)) return false;
 			using Resolver = ExternalMethodResolver<TFunc>;
 			static auto const baseInfo = typename Resolver::info();
 			ExternalMethod method;
@@ -65,7 +69,32 @@ namespace Makai::Anima::V2::Core {
 			method.argc		= Resolver::ARG_COUNT;
 			method.name		= name;
 			method.invoker	= typename Resolver::invoker(f);
+			externalMethods[name] = method;
+			return true;
 		}
+
+		void removeExternalMethod(String const& name) {
+			externalMethods.erase(name);
+		}
+
+		bool hasExternalMethod(String const& name) {
+			return externalMethods.contains(name);
+		}
+
+		Result<Object, Error> invokeExternalMethod(
+			String const& name,
+			List<Object> const& args
+		) const {
+			if (!(
+				hasExternalMethod(name)
+			&&	externalMethods[name].invoker
+			)) return Error::AV2_CCE_MISSING_METHOD;
+			return externalMethods[name].invoker->invoke(types, externalMethods[name], args)
+		}
+
+		Definition::Database		types;
+		Method::Database			methods;
+		Dictionary<ExternalMethod>	externalMethods;
 	};
 }
 

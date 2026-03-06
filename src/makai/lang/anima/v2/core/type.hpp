@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_CORE_TYPE_H
 #define MAKAILIB_ANIMA_V2_CORE_TYPE_H
 
-#include "../../../../compat/ctl.hpp"
+#include "forward.hpp"
 
 namespace Makai::Anima::V2::Core {
 	/// @brief Binary operator.
@@ -53,8 +53,6 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_VECTOR,
 	};
 
-	struct Method;
-
 	struct Definition {
 		struct Flags {
 			constexpr static uint64 const AV2_DF_BASIC		= 1 << 0;
@@ -76,22 +74,27 @@ namespace Makai::Anima::V2::Core {
 			using Type = Instance<Definition>;
 			using StorageType = List<Type>;
 
-			Type byAlias(String const& alias) {
+			List<Type> byAlias(String const& alias) {
+				StorageType defs;
 				for (auto& type: types) {
 					if (type->aliases.find(alias) != -1)
-						return type;
+						defs.pushBack(type);
 				}
-				return nullptr;
-			};
+				return defs;
+			}
 
 			Type byID(uint64 const id) {
 				if (id < types.size())
 					return types[id];
 				return nullptr;
-			};
+			}
 
 			StorageType types;
 		};
+
+		Functor<void(ref<byte>)>								construct;
+		Functor<void(ref<byte>)>								destruct;
+		Nullable<Function<void(ref<byte>, ref<byte const>)>>	clone;
 	};
 }
 

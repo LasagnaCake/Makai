@@ -468,8 +468,7 @@ static void doScopeExit(Context& context) {
 }
 
 static void doScopeBind(Context& context) {
-	context.fetchNext().expectToken(Type{'['}).fetchNext();
-	auto const count = context.fetchToken(LTS_TT_INTEGER, "bind count").getUnsigned();
+	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER, "bind count").getUnsigned();
 	context.fetchNext().expectToken(Type{':'}).fetchNext().expectToken(Type{'['}).fetchNext();
 	auto const src = context.fetchToken(LTS_TT_INTEGER, "global stack top offset").getUnsigned();
 	context.fetchNext().expectToken(Type{LTS_TT_LITTLE_ARROW}).fetchNext();
@@ -484,6 +483,26 @@ static void doScopeBind(Context& context) {
 	);
 	context.addInstruction(count);
 }
+
+static void doScopeBring(Context& context) {
+	auto const count = context.fetchNext().fetchToken(LTS_TT_INTEGER, "bind count").getUnsigned();
+	context.fetchNext().expectToken(Type{'['}).fetchNext();
+	auto const src = context.fetchToken(LTS_TT_INTEGER, "source scope").getUnsigned();
+	auto const offset = context.fetchNext().expectToken(Type{'['}).fetchToken(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
+	context.fetchNext().expectToken(Type{']'}).fetchNext().expectToken(Type{LTS_TT_LITTLE_ARROW}).fetchNext();
+	auto const dst = context.fetchToken(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
+	context.fetchNext().expectToken(Type{']'});
+	context.addInstructionType(
+		context.addNamedInstruction(Instruction::Name::AV2_IN_SCOPE_BRING),
+		Instruction::Binding {
+			offset,
+			dst
+		}
+	);
+	context.addInstruction(src);
+	context.addInstruction(count);
+}
+
 
 static void doCopy(Context& context) {
 	auto const src = getDataLocation(context.fetchNext());
@@ -892,17 +911,25 @@ void Minima::assemble() {
 			if (type->base)
 				decl.base = *type->base;
 		}
-		context.program.methods.resize(context.minima.types.size(), {});
-		for (auto& [name, method]: context.minima.methods) {
-			auto& decl = context.program.methods[method->id()];
-			decl = {
-				.name		= name,
-				.retType	= method->retType,
-				.argTypes	= method->argTypes,
-				.out		= method->out,
-				.entry		= context.program.labels.jumps[method->entry]
-			};
+		context.program.methods.resize(context.minima.methods.size(), {});
+		for (auto& [name, aliases]: context.minima.methods) {
+			for (auto& method: aliases) {
+				auto& decl = context.program.methods.pushBack({}).back();
+				decl = {
+					.id			= method->id(),
+					.name		= name,
+					.retType	= method->retType,
+					.argTypes	= method->argTypes,
+					.out		= method->out,
+					.entry		= context.program.labels.jumps[method->entry]
+				};
+			}
 		}
+		decltype (context.program.methods) temp;
+		temp.resize(context.minima.methods.size(), {});
+		for (auto& method: context.program.methods)
+			temp[method->id()] = method;
+		context.program.methods = temp;
 	}
 }
 CTL_DIAGBLOCK_END

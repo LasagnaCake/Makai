@@ -273,9 +273,13 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Binding` = how to bind the values.
 			/// @details `bind <count>`
 			AV2_IN_SCOPE_BIND,
+			/// @brief Binds a range of values from a previous scope to a range of places in the current scope.
+			/// @param type `Binding` = how to bind the values.
+			/// @details `bring <scope> <count>`
+			AV2_IN_SCOPE_BRING,
 			/// @brief Gets a reference of a given field from an object.
 			/// @param type `Field` = how to access the field.
-			/// @details `get <count>`
+			/// @details `get <id>`
 			AV2_IN_FIELD_GET,
 			/// @brief Gets the size of a value.
 			/// @param type 0 = element count, 1 = in bytes.
