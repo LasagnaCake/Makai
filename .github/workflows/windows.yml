@@ -45,11 +45,6 @@ jobs:
           gcc --version
           g++ --version
           mingw32-make --version
-      - name: Memorize environment
-        if: steps.cache.outputs.cache-hit != 'true'
-        env:
-          msys2: ${{ steps.prep.outputs.msys2-location }}
-        run: mkdir cache ; touch cache/msys2 ; echo "$env:msys2" > cache/msys2
 
   ship-it-full:
     name: Ship the library (FULL ver.)
@@ -60,9 +55,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - name: make ship-it
         run: |
           mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
@@ -80,9 +73,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - name: make tests
         run: |
           cd tests/ctl
@@ -117,9 +108,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - name: make tests
         run: |
           cd tests/ctl
@@ -154,9 +143,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - name: make debug gmake=mingw32-make
         run: |
           mingw32-make link-extern gmake=mingw32-make os=win
@@ -175,9 +162,7 @@ jobs:
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - name: make release
         run: |
           mingw32-make link-extern gmake=mingw32-make os=win
@@ -196,9 +181,7 @@ jobs:
     needs: [build-core-lib-debug, build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -224,9 +207,7 @@ jobs:
     needs: [build-core-lib-debug]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - uses: actions/download-artifact@master
         with:
           name: lib-debug
@@ -250,9 +231,7 @@ jobs:
     needs: [build-core-lib-release]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
-        with:
-          key: windows-msys2
+      - uses: msys2/setup-msys2@v2
       - uses: actions/download-artifact@master
         with:
           name: lib-release
