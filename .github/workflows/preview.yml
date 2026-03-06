@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get environment info
-        uses: LasagnaCake/Makai/etc/gh/actions/meta/info@main
+        uses: LasagnaCake/Makai/etc/gh/actions/info@main
         id: info
       - uses: actions/download-artifact@master
         with:
