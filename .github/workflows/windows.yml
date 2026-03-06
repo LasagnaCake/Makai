@@ -15,18 +15,13 @@ on:
 #    branches: [ "main" ]
 
 jobs:
-  prepare:
-    name: Install Latest GCC Via MSYS2
+  template-ignore-this-yaml-is-annoying:
+    name: Ignore this
     runs-on: windows-latest
-    defaults: &msys2
-      run:
-        shell: msys2 {0}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - &prepare
-        name: Install MSYS2
+    if: 1 != 1
+    # Hellspawn BEGIN
+    steps: &prepare
+      - name: Install MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -34,6 +29,14 @@ jobs:
           cache: true
           install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-7zip
       # Hellspawn END
+  prepare:
+    name: Install Latest GCC Via MSYS2
+    runs-on: windows-latest
+    defaults: &msys2
+      run:
+        shell: msys2 {0}
+    steps:
+      - *prepare
       - name: Verify GCC Installation
         run: |
           gcc --version
