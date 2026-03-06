@@ -123,6 +123,7 @@ jobs:
         with:
           tag_name: preview-${{vars.TODAY}}
           prerelease: true
+          draft: false
           files: |
             **/*.zip
           name: Preview Snapshot ${{vars.TODAY}}
