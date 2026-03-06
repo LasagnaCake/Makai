@@ -13,10 +13,10 @@ runs:
         type: ${{inputs.type}}
       id: info
     - name: Prepare environment
-      if: steps.info.output.env == msys2
+      if: steps.info.output.env == 'msys2'
       uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
     - name: Prepare environment
-      if: steps.info.output.env == linux
+      if: steps.info.output.env == 'linux'
       uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
     - uses: actions/checkout@v4
     - name: Build library
