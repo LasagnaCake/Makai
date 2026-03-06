@@ -242,7 +242,7 @@ static Location getDataLocation(Context& context) {
 			else if (id == "temporary" || id == "temp")	loc |= Location{DataLocation::AV2_DL_TEMPORARY, uint64{-1}};
 			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{0}};
 			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{1}};
-			else if (id == "undefined" || id == "void")	loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{2}};
+			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{2}};
 			else if (id == "null" || id == "nil")		loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{3}};
 			else if (id == "bytes" || id == "bin")		loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{9}};
 			else context.error("Invalid data source!");
@@ -865,6 +865,7 @@ static void doExpression(Context& context) {
 	else if (id == "enter" || id == "begin")	doScopeEnter(context);
 	else if (id == "exit" || id == "end")		doScopeExit(context);
 	else if (id == "bind")						doScopeBind(context);
+	else if (id == "bring")						doScopeBring(context);
 	else if (id == "copy")						doCopy(context);
 	else if (id == "context" || id == "mode")	doContext(context.fetchNext());
 	else if (id == "loose" || id == "strict")	doContext(context, true);
