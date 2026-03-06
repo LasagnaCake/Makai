@@ -35,7 +35,6 @@ jobs:
       - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
           type: full
-          os: ${{runner.os}}
 
   ship-it-lite-linux:
     name: Ship the library (LITE ver.) (Linux)
@@ -45,7 +44,6 @@ jobs:
       - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
           type: lite
-          os: ${{runner.os}}
 
   ship-it-full-win:
     name: Ship the library (FULL ver.) (Windows)
@@ -55,7 +53,6 @@ jobs:
       - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
           type: full
-          os: ${{runner.os}}
 
   ship-it-lite-win:
     name: Ship the library (LITE ver.) (Windows)
@@ -65,7 +62,6 @@ jobs:
       - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
           type: lite
-          os: ${{runner.os}}
 
   publish:
     name: Publish pre-release
