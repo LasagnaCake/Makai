@@ -4,29 +4,21 @@ inputs:
     description: "Build type"
     required: false
     default: lite
-  ship-it-linux:
-    if: runner.os == Linux
-    shell: msys2 {0}
-    steps:
-      - name: Prepare environment
-      - uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
-      - uses: actions/checkout@v4
-      - name: make ship-it
-        run: make ship-it os=linux lite=${{case(inputs.type == 'lite', '1', '0')}} skip-tooling=${{case(inputs.type == 'lite', '1', '0')}}
-      - uses: actions/upload-artifact@master
-        with:
-          name: lib-linux-${{inputs.type}}
-          path: output/linux-*.zip
-  ship-it-windows:
-    if: runner.os == Windows
-    shell: msys2 {0}
-    steps:
-      - name: Prepare environment
-      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
-      - uses: actions/checkout@v4
-      - name: make ship-it
-        run: make ship-it os=win lite=${{case(inputs.type == 'lite', '1', '0')}} skip-tooling=${{case(inputs.type == 'lite', '1', '0')}}
-      - uses: actions/upload-artifact@master
-        with:
-          name: lib-win-${{inputs.type}}
-          path: output/win-*.zip
+runs:
+  using: composite
+  env:
+    os: ${{case(runner.os == 'Windows', 'win', 'linux')}};
+    env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}};
+  steps:
+    - shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+      name: Ship the library (${{inputs.type}} ver. -> ${{runner.os}})
+      steps:
+        - name: Prepare environment
+        - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{env.env}}@main
+        - uses: actions/checkout@v4
+        - name: make ship-it
+          run: make ship-it os=${{env.os}} lite=${{case(inputs.type == 'lite', '1', '0')}}
+        - uses: actions/upload-artifact@master
+          with:
+            name: lib-${{env.os}}-${{inputs.type}}
+            path: output/${{env.os}}-*.zip
