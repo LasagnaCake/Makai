@@ -107,9 +107,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return tokens.back().type == type;
 		}
 
-		void expect(Axiom::Type const& type, String const& what) {
+		BaseContext& expect(Axiom::Type const& type, String const& what) {
 			if (!has(type))
 				error("Expected " + what + " here!");
+			return *this;
 		}
 
 		Data::Value& get(Axiom::Type const& type, String const& what) {
@@ -118,12 +119,28 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return current().value;
 		}
 
-		void expect(Axiom::Type const& type) {
-			expect(type, "'" + Axiom::asName(type) + "'");
+		BaseContext& expectNext(Axiom::Type const& type, String const& what) {
+			return next().expect(type, what);
 		}
 
-		bool get(Axiom::Type const& type) {
+		Data::Value& getNext(Axiom::Type const& type, String const& what) {
+			return next().get(type, what);
+		}
+
+		BaseContext& expect(Axiom::Type const& type) {
+			return expect(type, "'" + Axiom::asName(type) + "'");
+		}
+
+		Data::Value& get(Axiom::Type const& type) {
 			return get(type, "'" + Axiom::asName(type) + "'");
+		}
+
+		Data::Value& getNext(Axiom::Type const& type) {
+			return getNext(type, "'" + Axiom::asName(type) + "'");
+		}
+
+		BaseContext& expectNext(Axiom::Type const& type) {
+			return expectNext(type, "'" + Axiom::asName(type) + "'");
 		}
 
 		Data::Value value() const {

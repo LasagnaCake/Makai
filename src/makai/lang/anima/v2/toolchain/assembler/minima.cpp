@@ -34,21 +34,21 @@ struct Location {
 	}
 
 	constexpr void addID(Context& context) const {
-		if (hasID()) context.addInstruction(id.value());
+		if (hasID()) context.code.add(id.value());
 	}
 };
 
 static DataLocation getLoadType(Context& context, DataLocation const prev) {
 	DataLocation locAt = asPlace(prev);
-	if (context.hasToken(LTS_TT_IDENTIFIER)) {
-		auto const id = context.getValue<Makai::String>();
+	if (context.has(LTS_TT_IDENTIFIER)) {
+		auto const id = context.value().getString();
 		if (id == "reference" || id == "ref")
 			locAt = locAt | DataLocation::AV2_DLM_BY_REF;
 		else if (id == "move")
 			locAt = locAt | DataLocation::AV2_DLM_MOVE;
 		else if (id == "value" || id == "copy")
 			locAt = locAt | DataLocation{0};
-		context.fetchNext();
+		context.next();
 	}
 	return locAt;
 }
@@ -56,39 +56,37 @@ static DataLocation getLoadType(Context& context, DataLocation const prev) {
 static Location getStack(Context& context) {
 	Location loc;
 	context
-		.fetchNext()
-		.expectToken(Type{'['})
+		.next()
+		.expect(Type{'['})
 	;
-	context.fetchNext();
+	context.next();
 	bool backshots = false;
 	while (
-		context.hasToken(Type{'-'})
-	||	context.hasToken(Type{'+'})
+		context.has(Type{'-'})
+	||	context.has(Type{'+'})
 	) {
-		if (context.hasToken(Type{'-'}))
+		if (context.has(Type{'-'}))
 			backshots = !backshots;
-		context.fetchNext();
+		context.next();
 	}
-	loc.id = context.fetchToken(LTS_TT_INTEGER, "stack index").getUnsigned();
+	loc.id = context.get(LTS_TT_INTEGER, "stack index").getUnsigned();
 	loc.source = loc.source | (
 		backshots
 	?	DataLocation::AV2_DL_STACK_OFFSET
 	:	DataLocation::AV2_DL_STACK
 	);
-	context.fetchNext().expectToken(Type{']'});
+	context.expectNext(Type{']'});
 	return loc;
 }
 
 static Location getLocal(Context& context) {
 	auto const localID =
 		context
-			.fetchNext()
-			.expectToken(Type{'['})
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "local stack ID")
+			.expectNext(Type{'['})
+			.get(LTS_TT_IDENTIFIER, "local stack ID")
 			.getUnsigned()
 	;
-	context.fetchNext().expectToken(Type{']'});
+	context.expectNext(Type{']'});
 	return {
 		DataLocation::AV2_DL_LOCAL,
 		localID
@@ -96,13 +94,13 @@ static Location getLocal(Context& context) {
 }
 
 static Location getExtern(Context& context) {
-	context.fetchNext();
+	context.next();
 	uint64 externID = 0;
-	switch (context.currentToken().type) {
+	switch (context.current().type) {
 		case LTS_TT_IDENTIFIER:
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
-			externID = context.addConstant(context.currentValue().getString());
+			externID = context.minima.addConstant(context.value().getString());
 		break;
 		default: context.error("Expected external location name here!");
 	}
@@ -112,17 +110,10 @@ static Location getExtern(Context& context) {
 static Location getGlobal(Context& context) {
 	auto const name =
 		context
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "global name")
+			.getNext(LTS_TT_IDENTIFIER, "global name")
 			.getString()
 	;
-	uint64 globalID = 0;
-	if (context.program.labels.globals.contains(name))
-		globalID = context.program.labels.globals[name];
-	else {
-		globalID = context.program.labels.globals.size();
-		context.program.labels.globals[name] = globalID;
-	}
+	uint64 globalID = context.minima.addGlobal(name);
 	return {
 		DataLocation::AV2_DL_GLOBAL,
 		globalID
@@ -130,7 +121,7 @@ static Location getGlobal(Context& context) {
 }
 
 static Location getConstantLocation(Context& context) {
-	auto type = context.currentToken().type;
+	auto type = context.current().type;
 	bool isNumber = false;
 	bool negated = false;
 	while (
@@ -140,27 +131,27 @@ static Location getConstantLocation(Context& context) {
 		isNumber = true;
 		if (type == Type{'-'})
 			negated = !negated;
-		type = context.fetchNext().currentToken().type;
+		type = context.next().current().type;
 	}
 	Location loc {.source = DataLocation::AV2_DL_CONST};
 	if (isNumber) {
-		switch (context.currentToken().type) {
+		switch (context.current().type) {
 			case LTS_TT_INTEGER:
-				loc.id = context.addConstant(context.currentValue().getSigned() * (negated ? -1 : +1));
+				loc.id = context.minima.addConstant(context.value().getSigned() * (negated ? -1 : +1));
 			break;
 			case LTS_TT_REAL:
-				loc.id = context.addConstant(context.currentValue().getReal() * (negated ? -1 : +1));
+				loc.id = context.minima.addConstant(context.value().getReal() * (negated ? -1 : +1));
 			break;
 			default: context.error("Expected number here!");
 		}
 	} else {
-		switch (context.currentToken().type) {
+		switch (context.current().type) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
 			case LTS_TT_INTEGER:
 			case LTS_TT_REAL:
 			case LTS_TT_CHARACTER:
-				loc.id = context.addConstant(context.currentValue());
+				loc.id = context.minima.addConstant(context.value());
 			break;
 			default: context.error("Invalid constant!");
 		}
@@ -171,13 +162,12 @@ static Location getConstantLocation(Context& context) {
 static Location getLabelLocation(Context& context) {
 	auto const current =
 		context
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "label name")
+			.getNext(LTS_TT_IDENTIFIER, "label name")
 			.getString()
 	;
-	if (!context.jumps.labels.contains(current))
+	if (!context.minima.jumps.labels.contains(current))
 		context.error("Jump target has not been declared yet!");
-	return {DataLocation::AV2_DL_CONST, context.addConstant(context.jumps.labels[current])};
+	return {DataLocation::AV2_DL_CONST, context.minima.addConstant(context.minima.jumps.labels[current])};
 }
 
 static Location getDataLocation(Context& context) {
