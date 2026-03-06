@@ -24,5 +24,5 @@ runs:
       shell: bash
     - name: Get today's date
       if: runner.os != 'Windows' && runner.os != 'Linux'
-      run: echo "::error unsupported operating system [${{runner.os}}]!"]
+      run: echo "::error unsupported operating system [${{runner.os}}]!"
       shell: bash
