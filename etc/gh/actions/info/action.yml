@@ -6,21 +6,29 @@ inputs:
     default: lite
 outputs:
   os:
+    description: "Target OS"
     value: ${{steps.info.output.os}}
   env:
+    description: "Build Environment"
     value: ${{steps.info.output.env}}
   shell:
+    description: "Shell to Use"
     value: ${{steps.info.output.shell}}
   lite:
+    description: "Whether Building LITE Version"
     value: ${{steps.info.output.lite}}
-  date:
+  today:
+    description: "Today's Date"
     value: ${{steps.info.output.today}}
+  success:
+    description: "Whether Reading Info Was a Success"
+    value: ${{steps.info.output.success}}
 runs:
   using: composite
   steps:
     - name: Check if in valid OS
       if: (runner.os != 'Windows' && runner.os != 'Linux')
-      run: echo "::error unsupported operating system [${{runner.os}}]!"
+      run: echo "::error ::'unsupported operating system [${{runner.os}}]!'"
       shell: bash
     - name: Get Environment Info
       id: info
@@ -30,4 +38,5 @@ runs:
         echo "env=${{case(runner.os == 'Windows', 'msys2', 'linux')}}" >> $GITHUB_OUTPUT
         echo "shell=${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}" >> $GITHUB_OUTPUT
         echo "lite=${{case(inputs.type == 'lite', '1', '0')}}" >> $GITHUB_OUTPUT
+        echo "success='true'" >> $GITHUB_OUTPUT
       shell: bash
