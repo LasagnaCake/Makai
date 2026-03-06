@@ -8,10 +8,10 @@ runs:
   using: composite
   steps:
     - name: Get environment info
+      id: info
       uses: LasagnaCake/Makai/etc/gh/actions/info@main
       with:
         type: ${{inputs.type}}
-      id: info
     - name: Prepare environment
       if: runner.os == 'Windows'
       uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
