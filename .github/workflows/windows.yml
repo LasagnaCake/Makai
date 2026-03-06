@@ -22,10 +22,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup/msys2
-      # Hellspawn BEGIN
-      # Hellspawn END
       - name: Verify GCC Installation
         run: |
           gcc --version
