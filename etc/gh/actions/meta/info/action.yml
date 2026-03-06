@@ -11,6 +11,8 @@ outputs:
     value: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
   shell:
     value: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+  lite:
+    value: ${{case(inputs.type == 'lite', '1', '0')}}
   date:
     value: ${{steps.date.output.today}}
 runs:
