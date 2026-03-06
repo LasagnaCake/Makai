@@ -11,14 +11,13 @@ runs:
     env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
     shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
     lite: ${{case(inputs.type == 'lite', '1', '0')}}
-  shell: ${{env.shell}}
   steps:
-    - name: Ship the library (${{inputs.type}} ver. -> ${{runner.os}})
     - name: Prepare environment
     - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{env.env}}@main
     - uses: actions/checkout@v4
-    - name: make ship-it
+    - name: Ship the bastard
       run: make ship-it os=${{env.os}} lite=${{env.lite}} skip-tooling=${{env.lite}}
+      shell: ${{env.shell}}
     - uses: actions/upload-artifact@master
       with:
         name: lib-${{env.os}}-${{inputs.type}}
