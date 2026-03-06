@@ -83,6 +83,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return *this;
 		}
 
+		bool empty() {
+			return tokens.empty();
+		}
+
 		Axiom& token() 				{return tokens.back();}
 		Axiom const& token() const	{return tokens.back();}
 

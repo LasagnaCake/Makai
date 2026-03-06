@@ -350,10 +350,10 @@ static void doFieldGet(Context& context, bool const dyn = false) {
 	// TODO: The rest of this
 	if (!dyn) {
 		auto const field =
-		context
-			.expectNext(Type{'['})
-			.getNext(LTS_TT_IDENTIFIER, "field ID")
-			.getUnsigned()
+			context
+				.expectNext(Type{'['})
+				.getNext(LTS_TT_IDENTIFIER, "field ID")
+				.getUnsigned()
 		;
 		context.expectNext(Type{']'});
 	}
@@ -757,7 +757,7 @@ static void declareImport(Context& context) {
 		}
 	);
 	ctx.module = null;
-	ctx.parentModule = context.module ? context.module : context.parentModule;
+	ctx.parent = context.module ? context.module : context.parent;
 	ctx.file.source = path.splitAtLast('/').front();
 	Minima subm(ctx);
 	subm.assemble();
@@ -767,9 +767,9 @@ static void declareImport(Context& context) {
 }
 
 static void doDeclaration(Context& context) {
-	auto const decl = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "declaration type").getString();
+	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "declaration type").getString();
 	if (decl == "hook") {
-		auto const hook = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "hook name").getString();
+		auto const hook = context.getNext(LTS_TT_IDENTIFIER, "hook name").getString();
 		doLabel(context);
 		context.program.ani.in[hook] = context.program.labels.jumps[hook];
 	} else if (decl == "fn")
@@ -788,9 +788,9 @@ static void doDeclaration(Context& context) {
 }
 
 static void doExpression(Context& context) {
-	if (context.hasToken(Type{'@'}))
+	if (context.has(Type{'@'}))
 		return doDeclaration(context);
-	auto const id = context.fetchToken(LTS_TT_IDENTIFIER, "instruction name").getString();
+	auto const id = context.get(LTS_TT_IDENTIFIER, "instruction name").getString();
 	if (id == "jump" || id == "go")				doJump(context);
 	if (id == "dynamic" || id == "dyn")			doDynamic(context);
 	else if (id == "nop" || id == "next")		doNoOp(context);
@@ -810,7 +810,7 @@ static void doExpression(Context& context) {
 	else if (id == "bind")						doScopeBind(context);
 	else if (id == "bring")						doScopeBring(context);
 	else if (id == "copy")						doCopy(context);
-	else if (id == "context" || id == "mode")	doContext(context.fetchNext());
+	else if (id == "context" || id == "mode")	{context.next(); doContext(context);}
 	else if (id == "loose" || id == "strict")	doContext(context, true);
 	else if (id == "binop" || id == "bop")		doBinaryOperation(context);
 	else if (id == "unop"|| id == "uop")		doUnaryOperation(context);
@@ -826,7 +826,7 @@ static void doExpression(Context& context) {
 }
 
 void Minima::assemble() {
-	while (context.stream.next()) doExpression(context);
+	while (context.empty()) doExpression(context);
 	auto const unmapped = context.mapJumps();
 	if (unmapped.size())
 		context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
@@ -838,7 +838,7 @@ void Minima::assemble() {
 			return !e.value->local;
 		}
 	);
-	if (!(context.module || context.parentModule)) {
+	if (!(context.module || context.parent)) {
 		context.program.types.resize(context.types.size(), {});
 		for (auto& [name, type]: context.types) {
 			auto& decl = context.program.types[type->id()];
