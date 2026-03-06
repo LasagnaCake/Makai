@@ -1,0 +1,22 @@
+name: Pass environment info down
+inputs:
+  type:
+    description: "Build type"
+    required: false
+    default: lite
+outputs:
+  os:
+    value: ${{case(runner.os == 'Windows', 'win', 'linux')}}
+  env:
+    value: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
+  shell:
+    value: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+  date:
+    value: ${{steps.date.output.today}}
+runs:
+  using: composite
+  steps:
+    - name: Get today's date
+      id: date
+      run: echo "today=$(date +%Y%m%d%H%M)" >> $GITHUB_OUTPUT
+      shell: bash
