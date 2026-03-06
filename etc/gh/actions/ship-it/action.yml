@@ -1,0 +1,22 @@
+name: Ship library
+inputs:
+  type:
+    description: "Build type"
+    required: false
+    default: lite
+  env:
+    os: ${{case(runner.os == 'Windows', 'win', 'linux')}};
+    env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}};
+    shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
+  ship-it:
+    shell: ${{env.shell}}
+    name: Ship the library (${{inputs.type}} ver. -> ${{runner.os}})
+    steps:
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{env.env}}@main
+      - uses: actions/checkout@v4
+      - name: make ship-it
+        run: make ship-it os=${{env.os}} lite=${{case(inputs.type == 'lite', '1', '0')}}
+      - uses: actions/upload-artifact@master
+        with:
+          name: lib-${{env.os}}-${{inputs.type}}
+          path: output/${{env.os}}-*.zip

@@ -29,82 +29,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: [prepare-linux]
     steps:
-      - uses: awalsh128/cache-apt-pkgs-action@latest
+      - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
-          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
-          version: 1.0
-      - uses: actions/checkout@v4
-      - name: make ship-it
-        run: make ship-it os=linux
-      - uses: actions/upload-artifact@master
-        with:
-          name: lib-linux-full
-          path: output/linux-*.zip
+          type: full
 
   ship-it-lite-linux:
     name: Ship the library (LITE ver.) (Linux)
     runs-on: ubuntu-latest
     needs: [prepare-linux]
     steps:
-      - uses: awalsh128/cache-apt-pkgs-action@latest
+      - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
-          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
-          version: 1.0
-      - uses: actions/checkout@v4
-      - name: make ship-it
-        run: make ship-it os=linux lite=1 skip-tooling=1
-      - uses: actions/upload-artifact@master
-        with:
-          name: lib-linux-lite
-          path: output/linux-*.zip
+          type: lite
 
   ship-it-full-win:
     name: Ship the library (FULL ver.) (Windows)
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    #    needs: install-gcc
     steps:
-      - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
-      - name: make ship-it
-        run: |
-          pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
-          mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc
-      - uses: actions/upload-artifact@master
-        with:
-          name: lib-windows-full
-          path: output/win-*.zip
+          type: full
 
   ship-it-lite-win:
     name: Ship the library (LITE ver.) (Windows)
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    #    needs: install-gcc
     steps:
-      - uses: actions/checkout@v4
-      # Hellspawn BEGIN
-      - uses: msys2/setup-msys2@v2
+      - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
-          install: git mingw-w64-x86_64-toolchain
-          cache: false
-      # Hellspawn END
-      - name: make ship-it
-        run: |
-          pacman -S mingw-w64-x86_64-7zip --noconfirm --needed
-          mingw32-make ship-it gmake=mingw32-make os=win compiler=msys2-gcc lite=1 skip-tooling=1
-      - uses: actions/upload-artifact@master
-        with:
-          name: lib-windows-lite
-          path: output/win-*.zip
+          type: lite
 
   publish:
     name: Publish pre-release
@@ -118,14 +70,16 @@ jobs:
       - uses: actions/download-artifact@master
         with:
           path: output
+      - name: Get today's date
+        run: echo "TODAY=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
       - name: Post
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: preview-${{vars.TODAY}}
+          tag_name: preview-${{env.TODAY}}
           prerelease: true
           draft: false
           files: |
             **/*.zip
-          name: Preview Snapshot ${{vars.TODAY}}
+          name: Preview Snapshot ${{env.TODAY}}
           body: |
             Automatically-generated preview via GitHub action.

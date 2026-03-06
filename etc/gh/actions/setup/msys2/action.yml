@@ -10,7 +10,7 @@ runs:
     - name: Install MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: MINGW64
+        msystem: ${{inputs.env}}
         update: true
         cache: true
         install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-7zip make
