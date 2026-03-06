@@ -13,7 +13,11 @@ runs:
         type: ${{inputs.type}}
       id: info
     - name: Prepare environment
-      uses: LasagnaCake/Makai/etc/gh/actions/setup/${{steps.info.output.env}}@main
+      if: steps.info.output.env == msys2
+      uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
+    - name: Prepare environment
+      if: steps.info.output.env == linux
+      uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
     - uses: actions/checkout@v4
     - name: Build library
       run: make ship-it os=${{inputs.os}} lite=${{steps.info.output.lite}} skip-tooling=${{steps.info.output.lite}}
