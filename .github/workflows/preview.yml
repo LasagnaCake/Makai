@@ -19,10 +19,13 @@ jobs:
     name: Prepare Environment
     runs-on: ubuntu-latest
     steps:
-      - uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
-          version: 1.0
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
+
+  prepare-msys2:
+    name: Prepare Environment
+    runs-on: windows-latest
+    steps:
+      - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
 
   ship-it-full-linux:
     name: Ship the library (FULL ver.) (Linux)
@@ -47,6 +50,7 @@ jobs:
   ship-it-full-win:
     name: Ship the library (FULL ver.) (Windows)
     runs-on: windows-latest
+    needs: [prepare-msys2]
     steps:
       - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
@@ -56,6 +60,7 @@ jobs:
   ship-it-lite-win:
     name: Ship the library (LITE ver.) (Windows)
     runs-on: windows-latest
+    needs: [prepare-msys2]
     steps:
       - uses: LasagnaCake/Makai/etc/gh/actions/ship-it@main
         with:
