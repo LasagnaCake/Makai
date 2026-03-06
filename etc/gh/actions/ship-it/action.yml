@@ -7,10 +7,17 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Call actual implementation
-      uses: LasagnaCake/Makai/etc/gh/actions/ship-it/impl@main
+    - name: Get environment info
+      with: LasagnaCake/Makai/etc/gh/actions/meta/info@main
+      id: info
+    - name: Prepare environment
+    - uses: LasagnaCake/Makai/etc/gh/actions/setup/${{steps.info.output.env}}@main
+    - uses: actions/checkout@v4
+    - name: Build library
+      run: make ship-it os=${{inputs.os}} lite=${{case(inputs.type == 'lite', '1', '0')}} skip-tooling=${{case(inputs.type == 'lite', '1', '0')}}
+      shell: ${{steps.info.output.shell}}
+    - name: Upload artifact
+      uses: actions/upload-artifact@master
       with:
-        os: ${{case(runner.os == 'Windows', 'win', 'linux')}}
-        env: ${{case(runner.os == 'Windows', 'msys2', 'linux')}}
-        shell: ${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}
-        lite: ${{case(inputs.type == 'lite', true, false)}}
+        name: lib-${{steps.info.output.os}}-${{inputs.type}}
+        path: output/${{inputs.os}}-*.zip
