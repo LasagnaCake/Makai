@@ -81,11 +81,11 @@ jobs:
       - name: Post
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: preview-${{steps.info.output.today}}
+          tag_name: preview-${{steps.info.outputs.today}}
           prerelease: true
           draft: false
           files: |
             **/*.zip
-          name: Preview Snapshot ${{steps.info.output.today}}
+          name: Preview Snapshot ${{steps.info.outputs.today}}
           body: |
             Automatically-generated preview via GitHub action.
