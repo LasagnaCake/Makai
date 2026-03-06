@@ -1,0 +1,18 @@
+name: Setup MSYS2
+inputs:
+  env:
+    description: "MSYS2 environment"
+    required: false
+    default: MINGW64
+runs:
+  using: composite
+  steps:
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        cache: true
+        install: git mingw-w64-x86_64-toolchain mingw-w64-x86_64-7zip make
+    - name: Alias GNU Make
+      run: alias make=ming32-make

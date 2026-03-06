@@ -1,0 +1,8 @@
+name: Setup Linux
+runs:
+  using: composite
+  steps:
+    - uses: awalsh128/cache-apt-pkgs-action@latest
+      with: &prep-linux
+        packages: libgl1-mesa-dev libSDL2-2.0-0 libsdl2-dev curl libcurl4-openssl-dev
+        version: 1.0
