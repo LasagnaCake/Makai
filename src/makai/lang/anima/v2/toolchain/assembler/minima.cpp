@@ -12,39 +12,6 @@ using Context = Minima::Context;
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
-constexpr scstring INTERJECT = R"ASM(
-	@type Void [basic<void> empty]
-	@type Any [basic<any>]
-	@type Bool [basic<bool> derived<Any> value]
-	@type Null [basic<nil> derived<Any> nil empty]
-	@type Int [basic<int> derived<Any> value]
-	@type UInt [basic<uint> derived<Any> value]
-	@type Real [basic<real> derived<Any> value]
-	@type String [basic<str> derived<Any> nil]
-	@type Bytes [basic<bin> derived<Any> nil]
-	@type Vector [basic<vec> derived<Any> value]
-	@type Object [derived<Any> nil dyn struct]
-	@type AnyArray [array<Any> nil]
-	@type BoolArray [array<Bool> nil]
-	@type IntArray [array<Int> nil]
-	@type UIntArray [array<UInt> nil]
-	@type RealArray [array<Real> nil]
-	@type StringArray [array<String> nil]
-	@type VectorArray [array<Vector> nil]
-	@type ObjectArray [array<Object> nil]
-	@alias void:	Void
-	@alias any:		Any
-	@alias bool:	Bool
-	@alias int:		Int
-	@alias uint:	UInt
-	@alias real:	Real
-	@alias string:	String
-	@alias bytes:	Bytes
-	@alias vector:	Vector
-	@alias object:	Object
-	@alias array:	AnyArray
-)ASM";
-
 struct Location {
 	DataLocation			source;
 	Makai::Nullable<uint64>	id		= null;

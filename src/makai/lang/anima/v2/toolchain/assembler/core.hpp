@@ -8,7 +8,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		using TokenStream	= Lexer::CStyle::TokenStream;
 		using TokenList		= Lexer::CStyle::TokenStream::TokenList;
 		using Program		= Runtime::Program;
-		using Context		= Context;
 
 		virtual  ~AAssembler() {}
 
