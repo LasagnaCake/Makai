@@ -28,57 +28,19 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		virtual Node::Instance resolve(BaseContext& context) = 0;
 	};
 
-	struct ITypeResolver: IResolver {
-	};
-
-	struct IValueResolver: IResolver {
-	};
-
-	struct FunctionResolver: IValueResolver {
+	struct FunctionResolver: IResolver {
 		Node::Instance resolve(BaseContext& context) override;
 	};
 
-	struct PathResolver: IValueResolver {
+	struct PathResolver: IResolver {
 		Node::Instance resolve(BaseContext& context) override;
 	};
 
-	struct ExpressionResolver: IValueResolver {
+	struct ExpressionResolver: IResolver {
 		Node::Instance resolve(BaseContext& context) override;
 	};
 
-	struct AddSubResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct MulDivRemResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct FunctionCallResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct MemberGetResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct SubscriptResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct BinaryResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct UnaryPrefixResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct UnaryPostfixResolver: IValueResolver {
-		Node::Instance resolve(BaseContext& context) override;
-	};
-
-	struct EquationResolver: IValueResolver {
+	struct BlockResolver: IResolver {
 		Node::Instance resolve(BaseContext& context) override;
 	};
 }
