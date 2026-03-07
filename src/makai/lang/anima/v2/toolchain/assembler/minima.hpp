@@ -36,9 +36,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			usize addConstant(Data::Value const& val);
 			uint64 addGlobal(String const& name);
-			void addJumpTarget(String const& name);
 
+			void addJumpTarget(String const& name);
 			uint64 getJumpTarget(String const& name);
+			bool hasJumpTarget(String const& name);
+
+			StringList mapJumps();
 
 			enum class ImportAction {
 				AV2_TA_MCIA_ALLOW_IMPORT,

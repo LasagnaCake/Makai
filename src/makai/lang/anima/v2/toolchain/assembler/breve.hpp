@@ -5,8 +5,12 @@
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Breve: AAssembler {
-		using AAssembler::AAssembler;
+		struct Context: BaseContext {};
+
+		Breve(Context& context): AAssembler(context), context(context) {}
 		void assemble() override;
+
+		Context& context;
 	};
 }
 

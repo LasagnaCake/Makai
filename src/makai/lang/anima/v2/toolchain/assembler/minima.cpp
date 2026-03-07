@@ -165,6 +165,8 @@ static Location getLabelLocation(Context& context) {
 			.getNext(LTS_TT_IDENTIFIER, "label name")
 			.getString()
 	;
+	if (!context.hasJumpTarget(current))
+		context.error("Label has not been declared yet!");
 	return {DataLocation::AV2_DL_CONST, context.getJumpTarget(current)};
 }
 
@@ -252,7 +254,7 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 }
 
 static void doJump(Context& context, bool dynamic = false) {
-	context.getNext();
+	context.next();
 	if (!dynamic) context.expect(LTS_TT_IDENTIFIER, "jump expression");
 	else if (!context.has(LTS_TT_IDENTIFIER)) {
 		context.pad(1);
@@ -749,7 +751,7 @@ static void declareImport(Context& context) {
 	).replace('\\', '/');
 	auto const mod = Makai::File::getText(path);
 	Context ctx;
-	ctx	= context;
+	ctx.methods = context.methods;
 	ctx.program	= context.program;
 	ctx.methods.filter(
 		[] (auto const& e) {
