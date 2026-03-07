@@ -151,6 +151,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return token().value;
 		}
 
+		Axiom::Type type() const {
+			return token().type;
+		}
+
 		struct FileInfo {
 			String name;
 			String source;

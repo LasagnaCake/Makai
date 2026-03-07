@@ -96,7 +96,7 @@ static Location getLocal(Context& context) {
 static Location getExtern(Context& context) {
 	context.next();
 	uint64 externID = 0;
-	switch (context.token().type) {
+	switch (context.type()) {
 		case LTS_TT_IDENTIFIER:
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
@@ -121,7 +121,7 @@ static Location getGlobal(Context& context) {
 }
 
 static Location getConstantLocation(Context& context) {
-	auto type = context.token().type;
+	auto type = context.type();
 	bool isNumber = false;
 	bool negated = false;
 	while (
@@ -131,11 +131,11 @@ static Location getConstantLocation(Context& context) {
 		isNumber = true;
 		if (type == Type{'-'})
 			negated = !negated;
-		type = context.next().token().type;
+		type = context.next().type();
 	}
 	Location loc {.source = DataLocation::AV2_DL_CONST};
 	if (isNumber) {
-		switch (context.token().type) {
+		switch (context.type()) {
 			case LTS_TT_INTEGER:
 				loc.id = context.addConstant(context.value().getSigned() * (negated ? -1 : +1));
 			break;
@@ -145,7 +145,7 @@ static Location getConstantLocation(Context& context) {
 			default: context.error("Expected number here!");
 		}
 	} else {
-		switch (context.token().type) {
+		switch (context.type()) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
 			case LTS_TT_INTEGER:
@@ -188,7 +188,7 @@ static Location getDataLocation(Context& context) {
 			continue;
 		} else break;
 	}
-	switch (context.token().type) {
+	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
 			if (id == "local" || id == "arg")			loc |= getLocal(context);
@@ -235,7 +235,7 @@ static Location getDataLocation(Context& context) {
 static void doConditionalJump(Context& context, bool dynamic = false) {
 	context.next();
 	Instruction::Leap leap{.dyn = dynamic};
-	switch (context.token().type) {
+	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
 			if (id == "zero" || id == "z")				leap.type = Instruction::Leap::Type::AV2_ILT_IF_ZERO;
