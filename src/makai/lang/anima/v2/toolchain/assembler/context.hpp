@@ -74,6 +74,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		BaseContext(Messager& out = defaultWriter): out(out) {}
 
+		Axiom peek(usize const ahead = 0) {
+			if (tokens.size() < (ahead + 1))
+				error("Unexpected end-of-file!");
+			return tokens[-ahead];
+		}
+
 		BaseContext& next() {
 			if (tokens.empty())
 				error("Unexpected end-of-file!");
