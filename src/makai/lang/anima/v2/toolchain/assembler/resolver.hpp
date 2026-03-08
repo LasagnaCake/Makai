@@ -50,7 +50,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			AV2_TAPP_MUL_DIV_REM = 170,
 			AV2_TAPP_PREFIX = 180,
 			AV2_TAPP_POSTFIX = 190,
-			AV2_TAPP_FN_CALL = 200
 		};
 
 		BaseContext& context;
@@ -59,6 +58,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		virtual Node::Instance nextExpression(Precedence prec = Precedence::AV2_TAPP_NONE);
 
+		Node::Instance parse();
+
 		using OperatorBank = Map<BaseContext::Axiom, Instance<AResolver>>;
 
 		OperatorBank prefixes;
@@ -66,13 +67,20 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		static void add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver);
 
+		void direct(BaseContext::Axiom::Type const op);
+
 		void prefix(BaseContext::Axiom::Type const op);
 		void prefix(String const&);
 
 		void infix(BaseContext::Axiom::Type const op, bool const rightwards);
 		void infix(String const& op, bool const rightwards);
 
-		template <class... Types> void prefix(Types const&... args) requires (sizeof...(Types) > 1) {(..., prefix(args));}
+		void postfix(BaseContext::Axiom::Type const op);
+		void postfix(String const& op);
+
+		template <class... Types> void direct(Types const&... args) requires (sizeof...(Types) > 1)		{(..., nofix(args));	}
+		template <class... Types> void prefix(Types const&... args) requires (sizeof...(Types) > 1)		{(..., prefix(args));	}
+		template <class... Types> void postfix(Types const&... args) requires (sizeof...(Types) > 1)	{(..., postfix(args));	}
 
 		Parser::Precedence currentPrecedence();
 
@@ -90,12 +98,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		virtual Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) = 0;
 	};
 
-	struct NameResolver: AResolver {
-		using AResolver::AResolver;
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct ValueResolver: AResolver {
+	struct DirectResolver: AResolver {
 		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
@@ -125,11 +128,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	};
 
 	struct DeclarationResolver: AResolver {
-		using AResolver::AResolver;
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct BinaryResolver: AResolver {
 		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};

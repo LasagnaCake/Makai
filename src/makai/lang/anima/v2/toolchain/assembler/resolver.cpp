@@ -42,24 +42,54 @@ static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
 		case LTS_TT_COMPARE_LESS_EQUALS: return AV2_TAPP_COMPARE;
 		case LTS_TT_COMPARE_EQUALS:
 		case LTS_TT_COMPARE_NOT_EQUALS: return AV2_TAPP_EQ_INEQ;
-		case LTS_TT_BXOR: return AV2_TAPP_BXOR;
+		case LTS_TT_RAISE: return AV2_TAPP_BXOR;
 		case LTS_TT_BIT_AND: return AV2_TAPP_BAND;
 		case LTS_TT_BIT_OR: return AV2_TAPP_BOR;
 		case LTS_TT_LOGIC_AND: return AV2_TAPP_LAND;
 		case LTS_TT_LOGIC_OR: return AV2_TAPP_LOR;
+		case LTS_TT_INCREMENT:
+		case LTS_TT_DECREMENT:
+		case LTS_TT_DOT: return AV2_TAPP_POSTFIX;
+		case LTS_TT_COMMA: return AV2_TAPP_RHS_DECAY;
 	}
 	return Parser::Precedence::AV2_TAPP_NONE;
 }
 
 Parser::Parser(BaseContext& context): context(context) {
-	add({{.type = LTS_TT_IDENTIFIER, .value = ""}}, prefixes, new NameResolver(Precedence::AV2_TAPP_NONE, false));
+	direct(
+		LTS_TT_IDENTIFIER,
+		LTS_TT_INTEGER,
+		LTS_TT_DOUBLE_QUOTE_STRING,
+		LTS_TT_SINGLE_QUOTE_STRING,
+		LTS_TT_REAL,
+		LTS_TT_CHARACTER
+	);
 	prefix(
 		"sizeof",
 		"countof",
+		"typeof",
+		"not",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
 		LTS_TT_BIT_NOT
+	);
+	infix(LTS_TT_PLUS, false);
+	infix(LTS_TT_MINUS, false);
+	infix(LTS_TT_DIVIDE, false);
+	infix(LTS_TT_STAR, false);
+	infix(LTS_TT_MODULO, false);
+	infix(LTS_TT_DOT, false);
+	infix(LTS_TT_COMMA, false);
+	infix(LTS_TT_AMP, false);
+	infix(LTS_TT_PIPE, false);
+	infix(LTS_TT_RAISE, false);
+	infix(LTS_TT_LOGIC_AND, false);
+	infix(LTS_TT_LOGIC_OR, false);
+	infix("xor", false);
+	postfix(
+		LTS_TT_INCREMENT,
+		LTS_TT_DECREMENT
 	);
 }
 
@@ -77,11 +107,22 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	return lhs;
 }
 
+Node::Instance Parser::parse() {
+	return nextExpression();
+}
+
 Parser::Precedence Parser::currentPrecedence() {
 	auto const tok = context.peek();
 	if (!infixes.contains(tok))
 		return Parser::Precedence::AV2_TAPP_NONE;
 	return infixes[tok]->precedence;
+}
+
+void Parser::direct(BaseContext::Axiom::Type const op) {
+	BaseContext::Axiom ax;
+	ax.strict = false;
+	ax.type = op;
+	add(ax, prefixes, new DirectResolver(Precedence::AV2_TAPP_NONE, false));
 }
 
 void Parser::prefix(BaseContext::Axiom::Type const op) {
@@ -103,7 +144,7 @@ void Parser::prefix(Makai::String const& op) {
 	ax.type = LTS_TT_IDENTIFIER;
 	ax.strict = true;
 	ax.token = op;
-	add(op, prefixes, new PrefixResolver(Precedence::AV2_TAPP_NONE, false));
+	add(ax, prefixes, new PrefixResolver(Precedence::AV2_TAPP_NONE, false));
 }
 
 void Parser::infix(Makai::String const& op, bool const rightwards) {
@@ -121,18 +162,15 @@ void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AReso
 Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.pushBack(parser.nextExpression());
+	result->children.pushBack(parser.nextExpression(precedence));
 	return result;
 }
 
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.appendBack({lhs, parser.nextExpression()});
+	result->children.appendBack({lhs, parser.nextExpression(Parser::Precedence{enumcast(precedence) - rightwards})});
 	return result;
-}
-
-Parser::Precedence InfixResolver::precedenceOf(BaseContext::Axiom const& tok) {
 }
 
 Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
@@ -143,27 +181,16 @@ Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lh
 	return result;
 }
 
-Node::Instance BinaryResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->base = token;
-	result->children.appendBack({
-		lhs,
-		parser.nextExpression(precedenceOf(token))
-	});
-	return result;
-}
-
-
 Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->children.appendBack({
-		parser.nextExpression(),
+		parser.nextExpression(precedence),
 		lhs
 	});
 	parser.context.expectNext(LTS_TT_IDENTIFIER, "'else'");
 	if (parser.context.value().getString() != "else")
 		parser.context.error("Expected 'else' here!");
-	result->children.pushBack(parser.nextExpression());
+	result->children.pushBack(parser.nextExpression(precedence));
 	return result;
 }

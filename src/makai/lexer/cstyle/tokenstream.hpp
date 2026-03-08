@@ -57,7 +57,7 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_COLON			= ':',
 				LTS_TT_SEMICOLON		= ';',
 				LTS_TT_RAISE			= '^',
-				LTS_TT_BXOR				= LTS_TT_RAISE,
+				LTS_TT_BIT_XOR			= LTS_TT_RAISE,
 				LTS_TT_VBAR				= '|',
 				LTS_TT_PIPE				= LTS_TT_VBAR,
 				LTS_TT_BIT_OR			= LTS_TT_VBAR,
@@ -186,7 +186,7 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Lexer implementation.
 		struct Lexer;
-		
+
 		/// @brief Empty constructor.
 		TokenStream();
 
@@ -237,7 +237,7 @@ namespace Makai::Lexer::CStyle {
 		/// @brief Returns whether the token stream has not encountered an error.
 		/// @return Whether stream has not encountered an error.
 		constexpr bool ok() const {return !err.exists();}
-		
+
 		/// @brief Returns whether the token stream has not encountered an error.
 		/// @return Whether stream has not encountered an error.
 		operator bool() const {return finished();}
