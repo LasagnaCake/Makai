@@ -1,8 +1,10 @@
 #include "resolver.hpp"
 #include "context.hpp"
 
-using namespace Makai::Anima::V2::Toolchain::Assembler;
-using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
+using namespace Makai;
+
+using namespace Anima::V2::Toolchain::Assembler;
+using Type = Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
 static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
@@ -71,9 +73,9 @@ Parser::Parser(BaseContext& context): context(context) {
 	);
 	// Basic prefixes
 	prefix(
-		"sizeof",
-		"countof",
-		"typeof",
+		"size",
+		"count",
+		"type",
 		"sin",
 		"cos",
 		"tan",
@@ -85,6 +87,9 @@ Parser::Parser(BaseContext& context): context(context) {
 		"ln",
 		"not",
 		"return",
+		"ref",
+		"move",
+		"copy",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
@@ -96,7 +101,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix(LTS_TT_DIVIDE, false);
 	infix(LTS_TT_STAR, false);
 	infix(LTS_TT_MODULO, false);
-	infix(LTS_TT_DOT, false);
 	infix(LTS_TT_COMMA, false);
 	infix(LTS_TT_AMP, false);
 	infix(LTS_TT_PIPE, false);
@@ -115,16 +119,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix("fcross", false);
 	infix("is", false);
 	infix("as", false);
-	infix(LTS_TT_ADD_ASSIGN, true);
-	infix(LTS_TT_SUB_ASSIGN, true);
-	infix(LTS_TT_MUL_ASSIGN, true);
-	infix(LTS_TT_DIV_ASSIGN, true);
-	infix(LTS_TT_MOD_ASSIGN, true);
-	infix(LTS_TT_BIT_AND_ASSIGN, true);
-	infix(LTS_TT_BIT_OR_ASSIGN, true);
-	infix(LTS_TT_BIT_XOR_ASSIGN, true);
-	infix(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, true);
-	infix(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, true);
 	// Basic postfixes
 	postfix(
 		LTS_TT_INCREMENT,
@@ -141,10 +135,28 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("while", prefixes, new LoopResolver());
 	add("for", prefixes, new LoopResolver());
 	// Advanced infixes
-	add(LTS_TT_OPEN_BRACKET, infixes, new ArrayResolver());
+	add("if", infixes, new InlineIfElseResolver());
 	add(LTS_TT_COLON, infixes, new DeclarationResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
 	add(LTS_TT_EXCLAMATION, infixes, new FunctionCallResolver());
+	add(LTS_TT_DOT, infixes, new InfixResolver());
+	add(LTS_TT_OPEN_BRACKET, infixes, new ArrayResolver());
+	add(LTS_TT_EQUALS, infixes, new AssignmentResolver());
+	add(LTS_TT_ADD_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_SUB_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_MUL_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_DIV_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_MOD_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_BIT_AND_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_BIT_OR_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_BIT_XOR_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
+}
+
+AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft):
+	precedence(Cast::as<Parser::Precedence>(enumcast(precedence) - rightToLeft)),
+	rightToLeft(rightToLeft) {
 }
 
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
@@ -176,37 +188,37 @@ void Parser::direct(BaseContext::Axiom::Type const op) {
 	BaseContext::Axiom ax;
 	ax.strict = false;
 	ax.type = op;
-	add(ax, prefixes, new DirectResolver(Precedence::AV2_TAPP_NONE, false));
+	add(ax, prefixes, new DirectResolver());
 }
 
 void Parser::prefix(BaseContext::Axiom::Type const op) {
 	BaseContext::Axiom ax;
 	ax.strict = false;
 	ax.type = op;
-	add(ax, prefixes, new PrefixResolver(Precedence::AV2_TAPP_NONE, false));
+	add(ax, prefixes, new PrefixResolver());
 }
 
-void Parser::infix(BaseContext::Axiom::Type const op, bool const rightwards) {
+void Parser::infix(BaseContext::Axiom::Type const op, bool const rightToLeft) {
 	BaseContext::Axiom ax;
 	ax.strict = false;
 	ax.type = op;
-	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightwards));
+	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
 }
 
-void Parser::prefix(Makai::String const& op) {
+void Parser::prefix(String const& op) {
 	BaseContext::Axiom ax;
 	ax.type = LTS_TT_IDENTIFIER;
 	ax.strict = true;
 	ax.token = op;
-	add(ax, prefixes, new PrefixResolver(Precedence::AV2_TAPP_NONE, false));
+	add(ax, prefixes, new PrefixResolver());
 }
 
-void Parser::infix(Makai::String const& op, bool const rightwards) {
+void Parser::infix(String const& op, bool const rightToLeft) {
 	BaseContext::Axiom ax;
 	ax.type = LTS_TT_IDENTIFIER;
 	ax.strict = true;
 	ax.token = op;
-	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightwards));
+	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
 }
 
 void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
@@ -223,9 +235,12 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs
 		if (id == "true")		result->value = true;
 		else if (id == "false")	result->value = false;
 		else if (id == "null")	result->value = null;
-		else isIdentifier = true;
+		else {
+			isIdentifier = true;
+			result->value = id;
+		}
 	} else result->value = token.value;
-	result->content = isIdentifier ? Node::Content::AV2_TANC_NOTHING : Node::Content::AV2_TANC_VALUE;
+	result->content = isIdentifier ? Node::Content::AV2_TANC_PATH : Node::Content::AV2_TANC_VALUE;
 	return result;
 }
 
@@ -240,7 +255,7 @@ Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.appendBack({lhs, parser.nextExpression(Parser::Precedence{enumcast(precedence) - rightwards})});
+	result->children.appendBack({lhs, parser.nextExpression(precedence)});
 	result->content = Node::Content::AV2_TANC_INFIX_OP;
 	return result;
 }
@@ -269,7 +284,7 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 }
 
 Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	auto const expr = parser.nextExpression();
+	auto const expr = parser.nextExpression(precedence);
 	parser.context.expectNext(LTS_TT_CLOSE_PAREN);
 	return expr;
 }
@@ -278,16 +293,16 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->children.pushBack(lhs);
+	result->content = Node::Content::AV2_TANC_FN_CALL;
 	if (parser.context.type() == LTS_TT_EXCLAMATION) return result;
 	while (true) {
-		if (parser.context.next().has(LTS_TT_CLOSE_PAREN)) break;
-		result->children.pushBack(parser.nextExpression());
-		parser.context.expectNext(LTS_TT_COMMA);
-		if (parser.context.next().has(LTS_TT_CLOSE_PAREN))
+		if (parser.context.has(LTS_TT_CLOSE_PAREN)) break;
+		result->children.pushBack(parser.nextExpression(precedence));
+		parser.context.expect(LTS_TT_COMMA);
+		if (parser.context.peek().type == LTS_TT_CLOSE_PAREN)
 			parser.context.error("Expected expression after the comma!");
 	}
-	parser.context.expectNext(LTS_TT_CLOSE_PAREN);
-	result->content = Node::Content::AV2_TANC_FN_CALL;
+	parser.context.expect(LTS_TT_CLOSE_PAREN);
 	return result;
 }
 
@@ -296,7 +311,7 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	result->base = token;
 	while (true) {
 		if (parser.context.next().has(LTS_TT_CLOSE_CURLY)) break;
-		result->children.pushBack(parser.nextExpression());
+		result->children.pushBack(parser.nextExpression(precedence));
 	}
 	parser.context.expectNext(LTS_TT_CLOSE_CURLY);
 	result->content = Node::Content::AV2_TANC_BLOCK;
@@ -309,31 +324,14 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	if (lhs)
 		result->children.pushBack(lhs);
 	while (true) {
-		if (parser.context.next().has(LTS_TT_CLOSE_BRACKET)) break;
-		result->children.pushBack(parser.nextExpression());
-		parser.context.expectNext(LTS_TT_COMMA);
-		if (parser.context.next().has(LTS_TT_CLOSE_BRACKET))
+		if (parser.context.has(LTS_TT_CLOSE_BRACKET)) break;
+		result->children.pushBack(parser.nextExpression(precedence));
+		parser.context.expect(LTS_TT_COMMA);
+		if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
 			parser.context.error("Expected expression after the comma!");
 	}
-	parser.context.expectNext(LTS_TT_CLOSE_BRACKET);
+	parser.context.expect(LTS_TT_CLOSE_BRACKET);
 	result->content = lhs ? Node::Content::AV2_TANC_SUBSCRIPT : Node::Content::AV2_TANC_ARRAY;
-	return result;
-}
-
-
-Node::Instance SubfieldResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->base = token;
-	String fieldID = "";
-	do {
-		parser.context.expectNext(LTS_TT_IDENTIFIER);
-		auto const id = parser.context.value().getString();
-		fieldID += "/" + id;
-		parser.context.next();
-	} while (parser.context.has(LTS_TT_DOT));
-	parser.context.pad();
-	result->content = Node::Content::AV2_TANC_PATH;
-	result->value = fieldID;
 	return result;
 }
 
@@ -357,5 +355,20 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_LOOP;
 	result->value = token.token;
+	return result;
+}
+
+Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_ASSIGNMENT;
+	if (!(
+		lhs->content == Node::Content::AV2_TANC_ASSIGNMENT
+	||	lhs->content == Node::Content::AV2_TANC_PATH
+	)) parser.context.error("Expected assignment chain or declaration path here!");
+	result->children.appendBack({
+		lhs,
+		parser.nextExpression(precedence)
+	});
 	return result;
 }

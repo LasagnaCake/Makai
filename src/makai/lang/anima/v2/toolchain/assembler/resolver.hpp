@@ -8,7 +8,7 @@
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Decl;
 
-	struct Node: ID::Identifiable<Node const, uint64> {
+	struct Node: ID::Identifiable<Node const, ID::VLUID> {
 		using Instance = Instance<Node>;
 
 		enum class Content {
@@ -16,6 +16,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			AV2_TANC_VALUE,
 			AV2_TANC_NAME,
 			AV2_TANC_DECLARATION,
+			AV2_TANC_ASSIGNMENT,
 			AV2_TANC_FN_CALL,
 			AV2_TANC_PREFIX_OP,
 			AV2_TANC_INFIX_OP,
@@ -35,6 +36,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Makai::Instance<Decl>	type;
 		Core::DataLocation		source;
 		BaseContext::Axiom		base;
+
+		constexpr String name() const {
+			auto const base = id();
+			return toString("_u", base[0], "u", base[1], "u", base[2], "u", base[3]);
+		}
 	};
 
 	struct Decl {
@@ -45,26 +51,30 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Parser {
 		enum class Precedence {
 			AV2_TAPP_NONE,
-			AV2_TAPP_RHS_DECAY = 10,
-			AV2_TAPP_ASSIGN = 20,
-			AV2_TAPP_NULL_DECAY = 30,
-			AV2_TAPP_CONDITIONAL = 40,
-			AV2_TAPP_LOR = 50,
-			AV2_TAPP_LXOR = 60,
-			AV2_TAPP_LAND = 70,
-			AV2_TAPP_BOR = 80,
-			AV2_TAPP_BXOR = 90,
-			AV2_TAPP_BAND = 100,
-			AV2_TAPP_EQ_INEQ = 120,
-			AV2_TAPP_COMPARE = 130,
-			AV2_TAPP_ORDER = 140,
-			AV2_TAPP_BIT_SHIFT = 150,
-			AV2_TAPP_ADD_SUB = 160,
-			AV2_TAPP_MUL_DIV_REM = 170,
-			AV2_TAPP_ATAN2 = 180,
-			AV2_TAPP_CROSS_FCROSS = 190,
-			AV2_TAPP_PREFIX = 200,
-			AV2_TAPP_POSTFIX = 210,
+			AV2_TAPP_DECL,
+			AV2_TAPP_BLOCK,
+			AV2_TAPP_BRANCHES_AND_LOOPS,
+			AV2_TAPP_RHS_DECAY,
+			AV2_TAPP_NULL_DECAY,
+			AV2_TAPP_ASSIGN,
+			AV2_TAPP_INLINE_CONDITIONAL,
+			AV2_TAPP_LOR,
+			AV2_TAPP_LXOR,
+			AV2_TAPP_LAND,
+			AV2_TAPP_BOR,
+			AV2_TAPP_BXOR,
+			AV2_TAPP_BAND,
+			AV2_TAPP_EQ_INEQ,
+			AV2_TAPP_COMPARE,
+			AV2_TAPP_ORDER,
+			AV2_TAPP_BIT_SHIFT,
+			AV2_TAPP_ADD_SUB,
+			AV2_TAPP_MUL_DIV_REM,
+			AV2_TAPP_ATAN2,
+			AV2_TAPP_CROSS_FCROSS,
+			AV2_TAPP_PREFIX,
+			AV2_TAPP_POSTFIX,
+			AV2_TAPP_PATH,
 		};
 
 		BaseContext& context;
@@ -89,8 +99,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		void prefix(BaseContext::Axiom::Type const op);
 		void prefix(String const&);
 
-		void infix(BaseContext::Axiom::Type const op, bool const rightwards);
-		void infix(String const& op, bool const rightwards);
+		void infix(BaseContext::Axiom::Type const op, bool const rightToLeft);
+		void infix(String const& op, bool const rightToLeft);
 
 		void postfix(BaseContext::Axiom::Type const op);
 		void postfix(String const& op);
@@ -107,21 +117,21 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct AResolver {
 		virtual ~AResolver();
 
-		Parser::Precedence const	precedence;
-		bool const					rightwards;
-
-		AResolver(Parser::Precedence const precedence = Parser::Precedence::AV2_TAPP_NONE, bool const rightwards = false);
+		AResolver(Parser::Precedence const precedence = Parser::Precedence::AV2_TAPP_NONE, bool const rightToLeft = false);
 
 		virtual Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) = 0;
+
+		Parser::Precedence const	precedence;
+		bool const					rightToLeft;
 	};
 
 	struct DirectResolver: AResolver {
-		using AResolver::AResolver;
+		DirectResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct PrefixResolver: AResolver {
-		using AResolver::AResolver;
+		PrefixResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
@@ -131,70 +141,62 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	};
 
 	struct PostfixResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct PathResolver: AResolver {
+		PathResolver(): AResolver(Parser::Precedence::AV2_TAPP_PATH, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct FunctionCallResolver: AResolver {
-		using AResolver::AResolver;
+		FunctionCallResolver(): AResolver(Parser::Precedence::AV2_TAPP_POSTFIX, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct BlockResolver: AResolver {
-		using AResolver::AResolver;
+		BlockResolver(): AResolver(Parser::Precedence::AV2_TAPP_BLOCK, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct SubExpressionResolver: AResolver {
-		using AResolver::AResolver;
+		SubExpressionResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct BranchResolver: AResolver {
-		using AResolver::AResolver;
+		BranchResolver(): AResolver(Parser::Precedence::AV2_TAPP_BRANCHES_AND_LOOPS, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct LoopResolver: AResolver {
-		using AResolver::AResolver;
+		LoopResolver(): AResolver(Parser::Precedence::AV2_TAPP_BRANCHES_AND_LOOPS, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct InlineIfElseResolver: AResolver {
-		using AResolver::AResolver;
+		InlineIfElseResolver(): AResolver(Parser::Precedence::AV2_TAPP_INLINE_CONDITIONAL, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct DeclarationResolver: AResolver {
-		using AResolver::AResolver;
+		DeclarationResolver(): AResolver(Parser::Precedence::AV2_TAPP_DECL, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct AssignmentResolver: AResolver {
-		using AResolver::AResolver;
+		AssignmentResolver(): AResolver(Parser::Precedence::AV2_TAPP_ASSIGN, true) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct FunctionPrototypeResolver: AResolver {
-		using AResolver::AResolver;
+		FunctionPrototypeResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct ArrayResolver: AResolver {
-		using AResolver::AResolver;
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct ArrayIndexResolver: AResolver {
-		using AResolver::AResolver;
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct SubfieldResolver: AResolver {
-		using AResolver::AResolver;
+		ArrayResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 }
