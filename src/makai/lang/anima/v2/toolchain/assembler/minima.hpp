@@ -6,6 +6,12 @@
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Minima: AAssembler {
 		struct Context: BaseContext {
+			struct Namespace {
+				Dictionary<Instance<Namespace>>	namespaces;
+				Dictionary<Instance<Decl>>		types;
+				Dictionary<Instance<Method>>	methods;
+			};
+
 			struct Method: ID::Identifiable<Method const, uint64> {
 				uint64			retType;
 				List<uint64>	argTypes;

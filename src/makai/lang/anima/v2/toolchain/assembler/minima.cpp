@@ -3,11 +3,11 @@
 using namespace Makai::Anima::V2::Core;
 
 using namespace Makai::Anima::V2::Toolchain::Assembler;
-namespace Runtime = Makai::Anima::V2::Runtime;
-using Type = Minima::TokenStream::Token::Type;
-using enum Type;
 
 using Context = Minima::Context;
+
+using Type = Context::Tokenizer::Token::Type;
+using enum Type;
 
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
@@ -729,43 +729,8 @@ static void declareMethod(Context& context, bool forward = false) {
 	else context.error("Redeclaration of previously-declared method!");
 }
 
-static void declareModule(Context& context) {
-	if (context.module)
-		context.error("Redeclaration of module name!");
-	auto const name =
-		context
-			.getNext(LTS_TT_IDENTIFIER, "module name")
-			.getString()
-	;
-	context.module = name;
-}
-
 static void declareImport(Context& context) {
-	if (context.imports == Context::ImportAction::AV2_TA_MCIA_ERROR)
-		context.error("Import statements are disabled!");
-	else if (context.imports == Context::ImportAction::AV2_TA_MCIA_SKIP)
-		return;
-	auto const path = (
-		context.file.source
-	+	context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "file name").getString()
-	).replace('\\', '/');
-	auto const mod = Makai::File::getText(path);
-	Context ctx;
-	ctx.methods = context.methods;
-	ctx.program	= context.program;
-	ctx.methods.filter(
-		[] (auto const& e) {
-			return !e.value->local;
-		}
-	);
-	ctx.module = null;
-	ctx.parent = context.module ? context.module : context.parent;
-	ctx.file.source = path.splitAtLast('/').front();
-	Minima subm(ctx);
-	subm.assemble();
-	context.methods.append(ctx.methods);
-	context.types.append(ctx.types);
-	context.program	= ctx.program;
+	// TODO: Rethink this
 }
 
 static void doDeclaration(Context& context) {
@@ -781,7 +746,7 @@ static void doDeclaration(Context& context) {
 	else if (decl == "type")
 		declareType(context);
 	else if (decl == "module")
-		declareModule(context);
+		declareModuleStart(context);
 	else if (decl == "import")
 		declareImport(context);
 	else if (decl == "alias")
@@ -828,7 +793,7 @@ static void doExpression(Context& context) {
 }
 
 void Minima::assemble() {
-	while (context.empty()) doExpression(context);
+	while (!context.empty()) doExpression(context);
 	auto const unmapped = context.mapJumps();
 	if (unmapped.size())
 		context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
