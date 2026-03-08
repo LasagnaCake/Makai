@@ -4,7 +4,7 @@
 #include "context.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
-	struct AAssembler {
+	struct AAssembler: IExecutable<void> {
 		using TokenStream	= Lexer::CStyle::TokenStream;
 		using TokenList		= Lexer::CStyle::TokenStream::TokenList;
 		using Program		= Runtime::Program;
@@ -12,8 +12,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		virtual  ~AAssembler() {}
 
 		AAssembler(BaseContext& ctx): context(ctx) {}
-
-		virtual void assemble() = 0;
 
 		BaseContext& context;
 	};

@@ -6,10 +6,8 @@
 #include "parser.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler {
-	struct ACompiler {
+	struct ACompiler: IExecutable<void> {
 		using BaseContext = Assembler::BaseContext;
-		virtual BaseContext::Input compile() = 0;
-		virtual BaseContext::Input transpile() = 0;
 	};
 }
 

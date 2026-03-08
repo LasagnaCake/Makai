@@ -19,7 +19,7 @@ static void doExpression(Context& context) {
 
 }
 
-void Semibreve::assemble() {
+void Semibreve::execute() {
 	while (!context.empty()) doExpression(context);
 }
 

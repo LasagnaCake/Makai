@@ -41,7 +41,7 @@ struct IVisible {
 /// @brief Interface for a clonable object.
 /// @tparam T Object instance type.
 template<class T>
-struct IClonable {
+struct IClonable: T {
 	/// @brief Destructor.
 	constexpr ~IClonable() {}
 	/// @brief Returns a new copy of the object.
@@ -50,6 +50,17 @@ struct IClonable {
 	/// @brief Returns a new copy of the object.
 	/// @return copy of object.
 	constexpr virtual T clone() = 0;
+};
+
+/// @brief Interface for an executable object.
+/// @tparam T Result type.
+template<class T>
+struct IExecutable {
+	/// @brief Destructor.
+	constexpr ~IExecutable() {}
+	/// @brief Executes some code.
+	/// @return Result.
+	constexpr virtual T execute() const = 0;
 };
 
 CTL_NAMESPACE_END
