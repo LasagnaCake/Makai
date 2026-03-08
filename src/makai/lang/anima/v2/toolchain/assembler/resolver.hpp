@@ -27,29 +27,30 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		bool				postfix = false;
 	};
 
-	struct IResolver;
+	struct AResolver;
 
 	struct Parser {
 		enum class Precedence {
 			AV2_TAPP_NONE,
-			AV2_TAPP_RHS_DECAY,
-			AV2_TAPP_ASSIGN,
-			AV2_TAPP_CONDITIONAL,
-			AV2_TAPP_LOR,
-			AV2_TAPP_LXOR,
-			AV2_TAPP_LAND,
-			AV2_TAPP_BOR,
-			AV2_TAPP_BXOR,
-			AV2_TAPP_BAND,
-			AV2_TAPP_EQ_INEQ,
-			AV2_TAPP_COMPARE,
-			AV2_TAPP_ORDER,
-			AV2_TAPP_BIT_SHIFT,
-			AV2_TAPP_ADD_SUB,
-			AV2_TAPP_MUL_DIV_REM,
-			AV2_TAPP_PREFIX,
-			AV2_TAPP_POSTFIX,
-			AV2_TAPP_FN_CALL
+			AV2_TAPP_RHS_DECAY = 10,
+			AV2_TAPP_ASSIGN = 20,
+			AV2_TAPP_NULL_DECAY = 30,
+			AV2_TAPP_CONDITIONAL = 40,
+			AV2_TAPP_LOR = 50,
+			AV2_TAPP_LXOR = 60,
+			AV2_TAPP_LAND = 70,
+			AV2_TAPP_BOR = 80,
+			AV2_TAPP_BXOR = 90,
+			AV2_TAPP_BAND = 100,
+			AV2_TAPP_EQ_INEQ = 120,
+			AV2_TAPP_COMPARE = 130,
+			AV2_TAPP_ORDER = 140,
+			AV2_TAPP_BIT_SHIFT = 150,
+			AV2_TAPP_ADD_SUB = 160,
+			AV2_TAPP_MUL_DIV_REM = 170,
+			AV2_TAPP_PREFIX = 180,
+			AV2_TAPP_POSTFIX = 190,
+			AV2_TAPP_FN_CALL = 200
 		};
 
 		BaseContext& context;
@@ -58,75 +59,88 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		virtual Node::Instance nextExpression(Precedence prec = Precedence::AV2_TAPP_NONE);
 
-		using OperatorBank = Map<BaseContext::Axiom, Instance<IResolver>>;
+		using OperatorBank = Map<BaseContext::Axiom, Instance<AResolver>>;
 
 		OperatorBank prefixes;
 		OperatorBank infixes;
 
-		static void add(BaseContext::Axiom::Type const op, OperatorBank& bank, Instance<IResolver> const& resolver);
-		static void add(String const& op, OperatorBank& bank, Instance<IResolver> const& resolver);
+		static void add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver);
 
 		void prefix(BaseContext::Axiom::Type const op);
-		void prefix(String const& op);
+		void prefix(String const&);
 
-		void infix(BaseContext::Axiom::Type const op);
-		void infix(String const& op);
+		void infix(BaseContext::Axiom::Type const op, bool const rightwards);
+		void infix(String const& op, bool const rightwards);
 
-		template <class... Types> void prefix(Types const&... args) requires (sizeof...(Types) > 1)		{(..., prefix(args));}
-		template <class... Types> void infix(Types const&... args) requires (sizeof...(Types) > 1)		{(..., prefix(args));}
+		template <class... Types> void prefix(Types const&... args) requires (sizeof...(Types) > 1) {(..., prefix(args));}
 
-		usize currentPrecedence();
+		Parser::Precedence currentPrecedence();
 
 		Parser(BaseContext& context);
 	};
 
-	struct IResolver {
-		virtual ~IResolver();
+	struct AResolver {
+		virtual ~AResolver();
 
-		IResolver();
+		Parser::Precedence const	precedence;
+		bool const					rightwards;
 
-		virtual Parser::Precedence precedence(Parser&) {return Parser::Precedence::AV2_TAPP_NONE;}
+		AResolver(Parser::Precedence const precedence, bool const rightwards);
+
 		virtual Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) = 0;
 	};
 
-	struct NameResolver: IResolver {
+	struct NameResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct PrefixResolver: IResolver {
+	struct ValueResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct InfixResolver: IResolver {
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-		Parser::Precedence precedence(Parser& parser) override;
-	};
-
-	struct PostfixResolver: IResolver {
+	struct PrefixResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct FunctionCallResolver: IResolver {
+	struct InfixResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct BlockResolver: IResolver {
+	struct PostfixResolver: AResolver {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct DeclarationResolver: IResolver {
+	struct FunctionCallResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct BinaryResolver: IResolver {
+	struct BlockResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct InlineIfElseResolver: IResolver {
+	struct DeclarationResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct ExpressionResolver: IResolver {
+	struct BinaryResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct InlineIfElseResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct ExpressionResolver: AResolver {
+		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 }
