@@ -1,9 +1,8 @@
 #include "resolver.hpp"
-#include "context.hpp"
 
 using namespace Makai;
 
-using namespace Anima::V2::Toolchain::Assembler;
+using namespace Anima::V2::Toolchain::Compiler;
 using Type = Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
@@ -146,6 +145,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("trait", prefixes, new TraitResolver());
 	add("import", prefixes, new ImportResolver());
 	add("with", prefixes, new TemplateResolver());
+	add("struct", prefixes, new StructureResolver());
 	// Advanced infixes
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());
@@ -372,7 +372,11 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 }
 
 Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_IMPORT;
+	result->value = token.token;
+	return result;
 }
 
 Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {

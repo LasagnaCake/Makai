@@ -1,11 +1,12 @@
 #ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_ASSEMBLER_RESOLVER_H
 #define MAKAILIB_ANIMA_V2_TOOLCHAIN_ASSEMBLER_RESOLVER_H
 
-#include "context.hpp"
-#include "core.hpp"
-#include "../../core/instruction.hpp"
+#include "../assembler/assembler.hpp"
+#include "../../core/core.hpp"
 
-namespace Makai::Anima::V2::Toolchain::Assembler {
+namespace Makai::Anima::V2::Toolchain::Compiler {
+	using BaseContext = Assembler::BaseContext;
+
 	struct Decl;
 
 	struct Node: ID::Identifiable<Node const, ID::VLUID> {
@@ -27,7 +28,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			AV2_TANC_ARRAY,
 			AV2_TANC_SUBSCRIPT,
 			AV2_TANC_BRANCH,
-			AV2_TANC_LOOP
+			AV2_TANC_LOOP,
+			AV2_TANC_IMPORT,
+			AV2_TANC_TEMPLATE
 		};
 
 		Content					content = Content::AV2_TANC_EMPTY;
@@ -53,7 +56,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			AV2_TAPP_NONE,
 			AV2_TAPP_DECL,
 			AV2_TAPP_BLOCK,
-			AV2_TAPP_BRANCHES_AND_LOOPS,
 			AV2_TAPP_RHS_DECAY,
 			AV2_TAPP_NULL_DECAY,
 			AV2_TAPP_ASSIGN,
@@ -168,12 +170,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	};
 
 	struct BranchResolver: AResolver {
-		BranchResolver(): AResolver(Parser::Precedence::AV2_TAPP_BRANCHES_AND_LOOPS, false) {}
+		BranchResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct LoopResolver: AResolver {
-		LoopResolver(): AResolver(Parser::Precedence::AV2_TAPP_BRANCHES_AND_LOOPS, false) {}
+		LoopResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
@@ -219,6 +221,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 	struct TemplateResolver: AResolver {
 		TemplateResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct StructureResolver: AResolver {
+		StructureResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 }
