@@ -13,13 +13,14 @@ static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = tok.value.getString();
 			if (id == "else") return AV2_TAPP_NULL_DECAY;
-			else if (id == "if") return AV2_TAPP_CONDITIONAL;
 			else if (id == "and") return AV2_TAPP_LAND;
 			else if (id == "or") return AV2_TAPP_LOR;
 			else if (id == "xor") return AV2_TAPP_LXOR;
 			else if (id == "cross" || id == "fcross")
 				return AV2_TAPP_CROSS_FCROSS;
 			else if (id == "atan") return AV2_TAPP_ATAN2;
+			else if (id == "as") return AV2_TAPP_CAST;
+			else if (id == "is") return AV2_TAPP_TYPE_CHECK;
 		}
 		default: break;
 		case LTS_TT_ASSIGN:
@@ -90,6 +91,8 @@ Parser::Parser(BaseContext& context): context(context) {
 		"ref",
 		"move",
 		"copy",
+		"is",
+		"as",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
@@ -134,8 +137,18 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("do", prefixes, new LoopResolver());
 	add("while", prefixes, new LoopResolver());
 	add("for", prefixes, new LoopResolver());
+	add("module", prefixes, new DeclarationResolver());
+	add("local", prefixes, new DeclarationResolver());
+	add("global", prefixes, new DeclarationResolver());
+	add("out", prefixes, new DeclarationResolver());
+	add("func", prefixes, new DeclarationResolver());
+	add("extend", prefixes, new ExtensionResolver());
+	add("trait", prefixes, new TraitResolver());
+	add("import", prefixes, new ImportResolver());
+	add("with", prefixes, new TemplateResolver());
 	// Advanced infixes
 	add("if", infixes, new InlineIfElseResolver());
+	add("unless", infixes, new InlineIfElseResolver());
 	add(LTS_TT_COLON, infixes, new DeclarationResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
 	add(LTS_TT_EXCLAMATION, infixes, new FunctionCallResolver());
@@ -356,6 +369,10 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	result->content = Node::Content::AV2_TANC_LOOP;
 	result->value = token.token;
 	return result;
+}
+
+Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+
 }
 
 Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {

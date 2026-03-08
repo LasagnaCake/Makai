@@ -49,7 +49,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct AResolver;
 
 	struct Parser {
-		enum class Precedence {
+		enum class Precedence: uint16 {
 			AV2_TAPP_NONE,
 			AV2_TAPP_DECL,
 			AV2_TAPP_BLOCK,
@@ -61,6 +61,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			AV2_TAPP_LOR,
 			AV2_TAPP_LXOR,
 			AV2_TAPP_LAND,
+			AV2_TAPP_TYPE_CHECK,
 			AV2_TAPP_BOR,
 			AV2_TAPP_BXOR,
 			AV2_TAPP_BAND,
@@ -73,6 +74,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			AV2_TAPP_ATAN2,
 			AV2_TAPP_CROSS_FCROSS,
 			AV2_TAPP_PREFIX,
+			AV2_TAPP_CAST,
 			AV2_TAPP_POSTFIX,
 			AV2_TAPP_PATH,
 		};
@@ -195,8 +197,28 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct ExtensionResolver: AResolver {
+		ExtensionResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct TraitResolver: AResolver {
+		TraitResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct ArrayResolver: AResolver {
 		ArrayResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct ImportResolver: AResolver {
+		ImportResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct TemplateResolver: AResolver {
+		TemplateResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 }
