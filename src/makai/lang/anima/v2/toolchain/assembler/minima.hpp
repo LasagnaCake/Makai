@@ -64,7 +64,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		};
 
 		Minima(Context& context): AAssembler(context), context(context) {}
-		void execute() override;
+		void invoke() override;
 
 		Context& context;
 	};

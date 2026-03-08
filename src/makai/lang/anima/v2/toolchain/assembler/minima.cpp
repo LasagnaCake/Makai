@@ -792,7 +792,7 @@ static void doExpression(Context& context) {
 	else doLabel(context);
 }
 
-void Minima::execute() {
+void Minima::invoke() {
 	while (!context.empty()) doExpression(context);
 	auto const unmapped = context.mapJumps();
 	if (unmapped.size())

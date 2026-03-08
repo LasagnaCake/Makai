@@ -4,8 +4,9 @@
 #include "compiler.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler {
-	struct Breve: IExecutable<void> {
-		using BaseContext = ACompiler::BaseContext;
+	struct Breve: ACompiler {
+
+		void invoke() override;
 	};
 }
 

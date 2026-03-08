@@ -52,15 +52,30 @@ struct IClonable: T {
 	constexpr virtual T clone() = 0;
 };
 
-/// @brief Interface for an executable object.
+/// @brief Interface for an invokable object.
 /// @tparam T Result type.
-template<class T>
-struct IExecutable {
+/// @tparam Args... Argument types.
+template<class T, class... Args>
+struct IInvokable {
 	/// @brief Destructor.
-	constexpr ~IExecutable() {}
-	/// @brief Executes some code.
+	constexpr ~IInvokable() {}
+	/// @brief Invokes some code.
+	/// @param args... arguments.
 	/// @return Result.
-	constexpr virtual T execute() const = 0;
+	constexpr virtual T invoke(Args... args) = 0;
+};
+
+/// @brief Interface for a const-invokable object.
+/// @tparam T Result type.
+/// @tparam Args... Argument types.
+template<class T, class... Args>
+struct IConstInvokable {
+	/// @brief Destructor.
+	constexpr ~IConstInvokable() {}
+	/// @brief Invokes some code.
+	/// @param args... arguments.
+	/// @return Result.
+	constexpr virtual T invoke(Args... args) const = 0;
 };
 
 CTL_NAMESPACE_END

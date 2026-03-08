@@ -8,7 +8,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		struct Context: BaseContext {};
 
 		Semibreve(Context& context): AAssembler(context), context(context) {}
-		void execute() override;
+		void invoke() override;
 
 		Context& context;
 	};
