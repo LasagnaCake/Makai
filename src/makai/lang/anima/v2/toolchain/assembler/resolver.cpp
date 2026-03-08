@@ -15,6 +15,9 @@ static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
 			else if (id == "and") return AV2_TAPP_LAND;
 			else if (id == "or") return AV2_TAPP_LOR;
 			else if (id == "xor") return AV2_TAPP_LXOR;
+			else if (id == "cross" || id == "fcross")
+				return AV2_TAPP_CROSS_FCROSS;
+			else if (id == "atan") return AV2_TAPP_ATAN2;
 		}
 		default: break;
 		case LTS_TT_ASSIGN:
@@ -51,6 +54,7 @@ static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
 		case LTS_TT_DECREMENT:
 		case LTS_TT_DOT: return AV2_TAPP_POSTFIX;
 		case LTS_TT_COMMA: return AV2_TAPP_RHS_DECAY;
+		case LTS_TT_QUESTION: return AV2_TAPP_NULL_DECAY;
 	}
 	return Parser::Precedence::AV2_TAPP_NONE;
 }
@@ -68,7 +72,17 @@ Parser::Parser(BaseContext& context): context(context) {
 		"sizeof",
 		"countof",
 		"typeof",
+		"sin",
+		"cos",
+		"tan",
+		"asin",
+		"acos",
+		"atan",
+		"log2",
+		"log10",
+		"ln",
 		"not",
+		"return",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
@@ -86,11 +100,39 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix(LTS_TT_RAISE, false);
 	infix(LTS_TT_LOGIC_AND, false);
 	infix(LTS_TT_LOGIC_OR, false);
+	infix(LTS_TT_LESS_THAN, false);
+	infix(LTS_TT_GREATER_THAN, false);
+	infix(LTS_TT_COMPARE_LESS_EQUALS, false);
+	infix(LTS_TT_COMPARE_GREATER_EQUALS, false);
+	infix(LTS_TT_COMPARE_EQUALS, false);
+	infix(LTS_TT_COMPARE_NOT_EQUALS, false);
 	infix("xor", false);
+	infix("atan", false);
+	infix("cross", false);
+	infix("fcross", false);
+	infix("is", false);
+	infix("as", false);
+	infix(LTS_TT_ADD_ASSIGN, true);
+	infix(LTS_TT_SUB_ASSIGN, true);
+	infix(LTS_TT_MUL_ASSIGN, true);
+	infix(LTS_TT_DIV_ASSIGN, true);
+	infix(LTS_TT_MOD_ASSIGN, true);
+	infix(LTS_TT_BIT_AND_ASSIGN, true);
+	infix(LTS_TT_BIT_OR_ASSIGN, true);
+	infix(LTS_TT_BIT_XOR_ASSIGN, true);
+	infix(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, true);
+	infix(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, true);
 	postfix(
 		LTS_TT_INCREMENT,
 		LTS_TT_DECREMENT
 	);
+	add({{.type = LTS_TT_OPEN_PAREN}}, prefixes, new SubExpressionResolver());
+	add({{.type = LTS_TT_OPEN_CURLY}}, prefixes, new BlockResolver());
+	add({{.type = LTS_TT_OPEN_BRACKET}}, prefixes, new ArrayResolver());
+	add({{.type = LTS_TT_OPEN_BRACKET}}, infixes, new ArrayResolver());
+	add({{.type = LTS_TT_COLON}}, infixes, new DeclarationResolver());
+	add({{.type = LTS_TT_OPEN_PAREN}}, infixes, new FunctionCallResolver());
+	add({{.type = LTS_TT_EXCLAMATION}}, infixes, new FunctionCallResolver());
 }
 
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
@@ -184,6 +226,7 @@ Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lh
 Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
+	result->base.token = "@::if-else";
 	result->children.appendBack({
 		parser.nextExpression(precedence),
 		lhs
@@ -192,5 +235,79 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 	if (parser.context.value().getString() != "else")
 		parser.context.error("Expected 'else' here!");
 	result->children.pushBack(parser.nextExpression(precedence));
+	return result;
+}
+
+Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	auto const expr = parser.nextExpression();
+	parser.context.expectNext(LTS_TT_CLOSE_PAREN);
+	return expr;
+}
+
+Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->base.token = "@::call";
+	result->children.pushBack(lhs);
+	if (parser.context.type() == LTS_TT_EXCLAMATION) return result;
+	while (true) {
+		if (parser.context.next().has(LTS_TT_CLOSE_PAREN)) break;
+		result->children.pushBack(parser.nextExpression());
+		parser.context.expectNext(LTS_TT_COMMA);
+		if (parser.context.next().has(LTS_TT_CLOSE_PAREN))
+			parser.context.error("Expected expression after the comma!");
+	}
+	parser.context.expectNext(LTS_TT_CLOSE_PAREN);
+	return result;
+}
+
+Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->base.token = "@::block";
+	while (true) {
+		if (parser.context.next().has(LTS_TT_CLOSE_CURLY)) break;
+		result->children.pushBack(parser.nextExpression());
+	}
+	parser.context.expectNext(LTS_TT_CLOSE_CURLY);
+	return result;
+}
+
+Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->base.token = lhs ? "@::index" : "@::array";
+	if (lhs)
+		result->children.pushBack(lhs);
+	while (true) {
+		if (parser.context.next().has(LTS_TT_CLOSE_BRACKET)) break;
+		result->children.pushBack(parser.nextExpression());
+		parser.context.expectNext(LTS_TT_COMMA);
+		if (parser.context.next().has(LTS_TT_CLOSE_BRACKET))
+			parser.context.error("Expected expression after the comma!");
+	}
+	parser.context.expectNext(LTS_TT_CLOSE_BRACKET);
+	return result;
+}
+
+
+Node::Instance SubfieldResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->base.token = "@::field:";
+	do {
+		parser.context.expectNext(LTS_TT_IDENTIFIER);
+		auto const id = parser.context.value().getString();
+		result->base.token += "/" + id;
+		parser.context.next();
+	} while (parser.context.has(LTS_TT_DOT));
+	parser.context.pad();
+	return result;
+}
+
+Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->base.token = "@::decl";
 	return result;
 }

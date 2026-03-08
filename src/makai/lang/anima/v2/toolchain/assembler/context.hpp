@@ -23,6 +23,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			String sourceFile;
 
 			constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
+				if (strict != other.strict)
+					return strict <=> other.strict;
 				if (!strict) return type <=> other.type;
 				Ordered::OrderType order = type <=> other.type;
 				if (order == Ordered::Order::EQUAL) return value <=> other.value;
@@ -106,7 +108,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return *this;
 		}
 
-		BaseContext& pad(usize const count) {
+		BaseContext& pad(usize const count = 1) {
 			if (!count) return *this;
 			if (count == 1) tokens.pushBack({});
 			else put(Input().resize(count, {}));

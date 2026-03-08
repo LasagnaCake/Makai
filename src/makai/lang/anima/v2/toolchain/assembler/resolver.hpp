@@ -6,25 +6,24 @@
 #include "../../core/instruction.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Assembler {
+	struct Decl;
+
 	struct Node: ID::Identifiable<Node const, uint64> {
 		using Instance = Instance<Node>;
 
-		enum class Type {
-			AV2_TANT_CONSTANT,
-			AV2_TANT_BIN_OP,
-			AV2_TANT_UN_OP,
-			AV2_TANT_INLINE_IF_ELSE,
-			AV2_TANT_FN_CALL,
-			AV2_TANT_VAR_DECL,
-			AV2_TANT_FN_DECL,
-			AV2_TANT_PATH_RESOLVE,
-		};
+		List<Instance>			children;
+		Makai::Instance<Decl>	type;
+		Core::DataLocation		source;
+		BaseContext::Axiom		base;
+		bool					postfix = false;
+	};
 
-		Type				type;
-		List<Instance>		children;
-		Core::DataLocation	source;
-		BaseContext::Axiom	base;
-		bool				postfix = false;
+	struct Decl {
+	};
+
+	struct Namespace {
+		String const name;
+		Dictionary<Instance<Namespace>> children;
 	};
 
 	struct AResolver;
@@ -48,8 +47,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			AV2_TAPP_BIT_SHIFT = 150,
 			AV2_TAPP_ADD_SUB = 160,
 			AV2_TAPP_MUL_DIV_REM = 170,
-			AV2_TAPP_PREFIX = 180,
-			AV2_TAPP_POSTFIX = 190,
+			AV2_TAPP_ATAN2 = 180,
+			AV2_TAPP_CROSS_FCROSS = 190,
+			AV2_TAPP_PREFIX = 200,
+			AV2_TAPP_POSTFIX = 210,
 		};
 
 		BaseContext& context;
@@ -93,7 +94,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Parser::Precedence const	precedence;
 		bool const					rightwards;
 
-		AResolver(Parser::Precedence const precedence, bool const rightwards);
+		AResolver(Parser::Precedence const precedence = Parser::Precedence::AV2_TAPP_NONE, bool const rightwards = false);
 
 		virtual Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) = 0;
 	};
@@ -117,6 +118,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct PathResolver: AResolver {
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct FunctionCallResolver: AResolver {
 		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
@@ -127,7 +132,17 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct DeclarationResolver: AResolver {
+	struct SubExpressionResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct ConditionalBranchingResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct RepeatLoopResolver: AResolver {
 		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
@@ -138,6 +153,36 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 	};
 
 	struct ExpressionResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct DeclarationResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct AssignmentResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct FunctionPrototypeResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct ArrayResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct ArrayIndexResolver: AResolver {
+		using AResolver::AResolver;
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct SubfieldResolver: AResolver {
 		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
