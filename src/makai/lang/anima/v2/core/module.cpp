@@ -117,14 +117,14 @@ Makai::Data::Value Module::Labels::serialize() const {
 Module::Labels Module::Labels::deserialize(Makai::Data::Value const& v) {
 	Labels labels;
 	if (v.contains("jumps")) {
-		auto const jumpLabels	= v["jumps"];
+		auto const jumpLabels = v["jumps"];
 		for (auto [label, id]: jumpLabels.items())
-			labels.jumps[label]		= id;
+			labels.jumps[label] = id;
 	}
 	if (v.contains("globals")) {
-		auto const globalLabels	= v["globals"];
+		auto const globalLabels = v["globals"];
 		for (auto [label, id]: globalLabels.items())
-			labels.globals[label]	= id;
+			labels.globals[label] = id;
 	}
 	return labels;
 }
