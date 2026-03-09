@@ -5,10 +5,16 @@ using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
-	if (v.contains("const") && v["const"].isBytes()) {
-		auto const bin = v["const"].get<Makai::Data::Value::ByteListType>();
-		auto const start = bin.begin();
-	}
+	mod.strings =
+		v.fetch(
+			"const",
+			Makai::Data::Value::ArrayType()
+		).toList<String>(
+			[] (auto& e) {
+				return e.getString();
+			}
+		)
+	;
 	auto const code		= v["code"].get<Makai::Data::Value::ByteListType>();
 	auto const jumps	= v["jumps"].get<Makai::Data::Value::ByteListType>();
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
