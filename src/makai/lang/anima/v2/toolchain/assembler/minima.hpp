@@ -53,13 +53,19 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			uint64 getJumpTarget(String const& name);
 			bool hasJumpTarget(String const& name);
 
-			StringList mapJumps();
+			void finalize();
 
 			virtual Core::Module onImport(String const& file);
 
+			void addModule(Instance<Namespace> const& module);
+			void addMethod(Instance<Method> const& method);
+			void addType(Instance<Decl> const& type);
+
+			Instance<Namespace>	getModule(String const& name);
+			Instance<Method>	getMethod(String const& name);
+			Instance<Decl>		getType(String const& name);
+
 			Core::Module					program;
-			Nullable<String>				parent;
-			Nullable<String>				module;
 			Dictionary<Instance<Decl>>		types;
 			Dictionary<Instance<Method>>	methods;
 

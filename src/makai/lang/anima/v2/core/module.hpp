@@ -36,27 +36,30 @@ namespace Makai::Anima::V2::Core {
 			uint64			retType;
 			List<uint64>	argTypes;
 			bool			out = false;
-			uint64			entrypoint;
+			String			entrypoint;
 			uint64			size;
 		};
 
 		struct Declaration {
-			StringList							aliases;
-			uint64								flags		= 0;
-			Nullable<Core::BasicType>			basic		= Core::BasicType::AV2_BT_VOID;
-			Nullable<uint64>					base		= null;
-			uint64								byteSize	= 0;
-			uint64								alignment	= 1;
-			List<uint64>						fields;
-			Map<Core::BinaryOperator, uint64>	bops;
-			Map<Core::UnaryOperator, uint64>	uops;
-			Instance<Namespace>					ns;
+			StringList					aliases;
+			uint64						flags		= 0;
+			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
+			Nullable<uint64>			base		= null;
+			uint64						byteSize	= 0;
+			uint64						alignment	= 1;
+			List<uint64>				fields;
+			Dictionary<uint64>			operators;
+			Dictionary<uint64>			casts;
+			Instance<Namespace>			ns;
+		};
+
+		struct ToRemapLater {
+
 		};
 
 		struct Labels {
 			Label	globals;
 			Label	jumps;
-
 			Data::Value serialize() const;
 			static Labels deserialize(Data::Value const& v);
 		};
@@ -70,7 +73,7 @@ namespace Makai::Anima::V2::Core {
 			static NativeInterface deserialize(Data::Value const& v);
 		};
 
-		Data::Value serialize() const;
+		Data::Value serialize(bool forceSymbolsToBeKept = false) const;
 
 		static Module deserialize(Data::Value const& v);
 
@@ -85,6 +88,7 @@ namespace Makai::Anima::V2::Core {
 		List<Method>			methods;
 		List<Declaration>		types;
 		List<Namespace>			namespaces;
+		Dictionary<List<usize>>	jumpsToMap;
 	};
 }
 

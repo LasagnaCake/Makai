@@ -29,13 +29,13 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 	return mod;
 }
 
-Makai::Data::Value Module::serialize() const {
+Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
 	out["constants"]	= constants;
 	out["jumps"]		= jumpTable.toBytes();
 	out["code"]			= code.toBytes();
 	out["version"]		= art;
-	if (type == Module::Type::AV2_CMT_LIBRARY) {
+	if (type == Module::Type::AV2_CMT_LIBRARY || forceSymbolsToBeKept) {
 		out["labels"]	= out.object();
 		auto& outLabels = out["labels"];
 		outLabels["jumps"]		= out.object();
@@ -46,6 +46,9 @@ Makai::Data::Value Module::serialize() const {
 			outGlobals[name] = id;
 		for (auto& [name, id]: labels.jumps)
 			outJumps[name] = id;
+		out["unmapped"] = out.object();
+		for (auto& [name, places]: jumpsToMap)
+			out[name] = places.toList<Makai::Data::Value>();
 	}
 	out["ani"]	= ani;
 	out["type"]	= enumcast(type);

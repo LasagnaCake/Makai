@@ -137,10 +137,12 @@ static Location getConstantLocation(Context& context) {
 	if (isNumber) {
 		switch (context.type()) {
 			case LTS_TT_INTEGER:
-				loc.id = context.addConstant(context.value().getSigned() * (negated ? -1 : +1));
+				loc.source = DataLocation::AV2_DL_INT;
+				loc.id = context.value().getSigned() * (negated ? -1 : +1);
 			break;
 			case LTS_TT_REAL:
-				loc.id = context.addConstant(context.value().getReal() * (negated ? -1 : +1));
+				loc.source = DataLocation::AV2_DL_REAL;
+				loc.id = Makai::Cast::bit<uint64>(context.value().getReal() * (negated ? -1 : +1));
 			break;
 			default: context.error("Expected number here!");
 		}
@@ -148,10 +150,16 @@ static Location getConstantLocation(Context& context) {
 		switch (context.type()) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
-			case LTS_TT_INTEGER:
-			case LTS_TT_REAL:
-			case LTS_TT_CHARACTER:
 				loc.id = context.addConstant(context.value());
+			case LTS_TT_INTEGER:
+				loc.source = DataLocation::AV2_DL_UINT;
+				loc.id = context.value().getUnsigned();
+			case LTS_TT_REAL:
+				loc.source = DataLocation::AV2_DL_REAL;
+				loc.id = Makai::Cast::bit<uint64>(context.value().getReal());
+			case LTS_TT_CHARACTER:
+				loc.source = DataLocation::AV2_DL_UINT;
+				loc.id = context.value().getUnsigned();
 			break;
 			default: context.error("Invalid constant!");
 		}
@@ -160,6 +168,8 @@ static Location getConstantLocation(Context& context) {
 }
 
 static Location getLabelLocation(Context& context) {
+	if (context.program.type == Module::Type::AV2_CMT_LIBRARY)
+		context.error("Cannot use 'placeof' inside library programs!");
 	auto const current =
 		context
 			.getNext(LTS_TT_IDENTIFIER, "label name")
@@ -167,7 +177,7 @@ static Location getLabelLocation(Context& context) {
 	;
 	if (!context.hasJumpTarget(current))
 		context.error("Label has not been declared yet!");
-	return {DataLocation::AV2_DL_CONST, context.getJumpTarget(current)};
+	return {DataLocation::AV2_DL_UINT, context.getJumpTarget(current)};
 }
 
 static Location getDataLocation(Context& context) {
@@ -706,7 +716,7 @@ static void getMethodVisibility(Context& context, Context::Method& method) {
 	}
 }
 
-static void declareMethod(Context& context, bool forward = false) {
+static void declareMethodPrototype(Context& context) {
 	auto const method = new Context::Method();
 	getMethodVisibility(context, *method);
 	auto id = context.get(LTS_TT_IDENTIFIER, "return type").getString();
@@ -721,14 +731,29 @@ static void declareMethod(Context& context, bool forward = false) {
 			method->argTypes.pushBack(context.types[id]->id());
 		else context.error("Argument type does not exist!");
 	}
-	auto const name = context.getNext(LTS_TT_IDENTIFIER, "function name").getString();
-	if (!forward) doLabel(context);
-	method->entry = name;
-	if (forward && context.methods.contains(name))
+	auto const name = context.getNext(LTS_TT_IDENTIFIER, "method name").getString();
+	if (context.methods.contains(name))
 		context.error("Redeclaration of previously-declared method!");
-	else if (!forward && context.methods.contains(name) && context.methods[name]->size)
-		context.error("Redeclaration of previously-declared method!");
-	context.methods[name] = method;
+	context.addMethod(method);
+}
+
+static void declareMethodBody(Context& context) {
+	if (context.next().has(Type{'.'})) {
+		if (context.methodStack.empty())
+			context.error("Missing method body!");
+		auto const method = context.methodStack.popBack();
+		method->size = context.program.code.size() - method->size;
+	} else {
+		auto const name = context.getNext(LTS_TT_IDENTIFIER, "method name").getString();
+		if (!context.methods.contains(name))
+			context.error("Method prototype does not exist!");
+		auto const method = context.getMethod(name);
+		context.methodStack.pushBack(method);
+		auto const lname = context.getNext(LTS_TT_IDENTIFIER, "entrypoint").getString();
+		doLabel(context);
+		method->entry = lname;
+		method->size = context.program.code.size();
+	}
 }
 
 static void declareImport(Context& context) {
@@ -758,9 +783,9 @@ static void doDeclaration(Context& context) {
 		doLabel(context);
 		context.program.ani.in[hook] = context.program.labels.jumps[hook];
 	} else if (decl == "def")
-		declareMethod(context);
+		declareMethodBody(context);
 	else if (decl == "fn")
-		declareMethod(context, true);
+		declareMethodPrototype(context);
 	else if (decl == "type")
 		declareType(context);
 	else if (decl == "module")
@@ -814,51 +839,49 @@ static void doExpression(Context& context) {
 
 void Minima::invoke() {
 	while (!context.empty()) doExpression(context);
-	auto const unmapped = context.mapJumps();
-	if (unmapped.size())
-		context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
-	for (auto& [id, loc]: context.program.labels.jumps)
-		if (context.program.ani.in.contains(id))
-			context.program.ani.in[id] = context.program.labels.jumps[id];
+	if (context.program.type != Core::Module::Type::AV2_CMT_LIBRARY) {
+		context.finalize();
+		auto const unmapped = context.program.unmapped.keys();
+		if (unmapped.size())
+			context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
+	}
 	context.methods.filter(
 		[] (auto const& e) {
 			return !e.value->local;
 		}
 	);
-	if (!(context.module || context.parent)) {
-		context.program.types.resize(context.types.size(), {});
-		for (auto& [name, type]: context.types) {
-			auto& decl = context.program.types[type->id()];
-			if (decl.aliases.size()) {
-				decl.aliases.pushBack(name);
-				continue;
-			}
-			decl = {
-				.aliases	= Makai::StringList::from(name),
-				.flags		= type->flags
-			};
-			if (type->basic)
-				decl.basic = *type->basic;
-			if (type->base)
-				decl.base = *type->base;
+	context.program.types.resize(context.types.size(), {});
+	for (auto& [name, type]: context.types) {
+		auto& decl = context.program.types[type->id()];
+		if (decl.aliases.size()) {
+			decl.aliases.pushBack(name);
+			continue;
 		}
-		context.program.methods.resize(context.methods.size(), {});
-		for (auto& [name, method]: context.methods) {
-			auto& decl = context.program.methods.pushBack({}).back();
-			decl = {
-				.id			= method->id(),
-				.name		= name,
-				.retType	= method->retType,
-				.argTypes	= method->argTypes,
-				.out		= method->out,
-				.entrypoint	= context.program.labels.jumps[method->entry]
-			};
-		}
-		decltype (context.program.methods) temp;
-		temp.resize(context.methods.size(), {});
-		for (auto& method: context.program.methods)
-			temp[method.id] = method;
-		context.program.methods = temp;
+		decl = {
+			.aliases	= Makai::StringList::from(name),
+			.flags		= type->flags
+		};
+		if (type->basic)
+			decl.basic = *type->basic;
+		if (type->base)
+			decl.base = *type->base;
 	}
+	context.program.methods.resize(context.methods.size(), {});
+	for (auto& [name, method]: context.methods) {
+		auto& decl = context.program.methods.pushBack({}).back();
+		decl = {
+			.id			= method->id(),
+			.name		= name,
+			.retType	= method->retType,
+			.argTypes	= method->argTypes,
+			.out		= method->out,
+			.entrypoint	= method->entry
+		};
+	}
+	decltype (context.program.methods) temp;
+	temp.resize(context.methods.size(), {});
+	for (auto& method: context.program.methods)
+		temp[method.id] = method;
+	context.program.methods = temp;
 }
 CTL_DIAGBLOCK_END
