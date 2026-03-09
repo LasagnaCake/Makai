@@ -12,6 +12,11 @@ using enum Type;
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
+
+uint64 Context::addStringLiteral(String const& str) {
+
+}
+
 struct Location {
 	DataLocation			source;
 	Makai::Nullable<uint64>	id		= null;
@@ -100,7 +105,7 @@ static Location getExtern(Context& context) {
 		case LTS_TT_IDENTIFIER:
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
-			externID = context.addConstant(context.value().getString());
+			externID = context.addStringLiteral(context.value().getString());
 		break;
 		default: context.error("Expected external location name here!");
 	}
@@ -133,7 +138,7 @@ static Location getConstantLocation(Context& context) {
 			negated = !negated;
 		type = context.next().type();
 	}
-	Location loc {.source = DataLocation::AV2_DL_CONST};
+	Location loc {.source = DataLocation::AV2_DL_STRING};
 	if (isNumber) {
 		switch (context.type()) {
 			case LTS_TT_INTEGER:
@@ -150,7 +155,7 @@ static Location getConstantLocation(Context& context) {
 		switch (context.type()) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
-				loc.id = context.addConstant(context.value());
+				loc.id = context.addStringLiteral(context.value().getString());
 			case LTS_TT_INTEGER:
 				loc.source = DataLocation::AV2_DL_UINT;
 				loc.id = context.value().getUnsigned();
@@ -207,11 +212,10 @@ static Location getDataLocation(Context& context) {
 			else if (id == "global" || id == "g")		loc |= getGlobal(context);
 			else if (id == "external" || id == "out")	loc |= getExtern(context);
 			else if (id == "temporary" || id == "temp")	loc |= Location{DataLocation::AV2_DL_TEMPORARY, uint64{-1}};
-			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{0}};
-			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{1}};
-			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{2}};
-			else if (id == "null" || id == "nil")		loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{3}};
-			else if (id == "bytes" || id == "bin")		loc |= Location{DataLocation::AV2_DL_INTERNAL, uint64{9}};
+			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_BOOL, uint64{0}};
+			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_BOOL, uint64{1}};
+			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_VOID, null};
+			else if (id == "null" || id == "nil")		loc |= Location{DataLocation::AV2_DL_NULL, null};
 			else context.error("Invalid data source!");
 		}
 		case Type{'&'}:
@@ -841,7 +845,7 @@ void Minima::invoke() {
 	while (!context.empty()) doExpression(context);
 	if (context.program.type != Core::Module::Type::AV2_CMT_LIBRARY) {
 		context.finalize();
-		auto const unmapped = context.program.unmapped.keys();
+		auto const unmapped = context.program.jumpsToMap.keys();
 		if (unmapped.size())
 			context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
 	}

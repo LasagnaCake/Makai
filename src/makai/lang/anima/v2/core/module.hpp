@@ -79,7 +79,7 @@ namespace Makai::Anima::V2::Core {
 
 		Type					type;
 		Version					art			= ART_VER;
-		Data::Value::ArrayType	constants;
+		StringList				strings;
 		List<Core::Instruction>	code;
 		List<uint64>			jumpTable;
 		Labels					labels;

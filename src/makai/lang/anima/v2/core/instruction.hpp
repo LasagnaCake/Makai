@@ -6,16 +6,20 @@
 namespace Makai::Anima::V2::Core {
 	/// @brief Data location.
 	enum class DataLocation: uint8 {
-		/// @brief Internal value.
-		AV2_DL_INTERNAL,
+		/// @brief Void value.
+		AV2_DL_VOID,
+		/// @brief Null value.
+		AV2_DL_NULL,
+		/// @brief Boolean value.
+		AV2_DL_BOOL,
 		/// @brief Unsigned integer value.
 		AV2_DL_UINT,
 		/// @brief Signed integer value.
 		AV2_DL_INT,
 		/// @brief Floating point value.
 		AV2_DL_REAL,
-		/// @brief Constant data.
-		AV2_DL_CONST,
+		/// @brief Text value.
+		AV2_DL_STRING,
 		/// @brief Value in absolute position in the global stack.
 		AV2_DL_STACK,
 		/// @brief Value in offset from the top of the global stack.

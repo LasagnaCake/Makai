@@ -1,11 +1,14 @@
 #include "module.hpp"
+#include "makai/ctl/ctl/typetraits/cast.hpp"
 
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
-	if (v.contains("constants") && v["constants"].isArray())
-		mod.constants	= v["constants"].get<Makai::Data::Value::ArrayType>();
+	if (v.contains("const") && v["const"].isBytes()) {
+		auto const bin = v["const"].get<Makai::Data::Value::ByteListType>();
+		auto const start = bin.begin();
+	}
 	auto const code		= v["code"].get<Makai::Data::Value::ByteListType>();
 	auto const jumps	= v["jumps"].get<Makai::Data::Value::ByteListType>();
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
@@ -31,10 +34,17 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 
 Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
-	out["constants"]	= constants;
-	out["jumps"]		= jumpTable.toBytes();
-	out["code"]			= code.toBytes();
-	out["version"]		= art;
+	Binary<> strs;
+	for (auto& str: strings) {
+		uint64 const sz = str.size();
+		auto addr = Makai::Cast::rewrite<ref<byte const>>(&sz);
+		strs.appendBack(Binary<>(addr, addr + sizeof(sz)));
+		strs.appendBack(str.toBytes());
+	}
+	out["const"]	= strs;
+	out["jumps"]	= jumpTable.toBytes();
+	out["code"]		= code.toBytes();
+	out["version"]	= art;
 	if (type == Module::Type::AV2_CMT_LIBRARY || forceSymbolsToBeKept) {
 		out["labels"]	= out.object();
 		auto& outLabels = out["labels"];

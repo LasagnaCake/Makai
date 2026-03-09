@@ -46,7 +46,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return add(opcode, Makai::Cast::bit<uint32, T>(val));
 			}
 
-			usize addConstant(Data::Value const& val);
+			uint64 addStringLiteral(String const& val);
 			uint64 addGlobal(String const& name);
 
 			void addJumpTarget(String const& name);
