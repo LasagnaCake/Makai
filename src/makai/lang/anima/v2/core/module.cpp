@@ -40,14 +40,7 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 
 Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
-	Binary<> strs;
-	for (auto& str: strings) {
-		uint64 const sz = str.size();
-		auto addr = Makai::Cast::rewrite<ref<byte const>>(&sz);
-		strs.appendBack(Binary<>(addr, addr + sizeof(sz)));
-		strs.appendBack(str.toBytes());
-	}
-	out["const"]	= strs;
+	out["const"]	= strings.toList<Makai::Data::Value>();
 	out["jumps"]	= jumpTable.toBytes();
 	out["code"]		= code.toBytes();
 	out["version"]	= art;
