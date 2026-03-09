@@ -14,7 +14,7 @@ CTL_DIAGBLOCK_IGNORE_SWITCH
 
 
 uint64 Context::addStringLiteral(String const& str) {
-
+	if (program.strings.find(str) != -1)
 }
 
 struct Location {
@@ -573,7 +573,7 @@ static void doRandomNumber(Context& context) {
 
 static void doLabel(Context& context) {
 	auto const name = context.get(LTS_TT_IDENTIFIER, "label name").getString();
-	context.program.labels.jumps[name] = context.program.code.size();
+	context.jumps[name] = context.program.code.size();
 }
 
 static void doDynamic(Context& context) {
@@ -607,7 +607,7 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 		auto const field = context.get(LTS_TT_IDENTIFIER, "field type");
 		if (!context.types.contains(field))
 			context.error("Field type does not exist!");
-		type.fields.pushBack(context.types[field]->id());
+		type.fields.pushBack(context.types[field]->id);
 	}
 }
 
@@ -651,7 +651,7 @@ static void declareType(Context& context) {
 						.getString()
 				;
 				if (context.types.contains(base))
-					type->base = context.types[base]->id();
+					type->base = context.types[base]->id;
 				else context.error("Base type does not exist!");
 				context.expectNext(Type{'>'});
 			} else if (flag == "array") {
@@ -665,7 +665,7 @@ static void declareType(Context& context) {
 						.getString()
 				;
 				if (context.types.contains(base))
-					type->base = context.types[base]->id();
+					type->base = context.types[base]->id;
 				else context.error("Element type does not exist!");
 				context.expectNext(Type{'>'});
 			} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
@@ -725,14 +725,14 @@ static void declareMethodPrototype(Context& context) {
 	getMethodVisibility(context, *method);
 	auto id = context.get(LTS_TT_IDENTIFIER, "return type").getString();
 	if (context.types.contains(id))
-		method->retType = context.types[id]->id();
+		method->retType = context.types[id]->id;
 	else context.error("Return type does not exist!");
 	context.expectNext(Type{'('});
 	while (true) {
 		if (context.next().has(Type{')'})) break;
 		id = context.get(LTS_TT_IDENTIFIER, "agument type").getString();
 		if (context.types.contains(id))
-			method->argTypes.pushBack(context.types[id]->id());
+			method->argTypes.pushBack(context.types[id]->id);
 		else context.error("Argument type does not exist!");
 	}
 	auto const name = context.getNext(LTS_TT_IDENTIFIER, "method name").getString();
@@ -755,7 +755,7 @@ static void declareMethodBody(Context& context) {
 		context.methodStack.pushBack(method);
 		auto const lname = context.getNext(LTS_TT_IDENTIFIER, "entrypoint").getString();
 		doLabel(context);
-		method->entrypoint = lname;
+		method->entrypoint = context.jumps[lname];
 		method->size = context.program.code.size();
 	}
 }
@@ -785,7 +785,7 @@ static void doDeclaration(Context& context) {
 	if (decl == "hook") {
 		auto const hook = context.getNext(LTS_TT_IDENTIFIER, "hook name").getString();
 		doLabel(context);
-		context.program.ani.in[hook] = context.program.labels.jumps[hook];
+		context.program.ani.in[hook] = context.jumps[hook];
 	} else if (decl == "def")
 		declareMethodBody(context);
 	else if (decl == "fn")
@@ -845,7 +845,7 @@ void Minima::invoke() {
 	while (!context.empty()) doExpression(context);
 	if (context.program.type != Core::Module::Type::AV2_CMT_LIBRARY) {
 		context.finalize();
-		auto const unmapped = context.program.jumpsToMap.keys();
+		auto const unmapped = context.jumpsToMap.keys();
 		if (unmapped.size())
 			context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
 	}

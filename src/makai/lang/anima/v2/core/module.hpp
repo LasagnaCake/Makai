@@ -32,11 +32,12 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct Method {
+			uint64			id;
 			String			name;
-			String			retType;
-			List<String>	argTypes;
+			uint64			retType;
+			List<uint64>	argTypes;
 			bool			out = false;
-			String			entrypoint;
+			uint64			entrypoint;
 			uint64			size;
 		};
 
@@ -45,24 +46,13 @@ namespace Makai::Anima::V2::Core {
 			StringList					aliases;
 			uint64						flags		= 0;
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
-			Nullable<String>			base		= null;
+			Nullable<uint64>			base		= null;
 			uint64						byteSize	= 0;
 			uint64						alignment	= 1;
-			List<String>				fields;
-			Dictionary<String>			operators;
-			Dictionary<String>			casts;
-			Nullable<String>			ns;
-		};
-
-		struct ToRemapLater {
-
-		};
-
-		struct Labels {
-			Label	globals;
-			Label	jumps;
-			Data::Value serialize() const;
-			static Labels deserialize(Data::Value const& v);
+			List<uint64>				fields;
+			Dictionary<uint64>			operators;
+			Dictionary<uint64>			casts;
+			Nullable<uint64>			ns;
 		};
 
 		struct NativeInterface {
@@ -83,13 +73,11 @@ namespace Makai::Anima::V2::Core {
 		StringList				strings;
 		List<Core::Instruction>	code;
 		List<uint64>			jumpTable;
-		Labels					labels;
 		NativeInterface			ani;
 		Namespace				base;
 		List<Method>			methods;
 		List<Declaration>		types;
 		List<Namespace>			namespaces;
-		Dictionary<List<usize>>	jumpsToMap;
 	};
 }
 

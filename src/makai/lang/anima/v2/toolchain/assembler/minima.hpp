@@ -49,6 +49,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			List<Instance<Method>>		methodStack;
 			List<Instance<Namespace>>	moduleStack;
+			Dictionary<List<usize>>		jumpsToMap;
+			Dictionary<uint64>			jumps;
 		};
 
 		Minima(Context& context): AAssembler(context), context(context) {}
