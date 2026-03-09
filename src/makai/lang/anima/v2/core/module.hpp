@@ -2,6 +2,7 @@
 #define MAKAILIB_ANIMA_V2_CORE_MODULE_H
 
 #include "instruction.hpp"
+#include "makai/ctl/ctl/container/id/ssuid.hpp"
 #include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
@@ -31,26 +32,26 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct Method {
-			uint64			id;
 			String			name;
-			uint64			retType;
-			List<uint64>	argTypes;
+			String			retType;
+			List<String>	argTypes;
 			bool			out = false;
 			String			entrypoint;
 			uint64			size;
 		};
 
 		struct Declaration {
+			uint64						id;
 			StringList					aliases;
 			uint64						flags		= 0;
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
-			Nullable<uint64>			base		= null;
+			Nullable<String>			base		= null;
 			uint64						byteSize	= 0;
 			uint64						alignment	= 1;
-			List<uint64>				fields;
-			Dictionary<uint64>			operators;
-			Dictionary<uint64>			casts;
-			Instance<Namespace>			ns;
+			List<String>				fields;
+			Dictionary<String>			operators;
+			Dictionary<String>			casts;
+			Nullable<String>			ns;
 		};
 
 		struct ToRemapLater {

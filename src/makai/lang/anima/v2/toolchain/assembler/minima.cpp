@@ -297,7 +297,7 @@ static void doCall(Context& context, bool dynamic = false) {
 			invoke
 		);
 		if (context.methods.contains(id))
-			context.addJumpTarget(context.methods[id]->entry);
+			context.addJumpTarget(context.methods[id]->entrypoint);
 		else context.error("Method with this name does not exist!");
 	} else {
 		context.add(
@@ -547,7 +547,7 @@ static void doCast(Context& context, bool const dyn = false) {
 		auto const type = context.getNext(LTS_TT_IDENTIFIER, "type name").getString();
 		if (context.types.contains(type)) {
 			context.add(Instruction::Name::AV2_IN_CAST);
-			context.add(context.types[type]->id());
+			context.add(context.types[type]->id);
 		} else context.error("Type with this name does not exist!");
 	} else {
 		context.add(
@@ -591,7 +591,7 @@ static void doDynamic(Context& context) {
 	else context.error("Invalid dynamic operation!");
 }
 
-static void declareTypeFields(Context& context, Context::Decl& type) {
+static void declareTypeFields(Context& context, Context::Declaration& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
 	else if (
@@ -613,7 +613,7 @@ static void declareTypeFields(Context& context, Context::Decl& type) {
 
 static void declareType(Context& context) {
 	auto const name = context.getNext(LTS_TT_IDENTIFIER, "type name").getString();
-		auto const type = new Context::Decl();
+		auto const type = new Context::Declaration();
 		context.expectNext(Type{'['});
 		while (true) {
 			if (context.next().has(Type{']'})) break;
@@ -755,7 +755,7 @@ static void declareMethodBody(Context& context) {
 		context.methodStack.pushBack(method);
 		auto const lname = context.getNext(LTS_TT_IDENTIFIER, "entrypoint").getString();
 		doLabel(context);
-		method->entry = lname;
+		method->entrypoint = lname;
 		method->size = context.program.code.size();
 	}
 }
@@ -874,18 +874,17 @@ void Minima::invoke() {
 	for (auto& [name, method]: context.methods) {
 		auto& decl = context.program.methods.pushBack({}).back();
 		decl = {
-			.id			= method->id(),
 			.name		= name,
 			.retType	= method->retType,
 			.argTypes	= method->argTypes,
 			.out		= method->out,
-			.entrypoint	= method->entry
+			.entrypoint	= method->entrypoint
 		};
 	}
 	decltype (context.program.methods) temp;
 	temp.resize(context.methods.size(), {});
-	for (auto& method: context.program.methods)
-		temp[method.id] = method;
+	//for (auto& method: context.program.methods)
+	//	temp[method.legalName] = method;
 	context.program.methods = temp;
 }
 CTL_DIAGBLOCK_END

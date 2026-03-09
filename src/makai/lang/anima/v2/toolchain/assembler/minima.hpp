@@ -6,38 +6,16 @@
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Minima: AAssembler {
 		struct Context: BaseContext {
-			struct Namespace;
-			struct Decl;
-			struct Method;
 
-			struct Namespace {
-				Dictionary<Instance<Decl>>		types;
-				Dictionary<Instance<Method>>	methods;
+			struct Method: Core::Module::Method {
+				bool local = false;
 			};
-
-			struct Method: ID::Identifiable<Method const, uint64> {
-				uint64			retType;
-				List<uint64>	argTypes;
-				bool			out		= false;
-				bool			local	= false;
-				String			entry;
-				uint64			size;
-			};
-
-			struct Decl: ID::Identifiable<Decl const, uint64> {
-				uint64								flags		= 0;
-				Nullable<Core::BasicType>			basic		= Core::BasicType::AV2_BT_VOID;
-				Nullable<uint64>					base		= null;
-				uint64								alignment	= 1;
-				List<uint64>						fields;
-				Map<Core::BinaryOperator, uint64>	bops;
-				Map<Core::UnaryOperator, uint64>	uops;
-				Nullable<uint64>					ns;
-			};
+			using Declaration	= Core::Module::Declaration;
+			using Namespace		= Core::Module::Namespace;
 
 			using OpCode = Core::Instruction::Name;
 
-			usize add(OpCode const& opcode = OpCode::AV2_IN_NO_OP, uint32 const type = 0);
+			usize add(OpCode const& opcode = OpCode::AV2_IN_NO_OP, String const type = 0);
 			usize add(uint64 const& value);
 
 			template <class T>
@@ -59,15 +37,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			void addModule(Instance<Namespace> const& module);
 			void addMethod(Instance<Method> const& method);
-			void addType(Instance<Decl> const& type);
+			void addType(Instance<Declaration> const& type);
 
-			Instance<Namespace>	getModule(String const& name);
-			Instance<Method>	getMethod(String const& name);
-			Instance<Decl>		getType(String const& name);
+			Instance<Namespace>		getModule(String const& name);
+			Instance<Method>		getMethod(String const& name);
+			Instance<Declaration>	getType(String const& name);
 
-			Core::Module					program;
-			Dictionary<Instance<Decl>>		types;
-			Dictionary<Instance<Method>>	methods;
+			Core::Module						program;
+			Dictionary<Instance<Declaration>>	types;
+			Dictionary<Instance<Method>>		methods;
 
 			List<Instance<Method>>		methodStack;
 			List<Instance<Namespace>>	moduleStack;
