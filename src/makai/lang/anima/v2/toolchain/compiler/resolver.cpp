@@ -120,6 +120,10 @@ Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->value = lhs ? Makai::Data::Value("local") : Makai::Data::Value(token.token);
+	if (lhs) {
+
+	} else result->children.pushBack(parser.nextExpression(precedence));
 	return result;
 }
 

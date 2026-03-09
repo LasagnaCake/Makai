@@ -70,6 +70,7 @@ namespace Makai::Anima::V2::Core {
 		Instance<Definition>		base		= nullptr;
 		uint64						byteSize	= 0;
 		uint64						alignment	= 1;
+		List<Instance<Definition>>	fields;
 
 		struct Database {
 			using Type = Instance<Definition>;

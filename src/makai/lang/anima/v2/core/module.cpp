@@ -14,7 +14,7 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 		mod.labels = Module::Labels::deserialize(v["labels"]);
 	if (v.contains("ani"))
 		mod.ani = Module::NativeInterface::deserialize(v["ani"]);
-	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_MODULE);
+	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
 }
 
 Module Module::deserialize(Makai::Data::Value const& v) {
@@ -29,13 +29,13 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 	return mod;
 }
 
-Makai::Data::Value Module::serialize(bool const keepLabels) const {
+Makai::Data::Value Module::serialize() const {
 	Makai::Data::Value out;
 	out["constants"]	= constants;
 	out["jumps"]		= jumpTable.toBytes();
 	out["code"]			= code.toBytes();
 	out["version"]		= art;
-	if (keepLabels) {
+	if (type == Module::Type::AV2_CMT_LIBRARY) {
 		out["labels"]	= out.object();
 		auto& outLabels = out["labels"];
 		outLabels["jumps"]		= out.object();

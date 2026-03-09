@@ -67,6 +67,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			AV2_TAPP_BIT_SHIFT,
 			AV2_TAPP_ADD_SUB,
 			AV2_TAPP_MUL_DIV_REM,
+			AV2_TAPP_POW_ROOT,
 			AV2_TAPP_ATAN2,
 			AV2_TAPP_CROSS_FCROSS,
 			AV2_TAPP_PREFIX,

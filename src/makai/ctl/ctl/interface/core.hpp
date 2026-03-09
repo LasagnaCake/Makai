@@ -53,16 +53,21 @@ struct IClonable: T {
 };
 
 /// @brief Interface for an invokable object.
-/// @tparam T Result type.
-/// @tparam Args... Argument types.
-template<class T, class... Args>
-struct IInvokable {
+/// @tparam TInvoke Invocation type.
+template<class TInvoke>
+struct IInvokable;
+
+/// @brief Interface for an invokable object.
+/// @tparam TReturn Result type.
+/// @tparam TArgs... Argument types.
+template<class TReturn, class... TArgs>
+struct IInvokable<TReturn(TArgs...)> {
 	/// @brief Destructor.
 	constexpr ~IInvokable() {}
 	/// @brief Invokes some code.
 	/// @param args... arguments.
 	/// @return Result.
-	constexpr virtual T invoke(Args... args) = 0;
+	constexpr virtual TReturn invoke(TArgs... args) = 0;
 };
 
 /// @brief Interface for a const-invokable object.

@@ -9,7 +9,7 @@ namespace Makai::Anima::V2::Core {
 		using Version = Data::Version;
 
 		enum class Type {
-			AV2_CMT_MODULE,
+			AV2_CMT_LIBRARY,
 			AV2_CMT_CLI_EXE,
 			AV2_CMT_EXE,
 		};
@@ -36,13 +36,21 @@ namespace Makai::Anima::V2::Core {
 			uint64			retType;
 			List<uint64>	argTypes;
 			bool			out = false;
-			uint64			entry;
+			uint64			entrypoint;
+			uint64			size;
 		};
 
 		struct Declaration {
-			uint64						flags	= 0;
-			Nullable<Core::BasicType>	basic	= Core::BasicType::AV2_BT_VOID;
-			Nullable<uint64>			base	= null;
+			StringList							aliases;
+			uint64								flags		= 0;
+			Nullable<Core::BasicType>			basic		= Core::BasicType::AV2_BT_VOID;
+			Nullable<uint64>					base		= null;
+			uint64								byteSize	= 0;
+			uint64								alignment	= 1;
+			List<uint64>						fields;
+			Map<Core::BinaryOperator, uint64>	bops;
+			Map<Core::UnaryOperator, uint64>	uops;
+			Instance<Namespace>					ns;
 		};
 
 		struct Labels {
@@ -62,7 +70,7 @@ namespace Makai::Anima::V2::Core {
 			static NativeInterface deserialize(Data::Value const& v);
 		};
 
-		Data::Value serialize(bool const keepLabels = true) const;
+		Data::Value serialize() const;
 
 		static Module deserialize(Data::Value const& v);
 

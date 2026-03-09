@@ -23,7 +23,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 	};
 
 	struct PrefixResolver: AResolver {
-		PrefixResolver(): AResolver() {}
+		PrefixResolver(): AResolver(Parser::Precedence::AV2_TAPP_PREFIX, true) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
@@ -33,7 +33,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 	};
 
 	struct PostfixResolver: AResolver {
-		using AResolver::AResolver;
+		PostfixResolver(): AResolver(Parser::Precedence::AV2_TAPP_POSTFIX, false) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 

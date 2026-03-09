@@ -6,8 +6,10 @@
 #include "parser.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler {
-	struct ACompiler: IExecutable<void> {
-		using BaseContext = Assembler::BaseContext;
+	struct ACompiler: IInvokable<void()> {
+		Parser& parser;
+		BaseContext& context;
+		ACompiler(Parser& parser, BaseContext& context);
 	};
 }
 

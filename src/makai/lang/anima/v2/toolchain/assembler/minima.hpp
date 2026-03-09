@@ -6,8 +6,11 @@
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Minima: AAssembler {
 		struct Context: BaseContext {
+			struct Namespace;
+			struct Decl;
+			struct Method;
+
 			struct Namespace {
-				Dictionary<Instance<Namespace>>	namespaces;
 				Dictionary<Instance<Decl>>		types;
 				Dictionary<Instance<Method>>	methods;
 			};
@@ -18,15 +21,18 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				bool			out		= false;
 				bool			local	= false;
 				String			entry;
+				uint64			size;
 			};
 
 			struct Decl: ID::Identifiable<Decl const, uint64> {
-				uint64						flags		= 0;
-				Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
-				Nullable<uint64>			base		= null;
-				uint64						alignment	= 1;
-				List<uint64>				fields;
-				List<uint64>				operators;
+				uint64								flags		= 0;
+				Nullable<Core::BasicType>			basic		= Core::BasicType::AV2_BT_VOID;
+				Nullable<uint64>					base		= null;
+				uint64								alignment	= 1;
+				List<uint64>						fields;
+				Map<Core::BinaryOperator, uint64>	bops;
+				Map<Core::UnaryOperator, uint64>	uops;
+				Nullable<uint64>					ns;
 			};
 
 			using OpCode = Core::Instruction::Name;
@@ -49,18 +55,16 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			StringList mapJumps();
 
-			enum class ImportAction {
-				AV2_TA_MCIA_ALLOW_IMPORT,
-				AV2_TA_MCIA_SKIP,
-				AV2_TA_MCIA_ERROR,
-			};
+			virtual Core::Module onImport(String const& file);
 
-			Program							program;
-			ImportAction					imports	= ImportAction::AV2_TA_MCIA_ERROR;
+			Core::Module					program;
 			Nullable<String>				parent;
 			Nullable<String>				module;
 			Dictionary<Instance<Decl>>		types;
 			Dictionary<Instance<Method>>	methods;
+
+			List<Instance<Method>>		methodStack;
+			List<Instance<Namespace>>	moduleStack;
 		};
 
 		Minima(Context& context): AAssembler(context), context(context) {}

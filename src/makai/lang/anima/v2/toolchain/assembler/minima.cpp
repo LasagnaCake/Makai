@@ -724,12 +724,30 @@ static void declareMethod(Context& context, bool forward = false) {
 	auto const name = context.getNext(LTS_TT_IDENTIFIER, "function name").getString();
 	if (!forward) doLabel(context);
 	method->entry = name;
-	if (!context.types.contains(name))
-		context.methods[name] = method;
-	else context.error("Redeclaration of previously-declared method!");
+	if (forward && context.methods.contains(name))
+		context.error("Redeclaration of previously-declared method!");
+	else if (!forward && context.methods.contains(name) && context.methods[name]->size)
+		context.error("Redeclaration of previously-declared method!");
+	context.methods[name] = method;
 }
 
 static void declareImport(Context& context) {
+	// TODO: Rethink this
+}
+
+static void declareModuleStart(Context& context) {
+	// TODO: Rethink this
+}
+
+static void declareModuleEnd(Context& context) {
+	// TODO: Rethink this
+}
+
+static void declareModule(Context& context) {
+	// TODO: Rethink this
+}
+
+static void declareScopeBring(Context& context) {
 	// TODO: Rethink this
 }
 
@@ -739,18 +757,20 @@ static void doDeclaration(Context& context) {
 		auto const hook = context.getNext(LTS_TT_IDENTIFIER, "hook name").getString();
 		doLabel(context);
 		context.program.ani.in[hook] = context.program.labels.jumps[hook];
-	} else if (decl == "fn")
+	} else if (decl == "def")
 		declareMethod(context);
-	else if (decl == "def")
+	else if (decl == "fn")
 		declareMethod(context, true);
 	else if (decl == "type")
 		declareType(context);
 	else if (decl == "module")
-		declareModuleStart(context);
+		declareModule(context);
 	else if (decl == "import")
 		declareImport(context);
 	else if (decl == "alias")
 		declareAlias(context);
+	else if (decl == "bring")
+		declareScopeBring(context);
 	else context.error("Invalid declaration!");
 }
 
@@ -831,7 +851,7 @@ void Minima::invoke() {
 				.retType	= method->retType,
 				.argTypes	= method->argTypes,
 				.out		= method->out,
-				.entry		= context.program.labels.jumps[method->entry]
+				.entrypoint	= context.program.labels.jumps[method->entry]
 			};
 		}
 		decltype (context.program.methods) temp;

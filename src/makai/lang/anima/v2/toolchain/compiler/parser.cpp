@@ -16,6 +16,7 @@ static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
 			else if (id == "and") return AV2_TAPP_LAND;
 			else if (id == "or") return AV2_TAPP_LOR;
 			else if (id == "xor") return AV2_TAPP_LXOR;
+			else if (id == "pow") return AV2_TAPP_POW_ROOT;
 			else if (id == "cross" || id == "fcross")
 				return AV2_TAPP_CROSS_FCROSS;
 			else if (id == "atan") return AV2_TAPP_ATAN2;
@@ -83,9 +84,13 @@ Parser::Parser(BaseContext& context): context(context) {
 		"asin",
 		"acos",
 		"atan",
+		"sinh",
+		"cosh",
+		"tanh",
 		"log2",
 		"log10",
 		"ln",
+		"sqrt",
 		"not",
 		"return",
 		"ref",
@@ -122,6 +127,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix("fcross", false);
 	infix("is", false);
 	infix("as", false);
+	infix("pow", false);
 	// Basic postfixes
 	postfix(
 		LTS_TT_INCREMENT,
@@ -219,6 +225,13 @@ void Parser::infix(BaseContext::Axiom::Type const op, bool const rightToLeft) {
 	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
 }
 
+void Parser::postfix(BaseContext::Axiom::Type const op) {
+	BaseContext::Axiom ax;
+	ax.strict = false;
+	ax.type = op;
+	add(ax, prefixes, new PostfixResolver());
+}
+
 void Parser::prefix(String const& op) {
 	BaseContext::Axiom ax;
 	ax.type = LTS_TT_IDENTIFIER;
@@ -233,6 +246,14 @@ void Parser::infix(String const& op, bool const rightToLeft) {
 	ax.strict = true;
 	ax.token = op;
 	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
+}
+
+void Parser::postfix(String const& op) {
+	BaseContext::Axiom ax;
+	ax.type = LTS_TT_IDENTIFIER;
+	ax.strict = true;
+	ax.token = op;
+	add(ax, infixes, new PostfixResolver());
 }
 
 void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver) {

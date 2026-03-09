@@ -2,7 +2,7 @@
 #define MAKAILIB_ANIMA_V2_TOOLCHAIN_ASSEMBLER_CONTEXT_H
 
 #include "../../../../../lexer/lexer.hpp"
-#include "../../runtime/program.hpp"
+#include "../../core/module.hpp"
 #include "../../core/instruction.hpp"
 #include "../../core/type.hpp"
 
@@ -11,7 +11,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		struct Axiom;
 
 		using Tokenizer	= Lexer::CStyle::TokenStream;
-		using Program	= Runtime::Program;
 		using Input		= List<Axiom>;
 
 		virtual ~BaseContext() {}
