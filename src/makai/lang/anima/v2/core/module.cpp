@@ -7,7 +7,7 @@ using namespace Makai::Anima::V2::Core;
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	mod.strings =
 		v.fetch(
-			"const",
+			"strings",
 			Makai::Data::Value::ArrayType()
 		).toList<String>(
 			[] (auto& e) {
@@ -40,7 +40,7 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 
 Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
-	out["const"]	= strings.toList<Makai::Data::Value>();
+	out["strings"]	= strings.toList<Makai::Data::Value>();
 	out["jumps"]	= jumpTable.toBytes();
 	out["code"]		= code.toBytes();
 	out["version"]	= art;
