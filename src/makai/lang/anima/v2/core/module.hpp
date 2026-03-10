@@ -97,6 +97,9 @@ namespace Makai::Anima::V2::Core {
 		Instance<Meta>		meta		= new Meta();
 		Instance<ANI>		ani			= new ANI();
 		StringList			requiredModules;
+		Nullable<uint64>	pre;
+		Nullable<uint64>	main;
+		Nullable<uint64>	post;
 	};
 }
 

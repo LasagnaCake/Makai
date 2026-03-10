@@ -49,6 +49,29 @@ static Makai::String resolvePath(Context& context, bool absolute = false, Type c
 	return cleanPath(result);
 }
 
+void Context::finalize() {
+	auto unmapped = jumpsToMap.keys();
+	for (auto& label: unmapped) {
+		if (jumpsToMap.contains(label)) {
+			for (auto& location: jumpsToMap[label])
+				program.jumpTable[location] = jumps[label];
+			jumpsToMap.erase(label);
+		}
+	}
+	unmapped = jumpsToMap.keys();
+	if (unmapped.size())
+		error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
+	if (pre.size() && jumps.contains(pre))
+		program.pre = jumps[pre];
+	else if (pre.size()) error("Missing initializer location!");
+	if (main.size() && jumps.contains(main))
+		program.main = jumps[main];
+	else if (main.size()) error("Missing main entrypoint location!");
+	if (post.size() && jumps.contains(post))
+		program.post = jumps[post];
+	else if (post.size()) error("Missing finalizer location!");
+}
+
 struct Location {
 	DataLocation			source;
 	Makai::Nullable<uint64>	id		= null;
@@ -845,14 +868,36 @@ static void declareImport(Context& context) {
 	// TODO: Imports
 }
 
+static void declareInitializer(Context& context) {
+	if (context.pre.size())
+		context.error("Redeclaration of previously-declared initializer!");
+	context.pre = resolvePath(context);
+}
+
+static void declareMain(Context& context) {
+	if (context.main.size())
+		context.error("Redeclaration of previously-declared main entrypoint!");
+	context.main = resolvePath(context);
+}
+
+static void declareFinalizer(Context& context) {
+	if (context.post.size())
+		context.error("Redeclaration of previously-declared finalizer!");
+	context.post = resolvePath(context);
+}
+
+static void declareHook(Context& context) {
+	context.next();
+	auto const hook = resolvePath(context);
+	doLabel(context);
+	context.program.ani->in[hook] = context.jumps[hook];
+}
+
 static void doDeclaration(Context& context) {
 	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "declaration type").getString();
-	if (decl == "hook") {
-		context.next();
-		auto const hook = resolvePath(context);
-		doLabel(context);
-		context.program.ani->in[hook] = context.jumps[hook];
-	} else if (decl == "def")
+	if (decl == "hook")
+		declareHook(context);
+	else if (decl == "def")
 		declareMethodBody(context);
 	else if (decl == "fn")
 		declareMethodPrototype(context);
@@ -866,6 +911,12 @@ static void doDeclaration(Context& context) {
 		declareModule(context);
 	else if (decl == "import")
 		declareImport(context);
+	else if (decl == "pre")
+		declareInitializer(context);
+	else if (decl == "main")
+		declareMain(context);
+	else if (decl == "post")
+		declareFinalizer(context);
 	else context.error("Invalid declaration!");
 }
 
@@ -908,12 +959,7 @@ static void doExpression(Context& context) {
 
 void Minima::invoke() {
 	while (!context.empty()) doExpression(context);
-	if (context.program.type != Core::Module::Type::AV2_CMT_LIBRARY) {
-		context.finalize();
-		auto const unmapped = context.jumpsToMap.keys();
-		if (unmapped.size())
-			context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
-	}
+	context.finalize();
 	context.methods.filter(
 		[] (auto const& lhs, auto const& rhs) {
 			return lhs.value != rhs.value;

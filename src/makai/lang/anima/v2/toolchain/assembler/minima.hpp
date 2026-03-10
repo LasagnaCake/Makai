@@ -65,6 +65,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Dictionary<List<usize>>		jumpsToMap;
 			Dictionary<uint64>			jumps;
 
+			String pre, main, post;
+
 			Dictionary<Instance<Core::Module>> linkedModules;
 
 			Instance<Declaration> getSharedType(String const& module, String const& name);
