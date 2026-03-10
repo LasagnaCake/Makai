@@ -8,7 +8,7 @@ namespace Makai::Anima::V2::Core {
 	struct Library {
 		using Version = Module::Version;
 		String							name;
-		StringList						modules;
+		Dictionary<String>				modules;
 		Dictionary<Module::Declaration>	types;
 		Dictionary<Module::Method>		methods;
 	};

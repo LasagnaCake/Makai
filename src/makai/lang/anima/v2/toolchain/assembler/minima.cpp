@@ -329,7 +329,7 @@ static void doCall(Context& context, bool dynamic = false) {
 			invoke
 		);
 		if (context.methods.contains(id))
-			context.addJumpTarget(context.methods[id]->jump);
+			context.addJumpTarget(context.getMethod(id)->jump);
 		else context.error("Method with this name does not exist!");
 	} else {
 		context.add(
@@ -715,6 +715,7 @@ static void declareType(Context& context) {
 			} else if (flag == "casts") {
 				declareTypeCasts(context, *type);
 			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
+			else if (flag == "runtime")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
 			else context.error("Invalid flag!");
 		}
 		if (!context.types.contains(name))
@@ -723,15 +724,14 @@ static void declareType(Context& context) {
 }
 
 static void declareTypeAlias(Context& context) {
-	Makai::Nullable<Context::Declaration::Reference> share = null;
+	Makai::Instance<Context::Reference> share = null;
 	if (context.has(LTS_TT_IDENTIFIER) && context.value().getString() == "shared") {
-		Context::Declaration::Reference decl;
+		share = share.create();
 		context.expectNext(Type{'['});
-		decl.module = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "module path").getString();
+		share->module = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "module path").getString();
 		context.expectNext(Type{':'});
-		decl.name = resolvePath(context, true);
+		share->name = resolvePath(context, true);
 		context.expectNext(Type{']'});
-		share = decl;
 	}
 	auto const name = resolvePath(context);
 	if (context.types.contains(name))
@@ -741,7 +741,7 @@ static void declareTypeAlias(Context& context) {
 	if (!context.types.contains(type))
 		context.error("Type to be aliased does not exist!");
 	else if (share)
-		context.types[name] = new Context::Declaration::Reference{share.value()};
+		context.types[name] = share;
 	else context.types[name] = context.types[type];
 }
 

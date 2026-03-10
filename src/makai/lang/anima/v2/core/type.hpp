@@ -55,14 +55,15 @@ namespace Makai::Anima::V2::Core {
 
 	struct Definition {
 		struct Flags {
-			constexpr static uint64 const AV2_DF_BASIC		= 1 << 0;
-			constexpr static uint64 const AV2_DF_NULLABLE	= 1 << 1;
-			constexpr static uint64 const AV2_DF_EMPTY		= 1 << 2;
-			constexpr static uint64 const AV2_DF_ARRAY		= 1 << 3;
-			constexpr static uint64 const AV2_DF_VALUE		= 1 << 4;
-			constexpr static uint64 const AV2_DF_STRUCTURE	= 1 << 5;
-			constexpr static uint64 const AV2_DF_DYNAMIC	= 1 << 6;
-			constexpr static uint64 const AV2_DF_CLONABLE	= 1 << 7;
+			constexpr static uint64 const AV2_DF_BASIC			= 1 << 0;
+			constexpr static uint64 const AV2_DF_NULLABLE		= 1 << 1;
+			constexpr static uint64 const AV2_DF_EMPTY			= 1 << 2;
+			constexpr static uint64 const AV2_DF_ARRAY			= 1 << 3;
+			constexpr static uint64 const AV2_DF_VALUE			= 1 << 4;
+			constexpr static uint64 const AV2_DF_STRUCTURE		= 1 << 5;
+			constexpr static uint64 const AV2_DF_DYNAMIC		= 1 << 6;
+			constexpr static uint64 const AV2_DF_CLONABLE		= 1 << 7;
+			constexpr static uint64 const AV2_DF_ART_EQUIVALENT	= 1 << 8;
 		};
 		StringList					aliases;
 		uint64						flags		= 0;
