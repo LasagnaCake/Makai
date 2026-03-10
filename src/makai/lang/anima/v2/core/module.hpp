@@ -11,6 +11,7 @@ namespace Makai::Anima::V2::Core {
 
 		enum class Type {
 			AV2_CMT_LIBRARY,
+			AV2_CMT_SHARED_MODULE,
 			AV2_CMT_CLI_EXE,
 			AV2_CMT_EXE,
 		};
