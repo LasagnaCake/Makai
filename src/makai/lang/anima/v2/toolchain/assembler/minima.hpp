@@ -48,10 +48,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Instance<Declaration>	getType(String const& name);
 
 			Core::Module						program;
+
 			Dictionary<Instance<Reference>>		types;
-			Dictionary<Instance<Declaration>>	moduleTypes;
 			Dictionary<Instance<Reference>>		methods;
-			Dictionary<Instance<Declaration>>	moduleMethods;
+
+			Dictionary<Instance<Declaration>>	moduleTypes;
+			Dictionary<Instance<Method>>		moduleMethods;
 
 			List<Instance<Method>>		methodStack;
 			StringList					moduleStack;
