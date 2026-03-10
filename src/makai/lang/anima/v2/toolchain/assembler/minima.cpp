@@ -715,7 +715,7 @@ static void declareType(Context& context) {
 			} else if (flag == "casts") {
 				declareTypeCasts(context, *type);
 			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
-			else if (flag == "runtime")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
+			else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
 			else context.error("Invalid flag!");
 		}
 		if (!context.types.contains(name))
