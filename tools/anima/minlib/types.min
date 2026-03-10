@@ -1,3 +1,4 @@
+@module core
 // Types
 @type Void [basic<void> empty]
 @type Any [basic<any>]
@@ -18,16 +19,17 @@
 @type StringArray [array<String> nil]
 @type VectorArray [array<Vector> nil]
 @type ObjectArray [array<Object> nil]
+@module .
 
 // Aliases
-@alias void:	Void
-@alias any:		Any
-@alias bool:	Bool
-@alias int:		Int
-@alias uint:	UInt
-@alias real:	Real
-@alias str:		String
-@alias bin:		Bytes
-@alias vec:		Vector
-@alias obj:		Object
-@alias arr:		AnyArray
+@alias void:	core.Void
+@alias any:		core.Any
+@alias bool:	core.Bool
+@alias int:		core.Int
+@alias uint:	core.UInt
+@alias real:	core.Real
+@alias str:		core.String
+@alias bin:		core.Bytes
+@alias vec:		core.Vector
+@alias obj:		core.Object
+@alias arr:		core.AnyArray
