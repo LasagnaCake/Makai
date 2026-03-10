@@ -5,6 +5,7 @@
 #include "method.hpp"
 #include "value.hpp"
 #include "meta.hpp"
+#include "database.hpp"
 
 namespace Makai::Anima::V2::Core {
 	struct Context {

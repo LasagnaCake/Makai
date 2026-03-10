@@ -1,10 +1,10 @@
 #ifndef MAKAILIB_ANIMA_V2_CORE_DATABASE_H
 #define MAKAILIB_ANIMA_V2_CORE_DATABASE_H
 
-#include "type.hpp"
+#include "entry.hpp"
 
 namespace Makai::Anima::V2::Core {
-	template <class T>
+	template <Type::Derived<Entry> T>
 	struct Database {
 		using ElementType = Instance<T>;
 		using StorageType = List<T>;

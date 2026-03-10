@@ -3,9 +3,11 @@
 
 #include "instruction.hpp"
 #include "meta.hpp"
+#include "entry.hpp"
 #include "method.hpp"
 #include "type.hpp"
 #include "value.hpp"
 #include "context.hpp"
+#include "database.hpp"
 
 #endif
