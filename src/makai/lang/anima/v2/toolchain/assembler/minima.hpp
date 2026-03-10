@@ -55,6 +55,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Dictionary<Instance<Declaration>>	moduleTypes;
 			Dictionary<Instance<Method>>		moduleMethods;
 
+			Dictionary<Instance<Declaration>>	externalTypes;
+			Dictionary<Instance<Method>>		externalMethods;
+
+			StringList imports;
+
 			List<Instance<Method>>		methodStack;
 			StringList					moduleStack;
 			Dictionary<List<usize>>		jumpsToMap;
