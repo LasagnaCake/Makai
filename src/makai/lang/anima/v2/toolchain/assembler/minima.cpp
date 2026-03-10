@@ -917,13 +917,17 @@ void Minima::invoke() {
 			return lhs.value != rhs.value;
 		}
 	).filter(
-		[] (auto const& e) {
-			return !e.value->local;
+		[this] (auto const& e) -> bool {
+			return e.value->module.empty() && !context.getMethod(e.value->name)->local;
 		}
 	);
 	context.types.filter(
 		[] (auto const& lhs, auto const& rhs) {
 			return lhs.value != rhs.value;
+		}
+	).filter(
+		[] (auto const& e) -> bool {
+			return e.value->module.empty();
 		}
 	);
 	context.program.detail.types.resize(context.types.size());
