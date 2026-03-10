@@ -136,13 +136,8 @@ namespace Makai::Anima::V2::Core {
 			DataLocation	location;
 		};
 
-		/// @brief Binary math operation.
-		struct [[gnu::aligned(4)]] BinaryOperation {
-			Operator op;
-		};
-
-		/// @brief Unary math operation.
-		struct [[gnu::aligned(4)]] UnaryOperation {
+		/// @brief Operation.
+		struct [[gnu::aligned(4)]] Operation {
 			Operator op;
 		};
 
@@ -251,14 +246,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `return`
 			AV2_IN_RETURN,
-			/// @brief Executes an operation involving a binary operator.
-			/// @param type `BinaryOperation` = How to operate.
-			/// @details `bop`
-			AV2_IN_BOP,
-			/// @brief Executes an operation involving a unary operator.
-			/// @param type `UnaryOperation` = How to operate.
-			/// @details `uop`
-			AV2_IN_UOP,
+			/// @brief Executes an operation involving a, operator.
+			/// @param type `Operation` = How to operate.
+			/// @details `op`
+			AV2_IN_OP,
 			/// @brief Returns execution to the engine.
 			/// @param type Discarded.
 			/// @details `yield`
@@ -320,8 +311,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_STACK_CLEAR:	return "clear";
 				case Name::AV2_IN_STACK_FLUSH:	return "flush";
 				case Name::AV2_IN_RETURN:		return "return";
-				case Name::AV2_IN_BOP:			return "bop";
-				case Name::AV2_IN_UOP:			return "uop";
+				case Name::AV2_IN_OP:			return "op";
 				case Name::AV2_IN_YIELD:		return "yield";
 				case Name::AV2_IN_CAST:			return "cast";
 				case Name::AV2_IN_RANDOM:		return "rng";
