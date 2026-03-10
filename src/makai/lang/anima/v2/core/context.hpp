@@ -17,7 +17,7 @@ namespace Makai::Anima::V2::Core {
 
 		struct ExternalMethod;
 
-		using ExternalInvocation = Function<Result<Object, Error>(Definition::Database&, ExternalMethod&, List<Object> const&)>;
+		using ExternalInvocation = Function<Result<Object, Error>(Database<Definition>&, ExternalMethod&, List<Object> const&)>;
 
 		struct ExternalMethodInfo {
 			String 		retTypeName;
@@ -48,7 +48,7 @@ namespace Makai::Anima::V2::Core {
 			constexpr static Instance<ExternalInvocation> invoker(Function<TFunc> const& f) {
 				return new ExternalInvocation(
 					[f] (Definition::Database& types, ExternalMethod& method, List<Object> const& args) {
-						if (types.byAlias(artnameof<TReturn>()).empty())
+						if (types.byName(artnameof<TReturn>()).empty())
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
