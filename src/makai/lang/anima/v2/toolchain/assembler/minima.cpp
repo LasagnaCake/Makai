@@ -879,25 +879,10 @@ void Minima::invoke() {
 			return !e.value->local;
 		}
 	);
-	context.program.types.resize(context.types.size(), {});
-	for (auto& [name, type]: context.types) {
-		auto& decl = context.program.types[type->id];
-		if (decl.aliases.size()) {
-			decl.aliases.pushBack(name);
-			continue;
-		}
-		decl = {
-			.aliases	= Makai::StringList::from(name),
-			.flags		= type->flags
-		};
-		if (type->basic)
-			decl.basic = *type->basic;
-		if (type->base)
-			decl.base = *type->base;
-	}
-	context.program.methods.resize(context.methods.size(), {});
+	context.program.detail.types.resize(context.types.size(), {});
+	context.program.meta->methods.resize(context.methods.size(), {});
 	for (auto& [name, method]: context.methods) {
-		auto& decl = context.program.methods.pushBack({}).back();
+		auto& decl = context.program.meta->methods.pushBack({}).back();
 		decl = {
 			.name		= name,
 			.retType	= method->retType,
@@ -906,10 +891,10 @@ void Minima::invoke() {
 			.entrypoint	= method->entrypoint
 		};
 	}
-	decltype (context.program.methods) temp;
+	decltype (context.program.meta->methods) temp;
 	temp.resize(context.methods.size(), {});
 	//for (auto& method: context.program.methods)
 	//	temp[method.legalName] = method;
-	context.program.methods = temp;
+	context.program.meta->methods = temp;
 }
 CTL_DIAGBLOCK_END
