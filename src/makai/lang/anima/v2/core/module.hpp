@@ -63,7 +63,6 @@ namespace Makai::Anima::V2::Core {
 		struct Symbol {
 			Refs	methods;
 			Refs	types;
-			Refs	namespaces;
 
 			Data::Value serialize() const;
 			static Symbol deserialize(Data::Value const& v);
@@ -101,11 +100,10 @@ namespace Makai::Anima::V2::Core {
 		StringList			strings;
 		Bytecode			code;
 		List<uint64>		jumpTable;
-		Namespace			base;
 		Detail				detail;
 		Symbol				sym;
-		Instance<Meta>		meta	= new Meta();
-		Instance<ANI>		ani		= new ANI();
+		Instance<Meta>		meta		= new Meta();
+		Instance<ANI>		ani			= new ANI();
 		StringList			shared;
 	};
 }
