@@ -104,7 +104,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		void postfix(BaseContext::Axiom::Type const op);
 		void postfix(String const& op);
 
-		template <class... Types> void direct(Types const&... args) requires (sizeof...(Types) > 1)		{(..., nofix(args));	}
+		template <class... Types> void direct(Types const&... args) requires (sizeof...(Types) > 1)		{(..., direct(args));	}
 		template <class... Types> void prefix(Types const&... args) requires (sizeof...(Types) > 1)		{(..., prefix(args));	}
 		template <class... Types> void postfix(Types const&... args) requires (sizeof...(Types) > 1)	{(..., postfix(args));	}
 

@@ -116,6 +116,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		StructureResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
+
+	struct AttributeResolver: AResolver {
+		AttributeResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
 }
 
 #endif
