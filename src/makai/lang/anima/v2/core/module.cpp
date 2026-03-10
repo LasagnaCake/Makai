@@ -19,8 +19,25 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	auto const jumps	= v["jumps"].get<Makai::Data::Value::ByteListType>();
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
+	mod.sym = Module::Symbol::deserialize(v["sym"]);
+	mod.detail = Module::Detail::deserialize(v["detail"]);
 	if (v.contains("ani"))
-		mod.ani = Module::NativeInterface::deserialize(v["ani"]);
+		*mod.ani = Module::ANI::deserialize(v["ani"]);
+	else mod.ani.unbind();
+	if (v.contains("meta"))
+		*mod.meta = Module::Meta::deserialize(v["meta"]);
+	else mod.meta.unbind();
+	if (v.contains("shared"))
+		mod.shared =
+			v.fetch(
+				"shared",
+				Makai::Data::Value::ArrayType()
+			).toList<String>(
+				[] (auto& e) {
+					return e.getString();
+				}
+			)
+		;
 	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
 }
 
@@ -44,13 +61,14 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	out["version"]	= art;
 	if (type == Module::Type::AV2_CMT_LIBRARY || forceSymbolsToBeKept) {
 	}
-	out["ani"]	= ani;
+	if (ani)
+		out["ani"]	= *ani;
 	out["type"]	= enumcast(type);
 	return out;
 }
 
-Module::NativeInterface Module::NativeInterface::deserialize(Makai::Data::Value const& v) {
-	NativeInterface ani;
+Module::ANI Module::ANI::deserialize(Makai::Data::Value const& v) {
+	ANI ani;
 	if (v.contains("in")) {
 		auto const signals	= v["in"];
 		for (auto [label, id]: signals.items())
@@ -61,27 +79,19 @@ Module::NativeInterface Module::NativeInterface::deserialize(Makai::Data::Value 
 		for (auto const& e: externs.get<Data::Value::ArrayType>())
 			ani.out.pushBack(e);
 	}
-	if (v.contains("shared")) {
-		auto const sharedLibs = v["shared"];
-		for (auto [lib, path]: sharedLibs.items())
-			ani.shared[lib] = path.getString();
-	}
 	return ani;
 }
 
-Makai::Data::Value Module::NativeInterface::serialize() const {
+Makai::Data::Value Module::ANI::serialize() const {
 	auto result = Data::Value::object();
 	result["shared"]	= result.object();
 	result["in"]		= result.object();
 	result["out"]		= result.array();
 	auto& signals		= result["in"];
 	auto& externs		= result["out"];
-	auto& sharedLibs	= result["shared"];
 	for (auto& [name, id]: in)
 		signals[name] = id;
 	for (auto& name: out)
 		externs[externs.size()] = name;
-	for (auto& [lib, path]: shared)
-		sharedLibs[lib] = path;
 	return result;
 }
