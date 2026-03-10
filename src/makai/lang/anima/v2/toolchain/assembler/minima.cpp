@@ -535,39 +535,39 @@ static void doContext(Context& context, bool immediate = false) {
 static void doBinaryOperation(Context& context) {
 	Instruction::BinaryOperation bop;
 	auto const op = context.getNext(LTS_TT_IDENTIFIER, "binary operation name").getString();
-	if (op == "add")			bop.op = BinaryOperator::AV2_BOP_ADD;
-	else if (op == "sub")		bop.op = BinaryOperator::AV2_BOP_SUB;
-	else if (op == "mul")		bop.op = BinaryOperator::AV2_BOP_MUL;
-	else if (op == "div")		bop.op = BinaryOperator::AV2_BOP_DIV;
-	else if (op == "mod")		bop.op = BinaryOperator::AV2_BOP_REM;
-	else if (op == "land")		bop.op = BinaryOperator::AV2_BOP_LOGIC_AND;
-	else if (op == "lor")		bop.op = BinaryOperator::AV2_BOP_LOGIC_OR;
-	else if (op == "lxor")		bop.op = BinaryOperator::AV2_BOP_LOGIC_XOR;
-	else if (op == "band")		bop.op = BinaryOperator::AV2_BOP_BIT_AND;
-	else if (op == "bor")		bop.op = BinaryOperator::AV2_BOP_BIT_OR;
-	else if (op == "bxor")		bop.op = BinaryOperator::AV2_BOP_BIT_XOR;
+	if (op == "add")			bop.op = Operator::AV2_BOP_ADD;
+	else if (op == "sub")		bop.op = Operator::AV2_BOP_SUB;
+	else if (op == "mul")		bop.op = Operator::AV2_BOP_MUL;
+	else if (op == "div")		bop.op = Operator::AV2_BOP_DIV;
+	else if (op == "mod")		bop.op = Operator::AV2_BOP_REM;
+	else if (op == "land")		bop.op = Operator::AV2_BOP_LOGIC_AND;
+	else if (op == "lor")		bop.op = Operator::AV2_BOP_LOGIC_OR;
+	else if (op == "lxor")		bop.op = Operator::AV2_BOP_LOGIC_XOR;
+	else if (op == "band")		bop.op = Operator::AV2_BOP_BIT_AND;
+	else if (op == "bor")		bop.op = Operator::AV2_BOP_BIT_OR;
+	else if (op == "bxor")		bop.op = Operator::AV2_BOP_BIT_XOR;
 }
 
 static void doUnaryOperation(Context& context) {
 	Instruction::UnaryOperation bop;
 	auto const op = context.getNext(LTS_TT_IDENTIFIER, "unary operation name").getString();
-	if (op == "neg")		bop.op = UnaryOperator::AV2_UOP_NEGATE;
-	else if (op == "inc")	bop.op = UnaryOperator::AV2_UOP_INCREMENT;
-	else if (op == "dec")	bop.op = UnaryOperator::AV2_UOP_DECREMENT;
-	else if (op == "inv")	bop.op = UnaryOperator::AV2_UOP_INVERSE;
-	else if (op == "sin")	bop.op = UnaryOperator::AV2_UOP_SIN;
-	else if (op == "cos")	bop.op = UnaryOperator::AV2_UOP_COS;
-	else if (op == "tan")	bop.op = UnaryOperator::AV2_UOP_TAN;
-	else if (op == "asin")	bop.op = UnaryOperator::AV2_UOP_ASIN;
-	else if (op == "acos")	bop.op = UnaryOperator::AV2_UOP_ACOS;
-	else if (op == "atan")	bop.op = UnaryOperator::AV2_UOP_ATAN;
-	else if (op == "sinh")	bop.op = UnaryOperator::AV2_UOP_SINH;
-	else if (op == "cosh")	bop.op = UnaryOperator::AV2_UOP_COSH;
-	else if (op == "tanh")	bop.op = UnaryOperator::AV2_UOP_TANH;
-	else if (op == "log2")	bop.op = UnaryOperator::AV2_UOP_LOG2;
-	else if (op == "log10")	bop.op = UnaryOperator::AV2_UOP_LOG10;
-	else if (op == "ln")	bop.op = UnaryOperator::AV2_UOP_LN;
-	else if (op == "sqrt")	bop.op = UnaryOperator::AV2_UOP_SQRT;
+	if (op == "neg")		bop.op = Operator::AV2_UOP_NEGATE;
+	else if (op == "inc")	bop.op = Operator::AV2_UOP_INCREMENT;
+	else if (op == "dec")	bop.op = Operator::AV2_UOP_DECREMENT;
+	else if (op == "inv")	bop.op = Operator::AV2_UOP_INVERSE;
+	else if (op == "sin")	bop.op = Operator::AV2_UOP_SIN;
+	else if (op == "cos")	bop.op = Operator::AV2_UOP_COS;
+	else if (op == "tan")	bop.op = Operator::AV2_UOP_TAN;
+	else if (op == "asin")	bop.op = Operator::AV2_UOP_ASIN;
+	else if (op == "acos")	bop.op = Operator::AV2_UOP_ACOS;
+	else if (op == "atan")	bop.op = Operator::AV2_UOP_ATAN;
+	else if (op == "sinh")	bop.op = Operator::AV2_UOP_SINH;
+	else if (op == "cosh")	bop.op = Operator::AV2_UOP_COSH;
+	else if (op == "tanh")	bop.op = Operator::AV2_UOP_TANH;
+	else if (op == "log2")	bop.op = Operator::AV2_UOP_LOG2;
+	else if (op == "log10")	bop.op = Operator::AV2_UOP_LOG10;
+	else if (op == "ln")	bop.op = Operator::AV2_UOP_LN;
+	else if (op == "sqrt")	bop.op = Operator::AV2_UOP_SQRT;
 }
 
 static void doYield(Context& context) {

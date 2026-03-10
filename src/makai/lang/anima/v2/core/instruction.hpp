@@ -138,12 +138,12 @@ namespace Makai::Anima::V2::Core {
 
 		/// @brief Binary math operation.
 		struct [[gnu::aligned(4)]] BinaryOperation {
-			BinaryOperator op;
+			Operator op;
 		};
 
 		/// @brief Unary math operation.
 		struct [[gnu::aligned(4)]] UnaryOperation {
-			UnaryOperator op;
+			Operator op;
 		};
 
 		/// @brief Blitting.

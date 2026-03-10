@@ -4,22 +4,8 @@
 #include "forward.hpp"
 
 namespace Makai::Anima::V2::Core {
-	/// @brief Binary operator.
-	enum class BinaryOperator: uint8 {
-		AV2_BOP_ADD,
-		AV2_BOP_SUB,
-		AV2_BOP_MUL,
-		AV2_BOP_DIV,
-		AV2_BOP_REM,
-		AV2_BOP_LOGIC_AND,
-		AV2_BOP_LOGIC_OR,
-		AV2_BOP_LOGIC_XOR,
-		AV2_BOP_BIT_AND,
-		AV2_BOP_BIT_OR,
-		AV2_BOP_BIT_XOR,
-	};
-
-	enum class UnaryOperator: uint8 {
+	/// @brief Operator.
+	enum class Operator: uint16 {
 		AV2_UOP_NEGATE,
 		AV2_UOP_INCREMENT,
 		AV2_UOP_DECREMENT,
@@ -37,6 +23,17 @@ namespace Makai::Anima::V2::Core {
 		AV2_UOP_LOG10,
 		AV2_UOP_LN,
 		AV2_UOP_SQRT,
+		AV2_BOP_ADD = 0x1000,
+		AV2_BOP_SUB,
+		AV2_BOP_MUL,
+		AV2_BOP_DIV,
+		AV2_BOP_REM,
+		AV2_BOP_LOGIC_AND,
+		AV2_BOP_LOGIC_OR,
+		AV2_BOP_LOGIC_XOR,
+		AV2_BOP_BIT_AND,
+		AV2_BOP_BIT_OR,
+		AV2_BOP_BIT_XOR,
 	};
 
 	enum class BasicType {

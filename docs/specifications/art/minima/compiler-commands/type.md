@@ -64,3 +64,15 @@ Specifies that the type's bite size must align to a multiple of integer `<size>`
 ### `fields[ <types> ... ]`
 
 Specifies that the type contains fields of the given types, in order of declaration.
+
+### `operators [ <op-name> : <fn> ... ]`
+
+Specifies that the type contains a series of operators.
+
+### `casts [ <type-name> : <fn> ... ]`
+
+Specifies that the type contains a series of casts.
+
+### `bound`
+
+Specifies that the type is equivalent to an runtimeW-specified type.
