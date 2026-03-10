@@ -21,7 +21,7 @@ namespace Makai::Anima::V2::Core {
 
 		struct Namespace {
 			struct Entry {
-				uint64	refID;
+				uint64	id;
 				String	name;
 			};
 			uint64		id;
@@ -31,14 +31,11 @@ namespace Makai::Anima::V2::Core {
 			List<Entry>	namespaces;
 		};
 
-		struct External {
-			struct Reference {
-				Nullable<uint64>	module = null;
-				uint64				id;
-			};
-			using References = List<Reference>;
-			References types, methods;
+		struct Ref {
+			Nullable<uint64>	module = null;
+			uint64				id;
 		};
+		using Refs = List<Ref>;
 
 		struct Method {
 			String			name;
@@ -62,38 +59,53 @@ namespace Makai::Anima::V2::Core {
 			Nullable<uint64>			ns;
 		};
 
-		struct Info {
-			List<Method>		methods;
-			List<Declaration>	types;
-			List<Namespace>		namespaces;
-		};
-
-		struct NativeInterface {
-			Label				in;
-			StringList			out;
-			Dictionary<String>	shared;
+		struct Symbol {
+			Refs	methods;
+			Refs	types;
+			Refs	namespaces;
 
 			Data::Value serialize() const;
-			static NativeInterface deserialize(Data::Value const& v);
+			static Symbol deserialize(Data::Value const& v);
+		};
+
+		struct Detail {
+			List<Declaration>	types;
+
+			Data::Value serialize() const;
+			static Detail deserialize(Data::Value const& v);
+		};
+
+		struct Meta {
+			List<Method>	methods;
+			List<Namespace>	submodules;
+
+			Data::Value serialize() const;
+			static Meta deserialize(Data::Value const& v);
+		};
+
+		struct ANI {
+			Label		in;
+			StringList	out;
+
+			Data::Value serialize() const;
+			static ANI deserialize(Data::Value const& v);
 		};
 
 		Data::Value serialize(bool forceSymbolsToBeKept = false) const;
 
 		static Module deserialize(Data::Value const& v);
 
-		Type					type;
-		Version					art			= ART_VER;
-		StringList				strings;
-		Bytecode				code;
-		List<uint64>			jumpTable;
-		NativeInterface			ani;
-		Namespace				base;
-		External::References	methods;
-		External::References	types;
-		External::References	namespaces;
-		Info					info;
-		External				external;
-		StringList				requiredModules;
+		Type				type;
+		Version				art			= ART_VER;
+		StringList			strings;
+		Bytecode			code;
+		List<uint64>		jumpTable;
+		Namespace			base;
+		Detail				detail;
+		Symbol				sym;
+		Instance<Meta>		meta	= new Meta();
+		Instance<ANI>		ani		= new ANI();
+		StringList			shared;
 	};
 }
 
