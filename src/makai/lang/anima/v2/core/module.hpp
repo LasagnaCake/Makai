@@ -2,7 +2,6 @@
 #define MAKAILIB_ANIMA_V2_CORE_MODULE_H
 
 #include "instruction.hpp"
-#include "makai/ctl/ctl/container/id/ssuid.hpp"
 #include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
@@ -27,17 +26,18 @@ namespace Makai::Anima::V2::Core {
 		using Refs = List<Ref>;
 
 		struct Method {
+			uint64			id;
 			String			name;
 			uint64			retType;
 			List<uint64>	argTypes;
 			bool			out = false;
 			uint64			entrypoint;
-			uint64			id;
 			uint64			size;
 		};
 
 		struct Declaration {
 			uint64						id;
+			String						name;
 			uint64						flags		= 0;
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
 			Nullable<uint64>			base		= null;
@@ -84,6 +84,7 @@ namespace Makai::Anima::V2::Core {
 
 		Type				type;
 		Version				art			= ART_VER;
+		Version				version		= {0, 0, 1};
 		StringList			strings;
 		Bytecode			code;
 		List<uint64>		jumpTable;

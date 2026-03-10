@@ -6,6 +6,10 @@
 namespace Makai::Anima::V2::Toolchain::Assembler {
 	struct Minima: AAssembler {
 		struct Context: BaseContext {
+			struct Reference {
+				String module;
+				String name;
+			};
 
 			struct Method: Core::Module::Method {
 				bool local = false;
@@ -13,7 +17,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			};
 
 			struct Declaration: Core::Module::Declaration {
-
 			};
 
 			using OpCode = Core::Instruction::Name;
@@ -38,20 +41,24 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			virtual Core::Module onImport(String const& file);
 
-			void addMethod(Instance<Method> const& method);
-			void addType(Instance<Declaration> const& type);
+			void addMethod(String const& name, Instance<Method> const& method);
+			void addType(String const& name, Instance<Declaration> const& type);
 
 			Instance<Method>		getMethod(String const& name);
 			Instance<Declaration>	getType(String const& name);
 
 			Core::Module						program;
-			Dictionary<Instance<Declaration>>	types;
-			Dictionary<Instance<Method>>		methods;
+			Dictionary<Instance<Reference>>		types;
+			Dictionary<Instance<Declaration>>	moduleTypes;
+			Dictionary<Instance<Reference>>		methods;
+			Dictionary<Instance<Declaration>>	moduleMethods;
 
 			List<Instance<Method>>		methodStack;
 			StringList					moduleStack;
 			Dictionary<List<usize>>		jumpsToMap;
 			Dictionary<uint64>			jumps;
+
+			Instance<Declaration> getSharedType(String const& module, String const& name);
 
 			String fullModulePath() const;
 		};

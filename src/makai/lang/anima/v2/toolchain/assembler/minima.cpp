@@ -579,7 +579,7 @@ static void doCast(Context& context, bool const dyn = false) {
 		auto const type = resolvePath(context);
 		if (context.types.contains(type)) {
 			context.add(Instruction::Name::AV2_IN_CAST);
-			context.add(context.types[type]->id);
+			context.add(context.getType(type)->id);
 		} else context.error("Type with this name does not exist!");
 	} else {
 		context.add(
@@ -639,7 +639,7 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 		auto const field = resolvePath(context);
 		if (!context.types.contains(field))
 			context.error("Field type does not exist!");
-		type.fields.pushBack(context.types[field]->id);
+		type.fields.pushBack(context.getType(field)->id);
 	}
 }
 
@@ -683,7 +683,7 @@ static void declareType(Context& context) {
 				context.expectNext(Type{'<'});
 				auto const base = resolvePath(context);
 				if (context.types.contains(base))
-					type->base = context.types[base]->id;
+					type->base = context.getType(base)->id;
 				else context.error("Base type does not exist!");
 				context.expectNext(Type{'>'});
 			} else if (flag == "array") {
@@ -693,7 +693,7 @@ static void declareType(Context& context) {
 				context.expectNext(Type{'<'});
 				auto const base = resolvePath(context);
 				if (context.types.contains(base))
-					type->base = context.types[base]->id;
+					type->base = context.getType(base)->id;
 				else context.error("Element type does not exist!");
 				context.expectNext(Type{'>'});
 			} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
@@ -718,11 +718,21 @@ static void declareType(Context& context) {
 			else context.error("Invalid flag!");
 		}
 		if (!context.types.contains(name))
-			context.types[name] = type;
+			context.addType(name, type);
 		else context.error("Redeclaration of previously-declared type!");
 }
 
 static void declareTypeAlias(Context& context) {
+	Makai::Nullable<Context::Declaration::Reference> share = null;
+	if (context.has(LTS_TT_IDENTIFIER) && context.value().getString() == "shared") {
+		Context::Declaration::Reference decl;
+		context.expectNext(Type{'['});
+		decl.module = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "module path").getString();
+		context.expectNext(Type{':'});
+		decl.name = resolvePath(context, true);
+		context.expectNext(Type{']'});
+		share = decl;
+	}
 	auto const name = resolvePath(context);
 	if (context.types.contains(name))
 		context.error("Type name is already in use!");
@@ -730,7 +740,9 @@ static void declareTypeAlias(Context& context) {
 	auto const type = resolvePath(context);
 	if (!context.types.contains(type))
 		context.error("Type to be aliased does not exist!");
-	context.types[name] = context.types[type];
+	else if (share)
+		context.types[name] = new Context::Declaration::Reference{share.value()};
+	else context.types[name] = context.types[type];
 }
 
 static void declareMethodAlias(Context& context) {
@@ -771,20 +783,20 @@ static void declareMethodPrototype(Context& context) {
 	getMethodVisibility(context, *method);
 	auto id = resolvePath(context);
 	if (context.types.contains(id))
-		method->retType = context.types[id]->id;
+		method->retType = context.getType(id)->id;
 	else context.error("Return type does not exist!");
 	context.expectNext(Type{'('});
 	while (true) {
 		if (context.next().has(Type{')'})) break;
 		id = resolvePath(context);
 		if (context.types.contains(id))
-			method->argTypes.pushBack(context.types[id]->id);
+			method->argTypes.pushBack(context.getType(id)->id);
 		else context.error("Argument type does not exist!");
 	}
 	auto const name = context.getNext(LTS_TT_IDENTIFIER, "method name").getString();
 	if (context.methods.contains(name))
 		context.error("Redeclaration of previously-declared method!");
-	context.addMethod(method);
+	context.addMethod(name, method);
 }
 
 static void declareMethodBody(Context& context) {
@@ -916,11 +928,13 @@ void Minima::invoke() {
 	);
 	context.program.detail.types.resize(context.types.size());
 	for (auto& [name, type]: context.types)
-		context.program.detail.types.pushBack(*type);
+		if (type->module.empty())
+			context.program.detail.types.pushBack(*context.getType(type->name));
 	if (context.program.type == Module::Type::AV2_CMT_LIBRARY) {
 		context.program.meta->methods.resize(context.methods.size());
 		for (auto& [name, method]: context.methods)
-			context.program.meta->methods.pushBack(*method);
+			if (method->module.empty())
+				context.program.meta->methods.pushBack(*context.getMethod(method->name));
 		decltype (context.program.meta->methods) temp;
 		temp.resize(context.methods.size(), {});
 		context.program.meta->methods = temp;
