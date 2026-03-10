@@ -16,10 +16,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			};
 
-			struct Namespace: Core::Module::Namespace {
-
-			};
-
 			using OpCode = Core::Instruction::Name;
 
 			usize add(OpCode const& opcode = OpCode::AV2_IN_NO_OP, uint64 const type = 0);
@@ -42,11 +38,9 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			virtual Core::Module onImport(String const& file);
 
-			void addModule(Instance<Namespace> const& module);
 			void addMethod(Instance<Method> const& method);
 			void addType(Instance<Declaration> const& type);
 
-			Instance<Namespace>		getModule(String const& name);
 			Instance<Method>		getMethod(String const& name);
 			Instance<Declaration>	getType(String const& name);
 
@@ -55,11 +49,11 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Dictionary<Instance<Method>>		methods;
 
 			List<Instance<Method>>		methodStack;
-			List<Instance<Namespace>>	moduleStack;
+			StringList					moduleStack;
 			Dictionary<List<usize>>		jumpsToMap;
 			Dictionary<uint64>			jumps;
 
-			String currentPath() const;
+			String fullModulePath() const;
 		};
 
 		Minima(Context& context): AAssembler(context), context(context) {}

@@ -12,6 +12,9 @@ using enum Type;
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
+static Makai::String cleanPath(Makai::String const& path) {
+	return Makai::Regex::replace(path, "\\/\\/+", "\\/");
+}
 
 uint64 Context::addStringLiteral(String const& str) {
 	auto const strID = program.strings.find(str);
@@ -20,8 +23,14 @@ uint64 Context::addStringLiteral(String const& str) {
 	return program.strings.size() - 1;
 }
 
-static Makai::String resolvePath(Context& context) {
-	bool absolute = false;
+Makai::String Context::fullModulePath() const {
+	String path = "";
+	for (auto& module: moduleStack)
+		path += "/" + module;
+	return cleanPath(path);
+}
+
+static Makai::String resolvePath(Context& context, bool absolute = false) {
 	if (context.has(Type{'.'})) {
 		absolute = true;
 		context.expectNext(LTS_TT_IDENTIFIER, "namespace name");
@@ -29,13 +38,15 @@ static Makai::String resolvePath(Context& context) {
 	Makai::String result = context.value().getString();
 	while(context.peek().type == Type{'.'}) {
 		result +=
-			context
+			"/" + context
 				.expectNext(Type{'.'})
 				.getNext(LTS_TT_IDENTIFIER, "namespace name")
 				.getString()
 		;
 	}
-	return absolute ? result : context.currentPath() + result;
+	if (absolute)
+		result = context.fullModulePath() + result;
+	return cleanPath(result);
 }
 
 struct Location {
@@ -711,19 +722,18 @@ static void declareType(Context& context) {
 		else context.error("Redeclaration of previously-declared type!");
 }
 
-static void declareAlias(Context& context) {
+static void declareTypeAlias(Context& context) {
 	auto const name = resolvePath(context);
 	if (context.types.contains(name))
 		context.error("Type name is already in use!");
-	auto const type =
-		context
-			.expectNext(Type{':'})
-			.getNext(LTS_TT_IDENTIFIER, "aliased type name")
-			.getString()
-	;
+	context.expectNext(Type{':'});
+	auto const type = resolvePath(context);
 	if (!context.types.contains(type))
 		context.error("Type to be aliased does not exist!");
 	context.types[name] = context.types[type];
+}
+
+static void declareAlias(Context& context) {
 }
 
 static void getMethodVisibility(Context& context, Context::Method& method) {
@@ -785,24 +795,25 @@ static void declareImport(Context& context) {
 	// TODO: Rethink this
 }
 
-static void declareRequires(Context& context) {
+static void declareExtern(Context& context) {
 	// TODO: Rethink this
 }
 
 static void declareModuleStart(Context& context) {
 	// TODO: Rethink this
+	auto const name = resolvePath(context, true);
+	context.moduleStack.pushBack(name);
 }
 
 static void declareModuleEnd(Context& context) {
 	// TODO: Rethink this
+	context.moduleStack.popBack();
 }
 
 static void declareModule(Context& context) {
-	// TODO: Rethink this
-}
-
-static void declareScopeBring(Context& context) {
-	// TODO: Rethink this
+	if (context.next().has(Type{'.'}))
+		declareModuleEnd(context);
+	else declareModuleStart(context);
 }
 
 static void doDeclaration(Context& context) {
@@ -810,7 +821,7 @@ static void doDeclaration(Context& context) {
 	if (decl == "hook") {
 		auto const hook = resolvePath(context);
 		doLabel(context);
-		context.program.ani.in[hook] = context.jumps[hook];
+		context.program.ani->in[hook] = context.jumps[hook];
 	} else if (decl == "def")
 		declareMethodBody(context);
 	else if (decl == "fn")
@@ -821,10 +832,10 @@ static void doDeclaration(Context& context) {
 		declareModule(context);
 	else if (decl == "import")
 		declareImport(context);
+	else if (decl == "extern")
+		declareExtern(context);
 	else if (decl == "alias")
 		declareAlias(context);
-	else if (decl == "bring")
-		declareScopeBring(context);
 	else context.error("Invalid declaration!");
 }
 
@@ -875,26 +886,29 @@ void Minima::invoke() {
 			context.error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
 	}
 	context.methods.filter(
+		[] (auto const& lhs, auto const& rhs) {
+			return lhs.value != rhs.value;
+		}
+	).filter(
 		[] (auto const& e) {
 			return !e.value->local;
 		}
 	);
-	context.program.detail.types.resize(context.types.size(), {});
-	context.program.meta->methods.resize(context.methods.size(), {});
-	for (auto& [name, method]: context.methods) {
-		auto& decl = context.program.meta->methods.pushBack({}).back();
-		decl = {
-			.name		= name,
-			.retType	= method->retType,
-			.argTypes	= method->argTypes,
-			.out		= method->out,
-			.entrypoint	= method->entrypoint
-		};
+	context.types.filter(
+		[] (auto const& lhs, auto const& rhs) {
+			return lhs.value != rhs.value;
+		}
+	);
+	context.program.detail.types.resize(context.types.size());
+	for (auto& [name, type]: context.types)
+		context.program.detail.types.pushBack(*type);
+	if (context.program.type == Module::Type::AV2_CMT_LIBRARY) {
+		context.program.meta->methods.resize(context.methods.size());
+		for (auto& [name, method]: context.methods)
+			context.program.meta->methods.pushBack(*method);
+		decltype (context.program.meta->methods) temp;
+		temp.resize(context.methods.size(), {});
+		context.program.meta->methods = temp;
 	}
-	decltype (context.program.meta->methods) temp;
-	temp.resize(context.methods.size(), {});
-	//for (auto& method: context.program.methods)
-	//	temp[method.legalName] = method;
-	context.program.meta->methods = temp;
 }
 CTL_DIAGBLOCK_END

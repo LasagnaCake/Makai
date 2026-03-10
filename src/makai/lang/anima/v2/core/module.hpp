@@ -20,18 +20,6 @@ namespace Makai::Anima::V2::Core {
 
 		using Label = Dictionary<usize>;
 
-		struct Namespace {
-			struct Entry {
-				uint64	id;
-				String	name;
-			};
-			uint64		id;
-			String		name;
-			List<Entry>	methods;
-			List<Entry>	types;
-			List<Entry>	namespaces;
-		};
-
 		struct Ref {
 			Nullable<uint64>	module = null;
 			uint64				id;
@@ -77,7 +65,6 @@ namespace Makai::Anima::V2::Core {
 
 		struct Meta {
 			List<Method>	methods;
-			List<Namespace>	submodules;
 
 			Data::Value serialize() const;
 			static Meta deserialize(Data::Value const& v);
