@@ -7,7 +7,7 @@ namespace Makai::Anima::V2::Core {
 	struct Entry {
 		uint64 id;
 		String name;
-	}
+	};
 }
 
 #endif
