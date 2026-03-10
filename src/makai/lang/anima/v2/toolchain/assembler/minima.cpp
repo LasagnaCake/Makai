@@ -30,8 +30,8 @@ Makai::String Context::fullModulePath() const {
 	return cleanPath(path);
 }
 
-static Makai::String resolvePath(Context& context, bool absolute = false) {
-	if (context.has(Type{'.'})) {
+static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
+	if (context.has(pathSeparator)) {
 		absolute = true;
 		context.expectNext(LTS_TT_IDENTIFIER, "namespace name");
 	}
@@ -718,37 +718,37 @@ static void declareType(Context& context) {
 		else context.error("Redeclaration of previously-declared type!");
 }
 
-static void declareTypeAlias(Context& context) {
-	Makai::Instance<Context::Reference> share = null;
+static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instance<Context::Reference>>& syms) {
 	if (context.has(LTS_TT_IDENTIFIER) && context.value().getString() == "shared") {
-		share = share.create();
-		context.expectNext(Type{'['});
-		share->module = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "module path").getString();
+		Makai::Instance<Context::Reference> share = share.create();
+		context.next();
+		auto const name = resolvePath(context);
+		if (syms.contains(name))
+			context.error("Method name is already in use!");
+		context.expectNext(Type{':'}).expectNext(Type{'['});
+		share->module = resolvePath(context, true);
 		context.expectNext(Type{':'});
 		share->name = resolvePath(context, true);
 		context.expectNext(Type{']'});
+		syms[name]	= share;
+	} else {
+		auto const name = resolvePath(context);
+		if (syms.contains(name))
+			context.error("symbol name is already in use!");
+		context.expectNext(Type{':'});
+		auto const symName = resolvePath(context);
+		if (!syms.contains(symName))
+			context.error("Symbol to be aliased does not exist!");
+		syms[name]	= syms[symName];
 	}
-	auto const name = resolvePath(context);
-	if (context.types.contains(name))
-		context.error("Type name is already in use!");
-	context.expectNext(Type{':'});
-	auto const type = resolvePath(context);
-	if (!context.types.contains(type))
-		context.error("Type to be aliased does not exist!");
-	else if (share)
-		context.types[name] = share;
-	else context.types[name] = context.types[type];
+}
+
+static void declareTypeAlias(Context& context) {
+	declareSymbolAlias(context, context.types);
 }
 
 static void declareMethodAlias(Context& context) {
-	auto const name = resolvePath(context);
-	if (context.methods.contains(name))
-		context.error("Method name is already in use!");
-	context.expectNext(Type{':'});
-	auto const method = resolvePath(context);
-	if (!context.methods.contains(method))
-		context.error("Method to be aliased does not exist!");
-	context.methods[name] = context.methods[method];
+	declareSymbolAlias(context, context.methods);
 }
 
 static void declareAlias(Context& context) {
@@ -813,16 +813,7 @@ static void declareMethodBody(Context& context) {
 	}
 }
 
-static void declareImport(Context& context) {
-	// TODO: Rethink this
-}
-
-static void declareExtern(Context& context) {
-	// TODO: Rethink this
-}
-
 static void declareModuleStart(Context& context) {
-	// TODO: Rethink this
 	auto const name = resolvePath(context, true);
 	context.moduleStack.pushBack(name);
 }
@@ -852,10 +843,6 @@ static void doDeclaration(Context& context) {
 		declareType(context);
 	else if (decl == "module")
 		declareModule(context);
-	else if (decl == "import")
-		declareImport(context);
-	else if (decl == "extern")
-		declareExtern(context);
 	else if (decl == "alias")
 		declareAlias(context);
 	else context.error("Invalid declaration!");

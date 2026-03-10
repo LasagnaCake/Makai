@@ -95,7 +95,7 @@ namespace Makai::Anima::V2::Core {
 		Symbol				sym;
 		Instance<Meta>		meta		= new Meta();
 		Instance<ANI>		ani			= new ANI();
-		StringList			shared;
+		StringList			requiredModules;
 	};
 }
 

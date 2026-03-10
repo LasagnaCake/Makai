@@ -27,10 +27,10 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	if (v.contains("meta"))
 		*mod.meta = Module::Meta::deserialize(v["meta"]);
 	else mod.meta.unbind();
-	if (v.contains("shared"))
-		mod.shared =
+	if (v.contains("requires"))
+		mod.requiredModules =
 			v.fetch(
-				"shared",
+				"requires",
 				Makai::Data::Value::ArrayType()
 			).toList<String>(
 				[] (auto& e) {
