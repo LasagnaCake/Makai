@@ -3,14 +3,13 @@
 
 #include "module.hpp"
 
-
 namespace Makai::Anima::V2::Core {
 	struct Library {
 		using Version = Module::Version;
-		String							name;
-		Dictionary<String>				modules;
-		Dictionary<Module::Declaration>	types;
-		Dictionary<Module::Method>		methods;
+		String					name;
+		Dictionary<String>		modules;
+		Dictionary<Module::Ref>	types;
+		Dictionary<Module::Ref>	methods;
 	};
 }
 
