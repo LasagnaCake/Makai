@@ -45,7 +45,6 @@ namespace Makai::Anima::V2::Core {
 			uint64						alignment	= 1;
 			List<uint64>				fields;
 			List<uint64>				casts;
-			Nullable<uint64>			ns;
 		};
 
 		struct Symbol {
