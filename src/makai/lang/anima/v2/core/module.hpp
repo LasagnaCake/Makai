@@ -31,28 +31,41 @@ namespace Makai::Anima::V2::Core {
 			List<Entry>	namespaces;
 		};
 
+		struct External {
+			struct Reference {
+				Nullable<uint64>	module = null;
+				uint64				id;
+			};
+			using References = List<Reference>;
+			References types, methods;
+		};
+
 		struct Method {
-			uint64			id;
 			String			name;
 			uint64			retType;
 			List<uint64>	argTypes;
 			bool			out = false;
 			uint64			entrypoint;
+			uint64			id;
 			uint64			size;
 		};
 
 		struct Declaration {
 			uint64						id;
-			StringList					aliases;
 			uint64						flags		= 0;
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
 			Nullable<uint64>			base		= null;
 			uint64						byteSize	= 0;
 			uint64						alignment	= 1;
 			List<uint64>				fields;
-			Dictionary<uint64>			operators;
-			Dictionary<uint64>			casts;
+			List<uint64>				casts;
 			Nullable<uint64>			ns;
+		};
+
+		struct Info {
+			List<Method>		methods;
+			List<Declaration>	types;
+			List<Namespace>		namespaces;
 		};
 
 		struct NativeInterface {
@@ -71,13 +84,16 @@ namespace Makai::Anima::V2::Core {
 		Type					type;
 		Version					art			= ART_VER;
 		StringList				strings;
-		List<Core::Instruction>	code;
+		Bytecode				code;
 		List<uint64>			jumpTable;
 		NativeInterface			ani;
 		Namespace				base;
-		List<Method>			methods;
-		List<Declaration>		types;
-		List<Namespace>			namespaces;
+		External::References	methods;
+		External::References	types;
+		External::References	namespaces;
+		Info					info;
+		External				external;
+		StringList				requiredModules;
 	};
 }
 

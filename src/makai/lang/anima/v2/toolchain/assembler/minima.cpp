@@ -14,7 +14,28 @@ CTL_DIAGBLOCK_IGNORE_SWITCH
 
 
 uint64 Context::addStringLiteral(String const& str) {
-	if (program.strings.find(str) != -1)
+	auto const strID = program.strings.find(str);
+	if (strID != -1) return strID;
+	program.strings.pushBack(str);
+	return program.strings.size() - 1;
+}
+
+static Makai::String resolvePath(Context& context) {
+	bool absolute = false;
+	if (context.has(Type{'.'})) {
+		absolute = true;
+		context.expectNext(LTS_TT_IDENTIFIER, "namespace name");
+	}
+	Makai::String result = context.value().getString();
+	while(context.peek().type == Type{'.'}) {
+		result +=
+			context
+				.expectNext(Type{'.'})
+				.getNext(LTS_TT_IDENTIFIER, "namespace name")
+				.getString()
+		;
+	}
+	return absolute ? result : context.currentPath() + result;
 }
 
 struct Location {
@@ -297,7 +318,7 @@ static void doCall(Context& context, bool dynamic = false) {
 			invoke
 		);
 		if (context.methods.contains(id))
-			context.addJumpTarget(context.methods[id]->entrypoint);
+			context.addJumpTarget(context.methods[id]->jump);
 		else context.error("Method with this name does not exist!");
 	} else {
 		context.add(
@@ -544,7 +565,7 @@ static void doYield(Context& context) {
 
 static void doCast(Context& context, bool const dyn = false) {
 	if (!dyn) {
-		auto const type = context.getNext(LTS_TT_IDENTIFIER, "type name").getString();
+		auto const type = resolvePath(context);
 		if (context.types.contains(type)) {
 			context.add(Instruction::Name::AV2_IN_CAST);
 			context.add(context.types[type]->id);
@@ -604,15 +625,19 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 	context.expectNext(Type{'['});
 	while (true) {
 		if (context.next().has(Type{']'})) break;
-		auto const field = context.get(LTS_TT_IDENTIFIER, "field type");
+		auto const field = resolvePath(context);
 		if (!context.types.contains(field))
 			context.error("Field type does not exist!");
 		type.fields.pushBack(context.types[field]->id);
 	}
 }
 
+static void declareTypeOperators(Context& context, Context::Declaration& type) {}
+
+static void declareTypeCasts(Context& context, Context::Declaration& type) {}
+
 static void declareType(Context& context) {
-	auto const name = context.getNext(LTS_TT_IDENTIFIER, "type name").getString();
+	auto const name = resolvePath(context);
 		auto const type = new Context::Declaration();
 		context.expectNext(Type{'['});
 		while (true) {
@@ -644,12 +669,8 @@ static void declareType(Context& context) {
 					context.error("Type cannot be both a derived type and an array type!");
 				if (type->base)
 					context.error("Redeclaration of base type!");
-				auto const base =
-					context
-						.expectNext(Type{'<'})
-						.getNext(LTS_TT_IDENTIFIER, "base type")
-						.getString()
-				;
+				context.expectNext(Type{'<'});
+				auto const base = resolvePath(context);
 				if (context.types.contains(base))
 					type->base = context.types[base]->id;
 				else context.error("Base type does not exist!");
@@ -658,12 +679,8 @@ static void declareType(Context& context) {
 				type->flags |= Definition::Flags::AV2_DF_ARRAY;
 				if (type->base)
 					context.error("Redeclaration of element type!");
-				auto const base =
-					context
-						.expectNext(Type{'<'})
-						.getNext(LTS_TT_IDENTIFIER, "element type")
-						.getString()
-				;
+				context.expectNext(Type{'<'});
+				auto const base = resolvePath(context);
 				if (context.types.contains(base))
 					type->base = context.types[base]->id;
 				else context.error("Element type does not exist!");
@@ -682,6 +699,10 @@ static void declareType(Context& context) {
 				context.expectNext(Type{')'});
 			} else if (flag == "fields") {
 				declareTypeFields(context, *type);
+			} else if (flag == "operators") {
+				declareTypeOperators(context, *type);
+			} else if (flag == "casts") {
+				declareTypeCasts(context, *type);
 			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
 			else context.error("Invalid flag!");
 		}
@@ -691,7 +712,7 @@ static void declareType(Context& context) {
 }
 
 static void declareAlias(Context& context) {
-	auto const name = context.getNext(LTS_TT_IDENTIFIER, "alias name").getString();
+	auto const name = resolvePath(context);
 	if (context.types.contains(name))
 		context.error("Type name is already in use!");
 	auto const type =
@@ -723,14 +744,14 @@ static void getMethodVisibility(Context& context, Context::Method& method) {
 static void declareMethodPrototype(Context& context) {
 	auto const method = new Context::Method();
 	getMethodVisibility(context, *method);
-	auto id = context.get(LTS_TT_IDENTIFIER, "return type").getString();
+	auto id = resolvePath(context);
 	if (context.types.contains(id))
 		method->retType = context.types[id]->id;
 	else context.error("Return type does not exist!");
 	context.expectNext(Type{'('});
 	while (true) {
 		if (context.next().has(Type{')'})) break;
-		id = context.get(LTS_TT_IDENTIFIER, "agument type").getString();
+		id = resolvePath(context);
 		if (context.types.contains(id))
 			method->argTypes.pushBack(context.types[id]->id);
 		else context.error("Argument type does not exist!");
@@ -748,7 +769,7 @@ static void declareMethodBody(Context& context) {
 		auto const method = context.methodStack.popBack();
 		method->size = context.program.code.size() - method->size;
 	} else {
-		auto const name = context.getNext(LTS_TT_IDENTIFIER, "method name").getString();
+		auto const name = resolvePath(context);
 		if (!context.methods.contains(name))
 			context.error("Method prototype does not exist!");
 		auto const method = context.getMethod(name);
@@ -761,6 +782,10 @@ static void declareMethodBody(Context& context) {
 }
 
 static void declareImport(Context& context) {
+	// TODO: Rethink this
+}
+
+static void declareRequires(Context& context) {
 	// TODO: Rethink this
 }
 
@@ -783,7 +808,7 @@ static void declareScopeBring(Context& context) {
 static void doDeclaration(Context& context) {
 	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "declaration type").getString();
 	if (decl == "hook") {
-		auto const hook = context.getNext(LTS_TT_IDENTIFIER, "hook name").getString();
+		auto const hook = resolvePath(context);
 		doLabel(context);
 		context.program.ani.in[hook] = context.jumps[hook];
 	} else if (decl == "def")
@@ -856,7 +881,7 @@ void Minima::invoke() {
 	);
 	context.program.types.resize(context.types.size(), {});
 	for (auto& [name, type]: context.types) {
-		auto& decl = context.program.types[type->id()];
+		auto& decl = context.program.types[type->id];
 		if (decl.aliases.size()) {
 			decl.aliases.pushBack(name);
 			continue;

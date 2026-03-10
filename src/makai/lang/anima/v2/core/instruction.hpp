@@ -354,6 +354,8 @@ namespace Makai::Anima::V2::Core {
 			return Cast::bit<T>(*this);
 		}
 	};
+
+	using Bytecode = List<Core::Instruction>;
 }
 
 #endif

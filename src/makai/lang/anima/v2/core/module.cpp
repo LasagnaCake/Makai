@@ -19,8 +19,6 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	auto const jumps	= v["jumps"].get<Makai::Data::Value::ByteListType>();
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
-	if (v.contains("labels"))
-		mod.labels = Module::Labels::deserialize(v["labels"]);
 	if (v.contains("ani"))
 		mod.ani = Module::NativeInterface::deserialize(v["ani"]);
 	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
@@ -45,19 +43,6 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	out["code"]		= code.toBytes();
 	out["version"]	= art;
 	if (type == Module::Type::AV2_CMT_LIBRARY || forceSymbolsToBeKept) {
-		out["labels"]	= out.object();
-		auto& outLabels = out["labels"];
-		outLabels["jumps"]		= out.object();
-		outLabels["globals"]	= out.object();
-		auto& outJumps		= outLabels["jumps"];
-		auto& outGlobals	= outLabels["globals"];
-		for (auto& [name, id]: labels.globals)
-			outGlobals[name] = id;
-		for (auto& [name, id]: labels.jumps)
-			outJumps[name] = id;
-		out["unmapped"] = out.object();
-		for (auto& [name, places]: jumpsToMap)
-			out[name] = places.toList<Makai::Data::Value>();
 	}
 	out["ani"]	= ani;
 	out["type"]	= enumcast(type);
@@ -99,32 +84,4 @@ Makai::Data::Value Module::NativeInterface::serialize() const {
 	for (auto& [lib, path]: shared)
 		sharedLibs[lib] = path;
 	return result;
-}
-
-Makai::Data::Value Module::Labels::serialize() const {
-	auto out = Data::Value::object();
-	out["jumps"]	=
-	out["globals"]	= out.object();
-	auto& outJumps		= out["jumps"];
-	auto& outGlobals	= out["globals"];
-	for (auto& [name, id]: globals)
-		outGlobals[name] = id;
-	for (auto& [name, id]: jumps)
-		outJumps[name] = id;
-	return out;
-}
-
-Module::Labels Module::Labels::deserialize(Makai::Data::Value const& v) {
-	Labels labels;
-	if (v.contains("jumps")) {
-		auto const jumpLabels = v["jumps"];
-		for (auto [label, id]: jumpLabels.items())
-			labels.jumps[label] = id;
-	}
-	if (v.contains("globals")) {
-		auto const globalLabels = v["globals"];
-		for (auto [label, id]: globalLabels.items())
-			labels.globals[label] = id;
-	}
-	return labels;
 }

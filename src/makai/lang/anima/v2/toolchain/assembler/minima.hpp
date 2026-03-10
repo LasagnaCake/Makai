@@ -9,13 +9,20 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			struct Method: Core::Module::Method {
 				bool local = false;
+				String jump;
 			};
-			using Declaration	= Core::Module::Declaration;
-			using Namespace		= Core::Module::Namespace;
+
+			struct Declaration: Core::Module::Declaration {
+
+			};
+
+			struct Namespace: Core::Module::Namespace {
+
+			};
 
 			using OpCode = Core::Instruction::Name;
 
-			usize add(OpCode const& opcode = OpCode::AV2_IN_NO_OP, String const type = 0);
+			usize add(OpCode const& opcode = OpCode::AV2_IN_NO_OP, uint64 const type = 0);
 			usize add(uint64 const& value);
 
 			template <class T>
@@ -51,6 +58,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			List<Instance<Namespace>>	moduleStack;
 			Dictionary<List<usize>>		jumpsToMap;
 			Dictionary<uint64>			jumps;
+
+			String currentPath() const;
 		};
 
 		Minima(Context& context): AAssembler(context), context(context) {}
