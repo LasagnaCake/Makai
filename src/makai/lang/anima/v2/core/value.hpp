@@ -94,6 +94,7 @@ namespace Makai::Anima::V2::Core {
 		using Storage = Instance<Object>;
 		List<Storage>			fields;
 		Instance<Definition>	type;
+		Instance<Definition>	origin;
 		Value					value;
 		Map<uint64, uint64>		vtable;
 
