@@ -733,7 +733,21 @@ static void declareTypeAlias(Context& context) {
 	context.types[name] = context.types[type];
 }
 
+static void declareMethodAlias(Context& context) {
+	auto const name = resolvePath(context);
+	if (context.methods.contains(name))
+		context.error("Method name is already in use!");
+	context.expectNext(Type{':'});
+	auto const method = resolvePath(context);
+	if (!context.types.contains(method))
+		context.error("Method to be aliased does not exist!");
+	context.methods[name] = context.methods[method];
+}
+
 static void declareAlias(Context& context) {
+	auto const what = context.getNext(LTS_TT_IDENTIFIER, "alias type").getString();
+	if (what == "type")		declareTypeAlias(context);
+	else if (what == "fn")	declareMethodAlias(context);
 }
 
 static void getMethodVisibility(Context& context, Context::Method& method) {
