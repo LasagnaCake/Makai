@@ -92,8 +92,8 @@ namespace Makai::Anima::V2::Core {
 			return externalMethods[name].invoker->invoke(types, externalMethods[name], args);
 		}
 
-		Definition::Database		types;
-		Method::Database			methods;
+		Database<Definition>		types;
+		Database<Method>			methods;
 		Dictionary<ExternalMethod>	externalMethods;
 	};
 }

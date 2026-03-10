@@ -4,8 +4,7 @@
 #include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
-	struct Method {
-		String						name;
+	struct Method: Entry {
 		Instance<Definition>		retType;
 		List<Instance<Definition>>	argTypes;
 		bool						out = false;
@@ -14,10 +13,10 @@ namespace Makai::Anima::V2::Core {
 			using Type = Instance<Method>;
 			using StorageType = List<Type>;
 
-			StorageType byAlias(String const& alias) {
+			StorageType byName(String const& name) {
 				StorageType fns;
 				for (auto& type: types) {
-					if (type->name == alias)
+					if (type->name == name)
 						fns.pushBack(type);
 				}
 				return fns;

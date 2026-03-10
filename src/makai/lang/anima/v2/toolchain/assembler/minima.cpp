@@ -725,9 +725,9 @@ static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instan
 		auto const name = resolvePath(context);
 		if (syms.contains(name))
 			context.error("Method name is already in use!");
-		context.expectNext(Type{':'}).expectNext(Type{'['});
+		context.expectNext(Type{':'}).expectNext(Type{'['}).next();
 		share->module = resolvePath(context, true);
-		context.expectNext(Type{':'});
+		context.expectNext(Type{':'}).next();
 		share->name = resolvePath(context, true);
 		context.expectNext(Type{']'});
 		syms[name]	= share;
@@ -735,7 +735,7 @@ static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instan
 		auto const name = resolvePath(context);
 		if (syms.contains(name))
 			context.error("symbol name is already in use!");
-		context.expectNext(Type{':'});
+		context.expectNext(Type{':'}).next();
 		auto const symName = resolvePath(context);
 		if (!syms.contains(symName))
 			context.error("Symbol to be aliased does not exist!");
@@ -776,6 +776,7 @@ static void getMethodVisibility(Context& context, Context::Method& method) {
 static void declareMethodPrototype(Context& context) {
 	auto const method = new Context::Method();
 	getMethodVisibility(context, *method);
+	context.next();
 	auto id = resolvePath(context);
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
@@ -813,25 +814,41 @@ static void declareMethodBody(Context& context) {
 	}
 }
 
-static void declareModuleStart(Context& context) {
+static void declareNamespaceStart(Context& context) {
 	auto const name = resolvePath(context, true);
 	context.moduleStack.pushBack(name);
 }
 
-static void declareModuleEnd(Context& context) {
-	// TODO: Rethink this
+static void declareNamespaceEnd(Context& context) {
+	if (context.moduleStack.empty())
+		context.error("Missing matching namespace opening statement!");
 	context.moduleStack.popBack();
 }
 
-static void declareModule(Context& context) {
+static void declareNamespace(Context& context) {
 	if (context.next().has(Type{'.'}))
-		declareModuleEnd(context);
-	else declareModuleStart(context);
+		declareNamespaceEnd(context);
+	else declareNamespaceStart(context);
+}
+
+static void declareModule(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "module declaration").getString();
+	if (id == "name") {
+		if (context.program.name.size())
+			context.error("Module name was already defined!");
+		context.expectNext(Type{':'}).next();
+		auto const name = resolvePath(context, true);
+	};
+}
+
+static void declareImport(Context& context) {
+	// TODO: Imports
 }
 
 static void doDeclaration(Context& context) {
 	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "declaration type").getString();
 	if (decl == "hook") {
+		context.next();
 		auto const hook = resolvePath(context);
 		doLabel(context);
 		context.program.ani->in[hook] = context.jumps[hook];
@@ -841,10 +858,14 @@ static void doDeclaration(Context& context) {
 		declareMethodPrototype(context);
 	else if (decl == "type")
 		declareType(context);
-	else if (decl == "module")
-		declareModule(context);
+	else if (decl == "ns")
+		declareNamespace(context);
 	else if (decl == "alias")
 		declareAlias(context);
+	else if (decl == "module")
+		declareModule(context);
+	else if (decl == "import")
+		declareImport(context);
 	else context.error("Invalid declaration!");
 }
 

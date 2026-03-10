@@ -86,6 +86,7 @@ namespace Makai::Anima::V2::Core {
 		static Module deserialize(Data::Value const& v);
 
 		Type				type;
+		String				name;
 		Version				art			= ART_VER;
 		Version				version		= {0, 0, 1};
 		StringList			strings;

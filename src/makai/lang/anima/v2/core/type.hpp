@@ -2,6 +2,7 @@
 #define MAKAILIB_ANIMA_V2_CORE_TYPE_H
 
 #include "forward.hpp"
+#include "entry.hpp"
 
 namespace Makai::Anima::V2::Core {
 	/// @brief Operator.
@@ -50,7 +51,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_VECTOR,
 	};
 
-	struct Definition {
+	struct Definition: Entry {
 		struct Flags {
 			constexpr static uint64 const AV2_DF_BASIC			= 1 << 0;
 			constexpr static uint64 const AV2_DF_NULLABLE		= 1 << 1;
@@ -62,7 +63,6 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_CLONABLE		= 1 << 7;
 			constexpr static uint64 const AV2_DF_ART_EQUIVALENT	= 1 << 8;
 		};
-		StringList					aliases;
 		uint64						flags		= 0;
 		Nullable<BasicType>			basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
 		Instance<Definition>		base		= nullptr;
@@ -74,10 +74,10 @@ namespace Makai::Anima::V2::Core {
 			using Type = Instance<Definition>;
 			using StorageType = List<Type>;
 
-			List<Type> byAlias(String const& alias) {
+			StorageType byName(String const& name) {
 				StorageType defs;
 				for (auto& type: types) {
-					if (type->aliases.find(alias) != -1)
+					if (type->name == name)
 						defs.pushBack(type);
 				}
 				return defs;
