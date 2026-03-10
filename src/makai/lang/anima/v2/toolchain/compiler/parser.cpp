@@ -101,7 +101,10 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
-		LTS_TT_BIT_NOT
+		LTS_TT_BIT_NOT,
+		LTS_TT_RAISE,
+		LTS_TT_AMP,
+		LTS_TT_STAR
 	);
 	// Basic infixes
 	infix(LTS_TT_PLUS, false);
