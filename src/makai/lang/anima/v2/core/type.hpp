@@ -70,28 +70,6 @@ namespace Makai::Anima::V2::Core {
 		uint64						alignment	= 1;
 		List<Instance<Definition>>	fields;
 
-		struct Database {
-			using Type = Instance<Definition>;
-			using StorageType = List<Type>;
-
-			StorageType byName(String const& name) {
-				StorageType defs;
-				for (auto& type: types) {
-					if (type->name == name)
-						defs.pushBack(type);
-				}
-				return defs;
-			}
-
-			Type byID(uint64 const id) {
-				if (id < types.size())
-					return types[id];
-				return nullptr;
-			}
-
-			StorageType types;
-		};
-
 		Functor<void(ref<byte const>)>							construct;
 		Functor<void(ref<byte>)>								destruct;
 		Nullable<Function<void(ref<byte>, ref<byte const>)>>	clone;
