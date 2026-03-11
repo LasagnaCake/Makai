@@ -143,7 +143,7 @@ static Location getLocal(Context& context) {
 	auto const localID =
 		context
 			.expectNext(Type{'['})
-			.get(LTS_TT_IDENTIFIER, "local stack ID")
+			.get(LTS_TT_INTEGER, "local stack ID")
 			.getUnsigned()
 	;
 	context.expectNext(Type{']'});
@@ -168,11 +168,7 @@ static Location getExtern(Context& context) {
 }
 
 static Location getGlobal(Context& context) {
-	auto const name =
-		context
-			.getNext(LTS_TT_IDENTIFIER, "global name")
-			.getString()
-	;
+	auto const name = resolvePath(context);
 	uint64 globalID = context.addGlobal(name);
 	return {
 		DataLocation::AV2_DL_GLOBAL,
@@ -228,13 +224,8 @@ static Location getConstantLocation(Context& context) {
 }
 
 static Location getLabelLocation(Context& context) {
-	if (context.program.type == Module::Type::AV2_CMT_LIBRARY)
-		context.error("Cannot use 'placeof' inside library programs!");
-	auto const current =
-		context
-			.getNext(LTS_TT_IDENTIFIER, "label name")
-			.getString()
-	;
+	context.next();
+	auto const current = resolvePath(context);
 	if (!context.hasJumpTarget(current))
 		context.error("Label has not been declared yet!");
 	return {DataLocation::AV2_DL_UINT, context.getJumpTarget(current)};
@@ -339,14 +330,15 @@ static void doJump(Context& context, bool dynamic = false) {
 	if (jt == "if")
 		doConditionalJump(context, dynamic);
 	else if (!dynamic)
-		context.addJumpTarget(jt);
+		context.addJumpTarget(resolvePath(context));
 	else context.error("Invalid jump instruction!");
 }
 
 static void doCall(Context& context, bool dynamic = false) {
 	Instruction::Invocation invoke {.dynamic = dynamic};
 	if (!dynamic) {
-		auto id = context.getNext(LTS_TT_IDENTIFIER, "call expression").getString();
+		context.next();
+		auto id = resolvePath(context);
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
@@ -423,7 +415,7 @@ static void doFieldGet(Context& context, bool const dyn = false) {
 		auto const field =
 			context
 				.expectNext(Type{'['})
-				.getNext(LTS_TT_IDENTIFIER, "field ID")
+				.getNext(LTS_TT_INTEGER, "field ID")
 				.getUnsigned()
 		;
 		context.expectNext(Type{']'});
@@ -436,7 +428,7 @@ static void doArrayAt(Context& context, bool const dyn = false) {
 		auto const index =
 			context
 				.expectNext(Type{'['})
-				.getNext(LTS_TT_IDENTIFIER, "array index")
+				.getNext(LTS_TT_INTEGER, "array index")
 				.getUnsigned()
 		;
 		context.expectNext(Type{']'});
@@ -621,9 +613,11 @@ static void doRandomNumber(Context& context) {
 	} else context.error("Invalid RNG operation!");
 }
 
-static void doLabel(Context& context) {
-	auto const name = context.get(LTS_TT_IDENTIFIER, "label name").getString();
+static Makai::String doLabel(Context& context) {
+	context.next();
+	auto const name = resolvePath(context);
 	context.jumps[name] = context.program.code.size();
+	return name;
 }
 
 static void doDynamic(Context& context) {
@@ -812,7 +806,8 @@ static void declareMethodPrototype(Context& context) {
 			method->argTypes.pushBack(context.getType(id)->id);
 		else context.error("Argument type does not exist!");
 	}
-	auto const name = context.getNext(LTS_TT_IDENTIFIER, "method name").getString();
+	context.next();
+	auto const name = resolvePath(context);
 	if (context.methods.contains(name))
 		context.error("Redeclaration of previously-declared method!");
 	context.addMethod(name, method);
@@ -830,8 +825,7 @@ static void declareMethodBody(Context& context) {
 			context.error("Method prototype does not exist!");
 		auto const method = context.getMethod(name);
 		context.methodStack.pushBack(method);
-		auto const lname = context.getNext(LTS_TT_IDENTIFIER, "entrypoint").getString();
-		doLabel(context);
+		auto const lname = doLabel(context);
 		method->entrypoint = context.jumps[lname];
 		method->size = context.program.code.size();
 	}
