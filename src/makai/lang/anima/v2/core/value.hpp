@@ -5,97 +5,147 @@
 
 namespace Makai::Anima::V2::Core {
 	struct Value {
-		MemorySlice<byte>	content;
-		uint64				type;
+		using Storage = Instance<Value>;
+		using Memory = MemorySlice<byte>;
 
-		template <class T>
+		template <Type::NonVoid T>
 		consteval static bool sized() {
 			return (sizeof(T) >= sizeof(byte));
 		}
 
+		~Value();
+
 		constexpr Value() noexcept {}
 
-		template <Makai::Type::Different<Value> T>
-		constexpr Value(T const& v)
-		requires (sized<T>() && Makai::Type::CopyConstructible<T>) {
-			operator=(v);
+		constexpr Value(Value const& other, Instance<Definition> const& newType): content(other.content), type(newType), origin(other.origin) {
 		}
 
 		template <Makai::Type::Different<Value> T>
-		constexpr Value(T&& v)
-		requires (sized<T>() && Makai::Type::MoveConstructible<T>) {
-			operator=(move(v));
+		constexpr Value(T const& v, Instance<Definition> const& info) {
+			type = origin = info;
+			content->invoke(origin->byteSize);
+			origin->copy(content->data(), &v);
+		}
+
+		template <Makai::Type::Different<Value> T>
+		constexpr Value(T&& v, Instance<Definition> const& info) {
+			type = origin = info;
+			content->invoke(origin->byteSize);
+			origin->move(content->data(), &v);
 		}
 
 		constexpr Value(Value const& other) {
-			operator=(other);
+			if (other.origin->copy) {
+				content->invoke(other.content->size());
+				origin->copy.invoke(content->data(), other.content->data());
+			}
 		}
 
-		constexpr Value(Value&& other) = default;
+		Value(Value&& other) = default;
 
-		template <class T> constexpr Span<T>		span() requires (sized<T>())		{return Span<T>(data<T>(), size<T>());			}
-		template <class T> constexpr Span<T const>	span() const requires (sized<T>())	{return Span<T const>(data<T>(), size<T>());	}
+		ref<void const>	data() const		{return content->data();					}
+		constexpr usize byteSize() const	{return origin->byteSize;					}
 
-		template <class T> constexpr ref<T>			data() requires (sized<T>())		{return reinterpret_cast<ref<T>>(content.data());		}
-		template <class T> constexpr ref<T const>	data() const requires (sized<T>())	{return reinterpret_cast<ref<T const>>(content.data());	}
-		template <class T> constexpr usize			size() const requires (sized<T>())	{return content.size() / sizeof(T);						}
-
-		template <class T> constexpr T&			as() requires (sized<T>())			{return *data<T>();	}
-		template <class T> constexpr T const&	as() const requires (sized<T>())	{return *data<T>();	}
-
-		template <Makai::Type::Different<Value> T>
-		constexpr Value& operator=(T const& value)
-		requires (sized<T>() && Makai::Type::CopyConstructible<T>) {
-			prepare<T>();
-			as<T>() = value;
-			return *this;
-		}
-
-		template <Makai::Type::Different<Value> T>
-		constexpr Value& operator=(T&& value)
-		requires (sized<T>() && Makai::Type::MoveConstructible<T>) {
-			prepare<T>();
-			as<T>() = move(value);
-			return *this;
+		Value as(Instance<Definition> const& newType) const {
+			return Value(*this, newType);
 		}
 
 		constexpr Value& operator=(Value const& other) {
-			if (other.clone)
-				operator=(other.clone.value().invoke(*this));
+			if (other.type->copy)
+				return operator=(Value(other));
 			return *this;
 		}
-		constexpr Value& operator=(Value&&) = default;
 
-		template <class T> constexpr bool fits() const requires (sized<T>()) {return sizeof(T) == content.size();}
+		Value& operator=(Value&&) = default;
 
-	private:
-		friend class Object;
-
-		template <Makai::Type::Different<Value> T>
-		void prepare() {
-			destruct(*this);
-			content.free();
-			content.create(sizeof(T));
-			destruct = [] (Value& self) {
-				MX::destruct<T>(self.template data<T>());
-			};
-			if constexpr (Makai::Type::CopyConstructible<T>) {
-				clone = [] (Value& self) {
-					return Value(self.template as<T>());
-				};
-			} else clone = null;
+		constexpr uint64 flags() const {
+			return origin->flags;
 		}
 
-		Functor<void(Value&)>				destruct;
-		Nullable<Function<Value(Value&)>>	clone;
+		void copyTo(usize const index, ref<void const> const data) {
+			if (index < count())
+				origin->copy(addressAt(index), data);
+		}
+
+		void moveTo(usize const index, ref<void const> const data) {
+			if (index < count())
+				origin->move(addressAt(index), data);
+		}
+
+		Storage cloneFrom(usize const index) const {
+			if (index >= count()) return nullptr;
+			auto const addr = atIndex(index);
+			auto const mem = new Memory();
+			if (isStructrure() && isClonable()) {
+				mem->resize(origin->byteSize);
+				origin->copy(mem->data(), addr);
+				return new Value(mem, type, origin);
+			}
+			if (isArray() && origin->base->flags & Definition::Flags::AV2_DF_CLONABLE) {
+				mem->resize(origin->base->byteSize);
+				origin->copy(mem->data(), addr);
+				return new Value(mem, type->base, origin->base);
+			}
+			return nullptr;
+		}
+
+		constexpr usize	count() const {
+			if (isArray())
+				return content->size() / origin->base->byteSize;
+			else if (isStructrure())
+				return origin->fields.size();
+			else return 1;
+		}
+
+		bool isValueType() const {
+			return (origin->flags & Definition::Flags::AV2_DF_VALUE);
+		}
+
+		bool isClonable() const {
+			return (origin->flags & Definition::Flags::AV2_DF_CLONABLE);
+		}
+
+		bool isArray() const {
+			return (origin->flags & Definition::Flags::AV2_DF_ARRAY);
+		}
+
+		bool isStructrure() const {
+			return (origin->flags & Definition::Flags::AV2_DF_STRUCTURE);
+		}
+
+		pointer atIndex(usize const index) const {
+			addressAt(index);
+		}
+
+	private:
+		constexpr Value(
+			Instance<Memory> const& content,
+			Instance<Definition> const& type,
+			Instance<Definition> const& origin
+		): content(content), type(type), origin(origin) {
+		}
+
+		pointer addressAt(usize index) const {
+			if (isArray())
+				return (content->data() + index * origin->byteSize);
+			else if (isStructrure()) {
+				auto const fcount = origin->fields.size();
+				ref<byte> addr = content->data();
+				while (index > 0)
+					addr += origin->fields[fcount - (--index)]->byteSize;
+				return addr;
+			} else return content->data();
+		}
+
+		Instance<Memory>		content = new Memory();
+		Instance<Definition>	type;
+		Instance<Definition>	origin;
 	};
 
 	struct Object {
 		using Storage = Instance<Object>;
 		List<Storage>			fields;
-		Instance<Definition>	type;
-		Instance<Definition>	origin;
-		Value					value;
+		Value::Storage			value;
 		Map<uint64, uint64>		vtable;
 
 		~Object();

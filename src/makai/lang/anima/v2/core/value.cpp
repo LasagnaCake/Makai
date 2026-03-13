@@ -4,15 +4,23 @@ using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 Object::~Object() {
+}
 
+Value::~Value() {
+	if (content.unique()) {
+		if (origin->flags & Definition::Flags::AV2_DF_VALUE) {
+			for (usize i = 0; i < count(); ++i)
+				origin->destruct(addressAt(i));
+		} else origin->destruct(content->data());
+	}
 }
 
 Object::Storage Object::getAtIndex(uint64 const index) const {
-	if (!(type && type->base)) return null;
-	if (!(type->flags & Definition::Flags::AV2_DF_ARRAY))
+	if (!value) return null;
+	if (!value->isArray())
 		return null;
-	if (type->flags & Definition::Flags::AV2_DF_VALUE) {
-		if (!(type->flags & Definition::Flags::AV2_DF_CLONABLE)) return null;
+	if (value->isValueType()) {
+		if (!value->isClonable()) return null;
 		auto const cloner = type->base->clone.value();
 		auto& arr = value.content;
 		if (!(index < arr.size())) return null;
@@ -52,11 +60,17 @@ Object::Storage Object::field(uint64 const index) const {
 }
 
 bool Object::setAtIndex(uint64 const index, Object::Storage const& value) {
-	if (!(type && type->base)) return true;
+	if (!(type && type->base)) return false;
 	if (!(type->flags & Definition::Flags::AV2_DF_ARRAY))
-		return true;
+		return false;
 	if (type->flags & Definition::Flags::AV2_DF_VALUE) {
-		// TODO: Value array set-by-index
+		if (index * this->type->byteSize >= this->value.content.size())
+			return false;
+		auto const v = this->value.content.data() + index * this->type->byteSize;
+		if (!this->type->clone)
+			return false;
+		this->type->clone.value().invoke(v, value->value.content.data());
+		return true;
 	}
 	if (!(index < fields.size()))
 		return false;
@@ -65,5 +79,7 @@ bool Object::setAtIndex(uint64 const index, Object::Storage const& value) {
 }
 
 Object::Storage Object::clone() {
-	return new Object(*this);
+	if (value.clone)
+		return new Object(*this);
+	return null;
 }

@@ -151,7 +151,7 @@ typedef __uint128_t	uint128;
 #endif
 
 /// @brief Generic pointer.
-typedef void*	pointer;
+typedef void*		pointer;
 
 /// @brief "C-style" string.
 typedef char const*		cstring;

@@ -4,6 +4,7 @@
 #include "type.hpp"
 #include "method.hpp"
 #include "value.hpp"
+#include "database.hpp"
 
 namespace Makai::Anima::V2::Core::Meta {
 	struct Void	{};
@@ -16,12 +17,12 @@ namespace Makai::Anima::V2::Core::Meta {
 		concept ARTType = requires {
 			{T::ART_NAME}		-> Makai::Type::Equal<scstring>;
 			{T::constructor()}	-> Makai::Type::Functional<T(Object)>;
-			{T::converter()}	-> Makai::Type::Functional<Object(Definition::Database&, Makai::Meta::If<Makai::Type::Void<T>, nulltype, T> const&)>;
+			{T::converter()}	-> Makai::Type::Functional<Makai::Meta::If<Makai::Type::Void<T>, Object(Database<Definition>&), Object(Database<Definition>&, T const&)>>;
 		};
 
 		template <class T>
 		constexpr Function<T(Object const&)> toValue() {
-			return [] (Object const& obj) -> T {return obj.value.as<T>();};
+			return [] (Object const& obj) -> T {return *obj.value.as<T>();};
 		}
 
 		template <class T>
@@ -36,8 +37,8 @@ namespace Makai::Anima::V2::Core::Meta {
 				return toEmpty<Void>();
 			}
 
-			constexpr static Function<Object(Definition::Database&, nulltype&)> converter() {
-				return [] (Definition::Database&, nulltype&) -> Object {
+			constexpr static Function<Object(Database<Definition>&)> converter() {
+				return [] (Database<Definition>&) -> Object {
 					return Object();
 				};
 			}

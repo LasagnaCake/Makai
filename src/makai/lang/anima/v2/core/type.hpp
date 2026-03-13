@@ -70,9 +70,10 @@ namespace Makai::Anima::V2::Core {
 		uint64						alignment	= 1;
 		List<Instance<Definition>>	fields;
 
-		Functor<void(ref<byte const>)>							construct;
-		Functor<void(ref<byte>)>								destruct;
-		Nullable<Function<void(ref<byte>, ref<byte const>)>>	clone;
+		Functor<void(ptr<void>)>					construct;
+		Functor<void(ptr<void>, ptr<void const>)>	copy;
+		Functor<void(ptr<void>, ptr<void const>)>	move;
+		Functor<void(ptr<void>)>					destruct;
 	};
 }
 
