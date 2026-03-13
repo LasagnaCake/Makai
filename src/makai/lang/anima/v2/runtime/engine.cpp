@@ -292,7 +292,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 					crash(invalidLocationError(loc));
 				return Object::create();
 			}
-			auto& loc = context.scopeStack.back().localStack[id  % context.globalValueStack.size()];
+			auto& loc = context.scopeStack.back().localStack[id  % context.scopeStack.back().localStack.size()];
 			auto const v = loc;
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef);
@@ -336,6 +336,12 @@ Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize 
 				crash(invalidLocationError(loc));
 			}
 			return context.globalValueStack[-Cast::as<ssize>(id % context.globalValueStack.size() + 1)];
+		}
+		case DataLocation::AV2_DL_LOCAL: {
+			if (context.scopeStack.back().localStack.empty()) {
+				crash(invalidLocationError(loc));
+			}
+			return context.scopeStack.back().localStack[-Cast::as<ssize>(id % context.scopeStack.back().localStack.size() + 1)];
 		}
 		default:
 			crash(invalidLocationError(loc));
@@ -643,6 +649,14 @@ void Engine::v2ScopeBind() {
 
 void Engine::v2ScopeEnter() {
 	// TODO: This
+	auto const count = current.type;
+	if (context.globalValueStack.size() < count)
+		return crash(missingArgumentsError());
+	context.scopeStack.pushBack({
+		.localStack	= count ? context.globalValueStack.sliced(context.globalValueStack.size() - count) : {},
+		.mode		= context.scopeStack.back().mode,
+		.prevMode	= context.scopeStack.back().mode
+	});
 }
 
 void Engine::v2ScopeExit() {
