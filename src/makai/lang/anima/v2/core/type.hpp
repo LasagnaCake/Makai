@@ -72,7 +72,6 @@ namespace Makai::Anima::V2::Core {
 
 		Functor<void(ptr<void>)>					construct;
 		Functor<void(ptr<void>, ptr<void const>)>	copy;
-		Functor<void(ptr<void>, ptr<void const>)>	move;
 		Functor<void(ptr<void>)>					destruct;
 	};
 }

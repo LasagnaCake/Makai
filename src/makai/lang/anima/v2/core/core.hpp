@@ -6,7 +6,7 @@
 #include "entry.hpp"
 #include "method.hpp"
 #include "type.hpp"
-#include "value.hpp"
+#include "object.hpp"
 #include "context.hpp"
 #include "database.hpp"
 

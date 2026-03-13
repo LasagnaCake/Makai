@@ -3,7 +3,7 @@
 
 #include "type.hpp"
 #include "method.hpp"
-#include "value.hpp"
+#include "object.hpp"
 #include "database.hpp"
 
 namespace Makai::Anima::V2::Core::Meta {
