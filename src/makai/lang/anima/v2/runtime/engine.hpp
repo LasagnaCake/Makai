@@ -78,6 +78,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Copy();
 		void v2Call();
 		void v2Negate();
+		void v2StackBlit();
 		void v2StackPush();
 		void v2StackPop();
 		void v2StackSwap();
@@ -94,6 +95,13 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Jump();
 		void v2Await();
 		void v2Yield();
+		void v2ScopeBring();
+		void v2ScopeBind();
+		void v2ScopeEnter();
+		void v2ScopeExit();
+		void v2FieldGet();
+		void v2Sizeof();
+		void v2Typeof();
 
 		void doBinaryOperation(Core::Operator const op);
 		void doUnaryOperation(Core::Operator const op);
