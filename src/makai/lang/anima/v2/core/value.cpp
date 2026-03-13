@@ -21,27 +21,7 @@ Object::Storage Object::getAtIndex(uint64 const index) const {
 		return null;
 	if (value->isValueType()) {
 		if (!value->isClonable()) return null;
-		auto const cloner = type->base->clone.value();
-		auto& arr = value.content;
-		if (!(index < arr.size())) return null;
-		auto const elem = new Object();
-		auto const start	= arr.data() + index * type->byteSize;
-		auto const sz		= type->byteSize;
-		elem->value.content.invoke(sz);
-		type->base->construct(start);
-		cloner.invoke(elem->value.content.data(), start);
-		elem->value.destruct = [f = type->base->destruct] (Value& self) {
-			f(self.content.data());
-		};
-		if (type->base->clone)
-			elem->value.clone = [f = cloner, sz] (Value& self) -> Value {
-				Value v;
-				v.content.invoke(sz);
-				f.invoke(v.content.data(), self.content.data());
-				v.destruct	= self.destruct;
-				v.clone		= self.clone;
-				return v;
-			};
+		return new Object{.value = value->cloneFrom(index)};
 	}
 	return index < fields.size() ? fields[index] : null;
 }
