@@ -5,17 +5,6 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
-		using Value = Data::Value;
-
-		struct FunctionRegistry {
-			template <class T> struct Function;
-
-			template <class TReturn, class... TArgs>
-			struct Function<TReturn(TArgs...)> {
-
-			};
-		};
-
 		struct Error {
 			String				message;
 			usize				location;
@@ -23,8 +12,6 @@ namespace Makai::Anima::V2::Runtime {
 		};
 
 		bool process();
-
-		FunctionRegistry functions;
 
 		bool hasSignal(String const& name);
 		void fire(String const& signal);
