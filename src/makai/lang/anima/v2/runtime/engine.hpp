@@ -52,8 +52,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		Engine::Error invalidInstructionError();
 		Engine::Error endOfProgramError();
-		Engine::Error invalidBinaryMathError(String const& description);
-		Engine::Error invalidUnaryMathError(String const& description);
+		Engine::Error invalidOperationError(String const& description);
 		Engine::Error invalidInternalValueError(uint64 const id);
 		Engine::Error invalidLocationError(Core::DataLocation const& loc);
 		Engine::Error invalidSourceError(String const& description);
