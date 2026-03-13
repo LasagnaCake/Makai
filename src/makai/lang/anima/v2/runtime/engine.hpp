@@ -89,11 +89,8 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Op();
 		void v2SetContext();
 		void v2Compare();
-		void v2Get();
-		void v2Set();
 		void v2Cast();
 		void v2Jump();
-		void v2Await();
 		void v2Yield();
 		void v2ScopeBring();
 		void v2ScopeBind();
