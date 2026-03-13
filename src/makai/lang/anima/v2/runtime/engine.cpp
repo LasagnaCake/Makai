@@ -294,7 +294,6 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			auto const v = loc;
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef);
-			return accessor(v, byRef);
 		}
 		case DataLocation::AV2_DL_GLOBAL:		return global(id);
 		case DataLocation::AV2_DL_EXTERNAL:		return external(program.strings[id], byRef);
@@ -372,45 +371,141 @@ Runtime::Context::Storage Engine::external(String const& name, bool const byRef)
 template <class T>
 static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object::Storage const& rhs, Operator const op, Runtime::Context& context) {
 	switch (op) {
+		using enum Operator;
+		case AV2_BOP_ADD:	*out = *context.art.newValue<T>(lhs->toValue<T>() + rhs->toValue<T>()); return true;
+		case AV2_BOP_SUB:	*out = *context.art.newValue<T>(lhs->toValue<T>() - rhs->toValue<T>()); return true;
+		case AV2_BOP_MUL:	*out = *context.art.newValue<T>(lhs->toValue<T>() * rhs->toValue<T>()); return true;
+		case AV2_BOP_DIV:	*out = *context.art.newValue<T>(lhs->toValue<T>() / rhs->toValue<T>()); return true;
+		default: break;
+	}
+	if constexpr (Makai::Type::Number<T>) {
+		switch (op) {
 			using enum Operator;
-			case AV2_BOP_ADD:	*out = *context.art.newValue(lhs->toValue<double>() + rhs->toValue<double>()); return true;
-			case AV2_BOP_SUB:	*out = *context.art.newValue(lhs->toValue<double>() - rhs->toValue<double>()); return true;
-			case AV2_BOP_MUL:	*out = *context.art.newValue(lhs->toValue<double>() * rhs->toValue<double>()); return true;
-			case AV2_BOP_DIV:	*out = *context.art.newValue(lhs->toValue<double>() / rhs->toValue<double>()); return true;
-			case AV2_BOP_REM:	*out = *context.art.newValue(Makai::Math::mod(lhs->toValue<double>(), rhs->toValue<double>())); return true;
-			case AV2_BOP_POW:	*out = *context.art.newValue(Makai::Math::pow(lhs->toValue<double>(), rhs->toValue<double>())); return true;
-			case AV2_BOP_ATAN2:	*out = *context.art.newValue(Makai::Math::atan2(lhs->toValue<double>(), rhs->toValue<double>())); return true;
-			case AV2_BOP_LOGX:	*out = *context.art.newValue(Makai::Math::logn(lhs->toValue<double>(), rhs->toValue<double>())); return true;
-			default:
-				return false;
+			case AV2_BOP_REM:	*out = *context.art.newValue<T>(Makai::Math::mod(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
+			case AV2_BOP_POW:	*out = *context.art.newValue<T>(Makai::Math::pow(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
+			case AV2_BOP_ATAN2:	*out = *context.art.newValue<T>(Makai::Math::atan2(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
+			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn(lhs->toValue<T>(), rhs->toValue<T>()));	return true;;
+			default: break;
 		}
+	}
+	if constexpr (Makai::Type::Integer<T>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_BOP_BIT_AND:	*out = *context.art.newValue<T>(lhs->toValue<T>() & rhs->toValue<T>());	return true;
+			case AV2_BOP_BIT_OR:	*out = *context.art.newValue<T>(lhs->toValue<T>() | rhs->toValue<T>());	return true;
+			case AV2_BOP_BIT_XOR:	*out = *context.art.newValue<T>(lhs->toValue<T>() ^ rhs->toValue<T>());	return true;
+			default: break;
+		}
+	}
+	if constexpr (Makai::Type::Equal<T, bool>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_BOP_BIT_AND:	*out = *context.art.newValue<T>(lhs->toValue<T>() && rhs->toValue<T>());	return true;
+			case AV2_BOP_BIT_OR:	*out = *context.art.newValue<T>(lhs->toValue<T>() || rhs->toValue<T>());	return true;
+			case AV2_BOP_BIT_XOR:	*out = *context.art.newValue<T>(lhs->toValue<T>() != rhs->toValue<T>());	return true;
+			default: break;
+		}
+	}
+	return false;
 }
 
-void Engine::v2Op() {
-	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
+void Engine::doBinaryOperation(Operator const op) {
 	if (context.globalValueStack.size() < 2)
-		return crash(invalidSourceError("Missing values to compare!"));
+		return crash(invalidSourceError("Missing values to operate on!"));
 	auto rhs	= context.globalValueStack.popBack();
 	auto lhs	= context.globalValueStack.back();
 	auto out	= lhs;
 	if (err) return;
-	bool success;
-	if (lhs->isUnsigned() && rhs->isUnsigned()) {
-		success = bopIt<uint64>(out, lhs, rhs, op.op, context);
-	} if (lhs->isNumber() && rhs->isNumber()) {
-		success = bopIt<double>(out, lhs, rhs, op.op, context);
-	} else if (lhs->isAlgebraic() && rhs->isAlgebraic()) {
-		success = bopIt<Vector4>(out, lhs, rhs, op.op, context);
-	} else {
-		if (inStrictMode())
-			return crash(invalidBinaryMathError("Both values are not numbers!"));
-		*out = *Object::create();
-	}
+	bool success = false;
+	if (lhs->isBoolean() && rhs->isBoolean())			success = bopIt<bool>(out, lhs, rhs, op, context);
+	if (lhs->isUnsigned() && rhs->isUnsigned())			success = bopIt<uint64>(out, lhs, rhs, op, context);
+	else if (lhs->isSigned() && rhs->isSigned())		success = bopIt<int64>(out, lhs, rhs, op, context);
+	else if (lhs->isNumber() && rhs->isNumber())		success = bopIt<double>(out, lhs, rhs, op, context);
+	else if (lhs->isAlgebraic() && rhs->isAlgebraic())	success = bopIt<Vector4>(out, lhs, rhs, op, context);
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidBinaryMathError("Invalid/Unsupported operator!"));
 		*out = *Object::create();
 	}
+}
+
+template <class T>
+static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operator const op, Runtime::Context& context) {
+	switch (op) {
+		using enum Operator;
+		case AV2_UOP_NEGATE:	*out = *context.art.newValue<T>(-lhs->toValue<T>());						return true;
+		case AV2_UOP_INVERSE:	*out = *context.art.newValue<T>(Makai::Cast::as<T>(1) / lhs->toValue<T>());	return true;
+		default: break;
+	}
+	if constexpr (Makai::Type::Ex::Math::Vector::Vector<T>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_LENGTH:	*out = *context.art.newValue<T>(lhs->toValue<T>().length());			return true;
+			default: break;
+		}
+	}
+	if constexpr (Makai::Type::Number<T>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_INCREMENT:	*out = *context.art.newValue<T>(++lhs->toValue<T>());					return true;
+			case AV2_UOP_DECREMENT:	*out = *context.art.newValue<T>(--lhs->toValue<T>());					return true;
+			case AV2_UOP_SIN:		*out = *context.art.newValue<T>(Makai::Math::sin(lhs->toValue<T>()));	return true;
+			case AV2_UOP_COS:		*out = *context.art.newValue<T>(Makai::Math::cos(lhs->toValue<T>()));	return true;
+			case AV2_UOP_TAN:		*out = *context.art.newValue<T>(Makai::Math::tan(lhs->toValue<T>()));	return true;
+			case AV2_UOP_ASIN:		*out = *context.art.newValue<T>(asin(lhs->toValue<T>()));				return true;
+			case AV2_UOP_ACOS:		*out = *context.art.newValue<T>(acos(lhs->toValue<T>()));				return true;
+			case AV2_UOP_ATAN:		*out = *context.art.newValue<T>(atan(lhs->toValue<T>()));				return true;
+			case AV2_UOP_SINH:		*out = *context.art.newValue<T>(sinh(lhs->toValue<T>()));				return true;
+			case AV2_UOP_COSH:		*out = *context.art.newValue<T>(cosh(lhs->toValue<T>()));				return true;
+			case AV2_UOP_TANH:		*out = *context.art.newValue<T>(tanh(lhs->toValue<T>()));				return true;
+			case AV2_UOP_LOG2:		*out = *context.art.newValue<T>(Makai::Math::log2(lhs->toValue<T>()));	return true;
+			case AV2_UOP_LOG10:		*out = *context.art.newValue<T>(Makai::Math::log10(lhs->toValue<T>()));	return true;
+			case AV2_UOP_LN:		*out = *context.art.newValue<T>(Makai::Math::log(lhs->toValue<T>()));	return true;
+			case AV2_UOP_SQRT:		*out = *context.art.newValue<T>(Makai::Math::sqrt(lhs->toValue<T>()));	return true;
+			case AV2_UOP_LENGTH:	*out = *context.art.newValue<T>(Makai::Math::abs(lhs->toValue<T>()));	return true;
+			default: break;
+		}
+	}
+	if constexpr (Makai::Type::Integer<T>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_BIT_NOT:	*out = *context.art.newValue<T>(~lhs->toValue<T>());	return true;
+			default: break;
+		}
+	}
+	if constexpr (Makai::Type::Equal<T, bool>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_LOGIC_NOT:	*out = *context.art.newValue<T>(!lhs->toValue<T>());	return true;
+			default: break;
+		}
+	}
+}
+
+void Engine::doUnaryOperation(Operator const op) {
+	if (context.globalValueStack.size() < 1)
+		return crash(invalidSourceError("Missing values to operate on!"));
+	auto lhs	= context.globalValueStack.back();
+	auto out	= lhs;
+	if (err) return;
+	bool success = false;
+	if (lhs->isBoolean())			success = uopIt<bool>(out, lhs, op, context);
+	if (lhs->isUnsigned())			success = uopIt<uint64>(out, lhs, op, context);
+	else if (lhs->isSigned())		success = uopIt<int64>(out, lhs, op, context);
+	else if (lhs->isNumber())		success = uopIt<double>(out, lhs, op, context);
+	else if (lhs->isAlgebraic())	success = uopIt<Vector4>(out, lhs, op, context);
+	if (!success) {
+		if (inStrictMode())
+			return crash(invalidBinaryMathError("Invalid/Unsupported operator!"));
+		*out = *Object::create();
+	}
+}
+
+void Engine::v2Op() {
+	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
+	if (op.op < Operator::AV2_BOP_START)
+		doBinaryOperation(op.op);
+	else doUnaryOperation(op.op);
 }
 
 void Engine::terminate() {

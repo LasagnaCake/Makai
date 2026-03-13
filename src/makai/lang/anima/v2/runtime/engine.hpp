@@ -96,6 +96,9 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Await();
 		void v2Yield();
 
+		void doBinaryOperation(Core::Operator const op);
+		void doUnaryOperation(Core::Operator const op);
+
 		void jumpBy(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
