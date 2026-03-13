@@ -28,23 +28,18 @@ namespace Makai::Anima::V2::Core {
 		T toValue() const {
 			if (isArray())
 				invalidCastError<T>("Type is array");
-			if (origin->basic != BasicType::AV2_BT_BOOL)
-				invalidCastError<T>("Type mismatch");
-			return *ref<bool>(data());
+			if (origin->basic) {
+				return fromBasicNumber<T>();
+			}
 		}
 
 		template <Makai::Type::Number T>
-		T toValue() const {
+		T toValue() const requires Makai::Type::Different<T, bool> {
 			if (isArray())
 				invalidCastError<T>("Type is array");
-			switch (*origin->basic) {
-				using enum BasicType;
-				case AV2_BT_INT: return *ref<int64>(content->data());
-				case AV2_BT_UINT: return *ref<uint64>(content->data());
-				case AV2_BT_REAL: return *ref<double>(content->data());
-				default:
-				invalidCastError<T>("Type mismatch");
-			}
+			if (!origin->basic)
+				invalidCastError<T>("Not a basic type");
+			return fromBasicNumber<T>();
 		}
 
 		template <Makai::Type::OneOf<String, UTF8String> T>
@@ -53,25 +48,34 @@ namespace Makai::Anima::V2::Core {
 				invalidCastError<T>("Type is array");
 			if (origin->basic != BasicType::AV2_BT_STRING)
 				invalidCastError<T>("Type mismatch");
-			return *ref<UTF8String>(data());
+			return *ref<UTF8String>(content->data());
 		}
 
-		template <Makai::Type::OneOf<Binary<>, Vector4> T>
-		Binary<> toValue() const {
+		template <Makai::Type::Equal<Binary<>> T>
+		T toValue() const {
 			if (isArray())
 				invalidCastError<T>("Type is array");
 			if (origin->basic != BasicType::AV2_BT_BYTES)
 				invalidCastError<T>("Type mismatch");
-			return *ref<T>(data());
+			return *ref<T>(content->data());
+		}
+
+		template <Makai::Type::Equal<Vector4> T>
+		T toValue() const {
+			if (isArray())
+				invalidCastError<T>("Type is array");
+			if (origin->basic != BasicType::AV2_BT_VECTOR)
+				invalidCastError<T>("Type mismatch");
+			return *ref<T>(content->data());
 		}
 
 		template <ARTType T>
 		T toValue() const {
 			if (isArray())
 				invalidCastError<T>("Type is array");
-			if (sizeof(T) != origin->byteSize)
+			if (sizeof(T) != type->byteSize)
 				invalidCastError<T>("Size mismatch");
-			if (String(T::ART_NAME) != origin->name)
+			if (String(T::ART_NAME) != type->name)
 				invalidCastError<T>("Type mismatch");
 			return T::construct(*this);
 		}
@@ -123,11 +127,11 @@ namespace Makai::Anima::V2::Core {
 		Storage clone();
 
 		struct Accessor {
-			Accessor& operator=(Storage const& value) const	{return set(value);	}
-			operator Storage() const						{return get();		}
+			Accessor const& operator=(Storage const& value) const	{return set(value);	}
+			operator Storage() const								{return get();		}
 
-			Storage		get() const;
-			Accessor&	set(Storage const& value) const;
+			Storage			get() const;
+			Accessor const&	set(Storage const& value) const;
 
 			Storage source() const;
 
@@ -220,6 +224,19 @@ namespace Makai::Anima::V2::Core {
 		): content(content), type(type), origin(origin) {}
 
 		pointer addressAt(usize index) const;
+
+		template <class T>
+		T fromBasicNumber() {
+			switch (*origin->basic) {
+				using enum BasicType;
+				case AV2_BT_BOOL: return *ref<bool>(content->data());
+				case AV2_BT_INT: return *ref<int64>(content->data());
+				case AV2_BT_UINT: return *ref<uint64>(content->data());
+				case AV2_BT_REAL: return *ref<double>(content->data());
+				default:
+				invalidCastError<T>("Type mismatch");
+			}
+		}
 
 		template <class T>
 		[[noreturn]]

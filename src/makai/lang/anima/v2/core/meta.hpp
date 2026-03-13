@@ -32,7 +32,7 @@ namespace Makai::Anima::V2::Core::Meta {
 			static void construct(Object const&) {}
 
 			static Object::Storage convert(Database<Definition>& db) {
-				return Object::create();
+				return Object::create(db.byName(ART_NAME).front());
 			}
 		};
 
@@ -44,73 +44,103 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 
 			static Object::Storage convert(Database<Definition>& db, Any const&) {
-				return Object::create(db.byName("any").front());
+				return Object::create(db.byName(ART_NAME).front());
 			}
 		};
 
 		template<> struct ARTTI<nulltype> {
 			constexpr static scstring ART_NAME = "nil";
 
-			static nulltype construct(Object const& db) {
+			static nulltype construct(Object const&) {
 				return {};
 			}
 
 			static Object::Storage convert(Database<Definition>& db, nulltype const&) {
-				return Object::create(db.byName("nil").front());
+				return Object::create(db.byName(ART_NAME).front());
 			}
 		};
 
 		template<> struct ARTTI<bool> {
 			constexpr static scstring ART_NAME = "bool";
 
-			static nulltype construct(Object const& db) {
-				return {};
+			static bool construct(Object const& value) {
+				return value.toValue<bool>();
 			}
 
 			static Object::Storage convert(Database<Definition>& db, bool const& value) {
-				return Object::create(value, db.byName("bool").front());
+				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
 
 		template<Makai::Type::SignedInteger T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "int";
-			constexpr static auto constructor() {
-				return toValue<int64>();
+
+			static T construct(Object const& value) {
+				return value.toValue<T>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, T const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
 
 		template<Makai::Type::UnsignedInteger T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "uint";
-			constexpr static auto constructor() {
-				return toValue<uint64>();
+
+			static uint64 construct(Object const& value) {
+				return value.toValue<uint64>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, uint64 const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
 
 		template<Makai::Type::Real T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "real";
-			constexpr static auto constructor() {
-				return toValue<double>();
+
+			static T construct(Object const& value) {
+				return value.toValue<T>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, T const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
 
-		template<Makai::Type::Equal<Binary<>> T> struct ARTTI<T> {
+		template<> struct ARTTI<Binary<>> {
 			constexpr static scstring ART_NAME = "bytes";
-			constexpr static auto constructor() {
-				return toValue<Binary<>>();
+
+			static Binary<> construct(Object const& value) {
+				return value.toValue<Binary<>>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, Binary<> const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
 
 		template<Makai::Type::OneOf<String, UTF8String> T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "string";
-			constexpr static auto constructor() {
-				return toValue<UTF8String>();
+
+			static T construct(Object const& value) {
+				return value.toValue<T>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, T const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
 
 		template<Makai::Type::OneOf<Vector2, Vector3, Vector4> T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "vector";
-			constexpr static auto constructor() {
-				return toValue<Vector4>();
+
+			static T construct(Object const& value) {
+				return value.toValue<Vector4>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, T const& value) {
+				return Object::create(Vector4(value), db.byName(ART_NAME).front());
 			}
 		};
 
@@ -120,13 +150,13 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template <class... Types>
 		struct ToObjectTuple {
-			using Type = Tuple<Makai::Meta::If<false, Types, Object>...>;
+			using Type = Tuple<Makai::Meta::If<false, Types, Object::Storage>...>;
 		};
 
 		template <class... Types>
 		struct ListToTuple {
 			using Type = ToObjectTuple<Types...>;
-			using ListType = List<Object>;
+			using ListType = List<Object::Storage>;
 
 			constexpr static bool fits(ListType const& list) {
 				return list.size() >= sizeof...(Types);
@@ -153,26 +183,15 @@ namespace Makai::Anima::V2::Core::Meta {
 
 			template <usize... N>
 			constexpr static Type make(ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {ARTTI<Makai::Meta::Select<N, Types...>>::converter()(tup.template get<N>())...};
+				return {ARTTI<Makai::Meta::Select<N, Types...>>::convert(*tup.template get<N>())...};
 			}
 		};
 	};
 
 	template <class T>
-	constexpr String nameof() {
+	constexpr String artnameof() {
 		return Impl::ARTTI<T>::ART_NAME;
 	}
-
-	template <class T>
-	constexpr auto constructor() {
-		return Impl::ARTTI<T>::constructor();
-	}
-
-	template <class T>
-	constexpr auto converter() {
-		return Impl::ARTTI<T>::converter();
-	}
-
 
 	template <class... Types>
 	constexpr bool fits(List<Object> const& args) {

@@ -17,7 +17,7 @@ namespace Makai::Anima::V2::Core {
 
 		struct ExternalMethod;
 
-		using ExternalInvocation = Function<Result<Object, Error>(Database<Definition>&, ExternalMethod&, List<Object> const&)>;
+		using ExternalInvocation = Function<Result<Object::Storage, Error>(Database<Definition>&, ExternalMethod&, List<Object::Storage> const&)>;
 
 		struct ExternalMethodInfo {
 			String 		retTypeName;
@@ -82,9 +82,9 @@ namespace Makai::Anima::V2::Core {
 			return externalMethods.contains(name);
 		}
 
-		Result<Object, Error> invokeExternalMethod(
+		Result<Object::Storage, Error> invokeExternalMethod(
 			String const& name,
-			List<Object> const& args
+			List<Object::Storage> const& args
 		) {
 			if (!(
 				hasExternalMethod(name)
