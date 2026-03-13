@@ -139,13 +139,10 @@ Engine::Error Engine::invalidInstructionError() {
 	return makeErrorHere("Invalid/Unsupported instruction!");
 }
 
-Engine::Error Engine::invalidBinaryMathError(String const& description) {
-	return makeErrorHere("INVALID BINARY MATH: " + description);
+Engine::Error Engine::invalidOperationError(String const& description) {
+	return makeErrorHere("INVALID OPERATOR: " + description);
 }
 
-Engine::Error Engine::invalidUnaryMathError(String const& description) {
-	return makeErrorHere("INVALID UNARYs MATH: " + description);
-}
 
 Engine::Error Engine::invalidInternalValueError(uint64 const id) {
 	return makeErrorHere(CTL::toString("Internal value of ID [", id, "] does not exist!"));
@@ -291,7 +288,13 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			return accessor(v, byRef);
 		}
 		case DataLocation::AV2_DL_GLOBAL:		return global(id);
-		case DataLocation::AV2_DL_EXTERNAL:		return external(program.strings[id], byRef);
+		case DataLocation::AV2_DL_EXTERNAL: {
+			if (program.ani)
+				return external(program.ani->out[id], byRef);
+			else if (inStrictMode())
+				crash(invalidLocationError(loc));
+			return Object::create();
+		}
 		default: {
 			if (inStrictMode())
 				crash(invalidLocationError(loc));
@@ -424,7 +427,7 @@ void Engine::doBinaryOperation(Operator const op) {
 	else if (lhs->isAlgebraic() && rhs->isAlgebraic())	success = bopIt<Vector4>(out, lhs, rhs, op, context);
 	if (!success) {
 		if (inStrictMode())
-			return crash(invalidBinaryMathError("Invalid/Unsupported operator!"));
+			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
 		*out = *Object::create();
 	}
 }
@@ -497,7 +500,7 @@ void Engine::doUnaryOperation(Operator const op) {
 	else if (lhs->isAlgebraic())	success = uopIt<Vector4>(out, lhs, op, context);
 	if (!success) {
 		if (inStrictMode())
-			return crash(invalidBinaryMathError("Invalid/Unsupported operator!"));
+			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
 		*out = *Object::create();
 	}
 }
@@ -505,8 +508,8 @@ void Engine::doUnaryOperation(Operator const op) {
 void Engine::v2Op() {
 	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
 	if (op.op < Operator::AV2_BOP_START)
-		doBinaryOperation(op.op);
-	else doUnaryOperation(op.op);
+		doUnaryOperation(op.op);
+	else doBinaryOperation(op.op);
 }
 
 void Engine::terminate() {
