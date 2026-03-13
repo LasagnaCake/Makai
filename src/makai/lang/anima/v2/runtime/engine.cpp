@@ -1,10 +1,5 @@
 #include "engine.hpp"
 #include "context.hpp"
-#include "../../../../../makai/net/net.hpp"
-#include "../../../../../makai/file/flow.hpp"
-#include "../../../../../makai/data/data.hpp"
-#include "../../../../../makai/parser/parser.hpp"
-#include "../../../../../makai/tool/tool.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -315,6 +310,7 @@ Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 }
 
 Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
+	static Context::Storage failsafe;
 	auto const place = asPlace(loc);
 	switch (place) {
 		case DataLocation::AV2_DL_STACK: {
@@ -333,6 +329,7 @@ Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize 
 			crash(invalidLocationError(loc));
 	}
 	crash(invalidLocationError(loc));
+	return failsafe;
 }
 
 Runtime::Context::Storage& Engine::global(uint64 const id) {
@@ -368,6 +365,9 @@ Runtime::Context::Storage Engine::external(String const& name, bool const byRef)
 	return Object::create();
 }
 
+template <Makai::Type::Integer T>
+using Int = Makai::Meta::If<Makai::Type::Unsigned<T>, uint64, int64>;
+
 template <class T>
 static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object::Storage const& rhs, Operator const op, Runtime::Context& context) {
 	switch (op) {
@@ -381,28 +381,28 @@ static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object
 	if constexpr (Makai::Type::Number<T>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_BOP_REM:	*out = *context.art.newValue<T>(Makai::Math::mod(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
-			case AV2_BOP_POW:	*out = *context.art.newValue<T>(Makai::Math::pow(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
-			case AV2_BOP_ATAN2:	*out = *context.art.newValue<T>(Makai::Math::atan2(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
-			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn(lhs->toValue<T>(), rhs->toValue<T>()));	return true;;
+			case AV2_BOP_REM:	*out = *context.art.newValue<T>(Makai::Math::mod<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
+			case AV2_BOP_POW:	*out = *context.art.newValue<T>(Makai::Math::pow<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
+			case AV2_BOP_ATAN2:	*out = *context.art.newValue<T>(Makai::Math::atan2<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
+			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;;
 			default: break;
 		}
 	}
 	if constexpr (Makai::Type::Integer<T>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_BOP_BIT_AND:	*out = *context.art.newValue<T>(lhs->toValue<T>() & rhs->toValue<T>());	return true;
-			case AV2_BOP_BIT_OR:	*out = *context.art.newValue<T>(lhs->toValue<T>() | rhs->toValue<T>());	return true;
-			case AV2_BOP_BIT_XOR:	*out = *context.art.newValue<T>(lhs->toValue<T>() ^ rhs->toValue<T>());	return true;
+			case AV2_BOP_BIT_AND:	*out = *context.art.newValue<T>(lhs->toValue<Int<T>>() & rhs->toValue<Int<T>>());	return true;
+			case AV2_BOP_BIT_OR:	*out = *context.art.newValue<T>(lhs->toValue<Int<T>>() | rhs->toValue<Int<T>>());	return true;
+			case AV2_BOP_BIT_XOR:	*out = *context.art.newValue<T>(lhs->toValue<Int<T>>() ^ rhs->toValue<Int<T>>());	return true;
 			default: break;
 		}
 	}
 	if constexpr (Makai::Type::Equal<T, bool>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_BOP_BIT_AND:	*out = *context.art.newValue<T>(lhs->toValue<T>() && rhs->toValue<T>());	return true;
-			case AV2_BOP_BIT_OR:	*out = *context.art.newValue<T>(lhs->toValue<T>() || rhs->toValue<T>());	return true;
-			case AV2_BOP_BIT_XOR:	*out = *context.art.newValue<T>(lhs->toValue<T>() != rhs->toValue<T>());	return true;
+			case AV2_BOP_LOGIC_AND:	*out = *context.art.newValue<T>(lhs->toValue<T>() && rhs->toValue<T>());	return true;
+			case AV2_BOP_LOGIC_OR:	*out = *context.art.newValue<T>(lhs->toValue<T>() || rhs->toValue<T>());	return true;
+			case AV2_BOP_LOGIC_XOR:	*out = *context.art.newValue<T>(lhs->toValue<T>() != rhs->toValue<T>());	return true;
 			default: break;
 		}
 	}
@@ -447,39 +447,40 @@ static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operat
 	if constexpr (Makai::Type::Number<T>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_UOP_INCREMENT:	*out = *context.art.newValue<T>(++lhs->toValue<T>());					return true;
-			case AV2_UOP_DECREMENT:	*out = *context.art.newValue<T>(--lhs->toValue<T>());					return true;
-			case AV2_UOP_SIN:		*out = *context.art.newValue<T>(Makai::Math::sin(lhs->toValue<T>()));	return true;
-			case AV2_UOP_COS:		*out = *context.art.newValue<T>(Makai::Math::cos(lhs->toValue<T>()));	return true;
-			case AV2_UOP_TAN:		*out = *context.art.newValue<T>(Makai::Math::tan(lhs->toValue<T>()));	return true;
-			case AV2_UOP_ASIN:		*out = *context.art.newValue<T>(asin(lhs->toValue<T>()));				return true;
-			case AV2_UOP_ACOS:		*out = *context.art.newValue<T>(acos(lhs->toValue<T>()));				return true;
-			case AV2_UOP_ATAN:		*out = *context.art.newValue<T>(atan(lhs->toValue<T>()));				return true;
-			case AV2_UOP_SINH:		*out = *context.art.newValue<T>(sinh(lhs->toValue<T>()));				return true;
-			case AV2_UOP_COSH:		*out = *context.art.newValue<T>(cosh(lhs->toValue<T>()));				return true;
-			case AV2_UOP_TANH:		*out = *context.art.newValue<T>(tanh(lhs->toValue<T>()));				return true;
-			case AV2_UOP_LOG2:		*out = *context.art.newValue<T>(Makai::Math::log2(lhs->toValue<T>()));	return true;
-			case AV2_UOP_LOG10:		*out = *context.art.newValue<T>(Makai::Math::log10(lhs->toValue<T>()));	return true;
-			case AV2_UOP_LN:		*out = *context.art.newValue<T>(Makai::Math::log(lhs->toValue<T>()));	return true;
-			case AV2_UOP_SQRT:		*out = *context.art.newValue<T>(Makai::Math::sqrt(lhs->toValue<T>()));	return true;
-			case AV2_UOP_LENGTH:	*out = *context.art.newValue<T>(Makai::Math::abs(lhs->toValue<T>()));	return true;
+			case AV2_UOP_INCREMENT:	*out = *context.art.newValue<T>(lhs->toValue<T>()+1);							return true;
+			case AV2_UOP_DECREMENT:	*out = *context.art.newValue<T>(lhs->toValue<T>()-1);							return true;
+			case AV2_UOP_SIN:		*out = *context.art.newValue<T>(Makai::Math::sin(lhs->toValue<double>()));		return true;
+			case AV2_UOP_COS:		*out = *context.art.newValue<T>(Makai::Math::cos(lhs->toValue<double>()));		return true;
+			case AV2_UOP_TAN:		*out = *context.art.newValue<T>(Makai::Math::tan(lhs->toValue<double>()));		return true;
+			case AV2_UOP_ASIN:		*out = *context.art.newValue<T>(asin(lhs->toValue<T>()));						return true;
+			case AV2_UOP_ACOS:		*out = *context.art.newValue<T>(acos(lhs->toValue<T>()));						return true;
+			case AV2_UOP_ATAN:		*out = *context.art.newValue<T>(atan(lhs->toValue<T>()));						return true;
+			case AV2_UOP_SINH:		*out = *context.art.newValue<T>(sinh(lhs->toValue<T>()));						return true;
+			case AV2_UOP_COSH:		*out = *context.art.newValue<T>(cosh(lhs->toValue<T>()));						return true;
+			case AV2_UOP_TANH:		*out = *context.art.newValue<T>(tanh(lhs->toValue<T>()));						return true;
+			case AV2_UOP_LOG2:		*out = *context.art.newValue<T>(Makai::Math::log2(lhs->toValue<double>()));		return true;
+			case AV2_UOP_LOG10:		*out = *context.art.newValue<T>(Makai::Math::log10(lhs->toValue<double>()));	return true;
+			case AV2_UOP_LN:		*out = *context.art.newValue<T>(Makai::Math::log(lhs->toValue<double>()));		return true;
+			case AV2_UOP_SQRT:		*out = *context.art.newValue<T>(Makai::Math::sqrt(lhs->toValue<double>()));		return true;
+			case AV2_UOP_LENGTH:	*out = *context.art.newValue<T>(Makai::Math::abs(lhs->toValue<T>()));			return true;
 			default: break;
 		}
 	}
 	if constexpr (Makai::Type::Integer<T>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_UOP_BIT_NOT:	*out = *context.art.newValue<T>(~lhs->toValue<T>());	return true;
+			case AV2_UOP_BIT_NOT:	*out = *context.art.newValue<T>(~lhs->toValue<Int<T>>());	return true;
 			default: break;
 		}
 	}
 	if constexpr (Makai::Type::Equal<T, bool>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_UOP_LOGIC_NOT:	*out = *context.art.newValue<T>(!lhs->toValue<T>());	return true;
+			case AV2_UOP_LOGIC_NOT:	*out = *context.art.newValue<T>(!lhs->toValue<T>());		return true;
 			default: break;
 		}
 	}
+	return false;
 }
 
 void Engine::doUnaryOperation(Operator const op) {
@@ -530,141 +531,78 @@ void Engine::execute() {
 	isFinished	= false;
 }
 
-void Engine::onPrint(Value const& what) {
-	if (what.isString())
-		DEBUGLN(what.getString());
-	else DEBUGLN(what.toFLOWString());
-}
-
-Value Engine::onHTTPRequest(String const& url, String const& action, Value const& data) {
-	using namespace Makai::Net::HTTP;
-	Request req;
-	if (action == "GET")			req.type = Request::Type::MN_HRT_GET;
-	else if (action == "POST")		req.type = Request::Type::MN_HRT_POST;
-	else if (action == "PUT")		req.type = Request::Type::MN_HRT_PUT;
-	else if (action == "HEAD")		req.type = Request::Type::MN_HRT_HEAD;
-	else if (action == "PATCH")		req.type = Request::Type::MN_HRT_PATCH;
-	else if (action == "DELETE")	req.type = Request::Type::MN_HRT_DELETE;
-	else if (action == "UPDATE")	req.type = Request::Type::MN_HRT_UPDATE;
-	else if (inStrictMode()) {
-        crash(invalidFetchRequest(action));
-        return Value();
-    } else return Value();
-	req.data = data.toString();
-	auto resp = Makai::Net::HTTP::fetch(url, req);
-	Value respObj = respObj.object();
-	respObj["status"]	= enumcast(resp.status);
-	respObj["content"]	= resp.content;
-	respObj["time"]		= resp.time;
-	respObj["header"]	= resp.header;
-	respObj["source"]	= resp.source;
-	return respObj;
-}
-
 void Engine::v2SetContext() {
 	auto const ctx = Cast::bit<Instruction::Context>(current.type);
 	if (!ctx.immediate)
-		context.prevMode	= ctx.mode;
-	context.mode			= ctx.mode;
+		context.scopeStack.back().prevMode	= ctx.mode;
+	context.scopeStack.back().mode			= ctx.mode;
 }
 
 void Engine::v2StackPush() {
 	auto const inter = Cast::bit<Instruction::StackPush>(current.type);
 	auto const value = consumeValue(inter.location);
 	if (err) return;
-	context.valueStack.pushBack(value);
+	context.globalValueStack.pushBack(value);
 }
 
 void Engine::v2StackPop() {
-	auto const inter = Cast::bit<Instruction::StackPop>(current.type);
-	if (inter.discard) {
-		context.valueStack.popBack();
-		return;
-	}
-	auto& value = accessValue(inter.location);
-	if (err) return;
-	if (
-		(inter.location & DataLocation::AV2_DLM_BY_REF) == DataLocation::AV2_DLM_BY_REF
-	||	(inter.location & DataLocation::AV2_DLM_MOVE) == DataLocation::AV2_DLM_MOVE
-	) value = context.valueStack.popBack();
-	else *value = *context.valueStack.popBack();
+	if (context.globalValueStack.size())
+		context.globalValueStack.popBack();
 }
 
 void Engine::v2StackSwap() {
-	if (context.valueStack.size() >= 2)
-		Makai::swap(context.valueStack[-1], context.valueStack[-2]);
+	if (context.globalValueStack.size() >= 2)
+		Makai::swap(context.globalValueStack[-1], context.globalValueStack[-2]);
 }
 
 void Engine::v2StackClear() {
 	if (current.type)
-		context.valueStack.removeRange(-Math::max<int>(current.type, context.valueStack.size()));
+		context.globalValueStack.removeRange(-Math::max<int>(current.type, context.globalValueStack.size()));
 }
 
 void Engine::v2StackFlush() {
-	context.valueStack.clear();
+	context.globalValueStack.clear();
 }
 
 void Engine::v2Jump() {
-	Instruction::Leap op = current.getTypeAs<Instruction::Leap>();
-	usize to = 0;
-	if (op.source == DataLocation::AV2_DL_CONST) {
+	Instruction::Leap leap = current.getTypeAs<Instruction::Leap>();
+	using enum As<decltype(leap.type)>;
+	uint64 loc = 0;
+	if (context.globalValueStack.size() < ((leap.type != AV2_ILT_UNCONDITIONAL) + leap.dyn))
+		return crash(invalidSourceError("Not enough parameters for jump!"));
+	if (leap.dyn) {
+		if (context.globalValueStack.empty())
+			return crash(invalidSourceError("Global stack is empty!"));
+		loc = context.globalValueStack.popBack()->toValue<uint64>();
+	} else {
 		advance(true);
-		to = current.as<usize>();
-	} else to = consumeValue(op.source)->getUnsigned();
-	if (op.type == Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL)
-		return jumpBy(to, false);
-	if (
-		op.type == Instruction::Leap::Type::AV2_ILT_IF_TRUTHY
-	&&	op.condition == DataLocation::AV2_DL_INTERNAL
-	) return;
-	auto const cond = consumeValue(op.condition);
-	switch (op.type) {
-		case decltype(op.type)::AV2_ILT_IF_FALSY:					if (cond->isFalsy())							jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_TRUTHY:					if (cond->isTruthy())							jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_NAN:						if (cond->isNaN())								jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_NEGATIVE:				if (cond->isNumber() && cond->getReal() < 0)	jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_POSITIVE:				if (cond->isNumber() && cond->getReal() > 0)	jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_ZERO:					if (cond->isNumber() && cond->getReal() == 0)	jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_NOT_ZERO:				if (cond->isNumber() && cond->getReal() != 0)	jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_NULL:					if (cond->isNull())								jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_UNDEFINED:				if (cond->isUndefined())						jumpBy(to, false); break;
-		case decltype(op.type)::AV2_ILT_IF_NULL_OR_UNDEFINED:		if (cond->isNull() || cond->isUndefined())		jumpBy(to, false); break;
-		default: break;
+		loc = Makai::Cast::bit<uint64>(current);
 	}
-}
-
-void Engine::v2Cast() {
-	Instruction::Casting op = current.getTypeAs<Instruction::Casting>();
-	auto const src = consumeValue(op.src);
-	auto const dst = accessValue(op.dst);
-	if (src->isNumber())
-		switch (op.type) {
-			case Data::Value::Kind::DVK_BOOLEAN:	*dst = src->getBoolean();	return;
-			case Data::Value::Kind::DVK_UNSIGNED:	*dst = src->getUnsigned();	return;
-			case Data::Value::Kind::DVK_SIGNED:		*dst = src->getSigned();	return;
-			case Data::Value::Kind::DVK_REAL:		*dst = src->getReal();		return;
-			case Data::Value::Kind::DVK_STRING:		*dst = src->toString();		return;
-			default: break;
-		}
-	else if (src->isString()) {
-		switch (op.type) {
-			case Data::Value::Kind::DVK_BOOLEAN:	*dst = toBool(src->getString());	return;
-			case Data::Value::Kind::DVK_UNSIGNED:	*dst = toUInt64(src->getString());	return;
-			case Data::Value::Kind::DVK_SIGNED:		*dst = toInt64(src->getString());	return;
-			case Data::Value::Kind::DVK_REAL:		*dst = toDouble(src->getString());	return;
-			case Data::Value::Kind::DVK_STRING:		*dst = *src;						return;
+	bool shouldJump = false;
+	if (leap.type == AV2_ILT_UNCONDITIONAL) {
+		shouldJump = true;
+	} else {
+		if (context.globalValueStack.empty())
+			return crash(invalidSourceError("Global stack is empty!"));
+		auto const cond = context.globalValueStack.popBack();
+		switch (leap.type) {
+			case AV2_ILT_IF_TRUTHY:				shouldJump	= cond->toValue<bool>();		break;
+			case AV2_ILT_IF_FALSY:			 	shouldJump	= !cond->toValue<bool>();		break;
+			case AV2_ILT_IF_ZERO:				shouldJump	= cond->toValue<double>() == 0;	break;
+			case AV2_ILT_IF_NOT_ZERO:			shouldJump	= cond->toValue<double>() != 0;	break;
+			case AV2_ILT_IF_NEGATIVE:			shouldJump	= cond->toValue<double>() < 0;	break;
+			case AV2_ILT_IF_POSITIVE:			shouldJump	= cond->toValue<double>() > 0;	break;
+			case AV2_ILT_IF_NULL:				shouldJump	= context.art.types.byName("nil").find(cond->getCurrentType()) != -1;	break;
+			case AV2_ILT_IF_UNDEFINED:			shouldJump	= context.art.types.byName("void").find(cond->getCurrentType()) != -1;	break;
+			case AV2_ILT_IF_NULL_OR_UNDEFINED:	shouldJump	= (
+				context.art.types.byName("nil").find(cond->getCurrentType()) != -1
+			||	context.art.types.byName("void").find(cond->getCurrentType()) != -1
+			);	break;
 			default: break;
 		}
 	}
-	crash(
-		invalidCast(
-			"Cannot cast from ["
-		+	Data::Value::asNameString(src->type())
-		+	"] to ["
-		+	Data::Value::asNameString(op.type)
-		+	"]!"
-		)
-	);
+	if (shouldJump)
+		jumpBy(loc, false);
 }
 
 Engine::Error Engine::invalidLocationError(DataLocation const& loc) {
