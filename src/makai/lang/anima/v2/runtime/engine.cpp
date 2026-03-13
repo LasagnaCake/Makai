@@ -285,7 +285,8 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef);
 		}
-		case DataLocation::AV2_DL_GLOBAL:		return global(id);
+		case DataLocation::AV2_DL_GLOBAL:	return global(id);
+		case DataLocation::AV2_DL_LOCAL:	return scopeLocal(id);
 		case DataLocation::AV2_DL_EXTERNAL: {
 			if (program.ani)
 				return external(program.ani->out[id], byRef);
@@ -335,6 +336,10 @@ Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize 
 
 Runtime::Context::Storage& Engine::global(uint64 const id) {
 	return context.globals[id];
+}
+
+Runtime::Context::Storage& Engine::scopeLocal(uint64 const id) {
+	return context.scopeStack.back().localStack[id];
 }
 
 void Engine::jumpTo(usize const point, bool returnable) {
