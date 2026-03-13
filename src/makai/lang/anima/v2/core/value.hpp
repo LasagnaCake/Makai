@@ -142,6 +142,7 @@ namespace Makai::Anima::V2::Core {
 		Instance<Definition>	origin;
 	};
 
+	// TODO: Merge this with Value class
 	struct Object {
 		using Storage = Instance<Object>;
 		List<Storage>			fields;
