@@ -38,8 +38,6 @@ namespace Makai::Anima::V2::Runtime {
 
 	protected:
 		virtual Context::Storage	external	(String const& name, bool const byRef	);
-		Context::Storage			internal	(uint64 const valueID					);
-		Context::Storage&			temporary	(										);
 		Context::Storage&			global		(uint64 const globalID					);
 		Context::Storage&			iregister	(uint64 const registerID				);
 
@@ -70,13 +68,11 @@ namespace Makai::Anima::V2::Runtime {
 
 		Engine::Error makeErrorHere(String const& message);
 
-		void pushUndefinedIfInLooseMode(String const& fname);
-
 		Context::Storage consumeValue(Core::DataLocation const from);
-		Context::Storage getValueFromLocation(Core::DataLocation const location, usize const id);
+		Context::Storage getValueFromLocation(Core::DataLocation const location, uint64 const id);
 
 		Context::Storage& accessValue(Core::DataLocation const from);
-		Context::Storage& accessLocation(Core::DataLocation const location, usize const id);
+		Context::Storage& accessLocation(Core::DataLocation const location, uint64 const id);
 
 		void advance(bool isRequired = false);
 

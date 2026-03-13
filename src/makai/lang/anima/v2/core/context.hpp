@@ -47,14 +47,14 @@ namespace Makai::Anima::V2::Core {
 			template <class TFunc>
 			constexpr static Instance<ExternalInvocation> invoker(Function<TFunc> const& f) {
 				return new ExternalInvocation(
-					[f] (Database<Definition>& types, ExternalMethod& method, List<Object> const& args) {
+					[f] (Database<Definition>& types, ExternalMethod& method, List<Object::Storage> const& args) {
 						if (types.byName(artnameof<TReturn>()).empty())
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
 						if constexpr (Makai::Type::Void<TReturn>)
 							invoke(f, toArguments<TArgs...>(args));
-						else return converter<TReturn>()(types, invokeFromTuple(f, toArguments<TArgs...>(args)));
+						else return converter<TReturn>()(types, invokeFromTuple(f, toArguments<TArgs...>(args.sliced(0, method.argc))));
 					}
 				);
 			}

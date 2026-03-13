@@ -35,6 +35,9 @@ namespace Makai::Anima::V2::Core {
 		AV2_BOP_BIT_AND,
 		AV2_BOP_BIT_OR,
 		AV2_BOP_BIT_XOR,
+		AV2_BOP_LOGX,
+		AV2_BOP_ATAN2,
+		AV2_BOP_POW,
 	};
 
 	enum class BasicType {

@@ -28,8 +28,6 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_GLOBAL,
 		/// @brief Implemetation-defined value.
 		AV2_DL_EXTERNAL,
-		/// @brief Temporary value.
-		AV2_DL_TEMPORARY,
 		/// @brief Scope-local value.
 		AV2_DL_LOCAL,
 		/// @brief Location modifier: By reference.
@@ -70,13 +68,13 @@ namespace Makai::Anima::V2::Core {
 
 	/// @brief Comparison operator.
 	enum class Comparator: uint8 {
-		AV2_OP_EQUALS,
+		AV2_OP_THREEWAY,
 		AV2_OP_NOT_EQUALS,
+		AV2_OP_EQUALS,
 		AV2_OP_LESS_THAN,
 		AV2_OP_GREATER_THAN,
 		AV2_OP_LESS_EQUALS,
 		AV2_OP_GREATER_EQUALS,
-		AV2_OP_THREEWAY,
 	};
 
 	/// @brief Instruction.

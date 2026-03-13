@@ -115,6 +115,10 @@ namespace Makai::Anima::V2::Core {
 			return (origin->flags & Definition::Flags::AV2_DF_CLONABLE);
 		}
 
+		bool isAlgebraic() const {
+			return isNumber() || isVector();
+		}
+
 		bool isNumber() const {
 			return isInteger() || isReal();
 		}
@@ -139,6 +143,12 @@ namespace Makai::Anima::V2::Core {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_REAL);
+		}
+
+		bool isVector() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_VECTOR);
 		}
 
 		bool isArray() const {
