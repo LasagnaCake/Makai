@@ -623,3 +623,31 @@ Engine::Error Engine::invalidCast(String const& description) {
 Engine::Error Engine::invalidJump() {
 	return makeErrorHere("Jump target does not exist!");
 }
+
+void Engine::v2ScopeBring() {
+	// TODO: This
+}
+
+void Engine::v2ScopeBind() {
+	// TODO: This
+}
+
+void Engine::v2ScopeEnter() {
+	// TODO: This
+}
+
+void Engine::v2ScopeExit() {
+	// TODO: This
+}
+
+void Engine::v2FieldGet() {
+	// TODO: This
+}
+
+void Engine::v2Sizeof() {
+	// TODO: This
+}
+
+void Engine::v2Typeof() {
+	// TODO: This
+}
