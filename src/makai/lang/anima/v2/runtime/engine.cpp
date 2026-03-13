@@ -9,8 +9,6 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 
 using namespace Core;
 
-using Makai::Data::Value;
-
 bool Engine::yieldCycle() {
 	bool revertContext = false;
 	if (context.scopeStack.empty())
