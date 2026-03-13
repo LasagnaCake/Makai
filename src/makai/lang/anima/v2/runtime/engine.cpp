@@ -246,8 +246,8 @@ static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bo
 }
 
 Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, uint64 const id) {
-	auto const place = asPlace(loc);
-	auto const mod = asModifiers(loc);
+	auto const place	= asPlace(loc);
+	auto const mod		= asModifiers(loc);
 	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
 	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
 	switch (place) {
@@ -286,7 +286,17 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			return accessor(v, byRef);
 		}
 		case DataLocation::AV2_DL_GLOBAL:	return global(id);
-		case DataLocation::AV2_DL_LOCAL:	return scopeLocal(id);
+		case DataLocation::AV2_DL_LOCAL: {
+			if (context.scopeStack.back().localStack.empty()) {
+				if (inStrictMode())
+					crash(invalidLocationError(loc));
+				return Object::create();
+			}
+			auto& loc = context.scopeStack.back().localStack[id  % context.globalValueStack.size()];
+			auto const v = loc;
+			if (byMove) loc = nullptr;
+			return accessor(v, byRef);
+		}
 		case DataLocation::AV2_DL_EXTERNAL: {
 			if (program.ani)
 				return external(program.ani->out[id], byRef);
@@ -336,10 +346,6 @@ Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize 
 
 Runtime::Context::Storage& Engine::global(uint64 const id) {
 	return context.globals[id];
-}
-
-Runtime::Context::Storage& Engine::scopeLocal(uint64 const id) {
-	return context.scopeStack.back().localStack[id];
 }
 
 void Engine::jumpTo(usize const point, bool returnable) {
