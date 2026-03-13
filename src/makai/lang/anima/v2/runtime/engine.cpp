@@ -66,7 +66,7 @@ void Engine::v2Compare() {
 		return crash(invalidSourceError("Missing values to compare!"));
 	auto rhs	= context.globalValueStack.popBack();
 	auto lhs	= context.globalValueStack.back();
-	Value::OrderType order = Value::Order::EQUAL;
+	Makai::Ordered::OrderType order = Makai::Ordered::Order::EQUAL;
 	if (
 		lhs->getCurrentType() == rhs->getCurrentType()
 	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
