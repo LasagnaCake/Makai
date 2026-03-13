@@ -2,7 +2,6 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_ENGINE_H
 
 #include "context.hpp"
-#include "program.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
@@ -32,7 +31,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		void terminate();
 		void reset();
-		void load(Program const& program);
+		void load(Core::Module const& program);
 		void execute();
 
 		Nullable<Error>	error() const	{return err;			}
@@ -91,8 +90,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2StackFlush();
 		void v2Return();
 		void v2Halt();
-		void v2BinaryOp();
-		void v2UnaryOp();
+		void v2Op();
 		void v2SetContext();
 		void v2Compare();
 		void v2Get();
@@ -108,7 +106,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		bool				isFinished	= false;
 		bool				paused		= false;
-		Program				program;
+		Core::Module		program;
 		Context				context;
 		Core::Instruction	current;
 		Nullable<Error>		err;

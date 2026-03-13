@@ -9,5 +9,6 @@
 #include "object.hpp"
 #include "context.hpp"
 #include "database.hpp"
+#include "module.hpp"
 
 #endif

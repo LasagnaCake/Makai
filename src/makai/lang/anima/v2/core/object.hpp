@@ -80,9 +80,7 @@ namespace Makai::Anima::V2::Core {
 			return T::construct(*this);
 		}
 
-		Object as(Instance<Definition> const& newType) const {
-			return Object(*this, newType);
-		}
+		Object::Storage as(Instance<Definition> const& newType) const;
 
 		constexpr Object& operator=(Object const& other) {
 			if (other.type->copy)
@@ -103,6 +101,12 @@ namespace Makai::Anima::V2::Core {
 
 		usize count() const;
 
+		bool isBoolean() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_BOOL);
+		}
+
 		bool isValueType() const {
 			return (origin->flags & Definition::Flags::AV2_DF_VALUE);
 		}
@@ -111,12 +115,53 @@ namespace Makai::Anima::V2::Core {
 			return (origin->flags & Definition::Flags::AV2_DF_CLONABLE);
 		}
 
+		bool isNumber() const {
+			return isInteger() || isReal();
+		}
+
+		bool isInteger() const {
+			return isSigned() || isUnsigned();
+		}
+
+		bool isSigned() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_INT);
+		}
+
+		bool isUnsigned() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_UINT);
+		}
+
+		bool isReal() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_REAL);
+		}
+
 		bool isArray() const {
 			return (origin->flags & Definition::Flags::AV2_DF_ARRAY);
 		}
 
 		bool isStructrure() const {
 			return (origin->flags & Definition::Flags::AV2_DF_STRUCTURE);
+		}
+
+		bool isBasic() const {
+			return (origin->flags & Definition::Flags::AV2_DF_BASIC);
+		}
+
+		Ordered::OrderType compareWith(Storage const& other) const {
+			if (!other) return Ordered::Order::GREATER;
+			if (!count())
+				return (!other->count()) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
+			if (!type->compare)
+				return (!other->type->compare) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
+			if ((type == other->type) || type->canBecome(other->type))
+				return StandardOrder(type->compare(content->data(), other->content->data()).value());
+			return Ordered::Order::UNORDERED;
 		}
 
 		Storage getAtIndex(uint64 const index) const;
@@ -186,6 +231,10 @@ namespace Makai::Anima::V2::Core {
 
 		Object(Object&&)			= default;
 		Object& operator=(Object&&)	= default;
+
+
+		Instance<Definition>	getCurrentType();
+		Instance<Definition>	getOriginalType();
 
 	private:
 		friend Storage;

@@ -2,13 +2,11 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_CONTEXT_H
 
 #include "../../../../compat/ctl.hpp"
-#include "../core/instruction.hpp"
-#include "../core/value.hpp"
-#include "../core/context.hpp"
+#include "../core/core.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Context {
-		using Storage = Instance<Core::Value>;
+		using Storage = Core::Object::Storage;
 
 		struct IInvokable {
 			virtual ~IInvokable() {}

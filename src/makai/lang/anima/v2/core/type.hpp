@@ -70,9 +70,18 @@ namespace Makai::Anima::V2::Core {
 		uint64						alignment	= 1;
 		List<Instance<Definition>>	fields;
 
-		Functor<void(ptr<void>)>					construct;
-		Functor<void(ptr<void>, ptr<void const>)>	copy;
-		Functor<void(ptr<void>)>					destruct;
+		bool canBecome(Instance<Definition> const& type) const {
+			if (type == base) return true;
+			Instance<Definition> current = base;
+			while ((current = current->base))
+				if (current == type) return true;
+			return false;
+		}
+
+		Functor<void(ptr<void>)>							construct;
+		Functor<void(ptr<void>, ptr<void const>)>			copy;
+		Functor<void(ptr<void>)>							destruct;
+		Functor<int64(ptr<void const>, ptr<void const>)>	compare;
 	};
 }
 

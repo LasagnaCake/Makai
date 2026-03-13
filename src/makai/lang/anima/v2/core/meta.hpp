@@ -189,6 +189,9 @@ namespace Makai::Anima::V2::Core::Meta {
 	};
 
 	template <class T>
+	using ARTInfo = Impl::ARTTI<T>;
+
+	template <class T>
 	constexpr String artnameof() {
 		return Impl::ARTTI<T>::ART_NAME;
 	}

@@ -39,8 +39,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_RETURN: 		v2Return();		break;
 		case AV2_IN_CALL:			v2Call();		break;
 		case AV2_IN_CAST:			v2Cast();		break;
-		case AV2_IN_BOP:			v2BinaryOp();	break;
-		case AV2_IN_UOP:			v2UnaryOp();	break;
+		case AV2_IN_OP:				v2Op();			break;
 		case AV2_IN_COMPARE:		v2Compare();	break;
 		case AV2_IN_MODE:			v2SetContext();	break;
 		case AV2_IN_JUMP:			v2Jump();		break;
@@ -72,24 +71,30 @@ void Engine::v2Compare() {
 	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to compare!"));
-	auto lhs	= context.globalValueStack.popBack();
 	auto rhs	= context.globalValueStack.popBack();
+	auto lhs	= context.globalValueStack.back();
 	Value::OrderType order = Value::Order::EQUAL;
-	if (lhs->type == rhs->type)						order = *lhs <=> *rhs;
-	else if (lhs->isNumber() && rhs->isNumber())	order = lhs->get<double>() <=> lhs->get<double>();
+	if (
+		lhs->getCurrentType() == rhs->getCurrentType()
+	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
+	) order = lhs->compareWith(rhs);
+	else if (lhs->isBoolean() && rhs->isBoolean())		order = lhs->toValue<bool>() <=> lhs->toValue<bool>();
+	else if (lhs->isUnsigned() && rhs->isUnsigned())	order = lhs->toValue<uint64>() <=> lhs->toValue<uint64>();
+	else if (lhs->isInteger() && rhs->isInteger())		order = lhs->toValue<int64>() <=> lhs->toValue<int64>();
+	else if (lhs->isNumber() && rhs->isNumber())		order = lhs->toValue<double>() <=> lhs->toValue<double>();
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Types do not match!"));
 	else {
-		context.globalValueStack.pushBack(new Value());
+		context.globalValueStack.pushBack(Object::create());
 		return;
 	}
-	if (order == Value::Order::EQUAL)			context.globalValueStack.pushBack(new Value(0l));
-	else if (order == Value::Order::GREATER)	context.globalValueStack.pushBack(new Value(1l));
-	else if (order == Value::Order::LESS)		context.globalValueStack.pushBack(new Value(-1l));
+	if (order == Value::Order::EQUAL)			context.globalValueStack.pushBack(context.art.newValue(0l));
+	else if (order == Value::Order::GREATER)	context.globalValueStack.pushBack(context.art.newValue(1l));
+	else if (order == Value::Order::LESS)		context.globalValueStack.pushBack(context.art.newValue(-1l));
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Failed to compare types!"));
 	else {
-		context.globalValueStack.pushBack(new Value());
+		context.globalValueStack.pushBack(Object::create());
 		return;
 	}
 }

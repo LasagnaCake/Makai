@@ -93,6 +93,11 @@ namespace Makai::Anima::V2::Core {
 			return externalMethods[name].invoker->invoke(types, externalMethods[name], args);
 		}
 
+		template <class T>
+		constexpr Object::Storage newValue(T const& value) const {
+			return Object::create(value, types.byName(Meta::artnameof<T>()).front());
+		}
+
 		Database<Definition>		types;
 		Database<Method>			methods;
 		Dictionary<ExternalMethod>	externalMethods;

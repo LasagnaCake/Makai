@@ -1,4 +1,5 @@
 #include "object.hpp"
+#include "type.hpp"
 
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
@@ -10,6 +11,12 @@ Object::~Object() {
 				origin->destruct(addressAt(i));
 		} else origin->destruct(content->data());
 	}
+}
+
+Object::Storage Object::as(Instance<Definition> const& newType) const {
+	if (type->canBecome(newType))
+		return Object::create(*this, newType);
+	else return null;
 }
 
 Object::Storage Object::getAtIndex(uint64 const index) const {
@@ -69,7 +76,8 @@ Object::Storage Object::cloneFrom(usize const index) const {
 
 
 usize Object::count() const {
-	if (isArray())
+	if (!(content & content->size())) return 0;
+	else if (isArray())
 		return content->size() / origin->base->byteSize;
 	else if (isStructrure())
 		return origin->fields.size();
