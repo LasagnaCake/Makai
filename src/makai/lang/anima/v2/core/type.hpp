@@ -64,7 +64,7 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_ART_EQUIVALENT	= 1 << 8;
 		};
 		uint64						flags		= 0;
-		Nullable<BasicType>			basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
+		Nullable<BasicType>			basic;
 		Instance<Definition>		base		= nullptr;
 		uint64						byteSize	= 0;
 		uint64						alignment	= 1;

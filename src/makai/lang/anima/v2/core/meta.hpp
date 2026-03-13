@@ -11,59 +11,64 @@ namespace Makai::Anima::V2::Core::Meta {
 	struct Any	{};
 
 	namespace Impl {
-		template <class T> struct ARTTI;
-
 		template <class T>
-		concept ARTType = requires {
-			{T::ART_NAME}		-> Makai::Type::Equal<scstring>;
-			{T::constructor()}	-> Makai::Type::Functional<T(Object)>;
-			{T::converter()}	-> Makai::Type::Functional<Makai::Meta::If<Makai::Type::Void<T>, Object(Database<Definition>&), Object(Database<Definition>&, T const&)>>;
+		concept ValidType = requires {
+			ARTType<T>;
+			{T::convert} -> Makai::Type::Functional<
+				Makai::Meta::If<
+					Makai::Type::Void<T>,
+					Object(Database<Definition>&),
+					Object(Database<Definition>&, T const&)
+					>
+				>
+			;
 		};
 
-		template <class T>
-		constexpr Function<T(Object const&)> toValue() {
-			return [] (Object const& obj) -> T {return *obj.value.as<T>();};
-		}
-
-		template <class T>
-		constexpr Function<T(Object const&)> toEmpty() {
-			return [] (Object const& obj) -> T {return T{};};
-		}
+		template <class T> struct ARTTI;
 
 		template<> struct ARTTI<Void> {
 			constexpr static scstring ART_NAME = "void";
 
-			constexpr static Function<Void(Object const&)> constructor() {
-				return toEmpty<Void>();
-			}
+			static void construct(Object const&) {}
 
-			constexpr static Function<Object(Database<Definition>&)> converter() {
-				return [] (Database<Definition>&) -> Object {
-					return Object();
-				};
+			static Object::Storage convert(Database<Definition>& db) {
+				return Object::create();
 			}
 		};
 
 		template<> struct ARTTI<Any> {
 			constexpr static scstring ART_NAME = "any";
 
-			constexpr static Function<Any(Object const&)> constructor() {
-				return toEmpty<Any>();
+			static Any construct(Object const&) {
+				return {};
+			}
+
+			static Object::Storage convert(Database<Definition>& db, Any const&) {
+				return Object::create(db.byName("any").front());
 			}
 		};
 
 		template<> struct ARTTI<nulltype> {
 			constexpr static scstring ART_NAME = "nil";
 
-			constexpr static Function<nulltype(Object const&)> constructor() {
-				return toEmpty<nulltype>();
+			static nulltype construct(Object const& db) {
+				return {};
+			}
+
+			static Object::Storage convert(Database<Definition>& db, nulltype const&) {
+				return Object::create(db.byName("nil").front());
 			}
 		};
 
 		template<> struct ARTTI<bool> {
 			constexpr static scstring ART_NAME = "bool";
-			constexpr static auto constructor() {
-				return toValue<bool>();
+
+			static nulltype construct(Object const& db) {
+				return {};
+			}
+
+			static Object::Storage convert(Database<Definition>& db, bool const& value) {
+				return Object::create(value, db.byName("bool").front());
 			}
 		};
 

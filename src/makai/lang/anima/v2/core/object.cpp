@@ -92,7 +92,7 @@ Object::Storage Object::Accessor::get() const {
 	return value->getAtIndex(index);
 }
 
-Object::Accessor& Object::Accessor::set(Object::Storage const& value) {
+Object::Accessor& Object::Accessor::set(Object::Storage const& value) const {
 	value->setAtIndex(index, value);
 	return *this;
 }

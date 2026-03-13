@@ -7,7 +7,7 @@ namespace Makai::Anima::V2::Core {
 	template <Type::Derived<Entry> T>
 	struct Database {
 		using ElementType = Instance<T>;
-		using StorageType = List<T>;
+		using StorageType = List<ElementType>;
 
 		StorageType byName(String const& name) const {
 			StorageType out;
