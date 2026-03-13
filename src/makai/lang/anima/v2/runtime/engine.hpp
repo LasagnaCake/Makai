@@ -21,12 +21,11 @@ namespace Makai::Anima::V2::Runtime {
 		void load(Core::Module const& program);
 		void execute();
 
-		Nullable<Error>	error() const	{return err;			}
-
+		Nullable<Error>	error() const	{return err;}
 	protected:
 		virtual Context::Storage	external	(String const& name, bool const byRef	);
 		Context::Storage&			global		(uint64 const globalID					);
-		Context::Storage&			iregister	(uint64 const registerID				);
+		Context::Storage&			scopeLocal	(uint64 const localID					);
 
 		constexpr bool inStrictMode() const {return context.scopeStack.back().mode == Core::ContextMode::AV2_CM_STRICT;}
 
