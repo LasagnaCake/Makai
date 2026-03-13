@@ -116,7 +116,6 @@ namespace Makai::Anima::V2::Core {
 				AV2_ILT_IF_NEGATIVE,
 				AV2_ILT_IF_POSITIVE,
 				AV2_ILT_IF_NULL,
-				AV2_ILT_IF_NAN,
 				AV2_ILT_IF_UNDEFINED,
 				AV2_ILT_IF_NULL_OR_UNDEFINED,
 			};
