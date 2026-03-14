@@ -672,8 +672,8 @@ void Engine::v2ScopeEnter() {
 	if (context.globalValueStack.size() < count)
 		return crash(missingArgumentsError());
 	context.scopeStack.pushBack({
-		.mode		= context.scopeStack.back().mode,
-		.prevMode	= context.scopeStack.back().mode
+		.mode		= context.scope().mode,
+		.prevMode	= context.scope().mode
 	});
 	if (count) context.locals().resize(count, nullptr);
 }
