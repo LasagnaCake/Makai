@@ -76,7 +76,7 @@ namespace Base {
 		constexpr usize generateNewSeed() {
 			return OS::Time::now() ^ !(integer() << 0x2F);
 		}
-		
+
 	protected:
 		/// @brief Underlying engine used.
 		EngineType engine;
@@ -123,7 +123,7 @@ namespace Base {
 		T integer() {
 			return engine.next();
 		}
-		
+
 	protected:
 		/// @brief Underlying engine used.
 		EngineType engine;

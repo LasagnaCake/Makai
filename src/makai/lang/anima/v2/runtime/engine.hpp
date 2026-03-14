@@ -32,6 +32,9 @@ namespace Makai::Anima::V2::Runtime {
 
 		bool hasFunction(String const& name);
 
+		Random::SecureGenerator	srng;
+		Random::SimpleGenerator	prng;
+
 	private:
 		bool yieldCycle();
 
@@ -84,6 +87,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2FieldGet();
 		void v2Sizeof();
 		void v2Typeof();
+		void v2Random();
 
 		void doBinaryOperation(Core::Operator const op);
 		void doUnaryOperation(Core::Operator const op);
@@ -92,12 +96,12 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
-		bool				isFinished	= false;
-		bool				paused		= false;
-		Core::Module		program;
-		Context				context;
-		Core::Instruction	current;
-		Nullable<Error>		err;
+		bool					isFinished	= false;
+		bool					paused		= false;
+		Core::Module			program;
+		Context					context;
+		Core::Instruction		current;
+		Nullable<Error>			err;
 	};
 }
 

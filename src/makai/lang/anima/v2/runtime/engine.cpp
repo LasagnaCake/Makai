@@ -25,9 +25,20 @@ bool Engine::yieldCycle() {
 	switch (current.name) {
 		using enum Instruction::Name;
 		case AV2_IN_HALT:			v2Halt();		break;
+		case AV2_IN_STACK_BLIT:		v2StackBlit();	break;
 		case AV2_IN_STACK_POP:		v2StackPop();	break;
 		case AV2_IN_STACK_PUSH:		v2StackPush();	break;
 		case AV2_IN_STACK_CLEAR:	v2StackClear();	break;
+		case AV2_IN_STACK_FLUSH:	v2StackFlush();	break;
+		case AV2_IN_STACK_SWAP:		v2StackSwap();	break;
+		case AV2_IN_SCOPE_ENTER:	v2ScopeEnter();	break;
+		case AV2_IN_SCOPE_EXIT:		v2ScopeExit();	break;
+		case AV2_IN_SCOPE_BRING:	v2ScopeBring();	break;
+		case AV2_IN_SCOPE_BIND:		v2ScopeBind();	break;
+		case AV2_IN_SIZEOF:			v2Sizeof();		break;
+		case AV2_IN_TYPEOF:			v2Typeof();		break;
+		case AV2_IN_FIELD_GET:		v2FieldGet();	break;
+		case AV2_IN_RANDOM:			v2Random();		break;
 		case AV2_IN_COPY:			v2Copy();		break;
 		case AV2_IN_RETURN: 		v2Return();		break;
 		case AV2_IN_CALL:			v2Call();		break;
@@ -38,7 +49,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_JUMP:			v2Jump();		break;
 		case AV2_IN_YIELD:			v2Yield();		break;
 		case AV2_IN_NO_OP: break;
-		default: crash(invalidInstructionError());
+//		default: crash(invalidInstructionError());
 	}
 	if (revertContext) context.scopeStack.back().mode = context.scopeStack.back().prevMode;
 	return !isFinished;
@@ -709,6 +720,32 @@ void Engine::v2Sizeof() {
 
 void Engine::v2Typeof() {
 	context.push(context.pop()->getCurrentType()->id);
+}
+
+void Engine::v2Random() {
+	Instruction::Randomness rng = Makai::Cast::bit<Instruction::Randomness>(current.type);
+	Nullable<uint64> val;
+	if (rng.getSeed) val = prng.getSeed();
+	if (rng.setSeed) prng.setSeed(context.pop()->toValue<uint64>());
+	if (!(rng.setSeed || rng.getSeed)) {
+		Object::Storage lo, hi;
+		if (rng.bounded) {
+			hi = context.pop();
+			lo = context.pop();
+		}
+		if (rng.secure) switch (rng.type) {
+			using enum Instruction::Randomness::Type;
+			case AV2_IRT_INT:	context.push(rng.bounded ? prng.number<int64>(lo->toValue<int64>(), hi->toValue<int64>()) : srng.number<int64>());		break;
+			case AV2_IRT_UINT:	context.push(rng.bounded ? prng.number<uint64>(lo->toValue<uint64>(), hi->toValue<uint64>()) : srng.number<uint64>());	break;
+			case AV2_IRT_REAL:	context.push(rng.bounded ? prng.number<double>(lo->toValue<double>(), hi->toValue<double>()) : srng.number<double>());	break;
+		} else switch (rng.type) {
+			using enum Instruction::Randomness::Type;
+			case AV2_IRT_INT:	context.push(rng.bounded ? prng.number<int64>(lo->toValue<int64>(), hi->toValue<int64>()) : prng.number<int64>());		break;
+			case AV2_IRT_UINT:	context.push(rng.bounded ? prng.number<uint64>(lo->toValue<uint64>(), hi->toValue<uint64>()) : prng.number<uint64>());	break;
+			case AV2_IRT_REAL:	context.push(rng.bounded ? prng.number<double>(lo->toValue<double>(), hi->toValue<double>()) : prng.number<double>());	break;
+		}
+	}
+	if (val) context.push(*val);
 }
 
 void Engine::v2StackBlit() {
