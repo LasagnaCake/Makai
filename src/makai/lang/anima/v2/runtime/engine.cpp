@@ -727,6 +727,7 @@ void Engine::v2Random() {
 	Nullable<uint64> val;
 	if (rng.getSeed) val = prng.getSeed();
 	if (rng.setSeed) prng.setSeed(context.pop()->toValue<uint64>());
+	if (val) context.push(*val);
 	if (!(rng.setSeed || rng.getSeed)) {
 		Object::Storage lo, hi;
 		if (rng.bounded) {
@@ -745,7 +746,6 @@ void Engine::v2Random() {
 			case AV2_IRT_REAL:	context.push(rng.bounded ? prng.number<double>(lo->toValue<double>(), hi->toValue<double>()) : prng.number<double>());	break;
 		}
 	}
-	if (val) context.push(*val);
 }
 
 void Engine::v2StackBlit() {
