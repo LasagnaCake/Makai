@@ -8,12 +8,6 @@ namespace Makai::Anima::V2::Runtime {
 	struct Context {
 		using Storage = Core::Object::Storage;
 
-		struct IInvokable {
-			virtual ~IInvokable() {}
-
-			virtual Storage invoke(List<Storage> const& args) = 0;
-		};
-
 		struct Pointers {
 			usize	offset		= 0;
 			usize	function	= 0;
