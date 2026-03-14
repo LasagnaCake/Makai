@@ -22,6 +22,7 @@ namespace Makai::Anima::V2::Core {
 		struct Ref {
 			Nullable<uint64>	module = null;
 			uint64				id;
+			String				name;
 		};
 		using Refs = List<Ref>;
 

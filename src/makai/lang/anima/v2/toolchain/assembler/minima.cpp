@@ -847,8 +847,31 @@ static void declareModule(Context& context) {
 	};
 }
 
+Makai::Instance<Module> resolveModule(Context& context, Makai::String const& name) {
+	if (!context.linkedModules.contains(name))
+		context.error("Required module [" + name + "] was not linked!");
+	return context.linkedModules[name];
+}
+
+static void resolveImport(Context& context, Makai::String const& name) {
+	auto const mod = resolveModule(context, name);
+	for (auto& type: mod->sym.types)
+		if (!type.module) context.addExternalType(
+			cleanPath(name + "/" + type.name),
+			new Context::Declaration(mod->detail.types[type.id])
+		);
+	for (auto& method: mod->sym.methods)
+		if (!method.module) context.addExternalMethod(
+			cleanPath(name + "/" + method.name),
+			new Context::Method(mod->meta->methods[method.id])
+		);
+}
+
 static void declareImport(Context& context) {
 	// TODO: Imports
+	context.next();
+	auto const name = resolvePath(context, true);
+	resolveImport(context, name);
 }
 
 static void declareInitializer(Context& context) {
