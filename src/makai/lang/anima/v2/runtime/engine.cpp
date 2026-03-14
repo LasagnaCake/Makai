@@ -689,7 +689,7 @@ void Engine::v2FieldGet() {
 	if (field.dynamic) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.globalValueStack.popBack()->toValue<uint64>();
+		loc = context.pop()->toValue<uint64>();
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
