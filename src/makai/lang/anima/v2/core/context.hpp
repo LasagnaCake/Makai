@@ -101,8 +101,6 @@ namespace Makai::Anima::V2::Core {
 		Database<Definition>		types;
 		Database<Method>			methods;
 		Dictionary<ExternalMethod>	externalMethods;
-
-		Context();
 	};
 }
 
