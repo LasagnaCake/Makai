@@ -738,7 +738,7 @@ static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instan
 		context.next();
 		auto const name = resolvePath(context);
 		if (syms.contains(name))
-			context.error("Method name is already in use!");
+			context.error("Symbol name is already in use!");
 		context.expectNext(Type{':'}).expectNext(Type{'['}).next();
 		share->module = resolvePath(context, true);
 		context.expectNext(Type{':'}).next();
@@ -748,7 +748,7 @@ static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instan
 	} else {
 		auto const name = resolvePath(context);
 		if (syms.contains(name))
-			context.error("symbol name is already in use!");
+			context.error("Symbol name is already in use!");
 		context.expectNext(Type{':'}).next();
 		auto const symName = resolvePath(context);
 		if (!syms.contains(symName))
