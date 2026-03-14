@@ -38,6 +38,7 @@ namespace Makai::Anima::V2::Core {
 
 		struct Declaration {
 			uint64						id;
+			String						name;
 			uint64						flags		= 0;
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
 			Nullable<uint64>			base		= null;

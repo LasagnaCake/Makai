@@ -868,7 +868,6 @@ static void resolveImport(Context& context, Makai::String const& name) {
 }
 
 static void declareImport(Context& context) {
-	// TODO: Imports
 	context.next();
 	auto const name = resolvePath(context, true);
 	resolveImport(context, name);
