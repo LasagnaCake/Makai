@@ -22,6 +22,7 @@ namespace Makai::Anima::V2::Runtime {
 		void execute();
 
 		Nullable<Error>	error() const	{return err;}
+
 	protected:
 		virtual Context::Storage	external	(String const& name, bool const byRef	);
 		Context::Storage&			global		(uint64 const globalID					);
@@ -34,6 +35,8 @@ namespace Makai::Anima::V2::Runtime {
 
 		Random::SecureGenerator	srng;
 		Random::SimpleGenerator	prng;
+
+		Context context;
 
 	private:
 		bool yieldCycle();
@@ -99,7 +102,6 @@ namespace Makai::Anima::V2::Runtime {
 		bool					isFinished	= false;
 		bool					paused		= false;
 		Core::Module			program;
-		Context					context;
 		Core::Instruction		current;
 		Nullable<Error>			err;
 	};
