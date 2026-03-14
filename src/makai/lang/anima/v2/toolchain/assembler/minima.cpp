@@ -757,18 +757,10 @@ static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instan
 	}
 }
 
-static void declareTypeAlias(Context& context) {
-	declareSymbolAlias(context, context.types);
-}
-
-static void declareMethodAlias(Context& context) {
-	declareSymbolAlias(context, context.methods);
-}
-
 static void declareAlias(Context& context) {
 	auto const what = context.getNext(LTS_TT_IDENTIFIER, "alias type").getString();
-	if (what == "type")		declareTypeAlias(context);
-	else if (what == "fn")	declareMethodAlias(context);
+	if (what == "type")		declareSymbolAlias(context, context.types);
+	else if (what == "fn")	declareSymbolAlias(context, context.methods);
 	else context.error("Invalid aliasing!");
 }
 
