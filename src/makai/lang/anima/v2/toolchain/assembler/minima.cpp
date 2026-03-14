@@ -257,7 +257,6 @@ static Location getDataLocation(Context& context) {
 			else if (id == "stack")						loc |= getStack(context);
 			else if (id == "global" || id == "g")		loc |= getGlobal(context);
 			else if (id == "external" || id == "out")	loc |= getExtern(context);
-			else if (id == "temporary" || id == "temp")	loc |= Location{DataLocation::AV2_DL_TEMPORARY, uint64{-1}};
 			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_BOOL, uint64{0}};
 			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_BOOL, uint64{1}};
 			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_VOID, null};
@@ -273,10 +272,8 @@ static Location getDataLocation(Context& context) {
 		case Type{'$'}:
 			loc |= getGlobal(context);
 		break;
-		case Type{'@'}:
-			loc |= getLocal(context);
 		case Type{'.'}:
-			loc |= Location{DataLocation::AV2_DL_TEMPORARY, uint64{-1}};
+			loc |= getLocal(context);
 		break;
 		case Type{'+'}:
 		case Type{'-'}:
