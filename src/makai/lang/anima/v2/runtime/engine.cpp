@@ -664,7 +664,7 @@ void Engine::v2ScopeBind() {
 	if (!((bind.dst + count) < dst.size()))
 		return crash(outOfRangeError("Requested destination range falls outside its size!"));
 	for (usize i = 0; i < count; ++i)
-		dst[i + bind.dst] = src[i + bind.src];
+		dst[i + bind.dst] = src[i + (src.size() - count - bind.src + 1)];
 }
 
 void Engine::v2ScopeEnter() {
@@ -709,4 +709,17 @@ void Engine::v2Sizeof() {
 
 void Engine::v2Typeof() {
 	context.push(context.pop()->getCurrentType()->id);
+}
+
+void Engine::v2StackBlit() {
+	Instruction::Blitting blit = Makai::Cast::bit<Instruction::Blitting>(current.type);
+	auto& src = blit.fromGlobal ? context.globalValueStack : context.locals();
+	auto& dst = blit.fromGlobal ? context.locals() : context.globalValueStack;
+	advance(true);
+	auto const count = Makai::Cast::bit<uint64>(current);
+	if (!(blit.offset + count < src.size()))
+		return crash(outOfRangeError("Requested blit range falls outside source's size!"));
+	if (blit.fromGlobal)
+		dst.appendBack(src.sliced(-(blit.offset+1 + count), -(blit.offset+1)));
+	else dst.appendBack(src.sliced(blit.offset, blit.offset + count));
 }
