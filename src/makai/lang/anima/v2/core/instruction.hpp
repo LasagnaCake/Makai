@@ -237,6 +237,7 @@ namespace Makai::Anima::V2::Core {
 			AV2_IN_STACK_FLUSH,
 			/// @brief Copies a set of values from one stack to another.
 			/// @param type `Blitting` = how to blit the values.
+			/// @note Values are transfered "front"-to-"back", offset starts at the end of the stack for global stack.
 			/// @details `blit <count>`
 			AV2_IN_STACK_BLIT,
 			/// @brief Returns from a function.
@@ -273,6 +274,7 @@ namespace Makai::Anima::V2::Core {
 			AV2_IN_SCOPE_BIND,
 			/// @brief Binds a range of values from a previous scope to a range of places in the current scope.
 			/// @param type `Binding` = how to bind the values.
+			/// @note Values are bound "front"-to-"back", source offset starts at the end of the stack.
 			/// @details `bring <scope> <count>`
 			AV2_IN_SCOPE_BRING,
 			/// @brief Gets a reference of a given field from an object.
