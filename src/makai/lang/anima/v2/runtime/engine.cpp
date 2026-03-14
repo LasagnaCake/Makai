@@ -64,8 +64,8 @@ void Engine::v2Compare() {
 	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to compare!"));
-	auto rhs	= context.globalValueStack.popBack();
-	auto lhs	= context.globalValueStack.back();
+	auto rhs	= context.pop();
+	auto lhs	= context.top();
 	Makai::Ordered::OrderType order = Makai::Ordered::Order::EQUAL;
 	if (
 		lhs->getCurrentType() == rhs->getCurrentType()
@@ -92,15 +92,15 @@ void Engine::v2Compare() {
 	switch (comp.comp) {
 		using enum As<decltype(comp.comp)>;
 		case AV2_OP_THREEWAY:
-			*context.globalValueStack.back() = *context.art.newValue(enumcast<Makai::StandardOrder>(order));
+			*context.top() = *context.art.newValue(enumcast<Makai::StandardOrder>(order));
 		break;
 		using enum As<Makai::StandardOrder>;
-		case AV2_OP_EQUALS:			*context.globalValueStack.back() = *context.art.newValue(order == EQUAL);	break;
-		case AV2_OP_NOT_EQUALS:		*context.globalValueStack.back() = *context.art.newValue(order != EQUAL);	break;
-		case AV2_OP_GREATER_THAN:	*context.globalValueStack.back() = *context.art.newValue(order == GREATER);	break;
-		case AV2_OP_GREATER_EQUALS:	*context.globalValueStack.back() = *context.art.newValue(order != LESS);	break;
-		case AV2_OP_LESS_THAN:		*context.globalValueStack.back() = *context.art.newValue(order == LESS);	break;
-		case AV2_OP_LESS_EQUALS:	*context.globalValueStack.back() = *context.art.newValue(order != GREATER);	break;
+		case AV2_OP_EQUALS:			*context.top() = *context.art.newValue(order == EQUAL);	break;
+		case AV2_OP_NOT_EQUALS:		*context.top() = *context.art.newValue(order != EQUAL);	break;
+		case AV2_OP_GREATER_THAN:	*context.top() = *context.art.newValue(order == GREATER);	break;
+		case AV2_OP_GREATER_EQUALS:	*context.top() = *context.art.newValue(order != LESS);	break;
+		case AV2_OP_LESS_THAN:		*context.top() = *context.art.newValue(order == LESS);	break;
+		case AV2_OP_LESS_EQUALS:	*context.top() = *context.art.newValue(order != GREATER);	break;
 	}
 }
 
@@ -205,7 +205,7 @@ void Engine::v2Call() {
 	if (invocation.dynamic) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.globalValueStack.popBack()->toValue<uint64>();
+		loc = context.pop()->toValue<uint64>();
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
@@ -430,8 +430,8 @@ static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object
 void Engine::doBinaryOperation(Operator const op) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
-	auto rhs	= context.globalValueStack.popBack();
-	auto lhs	= context.globalValueStack.back();
+	auto rhs	= context.pop();
+	auto lhs	= context.top();
 	auto out	= lhs;
 	if (err) return;
 	bool success = false;
@@ -504,7 +504,7 @@ static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operat
 void Engine::doUnaryOperation(Operator const op) {
 	if (context.globalValueStack.size() < 1)
 		return crash(invalidSourceError("Missing values to operate on!"));
-	auto lhs	= context.globalValueStack.back();
+	auto lhs	= context.top();
 	auto out	= lhs;
 	if (err) return;
 	bool success = false;
@@ -565,7 +565,7 @@ void Engine::v2StackPush() {
 
 void Engine::v2StackPop() {
 	if (context.globalValueStack.size())
-		context.globalValueStack.popBack();
+		context.pop();
 }
 
 void Engine::v2StackSwap() {
@@ -602,7 +602,7 @@ void Engine::v2Jump() {
 	} else {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		auto const cond = context.globalValueStack.popBack();
+		auto const cond = context.pop();
 		switch (leap.type) {
 			case AV2_ILT_IF_TRUTHY:				shouldJump	= cond->toValue<bool>();		break;
 			case AV2_ILT_IF_FALSY:			 	shouldJump	= !cond->toValue<bool>();		break;
