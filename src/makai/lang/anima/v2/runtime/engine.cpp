@@ -338,10 +338,10 @@ Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize 
 			return context.globalValueStack[-Cast::as<ssize>(id % context.globalValueStack.size() + 1)];
 		}
 		case DataLocation::AV2_DL_LOCAL: {
-			if (context.scopeStack.back().localStack.empty()) {
+			if (context.locals().empty()) {
 				crash(invalidLocationError(loc));
 			}
-			return context.scopeStack.back().localStack[-Cast::as<ssize>(id % context.scopeStack.back().localStack.size() + 1)];
+			return context.locals()[id % context.locals().size()];
 		}
 		default:
 			crash(invalidLocationError(loc));
@@ -552,15 +552,15 @@ void Engine::execute() {
 void Engine::v2SetContext() {
 	auto const ctx = Cast::bit<Instruction::Context>(current.type);
 	if (!ctx.immediate)
-		context.scopeStack.back().prevMode	= ctx.mode;
-	context.scopeStack.back().mode			= ctx.mode;
+		context.scope().prevMode	= ctx.mode;
+	context.scope().mode			= ctx.mode;
 }
 
 void Engine::v2StackPush() {
 	auto const inter = Cast::bit<Instruction::StackPush>(current.type);
 	auto const value = consumeValue(inter.location);
 	if (err) return;
-	context.globalValueStack.pushBack(value);
+	context.push(value);
 }
 
 void Engine::v2StackPop() {
@@ -591,7 +591,7 @@ void Engine::v2Jump() {
 	if (leap.dyn) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.globalValueStack.popBack()->toValue<uint64>();
+		loc = context.pop()->toValue<uint64>();
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
@@ -627,10 +627,6 @@ Engine::Error Engine::invalidLocationError(DataLocation const& loc) {
 	return makeErrorHere("Invalid data location for instruction ["+ toString(enumcast(loc)) + "]!");
 }
 
-Engine::Error Engine::invalidFetchRequest(String const& description) {
-	return makeErrorHere(description);
-}
-
 Engine::Error Engine::invalidCast(String const& description) {
 	return makeErrorHere(description);
 }
@@ -640,37 +636,77 @@ Engine::Error Engine::invalidJump() {
 }
 
 void Engine::v2ScopeBring() {
-	// TODO: This
+	Instruction::Binding bind = Makai::Cast::bit<Instruction::Binding>(current.type);
+	advance(true);
+	auto const scope = Makai::Cast::bit<uint64>(current);
+	advance(true);
+	auto const count = Makai::Cast::bit<uint64>(current);
+	if (!(scope < context.scopeStack.size()))
+		return crash(outOfRangeError("Requested scope is out-of-range!"));
+	auto& src = context.scopeStack[-scope].localStack;
+	auto& dst = context.locals();
+	if (!((bind.src + count) < src.size()))
+		return crash(outOfRangeError("Requested source start + count is bigger than its stack size!"));
+	if (!((bind.dst + count) < dst.size()))
+		return crash(outOfRangeError("Requested destination start + count is bigger than its stack size!"));
+	for (usize i = 0; i < count; ++i)
+		dst[i + bind.dst] = src[i + bind.src];
 }
 
 void Engine::v2ScopeBind() {
-	// TODO: This
+	Instruction::Binding bind = Makai::Cast::bit<Instruction::Binding>(current.type);
+	advance(true);
+	auto const count = Makai::Cast::bit<uint64>(current);
+	auto& src = context.globalValueStack;
+	auto& dst = context.locals();
+	if (!((bind.src + count) < src.size()))
+		return crash(outOfRangeError("Requested global stack range falls outside its size!"));
+	if (!((bind.dst + count) < dst.size()))
+		return crash(outOfRangeError("Requested destination range falls outside its size!"));
+	for (usize i = 0; i < count; ++i)
+		dst[i + bind.dst] = src[i + bind.src];
 }
 
 void Engine::v2ScopeEnter() {
-	// TODO: This
 	auto const count = current.type;
 	if (context.globalValueStack.size() < count)
 		return crash(missingArgumentsError());
 	context.scopeStack.pushBack({
-		.localStack	= count ? context.globalValueStack.sliced(context.globalValueStack.size() - count) : {},
 		.mode		= context.scopeStack.back().mode,
 		.prevMode	= context.scopeStack.back().mode
 	});
+	if (count) context.locals().resize(count, nullptr);
 }
 
 void Engine::v2ScopeExit() {
-	// TODO: This
+	if (context.scopeStack.size())
+		context.scopeStack.popBack();
 }
 
 void Engine::v2FieldGet() {
-	// TODO: This
+	Instruction::Field field = current.getTypeAs<Instruction::Field>();
+	uint64 loc = 0;
+	if (field.dynamic) {
+		if (context.globalValueStack.empty())
+			return crash(invalidSourceError("Global stack is empty!"));
+		loc = context.globalValueStack.popBack()->toValue<uint64>();
+	} else {
+		advance(true);
+		loc = Makai::Cast::bit<uint64>(current);
+	}
+	advance(true);
+	context.push(context.pop()->at(loc));
 }
 
 void Engine::v2Sizeof() {
-	// TODO: This
+	if (current.type) {
+		context.push(context.pop()->count());
+	} else {
+		auto const val = context.pop();
+		context.push(val->count() * val->getOriginalType()->byteSize);
+	}
 }
 
 void Engine::v2Typeof() {
-	// TODO: This
+	context.push(context.pop()->getCurrentType()->id);
 }
