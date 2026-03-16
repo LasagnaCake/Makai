@@ -14,4 +14,8 @@ using enum Type;
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
+void Breve::invoke() {
+
+}
+
 CTL_DIAGBLOCK_END
