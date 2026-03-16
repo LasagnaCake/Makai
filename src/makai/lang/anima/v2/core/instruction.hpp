@@ -277,7 +277,7 @@ namespace Makai::Anima::V2::Core {
 			/// @note Values are bound "front"-to-"back", source offset starts at the end of the stack.
 			/// @details `bring <scope> <count>`
 			AV2_IN_SCOPE_BRING,
-			/// @brief Gets a reference of a given field from an object.
+			/// @brief Gets a reference of a given field from an object or array.
 			/// @param type `Field` = how to access the field.
 			/// @details `get <id>`
 			AV2_IN_FIELD_GET,
