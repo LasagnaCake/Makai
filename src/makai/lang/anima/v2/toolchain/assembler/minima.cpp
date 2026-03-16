@@ -406,26 +406,14 @@ static void doStackClear(Context& context) {
 	context.add(context.getNext(LTS_TT_INTEGER).getUnsigned());
 }
 
-static void doFieldGet(Context& context, bool const dyn = false) {
+static void doField(Context& context, bool const dyn = false) {
 	// TODO: The rest of this
+	Makai::Nullable<uint64> field;
 	if (!dyn) {
-		auto const field =
+		field =
 			context
 				.expectNext(Type{'['})
 				.getNext(LTS_TT_INTEGER, "field ID")
-				.getUnsigned()
-		;
-		context.expectNext(Type{']'});
-	}
-}
-
-static void doArrayAt(Context& context, bool const dyn = false) {
-	// TODO: The rest of this
-	if (!dyn) {
-		auto const index =
-			context
-				.expectNext(Type{'['})
-				.getNext(LTS_TT_INTEGER, "array index")
 				.getUnsigned()
 		;
 		context.expectNext(Type{']'});
@@ -625,10 +613,8 @@ static void doDynamic(Context& context) {
 		doCall(context, true);
 	else if (id == "cast")
 		doCast(context, true);
-	else if (id == "field" || id == "get")
-		doFieldGet(context, true);
-	else if (id == "index" || id == "at")
-		doArrayAt(context, true);
+	else if (id == "field" || id == "at")
+		doField(context, true);
 	else context.error("Invalid dynamic operation!");
 }
 
@@ -951,8 +937,7 @@ static void doExpression(Context& context) {
 	else if (id == "context" || id == "mode")	{context.next(); doContext(context);}
 	else if (id == "loose" || id == "strict")	doContext(context, true);
 	else if (id == "operator" || id == "op")	doOperation(context);
-	else if (id == "index" || id == "at")		doArrayAt(context);
-	else if (id == "field" || id == "get")		doFieldGet(context);
+	else if (id == "field" || id == "at")		doField(context);
 	else if (id == "count")						doSizeOf(context);
 	else if (id == "size")						doSizeOf(context, true);
 	else if (id == "type")						doTypeGet(context);
