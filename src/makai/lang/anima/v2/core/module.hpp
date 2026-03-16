@@ -64,12 +64,7 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct Meta {
-			struct Declaration {
-				String name;
-			};
-
 			List<Method>		methods;
-			List<Declaration>	types;
 
 			Data::Value serialize() const;
 			static Meta deserialize(Data::Value const& v);
