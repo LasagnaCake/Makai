@@ -87,6 +87,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct VariableDeclarationResolver: AResolver {
+		VariableDeclarationResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct ExtensionResolver: AResolver {
 		ExtensionResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;

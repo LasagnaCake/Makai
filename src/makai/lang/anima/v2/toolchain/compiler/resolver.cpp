@@ -116,17 +116,6 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	return result;
 }
 
-Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->base = token;
-	result->content = Node::Content::AV2_TANC_DECLARATION;
-	result->value = lhs ? Makai::Data::Value("local") : Makai::Data::Value(token.token);
-	if (lhs) {
-
-	} else result->children.pushBack(parser.nextExpression(precedence));
-	return result;
-}
-
 Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -163,5 +152,39 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 		lhs,
 		parser.nextExpression(precedence)
 	});
+	return result;
+}
+
+Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->value = lhs ? Makai::Data::Value("local") : Makai::Data::Value(token.token);
+	if (lhs) {
+
+	} else {
+		switch (parser.context.peek().type) {
+			case LTS_TT_IDENTIFIER: {
+				VariableDeclarationResolver resolver;
+				result->children.pushBack(resolver.resolve(parser, nullptr, parser.context.token()));
+			} break;
+			case LTS_TT_OPEN_PAREN: {
+				FunctionPrototypeResolver resolver;
+				result->children.pushBack(resolver.resolve(parser, nullptr, parser.context.token()));
+
+			} break;
+			default: parser.context.error("Invalid expression!");
+		}
+	};
+	return result;
+}
+
+Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	return result;
+}
+
+Node::Instance VariableDeclarationResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
 	return result;
 }
