@@ -1,7 +1,6 @@
 #ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_CORE_H
 #define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_CORE_H
 
-#include "../../runtime/runtime.hpp"
 #include "../assembler/assembler.hpp"
 #include "parser.hpp"
 
