@@ -6,7 +6,7 @@ using namespace Makai::Anima::V2::Toolchain::Compiler;
 
 using Context = Breve::Context;
 
-using Type = Context::Tokenizer::Token::Type;
+using Type = ::Context::Tokenizer::Token::Type;
 using enum Type;
 
 CTL_DIAGBLOCK_BEGIN
