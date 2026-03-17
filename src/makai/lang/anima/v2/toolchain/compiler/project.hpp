@@ -9,6 +9,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 
 	struct Project {
 		using Version = Core::Module::Version;
+
 		struct Library {
 			String	source;
 			Version	version;
