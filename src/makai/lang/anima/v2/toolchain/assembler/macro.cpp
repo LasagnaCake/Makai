@@ -616,7 +616,7 @@ static void doMacroTransform(
 							base.newTransform()->pre = [msgv] (auto& ctx) {
 								auto content = msgv->expand(ctx);
 								content = Makai::Regex::replace(content, "\\$\\{LINE\\}", Makai::toString(ctx.baseContext.token().position.line));
-								content = Makai::Regex::replace(content, "\\$\\{FILE\\}", Makai::toString(ctx.baseContext.fileName));
+								content = Makai::Regex::replace(content, "\\$\\{FILE\\}", Makai::toString(ctx.baseContext.file.name));
 								ctx.baseContext.out.writeLine("Message: ", content);
 							};
 						}
