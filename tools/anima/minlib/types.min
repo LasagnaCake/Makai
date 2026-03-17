@@ -1,4 +1,4 @@
-@module name: core
+@module [name: core]
 @ns Internal
 // Types
 @type Void [basic<void> empty discard]
