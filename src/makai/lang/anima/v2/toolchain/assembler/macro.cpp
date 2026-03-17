@@ -360,9 +360,9 @@ Makai::Instance<Macro::Transformation> macroApply(Macro::Arguments const& values
 
 namespace {
 	static Makai::Random::SecureGenerator rng;
-	static inline Makai::ID::VLUID uuid = uuid.create(0);
 
 	static Makai::String giveMeAName() {
+		static Makai::ID::VLUID uuid = uuid.create(0);
 		++uuid;
 		return Makai::toString("_u", uuid[0], "_u", uuid[1], "_u", uuid[2], "_u", uuid[3]);
 	}
@@ -431,65 +431,66 @@ namespace {
 			);
 		}
 	};
+}
 
-	static ExpansionGroup::Instance doExpansionGroup(Context& context, Macro::Rule& rule) {
-		auto content = new ExpansionGroup();
-		switch(context.type()) {
-			case LTS_TT_SINGLE_QUOTE_STRING:
-			case LTS_TT_DOUBLE_QUOTE_STRING:
-				content->sub.pushBack(new ExpandToValue(context.value().getString()));
-			break;
-			case Type{'$'}: {
-				switch (context.next().type()) {
-					case LTS_TT_IDENTIFIER: {
-						auto const varID = context.value().getString();
-						if (rule.variables.values().find(varID) == -1)
-							context.error("Macro variable does not exist!");
-						content->sub.pushBack(new ExpandToVariable(varID));
-					} break;
-					default: {
 
-					} break;
-				}
-			} break;
-			case Type{'%'}: {
-				context.expectNext(Type{'('});
-				auto pre = new ExpansionGroup();
-				while (!context.has(Type{')'})) {
-					if (context.next().has(Type{')'}))
-						break;
-					pre->sub.pushBack(doExpansionGroup(context, rule));
-				}
-				auto const enc = new ExpandToEncryption();
-				enc->base = pre;
-				content->sub.pushBack(enc);
-				context.expect(Type{')'});
-			} break;
-			case Type{'*'}: {
-				context.expectNext(Type{'('});
-				while (!context.has(Type{')'})) {
-					if (context.next().has(Type{')'}))
-						break;
-					content->sub.pushBack(doExpansionGroup(context, rule));
-				}
-				context.expect(Type{')'});
-			} break;
-			case Type{'+'}: {
-				content->sub.pushBack(new ExpandToValue(Makai::toString(rng.integer<uint64>())));
-			} break;
-			case Type{'-'}: {
-				content->sub.pushBack(new ExpandToValue(Makai::toString(rng.integer<int64>())));
-			} break;
-			case Type{'~'}: {
-				content->sub.pushBack(new ExpandToValue(Makai::toString(rng.real<double>())));
-			} break;
-			case Type{'@'}: {
-				content->sub.pushBack(new ExpandToValue(giveMeAName()));
-			} break;
-			default: context.error("Invalid tokenization!");
-		}
-		return content;
+static ExpansionGroup::Instance doExpansionGroup(Context& context, Macro::Rule& rule) {
+	auto content = new ExpansionGroup();
+	switch(context.type()) {
+		case LTS_TT_SINGLE_QUOTE_STRING:
+		case LTS_TT_DOUBLE_QUOTE_STRING:
+			content->sub.pushBack(new ExpandToValue(context.value().getString()));
+		break;
+		case Type{'$'}: {
+			switch (context.next().type()) {
+				case LTS_TT_IDENTIFIER: {
+					auto const varID = context.value().getString();
+					if (rule.variables.values().find(varID) == -1)
+						context.error("Macro variable does not exist!");
+					content->sub.pushBack(new ExpandToVariable(varID));
+				} break;
+				default: {
+
+				} break;
+			}
+		} break;
+		case Type{'%'}: {
+			context.expectNext(Type{'('});
+			auto pre = new ExpansionGroup();
+			while (!context.has(Type{')'})) {
+				if (context.next().has(Type{')'}))
+					break;
+				pre->sub.pushBack(doExpansionGroup(context, rule));
+			}
+			auto const enc = new ExpandToEncryption();
+			enc->base = pre;
+			content->sub.pushBack(enc);
+			context.expect(Type{')'});
+		} break;
+		case Type{'*'}: {
+			context.expectNext(Type{'('});
+			while (!context.has(Type{')'})) {
+				if (context.next().has(Type{')'}))
+					break;
+				content->sub.pushBack(doExpansionGroup(context, rule));
+			}
+			context.expect(Type{')'});
+		} break;
+		case Type{'+'}: {
+			content->sub.pushBack(new ExpandToValue(Makai::toString(rng.integer<uint64>())));
+		} break;
+		case Type{'-'}: {
+			content->sub.pushBack(new ExpandToValue(Makai::toString(rng.integer<int64>())));
+		} break;
+		case Type{'~'}: {
+			content->sub.pushBack(new ExpandToValue(Makai::toString(rng.real<double>())));
+		} break;
+		case Type{'@'}: {
+			content->sub.pushBack(new ExpandToValue(giveMeAName()));
+		} break;
+		default: context.error("Invalid tokenization!");
 	}
+	return content;
 }
 
 static void doMacroTransform(

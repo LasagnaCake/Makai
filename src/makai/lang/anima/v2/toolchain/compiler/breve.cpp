@@ -14,6 +14,12 @@ using enum Type;
 CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
+namespace {
+	struct BreveTreeTraverser {
+
+	};
+}
+
 void Breve::invoke() {
 	Parser parser(context);
 	auto const tree = parser.parse();
