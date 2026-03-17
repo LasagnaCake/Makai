@@ -8,6 +8,22 @@ namespace Makai::Anima::V2::Core {
 	struct Definition;
 	struct Value;
 	struct Object;
+
+	struct Symbol {
+		Nullable<uint64>	source = null;
+		uint64				id;
+		String				name;
+	};
+
+	struct MethodTable {
+		Map<uint64, uint64>	table;
+
+		constexpr uint64 resolve(uint64 const sym) const {
+			if (table.contains(sym))
+				return table[sym];
+			return sym;
+		}
+	};
 }
 
 #endif

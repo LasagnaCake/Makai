@@ -19,12 +19,7 @@ namespace Makai::Anima::V2::Core {
 
 		using Label = Dictionary<usize>;
 
-		struct Ref {
-			Nullable<uint64>	source = null;
-			uint64				id;
-			String				name;
-		};
-		using Refs = List<Ref>;
+		using Refs = List<Symbol>;
 
 		struct Method {
 			uint64			id;
@@ -47,9 +42,10 @@ namespace Makai::Anima::V2::Core {
 			uint64						alignment	= 0;
 			List<uint64>				fields;
 			List<uint64>				casts;
+			MethodTable					vtable;
 		};
 
-		struct Symbol {
+		struct Symbols {
 			Refs	methods;
 			Refs	types;
 
@@ -96,7 +92,7 @@ namespace Makai::Anima::V2::Core {
 		Bytecode			code;
 		List<uint64>		jumpTable;
 		Detail				detail;
-		Symbol				sym;
+		Symbols				sym;
 		Instance<Meta>		meta		= new Meta();
 		Instance<ANI>		ani			= new ANI();
 		Nullable<uint64>	pre;

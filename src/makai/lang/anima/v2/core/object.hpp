@@ -17,8 +17,6 @@ namespace Makai::Anima::V2::Core {
 		using Storage = Instance<Object>;
 		using Memory = MemorySlice<byte>;
 
-		Map<uint64, uint64>		vtable;
-
 		~Object();
 
 		ref<void const>	data() const		{return content->data();	}
@@ -177,8 +175,6 @@ namespace Makai::Anima::V2::Core {
 		Storage getAtIndex(uint64 const index) const;
 		bool setAtIndex(uint64 const index, Storage const& value);
 
-		uint64 resolveMethod(uint64 const id);
-
 		Storage clone();
 
 		struct Accessor {
@@ -245,6 +241,8 @@ namespace Makai::Anima::V2::Core {
 
 		Instance<Definition>	getCurrentType();
 		Instance<Definition>	getOriginalType();
+
+		MethodTable vtable;
 
 	private:
 		friend Storage;

@@ -45,12 +45,6 @@ bool Object::setAtIndex(uint64 const index, Object::Storage const& value) {
 	return true;
 }
 
-uint64 Object::resolveMethod(uint64 const id) {
-	if (vtable.contains(id))
-		return vtable[id];
-	return id;
-}
-
 Object::Storage Object::clone() {
 	if (type->copy)
 		return create(*this);

@@ -73,12 +73,6 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_POINTER		= 1 << 10;
 			constexpr static uint64 const AV2_DF_FINAL			= 1 << 10;
 		};
-		uint64						flags		= 0;
-		Nullable<BasicType>			basic;
-		Instance<Definition>		base		= nullptr;
-		uint64						byteSize	= 0;
-		uint64						alignment	= 1;
-		List<Instance<Definition>>	fields;
 
 		bool canBecome(Instance<Definition> const& type) const {
 			if (type == base) return true;
@@ -87,6 +81,15 @@ namespace Makai::Anima::V2::Core {
 				if (current == type) return true;
 			return false;
 		}
+
+		uint64						flags		= 0;
+		Nullable<BasicType>			basic;
+		Instance<Definition>		base		= nullptr;
+		uint64						byteSize	= 0;
+		uint64						alignment	= 1;
+		List<Instance<Definition>>	fields;
+
+		MethodTable	vtable;
 
 		Functor<void(ptr<void>)>							construct;
 		Functor<void(ptr<void>, ptr<void const>)>			copy;
