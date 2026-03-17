@@ -318,6 +318,8 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_STACK_POP:	return "pop";
 				case Name::AV2_IN_STACK_CLEAR:	return "clear";
 				case Name::AV2_IN_STACK_FLUSH:	return "flush";
+				case Name::AV2_IN_STACK_SWAP:	return "swap";
+				case Name::AV2_IN_STACK_BLIT:	return "blit";
 				case Name::AV2_IN_RETURN:		return "return";
 				case Name::AV2_IN_OP:			return "op";
 				case Name::AV2_IN_YIELD:		return "yield";
@@ -326,7 +328,11 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_SCOPE_ENTER:	return "enter";
 				case Name::AV2_IN_SCOPE_EXIT:	return "exit";
 				case Name::AV2_IN_SCOPE_BIND:	return "bind";
-				default: return "UNKNOWN";
+				case Name::AV2_IN_SCOPE_BRING:	return "bring";
+				case Name::AV2_IN_FIELD_GET:	return "get";
+				case Name::AV2_IN_SIZEOF:		return "sizeof";
+				case Name::AV2_IN_TYPEOF:		return "typeof";
+				case Name::AV2_IN_CLEAR:		return "del";
 			}
 		}
 

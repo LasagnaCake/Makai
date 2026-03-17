@@ -1,7 +1,7 @@
 @module name: core
 @ns Internal
 // Types
-@type Void [basic<void> empty]
+@type Void [basic<void> empty discard]
 @type Any [basic<any>]
 @type Null [basic<nil> derived<Any> nil empty]
 @type Bool [basic<bool> derived<Any>]

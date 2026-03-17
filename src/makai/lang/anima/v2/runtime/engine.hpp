@@ -91,6 +91,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Sizeof();
 		void v2Typeof();
 		void v2Random();
+		void v2Clear();
 
 		void doBinaryOperation(Core::Operator const op);
 		void doUnaryOperation(Core::Operator const op);

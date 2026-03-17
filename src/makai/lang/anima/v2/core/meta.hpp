@@ -8,6 +8,7 @@
 
 namespace Makai::Anima::V2::Core::Meta {
 	struct Void	{};
+
 	struct Any	{};
 
 	namespace Impl {

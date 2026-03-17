@@ -685,6 +685,16 @@ static void validateType(Context& context, Context::Declaration& type) {
 		|	Definition::Flags::AV2_DF_BASIC
 		)
 	) context.error("Structure types cannot be basic, array or dynamic types!");
+	if (type.flags & Definition::Flags::AV2_DF_EMPTY) {
+		if (type.alignment) context.error("Empty types cannot have a size!");
+		if (
+			type.flags & ~(
+				Definition::Flags::AV2_DF_EMPTY
+			|	Definition::Flags::AV2_DF_NULLABLE
+			|	Definition::Flags::AV2_DF_NO_RESULT
+			)
+		) context.error("Malformed empty type!");
+	}
 }
 
 static void declareTypeOperators(Context& context, Context::Declaration& type) {}
