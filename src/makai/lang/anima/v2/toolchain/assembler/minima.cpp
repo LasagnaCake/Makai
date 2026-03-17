@@ -750,25 +750,24 @@ static void declareAlias(Context& context) {
 	else context.error("Invalid aliasing!");
 }
 
-static void getMethodVisibility(Context& context, Context::Method& method) {
+static void getMethodAttriutes(Context& context, Context::Method& method) {
 	while (context.next().has(LTS_TT_IDENTIFIER)) {
 		auto const vis = context.get(LTS_TT_IDENTIFIER, "visibility").getString();
-		if (vis == "out")
-			method.out = true;
+		if (vis == "shared")
+			method.shared = true;
 		else if (vis == "local")
 			method.local = true;
 		else if (vis == "global")
 			method.local = false;
-		else if (vis == "in")
-			method.out = false;
+		else if (vis == "art")
+			method.shared = false;
 		else break;
 	}
 }
 
 static void declareMethodPrototype(Context& context) {
 	auto const method = new Context::Method();
-	getMethodVisibility(context, *method);
-	context.next();
+	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
@@ -799,6 +798,7 @@ static void declareMethodBody(Context& context) {
 		if (!context.methods.contains(name))
 			context.error("Method prototype does not exist!");
 		auto const method = context.getMethod(name);
+		if (method->shared || method->out) context.error("Cannot declare a body for a shared/external method!");
 		context.methodStack.pushBack(method);
 		auto const lname = doLabel(context);
 		method->entrypoint = context.jumps[lname];
@@ -842,12 +842,12 @@ Makai::Instance<Module> resolveModule(Context& context, Makai::String const& nam
 static void resolveImport(Context& context, Makai::String const& name) {
 	auto const mod = resolveModule(context, name);
 	for (auto& type: mod->sym.types)
-		if (!type.module) context.addExternalType(
+		if (!type.source) context.addExternalType(
 			cleanPath(name + "/" + type.name),
 			new Context::Declaration(mod->detail.types[type.id])
 		);
 	for (auto& method: mod->sym.methods)
-		if (!method.module) context.addExternalMethod(
+		if (!method.source) context.addExternalMethod(
 			cleanPath(name + "/" + method.name),
 			new Context::Method(mod->meta->methods[method.id])
 		);

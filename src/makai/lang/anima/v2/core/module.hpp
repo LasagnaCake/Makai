@@ -20,7 +20,8 @@ namespace Makai::Anima::V2::Core {
 		using Label = Dictionary<usize>;
 
 		struct Ref {
-			Nullable<uint64>	module = null;
+			bool				interop;
+			Nullable<uint64>	source = null;
 			uint64				id;
 			String				name;
 		};
@@ -32,6 +33,7 @@ namespace Makai::Anima::V2::Core {
 			uint64			retType;
 			List<uint64>	argTypes;
 			bool			out = false;
+			bool			shared = false;
 			uint64			entrypoint;
 			uint64			size;
 		};
@@ -74,6 +76,11 @@ namespace Makai::Anima::V2::Core {
 			Label		in;
 			StringList	out;
 
+			struct Shared {
+				StringList	modules;
+				StringList	interops;
+			} shared;
+
 			Data::Value serialize() const;
 			static ANI deserialize(Data::Value const& v);
 		};
@@ -96,7 +103,6 @@ namespace Makai::Anima::V2::Core {
 		Nullable<uint64>	pre;
 		Nullable<uint64>	main;
 		Nullable<uint64>	post;
-		StringList			requiredModules;
 	};
 }
 

@@ -186,6 +186,11 @@ namespace Makai::Anima::V2::Core {
 			bool	setSeed:	1;
 		};
 
+		struct [[gnu::aligned(4)]] Clear {
+			DataLocation	at;
+			bool			dyn: 1;
+		};
+
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -289,6 +294,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `type`
 			AV2_IN_TYPEOF,
+			/// @brief Clears a given location.
+			/// @param type `Clear`= how to clear the value.
+			/// @details `clear [<loc-id>]`
+			AV2_IN_CLEAR,
 		};
 
 		/// @brief Instruction "Name" (opcode).
