@@ -40,7 +40,7 @@ namespace Base {
 		constexpr static cstring rawName()	{return id->name();}
 		/// @brief Returns the name of the type.
 		/// @return Type name.
-		constexpr static cstring name()		{return abi::__cxa_demangle(id->name(),0,0,NULL);}
+		constexpr static cstring name()		{return abi::__cxa_demangle(id->name(), 0, 0, nullptr);}
 
 	private:
 		/// @brief Underlying type info structure.
