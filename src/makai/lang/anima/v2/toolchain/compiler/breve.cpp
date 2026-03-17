@@ -15,7 +15,8 @@ CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
 void Breve::invoke() {
-
+	Parser parser(context);
+	auto const tree = parser.parse();
 }
 
 CTL_DIAGBLOCK_END

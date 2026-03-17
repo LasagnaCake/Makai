@@ -20,7 +20,6 @@ namespace Makai::Anima::V2::Core {
 		using Label = Dictionary<usize>;
 
 		struct Ref {
-			bool				interop;
 			Nullable<uint64>	source = null;
 			uint64				id;
 			String				name;

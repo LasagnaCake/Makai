@@ -26,17 +26,6 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	if (v.contains("meta"))
 		*mod.meta = Module::Meta::deserialize(v["meta"]);
 	else mod.meta.unbind();
-	if (v.contains("requires"))
-		mod.requiredModules =
-			v.fetch(
-				"requires",
-				Makai::Data::Value::ArrayType()
-			).toList<String>(
-				[] (auto& e) {
-					return e.getString();
-				}
-			)
-		;
 	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
 }
 
