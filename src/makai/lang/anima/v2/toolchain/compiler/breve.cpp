@@ -15,8 +15,12 @@ CTL_DIAGBLOCK_BEGIN
 CTL_DIAGBLOCK_IGNORE_SWITCH
 
 namespace {
-	struct BreveTreeTraverser {
+	struct BreveTreeDecomposer {
 
+
+		void decompose() {
+
+		}
 	};
 }
 
