@@ -27,6 +27,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct InlineMinimaResolver: AResolver {
+		InlineMinimaResolver(): AResolver(Parser::Precedence::AV2_TAPP_PREFIX, true) {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct InfixResolver: AResolver {
 		using AResolver::AResolver;
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;

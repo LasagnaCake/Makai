@@ -142,6 +142,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_OPEN_PAREN, prefixes, new SubExpressionResolver());
 	add(LTS_TT_OPEN_CURLY, prefixes, new BlockResolver());
 	add(LTS_TT_OPEN_BRACKET, prefixes, new ArrayResolver());
+	add("asm", prefixes, new InlineMinimaResolver());
 	add(LTS_TT_AT, prefixes, new AttributeResolver());
 	add("if", prefixes, new BranchResolver());
 	add("unless", prefixes, new BranchResolver());

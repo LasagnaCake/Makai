@@ -33,6 +33,17 @@ Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs
 	return result;
 }
 
+Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	parser.context.expectNext(LTS_TT_OPEN_CURLY).next();
+	while (!parser.context.has(LTS_TT_CLOSE_CURLY)) {
+		result->interject.pushBack(parser.context.token());
+		parser.context.next();
+	}
+	return result;
+}
+
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
