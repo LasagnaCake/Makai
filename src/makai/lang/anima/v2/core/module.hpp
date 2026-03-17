@@ -45,7 +45,7 @@ namespace Makai::Anima::V2::Core {
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
 			Nullable<uint64>			base		= null;
 			uint64						byteSize	= 0;
-			uint64						alignment	= 1;
+			uint64						alignment	= 0;
 			List<uint64>				fields;
 			List<uint64>				casts;
 		};

@@ -628,6 +628,7 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 		|	Definition::Flags::AV2_DF_BASIC
 		)
 	) context.error("Cannot declare fields on basic, array and dynamic types!");
+	type.flags |= Definition::Flags::AV2_DF_STRUCTURE;
 	context.expectNext(Type{'['});
 	while (true) {
 		if (context.next().has(Type{']'})) break;
@@ -636,6 +637,54 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 			context.error("Field type does not exist!");
 		type.fields.pushBack(context.getType(field)->id);
 	}
+}
+
+static void validateType(Context& context, Context::Declaration& type) {
+	if (type.base && !(type.flags ^ context.getType(type.base)))
+		context.error("Derived type does not match semantics of its base type!");
+	if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
+		context.error("Only value types can have alignment size!");
+	if (!type.alignment && type.flags & Definition::Flags::AV2_DF_VALUE)
+		context.error("Value types must have an alignment!");
+	if (type.flags & Definition::Flags::AV2_DF_VALUE) {
+		for (auto& field : type.fields) {
+			if (!(context.getType(field)->flags & Definition::Flags::AV2_DF_VALUE))
+				context.error("Value types can only contain other value types!");
+			if (context.getType(field)->flags & Definition::Flags::AV2_DF_ARRAY)
+				context.error("Value types cannot contain arrays!");
+		}
+		if (
+			type.flags & Definition::Flags::AV2_DF_ARRAY
+		&&	!(context.getType(type.base)->flags & Definition::Flags::AV2_DF_VALUE)
+		) context.error("Value arrays can only contain value elements!");
+	}
+	if (type.flags & Definition::Flags::AV2_DF_ARRAY && type.fields.size())
+		context.error("Arrays cannot contain fields!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_ARRAY
+	&&	type.flags & Definition::Flags::AV2_DF_STRUCTURE
+	) context.error("Cannot have a type be both an array or a structure!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_DYNAMIC
+	&&	type.flags & Definition::Flags::AV2_DF_VALUE
+	) context.error("Cannot have a dynamic value type!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_BASIC
+	&&	type.flags & (
+			Definition::Flags::AV2_DF_STRUCTURE
+		|	Definition::Flags::AV2_DF_ARRAY
+		|	Definition::Flags::AV2_DF_ART_EQUIVALENT
+		|	Definition::Flags::AV2_DF_DYNAMIC
+		)
+	) context.error("Basic types cannot be structures, arrays, ART-Equivalent, or dynamic types!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_STRUCTURE
+	&&	type.flags & (
+			Definition::Flags::AV2_DF_DYNAMIC
+		|	Definition::Flags::AV2_DF_ARRAY
+		|	Definition::Flags::AV2_DF_BASIC
+		)
+	) context.error("Structure types cannot be basic, array or dynamic types!");
 }
 
 static void declareTypeOperators(Context& context, Context::Declaration& type) {}
@@ -682,9 +731,9 @@ static void declareType(Context& context) {
 				else context.error("Base type does not exist!");
 				context.expectNext(Type{'>'});
 			} else if (flag == "array") {
-				type->flags |= Definition::Flags::AV2_DF_ARRAY;
 				if (type->base)
 					context.error("Redeclaration of element type!");
+				type->flags |= Definition::Flags::AV2_DF_ARRAY;
 				context.expectNext(Type{'<'});
 				auto const base = resolvePath(context);
 				if (context.types.contains(base))
@@ -693,15 +742,24 @@ static void declareType(Context& context) {
 				context.expectNext(Type{'>'});
 			} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
 			else if (flag == "empty")	type->flags |= Definition::Flags::AV2_DF_EMPTY;
+			else if (flag == "discard")	type->flags |= Definition::Flags::AV2_DF_NO_RESULT;
 			else if (flag == "dyn")		type->flags |= Definition::Flags::AV2_DF_DYNAMIC;
 			else if (flag == "struct")	type->flags |= Definition::Flags::AV2_DF_STRUCTURE;
-			else if (flag == "align") {
+			else if (flag == "pack") {
+				if (type->alignment)
+					context.error("Redefinition of alignment!");
+				type->alignment = 1;
+			} else if (flag == "align") {
+				if (type->alignment)
+					context.error("Redefinition of alignment!");
 				type->alignment =
 					context
 						.expectNext(Type{'('})
 						.getNext(LTS_TT_INTEGER, "byte alignment")
 						.getUnsigned()
 				;
+				if (!type->alignment)
+					context.error("Cannot have empty alignment!");
 				context.expectNext(Type{')'});
 			} else if (flag == "fields") {
 				declareTypeFields(context, *type);
@@ -713,6 +771,7 @@ static void declareType(Context& context) {
 			else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
 			else context.error("Invalid flag!");
 		}
+		validateType(context, *type);
 		if (!context.types.contains(name))
 			context.addType(name, type);
 		else context.error("Redeclaration of previously-declared type!");
