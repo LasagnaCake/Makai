@@ -15,20 +15,15 @@ Macro::Rule::Match::Result Macro::Rule::Match::match(Macro::Arguments const& arg
 	if (matches.size()) return matchGroup(args, call);
 	if (!variadic && count >= args.size()) return null;
 	auto const sz = (!variadic) ? count : Math::min(count, args.size());
-	// DEBUGLN(">>> $--- Variadic match? ", variadic);
 	switch (type) {
 		case Type::AV2_TA_SM_RMT_WHATEVER: {
-			//if (inRunTime()) DEBUGLN("::: WHATEVER");
 			if (sz < minimum)
 				return null;
 			return args.sliced(0, sz);
 		} break;
 		case Type::AV2_TA_SM_RMT_ANY_OF: {
-			//if (inRunTime()) DEBUGLN("::: TOKEN");
-			//if (inRunTime()) DEBUGLN("Tokens: [", tokens.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(", "), "]");
 			bool next = false;
 			for (usize i = 0; i < sz; ++i) {
-				//DEBUGLN("[", Tokenizer::Token::asName(args[i].type), "]");
 				next = false;
 				for (auto& tok : tokens) {
 					if (tok == args[i]) {
@@ -43,15 +38,10 @@ Macro::Rule::Match::Result Macro::Rule::Match::match(Macro::Arguments const& arg
 			}
 		} break;
 		case Type::AV2_TA_SM_RMT_EXPRESSION: {
-			//if (inRunTime()) DEBUGLN("::: EXPRESSION");
 			if (expressionSolver)
 				result = expressionSolver(args).value();
-			//if (inRunTime()) DEBUGLN("Expression: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 		} break;
 	}
-	// DEBUGLN("$--- Variadic match? ", variadic);
-	// DEBUGLN("$--- Match size: ", sz);
-	// DEBUGLN("$--- Total: ", result.size());
 	call.invoke(*this, result);
 	return result;
 }
@@ -70,7 +60,6 @@ Macro::Arguments Macro::Rule::Match::solveExpression(Macro::Arguments const& arg
 			}
 		} else if (isExpressionToken(args[i].type)) {
 			result.pushBack(args[i]);
-			DEBUGLN("$ -> ", i, ":", args[i].token);
 		}
 		else break;
 		i += result.size() - prev;
@@ -91,7 +80,7 @@ Macro::Arguments Macro::Rule::Match::solveParameterPack(Macro::Arguments const& 
 			case Type{'('}: result.appendBack(solveParameterPack(args.sliced(i), Type{')'})); break;
 			case Type{'{'}: result.appendBack(solveParameterPack(args.sliced(i), Type{'}'})); break;
 			case Type{'['}: result.appendBack(solveParameterPack(args.sliced(i), Type{']'})); break;
-			default: DEBUGLN(". -> ", i, ":", args[i].token); result.pushBack(args[i]); break;
+			default: result.pushBack(args[i]); break;
 		}
 		i += result.size() - prev;
 		prev = result.size();
@@ -102,7 +91,6 @@ Macro::Arguments Macro::Rule::Match::solveParameterPack(Macro::Arguments const& 
 }
 
 Macro::Rule::Match::Result Macro::Rule::Match::matchGroup(Macro::Arguments const& args, Macro::Rule::Match::Callback const& call) const {
-	//if (inRunTime()) DEBUGLN("::: GROUP");
 	if (matches.empty()) return null;
 	Arguments result;
 	if (!count) return Arguments();
@@ -110,35 +98,25 @@ Macro::Rule::Match::Result Macro::Rule::Match::matchGroup(Macro::Arguments const
 	usize tokenStart	= 0;
 	usize matchCount	= 0;
 	Result mr;
-	// DEBUGLN(">>> .--- Variadic match? ", variadic);
 	do {
-		//if (inRunTime()) DEBUGLN("<match>");
 		for (auto& match: matches) {
-			//if (inRunTime()) DEBUGLN("<sub-match>");
 			if (tokenStart >= args.size()) {
 				if (result.empty() || !variadic) return null;
 				mr = Result{result};
 				break;
 			}
 			else mr = match->match(args.sliced(tokenStart), call);
-			//if (inRunTime()) DEBUGLN("</sub-match>");
 			if (!mr) break;
 			auto const v = mr.value();
-			//if (inRunTime()) DEBUGLN("Total match count: ", v.size());
 			if (v.empty()) break;
 			tokenStart += v.size();
 			result.appendBack(v);
 		}
-		//if (inRunTime()) DEBUGLN("</match>");
 		if (!mr || mr.value().empty()) break;
 		if (++matchCount >= sz) break;
 	} while (true);
-	//if (inRunTime()) DEBUGLN("Matched: [", result.toList<String>([] (auto const& elem) {return Tokenizer::Token::asName(elem.type);}).join(""), "]");
 	if (matchCount < minimum)
 		return null;
-	// DEBUGLN(".--- Variadic match? ", variadic);
-	// DEBUGLN(".--- Match size: ", sz);
-	// DEBUGLN(".--- Total: ", matchCount);
 	if (variadic || matchCount >= sz)
 		return result;
 	return null;
@@ -149,8 +127,6 @@ void Macro::Context::parse() {
 		input,
 		[&] (Rule::Match const& match, Arguments const& result) {
 			if (rule.variables.contains(match.id())) {
-				//DEBUGLN("--- Variable: [", rule.variables[match.id()], "]");
-				//DEBUGLN("--- Match: [", result.toList<Makai::String>([] (auto const& elem) -> Makai::String {return elem.token;}).join(), "]");
 				variables[rule.variables[match.id()]].tokens.pushBack(result);
 			}
 		}
@@ -242,7 +218,6 @@ static void doMacroRuleType(Context& context, Macro::Rule& rule, Macro::Rule::Ma
 				base.tokens.pushBack({{.type = Type{'<'}}});
 			} else if (varType == "assignop") {
 				base.tokens.pushBack({{.type = Type{'='}}});
-				// TODO: The rest
 			} else if (varType == "otherop") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = Type{'@'}}});
@@ -536,12 +511,8 @@ static void doMacroTransform(
 						auto const varName = context.value().getString();
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
-						//DEBUGLN("--- Transform::Variable: [", varName, "]");
 						base.newTransform()->pre = [varName = Makai::copy(varName)] (Macro::Context& context) {
-							//DEBUGLN("--- SIMPLE VARIABLE EXPANSION");
-							//DEBUGLN("--- Apply::Variable: [", varName, "]");
 							auto toks = context.variables[varName].tokens;
-							//DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
 							for (auto& tok: toks)
 								context.result.value.appendBack(tok);
 						};
@@ -550,27 +521,18 @@ static void doMacroTransform(
 						auto const varName = context.getNext(LTS_TT_IDENTIFIER, "macro variable name").getString();
 						if (rule.variables.values().find(varName) == -1)
 							context.error("Macro variable does not exist!");
-						//DEBUGLN("--- Transform::Variable: [", varName, "]");
 						context.expectNext(Type{'{'});
 						Makai::Instance<Macro::Transformation> tf = tf.create();
 						doMacroTransform(context, rule, *tf);
 						context.expect(Type{'}'});
 						base.newTransform()->pre =
 							[varName = Makai::copy(varName), tf = Makai::copy(tf)] (Macro::Context& ctx) {
-								//DEBUGLN("--- COMPLEX VARIABLE EXPANSION");
 								Macro::Context subctx = {ctx};
 								subctx.result = {};
 								tf->apply(subctx);
-								//DEBUG("Separator: [ ");
-								for (auto& tok: subctx.result.value)
-									DEBUG(tok.token, " ");
-								//DEBUGLN("]");
-								//DEBUGLN("--- Apply::Variable: [", varName, "]");
 								auto toks = ctx.variables[varName].tokens;
-								//DEBUGLN("--- Apply::Argc: [", toks.size(), "]");
 								usize i = 0;
 								for (auto& tok: toks) {
-									//DEBUGLN(i);
 									if (i) ctx.result.value.appendBack(subctx.result.value);
 									ctx.result.value.appendBack(tok);
 									++i;
@@ -648,4 +610,5 @@ static Macro::Expression doMacroExpression(Context& context, Macro& macro) {
 Makai::Instance<Macro> Macro::build(BaseContext& context) {
 	Makai::Instance<Macro> macro = macro.create();
 	doMacroExpression(context, *macro);
+	return macro;
 }
