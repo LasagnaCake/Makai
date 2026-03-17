@@ -640,7 +640,12 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 }
 
 static void validateType(Context& context, Context::Declaration& type) {
-	if (type.base && !(type.flags ^ context.getType(type.base)))
+	if (type.base && !(type.flags & Definition::Flags::AV2_DF_ARRAY)) {
+		auto& base = *context.getType(type.base);
+		type.flags |= base.flags;
+		type.fields.insert(base.fields, 0);
+	}
+	if (type.base && !(type.flags ^ context.getType(type.base)->flags))
 		context.error("Derived type does not match semantics of its base type!");
 	if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
 		context.error("Only value types can have alignment size!");
@@ -655,8 +660,8 @@ static void validateType(Context& context, Context::Declaration& type) {
 		}
 		if (
 			type.flags & Definition::Flags::AV2_DF_ARRAY
-		&&	!(context.getType(type.base)->flags & Definition::Flags::AV2_DF_VALUE)
-		) context.error("Value arrays can only contain value elements!");
+		&&	!(context.getType(*type.base)->flags & Definition::Flags::AV2_DF_VALUE)
+		) context.error("Value arrays can only contain value types!");
 	}
 	if (type.flags & Definition::Flags::AV2_DF_ARRAY && type.fields.size())
 		context.error("Arrays cannot contain fields!");
@@ -680,11 +685,10 @@ static void validateType(Context& context, Context::Declaration& type) {
 	if (
 		type.flags & Definition::Flags::AV2_DF_STRUCTURE
 	&&	type.flags & (
-			Definition::Flags::AV2_DF_DYNAMIC
-		|	Definition::Flags::AV2_DF_ARRAY
+			Definition::Flags::AV2_DF_ARRAY
 		|	Definition::Flags::AV2_DF_BASIC
 		)
-	) context.error("Structure types cannot be basic, array or dynamic types!");
+	) context.error("Structure types cannot be basic or array types!");
 	if (type.flags & Definition::Flags::AV2_DF_EMPTY) {
 		if (type.alignment) context.error("Empty types cannot have a size!");
 		if (
@@ -694,6 +698,30 @@ static void validateType(Context& context, Context::Declaration& type) {
 			|	Definition::Flags::AV2_DF_NO_RESULT
 			)
 		) context.error("Malformed empty type!");
+		type.byteSize	= 0;
+		type.alignment	= 0;
+	}
+	if (type.flags & Definition::Flags::AV2_DF_CLONABLE) {
+		if (type.flags & Definition::Flags::AV2_DF_ARRAY) {
+			if (!(context.getType(*type.base)->flags & Definition::Flags::AV2_DF_CLONABLE))
+				context.error("Clonable arrays must contain clonable elements!");
+		} else for (auto const f: type.fields) {
+			auto& field = *context.getType(f);
+			if (!(field.flags & Definition::Flags::AV2_DF_CLONABLE))
+				context.error("Clonable structures must contain clonable fields!");
+		}
+	}
+	if (!type.basic) {
+		for (auto& field: type.fields)
+			type.byteSize += context.getType(field)->byteSize;
+		type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
+	} else {
+		type.flags |=
+			Definition::Flags::AV2_DF_VALUE
+		|	Definition::Flags::AV2_DF_ART_EQUIVALENT
+		;
+		type.byteSize	= 0;
+		type.alignment	= 0;
 	}
 }
 
