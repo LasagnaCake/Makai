@@ -921,13 +921,17 @@ static void declareNamespace(Context& context) {
 }
 
 static void declareModule(Context& context) {
-	auto const id = context.getNext(LTS_TT_IDENTIFIER, "module declaration").getString();
-	if (id == "name") {
-		if (context.program.name.size())
-			context.error("Module name was already defined!");
-		context.expectNext(Type{':'}).next();
-		auto const name = resolvePath(context, true);
-	};
+	context.expectNext(LTS_TT_OPEN_BRACKET);
+	while (true) {
+		if (context.next().has(LTS_TT_CLOSE_BRACKET)) break;
+		auto const id = context.get(LTS_TT_IDENTIFIER, "module declaration").getString();
+		if (id == "name") {
+			if (context.program.name.size())
+				context.error("Module name was already defined!");
+			context.expectNext(Type{':'}).next();
+			auto const name = resolvePath(context, true);
+		};
+	}
 }
 
 Makai::Instance<Module> resolveModule(Context& context, Makai::String const& name) {
