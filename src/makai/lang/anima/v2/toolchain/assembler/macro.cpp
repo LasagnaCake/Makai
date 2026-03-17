@@ -582,7 +582,7 @@ static void doMacroTransform(
 						auto const toks = doExpansionGroup(context.next(), rule);
 						base.newTransform()->pre = [toks] (auto& ctx) {
 							auto const stream = toks->expand(ctx);
-							Tokenizer tz;
+							Macro::Tokenizer tz;
 							Makai::List<Macro::Axiom> appendix;
 							tz.open(stream);
 							while (tz.next())
@@ -602,7 +602,7 @@ static void doMacroTransform(
 						if (msgt == "error" || msgt == "err"){
 							auto const msgv = doExpansionGroup(context.next(), rule);
 							base.newTransform()->pre = [msgv] (auto& ctx) {
-								ctx.baseContext.template error<MacroError>(msgv->expand(ctx));
+								ctx.baseContext.template error<Macro::MacroError>(msgv->expand(ctx));
 							};
 						} else if (msgt == "warning" || msgt == "warn") {
 							auto const msgv = doExpansionGroup(context.next(), rule);
