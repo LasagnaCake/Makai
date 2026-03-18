@@ -298,6 +298,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Clear`= how to clear the value.
 			/// @details `clear [<loc-id>]`
 			AV2_IN_CLEAR,
+			/// @brief Jumps to one of the given targets, depending on the topmost value in the stack.
+			/// @param type Amount of jump targets.
+			/// @details `select <loc-id> ...`
+			AV2_IN_SELECT,
 		};
 
 		/// @brief Instruction "Name" (opcode).

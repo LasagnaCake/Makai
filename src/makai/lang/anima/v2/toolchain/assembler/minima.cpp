@@ -700,6 +700,20 @@ static void doDynamic(Context& context) {
 	else context.error("Invalid dynamic operation!");
 }
 
+static void doSelect(Context& context) {
+	uint32 count = 0;
+	auto const inst = context.add(Instruction::Name::AV2_IN_SELECT);
+	context.expectNext(LTS_TT_OPEN_BRACKET);
+	while (true) {
+		if (context.next().has(LTS_TT_CLOSE_BRACKET)) break;
+		context.addJumpTarget(resolvePath(context));
+		++count;
+	}
+	if (count < 0)
+		context.error("Select must have at least two targets!");
+	context.update(inst, count);
+}
+
 static void declareTypeFields(Context& context, Context::Declaration& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
@@ -1135,6 +1149,7 @@ static void doExpression(Context& context) {
 	else if (id == "yield")						doYield(context);
 	else if (id == "cast")						doCast(context);
 	else if (id == "random" || id == "rng")		doRandomNumber(context);
+	else if (id == "select" || id == "sel")		doSelect(context);
 	else doLabel(context);
 }
 

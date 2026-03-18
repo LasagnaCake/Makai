@@ -23,9 +23,6 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	if (v.contains("ani"))
 		*mod.ani = Module::ANI::deserialize(v["ani"]);
 	else mod.ani.unbind();
-	if (v.contains("meta"))
-		*mod.meta = Module::Meta::deserialize(v["meta"]);
-	else mod.meta.unbind();
 	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
 }
 
