@@ -21,6 +21,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			struct Trait		{};
 			struct Variable		{};
 			struct Namespace	{};
+
+			Data::Value serialize() const;
+			static Project deserialize(Data::Value const& v);
 		};
 
 		StringList			sources;

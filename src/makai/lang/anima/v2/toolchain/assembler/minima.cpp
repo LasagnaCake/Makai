@@ -869,6 +869,17 @@ static void declareTypeOperators(Context& context, Context::Declaration& type) {
 
 static void declareTypeCasts(Context& context, Context::Declaration& type) {}
 
+static void declareTypeMeta(Context& context, Context::Declaration& type) {
+	context.expectNext(Type{'['});
+	while (true) {
+		if (context.next().has(Type{']'})) break;
+		auto const key = resolvePath(context);
+		if (type.meta.contains(key))
+			context.error("Meta attribute has already been declared!");
+		type.meta[key] = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "Meta attribute value").getString();
+	}
+}
+
 static void declareType(Context& context) {
 	auto const name = resolvePath(context);
 		auto const type = new Context::Declaration();
@@ -949,6 +960,8 @@ static void declareType(Context& context) {
 			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
 			else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
 			else if (flag == "final")	type->flags |= Definition::Flags::AV2_DF_FINAL;
+			else if (flag == "meta")
+				declareTypeMeta(context, *type);
 			else context.error("Invalid flag!");
 		}
 		validateType(context, *type);

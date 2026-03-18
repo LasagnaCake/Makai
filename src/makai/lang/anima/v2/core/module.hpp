@@ -22,14 +22,15 @@ namespace Makai::Anima::V2::Core {
 		using Refs = List<Symbol>;
 
 		struct Method {
-			uint64			id;
-			String			name;
-			uint64			retType;
-			List<uint64>	argTypes;
-			bool			out = false;
-			bool			shared = false;
-			uint64			entrypoint;
-			uint64			size;
+			uint64				id;
+			String				name;
+			uint64				retType;
+			List<uint64>		argTypes;
+			bool				out = false;
+			bool				shared = false;
+			uint64				entrypoint;
+			uint64				size;
+			Dictionary<String>	meta;
 
 			Data::Value serialize() const;
 			static Method deserialize(Data::Value const& v);
@@ -46,7 +47,7 @@ namespace Makai::Anima::V2::Core {
 			List<uint64>				fields;
 			List<uint64>				casts;
 			MethodTable					vtable;
-			Makai::Data::Value			meta;
+			Dictionary<String>			meta;
 
 			Data::Value serialize() const;
 			static Declaration deserialize(Data::Value const& v);
