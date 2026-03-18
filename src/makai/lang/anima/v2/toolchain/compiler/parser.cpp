@@ -96,6 +96,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		"copy",
 		"is",
 		"as",
+		"drop",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
@@ -144,6 +145,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("asm", prefixes, new InlineMinimaResolver());
 	add("if", prefixes, new BranchResolver());
 	add("unless", prefixes, new BranchResolver());
+	add("switch", prefixes, new BranchResolver());
 	add("repeat", prefixes, new LoopResolver());
 	add("do", prefixes, new LoopResolver());
 	add("while", prefixes, new LoopResolver());

@@ -337,7 +337,8 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_FIELD_GET:	return "get";
 				case Name::AV2_IN_SIZEOF:		return "sizeof";
 				case Name::AV2_IN_TYPEOF:		return "typeof";
-				case Name::AV2_IN_CLEAR:		return "del";
+				case Name::AV2_IN_CLEAR:		return "drop";
+				case Name::AV2_IN_SELECT:		return "pick";
 			}
 		}
 

@@ -753,6 +753,10 @@ static void doSelect(Context& context) {
 	context.update(inst, count);
 }
 
+static void doClear(Context& context) {
+
+}
+
 static void declareTypeFields(Context& context, Context::Declaration& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
@@ -1203,7 +1207,8 @@ static void doExpression(Context& context) {
 	else if (id == "cast" || id == "as")		doCast(context);
 	else if (id == "rewrite")					doUnsafeCast(context);
 	else if (id == "random" || id == "rng")		doRandomNumber(context);
-	else if (id == "select")					doSelect(context);
+	else if (id == "select" || id == "pick")	doSelect(context);
+	else if (id == "unbind" || id == "drop")	doClear(context);
 	else doLabel(context);
 }
 
