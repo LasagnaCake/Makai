@@ -41,8 +41,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			void finalize();
 
-			virtual Core::Module onImport(String const& file);
-
 			void addMethod(String const& name, Instance<Method> const& method);
 			void addType(String const& name, Instance<Declaration> const& type);
 
@@ -76,8 +74,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			String pre, main, post;
 
 			Dictionary<Instance<Core::Module>> linkedModules;
-
-			Instance<Declaration> getSharedType(String const& module, String const& name);
 
 			String fullModulePath() const;
 		};
