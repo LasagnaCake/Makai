@@ -114,23 +114,21 @@ Makai::Instance<Context::Declaration> Context::getTypeByID(uint64 const& id) {
 	error("Type with the given ID does not exist!");
 }
 
-static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
-	if (context.has(pathSeparator)) {
-		absolute = true;
-		context.expectNext(LTS_TT_IDENTIFIER, "namespace name");
+void Context::addJumpTarget(String const& name) {
+	if (hasJumpTarget(name)) {
+		add(jumps[name]);
+		return;
 	}
-	Makai::String result = context.value().getString();
-	while(context.peek().type == Type{'.'}) {
-		result +=
-			"/" + context
-				.expectNext(Type{'.'})
-				.getNext(LTS_TT_IDENTIFIER, "namespace name")
-				.getString()
-		;
-	}
-	if (absolute)
-		result = context.fullModulePath() + result;
-	return cleanPath(result);
+	jumpsToMap[name].pushBack(program.code.size());
+	add(0);
+}
+
+uint64 Context::getJumpTarget(String const& name) {
+	return hasJumpTarget(name) ? jumps[name] : 0;
+}
+
+bool Context::hasJumpTarget(String const& name) {
+	return jumps.contains(name);
 }
 
 void Context::finalize() {
@@ -154,6 +152,25 @@ void Context::finalize() {
 	if (post.size() && jumps.contains(post))
 		program.post = jumps[post];
 	else if (post.size()) error("Missing finalizer location!");
+}
+
+static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
+	if (context.has(pathSeparator)) {
+		absolute = true;
+		context.expectNext(LTS_TT_IDENTIFIER, "namespace name");
+	}
+	Makai::String result = context.value().getString();
+	while(context.peek().type == Type{'.'}) {
+		result +=
+			"/" + context
+				.expectNext(Type{'.'})
+				.getNext(LTS_TT_IDENTIFIER, "namespace name")
+				.getString()
+		;
+	}
+	if (absolute)
+		result = context.fullModulePath() + result;
+	return cleanPath(result);
 }
 
 struct Location {
