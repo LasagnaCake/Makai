@@ -58,28 +58,30 @@ void Context::addExternalMethod(Makai::String const& module, Makai::String const
 	if (methods.contains(name))
 		error("Method with this name already exists!");
 	auto const fullID = module + ":" + name + "@" + method->name;
+	auto const refID = cleanPath(module + "/" + name);
 	externalMethods[fullID] = method;
-	methods[name] = new Reference{module, fullID};
+	methods[refID] = new Reference{module, fullID};
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
 	uint64 moduleID = program.ani->shared.modules.find(module);
 	if (moduleID == Makai::Limit::MAX<uint64>)
 		moduleID = program.ani->shared.modules.size();
-	program.sym.methods.pushBack({moduleID, method->id, name});
+	program.sym.methods.pushBack({moduleID, method->id, refID});
 }
 
 void Context::addExternalType(Makai::String const& module, Makai::String const& name, Instance<Declaration> const& type) {
 	if (methods.contains(name))
 		error("Type with this name already exists!");
 	auto const fullID = module + ":" + name + "@" + type->name;
+	auto const refID = cleanPath(module + "/" + name);
 	externalTypes[fullID] = type;
-	methods[name] = new Reference{module, fullID};
+	methods[refID] = new Reference{module, fullID};
 	type->id = program.detail.methods.size();
 	program.detail.types.pushBack(*type);
 	uint64 moduleID = program.ani->shared.modules.find(module);
 	if (moduleID == Makai::Limit::MAX<uint64>)
 		moduleID = program.ani->shared.modules.size();
-	program.sym.methods.pushBack({moduleID, type->id, name});
+	program.sym.methods.pushBack({moduleID, type->id, refID});
 }
 
 Makai::Instance<Context::Method> Context::getMethod(Makai::String const& name) {
@@ -709,7 +711,7 @@ static void doSelect(Context& context) {
 		context.addJumpTarget(resolvePath(context));
 		++count;
 	}
-	if (count < 0)
+	if (count < 2)
 		context.error("Select must have at least two targets!");
 	context.update(inst, count);
 }
@@ -1047,13 +1049,13 @@ static void resolveImport(Context& context, Makai::String const& name) {
 	for (auto& type: mod->sym.types)
 		if (!type.source) context.addExternalType(
 			mod->name,
-			cleanPath(name + "/" + type.name),
+			type.name,
 			new Context::Declaration(mod->detail.types[type.id])
 		);
 	for (auto& method: mod->sym.methods)
 		if (!method.source) context.addExternalMethod(
 			mod->name,
-			cleanPath(name + "/" + method.name),
+			method.name,
 			new Context::Method(mod->detail.methods[method.id])
 		);
 }
