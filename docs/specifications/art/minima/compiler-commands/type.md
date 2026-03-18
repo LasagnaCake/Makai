@@ -75,4 +75,12 @@ Specifies that the type contains a series of casts.
 
 ### `bound`
 
-Specifies that the type is equivalent to an runtimeW-specified type.
+Specifies that the type is equivalent to an runtime-specified type.
+
+### `final`
+
+Specifies that the type cannot be derived from.
+
+### `discard`
+
+Specifies that the result of methods that return the given type can be ignored.
