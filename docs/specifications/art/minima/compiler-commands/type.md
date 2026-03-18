@@ -27,9 +27,10 @@ Specifies that the type can be a null value.
 Specifies that the type is an analog for a ART basic type.
 
 > [!note]
-> Basic types also imply:
+> Basic types (except `any`) also imply:
 > - `value`
 > - `copy`
+> - `final`
 
 ### `derived< <type-name> >`
 
