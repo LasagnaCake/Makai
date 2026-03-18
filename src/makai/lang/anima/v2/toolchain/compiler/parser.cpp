@@ -56,7 +56,7 @@ static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
 		case LTS_TT_LOGIC_OR: return AV2_TAPP_LOR;
 		case LTS_TT_INCREMENT:
 		case LTS_TT_DECREMENT:
-		case LTS_TT_DOT: return AV2_TAPP_POSTFIX;
+		case LTS_TT_DOT: return AV2_TAPP_PATH;
 		case LTS_TT_COMMA: return AV2_TAPP_RHS_DECAY;
 		case LTS_TT_QUESTION: return AV2_TAPP_NULL_DECAY;
 	}
@@ -126,6 +126,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix(LTS_TT_COMPARE_GREATER_EQUALS, false);
 	infix(LTS_TT_COMPARE_EQUALS, false);
 	infix(LTS_TT_COMPARE_NOT_EQUALS, false);
+	infix(LTS_TT_DOT, false);
 	infix("xor", false);
 	infix("atan", false);
 	infix("cross", false);
@@ -166,7 +167,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_COLON, infixes, new DeclarationResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
 	add(LTS_TT_EXCLAMATION, infixes, new FunctionCallResolver());
-	add(LTS_TT_DOT, infixes, new InfixResolver());
 	add(LTS_TT_OPEN_BRACKET, infixes, new ArrayResolver());
 	add(LTS_TT_EQUALS, infixes, new AssignmentResolver());
 	add(LTS_TT_ADD_ASSIGN, infixes, new AssignmentResolver());
@@ -201,7 +201,10 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 }
 
 Node::Instance Parser::parse() {
-	return nextExpression();
+	Node::Instance root = Node::Instance::create();
+	while (!context.empty())
+		root->children.pushBack(nextExpression());
+	return root;
 }
 
 Parser::Precedence Parser::currentPrecedence() {
