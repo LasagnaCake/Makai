@@ -7,7 +7,10 @@
 Specifies an ART type with the given series of attributes.
 
 > [!note]
-> `array` and `derived` cannot be specified in the same type.
+> - `array` and `derived` cannot be specified in the same type.
+> - `array` and `struct` cannot be specified in the same type.
+> - `dyn` and `value` cannot be specified in the same type.
+> - `field`s cannot be specified in non-`struct` types.
 
 > [!note]
 > If an attribute requires a specific type, that type must be previously-declared.
