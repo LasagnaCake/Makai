@@ -44,8 +44,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			void addMethod(String const& name, Instance<Method> const& method);
 			void addType(String const& name, Instance<Declaration> const& type);
 
-			void addExternalMethod(String const& name, Instance<Method> const& method);
-			void addExternalType(String const& name, Instance<Declaration> const& type);
+			void addExternalMethod(String const& module, String const& name, Instance<Method> const& method);
+			void addExternalType(String const& module, String const& name, Instance<Declaration> const& type);
 
 			Instance<Method>		getMethod(String const& name);
 			Instance<Declaration>	getType(String const& name);

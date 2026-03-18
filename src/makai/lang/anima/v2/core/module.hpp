@@ -50,7 +50,7 @@ namespace Makai::Anima::V2::Core {
 			Refs	types;
 
 			Data::Value serialize() const;
-			static Symbol deserialize(Data::Value const& v);
+			static Symbols deserialize(Data::Value const& v);
 		};
 
 		struct Detail {

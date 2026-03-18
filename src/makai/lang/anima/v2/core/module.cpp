@@ -18,7 +18,7 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	auto const jumps	= v["jumps"].get<Makai::Data::Value::ByteListType>();
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
-	mod.sym = Module::Symbol::deserialize(v["sym"]);
+	mod.sym = Module::Symbols::deserialize(v["sym"]);
 	mod.detail = Module::Detail::deserialize(v["detail"]);
 	if (v.contains("ani"))
 		*mod.ani = Module::ANI::deserialize(v["ani"]);

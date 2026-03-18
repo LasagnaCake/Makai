@@ -30,6 +30,56 @@ Makai::String Context::fullModulePath() const {
 	return cleanPath(path);
 }
 
+void Context::addMethod(Makai::String const& name, Instance<Method> const& method) {
+	if (methods.contains(name))
+		error("Method with this name already exists!");
+	auto const fullID = name + "@" + method->name;
+	moduleMethods[fullID] = method;
+	methods[name] = new Reference{.name = fullID};
+}
+
+void Context::addType(Makai::String const& name, Instance<Declaration> const& type) {
+	if (methods.contains(name))
+		error("Type with this name already exists!");
+	auto const fullID = name + "@" + type->name;
+	moduleTypes[fullID] = type;
+	types[name] = new Reference{.name = fullID};
+}
+
+void Context::addExternalMethod(Makai::String const& module, Makai::String const& name, Instance<Method> const& method) {
+	if (methods.contains(name))
+		error("Method with this name already exists!");
+	auto const fullID = module + ":" + name + "@" + method->name;
+	externalMethods[fullID] = method;
+	methods[name] = new Reference{module, fullID};
+}
+
+void Context::addExternalType(Makai::String const& module, Makai::String const& name, Instance<Declaration> const& type) {
+	if (methods.contains(name))
+		error("Type with this name already exists!");
+	auto const fullID = module + ":" + name + "@" + type->name;
+	externalTypes[fullID] = type;
+	methods[name] = new Reference{module, fullID};
+}
+
+Makai::Instance<Context::Method> Context::getMethod(Makai::String const& name) {
+	if (!methods.contains(name))
+		error("No methods with this name exist!");
+	auto& method = methods[name];
+	if (method->module.empty())
+		return moduleMethods[method->name];
+	return externalMethods[method->name];
+}
+
+Makai::Instance<Context::Declaration> Context::getType(Makai::String const& name) {
+	if (!types.contains(name))
+		error("No types with this name exist!");
+	auto& type = types[name];
+	if (type->module.empty())
+		return moduleTypes[type->name];
+	return externalTypes[type->name];
+}
+
 static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
 	if (context.has(pathSeparator)) {
 		absolute = true;
@@ -950,11 +1000,13 @@ static void resolveImport(Context& context, Makai::String const& name) {
 	auto const mod = resolveModule(context, name);
 	for (auto& type: mod->sym.types)
 		if (!type.source) context.addExternalType(
+			mod->name,
 			cleanPath(name + "/" + type.name),
 			new Context::Declaration(mod->detail.types[type.id])
 		);
 	for (auto& method: mod->sym.methods)
 		if (!method.source) context.addExternalMethod(
+			mod->name,
 			cleanPath(name + "/" + method.name),
 			new Context::Method(mod->meta->methods[method.id])
 		);
