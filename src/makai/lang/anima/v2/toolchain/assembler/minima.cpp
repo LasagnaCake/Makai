@@ -720,7 +720,7 @@ static void validateType(Context& context, Context::Declaration& type) {
 	} else if (type.basic != BasicType::AV2_BT_ANY) {
 		type.flags |=
 			Definition::Flags::AV2_DF_VALUE
-//		|	Definition::Flags::AV2_DF_ART_EQUIVALENT
+		|	Definition::Flags::AV2_DF_CLONABLE
 		|	Definition::Flags::AV2_DF_FINAL
 		;
 		type.byteSize	= 0;
