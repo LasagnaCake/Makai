@@ -103,7 +103,6 @@ namespace Makai::Anima::V2::Core {
 		struct [[gnu::aligned(4)]] Invocation {
 			bool	dynamic:	1;
 			bool	external:	1;
-			bool	member:		1;
 		};
 
 		/// @brief Jump leap.

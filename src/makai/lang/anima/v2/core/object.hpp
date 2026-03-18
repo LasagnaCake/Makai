@@ -238,11 +238,8 @@ namespace Makai::Anima::V2::Core {
 		Object(Object&&)			= default;
 		Object& operator=(Object&&)	= default;
 
-
 		Instance<Definition>	getCurrentType();
 		Instance<Definition>	getOriginalType();
-
-		MethodTable vtable;
 
 	private:
 		friend Storage;
