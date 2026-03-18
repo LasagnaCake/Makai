@@ -36,6 +36,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	auto const fullID = name + "@" + method->name;
 	moduleMethods[fullID] = method;
 	methods[name] = new Reference{.name = fullID};
+	if (method->local) return;
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
 	program.sym.methods.pushBack({nullptr, method->id, name});
@@ -53,6 +54,7 @@ void Context::addType(Makai::String const& name, Instance<Declaration> const& ty
 }
 
 void Context::addExternalMethod(Makai::String const& module, Makai::String const& name, Instance<Method> const& method) {
+	if (method->local) return;
 	if (methods.contains(name))
 		error("Method with this name already exists!");
 	auto const fullID = module + ":" + name + "@" + method->name;
@@ -1038,7 +1040,7 @@ static void resolveImport(Context& context, Makai::String const& name) {
 		if (!method.source) context.addExternalMethod(
 			mod->name,
 			cleanPath(name + "/" + method.name),
-			new Context::Method(mod->meta->methods[method.id])
+			new Context::Method(mod->detail.methods[method.id])
 		);
 }
 
@@ -1158,17 +1160,5 @@ void Minima::invoke() {
 		}
 	);
 	context.program.detail.types.resize(context.types.size());
-	for (auto& [name, type]: context.types)
-		if (type->module.empty())
-			context.program.detail.types.pushBack(*context.getType(type->name));
-	if (context.program.type == Module::Type::AV2_CMT_LIBRARY) {
-		context.program.meta->methods.resize(context.methods.size());
-		for (auto& [name, method]: context.methods)
-			if (method->module.empty())
-				context.program.meta->methods.pushBack(*context.getMethod(method->name));
-		decltype (context.program.meta->methods) temp;
-		temp.resize(context.methods.size(), {});
-		context.program.meta->methods = temp;
-	}
 }
 CTL_DIAGBLOCK_END
