@@ -25,7 +25,7 @@ namespace Makai::Anima::V2::Core {
 		template <Makai::Type::Equal<bool> T>
 		T toValue() const {
 			if (isNumber())
-				return fromBasicNumber<float>();
+				return fromBasicNumber<bool>();
 			if (!isBoolean())
 				invalidCastError<T>("Mismatched types");
 			return fromBasicNumber<T>();
@@ -40,7 +40,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::OneOf<String, UTF8String, UTF32String> T>
 		T toValue() const {
-			if (!isArray())
+			if (!isString())
 				invalidCastError<T>("Mismatched types");
 			return *ref<UTF8String>(content->data());
 		}
@@ -70,7 +70,9 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Equal<Matrix4x4> T>
 		T toValue() const {
-			if (isVectorable())
+			if (isNumber())
+				return Matrix4x4::identity() * toValue<float>();
+			if (isVector())
 				return Matrix4x4::identity() * toValue<Vector4>();
 			if (!isMatrix())
 				invalidCastError<T>("Mismatched types");
@@ -173,10 +175,16 @@ namespace Makai::Anima::V2::Core {
 			return (origin->basic == BasicType::AV2_BT_CHAR);
 		}
 
-		bool isBytes() const {
+		bool isString() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_STRING);
+		}
+
+		bool isBytes() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_BYTES);
 		}
 
 		bool isArray() const {

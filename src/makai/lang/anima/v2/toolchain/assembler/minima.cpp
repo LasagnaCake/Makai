@@ -685,6 +685,24 @@ static void doCast(Context& context, bool const dyn = false) {
 	}
 }
 
+static void doUnsafeCast(Context& context, bool const dyn = false) {
+	if (!dyn) {
+		auto const type = resolvePath(context);
+		if (context.types.contains(type)) {
+			context.add(
+				Instruction::Name::AV2_IN_CAST,
+				Instruction::Casting{.unsafe = true}
+			);
+			context.add(context.getType(type)->id);
+		} else context.error("Type with this name does not exist!");
+	} else {
+		context.add(
+			Instruction::Name::AV2_IN_CAST,
+			Instruction::Casting{.dynamic = true, .unsafe = true}
+		);
+	}
+}
+
 static void doRandomNumber(Context& context) {
 	Instruction::Randomness rng;
 	auto id = context.getNext(LTS_TT_IDENTIFIER, "RNG operation").getString();
@@ -712,10 +730,12 @@ static void doDynamic(Context& context) {
 		doJump(context, true);
 	else if (id == "call" || id == "do")
 		doCall(context, true);
-	else if (id == "cast")
+	else if (id == "cast" || id == "as")
 		doCast(context, true);
 	else if (id == "field" || id == "at")
 		doField(context, true);
+	else if (id == "rewrite")
+		doUnsafeCast(context, true);
 	else context.error("Invalid dynamic operation!");
 }
 
@@ -1167,7 +1187,8 @@ static void doExpression(Context& context) {
 	else if (id == "size")						doSizeOf(context, true);
 	else if (id == "type")						doTypeGet(context);
 	else if (id == "yield")						doYield(context);
-	else if (id == "cast")						doCast(context);
+	else if (id == "cast" || id == "as")		doCast(context);
+	else if (id == "rewrite")					doUnsafeCast(context);
 	else if (id == "random" || id == "rng")		doRandomNumber(context);
 	else if (id == "select")					doSelect(context);
 	else doLabel(context);

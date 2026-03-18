@@ -156,7 +156,8 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Casting {
-			bool dynamic: 1;
+			bool dynamic:	1;
+			bool unsafe:	1;
 		};
 
 		struct [[gnu::aligned(4)]] Field {
