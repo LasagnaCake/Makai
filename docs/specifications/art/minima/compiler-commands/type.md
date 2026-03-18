@@ -11,6 +11,12 @@ Specifies an ART type with the given series of attributes.
 > - `array` and `struct` cannot be specified in the same type.
 > - `dyn` and `value` cannot be specified in the same type.
 > - `field`s cannot be specified in non-`struct` types.
+> - `align` cannot be specified in `empty` types.
+> - `empty` types can only have `nil` or `discard` attributes.
+> - `derived` types must match its parent's flags.
+> - `copy` `array` types must have `copy`able element types.
+> - `copy` `struct` types must have `copy`able field types.
+> - `value` types can only contain other `value` types.
 
 > [!note]
 > If an attribute requires a specific type, that type must be previously-declared.
