@@ -1,10 +1,8 @@
 #include "parser.hpp"
 #include "resolver.hpp"
 
-using namespace Makai;
-
-using namespace Anima::V2::Toolchain::Compiler;
-using Type = Lexer::CStyle::TokenStream::Token::Type;
+using namespace Makai::Anima::V2::Toolchain::Compiler;
+using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
 static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
@@ -144,7 +142,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_OPEN_CURLY, prefixes, new BlockResolver());
 	add(LTS_TT_OPEN_BRACKET, prefixes, new ArrayResolver());
 	add("asm", prefixes, new InlineMinimaResolver());
-	add(LTS_TT_AT, prefixes, new AttributeResolver());
 	add("if", prefixes, new BranchResolver());
 	add("unless", prefixes, new BranchResolver());
 	add("repeat", prefixes, new LoopResolver());
@@ -157,10 +154,11 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("out", prefixes, new DeclarationResolver());
 	add("func", prefixes, new DeclarationResolver());
 	add("extend", prefixes, new ExtensionResolver());
-	add("trait", prefixes, new TraitResolver());
 	add("import", prefixes, new ImportResolver());
-	add("with", prefixes, new TemplateResolver());
-	add("struct", prefixes, new StructureResolver());
+	add("trait", prefixes, new TraitDeclResolver());
+	add("with", prefixes, new TemplateDeclResolver());
+	add("struct", prefixes, new StructureDeclResolver());
+	add("prop", prefixes, new PropertyDeclResolver());
 	// Advanced infixes
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());

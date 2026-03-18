@@ -87,18 +87,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct VariableDeclarationResolver: AResolver {
-		VariableDeclarationResolver(): AResolver() {}
+	struct FunctionDeclResolver: AResolver {
+		FunctionDeclResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct VariableDeclResolver: AResolver {
+		VariableDeclResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct ExtensionResolver: AResolver {
 		ExtensionResolver(): AResolver() {}
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct TraitResolver: AResolver {
-		TraitResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
@@ -112,18 +112,33 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct TemplateResolver: AResolver {
-		TemplateResolver(): AResolver() {}
+	struct TemplateDeclResolver: AResolver {
+		TemplateDeclResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct StructureResolver: AResolver {
-		StructureResolver(): AResolver() {}
+	struct StructureDeclResolver: AResolver {
+		StructureDeclResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct AttributeResolver: AResolver {
-		AttributeResolver(): AResolver() {}
+	struct AttributeDeclResolver: AResolver {
+		AttributeDeclResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct PropertyDeclResolver: AResolver {
+		PropertyDeclResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct TraitDeclResolver: AResolver {
+		TraitDeclResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct InlineStructureResolver: AResolver {
+		InlineStructureResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 }

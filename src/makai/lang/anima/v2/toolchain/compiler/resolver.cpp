@@ -1,9 +1,7 @@
 #include "resolver.hpp"
 
-using namespace Makai;
-
-using namespace Anima::V2::Toolchain::Compiler;
-using Type = Lexer::CStyle::TokenStream::Token::Type;
+using namespace Makai::Anima::V2::Toolchain::Compiler;
+using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
 Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
@@ -132,6 +130,7 @@ Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lhs
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_BRANCH;
 	result->value = token.token;
+	// TODO: This
 	return result;
 }
 
@@ -140,6 +139,7 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_LOOP;
 	result->value = token.token;
+	// TODO: This
 	return result;
 }
 
@@ -148,6 +148,7 @@ Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lhs
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_IMPORT;
 	result->value = token.token;
+	// TODO: This
 	return result;
 }
 
@@ -158,6 +159,7 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 	if (!(
 		lhs->content == Node::Content::AV2_TANC_ASSIGNMENT
 	||	lhs->content == Node::Content::AV2_TANC_PATH
+	||	lhs->content == Node::Content::AV2_TANC_SUBSCRIPT
 	)) parser.context.error("Expected assignment chain or declaration path here!");
 	result->children.appendBack({
 		lhs,
@@ -171,18 +173,37 @@ Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->value = lhs ? Makai::Data::Value("local") : Makai::Data::Value(token.token);
-	if (lhs) {
-
+	if (!lhs) {
+		if (
+			token.token == "global"
+		||	token.token == "local"
+		) {
+			result->source = token.token == "local" ? Core::DataLocation::AV2_DL_LOCAL : Core::DataLocation::AV2_DL_GLOBAL;
+			VariableDeclResolver resolver;
+			result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
+		} else if (token.token == "out") {
+			parser.context.expectNext(LTS_TT_OPEN_BRACKET).next();
+			result->source = Core::DataLocation::AV2_DL_EXTERNAL;
+			switch (parser.context.type()) {
+				case LTS_TT_IDENTIFIER:
+				case LTS_TT_SINGLE_QUOTE_STRING:
+				case LTS_TT_DOUBLE_QUOTE_STRING: result->value = parser.context.value();
+				default: parser.context.error("Expected external variable name here!");
+			}
+			parser.context.expectNext(LTS_TT_CLOSE_BRACKET);
+			VariableDeclResolver resolver;
+			result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
+		}
 	} else {
 		switch (parser.context.peek().type) {
 			case LTS_TT_IDENTIFIER: {
-				VariableDeclarationResolver resolver;
-				result->children.pushBack(resolver.resolve(parser, nullptr, parser.context.token()));
+				VariableDeclResolver resolver;
+				result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
 			} break;
 			case LTS_TT_OPEN_PAREN: {
-				FunctionPrototypeResolver resolver;
-				result->children.pushBack(resolver.resolve(parser, nullptr, parser.context.token()));
-
+				result->value = "record";
+				InlineStructureResolver resolver;
+				result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
 			} break;
 			default: parser.context.error("Invalid expression!");
 		}
@@ -192,10 +213,12 @@ Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const
 
 Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
+	// TODO: This
 	return result;
 }
 
-Node::Instance VariableDeclarationResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
+	// TODO: This
 	return result;
 }

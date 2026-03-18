@@ -32,12 +32,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			AV2_TANC_INLINE_MINIMA
 		};
 
-		Content						content = Content::AV2_TANC_EMPTY;
-		Data::Value					value;
-		List<Instance>				children;
-		Core::DataLocation			source;
-		BaseContext::Axiom			base;
-		List<BaseContext::Axiom>	interject;
+		Content							content = Content::AV2_TANC_EMPTY;
+		Data::Value						value;
+		List<Instance>					children;
+		Nullable<Core::DataLocation>	source;
+		BaseContext::Axiom				base;
+		List<BaseContext::Axiom>		interject;
 
 		constexpr String name() const {
 			auto const base = id();
