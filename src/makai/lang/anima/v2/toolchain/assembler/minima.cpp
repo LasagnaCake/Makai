@@ -1151,7 +1151,7 @@ static void doExpression(Context& context) {
 	else if (id == "yield")						doYield(context);
 	else if (id == "cast")						doCast(context);
 	else if (id == "random" || id == "rng")		doRandomNumber(context);
-	else if (id == "select" || id == "sel")		doSelect(context);
+	else if (id == "select")					doSelect(context);
 	else doLabel(context);
 }
 
