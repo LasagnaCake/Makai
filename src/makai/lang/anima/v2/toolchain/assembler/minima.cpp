@@ -713,6 +713,8 @@ static void validateType(Context& context, Context::Declaration& type) {
 				context.error("Clonable structures must contain clonable fields!");
 		}
 	}
+	if (type.fields.size() && !(type.flags & Definition::Flags::AV2_DF_STRUCTURE))
+		context.error("Fields can only be declared on structures!");
 	if (!type.basic) {
 		for (auto& field: type.fields)
 			type.byteSize += context.getType(field)->byteSize;
