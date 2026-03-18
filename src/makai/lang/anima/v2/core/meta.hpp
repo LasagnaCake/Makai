@@ -73,6 +73,19 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
+		template<Type::OneOf<char, UTF8Char, UTF32Char> T>
+		struct ARTTI<T> {
+			constexpr static scstring ART_NAME = "char";
+
+			static bool construct(Object const& value) {
+				return value.toValue<T>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, bool const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
+			}
+		};
+
 		template<Makai::Type::SignedInteger T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "int";
 
@@ -121,7 +134,7 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
-		template<Makai::Type::OneOf<String, UTF8String> T> struct ARTTI<T> {
+		template<Makai::Type::OneOf<String, UTF8String, UTF32String> T> struct ARTTI<T> {
 			constexpr static scstring ART_NAME = "string";
 
 			static T construct(Object const& value) {

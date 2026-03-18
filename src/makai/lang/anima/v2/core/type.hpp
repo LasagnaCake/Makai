@@ -50,6 +50,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_ANY,
 		AV2_BT_NULL,
 		AV2_BT_BOOL,
+		AV2_BT_CHAR,
 		AV2_BT_INT,
 		AV2_BT_UINT,
 		AV2_BT_REAL,

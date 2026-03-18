@@ -5,30 +5,29 @@
 @type Any [basic<any>]
 @type Null [basic<nil> derived<Any> nil empty]
 @type Bool [basic<bool> derived<Any>]
+@type Char [basic<char> derived<Any>]
 @type Int [basic<int> derived<Any>]
 @type UInt [basic<uint> derived<Any>]
 @type Real [basic<real> derived<Any>]
 @type String [basic<str> derived<Any> nil]
 @type Bytes [basic<bin> derived<Any> nil]
-@type Vector [basic<vec> derived<Any>]
 @type AnyArray [array<Any> nil]
 @type BoolArray [array<Bool> nil]
 @type IntArray [array<Int> nil]
 @type UIntArray [array<UInt> nil]
 @type RealArray [array<Real> nil]
 @type StringArray [array<String> nil]
-@type VectorArray [array<Vector> nil]
 @ns .
 
 // Aliases
 @alias void:	Internal.Void
 @alias any:		Internal.Any
 @alias bool:	Internal.Bool
+@alias char:	Internal.Char
 @alias int:		Internal.Int
 @alias uint:	Internal.UInt
 @alias real:	Internal.Real
 @alias str:		Internal.String
 @alias bin:		Internal.Bytes
-@alias vec:		Internal.Vector
 @alias obj:		Internal.Object
 @alias arr:		Internal.AnyArray

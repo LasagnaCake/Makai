@@ -48,6 +48,8 @@ bool Engine::yieldCycle() {
 		case AV2_IN_MODE:			v2SetContext();	break;
 		case AV2_IN_JUMP:			v2Jump();		break;
 		case AV2_IN_YIELD:			v2Yield();		break;
+		case AV2_IN_CLEAR:			v2Clear();		break;
+		case AV2_IN_SELECT:			v2Select();		break;
 		case AV2_IN_NO_OP: break;
 //		default: crash(invalidInstructionError());
 	}

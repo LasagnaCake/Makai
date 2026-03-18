@@ -24,57 +24,60 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Equal<bool> T>
 		T toValue() const {
-			if (isArray())
-				invalidCastError<T>("Type is array");
-			if (origin->basic) {
-				return fromBasicNumber<T>();
-			}
+			if (isNumber())
+				return fromBasicNumber<float>();
+			if (!isBoolean())
+				invalidCastError<T>("Mismatched types");
+			return fromBasicNumber<T>();
 		}
 
 		template <Makai::Type::Number T>
 		T toValue() const requires Makai::Type::Different<T, bool> {
-			if (isArray())
-				invalidCastError<T>("Type is array");
-			if (!origin->basic)
-				invalidCastError<T>("Not a basic type");
+			if (!isNumber())
+				invalidCastError<T>("Mismatched types");
 			return fromBasicNumber<T>();
 		}
 
-		template <Makai::Type::OneOf<String, UTF8String> T>
+		template <Makai::Type::OneOf<String, UTF8String, UTF32String> T>
 		T toValue() const {
-			if (isArray())
-				invalidCastError<T>("Type is array");
-			if (origin->basic != BasicType::AV2_BT_STRING)
-				invalidCastError<T>("Type mismatch");
+			if (!isArray())
+				invalidCastError<T>("Mismatched types");
 			return *ref<UTF8String>(content->data());
 		}
 
 		template <Makai::Type::Equal<Binary<>> T>
 		T toValue() const {
-			if (isArray())
-				invalidCastError<T>("Type is array");
-			if (origin->basic != BasicType::AV2_BT_BYTES)
-				invalidCastError<T>("Type mismatch");
+			if (!isBytes())
+				invalidCastError<T>("Mismatched types");
 			return *ref<T>(content->data());
 		}
 
-		template <Makai::Type::Equal<Vector4> T>
+		template <Makai::Type::OneOf<char, UTF8Char, UTF32Char> T>
 		T toValue() const {
-			if (isArray())
-				invalidCastError<T>("Type is array");
-			if (origin->basic != BasicType::AV2_BT_VECTOR)
-				invalidCastError<T>("Type mismatch");
-			return *ref<T>(content->data());
+			if (!isCharacter())
+				invalidCastError<T>("Mismatched types");
+			return *ref<UTF8Char>(content->data());
+		}
+
+		template <Makai::Type::OneOf<Vector4> T>
+		T toValue() const {
+			if (isNumber())
+				return toValue<float>();
+			if (!isVector())
+				invalidCastError<T>("Mismatched types");
+			return *ref<Vector4>(content->data());
 		}
 
 		template <ARTType T>
-		T toValue() const {
+		T toValue(Database<Definition>& typeDB) const {
 			if (isArray())
-				invalidCastError<T>("Type is array");
+				invalidCastError<T>("Mismatched types");
 			if (sizeof(T) != type->byteSize)
 				invalidCastError<T>("Size mismatch");
-			if (String(T::ART_NAME) != type->name)
-				invalidCastError<T>("Type mismatch");
+			if (!typeDB.byName(T::ART_NAME))
+				invalidCastError<T>("Unregistered type");
+			if (!type->canBecome(typeDB.byName(T::ART_NAME)))
+				invalidCastError<T>("Forbidden conversion");
 			return T::construct(*this);
 		}
 
@@ -147,6 +150,18 @@ namespace Makai::Anima::V2::Core {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_VECTOR);
+		}
+
+		bool isCharacter() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_CHAR);
+		}
+
+		bool isBytes() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_STRING);
 		}
 
 		bool isArray() const {
@@ -280,7 +295,7 @@ namespace Makai::Anima::V2::Core {
 		pointer addressAt(usize index) const;
 
 		template <class T>
-		T fromBasicNumber() {
+		T fromBasicNumber() const {
 			switch (*origin->basic) {
 				using enum BasicType;
 				case AV2_BT_BOOL: return *ref<bool>(content->data());
@@ -296,7 +311,7 @@ namespace Makai::Anima::V2::Core {
 		[[noreturn]]
 		void invalidCastError(String const& reason) const {
 			throw Error::InvalidCast(
-				"Could not convert [" + nameof<T>() + "] to [" + origin->name + "]!",
+				"Could not convert [" + origin->name + "] to [" + nameof<T>() + "]!",
 				reason,
 				CTL_CPP_PRETTY_SOURCE
 			);

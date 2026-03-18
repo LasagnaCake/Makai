@@ -867,6 +867,7 @@ static void declareType(Context& context) {
 				if (basic == "void")		type->basic = BasicType::AV2_BT_VOID;
 				else if (basic == "nil")	type->basic = BasicType::AV2_BT_NULL;
 				else if (basic == "bool")	type->basic = BasicType::AV2_BT_BOOL;
+				else if (basic == "char")	type->basic = BasicType::AV2_BT_CHAR;
 				else if (basic == "int")	type->basic = BasicType::AV2_BT_INT;
 				else if (basic == "uint")	type->basic = BasicType::AV2_BT_UINT;
 				else if (basic == "real")	type->basic = BasicType::AV2_BT_REAL;
