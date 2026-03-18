@@ -75,9 +75,9 @@ Parser::Parser(BaseContext& context): context(context) {
 	);
 	// Basic prefixes
 	prefix(
-		"size",
-		"count",
-		"type",
+		"sizeof",
+		"countof",
+		"typeof",
 		"sin",
 		"cos",
 		"tan",
