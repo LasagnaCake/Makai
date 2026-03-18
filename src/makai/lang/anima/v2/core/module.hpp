@@ -30,6 +30,9 @@ namespace Makai::Anima::V2::Core {
 			bool			shared = false;
 			uint64			entrypoint;
 			uint64			size;
+
+			Data::Value serialize() const;
+			static Method deserialize(Data::Value const& v);
 		};
 
 		struct Declaration {
@@ -43,6 +46,10 @@ namespace Makai::Anima::V2::Core {
 			List<uint64>				fields;
 			List<uint64>				casts;
 			MethodTable					vtable;
+			Makai::Data::Value			meta;
+
+			Data::Value serialize() const;
+			static Declaration deserialize(Data::Value const& v);
 		};
 
 		struct Symbols {

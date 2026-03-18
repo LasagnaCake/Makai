@@ -17,21 +17,7 @@ CTL_DIAGBLOCK_IGNORE_SWITCH
 namespace {
 	struct BreveTreeDecomposer {
 
-		struct Namespace {
-			enum class Type {
-				BTD_NT_NAMESPACE,
-				BTD_NT_METHOD,
-				BTD_NT_TYPE,
-				BTD_NT_TRAIT,
-			};
-
-			String								name;
-			Type								type;
-			List<Makai::Instance<Namespace>>	children;
-		};
-
 		void decompose() {
-
 		}
 	};
 }

@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), comp)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, core breve parser resolver)
+	$(call compile-all, core breve parser resolver project)
 endef
 
 all: debug release

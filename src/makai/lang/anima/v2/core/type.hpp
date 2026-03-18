@@ -91,6 +91,8 @@ namespace Makai::Anima::V2::Core {
 		uint64						alignment	= 1;
 		List<Instance<Definition>>	fields;
 
+		Makai::Data::Value			meta;
+
 		Functor<void(ptr<void>)>							construct;
 		Functor<void(ptr<void>, ptr<void const>)>			copy;
 		Functor<void(ptr<void>)>							destruct;

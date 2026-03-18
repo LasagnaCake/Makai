@@ -15,6 +15,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			Version	version;
 		};
 
+		struct Intermediate {
+			struct Type			{};
+			struct Function		{};
+			struct Trait		{};
+			struct Variable		{};
+			struct Namespace	{};
+		};
+
 		StringList			sources;
 		Dictionary<Library>	libraries;
 		String				main;
