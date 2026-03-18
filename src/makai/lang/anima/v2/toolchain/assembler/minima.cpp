@@ -645,6 +645,8 @@ static void validateType(Context& context, Context::Declaration& type) {
 		type.flags |= base.flags;
 		type.fields.insert(base.fields, 0);
 	}
+	if (type.base && context.getType(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
+		context.error("Final types cannot be inherited from!");
 	if (type.base && !(type.flags ^ context.getType(type.base)->flags))
 		context.error("Derived type does not match semantics of its base type!");
 	if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
@@ -715,10 +717,11 @@ static void validateType(Context& context, Context::Declaration& type) {
 		for (auto& field: type.fields)
 			type.byteSize += context.getType(field)->byteSize;
 		type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
-	} else {
+	} else if (type.basic != BasicType::AV2_BT_ANY) {
 		type.flags |=
 			Definition::Flags::AV2_DF_VALUE
-		|	Definition::Flags::AV2_DF_ART_EQUIVALENT
+//		|	Definition::Flags::AV2_DF_ART_EQUIVALENT
+		|	Definition::Flags::AV2_DF_FINAL
 		;
 		type.byteSize	= 0;
 		type.alignment	= 0;
@@ -807,6 +810,7 @@ static void declareType(Context& context) {
 				declareTypeCasts(context, *type);
 			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
 			else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
+			else if (flag == "final")	type->flags |= Definition::Flags::AV2_DF_FINAL;
 			else context.error("Invalid flag!");
 		}
 		validateType(context, *type);
