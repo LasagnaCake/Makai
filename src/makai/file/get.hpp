@@ -94,7 +94,7 @@ namespace Makai::File {
 	/// @throw Makai::File::FileSaveError on file save errors.
 	template<Makai::Type::NonVoid T>
 	inline void saveBinary(String const& path, T const& data) {
-		saveBinary(path, ByteSpan(&data, sizeof(T)));
+		saveBinary(path, ByteSpan<>(&data, sizeof(T)));
 	}
 
 	/// @brief Loads a CSV file from disk.

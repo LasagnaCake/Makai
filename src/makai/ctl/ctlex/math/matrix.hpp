@@ -278,7 +278,7 @@ public:
 
 	/// @brief Destructor.
 	constexpr ~Matrix() {}
-	
+
 	/// @brief Fills all cells with a given value.
 	/// @param v Value to fill with.
 	/// @return Reference to self.
@@ -369,7 +369,7 @@ public:
 		// Return result
 		return result;
 	}
-	
+
 	// BUG: Clangd errors out on this function (and only THIS function)
 	/// @brief Converts a 3D rotation into a rotation matrix.
 	/// @param angle Rotation to convert.
@@ -406,7 +406,7 @@ public:
 	}
 
 	/// @brief Euler function type.
-	typedef decltype(fromEulerYXZ<DataType>)	EulerFunction;
+	using EulerFunction = Matrix<4, 4, DataType>(Vector3 const&);
 
 	/// @brief Converts a 3D translation into a translation matrix.
 	/// @param vec Translation to convert.
@@ -502,7 +502,7 @@ public:
 	/// @param vec Scaling to apply.
 	/// @return Scaled matrix.
 	/// @note Matrix must be a valid 3D transformation matrix.
-	/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl 
+	/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl
 	constexpr Matrix<4, 4, DataType> scaled(Vector3 const& vec) const
 	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		static_assert(R == 4, "Matrix is not a valid representation of a 3D transform!");
@@ -523,7 +523,7 @@ public:
 	/// @param vec Scaling to apply.
 	/// @return Reference to self.
 	/// @note Matrix must be a valid 3D transformation matrix.
-	/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl 
+	/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl
 	constexpr Matrix<4, 4, DataType>& scale(Vector3 const& vec)
 	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		static_assert(R == 4, "Matrix is not a valid representation of a 3D transform!");
@@ -586,7 +586,7 @@ public:
 		}
 		return res;
 	}
-	
+
 	/// @brief Returns the matrix, with a set of rows and columns removed.
 	/// @tparam RF Row count to remove.
 	/// @tparam CF Column count to remove.
@@ -614,7 +614,7 @@ public:
 	/// @tparam CF Column count to add.
 	/// @param rowStart Row to start inserting data in the new matrix.
 	/// @param colStart Column to start inserting data in the new matrix.
-	/// @return Expanded matrix. 
+	/// @return Expanded matrix.
 	/// @return
 	///		Shrunk matrix.
 	///		Returns a zero matrix
@@ -974,7 +974,7 @@ public:
 	/// @brief Multiplication assignment operator (`Transform3D`).
 	/// @param trans Tranform to multiply.
 	/// @return Reference to self.
-	/// @note Requires matrix to be a valid 3D transformation matrix. 
+	/// @note Requires matrix to be a valid 3D transformation matrix.
 	constexpr SelfType& operator*=(Transform3D const& trans)
 	requires Type::Ex::Math::Matrix::ValidTransform3D<R, C> {
 		static_assert(R == 4, "Matrix is not a valid representation of a 3D transform!");
@@ -1011,7 +1011,7 @@ public:
 		return Span<DataType, R>(data[idx]);
 	}
 
-	
+
 	/// @brief Array subscription operator.
 	/// @param idx Index to match.
 	/// @return Row view.
@@ -1282,7 +1282,7 @@ public:
 	/// @param perspective Perspective transformation output.
 	/// @param skew Skew transformation output.
 	/// @return 3D transformation.
-	/// @note Based off of https://opensource.apple.com/source/WebCore/WebCore-514/platform/graphics/transforms/TransformationMatrix.cpp 
+	/// @note Based off of https://opensource.apple.com/source/WebCore/WebCore-514/platform/graphics/transforms/TransformationMatrix.cpp
 	/// @note Requires matrix to be a valid 3D transformation matrix.
 	/// @warning Doesn't currently work!
 	#ifndef __clang__
@@ -1919,7 +1919,7 @@ constexpr Matrix<4, 4, T> perspectiveFOV(
 /// @param fovy Field of view.
 /// @param zNear Near clip plane.
 /// @return Resulting matrix.
-/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/ext/matrix_clip_space.inl 
+/// @note Based off of https://github.com/g-truc/glm/blob/master/glm/ext/matrix_clip_space.inl
 template<CTL::Type::Math::Operatable T>
 constexpr Matrix<4, 4, T> infinitePerspective(
 	T const& fovy,
