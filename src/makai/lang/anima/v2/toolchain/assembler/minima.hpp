@@ -50,8 +50,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Instance<Method>		getMethod(String const& name);
 			Instance<Declaration>	getType(String const& name);
 
-			Instance<Method>		getMethod(uint64 const& id);
-			Instance<Declaration>	getType(uint64 const& id);
+			Instance<Method>		getMethodByID(uint64 const& id);
+			Instance<Declaration>	getTypeByID(uint64 const& id);
 
 			Core::Module						program;
 

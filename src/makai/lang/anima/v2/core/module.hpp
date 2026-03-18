@@ -55,16 +55,10 @@ namespace Makai::Anima::V2::Core {
 
 		struct Detail {
 			List<Declaration>	types;
-
-			Data::Value serialize() const;
-			static Detail deserialize(Data::Value const& v);
-		};
-
-		struct Meta {
 			List<Method>		methods;
 
 			Data::Value serialize() const;
-			static Meta deserialize(Data::Value const& v);
+			static Detail deserialize(Data::Value const& v);
 		};
 
 		struct ANI {
@@ -93,7 +87,6 @@ namespace Makai::Anima::V2::Core {
 		List<uint64>		jumpTable;
 		Detail				detail;
 		Symbols				sym;
-		Instance<Meta>		meta		= new Meta();
 		Instance<ANI>		ani			= new ANI();
 		Nullable<uint64>	pre;
 		Nullable<uint64>	main;

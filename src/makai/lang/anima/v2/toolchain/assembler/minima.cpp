@@ -36,6 +36,9 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	auto const fullID = name + "@" + method->name;
 	moduleMethods[fullID] = method;
 	methods[name] = new Reference{.name = fullID};
+	method->id = program.detail.methods.size();
+	program.detail.methods.pushBack(*method);
+	program.sym.methods.pushBack({nullptr, method->id, name});
 }
 
 void Context::addType(Makai::String const& name, Instance<Declaration> const& type) {
@@ -44,6 +47,9 @@ void Context::addType(Makai::String const& name, Instance<Declaration> const& ty
 	auto const fullID = name + "@" + type->name;
 	moduleTypes[fullID] = type;
 	types[name] = new Reference{.name = fullID};
+	type->id = program.detail.methods.size();
+	program.detail.types.pushBack(*type);
+	program.sym.types.pushBack({nullptr, type->id, name});
 }
 
 void Context::addExternalMethod(Makai::String const& module, Makai::String const& name, Instance<Method> const& method) {
@@ -52,6 +58,12 @@ void Context::addExternalMethod(Makai::String const& module, Makai::String const
 	auto const fullID = module + ":" + name + "@" + method->name;
 	externalMethods[fullID] = method;
 	methods[name] = new Reference{module, fullID};
+	method->id = program.detail.methods.size();
+	program.detail.methods.pushBack(*method);
+	uint64 moduleID = program.ani->shared.modules.find(module);
+	if (moduleID == Makai::Limit::MAX<uint64>)
+		moduleID = program.ani->shared.modules.size();
+	program.sym.methods.pushBack({moduleID, method->id, name});
 }
 
 void Context::addExternalType(Makai::String const& module, Makai::String const& name, Instance<Declaration> const& type) {
@@ -60,6 +72,12 @@ void Context::addExternalType(Makai::String const& module, Makai::String const& 
 	auto const fullID = module + ":" + name + "@" + type->name;
 	externalTypes[fullID] = type;
 	methods[name] = new Reference{module, fullID};
+	type->id = program.detail.methods.size();
+	program.detail.types.pushBack(*type);
+	uint64 moduleID = program.ani->shared.modules.find(module);
+	if (moduleID == Makai::Limit::MAX<uint64>)
+		moduleID = program.ani->shared.modules.size();
+	program.sym.methods.pushBack({moduleID, type->id, name});
 }
 
 Makai::Instance<Context::Method> Context::getMethod(Makai::String const& name) {
@@ -78,6 +96,18 @@ Makai::Instance<Context::Declaration> Context::getType(Makai::String const& name
 	if (type->module.empty())
 		return moduleTypes[type->name];
 	return externalTypes[type->name];
+}
+
+Makai::Instance<Context::Method> Context::getMethodByID(uint64 const& id) {
+	if (id < program.sym.methods.size())
+		return getMethod(program.sym.methods[id].name);
+	error("Method with the given ID does not exist!");
+}
+
+Makai::Instance<Context::Declaration> Context::getTypeByID(uint64 const& id) {
+	if (id < program.sym.methods.size())
+		return getType(program.sym.types[id].name);
+	error("Type with the given ID does not exist!");
 }
 
 static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
@@ -691,13 +721,13 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 
 static void validateType(Context& context, Context::Declaration& type) {
 	if (type.base && !(type.flags & Definition::Flags::AV2_DF_ARRAY)) {
-		auto& base = *context.getType(type.base);
+		auto& base = *context.getTypeByID(type.base);
 		type.flags |= base.flags;
 		type.fields.insert(base.fields, 0);
 	}
-	if (type.base && context.getType(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
+	if (type.base && context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
 		context.error("Final types cannot be inherited from!");
-	if (type.base && !(type.flags ^ context.getType(type.base)->flags))
+	if (type.base && !(type.flags ^ context.getTypeByID(type.base)->flags))
 		context.error("Derived type does not match semantics of its base type!");
 	if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
 		context.error("Only value types can have alignment size!");
@@ -705,14 +735,14 @@ static void validateType(Context& context, Context::Declaration& type) {
 		context.error("Value types must have an alignment!");
 	if (type.flags & Definition::Flags::AV2_DF_VALUE) {
 		for (auto& field : type.fields) {
-			if (!(context.getType(field)->flags & Definition::Flags::AV2_DF_VALUE))
+			if (!(context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_VALUE))
 				context.error("Value types can only contain other value types!");
-			if (context.getType(field)->flags & Definition::Flags::AV2_DF_ARRAY)
+			if (context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_ARRAY)
 				context.error("Value types cannot contain arrays!");
 		}
 		if (
 			type.flags & Definition::Flags::AV2_DF_ARRAY
-		&&	!(context.getType(*type.base)->flags & Definition::Flags::AV2_DF_VALUE)
+		&&	!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_VALUE)
 		) context.error("Value arrays can only contain value types!");
 	}
 	if (type.flags & Definition::Flags::AV2_DF_ARRAY && type.fields.size())
@@ -755,10 +785,10 @@ static void validateType(Context& context, Context::Declaration& type) {
 	}
 	if (type.flags & Definition::Flags::AV2_DF_CLONABLE) {
 		if (type.flags & Definition::Flags::AV2_DF_ARRAY) {
-			if (!(context.getType(*type.base)->flags & Definition::Flags::AV2_DF_CLONABLE))
+			if (!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_CLONABLE))
 				context.error("Clonable arrays must contain clonable elements!");
 		} else for (auto const f: type.fields) {
-			auto& field = *context.getType(f);
+			auto& field = *context.getTypeByID(f);
 			if (!(field.flags & Definition::Flags::AV2_DF_CLONABLE))
 				context.error("Clonable structures must contain clonable fields!");
 		}
@@ -767,7 +797,7 @@ static void validateType(Context& context, Context::Declaration& type) {
 		context.error("Fields can only be declared on structures!");
 	if (!type.basic) {
 		for (auto& field: type.fields)
-			type.byteSize += context.getType(field)->byteSize;
+			type.byteSize += context.getTypeByID(field)->byteSize;
 		type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
 	} else if (type.basic != BasicType::AV2_BT_ANY) {
 		type.flags |=
