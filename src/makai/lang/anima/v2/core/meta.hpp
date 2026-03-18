@@ -158,6 +158,18 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
+		template<> struct ARTTI<Matrix4x4> {
+			constexpr static scstring ART_NAME = "matrix";
+
+			static Matrix4x4 construct(Object const& value) {
+				return value.toValue<Matrix4x4>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, Matrix4x4 const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
+			}
+		};
+
 		template<ARTType T>
 		struct ARTTI<T>: T {
 		};

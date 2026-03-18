@@ -59,7 +59,7 @@ namespace Makai::Anima::V2::Core {
 			return *ref<UTF8Char>(content->data());
 		}
 
-		template <Makai::Type::OneOf<Vector4> T>
+		template <Makai::Type::OneOf<Vector2, Vector3, Vector4> T>
 		T toValue() const {
 			if (isNumber())
 				return toValue<float>();
@@ -68,16 +68,21 @@ namespace Makai::Anima::V2::Core {
 			return *ref<Vector4>(content->data());
 		}
 
-		template <ARTType T>
-		T toValue(Database<Definition>& typeDB) const {
-			if (isArray())
+		template <Makai::Type::Equal<Matrix4x4> T>
+		T toValue() const {
+			if (isVectorable())
+				return Matrix4x4::identity() * toValue<Vector4>();
+			if (!isMatrix())
 				invalidCastError<T>("Mismatched types");
+			return *ref<Matrix4x4>(content->data());
+		}
+
+		template <ARTType T>
+		T toValue() const {
 			if (sizeof(T) != type->byteSize)
 				invalidCastError<T>("Size mismatch");
-			if (!typeDB.byName(T::ART_NAME))
-				invalidCastError<T>("Unregistered type");
-			if (!type->canBecome(typeDB.byName(T::ART_NAME)))
-				invalidCastError<T>("Forbidden conversion");
+			if (type->name != T::ART_NAME)
+				invalidCastError<T>("Type mismatch");
 			return T::construct(*this);
 		}
 
@@ -117,6 +122,10 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		bool isAlgebraic() const {
+			return isVector() || isMatrix();
+		}
+
+		bool isVectorable() const {
 			return isNumber() || isVector();
 		}
 
@@ -150,6 +159,12 @@ namespace Makai::Anima::V2::Core {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_VECTOR);
+		}
+
+		bool isMatrix() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_MATRIX);
 		}
 
 		bool isCharacter() const {

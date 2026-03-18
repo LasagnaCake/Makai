@@ -406,8 +406,13 @@ static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object
 		case AV2_BOP_ADD:	*out = *context.art.newValue<T>(lhs->toValue<T>() + rhs->toValue<T>()); return true;
 		case AV2_BOP_SUB:	*out = *context.art.newValue<T>(lhs->toValue<T>() - rhs->toValue<T>()); return true;
 		case AV2_BOP_MUL:	*out = *context.art.newValue<T>(lhs->toValue<T>() * rhs->toValue<T>()); return true;
-		case AV2_BOP_DIV:	*out = *context.art.newValue<T>(lhs->toValue<T>() / rhs->toValue<T>()); return true;
 		default: break;
+	}
+	if constexpr (Makai::Type::Different<T, Makai::Matrix4x4>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_BOP_DIV:	*out = *context.art.newValue<T>(lhs->toValue<T>() / rhs->toValue<T>()); return true;
+		}
 	}
 	if constexpr (Makai::Type::Number<T>) {
 		switch (op) {
@@ -448,11 +453,12 @@ void Engine::doBinaryOperation(Operator const op) {
 	auto out	= lhs;
 	if (err) return;
 	bool success = false;
-	if (lhs->isBoolean() && rhs->isBoolean())			success = bopIt<bool>(out, lhs, rhs, op, context);
-	if (lhs->isUnsigned() && rhs->isUnsigned())			success = bopIt<uint64>(out, lhs, rhs, op, context);
-	else if (lhs->isSigned() && rhs->isSigned())		success = bopIt<int64>(out, lhs, rhs, op, context);
-	else if (lhs->isNumber() && rhs->isNumber())		success = bopIt<double>(out, lhs, rhs, op, context);
-	else if (lhs->isAlgebraic() && rhs->isAlgebraic())	success = bopIt<Vector4>(out, lhs, rhs, op, context);
+	if (lhs->isBoolean() && rhs->isBoolean())				success = bopIt<bool>(out, lhs, rhs, op, context);
+	if (lhs->isUnsigned() && rhs->isUnsigned())				success = bopIt<uint64>(out, lhs, rhs, op, context);
+	else if (lhs->isSigned() && rhs->isSigned())			success = bopIt<int64>(out, lhs, rhs, op, context);
+	else if (lhs->isNumber() && rhs->isNumber())			success = bopIt<double>(out, lhs, rhs, op, context);
+	else if (lhs->isVectorable() && rhs->isVectorable())	success = bopIt<Vector4>(out, lhs, rhs, op, context);
+	else if (lhs->isAlgebraic() && rhs->isAlgebraic())		success = bopIt<Matrix4x4>(out, lhs, rhs, op, context);
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));

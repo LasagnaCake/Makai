@@ -57,6 +57,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_STRING,
 		AV2_BT_BYTES,
 		AV2_BT_VECTOR,
+		AV2_BT_MATRIX,
 	};
 
 	struct Definition: Entry {
