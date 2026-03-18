@@ -179,8 +179,6 @@ Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const
 		||	token.token == "local"
 		) {
 			result->source = token.token == "local" ? Core::DataLocation::AV2_DL_LOCAL : Core::DataLocation::AV2_DL_GLOBAL;
-			VariableDeclResolver resolver;
-			result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
 		} else if (token.token == "out") {
 			parser.context.expectNext(LTS_TT_OPEN_BRACKET).next();
 			result->source = Core::DataLocation::AV2_DL_EXTERNAL;
@@ -191,9 +189,9 @@ Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const
 				default: parser.context.error("Expected external variable name here!");
 			}
 			parser.context.expectNext(LTS_TT_CLOSE_BRACKET);
-			VariableDeclResolver resolver;
-			result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
 		}
+		VariableDeclResolver resolver;
+		result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
 	} else {
 		switch (parser.context.peek().type) {
 			case LTS_TT_IDENTIFIER: {
