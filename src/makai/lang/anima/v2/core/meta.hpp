@@ -14,7 +14,7 @@ namespace Makai::Anima::V2::Core::Meta {
 	namespace Impl {
 		template <class T>
 		concept ValidType = requires {
-			ARTType<T>;
+			requires ARTType<T>;
 			{T::convert} -> Makai::Type::Functional<
 				Makai::Meta::If<
 					Makai::Type::Void<T>,
@@ -219,7 +219,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 	template <class T>
 	constexpr String artnameof() {
-		return Impl::ARTTI<T>::ART_NAME;
+		return ARTInfo<T>::ART_NAME;
 	}
 
 	template <class... Types>

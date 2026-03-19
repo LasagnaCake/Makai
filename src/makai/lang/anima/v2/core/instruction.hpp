@@ -287,6 +287,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Field` = how to access the field.
 			/// @details `get <id>`
 			AV2_IN_FIELD_GET,
+			/// @brief Sets a given field of an object or array with a given value.
+			/// @param type `Field` = how to access the field.
+			/// @details `set <id>`
+			AV2_IN_FIELD_SET,
 			/// @brief Gets the size of a value.
 			/// @param type 0 = element count, 1 = in bytes.
 			/// @details `size`
@@ -340,6 +344,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_CLEAR:		return "drop";
 				case Name::AV2_IN_SELECT:		return "pick";
 			}
+			return "???";
 		}
 
 		/// @brief Parses an instruction from a value.

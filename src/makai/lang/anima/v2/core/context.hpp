@@ -39,8 +39,8 @@ namespace Makai::Anima::V2::Core {
 
 			constexpr static ExternalMethodInfo info() {
 				return {
-					artnameof<TReturn>(),
-					StringList::from(artnameof<TArgs>()...)
+					Meta::artnameof<TReturn>(),
+					StringList::from(Meta::artnameof<TArgs>()...)
 				};
 			}
 
@@ -48,13 +48,13 @@ namespace Makai::Anima::V2::Core {
 			constexpr static Instance<ExternalInvocation> invoker(Function<TFunc> const& f) {
 				return new ExternalInvocation(
 					[f] (Database<Definition>& types, ExternalMethod& method, List<Object::Storage> const& args) {
-						if (types.byName(artnameof<TReturn>()).empty())
+						if (types.byName(Meta::artnameof<TReturn>()).empty())
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
 						if constexpr (Makai::Type::Void<TReturn>)
 							invoke(f, toArguments<TArgs...>(args));
-						else return converter<TReturn>()(types, invokeFromTuple(f, toArguments<TArgs...>(args.sliced(0, method.argc))));
+						else return Meta::ARTInfo<TReturn>::convert(types, invokeFromTuple(f, toArguments<TArgs...>(args.sliced(0, method.argc))));
 					}
 				);
 			}

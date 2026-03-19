@@ -3,6 +3,7 @@
 
 #include "../../../../compat/ctl.hpp"
 #include "../core/core.hpp"
+#include "makai/lang/anima/v2/core/object.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Context {
@@ -40,7 +41,7 @@ namespace Makai::Anima::V2::Runtime {
 			return *this;
 		}
 
-		template <Type::Different<Storage> T>
+		template <Type::NoneOf<Storage, Core::Object::Accessor> T>
 		Context& push(T const& value) {
 			globalValueStack.pushBack(newValue(value));
 			return *this;

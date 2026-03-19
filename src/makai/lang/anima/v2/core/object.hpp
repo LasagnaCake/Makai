@@ -7,7 +7,7 @@
 namespace Makai::Anima::V2::Core {
 	template <class T>
 	concept ARTType = requires (Object o) {
-		Type::NonVoid<T>;
+		requires Type::NonVoid<T>;
 		sizeof(T) >= sizeof(byte);
 		{T::ART_NAME}		-> Makai::Type::Equal<scstring>;
 		{T::construct(o)}	-> Makai::Type::Equal<T>;
@@ -42,7 +42,9 @@ namespace Makai::Anima::V2::Core {
 		T toValue() const {
 			if (!isString())
 				invalidCastError<T>("Mismatched types");
-			return *ref<UTF8String>(content->data());
+			if constexpr (Makai::Type::Equal<T, String>)
+				return ref<UTF8String>(content->data())->toString();
+			else return *ref<UTF8String>(content->data());
 		}
 
 		template <Makai::Type::Equal<Binary<>> T>
@@ -73,7 +75,7 @@ namespace Makai::Anima::V2::Core {
 			if (isNumber())
 				return Matrix4x4::identity() * toValue<float>();
 			if (isVector())
-				return Matrix4x4::identity() * toValue<Vector4>();
+				return Matrix4x4::fromTranslation(toValue<Vector4>());
 			if (!isMatrix())
 				invalidCastError<T>("Mismatched types");
 			return *ref<Matrix4x4>(content->data());
@@ -233,9 +235,9 @@ namespace Makai::Anima::V2::Core {
 			friend struct Object;
 
 			usize	index;
-			Storage value;
+			Storage store;
 
-			Accessor(usize const& index, Storage const& value): index(index), value(value) {}
+			Accessor(usize const& index, Storage const& value): index(index), store(value) {}
 		};
 
 		Accessor	at(uint64 const index)			{return {index, this};		}

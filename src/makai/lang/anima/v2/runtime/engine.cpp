@@ -103,16 +103,16 @@ void Engine::v2Compare() {
 		}
 	}
 	switch (comp.comp) {
-		using enum As<decltype(comp.comp)>;
+		using enum Core::Comparator;
 		case AV2_OP_THREEWAY:
 			*context.top() = *context.art.newValue(enumcast<Makai::StandardOrder>(order));
 		break;
-		using enum As<Makai::StandardOrder>;
-		case AV2_OP_EQUALS:			*context.top() = *context.art.newValue(order == EQUAL);	break;
-		case AV2_OP_NOT_EQUALS:		*context.top() = *context.art.newValue(order != EQUAL);	break;
+		using enum Makai::StandardOrder;
+		case AV2_OP_EQUALS:			*context.top() = *context.art.newValue(order == EQUAL);		break;
+		case AV2_OP_NOT_EQUALS:		*context.top() = *context.art.newValue(order != EQUAL);		break;
 		case AV2_OP_GREATER_THAN:	*context.top() = *context.art.newValue(order == GREATER);	break;
-		case AV2_OP_GREATER_EQUALS:	*context.top() = *context.art.newValue(order != LESS);	break;
-		case AV2_OP_LESS_THAN:		*context.top() = *context.art.newValue(order == LESS);	break;
+		case AV2_OP_GREATER_EQUALS:	*context.top() = *context.art.newValue(order != LESS);		break;
+		case AV2_OP_LESS_THAN:		*context.top() = *context.art.newValue(order == LESS);		break;
 		case AV2_OP_LESS_EQUALS:	*context.top() = *context.art.newValue(order != GREATER);	break;
 	}
 }
@@ -401,26 +401,37 @@ using Int = Makai::Meta::If<Makai::Type::Unsigned<T>, uint64, int64>;
 
 template <class T>
 static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object::Storage const& rhs, Operator const op, Runtime::Context& context) {
-	switch (op) {
-		using enum Operator;
-		case AV2_BOP_ADD:	*out = *context.art.newValue<T>(lhs->toValue<T>() + rhs->toValue<T>()); return true;
-		case AV2_BOP_SUB:	*out = *context.art.newValue<T>(lhs->toValue<T>() - rhs->toValue<T>()); return true;
-		case AV2_BOP_MUL:	*out = *context.art.newValue<T>(lhs->toValue<T>() * rhs->toValue<T>()); return true;
-		default: break;
+	if constexpr (Makai::Type::Equal<T, bool>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_BOP_ADD:	*out = *context.art.newValue<T>(lhs->toValue<T>() || rhs->toValue<T>());	return true;
+			case AV2_BOP_SUB:	*out = *context.art.newValue<T>(lhs->toValue<T>() != rhs->toValue<T>());	return true;
+			case AV2_BOP_MUL:	*out = *context.art.newValue<T>(lhs->toValue<T>() && rhs->toValue<T>());	return true;
+			default: break;
+		}
+	} else if constexpr (Makai::Type::Number<T>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_BOP_ADD:	*out = *context.art.newValue<T>(lhs->toValue<T>() + rhs->toValue<T>()); return true;
+			case AV2_BOP_SUB:	*out = *context.art.newValue<T>(lhs->toValue<T>() - rhs->toValue<T>()); return true;
+			case AV2_BOP_MUL:	*out = *context.art.newValue<T>(lhs->toValue<T>() * rhs->toValue<T>()); return true;
+			default: break;
+		}
 	}
 	if constexpr (Makai::Type::Different<T, Makai::Matrix4x4>) {
 		switch (op) {
 			using enum Operator;
 			case AV2_BOP_DIV:	*out = *context.art.newValue<T>(lhs->toValue<T>() / rhs->toValue<T>()); return true;
+			default: break;
 		}
 	}
 	if constexpr (Makai::Type::Number<T>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_BOP_REM:	*out = *context.art.newValue<T>(Makai::Math::mod<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
-			case AV2_BOP_POW:	*out = *context.art.newValue<T>(Makai::Math::pow<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
-			case AV2_BOP_ATAN2:	*out = *context.art.newValue<T>(Makai::Math::atan2<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
-			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;;
+			case AV2_BOP_REM:	*out = *context.art.newValue<T>((T)Makai::Math::mod<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;
+			case AV2_BOP_POW:	*out = *context.art.newValue<T>(Makai::Math::pow<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;
+			case AV2_BOP_ATAN2:	*out = *context.art.newValue<T>((T)Makai::Math::atan2<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
+			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;;
 			default: break;
 		}
 	}
@@ -489,12 +500,12 @@ static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operat
 			case AV2_UOP_SIN:		*out = *context.art.newValue<T>(Makai::Math::sin(lhs->toValue<double>()));		return true;
 			case AV2_UOP_COS:		*out = *context.art.newValue<T>(Makai::Math::cos(lhs->toValue<double>()));		return true;
 			case AV2_UOP_TAN:		*out = *context.art.newValue<T>(Makai::Math::tan(lhs->toValue<double>()));		return true;
-			case AV2_UOP_ASIN:		*out = *context.art.newValue<T>(asin(lhs->toValue<T>()));						return true;
-			case AV2_UOP_ACOS:		*out = *context.art.newValue<T>(acos(lhs->toValue<T>()));						return true;
-			case AV2_UOP_ATAN:		*out = *context.art.newValue<T>(atan(lhs->toValue<T>()));						return true;
-			case AV2_UOP_SINH:		*out = *context.art.newValue<T>(sinh(lhs->toValue<T>()));						return true;
-			case AV2_UOP_COSH:		*out = *context.art.newValue<T>(cosh(lhs->toValue<T>()));						return true;
-			case AV2_UOP_TANH:		*out = *context.art.newValue<T>(tanh(lhs->toValue<T>()));						return true;
+			case AV2_UOP_ASIN:		*out = *context.art.newValue<T>((T)asin(lhs->toValue<T>()));					return true;
+			case AV2_UOP_ACOS:		*out = *context.art.newValue<T>((T)acos(lhs->toValue<T>()));					return true;
+			case AV2_UOP_ATAN:		*out = *context.art.newValue<T>((T)atan(lhs->toValue<T>()));					return true;
+			case AV2_UOP_SINH:		*out = *context.art.newValue<T>((T)sinh(lhs->toValue<T>()));					return true;
+			case AV2_UOP_COSH:		*out = *context.art.newValue<T>((T)cosh(lhs->toValue<T>()));					return true;
+			case AV2_UOP_TANH:		*out = *context.art.newValue<T>((T)tanh(lhs->toValue<T>()));					return true;
 			case AV2_UOP_LOG2:		*out = *context.art.newValue<T>(Makai::Math::log2(lhs->toValue<double>()));		return true;
 			case AV2_UOP_LOG10:		*out = *context.art.newValue<T>(Makai::Math::log10(lhs->toValue<double>()));	return true;
 			case AV2_UOP_LN:		*out = *context.art.newValue<T>(Makai::Math::log(lhs->toValue<double>()));		return true;
@@ -603,7 +614,7 @@ void Engine::v2StackFlush() {
 
 void Engine::v2Jump() {
 	Instruction::Leap leap = current.getTypeAs<Instruction::Leap>();
-	using enum As<decltype(leap.type)>;
+	using enum Instruction::Leap::Type;
 	uint64 loc = 0;
 	if (context.globalValueStack.size() < ((leap.type != AV2_ILT_UNCONDITIONAL) + leap.dyn))
 		return crash(invalidSourceError("Not enough parameters for jump!"));

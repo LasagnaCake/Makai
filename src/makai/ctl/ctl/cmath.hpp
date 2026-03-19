@@ -67,7 +67,8 @@ constexpr bool compare(F const a, F const b, F const epsilon = 1.0e-5) {
 /// @return Absolute value.
 template<Type::Number T = double>
 constexpr T abs(T const v) {
-	return (v < 0) ? -v : v;
+	if constexpr (Type::Equal<T, bool>) return v;
+	else return (v < 0) ? -v : v;
 }
 
 namespace {

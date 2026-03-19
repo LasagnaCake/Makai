@@ -91,10 +91,10 @@ pointer Object::addressAt(usize index) const {
 }
 
 Object::Storage Object::Accessor::get() const {
-	return value->getAtIndex(index);
+	return store->getAtIndex(index);
 }
 
 Object::Accessor const& Object::Accessor::set(Object::Storage const& value) const {
-	value->setAtIndex(index, value);
+	store->setAtIndex(index, value);
 	return *this;
 }

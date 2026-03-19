@@ -6,12 +6,14 @@ static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
 	cfg["output"]	= "out.anp";
+	cfg["link"]		= cfg.array();
 	return cfg;
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]	= "help";
 	tl["o"]	= "output";
+	tl["l"]	= "link";
 }
 
 int main(int argc, char** argv) try {
