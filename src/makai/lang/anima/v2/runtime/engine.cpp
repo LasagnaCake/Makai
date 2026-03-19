@@ -616,7 +616,7 @@ void Engine::v2Jump() {
 	Instruction::Leap leap = current.getTypeAs<Instruction::Leap>();
 	using enum Instruction::Leap::Type;
 	uint64 loc = 0;
-	if (context.globalValueStack.size() < ((leap.type != AV2_ILT_UNCONDITIONAL) + leap.dyn))
+	if (context.globalValueStack.size() < Makai::Cast::as<uint>((leap.type != AV2_ILT_UNCONDITIONAL) + leap.dyn))
 		return crash(invalidSourceError("Not enough parameters for jump!"));
 	if (leap.dyn) {
 		if (context.globalValueStack.empty())

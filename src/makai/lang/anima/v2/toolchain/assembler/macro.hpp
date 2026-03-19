@@ -44,7 +44,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 				Result match(Arguments const& args, Callback const& call = {}) const;
 
-				constexpr Count fit(Arguments const& args) const {
+				Count fit(Arguments const& args) const {
 					if (auto const result = match(args))
 						return result.value().size();
 					return null;

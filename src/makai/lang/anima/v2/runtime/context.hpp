@@ -3,7 +3,6 @@
 
 #include "../../../../compat/ctl.hpp"
 #include "../core/core.hpp"
-#include "makai/lang/anima/v2/core/object.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Context {

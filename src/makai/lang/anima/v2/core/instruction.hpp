@@ -339,6 +339,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_SCOPE_BIND:	return "bind";
 				case Name::AV2_IN_SCOPE_BRING:	return "bring";
 				case Name::AV2_IN_FIELD_GET:	return "get";
+				case Name::AV2_IN_FIELD_SET:	return "set";
 				case Name::AV2_IN_SIZEOF:		return "sizeof";
 				case Name::AV2_IN_TYPEOF:		return "typeof";
 				case Name::AV2_IN_CLEAR:		return "drop";

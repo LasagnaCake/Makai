@@ -407,6 +407,7 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 			else if (id == "empty" || id == "e")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_UNDEFINED;
 		}
 	}
+	context.add(Instruction::Name::AV2_IN_JUMP, leap);
 	if (!dynamic)
 		context.addJumpTarget(context.getNext(LTS_TT_IDENTIFIER, "jump expression").getString());
 }
@@ -507,9 +508,10 @@ static void doStackClear(Context& context) {
 	context.add(context.getNext(LTS_TT_INTEGER).getUnsigned());
 }
 
-static void doField(Context& context, bool const dyn = false) {
+static void doField(Context& context, bool const setter, bool const dyn = false) {
 	// TODO: The rest of this
 	Makai::Nullable<uint64> field;
+	Instruction::Field f;
 	if (!dyn) {
 		field =
 			context
@@ -518,7 +520,13 @@ static void doField(Context& context, bool const dyn = false) {
 				.getUnsigned()
 		;
 		context.expectNext(Type{']'});
-	}
+	} else f.dynamic = dyn;
+	context.add(
+		setter
+	?	Instruction::Name::AV2_IN_FIELD_SET
+	:	Instruction::Name::AV2_IN_FIELD_GET,
+		f
+	);
 }
 
 static void doSizeOf(Context& context, bool const inBytes = false) {
@@ -553,6 +561,7 @@ static void doCompare(Context& context) {
 	else if (id == "greaterequals" || id == "ge")	cmp.comp = Comparator::AV2_OP_GREATER_EQUALS;
 	else if (id == "lessequals" || id == "le")		cmp.comp = Comparator::AV2_OP_LESS_EQUALS;
 	else if (id == "order" || id == "o")			cmp.comp = Comparator::AV2_OP_THREEWAY;
+	context.add(Instruction::Name::AV2_IN_COMPARE, cmp);
 }
 
 static void doScopeEnter(Context& context) {
@@ -570,9 +579,9 @@ static void doScopeExit(Context& context) {
 static void doScopeBind(Context& context) {
 	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
 	context.expectNext(Type{':'}).expectNext(Type{'['});
-	auto const src = context.getNext(LTS_TT_INTEGER, "global stack top offset").getUnsigned();
+	auto const src = context.getNext(LTS_TT_INTEGER, "global stack top offset").get<uint16>();
 	context.expectNext(LTS_TT_LITTLE_ARROW);
-	auto const dst = context.getNext(LTS_TT_INTEGER, "local stack bottom offset").getUnsigned();
+	auto const dst = context.getNext(LTS_TT_INTEGER, "local stack bottom offset").get<uint16>();
 	context.expectNext(Type{']'});
 	context.add(
 		Instruction::Name::AV2_IN_SCOPE_BIND,
@@ -588,9 +597,9 @@ static void doScopeBring(Context& context) {
 	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
 	context.expectNext(Type{'['});
 	auto const src = context.getNext(LTS_TT_INTEGER, "source scope").getUnsigned();
-	auto const offset = context.expectNext(Type{'['}).getNext(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
+	auto const offset = context.expectNext(Type{'['}).getNext(LTS_TT_INTEGER, "source local stack bottom offset").get<uint16>();
 	context.expectNext(Type{']'}).expectNext(Type{LTS_TT_LITTLE_ARROW});
-	auto const dst = context.getNext(LTS_TT_INTEGER, "source local stack bottom offset").getUnsigned();
+	auto const dst = context.getNext(LTS_TT_INTEGER, "source local stack bottom offset").get<uint16>();
 	context.expectNext(Type{']'});
 	context.add(
 		Instruction::Name::AV2_IN_SCOPE_BRING,
@@ -664,6 +673,7 @@ static void doOperation(Context& context) {
 	else if (op == "log10")	bop.op = Operator::AV2_UOP_LOG10;
 	else if (op == "ln")	bop.op = Operator::AV2_UOP_LN;
 	else if (op == "sqrt")	bop.op = Operator::AV2_UOP_SQRT;
+	context.add(Instruction::Name::AV2_IN_OP, bop);
 }
 
 static void doYield(Context& context) {
@@ -733,7 +743,9 @@ static void doDynamic(Context& context) {
 	else if (id == "cast" || id == "as")
 		doCast(context, true);
 	else if (id == "field" || id == "at")
-		doField(context, true);
+		doField(context, false, true);
+	else if (id == "set")
+		doField(context, true, true);
 	else if (id == "rewrite")
 		doUnsafeCast(context, true);
 	else context.error("Invalid dynamic operation!");
@@ -1199,7 +1211,8 @@ static void doExpression(Context& context) {
 	else if (id == "context" || id == "mode")	{context.next(); doContext(context);}
 	else if (id == "loose" || id == "strict")	doContext(context, true);
 	else if (id == "operator" || id == "op")	doOperation(context);
-	else if (id == "field" || id == "at")		doField(context);
+	else if (id == "field" || id == "at")		doField(context, false);
+	else if (id == "set")						doField(context, true);
 	else if (id == "count")						doSizeOf(context);
 	else if (id == "size")						doSizeOf(context, true);
 	else if (id == "type")						doTypeGet(context);
