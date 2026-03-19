@@ -12,10 +12,8 @@
 
 CTL_NAMESPACE_BEGIN
 
-/// @brief Mutex synchronization barrier.
-class Mutex:
-	SelfIdentified<Mutex> {
-public:
+/// @brief Mutex (Mutual Exclusion) synchronization barrier.
+struct Mutex: SelfIdentified<Mutex> {
 	using SelfIdentified	= SelfIdentified<Mutex>;
 
 	using
