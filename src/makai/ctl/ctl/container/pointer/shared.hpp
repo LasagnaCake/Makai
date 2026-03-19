@@ -8,6 +8,7 @@
 #include "../../typetraits/traits.hpp"
 #include "../../algorithm/strconv.hpp"
 #include "../../memory/deleter.hpp"
+#include "../../async/lock.hpp"
 #include "../error.hpp"
 #include "../function.hpp"
 #include "../map/map.hpp"
@@ -52,6 +53,8 @@ namespace Base {
 	protected:
 		/// @brief Underlying reference database.
 		inline static Database database;
+		/// @brief Mutex for interlocking purposes.
+		inline static Mutex mutex;
 	};
 }
 
@@ -157,6 +160,7 @@ public:
 	/// @brief Returns the amount of references holding the current object.
 	/// @return Reference count.
 	constexpr ssize count() const {
+		ScopeLock<> lock{mutex};
 		if (!exists()) return 0;
 		return database[ref].count;
 	}
@@ -176,6 +180,7 @@ public:
 	/// @param ptr Object to reference.
 	/// @return Reference to self.
 	constexpr SelfType& bind(SelfType const& ptr) {
+		ScopeLock<> lock{mutex};
 		if (ref == ptr) return (*this);
 		unbind();
 		if (!ptr) return (*this);
@@ -187,6 +192,7 @@ public:
 	/// @param ptr Object to reference.
 	/// @return Reference to self.
 	constexpr SelfType& bind(OtherType const& ptr) {
+		ScopeLock<> lock{mutex};
 		CTL_PTR_ASSERT_WEAK;
 		if (ref == ptr) return (*this);
 		unbind();
@@ -198,11 +204,14 @@ public:
 	/// @brief Removes the pointer as a reference to a bound object.
 	/// @return Reference to self.
 	constexpr SelfType& unbind() {
+		ScopeLock<> lock{mutex};
 		if (!exists()) return (*this);
 		CTL_PTR_IF_STRONG {
 			if (unique())
 				destroy();
-			else if (count() > 0) database[(pointer)ref].count--;
+			else {
+				if (count() > 0) database[(pointer)ref].count--;
+			}
 		}
 		ref = nullptr;
 		return (*this);
@@ -211,6 +220,7 @@ public:
 	/// @brief Destroys (deletes) the bound object.
 	/// @return Reference to self.
 	constexpr SelfType& destroy() requires (!WEAK) {
+		ScopeLock<> lock{mutex};
 		if (!exists()) return (*this);
 		release();
 		deleter(ref);
@@ -222,6 +232,7 @@ public:
 	/// @return Reference to self.
 	/// @note Requires shared pointer type to be strong.
 	constexpr SelfType& release() requires (!WEAK) {
+		ScopeLock<> lock{mutex};
 		if (exists())
 			detach(ref);
 		return (*this);
@@ -232,6 +243,7 @@ public:
 	/// @note Requires shared pointer type to be strong.
 	constexpr static void detach(ref<DataType> const& ptr)
 	requires (!WEAK) {
+		ScopeLock<> lock{mutex};
 		if (isBound(ptr))
 			database[(pointer)ptr] = {false, 0};
 	}
@@ -240,6 +252,7 @@ public:
 	/// @return Whether the object exists.
 	constexpr bool exists() const {
 		if (!ref) return false;
+		ScopeLock<> lock{mutex};
 		CTL_PTR_IF_STRONG	return (database[(pointer)ref].count > 0);
 		else				return (database[(pointer)ref].exists);
 	}
@@ -305,7 +318,12 @@ public:
 	constexpr operator bool() const	{return exists();	}
 
 	template<Type::Functional<OperationType> TFunction>
-	constexpr Shared& modify(TFunction const& op)		{ReferenceType ref = *getPointer(); ref = op(ref); return (*this);	}
+	constexpr Shared& modify(TFunction const& op) {
+		ScopeLock<> lock{mutex};
+		ReferenceType ref = *getPointer();
+		ref = op(ref);
+		return (*this);
+	}
 	template<Type::Functional<OperationType> TFunction>
 	constexpr Shared& operator()(TFunction const& op)	{return modify(op);													}
 
@@ -345,6 +363,7 @@ public:
 	/// @brief Returns the value pointed to.
 	/// @return Reference to object being pointed to.
 	constexpr ReferenceType value() const {
+		ScopeLock<> lock{mutex};
 		if (!exists()) nullPointerError();
 		return (*ref);
 	}
@@ -374,6 +393,7 @@ public:
 
 private:
 	constexpr void attach(PointerType const& p) {
+		ScopeLock<> lock{mutex};
 		if (!p) return;
 		ref = p;
 		database[(pointer)p].exists = true;
@@ -389,11 +409,13 @@ private:
 	PointerType ref = nullptr;
 
 	constexpr PointerType getPointer() {
+		ScopeLock<> lock{mutex};
 		if (!exists()) nullPointerError();
 		return (ref);
 	}
 
 	constexpr PointerType getPointer() const {
+		ScopeLock<> lock{mutex};
 		if (!exists()) nullPointerError();
 		return (ref);
 	}

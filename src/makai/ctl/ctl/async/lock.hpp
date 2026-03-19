@@ -48,7 +48,7 @@ public:
 	ScopeLock(ReferenceType mutex): BaseType(mutex)	{mutex.capture();}
 	/// @brief Releases a mutex.
 	~ScopeLock()									{mutex.release();}
-	
+
 protected:
 	using BaseType::mutex;
 

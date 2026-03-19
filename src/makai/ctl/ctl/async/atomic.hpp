@@ -4,7 +4,6 @@
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
 #include "../templates.hpp"
-#include "../container/function.hpp"
 #include "../container/view.hpp"
 #include "../adapter/comparator.hpp"
 #include "mutex.hpp"
