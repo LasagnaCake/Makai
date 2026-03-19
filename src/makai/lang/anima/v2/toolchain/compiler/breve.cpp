@@ -1,6 +1,5 @@
 #include "breve.hpp"
-
-using namespace Makai;
+#include "intermediate.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -8,23 +7,14 @@ using namespace Makai::Anima::V2::Toolchain::Compiler;
 
 using Context = Breve::Context;
 
-using Type = Context::Tokenizer::Token::Type;
-using enum Type;
+using enum Context::Tokenizer::Token::Type;
 
-CTL_DIAGBLOCK_BEGIN
-CTL_DIAGBLOCK_IGNORE_SWITCH
+using enum Makai::Anima::V2::Toolchain::Compiler::Node::Content;
 
-namespace {
-	struct BreveTreeDecomposer {
-
-		void decompose() {
-		}
-	};
-}
+// TODO: This hellspawn
 
 void Breve::invoke() {
+	context.stack.pushBack(context.inter.root);
 	Parser parser(context);
 	auto const tree = parser.parse();
 }
-
-CTL_DIAGBLOCK_END

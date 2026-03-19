@@ -97,6 +97,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		"is",
 		"as",
 		"drop",
+		"local",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
@@ -125,7 +126,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix(LTS_TT_COMPARE_GREATER_EQUALS, false);
 	infix(LTS_TT_COMPARE_EQUALS, false);
 	infix(LTS_TT_COMPARE_NOT_EQUALS, false);
-	infix(LTS_TT_DOT, false);
 	infix("xor", false);
 	infix("atan", false);
 	infix("cross", false);
@@ -150,11 +150,10 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("do", prefixes, new LoopResolver());
 	add("while", prefixes, new LoopResolver());
 	add("for", prefixes, new LoopResolver());
-	add("module", prefixes, new DeclarationResolver());
-	add("local", prefixes, new DeclarationResolver());
-	add("global", prefixes, new DeclarationResolver());
-	add("out", prefixes, new DeclarationResolver());
-	add("func", prefixes, new DeclarationResolver());
+	add("module", prefixes, new ModuleDeclResolver());
+	add("global", prefixes, new SpecialVarDeclResolver());
+	add("out", prefixes, new SpecialVarDeclResolver());
+	add("func", prefixes, new FunctionDeclResolver());
 	add("extend", prefixes, new ExtensionResolver());
 	add("import", prefixes, new ImportResolver());
 	add("trait", prefixes, new TraitDeclResolver());
@@ -164,7 +163,8 @@ Parser::Parser(BaseContext& context): context(context) {
 	// Advanced infixes
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());
-	add(LTS_TT_COLON, infixes, new DeclarationResolver());
+	add(LTS_TT_DOT, infixes, new PathResolver());
+	add(LTS_TT_COLON, infixes, new VariableDeclResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
 	add(LTS_TT_EXCLAMATION, infixes, new FunctionCallResolver());
 	add(LTS_TT_OPEN_BRACKET, infixes, new ArrayResolver());

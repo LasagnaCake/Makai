@@ -45,15 +45,25 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
 			AV2_TCTD_STRUCT,
+			AV2_TCTD_TEMPLATE,
 		};
+
+		Definition def;
+		Namespace::TypeRef base;
 	};
 
-	struct Function: Labeled, Scoped {
-
+	struct Function: Labeled {
+		struct Overload: Scoped {
+			Namespace::TypeRef				result;
+			List<Namespace::VariableRef>	arguments;
+			String							implementation;
+		};
+		List<Instance<Overload>> overloads;
 	};
 
 	struct Variable: Labeled {
-
+		Namespace::TypeRef	type;
+		String				initializer;
 	};
 
 	struct Attribute: Labeled {

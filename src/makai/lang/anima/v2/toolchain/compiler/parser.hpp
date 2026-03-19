@@ -15,6 +15,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			AV2_TANC_VALUE,
 			AV2_TANC_NAME,
 			AV2_TANC_DECLARATION,
+			AV2_TANC_DEFINITION,
 			AV2_TANC_ASSIGNMENT,
 			AV2_TANC_FN_CALL,
 			AV2_TANC_PREFIX_OP,
@@ -34,6 +35,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 
 		Content							content = Content::AV2_TANC_EMPTY;
 		Data::Value						value;
+		Instance						lhs;
+		Instance						rhs;
 		List<Instance>					children;
 		Nullable<Core::DataLocation>	source;
 		BaseContext::Axiom				base;

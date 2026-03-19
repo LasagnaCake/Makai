@@ -19,7 +19,7 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs
 			result->value = id;
 		}
 	} else result->value = token.value;
-	result->content = isIdentifier ? Node::Content::AV2_TANC_PATH : Node::Content::AV2_TANC_VALUE;
+	result->content = isIdentifier ? Node::Content::AV2_TANC_NAME : Node::Content::AV2_TANC_VALUE;
 	return result;
 }
 
@@ -45,7 +45,8 @@ Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance cons
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.appendBack({lhs, parser.nextExpression(precedence)});
+	result->lhs = lhs;
+	result->rhs = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INFIX_OP;
 	return result;
 }
@@ -61,14 +62,12 @@ Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lh
 Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.appendBack({
-		parser.nextExpression(precedence),
-		lhs
-	});
+	result->children.pushBack(lhs);
+	result->lhs = parser.nextExpression(precedence);
 	parser.context.expectNext(LTS_TT_IDENTIFIER, "'else'");
 	if (parser.context.value().getString() != "else")
 		parser.context.error("Expected 'else' here!");
-	result->children.pushBack(parser.nextExpression(precedence));
+	result->rhs = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INLINE_IF_ELSE;
 	return result;
 }
@@ -82,7 +81,7 @@ Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance con
 Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.pushBack(lhs);
+	result->lhs = lhs;
 	result->content = Node::Content::AV2_TANC_FN_CALL;
 	if (parser.context.type() == LTS_TT_EXCLAMATION) return result;
 	while (true) {
@@ -112,7 +111,7 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	if (lhs)
-		result->children.pushBack(lhs);
+		result->lhs = lhs;
 	while (true) {
 		if (parser.context.has(LTS_TT_CLOSE_BRACKET)) break;
 		result->children.pushBack(parser.nextExpression(precedence));
@@ -159,53 +158,19 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 	if (!(
 		lhs->content == Node::Content::AV2_TANC_ASSIGNMENT
 	||	lhs->content == Node::Content::AV2_TANC_PATH
+	||	lhs->content == Node::Content::AV2_TANC_DECLARATION
 	||	lhs->content == Node::Content::AV2_TANC_SUBSCRIPT
 	)) parser.context.error("Expected assignment chain or declaration path here!");
-	result->children.appendBack({
-		lhs,
-		parser.nextExpression(precedence)
-	});
+	result->lhs = lhs;
+	result->rhs = parser.nextExpression(precedence);
 	return result;
 }
 
-Node::Instance DeclarationResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance SpecialVarDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
-	result->value = lhs ? Makai::Data::Value("local") : Makai::Data::Value(token.token);
-	if (!lhs) {
-		if (
-			token.token == "global"
-		||	token.token == "local"
-		) {
-			result->source = token.token == "local" ? Core::DataLocation::AV2_DL_LOCAL : Core::DataLocation::AV2_DL_GLOBAL;
-		} else if (token.token == "out") {
-			parser.context.expectNext(LTS_TT_OPEN_BRACKET).next();
-			result->source = Core::DataLocation::AV2_DL_EXTERNAL;
-			switch (parser.context.type()) {
-				case LTS_TT_IDENTIFIER:
-				case LTS_TT_SINGLE_QUOTE_STRING:
-				case LTS_TT_DOUBLE_QUOTE_STRING: result->value = parser.context.value();
-				default: parser.context.error("Expected external variable name here!");
-			}
-			parser.context.expectNext(LTS_TT_CLOSE_BRACKET);
-		}
-		VariableDeclResolver resolver;
-		result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
-	} else {
-		switch (parser.context.peek().type) {
-			case LTS_TT_IDENTIFIER: {
-				VariableDeclResolver resolver;
-				result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
-			} break;
-			case LTS_TT_OPEN_PAREN: {
-				result->value = "record";
-				InlineStructureResolver resolver;
-				result->children.pushBack(resolver.resolve(parser, result, parser.context.token()));
-			} break;
-			default: parser.context.error("Invalid expression!");
-		}
-	};
+	// TODO: This
 	return result;
 }
 
@@ -217,6 +182,15 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 
 Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
+	result->content = Node::Content::AV2_TANC_DECLARATION;
 	// TODO: This
+	return result;
+}
+
+Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->content = Node::Content::AV2_TANC_PATH;
+	result->lhs = lhs;
+	result->rhs = parser.nextExpression(precedence);
 	return result;
 }
