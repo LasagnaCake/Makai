@@ -286,10 +286,14 @@ Makai::Data::Value Node::serialize() const {
 			ch.pushBack(child->serialize());
 		out["children"] = ch;
 	}
-	// TODO: The rest of this mess
+	if (interject.size()) {
+		String ij;
+		for (auto& tok: interject)
+			ij += tok.token + " ";
+		ij.popBack();
+		out["asm"] = ij;
+	}
+	if (source) out["source"] = *source;
+	out["base"] = base.token;
 	return out;
-}
-
-Node::Instance Node::deserialize(Makai::Data::Value const& value) {
-
 }
