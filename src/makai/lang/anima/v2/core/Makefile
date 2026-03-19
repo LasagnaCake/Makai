@@ -1,4 +1,4 @@
-ROOT := ../../../../../../..
+ROOT := ../../../../../..
 include $(ROOT)/make/core.make
 
 override prefix := $(call concat, $(prefix), core)

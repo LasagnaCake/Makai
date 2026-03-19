@@ -38,6 +38,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_SIZEOF:			v2Sizeof();		break;
 		case AV2_IN_TYPEOF:			v2Typeof();		break;
 		case AV2_IN_FIELD_GET:		v2FieldGet();	break;
+		case AV2_IN_FIELD_SET:		v2FieldSet();	break;
 		case AV2_IN_RANDOM:			v2Random();		break;
 		case AV2_IN_COPY:			v2Copy();		break;
 		case AV2_IN_RETURN: 		v2Return();		break;
@@ -726,6 +727,22 @@ void Engine::v2FieldGet() {
 	}
 	advance(true);
 	context.push(context.pop()->at(loc));
+}
+
+void Engine::v2FieldSet() {
+	Instruction::Field field = current.getTypeAs<Instruction::Field>();
+	uint64 loc = 0;
+	if (field.dynamic) {
+		if (context.globalValueStack.empty())
+			return crash(invalidSourceError("Global stack is empty!"));
+		loc = context.pop()->toValue<uint64>();
+	} else {
+		advance(true);
+		loc = Makai::Cast::bit<uint64>(current);
+	}
+	advance(true);
+	auto const v = context.pop();
+	context.top()->at(loc).set(v);
 }
 
 void Engine::v2Sizeof() {

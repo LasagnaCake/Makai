@@ -88,6 +88,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2ScopeEnter();
 		void v2ScopeExit();
 		void v2FieldGet();
+		void v2FieldSet();
 		void v2Sizeof();
 		void v2Typeof();
 		void v2Random();
