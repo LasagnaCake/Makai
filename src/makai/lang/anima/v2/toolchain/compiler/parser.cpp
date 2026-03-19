@@ -269,3 +269,27 @@ void Parser::postfix(String const& op) {
 void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
 	bank[op] = resolver;
 }
+
+Makai::Data::Value Node::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["id"]		= id();
+	out["content"]	= asString(content);
+	out["value"]	= value;
+	if (lhs)
+		out["lhs"]	= lhs->serialize();
+	if (rhs)
+		out["rhs"]	= rhs->serialize();
+	if (children.size()) {
+		Makai::Data::Value::ArrayType ch;
+		ch.reserve(children.size());
+		for (auto& child: children)
+			ch.pushBack(child->serialize());
+		out["children"] = ch;
+	}
+	// TODO: The rest of this mess
+	return out;
+}
+
+Node::Instance Node::deserialize(Makai::Data::Value const& value) {
+
+}

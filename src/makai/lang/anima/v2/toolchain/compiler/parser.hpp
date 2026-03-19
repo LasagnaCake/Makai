@@ -46,6 +46,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			auto const base = id();
 			return toString("_u", base[0], "u", base[1], "u", base[2], "u", base[3]);
 		}
+
+		static Instance deserialize(Data::Value const& value);
+		Data::Value serialize() const;
+
+		static Content fromString(String const& str);
+		static String asString(Content const content);
 	};
 
 	struct AResolver;
