@@ -10,6 +10,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 	struct Node: ID::Identifiable<Node const, ID::VLUID> {
 		using Instance = Instance<Node>;
 
+		using ID::Identifiable<Node const, ID::VLUID>::id;
+
 		enum class Content {
 			AV2_TANC_EMPTY,
 			AV2_TANC_VALUE,
