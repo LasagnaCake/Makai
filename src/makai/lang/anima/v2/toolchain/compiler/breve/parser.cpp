@@ -5,7 +5,7 @@ using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
-static Parser::Precedence precedenceOf(BaseContext::Axiom const& tok) {
+Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 	switch (tok.type) {
 		using enum Parser::Precedence;
 		case LTS_TT_IDENTIFIER: {
@@ -160,6 +160,9 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("with", prefixes, new TemplateDeclResolver());
 	add("struct", prefixes, new StructureDeclResolver());
 	add("prop", prefixes, new PropertyDeclResolver());
+	add("prefix", prefixes, new DynamicOperatorDeclResolver());
+	add("postfix", prefixes, new DynamicOperatorDeclResolver());
+	add("infix", prefixes, new DynamicOperatorDeclResolver());
 	// Advanced infixes
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());

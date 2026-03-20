@@ -151,6 +151,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		InlineStructureResolver(): AResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
+
+	struct DynamicOperatorDeclResolver: AResolver {
+		DynamicOperatorDeclResolver(): AResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct DynamicOperatorResolver: AResolver {
+		bool isUnary = false;
+		DynamicOperatorResolver(bool const isUnary, Parser::Precedence const precedence, bool const rightToLeft): AResolver(precedence, rightToLeft), isUnary(isUnary) {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
 }
 
 #endif

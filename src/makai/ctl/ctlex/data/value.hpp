@@ -165,6 +165,10 @@ namespace Data {
 		template <Type::Ex::Data::Serializable T>
 		constexpr Value(T const& value): Value(value.serialize()) {}
 
+		/// @brief Constructs a value from a `Nullable<T>`.
+		template <class T>
+		constexpr Value(Nullable<T> const& value):		Value(value ? Value(value.value()) : null()) {}
+
 		/// @brief Copy constructor.
 		constexpr Value(Value const& other)	{operator=(other);	}
 		/// @brief Move constructor.
@@ -611,6 +615,18 @@ namespace Data {
 			return fallback;
 		}
 
+		/// @brief Returns the value as a given nullable for a type.
+		/// @tparam T value type.
+		/// @return Value as `T`, or null.
+		template <class T>
+		constexpr T get() const
+	 	requires (Type::Equal<T, Nullable<typename T::DataType>>) {
+			T out;
+			if (!tryGet<T>(out))
+				return null;
+			return out;
+		}
+
 		/// @brief Returns the value as a given type.
 		/// @tparam T value type.
 		/// @return Value as `T`.
@@ -658,6 +674,10 @@ namespace Data {
 		/// @brief Returns the value as a given type (Implicit conversion).
 		template <class T>
 		constexpr operator T() const {return get<T>();}
+
+		/// @brief Returns the value as a given type (Implicit conversion, nullable support).
+		template <class T>
+		constexpr operator Nullable<T>() const {return get<Nullable<T>>();}
 
 		/// @brief Array element access operator.
 		/// @param index Element index.

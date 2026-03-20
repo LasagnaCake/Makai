@@ -166,6 +166,24 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 	return result;
 }
 
+Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_TYPE_EXTENSION;
+	result->lhs = parser.nextExpression();
+	if (!lhs->isPathOrName())
+		parser.context.error("Invalid expression for extension!");
+	if (parser.context.peek().type == LTS_TT_IDENTIFIER) {
+		auto const id = parser.context.peek().value.getString();
+		if (id == "with")
+			parser.context.next();
+	}
+	result->rhs = parser.nextExpression();
+	if (!result->rhs->isDeclarationOrBlock())
+		parser.context.error("Expected declaration or code block here!");
+	return result;
+}
+
 Node::Instance SpecialVarDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -193,4 +211,62 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	result->lhs = lhs;
 	result->rhs = parser.nextExpression(precedence);
 	return result;
+}
+Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+}
+
+Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	auto const opkey = parser.context.expectNext(LTS_TT_IDENTIFIER, "operator name").token();
+	if (
+		token.token == "prefix"
+	||	token.token == "postfix"
+	) {
+		Instance<DynamicOperatorResolver> op = new DynamicOperatorResolver(
+			true,
+			token.token == "prefix"
+		?	decltype(precedence)::AV2_TAPP_PREFIX
+		:	decltype(precedence)::AV2_TAPP_POSTFIX,
+			false
+		);
+		if (token.token == "prefix") {
+			if (parser.prefixes.contains(opkey))
+				parser.context.error("Redeclaration of operator ["+ opkey.token +"]!");
+			parser.add(opkey, parser.prefixes, op.as<AResolver>());
+		}
+		else {
+			if (parser.infixes.contains(opkey))
+				parser.context.error("Redeclaration of operator ["+ opkey.token +"]!");
+			parser.add(opkey, parser.infixes, op.as<AResolver>());
+		}
+	} else {
+		int precOffset = 0;
+		switch (parser.context.next().type()) {
+			case LTS_TT_GREATER_THAN:	precOffset = 1;		break;
+			case LTS_TT_EQUALS:			precOffset = 0;		break;
+			case LTS_TT_LESS_THAN:		precOffset = -1;	break;
+			default: parser.context.error("Invalid precedence specifier!");
+		}
+		auto const precedence = enumcast(parser.precedenceOf(parser.context.next().token())) + precOffset;
+		bool rightToLeft = false;
+		if (parser.context.peek().type == LTS_TT_OPEN_BRACKET) {
+			auto const t = parser.context.next().next().type();
+			switch (t) {
+				case LTS_TT_BIT_SHIFT_LEFT:		rightToLeft = true;		break;
+				case LTS_TT_BIT_SHIFT_RIGHT:	rightToLeft = false;	break;
+				default: parser.context.error("Invalid direction specifier!");
+			}
+			parser.context.expectNext(LTS_TT_CLOSE_BRACKET);
+		}
+		if (parser.infixes.contains(opkey))
+			parser.context.error("Redeclaration of operator ["+ opkey.token +"]!");
+		parser.add(
+			opkey,
+			parser.infixes,
+			new DynamicOperatorResolver(
+				false,
+				Makai::Cast::as<Parser::Precedence>(precedence),
+				rightToLeft
+			)
+		);
+	}
 }

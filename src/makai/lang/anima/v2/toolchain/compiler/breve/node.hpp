@@ -32,6 +32,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_LOOP,
 			AV2_TANC_IMPORT,
 			AV2_TANC_TEMPLATE,
+			AV2_TANC_TYPE_EXTENSION,
 			AV2_TANC_INLINE_MINIMA
 		};
 
@@ -43,6 +44,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Nullable<Core::DataLocation>	source;
 		BaseContext::Axiom				base;
 		List<BaseContext::Axiom>		interject;
+
+		constexpr bool isPathOrName() const {
+			return content == Content::AV2_TANC_PATH || content == Content::AV2_TANC_NAME;
+		}
+
+		constexpr bool isDeclarationOrBlock() const {
+			return content == Content::AV2_TANC_DECLARATION || content == Content::AV2_TANC_BLOCK;
+		}
 
 		constexpr String name() const {
 			auto const base = id();
