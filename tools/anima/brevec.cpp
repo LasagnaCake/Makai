@@ -11,8 +11,7 @@ static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]			= false;
 	cfg["output"]		= "**{{name}}";
-	cfg["include"]		= cfg.array();
-	cfg["link"]			= cfg.array();
+	cfg["src"]			= cfg.array();
 	cfg["intermediate"]	= cfg.array();
 	return cfg;
 }
@@ -27,8 +26,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static void doHelpMessage() {
 	DEBUGLN("Breve Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(brevec <file> [--output <name>] [-I] [--src "[<source-dirs> ...]"])");
-	DEBUGLN("init");
+	DEBUGLN(R"(    brevec <file> [--output <name>] [-I] [--src "[<source-dirs> ...]"])");
 }
 
 int main(int argc, char** argv) try {
@@ -40,10 +38,12 @@ int main(int argc, char** argv) try {
 	if (cfg["help"])
 		doHelpMessage();
 	else {
+		DEBUGLN("Here!");
 		if (cfg["__args"].empty())
 			throw Makai::Error::NonexistentValue("No file given!");
+		DEBUGLN("Args: ", cfg["__args"].toFLOWString());
 		auto const file = Makai::OS::FS::standardize(cfg["__args"][0].get<Makai::String>(), Makai::OS::FS::PathSeparator::PS_POSIX);
-		// TODO: this
+		DEBUGLN("Compiling file \"", file, "\"...");
 		Compiler::Breve::Compiler::Context ctx;
 		Compiler::Breve::Parser parser(ctx);
 		Makai::Lexer::CStyle::TokenStream stream;
@@ -56,11 +56,11 @@ int main(int argc, char** argv) try {
 			auto const i = parser.parse();
 			Makai::File::saveText(
 				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
-					cfg["out"].getString(),
+					cfg["output"].getString(),
 					R"(\*\*\{\{name\}\})",
 					file
 						.splitAtLast('/').back()
-						.splitAtFirst('.').front()
+						.splitAtLast('.').front()
 				) + ".bpt",
 				i->serialize()
 			);

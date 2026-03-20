@@ -71,11 +71,11 @@ ifeq ($(os),win)
 WINFLAG := -mwindows
 endif
 
-.PHONY: debug release all tooling packer concerto minimac arte finale
+.PHONY: debug release all tooling packer concerto minimac brevec arte finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer minimac brevec finale # concerto arte
+tooling: prologue packer brevec minimac finale # concerto arte
 
 all: tooling
 
@@ -88,6 +88,7 @@ endef
 prologue:
 	@echo ""
 	@echo "libraries: $(LIBRARIES)"
+	@echo "debug? $(debug)"
 
 packer:
 	$(call compile, $@)
