@@ -75,28 +75,31 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer minimac finale # concerto arte
+tooling: prologue packer minimac brevec finale # concerto arte
 
 all: tooling
+
+define compile
+	@echo "[$(strip $(1))]"
+	$(COMPILER) $(CFG) -c $(strip $(1)).cpp -o $(strip $(1)).o
+	$(LINKER) -o $(strip $(1))$(EXEC_TYPE) $(strip $(1)).o $(OBJ) $(LK)
+endef
 
 prologue:
 	@echo ""
 	@echo "libraries: $(LIBRARIES)"
 
 packer:
-	@echo "[$@]"
-	$(COMPILER) $(CFG) -c packer.cpp -o packer.o
-	$(LINKER) -o packer$(EXEC_TYPE) packer.o $(OBJ) $(LK)
+	$(call compile, $@)
 
 concerto:
-	@echo "[$@]"
-	$(COMPILER) $(CFG) -c concerto.cpp -o concerto.o
-	$(LINKER) -o concerto$(EXEC_TYPE) concerto.o $(OBJ) $(LK)
+	$(call compile, $@)
 
 minimac:
-	@echo "[$@]"
-	$(COMPILER) $(CFG) -c minimac.cpp -o minimac.o
-	$(LINKER) -o minimac$(EXEC_TYPE) minimac.o $(OBJ) $(LK)
+	$(call compile, $@)
+
+brevec:
+	$(call compile, $@)
 
 arte:
 	@echo "[$@]"
@@ -109,6 +112,7 @@ mk-push:
 #	cp art$(EXEC_TYPE) ../../output/bin
 #	cp artw$(EXEC_TYPE) ../../output/bin
 	cp minimac$(EXEC_TYPE) ../../output/bin
+	cp brevec$(EXEC_TYPE) ../../output/bin
 #	cp concerto$(EXEC_TYPE) ../../output/bin
 	cp packer$(EXEC_TYPE) ../../output/bin
 
