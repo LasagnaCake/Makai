@@ -278,6 +278,11 @@ void Parser::postfix(String const& op) {
 }
 
 void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
+	if (bank.contains(op))
+		throw Makai::Error::FailedAction(
+			"Attempt to add duplicate of operator ["+ op.token + "]!",
+			CTL_CPP_PRETTY_SOURCE
+		);
 	bank[op] = resolver;
 }
 
