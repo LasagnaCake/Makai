@@ -272,3 +272,22 @@ void Parser::postfix(String const& op) {
 void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
 	bank[op] = resolver;
 }
+
+void Parser::add(BaseContext::Axiom::Type const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
+	BaseContext::Axiom ax;
+	ax.type = op;
+	ax.strict = false;
+	add(ax, bank, resolver);
+}
+
+void Parser::add(Makai::String const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
+	BaseContext::Axiom ax;
+	ax.type = LTS_TT_IDENTIFIER;
+	ax.strict = true;
+	ax.value = op;
+	ax.token = op;
+	add(ax, bank, resolver);
+}
+
+Parser::~Parser() {
+}
