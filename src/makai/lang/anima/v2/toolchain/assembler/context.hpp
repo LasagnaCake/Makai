@@ -22,9 +22,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			String sourceFile;
 
 			constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
-				if (strict != other.strict)
+				if (strict != other.strict) {
 					if (strict) return Ordered::Order::GREATER;
 					else return Ordered::Order::LESS;
+				}
 				if (!strict) return type <=> other.type;
 				Ordered::OrderType order = type <=> other.type;
 				if (order == Ordered::Order::EQUAL) {
