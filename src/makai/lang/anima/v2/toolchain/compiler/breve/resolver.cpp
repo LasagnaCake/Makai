@@ -26,19 +26,8 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs
 Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.pushBack(parser.nextExpression(precedence));
+	result->lhs = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_PREFIX_OP;
-	return result;
-}
-
-Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->base = token;
-	parser.context.expectNext(LTS_TT_OPEN_CURLY).next();
-	while (!parser.context.has(LTS_TT_CLOSE_CURLY)) {
-		result->interject.pushBack(parser.context.token());
-		parser.context.next();
-	}
 	return result;
 }
 
@@ -54,8 +43,19 @@ Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs,
 Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.pushBack(lhs);
+	result->lhs = lhs;
 	result->content = Node::Content::AV2_TANC_POSTFIX_OP;
+	return result;
+}
+
+Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	parser.context.expectNext(LTS_TT_OPEN_CURLY).next();
+	while (!parser.context.has(LTS_TT_CLOSE_CURLY)) {
+		result->interject.pushBack(parser.context.token());
+		parser.context.next();
+	}
 	return result;
 }
 
@@ -213,6 +213,24 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	return result;
 }
 Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	return result;
+	switch (opClass) {
+		case Class::AV2_TA_DORC_PREFIX: {
+			result->lhs = parser.nextExpression(precedence);
+			result->content = Node::Content::AV2_TANC_PREFIX_OP;
+		}
+		case Class::AV2_TA_DORC_INFIX: {
+			result->lhs = lhs;
+			result->rhs = parser.nextExpression(precedence);
+			result->content = Node::Content::AV2_TANC_INFIX_OP;
+		}
+		case Class::AV2_TA_DORC_POSTFIX: {
+			result->lhs = lhs;
+			result->content = Node::Content::AV2_TANC_POSTFIX_OP;
+		}
+	}
 }
 
 Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
@@ -222,7 +240,9 @@ Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instan
 	||	token.token == "postfix"
 	) {
 		Instance<DynamicOperatorResolver> op = new DynamicOperatorResolver(
-			true,
+			token.token == "prefix"
+		?	DynamicOperatorResolver::Class::AV2_TA_DORC_PREFIX
+		:	DynamicOperatorResolver::Class::AV2_TA_DORC_POSTFIX,
 			token.token == "prefix"
 		?	decltype(precedence)::AV2_TAPP_PREFIX
 		:	decltype(precedence)::AV2_TAPP_POSTFIX,
@@ -263,7 +283,7 @@ Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instan
 			opkey,
 			parser.infixes,
 			new DynamicOperatorResolver(
-				false,
+				DynamicOperatorResolver::Class::AV2_TA_DORC_INFIX,
 				Makai::Cast::as<Parser::Precedence>(precedence),
 				rightToLeft
 			)

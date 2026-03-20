@@ -158,8 +158,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct DynamicOperatorResolver: AResolver {
-		bool isUnary = false;
-		DynamicOperatorResolver(bool const isUnary, Parser::Precedence const precedence, bool const rightToLeft): AResolver(precedence, rightToLeft), isUnary(isUnary) {}
+		enum class Class {
+			AV2_TA_DORC_PREFIX,
+			AV2_TA_DORC_INFIX,
+			AV2_TA_DORC_POSTFIX,
+		};
+		Class opClass;
+		DynamicOperatorResolver(Class const opClass, Parser::Precedence const precedence, bool const rightToLeft): AResolver(precedence, rightToLeft), opClass(opClass) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 }
