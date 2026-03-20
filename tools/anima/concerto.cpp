@@ -1,5 +1,6 @@
 #include <makai/makai.hpp>
 #include "base.cc"
+#include "makai/lexer/cstyle/tokenstream.hpp"
 
 using namespace Makai::Anima::V2;
 
@@ -148,23 +149,17 @@ namespace Command {
 			throw Makai::Error::NonexistentValue("Missing target!");
 		DEBUGLN("Building project...");
 		Compiler::Project proj;
-		Assembler::Context ctx;
-		Compiler::setModuleSourceResolver(resolveSource);
+		Compiler::Breve::Context ctx;
 		proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
-		if (proj.type == decltype(proj.type)::AV2_TC_PT_MODULE)
-			return;
-		if (proj.main.source.empty() && proj.main.path.size())
+		Compiler::Parser parser(ctx);
+		Makai::Lexer::CStyle::TokenStream stream;
+		if (proj.main.path.empty())
 			proj.main.source = Makai::File::getText(proj.main.path);
-		Compiler::buildProject(ctx, proj, cfg["asm"]);
-		auto const outName = Makai::Regex::replace(cfg["output"], "\\$\\{name\\}", proj.name);
-		Makai::OS::FS::makeDirectory(Makai::String("output"));
-		if (cfg["asm"]) {
-			Makai::File::saveText("output/" + outName + ".min", ctx.intermediate());
-		}
-		else {
-			bool const debug = cfg["__args"][1].get<Makai::String>("") == "debug";
-			Makai::File::saveText("output/" + outName + ".anp", ctx.program.serialize(debug).toFLOWString("\t"));
-		}
+		stream.open(proj.main.source);
+		Makai::List<Assembler::BaseContext::Axiom> ax;
+		while (stream.next())
+			ax.pushBack({stream.current(), true, stream.tokenText(), stream.position(), proj.main.path});
+		ctx.append(ax.reverse());
 		DEBUGLN("Done!");
 	}
 

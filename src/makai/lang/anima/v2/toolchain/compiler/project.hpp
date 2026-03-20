@@ -15,9 +15,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			Version	version;
 		};
 
+		struct File {
+			String source;
+			String path;
+		};
+
 		StringList			sources;
 		Dictionary<Library>	libraries;
-		String				main;
+		File				main;
 
 		Data::Value serialize() const;
 		static Project deserialize(Data::Value const& v);

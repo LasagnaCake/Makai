@@ -13,4 +13,4 @@ link-shared = $(foreach lib,$(1), -l:$(strip $(lib)).so)
 export OS_LIBS :=
 export ADDLIBS := $(call link-shared, $(SHARELIB))
 endif
-export LITE_BUILD_REQS := -shared $(call link-static, libcrypto++ SDL2_net) $(call link-shared, $(SHARELIB))
+export LITE_BUILD_REQS := $(call link-static, libcrypto++ SDL2_net) $(call link-shared, $(SHARELIB))
