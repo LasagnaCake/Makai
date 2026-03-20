@@ -1,7 +1,7 @@
 ROOT := ../../../../../../..
 include $(ROOT)/make/core.make
 
-override prefix := $(call concat, $(prefix), comp)
+override prefix := $(call concat, $(prefix), cc)
 
 .PHONY: debug release all
 .ONESHELL:
