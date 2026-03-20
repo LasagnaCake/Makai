@@ -257,6 +257,7 @@ void Parser::prefix(String const& op) {
 	BaseContext::Axiom ax;
 	ax.type = LTS_TT_IDENTIFIER;
 	ax.strict = true;
+	ax.value = op;
 	ax.token = op;
 	add(ax, prefixes, new PrefixResolver());
 }
@@ -265,6 +266,7 @@ void Parser::infix(String const& op, bool const rightToLeft) {
 	BaseContext::Axiom ax;
 	ax.type = LTS_TT_IDENTIFIER;
 	ax.strict = true;
+	ax.value = op;
 	ax.token = op;
 	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
 }
@@ -273,6 +275,7 @@ void Parser::postfix(String const& op) {
 	BaseContext::Axiom ax;
 	ax.type = LTS_TT_IDENTIFIER;
 	ax.strict = true;
+	ax.value = op;
 	ax.token = op;
 	add(ax, infixes, new PostfixResolver());
 }
