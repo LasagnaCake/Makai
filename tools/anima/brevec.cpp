@@ -30,7 +30,7 @@ static void doHelpMessage() {
 }
 
 int main(int argc, char** argv) try {
-	if (CTL::CPP::Debug::hasDebugger())
+	//if (CTL::CPP::Debug::hasDebugger())
 		CTL::CPP::Debug::Traceable::trap = true;
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
@@ -64,7 +64,7 @@ int main(int argc, char** argv) try {
 						.splitAtLast('/').back()
 						.splitAtLast('.').front()
 				) + ".bpt",
-				i->serialize()
+				i->serialize().toString("  ")
 			);
 		} else {
 			// TODO: This

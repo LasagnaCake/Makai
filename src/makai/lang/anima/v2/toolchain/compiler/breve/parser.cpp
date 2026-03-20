@@ -199,14 +199,17 @@ AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft
 
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	auto tok = context.next().token();
-	if (!prefixes.contains(tok))
-		context.error("Invalid expression!");
-	Node::Instance lhs = prefixes[tok]->resolve(*this, null, tok);
-	if (!infixes.contains(tok))
+	Node::Instance lhs;
+	if (prefixes.contains(tok.token))
+		lhs = prefixes[tok.token]->resolve(*this, null, tok);
+	else if (directs.contains(tok.type))
+		lhs = directs[tok.type]->resolve(*this, null, tok);
+	else context.error("Invalid expression!");
+	if (!infixes.contains(tok.token))
 		return lhs;
 	while (precedence < currentPrecedence()) {
 		tok = context.next().token();
-		lhs = infixes[tok]->resolve(*this, lhs, tok);
+		lhs = infixes[tok.token]->resolve(*this, lhs, tok);
 	}
 	return lhs;
 }
@@ -220,46 +223,32 @@ Node::Instance Parser::parse() {
 
 Parser::Precedence Parser::currentPrecedence() {
 	auto const tok = context.peek();
-	if (!infixes.contains(tok))
+	if (!infixes.contains(tok.token))
 		return Parser::Precedence::AV2_TAPP_NONE;
-	return infixes[tok]->precedence;
+	return infixes[tok.token]->precedence;
 }
 
 void Parser::direct(BaseContext::Axiom::Type const op) {
-	BaseContext::Axiom ax;
-	ax.strict = false;
-	ax.type = op;
-	add(ax, prefixes, new DirectResolver());
+	directs[op] = new DirectResolver();
 }
 
 void Parser::prefix(BaseContext::Axiom::Type const op) {
-	BaseContext::Axiom ax;
-	ax.strict = false;
-	ax.type = op;
-	add(ax, prefixes, new PrefixResolver());
+	add(BaseContext::Axiom::asName(op), prefixes, new PrefixResolver());
 }
 
 void Parser::infix(BaseContext::Axiom::Type const op, bool const rightToLeft) {
 	BaseContext::Axiom ax;
-	ax.strict = false;
 	ax.type = op;
-	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
+	ax.strict = false;
+	add(BaseContext::Axiom::asName(op), infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
 }
 
 void Parser::postfix(BaseContext::Axiom::Type const op) {
-	BaseContext::Axiom ax;
-	ax.strict = false;
-	ax.type = op;
-	add(ax, prefixes, new PostfixResolver());
+	add(BaseContext::Axiom::asName(op), infixes, new PostfixResolver());
 }
 
 void Parser::prefix(String const& op) {
-	BaseContext::Axiom ax;
-	ax.type = LTS_TT_IDENTIFIER;
-	ax.strict = true;
-	ax.value = op;
-	ax.token = op;
-	add(ax, prefixes, new PrefixResolver());
+	add(op, prefixes, new PrefixResolver());
 }
 
 void Parser::infix(String const& op, bool const rightToLeft) {
@@ -268,43 +257,24 @@ void Parser::infix(String const& op, bool const rightToLeft) {
 	ax.strict = true;
 	ax.value = op;
 	ax.token = op;
-	add(ax, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
+	add(op, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
 }
 
 void Parser::postfix(String const& op) {
-	BaseContext::Axiom ax;
-	ax.type = LTS_TT_IDENTIFIER;
-	ax.strict = true;
-	ax.value = op;
-	ax.token = op;
-	add(ax, infixes, new PostfixResolver());
-}
-
-void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
-	if (bank.contains(op))
-		throw Makai::Error::FailedAction(
-			"Attempt to add duplicate of operator ["+ op.token + "]!",
-			CTL_CPP_PRETTY_SOURCE
-		);
-	DEBUGLN("Operation: ", op.strict ? op.token : op.asName(op.type));
-	bank[op] = resolver;
-	DEBUGLN("Added!");
+	add(op, infixes, new PostfixResolver());
 }
 
 void Parser::add(BaseContext::Axiom::Type const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
-	BaseContext::Axiom ax;
-	ax.type = op;
-	ax.strict = false;
-	add(ax, bank, resolver);
+	add(BaseContext::Axiom::asName(op), bank, resolver);
 }
 
 void Parser::add(Makai::String const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
-	BaseContext::Axiom ax;
-	ax.type = LTS_TT_IDENTIFIER;
-	ax.strict = true;
-	ax.value = op;
-	ax.token = op;
-	add(ax, bank, resolver);
+	if (bank.contains(op))
+		throw Makai::Error::FailedAction(
+			"Attempt to add duplicate of operator \""+ op + "\"!",
+			CTL_CPP_PRETTY_SOURCE
+		);
+	bank[op] = resolver;
 }
 
 Parser::~Parser() {

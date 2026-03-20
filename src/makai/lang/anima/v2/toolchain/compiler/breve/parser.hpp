@@ -47,14 +47,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		Node::Instance parse();
 
-		using OperatorBank = Map<BaseContext::Axiom, Instance<AResolver>>;
+		using NamedOperatorBank	= Dictionary<Instance<AResolver>>;
+		using TokenOperatorBank	= Map<BaseContext::Axiom::Type, Instance<AResolver>>;
 
+		using OperatorBank = NamedOperatorBank;
+
+		TokenOperatorBank directs;
 		OperatorBank prefixes;
 		OperatorBank infixes;
 
 		static Precedence precedenceOf(BaseContext::Axiom const& tok);
 
-		static void add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AResolver> const& resolver);
 		static void add(BaseContext::Axiom::Type const op, OperatorBank& bank, Instance<AResolver> const& resolver);
 		static void add(String const op, OperatorBank& bank, Instance<AResolver> const& resolver);
 

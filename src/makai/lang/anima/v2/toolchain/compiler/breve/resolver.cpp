@@ -284,7 +284,7 @@ Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance c
 }
 
 Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	auto const opkey = parser.context.expectNext(LTS_TT_IDENTIFIER, "operator name").token();
+	auto const opkey = parser.context.getNext(LTS_TT_IDENTIFIER, "operator name").getString();
 	if (
 		token.token == "prefix"
 	||	token.token == "postfix"
@@ -300,12 +300,12 @@ Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instan
 		);
 		if (token.token == "prefix") {
 			if (parser.prefixes.contains(opkey))
-				parser.context.error("Redeclaration of operator ["+ opkey.token +"]!");
+				parser.context.error("Redeclaration of operator ["+ opkey +"]!");
 			parser.add(opkey, parser.prefixes, op.as<AResolver>());
 		}
 		else {
 			if (parser.infixes.contains(opkey))
-				parser.context.error("Redeclaration of operator ["+ opkey.token +"]!");
+				parser.context.error("Redeclaration of operator ["+ opkey +"]!");
 			parser.add(opkey, parser.infixes, op.as<AResolver>());
 		}
 	} else {
@@ -328,7 +328,7 @@ Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instan
 			parser.context.expectNext(LTS_TT_CLOSE_BRACKET);
 		}
 		if (parser.infixes.contains(opkey))
-			parser.context.error("Redeclaration of operator ["+ opkey.token +"]!");
+			parser.context.error("Redeclaration of operator ["+ opkey +"]!");
 		parser.add(
 			opkey,
 			parser.infixes,
