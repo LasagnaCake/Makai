@@ -1,6 +1,6 @@
 #include "resolver.hpp"
 
-using namespace Makai::Anima::V2::Toolchain::Compiler;
+using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 

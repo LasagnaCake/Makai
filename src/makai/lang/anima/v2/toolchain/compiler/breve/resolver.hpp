@@ -1,11 +1,11 @@
-#ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_RESOLVER_H
-#define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_RESOLVER_H
+#ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_BREVE_RESOLVER_H
+#define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_BREVE_RESOLVER_H
 
-#include "../assembler/assembler.hpp"
-#include "../../core/core.hpp"
+#include "../../assembler/assembler.hpp"
+#include "../../../core/core.hpp"
 #include "parser.hpp"
 
-namespace Makai::Anima::V2::Toolchain::Compiler {
+namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct AResolver {
 		virtual ~AResolver();
 

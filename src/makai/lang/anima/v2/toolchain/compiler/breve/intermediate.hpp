@@ -1,10 +1,10 @@
-#ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_INTERMEDIATE_H
-#define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_INTERMEDIATE_H
+#ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_BREVE_INTERMEDIATE_H
+#define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_BREVE_INTERMEDIATE_H
 
-#include "../assembler/assembler.hpp"
-#include "../../core/core.hpp"
+#include "../../assembler/assembler.hpp"
+#include "../../../core/core.hpp"
 
-namespace Makai::Anima::V2::Toolchain::Compiler {
+namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Intermediate;
 
 	struct Labeled {
