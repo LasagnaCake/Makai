@@ -188,6 +188,7 @@ Node::Instance SpecialVarDeclResolver::resolve(Parser& parser, Node::Instance co
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
@@ -201,6 +202,7 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
@@ -208,6 +210,7 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 Node::Instance ModuleDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
@@ -215,6 +218,7 @@ Node::Instance ModuleDeclResolver::resolve(Parser& parser, Node::Instance const&
 Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
@@ -222,6 +226,7 @@ Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance cons
 Node::Instance StructureDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
@@ -229,6 +234,7 @@ Node::Instance StructureDeclResolver::resolve(Parser& parser, Node::Instance con
 Node::Instance TraitDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
@@ -236,6 +242,7 @@ Node::Instance TraitDeclResolver::resolve(Parser& parser, Node::Instance const& 
 Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
@@ -243,6 +250,7 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
 	// TODO: This
 	return result;
 }
