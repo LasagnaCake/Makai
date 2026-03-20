@@ -47,10 +47,13 @@ int main(int argc, char** argv) try {
 		Compiler::Breve::Parser parser(ctx);
 		Makai::Lexer::CStyle::TokenStream stream;
 		stream.open(Makai::File::getText(file));
+		DEBUGLN("This part");
 		Makai::List<Assembler::BaseContext::Axiom> ax;
 		while (stream.next())
 			ax.pushBack({stream.current(), true, stream.tokenText(), stream.position(), file});
-		ctx.append(ax.reverse());
+		DEBUGLN("That part");
+		ctx.put(ax);
+		DEBUGLN("Blablabla");
 		if (cfg["intermediate"]) {
 			auto const i = parser.parse();
 			Makai::File::saveText(
