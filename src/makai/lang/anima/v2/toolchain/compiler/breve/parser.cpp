@@ -205,7 +205,7 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	else if (directs.contains(tok.type))
 		lhs = directs[tok.type]->resolve(*this, null, tok);
 	else context.error("Invalid expression!");
-	if (!infixes.contains(tok.token))
+	if (!infixes.contains(context.peek().token))
 		return lhs;
 	while (precedence < currentPrecedence()) {
 		tok = context.next().token();
