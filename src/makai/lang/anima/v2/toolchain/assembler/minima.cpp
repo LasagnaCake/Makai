@@ -9,9 +9,6 @@ using Context = Minima::Context;
 using Type = Context::Tokenizer::Token::Type;
 using enum Type;
 
-CTL_DIAGBLOCK_BEGIN
-CTL_DIAGBLOCK_IGNORE_SWITCH
-
 static Makai::String cleanPath(Makai::String const& path) {
 	return Makai::Regex::replace(path, "\\/\\/+", "\\/");
 }
@@ -406,6 +403,7 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 			else if (id == "void" || id == "v")			leap.type = Instruction::Leap::Type::AV2_ILT_IF_UNDEFINED;
 			else if (id == "empty" || id == "e")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_UNDEFINED;
 		}
+		default: context.error("Invalid condition!");
 	}
 	context.add(Instruction::Name::AV2_IN_JUMP, leap);
 	if (!dynamic)
@@ -1248,4 +1246,3 @@ void Minima::invoke() {
 	);
 	context.program.detail.types.resize(context.types.size());
 }
-CTL_DIAGBLOCK_END
