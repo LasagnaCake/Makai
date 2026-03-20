@@ -23,10 +23,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
 				if (strict != other.strict)
-					return other.strict <=> strict;
+					if (strict) return Ordered::Order::GREATER;
+					else return Ordered::Order::LESSER;
 				if (!strict) return type <=> other.type;
 				Ordered::OrderType order = type <=> other.type;
-				if (order == Ordered::Order::EQUAL) return value <=> other.value;
+				if (order == Ordered::Order::EQUAL) {
+					if (type == Type::LATS_TT_IDENTIFIER)
+						return token <=> other.token;
+					return value <=> other.value;
+				}
 				else return order;
 			}
 
