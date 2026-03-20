@@ -31,7 +31,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 
 			constexpr bool operator==(Axiom const& other) const {
-				if (strict != other.strict) return false;
 				if (!strict) return type == other.type;
 				if (type == other.type)
 					return value == other.value;
