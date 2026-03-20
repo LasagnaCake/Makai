@@ -41,7 +41,6 @@ int main(int argc, char** argv) try {
 		DEBUGLN("Here!");
 		if (cfg["__args"].empty())
 			throw Makai::Error::NonexistentValue("No file given!");
-		DEBUGLN("Args: ", cfg["__args"].toFLOWString());
 		auto const file = Makai::OS::FS::standardize(cfg["__args"][0].get<Makai::String>(), Makai::OS::FS::PathSeparator::PS_POSIX);
 		DEBUGLN("Compiling file \"", file, "\"...");
 		Compiler::Breve::Compiler::Context ctx;
