@@ -289,4 +289,5 @@ Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instan
 			)
 		);
 	}
+	return null;
 }
