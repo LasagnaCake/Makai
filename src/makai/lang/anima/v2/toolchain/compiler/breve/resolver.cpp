@@ -260,7 +260,11 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	result->content = Node::Content::AV2_TANC_PATH;
 	result->lhs = lhs;
 	result->rhs = parser.nextExpression(precedence);
-	return result;
+	if (
+		result->rhs->content == Node::Content::AV2_TANC_PATH
+	||	result->rhs->content == Node::Content::AV2_TANC_NAME
+	) return result;
+	parser.context.error("Invalid path expression!");
 }
 Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
