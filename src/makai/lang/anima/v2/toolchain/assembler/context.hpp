@@ -28,7 +28,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				if (!strict) return type <=> other.type;
 				Ordered::OrderType order = type <=> other.type;
 				if (order == Ordered::Order::EQUAL) {
-					if (type == Type::LATS_TT_IDENTIFIER)
+					if (type == Type::LTS_TT_IDENTIFIER)
 						return token <=> other.token;
 					return value <=> other.value;
 				} else return order;
