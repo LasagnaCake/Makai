@@ -286,8 +286,9 @@ void Parser::add(BaseContext::Axiom const op, OperatorBank& bank, Instance<AReso
 			"Attempt to add duplicate of operator ["+ op.token + "]!",
 			CTL_CPP_PRETTY_SOURCE
 		);
-	DEBUGLN("Operation: ", op.token);
+	DEBUGLN("Operation: ", op.strict ? op.token : op.asName(op.type));
 	bank[op] = resolver;
+	DEBUGLN("Added!");
 }
 
 void Parser::add(BaseContext::Axiom::Type const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
