@@ -63,16 +63,6 @@ Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 }
 
 Parser::Parser(BaseContext& context): context(context) {
-	// Direct resolutions
-	DEBUGLN("Direct parsers");
-	direct(
-		LTS_TT_IDENTIFIER,
-		LTS_TT_INTEGER,
-		LTS_TT_DOUBLE_QUOTE_STRING,
-		LTS_TT_SINGLE_QUOTE_STRING,
-		LTS_TT_REAL,
-		LTS_TT_CHARACTER
-	);
 	// Basic prefixes
 	DEBUGLN("Prefix parsers");
 	prefix(
@@ -142,6 +132,16 @@ Parser::Parser(BaseContext& context): context(context) {
 	postfix(
 		LTS_TT_INCREMENT,
 		LTS_TT_DECREMENT
+	);
+	// Direct resolutions
+	DEBUGLN("Direct parsers");
+	direct(
+		LTS_TT_IDENTIFIER,
+		LTS_TT_INTEGER,
+		LTS_TT_DOUBLE_QUOTE_STRING,
+		LTS_TT_SINGLE_QUOTE_STRING,
+		LTS_TT_REAL,
+		LTS_TT_CHARACTER
 	);
 	// Advanced prefixes
 	DEBUGLN("Advanced prefix parsers");
