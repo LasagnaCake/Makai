@@ -64,6 +64,7 @@ Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 
 Parser::Parser(BaseContext& context): context(context) {
 	// Direct resolutions
+	DEBUGLN("Direct parsers");
 	direct(
 		LTS_TT_IDENTIFIER,
 		LTS_TT_INTEGER,
@@ -73,6 +74,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_CHARACTER
 	);
 	// Basic prefixes
+	DEBUGLN("Prefix parsers");
 	prefix(
 		"sizeof",
 		"countof",
@@ -110,6 +112,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_STAR
 	);
 	// Basic infixes
+	DEBUGLN("Infix parsers");
 	infix(LTS_TT_PLUS, false);
 	infix(LTS_TT_MINUS, false);
 	infix(LTS_TT_DIVIDE, false);
@@ -135,11 +138,13 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix("as", false);
 	infix("pow", false);
 	// Basic postfixes
+	DEBUGLN("Postfix parsers");
 	postfix(
 		LTS_TT_INCREMENT,
 		LTS_TT_DECREMENT
 	);
 	// Advanced prefixes
+	DEBUGLN("Advanced prefix parsers");
 	add(LTS_TT_OPEN_PAREN, prefixes, new SubExpressionResolver());
 	add(LTS_TT_OPEN_CURLY, prefixes, new BlockResolver());
 	add(LTS_TT_OPEN_BRACKET, prefixes, new ArrayResolver());
@@ -165,6 +170,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("postfix", prefixes, new DynamicOperatorDeclResolver());
 	add("infix", prefixes, new DynamicOperatorDeclResolver());
 	// Advanced infixes
+	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());
 	add(LTS_TT_DOT, infixes, new PathResolver());
@@ -183,6 +189,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_XOR_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
+	DEBUGLN("Done!");
 }
 
 AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft):
