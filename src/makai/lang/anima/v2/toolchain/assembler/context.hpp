@@ -31,8 +31,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					if (type == Type::LATS_TT_IDENTIFIER)
 						return token <=> other.token;
 					return value <=> other.value;
-				}
-				else return order;
+				} else return order;
 			}
 
 			constexpr bool operator==(Axiom const& other) const {
