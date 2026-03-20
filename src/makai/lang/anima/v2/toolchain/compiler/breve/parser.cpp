@@ -9,7 +9,8 @@ Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 	switch (tok.type) {
 		using enum Parser::Precedence;
 		case LTS_TT_IDENTIFIER: {
-			auto const id = tok.value.getString();
+			if (!tok.strict) return AV2_TAPP_NONE;
+			auto const id = tok.token;
 			if (id == "else") return AV2_TAPP_NULL_DECAY;
 			else if (id == "and") return AV2_TAPP_LAND;
 			else if (id == "or") return AV2_TAPP_LOR;
