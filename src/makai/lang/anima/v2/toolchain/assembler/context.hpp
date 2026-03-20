@@ -23,7 +23,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
 				if (strict != other.strict)
-					return strict <=> other.strict;
+					return other.strict <=> strict;
 				if (!strict) return type <=> other.type;
 				Ordered::OrderType order = type <=> other.type;
 				if (order == Ordered::Order::EQUAL) return value <=> other.value;
@@ -31,6 +31,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 
 			constexpr bool operator==(Axiom const& other) const {
+				if (strict != other.strict) return false;
 				if (!strict) return type == other.type;
 				if (type == other.type)
 					return value == other.value;
