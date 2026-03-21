@@ -212,9 +212,12 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (context.empty())
 		return lhs;
 	DEBUGLN("Next token: [", context.peek().token, "]");
+	DEBUGLN("Is infix? ", infixes.contains(context.peek().token));
 	if (!infixes.contains(context.peek().token))
 		return lhs;
+	DEBUGLN("Infix!");
 	while (precedence < currentPrecedence()) {
+		DEBUGLN("Resolving infix for: ", tok.token);
 		tok = context.next().token();
 		lhs = infixes[tok.token]->resolve(*this, lhs, tok);
 	}

@@ -280,11 +280,13 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 }
 
 Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving variable declaration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	result->lhs = lhs;
 	result->rhs = parser.nextExpression(precedence);
+	DEBUGLN("VariableDecl:DONE!");
 	return result;
 }
 
