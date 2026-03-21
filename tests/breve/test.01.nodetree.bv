@@ -2,8 +2,10 @@ import core.io
 
 using core.io
 
-module Test.Namespace {
 
+module Test.Namespace {
+	@Nullable
+	struct SuperStruct {}
 }
 
 main {
