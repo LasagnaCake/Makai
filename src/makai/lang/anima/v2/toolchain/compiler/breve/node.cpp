@@ -19,6 +19,7 @@ Makai::Data::Value Node::serialize() const {
 		for (auto& child: children)
 			if (child)
 				ch.pushBack(child->serialize());
+			else ch.pushBack(null);
 		out["children"] = ch;
 	}
 	if (interject.size()) {

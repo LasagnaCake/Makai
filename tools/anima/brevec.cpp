@@ -52,7 +52,7 @@ int main(int argc, char** argv) try {
 		while (stream.next())
 			ax.pushBack({stream.current(), true, stream.tokenText(), stream.position(), file});
 		DEBUGLN("That part");
-		ctx.put(ax);
+		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
 		if (cfg["intermediate"]) {
 			auto const i = parser.parse();

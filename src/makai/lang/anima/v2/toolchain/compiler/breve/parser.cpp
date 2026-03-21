@@ -198,13 +198,17 @@ AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft
 }
 
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
+	if (context.empty()) return nullptr;
 	auto tok = context.next().token();
 	Node::Instance lhs;
+	DEBUGLN("Token: ", tok.token);
 	if (prefixes.contains(tok.token))
 		lhs = prefixes[tok.token]->resolve(*this, null, tok);
 	else if (directs.contains(tok.type))
 		lhs = directs[tok.type]->resolve(*this, null, tok);
 	else context.error("Invalid expression!");
+	if (context.empty())
+		return lhs;
 	if (!infixes.contains(context.peek().token))
 		return lhs;
 	while (precedence < currentPrecedence()) {

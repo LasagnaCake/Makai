@@ -5,6 +5,7 @@ using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
 Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving direct expression...");
 	auto isIdentifier = parser.context.type() == LTS_TT_IDENTIFIER;
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -20,35 +21,43 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs
 		}
 	} else result->value = token.value;
 	result->content = isIdentifier ? Node::Content::AV2_TANC_NAME : Node::Content::AV2_TANC_VALUE;
+	DEBUGLN("Direct:DONE!");
 	return result;
 }
 
 Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving prefix expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->lhs = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_PREFIX_OP;
+	DEBUGLN("Prefix:DONE!");
 	return result;
 }
 
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving infix expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->lhs = lhs;
 	result->rhs = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INFIX_OP;
+	DEBUGLN("Infix:DONE!");
 	return result;
 }
 
 Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving postfix expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->lhs = lhs;
 	result->content = Node::Content::AV2_TANC_POSTFIX_OP;
+	DEBUGLN("Postfix:DONE!");
 	return result;
 }
 
 Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving inline assembly expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	parser.context.expectNext(LTS_TT_OPEN_CURLY).next();
@@ -56,10 +65,12 @@ Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance cons
 		result->interject.pushBack(parser.context.token());
 		parser.context.next();
 	}
+	DEBUGLN("Assembly:DONE!");
 	return result;
 }
 
 Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving inline if-else expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->children.pushBack(lhs);
@@ -69,67 +80,100 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 		parser.context.error("Expected 'else' here!");
 	result->rhs = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INLINE_IF_ELSE;
+	DEBUGLN("IfElse:DONE!");
 	return result;
 }
 
 Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving sub-expression...");
 	auto const expr = parser.nextExpression(precedence);
 	parser.context.expectNext(LTS_TT_CLOSE_PAREN);
+	DEBUGLN("SubExpression:DONE!");
 	return expr;
 }
 
 Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
+	DEBUGLN("Resolving function call expression...");
 	result->base = token;
 	result->lhs = lhs;
 	result->content = Node::Content::AV2_TANC_FN_CALL;
-	if (parser.context.type() == LTS_TT_EXCLAMATION) return result;
+	if (parser.context.peek().type == LTS_TT_EXCLAMATION) {
+		parser.context.next();
+		return result;
+	}
 	while (true) {
-		if (parser.context.has(LTS_TT_CLOSE_PAREN)) break;
+		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
+			parser.context.next();
+			break;
+		}
 		result->children.pushBack(parser.nextExpression(precedence));
-		parser.context.expect(LTS_TT_COMMA);
+		DEBUGLN("Argument: ", result->children.back()->base.token);
+		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
+			DEBUGLN("No more arguments!");
+			parser.context.next();
+			break;
+		}
+		parser.context.expectNext(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_PAREN)
 			parser.context.error("Expected expression after the comma!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_PAREN);
+	DEBUGLN("FunctionCall:DONE!");
 	return result;
 }
 
 Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving block expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	while (true) {
-		if (parser.context.next().has(LTS_TT_CLOSE_CURLY)) break;
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+			parser.context.next();
+			break;
+		}
 		result->children.pushBack(parser.nextExpression(precedence));
 	}
-	parser.context.expectNext(LTS_TT_CLOSE_CURLY);
+	parser.context.expect(LTS_TT_CLOSE_CURLY);
 	result->content = Node::Content::AV2_TANC_BLOCK;
+	DEBUGLN("Block:DONE!");
 	return result;
 }
 
 Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving array expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	if (lhs)
 		result->lhs = lhs;
 	while (true) {
-		if (parser.context.has(LTS_TT_CLOSE_BRACKET)) break;
+		if (parser.context.peek().type == (LTS_TT_CLOSE_BRACKET)) {
+			parser.context.next();
+			break;
+		}
 		result->children.pushBack(parser.nextExpression(precedence));
+		if (parser.context.peek().type == (LTS_TT_CLOSE_BRACKET)) {
+			parser.context.next();
+			break;
+		}
 		parser.context.expect(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
 			parser.context.error("Expected expression after the comma!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_BRACKET);
 	result->content = lhs ? Node::Content::AV2_TANC_SUBSCRIPT : Node::Content::AV2_TANC_ARRAY;
+	DEBUGLN("Array:DONE!");
 	return result;
 }
 
 Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving branch expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_BRANCH;
 	result->value = token.token;
 	// TODO: This
+	DEBUGLN("Branch:DONE!");
 	return result;
 }
 
@@ -144,10 +188,18 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 
 Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
+	DEBUGLN("Resolving import expression...");
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_IMPORT;
 	result->value = token.token;
-	// TODO: This
+	result->lhs = lhs;
+	DEBUGLN("Follows: ", parser.context.token().token);
+	DEBUGLN("Follows: ", parser.context.peek().token);
+	if (parser.context.type() == LTS_TT_DOT) {
+		DEBUGLN("Here!");
+		parser.context.next();
+	}
+	result->rhs = parser.nextExpression();
 	return result;
 }
 
