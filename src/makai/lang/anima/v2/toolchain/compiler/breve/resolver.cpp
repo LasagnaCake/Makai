@@ -312,6 +312,7 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	result->content = Node::Content::AV2_TANC_PATH;
 	result->lhs = lhs;
 	result->rhs = parser.nextExpression(precedence);
+	result->base = token;
 	if (
 		result->rhs->content == Node::Content::AV2_TANC_PATH
 	||	result->rhs->content == Node::Content::AV2_TANC_NAME
