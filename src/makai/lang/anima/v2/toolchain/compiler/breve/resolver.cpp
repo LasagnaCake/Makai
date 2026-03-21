@@ -246,7 +246,7 @@ Node::Instance AttributeResolver::resolve(Parser& parser, Node::Instance const& 
 	if (!(
 		result->lhs->isPathOrName()
 	||	result->lhs->content == Node::Content::AV2_TANC_ARRAY
-	))
+	)) parser.context.error("Expected single-attribute or attribute list here!");
 	result->rhs = parser.nextExpression();
 	return result;
 }
