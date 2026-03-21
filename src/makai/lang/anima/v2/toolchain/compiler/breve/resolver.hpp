@@ -88,6 +88,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct AttributeResolver: AResolver {
+		AttributeResolver(): AResolver() {}
+		virtual ~AttributeResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct SpecialVarDeclResolver: AResolver {
 		SpecialVarDeclResolver(): AResolver(Parser::Precedence::AV2_TAPP_DECL, false) {}
 		virtual ~SpecialVarDeclResolver() {}

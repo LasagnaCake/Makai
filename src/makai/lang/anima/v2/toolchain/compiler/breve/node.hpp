@@ -32,6 +32,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_LOOP,
 			AV2_TANC_IMPORT,
 			AV2_TANC_TEMPLATE,
+			AV2_TANC_ATTRIBUTE,
 			AV2_TANC_TYPE_EXTENSION,
 			AV2_TANC_INLINE_MINIMA
 		};

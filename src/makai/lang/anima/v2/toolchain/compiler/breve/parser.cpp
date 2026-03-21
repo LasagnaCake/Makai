@@ -170,6 +170,8 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("postfix", prefixes, new DynamicOperatorDeclResolver());
 	add("infix", prefixes, new DynamicOperatorDeclResolver());
 	add("main", prefixes, new MainBlockResolver());
+	add(LTS_TT_AT, prefix, new AttributeResolver());
+	add("attr", prefix, new AttributeDeclResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());

@@ -236,6 +236,21 @@ Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& 
 	return result;
 }
 
+Node::Instance AttributeResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_ATTRIBUTE;
+	result->lhs = parser.nextExpression();
+	if (!result->lhs)
+		parser.context.error("Unexpected end-of-file!");
+	if (!(
+		result->lhs->isPathOrName()
+	||	result->lhs->content == Node::Content::AV2_TANC_ARRAY
+	))
+	result->rhs = parser.nextExpression();
+	return result;
+}
+
 Node::Instance SpecialVarDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -279,7 +294,14 @@ Node::Instance StructureDeclResolver::resolve(Parser& parser, Node::Instance con
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	// TODO: This
+	auto const name = parser.nextExpression();
+	if (!name->isPathOrName())
+		parser.context.error("Expected path or name here!");
+	auto const def = parser.nextExpression();
+	if (def->content != Node::Content::AV2_TANC_BLOCK)
+		parser.context.error("Expected block declaration here!");
+	result->lhs = name;
+	result->rhs = def;
 	return result;
 }
 
