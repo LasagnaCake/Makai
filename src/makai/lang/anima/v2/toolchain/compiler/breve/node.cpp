@@ -57,7 +57,7 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_SUBSCRIPT:		return "subscript";
 		case Content::AV2_TANC_TEMPLATE:		return "template";
 		case Content::AV2_TANC_TYPE_EXTENSION:	return "extend";
-		default: break;
+		case Content::AV2_TANC_ATTRIBUTE:		return "attrib";
 	}
 	return "???";
 }
