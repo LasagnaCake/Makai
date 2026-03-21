@@ -883,7 +883,7 @@ namespace Data {
 					StringType result = "#[";
 					result += ::CTL::toString(id[0]);
 					for (usize i = 1; i < IdentifierType::SIZE; ++i)
-						result += ::CTL::toString(" ", id[i]);
+						result += " " + ::CTL::toString(id[i]);
 					return result + "]";
 				},
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
@@ -891,7 +891,7 @@ namespace Data {
 					StringType result = "(";
 					result += ::CTL::toString(vec[0]);
 					for (usize i = 1; i < 4; ++i)
-						result += ::CTL::toString(" ", vec[i]);
+						result += " " + ::CTL::toString(vec[i]);
 					return result + ")";
 				},
 				pad,

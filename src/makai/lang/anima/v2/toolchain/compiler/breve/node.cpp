@@ -8,18 +8,18 @@ Makai::Data::Value Node::serialize() const {
 	Makai::Data::Value out = out.object();
 	out["id"]		= id();
 	out["content"]	= asString(content);
-	out["value"]	= value;
+	if (value)
+		out["value"]	= value;
 	if (lhs)
-		out["lhs"]	= lhs->serialize();
+		out["lhs"]		= lhs->serialize();
 	if (rhs)
-		out["rhs"]	= rhs->serialize();
+		out["rhs"]		= rhs->serialize();
 	if (children.size()) {
 		Makai::Data::Value::ArrayType ch;
 		ch.reserve(children.size());
 		for (auto& child: children)
 			if (child)
 				ch.pushBack(child->serialize());
-			else ch.pushBack(null);
 		out["children"] = ch;
 	}
 	if (interject.size()) {

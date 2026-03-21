@@ -200,6 +200,7 @@ AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (context.empty()) return nullptr;
 	auto tok = context.next().token();
+	if (tok.type == LTS_TT_INVALID) return nullptr;
 	Node::Instance lhs;
 	DEBUGLN("Token: ", tok.token);
 	if (prefixes.contains(tok.token))
@@ -220,8 +221,11 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 
 Node::Instance Parser::parse() {
 	Node::Instance root = Node::Instance::create();
-	while (!context.empty())
-		root->children.pushBack(nextExpression());
+	while (!context.empty()) {
+		auto const expr = nextExpression();
+		if (!expr) break;
+		root->children.pushBack(expr);
+	}
 	return root;
 }
 

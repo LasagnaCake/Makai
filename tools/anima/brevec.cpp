@@ -64,7 +64,7 @@ int main(int argc, char** argv) try {
 						.splitAtLast('/').back()
 						.splitAtLast('.').front()
 				) + ".bpt",
-				i->serialize().toString("  ")
+				i->serialize().toFLOWString("  ")
 			);
 		} else {
 			// TODO: This
