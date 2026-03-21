@@ -321,7 +321,6 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	return result;
 	switch (opClass) {
 		case Class::AV2_TA_DORC_PREFIX: {
 			result->lhs = parser.nextExpression(precedence);
@@ -337,6 +336,16 @@ Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance c
 			result->content = Node::Content::AV2_TANC_POSTFIX_OP;
 		}
 	}
+	return result;
+}
+
+Node::Instance MainBlockResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->lhs = parser.nextExpression();
+	if (!result->lhs || result->lhs->content != Node::Content::AV2_TANC_BLOCK)
+		parser.context.error("Expected block expression here!");
+	return result;
 }
 
 Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
