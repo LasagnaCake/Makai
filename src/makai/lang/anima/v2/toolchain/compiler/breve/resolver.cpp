@@ -251,18 +251,31 @@ Node::Instance AttributeResolver::resolve(Parser& parser, Node::Instance const& 
 	return result;
 }
 
-Node::Instance SpecialVarDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving function prototype expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
-	result->base = token;
-	// TODO: This
-	return result;
-}
-
-Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	// TODO: This
+	while (true) {
+		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
+			parser.context.next();
+			break;
+		}
+		result->children.pushBack(parser.nextExpression(precedence));
+		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
+			parser.context.next();
+			break;
+		}
+		parser.context.expect(LTS_TT_COMMA);
+		if (parser.context.peek().type == LTS_TT_CLOSE_PAREN)
+			parser.context.error("Expected expression after the comma!");
+	}
+	parser.context.expect(LTS_TT_CLOSE_PAREN);
+	if (parser.context.peek().type == LTS_TT_LITTLE_ARROW) {
+		parser.context.next();
+		result->lhs = parser.nextExpression();
+	}
+	DEBUGLN("FunctionPrototype:DONE!");
 	return result;
 }
 
@@ -339,7 +352,14 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	// TODO: This
+	result->lhs = parser.nextExpression();
+	if (result->lhs->content != Node::Content::AV2_TANC_FN_PROTOTYPE)
+		parser.context.error("Expected function prototype here!");
+	if (parser.context.peek().type == LTS_TT_BIG_ARROW)
+		parser.context.next();
+	else if (parser.context.peek().type != LTS_TT_OPEN_CURLY)
+		parser.context.error("Expected '=>' or '{' here!");
+	result->rhs = parser.nextExpression();
 	return result;
 }
 

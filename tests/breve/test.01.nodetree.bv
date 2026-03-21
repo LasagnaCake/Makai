@@ -2,10 +2,12 @@ import core.io
 
 using core.io
 
-
 module Test.Namespace {
 	@Nullable
-	struct SuperStruct {}
+	struct MySpecialStruct {
+		func foo(var: int): void {
+		}
+	}
 }
 
 main {

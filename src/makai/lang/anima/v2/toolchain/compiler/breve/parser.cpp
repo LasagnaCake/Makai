@@ -157,8 +157,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("while", prefixes, new LoopResolver());
 	add("for", prefixes, new LoopResolver());
 	add("module", prefixes, new ModuleDeclResolver());
-	add("global", prefixes, new SpecialVarDeclResolver());
-	add("out", prefixes, new SpecialVarDeclResolver());
 	add("func", prefixes, new FunctionDeclResolver());
 	add("extend", prefixes, new ExtensionResolver());
 	add("import", prefixes, new ImportResolver());
