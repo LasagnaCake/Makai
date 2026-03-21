@@ -211,6 +211,7 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	else context.error("Invalid expression!");
 	if (context.empty())
 		return lhs;
+	DEBUGLN("Next token: ", context.peek().token);
 	if (!infixes.contains(context.peek().token))
 		return lhs;
 	while (precedence < currentPrecedence()) {

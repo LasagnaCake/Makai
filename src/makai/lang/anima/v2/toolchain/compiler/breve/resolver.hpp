@@ -113,7 +113,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct VariableDeclResolver: AResolver {
-		VariableDeclResolver(): AResolver() {}
+		VariableDeclResolver(): AResolver(Parser::Precedence::AV2_TAPP_DECL, false) {}
 		virtual ~VariableDeclResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};

@@ -283,7 +283,8 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	// TODO: This
+	result->lhs = lhs;
+	result->rhs = parser.nextExpression(precedence);
 	return result;
 }
 
@@ -344,14 +345,6 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	// TODO: This
-	return result;
-}
-
-Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->content = Node::Content::AV2_TANC_DECLARATION;
-	result->base = token;
 	result->lhs = parser.nextExpression();
 	if (result->lhs->content != Node::Content::AV2_TANC_FN_PROTOTYPE)
 		parser.context.error("Expected function prototype here!");
@@ -360,6 +353,14 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	else if (parser.context.peek().type != LTS_TT_OPEN_CURLY)
 		parser.context.error("Expected '=>' or '{' here!");
 	result->rhs = parser.nextExpression();
+	return result;
+}
+
+Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
+	// TODO: This
 	return result;
 }
 

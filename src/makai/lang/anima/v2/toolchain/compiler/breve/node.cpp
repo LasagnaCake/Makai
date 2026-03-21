@@ -58,6 +58,7 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_TEMPLATE:		return "template";
 		case Content::AV2_TANC_TYPE_EXTENSION:	return "extend";
 		case Content::AV2_TANC_ATTRIBUTE:		return "attrib";
+		case Content::AV2_TANC_FN_PROTOTYPE:	return "fn_proto";
 	}
 	return "???";
 }
