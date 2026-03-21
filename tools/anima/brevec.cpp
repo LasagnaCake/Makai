@@ -12,13 +12,13 @@ static Makai::Data::Value configBase() {
 	cfg["help"]			= false;
 	cfg["output"]		= "**{{name}}";
 	cfg["src"]			= cfg.array();
-	cfg["intermediate"]	= cfg.array();
+	cfg["parse-tree"]	= false;
 	return cfg;
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]	= "help";
-	tl["I"]	= "intermediate";
+	tl["P"]	= "parse-tree";
 	tl["o"]	= "output";
 	tl["s"]	= "src";
 }
@@ -54,7 +54,7 @@ int main(int argc, char** argv) try {
 		DEBUGLN("That part");
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
-		if (cfg["intermediate"]) {
+		if (cfg["parse-tree"]) {
 			auto const i = parser.parse();
 			Makai::File::saveText(
 				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
