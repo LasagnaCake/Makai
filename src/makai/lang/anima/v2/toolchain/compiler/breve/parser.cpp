@@ -223,7 +223,7 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 
 Node::Instance Parser::parse() {
 	Node::Instance root = Node::Instance::create();
-	while (!context.empty()) {
+	while (context.peek().type != LTS_TT_INVALID) {
 		auto const expr = nextExpression();
 		if (!expr) break;
 		root->children.pushBack(expr);

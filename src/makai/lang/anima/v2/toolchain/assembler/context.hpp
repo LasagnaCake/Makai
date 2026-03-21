@@ -108,7 +108,10 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			return tokens.empty();
 		}
 
-		Axiom token() const	{return empty() ? Axiom::invalid() : tokens.back();}
+		Axiom token() const	{
+			assertNotEmpty();
+			return tokens.back();
+		}
 
 		BaseContext& append(Input const& content) {
 			tokens.insert(content.reversed(), 0);

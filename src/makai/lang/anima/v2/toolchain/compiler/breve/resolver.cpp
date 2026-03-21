@@ -374,6 +374,7 @@ Node::Instance MainBlockResolver::resolve(Parser& parser, Node::Instance const& 
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->lhs = parser.nextExpression();
+	result->content = Node::Content::AV2_TANC_BLOCK;
 	if (!result->lhs || result->lhs->content != Node::Content::AV2_TANC_BLOCK)
 		parser.context.error("Expected block expression here!");
 	return result;
