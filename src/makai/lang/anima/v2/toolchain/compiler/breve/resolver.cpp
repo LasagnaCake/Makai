@@ -278,7 +278,14 @@ Node::Instance ModuleDeclResolver::resolve(Parser& parser, Node::Instance const&
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	// TODO: This
+	auto const name = parser.nextExpression();
+	if (!name->isPathOrName())
+		parser.context.error("Expected path or name here!");
+	auto const def = parser.nextExpression();
+	if (def->content != Node::Content::AV2_TANC_BLOCK)
+		parser.context.error("Expected block expression here!");
+	result->lhs = name;
+	result->rhs = def;
 	return result;
 }
 
@@ -347,6 +354,14 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	||	result->rhs->content == Node::Content::AV2_TANC_NAME
 	) return result;
 	parser.context.error("Invalid path expression!");
+}
+
+Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->base = token;
+	// TODO: This
+	return result;
 }
 
 Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {

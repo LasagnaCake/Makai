@@ -171,6 +171,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("infix", prefixes, new DynamicOperatorDeclResolver());
 	add("main", prefixes, new MainBlockResolver());
 	add(LTS_TT_AT, prefixes, new AttributeResolver());
+	add("using", prefixes, new UsingResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());
