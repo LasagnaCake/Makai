@@ -128,6 +128,8 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	while (true) {
+		if (parser.context.has(LTS_TT_CLOSE_CURLY))
+			break;
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
 			parser.context.next();
 			break;
@@ -152,10 +154,8 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs,
 			break;
 		}
 		result->children.pushBack(parser.nextExpression(precedence));
-		if (parser.context.peek().type == (LTS_TT_CLOSE_BRACKET)) {
-			parser.context.next();
+		if (parser.context.has(LTS_TT_CLOSE_BRACKET))
 			break;
-		}
 		parser.context.expect(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
 			parser.context.error("Expected expression after the comma!");
@@ -262,10 +262,8 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 			break;
 		}
 		result->children.pushBack(parser.nextExpression(precedence));
-		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
-			parser.context.next();
+		if (parser.context.has(LTS_TT_CLOSE_PAREN))
 			break;
-		}
 		parser.context.expect(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_PAREN)
 			parser.context.error("Expected expression after the comma!");
