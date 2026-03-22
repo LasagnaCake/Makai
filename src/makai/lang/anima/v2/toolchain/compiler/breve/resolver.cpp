@@ -154,8 +154,10 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs,
 			break;
 		}
 		result->children.pushBack(parser.nextExpression(precedence));
-		if (parser.context.has(LTS_TT_CLOSE_BRACKET))
+		if (parser.context.peek().type == (LTS_TT_CLOSE_BRACKET)) {
+			parser.context.next();
 			break;
+		}
 		parser.context.expect(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
 			parser.context.error("Expected expression after the comma!");
@@ -257,8 +259,10 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 			break;
 		}
 		result->children.pushBack(parser.nextExpression(precedence));
-		if (parser.context.has(LTS_TT_CLOSE_PAREN))
+		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
+			parser.context.next();
 			break;
+		}
 		parser.context.expect(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_PAREN)
 			parser.context.error("Expected expression after the comma!");
