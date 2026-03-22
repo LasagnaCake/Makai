@@ -207,12 +207,6 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_ASSIGNMENT;
-	if (!(
-		lhs->content == Node::Content::AV2_TANC_ASSIGNMENT
-	||	lhs->content == Node::Content::AV2_TANC_PATH
-	||	lhs->content == Node::Content::AV2_TANC_DECLARATION
-	||	lhs->content == Node::Content::AV2_TANC_SUBSCRIPT
-	)) parser.context.error("Expected assignment chain or declaration path here!");
 	result->lhs = lhs;
 	result->rhs = parser.nextExpression(precedence);
 	return result;
