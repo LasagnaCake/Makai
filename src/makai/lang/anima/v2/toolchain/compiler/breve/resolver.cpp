@@ -250,6 +250,7 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+		parser.context.expectNext(LTS_TT_OPEN_PAREN);
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			parser.context.next();
