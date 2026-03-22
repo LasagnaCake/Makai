@@ -352,9 +352,10 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 		parser.context.error("Expected function prototype here!");
 	if (parser.context.peek().type == LTS_TT_BIG_ARROW)
 		parser.context.next();
-	else if (parser.context.peek().type != LTS_TT_OPEN_CURLY)
-		parser.context.error("Expected '=>' or '{' here!");
-	result->rhs = parser.nextExpression();
+	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)
+		result->rhs = parser.nextExpression();
+	else if (parser.context.peek().type != LTS_TT_SEMICOLON)
+		parser.context.error("Expected '=>', ';' or '{' here!");
 	return result;
 }
 

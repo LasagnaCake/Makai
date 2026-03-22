@@ -5,7 +5,8 @@ using core.io
 module Test.Namespace {
 	@Nullable
 	struct MySpecialStruct {
-		foo : (var: int) -> void = {
+		foo :: (var: int) -> void = {
+			return var + var
 		}
 	}
 }

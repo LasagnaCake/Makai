@@ -158,6 +158,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("for", prefixes, new LoopResolver());
 	add("module", prefixes, new ModuleDeclResolver());
 	add("func", prefixes, new FunctionDeclResolver());
+	add(LTS_TT_COLON, prefixes, new FunctionPrototypeResolver());
 	add("extend", prefixes, new ExtensionResolver());
 	add("import", prefixes, new ImportResolver());
 	add("trait", prefixes, new TraitDeclResolver());
@@ -216,11 +217,11 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (!infixes.contains(context.peek().token))
 		return lhs;
 	DEBUGLN("Infix!");
-	while (precedence < currentPrecedence()) {
+	do {
 		DEBUGLN("Resolving infix for: ", tok.token);
 		tok = context.next().token();
 		lhs = infixes[tok.token]->resolve(*this, lhs, tok);
-	}
+	} while (precedence < currentPrecedence());
 	return lhs;
 }
 
