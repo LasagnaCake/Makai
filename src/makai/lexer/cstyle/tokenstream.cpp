@@ -326,7 +326,7 @@ bool TokenStream::next() {
 	else if (isWordChar(lexer->now())) {
 		lexeme = parseID(*lexer);
 		curToken.text = lexeme.toString();
-		curToken.value = curToken.text;
+		curToken.value = curToken.text.toString();
 		curToken.type = LTS_TT_IDENTIFIER;
 	}
 	else if (closingQuote(lexer->now()) != UTF::U8Char{}) {
@@ -334,7 +334,7 @@ bool TokenStream::next() {
 		lexer->next();
 		lexeme = parseString(*lexer, closingQuote(lexer->now()));
 		curToken.text = lexeme.toString();
-		curToken.value = curToken.text;
+		curToken.value = curToken.text.toString();
 	}
 	else parseOperator(*lexer, curToken);
 	if (lexeme.size())
@@ -344,8 +344,9 @@ bool TokenStream::next() {
 	return !isFinished;
 }
 
-Makai::String TokenStream::tokenText() const {
+Makai::UTF8String TokenStream::tokenText() const {
 	if (!lexer) return "";
+	return curToken.text;
 }
 
 TokenStream::Position TokenStream::position() const {
@@ -378,11 +379,11 @@ void TokenStream::assertOK() const {
 		);
 }
 
-TokenStream::TokenStream(String const& source)	{open(source);	}
-TokenStream::TokenStream()						{				}
-TokenStream::~TokenStream()						{close();		}
+TokenStream::TokenStream(UTF8String const& source)	{open(source);	}
+TokenStream::TokenStream()							{				}
+TokenStream::~TokenStream()							{close();		}
 
-CStyle::TokenStream& TokenStream::open(String const& source) {
+CStyle::TokenStream& TokenStream::open(UTF8String const& source) {
 	if (lexer) return *this;
 	lexer.bind(new Lexer{source.reversed()});
 	err = nullptr;
@@ -402,8 +403,7 @@ bool TokenStream::finished() const {
 }
 
 Makai::Result<TokenStream::TokenList, TokenStream::Error>
-
-Makai::Lexer::CStyle::tokenize(Makai::String const& source) {
+Makai::Lexer::CStyle::tokenize(Makai::UTF8String const& source) {
 	TokenStream::TokenList result;
 	TokenStream stream{source};
 	while (stream.next())

@@ -22,7 +22,7 @@ namespace Makai::Lexer::CStyle {
 		/// @brief Token stream error.
 		struct Error {
 			Position	where;
-			String		token;
+			UTF8String	token;
 		};
 
 		/// @brief Token stream token.
@@ -86,7 +86,7 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_SINGLE_QUOTE_STRING,
 				/// @brief Double-quote string literal.
 				LTS_TT_DOUBLE_QUOTE_STRING,
-				/// @brief Backtick-quote string literal.
+				/// @brief Backtick string literal.
 				LTS_TT_BACKTICK_STRING,
 				/// @brief French-single-quote string literal.
 				LTS_TT_FR_SINGLE_QUOTE_STRING,
@@ -161,7 +161,7 @@ namespace Makai::Lexer::CStyle {
 			/// @brief Token value.
 			Data::Value	value;
 			/// @brief Token text.
-			String		text;
+			UTF8String	text;
 			/// @brief Token position.
 			Position	at;
 
@@ -220,13 +220,13 @@ namespace Makai::Lexer::CStyle {
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
 		/// @note Source is copied, so there's no need to keep it around.
-		TokenStream(String const& source);
+		TokenStream(UTF8String const& source);
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
 		/// @return Reference to self.
 		/// @note Source is copied, so there's no need to keep it around.
-		TokenStream& open(String const& source);
+		TokenStream& open(UTF8String const& source);
 
 		/// @brief Closes the token stream.
 		/// @return Reference to self.
@@ -242,7 +242,7 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Returns the current token's text.
 		/// @return Current token's text.
-		String tokenText() const;
+		UTF8String tokenText() const;
 
 		/// @brief Returns the token stream's current position, INCLUDING line & column number.
 		/// @return Current position.
@@ -290,7 +290,7 @@ namespace Makai::Lexer::CStyle {
 	/// @param source Source content to process.
 	/// @return Resulting tokens, or an error (on failure).
 	Result<TokenStream::TokenList, TokenStream::Error>
-	tokenize(String const& source);
+	tokenize(UTF8String const& source);
 }
 
 #endif // MAKAILIB_LEXER_CORE_H

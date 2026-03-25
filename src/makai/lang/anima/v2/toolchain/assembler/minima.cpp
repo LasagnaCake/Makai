@@ -274,6 +274,30 @@ static Location getGlobal(Context& context) {
 	};
 }
 
+static DataLocation getIntWidth(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "int type").getString();
+	if (id == "i8")
+		return DataLocation{0};
+	else if (id == "i16")
+		return DataLocation::AV2_DLI_16;
+	else if (id == "i32")
+		return DataLocation::AV2_DLI_32;
+	else if (id == "i64")
+		return DataLocation::AV2_DLI_64;
+	else context.error("Invalid integer type!");
+}
+
+static DataLocation getRealWidth(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "real type").getString();
+	if (id == "f32")
+		return DataLocation{0};
+	else if (id == "f64")
+		return DataLocation::AV2_DLF_64;
+	else if (id == "f128")
+		return DataLocation::AV2_DLF_128;
+	else context.error("Invalid float type!");
+}
+
 static Location getConstantLocation(Context& context) {
 	auto type = context.type();
 	bool isNumber = false;
@@ -291,12 +315,18 @@ static Location getConstantLocation(Context& context) {
 	if (isNumber) {
 		switch (context.type()) {
 			case LTS_TT_INTEGER:
-				loc.source = DataLocation::AV2_DL_INT;
 				loc.id = context.value().getSigned() * (negated ? -1 : +1);
+				loc.source = DataLocation::AV2_DL_INT;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'i')
+					loc.source = loc.source | getIntWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLI_64;
 			break;
 			case LTS_TT_REAL:
-				loc.source = DataLocation::AV2_DL_REAL;
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal() * (negated ? -1 : +1));
+				loc.source = DataLocation::AV2_DL_REAL;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'f')
+					loc.source = loc.source | getRealWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLF_64;
 			break;
 			default: context.error("Expected number here!");
 		}
@@ -305,13 +335,23 @@ static Location getConstantLocation(Context& context) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
 			case LTS_TT_BACKTICK_STRING:
+			case LTS_TT_FR_SINGLE_QUOTE_STRING:
+			case LTS_TT_FR_DOUBLE_QUOTE_STRING:
+			case LTS_TT_JP_SINGLE_QUOTE_STRING:
+			case LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				loc.id = context.addStringLiteral(context.value().getString());
 			case LTS_TT_INTEGER:
-				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
 				loc.id = context.value().getUnsigned();
+				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'i')
+					loc.source = loc.source | getIntWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLI_64;
 			case LTS_TT_REAL:
-				loc.source = DataLocation::AV2_DL_REAL;
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal());
+				loc.source = DataLocation::AV2_DL_REAL;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'f')
+					loc.source = loc.source | getRealWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLF_64;
 			break;
 			default: context.error("Invalid constant!");
 		}
@@ -353,8 +393,8 @@ static Location getDataLocation(Context& context) {
 			else if (id == "stack")						loc |= getStack(context);
 			else if (id == "global" || id == "g")		loc |= getGlobal(context);
 			else if (id == "external" || id == "out")	loc |= getExtern(context);
-			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_BOOL, uint64{0}};
-			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_BOOL, uint64{1}};
+			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_BOOL, null};
+			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_BOOL | DataLocation::AV2_DLB_TRUE, null};
 			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_VOID, null};
 			else if (id == "null" || id == "nil")		loc |= Location{DataLocation::AV2_DL_NULL, null};
 			else context.error("Invalid data source!");
@@ -375,7 +415,11 @@ static Location getDataLocation(Context& context) {
 		case Type{'-'}:
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
-		case LTS_TT_CHARACTER:
+		case LTS_TT_BACKTICK_STRING:
+		case LTS_TT_FR_SINGLE_QUOTE_STRING:
+		case LTS_TT_FR_DOUBLE_QUOTE_STRING:
+		case LTS_TT_JP_SINGLE_QUOTE_STRING:
+		case LTS_TT_JP_DOUBLE_QUOTE_STRING:
 		case LTS_TT_INTEGER:
 		case LTS_TT_REAL:
 			loc |= getConstantLocation(context);

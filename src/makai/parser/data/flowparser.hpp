@@ -100,6 +100,10 @@ namespace Makai::Parser::Data {
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 			case TokenType::LTS_TT_BACKTICK_STRING:
+			case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+			case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+			case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+			case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
 			case TokenType{'{'}:
@@ -188,10 +192,15 @@ namespace Makai::Parser::Data {
 				switch (token.type) {
 				case TokenType{'-'}:
 				case TokenType::LTS_TT_INTEGER:
-				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
-				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_REAL:
 				case TokenType::LTS_TT_IDENTIFIER:
+				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_BACKTICK_STRING:
+				case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{ID_IDENTIFIER}:
 				case TokenType{'{'}:
@@ -228,6 +237,11 @@ namespace Makai::Parser::Data {
 				switch (token.type) {
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_BACKTICK_STRING:
+				case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_IDENTIFIER:
 					key = token.value.get<Value::StringType>();
 				break;
@@ -256,6 +270,11 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_BACKTICK_STRING:
+				case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_REAL:
 				case TokenType::LTS_TT_IDENTIFIER:
 				case TokenType{BINARY_IDENTIFIER}:

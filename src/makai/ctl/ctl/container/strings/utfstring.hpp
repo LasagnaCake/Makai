@@ -1617,6 +1617,9 @@ namespace UTF {
 		/// @return String as new encoding.
 		constexpr UTFString<32> toUTF32() const	{return toUTF<32>();	}
 
+		/// @brief Returns the string as a standard string.
+		constexpr operator String() const {return toString();}
+
 	private:
 		constexpr void assertIsInBounds(IndexType const index) const {
 			if (index >= 0 && usize(index) > (size()-1)) outOfBoundsError(index);

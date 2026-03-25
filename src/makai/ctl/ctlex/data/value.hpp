@@ -148,6 +148,9 @@ namespace Data {
 		template <::CTL::Type::Real T>
 		constexpr Value(T const value):					kind(Kind::DVK_REAL)			{content.real = value;						}
 		/// @brief Constructs a string value.
+		template <::CTL::Type::OneOfExcept<StringType, String, UTF8String, UTF32String> T>
+		constexpr Value(T const& value):				kind(Kind::DVK_STRING)			{content.string = new StringType(value);	}
+		/// @brief Constructs a string value.
 		template <::CTL::Type::CanBecome<StringType> T>
 		constexpr Value(T const& value):				kind(Kind::DVK_STRING)			{content.string = new StringType(value);	}
 		/// @brief Constructs a byte list value.
