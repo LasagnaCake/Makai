@@ -65,10 +65,11 @@ namespace Makai::Parser::Data {
 			if (!lexer.next()) return error("Missing vectir value!");
 			Vector4 vec;
 			float mult = 1;
-			for (usize i = 0; i < 4; ++i) {
+			usize i = 0;
+			for (; i < 4; ++i) {
 				while (true) {
 					if (!lexer.next()) return error("Missing identifier value!");
-					if (lexer.current().type == TokenType{')'}) continue;
+					if (lexer.current().type == TokenType{')'}) goto EndVector;
 					if (lexer.current().type == TokenType{'-'}) {
 						mult *= -1;
 						continue;
@@ -84,9 +85,36 @@ namespace Makai::Parser::Data {
 					}
 					return error("Expected number here!");
 				}
+				while (true) {
+					switch (lexer.current().type) {
+						case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+						case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+						case TokenType::LTS_TT_BACKTICK_STRING:
+						case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+						case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+						case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+						case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
+						case TokenType{BINARY_IDENTIFIER}:
+						case TokenType{ID_IDENTIFIER}:
+						case TokenType{'('}:
+						case TokenType{'{'}:
+						case TokenType{'['}:
+						case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+							return error("Expected number here!");
+						case TokenType{'+'}:
+						case TokenType{'-'}:
+						case TokenType::LTS_TT_INTEGER:
+						case TokenType::LTS_TT_REAL: break;
+						case TokenType{')'}: goto EndVector;
+						default: continue;
+					}
+				}
 			}
+		EndVector:
 			if (lexer.current().type != TokenType{')'})
 				return error("Expected ')' here!");
+			for (usize j = 0; j < i; ++j)
+				vec[j] = vec[j + (4 - i)];
 			return Value(vec);
 		}
 
@@ -129,9 +157,9 @@ namespace Makai::Parser::Data {
 			}
 			case TokenType{'}'}:
 			case TokenType{']'}:
+			case TokenType{')'}:
 				return error("Unexpected closure!");
 			default: return Value();
-				//return error("Missing or invalid token!");
 			}
 			return Value();
 		}
@@ -146,19 +174,34 @@ namespace Makai::Parser::Data {
 			if (!lexer.next()) return error("Missing identifier value!");
 			usize i = 0;
 			for (; i < Value::IdentifierType::SIZE; ++i) {
-				if (lexer.current().type == TokenType{']'})
-					break;
-				if (lexer.current().type != TokenType::LTS_TT_INTEGER) {
-					lexer.next();
-					continue;
+				switch (lexer.current().type) {
+					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_BACKTICK_STRING:
+					case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_REAL:
+					case TokenType{BINARY_IDENTIFIER}:
+					case TokenType{ID_IDENTIFIER}:
+					case TokenType{'('}:
+					case TokenType{'{'}:
+					case TokenType{'['}:
+					case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+						return error("Expected integer here!");
+					case TokenType::LTS_TT_INTEGER:
+						id[i] = lexer.current().value.getUnsigned();
+					case TokenType{']'}: goto TheRestOfTheOwl;
+					default: continue;
 				}
-				id[i] = lexer.current().value.getUnsigned();
 				if (!lexer.next()) return error("Missing identifier value!");
 			}
-			for (usize j = 0; j < i; ++j)
-				id[j] = id[j + (Value::IdentifierType::SIZE - i)];
+		TheRestOfTheOwl:
 			if (lexer.current().type != TokenType{']'})
 				return error("Expected ']' here!");
+			for (usize j = 0; j < i; ++j)
+				id[j] = id[j + (Value::IdentifierType::SIZE - i)];
 			return Value(Value::IdentifierType::create(id));
 		}
 
@@ -210,6 +253,7 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{ID_IDENTIFIER}:
+				case TokenType{'('}:
 				case TokenType{'{'}:
 				case TokenType{'['}:
 				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
