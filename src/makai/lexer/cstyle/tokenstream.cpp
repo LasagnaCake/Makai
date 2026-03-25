@@ -13,6 +13,8 @@ struct TokenStream::Lexer {
 	usize curLine	= 0;
 	usize curCol	= 0;
 
+	Lexer(UTF8String const& src): source(src), stream(src), total(src.size()) {}
+
 	bool empty() const {
 		return stream.empty();
 	}
