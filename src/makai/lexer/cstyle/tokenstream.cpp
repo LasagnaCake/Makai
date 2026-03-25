@@ -389,6 +389,7 @@ TokenStream::~TokenStream()							{close();		}
 CStyle::TokenStream& TokenStream::open(UTF8String const& source) {
 	if (lexer) return *this;
 	lexer.bind(new Lexer{source.reversed()});
+	DEBUGLN("Source size: ", lexer->source.size());
 	err = nullptr;
 	isFinished = false;
 	return *this;
