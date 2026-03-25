@@ -113,8 +113,9 @@ namespace Makai::Parser::Data {
 		EndVector:
 			if (lexer.current().type != TokenType{')'})
 				return error("Expected ')' here!");
-			for (usize j = 0; j < i; ++j)
-				vec[j] = vec[j + (4 - i)];
+			if (i < 4)
+				for (usize j = 0; j < i; ++j)
+					vec[j] = vec[j + (4 - i)];
 			return Value(vec);
 		}
 
@@ -200,8 +201,9 @@ namespace Makai::Parser::Data {
 		TheRestOfTheOwl:
 			if (lexer.current().type != TokenType{']'})
 				return error("Expected ']' here!");
-			for (usize j = 0; j < i; ++j)
-				id[j] = id[j + (Value::IdentifierType::SIZE - i)];
+			if (i < Value::IdentifierType::SIZE)
+				for (usize j = 0; j < i; ++j)
+					id[j] = id[j + (Value::IdentifierType::SIZE - i)];
 			return Value(Value::IdentifierType::create(id));
 		}
 
