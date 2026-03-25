@@ -154,6 +154,16 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_DECLARE,
 				/// @brief Bitwise shift right assignment (`::`).
 				LTS_TT_NAMESPACE_RESOLVE,
+				/// @brief Null decay (`??`).
+				LTS_TT_NULL_DECAY,
+				/// @brief Null access (`?.`).
+				LTS_TT_NULL_ACCESS,
+				/// @brief Null assignment (`?=`).
+				LTS_TT_NULL_ASSIGN,
+				/// @brief Pointer access (`*.`).
+				LTS_TT_PTR_ACCESS,
+				/// @brief Dereference access (`^.`).
+				LTS_TT_DEREF_ACCESS,
 			};
 
 			/// @brief Token type.
@@ -200,6 +210,13 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_BIT_XOR_ASSIGN:			return "^=";
 					case Type::LTS_TT_BIT_SHIFT_LEFT_ASSIGN:	return "<<=";
 					case Type::LTS_TT_BIT_SHIFT_RIGHT_ASSIGN:	return ">>=";
+					case Type::LTS_TT_ORDER:					return "<=>";
+					case Type::LTS_TT_ASSIGN:					return ":=";
+					case Type::LTS_TT_NAMESPACE_RESOLVE:		return "::";
+					case Type::LTS_TT_LOGIC_XOR:				return "^^";
+					case Type::LTS_TT_BIT_NOT_ASSIGN:			return "~=";
+					case Type::LTS_TT_STREAM_INSERT:			return "<|";
+					case Type::LTS_TT_STREAM_EXTRACT:			return "|>";
 					default: return "<!UNKNOWN>";
 				}
 			}

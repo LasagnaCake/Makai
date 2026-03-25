@@ -85,7 +85,6 @@ static UTF::U8Char unescape(UTF::U8Char const ch) {
 
 static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim = {'\"'}) {
 	UTF8String result;
-	lexer.next();
 	while (lexer.now() != delim) {
 		if (lexer.now() == UTF::U8Char{'\\'})
 			result.pushBack(unescape(lexer.next()));
@@ -143,8 +142,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_COMPARE_EQUALS;
-		}
-		if (lexer.peek() == UTF::U8Char{'>'}) {
+		} else if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIG_ARROW;
 		}
@@ -152,12 +150,10 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_OR_ASSIGN;
-		}
-		if (lexer.peek() == UTF::U8Char{'|'}) {
+		} else if (lexer.peek() == UTF::U8Char{'|'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_OR;
-		}
-		if (lexer.peek() == UTF::U8Char{'>'}) {
+		} else if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_STREAM_EXTRACT;
 		}
@@ -187,12 +183,10 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_SUB_ASSIGN;
-		}
-		if (lexer.peek() == UTF::U8Char{'-'}) {
+		} else if (lexer.peek() == UTF::U8Char{'-'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_DECREMENT;
-		}
-		if (lexer.peek() == UTF::U8Char{'>'}) {
+		} else if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LITTLE_ARROW;
 		}
@@ -200,8 +194,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{':'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_NAMESPACE_RESOLVE;
-		}
-		if (lexer.peek() == UTF::U8Char{'='}) {
+		} else if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_DECLARE;
 		}
@@ -209,14 +202,18 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'+'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_INCREMENT;
-		}
-		if (lexer.peek() == UTF::U8Char{'='}) {
+		} else if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_ADD_ASSIGN;
 		}
-	} else if (lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'='}) {
-		tok.text.pushBack(lexer.next());
-		tok.type = LTS_TT_MUL_ASSIGN;
+	} else if (lexer.now() == UTF::U8Char{'*'}) {
+		if (lexer.peek() == UTF::U8Char{'.'}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_PTR_ACCESS;
+		} else if (lexer.peek() == UTF::U8Char{'='}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_MUL_ASSIGN;
+		}
 	} else if (lexer.now() == UTF::U8Char{'/'} && lexer.peek() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_DIV_ASSIGN;
@@ -227,17 +224,18 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'^'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_XOR;
-		}
-		if (lexer.peek() == UTF::U8Char{'='}) {
+		} else if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_XOR_ASSIGN;
+		} else if (lexer.peek() == UTF::U8Char{'.'}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_DEREF_ACCESS;
 		}
 	} else if (lexer.now() == UTF::U8Char{'&'}) {
 		if (lexer.peek() == UTF::U8Char{'&'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_AND;
-		}
-		if (lexer.peek() == UTF::U8Char{'='}) {
+		} else if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_AND_ASSIGN;
 		}
@@ -245,8 +243,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'|'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_OR;
-		}
-		if (lexer.peek() == UTF::U8Char{'='}) {
+		} else if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_OR_ASSIGN;
 		}
@@ -259,6 +256,17 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 	} else if (lexer.now() == UTF::U8Char{'>'} && lexer.now() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_COMPARE_GREATER_EQUALS;
+	} else if (lexer.now() == UTF::U8Char{'?'}) {
+		if (lexer.peek() == UTF::U8Char{'.'}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_NULL_ACCESS;
+		} else if (lexer.peek() == UTF::U8Char{'?'}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_NULL_DECAY;
+		} else if (lexer.peek() == UTF::U8Char{'='}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_NULL_ASSIGN;
+		}
 	}
 	lexer.next();
 }
