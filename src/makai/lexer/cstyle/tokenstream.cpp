@@ -88,7 +88,7 @@ static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim
 	lexer.next();
 	while (lexer.now() != delim) {
 		if (lexer.now() == UTF::U8Char{'\\'})
-			result.pushBack(unescape(lexer.now()));
+			result.pushBack(unescape(lexer.next()));
 		else result.pushBack(lexer.now());
 		lexer.next();
 	}
