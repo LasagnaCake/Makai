@@ -137,8 +137,8 @@ constexpr TokenStream::Token::Type stringType(UTF::U8Char const op) {
 }
 
 static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
+	tok.type = TokenStream::Token::Type{lexer.now().value()};
 	tok.text.pushBack(lexer.now());
-	tok.type = TokenStream::Token::Type{tok.text.front().value()};
 	if (lexer.now() == UTF::U8Char{'='}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
@@ -169,7 +169,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 	} else if (lexer.now() == UTF::U8Char{'<'}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
-			if (lexer.peek() == UTF::U8Char{'>'}) {
+			if (lexer.peek(1) == UTF::U8Char{'>'}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_ORDER;
 				return;
@@ -184,7 +184,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		}
 		if (lexer.peek() == UTF::U8Char{'<'}) {
 			tok.text.pushBack(lexer.next());
-			if (lexer.peek() == UTF::U8Char{'='}) {
+			if (lexer.peek(1) == UTF::U8Char{'='}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_BIT_SHIFT_LEFT_ASSIGN;
 				return;
@@ -318,7 +318,7 @@ bool TokenStream::next() {
 				curToken.value = toInt64(lexeme.toString());
 			}
 		} catch (...) {
-			err = Error{curToken.at, lexeme.toString()};
+			err = Error{curToken.at, lexeme};
 			isFinished = true;
 		}
 	}
@@ -328,7 +328,7 @@ bool TokenStream::next() {
 		parseLineComment(*lexer);
 	else if (isWordChar(lexer->now())) {
 		lexeme = parseID(*lexer);
-		curToken.text = lexeme.toString();
+		curToken.text = lexeme;
 		curToken.value = curToken.text.toString();
 		curToken.type = LTS_TT_IDENTIFIER;
 	}
@@ -336,12 +336,12 @@ bool TokenStream::next() {
 		curToken.type = stringType(lexer->now());
 		lexer->next();
 		lexeme = parseString(*lexer, closingQuote(lexer->now()));
-		curToken.text = lexeme.toString();
+		curToken.text = lexeme;
 		curToken.value = curToken.text.toString();
 	}
 	else parseOperator(*lexer, curToken);
 	if (lexeme.size())
-		curToken.text = lexeme.toString();
+		curToken.text = lexeme;
 	if (lexer->empty())
 		isFinished = true;
 	DEBUGLN("Token: ", Token::asName(curToken.type));
