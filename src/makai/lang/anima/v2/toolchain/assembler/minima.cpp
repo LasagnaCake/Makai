@@ -304,6 +304,7 @@ static Location getConstantLocation(Context& context) {
 		switch (context.type()) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
+			case LTS_TT_BACKTICK_STRING:
 				loc.id = context.addStringLiteral(context.value().getString());
 			case LTS_TT_INTEGER:
 				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
