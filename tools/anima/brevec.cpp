@@ -55,6 +55,7 @@ int main(int argc, char** argv) try {
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
 		if (cfg["parse-tree"]) {
+			DEBUGLN("Doing parse tree...");
 			auto const i = parser.parse();
 			Makai::File::saveText(
 				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
