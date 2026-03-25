@@ -147,6 +147,11 @@ static void doMacroRuleType(Context& context, Macro::Rule& rule, Macro::Rule::Ma
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
 				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_BACKTICK_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_FR_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_FR_DOUBLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_JP_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_JP_DOUBLE_QUOTE_STRING}});
 			} else if (varType == "id" || varType == "identifier") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
@@ -155,12 +160,40 @@ static void doMacroRuleType(Context& context, Macro::Rule& rule, Macro::Rule::Ma
 				base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
 				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
 				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_BACKTICK_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_FR_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_FR_DOUBLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_JP_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_JP_DOUBLE_QUOTE_STRING}});
 			} else if (varType == "sqstr" || varType == "sqstring") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
 			} else if (varType == "dqstr" || varType == "dqstring") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+			} else if (varType == "dqstr" || varType == "btstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_BACKTICK_STRING}});
+			} else if (varType == "sqstr" || varType == "frsqstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_FR_SINGLE_QUOTE_STRING}});
+			} else if (varType == "dqstr" || varType == "frdqstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_FR_DOUBLE_QUOTE_STRING}});
+			} else if (varType == "sqstr" || varType == "jpsqstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_JP_SINGLE_QUOTE_STRING}});
+			} else if (varType == "dqstr" || varType == "jpdqstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_JP_DOUBLE_QUOTE_STRING}});
+			} else if (varType == "dqstr" || varType == "frstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_FR_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_FR_DOUBLE_QUOTE_STRING}});
+			} else if (varType == "dqstr" || varType == "jpstring") {
+				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
+				base.tokens.pushBack({{.type = LTS_TT_JP_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_JP_DOUBLE_QUOTE_STRING}});
 			} else if (varType == "int" || varType == "integer") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
@@ -171,17 +204,18 @@ static void doMacroRuleType(Context& context, Macro::Rule& rule, Macro::Rule::Ma
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
 				base.tokens.pushBack({{.type = LTS_TT_REAL}});
-			} else if (varType == "char" || varType == "character") {
-				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
-				base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
 			} else if (varType == "value") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = LTS_TT_IDENTIFIER}});
 				base.tokens.pushBack({{.type = LTS_TT_SINGLE_QUOTE_STRING}});
 				base.tokens.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_BACKTICK_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_FR_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_FR_DOUBLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_JP_SINGLE_QUOTE_STRING}});
+				base.tokens.pushBack({{.type = LTS_TT_JP_DOUBLE_QUOTE_STRING}});
 				base.tokens.pushBack({{.type = LTS_TT_INTEGER}});
 				base.tokens.pushBack({{.type = LTS_TT_REAL}});
-				base.tokens.pushBack({{.type = LTS_TT_CHARACTER}});
 			} else if (varType == "mathop") {
 				base.type = decltype(base.type)::AV2_TA_SM_RMT_ANY_OF;
 				base.tokens.pushBack({{.type = Type{'+'}}});
@@ -216,6 +250,7 @@ static void doMacroRuleType(Context& context, Macro::Rule& rule, Macro::Rule::Ma
 				base.tokens.pushBack({{.type = LTS_TT_COMPARE_NOT_EQUALS}});
 				base.tokens.pushBack({{.type = Type{'>'}}});
 				base.tokens.pushBack({{.type = Type{'<'}}});
+				base.tokens.pushBack({{.type = LTS_TT_ORDER}});
 			} else if (varType == "assignop") {
 				base.tokens.pushBack({{.type = Type{'='}}});
 			} else if (varType == "otherop") {
@@ -369,13 +404,13 @@ namespace {
 
 	struct IExpandAfter {
 		using Instance = Makai::Instance<IExpandAfter>;
-		virtual Makai::String expand(Macro::Context& context) const = 0;
+		virtual Makai::UTF8String expand(Macro::Context& context) const = 0;
 
 		virtual ~IExpandAfter() {}
 	};
 
 	struct ExpandToValue: IExpandAfter {
-		Makai::String expand(Macro::Context& context) const {
+		Makai::UTF8String expand(Macro::Context& context) const {
 			return value;
 		}
 
@@ -386,7 +421,7 @@ namespace {
 	};
 
 	struct ExpandToVariable: IExpandAfter {
-		Makai::String expand(Macro::Context& context) const {
+		Makai::UTF8String expand(Macro::Context& context) const {
 			if (!context.variables.contains(var)) return "";
 			Makai::String result;
 			for (auto& toks: context.variables[var].tokens) {
@@ -396,7 +431,7 @@ namespace {
 						case LTS_TT_DOUBLE_QUOTE_STRING:
 						case LTS_TT_IDENTIFIER:
 							result += tok.value.getString();
-						default: result += tok.token;
+						default: result += tok.text;
 					}
 				}
 			}
@@ -412,7 +447,7 @@ namespace {
 	struct ExpansionGroup: IExpandAfter {
 		Makai::List<Instance> sub;
 
-		Makai::String expand(Macro::Context& context) const {
+		Makai::UTF8String expand(Macro::Context& context) const {
 			Makai::String result = "";
 			for (auto& s: sub)
 				result += s->expand(context);
@@ -423,7 +458,7 @@ namespace {
 	struct ExpandToEncryption: IExpandAfter {
 		Instance base;
 
-		Makai::String expand(Macro::Context& context) const {
+		Makai::UTF8String expand(Macro::Context& context) const {
 			Makai::String result = base->expand(context);
 			return Makai::Data::encode(
 				Makai::Data::hashed(result.toBytes()),
@@ -549,7 +584,7 @@ static void doMacroTransform(
 							Makai::List<Macro::Axiom> appendix;
 							tz.open(stream);
 							while (tz.next())
-								appendix.pushBack({{tz.current()}, true, tz.tokenText(), tz.position()});
+								appendix.pushBack({{tz.current()}, true});
 							ctx.result.value.appendBack(appendix);
 						};
 					} break;
@@ -557,7 +592,7 @@ static void doMacroTransform(
 						auto const toks = doExpansionGroup(context.next(), rule);
 						base.newTransform()->pre = [toks] (auto& ctx) {
 							auto const v = toks->expand(ctx);
-							ctx.result.value.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING, .value = v}});
+							ctx.result.value.pushBack({{.type = LTS_TT_DOUBLE_QUOTE_STRING, .value = v.toString()}});
 						};
 					} break;
 					case Type{'!'}: {
@@ -571,14 +606,14 @@ static void doMacroTransform(
 							auto const msgv = doExpansionGroup(context.next(), rule);
 							base.newTransform()->pre = [msgv] (auto& ctx) {
 								ctx.baseContext.out.writeLine("Warning: ", msgv->expand(ctx));
-								ctx.baseContext.out.writeLine("At: ", ctx.baseContext.token().position.line);
-								ctx.baseContext.out.writeLine("Column: ", ctx.baseContext.token().position.column);
+								ctx.baseContext.out.writeLine("At: ", ctx.baseContext.token().at.line);
+								ctx.baseContext.out.writeLine("Column: ", ctx.baseContext.token().at.column);
 							};
 						} else if (msgt == "message" || msgt == "msg") {
 							auto const msgv = doExpansionGroup(context.next(), rule);
 							base.newTransform()->pre = [msgv] (auto& ctx) {
 								auto content = msgv->expand(ctx);
-								content = Makai::Regex::replace(content, "\\$\\{LINE\\}", Makai::toString(ctx.baseContext.token().position.line));
+								content = Makai::Regex::replace(content, "\\$\\{LINE\\}", Makai::toString(ctx.baseContext.token().at.line));
 								content = Makai::Regex::replace(content, "\\$\\{FILE\\}", Makai::toString(ctx.baseContext.file.name));
 								ctx.baseContext.out.writeLine("Message: ", content);
 							};

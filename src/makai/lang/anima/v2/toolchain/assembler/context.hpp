@@ -17,8 +17,6 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		struct Axiom: Tokenizer::Token {
 			bool strict = false;
-			String token;
-			Tokenizer::Position position = {0, 0, 0};
 			String sourceFile;
 
 			constexpr Ordered::OrderType operator<=>(Axiom const& other) const {
@@ -30,7 +28,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				Ordered::OrderType order = type <=> other.type;
 				if (order == Ordered::Order::EQUAL) {
 					if (type == Type::LTS_TT_IDENTIFIER)
-						return token <=> other.token;
+						return text <=> other.text;
 					return value <=> other.value;
 				} else return order;
 			}
@@ -65,12 +63,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 					Makai::CPP::SourceFile{"n/a", -1, "???"}
 				);
 			else {
-				auto const pos = token().position;
+				auto const pos = token().at;
 				throw E(
 					Makai::toString(
 						"At:\nLINE: ", pos.line,
 						"\nCOLUMN: ", pos.column,
-						"\n--> [", token().token, "]"
+						"\n--> [", token().text, "]"
 					),
 					what,
 					Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), token().sourceFile}

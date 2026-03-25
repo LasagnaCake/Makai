@@ -317,14 +317,14 @@ static Location getConstantLocation(Context& context) {
 			case LTS_TT_INTEGER:
 				loc.id = context.value().getSigned() * (negated ? -1 : +1);
 				loc.source = DataLocation::AV2_DL_INT;
-				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'i')
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'i'})
 					loc.source = loc.source | getIntWidth(context);
 				else loc.source = loc.source | DataLocation::AV2_DLI_64;
 			break;
 			case LTS_TT_REAL:
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal() * (negated ? -1 : +1));
 				loc.source = DataLocation::AV2_DL_REAL;
-				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'f')
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'f'})
 					loc.source = loc.source | getRealWidth(context);
 				else loc.source = loc.source | DataLocation::AV2_DLF_64;
 			break;
@@ -343,13 +343,13 @@ static Location getConstantLocation(Context& context) {
 			case LTS_TT_INTEGER:
 				loc.id = context.value().getUnsigned();
 				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
-				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'i')
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'u'})
 					loc.source = loc.source | getIntWidth(context);
 				else loc.source = loc.source | DataLocation::AV2_DLI_64;
 			case LTS_TT_REAL:
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal());
 				loc.source = DataLocation::AV2_DL_REAL;
-				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().token[0] == 'f')
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'f'})
 					loc.source = loc.source | getRealWidth(context);
 				else loc.source = loc.source | DataLocation::AV2_DLF_64;
 			break;

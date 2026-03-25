@@ -234,7 +234,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 	template <class T>
 	constexpr String artnameof() {
-		return String(ARTInfo<T>::ART_NAME, sizeof(ARTInfo<T>::ART_NAME));
+		return String(ARTInfo<T>::ART_NAME);
 	}
 
 	template <class... Types>

@@ -50,7 +50,7 @@ int main(int argc, char** argv) try {
 		DEBUGLN("This part");
 		Makai::List<Assembler::BaseContext::Axiom> ax;
 		while (stream.next())
-			ax.pushBack({stream.current(), true, stream.tokenText(), stream.position(), file});
+			ax.pushBack({stream.current(), true, file});
 		DEBUGLN("That part");
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
