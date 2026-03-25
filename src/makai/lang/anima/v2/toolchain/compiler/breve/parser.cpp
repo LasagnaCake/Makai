@@ -210,7 +210,7 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	auto tok = context.next().token();
 	if (tok.type == LTS_TT_INVALID) return nullptr;
 	Node::Instance lhs;
-	DEBUGLN("Token: ", tok.token);
+	DEBUGLN("Token: ", tok.text);
 	if (prefixes.contains(tok.text))
 		lhs = prefixes[tok.text]->resolve(*this, null, tok);
 	else if (directs.contains(tok.type))
@@ -218,13 +218,13 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	else context.error("Invalid expression!");
 	if (context.empty())
 		return lhs;
-	DEBUGLN("Next token: [", context.peek().token, "]");
-	DEBUGLN("Is infix? ", infixes.contains(context.peek().token));
+	DEBUGLN("Next token: [", context.peek().text, "]");
+	DEBUGLN("Is infix? ", infixes.contains(context.peek().text));
 	if (!infixes.contains(context.peek().text))
 		return lhs;
 	DEBUGLN("Infix!");
 	do {
-		DEBUGLN("Resolving infix for: ", tok.token);
+		DEBUGLN("Resolving infix for: ", tok.text);
 		tok = context.next().token();
 		lhs = infixes[tok.text]->resolve(*this, lhs, tok);
 	} while (precedence < currentPrecedence());
