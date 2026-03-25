@@ -108,7 +108,7 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 			break;
 		}
 		result->children.pushBack(parser.nextExpression(precedence));
-		DEBUGLN("Argument: ", result->children.back()->base.token);
+		DEBUGLN("Argument: ", result->children.back()->base.text);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			DEBUGLN("No more arguments!");
 			parser.context.next();
@@ -195,8 +195,8 @@ Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lhs
 	result->content = Node::Content::AV2_TANC_IMPORT;
 	result->value = token.text.toString();
 	result->lhs = lhs;
-	DEBUGLN("Follows: ", parser.context.token().token);
-	DEBUGLN("Follows: ", parser.context.peek().token);
+	DEBUGLN("Follows: ", parser.context.token().text);
+	DEBUGLN("Follows: ", parser.context.peek().text);
 	if (parser.context.type() == LTS_TT_DOT) {
 		DEBUGLN("Here!");
 		parser.context.next();
