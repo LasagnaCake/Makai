@@ -144,12 +144,17 @@ namespace Makai::Parser::Data {
 				return error("Expected '[' here!");
 			As<uint64[Value::IdentifierType::SIZE]> id;
 			if (!lexer.next()) return error("Missing identifier value!");
-			for (usize i = 0; i < Value::IdentifierType::SIZE; ++i) {
+			usize i = 0;
+			for (; i < Value::IdentifierType::SIZE; ++i) {
+				if (lexer.current().type == TokenType{']'})
+					break;
 				if (lexer.current().type != TokenType::LTS_TT_INTEGER)
-					return error("Invalid identifier!");
+					lexer.next();
 				id[i] = lexer.current().value.getUnsigned();
 				if (!lexer.next()) return error("Missing identifier value!");
 			}
+			for (usize j = 0; j < i; ++j)
+				id[j] = id[j + (Value::IdentifierType::SIZE - i)];
 			if (lexer.current().type != TokenType{']'})
 				return error("Expected ']' here!");
 			return Value(Value::IdentifierType::create(id));
