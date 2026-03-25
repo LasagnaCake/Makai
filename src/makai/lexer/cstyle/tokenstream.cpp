@@ -284,12 +284,12 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 }
 
 static void parseBlockComment(TokenStream::Lexer& lexer) {
-	while ((lexer.now() != UTF::U8Char{'*'} && lexer.peek() != UTF::U8Char{'/'}))
+	while (!(lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'/'}))
 		lexer.next();
 }
 
 static void parseLineComment(TokenStream::Lexer& lexer) {
-	while ((lexer.now() != UTF::U8Char{'\n'}))
+	while (lexer.now() != UTF::U8Char{'\n'})
 		lexer.next();
 }
 
@@ -341,6 +341,7 @@ bool TokenStream::next() {
 		curToken.text = lexeme.toString();
 	if (lexer->empty())
 		isFinished = true;
+	DEBUGLN("Token: ", Token::asName(curToken.type));
 	return !isFinished;
 }
 
