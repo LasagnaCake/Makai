@@ -108,6 +108,8 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_LOGIC_AND,
 				/// @brief Logical OR (`||`).
 				LTS_TT_LOGIC_OR,
+				/// @brief Logical XOR (`^^`).
+				LTS_TT_LOGIC_XOR,
 				/// @brief Bit shift left (`>>`).
 				LTS_TT_BIT_SHIFT_LEFT,
 				/// @brief Bit shift right (`<<`).
@@ -132,14 +134,16 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_BIT_OR_ASSIGN,
 				/// @brief Bitwise XOR assignment (`^=`).
 				LTS_TT_BIT_XOR_ASSIGN,
-				/// @brief "Little arrow" (`->`).
-				LTS_TT_LITTLE_ARROW,
-				/// @brief "Big arrow" (`=>`).
-				LTS_TT_BIG_ARROW,
+				/// @brief Bitwise NOT assignment (`~=`).
+				LTS_TT_BIT_NOT_ASSIGN,
 				/// @brief Bitwise shift left assignment (`<<=`).
 				LTS_TT_BIT_SHIFT_LEFT_ASSIGN,
 				/// @brief Bitwise shift right assignment (`>>=`).
 				LTS_TT_BIT_SHIFT_RIGHT_ASSIGN,
+				/// @brief "Little arrow" (`->`).
+				LTS_TT_LITTLE_ARROW,
+				/// @brief "Big arrow" (`=>`).
+				LTS_TT_BIG_ARROW,
 				/// @brief Stream insertion (`<|`).
 				LTS_TT_STREAM_INSERT,
 				/// @brief Stream extraction (`|>`).
@@ -150,10 +154,6 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_DECLARE,
 				/// @brief Bitwise shift right assignment (`::`).
 				LTS_TT_NAMESPACE_RESOLVE,
-				/// @brief Bitwise shift right assignment (`^^`).
-				LTS_TT_LOGIC_XOR,
-				/// @brief Bitwise NOT assignment (`~=`).
-				LTS_TT_BIT_NOT_ASSIGN,
 			};
 
 			/// @brief Token type.
