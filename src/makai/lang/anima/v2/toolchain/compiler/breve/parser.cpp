@@ -41,18 +41,19 @@ Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 		case LTS_TT_PERCENT: return AV2_TAPP_MUL_DIV_REM;
 		case LTS_TT_BIT_SHIFT_RIGHT:
 		case LTS_TT_BIT_SHIFT_LEFT: return AV2_TAPP_BIT_SHIFT;
-		case LTS_TT_TILDE: return AV2_TAPP_ORDER;
+		case LTS_TT_ORDER: return AV2_TAPP_ORDER;
 		case LTS_TT_LESS_THAN:
 		case LTS_TT_GREATER_THAN:
 		case LTS_TT_COMPARE_GREATER_EQUALS:
 		case LTS_TT_COMPARE_LESS_EQUALS: return AV2_TAPP_COMPARE;
 		case LTS_TT_COMPARE_EQUALS:
 		case LTS_TT_COMPARE_NOT_EQUALS: return AV2_TAPP_EQ_INEQ;
-		case LTS_TT_RAISE: return AV2_TAPP_BXOR;
+		case LTS_TT_BIT_XOR: return AV2_TAPP_BXOR;
 		case LTS_TT_BIT_AND: return AV2_TAPP_BAND;
 		case LTS_TT_BIT_OR: return AV2_TAPP_BOR;
 		case LTS_TT_LOGIC_AND: return AV2_TAPP_LAND;
 		case LTS_TT_LOGIC_OR: return AV2_TAPP_LOR;
+		case LTS_TT_LOGIC_XOR: return AV2_TAPP_LXOR;
 		case LTS_TT_INCREMENT:
 		case LTS_TT_DECREMENT:
 		case LTS_TT_DOT: return AV2_TAPP_PATH;
@@ -140,8 +141,12 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_INTEGER,
 		LTS_TT_DOUBLE_QUOTE_STRING,
 		LTS_TT_SINGLE_QUOTE_STRING,
+		LTS_TT_BACKTICK_STRING,
+		LTS_TT_JP_SINGLE_QUOTE_STRING,
+		LTS_TT_JP_DOUBLE_QUOTE_STRING,
+		LTS_TT_FR_SINGLE_QUOTE_STRING,
+		LTS_TT_FR_DOUBLE_QUOTE_STRING,
 		LTS_TT_REAL,
-		LTS_TT_CHARACTER
 	);
 	// Advanced prefixes
 	DEBUGLN("Advanced prefix parsers");
@@ -176,6 +181,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());
 	add(LTS_TT_DOT, infixes, new PathResolver());
+	add(LTS_TT_DECLARE, infixes, new VariableDeclResolver());
 	add(LTS_TT_COLON, infixes, new VariableDeclResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
 	add(LTS_TT_EXCLAMATION, infixes, new FunctionCallResolver());
