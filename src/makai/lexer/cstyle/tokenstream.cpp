@@ -306,7 +306,8 @@ bool TokenStream::next() {
 	}
 	UTF::U8String lexeme;
 	curToken = {.at = position()};
-	if (isNumberChar(lexer->now()) || (isOtherNumberChar(lexer->now()) && !isWordChar(lexer->peek()))) {
+	DEBUGLN("Char: ", UTF8String(lexer->now()).toString());
+	if (isNumberChar(lexer->now()) || ((lexer->now() == UTF::U8Char{'.'}) && !isWordChar(lexer->peek()))) {
 		lexeme = parseNumber(*lexer);
 		try {
 			if (lexeme.find({'.'}) != -1) {
