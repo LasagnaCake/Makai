@@ -25,6 +25,21 @@ namespace Makai::Anima::V2::Core::Meta {
 			;
 		};
 
+		template <class T>
+		consteval static cstring naenae() {
+			if constexpr (Type::Equal<T, int8>)		return "int8";
+			if constexpr (Type::Equal<T, int16>)	return "int16";
+			if constexpr (Type::Equal<T, int32>)	return "int32";
+			if constexpr (Type::Equal<T, int64>)	return "int64";
+			if constexpr (Type::Equal<T, uint8>)	return "uint8";
+			if constexpr (Type::Equal<T, uint16>)	return "uint16";
+			if constexpr (Type::Equal<T, uint32>)	return "uint32";
+			if constexpr (Type::Equal<T, uint64>)	return "uint64";
+			if constexpr (Type::Equal<T, float32>)	return "real32";
+			if constexpr (Type::Equal<T, float64>)	return "real64";
+			if constexpr (Type::Equal<T, float128>)	return "real128";
+		}
+
 		template <class T> struct ARTTI;
 
 		template<> struct ARTTI<Void> {
@@ -87,7 +102,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::SignedInteger T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = nameof<T>();
+			constexpr static scstring ART_NAME = naenae<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
@@ -99,7 +114,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::UnsignedInteger T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = nameof<T>();
+			constexpr static scstring ART_NAME = naenae<T>();
 
 			static uint64 construct(Object const& value) {
 				return value.toValue<T>();
@@ -111,7 +126,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::Real T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = nameof<T>();
+			constexpr static scstring ART_NAME = naenae<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
