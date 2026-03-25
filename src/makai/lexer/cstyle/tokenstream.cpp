@@ -143,53 +143,42 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_COMPARE_EQUALS;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIG_ARROW;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{'|'}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_OR_ASSIGN;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'|'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_OR;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_STREAM_EXTRACT;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{'<'}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
-			if (lexer.peek(1) == UTF::U8Char{'>'}) {
-				tok.text.pushBack(lexer.next());
+			if (lexer.peek() == UTF::U8Char{'>'}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_ORDER;
-				return;
 			}
 			tok.type = LTS_TT_COMPARE_LESS_EQUALS;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'|'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_STREAM_INSERT;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'<'}) {
 			tok.text.pushBack(lexer.next());
-			if (lexer.peek(1) == UTF::U8Char{'='}) {
-				tok.text.pushBack(lexer.next());
+			if (lexer.peek() == UTF::U8Char{'='}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_BIT_SHIFT_LEFT_ASSIGN;
-				return;
 			}
 			tok.type = LTS_TT_BIT_SHIFT_LEFT;
 			return;
@@ -198,98 +187,80 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_SUB_ASSIGN;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'-'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_DECREMENT;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LITTLE_ARROW;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{':'}) {
 		if (lexer.peek() == UTF::U8Char{':'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_NAMESPACE_RESOLVE;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_DECLARE;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{'+'}) {
 		if (lexer.peek() == UTF::U8Char{'+'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_INCREMENT;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_ADD_ASSIGN;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_MUL_ASSIGN;
-		return;
 	} else if (lexer.now() == UTF::U8Char{'/'} && lexer.peek() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_DIV_ASSIGN;
-		return;
 	} else if (lexer.now() == UTF::U8Char{'%'} && lexer.peek() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_MOD_ASSIGN;
-		return;
 	} else if (lexer.now() == UTF::U8Char{'^'}) {
 		if (lexer.peek() == UTF::U8Char{'^'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_XOR;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_XOR_ASSIGN;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{'&'}) {
 		if (lexer.peek() == UTF::U8Char{'&'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_AND;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_AND_ASSIGN;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{'|'}) {
 		if (lexer.peek() == UTF::U8Char{'|'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_LOGIC_OR;
-			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_BIT_OR_ASSIGN;
-			return;
 		}
 	} else if (lexer.now() == UTF::U8Char{'!'} && lexer.now() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_COMPARE_NOT_EQUALS;
-		return;
 	} else if (lexer.now() == UTF::U8Char{'~'} && lexer.now() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_BIT_NOT_ASSIGN;
-		return;
 	} else if (lexer.now() == UTF::U8Char{'>'} && lexer.now() == UTF::U8Char{'='}) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_COMPARE_GREATER_EQUALS;
-		return;
 	}
+	lexer.next();
 }
 
 static void parseBlockComment(TokenStream::Lexer& lexer) {
@@ -353,7 +324,6 @@ bool TokenStream::next() {
 		isFinished = true;
 	DEBUGLN("Type: ", Token::asName(curToken.type));
 	DEBUGLN("Text: ", curToken.text.toString());
-	lexer->next();
 	return !isFinished;
 }
 
