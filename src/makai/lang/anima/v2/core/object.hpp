@@ -144,19 +144,33 @@ namespace Makai::Anima::V2::Core {
 		bool isSigned() const {
 			if (!isBasic())
 				return false;
-			return (origin->basic == BasicType::AV2_BT_INT);
+			return (
+				origin->basic == BasicType::AV2_BT_INT8
+			||	origin->basic == BasicType::AV2_BT_INT16
+			||	origin->basic == BasicType::AV2_BT_INT32
+			||	origin->basic == BasicType::AV2_BT_INT64
+			);
 		}
 
 		bool isUnsigned() const {
 			if (!isBasic())
 				return false;
-			return (origin->basic == BasicType::AV2_BT_UINT);
+			return (
+				origin->basic == BasicType::AV2_BT_UINT8
+			||	origin->basic == BasicType::AV2_BT_UINT16
+			||	origin->basic == BasicType::AV2_BT_UINT32
+			||	origin->basic == BasicType::AV2_BT_UINT64
+			);
 		}
 
 		bool isReal() const {
 			if (!isBasic())
 				return false;
-			return (origin->basic == BasicType::AV2_BT_REAL);
+			return (
+				origin->basic == BasicType::AV2_BT_REAL32
+			||	origin->basic == BasicType::AV2_BT_REAL64
+			||	origin->basic == BasicType::AV2_BT_REAL128
+			);
 		}
 
 		bool isVector() const {
@@ -324,9 +338,17 @@ namespace Makai::Anima::V2::Core {
 			switch (*origin->basic) {
 				using enum BasicType;
 				case AV2_BT_BOOL: return *ref<bool>(content->data());
-				case AV2_BT_INT: return *ref<int64>(content->data());
-				case AV2_BT_UINT: return *ref<uint64>(content->data());
-				case AV2_BT_REAL: return *ref<double>(content->data());
+				case AV2_BT_INT8: return *ref<int8>(content->data());
+				case AV2_BT_INT16: return *ref<int16>(content->data());
+				case AV2_BT_INT32: return *ref<int32>(content->data());
+				case AV2_BT_INT64: return *ref<int64>(content->data());
+				case AV2_BT_UINT8: return *ref<uint8>(content->data());
+				case AV2_BT_UINT16: return *ref<uint16>(content->data());
+				case AV2_BT_UINT32: return *ref<uint32>(content->data());
+				case AV2_BT_UINT64: return *ref<uint64>(content->data());
+				case AV2_BT_REAL32: return *ref<float>(content->data());
+				case AV2_BT_REAL64: return *ref<double>(content->data());
+				case AV2_BT_REAL128: return *ref<long double>(content->data());
 				default:
 				invalidCastError<T>("Type mismatch");
 			}

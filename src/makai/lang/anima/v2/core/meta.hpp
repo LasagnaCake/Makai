@@ -87,7 +87,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::SignedInteger T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = "int";
+			constexpr static scstring ART_NAME = nameof<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
@@ -99,19 +99,19 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::UnsignedInteger T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = "uint";
+			constexpr static scstring ART_NAME = nameof<T>();
 
 			static uint64 construct(Object const& value) {
-				return value.toValue<uint64>();
+				return value.toValue<T>();
 			}
 
-			static Object::Storage convert(Database<Definition>& db, uint64 const& value) {
+			static Object::Storage convert(Database<Definition>& db, T const& value) {
 				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
 
 		template<Makai::Type::Real T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = "real";
+			constexpr static scstring ART_NAME = nameof<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();

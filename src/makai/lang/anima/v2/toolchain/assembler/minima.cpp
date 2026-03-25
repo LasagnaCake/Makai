@@ -955,12 +955,21 @@ static void declareType(Context& context) {
 				else if (basic == "nil")	type->basic = BasicType::AV2_BT_NULL;
 				else if (basic == "bool")	type->basic = BasicType::AV2_BT_BOOL;
 				else if (basic == "char")	type->basic = BasicType::AV2_BT_CHAR;
-				else if (basic == "int")	type->basic = BasicType::AV2_BT_INT;
-				else if (basic == "uint")	type->basic = BasicType::AV2_BT_UINT;
-				else if (basic == "real")	type->basic = BasicType::AV2_BT_REAL;
+				else if (basic == "i8")		type->basic = BasicType::AV2_BT_INT8;
+				else if (basic == "i16")	type->basic = BasicType::AV2_BT_INT16;
+				else if (basic == "i32")	type->basic = BasicType::AV2_BT_INT32;
+				else if (basic == "i64")	type->basic = BasicType::AV2_BT_INT64;
+				else if (basic == "u8")		type->basic = BasicType::AV2_BT_UINT8;
+				else if (basic == "u16")	type->basic = BasicType::AV2_BT_UINT16;
+				else if (basic == "u32")	type->basic = BasicType::AV2_BT_UINT32;
+				else if (basic == "u64")	type->basic = BasicType::AV2_BT_UINT64;
+				else if (basic == "f32")	type->basic = BasicType::AV2_BT_REAL32;
+				else if (basic == "f64")	type->basic = BasicType::AV2_BT_REAL64;
+				else if (basic == "f128")	type->basic = BasicType::AV2_BT_REAL128;
 				else if (basic == "str")	type->basic = BasicType::AV2_BT_STRING;
 				else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
 				else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
+				else if (basic == "mat")	type->basic = BasicType::AV2_BT_MATRIX;
 				else context.error("Invalid basic type!");
 				context.expectNext(Type{'>'});
 			}

@@ -134,8 +134,8 @@ constexpr TokenStream::Token::Type stringType(UTF::U8Char const op) {
 }
 
 static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
+	tok.text.pushBack(lexer.now());
 	if (lexer.now() == UTF::U8Char{'='}) {
-		tok.text.pushBack(lexer.now());
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_COMPARE_EQUALS;

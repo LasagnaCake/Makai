@@ -6,16 +6,26 @@
 @type Null [basic<nil> derived<Any> nil empty]
 @type Bool [basic<bool> derived<Any>]
 @type Char [basic<char> derived<Any>]
-@type Int [basic<int> derived<Any>]
-@type UInt [basic<uint> derived<Any>]
-@type Real [basic<real> derived<Any>]
+@type Int8 [basic<i8> derived<Any>]
+@type UInt8 [basic<u8> derived<Any>]
+@type Int16 [basic<i16> derived<Any>]
+@type UInt16 [basic<u16> derived<Any>]
+@type Int32 [basic<i32> derived<Any>]
+@type UInt32 [basic<u32> derived<Any>]
+@type Int64 [basic<i64> derived<Any>]
+@type UInt64 [basic<u64> derived<Any>]
+@type Real32 [basic<f32> derived<Any>]
+@type Real64 [basic<f64> derived<Any>]
+@type Real128 [basic<f128> derived<Any>]
 @type String [basic<str> derived<Any> nil]
 @type Bytes [basic<bin> derived<Any> nil]
 @type AnyArray [array<Any> nil]
 @type BoolArray [array<Bool> nil]
 @type IntArray [array<Int> nil]
 @type UIntArray [array<UInt> nil]
-@type RealArray [array<Real> nil]
+@type Real32Array [array<Real32> nil]
+@type Real64Array [array<Real64> nil]
+@type Real128Array [array<Real128> nil]
 @type StringArray [array<String> nil]
 @ns .
 
@@ -24,9 +34,9 @@
 @alias any:		Internal.Any
 @alias bool:	Internal.Bool
 @alias char:	Internal.Char
-@alias int:		Internal.Int
-@alias uint:	Internal.UInt
-@alias real:	Internal.Real
+@alias int:		Internal.Int64
+@alias uint:	Internal.UInt64
+@alias real:	Internal.Real64
 @alias str:		Internal.String
 @alias bin:		Internal.Bytes
 @alias obj:		Internal.Object
