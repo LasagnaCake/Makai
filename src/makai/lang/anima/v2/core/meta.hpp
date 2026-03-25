@@ -26,7 +26,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template <class T>
-		consteval static cstring specialNameOf() {
+		consteval static scstring const& specialNameOf() {
 			if constexpr (Type::Equal<T, int8>)		return "int8";
 			if constexpr (Type::Equal<T, int16>)	return "int16";
 			if constexpr (Type::Equal<T, int32>)	return "int32";
@@ -102,7 +102,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::SignedInteger T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = specialNameOf<T>();
+			constexpr static scstring const& ART_NAME = specialNameOf<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
@@ -114,7 +114,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::UnsignedInteger T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = specialNameOf<T>();
+			constexpr static scstring const& ART_NAME = specialNameOf<T>();
 
 			static uint64 construct(Object const& value) {
 				return value.toValue<T>();
@@ -126,7 +126,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::Real T> struct ARTTI<T> {
-			constexpr static scstring ART_NAME = specialNameOf<T>();
+			constexpr static scstring const& ART_NAME = specialNameOf<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
