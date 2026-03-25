@@ -353,6 +353,7 @@ bool TokenStream::next() {
 		isFinished = true;
 	DEBUGLN("Type: ", Token::asName(curToken.type));
 	DEBUGLN("Text: ", curToken.text.toString());
+	lexer->next();
 	return !isFinished;
 }
 
