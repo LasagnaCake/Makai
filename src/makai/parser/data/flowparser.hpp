@@ -99,10 +99,9 @@ namespace Makai::Parser::Data {
 				return Value(static_cast<usize>(token.value.get<uint64>()));
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+			case TokenType::LTS_TT_BACKTICK_STRING:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
-			case TokenType::LTS_TT_CHARACTER:
-				return Value(toString(Cast::as<char>(token.value.get<int64>())));
 			case TokenType{'{'}:
 				return parseObject();
 			case TokenType{'['}:
@@ -192,7 +191,6 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_REAL:
-				case TokenType::LTS_TT_CHARACTER:
 				case TokenType::LTS_TT_IDENTIFIER:
 				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{ID_IDENTIFIER}:
@@ -233,9 +231,6 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_IDENTIFIER:
 					key = token.value.get<Value::StringType>();
 				break;
-				case TokenType::LTS_TT_CHARACTER:
-					key = toString(Cast::as<char>(token.value.get<int64>()));
-				break;
 				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_REAL:
 				case TokenType{BINARY_IDENTIFIER}:
@@ -262,7 +257,6 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_REAL:
-				case TokenType::LTS_TT_CHARACTER:
 				case TokenType::LTS_TT_IDENTIFIER:
 				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{'{'}:
