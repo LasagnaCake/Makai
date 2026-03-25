@@ -25,12 +25,12 @@ Makai::Data::Value Node::serialize() const {
 	if (interject.size()) {
 		String ij;
 		for (auto& tok: interject)
-			ij += tok.token + " ";
+			ij += tok.text + " ";
 		ij.popBack();
 		out["asm"] = ij;
 	}
 	if (source) out["source"] = *source;
-	out["base"] = base.token;
+	out["base"] = base.text.toString();
 	return out;
 }
 

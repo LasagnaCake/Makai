@@ -11,13 +11,13 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs
 	result->base = token;
 	if (isIdentifier) {
 		isIdentifier = false;
-		auto const id = token.token;
+		auto const id = token.text;
 		if (id == "true")		result->value = true;
 		else if (id == "false")	result->value = false;
 		else if (id == "null")	result->value = null;
 		else {
 			isIdentifier = true;
-			result->value = id;
+			result->value = id.toString();
 		}
 	} else result->value = token.value;
 	result->content = isIdentifier ? Node::Content::AV2_TANC_NAME : Node::Content::AV2_TANC_VALUE;
@@ -173,7 +173,7 @@ Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lhs
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_BRANCH;
-	result->value = token.token;
+	result->value = token.text.toString();
 	// TODO: This
 	DEBUGLN("Branch:DONE!");
 	return result;
@@ -183,7 +183,7 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_LOOP;
-	result->value = token.token;
+	result->value = token.text.toString();
 	// TODO: This
 	return result;
 }
@@ -193,7 +193,7 @@ Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lhs
 	DEBUGLN("Resolving import expression...");
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_IMPORT;
-	result->value = token.token;
+	result->value = token.text.toString();
 	result->lhs = lhs;
 	DEBUGLN("Follows: ", parser.context.token().token);
 	DEBUGLN("Follows: ", parser.context.peek().token);
@@ -419,19 +419,19 @@ Node::Instance MainBlockResolver::resolve(Parser& parser, Node::Instance const& 
 Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	auto const opkey = parser.context.getNext(LTS_TT_IDENTIFIER, "operator name").getString();
 	if (
-		token.token == "prefix"
-	||	token.token == "postfix"
+		token.text == "prefix"
+	||	token.text == "postfix"
 	) {
 		Instance<DynamicOperatorResolver> op = new DynamicOperatorResolver(
-			token.token == "prefix"
+			token.text == "prefix"
 		?	DynamicOperatorResolver::Class::AV2_TA_DORC_PREFIX
 		:	DynamicOperatorResolver::Class::AV2_TA_DORC_POSTFIX,
-			token.token == "prefix"
+			token.text == "prefix"
 		?	decltype(precedence)::AV2_TAPP_PREFIX
 		:	decltype(precedence)::AV2_TAPP_POSTFIX,
 			false
 		);
-		if (token.token == "prefix") {
+		if (token.text == "prefix") {
 			if (parser.prefixes.contains(opkey))
 				parser.context.error("Redeclaration of operator ["+ opkey +"]!");
 			parser.add(opkey, parser.prefixes, op.as<AResolver>());

@@ -211,8 +211,8 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (tok.type == LTS_TT_INVALID) return nullptr;
 	Node::Instance lhs;
 	DEBUGLN("Token: ", tok.token);
-	if (prefixes.contains(tok.token))
-		lhs = prefixes[tok.token]->resolve(*this, null, tok);
+	if (prefixes.contains(tok.text))
+		lhs = prefixes[tok.text]->resolve(*this, null, tok);
 	else if (directs.contains(tok.type))
 		lhs = directs[tok.type]->resolve(*this, null, tok);
 	else context.error("Invalid expression!");
@@ -220,13 +220,13 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 		return lhs;
 	DEBUGLN("Next token: [", context.peek().token, "]");
 	DEBUGLN("Is infix? ", infixes.contains(context.peek().token));
-	if (!infixes.contains(context.peek().token))
+	if (!infixes.contains(context.peek().text))
 		return lhs;
 	DEBUGLN("Infix!");
 	do {
 		DEBUGLN("Resolving infix for: ", tok.token);
 		tok = context.next().token();
-		lhs = infixes[tok.token]->resolve(*this, lhs, tok);
+		lhs = infixes[tok.text]->resolve(*this, lhs, tok);
 	} while (precedence < currentPrecedence());
 	return lhs;
 }
@@ -243,9 +243,9 @@ Node::Instance Parser::parse() {
 
 Parser::Precedence Parser::currentPrecedence() {
 	auto const tok = context.peek();
-	if (!infixes.contains(tok.token))
+	if (!infixes.contains(tok.text))
 		return Parser::Precedence::AV2_TAPP_NONE;
-	return infixes[tok.token]->precedence;
+	return infixes[tok.text]->precedence;
 }
 
 void Parser::direct(BaseContext::Axiom::Type const op) {
@@ -267,7 +267,7 @@ void Parser::postfix(BaseContext::Axiom::Type const op) {
 	add(BaseContext::Axiom::asName(op), infixes, new PostfixResolver());
 }
 
-void Parser::prefix(String const& op) {
+void Parser::prefix(UTF8String const& op) {
 	add(op, prefixes, new PrefixResolver());
 }
 
@@ -276,11 +276,11 @@ void Parser::infix(String const& op, bool const rightToLeft) {
 	ax.type = LTS_TT_IDENTIFIER;
 	ax.strict = true;
 	ax.value = op;
-	ax.token = op;
+	ax.text = op;
 	add(op, infixes, new InfixResolver(precedenceOf(ax), rightToLeft));
 }
 
-void Parser::postfix(String const& op) {
+void Parser::postfix(UTF8String const& op) {
 	add(op, infixes, new PostfixResolver());
 }
 
@@ -288,7 +288,7 @@ void Parser::add(BaseContext::Axiom::Type const op, OperatorBank& bank, Instance
 	add(BaseContext::Axiom::asName(op), bank, resolver);
 }
 
-void Parser::add(Makai::String const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
+void Parser::add(Makai::UTF8String const op, OperatorBank& bank, Instance<AResolver> const& resolver) {
 	if (bank.contains(op))
 		throw Makai::Error::FailedAction(
 			"Attempt to add duplicate of operator \""+ op + "\"!",

@@ -47,7 +47,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		Node::Instance parse();
 
-		using NamedOperatorBank	= Dictionary<Instance<AResolver>>;
+		using NamedOperatorBank	= Map<UTF8String, Instance<AResolver>>;
 		using TokenOperatorBank	= Map<BaseContext::Axiom::Type, Instance<AResolver>>;
 
 		using OperatorBank = NamedOperatorBank;
@@ -59,18 +59,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		static Precedence precedenceOf(BaseContext::Axiom const& tok);
 
 		static void add(BaseContext::Axiom::Type const op, OperatorBank& bank, Instance<AResolver> const& resolver);
-		static void add(String const op, OperatorBank& bank, Instance<AResolver> const& resolver);
+		static void add(UTF8String const op, OperatorBank& bank, Instance<AResolver> const& resolver);
 
 		void direct(BaseContext::Axiom::Type const op);
 
 		void prefix(BaseContext::Axiom::Type const op);
-		void prefix(String const&);
+		void prefix(UTF8String const&);
 
 		void infix(BaseContext::Axiom::Type const op, bool const rightToLeft);
-		void infix(String const& op, bool const rightToLeft);
+		void infix(UTF8String const& op, bool const rightToLeft);
 
 		void postfix(BaseContext::Axiom::Type const op);
-		void postfix(String const& op);
+		void postfix(UTF8String const& op);
 
 		template <class... Types> void direct(Types const&... args) requires (sizeof...(Types) > 1)		{(..., direct(args));	}
 		template <class... Types> void prefix(Types const&... args) requires (sizeof...(Types) > 1)		{(..., prefix(args));	}
