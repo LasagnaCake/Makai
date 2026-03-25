@@ -146,7 +146,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_JP_DOUBLE_QUOTE_STRING,
 		LTS_TT_FR_SINGLE_QUOTE_STRING,
 		LTS_TT_FR_DOUBLE_QUOTE_STRING,
-		LTS_TT_REAL,
+		LTS_TT_REAL
 	);
 	// Advanced prefixes
 	DEBUGLN("Advanced prefix parsers");
