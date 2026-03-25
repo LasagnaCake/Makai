@@ -171,10 +171,11 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 			tok.text.pushBack(lexer.next());
 			if (lexer.peek(1) == UTF::U8Char{'>'}) {
 				tok.text.pushBack(lexer.next());
+				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_ORDER;
 				return;
 			}
-			tok.type = LTS_TT_LESS_THAN;
+			tok.type = LTS_TT_COMPARE_LESS_EQUALS;
 			return;
 		}
 		if (lexer.peek() == UTF::U8Char{'|'}) {
@@ -185,6 +186,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		if (lexer.peek() == UTF::U8Char{'<'}) {
 			tok.text.pushBack(lexer.next());
 			if (lexer.peek(1) == UTF::U8Char{'='}) {
+				tok.text.pushBack(lexer.next());
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_BIT_SHIFT_LEFT_ASSIGN;
 				return;
@@ -283,6 +285,10 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		tok.text.pushBack(lexer.next());
 		tok.type = LTS_TT_BIT_NOT_ASSIGN;
 		return;
+	} else if (lexer.now() == UTF::U8Char{'>'} && lexer.now() == UTF::U8Char{'='}) {
+		tok.text.pushBack(lexer.next());
+		tok.type = LTS_TT_COMPARE_GREATER_EQUALS;
+		return;
 	}
 }
 
@@ -298,7 +304,7 @@ static void parseLineComment(TokenStream::Lexer& lexer) {
 
 bool TokenStream::next() {
 	if (!lexer || isFinished) return false;
-	while (isSpaceChar(lexer->next()) && !lexer->empty())
+	while (isSpaceChar(lexer->now()) && !lexer->empty())
 		lexer->next();
 	if (lexer->empty()) {
 		isFinished = true;
@@ -306,7 +312,7 @@ bool TokenStream::next() {
 	}
 	UTF::U8String lexeme;
 	curToken = {.at = position()};
-	DEBUGLN("Char: ", UTF8String(lexer->now()).toString());
+	DEBUGLN("Char: ", (char)lexer->now().value());
 	if (isNumberChar(lexer->now()) || ((lexer->now() == UTF::U8Char{'.'}) && !isWordChar(lexer->peek()))) {
 		lexeme = parseNumber(*lexer);
 		try {
@@ -345,7 +351,8 @@ bool TokenStream::next() {
 		curToken.text = lexeme;
 	if (lexer->empty())
 		isFinished = true;
-	DEBUGLN("Token: ", Token::asName(curToken.type));
+	DEBUGLN("Type: ", Token::asName(curToken.type));
+	DEBUGLN("Text: ", curToken.text.toString());
 	return !isFinished;
 }
 
