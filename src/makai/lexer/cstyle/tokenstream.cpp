@@ -138,6 +138,7 @@ constexpr TokenStream::Token::Type stringType(UTF::U8Char const op) {
 
 static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 	tok.text.pushBack(lexer.now());
+	tok.type = TokenStream::Token::Type{tok.text.front().value()};
 	if (lexer.now() == UTF::U8Char{'='}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
@@ -283,7 +284,6 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		tok.type = LTS_TT_BIT_NOT_ASSIGN;
 		return;
 	}
-	tok.type = TokenStream::Token::Type{lexer.now().value()};
 }
 
 static void parseBlockComment(TokenStream::Lexer& lexer) {
