@@ -96,7 +96,7 @@ namespace Makai::Anima::V2::Core::Meta {
 				return value.toValue<T>();
 			}
 
-			static Object::Storage convert(Database<Definition>& db, bool const& value) {
+			static Object::Storage convert(Database<Definition>& db, T const& value) {
 				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};
