@@ -306,14 +306,11 @@ static Location getConstantLocation(Context& context) {
 			case LTS_TT_DOUBLE_QUOTE_STRING:
 				loc.id = context.addStringLiteral(context.value().getString());
 			case LTS_TT_INTEGER:
-				loc.source = DataLocation::AV2_DL_UINT;
+				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
 				loc.id = context.value().getUnsigned();
 			case LTS_TT_REAL:
 				loc.source = DataLocation::AV2_DL_REAL;
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal());
-			case LTS_TT_CHARACTER:
-				loc.source = DataLocation::AV2_DL_UINT;
-				loc.id = context.value().getUnsigned();
 			break;
 			default: context.error("Invalid constant!");
 		}
@@ -326,7 +323,7 @@ static Location getLabelLocation(Context& context) {
 	auto const current = resolvePath(context);
 	if (!context.hasJumpTarget(current))
 		context.error("Label has not been declared yet!");
-	return {DataLocation::AV2_DL_UINT, context.getJumpTarget(current)};
+	return {DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED, context.getJumpTarget(current)};
 }
 
 static Location getDataLocation(Context& context) {
