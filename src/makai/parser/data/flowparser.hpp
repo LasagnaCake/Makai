@@ -148,8 +148,10 @@ namespace Makai::Parser::Data {
 			for (; i < Value::IdentifierType::SIZE; ++i) {
 				if (lexer.current().type == TokenType{']'})
 					break;
-				if (lexer.current().type != TokenType::LTS_TT_INTEGER)
+				if (lexer.current().type != TokenType::LTS_TT_INTEGER) {
 					lexer.next();
+					continue;
+				}
 				id[i] = lexer.current().value.getUnsigned();
 				if (!lexer.next()) return error("Missing identifier value!");
 			}
