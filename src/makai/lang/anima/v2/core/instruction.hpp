@@ -43,6 +43,8 @@ namespace Makai::Anima::V2::Core {
 		AV2_DLF_64			= 0b01000000,
 		/// @brief Boolean (constants): Truthiness.
 		AV2_DLB_TRUE		= 0b10000000,
+		/// @brief Modifier bits.
+		AV2_DL_MODIFIERS	= 0b11100000,
 	};
 
 	constexpr DataLocation operator|(DataLocation const& a, DataLocation const& b) {
@@ -67,12 +69,12 @@ namespace Makai::Anima::V2::Core {
 
 	/// @brief Returns the data location without modifiers.
 	constexpr DataLocation asPlace(DataLocation const loc) {
-		return (loc & ~(DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE));
+		return (loc & ~(DataLocation::AV2_DL_MODIFIERS));
 	}
 
 	/// @brief Returns the modifiers for a data location.
 	constexpr DataLocation asModifiers(DataLocation const loc) {
-		return (loc & (DataLocation::AV2_DLM_BY_REF | DataLocation::AV2_DLM_MOVE));
+		return (loc & DataLocation::AV2_DL_MODIFIERS);
 	}
 
 	/// @brief Comparison operator.

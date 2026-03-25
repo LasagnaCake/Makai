@@ -248,7 +248,7 @@ void Engine::v2Call() {
 }
 
 Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
-	advance(true);
+	if (asPlace(from) != DataLocation::AV2_DL_BOOL) advance(true);
 	auto const store = getValueFromLocation(from, bitcast<uint64>(current));
 	if (!store) return Object::create();
 	return store;
@@ -265,14 +265,32 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
 	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
 	switch (place) {
-		case DataLocation::AV2_DL_INT: {
-			return context.art.newValue(Makai::Cast::bit<int64>(id));
+		case DataLocation::AV2_DL_BOOL: {
+			return context.art.newValue((mod & DataLocation::AV2_DLB_TRUE) == DataLocation::AV2_DLB_TRUE);
 		} break;
-		case DataLocation::AV2_DL_UINT: {
-			return context.art.newValue(Makai::Cast::bit<uint64>(id));
+		case DataLocation::AV2_DL_INT: {
+			if ((mod & DataLocation::AV2_DLI_UNSIGNED) == DataLocation::AV2_DLI_UNSIGNED) {
+				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
+					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::bit<int16, uint16>(id)); break;
+					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::bit<int32, uint32>(id)); break;
+					case DataLocation::AV2_DLI_64: return context.art.newValue(Makai::Cast::bit<int64, uint64>(id)); break;
+					default: return context.art.newValue(Makai::Cast::bit<int8, uint8>(id)); break;
+				}
+			} else {
+				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
+					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::as<uint16>(id)); break;
+					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::as<uint32>(id)); break;
+					case DataLocation::AV2_DLI_64: return context.art.newValue(Makai::Cast::as<uint64>(id)); break;
+					default: return context.art.newValue(Makai::Cast::as<uint8>(id)); break;
+				}
+			}
 		} break;
 		case DataLocation::AV2_DL_REAL: {
-			return context.art.newValue(Makai::Cast::bit<double>(id));
+			switch (mod) {
+				case DataLocation::AV2_DLF_64: return context.art.newValue(Makai::Cast::bit<float64>(id)); break;
+				case DataLocation::AV2_DLF_128: return context.art.newValue(Makai::Cast::as<float128>(Makai::Cast::bit<float64>(id))); break;
+				default: return context.art.newValue(Makai::Cast::bit<float32, uint32>(id)); break;
+			}
 		} break;
 		case DataLocation::AV2_DL_STRING: {
 			return context.art.newValue(program.strings[id]);
