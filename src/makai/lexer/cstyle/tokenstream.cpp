@@ -51,7 +51,7 @@ static bool isNumberChar(UTF::U8Char const ch) {
 static bool isWordChar(UTF::U8Char const ch) {
 	if (ch >= UTF::U8Char{'A'} && ch <= UTF::U8Char{'Z'}) return true;
 	if (ch >= UTF::U8Char{'a'} && ch <= UTF::U8Char{'z'}) return true;
-	if (ch >= UTF::U8Char{'_'}) return true;
+	if (ch == UTF::U8Char{'_'}) return true;
 	return false;
 }
 
@@ -60,17 +60,17 @@ static bool isIdentifierChar(UTF::U8Char const ch) {
 }
 
 static bool isOtherNumberChar(UTF::U8Char const ch) {
-	if (ch >= UTF::U8Char{'.'}) return true;
+	if (ch == UTF::U8Char{'.'}) return true;
 	return false;
 }
 
 static bool isSpaceChar(UTF::U8Char const ch) {
-	if (ch >= UTF::U8Char{'\n'}) return true;
-	if (ch >= UTF::U8Char{'\v'}) return true;
-	if (ch >= UTF::U8Char{'\t'}) return true;
-	if (ch >= UTF::U8Char{'\r'}) return true;
-	if (ch >= UTF::U8Char{' '}) return true;
-	if (ch >= UTF::U8Char{}) return true;
+	if (ch == UTF::U8Char{'\n'}) return true;
+	if (ch == UTF::U8Char{'\v'}) return true;
+	if (ch == UTF::U8Char{'\t'}) return true;
+	if (ch == UTF::U8Char{'\r'}) return true;
+	if (ch == UTF::U8Char{' '}) return true;
+	if (ch == UTF::U8Char{}) return true;
 	return false;
 }
 
