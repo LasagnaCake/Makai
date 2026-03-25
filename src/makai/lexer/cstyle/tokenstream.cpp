@@ -97,10 +97,9 @@ static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim
 
 static UTF8String parseID(TokenStream::Lexer& lexer) {
 	UTF8String result;
-	while (isIdentifierChar(lexer.now())) {
+	do {
 		result.pushBack(lexer.now());
-		lexer.next();
-	}
+	} while (isIdentifierChar(lexer.next()));
 	return result;
 }
 
