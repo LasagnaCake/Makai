@@ -12,9 +12,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_NULL,
 		/// @brief Boolean value.
 		AV2_DL_BOOL,
-		/// @brief Unsigned integer value.
-		AV2_DL_UINT,
-		/// @brief Signed integer value.
+		/// @brief Integer value.
 		AV2_DL_INT,
 		/// @brief Floating point value.
 		AV2_DL_REAL,
@@ -30,10 +28,21 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_EXTERNAL,
 		/// @brief Scope-local value.
 		AV2_DL_LOCAL,
-		/// @brief Location modifier: By reference.
-		AV2_DLM_BY_REF	= 0b10000000,
-		/// @brief Location modifier: By move.
-		AV2_DLM_MOVE	= 0b01000000,
+		/// @brief Location modifier (non-constants): By reference.
+		AV2_DLM_BY_REF		= 0b10000000,
+		/// @brief Location modifier (non-constants): By move.
+		AV2_DLM_MOVE		= 0b01000000,
+		/// @brief Integer modifier (constants): signedness.
+		AV2_DLI_UNSIGNED	= 0b10000000,
+		/// @brief Integer modifier (constants): size.
+		AV2_DLI_64			= 0b01100000,
+		AV2_DLI_32			= 0b01000000,
+		AV2_DLI_16			= 0b00100000,
+		/// @brief Floating point (constants): Size.
+		AV2_DLF_128			= 0b10000000,
+		AV2_DLF_64			= 0b01000000,
+		/// @brief Boolean (constants): Truthiness.
+		AV2_DLB_TRUE		= 0b10000000,
 	};
 
 	constexpr DataLocation operator|(DataLocation const& a, DataLocation const& b) {
