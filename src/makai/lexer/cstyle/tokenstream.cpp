@@ -329,9 +329,10 @@ bool TokenStream::next() {
 		curToken.type = LTS_TT_IDENTIFIER;
 	}
 	else if (closingQuote(lexer->now()) != UTF::U8Char{}) {
+		auto const quot = closingQuote(lexer->now());
 		curToken.type = stringType(lexer->now());
 		lexer->next();
-		lexeme = parseString(*lexer, closingQuote(lexer->now()));
+		lexeme = parseString(*lexer, quot);
 		curToken.text = lexeme;
 		curToken.value = curToken.text.toString();
 	}
