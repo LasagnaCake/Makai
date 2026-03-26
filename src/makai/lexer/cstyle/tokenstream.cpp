@@ -359,8 +359,8 @@ TokenStream::Position TokenStream::position() const {
 
 	return {
 		location(),
-		lexer->curCol,
-		lexer->curLine
+		lexer->curLine,
+		lexer->curCol
 	};
 }
 

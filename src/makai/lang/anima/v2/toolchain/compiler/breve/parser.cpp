@@ -91,7 +91,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		"is",
 		"as",
 		"drop",
-		"local",
+		"static",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
