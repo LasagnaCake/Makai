@@ -90,22 +90,26 @@ static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim
 			result.pushBack(unescape(lexer.next()));
 		else result.pushBack(lexer.now());
 		lexer.next();
+		if (lexer.now() == delim) break;
 	}
 	return result;
 }
 
 static UTF8String parseID(TokenStream::Lexer& lexer) {
 	UTF8String result;
-	do {
+	while (isIdentifierChar(lexer.now())) {
 		result.pushBack(lexer.now());
-	} while (isIdentifierChar(lexer.next()));
+		lexer.next();
+	}
 	return result;
 }
 
 static UTF8String parseNumber(TokenStream::Lexer& lexer) {
 	UTF8String result;
-	while (isIdentifierChar(lexer.now()) || isOtherNumberChar(lexer.now()))
-		result.pushBack(lexer.next());
+	while (isIdentifierChar(lexer.now()) || isOtherNumberChar(lexer.now())) {
+		result.pushBack(lexer.now());
+		lexer.next();
+	}
 	return result;
 }
 
@@ -163,8 +167,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 			if (lexer.peek() == UTF::U8Char{'>'}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_ORDER;
-			}
-			tok.type = LTS_TT_COMPARE_LESS_EQUALS;
+			} else tok.type = LTS_TT_COMPARE_LESS_EQUALS;
 		}
 		if (lexer.peek() == UTF::U8Char{'|'}) {
 			tok.text.pushBack(lexer.next());
@@ -175,9 +178,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 			if (lexer.peek() == UTF::U8Char{'='}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_BIT_SHIFT_LEFT_ASSIGN;
-			}
-			tok.type = LTS_TT_BIT_SHIFT_LEFT;
-			return;
+			} else tok.type = LTS_TT_BIT_SHIFT_LEFT;
 		}
 	} else if (lexer.now() == UTF::U8Char{'-'}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
@@ -268,7 +269,13 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 			tok.type = LTS_TT_NULL_ASSIGN;
 		}
 	} else if (lexer.now() == UTF::U8Char{'.'}) {
-		// TODO: Ellipses & range
+		if (lexer.peek() == UTF::U8Char{'.'}) {
+			tok.text.pushBack(lexer.next());
+			if (lexer.peek() == UTF::U8Char{'.'}) {
+				tok.text.pushBack(lexer.next());
+				tok.type = LTS_TT_ELLIPSIS;
+			}// else tok.type = LTS_TT_RANGE;
+		}
 	}
 	lexer.next();
 }
