@@ -92,6 +92,7 @@ static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim
 		lexer.next();
 		if (lexer.now() == delim) break;
 	}
+	DEBUGLN("String: ", result);
 	return result;
 }
 
