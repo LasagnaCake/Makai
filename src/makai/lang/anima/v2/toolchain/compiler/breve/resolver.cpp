@@ -360,13 +360,10 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 		result->children.pushBack(parser.nextExpression());
 		if (parser.context.peek().type != LTS_TT_SEMICOLON)
 			parser.context.error("Expected ';' here!");
-		return result;
 	}
 	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY) {
 		result->children.pushBack(parser.nextExpression());
-		return result;
-	}
-	if (parser.context.peek().type != LTS_TT_SEMICOLON)
+	} else if (parser.context.peek().type != LTS_TT_SEMICOLON)
 		parser.context.error("Expected '=>', ';' or '{' here!");
 	return result;
 }
