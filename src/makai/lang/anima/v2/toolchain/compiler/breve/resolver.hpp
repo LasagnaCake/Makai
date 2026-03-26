@@ -53,7 +53,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct FunctionCallResolver: AResolver {
-		FunctionCallResolver(): AResolver() {}
+		FunctionCallResolver(): AResolver(Parser::Precedence::AV2_TAPP_FN_CALL, false) {}
 		virtual ~FunctionCallResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
@@ -107,7 +107,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct FunctionDeclResolver: AResolver {
-		FunctionDeclResolver(): AResolver() {}
+		FunctionDeclResolver(): AResolver(Parser::Precedence::AV2_TAPP_DECL, false) {}
 		virtual ~FunctionDeclResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};

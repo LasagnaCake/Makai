@@ -36,6 +36,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TAPP_PREFIX,
 			AV2_TAPP_CAST,
 			AV2_TAPP_POSTFIX,
+			AV2_TAPP_FN_CALL,
 			AV2_TAPP_PATH,
 		};
 
