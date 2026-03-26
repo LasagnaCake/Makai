@@ -107,7 +107,7 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 			parser.context.next();
 			break;
 		}
-		result->children.pushBack(parser.nextExpression());
+		result->children.pushBack(parser.nextExpression(precedence));
 		DEBUGLN(":::::: Argument: ", result->children.back()->base.text);
 		DEBUGLN(":::::: Followup: ", parser.context.peek().text);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
