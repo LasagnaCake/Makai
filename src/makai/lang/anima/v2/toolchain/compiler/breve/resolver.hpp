@@ -53,7 +53,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct FunctionCallResolver: AResolver {
-		FunctionCallResolver(): AResolver(Parser::Precedence::AV2_TAPP_POSTFIX, false) {}
+		FunctionCallResolver(): AResolver() {}
 		virtual ~FunctionCallResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
