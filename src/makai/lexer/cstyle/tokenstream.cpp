@@ -141,6 +141,7 @@ constexpr TokenStream::Token::Type stringType(UTF::U8Char const op) {
 }
 
 static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
+	DEBUGLN("Operator time!");
 	tok.type = TokenStream::Token::Type{lexer.now().value()};
 	tok.text.pushBack(lexer.now());
 	if (lexer.now() == UTF::U8Char{'='}) {
@@ -334,7 +335,7 @@ bool TokenStream::next() {
 		lexer->next();
 		lexeme = parseString(*lexer, quot);
 		curToken.text	= lexeme;
-		curToken.value= curToken.text.toString();
+		curToken.value	= curToken.text.toString();
 	}
 	else parseOperator(*lexer, curToken);
 	if (lexeme.size())
