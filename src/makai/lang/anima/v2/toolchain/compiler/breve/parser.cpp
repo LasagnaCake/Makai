@@ -224,7 +224,7 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 		return lhs;
 	DEBUGLN("Infix!");
 	do {
-		DEBUGLN("Resolving infix for: ", tok.text, "(", tok.at.line, " : ", tok.at.column, ")");
+		DEBUGLN("Resolving infix for: '", tok.text, "' :: (", tok.at.line, " : ", tok.at.column, ")");
 		tok = context.next().token();
 		lhs = infixes[tok.text]->resolve(*this, lhs, tok);
 	} while (precedence < currentPrecedence());
