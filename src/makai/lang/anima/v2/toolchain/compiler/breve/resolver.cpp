@@ -355,10 +355,13 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	FunctionPrototypeResolver resolver;
 	result->lhs = lhs;
 	result->rhs = resolver.resolve(parser, null, {});
-	if (parser.context.peek().type == LTS_TT_BIG_ARROW)
+	if (parser.context.peek().type == LTS_TT_BIG_ARROW) {
 		parser.context.next();
-	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)
-		result->rhs = parser.nextExpression();
+		result->children.pushBack(parser.nextExpression());
+	}
+	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY) {
+		result->children.pushBack(parser.nextExpression());
+	}
 	else if (parser.context.peek().type != LTS_TT_SEMICOLON)
 		parser.context.error("Expected '=>', ';' or '{' here!");
 	return result;
