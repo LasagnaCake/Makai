@@ -365,6 +365,7 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 		result->children.pushBack(parser.nextExpression());
 	} else if (parser.context.peek().type != LTS_TT_SEMICOLON)
 		parser.context.error("Expected '=>', ';' or '{' here!");
+	if (parser.context.peek().type == LTS_TT_SEMICOLON) parser.context.next();
 	return result;
 }
 
