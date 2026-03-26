@@ -165,7 +165,7 @@ namespace Makai::Lexer::CStyle {
 				/// @brief Dereference access (`^.`).
 				LTS_TT_DEREF_ACCESS,
 				/// @brief Ellipsis (`...`).
-				LTS_TT_ELLIPSIS
+				LTS_TT_ELLIPSIS,
 			};
 
 			/// @brief Token type.

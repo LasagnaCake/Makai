@@ -258,7 +258,9 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 			parser.context.next();
 			break;
 		}
+		DEBUGLN(">>>>>>>>>>>> Argument");
 		result->children.pushBack(parser.nextExpression(precedence));
+		DEBUGLN("<<<<<<<<<<<< Follows: ", parser.context.peek().text);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			parser.context.next();
 			break;
@@ -268,9 +270,12 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 			parser.context.error("Expected expression after the comma!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_PAREN);
+	DEBUGLN("FunctionPrototype:Arguments:DONE!");
 	if (parser.context.peek().type == LTS_TT_LITTLE_ARROW) {
+		DEBUGLN("Resolving result type...");
 		parser.context.next();
 		result->lhs = parser.nextExpression();
+		DEBUGLN("FunctionPrototype:Result:DONE!");
 	}
 	DEBUGLN("FunctionPrototype:DONE!");
 	return result;
