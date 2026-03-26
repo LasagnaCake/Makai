@@ -11,7 +11,7 @@ module Test.Namespace {
 
 		bar :: (var: int) -> int => (foo(var) * var);
 
-		baz :: (var: int) => writeLine(bar(var) - var)
+		baz :: (var: int) => writeLine(bar(var) - var);
 	}
 }
 
