@@ -333,8 +333,8 @@ bool TokenStream::next() {
 		curToken.type = stringType(lexer->now());
 		lexer->next();
 		lexeme = parseString(*lexer, quot);
-		curToken.text = lexeme;
-		curToken.value = curToken.text.toString();
+		curToken.text	= lexeme;
+		curToken.value= curToken.text.toString();
 	}
 	else parseOperator(*lexer, curToken);
 	if (lexeme.size())
