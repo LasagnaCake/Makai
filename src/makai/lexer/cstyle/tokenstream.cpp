@@ -85,7 +85,7 @@ static UTF::U8Char unescape(UTF::U8Char const ch) {
 
 static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim = {'\"'}) {
 	UTF8String result;
-	while (lexer.now() != delim) {
+	while (!lexer.empty() && lexer.now() != delim) {
 		if (lexer.now() == UTF::U8Char{'\\'})
 			result.pushBack(unescape(lexer.next()));
 		else result.pushBack(lexer.now());
@@ -98,7 +98,7 @@ static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim
 
 static UTF8String parseID(TokenStream::Lexer& lexer) {
 	UTF8String result;
-	while (isIdentifierChar(lexer.now())) {
+	while (!lexer.empty() && isIdentifierChar(lexer.now())) {
 		result.pushBack(lexer.now());
 		lexer.next();
 	}
@@ -336,6 +336,7 @@ bool TokenStream::next() {
 		lexeme = parseString(*lexer, quot);
 		curToken.text	= lexeme;
 		curToken.value	= curToken.text.toString();
+		lexer->next();
 	}
 	else parseOperator(*lexer, curToken);
 	if (lexeme.size())
