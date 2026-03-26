@@ -344,9 +344,9 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	result->lhs = parser.nextExpression();
-	if (result->lhs->content != Node::Content::AV2_TANC_FN_PROTOTYPE)
-		parser.context.error("Expected function prototype here!");
+	FunctionPrototypeResolver resolver;
+	result->lhs = lhs;
+	result->rhs = resolver.resolve(parser, null, {});
 	if (parser.context.peek().type == LTS_TT_BIG_ARROW)
 		parser.context.next();
 	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)

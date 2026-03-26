@@ -162,7 +162,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("while", prefixes, new LoopResolver());
 	add("for", prefixes, new LoopResolver());
 	add("module", prefixes, new ModuleDeclResolver());
-	add("func", prefixes, new FunctionDeclResolver());
 	add(LTS_TT_COLON, prefixes, new FunctionPrototypeResolver());
 	add("extend", prefixes, new ExtensionResolver());
 	add("import", prefixes, new ImportResolver());
@@ -180,6 +179,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());
+	add(LTS_TT_NAMESPACE_RESOLVE, infixes, new FunctionDeclResolver());
 	add(LTS_TT_DOT, infixes, new PathResolver());
 	add(LTS_TT_DECLARE, infixes, new VariableDeclResolver());
 	add(LTS_TT_COLON, infixes, new VariableDeclResolver());
