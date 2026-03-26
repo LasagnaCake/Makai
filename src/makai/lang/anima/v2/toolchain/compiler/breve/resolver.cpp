@@ -358,11 +358,13 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	if (parser.context.peek().type == LTS_TT_BIG_ARROW) {
 		parser.context.next();
 		result->children.pushBack(parser.nextExpression());
+		return result;
 	}
 	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY) {
 		result->children.pushBack(parser.nextExpression());
+		return result;
 	}
-	else if (parser.context.peek().type != LTS_TT_SEMICOLON)
+	if (parser.context.peek().type != LTS_TT_SEMICOLON)
 		parser.context.error("Expected '=>', ';' or '{' here!");
 	return result;
 }
