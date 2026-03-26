@@ -32,7 +32,7 @@ struct TokenStream::Lexer {
 	}
 
 	UTF::U8Char peek(usize const ahead = 0) const {
-		if (stream.size() < (ahead + 2))
+		if ((ahead + 2) < stream.size())
 			return stream[- ahead - 2];
 		return {};
 	}
