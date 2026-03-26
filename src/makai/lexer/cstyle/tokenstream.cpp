@@ -115,14 +115,14 @@ static UTF8String parseNumber(TokenStream::Lexer& lexer) {
 }
 
 constexpr UTF::U8Char closingQuote(UTF::U8Char const op) {
-	switch (op) {
-		case (UTF::U8Char{'\''}): return {'\''};
-		case (UTF::U8Char{'\"'}): return {'\"'};
-		case (UTF::U8Char{'`'}): return {'`'};
-		case (UTF::U8Char{"«"}): return {"»"};
-		case (UTF::U8Char{"「"}): return {"」"};
-		case (UTF::U8Char{"『"}): return {"』"};
-		case (UTF::U8Char{"‹"}): return {"›"};
+	switch (op.value()) {
+		case (UTF::U8Char{'\''}.value()): return {'\''};
+		case (UTF::U8Char{'\"'}.value()): return {'\"'};
+		case (UTF::U8Char{'`'}.value()): return {'`'};
+		case (UTF::U8Char{"«"}.value()): return {"»"};
+		case (UTF::U8Char{"「"}.value()): return {"」"};
+		case (UTF::U8Char{"『"}.value()): return {"』"};
+		case (UTF::U8Char{"‹"}.value()): return {"›"};
 	}
 	return {};
 }
