@@ -136,7 +136,7 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs,
 			parser.context.next();
 			break;
 		}
-		result->children.pushBack(parser.nextExpression(precedence));
+		result->children.pushBack(parser.nextExpression());
 		DEBUGLN("Block:Statement:DONE!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_CURLY);
