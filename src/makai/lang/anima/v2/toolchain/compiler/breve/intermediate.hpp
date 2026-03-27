@@ -18,6 +18,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Attribute;
 	struct Trait;
 
+	struct Implementation;
+
+	struct IComposable {
+		virtual ~IComposable() {}
+		virtual Instance<Implementation> compose() const = 0;
+	};
+
 	struct IWritable {
 		virtual ~IWritable();
 
@@ -58,9 +65,20 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			(..., writeMain(toString(values)));
 		}
 
-		void writePreLine(UTF8String const& what);
-		void writeMainLine(UTF8String const& what);
-		void writePostLine(UTF8String const& what);
+		template <class... Types>
+		void writePreLine(Types const&... values) {
+			writePre(values..., "\n");
+		}
+
+		template <class... Types>
+		void writeMainLine(Types const&... values) {
+			writeMain(values..., "\n");
+		}
+
+		template <class... Types>
+		void writePostLine(Types const&... values) {
+			writePost(values..., "\n");
+		}
 
 	private:
 		template <class T>
@@ -71,7 +89,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		}
 	};
 
-	struct Implementation: IWritable {
+	struct Implementation: IWritable, IComposable {
 		using Instance		= Instance<Implementation>;
 		UTF8String pre, main, post;
 
@@ -79,10 +97,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		void writeMain(UTF8String const& what) override;
 		void writePost(UTF8String const& what) override;
 
-		UTF8String compose() const {return pre + main + post;}
+		Instance compose() const override {
+			auto const impl = new Implementation;
+			impl->pre = pre;
+			impl->main = main;
+			impl->post = post;
+			return impl;
+		}
 	};
 
-	struct Namespace: Labeled {
+	struct Namespace: Labeled, IComposable {
 		using TypeRef		= Instance<Type>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -91,19 +115,25 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		using Instance		= Instance<Namespace>;
 
+		usize varc;
+
 		UTF8Dictionary<Instance> subspaces;
 
-		TypeRef						type;
-		FunctionRef					function;
-		VariableRef					variable;
-		AttributeRef				attribute;
-		TraitRef					trait;
+		TypeRef			type;
+		FunctionRef		function;
+		VariableRef		variable;
+		AttributeRef	attribute;
+		TraitRef		trait;
 
 		Implementation::Instance	impl;
 
 		Instance resolve(UTF8StringList const& path) const;
 
 		Namespace(UTF8String const& name = "");
+
+		bool isPureNamespace() const;
+
+		Implementation::Instance compose() const override;
 	};
 
 	struct Type: Labeled {
@@ -114,16 +144,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		Definition					def;
-		Namespace::TypeRef			base;
-		Implementation::Instance	impl = impl.create();
+		Definition			def;
+		Namespace::TypeRef	base;
+		Namespace::Instance	scope;
 	};
 
 	struct Function: Labeled {
 		struct Overload {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
-			Implementation::Instance		impl 		= impl.create();
+			Namespace::Instance				scope;
+			UTF8String prototype() const;
 		};
 		using OverloadRef = Instance<Overload>;
 
@@ -133,8 +164,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Variable: Labeled {
-		Namespace::TypeRef			type;
-		Implementation::Instance	impl = impl.create();
+		Namespace::TypeRef	type;
+		Namespace::Instance	scope;
 	};
 
 	struct Attribute: Labeled {

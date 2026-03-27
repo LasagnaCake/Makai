@@ -9,6 +9,10 @@ using Type = BaseContext::Tokenizer::Token::Type;
 
 using enum BaseContext::Tokenizer::Token::Type;
 
+bool Namespace::isPureNamespace() const {
+	return !(type || function || variable || attribute || trait);
+}
+
 Namespace::Instance ATransformer::Context::get(UTF8StringList const& path) {
 	if (auto const ns = resolve(path))
 		return ns;
@@ -45,6 +49,7 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 }
 
 Namespace::Instance VariableDecl::transform(Context& context, Node::Instance const& node) {
+	++context.top()->varc;
 	auto const path = Context::pathOf(node->leftSide);
 	auto scope = context.resolve(path);
 	if (scope && scope->variable)
@@ -56,14 +61,23 @@ Namespace::Instance VariableDecl::transform(Context& context, Node::Instance con
 	var.type = context.fetch(node->middle)->type;
 	if (node->rightSide) {
 		Expression expr;
-	 	var.ns = expr.transform(context, node);
+	 	expr.transform(context, node);
 	}
 	return scope;
 }
 
-
 Namespace::Instance StructureDecl::transform(Context& context, Node::Instance const& node) {
 
+}
+
+Namespace::Instance BinaryExpression::transform(Context& context, Node::Instance const& node) {
+	Expression expr;
+	auto const lhs = expr.transform(context, node->leftSide);
+	auto const rhs = expr.transform(context, node->rightSide);
+	if (!lhs->impl)
+		context.error("Invalid expression!", node->leftSide);
+	if (!rhs->impl)
+		context.error("Invalid expression!", node->rightSide);
 }
 
 
@@ -74,6 +88,8 @@ Namespace::Instance Expression::transform(Context& context, Node::Instance const
 Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const path = Context::pathOf(node->leftSide);
 	auto const scope = context.get(path);
+	if (scope->impl)
+		context.error("Symbol is already defined as a different kind!", node);
 	if (!scope->function) {
 		scope->function = scope->function.create();
 		scope->function->name = path.back();

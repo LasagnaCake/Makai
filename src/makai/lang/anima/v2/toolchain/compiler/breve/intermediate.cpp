@@ -98,3 +98,20 @@ Function::OverloadRef Function::overload(List<Namespace::VariableRef> const& arg
 	}
 	return nullptr;
 }
+
+Implementation::Instance Namespace::compose() const {
+	Implementation::Instance out = out.create();
+	if (function) {
+		for (auto& ov: function->overloads)
+			out->writePreLine(ov->prototype());
+		return out;
+	}
+	if (impl) {
+		if (!variable)
+			out->writePreLine("begin", varc);
+		if (isPureNamespace())
+			out->writePostLine("keep");
+		if (!variable) out->writePostLine("end");
+	}
+	return out;
+}

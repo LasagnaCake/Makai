@@ -63,6 +63,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct Expression: ATransformer {
 		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
 	};
+
+	struct BinaryExpression: ATransformer {
+		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct PrefixExpression: ATransformer {
+		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct PostfixExpression: ATransformer {
+		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+	};
 }
 
 #endif
