@@ -27,6 +27,8 @@ Makai::UTF8StringList ATransformer::pathOf(Node::Instance const& node) {
 		return {};
 	if (node->content == Node::Content::AV2_TANC_NAME)
 		return Makai::UTF8StringList::from(node->value.getString());
+	else if (!node->isNameOrPath())
+		Context::error("This is not a valid path!", node);
 	Makai::UTF8StringList path;
 	path.pushBack(node->lhs->value.getString());
 	path.appendBack(pathOf(node->rhs));
@@ -59,4 +61,5 @@ Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance con
 		ov->arguments.pushBack(vd.transform(context, arg)->variable);
 	if (fn.overload(ov->arguments))
 		context.error("Redeclaration of function overload!", node);
+	return scope;
 }
