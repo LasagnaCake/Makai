@@ -37,6 +37,11 @@ Namespace::Instance VariableDecl::transform(Context& context, Node::Instance con
 
 }
 
+
+Namespace::Instance StructureDecl::transform(Context& context, Node::Instance const& node) {
+
+}
+
 Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const path = pathOf(node->lhs);
 	auto const scope = declare(context, path);
