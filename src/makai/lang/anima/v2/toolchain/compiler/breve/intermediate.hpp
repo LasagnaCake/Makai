@@ -89,8 +89,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		List<Namespace::Instance> scopeStack;
 
 		Namespace::Instance resolve(StringList const& path) const;
-
-		Namespace::Instance invokeScope(StringList const& path);
+		usize push(StringList const& path);
+		void pop(usize const count);
 	};
 }
 

@@ -26,14 +26,21 @@ Namespace::Instance Intermediate::resolve(StringList const& path) const {
 	return nullptr;
 }
 
-Namespace::Instance Intermediate::invokeScope(StringList const& path) {
-	if (path.empty()) return nullptr;
+usize Intermediate::push(StringList const& path) {
+	if (path.empty()) return 0;
 	if (scopeStack.empty() && root->subspaces.contains(path.back()))
 		return root->subspaces[path.back()];
 	else if (scopeStack.back()->subspaces.contains(path.back()))
 		return scopeStack.back()->subspaces[path.back()];
 	Namespace::Instance ns = ns.create(Namespace{{.name = path.back()}});
+	if (scopeStack.empty())
+		root->subspaces[ns->name] = ns;
+	else scopeStack.back()->subspaces[ns->name] = ns;
 	scopeStack.pushBack(ns);
-	if (auto const sc = invokeScope(path.sliced(1))) return sc;
-	else return ns;
+	return push(path.sliced(1)) + 1;
+}
+
+void Intermediate::pop(usize const count) {
+	if (scopeStack.size())
+		scopeStack.eraseRange(0, -Math::min(count, scopeStack.size()));
 }
