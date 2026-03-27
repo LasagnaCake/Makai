@@ -99,7 +99,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		AttributeRef				attribute;
 		TraitRef					trait;
 
-		Implementation::Instance	impl = impl.create();
+		Implementation::Instance	impl;
 
 		Instance resolve(UTF8StringList const& path) const;
 
