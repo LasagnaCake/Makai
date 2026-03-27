@@ -51,7 +51,7 @@ Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance con
 		ov->result = fetch(context, path, node->lhs)->type;
 	VariableDecl vd;
 	for (auto const& arg: proto->children)
-		ov->arguments.pushBack(vd.transform(context, node)->variable);
+		ov->arguments.pushBack(vd.transform(context, arg)->variable);
 	if (fn.overload(ov->arguments))
 		context.error("Redeclaration of function overload!", node);
 }
