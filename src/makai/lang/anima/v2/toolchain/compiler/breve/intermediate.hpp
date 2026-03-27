@@ -8,7 +8,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Intermediate;
 
 	struct Labeled {
-		String name;
+		UTF8String name;
 	};
 
 	struct Namespace;
@@ -18,11 +18,70 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Attribute;
 	struct Trait;
 
-	struct Implementable {
-		String pre, main, post;
+	struct IWritable {
+		virtual ~IWritable();
+
+		virtual void writePre(UTF8String const& what) = 0;
+		virtual void writeMain(UTF8String const& what) = 0;
+		virtual void writePost(UTF8String const& what) = 0;
+
+		template <Makai::Type::NoneOf<UTF8String, UTF32String, String> T>
+		void writePre(T const& what) {
+			writePre(toString(what));
+		}
+
+		template <Makai::Type::NoneOf<UTF8String, UTF32String, String> T>
+		void writeMain(T const& what) {
+			writeMain(toString(what));
+		}
+
+		template <Makai::Type::NoneOf<UTF8String, UTF32String, String> T>
+		void writePost(T const& what) {
+			writePost(toString(what));
+		}
+
+		template <class... Types>
+		void writePre(Types const&... values)
+		requires (sizeof...(Types) > 1) {
+			(..., writePre(toString(values)));
+		}
+
+		template <class... Types>
+		void writeMain(Types const&... values)
+		requires (sizeof...(Types) > 1) {
+			(..., writeMain(toString(values)));
+		}
+
+		template <class... Types>
+		void writePost(Types const&... values)
+		requires (sizeof...(Types) > 1) {
+			(..., writeMain(toString(values)));
+		}
+
+		void writePreLine(UTF8String const& what);
+		void writeMainLine(UTF8String const& what);
+		void writePostLine(UTF8String const& what);
+
+	private:
+		template <class T>
+		constexpr static UTF8String toString(T const& value) {
+			if constexpr (Makai::Type::OneOf<T, UTF8String, UTF32String, String>)
+				return value;
+			else return toString(value);
+		}
 	};
 
-	struct Namespace: Labeled {
+	struct Implementable: IWritable {
+		UTF8String pre, main, post;
+
+		void writePre(UTF8String const& what) override;
+		void writeMain(UTF8String const& what) override;
+		void writePost(UTF8String const& what) override;
+
+		UTF8String compose() const {return pre + main + post;}
+	};
+
+	struct Namespace: Labeled, Implementable {
 		using TypeRef		= Instance<Type>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -31,7 +90,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		using Instance		= Instance<Namespace>;
 
-		Dictionary<Instance> subspaces;
+		UTF8Dictionary<Instance> subspaces;
 
 		TypeRef			type;
 		FunctionRef		function;
@@ -39,7 +98,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		AttributeRef	attribute;
 		TraitRef		trait;
 
-		Instance resolve(StringList const& path) const;
+		Instance resolve(UTF8StringList const& path) const;
+
+		Namespace(UTF8String const& name = "");
 	};
 
 	struct Type: Labeled {
@@ -54,7 +115,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Namespace::TypeRef base;
 	};
 
-	struct Function: Labeled, Implementable {
+	struct Function: Labeled {
 		struct Overload {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
@@ -62,9 +123,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		List<Instance<Overload>> overloads;
 	};
 
-	struct Variable: Labeled, Implementable {
+	struct Variable: Labeled {
 		Namespace::TypeRef	type;
-		String				initializer;
 	};
 
 	struct Attribute: Labeled {
@@ -83,14 +143,19 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Trait: Labeled {
 	};
 
-	struct Intermediate {
+	struct Intermediate: IWritable {
 		Namespace::Instance root = root.create();
+
+		void writePre(UTF8String const& what) override;
+		void writeMain(UTF8String const& what) override;
+		void writePost(UTF8String const& what) override;
 
 		List<Namespace::Instance> scopeStack;
 
 		Namespace::Instance resolve(StringList const& path) const;
 		usize push(StringList const& path);
 		void pop(usize const count);
+		Namespace::Instance top() const;
 	};
 }
 

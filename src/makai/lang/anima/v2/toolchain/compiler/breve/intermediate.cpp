@@ -4,7 +4,9 @@ namespace Core = Makai::Anima::V2::Core;
 
 using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 
-Namespace::Instance Namespace::resolve(StringList const& path) const {
+Namespace::Namespace(UTF8String const& name): Labeled(name) {}
+
+Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
 	if (!subspaces.contains(path.back())) return nullptr;
 	if (path.size() == 1)
@@ -13,7 +15,7 @@ Namespace::Instance Namespace::resolve(StringList const& path) const {
 	return nullptr;
 }
 
-Namespace::Instance Intermediate::resolve(StringList const& path) const {
+Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
 	for (auto& scope: Makai::Range::reverse(scopeStack)) {
 		if (path.size() == 1 && scope->name == path.back())
@@ -32,7 +34,7 @@ usize Intermediate::push(StringList const& path) {
 		return root->subspaces[path.back()];
 	else if (scopeStack.back()->subspaces.contains(path.back()))
 		return scopeStack.back()->subspaces[path.back()];
-	Namespace::Instance ns = ns.create(Namespace{{.name = path.back()}});
+	Namespace::Instance ns = ns.create(path.back());
 	if (scopeStack.empty())
 		root->subspaces[ns->name] = ns;
 	else scopeStack.back()->subspaces[ns->name] = ns;
@@ -40,7 +42,35 @@ usize Intermediate::push(StringList const& path) {
 	return push(path.sliced(1)) + 1;
 }
 
-void Intermediate::pop(usize const count) {
-	if (scopeStack.size())
-		scopeStack.eraseRange(0, -Math::min(count, scopeStack.size()));
+void Intermediate::pop(usize count) {
+	while (scopeStack.size() && count--) {
+		auto const scope = scopeStack.popBack();
+		if (scopeStack.empty())
+			root->pre += scope->compose();
+		else scopeStack.back()->main += scope->compose();
+	}
+}
+
+void Implementable::writePre(UTF8String const& what) {
+	pre += " " + what;
+}
+
+void Implementable::writeMain(UTF8String const& what) {
+	main += " " + what;
+}
+
+void Implementable::writePost(UTF8String const& what) {
+	post += " " + what;
+}
+
+void Intermediate::writePre(UTF8String const& what) {
+	root->pre += " " + what;
+}
+
+void Intermediate::writeMain(UTF8String const& what) {
+	root->main += " " + what;
+}
+
+void Intermediate::writePost(UTF8String const& what) {
+	root->post += " " + what;
 }

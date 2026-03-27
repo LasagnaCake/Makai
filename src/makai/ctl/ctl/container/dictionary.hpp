@@ -31,6 +31,30 @@ using TreeDictionary	= TreeMap<String, TValue, TIndex>;
 template<class TValue, Type::Integer TIndex = usize>
 using Dictionary		= ListDictionary<TValue, TIndex>;
 
+/// @brief `Map` analog for `UTF8String`-mapped unsorted collections.
+/// @tparam TValue Value type.
+/// @tparam TIndex Index type.
+template<class TValue, Type::Integer TIndex = usize>
+using OrderedUTF8Dictionary	= OrderedMap<UTF8String, TValue, TIndex>;
+
+/// @brief `Map` analog for `UTF8String`-mapped sorted collections.
+/// @tparam TValue Value type.
+/// @tparam TIndex Index type.
+template<class TValue, Type::Integer TIndex = usize>
+using ListUTF8Dictionary	= ListMap<UTF8String, TValue, TIndex>;
+
+/// @brief `Map` analog for `UTF8String`-mapped tree-based collections.
+/// @tparam TValue Value type.
+/// @tparam TIndex Index type.
+template<class TValue, Type::Integer TIndex = usize>
+using TreeUTF8Dictionary	= TreeMap<UTF8String, TValue, TIndex>;
+
+/// @brief `Map` analog for `UTF8String`-mapped collections.
+/// @tparam TValue Value type.
+/// @tparam TIndex Index type.
+template<class TValue, Type::Integer TIndex = usize>
+using UTF8Dictionary		= ListDictionary<TValue, TIndex>;
+
 CTL_NAMESPACE_END
 
 #endif // CTL_CONTAINER_DICTIONARY_H
