@@ -145,8 +145,6 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	while (true) {
-		if (parser.context.has(LTS_TT_CLOSE_CURLY))
-			break;
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
 			parser.context.next();
 			break;
@@ -154,6 +152,10 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs,
 		DEBUGLN("!!!!!!!!!!!!!!!!!!!!!! Resolving block statement...");
 		result->children.pushBack(parser.nextExpression());
 		DEBUGLN("!!!!!!!!!!!!!!!!!!!!!! Block:Statement:DONE!");
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+			parser.context.next();
+			break;
+		}
 	}
 	parser.context.expect(LTS_TT_CLOSE_CURLY);
 	result->content = Node::Content::AV2_TANC_BLOCK;
