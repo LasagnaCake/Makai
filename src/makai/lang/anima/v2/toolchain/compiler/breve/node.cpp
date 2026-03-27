@@ -10,10 +10,12 @@ Makai::Data::Value Node::serialize() const {
 	out["content"]	= asString(content);
 	if (value)
 		out["value"]	= value;
-	if (lhs)
-		out["lhs"]		= lhs->serialize();
-	if (rhs)
-		out["rhs"]		= rhs->serialize();
+	if (leftSide)
+		out["left"]		= leftSide->serialize();
+	if (middle)
+		out["middle"]	= middle->serialize();
+	if (rightSide)
+		out["right"]	= rightSide->serialize();
 	if (children.size()) {
 		Makai::Data::Value::ArrayType ch;
 		ch.reserve(children.size());
