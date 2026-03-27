@@ -96,9 +96,6 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
 		LTS_TT_BIT_NOT,
-		LTS_TT_RAISE,
-		LTS_TT_DOLLAR,
-		LTS_TT_SHARP,
 		LTS_TT_AMP,
 		LTS_TT_STAR
 	);
@@ -162,7 +159,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("while", prefixes, new LoopResolver());
 	add("for", prefixes, new LoopResolver());
 	add("module", prefixes, new ModuleDeclResolver());
-	add(LTS_TT_COLON, prefixes, new FunctionPrototypeResolver());
+	add(LTS_TT_SHARP, prefixes, new FunctionPrototypeResolver());
 	add("extend", prefixes, new ExtensionResolver());
 	add("import", prefixes, new ImportResolver());
 	add("trait", prefixes, new TraitDeclResolver());
