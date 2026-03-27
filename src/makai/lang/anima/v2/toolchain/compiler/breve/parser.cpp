@@ -109,7 +109,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix(LTS_TT_DIVIDE, false);
 	infix(LTS_TT_STAR, false);
 	infix(LTS_TT_MODULO, false);
-	infix(LTS_TT_COMMA, false);
 	infix(LTS_TT_AMP, false);
 	infix(LTS_TT_PIPE, false);
 	infix(LTS_TT_RAISE, false);

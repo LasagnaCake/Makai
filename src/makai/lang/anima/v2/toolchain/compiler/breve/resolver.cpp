@@ -86,10 +86,25 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 
 Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving sub-expression...");
-	auto const expr = parser.nextExpression(precedence);
-	parser.context.expectNext(LTS_TT_CLOSE_PAREN);
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	while (true) {
+		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
+			parser.context.next();
+			break;
+		}
+		result->children.pushBack(parser.nextExpression(precedence));
+		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
+			parser.context.next();
+			break;
+		}
+		parser.context.expectNext(LTS_TT_COMMA);
+		if (parser.context.peek().type == LTS_TT_CLOSE_PAREN)
+			parser.context.error("Expected expression after the comma!");
+	}
+	parser.context.expect(LTS_TT_CLOSE_PAREN);
 	DEBUGLN("SubExpression:DONE!");
-	return expr;
+	return result;
 }
 
 Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
