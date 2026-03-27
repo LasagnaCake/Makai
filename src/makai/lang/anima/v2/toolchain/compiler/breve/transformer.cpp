@@ -44,6 +44,11 @@ Namespace::Instance StructureDecl::transform(Context& context, Node::Instance co
 
 }
 
+
+Namespace::Instance Expression::transform(Context& context, Node::Instance const& node) {
+
+}
+
 Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const path = pathOf(node->lhs);
 	auto const scope = declare(context, path);
@@ -57,9 +62,14 @@ Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance con
 	if (proto->lhs)
 		ov->result = fetch(context, path, node->lhs)->type;
 	VariableDecl vd;
-	for (auto const& arg: proto->children)
+	for (auto const& arg: proto->children) {
+		auto const varScope = vd.transform(context, arg);
+		if (varScope || !varScope->variable)
+			context.error("Expected variable declaration here!", arg);
 		ov->arguments.pushBack(vd.transform(context, arg)->variable);
+	}
 	if (fn.overload(ov->arguments))
 		context.error("Redeclaration of function overload!", node);
+	else fn.overloads.pushBack(ov);
 	return scope;
 }
