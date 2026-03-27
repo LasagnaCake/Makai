@@ -8,6 +8,12 @@
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct ATransformer {
+		struct Result {
+			UTF8String			source;
+			Namespace::Instance	scope;
+			Namespace::TypeRef	type;
+		};
+
 		using Instance = Instance<ATransformer>;
 
 		struct Context: Intermediate {
@@ -45,35 +51,35 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 		virtual ~ATransformer();
 
-		virtual Namespace::Instance transform(Context& context, Node::Instance const& node) = 0;
+		virtual Result transform(Context& context, Node::Instance const& node) = 0;
 	};
 
 	struct StructureDecl: ATransformer {
-		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
 	struct FunctionDecl: ATransformer {
-		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
 	struct VariableDecl: ATransformer {
-		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
 	struct Expression: ATransformer {
-		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
 	struct BinaryExpression: ATransformer {
-		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
 	struct PrefixExpression: ATransformer {
-		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
 	struct PostfixExpression: ATransformer {
-		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }
 
