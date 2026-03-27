@@ -88,6 +88,7 @@ Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance con
 	DEBUGLN("Resolving sub-expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
+	result->content = Node::Content::AV2_TANC_BLOCK;
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			parser.context.next();
