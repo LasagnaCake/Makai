@@ -17,6 +17,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool const					rightToLeft;
 	};
 
+	struct EmptyResolver: AResolver {
+		EmptyResolver(): AResolver() {}
+		virtual ~EmptyResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct DirectResolver: AResolver {
 		DirectResolver(): AResolver() {}
 		virtual ~DirectResolver() {}

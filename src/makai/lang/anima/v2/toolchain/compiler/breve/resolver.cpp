@@ -4,6 +4,13 @@ using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
+Node::Instance EmptyResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_EMPTY;
+	return result;
+}
+
 Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving direct expression...");
 	auto isIdentifier = parser.context.type() == LTS_TT_IDENTIFIER;
