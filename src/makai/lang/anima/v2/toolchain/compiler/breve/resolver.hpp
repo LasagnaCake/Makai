@@ -148,27 +148,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct StructureDeclResolver: AResolver {
-		StructureDeclResolver(): AResolver() {}
-		virtual ~StructureDeclResolver() {}
+	struct NamedBlockDeclResolver: AResolver {
+		bool const optionalName;
+		NamedBlockDeclResolver(bool const optionalName = true): AResolver(), optionalName(optionalName) {}
+		virtual ~NamedBlockDeclResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
 	struct PropertyDeclResolver: AResolver {
 		PropertyDeclResolver(): AResolver() {}
 		virtual ~PropertyDeclResolver() {}
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct TraitDeclResolver: AResolver {
-		TraitDeclResolver(): AResolver() {}
-		virtual ~TraitDeclResolver() {}
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct ModuleDeclResolver: AResolver {
-		ModuleDeclResolver(): AResolver() {}
-		virtual ~ModuleDeclResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 

@@ -320,21 +320,6 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
-Node::Instance ModuleDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->content = Node::Content::AV2_TANC_DECLARATION;
-	result->base = token;
-	auto const name = parser.nextExpression();
-	if (!name->isPathOrName())
-		parser.context.error("Expected path or name here!");
-	auto const def = parser.nextExpression();
-	if (def->content != Node::Content::AV2_TANC_BLOCK)
-		parser.context.error("Expected block expression here!");
-	result->lhs = name;
-	result->rhs = def;
-	return result;
-}
-
 Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
@@ -343,27 +328,15 @@ Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
-Node::Instance StructureDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	auto const name = parser.nextExpression();
-	if (!name->isPathOrName())
-		parser.context.error("Expected path or name here!");
-	auto const def = parser.nextExpression();
-	if (def->content != Node::Content::AV2_TANC_BLOCK)
-		parser.context.error("Expected block expression here!");
-	result->lhs = name;
-	result->rhs = def;
-	return result;
-}
-
-Node::Instance TraitDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->content = Node::Content::AV2_TANC_DECLARATION;
-	result->base = token;
-	auto const name = parser.nextExpression();
-	if (!name->isPathOrName())
+	if (optionalName && name->isBlock()) {
+		result->rhs = name;
+		return result;
+	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
 	auto const def = parser.nextExpression();
 	if (def->content != Node::Content::AV2_TANC_BLOCK)
@@ -449,7 +422,7 @@ Node::Instance MainBlockResolver::resolve(Parser& parser, Node::Instance const& 
 	result->base = token;
 	result->lhs = parser.nextExpression();
 	result->content = Node::Content::AV2_TANC_BLOCK;
-	if (!result->lhs || result->lhs->content != Node::Content::AV2_TANC_BLOCK)
+	if (!(result->lhs && result->lhs->isBlock()))
 		parser.context.error("Expected block expression here!");
 	return result;
 }
