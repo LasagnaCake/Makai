@@ -149,7 +149,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	);
 	// Advanced prefixes
 	DEBUGLN("Advanced prefix parsers");
-	add(LTS_TT_OPEN_PAREN, prefixes, new EmptyResolver());
+	add(LTS_TT_SEMICOLON, prefixes, new EmptyResolver());
 	add(LTS_TT_OPEN_PAREN, prefixes, new SubExpressionResolver());
 	add(LTS_TT_OPEN_CURLY, prefixes, new BlockResolver());
 	add(LTS_TT_OPEN_BRACKET, prefixes, new ArrayResolver());
