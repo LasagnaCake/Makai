@@ -104,6 +104,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			impl->post = post;
 			return impl;
 		}
+
+		UTF8String toString() const {return pre + main + post;}
 	};
 
 	struct Namespace: Labeled, IComposable {
