@@ -380,8 +380,9 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	}
 	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY) {
 		result->children.pushBack(parser.nextExpression());
-	} else if (parser.context.peek().type != LTS_TT_SEMICOLON)
-		parser.context.error("Expected '=>', ';' or '{' here!");
+	}/*else if (parser.context.peek().type == LTS_TT_SEMICOLON)
+		parser.context.next();
+	else parser.context.error("Expected '=>', ';' or '{' here!");*/
 	DEBUGLN("FunctionDecl:DONE!");
 	return result;
 }
