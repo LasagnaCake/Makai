@@ -1,4 +1,5 @@
 #include "transformer.hpp"
+#include "makai/lexer/cstyle/tokenstream.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -48,9 +49,18 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	return path;
 }
 
+ATransformer::resolve() {
+	auto const path = Context::pathOf(node);
+	if (!pathed && path.size() > 1)
+		context.error("Path declarations are forbidden in this context!", node);
+	auto scope = context.resolve(path);
+}
+
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
-	++context.top()->varc;
+	auto const localIndex = context.top()->varc++;
 	auto const path = Context::pathOf(node->leftSide);
+	if (!pathed && path.size() > 1)
+		context.error("Path declarations are forbidden in this context!", node->leftSide);
 	auto scope = context.resolve(path);
 	if (scope && scope->variable)
 		context.error("Redeclaration of variable with the given path!");
@@ -63,21 +73,31 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		Expression expr;
 	 	expr.transform(context, node);
 	}
-	return scope;
+	context.pop(path.size());
+	return {Makai::toString("local[", localIndex, "]"), scope, var.type};
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
-
 }
 
 ATransformer::Result BinaryExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const lhs = expr.transform(context, node->leftSide);
-	auto const rhs = expr.transform(context, node->rightSide);
-	if (lhs.source.empty())
+	if (!lhs.type)
 		context.error("Invalid expression!", node->leftSide);
-	if (rhs.source.empty())
-		context.error("Invalid expression!", node->rightSide);
+	context.top()->impl->writeMainLine("push", lhs.source);
+	if (node->base.text == "as") {
+		auto const
+	} else if (node->base.text == "is") {
+
+	} else {
+		auto const rhs = expr.transform(context, node->rightSide);
+		if (!rhs.type)
+			context.error("Invalid expression!", node->rightSide);
+		context.top()->impl->writeMainLine("push", rhs.source);
+		context.top()->impl->writeMainLine("op", node->base.text);
+	}
+	return {};
 }
 
 
@@ -87,6 +107,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const path = Context::pathOf(node->leftSide);
+	if (!pathed && path.size() > 1)
+		context.error("Path declarations are forbidden in this context!", node->leftSide);
 	auto const scope = context.get(path);
 	if (scope->impl)
 		context.error("Symbol is already defined as a different kind!", node);
@@ -101,13 +123,13 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		ov->result = context.fetch(path, node->leftSide)->type;
 	VariableDecl vd;
 	for (auto const& arg: proto->children) {
-		auto const varScope = vd.transform(context, arg);
-		if (varScope || !varScope->variable)
+		auto const decl = vd.transform(context, arg);
+		if (!(decl.scope && decl.scope->variable))
 			context.error("Expected variable declaration here!", arg);
-		ov->arguments.pushBack(vd.transform(context, arg)->variable);
+		ov->arguments.pushBack(decl.scope->variable);
 	}
 	if (fn.overload(ov->arguments))
 		context.error("Redeclaration of function overload!", node);
 	else fn.overloads.pushBack(ov);
-	return scope;
+	return {.scope = scope};
 }
