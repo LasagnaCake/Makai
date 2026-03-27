@@ -377,14 +377,11 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	if (parser.context.peek().type == LTS_TT_BIG_ARROW) {
 		parser.context.next();
 		result->children.pushBack(parser.nextExpression());
-		if (parser.context.peek().type != LTS_TT_SEMICOLON)
-			parser.context.error("Expected ';' here!");
 	}
 	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY) {
 		result->children.pushBack(parser.nextExpression());
 	} else if (parser.context.peek().type != LTS_TT_SEMICOLON)
 		parser.context.error("Expected '=>', ';' or '{' here!");
-	if (parser.context.peek().type == LTS_TT_SEMICOLON) parser.context.next();
 	DEBUGLN("FunctionDecl:DONE!");
 	return result;
 }
