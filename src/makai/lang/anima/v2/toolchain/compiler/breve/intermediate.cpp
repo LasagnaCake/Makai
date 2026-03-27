@@ -48,9 +48,11 @@ void Intermediate::pop(usize count) {
 	while (scopeStack.size() && count--) {
 		auto const scope = scopeStack.popBack();
 		if (!scope->impl) continue;
+		/*
 		if (scopeStack.empty())
-			root->impl->pre += scope->impl->compose();
-		else scopeStack.back()->impl->main += scope->impl->compose();
+			root->impl->pre += scope->impl->compose()->toString();
+		else scopeStack.back()->impl->main += scope->impl->compose()->toString();
+		 */
 	}
 }
 
