@@ -58,7 +58,6 @@ Namespace::Instance VariableDecl::transform(Context& context, Node::Instance con
 		Expression expr;
 		auto const et = expr.transform(context, node);
 		scope->subspaces[et->name] = et;
-		var.impl = et;
 	}
 	return scope;
 }
