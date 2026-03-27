@@ -14,6 +14,8 @@ using enum Makai::Anima::V2::Toolchain::Compiler::Breve::Node::Content;
 
 // TODO: This hellspawn
 
+
+
 void Compiler::invoke() {
 	context.stack.pushBack(context.inter.root);
 	Parser parser(context);

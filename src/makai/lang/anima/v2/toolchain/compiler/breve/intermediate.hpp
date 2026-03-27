@@ -18,9 +18,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Attribute;
 	struct Trait;
 
-	struct Scoped {
-		using NamespaceRef = Instance<Namespace>;
-		NamespaceRef subspace;
+	struct Implementable {
+		String pre, main, post;
 	};
 
 	struct Namespace: Labeled {
@@ -32,15 +31,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		using Instance		= Instance<Namespace>;
 
-		Dictionary<Instance>		subspaces;
-		Dictionary<TypeRef>			types;
-		Dictionary<FunctionRef>		functions;
-		Dictionary<VariableRef>		variables;
-		Dictionary<AttributeRef>	attributes;
-		Dictionary<TraitRef>		traits;
+		Dictionary<Instance> subspaces;
+
+		TypeRef			type;
+		FunctionRef		function;
+		VariableRef		variable;
+		AttributeRef	attribute;
+		TraitRef		trait;
+
+		Instance resolve(StringList const& path) const;
 	};
 
-	struct Type: Labeled, Scoped {
+	struct Type: Labeled {
 		enum class Definition {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
@@ -52,30 +54,43 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Namespace::TypeRef base;
 	};
 
-	struct Function: Labeled {
-		struct Overload: Scoped {
+	struct Function: Labeled, Implementable {
+		struct Overload {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
-			String							implementation;
 		};
 		List<Instance<Overload>> overloads;
 	};
 
-	struct Variable: Labeled {
+	struct Variable: Labeled, Implementable {
 		Namespace::TypeRef	type;
 		String				initializer;
 	};
 
 	struct Attribute: Labeled {
-
+		enum class Target {
+			AV2_TAAT_EMPTY		= 0,
+			AV2_TAAT_STRUCT		= 1 << 0,
+			AV2_TAAT_ATTRIBUTE	= 1 << 1,
+			AV2_TAAT_VARIABLE	= 1 << 2,
+			AV2_TAAT_FUNCTION	= 1 << 3,
+			AV2_TAAT_PROPERTY	= 1 << 4,
+			AV2_TAAT_VALUE		= 1 << 5,
+		};
+		Target target;
 	};
 
-	struct Trait: Labeled, Scoped {
-
+	struct Trait: Labeled {
 	};
 
 	struct Intermediate {
-		Instance<Namespace> root = root.create();
+		Namespace::Instance root = root.create();
+
+		List<Namespace::Instance> scopeStack;
+
+		Namespace::Instance resolve(StringList const& path) const;
+
+		Namespace::Instance invokeScope(StringList const& path);
 	};
 }
 
