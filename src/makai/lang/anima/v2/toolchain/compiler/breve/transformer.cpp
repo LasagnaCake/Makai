@@ -48,7 +48,7 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	return path;
 }
 
-Namespace::Instance VariableDecl::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
 	++context.top()->varc;
 	auto const path = Context::pathOf(node->leftSide);
 	auto scope = context.resolve(path);
@@ -66,26 +66,26 @@ Namespace::Instance VariableDecl::transform(Context& context, Node::Instance con
 	return scope;
 }
 
-Namespace::Instance StructureDecl::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
 
 }
 
-Namespace::Instance BinaryExpression::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result BinaryExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const lhs = expr.transform(context, node->leftSide);
 	auto const rhs = expr.transform(context, node->rightSide);
-	if (!lhs->impl)
+	if (lhs.source.empty())
 		context.error("Invalid expression!", node->leftSide);
-	if (!rhs->impl)
+	if (rhs.source.empty())
 		context.error("Invalid expression!", node->rightSide);
 }
 
 
-Namespace::Instance Expression::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
 
 }
 
-Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const path = Context::pathOf(node->leftSide);
 	auto const scope = context.get(path);
 	if (scope->impl)
