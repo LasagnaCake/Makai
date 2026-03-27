@@ -324,8 +324,8 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 		if (parser.context.peek().type == LTS_TT_EQUALS) {
 			parser.context.next();
 			result->children.pushBack(parser.nextExpression());
-		} else if (parser.context.peek().type != LTS_TT_SEMICOLON)
-			else parser.context.next();
+		} else if (parser.context.peek().type == LTS_TT_SEMICOLON)
+			parser.context.next();
 	}
 	DEBUGLN("VariableDecl:DONE!");
 	return result;
