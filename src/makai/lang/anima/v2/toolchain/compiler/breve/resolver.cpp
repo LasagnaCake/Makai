@@ -80,7 +80,7 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 	DEBUGLN("Resolving inline if-else expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.pushBack(leftSide);
+	result->middle= leftSide;
 	result->leftSide = parser.nextExpression(precedence);
 	parser.context.expectNext(LTS_TT_IDENTIFIER, "'else'");
 	if (parser.context.value().getString() != "else")
