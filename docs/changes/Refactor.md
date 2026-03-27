@@ -9,8 +9,9 @@
 - [ ] Rethink old graphical pipeline
 - - [ ] Add pipeline support
 - - - Via `Dispatcher`
-- [ ] Rethink old audio system
-- - [ ] Add 3D audio support
+- - [ ] Use `Value` for shader uniforms
+- [x] Rethink old audio system
+- - [x] Add 3D audio support
 - - - Perhaps via [miniaudio](https://miniaud.io/)?
 
 ## Very Complex

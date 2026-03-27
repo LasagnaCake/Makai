@@ -116,11 +116,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Function: Labeled {
-		struct Overload {
+		struct Overload: Implementable {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
 		};
-		List<Instance<Overload>> overloads;
+		using OverloadRef = Instance<Overload>;
+
+		List<OverloadRef> overloads;
 	};
 
 	struct Variable: Labeled {
