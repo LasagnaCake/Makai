@@ -13,7 +13,7 @@ module Test.Namespace {
 
 		baz :: (var: int) => writeLine(bar(var) - var)
 
-		biff :: ()
+		biff :: () -> void
 	}
 }
 
