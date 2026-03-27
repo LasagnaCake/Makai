@@ -209,7 +209,7 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	auto tok = context.next().token();
 	if (tok.type == LTS_TT_INVALID) return nullptr;
 	Node::Instance lhs;
-	DEBUGLN("Token: ", tok.text);
+	DEBUGLN("Prefix: ", tok.text);
 	if (prefixes.contains(tok.text))
 		lhs = prefixes[tok.text]->resolve(*this, null, tok);
 	else if (directs.contains(tok.type))
