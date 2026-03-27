@@ -4,6 +4,8 @@ namespace Core = Makai::Anima::V2::Core;
 
 using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 
+~IWritable::IWritable() {}
+
 Namespace::Namespace(UTF8String const& name): Labeled(name) {}
 
 Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
