@@ -28,7 +28,7 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 	return nullptr;
 }
 
-usize Intermediate::push(StringList const& path) {
+usize Intermediate::push(UTF8StringList const& path) {
 	if (path.empty()) return 0;
 	if (scopeStack.empty() && root->subspaces.contains(path.back()))
 		return root->subspaces[path.back()];
