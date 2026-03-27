@@ -47,34 +47,35 @@ usize Intermediate::push(UTF8StringList const& path) {
 void Intermediate::pop(usize count) {
 	while (scopeStack.size() && count--) {
 		auto const scope = scopeStack.popBack();
+		if (!scope->impl) continue;
 		if (scopeStack.empty())
-			root->pre += scope->compose();
-		else scopeStack.back()->main += scope->compose();
+			root->impl->pre += scope->impl->compose();
+		else scopeStack.back()->impl->main += scope->impl->compose();
 	}
 }
 
-void Implementable::writePre(UTF8String const& what) {
+void Implementation::writePre(UTF8String const& what) {
 	pre += " " + what;
 }
 
-void Implementable::writeMain(UTF8String const& what) {
+void Implementation::writeMain(UTF8String const& what) {
 	main += " " + what;
 }
 
-void Implementable::writePost(UTF8String const& what) {
+void Implementation::writePost(UTF8String const& what) {
 	post += " " + what;
 }
 
 void Intermediate::writePre(UTF8String const& what) {
-	root->pre += " " + what;
+	root->impl->pre += " " + what;
 }
 
 void Intermediate::writeMain(UTF8String const& what) {
-	root->main += " " + what;
+	root->impl->main += " " + what;
 }
 
 void Intermediate::writePost(UTF8String const& what) {
-	root->post += " " + what;
+	root->impl->post += " " + what;
 }
 
 Function::OverloadRef Function::overload(List<Namespace::VariableRef> const& args) const {

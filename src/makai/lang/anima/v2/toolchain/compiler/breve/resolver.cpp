@@ -4,14 +4,14 @@ using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
-Node::Instance EmptyResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance EmptyResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_EMPTY;
 	return result;
 }
 
-Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving direct expression...");
 	auto isIdentifier = parser.context.type() == LTS_TT_IDENTIFIER;
 	Node::Instance result = Node::Instance::create();
@@ -32,38 +32,38 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs
 	return result;
 }
 
-Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving prefix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->lhs = parser.nextExpression(precedence);
+	result->leftSide = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_PREFIX_OP;
 	DEBUGLN("Prefix:DONE!");
 	return result;
 }
 
-Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving infix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->lhs = lhs;
-	result->rhs = parser.nextExpression(precedence);
+	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INFIX_OP;
 	DEBUGLN("Infix:DONE!");
 	return result;
 }
 
-Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving postfix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->lhs = lhs;
+	result->leftSide = leftSide;
 	result->content = Node::Content::AV2_TANC_POSTFIX_OP;
 	DEBUGLN("Postfix:DONE!");
 	return result;
 }
 
-Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving inline assembly expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -76,22 +76,22 @@ Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
-Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving inline if-else expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->children.pushBack(lhs);
-	result->lhs = parser.nextExpression(precedence);
+	result->children.pushBack(leftSide);
+	result->leftSide = parser.nextExpression(precedence);
 	parser.context.expectNext(LTS_TT_IDENTIFIER, "'else'");
 	if (parser.context.value().getString() != "else")
 		parser.context.error("Expected 'else' here!");
-	result->rhs = parser.nextExpression(precedence);
+	result->rightSide = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INLINE_IF_ELSE;
 	DEBUGLN("IfElse:DONE!");
 	return result;
 }
 
-Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving sub-expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -115,11 +115,11 @@ Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance con
 	return result;
 }
 
-Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	DEBUGLN("Resolving function call expression...");
 	result->base = token;
-	result->lhs = lhs;
+	result->leftSide = leftSide;
 	result->content = Node::Content::AV2_TANC_FN_CALL;
 	if (parser.context.peek().type == LTS_TT_EXCLAMATION) {
 		parser.context.next();
@@ -147,7 +147,7 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
-Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving block expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -170,12 +170,12 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	return result;
 }
 
-Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving array expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	if (lhs)
-		result->lhs = lhs;
+	if (leftSide)
+		result->leftSide = leftSide;
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_BRACKET)) {
 			parser.context.next();
@@ -191,12 +191,12 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& lhs,
 			parser.context.error("Expected expression after the comma!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_BRACKET);
-	result->content = lhs ? Node::Content::AV2_TANC_SUBSCRIPT : Node::Content::AV2_TANC_ARRAY;
+	result->content = leftSide ? Node::Content::AV2_TANC_SUBSCRIPT : Node::Content::AV2_TANC_ARRAY;
 	DEBUGLN("Array:DONE!");
 	return result;
 }
 
-Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving branch expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -207,7 +207,7 @@ Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lhs
 	return result;
 }
 
-Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_LOOP;
@@ -216,66 +216,66 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& lhs, 
 	return result;
 }
 
-Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	DEBUGLN("Resolving import expression...");
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_IMPORT;
 	result->value = token.text.toString();
-	result->lhs = lhs;
+	result->leftSide = leftSide;
 	DEBUGLN("Follows: ", parser.context.token().text);
 	DEBUGLN("Follows: ", parser.context.peek().text);
 	if (parser.context.type() == LTS_TT_DOT) {
 		DEBUGLN("Here!");
 		parser.context.next();
 	}
-	result->rhs = parser.nextExpression();
+	result->rightSide = parser.nextExpression();
 	return result;
 }
 
-Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_ASSIGNMENT;
-	result->lhs = lhs;
-	result->rhs = parser.nextExpression(precedence);
+	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression(precedence);
 	return result;
 }
 
-Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_TYPE_EXTENSION;
-	result->lhs = parser.nextExpression();
-	if (!lhs->isPathOrName())
+	result->leftSide = parser.nextExpression();
+	if (!leftSide->isPathOrName())
 		parser.context.error("Invalid expression for extension!");
 	if (parser.context.peek().type == LTS_TT_IDENTIFIER) {
 		auto const id = parser.context.peek().value.getString();
 		if (id == "with")
 			parser.context.next();
 	}
-	result->rhs = parser.nextExpression();
-	if (!result->rhs->isDeclarationOrBlock())
+	result->rightSide = parser.nextExpression();
+	if (!result->rightSide->isDeclarationOrBlock())
 		parser.context.error("Expected declaration or code block here!");
 	return result;
 }
 
-Node::Instance AttributeResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance AttributeResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_ATTRIBUTE;
-	result->lhs = parser.nextExpression();
-	if (!result->lhs)
+	result->leftSide = parser.nextExpression();
+	if (!result->leftSide)
 		parser.context.error("Unexpected end-of-file!");
 	if (!(
-		result->lhs->isPathOrName()
-	||	result->lhs->content == Node::Content::AV2_TANC_ARRAY
+		result->leftSide->isPathOrName()
+	||	result->leftSide->content == Node::Content::AV2_TANC_ARRAY
 	)) parser.context.error("Expected single-attribute or attribute list here!");
-	result->rhs = parser.nextExpression();
+	result->rightSide = parser.nextExpression();
 	return result;
 }
 
-Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving function prototype expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -302,36 +302,33 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 	if (parser.context.peek().type == LTS_TT_LITTLE_ARROW) {
 		DEBUGLN("Resolving result type...");
 		parser.context.next();
-		result->lhs = parser.nextExpression();
+		result->leftSide = parser.nextExpression();
 		DEBUGLN("FunctionPrototype:Result:DONE!");
 	}
 	DEBUGLN("FunctionPrototype:DONE!");
 	return result;
 }
 
-Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving variable declaration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	result->lhs = lhs;
+	result->leftSide = leftSide;
 	if (token.type == LTS_TT_ASSIGN)
 		result->children.pushBack(parser.nextExpression());
 	else {
-		result->rhs = parser.nextExpression(precedence);
-		DEBUGLN("===== Type: ", result->rhs->base.text);
-		DEBUGLN("===== Next: ", parser.context.peek().text);
-		if (parser.context.peek().type == LTS_TT_EQUALS) {
-			parser.context.next();
-			result->children.pushBack(parser.nextExpression());
-		} else if (parser.context.peek().type == LTS_TT_SEMICOLON)
-			parser.context.next();
+		auto const v = parser.nextExpression(precedence);
+		if (v->content == Node::Content::AV2_TANC_ASSIGNMENT) {
+			result->middle = v->leftSide;
+			result->rightSide = v->rightSide;
+		}
 	}
 	DEBUGLN("VariableDecl:DONE!");
 	return result;
 }
 
-Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
@@ -339,46 +336,46 @@ Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
-Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	auto const name = parser.nextExpression();
 	if (optionalName && name->isBlock()) {
-		result->rhs = name;
+		result->rightSide = name;
 		return result;
 	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
 	auto const def = parser.nextExpression();
 	if (def->content != Node::Content::AV2_TANC_BLOCK)
 		parser.context.error("Expected block expression here!");
-	result->lhs = name;
-	result->rhs = def;
+	result->leftSide = name;
+	result->rightSide = def;
 	return result;
 }
 
-Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving function declaration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	FunctionPrototypeResolver resolver;
-	result->lhs = lhs;
-	result->rhs = resolver.resolve(parser, null, {});
+	result->leftSide = leftSide;
+	result->middle = resolver.resolve(parser, null, {});
 	if (parser.context.peek().type == LTS_TT_BIG_ARROW) {
 		parser.context.next();
-		result->children.pushBack(parser.nextExpression());
+		result->rightSide = parser.nextExpression();
 	}
-	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY) {
-		result->children.pushBack(parser.nextExpression());
-	}/*else if (parser.context.peek().type == LTS_TT_SEMICOLON)
+	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)
+		result->rightSide = parser.nextExpression();
+	/*else if (parser.context.peek().type == LTS_TT_SEMICOLON)
 		parser.context.next();
 	else parser.context.error("Expected '=>', ';' or '{' here!");*/
 	DEBUGLN("FunctionDecl:DONE!");
 	return result;
 }
 
-Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
@@ -386,20 +383,20 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
-Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_PATH;
-	result->lhs = lhs;
-	result->rhs = parser.nextExpression(precedence);
+	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression(precedence);
 	result->base = token;
 	if (
-		result->rhs->content == Node::Content::AV2_TANC_PATH
-	||	result->rhs->content == Node::Content::AV2_TANC_NAME
+		result->rightSide->content == Node::Content::AV2_TANC_PATH
+	||	result->rightSide->content == Node::Content::AV2_TANC_NAME
 	) return result;
 	parser.context.error("Invalid path expression!");
 }
 
-Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
@@ -407,38 +404,38 @@ Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& lhs,
 	return result;
 }
 
-Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	switch (opClass) {
 		case Class::AV2_TA_DORC_PREFIX: {
-			result->lhs = parser.nextExpression(precedence);
+			result->leftSide = parser.nextExpression(precedence);
 			result->content = Node::Content::AV2_TANC_PREFIX_OP;
 		}
 		case Class::AV2_TA_DORC_INFIX: {
-			result->lhs = lhs;
-			result->rhs = parser.nextExpression(precedence);
+			result->leftSide = leftSide;
+			result->rightSide = parser.nextExpression(precedence);
 			result->content = Node::Content::AV2_TANC_INFIX_OP;
 		}
 		case Class::AV2_TA_DORC_POSTFIX: {
-			result->lhs = lhs;
+			result->leftSide = leftSide;
 			result->content = Node::Content::AV2_TANC_POSTFIX_OP;
 		}
 	}
 	return result;
 }
 
-Node::Instance MainBlockResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance MainBlockResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->lhs = parser.nextExpression();
+	result->leftSide = parser.nextExpression();
 	result->content = Node::Content::AV2_TANC_BLOCK;
-	if (!(result->lhs && result->lhs->isBlock()))
+	if (!(result->leftSide && result->leftSide->isBlock()))
 		parser.context.error("Expected block expression here!");
 	return result;
 }
 
-Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	auto const opkey = parser.context.getNext(LTS_TT_IDENTIFIER, "operator name").getString();
 	if (
 		token.text == "prefix"

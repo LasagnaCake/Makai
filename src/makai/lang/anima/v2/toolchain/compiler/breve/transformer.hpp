@@ -33,18 +33,19 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 					);
 				}
 			}
+
+			Namespace::Instance declare(UTF8StringList const& path);
+			Namespace::Instance resolve(UTF8StringList const& path);
+			Namespace::Instance get(UTF8StringList const& path);
+			Namespace::Instance fetch(Node::Instance const& nodePath);
+			Namespace::Instance fetch(UTF8StringList const& path, Node::Instance const& base);
+
+			static UTF8StringList pathOf(Node::Instance const& node);
 		};
 
 		virtual ~ATransformer();
 
 		virtual Namespace::Instance transform(Context& context, Node::Instance const& node) = 0;
-
-		usize stack;
-
-		Namespace::Instance declare(Context& context, UTF8StringList const& path);
-		Namespace::Instance resolve(Context& context, UTF8StringList const& path);
-		Namespace::Instance fetch(Context& context, UTF8StringList const& path, Node::Instance const& base);
-		static UTF8StringList pathOf(Node::Instance const& node);
 	};
 
 	struct StructureDecl: ATransformer {

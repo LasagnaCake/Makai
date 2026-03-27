@@ -71,7 +71,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		}
 	};
 
-	struct Implementable: IWritable {
+	struct Implementation: IWritable {
+		using Instance		= Instance<Implementation>;
 		UTF8String pre, main, post;
 
 		void writePre(UTF8String const& what) override;
@@ -81,7 +82,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8String compose() const {return pre + main + post;}
 	};
 
-	struct Namespace: Labeled, Implementable {
+	struct Namespace: Labeled {
 		using TypeRef		= Instance<Type>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -92,11 +93,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Instance> subspaces;
 
-		TypeRef			type;
-		FunctionRef		function;
-		VariableRef		variable;
-		AttributeRef	attribute;
-		TraitRef		trait;
+		TypeRef						type;
+		FunctionRef					function;
+		VariableRef					variable;
+		AttributeRef				attribute;
+		TraitRef					trait;
+
+		Implementation::Instance	impl = impl.create();
 
 		Instance resolve(UTF8StringList const& path) const;
 
@@ -111,14 +114,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		Definition def;
-		Namespace::TypeRef base;
+		Definition					def;
+		Namespace::TypeRef			base;
+		Implementation::Instance	impl = impl.create();
 	};
 
 	struct Function: Labeled {
-		struct Overload: Implementable {
+		struct Overload {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
+			Implementation::Instance		impl 		= impl.create();
 		};
 		using OverloadRef = Instance<Overload>;
 
@@ -128,7 +133,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Variable: Labeled {
-		Namespace::TypeRef	type;
+		Namespace::TypeRef			type;
+		Implementation::Instance	impl = impl.create();
 	};
 
 	struct Attribute: Labeled {
@@ -163,6 +169,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		usize push(UTF8StringList const& path);
 		void pop(usize const count);
 		Namespace::Instance top() const;
+		Namespace::Instance parent() const;
 	};
 }
 

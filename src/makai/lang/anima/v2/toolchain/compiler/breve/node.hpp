@@ -40,8 +40,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		Content							content = Content::AV2_TANC_EMPTY;
 		Data::Value						value;
-		Instance						lhs;
-		Instance						rhs;
+		Instance						leftSide;
+		Instance						middle;
+		Instance						rightSide;
 		List<Instance>					children;
 		Nullable<Core::DataLocation>	source;
 		BaseContext::Axiom				base;
