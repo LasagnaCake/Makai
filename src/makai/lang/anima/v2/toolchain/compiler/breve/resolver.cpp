@@ -364,6 +364,7 @@ Node::Instance TraitDeclResolver::resolve(Parser& parser, Node::Instance const& 
 }
 
 Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving function declaration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
@@ -381,6 +382,7 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	} else if (parser.context.peek().type != LTS_TT_SEMICOLON)
 		parser.context.error("Expected '=>', ';' or '{' here!");
 	if (parser.context.peek().type == LTS_TT_SEMICOLON) parser.context.next();
+	DEBUGLN("FunctionDecl:DONE!");
 	return result;
 }
 
