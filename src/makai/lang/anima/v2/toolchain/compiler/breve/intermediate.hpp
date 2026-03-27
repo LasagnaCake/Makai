@@ -138,6 +138,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TAAT_VALUE		= 1 << 5,
 		};
 		Target target;
+		usize useCount;
+		usize globalMax;
+		usize localMax;
 	};
 
 	struct Trait: Labeled {
