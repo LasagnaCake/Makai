@@ -315,7 +315,17 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	result->lhs = lhs;
-	result->rhs = parser.nextExpression(precedence);
+	if (token.type == LTS_TT_ASSIGN)
+		result->children.pushBack(parser.nextExpression());
+	else {
+		result->rhs = parser.nextExpression(precedence);
+		if (parser.context.peek().type == LTS_TT_EQUALS) {
+			parser.context.next();
+			result->children.pushBack(parser.nextExpression());
+		} else if (parser.context.peek().type != LTS_TT_SEMICOLON)
+			parser.context.error("Expected assignment or ';' here!");
+		else parser.context.next();
+	}
 	DEBUGLN("VariableDecl:DONE!");
 	return result;
 }
