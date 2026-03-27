@@ -26,7 +26,7 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lhs
 }
 
 Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving prefix expression...");
+	DEBUGLN("Resolving prefix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->lhs = parser.nextExpression(precedence);
@@ -36,7 +36,7 @@ Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lhs
 }
 
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving infix expression...");
+	DEBUGLN("Resolving infix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->lhs = lhs;
@@ -47,7 +47,7 @@ Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& lhs,
 }
 
 Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving postfix expression...");
+	DEBUGLN("Resolving postfix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->lhs = lhs;
