@@ -123,6 +123,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		using OverloadRef = Instance<Overload>;
 
 		List<OverloadRef> overloads;
+
+		OverloadRef overload(List<Namespace::VariableRef> const& args) const;
 	};
 
 	struct Variable: Labeled {

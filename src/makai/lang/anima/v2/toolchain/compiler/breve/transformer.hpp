@@ -7,13 +7,13 @@
 #include "intermediate.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
-	struct ITransformer {
-		using Instance = Instance<ITransformer>;
+	struct ATransformer {
+		using Instance = Instance<ATransformer>;
 
 		struct Context: Intermediate {
 			template <Makai::Type::Derived<Error::Generic> E = Error::InvalidValue>
 			[[noreturn]]
-			void error(String const& what, Node::Instance const& where = nullptr) const {
+			static void error(String const& what, Node::Instance const& where = nullptr) {
 				if (!where)
 					throw E(
 						"At: EOF",
@@ -26,32 +26,37 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 						Makai::toString(
 							"At:\nLINE: ", pos.line,
 							"\nCOLUMN: ", pos.column,
-							"\n--> [", where-.text, "]"
+							"\n--> [", where->base.text, "]"
 						),
 						what,
-						Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), where-.sourceFile}
+						Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), where->base.sourceFile}
 					);
 				}
 			}
 		};
 
-		virtual ~ITransformer();
+		virtual ~ATransformer();
 
-		virtual Instance transform(Context& context, Node::Instance const& node) = 0;
+		virtual Namespace::Instance transform(Context& context, Node::Instance const& node) = 0;
 
 		usize stack;
 
-		Namespace::Instance declare(Context& context, UTF8StringList const& node);
-		Namespace::Instance resolve(Context& context, UTF8StringList const& node);
+		Namespace::Instance declare(Context& context, UTF8StringList const& path);
+		Namespace::Instance resolve(Context& context, UTF8StringList const& path);
+		Namespace::Instance fetch(Context& context, UTF8StringList const& path, Node::Instance const& base);
 		static UTF8StringList pathOf(Node::Instance const& node);
 	};
 
-	struct StructureDecl: ITransformer {
-		Instance transform(Context& context, Node::Instance const& node) override;
+	struct StructureDecl: ATransformer {
+		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
 	};
 
-	struct FunctionDecl: ITransformer {
-		Instance transform(Context& context, Node::Instance const& node) override;
+	struct FunctionDecl: ATransformer {
+		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct VariableDecl: ATransformer {
+		Namespace::Instance transform(Context& context, Node::Instance const& node) override;
 	};
 }
 

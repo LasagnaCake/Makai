@@ -7,17 +7,24 @@ using namespace Transformer;
 
 using Type = BaseContext::Tokenizer::Token::Type;
 
-using enum Type;
+using enum BaseContext::Tokenizer::Token::Type;
 
-Namespace::Instance ITransformer::declare(Context& context, Node::Instance const& node) {
-	auto const path = pathOf(node);
+Namespace::Instance ATransformer::declare(Context& context, UTF8StringList const& path) {
 	if (auto const ns = resolve(context, path))
 		return ns;
 	stack = context.push(path);
 	return context.scopeStack.back();
 }
 
-Makai::UTF8StringList ITransformer::pathOf(Node::Instance const& node) {
+Namespace::Instance ATransformer::fetch(Context& context, UTF8StringList const& path, Node::Instance const& base) {
+	if (auto const ns = resolve(context, path))
+		return ns;
+	context.error("Symbol does not exist!", base);
+}
+
+Makai::UTF8StringList ATransformer::pathOf(Node::Instance const& node) {
+	if (!node || node->content != Node::Content::AV2_TANC_NAME)
+		return {};
 	if (node->content == Node::Content::AV2_TANC_NAME)
 		return Makai::UTF8StringList::from(node->value.getString());
 	Makai::UTF8StringList path;
@@ -26,7 +33,11 @@ Makai::UTF8StringList ITransformer::pathOf(Node::Instance const& node) {
 	return path;
 }
 
-ITransformer::Instance FunctionDecl::transform(Context& context, Node::Instance const& node) {
+Namespace::Instance VariableDecl::transform(Context& context, Node::Instance const& node) {
+
+}
+
+Namespace::Instance FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const path = pathOf(node->lhs);
 	auto const scope = declare(context, path);
 	if (!scope->function) {
@@ -37,5 +48,10 @@ ITransformer::Instance FunctionDecl::transform(Context& context, Node::Instance 
 	auto const proto = node->rhs;
 	Function::OverloadRef ov = ov.create();
 	if (proto->lhs)
-		ov->result = resolve(context, path)->type;
+		ov->result = fetch(context, path, node->lhs)->type;
+	VariableDecl vd;
+	for (auto const& arg: proto->children)
+		ov->arguments.pushBack(vd.transform(context, node)->variable);
+	if (fn.overload(ov->arguments))
+		context.error("Redeclaration of function overload!", node);
 }

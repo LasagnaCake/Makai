@@ -74,3 +74,24 @@ void Intermediate::writeMain(UTF8String const& what) {
 void Intermediate::writePost(UTF8String const& what) {
 	root->post += " " + what;
 }
+
+Function::OverloadRef Function::overload(List<Namespace::VariableRef> const& args) const {
+	for (auto& ov: overloads) {
+		if (!ov) continue;
+		if (ov->arguments.size() != args.size()) continue;
+		bool miss = false;
+		for (auto const arg: Range::expand(ov->arguments))
+			if (!(args[arg.index].exists() || arg.value.exists()))
+				continue;
+			else if (args[arg.index].exists() != arg.value.exists()) {
+				miss = true;
+				break;
+			} else if (args[arg.index]->type != arg.value->type) {
+				miss = true;
+				break;
+			}
+		if (miss) continue;
+		return ov;
+	}
+	return nullptr;
+}
