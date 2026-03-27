@@ -319,8 +319,8 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 		result->children.pushBack(parser.nextExpression());
 	else {
 		result->rhs = parser.nextExpression(precedence);
-		DEBUGLN("Type: ", result->rhs->base.text);
-		DEBUGLN("Next: ", parser.context.peek().text);
+		DEBUGLN("===== Type: ", result->rhs->base.text);
+		DEBUGLN("===== Next: ", parser.context.peek().text);
 		if (parser.context.peek().type == LTS_TT_EQUALS) {
 			parser.context.next();
 			result->children.pushBack(parser.nextExpression());
