@@ -27,7 +27,7 @@ Makai::UTF8StringList ATransformer::pathOf(Node::Instance const& node) {
 		return {};
 	if (node->content == Node::Content::AV2_TANC_NAME)
 		return Makai::UTF8StringList::from(node->value.getString());
-	else if (!node->isNameOrPath())
+	else if (!node->isPathOrName())
 		Context::error("This is not a valid path!", node);
 	Makai::UTF8StringList path;
 	path.pushBack(node->lhs->value.getString());
