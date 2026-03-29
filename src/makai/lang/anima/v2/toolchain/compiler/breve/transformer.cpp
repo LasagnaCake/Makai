@@ -163,9 +163,10 @@ ATransformer::Result BinaryExpression::transform(Context& context, Node::Instanc
 		context.error("Type mismatch", node);
 	if (rhs.source != "stack[-0]")
 		context.top()->impl->writeMainLine("push", rhs.source);
-	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type))
-	context.top()->impl->writeMainLine("op", bopName(context, node));
-	return {{"stack[-0]"}, nullptr, lhs.type};
+	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
+		context.top()->impl->writeMainLine("op", bopName(context, node));
+		return {{"stack[-0]"}, nullptr, lhs.type};
+	}
 }
 
 
