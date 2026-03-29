@@ -48,19 +48,16 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	return path;
 }
 
-Namespace::Instance ATransformer::resolve(Context& context, Node::Instance const& node)  {
+Namespace::Instance ATransformer::resolve(Context& context, Node::Instance const& node) const {
 	auto const path = Context::pathOf(node);
-	if (!pathed && path.size() > 1)
+	if (!allowPaths && path.size() > 1)
 		context.error("Path declarations are forbidden in this context!", node);
 	auto scope = context.resolve(path);
+	return scope;
 }
 
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
-	auto const localIndex = context.top()->varc++;
-	auto const path = Context::pathOf(node->leftSide);
-	if (!pathed && path.size() > 1)
-		context.error("Path declarations are forbidden in this context!", node->leftSide);
-	auto scope = context.resolve(path);
+	auto const path = resolve(context, node);
 	if (scope && scope->variable)
 		context.error("Redeclaration of variable with the given path!");
 	scope = context.declare(path);
@@ -105,10 +102,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
-	auto const path = Context::pathOf(node->leftSide);
-	if (!pathed && path.size() > 1)
-		context.error("Path declarations are forbidden in this context!", node->leftSide);
-	auto const scope = context.get(path);
+	auto const path = resolve(context, node);
 	if (scope->impl)
 		context.error("Symbol is already defined as a different kind!", node);
 	if (!scope->function) {
