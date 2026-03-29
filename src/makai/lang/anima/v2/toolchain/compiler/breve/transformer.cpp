@@ -1,5 +1,4 @@
 #include "transformer.hpp"
-#include "makai/lexer/cstyle/tokenstream.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -49,7 +48,7 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	return path;
 }
 
-ATransformer::resolve() {
+Namespace::Instance ATransformer::resolve(Context& context, Node::Instance const& node)  {
 	auto const path = Context::pathOf(node);
 	if (!pathed && path.size() > 1)
 		context.error("Path declarations are forbidden in this context!", node);
