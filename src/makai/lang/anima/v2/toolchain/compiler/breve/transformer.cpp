@@ -136,7 +136,18 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	if (!lhs.source)
 		context.error("Invalid expression!", node->leftSide);
 	if (lhs.source != "stack[-0]")
-		context.top()->impl->writeMainLine("push", lhs.source);
+		context.top()->impl->writeMainLine("push ref", lhs.source);
+	context.top()->impl->writeMainLine("op", bopName(context, node));
+	return {{"stack[-0]"}, nullptr, lhs.type};
+}
+
+ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
+	Expression expr;
+	auto const lhs = expr.transform(context, node->leftSide);
+	if (!lhs.source)
+		context.error("Invalid expression!", node->leftSide);
+	if (lhs.source != "stack[-0]")
+		context.top()->impl->writeMainLine("push copy", lhs.source);
 	context.top()->impl->writeMainLine("op", bopName(context, node));
 	return {{"stack[-0]"}, nullptr, lhs.type};
 }
@@ -175,7 +186,9 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
-	return {.type = context.fetch(node)->type};
+	auto const t = context.fetch(node)->type;
+	if (!t) context.error("Type does not exist!", node);
+	return {.type = t};
 }
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
