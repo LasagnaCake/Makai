@@ -41,6 +41,7 @@ static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance 
 }
 
 static Makai::UTF8String uopName(ATransformer::Context& context, Node::Instance const& node) {
+	if (node->base.text == "not") return "lnot";
 	switch (node->base.type) {
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
@@ -109,6 +110,10 @@ ATransformer::resolve(Context& context, Node::Instance const& node) const {
 	return {path, scope};
 }
 
+bool ATransformer::Result::isStackTop() const {
+	return source && Makai::Regex::contains(*source, R"re(stack\[-0\])re");
+}
+
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
 	auto [path, scope] = resolve(context, node);
 	if (scope && scope->variable)
@@ -124,32 +129,78 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	 	expr.transform(context, node);
 	}
 	context.pop(path.size());
-	return {{Makai::toString("local[", parent->varc++, "]")}, scope, var.type};
+	return {{Makai::toString("move local[", parent->varc++, "]")}, scope, var.type};
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
 }
 
-ATransformer::Result PrefixExpression::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result Return::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
-	auto const lhs = expr.transform(context, node->leftSide);
-	if (!lhs.source)
+	auto const val = expr.transform(context, node->leftSide);
+	if (!val.source)
 		context.error("Invalid expression!", node->leftSide);
-	if (lhs.source != "stack[-0]")
-		context.top()->impl->writeMainLine("push ref", lhs.source);
-	context.top()->impl->writeMainLine("op", bopName(context, node));
-	return {{"stack[-0]"}, nullptr, lhs.type};
+	if (!val.isStackTop())
+		context.top()->impl->writeMainLine("push", val.source);
+	context.top()->impl->writeMainLine("ret");
+}
+
+ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result result;
+	for (auto const& child: node->children)
+		result = Expression().transform(context, child);
+	return result;
+}
+
+ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result result;
+	for (auto const& child: node->children)
+		result = Expression().transform(context, child);
+	return result;
+}
+
+ATransformer::Result PrefixExpression::transform(Context& context, Node::Instance const& node) {
+	if (node->base.text == "static")
+		return StaticExpression().transform(context, node);
+	if (node->base.text == "return")
+		return Return().transform(context, node);
+	Expression expr;
+	auto const val = expr.transform(context, node->leftSide);
+	if (!val.source)
+		context.error("Invalid expression!", node->leftSide);
+	if (
+		node->base.text == "copy"
+	||	node->base.text == "ref"
+	||	node->base.text == "move"
+	) return {{node->base.text + " " + *val.source}, val.scope, val.type};
+	if (!val.isStackTop()) {
+		if (
+			node->base.type == LTS_TT_INCREMENT
+		||	node->base.type == LTS_TT_DECREMENT
+		) context.top()->impl->writeMainLine("push ref", val.source);
+		else context.top()->impl->writeMainLine("push", val.source);
+	}
+	if (
+		node->base.text == "sizeof"
+	||	node->base.text == "countof"
+	||	node->base.text == "typeof"
+	) {
+		context.top()->impl->writeMainLine(node->base.text.sliced(0, -3));
+		return {{"move stack[-0]"}, val.scope, context.basicType("uint64")};
+	}
+	context.top()->impl->writeMainLine("op", uopName(context, node));
+	return {{"move stack[-0]"}, val.scope, val.type};
 }
 
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
-	auto const lhs = expr.transform(context, node->leftSide);
-	if (!lhs.source)
-		context.error("Invalid expression!", node->leftSide);
-	if (lhs.source != "stack[-0]")
-		context.top()->impl->writeMainLine("push copy", lhs.source);
-	context.top()->impl->writeMainLine("op", bopName(context, node));
-	return {{"stack[-0]"}, nullptr, lhs.type};
+	auto const val = expr.transform(context, node->rightSide);
+	if (!val.source)
+		context.error("Invalid expression!", node->rightSide);
+	if (!val.isStackTop())
+		context.top()->impl->writeMainLine("push copy", val.source);
+	context.top()->impl->writeMainLine("op", uopName(context, node));
+	return {{"move stack[-0]"}, val.scope, val.type};
 }
 
 ATransformer::Result BinaryExpression::transform(Context& context, Node::Instance const& node) {
@@ -157,7 +208,7 @@ ATransformer::Result BinaryExpression::transform(Context& context, Node::Instanc
 	auto const lhs = expr.transform(context, node->leftSide);
 	if (!lhs.source)
 		context.error("Invalid expression!", node->leftSide);
-	if (lhs.source != "stack[-0]")
+	if (!lhs.isStackTop())
 		context.top()->impl->writeMainLine("push", lhs.source);
 	if (
 		node->base.text == "as"
@@ -165,18 +216,18 @@ ATransformer::Result BinaryExpression::transform(Context& context, Node::Instanc
 	) {
 		auto const t = TypeRequest().transform(context, node->rightSide);
 		context.writeMainLine(node->base.text, t.type->name);
-		return {{"stack[-0]"}, nullptr, node->base.text == "is" ? context.basicType("bool") : t.type};
+		return {{"move stack[-0]"}, nullptr, node->base.text == "is" ? context.basicType("bool") : t.type};
 	}
 	auto const rhs = expr.transform(context, node->rightSide);
 	if (!rhs.source)
 		context.error("Invalid expression!", node->rightSide);
 	if (lhs.type->derivedFrom(rhs.type))
 		context.error("Type mismatch", node);
-	if (rhs.source != "stack[-0]")
+	if (!rhs.isStackTop())
 		context.top()->impl->writeMainLine("push", rhs.source);
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		context.top()->impl->writeMainLine("op", bopName(context, node));
-		return {{"stack[-0]"}, nullptr, lhs.type};
+		return {{"move stack[-0]"}, nullptr, lhs.type};
 	}
 }
 

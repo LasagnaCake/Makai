@@ -12,6 +12,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Nullable<UTF8String>	source;
 			Namespace::Instance		scope;
 			Namespace::TypeRef		type;
+
+			bool isStackTop() const;
 		};
 
 		using Instance = Instance<ATransformer>;
@@ -92,6 +94,22 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct PostfixExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct StaticExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Return: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Block: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct SubExpression: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }

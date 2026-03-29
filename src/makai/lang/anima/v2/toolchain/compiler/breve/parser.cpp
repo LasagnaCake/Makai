@@ -100,7 +100,9 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_RAISE,
 		LTS_TT_DOLLAR,
 		LTS_TT_SHARP,
-		LTS_TT_STAR
+		LTS_TT_STAR,
+		LTS_TT_INCREMENT,
+		LTS_TT_DECREMENT
 	);
 	// Basic infixes
 	DEBUGLN("Infix parsers");
