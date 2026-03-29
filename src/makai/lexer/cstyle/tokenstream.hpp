@@ -28,7 +28,7 @@ namespace Makai::Lexer::CStyle {
 		/// @brief Token stream token.
 		struct Token {
 			/// @brief Token type. May be a single unicode character, or one of the pre-defined values.
-			enum class Type: usize {
+			enum class Type: uint64 {
 				/// @brief Standard tokens.
 				LTS_TT_DOLLAR_SIGN		= '$',
 				LTS_TT_OPEN_PAREN		= '(',
@@ -75,9 +75,9 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_SHARP			= '#',
 				LTS_TT_POUND			= LTS_TT_SHARP,
 				/// @brief Invalid token.
-				LTS_TT_INVALID = Limit::MAX<usize>,
+				LTS_TT_INVALID = Limit::MAX<uint64>,
 				/// @brief Integer literal.
-				LTS_TT_INTEGER = Limit::MAX<byte> + 1,
+				LTS_TT_INTEGER = Limit::MAX<uint32> + 1,
 				/// @brief Floating-point literal.
 				LTS_TT_REAL,
 				/// @brief Alphanumeric identifier.
