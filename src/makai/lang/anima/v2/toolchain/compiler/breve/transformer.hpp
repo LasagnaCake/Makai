@@ -9,9 +9,9 @@
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct ATransformer {
 		struct Result {
-			UTF8String			source;
-			Namespace::Instance	scope;
-			Namespace::TypeRef	type;
+			Nullable<UTF8String>	source;
+			Namespace::Instance		scope;
+			Namespace::TypeRef		type;
 		};
 
 		using Instance = Instance<ATransformer>;
@@ -74,6 +74,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct Expression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct TypeRequest: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 

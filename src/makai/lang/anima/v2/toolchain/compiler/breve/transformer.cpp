@@ -54,24 +54,25 @@ ATransformer::resolve(Context& context, Node::Instance const& node) const {
 	if (!allowPaths && path.size() > 1)
 		context.error("Path declarations are forbidden in this context!", node);
 	auto scope = context.resolve(path);
-	return scope;
+	return {path, scope};
 }
 
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
-	auto const [path, scope] = resolve(context, node);
+	auto [path, scope] = resolve(context, node);
 	if (scope && scope->variable)
 		context.error("Redeclaration of variable with the given path!");
+	auto const parent = context.top();
 	scope = context.declare(path);
-	auto const parent = context.parent();
 	auto& var = *(scope->variable = scope->variable.create());
 	var.name = scope->name;
-	var.type = context.fetch(node->middle)->type;
+	TypeRequest t;
+	var.type = t.transform(context, node->middle).type;
 	if (node->rightSide) {
 		Expression expr;
 	 	expr.transform(context, node);
 	}
 	context.pop(path.size());
-	return {Makai::toString("local[", localIndex, "]"), scope, var.type};
+	return {{Makai::toString("local[", parent->varc++, "]")}, scope, var.type};
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
@@ -80,18 +81,22 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 ATransformer::Result BinaryExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const lhs = expr.transform(context, node->leftSide);
-	if (!lhs.type)
+	if (!lhs.source)
 		context.error("Invalid expression!", node->leftSide);
-	context.top()->impl->writeMainLine("push", lhs.source);
-	if (node->base.text == "as") {
-		auto const
-	} else if (node->base.text == "is") {
-
+	if (lhs.source != "stack[-0]")
+		context.top()->impl->writeMainLine("push", lhs.source);
+	if (
+		node->base.text == "as"
+	||	node->base.text == "is"
+	) {
+		auto const t = TypeRequest().transform(context, node->rightSide);
+		context.writeMainLine(node->base.text, t.type->name);
 	} else {
 		auto const rhs = expr.transform(context, node->rightSide);
-		if (!rhs.type)
+		if (!rhs.source)
 			context.error("Invalid expression!", node->rightSide);
-		context.top()->impl->writeMainLine("push", rhs.source);
+		if (rhs.source != "stack[-0]")
+			context.top()->impl->writeMainLine("push", rhs.source);
 		context.top()->impl->writeMainLine("op", node->base.text);
 	}
 	return {};
@@ -100,6 +105,10 @@ ATransformer::Result BinaryExpression::transform(Context& context, Node::Instanc
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
 
+}
+
+ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
+	return {.type = context.fetch(node)->type};
 }
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {

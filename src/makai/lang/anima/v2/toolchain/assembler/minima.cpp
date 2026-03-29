@@ -580,6 +580,11 @@ static void doTypeGet(Context& context) {
 	context.add(Instruction::Name::AV2_IN_TYPEOF);
 }
 
+
+static void doTypeCheck(Context& context, bool const dynamic = false) {
+	// TODO: Dynamic type checking
+}
+
 static void doHalt(Context& context, bool const error = false) {
 	context.add(
 		Instruction::Name::AV2_IN_HALT,
@@ -788,6 +793,8 @@ static void doDynamic(Context& context) {
 		doField(context, true, true);
 	else if (id == "rewrite")
 		doUnsafeCast(context, true);
+	else if (id == "is")
+		doTypeCheck(context, true);
 	else context.error("Invalid dynamic operation!");
 }
 
@@ -1265,6 +1272,7 @@ static void doExpression(Context& context) {
 	else if (id == "count")						doSizeOf(context);
 	else if (id == "size")						doSizeOf(context, true);
 	else if (id == "type")						doTypeGet(context);
+	else if (id == "is")						doTypeCheck(context);
 	else if (id == "yield")						doYield(context);
 	else if (id == "cast" || id == "as")		doCast(context);
 	else if (id == "rewrite")					doUnsafeCast(context);
