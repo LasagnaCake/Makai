@@ -173,6 +173,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Variable: Labeled {
 		Namespace::TypeRef	type;
 		Namespace::Instance	scope;
+		UTF8String			source;
 	};
 
 	struct Attribute: Labeled {
