@@ -128,7 +128,11 @@ Namespace::TypeRef TypeDecl::stronger(Namespace::TypeRef const& a, Namespace::Ty
 	else {
 		auto const at = *a->basic;
 		auto const bt = *b->basic;
-
+		if (at == bt) return at;
+		if (Core::isAlgebraic(at) && Core::isAlgebraic(bt))
+			return (at > bt ? a : b);
+		if (Core::isText(at) && Core::isText(bt))
+			return Core::isString(at) ? a : b;
 	}
 	return nullptr;
 }

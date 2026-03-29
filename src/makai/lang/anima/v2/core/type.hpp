@@ -62,11 +62,81 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_REAL32,
 		AV2_BT_REAL64,
 		AV2_BT_REAL128,
-		AV2_BT_STRING,
-		AV2_BT_BYTES,
 		AV2_BT_VECTOR,
 		AV2_BT_MATRIX,
+		AV2_BT_STRING,
+		AV2_BT_BYTES,
 	};
+
+	constexpr bool isBoolean(BasicType const bt) {
+		return bt == BasicType::AV2_BT_BOOL;
+	}
+
+	constexpr bool isSigned(BasicType const bt) {
+		return (
+			bt == BasicType::AV2_BT_INT8
+		||	bt == BasicType::AV2_BT_INT16
+		||	bt == BasicType::AV2_BT_INT32
+		||	bt == BasicType::AV2_BT_INT64
+		);
+	}
+
+	constexpr bool isUnsigned(BasicType const bt) {
+		return (
+			bt == BasicType::AV2_BT_UINT8
+		||	bt == BasicType::AV2_BT_UINT16
+		||	bt == BasicType::AV2_BT_UINT32
+		||	bt == BasicType::AV2_BT_UINT64
+		);
+	}
+
+	constexpr bool isInteger(BasicType const bt) {
+		return (isSigned(bt) || isUnsigned(bt));
+	}
+
+	constexpr bool isReal(BasicType const bt) {
+		return (
+			bt == BasicType::AV2_BT_REAL32
+		||	bt == BasicType::AV2_BT_REAL64
+		||	bt == BasicType::AV2_BT_REAL128
+		);
+	}
+
+	constexpr bool isNumber(BasicType const bt) {
+		return (isInteger(bt) || isReal(bt));
+	}
+
+	constexpr bool isString(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_STRING);
+	}
+
+	constexpr bool isCharacter(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_CHARACTER);
+	}
+
+	constexpr bool isText(BasicType const bt) {
+		return (isCharacter(bt) || isString(bt));
+	}
+
+	constexpr bool isBytes(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_BYTES);
+	}
+
+	constexpr bool isVector(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_VECTOR);
+	}
+
+	constexpr bool isMatrix(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_MATRIX);
+	}
+
+	constexpr bool isVectorable(BasicType const bt) {
+		return (isNumber(bt) || isVector(bt));
+	}
+
+	constexpr bool isAlgebraic(BasicType const bt) {
+		return (isVectorable(bt) || isMatrix(bt));
+	}
 
 	struct Definition: Entry {
 		struct Flags {
