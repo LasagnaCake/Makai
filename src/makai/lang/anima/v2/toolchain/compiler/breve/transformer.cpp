@@ -48,7 +48,8 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	return path;
 }
 
-Namespace::Instance ATransformer::resolve(Context& context, Node::Instance const& node) const {
+Makai::KeyValuePair<Makai::UTF8StringList, Namespace::Instance>
+ATransformer::resolve(Context& context, Node::Instance const& node) const {
 	auto const path = Context::pathOf(node);
 	if (!allowPaths && path.size() > 1)
 		context.error("Path declarations are forbidden in this context!", node);
@@ -57,7 +58,7 @@ Namespace::Instance ATransformer::resolve(Context& context, Node::Instance const
 }
 
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
-	auto const path = resolve(context, node);
+	auto const [path, scope] = resolve(context, node);
 	if (scope && scope->variable)
 		context.error("Redeclaration of variable with the given path!");
 	scope = context.declare(path);
@@ -102,7 +103,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
-	auto const path = resolve(context, node);
+	auto const [path, scope] = resolve(context, node);
 	if (scope->impl)
 		context.error("Symbol is already defined as a different kind!", node);
 	if (!scope->function) {
