@@ -111,7 +111,7 @@ namespace Makai::Anima::V2::Core {
 	}
 
 	constexpr bool isCharacter(BasicType const bt) {
-		return (bt == BasicType::AV2_BT_CHARACTER);
+		return (bt == BasicType::AV2_BT_CHAR);
 	}
 
 	constexpr bool isText(BasicType const bt) {
