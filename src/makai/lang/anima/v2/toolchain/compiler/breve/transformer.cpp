@@ -89,13 +89,15 @@ Namespace::Instance ATransformer::Context::fetch(Node::Instance const& nodePath)
 }
 
 Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) {
-	if (!node || node->content != Node::Content::AV2_TANC_NAME)
+	if (!node)
 		return {};
 	if (node->content == Node::Content::AV2_TANC_NAME)
 		return Makai::UTF8StringList::from(node->value.getString());
 	else if (!node->isPathOrName())
 		Context::error("This is not a valid path!", node);
 	Makai::UTF8StringList path;
+	if (node->content != Node::Content::AV2_TANC_NAME)
+		Context::error("This is not a valid path!", node->leftSide);
 	path.pushBack(node->leftSide->value.getString());
 	path.appendBack(pathOf(node->rightSide));
 	return path;
@@ -133,6 +135,11 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
+}
+
+ATransformer::Result StaticExpression::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
 }
 
 ATransformer::Result Return::transform(Context& context, Node::Instance const& node) {
@@ -143,19 +150,24 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	if (!val.isStackTop())
 		context.top()->impl->writeMainLine("push", val.source);
 	context.top()->impl->writeMainLine("ret");
+	return {{"move stack[-0]"}, val.scope, val.type};
 }
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
+	auto const scope = context.declare(UTF8StringList::from("<>"));
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
+	context.pop(1);
 	return result;
 }
 
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
+	auto const scope = context.declare(UTF8StringList::from("<>"));
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
+	context.pop(1);
 	return result;
 }
 
@@ -229,6 +241,13 @@ ATransformer::Result BinaryExpression::transform(Context& context, Node::Instanc
 		context.top()->impl->writeMainLine("op", bopName(context, node));
 		return {{"move stack[-0]"}, nullptr, lhs.type};
 	}
+}
+
+
+ATransformer::Result Direct::transform(Context& context, Node::Instance const& node) {
+	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
+		context.error("Expected value here!", node);
+
 }
 
 
