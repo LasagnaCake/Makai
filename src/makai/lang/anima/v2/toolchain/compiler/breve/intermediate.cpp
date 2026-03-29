@@ -117,3 +117,18 @@ Implementation::Instance Namespace::compose() const {
 	}
 	return out;
 }
+
+Namespace::TypeRef TypeDecl::stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b) {
+	if (!(a && b))			return nullptr;
+	if (a == b)				return a;
+	if (a->derivedFrom(b))	return b;
+	if (b->derivedFrom(a))	return a;
+	if (!(a->basic.exists() && b->basic.exists()))
+		return nullptr;
+	else {
+		auto const at = *a->basic;
+		auto const bt = *b->basic;
+
+	}
+	return nullptr;
+}

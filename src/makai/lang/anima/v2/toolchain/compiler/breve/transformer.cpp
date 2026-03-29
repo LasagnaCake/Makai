@@ -9,6 +9,58 @@ using Type = BaseContext::Tokenizer::Token::Type;
 
 using enum BaseContext::Tokenizer::Token::Type;
 
+static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance const& node) {
+	switch (node->base.type) {
+		case LTS_TT_SINGLE_QUOTE_STRING:
+		case LTS_TT_DOUBLE_QUOTE_STRING:
+		case LTS_TT_BACKTICK_STRING:
+		case LTS_TT_FR_SINGLE_QUOTE_STRING:
+		case LTS_TT_FR_DOUBLE_QUOTE_STRING:
+		case LTS_TT_JP_SINGLE_QUOTE_STRING:
+		case LTS_TT_JP_DOUBLE_QUOTE_STRING:
+		case LTS_TT_IDENTIFIER:				return node->base.text;
+		case LTS_TT_PLUS:					return "add";
+		case LTS_TT_MINUS:					return "sub";
+		case LTS_TT_STAR:					return "mul";
+		case LTS_TT_FWD_SLASH:				return "div";
+		case LTS_TT_PERCENT:				return "mod";
+		case LTS_TT_COMPARE_EQUALS:			return "e";
+		case LTS_TT_COMPARE_NOT_EQUALS:		return "n";
+		case LTS_TT_COMPARE_GREATER_EQUALS:	return "ge";
+		case LTS_TT_COMPARE_LESS_EQUALS:	return "le";
+		case LTS_TT_ORDER:					return "o";
+		case LTS_TT_LOGIC_AND:				return "land";
+		case LTS_TT_LOGIC_OR:				return "lor";
+		case LTS_TT_LOGIC_XOR:				return "lxor";
+		case LTS_TT_BIT_AND:				return "band";
+		case LTS_TT_BIT_OR:					return "bor";
+		case LTS_TT_BIT_XOR:				return "bxor";
+		default: context.error("Invalid/Unsupported operator!", node);
+	}
+	context.error("Invalid/Unsupported operator!", node);
+}
+
+static Makai::UTF8String uopName(ATransformer::Context& context, Node::Instance const& node) {
+	switch (node->base.type) {
+		case LTS_TT_SINGLE_QUOTE_STRING:
+		case LTS_TT_DOUBLE_QUOTE_STRING:
+		case LTS_TT_BACKTICK_STRING:
+		case LTS_TT_FR_SINGLE_QUOTE_STRING:
+		case LTS_TT_FR_DOUBLE_QUOTE_STRING:
+		case LTS_TT_JP_SINGLE_QUOTE_STRING:
+		case LTS_TT_JP_DOUBLE_QUOTE_STRING:
+		case LTS_TT_IDENTIFIER:				return node->base.text;
+		case LTS_TT_PLUS:					return "nop";
+		case LTS_TT_MINUS:					return "neg";
+		case LTS_TT_INCREMENT:				return "inc";
+		case LTS_TT_DECREMENT:				return "dec";
+		case LTS_TT_LOGIC_NOT:				return "lnot";
+		case LTS_TT_BIT_NOT:				return "bnot";
+		default: context.error("Invalid/Unsupported operator!", node);
+	}
+	context.error("Invalid/Unsupported operator!", node);
+}
+
 bool Namespace::isPureNamespace() const {
 	return !(type || function || variable || attribute || trait);
 }
@@ -78,6 +130,17 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
 }
 
+ATransformer::Result PrefixExpression::transform(Context& context, Node::Instance const& node) {
+	Expression expr;
+	auto const lhs = expr.transform(context, node->leftSide);
+	if (!lhs.source)
+		context.error("Invalid expression!", node->leftSide);
+	if (lhs.source != "stack[-0]")
+		context.top()->impl->writeMainLine("push", lhs.source);
+	context.top()->impl->writeMainLine("op", bopName(context, node));
+	return {{"stack[-0]"}, nullptr, lhs.type};
+}
+
 ATransformer::Result BinaryExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const lhs = expr.transform(context, node->leftSide);
@@ -91,15 +154,18 @@ ATransformer::Result BinaryExpression::transform(Context& context, Node::Instanc
 	) {
 		auto const t = TypeRequest().transform(context, node->rightSide);
 		context.writeMainLine(node->base.text, t.type->name);
-	} else {
-		auto const rhs = expr.transform(context, node->rightSide);
-		if (!rhs.source)
-			context.error("Invalid expression!", node->rightSide);
-		if (rhs.source != "stack[-0]")
-			context.top()->impl->writeMainLine("push", rhs.source);
-		context.top()->impl->writeMainLine("op", node->base.text);
+		return {{"stack[-0]"}, nullptr, node->base.text == "is" ? context.basicType("bool") : t.type};
 	}
-	return {};
+	auto const rhs = expr.transform(context, node->rightSide);
+	if (!rhs.source)
+		context.error("Invalid expression!", node->rightSide);
+	if (lhs.type->derivedFrom(rhs.type))
+		context.error("Type mismatch", node);
+	if (rhs.source != "stack[-0]")
+		context.top()->impl->writeMainLine("push", rhs.source);
+	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type))
+	context.top()->impl->writeMainLine("op", bopName(context, node));
+	return {{"stack[-0]"}, nullptr, lhs.type};
 }
 
 

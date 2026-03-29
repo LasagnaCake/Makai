@@ -12,7 +12,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Namespace;
-	struct Type;
+	struct TypeDecl;
 	struct Function;
 	struct Variable;
 	struct Attribute;
@@ -109,7 +109,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Namespace: Labeled, IComposable {
-		using TypeRef		= Instance<Type>;
+		using TypeRef		= Instance<TypeDecl>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
 		using AttributeRef	= Instance<Attribute>;
@@ -138,7 +138,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Implementation::Instance compose() const override;
 	};
 
-	struct Type: Labeled {
+	struct TypeDecl: Labeled {
 		enum class Definition {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
@@ -146,9 +146,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		Definition			def;
-		Namespace::TypeRef	base;
-		Namespace::Instance	scope;
+		Definition					def;
+		Nullable<Core::BasicType>	basic;
+		Namespace::TypeRef			base;
+		Namespace::Instance			scope;
+
+		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
+
+		bool derivedFrom(Namespace::TypeRef const& otherType) const;
 	};
 
 	struct Function: Labeled {

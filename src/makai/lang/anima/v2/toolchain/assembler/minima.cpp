@@ -701,6 +701,8 @@ static void doOperation(Context& context) {
 	else if (op == "band")	bop.op = Operator::AV2_BOP_BIT_AND;
 	else if (op == "bor")	bop.op = Operator::AV2_BOP_BIT_OR;
 	else if (op == "bxor")	bop.op = Operator::AV2_BOP_BIT_XOR;
+	else if (op == "pow")	bop.op = Operator::AV2_BOP_POW;
+	else if (op == "atan2")	bop.op = Operator::AV2_BOP_ATAN2;
 	else if (op == "neg")	bop.op = Operator::AV2_UOP_NEGATE;
 	else if (op == "inc")	bop.op = Operator::AV2_UOP_INCREMENT;
 	else if (op == "dec")	bop.op = Operator::AV2_UOP_DECREMENT;
@@ -718,6 +720,9 @@ static void doOperation(Context& context) {
 	else if (op == "log10")	bop.op = Operator::AV2_UOP_LOG10;
 	else if (op == "ln")	bop.op = Operator::AV2_UOP_LN;
 	else if (op == "sqrt")	bop.op = Operator::AV2_UOP_SQRT;
+	else if (op == "lnot")	bop.op = Operator::AV2_UOP_LOGIC_NOT;
+	else if (op == "bnot")	bop.op = Operator::AV2_UOP_BIT_NOT;
+	else context.error("Invalid/Unsupported operation!");
 	context.add(Instruction::Name::AV2_IN_OP, bop);
 }
 

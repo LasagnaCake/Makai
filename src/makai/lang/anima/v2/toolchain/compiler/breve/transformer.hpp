@@ -46,6 +46,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Namespace::Instance fetch(Node::Instance const& nodePath);
 			Namespace::Instance fetch(UTF8StringList const& path, Node::Instance const& base);
 
+			Namespace::TypeRef basicType(UTF8String const& name);
+
 			static UTF8StringList pathOf(Node::Instance const& node);
 		};
 

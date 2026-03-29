@@ -177,8 +177,8 @@ namespace Makai::Lexer::CStyle {
 			/// @brief Token position.
 			Position	at;
 
-			constexpr static String asName(Type const type) {
-				if (type < Type::LTS_TT_INTEGER) return toString(Cast::as<char>(type));
+			constexpr static UTF8String toString(Type const type) {
+				if (type < Type::LTS_TT_INTEGER) return CTL::toString(Cast::as<char>(type));
 				switch (type) {
 					case Type::LTS_TT_INTEGER:					return "<integer>";
 					case Type::LTS_TT_REAL:						return "<real>";
@@ -222,6 +222,8 @@ namespace Makai::Lexer::CStyle {
 					default: return "<!UNKNOWN>";
 				}
 			}
+
+			constexpr static UTF8String asName(Type const type) {return toString(type);}
 		};
 
 		/// @brief Token list.
