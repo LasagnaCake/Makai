@@ -62,6 +62,51 @@ static Makai::UTF8String uopName(ATransformer::Context& context, Node::Instance 
 	context.error("Invalid/Unsupported operator!", node);
 }
 
+static ATransformer::Result infixResolve(ATransformer::Context& context, Node::Instance const& node, Namespace::TypeRef const& type) {
+	for (auto& [name, tok]: type->scope->subspaces)
+		if (
+			tok->function
+		&&	tok->meta.contains("Operator")
+		&&	tok->meta["Operator"]->value.contains("infix")
+		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("infix", "") == bopName(context, node)
+		) {
+			auto const ov = tok->function->overload(Function::ArgTypes::from(type, type));
+			context.top()->impl->writeMainLine("call", ov->entry);
+			return {{"stack[-0]"}, nullptr, ov->result};
+		}
+	context.error("Invalid operator for type!", node);
+}
+
+static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::Instance const& node, Namespace::TypeRef const& type) {
+	for (auto& [name, tok]: type->scope->subspaces)
+		if (
+			tok->function
+		&&	tok->meta.contains("Operator")
+		&&	tok->meta["Operator"]->value.contains("prefix")
+		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("prefix", "") == uopName(context, node)
+		) {
+			auto const ov = tok->function->overload(Function::ArgTypes::from(type));
+			context.top()->impl->writeMainLine("call", ov->entry);
+			return {{"stack[-0]"}, nullptr, ov->result};
+		}
+	context.error("Invalid operator for type!", node);
+}
+
+static ATransformer::Result postfixResolve(ATransformer::Context& context, Node::Instance const& node, Namespace::TypeRef const& type) {
+	for (auto& [name, tok]: type->scope->subspaces)
+		if (
+			tok->function
+		&&	tok->meta.contains("Operator")
+		&&	tok->meta["Operator"]->value.contains("postfix")
+		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("postfix", "") == uopName(context, node)
+		) {
+			auto const ov = tok->function->overload(Function::ArgTypes::from(type));
+			context.top()->impl->writeMainLine("call", ov->entry);
+			return {{"stack[-0]"}, nullptr, ov->result};
+		}
+	context.error("Invalid operator for type!", node);
+}
+
 bool Namespace::isPureNamespace() const {
 	return !(type || function || variable || attribute || trait);
 }
@@ -155,7 +200,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	auto const scope = context.declare(UTF8StringList::from("<>"));
+	auto const scope = context.declare(UTF8StringList::from("<>" + node->name()));
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
 	context.pop(1);
@@ -164,7 +209,7 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	auto const scope = context.declare(UTF8StringList::from("<>"));
+	auto const scope = context.declare(UTF8StringList::from("<>" + node->name()));
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
 	context.pop(1);
@@ -200,8 +245,10 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		context.top()->impl->writeMainLine(node->base.text.sliced(0, -3));
 		return {{"move stack[-0]"}, val.scope, context.basicType("uint64")};
 	}
-	context.top()->impl->writeMainLine("op", uopName(context, node));
-	return {{"move stack[-0]"}, val.scope, val.type};
+	if (val.type->basic) {
+		context.top()->impl->writeMainLine("op", bopName(context, node));
+		return {{"move stack[-0]"}, nullptr, val.type};
+	} else return prefixResolve(context, node, val.type);
 }
 
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
@@ -212,7 +259,10 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 	if (!val.isStackTop())
 		context.top()->impl->writeMainLine("push copy", val.source);
 	context.top()->impl->writeMainLine("op", uopName(context, node));
-	return {{"move stack[-0]"}, val.scope, val.type};
+	if (val.type->basic) {
+		context.top()->impl->writeMainLine("op", bopName(context, node));
+		return {{"move stack[-0]"}, nullptr, val.type};
+	} else return postfixResolve(context, node, val.type);
 }
 
 ATransformer::Result BinaryExpression::transform(Context& context, Node::Instance const& node) {
@@ -233,14 +283,15 @@ ATransformer::Result BinaryExpression::transform(Context& context, Node::Instanc
 	auto const rhs = expr.transform(context, node->rightSide);
 	if (!rhs.source)
 		context.error("Invalid expression!", node->rightSide);
-	if (lhs.type->derivedFrom(rhs.type))
-		context.error("Type mismatch", node);
 	if (!rhs.isStackTop())
 		context.top()->impl->writeMainLine("push", rhs.source);
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
-		context.top()->impl->writeMainLine("op", bopName(context, node));
-		return {{"move stack[-0]"}, nullptr, lhs.type};
+		if (t->basic) {
+			context.top()->impl->writeMainLine("op", bopName(context, node));
+			return {{"move stack[-0]"}, nullptr, t};
+		} else return infixResolve(context, node, t);
 	}
+	context.error("Type mismatch!", node);
 }
 
 
@@ -268,7 +319,7 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const [path, scope] = resolve(context, node);
-	if (scope->impl)
+	if (!(scope->function || scope->isPureNamespace()))
 		context.error("Symbol is already defined as a different kind!", node);
 	if (!scope->function) {
 		scope->function = scope->function.create();
