@@ -265,7 +265,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 	} else return postfixResolve(context, node, val.type);
 }
 
-ATransformer::Result BinaryExpression::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const lhs = expr.transform(context, node->leftSide);
 	if (!lhs.source)
@@ -308,7 +308,24 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
-
+	if (!node) return {};
+	switch (node->content) {
+		case Node::Content::AV2_TANC_EMPTY:				return {};
+		case Node::Content::AV2_TANC_VALUE:				return Direct().transform(context, node);
+		case Node::Content::AV2_TANC_BLOCK:				return Block().transform(context, node);
+		case Node::Content::AV2_TANC_ASSIGNMENT:		return Assignment().transform(context, node);
+		case Node::Content::AV2_TANC_DECLARATION:		return Declaration().transform(context, node);
+		case Node::Content::AV2_TANC_FN_CALL:			return Call().transform(context, node);
+		case Node::Content::AV2_TANC_DEFINITION:		return Definition().transform(context, node);
+		case Node::Content::AV2_TANC_PREFIX_OP:			return PrefixExpression().transform(context, node);
+		case Node::Content::AV2_TANC_INFIX_OP:			return InfixExpression().transform(context, node);
+		case Node::Content::AV2_TANC_POSTFIX_OP:		return PostfixExpression().transform(context, node);
+		case Node::Content::AV2_TANC_BRANCH:			return Branch().transform(context, node);
+		case Node::Content::AV2_TANC_INLINE_IF_ELSE:	return InlineIfElse().transform(context, node);
+		case Node::Content::AV2_TANC_LOOP:				return Loop().transform(context, node);
+		case Node::Content::AV2_TANC_INLINE_MINIMA:		return InlineAssembly().transform(context, node);
+		case Node::Content::AV2_TANC_ATTRIBUTE:			return Attribute().transform(context, node);
+	}
 }
 
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
