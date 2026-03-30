@@ -22,6 +22,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Variable;
 	struct Attribute;
 	struct Trait;
+	struct Property;
 
 	struct Implementation;
 
@@ -126,6 +127,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		using VariableRef	= Instance<Variable>;
 		using AttributeRef	= Instance<Attribute>;
 		using TraitRef		= Instance<Trait>;
+		using PropertyRef	= Instance<Property>;
 
 		using Instance		= Instance<Namespace>;
 
@@ -140,6 +142,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		VariableRef		variable;
 		AttributeRef	attribute;
 		TraitRef		trait;
+		PropertyRef		property;
 
 		Implementation::Instance	impl = impl.create();
 
@@ -160,6 +163,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
+		uint64							flags;
 		Definition						def;
 		Nullable<Core::BasicType>		basic;
 		Namespace::TypeRef				base;
@@ -198,17 +202,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Attribute: Labeled, Positioned {
-		enum class Target {
+		enum class Target: uint64 {
 			AV2_TAAT_EMPTY		= 0,
 			AV2_TAAT_STRUCT		= 1 << 0,
 			AV2_TAAT_ATTRIBUTE	= 1 << 1,
 			AV2_TAAT_VARIABLE	= 1 << 2,
 			AV2_TAAT_FUNCTION	= 1 << 3,
 			AV2_TAAT_PROPERTY	= 1 << 4,
-			AV2_TAAT_VALUE		= 1 << 5,
+			AV2_TAAT_NAMESPACE	= 1 << 5,
+			AV2_TAAT_EVERYTHING	= Makai::Limit::MAX<uint64>
 		};
 
-		Target target;
+		Target target	= Target::AV2_TAAT_EVERYTHING;
 		usize useCount;
 		usize globalMax;
 		usize localMax;
@@ -221,7 +226,28 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8Dictionary<Field> fields;
 
 		Functor<void(Namespace::Instance const&, Data::Value const&, Attribute&)> transform;
+
+		static bool matchesTarget(Namespace const& ns, Target const target);
 	};
+
+	struct Property:  Labeled, Positioned {
+		Namespace::TypeRef		type;
+		Namespace::Instance		scope;
+		Namespace::FunctionRef	getter;
+		Namespace::FunctionRef	setter;
+	};
+
+	constexpr Attribute::Target operator&(Attribute::Target const& a, Attribute::Target const& b) {
+		return Makai::Cast::as<Attribute::Target>(enumcast(a) & enumcast(b));
+	}
+
+	constexpr Attribute::Target operator|(Attribute::Target const& a, Attribute::Target const& b) {
+		return Makai::Cast::as<Attribute::Target>(enumcast(a) | enumcast(b));
+	}
+
+	constexpr Attribute::Target operator~(Attribute::Target const& a) {
+		return Makai::Cast::as<Attribute::Target>(~enumcast(a));
+	}
 
 	struct Trait: Labeled, Positioned {
 	};
@@ -240,6 +266,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		void pop(usize const count);
 		Namespace::Instance top() const;
 		Namespace::Instance parent() const;
+
+		void addGlobalAttribute(Namespace::AttributeRef const& attrib);
 
 		Intermediate();
 	};

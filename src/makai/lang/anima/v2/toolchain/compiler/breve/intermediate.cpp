@@ -140,11 +140,12 @@ Namespace::TypeRef TypeDecl::stronger(Namespace::TypeRef const& a, Namespace::Ty
 
 static Attribute::Target fromString(Makai::UTF8String const& name) {
 	if (name == "struct")	return Attribute::Target::AV2_TAAT_STRUCT;
-	if (name == "fn")		return Attribute::Target::AV2_TAAT_FUNCTION;
+	if (name == "func")		return Attribute::Target::AV2_TAAT_FUNCTION;
 	if (name == "prop")		return Attribute::Target::AV2_TAAT_PROPERTY;
-	if (name == "value")	return Attribute::Target::AV2_TAAT_VALUE;
+	if (name == "module")	return Attribute::Target::AV2_TAAT_NAMESPACE;
 	if (name == "var")		return Attribute::Target::AV2_TAAT_VARIABLE;
-	if (name == "attrib")	return Attribute::Target::AV2_TAAT_ATTRIBUTE;
+	if (name == "attr")		return Attribute::Target::AV2_TAAT_ATTRIBUTE;
+	if (name == "prop")		return Attribute::Target::AV2_TAAT_PROPERTY;
 	return Attribute::Target::AV2_TAAT_EMPTY;
 }
 
@@ -156,6 +157,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 	attrib->fields["target"]	= {DVK_STRING								};
 	attrib->fields["globalMax"]	= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
 	attrib->fields["localMax"]	= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
+	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
 		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
 			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
@@ -196,8 +198,145 @@ static Namespace::AttributeRef createMetaAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createOperatorAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Operator";
+	attrib->fields["prefix"]	= {DVK_STRING, ""	};
+	attrib->fields["infix"]		= {DVK_STRING, ""	};
+	attrib->fields["postfix"]	= {DVK_STRING, ""	};
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createNullableAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Nullable";
+	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_NULLABLE;
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createEmptyAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Empty";
+	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_EMPTY;
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createDynamicAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Dynamic";
+	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_DYNAMIC;
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createCopyAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Copy";
+	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_CLONABLE;
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createFinalAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Final";
+	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_FINAL;
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createBasicAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Basic";
+	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->fields["type"] = {DVK_STRING};
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_BASIC;
+		auto const bt = (v["type"].getString());
+		if (bt == "void")			ns->type->basic = AV2_BT_VOID;
+		else if (bt == "bool")		ns->type->basic = AV2_BT_BOOL;
+		else if (bt == "int8")		ns->type->basic = AV2_BT_INT8;
+		else if (bt == "uint8")		ns->type->basic = AV2_BT_UINT8;
+		else if (bt == "int16")		ns->type->basic = AV2_BT_INT16;
+		else if (bt == "uint16")	ns->type->basic = AV2_BT_UINT16;
+		else if (bt == "int32")		ns->type->basic = AV2_BT_INT32;
+		else if (bt == "uint32")	ns->type->basic = AV2_BT_UINT32;
+		else if (bt == "int64")		ns->type->basic = AV2_BT_INT64;
+		else if (bt == "uint64")	ns->type->basic = AV2_BT_UINT64;
+		else if (bt == "float32")	ns->type->basic = AV2_BT_REAL32;
+		else if (bt == "float64")	ns->type->basic = AV2_BT_REAL64;
+		else if (bt == "float128")	ns->type->basic = AV2_BT_REAL128;
+		else if (bt == "vector")	ns->type->basic = AV2_BT_VECTOR;
+		else if (bt == "bytes")		ns->type->basic = AV2_BT_BYTES;
+		else if (bt == "matrix")	ns->type->basic = AV2_BT_MATRIX;
+		else if (bt == "type")		ns->type->basic = AV2_BT_TYPEID;
+		else if (bt == "string")	ns->type->basic = AV2_BT_STRING;
+		else if (bt == "char")		ns->type->basic = AV2_BT_CHAR;
+		else if (bt == "any")		ns->type->basic = AV2_BT_ANY;
+		else if (bt == "null")		ns->type->basic = AV2_BT_NULL;
+	};
+	return attrib;
+}
+
+bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
+	using enum Lexer::CStyle::TokenStream::Token::Type;
+	if (target == Target::AV2_TAAT_EMPTY)
+		return false;
+	if (ns.variable && enumcast(target & Target::AV2_TAAT_VARIABLE))
+		return true;
+	if (ns.type && (ns.type->def == TypeDecl::Definition::AV2_TCTD_STRUCT) && enumcast(target & Target::AV2_TAAT_STRUCT))
+		return true;
+	if (ns.property && enumcast(target & Target::AV2_TAAT_PROPERTY ))
+		return true;
+	if (ns.function && enumcast(target & Target::AV2_TAAT_FUNCTION))
+		return true;
+	if (ns.isPureNamespace() && enumcast(target & Target::AV2_TAAT_NAMESPACE))
+		return true;
+	return false;
+}
+
+void Intermediate::addGlobalAttribute(Namespace::AttributeRef const& attrib) {
+	auto const scope = Namespace::Instance::create();
+	scope->name = attrib->name;
+	scope->attribute = attrib;
+	root->subspaces[attrib->name] = scope;
+}
+
 Intermediate::Intermediate() {
-	auto const attrib = Namespace::Instance::create();
-	attrib->attribute = createMetaAttribute();
-	root->subspaces["Attribute"] = attrib;
+	addGlobalAttribute(createMetaAttribute());
+	addGlobalAttribute(createOperatorAttribute());
+	addGlobalAttribute(createNullableAttribute());
+	addGlobalAttribute(createEmptyAttribute());
+	addGlobalAttribute(createDynamicAttribute());
+	addGlobalAttribute(createCopyAttribute());
+	addGlobalAttribute(createFinalAttribute());
 }

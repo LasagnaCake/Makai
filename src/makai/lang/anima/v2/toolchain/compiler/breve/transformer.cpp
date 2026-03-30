@@ -176,7 +176,9 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		Expression expr;
 	 	auto const result = expr.transform(context, node);
 		direct = result.direct;
+		var.defaulted = true;
 	}
+	var.value = direct;
 	context.pop(path.size());
 	return {{Makai::toString("move local[", parent->varc++, "]")}, scope, var.type, direct};
 }
@@ -352,6 +354,8 @@ void resolveEmptyAttribute(
 ) {
 	auto const [path, scope] = ATransformer::resolve(context, node, true);
 	if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
+	if (!Attribute::matchesTarget(*ns, scope->attribute->target))
+		context.error("Invalid attribute for given expression!", node);
 	if (attribs.contains(scope->attribute->name))
 		context.error("Reapplication of previous attribute!", node);
 	auto const attr = Metadata::Instance::create();
@@ -378,6 +382,8 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 	} else if (node->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const [path, scope] = ATransformer::resolve(context, node->leftSide, true);
 		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node->leftSide);
+		if (!Attribute::matchesTarget(*ns, scope->attribute->target))
+			context.error("Invalid attribute for given expression!", node);
 		if (attribs.contains(scope->attribute->name))
 			context.error("Reapplication of previous attribute!", node->leftSide);
 		auto const attr = Metadata::Instance::create();
