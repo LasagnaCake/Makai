@@ -173,7 +173,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("prefix", prefixes, new DynamicOperatorDeclResolver());
 	add("postfix", prefixes, new DynamicOperatorDeclResolver());
 	add("infix", prefixes, new DynamicOperatorDeclResolver());
-	add("main", prefixes, new MainBlockResolver());
 	add(LTS_TT_AT, prefixes, new AttributeResolver());
 	add("using", prefixes, new UsingResolver());
 	add("true", prefixes, new SpecialDirectResolver());

@@ -162,9 +162,9 @@ bool ATransformer::Result::isStackTop() const {
 }
 
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
-	auto [path, scope] = resolve(context, node);
+	auto [path, scope] = resolve(context, node->leftSide);
 	if (scope && scope->variable)
-		context.error("Redeclaration of variable with the given path!");
+		context.error("Redeclaration of variable with the given path!", node->leftSide);
 	auto const parent = context.top();
 	scope = context.declare(path);
 	auto& var = *(scope->variable = scope->variable.create());
@@ -181,6 +181,27 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	var.value = direct;
 	context.pop(path.size());
 	return {{Makai::toString("move local[", parent->varc++, "]")}, scope, var.type, direct};
+}
+
+ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
+	auto [name, scope] = resolve(context, node->rightSide);
+	if (!scope)
+		context.error("Requested symbol does not exist!", node->rightSide);
+	if (node->leftSide) {
+		auto const alias = context.pathOf(node->leftSide);
+		auto const tmp = context.declare(alias);
+		if (context.parent()->resolve(alias))
+			context.error("Symbol with this name already exists in the current scope!", node->leftSide);
+		context.parent()->subspaces[alias.back()] = scope;
+		context.pop(alias.size());
+	} else {
+		auto const tmp = context.declare(name.back());
+		if (context.parent()->subspaces.contains(tmp.back()))
+			context.error("Symbol with this name already exists in the current scope!", node->rightSide);
+		context.parent()->subspaces[name.back()] = scope;
+		context.pop(1);
+	}
+	return {.scope = scope};
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {

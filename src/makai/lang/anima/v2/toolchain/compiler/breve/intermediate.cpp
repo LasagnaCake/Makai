@@ -303,6 +303,7 @@ static Namespace::AttributeRef createBasicAttribute() {
 		else if (bt == "char")		ns->type->basic = AV2_BT_CHAR;
 		else if (bt == "any")		ns->type->basic = AV2_BT_ANY;
 		else if (bt == "null")		ns->type->basic = AV2_BT_NULL;
+		else Transformer::ATransformer::Context::error("Invalid basic type!", ns->node);
 	};
 	return attrib;
 }
@@ -339,4 +340,5 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createDynamicAttribute());
 	addGlobalAttribute(createCopyAttribute());
 	addGlobalAttribute(createFinalAttribute());
+	addGlobalAttribute(createBasicAttribute());
 }

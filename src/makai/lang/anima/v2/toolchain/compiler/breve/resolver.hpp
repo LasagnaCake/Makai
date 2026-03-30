@@ -179,12 +179,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct MainBlockResolver: AResolver {
-		MainBlockResolver(): AResolver() {}
-		virtual ~MainBlockResolver() {}
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
 	struct UsingResolver: AResolver {
 		UsingResolver(): AResolver() {}
 		virtual ~UsingResolver() {}

@@ -82,7 +82,7 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		template <Makai::Type::Equal<TypeID> T>
-		T toValue() const {);
+		T toValue() const {
 			if (!isTypeID())
 				invalidCastError<T>("Mismatched types");
 			return *ref<TypeID>(content->data());

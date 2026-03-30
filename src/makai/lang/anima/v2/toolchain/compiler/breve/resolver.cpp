@@ -403,9 +403,15 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftS
 
 Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
-	result->content = Node::Content::AV2_TANC_DECLARATION;
+	result->content = Node::Content::AV2_TANC_ALIAS;
 	result->base = token;
-	// TODO: This
+	auto const decl = parser.nextExpression();
+	if (decl->content == Node::Content::AV2_TANC_PATH) {
+		result->rightSide = decl;
+	} else if (decl->content == Node::Content::AV2_TANC_ASSIGNMENT) {
+		result->leftSide = decl->leftSide;
+		result->rightSide = decl->rightSide;
+	} else parser.context.error("Invalid alias expression!");
 	return result;
 }
 
@@ -427,16 +433,6 @@ Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance c
 			result->content = Node::Content::AV2_TANC_POSTFIX_OP;
 		}
 	}
-	return result;
-}
-
-Node::Instance MainBlockResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	Node::Instance result = Node::Instance::create();
-	result->base = token;
-	result->leftSide = parser.nextExpression();
-	result->content = Node::Content::AV2_TANC_BLOCK;
-	if (!(result->leftSide && result->leftSide->isBlock()))
-		parser.context.error("Expected block expression here!");
 	return result;
 }
 
