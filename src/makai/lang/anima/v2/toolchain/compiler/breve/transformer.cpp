@@ -173,7 +173,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	var.type = t.transform(context, node->middle).type;
 	if (node->rightSide) {
 		Expression expr;
-	 	expr.transform(context, node);
+	 	auto const result = expr.transform(context, node);
 	}
 	context.pop(path.size());
 	return {{Makai::toString("move local[", parent->varc++, "]")}, scope, var.type};
@@ -241,7 +241,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	||	node->base.text == "typeof"
 	) {
 		context.top()->impl->writeMainLine(node->base.text.sliced(0, -3));
-		return {{"move stack[-0]"}, val.scope, context.basicType("uint64")};
+		return {{"move stack[-0]"}, val.scope, node->base.text == "typeof" ? context.basicType("type") : context.basicType("uint64")};
 	}
 	if (val.type->basic) {
 		context.top()->impl->writeMainLine("op", bopName(context, node));

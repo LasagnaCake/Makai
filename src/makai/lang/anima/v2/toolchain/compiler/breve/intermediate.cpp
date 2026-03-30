@@ -165,7 +165,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 		attrib->globalMax	= v.fetch<uint64>("globalMax", Makai::Limit::MAX<uint64>);
 		for (auto const& [name, field]: ns->subspaces) {
 			if (!field->variable)
-				Transformer::ATransformer::Context::error("Expected variable declaration here!", field->node);
+				continue;
 			auto const& var = field->variable;
 			if (!var->type->basic)
 				Transformer::ATransformer::Context::error("Variable type must be a basic type!", var->node);

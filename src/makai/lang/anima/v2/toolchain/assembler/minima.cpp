@@ -982,6 +982,7 @@ static void declareType(Context& context) {
 				else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
 				else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
 				else if (basic == "mat")	type->basic = BasicType::AV2_BT_MATRIX;
+				else if (basic == "type")	type->basic = BasicType::AV2_BT_TYPEID;
 				else context.error("Invalid basic type!");
 				context.expectNext(Type{'>'});
 			}

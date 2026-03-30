@@ -81,6 +81,13 @@ namespace Makai::Anima::V2::Core {
 			return *ref<Matrix4x4>(content->data());
 		}
 
+		template <Makai::Type::Equal<TypeID> T>
+		T toValue() const {);
+			if (!isTypeID())
+				invalidCastError<T>("Mismatched types");
+			return *ref<TypeID>(content->data());
+		}
+
 		template <ARTType T>
 		T toValue() const {
 			if (sizeof(T) != type->byteSize)
@@ -183,6 +190,12 @@ namespace Makai::Anima::V2::Core {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_MATRIX);
+		}
+
+		bool isTypeID() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_TYPEID);
 		}
 
 		bool isCharacter() const {

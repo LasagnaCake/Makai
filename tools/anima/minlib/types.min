@@ -19,6 +19,9 @@
 @type Real128 [basic<f128> derived<Any>]
 @type String [basic<str> derived<Any> nil]
 @type Bytes [basic<bin> derived<Any> nil]
+@type Vector [basic<vec> derived<Any>]
+@type Matrix [basic<mat> derived<Any>]
+@type Type [basic<type> derived<Any>]
 @type AnyArray [array<Any> nil]
 @type BoolArray [array<Bool> nil]
 @type IntArray [array<Int> nil]
@@ -41,3 +44,6 @@
 @alias bin:		Internal.Bytes
 @alias obj:		Internal.Object
 @alias arr:		Internal.AnyArray
+@alias vec:		Internal.Vector
+@alias mat:		Internal.Matrix
+@alias type:	Internal.Type

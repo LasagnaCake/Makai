@@ -7,10 +7,6 @@
 #include "database.hpp"
 
 namespace Makai::Anima::V2::Core::Meta {
-	struct Void	{};
-
-	struct Any	{};
-
 	namespace Impl {
 		template <class T>
 		concept ValidType = requires {
@@ -181,6 +177,18 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 
 			static Object::Storage convert(Database<Definition>& db, Matrix4x4 const& value) {
+				return Object::create(value, db.byName(ART_NAME).front());
+			}
+		};
+
+		template<> struct ARTTI<TypeID> {
+			constexpr static scstring ART_NAME = "type";
+
+			static TypeID construct(Object const& value) {
+				return value.toValue<TypeID>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, TypeID const& value) {
 				return Object::create(value, db.byName(ART_NAME).front());
 			}
 		};

@@ -41,6 +41,14 @@ namespace Makai::Anima::V2::Core {
 			return sym;
 		}
 	};
+
+	struct Void {};
+
+	struct Any {};
+
+	struct TypeID {
+		uint64 id;
+	};
 }
 
 #endif

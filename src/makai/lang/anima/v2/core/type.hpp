@@ -62,6 +62,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_REAL32,
 		AV2_BT_REAL64,
 		AV2_BT_REAL128,
+		AV2_BT_TYPEID,
 		AV2_BT_VECTOR,
 		AV2_BT_MATRIX,
 		AV2_BT_STRING,
@@ -100,6 +101,10 @@ namespace Makai::Anima::V2::Core {
 		||	bt == BasicType::AV2_BT_REAL64
 		||	bt == BasicType::AV2_BT_REAL128
 		);
+	}
+
+	constexpr bool isTypeID(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_TYPEID);
 	}
 
 	constexpr bool isNumber(BasicType const bt) {
