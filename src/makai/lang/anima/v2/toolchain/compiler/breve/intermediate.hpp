@@ -128,7 +128,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Instance> subspaces;
 
-		Dictionary<Metadata::Instance> meta;
+		UTF8Dictionary<Metadata::Instance> meta;
 
 		TypeRef			type;
 		FunctionRef		function;
@@ -209,7 +209,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Data::Value			defaultValue;
 		};
 
-		Dictionary<Makai::Data::Value::Kind> fields;
+		UTF8Dictionary<Field> fields;
 	};
 
 	struct Trait: Labeled {
