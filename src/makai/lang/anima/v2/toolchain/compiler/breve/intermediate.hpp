@@ -219,7 +219,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Field> fields;
 
-		Functor<void(Namespace::Instance const&, Data::Value const&)> transform;
+		Functor<void(Namespace::Instance const&, Data::Value const&, Attribute&)> transform;
 	};
 
 	struct Trait: Labeled, Positioned {
@@ -239,6 +239,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		void pop(usize const count);
 		Namespace::Instance top() const;
 		Namespace::Instance parent() const;
+
+		Intermediate();
 	};
 }
 

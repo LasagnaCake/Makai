@@ -339,7 +339,8 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 void resolveEmptyAttribute(
 	ATransformer::Context& context,
 	Node::Instance const& node,
-	Makai::Dictionary<Metadata::Instance>& attribs
+	Makai::Dictionary<Metadata::Instance>& attribs,
+	Namespace::Instance const& ns
 ) {
 	auto const [path, scope] = ATransformer::resolve(context, node, true);
 	if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
@@ -355,85 +356,17 @@ void resolveEmptyAttribute(
 		else attr->value[name] = field.defaultValue;
 	if (missing.size())
 		context.error("Required attributes [" + missing.join(",") + "] missing!", node);
+	scope->attribute->transform(ns, attr->value, *attr->attribute);
 }
 
-Makai::Data::Value::Kind asValueType() {
-
-}
-
-static Namespace::AttributeRef createMetaAttribute(ATransformer::Context& ctx) {
-	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Attribute";
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v) {
-		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
-			ATransformer::Context::error("Expected structure here!", ns->node);
-		auto const attrib = Namespace::AttributeRef::create();
-		for (auto const& [name, field]: ns->subspaces) {
-			if (!field->variable)
-				ATransformer::Context::error("Expected variable declaration here!", field->node);
-			auto const& var = field->variable;
-			if (!var->type->basic)
-				ATransformer::Context::error("Variable type must be a basic type!", var->node);
-			if (var->defaulted && !var->value)
-				ATransformer::Context::error("Attribute field defaults must have constant values!", var->node);
-			if (attrib->fields.contains(name))
-				ATransformer::Context::error("Redeclaration of previously-declared field!", var->node);
-			Makai::Data::Value::Kind kind;
-			switch (*var->type->basic) {
-				using enum Makai::Data::Value::Kind;
-				using enum Core::BasicType;
-				case AV2_BT_STRING: kind = DVK_STRING;
-				case AV2_BT_INT8:
-				case AV2_BT_INT16:
-				case AV2_BT_INT32:
-				case AV2_BT_INT64: kind = DVK_SIGNED;
-				case AV2_BT_UINT8:
-				case AV2_BT_UINT16:
-				case AV2_BT_UINT32:
-				case AV2_BT_UINT64: kind = DVK_UNSIGNED;
-				case AV2_BT_REAL32:
-				case AV2_BT_REAL64:
-				case AV2_BT_REAL128: kind = DVK_REAL;
-				default: ATransformer::Context::error("Invalid basic type for attribute!", var->node);
-			}
-			attrib->fields[name] = {kind, var->value};
-		}
-	};
-	return attrib;
-}
-
-static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Context& context, Node::Instance const& node) {
-	Makai::Dictionary<Metadata::Instance> attribs;
-	if (node->content == Node::Content::AV2_TANC_NAME) {
-		if (node->value.getString() == "Attribute") {
-			if (!node->rightSide)
-				context.error("Expected expression after this attribute!", node);
-			if (!(
-				node->rightSide->content == Node::Content::AV2_TANC_DECLARATION
-			&&	node->rightSide->base.text == "struct"
-			)) context.error("Expected struct declaration here!", node->rightSide);
-			auto const attrib = Namespace::AttributeRef::create();
-			auto const name = context.pathOf(node->rightSide->leftSide);
-			auto const type = context.pathOf(node->rightSide->middle);
-			auto const decl = node->rightSide->rightSide;
-			for (auto const& field: decl->children) {
-				if (!field->isVariableDeclaration())
-					context.error("Expected attribute field here!", field);
-				if (name.size() > 1)
-					context.error("Attributes cannot have sub-fields!", field->leftSide);
-				if (attrib->fields.contains(name.back()))
-					context.error("Redeclaration of previous field!", field->leftSide);
-				if (type.size() > 1)
-					context.error("Attribute fields can only be basic types!", field->middle);
-				if (decl->content != Node::Content::AV2_TANC_VALUE)
-					context.error("Attribute fields can only accept constants!", decl);
-				attrib->fields = {
-
-				};
-			}
-		} else resolveEmptyAttribute(context, node, attribs);
-	} else if (node->content == Node::Content::AV2_TANC_PATH) {
-		resolveEmptyAttribute(context, node, attribs);
+static Makai::Dictionary<Metadata::Instance> resolveAttribute(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Namespace::Instance const& ns,
+	Makai::Dictionary<Metadata::Instance>& attribs
+) {
+	if (node->isPathOrName()) {
+		resolveEmptyAttribute(context, node, attribs, ns);
 	} else if (node->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const [path, scope] = ATransformer::resolve(context, node->leftSide, true);
 		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node->leftSide);
@@ -469,9 +402,10 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 			else if (attr->value[name].type() != desc.type)
 				context.error("Attribute field mismatch!", node);
 		attribs[scope->attribute->name] = attr;
+		attr->attribute->transform(ns, attr->value, *attr->attribute);
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
 		for (auto const& attrib: node->children) {
-			auto const attrs = resolveAttribute(context, attrib);
+			auto const attrs = resolveAttribute(context, attrib, ns, attribs);
 			if (attribs.contains(attrs.keys()))
 				context.error("Reapplication of previous attributes [" + attribs.match(attrs.keys()).join(",") + "]!", node);
 			attribs.append(attrs);
@@ -481,9 +415,10 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 }
 
 ATransformer::Result AttributeExpression::transform(Context& context, Node::Instance const& node) {
-	Makai::Dictionary<Metadata::Instance> attributes = resolveAttribute(context, node->leftSide);
 	auto const expr = Expression().transform(context, node->rightSide);
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
+	Makai::Dictionary<Metadata::Instance> attributes;
+		resolveAttribute(context, node->leftSide, expr.scope, attributes);
 	if (expr.scope->meta.contains(attributes.keys()))
 		context.error("Reapplication of previous attributes [" + attributes.match(expr.scope->meta.keys()).join(",") + "]!", node->rightSide);
 	if (attributes.contains("Attribute"))

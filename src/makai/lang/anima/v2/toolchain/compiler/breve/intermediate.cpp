@@ -1,4 +1,5 @@
 #include "intermediate.hpp"
+#include "transformer.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -135,4 +136,68 @@ Namespace::TypeRef TypeDecl::stronger(Namespace::TypeRef const& a, Namespace::Ty
 			return Core::isString(at) ? a : b;
 	}
 	return nullptr;
+}
+
+static Attribute::Target fromString(Makai::UTF8String const& name) {
+	if (name == "struct")	return Attribute::Target::AV2_TAAT_STRUCT;
+	if (name == "fn")		return Attribute::Target::AV2_TAAT_FUNCTION;
+	if (name == "prop")		return Attribute::Target::AV2_TAAT_PROPERTY;
+	if (name == "value")	return Attribute::Target::AV2_TAAT_VALUE;
+	if (name == "var")		return Attribute::Target::AV2_TAAT_VARIABLE;
+	if (name == "attrib")	return Attribute::Target::AV2_TAAT_ATTRIBUTE;
+	return Attribute::Target::AV2_TAAT_EMPTY;
+}
+
+static Namespace::AttributeRef createMetaAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Attribute";
+	attrib->fields["target"]	= {DVK_STRING								};
+	attrib->fields["globalMax"]	= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
+	attrib->fields["localMax"]	= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
+			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
+		auto const attrib = Namespace::AttributeRef::create();
+		attrib->target		= fromString(v.fetch<Makai::UTF8String>("target", "fn"));
+		attrib->localMax	= v.fetch<uint64>("localMax", Makai::Limit::MAX<uint64>);
+		attrib->globalMax	= v.fetch<uint64>("globalMax", Makai::Limit::MAX<uint64>);
+		for (auto const& [name, field]: ns->subspaces) {
+			if (!field->variable)
+				Transformer::ATransformer::Context::error("Expected variable declaration here!", field->node);
+			auto const& var = field->variable;
+			if (!var->type->basic)
+				Transformer::ATransformer::Context::error("Variable type must be a basic type!", var->node);
+			if (var->defaulted && !var->value)
+				Transformer::ATransformer::Context::error("Attribute field defaults must have constant values!", var->node);
+			if (attrib->fields.contains(name))
+				Transformer::ATransformer::Context::error("Redeclaration of previously-declared field!", var->node);
+			Makai::Data::Value::Kind kind;
+			switch (*var->type->basic) {
+				case AV2_BT_STRING: kind = DVK_STRING;
+				case AV2_BT_INT8:
+				case AV2_BT_INT16:
+				case AV2_BT_INT32:
+				case AV2_BT_INT64: kind = DVK_SIGNED;
+				case AV2_BT_UINT8:
+				case AV2_BT_UINT16:
+				case AV2_BT_UINT32:
+				case AV2_BT_UINT64: kind = DVK_UNSIGNED;
+				case AV2_BT_REAL32:
+				case AV2_BT_REAL64:
+				case AV2_BT_REAL128: kind = DVK_REAL;
+				default: Transformer::ATransformer::Context::error("Invalid basic type for attribute!", var->node);
+			}
+			attrib->fields[name] = {kind, var->value};
+		}
+		ns->attribute = attrib;
+	};
+	return attrib;
+}
+
+Intermediate::Intermediate() {
+	auto const attrib = Namespace::Instance::create();
+	attrib->attribute = createMetaAttribute();
+	root->subspaces["Attribute"] = attrib;
 }
