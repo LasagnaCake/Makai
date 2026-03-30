@@ -79,6 +79,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
+	struct AttributeDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
 	struct Declaration: ATransformer {
 		bool pathed = true;
 		Result transform(Context& context, Node::Instance const& node) override;

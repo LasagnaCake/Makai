@@ -56,6 +56,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			return content == Content::AV2_TANC_DECLARATION || content == Content::AV2_TANC_BLOCK;
 		}
 
+		constexpr bool isVariableDeclaration() const {
+			return content == Content::AV2_TANC_ASSIGNMENT || (
+				content == Content::AV2_TANC_DECLARATION
+			&&	(
+					base.type == As<decltype(base.type)>(':')
+				||	base.type == As<decltype(base.type)>::LTS_TT_DECLARE
+				)
+			);
+		}
+
 		constexpr bool isBlock() const {
 			return content == Content::AV2_TANC_BLOCK;
 		}

@@ -317,13 +317,17 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 	result->base = token;
 	result->leftSide = leftSide;
 	if (token.type == LTS_TT_ASSIGN)
-		result->children.pushBack(parser.nextExpression());
+		result->rightSide = parser.nextExpression();
+	else if (token.type == LTS_TT_DECLARE)
+		result->rightSide = parser.nextExpression();
 	else {
 		auto const v = parser.nextExpression(precedence);
 		if (v->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 			result->middle = v->leftSide;
 			result->rightSide = v->rightSide;
-		}
+		} else if (v->isPathOrName()) {
+			result->middle = v;
+		} else parser.context.error("Expected type or assignment here!");
 	}
 	DEBUGLN("VariableDecl:DONE!");
 	return result;

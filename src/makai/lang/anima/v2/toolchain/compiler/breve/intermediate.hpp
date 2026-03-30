@@ -3,12 +3,17 @@
 
 #include "../../assembler/assembler.hpp"
 #include "../../../core/core.hpp"
+#include "node.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Intermediate;
 
 	struct Labeled {
 		UTF8String name;
+	};
+
+	struct Positioned {
+		Instance<Node> node;
 	};
 
 	struct Namespace;
@@ -115,7 +120,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value			value;
 	};
 
-	struct Namespace: Labeled, IComposable {
+	struct Namespace: Labeled, Positioned, IComposable {
 		using TypeRef		= Instance<TypeDecl>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -165,7 +170,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool derivedFrom(Namespace::TypeRef const& otherType) const;
 	};
 
-	struct Function: Labeled {
+	struct Function: Labeled, Positioned {
 		struct Overload {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
@@ -183,13 +188,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		OverloadRef overload(List<Namespace::TypeRef> const& args) const;
 	};
 
-	struct Variable: Labeled {
+	struct Variable: Labeled, Positioned {
 		Namespace::TypeRef	type;
 		Namespace::Instance	scope;
 		UTF8String			source;
+		Data::Value			value;
+		bool				defaulted;
 	};
 
-	struct Attribute: Labeled {
+	struct Attribute: Labeled, Positioned {
 		enum class Target {
 			AV2_TAAT_EMPTY		= 0,
 			AV2_TAAT_STRUCT		= 1 << 0,
@@ -199,6 +206,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TAAT_PROPERTY	= 1 << 4,
 			AV2_TAAT_VALUE		= 1 << 5,
 		};
+
 		Target target;
 		usize useCount;
 		usize globalMax;
@@ -210,9 +218,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		};
 
 		UTF8Dictionary<Field> fields;
+
+		Functor<void(Namespace::Instance const&, Data::Value const&)> transform;
 	};
 
-	struct Trait: Labeled {
+	struct Trait: Labeled, Positioned {
 	};
 
 	struct Intermediate: IWritable {
