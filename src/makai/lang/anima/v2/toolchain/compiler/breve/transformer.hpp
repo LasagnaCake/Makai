@@ -77,6 +77,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
+	struct Declaration: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Assignment: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
 	struct Expression: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
@@ -85,7 +94,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
-	struct BinaryExpression: ATransformer {
+	struct InfixExpression: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
@@ -114,6 +123,34 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct SubExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Call: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Definition: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Branch: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct InlineIfElse: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Loop: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct InlineAssembly: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Attribute: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }
