@@ -248,14 +248,11 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
 	auto const v = node->value.toString();
-	if (node->value.isString())		return {{v			}, nullptr,	context.basicType("string")		};
-	if (node->value.isUnsigned())	return {{v			}, nullptr,	context.basicType("uint64")		};
-	if (node->value.isSigned())		return {{v			}, nullptr,	context.basicType("int64")		};
-	if (node->value.isReal())		return {{v			}, nullptr,	context.basicType("float64")	};
-	if (node->value.isBytes())		return {{"bin:" + v	}, nullptr,	context.basicType("bytes")		};
-	if (node->value.isVector())		return {{"vec:" + v	}, nullptr,	context.basicType("vector")		};
-	if (node->value.isMatrix())		return {{"mat:" + v	}, nullptr,	context.basicType("matrix")		};
-	context.error("Invalid constant", node);
+	if (node->value.isString())		return {{v}, nullptr,	context.basicType("string")		};
+	if (node->value.isUnsigned())	return {{v}, nullptr,	context.basicType("uint64")		};
+	if (node->value.isSigned())		return {{v}, nullptr,	context.basicType("int64")		};
+	if (node->value.isReal())		return {{v}, nullptr,	context.basicType("float64")	};
+	context.error("Invalid constant!", node);
 }
 
 
