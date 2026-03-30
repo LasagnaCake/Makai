@@ -353,7 +353,7 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 		if (attribs.contains(scope->attribute->name))
 			context.error("Reapplication of previous attribute!", node->leftSide);
 		auto const attr = Metadata::Instance::create();
-		attribs[scope->attribute->name] = attr;
+		attr->attribute = scope->attribute;
 		for (auto const& at: node->leftSide->children) {
 			if (!at)
 				context.error("Invalid attribute field!", at);
@@ -370,9 +370,18 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 			))
 				context.error("Expected constant (or name) here!", at->rightSide);
 			auto const value = at->rightSide->value;
+			if (!attr->attribute->fields.contains(name))
+				context.error("Field does not exist for given attribute!", at);
 			attr->value[name] = value;
 		}
-		attr->attribute = scope->attribute;
+		for (auto const& [name, desc]: attr->attribute->fields)
+			if (!desc.defaultValue && !attr->value.contains(name))
+				context.error("Required field does not exist!", node);
+			else if (desc.defaultValue && !attr->value.contains(name))
+				attr->value[name] = desc.defaultValue;
+			else if (attr->value[name].type() != desc.type)
+				context.error("Attribute field mismatch!", node);
+		attribs[scope->attribute->name] = attr;
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
 		for (auto const& attrib: node->children) {
 			auto const attrs = resolveAttribute(context, attrib);
