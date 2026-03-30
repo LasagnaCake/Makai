@@ -108,6 +108,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8String toString() const {return pre + main + post;}
 	};
 
+	struct Metadata {
+		using Instance = Instance<Metadata>;
+
+		Makai::Instance<Attribute>	attribute;
+		Makai::Data::Value			value;
+	};
+
 	struct Namespace: Labeled, IComposable {
 		using TypeRef		= Instance<TypeDecl>;
 		using FunctionRef	= Instance<Function>;
@@ -121,13 +128,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Instance> subspaces;
 
+		Dictionary<Metadata::Instance> meta;
+
 		TypeRef			type;
 		FunctionRef		function;
 		VariableRef		variable;
 		AttributeRef	attribute;
 		TraitRef		trait;
 
-		Implementation::Instance	impl;
+		Implementation::Instance	impl = impl.create();
 
 		Instance resolve(UTF8StringList const& path) const;
 
@@ -146,10 +155,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		Definition					def;
-		Nullable<Core::BasicType>	basic;
-		Namespace::TypeRef			base;
-		Namespace::Instance			scope;
+		Definition						def;
+		Nullable<Core::BasicType>		basic;
+		Namespace::TypeRef				base;
+		Namespace::Instance				scope;
 
 		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
 
@@ -161,13 +170,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
 			Namespace::Instance				scope;
+			UTF8String						entry;
 			UTF8String prototype() const;
 		};
 		using OverloadRef = Instance<Overload>;
 
 		List<OverloadRef> overloads;
 
+		using ArgTypes = List<Namespace::TypeRef>;
+
 		OverloadRef overload(List<Namespace::VariableRef> const& args) const;
+		OverloadRef overload(List<Namespace::TypeRef> const& args) const;
 	};
 
 	struct Variable: Labeled {
