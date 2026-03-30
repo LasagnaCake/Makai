@@ -324,7 +324,11 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_INLINE_IF_ELSE:	return InlineIfElse().transform(context, node);
 		case Node::Content::AV2_TANC_LOOP:				return Loop().transform(context, node);
 		case Node::Content::AV2_TANC_INLINE_MINIMA:		return InlineAssembly().transform(context, node);
-		case Node::Content::AV2_TANC_ATTRIBUTE:			return Attribute().transform(context, node);
+		case Node::Content::AV2_TANC_ATTRIBUTE:			return AttributeExpression().transform(context, node);
+		case Node::Content::AV2_TANC_NAME: {
+
+		}
+		default: context.error("Unsupported expression!", node);
 	}
 }
 
@@ -332,6 +336,57 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 	auto const t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
 	return {.type = t};
+}
+
+static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Context& context, Node::Instance const& node) {
+	Makai::Dictionary<Metadata::Instance> attribs;
+	if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
+		auto const [path, scope] = ATransformer::resolve(context, node, true);
+		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
+		if (attribs.contains(scope->attribute->name))
+			context.error("Reapplication of previous attribute!", node);
+		auto const attr = Metadata::Instance::create();
+		attribs[scope->attribute->name] = attr;
+		attr->attribute = scope->attribute;
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
+		auto const [path, scope] = ATransformer::resolve(context, node->leftSide, true);
+		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node->leftSide);
+		if (attribs.contains(scope->attribute->name))
+			context.error("Reapplication of previous attribute!", node->leftSide);
+		auto const attr = Metadata::Instance::create();
+		attribs[scope->attribute->name] = attr;
+		attr->attribute = scope->attribute;
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_ARRAY) {
+		for (auto const& attrib: node->leftSide->children) {
+			auto const attrs = resolveAttribute(context, attrib);
+			if (attribs.contains(attrs.keys()))
+				context.error("Reapplication of previous attributes [" + attribs.match(attrs.keys()).join(",") + "]!", node);
+			attribs.append(attrs);
+		}
+	}
+	return attribs;
+}
+
+ATransformer::Result AttributeExpression::transform(Context& context, Node::Instance const& node) {
+	Makai::Dictionary<Metadata::Instance> attributes;
+	if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
+		auto const [path, scope] = resolve(context, node);
+		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_ARRAY) {
+		for (auto const& attrib: node->leftSide->children) {
+			auto const [path, scope] = resolve(context, attrib);
+			if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
+		}
+	}
+	auto const expr = Expression().transform(context, node->rightSide);
+	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
+	if (expr.scope->meta.contains(attributes.keys()))
+		context.error("Reapplication of previous attributes [" + attributes.match(expr.scope->meta.keys()).join(",") + "]!", node->rightSide);
+	if (attributes.contains("Attribute"))
+		if (!expr.scope->type) context.error("Expected structure here!", node->rightSide);
+	expr.scope->meta.append(attributes);
 }
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {

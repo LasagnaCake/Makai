@@ -203,6 +203,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		usize useCount;
 		usize globalMax;
 		usize localMax;
+
+		struct Field {
+			Data::Value::Kind	type;
+			Data::Value			defaultValue;
+		};
+
+		Dictionary<Makai::Data::Value::Kind> fields;
 	};
 
 	struct Trait: Labeled {

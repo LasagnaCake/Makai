@@ -270,6 +270,7 @@ Node::Instance AttributeResolver::resolve(Parser& parser, Node::Instance const& 
 	if (!(
 		result->leftSide->isPathOrName()
 	||	result->leftSide->content == Node::Content::AV2_TANC_ARRAY
+	||	result->leftSide->content == Node::Content::AV2_TANC_FN_CALL
 	)) parser.context.error("Expected single-attribute or attribute list here!");
 	result->rightSide = parser.nextExpression();
 	return result;
