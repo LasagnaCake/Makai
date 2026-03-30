@@ -200,16 +200,14 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	auto const scope = context.declare(UTF8StringList::from("<>" + node->name()));
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
-	context.pop(1);
 	return result;
 }
 
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	auto const scope = context.declare(UTF8StringList::from("<>" + node->name()));
+	auto const scope = context.declare(UTF8StringList::from("::" + node->name()));
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
 	context.pop(1);
@@ -340,8 +338,8 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 
 static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Context& context, Node::Instance const& node) {
 	Makai::Dictionary<Metadata::Instance> attribs;
-	if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
-	} else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
+	if (node->content == Node::Content::AV2_TANC_NAME) {
+	} else if (node->content == Node::Content::AV2_TANC_PATH) {
 		auto const [path, scope] = ATransformer::resolve(context, node, true);
 		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
 		if (attribs.contains(scope->attribute->name))
@@ -349,16 +347,32 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 		auto const attr = Metadata::Instance::create();
 		attribs[scope->attribute->name] = attr;
 		attr->attribute = scope->attribute;
-	} else if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
+	} else if (node->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const [path, scope] = ATransformer::resolve(context, node->leftSide, true);
 		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node->leftSide);
 		if (attribs.contains(scope->attribute->name))
 			context.error("Reapplication of previous attribute!", node->leftSide);
 		auto const attr = Metadata::Instance::create();
 		attribs[scope->attribute->name] = attr;
+		auto const attribv = context.declare(Makai::UTF8StringList::from("::Attribute::Value" + node->leftSide->name()));
+		for (auto const& at: node->leftSide->children) {
+			if (!at)
+				context.error("Invalid attribute field!", at);
+			if (at->content != Node::Content::AV2_TANC_ASSIGNMENT)
+				context.error("Invalid attribute field value!", at);
+			if (at->leftSide->content != Node::Content::AV2_TANC_NAME)
+				context.error("Expected name here!", at->leftSide);
+			auto const name = node->leftSide->value.getString();
+			if (!(
+				at->rightSide->content == Node::Content::AV2_TANC_VALUE
+			||	at->rightSide->content == Node::Content::AV2_TANC_NAME
+			))
+				context.error("Expected constant (or name) here!", at->rightSide);
+			auto const value = node->rightSide->value;
+		}
 		attr->attribute = scope->attribute;
-	} else if (node->leftSide->content == Node::Content::AV2_TANC_ARRAY) {
-		for (auto const& attrib: node->leftSide->children) {
+	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
+		for (auto const& attrib: node->children) {
 			auto const attrs = resolveAttribute(context, attrib);
 			if (attribs.contains(attrs.keys()))
 				context.error("Reapplication of previous attributes [" + attribs.match(attrs.keys()).join(",") + "]!", node);
@@ -369,17 +383,7 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 }
 
 ATransformer::Result AttributeExpression::transform(Context& context, Node::Instance const& node) {
-	Makai::Dictionary<Metadata::Instance> attributes;
-	if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
-	} else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
-		auto const [path, scope] = resolve(context, node);
-		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
-	} else if (node->leftSide->content == Node::Content::AV2_TANC_ARRAY) {
-		for (auto const& attrib: node->leftSide->children) {
-			auto const [path, scope] = resolve(context, attrib);
-			if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
-		}
-	}
+	Makai::Dictionary<Metadata::Instance> attributes = resolveAttribute(context, node->leftSide);
 	auto const expr = Expression().transform(context, node->rightSide);
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
 	if (expr.scope->meta.contains(attributes.keys()))
