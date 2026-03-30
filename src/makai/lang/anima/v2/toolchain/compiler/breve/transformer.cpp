@@ -354,7 +354,6 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 			context.error("Reapplication of previous attribute!", node->leftSide);
 		auto const attr = Metadata::Instance::create();
 		attribs[scope->attribute->name] = attr;
-		auto const attribv = context.declare(Makai::UTF8StringList::from("::Attribute::Value" + node->leftSide->name()));
 		for (auto const& at: node->leftSide->children) {
 			if (!at)
 				context.error("Invalid attribute field!", at);
@@ -362,13 +361,16 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(ATransformer::Cont
 				context.error("Invalid attribute field value!", at);
 			if (at->leftSide->content != Node::Content::AV2_TANC_NAME)
 				context.error("Expected name here!", at->leftSide);
-			auto const name = node->leftSide->value.getString();
+			auto const name = at->leftSide->value.getString();
+			if (attr->value.contains(name))
+				context.error("Redeclaration of previously-declared field!", at->leftSide);
 			if (!(
 				at->rightSide->content == Node::Content::AV2_TANC_VALUE
 			||	at->rightSide->content == Node::Content::AV2_TANC_NAME
 			))
 				context.error("Expected constant (or name) here!", at->rightSide);
-			auto const value = node->rightSide->value;
+			auto const value = at->rightSide->value;
+			attr->value[name] = value;
 		}
 		attr->attribute = scope->attribute;
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
