@@ -1,4 +1,16 @@
 #include "transformer.hpp"
+#include "intermediate.hpp"
+#include "makai/lang/anima/v2/core/type.hpp"
+#include "resolver.hpp"
+
+/*
+
+[MikuTeto]
+¡O¡   ▼O⧨
+/|\   /|\
+/ \   / \
+
+ */
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -174,8 +186,11 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	Makai::Data::Value direct;
 	if (node->rightSide) {
 		Expression expr;
+		auto const tmp = context.declare(UTF8StringList::from("<>" + node->name()));
 	 	auto const result = expr.transform(context, node);
+		context.pop(1);
 		direct = result.direct;
+		var.initializer = tmp;
 		var.defaulted = true;
 	}
 	var.value = direct;
@@ -195,8 +210,8 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 		context.parent()->subspaces[alias.back()] = scope;
 		context.pop(alias.size());
 	} else {
-		auto const tmp = context.declare(name.back());
-		if (context.parent()->subspaces.contains(tmp.back()))
+		auto const tmp = context.declare(UTF8StringList::from(name.back()));
+		if (context.parent()->subspaces.contains(name.back()))
 			context.error("Symbol with this name already exists in the current scope!", node->rightSide);
 		context.parent()->subspaces[name.back()] = scope;
 		context.pop(1);
@@ -205,7 +220,26 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
-	// TODO: This
+	auto [name, scope] = resolve(context, node->leftSide);
+	if (scope->type)
+		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
+	auto& type = *(scope->type = scope->type.create());
+	auto const initer = name.join("_") + node->name();
+	auto const initScope = context.declare(UTF8StringList::from("<>" + initer));
+	Block().transform(context, node->rightSide);
+	type.scope = initScope;
+	List<Namespace::VariableRef> defaulted;
+	List<Namespace::VariableRef> statics;
+	scope->type->flags |= Core::Definition::Flags::AV2_DF_STRUCTURE;
+	for (auto const& [name, sub]: initScope->subspaces) {
+		if (sub->variable) {
+			auto& var = *sub->variable;
+			var.fieldOf = scope->type.asWeak();
+			type.fields[name] = sub->variable;
+		}
+	}
+	context.pop(1);
+	return {.scope = initScope};
 }
 
 ATransformer::Result StaticExpression::transform(Context& context, Node::Instance const& node) {
@@ -367,7 +401,7 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 	return {.type = t};
 }
 
-void resolveEmptyAttribute(
+static void resolveEmptyAttribute(
 	ATransformer::Context& context,
 	Node::Instance const& node,
 	Makai::Dictionary<Metadata::Instance>& attribs,
@@ -375,6 +409,9 @@ void resolveEmptyAttribute(
 ) {
 	auto const [path, scope] = ATransformer::resolve(context, node, true);
 	if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node);
+	if (scope->attribute->useCount < scope->attribute->globalMax)
+		++scope->attribute->useCount;
+	else context.error("Attribute limit reached!", node);
 	if (!Attribute::matchesTarget(*ns, scope->attribute->target))
 		context.error("Invalid attribute for given expression!", node);
 	if (attribs.contains(scope->attribute->name))
@@ -403,6 +440,9 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 	} else if (node->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const [path, scope] = ATransformer::resolve(context, node->leftSide, true);
 		if (!(scope && scope->attribute)) context.error("Attribute does not exist!", node->leftSide);
+		if (scope->attribute->useCount < scope->attribute->globalMax)
+			++scope->attribute->useCount;
+		else context.error("Attribute limit reached!", node);
 		if (!Attribute::matchesTarget(*ns, scope->attribute->target))
 			context.error("Invalid attribute for given expression!", node);
 		if (attribs.contains(scope->attribute->name))
@@ -477,7 +517,7 @@ static Makai::UTF8String overloadName(Makai::List<Namespace::VariableRef> const&
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const [path, scope] = resolve(context, node);
-	if (!(scope->function || scope->isPureNamespace()))
+	if (!(scope->function))
 		context.error("Symbol is already defined as a different kind!", node);
 	if (!scope->function) {
 		scope->function = scope->function.create();
@@ -503,6 +543,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	context.pop(1);
 	Namespace::Instance implScope;
+	Function::OverloadRef implOv;
 	for (auto i: Makai::range(optionals.size())) {
 		auto args = ov->arguments;
 		args.appendBack(optionals.sliced(0, -(i+1)));
@@ -512,30 +553,53 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			if (!implScope) {
 				auto const ovName = scope->function->name + overloadName(args);
 				implScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
-				f->entry = "__" + ovName;
+				f->entry = "__" + ovName  + node->name();
 				context.pop(1);
 			}
 		} else {
 			auto const ovName = scope->function->name + overloadName(args);
-			auto const overloadScope = context.declare(Makai::UTF8StringList::from("__" + ovName));
+			auto const overloadScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
 			if (!implScope)
 				implScope = overloadScope;
 			auto const oo = ov.create();
+			oo->entry = "__" + ovName + node->name();
 			oo->arguments = args;
 			oo->result = ov->result;
 			oo->scope = overloadScope;
 			for (auto const& arg: args)
 				oo->scope->subspaces[arg->name] = arg->scope;
 			fn.overloads.pushBack(oo);
+			if (!implOv) implOv = oo;
+			else {
+				context.writePreLine("@fn", oo->entry);
+				overloadScope->impl->writePreLine(oo->entry, ":");
+				overloadScope->impl->writePreLine("begin", toString(args.size()));
+				overloadScope->impl->writePreLine("bind", toString(args.size()), "[0 : 0]");
+				overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose());
+				overloadScope->impl->writePostLine("call", implOv->entry);
+				overloadScope->impl->writePostLine("end");
+			}
 			context.pop(1);
 		}
 	}
-	context.scopeStack.pushBack(implScope);
-	if (node->rightSide)
+	if (node->rightSide) {
+		context.scopeStack.pushBack(implScope);
+		implScope->impl->writePreLine(implOv->entry, ":");
 		auto const expr = Expression().transform(context, node->rightSide);
-	implScope->impl->writePreLine("begin", implScope->varc);
-	implScope->impl->writePreLine("bind", implScope->varc, "[0 : 0]");
-	implScope->impl->writePostLine("end");
-	context.scopeStack.popBack();
+		implScope->impl->writePreLine("begin", implScope->varc);
+		implScope->impl->writePreLine("bind", implScope->varc, "[0 : 0]");
+		implScope->impl->writePostLine("end");
+		context.scopeStack.popBack();
+	}
 	return {.scope = scope};
+}
+
+ATransformer::Result Assignment::transform(Context& context, Node::Instance const& node) {
+	auto const lhs = Expression().transform(context, node->leftSide);
+	auto const rhs = Expression().transform(context, node->rightSide);
+	if (lhs.direct) context.error("Cannot assign a value to a direct value!", node->leftSide);
+	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
+		context.writeMainLine("copy", rhs.source, "->", lhs.source);
+		return {lhs.source, lhs.scope, t, rhs.direct};
+	} else context.error("Type mismatch!", node);
 }

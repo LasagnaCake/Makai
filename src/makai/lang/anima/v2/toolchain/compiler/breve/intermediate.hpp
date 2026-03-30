@@ -3,6 +3,7 @@
 
 #include "../../assembler/assembler.hpp"
 #include "../../../core/core.hpp"
+#include "makai/ctl/ctl/container/dictionary.hpp"
 #include "node.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
@@ -163,11 +164,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		uint64							flags;
-		Definition						def;
-		Nullable<Core::BasicType>		basic;
-		Namespace::TypeRef				base;
-		Namespace::Instance				scope;
+		uint64									flags;
+		Definition								def;
+		Nullable<Core::BasicType>				basic;
+		Namespace::TypeRef						base;
+		Namespace::Instance						scope;
+		Nullable<UTF8String>					artEquivalent;
+		UTF8Dictionary<Namespace::VariableRef>	fields;
 
 		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
 
@@ -193,12 +196,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Variable: Labeled, Positioned {
-		Namespace::TypeRef		type;
-		Namespace::Instance		scope;
-		Namespace::FunctionRef	initializer;
-		UTF8String				source;
-		Data::Value				value;
-		bool					defaulted;
+		Namespace::TypeRef	type;
+		Namespace::Instance	scope;
+		Namespace::Instance	initializer;
+		UTF8String			source;
+		Data::Value			value;
+		bool				defaulted;
+		bool				global;
+		bool				staticEntity;
+		Handle<TypeDecl>	fieldOf;
 	};
 
 	struct Attribute: Labeled, Positioned {
