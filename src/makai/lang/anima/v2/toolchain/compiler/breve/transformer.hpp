@@ -12,6 +12,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Nullable<UTF8String>	source;
 			Namespace::Instance		scope;
 			Namespace::TypeRef		type;
+			Data::Value				direct;
 
 			bool isStackTop() const;
 		};

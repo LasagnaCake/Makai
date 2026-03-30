@@ -189,11 +189,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Variable: Labeled, Positioned {
-		Namespace::TypeRef	type;
-		Namespace::Instance	scope;
-		UTF8String			source;
-		Data::Value			value;
-		bool				defaulted;
+		Namespace::TypeRef		type;
+		Namespace::Instance		scope;
+		Namespace::FunctionRef	initializer;
+		UTF8String				source;
+		Data::Value				value;
+		bool					defaulted;
 	};
 
 	struct Attribute: Labeled, Positioned {

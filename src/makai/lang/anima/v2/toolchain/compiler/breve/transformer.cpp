@@ -171,12 +171,14 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	var.name = scope->name;
 	TypeRequest t;
 	var.type = t.transform(context, node->middle).type;
+	Makai::Data::Value direct;
 	if (node->rightSide) {
 		Expression expr;
 	 	auto const result = expr.transform(context, node);
+		direct = result.direct;
 	}
 	context.pop(path.size());
-	return {{Makai::toString("move local[", parent->varc++, "]")}, scope, var.type};
+	return {{Makai::toString("move local[", parent->varc++, "]")}, scope, var.type, direct};
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
@@ -208,9 +210,15 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
 	auto const scope = context.declare(UTF8StringList::from("::" + node->name()));
+	scope->subspaces = context.parent()->subspaces;
+	scope->varc = context.parent()->varc;
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
 	context.pop(1);
+	context.writeMainLine("begin", context.top()->varc + scope->varc);
+	context.writeMainLine("bring", context.top()->varc, "[0 : 0]");
+	context.top()->impl->writeMainLine(scope->impl->compose());
+	context.writeMainLine("end");
 	return result;
 }
 
@@ -227,7 +235,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		node->base.text == "copy"
 	||	node->base.text == "ref"
 	||	node->base.text == "move"
-	) return {{node->base.text + " " + *val.source}, val.scope, val.type};
+	) return {{node->base.text + " " + *val.source}, val.scope, val.type, val.direct};
 	if (!val.isStackTop()) {
 		if (
 			node->base.type == LTS_TT_INCREMENT
@@ -297,10 +305,10 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
 	auto const v = node->value.toString();
-	if (node->value.isString())		return {{v}, nullptr,	context.basicType("string")		};
-	if (node->value.isUnsigned())	return {{v}, nullptr,	context.basicType("uint64")		};
-	if (node->value.isSigned())		return {{v}, nullptr,	context.basicType("int64")		};
-	if (node->value.isReal())		return {{v}, nullptr,	context.basicType("float64")	};
+	if (node->value.isString())		return {{v}, nullptr,	context.basicType("string"), node->value	};
+	if (node->value.isUnsigned())	return {{v}, nullptr,	context.basicType("uint64"), node->value	};
+	if (node->value.isSigned())		return {{v}, nullptr,	context.basicType("int64"), node->value		};
+	if (node->value.isReal())		return {{v}, nullptr,	context.basicType("float64"), node->value	};
 	context.error("Invalid constant!", node);
 }
 
@@ -426,6 +434,20 @@ ATransformer::Result AttributeExpression::transform(Context& context, Node::Inst
 	expr.scope->meta.append(attributes);
 }
 
+static Makai::UTF8String overloadName(Function::ArgTypes const& types) {
+	Makai::UTF8String name;
+	for (auto const& type: types)
+		name += "_" + type->name;
+	return name;
+}
+
+static Makai::UTF8String overloadName(Makai::List<Namespace::VariableRef> const& args) {
+	Makai::UTF8String name;
+	for (auto const& arg: args)
+		name += "_" + arg->type->name;
+	return name;
+}
+
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const [path, scope] = resolve(context, node);
 	if (!(scope->function || scope->isPureNamespace()))
@@ -439,15 +461,54 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	Function::OverloadRef ov = ov.create();
 	if (proto->leftSide)
 		ov->result = context.fetch(path, node->leftSide)->type;
+	auto const newScope = context.declare(Makai::UTF8StringList::from("<>" + node->name()));
 	VariableDecl vd;
+	List<Namespace::VariableRef> optionals;
 	for (auto const& arg: proto->children) {
 		auto const decl = vd.transform(context, arg);
 		if (!(decl.scope && decl.scope->variable))
 			context.error("Expected variable declaration here!", arg);
-		ov->arguments.pushBack(decl.scope->variable);
+		if (decl.scope->variable->defaulted)
+			optionals.pushBack(decl.scope->variable);
+		else if (optionals.empty())
+			ov->arguments.pushBack(decl.scope->variable);
+		else context.error("Cannot have required arguments follow optional ones!", arg);
 	}
-	if (fn.overload(ov->arguments))
-		context.error("Redeclaration of function overload!", node);
-	else fn.overloads.pushBack(ov);
+	context.pop(1);
+	Namespace::Instance implScope;
+	for (auto i: Makai::range(optionals.size())) {
+		auto args = ov->arguments;
+		args.appendBack(optionals.sliced(0, -(i+1)));
+		if (auto const f = fn.overload(args)) {
+			if (f->scope || f->result != ov->result)
+				context.error("Redeclaration of function overload!", node);
+			if (!implScope) {
+				auto const ovName = scope->function->name + overloadName(args);
+				implScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
+				f->entry = "__" + ovName;
+				context.pop(1);
+			}
+		} else {
+			auto const ovName = scope->function->name + overloadName(args);
+			auto const overloadScope = context.declare(Makai::UTF8StringList::from("__" + ovName));
+			if (!implScope)
+				implScope = overloadScope;
+			auto const oo = ov.create();
+			oo->arguments = args;
+			oo->result = ov->result;
+			oo->scope = overloadScope;
+			for (auto const& arg: args)
+				oo->scope->subspaces[arg->name] = arg->scope;
+			fn.overloads.pushBack(oo);
+			context.pop(1);
+		}
+	}
+	context.scopeStack.pushBack(implScope);
+	if (node->rightSide)
+		auto const expr = Expression().transform(context, node->rightSide);
+	implScope->impl->writePreLine("begin", implScope->varc);
+	implScope->impl->writePreLine("bind", implScope->varc, "[0 : 0]");
+	implScope->impl->writePostLine("end");
+	context.scopeStack.popBack();
 	return {.scope = scope};
 }
