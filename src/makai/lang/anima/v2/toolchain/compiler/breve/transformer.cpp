@@ -199,20 +199,21 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
-	auto [name, scope] = resolve(context, node->rightSide);
+	auto const name = context.pathOf(node->rightSide);
+	auto scope = Expression().transform(context, node->rightSide).scope;
 	if (!scope)
-		context.error("Requested symbol does not exist!", node->rightSide);
+		context.error("Requested symbol scope does not exist!", node->rightSide);
 	if (node->leftSide) {
 		auto const alias = context.pathOf(node->leftSide);
-		auto const tmp = context.declare(alias);
 		if (context.parent()->resolve(alias))
 			context.error("Symbol with this name already exists in the current scope!", node->leftSide);
+		auto const tmp = context.declare(alias);
 		context.parent()->subspaces[alias.back()] = scope;
 		context.pop(alias.size());
 	} else {
-		auto const tmp = context.declare(UTF8StringList::from(name.back()));
 		if (context.parent()->subspaces.contains(name.back()))
 			context.error("Symbol with this name already exists in the current scope!", node->rightSide);
+		auto const tmp = context.declare(UTF8StringList::from(name.back()));
 		context.parent()->subspaces[name.back()] = scope;
 		context.pop(1);
 	}
@@ -240,10 +241,6 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	}
 	context.pop(1);
 	return {.scope = initScope};
-}
-
-ATransformer::Result StaticExpression::transform(Context& context, Node::Instance const& node) {
-	// TODO: This
 }
 
 ATransformer::Result Return::transform(Context& context, Node::Instance const& node) {
@@ -388,8 +385,9 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_LOOP:				return Loop().transform(context, node);
 		case Node::Content::AV2_TANC_INLINE_MINIMA:		return InlineAssembly().transform(context, node);
 		case Node::Content::AV2_TANC_ATTRIBUTE:			return AttributeExpression().transform(context, node);
-		case Node::Content::AV2_TANC_NAME: {
-
+		case Node::Content::AV2_TANC_NAME:
+		case Node::Content::AV2_TANC_PATH: {
+			// This part will be hell
 		}
 		default: context.error("Unsupported expression!", node);
 	}
@@ -606,4 +604,11 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		context.writeMainLine("copy", rhs.source, "->", lhs.source);
 		return {lhs.source, lhs.scope, t, rhs.direct};
 	} else context.error("Type mismatch!", node);
+}
+
+ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
+	auto const path = context.pathOf(node->rightSide);
+	auto const fpath = path.join("/");
+	auto const subinter = import(fpath);
+	return {.scope = subinter.root};
 }

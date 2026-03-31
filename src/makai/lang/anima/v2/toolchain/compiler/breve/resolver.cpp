@@ -222,14 +222,13 @@ Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& lef
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_IMPORT;
 	result->value = token.text.toString();
-	result->leftSide = leftSide;
 	DEBUGLN("Follows: ", parser.context.token().text);
 	DEBUGLN("Follows: ", parser.context.peek().text);
 	if (parser.context.type() == LTS_TT_DOT) {
 		DEBUGLN("Here!");
 		parser.context.next();
 	}
-	result->rightSide = parser.nextExpression();
+	result->leftSide = parser.nextExpression();
 	return result;
 }
 
