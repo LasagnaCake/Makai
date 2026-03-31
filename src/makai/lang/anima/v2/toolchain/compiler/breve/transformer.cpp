@@ -1,6 +1,5 @@
 #include "transformer.hpp"
 #include "intermediate.hpp"
-#include "makai/lang/anima/v2/core/type.hpp"
 #include "resolver.hpp"
 
 /*
@@ -20,6 +19,8 @@ using namespace Transformer;
 using Type = BaseContext::Tokenizer::Token::Type;
 
 using enum BaseContext::Tokenizer::Token::Type;
+
+using Token = BaseContext::Tokenizer::Token;
 
 static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance const& node) {
 	switch (node->base.type) {
@@ -194,8 +195,10 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		var.defaulted = true;
 	}
 	var.value = direct;
+	var.id = parent->varc++;
+	var.source = Makai::toString("move local[", var.id, "]");
 	context.pop(path.size());
-	return {{Makai::toString("move local[", parent->varc++, "]")}, scope, var.type, direct};
+	return {{var.source}, scope, var.type, direct};
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
@@ -276,15 +279,144 @@ ATransformer::Result SubExpression::transform(Context& context, Node::Instance c
 	return result;
 }
 
+static Namespace::TypeRef directName(ATransformer::Context& context, Makai::Data::Value::Kind const& type) {
+	switch (type) {
+		case Makai::Data::Value::Kind::DVK_BOOLEAN:		return context.basicType("bool");
+		case Makai::Data::Value::Kind::DVK_SIGNED:		return context.basicType("int64");
+		case Makai::Data::Value::Kind::DVK_UNSIGNED:	return context.basicType("uint64");
+		case Makai::Data::Value::Kind::DVK_REAL:		return context.basicType("float64");
+		case Makai::Data::Value::Kind::DVK_VECTOR:		return context.basicType("vector");
+		case Makai::Data::Value::Kind::DVK_STRING:		return context.basicType("string");
+		case Makai::Data::Value::Kind::DVK_BYTES:		return context.basicType("bytes");
+		default: return {};
+	}
+}
+
+template<class T>
+static Makai::Data::Value uopDirectResolveEX(T const& v, Token const& tok) {
+	if constexpr (Makai::Type::Integer<T>) {
+		switch (tok.type) {
+			case LTS_TT_BIT_NOT: if constexpr (Makai::Type::Equal<T, bool>) return !v; else return ~v;
+			default: break;
+		}
+	}
+	if constexpr (Makai::Type::Number<T>) {
+		if (tok.type == LTS_TT_IDENTIFIER) {
+			auto const id = tok.text;
+			if (id == "sin")	return Makai::Math::sin<double>(v);
+			if (id == "cos")	return Makai::Math::cos<double>(v);
+			if (id == "tan")	return Makai::Math::tan<double>(v);
+			if (id == "asin")	return asin(v);
+			if (id == "acos")	return acos(v);
+			if (id == "atan")	return atan(v);
+			if (id == "sinh")	return sinh(v);
+			if (id == "cosh")	return cosh(v);
+			if (id == "tanh")	return tanh(v);
+			if (id == "log2")	return Makai::Math::log2<double>(v);
+			if (id == "log10")	return Makai::Math::log10<double>(v);
+			if (id == "ln")		return Makai::Math::log<double>(v);
+			if (id == "sqrt")	return Makai::Math::sqrt<double>(v);
+		} else switch (tok.type) {
+			case LTS_TT_LOGIC_NOT:	return !v;
+			default: break;
+		}
+	}
+	if (tok.type == LTS_TT_IDENTIFIER) {
+		auto const id = tok.text;
+		if (id == "inv") return 1.0 / v;
+		if (id == "copy") return v;
+		if (id == "move") return v;
+		if (id == "ref") return v;
+		if (id == "sizeof") return sizeof(v);
+		if (id == "countof") return Makai::Data::Value(v).size();
+	} else switch (tok.type) {
+		case LTS_TT_INCREMENT:	return v + 1;
+		case LTS_TT_DECREMENT:	return v - 1;
+		case LTS_TT_PLUS:		return v * 1;
+		case LTS_TT_MINUS:		return v * (-1);
+		default: break;
+	}
+	return {};
+}
+
+static Makai::Data::Value uopDirectResolve(Makai::Data::Value const& v, Token const& tok) {
+	switch (v.type()) {
+		case Makai::Data::Value::Kind::DVK_BOOLEAN:		return uopDirectResolveEX(v.getBoolean(),	tok);
+		case Makai::Data::Value::Kind::DVK_SIGNED:		return uopDirectResolveEX(v.getSigned(),	tok);
+		case Makai::Data::Value::Kind::DVK_UNSIGNED:	return uopDirectResolveEX(v.getUnsigned(),	tok);
+		case Makai::Data::Value::Kind::DVK_REAL:		return uopDirectResolveEX(v.getReal(),		tok);
+		case Makai::Data::Value::Kind::DVK_VECTOR:		return uopDirectResolveEX(v.getVector(),	tok);
+		default: return {};
+	}
+}
+
+template<class T>
+static Makai::Data::Value bopDirectResolveEX(T const& a, T const& b, Token const& tok) {
+	if constexpr (Makai::Type::Equal<T, bool>) {
+		switch (tok.type) {
+			case LTS_TT_BIT_AND:	return a && b;
+			case LTS_TT_BIT_OR:		return a || b;
+			case LTS_TT_BIT_XOR:	return a != b;
+			default: break;
+		}
+	}
+	if constexpr (Makai::Type::Integer<T>) {
+		switch (tok.type) {
+			case LTS_TT_BIT_AND:	return a & b;
+			case LTS_TT_BIT_OR:		return a | b;
+			case LTS_TT_BIT_XOR:	return a ^ b;
+			case LTS_TT_LOGIC_AND:	return a && b;
+			case LTS_TT_LOGIC_OR:	return a || b;
+			case LTS_TT_LOGIC_XOR:	return bool(a) != bool(b);
+			case LTS_TT_MODULO:		return a % b;
+			default: break;
+		}
+	}
+	if constexpr (Makai::Type::Number<T>) {
+		if (tok.type == LTS_TT_IDENTIFIER) {
+			auto const id = tok.text;
+			if (id == "pow")	return Makai::Math::atan2<double>(a, b);
+			if (id == "atan2")	return Makai::Math::pow<double>(a, b);
+		} else switch (tok.type) {
+			case LTS_TT_MODULO:	return Makai::Math::mod<double>(a, b);
+			default: break;
+		}
+	}
+	if (tok.type == LTS_TT_IDENTIFIER) {
+	} else switch (tok.type) {
+		case LTS_TT_INCREMENT:	return a + 1;
+		case LTS_TT_DECREMENT:	return a - 1;
+		case LTS_TT_PLUS:		return a + b;
+		case LTS_TT_MINUS:		return a - b;
+		case LTS_TT_STAR:		return a * b;
+		case LTS_TT_DIVIDE:		return a / b;
+		default: break;
+	}
+	return {};
+}
+
+static Makai::Data::Value bopDirectResolve(Makai::Data::Value const& a, Makai::Data::Value const& b, Token const& tok) {
+	switch ((a.type() > b.type() ? a.type() : b.type())) {
+		case Makai::Data::Value::Kind::DVK_BOOLEAN:		return bopDirectResolveEX(a.getBoolean(),	b.getBoolean(),		tok);
+		case Makai::Data::Value::Kind::DVK_SIGNED:		return bopDirectResolveEX(a.getSigned(),	b.getSigned(),		tok);
+		case Makai::Data::Value::Kind::DVK_UNSIGNED:	return bopDirectResolveEX(a.getUnsigned(),	b.getUnsigned(),	tok);
+		case Makai::Data::Value::Kind::DVK_REAL:		return bopDirectResolveEX(a.getReal(),		b.getReal(),		tok);
+		case Makai::Data::Value::Kind::DVK_VECTOR:		return bopDirectResolveEX(a.getVector(),	b.getVector(),		tok);
+		default: return {};
+	}
+}
+
 ATransformer::Result PrefixExpression::transform(Context& context, Node::Instance const& node) {
-	if (node->base.text == "static")
-		return StaticExpression().transform(context, node);
 	if (node->base.text == "return")
 		return Return().transform(context, node);
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
 	if (!val.source)
 		context.error("Invalid expression!", node->leftSide);
+	if (val.direct && node->base.text != "typeof") {
+		auto const result = uopDirectResolve(val.direct, node->base);
+		return {{result.toString()}, val.scope, directName(context, result.type()), result};
+	}
 	if (
 		node->base.text == "copy"
 	||	node->base.text == "ref"
@@ -316,6 +448,10 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 	auto const val = expr.transform(context, node->rightSide);
 	if (!val.source)
 		context.error("Invalid expression!", node->rightSide);
+	if (val.direct && node->base.text != "typeof") {
+		auto const result = uopDirectResolve(val.direct, node->base);
+		return {{result.toString()}, val.scope, directName(context, result.type()), result};
+	}
 	if (!val.isStackTop())
 		context.top()->impl->writeMainLine("push copy", val.source);
 	context.top()->impl->writeMainLine("op", uopName(context, node));
@@ -330,7 +466,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	auto const lhs = expr.transform(context, node->leftSide);
 	if (!lhs.source)
 		context.error("Invalid expression!", node->leftSide);
-	if (!lhs.isStackTop())
+	if (!lhs.isStackTop() && !lhs.direct)
 		context.top()->impl->writeMainLine("push", lhs.source);
 	if (
 		node->base.text == "as"
@@ -343,8 +479,16 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	auto const rhs = expr.transform(context, node->rightSide);
 	if (!rhs.source)
 		context.error("Invalid expression!", node->rightSide);
+	if (lhs.direct && rhs.direct) {
+		auto const result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
+		return {{result.toString()}, nullptr, directName(context, result.type()), result};
+	}
 	if (!rhs.isStackTop())
 		context.top()->impl->writeMainLine("push", rhs.source);
+	if (lhs.direct) {
+		context.top()->impl->writeMainLine("push", rhs.source);
+		context.top()->impl->writeMainLine("swap");
+	}
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		if (t->basic) {
 			context.top()->impl->writeMainLine("op", bopName(context, node));
