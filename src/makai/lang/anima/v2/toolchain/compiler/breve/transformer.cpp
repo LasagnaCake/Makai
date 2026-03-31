@@ -22,6 +22,116 @@ using enum BaseContext::Tokenizer::Token::Type;
 
 using Token = BaseContext::Tokenizer::Token;
 
+static ATransformer::Result expandVariable(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Variable& var,
+	bool const stack = false
+);
+
+static ATransformer::Result expandProperty(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Property& prop,
+	bool const stack = false
+);
+
+static ATransformer::Result expandVariable(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Variable& var,
+	bool const stack
+) {
+	if (var.fieldOf) {
+		auto parent = context.resolve(path = path.sliced(0, -1));
+		while (path.size()) {
+			parent = context.resolve(path = path.sliced(0, -1));
+			if (!parent) continue;
+			if (parent->variable && parent->variable->type.asWeak() == var.fieldOf)
+				break;
+			if (parent->property && parent->property->type.asWeak() == var.fieldOf)
+				break;
+		}
+		if (parent && parent->variable)
+			expandVariable(context, node, path, *parent->variable, true);
+		else if (parent && parent->property)
+			expandProperty(context, node, path, *parent->property, true);
+		else if (stack) context.top()->impl->writeMainLine("push", var.source);
+		context.top()->impl->writeMainLine("at", var.id);
+		return {{"stack[-0]"}, var.scope, var.type};
+	} else
+		return {var.source, var.scope, var.type};
+}
+
+static ATransformer::Result expandProperty(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Property& prop,
+	bool const stack
+) {
+	auto const get = prop.getter->overloadFromTypes({});
+	auto parent = context.resolve(path = path.sliced(0, -1));
+	while (path.size()) {
+		parent = context.resolve(path = path.sliced(0, -1));
+		if (!parent) continue;
+		if (parent->variable && parent->variable->type.asWeak() == prop.fieldOf)
+			break;
+		if (parent->property && parent->property->type.asWeak() == prop.fieldOf)
+			break;
+	}
+	if (parent && parent->variable)
+		expandVariable(context, node, path, *parent->variable, true);
+	else if (parent && parent->property)
+		expandProperty(context, node, path, *parent->property, true);
+	context.top()->impl->writeMainLine("call", get->entry);
+	return {{"stack[-0]"}, prop.scope, get->result};
+}
+
+static void addToStack(
+	ATransformer::Context& context,
+	Namespace::Instance const& ns
+) {
+	if (ns->variable) {
+		context.top()->impl->writeMainLine("push", ns->variable->source);
+	} else if (ns->property) {
+		auto const ov = ns->property->getter->overloadFromTypes({});
+		context.top()->impl->writeMainLine("cal", ov->entry);
+	}
+}
+
+static ATransformer::Result pathTraverse(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Namespace::Instance const& ns,
+	Makai::UTF8StringList const& path
+) {
+	if (!ns)
+		context.error("Symbol with this name does not exist at the given path!", node);
+	if (path.empty()) {
+		return {{"stack[-0]"}, ns};
+	}
+	if (ns->variable) {
+		if (ns->variable->type->fields.contains(path.back())) {
+			auto const f = ns->type->fields[path.back()];
+			context.top()->impl->writeMainLine("at", f->id);
+			return pathTraverse(context, node, ns->variable->type->scope, path.sliced(1));
+		}
+	}
+	if (ns->property) {
+		if (ns->property->type->fields.contains(path.back())) {
+			auto const f = ns->type->fields[path.back()];
+			auto const ov = ns->property->getter->overloadFromTypes({});
+			context.top()->impl->writeMainLine("call", ov->entry);
+			return pathTraverse(context, node, ns->property->type->scope, path.sliced(1));
+		}
+	}
+	return pathTraverse(context, node, context.resolve(Makai::UTF8StringList::from(path.front())), path.sliced(1));
+}
+
 static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance const& node) {
 	switch (node->base.type) {
 		case LTS_TT_SINGLE_QUOTE_STRING:
@@ -516,116 +626,6 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	context.error("Invalid constant!", node);
 }
 
-static ATransformer::Result expandVariable(
-	ATransformer::Context& context,
-	Node::Instance const& node,
-	Makai::UTF8StringList path,
-	Variable& var,
-	bool const stack = false
-);
-
-static ATransformer::Result expandProperty(
-	ATransformer::Context& context,
-	Node::Instance const& node,
-	Makai::UTF8StringList path,
-	Property& prop,
-	bool const stack = false
-);
-
-static ATransformer::Result expandVariable(
-	ATransformer::Context& context,
-	Node::Instance const& node,
-	Makai::UTF8StringList path,
-	Variable& var,
-	bool const stack
-) {
-	if (var.fieldOf) {
-		auto parent = context.resolve(path = path.sliced(0, -1));
-		while (path.size()) {
-			parent = context.resolve(path = path.sliced(0, -1));
-			if (!parent) continue;
-			if (parent->variable && parent->variable->type.asWeak() == var.fieldOf)
-				break;
-			if (parent->property && parent->property->type.asWeak() == var.fieldOf)
-				break;
-		}
-		if (parent && parent->variable)
-			expandVariable(context, node, path, *parent->variable, true);
-		else if (parent && parent->property)
-			expandProperty(context, node, path, *parent->property, true);
-		else if (stack) context.top()->impl->writeMainLine("push", var.source);
-		context.top()->impl->writeMainLine("at", var.id);
-		return {{"stack[-0]"}, var.scope, var.type};
-	} else
-		return {var.source, var.scope, var.type};
-}
-
-static ATransformer::Result expandProperty(
-	ATransformer::Context& context,
-	Node::Instance const& node,
-	Makai::UTF8StringList path,
-	Property& prop,
-	bool const stack
-) {
-	auto const get = prop.getter->overloadFromTypes({});
-	auto parent = context.resolve(path = path.sliced(0, -1));
-	while (path.size()) {
-		parent = context.resolve(path = path.sliced(0, -1));
-		if (!parent) continue;
-		if (parent->variable && parent->variable->type.asWeak() == prop.fieldOf)
-			break;
-		if (parent->property && parent->property->type.asWeak() == prop.fieldOf)
-			break;
-	}
-	if (parent && parent->variable)
-		expandVariable(context, node, path, *parent->variable, true);
-	else if (parent && parent->property)
-		expandProperty(context, node, path, *parent->property, true);
-	context.top()->impl->writeMainLine("call", get->entry);
-	return {{"stack[-0]"}, prop.scope, get->result};
-}
-
-static void addToStack(
-	ATransformer::Context& context,
-	Namespace::Instance const& ns
-) {
-	if (ns->variable) {
-		context.top()->impl->writeMainLine("push", ns->variable->source);
-	} else if (ns->property) {
-		auto const ov = ns->property->getter->overloadFromTypes({});
-		context.top()->impl->writeMainLine("cal", ov->entry);
-	}
-}
-
-static ATransformer::Result pathTraverse(
-	ATransformer::Context& context,
-	Node::Instance const& node,
-	Namespace::Instance const& ns,
-	Makai::UTF8StringList const& path
-) {
-	if (!ns)
-		context.error("Symbol with this name does not exist at the given path!", node);
-	if (path.empty()) {
-		return {{"stack[-0]"}, ns};
-	}
-	if (ns->variable) {
-		if (ns->variable->type->fields.contains(path.back())) {
-			auto const f = ns->type->fields[path.back()];
-			context.top()->impl->writeMainLine("at", f->id);
-			return pathTraverse(context, node, ns->variable->type->scope, path.sliced(1));
-		}
-	}
-	if (ns->property) {
-		if (ns->property->type->fields.contains(path.back())) {
-			auto const f = ns->type->fields[path.back()];
-			auto const ov = ns->property->getter->overloadFromTypes({});
-			context.top()->impl->writeMainLine("call", ov->entry);
-			return pathTraverse(context, node, ns->property->type->scope, path.sliced(1));
-		}
-	}
-	return pathTraverse(context, node, context.resolve(Makai::UTF8StringList::from(path.front())), path.sliced(1));
-}
-
 ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
 	auto const path = context.pathOf(node).reverse();
 	auto const ns = context.resolve(Makai::UTF8StringList::from(path.front()));
@@ -943,4 +943,11 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 			return NamespaceDecl().transform(context, node);
 	}
 	context.error("Invalid declaration!", node);
+}
+
+ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
+	auto const result = PathExpression().transform(context, node->leftSide);
+	if (!result.scope->function)
+		context.error("Symbol is not a function!", node->leftSide);
+	// TODO: Function call
 }
