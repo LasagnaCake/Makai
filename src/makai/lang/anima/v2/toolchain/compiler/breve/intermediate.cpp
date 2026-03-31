@@ -31,29 +31,30 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 	return nullptr;
 }
 
-usize Intermediate::push(UTF8StringList const& path) {
-	if (path.empty()) return 0;
-	if (scopeStack.empty() && root->subspaces.contains(path.back()))
-		return root->subspaces[path.back()];
-	else if (scopeStack.back()->subspaces.contains(path.back()))
-		return scopeStack.back()->subspaces[path.back()];
+Namespace::Instance Intermediate::push(UTF8StringList const& path) {
+	if (path.empty()) return scopeStack.back();
+	if (path.size() == 1) {
+		if (scopeStack.empty() && root->subspaces.contains(path.back())) {
+			scopeStack.pushBack(root->subspaces[path.back()]);
+			return scopeStack.back();
+		}
+		else if (scopeStack.back()->subspaces.contains(path.back())) {
+			scopeStack.pushBack(scopeStack.back()->subspaces[path.back()]);
+			return scopeStack.back();
+		}
+	}
 	Namespace::Instance ns = ns.create(path.back());
 	if (scopeStack.empty())
 		root->subspaces[ns->name] = ns;
 	else scopeStack.back()->subspaces[ns->name] = ns;
 	scopeStack.pushBack(ns);
-	return push(path.sliced(1)) + 1;
+	return push(path.sliced(1));
 }
 
 void Intermediate::pop(usize count) {
 	while (scopeStack.size() && count--) {
 		auto const scope = scopeStack.popBack();
 		if (!scope->impl) continue;
-		/*
-		if (scopeStack.empty())
-			root->impl->pre += scope->impl->compose()->toString();
-		else scopeStack.back()->impl->main += scope->impl->compose()->toString();
-		 */
 	}
 }
 
@@ -81,7 +82,11 @@ void Intermediate::writePost(UTF8String const& what) {
 	root->impl->post += " " + what;
 }
 
-Function::OverloadRef Function::overload(List<Namespace::VariableRef> const& args) const {
+Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args) const {
+	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) {return e->type;}));
+}
+
+Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args) const {
 	for (auto& ov: overloads) {
 		if (!ov) continue;
 		if (ov->arguments.size() != args.size()) continue;
@@ -92,7 +97,7 @@ Function::OverloadRef Function::overload(List<Namespace::VariableRef> const& arg
 			else if (args[arg.index].exists() != arg.value.exists()) {
 				miss = true;
 				break;
-			} else if (args[arg.index]->type != arg.value->type) {
+			} else if (args[arg.index] != arg.value->type) {
 				miss = true;
 				break;
 			}

@@ -182,6 +182,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			List<Namespace::VariableRef>	arguments;
 			Namespace::Instance				scope;
 			UTF8String						entry;
+			bool							staticEntity;
+			Handle<TypeDecl>				methodOf;
 			UTF8String prototype() const;
 		};
 		using OverloadRef = Instance<Overload>;
@@ -190,8 +192,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		using ArgTypes = List<Namespace::TypeRef>;
 
-		OverloadRef overload(List<Namespace::VariableRef> const& args) const;
-		OverloadRef overload(List<Namespace::TypeRef> const& args) const;
+		OverloadRef overloadFromVariables(List<Namespace::VariableRef> const& args) const;
+		OverloadRef overloadFromTypes(List<Namespace::TypeRef> const& args) const;
 	};
 
 	struct Variable: Labeled, Positioned {
@@ -272,7 +274,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		List<Namespace::Instance> scopeStack;
 
 		Namespace::Instance resolve(UTF8StringList const& path) const;
-		usize push(UTF8StringList const& path);
+		Namespace::Instance push(UTF8StringList const& path);
 		void pop(usize const count);
 		Namespace::Instance top() const;
 		Namespace::Instance parent() const;

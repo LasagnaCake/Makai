@@ -384,6 +384,19 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	// TODO: This
+	auto const expr = parser.nextExpression();
+	if (expr->content == Node::Content::AV2_TANC_ASSIGNMENT) {
+		result->leftSide = expr->leftSide;
+		result->middle = expr->rightSide;
+		return result;
+	}
+	if (!expr->isPathOrName())
+		parser.context.error("Direct getter, or block, for property!");
+	result->leftSide = expr;
+	auto const expr2 = parser.nextExpression();
+	if (expr2->content == Node::Content::AV2_TANC_BLOCK)
+		parser.context.error("Expected block here!");
+	result->children = expr2->children;
 	return result;
 }
 

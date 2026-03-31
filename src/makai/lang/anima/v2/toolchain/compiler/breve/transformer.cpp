@@ -83,7 +83,7 @@ static ATransformer::Result infixResolve(ATransformer::Context& context, Node::I
 		&&	tok->meta["Operator"]->value.contains("infix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("infix", "") == bopName(context, node)
 		) {
-			auto const ov = tok->function->overload(Function::ArgTypes::from(type, type));
+			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"stack[-0]"}, nullptr, ov->result};
 		}
@@ -98,7 +98,7 @@ static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::
 		&&	tok->meta["Operator"]->value.contains("prefix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("prefix", "") == uopName(context, node)
 		) {
-			auto const ov = tok->function->overload(Function::ArgTypes::from(type));
+			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"stack[-0]"}, nullptr, ov->result};
 		}
@@ -113,7 +113,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 		&&	tok->meta["Operator"]->value.contains("postfix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("postfix", "") == uopName(context, node)
 		) {
-			auto const ov = tok->function->overload(Function::ArgTypes::from(type));
+			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"stack[-0]"}, nullptr, ov->result};
 		}
@@ -175,11 +175,11 @@ bool ATransformer::Result::isStackTop() const {
 }
 
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
-	auto [path, scope] = resolve(context, node->leftSide);
-	if (scope && scope->variable)
-		context.error("Redeclaration of variable with the given path!", node->leftSide);
+	auto path = context.pathOf(node->leftSide);
 	auto const parent = context.top();
-	scope = context.declare(path);
+	if (parent->resolve(path))
+		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
+	auto const scope = context.declare(path);
 	auto& var = *(scope->variable = scope->variable.create());
 	var.name = scope->name;
 	TypeRequest t;
@@ -567,7 +567,7 @@ static ATransformer::Result expandProperty(
 	Property& prop,
 	bool const stack
 ) {
-	auto const get = prop.getter->overload(Makai::List<Namespace::TypeRef>{});
+	auto const get = prop.getter->overloadFromTypes({});
 	auto parent = context.resolve(path = path.sliced(0, -1));
 	while (path.size()) {
 		parent = context.resolve(path = path.sliced(0, -1));
@@ -592,7 +592,7 @@ static void addToStack(
 	if (ns->variable) {
 		context.top()->impl->writeMainLine("push", ns->variable->source);
 	} else if (ns->property) {
-		auto const ov = ns->property->getter->overload(Makai::List<Namespace::TypeRef>());
+		auto const ov = ns->property->getter->overloadFromTypes({});
 		context.top()->impl->writeMainLine("cal", ov->entry);
 	}
 }
@@ -618,7 +618,7 @@ static ATransformer::Result pathTraverse(
 	if (ns->property) {
 		if (ns->property->type->fields.contains(path.back())) {
 			auto const f = ns->type->fields[path.back()];
-			auto const ov = ns->property->getter->overload(Makai::List<Namespace::TypeRef>());
+			auto const ov = ns->property->getter->overloadFromTypes({});
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return pathTraverse(context, node, ns->property->type->scope, path.sliced(1));
 		}
@@ -813,7 +813,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	for (auto i: Makai::range(optionals.size())) {
 		auto args = ov->arguments;
 		args.appendBack(optionals.sliced(0, -(i+1)));
-		if (auto const f = fn.overload(args)) {
+		if (auto const f = fn.overloadFromVariables(args)) {
 			if (f->scope || f->result != ov->result)
 				context.error("Redeclaration of function overload!", node);
 			if (!implScope) {
@@ -875,6 +875,58 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	auto const fpath = path.join("/");
 	auto const subinter = import(fpath);
 	return {.scope = subinter.root};
+}
+
+ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance const& node) {
+	auto const path = context.pathOf(node->leftSide);
+	if (context.top()->resolve(path))
+		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
+	auto const scope = context.declare(path);
+	scope->property = scope->property.create();
+	if (node->middle) {
+	} else if (node->children.size()) {
+		for (auto const& child: node->children) {
+			auto const member = Expression().transform(context, child);
+			if (!member.scope->function)
+				context.error("Properties can only have functions!", child);
+			if (member.scope->meta.contains("Getter")) {
+				if (scope->property->getter)
+					context.error("Property getter has already been declared!");
+				scope->property->getter = member.scope->function;
+				bool hit = false;
+				for (auto const& ov: member.scope->function->overloads)
+					if (ov->methodOf && ov->arguments.size() == 0) {
+						hit = true;
+						break;
+					}
+				if (!hit) context.error("Missing required overload for getter!", child);
+			}
+			if (member.scope->meta.contains("Setter")) {
+				if (scope->property->setter)
+					context.error("Property setter has already been declared!");
+				scope->property->setter = member.scope->function;
+				bool hit = false;
+				for (auto const& ov: member.scope->function->overloads)
+					if (ov->methodOf && ov->arguments.size() == 1) {
+						hit = true;
+						break;
+					}
+				if (!hit) context.error("Missing required overload for setter!", child);
+			}
+		}
+	}
+	context.pop(path.size());
+	return {.scope = scope};
+}
+
+ATransformer::Result NamespaceDecl::transform(Context& context, Node::Instance const& node) {
+	auto const path = context.pathOf(node->leftSide);
+	if (context.top()->resolve(path))
+		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
+	auto const scope = context.declare(path);
+	Block().transform(context, node);
+	context.pop(path.size());
+	return {.scope = scope};
 }
 
 ATransformer::Result Declaration::transform(Context& context, Node::Instance const& node) {
