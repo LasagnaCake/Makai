@@ -818,7 +818,11 @@ static void doSelect(Context& context) {
 }
 
 static void doClear(Context& context) {
+	// TODO: this
+}
 
+static void doCreate(Context& context, bool const dynamic = false) {
+	// TODO: this
 }
 
 static void declareTypeFields(Context& context, Context::Declaration& type) {
@@ -1285,6 +1289,7 @@ static void doExpression(Context& context) {
 	else if (id == "random" || id == "rng")		doRandomNumber(context);
 	else if (id == "select" || id == "pick")	doSelect(context);
 	else if (id == "unbind" || id == "drop")	doClear(context);
+	else if (id == "create" || id == "new")		doCreate(context);
 	else doLabel(context);
 }
 

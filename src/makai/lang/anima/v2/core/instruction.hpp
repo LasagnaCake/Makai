@@ -203,6 +203,10 @@ namespace Makai::Anima::V2::Core {
 			bool			dyn: 1;
 		};
 
+		struct [[gnu::aligned(4)]] Create {
+			bool			dyn: 1;
+		};
+
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -296,11 +300,11 @@ namespace Makai::Anima::V2::Core {
 			AV2_IN_SCOPE_BRING,
 			/// @brief Gets a reference of a given field from an object or array.
 			/// @param type `Field` = how to access the field.
-			/// @details `get <id>`
+			/// @details `get [<id>]`
 			AV2_IN_FIELD_GET,
 			/// @brief Sets a given field of an object or array with a given value.
 			/// @param type `Field` = how to access the field.
-			/// @details `set <id>`
+			/// @details `set [<id>]`
 			AV2_IN_FIELD_SET,
 			/// @brief Gets the size of a value.
 			/// @param type 0 = element count, 1 = in bytes.
@@ -310,14 +314,18 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `type`
 			AV2_IN_TYPEOF,
-			/// @brief Clears a given location.
-			/// @param type `Clear`= how to clear the value.
-			/// @details `clear [<loc-id>]`
-			AV2_IN_CLEAR,
 			/// @brief Jumps to one of the given targets, depending on the topmost value in the stack.
 			/// @param type Amount of jump targets.
 			/// @details `select <loc-id> ...`
 			AV2_IN_SELECT,
+			/// @brief Clears a given location.
+			/// @param type `Clear`= how to clear the value.
+			/// @details `clear [<loc-id>]`
+			AV2_IN_CLEAR,
+			/// @brief Creates a value with the given type and pushes it to the stack.
+			/// @param type `Create`= how to create the value.
+			/// @details `new [<type>]`
+			AV2_IN_CREATE,
 		};
 
 		/// @brief Instruction "Name" (opcode).
@@ -353,8 +361,9 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_FIELD_SET:	return "set";
 				case Name::AV2_IN_SIZEOF:		return "sizeof";
 				case Name::AV2_IN_TYPEOF:		return "typeof";
-				case Name::AV2_IN_CLEAR:		return "drop";
 				case Name::AV2_IN_SELECT:		return "pick";
+				case Name::AV2_IN_CLEAR:		return "drop";
+				case Name::AV2_IN_CREATE:		return "new";
 			}
 			return "???";
 		}
