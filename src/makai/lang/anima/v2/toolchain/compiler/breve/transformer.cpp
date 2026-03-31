@@ -402,7 +402,11 @@ static Makai::Data::Value bopDirectResolve(Makai::Data::Value const& a, Makai::D
 		case Makai::Data::Value::Kind::DVK_UNSIGNED:	return bopDirectResolveEX(a.getUnsigned(),	b.getUnsigned(),	tok);
 		case Makai::Data::Value::Kind::DVK_REAL:		return bopDirectResolveEX(a.getReal(),		b.getReal(),		tok);
 		case Makai::Data::Value::Kind::DVK_VECTOR:		return bopDirectResolveEX(a.getVector(),	b.getVector(),		tok);
-		default: return {};
+		default: {
+			if (a.isString() && b.isString() && tok.type == LTS_TT_PLUS)
+				return a.getString() + b.getString();
+			return {};
+		}
 	}
 }
 
@@ -415,7 +419,8 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		context.error("Invalid expression!", node->leftSide);
 	if (val.direct && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
-		return {{result.toString()}, val.scope, directName(context, result.type()), result};
+		if (!result.isUndefined())
+			return {{result.toString()}, val.scope, directName(context, result.type()), result};
 	}
 	if (
 		node->base.text == "copy"
@@ -450,7 +455,8 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 		context.error("Invalid expression!", node->rightSide);
 	if (val.direct && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
-		return {{result.toString()}, val.scope, directName(context, result.type()), result};
+		if (!result.isUndefined())
+			return {{result.toString()}, val.scope, directName(context, result.type()), result};
 	}
 	if (!val.isStackTop())
 		context.top()->impl->writeMainLine("push copy", val.source);
@@ -481,7 +487,8 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		context.error("Invalid expression!", node->rightSide);
 	if (lhs.direct && rhs.direct) {
 		auto const result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
-		return {{result.toString()}, nullptr, directName(context, result.type()), result};
+		if (!result.isUndefined())
+			return {{result.toString()}, nullptr, directName(context, result.type()), result};
 	}
 	if (!rhs.isStackTop())
 		context.top()->impl->writeMainLine("push", rhs.source);
@@ -502,10 +509,10 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
 	auto const v = node->value.toString();
-	if (node->value.isString())		return {{v}, nullptr,	context.basicType("string"), node->value	};
-	if (node->value.isUnsigned())	return {{v}, nullptr,	context.basicType("uint64"), node->value	};
-	if (node->value.isSigned())		return {{v}, nullptr,	context.basicType("int64"), node->value		};
-	if (node->value.isReal())		return {{v}, nullptr,	context.basicType("float64"), node->value	};
+	if (node->value.isString())		return {{v}, nullptr,	context.basicType("string"),	node->value	};
+	if (node->value.isUnsigned())	return {{v}, nullptr,	context.basicType("uint64"),	node->value	};
+	if (node->value.isSigned())		return {{v}, nullptr,	context.basicType("int64"),		node->value	};
+	if (node->value.isReal())		return {{v}, nullptr,	context.basicType("float64"),	node->value	};
 	context.error("Invalid constant!", node);
 }
 
@@ -578,16 +585,52 @@ static ATransformer::Result expandProperty(
 	return {{"stack[-0]"}, prop.scope, get->result};
 }
 
+static void addToStack(
+	ATransformer::Context& context,
+	Namespace::Instance const& ns
+) {
+	if (ns->variable) {
+		context.top()->impl->writeMainLine("push", ns->variable->source);
+	} else if (ns->property) {
+		auto const ov = ns->property->getter->overload(Makai::List<Namespace::TypeRef>());
+		context.top()->impl->writeMainLine("cal", ov->entry);
+	}
+}
+
+static ATransformer::Result pathTraverse(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Namespace::Instance const& ns,
+	Makai::UTF8StringList const& path
+) {
+	if (!ns)
+		context.error("Symbol with this name does not exist at the given path!", node);
+	if (path.empty()) {
+		return {{"stack[-0]"}, ns};
+	}
+	if (ns->variable) {
+		if (ns->variable->type->fields.contains(path.back())) {
+			auto const f = ns->type->fields[path.back()];
+			context.top()->impl->writeMainLine("at", f->id);
+			return pathTraverse(context, node, ns->variable->type->scope, path.sliced(1));
+		}
+	}
+	if (ns->property) {
+		if (ns->property->type->fields.contains(path.back())) {
+			auto const f = ns->type->fields[path.back()];
+			auto const ov = ns->property->getter->overload(Makai::List<Namespace::TypeRef>());
+			context.top()->impl->writeMainLine("call", ov->entry);
+			return pathTraverse(context, node, ns->property->type->scope, path.sliced(1));
+		}
+	}
+	return pathTraverse(context, node, context.resolve(Makai::UTF8StringList::from(path.front())), path.sliced(1));
+}
+
 ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
-	auto const path = context.pathOf(node);
-	auto const scope = context.resolve(path);
-	if (!scope)
-		context.error("Symbol does not exist!", node);
-	if (scope->variable)
-		return expandVariable(context, node, path, *scope->variable);
-	if (scope->property)
-		return expandProperty(context, node, path, *scope->property);
-	return {.scope = scope};
+	auto const path = context.pathOf(node).reverse();
+	auto const ns = context.resolve(Makai::UTF8StringList::from(path.front()));
+	addToStack(context, ns);
+	return pathTraverse(context, node, ns, path.sliced(1));
 }
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
@@ -832,4 +875,20 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	auto const fpath = path.join("/");
 	auto const subinter = import(fpath);
 	return {.scope = subinter.root};
+}
+
+ATransformer::Result Declaration::transform(Context& context, Node::Instance const& node) {
+	if (node->base.type == LTS_TT_NAMESPACE_RESOLVE)
+		return FunctionDecl().transform(context, node);
+	if (node->base.type == LTS_TT_COLON || node->base.type == LTS_TT_DECLARE)
+		return VariableDecl().transform(context, node);
+	if (node->base.type == LTS_TT_IDENTIFIER) {
+		if (node->base.text == "struct")
+			return StructureDecl().transform(context, node);
+		if (node->base.text == "prop")
+			return PropertyDecl().transform(context, node);
+		if (node->base.text == "module")
+			return NamespaceDecl().transform(context, node);
+	}
+	context.error("Invalid declaration!", node);
 }
