@@ -184,8 +184,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 	struct Subscript: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
+	};
 
-		static Makai::Function<Intermediate(UTF8String const&)> import;
+	struct TypeExtension: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Array: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }
 

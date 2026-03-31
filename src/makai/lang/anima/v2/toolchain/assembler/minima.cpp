@@ -1252,7 +1252,7 @@ static void doExpression(Context& context) {
 		return doDeclaration(context);
 	auto const id = context.get(LTS_TT_IDENTIFIER, "instruction name").getString();
 	if (id == "jump" || id == "go")				doJump(context);
-	if (id == "dynamic" || id == "dyn")			doDynamic(context);
+	else if (id == "dynamic" || id == "dyn")	doDynamic(context);
 	else if (id == "nop" || id == "next")		doNoOp(context);
 	else if (id == "swap")						doStackSwap(context);
 	else if (id == "flush")						doStackFlush(context);
