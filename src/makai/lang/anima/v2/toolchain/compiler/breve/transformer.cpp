@@ -99,37 +99,37 @@ static void addToStack(
 		context.top()->impl->writeMainLine("push", ns->variable->source);
 	} else if (ns->property) {
 		auto const ov = ns->property->getter->overloadFromTypes({});
-		context.top()->impl->writeMainLine("cal", ov->entry);
+		context.top()->impl->writeMainLine("call", ov->entry);
 	}
 }
 
-static ATransformer::Result pathTraverse(
+static ATransformer::Result resolveSubfield(
 	ATransformer::Context& context,
 	Node::Instance const& node,
 	Namespace::Instance const& ns,
-	Makai::UTF8StringList const& path
+	Makai::UTF8String const& sub
 ) {
 	if (!ns)
 		context.error("Symbol with this name does not exist at the given path!", node);
-	if (path.empty()) {
-		return {{"stack[-0]"}, ns};
+	if (sub.empty()) {
+		return {{"move stack[-0]"}, ns};
 	}
 	if (ns->variable) {
-		if (ns->variable->type->fields.contains(path.back())) {
-			auto const f = ns->type->fields[path.back()];
+		if (ns->variable->type->fields.contains(sub)) {
+			auto const f = ns->type->fields[sub];
 			context.top()->impl->writeMainLine("at", f->id);
-			return pathTraverse(context, node, ns->variable->type->scope, path.sliced(1));
+			return {{"move stack[-0]"}, f->scope, f->type};
 		}
 	}
 	if (ns->property) {
-		if (ns->property->type->fields.contains(path.back())) {
-			auto const f = ns->type->fields[path.back()];
+		if (ns->property->type->fields.contains(sub)) {
+			auto const f = ns->type->fields[sub];
 			auto const ov = ns->property->getter->overloadFromTypes({});
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return pathTraverse(context, node, ns->property->type->scope, path.sliced(1));
+			return {{"move stack[-0]"}, f->scope, f->type};
 		}
 	}
-	return pathTraverse(context, node, context.resolve(Makai::UTF8StringList::from(path.front())), path.sliced(1));
+	return {};
 }
 
 static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance const& node) {
@@ -264,10 +264,10 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	else if (!node->isPathOrName())
 		Context::error("This is not a valid path!", node);
 	Makai::UTF8StringList path;
-	if (node->content != Node::Content::AV2_TANC_NAME)
-		Context::error("This is not a valid path!", node->leftSide);
-	path.pushBack(node->leftSide->value.getString());
-	path.appendBack(pathOf(node->rightSide));
+	if (node->rightSide->content != Node::Content::AV2_TANC_NAME)
+		Context::error("This is not a valid path!", node->rightSide);
+	path.appendBack(pathOf(node->leftSide));
+	path.pushBack(node->rightSide->value.getString());
 	return path;
 }
 
@@ -627,10 +627,29 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 }
 
 ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
-	auto const path = context.pathOf(node).reverse();
-	auto const ns = context.resolve(Makai::UTF8StringList::from(path.front()));
-	addToStack(context, ns);
-	return pathTraverse(context, node, ns, path.sliced(1));
+	UTF8StringList path;
+	Namespace::Instance ns;
+	if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
+		auto const fcall = Call().transform(context, node->leftSide);
+		path = context.pathOf(node->rightSide).reverse();
+		ns = fcall.type->scope;
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+		auto const fcall = Subscript().transform(context, node->leftSide);
+		path = context.pathOf(node->rightSide).reverse();
+		ns = fcall.type->scope;
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
+		path = context.pathOf(node).reverse();
+		ns = context.resolve(Makai::UTF8StringList::from(path.front()));
+		addToStack(context, ns);
+	}else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
+		auto const nsx = PathExpression().transform(context, node->leftSide);
+		path = context.pathOf(node->rightSide).reverse();
+		ns = nsx.scope;
+		return resolveSubfield(context, node, ns, path.back());
+	}
+	if (!ns->subspaces.contains(path.front()))
+		context.error("Subpath type doesn't contain the given member!", node->leftSide);
+	return {.scope = ns->subspaces[path.front()]};
 }
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
@@ -946,8 +965,15 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 }
 
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
-	auto const result = PathExpression().transform(context, node->leftSide);
-	if (!result.scope->function)
+	auto const fn = Expression().transform(context, node->leftSide);
+	if (!fn.scope->function)
 		context.error("Symbol is not a function!", node->leftSide);
 	// TODO: Function call
+	for (auto const& arg: node->children) {
+		auto const expr = Expression().transform(context, arg);
+		if (!expr.source)
+			context.error("Expected value here!", arg);
+		if (!expr.isStackTop())
+			context.top()->impl->writeMainLine("push", *expr.source);
+	}
 }

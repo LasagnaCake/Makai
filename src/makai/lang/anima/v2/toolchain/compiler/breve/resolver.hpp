@@ -36,7 +36,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct PathResolver: AResolver {
-		PathResolver(): AResolver(Parser::Precedence::AV2_TAPP_PATH, false) {}
+		PathResolver(): AResolver(Parser::Precedence::AV2_TAPP_PATH, true) {}
 		virtual ~PathResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
