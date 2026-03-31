@@ -191,6 +191,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct DropExpressionResolver: AResolver {
+		DropExpressionResolver(): AResolver() {}
+		virtual ~DropExpressionResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct DynamicOperatorResolver: AResolver {
 		enum class Class {
 			AV2_TA_DORC_PREFIX,

@@ -205,6 +205,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool				global;
 		bool				staticEntity;
 		Handle<TypeDecl>	fieldOf;
+		uint64				id;
 	};
 
 	struct Attribute: Labeled, Positioned {
@@ -244,6 +245,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Namespace::Instance		scope;
 		Namespace::FunctionRef	getter;
 		Namespace::FunctionRef	setter;
+		Handle<TypeDecl>		fieldOf;
 	};
 
 	constexpr Attribute::Target operator&(Attribute::Target const& a, Attribute::Target const& b) {

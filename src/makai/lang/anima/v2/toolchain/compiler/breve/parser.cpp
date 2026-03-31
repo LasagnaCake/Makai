@@ -90,8 +90,6 @@ Parser::Parser(BaseContext& context): context(context) {
 		"copy",
 		"is",
 		"as",
-		"drop",
-		"static",
 		LTS_TT_PLUS,
 		LTS_TT_MINUS,
 		LTS_TT_LOGIC_NOT,
@@ -178,6 +176,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("true", prefixes, new SpecialDirectResolver());
 	add("false", prefixes, new SpecialDirectResolver());
 	add("null", prefixes, new SpecialDirectResolver());
+	add("drop", prefixes, new DropExpressionResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());

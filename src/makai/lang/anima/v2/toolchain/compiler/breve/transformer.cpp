@@ -354,7 +354,6 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	context.error("Type mismatch!", node);
 }
 
-
 ATransformer::Result Direct::transform(Context& context, Node::Instance const& node) {
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
@@ -366,6 +365,86 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	context.error("Invalid constant!", node);
 }
 
+static ATransformer::Result expandVariable(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Variable& var,
+	bool const stack = false
+);
+
+static ATransformer::Result expandProperty(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Property& prop,
+	bool const stack = false
+);
+
+static ATransformer::Result expandVariable(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Variable& var,
+	bool const stack
+) {
+	if (var.fieldOf) {
+		auto parent = context.resolve(path = path.sliced(0, -1));
+		while (path.size()) {
+			parent = context.resolve(path = path.sliced(0, -1));
+			if (!parent) continue;
+			if (parent->variable && parent->variable->type.asWeak() == var.fieldOf)
+				break;
+			if (parent->property && parent->property->type.asWeak() == var.fieldOf)
+				break;
+		}
+		if (parent && parent->variable)
+			expandVariable(context, node, path, *parent->variable, true);
+		else if (parent && parent->property)
+			expandProperty(context, node, path, *parent->property, true);
+		else if (stack) context.top()->impl->writeMainLine("push", var.source);
+		context.top()->impl->writeMainLine("at", var.id);
+		return {{"stack[-0]"}, var.scope, var.type};
+	} else
+		return {var.source, var.scope, var.type};
+}
+
+static ATransformer::Result expandProperty(
+	ATransformer::Context& context,
+	Node::Instance const& node,
+	Makai::UTF8StringList path,
+	Property& prop,
+	bool const stack
+) {
+	auto const get = prop.getter->overload(Makai::List<Namespace::TypeRef>{});
+	auto parent = context.resolve(path = path.sliced(0, -1));
+	while (path.size()) {
+		parent = context.resolve(path = path.sliced(0, -1));
+		if (!parent) continue;
+		if (parent->variable && parent->variable->type.asWeak() == prop.fieldOf)
+			break;
+		if (parent->property && parent->property->type.asWeak() == prop.fieldOf)
+			break;
+	}
+	if (parent && parent->variable)
+		expandVariable(context, node, path, *parent->variable, true);
+	else if (parent && parent->property)
+		expandProperty(context, node, path, *parent->property, true);
+	context.top()->impl->writeMainLine("call", get->entry);
+	return {{"stack[-0]"}, prop.scope, get->result};
+}
+
+ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
+	auto const path = context.pathOf(node);
+	auto const scope = context.resolve(path);
+	if (!scope)
+		context.error("Symbol does not exist!", node);
+	if (scope->variable)
+		return expandVariable(context, node, path, *scope->variable);
+	if (scope->property)
+		return expandProperty(context, node, path, *scope->property);
+	return {.scope = scope};
+}
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
 	if (!node) return {};
@@ -386,9 +465,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_INLINE_MINIMA:		return InlineAssembly().transform(context, node);
 		case Node::Content::AV2_TANC_ATTRIBUTE:			return AttributeExpression().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
-		case Node::Content::AV2_TANC_PATH: {
-			// This part will be hell
-		}
+		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
 		default: context.error("Unsupported expression!", node);
 	}
 }
