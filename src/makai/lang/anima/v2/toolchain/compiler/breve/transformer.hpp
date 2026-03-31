@@ -70,17 +70,22 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
+	struct PropertyDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct NamespaceDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
 	struct FunctionDecl: ATransformer {
 		bool pathed = true;
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
 	struct VariableDecl: ATransformer {
-		bool pathed = true;
-		Result transform(Context& context, Node::Instance const& node) override;
-	};
-
-	struct AttributeDecl: ATransformer {
 		bool pathed = true;
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
