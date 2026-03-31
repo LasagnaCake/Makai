@@ -155,16 +155,18 @@ static Namespace::AttributeRef createMetaAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Attribute";
 	attrib->fields["target"]	= {DVK_STRING								};
-	attrib->fields["globalMax"]	= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
-	attrib->fields["localMax"]	= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
+	attrib->fields["min"]		= {DVK_UNSIGNED, 0							};
+	attrib->fields["max"]		= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
+	attrib->fields["saveUses"]	= {DVK_BOOLEAN, true						};
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
 		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
 			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
 		auto const attrib = Namespace::AttributeRef::create();
-		attrib->target		= fromString(v.fetch<Makai::UTF8String>("target", "fn"));
-		attrib->localMax	= v.fetch<uint64>("localMax", Makai::Limit::MAX<uint64>);
-		attrib->globalMax	= v.fetch<uint64>("globalMax", Makai::Limit::MAX<uint64>);
+		attrib->target		= fromString(v.fetch<Makai::UTF8String>("target", "func"));
+		attrib->globalMin	= v.fetch<uint64>("min", 0);
+		attrib->globalMax	= v.fetch<uint64>("max", Makai::Limit::MAX<uint64>);
+		attrib->saveUses	= v.fetch<bool>("saveUses", true);
 		for (auto const& [name, field]: ns->subspaces) {
 			if (!field->variable)
 				continue;
@@ -177,6 +179,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 				Transformer::ATransformer::Context::error("Redeclaration of previously-declared field!", var->node);
 			Makai::Data::Value::Kind kind;
 			switch (*var->type->basic) {
+				case AV2_BT_BOOL: kind = DVK_BOOLEAN;
 				case AV2_BT_STRING: kind = DVK_STRING;
 				case AV2_BT_INT8:
 				case AV2_BT_INT16:
@@ -370,6 +373,19 @@ static Namespace::AttributeRef createBoundAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createMainAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Main";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->globalMin = 1;
+	attrib->globalMax = 1;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	};
+	return attrib;
+}
+
 bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 	using enum Lexer::CStyle::TokenStream::Token::Type;
 	if (target == Target::AV2_TAAT_EMPTY)
@@ -406,4 +422,6 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createValueAttribute());
 	addGlobalAttribute(createBoundAttribute());
 	addGlobalAttribute(createGlobalAttribute());
+	addGlobalAttribute(createStaticAttribute());
+	addGlobalAttribute(createMainAttribute());
 }

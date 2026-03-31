@@ -421,16 +421,16 @@ Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance c
 	switch (opClass) {
 		case Class::AV2_TA_DORC_PREFIX: {
 			result->leftSide = parser.nextExpression(precedence);
-			result->content = Node::Content::AV2_TANC_PREFIX_OP;
+			result->content = Node::Content::AV2_TANC_CUSTOM_PREFIX_OP;
 		}
 		case Class::AV2_TA_DORC_INFIX: {
 			result->leftSide = leftSide;
 			result->rightSide = parser.nextExpression(precedence);
-			result->content = Node::Content::AV2_TANC_INFIX_OP;
+			result->content = Node::Content::AV2_TANC_CUSTOM_INFIX_OP;
 		}
 		case Class::AV2_TA_DORC_POSTFIX: {
 			result->leftSide = leftSide;
-			result->content = Node::Content::AV2_TANC_POSTFIX_OP;
+			result->content = Node::Content::AV2_TANC_CUSTOM_POSTFIX_OP;
 		}
 	}
 	return result;

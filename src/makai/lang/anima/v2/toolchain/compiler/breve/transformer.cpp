@@ -414,6 +414,8 @@ static void resolveEmptyAttribute(
 	else context.error("Attribute limit reached!", node);
 	if (!Attribute::matchesTarget(*ns, scope->attribute->target))
 		context.error("Invalid attribute for given expression!", node);
+	if (scope->attribute->saveUses)
+		scope->attribute->uses.pushBack(ns);
 	if (attribs.contains(scope->attribute->name))
 		context.error("Reapplication of previous attribute!", node);
 	auto const attr = Metadata::Instance::create();
@@ -445,6 +447,8 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 		else context.error("Attribute limit reached!", node);
 		if (!Attribute::matchesTarget(*ns, scope->attribute->target))
 			context.error("Invalid attribute for given expression!", node);
+		if (scope->attribute->saveUses)
+			scope->attribute->uses.pushBack(ns);
 		if (attribs.contains(scope->attribute->name))
 			context.error("Reapplication of previous attribute!", node->leftSide);
 		auto const attr = Metadata::Instance::create();

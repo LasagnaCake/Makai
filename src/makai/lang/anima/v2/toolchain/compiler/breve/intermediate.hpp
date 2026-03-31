@@ -220,9 +220,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		};
 
 		Target target	= Target::AV2_TAAT_EVERYTHING;
-		usize useCount;
-		usize globalMax;
-		usize localMax;
+		usize	useCount	= 0;
+		usize	globalMin	= 0;
+		usize	globalMax	= -1;
+		bool	saveUses	= true;
+
+		List<Namespace::Instance> uses;
 
 		struct Field {
 			Data::Value::Kind	type;

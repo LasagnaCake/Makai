@@ -36,7 +36,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_ATTRIBUTE,
 			AV2_TANC_TYPE_EXTENSION,
 			AV2_TANC_ALIAS,
-			AV2_TANC_INLINE_MINIMA
+			AV2_TANC_INLINE_MINIMA,
+			AV2_TANC_CUSTOM_PREFIX_OP,
+			AV2_TANC_CUSTOM_INFIX_OP,
+			AV2_TANC_CUSTOM_POSTFIX_OP,
 		};
 
 		Content							content = Content::AV2_TANC_EMPTY;
