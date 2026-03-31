@@ -240,7 +240,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			auto& var = *sub->variable;
 			var.fieldOf = scope->type.asWeak();
 			type.fields[name] = sub->variable;
-		}
+		} else context.error("Structure declarations can only contain variables!", node);
 	}
 	context.pop(1);
 	return {.scope = initScope};
