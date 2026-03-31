@@ -61,6 +61,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		static KeyValuePair<UTF8StringList, Namespace::Instance> resolve(Context& context, Node::Instance const& node, bool const allowPaths);
 
 		KeyValuePair<UTF8StringList, Namespace::Instance> resolve(Context& context, Node::Instance const& node) const;
+		KeyValuePair<UTF8StringList, Namespace::Instance> traverse(Context& context, Node::Instance const& node) const;
 
 		virtual Result transform(Context& context, Node::Instance const& node) = 0;
 	};
