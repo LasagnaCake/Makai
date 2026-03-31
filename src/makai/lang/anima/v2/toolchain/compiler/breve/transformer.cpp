@@ -1036,6 +1036,6 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	}
 	auto const arr = context.arrayFor(prev);
 	context.top()->impl->writeMainLine("new", arr->name);
-	context.top()->impl->writeMainLine("insert", count);
+	context.top()->impl->writeMainLine("build", count);
 	return {{"move stack[-0]"}, arr->scope, arr};
 }
