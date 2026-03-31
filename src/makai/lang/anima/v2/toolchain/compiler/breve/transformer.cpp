@@ -622,6 +622,7 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
 	auto const v = node->value.toString();
+	if (node->value.isBoolean())	return {{v}, context.basicType("bool")->scope,		context.basicType("bool"),		node->value	};
 	if (node->value.isString())		return {{v}, context.basicType("string")->scope,	context.basicType("string"),	node->value	};
 	if (node->value.isUnsigned())	return {{v}, context.basicType("uint64")->scope,	context.basicType("uint64"),	node->value	};
 	if (node->value.isSigned())		return {{v}, context.basicType("int64")->scope,		context.basicType("int64"),		node->value	};
@@ -1020,5 +1021,21 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 }
 
 ATransformer::Result Array::transform(Context& context, Node::Instance const& node) {
-
+	Namespace::TypeRef prev;
+	usize const count = node->children.size();
+	for (auto const& arg: node->children) {
+		auto const expr = Expression().transform(context, arg);
+		if (!expr.source)
+			context.error("Expected value here!", arg);
+		if (!expr.isStackTop())
+			context.top()->impl->writeMainLine("push", *expr.source);
+		if (!prev)
+			prev = expr.type;
+		else if (!(prev = TypeDecl::stronger(prev, expr.type)))
+			context.error("Type mismatch here!", arg);
+	}
+	auto const arr = context.arrayFor(prev);
+	context.top()->impl->writeMainLine("new", arr->name);
+	context.top()->impl->writeMainLine("insert", count);
+	return {{"move stack[-0]"}, arr->scope, arr};
 }

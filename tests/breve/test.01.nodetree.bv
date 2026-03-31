@@ -5,20 +5,20 @@ using core.io
 module Test.Namespace {
 	@Nullable
 	struct MySpecialStruct {
-		foo :: (var: int) -> int {
-			return var + var
-		}
-
-		bar :: (var: int) -> int => (foo(var) * var)
-
-		baz :: (var: int) => writeLine(bar(var) - var)
-
-		biff :: () -> void
-
 		example : int = 0
 	}
+
+	foo :: (var: int) -> int {
+		return var + var
+	}
+
+	bar :: (var: int) -> int => (foo(var) * var)
+
+	baz :: (var: int) => writeLine(bar(var) - var)
+
+	biff :: () -> void
 }
 
 main {
-    writeLine("Hello, World!")
+	writeLine("Hello, World!")
 }

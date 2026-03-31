@@ -319,7 +319,7 @@ namespace Makai::Anima::V2::Core {
 			/// @details `select <loc-id> ...`
 			AV2_IN_SELECT,
 			/// @brief Clears a given location.
-			/// @param type `Clear`= how to clear the value.
+			/// @param type `Clear`= how to clear the location.
 			/// @details `clear [<loc-id>]`
 			AV2_IN_CLEAR,
 			/// @brief Creates a value with the given type and pushes it to the stack.
