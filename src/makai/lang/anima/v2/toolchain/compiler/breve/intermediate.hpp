@@ -236,6 +236,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		struct Field {
 			Data::Value::Kind	type;
 			Data::Value			defaultValue;
+			bool				path = false;
 		};
 
 		UTF8Dictionary<Field> fields;

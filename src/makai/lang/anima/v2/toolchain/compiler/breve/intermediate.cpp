@@ -165,7 +165,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 	attrib->fields["min"]		= {DVK_UNSIGNED, 0							};
 	attrib->fields["max"]		= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
 			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
 		auto const attrib = Namespace::AttributeRef::create();
@@ -264,10 +264,10 @@ static Namespace::AttributeRef createGlobalAttribute() {
 	attrib->fields["source"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		static Makai::UTF8Dictionary<Namespace::TypeRef> globalTypes;
-		if (ns->variable->initializer)
-			Transformer::ATransformer::Context::error("Globals cannot have initializers!", ns->node);
 		if (ns->variable->global)
 			Transformer::ATransformer::Context::error("Variable cannot be both Global and Static!", ns->node);
+		if (ns->variable->initializer)
+			Transformer::ATransformer::Context::error("Globals cannot have initializers!", ns->node);
 		ns->variable->global = true;
 		ns->variable->staticEntity = true;
 		auto const srcName = v["source"].getString().replace('\\', '/').replace('/', '.');
@@ -307,7 +307,7 @@ static Namespace::AttributeRef createMemberAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Member";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->fields["type"] = {DVK_STRING};
+	attrib->fields["type"] = {.type = DVK_STRING, .path = true};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		auto const bns = inter.resolve(Makai::UTF8String(v["type"].getString()).split("/"));
 		if (!(bns && bns->type))

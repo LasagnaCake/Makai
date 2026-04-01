@@ -717,7 +717,7 @@ static void resolveEmptyAttribute(
 		else attr->value[name] = field.defaultValue;
 	if (missing.size())
 		context.error("Required attributes [" + missing.join(",") + "] missing!", node);
-	scope->attribute->transform(ns, attr->value, *attr->attribute);
+	scope->attribute->transform(context, ns, attr->value, *attr->attribute);
 }
 
 static Makai::Dictionary<Metadata::Instance> resolveAttribute(
@@ -752,9 +752,11 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 				context.error("Redeclaration of previously-declared field!", at->leftSide);
 			if (!attr->attribute->fields.contains(name))
 				context.error("Field does not exist for given attribute!", at);
-			if (at->rightSide->content == Node::Content::AV2_TANC_PATH) {
+			if (at->rightSide->content == Node::Content::AV2_TANC_PATH && attr->attribute->fields[name].path) {
 				attr->value[name] = context.pathOf(at->rightSide).join("/").toString();
-			} else if (!(
+			} else if (attr->attribute->fields[name].path)
+				context.error("Expected path here!", at->rightSide);
+		 	else if (!(
 				at->rightSide->content == Node::Content::AV2_TANC_VALUE
 			||	at->rightSide->content == Node::Content::AV2_TANC_NAME
 			)) context.error("Expected constant (or name) here!", at->rightSide);
@@ -768,7 +770,7 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			else if (attr->value[name].type() != desc.type)
 				context.error("Attribute field mismatch!", node);
 		attribs[scope->attribute->name] = attr;
-		attr->attribute->transform(ns, attr->value, *attr->attribute);
+		attr->attribute->transform(context, ns, attr->value, *attr->attribute);
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
 		for (auto const& attrib: node->children) {
 			auto const attrs = resolveAttribute(context, attrib, ns, attribs);
