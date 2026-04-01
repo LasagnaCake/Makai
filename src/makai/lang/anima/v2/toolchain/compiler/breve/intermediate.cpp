@@ -56,7 +56,6 @@ Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 void Intermediate::pop(usize count) {
 	while (scopeStack.size() && count--) {
 		auto const scope = scopeStack.popBack();
-		if (!scope->impl) continue;
 	}
 }
 
@@ -609,7 +608,7 @@ Makai::Data::Value Attribute::serialize() const {
 	out["uses"] = useCount;
 	out["min"] = globalMin;
 	out["max"] = globalMax;
-	for (auto const [name, field]: fields) {
+	for (auto const& [name, field]: fields) {
 		auto& f = out["fields"][name.toString()];
 		f["type"] = Makai::Data::Value::asNameString(field.type);
 		if (field.defaultValue)
