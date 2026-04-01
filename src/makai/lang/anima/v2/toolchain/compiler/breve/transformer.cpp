@@ -62,9 +62,9 @@ static ATransformer::Result expandVariable(
 			expandProperty(context, node, path, *parent->property, true);
 		else if (stack) context.top()->impl->writeMainLine("push", var.source);
 		context.top()->impl->writeMainLine("at", var.id);
-		return {{"stack[-0]"}, var.scope, var.type};
+		return {{"stack[-0]"}, var.scope.raw(), var.type};
 	} else
-		return {var.source, var.scope, var.type};
+		return {var.source, var.scope.raw(), var.type};
 }
 
 static ATransformer::Result expandProperty(
@@ -89,7 +89,7 @@ static ATransformer::Result expandProperty(
 	else if (parent && parent->property)
 		expandProperty(context, node, path, *parent->property, true);
 	context.top()->impl->writeMainLine("call", get->entry);
-	return {{"stack[-0]"}, prop.scope, get->result};
+	return {{"stack[-0]"}, prop.scope.raw(), get->result};
 }
 
 static void addToStack(
@@ -119,7 +119,7 @@ static ATransformer::Result resolveSubfield(
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->type->fields[sub];
 			context.top()->impl->writeMainLine("at", f->id);
-			return {{"move stack[-0]"}, f->scope, f->type};
+			return {{"move stack[-0]"}, f->scope.raw(), f->type};
 		}
 	}
 	if (ns->property) {
@@ -127,7 +127,7 @@ static ATransformer::Result resolveSubfield(
 			auto const f = ns->type->fields[sub];
 			auto const ov = ns->property->getter->overloadFromTypes({});
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move stack[-0]"}, f->scope, f->type};
+			return {{"move stack[-0]"}, f->scope.raw(), f->type};
 		}
 	}
 	return {};
@@ -196,7 +196,7 @@ static ATransformer::Result infixResolve(ATransformer::Context& context, Node::I
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"stack[-0]"}, ov->result->scope, ov->result};
+			return {{"stack[-0]"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -211,7 +211,7 @@ static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"stack[-0]"}, ov->result->scope, ov->result};
+			return {{"stack[-0]"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -226,7 +226,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"stack[-0]"}, ov->result->scope, ov->result};
+			return {{"stack[-0]"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -553,11 +553,11 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	) {
 		context.top()->impl->writeMainLine(node->base.text.sliced(0, -3));
 		auto const retType = node->base.text == "typeof" ? context.basicType("type") : context.basicType("uint64");
-		return {{"move stack[-0]"}, retType->scope, retType};
+		return {{"move stack[-0]"}, retType->scope.raw(), retType};
 	}
 	if (val.type->basic) {
 		context.top()->impl->writeMainLine("op", bopName(context, node));
-		return {{"move stack[-0]"}, val.type->scope, val.type};
+		return {{"move stack[-0]"}, val.type->scope.raw(), val.type};
 	} else return prefixResolve(context, node, val.type);
 }
 
@@ -569,14 +569,14 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 	if (val.direct && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString()}, val.type->scope, directName(context, result.type()), result};
+			return {{result.toString()}, val.type->scope.raw(), directName(context, result.type()), result};
 	}
 	if (!val.isStackTop())
 		context.top()->impl->writeMainLine("push copy", val.source);
 	context.top()->impl->writeMainLine("op", uopName(context, node));
 	if (val.type->basic) {
 		context.top()->impl->writeMainLine("op", bopName(context, node));
-		return {{"move stack[-0]"}, val.type->scope, val.type};
+		return {{"move stack[-0]"}, val.type->scope.raw(), val.type};
 	} else return postfixResolve(context, node, val.type);
 }
 
@@ -594,7 +594,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		auto const t = TypeRequest().transform(context, node->rightSide);
 		context.writeMainLine(node->base.text, t.type->name);
 		auto const retType = node->base.text == "is" ? context.basicType("bool") : t.type;
-		return {{"move stack[-0]"}, retType->scope, retType};
+		return {{"move stack[-0]"}, retType->scope.raw(), retType};
 	}
 	auto const rhs = expr.transform(context, node->rightSide);
 	if (!rhs.source)
@@ -602,7 +602,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	if (lhs.direct && rhs.direct) {
 		auto const result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString()}, directName(context, result.type())->scope, directName(context, result.type()), result};
+			return {{result.toString()}, directName(context, result.type())->scope.raw(), directName(context, result.type()), result};
 	}
 	if (!rhs.isStackTop())
 		context.top()->impl->writeMainLine("push", rhs.source);
@@ -613,7 +613,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		if (t->basic) {
 			context.top()->impl->writeMainLine("op", bopName(context, node));
-			return {{"move stack[-0]"}, t->scope, t};
+			return {{"move stack[-0]"}, t->scope.raw(), t};
 		} else return infixResolve(context, node, t);
 	}
 	context.error("Type mismatch!", node);
@@ -623,17 +623,17 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
 	auto const v = node->value.toString();
-	if (node->value.isBoolean())	return {{v}, context.basicType("bool")->scope,		context.basicType("bool"),		node->value	};
-	if (node->value.isString())		return {{v}, context.basicType("string")->scope,	context.basicType("string"),	node->value	};
-	if (node->value.isUnsigned())	return {{v}, context.basicType("uint64")->scope,	context.basicType("uint64"),	node->value	};
-	if (node->value.isSigned())		return {{v}, context.basicType("int64")->scope,		context.basicType("int64"),		node->value	};
-	if (node->value.isReal())		return {{v}, context.basicType("float64")->scope,	context.basicType("float64"),	node->value	};
+	if (node->value.isBoolean())	return {{v}, context.basicType("bool")->scope.raw(),	context.basicType("bool"),		node->value	};
+	if (node->value.isString())		return {{v}, context.basicType("string")->scope.raw(),	context.basicType("string"),	node->value	};
+	if (node->value.isUnsigned())	return {{v}, context.basicType("uint64")->scope.raw(),	context.basicType("uint64"),	node->value	};
+	if (node->value.isSigned())		return {{v}, context.basicType("int64")->scope.raw(),	context.basicType("int64"),		node->value	};
+	if (node->value.isReal())		return {{v}, context.basicType("float64")->scope.raw(),	context.basicType("float64"),	node->value	};
 	context.error("Invalid constant!", node);
 }
 
 ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
 	UTF8StringList path;
-	Namespace::Instance ns;
+	Handle<Namespace> ns;
 	if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const fcall = Call().transform(context, node->leftSide);
 		path = context.pathOf(node->rightSide).reverse();
@@ -644,15 +644,15 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		ns = fcall.type->scope;
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
 		path = context.pathOf(node->leftSide).reverse();
-		ns = context.resolve(Makai::UTF8StringList::from(path.front()));
+		ns = context.resolve(Makai::UTF8StringList::from(path.front())).asWeak();
 		if (!ns) context.error("Symbol with this name does not exist!", node->leftSide);
-		return {.scope = ns};
-		addToStack(context, ns);
+		return {.scope = ns.raw()};
+		addToStack(context, ns.raw());
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
 		auto const nsx = PathExpression().transform(context, node->leftSide);
 		path = context.pathOf(node->rightSide).reverse();
 		ns = nsx.scope;
-		return resolveSubfield(context, node, ns, path.back());
+		return resolveSubfield(context, node, ns.raw(), path.back());
 	}
 	if (!ns->subspaces.contains(path.front()))
 		context.error("Subpath type doesn't contain the given member!", node->leftSide);
@@ -859,7 +859,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			oo->result = ov->result;
 			oo->scope = overloadScope.asWeak();
 			for (auto const& arg: args)
-				oo->scope->subspaces[arg->name] = arg->scope;
+				oo->scope->subspaces[arg->name] = arg->scope.raw();
 			fn.overloads.pushBack(oo);
 			if (!implOv) implOv = oo;
 			else {
@@ -990,7 +990,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		context.error("Requested overload does not exist!", node);
 	auto& ov = *f.overloadFromTypes(args);
 	context.top()->impl->writeMainLine("call", ov.entry);
-	return {{"move stack[-0]"}, ov.result->scope, ov.result};
+	return {{"move stack[-0]"}, ov.result->scope.raw(), ov.result};
 }
 
 ATransformer::Result Subscript::transform(Context& context, Node::Instance const& node) {
@@ -1018,7 +1018,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("dyn at");
 	} else context.error("Expected unsigned integer here!", node->rightSide);
 	auto const t = src.type->base;
-	return {{"move stack[-0]"}, t->scope, t};
+	return {{"move stack[-0]"}, t->scope.raw(), t};
 }
 
 ATransformer::Result Array::transform(Context& context, Node::Instance const& node) {
@@ -1039,5 +1039,5 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	context.top()->impl->writeMainLine("new", arr->name);
 	for (auto const i: range(count))
 		context.top()->impl->writeMainLine("set", count - (i+1));
-	return {{"move stack[-0]"}, arr->scope, arr};
+	return {{"move stack[-0]"}, arr->scope.raw(), arr};
 }
