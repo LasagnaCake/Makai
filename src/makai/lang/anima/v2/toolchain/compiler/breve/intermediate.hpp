@@ -192,8 +192,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Handle<TypeDecl>				methodOf;
 			Variant							variant = Variant::AV2_TCB_FOV_NONE;
 
-			UTF8Dictionary<Attribute::Instance> meta;
-
 			UTF8String prototype() const;
 		};
 		using OverloadRef = Instance<Overload>;
