@@ -899,7 +899,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.direct) context.error("Cannot assign a value to a direct value!", node->leftSide);
 	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
-		context.top()->impl->writeMainLine("copy", rhs.source, "->", *lhs.source);
+		context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
 		return {lhs.source, lhs.scope, t, rhs.direct};
 	} else context.error("Type mismatch!", node);
 }
