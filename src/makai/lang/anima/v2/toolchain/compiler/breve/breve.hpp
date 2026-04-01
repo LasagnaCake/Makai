@@ -5,5 +5,6 @@
 #include "compiler.hpp"
 #include "parser.hpp"
 #include "resolver.hpp"
+#include "transformer.hpp"
 
 #endif
