@@ -625,4 +625,12 @@ Makai::Data::Value Property::serialize() const {
 	if (type)	out["type"]	= type->name.toString();
 	if (getter)	out["get"]	= getter->serialize();
 	if (setter)	out["set"]	= setter->serialize();
+	return out;
+}
+
+Makai::Data::Value Intermediate::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["root"] = root->serialize();
+	out["stack"] = scopeStack.size();
+	return out;
 }
