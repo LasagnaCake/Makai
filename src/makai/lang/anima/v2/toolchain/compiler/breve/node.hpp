@@ -37,6 +37,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_TYPE_EXTENSION,
 			AV2_TANC_ALIAS,
 			AV2_TANC_INLINE_MINIMA,
+			AV2_TANC_EMPTY_DECAY,
+			AV2_TANC_NEW,
+			AV2_TANC_DROP,
 			AV2_TANC_CUSTOM_PREFIX_OP,
 			AV2_TANC_CUSTOM_INFIX_OP,
 			AV2_TANC_CUSTOM_POSTFIX_OP,
@@ -61,7 +64,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		}
 
 		constexpr bool isVariableDeclaration() const {
-			return content == Content::AV2_TANC_ASSIGNMENT || (
+			return (
 				content == Content::AV2_TANC_DECLARATION
 			&&	(
 					base.type == As<decltype(base.type)>(':')

@@ -375,9 +375,6 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	}
 	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)
 		result->rightSide = parser.nextExpression();
-	/*else if (parser.context.peek().type == LTS_TT_SEMICOLON)
-		parser.context.next();
-	else parser.context.error("Expected '=>', ';' or '{' here!");*/
 	DEBUGLN("FunctionDecl:DONE!");
 	return result;
 }
@@ -386,7 +383,6 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	// TODO: This
 	auto const expr = parser.nextExpression();
 	if (expr->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 		result->leftSide = expr->leftSide;
@@ -427,6 +423,15 @@ Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& left
 		result->leftSide = decl->leftSide;
 		result->rightSide = decl->rightSide;
 	} else parser.context.error("Invalid alias expression!");
+	return result;
+}
+
+Node::Instance EmptyDecayResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->content = Node::Content::AV2_TANC_EMPTY_DECAY;
+	result->base = token;
+	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression(precedence);
 	return result;
 }
 

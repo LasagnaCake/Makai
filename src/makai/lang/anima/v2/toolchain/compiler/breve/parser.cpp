@@ -177,11 +177,13 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("false", prefixes, new SpecialDirectResolver());
 	add("null", prefixes, new SpecialDirectResolver());
 	add("drop", prefixes, new DropExpressionResolver());
+	add("new", prefixes, new CreateExpressionResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());
 	add("unless", infixes, new InlineIfElseResolver());
 	add(LTS_TT_NAMESPACE_RESOLVE, infixes, new FunctionDeclResolver());
+	add(LTS_TT_NULL_DECAY, infixes, new EmptyDecayResolver());
 	add(LTS_TT_DOT, infixes, new PathResolver());
 	add(LTS_TT_DECLARE, infixes, new VariableDeclResolver());
 	add(LTS_TT_COLON, infixes, new VariableDeclResolver());

@@ -197,6 +197,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct CreateExpressionResolver: AResolver {
+		CreateExpressionResolver(): AResolver() {}
+		virtual ~CreateExpressionResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct EmptyDecayResolver: AResolver {
+		EmptyDecayResolver(): AResolver(Parser::Precedence::AV2_TAPP_NULL_DECAY, false) {}
+		virtual ~EmptyDecayResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct DynamicOperatorResolver: AResolver {
 		enum class Class {
 			AV2_TA_DORC_PREFIX,
