@@ -472,7 +472,7 @@ Node::Instance DynamicOperatorResolver::resolve(Parser& parser, Node::Instance c
 }
 
 Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	auto const opkey = parser.context.getNext(LTS_TT_IDENTIFIER, "operator name").getString();
+	auto const opkey = parser.context.expectNext(LTS_TT_IDENTIFIER, "operator name").token().text;
 	if (
 		token.text == "prefix"
 	||	token.text == "postfix"
