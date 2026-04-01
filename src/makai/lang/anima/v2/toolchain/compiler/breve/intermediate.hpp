@@ -95,6 +95,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		}
 	};
 
+	struct Scoped {
+		Handle<Namespace> node;
+	};
+
 	struct Implementation: IWritable, IComposable {
 		using Instance		= Instance<Implementation>;
 		UTF8String pre, main, post;
@@ -177,10 +181,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Function: Labeled, Positioned {
-		struct Overload {
+		struct Overload: Scoped {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
-			Namespace::Instance				scope;
 			UTF8String						entry;
 			bool							staticEntity;
 			Handle<TypeDecl>				methodOf;
@@ -196,9 +199,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		OverloadRef overloadFromTypes(List<Namespace::TypeRef> const& args) const;
 	};
 
-	struct Variable: Labeled, Positioned {
+	struct Variable: Labeled, Positioned, Scoped {
 		Namespace::TypeRef	type;
-		Namespace::Instance	scope;
 		Namespace::Instance	initializer;
 		UTF8String			source;
 		Data::Value			value;
@@ -241,9 +243,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		static bool matchesTarget(Namespace const& ns, Target const target);
 	};
 
-	struct Property:  Labeled, Positioned {
+	struct Property:  Labeled, Positioned, Scoped {
 		Namespace::TypeRef		type;
-		Namespace::Instance		scope;
 		Namespace::FunctionRef	getter;
 		Namespace::FunctionRef	setter;
 		Handle<TypeDecl>		fieldOf;
@@ -261,7 +262,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		return Makai::Cast::as<Attribute::Target>(~enumcast(a));
 	}
 
-	struct Trait: Labeled, Positioned {
+	struct Trait: Labeled, Positioned, Scoped {
 	};
 
 	struct Intermediate: IWritable {

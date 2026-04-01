@@ -336,13 +336,13 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
 	auto [name, scope] = resolve(context, node->leftSide);
-	if (scope->type)
+	if (scope && scope->type)
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
+	if (!scope = context.declare(name));
 	auto& type = *(scope->type = scope->type.create());
 	auto const initer = name.join("_") + node->name();
-	auto const initScope = context.declare(UTF8StringList::from("<>" + initer));
 	Block().transform(context, node->rightSide);
-	type.scope = initScope;
+	type.scope = scope.asWeak();
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
 	scope->type->flags |= Core::Definition::Flags::AV2_DF_STRUCTURE;
@@ -353,8 +353,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			type.fields[name] = sub->variable;
 		} else context.error("Structure declarations can only contain variables!", node);
 	}
-	context.pop(1);
-	return {.scope = initScope};
+	context.pop(name.size());
+	return {.scope = scope, .type = scope->type};
 }
 
 ATransformer::Result Return::transform(Context& context, Node::Instance const& node) {
@@ -856,7 +856,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			oo->entry = "__" + ovName + node->name();
 			oo->arguments = args;
 			oo->result = ov->result;
-			oo->scope = overloadScope;
+			oo->scope = overloadScope.asWeak();
 			for (auto const& arg: args)
 				oo->scope->subspaces[arg->name] = arg->scope;
 			fn.overloads.pushBack(oo);
@@ -880,7 +880,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		implScope->impl->writePreLine("begin", implScope->varc);
 		implScope->impl->writePreLine("bind", implScope->varc, "[0 : 0]");
 		implScope->impl->writePostLine("end");
-		implOv->scope = implScope;
+		implOv->scope = implScope.asWeak();
 		context.scopeStack.popBack();
 	}
 	return {.scope = scope};
@@ -1036,6 +1036,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	}
 	auto const arr = context.arrayFor(prev);
 	context.top()->impl->writeMainLine("new", arr->name);
-	context.top()->impl->writeMainLine("build", count);
+	for (auto const i: range(count))
+		context.top()->impl->writeMainLine("set", count - (i+1));
 	return {{"move stack[-0]"}, arr->scope, arr};
 }
