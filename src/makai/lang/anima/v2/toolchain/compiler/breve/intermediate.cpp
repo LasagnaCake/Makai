@@ -225,9 +225,6 @@ static Namespace::AttributeRef createConverterAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Converter";
-	attrib->fields["prefix"]	= {DVK_STRING, ""	};
-	attrib->fields["infix"]		= {DVK_STRING, ""	};
-	attrib->fields["postfix"]	= {DVK_STRING, ""	};
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
 	};
@@ -267,12 +264,14 @@ static Namespace::AttributeRef createGlobalAttribute() {
 		static Makai::UTF8Dictionary<Namespace::TypeRef> globalTypes;
 		if (ns->variable->initializer)
 			Transformer::ATransformer::Context::error("Globals cannot have initializers!", ns->node);
+		if (ns->variable->global)
+			Transformer::ATransformer::Context::error("Variable cannot be both Global and Static!", ns->node);
 		ns->variable->global = true;
 		ns->variable->staticEntity = true;
 		auto const srcName = v["source"].getString().replace('\\', '/').replace('/', '.');
 		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type)
 			Transformer::ATransformer::Context::error("Global variable type mismatch!", ns->node);
-		ns->variable->source = "$" + srcName;
+		ns->variable->source = "move $" + srcName;
 	};
 	return attrib;
 }
@@ -282,12 +281,34 @@ static Namespace::AttributeRef createStaticAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Static";
-	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
+	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE | Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
 		static Makai::Random::SecureGenerator rng;
-		ns->variable->global = true;
-		ns->variable->staticEntity = true;
-		ns->variable->source = "$__STATIC__._ns_" + Makai::toString(rng.integer()) + "._ns_" + ns->node->name() + "._" + ns->variable->name;
+		if (ns->variable) {
+			if (ns->variable->global)
+				Transformer::ATransformer::Context::error("Variable cannot be both Global and Static!", ns->node);
+			ns->variable->global = true;
+			ns->variable->staticEntity = true;
+			ns->variable->source = "move $__STATIC__._ns_" + Makai::toString(rng.integer()) + "._ns_" + ns->node->name() + "._" + ns->variable->name;
+		} else if (ns->function) {
+			for (auto& ov: ns->function->overloads)
+				if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE)
+					ov->variant = Function::Overload::Variant::AV2_TCB_FOV_STATIC;
+		}
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createInstanceAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Static";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		for (auto& ov: ns->function->overloads)
+			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE)
+				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_INSTANCED;
 	};
 	return attrib;
 }
@@ -440,7 +461,7 @@ bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 		return false;
 	if (ns.variable && enumcast(target & Target::AV2_TAAT_VARIABLE))
 		return true;
-	if (ns.type && (ns.type->def == TypeDecl::Definition::AV2_TCTD_STRUCT) && enumcast(target & Target::AV2_TAAT_STRUCT))
+	if ((ns.type && ns.type->def == TypeDecl::Definition::AV2_TCTD_STRUCT) && enumcast(target & Target::AV2_TAAT_STRUCT))
 		return true;
 	if (ns.property && enumcast(target & Target::AV2_TAAT_PROPERTY ))
 		return true;
