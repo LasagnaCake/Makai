@@ -83,7 +83,7 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 	DEBUGLN("Resolving inline if-else expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->middle= leftSide;
+	result->middle = leftSide;
 	result->leftSide = parser.nextExpression(precedence);
 	parser.context.expectNext(LTS_TT_IDENTIFIER, "'else'");
 	if (parser.context.value().getString() != "else")
@@ -205,7 +205,12 @@ Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lef
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_BRANCH;
 	result->value = token.text.toString();
-	// TODO: This
+	result->middle		= parser.nextExpression();
+	result->leftSide	= parser.nextExpression();
+	if (parser.context.peek().text == "else") {
+		parser.context.next();
+		result->rightSide = parser.nextExpression();
+	}
 	DEBUGLN("Branch:DONE!");
 	return result;
 }
@@ -214,8 +219,18 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& leftS
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_LOOP;
-	result->value = token.text.toString();
-	// TODO: This
+	result->value = null;
+	if (token.text == "do") {
+		result->rightSide	= parser.nextExpression();
+		parser.context.expectNext(LTS_TT_IDENTIFIER);
+		if (parser.context.token().text != "while")
+			parser.context.error("Expected 'while' here!");
+		result->value = parser.context.token().text.toString();
+		result->leftSide	= parser.nextExpression();
+	} else {
+		result->leftSide	= parser.nextExpression();
+		result->rightSide	= parser.nextExpression();
+	}
 	return result;
 }
 
