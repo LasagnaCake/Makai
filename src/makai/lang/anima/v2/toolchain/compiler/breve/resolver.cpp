@@ -16,18 +16,21 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lef
 	auto isIdentifier = parser.context.type() == LTS_TT_IDENTIFIER;
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	if (isIdentifier) {
-		isIdentifier = false;
-		auto const id = token.text;
-		if (id == "true")		result->value = true;
-		else if (id == "false")	result->value = false;
-		else if (id == "null")	result->value = null;
-		else {
-			isIdentifier = true;
-			result->value = id.toString();
-		}
-	} else result->value = token.value;
+	result->value = token.value;
 	result->content = isIdentifier ? Node::Content::AV2_TANC_NAME : Node::Content::AV2_TANC_VALUE;
+	DEBUGLN("Direct:DONE!");
+	return result;
+}
+
+Node::Instance SpecialDirectResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving special direct expression...");
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	auto const id = token.text;
+	if (id == "true")		result->value = true;
+	else if (id == "false")	result->value = false;
+	else if (id == "null")	result->value = null;
+	result->content = Node::Content::AV2_TANC_VALUE;
 	DEBUGLN("Direct:DONE!");
 	return result;
 }
