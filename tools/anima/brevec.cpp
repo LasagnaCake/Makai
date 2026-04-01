@@ -1,5 +1,6 @@
 #include <makai/makai.hpp>
 #include "base.cc"
+#include "makai/lang/anima/v2/toolchain/compiler/breve/transformer.hpp"
 
 using namespace Makai::Anima::V2;
 
@@ -69,7 +70,7 @@ int main(int argc, char** argv) try {
 			);
 		} else if (cfg["level"].getString("full") == "intermediate") {
 			Compiler::Breve::Transformer::ATransformer::Context ctx;
-			Compiler::Breve::Transformer::TheWholeProgram tf;
+			Compiler::Breve::Transformer::TheEntireProgram tf;
 			tf.transform(ctx, parser.parse());
 			Makai::File::saveText(
 				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
@@ -78,10 +79,9 @@ int main(int argc, char** argv) try {
 					file
 						.splitAtLast('/').back()
 						.splitAtLast('.').front()
-				) + ".bpt",
+				) + ".bir",
 				ctx.serialize().toFLOWString("  ")
 			);
-			// TODO: This
 		} else {
 			// TODO: This
 		}
