@@ -873,7 +873,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				overloadScope->impl->writePreLine(oo->entry, ":");
 				overloadScope->impl->writePreLine("begin", toString(args.size()));
 				overloadScope->impl->writePreLine("bind", toString(args.size()), "[0 : 0]");
-				overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose());
+				overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 				overloadScope->impl->writePostLine("call", implOv->entry);
 				overloadScope->impl->writePostLine("end");
 			}
@@ -1067,7 +1067,7 @@ ATransformer::Result Drop::transform(Context& context, Node::Instance const& nod
 	if (!at.source)
 		context.error("Expression does not result in a value!", node->leftSide);
 	if (!at.direct)
-		context.top()->impl->writeMainLine("drop", at.source);
+		context.top()->impl->writeMainLine("drop", *at.source);
 	return {};
 }
 
