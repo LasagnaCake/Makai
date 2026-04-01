@@ -5,10 +5,10 @@
 
 /*
 
-[MikuTeto]
-↑O↑   ▼O▼
-/|\   /|\
-/ \   / \
+[MikuTeto (+ Yi Xi)]
+↑O↑   ▼O▼    Θ-▐▌
+/|\   /|\   /|\!
+/ \   / \   / \
 
  */
 
@@ -64,7 +64,7 @@ static ATransformer::Result expandVariable(
 			expandProperty(context, node, path, *parent->property, true);
 		else if (stack) context.top()->impl->writeMainLine("push", var.source);
 		context.top()->impl->writeMainLine("at", var.id);
-		return {{"stack[-0]"}, var.scope.raw(), var.type};
+		return {{"move stack[-0]"}, var.scope.raw(), var.type};
 	} else
 		return {var.source, var.scope.raw(), var.type};
 }
@@ -91,7 +91,7 @@ static ATransformer::Result expandProperty(
 	else if (parent && parent->property)
 		expandProperty(context, node, path, *parent->property, true);
 	context.top()->impl->writeMainLine("call", get->entry);
-	return {{"stack[-0]"}, prop.scope.raw(), get->result};
+	return {{"move stack[-0]"}, prop.scope.raw(), get->result};
 }
 
 static void addToStack(
@@ -198,7 +198,7 @@ static ATransformer::Result infixResolve(ATransformer::Context& context, Node::I
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"stack[-0]"}, ov->result->scope.raw(), ov->result};
+			return {{"move stack[-0]"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -213,7 +213,7 @@ static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"stack[-0]"}, ov->result->scope.raw(), ov->result};
+			return {{"move stack[-0]"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -228,7 +228,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"stack[-0]"}, ov->result->scope.raw(), ov->result};
+			return {{"move stack[-0]"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
