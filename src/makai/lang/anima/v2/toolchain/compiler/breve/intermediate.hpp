@@ -183,8 +183,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		struct Overload: Scoped {
 			enum class Variant {
 				AV2_TCB_FOV_NONE,
-				AV2_TCB_FOV_INSTANCED,
-				AV2_TCB_FOV_STATIC,
+				AV2_TCB_FOV_GLOBAL,
+				AV2_TCB_FOV_CLASS,
+				AV2_TCB_FOV_INSTANCE,
 			};
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
