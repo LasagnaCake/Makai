@@ -6,11 +6,13 @@
 /*
 
 [MikuTeto]
-¡O¡   ▼O⧨
+↑O↑   ▼O▼
 /|\   /|\
 / \   / \
 
  */
+
+// Ignore the ugly .raw() calls
 
 namespace Core = Makai::Anima::V2::Core;
 
