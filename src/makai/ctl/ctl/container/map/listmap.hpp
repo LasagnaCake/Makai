@@ -340,7 +340,7 @@ public:
 	/// @brief Returns how many of the given keys exists in the container.
 	/// @param keys Keys to search for.
 	/// @return How many keys exist.
-	constexpr SizeType contains(List<KeyType, SizeType> const& keys) const {
+	constexpr SizeType countOf(List<KeyType, SizeType> const& keys) const {
 		if (empty()) return 0;
 		SizeType matched = 0;
 		for (auto const& key: keys)
