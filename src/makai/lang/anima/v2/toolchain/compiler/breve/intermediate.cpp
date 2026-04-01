@@ -1,4 +1,5 @@
 #include "intermediate.hpp"
+#include "makai/ctl/ctlex/data/value.hpp"
 #include "transformer.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
@@ -525,4 +526,103 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
 	addGlobalAttribute(createSharedAttribute());
+}
+
+Makai::Data::Value Implementation::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["pre"] = pre.toString();
+	out["main"] = main.toString();
+	out["post"] = post.toString();
+	return out;
+}
+
+Makai::Data::Value Namespace::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["name"] = name.toString();
+	if (function)	out["fn"]		= function->serialize();
+	if (type)		out["type"]		= type->serialize();
+	if (variable)	out["var"]		= variable->serialize();
+	if (attribute)	out["attr"]		= attribute->serialize();
+	if (trait)		out["trait"]	= trait->serialize();
+	if (property)	out["prop"]		= property->serialize();
+	for (auto& [name, props]: meta) {
+		out["meta"][name]["name"]	= props->attribute->name.toString();
+		out["meta"][name]["value"]	= props->value;
+	}
+	out["varc"]	= varc;
+	out["impl"] = impl->serialize();
+	return out;
+}
+
+Makai::Data::Value Function::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["name"] = name.toString();
+	for (auto const ov: Makai::Range::expand(overloads))
+		out["overloads"][ov.index] = ov.value->serialize();
+	return out;
+}
+
+Makai::Data::Value Function::Overload::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["ret"] = result->name.toString();
+	for (auto const arg: Makai::Range::expand(arguments))
+		out["args"][arg.index] = arg.value->serialize();
+	out["entry"] = entry.toString();
+	out["scope"] = scope->serialize();
+	if (methodOf)
+		out["method_of"] = methodOf->name.toString();
+	switch (variant) {
+		using enum Variant;
+		case Variant::AV2_TCB_FOV_NONE:
+		case Variant::AV2_TCB_FOV_GLOBAL:	out["variant"] = "global";		break;
+		case Variant::AV2_TCB_FOV_CLASS:	out["variant"] = "class";		break;
+		case Variant::AV2_TCB_FOV_INSTANCE:	out["variant"] = "instance";	break;
+	}
+	return out;
+}
+
+Makai::Data::Value Variable::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["type"] = type->name.toString();
+	if (initializer)
+		out["init"] = initializer->serialize();
+	out["src"] = source.toString();
+	if (value)
+		out["direct"] = value;
+	if (global || staticEntity)
+		out["global"] = true;
+	if (fieldOf)
+		out["field_of"] = fieldOf->name.toString();
+	out["id"] = id;
+	return out;
+}
+
+Makai::Data::Value Attribute::serialize() const {
+	Makai::Data::Value out = out.object();
+	StringList tg;
+	if (enumcast(target & Target::AV2_TAAT_ATTRIBUTE))	tg.pushBack("attr");
+	if (enumcast(target & Target::AV2_TAAT_STRUCT))		tg.pushBack("struct");
+	if (enumcast(target & Target::AV2_TAAT_VARIABLE))	tg.pushBack("var");
+	if (enumcast(target & Target::AV2_TAAT_FUNCTION))	tg.pushBack("fn");
+	if (enumcast(target & Target::AV2_TAAT_NAMESPACE))	tg.pushBack("module");
+	if (enumcast(target & Target::AV2_TAAT_PROPERTY))	tg.pushBack("prop");
+	out["target"] = tg.toList<Makai::Data::Value>();
+	out["uses"] = useCount;
+	out["min"] = globalMin;
+	out["max"] = globalMax;
+	for (auto const [name, field]: fields) {
+		auto& f = out["fields"][name.toString()];
+		f["type"] = Makai::Data::Value::asNameString(field.type);
+		if (field.defaultValue)
+			f["default"] = field.defaultValue;
+		f["is_path"] = field.path;
+	}
+	return out;
+}
+
+Makai::Data::Value Property::serialize() const {
+	Makai::Data::Value out = out.object();
+	if (type)	out["type"]	= type->name.toString();
+	if (getter)	out["get"]	= getter->serialize();
+	if (setter)	out["set"]	= setter->serialize();
 }

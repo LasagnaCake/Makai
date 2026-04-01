@@ -99,7 +99,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Handle<Namespace> scope;
 	};
 
-	struct Implementation: IWritable, IComposable {
+	struct ISerializable {
+		virtual ~ISerializable() {}
+		virtual Makai::Data::Value serialize() const = 0;
+	};
+
+	struct Implementation: IWritable, IComposable, ISerializable {
 		using Instance		= Instance<Implementation>;
 		UTF8String pre, main, post;
 
@@ -116,6 +121,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		}
 
 		UTF8String toString() const {return pre + main + post;}
+
+		Makai::Data::Value serialize() const override;
 	};
 
 	struct Metadata {
@@ -125,7 +132,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value			value;
 	};
 
-	struct Namespace: Labeled, Positioned, IComposable {
+	struct Namespace: Labeled, Positioned, IComposable, ISerializable {
 		using TypeRef		= Instance<TypeDecl>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -157,9 +164,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool isPureNamespace() const;
 
 		Implementation::Instance compose() const override;
+
+		Makai::Data::Value serialize() const override;
 	};
 
-	struct TypeDecl: Labeled, Positioned, Scoped {
+	struct TypeDecl: Labeled, Positioned, Scoped, ISerializable {
 		enum class Definition {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
@@ -177,10 +186,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
 
 		bool derivedFrom(Namespace::TypeRef const& otherType) const;
+
+		Makai::Data::Value serialize() const override;
 	};
 
-	struct Function: Labeled, Positioned {
-		struct Overload: Scoped {
+	struct Function: Labeled, Positioned, ISerializable {
+		struct Overload: Scoped, ISerializable {
 			enum class Variant {
 				AV2_TCB_FOV_NONE,
 				AV2_TCB_FOV_GLOBAL,
@@ -194,6 +205,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Variant							variant = Variant::AV2_TCB_FOV_NONE;
 
 			UTF8String prototype() const;
+
+			Makai::Data::Value serialize() const override;
 		};
 		using OverloadRef = Instance<Overload>;
 
@@ -203,9 +216,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		OverloadRef overloadFromVariables(List<Namespace::VariableRef> const& args) const;
 		OverloadRef overloadFromTypes(List<Namespace::TypeRef> const& args) const;
+
+		Makai::Data::Value serialize() const override;
 	};
 
-	struct Variable: Labeled, Positioned, Scoped {
+	struct Variable: Labeled, Positioned, Scoped, ISerializable {
 		Namespace::TypeRef	type;
 		Namespace::Instance	initializer;
 		UTF8String			source;
@@ -215,9 +230,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool				staticEntity;
 		Handle<TypeDecl>	fieldOf;
 		uint64				id;
+
+		Makai::Data::Value serialize() const override;
 	};
 
-	struct Attribute: Labeled, Positioned {
+	struct Attribute: Labeled, Positioned, ISerializable {
 		enum class Target: uint64 {
 			AV2_TAAT_EMPTY		= 0,
 			AV2_TAAT_STRUCT		= 1 << 0,
@@ -245,13 +262,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Functor<void(Intermediate&, Namespace::Instance const&, Data::Value const&, Attribute&)> transform;
 
 		static bool matchesTarget(Namespace const& ns, Target const target);
+
+		Makai::Data::Value serialize() const override;
 	};
 
-	struct Property:  Labeled, Positioned, Scoped {
+	struct Property:  Labeled, Positioned, Scoped, ISerializable {
 		Namespace::TypeRef		type;
 		Namespace::FunctionRef	getter;
 		Namespace::FunctionRef	setter;
 		Handle<TypeDecl>		fieldOf;
+
+		Makai::Data::Value serialize() const override;
 	};
 
 	constexpr Attribute::Target operator&(Attribute::Target const& a, Attribute::Target const& b) {
@@ -266,10 +287,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		return Makai::Cast::as<Attribute::Target>(~enumcast(a));
 	}
 
-	struct Trait: Labeled, Positioned, Scoped {
+	struct Trait: Labeled, Positioned, Scoped, ISerializable {
+		Makai::Data::Value serialize() const override;
 	};
 
-	struct Intermediate: IWritable {
+	struct Intermediate: IWritable, ISerializable {
 		Namespace::Instance root = root.create();
 
 		void writePre(UTF8String const& what) override;
@@ -287,6 +309,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		void addGlobalAttribute(Namespace::AttributeRef const& attrib);
 
 		Intermediate();
+
+		Makai::Data::Value serialize() const override;
 	};
 }
 

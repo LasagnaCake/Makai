@@ -9,16 +9,16 @@ constexpr auto const VER = Makai::Data::Version{1};
 
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
-	cfg["help"]			= false;
-	cfg["output"]		= "**{{name}}";
-	cfg["src"]			= cfg.array();
-	cfg["parse-tree"]	= false;
+	cfg["help"]		= false;
+	cfg["output"]	= "**{{name}}";
+	cfg["src"]		= cfg.array();
+	cfg["level"]	= "full";
 	return cfg;
 }
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]	= "help";
-	tl["P"]	= "parse-tree";
+	tl["L"]	= "level";
 	tl["o"]	= "output";
 	tl["s"]	= "src";
 }
@@ -54,7 +54,7 @@ int main(int argc, char** argv) try {
 		DEBUGLN("That part");
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
-		if (cfg["parse-tree"]) {
+		if (cfg["level"].getString("full") == "parse-tree") {
 			DEBUGLN("Doing parse tree...");
 			auto const i = parser.parse();
 			Makai::File::saveText(
@@ -67,6 +67,21 @@ int main(int argc, char** argv) try {
 				) + ".bpt",
 				i->serialize().toFLOWString("  ")
 			);
+		} else if (cfg["level"].getString("full") == "intermediate") {
+			Compiler::Breve::Transformer::ATransformer::Context ctx;
+			Compiler::Breve::Transformer::TheWholeProgram tf;
+			tf.transform(ctx, parser.parse());
+			Makai::File::saveText(
+				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
+					cfg["output"].getString(),
+					R"(\*\*\{\{name\}\})",
+					file
+						.splitAtLast('/').back()
+						.splitAtLast('.').front()
+				) + ".bpt",
+				ctx.serialize().toFLOWString("  ")
+			);
+			// TODO: This
 		} else {
 			// TODO: This
 		}
