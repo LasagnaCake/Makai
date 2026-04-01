@@ -240,7 +240,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Field> fields;
 
-		Functor<void(Namespace::Instance const&, Data::Value const&, Attribute&)> transform;
+		Functor<void(Intermediate&, Namespace::Instance const&, Data::Value const&, Attribute&)> transform;
 
 		static bool matchesTarget(Namespace const& ns, Target const target);
 	};

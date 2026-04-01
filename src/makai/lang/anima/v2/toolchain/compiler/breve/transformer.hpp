@@ -53,6 +53,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Namespace::TypeRef arrayFor(Namespace::TypeRef const& type);
 
 			static UTF8StringList pathOf(Node::Instance const& node);
+
+			Namespace::Instance getStructScope() const;
 		};
 
 		virtual ~ATransformer();

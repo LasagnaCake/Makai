@@ -7,6 +7,8 @@ using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 
 IWritable::~IWritable() {}
 
+#define ATTRIBUTE_TRANSFORMER()  [] (Intermediate& inter, Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base)
+
 Namespace::Namespace(UTF8String const& name): Labeled(name) {}
 
 Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
@@ -198,7 +200,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 				default: Transformer::ATransformer::Context::error("Invalid basic type for attribute!", var->node);
 			}
 			attrib->fields[name] = {kind, var->value};
-			attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+			attrib->transform = ATTRIBUTE_TRANSFORMER() {
 			};
 		}
 		ns->attribute = attrib;
@@ -215,7 +217,7 @@ static Namespace::AttributeRef createOperatorAttribute() {
 	attrib->fields["infix"]		= {DVK_STRING, ""	};
 	attrib->fields["postfix"]	= {DVK_STRING, ""	};
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 	};
 	return attrib;
 }
@@ -226,7 +228,7 @@ static Namespace::AttributeRef createConverterAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Converter";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 	};
 	return attrib;
 }
@@ -237,7 +239,7 @@ static Namespace::AttributeRef createGetterAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Getter";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 	};
 	return attrib;
 }
@@ -248,7 +250,7 @@ static Namespace::AttributeRef createSetterAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Setter";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 	};
 	return attrib;
 }
@@ -260,7 +262,7 @@ static Namespace::AttributeRef createGlobalAttribute() {
 	attrib->name = "Global";
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
 	attrib->fields["source"] = {DVK_STRING};
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		static Makai::UTF8Dictionary<Namespace::TypeRef> globalTypes;
 		if (ns->variable->initializer)
 			Transformer::ATransformer::Context::error("Globals cannot have initializers!", ns->node);
@@ -282,7 +284,7 @@ static Namespace::AttributeRef createStaticAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Static";
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE | Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		static Makai::Random::SecureGenerator rng;
 		if (ns->variable) {
 			if (ns->variable->global)
@@ -299,17 +301,22 @@ static Namespace::AttributeRef createStaticAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createInstanceAttribute() {
+static Namespace::AttributeRef createMemberAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Instance";
+	attrib->name = "Member";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->fields["type"] = {DVK_STRING};
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		auto const bns = inter.resolve(Makai::UTF8String(v["type"].getString()).split("/"));
+		if (!(bns && bns->type))
+			Transformer::ATransformer::Context::error("Symbol must be a type!", ns->node);
+		auto const bt = bns->type;
 		for (auto& ov: ns->function->overloads)
 			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
-				if (ov->arguments.size() < 1)
-					Transformer::ATransformer::Context::error("Missing [self] parameter for instanced function!", ns->node);
+				if (!(ov->arguments.size() >= 1 && ov->arguments[0]->type == bt))
+					Transformer::ATransformer::Context::error("Missing appropriate [self] parameter for member function!", ns->node);
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_INSTANCED;
 			}
 	};
@@ -322,7 +329,7 @@ static Namespace::AttributeRef createNullableAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Nullable";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_NULLABLE;
 	};
 	return attrib;
@@ -334,7 +341,7 @@ static Namespace::AttributeRef createEmptyAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Empty";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_EMPTY;
 		if (ns->type->fields.size())
 			Transformer::ATransformer::Context::error("Empty type must not contain fields!", ns->node);
@@ -348,7 +355,7 @@ static Namespace::AttributeRef createDynamicAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Dynamic";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_DYNAMIC;
 		if (ns->type->fields.size())
 			Transformer::ATransformer::Context::error("Dynamic type must not contain fields!", ns->node);
@@ -362,7 +369,7 @@ static Namespace::AttributeRef createCopyAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Copy";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_CLONABLE;
 	};
 	return attrib;
@@ -374,7 +381,7 @@ static Namespace::AttributeRef createFinalAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Final";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_FINAL;
 	};
 	return attrib;
@@ -386,7 +393,7 @@ static Namespace::AttributeRef createValueAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Value";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_VALUE;
 	};
 	return attrib;
@@ -399,7 +406,7 @@ static Namespace::AttributeRef createBasicAttribute() {
 	attrib->name = "Basic";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
 	attrib->fields["type"] = {DVK_STRING};
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_BASIC;
 		if (ns->type->fields.size())
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
@@ -437,7 +444,7 @@ static Namespace::AttributeRef createBoundAttribute() {
 	attrib->name = "Bound";
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
 	attrib->fields["type"] = {DVK_STRING};
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_ART_EQUIVALENT;
 		auto const artt = (v["type"].getString());
 		ns->type->artEquivalent = artt;
@@ -453,7 +460,7 @@ static Namespace::AttributeRef createMainAttribute() {
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->globalMin = 1;
 	attrib->globalMax = 1;
-	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 	};
 	return attrib;
 }
@@ -499,5 +506,5 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createGetterAttribute());
 	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());
-	addGlobalAttribute(createInstanceAttribute());
+	addGlobalAttribute(createMemberAttribute());
 }

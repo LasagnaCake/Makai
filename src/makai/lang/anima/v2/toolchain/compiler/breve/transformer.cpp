@@ -750,15 +750,15 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			auto const name = at->leftSide->value.getString();
 			if (attr->value.contains(name))
 				context.error("Redeclaration of previously-declared field!", at->leftSide);
-			if (!(
-				at->rightSide->content == Node::Content::AV2_TANC_VALUE
-			||	at->rightSide->content == Node::Content::AV2_TANC_NAME
-			))
-				context.error("Expected constant (or name) here!", at->rightSide);
-			auto const value = at->rightSide->value;
 			if (!attr->attribute->fields.contains(name))
 				context.error("Field does not exist for given attribute!", at);
-			attr->value[name] = value;
+			if (at->rightSide->content == Node::Content::AV2_TANC_PATH) {
+				attr->value[name] = context.pathOf(at->rightSide).join("/").toString();
+			} else if (!(
+				at->rightSide->content == Node::Content::AV2_TANC_VALUE
+			||	at->rightSide->content == Node::Content::AV2_TANC_NAME
+			)) context.error("Expected constant (or name) here!", at->rightSide);
+			attr->value[name] = at->rightSide->value;
 		}
 		for (auto const& [name, desc]: attr->attribute->fields)
 			if (!desc.defaultValue && !attr->value.contains(name))
