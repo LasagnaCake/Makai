@@ -335,18 +335,19 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
-	auto [name, scope] = resolve(context, node->leftSide);
-	if (scope && scope->type)
+	auto const name = context.pathOf(node->leftSide);
+	if (context.top()->subspaces.contains(name.front()))
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
-	if (!scope = context.declare(name));
+	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
 	auto const initer = name.join("_") + node->name();
 	Block().transform(context, node->rightSide);
 	type.scope = scope.asWeak();
+	type.node = node;
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
 	scope->type->flags |= Core::Definition::Flags::AV2_DF_STRUCTURE;
-	for (auto const& [name, sub]: initScope->subspaces) {
+	for (auto const& [name, sub]: scope->subspaces) {
 		if (sub->variable) {
 			auto& var = *sub->variable;
 			var.fieldOf = scope->type.asWeak();

@@ -96,7 +96,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Scoped {
-		Handle<Namespace> node;
+		Handle<Namespace> scope;
 	};
 
 	struct Implementation: IWritable, IComposable {
@@ -159,7 +159,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Implementation::Instance compose() const override;
 	};
 
-	struct TypeDecl: Labeled {
+	struct TypeDecl: Labeled, Positioned, Scoped {
 		enum class Definition {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
@@ -171,7 +171,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Definition								def;
 		Nullable<Core::BasicType>				basic;
 		Namespace::TypeRef						base;
-		Namespace::Instance						scope;
 		Nullable<UTF8String>					artEquivalent;
 		UTF8Dictionary<Namespace::VariableRef>	fields;
 
