@@ -995,7 +995,10 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		context.error("Requested overload does not exist!", node);
 	auto& ov = *f.overloadFromTypes(args);
 	if (
-		ov.variant != decltype(ov.variant)::AV2_TCB_FOV_INSTANCED
+		(
+			ov.variant == decltype(ov.variant)::AV2_TCB_FOV_NONE
+		||	ov.variant == decltype(ov.variant)::AV2_TCB_FOV_GLOBAL
+		)
 	&&	fn.source
 	) context.top()->impl->writeMainLine("pop");
 	context.top()->impl->writeMainLine("call", ov.entry);
