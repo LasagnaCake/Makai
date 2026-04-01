@@ -328,6 +328,8 @@ static Namespace::AttributeRef createMemberAttribute() {
 		if (!(bns && bns->type))
 			Transformer::ATransformer::Context::error("Symbol must be a type!", ns->node);
 		auto const bt = bns->type;
+		if (bns->subspaces.contains(ns->name))
+			Transformer::ATransformer::Context::error("Symbol has already been declared in the type!", ns->node);
 		for (auto& ov: ns->function->overloads)
 			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
 				if (!(ov->arguments.size() >= 1 && ov->arguments[0]->type == bt))
