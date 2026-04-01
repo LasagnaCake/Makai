@@ -1017,10 +1017,10 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("at", index.direct.getUnsigned());
 	}
 	if (
-		index.type != context.basicType("uint8")
-	||	index.type != context.basicType("uint16")
-	||	index.type != context.basicType("uint32")
-	||	index.type != context.basicType("uint64")
+		index.type == context.basicType("uint8")
+	||	index.type == context.basicType("uint16")
+	||	index.type == context.basicType("uint32")
+	||	index.type == context.basicType("uint64")
 	) {
 		if (!index.isStackTop())
 			context.top()->impl->writeMainLine("push", *src.source);
