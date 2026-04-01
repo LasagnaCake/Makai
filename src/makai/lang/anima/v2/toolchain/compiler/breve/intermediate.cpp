@@ -278,6 +278,21 @@ static Namespace::AttributeRef createGlobalAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createSharedAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Shared";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->fields["name"]	= {.type=DVK_STRING, .path=true};
+	attrib->fields["lib"]	= {.type=DVK_STRING, .path=true};
+	attrib->fields["type"]	= {.type=DVK_STRING, .defaultValue="so", .path=true};
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		// TODO: Shared functions
+	};
+	return attrib;
+}
+
 static Namespace::AttributeRef createStaticAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
@@ -295,7 +310,7 @@ static Namespace::AttributeRef createStaticAttribute() {
 		} else if (ns->function) {
 			for (auto& ov: ns->function->overloads)
 				if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE)
-					ov->variant = Function::Overload::Variant::AV2_TCB_FOV_STATIC;
+					ov->variant = Function::Overload::Variant::AV2_TCB_FOV_GLOBAL;
 		}
 	};
 	return attrib;
@@ -317,7 +332,7 @@ static Namespace::AttributeRef createMemberAttribute() {
 			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
 				if (!(ov->arguments.size() >= 1 && ov->arguments[0]->type == bt))
 					Transformer::ATransformer::Context::error("Missing appropriate [self] parameter for member function!", ns->node);
-				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_INSTANCED;
+				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
 			}
 	};
 	return attrib;
@@ -507,4 +522,5 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
+	addGlobalAttribute(createSharedAttribute());
 }
