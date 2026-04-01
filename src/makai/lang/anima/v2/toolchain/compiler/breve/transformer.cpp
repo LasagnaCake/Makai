@@ -389,7 +389,7 @@ ATransformer::Result SubExpression::transform(Context& context, Node::Instance c
 	context.pop(1);
 	context.writeMainLine("begin", context.top()->varc + scope->varc);
 	context.writeMainLine("bring", context.top()->varc, "[0 : 0]");
-	context.top()->impl->writeMainLine(scope->impl->compose());
+	context.top()->impl->writeMainLine(scope->impl->compose()->toString());
 	context.writeMainLine("end");
 	return result;
 }
@@ -796,6 +796,7 @@ ATransformer::Result AttributeExpression::transform(Context& context, Node::Inst
 	if (attributes.contains("Attribute"))
 		if (!expr.scope->type) context.error("Expected structure here!", node->rightSide);
 	expr.scope->meta.append(attributes);
+	return expr;
 }
 
 static Makai::UTF8String overloadName(Function::ArgTypes const& types) {
@@ -988,7 +989,6 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
-		context.top()->impl->writeMainLine("copy", rhs.source, "->", *lhs.source);
 		if (!expr.isStackTop())
 			context.top()->impl->writeMainLine("push", *expr.source);
 		args.pushBack(expr.type);
@@ -1069,4 +1069,11 @@ ATransformer::Result Drop::transform(Context& context, Node::Instance const& nod
 	if (!at.direct)
 		context.top()->impl->writeMainLine("drop", at.source);
 	return {};
+}
+
+ATransformer::Result TheEntireProgram::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result result;
+	for (auto const& child: node->children)
+		result = Expression().transform(context, child);
+	return result;
 }

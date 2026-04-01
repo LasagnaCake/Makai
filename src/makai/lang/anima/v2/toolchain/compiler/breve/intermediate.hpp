@@ -91,7 +91,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		constexpr static UTF8String toString(T const& value) {
 			if constexpr (Makai::Type::OneOf<T, UTF8String, UTF32String, String>)
 				return value;
-			else return toString(value);
+			else return Makai::toString(value);
 		}
 	};
 
