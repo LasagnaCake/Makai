@@ -818,7 +818,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		context.error("Symbol is already defined as a different kind!", node);
 	if (!scope->function) {
 		scope->function = scope->function.create();
-		scope->function->name = path.back();
+		scope->function->name = path.join("_") + node->name();
 	}
 	auto& fn = *scope->function;
 	auto const proto = node->middle;
@@ -885,6 +885,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		auto const expr = Expression().transform(context, node->rightSide);
 		implScope->impl->writePreLine("begin", implScope->varc);
 		implScope->impl->writePreLine("bind", implScope->varc, "[0 : 0]");
+		implScope->impl->writePreLine("clear", implScope->varc);
 		implScope->impl->writePostLine("end");
 		implOv->scope = implScope.asWeak();
 		context.scopeStack.popBack();
@@ -897,7 +898,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.direct) context.error("Cannot assign a value to a direct value!", node->leftSide);
 	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
-		context.writeMainLine("copy", rhs.source, "->", *lhs.source);
+		context.top()->impl->writeMainLine("copy", rhs.source, "->", *lhs.source);
 		return {lhs.source, lhs.scope, t, rhs.direct};
 	} else context.error("Type mismatch!", node);
 }
@@ -987,6 +988,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
+		context.top()->impl->writeMainLine("copy", rhs.source, "->", *lhs.source);
 		if (!expr.isStackTop())
 			context.top()->impl->writeMainLine("push", *expr.source);
 		args.pushBack(expr.type);
