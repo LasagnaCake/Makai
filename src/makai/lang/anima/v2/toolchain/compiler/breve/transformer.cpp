@@ -367,7 +367,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	if (!val.source)
 		context.error("Invalid expression!", node->leftSide);
 	if (!val.isStackTop())
-		context.top()->impl->writeMainLine("push", val.source);
+		context.top()->impl->writeMainLine("push", *val.source);
 	context.top()->impl->writeMainLine("ret");
 	return {{"move stack[-0]"}, val.scope, val.type};
 }
@@ -546,8 +546,8 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		if (
 			node->base.type == LTS_TT_INCREMENT
 		||	node->base.type == LTS_TT_DECREMENT
-		) context.top()->impl->writeMainLine("push ref", val.source);
-		else context.top()->impl->writeMainLine("push", val.source);
+		) context.top()->impl->writeMainLine("push ref", *val.source);
+		else context.top()->impl->writeMainLine("push", *val.source);
 	}
 	if (
 		node->base.text == "sizeof"
@@ -575,7 +575,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 			return {{result.toString()}, val.type->scope.raw(), directName(context, result.type()), result};
 	}
 	if (!val.isStackTop())
-		context.top()->impl->writeMainLine("push copy", val.source);
+		context.top()->impl->writeMainLine("push copy", *val.source);
 	context.top()->impl->writeMainLine("op", uopName(context, node));
 	if (val.type->basic) {
 		context.top()->impl->writeMainLine("op", bopName(context, node));
@@ -589,7 +589,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	if (!lhs.source)
 		context.error("Invalid expression!", node->leftSide);
 	if (!lhs.isStackTop() && !lhs.direct)
-		context.top()->impl->writeMainLine("push", lhs.source);
+		context.top()->impl->writeMainLine("push", *lhs.source);
 	if (
 		node->base.text == "as"
 	||	node->base.text == "is"
@@ -608,9 +608,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 			return {{result.toString()}, directName(context, result.type())->scope.raw(), directName(context, result.type()), result};
 	}
 	if (!rhs.isStackTop())
-		context.top()->impl->writeMainLine("push", rhs.source);
+		context.top()->impl->writeMainLine("push", *rhs.source);
 	if (lhs.direct) {
-		context.top()->impl->writeMainLine("push", rhs.source);
+		context.top()->impl->writeMainLine("push", *rhs.source);
 		context.top()->impl->writeMainLine("swap");
 	}
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
@@ -897,7 +897,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.direct) context.error("Cannot assign a value to a direct value!", node->leftSide);
 	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
-		context.writeMainLine("copy", rhs.source, "->", lhs.source);
+		context.writeMainLine("copy", rhs.source, "->", *lhs.source);
 		return {lhs.source, lhs.scope, t, rhs.direct};
 	} else context.error("Type mismatch!", node);
 }
@@ -1048,13 +1048,16 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 }
 
 ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {
-	auto const t = TypeRequest().transform(context, node).type;
+	auto const t = TypeRequest().transform(context, node->leftSide).type;
 	context.top()->impl->writeMainLine("new", t->name);
 	return {{"move stack[-0]"}, t->scope.raw(), t};
 }
 
 ATransformer::Result Drop::transform(Context& context, Node::Instance const& node) {
-	auto const at = PathExpression().transform(context, node);
-	context.top()->impl->writeMainLine("drop", at.source);
+	auto const at = PathExpression().transform(context, node->leftSide);
+	if (!at.source)
+		context.error("Expression does not result in a value!", node->leftSide);
+	if (!at.direct)
+		context.top()->impl->writeMainLine("drop", at.source);
 	return {};
 }
