@@ -1046,3 +1046,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 		context.top()->impl->writeMainLine("set", count - (i+1));
 	return {{"move stack[-0]"}, arr->scope.raw(), arr};
 }
+
+ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {}
+
+ATransformer::Result Drop::transform(Context& context, Node::Instance const& node) {}
