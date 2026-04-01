@@ -1047,6 +1047,14 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	return {{"move stack[-0]"}, arr->scope.raw(), arr};
 }
 
-ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {}
+ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {
+	auto const t = TypeRequest().transform(context, node).type;
+	context.top()->impl->writeMainLine("new", t->name);
+	return {{"move stack[-0]"}, t->scope.raw(), t};
+}
 
-ATransformer::Result Drop::transform(Context& context, Node::Instance const& node) {}
+ATransformer::Result Drop::transform(Context& context, Node::Instance const& node) {
+	auto const at = PathExpression().transform(context, node);
+	context.top()->impl->writeMainLine("drop", at.source);
+	return {};
+}
