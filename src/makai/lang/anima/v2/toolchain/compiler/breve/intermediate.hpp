@@ -181,11 +181,19 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct Function: Labeled, Positioned {
 		struct Overload: Scoped {
+			enum class Variant {
+				AV2_TCB_FOV_NONE,
+				AV2_TCB_FOV_INSTANCED,
+				AV2_TCB_FOV_STATIC,
+			};
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
 			UTF8String						entry;
-			bool							staticEntity;
 			Handle<TypeDecl>				methodOf;
+			Variant							variant = Variant::AV2_TCB_FOV_NONE;
+
+			UTF8Dictionary<Attribute::Instance> meta;
+
 			UTF8String prototype() const;
 		};
 		using OverloadRef = Instance<Overload>;
@@ -222,7 +230,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TAAT_EVERYTHING	= Makai::Limit::MAX<uint64>
 		};
 
-		Target target	= Target::AV2_TAAT_EVERYTHING;
+		Target	target		= Target::AV2_TAAT_EVERYTHING;
 		usize	useCount	= 0;
 		usize	globalMin	= 0;
 		usize	globalMax	= -1;
