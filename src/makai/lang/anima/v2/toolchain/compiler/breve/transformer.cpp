@@ -1,6 +1,5 @@
 #include "transformer.hpp"
 #include "intermediate.hpp"
-#include "makai/lang/anima/v2/core/type.hpp"
 #include "resolver.hpp"
 
 /*
@@ -99,6 +98,8 @@ static void addToStack(
 	Namespace::Instance const& ns
 ) {
 	if (ns->variable) {
+		if (ns->variable->fieldOf && !ns->variable->staticEntity)
+			context.top()->impl->writeMainLine("at", ns->variable->id);
 		context.top()->impl->writeMainLine("push", ns->variable->source);
 	} else if (ns->property) {
 		auto const ov = ns->property->getter->overloadFromTypes({});

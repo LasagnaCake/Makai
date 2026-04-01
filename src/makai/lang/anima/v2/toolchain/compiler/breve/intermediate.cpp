@@ -198,6 +198,8 @@ static Namespace::AttributeRef createMetaAttribute() {
 				default: Transformer::ATransformer::Context::error("Invalid basic type for attribute!", var->node);
 			}
 			attrib->fields[name] = {kind, var->value};
+			attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+			};
 		}
 		ns->attribute = attrib;
 	};
@@ -262,11 +264,15 @@ static Namespace::AttributeRef createGlobalAttribute() {
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
 	attrib->fields["source"] = {DVK_STRING};
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		static Makai::UTF8Dictionary<Namespace::TypeRef> globalTypes;
 		if (ns->variable->initializer)
 			Transformer::ATransformer::Context::error("Globals cannot have initializers!", ns->node);
 		ns->variable->global = true;
 		ns->variable->staticEntity = true;
-		ns->variable->source = "$" + v["fields"].getString().replace('\\', '/').replace('/', '.');
+		auto const srcName = v["source"].getString().replace('\\', '/').replace('/', '.');
+		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type)
+			Transformer::ATransformer::Context::error("Global variable type mismatch!", ns->node);
+		ns->variable->source = "$" + srcName;
 	};
 	return attrib;
 }
@@ -278,7 +284,10 @@ static Namespace::AttributeRef createStaticAttribute() {
 	attrib->name = "Static";
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+		static Makai::Random::SecureGenerator rng;
+		ns->variable->global = true;
 		ns->variable->staticEntity = true;
+		ns->variable->source = "$__STATIC__._ns_" + Makai::toString(rng.integer()) + "._ns_" + ns->node->name() + "._" + ns->variable->name;
 	};
 	return attrib;
 }
