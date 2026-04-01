@@ -355,7 +355,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			auto& var = *sub->variable;
 			var.fieldOf = scope->type.asWeak();
 			type.fields[name] = sub->variable;
-		} else context.error("Structure declarations can only contain variables!", node);
+		}
 	}
 	context.pop(name.size());
 	return {.scope = scope, .type = scope->type};
@@ -778,7 +778,7 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
 		for (auto const& attrib: node->children) {
 			auto const attrs = resolveAttribute(context, attrib, ns, attribs);
-			if (attribs.contains(attrs.keys()))
+			if (attribs.countOf(attrs.keys()))
 				context.error("Reapplication of previous attributes [" + attribs.match(attrs.keys()).join(",") + "]!", node);
 			attribs.append(attrs);
 		}
@@ -791,7 +791,7 @@ ATransformer::Result AttributeExpression::transform(Context& context, Node::Inst
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
 	Makai::Dictionary<Metadata::Instance> attributes;
 		resolveAttribute(context, node->leftSide, expr.scope, attributes);
-	if (expr.scope->meta.contains(attributes.keys()))
+	if (expr.scope->meta.countOf(attributes.keys()))
 		context.error("Reapplication of previous attributes [" + attributes.match(expr.scope->meta.keys()).join(",") + "]!", node->rightSide);
 	if (attributes.contains("Attribute"))
 		if (!expr.scope->type) context.error("Expected structure here!", node->rightSide);
