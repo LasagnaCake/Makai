@@ -207,10 +207,6 @@ namespace Makai::Anima::V2::Core {
 			bool			dyn: 1;
 		};
 
-		struct [[gnu::aligned(4)]] Build {
-			bool			dyn: 1;
-		};
-
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
