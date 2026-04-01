@@ -324,7 +324,7 @@ static Namespace::AttributeRef createMemberAttribute() {
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["type"] = {.type = DVK_STRING, .path = true};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		auto const bns = inter.resolve(Makai::UTF8String(v["type"].getString()).split('/'));
+		auto const bns = inter.resolve(Makai::UTF8String(v["type"].getString()).split(Makai::UTF8Char{'/'}));
 		if (!(bns && bns->type))
 			Transformer::ATransformer::Context::error("Symbol must be a type!", ns->node);
 		auto const bt = bns->type;
