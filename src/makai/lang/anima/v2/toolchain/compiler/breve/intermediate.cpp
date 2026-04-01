@@ -162,7 +162,6 @@ static Namespace::AttributeRef createMetaAttribute() {
 	attrib->fields["target"]	= {DVK_STRING								};
 	attrib->fields["min"]		= {DVK_UNSIGNED, 0							};
 	attrib->fields["max"]		= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
-	attrib->fields["saveUses"]	= {DVK_BOOLEAN, true						};
 	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
 		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
@@ -171,7 +170,6 @@ static Namespace::AttributeRef createMetaAttribute() {
 		attrib->target		= fromString(v.fetch<Makai::UTF8String>("target", "func"));
 		attrib->globalMin	= v.fetch<uint64>("min", 0);
 		attrib->globalMax	= v.fetch<uint64>("max", Makai::Limit::MAX<uint64>);
-		attrib->saveUses	= v.fetch<bool>("saveUses", true);
 		for (auto const& [name, field]: ns->subspaces) {
 			if (!field->variable)
 				continue;
@@ -211,6 +209,20 @@ static Namespace::AttributeRef createOperatorAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Operator";
+	attrib->fields["prefix"]	= {DVK_STRING, ""	};
+	attrib->fields["infix"]		= {DVK_STRING, ""	};
+	attrib->fields["postfix"]	= {DVK_STRING, ""	};
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createConverterAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Converter";
 	attrib->fields["prefix"]	= {DVK_STRING, ""	};
 	attrib->fields["infix"]		= {DVK_STRING, ""	};
 	attrib->fields["postfix"]	= {DVK_STRING, ""	};
@@ -453,4 +465,5 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createMainAttribute());
 	addGlobalAttribute(createGetterAttribute());
 	addGlobalAttribute(createSetterAttribute());
+	addGlobalAttribute(createConverterAttribute());
 }

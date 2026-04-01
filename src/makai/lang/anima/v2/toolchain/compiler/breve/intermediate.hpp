@@ -226,9 +226,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		usize	useCount	= 0;
 		usize	globalMin	= 0;
 		usize	globalMax	= -1;
-		bool	saveUses	= true;
-
-		List<Namespace::Instance> uses;
 
 		struct Field {
 			Data::Value::Kind	type;
