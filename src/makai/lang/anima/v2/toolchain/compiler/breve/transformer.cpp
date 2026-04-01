@@ -999,7 +999,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			ov.variant == decltype(ov.variant)::AV2_TCB_FOV_NONE
 		||	ov.variant == decltype(ov.variant)::AV2_TCB_FOV_GLOBAL
 		)
-	&&	fn.source
+	&&	Makai::Regex::contains(fn.source.orElse("").toString(), "stack")
 	) context.top()->impl->writeMainLine("pop");
 	context.top()->impl->writeMainLine("call", ov.entry);
 	return {{"move stack[-0]"}, ov.result->scope.raw(), ov.result};
