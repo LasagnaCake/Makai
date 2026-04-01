@@ -752,14 +752,18 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 				context.error("Redeclaration of previously-declared field!", at->leftSide);
 			if (!attr->attribute->fields.contains(name))
 				context.error("Field does not exist for given attribute!", at);
-			if (at->rightSide->content == Node::Content::AV2_TANC_PATH && attr->attribute->fields[name].path) {
-				attr->value[name] = context.pathOf(at->rightSide).join("/").toString();
-			} else if (attr->attribute->fields[name].path)
-				context.error("Expected path here!", at->rightSide);
-		 	else if (!(
-				at->rightSide->content == Node::Content::AV2_TANC_VALUE
-			||	at->rightSide->content == Node::Content::AV2_TANC_NAME
-			)) context.error("Expected constant (or name) here!", at->rightSide);
+			{
+				if (at->rightSide->content == Node::Content::AV2_TANC_PATH && attr->attribute->fields[name].path) {
+					attr->value[name] = context.pathOf(at->rightSide).join("/").toString();
+				} else if (attr->attribute->fields[name].path) {
+					context.error("Expected path here!", at->rightSide);
+				} else if (!(
+					at->rightSide->content == Node::Content::AV2_TANC_VALUE
+				||	at->rightSide->content == Node::Content::AV2_TANC_NAME
+				)) {
+					context.error("Expected constant (or name) here!", at->rightSide);
+				}
+			}
 			attr->value[name] = at->rightSide->value;
 		}
 		for (auto const& [name, desc]: attr->attribute->fields)
