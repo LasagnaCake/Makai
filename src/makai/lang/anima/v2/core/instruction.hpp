@@ -207,6 +207,10 @@ namespace Makai::Anima::V2::Core {
 			bool			dyn: 1;
 		};
 
+		struct [[gnu::aligned(4)]] Build {
+			bool			dyn: 1;
+		};
+
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -298,6 +302,10 @@ namespace Makai::Anima::V2::Core {
 			/// @note Values are bound "front"-to-"back", source offset starts at the end of the stack.
 			/// @details `bring <scope> <count>`
 			AV2_IN_SCOPE_BRING,
+			/// @brief Adds an extra count of entries at the end of the local stack.
+			/// @param type Amount of entries to add.
+			/// @details `decl`
+			AV2_IN_SCOPE_DECLARE,
 			/// @brief Gets a reference of a given field from an object or array.
 			/// @param type `Field` = how to access the field.
 			/// @details `get [<id>]`
@@ -319,11 +327,11 @@ namespace Makai::Anima::V2::Core {
 			/// @details `select <loc-id> ...`
 			AV2_IN_SELECT,
 			/// @brief Clears a given location.
-			/// @param type `Clear`= how to clear the location.
+			/// @param type `Clear` = how to clear the location.
 			/// @details `clear [<loc-id>]`
 			AV2_IN_CLEAR,
-			/// @brief Creates a value with the given type and pushes it to the stack.
-			/// @param type `Create`= how to create the value.
+			/// @brief Creates an empty value with the given type and pushes it to the stack.
+			/// @param type `Create` = how to create the value.
 			/// @details `new [<type>]`
 			AV2_IN_CREATE,
 		};
