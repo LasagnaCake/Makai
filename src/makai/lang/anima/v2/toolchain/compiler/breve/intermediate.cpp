@@ -303,12 +303,15 @@ static Namespace::AttributeRef createInstanceAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Static";
+	attrib->name = "Instance";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->transform = [] (Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base) {
 		for (auto& ov: ns->function->overloads)
-			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE)
+			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
+				if (ov->arguments.size() < 1)
+					Transformer::ATransformer::Context::error("Missing [self] parameter for instanced function!", ns->node);
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_INSTANCED;
+			}
 	};
 	return attrib;
 }
@@ -496,4 +499,5 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createGetterAttribute());
 	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());
+	addGlobalAttribute(createInstanceAttribute());
 }
