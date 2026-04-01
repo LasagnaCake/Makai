@@ -1,5 +1,4 @@
 #include "intermediate.hpp"
-#include "makai/ctl/ctlex/data/value.hpp"
 #include "transformer.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
