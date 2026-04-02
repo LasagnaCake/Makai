@@ -3,6 +3,7 @@
 
 #include "../../assembler/assembler.hpp"
 #include "../../../core/core.hpp"
+#include "makai/ctl/ctl/container/dictionary.hpp"
 #include "makai/lang/anima/v2/core/type.hpp"
 #include "node.hpp"
 #include "intermediate.hpp"
@@ -60,6 +61,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			void addBasicType(Core::BasicType const type, uint64 const flags = 0);
 
 			Context();
+
+			UTF8Dictionary<Namespace::TypeRef>			basics;
+			Map<Handle<TypeDecl>, Namespace::TypeRef>	arrays;
 		};
 
 		virtual ~ATransformer();
