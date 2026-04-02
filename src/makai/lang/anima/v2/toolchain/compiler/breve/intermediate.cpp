@@ -672,3 +672,4 @@ Makai::UTF8String Function::Overload::prototype() const {
 }
 
 Function::Overload::Overload() {}
+Function::Overload::~Overload() {}
