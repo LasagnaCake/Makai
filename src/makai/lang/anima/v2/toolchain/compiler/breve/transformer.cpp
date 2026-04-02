@@ -1085,7 +1085,18 @@ ATransformer::Result ArrayTypeDecl::transform(Context& context, Node::Instance c
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
+	return basics.contains(name) ? basics[name] : nullptr;
+}
 
+Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& type) {
+	if (!type) return nullptr;
+	if (!arrays.contains(type.asWeak())) {
+		auto const arr = type.create();
+		arr->flags |= Core::Definition::Flags::AV2_DF_ARRAY;
+		arr->base = type;
+		arr->name = type->name + "_array";
+		return arr;
+	} else return arrays[type.asWeak()];
 }
 
 ATransformer::Context::Context(): Intermediate() {
@@ -1093,13 +1104,32 @@ ATransformer::Context::Context(): Intermediate() {
 	using Flags = Core::Definition::Flags;
 	addBasicType(AV2_BT_ANY);
 	addBasicType(AV2_BT_VOID, Flags::AV2_DF_EMPTY | Flags::AV2_DF_NO_RESULT);
-	addBasicType(AV2_BT_NULL, Flags::AV2_DF_EMPTY);
+	addBasicType(AV2_BT_NULL, Flags::AV2_DF_EMPTY | Flags::AV2_DF_NULLABLE);
+	addBasicType(AV2_BT_BOOL);
+	addBasicType(AV2_BT_CHAR);
+	addBasicType(AV2_BT_INT8);
+	addBasicType(AV2_BT_UINT8);
+	addBasicType(AV2_BT_INT16);
+	addBasicType(AV2_BT_UINT16);
+	addBasicType(AV2_BT_INT32);
+	addBasicType(AV2_BT_UINT32);
+	addBasicType(AV2_BT_INT64);
+	addBasicType(AV2_BT_UINT64);
+	addBasicType(AV2_BT_UINT32);
+	addBasicType(AV2_BT_REAL64);
+	addBasicType(AV2_BT_REAL128);
+	addBasicType(AV2_BT_STRING, Flags::AV2_DF_NULLABLE);
+	addBasicType(AV2_BT_BYTES, Flags::AV2_DF_NULLABLE);
+	addBasicType(AV2_BT_VECTOR);
+	addBasicType(AV2_BT_MATRIX);
+	addBasicType(AV2_BT_TYPEID);
 }
 
-void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 const flags) {{
+void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 const flags) {
 	using enum Core::BasicType;
 	UTF8String name;
-	switch (type)
+	switch (type) {
+		default: return;
 		case AV2_BT_VOID:		name = "void";		break;
 		case AV2_BT_ANY:		name = "any";		break;
 		case AV2_BT_NULL:		name = "null";		break;
@@ -1122,6 +1152,7 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 		case AV2_BT_VECTOR:		name = "vector";	break;
 		case AV2_BT_MATRIX:		name = "matrix";	break;
 	}
+	if (root->subspaces.contains(name)) return;
 	auto const ns = Namespace::Instance::create();
 	root->subspaces[name] = ns;
 	auto& t = *(ns->type = ns->type.create());
@@ -1130,4 +1161,5 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	t.flags |= Core::Definition::Flags::AV2_DF_BASIC | flags;
 	if (type != AV2_BT_VOID && type != Core::BasicType::AV2_BT_ANY)
 		t.base = basicType("name");
+	basics[name] = ns->type;
 }
