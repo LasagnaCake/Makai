@@ -884,9 +884,9 @@ namespace Data {
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
 					auto const& id = *val.content.id;
 					StringType result = "#[";
-					result += ::CTL::toString(id[0]);
+					result += ::CTL::toString(id[IdentifierType::SIZE-1]);
 					for (usize i = 1; i < IdentifierType::SIZE; ++i)
-						result += " " + ::CTL::toString(id[i]);
+						result += " " + ::CTL::toString(id[IdentifierType::SIZE-(i+1)]);
 					return result + "]";
 				},
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
