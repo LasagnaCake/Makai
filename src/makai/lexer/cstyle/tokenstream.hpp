@@ -77,7 +77,7 @@ namespace Makai::Lexer::CStyle {
 				/// @brief Invalid token.
 				LTS_TT_INVALID = Limit::MAX<uint64>,
 				/// @brief Integer literal.
-				LTS_TT_INTEGER = Makai::Cast::as<uint64>(Limit::MAX<uint32>) + 1,
+				LTS_TT_INTEGER = Cast::as<uint64>(Limit::MAX<uint32>) + 1,
 				/// @brief Floating-point literal.
 				LTS_TT_REAL,
 				/// @brief Alphanumeric identifier.
