@@ -1095,6 +1095,8 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 		arr->flags |= Core::Definition::Flags::AV2_DF_ARRAY;
 		arr->base = type;
 		arr->name = type->name + "_array";
+		auto& ns = *(root->subspaces["__ARRAYS__"]->subspaces[arr->name] = Namespace::Instance::create(arr->name));
+		ns.type = arr;
 		return arr;
 	} else return arrays[type.asWeak()];
 }
@@ -1123,6 +1125,7 @@ ATransformer::Context::Context(): Intermediate() {
 	addBasicType(AV2_BT_VECTOR);
 	addBasicType(AV2_BT_MATRIX);
 	addBasicType(AV2_BT_TYPEID);
+	root->subspaces["__ARRAYS__"] = Namespace::Instance::create("__ARRAYS__");
 }
 
 void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 const flags) {
