@@ -192,7 +192,7 @@ namespace Makai::Parser::Data {
 					case TokenType{CUSTOM_TYPE_IDENTIFIER}:
 						return error("Expected integer here!");
 					case TokenType::LTS_TT_INTEGER:
-						id[i] = lexer.current().value.getUnsigned();
+						id[(Value::IdentifierType::SIZE-(i+1))] = lexer.current().value.getUnsigned();
 					case TokenType{']'}: goto TheRestOfTheOwl;
 					default: continue;
 				}
@@ -203,7 +203,7 @@ namespace Makai::Parser::Data {
 				return error("Expected ']' here!");
 			if (i < Value::IdentifierType::SIZE)
 				for (usize j = 0; j < i; ++j)
-					id[j] = id[j + (Value::IdentifierType::SIZE - i)];
+					swap(id[j], id[j + (Value::IdentifierType::SIZE - i)]);
 			return Value(Value::IdentifierType::create(id));
 		}
 
