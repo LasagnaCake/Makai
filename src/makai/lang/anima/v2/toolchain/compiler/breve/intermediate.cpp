@@ -611,6 +611,30 @@ Makai::Data::Value Variable::serialize() const {
 	return out;
 }
 
+Makai::Data::Value Trait::serialize() const {return {};}
+
+Makai::Data::Value TypeDecl::serialize() const {
+	Makai::Data::Value out = out.object();
+	out["name"] = name.toString();
+	if (base)
+		out["base"] = base->name.toString();
+	switch (def) {
+		case Definition::AV2_TCTD_ARRAY: out["def"] = "array"; break;
+		case Definition::AV2_TCTD_STRUCT: out["def"] = "basic"; break;
+		case Definition::AV2_TCTD_TEMPLATE: out["def"] = "template"; break;
+		case Definition::AV2_TCTD_BASIC: out["def"] = "basic"; break;
+	}
+	if (basic)
+		// TODO: Not this
+		out["basic"] = enumcast(*basic);
+	if (artEquivalent)
+		out["art_type"] = artEquivalent.value().toString();
+	for (auto const& [name, field]: fields)
+		if (field)
+			out["fields"][name.toString()] = field->serialize();
+	return out;
+}
+
 Makai::Data::Value Attribute::serialize() const {
 	Makai::Data::Value out = out.object();
 	StringList tg;
