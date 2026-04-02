@@ -19,7 +19,7 @@ static Makai::Data::Value configBase() {
 
 static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]	= "help";
-	tl["L"]	= "level";
+	tl["l"]	= "level";
 	tl["o"]	= "output";
 	tl["s"]	= "src";
 }
