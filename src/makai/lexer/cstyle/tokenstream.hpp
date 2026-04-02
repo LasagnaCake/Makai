@@ -219,8 +219,14 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_BIT_NOT_ASSIGN:			return "~=";
 					case Type::LTS_TT_STREAM_INSERT:			return "<|";
 					case Type::LTS_TT_STREAM_EXTRACT:			return "|>";
-					default: return "<!UNKNOWN>";
+					case Type::LTS_TT_NULL_DECAY:				return "??";
+					case Type::LTS_TT_NULL_ACCESS:				return "?.";
+					case Type::LTS_TT_NULL_ASSIGN:				return "?=";
+					case Type::LTS_TT_PTR_ACCESS:				return "*.";
+					case Type::LTS_TT_DEREF_ACCESS:				return "^.";
+					case Type::LTS_TT_ELLIPSIS:					return "...";
 				}
+				return "<!UNKNOWN>";
 			}
 
 			constexpr static UTF8String asName(Type const type) {return toString(type);}

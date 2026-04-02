@@ -663,6 +663,8 @@ Makai::Data::Value Property::serialize() const {
 	if (type)	out["type"]	= type->name.toString();
 	if (getter)	out["get"]	= getter->serialize();
 	if (setter)	out["set"]	= setter->serialize();
+	if (fieldOf)
+		out["field_of"] = fieldOf->name.toString();
 	return out;
 }
 
