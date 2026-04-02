@@ -632,3 +632,18 @@ Makai::Data::Value Intermediate::serialize() const {
 	out["stack"] = scopeStack.size();
 	return out;
 }
+
+bool Namespace::isPureNamespace() const {
+	return !(type || function || variable || attribute || trait);
+}
+
+bool TypeDecl::derivedFrom(Namespace::TypeRef const& other) const {
+	if (!base) return false;
+	if (base == other) return true;
+	return base->derivedFrom(other);
+}
+
+Namespace::Instance Intermediate::top() const {
+	if (scopeStack.empty()) return root;
+	return scopeStack.back();
+}

@@ -3,6 +3,7 @@
 
 #include "../../assembler/assembler.hpp"
 #include "../../../core/core.hpp"
+#include "makai/lang/anima/v2/core/type.hpp"
 #include "node.hpp"
 #include "intermediate.hpp"
 
@@ -55,6 +56,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			static UTF8StringList pathOf(Node::Instance const& node);
 
 			Namespace::Instance getStructScope() const;
+
+			void addBasicType(Core::BasicType const type, uint64 const flags = 0);
+
+			Context();
 		};
 
 		virtual ~ATransformer();
@@ -206,6 +211,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct EmptyDecay: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct ArrayTypeDecl: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 

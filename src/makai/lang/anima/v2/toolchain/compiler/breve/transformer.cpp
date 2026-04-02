@@ -1,5 +1,6 @@
 #include "transformer.hpp"
 #include "intermediate.hpp"
+#include "makai/lang/anima/v2/core/type.hpp"
 #include "resolver.hpp"
 
 /*
@@ -234,9 +235,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 	context.error("Invalid operator for type!", node);
 }
 
-bool Namespace::isPureNamespace() const {
-	return !(type || function || variable || attribute || trait);
-}
+ATransformer::~ATransformer() {}
 
 Namespace::Instance ATransformer::Context::get(UTF8StringList const& path) {
 	if (auto const ns = resolve(path))
@@ -687,6 +686,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
+	if (node->content == Node::Content::AV2_TANC_DECLARATION && node->base.text == "*")
+		return ArrayTypeDecl().transform(context, node);
 	auto const t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
 	return {.type = t};
@@ -1076,4 +1077,57 @@ ATransformer::Result TheEntireProgram::transform(Context& context, Node::Instanc
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
 	return result;
+}
+
+ATransformer::Result ArrayTypeDecl::transform(Context& context, Node::Instance const& node) {
+	auto const t = context.arrayFor(TypeRequest().transform(context, node->leftSide).type);
+	return {.type = t};
+}
+
+Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
+
+}
+
+ATransformer::Context::Context(): Intermediate() {
+	using enum Core::BasicType;
+	using Flags = Core::Definition::Flags;
+	addBasicType(AV2_BT_ANY);
+	addBasicType(AV2_BT_VOID, Flags::AV2_DF_EMPTY | Flags::AV2_DF_NO_RESULT);
+	addBasicType(AV2_BT_NULL, Flags::AV2_DF_EMPTY);
+}
+
+void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 const flags) {{
+	using enum Core::BasicType;
+	UTF8String name;
+	switch (type)
+		case AV2_BT_VOID:		name = "void";		break;
+		case AV2_BT_ANY:		name = "any";		break;
+		case AV2_BT_NULL:		name = "null";		break;
+		case AV2_BT_TYPEID:		name = "type";		break;
+		case AV2_BT_BOOL:		name = "bool";		break;
+		case AV2_BT_CHAR:		name = "char";		break;
+		case AV2_BT_INT8:		name = "int8";		break;
+		case AV2_BT_INT16:		name = "int16";		break;
+		case AV2_BT_INT32:		name = "int32";		break;
+		case AV2_BT_INT64:		name = "int64";		break;
+		case AV2_BT_UINT8:		name = "uint8";		break;
+		case AV2_BT_UINT16:		name = "uint16";	break;
+		case AV2_BT_UINT32:		name = "uint32";	break;
+		case AV2_BT_UINT64:		name = "uint64";	break;
+		case AV2_BT_REAL32:		name = "float32";	break;
+		case AV2_BT_REAL64:		name = "float64";	break;
+		case AV2_BT_REAL128:	name = "float128";	break;
+		case AV2_BT_STRING:		name = "string";	break;
+		case AV2_BT_BYTES:		name = "bytes";		break;
+		case AV2_BT_VECTOR:		name = "vector";	break;
+		case AV2_BT_MATRIX:		name = "matrix";	break;
+	}
+	auto const ns = Namespace::Instance::create();
+	root->subspaces[name] = ns;
+	auto& t = *(ns->type = ns->type.create());
+	t.name = name;
+	t.basic = type;
+	t.flags |= Core::Definition::Flags::AV2_DF_BASIC | flags;
+	if (type != AV2_BT_VOID && type != Core::BasicType::AV2_BT_ANY)
+		t.base = basicType("name");
 }
