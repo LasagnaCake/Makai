@@ -77,7 +77,7 @@ namespace Makai::Lexer::CStyle {
 				/// @brief Invalid token.
 				LTS_TT_INVALID = Limit::MAX<uint64>,
 				/// @brief Integer literal.
-				LTS_TT_INTEGER = Limit::MAX<uint32> + 1,
+				LTS_TT_INTEGER = Makai::Cast::as<uint64>(Limit::MAX<uint32>) + 1,
 				/// @brief Floating-point literal.
 				LTS_TT_REAL,
 				/// @brief Alphanumeric identifier.
@@ -213,7 +213,7 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_BIT_SHIFT_LEFT_ASSIGN:	return "<<=";
 					case Type::LTS_TT_BIT_SHIFT_RIGHT_ASSIGN:	return ">>=";
 					case Type::LTS_TT_ORDER:					return "<=>";
-					case Type::LTS_TT_ASSIGN:					return ":=";
+					case Type::LTS_TT_DECLARE:					return ":=";
 					case Type::LTS_TT_NAMESPACE_RESOLVE:		return "::";
 					case Type::LTS_TT_LOGIC_XOR:				return "^^";
 					case Type::LTS_TT_BIT_NOT_ASSIGN:			return "~=";
@@ -225,6 +225,7 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_PTR_ACCESS:				return "*.";
 					case Type::LTS_TT_DEREF_ACCESS:				return "^.";
 					case Type::LTS_TT_ELLIPSIS:					return "...";
+					default: return "<!UNKNOWN>";
 				}
 				return "<!UNKNOWN>";
 			}
