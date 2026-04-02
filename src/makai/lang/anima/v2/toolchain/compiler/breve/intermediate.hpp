@@ -317,6 +317,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Intermediate: IWritable, ISerializable {
+		using Instance = Instance<Intermediate>;
+
 		Namespace::Instance root = root.create();
 
 		void writePre(UTF8String const& what) override;

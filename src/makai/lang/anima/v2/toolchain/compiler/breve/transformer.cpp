@@ -275,6 +275,11 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 
 Makai::KeyValuePair<Makai::UTF8StringList, Namespace::Instance>
 ATransformer::resolve(Context& context, Node::Instance const& node) const {
+	return resolve(context, node, allowPaths);
+}
+
+Makai::KeyValuePair<Makai::UTF8StringList, Namespace::Instance>
+ATransformer::resolve(Context& context, Node::Instance const& node, bool allowPaths) {
 	auto const path = Context::pathOf(node);
 	if (!allowPaths && path.size() > 1)
 		context.error("Path declarations are forbidden in this context!", node);
@@ -908,7 +913,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	auto const path = context.pathOf(node->rightSide);
 	auto const fpath = path.join("/");
 	auto const subinter = import(fpath);
-	return {.scope = subinter.root};
+	return {.scope = subinter->root};
 }
 
 ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance const& node) {
@@ -1165,3 +1170,5 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 		t.base = basicType("name");
 	basics[name] = ns->type;
 }
+
+Makai::Function<Intermediate::Instance(Makai::UTF8String const&)> Import::import;

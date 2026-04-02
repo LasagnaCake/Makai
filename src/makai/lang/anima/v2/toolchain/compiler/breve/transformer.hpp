@@ -188,7 +188,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct Import: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 
-		static Makai::Function<Intermediate(UTF8String const&)> import;
+		static Makai::Function<Intermediate::Instance(UTF8String const&)> import;
 	};
 
 	struct Subscript: ATransformer {
