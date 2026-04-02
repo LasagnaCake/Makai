@@ -683,6 +683,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_LOOP:				return Loop().transform(context, node);
 		case Node::Content::AV2_TANC_INLINE_MINIMA:		return InlineAssembly().transform(context, node);
 		case Node::Content::AV2_TANC_ATTRIBUTE:			return AttributeExpression().transform(context, node);
+		case Node::Content::AV2_TANC_DROP:				return Drop().transform(context, node);
+		case Node::Content::AV2_TANC_NEW:				return Create().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
 		default: context.error("Unsupported expression!", node);
@@ -1073,6 +1075,42 @@ ATransformer::Result Drop::transform(Context& context, Node::Instance const& nod
 		context.error("Expression does not result in a value!", node->leftSide);
 	if (!at.direct)
 		context.top()->impl->writeMainLine("drop", *at.source);
+	return {};
+}
+
+ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
+	return {};
+}
+
+ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
+	return {};
+}
+
+ATransformer::Result Loop::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
+	return {};
+}
+
+ATransformer::Result Definition::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
+	if (node->base.text == "::")		return FunctionDecl().transform(context, node);
+	if (node->base.text == ":")			return VariableDecl().transform(context, node);
+	if (node->base.text == "prop")		return PropertyDecl().transform(context, node);
+	if (node->base.text == "struct")	return StructureDecl().transform(context, node);
+	if (node->base.text == "module")	return NamespaceDecl().transform(context, node);
+	if (node->base.text == "*")			return ArrayTypeDecl().transform(context, node);
+	context.error("Unimplemented support for given declaration!", node);
+}
+
+ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
+	auto const scope = context.declare(UTF8StringList::from("<>" + node->name()));
+	for (auto& tok: node->interject)
+		scope->impl->writeMain(tok.text);
+	scope->impl->writeMainLine("");
+	context.pop(1);
 	return {};
 }
 

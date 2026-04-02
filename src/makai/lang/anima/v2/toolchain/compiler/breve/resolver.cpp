@@ -531,3 +531,19 @@ Node::Instance DynamicOperatorDeclResolver::resolve(Parser& parser, Node::Instan
 }
 
 AResolver::~AResolver() {}
+
+Node::Instance DropExpressionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_DROP;
+	result->leftSide = parser.nextExpression();
+	return result;
+}
+
+Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_NEW;
+	result->leftSide = parser.nextExpression();
+	return result;
+}

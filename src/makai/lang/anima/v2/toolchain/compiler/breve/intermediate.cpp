@@ -688,6 +688,11 @@ Namespace::Instance Intermediate::top() const {
 	return scopeStack.back();
 }
 
+Namespace::Instance Intermediate::parent() const {
+	if (scopeStack.size() < 2) return root;
+	return scopeStack[-2];
+}
+
 Makai::UTF8String Function::Overload::prototype() const {
 	Makai::UTF8String out = result->name;
 	for (auto& arg: arguments)
