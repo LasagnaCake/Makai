@@ -15,6 +15,17 @@ Trait::Trait(UTF8String const& name): Labeled(name) {}
 TypeDecl::TypeDecl(UTF8String const& name): Labeled(name) {}
 Variable::Variable(UTF8String const& name): Labeled(name) {}
 Property::Property(UTF8String const& name): Labeled(name) {}
+Attribute::Attribute(UTF8String const& name): Labeled(name) {}
+
+Namespace::~Namespace() {}
+Function::~Function() {}
+Trait::~Trait() {}
+TypeDecl::~TypeDecl() {}
+Property::~Property() {}
+Variable::~Variable() {}
+Attribute::~Attribute() {}
+
+Intermediate::~Intermediate() {}
 
 Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;

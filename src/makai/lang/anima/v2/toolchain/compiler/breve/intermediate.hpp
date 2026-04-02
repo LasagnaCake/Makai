@@ -125,6 +125,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 
 		Implementation() {}
+		virtual ~Implementation() {}
 	};
 
 	struct Metadata {
@@ -162,6 +163,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Instance resolve(UTF8StringList const& path) const;
 
 		Namespace(UTF8String const& name = "");
+		virtual ~Namespace();
 
 		bool isPureNamespace() const;
 
@@ -192,6 +194,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 
 		TypeDecl(UTF8String const& name = "");
+		virtual ~TypeDecl();
 	};
 
 	struct Function: Labeled, Positioned, ISerializable {
@@ -213,6 +216,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Makai::Data::Value serialize() const override;
 
 			Overload();
+			virtual ~Overload();
 		};
 		using OverloadRef = Instance<Overload>;
 
@@ -226,6 +230,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 
 		Function(UTF8String const& name = "");
+		virtual ~Function();
 	};
 
 	struct Variable: Labeled, Positioned, Scoped, ISerializable {
@@ -242,6 +247,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 
 		Variable(UTF8String const& name = "");
+		virtual ~Variable();
 	};
 
 	struct Attribute: Labeled, Positioned, ISerializable {
@@ -276,6 +282,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 
 		Attribute(UTF8String const& name = "");
+		virtual ~Attribute();
 	};
 
 	struct Property:  Labeled, Positioned, Scoped, ISerializable {
@@ -287,6 +294,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 
 		Property(UTF8String const& name = "");
+		virtual ~Property();
 	};
 
 	constexpr Attribute::Target operator&(Attribute::Target const& a, Attribute::Target const& b) {
@@ -305,6 +313,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 
 		Trait(UTF8String const& name = "");
+		virtual ~Trait();
 	};
 
 	struct Intermediate: IWritable, ISerializable {
@@ -325,6 +334,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		void addGlobalAttribute(Namespace::AttributeRef const& attrib);
 
 		Intermediate();
+		virtual ~Intermediate();
 
 		Makai::Data::Value serialize() const override;
 	};
