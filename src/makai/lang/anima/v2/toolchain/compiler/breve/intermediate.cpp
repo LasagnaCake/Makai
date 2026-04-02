@@ -10,6 +10,11 @@ IWritable::~IWritable() {}
 #define ATTRIBUTE_TRANSFORMER()  [] (Intermediate& inter, Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base)
 
 Namespace::Namespace(UTF8String const& name): Labeled(name) {}
+Function::Function(UTF8String const& name): Labeled(name) {}
+Trait::Trait(UTF8String const& name): Labeled(name) {}
+TypeDecl::TypeDecl(UTF8String const& name): Labeled(name) {}
+Variable::Variable(UTF8String const& name): Labeled(name) {}
+Property::Property(UTF8String const& name): Labeled(name) {}
 
 Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
@@ -647,3 +652,12 @@ Namespace::Instance Intermediate::top() const {
 	if (scopeStack.empty()) return root;
 	return scopeStack.back();
 }
+
+Makai::UTF8String Function::Overload::prototype() const {
+	Makai::UTF8String out = result->name;
+	for (auto& arg: arguments)
+		out += "_" + arg->type->name;
+	return out;
+}
+
+Function::Overload::Overload() {}

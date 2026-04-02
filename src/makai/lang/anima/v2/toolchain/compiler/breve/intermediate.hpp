@@ -123,6 +123,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8String toString() const {return pre + main + post;}
 
 		Makai::Data::Value serialize() const override;
+
+		Implementation() {}
 	};
 
 	struct Metadata {
@@ -188,6 +190,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool derivedFrom(Namespace::TypeRef const& otherType) const;
 
 		Makai::Data::Value serialize() const override;
+
+		TypeDecl(UTF8String const& name = "");
 	};
 
 	struct Function: Labeled, Positioned, ISerializable {
@@ -207,6 +211,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			UTF8String prototype() const;
 
 			Makai::Data::Value serialize() const override;
+
+			Overload();
 		};
 		using OverloadRef = Instance<Overload>;
 
@@ -218,6 +224,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		OverloadRef overloadFromTypes(List<Namespace::TypeRef> const& args) const;
 
 		Makai::Data::Value serialize() const override;
+
+		Function(UTF8String const& name = "");
 	};
 
 	struct Variable: Labeled, Positioned, Scoped, ISerializable {
@@ -232,6 +240,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		uint64				id;
 
 		Makai::Data::Value serialize() const override;
+
+		Variable(UTF8String const& name = "");
 	};
 
 	struct Attribute: Labeled, Positioned, ISerializable {
@@ -264,6 +274,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		static bool matchesTarget(Namespace const& ns, Target const target);
 
 		Makai::Data::Value serialize() const override;
+
+		Attribute(UTF8String const& name = "");
 	};
 
 	struct Property:  Labeled, Positioned, Scoped, ISerializable {
@@ -273,6 +285,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Handle<TypeDecl>		fieldOf;
 
 		Makai::Data::Value serialize() const override;
+
+		Property(UTF8String const& name = "");
 	};
 
 	constexpr Attribute::Target operator&(Attribute::Target const& a, Attribute::Target const& b) {
@@ -289,6 +303,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct Trait: Labeled, Positioned, Scoped, ISerializable {
 		Makai::Data::Value serialize() const override;
+
+		Trait(UTF8String const& name = "");
 	};
 
 	struct Intermediate: IWritable, ISerializable {

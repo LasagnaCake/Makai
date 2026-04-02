@@ -1,6 +1,5 @@
 #include "transformer.hpp"
 #include "intermediate.hpp"
-#include "makai/lang/anima/v2/core/type.hpp"
 #include "resolver.hpp"
 
 /*
