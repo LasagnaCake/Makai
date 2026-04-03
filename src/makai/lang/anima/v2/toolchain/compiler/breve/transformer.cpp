@@ -262,7 +262,7 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	if (!node)
 		return Makai::UTF8StringList();
 	if (node->content == Node::Content::AV2_TANC_NAME) {
-		DEBUGLN("Left:", node->value.getString());
+		DEBUGLN("------ Left:", node->value.getString());
 		return Makai::UTF8StringList::from(node->value.getString());
 	}
 	else if (!node->isPathOrName())
@@ -271,8 +271,12 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	if (node->rightSide->content != Node::Content::AV2_TANC_NAME)
 		Context::error("This is not a valid path!", node->rightSide);
 	path.appendBack(pathOf(node->leftSide));
-	DEBUGLN("Right:", node->rightSide->value.getString());
+	DEBUGLN("------ Right:", node->rightSide->value.getString());
 	path.pushBack(node->rightSide->value.getString());
+	DEBUG("Path: ");
+	for (auto& name: path)
+		DEBUG("/", name);
+	DEBUG("\n");
 	return path;
 }
 
