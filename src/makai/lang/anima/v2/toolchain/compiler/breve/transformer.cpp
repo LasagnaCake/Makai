@@ -260,15 +260,18 @@ Namespace::Instance ATransformer::Context::fetch(Node::Instance const& nodePath)
 
 Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) {
 	if (!node)
-		return {};
-	if (node->content == Node::Content::AV2_TANC_NAME)
+		return Makai::UTF8StringList();
+	if (node->content == Node::Content::AV2_TANC_NAME) {
+		DEBUGLN("Left:", node->value.getString());
 		return Makai::UTF8StringList::from(node->value.getString());
+	}
 	else if (!node->isPathOrName())
 		Context::error("This is not a valid path!", node);
 	Makai::UTF8StringList path;
 	if (node->rightSide->content != Node::Content::AV2_TANC_NAME)
 		Context::error("This is not a valid path!", node->rightSide);
 	path.appendBack(pathOf(node->leftSide));
+	DEBUGLN("Right:", node->rightSide->value.getString());
 	path.pushBack(node->rightSide->value.getString());
 	return path;
 }
