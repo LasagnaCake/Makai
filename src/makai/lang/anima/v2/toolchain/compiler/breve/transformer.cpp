@@ -685,6 +685,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_ATTRIBUTE:			return AttributeExpression().transform(context, node);
 		case Node::Content::AV2_TANC_DROP:				return Drop().transform(context, node);
 		case Node::Content::AV2_TANC_NEW:				return Create().transform(context, node);
+		case Node::Content::AV2_TANC_IMPORT:			return Import().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
 		default: context.error("Unsupported expression!", node);
@@ -915,6 +916,8 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	auto const path = context.pathOf(node->rightSide);
 	auto const fpath = path.join("/");
 	auto const subinter = import(fpath);
+	// This is for testing purposes
+	if (!subinter) return {};
 	return {.scope = subinter->root};
 }
 
@@ -1209,4 +1212,4 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	basics[name] = ns->type;
 }
 
-Makai::Function<Intermediate::Instance(Makai::UTF8String const&)> Import::import;
+Makai::Function<Intermediate::Instance(Makai::UTF8String const&)> Import::import = [] (auto const&) {return nullptr;};

@@ -9,7 +9,7 @@ module Test.Namespace {
 	}
 
 	foo :: (var: int) -> int {
-		return var + var
+		return var + var if ref var > 0 else foo(-var);
 	}
 
 	bar :: (var: int) -> int => (foo(var) * var)
@@ -19,6 +19,7 @@ module Test.Namespace {
 	biff :: () -> void
 }
 
-main {
+@Main
+main :: () {
 	writeLine("Hello, World!")
 }

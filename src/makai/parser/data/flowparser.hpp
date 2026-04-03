@@ -190,6 +190,7 @@ namespace Makai::Parser::Data {
 					case TokenType{'{'}:
 					case TokenType{'['}:
 					case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+					case TokenType{INTERNAL_TYPE_IDENTIFIER}:
 						return error("Expected integer here!");
 					case TokenType::LTS_TT_INTEGER:
 						id[(Value::IdentifierType::SIZE-(i+1))] = lexer.current().value.getUnsigned();
@@ -258,7 +259,8 @@ namespace Makai::Parser::Data {
 				case TokenType{'('}:
 				case TokenType{'{'}:
 				case TokenType{'['}:
-				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
+				case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+				case TokenType{INTERNAL_TYPE_IDENTIFIER}: {
 					auto v = parseValue();
 					if (v) {
 						auto const vv = v.value();
@@ -305,6 +307,7 @@ namespace Makai::Parser::Data {
 				case TokenType{'['}:
 				case TokenType{'-'}:
 				case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+				case TokenType{INTERNAL_TYPE_IDENTIFIER}:
 					return error("Object key is not a string or identifier!");
 				default: continue;
 				}
@@ -333,7 +336,8 @@ namespace Makai::Parser::Data {
 				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{'{'}:
 				case TokenType{'['}:
-				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
+				case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+				case TokenType{INTERNAL_TYPE_IDENTIFIER}: {
 					auto const v = parseValue();
 					if (v) {
 						auto const vv = v.value();
