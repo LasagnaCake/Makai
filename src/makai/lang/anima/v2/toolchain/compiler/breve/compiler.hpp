@@ -5,18 +5,15 @@
 #include "parser.hpp"
 #include "intermediate.hpp"
 #include "node.hpp"
+#include "transformer.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
-	struct Compiler: ACompiler, IValue<Intermediate>  {
-		struct Context: BaseContext {
-			Intermediate inter;
-			List<Namespace::Instance> stack;
-
-			Namespace::Instance getNamespace(String const& name);
+	struct Compiler: ACompiler, IValue<UTF8String>  {
+		struct Context: BaseContext, Transformer::ATransformer::Context {
 		};
 
 		void invoke() override;
-		Intermediate value() const override;
+		UTF8String value() const override;
 
 		Compiler(Parser& parser, Context& context): ACompiler(context), context(context), parser(parser) {}
 

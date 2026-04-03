@@ -277,7 +277,9 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	for (auto& name: path)
 		DEBUG("/", name);
 	DEBUG("\n");
-	return path;
+	auto const p2 = copy(path);
+	path.dispose();
+	return p2;
 }
 
 Makai::KeyValuePair<Makai::UTF8StringList, Namespace::Instance>
