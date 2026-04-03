@@ -66,7 +66,9 @@ Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 		root->subspaces[ns->name] = ns;
 	else scopeStack.back()->subspaces[ns->name] = ns;
 	scopeStack.pushBack(ns);
-	return push(path.sliced(1));
+	if (path.size())
+		return push(path.sliced(1));
+	return scopeStack.back();
 }
 
 void Intermediate::pop(usize count) {
