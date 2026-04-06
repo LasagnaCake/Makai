@@ -55,7 +55,8 @@ int main(int argc, char** argv) try {
 		DEBUGLN("That part");
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
-		if (cfg["level"].getString("full") == "parse-tree") {
+		auto const level = cfg["level"].getString("full");
+		if (level == "parse-tree" || level == "parse") {
 			DEBUGLN("Doing parse tree...");
 			auto const i = parser.parse();
 			Makai::File::saveText(
@@ -68,7 +69,7 @@ int main(int argc, char** argv) try {
 				) + ".bpt",
 				i->serialize().toFLOWString("  ")
 			);
-		} else if (cfg["level"].getString("full") == "intermediate") {
+		} else if (level == "intermediate" || level == "ir") {
 			Compiler::Breve::Transformer::ATransformer::Context ctx;
 			Compiler::Breve::Transformer::TheEntireProgram tf;
 			tf.transform(ctx, parser.parse());
@@ -82,6 +83,8 @@ int main(int argc, char** argv) try {
 				) + ".bir",
 				ctx.serialize().toFLOWString("  ")
 			);
+		} else if (level == "minima" || level == "min") {
+			// TODO: This
 		} else {
 			// TODO: This
 		}

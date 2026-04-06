@@ -56,7 +56,7 @@ Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 			scopeStack.pushBack(root->subspaces[path.back()]);
 			return scopeStack.back();
 		}
-		else if (scopeStack.back()->subspaces.contains(path.back())) {
+		else if (scopeStack.size() && scopeStack.back()->subspaces.contains(path.back())) {
 			scopeStack.pushBack(scopeStack.back()->subspaces[path.back()]);
 			return scopeStack.back();
 		}
