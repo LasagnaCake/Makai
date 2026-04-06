@@ -906,7 +906,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		}
 	} else {
 		implOv = ov;
-		implScope = ov->scope.raw();
+		if (node->rightSide)
+			implScope = ov->scope.create().raw();
 	}
 	if (node->rightSide) {
 		context.scopeStack.pushBack(implScope);
