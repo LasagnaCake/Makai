@@ -565,9 +565,8 @@ Makai::Data::Value Namespace::serialize() const {
 		out["meta"][name]["name"]	= props->attribute->name.toString();
 		out["meta"][name]["value"]	= props->value;
 	}
-	for (auto& [name, ns]: subspaces) {
-		out["subns"][name]	= ns->name.toString();
-	}
+	for (auto& [name, ns]: subspaces)
+		out["sub_ns"][name]	= ns->serialize();
 	out["varc"]	= varc;
 	out["impl"] = impl->serialize();
 	return out;
