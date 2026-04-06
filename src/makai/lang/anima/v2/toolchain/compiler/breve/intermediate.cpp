@@ -546,9 +546,9 @@ Intermediate::Intermediate() {
 
 Makai::Data::Value Implementation::serialize() const {
 	Makai::Data::Value out = out.object();
-	out["pre"] = pre.toString();
-	out["main"] = main.toString();
-	out["post"] = post.toString();
+	out["pre"]	= pre.toString();
+	out["main"]	= main.toString();
+	out["post"]	= post.toString();
 	return out;
 }
 
@@ -564,6 +564,9 @@ Makai::Data::Value Namespace::serialize() const {
 	for (auto& [name, props]: meta) {
 		out["meta"][name]["name"]	= props->attribute->name.toString();
 		out["meta"][name]["value"]	= props->value;
+	}
+	for (auto& [name, ns]: subspaces) {
+		out["subns"][name]	= ns->name.toString();
 	}
 	out["varc"]	= varc;
 	out["impl"] = impl->serialize();
