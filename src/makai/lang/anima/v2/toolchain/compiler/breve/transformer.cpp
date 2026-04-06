@@ -865,43 +865,48 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	context.pop(1);
 	Namespace::Instance implScope;
 	Function::OverloadRef implOv;
-	for (auto i: Makai::range(optionals.size())) {
-		auto args = ov->arguments;
-		args.appendBack(optionals.sliced(0, -(i+1)));
-		if (auto const f = fn.overloadFromVariables(args)) {
-			if (f->scope || f->result != ov->result)
-				context.error("Redeclaration of function overload!", node);
-			if (!implScope) {
+	if (optionals.size()) {
+		for (auto i: Makai::range(optionals.size())) {
+			auto args = ov->arguments;
+			args.appendBack(optionals.sliced(0, -(i+1)));
+			if (auto const f = fn.overloadFromVariables(args)) {
+				if (f->scope || f->result != ov->result)
+					context.error("Redeclaration of function overload!", node);
+				if (!implScope) {
+					auto const ovName = scope->function->name + overloadName(args);
+					implScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
+					f->entry = "__" + ovName  + node->name();
+					context.pop(1);
+				}
+			} else {
 				auto const ovName = scope->function->name + overloadName(args);
-				implScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
-				f->entry = "__" + ovName  + node->name();
+				auto const overloadScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
+				if (!implScope)
+					implScope = overloadScope;
+				auto const oo = ov.create();
+				oo->entry = "__" + ovName + node->name();
+				oo->arguments = args;
+				oo->result = ov->result;
+				oo->scope = overloadScope.asWeak();
+				for (auto const& arg: args)
+					oo->scope->subspaces[arg->name] = arg->scope.raw();
+				fn.overloads.pushBack(oo);
+				if (!implOv) implOv = oo;
+				else {
+					context.writePreLine("@fn", oo->entry);
+					overloadScope->impl->writePreLine(oo->entry, ":");
+					overloadScope->impl->writePreLine("begin", toString(args.size()));
+					overloadScope->impl->writePreLine("bind", toString(args.size()), "[0 : 0]");
+					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
+					overloadScope->impl->writePostLine("call", implOv->entry);
+					overloadScope->impl->writePostLine("end");
+				}
 				context.pop(1);
 			}
-		} else {
-			auto const ovName = scope->function->name + overloadName(args);
-			auto const overloadScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
-			if (!implScope)
-				implScope = overloadScope;
-			auto const oo = ov.create();
-			oo->entry = "__" + ovName + node->name();
-			oo->arguments = args;
-			oo->result = ov->result;
-			oo->scope = overloadScope.asWeak();
-			for (auto const& arg: args)
-				oo->scope->subspaces[arg->name] = arg->scope.raw();
-			fn.overloads.pushBack(oo);
-			if (!implOv) implOv = oo;
-			else {
-				context.writePreLine("@fn", oo->entry);
-				overloadScope->impl->writePreLine(oo->entry, ":");
-				overloadScope->impl->writePreLine("begin", toString(args.size()));
-				overloadScope->impl->writePreLine("bind", toString(args.size()), "[0 : 0]");
-				overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
-				overloadScope->impl->writePostLine("call", implOv->entry);
-				overloadScope->impl->writePostLine("end");
-			}
-			context.pop(1);
 		}
+	} else {
+		implOv = ov;
+		implScope = ov->scope.raw();
 	}
 	if (node->rightSide) {
 		context.scopeStack.pushBack(implScope);
