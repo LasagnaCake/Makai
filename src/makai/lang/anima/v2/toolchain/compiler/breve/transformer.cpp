@@ -832,7 +832,7 @@ static Makai::UTF8String overloadName(Makai::List<Namespace::VariableRef> const&
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto const [path, scope] = resolve(context, node->leftSide);
-	if (!symbol->isPureNamespace() && !scope->function)
+	if (!scope->isPureNamespace() && !scope->function)
 		context.error("Symbol is already defined as a different kind!", node);
 	if (!scope->function) {
 		scope->function = scope->function.create();
