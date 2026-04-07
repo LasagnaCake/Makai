@@ -1118,7 +1118,6 @@ ATransformer::Result Loop::transform(Context& context, Node::Instance const& nod
 }
 
 ATransformer::Result Definition::transform(Context& context, Node::Instance const& node) {
-	// TODO: This
 	if (node->base.text == "::")		return FunctionDecl().transform(context, node);
 	if (node->base.text == ":")			return VariableDecl().transform(context, node);
 	if (node->base.text == "prop")		return PropertyDecl().transform(context, node);
@@ -1163,6 +1162,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 		arr->name = type->name + "_array";
 		auto& ns = *(root->subspaces["__ARRAYS__"]->subspaces[arr->name] = Namespace::Instance::create(arr->name));
 		ns.type = arr;
+		arrays[type.asWeak()]=arr;
 		return arr;
 	} else return arrays[type.asWeak()];
 }
