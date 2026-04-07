@@ -39,10 +39,11 @@ Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
 	for (auto& scope: Makai::Range::reverse(scopeStack)) {
-		if (path.size() == 1 && scope->name == path.back())
+		if (path.size() == 1 && scope->name == path.front())
 			return scope;
-		else if (auto ns = scope->resolve(path))
-			return ns;
+		else if (auto ns = scope->resolve(path.sliced(1)))
+			if (scope->name == path.front())
+				return ns;
 	}
 	if (auto ns = root->resolve(path))
 		return ns;
@@ -52,16 +53,16 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 	if (path.empty()) return scopeStack.back();
 	if (path.size() == 1) {
-		if (scopeStack.empty() && root->subspaces.contains(path.back())) {
-			scopeStack.pushBack(root->subspaces[path.back()]);
+		if (scopeStack.empty() && root->subspaces.contains(path.front())) {
+			scopeStack.pushBack(root->subspaces[path.front()]);
 			return scopeStack.back();
 		}
-		else if (scopeStack.size() && scopeStack.back()->subspaces.contains(path.back())) {
-			scopeStack.pushBack(scopeStack.back()->subspaces[path.back()]);
+		else if (scopeStack.size() && scopeStack.back()->subspaces.contains(path.front())) {
+			scopeStack.pushBack(scopeStack.front()->subspaces[path.front()]);
 			return scopeStack.back();
 		}
 	}
-	Namespace::Instance ns = ns.create(path.back());
+	Namespace::Instance ns = ns.create(path.front());
 	if (scopeStack.empty())
 		root->subspaces[ns->name] = ns;
 	else scopeStack.back()->subspaces[ns->name] = ns;
