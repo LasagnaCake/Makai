@@ -649,33 +649,35 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 
 ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
 	UTF8StringList path;
-	Handle<Namespace> ns;
+	ATransformer::Result result;
 	if (node->content == Node::Content::AV2_TANC_NAME) {
 		auto const [path, ns] = resolve(context, node);
-		return {.scope = ns};
+		addToStack(context, ns.raw());
+		if (ns->variable) {
+			result.source	= ns->variable->source;
+			result.type		= ns->variable->type;
+			result.scope	= ns->variable->scope.raw();
+		}
+		return result;
 	} if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const fcall = Call().transform(context, node->leftSide);
 		path = context.pathOf(node->rightSide).reverse();
-		ns = fcall.type->scope;
+		result = fcall;
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-		auto const fcall = Subscript().transform(context, node->leftSide);
+		auto const sub = Subscript().transform(context, node->leftSide);
 		path = context.pathOf(node->rightSide).reverse();
-		ns = fcall.type->scope;
+		result = sub;
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
-		path = context.pathOf(node->leftSide).reverse();
-		ns = context.resolve(Makai::UTF8StringList::from(path.front())).asWeak();
-		if (!ns) context.error("Symbol with this name does not exist!", node->leftSide);
-		return {.scope = ns.raw()};
-		addToStack(context, ns.raw());
+		return PathExpression().transform(context, node->leftSide);
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
 		auto const nsx = PathExpression().transform(context, node->leftSide);
 		path = context.pathOf(node->rightSide).reverse();
-		ns = nsx.scope;
-		return resolveSubfield(context, node, ns.raw(), path.back());
+		result = nsx;
+		return resolveSubfield(context, node, result.scope, path.back());
 	}
-	if (!ns->subspaces.contains(path.front()))
+	if (!result.scope->subspaces.contains(path.front()))
 		context.error("Subpath type doesn't contain the given member!", node->leftSide);
-	return {.scope = ns->subspaces[path.front()]};
+	return resolveSubfield(context, node, result.scope, path.front());
 }
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
