@@ -1020,7 +1020,8 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
 	auto const fn = Expression().transform(context, node->leftSide);
-	// Empty here...
+	if (!fn.scope)
+		context.error("Symbol does not exist!", node->leftSide);
 	if (!fn.scope->function)
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
