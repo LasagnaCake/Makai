@@ -32,18 +32,20 @@ Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (!subspaces.contains(path.back())) return nullptr;
 	if (path.size() == 1)
 		return subspaces[path.back()];
-	else return subspaces[path.back()]->resolve(path.sliced(1));
+	else return subspaces[path.front()]->resolve(path.sliced(1));
 	return nullptr;
 }
 
 Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
+	DEBUGLN("Looking for '/", path.join("/"), "'");
 	for (auto& scope: Makai::Range::reverse(scopeStack)) {
-		if (path.size() == 1 && scope->name == path.front())
-			return scope;
-		else if (auto ns = scope->resolve(path.sliced(1)))
-			if (scope->name == path.front())
+		if (scope->name == path.front()) {
+			if (path.size() == 1)
+				return scope;
+			if (auto ns = scope->resolve(path.sliced(1)))
 				return ns;
+		}
 	}
 	if (auto ns = root->resolve(path))
 		return ns;
