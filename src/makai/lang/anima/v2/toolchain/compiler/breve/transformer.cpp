@@ -986,10 +986,10 @@ ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance co
 
 ATransformer::Result NamespaceDecl::transform(Context& context, Node::Instance const& node) {
 	auto const path = context.pathOf(node->leftSide);
-	if (context.top()->resolve(path))
+	if ((context.top()->resolve(path) && !context.top()->resolve(path)->isPureNamespace()))
 		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
 	auto const scope = context.declare(path);
-	Block().transform(context, node);
+	Block().transform(context, node->rightSide);
 	context.pop(path.size());
 	return {.scope = scope};
 }
@@ -1128,7 +1128,6 @@ ATransformer::Result Definition::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance const& node) {
-	// TODO: This
 	auto const scope = context.declare(UTF8StringList::from("<>" + node->name()));
 	for (auto& tok: node->interject)
 		scope->impl->writeMain(tok.text);
