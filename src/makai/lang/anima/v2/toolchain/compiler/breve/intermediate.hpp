@@ -253,12 +253,13 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Attribute: Labeled, Positioned, ISerializable {
 		enum class Target: uint64 {
 			AV2_TAAT_EMPTY		= 0,
-			AV2_TAAT_STRUCT		= 1 << 0,
+			AV2_TAAT_TYPE		= 1 << 0,
 			AV2_TAAT_ATTRIBUTE	= 1 << 1,
 			AV2_TAAT_VARIABLE	= 1 << 2,
 			AV2_TAAT_FUNCTION	= 1 << 3,
 			AV2_TAAT_PROPERTY	= 1 << 4,
 			AV2_TAAT_NAMESPACE	= 1 << 5,
+			AV2_TAAT_TRAIT		= 1 << 6,
 			AV2_TAAT_EVERYTHING	= Makai::Limit::MAX<uint64>
 		};
 

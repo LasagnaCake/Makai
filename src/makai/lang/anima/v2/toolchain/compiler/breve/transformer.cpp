@@ -361,6 +361,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	type.node = node;
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
+	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
 	scope->type->flags |= Core::Definition::Flags::AV2_DF_STRUCTURE;
 	for (auto const& [name, sub]: scope->subspaces) {
 		if (sub->variable) {

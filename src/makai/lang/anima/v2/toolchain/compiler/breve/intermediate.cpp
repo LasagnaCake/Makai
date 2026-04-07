@@ -163,7 +163,7 @@ Namespace::TypeRef TypeDecl::stronger(Namespace::TypeRef const& a, Namespace::Ty
 }
 
 static Attribute::Target fromString(Makai::UTF8String const& name) {
-	if (name == "struct")	return Attribute::Target::AV2_TAAT_STRUCT;
+	if (name == "struct")	return Attribute::Target::AV2_TAAT_TYPE;
 	if (name == "func")		return Attribute::Target::AV2_TAAT_FUNCTION;
 	if (name == "prop")		return Attribute::Target::AV2_TAAT_PROPERTY;
 	if (name == "module")	return Attribute::Target::AV2_TAAT_NAMESPACE;
@@ -181,7 +181,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 	attrib->fields["target"]	= {DVK_STRING								};
 	attrib->fields["min"]		= {DVK_UNSIGNED, 0							};
 	attrib->fields["max"]		= {DVK_UNSIGNED, Makai::Limit::MAX<uint64>	};
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
 			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
@@ -362,7 +362,7 @@ static Namespace::AttributeRef createNullableAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Nullable";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_NULLABLE;
 	};
@@ -374,7 +374,7 @@ static Namespace::AttributeRef createEmptyAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Empty";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_EMPTY;
 		if (ns->type->fields.size())
@@ -388,7 +388,7 @@ static Namespace::AttributeRef createDynamicAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Dynamic";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_DYNAMIC;
 		if (ns->type->fields.size())
@@ -402,7 +402,7 @@ static Namespace::AttributeRef createCopyAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Copy";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_CLONABLE;
 	};
@@ -414,7 +414,7 @@ static Namespace::AttributeRef createFinalAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Final";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_FINAL;
 	};
@@ -426,7 +426,7 @@ static Namespace::AttributeRef createValueAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Value";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_VALUE;
 	};
@@ -438,9 +438,11 @@ static Namespace::AttributeRef createBasicAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Basic";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->fields["type"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		ns->type->def = TypeDecl::Definition::AV2_TCTD_BASIC;
+		ns->type->flags &= ~Core::Definition::Flags::AV2_DF_STRUCTURE;
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_BASIC;
 		if (ns->type->fields.size())
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
@@ -476,7 +478,7 @@ static Namespace::AttributeRef createBoundAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Bound";
-	attrib->target = Attribute::Target::AV2_TAAT_STRUCT;
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->fields["type"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_ART_EQUIVALENT;
@@ -505,11 +507,13 @@ bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 		return false;
 	if (ns.variable && enumcast(target & Target::AV2_TAAT_VARIABLE))
 		return true;
-	if ((ns.type && ns.type->def == TypeDecl::Definition::AV2_TCTD_STRUCT) && enumcast(target & Target::AV2_TAAT_STRUCT))
+	if (ns.type && enumcast(target & Target::AV2_TAAT_TYPE))
 		return true;
-	if (ns.property && enumcast(target & Target::AV2_TAAT_PROPERTY ))
+	if (ns.property && enumcast(target & Target::AV2_TAAT_PROPERTY))
 		return true;
 	if (ns.function && enumcast(target & Target::AV2_TAAT_FUNCTION))
+		return true;
+	if (ns.trait && enumcast(target & Target::AV2_TAAT_TRAIT))
 		return true;
 	if (ns.isPureNamespace() && enumcast(target & Target::AV2_TAAT_NAMESPACE))
 		return true;
@@ -643,7 +647,7 @@ Makai::Data::Value Attribute::serialize() const {
 	Makai::Data::Value out = out.object();
 	StringList tg;
 	if (enumcast(target & Target::AV2_TAAT_ATTRIBUTE))	tg.pushBack("attr");
-	if (enumcast(target & Target::AV2_TAAT_STRUCT))		tg.pushBack("struct");
+	if (enumcast(target & Target::AV2_TAAT_TYPE))		tg.pushBack("struct");
 	if (enumcast(target & Target::AV2_TAAT_VARIABLE))	tg.pushBack("var");
 	if (enumcast(target & Target::AV2_TAAT_FUNCTION))	tg.pushBack("fn");
 	if (enumcast(target & Target::AV2_TAAT_NAMESPACE))	tg.pushBack("module");
