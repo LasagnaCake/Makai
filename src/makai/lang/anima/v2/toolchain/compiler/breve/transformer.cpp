@@ -650,7 +650,10 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
 	UTF8StringList path;
 	Handle<Namespace> ns;
-	if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
+	if (node->content == Node::Content::AV2_TANC_NAME) {
+		auto const [path, ns] = resolve(context, node);
+		return {.scope = ns};
+	} if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const fcall = Call().transform(context, node->leftSide);
 		path = context.pathOf(node->rightSide).reverse();
 		ns = fcall.type->scope;
