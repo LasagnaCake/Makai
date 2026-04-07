@@ -840,6 +840,8 @@ static Makai::UTF8String overloadName(Makai::List<Namespace::VariableRef> const&
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto [path, scope] = resolve(context, node->leftSide);
+	DEBUGLN("Path = /", path.join("/"));
+	bool isCompletelyNewFunction = false;
 	if (scope) {
 		if (!scope->isPureNamespace() && !scope->function)
 			context.error("Symbol is already defined as a different kind!", node);
@@ -847,11 +849,17 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			scope->function = scope->function.create();
 			scope->function->name = path.join("_") + node->name();
 		}
+		context.scopeStack.pushBack(scope);
 	} else {
 		scope = context.declare(path);
 		scope->function = scope->function.create();
 		scope->function->name = path.join("_") + node->name();
+		isCompletelyNewFunction = true;
 	}
+	DEBUG("Stack = ");
+	for (auto& sco: context.scopeStack)
+		DEBUG("/", sco->name);
+	DEBUGLN("");
 	auto& fn = *scope->function;
 	auto const proto = node->middle;
 	Function::OverloadRef ov = ov.create();
@@ -928,6 +936,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		implOv->scope = implScope.asWeak();
 		context.scopeStack.popBack();
 	}
+	context.pop(isCompletelyNewFunction ? path.size() : 1);
 	return {.scope = scope};
 }
 
