@@ -652,6 +652,8 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 	ATransformer::Result result;
 	if (node->content == Node::Content::AV2_TANC_NAME) {
 		auto const [path, ns] = resolve(context, node);
+		if (!ns)
+			context.error("Symbol does not exist!", node);
 		addToStack(context, ns.raw());
 		if (ns->variable) {
 			result.source	= ns->variable->source;
