@@ -1,16 +1,16 @@
 module Test.Namespace {
 	@Nullable
 	struct MySpecialStruct {
-		example : int = 0
+		example : int64 = 0
 	}
 
-	foo :: (var: int) -> int {
+	foo :: (var: int64) -> int64 {
 		return copy var + copy var
 	}
 
-	bar :: (var: int) -> int => (foo(copy var) * copy var)
+	bar :: (var: int64) -> int64 => (foo(copy var) * copy var)
 
-	baz :: (var: int) => writeLine(bar(copy var) - copy var)
+	baz :: (var: int64) => writeLine(bar(copy var) - copy var)
 
 	biff :: () -> void
 }
