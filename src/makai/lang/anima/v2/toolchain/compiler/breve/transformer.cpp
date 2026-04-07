@@ -1162,7 +1162,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 		arr->name = type->name + "_array";
 		auto& ns = *(root->subspaces["__ARRAYS__"]->subspaces[arr->name] = Namespace::Instance::create(arr->name));
 		ns.type = arr;
-		arrays[type.asWeak()]=arr;
+		arrays[type.asWeak()] = arr;
 		return arr;
 	} else return arrays[type.asWeak()];
 }
@@ -1229,7 +1229,7 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	t.basic = type;
 	t.flags |= Core::Definition::Flags::AV2_DF_BASIC | flags;
 	if (type != AV2_BT_VOID && type != Core::BasicType::AV2_BT_ANY)
-		t.base = basicType("name");
+		t.base = basicType("any");
 	basics[name] = ns->type;
 }
 
