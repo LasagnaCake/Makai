@@ -764,7 +764,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	constexpr SelfType sliced(IndexType start) const {
-		if (IndexType(count) < start) return SelfType();
+		if (IndexType(count) <= start) return SelfType();
 		assertIsInBounds(start);
 		wrapBounds(start, count);
 		return SelfType(cbegin() + start, cend());
@@ -778,10 +778,10 @@ public:
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	constexpr SelfType sliced(IndexType start, IndexType stop) const {
 		if (empty()) return SelfType();
-		if (IndexType(count) < start) return SelfType();
+		if (IndexType(count) <= start) return SelfType();
 		assertIsInBounds(start);
 		wrapBounds(start, count);
-		if (IndexType(count) < stop) return sliced(start);
+		if (IndexType(count) <= stop) return sliced(start);
 		assertIsInBounds(stop);
 		wrapBounds(stop, count);
 		if (stop < start) return SelfType();
