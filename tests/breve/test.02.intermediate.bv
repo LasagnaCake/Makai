@@ -10,7 +10,7 @@ module Test.Namespace {
 
 	bar :: (var: int64) -> int64 => (foo(copy var) * copy var)
 
-	baz :: (var: int64) => writeLine(bar(copy var) - copy var)
+	baz :: (var: int64) => (bar(copy var) - copy var)
 
 	biff :: () -> void
 }
