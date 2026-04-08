@@ -304,6 +304,14 @@ bool ATransformer::Result::isStackTop() const {
 	return source && Makai::Regex::contains(*source, R"re(stack\[\-0\])re");
 }
 
+Namespace::Instance ATransformer::Context::nearestVarScope() const {
+	for (auto& sco: Range::reverse(scopeStack)) {
+		if (sco->isPureNamespace() && sco->declaredAsNamespace) continue;
+		return sco;
+	}
+	return root;
+}
+
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
 	auto path = context.pathOf(node->leftSide);
 	auto const parent = context.nearestVarScope();
