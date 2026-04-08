@@ -921,10 +921,10 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				fn.overloads.pushBack(oo);
 				if (!implOv) implOv = oo;
 				else {
-					context.writePreLine("@fn", oo->entry);
 					overloadScope->impl->writePreLine(oo->entry, ":");
 					overloadScope->impl->writePreLine("begin", toString(args.size()));
-					overloadScope->impl->writePreLine("bind", toString(args.size()), "[0 : 0]");
+					overloadScope->impl->writePreLine("bind move", toString(args.size()), "[0 : 0]");
+					overloadScope->impl->writePreLine("clear", toString(args.size()));
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 					overloadScope->impl->writePostLine("call", implOv->entry);
 					overloadScope->impl->writePostLine("end");

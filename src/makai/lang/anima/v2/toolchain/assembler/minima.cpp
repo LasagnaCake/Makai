@@ -948,7 +948,7 @@ static void declareTypeMeta(Context& context, Context::Declaration& type) {
 		auto const key = resolvePath(context);
 		if (type.meta.contains(key))
 			context.error("Meta attribute has already been declared!");
-		type.meta[key] = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "Meta attribute value").getString();
+		type.meta[key] = Makai::FLOW::parse(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "Meta attribute value").getString());
 	}
 }
 
@@ -968,6 +968,7 @@ static void declareType(Context& context) {
 						.getString()
 				;
 				if (basic == "void")		type->basic = BasicType::AV2_BT_VOID;
+				else if (basic == "any")	type->basic = BasicType::AV2_BT_ANY;
 				else if (basic == "nil")	type->basic = BasicType::AV2_BT_NULL;
 				else if (basic == "bool")	type->basic = BasicType::AV2_BT_BOOL;
 				else if (basic == "char")	type->basic = BasicType::AV2_BT_CHAR;

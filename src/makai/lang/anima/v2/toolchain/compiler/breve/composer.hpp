@@ -9,6 +9,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Composer {
 		Intermediate::Instance inter;
 
+		UTF8StringList types;
+		UTF8StringList functions;
+
+		UTF8String content;
+
 		UTF8String toMinima() const;
 	};
 }
