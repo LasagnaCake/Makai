@@ -309,7 +309,8 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	auto& var = *(scope->variable = scope->variable.create());
 	var.name = scope->name;
 	TypeRequest t;
-	var.type = t.transform(context, node->middle).type;
+	if (node->middle)
+		var.type = t.transform(context, node->middle).type;
 	Makai::Data::Value direct;
 	if (node->rightSide) {
 		Expression expr;
@@ -319,6 +320,8 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		direct = result.direct;
 		var.initializer = tmp;
 		var.defaulted = true;
+		if (!var.type)
+			var.type = result.type;
 	}
 	var.value = direct;
 	var.id = parent->varc++;
