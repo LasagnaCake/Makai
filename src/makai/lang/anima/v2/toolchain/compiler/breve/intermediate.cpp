@@ -601,7 +601,8 @@ Makai::Data::Value Function::Overload::serialize() const {
 	for (auto const arg: Makai::Range::expand(arguments))
 		out["args"][arg.index] = arg.value->serialize();
 	out["entry"] = entry.toString();
-	out["scope"] = scope->serialize();
+	if (scope)
+		out["scope"] = scope->serialize();
 	if (methodOf)
 		out["method_of"] = methodOf->name.toString();
 	switch (variant) {
