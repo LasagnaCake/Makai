@@ -931,6 +931,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		implOv = ov;
 		if (node->rightSide)
 			implScope = newScope;
+		ov->entry = "__" + ov->prototype()  + node->name();
 		fn.overloads.pushBack(implOv);
 	}
 	if (node->rightSide) {
