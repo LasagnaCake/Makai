@@ -715,9 +715,9 @@ Namespace::Instance Intermediate::parent() const {
 }
 
 Makai::UTF8String Function::Overload::prototype() const {
-	Makai::UTF8String out = result->name;
+	Makai::UTF8String out = result ? result->name : "ERR_MISSING_RETURN";
 	for (auto& arg: arguments)
-		out += "_" + arg->type->name;
+		out += "_" + (arg->type ? arg->type->name : "ERR_MISSING_TYPE");
 	return out;
 }
 
