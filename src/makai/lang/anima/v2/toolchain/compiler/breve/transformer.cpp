@@ -943,9 +943,10 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	if (node->rightSide) {
 		context.scopeStack.pushBack(implScope);
 		implScope->impl->writePreLine(implOv->entry, ":");
-		auto const expr = Expression().transform(context, node->rightSide);
 		implScope->impl->writePreLine("begin", implScope->varc);
-		implScope->impl->writePreLine("bind", implScope->varc, "[0 : 0]");
+		implScope->impl->writePreLine("bind move", implScope->varc, "[0 : 0]");
+		implScope->impl->writePreLine("clear", implScope->varc);
+		auto const expr = Expression().transform(context, node->rightSide);
 		if (expr.source && !expr.isStackTop())
 			implScope->impl->writePostLine("push", *expr.source);
 		implScope->impl->writePostLine("end");
