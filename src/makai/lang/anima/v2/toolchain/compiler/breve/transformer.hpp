@@ -57,6 +57,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			void addBasicType(Core::BasicType const type, uint64 const flags = 0);
 
+			Namespace::Instance nearestVarScope() const;
+
 			Context();
 
 			UTF8Dictionary<Namespace::TypeRef>			basics;

@@ -1,4 +1,5 @@
 #include "composer.hpp"
+#include "intermediate.hpp"
 #include "makai/lang/anima/v2/core/type.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
@@ -19,9 +20,51 @@ void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		).join(" ")
 		+	")"
 		);
-		composer.content += "@def " + ov->scope->compose()->toString() + "\n\n";
+		composer.impl.writeMainLine("@def", ov->scope->compose()->toString(), "\n");
 	}
 }
+
+void doVariable(Composer& composer, Namespace::FunctionRef const& fn) {
+	for (auto& ov: fn->overloads) {
+		composer.functions.pushBack(
+			"@fn "
+		+	ov->entry
+		+	" ("
+		+	ov->arguments
+			.toList<Makai::UTF8String>(
+			[] (auto const& e) {
+				return e->type->name;
+			}
+		).join(" ")
+		+	")"
+		);
+		composer.impl.writeMainLine("@def", ov->scope->compose()->toString(), "\n");
+	}
+}
+
+void doNamespace(Composer& composer, Namespace::Instance const& ns) {
+	Implementation curImpl;
+	for (auto& [name, sub]: ns->subspaces) {
+		if (composer.visited[ns]) continue;
+	 	composer.visited[ns] = true;
+		if (sub->isPureNamespace()) doNamespace(composer, ns);
+		if (sub->function) doFunction(composer, ns->function);
+		if (sub->variable) {
+			if (ns->declaredAsNamespace && !sub->variable->global) {
+				sub->variable->id = composer.staticVarCount;
+				++composer.staticVarCount;
+			}
+		}
+	}
+	if (ns->isPureNamespace() && !ns->declaredAsNamespace) {
+		curImpl.writePreLine("begin", ns->varc);
+		curImpl.writePreLine("bring", ns->varc, "[0 : 0]");
+		curImpl.writeMainLine(ns->impl->toString());
+		curImpl.writePostLine("end");
+	}
+	composer.impl.writeMainLine(curImpl.toString());
+}
+
 void doType(Composer& composer, Namespace::TypeRef const& type) {
 	Makai::UTF8String decl;
 	decl += "@type " + type->name + " [\n ";

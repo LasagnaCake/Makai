@@ -7,12 +7,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Composer;
 
 	struct Composer {
+		Map<Namespace::Instance, bool> visited;
+
 		Intermediate::Instance inter;
 
 		UTF8StringList types;
 		UTF8StringList functions;
 
-		UTF8String content;
+		usize staticVarCount = 0;
+
+		Implementation impl;
 
 		UTF8String toMinima() const;
 	};

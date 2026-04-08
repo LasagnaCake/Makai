@@ -151,6 +151,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Metadata::Instance> meta;
 
+		bool declaredAsNamespace = false;
+
 		TypeRef			type;
 		FunctionRef		function;
 		VariableRef		variable;
@@ -243,6 +245,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool				staticEntity;
 		Handle<TypeDecl>	fieldOf;
 		uint64				id;
+		Handle<Namespace>	parentScope;
+
+		UTF8String getSource() {
+			if (global) return source;
+			else return "move local[" + Makai::toString(id) + "]";
+		}
 
 		Makai::Data::Value serialize() const override;
 

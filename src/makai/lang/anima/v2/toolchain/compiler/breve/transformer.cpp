@@ -61,11 +61,11 @@ static ATransformer::Result expandVariable(
 			expandVariable(context, node, path, *parent->variable, true);
 		else if (parent && parent->property)
 			expandProperty(context, node, path, *parent->property, true);
-		else if (stack) context.top()->impl->writeMainLine("push", var.source);
+		else if (stack) context.top()->impl->writeMainLine("push", var.getSource());
 		context.top()->impl->writeMainLine("at", var.id);
 		return {{"move stack[-0]"}, var.scope.raw(), var.type};
 	} else
-		return {var.source, var.scope.raw(), var.type};
+		return {var.getSource(), var.scope.raw(), var.type};
 }
 
 static ATransformer::Result expandProperty(
@@ -102,7 +102,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 			context.top()->impl->writeMainLine("at", ns->variable->id);
 			return {"move stack[-0]"};
 		}
-		return ns->variable->source;
+		return ns->variable->getSource();
 	} else if (ns->property) {
 		auto const ov = ns->property->getter->overloadFromTypes({});
 		context.top()->impl->writeMainLine("call", ov->entry);
@@ -306,7 +306,7 @@ bool ATransformer::Result::isStackTop() const {
 
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
 	auto path = context.pathOf(node->leftSide);
-	auto const parent = context.top();
+	auto const parent = context.nearestVarScope();
 	if (parent->resolve(path))
 		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
 	auto const scope = context.declare(path);
@@ -327,13 +327,13 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		if (!var.type)
 			var.type = result.type;
 	}
+	var.parentScope = parent.asWeak();
 	var.value = direct;
 	var.id = parent->varc++;
-	var.source = Makai::toString("move local[", var.id, "]");
 	context.pop(path.size());
 	if (!var.type)
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
-	return {{var.source}, scope, var.type, direct};
+	return {{var.getSource()}, scope, var.type, direct};
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
@@ -1027,6 +1027,7 @@ ATransformer::Result NamespaceDecl::transform(Context& context, Node::Instance c
 	if ((context.top()->resolve(path) && !context.top()->resolve(path)->isPureNamespace()))
 		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
 	auto const scope = context.declare(path);
+	scope->declaredAsNamespace = true;
 	Block().transform(context, node->rightSide);
 	context.pop(path.size());
 	return {.scope = scope};
