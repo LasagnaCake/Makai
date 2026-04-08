@@ -327,6 +327,8 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	var.id = parent->varc++;
 	var.source = Makai::toString("move local[", var.id, "]");
 	context.pop(path.size());
+	if (!var.type)
+		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
 	return {{var.source}, scope, var.type, direct};
 }
 
@@ -873,6 +875,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	List<Namespace::VariableRef> optionals;
 	for (auto const& arg: proto->children) {
 		auto const decl = vd.transform(context, arg);
+		if (!decl.scope->variable->type)
+			context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
 		if (!(decl.scope && decl.scope->variable))
 			context.error("Expected variable declaration here!", arg);
 		if (decl.scope->variable->defaulted)
@@ -939,7 +943,11 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		implScope->impl->writePostLine("end");
 		implOv->scope = implScope.asWeak();
 		context.scopeStack.popBack();
+		if (!implOv->result && expr.source)
+			implOv->result = expr.type;
 	}
+	if (!implOv->result)
+		implOv->result = context.basicType("void");
 	context.pop(isCompletelyNewFunction ? path.size() : 1);
 	return {.scope = scope};
 }
