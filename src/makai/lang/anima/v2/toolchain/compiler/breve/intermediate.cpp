@@ -29,9 +29,9 @@ Intermediate::~Intermediate() {}
 
 Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
-	if (!subspaces.contains(path.back())) return nullptr;
+	if (!subspaces.contains(path.front())) return nullptr;
 	if (path.size() == 1)
-		return subspaces[path.back()];
+		return subspaces[path.front()];
 	else return subspaces[path.front()]->resolve(path.sliced(1));
 	return nullptr;
 }
@@ -40,15 +40,23 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
 	DEBUGLN("Looking for '/", path.join("/"), "'");
 	for (auto& scope: Makai::Range::reverse(scopeStack)) {
+		DEBUGLN("Scope: ", scope->name);
+		DEBUG("Subspaces: [ ");
+		for (auto const& [name, subns]: scope->subspaces)
+			DEBUG( "{", name , ":", subns->name, "} ");
+		DEBUGLN("]");
 		if (scope->name == path.front()) {
 			if (path.size() == 1)
 				return scope;
-			if (auto ns = scope->resolve(path.sliced(1)))
+			else if (auto const ns = scope->resolve(path.sliced(1)))
 				return ns;
-		}
+		} else if (auto const ns = scope->resolve(path)) return ns;
+		DEBUGLN("Nope!");
 	}
-	if (auto ns = root->resolve(path))
+	DEBUGLN("Global scope");
+	if (auto const ns = root->resolve(path))
 		return ns;
+	DEBUGLN("Nope!");
 	return nullptr;
 }
 
