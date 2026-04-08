@@ -2,7 +2,6 @@
 #define MAKAILIB_ANIMA_V2_CORE_MODULE_H
 
 #include "instruction.hpp"
-#include "makai/ctl/ctlex/data/value.hpp"
 #include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
