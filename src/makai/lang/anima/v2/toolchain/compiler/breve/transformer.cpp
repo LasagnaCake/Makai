@@ -939,7 +939,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		auto const expr = Expression().transform(context, node->rightSide);
 		implScope->impl->writePreLine("begin", implScope->varc);
 		implScope->impl->writePreLine("bind", implScope->varc, "[0 : 0]");
-		implScope->impl->writePreLine("clear", implScope->varc);
+		implScope->impl->writePostLine("clear", implScope->varc);
 		implScope->impl->writePostLine("end");
 		implOv->scope = implScope.asWeak();
 		context.scopeStack.popBack();
