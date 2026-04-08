@@ -93,18 +93,22 @@ static ATransformer::Result expandProperty(
 	return {{"move stack[-0]"}, prop.scope.raw(), get->result};
 }
 
-static void addToStack(
+static Makai::Nullable<Makai::UTF8String> addToStack(
 	ATransformer::Context& context,
 	Namespace::Instance const& ns
 ) {
 	if (ns->variable) {
-		if (ns->variable->fieldOf && !ns->variable->staticEntity)
+		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
 			context.top()->impl->writeMainLine("at", ns->variable->id);
-		context.top()->impl->writeMainLine("push", ns->variable->source);
+			return {"move stack[-0]"};
+		}
+		return ns->variable->source;
 	} else if (ns->property) {
 		auto const ov = ns->property->getter->overloadFromTypes({});
 		context.top()->impl->writeMainLine("call", ov->entry);
+		return {"move stack[-0]"};
 	}
+	return null;
 }
 
 static ATransformer::Result resolveSubfield(
@@ -297,7 +301,7 @@ ATransformer::resolve(Context& context, Node::Instance const& node, bool allowPa
 }
 
 bool ATransformer::Result::isStackTop() const {
-	return source && Makai::Regex::contains(*source, R"re(stack\[-0\])re");
+	return source && Makai::Regex::contains(*source, R"re(stack\[\-0\])re");
 }
 
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
@@ -659,9 +663,8 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		auto const [path, ns] = resolve(context, node);
 		if (!ns)
 			context.error("Symbol does not exist!", node);
-		addToStack(context, ns.raw());
+		result.source = addToStack(context, ns.raw());
 		if (ns->variable) {
-			result.source	= ns->variable->source;
 			result.type		= ns->variable->type;
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;
@@ -680,6 +683,8 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		auto const nsx = PathExpression().transform(context, node->leftSide);
 		path = context.pathOf(node->rightSide).reverse();
 		result = nsx;
+		if (result.source && !nsx.isStackTop())
+			context.top()->impl->writeMainLine("push", *result.source);
 		return resolveSubfield(context, node, result.scope, path.back());
 	}
 	if (!result.scope->subspaces.contains(path.front()))
@@ -852,13 +857,13 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			context.error("Symbol is already defined as a different kind!", node);
 		if (!scope->function) {
 			scope->function = scope->function.create();
-			scope->function->name = path.join("_") + node->name();
+			scope->function->name = path.join("_");
 		}
 		context.scopeStack.pushBack(scope);
 	} else {
 		scope = context.declare(path);
 		scope->function = scope->function.create();
-		scope->function->name = path.join("_") + node->name();
+		scope->function->name = path.join("_");
 		isCompletelyNewFunction = true;
 	}
 	DEBUG("Stack = ");
@@ -931,7 +936,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		implOv = ov;
 		if (node->rightSide)
 			implScope = newScope;
-		ov->entry = "__" + ov->prototype()  + node->name();
+		auto const ovName = scope->function->name + overloadName(ov->arguments);
+		ov->entry = "__" + ovName  + node->name();
 		fn.overloads.pushBack(implOv);
 	}
 	if (node->rightSide) {
