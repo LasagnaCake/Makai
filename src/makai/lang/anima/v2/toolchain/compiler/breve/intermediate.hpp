@@ -68,7 +68,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		template <class... Types>
 		void writePost(Types const&... values)
 		requires (sizeof...(Types) > 1) {
-			(..., writeMain(toString(values)));
+			(..., writePost(toString(values)));
 		}
 
 		template <class... Types>
