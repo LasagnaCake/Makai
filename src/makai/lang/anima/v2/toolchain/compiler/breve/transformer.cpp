@@ -659,7 +659,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 			result.source	= ns->variable->source;
 			result.type		= ns->variable->type;
 			result.scope	= ns->variable->scope.raw();
-		}
+		} else result.scope = ns;
 		return result;
 	} if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const fcall = Call().transform(context, node->leftSide);
@@ -1043,6 +1043,11 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			context.top()->impl->writeMainLine("push", *expr.source);
 		args.pushBack(expr.type);
 	}
+	DEBUGLN("Function: ", f.name);
+	DEBUG("Overloads: [ ");
+	for (auto const& ov: f.overloads)
+		DEBUG(ov->prototype(), " ");
+	DEBUGLN("]");
 	if (!f.overloadFromTypes(args))
 		context.error("Requested overload does not exist!", node);
 	auto& ov = *f.overloadFromTypes(args);
