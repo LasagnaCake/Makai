@@ -1,12 +1,12 @@
 #include "composer.hpp"
 #include "intermediate.hpp"
-#include "makai/lang/anima/v2/core/type.hpp"
+#include "transformer.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
 
 using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 
-void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
+static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 	for (auto& ov: fn->overloads) {
 		composer.functions.pushBack(
 			"@fn "
@@ -21,51 +21,16 @@ void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		+	")"
 		);
 		composer.impl.writeMainLine("@def", ov->scope->compose()->toString(), "\n");
+		composer.impl.writeMainLine("@def .\n");
 	}
 }
 
-void doVariable(Composer& composer, Namespace::FunctionRef const& fn) {
-	for (auto& ov: fn->overloads) {
-		composer.functions.pushBack(
-			"@fn "
-		+	ov->entry
-		+	" ("
-		+	ov->arguments
-			.toList<Makai::UTF8String>(
-			[] (auto const& e) {
-				return e->type->name;
-			}
-		).join(" ")
-		+	")"
-		);
-		composer.impl.writeMainLine("@def", ov->scope->compose()->toString(), "\n");
-	}
+static void doVariable(Composer& composer, Namespace::FunctionRef const& fn) {
+	// TODO: Variable
+
 }
 
-void doNamespace(Composer& composer, Namespace::Instance const& ns) {
-	Implementation curImpl;
-	for (auto& [name, sub]: ns->subspaces) {
-		if (composer.visited[ns]) continue;
-	 	composer.visited[ns] = true;
-		if (sub->isPureNamespace()) doNamespace(composer, ns);
-		if (sub->function) doFunction(composer, ns->function);
-		if (sub->variable) {
-			if (ns->declaredAsNamespace && !sub->variable->global) {
-				sub->variable->id = composer.staticVarCount;
-				++composer.staticVarCount;
-			}
-		}
-	}
-	if (ns->isPureNamespace() && !ns->declaredAsNamespace) {
-		curImpl.writePreLine("begin", ns->varc);
-		curImpl.writePreLine("bring", ns->varc, "[0 : 0]");
-		curImpl.writeMainLine(ns->impl->toString());
-		curImpl.writePostLine("end");
-	}
-	composer.impl.writeMainLine(curImpl.toString());
-}
-
-void doType(Composer& composer, Namespace::TypeRef const& type) {
+static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	Makai::UTF8String decl;
 	decl += "@type " + type->name + " [\n ";
 	if (type->flags & Core::Definition::Flags::AV2_DF_BASIC) {
@@ -121,11 +86,51 @@ void doType(Composer& composer, Namespace::TypeRef const& type) {
 	}
 	decl += "\n  meta [\n";
 	for (auto& [name, attrib]: type->scope->meta)
-		decl += name + " ´" + attrib->value.toFLOWString() + "´\n";
+		if (!attrib->value.isUndefined())
+			decl += "    " + name + " ´" + attrib->value.toFLOWString() + "´\n";
 	decl += "  ]\n]";
 	composer.types.pushBack(decl);
 }
 
-Makai::UTF8String Composer::toMinima() const {
+static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
+	Implementation curImpl;
+	for (auto& [name, sub]: ns->subspaces) {
+		if (composer.visited[ns]) continue;
+	 	composer.visited[ns] = true;
+		if (sub->isPureNamespace()) doNamespace(composer, ns);
+		if (sub->function) doFunction(composer, ns->function);
+		if (sub->variable) {
+			if (ns->declaredAsNamespace && !sub->variable->global) {
+				sub->variable->id = composer.staticVarCount;
+				++composer.staticVarCount;
+			}
+		}
+		if (sub->type) doType(composer, sub->type);
+	}
+	if (ns->isPureNamespace() && !ns->declaredAsNamespace) {
+		curImpl.writePreLine("begin", ns->varc);
+		curImpl.writePreLine("bring", ns->varc, "[0 : 0]");
+		curImpl.writeMainLine(ns->impl->toString());
+		curImpl.writePostLine("end");
+	}
+	composer.impl.writeMainLine(curImpl.toString());
+}
 
+Makai::UTF8String Composer::toMinima() const {
+	auto self = copy(*this);
+	doNamespace(self, inter.root);
+	UTF8String result = self.types.join("\n") + self.functions.join("\n") + self.impl.toString();
+	if (mustHaveMain && !self.inter.entry)
+			Transformer::ATransformer::Context::error("Missing required entrypoint!");
+	result += [&self] () -> UTF8String {
+		UTF8String out = "__initializer__:\n";
+		for (auto& init: self.preMain)
+			out += init->impl->toString();
+		if (self.inter.entry)	out += "call " + self.entry->entry + "\n";
+		out += "stop";
+		return out;
+	} ();
+	result += "@entry __initializer__\n";
+	if (self.inter.exit)	result += "@exit " + self.exit->entry + "\n";
+	return result;
 }

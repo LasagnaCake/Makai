@@ -330,6 +330,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		Namespace::Instance root = root.create();
 
+		Handle<Function::Overload> entry;
+		Handle<Function::Overload> exit;
+
 		void writePre(UTF8String const& what) override;
 		void writeMain(UTF8String const& what) override;
 		void writePost(UTF8String const& what) override;

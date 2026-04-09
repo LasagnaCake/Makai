@@ -505,9 +505,50 @@ static Namespace::AttributeRef createMainAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Main";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->globalMin = 1;
+	attrib->globalMin = 0;
 	attrib->globalMax = 1;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		if (inter.entry)
+			Transformer::ATransformer::Context::error("Redeclaration of previously-declared entry!", ns->node);
+		inter.entry = ns->function->overloadFromTypes({}).asWeak();
+		if (!inter.entry)
+			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createEntryAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Entry";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->globalMin = 0;
+	attrib->globalMax = 1;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		if (inter.entry)
+			Transformer::ATransformer::Context::error("Redeclaration of previously-declared entry!", ns->node);
+		inter.entry = ns->function->overloadFromTypes({}).asWeak();
+		if (!inter.entry)
+			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createExitAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Exit";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->globalMin = 0;
+	attrib->globalMax = 1;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		if (inter.exit)
+			Transformer::ATransformer::Context::error("Redeclaration of previously-declared exit!", ns->node);
+		inter.exit = ns->function->overloadFromTypes({}).asWeak();
+		if (!inter.exit)
+			Transformer::ATransformer::Context::error("No valid function overload for exit!", ns->node);
 	};
 	return attrib;
 }
@@ -557,6 +598,8 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
 	addGlobalAttribute(createSharedAttribute());
+	addGlobalAttribute(createEntryAttribute());
+	addGlobalAttribute(createExitAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {

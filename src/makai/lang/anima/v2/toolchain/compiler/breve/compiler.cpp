@@ -1,5 +1,7 @@
 #include "compiler.hpp"
+#include "composer.hpp"
 #include "intermediate.hpp"
+#include "../../assembler/minima.hpp"
 #include "node.hpp"
 #include "transformer.hpp"
 
@@ -19,4 +21,13 @@ void Compiler::invoke() {
 	Parser parser(context);
 	auto const tree	= parser.parse();
 	auto const ir	= Transformer::TheEntireProgram().transform(context, tree);
+	auto const min	= Composer{.inter = context}.toMinima();
+	Assembler::Minima::Context minctx;
+	Makai::Lexer::CStyle::TokenStream stream;
+	stream.open(min);
+	Makai::List<Assembler::BaseContext::Axiom> ax;
+	while (stream.next())
+		ax.pushBack({stream.current(), true, ""});
+	minctx.put(ax).pad();
+	Assembler::Minima(minctx).invoke();
 }

@@ -84,7 +84,20 @@ int main(int argc, char** argv) try {
 				ctx.serialize().toFLOWString("  ")
 			);
 		} else if (level == "minima" || level == "min") {
-			// TODO: This
+			Compiler::Breve::Transformer::ATransformer::Context ctx;
+			Compiler::Breve::Transformer::TheEntireProgram tf;
+			Compiler::Breve::Composer comp{.inter = ctx};
+			tf.transform(ctx, parser.parse());
+			Makai::File::saveText(
+				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
+					cfg["output"].getString(),
+					R"(\*\*\{\{name\}\})",
+					file
+						.splitAtLast('/').back()
+						.splitAtLast('.').front()
+				) + ".min",
+				comp.toMinima()
+			);
 		} else {
 			// TODO: This
 		}

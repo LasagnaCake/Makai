@@ -140,15 +140,12 @@ void Context::finalize() {
 	unmapped = jumpsToMap.keys();
 	if (unmapped.size())
 		error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
-	if (pre.size() && jumps.contains(pre))
-		program.pre = jumps[pre];
-	else if (pre.size()) error("Missing initializer location!");
-	if (main.size() && jumps.contains(main))
-		program.main = jumps[main];
-	else if (main.size()) error("Missing main entrypoint location!");
-	if (post.size() && jumps.contains(post))
-		program.post = jumps[post];
-	else if (post.size()) error("Missing finalizer location!");
+	if (entry.size() && jumps.contains(entry))
+		program.entry = jumps[entry];
+	else if (entry.size()) error("Missing entry location!");
+	if (exit.size() && jumps.contains(exit))
+		program.exit = jumps[exit];
+	else if (exit.size()) error("Missing exit location!");
 }
 
 static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
@@ -1200,22 +1197,16 @@ static void declareImport(Context& context) {
 	resolveImport(context, name);
 }
 
-static void declareInitializer(Context& context) {
-	if (context.pre.size())
-		context.error("Redeclaration of previously-declared initializer!");
-	context.pre = resolvePath(context);
+static void declareEntry(Context& context) {
+	if (context.entry.size())
+		context.error("Redeclaration of previously-declared entry!");
+	context.entry = resolvePath(context);
 }
 
-static void declareMain(Context& context) {
-	if (context.main.size())
-		context.error("Redeclaration of previously-declared main entrypoint!");
-	context.main = resolvePath(context);
-}
-
-static void declareFinalizer(Context& context) {
-	if (context.post.size())
-		context.error("Redeclaration of previously-declared finalizer!");
-	context.post = resolvePath(context);
+static void declareExit(Context& context) {
+	if (context.entry.size())
+		context.error("Redeclaration of previously-declared exit!");
+	context.entry = resolvePath(context);
 }
 
 static void declareHook(Context& context) {
@@ -1243,12 +1234,10 @@ static void doDeclaration(Context& context) {
 		declareModule(context);
 	else if (decl == "import")
 		declareImport(context);
-	else if (decl == "pre")
-		declareInitializer(context);
-	else if (decl == "main")
-		declareMain(context);
-	else if (decl == "post")
-		declareFinalizer(context);
+	else if (decl == "entry")
+		declareEntry(context);
+	else if (decl == "exit")
+		declareExit(context);
 	else context.error("Invalid declaration!");
 }
 

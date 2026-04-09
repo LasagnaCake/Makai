@@ -6,5 +6,6 @@
 #include "parser.hpp"
 #include "resolver.hpp"
 #include "transformer.hpp"
+#include "composer.hpp"
 
 #endif

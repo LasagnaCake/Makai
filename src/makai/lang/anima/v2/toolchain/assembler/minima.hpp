@@ -71,7 +71,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Dictionary<List<usize>>		jumpsToMap;
 			Dictionary<uint64>			jumps;
 
-			String pre, main, post;
+			String entry, exit;
 
 			Dictionary<Instance<Core::Module>> linkedModules;
 

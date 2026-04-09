@@ -9,7 +9,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Composer {
 		Map<Namespace::Instance, bool> visited;
 
-		Intermediate::Instance inter;
+		Intermediate& inter;
 
 		UTF8StringList types;
 		UTF8StringList functions;
@@ -19,6 +19,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Implementation impl;
 
 		UTF8String toMinima() const;
+
+		bool mustHaveMain = true;
+
+		Function::OverloadRef entry;
+		Function::OverloadRef exit;
+		List<Namespace::Instance> preMain;
 	};
 }
 
