@@ -21,6 +21,7 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Token stream error.
 		struct Error {
+			UTF8String	what;
 			Position	where;
 			UTF8String	token;
 		};

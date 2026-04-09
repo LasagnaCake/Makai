@@ -1,5 +1,6 @@
 #include <makai/makai.hpp>
 #include "base.cc"
+#include "makai/ctl/ctl/container/error.hpp"
 #include "makai/lang/anima/v2/toolchain/compiler/breve/transformer.hpp"
 
 using namespace Makai::Anima::V2;
@@ -52,6 +53,11 @@ int main(int argc, char** argv) try {
 		Makai::List<Assembler::BaseContext::Axiom> ax;
 		while (stream.next())
 			ax.pushBack({stream.current(), true, file});
+		if (!stream.ok())
+			throw Makai::Error::InvalidValue(
+				"Parsing failure!",
+				stream.error().value().what
+			);
 		DEBUGLN("That part");
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");

@@ -5,9 +5,11 @@ using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
 Node::Instance EmptyResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving empty expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_EMPTY;
+	DEBUGLN("Empty:DONE!");
 	return result;
 }
 
@@ -134,6 +136,8 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 			break;
 		}
 		result->children.pushBack(parser.nextExpression());
+		if (!result->children.back())
+			parser.context.error("[" + Makai::toString(__LINE__) + "] INTERNAL_ERROR :: Oops :/");
 		DEBUGLN(":::::: Argument: ", result->children.back()->base.text);
 		DEBUGLN(":::::: Followup: ", parser.context.peek().text);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {

@@ -306,16 +306,15 @@ bool TokenStream::next() {
 	if (isNumberChar(lexer->now()) || ((lexer->now() == UTF::U8Char{'.'}) && !isWordChar(lexer->peek()))) {
 		lexeme = parseNumber(*lexer);
 		try {
-			if (lexeme.find({'.'}) != -1) {
+			if (lexeme.find({'.'}) == -1) {
 				curToken.type = Token::Type::LTS_TT_INTEGER;
 				curToken.value = toDouble(lexeme.toString());
-			}
-			if (lexeme.find({'.'}) != -1) {
+			} else {
 				curToken.type = Token::Type::LTS_TT_REAL;
 				curToken.value = toInt64(lexeme.toString());
 			}
-		} catch (...) {
-			err = Error{curToken.at, lexeme};
+		} catch (Exception const& e) {
+			err = Error{e.what(), curToken.at, lexeme};
 			isFinished = true;
 		}
 	}

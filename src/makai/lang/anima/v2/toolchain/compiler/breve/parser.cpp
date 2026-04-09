@@ -209,9 +209,15 @@ AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft
 }
 
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
-	if (context.empty()) return nullptr;
+	if (context.empty()) {
+		DEBUGLN("End-of-File Reached!?");
+		return nullptr;
+	}
 	auto tok = context.next().token();
-	if (tok.type == LTS_TT_INVALID) return nullptr;
+	if (tok.type == LTS_TT_INVALID) {
+		DEBUGLN("Invalid Token!?");
+		return nullptr;
+	}
 	Node::Instance lhs;
 	DEBUGLN("Prefix: ", tok.text);
 	if (prefixes.contains(tok.text))
