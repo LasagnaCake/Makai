@@ -428,7 +428,7 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftS
 		result->rightSide->content == Node::Content::AV2_TANC_PATH
 	||	result->rightSide->content == Node::Content::AV2_TANC_NAME
 	) return result;
-	parser.context.error("Invalid path expression!");
+	parser.context.error("Invalid path expression ("+Node::asString(result->rightSide->content)+")!");
 }
 
 Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
