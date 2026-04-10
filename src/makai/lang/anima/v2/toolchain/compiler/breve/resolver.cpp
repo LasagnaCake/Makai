@@ -123,6 +123,8 @@ Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance con
 Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	DEBUGLN("Resolving function call expression...");
+	if (!leftSide)
+		parser.context.error("["+Makai::toString(__LINE__)+"] INTERNAL_ERROR :: Uh oh, hehe :D");
 	result->base = token;
 	result->leftSide = leftSide;
 	result->content = Node::Content::AV2_TANC_FN_CALL;
