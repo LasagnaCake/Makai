@@ -10,7 +10,7 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 	for (auto& ov: fn->overloads) {
 		composer.functions.pushBack(
 			"@fn "
-		+	ov->entry
+		+	ov->result->name
 		+	" ("
 		+	ov->arguments
 			.toList<Makai::UTF8String>(
@@ -18,7 +18,8 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 				return e->type->name;
 			}
 		).join(" ")
-		+	")"
+		+	") "
+		+ ov->entry + "\n"
 		);
 		if (ov->scope) {
 			composer.impl->writeMainLine("@def", ov->entry, ":\n", ov->scope->compose()->toString(), "\n");
