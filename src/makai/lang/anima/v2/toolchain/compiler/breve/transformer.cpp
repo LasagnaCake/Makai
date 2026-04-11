@@ -1091,6 +1091,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	for (auto const& ov: f.overloads)
 		DEBUG(ov->prototype(), " ");
 	DEBUGLN("]");
+	auto const ovLookupSig = args.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
+	DEBUGLN("Looking for: [", ovLookupSig, "]");
 	if (!f.overloadFromTypes(args))
 		context.error("Requested overload does not exist!", node);
 	auto& ov = *f.overloadFromTypes(args);

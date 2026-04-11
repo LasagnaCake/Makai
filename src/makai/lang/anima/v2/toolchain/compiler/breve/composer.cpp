@@ -126,11 +126,11 @@ Makai::UTF8String Composer::toMinima() const {
 		UTF8String out = "__initializer__:\n";
 		for (auto& init: self.preMain)
 			out += init->impl->toString();
-		if (self.inter.entry)	out += "call " + self.entry->entry + "\n";
+		if (self.inter.entry)	out += "call " + self.inter.entry->entry + "\n";
 		out += "stop";
 		return out;
 	} ();
 	result += "@entry __initializer__\n";
-	if (self.inter.exit)	result += "@exit " + self.exit->entry + "\n";
+	if (self.inter.exit)	result += "@exit " + self.inter.exit->entry + "\n";
 	return result;
 }

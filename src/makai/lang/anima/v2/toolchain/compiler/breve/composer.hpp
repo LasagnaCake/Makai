@@ -22,8 +22,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		bool mustHaveMain = true;
 
-		Function::OverloadRef entry;
-		Function::OverloadRef exit;
 		List<Namespace::Instance> preMain;
 	};
 }

@@ -308,10 +308,10 @@ bool TokenStream::next() {
 		try {
 			if (lexeme.find({'.'}) == -1) {
 				curToken.type = Token::Type::LTS_TT_INTEGER;
-				curToken.value = toDouble(lexeme.toString());
+				curToken.value = toInt64(lexeme.toString());
 			} else {
 				curToken.type = Token::Type::LTS_TT_REAL;
-				curToken.value = toInt64(lexeme.toString());
+				curToken.value = toDouble(lexeme.toString());
 			}
 		} catch (Exception const& e) {
 			err = Error{e.what(), curToken.at, lexeme};
