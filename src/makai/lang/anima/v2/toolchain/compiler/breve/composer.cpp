@@ -85,9 +85,10 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		else decl += " base<" + type->base->name + ">";
 	}
 	decl += "\n  meta [\n";
-	for (auto& [name, attrib]: type->scope->meta)
-		if (!attrib->value.isUndefined())
-			decl += "    " + name + " ´" + attrib->value.toFLOWString() + "´\n";
+	if (type->scope)
+		for (auto& [name, attrib]: type->scope->meta)
+			if (!attrib->value.isUndefined())
+				decl += "    " + name + " ´" + attrib->value.toFLOWString() + "´\n";
 	decl += "  ]\n]";
 	composer.types.pushBack(decl);
 }
@@ -97,7 +98,7 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 	for (auto& [name, sub]: ns->subspaces) {
 		if (composer.visited.contains(sub)) continue;
 	 	composer.visited[sub] = true;
-		if (sub->function) doFunction(composer, ns->function);
+		if (sub->function) doFunction(composer, sub->function);
 		if (sub->variable) {
 			if (ns->declaredAsNamespace && !sub->variable->global) {
 				sub->variable->id = composer.staticVarCount;
