@@ -20,8 +20,10 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		).join(" ")
 		+	")"
 		);
-		composer.impl->writeMainLine("@def", ov->scope->compose()->toString(), "\n");
-		composer.impl->writeMainLine("@def .\n");
+		if (ov->scope) {
+			composer.impl->writeMainLine("@def", ov->scope->compose()->toString(), "\n");
+			composer.impl->writeMainLine("@def .\n");
+		}
 	}
 }
 
@@ -97,6 +99,7 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 	composer.push();
 	for (auto& [name, sub]: ns->subspaces) {
 		if (composer.visited.contains(sub)) continue;
+		if (!sub) continue;
 	 	composer.visited[sub] = true;
 		if (sub->function) doFunction(composer, sub->function);
 		if (sub->variable) {
