@@ -262,6 +262,10 @@ Namespace::Instance ATransformer::Context::fetch(Node::Instance const& nodePath)
 	return fetch(pathOf(nodePath), nodePath);
 }
 
+Makai::UTF8StringList ATransformer::Context::pathOf(UTF8String const& path) {
+	return path.split(UTF8Char{'/'}).erase(0);
+}
+
 Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) {
 	if (!node)
 		return Makai::UTF8StringList();
@@ -276,7 +280,7 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 		Context::error("This is not a valid path!", node->rightSide);
 	path.appendBack(pathOf(node->leftSide));
 	DEBUGLN("------ Right:", node->value.getString());
-	path.appendBack(node->value.getString().split('/').erase(0).toList<UTF8String>());
+	path.appendBack(pathOf(node->value.getString()));
 	DEBUG("Path: ");
 	for (auto& name: path)
 		DEBUG("/", name);
@@ -677,21 +681,29 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		return result;
 	} if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
 		auto const fcall = Call().transform(context, node->leftSide);
-		path = context.pathOf(node->rightSide).reverse();
+		path = context.pathOf(node->value.getString()).reverse();
 		result = fcall;
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
 		auto const sub = Subscript().transform(context, node->leftSide);
-		path = context.pathOf(node->rightSide).reverse();
+		path = context.pathOf(node->value.getString()).reverse();
 		result = sub;
-	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
-		return PathExpression().transform(context, node->leftSide);
-	} else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
+	}  else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
 		auto const nsx = PathExpression().transform(context, node->leftSide);
-		path = context.pathOf(node->rightSide).reverse();
+		path = context.pathOf(node->value.getString()).reverse();
 		result = nsx;
 		if (result.source && !nsx.isStackTop())
 			context.top()->impl->writeMainLine("push", *result.source);
 		return resolveSubfield(context, node, result.scope, path.back());
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
+		path = context.pathOf(node);
+		auto const ns = context.resolve(path);
+		if (!ns)
+			context.error("Symbol does not exist!", node);
+		result.source = addToStack(context, ns.raw());
+		if (ns->variable) {
+			result.type		= ns->variable->type;
+			result.scope	= ns->variable->scope.raw();
+		} else result.scope = ns;
 	}
 	if (!result.scope->subspaces.contains(path.front()))
 		context.error("Subpath type doesn't contain the given member!", node->leftSide);
@@ -873,7 +885,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		isCompletelyNewFunction = true;
 	}
 	DEBUG("Stack = ");
-	for (auto& sco: Range::reverse(context.scopeStack))
+	for (auto& sco: context.scopeStack)
 		DEBUG("/", sco->name);
 	DEBUGLN("");
 	auto& fn = *scope->function;
@@ -1056,7 +1068,7 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 }
 
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
-	DEBUGLN("Left-side:", node->leftSide->base.text);
+	DEBUGLN("Left-side: ", node->leftSide->base.text);
 	auto const fn = Expression().transform(context, node->leftSide);
 	if (!fn.scope)
 		context.error("Symbol does not exist!", node->leftSide);
