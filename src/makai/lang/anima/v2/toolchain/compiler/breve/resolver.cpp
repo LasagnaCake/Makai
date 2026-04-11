@@ -426,18 +426,21 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftS
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_PATH;
 	result->leftSide = leftSide;
-	result->rightSide = parser.nextExpression(precedence);
+	String subpath;
+	while (true) {
+		subpath += "/" + parser.context.getNext(LTS_TT_IDENTIFIER, "name").getString();
+		 if (parser.context.peek().type == LTS_TT_DOT) {
+			parser.context.next();
+			continue;
+		} else break;
+	}
+	result->value = subpath;
 	result->base = token;
 	DEBUGLN("Path Expression {");
 	DEBUGLN("  LHS: ", result->leftSide->base.text);
-	DEBUGLN("  RHS: ", result->rightSide->base.text);
-	DEBUGLN("  Token: ", result->base.text);
+	DEBUGLN("  Subpath: ", result->value.getString());
 	DEBUGLN("}");
-	if (
-		result->rightSide->content == Node::Content::AV2_TANC_PATH
-	||	result->rightSide->content == Node::Content::AV2_TANC_NAME
-	) return result;
-	parser.context.error("Invalid path expression ("+Node::asString(result->rightSide->content)+")!");
+	return result;
 }
 
 Node::Instance UsingResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
