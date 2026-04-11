@@ -92,7 +92,7 @@ int main(int argc, char** argv) try {
 		} else if (level == "minima" || level == "min") {
 			Compiler::Breve::Transformer::ATransformer::Context ctx;
 			Compiler::Breve::Transformer::TheEntireProgram tf;
-			Compiler::Breve::Composer comp{.inter = ctx};
+			Compiler::Breve::Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
 			Makai::File::saveText(
 				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(

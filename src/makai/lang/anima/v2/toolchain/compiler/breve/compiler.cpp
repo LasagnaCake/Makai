@@ -21,7 +21,7 @@ void Compiler::invoke() {
 	Parser parser(context);
 	auto const tree	= parser.parse();
 	auto const ir	= Transformer::TheEntireProgram().transform(context, tree);
-	auto const min	= Composer{.inter = context}.toMinima();
+	auto const min	= Composer(context).toMinima();
 	Assembler::Minima::Context minctx;
 	Makai::Lexer::CStyle::TokenStream stream;
 	stream.open(min);

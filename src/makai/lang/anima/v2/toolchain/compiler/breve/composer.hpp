@@ -7,22 +7,45 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Composer;
 
 	struct Composer {
-		Map<Namespace::Instance, bool> visited;
-
 		Intermediate& inter;
+
+		Map<Namespace::Instance, bool> visited;
 
 		UTF8StringList types;
 		UTF8StringList functions;
 
 		usize staticVarCount = 0;
 
-		Implementation impl;
+		Implementation::Instance impl = new Implementation();
 
-		UTF8String toMinima() const;
+		UTF8String toMinima();
 
 		bool mustHaveMain = true;
 
 		List<Namespace::Instance> preMain;
+
+		List<Implementation::Instance> implStack;
+
+		void push() {
+			implStack.pushBack(new Implementation());
+		}
+
+		void pop() {
+			if (implStack.empty()) return;
+			auto const prevImpl = implStack.popBack();
+			if (implStack.empty()) impl->writeMain(prevImpl->toString());
+			else implStack.back()->writeMain(prevImpl->toString());
+		}
+
+		Implementation::Instance top() const {
+			if (implStack.empty()) return impl;
+			return implStack.back();
+		}
+
+		Composer(Intermediate& inter): inter(inter) {}
+
+	private:
+		UTF8String cache;
 	};
 }
 

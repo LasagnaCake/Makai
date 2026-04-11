@@ -20,8 +20,8 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		).join(" ")
 		+	")"
 		);
-		composer.impl.writeMainLine("@def", ov->scope->compose()->toString(), "\n");
-		composer.impl.writeMainLine("@def .\n");
+		composer.impl->writeMainLine("@def", ov->scope->compose()->toString(), "\n");
+		composer.impl->writeMainLine("@def .\n");
 	}
 }
 
@@ -93,11 +93,10 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 }
 
 static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
-	Implementation curImpl;
+	composer.push();
 	for (auto& [name, sub]: ns->subspaces) {
-		if (composer.visited[ns]) continue;
-	 	composer.visited[ns] = true;
-		if (sub->isPureNamespace()) doNamespace(composer, ns);
+		if (composer.visited.contains(sub)) continue;
+	 	composer.visited[sub] = true;
 		if (sub->function) doFunction(composer, ns->function);
 		if (sub->variable) {
 			if (ns->declaredAsNamespace && !sub->variable->global) {
@@ -108,29 +107,31 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 		if (sub->type) doType(composer, sub->type);
 	}
 	if (ns->isPureNamespace() && !ns->declaredAsNamespace) {
-		curImpl.writePreLine("begin", ns->varc);
-		curImpl.writePreLine("bring", ns->varc, "[0 : 0]");
-		curImpl.writeMainLine(ns->impl->toString());
-		curImpl.writePostLine("end");
+		composer.top()->writePreLine("begin", ns->varc);
+		composer.top()->writePreLine("bring", ns->varc, "[0 : 0]");
+		composer.top()->writeMainLine(ns->impl->toString());
+		composer.top()->writePostLine("end");
 	}
-	composer.impl.writeMainLine(curImpl.toString());
+	for (auto& [name, sub]: ns->subspaces)
+		doNamespace(composer, sub);
+	composer.pop();
 }
 
-Makai::UTF8String Composer::toMinima() const {
-	auto self = copy(*this);
-	doNamespace(self, inter.root);
-	UTF8String result = self.types.join("\n") + self.functions.join("\n") + self.impl.toString();
-	if (mustHaveMain && !self.inter.entry)
+Makai::UTF8String Composer::toMinima() {
+	if (cache.size()) return cache;
+	doNamespace(*this, inter.root);
+	cache = types.join("\n") + functions.join("\n") + impl->toString();
+	if (mustHaveMain && !inter.entry)
 			Transformer::ATransformer::Context::error("Missing required entrypoint!");
-	result += [&self] () -> UTF8String {
+	cache += [this] () -> UTF8String {
 		UTF8String out = "__initializer__:\n";
-		for (auto& init: self.preMain)
+		for (auto& init: preMain)
 			out += init->impl->toString();
-		if (self.inter.entry)	out += "call " + self.inter.entry->entry + "\n";
-		out += "stop";
+		if (inter.entry)	out += "call " + inter.entry->entry + "\n";
+		out += "stop\n";
 		return out;
 	} ();
-	result += "@entry __initializer__\n";
-	if (self.inter.exit)	result += "@exit " + self.inter.exit->entry + "\n";
-	return result;
+	cache += "@entry __initializer__\n";
+	if (inter.exit)	cache += "@exit " + inter.exit->entry + "\n";
+	return cache;
 }
