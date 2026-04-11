@@ -15,6 +15,7 @@ Node::Instance EmptyResolver::resolve(Parser& parser, Node::Instance const& left
 
 Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving direct expression...");
+	DEBUGLN("######## Value: ", token.value ? token.value.toString() : token.text.toString());
 	auto isIdentifier = parser.context.type() == LTS_TT_IDENTIFIER;
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
@@ -26,6 +27,7 @@ Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& lef
 
 Node::Instance SpecialDirectResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving special direct expression...");
+	DEBUGLN("######## Value: ", token.text);
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	auto const id = token.text;
@@ -426,6 +428,11 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftS
 	result->leftSide = leftSide;
 	result->rightSide = parser.nextExpression(precedence);
 	result->base = token;
+	DEBUGLN("Path Expression {");
+	DEBUGLN("  LHS: ", result->leftSide->base.text);
+	DEBUGLN("  RHS: ", result->rightSide->base.text);
+	DEBUGLN("  Token: ", result->base.text);
+	DEBUGLN("}");
 	if (
 		result->rightSide->content == Node::Content::AV2_TANC_PATH
 	||	result->rightSide->content == Node::Content::AV2_TANC_NAME

@@ -65,7 +65,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct FunctionCallResolver: AResolver {
-		FunctionCallResolver(): AResolver(Parser::Precedence::AV2_TAPP_FN_CALL, true) {}
+		FunctionCallResolver(): AResolver(Parser::Precedence::AV2_TAPP_FN_CALL, false) {}
 		virtual ~FunctionCallResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};

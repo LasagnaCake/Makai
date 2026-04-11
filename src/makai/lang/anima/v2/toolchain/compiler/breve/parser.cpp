@@ -232,11 +232,11 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (!infixes.contains(context.peek().text))
 		return lhs;
 	DEBUGLN("Infix!");
-	while (precedence < currentPrecedence()) {
+	do {
 		tok = context.next().token();
 		DEBUGLN("Resolving infix for: '", tok.text, "' :: (", tok.at.line, " : ", tok.at.column, ")");
 		lhs = infixes[tok.text]->resolve(*this, lhs, tok);
-	}
+	} while (precedence < currentPrecedence());
 	return lhs;
 }
 
