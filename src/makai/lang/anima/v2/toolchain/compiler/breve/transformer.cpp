@@ -873,7 +873,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		isCompletelyNewFunction = true;
 	}
 	DEBUG("Stack = ");
-	for (auto& sco: context.scopeStack)
+	for (auto& sco: Range::reverse(context.scopeStack))
 		DEBUG("/", sco->name);
 	DEBUGLN("");
 	auto& fn = *scope->function;
@@ -1056,9 +1056,11 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 }
 
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
+	DEBUGLN("Left-side:", node->leftSide->base.text);
 	auto const fn = Expression().transform(context, node->leftSide);
 	if (!fn.scope)
 		context.error("Symbol does not exist!", node->leftSide);
+	DEBUGLN(fn.scope->name);
 	if (!fn.scope->function)
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
