@@ -321,6 +321,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
 	auto const scope = context.declare(path);
 	auto& var = *(scope->variable = scope->variable.create());
+	parent->impl->writeMainLine("decl 1");
 	var.name = scope->name;
 	TypeRequest t;
 	if (node->middle)
