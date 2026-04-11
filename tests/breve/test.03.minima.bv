@@ -16,6 +16,6 @@ module Test.Namespace {
 }
 
 @Main
-main :: () {
+main :: () -> void {
     Test.Namespace.baz(32 + 64)
 }
