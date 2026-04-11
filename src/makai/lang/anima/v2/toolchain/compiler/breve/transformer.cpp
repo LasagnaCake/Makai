@@ -272,18 +272,16 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	else if (!node->isPathOrName())
 		Context::error("This is not a valid path!", node);
 	Makai::UTF8StringList path;
-	if (node->rightSide->content != Node::Content::AV2_TANC_NAME)
+	if (node->rightSide)
 		Context::error("This is not a valid path!", node->rightSide);
 	path.appendBack(pathOf(node->leftSide));
-	DEBUGLN("------ Right:", node->rightSide->value.getString());
-	path.pushBack(node->rightSide->value.getString());
+	DEBUGLN("------ Right:", node->value.getString());
+	path.appendBack(node->value.getString().split('/').erase(0).toList<UTF8String>());
 	DEBUG("Path: ");
 	for (auto& name: path)
 		DEBUG("/", name);
 	DEBUG("\n");
-	auto const p2 = copy(path);
-	path.dispose();
-	return p2;
+	return copy(path);
 }
 
 Makai::KeyValuePair<Makai::UTF8StringList, Namespace::Instance>
@@ -315,7 +313,7 @@ Namespace::Instance ATransformer::Context::nearestVarScope() const {
 ATransformer::Result VariableDecl::transform(Context& context, Node::Instance const& node) {
 	auto path = context.pathOf(node->leftSide);
 	auto const parent = context.nearestVarScope();
-	if (parent->resolve(path))
+	if (context.top()->resolve(path))
 		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
 	auto const scope = context.declare(path);
 	auto& var = *(scope->variable = scope->variable.create());
@@ -326,8 +324,8 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	Makai::Data::Value direct;
 	if (node->rightSide) {
 		Expression expr;
-		auto const tmp = context.declare(UTF8StringList::from("<>" + node->name()));
-	 	auto const result = expr.transform(context, node);
+		auto const tmp = context.declare(UTF8StringList::from("<var>" + node->name()));
+	 	auto const result = expr.transform(context, node->rightSide);
 		context.pop(1);
 		direct = result.direct;
 		var.initializer = tmp;
@@ -883,7 +881,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	Function::OverloadRef ov = ov.create();
 	if (proto->leftSide)
 		ov->result = context.fetch(path, node->leftSide)->type;
-	auto const newScope = context.declare(Makai::UTF8StringList::from("<>" + node->name()));
+	auto const newScope = context.declare(Makai::UTF8StringList::from("<fn>" + node->name()));
 	VariableDecl vd;
 	List<Namespace::VariableRef> optionals;
 	for (auto const& arg: proto->children) {
@@ -910,13 +908,13 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 					context.error("Redeclaration of function overload!", node);
 				if (!implScope) {
 					auto const ovName = scope->function->name + overloadName(args);
-					implScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
+					implScope = context.declare(Makai::UTF8StringList::from("<overload>" + ovName));
 					f->entry = "__" + ovName  + node->name();
 					context.pop(1);
 				}
 			} else {
 				auto const ovName = scope->function->name + overloadName(args);
-				auto const overloadScope = context.declare(Makai::UTF8StringList::from("<>" + ovName));
+				auto const overloadScope = context.declare(Makai::UTF8StringList::from("<overload>" + ovName));
 				if (!implScope)
 					implScope = overloadScope;
 				auto const oo = ov.create();
@@ -1182,7 +1180,7 @@ ATransformer::Result Definition::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance const& node) {
-	auto const scope = context.declare(UTF8StringList::from("<>" + node->name()));
+	auto const scope = context.declare(UTF8StringList::from("<asm>" + node->name()));
 	for (auto& tok: node->interject)
 		scope->impl->writeMain(tok.text);
 	scope->impl->writeMainLine("");
