@@ -21,10 +21,6 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		+	") "
 		+ ov->entry + "\n"
 		);
-		if (ov->scope) {
-			composer.impl->writeMainLine("@def", ov->entry, ":\n", ov->scope->compose()->toString(), "\n");
-			composer.impl->writeMainLine("@def .\n");
-		}
 	}
 }
 
@@ -140,7 +136,7 @@ Makai::UTF8String Composer::toMinima() {
 	} ();
 	cache += "@entry __initializer__\n";
 	if (inter.exit)	cache += "@exit " + inter.exit->entry + "\n";
-	cache = Regex::replace(cache, R"(\n\s\s+)", "\n");
+	cache = Regex::replace(cache, R"(\n\s+)", "\n");
 	cache = Regex::replace(cache, R"(^\s+)", "");
 	return cache;
 }

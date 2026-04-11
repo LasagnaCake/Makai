@@ -941,13 +941,14 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				fn.overloads.pushBack(oo);
 				if (!implOv) implOv = oo;
 				else {
-					overloadScope->impl->writePreLine(oo->entry, ":");
+					overloadScope->impl->writePreLine("@def", oo->entry, ":");
 					overloadScope->impl->writePreLine("begin", toString(args.size()));
 					overloadScope->impl->writePreLine("bind move", toString(args.size()), "[0 : 0]");
 					overloadScope->impl->writePreLine("clear", toString(args.size()));
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 					overloadScope->impl->writePostLine("call", implOv->entry);
 					overloadScope->impl->writePostLine("end");
+					overloadScope->impl->writePostLine("@def .\n");
 				}
 				context.pop(1);
 			}
@@ -962,7 +963,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	if (node->rightSide) {
 		context.scopeStack.pushBack(implScope);
-		implScope->impl->writePreLine(implOv->entry, ":");
+		implScope->impl->writePreLine("@def", implOv->entry, ":");
 		implScope->impl->writePreLine("begin", implScope->varc);
 		implScope->impl->writePreLine("bind move", implScope->varc, "[0 : 0]");
 		implScope->impl->writePreLine("clear", implScope->varc);
@@ -970,6 +971,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		if (expr.source && !expr.isStackTop())
 			implScope->impl->writePostLine("push", *expr.source);
 		implScope->impl->writePostLine("end");
+		implScope->impl->writePostLine("@def .\n");
 		implOv->scope = implScope.asWeak();
 		context.scopeStack.popBack();
 		if (!implOv->result && expr.source)
