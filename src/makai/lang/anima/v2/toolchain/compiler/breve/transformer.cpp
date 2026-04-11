@@ -704,6 +704,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 			result.type		= ns->variable->type;
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;
+		return result;
 	}
 	if (!result.scope->subspaces.contains(path.front()))
 		context.error("Subpath type doesn't contain the given member!", node->leftSide);
