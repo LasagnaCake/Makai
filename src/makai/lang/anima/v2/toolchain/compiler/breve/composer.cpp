@@ -91,8 +91,9 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		for (auto& [name, attrib]: type->scope->meta)
 			if (!attrib->value.isUndefined())
 				decl += "    " + name + " ´" + attrib->value.toFLOWString() + "´\n";
-		decl += "  ]\n]\n";
+		decl += "  ]";
 	}
+	decl += "\n]\n";
 	composer.types.pushBack(decl);
 }
 
@@ -113,7 +114,7 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 	}
 	if (ns->isPureNamespace() && !ns->declaredAsNamespace) {
 		composer.top()->writePreLine("begin", ns->varc);
-		composer.top()->writePreLine("bring", ns->varc, "[0 : 0]");
+		composer.top()->writePreLine("keep");
 		composer.top()->writeMainLine(ns->impl->toString());
 		composer.top()->writePostLine("end");
 	}
@@ -138,5 +139,7 @@ Makai::UTF8String Composer::toMinima() {
 	} ();
 	cache += "@entry __initializer__\n";
 	if (inter.exit)	cache += "@exit " + inter.exit->entry + "\n";
+	cache = Regex::replace(cache, R"(\n\s\s+)", "\n");
+	cache = Regex::replace(cache, R"(^\s+)", "");
 	return cache;
 }
