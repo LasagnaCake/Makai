@@ -79,7 +79,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		constexpr String name() const {
 			auto const base = id();
-			return toString("_u", base[0], "u", base[1], "u", base[2], "u", base[3]);
+			return toString("_ID_u", base[3], "u", base[2], "u", base[1], "u", base[0], "_");
 		}
 
 		Data::Value serialize() const;
