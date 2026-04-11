@@ -21,7 +21,7 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		+	")"
 		);
 		if (ov->scope) {
-			composer.impl->writeMainLine("@def", ov->scope->compose()->toString(), "\n");
+			composer.impl->writeMainLine("@def", ov->entry, ":\n", ov->scope->compose()->toString(), "\n");
 			composer.impl->writeMainLine("@def .\n");
 		}
 	}
