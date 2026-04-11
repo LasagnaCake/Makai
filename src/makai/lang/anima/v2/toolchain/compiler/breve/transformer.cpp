@@ -374,10 +374,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
-	auto const initer = name.join("_") + node->name();
+	auto const initer = "__init_" + name.join("_") + node->name();
 	Block().transform(context, node->rightSide);
 	type.scope = scope.asWeak();
 	type.node = node;
+	type.name = "__" + name.join("_") + node->name();
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
 	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
