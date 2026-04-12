@@ -109,7 +109,7 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 		}
 		if (sub->type) doType(composer, sub->type);
 	}
-	if (ns->isPureNamespace() && !ns->declaredAsNamespace) {
+	if (ns->isPureNamespace() && !ns->declaredAsNamespace && ns->impl->main.size()) {
 		composer.top()->writePreLine("begin", ns->varc);
 		composer.top()->writePreLine("keep");
 		composer.top()->writeMainLine(ns->impl->toString());
