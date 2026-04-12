@@ -33,6 +33,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		void pop() {
 			if (implStack.empty()) return;
 			auto const prevImpl = implStack.popBack();
+			if (prevImpl->main.empty()) return;
 			if (implStack.empty()) impl->writeMain(prevImpl->toString());
 			else implStack.back()->writeMain(prevImpl->toString());
 		}
