@@ -894,8 +894,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	auto& fn = *scope->function;
 	auto const proto = node->middle;
 	Function::OverloadRef ov = ov.create();
-	if (proto->leftSide)
-		ov->result = context.fetch(path, node->leftSide)->type;
+	if (proto->rightSide && !(ov->result = TypeRequest().transform(context, node->rightSide).type))
+		context.error("Type does not exist!");
 	auto const newScope = context.declare(Makai::UTF8StringList::from("<fn>" + node->name()));
 	VariableDecl vd;
 	List<Namespace::VariableRef> optionals;
@@ -1191,12 +1191,13 @@ ATransformer::Result Loop::transform(Context& context, Node::Instance const& nod
 }
 
 ATransformer::Result Definition::transform(Context& context, Node::Instance const& node) {
-	if (node->base.text == "::")		return FunctionDecl().transform(context, node);
-	if (node->base.text == ":")			return VariableDecl().transform(context, node);
-	if (node->base.text == "prop")		return PropertyDecl().transform(context, node);
-	if (node->base.text == "struct")	return StructureDecl().transform(context, node);
-	if (node->base.text == "module")	return NamespaceDecl().transform(context, node);
-	if (node->base.text == "*")			return ArrayTypeDecl().transform(context, node);
+	if (node->base.text == "::")			return FunctionDecl().transform(context, node);
+	if (node->base.text == ":")				return VariableDecl().transform(context, node);
+	if (node->base.type == LTS_TT_DECLARE)	return VariableDecl().transform(context, node);
+	if (node->base.text == "prop")			return PropertyDecl().transform(context, node);
+	if (node->base.text == "struct")		return StructureDecl().transform(context, node);
+	if (node->base.text == "module")		return NamespaceDecl().transform(context, node);
+	if (node->base.text == "*")				return ArrayTypeDecl().transform(context, node);
 	context.error("Unimplemented support for given declaration!", node);
 }
 
