@@ -285,6 +285,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 static void parseBlockComment(TokenStream::Lexer& lexer) {
 	while (!(lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'/'}))
 		lexer.next();
+	lexer.next();
 }
 
 static void parseLineComment(TokenStream::Lexer& lexer) {
