@@ -29,6 +29,7 @@ static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
 	if (var->initializer && !var->staticEntity && !composer.visited.contains(var->initializer)) {
 		composer.top()->writeMainLine(var->initializer->impl->toString());
 		composer.visited[var->initializer] = true;
+		var->initializer->impl = null;
 	}
 }
 
@@ -86,11 +87,19 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			decl += " array<" + type->base->name + ">";
 		else decl += " base<" + type->base->name + ">";
 	}
-	if (type->scope && type->scope->meta.size()) {
-		decl += "\n  meta [\n";
-		for (auto& [name, attrib]: type->scope->meta)
-			if (!attrib->value.isUndefined())
-				decl += "    " + name + " ´" + attrib->value.toFLOWString() + "´\n";
+	if (type->scope) {
+		if (type->scope->meta.values().filter([] (auto const& e) {return !e->value.isUndefined();}).size()) {
+			decl += "\n  meta [\n";
+			for (auto& [name, attrib]: type->scope->meta)
+				if (!attrib->value.isUndefined())
+					decl += "    " + name + " ´" + attrib->value.toFLOWString() + "´\n";
+			decl += "  ]";
+		}
+	}
+	if (type->fields.size()) {
+		decl += "\n  fields [\n";
+		for (auto& [name, field]: type->fields)
+			if (field) decl += "    " + (field->type->name) + "\n";
 		decl += "  ]";
 	}
 	decl += "\n]\n";
@@ -98,7 +107,18 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 }
 
 static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
+	if (!ns) return;
+	auto const shouldDeclareALotOfBullshit =
+		ns->isPureNamespace()
+	&&	ns->impl
+	&&	!ns->declaredAsNamespace && ns->impl->main.size()
+	;
 	composer.push();
+	if (shouldDeclareALotOfBullshit) {
+		composer.top()->writePreLine("// begin", ns->varc);
+		composer.top()->writePreLine("// keep");
+		composer.top()->writeMainLine(ns->impl->pre);
+	}
 	for (auto& [name, sub]: ns->subspaces) {
 		if (composer.visited.contains(sub) && composer.visited[sub]) continue;
 		if (!sub) continue;
@@ -107,20 +127,20 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 			if (ns->declaredAsNamespace && !sub->variable->global) {
 				sub->variable->id = composer.staticVarCount;
 				++composer.staticVarCount;
-			}
+			} else doVariable(composer, sub->variable);
 		}
 		if (sub->type) doType(composer, sub->type);
 	}
-	if(composer.visited.contains(ns) && composer.visited[ns]) return composer.pop();
-	if (ns->isPureNamespace() && !ns->declaredAsNamespace && ns->impl->main.size()) {
-		composer.top()->writePreLine("// begin", ns->varc);
-		composer.top()->writePreLine("// keep");
-		composer.top()->writeMainLine(ns->impl->toString());
-		composer.top()->writePostLine("// end");
-	}
+	if(composer.visited.contains(ns) && composer.visited[ns])
+		return composer.pop();
 	composer.visited[ns] = true;
 	for (auto& [name, sub]: ns->subspaces)
 		doNamespace(composer, sub);
+	if (shouldDeclareALotOfBullshit) {
+		composer.top()->writePostLine(ns->impl->main);
+		composer.top()->writePostLine(ns->impl->post);
+		composer.top()->writePostLine("// end");
+	}
 	composer.pop();
 }
 
