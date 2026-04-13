@@ -24,9 +24,12 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 	}
 }
 
-static void doVariable(Composer& composer, Namespace::FunctionRef const& fn) {
+static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
 	// TODO: Variable
-
+	if (var->initializer && !var->staticEntity && !composer.visited.contains(var->initializer)) {
+		composer.top()->writeMainLine(var->initializer->impl->toString());
+		composer.visited[var->initializer] = true;
+	}
 }
 
 static void doType(Composer& composer, Namespace::TypeRef const& type) {
@@ -83,7 +86,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			decl += " array<" + type->base->name + ">";
 		else decl += " base<" + type->base->name + ">";
 	}
-	if (type->scope) {
+	if (type->scope && type->scope->meta.size()) {
 		decl += "\n  meta [\n";
 		for (auto& [name, attrib]: type->scope->meta)
 			if (!attrib->value.isUndefined())
@@ -97,9 +100,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 	composer.push();
 	for (auto& [name, sub]: ns->subspaces) {
-		if (composer.visited.contains(sub)) continue;
+		if (composer.visited.contains(sub) && composer.visited[sub]) continue;
 		if (!sub) continue;
-	 	composer.visited[sub] = true;
 		if (sub->function) doFunction(composer, sub->function);
 		if (sub->variable) {
 			if (ns->declaredAsNamespace && !sub->variable->global) {
@@ -109,12 +111,14 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 		}
 		if (sub->type) doType(composer, sub->type);
 	}
+	if(composer.visited.contains(ns) && composer.visited[ns]) return composer.pop();
 	if (ns->isPureNamespace() && !ns->declaredAsNamespace && ns->impl->main.size()) {
-		composer.top()->writePreLine("begin", ns->varc);
-		composer.top()->writePreLine("keep");
+		composer.top()->writePreLine("// begin", ns->varc);
+		composer.top()->writePreLine("// keep");
 		composer.top()->writeMainLine(ns->impl->toString());
-		composer.top()->writePostLine("end");
+		composer.top()->writePostLine("// end");
 	}
+	composer.visited[ns] = true;
 	for (auto& [name, sub]: ns->subspaces)
 		doNamespace(composer, sub);
 	composer.pop();
