@@ -38,6 +38,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	decl += "@type " + type->name + " [\n ";
 	if (type->flags & Core::Definition::Flags::AV2_DF_BASIC) {
 		decl += " basic<";
+		if (!type->basic)
+			Transformer::ATransformer::Context::error("Missing basic type analog!");
 		switch (*type->basic) {
 			case Core::BasicType::AV2_BT_ANY:		decl += "any";	break;
 			case Core::BasicType::AV2_BT_INT8:		decl += "i8";	break;
