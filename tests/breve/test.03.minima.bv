@@ -16,6 +16,6 @@ module Test.Namespace {
 }
 
 @Main
-main :: () -> void {
+main :: () {
     oper := Test.Namespace.baz(32 + 64)
 }

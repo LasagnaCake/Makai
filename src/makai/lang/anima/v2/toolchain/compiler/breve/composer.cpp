@@ -108,17 +108,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 
 static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 	if (!ns) return;
-	auto const shouldDeclareALotOfBullshit =
-		ns->isPureNamespace()
-	&&	ns->impl
-	&&	!ns->declaredAsNamespace && ns->impl->main.size()
-	;
 	composer.push();
-	if (shouldDeclareALotOfBullshit) {
-		composer.top()->writePreLine("// begin", ns->varc);
-		composer.top()->writePreLine("// keep");
-		composer.top()->writeMainLine(ns->impl->pre);
-	}
 	for (auto& [name, sub]: ns->subspaces) {
 		if (composer.visited.contains(sub) && composer.visited[sub]) continue;
 		if (!sub) continue;
@@ -136,11 +126,6 @@ static void doNamespace(Composer& composer, Namespace::Instance const& ns) {
 	composer.visited[ns] = true;
 	for (auto& [name, sub]: ns->subspaces)
 		doNamespace(composer, sub);
-	if (shouldDeclareALotOfBullshit) {
-		composer.top()->writePostLine(ns->impl->main);
-		composer.top()->writePostLine(ns->impl->post);
-		composer.top()->writePostLine("// end");
-	}
 	composer.pop();
 }
 

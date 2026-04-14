@@ -329,7 +329,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	Makai::Data::Value direct;
 	if (node->rightSide) {
 		Expression expr;
-		auto const tmp = context.declare(UTF8StringList::from("<var>" + node->name()));
+		auto const tmp = parent;
 	 	auto const result = expr.transform(context, node->rightSide);
 		context.pop(1);
 		direct = result.direct;
@@ -408,22 +408,21 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
+	context.writeMainLine("begin", context.top()->varc);
+	context.writeMainLine("keep");
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
+	context.writeMainLine("end");
 	return result;
 }
 
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	auto const scope = context.declare(UTF8StringList::from("::" + node->name()));
-	scope->subspaces = context.parent()->subspaces;
-	scope->varc = context.parent()->varc;
+	auto const scope = context.top();
+	context.writeMainLine("begin", context.top()->varc);
+	context.writeMainLine("keep");
 	for (auto const& child: node->children)
 		result = Expression().transform(context, child);
-	context.pop(1);
-	context.writeMainLine("begin", context.top()->varc + scope->varc);
-	context.writeMainLine("bring", context.top()->varc, "[0 : 0]");
-	context.top()->impl->writeMainLine(scope->impl->compose()->toString());
 	context.writeMainLine("end");
 	return result;
 }
@@ -944,7 +943,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				else {
 					overloadScope->impl->writePreLine("@def", oo->entry, ":");
 					overloadScope->impl->writePreLine("begin", toString(args.size()));
-					overloadScope->impl->writePreLine("bind move", toString(args.size()), "[0 : 0]");
+					overloadScope->impl->writePreLine("bind ref", toString(args.size()), "[0 : 0]");
 					overloadScope->impl->writePreLine("clear", toString(args.size()));
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 					overloadScope->impl->writePostLine("call", implOv->entry);
@@ -966,7 +965,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		context.scopeStack.pushBack(implScope);
 		implScope->impl->writePreLine("@def", implOv->entry, ":");
 		implScope->impl->writePreLine("begin", implScope->varc);
-		implScope->impl->writePreLine("bind move", implScope->varc, "[0 : 0]");
+		implScope->impl->writePreLine("bind ref", implScope->varc, "[0 : 0]");
 		implScope->impl->writePreLine("clear", implScope->varc);
 		auto const expr = Expression().transform(context, node->rightSide);
 		if (expr.source && !expr.isStackTop())
@@ -1202,7 +1201,7 @@ ATransformer::Result Definition::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance const& node) {
-	auto const scope = context.declare(UTF8StringList::from("<asm>" + node->name()));
+	auto const scope = context.nearestVarScope();
 	for (auto& tok: node->interject)
 		scope->impl->writeMain(tok.text);
 	scope->impl->writeMainLine("");

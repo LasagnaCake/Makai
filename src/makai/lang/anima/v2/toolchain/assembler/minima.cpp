@@ -619,23 +619,27 @@ static void doScopeExit(Context& context) {
 }
 
 static void doScopeBind(Context& context) {
+	auto const transfer = context.getNext(LTS_TT_IDENTIFIER, "transfer mode").getString();
 	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
 	context.expectNext(Type{':'}).expectNext(Type{'['});
 	auto const src = context.getNext(LTS_TT_INTEGER, "global stack top offset").get<uint16>();
 	context.expectNext(LTS_TT_LITTLE_ARROW);
 	auto const dst = context.getNext(LTS_TT_INTEGER, "local stack bottom offset").get<uint16>();
 	context.expectNext(Type{']'});
+	if (count < 1) return;
 	context.add(
 		Instruction::Name::AV2_IN_SCOPE_BIND,
 		Instruction::Binding {
 			src,
-			dst
+			dst,
+			transfer == "copy"
 		}
 	);
 	context.add(count);
 }
 
 static void doScopeBring(Context& context) {
+	auto const transfer = context.getNext(LTS_TT_IDENTIFIER, "transfer mode").getString();
 	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
 	context.expectNext(Type{'['});
 	auto const src = context.getNext(LTS_TT_INTEGER, "source scope").getUnsigned();
@@ -643,15 +647,20 @@ static void doScopeBring(Context& context) {
 	context.expectNext(Type{']'}).expectNext(Type{LTS_TT_LITTLE_ARROW});
 	auto const dst = context.getNext(LTS_TT_INTEGER, "source local stack bottom offset").get<uint16>();
 	context.expectNext(Type{']'});
+	if (count < 1) return;
 	context.add(
 		Instruction::Name::AV2_IN_SCOPE_BRING,
 		Instruction::Binding {
 			offset,
-			dst
+			dst,
+			transfer == "copy"
 		}
 	);
 	context.add(src);
 	context.add(count);
+}
+static void doScopeKeep(Context& context) {
+	context.add(Instruction::Name::AV2_IN_SCOPE_KEEP);
 }
 
 
@@ -1263,6 +1272,7 @@ static void doExpression(Context& context) {
 	else if (id == "exit" || id == "end")		doScopeExit(context);
 	else if (id == "bind")						doScopeBind(context);
 	else if (id == "bring")						doScopeBring(context);
+	else if (id == "keep")						doScopeKeep(context);
 	else if (id == "copy")						doCopy(context);
 	else if (id == "context" || id == "mode")	{context.next(); doContext(context);}
 	else if (id == "loose" || id == "strict")	doContext(context, true);

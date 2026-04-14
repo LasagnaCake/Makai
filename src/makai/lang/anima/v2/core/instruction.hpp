@@ -162,8 +162,9 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Binding {
-			uint16	src;
-			uint16	dst;
+			uint16	src: 15;
+			uint16	dst: 15;
+			bool copy: 1;
 		};
 
 		struct [[gnu::aligned(4)]] Casting {
@@ -302,6 +303,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Amount of entries to add.
 			/// @details `decl`
 			AV2_IN_SCOPE_DECLARE,
+			/// @brief Binds all of the previous scope's values to this one.
+			/// @param type Discarded.
+			/// @details `keep`
+			AV2_IN_SCOPE_KEEP,
 			/// @brief Gets a reference of a given field from an object or array.
 			/// @param type `Field` = how to access the field.
 			/// @details `get [<id>]`
@@ -362,6 +367,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_SCOPE_BIND:		return "bind";
 				case Name::AV2_IN_SCOPE_BRING:		return "bring";
 				case Name::AV2_IN_SCOPE_DECLARE:	return "decl";
+				case Name::AV2_IN_SCOPE_KEEP:		return "keep";
 				case Name::AV2_IN_FIELD_GET:		return "get";
 				case Name::AV2_IN_FIELD_SET:		return "set";
 				case Name::AV2_IN_SIZEOF:			return "sizeof";

@@ -87,13 +87,16 @@ namespace Makai::Anima::V2::Runtime {
 		void v2ScopeBind();
 		void v2ScopeEnter();
 		void v2ScopeExit();
+		void v2ScopeDeclare();
+		void v2ScopeKeep();
 		void v2FieldGet();
 		void v2FieldSet();
 		void v2Sizeof();
 		void v2Typeof();
 		void v2Random();
-		void v2Clear();
 		void v2Select();
+		void v2Clear();
+		void v2Create();
 
 		void doBinaryOperation(Core::Operator const op);
 		void doUnaryOperation(Core::Operator const op);
