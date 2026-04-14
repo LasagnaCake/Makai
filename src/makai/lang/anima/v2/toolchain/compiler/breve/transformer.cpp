@@ -904,7 +904,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
 		if (!(decl.scope && decl.scope->variable))
 			context.error("Expected variable declaration here!", arg);
-		if (decl.scope->variable->defaulted)
+		if (decl.scope->variable->defaulted && decl.scope->variable->initializer)
 			optionals.pushBack(decl.scope->variable);
 		else if (optionals.empty())
 			ov->arguments.pushBack(decl.scope->variable);
@@ -913,6 +913,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	context.pop(1);
 	Namespace::Instance implScope;
 	Function::OverloadRef implOv;
+	DEBUGLN("Optionals: ", optionals.size());
 	if (optionals.size()) {
 		for (auto i: Makai::range(optionals.size())) {
 			auto args = ov->arguments;
