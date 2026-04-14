@@ -147,7 +147,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		usize varc;
 
-		OrderedMap<UTF8String, Instance> subspaces;
+		UTF8Dictionary<Instance> subspaces;
 
 		UTF8Dictionary<Metadata::Instance> meta;
 
@@ -185,9 +185,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		uint64									flags;
 		Definition								def;
 		Nullable<Core::BasicType>				basic;
-		Namespace::TypeRef								base;
-		Nullable<UTF8String>							artEquivalent;
-		OrderedMap<UTF8String, Namespace::VariableRef>	fields;
+		Namespace::TypeRef						base;
+		Nullable<UTF8String>					artEquivalent;
+		UTF8Dictionary<Namespace::VariableRef>	fields;
 
 		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
 
@@ -282,7 +282,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			bool				path = false;
 		};
 
-		OrderedMap<UTF8String, Field> fields;
+		UTF8Dictionary<Field> fields;
 
 		Functor<void(Intermediate&, Namespace::Instance const&, Data::Value const&, Attribute&)> transform;
 
