@@ -162,9 +162,9 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Binding {
-			uint16	src: 15;
-			uint16	dst: 15;
-			bool copy: 1;
+			uint16	src:	15;
+			uint16	dst:	15;
+			bool	copy:	1;
 		};
 
 		struct [[gnu::aligned(4)]] Casting {
