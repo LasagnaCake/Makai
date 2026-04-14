@@ -329,7 +329,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	Makai::Data::Value direct;
 	if (node->rightSide) {
 		Expression expr;
-		auto const tmp = parent;
+		auto const tmp = context.declare(UTF8StringList::from("<init>" + node->name()));
 	 	auto const result = expr.transform(context, node->rightSide);
 		context.pop(1);
 		direct = result.direct;
@@ -410,21 +410,21 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 	ATransformer::Result result;
 	context.writeMainLine("begin", context.top()->varc);
 	context.writeMainLine("keep");
-	for (auto const& child: node->children)
+	for (auto const& child: node->children) {
 		result = Expression().transform(context, child);
+		if (result.scope && result.scope->variable) {
+			if (!result.scope->variable->initializer)		continue;
+			if (context.nearestVarScope() == context.root)	continue;
+			context.writeMainLine(result.scope->variable->initializer->impl->toString());
+			result.scope->variable->initializer = null;
+		}
+	}
 	context.writeMainLine("end");
 	return result;
 }
 
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
-	ATransformer::Result result;
-	auto const scope = context.top();
-	context.writeMainLine("begin", context.top()->varc);
-	context.writeMainLine("keep");
-	for (auto const& child: node->children)
-		result = Expression().transform(context, child);
-	context.writeMainLine("end");
-	return result;
+	return Block().transform(context, node);
 }
 
 static Namespace::TypeRef directName(ATransformer::Context& context, Makai::Data::Value::Kind const& type) {
