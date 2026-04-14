@@ -413,6 +413,7 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 	for (auto const& child: node->children) {
 		result = Expression().transform(context, child);
 		if (result.scope && result.scope->variable) {
+			context.writeMainLine(result.scope->impl->toString());
 			if (!result.scope->variable->initializer)		continue;
 			if (context.nearestVarScope() == context.root)	continue;
 			context.writeMainLine(result.scope->variable->initializer->impl->toString());
