@@ -39,6 +39,7 @@ static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
 static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	Makai::UTF8String decl;
 	decl += "@type " + type->name + " [\n ";
+	DEBUGLN("Type Name: '", type->name, "'");
 	if (type->flags & Core::Definition::Flags::AV2_DF_BASIC) {
 		decl += " basic<";
 		if (!type->basic)
