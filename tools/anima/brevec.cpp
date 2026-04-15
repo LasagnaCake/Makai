@@ -1,5 +1,6 @@
 #include <makai/makai.hpp>
 #include "base.cc"
+#include "makai/lang/anima/v2/toolchain/assembler/minima.hpp"
 
 using namespace Makai::Anima::V2;
 
@@ -10,6 +11,7 @@ constexpr auto const VER = Makai::Data::Version{1};
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
+	cfg["strip"]	= false;
 	cfg["output"]	= "**{{name}}";
 	cfg["src"]		= cfg.array();
 	cfg["level"]	= "full";
@@ -21,6 +23,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["l"]	= "level";
 	tl["o"]	= "output";
 	tl["s"]	= "src";
+	tl["S"]	= "strip";
 }
 
 static void doHelpMessage() {
@@ -103,7 +106,19 @@ int main(int argc, char** argv) try {
 				comp.toMinima()
 			);
 		} else {
-			// TODO: This
+			Compiler::Breve::Compiler::Context ctx;
+			Compiler::Breve::Compiler comp(parser, ctx);
+			comp.invoke();
+			auto const v = comp.value();
+			Assembler::Minima::Context minCtx;
+			ax.clear();
+			stream.close().open(v);
+			while (stream.next())
+				ax.pushBack({stream.current(), true, file});
+			minCtx.put(ax).pad();
+			Assembler::Minima minAsm(minCtx);
+			minAsm.invoke();
+			minCtx.program.serialize(!cfg.fetch("strip", false));
 		}
 	}
 	return 0;
