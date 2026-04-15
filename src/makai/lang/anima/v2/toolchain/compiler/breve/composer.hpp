@@ -14,6 +14,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8StringList types;
 		UTF8StringList functions;
 		List<Implementation::Instance> funcDefs;
+		List<Implementation::Instance> staticDefs;
 
 		usize staticVarCount = 0;
 
