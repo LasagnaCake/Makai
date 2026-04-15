@@ -117,7 +117,7 @@ int main(int argc, char** argv) try {
 						.splitAtLast('/').back()
 						.splitAtLast('.').front()
 				) + ".anp",
-				prog.toFLOWString()
+				prog.serialize(!cfg.fetch("strip", false)).toFLOWString()
 			);
 		}
 	}
