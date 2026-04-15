@@ -30,4 +30,5 @@ void Compiler::invoke() {
 		ax.pushBack({stream.current(), true, ""});
 	minctx.put(ax).pad();
 	Assembler::Minima(minctx).invoke();
+	result = minctx.program;
 }

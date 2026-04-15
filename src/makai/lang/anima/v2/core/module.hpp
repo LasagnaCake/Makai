@@ -23,7 +23,7 @@ namespace Makai::Anima::V2::Core {
 
 		struct Method {
 			uint64				id;
-			String				name;
+			UTF8String			name;
 			uint64				retType;
 			List<uint64>		argTypes;
 			bool				out = false;
@@ -38,7 +38,7 @@ namespace Makai::Anima::V2::Core {
 
 		struct Declaration {
 			uint64						id;
-			String						name;
+			UTF8String					name;
 			uint64						flags		= 0;
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
 			Nullable<uint64>			base		= null;

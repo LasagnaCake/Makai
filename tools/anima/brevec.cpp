@@ -108,7 +108,7 @@ int main(int argc, char** argv) try {
 			Compiler::Breve::Compiler::Context ctx;
 			Compiler::Breve::Compiler comp(parser, ctx);
 			comp.invoke();
-			auto const prog = ctx.program.serialize(!cfg.fetch("strip", false));
+			auto const prog = comp.value();
 			Makai::File::saveText(
 				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
 					cfg["output"].getString(),
