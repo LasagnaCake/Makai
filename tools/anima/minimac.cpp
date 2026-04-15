@@ -1,4 +1,7 @@
+#include "makai/lang/anima/v2/toolchain/assembler/minima.hpp"
 #include <makai/makai.hpp>
+
+using namespace Makai::Anima::V2::Toolchain;
 
 constexpr auto const VER = Makai::Data::Version{1};
 
@@ -14,12 +17,15 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]	= "help";
 	tl["o"]	= "output";
 	tl["l"]	= "link";
+	tl["c"]	= "code";
+	tl["P"]	= "pack";
+	tl["S"]	= "strip";
 }
 
 static void doHelpMessage() {
 	DEBUGLN("Minima Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(minimac <file> [--output <name>] [-NT] [--link "[<modules> ...]"])");
+	DEBUGLN(R"(minimac (<file> OR -s <source>) [--output <name>] [--link "[<modules> ...]"])");
 	DEBUGLN("init");
 }
 
@@ -32,10 +38,35 @@ int main(int argc, char** argv) try {
 	if (cfg["help"])
 		doHelpMessage();
 	else {
-		if (cfg["__args"].empty())
+		if (cfg["__args"].empty() && !cfg.contains("source"))
 			throw Makai::Error::NonexistentValue("No file given!");
-		auto const file = cfg["__args"][0].get<Makai::String>();
-		// TODO: this
+		auto const file = cfg.contains("code") ? cfg["code"].getString() : Makai::File::getText(cfg["__args"][0].getString());
+		Makai::Lexer::CStyle::TokenStream stream;
+		stream.open(file);
+		Makai::List<Assembler::BaseContext::Axiom> ax;
+		Assembler::Minima::Context ctx;
+		while (stream.next())
+			ax.pushBack({stream.current(), true, file});
+		if (!stream.ok())
+			throw Makai::Error::InvalidValue(
+				"Parsing failure!",
+				stream.error().value().what
+			);
+		ctx.put(ax).pad();
+		auto const outName = Makai::Regex::replace(
+			cfg["output"].getString(),
+			R"(\*\*\{\{name\}\})",
+			file
+				.splitAtLast('/').back()
+				.splitAtLast('.').front()
+		);
+		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
+		Assembler::Minima minAsm(ctx);
+		minAsm.invoke();
+		Makai::File::saveText(
+			outPath + ".bir",
+			ctx.program.serialize().toFLOWString(cfg.fetch("strip", false) ? null : "  ")
+		);
 	}
 	return 0;
 } catch (Makai::Error::Generic const& e) {

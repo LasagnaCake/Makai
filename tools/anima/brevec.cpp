@@ -62,17 +62,19 @@ int main(int argc, char** argv) try {
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
 		auto const level = cfg["level"].getString("full");
+		auto const outName = Makai::Regex::replace(
+			cfg["output"].getString(),
+			R"(\*\*\{\{name\}\})",
+			file
+				.splitAtLast('/').back()
+				.splitAtLast('.').front()
+		);
+		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
 		if (level == "parse-tree" || level == "parse") {
 			DEBUGLN("Doing parse tree...");
 			auto const i = parser.parse();
 			Makai::File::saveText(
-				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
-					cfg["output"].getString(),
-					R"(\*\*\{\{name\}\})",
-					file
-						.splitAtLast('/').back()
-						.splitAtLast('.').front()
-				) + ".bpt",
+				outPath + ".bpt",
 				i->serialize().toFLOWString("  ")
 			);
 		} else if (level == "intermediate" || level == "ir") {
@@ -80,13 +82,7 @@ int main(int argc, char** argv) try {
 			Compiler::Breve::Transformer::TheEntireProgram tf;
 			tf.transform(ctx, parser.parse());
 			Makai::File::saveText(
-				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
-					cfg["output"].getString(),
-					R"(\*\*\{\{name\}\})",
-					file
-						.splitAtLast('/').back()
-						.splitAtLast('.').front()
-				) + ".bir",
+				outPath + ".bir",
 				ctx.serialize().toFLOWString("  ")
 			);
 		} else if (level == "minima" || level == "min") {
@@ -95,29 +91,23 @@ int main(int argc, char** argv) try {
 			Compiler::Breve::Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
 			Makai::File::saveText(
-				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
-					cfg["output"].getString(),
-					R"(\*\*\{\{name\}\})",
-					file
-						.splitAtLast('/').back()
-						.splitAtLast('.').front()
-				) + ".min",
+				outPath + ".min",
 				comp.toMinima()
 			);
 		} else {
-			Compiler::Breve::Compiler::Context ctx;
-			Compiler::Breve::Compiler comp(parser, ctx);
-			comp.invoke();
-			auto const prog = comp.value();
-			Makai::File::saveText(
-				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
-					cfg["output"].getString(),
-					R"(\*\*\{\{name\}\})",
-					file
-						.splitAtLast('/').back()
-						.splitAtLast('.').front()
-				) + ".anp",
-				prog.serialize(!cfg.fetch("strip", false)).toFLOWString()
+			Compiler::Breve::Transformer::ATransformer::Context ctx;
+			Compiler::Breve::Transformer::TheEntireProgram tf;
+			Compiler::Breve::Composer comp(ctx);
+			tf.transform(ctx, parser.parse());
+			Makai::OS::launch(
+				Makai::OS::executable(Makai::OS::FS::sourceLocation() + "/minimac"),
+				Makai::OS::FS::currentDirectory(),
+				Makai::StringList::from(
+					"-c",
+					comp.toMinima(),
+					"-o",
+					outName + ".anp"
+				)
 			);
 		}
 	}
