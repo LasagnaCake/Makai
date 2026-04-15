@@ -21,8 +21,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			using OpCode = Core::Instruction::Name;
 
-			usize add(OpCode const& opcode = OpCode::AV2_IN_NO_OP, uint32 const type = 0);
-			usize add(uint64 const& value);
+			usize add(OpCode const opcode = OpCode::AV2_IN_NO_OP, uint32 const type = 0);
+			usize add(uint64 const value);
 
 			template <class T>
 			usize add(OpCode const& opcode, T const& val)
@@ -30,7 +30,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				return add(opcode, Makai::Cast::bit<uint32, T>(val));
 			}
 
-			usize update(usize const& instruction, uint32 const& type);
+			usize update(usize const instruction, uint32 const type);
 
 			uint64 addStringLiteral(String const& val);
 			uint64 addGlobal(String const& name);

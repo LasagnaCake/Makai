@@ -36,6 +36,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_SCOPE_BRING:	v2ScopeBring();		break;
 		case AV2_IN_SCOPE_BIND:		v2ScopeBind();		break;
 		case AV2_IN_SCOPE_DECLARE:	v2ScopeDeclare();	break;
+		case AV2_IN_SCOPE_KEEP:		v2ScopeKeep();		break;
 		case AV2_IN_SIZEOF:			v2Sizeof();			break;
 		case AV2_IN_TYPEOF:			v2Typeof();			break;
 		case AV2_IN_FIELD_GET:		v2FieldGet();		break;

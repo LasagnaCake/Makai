@@ -111,6 +111,26 @@ Makai::Instance<Context::Declaration> Context::getTypeByID(uint64 const& id) {
 	error("Type with the given ID does not exist!");
 }
 
+usize Context::add(uint64 const value) {
+	program.code.pushBack(Makai::Cast::bit<Core::Instruction>(value));
+	return program.code.size()-1;
+}
+
+usize Context::add(OpCode const opcode, uint32 const type) {
+	program.code.pushBack(Core::Instruction{opcode, type});
+	return program.code.size()-1;
+}
+
+usize Context::update(usize const inst, uint32 const type) {
+	program.code[inst].type = type;
+	return inst;
+}
+
+uint64 Context::addGlobal(String const& name) {
+	program.strings.pushBack(name);
+	return program.strings.size()-1;
+}
+
 void Context::addJumpTarget(String const& name) {
 	if (hasJumpTarget(name)) {
 		add(jumps[name]);
