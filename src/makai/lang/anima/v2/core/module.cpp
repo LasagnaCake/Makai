@@ -80,3 +80,19 @@ Makai::Data::Value Module::ANI::serialize() const {
 		externs[externs.size()] = name;
 	return result;
 }
+
+Module::Symbols Module::Symbols::deserialize(Makai::Data::Value const& v) {
+
+}
+
+Makai::Data::Value Module::Symbols::serialize() const {
+
+}
+
+Module::Detail Module::Detail::deserialize(Makai::Data::Value const& v) {
+
+}
+
+Makai::Data::Value Module::Detail::serialize() const {
+
+}
