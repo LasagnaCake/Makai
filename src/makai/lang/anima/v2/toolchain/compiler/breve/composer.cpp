@@ -21,11 +21,12 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		+	") "
 		+ ov->entry + "\n"
 		);
+		if (ov->scope)
+			composer.funcDefs.pushBack(ov->scope->impl);
 	}
 }
 
 static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
-	// TODO: Variable
 	if (var->initializer && !var->staticEntity && !composer.visited.contains(var->initializer)) {
 		composer.top()->writeMainLine(var->initializer->impl->toString());
 		composer.visited[var->initializer] = true;
@@ -136,15 +137,17 @@ Makai::UTF8String Composer::toMinima() {
 	doNamespace(*this, inter.root);
 	cache = types.join("\n") + functions.join("\n") + impl->toString();
 	if (mustHaveMain && !inter.entry)
-			Transformer::ATransformer::Context::error("Missing required entrypoint!");
+		Transformer::ATransformer::Context::error("Missing required entrypoint!");
 	cache += [this] () -> UTF8String {
 		UTF8String out = "__initializer__:\n";
 		for (auto& init: preMain)
 			out += init->impl->toString();
-		if (inter.entry)	out += "call " + inter.entry->entry + "\n";
+		if (inter.entry) out += "call " + inter.entry->entry + "\n";
 		out += "stop\n";
 		return out;
 	} ();
+	for (auto& fd: funcDefs) if (fd)
+		cache += fd->toString() + "\n";
 	cache += "@entry __initializer__\n";
 	if (inter.exit)	cache += "@exit " + inter.exit->entry + "\n";
 	cache = Regex::replace(cache, R"(\n\s+)", "\n");
