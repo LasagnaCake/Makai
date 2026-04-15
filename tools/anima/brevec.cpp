@@ -1,6 +1,5 @@
 #include <makai/makai.hpp>
 #include "base.cc"
-#include "makai/lang/anima/v2/toolchain/assembler/minima.hpp"
 
 using namespace Makai::Anima::V2;
 
