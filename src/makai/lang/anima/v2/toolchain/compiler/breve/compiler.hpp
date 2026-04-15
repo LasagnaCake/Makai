@@ -14,7 +14,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		void invoke() override;
 
-		Core::Module value() const override;
+		Core::Module value() const override {return result;}
 
 		Compiler(Parser& parser, Context& context): ACompiler(context), context(context), parser(parser) {}
 

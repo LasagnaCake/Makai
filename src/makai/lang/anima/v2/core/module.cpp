@@ -124,3 +124,64 @@ Makai::Data::Value Module::Detail::serialize() const {
 		result["methods"][result["methods"].size()] = method.serialize();
 	return result;
 }
+
+Makai::Data::Value Module::Method::serialize() const {
+	auto result = Data::Value::object();
+	result["id"] = id;
+	result["name"] = name.toString();
+	result["return"] = retType;
+	result["args"] = argTypes.toList<Data::Value>();
+	result["out"] = out;
+	result["shared"] = shared;
+	result["entry"] = entrypoint;
+	result["size"] = size;
+	result["meta"] = meta;
+	return result;
+}
+
+
+Module::Method Module::Method::deserialize(Data::Value const& v) {
+	Module::Method result;
+	result.id = v["id"];
+	result.name = v["name"].getString();
+	result.retType = v["return"];
+	result.argTypes = v["args"].getArray().toList<uint64>();
+	result.out = v["out"];
+	result.shared = v["shared"];
+	result.entrypoint = v["entry"];
+	result.size = v["size"];
+	result.meta = v["meta"];
+	return result;
+}
+
+Makai::Data::Value Module::Declaration::serialize() const {
+	auto result = Data::Value::object();
+	result["id"] = id;
+	result["name"] = name.toString();
+	result["flags"] = flags;
+	if (basic)
+		result["basic"] = *basic;
+	if (base)
+		result["base"] = *base;
+	result["bytes"] = byteSize;
+	result["align"] = alignment;
+	result["fields"] = fields.toList<Data::Value>();
+	result["meta"] = meta;
+	return result;
+}
+
+
+Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
+	Module::Declaration result;
+	result.id = v["id"];
+	result.name = v["name"].getString();
+	result.flags = v["flags"].getUnsigned();
+	if (v.contains("basic"))
+		result.basic = Cast::as<BasicType>(v["basic"].getUnsigned());
+	if (v.contains("base"))
+		result.base = v["base"].getUnsigned();
+	result.byteSize = v["bytes"];
+	result.alignment = v["align"];
+	result.meta = v["meta"];
+	return result;
+}
