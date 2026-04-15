@@ -35,6 +35,14 @@ namespace OS {
 		}
 	}
 
+	/// @brief Returns the given path with the appropriate executable file extension for the current operating system.
+	/// @return Executable path.
+	constexpr String executable(String const& path = "") {
+		if constexpr (CTL_TARGET_OS == CTL_OS_WINDOWS)
+			return path + ".exe";
+		else return path;
+	}
+
 	/// @brief Runs an executable in the same thread.
 	/// @param path Path to executable.
 	/// @param directory Directory to run in. By default, it is the same directory as the executable.
