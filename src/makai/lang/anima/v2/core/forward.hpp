@@ -12,13 +12,13 @@ namespace Makai::Anima::V2::Core {
 	struct Symbol {
 		Nullable<uint64>	source = null;
 		uint64				id;
-		String				name;
+		UTF8String			name;
 
 		constexpr Data::Value serialize() const {
 			auto def = Data::Value::object();
 			if (source) def["src"] = *source;
 			def["id"] = id;
-			def["name"] = name;
+			def["name"] = name.toString();
 			return def;
 		}
 
