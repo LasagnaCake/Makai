@@ -82,17 +82,45 @@ Makai::Data::Value Module::ANI::serialize() const {
 }
 
 Module::Symbols Module::Symbols::deserialize(Makai::Data::Value const& v) {
-
+	Module::Symbols result;
+	if (v.contains("types"))
+		for (auto& sym: v["types"].getArray())
+			result.types.pushBack(sym);
+	if (v.contains("methods"))
+		for (auto& sym: v["methods"].getArray())
+			result.methods.pushBack(sym);
+	return result;
 }
 
 Makai::Data::Value Module::Symbols::serialize() const {
-
+	auto result = Data::Value::object();
+	result["types"]		= result.array();
+	result["methods"]	= result.array();
+	for (auto& type: types)
+		result["types"][result["types"].size()] = type;
+	for (auto& method: methods)
+		result["methods"][result["methods"].size()] = method;
+	return result;
 }
 
 Module::Detail Module::Detail::deserialize(Makai::Data::Value const& v) {
-
+	Module::Detail result;
+	if (v.contains("types"))
+		for (auto& sym: v["types"].getArray())
+			result.types.pushBack(sym);
+	if (v.contains("methods"))
+		for (auto& sym: v["methods"].getArray())
+			result.methods.pushBack(sym);
+	return result;
 }
 
 Makai::Data::Value Module::Detail::serialize() const {
-
+	auto result = Data::Value::object();
+	result["types"]		= result.array();
+	result["methods"]	= result.array();
+	for (auto& type: types)
+		result["types"][result["types"].size()] = type.serialize();
+	for (auto& method: methods)
+		result["methods"][result["methods"].size()] = method.serialize();
+	return result;
 }
