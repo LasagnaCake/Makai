@@ -27,11 +27,13 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 }
 
 static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
-	if (var->initializer && !var->staticEntity && !composer.visited.contains(var->initializer)) {
+	if (!var->initializer) return;
+	if (!var->staticEntity && !composer.visited.contains(var->initializer)) {
 		composer.top()->writeMainLine(var->initializer->impl->toString());
 		composer.visited[var->initializer] = true;
 		var->initializer->impl = null;
-	}
+	} else if (var->staticEntity)
+		composer.staticDefs.pushBack(var->initializer->impl);
 }
 
 static void doType(Composer& composer, Namespace::TypeRef const& type) {
@@ -140,16 +142,18 @@ Makai::UTF8String Composer::toMinima() {
 		Transformer::ATransformer::Context::error("Missing required entrypoint!");
 	cache += [this] () -> UTF8String {
 		UTF8String out = "__initializer__:\n";
+		for (auto& sd: staticDefs) if (sd)
+			cache += sd->toString() + "\n";
 		for (auto& init: preMain)
 			out += init->impl->toString();
 		if (inter.entry) out += "call " + inter.entry->entry + "\n";
 		out += "stop\n";
 		return out;
 	} ();
-	for (auto& fd: funcDefs) if (fd)
-		cache += fd->toString() + "\n";
 	cache += "@entry __initializer__\n";
 	if (inter.exit)	cache += "@exit " + inter.exit->entry + "\n";
+	for (auto& fd: funcDefs) if (fd)
+		cache += fd->toString() + "\n";
 	cache = Regex::replace(cache, R"(\n\s+)", "\n");
 	cache = Regex::replace(cache, R"(^\s+)", "");
 	return cache;
