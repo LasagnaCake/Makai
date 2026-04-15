@@ -108,16 +108,17 @@ int main(int argc, char** argv) try {
 			Compiler::Breve::Compiler::Context ctx;
 			Compiler::Breve::Compiler comp(parser, ctx);
 			comp.invoke();
-			auto const v = comp.value();
-			Assembler::Minima::Context minCtx;
-			ax.clear();
-			stream.close().open(v);
-			while (stream.next())
-				ax.pushBack({stream.current(), true, file});
-			minCtx.put(ax).pad();
-			Assembler::Minima minAsm(minCtx);
-			minAsm.invoke();
-			minCtx.program.serialize(!cfg.fetch("strip", false));
+			auto const prog = ctx.program.serialize(!cfg.fetch("strip", false));
+			Makai::File::saveText(
+				Makai::OS::FS::currentDirectory() + "/output/" + Makai::Regex::replace(
+					cfg["output"].getString(),
+					R"(\*\*\{\{name\}\})",
+					file
+						.splitAtLast('/').back()
+						.splitAtLast('.').front()
+				) + ".anp",
+				prog.toFLOWString()
+			);
 		}
 	}
 	return 0;
