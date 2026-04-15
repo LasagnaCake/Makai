@@ -182,7 +182,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		uint64									flags;
+		uint64									flags = 0;
 		Definition								def;
 		Nullable<Core::BasicType>				basic;
 		Namespace::TypeRef						base;
