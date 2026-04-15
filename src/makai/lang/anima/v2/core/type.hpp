@@ -156,7 +156,7 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_ART_EQUIVALENT	= 1 << 8;
 			constexpr static uint64 const AV2_DF_NO_RESULT		= 1 << 9;
 			constexpr static uint64 const AV2_DF_POINTER		= 1 << 10;
-			constexpr static uint64 const AV2_DF_FINAL			= 1 << 10;
+			constexpr static uint64 const AV2_DF_FINAL			= 1 << 11;
 		};
 
 		bool canBecome(Instance<Definition> const& type) const {
