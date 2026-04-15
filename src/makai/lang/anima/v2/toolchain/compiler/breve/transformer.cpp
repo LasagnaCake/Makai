@@ -1276,7 +1276,7 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	using enum Core::BasicType;
 	UTF8String name;
 	switch (type) {
-		default: return;
+		default: error("UHHHHHHHHHHH");
 		case AV2_BT_VOID:		name = "void";		break;
 		case AV2_BT_ANY:		name = "any";		break;
 		case AV2_BT_NULL:		name = "null";		break;
@@ -1306,7 +1306,7 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	t.name = name;
 	t.basic = type;
 	t.flags |= Core::Definition::Flags::AV2_DF_BASIC | flags;
-	if (type != AV2_BT_VOID && type != Core::BasicType::AV2_BT_ANY)
+	if (type != AV2_BT_VOID && type != AV2_BT_ANY)
 		t.base = basicType("any");
 	basics[name] = ns->type;
 }
