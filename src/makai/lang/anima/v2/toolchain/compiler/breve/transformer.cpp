@@ -337,6 +337,10 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		var.defaulted = true;
 		if (!var.type)
 			var.type = result.type;
+		if (parent != context.root && !var.staticEntity) {
+			parent->impl->writeMainLine(tmp->impl->toString());
+			var.initializer = nullptr;
+		}
 	}
 	var.parentScope = parent.asWeak();
 	var.value = direct;
