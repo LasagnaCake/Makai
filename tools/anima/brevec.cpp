@@ -61,7 +61,7 @@ int main(int argc, char** argv) try {
 		DEBUGLN("That part");
 		ctx.put(ax).pad();
 		DEBUGLN("Blablabla");
-		auto const level = cfg["level"].getString("full");
+		auto const level = cfg.fetch<Makai::String>("level", "full");
 		auto const outName = Makai::Regex::replace(
 			cfg["output"].getString(),
 			R"(\*\*\{\{name\}\})",
@@ -70,6 +70,7 @@ int main(int argc, char** argv) try {
 				.splitAtLast('.').front()
 		);
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
+		DEBUGLN("Level: ", level);
 		if (level == "parse-tree" || level == "parse") {
 			DEBUGLN("Doing parse tree...");
 			auto const i = parser.parse();
@@ -95,20 +96,20 @@ int main(int argc, char** argv) try {
 				comp.toMinima()
 			);
 		} else {
+			DEBUGLN(">>>> >>>> FULL COMPILATION <<<< <<<<");
 			Compiler::Breve::Transformer::ATransformer::Context ctx;
 			Compiler::Breve::Transformer::TheEntireProgram tf;
 			Compiler::Breve::Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
-			Makai::OS::launch(
+			auto const min = comp.toMinima();
+			DEBUGLN("Launching minima compiler '", Makai::OS::executable(Makai::OS::FS::sourceLocation() + "/minimac"), "'...");
+			auto const r = Makai::OS::launch(
 				Makai::OS::executable(Makai::OS::FS::sourceLocation() + "/minimac"),
 				Makai::OS::FS::currentDirectory(),
-				Makai::StringList::from(
-					"-c",
-					comp.toMinima(),
-					"-o",
-					outName + ".anp"
-				)
+				Makai::StringList::from("-c", min, "-o", outName)
 			);
+			if (!r) return -1;
+			DEBUGLN("Done!");
 		}
 	}
 	return 0;

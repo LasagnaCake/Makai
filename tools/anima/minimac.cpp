@@ -25,7 +25,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static void doHelpMessage() {
 	DEBUGLN("Minima Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(minimac (<file> OR -s <source>) [--output <name>] [--link "[<modules> ...]"])");
+	DEBUGLN(R"(minimac (<file> OR -c <code>) [--output <name>] [--link "[<modules> ...]"])");
 	DEBUGLN("init");
 }
 
@@ -38,7 +38,8 @@ int main(int argc, char** argv) try {
 	if (cfg["help"])
 		doHelpMessage();
 	else {
-		if (cfg["__args"].empty() && !cfg.contains("source"))
+		DEBUGLN("Assembilg minima program...");
+		if (cfg["__args"].empty() && !cfg.contains("code"))
 			throw Makai::Error::NonexistentValue("No file given!");
 		auto const file = cfg.contains("code") ? cfg["code"].getString() : Makai::File::getText(cfg["__args"][0].getString());
 		Makai::Lexer::CStyle::TokenStream stream;
@@ -63,8 +64,9 @@ int main(int argc, char** argv) try {
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
 		Assembler::Minima minAsm(ctx);
 		minAsm.invoke();
+		DEBUGLN("Done!");
 		Makai::File::saveText(
-			outPath + ".bir",
+			outPath + ".anp",
 			ctx.program.serialize().toFLOWString(cfg.fetch("strip", false) ? null : "  ")
 		);
 	}

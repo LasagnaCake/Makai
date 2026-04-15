@@ -92,10 +92,11 @@ namespace OS {
 		prgArgs.pushBack(NULL);
 		auto const pid = getpid();
 		fork();
-		if (pid != getpid())
+		if (pid != getpid()) {
+			chdir(directory.cstr());
 			return execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
-		else {
-			int result;
+		} else {
+			int result = -1;
 			wait(&result);
 			return result;
 		}
