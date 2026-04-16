@@ -137,7 +137,7 @@ namespace OS::Registry {
 			keyOf(domain),
 			key.cstr(),
 			NULL,
-			RRF_RT_BINARY | RRF_NOEXPAND,
+			RRF_RT_REG_BINARY | RRF_NOEXPAND,
 			&type,
 			(pointer)buf.data(),
 			&sz
