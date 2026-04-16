@@ -979,104 +979,106 @@ static void declareTypeMeta(Context& context, Context::Declaration& type) {
 }
 
 static void declareType(Context& context) {
+	context.next();
 	auto const name = resolvePath(context);
-		auto const type = new Context::Declaration();
-		context.expectNext(Type{'['});
-		while (true) {
-			if (context.next().has(Type{']'})) break;
-			auto const flag = context.get(LTS_TT_IDENTIFIER, "type flag").getString();
-			if (flag == "basic") {
-				type->flags |= Definition::Flags::AV2_DF_BASIC;
-				auto const basic =
-					context
-						.expectNext(Type{'<'})
-						.getNext(LTS_TT_IDENTIFIER, "basic type")
-						.getString()
-				;
-				if (basic == "void")		type->basic = BasicType::AV2_BT_VOID;
-				else if (basic == "any")	type->basic = BasicType::AV2_BT_ANY;
-				else if (basic == "nil")	type->basic = BasicType::AV2_BT_NULL;
-				else if (basic == "bool")	type->basic = BasicType::AV2_BT_BOOL;
-				else if (basic == "char")	type->basic = BasicType::AV2_BT_CHAR;
-				else if (basic == "i8")		type->basic = BasicType::AV2_BT_INT8;
-				else if (basic == "i16")	type->basic = BasicType::AV2_BT_INT16;
-				else if (basic == "i32")	type->basic = BasicType::AV2_BT_INT32;
-				else if (basic == "i64")	type->basic = BasicType::AV2_BT_INT64;
-				else if (basic == "u8")		type->basic = BasicType::AV2_BT_UINT8;
-				else if (basic == "u16")	type->basic = BasicType::AV2_BT_UINT16;
-				else if (basic == "u32")	type->basic = BasicType::AV2_BT_UINT32;
-				else if (basic == "u64")	type->basic = BasicType::AV2_BT_UINT64;
-				else if (basic == "f32")	type->basic = BasicType::AV2_BT_REAL32;
-				else if (basic == "f64")	type->basic = BasicType::AV2_BT_REAL64;
-				else if (basic == "f128")	type->basic = BasicType::AV2_BT_REAL128;
-				else if (basic == "str")	type->basic = BasicType::AV2_BT_STRING;
-				else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
-				else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
-				else if (basic == "mat")	type->basic = BasicType::AV2_BT_MATRIX;
-				else if (basic == "type")	type->basic = BasicType::AV2_BT_TYPEID;
-				else context.error("Invalid basic type!");
-				context.expectNext(Type{'>'});
-			}
-			else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
-			else if (flag == "derived") {
-				if (type->flags | Definition::Flags::AV2_DF_ARRAY)
-					context.error("Type cannot be both a derived type and an array type!");
-				if (type->base)
-					context.error("Redeclaration of base type!");
-				context.expectNext(Type{'<'});
-				auto const base = resolvePath(context);
-				if (context.types.contains(base))
-					type->base = context.getType(base)->id;
-				else context.error("Base type does not exist!");
-				context.expectNext(Type{'>'});
-			} else if (flag == "array") {
-				if (type->base)
-					context.error("Redeclaration of element type!");
-				type->flags |= Definition::Flags::AV2_DF_ARRAY;
-				context.expectNext(Type{'<'});
-				auto const base = resolvePath(context);
-				if (context.types.contains(base))
-					type->base = context.getType(base)->id;
-				else context.error("Element type does not exist!");
-				context.expectNext(Type{'>'});
-			} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
-			else if (flag == "empty")	type->flags |= Definition::Flags::AV2_DF_EMPTY;
-			else if (flag == "discard")	type->flags |= Definition::Flags::AV2_DF_NO_RESULT;
-			else if (flag == "dyn")		type->flags |= Definition::Flags::AV2_DF_DYNAMIC;
-			else if (flag == "struct")	type->flags |= Definition::Flags::AV2_DF_STRUCTURE;
-			else if (flag == "pack") {
-				if (type->alignment)
-					context.error("Redefinition of alignment!");
-				type->alignment = 1;
-			} else if (flag == "align") {
-				if (type->alignment)
-					context.error("Redefinition of alignment!");
-				type->alignment =
-					context
-						.expectNext(Type{'('})
-						.getNext(LTS_TT_INTEGER, "byte alignment")
-						.getUnsigned()
-				;
-				if (!type->alignment)
-					context.error("Cannot have empty alignment!");
-				context.expectNext(Type{')'});
-			} else if (flag == "fields") {
-				declareTypeFields(context, *type);
-			} else if (flag == "operators") {
-				declareTypeOperators(context, *type);
-			} else if (flag == "casts") {
-				declareTypeCasts(context, *type);
-			} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
-			else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
-			else if (flag == "final")	type->flags |= Definition::Flags::AV2_DF_FINAL;
-			else if (flag == "meta")
-				declareTypeMeta(context, *type);
-			else context.error("Invalid flag!");
+	auto const type = new Context::Declaration();
+	context.expectNext(Type{'['});
+	while (true) {
+		if (context.next().has(Type{']'})) break;
+		auto const flag = context.get(LTS_TT_IDENTIFIER, "type flag").getString();
+		if (flag == "basic") {
+			type->flags |= Definition::Flags::AV2_DF_BASIC;
+			auto const basic =
+				context
+					.expectNext(Type{'<'})
+					.getNext(LTS_TT_IDENTIFIER, "basic type")
+					.getString()
+			;
+			if (basic == "void")		type->basic = BasicType::AV2_BT_VOID;
+			else if (basic == "any")	type->basic = BasicType::AV2_BT_ANY;
+			else if (basic == "nil")	type->basic = BasicType::AV2_BT_NULL;
+			else if (basic == "bool")	type->basic = BasicType::AV2_BT_BOOL;
+			else if (basic == "char")	type->basic = BasicType::AV2_BT_CHAR;
+			else if (basic == "i8")		type->basic = BasicType::AV2_BT_INT8;
+			else if (basic == "i16")	type->basic = BasicType::AV2_BT_INT16;
+			else if (basic == "i32")	type->basic = BasicType::AV2_BT_INT32;
+			else if (basic == "i64")	type->basic = BasicType::AV2_BT_INT64;
+			else if (basic == "u8")		type->basic = BasicType::AV2_BT_UINT8;
+			else if (basic == "u16")	type->basic = BasicType::AV2_BT_UINT16;
+			else if (basic == "u32")	type->basic = BasicType::AV2_BT_UINT32;
+			else if (basic == "u64")	type->basic = BasicType::AV2_BT_UINT64;
+			else if (basic == "f32")	type->basic = BasicType::AV2_BT_REAL32;
+			else if (basic == "f64")	type->basic = BasicType::AV2_BT_REAL64;
+			else if (basic == "f128")	type->basic = BasicType::AV2_BT_REAL128;
+			else if (basic == "str")	type->basic = BasicType::AV2_BT_STRING;
+			else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
+			else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
+			else if (basic == "mat")	type->basic = BasicType::AV2_BT_MATRIX;
+			else if (basic == "type")	type->basic = BasicType::AV2_BT_TYPEID;
+			else context.error("Invalid basic type!");
+			context.expectNext(Type{'>'});
 		}
-		validateType(context, *type);
-		if (!context.types.contains(name))
-			context.addType(name, type);
-		else context.error("Redeclaration of previously-declared type!");
+		else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
+		else if (flag == "derived") {
+			if (type->flags | Definition::Flags::AV2_DF_ARRAY)
+				context.error("Type cannot be both a derived type and an array type!");
+			if (type->base)
+				context.error("Redeclaration of base type!");
+			context.expectNext(Type{'<'});
+			auto const base = resolvePath(context);
+			if (context.types.contains(base))
+				type->base = context.getType(base)->id;
+			else context.error("Base type does not exist!");
+			context.expectNext(Type{'>'});
+		} else if (flag == "array") {
+			if (type->base)
+				context.error("Redeclaration of element type!");
+			type->flags |= Definition::Flags::AV2_DF_ARRAY;
+			context.expectNext(Type{'<'});
+			auto const base = resolvePath(context);
+			if (context.types.contains(base))
+				type->base = context.getType(base)->id;
+			else context.error("Element type does not exist!");
+			context.expectNext(Type{'>'});
+		} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
+		else if (flag == "empty")	type->flags |= Definition::Flags::AV2_DF_EMPTY;
+		else if (flag == "discard")	type->flags |= Definition::Flags::AV2_DF_NO_RESULT;
+		else if (flag == "dyn")		type->flags |= Definition::Flags::AV2_DF_DYNAMIC;
+		else if (flag == "struct")	type->flags |= Definition::Flags::AV2_DF_STRUCTURE;
+		else if (flag == "pack") {
+			if (type->alignment)
+				context.error("Redefinition of alignment!");
+			type->alignment = 1;
+		} else if (flag == "align") {
+			if (type->alignment)
+				context.error("Redefinition of alignment!");
+			type->alignment =
+				context
+					.expectNext(Type{'('})
+					.getNext(LTS_TT_INTEGER, "byte alignment")
+					.getUnsigned()
+			;
+			if (!type->alignment)
+				context.error("Cannot have empty alignment!");
+			context.expectNext(Type{')'});
+		} else if (flag == "fields") {
+			declareTypeFields(context, *type);
+		} else if (flag == "operators") {
+			declareTypeOperators(context, *type);
+		} else if (flag == "casts") {
+			declareTypeCasts(context, *type);
+		} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
+		else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
+		else if (flag == "final")	type->flags |= Definition::Flags::AV2_DF_FINAL;
+		else if (flag == "meta")
+			declareTypeMeta(context, *type);
+		else context.error("Invalid flag!");
+	}
+	validateType(context, *type);
+	if (!context.types.contains(name))
+		context.addType(name, type);
+	else context.error("Redeclaration of previously-declared type!");
+	context.next();
 }
 
 static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instance<Context::Reference>>& syms) {
