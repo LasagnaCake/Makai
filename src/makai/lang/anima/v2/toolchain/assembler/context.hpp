@@ -99,6 +99,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		BaseContext& next() {
 			if (empty()) return *this;
 			tokens.popBack();
+			if (!empty()) DEBUGLN("Token: ", token().text);
 			return *this;
 		}
 

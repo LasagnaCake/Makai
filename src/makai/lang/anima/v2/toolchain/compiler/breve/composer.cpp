@@ -91,7 +91,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	if (type->base) {
 		if (type->flags & Core::Definition::Flags::AV2_DF_ARRAY)
 			decl += " array<" + type->base->name + ">";
-		else decl += " base<" + type->base->name + ">";
+		else decl += " derived<" + type->base->name + ">";
 	}
 	if (type->scope) {
 		if (type->scope->meta.values().filter([] (auto const& e) {return !e->value.isUndefined();}).size()) {

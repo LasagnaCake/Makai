@@ -1248,6 +1248,11 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 ATransformer::Context::Context(): Intermediate() {
 	using enum Core::BasicType;
 	using Flags = Core::Definition::Flags;
+	root->subspaces["##T0_IMPORTS"]		= Namespace::Instance::create("##T0_IMPORTS");
+	root->subspaces["##T1_BASICS"]		= Namespace::Instance::create("##T1_BASICS");
+	root->subspaces["##T2_USERTYPES"]	= Namespace::Instance::create("##T2_USERTYPES");
+	root->subspaces["##T3_FUNCTIONS"]	= Namespace::Instance::create("##T3_FUNCTIONS");
+	root->subspaces["##T4_TRAITS"]		= Namespace::Instance::create("##T4_TRAITS");
 	addBasicType(AV2_BT_ANY);
 	addBasicType(AV2_BT_VOID, Flags::AV2_DF_EMPTY | Flags::AV2_DF_NO_RESULT);
 	addBasicType(AV2_BT_NULL, Flags::AV2_DF_EMPTY | Flags::AV2_DF_NULLABLE);
@@ -1273,6 +1278,7 @@ ATransformer::Context::Context(): Intermediate() {
 }
 
 void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 const flags) {
+	static usize id = 0;
 	using enum Core::BasicType;
 	UTF8String name;
 	switch (type) {
@@ -1301,6 +1307,7 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	}
 	if (root->subspaces.contains(name)) return;
 	auto const ns = Namespace::Instance::create();
+	root->subspaces["##T1_BASICS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 8), "::") + name] = ns;
 	root->subspaces[name] = ns;
 	auto& t = *(ns->type = ns->type.create());
 	t.name = name;

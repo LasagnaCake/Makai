@@ -45,7 +45,7 @@ void Context::addType(Makai::String const& name, Instance<Declaration> const& ty
 	auto const fullID = name + "@" + type->name;
 	moduleTypes[fullID] = type;
 	types[name] = new Reference{.name = fullID};
-	type->id = program.detail.methods.size();
+	type->id = program.detail.types.size();
 	program.detail.types.pushBack(*type);
 	program.sym.types.pushBack({nullptr, type->id, name});
 }
@@ -171,14 +171,14 @@ void Context::finalize() {
 static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
 	if (context.has(pathSeparator)) {
 		absolute = true;
-		context.expectNext(LTS_TT_IDENTIFIER, "namespace name");
+		context.expectNext(LTS_TT_IDENTIFIER, "namespace/symbol name");
 	}
-	Makai::String result = context.value().getString();
+	Makai::String result = context.get(LTS_TT_IDENTIFIER, "namespace/symbol name").getString();
 	while(context.peek().type == Type{'.'}) {
 		result +=
 			"/" + context
 				.expectNext(Type{'.'})
-				.getNext(LTS_TT_IDENTIFIER, "namespace name")
+				.getNext(LTS_TT_IDENTIFIER, "namespace/symbol name")
 				.getString()
 		;
 	}
@@ -1020,11 +1020,11 @@ static void declareType(Context& context) {
 		}
 		else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
 		else if (flag == "derived") {
-			if (type->flags | Definition::Flags::AV2_DF_ARRAY)
+			if (type->flags & Definition::Flags::AV2_DF_ARRAY)
 				context.error("Type cannot be both a derived type and an array type!");
 			if (type->base)
 				context.error("Redeclaration of base type!");
-			context.expectNext(Type{'<'});
+			context.expectNext(Type{'<'}).next();
 			auto const base = resolvePath(context);
 			if (context.types.contains(base))
 				type->base = context.getType(base)->id;
@@ -1034,7 +1034,7 @@ static void declareType(Context& context) {
 			if (type->base)
 				context.error("Redeclaration of element type!");
 			type->flags |= Definition::Flags::AV2_DF_ARRAY;
-			context.expectNext(Type{'<'});
+			context.expectNext(Type{'<'}).next();
 			auto const base = resolvePath(context);
 			if (context.types.contains(base))
 				type->base = context.getType(base)->id;
