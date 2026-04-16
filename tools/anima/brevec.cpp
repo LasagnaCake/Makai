@@ -1,6 +1,6 @@
 #include <makai/makai.hpp>
 #include "base.cc"
-#include "makai/ctl/ctl/namespace.hpp"
+#include "makai/file/get.hpp"
 
 using namespace Makai::Anima::V2;
 using namespace Toolchain::Compiler::Breve;
@@ -60,22 +60,22 @@ int main(int argc, char** argv) try {
 		if (level == "parse-tree" || level == "parse") {
 			Makai::File::saveText(
 				outPath + ".bpt",
-				compile(outName, file, CompilationLevel::AV2_TCB_CCL_PARSE_TREE).toString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_PARSE_TREE).toString()
 			);
 		} else if (level == "intermediate" || level == "ir") {
 			Makai::File::saveText(
 				outPath + ".bir",
-				compile(outName, file, CompilationLevel::AV2_TCB_CCL_INTERMEDIATE).toString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_INTERMEDIATE).toString()
 			);
 		} else if (level == "minima" || level == "min") {
 			Makai::File::saveText(
 				outPath + ".min",
-				compile(outName, file, CompilationLevel::AV2_TCB_CCL_MINIMA).toString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_MINIMA).toString()
 			);
 		} else {
 			Makai::File::saveText(
 				outPath + ".anṕ",
-				compile(outName, file, CompilationLevel::AV2_TCB_CCL_FULL).toString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL).toString()
 			);
 		}
 	}
