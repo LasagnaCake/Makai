@@ -1337,19 +1337,19 @@ void Minima::invoke() {
 	context.program.detail.types.resize(context.types.size());
 }
 
-Makai::Anima::V2::Core::Module Minima::assemble(UTF8String const& file) {
+Makai::Anima::V2::Core::Module Minima::assemble(UTF8String const& fname, UTF8String const& file) {
 	Makai::Lexer::CStyle::TokenStream stream;
 	stream.open(file);
 	Makai::List<Assembler::BaseContext::Axiom> ax;
 	Assembler::Minima::Context ctx;
 	while (stream.next())
-		ax.pushBack({stream.current(), true, file});
+		ax.pushBack({stream.current(), true, fname});
 	if (!stream.ok())
 		throw Makai::Error::InvalidValue(
 			"Parsing failure!",
 			stream.error().value().what
 		);
-	ctx.put(ax).pad();
+	ctx.put(ax);
 	Assembler::Minima minAsm(ctx);
 	minAsm.invoke();
 	return ctx.program;

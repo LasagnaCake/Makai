@@ -49,7 +49,7 @@ int main(int argc, char** argv) try {
 				.splitAtLast('.').front()
 		);
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
-		auto const code = Assembler::Minima::assemble(file);
+		auto const code = Assembler::Minima::assemble(outName, file);
 		DEBUGLN("Done!");
 		Makai::File::saveText(
 			outPath + ".anp",

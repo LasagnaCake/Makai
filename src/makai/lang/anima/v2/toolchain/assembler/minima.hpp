@@ -83,7 +83,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 		Context& context;
 
-		static Core::Module assemble(UTF8String const& file);
+		static Core::Module assemble(UTF8String const& fname, UTF8String const& file);
 	};
 }
 

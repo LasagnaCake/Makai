@@ -50,7 +50,7 @@ Makai::Data::Value Breve::compile(Makai::UTF8String const& fname, Makai::UTF8Str
 			Transformer::TheEntireProgram tf;
 			Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
-			return Assembler::Minima::assemble(comp.toMinima());
+			return Assembler::Minima::assemble(fname, comp.toMinima());
 		}
 	}
 }
