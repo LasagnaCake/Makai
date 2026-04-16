@@ -82,6 +82,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		void invoke() override;
 
 		Context& context;
+
+		static Core::Module assemble(UTF8String const& file);
 	};
 }
 

@@ -8,22 +8,14 @@
 #include "transformer.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
-	struct Compiler: ACompiler, IValue<Core::Module> {
-		struct Context: BaseContext, Transformer::ATransformer::Context {
-		};
-
-		void invoke() override;
-
-		Core::Module value() const override {return result;}
-
-		Compiler(Parser& parser, Context& context): ACompiler(context), context(context), parser(parser) {}
-
-	private:
-		Context& context;
-		Parser& parser;
-
-		Core::Module result;
+	enum class CompilationLevel {
+		AV2_TCB_CCL_PARSE_TREE,
+		AV2_TCB_CCL_INTERMEDIATE,
+		AV2_TCB_CCL_MINIMA,
+		AV2_TCB_CCL_FULL,
 	};
+
+	Data::Value compile(UTF8String const& fname, UTF8String const& file, CompilationLevel const level);
 }
 
 #endif

@@ -1,7 +1,9 @@
 #include <makai/makai.hpp>
 #include "base.cc"
+#include "makai/ctl/ctl/namespace.hpp"
 
 using namespace Makai::Anima::V2;
+using namespace Toolchain::Compiler::Breve;
 
 using namespace Toolchain;
 
@@ -32,7 +34,7 @@ static void doHelpMessage() {
 }
 
 int main(int argc, char** argv) try {
-	//if (CTL::CPP::Debug::hasDebugger())
+	if (CTL::CPP::Debug::hasDebugger() or (CTL_TARGET_OS == CTL_OS_UNIX))
 		CTL::CPP::Debug::Traceable::trap = true;
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
@@ -45,22 +47,6 @@ int main(int argc, char** argv) try {
 			throw Makai::Error::NonexistentValue("No file given!");
 		auto const file = Makai::OS::FS::standardize(cfg["__args"][0].get<Makai::String>(), Makai::OS::FS::PathSeparator::PS_POSIX);
 		DEBUGLN("Compiling file \"", file, "\"...");
-		Compiler::Breve::Compiler::Context ctx;
-		Compiler::Breve::Parser parser(ctx);
-		Makai::Lexer::CStyle::TokenStream stream;
-		stream.open(Makai::File::getText(file));
-		DEBUGLN("This part");
-		Makai::List<Assembler::BaseContext::Axiom> ax;
-		while (stream.next())
-			ax.pushBack({stream.current(), true, file});
-		if (!stream.ok())
-			throw Makai::Error::InvalidValue(
-				"Parsing failure!",
-				stream.error().value().what
-			);
-		DEBUGLN("That part");
-		ctx.put(ax).pad();
-		DEBUGLN("Blablabla");
 		auto const level = cfg.fetch<Makai::String>("level", "full");
 		auto const outName = Makai::Regex::replace(
 			cfg["output"].getString(),
@@ -72,44 +58,25 @@ int main(int argc, char** argv) try {
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
 		DEBUGLN("Level: ", level);
 		if (level == "parse-tree" || level == "parse") {
-			DEBUGLN("Doing parse tree...");
-			auto const i = parser.parse();
 			Makai::File::saveText(
 				outPath + ".bpt",
-				i->serialize().toFLOWString("  ")
+				compile(outName, file, CompilationLevel::AV2_TCB_CCL_PARSE_TREE).toString()
 			);
 		} else if (level == "intermediate" || level == "ir") {
-			Compiler::Breve::Transformer::ATransformer::Context ctx;
-			Compiler::Breve::Transformer::TheEntireProgram tf;
-			tf.transform(ctx, parser.parse());
 			Makai::File::saveText(
 				outPath + ".bir",
-				ctx.serialize().toFLOWString("  ")
+				compile(outName, file, CompilationLevel::AV2_TCB_CCL_INTERMEDIATE).toString()
 			);
 		} else if (level == "minima" || level == "min") {
-			Compiler::Breve::Transformer::ATransformer::Context ctx;
-			Compiler::Breve::Transformer::TheEntireProgram tf;
-			Compiler::Breve::Composer comp(ctx);
-			tf.transform(ctx, parser.parse());
 			Makai::File::saveText(
 				outPath + ".min",
-				comp.toMinima()
+				compile(outName, file, CompilationLevel::AV2_TCB_CCL_MINIMA).toString()
 			);
 		} else {
-			DEBUGLN(">>>> >>>> FULL COMPILATION <<<< <<<<");
-			Compiler::Breve::Transformer::ATransformer::Context ctx;
-			Compiler::Breve::Transformer::TheEntireProgram tf;
-			Compiler::Breve::Composer comp(ctx);
-			tf.transform(ctx, parser.parse());
-			auto const min = comp.toMinima();
-			DEBUGLN("Launching minima compiler '", Makai::OS::executable(Makai::OS::FS::sourceLocation() + "/minimac"), "'...");
-			auto const r = Makai::OS::launch(
-				Makai::OS::executable(Makai::OS::FS::sourceLocation() + "/minimac"),
-				Makai::OS::FS::currentDirectory(),
-				Makai::StringList::from("-c", min, "-o", outName)
+			Makai::File::saveText(
+				outPath + ".anṕ",
+				compile(outName, file, CompilationLevel::AV2_TCB_CCL_FULL).toString()
 			);
-			if (!r) return -1;
-			DEBUGLN("Done!");
 		}
 	}
 	return 0;

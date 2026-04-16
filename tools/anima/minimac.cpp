@@ -42,18 +42,6 @@ int main(int argc, char** argv) try {
 		if (cfg["__args"].empty() && !cfg.contains("code"))
 			throw Makai::Error::NonexistentValue("No file given!");
 		auto const file = cfg.contains("code") ? cfg["code"].getString() : Makai::File::getText(cfg["__args"][0].getString());
-		Makai::Lexer::CStyle::TokenStream stream;
-		stream.open(file);
-		Makai::List<Assembler::BaseContext::Axiom> ax;
-		Assembler::Minima::Context ctx;
-		while (stream.next())
-			ax.pushBack({stream.current(), true, file});
-		if (!stream.ok())
-			throw Makai::Error::InvalidValue(
-				"Parsing failure!",
-				stream.error().value().what
-			);
-		ctx.put(ax).pad();
 		auto const outName = Makai::Regex::replace(
 			cfg["output"].getString(),
 			R"(\*\*\{\{name\}\})",
@@ -62,12 +50,11 @@ int main(int argc, char** argv) try {
 				.splitAtLast('.').front()
 		);
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
-		Assembler::Minima minAsm(ctx);
-		minAsm.invoke();
+		auto const code = Assembler::Minima::assemble(file);
 		DEBUGLN("Done!");
 		Makai::File::saveText(
 			outPath + ".anp",
-			ctx.program.serialize().toFLOWString(cfg.fetch("strip", false) ? null : "  ")
+			code.serialize().toFLOWString(cfg.fetch("strip", false) ? null : "  ")
 		);
 	}
 	return 0;
