@@ -70,7 +70,7 @@ int main(int argc, char** argv) try {
 		} else if (level == "minima" || level == "min") {
 			Makai::File::saveText(
 				outPath + ".min",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_MINIMA).toString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_MINIMA).getString()
 			);
 		} else {
 			Makai::File::saveText(
