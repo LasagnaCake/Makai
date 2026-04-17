@@ -933,6 +933,7 @@ static void validateType(Context& context, Context::Declaration& type) {
 				Definition::Flags::AV2_DF_EMPTY
 			|	Definition::Flags::AV2_DF_NULLABLE
 			|	Definition::Flags::AV2_DF_NO_RESULT
+			|	Definition::Flags::AV2_DF_BASIC
 			)
 		) context.error("Malformed empty type!");
 		type.byteSize	= 0;
@@ -984,6 +985,7 @@ static void declareType(Context& context) {
 	context.next();
 	auto const name = resolvePath(context);
 	auto const type = new Context::Declaration();
+	type->name = name;
 	context.expectNext(Type{'['});
 	while (true) {
 		if (context.next().has(Type{']'})) break;

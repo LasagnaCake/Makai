@@ -10,6 +10,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Intermediate& inter;
 
 		Map<Namespace::Instance, bool> visited;
+		Map<Namespace::TypeRef, bool> visitedTypes;
+		Map<Namespace::FunctionRef, bool> visitedFunctions;
 
 		UTF8StringList types;
 		UTF8StringList functions;

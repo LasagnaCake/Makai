@@ -7,6 +7,8 @@ namespace Core = Makai::Anima::V2::Core;
 using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 
 static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
+	if (composer.visitedFunctions.contains(fn)) return;
+	composer.visitedFunctions[fn] = true;
 	for (auto& ov: fn->overloads) {
 		composer.functions.pushBack(
 			"@fn "
@@ -37,6 +39,8 @@ static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
 }
 
 static void doType(Composer& composer, Namespace::TypeRef const& type) {
+	if (composer.visitedTypes.contains(type)) return;
+	composer.visitedTypes[type] = true;
 	Makai::UTF8String decl;
 	decl += "@type " + type->name + " [\n ";
 	DEBUGLN("Type Name: '", type->name, "'");
