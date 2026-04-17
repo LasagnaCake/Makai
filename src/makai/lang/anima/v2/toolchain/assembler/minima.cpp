@@ -1152,6 +1152,7 @@ static void declareMethodPrototype(Context& context) {
 	if (context.methods.contains(name))
 		context.error("Redeclaration of previously-declared method!");
 	context.addMethod(name, method);
+	context.next();
 }
 
 static void declareMethodBody(Context& context) {
@@ -1160,6 +1161,7 @@ static void declareMethodBody(Context& context) {
 			context.error("Missing method body!");
 		auto const method = context.methodStack.popBack();
 		method->size = context.program.code.size() - method->size;
+		context.next();
 	} else {
 		auto const name = resolvePath(context);
 		if (!context.methods.contains(name))
@@ -1170,6 +1172,7 @@ static void declareMethodBody(Context& context) {
 		auto const lname = doLabel(context);
 		method->entrypoint = context.jumps[lname];
 		method->size = context.program.code.size();
+		context.next();
 	}
 }
 
