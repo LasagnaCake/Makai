@@ -40,7 +40,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 }
 
 void Context::addType(Makai::String const& name, Instance<Declaration> const& type) {
-	if (methods.contains(name))
+	if (types.contains(name))
 		error("Type with this name already exists!");
 	auto const fullID = name + "@" + type->name;
 	moduleTypes[fullID] = type;
@@ -106,7 +106,7 @@ Makai::Instance<Context::Method> Context::getMethodByID(uint64 const& id) {
 }
 
 Makai::Instance<Context::Declaration> Context::getTypeByID(uint64 const& id) {
-	if (id < program.sym.methods.size())
+	if (id < program.sym.types.size())
 		return getType(program.sym.types[id].name);
 	error("Type with the given ID does not exist!");
 }
