@@ -876,7 +876,9 @@ static void validateType(Context& context, Context::Declaration& type) {
 	if (type.base && !(type.flags & Definition::Flags::AV2_DF_ARRAY)) {
 		auto& base = *context.getTypeByID(type.base);
 		type.flags |= base.flags;
-		type.fields.insert(base.fields, 0);
+		if (type.fields.size())
+			type.fields.insert(base.fields, 0);
+		else type.fields.appendBack(base.fields);
 	}
 	if (type.base && context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
 		context.error("Final types cannot be inherited from!");
