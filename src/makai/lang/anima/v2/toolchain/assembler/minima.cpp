@@ -873,6 +873,8 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 }
 
 static void validateType(Context& context, Context::Declaration& type) {
+		DEBUGLN("Name: ", type.name);
+		DEBUGLN("Flags: ", type.flags);
 	if (type.base && !(type.flags & Definition::Flags::AV2_DF_ARRAY)) {
 		auto& base = *context.getTypeByID(type.base);
 		type.flags |= base.flags;
