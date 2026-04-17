@@ -882,8 +882,6 @@ static void validateType(Context& context, Context::Declaration& type) {
 	}
 	if (type.base && context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
 		context.error("Final types cannot be inherited from!");
-	if (type.base && !(type.flags ^ context.getTypeByID(type.base)->flags))
-		context.error("Derived type does not match semantics of its base type!");
 	if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
 		context.error("Only value types can have alignment size!");
 	if (!type.alignment && type.flags & Definition::Flags::AV2_DF_VALUE)
