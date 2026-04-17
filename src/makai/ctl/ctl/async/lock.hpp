@@ -60,6 +60,10 @@ private:
 	void operator delete[](pointer);
 };
 
+
+template<Type::Derived<Mutex> TMutex = Mutex>
+constexpr ScopeLock<TMutex> lock(TMutex& mutex) {return {mutex};}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_ASYNC_LOCK_H

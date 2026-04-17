@@ -37,27 +37,43 @@ namespace OS::Registry {
 	}
 
 	inline void setString(Domain const domain, String const& key, String const& value, bool const lazy = false) {
+		#ifdef CTL_ON_WINDOWS
 		RegSetValueEx(keyOf(domain), key.cstr(), 0, lazy ? REG_EXPAND_SZ : REG_SZ, (ref<byte const>)value.cstr(), value.size());
+		#else
+		#endif
 	}
 
 	inline void setUInt32(Domain const domain, String const& key, uint32 const value) {
+		#ifdef CTL_ON_WINDOWS
 		RegSetValueEx(keyOf(domain), key.cstr(), 0, REG_DWORD, (ref<byte const>)&value, sizeof(value));
+		#else
+		#endif
 	}
 
 	inline void setUInt64(Domain const domain, String const& key, uint64 const value) {
+		#ifdef CTL_ON_WINDOWS
 		RegSetValueEx(keyOf(domain), key.cstr(), 0, REG_QWORD, (ref<byte const>)&value, sizeof(value));
+		#else
+		#endif
 	}
 
 	inline void setStringList(Domain const domain, String const& key, StringList const& value) {
+		#ifdef CTL_ON_WINDOWS
 		String buf = value.join("\0") + "\0\0";
 		RegSetValueEx(keyOf(domain), key.cstr(), 0, REG_MULTI_SZ, (ref<byte const>)buf.cstr(), buf.size());
+		#else
+		#endif
 	}
 
 	inline void setBytes(Domain const domain, String const& key, Binary<> const& value) {
+		#ifdef CTL_ON_WINDOWS
 		RegSetValueEx(keyOf(domain), key.cstr(), 0, REG_BINARY, value.data(), value.size());
+		#else
+		#endif
 	}
 
 	inline String getString(Domain const domain, String const& key, bool const lazy = false) {
+		#ifdef CTL_ON_WINDOWS
 		String buf = String().reserve(4096, '\0');
 		uint32 sz;
 		DWORD type;
@@ -73,9 +89,13 @@ namespace OS::Registry {
 		if (result != ERROR_SUCCESS)
 			throw Error::InvalidValue("Failed to get registry value!", CTL_CPP_PRETTY_SOURCE);
 		return buf.resize(sz-1);
+		#else
+		return "";
+		#endif
 	}
 
 	inline StringList getStringList(Domain const domain, String const& key) {
+		#ifdef CTL_ON_WINDOWS
 		String buf = String().reserve(4096, '\0');
 		uint32 sz;
 		DWORD type;
@@ -91,9 +111,13 @@ namespace OS::Registry {
 		if (result != ERROR_SUCCESS)
 			throw Error::InvalidValue("Failed to get registry value!", CTL_CPP_PRETTY_SOURCE);
 		return buf.resize(sz-2).split('\0');
+		#else
+		return {};
+		#endif
 	}
 
 	inline uint32 getUInt32(Domain const domain, String const& key) {
+		#ifdef CTL_ON_WINDOWS
 		uint32 out;
 		uint32 sz;
 		DWORD type;
@@ -109,9 +133,13 @@ namespace OS::Registry {
 		if (result != ERROR_SUCCESS)
 			throw Error::InvalidValue("Failed to get registry value!", CTL_CPP_PRETTY_SOURCE);
 		return out;
+		#else
+		return 0;
+		#endif
 	}
 
 	inline uint64 getUInt64(Domain const domain, String const& key) {
+		#ifdef CTL_ON_WINDOWS
 		uint64 out;
 		uint32 sz;
 		DWORD type;
@@ -127,9 +155,13 @@ namespace OS::Registry {
 		if (result != ERROR_SUCCESS)
 			throw Error::InvalidValue("Failed to get registry value!", CTL_CPP_PRETTY_SOURCE);
 		return out;
+		#else
+		return 0;
+		#endif
 	}
 
 	inline Binary<> getBytes(Domain const domain, String const& key) {
+		#ifdef CTL_ON_WINDOWS
 		Binary<> buf = Binary<>().reserve(4096, '\0');
 		uint32 sz;
 		DWORD type;
@@ -145,6 +177,9 @@ namespace OS::Registry {
 		if (result != ERROR_SUCCESS)
 			throw Error::InvalidValue("Failed to get registry value!", CTL_CPP_PRETTY_SOURCE);
 		return buf.resize(sz);
+		#else
+		return {};
+		#endif
 	}
 }
 
