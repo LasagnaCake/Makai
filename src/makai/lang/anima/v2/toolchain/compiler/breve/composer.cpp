@@ -146,7 +146,7 @@ Makai::UTF8String Composer::toMinima() {
 	if (mustHaveMain && !inter.entry)
 		Transformer::ATransformer::Context::error("Missing required entrypoint!");
 	cache += [this] () -> UTF8String {
-		UTF8String out = "__initializer__:\n";
+		UTF8String out = "@target __initializer__:\n";
 		for (auto& sd: staticDefs) if (sd)
 			cache += sd->toString() + "\n";
 		for (auto& init: preMain)
