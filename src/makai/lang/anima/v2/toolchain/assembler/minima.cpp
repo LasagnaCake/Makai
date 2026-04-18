@@ -803,10 +803,11 @@ static void doRandomNumber(Context& context) {
 	} else context.error("Invalid RNG operation!");
 }
 
-static Makai::String doLabel(Context& context) {
+static Makai::String declareJumpTarget(Context& context) {
 	context.next();
 	auto const name = resolvePath(context);
 	context.jumps[name] = context.program.code.size();
+	context.expectNext(LTS_TT_COLON).next();
 	return name;
 }
 
@@ -1169,7 +1170,7 @@ static void declareMethodBody(Context& context) {
 		auto const method = context.getMethod(name);
 		if (method->shared || method->out) context.error("Cannot declare a body for a shared/external method!");
 		context.methodStack.pushBack(method);
-		auto const lname = doLabel(context);
+		auto const lname = declareJumpTarget(context);
 		method->entrypoint = context.jumps[lname];
 		method->size = context.program.code.size();
 		context.next();
@@ -1250,7 +1251,7 @@ static void declareExit(Context& context) {
 static void declareHook(Context& context) {
 	context.next();
 	auto const hook = resolvePath(context);
-	doLabel(context);
+	declareJumpTarget(context);
 	context.program.ani->in[hook] = context.jumps[hook];
 }
 
@@ -1276,6 +1277,8 @@ static void doDeclaration(Context& context) {
 		declareEntry(context);
 	else if (decl == "exit")
 		declareExit(context);
+	else if (decl == "target")
+		declareJumpTarget(context);
 	else context.error("Invalid declaration!");
 }
 
@@ -1319,7 +1322,7 @@ static void doExpression(Context& context) {
 	else if (id == "select" || id == "pick")	doSelect(context);
 	else if (id == "unbind" || id == "drop")	doClear(context);
 	else if (id == "create" || id == "new")		doCreate(context);
-	else doLabel(context);
+	else context.error("Invalid instruction!");
 }
 
 void Minima::invoke() {
