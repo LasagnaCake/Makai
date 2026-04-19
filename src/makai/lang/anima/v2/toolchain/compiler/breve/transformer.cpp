@@ -949,7 +949,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				else {
 					overloadScope->impl->writePreLine("@def", oo->entry, ":");
 					overloadScope->impl->writePreLine("begin", toString(args.size()));
-					overloadScope->impl->writePreLine("bind ref", toString(args.size()), "[0 : 0]");
+					overloadScope->impl->writePreLine("bind ref", toString(args.size()), "[0 -> 0]");
 					overloadScope->impl->writePreLine("clear", toString(args.size()));
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 					overloadScope->impl->writePostLine("call", implOv->entry);
@@ -971,7 +971,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		context.scopeStack.pushBack(implScope);
 		implScope->impl->writePreLine("@def", implOv->entry, ":");
 		implScope->impl->writePreLine("begin", implScope->varc);
-		implScope->impl->writePreLine("bind ref", implScope->varc, "[0 : 0]");
+		implScope->impl->writePreLine("bind ref", implScope->varc, "[0 -> 0]");
 		implScope->impl->writePreLine("clear", implScope->varc);
 		auto const expr = Expression().transform(context, node->rightSide);
 		if (expr.source && !expr.isStackTop())
