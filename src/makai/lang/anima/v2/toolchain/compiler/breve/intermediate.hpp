@@ -145,7 +145,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		using Instance		= Instance<Namespace>;
 
-		usize varc;
+		usize varc = 0;
 
 		UTF8Dictionary<Instance> subspaces;
 
@@ -240,11 +240,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Namespace::Instance	initializer;
 		UTF8String			source;
 		Data::Value			value;
-		bool				defaulted;
-		bool				global;
-		bool				staticEntity;
+		bool				defaulted = false;
+		bool				global = false;
+		bool				staticEntity = false;
 		Handle<TypeDecl>	fieldOf;
-		uint64				id;
+		uint64				id = 0;
 		Handle<Namespace>	parentScope;
 
 		UTF8String getSource() {
