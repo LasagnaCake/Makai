@@ -357,12 +357,14 @@ static Location getConstantLocation(Context& context) {
 			case LTS_TT_JP_SINGLE_QUOTE_STRING:
 			case LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				loc.id = context.addStringLiteral(context.value().getString());
+			break;
 			case LTS_TT_INTEGER:
 				loc.id = context.value().getUnsigned();
 				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
 				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'u'})
 					loc.source = loc.source | getIntWidth(context);
 				else loc.source = loc.source | DataLocation::AV2_DLI_64;
+			break;
 			case LTS_TT_REAL:
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal());
 				loc.source = DataLocation::AV2_DL_REAL;
@@ -419,7 +421,7 @@ static Location getDataLocation(Context& context) {
 			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_VOID, null};
 			else if (id == "null" || id == "nil")		loc |= Location{DataLocation::AV2_DL_NULL, null};
 			else context.error("Invalid data source!");
-		}
+		} break;
 		case Type{'&'}:
 			loc |= getLabelLocation(context);
 		break;
@@ -1164,12 +1166,14 @@ static void declareMethodPrototype(Context& context) {
 }
 
 static void declareMethodBody(Context& context) {
+	DEBUGLN("Body type: ", context.peek().text);
 	if (context.next().has(Type{'.'})) {
 		if (context.methodStack.empty())
 			context.error("Missing method body!");
 		auto const method = context.methodStack.popBack();
 		method->size = context.program.code.size() - method->size;
 	} else {
+		DEBUGLN("Body type: ", context.token().text);
 		auto const name = resolvePath(context);
 		if (!context.methods.contains(name))
 			context.error("Method prototype does not exist!");
