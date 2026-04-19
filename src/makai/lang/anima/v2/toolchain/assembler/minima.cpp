@@ -641,7 +641,7 @@ static void doScopeExit(Context& context) {
 static void doScopeBind(Context& context) {
 	auto const transfer = context.getNext(LTS_TT_IDENTIFIER, "transfer mode").getString();
 	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
-	context.expectNext(Type{':'}).expectNext(Type{'['});
+	context.expectNext(Type{'['});
 	auto const src = context.getNext(LTS_TT_INTEGER, "global stack top offset").get<uint16>();
 	context.expectNext(LTS_TT_LITTLE_ARROW);
 	auto const dst = context.getNext(LTS_TT_INTEGER, "local stack bottom offset").get<uint16>();
@@ -664,7 +664,7 @@ static void doScopeBring(Context& context) {
 	context.expectNext(Type{'['});
 	auto const src = context.getNext(LTS_TT_INTEGER, "source scope").getUnsigned();
 	auto const offset = context.expectNext(Type{'['}).getNext(LTS_TT_INTEGER, "source local stack bottom offset").get<uint16>();
-	context.expectNext(Type{']'}).expectNext(Type{LTS_TT_LITTLE_ARROW});
+	context.expectNext(Type{']'}).expectNext(LTS_TT_LITTLE_ARROW);
 	auto const dst = context.getNext(LTS_TT_INTEGER, "source local stack bottom offset").get<uint16>();
 	context.expectNext(Type{']'});
 	if (count < 1) return;
