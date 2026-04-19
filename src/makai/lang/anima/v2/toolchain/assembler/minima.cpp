@@ -223,7 +223,6 @@ static DataLocation getLoadType(Context& context, DataLocation const prev) {
 			locAt = locAt | DataLocation::AV2_DLM_MOVE;
 		else if (id == "value" || id == "copy")
 			locAt = locAt | DataLocation{0};
-		context.next();
 	}
 	return locAt;
 }
@@ -258,7 +257,7 @@ static Location getLocal(Context& context) {
 	auto const localID =
 		context
 			.expectNext(Type{'['})
-			.get(LTS_TT_INTEGER, "local stack ID")
+			.getNext(LTS_TT_INTEGER, "local stack ID")
 			.getUnsigned()
 	;
 	context.expectNext(Type{']'});
@@ -389,6 +388,7 @@ static Location getLabelLocation(Context& context) {
 static Location getDataLocation(Context& context) {
 	Location loc;
 	bool hasLoadType = false;
+	DEBUGLN("Getting move type...");
 	while (context.has(LTS_TT_IDENTIFIER)) {
 		auto const lt = context.value().getString();
 		if (
@@ -396,6 +396,7 @@ static Location getDataLocation(Context& context) {
 		||	lt == "ref"
 		||	lt == "copy"
 		) {
+			DEBUGLN("Has move!");
 			if (!hasLoadType) {
 				hasLoadType = true;
 				loc.source = getLoadType(context, DataLocation{0});
@@ -404,6 +405,7 @@ static Location getDataLocation(Context& context) {
 			continue;
 		} else break;
 	}
+	DEBUGLN("Getting location...");
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
