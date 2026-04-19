@@ -347,6 +347,7 @@ static Location getConstantLocation(Context& context) {
 			break;
 			default: context.error("Expected number here!");
 		}
+		return loc;
 	} else {
 		switch (context.type()) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
@@ -372,6 +373,7 @@ static Location getConstantLocation(Context& context) {
 			break;
 			default: context.error("Invalid constant!");
 		}
+		return loc;
 	}
 	context.error("Invalid constant!");
 }
@@ -679,10 +681,16 @@ static void doScopeBring(Context& context) {
 	context.add(src);
 	context.add(count);
 }
+
 static void doScopeKeep(Context& context) {
 	context.add(Instruction::Name::AV2_IN_SCOPE_KEEP);
 }
 
+static void doScopeDeclare(Context& context) {
+	auto const count = context.getNext(LTS_TT_INTEGER, "declaration count").getUnsigned();
+	if (count < 1) return;
+	context.add(Instruction::Name::AV2_IN_SCOPE_DECLARE, count);
+}
 
 static void doCopy(Context& context) {
 	context.next();
@@ -1305,6 +1313,7 @@ static void doExpression(Context& context) {
 	else if (id == "bind")						doScopeBind(context);
 	else if (id == "bring")						doScopeBring(context);
 	else if (id == "keep")						doScopeKeep(context);
+	else if (id == "decl")						doScopeDeclare(context);
 	else if (id == "copy")						doCopy(context);
 	else if (id == "context" || id == "mode")	{context.next(); doContext(context);}
 	else if (id == "loose" || id == "strict")	doContext(context, true);
