@@ -804,7 +804,6 @@ static void doRandomNumber(Context& context) {
 }
 
 static Makai::String declareJumpTarget(Context& context) {
-	context.next();
 	auto const name = resolvePath(context);
 	context.jumps[name] = context.program.code.size();
 	context.expectNext(LTS_TT_COLON);
@@ -1277,9 +1276,10 @@ static void doDeclaration(Context& context) {
 		declareEntry(context);
 	else if (decl == "exit")
 		declareExit(context);
-	else if (decl == "target")
+	else if (decl == "target") {
+		context.next();
 		declareJumpTarget(context);
-	else context.error("Invalid declaration!");
+	} else context.error("Invalid declaration!");
 }
 
 static void doExpression(Context& context) {
