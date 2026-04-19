@@ -1167,7 +1167,8 @@ static void declareMethodPrototype(Context& context) {
 
 static void declareMethodBody(Context& context) {
 	context.next();
-	DEBUGLN("Body type: ", Tokenizer::Token::asName(context.token().type));
+	DEBUGLN("Body type: ", Context::Tokenizer::Token::asName(context.token().type));
+	DEBUGLN("Body text: ", context.token().text);
 	if (context.has(Type{'.'})) {
 		if (context.methodStack.empty())
 			context.error("Missing method body!");
