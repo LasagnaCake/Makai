@@ -1167,13 +1167,13 @@ static void declareMethodPrototype(Context& context) {
 
 static void declareMethodBody(Context& context) {
 	DEBUGLN("Body type: ", context.peek().text);
-	if (context.next().has(Type{'.'})) {
+	context.next();
+	if (context.has(Type{'.'})) {
 		if (context.methodStack.empty())
 			context.error("Missing method body!");
 		auto const method = context.methodStack.popBack();
 		method->size = context.program.code.size() - method->size;
 	} else {
-		DEBUGLN("Body type: ", context.token().text);
 		auto const name = resolvePath(context);
 		if (!context.methods.contains(name))
 			context.error("Method prototype does not exist!");
