@@ -151,7 +151,7 @@ bool Context::hasJumpTarget(String const& name) {
 void Context::finalize() {
 	auto unmapped = jumpsToMap.keys();
 	for (auto& label: unmapped) {
-		if (jumpsToMap.contains(label)) {
+		if (jumpsToMap.contains(label) && jumps.contains(label)) {
 			for (auto& location: jumpsToMap[label])
 				program.jumpTable[location] = jumps[label];
 			jumpsToMap.erase(label);
