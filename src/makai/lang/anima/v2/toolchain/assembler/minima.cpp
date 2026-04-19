@@ -807,7 +807,7 @@ static Makai::String declareJumpTarget(Context& context) {
 	context.next();
 	auto const name = resolvePath(context);
 	context.jumps[name] = context.program.code.size();
-	context.expectNext(LTS_TT_COLON).next();
+	context.expectNext(LTS_TT_COLON);
 	return name;
 }
 
@@ -1083,7 +1083,6 @@ static void declareType(Context& context) {
 	if (!context.types.contains(name))
 		context.addType(name, type);
 	else context.error("Redeclaration of previously-declared type!");
-	context.next();
 }
 
 static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instance<Context::Reference>>& syms) {
@@ -1153,7 +1152,6 @@ static void declareMethodPrototype(Context& context) {
 	if (context.methods.contains(name))
 		context.error("Redeclaration of previously-declared method!");
 	context.addMethod(name, method);
-	context.next();
 }
 
 static void declareMethodBody(Context& context) {
@@ -1162,7 +1160,6 @@ static void declareMethodBody(Context& context) {
 			context.error("Missing method body!");
 		auto const method = context.methodStack.popBack();
 		method->size = context.program.code.size() - method->size;
-		context.next();
 	} else {
 		auto const name = resolvePath(context);
 		if (!context.methods.contains(name))
@@ -1173,7 +1170,6 @@ static void declareMethodBody(Context& context) {
 		auto const lname = declareJumpTarget(context);
 		method->entrypoint = context.jumps[lname];
 		method->size = context.program.code.size();
-		context.next();
 	}
 }
 
@@ -1239,12 +1235,14 @@ static void declareImport(Context& context) {
 static void declareEntry(Context& context) {
 	if (context.entry.size())
 		context.error("Redeclaration of previously-declared entry!");
+	context.next();
 	context.entry = resolvePath(context);
 }
 
 static void declareExit(Context& context) {
 	if (context.entry.size())
 		context.error("Redeclaration of previously-declared exit!");
+	context.next();
 	context.entry = resolvePath(context);
 }
 
@@ -1252,6 +1250,8 @@ static void declareHook(Context& context) {
 	context.next();
 	auto const hook = resolvePath(context);
 	declareJumpTarget(context);
+	if (context.program.ani->in.contains(hook))
+		context.error("Redeclaration of previously-declared hook!");
 	context.program.ani->in[hook] = context.jumps[hook];
 }
 
@@ -1326,7 +1326,10 @@ static void doExpression(Context& context) {
 }
 
 void Minima::invoke() {
-	while (!context.empty()) doExpression(context);
+	while (!context.empty()) {
+		doExpression(context);
+		context.next();
+	}
 	context.finalize();
 	context.methods.filter(
 		[] (auto const& lhs, auto const& rhs) {
