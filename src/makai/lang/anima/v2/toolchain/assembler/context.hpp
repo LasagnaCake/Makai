@@ -132,7 +132,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		bool has(Axiom::Type const& type) {
 			if (empty())
 				return false;
-			return tokens.back().type == type;
+			return token().type == type;
 		}
 
 		BaseContext& expect(Axiom::Type const& type, String const& what) {
