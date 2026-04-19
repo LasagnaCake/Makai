@@ -396,6 +396,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		}
 	}
 	context.pop(name.size());
+	context.registerType(scope);
 	return {.scope = scope, .type = scope->type};
 }
 
@@ -986,6 +987,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	if (!implOv->result)
 		implOv->result = context.basicType("void");
 	context.pop(isCompletelyNewFunction ? path.size() : 1);
+	context.registerFunction(scope);
 	return {.scope = scope};
 }
 
@@ -1224,6 +1226,7 @@ ATransformer::Result TheEntireProgram::transform(Context& context, Node::Instanc
 
 ATransformer::Result ArrayTypeDecl::transform(Context& context, Node::Instance const& node) {
 	auto const t = context.arrayFor(TypeRequest().transform(context, node->leftSide).type);
+	context.registerType(t->scope.raw());
 	return {.type = t};
 }
 
@@ -1243,6 +1246,24 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 		arrays[type.asWeak()] = arr;
 		return arr;
 	} else return arrays[type.asWeak()];
+}
+
+void ATransformer::Context::registerType(Namespace::Instance const& ns) {
+	static usize id = 0;
+	if (!ns) return;
+	root->subspaces["##T2_USERTYPES"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
+}
+
+void ATransformer::Context::registerFunction(Namespace::Instance const& ns) {
+	static usize id = 0;
+	if (!ns) return;
+	root->subspaces["##T3_FUNCTIONS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
+}
+
+void ATransformer::Context::registerImport(Namespace::Instance const& ns) {
+	static usize id = 0;
+	if (!ns) return;
+	root->subspaces["##T0_IMPORTS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
 }
 
 ATransformer::Context::Context(): Intermediate() {

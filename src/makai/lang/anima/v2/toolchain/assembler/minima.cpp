@@ -34,6 +34,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	moduleMethods[fullID] = method;
 	methods[name] = new Reference{.name = fullID};
 	if (method->local) return;
+	method->jump = name + "/entry";
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
 	program.sym.methods.pushBack({nullptr, method->id, name});
@@ -132,6 +133,8 @@ uint64 Context::addGlobal(String const& name) {
 }
 
 void Context::addJumpTarget(String const& name) {
+	if (name.empty())
+		error("Missing jump target name!");
 	if (hasJumpTarget(name)) {
 		add(jumps[name]);
 		return;
@@ -151,6 +154,8 @@ bool Context::hasJumpTarget(String const& name) {
 void Context::finalize() {
 	auto unmapped = jumpsToMap.keys();
 	for (auto& label: unmapped) {
+		if (label.empty())
+			error("Somehow, jump target is empty!");
 		if (jumpsToMap.contains(label) && jumps.contains(label)) {
 			for (auto& location: jumpsToMap[label])
 				program.jumpTable[location] = jumps[label];
@@ -572,7 +577,6 @@ static void doStackClear(Context& context) {
 }
 
 static void doField(Context& context, bool const setter, bool const dyn = false) {
-	// TODO: The rest of this
 	Makai::Nullable<uint64> field;
 	Instruction::Field f;
 	if (!dyn) {
@@ -1181,9 +1185,10 @@ static void declareMethodBody(Context& context) {
 		auto const method = context.getMethod(name);
 		if (method->shared || method->out) context.error("Cannot declare a body for a shared/external method!");
 		context.methodStack.pushBack(method);
-		auto const lname = declareJumpTarget(context);
-		method->entrypoint = context.jumps[lname];
+		context.jumps[method->jump] = context.program.code.size();
+		method->entrypoint = context.jumps[method->jump];
 		method->size = context.program.code.size();
+		context.expectNext(LTS_TT_COLON);
 	}
 }
 
