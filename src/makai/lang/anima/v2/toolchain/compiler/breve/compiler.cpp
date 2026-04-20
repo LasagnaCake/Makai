@@ -12,7 +12,12 @@ using namespace Compiler;
 
 // TODO: This hellspawn
 
-Makai::Data::Value Breve::compile(Makai::UTF8String const& fname, Makai::UTF8String const& file, CompilationLevel const level) {
+Makai::Data::Value Breve::compile(
+	Makai::UTF8String const& fname,
+	Makai::UTF8String const& file,
+	CompilationLevel const level,
+	Makai::UTF8String const& append
+) {
 	Assembler::BaseContext ctx;
 	Breve::Parser parser(ctx);
 	Makai::Lexer::CStyle::TokenStream stream;
@@ -50,7 +55,7 @@ Makai::Data::Value Breve::compile(Makai::UTF8String const& fname, Makai::UTF8Str
 			Transformer::TheEntireProgram tf;
 			Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
-			return Assembler::Minima::assemble(fname, comp.toMinima());
+			return Assembler::Minima::assemble(fname, append + comp.toMinima());
 		}
 	}
 }
