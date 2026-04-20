@@ -1274,6 +1274,31 @@ static void declareHook(Context& context) {
 	context.program.ani->in[hook] = context.jumps[hook];
 }
 
+static void declareBinaryType(Context& context) {
+	context.next();
+	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "binary type").getString();
+	if (decl == "program" or decl == "exe") 		context.program.type = Module::Type::AV2_CMT_EXE;
+	else if (decl == "cli") 						context.program.type = Module::Type::AV2_CMT_CLI_EXE;
+	else if (decl == "library" or decl == "lib")	context.program.type = Module::Type::AV2_CMT_LIBRARY;
+	else context.error("Invalid binary type!");
+}
+
+static void declareBinaryVersion(Context& context) {
+	context.next();
+	auto const decl = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "binary version").getString();
+	context.program.version = context.program.version.deserialize(decl);
+}
+
+static void declareBinaryInfo(Context& context) {
+	context.next();
+	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "binary declaration type").getString();
+	if (decl == "ver")
+		declareBinaryVersion(context);
+	else if (decl == "type")
+		declareBinaryType(context);
+	else context.error("Invalid binary declaration!");
+}
+
 static void doDeclaration(Context& context) {
 	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "declaration type").getString();
 	if (decl == "hook")
@@ -1296,6 +1321,8 @@ static void doDeclaration(Context& context) {
 		declareEntry(context);
 	else if (decl == "exit")
 		declareExit(context);
+	else if (decl == "bin")
+		declareBinaryInfo(context);
 	else if (decl == "target") {
 		context.next();
 		declareJumpTarget(context);
@@ -1374,7 +1401,10 @@ void Minima::invoke() {
 	context.program.detail.types.resize(context.types.size());
 }
 
-Makai::Anima::V2::Core::Module Minima::assemble(UTF8String const& fname, UTF8String const& file) {
+Makai::Anima::V2::Core::Module Minima::assemble(
+	UTF8String const& fname,
+	UTF8String const& file
+) {
 	Makai::Lexer::CStyle::TokenStream stream;
 	stream.open(file);
 	Makai::List<Assembler::BaseContext::Axiom> ax;
