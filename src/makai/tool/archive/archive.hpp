@@ -107,14 +107,14 @@ namespace Makai::Tool::Arch {
 		uint32	crc			= 0;
 		Block	block		= {};
 	};
-	
+
 	/// @brief Archive file format current version.
 	constexpr uint64 ARCHIVE_VERSION		= 2;
 	/// @brief Archive file format minimum version required.
 	constexpr uint64 ARCHIVE_MIN_VERSION	= 1;
 	/// @brief Size of file token identifier.
 	constexpr usize FILE_TOKEN_SIZE			= 20;
-	
+
 	/// @brief File token type.
 	using FileToken = As<char const[FILE_TOKEN_SIZE]>;
 
