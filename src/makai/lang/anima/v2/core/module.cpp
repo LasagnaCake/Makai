@@ -167,7 +167,8 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 	result.shared = v["shared"];
 	result.entrypoint = v["entry"];
 	result.size = v["size"];
-	result.meta = v["meta"];
+	if (v.contains("meta"))
+		result.meta = v["meta"];
 	return result;
 }
 
@@ -181,10 +182,14 @@ Makai::Data::Value Module::Declaration::serialize() const {
 		result["basic"] = *basic;
 	if (base)
 		result["base"] = *base;
-	result["bytes"] = byteSize;
-	result["align"] = alignment;
-	result["fields"] = fields.toList<Data::Value>();
-	result["meta"] = meta;
+	if (byteSize)
+		result["bytes"] = byteSize;
+	if (alignment)
+		result["align"] = alignment;
+	if (fields.size())
+		result["fields"] = fields.toList<Data::Value>();
+	if (!meta.isUndefined())
+		result["meta"] = meta;
 	return result;
 }
 
@@ -199,8 +204,13 @@ Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 		result.basic = Cast::as<BasicType>(v["basic"].getUnsigned());
 	if (v.contains("base"))
 		result.base = v["base"].getUnsigned();
-	result.byteSize = v["bytes"];
-	result.alignment = v["align"];
-	result.meta = v["meta"];
+	if (v.contains("bytes"))
+		result.byteSize = v["bytes"];
+	if (v.contains("align"))
+		result.alignment = v["align"];
+	if (v.contains("meta"))
+		result.meta = v["meta"];
+	if (v.contains("fields"))
+		result.fields = v["fields"].getArray().toList<uint64>();
 	return result;
 }
