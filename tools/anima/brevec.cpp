@@ -30,7 +30,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static void doHelpMessage() {
 	DEBUGLN("Breve Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(    brevec <file> [--output <name>] [-I] [--src "[<source-dirs> ...]"])");
+	DEBUGLN(R"(    brevec <file> [--output <name>] [-l <compilation-level>] [--src "[<source-dirs> ...]"] [-X])");
 }
 
 int main(int argc, char** argv) try {
@@ -75,7 +75,7 @@ int main(int argc, char** argv) try {
 		} else {
 			Makai::File::saveText(
 				outPath + ".anp",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL).toFLOWString("  ")
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString("  ")
 			);
 		}
 	}

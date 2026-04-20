@@ -19,6 +19,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8String const& fname,
 		UTF8String const& file,
 		CompilationLevel const level,
+		bool const strip = false,
 		UTF8String const& append = ""
 	);
 }

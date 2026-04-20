@@ -16,6 +16,7 @@ Makai::Data::Value Breve::compile(
 	Makai::UTF8String const& fname,
 	Makai::UTF8String const& file,
 	CompilationLevel const level,
+	bool const strip,
 	Makai::UTF8String const& append
 ) {
 	Assembler::BaseContext ctx;
@@ -55,7 +56,7 @@ Makai::Data::Value Breve::compile(
 			Transformer::TheEntireProgram tf;
 			Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
-			return Assembler::Minima::assemble(fname, append + comp.toMinima());
+			return Assembler::Minima::assemble(fname, append + comp.toMinima(), strip);
 		}
 	}
 }

@@ -1403,7 +1403,8 @@ void Minima::invoke() {
 
 Makai::Anima::V2::Core::Module Minima::assemble(
 	UTF8String const& fname,
-	UTF8String const& file
+	UTF8String const& file,
+	bool const strip
 ) {
 	Makai::Lexer::CStyle::TokenStream stream;
 	stream.open(file);
@@ -1419,5 +1420,5 @@ Makai::Anima::V2::Core::Module Minima::assemble(
 	ctx.put(ax);
 	Assembler::Minima minAsm(ctx);
 	minAsm.invoke();
-	return ctx.program;
+	return ctx.program.serialize(!strip);
 }
