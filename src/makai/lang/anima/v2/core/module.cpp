@@ -1,4 +1,5 @@
 #include "module.hpp"
+#include "../../../../tool/archive/archive.hpp"
 
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
@@ -14,8 +15,8 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 			}
 		)
 	;
-	auto const code		= v["code"].get<Makai::Data::Value::ByteListType>();
-	auto const jumps	= v["jumps"].get<Makai::Data::Value::ByteListType>();
+	auto const code		= Makai::Tool::Arch::decompress(v["code"].get<Makai::Data::Value::ByteListType>());
+	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].get<Makai::Data::Value::ByteListType>());
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 	mod.sym = Module::Symbols::deserialize(v["sym"]);
@@ -41,8 +42,8 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
 	out["strings"]	= strings.toList<Makai::Data::Value>();
-	out["jumps"]	= jumpTable.toBytes();
-	out["code"]		= code.toBytes();
+	out["jumps"]	= Makai::Tool::Arch::compress(jumpTable.toBytes());
+	out["code"]		= Makai::Tool::Arch::compress(code.toBytes());
 	out["version"]	= art;
 	out["sym"]		= sym;
 	out["detail"]	= detail;
