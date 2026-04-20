@@ -75,7 +75,7 @@ int main(int argc, char** argv) try {
 		} else {
 			Makai::File::saveText(
 				outPath + ".anp",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL).toFLOWString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL).toFLOWString("  ")
 			);
 		}
 	}

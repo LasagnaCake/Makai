@@ -1354,7 +1354,7 @@ void Minima::invoke() {
 	context.finalize();
 	context.methods.filter(
 		[] (auto const& lhs, auto const& rhs) {
-			return lhs.value == rhs.value;
+			return lhs.value != rhs.value;
 		}
 	).filter(
 		[this] (auto const& e) -> bool {
@@ -1364,7 +1364,7 @@ void Minima::invoke() {
 	);
 	context.types.filter(
 		[] (auto const& lhs, auto const& rhs) {
-			return lhs.value == rhs.value;
+			return lhs.value != rhs.value;
 		}
 	).filter(
 		[] (auto const& e) -> bool {

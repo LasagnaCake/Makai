@@ -44,8 +44,8 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	out["jumps"]	= jumpTable.toBytes();
 	out["code"]		= code.toBytes();
 	out["version"]	= art;
-	if (type == Module::Type::AV2_CMT_LIBRARY || forceSymbolsToBeKept) {
-	}
+	out["sym"]		= sym;
+	out["detail"]	= detail;
 	if (ani)
 		out["ani"]	= *ani;
 	out["type"]	= enumcast(type);
