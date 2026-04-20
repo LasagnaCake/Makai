@@ -1419,5 +1419,5 @@ Makai::Anima::V2::Core::Module Minima::assemble(
 	ctx.put(ax);
 	Assembler::Minima minAsm(ctx);
 	minAsm.invoke();
-	return ctx.program.serialize(!strip);
+	return ctx.program;
 }
