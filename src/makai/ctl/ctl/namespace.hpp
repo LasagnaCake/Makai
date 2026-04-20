@@ -30,8 +30,10 @@
 
 #if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__) && !defined(CTL_NO_WINDOWS_PLEASE)
 #define CTL_TARGET_OS (CTL_OS_WINDOWS)
+#define CTL_ON_WINDOWS (1)
 #else
 #define CTL_TARGET_OS (CTL_OS_UNIX)
+#define CTL_ON_UNIX (1)
 #endif
 
 /// @brief Core library.

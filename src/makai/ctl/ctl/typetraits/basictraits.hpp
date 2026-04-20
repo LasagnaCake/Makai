@@ -73,7 +73,7 @@ namespace Type {
 			template <class T, class... Args>			struct IsConstructible<
 				VoidType<decltype(::new T(declval<Args>()...))
 			>, T, Args...> : TrueType {};
-			
+
 			template<class Lambda, int=(Lambda{}(), 0)>
 			constexpr bool isConstexpr(Lambda)	{return true;	}
 			constexpr bool isConstexpr(...)		{return false;	}
@@ -87,7 +87,7 @@ namespace Type {
 			// cppreference
 			template <class T>
 			TrueType isPoly(decltype(dynamic_cast<const volatile void*>(static_cast<T*>(nullptr))));
-			
+
 			// cppreference
 			template <class T>
 			FalseType isPoly();
@@ -225,7 +225,7 @@ namespace Type {
 	template<typename T, typename To>
 	concept Convertible = Impl::IsConvertible<T, To>::value;
 
-	/// @brief `T` must be able to be (implicitly) convertible to `To`, and must not throw. 
+	/// @brief `T` must be able to be (implicitly) convertible to `To`, and must not throw.
 	template<typename T, typename To>
 	concept NothrowConvertible = Impl::IsNothrowConvertible<T, To>::value;
 
@@ -438,7 +438,7 @@ namespace Type {
 		/// @brief `A ^ B` must be a valid operation.
 		template <typename A, typename B>
 		concept Xorable = requires (A a, B b) {a ^ b;};
-		
+
 		/// @brief `A & B`, `A | B`, and `A ^ B` must be valid operations.
 		template <typename A, typename B>
 		concept Expressionable =
@@ -446,7 +446,7 @@ namespace Type {
 		&&	Orable<A, B>
 		&&	Xorable<A, B>
 		;
-		
+
 		/// @brief `A &= B` must be a valid operation.
 		template <typename A, typename B>
 		concept AndAssignable = requires (A a, B b) {a &= b;};
@@ -497,7 +497,7 @@ namespace Type {
 		/// @brief `!T` must be a valid operation.
 		template <typename T>
 		concept Negatable = requires (T t) {!t;};
-		
+
 		/// @brief
 		///		All logical operations (with `A` in the left-hand side)
 		///		must be valid, and both must be negatable.
@@ -572,7 +572,7 @@ namespace Type {
 		/// @brief `A << B` and `A >> B` must be valid operations.
 		template <typename A, typename B>
 		concept Expressionable = Insertible<A, B> && Extractible<A, B>;
-		
+
 		/// @brief `A <<= B` must be a valid operation.
 		template <typename A, typename B>
 		concept InsAssignable = requires (A a, B b) {a <<= b;};
@@ -580,7 +580,7 @@ namespace Type {
 		/// @brief `A >>= B` must be a valid operation.
 		template <typename A, typename B>
 		concept ExtAssignable = requires (A a, B b) {a >>= b;};
-		
+
 		/// @brief `A <<= B` and `A >>= B` must be valid operations.
 		template <typename A, typename B>
 		concept Assignable = InsAssignable<A, B> && ExtAssignable<A, B>;
@@ -688,6 +688,10 @@ namespace Type {
 	template<class T, typename... Types>
 	concept NoneOf = !OneOf<T, Types...>;
 
+	/// @brief Type must be one in a series of `Types`, except the first.
+	template<class T, class TNot, typename... Types>
+	concept OneOfExcept = OneOf<T, Types...> && Different<T, TNot>;
+
 	/// @brief Type must be equal to `T2` or `T2 const`.
 	template<class T, typename T2>
 	concept EqualOrConst = OneOf<T, AsNonConst<T2>, AsNonConst<T2> const>;
@@ -717,7 +721,7 @@ namespace Type {
 	/// @brief Type must have a virtual destructor.
 	template <class T>
 	concept Virtual = Impl::IsVirtual<T>::value;
-	
+
 	/// @brief Type must NOT be constant.
 	template <class T>
 	concept NonConstant = Type::Different<T, T const>;
@@ -725,7 +729,7 @@ namespace Type {
 	/// @brief Type must have a default (empty) constructor.
 	template <class T>
 	concept DefaultConstructible = Type::Constructible<T>;
-	
+
 	/// @brief Type must be copy constructible.
 	template <class T>
 	concept CopyConstructible = Type::Constructible<T, T const&>;
@@ -741,7 +745,7 @@ namespace Type {
 	/// @brief Type must be move assignable.
 	template <class T>
 	concept MoveAssignable = requires (T a, T&& b) {a = b;};
-	
+
 	/// @brief `*A` must be a valid operation.
 	template <typename A>
 	concept Dereferenciable = requires (A a) {*a;};
@@ -765,7 +769,10 @@ namespace Type {
 	template<class T, class To>
 	concept CanBecome = Type::Equal<T, To> || Type::Convertible<T, To>;
 
-	
+	/// @brief Type must be able to become one of the given types.
+	template<class T, class... Types>
+	concept CanBecomeOneOf = (... || CanBecome<T, Types>);
+
 	/// @brief Type must match a given rule.
 	template <class T, template <class> class TRule>
 	concept Matches = TRule<T>::value;

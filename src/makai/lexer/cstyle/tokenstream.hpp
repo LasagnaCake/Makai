@@ -9,9 +9,6 @@ namespace Makai::Lexer::CStyle {
 	struct TokenStream {
 		DEFINE_ERROR_TYPE_EX(InvalidToken, InvalidValue);
 
-		/// @brief Default string literal buffer size.
-		constexpr static usize const DEFAULT_BUFFER_SIZE = 0x10000;
-
 		/// @brief Token position in the stream.
 		struct Position {
 			/// @brief Index into the text.
@@ -24,14 +21,15 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Token stream error.
 		struct Error {
+			UTF8String	what;
 			Position	where;
-			String		token;
+			UTF8String	token;
 		};
 
 		/// @brief Token stream token.
 		struct Token {
 			/// @brief Token type. May be a single unicode character, or one of the pre-defined values.
-			enum class Type: usize {
+			enum class Type: uint64 {
 				/// @brief Standard tokens.
 				LTS_TT_DOLLAR_SIGN		= '$',
 				LTS_TT_OPEN_PAREN		= '(',
@@ -57,7 +55,7 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_COLON			= ':',
 				LTS_TT_SEMICOLON		= ';',
 				LTS_TT_RAISE			= '^',
-				LTS_TT_BXOR				= LTS_TT_RAISE,
+				LTS_TT_BIT_XOR			= LTS_TT_RAISE,
 				LTS_TT_VBAR				= '|',
 				LTS_TT_PIPE				= LTS_TT_VBAR,
 				LTS_TT_BIT_OR			= LTS_TT_VBAR,
@@ -78,9 +76,9 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_SHARP			= '#',
 				LTS_TT_POUND			= LTS_TT_SHARP,
 				/// @brief Invalid token.
-				LTS_TT_INVALID = Limit::MAX<usize>,
+				LTS_TT_INVALID = Limit::MAX<uint64>,
 				/// @brief Integer literal.
-				LTS_TT_INTEGER = Limit::MAX<byte> + 1,
+				LTS_TT_INTEGER = Cast::as<uint64>(Limit::MAX<uint32>) + 1,
 				/// @brief Floating-point literal.
 				LTS_TT_REAL,
 				/// @brief Alphanumeric identifier.
@@ -89,8 +87,16 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_SINGLE_QUOTE_STRING,
 				/// @brief Double-quote string literal.
 				LTS_TT_DOUBLE_QUOTE_STRING,
-				/// @brief Character literal.
-				LTS_TT_CHARACTER,
+				/// @brief Backtick string literal.
+				LTS_TT_BACKTICK_STRING,
+				/// @brief French-single-quote string literal.
+				LTS_TT_FR_SINGLE_QUOTE_STRING,
+				/// @brief Japanese-single-quote string literal.
+				LTS_TT_JP_SINGLE_QUOTE_STRING,
+				/// @brief French-double-quote string literal.
+				LTS_TT_FR_DOUBLE_QUOTE_STRING,
+				/// @brief Japanese-double-quote string literal.
+				LTS_TT_JP_DOUBLE_QUOTE_STRING,
 				/// @brief Equality comparison (`==`).
 				LTS_TT_COMPARE_EQUALS,
 				/// @brief Inequality comparison (`!=`).
@@ -103,6 +109,8 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_LOGIC_AND,
 				/// @brief Logical OR (`||`).
 				LTS_TT_LOGIC_OR,
+				/// @brief Logical XOR (`^^`).
+				LTS_TT_LOGIC_XOR,
 				/// @brief Bit shift left (`>>`).
 				LTS_TT_BIT_SHIFT_LEFT,
 				/// @brief Bit shift right (`<<`).
@@ -127,32 +135,61 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_BIT_OR_ASSIGN,
 				/// @brief Bitwise XOR assignment (`^=`).
 				LTS_TT_BIT_XOR_ASSIGN,
-				/// @brief "Little arrow" (`->`).
-				LTS_TT_LITTLE_ARROW,
-				/// @brief "Big arrow" (`=>`).
-				LTS_TT_BIG_ARROW,
+				/// @brief Bitwise NOT assignment (`~=`).
+				LTS_TT_BIT_NOT_ASSIGN,
 				/// @brief Bitwise shift left assignment (`<<=`).
 				LTS_TT_BIT_SHIFT_LEFT_ASSIGN,
 				/// @brief Bitwise shift right assignment (`>>=`).
 				LTS_TT_BIT_SHIFT_RIGHT_ASSIGN,
-				/// @brief Maximum token types.
-				LTS_TT_MAX_TOKEN_TYPES,
+				/// @brief "Little arrow" (`->`).
+				LTS_TT_LITTLE_ARROW,
+				/// @brief "Big arrow" (`=>`).
+				LTS_TT_BIG_ARROW,
+				/// @brief Stream insertion (`<|`).
+				LTS_TT_STREAM_INSERT,
+				/// @brief Stream extraction (`|>`).
+				LTS_TT_STREAM_EXTRACT,
+				/// @brief Order (`<=>`).
+				LTS_TT_ORDER,
+				/// @brief Declaration (`:=`).
+				LTS_TT_DECLARE,
+				/// @brief Bitwise shift right assignment (`::`).
+				LTS_TT_NAMESPACE_RESOLVE,
+				/// @brief Null decay (`??`).
+				LTS_TT_NULL_DECAY,
+				/// @brief Null access (`?.`).
+				LTS_TT_NULL_ACCESS,
+				/// @brief Null assignment (`?=`).
+				LTS_TT_NULL_ASSIGN,
+				/// @brief Pointer access (`*.`).
+				LTS_TT_PTR_ACCESS,
+				/// @brief Dereference access (`^.`).
+				LTS_TT_DEREF_ACCESS,
+				/// @brief Ellipsis (`...`).
+				LTS_TT_ELLIPSIS,
 			};
 
 			/// @brief Token type.
 			Type		type		= Type::LTS_TT_INVALID;
 			/// @brief Token value.
 			Data::Value	value;
+			/// @brief Token text.
+			UTF8String	text;
+			/// @brief Token position.
+			Position	at;
 
-			constexpr static String asName(Type const type) {
-				if (type < Type::LTS_TT_INTEGER) return toString(Cast::as<char>(type));
-				if (type >= Type::LTS_TT_MAX_TOKEN_TYPES) return "<!INVALID TOKEN>";
+			constexpr static UTF8String toString(Type const type) {
+				if (type < Type::LTS_TT_INTEGER) return CTL::toString(Cast::as<char>(type));
 				switch (type) {
 					case Type::LTS_TT_INTEGER:					return "<integer>";
 					case Type::LTS_TT_REAL:						return "<real>";
-					case Type::LTS_TT_CHARACTER:				return "<character>";
 					case Type::LTS_TT_SINGLE_QUOTE_STRING:		return "<single-quote string>";
 					case Type::LTS_TT_DOUBLE_QUOTE_STRING:		return "<double-quote string>";
+					case Type::LTS_TT_BACKTICK_STRING:			return "<backtick string>";
+					case Type::LTS_TT_FR_SINGLE_QUOTE_STRING:	return "<french single-quote string>";
+					case Type::LTS_TT_FR_DOUBLE_QUOTE_STRING:	return "<french double-quote string>";
+					case Type::LTS_TT_JP_SINGLE_QUOTE_STRING:	return "<japanese single-quote string>";
+					case Type::LTS_TT_JP_DOUBLE_QUOTE_STRING:	return "<japanese double-quote string>";
 					case Type::LTS_TT_IDENTIFIER:				return "<identifier>";
 					case Type::LTS_TT_COMPARE_EQUALS:			return "==";
 					case Type::LTS_TT_COMPARE_NOT_EQUALS:		return "!=";
@@ -176,9 +213,25 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_BIT_XOR_ASSIGN:			return "^=";
 					case Type::LTS_TT_BIT_SHIFT_LEFT_ASSIGN:	return "<<=";
 					case Type::LTS_TT_BIT_SHIFT_RIGHT_ASSIGN:	return ">>=";
+					case Type::LTS_TT_ORDER:					return "<=>";
+					case Type::LTS_TT_DECLARE:					return ":=";
+					case Type::LTS_TT_NAMESPACE_RESOLVE:		return "::";
+					case Type::LTS_TT_LOGIC_XOR:				return "^^";
+					case Type::LTS_TT_BIT_NOT_ASSIGN:			return "~=";
+					case Type::LTS_TT_STREAM_INSERT:			return "<|";
+					case Type::LTS_TT_STREAM_EXTRACT:			return "|>";
+					case Type::LTS_TT_NULL_DECAY:				return "??";
+					case Type::LTS_TT_NULL_ACCESS:				return "?.";
+					case Type::LTS_TT_NULL_ASSIGN:				return "?=";
+					case Type::LTS_TT_PTR_ACCESS:				return "*.";
+					case Type::LTS_TT_DEREF_ACCESS:				return "^.";
+					case Type::LTS_TT_ELLIPSIS:					return "...";
 					default: return "<!UNKNOWN>";
 				}
+				return "<!UNKNOWN>";
 			}
+
+			constexpr static UTF8String asName(Type const type) {return toString(type);}
 		};
 
 		/// @brief Token list.
@@ -186,7 +239,7 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Lexer implementation.
 		struct Lexer;
-		
+
 		/// @brief Empty constructor.
 		TokenStream();
 
@@ -195,16 +248,14 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
-		/// @param bufferSize Size of buffer to process string literals. By default, it is `DEFAULT_BUFFER_SIZE`.
 		/// @note Source is copied, so there's no need to keep it around.
-		TokenStream(String const& source, usize const bufferSize = DEFAULT_BUFFER_SIZE);
+		TokenStream(UTF8String const& source);
 
 		/// @brief Opens the token stream.
 		/// @param source Source content to process.
-		/// @param bufferSize Size of buffer to process string literals. By default, it is `DEFAULT_BUFFER_SIZE`.
 		/// @return Reference to self.
 		/// @note Source is copied, so there's no need to keep it around.
-		TokenStream& open(String const& source, usize const bufferSize = DEFAULT_BUFFER_SIZE);
+		TokenStream& open(UTF8String const& source);
 
 		/// @brief Closes the token stream.
 		/// @return Reference to self.
@@ -220,7 +271,7 @@ namespace Makai::Lexer::CStyle {
 
 		/// @brief Returns the current token's text.
 		/// @return Current token's text.
-		String tokenText() const;
+		UTF8String tokenText() const;
 
 		/// @brief Returns the token stream's current position, INCLUDING line & column number.
 		/// @return Current position.
@@ -237,7 +288,7 @@ namespace Makai::Lexer::CStyle {
 		/// @brief Returns whether the token stream has not encountered an error.
 		/// @return Whether stream has not encountered an error.
 		constexpr bool ok() const {return !err.exists();}
-		
+
 		/// @brief Returns whether the token stream has not encountered an error.
 		/// @return Whether stream has not encountered an error.
 		operator bool() const {return finished();}
@@ -266,10 +317,9 @@ namespace Makai::Lexer::CStyle {
 
 	/// @brief Converts some source content to a list of tokens.
 	/// @param source Source content to process.
-	/// @param bufferSize Size of buffer to process string literals. By default, it is `TokenStream::DEFAULT_BUFFER_SIZE`.
 	/// @return Resulting tokens, or an error (on failure).
 	Result<TokenStream::TokenList, TokenStream::Error>
-	tokenize(String const& source, usize const bufferSize = TokenStream::DEFAULT_BUFFER_SIZE);
+	tokenize(UTF8String const& source);
 }
 
 #endif // MAKAILIB_LEXER_CORE_H

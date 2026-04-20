@@ -6,6 +6,7 @@
 #include "../templates.hpp"
 #include "../container/pointer/shared.hpp"
 #include "../container/nullable.hpp"
+#include "thread.hpp"
 #include "atomic.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -97,12 +98,12 @@ public:
 	bool ready() {
 		return !(thread && *thread);
 	}
-	
+
 	/// @brief Copy constructor.
 	/// @param other `Promise` to copy from.
 	constexpr Promise(SelfType const& other): Promise(other.data, other.thread) {}
 
-	
+
 	/// @brief Returns whether awaiting is necessary.
 	/// @return Whether to await.
 	bool await_ready()			{return ready();	}

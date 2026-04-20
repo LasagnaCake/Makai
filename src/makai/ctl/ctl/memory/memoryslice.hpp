@@ -41,7 +41,7 @@ struct MemorySlice:
 	constexpr static auto NO_COPY_FN = [] (ref<DataType> const, ref<DataType const> const) {};
 
 	/// @brief Default constructor.
-	constexpr MemorySlice()					{				}
+	constexpr MemorySlice() noexcept		{				}
 	/// @brief Constructs the memory slice with space for a number of elements.
 	/// @param sz Element count to allocate for.
 	constexpr MemorySlice(usize const sz)	{invoke(sz);	}
@@ -56,7 +56,7 @@ struct MemorySlice:
 		length(::CTL::move(other.length)) {
 		other.contents = nullptr;
 	}
-	
+
 	/// @brief Copy assignment operator (deleted).
 	constexpr SelfType& operator=(SelfType const& other) = delete;
 

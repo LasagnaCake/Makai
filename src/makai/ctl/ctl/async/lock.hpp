@@ -4,6 +4,7 @@
 #include "../namespace.hpp"
 #include "../templates.hpp"
 #include "../typetraits/traits.hpp"
+#include "../typetraits/verify.hpp"
 #include "mutex.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -21,7 +22,7 @@ public:
 
 	/// @brief Binds a mutex to this lock.
 	/// @param mutex Mutex to bind.
-	BaseLock(ReferenceType mutex): mutex(mutex) {}
+	constexpr BaseLock(ReferenceType mutex): mutex(mutex) {}
 
 protected:
 	/// @brief Mutex associated with this lock.
@@ -45,10 +46,10 @@ public:
 
 	/// @brief Binds and captures a mutex.
 	/// @param mutex Mutex to capture.
-	ScopeLock(ReferenceType mutex): BaseType(mutex)	{mutex.capture();}
+	constexpr ScopeLock(ReferenceType mutex): BaseType(mutex)	{if (inRunTime()) mutex.capture();}
 	/// @brief Releases a mutex.
-	~ScopeLock()									{mutex.release();}
-	
+	constexpr ~ScopeLock()										{if (inRunTime()) mutex.release();}
+
 protected:
 	using BaseType::mutex;
 
@@ -58,6 +59,10 @@ private:
 	pointer operator new[](usize);
 	void operator delete[](pointer);
 };
+
+
+template<Type::Derived<Mutex> TMutex = Mutex>
+constexpr ScopeLock<TMutex> lock(TMutex& mutex) {return {mutex};}
 
 CTL_NAMESPACE_END
 

@@ -15,7 +15,7 @@ namespace Data {
 		constexpr static Version deserialize(Data::Value const& value) {
 			Version ver;
 			if (value.isString()) {
-				StringList const verv = 
+				StringList const verv =
 					value
 					.get<String>()
 					.split('.')

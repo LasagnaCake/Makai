@@ -35,6 +35,14 @@ namespace OS {
 		}
 	}
 
+	/// @brief Returns the given path with the appropriate executable file extension for the current operating system.
+	/// @return Executable path.
+	constexpr String executable(String const& path = "") {
+		if constexpr (CTL_TARGET_OS == CTL_OS_WINDOWS)
+			return path + ".exe";
+		else return path;
+	}
+
 	/// @brief Runs an executable in the same thread.
 	/// @param path Path to executable.
 	/// @param directory Directory to run in. By default, it is the same directory as the executable.
@@ -84,10 +92,11 @@ namespace OS {
 		prgArgs.pushBack(NULL);
 		auto const pid = getpid();
 		fork();
-		if (pid != getpid())
+		if (pid != getpid()) {
+			chdir(directory.cstr());
 			return execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
-		else {
-			int result;
+		} else {
+			int result = -1;
 			wait(&result);
 			return result;
 		}

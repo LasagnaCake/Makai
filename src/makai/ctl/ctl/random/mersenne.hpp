@@ -25,7 +25,7 @@ namespace Random::Engine::Impl {
 		I S,
 		I B,
 		usize T,
-		I C, 
+		I C,
 		usize L,
 		I F
 	>
@@ -70,7 +70,7 @@ namespace Random::Engine::Impl {
 			state.array[0] = seed;
 			for (usize i = 1; i < N; ++i) {
 				seed = F * (seed ^ (seed >> (W-2))) + i;
-				state.array[i] = seed; 
+				state.array[i] = seed;
 			}
 			state.index = 0;
 			this->seed = seed;
@@ -123,7 +123,7 @@ namespace Random::Engine::Impl {
 		0xfff7eee000000000, 43,
 		6364136223846793005
 	>;
-	
+
 	/// @brief Decays to an appropriate engine type, depending on the CPU architecture.
 	using Mersenne = Meta::DualType<sizeof(usize) == sizeof(uint64), Impl::Mersenne64, Impl::Mersenne32>;
 }

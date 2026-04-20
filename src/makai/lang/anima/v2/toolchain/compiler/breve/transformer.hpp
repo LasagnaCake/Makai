@@ -1,0 +1,234 @@
+#ifndef MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_BREVE_TRANSFORMER_H
+#define MAKAILIB_ANIMA_V2_TOOLCHAIN_COMPILER_BREVE_TRANSFORMER_H
+
+#include "../../assembler/assembler.hpp"
+#include "../../../core/core.hpp"
+#include "node.hpp"
+#include "intermediate.hpp"
+
+namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
+	struct ATransformer {
+		struct Result {
+			Nullable<UTF8String>	source;
+			Namespace::Instance		scope;
+			Namespace::TypeRef		type;
+			Data::Value				direct;
+
+			bool isStackTop() const;
+		};
+
+		using Instance = Instance<ATransformer>;
+
+		struct Context: Intermediate {
+			template <Makai::Type::Derived<Error::Generic> E = Error::InvalidValue>
+			[[noreturn]]
+			static void error(String const& what, Node::Instance const& where = nullptr) {
+				if (!where)
+					throw E(
+						"At: EOF",
+						what,
+						Makai::CPP::SourceFile{"n/a", -1, "???"}
+					);
+				else {
+					auto const pos = where->base.at;
+					throw E(
+						Makai::toString(
+							"At:\nLINE: ", pos.line,
+							"\nCOLUMN: ", pos.column,
+							"\n--> [", where->base.text, "]"
+						),
+						what,
+						Makai::CPP::SourceFile{"n/a", Cast::as<int>(pos.line), where->base.sourceFile}
+					);
+				}
+			}
+
+			Namespace::Instance declare(UTF8StringList const& path);
+			Namespace::Instance get(UTF8StringList const& path);
+			Namespace::Instance fetch(Node::Instance const& nodePath);
+			Namespace::Instance fetch(UTF8StringList const& path, Node::Instance const& base);
+
+			Namespace::TypeRef basicType(UTF8String const& name);
+			Namespace::TypeRef arrayFor(Namespace::TypeRef const& type);
+
+			static UTF8StringList pathOf(UTF8String const& path);
+			static UTF8StringList pathOf(Node::Instance const& node);
+
+			Namespace::Instance getStructScope() const;
+
+			void addBasicType(Core::BasicType const type, uint64 const flags = 0);
+
+			void registerImport(Namespace::Instance const& ns);
+			void registerType(Namespace::Instance const& ns);
+			void registerFunction(Namespace::Instance const& ns);
+
+			Namespace::Instance nearestVarScope() const;
+
+			Context();
+
+			UTF8Dictionary<Namespace::TypeRef>			basics;
+			Map<Handle<TypeDecl>, Namespace::TypeRef>	arrays;
+		};
+
+		virtual ~ATransformer();
+
+		bool allowPaths = true;
+
+		static KeyValuePair<UTF8StringList, Namespace::Instance> resolve(Context& context, Node::Instance const& node, bool const allowPaths);
+
+		KeyValuePair<UTF8StringList, Namespace::Instance> resolve(Context& context, Node::Instance const& node) const;
+		KeyValuePair<UTF8StringList, Namespace::Instance> traverse(Context& context, Node::Instance const& node) const;
+
+		virtual Result transform(Context& context, Node::Instance const& node) = 0;
+	};
+
+	struct StructureDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct PropertyDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct NamespaceDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct FunctionDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct VariableDecl: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Declaration: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Assignment: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Expression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct TypeRequest: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct InfixExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct PrefixExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct PathExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct PostfixExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct StaticExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Return: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Block: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Direct: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Aliasing: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct SubExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Call: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Definition: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Branch: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct InlineIfElse: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Loop: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct InlineAssembly: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct AttributeExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Import: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+
+		static Makai::Function<Intermediate::Instance(UTF8String const&)> import;
+	};
+
+	struct Subscript: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct TypeExtension: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Array: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Create: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Drop: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct EmptyDecay: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct ArrayTypeDecl: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct TheEntireProgram: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+}
+
+#endif

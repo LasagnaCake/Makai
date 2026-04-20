@@ -1,0 +1,20 @@
+ROOT := ../../../../../..
+include $(ROOT)/make/core.make
+
+override prefix := $(call concat, $(prefix), core)
+
+.PHONY: debug release all
+.ONESHELL:
+.SHELLFLAGS = -ec
+
+define MAKE_SUB
+	$(call compile-all, module object)
+endef
+
+all: debug release
+
+debug:
+	$(MAKE_SUB)
+
+release:
+	$(MAKE_SUB)

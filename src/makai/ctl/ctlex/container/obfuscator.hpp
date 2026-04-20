@@ -72,7 +72,7 @@ namespace Impl {
 		||	v % 5 == 0
 		||	v % 7 == 0
 		||	v % 11 == 0
-		) return false; 
+		) return false;
 		for (usize i = 13; i < v/2; ++i)
 			if (v % i == 0)
 				return false;
@@ -91,7 +91,7 @@ namespace Impl {
 				return i;
 		return 0;
 	}
-	
+
 	/// @brief Compile-time pseudo-random number.
 	constexpr usize PRNG = Random::ctsprng<usize>({});
 
@@ -385,14 +385,14 @@ namespace StaticStringMangler {
 			return rng;
 		}
 	}
-	
+
 	/// @brief Binary shuffle.
 	/// @tparam S String size.
 	/// @tparam MASK Shuffle mask.
 	/// @tparam PARITY Shuffle parity.
 	template<usize S, usize MASK, bool PARITY, class TSize>
 	using BinaryShuffle = FunctionShuffle<S, MASK, PARITY, Shuffles::binary, TSize>;
-	
+
 	/// @brief Prime shuffle.
 	/// @tparam S String size.
 	/// @tparam MASK Shuffle mask.
@@ -500,6 +500,11 @@ private:
 		return ContainerType(result);
 	}
 };
+
+template <usize N, class TObfuscator = ObfuscatedStaticString<Random::CTPRNG<usize> % highBit(N) * 2 + highBit(N) * 2>>
+consteval TObfuscator obfuscate(As<char const[N]> const& str) {
+	return TObfuscator(str);
+}
 
 CTL_EX_NAMESPACE_END
 

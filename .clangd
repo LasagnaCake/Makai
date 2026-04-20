@@ -1,29 +1,33 @@
 CompileFlags:
-# Add: [-std=gnu++20, -Wall, -Wpedantic, -fms-extensions, -fconcepts, -fcoroutines, -m64, -Ioutput/include]
+  # Add: [-std=gnu++20, -Wall, -Wpedantic, -fms-extensions, -fconcepts, -fcoroutines, -m64, -Ioutput/include]
   Add:
-   - -std=gnu++20
-   - -Wall
-   - -Wpedantic
-   - -fms-extensions
-   - -fcoroutines
-   - -m64
-   - -Ioutput/include
-   - -Ilib/SDL2-2.0.10/include
-   - -Ilib/OpenGL/GLAD/include
-   - -Ilib/stb
-   - -Ilib/cute_headers
-   - -Ilib/cppcodec-0.2
-   - -Ilib/cryptopp/include
-   - -Ilib/xml2json/include
-   - -Ilib/miniaudio
-   - -Ilib/minivorbis
-   - -Ilib/json2xml
-   - -Ilib/curl/include
+    - -std=gnu++20
+    - -Wall
+    - -Wpedantic
+    - -fms-extensions
+    - -fcoroutines
+    - -m64
+    - -Ioutput/include
+    - -Ilib/SDL2-2.0.10/include
+    - -Ilib/OpenGL/GLAD/include
+    - -Ilib/stb
+    - -Ilib/cute_headers
+    - -Ilib/cppcodec-0.2
+    - -Ilib/cryptopp/include
+    - -Ilib/xml2json/include
+    - -Ilib/miniaudio
+    - -Ilib/minivorbis
+    - -Ilib/json2xml
+    - -Ilib/curl/include
+    - -frelaxed-template-template-args
+Documentation:
+  CommentFormat: Doxygen
 Index:
   Background: Skip
 Diagnostics:
   UnusedIncludes: None
 Completion:
+  AllScopes: No
   HeaderInsertion: Never
   ArgumentLists: Delimiters
 InlayHints:

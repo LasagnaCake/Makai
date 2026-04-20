@@ -1,6 +1,0 @@
-import core;
-
-main {
-	// Main code goes here...
-	core.IO.writeLine("Hello, world!");
-}

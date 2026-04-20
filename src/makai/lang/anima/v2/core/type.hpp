@@ -1,29 +1,18 @@
 #ifndef MAKAILIB_ANIMA_V2_CORE_TYPE_H
 #define MAKAILIB_ANIMA_V2_CORE_TYPE_H
 
-#include "../../../../compat/ctl.hpp"
+#include "forward.hpp"
+#include "entry.hpp"
 
 namespace Makai::Anima::V2::Core {
-	/// @brief Binary operator.
-	enum class BinaryOperator: uint8 {
-		AV2_BOP_ADD,
-		AV2_BOP_SUB,
-		AV2_BOP_MUL,
-		AV2_BOP_DIV,
-		AV2_BOP_REM,
-		AV2_BOP_LOGIC_AND,
-		AV2_BOP_LOGIC_OR,
-		AV2_BOP_LOGIC_XOR,
-		AV2_BOP_BIT_AND,
-		AV2_BOP_BIT_OR,
-		AV2_BOP_BIT_XOR,
-	};
-
-	enum class UnaryOperator: uint8 {
+	/// @brief Operator.
+	enum class Operator: uint16 {
 		AV2_UOP_NEGATE,
 		AV2_UOP_INCREMENT,
 		AV2_UOP_DECREMENT,
 		AV2_UOP_INVERSE,
+		AV2_UOP_LOGIC_NOT,
+		AV2_UOP_BIT_NOT,
 		AV2_UOP_SIN,
 		AV2_UOP_COS,
 		AV2_UOP_TAN,
@@ -37,6 +26,22 @@ namespace Makai::Anima::V2::Core {
 		AV2_UOP_LOG10,
 		AV2_UOP_LN,
 		AV2_UOP_SQRT,
+		AV2_UOP_LENGTH,
+		AV2_BOP_START = 0x1000,
+		AV2_BOP_ADD = AV2_BOP_START,
+		AV2_BOP_SUB,
+		AV2_BOP_MUL,
+		AV2_BOP_DIV,
+		AV2_BOP_REM,
+		AV2_BOP_LOGIC_AND,
+		AV2_BOP_LOGIC_OR,
+		AV2_BOP_LOGIC_XOR,
+		AV2_BOP_BIT_AND,
+		AV2_BOP_BIT_OR,
+		AV2_BOP_BIT_XOR,
+		AV2_BOP_LOGX,
+		AV2_BOP_ATAN2,
+		AV2_BOP_POW,
 	};
 
 	enum class BasicType {
@@ -45,53 +50,136 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_ANY,
 		AV2_BT_NULL,
 		AV2_BT_BOOL,
-		AV2_BT_INT,
-		AV2_BT_UINT,
-		AV2_BT_REAL,
+		AV2_BT_CHAR,
+		AV2_BT_INT8,
+		AV2_BT_INT16,
+		AV2_BT_INT32,
+		AV2_BT_INT64,
+		AV2_BT_UINT8,
+		AV2_BT_UINT16,
+		AV2_BT_UINT32,
+		AV2_BT_UINT64,
+		AV2_BT_REAL32,
+		AV2_BT_REAL64,
+		AV2_BT_REAL128,
+		AV2_BT_TYPEID,
+		AV2_BT_VECTOR,
+		AV2_BT_MATRIX,
 		AV2_BT_STRING,
 		AV2_BT_BYTES,
-		AV2_BT_VECTOR,
 	};
 
-	struct Method;
+	constexpr bool isBoolean(BasicType const bt) {
+		return bt == BasicType::AV2_BT_BOOL;
+	}
 
-	struct Definition {
+	constexpr bool isSigned(BasicType const bt) {
+		return (
+			bt == BasicType::AV2_BT_INT8
+		||	bt == BasicType::AV2_BT_INT16
+		||	bt == BasicType::AV2_BT_INT32
+		||	bt == BasicType::AV2_BT_INT64
+		);
+	}
+
+	constexpr bool isUnsigned(BasicType const bt) {
+		return (
+			bt == BasicType::AV2_BT_UINT8
+		||	bt == BasicType::AV2_BT_UINT16
+		||	bt == BasicType::AV2_BT_UINT32
+		||	bt == BasicType::AV2_BT_UINT64
+		);
+	}
+
+	constexpr bool isInteger(BasicType const bt) {
+		return (isSigned(bt) || isUnsigned(bt));
+	}
+
+	constexpr bool isReal(BasicType const bt) {
+		return (
+			bt == BasicType::AV2_BT_REAL32
+		||	bt == BasicType::AV2_BT_REAL64
+		||	bt == BasicType::AV2_BT_REAL128
+		);
+	}
+
+	constexpr bool isTypeID(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_TYPEID);
+	}
+
+	constexpr bool isNumber(BasicType const bt) {
+		return (isInteger(bt) || isReal(bt));
+	}
+
+	constexpr bool isString(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_STRING);
+	}
+
+	constexpr bool isCharacter(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_CHAR);
+	}
+
+	constexpr bool isText(BasicType const bt) {
+		return (isCharacter(bt) || isString(bt));
+	}
+
+	constexpr bool isBytes(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_BYTES);
+	}
+
+	constexpr bool isVector(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_VECTOR);
+	}
+
+	constexpr bool isMatrix(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_MATRIX);
+	}
+
+	constexpr bool isVectorable(BasicType const bt) {
+		return (isNumber(bt) || isVector(bt));
+	}
+
+	constexpr bool isAlgebraic(BasicType const bt) {
+		return (isVectorable(bt) || isMatrix(bt));
+	}
+
+	struct Definition: Entry {
 		struct Flags {
-			constexpr static uint64 const AV2_DF_BASIC		= 1 << 0;
-			constexpr static uint64 const AV2_DF_NULLABLE	= 1 << 1;
-			constexpr static uint64 const AV2_DF_EMPTY		= 1 << 2;
-			constexpr static uint64 const AV2_DF_ARRAY		= 1 << 3;
-			constexpr static uint64 const AV2_DF_VALUE		= 1 << 4;
-			constexpr static uint64 const AV2_DF_STRUCTURE	= 1 << 5;
-			constexpr static uint64 const AV2_DF_DYNAMIC	= 1 << 6;
+			constexpr static uint64 const AV2_DF_BASIC			= 1 << 0;
+			constexpr static uint64 const AV2_DF_NULLABLE		= 1 << 1;
+			constexpr static uint64 const AV2_DF_EMPTY			= 1 << 2;
+			constexpr static uint64 const AV2_DF_ARRAY			= 1 << 3;
+			constexpr static uint64 const AV2_DF_VALUE			= 1 << 4;
+			constexpr static uint64 const AV2_DF_STRUCTURE		= 1 << 5;
+			constexpr static uint64 const AV2_DF_DYNAMIC		= 1 << 6;
+			constexpr static uint64 const AV2_DF_CLONABLE		= 1 << 7;
+			constexpr static uint64 const AV2_DF_ART_EQUIVALENT	= 1 << 8;
+			constexpr static uint64 const AV2_DF_NO_RESULT		= 1 << 9;
+			constexpr static uint64 const AV2_DF_POINTER		= 1 << 10;
+			constexpr static uint64 const AV2_DF_FINAL			= 1 << 11;
 		};
-		StringList					aliases;
+
+		bool canBecome(Instance<Definition> const& type) const {
+			if (type == base) return true;
+			Instance<Definition> current = base;
+			while ((current = current->base))
+				if (current == type) return true;
+			return false;
+		}
+
 		uint64						flags		= 0;
-		Nullable<BasicType>			basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
+		Nullable<BasicType>			basic;
 		Instance<Definition>		base		= nullptr;
 		uint64						byteSize	= 0;
 		uint64						alignment	= 1;
+		List<Instance<Definition>>	fields;
 
-		struct Database {
-			using Type = Instance<Definition>;
-			using StorageType = List<Type>;
+		Dictionary<String>			meta;
 
-			Type byAlias(String const& alias) {
-				for (auto& type: types) {
-					if (type->aliases.find(alias) != -1)
-						return type;
-				}
-				return nullptr;
-			};
-
-			Type byID(uint64 const id) {
-				if (id < types.size())
-					return types[id];
-				return nullptr;
-			};
-
-			StorageType types;
-		};
+		Functor<void(ptr<void>)>							construct;
+		Functor<void(ptr<void>, ptr<void const>)>			copy;
+		Functor<void(ptr<void>)>							destruct;
+		Functor<int64(ptr<void const>, ptr<void const>)>	compare;
 	};
 }
 

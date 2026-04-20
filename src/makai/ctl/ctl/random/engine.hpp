@@ -38,7 +38,7 @@ namespace Base {
 		constexpr virtual usize next() = 0;
 		/// @brief Returns the engine's current seed.
 		/// @return Current seed.
-		constexpr virtual usize getSeed() = 0;
+		constexpr virtual usize getSeed() const = 0;
 		/// @brief Sets the engine's current seed.
 		/// @param seed Current seed.
 		constexpr virtual void setSeed(usize const seed) = 0;
@@ -97,7 +97,7 @@ namespace Engine {
 
 		/// @brief
 		/// @return
-		constexpr virtual usize getSeed() final {
+		constexpr virtual usize getSeed() const final {
 			return engine.getSeed();
 		}
 
@@ -190,7 +190,6 @@ namespace Engine {
 	};
 	#else
 	/// @brief Secure random engine.
-	/// @warning Currently unimplemented!
 	struct Secure: Base::ISecureEngine {
 		/// @brief Default constructor.
 		Secure() {}

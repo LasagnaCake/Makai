@@ -1617,6 +1617,9 @@ namespace UTF {
 		/// @return String as new encoding.
 		constexpr UTFString<32> toUTF32() const	{return toUTF<32>();	}
 
+		/// @brief Returns the string as a standard string.
+		constexpr operator String() const {return toString();}
+
 	private:
 		constexpr void assertIsInBounds(IndexType const index) const {
 			if (index >= 0 && usize(index) > (size()-1)) outOfBoundsError(index);
@@ -1638,18 +1641,36 @@ namespace UTF {
 	template<usize S>
 	using UString	= UTFString<S>;
 
+	/// @brief UTF-8 string.
 	using U8String	= UString<8>;
+	/// @brief UTF-32 string.
 	using U32String	= UString<32>;
 
+	/// @brief UTF-8 character.
 	using U8Char	= typename UString<8>::DataType;
+	/// @brief UTF-32 character.
 	using U32Char	= typename UString<32>::DataType;
 }
 
+/// @brief UTF-8 string.
 using UTF8String	= UTF::U8String;
+/// @brief UTF-32 string.
 using UTF32String	= UTF::U32String;
 
+/// @brief UTF-8 character.
 using UTF8Char	= UTF::U8Char;
+/// @brief UTF-32 character.
 using UTF32Char	= UTF::U32Char;
+
+/// @brief List of UTF-8 strings.
+typedef List<UTF8String>				UTF8StringList;
+/// @brief Pair of UTF-8 strings.
+typedef Pair<UTF8String, UTF8String>	UTF8StringPair;
+
+/// @brief List of UTF-32 strings.
+typedef List<UTF32String>				UTF32StringList;
+/// @brief Pair of UTF-32 strings.
+typedef Pair<UTF32String, UTF32String>	UTF32StringPair;
 
 //static_assert(UTF8String("Compile-time Magics!").size());
 

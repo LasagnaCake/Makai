@@ -75,11 +75,11 @@ public:
 	;
 
 	static_assert(
-		!SORTED || Type::Algorithm::Sortable<KeyType>, 
+		!SORTED || Type::Algorithm::Sortable<KeyType>,
 		"Cannot form a sortable map whithout an sortable key!"
 	);
 	static_assert(
-		!SORTED || Type::Algorithm::Sortable<PairType>, 
+		!SORTED || Type::Algorithm::Sortable<PairType>,
 		"Cannot form a sortable map whithout an sortable pair type!"
 	);
 
@@ -236,7 +236,7 @@ public:
 		if (i == -1)	return fallback;
 		else			return (data() + i)->value;
 	}
-	
+
 	/// @brief Gets the value of the element that matches the given key. If value does not exist, returns a fallback.
 	/// @param key Key to look for.
 	/// @param fallback Fallback value to return.
@@ -275,7 +275,7 @@ public:
 	requires (!SORTED) {
 		return ::CTL::fsearch<ConstIteratorType, IndexType, PairType, KeyCompare>(begin(), end(), {key});
 	}
-	
+
 	/// @brief Searches for the index of a given key. If key doesn't exist, returns -1.
 	/// @param key Key to look for.
 	/// @return Index of key, or -1 if not found.
@@ -335,6 +335,29 @@ public:
 	constexpr bool contains(KeyType const& key) const {
 		if (empty()) return false;
 		return search(key) != -1;
+	}
+
+	/// @brief Returns how many of the given keys exists in the container.
+	/// @param keys Keys to search for.
+	/// @return How many keys exist.
+	constexpr SizeType countOf(List<KeyType, SizeType> const& keys) const {
+		if (empty()) return 0;
+		SizeType matched = 0;
+		for (auto const& key: keys)
+			if (contains(key)) ++matched;
+		return matched;
+	}
+
+	/// @brief Returns which of the given keys exists in the container.
+	/// @param keys Keys to search for.
+	/// @return Which keys exist.
+	constexpr List<KeyType, SizeType> match(List<KeyType, SizeType> const& keys) const {
+		if (empty()) return {};
+		List<KeyType, SizeType> matched;
+		for (auto const& key: keys)
+			if (contains(key))
+				matched.pushBack(key);
+		return matched;
 	}
 
 	/// @brief Erases an element that matches the given key.

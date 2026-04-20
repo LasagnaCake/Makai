@@ -7,13 +7,9 @@ using namespace Toolchain;
 
 constexpr auto const VER = Makai::Data::Version{1};
 
-constinit auto const METAPASS = Makai::ObfuscatedStaticString<Makai::Random::CTPRNG<usize> % 32  + 128>(
-	"Moriarty and the Unnamed Catharsis ~ Microcosm Genesis of Ars Poetica"
-);
+constinit auto const METAPASS = Makai::obfuscate("Moriarty and the Unnamed Catharsis ~ Microcosm Genesis of Ars Poetica");
 
-constinit auto const PACKAGEKEY = Makai::ObfuscatedStaticString<Makai::Random::CTPRNG<usize> % 32  + 128>(
-	"Binary Interloper of Esoteric Dreams ~ In Another Angelic Devil"
-);
+constinit auto const PACKAGEKEY = Makai::obfuscate("Binary Interloper of Esoteric Dreams ~ In Another Angelic Devil");
 
 constexpr auto const METAINFO = R"###(
 	{
@@ -148,23 +144,17 @@ namespace Command {
 			throw Makai::Error::NonexistentValue("Missing target!");
 		DEBUGLN("Building project...");
 		Compiler::Project proj;
-		Assembler::Context ctx;
-		Compiler::setModuleSourceResolver(resolveSource);
+		Compiler::Breve::Compiler::Context ctx;
 		proj = proj.deserialize(Makai::File::getFLOW("project.flow"));
-		if (proj.type == decltype(proj.type)::AV2_TC_PT_MODULE)
-			return;
-		if (proj.main.source.empty() && proj.main.path.size())
+		Compiler::Breve::Parser parser(ctx);
+		Makai::Lexer::CStyle::TokenStream stream;
+		if (proj.main.path.empty())
 			proj.main.source = Makai::File::getText(proj.main.path);
-		Compiler::buildProject(ctx, proj, cfg["asm"]);
-		auto const outName = Makai::Regex::replace(cfg["output"], "\\$\\{name\\}", proj.name);
-		Makai::OS::FS::makeDirectory(Makai::String("output"));
-		if (cfg["asm"]) {
-			Makai::File::saveText("output/" + outName + ".min", ctx.intermediate());
-		}
-		else {
-			bool const debug = cfg["__args"][1].get<Makai::String>("") == "debug";
-			Makai::File::saveText("output/" + outName + ".anp", ctx.program.serialize(debug).toFLOWString("\t"));
-		}
+		stream.open(proj.main.source);
+		Makai::List<Assembler::BaseContext::Axiom> ax;
+		while (stream.next())
+			ax.pushBack({stream.current(), true, stream.tokenText(), stream.position(), proj.main.path});
+		ctx.append(ax.reverse());
 		DEBUGLN("Done!");
 	}
 

@@ -65,10 +65,11 @@ namespace Makai::Parser::Data {
 			if (!lexer.next()) return error("Missing vectir value!");
 			Vector4 vec;
 			float mult = 1;
-			for (usize i = 0; i < 4; ++i) {
+			usize i = 0;
+			for (; i < 4; ++i) {
 				while (true) {
 					if (!lexer.next()) return error("Missing identifier value!");
-					if (lexer.current().type == TokenType{')'}) continue;
+					if (lexer.current().type == TokenType{')'}) goto EndVector;
 					if (lexer.current().type == TokenType{'-'}) {
 						mult *= -1;
 						continue;
@@ -84,9 +85,37 @@ namespace Makai::Parser::Data {
 					}
 					return error("Expected number here!");
 				}
+				while (true) {
+					switch (lexer.current().type) {
+						case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+						case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+						case TokenType::LTS_TT_BACKTICK_STRING:
+						case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+						case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+						case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+						case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
+						case TokenType{BINARY_IDENTIFIER}:
+						case TokenType{ID_IDENTIFIER}:
+						case TokenType{'('}:
+						case TokenType{'{'}:
+						case TokenType{'['}:
+						case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+							return error("Expected number here!");
+						case TokenType{'+'}:
+						case TokenType{'-'}:
+						case TokenType::LTS_TT_INTEGER:
+						case TokenType::LTS_TT_REAL: break;
+						case TokenType{')'}: goto EndVector;
+						default: continue;
+					}
+				}
 			}
+		EndVector:
 			if (lexer.current().type != TokenType{')'})
 				return error("Expected ')' here!");
+			if (i < 4)
+				for (usize j = 0; j < i; ++j)
+					vec[j] = vec[j + (4 - i)];
 			return Value(vec);
 		}
 
@@ -99,10 +128,13 @@ namespace Makai::Parser::Data {
 				return Value(static_cast<usize>(token.value.get<uint64>()));
 			case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 			case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+			case TokenType::LTS_TT_BACKTICK_STRING:
+			case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+			case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+			case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+			case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 			case TokenType::LTS_TT_REAL:
 				return token.value;
-			case TokenType::LTS_TT_CHARACTER:
-				return Value(toString(Cast::as<char>(token.value.get<int64>())));
 			case TokenType{'{'}:
 				return parseObject();
 			case TokenType{'['}:
@@ -126,9 +158,9 @@ namespace Makai::Parser::Data {
 			}
 			case TokenType{'}'}:
 			case TokenType{']'}:
+			case TokenType{')'}:
 				return error("Unexpected closure!");
 			default: return Value();
-				//return error("Missing or invalid token!");
 			}
 			return Value();
 		}
@@ -141,14 +173,38 @@ namespace Makai::Parser::Data {
 				return error("Expected '[' here!");
 			As<uint64[Value::IdentifierType::SIZE]> id;
 			if (!lexer.next()) return error("Missing identifier value!");
-			for (usize i = 0; i < Value::IdentifierType::SIZE; ++i) {
-				if (lexer.current().type != TokenType::LTS_TT_INTEGER)
-					return error("Invalid identifier!");
-				id[i] = lexer.current().value.getUnsigned();
+			usize i = 0;
+			for (; i < Value::IdentifierType::SIZE; ++i) {
+				switch (lexer.current().type) {
+					case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_BACKTICK_STRING:
+					case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+					case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
+					case TokenType::LTS_TT_REAL:
+					case TokenType{BINARY_IDENTIFIER}:
+					case TokenType{ID_IDENTIFIER}:
+					case TokenType{'('}:
+					case TokenType{'{'}:
+					case TokenType{'['}:
+					case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+					case TokenType{INTERNAL_TYPE_IDENTIFIER}:
+						return error("Expected integer here!");
+					case TokenType::LTS_TT_INTEGER:
+						id[(Value::IdentifierType::SIZE-(i+1))] = lexer.current().value.getUnsigned();
+					case TokenType{']'}: goto TheRestOfTheOwl;
+					default: continue;
+				}
 				if (!lexer.next()) return error("Missing identifier value!");
 			}
+		TheRestOfTheOwl:
 			if (lexer.current().type != TokenType{']'})
 				return error("Expected ']' here!");
+			if (i < Value::IdentifierType::SIZE)
+				for (usize j = 0; j < i; ++j)
+					swap(id[j], id[j + (Value::IdentifierType::SIZE - i)]);
 			return Value(Value::IdentifierType::create(id));
 		}
 
@@ -189,16 +245,22 @@ namespace Makai::Parser::Data {
 				switch (token.type) {
 				case TokenType{'-'}:
 				case TokenType::LTS_TT_INTEGER:
+				case TokenType::LTS_TT_REAL:
+				case TokenType::LTS_TT_IDENTIFIER:
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
-				case TokenType::LTS_TT_REAL:
-				case TokenType::LTS_TT_CHARACTER:
-				case TokenType::LTS_TT_IDENTIFIER:
+				case TokenType::LTS_TT_BACKTICK_STRING:
+				case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{ID_IDENTIFIER}:
+				case TokenType{'('}:
 				case TokenType{'{'}:
 				case TokenType{'['}:
-				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
+				case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+				case TokenType{INTERNAL_TYPE_IDENTIFIER}: {
 					auto v = parseValue();
 					if (v) {
 						auto const vv = v.value();
@@ -230,11 +292,13 @@ namespace Makai::Parser::Data {
 				switch (token.type) {
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_BACKTICK_STRING:
+				case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_IDENTIFIER:
 					key = token.value.get<Value::StringType>();
-				break;
-				case TokenType::LTS_TT_CHARACTER:
-					key = toString(Cast::as<char>(token.value.get<int64>()));
 				break;
 				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_REAL:
@@ -243,6 +307,7 @@ namespace Makai::Parser::Data {
 				case TokenType{'['}:
 				case TokenType{'-'}:
 				case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+				case TokenType{INTERNAL_TYPE_IDENTIFIER}:
 					return error("Object key is not a string or identifier!");
 				default: continue;
 				}
@@ -261,13 +326,18 @@ namespace Makai::Parser::Data {
 				case TokenType::LTS_TT_INTEGER:
 				case TokenType::LTS_TT_SINGLE_QUOTE_STRING:
 				case TokenType::LTS_TT_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_BACKTICK_STRING:
+				case TokenType::LTS_TT_FR_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_FR_DOUBLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_SINGLE_QUOTE_STRING:
+				case TokenType::LTS_TT_JP_DOUBLE_QUOTE_STRING:
 				case TokenType::LTS_TT_REAL:
-				case TokenType::LTS_TT_CHARACTER:
 				case TokenType::LTS_TT_IDENTIFIER:
 				case TokenType{BINARY_IDENTIFIER}:
 				case TokenType{'{'}:
 				case TokenType{'['}:
-				case TokenType{CUSTOM_TYPE_IDENTIFIER}: {
+				case TokenType{CUSTOM_TYPE_IDENTIFIER}:
+				case TokenType{INTERNAL_TYPE_IDENTIFIER}: {
 					auto const v = parseValue();
 					if (v) {
 						auto const vv = v.value();

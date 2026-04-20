@@ -41,7 +41,7 @@ struct IVisible {
 /// @brief Interface for a clonable object.
 /// @tparam T Object instance type.
 template<class T>
-struct IClonable {
+struct IClonable: T {
 	/// @brief Destructor.
 	constexpr ~IClonable() {}
 	/// @brief Returns a new copy of the object.
@@ -50,6 +50,37 @@ struct IClonable {
 	/// @brief Returns a new copy of the object.
 	/// @return copy of object.
 	constexpr virtual T clone() = 0;
+};
+
+/// @brief Interface for an invokable object.
+/// @tparam TInvoke Invocation type.
+template<class TInvoke>
+struct IInvokable;
+
+/// @brief Interface for an invokable object.
+/// @tparam TReturn Result type.
+/// @tparam TArgs... Argument types.
+template<class TReturn, class... TArgs>
+struct IInvokable<TReturn(TArgs...)> {
+	/// @brief Destructor.
+	constexpr ~IInvokable() {}
+	/// @brief Invokes some code.
+	/// @param args... arguments.
+	/// @return Result.
+	constexpr virtual TReturn invoke(TArgs... args) = 0;
+};
+
+/// @brief Interface for a const-invokable object.
+/// @tparam T Result type.
+/// @tparam Args... Argument types.
+template<class T, class... Args>
+struct IConstInvokable {
+	/// @brief Destructor.
+	constexpr ~IConstInvokable() {}
+	/// @brief Invokes some code.
+	/// @param args... arguments.
+	/// @return Result.
+	constexpr virtual T invoke(Args... args) const = 0;
 };
 
 CTL_NAMESPACE_END

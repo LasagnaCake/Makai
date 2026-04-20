@@ -148,6 +148,9 @@ namespace Data {
 		template <::CTL::Type::Real T>
 		constexpr Value(T const value):					kind(Kind::DVK_REAL)			{content.real = value;						}
 		/// @brief Constructs a string value.
+		template <::CTL::Type::OneOfExcept<StringType, String, UTF8String, UTF32String> T>
+		constexpr Value(T const& value):				kind(Kind::DVK_STRING)			{content.string = new StringType(value);	}
+		/// @brief Constructs a string value.
 		template <::CTL::Type::CanBecome<StringType> T>
 		constexpr Value(T const& value):				kind(Kind::DVK_STRING)			{content.string = new StringType(value);	}
 		/// @brief Constructs a byte list value.
@@ -164,6 +167,10 @@ namespace Data {
 		/// @brief Constructs the value from a serializable value.
 		template <Type::Ex::Data::Serializable T>
 		constexpr Value(T const& value): Value(value.serialize()) {}
+
+		/// @brief Constructs a value from a `Nullable<T>`.
+		template <class T>
+		constexpr Value(Nullable<T> const& value):		Value(value ? Value(value.value()) : null()) {}
 
 		/// @brief Copy constructor.
 		constexpr Value(Value const& other)	{operator=(other);	}
@@ -611,6 +618,18 @@ namespace Data {
 			return fallback;
 		}
 
+		/// @brief Returns the value as a given nullable for a type.
+		/// @tparam T value type.
+		/// @return Value as `T`, or null.
+		template <class T>
+		constexpr T get() const
+	 	requires (Type::Equal<T, Nullable<typename T::DataType>>) {
+			T out;
+			if (!tryGet<T>(out))
+				return null;
+			return out;
+		}
+
 		/// @brief Returns the value as a given type.
 		/// @tparam T value type.
 		/// @return Value as `T`.
@@ -658,6 +677,10 @@ namespace Data {
 		/// @brief Returns the value as a given type (Implicit conversion).
 		template <class T>
 		constexpr operator T() const {return get<T>();}
+
+		/// @brief Returns the value as a given type (Implicit conversion, nullable support).
+		template <class T>
+		constexpr operator Nullable<T>() const {return get<Nullable<T>>();}
 
 		/// @brief Array element access operator.
 		/// @param index Element index.
@@ -861,9 +884,9 @@ namespace Data {
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
 					auto const& id = *val.content.id;
 					StringType result = "#[";
-					result += ::CTL::toString(id[0]);
+					result += ::CTL::toString(id[IdentifierType::SIZE-1]);
 					for (usize i = 1; i < IdentifierType::SIZE; ++i)
-						result += ::CTL::toString(" ", id[i]);
+						result += " " + ::CTL::toString(id[IdentifierType::SIZE-(i+1)]);
 					return result + "]";
 				},
 				[] (Value const& val, String const& lhs, String const& sep) -> StringType {
@@ -871,7 +894,7 @@ namespace Data {
 					StringType result = "(";
 					result += ::CTL::toString(vec[0]);
 					for (usize i = 1; i < 4; ++i)
-						result += ::CTL::toString(" ", vec[i]);
+						result += " " + ::CTL::toString(vec[i]);
 					return result + ")";
 				},
 				pad,

@@ -1,23 +1,200 @@
 #include "minima.hpp"
 
+using namespace Makai::Anima::V2::Core;
+
 using namespace Makai::Anima::V2::Toolchain::Assembler;
-namespace Runtime = Makai::Anima::V2::Runtime;
-using Instruction = Makai::Anima::V2::Instruction;
-using DataLocation = Makai::Anima::V2::DataLocation;
-using Type = Minima::TokenStream::Token::Type;
-using enum Type;
 
 using Context = Minima::Context;
 
-#define MINIMA_ASSEMBLE_FN(NAME) static void do##NAME (Minima::Context& context)
-#define MINIMA_ERROR(TYPE, WHAT) context.error<Makai::Error::TYPE>(WHAT)
+using Type = Context::Tokenizer::Token::Type;
+using enum Type;
 
-CTL_DIAGBLOCK_BEGIN
-CTL_DIAGBLOCK_IGNORE_SWITCH
+static Makai::String cleanPath(Makai::String const& path) {
+	return Makai::Regex::replace(path, "\\/\\/+", "\\/");
+}
+
+uint64 Context::addStringLiteral(String const& str) {
+	auto const strID = program.strings.find(str);
+	if (strID != -1) return strID;
+	program.strings.pushBack(str);
+	return program.strings.size() - 1;
+}
+
+Makai::String Context::fullModulePath() const {
+	String path = "";
+	for (auto& module: moduleStack)
+		path += "/" + module;
+	return cleanPath(path);
+}
+
+void Context::addMethod(Makai::String const& name, Instance<Method> const& method) {
+	if (methods.contains(name))
+		error("Method with this name already exists!");
+	auto const fullID = name + "@" + method->name;
+	moduleMethods[fullID] = method;
+	methods[name] = new Reference{.name = fullID};
+	if (method->local) return;
+	method->jump = name + "/entry";
+	method->id = program.detail.methods.size();
+	program.detail.methods.pushBack(*method);
+	program.sym.methods.pushBack({nullptr, method->id, name});
+}
+
+void Context::addType(Makai::String const& name, Instance<Declaration> const& type) {
+	if (types.contains(name))
+		error("Type with this name already exists!");
+	auto const fullID = name + "@" + type->name;
+	moduleTypes[fullID] = type;
+	types[name] = new Reference{.name = fullID};
+	type->id = program.detail.types.size();
+	program.detail.types.pushBack(*type);
+	program.sym.types.pushBack({nullptr, type->id, name});
+}
+
+void Context::addExternalMethod(Makai::String const& module, Makai::String const& name, Instance<Method> const& method) {
+	if (method->local) return;
+	if (methods.contains(name))
+		error("Method with this name already exists!");
+	auto const fullID = module + ":" + name + "@" + method->name;
+	auto const refID = cleanPath(module + "/" + name);
+	externalMethods[fullID] = method;
+	methods[refID] = new Reference{module, fullID};
+	method->id = program.detail.methods.size();
+	program.detail.methods.pushBack(*method);
+	uint64 moduleID = program.ani->shared.modules.find(module);
+	if (moduleID == Makai::Limit::MAX<uint64>)
+		moduleID = program.ani->shared.modules.size();
+	program.sym.methods.pushBack({moduleID, method->id, refID});
+}
+
+void Context::addExternalType(Makai::String const& module, Makai::String const& name, Instance<Declaration> const& type) {
+	if (methods.contains(name))
+		error("Type with this name already exists!");
+	auto const fullID = module + ":" + name + "@" + type->name;
+	auto const refID = cleanPath(module + "/" + name);
+	externalTypes[fullID] = type;
+	methods[refID] = new Reference{module, fullID};
+	type->id = program.detail.methods.size();
+	program.detail.types.pushBack(*type);
+	uint64 moduleID = program.ani->shared.modules.find(module);
+	if (moduleID == Makai::Limit::MAX<uint64>)
+		moduleID = program.ani->shared.modules.size();
+	program.sym.methods.pushBack({moduleID, type->id, refID});
+}
+
+Makai::Instance<Context::Method> Context::getMethod(Makai::String const& name) {
+	if (!methods.contains(name))
+		error("No methods with this name exist!");
+	auto& method = methods[name];
+	if (method->module.empty())
+		return moduleMethods[method->name];
+	return externalMethods[method->name];
+}
+
+Makai::Instance<Context::Declaration> Context::getType(Makai::String const& name) {
+	if (!types.contains(name))
+		error("No types with this name exist!");
+	auto& type = types[name];
+	if (type->module.empty())
+		return moduleTypes[type->name];
+	return externalTypes[type->name];
+}
+
+Makai::Instance<Context::Method> Context::getMethodByID(uint64 const& id) {
+	if (id < program.sym.methods.size())
+		return getMethod(program.sym.methods[id].name);
+	error("Method with the given ID does not exist!");
+}
+
+Makai::Instance<Context::Declaration> Context::getTypeByID(uint64 const& id) {
+	if (id < program.sym.types.size())
+		return getType(program.sym.types[id].name);
+	error("Type with the given ID does not exist!");
+}
+
+usize Context::add(uint64 const value) {
+	program.code.pushBack(Makai::Cast::bit<Core::Instruction>(value));
+	return program.code.size()-1;
+}
+
+usize Context::add(OpCode const opcode, uint32 const type) {
+	program.code.pushBack(Core::Instruction{opcode, type});
+	return program.code.size()-1;
+}
+
+usize Context::update(usize const inst, uint32 const type) {
+	program.code[inst].type = type;
+	return inst;
+}
+
+uint64 Context::addGlobal(String const& name) {
+	program.strings.pushBack(name);
+	return program.strings.size()-1;
+}
+
+void Context::addJumpTarget(String const& name) {
+	if (name.empty())
+		error("Missing jump target name!");
+	if (hasJumpTarget(name)) {
+		add(jumps[name]);
+		return;
+	}
+	jumpsToMap[name].pushBack(program.code.size());
+	add(0);
+}
+
+uint64 Context::getJumpTarget(String const& name) {
+	return hasJumpTarget(name) ? jumps[name] : 0;
+}
+
+bool Context::hasJumpTarget(String const& name) {
+	return jumps.contains(name);
+}
+
+void Context::finalize() {
+	auto unmapped = jumpsToMap.keys();
+	for (auto& label: unmapped) {
+		if (label.empty())
+			error("Somehow, jump target is empty!");
+		if (jumpsToMap.contains(label) && jumps.contains(label)) {
+			for (auto& location: jumpsToMap[label])
+				program.code[location] = Makai::Cast::bit<Instruction>(jumps[label]);
+			jumpsToMap.erase(label);
+		}
+	}
+	unmapped = jumpsToMap.keys();
+	if (unmapped.size())
+		error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
+	if (entry.size() && jumps.contains(entry))
+		program.entry = jumps[entry];
+	else if (entry.size()) error("Missing entry location!");
+	if (exit.size() && jumps.contains(exit))
+		program.exit = jumps[exit];
+	else if (exit.size()) error("Missing exit location!");
+}
+
+static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
+	if (context.has(pathSeparator)) {
+		absolute = true;
+		context.expectNext(LTS_TT_IDENTIFIER, "namespace/symbol name");
+	}
+	Makai::String result = context.get(LTS_TT_IDENTIFIER, "namespace/symbol name").getString();
+	while(context.peek().type == Type{'.'}) {
+		result +=
+			"/" + context
+				.expectNext(Type{'.'})
+				.getNext(LTS_TT_IDENTIFIER, "namespace/symbol name")
+				.getString()
+		;
+	}
+	if (absolute)
+		result = context.fullModulePath() + result;
+	return cleanPath(result);
+}
 
 struct Location {
-	DataLocation	source;
-	uint64			id;
+	DataLocation			source;
+	Makai::Nullable<uint64>	id		= null;
 
 	constexpr Location operator|(Location const& other) const {
 		return {
@@ -31,19 +208,26 @@ struct Location {
 		id = other.id;
 		return *this;
 	}
+
+	constexpr bool hasID() const {
+		return id.exists();
+	}
+
+	constexpr void addID(Context& context) const {
+		if (hasID()) context.add(id.value());
+	}
 };
 
 static DataLocation getLoadType(Context& context, DataLocation const prev) {
 	DataLocation locAt = asPlace(prev);
-	if (context.hasToken(LTS_TT_IDENTIFIER)) {
-		auto const id = context.getValue<Makai::String>();
+	if (context.has(LTS_TT_IDENTIFIER)) {
+		auto const id = context.value().getString();
 		if (id == "reference" || id == "ref")
 			locAt = locAt | DataLocation::AV2_DLM_BY_REF;
 		else if (id == "move")
 			locAt = locAt | DataLocation::AV2_DLM_MOVE;
 		else if (id == "value" || id == "copy")
 			locAt = locAt | DataLocation{0};
-		context.fetchNext();
 	}
 	return locAt;
 }
@@ -51,55 +235,51 @@ static DataLocation getLoadType(Context& context, DataLocation const prev) {
 static Location getStack(Context& context) {
 	Location loc;
 	context
-		.fetchNext()
-		.expectToken(Type{'['})
+		.next()
+		.expect(Type{'['})
 	;
-	context.fetchNext();
+	context.next();
 	bool backshots = false;
 	while (
-		context.hasToken(Type{'-'})
-	||	context.hasToken(Type{'+'})
+		context.has(Type{'-'})
+	||	context.has(Type{'+'})
 	) {
-		if (context.hasToken(Type{'-'}))
+		if (context.has(Type{'-'}))
 			backshots = !backshots;
-		context.fetchNext();
+		context.next();
 	}
-	loc.id = context.fetchToken(LTS_TT_INTEGER, "stack index").getUnsigned();
+	loc.id = context.get(LTS_TT_INTEGER, "stack index").getUnsigned();
 	loc.source = loc.source | (
 		backshots
 	?	DataLocation::AV2_DL_STACK_OFFSET
 	:	DataLocation::AV2_DL_STACK
 	);
-	context.fetchNext().expectToken(Type{']'});
+	context.expectNext(Type{']'});
 	return loc;
 }
 
-static Location getRegister(Context& context) {
-	auto const regID =
+static Location getLocal(Context& context) {
+	auto const localID =
 		context
-			.fetchNext()
-			.expectToken(Type{'['})
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "stack ID")
+			.expectNext(Type{'['})
+			.getNext(LTS_TT_INTEGER, "local stack ID")
 			.getUnsigned()
 	;
-	if (regID > 31)
-		context.error("Register index must be between 0 and 31!");
-	context.fetchNext().expectToken(Type{']'});
+	context.expectNext(Type{']'});
 	return {
-		DataLocation::AV2_DL_REGISTER,
-		regID
+		DataLocation::AV2_DL_LOCAL,
+		localID
 	};
 }
 
 static Location getExtern(Context& context) {
-	context.fetchNext();
+	context.next();
 	uint64 externID = 0;
-	switch (context.currentToken().type) {
+	switch (context.type()) {
 		case LTS_TT_IDENTIFIER:
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
-			externID = context.addConstant(context.currentValue().getString());
+			externID = context.addStringLiteral(context.value().getString());
 		break;
 		default: context.error("Expected external location name here!");
 	}
@@ -107,27 +287,40 @@ static Location getExtern(Context& context) {
 }
 
 static Location getGlobal(Context& context) {
-	auto const name =
-		context
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "global name")
-			.getString()
-	;
-	uint64 globalID = 0;
-	if (context.program.labels.globals.contains(name))
-		globalID = context.program.labels.globals[name];
-	else {
-		globalID = context.program.labels.globals.size();
-		context.program.labels.globals[name] = globalID;
-	}
+	auto const name = resolvePath(context);
+	uint64 globalID = context.addGlobal(name);
 	return {
 		DataLocation::AV2_DL_GLOBAL,
 		globalID
 	};
 }
 
+static DataLocation getIntWidth(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "int type").getString();
+	if (id == "i8")
+		return DataLocation{0};
+	else if (id == "i16")
+		return DataLocation::AV2_DLI_16;
+	else if (id == "i32")
+		return DataLocation::AV2_DLI_32;
+	else if (id == "i64")
+		return DataLocation::AV2_DLI_64;
+	else context.error("Invalid integer type!");
+}
+
+static DataLocation getRealWidth(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "real type").getString();
+	if (id == "f32")
+		return DataLocation{0};
+	else if (id == "f64")
+		return DataLocation::AV2_DLF_64;
+	else if (id == "f128")
+		return DataLocation::AV2_DLF_128;
+	else context.error("Invalid float type!");
+}
+
 static Location getConstantLocation(Context& context) {
-	auto type = context.currentToken().type;
+	auto type = context.type();
 	bool isNumber = false;
 	bool negated = false;
 	while (
@@ -137,270 +330,124 @@ static Location getConstantLocation(Context& context) {
 		isNumber = true;
 		if (type == Type{'-'})
 			negated = !negated;
-		type = context.fetchNext().currentToken().type;
+		type = context.next().type();
 	}
-	Location loc {.source = DataLocation::AV2_DL_CONST};
+	Location loc {.source = DataLocation::AV2_DL_STRING};
 	if (isNumber) {
-		switch (context.currentToken().type) {
+		switch (context.type()) {
 			case LTS_TT_INTEGER:
-				loc.id = context.addConstant(context.currentValue().getSigned() * (negated ? -1 : +1));
+				loc.id = context.value().getSigned() * (negated ? -1 : +1);
+				loc.source = DataLocation::AV2_DL_INT;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'i'})
+					loc.source = loc.source | getIntWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLI_64;
 			break;
 			case LTS_TT_REAL:
-				loc.id = context.addConstant(context.currentValue().getReal() * (negated ? -1 : +1));
+				loc.id = Makai::Cast::bit<uint64>(context.value().getReal() * (negated ? -1 : +1));
+				loc.source = DataLocation::AV2_DL_REAL;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'f'})
+					loc.source = loc.source | getRealWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLF_64;
 			break;
 			default: context.error("Expected number here!");
 		}
+		return loc;
 	} else {
-		switch (context.currentToken().type) {
+		switch (context.type()) {
 			case LTS_TT_SINGLE_QUOTE_STRING:
 			case LTS_TT_DOUBLE_QUOTE_STRING:
+			case LTS_TT_BACKTICK_STRING:
+			case LTS_TT_FR_SINGLE_QUOTE_STRING:
+			case LTS_TT_FR_DOUBLE_QUOTE_STRING:
+			case LTS_TT_JP_SINGLE_QUOTE_STRING:
+			case LTS_TT_JP_DOUBLE_QUOTE_STRING:
+				loc.id = context.addStringLiteral(context.value().getString());
+			break;
 			case LTS_TT_INTEGER:
+				loc.id = context.value().getUnsigned();
+				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'u'})
+					loc.source = loc.source | getIntWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLI_64;
+			break;
 			case LTS_TT_REAL:
-			case LTS_TT_CHARACTER:
-				loc.id = context.addConstant(context.currentValue());
+				loc.id = Makai::Cast::bit<uint64>(context.value().getReal());
+				loc.source = DataLocation::AV2_DL_REAL;
+				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'f'})
+					loc.source = loc.source | getRealWidth(context);
+				else loc.source = loc.source | DataLocation::AV2_DLF_64;
 			break;
 			default: context.error("Invalid constant!");
 		}
+		return loc;
 	}
 	context.error("Invalid constant!");
 }
 
-MINIMA_ASSEMBLE_FN(InternalCall) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed internal call!");
-	auto const func = context.stream.current();
-	Instruction::Invocation invoke{DataLocation::AV2_DL_INTERNAL, 0};
-	switch (func.type) {
-		case LTS_TT_IDENTIFIER: {
-			auto const id = func.value.get<Makai::String>();
-			if (id == "add")								invoke.argc = '+';
-			else if (id == "subtract" || id == "sub")		invoke.argc = '-';
-			else if (id == "multiply" || id == "mul")		invoke.argc = '*';
-			else if (id == "divide" || id == "div")			invoke.argc = '/';
-			else if (id == "power" || id == "pow")			invoke.argc = 'p';
-			else if (id == "remainder" || id == "rem")		invoke.argc = '%';
-			else if (id == "compare" || id == "cmp")		invoke.argc = '=';
-			else if (id == "negate" || id == "neg")			invoke.argc = 'n';
-			else if (id == "band")							invoke.argc = '&';
-			else if (id == "bor")							invoke.argc = '|';
-			else if (id == "bxor")							invoke.argc = '^';
-			else if (id == "bnot")							invoke.argc = '~';
-			else if (id == "land" || id == "and")			invoke.argc = 'a';
-			else if (id == "lor" || id == "or")				invoke.argc = 'o';
-			else if (id == "lnot" || id == "not")			invoke.argc = '!';
-			else if (id == "sin")							invoke.argc = 's';
-			else if (id == "cos")							invoke.argc = 'c';
-			else if (id == "tan")							invoke.argc = 't';
-			else if (id == "stringify" || id == "strify")	invoke.argc = '_';
-			else if (id == "destrfy" || id == "parse")		invoke.argc = '\0';
-			else if (id == "typename" || id == "tname")		invoke.argc = 'i';
-			else if (id == "arcsin" || id == "asin")		invoke.argc = 'S';
-			else if (id == "arccos" || id == "acos")		invoke.argc = 'C';
-			else if (id == "arctan" || id == "atan")		invoke.argc = 'T';
-			else if (id == "atan2" || id == "a2")			invoke.argc = '2';
-			else if (id == "interrupt" || id == "stop")		invoke.argc = '.';
-			else if (id == "access" || id == "read")		invoke.argc = ':';
-			else if (id == "print" || id == "echo")			invoke.argc = '@';
-			else if (id == "sizeof")						invoke.argc = '#';
-			else if (id == "http")							invoke.argc = 'H';
-			else if (id == "vec2" || id == "vec3" || id == "vec4") {
-				invoke.argc	= id.back();
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "vector operation").getString();
-				if (op == "new")			invoke.mod = '.';
-				else if (op == "vnew")		invoke.mod = '=';
-				else if (op == "cross")		invoke.mod = 'x';
-				else if (op == "dot")		invoke.mod = '*';
-				else if (op == "fcross")	invoke.mod = 'X';
-				else if (op == "tan" && id == "vec2")
-					invoke.mod = 't';
-				else if (op == "angle" && (id == "vec2" || id == "vec3"))
-					invoke.mod = 'a';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} else if (id == "string" || id == "str" || id == "s") {
-				invoke.argc	= '"';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
-				if (op == "new")							invoke.mod = '.';
-				else if (id == "slice" || op == "sub")		invoke.mod = '_';
-				else if (op == "replace" || op == "rep")	invoke.mod = ':';
-				else if (op == "split" || op == "sep")		invoke.mod = '/';
-				else if (op == "concat" || op == "join")	invoke.mod = '+';
-				else if (op == "match" || op == "is")		invoke.mod = '=';
-				else if (op == "contains" || op == "has")	invoke.mod = 'f';
-				else if (op == "find" || op == "in")		invoke.mod = 'i';
-				else if (op == "remove" || op == "del")		invoke.mod = '-';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} 	else if (id == "array" || id == "arr" || id == "a") {
-				invoke.argc	= '[';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "array operation").getString();
-				if (op == "new")							invoke.mod = '.';
-				else if (op == "remove" || op == "del")		invoke.mod = '-';
-				else if (op == "concat" || op == "join")	invoke.mod = '+';
-				else if (op == "like")						invoke.mod = '=';
-				else if (op == "unlike")					invoke.mod = '!';
-				else if (op == "slice" || op == "sub")		invoke.mod = '_';
-				else if (op == "find")						invoke.mod = 'f';
-				else if (op == "fuzz")						invoke.mod = 'F';
-				else if (op == "push")						invoke.mod = '<';
-				else if (op == "pop")						invoke.mod = '>';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} else if (id == "object" || id == "obj" || id == "o") {
-				invoke.argc	= '{';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "object operation").getString();
-				if (op == "new")								invoke.mod = '.';
-				else if (op == "has")							invoke.mod = ':';
-				else if (op == "removekey" || op == "delk")		invoke.mod = '-';
-				else if (op == "removevalue" || op == "delv")	invoke.mod = '/';
-				else if (op == "concat" || op == "join")		invoke.mod = '+';
-				else if (op == "findkey" || op == "fink")		invoke.mod = 'f';
-				else if (op == "fuzzkey" || op == "fuzk")		invoke.mod = 'F';
-				else if (op == "findval" || op == "finv")		invoke.mod = 'x';
-				else if (op == "fuzzval" || op == "fuzv")		invoke.mod = 'X';
-				else if (op == "keys" || op == "k")				invoke.mod = 'k';
-				else if (op == "values" || op == "v")			invoke.mod = 'v';
-				else if (op == "items" || op == "i")			invoke.mod = 'i';
-				else if (op == "parse" || op == "make")			invoke.mod = '{';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} else if (id == "os") {
-				invoke.argc	= '\n';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "OS operation").getString();
-				if (op == "exe")		invoke.mod = 'E';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} else if (id == "fs") {
-				invoke.argc	= '\t';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Filesystem operation").getString();
-				if (op == "getb")		invoke.mod = 'b';
-				else if (op == "saveb")	invoke.mod = 'B';
-				else if (op == "gett")	invoke.mod = 't';
-				else if (op == "savet")	invoke.mod = 'T';
-				else if (op == "getj")	invoke.mod = 'j';
-				else if (op == "savej")	invoke.mod = 'J';
-				else if (op == "geto")	invoke.mod = 'o';
-				else if (op == "saveo")	invoke.mod = 'O';
-				else if (op == "mkdir")	invoke.mod = '/';
-				else if (op == "isdir")	invoke.mod = '\\';
-				else if (op == "has")	invoke.mod = '.';
-				else if (op == "del")	invoke.mod = 'r';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} else if (id == "arch") {
-				invoke.argc	= '\v';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Archive operation").getString();
-				if (op == "load")			invoke.mod = '<';
-				else if (op == "unload")	invoke.mod = '>';
-				else if (op == "new")		invoke.mod = '.';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} else if (id == "crypt") {
-				invoke.argc	= '?';
-				auto const op = context.fetchNext().fetchToken(LTS_TT_IDENTIFIER, "Cryptographical operation").getString();
-				if (op == "encode")			invoke.mod = 'e';
-				else if (op == "decode")	invoke.mod = 'd';
-				else if (op == "encrypt")	invoke.mod = 'E';
-				else if (op == "decrypt")	invoke.mod = 'D';
-				else if (op == "hash")		invoke.mod = 'h';
-				else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-			} else MINIMA_ERROR(InvalidValue, "Invalid internal call!");
-		} break;
-		case Type{'+'}:
-		case Type{'-'}:
-		case Type{'*'}:
-		case Type{'/'}:
-		case Type{'%'}:
-		case Type{'&'}:
-		case Type{'|'}:
-		case Type{'~'}:
-		case Type{'!'}:
-		case Type{'='}:
-		case Type{'.'}:
-		case Type{'@'}:
-		case Type{'>'}:
-		case Type{','}: {
-			invoke.argc = Makai::Cast::as<uint8>(func.type);
-		} break;
-		case Type::LTS_TT_LOGIC_AND: {
-			invoke.argc = 'a';
-		} break;
-		case Type::LTS_TT_LOGIC_OR: {
-			invoke.argc = 'o';
-		} break;
-		case Type::LTS_TT_COMPARE_EQUALS: {
-			invoke.argc = '=';
-		} break;
-		default:
-			MINIMA_ERROR(InvalidValue, "Invalid internal function call!");
-	}
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_CALL,
-		Makai::Cast::bit<uint32>(invoke)
-	});
-}
-
 static Location getLabelLocation(Context& context) {
-	auto const current =
-		context
-			.fetchNext()
-			.fetchToken(LTS_TT_IDENTIFIER, "label name")
-			.getString()
-	;
-	if (!context.jumps.labels.contains(current))
-		context.error("Jump target has not been declared yet!");
-	return {DataLocation::AV2_DL_CONST, context.addConstant(context.jumps.labels[current])};
+	context.next();
+	auto const current = resolvePath(context);
+	if (!context.hasJumpTarget(current))
+		context.error("Label has not been declared yet!");
+	return {DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED, context.getJumpTarget(current)};
 }
 
 static Location getDataLocation(Context& context) {
 	Location loc;
 	bool hasLoadType = false;
-	while (context.hasToken(LTS_TT_IDENTIFIER)) {
-		auto const lt = context.getValue<Makai::String>();
+	DEBUGLN("Getting move type...");
+	while (context.has(LTS_TT_IDENTIFIER)) {
+		auto const lt = context.value().getString();
 		if (
 			lt == "move"
 		||	lt == "ref"
 		||	lt == "copy"
 		) {
+			DEBUGLN("Has move!");
 			if (!hasLoadType) {
 				hasLoadType = true;
 				loc.source = getLoadType(context, DataLocation{0});
 			}
-			context.fetchNext();
+			context.next();
 			continue;
 		} else break;
 	}
-	switch (context.currentToken().type) {
+	DEBUGLN("Getting location...");
+	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
-			auto const id = context.getValue<Makai::String>();
-			if (id == "register" || id == "reg")		loc |= getRegister(context);
+			auto const id = context.value().getString();
+			if (id == "local" || id == "arg")			loc |= getLocal(context);
 			else if (id == "placeof")					loc |= getLabelLocation(context);
 			else if (id == "stack")						loc |= getStack(context);
 			else if (id == "global" || id == "g")		loc |= getGlobal(context);
 			else if (id == "external" || id == "out")	loc |= getExtern(context);
-			else if (id == "temporary" || id == "temp")	loc |= {DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
-			else if (id == "false")						loc |= {DataLocation::AV2_DL_INTERNAL, 0};
-			else if (id == "true")						loc |= {DataLocation::AV2_DL_INTERNAL, 1};
-			else if (id == "undefined" || id == "void")	loc |= {DataLocation::AV2_DL_INTERNAL, 2};
-			else if (id == "null" || id == "nil")		loc |= {DataLocation::AV2_DL_INTERNAL, 3};
-			else if (id == "nan")						loc |= {DataLocation::AV2_DL_INTERNAL, 4};
-			else if (id == "array" || id == "arr")		loc |= {DataLocation::AV2_DL_INTERNAL, 8};
-			else if (id == "bytes" || id == "bin")		loc |= {DataLocation::AV2_DL_INTERNAL, 9};
-			else if (id == "object" || id == "obj")		loc |= {DataLocation::AV2_DL_INTERNAL, 10};
+			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_BOOL, null};
+			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_BOOL | DataLocation::AV2_DLB_TRUE, null};
+			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_VOID, null};
+			else if (id == "null" || id == "nil")		loc |= Location{DataLocation::AV2_DL_NULL, null};
 			else context.error("Invalid data source!");
-		}
+		} break;
 		case Type{'&'}:
 			loc |= getLabelLocation(context);
 		break;
-		case Type{'@'}:
+		case Type{':'}:
 			loc |= getExtern(context);
 		break;
-		case Type{':'}:
+		case Type{'$'}:
 			loc |= getGlobal(context);
 		break;
-		case Type{'$'}:
-			loc |= getRegister(context);
 		case Type{'.'}:
-			loc |= loc |= {DataLocation::AV2_DL_TEMPORARY, uint64(-1)};
+			loc |= getLocal(context);
 		break;
 		case Type{'+'}:
 		case Type{'-'}:
 		case LTS_TT_SINGLE_QUOTE_STRING:
 		case LTS_TT_DOUBLE_QUOTE_STRING:
-		case LTS_TT_CHARACTER:
+		case LTS_TT_BACKTICK_STRING:
+		case LTS_TT_FR_SINGLE_QUOTE_STRING:
+		case LTS_TT_FR_DOUBLE_QUOTE_STRING:
+		case LTS_TT_JP_SINGLE_QUOTE_STRING:
+		case LTS_TT_JP_DOUBLE_QUOTE_STRING:
 		case LTS_TT_INTEGER:
 		case LTS_TT_REAL:
 			loc |= getConstantLocation(context);
@@ -410,919 +457,937 @@ static Location getDataLocation(Context& context) {
 	return loc;
 }
 
-static void doConditionalLeapType(Context& context, Instruction::Leap& leap) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed jump!");
-	auto modifier = context.stream.current();
-	switch (modifier.type) {
+static void doConditionalJump(Context& context, bool dynamic = false) {
+	context.next();
+	Instruction::Leap leap{.dyn = dynamic};
+	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
-			auto const id = modifier.value.get<Makai::String>();
-			if (id == "null")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL;
-			else if (id == "undefined" || id == "void")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_UNDEFINED;
-			else if (id == "nan")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_NAN;
-			else if (id == "not" || id == "false" || id == "falsy")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_FALSY;
-			else if (id == "empty" || id == "_")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_UNDEFINED;
-			else if (id == "is" || id == "true" || id == "truthy")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_TRUTHY;
-			else if (id == "negative" || id == "neg")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_NEGATIVE;
-			else if (id == "positive" || id == "pos")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_POSITIVE;
-			else if (id == "zero" || id == "z")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_ZERO;
-			else if (id == "nonzero" || id == "nz")
-				leap.type = Instruction::Leap::Type::AV2_ILT_IF_NOT_ZERO;
-			else MINIMA_ERROR(InvalidValue, "Invalid jump type!");
-		} break;
-		case Type{'+'}:
-		case Type{'>'}: {
-			leap.type = Instruction::Leap::Type::AV2_ILT_IF_POSITIVE;
-		} break;
-		case Type{'?'}:
-		case Type{'_'}: {
-			leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_UNDEFINED;
-		} break;
-		case Type{'-'}:
-		case Type{'<'}: {
-			leap.type = Instruction::Leap::Type::AV2_ILT_IF_NEGATIVE;
-		} break;
-		case Type{'.'}:
-		case Type{'='}: {
-			leap.type = Instruction::Leap::Type::AV2_ILT_IF_TRUTHY;
-		} break;
-		case Type{'!'}: {
-			leap.type = Instruction::Leap::Type::AV2_ILT_IF_FALSY;
-		} break;
-		case Type::LTS_TT_INTEGER: {
-			auto const num = modifier.value.get<usize>();
-			leap.type = num ? Instruction::Leap::Type::AV2_ILT_IF_NOT_ZERO : Instruction::Leap::Type::AV2_ILT_IF_ZERO;
-		} break;
-		default: MINIMA_ERROR(InvalidValue, "Unexpected token!");
-	}
-	context.fetchNext();
-	auto const loc = getDataLocation(context);
-	leap.condition = loc.source;
-	if (leap.condition == DataLocation::AV2_DL_CONST) {
-		leap.type = Instruction::Leap::Type::AV2_ILT_IF_TRUTHY;
-		if (loc.id == 0) leap.condition = DataLocation::AV2_DL_INTERNAL;
-	} else if (loc.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
-}
-
-void doLeapType(Context& context, Instruction::Leap& leap) {
-	auto loc = context.stream.current();
-	if ((leap.source == DataLocation::AV2_DL_CONST) && loc.type == Type{';'})
-		MINIMA_ERROR(NonexistentValue, "Malformed jump!");
-	switch (loc.type) {
-		case Type{'?'}: {
-			doConditionalLeapType(context, leap);
-		} break;
-		case LTS_TT_IDENTIFIER: {
-			auto const id = loc.value.get<Makai::String>();
-			if (id == "if") doConditionalLeapType(context, leap);
-			break;
+			auto const id = context.value().getString();
+			if (id == "zero" || id == "z")				leap.type = Instruction::Leap::Type::AV2_ILT_IF_ZERO;
+			else if (id == "nonzero" || id == "nz")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NOT_ZERO;
+			else if (id == "negative" || id == "n")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NEGATIVE;
+			else if (id == "positive" || id == "p")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_POSITIVE;
+			else if (id == "true" || id == "t")			leap.type = Instruction::Leap::Type::AV2_ILT_IF_TRUTHY;
+			else if (id == "false" || id == "f")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_FALSY;
+			else if (id == "null" || id == "nil")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL;
+			else if (id == "void" || id == "v")			leap.type = Instruction::Leap::Type::AV2_ILT_IF_UNDEFINED;
+			else if (id == "empty" || id == "e")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_UNDEFINED;
 		}
-		default: MINIMA_ERROR(InvalidValue, "Unexpected token!");
+		default: context.error("Invalid condition!");
 	}
-	if (leap.source == DataLocation::AV2_DL_CONST) {
-		if (!context.stream.next())
-			MINIMA_ERROR(NonexistentValue, "Malformed jump!");
-		auto const name = context.stream.current();
-		if (name.type != LTS_TT_IDENTIFIER)
-			MINIMA_ERROR(InvalidValue, "Expected identifier for jump label!");
-		DEBUGLN("Target: ", name.value.get<Makai::String>());
-		context.addJumpTarget(name.value.get<Makai::String>());
-	}
+	context.add(Instruction::Name::AV2_IN_JUMP, leap);
+	if (!dynamic)
+		context.addJumpTarget(context.getNext(LTS_TT_IDENTIFIER, "jump expression").getString());
 }
 
-void doDynamicLeap(Context& context, Instruction::Leap& leap) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed jump!");
-	auto const loc = getDataLocation(context);
-	leap.source = loc.source;
-	if (loc.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
-	doLeapType(context, leap);
-}
-
-MINIMA_ASSEMBLE_FN(Jump) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed jump!");
-	Instruction::Leap leap = {
-		.type		= Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
-		.source		= Makai::Anima::V2::DataLocation::AV2_DL_CONST,
-		.condition	= Makai::Anima::V2::DataLocation::AV2_DL_CONST
-	};
-	auto const index = context.program.code.size();
-	context.program.code.pushBack({});
-	auto loc = context.stream.current();
-	switch (loc.type) {
-		case LTS_TT_IDENTIFIER: {
-			auto const id = loc.value.get<Makai::String>();
-			if (id == "dynamic" || id == "dyn") {
-				doDynamicLeap(context, leap);
-				break;
-			} else if (id == "if") {
-				doConditionalLeapType(context, leap);
-				context.fetchNext();
+static void doJump(Context& context, bool dynamic = false) {
+	context.next();
+	if (!dynamic) context.expect(LTS_TT_IDENTIFIER, "jump expression");
+	else if (!context.has(LTS_TT_IDENTIFIER)) {
+		context.pad(1);
+		context.add(
+			Instruction::Name::AV2_IN_JUMP,
+			Instruction::Leap{
+				Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
+				true
 			}
-			auto const name = context.fetchToken(LTS_TT_IDENTIFIER, "jump target").getString();
-			DEBUGLN("Target: ", name);
-			context.addJumpTarget(name);
-		} break;
-		case Type{'&'}:
-			doDynamicLeap(context, leap);
-		break;
-		case Type{'?'}:
-			doConditionalLeapType(context, leap);
-		break;
-		default: {
-			if (!context.stream.next())
-				MINIMA_ERROR(NonexistentValue, "Malformed jump!");
-			doLeapType(context, leap);
-		} break;
-	}
-	context.program.code[index] = {
-		Instruction::Name::AV2_IN_JUMP,
-		Makai::Cast::bit<uint32>(leap)
-	};
-}
-
-MINIMA_ASSEMBLE_FN(NoOp) {
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_NO_OP,
-		context.stream.current().value == Makai::Data::Value("next")
-	});
-}
-
-MINIMA_ASSEMBLE_FN(StackSwap) {
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_STACK_SWAP,
-		0
-	});
-}
-
-MINIMA_ASSEMBLE_FN(StackFlush) {
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_STACK_FLUSH,
-		0
-	});
-}
-
-MINIMA_ASSEMBLE_FN(StackClear) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed stack clear!");
-	auto const count = context.stream.current();
-	if (count.type != Type::LTS_TT_INTEGER && count.value.isSigned())
-		MINIMA_ERROR(InvalidValue, "Stack count must be an unsigned integer!");
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_STACK_CLEAR,
-		count.value
-	});
-}
-
-MINIMA_ASSEMBLE_FN(StackPush) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed stack push!");
-	auto const loc = getDataLocation(context);
-	Instruction inst = {
-		Instruction::Name::AV2_IN_STACK_PUSH,
-		Makai::Cast::bit<uint32>(Instruction::StackPush{loc.source})
-	};
-	context.program.code.pushBack(inst);
-	if (loc.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
-}
-
-MINIMA_ASSEMBLE_FN(StackPop) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed stack pop!");
-	auto loc = getDataLocation(context);
-	Instruction inst = {Instruction::Name::AV2_IN_STACK_POP};
-	if (loc.source == DataLocation::AV2_DL_INTERNAL) {
-		inst.type = 0;
-		loc.id = -1;
-	}
-	else inst.type = Makai::Cast::bit<uint32>(Instruction::StackPop{loc.source, true});
-	if (
-		loc.source == DataLocation::AV2_DL_CONST
-	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant value!");
-	context.program.code.pushBack(inst);
-	if (loc.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
-}
-
-MINIMA_ASSEMBLE_FN(Return) {
-	Instruction inst = {Instruction::Name::AV2_IN_RETURN};
-	context.program.code.pushBack(inst);
-}
-
-static Makai::Data::Value::Kind getType(Context& context) {
-	using enum Makai::Data::Value::Kind;
-	constexpr auto const DVK_ANY = Makai::Cast::as<decltype(DVK_VOID)>(-1);
-	auto const ret = context.stream.current();
-	switch (ret.type) {
-		case LTS_TT_IDENTIFIER: {
-			auto const id = ret.value.get<Makai::String>();
-			if (id == "any")														return DVK_ANY;
-			else if (id == "boolean" || id == "bool" || id == "b")					return DVK_BOOLEAN;
-			else if (id == "void" || id == "undefined" || id == "v")				return DVK_VOID;
-			else if (id == "int" || id == "i")										return DVK_SIGNED;
-			else if (id == "uint" || id == "u")										return DVK_UNSIGNED;
-			else if (id == "float" || id == "real" || id == "f" || id == "r")		return DVK_REAL;
-			else if (id == "string" || id == "text" || id == "str" || id == "s")	return DVK_STRING;
-			else if (id == "array" || id == "list" || id == "a")					return DVK_ARRAY;
-			else if (id == "binary" || id == "bytes" || id == "bin")				return DVK_BYTES;
-			else if (id == "object" || id == "struct" || id == "o")					return DVK_OBJECT;
-			MINIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
-		}
-		case Type{'?'}: return DVK_ANY;
-		case Type{'_'}: return DVK_VOID;
-		case Type{'+'}: return DVK_SIGNED;
-		case Type{'-'}: return DVK_UNSIGNED;
-		default: MINIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
-	}
-	MINIMA_ERROR(InvalidValue, "Invalid/Unsupported type!");
-}
-
-MINIMA_ASSEMBLE_FN(Call) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-	auto const func = context.stream.current();
-	if (func.type != LTS_TT_IDENTIFIER)
-		MINIMA_ERROR(InvalidValue, "Function call must be an identifier!");
-	auto fname = func.value.get<Makai::String>();
-	Instruction::Invocation invoke;
-	auto retType = Makai::Cast::as<Makai::Data::Value::Kind>(-2);
-	if (fname == "internal" || fname == "intern" || fname == "in") {
-		return doInternalCall(context);
-	}
-	else if (fname == "external" || fname == "extern" || fname == "out") {
-		invoke.location = DataLocation::AV2_DL_EXTERNAL;
-		if (!context.stream.next())
-			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-		auto const func = context.stream.current();
-		if (!func.value.isString())
-			MINIMA_ERROR(InvalidValue, "External call name must be a string!");
-		fname = func.value.get<Makai::String>();
-		if (!context.stream.next())
-			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-		retType = getType(context);
-	} else invoke.location = DataLocation::AV2_DL_CONST;
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-	auto const funcID = context.program.code.size();
-	context.program.code.pushBack({});
-	if (invoke.location == DataLocation::AV2_DL_CONST) {
-		context.addJumpTarget(fname);
-	} else {
-		context.addInstruction<uint64>(context.addConstant(fname));
-	}
-	if (!context.hasToken(Type{'('}))
-		MINIMA_ERROR(InvalidValue, "Expected '(' here!");
-	Makai::List<uint64> argi;
-	while (context.stream.current().type != Type{')'} && argi.size() < 256) {
-		if (!context.stream.next())
-			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-		auto const argIndex = context.stream.current();
-		if (argIndex.type == Type{')'}) break;
-		if (!argIndex.value.isUnsigned())
-			MINIMA_ERROR(InvalidValue, "Argument index must be an unsigned integer!");
-		auto const i = argIndex.value.get<uint64>();
-		if (i > 255)
-			MINIMA_ERROR(InvalidValue, "Maximum argument index is 255!");
-		if (!context.stream.next())
-			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-		if (argi.find(i) != -1)
-			MINIMA_ERROR(InvalidValue, "Duplicate argument!");
-		if (context.stream.current().type != Type{'='})
-			MINIMA_ERROR(InvalidValue, "Expected '=' here!");
-		if (!context.stream.next())
-			MINIMA_ERROR(NonexistentValue, "Malformed function call!");
-		Instruction::Invocation::Parameter param;
-		auto const loc = getDataLocation(context);
-		param.location	= loc.source;
-		param.id		= loc.id;
-		param.argument	= i;
-		context.addInstruction(param);
-	}
-	if (invoke.location == DataLocation::AV2_DL_EXTERNAL) {
-
-	}
-	if (!context.hasToken(Type{')'}))
-		MINIMA_ERROR(InvalidValue, "Expected ')' here!");
-	for (auto& arg: argi)
-		if (arg > invoke.argc)
-		invoke.argc = invoke.argc;
-	context.program.code[funcID] = {
-		Instruction::Name::AV2_IN_CALL,
-		Makai::Cast::bit<uint32>(invoke)
-	};
-	if (retType != Makai::Cast::as<decltype(retType)>(-2))
-		context.program.code.pushBack(Makai::Cast::bit<Instruction, uint64>(Makai::enumcast(retType)));
-}
-
-MINIMA_ASSEMBLE_FN(Compare) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed comparison!");
-	auto const lhs = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed comparison!");
-	Makai::Anima::V2::Comparator comp;
-	{
-		auto const cmp = context.stream.current();
-		switch (cmp.type) {
-			using enum As<decltype(comp)>;
-			case LTS_TT_IDENTIFIER: {
-				auto const id = cmp.value.get<Makai::String>();
-				if (id == "equals" || id == "eq")							comp = AV2_OP_EQUALS;
-				else if (id == "notequals" || id == "not" || id == "ne")	comp = AV2_OP_NOT_EQUALS;
-				else if (id == "less" || id == "lt")						comp = AV2_OP_LESS_THAN;
-				else if (id == "greater" || id == "gt")						comp = AV2_OP_GREATER_THAN;
-				else if (id == "lessequals" || id == "le")					comp = AV2_OP_LESS_EQUALS;
-				else if (id == "greaterequals" || id == "ge")				comp = AV2_OP_GREATER_EQUALS;
-				else if (id == "threeway" || id == "order" || id == "ord")	comp = AV2_OP_THREEWAY;
-				else if (id == "typeof" || id == "is")						comp = AV2_OP_TYPE_COMPARE;
-				else MINIMA_ERROR(InvalidValue, "Invalid comparison type!");
-			} break;
-			case Type{':'}:						comp = AV2_OP_THREEWAY;			break;
-			case Type{'<'}:						comp = AV2_OP_LESS_THAN;		break;
-			case Type{'>'}:						comp = AV2_OP_GREATER_THAN;		break;
-			case Type{'='}:
-			case LTS_TT_COMPARE_EQUALS:			comp = AV2_OP_EQUALS;			break;
-			case Type{'!'}:
-			case LTS_TT_COMPARE_NOT_EQUALS:		comp = AV2_OP_NOT_EQUALS;		break;
-			case LTS_TT_COMPARE_GREATER_EQUALS:	comp = AV2_OP_GREATER_EQUALS;	break;
-			case LTS_TT_COMPARE_LESS_EQUALS:	comp = AV2_OP_LESS_EQUALS;		break;
-			default: MINIMA_ERROR(InvalidValue, "Invalid comparator for comparison!");
-		}
-	}
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed comparison!");
-	auto const rhs = getDataLocation(context);
-	if (!(context.stream.next() && context.stream.current().type == Type::LTS_TT_LITTLE_ARROW))
-		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
-	context.fetchNext();
-	auto const out = getDataLocation(context);
-	if (
-		out.source == DataLocation::AV2_DL_CONST
-	||	out.source == DataLocation::AV2_DL_INTERNAL
-	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed comparison!");
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_COMPARE,
-		Makai::Cast::bit<uint32, Instruction::Comparison>({
-			lhs.source,
-			rhs.source,
-			out.source,
-			comp
-		})
-	});
-	if (lhs.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(lhs.id));
-	if (rhs.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(rhs.id));
-	if (out.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(out.id));
-}
-
-MINIMA_ASSEMBLE_FN(Copy) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed copy!");
-	auto const from = getDataLocation(context);
-	context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed copy!");
-	auto const to = getDataLocation(context);
-	if (
-		to.source == DataLocation::AV2_DL_CONST
-	||	to.source == DataLocation::AV2_DL_INTERNAL
-	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
-	Instruction::Transfer tf = {
-		from.source,
-		to.source
-	};
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_COPY,
-		Makai::Cast::bit<uint32>(tf)
-	});
-	if (from.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(from.id));
-	if (to.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(to.id));
-}
-
-MINIMA_ASSEMBLE_FN(Context) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed context declaration!");
-	auto const mode = context.stream.current();
-	if (mode.type != LTS_TT_IDENTIFIER)
-		MINIMA_ERROR(InvalidValue, "Context mode name must be an identifier!");
-	auto id = mode.value.get<Makai::String>();
-	Instruction::Context ctx;
-	if (id == "strict" || id == "default" || id == "none")
-		ctx.mode = Makai::Anima::V2::ContextMode::AV2_CM_STRICT;
-	else if (id == "loose")
-		ctx.mode = Makai::Anima::V2::ContextMode::AV2_CM_LOOSE;
-	else MINIMA_ERROR(InvalidValue, "Invalid context mode!");
-	ctx.immediate = false;
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_MODE,
-		Makai::Cast::bit<uint32>(ctx)
-	});
-}
-
-MINIMA_ASSEMBLE_FN(ImmediateContext) {
-	if (
-		context.program.code.back().name == Instruction::Name::AV2_IN_MODE
-	&&	Makai::Cast::bit<Instruction::Context>(context.program.code.back().type).immediate
-	) MINIMA_ERROR(InvalidValue, "Only one immediate context allowed per instruction!");
-	auto id = context.stream.current().value.get<Makai::String>();
-	Instruction::Context ctx;
-	if (id == "strict")
-		ctx.mode = Makai::Anima::V2::ContextMode::AV2_CM_STRICT;
-	else if (id == "loose")
-		ctx.mode = Makai::Anima::V2::ContextMode::AV2_CM_LOOSE;
-	else MINIMA_ERROR(InvalidValue, "Invalid immediate context mode!");
-	ctx.immediate = false;
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_MODE,
-		Makai::Cast::bit<uint32>(ctx)
-	});
-}
-
-MINIMA_ASSEMBLE_FN(Halt) {
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_HALT,
-		0
-	});
-}
-
-MINIMA_ASSEMBLE_FN(ErrorHalt) {
-	auto const err = getDataLocation(context);
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_HALT,
-		Makai::Cast::bit<uint32>(Instruction::Stop{
-			Instruction::Stop::Mode::AV2_ISM_ERROR,
-			err.source
-		})
-	});
-	if (err.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(err.id));
-}
-
-MINIMA_ASSEMBLE_FN(ExitHalt) {
-	auto const v = getDataLocation(context);
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_HALT,
-		Makai::Cast::bit<uint32>(Instruction::Stop{
-			Instruction::Stop::Mode::AV2_ISM_WITH_VALUE,
-			v.source
-		})
-	});
-	if (v.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(v.id));
-}
-
-MINIMA_ASSEMBLE_FN(BinaryMath) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
-	auto const lhs = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
-	auto const op = context.stream.current();
-	Instruction::BinaryMath bmath;
-	switch (op.type) {
-		case LTS_TT_IDENTIFIER: {
-			auto const id = op.value.get<Makai::String>();
-			if (id == "add")							bmath.op = decltype(bmath.op)::AV2_IBM_OP_ADD;
-			else if (id == "subtract" || id == "sub")	bmath.op = decltype(bmath.op)::AV2_IBM_OP_SUB;
-			else if (id == "multiply" || id == "mul")	bmath.op = decltype(bmath.op)::AV2_IBM_OP_MUL;
-			else if (id == "divide" || id == "div")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_DIV;
-			else if (id == "remainder" || id == "rem")	bmath.op = decltype(bmath.op)::AV2_IBM_OP_REM;
-			else if (id == "power" || id == "pow")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_POW;
-			else if (id == "atan2" || id == "a2")		bmath.op = decltype(bmath.op)::AV2_IBM_OP_ATAN2;
-			else MINIMA_ERROR(NonexistentValue, "Invalid binary math operator!");
-		} break;
-		case Type{'+'}: {
-			bmath.op = decltype(bmath.op)::AV2_IBM_OP_ADD;
-		} break;
-		case Type{'-'}: {
-			bmath.op = decltype(bmath.op)::AV2_IBM_OP_SUB;
-		} break;
-		case Type{'*'}: {
-			bmath.op = decltype(bmath.op)::AV2_IBM_OP_MUL;
-		} break;
-		case Type{'/'}: {
-			bmath.op = decltype(bmath.op)::AV2_IBM_OP_DIV;
-		} break;
-		case Type{'%'}: {
-			bmath.op = decltype(bmath.op)::AV2_IBM_OP_REM;
-		} break;
-		case Type{'^'}: {
-			bmath.op = decltype(bmath.op)::AV2_IBM_OP_POW;
-		} break;
-		case Type{'.'}: {
-			bmath.op = decltype(bmath.op)::AV2_IBM_OP_ATAN2;
-		} break;
-		default: MINIMA_ERROR(NonexistentValue, "Invalid binary math operator!");
-	}
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
-	auto const rhs = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
-	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
-		MINIMA_ERROR(NonexistentValue, "Expected '->' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed binary math expression!");
-	auto const out = getDataLocation(context);
-	if (
-		out.source == DataLocation::AV2_DL_CONST
-	||	out.source == DataLocation::AV2_DL_INTERNAL
-	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
-	bmath.lhs = lhs.source;
-	bmath.rhs = rhs.source;
-	bmath.out = out.source;
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_MATH_UOP,
-		Makai::Cast::bit<uint32>(bmath)
-	});
-	if (lhs.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(lhs.id));
-	if (rhs.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(rhs.id));
-	if (out.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(out.id));
-}
-
-MINIMA_ASSEMBLE_FN(UnaryMath) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
-	auto const op = context.stream.current();
-	Instruction::UnaryMath umath;
-	switch (op.type) {
-		case LTS_TT_IDENTIFIER: {
-			auto const id = op.value.get<Makai::String>();
-			if (id == "negate" || id == "neg")			umath.op = decltype(umath.op)::AV2_IUM_OP_NEGATE;
-			else if (id == "increment" || id == "inc")	umath.op = decltype(umath.op)::AV2_IUM_OP_INCREMENT;
-			else if (id == "decrement" || id == "dec")	umath.op = decltype(umath.op)::AV2_IUM_OP_DECREMENT;
-			else if (id == "inverse" || id == "inv")	umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE;
-			else if (id == "sin")						umath.op = decltype(umath.op)::AV2_IUM_OP_SIN;
-			else if (id == "cos")						umath.op = decltype(umath.op)::AV2_IUM_OP_COS;
-			else if (id == "tan")						umath.op = decltype(umath.op)::AV2_IUM_OP_TAN;
-			else if (id == "arcsin" || id == "asin")	umath.op = decltype(umath.op)::AV2_IUM_OP_ASIN;
-			else if (id == "arccos" || id == "acos")	umath.op = decltype(umath.op)::AV2_IUM_OP_ACOS;
-			else if (id == "arctan" || id == "atan")	umath.op = decltype(umath.op)::AV2_IUM_OP_ATAN;
-			else if (id == "sinh")						umath.op = decltype(umath.op)::AV2_IUM_OP_SINH;
-			else if (id == "cosh")						umath.op = decltype(umath.op)::AV2_IUM_OP_COSH;
-			else if (id == "tanh")						umath.op = decltype(umath.op)::AV2_IUM_OP_TANH;
-			else if (id == "log2" || id == "l2")		umath.op = decltype(umath.op)::AV2_IUM_OP_LOG2;
-			else if (id == "log10" || id == "l10")		umath.op = decltype(umath.op)::AV2_IUM_OP_LOG10;
-			else if (id == "logn" || id == "ln")		umath.op = decltype(umath.op)::AV2_IUM_OP_LN;
-			else if (id == "sqrt")						umath.op = decltype(umath.op)::AV2_IUM_OP_SQRT;
-			else MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
-		} break;
-		case LTS_TT_DECREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_DECREMENT; break;
-		case LTS_TT_INCREMENT: umath.op = decltype(umath.op)::AV2_IUM_OP_INCREMENT; break;
-		case Type{'-'}: umath.op = decltype(umath.op)::AV2_IUM_OP_NEGATE; break;
-		case Type{'/'}: umath.op = decltype(umath.op)::AV2_IUM_OP_INVERSE; break;
-		default: MINIMA_ERROR(NonexistentValue, "Invalid unary math operator!");
-	}
-	context.fetchNext();
-	auto const v = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
-	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
-		MINIMA_ERROR(NonexistentValue, "Expected '->' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed unary math expression!");
-	auto const out = getDataLocation(context);
-	if (
-		out.source == DataLocation::AV2_DL_CONST
-	||	out.source == DataLocation::AV2_DL_INTERNAL
-	) MINIMA_ERROR(NonexistentValue, "Destination cannot be a constant or internal value!");
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_MATH_UOP,
-		Makai::Cast::bit<uint32>(umath)
-	});
-	if (v.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(v.id));
-	if (out.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(out.id));
-}
-
-MINIMA_ASSEMBLE_FN(Yield) {
-	context.program.code.pushBack({
-		Instruction::Name::AV2_IN_YIELD,
-		0
-	});
-}
-
-static void doTruthyAwait(Context& context, Instruction::WaitRequest& wait) {
-	auto const loc = getDataLocation(context);
-	if (loc.source == DataLocation::AV2_DL_CONST)
-		MINIMA_ERROR(InvalidValue, "Cannot await based on a constant value!");
-	wait.val = loc.source;
-	if (loc.id < Makai::Limit::MAX<uint64>)
-		context.program.code.pushBack(Makai::Cast::bit<Instruction>(loc.id));
-}
-
-static void doFalsyAwait(Context& context, Instruction::WaitRequest& wait) {
-	wait.wait = decltype(wait.wait)::AV2_IWRW_FALSY;
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed await!");
-	doTruthyAwait(context, wait);
-}
-
-MINIMA_ASSEMBLE_FN(Await) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed await!");
-	auto const await = context.stream.current();
-	Instruction::WaitRequest wait {.wait = decltype(wait.wait)::AV2_IWRW_TRUTHY};
-	auto const awaitID = context.program.code.size();
-		context.program.code.pushBack({});
-	switch (await.type) {
-		case LTS_TT_IDENTIFIER: {
-			auto const id = await.value.get<Makai::String>();
-			if (id == "not") doFalsyAwait(context, wait);
-			else doTruthyAwait(context, wait);
-		} break;
-		case Type{'!'}: doFalsyAwait(context, wait); break;
-		default: doTruthyAwait(context, wait); break;
-	}
-	context.program.code[awaitID] = {
-		Instruction::Name::AV2_IN_AWAIT,
-		Makai::Cast::bit<uint32>(wait)
-	};
-}
-
-MINIMA_ASSEMBLE_FN(Get) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const getID = context.addNamedInstruction(Instruction::Name::AV2_IN_GET);
-	Instruction::GetRequest get;
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const from = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	if (context.stream.current().type != Type{'['})
-		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const field = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	if (context.stream.current().type != Type{']'})
-		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
-		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed getter!");
-	auto const to = getDataLocation(context);
-	get.from	= from.source;
-	get.to		= to.source;
-	get.field	= field.source;
-	if (field.id < Makai::Limit::MAX<uint64>)
-		context.addInstruction(field.id);
-	if (from.id < Makai::Limit::MAX<uint64>)
-		context.addInstruction(from.id);
-	if (to.id < Makai::Limit::MAX<uint64>)
-		context.addInstruction(to.id);
-	context.addInstructionType(getID, get);
-}
-
-MINIMA_ASSEMBLE_FN(Set) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	auto const setID = context.addNamedInstruction(Instruction::Name::AV2_IN_SET);
-	Instruction::SetRequest set;
-	auto const to = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	if (context.stream.current().type != Type::LTS_TT_LITTLE_ARROW)
-		MINIMA_ERROR(InvalidValue, "Expected '->' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	auto const from = getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	if (context.stream.current().type != Type{'['})
-		MINIMA_ERROR(InvalidValue, "Expected '[' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed setter!");
-	auto const field = getDataLocation(context);
-	if (context.stream.current().type != Type{']'})
-		MINIMA_ERROR(InvalidValue, "Expected ']' here!");
-	set.from	= from.source;
-	set.to		= to.source;
-	set.field	= field.source;
-	if (field.id < Makai::Limit::MAX<uint64>)
-		context.addInstruction(field.id);
-	if (from.id < Makai::Limit::MAX<uint64>)
-		context.addInstruction(from.id);
-	if (to.id < Makai::Limit::MAX<uint64>)
-		context.addInstruction(to.id);
-	context.addInstructionType(setID, set);
-}
-
-MINIMA_ASSEMBLE_FN(Cast) {
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	auto const castID = context.addNamedInstruction(Instruction::Name::AV2_IN_CAST);
-	auto const from	= getDataLocation(context);
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	if (context.stream.current().type != Type{':'})
-		MINIMA_ERROR(InvalidValue, "Expected ':' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	auto const type = getType(context);
-	if (!context.isCastable(type)) MINIMA_ERROR(InvalidValue, "Casts can only happen to scalar types, string and [any]!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	if (!context.hasToken(LTS_TT_LITTLE_ARROW))
-		context.error("Expected '->' here!");
-	if (!context.stream.next())
-		MINIMA_ERROR(NonexistentValue, "Malformed cast!");
-	auto const to	= getDataLocation(context);
-	if (type != context.DVK_ANY) {
-		Instruction::Casting cast = {from.source, to.source, type};
-		context.addInstructionType(castID, cast);
-	} else {
-		context.instruction(castID).name = Instruction::Name::AV2_IN_COPY;
-		context.addInstructionType(castID, Instruction::Transfer{from.source, to.source});
-	}
-	if (from.id < Makai::Limit::MAX<usize>)
-		context.addInstruction(from.id);
-	if (to.id < Makai::Limit::MAX<usize>)
-		context.addInstruction(to.id);
-}
-
-MINIMA_ASSEMBLE_FN(Label) {
-	auto const name = context.stream.current();
-	if (name.type != LTS_TT_IDENTIFIER)
-		MINIMA_ERROR(InvalidValue, "Label name must be an identifier!");
-	if (!context.stream.next() && context.stream.current().type != Type{':'})
-		MINIMA_ERROR(NonexistentValue, "Malformed jump label!");
-	auto const id = name.value.get<Makai::String>();
-	context.jumps.labels[id] = context.program.code.size();
-	context.program.labels.jumps[id] = context.program.jumpTable.size();
-	context.program.jumpTable.pushBack(context.program.code.size());
-	auto const nopID = context.addNamedInstruction(Instruction::Name::AV2_IN_NO_OP);
-	context.instruction(nopID).type = 1;
-}
-
-MINIMA_ASSEMBLE_FN(Indirect) {
-	// TODO: This (what was this supposed to be, again?)
-	// "Indirect" reads & writes (i.e. uhhhhhhhhhhhh)
-}
-
-MINIMA_ASSEMBLE_FN(Hook) {
-	context.fetchNext();
-	if (!context.hasToken(LTS_TT_IDENTIFIER))
-		MINIMA_ERROR(InvalidValue, "Hook must be an identifier!");
-	auto const hookName = context.stream.current().value;
-	context.program.ani.in[hookName] = 0;
-	doLabel(context);
-}
-
-MINIMA_ASSEMBLE_FN(RandomNumber) {
-	context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG operation");
-	auto id = context.currentValue().getString();
-	DEBUGLN("RNG Action: [", id, "]");
-	Instruction::Randomness rng;
-	if (id == "seed") {
-		context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG seed operation");
-		auto const op = context.currentValue().getString();
-		context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
-		context.fetchNext();
-		auto const seed = getDataLocation(context);
-		auto const inst = context.addNamedInstruction(Instruction::Name::AV2_IN_RANDOM);
-		if (op == "set")
-			rng.flags = Instruction::Randomness::Flags::AV2_IRF_SET_SEED;
-		else if (op == "get")
-			rng.flags = Instruction::Randomness::Flags::AV2_IRF_GET_SEED;
-		else context.error("Invalid RNG seed operation!");
-		rng.num = seed.source;
-		context.addInstructionType(inst, rng);
-		context.addInstruction(seed.id);
-		return;
-	}
-	auto const inst = context.addNamedInstruction(Instruction::Name::AV2_IN_RANDOM);
-	rng.flags = Instruction::Randomness::Flags::AV2_IRF_SET_SEED;
-	bool secure = false;
-	if (id == "secure" || id == "safe" || id == "srng") {
-		secure = false;
-	} else if (id == "pseudo" || id == "fast" || id == "prng") {
-		secure = true;
-	} else context.error("Invalid RNG operation!");
-	context.fetchNext().expectToken(LTS_TT_IDENTIFIER, "RNG operation");
-	id = context.currentValue().getString();
-	if (id == "float" || id == "real" || id == "r") {
-		rng.type = decltype(rng.type)::AV2_IRT_REAL;
-	} else if (id == "signed" || id == "int" || id == "i") {
-		rng.type = decltype(rng.type)::AV2_IRT_INT;
-	} else if (id == "unsigned" || id == "uint" || id == "u") {
-		rng.type = decltype(rng.type)::AV2_IRT_UINT;
-	} else context.error("Invalid RNG generation type!");
-	context.fetchNext();
-	Location num;
-	switch (context.currentToken().type) {
-		case Type{'('}: {
-			Instruction::Randomness::Number numDecl = {};
-			auto const lo = getDataLocation(context.fetchNext());
-			context.fetchNext().expectToken(Type{':'});
-			auto const hi = getDataLocation(context.fetchNext());
-			context.fetchNext().expectToken(Type{')'});
-			rng.flags = decltype(rng.flags)::AV2_IRF_BOUNDED;
-			context.fetchNext().expectToken(LTS_TT_LITTLE_ARROW);
-			num = getDataLocation(context.fetchNext());
-			numDecl.lo = lo.source;
-			numDecl.hi = hi.source;
-			context.addInstruction(numDecl);
-			if (lo.id < Makai::Limit::MAX<uint64>)
-				context.addInstruction(lo.id);
-			if (hi.id < Makai::Limit::MAX<uint64>)
-				context.addInstruction(hi.id);
-		} break;
-		case LTS_TT_LITTLE_ARROW: {
-			num = getDataLocation(context.fetchNext());
-		} break;
-		default: context.error("Invalid RNG operation!");
-	}
-	if (secure)
-		rng.flags = Makai::Cast::as<decltype(rng.flags)>(
-			Makai::enumcast(decltype(rng.flags)::AV2_IRF_SECURE)
-		|	Makai::enumcast(rng.flags)
 		);
-	context.addInstructionType(inst, rng);
-	if (num.id < Makai::Limit::MAX<uint64>)
-		context.addInstruction(num.id);
+	}
+	auto const jt = context.value().getString();
+	if (jt == "if")
+		doConditionalJump(context, dynamic);
+	else if (!dynamic)
+		context.addJumpTarget(resolvePath(context));
+	else context.error("Invalid jump instruction!");
 }
 
-MINIMA_ASSEMBLE_FN(StructuredOperation) {
-	// TODO: Structured operations
+static void doCall(Context& context, bool dynamic = false) {
+	Instruction::Invocation invoke {.dynamic = dynamic};
+	if (!dynamic) {
+		context.next();
+		auto id = resolvePath(context);
+		context.add(
+			Instruction::Name::AV2_IN_CALL,
+			invoke
+		);
+		if (context.methods.contains(id))
+			context.addJumpTarget(context.getMethod(id)->jump);
+		else context.error("Method with this name does not exist!");
+	} else {
+		context.add(
+			Instruction::Name::AV2_IN_CALL,
+			invoke
+		);
+	}
 }
 
-MINIMA_ASSEMBLE_FN(Instantiation) {
-	// TODO: Instantiation
+static void doNoOp(Context& context) {
+	context.add(
+		Instruction::Name::AV2_IN_NO_OP,
+		Makai::Cast::as<uint32>(context.value().getString() == "next")
+	);
 }
 
-MINIMA_ASSEMBLE_FN(Expression) {
-	auto const current = context.stream.current();
-	if (current.type == LTS_TT_IDENTIFIER) {
-		auto const id = current.value.get<Makai::String>();
-		if (id == "jump" || id == "go")							doJump(context);
-		else if (id == "nop" || id == "next")					doNoOp(context);
-		else if (id == "swap")									doStackSwap(context);
-		else if (id == "flush")									doStackFlush(context);
-		else if (id == "push")									doStackPush(context);
-		else if (id == "pop")									doStackPop(context);
-		else if (id == "clear")									doStackClear(context);
-		else if (id == "return" || id == "ret" || id == "end")	doReturn(context);
-		else if (id == "terminate" || id == "halt")				doHalt(context);
-		else if (id == "error" || id == "err")					doErrorHalt(context);
-		else if (id == "exit")									doExitHalt(context);
-		else if (id == "call" || id == "do")					doCall(context);
-		else if (id == "compare" || id == "cmp")				doCompare(context);
-		else if (id == "copy")									doCopy(context);
-		else if (id == "context" || id == "mode")				doContext(context);
-		else if (id == "loose" || id == "strict")				doImmediateContext(context);
-		else if (id == "binop" || id == "bmath" || id == "bop")	doBinaryMath(context);
-		else if (id == "unop"|| id == "uop")					doUnaryMath(context);
-		else if (id == "yield")									doYield(context);
-		else if (id == "await" || id == "wait")					doAwait(context);
-		else if (id == "convert" || id == "cast")				doCast(context);
-		else if (id == "read" || id == "get")					doGet(context);
-		else if (id == "write" || id == "set")					doSet(context);
-		else if (id == "indirect"  || id == "ref")				doIndirect(context);
-		else if (id == "in")									doHook(context);
-		else if (id == "random" || id == "rng")					doRandomNumber(context);
-		else if (id == "struct" || id == "data")				doStructuredOperation(context);
-		else if (id == "new")									doInstantiation(context);
-		else doLabel(context);
-	} else MINIMA_ERROR(InvalidValue, "Instruction must be an identifier!");
+static void doStackSwap(Context& context) {
+	context.add(Instruction::Name::AV2_IN_STACK_SWAP);
 }
 
-void Minima::assemble() {
-	while (context.stream.next()) doExpression(context);
-	auto const unmapped = context.mapJumps();
-	if (unmapped.size())
-		MINIMA_ERROR(NonexistentValue, "Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
-	for (auto& [id, loc]: context.program.labels.jumps)
-		if (context.program.ani.in.contains(id))
-			context.program.ani.in[id] = context.program.labels.jumps[id];
+static void doStackFlush(Context& context) {
+	context.add(Instruction::Name::AV2_IN_STACK_FLUSH);
 }
-CTL_DIAGBLOCK_END
+
+static void doStackPush(Context& context) {
+	context.next();
+	auto const src = getDataLocation(context);
+	context.add(
+		Instruction::Name::AV2_IN_STACK_PUSH,
+		Instruction::StackPush{src.source}
+	);
+	src.addID(context);
+}
+
+static void doStackPop(Context& context) {
+	context.add(Instruction::Name::AV2_IN_STACK_POP);
+}
+
+static void doStackBlit(Context& context) {
+	Instruction::Blitting blit {.type = Instruction::Blitting::Type::AV2_IBT_COPY};
+	auto const count = context.getNext(LTS_TT_INTEGER).getUnsigned();
+	context.expectNext(LTS_TT_LITTLE_ARROW);
+	auto const src = context.getNext(LTS_TT_IDENTIFIER, "blit source").getString();
+	if (src == "local" || src == "l")
+		blit.fromGlobal = true;
+	else if (src == "global" || src == "g")
+		blit.fromGlobal = false;
+	else context.error("Invalid blit source!");
+	context.add(
+		Instruction::Name::AV2_IN_STACK_BLIT,
+		blit
+	);
+	context.add(count);
+}
+
+static void doReturn(Context& context) {
+	context.add(Instruction::Name::AV2_IN_RETURN);
+}
+
+static void doStackClear(Context& context) {
+	context.add(Instruction::Name::AV2_IN_STACK_CLEAR);
+	context.add(context.getNext(LTS_TT_INTEGER).getUnsigned());
+}
+
+static void doField(Context& context, bool const setter, bool const dyn = false) {
+	Makai::Nullable<uint64> field;
+	Instruction::Field f;
+	if (!dyn) {
+		field =
+			context
+				.expectNext(Type{'['})
+				.getNext(LTS_TT_INTEGER, "field ID")
+				.getUnsigned()
+		;
+		context.expectNext(Type{']'});
+	} else f.dynamic = dyn;
+	context.add(
+		setter
+	?	Instruction::Name::AV2_IN_FIELD_SET
+	:	Instruction::Name::AV2_IN_FIELD_GET,
+		f
+	);
+}
+
+static void doSizeOf(Context& context, bool const inBytes = false) {
+	context.add(
+		Instruction::Name::AV2_IN_SIZEOF,
+		inBytes
+	);
+}
+
+static void doTypeGet(Context& context) {
+	context.add(Instruction::Name::AV2_IN_TYPEOF);
+}
+
+
+static void doTypeCheck(Context& context, bool const dynamic = false) {
+	// TODO: Dynamic type checking
+}
+
+static void doHalt(Context& context, bool const error = false) {
+	context.add(
+		Instruction::Name::AV2_IN_HALT,
+		Instruction::Stop{
+			error
+		?	Instruction::Stop::Mode::AV2_ISM_ERROR
+		:	Instruction::Stop::Mode::AV2_ISM_NORMAL
+		}
+	);
+}
+
+static void doCompare(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "comparison").getString();
+	Instruction::Comparison cmp;
+	if (id == "less" || id == "l")					cmp.comp = Comparator::AV2_OP_LESS_THAN;
+	else if (id == "greater" || id == "g")			cmp.comp = Comparator::AV2_OP_GREATER_THAN;
+	else if (id == "equals" || id == "e")			cmp.comp = Comparator::AV2_OP_EQUALS;
+	else if (id == "notequals" || id == "ne")		cmp.comp = Comparator::AV2_OP_NOT_EQUALS;
+	else if (id == "greaterequals" || id == "ge")	cmp.comp = Comparator::AV2_OP_GREATER_EQUALS;
+	else if (id == "lessequals" || id == "le")		cmp.comp = Comparator::AV2_OP_LESS_EQUALS;
+	else if (id == "order" || id == "o")			cmp.comp = Comparator::AV2_OP_THREEWAY;
+	context.add(Instruction::Name::AV2_IN_COMPARE, cmp);
+}
+
+static void doScopeEnter(Context& context) {
+	auto const count = context.getNext(LTS_TT_INTEGER, "scope-local stack size");
+	context.add(
+		Instruction::Name::AV2_IN_SCOPE_ENTER,
+		count
+	);
+}
+
+static void doScopeExit(Context& context) {
+	context.add(Instruction::Name::AV2_IN_SCOPE_EXIT);
+}
+
+static void doScopeBind(Context& context) {
+	auto const transfer = context.getNext(LTS_TT_IDENTIFIER, "transfer mode").getString();
+	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
+	context.expectNext(Type{'['});
+	auto const src = context.getNext(LTS_TT_INTEGER, "global stack top offset").get<uint16>();
+	context.expectNext(LTS_TT_LITTLE_ARROW);
+	auto const dst = context.getNext(LTS_TT_INTEGER, "local stack bottom offset").get<uint16>();
+	context.expectNext(Type{']'});
+	if (count < 1) return;
+	context.add(
+		Instruction::Name::AV2_IN_SCOPE_BIND,
+		Instruction::Binding {
+			src,
+			dst,
+			transfer == "copy"
+		}
+	);
+	context.add(count);
+}
+
+static void doScopeBring(Context& context) {
+	auto const transfer = context.getNext(LTS_TT_IDENTIFIER, "transfer mode").getString();
+	auto const count = context.getNext(LTS_TT_INTEGER, "bind count").getUnsigned();
+	context.expectNext(Type{'['});
+	auto const src = context.getNext(LTS_TT_INTEGER, "source scope").getUnsigned();
+	auto const offset = context.expectNext(Type{'['}).getNext(LTS_TT_INTEGER, "source local stack bottom offset").get<uint16>();
+	context.expectNext(Type{']'}).expectNext(LTS_TT_LITTLE_ARROW);
+	auto const dst = context.getNext(LTS_TT_INTEGER, "source local stack bottom offset").get<uint16>();
+	context.expectNext(Type{']'});
+	if (count < 1) return;
+	context.add(
+		Instruction::Name::AV2_IN_SCOPE_BRING,
+		Instruction::Binding {
+			offset,
+			dst,
+			transfer == "copy"
+		}
+	);
+	context.add(src);
+	context.add(count);
+}
+
+static void doScopeKeep(Context& context) {
+	context.add(Instruction::Name::AV2_IN_SCOPE_KEEP);
+}
+
+static void doScopeDeclare(Context& context) {
+	auto const count = context.getNext(LTS_TT_INTEGER, "declaration count").getUnsigned();
+	if (count < 1) return;
+	context.add(Instruction::Name::AV2_IN_SCOPE_DECLARE, count);
+}
+
+static void doCopy(Context& context) {
+	context.next();
+	auto const src = getDataLocation(context);
+	context.expectNext(LTS_TT_LITTLE_ARROW).next();
+	auto const dst = getDataLocation(context);
+	Instruction::Transfer tf {
+		src.source,
+		dst.source
+	};
+	context.add(
+		Instruction::Name::AV2_IN_COPY,
+		tf
+	);
+	src.addID(context);
+	dst.addID(context);
+}
+
+static void doContext(Context& context, bool immediate = false) {
+	auto const mode = context.get(LTS_TT_IDENTIFIER, "context").getString();
+	Instruction::Context ctx{.immediate = immediate};
+	if (mode == "loose")		ctx.mode = ContextMode::AV2_CM_LOOSE;
+	else if (mode == "strict")	ctx.mode = ContextMode::AV2_CM_STRICT;
+	else context.error("Invalid context!");
+	context.add(
+		Instruction::Name::AV2_IN_MODE,
+		ctx
+	);
+}
+
+static void doOperation(Context& context) {
+	Instruction::Operation bop;
+	auto const op = context.getNext(LTS_TT_IDENTIFIER, "unary operation name").getString();
+	if (op == "add")		bop.op = Operator::AV2_BOP_ADD;
+	else if (op == "sub")	bop.op = Operator::AV2_BOP_SUB;
+	else if (op == "mul")	bop.op = Operator::AV2_BOP_MUL;
+	else if (op == "div")	bop.op = Operator::AV2_BOP_DIV;
+	else if (op == "mod")	bop.op = Operator::AV2_BOP_REM;
+	else if (op == "land")	bop.op = Operator::AV2_BOP_LOGIC_AND;
+	else if (op == "lor")	bop.op = Operator::AV2_BOP_LOGIC_OR;
+	else if (op == "lxor")	bop.op = Operator::AV2_BOP_LOGIC_XOR;
+	else if (op == "band")	bop.op = Operator::AV2_BOP_BIT_AND;
+	else if (op == "bor")	bop.op = Operator::AV2_BOP_BIT_OR;
+	else if (op == "bxor")	bop.op = Operator::AV2_BOP_BIT_XOR;
+	else if (op == "pow")	bop.op = Operator::AV2_BOP_POW;
+	else if (op == "atan2")	bop.op = Operator::AV2_BOP_ATAN2;
+	else if (op == "neg")	bop.op = Operator::AV2_UOP_NEGATE;
+	else if (op == "inc")	bop.op = Operator::AV2_UOP_INCREMENT;
+	else if (op == "dec")	bop.op = Operator::AV2_UOP_DECREMENT;
+	else if (op == "inv")	bop.op = Operator::AV2_UOP_INVERSE;
+	else if (op == "sin")	bop.op = Operator::AV2_UOP_SIN;
+	else if (op == "cos")	bop.op = Operator::AV2_UOP_COS;
+	else if (op == "tan")	bop.op = Operator::AV2_UOP_TAN;
+	else if (op == "asin")	bop.op = Operator::AV2_UOP_ASIN;
+	else if (op == "acos")	bop.op = Operator::AV2_UOP_ACOS;
+	else if (op == "atan")	bop.op = Operator::AV2_UOP_ATAN;
+	else if (op == "sinh")	bop.op = Operator::AV2_UOP_SINH;
+	else if (op == "cosh")	bop.op = Operator::AV2_UOP_COSH;
+	else if (op == "tanh")	bop.op = Operator::AV2_UOP_TANH;
+	else if (op == "log2")	bop.op = Operator::AV2_UOP_LOG2;
+	else if (op == "log10")	bop.op = Operator::AV2_UOP_LOG10;
+	else if (op == "ln")	bop.op = Operator::AV2_UOP_LN;
+	else if (op == "sqrt")	bop.op = Operator::AV2_UOP_SQRT;
+	else if (op == "lnot")	bop.op = Operator::AV2_UOP_LOGIC_NOT;
+	else if (op == "bnot")	bop.op = Operator::AV2_UOP_BIT_NOT;
+	else context.error("Invalid/Unsupported operation!");
+	context.add(Instruction::Name::AV2_IN_OP, bop);
+}
+
+static void doYield(Context& context) {
+	context.add(Instruction::Name::AV2_IN_YIELD);
+}
+
+static void doCast(Context& context, bool const dyn = false) {
+	if (!dyn) {
+		auto const type = resolvePath(context);
+		if (context.types.contains(type)) {
+			context.add(Instruction::Name::AV2_IN_CAST);
+			context.add(context.getType(type)->id);
+		} else context.error("Type with this name does not exist!");
+	} else {
+		context.add(
+			Instruction::Name::AV2_IN_CAST,
+			Instruction::Casting{.dynamic = true}
+		);
+	}
+}
+
+static void doUnsafeCast(Context& context, bool const dyn = false) {
+	if (!dyn) {
+		auto const type = resolvePath(context);
+		if (context.types.contains(type)) {
+			context.add(
+				Instruction::Name::AV2_IN_CAST,
+				Instruction::Casting{.unsafe = true}
+			);
+			context.add(context.getType(type)->id);
+		} else context.error("Type with this name does not exist!");
+	} else {
+		context.add(
+			Instruction::Name::AV2_IN_CAST,
+			Instruction::Casting{.dynamic = true, .unsafe = true}
+		);
+	}
+}
+
+static void doRandomNumber(Context& context) {
+	Instruction::Randomness rng;
+	auto id = context.getNext(LTS_TT_IDENTIFIER, "RNG operation").getString();
+	if (id == "setseed")		rng.setSeed					= true;
+	else if (id == "getseed")	rng.getSeed					= true;
+	else if (id == "reseed")	rng.setSeed = rng.getSeed	= true;
+	else if (id == "safe" || id == "fast") {
+		rng.secure = id == "safe";
+		if (context.getNext(LTS_TT_IDENTIFIER) && context.value().getString() == "bounded")
+			rng.bounded = true;
+		else context.pad(1);
+	} else context.error("Invalid RNG operation!");
+}
+
+static Makai::String declareJumpTarget(Context& context) {
+	auto const name = resolvePath(context);
+	context.registerJumpPoint(name);
+	context.expectNext(LTS_TT_COLON);
+	return name;
+}
+
+static void doDynamic(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "dynamic operation").getString();
+	if (id == "jump" || id == "go")
+		doJump(context, true);
+	else if (id == "call" || id == "do")
+		doCall(context, true);
+	else if (id == "cast" || id == "as")
+		doCast(context, true);
+	else if (id == "field" || id == "at")
+		doField(context, false, true);
+	else if (id == "set")
+		doField(context, true, true);
+	else if (id == "rewrite")
+		doUnsafeCast(context, true);
+	else if (id == "is")
+		doTypeCheck(context, true);
+	else context.error("Invalid dynamic operation!");
+}
+
+static void doSelect(Context& context) {
+	uint32 count = 0;
+	auto const inst = context.add(Instruction::Name::AV2_IN_SELECT);
+	context.expectNext(LTS_TT_OPEN_BRACKET);
+	while (true) {
+		if (context.next().has(LTS_TT_CLOSE_BRACKET)) break;
+		context.addJumpTarget(resolvePath(context));
+		++count;
+	}
+	if (count < 2)
+		context.error("Select must have at least two targets!");
+	context.update(inst, count);
+}
+
+static void doClear(Context& context) {
+	// TODO: this
+}
+
+static void doCreate(Context& context, bool const dynamic = false) {
+	// TODO: this
+}
+
+static void declareTypeFields(Context& context, Context::Declaration& type) {
+	if (type.fields.size())
+		context.error("Redeclaration of type fields are not allowed!");
+	else if (
+		type.flags & (
+			Definition::Flags::AV2_DF_DYNAMIC
+		|	Definition::Flags::AV2_DF_ARRAY
+		|	Definition::Flags::AV2_DF_BASIC
+		)
+	) context.error("Cannot declare fields on basic, array and dynamic types!");
+	type.flags |= Definition::Flags::AV2_DF_STRUCTURE;
+	context.expectNext(Type{'['});
+	while (true) {
+		if (context.next().has(Type{']'})) break;
+		auto const field = resolvePath(context);
+		if (!context.types.contains(field))
+			context.error("Field type does not exist!");
+		type.fields.pushBack(context.getType(field)->id);
+	}
+}
+
+static void validateType(Context& context, Context::Declaration& type) {
+		DEBUGLN("Name: ", type.name);
+		DEBUGLN("Flags: ", type.flags);
+	if (type.base && !(type.flags & Definition::Flags::AV2_DF_ARRAY)) {
+		auto& base = *context.getTypeByID(type.base);
+		type.flags |= base.flags;
+		if (type.fields.size())
+			type.fields.insert(base.fields, 0);
+		else type.fields.appendBack(base.fields);
+	}
+	if (type.base && context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
+		context.error("Final types cannot be inherited from!");
+	if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
+		context.error("Only value types can have alignment size!");
+	if (!type.alignment && type.flags & Definition::Flags::AV2_DF_VALUE)
+		context.error("Value types must have an alignment!");
+	if (type.flags & Definition::Flags::AV2_DF_VALUE) {
+		for (auto& field : type.fields) {
+			if (!(context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_VALUE))
+				context.error("Value types can only contain other value types!");
+			if (context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_ARRAY)
+				context.error("Value types cannot contain arrays!");
+		}
+		if (
+			type.flags & Definition::Flags::AV2_DF_ARRAY
+		&&	!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_VALUE)
+		) context.error("Value arrays can only contain value types!");
+	}
+	if (type.flags & Definition::Flags::AV2_DF_ARRAY && type.fields.size())
+		context.error("Arrays cannot contain fields!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_ARRAY
+	&&	type.flags & Definition::Flags::AV2_DF_STRUCTURE
+	) context.error("Cannot have a type be both an array or a structure!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_DYNAMIC
+	&&	type.flags & Definition::Flags::AV2_DF_VALUE
+	) context.error("Cannot have a dynamic value type!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_BASIC
+	&&	type.flags & (
+			Definition::Flags::AV2_DF_STRUCTURE
+		|	Definition::Flags::AV2_DF_ARRAY
+		|	Definition::Flags::AV2_DF_ART_EQUIVALENT
+		|	Definition::Flags::AV2_DF_DYNAMIC
+		)
+	) context.error("Basic types cannot be structures, arrays, ART-Equivalent, or dynamic types!");
+	if (
+		type.flags & Definition::Flags::AV2_DF_STRUCTURE
+	&&	type.flags & (
+			Definition::Flags::AV2_DF_ARRAY
+		|	Definition::Flags::AV2_DF_BASIC
+		)
+	) context.error("Structure types cannot be basic or array types!");
+	if (type.flags & Definition::Flags::AV2_DF_EMPTY) {
+		if (type.alignment) context.error("Empty types cannot have a size!");
+		if (
+			type.flags & ~(
+				Definition::Flags::AV2_DF_EMPTY
+			|	Definition::Flags::AV2_DF_NULLABLE
+			|	Definition::Flags::AV2_DF_NO_RESULT
+			|	Definition::Flags::AV2_DF_BASIC
+			)
+		) context.error("Malformed empty type!");
+		type.byteSize	= 0;
+		type.alignment	= 0;
+	}
+	if (type.flags & Definition::Flags::AV2_DF_CLONABLE) {
+		if (type.flags & Definition::Flags::AV2_DF_ARRAY) {
+			if (!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_CLONABLE))
+				context.error("Clonable arrays must contain clonable elements!");
+		} else for (auto const f: type.fields) {
+			auto& field = *context.getTypeByID(f);
+			if (!(field.flags & Definition::Flags::AV2_DF_CLONABLE))
+				context.error("Clonable structures must contain clonable fields!");
+		}
+	}
+	if (type.fields.size() && !(type.flags & Definition::Flags::AV2_DF_STRUCTURE))
+		context.error("Fields can only be declared on structures!");
+	if (!type.basic) {
+		for (auto& field: type.fields)
+			type.byteSize += context.getTypeByID(field)->byteSize;
+		type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
+	} else if (type.basic != BasicType::AV2_BT_ANY) {
+		type.flags |=
+			Definition::Flags::AV2_DF_VALUE
+		|	Definition::Flags::AV2_DF_CLONABLE
+		|	Definition::Flags::AV2_DF_FINAL
+		;
+		type.byteSize	= 0;
+		type.alignment	= 0;
+	}
+}
+
+static void declareTypeOperators(Context& context, Context::Declaration& type) {}
+
+static void declareTypeCasts(Context& context, Context::Declaration& type) {}
+
+static void declareTypeMeta(Context& context, Context::Declaration& type) {
+	context.expectNext(Type{'['});
+	while (true) {
+		if (context.next().has(Type{']'})) break;
+		auto const key = resolvePath(context);
+		if (type.meta.contains(key))
+			context.error("Meta attribute has already been declared!");
+		type.meta[key] = Makai::FLOW::parse(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "Meta attribute value").getString());
+	}
+}
+
+static void declareType(Context& context) {
+	context.next();
+	auto const name = resolvePath(context);
+	auto const type = new Context::Declaration();
+	type->name = name;
+	context.expectNext(Type{'['});
+	while (true) {
+		if (context.next().has(Type{']'})) break;
+		auto const flag = context.get(LTS_TT_IDENTIFIER, "type flag").getString();
+		if (flag == "basic") {
+			type->flags |= Definition::Flags::AV2_DF_BASIC;
+			auto const basic =
+				context
+					.expectNext(Type{'<'})
+					.getNext(LTS_TT_IDENTIFIER, "basic type")
+					.getString()
+			;
+			if (basic == "void")		type->basic = BasicType::AV2_BT_VOID;
+			else if (basic == "any")	type->basic = BasicType::AV2_BT_ANY;
+			else if (basic == "nil")	type->basic = BasicType::AV2_BT_NULL;
+			else if (basic == "bool")	type->basic = BasicType::AV2_BT_BOOL;
+			else if (basic == "char")	type->basic = BasicType::AV2_BT_CHAR;
+			else if (basic == "i8")		type->basic = BasicType::AV2_BT_INT8;
+			else if (basic == "i16")	type->basic = BasicType::AV2_BT_INT16;
+			else if (basic == "i32")	type->basic = BasicType::AV2_BT_INT32;
+			else if (basic == "i64")	type->basic = BasicType::AV2_BT_INT64;
+			else if (basic == "u8")		type->basic = BasicType::AV2_BT_UINT8;
+			else if (basic == "u16")	type->basic = BasicType::AV2_BT_UINT16;
+			else if (basic == "u32")	type->basic = BasicType::AV2_BT_UINT32;
+			else if (basic == "u64")	type->basic = BasicType::AV2_BT_UINT64;
+			else if (basic == "f32")	type->basic = BasicType::AV2_BT_REAL32;
+			else if (basic == "f64")	type->basic = BasicType::AV2_BT_REAL64;
+			else if (basic == "f128")	type->basic = BasicType::AV2_BT_REAL128;
+			else if (basic == "str")	type->basic = BasicType::AV2_BT_STRING;
+			else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
+			else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
+			else if (basic == "mat")	type->basic = BasicType::AV2_BT_MATRIX;
+			else if (basic == "type")	type->basic = BasicType::AV2_BT_TYPEID;
+			else context.error("Invalid basic type!");
+			context.expectNext(Type{'>'});
+		}
+		else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
+		else if (flag == "derived") {
+			if (type->flags & Definition::Flags::AV2_DF_ARRAY)
+				context.error("Type cannot be both a derived type and an array type!");
+			if (type->base)
+				context.error("Redeclaration of base type!");
+			context.expectNext(Type{'<'}).next();
+			auto const base = resolvePath(context);
+			if (context.types.contains(base))
+				type->base = context.getType(base)->id;
+			else context.error("Base type does not exist!");
+			context.expectNext(Type{'>'});
+		} else if (flag == "array") {
+			if (type->base)
+				context.error("Redeclaration of element type!");
+			type->flags |= Definition::Flags::AV2_DF_ARRAY;
+			context.expectNext(Type{'<'}).next();
+			auto const base = resolvePath(context);
+			if (context.types.contains(base))
+				type->base = context.getType(base)->id;
+			else context.error("Element type does not exist!");
+			context.expectNext(Type{'>'});
+		} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
+		else if (flag == "empty")	type->flags |= Definition::Flags::AV2_DF_EMPTY;
+		else if (flag == "discard")	type->flags |= Definition::Flags::AV2_DF_NO_RESULT;
+		else if (flag == "dyn")		type->flags |= Definition::Flags::AV2_DF_DYNAMIC;
+		else if (flag == "struct")	type->flags |= Definition::Flags::AV2_DF_STRUCTURE;
+		else if (flag == "pack") {
+			if (type->alignment)
+				context.error("Redefinition of alignment!");
+			type->alignment = 1;
+		} else if (flag == "align") {
+			if (type->alignment)
+				context.error("Redefinition of alignment!");
+			type->alignment =
+				context
+					.expectNext(Type{'('})
+					.getNext(LTS_TT_INTEGER, "byte alignment")
+					.getUnsigned()
+			;
+			if (!type->alignment)
+				context.error("Cannot have empty alignment!");
+			context.expectNext(Type{')'});
+		} else if (flag == "fields") {
+			declareTypeFields(context, *type);
+		} else if (flag == "operators") {
+			declareTypeOperators(context, *type);
+		} else if (flag == "casts") {
+			declareTypeCasts(context, *type);
+		} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
+		else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
+		else if (flag == "final")	type->flags |= Definition::Flags::AV2_DF_FINAL;
+		else if (flag == "meta")
+			declareTypeMeta(context, *type);
+		else context.error("Invalid flag!");
+	}
+	validateType(context, *type);
+	if (!context.types.contains(name))
+		context.addType(name, type);
+	else context.error("Redeclaration of previously-declared type!");
+}
+
+static void declareSymbolAlias(Context& context, Makai::Dictionary<Makai::Instance<Context::Reference>>& syms) {
+	if (context.has(LTS_TT_IDENTIFIER) && context.value().getString() == "shared") {
+		Makai::Instance<Context::Reference> share = share.create();
+		context.next();
+		auto const name = resolvePath(context);
+		if (syms.contains(name))
+			context.error("Symbol name is already in use!");
+		context.expectNext(Type{':'}).expectNext(Type{'['}).next();
+		share->module = resolvePath(context, true);
+		context.expectNext(Type{':'}).next();
+		share->name = resolvePath(context, true);
+		context.expectNext(Type{']'});
+		syms[name]	= share;
+	} else {
+		auto const name = resolvePath(context);
+		if (syms.contains(name))
+			context.error("Symbol name is already in use!");
+		context.expectNext(Type{':'}).next();
+		auto const symName = resolvePath(context);
+		if (!syms.contains(symName))
+			context.error("Symbol to be aliased does not exist!");
+		syms[name]	= syms[symName];
+	}
+}
+
+static void declareAlias(Context& context) {
+	auto const what = context.getNext(LTS_TT_IDENTIFIER, "alias type").getString();
+	if (what == "type")		declareSymbolAlias(context, context.types);
+	else if (what == "fn")	declareSymbolAlias(context, context.methods);
+	else context.error("Invalid aliasing!");
+}
+
+static void getMethodAttriutes(Context& context, Context::Method& method) {
+	while (context.next().has(LTS_TT_IDENTIFIER)) {
+		auto const vis = context.get(LTS_TT_IDENTIFIER, "visibility").getString();
+		if (vis == "shared")
+			method.shared = true;
+		else if (vis == "local")
+			method.local = true;
+		else if (vis == "global")
+			method.local = false;
+		else if (vis == "art")
+			method.shared = false;
+		else break;
+	}
+}
+
+static void declareMethodPrototype(Context& context) {
+	auto const method = new Context::Method();
+	getMethodAttriutes(context, *method);
+	auto id = resolvePath(context);
+	if (context.types.contains(id))
+		method->retType = context.getType(id)->id;
+	else context.error("Return type does not exist!");
+	context.expectNext(Type{'('});
+	while (true) {
+		if (context.next().has(Type{')'})) break;
+		id = resolvePath(context);
+		if (context.types.contains(id))
+			method->argTypes.pushBack(context.getType(id)->id);
+		else context.error("Argument type does not exist!");
+	}
+	context.next();
+	auto const name = resolvePath(context);
+	if (context.methods.contains(name))
+		context.error("Redeclaration of previously-declared method!");
+	context.addMethod(name, method);
+}
+
+static void declareMethodBody(Context& context) {
+	context.next();
+	DEBUGLN("Body type: ", Context::Tokenizer::Token::asName(context.token().type));
+	DEBUGLN("Body text: ", context.token().text);
+	if (context.has(Type{'.'})) {
+		if (context.methodStack.empty())
+			context.error("Missing method body!");
+		auto const method = context.methodStack.popBack();
+		method->size = context.program.code.size() - method->size;
+	} else {
+		auto const name = resolvePath(context);
+		if (!context.methods.contains(name))
+			context.error("Method prototype does not exist!");
+		auto const method = context.getMethod(name);
+		if (method->shared || method->out) context.error("Cannot declare a body for a shared/external method!");
+		context.methodStack.pushBack(method);
+		context.registerJumpPoint(method->jump);
+		method->entrypoint = context.jumps[method->jump];
+		method->size = context.program.code.size();
+		context.expectNext(LTS_TT_COLON);
+	}
+}
+
+static void declareNamespaceStart(Context& context) {
+	auto const name = resolvePath(context, true);
+	context.moduleStack.pushBack(name);
+}
+
+static void declareNamespaceEnd(Context& context) {
+	if (context.moduleStack.empty())
+		context.error("Missing matching namespace opening statement!");
+	context.moduleStack.popBack();
+}
+
+static void declareNamespace(Context& context) {
+	if (context.next().has(Type{'.'}))
+		declareNamespaceEnd(context);
+	else declareNamespaceStart(context);
+}
+
+static void declareModule(Context& context) {
+	context.expectNext(LTS_TT_OPEN_BRACKET);
+	while (true) {
+		if (context.next().has(LTS_TT_CLOSE_BRACKET)) break;
+		auto const id = context.get(LTS_TT_IDENTIFIER, "module declaration").getString();
+		if (id == "name") {
+			if (context.program.name.size())
+				context.error("Module name was already defined!");
+			context.expectNext(Type{':'}).next();
+			auto const name = resolvePath(context, true);
+		};
+	}
+}
+
+Makai::Instance<Module> resolveModule(Context& context, Makai::String const& name) {
+	if (!context.linkedModules.contains(name))
+		context.error("Required module [" + name + "] was not linked!");
+	return context.linkedModules[name];
+}
+
+static void resolveImport(Context& context, Makai::String const& name) {
+	auto const mod = resolveModule(context, name);
+	for (auto& type: mod->sym.types)
+		if (!type.source) context.addExternalType(
+			mod->name,
+			type.name,
+			new Context::Declaration(mod->detail.types[type.id])
+		);
+	for (auto& method: mod->sym.methods)
+		if (!method.source) context.addExternalMethod(
+			mod->name,
+			method.name,
+			new Context::Method(mod->detail.methods[method.id])
+		);
+}
+
+static void declareImport(Context& context) {
+	context.next();
+	auto const name = resolvePath(context, true);
+	resolveImport(context, name);
+}
+
+static void declareEntry(Context& context) {
+	if (context.entry.size())
+		context.error("Redeclaration of previously-declared entry!");
+	context.next();
+	context.entry = resolvePath(context);
+}
+
+static void declareExit(Context& context) {
+	if (context.entry.size())
+		context.error("Redeclaration of previously-declared exit!");
+	context.next();
+	context.entry = resolvePath(context);
+}
+
+static void declareHook(Context& context) {
+	context.next();
+	auto const hook = resolvePath(context);
+	declareJumpTarget(context);
+	if (context.program.ani->in.contains(hook))
+		context.error("Redeclaration of previously-declared hook!");
+	context.program.ani->in[hook] = context.jumps[hook];
+}
+
+static void doDeclaration(Context& context) {
+	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "declaration type").getString();
+	if (decl == "hook")
+		declareHook(context);
+	else if (decl == "def")
+		declareMethodBody(context);
+	else if (decl == "fn")
+		declareMethodPrototype(context);
+	else if (decl == "type")
+		declareType(context);
+	else if (decl == "ns")
+		declareNamespace(context);
+	else if (decl == "alias")
+		declareAlias(context);
+	else if (decl == "module")
+		declareModule(context);
+	else if (decl == "import")
+		declareImport(context);
+	else if (decl == "entry")
+		declareEntry(context);
+	else if (decl == "exit")
+		declareExit(context);
+	else if (decl == "target") {
+		context.next();
+		declareJumpTarget(context);
+	} else context.error("Invalid declaration!");
+}
+
+static void doExpression(Context& context) {
+	if (context.has(Type{'@'}))
+		return doDeclaration(context);
+	auto const id = context.get(LTS_TT_IDENTIFIER, "instruction name").getString();
+	if (id == "jump" || id == "go")				doJump(context);
+	else if (id == "dynamic" || id == "dyn")	doDynamic(context);
+	else if (id == "nop" || id == "next")		doNoOp(context);
+	else if (id == "swap")						doStackSwap(context);
+	else if (id == "flush")						doStackFlush(context);
+	else if (id == "push")						doStackPush(context);
+	else if (id == "pop")						doStackPop(context);
+	else if (id == "clear")						doStackClear(context);
+	else if (id == "blit")						doStackBlit(context);
+	else if (id == "return" || id == "ret")		doReturn(context);
+	else if (id == "terminate" || id == "stop")	doHalt(context);
+	else if (id == "error")						doHalt(context, true);
+	else if (id == "call" || id == "do")		doCall(context);
+	else if (id == "compare" || id == "cmp")	doCompare(context);
+	else if (id == "enter" || id == "begin")	doScopeEnter(context);
+	else if (id == "exit" || id == "end")		doScopeExit(context);
+	else if (id == "bind")						doScopeBind(context);
+	else if (id == "bring")						doScopeBring(context);
+	else if (id == "keep")						doScopeKeep(context);
+	else if (id == "decl")						doScopeDeclare(context);
+	else if (id == "copy")						doCopy(context);
+	else if (id == "context" || id == "mode")	{context.next(); doContext(context);}
+	else if (id == "loose" || id == "strict")	doContext(context, true);
+	else if (id == "operator" || id == "op")	doOperation(context);
+	else if (id == "field" || id == "at")		doField(context, false);
+	else if (id == "set")						doField(context, true);
+	else if (id == "count")						doSizeOf(context);
+	else if (id == "size")						doSizeOf(context, true);
+	else if (id == "type")						doTypeGet(context);
+	else if (id == "is")						doTypeCheck(context);
+	else if (id == "yield")						doYield(context);
+	else if (id == "cast" || id == "as")		doCast(context);
+	else if (id == "rewrite")					doUnsafeCast(context);
+	else if (id == "random" || id == "rng")		doRandomNumber(context);
+	else if (id == "select" || id == "pick")	doSelect(context);
+	else if (id == "unbind" || id == "drop")	doClear(context);
+	else if (id == "create" || id == "new")		doCreate(context);
+	else context.error("Invalid instruction!");
+}
+
+void Minima::invoke() {
+	while (!context.empty()) {
+		doExpression(context);
+		context.next();
+	}
+	context.finalize();
+	context.methods.filter(
+		[] (auto const& lhs, auto const& rhs) {
+			return lhs.value != rhs.value;
+		}
+	).filter(
+		[this] (auto const& e) -> bool {
+			DEBUGLN("Method: ", e.value->name);
+			return e.value->module.empty() && !context.getMethod(e.key)->local;
+		}
+	);
+	context.types.filter(
+		[] (auto const& lhs, auto const& rhs) {
+			return lhs.value != rhs.value;
+		}
+	).filter(
+		[] (auto const& e) -> bool {
+			return e.value->module.empty();
+		}
+	);
+	context.program.detail.types.resize(context.types.size());
+}
+
+Makai::Anima::V2::Core::Module Minima::assemble(UTF8String const& fname, UTF8String const& file) {
+	Makai::Lexer::CStyle::TokenStream stream;
+	stream.open(file);
+	Makai::List<Assembler::BaseContext::Axiom> ax;
+	Assembler::Minima::Context ctx;
+	while (stream.next())
+		ax.pushBack({stream.current(), true, fname});
+	if (!stream.ok())
+		throw Makai::Error::InvalidValue(
+			"Parsing failure!",
+			stream.error().value().what
+		);
+	ctx.put(ax);
+	Assembler::Minima minAsm(ctx);
+	minAsm.invoke();
+	return ctx.program;
+}

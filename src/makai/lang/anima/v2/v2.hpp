@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_H
 #define MAKAILIB_ANIMA_V2_H
 
-#include "instruction.hpp"
+#include "core/core.hpp"
 #include "runtime/runtime.hpp"
 #include "toolchain/toolchain.hpp"
 

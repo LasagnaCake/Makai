@@ -2,26 +2,11 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_CONTEXT_H
 
 #include "../../../../compat/ctl.hpp"
-#include "../instruction.hpp"
-#include "program.hpp"
-
-#define ANIMA_V2_SHARED_FN_NAME_PREFIX "anima/env/share/"
+#include "../core/core.hpp"
 
 namespace Makai::Anima::V2::Runtime {
-	constexpr auto const SHARED_FUNCTION_PREFIX = ANIMA_V2_SHARED_FN_NAME_PREFIX;
 	struct Context {
-		using Storage = Instance<Data::Value>;
-
-		struct IInvokable {
-			virtual ~IInvokable() {}
-
-			virtual Storage invoke(List<Storage> const& args) = 0;
-		};
-
-		Context() {
-			for (auto& reg: registers)
-				reg = new Data::Value();
-		}
+		using Storage = Core::Object::Storage;
 
 		struct Pointers {
 			usize	offset		= 0;
@@ -29,79 +14,70 @@ namespace Makai::Anima::V2::Runtime {
 			usize	instruction	= -1;
 		};
 
+		struct Scope {
+			List<Storage>		localStack;
+			Core::ContextMode	mode		= Core::ContextMode::AV2_CM_STRICT;
+			Core::ContextMode	prevMode	= Core::ContextMode::AV2_CM_STRICT;
+
+			Scope& push(Storage const& value) {
+				localStack.pushBack(value);
+				return *this;
+			}
+
+			Storage pop() {
+				return localStack.popBack();
+			}
+
+			Storage& top() {
+				return localStack.back();
+			}
+		};
+
 		using VariableBank = Map<uint64, Data::Value>;
 
-		ContextMode					mode		= ContextMode::AV2_CM_STRICT;
-		ContextMode					prevMode	= ContextMode::AV2_CM_STRICT;
-		Pointers					pointers;
-		List<Storage>				valueStack;
-		List<Pointers>				pointerStack;
-		Map<usize, Storage>			globals;
-		As<Storage[REGISTER_COUNT]>	registers;
-		Storage						temporary = Storage::create();
-
-		Data::Value					result;
-
-		struct SharedSpace {
-			using Function	= Instance<IInvokable>;
-
-			struct Namespace {
-				Dictionary<Function>	functions;
-			};
-
-			using LibraryCall = void(Namespace*);
-
-			Dictionary<Namespace>		ns;
-			Dictionary<CPP::Library>	libraries;
-
-			~SharedSpace() {
-				for (auto& [name, lib] : libraries) {
-					auto const exit = lib.function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/v2/exit");
-					if (exit) exit(&ns[name]);
-				}
-			}
-
-			void addLibrary(String const& name, String const& libpath) {
-				if (!libraries.contains(name))
-					libraries[name].open(libpath);
-				auto const init = libraries[name].function<LibraryCall>(toString(SHARED_FUNCTION_PREFIX) + "/v2/init");
-				if (init) init(&ns[name]);
-			}
-
-			Function fetch(String const& lib, String const& fname) {
-				if (libraries.contains(lib) && ns[lib].functions.contains(fname))
-					return ns[lib].functions[fname];
-				return nullptr;
-			}
-
-			bool has(String const& lib, String const& fname) {
-				return libraries.contains(lib) && ns[lib].functions.contains(fname);
-			}
-		} shared;
-
-		void prepare(Program const& program) {
-			for (auto const& [name, path]: program.ani.shared) {
-				if (OS::FS::exists(path))
-					return shared.addLibrary(name, path);
-				String spath = OS::FS::sourceLocation() + "/" + path;
-				if (OS::FS::exists(spath))
-					return shared.addLibrary(name, spath);
-				throw Error::FailedAction(
-					"Failed to load library \"" +name + "\"!",
-					"Library does not exist at the given path |" + path + "|",
-					CTL_CPP_PRETTY_SOURCE
-				);
-			}
+		Context& push(Storage const& value) {
+			globalValueStack.pushBack(value);
+			return *this;
 		}
+
+		template <Type::NoneOf<Storage, Core::Object::Accessor> T>
+		Context& push(T const& value) {
+			globalValueStack.pushBack(newValue(value));
+			return *this;
+		}
+
+		Storage pop() {
+			return globalValueStack.popBack();
+		}
+
+		Storage& top() {
+			return globalValueStack.back();
+		}
+
+		Storage& localTop() {
+			return scope().top();
+		}
+
+		Scope& scope() {
+			return scopeStack.back();
+		}
+
+		List<Storage>& locals() {
+			return scope().localStack;
+		}
+
+		template <class T>
+		Storage newValue(T const& value) {
+			return art.newValue(value);
+		}
+
+		Pointers			pointers;
+		List<Storage>		globalValueStack;
+		List<Pointers>		pointerStack;
+		List<Scope>			scopeStack;
+		Map<usize, Storage>	globals;
+		Core::Context		art;
 	};
 }
-
-#define ANIMA_V2_SHARED_LIB_DECL extern "C" __stdcall
-#define ANIMA_V2_SHARED_LIB_CALL(NAME, EXPORT)\
-	ANIMA_V2_SHARED_LIB_DECL void NAME(Makai::Anima::V2::Runtime::Context::SharedSpace::Library*) asm(ANIMA_V2_SHARED_FN_NAME_PREFIX EXPORT);\
-	ANIMA_V2_SHARED_LIB_DECL void NAME(Makai::Anima::V2::Runtime::Context::SharedSpace::Library*)
-
-#define ANIMA_V2_SHARED_INIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_entryPoint, "v2/init")
-#define ANIMA_V2_SHARED_EXIT ANIMA_V2_SHARED_LIB_CALL(mk_av2_shared_exitPoint, "v2/exit")
 
 #endif

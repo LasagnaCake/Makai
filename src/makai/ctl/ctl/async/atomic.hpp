@@ -4,10 +4,9 @@
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
 #include "../templates.hpp"
-#include "../container/function.hpp"
 #include "../container/view.hpp"
 #include "../adapter/comparator.hpp"
-#include "thread.hpp"
+#include "mutex.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -24,15 +23,12 @@ CTL_NAMESPACE_BEGIN
 ///		Use a `Box` instead.
 template <class T>
 class Atomic:
-	Async::Base::Yieldable,
 	Typed<T>,
 	SelfIdentified<Atomic<T>>,
-	Derived<Async::Base::Yieldable>,
 	Ordered {
 public:
 	using Typed				= Typed<T>;
 	using SelfIdentified	= SelfIdentified<Atomic<T>>;
-	using Derived			= Derived<Async::Base::Yieldable>;
 
 	using
 		typename Typed::DataType,
@@ -44,10 +40,6 @@ public:
 
 	using
 		typename SelfIdentified::SelfType
-	;
-
-	using
-		typename Derived::BaseType
 	;
 
 	/// @brief Thread-safe view.
@@ -65,10 +57,6 @@ public:
 	/// @param data Value to move.
 	constexpr Atomic(TemporaryType data):		data(CTL::move(data))	{}
 
-	/// @brief Returns whether the stored value is currently being accessed.
-	/// @return Whether it is being currently accessed.
-	inline bool isLocked() const {return locked;}
-	
 	/// @brief Safe copy assignment operator.
 	/// @param data Value to copy from.
 	inline SelfType& operator=(ConstReferenceType val) {
@@ -222,24 +210,16 @@ private:
 	inline void release() const	{releaseLock();					}
 
 	inline void acquireLock() const {
-		do {
-			while (getLock())
-				BaseType::asyncYield();
-		} while (__atomic_test_and_set(&locked, __ATOMIC_ACQUIRE));
+		mutex.capture();
 	}
 
 	inline void releaseLock() const {
-		__atomic_clear(&locked, __ATOMIC_RELEASE);
-	}
-
-	inline bool getLock() const {
-		return __atomic_load_n(&locked, __ATOMIC_RELAXED);
+		mutex.release();
 	}
 
 	/// @brief Underlying stored data.
 	DataType data;
-	/// @brief Whether the stored value is currently being accessed.
-	volatile bool mutable locked = false;
+	Mutex mutable mutex;
 };
 
 CTL_NAMESPACE_END

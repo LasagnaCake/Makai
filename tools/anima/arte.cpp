@@ -6,45 +6,17 @@
 constexpr auto const VER = Makai::Data::Version{1};
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
-	bool httpRequestsEnabled = false;
-
-	void onPrint(Makai::Data::Value const& value) override {
-		#ifndef ARTE_NO_CLI
-		if (value.isString())
-			std::cout << value.getString();
-		else std::cout << value.toFLOWString();
-		#endif
-	}
-
-	Makai::Data::Value onHTTPRequest(
-		Makai::String const& url,
-		Makai::String const& action,
-		Makai::Data::Value const& value
-	) override {
-		if (httpRequestsEnabled)
-			return Engine::onHTTPRequest(url, action, value);
-		Makai::Data::Value result = result.object();
-		result["status"]	= 2;
-		result["content"]	= "Program is forbidden from making HTTP requests";
-		result["time"]		= 0;
-		result["header"]	= "HTTP requests are not enabled!";
-		result["source"]	= url;
-		return result;
-	}
 };
 
 struct ARTEMain: Makai::AMain {
 	static Makai::Data::Value configBase() {
 		Makai::Data::Value cfg;
 		cfg["help"]		= false;
-		cfg["net"]		= true;
 		return cfg;
 	}
 
 	static void translationBase(Makai::CLI::Parser::Translation& tl) {
 		tl["H"]		= "help";
-		tl["N"]		= "net";
-		tl["Net"]	= "net";
 	}
 
 	ARTEMain(Makai::CLI::Parser& cli): AMain(cli) {
@@ -57,7 +29,6 @@ struct ARTEMain: Makai::AMain {
 
 	void run(Makai::Data::Value const& args) override {
 		ARTE engine;
-		engine.httpRequestsEnabled = args.fetch("net", false);
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
@@ -71,7 +42,7 @@ struct ARTEMain: Makai::AMain {
 			engine.error().then([&] (auto const& e) {
 				writeLine("!!! ERROR !!!");
 				writeLine("At bytecode offset ", e.location);
-				writeLine("At instruction ", Makai::Anima::V2::Instruction::asString(e.instruction.name));
+				writeLine("At instruction ", Makai::Anima::V2::Core::Instruction::asString(e.instruction.name));
 				writeLine("Message: [", e.message, "]");
 				return e;
 			});

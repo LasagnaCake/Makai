@@ -764,7 +764,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	constexpr SelfType sliced(IndexType start) const {
-		if (IndexType(count) < start) return SelfType();
+		if (IndexType(count) <= start) return SelfType();
 		assertIsInBounds(start);
 		wrapBounds(start, count);
 		return SelfType(cbegin() + start, cend());
@@ -777,10 +777,11 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	constexpr SelfType sliced(IndexType start, IndexType stop) const {
-		if (IndexType(count) < start) return SelfType();
+		if (empty()) return SelfType();
+		if (IndexType(count) <= start) return SelfType();
 		assertIsInBounds(start);
 		wrapBounds(start, count);
-		if (IndexType(count) < stop) return sliced(start);
+		if (IndexType(count) <= stop) return sliced(start);
 		assertIsInBounds(stop);
 		wrapBounds(stop, count);
 		if (stop < start) return SelfType();
@@ -1473,6 +1474,13 @@ using ByteList = BinaryData<TIndex, TAlloc, TConstAlloc>;
 /// @tparam TConstAlloc<class> Constant allocator type.
 template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using Binary = BinaryData<TIndex, TAlloc, TConstAlloc>;
+
+/// @brief `List` analog for dynamic array of bytes.
+/// @tparam TIndex Index type.
+/// @tparam TAlloc<class> Allocator type.
+/// @tparam TConstAlloc<class> Constant allocator type.
+template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
+using Bytes = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
 static_assert(Type::Container::List<List<int>>);
 

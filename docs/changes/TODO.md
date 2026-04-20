@@ -41,9 +41,6 @@
 
 - [ ] Replace SDL2 with SDL3 (perhaps?)
 - [ ] See [ideas.md](ideas.md)
-- [ ] (Maybe) replace JSON to other specification
-- - For the *custom file formats*, that is
-- - See [File Format Alternatives Proposal](../../docs/changes/AltFormats.md) for more informaion
 - [ ] Multi-platform support:
 - - [ ] Linux
 - [ ] Add [QOI](https://github.com/phoboslab/qoi/blob/master/qoi.h) support
@@ -54,7 +51,7 @@
 - - - See [Text Tags](../specifications/text-tags.md) for more info
 - [ ] Support for "Game DLLs"
 - - Having the game being separate from the executable, and stuff being loadable from a DLL
-- (Maybe) reimplement save & load file dialogs ([via this, perhaps?](https://github.com/btzy/nativefiledialog-extended))
+- (Maybe) reimplement save & load file dialogs ([via this, perhaps?](https://github.com/btzy/nativefiledialog-extended) or SDL3)
 - [ ] Add OKLAB support (perhaps?)
 
 ## Other refactoring
