@@ -1475,6 +1475,13 @@ using ByteList = BinaryData<TIndex, TAlloc, TConstAlloc>;
 template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using Binary = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
+/// @brief `List` analog for dynamic array of bytes.
+/// @tparam TIndex Index type.
+/// @tparam TAlloc<class> Allocator type.
+/// @tparam TConstAlloc<class> Constant allocator type.
+template <Type::Integer TIndex = usize, template <class> class TAlloc = HeapAllocator, template <class> class TConstAlloc = ConstantAllocator>
+using Bytes = BinaryData<TIndex, TAlloc, TConstAlloc>;
+
 static_assert(Type::Container::List<List<int>>);
 
 CTL_NAMESPACE_END
