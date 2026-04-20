@@ -158,7 +158,7 @@ void Context::finalize() {
 			error("Somehow, jump target is empty!");
 		if (jumpsToMap.contains(label) && jumps.contains(label)) {
 			for (auto& location: jumpsToMap[label])
-				program.jumpTable[location] = jumps[label];
+				program.code[location] = Makai::Cast::bit<Instruction>(jumps[label]);
 			jumpsToMap.erase(label);
 		}
 	}
