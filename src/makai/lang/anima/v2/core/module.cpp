@@ -29,8 +29,11 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 
 Module Module::deserialize(Makai::Data::Value const& v) {
 	Module mod;
+	if (v.contains("art"))
+		mod.art		= v["art"];
+	else mod.art	= Module::Version{1};
 	if (v.contains("version"))
-		mod.art = v["version"];
+		mod.version	= v["version"];
 	else mod.art = ART_VER;
 	switch (mod.art.major) {
 		case 2: deserializeV1(mod, v); break;
@@ -44,9 +47,17 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	out["strings"]	= strings.toList<Makai::Data::Value>();
 	out["jumps"]	= Makai::Tool::Arch::compress(jumpTable.toBytes());
 	out["code"]		= Makai::Tool::Arch::compress(code.toBytes());
-	out["version"]	= art;
-	out["sym"]		= sym;
+	out["art"]		= art;
+	out["version"]	= version;
 	out["detail"]	= detail;
+	if (type == Module::Type::AV2_CMT_LIBRARY or forceSymbolsToBeKept) {
+		out["detail"]	= detail;
+		out["sym"]		= sym;
+	} else {
+		auto dt = copy(detail);
+		for (auto& s : dt.methods)	s.name = "";
+		for (auto& s : dt.types)	s.name = "";
+	}
 	if (ani)
 		out["ani"]	= *ani;
 	out["type"]	= enumcast(type);
@@ -129,7 +140,8 @@ Makai::Data::Value Module::Detail::serialize() const {
 Makai::Data::Value Module::Method::serialize() const {
 	auto result = Data::Value::object();
 	result["id"] = id;
-	result["name"] = name.toString();
+	if (name.size())
+		result["name"] = name.toString();
 	result["return"] = retType;
 	result["args"] = argTypes.toList<Data::Value>();
 	result["out"] = out;
@@ -144,7 +156,8 @@ Makai::Data::Value Module::Method::serialize() const {
 Module::Method Module::Method::deserialize(Data::Value const& v) {
 	Module::Method result;
 	result.id = v["id"];
-	result.name = v["name"].getString();
+	if (v.contains("name"))
+		result.name = v["name"].getString();
 	result.retType = v["return"];
 	result.argTypes = v["args"].getArray().toList<uint64>();
 	result.out = v["out"];
@@ -158,7 +171,8 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 Makai::Data::Value Module::Declaration::serialize() const {
 	auto result = Data::Value::object();
 	result["id"] = id;
-	result["name"] = name.toString();
+	if (name.size())
+		result["name"] = name.toString();
 	result["flags"] = flags;
 	if (basic)
 		result["basic"] = *basic;
@@ -175,7 +189,8 @@ Makai::Data::Value Module::Declaration::serialize() const {
 Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 	Module::Declaration result;
 	result.id = v["id"];
-	result.name = v["name"].getString();
+	if (v.contains("name"))
+		result.name = v["name"].getString();
 	result.flags = v["flags"].getUnsigned();
 	if (v.contains("basic"))
 		result.basic = Cast::as<BasicType>(v["basic"].getUnsigned());
