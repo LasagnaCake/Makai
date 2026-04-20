@@ -1,0 +1,41 @@
+name: Ship library
+inputs:
+  type:
+    description: "Build type"
+    required: false
+    default: lite
+runs:
+  using: composite
+  steps:
+    - name: Get environment info
+      id: info
+      uses: LasagnaCake/Makai/etc/gh/actions/info@main
+      with:
+        type: ${{inputs.type}}
+    - name: View environment info
+      run: |
+        echo "today: [${{steps.info.outputs.today}}]"
+        echo "os: [${{steps.info.outputs.os}}]"
+        echo "env: [${{steps.info.outputs.env}}]"
+        echo "shell: [${{steps.info.outputs.shell}}]"
+        echo "lite? [${{steps.info.outputs.lite}}]"
+      shell: bash
+    - name: Check if got info
+      if: steps.info.outputs.success != true
+      run: echo "::error  ::'Failed to get environment info!'"
+      shell: bash
+    - name: Prepare environment
+      if: runner.os == 'Windows'
+      uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
+    - name: Prepare environment
+      if: runner.os == 'Linux'
+      uses: LasagnaCake/Makai/etc/gh/actions/setup/linux@main
+    - uses: actions/checkout@v4
+    - name: Build library
+      run: make ship-it os="${{steps.info.outputs.os}}" lite="${{steps.info.outputs.lite}}" skip-tooling="${{steps.info.outputs.lite}}"
+      shell: ${{steps.info.outputs.shell}}
+    - name: Upload artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: lib-${{steps.info.outputs.os}}-${{inputs.type}}
+        path: output/${{steps.info.outputs.os}}-*.zip

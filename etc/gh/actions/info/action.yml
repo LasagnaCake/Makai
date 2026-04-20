@@ -1,0 +1,42 @@
+name: Get environment info
+inputs:
+  type:
+    description: "Build type"
+    required: false
+    default: lite
+outputs:
+  os:
+    description: "Target OS"
+    value: ${{steps.info.outputs.os}}
+  env:
+    description: "Build Environment"
+    value: ${{steps.info.outputs.env}}
+  shell:
+    description: "Shell to Use"
+    value: ${{steps.info.outputs.shell}}
+  lite:
+    description: "Whether Building LITE Version"
+    value: ${{steps.info.outputs.lite}}
+  today:
+    description: "Today's Date"
+    value: ${{steps.info.outputs.today}}
+  success:
+    description: "Whether Reading Info Was a Success"
+    value: ${{steps.info.outputs.success}}
+runs:
+  using: composite
+  steps:
+    - name: Check if in valid OS
+      if: (runner.os != 'Windows' && runner.os != 'Linux')
+      run: echo "::error ::'unsupported operating system [${{runner.os}}]!'"
+      shell: bash
+    - name: Get Environment Info
+      id: info
+      run: |
+        echo "today=$(date +%Y-%m-%d-%H%M)" >> $GITHUB_OUTPUT
+        echo "os=${{case(runner.os == 'Windows', 'win', 'linux')}}" >> $GITHUB_OUTPUT
+        echo "env=${{case(runner.os == 'Windows', 'msys2', 'linux')}}" >> $GITHUB_OUTPUT
+        echo "shell=${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}" >> $GITHUB_OUTPUT
+        echo "lite=${{case(inputs.type == 'lite', '1', '0')}}" >> $GITHUB_OUTPUT
+        echo "success=true" >> $GITHUB_OUTPUT
+      shell: bash
