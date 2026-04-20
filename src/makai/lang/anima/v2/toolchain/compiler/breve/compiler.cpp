@@ -56,7 +56,9 @@ Makai::Data::Value Breve::compile(
 			Transformer::TheEntireProgram tf;
 			Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
-			return Assembler::Minima::assemble(fname, append + comp.toMinima(), strip);
+			if (append.size())
+				return Assembler::Minima::assemble(fname, append + comp.toMinima(), strip);
+			else return Assembler::Minima::assemble(fname, comp.toMinima(), strip);
 		}
 	}
 }
