@@ -15,7 +15,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		AV2_TCB_CCL_FULL,
 	};
 
-	Data::Value compile(UTF8String const& fname, UTF8String const& file, CompilationLevel const level);
+	Data::Value compile(
+		UTF8String const& fname,
+		UTF8String const& file,
+		CompilationLevel const level,
+		UTF8String const& append = ""
+	);
 }
 
 #endif
