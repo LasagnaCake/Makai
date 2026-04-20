@@ -56,9 +56,11 @@ Makai::Data::Value Breve::compile(
 			Transformer::TheEntireProgram tf;
 			Composer comp(ctx);
 			tf.transform(ctx, parser.parse());
-			if (append.size())
-				return Assembler::Minima::assemble(fname, append + comp.toMinima(), strip);
-			else return Assembler::Minima::assemble(fname, comp.toMinima(), strip);
+			return Assembler::Minima::assemble(fname, append + comp.toMinima()).serialize(!strip);
 		}
 	}
+	throw Makai::Error::InvalidValue(
+		"NO!",
+		stream.error().value().what
+	);
 }

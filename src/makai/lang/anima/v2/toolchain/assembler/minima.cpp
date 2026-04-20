@@ -1275,7 +1275,6 @@ static void declareHook(Context& context) {
 }
 
 static void declareBinaryType(Context& context) {
-	context.next();
 	auto const decl = context.getNext(LTS_TT_IDENTIFIER, "binary type").getString();
 	if (decl == "program" or decl == "exe") 		context.program.type = Module::Type::AV2_CMT_EXE;
 	else if (decl == "cli") 						context.program.type = Module::Type::AV2_CMT_CLI_EXE;

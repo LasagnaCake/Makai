@@ -45,6 +45,7 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
 	out["strings"]	= strings.toList<Makai::Data::Value>();
+	DEBUGLN("Binary: ", code.size());
 	out["jumps"]	= Makai::Tool::Arch::compress(jumpTable.toBytes());
 	out["code"]		= Makai::Tool::Arch::compress(code.toBytes());
 	out["art"]		= art;
