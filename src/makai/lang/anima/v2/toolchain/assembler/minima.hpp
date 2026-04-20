@@ -39,6 +39,15 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			uint64 getJumpTarget(String const& name);
 			bool hasJumpTarget(String const& name);
 
+			void mapJump(String const& name, uint64 const target) {
+				jumps[name] = program.jumpTable.size();
+				program.jumpTable.pushBack(target);
+			}
+
+			void registerJumpPoint(String const& name) {
+				mapJump(name, program.code.size());
+			}
+
 			void finalize();
 
 			void addMethod(String const& name, Instance<Method> const& method);

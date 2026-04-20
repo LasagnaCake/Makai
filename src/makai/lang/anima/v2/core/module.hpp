@@ -85,7 +85,7 @@ namespace Makai::Anima::V2::Core {
 
 		static Module deserialize(Data::Value const& v);
 
-		Type				type;
+		Type				type		= Type::AV2_CMT_CLI_EXE;
 		String				name;
 		Version				art			= ART_VER;
 		Version				version		= {0, 0, 1};

@@ -821,7 +821,7 @@ static void doRandomNumber(Context& context) {
 
 static Makai::String declareJumpTarget(Context& context) {
 	auto const name = resolvePath(context);
-	context.jumps[name] = context.program.code.size();
+	context.registerJumpPoint(name);
 	context.expectNext(LTS_TT_COLON);
 	return name;
 }
@@ -1185,7 +1185,7 @@ static void declareMethodBody(Context& context) {
 		auto const method = context.getMethod(name);
 		if (method->shared || method->out) context.error("Cannot declare a body for a shared/external method!");
 		context.methodStack.pushBack(method);
-		context.jumps[method->jump] = context.program.code.size();
+		context.registerJumpPoint(method->jump);
 		method->entrypoint = context.jumps[method->jump];
 		method->size = context.program.code.size();
 		context.expectNext(LTS_TT_COLON);
@@ -1354,16 +1354,17 @@ void Minima::invoke() {
 	context.finalize();
 	context.methods.filter(
 		[] (auto const& lhs, auto const& rhs) {
-			return lhs.value != rhs.value;
+			return lhs.value == rhs.value;
 		}
 	).filter(
 		[this] (auto const& e) -> bool {
-			return e.value->module.empty() && !context.getMethod(e.value->name)->local;
+			DEBUGLN("Method: ", e.value->name);
+			return e.value->module.empty() && !context.getMethod(e.key)->local;
 		}
 	);
 	context.types.filter(
 		[] (auto const& lhs, auto const& rhs) {
-			return lhs.value != rhs.value;
+			return lhs.value == rhs.value;
 		}
 	).filter(
 		[] (auto const& e) -> bool {
