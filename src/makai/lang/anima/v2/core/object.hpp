@@ -22,6 +22,13 @@ namespace Makai::Anima::V2::Core {
 		ref<void const>	data() const		{return content->data();	}
 		constexpr usize byteSize() const	{return origin->byteSize;	}
 
+		template <Makai::Type::Equal<nulltype> T>
+		T toValue() const {
+			if (!isNull())
+				invalidCastError<T>("Mismatched types");
+			return null;
+		}
+
 		template <Makai::Type::Equal<bool> T>
 		T toValue() const {
 			if (isNumber())
@@ -95,6 +102,11 @@ namespace Makai::Anima::V2::Core {
 			if (type->name != T::ART_NAME)
 				invalidCastError<T>("Type mismatch");
 			return T::construct(*this);
+		}
+
+		template <Type::Equal<Data::Value> T>
+		T toValue() const {
+			return toDynamicValue();
 		}
 
 		Object::Storage as(Instance<Definition> const& newType) const;
@@ -216,6 +228,14 @@ namespace Makai::Anima::V2::Core {
 			return (origin->basic == BasicType::AV2_BT_BYTES);
 		}
 
+		bool isVoid() const {
+			return origin->basic == BasicType::AV2_BT_VOID;
+		}
+
+		bool isNull() const {
+			return origin->basic == BasicType::AV2_BT_NULL;
+		}
+
 		bool isArray() const {
 			return (origin->flags & Definition::Flags::AV2_DF_ARRAY);
 		}
@@ -226,6 +246,19 @@ namespace Makai::Anima::V2::Core {
 
 		bool isBasic() const {
 			return (origin->flags & Definition::Flags::AV2_DF_BASIC);
+		}
+
+		Data::Value toDynamicValue() const {
+			if (!isBasic()) return Data::Value::undefined();
+			if (isNull())		return toValue<nulltype>();
+			if (isBoolean())	return toValue<bool>();
+			if (isUnsigned())	return toValue<uint64>();
+			if (isSigned())		return toValue<int64>();
+			if (isNumber())		return toValue<double>();
+			if (isVectorable())	return toValue<Vector4>();
+			if (isString())		return toValue<String>();
+			if (isBytes())		return toValue<Bytes<>>();
+			return Data::Value::undefined();
 		}
 
 		Ordered::OrderType compareWith(Storage const& other) const {
@@ -308,6 +341,8 @@ namespace Makai::Anima::V2::Core {
 
 		Instance<Definition>	getCurrentType();
 		Instance<Definition>	getOriginalType();
+
+		template <class T> explicit operator T() const {return toValue<T>();}
 
 	private:
 		friend Storage;
