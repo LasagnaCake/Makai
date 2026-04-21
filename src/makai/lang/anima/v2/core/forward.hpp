@@ -44,7 +44,9 @@ namespace Makai::Anima::V2::Core {
 
 	struct Void {};
 
-	struct Any {};
+	struct Any {
+		Instance<Object> value;
+	};
 
 	struct TypeID {
 		uint64 id;

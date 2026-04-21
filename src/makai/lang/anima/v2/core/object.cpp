@@ -45,6 +45,12 @@ bool Object::setAtIndex(uint64 const index, Object::Storage const& value) {
 	return true;
 }
 
+Object::Storage Object::clone() const {
+	if (type->copy)
+		return create(*this);
+	return null;
+}
+
 Object::Storage Object::clone() {
 	if (type->copy)
 		return create(*this);

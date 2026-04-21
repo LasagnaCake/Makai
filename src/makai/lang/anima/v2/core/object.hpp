@@ -243,6 +243,7 @@ namespace Makai::Anima::V2::Core {
 		bool setAtIndex(uint64 const index, Storage const& value);
 
 		Storage clone();
+		Storage clone() const;
 
 		struct Accessor {
 			Accessor const& operator=(Storage const& value) const	{return set(value);	}

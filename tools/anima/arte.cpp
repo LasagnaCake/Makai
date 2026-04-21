@@ -16,9 +16,19 @@ namespace ART {
 
 	template <class T>
 	static Makai::UTF8String toString(T const& val) {
-		if constexpr (Makai::Type::Equal<T, Makai::UTF8Char>)
+		if constexpr (Makai::Type::Equal<T, Makai::Anima::V2::Core::Any>)
+			return Makai::UTF8String();
+		else if constexpr (Makai::Type::Equal<T, Makai::UTF8Char>)
 			return Makai::UTF8String(val);
 		else return Makai::toString(val);
+	}
+
+	static void writeAny(Makai::Anima::V2::Core::Any const& what) {
+		write(toString(what));
+	}
+
+	static void writeAnyLine(Makai::Anima::V2::Core::Any const& what) {
+		writeLine(toString(what));
 	}
 }
 
@@ -26,6 +36,8 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	ARTE() {
 		context.art.addExternalMethod("art/core/io/write_string", ART::write);
 		context.art.addExternalMethod("art/core/io/writeLine_string", ART::writeLine);
+		context.art.addExternalMethod("art/core/io/write_any", ART::writeAny);
+		context.art.addExternalMethod("art/core/io/writeLine_any", ART::writeAnyLine);
 		context.art.addExternalMethod("art/core/conv/toString_string", ART::toString<Makai::UTF8String>);
 		context.art.addExternalMethod("art/core/conv/toString_int8", ART::toString<int8>);
 		context.art.addExternalMethod("art/core/conv/toString_int16", ART::toString<int16>);
@@ -40,6 +52,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		context.art.addExternalMethod("art/core/conv/toString_float128", ART::toString<float128>);
 		context.art.addExternalMethod("art/core/conv/toString_bool", ART::toString<bool>);
 		context.art.addExternalMethod("art/core/conv/toString_char", ART::toString<Makai::UTF8Char>);
+		context.art.addExternalMethod("art/core/conv/toString_any", ART::toString<Makai::Anima::V2::Core::Any>);
 	}
 };
 

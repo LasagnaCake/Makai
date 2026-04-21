@@ -51,8 +51,8 @@ namespace Makai::Anima::V2::Core::Meta {
 		template<> struct ARTTI<Any> {
 			constexpr static scstring ART_NAME = "any";
 
-			static Any construct(Object const&) {
-				return {};
+			static Any construct(Object const& obj) {
+				return {obj.clone()};
 			}
 
 			static Object::Storage convert(Database<Definition>& db, Any const&) {
