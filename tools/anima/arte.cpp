@@ -35,8 +35,8 @@ namespace ART {
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	ARTE() {
 		context.art.addExternalMethod("art/core/io/write_string", ART::write);
-		context.art.addExternalMethod("art/core/io/writeLine_string", ART::writeLine);
 		context.art.addExternalMethod("art/core/io/write_any", ART::writeAny);
+		context.art.addExternalMethod("art/core/io/writeLine_string", ART::writeLine);
 		context.art.addExternalMethod("art/core/io/writeLine_any", ART::writeAnyLine);
 		context.art.addExternalMethod("art/core/conv/toString_string", ART::toString<Makai::UTF8String>);
 		context.art.addExternalMethod("art/core/conv/toString_int8", ART::toString<int8>);
