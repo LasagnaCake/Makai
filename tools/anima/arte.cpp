@@ -5,7 +5,21 @@
 
 constexpr auto const VER = Makai::Data::Version{1};
 
+namespace ART {
+	static void write(Makai::UTF8String const& str) {
+		std::cout << str;
+	}
+
+	static void writeLine(Makai::UTF8String const& str) {
+		std::cout << str << "\n";
+	}
+}
+
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
+	ARTE() {
+		context.art.addExternalMethod("art/core/io/write", ART::write);
+		context.art.addExternalMethod("art/core/io/writeLine", ART::writeLine);
+	}
 };
 
 struct ARTEMain: Makai::AMain {
