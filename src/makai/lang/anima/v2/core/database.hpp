@@ -18,6 +18,15 @@ namespace Makai::Anima::V2::Core {
 			return out;
 		};
 
+		StorageType byNameHash(uint64 const& hash) const {
+			StorageType out;
+			for (auto& v: values) {
+				if (v->hash == hash)
+					out.pushBack(v);
+			}
+			return out;
+		};
+
 		ElementType byID(uint64 const id) const {
 			if (id < values.size())
 				return values[id];

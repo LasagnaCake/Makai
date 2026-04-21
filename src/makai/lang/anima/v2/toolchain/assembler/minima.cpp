@@ -1002,6 +1002,7 @@ static void declareType(Context& context) {
 	auto const name = resolvePath(context);
 	auto const type = new Context::Declaration();
 	type->name = name;
+	type->hash = Makai::ConstHasher::hash(name);
 	context.expectNext(Type{'['});
 	while (true) {
 		if (context.next().has(Type{']'})) break;

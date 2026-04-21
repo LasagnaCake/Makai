@@ -174,10 +174,11 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 
 Makai::Data::Value Module::Declaration::serialize() const {
 	auto result = Data::Value::object();
-	result["id"] = id;
+	result["id"]	= id;
+	result["flags"]	= flags;
+	result["hash"]	= hash;
 	if (name.size())
 		result["name"] = name.toString();
-	result["flags"] = flags;
 	if (basic)
 		result["basic"] = *basic;
 	if (base)
@@ -196,10 +197,11 @@ Makai::Data::Value Module::Declaration::serialize() const {
 
 Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 	Module::Declaration result;
-	result.id = v["id"];
+	result.id		= v["id"].getUnsigned();
+	result.flags	= v["flags"].getUnsigned();
+	result.hash		= v["hash"].getUnsigned();
 	if (v.contains("name"))
 		result.name = v["name"].getString();
-	result.flags = v["flags"].getUnsigned();
 	if (v.contains("basic"))
 		result.basic = Cast::as<BasicType>(v["basic"].getUnsigned());
 	if (v.contains("base"))
