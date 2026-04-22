@@ -259,7 +259,7 @@ template <class TReturn, class... TArgs>
 struct TupleCall<TReturn(TArgs...)> {
 	template <Type::Functional<TReturn(TArgs...)> T>
 	constexpr static TReturn invoke(T const& f, Tuple<TArgs...>& args) {
-		return call(f, IntegerPack<sizeof...(TArgs)>());
+		return invoke(f, args, IntegerPack<sizeof...(TArgs)>());
 	}
 
 	template <Type::Functional<TReturn(TArgs...)> T, usize... N>
