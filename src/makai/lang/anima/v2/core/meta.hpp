@@ -274,13 +274,13 @@ namespace Makai::Anima::V2::Core::Meta {
 
 	template <class... Types>
 	constexpr bool fits(List<Object::Storage> const& args) {
-		return typename Impl::ListToTuple<Types...>::fits();
+		return Impl::ListToTuple<Types...>::fits();
 	}
 
 	template <class... Types>
 	constexpr Tuple<Types...> toArguments(List<Object::Storage> const& args) {
-		return typename Impl::ObjectTupleToArguments<Types...>::make(
-			typename Impl::ListToTuple<Types...>::make()
+		return Impl::ObjectTupleToArguments<Types...>::make(
+			Impl::ListToTuple<Types...>::make(args)
 		);
 	}
 }
