@@ -40,7 +40,7 @@ namespace Makai::Anima::V2::Core {
 			constexpr static ExternalMethodInfo info() {
 				return {
 					Meta::arthashof<TReturn>(),
-					StringList::from(Meta::arthashof<TArgs>()...)
+					List<usize>::from(Meta::arthashof<TArgs>()...)
 				};
 			}
 
@@ -54,7 +54,7 @@ namespace Makai::Anima::V2::Core {
 							return Error::AV2_CCE_MISSING_ARGS;
 						if constexpr (Makai::Type::Void<TReturn>)
 							invoke(f, toArguments<TArgs...>(args));
-						else return Meta::ARTInfo<TReturn>::convert(types, invokeFromTuple(f, toArguments<TArgs...>(args.sliced(0, method.argc))));
+						else return Meta::ARTInfo<TReturn>::convert(types, invokeFromTuple(f, Meta::toArguments<TArgs...>(args.sliced(0, method.argc))));
 					}
 				);
 			}
