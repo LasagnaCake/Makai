@@ -13,11 +13,14 @@ namespace Makai::Anima::V2::Core {
 			AV2_CCE_MISSING_METHOD,
 			AV2_CCE_MISSING_ART_TYPE,
 			AV2_CCE_MISSING_ARGS,
+			AV2_CCE_HOW_DID_YOU_GET_HERE,
 		};
 
 		struct ExternalMethod;
 
-		using ExternalInvocation = Function<Result<Object::Storage, Error>(Database<Definition>&, ExternalMethod&, List<Object::Storage> const&)>;
+		using MethodResult = Result<Object::Storage, Error>;
+
+		using ExternalInvocation = Function<MethodResult(Database<Definition>&, ExternalMethod&, List<Object::Storage> const&)>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -47,21 +50,24 @@ namespace Makai::Anima::V2::Core {
 			template <class TFunc>
 			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
 				return new ExternalInvocation(
-					[f] (Database<Definition>& types, ExternalMethod& method, List<Object::Storage> const& args) {
+					[f] (Database<Definition>& types, ExternalMethod& method, List<Object::Storage> const& args)
+					-> MethodResult {
 						if (types.byNameHash(Meta::arthashof<TReturn>()).empty())
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
-						auto tup = toArguments<TArgs...>(types, args.sliced(0, method.argc));
-						if constexpr (Makai::Type::Void<TReturn>)
-							invoke(f, tup);
-						else return Meta::ARTInfo<TReturn>::convert(
+						auto tup = Meta::toArguments<TArgs...>(types, args.sliced(0, method.argc));
+						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+							invokeFromTuple<void>(f, tup);
+							return Object::Storage();
+						} else return Meta::ARTInfo<TReturn>::convert(
 							types,
-							invokeFromTuple(
+							invokeFromTuple<TReturn>(
 								f,
 								tup
 							)
 						);
+						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
 					}
 				);
 			}
