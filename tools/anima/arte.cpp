@@ -3,31 +3,39 @@
 
 #include "base.cc"
 
+#ifdef ARTE_CLI
+#define doWrite(WHAT) std::cout << WHAT
+#define doWriteLine(WHAT) std::cout << WHAT << "\n"
+#else
+#define doWrite(WHAT)
+#define doWriteLine(WHAT)
+#endif
+
 constexpr auto const VER = Makai::Data::Version{1};
 
 namespace ART {
-	static void write(Makai::UTF8String const& str) {
-		std::cout << str;
+	static void write(Makai::UTF8String str) {
+		doWrite(str);
 	}
 
-	static void writeLine(Makai::UTF8String const& str) {
-		std::cout << str << "\n";
+	static void writeLine(Makai::UTF8String str) {
+		doWriteLine(str);
 	}
 
 	template <class T>
-	static Makai::UTF8String toString(T const& val) {
+	static Makai::UTF8String toString(T val) {
 		if constexpr (Makai::Type::Equal<T, Makai::Anima::V2::Core::Any>)
-			return Makai::UTF8String();
+			return Makai::UTF8String(); // TODO: Proper any handling
 		else if constexpr (Makai::Type::Equal<T, Makai::UTF8Char>)
 			return Makai::UTF8String(val);
 		else return Makai::toString(val);
 	}
 
-	static void writeAny(Makai::Anima::V2::Core::Any const& what) {
+	static void writeAny(Makai::Anima::V2::Core::Any what) {
 		write(toString(what));
 	}
 
-	static void writeAnyLine(Makai::Anima::V2::Core::Any const& what) {
+	static void writeAnyLine(Makai::Anima::V2::Core::Any what) {
 		writeLine(toString(what));
 	}
 }

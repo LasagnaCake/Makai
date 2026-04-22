@@ -22,23 +22,33 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template <class T>
-		consteval static scstring const& specialNameOf() {
-			if constexpr (Type::Equal<T, int8>)		return "int8";
-			if constexpr (Type::Equal<T, int16>)	return "int16";
-			if constexpr (Type::Equal<T, int32>)	return "int32";
-			if constexpr (Type::Equal<T, int64>)	return "int64";
-			if constexpr (Type::Equal<T, uint8>)	return "uint8";
-			if constexpr (Type::Equal<T, uint16>)	return "uint16";
-			if constexpr (Type::Equal<T, uint32>)	return "uint32";
-			if constexpr (Type::Equal<T, uint64>)	return "uint64";
-			if constexpr (Type::Equal<T, float32>)	return "real32";
-			if constexpr (Type::Equal<T, float64>)	return "real64";
-			if constexpr (Type::Equal<T, float128>)	return "real128";
+		consteval static auto specialHashOf() {
+			if constexpr (Type::Equal<T, int8>)		return ConstHasher::hash("int8");
+			if constexpr (Type::Equal<T, int16>)	return ConstHasher::hash("int16");
+			if constexpr (Type::Equal<T, int32>)	return ConstHasher::hash("int32");
+			if constexpr (Type::Equal<T, int64>)	return ConstHasher::hash("int64");
+			if constexpr (Type::Equal<T, uint8>)	return ConstHasher::hash("uint8");
+			if constexpr (Type::Equal<T, uint16>)	return ConstHasher::hash("uint16");
+			if constexpr (Type::Equal<T, uint32>)	return ConstHasher::hash("uint32");
+			if constexpr (Type::Equal<T, uint64>)	return ConstHasher::hash("uint64");
+			if constexpr (Type::Equal<T, float32>)	return ConstHasher::hash("real32");
+			if constexpr (Type::Equal<T, float64>)	return ConstHasher::hash("real64");
+			if constexpr (Type::Equal<T, float128>)	return ConstHasher::hash("real128");
 		}
 
 		template <class T> struct ARTTI;
 
 		template<> struct ARTTI<Void> {
+			constexpr static auto const ART_HASH = ConstHasher::hash("void");
+
+			static void construct(Object const&) {}
+
+			static Object::Storage convert(Database<Definition>& db) {
+				return Object::create(db.byNameHash(ART_HASH).front());
+			}
+		};
+
+		template<> struct ARTTI<void> {
 			constexpr static auto const ART_HASH = ConstHasher::hash("void");
 
 			static void construct(Object const&) {}
@@ -98,7 +108,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::SignedInteger T> struct ARTTI<T> {
-			constexpr static auto const ART_HASH = ConstHasher::hash(specialNameOf<T>());
+			constexpr static auto const ART_HASH = specialHashOf<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
@@ -110,7 +120,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::UnsignedInteger T> struct ARTTI<T> {
-			constexpr static auto const ART_HASH = ConstHasher::hash(specialNameOf<T>());
+			constexpr static auto const ART_HASH = specialHashOf<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
@@ -122,7 +132,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::Real T> struct ARTTI<T> {
-			constexpr static auto const ART_HASH = ConstHasher::hash(specialNameOf<T>());
+			constexpr static auto const ART_HASH = specialHashOf<T>();
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
@@ -193,6 +203,18 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
+		template<> struct ARTTI<Data::Value> {
+			constexpr static auto const ART_HASH = ConstHasher::hash("any");
+
+			static Data::Value construct(Object const& value) {
+				return value.toValue<Data::Value>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, TypeID const& value) {
+				return Object::create(value, db.byNameHash(ART_HASH).front());
+			}
+		};
+
 		template<ARTType T>
 		struct ARTTI<T>: T {
 			constexpr static auto const ART_HASH = ConstHasher::hash(T::ART_NAME);
@@ -246,8 +268,8 @@ namespace Makai::Anima::V2::Core::Meta {
 	using ARTInfo = Impl::ARTTI<T>;
 
 	template <class T>
-	constexpr String artnameof() {
-		return String(ARTInfo<T>::ART_NAME);
+	constexpr usize arthashof() {
+		return ARTInfo<T>::ART_HASH;
 	}
 
 	template <class... Types>

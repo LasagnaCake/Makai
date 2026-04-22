@@ -46,6 +46,10 @@ namespace Makai::Anima::V2::Core {
 
 	struct Any {
 		Instance<Object> value;
+
+		constexpr Instance<Object> const& operator->() const {
+			return value;
+		}
 	};
 
 	struct TypeID {

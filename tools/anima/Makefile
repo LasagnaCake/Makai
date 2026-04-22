@@ -75,7 +75,7 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer brevec minimac finale # concerto arte
+tooling: prologue packer brevec minimac finale arte # concerto
 
 all: tooling
 

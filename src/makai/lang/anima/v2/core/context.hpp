@@ -20,8 +20,8 @@ namespace Makai::Anima::V2::Core {
 		using ExternalInvocation = Function<Result<Object::Storage, Error>(Database<Definition>&, ExternalMethod&, List<Object::Storage> const&)>;
 
 		struct ExternalMethodInfo {
-			String 		retTypeName;
-			StringList	argTypeNames;
+			usize 		retTypeHash;
+			List<usize>	argTypeHashes;
 		};
 
 		struct ExternalMethod: Method {
@@ -39,16 +39,16 @@ namespace Makai::Anima::V2::Core {
 
 			constexpr static ExternalMethodInfo info() {
 				return {
-					Meta::artnameof<TReturn>(),
-					StringList::from(Meta::artnameof<TArgs>()...)
+					Meta::arthashof<TReturn>(),
+					StringList::from(Meta::arthashof<TArgs>()...)
 				};
 			}
 
 			template <class TFunc>
-			constexpr static Instance<ExternalInvocation> invoker(Function<TFunc> const& f) {
+			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
 				return new ExternalInvocation(
 					[f] (Database<Definition>& types, ExternalMethod& method, List<Object::Storage> const& args) {
-						if (types.byName(Meta::artnameof<TReturn>()).empty())
+						if (types.byNameHash(Meta::arthashof<TReturn>()).empty())
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
@@ -64,12 +64,12 @@ namespace Makai::Anima::V2::Core {
 		bool addExternalMethod(String const& name, TFunc const& f) {
 			if (hasExternalMethod(name)) return false;
 			using Resolver = ExternalMethodResolver<TFunc>;
-			static auto const baseInfo = typename Resolver::info();
+			static auto const baseInfo = Resolver::info();
 			ExternalMethod method;
 			method.out		= true;
 			method.argc		= Resolver::ARG_COUNT;
 			method.name		= name;
-			method.invoker	= typename Resolver::invoker(f);
+			method.invoker	= Resolver::invoker(f);
 			externalMethods[name] = method;
 			return true;
 		}
@@ -95,7 +95,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <class T>
 		constexpr Object::Storage newValue(T const& value) const {
-			return Object::create(value, types.byName(Meta::artnameof<T>()).front());
+			return Object::create(value, types.byNameHash(Meta::arthashof<T>()).front());
 		}
 
 		Database<Definition>		types;

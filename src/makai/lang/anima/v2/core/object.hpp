@@ -418,6 +418,19 @@ namespace Makai::Anima::V2::Core {
 		Instance<Definition>	type;
 		Instance<Definition>	origin;
 	};
+
+	constexpr Data::Value decay(Object::Storage const& val) {
+		if (!val) return Data::Value::undefined();
+		return val->toDynamicValue();
+	}
+
+	constexpr Data::Value decay(Any const& any) {
+		return decay(any.value);
+	}
+
+	constexpr Data::Value operator*(Any const& any) {
+		return decay(any);
+	}
 }
 
 #endif
