@@ -687,6 +687,10 @@ Engine::Error Engine::invalidJump() {
 	return makeErrorHere("Jump target does not exist!");
 }
 
+Engine::Error Engine::outOfRangeError(String const& desc) {
+	return makeErrorHere(desc);
+}
+
 void Engine::v2ScopeBring() {
 	Instruction::Binding bind = Makai::Cast::bit<Instruction::Binding>(current.type);
 	advance(true);
@@ -823,5 +827,21 @@ void Engine::v2Create() {
 }
 
 void Engine::v2Clear() {
+	// TODO: This
+}
+
+void Engine::v2ScopeKeep() {
+	// TODO: This
+}
+
+void Engine::v2ScopeDeclare() {
+	// TODO: This
+}
+
+void Engine::v2Cast() {
+	// TODO: This
+}
+
+void Engine::v2Select() {
 	// TODO: This
 }

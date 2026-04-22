@@ -104,3 +104,11 @@ Object::Accessor const& Object::Accessor::set(Object::Storage const& value) cons
 	store->setAtIndex(index, value);
 	return *this;
 }
+
+Makai::Instance<Definition> Object::getCurrentType() const {
+	return type;
+}
+
+Makai::Instance<Definition> Object::getOriginalType() const {
+	return origin;
+}
