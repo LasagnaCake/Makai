@@ -259,7 +259,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 			template <usize... N>
 			constexpr static Type make(Database<Definition>& db, ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {ARTTI<Makai::Meta::Select<N, Types...>>::convert(db, *tup.template get<N>())...};
+				return {ARTTI<Makai::Meta::Select<N, Types...>>::construct(*tup.template get<N>())...};
 			}
 		};
 	};
