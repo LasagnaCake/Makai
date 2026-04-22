@@ -231,7 +231,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template <class... Types>
 		struct ListToTuple {
-			using Type = ToObjectTuple<Types...>;
+			using Type = typename ToObjectTuple<Types...>::Type;
 			using ListType = List<Object::Storage>;
 
 			constexpr static bool fits(ListType const& list) {
