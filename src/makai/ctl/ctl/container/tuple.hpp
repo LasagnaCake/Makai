@@ -270,7 +270,7 @@ struct TupleCall<TReturn(TArgs...)> {
 
 template <class TReturn, class... TArgs>
 constexpr TReturn invokeFromTuple(Type::Functional<TReturn(TArgs...)> auto f, Tuple<TArgs...>& args) {
-	return typename TupleCall<TReturn(TArgs...)>::invoke(f, args);
+	return TupleCall<TReturn(TArgs...)>::invoke(f, args);
 }
 
 namespace Impl {
@@ -282,7 +282,7 @@ namespace Impl {
 		template <usize... NI>
 		consteval static Decay<NI...> make(IndexTuple<NI...>);
 
-		using Type = decltype(make(IntegerPack<N>{}));
+		using Type = decltype(make(IntegerPack<N>()));
 	};
 }
 
