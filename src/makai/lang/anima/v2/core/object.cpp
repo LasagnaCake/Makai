@@ -21,7 +21,7 @@ Object::Storage Object::as(Instance<Definition> const& newType) const {
 
 Object::Storage Object::getAtIndex(uint64 const index) const {
 	if (!type) return null;
-	if (!isArray())
+	if (!(isArray()|| isStructrure()))
 		return null;
 	if (isValueType()) {
 		if (!isClonable())

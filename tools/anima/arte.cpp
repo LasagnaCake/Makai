@@ -25,7 +25,7 @@ namespace ART {
 	template <class T>
 	static Makai::UTF8String toString(T val) {
 		if constexpr (Makai::Type::Equal<T, Makai::Anima::V2::Core::Any>)
-			return Makai::UTF8String(); // TODO: Proper any handling
+			return Makai::UTF8String();
 		else if constexpr (Makai::Type::Equal<T, Makai::UTF8Char>)
 			return Makai::UTF8String(val);
 		else return Makai::toString(val);

@@ -250,16 +250,16 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template <class... Types>
 		struct ObjectTupleToArguments {
-			using ObjectTupleType = ToObjectTuple<Types...>;
+			using ObjectTupleType = typename ToObjectTuple<Types...>::Type;
 			using Type = Tuple<Types...>;
 
-			constexpr static Type make(ObjectTupleType const& tup) {
+			constexpr static Type make(Database<Definition>& db, ObjectTupleType const& tup) {
 				return make(tup, IntegerPack<sizeof...(Types)>());
 			}
 
 			template <usize... N>
-			constexpr static Type make(ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {ARTTI<Makai::Meta::Select<N, Types...>>::convert(*tup.template get<N>())...};
+			constexpr static Type make(Database<Definition>& db, ObjectTupleType const& tup, IndexTuple<N...>) {
+				return {ARTTI<Makai::Meta::Select<N, Types...>>::convert(db, *tup.template get<N>())...};
 			}
 		};
 	};
@@ -278,9 +278,9 @@ namespace Makai::Anima::V2::Core::Meta {
 	}
 
 	template <class... Types>
-	constexpr Tuple<Types...> toArguments(List<Object::Storage> const& args) {
+	constexpr Tuple<Types...> toArguments(Database<Definition>& db, List<Object::Storage> const& args) {
 		return Impl::ObjectTupleToArguments<Types...>::make(
-			Impl::ListToTuple<Types...>::make(args)
+			Impl::ListToTuple<Types...>::make(db, args)
 		);
 	}
 }

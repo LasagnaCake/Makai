@@ -53,11 +53,12 @@ namespace Makai::Anima::V2::Core {
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
 						if constexpr (Makai::Type::Void<TReturn>)
-							invoke(f, toArguments<TArgs...>(args));
+							invoke(f, toArguments<TArgs...>(types, args));
 						else return Meta::ARTInfo<TReturn>::convert(
 							types, invokeFromTuple(
 								f,
 								Meta::toArguments<TArgs...>(
+									types,
 									args.sliced(0, method.argc)
 								)
 							)

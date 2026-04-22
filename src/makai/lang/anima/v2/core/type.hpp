@@ -174,12 +174,14 @@ namespace Makai::Anima::V2::Core {
 		uint64						alignment	= 1;
 		List<Instance<Definition>>	fields;
 
-		Dictionary<String>			meta;
+		Data::Value::ObjectType		meta;
 
 		Functor<void(ptr<void>)>							construct;
 		Functor<void(ptr<void>, ptr<void const>)>			copy;
 		Functor<void(ptr<void>)>							destruct;
 		Functor<int64(ptr<void const>, ptr<void const>)>	compare;
+
+		Functor<UTF8String(Object const&)>					toStringInternal;
 	};
 }
 
