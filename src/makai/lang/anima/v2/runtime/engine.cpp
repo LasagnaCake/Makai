@@ -813,8 +813,15 @@ void Engine::v2StackBlit() {
 	auto const count = Makai::Cast::bit<uint64>(current);
 	if (!(blit.offset + count < src.size()))
 		return crash(outOfRangeError("Requested blit range falls outside source's size!"));
-	// TODO: The different blitting type stuff
 	if (blit.fromGlobal)
 		dst.appendBack(src.sliced(-(blit.offset+1 + count), -(blit.offset+1)));
 	else dst.appendBack(src.sliced(blit.offset, blit.offset + count));
+}
+
+void Engine::v2Create() {
+	// TODO: This
+}
+
+void Engine::v2Clear() {
+	// TODO: This
 }
