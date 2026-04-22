@@ -54,7 +54,14 @@ namespace Makai::Anima::V2::Core {
 							return Error::AV2_CCE_MISSING_ARGS;
 						if constexpr (Makai::Type::Void<TReturn>)
 							invoke(f, toArguments<TArgs...>(args));
-						else return Meta::ARTInfo<TReturn>::convert(types, invokeFromTuple(f, Meta::toArguments<TArgs...>(args.sliced(0, method.argc))));
+						else return Meta::ARTInfo<TReturn>::convert(
+							types, invokeFromTuple(
+								f,
+								Meta::toArguments<TArgs...>(
+									args.sliced(0, method.argc)
+								)
+							)
+						);
 					}
 				);
 			}
