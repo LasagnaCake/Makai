@@ -52,15 +52,14 @@ namespace Makai::Anima::V2::Core {
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
+						auto tup = toArguments<TArgs...>(types, args.sliced(0, method.argc));
 						if constexpr (Makai::Type::Void<TReturn>)
-							invoke(f, toArguments<TArgs...>(types, args));
+							invoke(f, tup);
 						else return Meta::ARTInfo<TReturn>::convert(
-							types, invokeFromTuple(
+							types,
+							invokeFromTuple(
 								f,
-								Meta::toArguments<TArgs...>(
-									types,
-									args.sliced(0, method.argc)
-								)
+								tup
 							)
 						);
 					}

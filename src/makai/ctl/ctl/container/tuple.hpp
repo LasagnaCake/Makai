@@ -273,6 +273,32 @@ constexpr TReturn invokeFromTuple(Type::Functional<TReturn(TArgs...)> auto f, Tu
 	return typename TupleCall<TReturn(TArgs...)>::invoke(f, args);
 }
 
+namespace Impl {
+	template<class T, usize N>
+	struct ArrayTuple {
+		template <usize... NI>
+		using Decay = Tuple<Meta::Last<decltype(NI), T>...>;
+
+		template <usize... NI>
+		consteval static Decay<NI...> make(IndexTuple<NI...>);
+
+		using Type = decltype(make(IntegerPack<N>{}));
+	};
+}
+
+/// @brief Collection of values of a single type.
+/// @tparam T Element type.
+/// @tparam N Element count.
+template<class T, usize N>
+using ArrayTuple = typename Impl::ArrayTuple<T, N>::Type;
+
+/// @brief Collection of values of a single type.
+/// @tparam T Element type.
+/// @tparam ...Types Leftover types. Ignored, but used to get tuple size.
+/// @note Useful for when you need a single-type analog for another tuple.
+template<class T, class... Types>
+using SingleTypeTuple = ArrayTuple<T, sizeof...(Types)>;
+
 CTL_NAMESPACE_END
 
 //#define MAKE_REFLECTIVE(__VA_ARGS__) MemberListType members = {__VA_ARGS__}

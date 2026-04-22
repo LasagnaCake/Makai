@@ -226,7 +226,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template <class... Types>
 		struct ToObjectTuple {
-			using Type = Tuple<Makai::Meta::If<false, Types, Object::Storage>...>;
+			using Type = SingleTypeTuple<Object::Storage, Types...>;
 		};
 
 		template <class... Types>
@@ -254,7 +254,7 @@ namespace Makai::Anima::V2::Core::Meta {
 			using Type = Tuple<Types...>;
 
 			constexpr static Type make(Database<Definition>& db, ObjectTupleType const& tup) {
-				return make(tup, IntegerPack<sizeof...(Types)>());
+				return make(db, tup, IntegerPack<sizeof...(Types)>());
 			}
 
 			template <usize... N>
@@ -280,7 +280,8 @@ namespace Makai::Anima::V2::Core::Meta {
 	template <class... Types>
 	constexpr Tuple<Types...> toArguments(Database<Definition>& db, List<Object::Storage> const& args) {
 		return Impl::ObjectTupleToArguments<Types...>::make(
-			Impl::ListToTuple<Types...>::make(db, args)
+			db,
+			Impl::ListToTuple<Types...>::make(args)
 		);
 	}
 }
