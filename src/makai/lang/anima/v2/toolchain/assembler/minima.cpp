@@ -35,7 +35,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	methods[name] = new Reference{.name = fullID};
 	if (!method->out) {
 		method->jump = name + "/entry";
-		method->hash = ConstHasher::hash(copy(name));
+		method->hash = ConstHasher::hash(name);
 	}
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
