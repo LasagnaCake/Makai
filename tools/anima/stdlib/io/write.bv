@@ -1,0 +1,13 @@
+namespace IO {
+	@ARTCall(name = "art/core/io/write_string")
+	write :: (what: str);
+
+	@ARTCall(name = "art/core/io/writLine_string")
+	writeLine :: (what: str);
+
+	@ARTCall(name = "art/core/io/write_any")
+	write :: (what: any);
+
+	@ARTCall(name = "art/core/io/writeLine_any")
+	writeLine :: (what: any);
+}

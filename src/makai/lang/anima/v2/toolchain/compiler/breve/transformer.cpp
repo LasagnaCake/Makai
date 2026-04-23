@@ -373,6 +373,19 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 	return {.scope = scope};
 }
 
+ATransformer::Result Using::transform(Context& context, Node::Instance const& node) {
+	auto const name = context.pathOf(node->rightSide);
+	auto scope = Expression().transform(context, node->leftSide).scope;
+	if (!scope)
+		context.error("Namespace does not exist!", node->leftSide);
+	if (!scope->isPureNamespace())
+		context.error("Scope is not a pure namespace!", node->leftSide);
+	for (auto& [name, mem]: scope->subspaces)
+		if (!context.top()->subspaces.contains(name))
+			context.top()->subspaces[name] = mem;
+	return {.scope = scope};
+}
+
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
 	auto const name = context.pathOf(node->leftSide);
 	if (context.top()->subspaces.contains(name.front()))
@@ -739,6 +752,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_DROP:				return Drop().transform(context, node);
 		case Node::Content::AV2_TANC_NEW:				return Create().transform(context, node);
 		case Node::Content::AV2_TANC_IMPORT:			return Import().transform(context, node);
+		case Node::Content::AV2_TANC_ALIAS:				return Aliasing().transform(context, node);
+		case Node::Content::AV2_TANC_UNSCOPING:			return Using().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
 		default: context.error("Unsupported expression!", node);

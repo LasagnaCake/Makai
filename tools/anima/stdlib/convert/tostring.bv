@@ -39,4 +39,5 @@ namespace Convert {
 
 	@ARTCall(name = "art/core/conv/toString_float128")
 	toString :: (what: float128) -> string;
+
 }
