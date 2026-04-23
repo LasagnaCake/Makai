@@ -1,6 +1,5 @@
 #include "transformer.hpp"
 #include "intermediate.hpp"
-#include "makai/lang/anima/v2/toolchain/compiler/breve/transformer.hpp"
 #include "resolver.hpp"
 
 /*
@@ -1184,31 +1183,32 @@ ATransformer::Result Drop::transform(Context& context, Node::Instance const& nod
 }
 
 ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance const& node) {
-	// TODO: This
-	return {};
+	auto const iif = Branch().transform(context, node);
+	if (!(iif.source and iif.type)) context.error("inline if-elses must result in a value!", node);
+	return iif;
 }
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
 	// TODO: This
 	auto const cond = Expression().transform(context, node->leftSide);
-	if (!cond.source)
-		context.error("Expression does not result in a value!", node->leftSide);
 	if (!cond.direct.isUndefined()) {
 		if (cond.direct.isTruthy()) return Expression().transform(context, node->middle);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
 	} else {
+		if (!cond.source)
+			context.error("Expression does not result in a value!", node->leftSide);
 		auto const ifTrueLabel = "__if_" + node->name() + "_true_";
 		auto const ifFalseLabel = "__if_" + node->name() + "_false_";
 		auto const ifEndLabel = "__if_" + node->name() + "_end_";
 		if (!cond.isStackTop())
-			context.writeMainLine("push", cond.source);
+			context.writeMainLine("push", cond.source.value());
 		context.writeMainLine("pick [", ifTrueLabel, node->rightSide ? ifFalseLabel : ifEndLabel, "]");
 		context.writeMainLine("@target", ifTrueLabel, ":");
 		context.writeMainLine("begin 0");
 		context.writeMainLine("keep");
 		auto const ifTrue = Expression().transform(context, node->middle);
-		if (!ifTrue.isStackTop())
-			context.writeMainLine("push", ifTrue.source);
+		if (ifTrue.source && !ifTrue.isStackTop())
+			context.writeMainLine("push", ifTrue.source.value());
 		context.writeMainLine("end");
 		context.writeMainLine("jump", ifEndLabel);
 		if (node->rightSide) {
@@ -1216,8 +1216,8 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			context.writeMainLine("begin 0");
 			context.writeMainLine("keep");
 			auto const ifFalse = Expression().transform(context, node->rightSide);
-			if (!ifFalse.isStackTop())
-				context.writeMainLine("push", ifFalse.source);
+			if (ifFalse.source && !ifFalse.isStackTop())
+				context.writeMainLine("push", ifFalse.source.value());
 			if (ifTrue.type != ifFalse.type)
 				context.error("Both paths return different types!", node);
 			context.writeMainLine("end");
