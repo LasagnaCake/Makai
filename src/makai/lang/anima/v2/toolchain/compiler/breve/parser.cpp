@@ -126,6 +126,9 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix("is", false);
 	infix("as", false);
 	infix("pow", false);
+	infix("and", false);
+	infix("or", false);
+	infix("xor", false);
 	// Basic postfixes
 	DEBUGLN("Postfix parsers");
 	postfix(
