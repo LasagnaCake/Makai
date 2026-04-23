@@ -413,7 +413,7 @@ namespace StaticStringMangler {
 template<usize S>
 using MangledStaticString = StaticStringMangler::PseudoRandomShuffle<
 	S,
-	(Impl::PRNG & (~0xFF)) | (Impl::PrimeNumber<S>::CLOSEST & 0xFF),
+	(Random::CTPRNG<usize> & (~0xFF)) | (Impl::PrimeNumber<S>::CLOSEST & 0xFF),
 	!Impl::PrimeNumber<S>::IS_PRIME,
 	Decay::Number::AsUnsigned<S>
 >;
@@ -470,6 +470,10 @@ public:
 		return result.resize(isize());
 	}
 
+	/// @brief Deobfuscates the string.
+	/// @return Deobfuscated string.
+	operator String() const {return deobfuscated();}
+
 private:
 	typedef TContainer<SIZE> ContainerType;
 
@@ -501,6 +505,13 @@ private:
 	}
 };
 
+/// @brief Obfuscates a string.
+/// @param str String to obfuscate.
+/// @return Obfuscated string.
+/// @detail
+/// 	Ensures the string is obfuscated at compile-time,
+/// 	and only deobfuscated at runtime.
+/// 	Obfuscation tactic changes with each compilation.
 template <usize N, class TObfuscator = ObfuscatedStaticString<Random::CTPRNG<usize> % highBit(N) * 2 + highBit(N) * 2>>
 consteval TObfuscator obfuscate(As<char const[N]> const& str) {
 	return TObfuscator(str);
