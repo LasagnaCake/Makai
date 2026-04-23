@@ -1,3 +1,5 @@
+using core = import core;
+
 module Test.Namespace {
 	@Nullable
 	struct MySpecialStruct {
@@ -17,5 +19,6 @@ module Test.Namespace {
 
 @Main
 main :: () {
-    oper := Test.Namespace.baz(32 + 64)
+    val := Test.Namespace.baz(32 + 64)
+    core.IO.writeLine("32 + 64 = ", val)
 }

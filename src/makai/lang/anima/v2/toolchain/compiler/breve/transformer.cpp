@@ -374,7 +374,6 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 }
 
 ATransformer::Result Using::transform(Context& context, Node::Instance const& node) {
-	auto const name = context.pathOf(node->rightSide);
 	auto scope = Expression().transform(context, node->leftSide).scope;
 	if (!scope)
 		context.error("Namespace does not exist!", node->leftSide);

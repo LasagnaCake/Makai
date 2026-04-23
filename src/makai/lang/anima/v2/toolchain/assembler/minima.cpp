@@ -1157,7 +1157,6 @@ static void getMethodAttriutes(Context& context, Context::Method& method) {
 static void declareMethodPrototype(Context& context) {
 	auto const method = new Context::Method();
 	getMethodAttriutes(context, *method);
-	method->out = true;
 	auto id = resolvePath(context);
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
@@ -1185,6 +1184,7 @@ static void declareOutboundMethod(Context& context) {
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
+	method->out = true;
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
 	else context.error("Return type does not exist!");
