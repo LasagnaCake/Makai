@@ -10,8 +10,16 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 	if (composer.visitedFunctions.contains(fn)) return;
 	composer.visitedFunctions[fn] = true;
 	for (auto& ov: fn->overloads) {
+		Makai::UTF8String ovstr;
+		switch (ov->variant) {
+			using ET = As<decltype(ov->variant)>;
+			using enum ET;
+			case AV2_TCB_FOV_ART_CALL:	ovstr += "@out[\"" + ov->outEntry + "\"] ";								break;
+			case AV2_TCB_FOV_DYNLIB:	ovstr += "@shared[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";	break;
+			default:					ovstr += "@fn ";														break;
+		}
 		composer.functions.pushBack(
-			(ov->variant == decltype(ov->variant)::AV2_TCB_FOV_ART_CALL ? "@out[\"" + ov->outEntry + "\"] " : "@fn ")
+			ovstr
 		+	ov->result->name
 		+	" ("
 		+	ov->arguments
