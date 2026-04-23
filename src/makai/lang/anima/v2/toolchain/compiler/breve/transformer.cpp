@@ -1,5 +1,6 @@
 #include "transformer.hpp"
 #include "intermediate.hpp"
+#include "makai/lang/anima/v2/toolchain/compiler/breve/transformer.hpp"
 #include "resolver.hpp"
 
 /*
@@ -1189,7 +1190,42 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
 	// TODO: This
-	return {};
+	auto const cond = Expression().transform(context, node->leftSide);
+	if (!cond.source)
+		context.error("Expression does not result in a value!", node->leftSide);
+	if (!cond.direct.isUndefined()) {
+		if (cond.direct.isTruthy()) return Expression().transform(context, node->middle);
+		else if (node->rightSide) return Expression().transform(context, node->rightSide);
+	} else {
+		auto const ifTrueLabel = "__if_" + node->name() + "_true_";
+		auto const ifFalseLabel = "__if_" + node->name() + "_false_";
+		auto const ifEndLabel = "__if_" + node->name() + "_end_";
+		if (!cond.isStackTop())
+			context.writeMainLine("push", cond.source);
+		context.writeMainLine("pick [", ifTrueLabel, node->rightSide ? ifFalseLabel : ifEndLabel, "]");
+		context.writeMainLine("@target", ifTrueLabel, ":");
+		context.writeMainLine("begin 0");
+		context.writeMainLine("keep");
+		auto const ifTrue = Expression().transform(context, node->middle);
+		if (!ifTrue.isStackTop())
+			context.writeMainLine("push", ifTrue.source);
+		context.writeMainLine("end");
+		context.writeMainLine("jump", ifEndLabel);
+		if (node->rightSide) {
+			context.writeMainLine("@target", ifFalseLabel, ":");
+			context.writeMainLine("begin 0");
+			context.writeMainLine("keep");
+			auto const ifFalse = Expression().transform(context, node->rightSide);
+			if (!ifFalse.isStackTop())
+				context.writeMainLine("push", ifFalse.source);
+			if (ifTrue.type != ifFalse.type)
+				context.error("Both paths return different types!", node);
+			context.writeMainLine("end");
+			context.writeMainLine("jump", ifEndLabel);
+		}
+		context.writeMainLine("@target", ifEndLabel, ":");
+		return {.source = {"move stack[-0}"}, .type = ifTrue.type};
+	}
 }
 
 ATransformer::Result Loop::transform(Context& context, Node::Instance const& node) {

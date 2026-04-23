@@ -881,8 +881,10 @@ void Engine::v2Select() {
 	auto const selCount = current.type;
 	if (context.globalValueStack.empty())
 		return crash(outOfRangeError("Global stack is empty!"));
-	if (!context.top()->isUnsigned())
-		return crash(makeErrorHere("Expected unsigned integer for select!"));
+	if (!context.top())
+		return crash(makeErrorHere("Select value does not exist!"));
+	if (!(context.top()->isUnsigned() or context.top()->isBoolean()))
+		return crash(makeErrorHere("Expected unsigned integer or boolean value for select!"));
 	uint64 const to = context.pop()->toValue<uint64>();
 	if (!selCount) return;
 	List<uint64> targets;
