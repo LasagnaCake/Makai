@@ -33,6 +33,8 @@ namespace ART {
 	static void writeAnyLine(Makai::Anima::V2::Core::Any what) {
 		writeLine(toString(what));
 	}
+
+	template <class T> static void doNothing(T) {}
 }
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
@@ -44,6 +46,11 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 			context.art.addExternalMethod("art/core/io/write_any", ART::writeAny);
 			context.art.addExternalMethod("art/core/io/writeLine_string", ART::writeLine);
 			context.art.addExternalMethod("art/core/io/writeLine_any", ART::writeAnyLine);
+		} else {
+			context.art.addExternalMethod("art/core/io/write_string", ART::doNothing<Makai::UTF8String>);
+			context.art.addExternalMethod("art/core/io/write_any", ART::doNothing<Makai::Anima::V2::Core::Any>);
+			context.art.addExternalMethod("art/core/io/writeLine_string", ART::doNothing<Makai::UTF8String>);
+			context.art.addExternalMethod("art/core/io/writeLine_any", ART::doNothing<Makai::Anima::V2::Core::Any>);
 		}
 		context.art.addExternalMethod("art/core/conv/toString_string", ART::toString<Makai::UTF8String>);
 		context.art.addExternalMethod("art/core/conv/toString_int8", ART::toString<int8>);
