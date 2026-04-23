@@ -68,6 +68,7 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_CUSTOM_PREFIX_OP:	return "ex_prefix";
 		case Content::AV2_TANC_CUSTOM_INFIX_OP:		return "ex_infix";
 		case Content::AV2_TANC_CUSTOM_POSTFIX_OP:	return "ex_postfix";
+		case Content::AV2_TANC_UNSCOPING:			return "unscope";
 	}
 	return "???";
 }
