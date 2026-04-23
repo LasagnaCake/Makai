@@ -1,7 +1,7 @@
 #CC 	?= gcc
 #CXX ?= g++
 
-ROOT	:= ../..
+ROOT	:= ../../..
 
 LEAN := -s
 
@@ -75,14 +75,14 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer brevec minimac arte finale # concerto
+tooling: prologue av2io finale
 
 all: tooling
 
 define compile
 	@echo "[$(strip $(1))]"
 	$(COMPILER) $(CFG) -c $(strip $(1)).cpp -o $(strip $(1)).o
-	$(LINKER) -o $(strip $(1))$(EXEC_TYPE) $(strip $(1)).o $(OBJ) $(LK)
+	$(LINKER) -o $(strip $(1)).dll $(strip $(1)).o $(OBJ) $(LK)
 endef
 
 prologue:
@@ -90,29 +90,7 @@ prologue:
 	@echo "libraries: $(LIBRARIES)"
 	@echo "debug? $(debug)"
 
-packer:
-	$(call compile, $@)
-
-concerto:
-	$(call compile, $@)
-
-minimac:
-	$(call compile, $@)
-
-brevec:
-	$(call compile, $@)
-
-arte:
-	@echo "[$@]"
-	$(COMPILER) $(CFG) -c art.cpp -o art.o
-	$(LINKER) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
-
-mk-push:
-	cp art$(EXEC_TYPE) ../../output/bin
-	cp minimac$(EXEC_TYPE) ../../output/bin
-	cp brevec$(EXEC_TYPE) ../../output/bin
-#	cp concerto$(EXEC_TYPE) ../../output/bin
-	cp packer$(EXEC_TYPE) ../../output/bin
+av2io:
 
 finale:
 	@echo 
