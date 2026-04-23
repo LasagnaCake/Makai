@@ -1189,11 +1189,11 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
-	// TODO: This
 	auto const cond = Expression().transform(context, node->leftSide);
 	if (!cond.direct.isUndefined()) {
 		if (cond.direct.isTruthy()) return Expression().transform(context, node->middle);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
+		else return {};
 	} else {
 		if (!cond.source)
 			context.error("Expression does not result in a value!", node->leftSide);
