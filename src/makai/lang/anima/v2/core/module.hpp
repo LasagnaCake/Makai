@@ -24,6 +24,7 @@ namespace Makai::Anima::V2::Core {
 		struct Method {
 			uint64			id;
 			UTF8String		name;
+			uint64			hash;
 			uint64			retType;
 			List<uint64>	argTypes;
 			bool			out = false;

@@ -206,6 +206,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 				AV2_TCB_FOV_GLOBAL,
 				AV2_TCB_FOV_CLASS,
 				AV2_TCB_FOV_INSTANCE,
+				AV2_TCB_FOV_ART_CALL,
 			};
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;

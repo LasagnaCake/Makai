@@ -34,7 +34,10 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	moduleMethods[fullID] = method;
 	methods[name] = new Reference{.name = fullID};
 	if (method->local) return;
-	method->jump = name + "/entry";
+	if (!method->out) {
+		method->jump = name + "/entry";
+		method->hash = ConstHasher::hash(name);
+	}
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
 	program.sym.methods.pushBack({nullptr, method->id, name});
@@ -59,6 +62,7 @@ void Context::addExternalMethod(Makai::String const& module, Makai::String const
 	auto const refID = cleanPath(module + "/" + name);
 	externalMethods[fullID] = method;
 	methods[refID] = new Reference{module, fullID};
+	method->hash = ConstHasher::hash(name);
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
 	uint64 moduleID = program.ani->shared.modules.find(module);
@@ -506,13 +510,16 @@ static void doCall(Context& context, bool dynamic = false) {
 	if (!dynamic) {
 		context.next();
 		auto id = resolvePath(context);
+		if (!context.methods.contains(id))
+			context.error("Method with this name does not exist!");
+		auto const m = context.getMethod(id);
+		invoke.art = m->out;
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
 		);
-		if (context.methods.contains(id))
-			context.addJumpTarget(context.getMethod(id)->jump);
-		else context.error("Method with this name does not exist!");
+		if (m->out) context.add(m->hash);
+		else context.addJumpTarget(m->jump);
 	} else {
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
@@ -1151,6 +1158,33 @@ static void getMethodAttriutes(Context& context, Context::Method& method) {
 static void declareMethodPrototype(Context& context) {
 	auto const method = new Context::Method();
 	getMethodAttriutes(context, *method);
+	method->out = true;
+	auto id = resolvePath(context);
+	if (context.types.contains(id))
+		method->retType = context.getType(id)->id;
+	else context.error("Return type does not exist!");
+	context.expectNext(Type{'('});
+	while (true) {
+		if (context.next().has(Type{')'})) break;
+		id = resolvePath(context);
+		if (context.types.contains(id))
+			method->argTypes.pushBack(context.getType(id)->id);
+		else context.error("Argument type does not exist!");
+	}
+	context.next();
+	auto const name = resolvePath(context);
+	if (context.methods.contains(name))
+		context.error("Redeclaration of previously-declared method!");
+	context.addMethod(name, method);
+}
+
+static void declareOutboundMethod(Context& context) {
+	auto const method = new Context::Method();
+	context.expectNext(Type{'['});
+	auto const outID = Makai::ConstHasher::hash(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString());
+	context.expectNext(Type{']'});
+	method->hash = outID;
+	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
@@ -1307,6 +1341,8 @@ static void doDeclaration(Context& context) {
 		declareMethodBody(context);
 	else if (decl == "fn")
 		declareMethodPrototype(context);
+	else if (decl == "out")
+		declareOutboundMethod(context);
 	else if (decl == "type")
 		declareType(context);
 	else if (decl == "ns")

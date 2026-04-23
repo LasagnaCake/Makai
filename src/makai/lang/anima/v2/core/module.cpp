@@ -145,6 +145,7 @@ Makai::Data::Value Module::Method::serialize() const {
 	result["id"] = id;
 	if (name.size())
 		result["name"] = name.toString();
+	result["hash"] = hash;
 	result["return"] = retType;
 	result["args"] = argTypes.toList<Data::Value>();
 	result["out"] = out;
@@ -161,6 +162,7 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 	result.id = v["id"];
 	if (v.contains("name"))
 		result.name = v["name"].getString();
+	result.hash = v["hash"].getUnsigned();
 	result.retType = v["return"];
 	result.argTypes = v["args"].getArray().toList<uint64>();
 	result.out = v["out"];

@@ -490,10 +490,10 @@ static Namespace::AttributeRef createBoundAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Bound";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
-	attrib->fields["type"] = {DVK_STRING};
+	attrib->fields["artType"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_ART_EQUIVALENT;
-		auto const artt = (v["type"].getString());
+		auto const artt = (v["artType"].getString());
 		ns->type->artEquivalent = artt;
 	};
 	return attrib;
@@ -553,6 +553,24 @@ static Namespace::AttributeRef createExitAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createARTCallAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "ARTCall";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->fields["path"] = {.type = DVK_STRING, .path = true};
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		auto const name = (v["path"].getString());
+		for (auto& ov: ns->function->overloads)
+			if (ov->entry.empty() && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
+				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_ART_CALL;
+				ov->entry = name;
+			}
+	};
+	return attrib;
+}
+
 bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 	using enum Lexer::CStyle::TokenStream::Token::Type;
 	if (target == Target::AV2_TAAT_EMPTY)
@@ -598,6 +616,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
 	addGlobalAttribute(createSharedAttribute());
+	addGlobalAttribute(createARTCallAttribute());
 	addGlobalAttribute(createEntryAttribute());
 	addGlobalAttribute(createExitAttribute());
 }

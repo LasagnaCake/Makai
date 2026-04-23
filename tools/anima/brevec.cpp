@@ -42,7 +42,7 @@ int main(int argc, char** argv) try {
 	Transformer::Import::importer = [dirs = cfg["src"].getArray().toList<Makai::String>()] (auto const path) -> File {
 		if (Makai::OS::FS::exists(path + ".bv"))
 			return parseFile(path + ".bv", Makai::File::getText(path + ".bv"));
-		auto const brevecDir = Makai::OS::FS::sourcePath();
+		auto const brevecDir = Makai::OS::FS::sourceLocation();
 		if (Makai::OS::FS::exists(brevecDir + "/" + path + ".bv"))
 			return parseFile(brevecDir + "/" + path + ".bv", Makai::File::getText(brevecDir + "/" + path + ".bv"));
 		for (auto& dir: dirs)

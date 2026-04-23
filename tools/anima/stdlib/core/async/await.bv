@@ -1,3 +1,0 @@
-namespace Async {
-	macro await => {$cond:expr;} => {while $cond yield;}
-}

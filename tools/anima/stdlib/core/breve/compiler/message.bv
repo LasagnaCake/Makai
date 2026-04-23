@@ -1,5 +1,0 @@
-namespace Breve.Compiler.Message {
-	macro LINE	= {$!message "[]::[ LINE=${LINE} ]::[]"					}
-	macro FILE	= {$!message "[]::[ FILE=|${FILE}| ]::[]"				}
-	macro STATE	= {$!message "[]::[ FILE=|${FILE}| LINE=${LINE} ]::[]"	}
-}

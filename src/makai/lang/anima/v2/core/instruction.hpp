@@ -113,6 +113,7 @@ namespace Makai::Anima::V2::Core {
 		/// @brief Function invocation.
 		struct [[gnu::aligned(4)]] Invocation {
 			bool	dynamic:	1;
+			bool	art:		1;
 			bool	external:	1;
 		};
 

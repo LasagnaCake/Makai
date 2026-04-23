@@ -1,9 +1,0 @@
-namespace IO {
-	func exit(value: any = (0 as any)): void {
-		fatal asm {
-			exit move stack[-0]
-		}
-	}
-}
-
-extend void with global func exit(value: any = (0 as any)): void => IO.exit(move value);
