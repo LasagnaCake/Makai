@@ -312,9 +312,8 @@ static Namespace::AttributeRef createSharedAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Shared";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->fields["name"]	= {.type=DVK_STRING, .path=true};
+	attrib->fields["name"]	= {.type=DVK_STRING};
 	attrib->fields["lib"]	= {.type=DVK_STRING, .path=true};
-	attrib->fields["type"]	= {.type=DVK_STRING, .defaultValue="artm", .path=true};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		// TODO: Shared functions
 	};

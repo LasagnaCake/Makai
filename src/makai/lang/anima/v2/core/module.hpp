@@ -75,8 +75,12 @@ namespace Makai::Anima::V2::Core {
 			StringList	out;
 
 			struct Shared {
+				StringList	libraries;
 				StringList	modules;
 				StringList	interops;
+
+				Data::Value serialize() const;
+				static Shared deserialize(Data::Value const& v);
 			} shared;
 
 			Data::Value serialize() const;

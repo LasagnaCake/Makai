@@ -1142,14 +1142,10 @@ static void declareAlias(Context& context) {
 static void getMethodAttriutes(Context& context, Context::Method& method) {
 	while (context.next().has(LTS_TT_IDENTIFIER)) {
 		auto const vis = context.get(LTS_TT_IDENTIFIER, "visibility").getString();
-		if (vis == "shared")
-			method.shared = true;
-		else if (vis == "local")
+		if (vis == "local")
 			method.local = true;
 		else if (vis == "global")
 			method.local = false;
-		else if (vis == "art")
-			method.shared = false;
 		else break;
 	}
 }
@@ -1185,6 +1181,38 @@ static void declareOutboundMethod(Context& context) {
 	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
 	method->out = true;
+	if (context.types.contains(id))
+		method->retType = context.getType(id)->id;
+	else context.error("Return type does not exist!");
+	context.expectNext(Type{'('});
+	while (true) {
+		if (context.next().has(Type{')'})) break;
+		id = resolvePath(context);
+		if (context.types.contains(id))
+			method->argTypes.pushBack(context.getType(id)->id);
+		else context.error("Argument type does not exist!");
+	}
+	context.next();
+	auto const name = resolvePath(context);
+	if (context.methods.contains(name))
+		context.error("Redeclaration of previously-declared method!");
+	context.addMethod(name, method);
+}
+
+static void declareSharedMethod(Context& context) {
+	auto const method = new Context::Method();
+	context.expectNext(Type{'['});
+	auto const dynlibName = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString();
+	context.expectNext(Type{':'});
+	auto const outID = Makai::ConstHasher::hash(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString());
+	context.expectNext(Type{']'});
+	method->hash = outID;
+	getMethodAttriutes(context, *method);
+	auto id = resolvePath(context);
+	method->out		= true;
+	method->shared	= true;
+	if (context.program.ani->shared.libraries.find(dynlibName) == -1)
+		context.program.ani->shared.libraries.pushBack(dynlibName);
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
 	else context.error("Return type does not exist!");
@@ -1342,6 +1370,8 @@ static void doDeclaration(Context& context) {
 		declareMethodPrototype(context);
 	else if (decl == "out")
 		declareOutboundMethod(context);
+	else if (decl == "shared")
+		declareSharedMethod(context);
 	else if (decl == "type")
 		declareType(context);
 	else if (decl == "ns")

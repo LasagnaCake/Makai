@@ -73,37 +73,80 @@ namespace Makai::Anima::V2::Core {
 			}
 		};
 
+		struct MethodAdder {
+			template <class TFunc>
+			bool add(String const& name, TFunc const& f) const {
+				context.addExternalMethod(name, f);
+			}
+
+			MethodAdder(Context& context): context(context) {}
+
+		private:
+			Context& context;
+		};
+
+		struct MethodRemover {
+			void remove(String const& name) const {
+				context.removeExternalMethod(name);
+			}
+
+			MethodRemover(Context& context): context(context) {}
+
+		private:
+			Context& context;
+		};
+
 		template <class TFunc>
 		bool addExternalMethod(String const& name, TFunc const& f) {
-			if (hasExternalMethod(name)) return false;
-			using Resolver = ExternalMethodResolver<TFunc>;
-			static auto const baseInfo = Resolver::info();
-			ExternalMethod method;
-			method.out		= true;
-			method.argc		= Resolver::ARG_COUNT;
-			method.name		= name;
-			method.invoker	= Resolver::invoker(f);
-			externalMethods[name] = method;
-			return true;
+			return addExternalMethod(ConstHasher::hash(name), f);
 		}
 
 		void removeExternalMethod(String const& name) {
-			externalMethods.erase(name);
+			removeExternalMethod(ConstHasher::hash(name));
 		}
 
 		bool hasExternalMethod(String const& name) const {
-			return externalMethods.contains(name);
+			return hasExternalMethod(ConstHasher::hash(name));
 		}
 
 		Result<Object::Storage, Error> invokeExternalMethod(
 			String const& name,
 			List<Object::Storage> const& args
 		) {
+			return invokeExternalMethod(ConstHasher::hash(name), args);
+		}
+
+		template <class TFunc>
+		bool addExternalMethod(usize const& hash, TFunc const& f) {
+			if (hasExternalMethod(hash)) return false;
+			using Resolver = ExternalMethodResolver<TFunc>;
+			static auto const baseInfo = Resolver::info();
+			ExternalMethod method;
+			method.out		= true;
+			method.argc		= Resolver::ARG_COUNT;
+			method.hash		= hash;
+			method.invoker	= Resolver::invoker(f);
+			externalMethods[hash] = method;
+			return true;
+		}
+
+		void removeExternalMethod(usize const& hash) {
+			externalMethods.erase(hash);
+		}
+
+		bool hasExternalMethod(usize const& hash) const {
+			return externalMethods.contains(hash);
+		}
+
+		Result<Object::Storage, Error> invokeExternalMethod(
+			usize const& hash,
+			List<Object::Storage> const& args
+		) {
 			if (!(
-				hasExternalMethod(name)
-			&&	externalMethods[name].invoker
+				hasExternalMethod(hash)
+			&&	externalMethods[hash].invoker
 			)) return Error::AV2_CCE_MISSING_METHOD;
-			return externalMethods[name].invoker->invoke(types, externalMethods[name], args);
+			return externalMethods[hash].invoker->invoke(types, externalMethods[hash], args);
 		}
 
 		template <class T>
@@ -113,7 +156,7 @@ namespace Makai::Anima::V2::Core {
 
 		Database<Definition>		types;
 		Database<Method>			methods;
-		Dictionary<ExternalMethod>	externalMethods;
+		Map<usize, ExternalMethod>	externalMethods;
 	};
 }
 

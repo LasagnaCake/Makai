@@ -84,7 +84,7 @@ Module::ANI Module::ANI::deserialize(Makai::Data::Value const& v) {
 
 Makai::Data::Value Module::ANI::serialize() const {
 	auto result = Data::Value::object();
-	result["shared"]	= result.object();
+	result["shared"]	= shared;
 	result["in"]		= result.object();
 	result["out"]		= result.array();
 	auto& signals		= result["in"];
@@ -93,6 +93,22 @@ Makai::Data::Value Module::ANI::serialize() const {
 		signals[name] = id;
 	for (auto& name: out)
 		externs[externs.size()] = name;
+	return result;
+}
+
+Module::ANI::Shared Module::ANI::Shared::deserialize(Data::Value const& v) {
+	Module::ANI::Shared out;
+	out.modules		= v["modules"].getArray().toList<Makai::String>();
+	out.interops	= v["interops"].getArray().toList<Makai::String>();
+	out.libraries	= v["libraries"].getArray().toList<Makai::String>();
+	return out;
+}
+
+Makai::Data::Value Module::ANI::Shared::serialize() const {
+	auto result = Data::Value::object();
+	result["modules"]	= modules.toList<Makai::Data::Value>();
+	result["interops"]	= interops.toList<Makai::Data::Value>();
+	result["libraries"]	= libraries.toList<Makai::Data::Value>();
 	return result;
 }
 

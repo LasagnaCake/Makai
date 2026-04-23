@@ -36,6 +36,11 @@
 #define CTL_ON_UNIX (1)
 #endif
 
+#define CTL_DYNEXPORT __declspec(dllexport)
+#define CTL_DYNIMPORT __declspec(dllimport)
+
+#define CTL_CDECL extern "C"
+
 /// @brief Core library.
 namespace CTL {}
 
