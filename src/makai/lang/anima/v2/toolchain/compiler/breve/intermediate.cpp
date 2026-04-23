@@ -315,7 +315,16 @@ static Namespace::AttributeRef createSharedAttribute() {
 	attrib->fields["name"]	= {.type=DVK_STRING};
 	attrib->fields["lib"]	= {.type=DVK_STRING, .path=true};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		// TODO: Shared functions
+		static usize id = 0;
+		auto const name = (v["name"].getString());
+		auto const lib = (v["lib"].getString());
+		for (auto& ov: ns->function->overloads)
+			if (ov->entry.empty() && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
+				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_DYNLIB;
+				ov->outEntry = name;
+				ov->dynlib = lib;
+				ov->entry = "__shared_dynlib_" + Makai::toString(id) + ov->methodOf->node->name();
+			}
 	};
 	return attrib;
 }
