@@ -3,13 +3,8 @@
 
 #include "base.cc"
 
-#ifdef ARTE_CLI
 #define doWrite(WHAT) std::cout << WHAT
 #define doWriteLine(WHAT) std::cout << WHAT << "\n"
-#else
-#define doWrite(WHAT)
-#define doWriteLine(WHAT)
-#endif
 
 constexpr auto const VER = Makai::Data::Version{1};
 
@@ -41,11 +36,15 @@ namespace ART {
 }
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
+	bool cliEnabled = false;
+
 	ARTE() {
-		context.art.addExternalMethod("art/core/io/write_string", ART::write);
-		context.art.addExternalMethod("art/core/io/write_any", ART::writeAny);
-		context.art.addExternalMethod("art/core/io/writeLine_string", ART::writeLine);
-		context.art.addExternalMethod("art/core/io/writeLine_any", ART::writeAnyLine);
+		if (cliEnabled) {
+			context.art.addExternalMethod("art/core/io/write_string", ART::write);
+			context.art.addExternalMethod("art/core/io/write_any", ART::writeAny);
+			context.art.addExternalMethod("art/core/io/writeLine_string", ART::writeLine);
+			context.art.addExternalMethod("art/core/io/writeLine_any", ART::writeAnyLine);
+		}
 		context.art.addExternalMethod("art/core/conv/toString_string", ART::toString<Makai::UTF8String>);
 		context.art.addExternalMethod("art/core/conv/toString_int8", ART::toString<int8>);
 		context.art.addExternalMethod("art/core/conv/toString_int16", ART::toString<int16>);
@@ -68,11 +67,13 @@ struct ARTEMain: Makai::AMain {
 	static Makai::Data::Value configBase() {
 		Makai::Data::Value cfg;
 		cfg["help"]		= false;
+		cfg["cli"]		= false;
 		return cfg;
 	}
 
 	static void translationBase(Makai::CLI::Parser::Translation& tl) {
 		tl["H"]		= "help";
+		tl["C"]		= "cli";
 	}
 
 	ARTEMain(Makai::CLI::Parser& cli): AMain(cli) {
@@ -81,15 +82,16 @@ struct ARTEMain: Makai::AMain {
 		showDialogOnError = false;
 	}
 
-	void write(Makai::String const& what) const override {DEBUG(what);}
+	void write(Makai::String const& what) const override {doWrite(what);}
 
 	void run(Makai::Data::Value const& args) override {
-		ARTE engine;
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
-			writeLine("art <program> [-N]");
+			writeLine("art <program> [-C]");
 		} else {
+			ARTE engine;
+			engine.cliEnabled = args["cli"];
 			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 			engine.execute();
 			while (engine.process()) {

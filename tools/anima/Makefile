@@ -104,14 +104,11 @@ brevec:
 
 arte:
 	@echo "[$@]"
-	$(COMPILER) $(CFG) -c arte.cpp -o art.o -DARTE_CLI
-	$(COMPILER) $(CFG) -c arte.cpp -o artw.o -DARTE_NO_CLI $(WINFLAG)
+	$(COMPILER) $(CFG) -c art.cpp -o art.o
 	$(LINKER) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
-	$(LINKER) -o artw$(EXEC_TYPE) artw.o $(OBJ) $(LK) $(WINFLAG)
 
 mk-push:
 	cp art$(EXEC_TYPE) ../../output/bin
-	cp artw$(EXEC_TYPE) ../../output/bin
 	cp minimac$(EXEC_TYPE) ../../output/bin
 	cp brevec$(EXEC_TYPE) ../../output/bin
 #	cp concerto$(EXEC_TYPE) ../../output/bin
