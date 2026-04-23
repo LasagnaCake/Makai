@@ -113,13 +113,13 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix(LTS_TT_RAISE, false);
 	infix(LTS_TT_LOGIC_AND, false);
 	infix(LTS_TT_LOGIC_OR, false);
+	infix(LTS_TT_LOGIC_XOR, false);
 	infix(LTS_TT_LESS_THAN, false);
 	infix(LTS_TT_GREATER_THAN, false);
 	infix(LTS_TT_COMPARE_LESS_EQUALS, false);
 	infix(LTS_TT_COMPARE_GREATER_EQUALS, false);
 	infix(LTS_TT_COMPARE_EQUALS, false);
 	infix(LTS_TT_COMPARE_NOT_EQUALS, false);
-	infix("xor", false);
 	infix("atan", false);
 	infix("cross", false);
 	infix("fcross", false);
