@@ -925,7 +925,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			auto args = ov->arguments;
 			args.appendBack(optionals.sliced(0, -(i+1)));
 			if (auto const f = fn.overloadFromVariables(args)) {
-				if (f->scope || f->result != ov->result)
+				if (f->scope || f->result != ov->result || ov->outEntry.size())
 					context.error("Redeclaration of function overload!", node);
 				if (!implScope) {
 					auto const ovName = scope->function->name + overloadName(args);

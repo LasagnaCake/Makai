@@ -11,7 +11,7 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 	composer.visitedFunctions[fn] = true;
 	for (auto& ov: fn->overloads) {
 		composer.functions.pushBack(
-			(ov->variant == decltype(ov->variant)::AV2_TCB_FOV_ART_CALL ? "@out['" + ov->entry + "'] " : "@fn ")
+			(ov->variant == decltype(ov->variant)::AV2_TCB_FOV_ART_CALL ? "@out[\"" + ov->outEntry + "\"] " : "@fn ")
 		+	ov->result->name
 		+	" ("
 		+	ov->arguments

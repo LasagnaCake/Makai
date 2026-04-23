@@ -559,13 +559,15 @@ static Namespace::AttributeRef createARTCallAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "ARTCall";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->fields["path"] = {.type = DVK_STRING, .path = true};
+	attrib->fields["name"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		auto const name = (v["path"].getString());
+		static usize id = 0;
+		auto const name = (v["name"].getString());
 		for (auto& ov: ns->function->overloads)
 			if (ov->entry.empty() && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_ART_CALL;
-				ov->entry = name;
+				ov->outEntry = name;
+				ov->entry = name.replaced(Makai::UTF8Char{'/'}, Makai::UTF8Char{'_'}) + "_" + Makai::toString(id) + ov->methodOf->node->name();
 			}
 	};
 	return attrib;

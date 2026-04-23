@@ -211,6 +211,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
 			UTF8String						entry;
+			UTF8String						outEntry;
 			Handle<TypeDecl>				methodOf;
 			Variant							variant = Variant::AV2_TCB_FOV_NONE;
 
