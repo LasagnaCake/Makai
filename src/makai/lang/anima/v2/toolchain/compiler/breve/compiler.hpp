@@ -22,6 +22,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool const strip = false,
 		UTF8String const& append = ""
 	);
+
+	File parseFile(
+		UTF8String const& fname,
+		UTF8String const& file
+	);
 }
 
 #endif

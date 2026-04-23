@@ -377,7 +377,7 @@ namespace StaticStringMangler {
 
 		/// @brief Pseudo-random shuffle.
 		constexpr usize prng(usize const sz, bool const firstHalf) {
-			constexpr usize SEED = Impl::PRNG;
+			usize const SEED = Random::CTPRNG<usize>;
 			if (sz % 2) return prime(sz, firstHalf);
 			if (Impl::isPrime(sz) && sz > 16) return binary(sz, firstHalf);
 			usize const rng = (SEED % sz) ? (SEED % sz) : (1);

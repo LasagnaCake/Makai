@@ -1004,10 +1004,10 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
 	auto const path = context.pathOf(node->rightSide);
 	auto const fpath = path.join("/");
-	auto const subinter = import(fpath);
+	auto const subinter = importer(fpath);
 	// This is for testing purposes
-	if (!subinter) return {};
-	return {.scope = subinter->root};
+	if (!subinter.content) return {};
+	return {.scope = subinter.content};
 }
 
 ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance const& node) {
@@ -1375,4 +1375,6 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	basics[name] = ns->type;
 }
 
-Makai::Function<Intermediate::Instance(Makai::UTF8String const&)> Import::import = [] (auto const&) {return nullptr;};
+Makai::Function<File(Makai::UTF8String const&)> Import::importer = [] (auto const&) -> File {
+	throw Error::InvalidAction("Missing importer!");
+};

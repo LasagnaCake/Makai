@@ -64,3 +64,27 @@ Makai::Data::Value Breve::compile(
 		stream.error().value().what
 	);
 }
+
+
+Breve::File Breve::parseFile(
+	Makai::UTF8String const& fname,
+	Makai::UTF8String const& file
+) {
+	Assembler::BaseContext ctx;
+	Breve::Parser parser(ctx);
+	Makai::Lexer::CStyle::TokenStream stream;
+	stream.open(file);
+	Makai::List<Assembler::BaseContext::Axiom> ax;
+	while (stream.next())
+		ax.pushBack({stream.current(), true, fname});
+	if (!stream.ok())
+		throw Makai::Error::InvalidValue(
+			"Parsing failure!",
+			stream.error().value().what
+		);
+	ctx.put(ax).pad();
+	Transformer::ATransformer::Context compCtx;
+	Transformer::TheEntireProgram tf;
+	tf.transform(compCtx, parser.parse());
+	return {compCtx.root, compCtx.entry.raw(), compCtx.exit.raw()};
+}

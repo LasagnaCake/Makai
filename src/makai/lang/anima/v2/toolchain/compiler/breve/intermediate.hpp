@@ -325,6 +325,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Trait();
 	};
 
+	struct File {
+		Namespace::Instance		content;
+	 	Function::OverloadRef	entry;
+	 	Function::OverloadRef	exit;
+	};
+
 	struct Intermediate: IWritable, ISerializable {
 		using Instance = Instance<Intermediate>;
 
