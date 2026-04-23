@@ -19,6 +19,14 @@ Object::Storage Object::as(Instance<Definition> const& newType) const {
 	else return null;
 }
 
+bool Object::changeType(Instance<Definition> const& newType) {
+	if (type->canBecome(newType)) {
+		type = newType;
+		return true;
+	}
+	else return false;
+}
+
 Object::Storage Object::getAtIndex(uint64 const index) const {
 	if (!type) return null;
 	if (!(isArray()|| isStructrure()))

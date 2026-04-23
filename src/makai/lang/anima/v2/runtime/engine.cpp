@@ -396,8 +396,10 @@ void Engine::jumpTo(usize const point, bool returnable) {
 }
 
 void Engine::jumpBy(usize const tableID, bool returnable) {
+	if (tableID == Makai::Limit::MAX<uint64>)
+		return;
 	if (tableID < program.jumpTable.size())
-		jumpTo(program.jumpTable[tableID], false);
+		jumpTo(program.jumpTable[tableID], returnable);
 	else crash(invalidJump());
 }
 
@@ -412,6 +414,10 @@ void Engine::fire(String const& signal) {
 
 void Engine::returnBack() {
 	context.pointers = context.pointerStack.popBack();
+	while (
+		context.scopeStack.size()
+	&&	context.scopeStack.back().pointerFrame >= context.pointerStack.size()
+	) context.scopeStack.popBack();
 }
 
 Runtime::Context::Storage Engine::external(String const& name, bool const byRef) {
@@ -728,8 +734,9 @@ void Engine::v2ScopeEnter() {
 	if (context.globalValueStack.size() < count)
 		return crash(missingArgumentsError());
 	context.scopeStack.pushBack({
-		.mode		= context.scope().mode,
-		.prevMode	= context.scope().mode
+		.mode			= context.scope().mode,
+		.prevMode		= context.scope().mode,
+		.pointerFrame	= context.pointerStack.size()
 	});
 	if (count) context.locals().resize(count, nullptr);
 }
@@ -831,17 +838,60 @@ void Engine::v2Clear() {
 }
 
 void Engine::v2ScopeKeep() {
-	// TODO: This
+	if (context.scopeStack.size() < 2) return;
+	auto& locals = context.scope().localStack;
+	auto& parentLocals = context.scopeStack[-2].localStack;
+	if (locals.size() >= parentLocals.size())
+		for (auto const& i: range(parentLocals.size()))
+			locals[i] = parentLocals[i];
+	if (locals.size() < parentLocals.size())
+		locals = parentLocals;
+	else locals.appendBack(parentLocals);
 }
 
 void Engine::v2ScopeDeclare() {
-	// TODO: This
+	for (usize i = 0; i < current.type; ++i)
+		context.push(Object::create());
 }
 
 void Engine::v2Cast() {
-	// TODO: This
+	Instruction::Casting cast = Makai::Cast::bit<Instruction::Casting>(current.type);
+	if (context.globalValueStack.empty())
+		return crash(outOfRangeError("Global stack is empty!"));
+	uint64 typeID;
+	if (cast.dynamic) {
+		if (context.globalValueStack.size() < 2)
+			return crash(outOfRangeError("Not enough arguments for dynamic cast!"));
+		auto const id = context.pop();
+		if (!(id && id->isTypeID()))
+			return crash(makeErrorHere("Dynamic cast argument is not a type ID!"));
+		typeID = id->toValue<TypeID>().id;
+	} else {
+		advance(true);
+		typeID = Makai::Cast::bit<uint64>(current);
+	}
+	if (auto const t = context.art.types.byID(typeID)) {
+		auto const v = context.top();
+		if (!v->changeType(t))
+			return crash(makeErrorHere("Cannot convert value to requested type!"));
+	} else return crash(makeErrorHere("Type does not exist!"));
 }
 
 void Engine::v2Select() {
-	// TODO: This
+	auto const selCount = current.type;
+	if (context.globalValueStack.empty())
+		return crash(outOfRangeError("Global stack is empty!"));
+	if (!context.top()->isUnsigned())
+		return crash(makeErrorHere("Expected unsigned integer for select!"));
+	uint64 const to = context.pop()->toValue<uint64>();
+	if (!selCount) return;
+	List<uint64> targets;
+	targets.resize(selCount);
+	for (usize i = 0; i < selCount; ++i) {
+		advance(true);
+		targets.pushBack(Makai::Cast::bit<uint64>(current));
+	}
+	if (to >= targets.size())
+		jumpBy(targets.back(), false);
+	else jumpBy(targets[to], false);
 }

@@ -325,7 +325,7 @@ namespace Makai::Anima::V2::Core {
 			AV2_IN_TYPEOF,
 			/// @brief Jumps to one of the given targets, depending on the topmost value in the stack.
 			/// @param type Amount of jump targets.
-			/// @details `select <loc-id> ...`
+			/// @details `select <jump-id> ...`
 			AV2_IN_SELECT,
 			/// @brief Clears a given location.
 			/// @param type `Clear` = how to clear the location.

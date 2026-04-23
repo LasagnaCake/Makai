@@ -16,8 +16,9 @@ namespace Makai::Anima::V2::Runtime {
 
 		struct Scope {
 			List<Storage>		localStack;
-			Core::ContextMode	mode		= Core::ContextMode::AV2_CM_STRICT;
-			Core::ContextMode	prevMode	= Core::ContextMode::AV2_CM_STRICT;
+			Core::ContextMode	mode			= Core::ContextMode::AV2_CM_STRICT;
+			Core::ContextMode	prevMode		= Core::ContextMode::AV2_CM_STRICT;
+			usize				pointerFrame	= -1;
 
 			Scope& push(Storage const& value) {
 				localStack.pushBack(value);

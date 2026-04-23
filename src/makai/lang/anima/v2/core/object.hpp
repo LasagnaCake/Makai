@@ -111,6 +111,8 @@ namespace Makai::Anima::V2::Core {
 
 		Object::Storage as(Instance<Definition> const& newType) const;
 
+		bool changeType(Instance<Definition> const& newType);
+
 		constexpr Object& operator=(Object const& other) {
 			if (other.type->copy)
 				return operator=(Object(other));
