@@ -8,65 +8,10 @@
 
 constexpr auto const VER = Makai::Data::Version{1};
 
-namespace ART {
-	static void write(Makai::UTF8String str) {
-		doWrite(str);
-	}
-
-	static void writeLine(Makai::UTF8String str) {
-		doWriteLine(str);
-	}
-
-	template <class T>
-	static Makai::UTF8String toString(T val) {
-		if constexpr (Makai::Type::Equal<T, Makai::Anima::V2::Core::Any>)
-			return Makai::UTF8String();
-		else if constexpr (Makai::Type::Equal<T, Makai::UTF8Char>)
-			return Makai::UTF8String(val);
-		else return Makai::toString(val);
-	}
-
-	static void writeAny(Makai::Anima::V2::Core::Any what) {
-		write(toString(what));
-	}
-
-	static void writeAnyLine(Makai::Anima::V2::Core::Any what) {
-		writeLine(toString(what));
-	}
-
-	template <class T> static void doNothing(T) {}
-}
-
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	bool cliEnabled = false;
 
 	ARTE() {
-		if (cliEnabled) {
-			context.art.addExternalMethod("art/core/io/write_string", ART::write);
-			context.art.addExternalMethod("art/core/io/write_any", ART::writeAny);
-			context.art.addExternalMethod("art/core/io/writeLine_string", ART::writeLine);
-			context.art.addExternalMethod("art/core/io/writeLine_any", ART::writeAnyLine);
-		} else {
-			context.art.addExternalMethod("art/core/io/write_string", ART::doNothing<Makai::UTF8String>);
-			context.art.addExternalMethod("art/core/io/write_any", ART::doNothing<Makai::Anima::V2::Core::Any>);
-			context.art.addExternalMethod("art/core/io/writeLine_string", ART::doNothing<Makai::UTF8String>);
-			context.art.addExternalMethod("art/core/io/writeLine_any", ART::doNothing<Makai::Anima::V2::Core::Any>);
-		}
-		context.art.addExternalMethod("art/core/conv/toString_string", ART::toString<Makai::UTF8String>);
-		context.art.addExternalMethod("art/core/conv/toString_int8", ART::toString<int8>);
-		context.art.addExternalMethod("art/core/conv/toString_int16", ART::toString<int16>);
-		context.art.addExternalMethod("art/core/conv/toString_int32", ART::toString<int32>);
-		context.art.addExternalMethod("art/core/conv/toString_int64", ART::toString<int64>);
-		context.art.addExternalMethod("art/core/conv/toString_uint8", ART::toString<uint8>);
-		context.art.addExternalMethod("art/core/conv/toString_uint16", ART::toString<uint16>);
-		context.art.addExternalMethod("art/core/conv/toString_uint32", ART::toString<uint32>);
-		context.art.addExternalMethod("art/core/conv/toString_uint64", ART::toString<uint64>);
-		context.art.addExternalMethod("art/core/conv/toString_float32", ART::toString<float32>);
-		context.art.addExternalMethod("art/core/conv/toString_float64", ART::toString<float64>);
-		context.art.addExternalMethod("art/core/conv/toString_float128", ART::toString<float128>);
-		context.art.addExternalMethod("art/core/conv/toString_bool", ART::toString<bool>);
-		context.art.addExternalMethod("art/core/conv/toString_char", ART::toString<Makai::UTF8Char>);
-		context.art.addExternalMethod("art/core/conv/toString_any", ART::toString<Makai::Anima::V2::Core::Any>);
 	}
 };
 
