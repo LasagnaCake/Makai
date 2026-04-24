@@ -8,6 +8,8 @@
 #include "database.hpp"
 
 namespace Makai::Anima::V2::Core {
+	struct ILibrary;
+
 	struct Context {
 		enum class Error {
 			AV2_CCE_MISSING_METHOD,
@@ -154,9 +156,32 @@ namespace Makai::Anima::V2::Core {
 			return Object::create(value, types.byNameHash(Meta::arthashof<T>()).front());
 		}
 
+		struct Library {
+			Instance<ILibrary>	impl;
+			CPP::Library		dll;
+
+			~Library() {close();}
+
+			static Nullable<Library> open(String const& path, Context& ctx);
+
+			void close();
+		};
+
+		bool loadLibrary(String const& path) {
+			auto const lib = Library::open(path, *this);
+			if (!lib) return false;
+			dynlibs.pushBack(*lib);
+			return true;
+		}
+
+		void unloadLibraries() {
+			dynlibs.clear();
+		}
+
 		Database<Definition>		types;
 		Database<Method>			methods;
 		Map<usize, ExternalMethod>	externalMethods;
+		List<Library>				dynlibs;
 	};
 }
 

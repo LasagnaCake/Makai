@@ -4,10 +4,6 @@ using namespace Makai;
 using namespace Anima::V2::Core;
 
 struct ToStringLib: ILibrary {
-	void open() {
-
-	}
-
 	template <class T>
 	static UTF8String toString(T val) {
 		if constexpr (Makai::Type::Equal<T, Any>) {
@@ -38,13 +34,6 @@ struct ToStringLib: ILibrary {
 		context.add("av2/tostring_float128", toString<float128>);
 		context.add("av2/tostring_char", toString<UTF8Char>);
 		context.add("av2/tostring_vector", toString<Vector4>);
-	}
-
-	void unload(Context::MethodRemover const& context) {
-	}
-
-	void close() {
-
 	}
 };
 
