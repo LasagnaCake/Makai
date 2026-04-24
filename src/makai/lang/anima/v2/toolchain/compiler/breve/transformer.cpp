@@ -823,6 +823,7 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			if (at->leftSide->content != Node::Content::AV2_TANC_NAME)
 				context.error("Expected name here!", at->leftSide);
 			auto const name = at->leftSide->value.getString();
+			DEBUGLN("~~~~~~~~~~~~ Attribute Field: ", name);
 			if (attr->value.contains(name))
 				context.error("Redeclaration of previously-declared field!", at->leftSide);
 			if (!attr->attribute->fields.contains(name))
