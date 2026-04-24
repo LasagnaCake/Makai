@@ -352,7 +352,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
-	auto const name = context.pathOf(node->rightSide);
+	auto const name = context.pathOf(node->leftSide);
 	auto scope = Expression().transform(context, node->rightSide).scope;
 	if (!scope)
 		context.error("Requested symbol scope does not exist!", node->rightSide);
