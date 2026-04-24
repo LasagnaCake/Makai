@@ -162,21 +162,25 @@ namespace Makai::Anima::V2::Core {
 
 			~Library();
 
-			static Nullable<Library> open(String const& path, Context& ctx);
+			static Nullable<Library> open(String const& path, Context& context);
 
 			void close();
 		};
 
-		bool loadLibrary(String const& path);
+		bool openLibrary(String const& path);
 
-		void unloadLibraries() {
-			dynlibs.clear();
-		}
+		void loadLibraries();
+		void unloadLibraries();
+
+		~Context();
 
 		Database<Definition>		types;
 		Database<Method>			methods;
 		Map<usize, ExternalMethod>	externalMethods;
 		List<Library>				dynlibs;
+
+	private:
+		List<Instance<ILibrary>>	toBeLoaded;
 	};
 }
 

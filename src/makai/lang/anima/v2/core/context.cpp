@@ -4,11 +4,40 @@
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
-Context::Library::~Library() {close();}
+Context::~Context()				{unloadLibraries();	}
+Context::Library::~Library()	{close();			}
 
-bool Context::loadLibrary(Makai::String const& path) {
+bool Context::openLibrary(Makai::String const& path) {
 	auto const lib = Library::open(path, *this);
 	if (!lib) return false;
 	dynlibs.pushBack(*lib);
 	return true;
+}
+
+void Context::Library::close() {
+	if(!impl) return;
+	impl->close();
+}
+
+void Context::loadLibraries() {
+	for (auto& lib: toBeLoaded)
+		lib->load(*this);
+	toBeLoaded.clear();
+}
+
+void Context::unloadLibraries() {
+	for (auto& lib: dynlibs)
+		lib.impl->unload(*this);
+	dynlibs.clear();
+}
+
+Makai::Nullable<Context::Library> Context::Library::open(Makai::String const& path, Context& context) {
+	if (!Makai::OS::FS::exists(path)) return null;
+	Library lib;
+	lib.dll.open(path);
+	auto const fn = lib.dll.function<owner<ILibrary>()>("AV2_Extern_getLibrary");
+	lib.impl = fn();
+	if (!lib.impl) return null;
+	lib.impl->open();
+	return lib;
 }
