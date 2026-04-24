@@ -76,7 +76,7 @@ namespace Makai::Anima::V2::Core {
 		struct MethodAdder {
 			template <class TFunc>
 			bool add(String const& name, TFunc const& f) const {
-				context.addExternalMethod(name, f);
+				return context.addExternalMethod(name, f);
 			}
 
 			MethodAdder(Context& context): context(context) {}
