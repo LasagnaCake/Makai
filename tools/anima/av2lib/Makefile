@@ -75,7 +75,7 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue av2io finale
+tooling: prologue av2io av2tostring finale
 
 all: tooling
 
@@ -91,6 +91,10 @@ prologue:
 	@echo "debug? $(debug)"
 
 av2io:
+	$(call compile, $@)
+
+av2tostring:
+	$(call compile, $@)
 
 finale:
 	@echo 
