@@ -1,43 +1,43 @@
 namespace Convert {
 	toString :: (what: string) => what;
 
-	@ARTCall(name = "art/core/conv/toString_any")
+	@Shared(lib = av2tostring, name = "av2/toString_any")
 	toString :: (what: any) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_bool")
+	@Shared(lib = av2tostring, name = "av2/toString_bool")
 	toString :: (what: bool) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_int8")
+	@Shared(lib = av2tostring, name = "av2/toString_int8")
 	toString :: (what: int8) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_int16")
+	@Shared(lib = av2tostring, name = "av2/toString_int16")
 	toString :: (what: int16) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_int32")
+	@Shared(lib = av2tostring, name = "av2/toString_int32")
 	toString :: (what: int32) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_int64")
+	@Shared(lib = av2tostring, name = "av2/toString_int64")
 	toString :: (what: int64) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_uint8")
+	@Shared(lib = av2tostring, name = "av2/toString_uint8")
 	toString :: (what: uint8) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_uint16")
+	@Shared(lib = av2tostring, name = "av2/toString_uint16")
 	toString :: (what: uint16) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_uint32")
+	@Shared(lib = av2tostring, name = "av2/toString_uint32")
 	toString :: (what: uint32) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_uint64")
+	@Shared(lib = av2tostring, name = "av2/toString_uint64")
 	toString :: (what: uint64) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_float32")
+	@Shared(lib = av2tostring, name = "av2/toString_float32")
 	toString :: (what: float32) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_float64")
+	@Shared(lib = av2tostring, name = "av2/toString_float64")
 	toString :: (what: float64) -> string;
 
-	@ARTCall(name = "art/core/conv/toString_float128")
+	@Shared(lib = av2tostring, name = "av2/toString_float128")
 	toString :: (what: float128) -> string;
 
 }

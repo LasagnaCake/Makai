@@ -1,13 +1,13 @@
 namespace IO {
-	@ARTCall(name = "art/core/io/write_string")
+	@Shared(lib = av2console, name = "av2/console/write_string", optional = true)
 	write :: (what: str);
 
-	@ARTCall(name = "art/core/io/writLine_string")
+	@Shared(lib = av2console, name = "av2/console/writLine_string", optional = true)
 	writeLine :: (what: str);
 
-	@ARTCall(name = "art/core/io/write_any")
+	@Shared(lib = av2console, name = "av2/console/write_any", optional = true)
 	write :: (what: any);
 
-	@ARTCall(name = "art/core/io/writeLine_any")
+	@Shared(lib = av2console, name = "av2/console/writeLine_any", optional = true)
 	writeLine :: (what: any);
 }

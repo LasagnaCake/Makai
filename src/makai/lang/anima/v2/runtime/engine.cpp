@@ -229,19 +229,22 @@ void Engine::v2Call() {
 	}
 	if (invocation.external) {
 		context.art
-			.invokeExternalMethod(program.ani->out[loc], context.globalValueStack.reversed())
+			.invokeExternalMethod(loc, context.globalValueStack.reversed())
 			.then(
 				[&] (auto const& v) {
-					context.globalValueStack.pushBack(v);
+					if (v && !v->isEmptyType())
+						context.globalValueStack.pushBack(v);
 				}
 			).onError(
 				[&] (auto const& e) {
+					if (invocation.optional) return;
 					Makai::String err = "EXTERNAL FUNCTION: ";
 					switch (e) {
 						using enum Core::Context::Error;
-						case AV2_CCE_MISSING_METHOD:	err += "Function does not exist";
-						case AV2_CCE_MISSING_ARGS:		err += "Not enough args for function";
-						case AV2_CCE_MISSING_ART_TYPE:	err += "Return type does not exist in the current ART context";
+						case AV2_CCE_MISSING_METHOD:		err += "Function does not exist";
+						case AV2_CCE_MISSING_ARGS:			err += "Not enough args for function";
+						case AV2_CCE_MISSING_ART_TYPE:		err += "Return type does not exist in the current ART context";
+						case AV2_CCE_HOW_DID_YOU_GET_HERE:	err += "Somehow, execution reached an unreachable point";
 					}
 					crash(invalidFunctionError(err));
 				}

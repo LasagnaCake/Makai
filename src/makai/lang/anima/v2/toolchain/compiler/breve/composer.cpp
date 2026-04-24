@@ -18,6 +18,7 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 			case AV2_TCB_FOV_DYNLIB:	ovstr += "@shared[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";	break;
 			default:					ovstr += "@fn ";														break;
 		}
+		ovstr += ov->optional ? "optional " : "required ";
 		composer.functions.pushBack(
 			ovstr
 		+	ov->result->name

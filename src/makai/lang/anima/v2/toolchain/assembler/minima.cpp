@@ -512,7 +512,8 @@ static void doCall(Context& context, bool dynamic = false) {
 		if (!context.methods.contains(id))
 			context.error("Method with this name does not exist!");
 		auto const m = context.getMethod(id);
-		invoke.art = m->out;
+		invoke.external = m->out;
+		invoke.optional = m->optional;
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
@@ -1141,11 +1142,15 @@ static void declareAlias(Context& context) {
 
 static void getMethodAttriutes(Context& context, Context::Method& method) {
 	while (context.next().has(LTS_TT_IDENTIFIER)) {
-		auto const vis = context.get(LTS_TT_IDENTIFIER, "visibility").getString();
-		if (vis == "local")
+		auto const attr = context.get(LTS_TT_IDENTIFIER, "visibility").getString();
+		if (attr == "local")
 			method.local = true;
-		else if (vis == "global")
+		else if (attr == "global")
 			method.local = false;
+		else if (attr == "required")
+			method.optional = false;
+		else if (attr == "optional")
+			method.optional = true;
 		else break;
 	}
 }

@@ -965,7 +965,6 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 					overloadScope->impl->writePreLine("@def", oo->entry, ":");
 					overloadScope->impl->writePreLine("begin", toString(args.size()));
 					overloadScope->impl->writePreLine("bind ref", toString(args.size()), "[0 -> 0]");
-					overloadScope->impl->writePreLine("clear", toString(args.size()));
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 					overloadScope->impl->writePostLine("call", implOv->entry);
 					overloadScope->impl->writePostLine("end");
@@ -1016,8 +1015,12 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
-	auto const path = context.pathOf(node->rightSide);
+	auto const path = context.pathOf(node->leftSide);
 	auto const fpath = path.join("/").toString();
+	DEBUG("Path: ");
+	for (auto& p: path)
+		DEBUG("/", p);
+	DEBUGLN("");
 	auto const subinter = importer(fpath);
 	// This is for testing purposes
 	if (!subinter.content) return {};

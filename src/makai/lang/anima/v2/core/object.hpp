@@ -146,6 +146,10 @@ namespace Makai::Anima::V2::Core {
 			return (origin->flags & Definition::Flags::AV2_DF_CLONABLE);
 		}
 
+		bool isEmptyType() const {
+			return (origin->flags & Definition::Flags::AV2_DF_NO_RESULT);
+		}
+
 		bool isAlgebraic() const {
 			return isVector() || isMatrix();
 		}

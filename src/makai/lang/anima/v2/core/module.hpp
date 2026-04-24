@@ -29,6 +29,7 @@ namespace Makai::Anima::V2::Core {
 			List<uint64>	argTypes;
 			bool			out = false;
 			bool			shared = false;
+			bool			optional = false;
 			uint64			entrypoint;
 			uint64			size;
 			Data::Value		meta;

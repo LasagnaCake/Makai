@@ -216,6 +216,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			UTF8String						dynlib;
 			Handle<TypeDecl>				methodOf;
 			Variant							variant = Variant::AV2_TCB_FOV_NONE;
+			bool							optional = false;
 
 			UTF8String prototype() const;
 
