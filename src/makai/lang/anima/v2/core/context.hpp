@@ -160,19 +160,14 @@ namespace Makai::Anima::V2::Core {
 			Instance<ILibrary>	impl;
 			CPP::Library		dll;
 
-			~Library() {close();}
+			~Library();
 
 			static Nullable<Library> open(String const& path, Context& ctx);
 
 			void close();
 		};
 
-		bool loadLibrary(String const& path) {
-			auto const lib = Library::open(path, *this);
-			if (!lib) return false;
-			dynlibs.pushBack(*lib);
-			return true;
-		}
+		bool loadLibrary(String const& path);
 
 		void unloadLibraries() {
 			dynlibs.clear();
