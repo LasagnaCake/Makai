@@ -75,14 +75,14 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue av2io av2tostring finale
+tooling: prologue av2 finale
 
 all: tooling
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) -c $(strip $(1)).cpp -o $(strip $(1)).o
-	$(LINKER) -o $(strip $(1)).dll $(strip $(1)).o $(OBJ) $(LK)
+	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
+	$(LINKER) -o av2$(strip $(1)).dll av2$(strip $(1)).o $(OBJ) $(LK)
 endef
 
 prologue:
@@ -90,11 +90,9 @@ prologue:
 	@echo "libraries: $(LIBRARIES)"
 	@echo "debug? $(debug)"
 
-av2io:
-	$(call compile, $@)
-
-av2tostring:
-	$(call compile, $@)
+av2:
+	$(call compile, io)
+	$(call compile, tostring)
 
 finale:
 	@echo 
