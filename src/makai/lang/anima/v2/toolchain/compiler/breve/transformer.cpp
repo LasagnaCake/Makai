@@ -841,13 +841,14 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			}
 			attr->value[name] = at->rightSide->value;
 		}
-		for (auto const& [name, desc]: attr->attribute->fields)
+		for (auto const& [name, desc]: attr->attribute->fields) {
 			if (!desc.defaultValue && !attr->value.contains(name))
 				context.error("Required field ["+name+"] does not exist!", node);
-			else if (desc.defaultValue && !attr->value.contains(name))
+			else if (!desc.defaultValue.isUndefined() && !attr->value.contains(name))
 				attr->value[name] = desc.defaultValue;
 			else if (attr->value[name].type() != desc.type)
 				context.error("Attribute field ["+name+"] type mismatch!", node);
+		}
 		attribs[scope->attribute->name] = attr;
 		attr->attribute->transform(context, ns, attr->value, *attr->attribute);
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
