@@ -578,7 +578,7 @@ static Namespace::AttributeRef createARTCallAttribute() {
 			if (ov->entry.empty() && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_ART_CALL;
 				ov->outEntry = name;
-				ob->optional = v["optional"];
+				ov->optional = v["optional"];
 				ov->entry = "__art_call_" + Makai::toString(id) + ov->methodOf->node->name();
 			}
 	};
