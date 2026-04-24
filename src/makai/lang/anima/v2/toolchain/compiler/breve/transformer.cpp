@@ -1017,7 +1017,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 
 ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
 	auto const path = context.pathOf(node->rightSide);
-	auto const fpath = path.join("/");
+	auto const fpath = path.join("/").toString();
 	auto const subinter = importer(fpath);
 	// This is for testing purposes
 	if (!subinter.content) return {};

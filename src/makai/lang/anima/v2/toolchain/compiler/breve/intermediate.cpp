@@ -684,6 +684,7 @@ Makai::Data::Value Function::Overload::serialize() const {
 		case Variant::AV2_TCB_FOV_CLASS:	out["variant"] = "class";		break;
 		case Variant::AV2_TCB_FOV_INSTANCE:	out["variant"] = "instance";	break;
 		case Variant::AV2_TCB_FOV_ART_CALL:	out["variant"] = "artcall";		break;
+		case Variant::AV2_TCB_FOV_DYNLIB:	out["variant"] = "dynlib";		break;
 	}
 	return out;
 }

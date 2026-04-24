@@ -39,6 +39,7 @@ int main(int argc, char** argv) try {
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
 	Transformer::Import::importer = [dirs = cfg["src"].getArray().toList<Makai::String>()] (auto const path) -> File {
+		if (path.empty()) throw Makai::Error::FailedAction("Module name is empty!");
 		if (Makai::OS::FS::exists(path + ".bv"))
 			return parseFile(path + ".bv", Makai::File::getText(path + ".bv"));
 		auto const brevecDir = Makai::OS::FS::sourceLocation() + "/anima/breve/lib";
