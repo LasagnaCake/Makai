@@ -1,4 +1,4 @@
-namespace Convert {
+module Convert {
 	toString :: (what: string) => what;
 
 	@Shared(lib = av2tostring, name = "av2/toString_any")
