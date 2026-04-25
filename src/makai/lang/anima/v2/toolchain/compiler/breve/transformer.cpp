@@ -868,21 +868,18 @@ ATransformer::Result AttributeExpression::transform(Context& context, Node::Inst
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
 	Makai::Dictionary<Metadata::Instance> attributes;
 	resolveAttribute(context, node->leftSide, expr.scope, attributes);
-	if (expr.scope->meta.countOf(attributes.keys())) {
-		auto const attrs = copy(attributes).match(expr.scope->meta.keys());
-		context.error("Reapplication of previous attributes [" + attrs.join(",") + "]!", node->rightSide);
+	Makai::StringList repeat;
+	if (!expr.scope->function) {
+		for (auto const& attr: expr.scope->meta.keys())
+			if (attributes.contains(attr))
+				repeat.pushBack(attr);
+		if (repeat.size())
+			context.error("Reapplication of previous attributes [" + repeat.join(",") + "]!", node->rightSide);
 	}
 	if (attributes.contains("Attribute"))
 		if (!expr.scope->type) context.error("Expected structure here!", node->rightSide);
 	expr.scope->meta.append(attributes);
 	return expr;
-}
-
-static Makai::UTF8String overloadName(Function::ArgTypes const& types) {
-	Makai::UTF8String name;
-	for (auto const& type: types)
-		name += "_" + type->name;
-	return name;
 }
 
 static Makai::UTF8String overloadName(Makai::List<Namespace::VariableRef> const& args) {
