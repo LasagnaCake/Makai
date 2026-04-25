@@ -1,0 +1,17 @@
+using import core.types.any
+
+@Basic(type = "uint8")
+@Derived(base = any)
+struct uint8 {}
+
+@Basic(type = "uint16")
+@Derived(base = any)
+struct uint16 {}
+
+@Basic(type = "uint32")
+@Derived(base = any)
+struct uint32 {}
+
+@Basic(type = "uint64")
+@Derived(base = any)
+struct uint64 {}

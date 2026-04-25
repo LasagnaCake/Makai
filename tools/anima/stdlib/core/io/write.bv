@@ -1,3 +1,5 @@
+import core.types
+
 module IO {
 	@Shared(lib = av2console, name = "av2/console/write_string", optional = true)
 	write :: (what: string);

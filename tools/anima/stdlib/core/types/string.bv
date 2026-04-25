@@ -1,0 +1,6 @@
+using import core.types.any
+
+@Basic(type = "string")
+@Derived(base = any)
+@Nullable
+struct string {}

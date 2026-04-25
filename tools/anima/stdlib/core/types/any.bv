@@ -1,0 +1,2 @@
+@Basic(type = "any")
+struct any {}

@@ -1328,27 +1328,6 @@ ATransformer::Context::Context(): Intermediate() {
 	root->subspaces["##T2_USERTYPES"]	= Namespace::Instance::create("##T2_USERTYPES");
 	root->subspaces["##T3_FUNCTIONS"]	= Namespace::Instance::create("##T3_FUNCTIONS");
 	root->subspaces["##T4_TRAITS"]		= Namespace::Instance::create("##T4_TRAITS");
-	addBasicType(AV2_BT_ANY);
-	addBasicType(AV2_BT_VOID, Flags::AV2_DF_EMPTY | Flags::AV2_DF_NO_RESULT);
-	addBasicType(AV2_BT_NULL, Flags::AV2_DF_EMPTY | Flags::AV2_DF_NULLABLE);
-	addBasicType(AV2_BT_BOOL);
-	addBasicType(AV2_BT_CHAR);
-	addBasicType(AV2_BT_INT8);
-	addBasicType(AV2_BT_UINT8);
-	addBasicType(AV2_BT_INT16);
-	addBasicType(AV2_BT_UINT16);
-	addBasicType(AV2_BT_INT32);
-	addBasicType(AV2_BT_UINT32);
-	addBasicType(AV2_BT_INT64);
-	addBasicType(AV2_BT_UINT64);
-	addBasicType(AV2_BT_REAL32);
-	addBasicType(AV2_BT_REAL64);
-	addBasicType(AV2_BT_REAL128);
-	addBasicType(AV2_BT_STRING, Flags::AV2_DF_NULLABLE);
-	addBasicType(AV2_BT_BYTES, Flags::AV2_DF_NULLABLE);
-	addBasicType(AV2_BT_VECTOR);
-	addBasicType(AV2_BT_MATRIX);
-	addBasicType(AV2_BT_TYPEID);
 	root->subspaces["__ARRAYS__"] = Namespace::Instance::create("__ARRAYS__");
 }
 

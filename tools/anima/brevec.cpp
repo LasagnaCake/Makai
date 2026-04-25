@@ -39,15 +39,17 @@ int main(int argc, char** argv) try {
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
 	Transformer::Import::importer = [dirs = cfg["src"].getArray().toList<Makai::String>()] (auto const path) -> File {
+		static Makai::Dictionary<File> cache;
 		if (path.empty()) throw Makai::Error::FailedAction("Module name is empty!");
+		if (cache.contains(path)) return cache[path];
 		if (Makai::OS::FS::exists(path + ".bv"))
-			return parseFile(path + ".bv", Makai::File::getText(path + ".bv"));
+			return cache[path] = parseFile(path + ".bv", Makai::File::getText(path + ".bv"));
 		auto const brevecDir = Makai::OS::FS::sourceLocation() + "/anima/breve/lib";
 		if (Makai::OS::FS::exists(brevecDir + "/" + path + ".bv"))
-			return parseFile(brevecDir + "/" + path + ".bv", Makai::File::getText(brevecDir + "/" + path + ".bv"));
+			return cache[path] = parseFile(brevecDir + "/" + path + ".bv", Makai::File::getText(brevecDir + "/" + path + ".bv"));
 		for (auto& dir: dirs)
 			if (Makai::OS::FS::exists(dir + "/" + path + ".bv"))
-				return parseFile(dir + "/" + path + ".bv", Makai::File::getText(dir + "/" + path + ".bv"));
+				return cache[path] = parseFile(dir + "/" + path + ".bv", Makai::File::getText(dir + "/" + path + ".bv"));
 		throw Makai::Error::FailedAction("Failed to find module '" + path + "'");
 	};
 	if (cfg["help"])

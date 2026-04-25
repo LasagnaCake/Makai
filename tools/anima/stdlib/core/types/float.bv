@@ -1,0 +1,13 @@
+using import core.types.any
+
+@Basic(type = "float32")
+@Derived(base = any)
+struct float32 {}
+
+@Basic(type = "float64")
+@Derived(base = any)
+struct float64 {}
+
+@Basic(type = "float128")
+@Derived(base = any)
+struct float128 {}

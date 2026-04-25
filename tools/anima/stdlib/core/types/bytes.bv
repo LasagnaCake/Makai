@@ -1,0 +1,6 @@
+using import core.types.any
+
+@Basic(type = "bytes")
+@Derived(base = any)
+@Nullable
+struct bytes {}

@@ -404,6 +404,18 @@ static Namespace::AttributeRef createEmptyAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createDiscardAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Empty";
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_NO_RESULT;
+	};
+	return attrib;
+}
+
 static Namespace::AttributeRef createDynamicAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
@@ -616,6 +628,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createOperatorAttribute());
 	addGlobalAttribute(createNullableAttribute());
 	addGlobalAttribute(createEmptyAttribute());
+	addGlobalAttribute(createDiscardAttribute());
 	addGlobalAttribute(createDynamicAttribute());
 	addGlobalAttribute(createCopyAttribute());
 	addGlobalAttribute(createFinalAttribute());
