@@ -787,7 +787,7 @@ static void resolveEmptyAttribute(
 	attr->attribute = scope->attribute;
 	Makai::UTF8StringList missing;
 	for (auto& [name, field]: attr->attribute->fields)
-		if (!field.defaultValue)
+		if (field.defaultValue.isUndefined())
 			missing.pushBack(name);
 		else attr->value[name] = field.defaultValue;
 	if (missing.size())
@@ -841,9 +841,9 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 		}
 		Makai::UTF8StringList missing;
 		for (auto const& [name, desc]: attr->attribute->fields) {
-			if (!desc.defaultValue && !attr->value.contains(name))
+			if (desc.defaultValue.isUndefined() && !attr->value.contains(name))
 				missing.pushBack(name);
-			else if (!desc.defaultValue.isUndefined() && !attr->value.contains(name))
+			else if (!desc.defaultValue.isUndefined())
 				attr->value[name] = desc.defaultValue;
 			else if (attr->value[name].type() != desc.type)
 				context.error("Attribute field ["+name+"] type mismatch!", node);
