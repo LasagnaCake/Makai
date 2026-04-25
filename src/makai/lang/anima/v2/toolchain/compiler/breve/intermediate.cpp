@@ -314,7 +314,7 @@ static Namespace::AttributeRef createSharedAttribute() {
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"]		= {.type=DVK_STRING};
 	attrib->fields["lib"]		= {.type=DVK_STRING, .path=true};
-	attrib->fields["optional"]	= {.type=DVK_STRING, .defaultValue=false, .path=true};
+	attrib->fields["optional"]	= {.type=DVK_BOOLEAN, .defaultValue=false};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		static usize id = 0;
 		auto const name = (v["name"].getString());
