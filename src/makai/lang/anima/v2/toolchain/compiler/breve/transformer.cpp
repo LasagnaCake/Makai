@@ -1341,7 +1341,7 @@ ATransformer::Context::Context(): Intermediate() {
 	addBasicType(AV2_BT_UINT32);
 	addBasicType(AV2_BT_INT64);
 	addBasicType(AV2_BT_UINT64);
-	addBasicType(AV2_BT_UINT32);
+	addBasicType(AV2_BT_REAL32);
 	addBasicType(AV2_BT_REAL64);
 	addBasicType(AV2_BT_REAL128);
 	addBasicType(AV2_BT_STRING, Flags::AV2_DF_NULLABLE);
