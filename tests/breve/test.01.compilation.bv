@@ -20,5 +20,6 @@ module Test.Namespace {
 @Main
 main :: () {
     val := Test.Namespace.baz(32 + 64)
-    core.IO.writeLine("32 + 64 = ", val)
+    core.IO.write("32 + 64 = ")
+    core.IO.writeLine(val)
 }
