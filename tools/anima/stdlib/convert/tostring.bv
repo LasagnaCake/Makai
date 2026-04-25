@@ -40,4 +40,10 @@ module Convert {
 	@Shared(lib = av2tostring, name = "av2/toString_float128")
 	toString :: (what: float128) -> string;
 
+	@Shared(lib = av2tostring, name = "av2/toString_char")
+	toString :: (what: char) -> string;
+
+	@Shared(lib = av2tostring, name = "av2/toString_vector")
+	toString :: (what: vector) -> string;
+
 }
