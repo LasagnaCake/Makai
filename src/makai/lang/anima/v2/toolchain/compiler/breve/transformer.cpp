@@ -819,7 +819,7 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			if (!at)
 				context.error("Invalid attribute field!", at);
 			if (at->content != Node::Content::AV2_TANC_ASSIGNMENT)
-				context.error("Invalid attribute field value!", at);
+				context.error("Invalid attribute field specifier!", at);
 			if (at->leftSide->content != Node::Content::AV2_TANC_NAME)
 				context.error("Expected name here!", at->leftSide);
 			auto const name = at->leftSide->value.getString();
@@ -829,14 +829,11 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			if (!attr->attribute->fields.contains(name))
 				context.error("Field does not exist for given attribute!", at);
 			{
-				if (at->rightSide->content == Node::Content::AV2_TANC_PATH && attr->attribute->fields[name].path) {
+				if (at->rightSide->isPathOrName() && attr->attribute->fields[name].path) {
 					attr->value[name] = context.pathOf(at->rightSide).join("/").toString();
 				} else if (attr->attribute->fields[name].path) {
 					context.error("Expected path here!", at->rightSide);
-				} else if (!(
-					at->rightSide->content == Node::Content::AV2_TANC_VALUE
-				||	at->rightSide->content == Node::Content::AV2_TANC_NAME
-				)) {
+				} else if (at->rightSide->content != Node::Content::AV2_TANC_VALUE) {
 					context.error("Expected constant (or name) here!", at->rightSide);
 				}
 			}
