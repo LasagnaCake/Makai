@@ -815,7 +815,7 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			context.error("Reapplication of previous attribute!", node->leftSide);
 		auto const attr = Metadata::Instance::create();
 		attr->attribute = scope->attribute;
-		for (auto const& at: node->leftSide->children) {
+		for (auto const& at: node->children) {
 			if (!at)
 				context.error("Invalid attribute field!", at);
 			if (at->content != Node::Content::AV2_TANC_ASSIGNMENT)
@@ -842,14 +842,17 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			}
 			attr->value[name] = at->rightSide->value;
 		}
+		Makai::UTF8StringList missing;
 		for (auto const& [name, desc]: attr->attribute->fields) {
 			if (!desc.defaultValue && !attr->value.contains(name))
-				context.error("Required field ["+name+"] does not exist!", node);
+				missing.pushBack(name);
 			else if (!desc.defaultValue.isUndefined() && !attr->value.contains(name))
 				attr->value[name] = desc.defaultValue;
 			else if (attr->value[name].type() != desc.type)
 				context.error("Attribute field ["+name+"] type mismatch!", node);
 		}
+		if (missing.size())
+			context.error("Required attributes [" + missing.join(",") + "] missing!", node);
 		attribs[scope->attribute->name] = attr;
 		attr->attribute->transform(context, ns, attr->value, *attr->attribute);
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
