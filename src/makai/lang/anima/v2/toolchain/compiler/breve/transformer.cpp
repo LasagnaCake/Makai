@@ -867,9 +867,11 @@ ATransformer::Result AttributeExpression::transform(Context& context, Node::Inst
 	auto const expr = Expression().transform(context, node->rightSide);
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
 	Makai::Dictionary<Metadata::Instance> attributes;
-		resolveAttribute(context, node->leftSide, expr.scope, attributes);
-	if (expr.scope->meta.countOf(attributes.keys()))
-		context.error("Reapplication of previous attributes [" + attributes.match(expr.scope->meta.keys()).join(",") + "]!", node->rightSide);
+	resolveAttribute(context, node->leftSide, expr.scope, attributes);
+	if (expr.scope->meta.countOf(attributes.keys())) {
+		auto const attrs = copy(attributes).match(expr.scope->meta.keys());
+		context.error("Reapplication of previous attributes [" + attrs.join(",") + "]!", node->rightSide);
+	}
 	if (attributes.contains("Attribute"))
 		if (!expr.scope->type) context.error("Expected structure here!", node->rightSide);
 	expr.scope->meta.append(attributes);
