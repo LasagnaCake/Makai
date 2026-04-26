@@ -378,6 +378,8 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 		if (name->base.text != ":")
 			parser.context.error("Invalid inheritance expression!");
 		else {
+			if (!name->leftSide->isPathOrName())
+				parser.context.error("Expected name here!");
 			result->middle = name->rightSide;
 			result->leftSide = name->leftSide;
 			name = name->leftSide;
