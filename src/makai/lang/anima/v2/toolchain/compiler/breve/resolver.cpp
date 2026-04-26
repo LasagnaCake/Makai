@@ -367,20 +367,23 @@ Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance cons
 }
 
 Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving named block expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	auto name = parser.nextExpression();
 	if (optionalName && name->isBlock()) {
 		result->rightSide = name;
+		DEBUGLN("NamedBlock:DONE!");
 		return result;
 	} else if (canInherit && name->content == Node::Content::AV2_TANC_DECLARATION) {
-		DEBUGLN("+++++++++++++++ DECL::LHS = ", Node::asString(name->leftSide->content));
 		if (name->base.text != ":")
 			parser.context.error("Invalid inheritance expression!");
-		else if (!name->leftSide->isPathOrName())
+		DEBUGLN("+++++++++++++++ DECL::LHS is ", Node::asString(name->leftSide->content));
+		DEBUGLN("+++++++++++++++ DECL::LHS = ", name->leftSide->base.text);
+		if (!name->leftSide->isPathOrName())
 			parser.context.error("Expected name or path here!");
-		result->middle = name->rightSide;
+		result->middle = name->middle;
 		result->leftSide = name->leftSide;
 	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
@@ -389,6 +392,7 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 	if (def->content != Node::Content::AV2_TANC_BLOCK)
 		parser.context.error("Expected block expression here!");
 	result->rightSide = def;
+	DEBUGLN("NamedBlock:DONE!");
 	return result;
 }
 
