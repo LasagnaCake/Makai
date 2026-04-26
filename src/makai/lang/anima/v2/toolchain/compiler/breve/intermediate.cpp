@@ -127,7 +127,7 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 			else if (args[arg.index].exists() != arg.value.exists()) {
 				miss = true;
 				break;
-			} else if (args[arg.index] != arg.value->type) {
+			} else if (args[arg.index] != arg.value->type.raw()) {
 				miss = true;
 				break;
 			}
@@ -370,7 +370,7 @@ static Namespace::AttributeRef createMemberAttribute() {
 			Transformer::ATransformer::Context::error("Symbol has already been declared in the type!", ns->node);
 		for (auto& ov: ns->function->overloads)
 			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
-				if (!(ov->arguments.size() >= 1 && ov->arguments[0]->type == bt))
+				if (!(ov->arguments.size() >= 1 && ov->arguments[0]->type == bt.asWeak()))
 					Transformer::ATransformer::Context::error("Missing appropriate [self] parameter for member function!", ns->node);
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
 			}
