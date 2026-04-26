@@ -1,17 +1,13 @@
-using import types.any
+using import core.types.any
 
 @Basic(type = "int8")
-@Derived(base = any)
-struct int8 {}
+struct int8 : any {}
 
 @Basic(type = "int16")
-@Derived(base = any)
-struct int16 {}
+struct int16 : any {}
 
 @Basic(type = "int32")
-@Derived(base = any)
-struct int32 {}
+struct int32 : any {}
 
 @Basic(type = "int64")
-@Derived(base = any)
-struct int64 {}
+struct int64 : any {}

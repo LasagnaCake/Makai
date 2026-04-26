@@ -2,5 +2,4 @@ using import core.types.any
 
 @Empty
 @Nullable
-@Derived(base = "any")
-struct null {}
+struct null : any {}

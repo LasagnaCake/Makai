@@ -1,13 +1,10 @@
 using import core.types.any
 
 @Basic(type = "float32")
-@Derived(base = any)
-struct float32 {}
+struct float32 : any {}
 
 @Basic(type = "float64")
-@Derived(base = any)
-struct float64 {}
+struct float64 : any {}
 
 @Basic(type = "float128")
-@Derived(base = any)
-struct float128 {}
+struct float128 : any {}

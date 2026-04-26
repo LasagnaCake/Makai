@@ -370,10 +370,17 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	auto const name = parser.nextExpression();
+	auto name = parser.nextExpression();
 	if (optionalName && name->isBlock()) {
 		result->rightSide = name;
 		return result;
+	} else if (canInherit && name->content == Node::Content::AV2_TANC_DECLARATION) {
+		if (name->base.text != ":")
+			parser.context.error("Invalid inheritance expression!");
+		else {
+			result->middle = name->rightSide;
+			name = name->leftSide;
+		}
 	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
 	auto const def = parser.nextExpression();

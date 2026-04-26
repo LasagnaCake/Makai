@@ -241,7 +241,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Variable: Labeled, Positioned, Scoped, ISerializable {
-		Namespace::TypeRef	type;
+		Handle<TypeDecl>	type;
 		Namespace::Instance	initializer;
 		UTF8String			source;
 		Data::Value			value;

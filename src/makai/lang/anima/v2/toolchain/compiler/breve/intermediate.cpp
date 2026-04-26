@@ -408,7 +408,7 @@ static Namespace::AttributeRef createDiscardAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Empty";
+	attrib->name = "Discard";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_NO_RESULT;

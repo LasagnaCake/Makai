@@ -1,5 +1,4 @@
 using import core.types.any
 
 @Basic(type = "vector")
-@Derived(base = any)
-struct vector {}
+struct vector : any {}

@@ -63,9 +63,9 @@ static ATransformer::Result expandVariable(
 			expandProperty(context, node, path, *parent->property, true);
 		else if (stack) context.top()->impl->writeMainLine("push", var.getSource());
 		context.top()->impl->writeMainLine("at", var.id);
-		return {{"move stack[-0]"}, var.scope.raw(), var.type};
+		return {{"move stack[-0]"}, var.scope.raw(), var.type.raw()};
 	} else
-		return {var.getSource(), var.scope.raw(), var.type};
+		return {var.getSource(), var.scope.raw(), var.type.raw()};
 }
 
 static ATransformer::Result expandProperty(
@@ -126,7 +126,7 @@ static ATransformer::Result resolveSubfield(
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->type->fields[sub];
 			context.top()->impl->writeMainLine("at", f->id);
-			return {{"move stack[-0]"}, f->scope.raw(), f->type};
+			return {{"move stack[-0]"}, f->scope.raw(), f->type.raw()};
 		}
 	}
 	if (ns->property) {
@@ -134,7 +134,7 @@ static ATransformer::Result resolveSubfield(
 			auto const f = ns->type->fields[sub];
 			auto const ov = ns->property->getter->overloadFromTypes({});
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move stack[-0]"}, f->scope.raw(), f->type};
+			return {{"move stack[-0]"}, f->scope.raw(), f->type.raw()};
 		}
 	}
 	return {};
@@ -325,7 +325,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	var.name = scope->name;
 	TypeRequest t;
 	if (node->middle)
-		var.type = t.transform(context, node->middle).type;
+		var.type = t.transform(context, node->middle).type.asWeak();
 	Makai::Data::Value direct;
 	if (node->rightSide) {
 		Expression expr;
@@ -336,7 +336,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		var.initializer = tmp;
 		var.defaulted = true;
 		if (!var.type)
-			var.type = result.type;
+			var.type = result.type.asWeak();
 		if (parent != context.root && !var.staticEntity) {
 			parent->impl->writeMainLine(tmp->impl->toString());
 			var.initializer = nullptr;
@@ -348,7 +348,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	context.pop(path.size());
 	if (!var.type)
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
-	return {{var.getSource()}, scope, var.type, direct};
+	return {{var.getSource()}, scope, var.type.raw(), direct};
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
@@ -391,6 +391,24 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
+	if (node->middle) {
+		auto const base = TypeRequest().transform(context, node->middle).scope->type;
+		type.base = base;
+		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
+		type.fields.append(base->fields);
+		scope->subspaces["base"] = base->scope.raw();
+		scope->varc += base->scope->varc;
+	}
+	{
+		auto const thisVarScope = context.declare(UTF8StringList::from("this"));
+		auto& thisVar = *(thisVarScope->variable = thisVarScope->variable.create());
+		thisVar.fieldOf = scope->type;
+		thisVar.source = "ref stack[-0]";
+		thisVar.type = scope->type.asWeak();
+		thisVar.parentScope = scope;
+		scope->subspaces["this"] = thisVarScope;
+		context.pop(1);
+	}
 	auto const initer = "__init_" + name.join("_") + node->name();
 	Block().transform(context, node->rightSide);
 	type.scope = scope.asWeak();
@@ -694,7 +712,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 			context.error("Symbol does not exist!", node);
 		result.source = addToStack(context, ns.raw());
 		if (ns->variable) {
-			result.type		= ns->variable->type;
+			result.type		= ns->variable->type.raw();
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;
 		return result;
@@ -720,7 +738,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 			context.error("Symbol does not exist!", node);
 		result.source = addToStack(context, ns.raw());
 		if (ns->variable) {
-			result.type		= ns->variable->type;
+			result.type		= ns->variable->type.raw();
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;
 		return result;

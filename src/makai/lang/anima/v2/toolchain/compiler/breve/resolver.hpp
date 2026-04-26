@@ -156,7 +156,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct NamedBlockDeclResolver: AResolver {
 		bool const optionalName;
-		NamedBlockDeclResolver(bool const optionalName = true): AResolver(), optionalName(optionalName) {}
+		bool const canInherit;
+		NamedBlockDeclResolver(bool const optionalName = true, bool const canInherit = false): AResolver(), optionalName(optionalName), canInherit(canInherit) {}
 		virtual ~NamedBlockDeclResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
