@@ -113,7 +113,7 @@ void Intermediate::writePost(UTF8String const& what) {
 }
 
 Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args) const {
-	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) {return e->type.raw();}));
+	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.raw();}));
 }
 
 Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args) const {
