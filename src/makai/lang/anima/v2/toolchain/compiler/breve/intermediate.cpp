@@ -477,7 +477,7 @@ static Namespace::AttributeRef createBasicAttribute() {
 		ns->type->def = TypeDecl::Definition::AV2_TCTD_BASIC;
 		ns->type->flags &= ~Core::Definition::Flags::AV2_DF_STRUCTURE;
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_BASIC;
-		if (ns->type->fields.size())
+		if (ns->type->fields.size() > 1)
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
 		auto const bt = (v["type"].getString());
 		if (bt == "void")			ns->type->basic = AV2_BT_VOID;
