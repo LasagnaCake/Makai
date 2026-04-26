@@ -269,6 +269,8 @@ Makai::UTF8StringList ATransformer::Context::pathOf(UTF8String const& path) {
 Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) {
 	if (!node)
 		return Makai::UTF8StringList();
+	// CPP::Debug::breakpoint();
+	DEBUGLN("NODE_ADDR_", node.raw());
 	if (node->content == Node::Content::AV2_TANC_NAME) {
 		DEBUGLN("------ Left:", node->value.getString());
 		return Makai::UTF8StringList::from(node->value.getString());
