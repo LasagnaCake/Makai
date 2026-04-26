@@ -113,7 +113,7 @@ void Intermediate::writePost(UTF8String const& what) {
 }
 
 Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args) const {
-	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) {return e->type;}));
+	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) {return e->type.raw();}));
 }
 
 Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args) const {
@@ -299,7 +299,7 @@ static Namespace::AttributeRef createGlobalAttribute() {
 		ns->variable->global = true;
 		ns->variable->staticEntity = true;
 		auto const srcName = v["source"].getString().replace('\\', '/').replace('/', '.');
-		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type)
+		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type.raw())
 			Transformer::ATransformer::Context::error("Global variable type mismatch!", ns->node);
 		ns->variable->source = "move $" + srcName;
 	};
