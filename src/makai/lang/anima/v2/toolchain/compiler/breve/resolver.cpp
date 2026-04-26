@@ -375,26 +375,19 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 		result->rightSide = name;
 		return result;
 	} else if (canInherit && name->content == Node::Content::AV2_TANC_DECLARATION) {
+		DEBUGLN("+++++++++++++++ DECL::LHS = ", Node::asString(name->leftSide->content));
 		if (name->base.text != ":")
 			parser.context.error("Invalid inheritance expression!");
-		else {
-			// parser.context.error("TEST ERROR PLEASE IGNORE AAAAAAAAAAAA");
-			if (!name->leftSide->isPathOrName())
-				parser.context.error("Expected name here!");
-			DEBUGLN(Node::asString(name->leftSide->content));
-			result->middle = name->rightSide;
-			DEBUGLN(Node::asString(name->leftSide->content));
-			result->leftSide = name->leftSide;
-			DEBUGLN(Node::asString(name->leftSide->content));
-			name = name->leftSide;
-			DEBUGLN(Node::asString(name->content));
-		}
+		else if (!name->leftSide->isPathOrName())
+			parser.context.error("Expected name or path here!");
+		result->middle = name->rightSide;
+		result->leftSide = name->leftSide;
 	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
+	else result->leftSide = name;
 	auto const def = parser.nextExpression();
 	if (def->content != Node::Content::AV2_TANC_BLOCK)
 		parser.context.error("Expected block expression here!");
-	result->leftSide = name;
 	result->rightSide = def;
 	return result;
 }
