@@ -386,6 +386,8 @@ ATransformer::Result Using::transform(Context& context, Node::Instance const& no
 }
 
 ATransformer::Result StructureDecl::transform(Context& context, Node::Instance const& node) {
+	if (!node->leftSide)
+		context.error("Expected declaration name here!");
 	auto const name = context.pathOf(node->leftSide);
 	if (context.top()->subspaces.contains(name.front()))
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
