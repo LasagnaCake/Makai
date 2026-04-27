@@ -1320,7 +1320,9 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 		arr->flags |= Core::Definition::Flags::AV2_DF_ARRAY;
 		arr->base = type;
 		arr->name = type->name + "_array";
-		auto& ns = *(root->subspaces["__ARRAYS__"]->subspaces[arr->name] = Namespace::Instance::create(arr->name));
+		auto const nsp = Namespace::Instance::create(arr->name);
+		registerType(nsp);
+		auto& ns = *nsp;
 		ns.type = arr;
 		arrays[type.asWeak()] = arr;
 		return arr;
@@ -1330,13 +1332,13 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T2_USERTYPES"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
+	root->subspaces["##T1_USER_TYPES"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerFunction(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T3_FUNCTIONS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
+	root->subspaces["##T2_FUNCTIONS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerImport(Namespace::Instance const& ns) {
@@ -1349,11 +1351,9 @@ ATransformer::Context::Context(): Intermediate() {
 	using enum Core::BasicType;
 	using Flags = Core::Definition::Flags;
 	root->subspaces["##T0_IMPORTS"]		= Namespace::Instance::create("##T0_IMPORTS");
-	root->subspaces["##T1_BASICS"]		= Namespace::Instance::create("##T1_BASICS");
-	root->subspaces["##T2_USERTYPES"]	= Namespace::Instance::create("##T2_USERTYPES");
-	root->subspaces["##T3_FUNCTIONS"]	= Namespace::Instance::create("##T3_FUNCTIONS");
-	root->subspaces["##T4_TRAITS"]		= Namespace::Instance::create("##T4_TRAITS");
-	root->subspaces["__ARRAYS__"] = Namespace::Instance::create("__ARRAYS__");
+	root->subspaces["##T1_USER_TYPES"]	= Namespace::Instance::create("##T1_USER_TYPES");
+	root->subspaces["##T2_FUNCTIONS"]	= Namespace::Instance::create("##T2_FUNCTIONS");
+	root->subspaces["##T3_TRAITS"]		= Namespace::Instance::create("##T3_TRAITS");
 }
 
 void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 const flags) {
