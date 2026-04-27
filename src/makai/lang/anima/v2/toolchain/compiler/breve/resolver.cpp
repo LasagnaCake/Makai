@@ -381,6 +381,8 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 			parser.context.error("Invalid inheritance expression!");
 		DEBUGLN("+++++++++++++++ DECL::LHS is ", Node::asString(name->leftSide->content));
 		DEBUGLN("+++++++++++++++ DECL::LHS = ", name->leftSide->base.text);
+		DEBUGLN("+++++++++++++++ DECL::MHS is ", Node::asString(name->middle->content));
+		DEBUGLN("+++++++++++++++ DECL::MHS = ", name->middle->base.text);
 		if (!name->leftSide->isPathOrName())
 			parser.context.error("Expected name or path here!");
 		result->middle = name->middle;
