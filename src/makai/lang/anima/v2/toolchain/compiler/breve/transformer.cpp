@@ -377,6 +377,7 @@ ATransformer::Result Using::transform(Context& context, Node::Instance const& no
 	auto scope = Expression().transform(context, node->leftSide).scope;
 	if (!scope)
 		context.error("Namespace does not exist!", node->leftSide);
+	DEBUGLN("^^^^^^^^^^^^^^ Target Scope: ", scope->serialize().toFLOWString("  "));
 	if (!scope->isPureNamespace())
 		context.error("Scope is not a pure namespace!", node->leftSide);
 	for (auto& [name, mem]: scope->subspaces)
