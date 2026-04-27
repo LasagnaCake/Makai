@@ -358,6 +358,7 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 	auto scope = Expression().transform(context, node->rightSide).scope;
 	if (!scope)
 		context.error("Requested symbol scope does not exist!", node->rightSide);
+	DEBUGLN("^^^^^^^^^^^^^^ Symbol to be Aliased: ", scope->serialize().toFLOWString("  "));
 	if (node->leftSide) {
 		auto const alias = context.pathOf(node->leftSide);
 		if (context.parent()->resolve(alias))
@@ -365,12 +366,9 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 		auto const tmp = context.declare(alias);
 		context.parent()->subspaces[alias.back()] = scope;
 		context.pop(alias.size());
-	} else {
-		if (context.parent()->subspaces.contains(name.back()))
-			context.error("Symbol with this name already exists in the current scope!", node->rightSide);
-		auto const tmp = context.declare(UTF8StringList::from(name.back()));
-		context.parent()->subspaces[name.back()] = scope;
-		context.pop(1);
+	} else for (auto& [name, sub]: scope->subspaces) {
+		if (!context.parent()->subspaces.contains(name))
+			context.parent()->subspaces[name] = sub;
 	}
 	return {.scope = scope};
 }
@@ -396,7 +394,10 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
 	if (node->middle) {
-		auto const base = TypeRequest().transform(context, node->middle).scope->type;
+		auto const sco = TypeRequest().transform(context, node->middle).scope;
+		if (!(sco && sco->type))
+			context.error("Type does not exist!", node->middle);
+		auto const base = sco->type;
 		type.base = base;
 		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
 		type.fields.append(base->fields);
@@ -754,6 +755,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
 	if (!node) return {};
+	DEBUGLN("Expression Type: ", Node::asString(node->content));
 	switch (node->content) {
 		case Node::Content::AV2_TANC_EMPTY:				return {};
 		case Node::Content::AV2_TANC_VALUE:				return Direct().transform(context, node);
