@@ -1323,7 +1323,10 @@ ATransformer::Result ArrayTypeDecl::transform(Context& context, Node::Instance c
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
-	return basics.contains(name) ? basics[name] : nullptr;
+	auto const scope = resolve(UTF8StringList::from(name));
+	if (!(scope && scope->type))
+		error("Basic type ["+name+"] does not exist!\nDid you forget to [using import core.types]?");
+	return scope->type;
 }
 
 Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& type) {
