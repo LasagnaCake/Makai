@@ -197,7 +197,7 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& left
 			parser.context.next();
 			break;
 		}
-		parser.context.expect(LTS_TT_COMMA);
+		parser.context.expectNext(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
 			parser.context.error("Expected expression after the comma!");
 	}

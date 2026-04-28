@@ -1,6 +1,4 @@
 using import core.types.any
 
-@Basic(type = "bool")
-@Copy
-@Value
+@[Basic(type = "bool"), Copy, Value]
 struct bool : any {}

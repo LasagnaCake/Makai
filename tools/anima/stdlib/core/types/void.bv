@@ -1,3 +1,2 @@
-@Empty
-@Discard
+@[Basic(type = "void"), Empty, Discard]
 struct void {}

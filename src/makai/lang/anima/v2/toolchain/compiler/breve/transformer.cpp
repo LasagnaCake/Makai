@@ -826,7 +826,7 @@ static void resolveEmptyAttribute(
 			missing.pushBack(name);
 		else attr->value[name] = field.defaultValue;
 	if (missing.size())
-		context.error("Required attributes [" + missing.join(",") + "] missing!", node);
+		context.error("Required attribute parameters [" + missing.join(",") + "] missing!", node);
 	scope->attribute->transform(context, ns, attr->value, *attr->attribute);
 }
 
@@ -890,8 +890,12 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
 		for (auto const& attrib: node->children) {
 			auto const attrs = resolveAttribute(context, attrib, ns, attribs);
-			if (attribs.countOf(attrs.keys()))
-				context.error("Reapplication of previous attributes [" + attribs.match(attrs.keys()).join(",") + "]!", node);
+			Makai::UTF8StringList dupes;
+			for (auto& attr: attrs.keys())
+				if (attribs.contains(attr))
+					dupes.pushBack(attr);
+			if (dupes.size())
+				context.error("Reapplication of previous attributes [" + dupes.join(", ") + "]!", node);
 			attribs.append(attrs);
 		}
 	}

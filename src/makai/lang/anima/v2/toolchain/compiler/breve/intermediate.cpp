@@ -320,12 +320,13 @@ static Namespace::AttributeRef createSharedAttribute() {
 		auto const name = (v["name"].getString());
 		auto const lib = (v["lib"].getString());
 		for (auto& ov: ns->function->overloads)
-			if (ov->entry.empty() && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
+			if ((!ov->scope) && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
+				DEBUGLN("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Applying shared attribute...");
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_DYNLIB;
 				ov->outEntry = name;
 				ov->dynlib = lib;
 				ov->optional = v["optional"];
-				ov->entry = "__shared_dynlib_" + Makai::toString(id) + ov->methodOf->node->name();
+				ov->entry = "__shared_dynlib_" + Makai::toString(id) + ns->function->name + (ov->methodOf ? ov->methodOf->name : "");
 			}
 	};
 	return attrib;

@@ -357,7 +357,7 @@ public:
 		for (auto const& key: keys)
 			if (contains(key))
 				matched.pushBack(key);
-		return matched;
+		return copy(matched);
 	}
 
 	/// @brief Erases an element that matches the given key.

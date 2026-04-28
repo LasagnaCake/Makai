@@ -1,7 +1,4 @@
 using import core.types.any
 
-@Basic(type = "bytes")
-@Nullable
-@Copy
-@Value
+@[Basic(type = "bytes"), Nullable, Copy, Value]
 struct bytes : any {}
