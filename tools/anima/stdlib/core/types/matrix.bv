@@ -1,4 +1,6 @@
 using import core.types.any
 
 @Basic(type = "matrix")
+@Copy
+@Value
 struct matrix : any {}

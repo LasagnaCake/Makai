@@ -1,10 +1,16 @@
 using import core.types.any
 
 @Basic(type = "float32")
+@Copy
+@Value
 struct float32 : any {}
 
 @Basic(type = "float64")
+@Copy
+@Value
 struct float64 : any {}
 
 @Basic(type = "float128")
+@Copy
+@Value
 struct float128 : any {}

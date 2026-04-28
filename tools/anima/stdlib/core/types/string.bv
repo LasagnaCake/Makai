@@ -2,4 +2,6 @@ using import core.types.any
 
 @Basic(type = "string")
 @Nullable
+@Copy
+@Value
 struct string : any {}

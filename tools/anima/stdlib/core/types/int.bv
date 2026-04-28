@@ -1,13 +1,21 @@
 using import core.types.any
 
 @Basic(type = "int8")
+@Copy
+@Value
 struct int8 : any {}
 
 @Basic(type = "int16")
+@Copy
+@Value
 struct int16 : any {}
 
 @Basic(type = "int32")
+@Copy
+@Value
 struct int32 : any {}
 
 @Basic(type = "int64")
+@Copy
+@Value
 struct int64 : any {}

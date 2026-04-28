@@ -357,7 +357,9 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	var.id = parent->varc++;
 	context.pop(path.size());
 	if (!var.type)
-		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
+		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
+	else if (var.type->flags & Core::Definition::Flags::AV2_DF_NO_RESULT)
+		context.error("[Variables cannot have discardable types!", node);
 	return {{var.getSource()}, scope, var.type.raw(), direct};
 }
 

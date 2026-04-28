@@ -1,4 +1,5 @@
-using core = import core;
+using import core.types;
+using import core.io;
 
 module Test.Namespace {
 	@Nullable
@@ -20,6 +21,6 @@ module Test.Namespace {
 @Main
 main :: () {
     val := Test.Namespace.baz(32 + 64)
-    core.IO.write("32 + 64 = ")
-    core.IO.writeLine(val)
+    IO.write("32 + 64 = ")
+    IO.writeLine(val)
 }

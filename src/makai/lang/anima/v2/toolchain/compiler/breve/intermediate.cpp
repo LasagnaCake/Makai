@@ -398,7 +398,7 @@ static Namespace::AttributeRef createEmptyAttribute() {
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags |= Core::Definition::Flags::AV2_DF_EMPTY;
-		if (ns->type->fields.size())
+		if (ns->type->fields.size() > 1)
 			Transformer::ATransformer::Context::error("Empty type must not contain fields!", ns->node);
 	};
 	return attrib;

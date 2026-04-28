@@ -1,4 +1,4 @@
-import core.types
+using import core.types
 
 module Convert {
 	toString :: (what: string) => what;
