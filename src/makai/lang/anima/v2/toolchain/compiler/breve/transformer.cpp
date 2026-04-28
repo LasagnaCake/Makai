@@ -892,12 +892,6 @@ static Makai::UTF8StringList resolveAttribute(
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
 		for (auto const& attrib: node->children) {
 			auto const attrs = resolveAttribute(context, attrib, ns, attribs);
-			Makai::UTF8StringList dupes;
-			for (auto& attr: attrs)
-				if (attribs.contains(attr))
-					dupes.pushBack(attr);
-			if (dupes.size())
-				context.error("Reapplication of previous attributes [" + dupes.join(", ") + "]!", node);
 			newAttrs.appendBack(attrs);
 		}
 	}
