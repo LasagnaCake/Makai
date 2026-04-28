@@ -409,8 +409,10 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			context.error("No type with this name exists!", node->middle);
 		type.base = base;
 		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
-		type.fields.append(base->fields);
-		scope->subspaces["base"] = base->scope.raw();
+		auto baseFields = base->fields;
+		baseFields["base"] = baseFields["this"];
+		baseFields.erase("this");
+		type.fields.append(baseFields);
 		scope->varc += base->scope->varc;
 	}
 	{
@@ -1058,7 +1060,6 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	if (!subinter.content) return {};
 	for (auto& [name, imp]: context.root->subspaces["##T0_IMPORTS"]->subspaces)
 		if (imp == subinter.content) return {.scope = subinter.content};
-	DEBUGLN(subinter.content->serialize().toFLOWString("  "));
 	context.registerImport(subinter.content);
 	return {.scope = subinter.content};
 }

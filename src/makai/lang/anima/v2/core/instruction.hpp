@@ -206,7 +206,8 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Create {
-			bool			dyn: 1;
+			bool			dyn:			1;
+			bool			initWithScope:	1;
 		};
 
 		/// @brief Instruction name.
@@ -336,6 +337,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Create` = how to create the value.
 			/// @details `new [<type>]`
 			AV2_IN_CREATE,
+			/// @brief Initializes the current value on the stack with the current scope's local values.
+			/// @param type Discarded.
+			/// @details `init`
+			AV2_IN_INIT,
 		};
 
 		/// @brief Instruction "Name" (opcode).
