@@ -830,12 +830,13 @@ static void resolveEmptyAttribute(
 	scope->attribute->transform(context, ns, attr->value, *attr->attribute);
 }
 
-static Makai::Dictionary<Metadata::Instance> resolveAttribute(
+static Makai::UTF8StringList resolveAttribute(
 	ATransformer::Context& context,
 	Node::Instance const& node,
 	Namespace::Instance const& ns,
 	Makai::Dictionary<Metadata::Instance>& attribs
 ) {
+	Makai::UTF8StringList newAttrs;
 	if (node->isPathOrName()) {
 		resolveEmptyAttribute(context, node, attribs, ns);
 	} else if (node->content == Node::Content::AV2_TANC_FN_CALL) {
@@ -887,19 +888,20 @@ static Makai::Dictionary<Metadata::Instance> resolveAttribute(
 			context.error("Required attributes [" + missing.join(",") + "] missing!", node);
 		attribs[scope->attribute->name] = attr;
 		attr->attribute->transform(context, ns, attr->value, *attr->attribute);
+		newAttrs.pushBack(scope->attribute->name);
 	} else if (node->content == Node::Content::AV2_TANC_ARRAY) {
 		for (auto const& attrib: node->children) {
 			auto const attrs = resolveAttribute(context, attrib, ns, attribs);
 			Makai::UTF8StringList dupes;
-			for (auto& attr: attrs.keys())
+			for (auto& attr: attrs)
 				if (attribs.contains(attr))
 					dupes.pushBack(attr);
 			if (dupes.size())
 				context.error("Reapplication of previous attributes [" + dupes.join(", ") + "]!", node);
-			attribs.append(attrs);
+			newAttrs.appendBack(attrs);
 		}
 	}
-	return attribs;
+	return newAttrs;
 }
 
 ATransformer::Result AttributeExpression::transform(Context& context, Node::Instance const& node) {
