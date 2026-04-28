@@ -1047,7 +1047,6 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
-	static usize current = 0;
 	auto const path = context.pathOf(node->leftSide);
 	auto const fpath = path.join("/").toString();
 	DEBUG("Path: ");
@@ -1059,7 +1058,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	if (!subinter.content) return {};
 	for (auto& [name, imp]: context.root->subspaces["##T0_IMPORTS"]->subspaces)
 		if (imp == subinter.content) return {.scope = subinter.content};
-	context.root->subspaces["##T0_IMPORTS"]->subspaces[("#" + Makai::toString(++current))] = subinter.content;
+	context.registerImport(subinter.content);
 	return {.scope = subinter.content};
 }
 
