@@ -366,7 +366,6 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 	auto scope = Expression().transform(context, node->rightSide).scope;
 	if (!scope)
 		context.error("Requested symbol scope does not exist!", node->rightSide);
-	DEBUGLN("^^^^^^^^^^^^^^ Symbol to be Aliased: ", scope->serialize().toFLOWString("  "));
 	if (node->leftSide) {
 		auto const alias = context.pathOf(node->leftSide);
 		if (context.parent()->resolve(alias))
@@ -385,12 +384,14 @@ ATransformer::Result Using::transform(Context& context, Node::Instance const& no
 	auto scope = Expression().transform(context, node->leftSide).scope;
 	if (!scope)
 		context.error("Namespace does not exist!", node->leftSide);
-	DEBUGLN("^^^^^^^^^^^^^^ Target Scope: ", scope->serialize().toFLOWString("  "));
 	if (!scope->isPureNamespace())
 		context.error("Scope is not a pure namespace!", node->leftSide);
-	for (auto& [name, mem]: scope->subspaces)
-		if (!context.top()->subspaces.contains(name))
+	for (auto& [name, mem]: scope->subspaces) {
+		if (!context.top()->subspaces.contains(name)) {
+			DEBUGLN("Adding ", name, "...");
 			context.top()->subspaces[name] = mem;
+		}
+	}
 	return {.scope = scope};
 }
 
@@ -1340,7 +1341,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 }
 
 static Makai::String idName(usize const id) {
-	return Makai::Format::pad(Makai::toString(id), '0', 32, CTL::Format::Justify::CFJ_RIGHT);
+	return Makai::Format::pad(Makai::toString(id), '0', 16, CTL::Format::Justify::CFJ_LEFT);
 }
 
 void ATransformer::Context::registerType(Namespace::Instance const& ns) {
