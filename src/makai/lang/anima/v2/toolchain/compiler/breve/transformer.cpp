@@ -1342,19 +1342,19 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T1_USER_TYPES"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
+	root->subspaces["##T1_USER_TYPES"]->subspaces[ Makai::toString("#", Makai::Format::pad(Makai::toString(++id), '0', 32, CTL::Format::Justify::CFJ_RIGHT), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerFunction(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T2_FUNCTIONS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
+	root->subspaces["##T2_FUNCTIONS"]->subspaces[ Makai::toString("#", Makai::Format::pad(Makai::toString(++id), '0', 32, CTL::Format::Justify::CFJ_RIGHT), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerImport(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T0_IMPORTS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 32), "::") + ns->name] = ns;
+	root->subspaces["##T0_IMPORTS"]->subspaces[ Makai::toString("#", Makai::Format::pad(Makai::toString(++id), '0', 32, CTL::Format::Justify::CFJ_RIGHT), "::") + ns->name] = ns;
 }
 
 ATransformer::Context::Context(): Intermediate() {
@@ -1396,7 +1396,7 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	}
 	if (root->subspaces.contains(name)) return;
 	auto const ns = Namespace::Instance::create();
-	root->subspaces["##T1_BASICS"]->subspaces[ Makai::toString("#", Makai::Format::prettify(++id, 0, 8), "::") + name] = ns;
+	root->subspaces["##T1_BASICS"]->subspaces[ Makai::toString("#", Makai::Format::pad(Makai::toString(++id), '0', 32, CTL::Format::Justify::CFJ_RIGHT), "::") + name] = ns;
 	root->subspaces[name] = ns;
 	auto& t = *(ns->type = ns->type.create());
 	t.name = name;
