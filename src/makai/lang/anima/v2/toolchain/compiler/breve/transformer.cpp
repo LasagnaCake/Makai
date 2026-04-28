@@ -308,6 +308,14 @@ bool ATransformer::Result::isStackTop() const {
 	return source && Makai::Regex::contains(*source, R"re(stack\[\-0\])re");
 }
 
+bool ATransformer::Result::isDiscardable() const {
+	return type && type->flags & Core::Definition::Flags::AV2_DF_NO_RESULT;
+}
+
+bool ATransformer::Result::shouldBePushed() const {
+	return !isDiscardable() && !isStackTop();
+}
+
 Namespace::Instance ATransformer::Context::nearestVarScope() const {
 	for (auto& sco: Range::reverse(scopeStack)) {
 		if (sco->isPureNamespace() && sco->declaredAsNamespace) continue;
@@ -441,7 +449,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	auto const val = expr.transform(context, node->leftSide);
 	if (!val.source)
 		context.error("Invalid expression!", node->leftSide);
-	if (!val.isStackTop())
+	if (val.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *val.source);
 	context.top()->impl->writeMainLine("ret");
 	return {{"move stack[-0]"}, val.scope, val.type};
@@ -617,7 +625,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	||	node->base.text == "ref"
 	||	node->base.text == "move"
 	) return {{node->base.text + " " + *val.source}, val.scope, val.type, val.direct};
-	if (!val.isStackTop()) {
+	if (val.shouldBePushed()) {
 		if (
 			node->base.type == LTS_TT_INCREMENT
 		||	node->base.type == LTS_TT_DECREMENT
@@ -649,7 +657,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 		if (!result.isUndefined())
 			return {{result.toString()}, val.type->scope.raw(), directName(context, result.type()), result};
 	}
-	if (!val.isStackTop())
+	if (val.shouldBePushed())
 		context.top()->impl->writeMainLine("push copy", *val.source);
 	context.top()->impl->writeMainLine("op", uopName(context, node));
 	if (val.type->basic) {
@@ -663,7 +671,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	auto const lhs = expr.transform(context, node->leftSide);
 	if (!lhs.source)
 		context.error("Invalid expression!", node->leftSide);
-	if (!lhs.isStackTop() && !lhs.direct)
+	if (lhs.shouldBePushed() && !lhs.direct)
 		context.top()->impl->writeMainLine("push", *lhs.source);
 	if (
 		node->base.text == "as"
@@ -682,12 +690,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (!result.isUndefined())
 			return {{result.toString()}, directName(context, result.type())->scope.raw(), directName(context, result.type()), result};
 	}
-	if (!rhs.isStackTop())
+	if (lhs.direct)
+		context.top()->impl->writeMainLine("push", *lhs.source);
+	if (rhs.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *rhs.source);
-	if (lhs.direct) {
-		context.top()->impl->writeMainLine("push", *rhs.source);
-		context.top()->impl->writeMainLine("swap");
-	}
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		if (t->basic) {
 			context.top()->impl->writeMainLine("op", bopName(context, node));
@@ -734,7 +740,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		auto const nsx = PathExpression().transform(context, node->leftSide);
 		path = context.pathOf(node->value.getString()).reverse();
 		result = nsx;
-		if (result.source && !nsx.isStackTop())
+		if (result.source && nsx.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *result.source);
 		return resolveSubfield(context, node, result.scope, path.back());
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
@@ -1014,7 +1020,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		implScope->impl->writePreLine("bind ref", implScope->varc, "[0 -> 0]");
 		implScope->impl->writePreLine("clear", implScope->varc);
 		auto const expr = Expression().transform(context, node->rightSide);
-		if (expr.source && !expr.isStackTop())
+		if (expr.source && expr.shouldBePushed())
 			implScope->impl->writePostLine("push", *expr.source);
 		implScope->impl->writePostLine("end");
 		implScope->impl->writePostLine("@def .\n");
@@ -1136,7 +1142,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
-		if (!expr.isStackTop())
+		if (expr.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *expr.source);
 		args.pushBack(expr.type);
 	}
@@ -1167,7 +1173,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.error("Expected value here!", node->leftSide);
 	if (!(src.type->flags & Core::Definition::Flags::AV2_DF_ARRAY))
 		context.error("Value is not an array!", node->rightSide);
-	if (!src.isStackTop())
+	if (src.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *src.source);
 	auto const index = Expression().transform(context, node->rightSide);
 	if (index.direct) {
@@ -1181,7 +1187,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	||	index.type == context.basicType("uint32")
 	||	index.type == context.basicType("uint64")
 	) {
-		if (!index.isStackTop())
+		if (index.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *src.source);
 		context.top()->impl->writeMainLine("dyn at");
 	} else context.error("Expected unsigned integer here!", node->rightSide);
@@ -1196,7 +1202,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
-		if (!expr.isStackTop())
+		if (expr.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *expr.source);
 		if (!prev)
 			prev = expr.type;
@@ -1243,14 +1249,14 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		auto const ifTrueLabel = "__if_" + node->name() + "_true_";
 		auto const ifFalseLabel = "__if_" + node->name() + "_false_";
 		auto const ifEndLabel = "__if_" + node->name() + "_end_";
-		if (!cond.isStackTop())
+		if (cond.shouldBePushed())
 			context.writeMainLine("push", cond.source.value());
 		context.writeMainLine("pick [", ifTrueLabel, node->rightSide ? ifFalseLabel : ifEndLabel, "]");
 		context.writeMainLine("@target", ifTrueLabel, ":");
 		context.writeMainLine("begin 0");
 		context.writeMainLine("keep");
 		auto const ifTrue = Expression().transform(context, node->middle);
-		if (ifTrue.source && !ifTrue.isStackTop())
+		if (ifTrue.source && ifTrue.shouldBePushed())
 			context.writeMainLine("push", ifTrue.source.value());
 		context.writeMainLine("end");
 		context.writeMainLine("jump", ifEndLabel);
@@ -1259,7 +1265,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			context.writeMainLine("begin 0");
 			context.writeMainLine("keep");
 			auto const ifFalse = Expression().transform(context, node->rightSide);
-			if (ifFalse.source && !ifFalse.isStackTop())
+			if (ifFalse.source && ifFalse.shouldBePushed())
 				context.writeMainLine("push", ifFalse.source.value());
 			if (ifTrue.type != ifFalse.type)
 				context.error("Both paths return different types!", node);
@@ -1319,7 +1325,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 		auto const arr = type.create();
 		arr->flags |= Core::Definition::Flags::AV2_DF_ARRAY;
 		arr->base = type;
-		arr->name = type->name + "_array";
+		arr->name = type->name + "Array";
 		auto const nsp = Namespace::Instance::create(arr->name);
 		registerType(nsp);
 		auto& ns = *nsp;
