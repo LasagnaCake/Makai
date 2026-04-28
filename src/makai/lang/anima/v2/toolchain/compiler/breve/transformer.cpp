@@ -1058,6 +1058,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	if (!subinter.content) return {};
 	for (auto& [name, imp]: context.root->subspaces["##T0_IMPORTS"]->subspaces)
 		if (imp == subinter.content) return {.scope = subinter.content};
+	DEBUGLN(subinter.content->serialize().toFLOWString("  "));
 	context.registerImport(subinter.content);
 	return {.scope = subinter.content};
 }
