@@ -52,12 +52,12 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_BOOL,
 		AV2_BT_CHAR,
 		AV2_BT_INT8,
-		AV2_BT_INT16,
-		AV2_BT_INT32,
-		AV2_BT_INT64,
 		AV2_BT_UINT8,
+		AV2_BT_INT16,
 		AV2_BT_UINT16,
+		AV2_BT_INT32,
 		AV2_BT_UINT32,
+		AV2_BT_INT64,
 		AV2_BT_UINT64,
 		AV2_BT_REAL32,
 		AV2_BT_REAL64,
@@ -65,8 +65,8 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_TYPEID,
 		AV2_BT_VECTOR,
 		AV2_BT_MATRIX,
-		AV2_BT_STRING,
 		AV2_BT_BYTES,
+		AV2_BT_STRING,
 	};
 
 	constexpr bool isBoolean(BasicType const bt) {
