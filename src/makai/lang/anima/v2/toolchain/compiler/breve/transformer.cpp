@@ -404,12 +404,9 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
 	if (node->middle) {
-		auto const sco = TypeRequest().transform(context, node->middle).scope;
-		if (!sco)
-			context.error("No symbol with this name exists!", node->middle);
-		if (!sco->type)
-			context.error("Symbol is not a type!", node->middle);
-		auto const base = sco->type;
+		auto const base = TypeRequest().transform(context, node->middle).type;
+		if (!base)
+			context.error("No type with this name exists!", node->middle);
 		type.base = base;
 		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
 		type.fields.append(base->fields);
