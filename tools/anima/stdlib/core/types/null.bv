@@ -1,5 +1,0 @@
-using import core.types.any
-
-@Empty
-@Nullable
-struct null : any {}
