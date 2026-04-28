@@ -14,6 +14,7 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		switch (ov->variant) {
 			using ET = As<decltype(ov->variant)>;
 			using enum ET;
+			DEBUGLN("Variant: ", ov->serialize()["variant"].getString());
 			case AV2_TCB_FOV_ART_CALL:	ovstr += "@out[\"" + ov->outEntry + "\"] ";								break;
 			case AV2_TCB_FOV_DYNLIB:	ovstr += "@shared[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";	break;
 			default:					ovstr += "@fn ";														break;
