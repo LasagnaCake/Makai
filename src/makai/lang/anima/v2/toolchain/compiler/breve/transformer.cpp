@@ -405,8 +405,10 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto& type = *(scope->type = scope->type.create());
 	if (node->middle) {
 		auto const sco = TypeRequest().transform(context, node->middle).scope;
-		if (!(sco && sco->type))
-			context.error("Type does not exist!", node->middle);
+		if (!sco)
+			context.error("No symbol with this name exists!", node->middle);
+		if (!sco->type)
+			context.error("Symbol is not a type!", node->middle);
 		auto const base = sco->type;
 		type.base = base;
 		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
