@@ -14,7 +14,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Namespace::TypeRef		type;
 			Data::Value				direct;
 
+			bool shouldBePushed() const;
 			bool isStackTop() const;
+			bool isDiscardable() const;
 		};
 
 		using Instance = Instance<ATransformer>;
