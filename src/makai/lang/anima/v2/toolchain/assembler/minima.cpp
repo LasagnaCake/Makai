@@ -1,5 +1,4 @@
 #include "minima.hpp"
-#include "makai/lang/anima/v2/core/type.hpp"
 
 using namespace Makai::Anima::V2::Core;
 
@@ -979,7 +978,7 @@ static void validateType(Context& context, Context::Declaration& type) {
 		for (auto& field: type.fields)
 			type.byteSize += context.getTypeByID(field)->byteSize;
 		type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
-	} else if (type.basic != BasicType::AV2_BT_ANY or type.basic != BasicType::AV2_BT_VOID) {
+	} else if (type.basic != BasicType::AV2_BT_ANY && type.basic != BasicType::AV2_BT_VOID) {
 		type.flags |=
 			Definition::Flags::AV2_DF_VALUE
 		|	Definition::Flags::AV2_DF_CLONABLE

@@ -73,12 +73,12 @@ int main(int argc, char** argv) try {
 		if (level == "parse-tree" || level == "parse") {
 			Makai::File::saveText(
 				outPath + ".bpt",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_PARSE_TREE).toFLOWString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_PARSE_TREE).toFLOWString("  ")
 			);
 		} else if (level == "intermediate" || level == "ir") {
 			Makai::File::saveText(
 				outPath + ".bir",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_INTERMEDIATE).toFLOWString()
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_INTERMEDIATE).toFLOWString("  ")
 			);
 		} else if (level == "minima" || level == "min") {
 			Makai::File::saveText(
@@ -88,10 +88,7 @@ int main(int argc, char** argv) try {
 		} else {
 			Makai::File::saveText(
 				outPath + ".anp",
-				Makai::Regex::replace(
-					compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString(),
-					"\n+", " "
-				)
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString("  ")
 			);
 		}
 	}

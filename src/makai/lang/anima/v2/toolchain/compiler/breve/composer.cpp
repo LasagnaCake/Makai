@@ -175,7 +175,5 @@ Makai::UTF8String Composer::toMinima() {
 	if (inter.exit)	cache += "@exit " + inter.exit->entry + "\n";
 	for (auto& fd: funcDefs) if (fd)
 		cache += fd->toString() + "\n";
-	cache = Regex::replace(cache, R"(\n\s+)", "\n");
-	cache = Regex::replace(cache, R"(^\s+)", "");
 	return cache;
 }
