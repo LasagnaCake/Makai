@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: LasagnaCake/Makai/etc/gh/actions/setup/msys2@main
 
-  ship-it-full-linux:
+  ship-it-full-linux-x64:
     name: Ship the library (FULL ver.) (Linux)
     runs-on: ubuntu-latest
     needs: [prepare-linux]
@@ -36,7 +36,7 @@ jobs:
         with:
           type: full
 
-  ship-it-lite-linux:
+  ship-it-lite-linux-x64:
     name: Ship the library (LITE ver.) (Linux)
     runs-on: ubuntu-latest
     needs: [prepare-linux]
@@ -45,7 +45,7 @@ jobs:
         with:
           type: lite
 
-  ship-it-full-win:
+  ship-it-full-win-x64:
     name: Ship the library (FULL ver.) (Windows)
     runs-on: windows-latest
     needs: [prepare-msys2]
@@ -54,7 +54,7 @@ jobs:
         with:
           type: full
 
-  ship-it-lite-win:
+  ship-it-lite-win-x64:
     name: Ship the library (LITE ver.) (Windows)
     runs-on: windows-latest
     needs: [prepare-msys2]
@@ -66,10 +66,10 @@ jobs:
   publish:
     name: Publish pre-release
     needs:
-      - ship-it-lite-win
-      - ship-it-full-win
-      - ship-it-lite-linux
-      - ship-it-full-linux
+      - ship-it-lite-win-x64
+      - ship-it-full-win-x64
+      - ship-it-lite-linux-x64
+      - ship-it-full-linux-x64
     runs-on: ubuntu-latest
     steps:
       - name: Get environment info
