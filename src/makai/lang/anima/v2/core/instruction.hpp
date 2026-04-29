@@ -340,7 +340,7 @@ namespace Makai::Anima::V2::Core {
 			/// @brief Initializes the current value on the stack with the current scope's local values.
 			/// @param type Discarded.
 			/// @details `init`
-			AV2_IN_INIT,
+			AV2_IN_INITIALIZE,
 		};
 
 		/// @brief Instruction "Name" (opcode).
@@ -381,6 +381,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_SELECT:			return "pick";
 				case Name::AV2_IN_CLEAR:			return "drop";
 				case Name::AV2_IN_CREATE:			return "new";
+				case Name::AV2_IN_INITIALIZE:		return "init";
 			}
 			return "???";
 		}
