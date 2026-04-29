@@ -106,11 +106,11 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
-		bool					isFinished	= false;
-		bool					paused		= false;
-		Core::Module			program;
-		Core::Instruction		current;
-		Nullable<Error>			err;
+		bool				isFinished	= false;
+		bool				paused		= false;
+		Core::Module		program;
+		Core::Instruction	current;
+		Nullable<Error>		err;
 	};
 }
 
