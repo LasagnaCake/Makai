@@ -375,9 +375,12 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 		auto const tmp = context.declare(alias);
 		context.parent()->subspaces[alias.back()] = scope;
 		context.pop(alias.size());
-	} else for (auto& [name, sub]: scope->subspaces) {
-		if (!context.parent()->subspaces.contains(name))
-			context.parent()->subspaces[name] = sub;
+	} else {
+		if (context.parent()->resolve(UTF8StringList::from(scope->name)))
+			context.error("Symbol with this name already exists in the current scope!", node->leftSide);
+		auto const tmp = context.declare(UTF8StringList::from(scope->name));
+		context.parent()->subspaces[scope->name] = scope;
+		context.pop(1);
 	}
 	return {.scope = scope};
 }
@@ -877,11 +880,11 @@ static Makai::UTF8StringList resolveAttribute(
 		}
 		Makai::UTF8StringList missing;
 		for (auto const& [name, desc]: attr->attribute->fields) {
-			if (desc.defaultValue.isUndefined() && !attr->value.contains(name))
-				missing.pushBack(name);
-			else if (!desc.defaultValue.isUndefined())
-				attr->value[name] = desc.defaultValue;
-			else if (attr->value[name].type() != desc.type)
+			if (!attr->value.contains(name)) {
+				if (desc.defaultValue.isUndefined())
+					missing.pushBack(name);
+				else attr->value[name] = desc.defaultValue;
+			} else if (attr->value[name].type() != desc.type)
 				context.error("Attribute field ["+name+"] type mismatch!", node);
 		}
 		if (missing.size())
