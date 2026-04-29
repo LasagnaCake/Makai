@@ -1,13 +1,13 @@
 using import core.types.any
 
-@[Basic(type = "uint8"), Copy, Value]
+@Basic(type = "uint8")
 struct uint8 : any {}
 
-@[Basic(type = "uint16"), Copy, Value]
+@Basic(type = "uint16")
 struct uint16 : any {}
 
-@[Basic(type = "uint32"), Copy, Value]
+@Basic(type = "uint32")
 struct uint32 : any {}
 
-@[Basic(type = "uint64"), Copy, Value]
+@Basic(type = "uint64")
 struct uint64 : any {}

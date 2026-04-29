@@ -114,10 +114,12 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			decl += "\n  meta [\n";
 			for (auto& [name, attrib]: type->scope->meta)
 				if (!attrib->value.isUndefined())
-					decl += "    " + name + " ´" + attrib->value.toFLOWString() + "´\n";
+					decl += "    " + name + " `" + attrib->value.toFLOWString() + "`\n";
 			decl += "  ]";
 		}
 	}
+	type->fields.erase("this");
+	type->fields.erase("base");
 	if (type->fields.size()) {
 		decl += "\n  fields [\n";
 		for (auto& [name, field]: type->fields) {

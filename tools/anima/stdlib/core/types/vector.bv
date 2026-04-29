@@ -1,4 +1,4 @@
 using import core.types.any
 
-@[Basic(type = "vector"), Copy, Value]
+@Basic(type = "vector")
 struct vector : any {}
