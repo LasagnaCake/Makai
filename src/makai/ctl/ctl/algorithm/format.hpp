@@ -16,17 +16,20 @@ namespace Format {
 	};
 
 	/// @brief Pads the given string with a given character, such that the size is at least the given width.
+	/// @tparam TString String type.
+	/// @tparam TChar Character type. By default, it is the same character type aused by the string type.
 	/// @param str String to pad.
 	/// @param chr Character to pad with.
 	/// @param width Minimum width the resulting string must have.
 	/// @param just Direction to justify.
 	/// @return Padded string.
 	/// @note If `width <= str.size()`, then no modifications are applied.
-	constexpr String pad(String str, char const chr, usize const width, Justify const& just = Justify::CFJ_LEFT) {
+	template<Type::OneOf<String, UTF8String, UTF32String> TString = String, Type::OneOf<char, UTF8Char, UTF32Char> TChar = typename TString::DataType>
+	constexpr TString pad(TString const& str, TChar const chr, usize const width, Justify const& just = Justify::CFJ_LEFT) {
 		if(width > str.size()) {
 			switch (just) {
-				case Justify::CFJ_LEFT:		str.insert(chr, width - str.size(), 0);		break;
-				case Justify::CFJ_RIGHT:	str.appendBack(width - str.size(), chr);	break;
+				case Justify::CFJ_LEFT:		return TString().resize(width - str.size(), TChar{chr}) + str;	break;
+				case Justify::CFJ_RIGHT:	return str + TString().resize(width - str.size(), TChar{chr});	break;
 				case Justify::CFJ_CENTER:
 					usize lhs = usize((float(width) * 0.75) + 0.5);
 					return pad(
@@ -48,13 +51,14 @@ namespace Format {
 
 	/// @brief Converts a floating point number to string, with formatting.
 	/// @tparam T Floating point type.
+	/// @tparam TString String type.
 	/// @param num Number to convert.
 	/// @param precision Amount of decimal places to have.
 	/// @param minlead Minimum amount of whole digits to have.
 	/// @return Resulting number string.
-	template <Type::Real T>
-	constexpr String prettify(T const& num, usize const precision, usize const minlead) {
-		String strnum = String::fromNumber<T>(num, precision);
+	template <Type::Real T, Type::OneOf<String, UTF8String, UTF32String> TString = String>
+	constexpr TString prettify(T const& num, usize const precision, usize const minlead) {
+		TString strnum = String::fromNumber<T>(num, precision);
 		usize lead	= strnum.size() + minlead;
 		ssize dot	= strnum.find('.');
 		if (dot > -1) lead -= dot;
@@ -63,12 +67,13 @@ namespace Format {
 
 	/// @brief Converts an integer to string, with formatting.
 	/// @tparam T Integer type.
+	/// @tparam TString String type.
 	/// @param num Number to convert.
 	/// @param precision Amount of decimal places to have.
 	/// @param minlead Minimum amount of whole digits to have.
 	/// @return Resulting number string.
-	template <Type::Integer T>
-	constexpr String prettify(T const& num, usize const precision, usize const minlead) {
+	template <Type::Integer T, Type::OneOf<String, UTF8String, UTF32String> TString = String>
+	constexpr TString prettify(T const& num, usize const precision, usize const minlead) {
 		return prettify<floatmax>(num, precision, minlead);
 	}
 }

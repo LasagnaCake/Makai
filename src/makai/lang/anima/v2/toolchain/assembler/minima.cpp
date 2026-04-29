@@ -1000,7 +1000,7 @@ static void declareTypeMeta(Context& context, Context::Declaration& type) {
 		auto const key = resolvePath(context);
 		if (type.meta.contains(key))
 			context.error("Meta attribute has already been declared!");
-		type.meta[key] = Makai::FLOW::parse(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING, "Meta attribute value").getString());
+		type.meta[key] = Makai::FLOW::parse(context.getNext(LTS_TT_BACKTICK_STRING, "Meta attribute value").getString());
 	}
 }
 

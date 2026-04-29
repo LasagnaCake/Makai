@@ -327,8 +327,7 @@ static Namespace::AttributeRef createSharedAttribute() {
 				ov->dynlib = lib;
 				ov->optional = v["optional"];
 				auto const pent = ov->entry;
-				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ns->function->name + (ov->methodOf ? ov->methodOf->name : "");
-				ov->entry += "_" + lib + pent;
+				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
 	};
 	return attrib;
@@ -341,13 +340,13 @@ static Namespace::AttributeRef createStaticAttribute() {
 	attrib->name = "Static";
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE | Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		static Makai::Random::SecureGenerator rng;
+		static usize id = 0;
 		if (ns->variable) {
 			if (ns->variable->global)
 				Transformer::ATransformer::Context::error("Variable cannot be both Global and Static!", ns->node);
 			ns->variable->global = true;
 			ns->variable->staticEntity = true;
-			ns->variable->source = "move $__STATIC__._ns_" + Makai::toString(rng.integer()) + "._ns_" + ns->node->name() + "._" + ns->variable->name;
+			ns->variable->source = "move $__STATIC__._ns_" + Makai::toString(++id) + "._ns_" + ns->node->name() + "._" + ns->variable->name;
 		} else if (ns->function) {
 			for (auto& ov: ns->function->overloads)
 				if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE)
@@ -593,11 +592,11 @@ static Namespace::AttributeRef createARTCallAttribute() {
 		static usize id = 0;
 		auto const name = (v["name"].getString());
 		for (auto& ov: ns->function->overloads)
-			if (ov->entry.empty() && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
+			if ((!ov->scope) && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_ART_CALL;
 				ov->outEntry = name;
 				ov->optional = v["optional"];
-				ov->entry = "__art_call_" + Makai::toString(id) + ov->methodOf->node->name();
+				ov->entry = "__art_call_" + Makai::toString(id) + ov->entry;
 			}
 	};
 	return attrib;
