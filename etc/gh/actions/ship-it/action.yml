@@ -16,6 +16,7 @@ runs:
       run: |
         echo "today: [${{steps.info.outputs.today}}]"
         echo "os: [${{steps.info.outputs.os}}]"
+        echo "arch: [${{steps.info.outputs.arch}}]"
         echo "env: [${{steps.info.outputs.env}}]"
         echo "shell: [${{steps.info.outputs.shell}}]"
         echo "lite? [${{steps.info.outputs.lite}}]"
