@@ -841,6 +841,10 @@ void Engine::v2Clear() {
 	// TODO: This
 }
 
+void Engine::v2Initialize() {
+	// TODO: This
+}
+
 void Engine::v2ScopeKeep() {
 	if (context.scopeStack.size() < 2) return;
 	auto& locals = context.scope().localStack;
