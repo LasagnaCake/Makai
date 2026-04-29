@@ -118,11 +118,12 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			decl += "  ]";
 		}
 	}
-	type->fields.erase("this");
-	type->fields.erase("base");
-	if (type->fields.size()) {
+	auto fields = copy(type->fields);
+	fields.erase("this");
+	fields.erase("base");
+	if (fields.size()) {
 		decl += "\n  fields [\n";
-		for (auto& [name, field]: type->fields) {
+		for (auto& [name, field]: fields) {
 			if (name == "this" or name == "base") continue;
 			if (field) decl += "    " + (field->type->name) + "\n";
 		}
