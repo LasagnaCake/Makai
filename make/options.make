@@ -30,6 +30,12 @@ else
 export os:=win
 endif
 
+ifdef arch
+export arch
+else
+export arch:=arm64
+endif
+
 o?=2
 export o
 
@@ -43,7 +49,11 @@ export math
 ifdef compiler
 export compiler
 else
+ifeq ($(os),win)
 compiler:=msys2-gcc
+else
+compiler:=gcc
+endif
 export compiler
 endif
 

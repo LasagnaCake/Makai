@@ -99,7 +99,7 @@ endif
 
 package-lib:
 	@cd output
-	@7z a -tzip $(os)-$(compiler)-$(BUILDTYPE).zip bin lib include -r -mem=AES256
+	@7z a -tzip $(os)-$(compiler)-$(arch)-$(BUILDTYPE).zip bin lib include -r -mem=AES256
 	@cd ..
 
 it: clear-output copy-headers copy-ex-headers $(LINK_EXTERN) all $(TOOLING_STEP)
