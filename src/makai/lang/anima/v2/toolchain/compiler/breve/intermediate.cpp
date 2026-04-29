@@ -326,7 +326,9 @@ static Namespace::AttributeRef createSharedAttribute() {
 				ov->outEntry = name;
 				ov->dynlib = lib;
 				ov->optional = v["optional"];
+				auto const pent = ov->entry;
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ns->function->name + (ov->methodOf ? ov->methodOf->name : "");
+				ov->entry += "_" + lib + pent;
 			}
 	};
 	return attrib;
