@@ -1369,7 +1369,6 @@ void ATransformer::Context::registerImport(Namespace::Instance const& ns) {
 
 ATransformer::Context::Context(): Intermediate() {
 	using enum Core::BasicType;
-	using Flags = Core::Definition::Flags;
 	root->subspaces["##T0_IMPORTS"]		= Namespace::Instance::create("##T0_IMPORTS");
 	root->subspaces["##T1_USER_TYPES"]	= Namespace::Instance::create("##T1_USER_TYPES");
 	root->subspaces["##T2_FUNCTIONS"]	= Namespace::Instance::create("##T2_FUNCTIONS");
