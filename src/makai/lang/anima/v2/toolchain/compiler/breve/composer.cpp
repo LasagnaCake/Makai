@@ -115,6 +115,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			for (auto& [name, attrib]: type->scope->meta)
 				if (!attrib->value.isUndefined())
 					decl += "    " + name + " `" + attrib->value.toFLOWString("      ") + "`\n";
+				else
+					decl += "    " + name + " `{}`\n";
 			decl += "  ]";
 		}
 	}

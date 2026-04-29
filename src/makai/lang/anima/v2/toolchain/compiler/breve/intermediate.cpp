@@ -227,7 +227,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 				case AV2_BT_REAL128: kind = DVK_REAL;
 				default: Transformer::ATransformer::Context::error("Invalid basic type for attribute!", var->node);
 			}
-			attrib->fields[name] = {kind, var->value};
+			attrib->fields[name] = {kind, var->value, var->scope->meta.contains("Path")};
 			attrib->transform = ATTRIBUTE_TRANSFORMER() {
 			};
 		}
@@ -302,6 +302,18 @@ static Namespace::AttributeRef createGlobalAttribute() {
 		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type.raw())
 			Transformer::ATransformer::Context::error("Global variable type mismatch!", ns->node);
 		ns->variable->source = "move $" + srcName;
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createPathAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Path";
+	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		// Only checked inside Attribute structs
 	};
 	return attrib;
 }
