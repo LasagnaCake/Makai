@@ -5,6 +5,13 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
+		enum class State {
+			AV2_RES_READY,
+			AV2_RES_INITIALIZING,
+			AV2_RES_RUNNING,
+			AV2_RES_FINISHED,
+		};
+
 		struct Error {
 			String				message;
 			usize				location;
@@ -23,11 +30,16 @@ namespace Makai::Anima::V2::Runtime {
 
 		Nullable<Error>	error() const	{return err;}
 
+		bool running() const;
+		bool finished() const;
+
 	protected:
 		virtual Context::Storage	external	(String const& name, bool const byRef	);
 		Context::Storage&			global		(uint64 const globalID					);
 
 		constexpr bool inStrictMode() const {return context.scopeStack.back().mode == Core::ContextMode::AV2_CM_STRICT;}
+
+		void initialize();
 
 		void crash(Engine::Error const& error);
 
@@ -106,7 +118,7 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();
 
-		bool				isFinished	= false;
+		State				engineState	= State::AV2_RES_READY;
 		bool				paused		= false;
 		Core::Module		program;
 		Core::Instruction	current;

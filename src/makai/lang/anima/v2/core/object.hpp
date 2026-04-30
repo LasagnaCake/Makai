@@ -345,8 +345,8 @@ namespace Makai::Anima::V2::Core {
 		Object(Object&&)			= default;
 		Object& operator=(Object&&)	= default;
 
-		Instance<Definition>	getCurrentType()	const;
-		Instance<Definition>	getOriginalType()	const;
+		Handle<Definition>	getCurrentType()	const;
+		Handle<Definition>	getOriginalType()	const;
 
 		template <class T> explicit operator T() const {return toValue<T>();}
 

@@ -1,5 +1,7 @@
 #include "engine.hpp"
 #include "context.hpp"
+#include "makai/lang/anima/v2/core/forward.hpp"
+#include "makai/lang/anima/v2/core/type.hpp"
 
 using Makai::Anima::V2::Runtime::Engine;
 
@@ -15,12 +17,12 @@ bool Engine::yieldCycle() {
 		context.scopeStack.pushBack({});
 	if (context.scopeStack.back().prevMode != context.scopeStack.back().mode)
 		revertContext = true;
-	if (isFinished) return false;
+	if (!running()) return false;
 	do {
 		DEBUGLN("Next instruction, please!");
 		advance();
-	} while (current.name == Instruction::Name::AV2_IN_NO_OP && current.type);
-	if (isFinished) return false;
+	} while (running() && current.name == Instruction::Name::AV2_IN_NO_OP && current.type);
+	if (!running()) return false;
 	DEBUGLN("Instruction: ", Instruction::asString(current.name));
 	switch (current.name) {
 		using enum Instruction::Name;
@@ -59,14 +61,14 @@ bool Engine::yieldCycle() {
 //		default: crash(invalidInstructionError());
 	}
 	if (revertContext) context.scopeStack.back().mode = context.scopeStack.back().prevMode;
-	return !isFinished;
+	return running();
 }
 
 bool Engine::process() {
 	paused = false;
 	while (Engine::yieldCycle() && !paused) {}
 	DEBUGLN("Done processing for now!");
-	return !isFinished;
+	return running();
 }
 
 void Engine::crash(Engine::Error const& e) {
@@ -591,7 +593,7 @@ void Engine::v2Op() {
 
 void Engine::terminate() {
 	DEBUGLN("Terminating...");
-	isFinished = true;
+	engineState = State::AV2_RES_FINISHED;
 
 }
 
@@ -600,6 +602,7 @@ void Engine::reset() {
 	context		= {};
 	current		= {};
 	err			= {};
+	engineState = State::AV2_RES_READY;
 }
 
 void Engine::load(Module const& prog) {
@@ -608,7 +611,62 @@ void Engine::load(Module const& prog) {
 }
 
 void Engine::execute() {
-	isFinished	= false;
+	if (running()) return;
+	engineState = State::AV2_RES_INITIALIZING;
+}
+
+void Engine::initialize() {
+	if (engineState != State::AV2_RES_INITIALIZING) return;
+	Map<uint64, uint64> inheritances;
+	Map<uint64, List<uint64>> fields;
+	for (auto const& [type, i]: Range::expand(program.detail.types)) {
+		Instance<Core::Definition> dt = dt.create();
+		dt->hash = type.hash;
+		if (type.base) inheritances[i] = *type.base;
+		if (type.fields.size())
+			fields[i] = type.fields;
+		dt->basic = type.basic;
+		dt->flags = type.flags;
+		if (type.basic) {
+			auto const basic = *type.basic;
+			switch (basic) {
+				case Core::BasicType::AV2_BT_BOOL:		dt->byteSize = sizeof(bool); break;
+				case Core::BasicType::AV2_BT_INT8:		dt->byteSize = sizeof(int8); break;
+				case Core::BasicType::AV2_BT_UINT8:		dt->byteSize = sizeof(uint8); break;
+				case Core::BasicType::AV2_BT_INT16:		dt->byteSize = sizeof(int16); break;
+				case Core::BasicType::AV2_BT_UINT16:	dt->byteSize = sizeof(uint16); break;
+				case Core::BasicType::AV2_BT_INT32:		dt->byteSize = sizeof(int32); break;
+				case Core::BasicType::AV2_BT_UINT32:	dt->byteSize = sizeof(uint32); break;
+				case Core::BasicType::AV2_BT_INT64:		dt->byteSize = sizeof(int64); break;
+				case Core::BasicType::AV2_BT_UINT64:	dt->byteSize = sizeof(uint64); break;
+				case Core::BasicType::AV2_BT_REAL32:	dt->byteSize = sizeof(float32); break;
+				case Core::BasicType::AV2_BT_REAL64:	dt->byteSize = sizeof(float64); break;
+				case Core::BasicType::AV2_BT_REAL128:	dt->byteSize = sizeof(float128); break;
+				case Core::BasicType::AV2_BT_CHAR:		dt->byteSize = sizeof(UTF8Char); break;
+				case Core::BasicType::AV2_BT_STRING:	dt->byteSize = sizeof(UTF8String); break;
+				case Core::BasicType::AV2_BT_VECTOR:	dt->byteSize = sizeof(Vector4); break;
+				case Core::BasicType::AV2_BT_MATRIX:	dt->byteSize = sizeof(Matrix4x4); break;
+				case Core::BasicType::AV2_BT_BYTES:		dt->byteSize = sizeof(Bytes<>); break;
+				case Core::BasicType::AV2_BT_TYPEID:	dt->byteSize = sizeof(Core::TypeID); break;
+				case Core::BasicType::AV2_BT_ANY:
+				case Core::BasicType::AV2_BT_NOT_A_BASIC_TYPE:
+				case Core::BasicType::AV2_BT_VOID:
+				case Core::BasicType::AV2_BT_NULL: dt->byteSize = 0; break;
+			}
+			dt->alignment = 1;
+			Definition::makeBasic(*dt);
+		} else {
+			dt->alignment = type.alignment;
+			dt->byteSize = type.byteSize;
+		}
+		context.art.types.addElement(dt);
+	}
+	for (auto const& [self, base]: inheritances)
+		context.art.types.values[self]->base = context.art.types.values[base].asWeak();
+	for (auto const& [self, fields]: fields)
+		for (auto const& field: fields)
+			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
+	engineState = State::AV2_RES_RUNNING;
 }
 
 void Engine::v2SetContext() {

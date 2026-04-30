@@ -159,30 +159,44 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_FINAL			= 1 << 11;
 		};
 
-		bool canBecome(Instance<Definition> const& type) const {
+		bool canBecome(Handle<Definition> const& type) const {
 			if (type == base) return true;
-			Instance<Definition> current = base;
+			Handle<Definition> current = base;
 			while ((current = current->base))
 				if (current == type) return true;
 			return false;
 		}
 
+		static void makeBasic(Definition& type);
+
 		uint64						flags		= 0;
 		Nullable<BasicType>			basic;
-		Instance<Definition>		base		= nullptr;
+		Handle<Definition>			base		= nullptr;
 		uint64						byteSize	= 0;
 		uint64						alignment	= 1;
-		List<Instance<Definition>>	fields;
+		List<Handle<Definition>>	fields;
 
 		Data::Value::ObjectType		meta;
 
-		Functor<void(ptr<void>)>							construct;
-		Functor<void(ptr<void>, ptr<void const>)>			copy;
-		Functor<void(ptr<void>)>							destruct;
-		Functor<int64(ptr<void const>, ptr<void const>)>	compare;
+		using Constructor	= Functor<void(ptr<void>)>;
+		using Destructor	= Functor<void(ptr<void>)>;
+		using Cloner		= Functor<void(ptr<void>, ptr<void const>)>;
+		using Comparator	= Functor<int64(ptr<void const>, ptr<void const>)>;
+		using Stringifier	= Functor<UTF8String(Object const&)>;
 
-		Functor<UTF8String(Object const&)>					toStringInternal;
+		Constructor	construct;
+		Destructor	destruct;
+		Cloner		copy;
+		Comparator	compare;
+
+		Stringifier	toStringInternal;
 	};
+
+	Definition::Constructor	constructorOf(BasicType const type);
+	Definition::Destructor	destructorOf(BasicType const type);
+	Definition::Cloner		clonerOf(BasicType const type);
+	Definition::Comparator	comparatorOf(BasicType const type);
+	Definition::Stringifier	stringifierOf(BasicType const type);
 }
 
 #endif

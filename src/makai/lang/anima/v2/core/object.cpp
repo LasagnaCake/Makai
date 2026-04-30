@@ -77,11 +77,10 @@ Object::Storage Object::cloneFrom(usize const index) const {
 	if (isArray() && origin->base->flags & Definition::Flags::AV2_DF_CLONABLE) {
 		mem->resize(origin->base->byteSize);
 		origin->copy(mem->data(), addr);
-		return create(mem, type->base, origin->base);
+		return create(mem, type->base.raw(), origin->base.raw());
 	}
 	return nullptr;
 }
-
 
 usize Object::count() const {
 	if (!(content & content->size())) return 0;
@@ -113,10 +112,10 @@ Object::Accessor const& Object::Accessor::set(Object::Storage const& value) cons
 	return *this;
 }
 
-Makai::Instance<Definition> Object::getCurrentType() const {
-	return type;
+Makai::Handle<Definition> Object::getCurrentType() const {
+	return type.asWeak();
 }
 
-Makai::Instance<Definition> Object::getOriginalType() const {
-	return origin;
+Makai::Handle<Definition> Object::getOriginalType() const {
+	return origin.asWeak();
 }

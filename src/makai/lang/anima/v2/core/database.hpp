@@ -33,6 +33,10 @@ namespace Makai::Anima::V2::Core {
 			return nullptr;
 		};
 
+		void addElement(ElementType const& elem) {
+			values.pushBack(elem);
+		}
+
 		StorageType values;
 	};
 }
