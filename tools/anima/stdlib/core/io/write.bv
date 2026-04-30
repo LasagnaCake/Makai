@@ -2,14 +2,14 @@ using import core.types
 
 module IO {
 	@Shared(lib = av2console, name = "av2/console/write_string", optional = true)
-	write :: (what: string) -> void;
+	write :: (what: string) -> void
 
 	@Shared(lib = av2console, name = "av2/console/writLine_string", optional = true)
-	writeLine :: (what: string) -> void;
+	writeLine :: (what: string) -> void
 
 	@Shared(lib = av2console, name = "av2/console/write_any", optional = true)
-	write :: (what: any) -> void;
+	write :: (what: any) -> void
 
 	@Shared(lib = av2console, name = "av2/console/writeLine_any", optional = true)
-	writeLine :: (what: any) -> void;
+	writeLine :: (what: any) -> void
 }
