@@ -16,7 +16,7 @@ bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& p
 		OS::FS::concatenate(OS::FS::currentDirectory(), path),
 	};
 	if (auto const artHome = getenv("ART_HOME"))
-		paths.pushBack(OS::FS::concatenate(artHome, path));
+		paths.pushBack(OS::FS::concatenate(artHome, "av2", path));
 	for (auto const& p: paths)
 		if (OS::FS::exists(p))
 			return context.art.openLibrary(path);
