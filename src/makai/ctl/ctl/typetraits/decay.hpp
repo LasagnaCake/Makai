@@ -108,6 +108,24 @@ constexpr T* addressof(T& v) noexcept {return &v;}
 template<class T>
 constexpr pointer anull(T& v) noexcept {return const_cast<pointer>(static_cast<ref<void volatile const>>(addressof(v)));}
 
+/// @brief Accesses an address as if it was of another type, regardless of its origin type.
+/// @tparam TFrom Source type.
+/// @tparam TTo Destination type.
+/// @param v Address to access.
+/// @return Reference to value in address, as the given type.
+/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO!
+template<class TTo, class TFrom>
+constexpr TTo& violate(ref<TFrom> const v) noexcept {return *reinterpret_cast<ref<TTo>>(v);}
+
+/// @brief Accesses an address as if it was of another type, regardless of its origin type.
+/// @tparam TFrom Source type.
+/// @tparam TTo Destination type.
+/// @param v Address to access.
+/// @return Reference to value in address, as the given type.
+/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO!
+template<class TTo, class TFrom>
+constexpr TTo const& violate(cref<TFrom> const v) noexcept {return *reinterpret_cast<cref<TTo>>(v);}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_TYPETRAITS_DECAY_H

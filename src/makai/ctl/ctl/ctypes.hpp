@@ -197,6 +197,17 @@ using owner = ptr<T>;
 template<class T>
 using ref = ptr<T>;
 
+/// @brief
+///		Syntatic sugar for `T const*`.
+///		Hints to the programmer that the value is not owned AND is constant.
+///
+///		- If field/parameter, then it does not take ownership of the data pointed to.
+///
+///		- If return value, then the caller does not take ownership of the data pointed to.
+/// @tparam T Pointed type.
+template<class T>
+using cref = ptr<T const>;
+
 /// @brief Syntatic sugar for `T const&`. Indicates a variable is a read-only reference.
 template<class T> using in		= T const&;
 /// @brief Syntatic sugar for `T&`. Indicates a variable is a reference that can be read from, and written to.

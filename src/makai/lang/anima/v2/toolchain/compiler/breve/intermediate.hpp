@@ -217,6 +217,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Handle<TypeDecl>				methodOf;
 			Variant							variant = Variant::AV2_TCB_FOV_NONE;
 			bool							optional = false;
+			bool							hasImplementation = false;
+
+			UTF8Dictionary<Metadata::Instance> meta;
 
 			UTF8String prototype() const;
 

@@ -52,8 +52,16 @@ namespace Makai::Anima::V2::Core {
 		}
 	};
 
-	struct TypeID {
+	struct TypeID: Ordered {
 		uint64 id;
+
+		constexpr OrderType operator<=>(TypeID const& other) const {
+			return id <=> other.id;
+		}
+
+		constexpr bool operator==(TypeID const& other) const {
+			return id == other.id;
+		}
 	};
 }
 

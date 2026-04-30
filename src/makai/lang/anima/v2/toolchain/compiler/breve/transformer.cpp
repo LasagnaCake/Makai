@@ -981,7 +981,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			auto args = ov->arguments;
 			args.appendBack(optionals.sliced(0, -(i+1)));
 			if (auto const f = fn.overloadFromVariables(args)) {
-				if (f->scope || f->result != ov->result || ov->outEntry.size())
+				if (f->hasImplementation)
 					context.error("Redeclaration of function overload!", node);
 				if (!implScope) {
 					auto const ovName = scope->function->name + overloadName(args);
@@ -1011,6 +1011,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 					overloadScope->impl->writePostLine("call", implOv->entry);
 					overloadScope->impl->writePostLine("end");
 					overloadScope->impl->writePostLine("@def .\n");
+					oo->hasImplementation = true;
 				}
 				context.pop(1);
 			}
@@ -1038,6 +1039,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		context.scopeStack.popBack();
 		if (!implOv->result && expr.source)
 			implOv->result = expr.type;
+		implOv->hasImplementation = true;
 	}
 	if (!implOv->result)
 		implOv->result = context.basicType("void");
@@ -1151,6 +1153,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
 	Function::ArgTypes args;
+	if (fn.shouldBePushed())
+		context.top()->impl->writeMainLine("push", *fn.source);
 	for (auto const& arg: node->children) {
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
@@ -1166,9 +1170,14 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	DEBUGLN("]");
 	auto const ovLookupSig = args.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
 	DEBUGLN("Looking for: [", ovLookupSig, "]");
-	if (!f.overloadFromTypes(args))
-		context.error("Requested overload does not exist!", node);
-	auto& ov = *f.overloadFromTypes(args);
+	auto memArgs = args;
+	if (fn.source)
+		memArgs.reverse().pushBack(fn.type).reverse();
+	if (!(f.overloadFromTypes(args) or f.overloadFromTypes(memArgs)))
+		context.error("No suitable overload exists!", node);
+	auto const ovf = f.overloadFromTypes(args);
+	auto& ov = ovf ? *ovf : *f.overloadFromTypes(memArgs);
+	context.top()->impl->writeMainLine("call", ov.entry);
 	if (
 		(
 			ov.variant == decltype(ov.variant)::AV2_TCB_FOV_NONE
@@ -1176,7 +1185,6 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		)
 	&&	Makai::Regex::contains(fn.source.orElse("").toString(), "stack")
 	) context.top()->impl->writeMainLine("pop");
-	context.top()->impl->writeMainLine("call", ov.entry);
 	return {{"move stack[-0]"}, ov.result->scope.raw(), ov.result};
 }
 

@@ -332,9 +332,9 @@ static Namespace::AttributeRef createSharedAttribute() {
 		auto const name = (v["name"].getString());
 		auto const lib = (v["lib"].getString());
 		for (auto& ov: ns->function->overloads)
-			if ((!ov->scope) && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
+			if (!ov->hasImplementation) {
 				DEBUGLN("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Applying shared attribute...");
-				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_DYNLIB;
+				ov->hasImplementation = true;
 				ov->outEntry = name;
 				ov->dynlib = lib;
 				ov->optional = v["optional"];
@@ -374,9 +374,9 @@ static Namespace::AttributeRef createMemberAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Member";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->fields["type"] = {.type = DVK_STRING, .path = true};
+	attrib->fields["of"] = {.type = DVK_STRING, .path = true};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		auto const bns = inter.resolve(Makai::UTF8String(v["type"].getString()).split(Makai::UTF8Char{'/'}));
+		auto const bns = inter.resolve(Makai::UTF8String(v["of"].getString()).split(Makai::UTF8Char{'/'}));
 		if (!(bns && bns->type))
 			Transformer::ATransformer::Context::error("Symbol must be a type!", ns->node);
 		auto const bt = bns->type;
@@ -385,7 +385,7 @@ static Namespace::AttributeRef createMemberAttribute() {
 		for (auto& ov: ns->function->overloads)
 			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
 				if (!(ov->arguments.size() >= 1 && ov->arguments[0]->type == bt.asWeak()))
-					Transformer::ATransformer::Context::error("Missing appropriate [self] parameter for member function!", ns->node);
+					Transformer::ATransformer::Context::error("Missing appropriate [this] parameter for member function!", ns->node);
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
 			}
 	};
@@ -604,8 +604,8 @@ static Namespace::AttributeRef createARTCallAttribute() {
 		static usize id = 0;
 		auto const name = (v["name"].getString());
 		for (auto& ov: ns->function->overloads)
-			if ((!ov->scope) && ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
-				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_ART_CALL;
+			if (!ov->hasImplementation) {
+				ov->hasImplementation = true;
 				ov->outEntry = name;
 				ov->optional = v["optional"];
 				ov->entry = "__art_call_" + Makai::toString(id) + ov->entry;
