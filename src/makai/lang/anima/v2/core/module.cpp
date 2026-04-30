@@ -18,14 +18,14 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
 	if (code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
-		"Failed to load bytecode section"
-		CTL_CPP_PRETTY_FUNCTION
+		"Failed to load bytecode section",
+		CTL_CPP_PRETTY_SOURCE
 	);
 	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
 	if (jumps.empty()) throw Error::FailedAction(
 		"Failed to load file!",
 		"Failed to load jump table section",
-		CTL_CPP_PRETTY_FUNCTION
+		CTL_CPP_PRETTY_SOURCE
 	);
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
