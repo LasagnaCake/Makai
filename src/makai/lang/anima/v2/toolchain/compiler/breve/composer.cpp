@@ -13,13 +13,11 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		Makai::UTF8String ovstr;
 		DEBUGLN("Name: ", ov->entry);
 		DEBUGLN("Variant: ", ov->serialize()["variant"].getString());
-		switch (ov->variant) {
-			using ET = As<decltype(ov->variant)>;
-			using enum ET;
-			case AV2_TCB_FOV_ART_CALL:	ovstr += "@out[\"" + ov->outEntry + "\"] ";								break;
-			case AV2_TCB_FOV_DYNLIB:	ovstr += "@shared[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";	break;
-			default:					ovstr += "@fn ";														break;
-		}
+		if (ov->dynlib.size())
+			ovstr += "@shared[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";
+		else if (ov->outEntry.size())
+			ovstr += "@out[\"" + ov->outEntry + "\"] ";
+		else ovstr += "@fn ";
 		if (ov->variant == decltype(ov->variant)::AV2_TCB_FOV_DYNLIB)
 			ovstr += ov->optional ? "optional " : "required ";
 		composer.functions.pushBack(
