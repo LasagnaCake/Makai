@@ -115,6 +115,7 @@ namespace Makai::Anima::V2::Core {
 			bool	dynamic:	1;
 			bool	external:	1;
 			bool	optional:	1;
+			bool	noResult:	1;
 		};
 
 		/// @brief Jump leap.

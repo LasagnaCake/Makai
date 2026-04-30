@@ -21,12 +21,14 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 		"Failed to load bytecode section",
 		CTL_CPP_PRETTY_SOURCE
 	);
+	DEBUGLN("Bytecode Section: ", code.size());
 	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
 	if (jumps.empty()) throw Error::FailedAction(
 		"Failed to load file!",
 		"Failed to load jump table section",
 		CTL_CPP_PRETTY_SOURCE
 	);
+	DEBUGLN("Jump Table Section: ", jumps.size());
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 	mod.sym = Module::Symbols::deserialize(v["sym"]);
@@ -46,7 +48,7 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 		mod.version	= v["version"];
 	else mod.art = ART_VER;
 	switch (mod.art.major) {
-		case 2: deserializeV1(mod, v); break;
+		case 1: deserializeV1(mod, v); break;
 		default: break;
 	}
 	return mod;

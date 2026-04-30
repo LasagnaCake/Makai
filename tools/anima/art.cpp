@@ -47,7 +47,7 @@ struct ARTEMain: Makai::AMain {
 			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 			engine.execute();
 			while (engine.process()) {
-				writeLine("Frame!");
+				DEBUGLN("Frame!");
 			};
 			engine.error().then([&] (auto const& e) {
 				writeLine("!!! ERROR !!!");

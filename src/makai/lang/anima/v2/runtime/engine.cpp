@@ -252,7 +252,11 @@ void Engine::v2Call() {
 				}
 			).onError(
 				[&] (auto const& e) {
-					if (invocation.optional) return;
+					if (invocation.optional) {
+						if (!invocation.noResult)
+							context.globalValueStack.pushBack(nullptr);
+						return;
+					}
 					Makai::String err = "EXTERNAL FUNCTION: ";
 					switch (e) {
 						using enum Core::Context::Error;
@@ -646,6 +650,7 @@ void Engine::load(Module const& prog) {
 void Engine::execute() {
 	if (running()) return;
 	engineState = State::AV2_RES_INITIALIZING;
+	load();
 }
 
 void Engine::load() {

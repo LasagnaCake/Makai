@@ -514,6 +514,7 @@ static void doCall(Context& context, bool dynamic = false) {
 		auto const m = context.getMethod(id);
 		invoke.external = m->out;
 		invoke.optional = m->optional;
+		invoke.noResult = context.program.detail.types[m->retType].flags & Definition::Flags::AV2_DF_NO_RESULT;
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
