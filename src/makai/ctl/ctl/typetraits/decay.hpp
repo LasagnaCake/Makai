@@ -113,7 +113,7 @@ constexpr pointer anull(T& v) noexcept {return const_cast<pointer>(static_cast<r
 /// @tparam TTo Destination type.
 /// @param v Address to access.
 /// @return Reference to value in address, as the given type.
-/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO!
+/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO! This effectively is a `reinterpret_cast`!
 template<class TTo, class TFrom>
 constexpr TTo& violate(ref<TFrom> const v) noexcept {return *reinterpret_cast<ref<TTo>>(v);}
 
@@ -122,9 +122,27 @@ constexpr TTo& violate(ref<TFrom> const v) noexcept {return *reinterpret_cast<re
 /// @tparam TTo Destination type.
 /// @param v Address to access.
 /// @return Reference to value in address, as the given type.
-/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO!
+/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO! This effectively is a `reinterpret_cast`!
 template<class TTo, class TFrom>
 constexpr TTo const& violate(cref<TFrom> const v) noexcept {return *reinterpret_cast<cref<TTo>>(v);}
+
+/// @brief Accesses an object as if it was of another type, regardless of its origin type.
+/// @tparam TFrom Source type.
+/// @tparam TTo Destination type.
+/// @param v Address to access.
+/// @return Reference to value in address, as the given type.
+/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO! This effectively is a `reinterpret_cast`!
+template<class TTo, class TFrom>
+constexpr TTo& violate(TFrom& v) noexcept {return violate<TTo>(addressof(v));}
+
+/// @brief Accesses an object as if it was of another type, regardless of its origin type.
+/// @tparam TFrom Source type.
+/// @tparam TTo Destination type.
+/// @param v Address to access.
+/// @return Reference to value in address, as the given type.
+/// @warn DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE GETTING INTO! This effectively is a `reinterpret_cast`!
+template<class TTo, class TFrom>
+constexpr TTo const& violate(TFrom const& v) noexcept {return violate<TTo>(addressof(v));}
 
 CTL_NAMESPACE_END
 
