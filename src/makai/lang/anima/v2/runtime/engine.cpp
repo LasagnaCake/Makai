@@ -13,6 +13,7 @@ bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& p
 	StringList paths = {
 		path,
 		OS::FS::concatenate(OS::FS::sourceLocation(), path),
+		OS::FS::concatenate(OS::FS::currentDirectory(), path),
 	};
 	if (auto const artHome = getenv("ART_HOME"))
 		paths.pushBack(OS::FS::concatenate(artHome, path));
