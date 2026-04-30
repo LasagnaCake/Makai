@@ -43,10 +43,10 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 	Module mod;
 	if (v.contains("art"))
 		mod.art		= v["art"];
-	else mod.art	= Module::Version{1};
+	else mod.art	= ART_VER;
 	if (v.contains("version"))
-		mod.version	= v["version"];
-	else mod.art = ART_VER;
+		mod.version		= v["version"];
+	else mod.version	= Module::Version{0};
 	switch (mod.art.major) {
 		case 1: deserializeV1(mod, v); break;
 		default: break;
