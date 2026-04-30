@@ -76,7 +76,7 @@ else
 dynlib ?=so
 endif
 
-.PHONY: debug release all tooling packer concerto minimac brevec arte finale
+.PHONY: debug release all tooling packer concerto minimac brevec arte av2lib finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 

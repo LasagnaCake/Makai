@@ -17,6 +17,10 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	;
 	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
 	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
+	if (code.empty()) throw Error::FailedAction(
+		"Failed to load file!",
+		CTL_CPP_PRETTY_FUNCTION
+	);
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 	mod.sym = Module::Symbols::deserialize(v["sym"]);
