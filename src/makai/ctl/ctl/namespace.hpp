@@ -36,8 +36,23 @@
 #define CTL_ON_UNIX (1)
 #endif
 
+#if CTL_ON_WINDOWS
 #define CTL_DYNEXPORT __declspec(dllexport)
 #define CTL_DYNIMPORT __declspec(dllimport)
+#elif CTL_ON_UNIX
+#define CTL_DYNEXPORT __attribute__((visibility("default")))
+#define CTL_DYNIMPORT
+#else
+#define CTL_DYNEXPORT
+#define CTL_DYNIMPORT
+#pragma warning "What system is this?"
+#endif
+
+#ifdef CTL_BUILD_MODE
+#define CTL_DYNCALL CTL_DYNEXPORT
+#else
+#define CTL_DYNCALL CTL_DYNIMPORT
+#endif
 
 #define CTL_CDECL extern "C"
 
