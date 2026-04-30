@@ -1668,13 +1668,9 @@ template<usize N> using StaticWideString	= BaseStaticString<wchar_t,	N>;
 /// @brief String literals.
 namespace Literals::Text {
 	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cstring cstr, litsize sz)	{return String(cstr, sz);					}
-	/// @brief CTL `String` literal.
-	constexpr String operator "" s		(cwstring cstr, litsize sz)	{return WideString(cstr, sz).toString();	}
+	constexpr String operator "" s		(cstring cstr, litsize sz)	{return String(cstr, sz);		}
 	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cstring cstr, litsize sz)	{return String(cstr, sz).toWideString();	}
-	/// @brief CTL `WideString` literal.
-	constexpr WideString operator "" ws	(cwstring cstr, litsize sz)	{return WideString(cstr, sz);				}
+	constexpr WideString operator "" ws	(cwstring cstr, litsize sz)	{return WideString(cstr, sz);	}
 }
 #pragma GCC diagnostic pop
 
