@@ -626,8 +626,7 @@ void Engine::load(Module const& prog) {
 	if (!(
 		prog.type == decltype(prog.type)::AV2_CMT_EXE
 	or	prog.type != decltype(prog.type)::AV2_CMT_CLI_EXE
-	))
-		return;
+	)) return;
 	program = prog;
 }
 
