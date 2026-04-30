@@ -53,6 +53,9 @@ OBJ := $(EXTRAOBJS)
 
 ifeq ($(os),win)
 WINFLAG := -mwindows
+dynlib ?=dll
+else
+dynlib ?=so
 endif
 
 .PHONY: debug release all libs packer concerto minimac brevec arte finale
@@ -65,7 +68,7 @@ all: libs
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).dll
+	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).$(dynlib)
 endef
 
 prologue:
