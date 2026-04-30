@@ -11,8 +11,7 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 			{}
 		).toList<String>(
 			[] (auto& e) {
-				DEBUGLN("Element: ", e.toFLOWString());
-				return e.getString();
+				return e.isString() ? e.getString() : "";
 			}
 		)
 	;
