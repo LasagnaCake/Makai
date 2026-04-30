@@ -6,11 +6,12 @@ using namespace Makai::Anima::V2::Core;
 
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	mod.strings =
-		v.fetch(
+		v.fetch<Makai::Data::Value::ArrayType>(
 			"strings",
-			Makai::Data::Value::ArrayType()
+			{}
 		).toList<String>(
 			[] (auto& e) {
+				DEBUGLN("Element: ", e.toFLOWString());
 				return e.getString();
 			}
 		)
