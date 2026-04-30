@@ -1,51 +1,51 @@
 using import core.types
 
 module Convert {
-	toString :: (what: string) => what;
+	toString :: (what: string) => what
 
 	@Shared(lib = av2tostring, name = "av2/toString_any")
-	toString :: (what: any) -> string;
+	toString :: (what: any) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_bool")
-	toString :: (what: bool) -> string;
+	toString :: (what: bool) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_int8")
-	toString :: (what: int8) -> string;
+	toString :: (what: int8) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_int16")
-	toString :: (what: int16) -> string;
+	toString :: (what: int16) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_int32")
-	toString :: (what: int32) -> string;
+	toString :: (what: int32) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_int64")
-	toString :: (what: int64) -> string;
+	toString :: (what: int64) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_uint8")
-	toString :: (what: uint8) -> string;
+	toString :: (what: uint8) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_uint16")
-	toString :: (what: uint16) -> string;
+	toString :: (what: uint16) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_uint32")
-	toString :: (what: uint32) -> string;
+	toString :: (what: uint32) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_uint64")
-	toString :: (what: uint64) -> string;
+	toString :: (what: uint64) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_float32")
-	toString :: (what: float32) -> string;
+	toString :: (what: float32) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_float64")
-	toString :: (what: float64) -> string;
+	toString :: (what: float64) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_float128")
-	toString :: (what: float128) -> string;
+	toString :: (what: float128) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_char")
-	toString :: (what: char) -> string;
+	toString :: (what: char) -> string
 
 	@Shared(lib = av2tostring, name = "av2/toString_vector")
-	toString :: (what: vector) -> string;
+	toString :: (what: vector) -> string
 
 }
