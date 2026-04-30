@@ -593,8 +593,24 @@ void Engine::v2Op() {
 
 void Engine::terminate() {
 	DEBUGLN("Terminating...");
+	if (engineState == State::AV2_RES_RUNNING && program.exit) {
+		engineState = State::AV2_RES_FINISHED;
+		jumpBy(*program.exit, false);
+		while (running()) process();
+	}
 	engineState = State::AV2_RES_FINISHED;
+}
 
+bool Engine::running() const {
+	return (
+		engineState == State::AV2_RES_INITIALIZING
+	or	engineState == State::AV2_RES_RUNNING
+	or	engineState == State::AV2_RES_EXITING
+	);
+}
+
+bool Engine::finished() const {
+	return (engineState == State::AV2_RES_FINISHED);
 }
 
 void Engine::reset() {
@@ -666,6 +682,7 @@ void Engine::initialize() {
 	for (auto const& [self, fields]: fields)
 		for (auto const& field: fields)
 			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
+	jumpBy(*program.entry, false);
 	engineState = State::AV2_RES_RUNNING;
 }
 
