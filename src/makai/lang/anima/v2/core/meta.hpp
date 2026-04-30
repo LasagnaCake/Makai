@@ -65,8 +65,8 @@ namespace Makai::Anima::V2::Core::Meta {
 				return {obj.clone()};
 			}
 
-			static Object::Storage convert(Database<Definition>& db, Any const&) {
-				return Object::create(db.byNameHash(ART_HASH).front());
+			static Object::Storage convert(Database<Definition>& db, Any const& value) {
+				return Object::create(value.value, db.byNameHash(ART_HASH).front());
 			}
 		};
 
@@ -283,6 +283,86 @@ namespace Makai::Anima::V2::Core::Meta {
 			db,
 			Impl::ListToTuple<Types...>::make(args)
 		);
+	}
+
+	namespace Impl {
+		template <Type::Class T>
+		class EasyImplementor {
+			constexpr static bool const IS_ART_TYPE			= ARTType<T>;
+			constexpr static bool const HAS_CONSTRUCTOR		= Type::Constructible<T>;
+			constexpr static bool const HAS_DESTRUCTOR		= requires {T::~T();};
+			constexpr static bool const HAS_CLONER			= Type::CopyAssignable<T>;
+			constexpr static bool const HAS_COMPARATOR		= requires (T const a, T const b) {{a <=> b} -> Type::Convertible<StandardOrder>;};
+			constexpr static bool const HAS_EXPLICIT_BASE	= requires {typename T::BaseType;};
+
+			constexpr static auto const TYPE_HASH = IS_ART_TYPE ? T::ART_HASH : ConstHasher::hash(nameof<T>());
+
+			static_assert(HAS_CONSTRUCTOR && HAS_DESTRUCTOR, "Type must have a constructor and a destructor!");
+
+			static Definition::Constructor constructor()
+			requires (HAS_CONSTRUCTOR) {
+				return {
+					[] (auto e) {
+						MX::construct<T>(Cast::rewrite<ref<T>>(e));
+					}
+				};
+			}
+
+			static Definition::Destructor destructor()
+			requires (HAS_DESTRUCTOR) {
+				return {
+					[] (auto e) {
+						MX::destruct<T>(Cast::rewrite<ref<T>>(e));
+					}
+				};
+			}
+
+			static Definition::Cloner cloner()
+			requires (HAS_CLONER) {
+				return {
+					[] (auto a, auto b) {
+						violate<T>(a) = violate<T>(b);
+					}
+				};
+			}
+
+			static Definition::Comparator comparator()
+			requires (HAS_COMPARATOR) {
+				return {
+					[] (auto a, auto b) {
+						return enumcast<StandardOrder>(violate<T>(a) <=> violate<T>(b));
+					}
+				};
+			}
+
+			static void implement(Definition& type, Database<Definition>& db) {
+				type.construct = constructor();
+				type.destruct = destructor();
+				type.id = db.values.size();
+				type.name = nameof<T>();
+				if  constexpr (HAS_CLONER) {
+					type.flags |= Definition::Flags::AV2_DF_CLONABLE;
+					type.copy = cloner();
+				}
+				if constexpr (HAS_COMPARATOR)
+					type.compare = comparator();
+				if constexpr (IS_ART_TYPE)
+					type.hash = arthashof<T>();
+				else type.hash = ConstHasher::hash(type.name);
+				type.alignment	= alignof (T);
+				type.byteSize	= sizeof (T);
+				if constexpr (HAS_EXPLICIT_BASE)
+					type.base = db.byNameHash(EasyImplementor<typename T::BaseType>::TYPE_HASH).front();
+				type.flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
+			}
+		};
+	}
+
+	template <class T>
+	constexpr Instance<Definition> implement(Database<Definition>& db) {
+		Instance<Definition> type = type.create();
+		Impl::EasyImplementor<T>::implement(*type, db);
+		return type;
 	}
 }
 

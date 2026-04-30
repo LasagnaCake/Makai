@@ -98,6 +98,30 @@ namespace Makai::Anima::V2::Core {
 			Context& context;
 		};
 
+		struct TypeAdder {
+			template <class T>
+			bool add() const {
+				return context.addExternalType<T>();
+			}
+
+			TypeAdder(Context& context): context(context) {}
+
+		private:
+			Context& context;
+		};
+
+		struct TypeRemover {
+			template <class T>
+			void remove() const {
+				context.removeExternalType<T>();
+			}
+
+			TypeRemover(Context& context): context(context) {}
+
+		private:
+			Context& context;
+		};
+
 		template <class TFunc>
 		bool addExternalMethod(String const& name, TFunc const& f) {
 			return addExternalMethod(ConstHasher::hash(name), f);
@@ -168,6 +192,26 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		bool openLibrary(String const& path);
+
+		template <class T>
+		bool addExternalType() {
+			if (hasExternalType<T>()) return false;
+			types.addElement(Meta::implement<T>(types));
+			return true;
+		}
+
+		template <class T>
+		bool hasExternalType() const {
+			return externalMethods.contains(Meta::Impl::EasyImplementor<T>::NAME_HASH);
+		}
+
+		template <class T>
+		void removeExternalType() {
+			if (!hasExternalType<T>()) return;
+			auto const type = types.queryByNameHash(Meta::Impl::EasyImplementor<T>::NAME_HASH).front();
+			if (type->flags & Definition::Flags::AV2_DF_ART_EQUIVALENT)
+				types.values[type->id] = nullptr;
+		}
 
 		void loadLibraries();
 		void unloadLibraries();

@@ -991,6 +991,32 @@ static void validateType(Context& context, Context::Declaration& type) {
 		type.byteSize	= 0;
 		type.alignment	= 1;
 	}
+	if (type.basic) {
+		switch (*type.basic) {
+			case BasicType::AV2_BT_VOID:	type.hash = Makai::ConstHasher::hash("void");		break;
+			case BasicType::AV2_BT_ANY:		type.hash = Makai::ConstHasher::hash("any");		break;
+			case BasicType::AV2_BT_NULL:	type.hash = Makai::ConstHasher::hash("null");		break;
+			case BasicType::AV2_BT_BOOL:	type.hash = Makai::ConstHasher::hash("bool");		break;
+			case BasicType::AV2_BT_CHAR:	type.hash = Makai::ConstHasher::hash("char");		break;
+			case BasicType::AV2_BT_INT8:	type.hash = Makai::ConstHasher::hash("int8");		break;
+			case BasicType::AV2_BT_INT16:	type.hash = Makai::ConstHasher::hash("int16");		break;
+			case BasicType::AV2_BT_INT32:	type.hash = Makai::ConstHasher::hash("int32");		break;
+			case BasicType::AV2_BT_INT64:	type.hash = Makai::ConstHasher::hash("int64");		break;
+			case BasicType::AV2_BT_UINT8:	type.hash = Makai::ConstHasher::hash("uint8");		break;
+			case BasicType::AV2_BT_UINT16:	type.hash = Makai::ConstHasher::hash("uint16");		break;
+			case BasicType::AV2_BT_UINT32:	type.hash = Makai::ConstHasher::hash("uint32");		break;
+			case BasicType::AV2_BT_UINT64:	type.hash = Makai::ConstHasher::hash("uint64");		break;
+			case BasicType::AV2_BT_REAL32:	type.hash = Makai::ConstHasher::hash("float32");	break;
+			case BasicType::AV2_BT_REAL64:	type.hash = Makai::ConstHasher::hash("float64");	break;
+			case BasicType::AV2_BT_REAL128:	type.hash = Makai::ConstHasher::hash("float128");	break;
+			case BasicType::AV2_BT_STRING:	type.hash = Makai::ConstHasher::hash("string");		break;
+			case BasicType::AV2_BT_BYTES:	type.hash = Makai::ConstHasher::hash("bytes");		break;
+			case BasicType::AV2_BT_VECTOR:	type.hash = Makai::ConstHasher::hash("vector");		break;
+			case BasicType::AV2_BT_MATRIX:	type.hash = Makai::ConstHasher::hash("matrix");		break;
+			case BasicType::AV2_BT_TYPEID:	type.hash = Makai::ConstHasher::hash("type");		break;
+			case BasicType::AV2_BT_NOT_A_BASIC_TYPE: break;
+		}
+	}
 }
 
 static void declareTypeOperators(Context& context, Context::Declaration& type) {}

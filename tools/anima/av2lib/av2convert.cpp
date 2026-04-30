@@ -4,7 +4,7 @@ using namespace Makai;
 using namespace Anima::V2::Core;
 
 struct ConvertLib: ILibrary {
-	void load(Context::MethodAdder const& context) {
+	void load(Context::TypeAdder const& types, Context::MethodAdder const& methods) {
 	}
 };
 

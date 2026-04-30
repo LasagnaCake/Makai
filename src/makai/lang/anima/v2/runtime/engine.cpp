@@ -636,8 +636,14 @@ void Engine::execute() {
 void Engine::initialize() {
 	if (engineState != State::AV2_RES_INITIALIZING) return;
 	Map<uint64, uint64> inheritances;
+	Map<uint64, uint64> boundTypes;
 	Map<uint64, List<uint64>> fields;
 	for (auto const& [type, i]: Range::expand(program.detail.types)) {
+		if (type.flags & Definition::Flags::AV2_DF_ART_EQUIVALENT) {
+			boundTypes[i] = type.hash;
+			context.art.types.values.pushBack(nullptr);
+			continue;
+		}
 		Instance<Core::Definition> dt = dt.create();
 		dt->hash = type.hash;
 		if (type.base) inheritances[i] = *type.base;
@@ -684,7 +690,14 @@ void Engine::initialize() {
 	for (auto const& [self, fields]: fields)
 		for (auto const& field: fields)
 			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
-	jumpBy(*program.entry, false);
+	for (auto const& [self, artEquiv]: boundTypes) {
+		auto const types = context.art.types.byNameHash(artEquiv);
+		if (types.size())
+			context.art.types.values[self] = types.front();
+		else crash(makeErrorHere("ART context does not contain the requested type!"));
+	}
+	if (program.entry) jumpBy(*program.entry, false);
+	else crash(makeErrorHere("Missing entrypoint!"));
 	engineState = State::AV2_RES_RUNNING;
 }
 

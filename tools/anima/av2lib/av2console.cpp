@@ -28,11 +28,11 @@ struct ConsoleLib: ILibrary {
 			writeLine_string(toString(what.value->toDynamicValue()));
 	}
 
-	void load(Context::MethodAdder const& context) {
-		context.add("av2/console/write_string", write_string);
-		context.add("av2/console/write_any", write_any);
-		context.add("av2/console/writeLine_string", writeLine_string);
-		context.add("av2/console/writeLine_any", writeLine_any);
+	void load(Context::TypeAdder const& types, Context::MethodAdder const& methods) {
+		methods.add("av2/console/write_string", write_string);
+		methods.add("av2/console/write_any", write_any);
+		methods.add("av2/console/writeLine_string", writeLine_string);
+		methods.add("av2/console/writeLine_any", writeLine_any);
 	}
 };
 

@@ -26,7 +26,6 @@ Definition::Constructor Core::constructorOf(BasicType const type) {
 		default: return doNotConstruct();
 	}
 }
-}
 
 template <class T>
 static Definition::Destructor castAndDestruct() {

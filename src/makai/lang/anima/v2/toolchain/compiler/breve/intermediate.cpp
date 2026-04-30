@@ -663,6 +663,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createARTCallAttribute());
 	addGlobalAttribute(createEntryAttribute());
 	addGlobalAttribute(createExitAttribute());
+	addGlobalAttribute(createPathAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {
