@@ -230,7 +230,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 			static List<T> construct(Object const& value) {
 				List<T> result;
-				result.resize(value.size());
+				result.resize(value.count());
 				for (usize i: range(value.count()))
 					result.pushBack(ARTTI<T>::construct(value.getAtIndex(i)));
 				return result;
