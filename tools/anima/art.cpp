@@ -8,6 +8,8 @@
 
 constexpr auto const VER = Makai::Data::Version{1};
 
+DEFINE_ERROR_TYPE_EX(EngineError, FailedAction);
+
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	bool cliEnabled = false;
 
@@ -36,6 +38,15 @@ struct ARTEMain: Makai::AMain {
 
 	void write(Makai::String const& what) const override {doWrite(what);}
 
+	static ARTE::Error handleError(ARTE::Error const& e) {
+		throw EngineError(Makai::toString(
+			"!!! ERROR !!!",
+			"\n", "At bytecode offset ", e.location,
+			"\n", "At instruction ", Makai::Anima::V2::Core::Instruction::asString(e.instruction.name),
+			"\n", "Message: [", e.message, "]"
+		));
+	}
+
 	void run(Makai::Data::Value const& args) override {
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
@@ -44,18 +55,15 @@ struct ARTEMain: Makai::AMain {
 		} else {
 			ARTE engine;
 			engine.cliEnabled = args["cli"];
-			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
+			{
+				auto const f = Makai::Anima::V2::Core::Module::deserialize(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
+				engine.load(Makai::File::getFLOW(f));
+			}
 			engine.execute();
 			while (engine.process()) {
 				DEBUGLN("Frame!");
-			};
-			engine.error().then([&] (auto const& e) {
-				writeLine("!!! ERROR !!!");
-				writeLine("At bytecode offset ", e.location);
-				writeLine("At instruction ", Makai::Anima::V2::Core::Instruction::asString(e.instruction.name));
-				writeLine("Message: [", e.message, "]");
-				return e;
-			});
+			}
+			engine.error().then(handleError);
 		}
 	}
 };
