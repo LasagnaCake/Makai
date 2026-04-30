@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), core)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, module object context)
+	$(call compile-all, module object context type)
 endef
 
 all: debug release
