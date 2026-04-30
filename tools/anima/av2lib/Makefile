@@ -32,21 +32,11 @@ else
 LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
 
-DEBUGMODE		:= -DMAKAILIB_DEBUG
-DEBUGCOMPCFG	:= $(COMPILER_CONFIG) -Wall -Wpedantic -Og -ggdb3 -fno-omit-frame-pointer $(DEBUGMODE)
-DEBUGLINKCFG	:= $(LINKER_CONFIG) -Og $(LIBRARIES)
-
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
-LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LEAN) $(LIBRARIES)
+LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LEAN) $(LIBRARIES) -fPIC
 
 COMPILER	:= $(CXX) $(INCLUDES)
-ifeq ($(os),linux)
-LINKER		:= $(CXX)
-else
-LINKER		:= $(CXX) -static
-endif
 
-DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
 EXTRAOBJS := $(ROOT)/output/lib/libmakai.a
 
 LIBNAME	:= archive
@@ -57,32 +47,25 @@ define GET_TIME
 @echo ""
 endef
 
-ifeq ($(debug),1)
-CFG := $(DEBUGCOMPCFG)
-LK := $(DEBUGLINKCFG)
-OBJ := $(DEBUGEXTRAOBJS)
-else
 CFG := $(COMPCFG)
 LK := $(LINKCFG)
 OBJ := $(EXTRAOBJS)
-endif
 
 ifeq ($(os),win)
 WINFLAG := -mwindows
 endif
 
-.PHONY: debug release all tooling packer concerto minimac brevec arte finale
+.PHONY: debug release all libs packer concerto minimac brevec arte finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue av2 finale
+libs: prologue av2 finale
 
-all: tooling
+all: libs
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
-	$(LINKER) -o av2$(strip $(1)).dll av2$(strip $(1)).o $(OBJ) $(LK)
+	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).dll
 endef
 
 prologue:
@@ -91,8 +74,10 @@ prologue:
 	@echo "debug? $(debug)"
 
 av2:
-	$(call compile, io)
+	$(call compile, console)
 	$(call compile, tostring)
+	$(call compile, convert)
+	$(call compile, string)
 
 finale:
 	@echo 

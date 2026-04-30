@@ -16,6 +16,9 @@ struct ConsoleLib: ILibrary {
 	}
 
 	static UTF8String toString(Makai::Data::Value val) {
+		if (val.isUndefined()) return "";
+		if (val.isString()) return val.getString();
+		return val.toFLOWString();
 	}
 
 	static void write_any(Makai::Anima::V2::Core::Any what) {

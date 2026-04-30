@@ -75,7 +75,7 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer brevec minimac arte finale # concerto
+tooling: prologue packer brevec minimac arte av2lib finale # concerto
 
 all: tooling
 
@@ -107,12 +107,16 @@ arte:
 	$(COMPILER) $(CFG) -c art.cpp -o art.o
 	$(LINKER) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
 
+av2lib:
+	$(call submake, $@)
+
 mk-push:
 	cp art$(EXEC_TYPE) ../../output/bin
 	cp minimac$(EXEC_TYPE) ../../output/bin
 	cp brevec$(EXEC_TYPE) ../../output/bin
 #	cp concerto$(EXEC_TYPE) ../../output/bin
 	cp packer$(EXEC_TYPE) ../../output/bin
+	cp av2lib/*.dll ../../output/bin/av2
 
 finale:
 	@echo 
