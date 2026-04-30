@@ -9,6 +9,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_RES_READY,
 			AV2_RES_INITIALIZING,
 			AV2_RES_RUNNING,
+			AV2_RES_EXITING,
 			AV2_RES_FINISHED,
 		};
 
