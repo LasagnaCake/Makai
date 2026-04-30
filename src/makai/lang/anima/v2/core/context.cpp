@@ -21,13 +21,13 @@ void Context::Library::close() {
 
 void Context::loadLibraries() {
 	for (auto& lib: toBeLoaded)
-		lib->load(*this);
+		lib->load(*this, *this);
 	toBeLoaded.clear();
 }
 
 void Context::unloadLibraries() {
 	for (auto& lib: dynlibs)
-		lib.impl->unload(*this);
+		lib.impl->unload(*this, *this);
 	dynlibs.clear();
 }
 
