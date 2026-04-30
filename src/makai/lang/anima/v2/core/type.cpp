@@ -1,6 +1,7 @@
 #include "type.hpp"
 
 using namespace Makai;
+using namespace Makai::Anima::V2;
 using namespace Makai::Anima::V2::Core;
 
 template <class T>
@@ -16,7 +17,7 @@ static Definition::Constructor doNotConstruct() {
 	return {};
 }
 
-Definition::Constructor constructorOf(BasicType const type) {
+Definition::Constructor Core::constructorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_STRING:	return castAndConstruct<UTF8String>();
 		case BasicType::AV2_BT_BYTES:	return castAndConstruct<Bytes<>>();
@@ -40,7 +41,7 @@ static Definition::Destructor doNotDestruct() {
 	return {};
 }
 
-Definition::Destructor destructorOf(BasicType const type) {
+Definition::Destructor Core::destructorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_STRING:	return castAndDestruct<UTF8String>();
 		case BasicType::AV2_BT_BYTES:	return castAndDestruct<Bytes<>>();
@@ -63,7 +64,7 @@ static Definition::Cloner doNotClone() {
 	return {};
 }
 
-Definition::Cloner clonerOf(BasicType const type) {
+Definition::Cloner Core::clonerOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_BOOL:	return castAndClone<bool>();
 		case BasicType::AV2_BT_INT8:	return castAndClone<int8>();
@@ -109,7 +110,7 @@ static Definition::Comparator doNotCompare() {
 	return {};
 }
 
-Definition::Comparator comparatorOf(BasicType const type) {
+Definition::Comparator Core::comparatorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_BOOL:	return primitiveCompare<bool>();
 		case BasicType::AV2_BT_INT8:	return primitiveCompare<int8>();
