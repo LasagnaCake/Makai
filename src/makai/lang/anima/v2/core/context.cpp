@@ -8,9 +8,10 @@ Context::~Context()				{unloadLibraries();	}
 Context::Library::~Library()	{close();			}
 
 bool Context::openLibrary(Makai::String const& path) {
+	if (dynlibs.contains(path)) return true;
 	auto const lib = Library::open(path, *this);
 	if (!lib) return false;
-	dynlibs.pushBack(*lib);
+	dynlibs[path] = *lib;
 	return true;
 }
 
@@ -26,7 +27,7 @@ void Context::loadLibraries() {
 }
 
 void Context::unloadLibraries() {
-	for (auto& lib: dynlibs)
+	for (auto& [name, lib]: dynlibs)
 		lib.impl->unload(*this, *this);
 	dynlibs.clear();
 }

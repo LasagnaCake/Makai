@@ -5,6 +5,7 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
+
 		enum class State {
 			AV2_RES_READY,
 			AV2_RES_INITIALIZING,
@@ -18,6 +19,18 @@ namespace Makai::Anima::V2::Runtime {
 			usize				location;
 			Core::Instruction	instruction;
 		};
+
+		struct ILibraryLoader {
+			virtual ~ILibraryLoader() {}
+
+			virtual bool loadLibrary(Context& context, String const& path) = 0;
+		};
+
+		struct DefaultLibraryLoader: ILibraryLoader {
+			bool loadLibrary(Context& context, String const& path) override;
+		};
+
+		virtual ~Engine() {}
 
 		bool process();
 
@@ -40,8 +53,6 @@ namespace Makai::Anima::V2::Runtime {
 
 		constexpr bool inStrictMode() const {return context.scopeStack.back().mode == Core::ContextMode::AV2_CM_STRICT;}
 
-		void initialize();
-
 		void crash(Engine::Error const& error);
 
 		bool hasFunction(String const& name);
@@ -51,7 +62,12 @@ namespace Makai::Anima::V2::Runtime {
 
 		Context context;
 
+		Instance<ILibraryLoader> loader = new DefaultLibraryLoader();
+
 	private:
+		void load();
+		void unload();
+
 		bool yieldCycle();
 
 		Engine::Error invalidInstructionError();

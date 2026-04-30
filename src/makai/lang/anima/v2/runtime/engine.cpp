@@ -9,6 +9,18 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 
 using namespace Core;
 
+bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& path) {
+	StringList const paths = {
+		path,
+		OS::FS::concatenate(OS::FS::sourceLocation(), path),
+		OS::FS::concatenate(getenv("ART_HOME"), path)
+	};
+	for (auto const& p: paths)
+		if (OS::FS::exists(p))
+			return context.art.openLibrary(path);
+	return false;
+}
+
 bool Engine::yieldCycle() {
 	bool revertContext = false;
 	if (context.scopeStack.empty())
@@ -613,6 +625,7 @@ bool Engine::finished() const {
 
 void Engine::reset() {
 	terminate();
+	unload();
 	context		= {};
 	current		= {};
 	err			= {};
@@ -633,7 +646,7 @@ void Engine::execute() {
 	engineState = State::AV2_RES_INITIALIZING;
 }
 
-void Engine::initialize() {
+void Engine::load() {
 	if (engineState != State::AV2_RES_INITIALIZING) return;
 	Map<uint64, uint64> inheritances;
 	Map<uint64, uint64> boundTypes;
@@ -698,10 +711,15 @@ void Engine::initialize() {
 	}
 	if (program.entry) jumpBy(*program.entry, false);
 	else crash(makeErrorHere("Missing entrypoint!"));
-	if (program.ani)
+	if (program.ani && loader)
 		for (auto& lib: program.ani->shared.libraries)
-			context.art.openLibrary(lib);
+			loader->loadLibrary(context, lib);
+	context.art.loadLibraries();
 	engineState = State::AV2_RES_RUNNING;
+}
+
+void Engine::unload() {
+	context.art.unloadLibraries();
 }
 
 void Engine::v2SetContext() {

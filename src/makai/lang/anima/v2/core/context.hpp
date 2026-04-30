@@ -221,7 +221,7 @@ namespace Makai::Anima::V2::Core {
 		Database<Definition>		types;
 		Database<Method>			methods;
 		Map<usize, ExternalMethod>	externalMethods;
-		List<Library>				dynlibs;
+		Dictionary<Library>			dynlibs;
 
 	private:
 		List<Instance<ILibrary>>	toBeLoaded;
