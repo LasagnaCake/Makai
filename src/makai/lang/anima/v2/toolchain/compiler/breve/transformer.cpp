@@ -313,7 +313,7 @@ bool ATransformer::Result::isDiscardable() const {
 }
 
 bool ATransformer::Result::shouldBePushed() const {
-	return !isDiscardable() && !isStackTop();
+	return source && !isDiscardable() && !isStackTop();
 }
 
 Namespace::Instance ATransformer::Context::nearestVarScope() const {
