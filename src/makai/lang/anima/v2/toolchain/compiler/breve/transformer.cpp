@@ -341,6 +341,9 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		Expression expr;
 		auto const tmp = context.declare(UTF8StringList::from("<init>" + node->name()));
 	 	auto const result = expr.transform(context, node->rightSide);
+		if (result.source)
+			tmp->impl->writeMainLine("copy", *result.source, "->", var.getSource());
+		else context.error("Expected value here!", node->rightSide);
 		context.pop(1);
 		direct = result.direct;
 		var.initializer = tmp;
