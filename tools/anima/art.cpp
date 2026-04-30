@@ -56,7 +56,7 @@ struct ARTEMain: Makai::AMain {
 			ARTE engine;
 			engine.cliEnabled = args["cli"];
 			{
-				auto const f = Makai::Anima::V2::Core::Module::deserialize(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
+				auto const f = Makai::File::getFLOW(args["__args"][0].getString() + ".anp");
 				engine.load(f);
 			}
 			engine.execute();
