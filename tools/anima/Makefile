@@ -23,6 +23,8 @@ OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-af
 
 export os ?=win
 
+sinclude $(ROOT)/make/options.make
+sinclude $(ROOT)/make/core.make
 sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
@@ -69,6 +71,9 @@ endif
 
 ifeq ($(os),win)
 WINFLAG := -mwindows
+dynlib ?=dll
+else
+dynlib ?=so
 endif
 
 .PHONY: debug release all tooling packer concerto minimac brevec arte finale
@@ -108,7 +113,10 @@ arte:
 	$(LINKER) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
 
 av2lib:
-	$(call submake, $@)
+	@echo "[$@]"
+	@cd $@
+	$(GNU_MAKE) from-lite=$(lite) dynlib=$(dynlib)
+	@cd ../..
 
 mk-push:
 	cp art$(EXEC_TYPE) ../../output/bin
@@ -116,7 +124,8 @@ mk-push:
 	cp brevec$(EXEC_TYPE) ../../output/bin
 #	cp concerto$(EXEC_TYPE) ../../output/bin
 	cp packer$(EXEC_TYPE) ../../output/bin
-	cp av2lib/*.dll ../../output/bin/av2
+	mkdir -p ../../output/bin/av2
+	cp av2lib/*.$(dynlib) ../../output/bin/av2
 
 finale:
 	@echo 
