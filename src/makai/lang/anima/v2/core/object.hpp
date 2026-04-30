@@ -284,6 +284,8 @@ namespace Makai::Anima::V2::Core {
 		Storage clone();
 		Storage clone() const;
 
+		void preallocate(usize const fields);
+
 		struct Accessor {
 			Accessor const& operator=(Storage const& value) const	{return set(value);	}
 			operator Storage() const								{return get();		}

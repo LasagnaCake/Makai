@@ -65,6 +65,10 @@ Object::Storage Object::clone() {
 	return null;
 }
 
+void Object::reserveFields(usize const count) {
+	fields.reserve(count, null);
+}
+
 Object::Storage Object::cloneFrom(usize const index) const {
 	if (index >= count()) return nullptr;
 	auto const addr = addressAt(index);
@@ -83,6 +87,9 @@ Object::Storage Object::cloneFrom(usize const index) const {
 }
 
 usize Object::count() const {
+	if (!origin) return 0;
+	if (!isValueType())
+		return fields.size();
 	if (!(content & content->size())) return 0;
 	else if (isArray())
 		return content->size() / origin->base->byteSize;

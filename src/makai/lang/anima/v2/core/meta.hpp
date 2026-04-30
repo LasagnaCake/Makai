@@ -224,6 +224,26 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
+		template<class T>
+		struct ARTTI<List<T>>: List<T> {
+			inline static auto const ART_HASH = ConstHasher::hash(toString(nameof<T>(), "_array"));
+
+			static List<T> construct(Object const& value) {
+				List<T> result;
+				result.resize(value.size());
+				for (usize i: range(value.count()))
+					result.pushBack(ARTTI<T>::construct(value.getAtIndex(i)));
+				return result;
+			}
+
+			static Object::Storage convert(Database<Definition>& db, List<T> const& value) {
+				Object::Storage obj = Object::create(db.byNameHash(ART_HASH).front());
+				for (usize i: range(value.size()))
+					obj->setAtIndex(i, Object::create(value[i], db.byNameHash(ARTTI<T>::ART_HASH).front()));
+				return obj;
+			}
+		};
+
 		template <class... Types>
 		struct ToObjectTuple {
 			using Type = SingleTypeTuple<Object::Storage, Types...>;
