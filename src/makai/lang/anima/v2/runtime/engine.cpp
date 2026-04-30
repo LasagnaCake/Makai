@@ -698,6 +698,9 @@ void Engine::initialize() {
 	}
 	if (program.entry) jumpBy(*program.entry, false);
 	else crash(makeErrorHere("Missing entrypoint!"));
+	if (program.ani)
+		for (auto& lib: program.ani->shared.libraries)
+			context.art.openLibrary(lib);
 	engineState = State::AV2_RES_RUNNING;
 }
 
