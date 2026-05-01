@@ -23,8 +23,10 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	DEBUGLN("Jump Table Section: ", jumps.size());
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
-	mod.sym = Module::Symbols::deserialize(v["sym"]);
-	mod.detail = Module::Detail::deserialize(v["detail"]);
+	if (v.contains("sym"))
+		mod.sym = Module::Symbols::deserialize(v["sym"]);
+	if (v.contains("detail"))
+		mod.detail = Module::Detail::deserialize(v["detail"]);
 	if (v.contains("ani"))
 		*mod.ani = Module::ANI::deserialize(v["ani"]);
 	else mod.ani.unbind();
