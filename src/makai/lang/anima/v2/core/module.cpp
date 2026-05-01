@@ -221,7 +221,8 @@ Makai::Data::Value Module::Declaration::serialize() const {
 
 Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 	Module::Declaration result;
-	result.id		= v["id"].getUnsigned();
+	if (v.contains("id"))
+		result.id	= v["id"].getUnsigned();
 	result.flags	= v["flags"].getUnsigned();
 	result.hash		= v["hash"].getUnsigned();
 	if (v.contains("name"))
