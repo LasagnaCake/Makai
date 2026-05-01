@@ -1071,7 +1071,7 @@ namespace Data {
 				return ::CTL::toString(content.signedInt);
 			if (isReal())
 				return ::CTL::toString(content.real);
-			StringType const NEWLINE = StringType("\n");
+			StringType const NEWLINE = pad ? StringType("\n") : StringType("");
 			StringType const lhs = pad ? (NEWLINE + pad.toString()) : StringType("");
 			if (isBytes()) {
 				return toBytes(*this, lhs, sep);
@@ -1192,6 +1192,7 @@ namespace Data {
 		if (isBytes())		return content.bytes->size();
 		if (isArray())		return content.array->size();
 		if (isObject())		return content.object->size();
+		if (isVector())		return 4;
 		if (isIdentifier())	return 4;
 		if (isScalar())		return 1;
 		return 0;
