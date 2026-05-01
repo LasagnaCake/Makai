@@ -4,9 +4,13 @@
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
+static bool valueExists(Data::Value const& v) {
+	return !v.isUndefined();
+}
+
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	if (v.contains("strings"))
-		mod.strings = v["strings"].getArray().toList<String>([](auto const& e){return e.isString() ? e.getString() : "";});
+		mod.strings = v["strings"].getArray().filter(valueExists).toList<String>([](auto const& e){return e.isString() ? e.getString() : "";});
 	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
 	if (code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
@@ -143,10 +147,10 @@ Makai::Data::Value Module::Symbols::serialize() const {
 Module::Detail Module::Detail::deserialize(Makai::Data::Value const& v) {
 	Module::Detail result;
 	if (v.contains("types"))
-		for (auto& sym: v["types"].getArray())
+		for (auto& sym: v["types"].getArray().filter(valueExists))
 			result.types.pushBack(sym);
 	if (v.contains("methods"))
-		for (auto& sym: v["methods"].getArray())
+		for (auto& sym: v["methods"].getArray().filter(valueExists))
 			result.methods.pushBack(sym);
 	return result;
 }
@@ -181,12 +185,14 @@ Makai::Data::Value Module::Method::serialize() const {
 
 Module::Method Module::Method::deserialize(Data::Value const& v) {
 	Module::Method result;
+	if (!v) return result;
+	DEBUGLN ("Method ", v.toFLOWString("  "));
 	result.id = v["id"];
 	if (v.contains("name"))
 		result.name = v["name"].getString();
 	result.hash = v["hash"].getUnsigned();
 	result.retType = v["return"];
-	result.argTypes = v["args"].getArray().toList<uint64>();
+	result.argTypes = v["args"].getArray().toList<uint64>().filter(valueExists);
 	result.out = v["out"];
 	result.shared = v["shared"];
 	result.entrypoint = v["entry"];
@@ -212,7 +218,7 @@ Makai::Data::Value Module::Declaration::serialize() const {
 	if (alignment)
 		result["align"] = alignment;
 	if (fields.size())
-		result["fields"] = fields.toList<Data::Value>();
+		result["fields"] = fields.toList<Data::Value>().filter(valueExists);
 	if (!meta.isUndefined())
 		result["meta"] = meta;
 	return result;
@@ -221,8 +227,9 @@ Makai::Data::Value Module::Declaration::serialize() const {
 
 Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 	Module::Declaration result;
-	if (v.contains("id"))
-		result.id	= v["id"].getUnsigned();
+	if (!v) return result;
+	DEBUGLN ("Type ", v.toFLOWString("  "));
+	result.id		= v["id"].getUnsigned();
 	result.flags	= v["flags"].getUnsigned();
 	result.hash		= v["hash"].getUnsigned();
 	if (v.contains("name"))
