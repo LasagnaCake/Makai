@@ -5,16 +5,8 @@ using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
-	mod.strings =
-		v.fetch<Makai::Data::Value::ArrayType>(
-			"strings",
-			{}
-		).toList<String>(
-			[] (auto& e) {
-				return e.isString() ? e.getString() : "";
-			}
-		)
-	;
+	if (v.contains("strings"))
+		mod.strings = v["strings"].getArray().toList<String>([](auto const& e){return e.isString() ? e.getString() : "";});
 	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
 	if (code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
