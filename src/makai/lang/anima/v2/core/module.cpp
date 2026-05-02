@@ -12,21 +12,23 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	if (v.contains("strings"))
 		mod.strings = v["strings"].getArray().filter(valueExists).toList<String>([](auto const& e){return e.isString() ? e.getString() : "";});
 	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
-	if (code.empty()) throw Error::FailedAction(
+	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
+	DEBUGLN("Bytecode Section: ", code.size());
+	DEBUGLN("Jump Table Section: ", jumps.size());
+	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
+	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
+	DEBUGLN("Instructions: ", mod.code.size());
+	DEBUGLN("Jump Table Entries: ", mod.jumpTable.size());
+	if (mod.code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
 		"Failed to load bytecode section",
 		CTL_CPP_PRETTY_SOURCE
 	);
-	DEBUGLN("Bytecode Section: ", code.size());
-	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
-	if (jumps.empty()) throw Error::FailedAction(
+	if (mod.jumpTable.empty()) throw Error::FailedAction(
 		"Failed to load file!",
 		"Failed to load jump table section",
 		CTL_CPP_PRETTY_SOURCE
 	);
-	DEBUGLN("Jump Table Section: ", jumps.size());
-	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
-	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 	if (v.contains("sym"))
 		mod.sym = Module::Symbols::deserialize(v["sym"]);
 	if (v.contains("detail"))

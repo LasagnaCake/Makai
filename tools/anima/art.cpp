@@ -55,10 +55,7 @@ struct ARTEMain: Makai::AMain {
 		} else {
 			ARTE engine;
 			engine.cliEnabled = args["cli"];
-			{
-				auto const f = Makai::File::getFLOW(args["__args"][0].getString() + ".anp");
-				engine.load(f);
-			}
+			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 			engine.execute();
 			while (engine.process()) {
 				DEBUGLN("Frame!");

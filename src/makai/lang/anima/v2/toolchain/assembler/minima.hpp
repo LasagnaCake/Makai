@@ -40,7 +40,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			bool hasJumpTarget(String const& name);
 
 			void mapJump(String const& name, uint64 const target) {
-				jumps[name] = program.jumpTable.size();
+				jumps[name] = program.jumpTable.size() - 1;
 				program.jumpTable.pushBack(target);
 			}
 

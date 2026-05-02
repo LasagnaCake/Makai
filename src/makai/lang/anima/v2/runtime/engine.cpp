@@ -205,6 +205,7 @@ Engine::Error Engine::missingArgumentsError() {
 void Engine::advance(bool isRequired) {
 	DEBUGLN("Advancing...");
 	++context.pointers.instruction;
+	DEBUGLN("Fetching instruction [", context.pointers.instruction, "] ...");
 	if (context.pointers.instruction < program.code.size())
 		current = program.code[context.pointers.instruction];
 	else if (isRequired)
@@ -242,6 +243,7 @@ void Engine::v2Call() {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
 	}
+	DEBUGLN("Handling call...");
 	if (invocation.external) {
 		context.art
 			.invokeExternalMethod(loc, context.globalValueStack.reversed())
@@ -418,8 +420,10 @@ void Engine::jumpTo(usize const point, bool returnable) {
 }
 
 void Engine::jumpBy(usize const tableID, bool returnable) {
+	DEBUGLN("Doing jump...");
 	if (tableID == Makai::Limit::MAX<uint64>)
 		return;
+	DEBUGLN("Jumping to target...");
 	if (tableID < program.jumpTable.size())
 		jumpTo(program.jumpTable[tableID], returnable);
 	else crash(invalidJump());
@@ -642,7 +646,7 @@ void Engine::load(Module const& prog) {
 	reset();
 	if (!(
 		prog.type == decltype(prog.type)::AV2_CMT_EXE
-	or	prog.type != decltype(prog.type)::AV2_CMT_CLI_EXE
+	or	prog.type == decltype(prog.type)::AV2_CMT_CLI_EXE
 	)) return;
 	program = prog;
 }
@@ -655,6 +659,8 @@ void Engine::execute() {
 
 void Engine::load() {
 	if (engineState != State::AV2_RES_INITIALIZING) return;
+	if (program.code.empty())
+		return crash(makeErrorHere("Module has no code!"));
 	Map<uint64, uint64> inheritances;
 	Map<uint64, uint64> boundTypes;
 	Map<uint64, List<uint64>> fields;
@@ -714,10 +720,10 @@ void Engine::load() {
 		auto const types = context.art.types.byNameHash(artEquiv);
 		if (types.size())
 			context.art.types.values[self] = types.front();
-		else crash(makeErrorHere("ART context does not contain the requested type!"));
+		else return crash(makeErrorHere("ART context does not contain the requested type!"));
 	}
 	if (program.entry) jumpBy(program.entry, false);
-	else crash(makeErrorHere("Missing entrypoint!"));
+	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (program.ani && loader)
 		for (auto& lib: program.ani->shared.libraries)
 			loader->loadLibrary(context, lib);
