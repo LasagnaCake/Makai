@@ -4,7 +4,7 @@
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
-static bool valueExists(Data::Value const& v) {
+static bool valueExists(Makai::Data::Value const& v) {
 	return !v.isUndefined();
 }
 
@@ -35,6 +35,10 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 		*mod.ani = Module::ANI::deserialize(v["ani"]);
 	else mod.ani.unbind();
 	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
+	if (v.contains("entry"))
+		mod.entry = v["entry"].getUnsigned();
+	if (v.contains("exit"))
+		mod.exit = v["exit"].getUnsigned();
 }
 
 Module Module::deserialize(Makai::Data::Value const& v) {
@@ -74,6 +78,8 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	if (ani)
 		out["ani"]	= *ani;
 	out["type"]	= enumcast(type);
+	if (entry)	out["entry"]	= *entry;
+	if (exit)	out["exit"]		= *exit;
 	return out;
 }
 
