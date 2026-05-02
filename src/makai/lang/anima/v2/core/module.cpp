@@ -78,8 +78,8 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	if (ani)
 		out["ani"]	= *ani;
 	out["type"]	= enumcast(type);
-	if (entry)	out["entry"]	= *entry;
-	if (exit)	out["exit"]		= *exit;
+	if (entry + 1)	out["entry"]	= entry;
+	if (exit + 1)	out["exit"]		= exit;
 	return out;
 }
 

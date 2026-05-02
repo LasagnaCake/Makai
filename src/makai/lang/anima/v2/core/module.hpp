@@ -102,8 +102,8 @@ namespace Makai::Anima::V2::Core {
 		Detail				detail;
 		Symbols				sym;
 		Instance<ANI>		ani			= new ANI();
-		Nullable<uint64>	entry;
-		Nullable<uint64>	exit;
+		uint64				entry	= -1;
+		uint64				exit	= -1;
 	};
 }
 
