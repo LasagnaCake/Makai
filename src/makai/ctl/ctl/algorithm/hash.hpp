@@ -424,7 +424,7 @@ struct Hasher {
 /// @return Resulting hash.
 template<class T>
 constexpr static usize hash(ref<T const> const data, usize const size) {
-	return Hasher::hash(data, size);
+	return ConstHasher::hash(data, size);
 }
 
 /// @brief Generates the hash for a given fixed array.
@@ -434,7 +434,7 @@ constexpr static usize hash(ref<T const> const data, usize const size) {
 /// @return Resulting hash.
 template<class T, usize S>
 constexpr static usize hash(As<const T[S]> const& data) {
-	return Hasher::hash(data);
+	return ConstHasher::hash(data);
 }
 
 /// @brief Generates the hash for a value.
@@ -443,7 +443,7 @@ constexpr static usize hash(As<const T[S]> const& data) {
 /// @return Resulting hash.
 template <class T>
 constexpr static usize hash(T const& value) {
-	return Hasher::hash(value);
+	return ConstHasher::hash(value);
 }
 
 /// @brief Algorithm-specific type constraints.
