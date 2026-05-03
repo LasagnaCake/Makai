@@ -35,7 +35,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	methods[name] = new Reference{.name = fullID};
 	if (!method->out) {
 		method->jump = name + "/entry";
-		method->hash = ConstHasher::hash(name);
+		method->hash = hash(name);
 	}
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
@@ -61,7 +61,7 @@ void Context::addExternalMethod(Makai::String const& module, Makai::String const
 	auto const refID = cleanPath(module + "/" + name);
 	externalMethods[fullID] = method;
 	methods[refID] = new Reference{module, fullID};
-	method->hash = ConstHasher::hash(name);
+	method->hash = hash(name);
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
 	uint64 moduleID = program.ani->shared.modules.find(module);
@@ -912,10 +912,12 @@ static void validateType(Context& context, Context::Declaration& type) {
 	}
 	if (type.base && context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
 		context.error("Final types cannot be inherited from!");
-	if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
-		context.error("Only value types can have alignment size!");
-	if (!type.alignment && type.flags & Definition::Flags::AV2_DF_VALUE)
-		context.error("Value types must have an alignment!");
+	if (!type.basic) {
+		if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
+			context.error("Only value types can have alignment size!");
+		if (!type.alignment && type.flags & Definition::Flags::AV2_DF_VALUE)
+			context.error("Value types must have an alignment!");
+	}
 	if (type.flags & Definition::Flags::AV2_DF_VALUE) {
 		for (auto& field : type.fields) {
 			if (!(context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_VALUE))
@@ -955,7 +957,7 @@ static void validateType(Context& context, Context::Declaration& type) {
 		)
 	) context.error("Structure types cannot be basic or array types!");
 	if (type.flags & Definition::Flags::AV2_DF_EMPTY) {
-		if (type.alignment) context.error("Empty types cannot have a size!");
+		if (type.alignment) context.error("Empty types cannot have size nor alignment!");
 		if (
 			type.flags & ~(
 				Definition::Flags::AV2_DF_EMPTY
@@ -994,27 +996,27 @@ static void validateType(Context& context, Context::Declaration& type) {
 	}
 	if (type.basic) {
 		switch (*type.basic) {
-			case BasicType::AV2_BT_VOID:	type.hash = Makai::ConstHasher::hash("void");		break;
-			case BasicType::AV2_BT_ANY:		type.hash = Makai::ConstHasher::hash("any");		break;
-			case BasicType::AV2_BT_NULL:	type.hash = Makai::ConstHasher::hash("null");		break;
-			case BasicType::AV2_BT_BOOL:	type.hash = Makai::ConstHasher::hash("bool");		break;
-			case BasicType::AV2_BT_CHAR:	type.hash = Makai::ConstHasher::hash("char");		break;
-			case BasicType::AV2_BT_INT8:	type.hash = Makai::ConstHasher::hash("int8");		break;
-			case BasicType::AV2_BT_INT16:	type.hash = Makai::ConstHasher::hash("int16");		break;
-			case BasicType::AV2_BT_INT32:	type.hash = Makai::ConstHasher::hash("int32");		break;
-			case BasicType::AV2_BT_INT64:	type.hash = Makai::ConstHasher::hash("int64");		break;
-			case BasicType::AV2_BT_UINT8:	type.hash = Makai::ConstHasher::hash("uint8");		break;
-			case BasicType::AV2_BT_UINT16:	type.hash = Makai::ConstHasher::hash("uint16");		break;
-			case BasicType::AV2_BT_UINT32:	type.hash = Makai::ConstHasher::hash("uint32");		break;
-			case BasicType::AV2_BT_UINT64:	type.hash = Makai::ConstHasher::hash("uint64");		break;
-			case BasicType::AV2_BT_REAL32:	type.hash = Makai::ConstHasher::hash("float32");	break;
-			case BasicType::AV2_BT_REAL64:	type.hash = Makai::ConstHasher::hash("float64");	break;
-			case BasicType::AV2_BT_REAL128:	type.hash = Makai::ConstHasher::hash("float128");	break;
-			case BasicType::AV2_BT_STRING:	type.hash = Makai::ConstHasher::hash("string");		break;
-			case BasicType::AV2_BT_BYTES:	type.hash = Makai::ConstHasher::hash("bytes");		break;
-			case BasicType::AV2_BT_VECTOR:	type.hash = Makai::ConstHasher::hash("vector");		break;
-			case BasicType::AV2_BT_MATRIX:	type.hash = Makai::ConstHasher::hash("matrix");		break;
-			case BasicType::AV2_BT_TYPEID:	type.hash = Makai::ConstHasher::hash("type");		break;
+			case BasicType::AV2_BT_VOID:	type.hash = Makai::hash("void");		break;
+			case BasicType::AV2_BT_ANY:		type.hash = Makai::hash("any");			break;
+			case BasicType::AV2_BT_NULL:	type.hash = Makai::hash("null");		break;
+			case BasicType::AV2_BT_BOOL:	type.hash = Makai::hash("bool");		break;
+			case BasicType::AV2_BT_CHAR:	type.hash = Makai::hash("char");		break;
+			case BasicType::AV2_BT_INT8:	type.hash = Makai::hash("int8");		break;
+			case BasicType::AV2_BT_INT16:	type.hash = Makai::hash("int16");		break;
+			case BasicType::AV2_BT_INT32:	type.hash = Makai::hash("int32");		break;
+			case BasicType::AV2_BT_INT64:	type.hash = Makai::hash("int64");		break;
+			case BasicType::AV2_BT_UINT8:	type.hash = Makai::hash("uint8");		break;
+			case BasicType::AV2_BT_UINT16:	type.hash = Makai::hash("uint16");		break;
+			case BasicType::AV2_BT_UINT32:	type.hash = Makai::hash("uint32");		break;
+			case BasicType::AV2_BT_UINT64:	type.hash = Makai::hash("uint64");		break;
+			case BasicType::AV2_BT_REAL32:	type.hash = Makai::hash("float32");		break;
+			case BasicType::AV2_BT_REAL64:	type.hash = Makai::hash("float64");		break;
+			case BasicType::AV2_BT_REAL128:	type.hash = Makai::hash("float128");	break;
+			case BasicType::AV2_BT_STRING:	type.hash = Makai::hash("string");		break;
+			case BasicType::AV2_BT_BYTES:	type.hash = Makai::hash("bytes");		break;
+			case BasicType::AV2_BT_VECTOR:	type.hash = Makai::hash("vector");		break;
+			case BasicType::AV2_BT_MATRIX:	type.hash = Makai::hash("matrix");		break;
+			case BasicType::AV2_BT_TYPEID:	type.hash = Makai::hash("type");		break;
 			case BasicType::AV2_BT_NOT_A_BASIC_TYPE: break;
 		}
 	}
@@ -1040,7 +1042,7 @@ static void declareType(Context& context) {
 	auto const name = resolvePath(context);
 	auto const type = new Context::Declaration();
 	type->name = name;
-	type->hash = Makai::ConstHasher::hash(name);
+	type->hash = Makai::hash(name);
 	context.expectNext(Type{'['});
 	while (true) {
 		if (context.next().has(Type{']'})) break;
@@ -1055,28 +1057,30 @@ static void declareType(Context& context) {
 			;
 			type->byteSize = 0;
 			type->alignment = 1;
-			switch (CTL::hash(basic.toString())) {
-				case CTL::hash("bool"):	type->basic = BasicType::AV2_BT_BOOL;		type->byteSize = sizeof(bool);				break;
-				case CTL::hash("i8"):	type->basic = BasicType::AV2_BT_INT8;		type->byteSize = sizeof(int8);				break;
-				case CTL::hash("u8"):	type->basic = BasicType::AV2_BT_UINT8;		type->byteSize = sizeof(uint8);				break;
-				case CTL::hash("i16"):	type->basic = BasicType::AV2_BT_INT16;		type->byteSize = sizeof(int16);				break;
-				case CTL::hash("u16"):	type->basic = BasicType::AV2_BT_UINT16;		type->byteSize = sizeof(uint16);			break;
-				case CTL::hash("i32"):	type->basic = BasicType::AV2_BT_INT32;		type->byteSize = sizeof(int32);				break;
-				case CTL::hash("u32"):	type->basic = BasicType::AV2_BT_UINT32;		type->byteSize = sizeof(uint32);			break;
-				case CTL::hash("i64"):	type->basic = BasicType::AV2_BT_INT64;		type->byteSize = sizeof(int64);				break;
-				case CTL::hash("u64"):	type->basic = BasicType::AV2_BT_UINT64;		type->byteSize = sizeof(uint64);			break;
-				case CTL::hash("f32"):	type->basic = BasicType::AV2_BT_REAL32;		type->byteSize = sizeof(float32);			break;
-				case CTL::hash("f64"):	type->basic = BasicType::AV2_BT_REAL64;		type->byteSize = sizeof(float64);			break;
-				case CTL::hash("f128"):	type->basic = BasicType::AV2_BT_REAL128;	type->byteSize = sizeof(float128);			break;
-				case CTL::hash("char"):	type->basic = BasicType::AV2_BT_CHAR;		type->byteSize = sizeof(Makai::UTF8Char);	break;
-				case CTL::hash("str"):	type->basic = BasicType::AV2_BT_STRING;		type->byteSize = sizeof(Makai::UTF8String);	break;
-				case CTL::hash("vec"):	type->basic = BasicType::AV2_BT_VECTOR;		type->byteSize = sizeof(Makai::Vector4);	break;
-				case CTL::hash("mat"):	type->basic = BasicType::AV2_BT_MATRIX;		type->byteSize = sizeof(Makai::Matrix4x4);	break;
-				case CTL::hash("bin"):	type->basic = BasicType::AV2_BT_BYTES;		type->byteSize = sizeof(Makai::Bytes<>);	break;
-				case CTL::hash("type"):	type->basic = BasicType::AV2_BT_TYPEID;		type->byteSize = sizeof(TypeID);			break;
-				case CTL::hash("void"):	type->basic = BasicType::AV2_BT_VOID;													break;
-				case CTL::hash("any"):	type->basic = BasicType::AV2_BT_ANY;													break;
-				case CTL::hash("nil"):	type->basic = BasicType::AV2_BT_NULL;													break;
+			DEBUGLN(hash(basic.toString()));
+			DEBUGLN(Makai::hash("any"));
+			switch (Makai::hash(basic.toString())) {
+				case Makai::hash("bool"):	type->basic = BasicType::AV2_BT_BOOL;		type->byteSize = sizeof(bool);				break;
+				case Makai::hash("i8"):		type->basic = BasicType::AV2_BT_INT8;		type->byteSize = sizeof(int8);				break;
+				case Makai::hash("u8"):		type->basic = BasicType::AV2_BT_UINT8;		type->byteSize = sizeof(uint8);				break;
+				case Makai::hash("i16"):	type->basic = BasicType::AV2_BT_INT16;		type->byteSize = sizeof(int16);				break;
+				case Makai::hash("u16"):	type->basic = BasicType::AV2_BT_UINT16;		type->byteSize = sizeof(uint16);			break;
+				case Makai::hash("i32"):	type->basic = BasicType::AV2_BT_INT32;		type->byteSize = sizeof(int32);				break;
+				case Makai::hash("u32"):	type->basic = BasicType::AV2_BT_UINT32;		type->byteSize = sizeof(uint32);			break;
+				case Makai::hash("i64"):	type->basic = BasicType::AV2_BT_INT64;		type->byteSize = sizeof(int64);				break;
+				case Makai::hash("u64"):	type->basic = BasicType::AV2_BT_UINT64;		type->byteSize = sizeof(uint64);			break;
+				case Makai::hash("f32"):	type->basic = BasicType::AV2_BT_REAL32;		type->byteSize = sizeof(float32);			break;
+				case Makai::hash("f64"):	type->basic = BasicType::AV2_BT_REAL64;		type->byteSize = sizeof(float64);			break;
+				case Makai::hash("f128"):	type->basic = BasicType::AV2_BT_REAL128;	type->byteSize = sizeof(float128);			break;
+				case Makai::hash("char"):	type->basic = BasicType::AV2_BT_CHAR;		type->byteSize = sizeof(Makai::UTF8Char);	break;
+				case Makai::hash("str"):	type->basic = BasicType::AV2_BT_STRING;		type->byteSize = sizeof(Makai::UTF8String);	break;
+				case Makai::hash("vec"):	type->basic = BasicType::AV2_BT_VECTOR;		type->byteSize = sizeof(Makai::Vector4);	break;
+				case Makai::hash("mat"):	type->basic = BasicType::AV2_BT_MATRIX;		type->byteSize = sizeof(Makai::Matrix4x4);	break;
+				case Makai::hash("bin"):	type->basic = BasicType::AV2_BT_BYTES;		type->byteSize = sizeof(Makai::Bytes<>);	break;
+				case Makai::hash("type"):	type->basic = BasicType::AV2_BT_TYPEID;		type->byteSize = sizeof(TypeID);			break;
+				case Makai::hash("void"):	type->basic = BasicType::AV2_BT_VOID;		type->alignment = 0;						break;
+				case Makai::hash("any"):	type->basic = BasicType::AV2_BT_ANY;		type->alignment = 0;						break;
+				case Makai::hash("nil"):	type->basic = BasicType::AV2_BT_NULL;		type->alignment = 0;						break;
 				default: context.error("Invalid basic type!");
 			}
 			context.expectNext(Type{'>'});
@@ -1215,7 +1219,7 @@ static void declareMethodPrototype(Context& context) {
 static void declareOutboundMethod(Context& context) {
 	auto const method = new Context::Method();
 	context.expectNext(Type{'['});
-	auto const outID = Makai::ConstHasher::hash(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString());
+	auto const outID = Makai::hash(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString());
 	context.expectNext(Type{']'});
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
@@ -1244,7 +1248,7 @@ static void declareSharedMethod(Context& context) {
 	context.expectNext(Type{'['});
 	auto const dynlibName = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString();
 	context.expectNext(Type{':'});
-	auto const outID = Makai::ConstHasher::hash(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString());
+	auto const outID = Makai::hash(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString());
 	context.expectNext(Type{']'});
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
