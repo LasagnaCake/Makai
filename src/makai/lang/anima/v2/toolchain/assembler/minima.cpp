@@ -1053,28 +1053,32 @@ static void declareType(Context& context) {
 					.getNext(LTS_TT_IDENTIFIER, "basic type")
 					.getString()
 			;
-			if (basic == "void")		type->basic = BasicType::AV2_BT_VOID;
-			else if (basic == "any")	type->basic = BasicType::AV2_BT_ANY;
-			else if (basic == "nil")	type->basic = BasicType::AV2_BT_NULL;
-			else if (basic == "bool")	type->basic = BasicType::AV2_BT_BOOL;
-			else if (basic == "char")	type->basic = BasicType::AV2_BT_CHAR;
-			else if (basic == "i8")		type->basic = BasicType::AV2_BT_INT8;
-			else if (basic == "i16")	type->basic = BasicType::AV2_BT_INT16;
-			else if (basic == "i32")	type->basic = BasicType::AV2_BT_INT32;
-			else if (basic == "i64")	type->basic = BasicType::AV2_BT_INT64;
-			else if (basic == "u8")		type->basic = BasicType::AV2_BT_UINT8;
-			else if (basic == "u16")	type->basic = BasicType::AV2_BT_UINT16;
-			else if (basic == "u32")	type->basic = BasicType::AV2_BT_UINT32;
-			else if (basic == "u64")	type->basic = BasicType::AV2_BT_UINT64;
-			else if (basic == "f32")	type->basic = BasicType::AV2_BT_REAL32;
-			else if (basic == "f64")	type->basic = BasicType::AV2_BT_REAL64;
-			else if (basic == "f128")	type->basic = BasicType::AV2_BT_REAL128;
-			else if (basic == "str")	type->basic = BasicType::AV2_BT_STRING;
-			else if (basic == "bin")	type->basic = BasicType::AV2_BT_BYTES;
-			else if (basic == "vec")	type->basic = BasicType::AV2_BT_VECTOR;
-			else if (basic == "mat")	type->basic = BasicType::AV2_BT_MATRIX;
-			else if (basic == "type")	type->basic = BasicType::AV2_BT_TYPEID;
-			else context.error("Invalid basic type!");
+			type->byteSize = 0;
+			type->alignment = 1;
+			switch (CTL::hash(basic)) {
+				case CTL::hash("bool"):	type->basic = BasicType::AV2_BT_BOOL;		type->byteSize = sizeof(bool);				break;
+				case CTL::hash("i8"):	type->basic = BasicType::AV2_BT_INT8;		type->byteSize = sizeof(int8);				break;
+				case CTL::hash("u8"):	type->basic = BasicType::AV2_BT_UINT8;		type->byteSize = sizeof(uint8);				break;
+				case CTL::hash("i16"):	type->basic = BasicType::AV2_BT_INT16;		type->byteSize = sizeof(int16);				break;
+				case CTL::hash("u16"):	type->basic = BasicType::AV2_BT_UINT16;		type->byteSize = sizeof(uint16);			break;
+				case CTL::hash("i32"):	type->basic = BasicType::AV2_BT_INT32;		type->byteSize = sizeof(int32);				break;
+				case CTL::hash("u32"):	type->basic = BasicType::AV2_BT_UINT32;		type->byteSize = sizeof(uint32);			break;
+				case CTL::hash("i64"):	type->basic = BasicType::AV2_BT_INT64;		type->byteSize = sizeof(int64);				break;
+				case CTL::hash("u64"):	type->basic = BasicType::AV2_BT_UINT64;		type->byteSize = sizeof(uint64);			break;
+				case CTL::hash("f32"):	type->basic = BasicType::AV2_BT_REAL32;		type->byteSize = sizeof(float32);			break;
+				case CTL::hash("f64"):	type->basic = BasicType::AV2_BT_REAL64;		type->byteSize = sizeof(float64);			break;
+				case CTL::hash("f128"):	type->basic = BasicType::AV2_BT_REAL128;	type->byteSize = sizeof(float128);			break;
+				case CTL::hash("char"):	type->basic = BasicType::AV2_BT_CHAR;		type->byteSize = sizeof(Makai::UTF8Char);	break;
+				case CTL::hash("str"):	type->basic = BasicType::AV2_BT_STRING;		type->byteSize = sizeof(Makai::UTF8String);	break;
+				case CTL::hash("vec"):	type->basic = BasicType::AV2_BT_VECTOR;		type->byteSize = sizeof(Makai::Vector4);	break;
+				case CTL::hash("mat"):	type->basic = BasicType::AV2_BT_MATRIX;		type->byteSize = sizeof(Makai::Matrix4x4);	break;
+				case CTL::hash("bin"):	type->basic = BasicType::AV2_BT_BYTES;		type->byteSize = sizeof(Makai::Bytes<>);	break;
+				case CTL::hash("type"):	type->basic = BasicType::AV2_BT_TYPEID;		type->byteSize = sizeof(TypeID);			break;
+				case CTL::hash("void"):	type->basic = BasicType::AV2_BT_VOID;													break;
+				case CTL::hash("any"):	type->basic = BasicType::AV2_BT_ANY;													break;
+				case CTL::hash("nil"):	type->basic = BasicType::AV2_BT_NULL;													break;
+				default: context.error("Invalid basic type!");
+			}
 			context.expectNext(Type{'>'});
 		}
 		else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
