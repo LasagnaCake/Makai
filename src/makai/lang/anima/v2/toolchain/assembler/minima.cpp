@@ -1055,7 +1055,7 @@ static void declareType(Context& context) {
 			;
 			type->byteSize = 0;
 			type->alignment = 1;
-			switch (CTL::hash(basic)) {
+			switch (CTL::hash(basic.toString())) {
 				case CTL::hash("bool"):	type->basic = BasicType::AV2_BT_BOOL;		type->byteSize = sizeof(bool);				break;
 				case CTL::hash("i8"):	type->basic = BasicType::AV2_BT_INT8;		type->byteSize = sizeof(int8);				break;
 				case CTL::hash("u8"):	type->basic = BasicType::AV2_BT_UINT8;		type->byteSize = sizeof(uint8);				break;
