@@ -13,7 +13,7 @@ CTL_NAMESPACE_BEGIN
 namespace Impl::Hash {
 	// Based off of https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/libsupc%2B%2B/hash_bytes.cc
 
-	/// @brief Simple hash algorithm implementation.	
+	/// @brief Simple hash algorithm implementation.
 	namespace Simple {
 		/// @brief Generates a hash from the given data, using GCC's dummy hash implementation.
 		/// @param data Data to hash.
@@ -29,7 +29,7 @@ namespace Impl::Hash {
 			return seed;
 		}
 	}
-	
+
 	// Based off of https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/libsupc%2B%2B/hash_bytes.cc
 
 	/// @brief FNV1-A hash algorithm implementation.
@@ -43,7 +43,7 @@ namespace Impl::Hash {
 				default:				return 0;
 			}
 		}
-		
+
 		/// @brief Generates the offset to be used.
 		/// @return Offset to be used.
 		consteval usize offset() {
@@ -53,7 +53,7 @@ namespace Impl::Hash {
 				default:				return 0;
 			}
 		}
-		
+
 		/// @brief Generates a hash from the given data, using the FNV1-A hash algorithm.
 		/// @param data Data to hash.
 		/// @param sz Size of data to hash.
@@ -68,9 +68,9 @@ namespace Impl::Hash {
 			return seed;
 		}
 	}
-	
+
 	// Based off of https://github.com/aappleby/smhasher/blob/master/src/MurmurHash2.cpp
-	
+
 	/// @brief Murmur2 hash algorithm implementation.
 	namespace Murmur2 {
 		/// @brief Mixes a set of values.
@@ -81,21 +81,21 @@ namespace Impl::Hash {
 			h *= m;
 			h ^= k;
 		}
-		
+
 		/// @brief Shuffles a set of values.
 		constexpr void shuffle(usize& h, usize const m, usize const v) {
 			h ^= h >> v;
 			h *= m;
 			h ^= h >> v;
 		}
-		
+
 		/// @brief Shuffles a set of values.
 		constexpr void shuffle(usize& h, usize const m, usize const v1, usize const v2) {
 			h ^= h >> v1;
 			h *= m;
 			h ^= h >> v2;
 		}
-		
+
 		/// @brief Generates a hash from the given data, using the Murmur2 hash algorithm's 64-bit implementation.
 		/// @param data Data to hash.
 		/// @param sz Size of data to hash.
@@ -131,8 +131,8 @@ namespace Impl::Hash {
 			mix(hash, s, m, r);
 			shuffle(hash, m, r);
 			return hash;
-		} 
-		
+		}
+
 		/// @brief Generates a hash from the given data, using the Murmur2 hash algorithm's 32-bit implementation.
 		/// @param data Data to hash.
 		/// @param sz Size of data to hash.
@@ -233,14 +233,14 @@ namespace Impl::Hash {
 			return Impl::constHash(data, sz, seed, {0xc6a4a7935bd1e995ull, 0xc6a4a7935bd1e995ull}, {47, 47});
 		}
 	}
-	
+
 	/// @brief Generates a hash from the given data.
 	/// @param data Data to hash.
 	/// @param sz Size of data to hash.
 	/// @param seed Starting seed.
 	/// @return Resulting hash.
 	constexpr usize hash(ref<void const> data, usize sz, usize seed = 0) {
-		if constexpr (sizeof(usize) == sizeof(uint64))	
+		if constexpr (sizeof(usize) == sizeof(uint64))
 			return Murmur2::hash64(data, sz, seed);
 		else if constexpr (sizeof(usize) == sizeof(uint32))
 			return Murmur2::hash32(data, sz, seed);
@@ -253,7 +253,7 @@ namespace Impl::Hash {
 	/// @param seed Starting seed.
 	/// @return Resulting hash.
 	constexpr usize constHash(ref<char const> const data, usize const sz, usize seed = 0) {
-		if constexpr (sizeof(usize) == sizeof(uint64))	
+		if constexpr (sizeof(usize) == sizeof(uint64))
 			return Murmur2::constHash64(data, sz, seed);
 		else unreachable();
 	}
@@ -324,38 +324,38 @@ struct Hasher {
 	/// @param ptr pointer to hash.
 	/// @return Resulting hash.
 	template<class T>
-	constexpr static usize hashPointer(ref<T> const ptr)	{return bitcast<usize>(ptr);		}
+	constexpr static usize hashPointer(ref<T> const ptr)	{return bitcast<usize>(ptr);									}
 
 	/// @brief Generates the hash for a given integer.
 	/// @tparam T Integer type.
 	/// @param value Integer to hash.
 	/// @return Resulting hash.
 	template <Type::Integer T>
-	constexpr static usize hash(T const& value)				{return value;						}
+	constexpr static usize hash(T const& value)				{return Type::Unsigned<T> ? value : bitcast<usize, T>(value);	}
 
 	/// @brief Generates the hash for a given floating point number.
 	/// @param value Number to hash.
 	/// @return Resulting hash.
-	constexpr static usize hash(float const value)			{return bitcast<uint32>(value);		}
-	
+	constexpr static usize hash(float const value)			{return bitcast<uint32>(value);									}
+
 	/// @brief Generates the hash for a given floating point number.
 	/// @param value Number to hash.
 	/// @return Resulting hash.
-	constexpr static usize hash(double const value)			{return bitcast<uint64>(value);		}
+	constexpr static usize hash(double const value)			{return bitcast<uint64>(value);									}
 
 	/// @brief Generates the hash for a given pointer.
 	/// @tparam T Convertible type.
 	/// @param value Pointer to hash.
 	/// @return Resulting hash.
 	template <Type::Convertible<usize> T>
-	constexpr static usize hash(T const value)		{return static_cast<usize>(value);	}
+	constexpr static usize hash(T const value)				{return static_cast<usize>(value);								}
 
 	/// @brief Generates the hash for a given `enum`.
 	/// @tparam T `enum` type.
 	/// @param value `enum` value to hash.
 	/// @return Resulting hash.
 	template <Type::Enumerator T>
-	constexpr static usize hash(T const& value)		{return static_cast<usize>(value);	}
+	constexpr static usize hash(T const& value)				{return static_cast<usize>(value);								}
 
 	/// @brief Generates the hash for a given range of elements.
 	/// @tparam T Element type.
@@ -396,7 +396,7 @@ struct Hasher {
 		return hash(value.data(), value.size());
 	}
 
-	
+
 	/// @brief Generates the hash for a given bounded type.
 	/// @tparam T Bounded type.
 	/// @param value Ranged object to hash.
@@ -417,6 +417,35 @@ struct Hasher {
 	constexpr static usize hash(T const& value);
 };
 
+/// @brief Generates the hash for a given range of elements.
+/// @tparam T Element type.
+/// @param data Pointer to beginning of range.
+/// @param size Size of range.
+/// @return Resulting hash.
+template<class T>
+constexpr static usize hash(ref<T const> const data, usize const size) {
+	return Hasher::hash(data, size);
+}
+
+/// @brief Generates the hash for a given fixed array.
+/// @tparam T Element type.
+/// @tparam S Array size.
+/// @param str Array to hash.
+/// @return Resulting hash.
+template<class T, usize S>
+constexpr static usize hash(As<const T[S]> const& data) {
+	return Hasher::hash(data);
+}
+
+/// @brief Generates the hash for a value.
+/// @tparam T Value type.
+/// @param value Value to hash.
+/// @return Resulting hash.
+template <class T>
+constexpr static usize hash(T const& value) {
+	return Hasher::hash(value);
+}
+
 /// @brief Algorithm-specific type constraints.
 namespace Type::Algorithm {
 	/// @brief Type must be hashable by `THasher`.
@@ -425,6 +454,8 @@ namespace Type::Algorithm {
 		{THasher::hash(v)} -> Type::Equal<usize>;
 	};
 }
+
+
 
 CTL_NAMESPACE_END
 
