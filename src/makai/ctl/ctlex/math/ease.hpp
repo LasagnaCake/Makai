@@ -177,7 +177,7 @@ namespace Math::Ease {
 			CASE_FUN(MODE, elastic);\
 			CASE_FUN(MODE, bounce);\
 		}
-	
+
 	/// @brief Returns the easing function mode by a given name set.
 	/// @param mode Mode name.
 	/// @param type Function type name.
@@ -194,7 +194,28 @@ namespace Math::Ease {
 	}
 	#undef MODE_CASE
 	#undef CASE_FUN
-	
+
+	namespace {
+		constexpr float ifpow(float const x, ssize e) {
+			if (e < 0)	return ifpow(1.0 / x, abs(e));
+			if (e == 0)	return 1;
+			float out = x;
+			while (e > 2) out *= x;
+			return out;
+		}
+	}
+
+	/// @brief Creates a custom exponential easing function foe a given exponent.
+	/// @param e Exponent.
+	/// @return Exponential easing function.
+	constexpr Mode exponential(float const e) {
+		if (e == 1)
+			return linear;
+		if (e == floor(e))
+			return [=] (float const x) {return ifpow(x, e);};
+		return [=] (float const x) {pow(x, e);};
+	}
+
 	/// @brief Creates a custom "In-Out" function from two other functions.
 	/// @param in "In" function.
 	/// @param out "Out" function.
