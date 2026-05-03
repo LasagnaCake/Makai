@@ -677,38 +677,10 @@ void Engine::load() {
 			fields[i] = type.fields;
 		dt->basic = type.basic;
 		dt->flags = type.flags;
-		if (type.basic) {
-			auto const basic = *type.basic;
-			switch (basic) {
-				case Core::BasicType::AV2_BT_BOOL:		dt->byteSize = sizeof(bool); break;
-				case Core::BasicType::AV2_BT_INT8:		dt->byteSize = sizeof(int8); break;
-				case Core::BasicType::AV2_BT_UINT8:		dt->byteSize = sizeof(uint8); break;
-				case Core::BasicType::AV2_BT_INT16:		dt->byteSize = sizeof(int16); break;
-				case Core::BasicType::AV2_BT_UINT16:	dt->byteSize = sizeof(uint16); break;
-				case Core::BasicType::AV2_BT_INT32:		dt->byteSize = sizeof(int32); break;
-				case Core::BasicType::AV2_BT_UINT32:	dt->byteSize = sizeof(uint32); break;
-				case Core::BasicType::AV2_BT_INT64:		dt->byteSize = sizeof(int64); break;
-				case Core::BasicType::AV2_BT_UINT64:	dt->byteSize = sizeof(uint64); break;
-				case Core::BasicType::AV2_BT_REAL32:	dt->byteSize = sizeof(float32); break;
-				case Core::BasicType::AV2_BT_REAL64:	dt->byteSize = sizeof(float64); break;
-				case Core::BasicType::AV2_BT_REAL128:	dt->byteSize = sizeof(float128); break;
-				case Core::BasicType::AV2_BT_CHAR:		dt->byteSize = sizeof(UTF8Char); break;
-				case Core::BasicType::AV2_BT_STRING:	dt->byteSize = sizeof(UTF8String); break;
-				case Core::BasicType::AV2_BT_VECTOR:	dt->byteSize = sizeof(Vector4); break;
-				case Core::BasicType::AV2_BT_MATRIX:	dt->byteSize = sizeof(Matrix4x4); break;
-				case Core::BasicType::AV2_BT_BYTES:		dt->byteSize = sizeof(Bytes<>); break;
-				case Core::BasicType::AV2_BT_TYPEID:	dt->byteSize = sizeof(Core::TypeID); break;
-				case Core::BasicType::AV2_BT_ANY:
-				case Core::BasicType::AV2_BT_NOT_A_BASIC_TYPE:
-				case Core::BasicType::AV2_BT_VOID:
-				case Core::BasicType::AV2_BT_NULL: dt->byteSize = 0; break;
-			}
-			dt->alignment = 1;
+		dt->alignment = type.alignment;
+		dt->byteSize = type.byteSize;
+		if (type.basic)
 			Definition::makeBasic(*dt);
-		} else {
-			dt->alignment = type.alignment;
-			dt->byteSize = type.byteSize;
-		}
 		context.art.types.addElement(dt);
 	}
 	for (auto const& [self, base]: inheritances)
