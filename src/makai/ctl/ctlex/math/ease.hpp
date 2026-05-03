@@ -208,7 +208,7 @@ namespace Math::Ease {
 	/// @brief Creates a custom exponential easing function foe a given exponent.
 	/// @param e Exponent.
 	/// @return Exponential easing function.
-	constexpr Mode exponential(float const e) {
+	constexpr Mode fromExponent(float const e) {
 		if (e == 1)
 			return linear;
 		if (e == floor(e))
