@@ -426,7 +426,8 @@ void Engine::jumpBy(usize const tableID, bool returnable) {
 	DEBUGLN("Jumping to target...");
 	if (tableID < program.jumpTable.size())
 		jumpTo(program.jumpTable[tableID], returnable);
-	else crash(invalidJump());
+	else return crash(invalidJump());
+	DEBUGLN("The Rabbit has Landed!");
 }
 
 bool Engine::hasSignal(String const& signal) {
