@@ -17,7 +17,7 @@ namespace Math::Ease {
 	/// @brief Easing function type.
 	using EaseFunction = Decay::AsFunction<float(float const)>;
 	/// @brief Easing function wrapper type.
-	typedef Function<EaseFunction> Mode;
+	using Mode = Function<EaseFunction>;
 
 	#define EASE_FUN(NAME) constexpr float NAME(float const x)
 	EASE_FUN(linear) {return x;}
@@ -213,7 +213,7 @@ namespace Math::Ease {
 			return linear;
 		if (e == floor(e))
 			return [=] (float const x) {return ifpow(x, e);};
-		return [=] (float const x) {pow(x, e);};
+		return [=] (float const x) {return pow(x, e);};
 	}
 
 	/// @brief Creates a custom "In-Out" function from two other functions.
