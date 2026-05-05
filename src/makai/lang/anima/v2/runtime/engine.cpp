@@ -616,8 +616,8 @@ void Engine::v2Op() {
 
 void Engine::terminate() {
 	DEBUGLN("Terminating...");
-	if (engineState == State::AV2_RES_RUNNING && program.exit) {
-		engineState = State::AV2_RES_FINISHED;
+	if (engineState == State::AV2_RES_RUNNING && program.exit != Limit::MAX<uint64>) {
+		engineState = State::AV2_RES_EXITING;
 		jumpBy(program.exit, false);
 		while (running()) process();
 	}
@@ -697,7 +697,7 @@ void Engine::load() {
 			context.art.types.values[self] = types.front();
 		else return crash(makeErrorHere("ART context does not contain the requested type!"));
 	}
-	if (program.entry) jumpBy(program.entry, false);
+	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (program.ani && loader)
 		for (auto& lib: program.ani->shared.libraries)
