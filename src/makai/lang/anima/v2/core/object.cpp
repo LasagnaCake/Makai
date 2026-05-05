@@ -6,6 +6,7 @@ using namespace Makai::Anima::V2::Core;
 
 Object::~Object() {
 	if (content.unique()) {
+		if (!origin) return;
 		if (origin->flags & Definition::Flags::AV2_DF_VALUE) {
 			for (usize i = 0; i < count(); ++i)
 				origin->destruct(addressAt(i));
