@@ -159,11 +159,14 @@ Makai::Data::Value Module::Symbols::serialize() const {
 Module::Detail Module::Detail::deserialize(Makai::Data::Value const& v) {
 	Module::Detail result;
 	if (v.contains("types"))
-		for (auto& sym: v["types"].getArray().filter(valueExists))
-			result.types.pushBack(sym);
+		for (auto& sym: v["types"].getArray())
+			if (!sym.isUndefined())
+				result.types.pushBack(sym);
+	DEBUGLN("Total types: ", result.types.size());
 	if (v.contains("methods"))
-		for (auto& sym: v["methods"].getArray().filter(valueExists))
-			result.methods.pushBack(sym);
+		for (auto& sym: v["methods"].getArray())
+			if (!sym.isUndefined())
+				result.methods.pushBack(sym);
 	return result;
 }
 
@@ -257,6 +260,8 @@ Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 	if (v.contains("meta"))
 		result.meta = v["meta"];
 	if (v.contains("fields"))
-		result.fields = v["fields"].getArray().toList<uint64>();
+		for (auto& field: v["fields"].getArray())
+			if (!field.isUndefined())
+				result.fields.pushBack(field.getUnsigned());
 	return result;
 }
