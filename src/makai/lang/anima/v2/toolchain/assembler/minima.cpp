@@ -829,7 +829,7 @@ static void doRandomNumber(Context& context) {
 
 static Makai::String declareJumpTarget(Context& context) {
 	auto const name = resolvePath(context);
-	context.registerJumpPoint(name);
+	context.registerLandingPoint(name);
 	context.expectNext(LTS_TT_COLON);
 	return name;
 }

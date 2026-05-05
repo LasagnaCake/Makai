@@ -44,7 +44,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				program.jumpTable.pushBack(target);
 			}
 
-			void registerJumpPoint(String const& name) {
+			void registerLandingPoint(String const& name) {
 				mapJump(name, program.code.size());
 			}
 

@@ -18,7 +18,11 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 	DEBUGLN("Instructions: ", mod.code.size());
-	DEBUGLN("Jump Table Entries: ", mod.jumpTable.size());
+	DEBUG("Jump Table Entries: ", mod.jumpTable.size(), " [ ");
+	for (auto& jump : mod.jumpTable) {
+		DEBUG(jump, " ");
+	}
+	DEBUGLN("]");
 	if (mod.code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
 		"Failed to load bytecode section",
