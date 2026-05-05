@@ -996,32 +996,6 @@ static void validateType(Context& context, Context::Declaration& type) {
 		type.byteSize	= 0;
 		type.alignment	= 1;
 	}
-	if (type.basic) {
-		switch (*type.basic) {
-			case BasicType::AV2_BT_VOID:	type.hash = Makai::hash("void");		break;
-			case BasicType::AV2_BT_ANY:		type.hash = Makai::hash("any");			break;
-			case BasicType::AV2_BT_NULL:	type.hash = Makai::hash("null");		break;
-			case BasicType::AV2_BT_BOOL:	type.hash = Makai::hash("bool");		break;
-			case BasicType::AV2_BT_CHAR:	type.hash = Makai::hash("char");		break;
-			case BasicType::AV2_BT_INT8:	type.hash = Makai::hash("int8");		break;
-			case BasicType::AV2_BT_INT16:	type.hash = Makai::hash("int16");		break;
-			case BasicType::AV2_BT_INT32:	type.hash = Makai::hash("int32");		break;
-			case BasicType::AV2_BT_INT64:	type.hash = Makai::hash("int64");		break;
-			case BasicType::AV2_BT_UINT8:	type.hash = Makai::hash("uint8");		break;
-			case BasicType::AV2_BT_UINT16:	type.hash = Makai::hash("uint16");		break;
-			case BasicType::AV2_BT_UINT32:	type.hash = Makai::hash("uint32");		break;
-			case BasicType::AV2_BT_UINT64:	type.hash = Makai::hash("uint64");		break;
-			case BasicType::AV2_BT_REAL32:	type.hash = Makai::hash("float32");		break;
-			case BasicType::AV2_BT_REAL64:	type.hash = Makai::hash("float64");		break;
-			case BasicType::AV2_BT_REAL128:	type.hash = Makai::hash("float128");	break;
-			case BasicType::AV2_BT_STRING:	type.hash = Makai::hash("string");		break;
-			case BasicType::AV2_BT_BYTES:	type.hash = Makai::hash("bytes");		break;
-			case BasicType::AV2_BT_VECTOR:	type.hash = Makai::hash("vector");		break;
-			case BasicType::AV2_BT_MATRIX:	type.hash = Makai::hash("matrix");		break;
-			case BasicType::AV2_BT_TYPEID:	type.hash = Makai::hash("type");		break;
-			case BasicType::AV2_BT_NOT_A_BASIC_TYPE: break;
-		}
-	}
 }
 
 static void declareTypeOperators(Context& context, Context::Declaration& type) {}
@@ -1059,9 +1033,8 @@ static void declareType(Context& context) {
 			;
 			type->byteSize = 0;
 			type->alignment = 1;
-			DEBUGLN(hash(basic.toString()));
-			DEBUGLN(Makai::hash("any"));
-			switch (Makai::hash(basic.toString())) {
+			type->hash = hash(basic.toString());
+			switch (type->hash) {
 				case Makai::hash("bool"):	type->basic = BasicType::AV2_BT_BOOL;		type->byteSize = sizeof(bool);				break;
 				case Makai::hash("i8"):		type->basic = BasicType::AV2_BT_INT8;		type->byteSize = sizeof(int8);				break;
 				case Makai::hash("u8"):		type->basic = BasicType::AV2_BT_UINT8;		type->byteSize = sizeof(uint8);				break;
