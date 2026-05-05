@@ -45,7 +45,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			}
 
 			void registerLandingPoint(String const& name) {
-				mapJump(name, program.code.size() - 1);
+				mapJump(name, program.code.size());
+				add(OpCode::AV2_IN_NO_OP, 1);
 			}
 
 			void finalize();
