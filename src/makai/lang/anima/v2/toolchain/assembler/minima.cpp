@@ -1291,7 +1291,7 @@ static void declareMethodBody(Context& context) {
 		auto const method = context.getMethod(name);
 		if (method->shared || method->out) context.error("Cannot declare a body for a shared/external method!");
 		context.methodStack.pushBack(method);
-		context.registerJumpPoint(method->jump);
+		context.registerLandingPoint(method->jump);
 		method->entrypoint = context.jumps[method->jump];
 		method->size = context.program.code.size();
 		context.expectNext(LTS_TT_COLON);

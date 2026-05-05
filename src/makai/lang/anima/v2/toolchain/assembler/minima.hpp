@@ -40,12 +40,12 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			bool hasJumpTarget(String const& name);
 
 			void mapJump(String const& name, uint64 const target) {
-				jumps[name] = program.jumpTable.size() - 1;
+				jumps[name] = program.jumpTable.size();
 				program.jumpTable.pushBack(target);
 			}
 
 			void registerLandingPoint(String const& name) {
-				mapJump(name, program.code.size());
+				mapJump(name, program.code.size() - 1);
 			}
 
 			void finalize();

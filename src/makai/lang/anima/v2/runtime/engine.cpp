@@ -427,6 +427,7 @@ void Engine::jumpBy(usize const tableID, bool returnable) {
 	if (tableID < program.jumpTable.size())
 		jumpTo(program.jumpTable[tableID], returnable);
 	else return crash(invalidJump());
+	DEBUGLN("Table index: ", tableID);
 	DEBUGLN("We goin to: ", program.jumpTable[tableID]);
 	DEBUGLN("The Rabbit has Landed!");
 }

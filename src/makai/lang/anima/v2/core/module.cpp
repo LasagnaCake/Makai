@@ -19,9 +19,8 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 	DEBUGLN("Instructions: ", mod.code.size());
 	DEBUG("Jump Table Entries: ", mod.jumpTable.size(), " [ ");
-	for (auto& jump : mod.jumpTable) {
+	for (auto& jump : mod.jumpTable)
 		DEBUG(jump, " ");
-	}
 	DEBUGLN("]");
 	if (mod.code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
