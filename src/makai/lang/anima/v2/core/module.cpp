@@ -5,6 +5,7 @@ using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 static bool valueExists(Makai::Data::Value const& v) {
+	DEBUGLN("WHAT? ", !v.isUndefined());
 	return !v.isUndefined();
 }
 
