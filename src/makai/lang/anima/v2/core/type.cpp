@@ -7,6 +7,7 @@ using namespace Makai::Anima::V2::Core;
 
 template <class T>
 static void castAndConstructImpl(ref<void> a) {
+	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	MX::construct<T>(Cast::rewrite<ref<T>>(a));
 }
 
@@ -31,6 +32,7 @@ Definition::Constructor Core::constructorOf(BasicType const type) {
 
 template <class T>
 static void castAndDestructImpl(ref<void> a) {
+	if (!a) return;
 	MX::destruct<T>(Cast::rewrite<ref<T>>(a));
 }
 
@@ -55,6 +57,8 @@ Definition::Destructor Core::destructorOf(BasicType const type) {
 
 template <class T>
 static void castAndCloneImpl(ref<void> a, ref<void const> b) {
+	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
+	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	violate<T>(a) = violate<T>(b);
 }
 
@@ -93,6 +97,8 @@ Definition::Cloner Core::clonerOf(BasicType const type) {
 
 template <class T>
 static int64 castAndCompareImpl(ref<void const> const a, ref<void const> const b) {
+	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
+	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	return enumcast<StandardOrder>(violate<T>(a) <=> violate<T>(b));
 }
 
