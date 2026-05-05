@@ -23,6 +23,7 @@ namespace Makai::Anima::V2::Core {
 		StorageType byNameHash(uint64 const& hash) const {
 			DEBUGLN("Looking for hash: ", hash);
 			StorageType out;
+			DEBUGLN("Database Size: ", values.size());
 			for (auto& v: values) {
 				DEBUGLN("    > Hash: ", v->hash, " :: ", v->hash == hash);
 				if (v->hash == hash)
