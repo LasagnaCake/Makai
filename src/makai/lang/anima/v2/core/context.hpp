@@ -208,13 +208,13 @@ namespace Makai::Anima::V2::Core {
 
 		template <class T>
 		bool hasExternalType() const {
-			return externalMethods.contains(Meta::Impl::EasyImplementor<T>::NAME_HASH);
+			return externalMethods.contains(Meta::arthashof<T>());
 		}
 
 		template <class T>
 		void removeExternalType() {
 			if (!hasExternalType<T>()) return;
-			auto const type = types.queryByNameHash(Meta::Impl::EasyImplementor<T>::NAME_HASH).front();
+			auto const type = types.queryByNameHash(Meta::arthashof<T>()).front();
 			if (type->flags & Definition::Flags::AV2_DF_ART_EQUIVALENT)
 				types.values[type->id] = nullptr;
 		}
