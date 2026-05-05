@@ -6,6 +6,9 @@
 ## Table of contents
 
 - [Overview](#Overview)
+- - [Main Features](#Main-Features)
+- - [Subsystems](#Subsystems)
+- - [Future](#Future)
 - [Supported Operating Systems](#Supported-Operating-Systems)
 - [Requirements](#Requirements)
 - - [Windows](#Windows)
@@ -21,6 +24,28 @@
 A C++20 3D application & game framework (with support for "Pseudo-2D"),
 built on top of SDL2 & OpenGL.
 
+Things you'll find here:
+
+### Main Features
+
+- **Main implementation of Anima RunTime (ART) and ART's official language compilers (Breve, Minima)** (Via `Makai::Lang::Anima::V2` namespace)
+- **Custom standard library, purpose-build for ease of use and portability** (Via `CTL` namespace, but also accessible directly in `Makai`)
+
+### Subsystems
+
+- Networking (Via `Makai::Net` namespace)
+- Graphical rendering (2D, 3D, text, etc.) (Via `Makai::Graph` namespace)
+- Audio, sound & music (Via `Makai::Audio` namespace)
+- GJK-based 2D & 3D collision testing (Via `Makai::Collision` namespace)
+- Window & input handling (Via `Makai::App` class && `Makai::Input` namespace)
+- Filesystem handling (Via `Makai::File` namespace)
+- Archive file handling (Via `Makai::Tool::Arch` namespace)
+- Other utilities (encoding/decoding, JSON & FLOW support, etc.)
+
+### Future
+
+- Image processing (Via `Makai::Image` namespace)
+ 
 ## Supported operating systems
 
 - 64-bit Windows
