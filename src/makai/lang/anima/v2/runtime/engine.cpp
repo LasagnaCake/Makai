@@ -698,6 +698,8 @@ void Engine::load() {
 			context.art.types.values[self] = types.front();
 		else return crash(makeErrorHere("ART context does not contain the requested type!"));
 	}
+	if (context.art.types.values.size() < program.detail.types.size())
+		return crash(makeErrorHere("Program has missing types!"));
 	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (program.ani && loader)
