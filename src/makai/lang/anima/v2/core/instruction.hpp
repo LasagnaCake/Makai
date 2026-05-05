@@ -56,7 +56,7 @@ namespace Makai::Anima::V2::Core {
 	}
 
 	constexpr DataLocation operator~(DataLocation const& a) {
-		return Cast::as<DataLocation>(enumcast(a));
+		return Cast::as<DataLocation>(~enumcast(a));
 	}
 
 	/// @brief Execution context mode.

@@ -291,7 +291,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	auto const mod		= asModifiers(loc);
 	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
 	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
-	DEBUGLN("Data Location: ", enumcast(place));
+	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
 	switch (place) {
 		case DataLocation::AV2_DL_BOOL: {
 			return context.art.newValue((mod & DataLocation::AV2_DLB_TRUE) == DataLocation::AV2_DLB_TRUE);
