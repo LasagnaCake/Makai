@@ -580,8 +580,10 @@ static void doReturn(Context& context) {
 }
 
 static void doStackClear(Context& context) {
+	auto const count = context.getNext(LTS_TT_INTEGER).getUnsigned();
+	if (count < 1) return;
 	context.add(Instruction::Name::AV2_IN_STACK_CLEAR);
-	context.add(context.getNext(LTS_TT_INTEGER).getUnsigned());
+	context.add(count);
 }
 
 static void doField(Context& context, bool const setter, bool const dyn = false) {
@@ -867,7 +869,7 @@ static void doSelect(Context& context) {
 	context.update(inst, count);
 }
 
-static void doClear(Context& context) {
+static void doUnbind(Context& context) {
 	// TODO: this
 }
 
@@ -1477,7 +1479,7 @@ static void doExpression(Context& context) {
 	else if (id == "rewrite")					doUnsafeCast(context);
 	else if (id == "random" || id == "rng")		doRandomNumber(context);
 	else if (id == "select" || id == "pick")	doSelect(context);
-	else if (id == "unbind" || id == "drop")	doClear(context);
+	else if (id == "unbind" || id == "drop")	doUnbind(context);
 	else if (id == "create" || id == "new")		doCreate(context);
 	else if (id == "init" || id == "make")		doInitialize(context);
 	else context.error("Invalid instruction!");

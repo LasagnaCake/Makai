@@ -13,6 +13,16 @@ Node::Instance EmptyResolver::resolve(Parser& parser, Node::Instance const& left
 	return result;
 }
 
+Node::Instance EnumResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	// TODO: This
+	DEBUGLN("Resolving enumeration expression...");
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_EMPTY;
+	DEBUGLN("Empty:DONE!");
+	return result;
+}
+
 Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving direct expression...");
 	DEBUGLN("######## Value: ", token.value ? token.value.toString() : token.text.toString());
