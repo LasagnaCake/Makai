@@ -2,7 +2,9 @@
 #define CTL_CONTAINER_FUNCTION_H
 
 #include "../templates.hpp"
+#include "../interface/core.hpp"
 #include "../typetraits/traits.hpp"
+#include "../typetraits/cast.hpp"
 #include "../cpperror.hpp"
 
 // Function implementation based off of: https://stackoverflow.com/a/61191826
@@ -13,23 +15,20 @@ CTL_NAMESPACE_BEGIN
 #pragma GCC diagnostic ignored "-Wmismatched-new-delete"
 
 namespace Impl {
-	namespace Partial {
-		template <typename TReturn, typename... TArgs>
-		struct Function {
-			constexpr virtual TReturn invoke(TArgs...) const		= 0;
-			constexpr TReturn operator()(TArgs... args) const		{return invoke(args...);}
-			constexpr virtual ~Function()							= default;
-		};
-	}
+	template <typename TFunction, typename TPrototype>
+	struct Callable;
 
 	template <typename TFunction, typename TReturn, typename... TArgs>
-	struct Function: Partial::Function<TReturn, TArgs...> {
+	struct Callable<TFunction, TReturn(TArgs...)>: IInvokable<TReturn(TArgs...)>, IConstInvokable<TReturn(TArgs...)> {
 		TFunction func;
-		constexpr TReturn invoke(TArgs... args) const override {return func(args...);}
-		constexpr Function(TFunction&& func):		func(move(func))	{}
-		constexpr Function(TFunction const& func):	func(func)			{}
 
-		constexpr virtual ~Function() {}
+		constexpr TReturn invoke(TArgs... args) override		{return func(args...);}
+		constexpr TReturn invoke(TArgs... args) const override	{return func(args...);}
+
+		constexpr Callable(TFunction&& func):		func(move(func))	{}
+		constexpr Callable(TFunction const& func):	func(func)			{}
+
+		constexpr virtual ~Callable() {}
 	};
 }
 
@@ -67,19 +66,21 @@ public:
 	;
 
 private:
+	using PrototypeType  = ReturnType(TArgs...);
+
 	/// @brief Callable bound to the object.
-	owner<Impl::Partial::Function<ReturnType, TArgs...>> func{nullptr};
+	owner<IConstInvokable<PrototypeType>> func{nullptr};
 
-	template<typename TFunction>
-	using Callable = Impl::Function<Decay::AsArgument<TFunction>, TReturn, TArgs...>;
+	template<class TFunction>
+	using Callable = Impl::Callable<Decay::AsArgument<TFunction>, PrototypeType>;
 
-	template<typename TFunction>
+	template<class TFunction>
 	constexpr static owner<Callable<TFunction>>
 	makeCallable(TFunction&& f) {
 		return ::new Callable<TFunction>(CTL::move(f));
 	}
 
-	template<typename TFunction>
+	template<class TFunction>
 	constexpr static owner<Callable<TFunction>>
 	makeCallable(TFunction const& f) {
 		return ::new Callable<TFunction>(f);
@@ -87,7 +88,7 @@ private:
 
 	constexpr void assign(SelfType const& other) {
 		if (!other.func) return;
-		func = makeCallable(((owner<Callable<FunctionType>>)other.func)->func);
+		func = makeCallable(Cast::as<owner<Callable<FunctionType>>>(other.func)->func);
 	}
 
 	constexpr void destroy() {
@@ -189,7 +190,7 @@ using Acquisition	= Function<R()>;
 template<typename... Args>
 using Signal	= Procedure<Args...>;
 
-/// @brief `Function` analog for a trigger. 
+/// @brief `Function` analog for a trigger.
 /// @tparam ...Args Argument types.
 template<typename... Args>
 using Trigger	= Function<bool(Args...)>;

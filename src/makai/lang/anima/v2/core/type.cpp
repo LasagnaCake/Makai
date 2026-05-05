@@ -4,17 +4,19 @@ using namespace Makai;
 using namespace Makai::Anima::V2;
 using namespace Makai::Anima::V2::Core;
 
+
 template <class T>
-static Definition::Constructor castAndConstruct() {
-	return {
-		[] (auto a) {
-			MX::construct<T>(Cast::rewrite<ref<T>>(a));
-		}
-	};
+static void castAndConstructImpl(ref<void> a) {
+	MX::construct<T>(Cast::rewrite<ref<T>>(a));
 }
 
 static Definition::Constructor doNotConstruct() {
 	return {};
+}
+
+template <class T>
+static Definition::Destructor castAndConstruct() {
+	return {castAndConstructImpl<T>};
 }
 
 Definition::Constructor Core::constructorOf(BasicType const type) {
@@ -28,12 +30,13 @@ Definition::Constructor Core::constructorOf(BasicType const type) {
 }
 
 template <class T>
+static void castAndDestructImpl(ref<void> a) {
+	MX::destruct<T>(Cast::rewrite<ref<T>>(a));
+}
+
+template <class T>
 static Definition::Destructor castAndDestruct() {
-	return {
-		[] (auto a) {
-			MX::destruct<T>(Cast::rewrite<ref<T>>(a));
-		}
-	};
+	return {castAndDestructImpl<T>};
 }
 
 static Definition::Destructor doNotDestruct() {
@@ -51,12 +54,13 @@ Definition::Destructor Core::destructorOf(BasicType const type) {
 }
 
 template <class T>
+static void castAndCloneImpl(ref<void> a, ref<void const> b) {
+	violate<T>(a) = violate<T>(b);
+}
+
+template <class T>
 static Definition::Cloner castAndClone() {
-	return {
-		[] (auto a, auto const b) {
-			violate<T>(a) = violate<T>(b);
-		}
-	};
+	return {castAndCloneImpl<T>};
 }
 
 static Definition::Cloner doNotClone() {
@@ -88,21 +92,23 @@ Definition::Cloner Core::clonerOf(BasicType const type) {
 }
 
 template <class T>
+static int64 castAndCompareImpl(ref<void const> const a, ref<void const> const b) {
+	return enumcast<StandardOrder>(violate<T>(a) <=> violate<T>(b));
+}
+
+template <class T>
 static Definition::Comparator castAndCompare() {
-	return {
-		[] (auto const a, auto const b) -> bool {
-			return enumcast<StandardOrder>(violate<T>(a) <=> violate<T>(b));
-		}
-	};
+	return {castAndCompareImpl<T>};
+}
+
+template <class T>
+static int64 primitiveCompareImpl(ref<void const> const a, ref<void const> const b) {
+	return MX::memcmp(a, b, sizeof(T));
 }
 
 template <class T>
 static Definition::Comparator primitiveCompare() {
-	return {
-		[] (auto const a, auto const b) -> bool {
-			return MX::memcmp(a, b, sizeof(T));
-		}
-	};
+	return {primitiveCompareImpl<T>};
 }
 
 static Definition::Comparator doNotCompare() {

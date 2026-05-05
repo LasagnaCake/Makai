@@ -11,7 +11,7 @@ CTL_NAMESPACE_BEGIN
 template<class T>
 struct IConstValue {
 	/// @brief Destructor.
-	constexpr ~IConstValue() {}
+	constexpr virtual ~IConstValue() {}
 	/// @brief Returns the stored value. Must be implemented.
 	/// @return Stored value.
 	constexpr virtual T value() const = 0;
@@ -22,7 +22,7 @@ struct IConstValue {
 template<class T>
 struct IValue {
 	/// @brief Destructor.
-	constexpr ~IValue() {}
+	constexpr virtual ~IValue() {}
 	/// @brief Returns the stored value. Must be implemented.
 	/// @return Stored value.
 	constexpr virtual T value() const = 0;
@@ -31,7 +31,7 @@ struct IValue {
 /// @brief Interface for an object with toggleable visibility.
 struct IVisible {
 	/// @brief Destructor.
-	constexpr ~IVisible() {}
+	constexpr virtual ~IVisible() {}
 	/// @brief Shows the object. Must be implemented.
 	constexpr virtual void show() = 0;
 	/// @brief Hides the object. Must be implemented.
@@ -43,7 +43,7 @@ struct IVisible {
 template<class T>
 struct IClonable: T {
 	/// @brief Destructor.
-	constexpr ~IClonable() {}
+	constexpr virtual ~IClonable() {}
 	/// @brief Returns a new copy of the object.
 	/// @return copy of object.
 	constexpr virtual T clone() const = 0;
@@ -63,24 +63,29 @@ struct IInvokable;
 template<class TReturn, class... TArgs>
 struct IInvokable<TReturn(TArgs...)> {
 	/// @brief Destructor.
-	constexpr ~IInvokable() {}
+	constexpr virtual ~IInvokable() {}
 	/// @brief Invokes some code.
 	/// @param args... arguments.
 	/// @return Result.
 	constexpr virtual TReturn invoke(TArgs... args) = 0;
 };
 
+/// @brief Interface for an invokable object.
+/// @tparam TInvoke Invocation type.
+template<class TInvoke>
+struct IConstInvokable;
+
 /// @brief Interface for a const-invokable object.
-/// @tparam T Result type.
-/// @tparam Args... Argument types.
-template<class T, class... Args>
-struct IConstInvokable {
+/// @tparam TReturn Result type.
+/// @tparam TArgs... Argument types.
+template<class TReturn, class... TArgs>
+struct IConstInvokable<TReturn(TArgs...)> {
 	/// @brief Destructor.
-	constexpr ~IConstInvokable() {}
+	constexpr virtual ~IConstInvokable() {}
 	/// @brief Invokes some code.
 	/// @param args... arguments.
 	/// @return Result.
-	constexpr virtual T invoke(Args... args) const = 0;
+	constexpr virtual TReturn invoke(TArgs... args) const = 0;
 };
 
 CTL_NAMESPACE_END
