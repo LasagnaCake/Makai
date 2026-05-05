@@ -699,7 +699,13 @@ void Engine::load() {
 		else return crash(makeErrorHere("ART context does not contain the requested type!"));
 	}
 	if (context.art.types.values.size() < program.detail.types.size())
-		return crash(makeErrorHere("Program has missing types!"));
+		return crash(makeErrorHere(toString(
+			"Program has missing types [",
+			context.art.types.values.size(),
+			" < ",
+			program.detail.types.size(),
+			"]!"
+		)));
 	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (program.ani && loader)
