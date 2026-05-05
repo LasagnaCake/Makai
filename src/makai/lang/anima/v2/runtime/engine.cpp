@@ -698,6 +698,7 @@ void Engine::load() {
 			context.art.types.values[self] = types.front();
 		else return crash(makeErrorHere("ART context does not contain the requested type!"));
 	}
+	DEBUGLN("[", context.art.types.values.size(), " < ", program.detail.types.size(), "]? ", context.art.types.values.size() < program.detail.types.size());
 	if (context.art.types.values.size() < program.detail.types.size())
 		return crash(makeErrorHere(toString(
 			"Program has missing types [",
