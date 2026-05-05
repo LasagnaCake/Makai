@@ -23,17 +23,17 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template <class T>
 		consteval static auto specialHashOf() {
-			if constexpr (Type::Equal<T, int8>)		return ConstHasher::hash("int8");
-			if constexpr (Type::Equal<T, int16>)	return ConstHasher::hash("int16");
-			if constexpr (Type::Equal<T, int32>)	return ConstHasher::hash("int32");
-			if constexpr (Type::Equal<T, int64>)	return ConstHasher::hash("int64");
-			if constexpr (Type::Equal<T, uint8>)	return ConstHasher::hash("uint8");
-			if constexpr (Type::Equal<T, uint16>)	return ConstHasher::hash("uint16");
-			if constexpr (Type::Equal<T, uint32>)	return ConstHasher::hash("uint32");
-			if constexpr (Type::Equal<T, uint64>)	return ConstHasher::hash("uint64");
-			if constexpr (Type::Equal<T, float32>)	return ConstHasher::hash("real32");
-			if constexpr (Type::Equal<T, float64>)	return ConstHasher::hash("real64");
-			if constexpr (Type::Equal<T, float128>)	return ConstHasher::hash("real128");
+			if constexpr (Type::Equal<T, int8>)		return ConstHasher::hash("i8");
+			if constexpr (Type::Equal<T, int16>)	return ConstHasher::hash("i16");
+			if constexpr (Type::Equal<T, int32>)	return ConstHasher::hash("i32");
+			if constexpr (Type::Equal<T, int64>)	return ConstHasher::hash("i64");
+			if constexpr (Type::Equal<T, uint8>)	return ConstHasher::hash("u8");
+			if constexpr (Type::Equal<T, uint16>)	return ConstHasher::hash("u16");
+			if constexpr (Type::Equal<T, uint32>)	return ConstHasher::hash("u32");
+			if constexpr (Type::Equal<T, uint64>)	return ConstHasher::hash("u64");
+			if constexpr (Type::Equal<T, float32>)	return ConstHasher::hash("f32");
+			if constexpr (Type::Equal<T, float64>)	return ConstHasher::hash("f64");
+			if constexpr (Type::Equal<T, float128>)	return ConstHasher::hash("f128");
 		}
 
 		template <class T> struct ARTTI;
@@ -144,7 +144,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<> struct ARTTI<Binary<>> {
-			constexpr static auto const ART_HASH = ConstHasher::hash("bytes");
+			constexpr static auto const ART_HASH = ConstHasher::hash("bin");
 
 			static Binary<> construct(Object const& value) {
 				return value.toValue<Binary<>>();
@@ -156,7 +156,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::OneOf<String, UTF8String, UTF32String> T> struct ARTTI<T> {
-			constexpr static auto const ART_HASH = ConstHasher::hash("string");
+			constexpr static auto const ART_HASH = ConstHasher::hash("str");
 
 			static T construct(Object const& value) {
 				return value.toValue<T>();
@@ -168,7 +168,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<Makai::Type::OneOf<Vector2, Vector3, Vector4> T> struct ARTTI<T> {
-			constexpr static auto const ART_HASH = ConstHasher::hash("vector");
+			constexpr static auto const ART_HASH = ConstHasher::hash("vec");
 
 			static T construct(Object const& value) {
 				return value.toValue<Vector4>();
@@ -180,7 +180,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<> struct ARTTI<Matrix4x4> {
-			constexpr static auto const ART_HASH = ConstHasher::hash("matrix");
+			constexpr static auto const ART_HASH = ConstHasher::hash("mat");
 
 			static Matrix4x4 construct(Object const& value) {
 				return value.toValue<Matrix4x4>();
