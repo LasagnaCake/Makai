@@ -1010,6 +1010,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 					overloadScope->impl->writePostLine("call", implOv->entry);
 					overloadScope->impl->writePostLine("end");
+					overloadScope->impl->writePostLine("ret");
 					overloadScope->impl->writePostLine("@def .\n");
 					oo->hasImplementation = true;
 				}
@@ -1034,6 +1035,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		if (expr.source && expr.shouldBePushed())
 			implScope->impl->writePostLine("push", *expr.source);
 		implScope->impl->writePostLine("end");
+		implScope->impl->writePostLine("ret");
 		implScope->impl->writePostLine("@def .\n");
 		implOv->scope = implScope.asWeak();
 		context.scopeStack.popBack();
