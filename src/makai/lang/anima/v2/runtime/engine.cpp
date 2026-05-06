@@ -142,6 +142,7 @@ void Engine::v2Compare() {
 
 void Engine::v2Halt() {
 	Instruction::Stop stop = bitcast<Instruction::Stop>(current.type);
+	CPP::Debug::breakpoint();
 	switch (stop.mode) {
 		case Core::Instruction::Stop::Mode::AV2_ISM_ERROR: {
 			auto const v = consumeValue(DataLocation::AV2_DL_STRING);
@@ -207,15 +208,15 @@ Engine::Error Engine::missingArgumentsError() {
 }
 
 void Engine::advance(bool isRequired) {
-	DEBUGLN("Advancing...");
+	if (!isRequired) DEBUGLN("Advancing...");
 	++context.pointers.instruction;
-	DEBUGLN("Fetching instruction [", context.pointers.instruction, "] ...");
+	if (!isRequired) DEBUGLN("Fetching instruction [", context.pointers.instruction, "] ...");
 	if (context.pointers.instruction < program.code.size())
 		current = program.code[context.pointers.instruction];
 	else if (isRequired)
 		crash(endOfProgramError());
 	else {
-		DEBUGLN("End of program reached!");
+		if (!isRequired) DEBUGLN("End of program reached!");
 		terminate();
 	}
 }
