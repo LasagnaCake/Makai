@@ -122,13 +122,13 @@ Makai::Data::Value Module::ANI::serialize() const {
 
 Module::ANI::Shared Module::ANI::Shared::deserialize(Data::Value const& v) {
 	Module::ANI::Shared out;
-	for (auot& v: v["modules"].getArray())
+	for (auto& v: v["modules"].getArray())
 		if (!v.isUndefined())
 			out.modules.pushBack(v);
-	for (auot& v: v["interops"].getArray())
+	for (auto& v: v["interops"].getArray())
 		if (!v.isUndefined())
 			out.interops.pushBack(v);
-	for (auot& v: v["libraries"].getArray())
+	for (auto& v: v["libraries"].getArray())
 		if (!v.isUndefined())
 			out.libraries.pushBack(v);
 	return out;
