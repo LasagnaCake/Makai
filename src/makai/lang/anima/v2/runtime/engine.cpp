@@ -208,17 +208,13 @@ Engine::Error Engine::missingArgumentsError() {
 }
 
 void Engine::advance(bool isRequired) {
-	if (!isRequired) DEBUGLN("Advancing...");
 	++context.pointers.instruction;
 	if (!isRequired) DEBUGLN("Fetching instruction [", context.pointers.instruction, "] ...");
 	if (context.pointers.instruction < program.code.size())
 		current = program.code[context.pointers.instruction];
 	else if (isRequired)
-		crash(endOfProgramError());
-	else {
-		if (!isRequired) DEBUGLN("End of program reached!");
-		terminate();
-	}
+		return crash(endOfProgramError());
+	else return terminate();
 }
 
 void Engine::v2Return() {
@@ -267,10 +263,10 @@ void Engine::v2Call() {
 					Makai::String err = "EXTERNAL FUNCTION: ";
 					switch (e) {
 						using enum Core::Context::Error;
-						case AV2_CCE_MISSING_METHOD:		err += "Function does not exist";
-						case AV2_CCE_MISSING_ARGS:			err += "Not enough args for function";
-						case AV2_CCE_MISSING_ART_TYPE:		err += "Return type does not exist in the current ART context";
-						case AV2_CCE_HOW_DID_YOU_GET_HERE:	err += "Somehow, execution reached an unreachable point";
+						case AV2_CCE_MISSING_METHOD:		err += "Function does not exist";								break;
+						case AV2_CCE_MISSING_ARGS:			err += "Not enough args for function";							break;
+						case AV2_CCE_MISSING_ART_TYPE:		err += "Return type does not exist in the current ART context";	break;
+						case AV2_CCE_HOW_DID_YOU_GET_HERE:	err += "Somehow, execution reached an unreachable point";		break;
 					}
 					crash(invalidFunctionError(err));
 				}

@@ -200,6 +200,7 @@ Makai::Data::Value Module::Method::serialize() const {
 	result["out"] = out;
 	result["shared"] = shared;
 	result["entry"] = entrypoint;
+	result["optional"] = optional;
 	result["size"] = size;
 	result["meta"] = meta;
 	return result;
@@ -219,6 +220,7 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 	result.out = v["out"];
 	result.shared = v["shared"];
 	result.entrypoint = v["entry"];
+	result.optional = v["optional"];
 	result.size = v["size"];
 	if (v.contains("meta"))
 		result.meta = v["meta"];

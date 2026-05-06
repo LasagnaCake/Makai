@@ -18,7 +18,7 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		else if (ov->outEntry.size())
 			ovstr += "@out[\"" + ov->outEntry + "\"] ";
 		else ovstr += "@fn ";
-		if (ov->variant == decltype(ov->variant)::AV2_TCB_FOV_DYNLIB)
+		if (ov->outEntry.size())
 			ovstr += ov->optional ? "optional " : "required ";
 		composer.functions.pushBack(
 			ovstr
