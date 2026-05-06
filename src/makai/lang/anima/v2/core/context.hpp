@@ -81,7 +81,7 @@ namespace Makai::Anima::V2::Core {
 				return context.addExternalMethod(name, f);
 			}
 
-			MethodAdder(Context& context): context(context) {}
+			constexpr MethodAdder(Context& context): context(context) {}
 
 		private:
 			Context& context;
@@ -92,7 +92,7 @@ namespace Makai::Anima::V2::Core {
 				context.removeExternalMethod(name);
 			}
 
-			MethodRemover(Context& context): context(context) {}
+			constexpr MethodRemover(Context& context): context(context) {}
 
 		private:
 			Context& context;
@@ -104,7 +104,7 @@ namespace Makai::Anima::V2::Core {
 				return context.addExternalType<T>();
 			}
 
-			TypeAdder(Context& context): context(context) {}
+			constexpr TypeAdder(Context& context): context(context) {}
 
 		private:
 			Context& context;
@@ -116,11 +116,22 @@ namespace Makai::Anima::V2::Core {
 				context.removeExternalType<T>();
 			}
 
-			TypeRemover(Context& context): context(context) {}
+			constexpr TypeRemover(Context& context): context(context) {}
 
 		private:
 			Context& context;
 		};
+
+		template <class TMethodHandler, class TTypeHandler>
+		struct ContextHandler {
+			TMethodHandler	const methods;
+			TTypeHandler	const types;
+
+			constexpr ContextHandler(Context& context): methods(context), types(context) {}
+		};
+
+		using Adder		= ContextHandler<MethodAdder, TypeAdder>;
+		using Remover	= ContextHandler<MethodRemover, TypeRemover>;
 
 		template <class TFunc>
 		bool addExternalMethod(String const& name, TFunc const& f) {

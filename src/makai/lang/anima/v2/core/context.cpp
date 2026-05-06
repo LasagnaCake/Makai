@@ -22,13 +22,13 @@ void Context::Library::close() {
 
 void Context::loadLibraries() {
 	for (auto& lib: toBeLoaded)
-		lib->load(*this, *this);
+		lib->load(*this);
 	toBeLoaded.clear();
 }
 
 void Context::unloadLibraries() {
 	for (auto& [name, lib]: dynlibs)
-		lib.impl->unload(*this, *this);
+		lib.impl->unload(*this);
 	dynlibs.clear();
 }
 
@@ -39,6 +39,10 @@ Makai::Nullable<Context::Library> Context::Library::open(Makai::String const& pa
 	auto const fn = lib.dll.function<owner<ILibrary>()>("AV2_Extern_getLibrary");
 	lib.impl = fn();
 	if (!lib.impl) return null;
+	DEBUGLN("<library>");
+	DEBUGLN("<name>", lib.impl->name(), "</name>");
+	DEBUGLN("<version>", lib.impl->version().serialize().toFLOWString(), "</version>");
+	DEBUGLN("</library>");
 	lib.impl->open();
 	return lib;
 }

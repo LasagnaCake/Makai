@@ -31,12 +31,18 @@ struct ConsoleLib: ILibrary {
 			writeLine_string(toString(what.value->toDynamicValue()));
 	}
 
-	void load(Context::TypeAdder const& types, Context::MethodAdder const& methods) {
-		methods.add("av2/console/write_string", write_string);
-		methods.add("av2/console/write_any", write_any);
-		methods.add("av2/console/writeLine_string", writeLine_string);
-		methods.add("av2/console/writeLine_any", writeLine_any);
+	void open() override {doWriteLine("Opening " + CTL::toString(__FILE__) + "...");}
+
+	void close() override {doWriteLine("Closing " + CTL::toString(__FILE__)  + "...");}
+
+	void load(Context::Adder const& context) override {
+		context.methods.add("av2/console/write_string", write_string);
+		context.methods.add("av2/console/write_any", write_any);
+		context.methods.add("av2/console/writeLine_string", writeLine_string);
+		context.methods.add("av2/console/writeLine_any", writeLine_any);
 	}
+
+	String name() const override {return "av2/console";}
 };
 
 AV2_Library(ConsoleLib);

@@ -6,10 +6,14 @@
 namespace Makai::Anima::V2::Core {
 	struct ILibrary {
 		virtual ~ILibrary() {}
-		virtual void open()																				{}
-		virtual void load(Context::TypeAdder const& types, Context::MethodAdder const& methods)			= 0;
-		virtual void unload(Context::TypeRemover const& types, Context::MethodRemover const& methods)	{}
-		virtual void close()																			{}
+		virtual void open()										{DEBUGLN("Opening [", name(), "]...");}
+		virtual void load(Context::Adder const& context)		= 0;
+		virtual void unload(Context::Remover const& remover)	{DEBUGLN("Unloading [", name(), "]...");}
+		virtual void close()									{DEBUGLN("Closing [", name(), "]...");}
+
+		virtual String			name() const	= 0;
+		virtual Data::Version	version() const	{return Data::Version{0};		}
+		virtual usize			hash() const	{return Makai::hash(name());	}
 	};
 }
 

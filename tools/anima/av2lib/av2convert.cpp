@@ -4,8 +4,10 @@ using namespace Makai;
 using namespace Anima::V2::Core;
 
 struct ConvertLib: ILibrary {
-	void load(Context::TypeAdder const& types, Context::MethodAdder const& methods) {
+	void load(Context::Adder const& adder) override {
 	}
+
+	String name() const override {return "av2/convert";}
 };
 
 AV2_Library(ConvertLib);

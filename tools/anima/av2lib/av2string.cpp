@@ -32,15 +32,17 @@ struct StringLib: ILibrary {
 		return Regex::find(str, expr).toList<String>([] (auto const& e) {return e.match;});
 	}
 
-	void load(Context::TypeAdder const& types, Context::MethodAdder const& methods) {
-		methods.add("av2/string/replace", replace);
-		methods.add("av2/string/contains", contains);
-		methods.add("av2/string/matches", matches);
-		methods.add("av2/string/count", count);
-		methods.add("av2/string/findFirst", findFirst);
-		methods.add("av2/string/firstIndexOf", firstIndexOf);
-		methods.add("av2/string/find", find);
+	void load(Context::Adder const& context) override {
+		context.methods.add("av2/string/replace", replace);
+		context.methods.add("av2/string/contains", contains);
+		context.methods.add("av2/string/matches", matches);
+		context.methods.add("av2/string/count", count);
+		context.methods.add("av2/string/findFirst", findFirst);
+		context.methods.add("av2/string/firstIndexOf", firstIndexOf);
+		context.methods.add("av2/string/find", find);
 	}
+
+	String name() const override {return "av2/string";}
 };
 
 AV2_Library(StringLib);
