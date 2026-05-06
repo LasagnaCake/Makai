@@ -1,0 +1,4 @@
+using import core.types.any
+
+@Basic(type = "char")
+struct char : any {}

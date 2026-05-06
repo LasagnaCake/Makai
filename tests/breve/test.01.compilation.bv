@@ -1,5 +1,4 @@
-using import core.types;
-using import core.io;
+using import core;
 
 module Test.Namespace {
 	@Nullable

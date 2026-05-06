@@ -10,6 +10,7 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 using namespace Core;
 
 bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& path) {
+	DEBUGLN("Searching for library [", path, "]...");
 	StringList paths = {
 		path,
 		OS::FS::concatenate(OS::FS::sourceLocation(), path),
@@ -17,9 +18,12 @@ bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& p
 	};
 	if (auto const artHome = getenv("ART_HOME"))
 		paths.pushBack(OS::FS::concatenate(artHome, "av2", path));
-	for (auto const& p: paths)
+	for (auto const& p: paths) {
+		DEBUGLN("  > On path '", p, "'");
 		if (OS::FS::exists(p))
 			return context.art.openLibrary(path);
+	}
+	DEBUGLN("Not found");
 	return false;
 }
 
