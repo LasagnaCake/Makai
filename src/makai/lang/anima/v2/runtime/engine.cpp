@@ -831,18 +831,16 @@ void Engine::v2ScopeBind() {
 	auto const count = Makai::Cast::bit<uint64>(current);
 	auto& src = context.globalValueStack;
 	auto& dst = context.locals();
-	if (!((bind.src + count) < src.size()))
+	if ((bind.src + count) > src.size())
 		return crash(outOfRangeError("Requested global stack range falls outside its size!"));
-	if (!((bind.dst + count) < dst.size()))
+	if ((bind.dst + count) > dst.size())
 		return crash(outOfRangeError("Requested destination range falls outside its size!"));
 	for (usize i = 0; i < count; ++i)
-		dst[i + bind.dst] = src[i + (src.size() - count - bind.src + 1)];
+		dst[i + bind.dst] = src[i + (src.size() - count - bind.src - 1)];
 }
 
 void Engine::v2ScopeEnter() {
 	auto const count = current.type;
-	if (context.globalValueStack.size() < count)
-		return crash(missingArgumentsError());
 	context.scopeStack.pushBack({
 		.mode			= context.scope().mode,
 		.prevMode		= context.scope().mode,

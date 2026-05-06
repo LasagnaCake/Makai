@@ -145,6 +145,31 @@ Definition::Comparator Core::comparatorOf(BasicType const type) {
 }
 
 void Definition::makeBasic(Definition& type) {
+	switch (type.hash) {
+		type.byteSize = 0;
+		case Makai::hash("bool"):	type.byteSize = sizeof(bool);				break;
+		case Makai::hash("i8"):		type.byteSize = sizeof(int8);				break;
+		case Makai::hash("u8"):		type.byteSize = sizeof(uint8);				break;
+		case Makai::hash("i16"):	type.byteSize = sizeof(int16);				break;
+		case Makai::hash("u16"):	type.byteSize = sizeof(uint16);				break;
+		case Makai::hash("i32"):	type.byteSize = sizeof(int32);				break;
+		case Makai::hash("u32"):	type.byteSize = sizeof(uint32);				break;
+		case Makai::hash("i64"):	type.byteSize = sizeof(int64);				break;
+		case Makai::hash("u64"):	type.byteSize = sizeof(uint64);				break;
+		case Makai::hash("f32"):	type.byteSize = sizeof(float32);			break;
+		case Makai::hash("f64"):	type.byteSize = sizeof(float64);			break;
+		case Makai::hash("f128"):	type.byteSize = sizeof(float128);			break;
+		case Makai::hash("char"):	type.byteSize = sizeof(Makai::UTF8Char);	break;
+		case Makai::hash("str"):	type.byteSize = sizeof(Makai::UTF8String);	break;
+		case Makai::hash("vec"):	type.byteSize = sizeof(Makai::Vector4);		break;
+		case Makai::hash("mat"):	type.byteSize = sizeof(Makai::Matrix4x4);	break;
+		case Makai::hash("bin"):	type.byteSize = sizeof(Makai::Bytes<>);		break;
+		case Makai::hash("type"):	type.byteSize = sizeof(TypeID);				break;
+		case Makai::hash("void"):	type.alignment = 0;							break;
+		case Makai::hash("any"):	type.alignment = 0;							break;
+		case Makai::hash("nil"):	type.alignment = 0;							break;
+		default: break;
+	}
 	type.construct	= constructorOf(type.basic);
 	type.destruct	= destructorOf(type.basic);
 	type.copy		= clonerOf(type.basic);
