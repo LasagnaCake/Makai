@@ -474,6 +474,22 @@ namespace OS::FS {
 		return resolve("/proc/self/exe").splitAtLast('/').front();
 		#endif
 	}
+
+	inline String asSharedLibrary(String const name) {
+		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
+		return name + ".dll";
+		#else
+		return name + ".so";
+		#endif
+	}
+
+	inline String asExecutable(String const name) {
+		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
+		return name + ".exe";
+		#else
+		return name;
+		#endif
+	}
 }
 
 CTL_NAMESPACE_END
