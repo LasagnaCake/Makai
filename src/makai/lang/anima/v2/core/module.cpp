@@ -101,6 +101,8 @@ Module::ANI Module::ANI::deserialize(Makai::Data::Value const& v) {
 		for (auto const& e: externs.get<Data::Value::ArrayType>())
 			ani.out.pushBack(e);
 	}
+	if (v.contains("shared"))
+		ani.shared = v["shared"];
 	return ani;
 }
 
