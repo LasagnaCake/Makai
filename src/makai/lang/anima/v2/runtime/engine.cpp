@@ -715,7 +715,7 @@ void Engine::load() {
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (program.ani && loader)
 		for (auto& lib: program.ani->shared.libraries)
-			loader->loadLibrary(context, lib);
+			loader->loadLibrary(context, OS::FS::asSharedLibrary(lib));
 	context.art.loadLibraries();
 	engineState = State::AV2_RES_RUNNING;
 }
