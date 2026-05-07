@@ -12,6 +12,7 @@
 #include "archive.hpp"
 
 #include "../../data/encdec.hpp"
+#include "../../data/hash.hpp"
 
 using namespace CTL::Literals::Text;
 
@@ -73,6 +74,11 @@ constexpr String Arch::truncate(String const& str) {
 	for (usize i = 0; i < str.size()/2; ++i)
 		result[i] = (str[i*2] ^ str[i*2+1]);
 	return result;
+}
+
+uint32 Arch::crcOf(BinaryData<> const& data) {
+	auto const crc = Makai::hash(Data::hashed(data, Makai::Data::HashMode::HM_SHA3_512));
+	return crc ^ (crc >> sizeof(uint32));
 }
 
 String Arch::hashPassword(String const& str) {
@@ -311,14 +317,12 @@ void Arch::pack(
 		// Headers
 		ArchiveHeader	header;
 		// Set main header params
-		header.version		= ARCHIVE_VERSION;		// file format version
-		header.minVersion	= ARCHIVE_MIN_VERSION;	// file format minimum version
-		header.encryption	= (uint16)enc;			// encryption mode
-		header.compression	= (uint16)comp;			// compression mode
-		header.level		= complvl;				// compression level
-		/*header.flags =
-			Flags::SHOULD_CHECK_CRC_BIT				// Do CRC step
-		;*/
+		header.flags		= Flags::SHOULD_CHECK_CRC_BIT	// Do CRC step
+		header.version		= ARCHIVE_VERSION;				// file format version
+		header.minVersion	= ARCHIVE_MIN_VERSION;			// file format minimum version
+		header.encryption	= (uint16)enc;					// encryption mode
+		header.compression	= (uint16)comp;					// compression mode
+		header.level		= complvl;						// compression level
 		DEBUGLN("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
 		DEBUGLN("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
 		DEBUGLN("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
@@ -365,7 +369,7 @@ void Arch::pack(
 				DEBUGLN("After encryption: ", contents.size());
 			}
 			fheader.compSize	= contents.size();	// Compressed file size
-			fheader.crc			= 0;				// CRC (currently not working)
+			fheader.crc			= crcOf(contents);	// CRC (currently not working)
 			// Debug info
 			DEBUGLN("'", files[i], "':");
 			DEBUGLN("          FILE INDEX: ", i							);
@@ -704,7 +708,7 @@ void Arch::FileArchive::processFileEntry(FileEntry& entry) const {
 	demangleData(data, entry.header.block);
 	if (data.size() != entry.header.uncSize)
 		corruptedFileError(entry.path);
-	if (header.flags & Flags::SHOULD_CHECK_CRC_BIT && !true) // CRC currently not working
+	if (header.flags & Flags::SHOULD_CHECK_CRC_BIT && (entry.header.crc != crcOf(data))) // CRC currently not working
 		crcFailError(entry.path);
 	entry.data = data;
 }
@@ -928,7 +932,7 @@ BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& pas
 				"Failed to load '" + path + "'!",
 				"Uncompressed size doesn't match!"
 			);
-		if ((header.flags & Flags::SHOULD_CHECK_CRC_BIT) && !true) // CRC currently not working
+		if ((header.flags & Flags::SHOULD_CHECK_CRC_BIT) && (fh.crc != crcOf(fd))) // CRC currently not working
 			File::FileLoadError(
 				"Failed to load '" + path + "'!",
 				"CRC check failed!"
@@ -946,7 +950,7 @@ BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& pas
 
 String Arch::loadEncryptedTextFile(String const& path, String const& password) {
 	BinaryData<> fd = loadEncryptedBinaryFile(path, password);
-	return String(List<char>(fd));
+	return String(fd.toList<char>());
 }
 
 template<typename T>
@@ -976,7 +980,7 @@ void Arch::saveEncryptedBinaryFile(
 	header.level		= lvl;			// compression level
 	header.flags =
 		Flags::SINGLE_FILE_ARCHIVE_BIT	// Single-file archive
-	//|	Flags::SHOULD_CHECK_CRC_BIT		// Do CRC step
+	|	Flags::SHOULD_CHECK_CRC_BIT		// Do CRC step
 	;
 	// Write header
 	file.write((char*)&header, header.headerSize);
@@ -1004,7 +1008,7 @@ void Arch::saveEncryptedBinaryFile(
 			);
 		}
 		fheader.compSize	= contents.size();	// Compressed file size
-		fheader.crc			= 0;				// CRC (currently not working)
+		fheader.crc			= crcOf(contents);	// CRC (currently not working)
 		// Copy header & file data
 		file.write((char*)&fheader, header.fileHeaderSize);
 		file.write((char*)contents.data(), contents.size());

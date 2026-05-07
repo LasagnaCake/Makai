@@ -91,6 +91,11 @@ namespace Makai::Tool::Arch {
 		uint8 const					level	= 9
 	);
 
+	/// @brief Gets the CRC for some data.
+	/// @param data Data to get CRC for.
+	/// @return CRC of data.
+	uint32 crcOf(BinaryData<> const& data);
+
 	/// @brief File entry header.
 	struct [[gnu::packed]] FileHeader {
 		uint64	uncSize;
