@@ -55,7 +55,7 @@ OBJ := $(EXTRAOBJS)
 ifeq ($(os),win)
 WINFLAG := -mwindows
 dynlib ?=dll
-makelib = -Wl--imp-implib=$(strip $(1)).a
+makelib = -Wl,--imp-implib=$(strip $(1)).a
 else
 dynlib ?=so
 makelib = -Wl,-soname,$(strip $(1))
