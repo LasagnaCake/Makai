@@ -77,7 +77,7 @@ namespace ANSI {
 			color = enumcast(bg) + 40;
 			if (color > 47) color += 53;
 			out += ::CTL::toString(color, ";");
-			return out;
+			return out + "m";
 		}
 	};
 
@@ -106,3 +106,5 @@ namespace ANSI {
 }
 
 CTL_NAMESPACE_END
+
+#endif

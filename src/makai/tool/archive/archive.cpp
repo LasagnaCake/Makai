@@ -77,7 +77,7 @@ constexpr String Arch::truncate(String const& str) {
 }
 
 uint32 Arch::crcOf(BinaryData<> const& data) {
-	auto const crc = Makai::hash(Data::hashed(data, Makai::Data::HashMode::HM_SHA3_512));
+	auto const crc = Makai::hash(Data::hashed(data, Makai::Data::HashMode::HM_SHA3_512).toList<char>());
 	return crc ^ (crc >> sizeof(uint32));
 }
 
@@ -317,12 +317,14 @@ void Arch::pack(
 		// Headers
 		ArchiveHeader	header;
 		// Set main header params
-		header.flags		= Flags::SHOULD_CHECK_CRC_BIT	// Do CRC step
 		header.version		= ARCHIVE_VERSION;				// file format version
 		header.minVersion	= ARCHIVE_MIN_VERSION;			// file format minimum version
 		header.encryption	= (uint16)enc;					// encryption mode
 		header.compression	= (uint16)comp;					// compression mode
 		header.level		= complvl;						// compression level
+		header.flags =
+			Flags::SHOULD_CHECK_CRC_BIT	// Do CRC step
+		;
 		DEBUGLN("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
 		DEBUGLN("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
 		DEBUGLN("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);

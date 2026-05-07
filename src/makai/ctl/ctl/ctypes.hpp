@@ -1,16 +1,15 @@
 #ifndef CTL_EXTENDED_TYPES_H
 #define CTL_EXTENDED_TYPES_H
 
-#include <ctype.h>
 #include "meta/if.hpp"
 
-#if		INTPTR_MAX == INT64_MAX
+#if		__INTPTR_MAX__ == __INT64_MAX__
 /// @brief CPU architecture.
 #define CPU_ARCH (64)
-#elif	INTPTR_MAX == INT32_MAX
+#elif	__INTPTR_MAX__ == __INT32_MAX__
 /// @brief CPU architecture.
 #define CPU_ARCH (32)
-#elif	INTPTR_MAX == INT16_MAX
+#elif	__INTPTR_MAX__ == __INT16_MAX__
 /// @brief CPU architecture.
 #define CPU_ARCH (16)
 #else

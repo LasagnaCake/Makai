@@ -282,6 +282,15 @@ struct ConstHasher {
 		return Impl::Hash::constHash(data, size, SEED);
 	}
 
+	/// @brief Generates the hash for a given series of bytes.
+	/// @param data Pointer to beginning of string.
+	/// @param size Size of string.
+	/// @return Resulting hash.
+	template <Type::Different<char const> T>
+	constexpr static usize hash(ref<T> const data, usize const size) {
+		return Impl::Hash::constHash((cstring)data, size * sizeof(T), SEED);
+	}
+
 	/// @brief Generates the hash for a given fixed char array.
 	/// @tparam S Array size.
 	/// @param str Array to hash.
