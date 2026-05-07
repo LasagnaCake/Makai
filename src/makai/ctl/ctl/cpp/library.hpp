@@ -35,6 +35,10 @@ namespace CPP {
 		#else
 		Module (String const& path) {
 			lib = dlopen(path.cstr(), RTLD_LAZY | RTLD_LOCAL);
+			if (!lib) throw Error::FailedAction(
+				"Failed to load library '"+path+"'!",
+				CTL_CPP_PRETTY_SOURCE
+			);
 		}
 
 		~Module()									{if (lib) dlclose(lib);						}
