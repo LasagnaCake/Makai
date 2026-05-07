@@ -4,103 +4,104 @@
 #include "../namespace.hpp"
 #include "../container/strings/strings.hpp"
 #include "../algorithm/strconv.hpp"
+#include "../typetraits/enum.hpp"
 
 CTL_NAMESPACE_BEGIN
 
 namespace ANSI {
-	namespace TextCode {
-		struct Code: Streamable<char>, SelfIdentified<Code> {
-			using Streamable		= ::CTL::Streamable<char>;
-			using SelfIdentified	= ::CTL::SelfIdentified<Code>;
-
-			using
-				typename SelfIdentified::SelfType
-			;
-
-			using
-				typename Streamable::InputStreamType,
-				typename Streamable::OutputStreamType
-			;
-
-			/// @brief Stream insertion operator.
-			constexpr OutputStreamType& operator<<(OutputStreamType& o) const							{o << "\033[" << code << "m"; return o;			}
-			/// @brief Stream insertion operator.
-			friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType const& self)	{o << "\033[" << self.code << "m"; return o;	}
-
-			String toString() const {return ::CTL::toString("\033[", code, "m");}
-
-			uint8 code;
+	struct [[gnu::packed]] Code {
+		enum class Format: uint16 {
+			ACF_NONE		= 0,
+			ACF_BOLD		= 1 << 0,
+			ACF_DIM			= 1 << 1,
+			ACF_ITALIC		= 1 << 2,
+			ACF_UNDERLINE	= 1 << 3,
+			ACF_BLINK		= 1 << 4,
+			ACF_FLASH		= 1 << 5,
+			ACF_INVERT		= 1 << 6,
+			ACF_HIDE		= 1 << 7,
+			ACF_STRIKE		= 1 << 8
 		};
 
-		constexpr static Code const NONE			= {0};
-		constexpr static Code const BOLD			= {1};
-		constexpr static Code const DIM				= {2};
-		constexpr static Code const ITALIC			= {3};
-		constexpr static Code const UNDERLINE		= {4};
-		constexpr static Code const BLINK			= {5};
-		constexpr static Code const FLASH			= {6};
-		constexpr static Code const INVERT			= {7};
-		constexpr static Code const HIDE			= {8};
-		constexpr static Code const STRIKE			= {9};
-		constexpr static Code const DEFAULT_FONT	= {10};
-		constexpr static Code const ALT_FONT_0		= {11};
-		constexpr static Code const ALT_FONT_1		= {12};
-		constexpr static Code const ALT_FONT_2		= {13};
-		constexpr static Code const ALT_FONT_3		= {14};
-		constexpr static Code const ALT_FONT_4		= {15};
-		constexpr static Code const ALT_FONT_5		= {16};
-		constexpr static Code const ALT_FONT_6		= {17};
-		constexpr static Code const ALT_FONT_7		= {18};
-		constexpr static Code const ALT_FONT_8		= {19};
-		constexpr static Code const GOTHIC_FONT		= {20};
+		enum class Font: uint8 {
+			ACF_DEFAULT_FONT,
+			ACF_ALT_FONT_0,
+			ACF_ALT_FONT_1,
+			ACF_ALT_FONT_2,
+			ACF_ALT_FONT_3,
+			ACF_ALT_FONT_4,
+			ACF_ALT_FONT_5,
+			ACF_ALT_FONT_6,
+			ACF_ALT_FONT_7,
+			ACF_ALT_FONT_8,
+			ACF_ALT_GOTHIC_FONT,
+		};
 
-		constexpr static Code const BLACK_TEXT		= {30};
-		constexpr static Code const BLACK_BG		= {40};
+		enum class Color: uint8 {
+			ACC_BLACK,
+			ACC_RED,
+			ACC_GREEN,
+			ACC_YELLOW,
+			ACC_BLUE,
+			ACC_MAGENTA,
+			ACC_CYAN,
+			ACC_WHITE,
+			ACC_LIGHT_BLACK,
+			ACC_LIGHT_RED,
+			ACC_LIGHT_GREEN,
+			ACC_LIGHT_YELLOW,
+			ACC_LIGHT_BLUE,
+			ACC_LIGHT_MAGENTA,
+			ACC_LIGHT_CYAN,
+			ACC_LIGHT_WHITE,
+		};
 
-		constexpr static Code const RED_TEXT		= {31};
-		constexpr static Code const RED_BG			= {41};
+		Format	format:	9	= Format::ACF_NONE;
+		Font	font:	4	= Font::ACF_DEFAULT_FONT;
+		Color	text:	4	= Color::ACC_WHITE;
+		Color	bg:		4	= Color::ACC_BLACK;
 
-		constexpr static Code const GREEN_TEXT		= {32};
-		constexpr static Code const GREEN_BG		= {42};
+		constexpr String toString() const {
+			String out = "\033[0;";
+			auto fmt = enumcast(format);
+			usize code = 1;
+			if (fmt) do {
+				if (fmt & 1) out += ::CTL::toString(code) + ";";
+				++code;
+			} while (fmt >> 1);
+			out += "38;";
+			auto color = enumcast(text) + 30;
+			if (color > 37) color += 53;
+			out += ::CTL::toString(color, ";");
+			out += "38;";
+			color = enumcast(bg) + 40;
+			if (color > 47) color += 53;
+			out += ::CTL::toString(color, ";");
+			return out;
+		}
+	};
 
-		constexpr static Code const YELLOW_TEXT		= {33};
-		constexpr static Code const YELLOW_BG		= {43};
+	constexpr Code::Format operator|(Code::Format const a, Code::Format const b) {
+		return Code::Format{enumcast(a) | enumcast(b)};
+	}
 
-		constexpr static Code const BLUE_TEXT		= {34};
-		constexpr static Code const BLUE_BG			= {44};
+	constexpr Code::Format operator&(Code::Format const a, Code::Format const b) {
+		return Code::Format{enumcast(a) & enumcast(b)};
+	}
 
-		constexpr static Code const MAGENTA_TEXT	= {35};
-		constexpr static Code const MAGENTA_BG		= {45};
+	constexpr Code::Format operator~(Code::Format const a) {
+		return Code::Format{~enumcast(a)};
+	}
 
-		constexpr static Code const CYAN_TEXT		= {36};
-		constexpr static Code const CYAN_BG			= {46};
+	constexpr Code const NONE = Code{};
 
-		constexpr static Code const WHITE_TEXT		= {37};
-		constexpr static Code const WHITE_BG		= {47};
+	constexpr String format(String const& str, Code const& code) {
+		return code.toString() + str + NONE.toString();
+	}
 
-		constexpr static Code const BRIGHT_BLACK_TEXT	= {90};
-		constexpr static Code const BRIGHT_BLACK_BG		= {100};
-
-		constexpr static Code const BRIGHT_RED_TEXT		= {91};
-		constexpr static Code const BRIGHT_RED_BG		= {101};
-
-		constexpr static Code const BRIGHT_GREEN_TEXT	= {92};
-		constexpr static Code const BRIGHT_GREEN_BG		= {102};
-
-		constexpr static Code const BRIGHT_YELLOW_TEXT	= {93};
-		constexpr static Code const BRIGHT_YELLOW_BG	= {103};
-
-		constexpr static Code const BRIGHT_BLUE_TEXT	= {94};
-		constexpr static Code const BRIGHT_BLUE_BG		= {104};
-
-		constexpr static Code const BRIGHT_MAGENTA_TEXT	= {95};
-		constexpr static Code const BRIGHT_MAGENTA_BG	= {105};
-
-		constexpr static Code const BRIGHT_CYAN_TEXT	= {96};
-		constexpr static Code const BRIGHT_CYAN_BG		= {106};
-
-		constexpr static Code const BRIGHT_WHITE_TEXT	= {97};
-		constexpr static Code const BRIGHT_WHITE_BG		= {107};
+	template <Code C>
+	constexpr String format(String const& str) {
+		return format(str, C);
 	}
 }
 
