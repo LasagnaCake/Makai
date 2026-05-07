@@ -33,9 +33,10 @@ LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
 
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) -fPIC -shared -s
-LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LEAN) $(LIBRARIES)
+LINKCFG	:= $(LINKER_CONFIG) -shared -s -O$(o) $(LEAN) $(LIBRARIES)
 
 COMPILER	:= $(CXX) $(INCLUDES)
+LINKER		:= $(CXX) $(LINKCFG)
 
 EXTRAOBJS := $(ROOT)/output/lib/libmakai.a
 
@@ -54,8 +55,10 @@ OBJ := $(EXTRAOBJS)
 ifeq ($(os),win)
 WINFLAG := -mwindows
 dynlib ?=dll
+makelib = -Wl--imp-implib=$(strip $(1)).a
 else
 dynlib ?=so
+makelib = -Wl,-soname,$(strip $(1))
 endif
 
 .PHONY: debug release all libs packer concerto minimac brevec arte finale
@@ -68,7 +71,8 @@ all: libs
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).$(dynlib)
+	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
+	$(LINKER) -o av2$(strip $(1)).o $(call makelib, av2$(strip $(1)).$(dynlib))
 endef
 
 prologue:
