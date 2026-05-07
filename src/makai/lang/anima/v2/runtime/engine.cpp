@@ -13,15 +13,15 @@ bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& p
 	DEBUGLN("Searching for library [", path, "]...");
 	StringList paths = {
 		path,
-		OS::FS::concatenate(OS::FS::sourceLocation(), "av2", path),
 		OS::FS::concatenate(OS::FS::currentDirectory(), path),
+		OS::FS::concatenate(OS::FS::sourceLocation(), "av2", path),
 	};
 	if (auto const artHome = getenv("ART_HOME"))
 		paths.pushBack(OS::FS::concatenate(artHome, "av2", path));
 	for (auto const& p: paths) {
 		DEBUGLN("  > On path '", p, "'");
 		if (OS::FS::exists(p))
-			return context.art.openLibrary(path);
+			return context.art.openLibrary(p);
 	}
 	DEBUGLN("Not found");
 	return false;

@@ -9,6 +9,7 @@ Context::Library::~Library()	{close();			}
 
 bool Context::openLibrary(Makai::String const& path) {
 	if (dynlibs.contains(path)) return true;
+	DEBUGLN("Fetching library...");
 	auto const lib = Library::open(path, *this);
 	if (!lib) return false;
 	dynlibs[path] = *lib;
@@ -34,8 +35,10 @@ void Context::unloadLibraries() {
 
 Makai::Nullable<Context::Library> Context::Library::open(Makai::String const& path, Context& context) {
 	if (!Makai::OS::FS::exists(path)) return null;
+	DEBUGLN("Opening library...");
 	Library lib;
 	lib.dll.open(path);
+	DEBUGLN("Getting entrypoint...");
 	auto const fn = lib.dll.function<owner<ILibrary>()>("AV2_Extern_getLibrary");
 	lib.impl = fn();
 	if (!lib.impl) return null;
