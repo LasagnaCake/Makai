@@ -7,6 +7,7 @@
 #include "../container/error.hpp"
 #include "../container/nullable.hpp"
 #include "../container/functor.hpp"
+#include "../algorithm/strconv.hpp"
 #include "sourcefile.hpp"
 
 #if (CTL_TARGET_OS == CTL_OS_WINDOWS)
@@ -25,6 +26,7 @@ namespace CPP {
 				lib = LoadLibrary(path.cstr());
 				if (!lib) throw Error::FailedAction(
 					"Failed to load library '"+path+"'!",
+					toString("ERROR CODE ", GetLastError()),
 					CTL_CPP_PRETTY_SOURCE
 				);
 			}
@@ -37,6 +39,7 @@ namespace CPP {
 			lib = dlopen(path.cstr(), RTLD_LAZY | RTLD_LOCAL);
 			if (!lib) throw Error::FailedAction(
 				"Failed to load library '"+path+"'!",
+				dlerror(),
 				CTL_CPP_PRETTY_SOURCE
 			);
 		}
