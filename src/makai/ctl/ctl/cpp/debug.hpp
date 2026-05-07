@@ -29,7 +29,11 @@ namespace CPP::Debug {
 		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 		return IsDebuggerPresent();
 		#else
+		#ifdef CTL_CONSOLE_OUT
+		return true;
+		#else
 		return false;
+		#endif
 		#endif
 	}
 
