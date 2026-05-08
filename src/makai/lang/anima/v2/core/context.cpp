@@ -10,9 +10,10 @@ Context::Library::~Library()	{close();			}
 bool Context::openLibrary(Makai::String const& path) {
 	if (dynlibs.contains(path)) return true;
 	DEBUGLN("Fetching library...");
-	auto const lib = Library::open(path, *this);
-	if (!lib) return false;
-	dynlibs[path] = *lib;
+	Library lib;
+	if (!lib.open(path, *this))
+		return false;
+	dynlibs[path] = lib;
 	return true;
 }
 
@@ -33,19 +34,19 @@ void Context::unloadLibraries() {
 	dynlibs.clear();
 }
 
-Makai::Nullable<Context::Library> Context::Library::open(Makai::String const& path, Context& context) {
-	if (!Makai::OS::FS::exists(path)) return null;
+bool Context::Library::open(Makai::String const& path, Context& context) {
+	if (!Makai::OS::FS::exists(path)) return false;
 	DEBUGLN("Opening library...");
 	Library lib;
 	lib.dll.open(path);
 	DEBUGLN("Getting entrypoint...");
 	auto const fn = lib.dll.function<owner<ILibrary>()>("AV2_Extern_getLibrary");
 	lib.impl = fn();
-	if (!lib.impl) return null;
+	if (!lib.impl) return false;
 	DEBUGLN("<library>");
 	DEBUGLN("<name>", lib.impl->name(), "</name>");
 	DEBUGLN("<version>", lib.impl->version().serialize().toFLOWString(), "</version>");
 	DEBUGLN("</library>");
 	lib.impl->open();
-	return lib;
+	return true;
 }

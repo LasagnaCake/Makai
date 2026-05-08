@@ -71,8 +71,7 @@ all: libs
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
-	$(LINKER) -o av2$(strip $(1)).o $(call makelib, av2$(strip $(1)).$(dynlib))
+	$(COMPILER) $(CFG) av2$(strip $(1)).cpp -o av2$(strip $(1)).so -shared -s
 endef
 
 prologue:

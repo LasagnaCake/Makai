@@ -255,11 +255,13 @@ void Engine::v2Call() {
 				}
 			).onError(
 				[&] (auto const& e) {
+					/*
 					if (invocation.optional) {
 						if (!invocation.noResult)
 							context.globalValueStack.pushBack(nullptr);
 						return;
 					}
+					*/
 					Makai::String err = "EXTERNAL FUNCTION: ";
 					switch (e) {
 						using enum Core::Context::Error;

@@ -179,6 +179,9 @@ namespace Makai::Anima::V2::Core {
 			usize const& hash,
 			List<Object::Storage> const& args
 		) {
+			DEBUGLN("Looking for method ", hash, "...");
+			for (auto& m: externalMethods)
+				DEBUGLN("  > ", m.key);
 			if (!(
 				hasExternalMethod(hash)
 			&&	externalMethods[hash].invoker
@@ -203,7 +206,7 @@ namespace Makai::Anima::V2::Core {
 
 			~Library();
 
-			static Nullable<Library> open(String const& path, Context& context);
+			bool open(String const& path, Context& context);
 
 			void close();
 		};
