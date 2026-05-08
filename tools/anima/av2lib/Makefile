@@ -71,7 +71,7 @@ all: libs
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) av2$(strip $(1)).cpp -o av2$(strip $(1)).so -shared -s $(LK)
+	$(COMPILER) $(CFG) $(LK) av2$(strip $(1)).cpp -o av2$(strip $(1)).so -shared -s
 endef
 
 prologue:
