@@ -1,3 +1,5 @@
+#define CTL_DEVMODE_DEBUG
+
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 #include "base.cc"
@@ -143,8 +145,8 @@ struct MakePageMain: AMain {
 	void doBuild() {
 		auto const proj = Makai::File::getFLOW("project.flow");
 		StringList const dirs =
-			proj
-				.fetch("build", Makai::Data::Value::ArrayType())
+			proj["build"]
+				.getArray()
 				.filter(isString)
 				.toList<String>(getString)
 		;
