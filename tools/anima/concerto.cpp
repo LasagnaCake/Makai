@@ -1,4 +1,5 @@
 #include <makai/makai.hpp>
+#include <makai/main.hpp>
 #include "base.cc"
 
 using namespace Makai::Anima::V2;
@@ -18,5 +19,37 @@ constexpr auto const METAINFO = R"###(
 		version	**{{version}}
 	}
 )###";
+
+struct ConcertoMain: Makai::AMain {
+	static Makai::Data::Value configBase() {
+		Makai::Data::Value cfg;
+		cfg["help"]	= false;
+		return cfg;
+	}
+
+	static void translationBase(Makai::CLI::Parser::Translation& tl) {
+		tl["H"]	= "help";
+	}
+
+	ConcertoMain(Makai::CLI::Parser& cli): AMain(cli) {
+		translationBase(cli.tl);
+		baseArgs = configBase();
+		showDialogOnError = false;
+	}
+
+
+	void write(Makai::String const& what) const override {DEBUGLN(what);}
+
+	void run(Makai::Data::Value const& args) override {
+		if (args.fetch("help", false)) {
+			writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
+			writeLine("Available commands:");
+			writeLine("concerto <action>");
+		} else {
+		}
+	}
+};
+
+Makai_bindMain(ConcertoMain)
 
 // TODO: This (again)

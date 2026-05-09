@@ -76,11 +76,11 @@ else
 dynlib ?=so
 endif
 
-.PHONY: debug release all tooling packer concerto minimac brevec arte av2lib finale
+.PHONY: debug release all tooling packer concerto minimac brevec arte av2lib mkpg finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer brevec minimac arte av2lib finale # concerto
+tooling: prologue packer brevec minimac arte mkpg av2lib finale # concerto
 
 all: tooling
 
@@ -107,6 +107,9 @@ minimac:
 brevec:
 	$(call compile, $@)
 
+mkpg:
+	$(call compile, $@)
+
 arte:
 	@echo "[$@]"
 	$(COMPILER) $(CFG) -c art.cpp -o art.o
@@ -124,6 +127,7 @@ mk-push:
 	cp brevec$(EXEC_TYPE) ../../output/bin
 #	cp concerto$(EXEC_TYPE) ../../output/bin
 	cp packer$(EXEC_TYPE) ../../output/bin
+	cp mkpg$(EXEC_TYPE) ../../output/bin
 	mkdir -p ../../output/bin/av2
 	cp av2lib/*.$(dynlib) ../../output/bin/av2
 
