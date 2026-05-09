@@ -25,12 +25,7 @@
 - - Code is documented via doxygen comments, so must figure out how to generate docs from that
 - [x] Fix core library CI
 - [ ] Add HSL (Hue-Saturation-Luminosity) & BC (Brightness-Contrast) to buffer mask effect
-- [ ] Embedded language (compiled (preferable, even if to bytecode), JIT or interpreted)
-- - Could implement support for Squirrel/LUA/AngelScript
-- - Or C# even, this one might be the more feasible option
-- - - This one sounds enticing
-- - Or Ruby via [Rice](https://ruby-rice.github.io/4.x/api/overview.html), perhaps?
-- - What about [SWIG](https://www.swig.org/)?
+- [x] Embedded language
 - [ ] Bugs & Errors (see [Issues.txt](../../Issues.txt))
 
 ### Extension library

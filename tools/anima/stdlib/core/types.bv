@@ -9,3 +9,4 @@ using import core.types.matrix
 using import core.types.bytes
 using import core.types.string
 using import core.types.char
+using import core.types.type
