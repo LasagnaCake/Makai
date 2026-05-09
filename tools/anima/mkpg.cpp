@@ -140,17 +140,21 @@ struct MakePageMain: AMain {
 	static bool		isString(Makai::Data::Value const& e)	{return e.isString();	}
 	static String	getString(Makai::Data::Value const& e)	{return e.getString();	}
 
-	static void doBuild() {
+	void doBuild() {
 		auto const proj = Makai::File::getFLOW("project.flow");
 		StringList const dirs =
 			proj
-				.fetch("build", Makai::Data::Value::array())
+				.fetch("build", Makai::Data::Value::ArrayType())
 				.filter(isString)
 				.toList<String>(getString)
 		;
 		Makai::Data::Value env;
 		env["project"] = proj;
-		for (auto const& dir: dirs)	buildFolder(dir, env);
+		for (auto const& dir: dirs)
+			buildFolder(
+				OS::FS::FileTree::getStructure(dir),
+				env
+			);
 	}
 
 	void run(Makai::Data::Value const& args) override {
