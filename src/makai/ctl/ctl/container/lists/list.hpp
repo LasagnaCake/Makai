@@ -319,8 +319,8 @@ public:
 		assertIsInBounds(index);
 		wrapBounds(index, count);
 		if (count >= contents.size()) increase();
-		copy(contents.data() + index, contents.data() + index + 1, count - index);
-		MX::construct(contents.data()+index, value);
+		copy(contents.data() + index, contents.data() + index + 1, count - index, count > 1 ? count - 1 : 0);
+		MX::reconstruct(contents.data()+index, value);
 		++count;
 		return *this;
 	}
@@ -335,7 +335,7 @@ public:
 		assertIsInBounds(index);
 		wrapBounds(index, count);
 		expand(other.count);
-		copy(contents.data() + index, contents.data() + index+other.count, count - index);
+		copy(contents.data() + index, contents.data() + index+other.count, count > index ? count - index : 0);
 		copy(other.contents.data(), contents.data() + index, other.count);
 		count += other.count;
 		return *this;
@@ -1323,7 +1323,10 @@ private:
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
 		if (count > 1 && i < count-1)
-			copy(contents.data() + i + 1, contents.data() + i, count-i-1);
+			for (usize j = i; j < (count - 1); ++j) {
+				MX::destruct(contents.data() + i);
+				MX::construct(contents.data() + i, *(contents.data() + i + 1));
+			}
 		MX::destruct(contents.data()+count-1);
 		return *this;
 	}
@@ -1332,7 +1335,10 @@ private:
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
 		if (count > 1 && start < count-1)
-			copy(contents.data() + start + amount, contents.data() + start, count-(start+amount));
+			for (usize j = start; j < (count - amount); ++j) {
+				MX::destruct(contents.data() + start);
+				MX::construct(contents.data() + start, *(contents.data() + start + amount));
+			}
 		MX::objclear(contents.data()+start, amount);
 		return *this;
 	}
@@ -1370,12 +1376,15 @@ private:
 		count = newCount;
 	}
 
-	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+	constexpr static void copy(ref<ConstantType> src, ref<DataType> dst, SizeType count, SizeType clearCount = 0) {
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return;
 		if (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
-		else MX::objcopy<DataType>(dst, src, count);
+		else {
+			if (clearCount) MX::objclear(dst, clearCount);
+			MX::objcopy<DataType>(dst, src, count);
+		}
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
