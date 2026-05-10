@@ -138,13 +138,22 @@ struct MakePageMain: AMain {
 				auto const files = Makai::OS::FS::filesIn(folder);
 				for (auto const& file: files)
 					if (Makai::OS::FS::exists(file) && Makai::OS::FS::fileExtension(file) == "mp") {
+						writeLine("Building: ", file);
 						Makai::Data::Value pageEnv = env;
 						auto const page = Makai::FLOW::parse("{" + Makai::File::getText(file) + "}");
 						pageEnv["page_meta"] = page;
 						PageProcessor proc;
 						proc.doPage(page["html"].getString(), pageEnv);
-						auto const outPath = Makai::OS::FS::concatenate(outDir, Makai::OS::FS::childPath(folder), Makai::OS::FS::fileName(file, true));
-						Makai::File::saveText(outPath + ".html", proc.output);
+						auto const basePath =
+							Regex::replace(
+								Regex::replace(file, "[\\/]", "/"),
+								"\\.mp",
+								".html"
+							).splitAtFirst('/').back()
+						;
+						auto const outPath = Makai::OS::FS::concatenate(outDir, basePath);
+						writeLine("Saving to: ", outPath);
+						Makai::File::saveText(outPath, proc.output);
 					}
 			}
 			buildFolder(Makai::OS::FS::foldersIn(folder), env);
