@@ -461,7 +461,8 @@ public:
 	constexpr SelfType& remove(IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
-		return BaseType::remove(index);
+		BaseType::remove(index);
+		return *this;
 	}
 
 	/// @brief Removes characters that match a given character.
@@ -528,7 +529,8 @@ public:
 	constexpr SelfType& erase(IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
-		return BaseType::erase(index);
+		BaseType::erase(index);
+		return *this;
 	}
 
 	/// @brief Erases characters that match a given value.
