@@ -534,7 +534,9 @@ public:
 	constexpr SelfType& remove(IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		return squash(index);
+		squash(index);
+		--count;
+		return *this;
 	}
 
 	/// @brief Removes elements that match a given value.
@@ -642,6 +644,7 @@ public:
 		if (stop < start) return 0;
 		if (SizeType(stop) > count) stop = count;
 		squashRange(start, stop - start);
+		count -= (stop - start);
 		return stop - start;
 	}
 
