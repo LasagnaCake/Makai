@@ -3,10 +3,17 @@
 
 #ifdef CTL_DEVMODE_DEBUG
 #include <iostream>
-#define CTL_DEVMODE_FN_DECL			std::cout << "[" <<  __builtin_FUNCTION() << "]\n"
 #define CTL_DEVMODE_FN_BEGIN		std::cout << "<" <<  __builtin_FUNCTION() << ">\n"
 #define CTL_DEVMODE_FN_END			std::cout << "</" <<  __builtin_FUNCTION() << ">\n"
-#define CTL_DEVMODE_OUT(CONTENT)	std::cout << (CONTENT)
+#define CTL_DEVMODE_OUT(CONTENT)	std::cout << CONTENT
+namespace CTL::_Devmode {
+	struct Scope {
+		const char* const fname;
+		Scope(const char* fname): fname(fname) {CTL_DEVMODE_OUT("<" <<  fname << ">\n");}
+		~Scope() {CTL_DEVMODE_OUT("</" << fname << ">\n");}
+	};
+}
+#define CTL_DEVMODE_FN_DECL			auto const _SCOPE = ::CTL::_Devmode::Scope(__builtin_FUNCTION())
 #else
 #define CTL_DEVMODE_FN_DECL
 #define CTL_DEVMODE_FN_BEGIN
@@ -57,7 +64,8 @@
 #define CTL_CDECL extern "C"
 
 /// @brief Core library.
-namespace CTL {}
+namespace CTL {
+}
 
 CTL_NAMESPACE_BEGIN
 
