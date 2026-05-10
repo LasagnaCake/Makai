@@ -126,7 +126,7 @@ struct MakePageMain: AMain {
 	void write(Makai::String const& what) const override {DEBUGLN(what);}
 
 	void buildFolder(Makai::StringList const& folders, Makai::Data::Value const& env) {
-		auto const outDir = env["output"].getString();
+		auto const outDir = env["project"]["output"].getString();
 		for (auto& folder: folders) {
 			for (auto const& file: Makai::OS::FS::filesIn(folder))
 				if (Makai::OS::FS::exists(file) && Makai::OS::FS::fileExtension(file) == "mp") {
