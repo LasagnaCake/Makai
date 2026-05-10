@@ -40,7 +40,7 @@ namespace Makai {
 		/// @param args... what to print.
 		template <class... TArgs>
 		constexpr void writeLine(TArgs const&... args) const {
-			(write(toString(args)), ..., write("\n"));
+			write(args..., "\n");
 		}
 
 		/// @brief Called when program runs.
