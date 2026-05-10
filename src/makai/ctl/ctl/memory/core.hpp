@@ -450,6 +450,45 @@ namespace MX {
 			destruct<T>(mem++);
 		return mem;
 	}
+
+	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
+	constexpr ref<T> objremake(ref<T> dst, ref<T const> src, usize sz) {
+		if (!(sz + 1)) unreachable();
+		if (!sz) return dst;
+		T* start = dst;
+		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
+		if (inCompileTime())
+			while (sz--)
+				reconstruct(dst++, *src++);
+		else
+		#endif
+		try {
+			if (dst < src) {
+				while (sz--) {
+					//*(dst++) = *(src++);
+					reconstruct(dst++, *src++);
+				}
+			}
+			else {
+				dst += sz;
+				src += sz;
+				start = dst;
+				while (sz--) {
+					//*(--dst) = *(--src);
+					reconstruct(--dst, *--src);
+				}
+			}
+		} catch (...) {
+			if (dst < src)
+				for (;dst != start; --dst)
+					destruct(dst);
+			else
+				for (;dst != start; ++dst)
+					destruct(dst);
+		}
+		return dst;
+	}
 }
 
 CTL_NAMESPACE_END
