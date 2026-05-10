@@ -92,11 +92,14 @@ struct PageProcessor {
 		output += expr.popBack();
 		for (auto& sub: subs) {
 			auto const block = Makai::Regex::replace(sub.match, R"(<<|>>)", "");
+			DEBUGLN("Component: ", block);
 			auto const bldat = block.splitAtFirst(' ');
-			auto const type = block.find('/');
+			auto type = block.rfind('/');
+			if (type > 0 && type < (block.size() - 1))
+				type = block.find('/');
 			Makai::String blname;
 			Makai::Data::Value blparams;
-			blname = Makai::Regex::replace(bldat.front(), "\\/", "");
+			blname = bldat.erase(type);
 			if (bldat.size() > 2)
 				blparams = Makai::FLOW::parse("{" + bldat.back() + "}");
 			auto newEnv = env;
@@ -105,11 +108,10 @@ struct PageProcessor {
 			auto const blinfo = components[blname];
 			newEnv["local"] = blparams;
 			newEnv["page_meta"] = blinfo;
-			switch (type) {
-				case (-1):	doPage(blinfo.fetch<Makai::String>("html_begin"), newEnv);	break;
-				case (0):	doPage(blinfo.fetch<Makai::String>("html_end"), newEnv);	break;
-				default:	doPage(blinfo.fetch<Makai::String>("html"), newEnv);		break;
-			}
+			DEBUGLN("Vars: ", blparams.toFLOWString());
+			if (type == (block.size() - 1))	doPage(blinfo.fetch<Makai::String>("html_end"), newEnv);
+			else if (type == 0)				doPage(blinfo.fetch<Makai::String>("html_begin"), newEnv);
+			else							doPage(blinfo.fetch<Makai::String>("html"), newEnv);
 			output += expr.popBack();
 		}
 	}
