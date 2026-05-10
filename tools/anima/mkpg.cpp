@@ -1,5 +1,3 @@
-#define CTL_DEVMODE_DEBUG
-
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 #include "base.cc"
@@ -34,7 +32,7 @@ struct PageProcessor {
 					Makai::Data::EncodingType::ET_BASE64
 				)
 			;
-		else if (name == "url")
+		else if (name == "file")
 			return env["project"]["url"].getString() + "/" + vars;
 		else if (name == "page")
 			return env["project"]["url"].getString() + "/" + vars + ".html";
@@ -109,8 +107,6 @@ struct PageProcessor {
 };
 
 struct MakePageMain: AMain {
-	PageProcessor proc;
-
 	static Makai::Data::Value configBase() {
 		Makai::Data::Value cfg;
 		cfg["help"]	= false;
@@ -129,13 +125,17 @@ struct MakePageMain: AMain {
 
 	void write(Makai::String const& what) const override {DEBUGLN(what);}
 
-	void buildFolder(OS::FS::FileTree::Entry const& contents, Makai::Data::Value const& env) {
+	void buildFolder(Makai::StringList const& folders, Makai::Data::Value const& env) {
 		auto const outDir = env["output"].getString();
-		for (auto& content: contents) {
-			proc.output.clear();
-			if (content.isFolder()) buildFolder(content, env);
-			else proc.doPage(content.path() + ".mp", env);
-			Makai::File::saveText(Makai::OS::FS::concatenate(outDir, content.path()), proc.output);
+		for (auto& folder: folders) {
+			for (auto const& file: Makai::OS::FS::filesIn(folder))
+				if (Makai::OS::FS::exists(file) && Makai::OS::FS::fileExtension(file) == "mp") {
+					PageProcessor proc;
+					proc.doPage(file, env);
+					auto const outPath = Makai::OS::FS::concatenate(outDir, Makai::OS::FS::childPath(folder), Makai::OS::FS::fileName(file, true));
+					Makai::File::saveText(outPath + ".html", proc.output);
+				}
+			buildFolder(Makai::OS::FS::foldersIn(folder), env);
 		}
 	}
 
@@ -152,11 +152,7 @@ struct MakePageMain: AMain {
 		;
 		Makai::Data::Value env;
 		env["project"] = proj;
-		for (auto const& dir: dirs)
-			buildFolder(
-				OS::FS::FileTree::getStructure(dir),
-				env
-			);
+		buildFolder(dirs, env);
 	}
 
 	void run(Makai::Data::Value const& args) override {
