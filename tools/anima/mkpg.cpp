@@ -129,7 +129,7 @@ struct MakePageMain: AMain {
 		showDialogOnError = false;
 	}
 
-	void write(Makai::String const& what) const override {DEBUGLN(what);}
+	void write(Makai::String const& what) const override {DEBUG(what);}
 
 	void buildFolder(Makai::StringList const& folders, Makai::Data::Value const& env) {
 		auto const outDir = env["project"]["output"].getString();
@@ -144,13 +144,17 @@ struct MakePageMain: AMain {
 						pageEnv["page_meta"] = page;
 						PageProcessor proc;
 						proc.doPage(page["html"].getString(), pageEnv);
-						auto const basePath =
+						auto basePath =
 							Regex::replace(
-								Regex::replace(file, "[\\/]", "/"),
+								Regex::replace(file, "[\\\\/]", "/"),
 								"\\.mp",
 								".html"
-							).splitAtFirst('/').back()
+							)
 						;
+						auto const dir = basePath.rfind('/');
+						writeLine("AAAA: ", basePath);
+						writeLine("At: ", dir);
+						if (dir != -1) basePath = basePath.substring(dir);
 						auto const outPath = Makai::OS::FS::concatenate(outDir, basePath);
 						writeLine("Saving to: ", outPath);
 						Makai::File::saveText(outPath, proc.output);
