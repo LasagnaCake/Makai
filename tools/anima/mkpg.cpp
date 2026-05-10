@@ -52,18 +52,22 @@ struct PageProcessor {
 	}
 
 	void doPage(Makai::UTF8String const& page, Makai::Data::Value env) {
+		DEBUGLN("Page {");
+		DEBUGLN(page);
+		DEBUGLN("}");
 		auto const pdat = env["page_meta"];
 		Makai::Data::Value components;
 		if (pdat.contains("import"))
 			for (auto& imp: pdat["import"].getArray()) {
 				if (!imp.isString()) continue;
 				auto const path = imp.getString();
+				DEBUGLN("Importing '", path, "'...");
 				if (!cache.contains(path))
 					cache[path] = Makai::FLOW::parse("{" + Makai::File::getText(path + ".mp") + "}");
-				auto const compName = cache["path"].fetch("name", Makai::OS::FS::fileName(path, true));
+				auto const compName = cache[path].fetch("name", Makai::OS::FS::fileName(path, true));
 				if (components.contains(compName))
 					throw Makai::Error::NonexistentValue("Component with name '" + compName + "' was already defined!");
-				else env["page_meta"][compName] = cache[path];
+				else components[compName] = cache[path];
 			}
 		if (pdat.contains("default"))
 			for (auto const& [k, v]: pdat["default"].items())
@@ -92,18 +96,20 @@ struct PageProcessor {
 			auto const type = block.find('/');
 			Makai::String blname;
 			Makai::Data::Value blparams;
-			blname = bldat.front();
+			blname = Makai::Regex::replace(bldat.front(), "\\/", "");
 			if (bldat.size() > 2)
 				blparams = Makai::FLOW::parse("{" + bldat.back() + "}");
 			auto newEnv = env;
+			if (!components.contains(blname))
+				throw Makai::Error::NonexistentValue("Component '" + blname + "' does not exist!");
 			auto const blinfo = components[blname];
 			newEnv["local"] = blparams;
 			newEnv["page_meta"] = blinfo;
-			if (components.contains(blname)) switch (type) {
-				case (-1):	doPage(blinfo.fetch<Makai::String>("html_begin", ""), newEnv);	break;
-				case (0):	doPage(blinfo.fetch<Makai::String>("html_end", ""), newEnv);	break;
-				default:	doPage(blinfo.fetch<Makai::String>("html", ""), newEnv);		break;
-			} else throw Makai::Error::NonexistentValue("Component '" + blname + "' does not exist!");
+			switch (type) {
+				case (-1):	doPage(blinfo.fetch<Makai::String>("html_begin"), newEnv);	break;
+				case (0):	doPage(blinfo.fetch<Makai::String>("html_end"), newEnv);	break;
+				default:	doPage(blinfo.fetch<Makai::String>("html"), newEnv);		break;
+			}
 			output += expr.popBack();
 		}
 	}
@@ -151,10 +157,10 @@ struct MakePageMain: AMain {
 								".html"
 							)
 						;
-						auto const dir = basePath.rfind('/');
+						auto const dir = basePath.find('/');
 						writeLine("AAAA: ", basePath);
 						writeLine("At: ", dir);
-						if (dir != -1) basePath = basePath.substring(dir);
+						if (dir != -1) basePath = basePath.sliced(dir);
 						auto const outPath = Makai::OS::FS::concatenate(outDir, basePath);
 						writeLine("Saving to: ", outPath);
 						Makai::File::saveText(outPath, proc.output);
