@@ -21,7 +21,7 @@ namespace Type::Algorithm::Search {
 
 	/// @brief Type must be a valid comparator that supports both threeway and equality comparison on `TData`.
 	template<class TCompare, class TData>
-	concept FullHouseComparator = 
+	concept FullHouseComparator =
 		EqualityComparator<TCompare, TData>
 	&&	ThreewayComparator<TCompare, TData>
 	;
@@ -44,9 +44,10 @@ template<
 >
 constexpr TIndex fsearch(T begin, T const& end, TData const& value) {
 	if (end <= begin) return -1;
+	usize const total = end-begin;
 	while (begin < end) {
 		if (TCompare::equals(*begin, value))
-			return end-begin;
+			return total - (end-begin);
 		++begin;
 	}
 	return -1;
