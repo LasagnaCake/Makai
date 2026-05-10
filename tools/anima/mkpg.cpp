@@ -20,9 +20,9 @@ struct PageProcessor {
 	Makai::String processAction(Makai::UTF8String const& act, Makai::Data::Value const& env) {
 		auto const name = Makai::Regex::findFirst(act, "@.*?:").match;
 		auto const vars = Makai::Regex::replace(act, "@.*?:", "");
-		if (name == "embed")
+		if (name == "@embed:")
 			return Makai::File::getText(vars);
-		else if (name == "image")
+		else if (name == "@image:")
 			return
 				"data:image/"
 			+	Makai::OS::FS::fileExtension(vars)
@@ -32,9 +32,9 @@ struct PageProcessor {
 					Makai::Data::EncodingType::ET_BASE64
 				)
 			;
-		else if (name == "file")
+		else if (name == "@file:")
 			return env["project"]["url"].getString() + "/" + vars;
-		else if (name == "page")
+		else if (name == "@page:")
 			return env["project"]["url"].getString() + "/" + vars + ".html";
 		else throw Makai::Error::NonexistentValue("Invalid action '" + name + "'!");
 	}
@@ -42,31 +42,35 @@ struct PageProcessor {
 	Makai::String processExternalVariable(Makai::UTF8String const& var, Makai::Data::Value const& env) {
 		auto const proc = var.rfind('$');
 		auto const name = Makai::Regex::replace(var, R"(^\$\$?)", "");
-		if (proc == 0) return env["page_meta"][name].getString();
-		return env["project"][name].getString();
+		if (proc == 0) {
+			if (env["page_meta"].contains(name))
+				return env["page_meta"][name].getString();
+			else throw Makai::Error::NonexistentValue("Page attribute '" + name + "' does not exist!");
+		} else if (env["project"]["vars"].contains(name))
+			return env["project"]["vars"][name].getString();
+		else throw Makai::Error::NonexistentValue("Project variable '" + name + "' does not exist!");
 	}
 
 	void doPage(Makai::UTF8String const& page, Makai::Data::Value env) {
-		auto const pdat = Makai::FLOW::parse(page);
-		auto const html = pdat["html"];
+		auto const pdat = env["page_meta"];
 		Makai::Data::Value components;
 		if (pdat.contains("import"))
 			for (auto& imp: pdat["import"].getArray()) {
 				if (!imp.isString()) continue;
 				auto const path = imp.getString();
 				if (!cache.contains(path))
-					cache[path] = Makai::File::getFLOW(path + ".mp");
+					cache[path] = Makai::FLOW::parse("{" + Makai::File::getText(path + ".mp") + "}");
 				auto const compName = cache["path"].fetch("name", Makai::OS::FS::fileName(path, true));
 				if (components.contains(compName))
 					throw Makai::Error::NonexistentValue("Component with name '" + compName + "' was already defined!");
-				else env["page_meta"][compName] = compName;
+				else env["page_meta"][compName] = cache[path];
 			}
 		if (pdat.contains("default"))
 			for (auto const& [k, v]: pdat["default"].items())
 				if (!env["local"].contains(k))
 					env["local"][k] = v;
-		auto subs = Makai::Regex::find(html, R"(\{\{.*?\}\})");
-		auto expr = Makai::Regex::replace(html, R"(\{\{.*?\}\})", "\a").split({'\a'}).reverse();
+		auto subs = Makai::Regex::find(page, R"(\{\{.*?\}\})");
+		auto expr = Makai::Regex::replace(page, R"(\{\{.*?\}\})", "\a").split({'\a'}).reverse();
 		Makai::UTF8String buf = expr.popBack();
 		for (auto& sub: subs) {
 			auto const var = Makai::Regex::replace(sub.match, R"(\{\{|\}\})", "");
@@ -92,11 +96,13 @@ struct PageProcessor {
 			if (bldat.size() > 2)
 				blparams = Makai::FLOW::parse("{" + bldat.back() + "}");
 			auto newEnv = env;
+			auto const blinfo = components[blname];
 			newEnv["local"] = blparams;
+			newEnv["page_meta"] = blinfo;
 			if (components.contains(blname)) switch (type) {
-				case (-1):	doPage(components[blname].fetch<Makai::String>("html_begin", ""), newEnv);	break;
-				case (0):	doPage(components[blname].fetch<Makai::String>("html_end", ""), newEnv);	break;
-				default:	doPage(components[blname].fetch<Makai::String>("html", ""), newEnv);		break;
+				case (-1):	doPage(blinfo.fetch<Makai::String>("html_begin", ""), newEnv);	break;
+				case (0):	doPage(blinfo.fetch<Makai::String>("html_end", ""), newEnv);	break;
+				default:	doPage(blinfo.fetch<Makai::String>("html", ""), newEnv);		break;
 			} else throw Makai::Error::NonexistentValue("Component '" + blname + "' does not exist!");
 			output += expr.popBack();
 		}
@@ -128,13 +134,19 @@ struct MakePageMain: AMain {
 	void buildFolder(Makai::StringList const& folders, Makai::Data::Value const& env) {
 		auto const outDir = env["project"]["output"].getString();
 		for (auto& folder: folders) {
-			for (auto const& file: Makai::OS::FS::filesIn(folder))
-				if (Makai::OS::FS::exists(file) && Makai::OS::FS::fileExtension(file) == "mp") {
-					PageProcessor proc;
-					proc.doPage(file, env);
-					auto const outPath = Makai::OS::FS::concatenate(outDir, Makai::OS::FS::childPath(folder), Makai::OS::FS::fileName(file, true));
-					Makai::File::saveText(outPath + ".html", proc.output);
-				}
+			{
+				auto const files = Makai::OS::FS::filesIn(folder);
+				for (auto const& file: files)
+					if (Makai::OS::FS::exists(file) && Makai::OS::FS::fileExtension(file) == "mp") {
+						Makai::Data::Value pageEnv = env;
+						auto const page = Makai::FLOW::parse("{" + Makai::File::getText(file) + "}");
+						pageEnv["page_meta"] = page;
+						PageProcessor proc;
+						proc.doPage(page["html"].getString(), pageEnv);
+						auto const outPath = Makai::OS::FS::concatenate(outDir, Makai::OS::FS::childPath(folder), Makai::OS::FS::fileName(file, true));
+						Makai::File::saveText(outPath + ".html", proc.output);
+					}
+			}
 			buildFolder(Makai::OS::FS::foldersIn(folder), env);
 		}
 	}
