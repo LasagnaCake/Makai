@@ -55,7 +55,7 @@ OBJ := $(EXTRAOBJS)
 ifeq ($(os),win)
 WINFLAG := -mwindows
 dynlib ?=dll
-makelib = -Wl,--imp-implib=$(strip $(1)).a
+makelib = -Wl,"$(LIBRARIES)",--subsystem,windows
 else
 dynlib ?=so
 makelib = -Wl,-soname,$(strip $(1))
@@ -71,7 +71,7 @@ all: libs
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) $(LK) av2$(strip $(1)).cpp -o av2$(strip $(1)).so -shared -s $(LK) $(OBJ)
+	$(COMPILER) $(CFG) $(LK) av2$(strip $(1)).cpp -o av2$(strip $(1)).$(dynlib) -shared -s $(LK) $(OBJ)
 endef
 
 prologue:
