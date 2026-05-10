@@ -224,221 +224,29 @@ namespace OS::FS {
 		return "";
 	}
 
-	/// @brief Directory file tree.
-	struct FileTree {
-		/// @brief File tree entry.
-		struct Entry {
-			/// @brief Default constructor.
-			constexpr Entry() {}
-
-			/// @brief Constructs a path entry as a file.
-			/// @param name Entry name.
-			/// @param path Relative path to entry.
-			constexpr Entry(String const& name, String const& path):
-				ename(name),
-				epath(path) {}
-
-			/// @brief Constructs a path entry as a directory.
-			/// @param name Entry name.
-			/// @param path Relative path to entry.
-			/// @param children Directory contents.
-			constexpr Entry(String const& name, String const& path, List<Entry>	const& children):
-				ename(name),
-				epath(path),
-				children(children),
-				folder(true) {}
-
-			/// @brief Copy constructor.
-			/// @param other `Entry` to copy from.
-			constexpr Entry(Entry const& other):
-				ename(other.ename),
-				epath(other.epath),
-				children(other.children),
-				folder(other.folder) {}
-
-			/// @brief Move constructor.
-			/// @param other `Entry` to move.
-			constexpr Entry(Entry&& other):
-				ename(CTL::move(other.ename)),
-				epath(CTL::move(other.epath)),
-				children(CTL::move(other.children)),
-				folder(CTL::move(other.folder)) {}
-
-			/// @brief Iterates through the entry's children, performing the passed operation.
-			/// @tparam TFunction Operation type.
-			/// @param op Operation to perform.
-			/// @return Reference to self.
-			template<Type::Functional<void(Entry&)> TFunction>
-			constexpr Entry& forEach(TFunction const& op) {
-				for (Entry& e: children)
-					op(e);
-				return *this;
-			}
-
-			/// @brief Iterates through the entry's children, performing the passed operation.
-			/// @tparam TFunction Operation type.
-			/// @param op Operation to perform.
-			/// @return Const reference to self.
-			template<Type::Functional<void(Entry const&)> TFunction>
-			constexpr Entry const& forEach(TFunction const& op) const {
-				for (Entry const& e: children)
-					op(e);
-				return *this;
-			}
-
-			/// @brief Copy assignment operator.
-			/// @param other `Entry` to copy from.
-			/// @return Reference to self.
-			constexpr Entry& operator=(Entry const& other) {
-				ename		= other.ename;
-				epath		= other.epath;
-				folder		= other.folder;
-				children	= other.children;
-				return *this;
-			}
-
-			/// @brief Move assignment operator.
-			/// @param other `Entry` to move.
-			/// @return Reference to self.
-			constexpr Entry& operator=(Entry&& other) {
-				ename		= CTL::move(other.ename);
-				epath		= CTL::move(other.epath);
-				folder		= CTL::move(other.folder);
-				children	= CTL::move(other.children);
-				return *this;
-			}
-
-			/// @brief Returns an iterator to the beginning of the entry's children.
-			/// @return Iterator to beginning of entry's children.
-			constexpr auto begin()			{return children.begin();	}
-			/// @brief Returns an iterator to the end of the entry's children.
-			/// @return Iterator to end of entry's children.
-			constexpr auto end()			{return children.end();		}
-			/// @brief Returns a pointer to the beginning of the entry's children.
-			/// @return Pointer to beginning of entry's children.
-			constexpr auto cbegin()			{return children.cbegin();	}
-			/// @brief Returns a pointer to the end of the entry's children.
-			/// @return Pointer to end of entry's children.
-			constexpr auto cend()			{return children.cend();	}
-
-			/// @brief Returns an iterator to the beginning of the entry's children.
-			/// @return Iterator to beginning of entry's children.
-			constexpr auto begin() const	{return children.begin();	}
-			/// @brief Returns an iterator to the end of the entry's children.
-			/// @return Iterator to end of entry's children.
-			constexpr auto end() const		{return children.end();		}
-			/// @brief Returns a pointer to the beginning of the entry's children.
-			/// @return Pointer to beginning of entry's children.
-			constexpr auto cbegin() const	{return children.cbegin();	}
-			/// @brief Returns a pointer to the end of the entry's children.
-			/// @return Pointer to end of entry's children.
-			constexpr auto cend() const		{return children.cend();	}
-
-			/// @brief Returns the path of all files inside the directory, and subdirectories (if entry is a directory).
-			/// @return Path of all files inside the directory. If not a directory, returns own path.
-			constexpr StringList getAllFiles() const {
-				if (!folder) return StringList().pushBack(epath);
-				StringList files;
-				for (Entry const& e: children) {
-					if (!e.folder)
-						files.pushBack(e.epath);
-					else {
-						StringList subfiles = e.getAllFiles();
-						files.appendBack(subfiles);
-					}
-				}
-				return files;
-			}
-
-			/// @brief Returns the entry's children, if entry is a directory.
-			/// @return The entry's children.
-			constexpr List<Entry> getChildren() const {return children;}
-
-			/// @brief Returns the entry's children, if entry is a directory.
-			/// @return The entry's children.
-			constexpr operator List<Entry>() const	{return getChildren();	}
-			/// @brief Returns the path to the entry.
-			/// @return Path to the entry.
-			constexpr operator String() const		{return path();			}
-
-			/// @brief Returns whether the entry is a directory.
-			/// @return Whether the entry is a directory.
-			constexpr bool isFolder() const {return folder;}
-
-			/// @brief Returns the entry's name.
-			/// @return The entry's name.
-			constexpr String name() const {return ename;}
-			/// @brief Returns the path to the entry.
-			/// @return Path to the entry.
-			constexpr String path() const {return epath;}
-
-			/// @brief Returns whether the entry has any children.
-			/// @return Whether the entry has any children.
-			constexpr usize empty() const {return children.empty();	}
-
-		private:
-			/// @brief Entry name.
-			String ename;
-			/// @brief Path to entry.
-			String epath;
-
-			/// @brief Child entries, if entry is a directory.
-			List<Entry>	children	= List<Entry>();
-			/// @brief Whether the entry is a directory.
-			bool		folder		= false;
-		};
-
-		/// @brief Constructs a file tree for a given path.
-		/// @param path Path to construct a file tree for.
-		FileTree(String const& path): tree(getStructure(path)) {}
-
-		/// @brief Constructs a file tree from an entry.
-		/// @param entry Entry to construct a file tree from.
-		constexpr FileTree(Entry const& entry): tree(entry) {}
-
-		/// @brief Copy constructor.
-		/// @param entry Entry to copy from.
-		constexpr FileTree(FileTree const& other): tree(other.tree) {}
-
-		/// @brief Returns the head of the file tree.
-		/// @return Head of the file tree.
-		constexpr operator Entry() const {return tree;}
-
-		/// @brief Builds a directory structure for a path.
-		/// @param path Path to entry.
-		/// @return Directory structure. If path does not lead to a folder, simply returns an entry for that file.
-		static inline Entry getStructure(String const& path) {
-			if (!exists(path))
-				throw Error::InvalidValue("Path \"" +path+ "\" does not exist!", CTL_CPP_PRETTY_SOURCE);
-			if (!isDirectory(path)) return Entry(fileName(path), path);
-			return Entry(
-				String(fs::path(path.std()).stem().string()),
-				path,
-				getFolderContents(path)
-			);
+	inline StringList filesIn(String const& folder) {
+		if (!isDirectory(folder)) return {};
+		StringList files;
+		for (auto const& e: fs::directory_iterator(folder.std())) {
+			if (e.is_directory()) continue;
+			String name = e.path().filename().string();
+			String path = concatenate(folder, name);
+			files.pushBack(path);
 		}
+		return files;
+	}
 
-		/// @brief Returns the contents of a folder.
-		/// @param folder Folder to get the contents of.
-		/// @return Contents of the folder. If path does not lead to a folder, returns an empty list.
-		/// @note Will also build the directory structure of all subfolders.
-		static inline List<Entry> getFolderContents(String const& folder) {
-			if (!isDirectory(folder)) return List<Entry>();
-			List<Entry> entries;
-			for (auto const& e: fs::directory_iterator(folder.std())) {
-				String name = String((e.is_directory()) ? e.path().stem().string() : e.path().filename().string());
-				String path = concatenate(folder, name);
-				if (e.is_directory())
-					entries.pushBack(Entry(name, path, getFolderContents(path)));
-				else
-					entries.pushBack(Entry(name, path));
-			}
-			return entries;
+	inline StringList foldersIn(String const& folder) {
+		if (!isDirectory(folder)) return {};
+		StringList folders;
+		for (auto const& e: fs::directory_iterator(folder.std())) {
+			if (!e.is_directory()) continue;
+			String name = e.path().stem().string();
+			String path = concatenate(folder, name);
+			folders.pushBack(path);
 		}
-
-		/// @brief Head of the file tree.
-		Entry tree;
-	};
+		return folders;
+	}
 
 	/// @brief Returns the executable's current working directory.
 	/// @return Current working directory.
