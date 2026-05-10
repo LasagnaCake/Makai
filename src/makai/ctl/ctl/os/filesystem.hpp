@@ -233,7 +233,7 @@ namespace OS::FS {
 			String path = concatenate(folder, name);
 			files.pushBack(path);
 		}
-		return files;
+		return copy(files);
 	}
 
 	inline StringList foldersIn(String const& folder) {
@@ -245,7 +245,7 @@ namespace OS::FS {
 			String path = concatenate(folder, name);
 			folders.pushBack(path);
 		}
-		return folders;
+		return copy(folders);
 	}
 
 	/// @brief Returns the executable's current working directory.
