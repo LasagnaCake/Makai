@@ -525,7 +525,7 @@ public:
 	/// @note
 	///		Resizes the `BaseString`.
 	///		If you need the `BaseString` size to remain the same, use `remove`.
-	constexpr SelfType& erase(IndexType const index) {
+	constexpr SelfType& erase(IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index);
 		return BaseType::erase(index);
