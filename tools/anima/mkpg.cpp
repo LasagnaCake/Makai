@@ -97,9 +97,10 @@ struct PageProcessor {
 			auto type = block.rfind('/');
 			if (type > 0 && type < (block.size() - 1))
 				type = block.find('/');
-			Makai::String blname;
+			Makai::String blname = bldat.front();
 			Makai::Data::Value blparams;
-			blname = bldat.erase(type);
+			if (!(type > 0 && type < (block.size() - 1)))
+				blname = blname.erase(type);
 			if (bldat.size() > 2)
 				blparams = Makai::FLOW::parse("{" + bldat.back() + "}");
 			auto newEnv = env;
