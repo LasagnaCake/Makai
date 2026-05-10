@@ -1327,19 +1327,19 @@ private:
 				MX::destruct(contents.data() + i);
 				MX::construct(contents.data() + i, *(contents.data() + i + 1));
 			}
-		MX::destruct(contents.data()+count-1);
+		else MX::destruct(contents.data()+count-1);
 		return *this;
 	}
 
 	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
-		if (count > 1 && start < count-1)
+		if (count > amount && start < count-amount)
 			for (usize j = start; j < (count - amount); ++j) {
 				MX::destruct(contents.data() + start);
 				MX::construct(contents.data() + start, *(contents.data() + start + amount));
 			}
-		MX::objclear(contents.data()+start, amount);
+		else MX::objclear(contents.data()+start, amount);
 		return *this;
 	}
 
