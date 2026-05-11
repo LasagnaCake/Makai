@@ -50,7 +50,7 @@ namespace Convert {
 					result += b32part({data.data() + i - 5, data.size() % 5});
 				return result;
 			}
-			
+
 			/// @brief Converts binary data to a string.
 			/// @param data Data to convert.
 			/// @return String.
@@ -72,15 +72,15 @@ namespace Convert {
 				constexpr byte const COFF = 31;
 				String s;
 				s.pushBack(toBase32Char((data[0] >> 3) & COFF));
-				if (data.size() < 2) return s + String(8 - s.size(), '=');
+				if (data.size() < 2) return s.pushBack(toBase32Char((data[0] << 2)) & COFF) + String(8 - s.size() - 1, '=');
 				s.pushBack(toBase32Char(((data[0] << 2) | (data[1] >> 6)) & COFF));
 				s.pushBack(toBase32Char((data[1] >> 1) & COFF));
-				if (data.size() < 3) return s + String(8 - s.size(), '=');
+				if (data.size() < 3) return s.pushBack(toBase32Char((data[1] << 4)) & COFF) + String(8 - s.size() - 1, '=');
 				s.pushBack(toBase32Char(((data[1] << 4) | (data[2] >> 4)) & COFF));
-				if (data.size() < 4) return s + String(8 - s.size(), '=');
+				if (data.size() < 4) return s.pushBack(toBase32Char((data[2] << 1)) & COFF) + String(8 - s.size() - 1, '=');
 				s.pushBack(toBase32Char(((data[2] << 1) | (data[3] >> 7)) & COFF));
 				s.pushBack(toBase32Char((data[3] >> 2) & COFF));
-				if (data.size() < 5) return s + String(8 - s.size(), '=');
+				if (data.size() < 5) return s.pushBack(toBase32Char((data[3] << 3)) & COFF) + String(8 - s.size() - 1, '=');
 				s.pushBack(toBase32Char(((data[3] << 3) | (data[4] >> 5)) & COFF));
 				s.pushBack(toBase32Char(data[4] & COFF));
 				return s;
@@ -89,11 +89,10 @@ namespace Convert {
 			constexpr static String b64part(ConstByteSpan<> const& data) {
 				constexpr byte const COFF = 63;
 				String s;
-				// TODO: This
 				s.pushBack(toBase64Char((data[0] >> 2) & COFF));
-				if (data.size() < 2) return s + String(4 - s.size(), '=');
+				if (data.size() < 2) return s.pushBack(toBase64Char((data[0] << 4) & COFF)) + String(4 - s.size() - 1, '=');
 				s.pushBack(toBase64Char(((data[0] << 4) | (data[1] >> 4)) & COFF));
-				if (data.size() < 3) return s + String(4 - s.size(), '=');
+				if (data.size() < 3) return s.pushBack(toBase64Char((data[1] << 2) & COFF)) + String(4 - s.size() - 1, '=');
 				s.pushBack(toBase64Char(((data[1] << 2) | (data[2] >> 6)) & COFF));
 				s.pushBack(toBase64Char(data[2] & COFF));
 				return s;
