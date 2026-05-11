@@ -3,8 +3,6 @@
 
 ROOT	:= ../../..
 
-LEAN := -s
-
 debug := 0
 
 ADDCONF := -static-libstdc++ -static-libgcc
@@ -27,13 +25,13 @@ sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
-LIBRARIES	:= $(OS_LIBS) $(ADDLIBS) $(LITE_BUILD_REQS)
+LIBRARIES	:= $(OS_LIBS) $(LITE_BUILD_REQS)
 else
 LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
 
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) -fPIC
-LINKCFG	:= $(LINKER_CONFIG) -shared -s -O$(o) $(LEAN)
+LINKCFG	:= $(LINKER_CONFIG) -shared -O$(o) $(LEAN)
 
 COMPILER	:= $(CXX) $(INCLUDES) $(COMPCFG) $(LINKCFG)
 

@@ -3,7 +3,7 @@
 
 ROOT	:= ../..
 
-LEAN := -s
+LEAN := -strip
 
 debug := 0
 
@@ -29,7 +29,7 @@ sinclude $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
-LIBRARIES	:= $(OS_LIBS) $(ADDLIBS) $(LITE_BUILD_REQS)
+LIBRARIES	:= $(OS_LIBS) $(LITE_BUILD_REQS)
 else
 LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
@@ -39,13 +39,14 @@ DEBUGCOMPCFG	:= $(COMPILER_CONFIG) -Wall -Wpedantic -Og -ggdb3 -fno-omit-frame-p
 DEBUGLINKCFG	:= $(LINKER_CONFIG) -Og $(LIBRARIES)
 
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
-LINKCFG	:= $(LINKER_CONFIG) -s -O$(o) $(LEAN) $(LIBRARIES)
 
 COMPILER	:= $(CXX) $(INCLUDES)
 ifeq ($(os),linux)
-LINKER		:= $(CXX)
+LINKER	:= $(CXX)
+LINKCFG	:= $(LINKER_CONFIG) -O$(o) $(LIBRARIES)
 else
-LINKER		:= $(CXX) -static
+LINKER	:= $(CXX) -static
+LINKCFG	:= $(LINKER_CONFIG) $(LEAN) -O$(o) $(LIBRARIES)
 endif
 
 DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
@@ -74,6 +75,9 @@ WINFLAG := -mwindows
 dynlib ?=dll
 else
 dynlib ?=so
+endif
+
+ifeq ($(do-dynlibs),1)
 DYNLIB_ACTION :=av2lib
 DYNLIB_COPY :=cp av2lib/*.$(dynlib) ../../output/bin/av2
 endif
