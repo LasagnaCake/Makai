@@ -54,14 +54,20 @@ namespace Makai {
 			run(cli.parse(baseArgs));
 			return 0;
 		} catch (Makai::Error::Generic const& e) {
+			#ifndef MAKAILIB_MAIN_NO_POPUPS
 			if (showDialogOnError)
 				Makai::Popup::showError(e.report());
-			else writeLine(e.what());
+			else
+			#endif
+				writeLine(e.what());
 			return -1;
 		} catch (Makai::Exception const& e) {
+			#ifndef MAKAILIB_MAIN_NO_POPUPS
 			if (showDialogOnError)
 				Makai::Popup::showError(e.what());
-			else writeLine(e.what());
+			else
+			#endif
+				writeLine(e.what());
 			return -1;
 		}
 

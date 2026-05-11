@@ -32,11 +32,10 @@ else
 LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
 
-COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) -fPIC -shared -s
-LINKCFG	:= $(LIBRARIES) $(LINKER_CONFIG) -shared -s -O$(o) $(LEAN) $(LIBRARIES)
+COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) -fPIC
+LINKCFG	:= $(LINKER_CONFIG) -shared -s -O$(o) $(LEAN)
 
-COMPILER	:= $(CXX) $(INCLUDES)
-LINKER		:= $(CXX) $(LINKCFG)
+COMPILER	:= $(CXX) $(INCLUDES) $(COMPCFG) $(LINKCFG)
 
 EXTRAOBJS := $(ROOT)/output/lib/libmakai.a
 
@@ -71,7 +70,7 @@ all: libs
 
 define compile
 	@echo "[$(strip $(1))]"
-	$(COMPILER) $(CFG) $(LK) av2$(strip $(1)).cpp -o av2$(strip $(1)).$(dynlib) -shared -s $(LK) $(OBJ)
+	$(COMPILER) $(CFG) $(LK) av2$(strip $(1)).cpp -o av2$(strip $(1)).$(dynlib) $(LIBRARIES) $(OBJ)
 endef
 
 prologue:

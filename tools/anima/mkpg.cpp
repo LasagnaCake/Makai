@@ -1,3 +1,5 @@
+#define MAKAILIB_MAIN_NO_POPUPS
+
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 #include "base.cc"
@@ -32,6 +34,11 @@ struct PageProcessor {
 					Makai::Data::EncodingType::ET_BASE64
 				)
 			;
+		else if (name == "@base64:")
+			return Makai::Data::encode(
+				Makai::File::getBinary(vars),
+				Makai::Data::EncodingType::ET_BASE64
+			);
 		else if (name == "@file:")
 			return env["project"]["url"].getString() + "/" + vars;
 		else if (name == "@page:")
@@ -52,16 +59,12 @@ struct PageProcessor {
 	}
 
 	void doPage(Makai::UTF8String const& page, Makai::Data::Value env) {
-		DEBUGLN("Page {");
-		DEBUGLN(page);
-		DEBUGLN("}");
 		auto const pdat = env["page_meta"];
 		Makai::Data::Value components;
 		if (pdat.contains("import"))
 			for (auto& imp: pdat["import"].getArray()) {
 				if (!imp.isString()) continue;
 				auto const path = imp.getString();
-				DEBUGLN("Importing '", path, "'...");
 				if (!cache.contains(path))
 					cache[path] = Makai::FLOW::parse("{" + Makai::File::getText(path + ".mp") + "}");
 				auto const compName = cache[path].fetch("name", Makai::OS::FS::fileName(path, true));
@@ -92,7 +95,6 @@ struct PageProcessor {
 		output += expr.popBack();
 		for (auto& sub: subs) {
 			auto const block = Makai::Regex::replace(sub.match, R"(<<|>>)", "");
-			DEBUGLN("Component: ", block);
 			auto bldat = block.splitAtFirst(' ');
 			auto type = block.rfind('/');
 			if (type > 0 && type < ssize(block.size() - 1))
@@ -103,7 +105,6 @@ struct PageProcessor {
 				if (bldat.back().back() == '/')
 					bldat.back().popBack();
 				blparams = Makai::FLOW::parse("{" + bldat.back() + "}");
-				DEBUGLN("Vars: ", blparams.toFLOWString());
 			}
 			auto newEnv = env;
 			if (!components.contains(blname))
@@ -162,8 +163,6 @@ struct MakePageMain: AMain {
 							)
 						;
 						auto const dir = basePath.find('/');
-						writeLine("AAAA: ", basePath);
-						writeLine("At: ", dir);
 						if (dir != -1) basePath = basePath.sliced(dir);
 						auto const outPath = Makai::OS::FS::concatenate(outDir, basePath);
 						writeLine("Saving to: ", outPath);
@@ -188,6 +187,14 @@ struct MakePageMain: AMain {
 		Makai::Data::Value env;
 		env["project"] = proj;
 		buildFolder(dirs, env);
+		StringList const packed =
+			proj["pack"]
+				.getArray()
+				.filter(isString)
+				.toList<String>(getString)
+		;
+		for (auto const& p: packed)
+		Makai::OS::FS::copy(p, OS::FS::concatenate(proj["output"].getString(), p));
 	}
 
 	void run(Makai::Data::Value const& args) override {

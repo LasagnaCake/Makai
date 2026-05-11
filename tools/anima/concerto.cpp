@@ -1,3 +1,5 @@
+#define MAKAILIB_MAIN_NO_POPUPS
+
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 #include "base.cc"
