@@ -70,6 +70,7 @@ template<
 >
 constexpr TIndex rsearch(T const& begin, T end, TData const& value) {
 	if (end <= begin) return -1;
+	usize const total = end-begin;
 	while (--end >= begin)
 		if (TCompare::equals(*end, value))
 			return end-begin;
