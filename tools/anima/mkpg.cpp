@@ -82,7 +82,7 @@ struct PageProcessor {
 				buf += processAction(var, env);
 			else if (var.front() == '$')
 				buf += processExternalVariable(var, env);
-			else if (env["local"].contains(buf))
+			else if (env["local"].contains(var))
 				buf += env["local"][var].getString();
 			else throw Makai::Error::NonexistentValue("Missing value for variable '" + var + "'!");
 			buf += expr.popBack();
@@ -93,23 +93,24 @@ struct PageProcessor {
 		for (auto& sub: subs) {
 			auto const block = Makai::Regex::replace(sub.match, R"(<<|>>)", "");
 			DEBUGLN("Component: ", block);
-			auto const bldat = block.splitAtFirst(' ');
+			auto bldat = block.splitAtFirst(' ');
 			auto type = block.rfind('/');
 			if (type > 0 && type < ssize(block.size() - 1))
 				type = block.find('/');
-			Makai::String blname = bldat.front();
+			Makai::String blname = Regex::replace(bldat.front(), "\\/", "");
 			Makai::Data::Value blparams;
-			if (type == ssize(block.size() - 1))	blname.popBack();
-			else if (type == 0)						blname = blname.substring(1);
-			if (bldat.size() > 2)
+			if (bldat.size() > 1) {
+				if (bldat.back().back() == '/')
+					bldat.back().popBack();
 				blparams = Makai::FLOW::parse("{" + bldat.back() + "}");
+				DEBUGLN("Vars: ", blparams.toFLOWString());
+			}
 			auto newEnv = env;
 			if (!components.contains(blname))
 				throw Makai::Error::NonexistentValue("Component '" + blname + "' does not exist!");
 			auto const blinfo = components[blname];
 			newEnv["local"] = blparams;
 			newEnv["page_meta"] = blinfo;
-			DEBUGLN("Vars: ", blparams.toFLOWString());
 			if (type == ssize(block.size() - 1))	doPage(blinfo.fetch<Makai::String>("html"),			newEnv);
 			else if (type == 0)						doPage(blinfo.fetch<Makai::String>("html_end"),		newEnv);
 			else									doPage(blinfo.fetch<Makai::String>("html_begin"),	newEnv);
