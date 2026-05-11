@@ -74,13 +74,15 @@ WINFLAG := -mwindows
 dynlib ?=dll
 else
 dynlib ?=so
+DYNLIB_ACTION :=av2lib
+DYNLIB_COPY :=cp av2lib/*.$(dynlib) ../../output/bin/av2
 endif
 
 .PHONY: debug release all tooling packer concerto minimac brevec arte av2lib mkpg finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue packer brevec minimac arte mkpg av2lib finale # concerto
+tooling: prologue packer brevec minimac arte mkpg $(DYNLIB_ACTION) finale # concerto
 
 all: tooling
 
@@ -129,7 +131,7 @@ mk-push:
 	cp packer$(EXEC_TYPE) ../../output/bin
 	cp mkpg$(EXEC_TYPE) ../../output/bin
 	mkdir -p ../../output/bin/av2
-	cp av2lib/*.$(dynlib) ../../output/bin/av2
+	$(DYNLIB_COPY)
 
 finale:
 	@echo 
