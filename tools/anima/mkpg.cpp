@@ -1,3 +1,4 @@
+#include "makai/ctl/ctlex/data/value.hpp"
 #define MAKAILIB_MAIN_NO_POPUPS
 
 #include <makai/makai.hpp>
@@ -49,12 +50,13 @@ struct PageProcessor {
 	Makai::String processExternalVariable(Makai::UTF8String const& var, Makai::Data::Value const& env) {
 		auto const proc = var.rfind('$');
 		auto const name = Makai::Regex::replace(var, R"(^\$\$?)", "");
+		auto const path = Makai::Data::Value::Path(name.replaced('.', '/'));
 		if (proc == 0) {
-			if (env["page_meta"].contains(name))
-				return env["page_meta"][name].getString();
+			if (env["page_meta"].contains(path))
+				return env["page_meta"][path].getString();
 			else throw Makai::Error::NonexistentValue("Page attribute '" + name + "' does not exist!");
-		} else if (env["project"]["vars"].contains(name))
-			return env["project"]["vars"][name].getString();
+		} else if (env["project"]["vars"].contains(path))
+			return env["project"]["vars"][path].getString();
 		else throw Makai::Error::NonexistentValue("Project variable '" + name + "' does not exist!");
 	}
 
