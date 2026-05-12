@@ -41,6 +41,6 @@ runs:
         echo "env=${{case(runner.os == 'Windows', 'msys2', 'linux')}}" >> $GITHUB_OUTPUT
         echo "shell=${{case(runner.os == 'Windows', 'msys2 {0}', 'bash')}}" >> $GITHUB_OUTPUT
         echo "lite=${{case(inputs.type == 'lite', '1', '0')}}" >> $GITHUB_OUTPUT
-        echo "arch=${{RUNNER_ARCH}}" >> $GITHUB_OUTPUT
+        echo "arch=${{runner.arch}}" >> $GITHUB_OUTPUT
         echo "success=true" >> $GITHUB_OUTPUT
       shell: bash
