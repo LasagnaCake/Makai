@@ -22,7 +22,7 @@ runs:
         echo "lite? [${{steps.info.outputs.lite}}]"
       shell: bash
     - name: Check if got info
-      if: steps.info.outputs.success != true
+      if: (steps.info.outputs.success != true && steps.info.outputs.success != 'true')
       run: echo "::error  ::'Failed to get environment info!'"
       shell: bash
     - name: Prepare environment
