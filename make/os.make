@@ -11,6 +11,6 @@ endif
 ifeq ($(os),linux)
 link-shared = $(foreach lib,$(1), -l:$(strip $(lib)).so)
 export OS_LIBS :=
-export ADDLIBS := -shared $(call link-shared, $(SHARELIB))
+export ADDLIBS := $(call link-shared, $(SHARELIB))
 endif
 export LITE_BUILD_REQS := $(call link-static, libcrypto++ SDL2_net) $(call link-shared, $(SHARELIB))
