@@ -47,7 +47,7 @@ namespace Convert {
 					result += b32part({data.data() + i, 5});
 				}
 				if (data.size() % 5)
-					result += b32part({data.data() + i - 5, data.size() % 5});
+					result += b32part({data.data() + i, data.size() % 5});
 				return result;
 			}
 
@@ -59,11 +59,10 @@ namespace Convert {
 				if (data.empty()) return "";
 				String result = "";
 				usize i = 0;
-				for (i = 0; i < data.size(); i += 3) {
+				for (i = 0; i < data.size(); i += 3)
 					result += b64part({data.data() + i, 3});
-				}
 				if (data.size() % 3)
-					result += b64part({data.data() + i - 3, data.size() % 3});
+					result += b64part({data.data() + i, data.size() % 3});
 				return result;
 			}
 
