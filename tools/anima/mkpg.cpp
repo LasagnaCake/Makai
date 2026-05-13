@@ -1,4 +1,5 @@
 #include "makai/ctl/ctlex/data/value.hpp"
+#include "makai/file/get.hpp"
 #define MAKAILIB_MAIN_NO_POPUPS
 
 #include <makai/makai.hpp>
@@ -11,11 +12,11 @@ constexpr auto const VER = Makai::Data::Version{1};
 
 constexpr auto const PROJBASE = R"###(
 {
-	type "doc"
+	type "mp:doc"
 	build ["page"]
 	pack ["res"]
 	url "**{{url}}"
-	output "output/www"
+	output "www"
 }
 )###";
 
@@ -188,6 +189,21 @@ struct MakePageMain: AMain {
 	static bool		isString(Makai::Data::Value const& e)	{return e.isString();	}
 	static String	getString(Makai::Data::Value const& e)	{return e.getString();	}
 
+	void doNew(Makai::Data::Value const& args) {
+		if (args["__args"].size() < 2)
+			throw Error::FailedAction("Missing project name!");
+		auto const projName = args["__args"][1].getString();
+		Makai::Data::Value proj = Makai::FLOW::parse(PROJBASE);
+		proj["name"] = projName;
+		Makai::OS::FS::makeDirectory(
+			projName,
+			OS::FS::concatenate(projName, "res"),
+			OS::FS::concatenate(projName, "page")
+		);
+		Makai::File::saveText(projName + "/project.flow", proj.toFLOWString("  "));
+		Makai::File::saveText(projName + "/index.mp", "import[]\n\nhtml ``");
+	}
+
 	void doBuild() {
 		auto const proj = Makai::File::getFLOW("project.flow");
 		StringList const dirs =
@@ -206,7 +222,7 @@ struct MakePageMain: AMain {
 				.toList<String>(getString)
 		;
 		for (auto const& p: packed)
-		Makai::OS::FS::copy(p, OS::FS::concatenate(proj["output"].getString(), p));
+			Makai::OS::FS::copy(p, OS::FS::concatenate(proj["output"].getString(), p));
 	}
 
 	void run(Makai::Data::Value const& args) override {
@@ -219,6 +235,7 @@ struct MakePageMain: AMain {
 				throw Error::FailedAction("Expected action to follow 'mkpg'!");
 			auto const act = args["__args"][0].getString();
 			if (act == "build") doBuild();
+			if (act == "new") doNew(args);
 		}
 	}
 };

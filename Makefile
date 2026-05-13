@@ -209,7 +209,7 @@ tooling: build-tooling copy-tooling
 
 build-tooling:
 	@cd tools/anima
-	$(GNU_MAKE) debug=$(debug-tooling) from-lite=$(lite)
+	$(GNU_MAKE) debug=$(debug-tooling) from-lite=$(lite) do-dynlibs=$(do-dynlibs)
 	@cd ../..
 
 ifeq ($(os),win)
@@ -224,7 +224,7 @@ copy-tooling:
 	@echo "Copying tooling..."
 	@mkdir -p output/bin/anima/breve/lib
 	@cd tools/anima
-	$(GNU_MAKE) mk-push
+	$(GNU_MAKE) mk-push do-dynlibs=$(do-dynlibs)
 	@cd stdlib
 	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
 	$(MOVE_DLL_TOOLS)

@@ -35,7 +35,7 @@ LINKCFG	:= $(LINKER_CONFIG) -shared -O$(o) $(LEAN)
 
 COMPILER	:= $(CXX) $(INCLUDES) $(COMPCFG) $(LINKCFG)
 
-EXTRAOBJS := $(ROOT)/output/lib/libmakai.a
+EXTRAOBJS := -L$(ROOT)/output/lib/libmakai.a
 
 LIBNAME	:= archive
 
