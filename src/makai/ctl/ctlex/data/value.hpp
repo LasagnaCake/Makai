@@ -111,6 +111,7 @@ namespace Data {
 					if (node.validate([] (auto const& e) {return isNumberChar(static_cast<char>(e));}))
 						path.nodes.pushBack({toInt64(::CTL::toString(node)), ""});
 					else path.nodes.pushBack({Limit::MAX<ssize>, node});
+				path.nodes.reverse();
 				return path;
 			}
 
@@ -584,8 +585,7 @@ namespace Data {
 				}
 			}
 			if (!isStructured()) return false;
-			auto const key = path.nodes.front();
-			path.nodes.remove(0);
+			auto const key = path.nodes.popBack();
 			if (isArray()) {
 				if (key.value.size()) return false;
 				return operator[](key.key).tryFetch(out, path);
@@ -716,13 +716,14 @@ namespace Data {
 		constexpr Value& operator[](CompiledPath path) {
 			if (path.nodes.empty()) return *this;
 			if (!(isStructured() || isFalsy())) typeMismatchError("array or object");
-			auto const key = path.nodes.front();
-			path.nodes.remove(0);
+			auto const key = path.nodes.popBack();
 			if (isArray()) {
 				if (key.value.size()) typeMismatchError("array");
+				if (path.nodes.empty()) return operator[](key.key);
 				return operator[](key.key).operator[](path);
 			} else {
 				if (key.value.empty()) typeMismatchError("object");
+				if (path.nodes.empty()) return operator[](key.value);
 				return operator[](key.value).operator[](path);
 			}
 		}
@@ -762,14 +763,15 @@ namespace Data {
 		constexpr Value operator[](CompiledPath path) const {
 			if (path.nodes.empty()) return *this;
 			if (!isStructured()) return undefined();
-			auto const key = path.nodes.front();
-			path.nodes.remove(0);
+			auto const key = path.nodes.popBack();
 			if (isArray()) {
 				if (key.value.size()) typeMismatchError("array");
+				if (path.nodes.empty()) return operator[](key.key);
 				return operator[](key.key).operator[](path);
 			} else {
 				if (key.value.empty()) typeMismatchError("object");
 				if (!contains(key.value)) return undefined();
+				if (path.nodes.empty()) return operator[](key.value);
 				return operator[](key.value).operator[](path);
 			}
 		}
@@ -1003,16 +1005,17 @@ namespace Data {
 		constexpr bool contains(CompiledPath path) const {
 			if (path.nodes.empty()) return isFalsy();
 			if (!isStructured()) return false;
-			auto const key = path.nodes.front();
-			path.nodes.remove(0);
+			auto const key = path.nodes.popBack();
 			if (isArray()) {
 				if (key.value.size()) return false;
+				if (path.nodes.empty()) return static_cast<ssize>(size()) < key.key;
 				return operator[](key.key).contains(path);
-			} else {
+			} else if (isObject()) {
 				if (key.value.empty()) return false;
+				if (path.nodes.empty()) return contains(key.value);
 				if (!contains(key.value)) return false;
 				return operator[](key.value).contains(path);
-			}
+			} else return false;
 		}
 
 		/// @brief Returns whether the value contains a given key or path.
