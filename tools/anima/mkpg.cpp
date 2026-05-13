@@ -241,5 +241,3 @@ struct MakePageMain: AMain {
 };
 
 Makai_bindMain(MakePageMain)
-
-// TODO: This (again)
