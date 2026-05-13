@@ -19,8 +19,12 @@ constexpr auto const PROJBASE = R"###(
 }
 )###";
 
+static CPP::SourceFile errorLocation(String const& file) {
+	return CPP::SourceFile("<unknown>", -1, file);
+}
+
 struct PageProcessor {
-	Makai::String processAction(Makai::UTF8String const& act, Makai::Data::Value const& env) {
+	Makai::String processAction(Makai::UTF8String const& act, Makai::Data::Value const& env, String const& basePath) {
 		auto const name = Makai::Regex::findFirst(act, "@.*?:").match;
 		auto const vars = Makai::Regex::replace(act, "@.*?:", "");
 		if (name == "@embed:")
@@ -44,23 +48,23 @@ struct PageProcessor {
 			return env["project"]["url"].getString() + "/" + vars;
 		else if (name == "@page:")
 			return env["project"]["url"].getString() + "/" + vars + ".html";
-		else throw Makai::Error::NonexistentValue("Invalid action '" + name + "'!");
+		else throw Makai::Error::NonexistentValue("Invalid action '" + name + "'!", errorLocation(basePath));
 	}
 
-	Makai::String processExternalVariable(Makai::UTF8String const& var, Makai::Data::Value const& env) {
+	Makai::String processExternalVariable(Makai::UTF8String const& var, Makai::Data::Value const& env, String const& basePath) {
 		auto const proc = var.rfind('$');
 		auto const name = Makai::Regex::replace(var, R"(^\$\$?)", "");
 		auto const path = Makai::Data::Value::Path(name.replaced('.', '/'));
 		if (proc == 0) {
 			if (env["page_meta"].contains(path))
 				return env["page_meta"][path].getString();
-			else throw Makai::Error::NonexistentValue("Page attribute '" + name + "' does not exist!");
+			else throw Makai::Error::NonexistentValue("Page attribute '" + name + "' does not exist!", errorLocation(basePath));
 		} else if (env["project"]["vars"].contains(path))
 			return env["project"]["vars"][path].getString();
-		else throw Makai::Error::NonexistentValue("Project variable '" + name + "' does not exist!");
+		else throw Makai::Error::NonexistentValue("Project variable '" + name + "' does not exist!", errorLocation(basePath));
 	}
 
-	void doPage(Makai::UTF8String const& page, Makai::Data::Value env) {
+	void doPage(Makai::UTF8String const& page, Makai::Data::Value env, String const& basePath) {
 		auto const pdat = env["page_meta"];
 		Makai::Data::Value components;
 		if (pdat.contains("import"))
@@ -71,8 +75,11 @@ struct PageProcessor {
 					cache[path] = Makai::FLOW::parse("{" + Makai::File::getText(path + ".mp") + "}");
 				auto const compName = cache[path].fetch("name", Makai::OS::FS::fileName(path, true));
 				if (components.contains(compName))
-					throw Makai::Error::NonexistentValue("Component with name '" + compName + "' was already defined!");
-				else components[compName] = cache[path];
+					throw Makai::Error::DuplicateValue("Component with name '" + compName + "' was already defined!", errorLocation(path));
+				else {
+					components[compName] = cache[path];
+					components[compName]["file_path"] = path;
+				}
 			}
 		if (pdat.contains("default"))
 			for (auto const& [k, v]: pdat["default"].items())
@@ -84,12 +91,14 @@ struct PageProcessor {
 		for (auto& sub: subs) {
 			auto const var = Makai::Regex::replace(sub.match, R"(\{\{|\}\})", "");
 			if (var.front() == '@')
-				buf += processAction(var, env);
+				buf += processAction(var, env, basePath);
 			else if (var.front() == '$')
-				buf += processExternalVariable(var, env);
-			else if (env["local"].contains(var))
+				buf += processExternalVariable(var, env, basePath);
+			else if (env["local"].contains(var)) {
+				DEBUGLN(var, ": ", env["local"][var].toFLOWString());
 				buf += env["local"][var].getString();
-			else throw Makai::Error::NonexistentValue("Missing value for variable '" + var + "'!");
+			}
+			else throw Makai::Error::NonexistentValue("Missing value for variable '" + var + "'!", errorLocation(basePath));
 			buf += expr.popBack();
 		}
 		subs = Makai::Regex::find(buf, R"(<<.*?>>)");
@@ -110,14 +119,15 @@ struct PageProcessor {
 			}
 			auto newEnv = env;
 			if (!components.contains(blname))
-				throw Makai::Error::NonexistentValue("Component '" + blname + "' does not exist!");
+				throw Makai::Error::NonexistentValue("Component '" + blname + "' does not exist!", errorLocation(basePath));
 			auto const blinfo = components[blname];
 			newEnv["local"] = blparams;
 			newEnv["page_meta"] = blinfo;
-			if (type == ssize(block.size() - 1))	doPage(blinfo.fetch<Makai::String>("html"),			newEnv);
-			else if (type == 0)						doPage(blinfo.fetch<Makai::String>("html_end"),		newEnv);
-			else									doPage(blinfo.fetch<Makai::String>("html_begin"),	newEnv);
-			output += expr.popBack();
+			if (type == ssize(block.size() - 1))	doPage(blinfo.fetch<Makai::String>("html"),			newEnv, blinfo["file_path"].getString());
+			else if (type == 0)						doPage(blinfo.fetch<Makai::String>("html_end"),		newEnv, blinfo["file_path"].getString());
+			else									doPage(blinfo.fetch<Makai::String>("html_begin"),	newEnv, blinfo["file_path"].getString());
+			if (expr.size())
+				output += expr.popBack();
 		}
 	}
 
@@ -156,7 +166,7 @@ struct MakePageMain: AMain {
 						auto const page = Makai::FLOW::parse("{" + Makai::File::getText(file) + "}");
 						pageEnv["page_meta"] = page;
 						PageProcessor proc;
-						proc.doPage(page["html"].getString(), pageEnv);
+						proc.doPage(page["html"].getString(), pageEnv, file);
 						auto basePath =
 							Regex::replace(
 								Regex::replace(file, "[\\\\/]", "/"),
