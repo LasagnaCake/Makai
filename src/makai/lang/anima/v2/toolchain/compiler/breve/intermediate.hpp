@@ -292,6 +292,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Field> fields;
 
+		StringList fieldMap;
+
+		uint64 baseTypeHash = 0;
+
 		Functor<void(Intermediate&, Namespace::Instance const&, Data::Value const&, Attribute&)> transform;
 
 		static bool matchesTarget(Namespace const& ns, Target const target);
