@@ -36,7 +36,9 @@ LINKCFG	:= $(LINKER_CONFIG) -O$(o)
 COMPILER	:= $(CXX) $(INCLUDES)
 LINKER		:= $(CXX)
 
-EXTRAOBJS := -L$(ROOT)/output/lib/libmakai.a
+INC_MAKAI:=(ROOT)/output/lib/libmakai.a
+
+EXTRAOBJS := -L(ROOT)/output/lib -lmakai
 
 LIBNAME	:= archive
 
