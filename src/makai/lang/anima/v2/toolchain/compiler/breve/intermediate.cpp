@@ -229,10 +229,11 @@ static Namespace::AttributeRef createMetaAttribute() {
 				default: Transformer::ATransformer::Context::error("Invalid basic type for attribute!", var->node);
 			}
 			attrib->fields[name] = {kind, var->value, var->scope->meta.contains("Path")};
+			attrib->fieldMap.pushBack(name);
 		}
 		attrib->transform = ATTRIBUTE_TRANSFORMER() {
 			auto& meta = ns->meta[base.name]->value["::meta"];
-			meta["name"]	= base.name.toString()	;
+			meta["name"]	= base.name.toString();
 			meta["hash"]	= base.baseTypeHash;
 			meta["map"]		= base.fieldMap.toList<Makai::Data::Value>();
 		};
