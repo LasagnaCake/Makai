@@ -197,11 +197,11 @@ static Namespace::AttributeRef createMetaAttribute() {
 		if (!(ns->type && ns->type->def == TypeDecl::Definition::AV2_TCTD_STRUCT))
 			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
 		auto const attrib = Namespace::AttributeRef::create();
-		attrib->name		= ns->type->name;
-		attrib->target		= fromString(v.fetch<Makai::UTF8String>("target", "func"));
-		attrib->globalMin	= v.fetch<uint64>("min", 0);
-		attrib->globalMax	= v.fetch<uint64>("max", Makai::Limit::MAX<uint64>);
-		attrib->fields["::meta"]["map"] = Makai::Data::Value::array();
+		attrib->name			= ns->type->name;
+		attrib->baseTypeHash	= ns->type->hash;
+		attrib->target			= fromString(v.fetch<Makai::UTF8String>("target", "func"));
+		attrib->globalMin		= v.fetch<uint64>("min", 0);
+		attrib->globalMax		= v.fetch<uint64>("max", Makai::Limit::MAX<uint64>);
 		for (auto const& [name, field]: ns->subspaces) {
 			if (!field->variable)
 				continue;
@@ -230,13 +230,13 @@ static Namespace::AttributeRef createMetaAttribute() {
 				default: Transformer::ATransformer::Context::error("Invalid basic type for attribute!", var->node);
 			}
 			attrib->fields[name] = {kind, var->value, var->scope->meta.contains("Path")};
-			auto& attribMap = attrib->fields["::meta"]["map"];
-			attribMap[attribMap.size()] = name;
 		}
 		attrib->transform = ATTRIBUTE_TRANSFORMER() {
-			ns->meta["::meta"] = base.fields["::meta"];
+			auto& meta = ns->meta["::meta"];
+			meta["name"]	= base.name;
+			meta["hash"]	= base.baseTypeHash;
+			meta["map"]		= base.fieldMap;
 		};
-		attrib->fields["::meta"]["name"] = attrib->name;
 		ns->attribute = attrib;
 	};
 	return attrib;
