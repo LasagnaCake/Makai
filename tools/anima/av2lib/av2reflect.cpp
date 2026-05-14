@@ -16,6 +16,12 @@ struct ReflectLib: ILibrary {
 		return obj->origin->meta.keys();
 	}
 
+	static Any unpack(Any const& obj, TypeID const& attr) {
+		if (!obj.value)		return {};
+		if (!obj->origin)	return {};
+		return obj->origin->meta.keys();
+	}
+
 	void load(Context::Adder const& context) override {
 	}
 
