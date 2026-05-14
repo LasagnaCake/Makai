@@ -198,7 +198,6 @@ static Namespace::AttributeRef createMetaAttribute() {
 			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
 		auto const attrib = Namespace::AttributeRef::create();
 		attrib->name			= ns->type->name;
-		attrib->baseTypeHash	= ns->type->hash;
 		attrib->target			= fromString(v.fetch<Makai::UTF8String>("target", "func"));
 		attrib->globalMin		= v.fetch<uint64>("min", 0);
 		attrib->globalMax		= v.fetch<uint64>("max", Makai::Limit::MAX<uint64>);
@@ -232,10 +231,10 @@ static Namespace::AttributeRef createMetaAttribute() {
 			attrib->fields[name] = {kind, var->value, var->scope->meta.contains("Path")};
 		}
 		attrib->transform = ATTRIBUTE_TRANSFORMER() {
-			auto& meta = ns->meta["::meta"];
-			meta["name"]	= base.name;
+			auto& meta = ns->meta[base.name]->value["::meta"];
+			meta["name"]	= base.name.toString()	;
 			meta["hash"]	= base.baseTypeHash;
-			meta["map"]		= base.fieldMap;
+			meta["map"]		= base.fieldMap.toList<Makai::Data::Value>();
 		};
 		ns->attribute = attrib;
 	};
