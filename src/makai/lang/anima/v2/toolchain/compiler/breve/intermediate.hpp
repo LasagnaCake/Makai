@@ -292,7 +292,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		UTF8Dictionary<Field> fields;
 
-		StringList fieldMap;
+		UTF8StringList fieldMap;
 
 		uint64 baseTypeHash = 0;
 
