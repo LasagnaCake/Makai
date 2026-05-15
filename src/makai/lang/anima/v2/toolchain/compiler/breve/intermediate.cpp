@@ -198,6 +198,7 @@ static Namespace::AttributeRef createMetaAttribute() {
 			Transformer::ATransformer::Context::error("Expected structure here!", ns->node);
 		auto const attrib = Namespace::AttributeRef::create();
 		attrib->name			= ns->type->name;
+		attrib->baseTypeHash	= Makai::hash(attrib->name);
 		attrib->target			= fromString(v.fetch<Makai::UTF8String>("target", "func"));
 		attrib->globalMin		= v.fetch<uint64>("min", 0);
 		attrib->globalMax		= v.fetch<uint64>("max", Makai::Limit::MAX<uint64>);
@@ -786,6 +787,13 @@ Makai::Data::Value Attribute::serialize() const {
 	out["uses"] = useCount;
 	out["min"] = globalMin;
 	out["max"] = globalMax;
+	if(fieldMap.size()) out["map"] = fieldMap.toList<Makai::Data::Value>(
+		[] (Makai::UTF8String const& e) -> Makai::Data::Value {
+			return e.toString();
+		}
+	);
+	if (baseTypeHash)
+		out["hash"] = baseTypeHash;
 	for (auto const& [name, field]: fields) {
 		auto& f = out["fields"][name.toString()];
 		f["type"] = Makai::Data::Value::asNameString(field.type);
