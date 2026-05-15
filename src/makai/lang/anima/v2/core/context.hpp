@@ -20,7 +20,7 @@ namespace Makai::Anima::V2::Core {
 
 		using MethodResult = Result<Object::Storage, Error>;
 
-		using ExternalInvocation = Function<MethodResult(Database<Definition>&, ExternalMethod&, List<Object::Storage> const&)>;
+		using ExternalInvocation = Function<MethodResult(Context&, ExternalMethod&, List<Object::Storage> const&)>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -34,8 +34,38 @@ namespace Makai::Anima::V2::Core {
 
 		template <class T> struct ExternalMethodResolver;
 
-		template <class TReturn, Type::Equal<Context&> TContext, class... TArgs>
-		struct ExternalMethodResolver<TReturn(TContext&, TArgs...)> {
+		template <class TReturn>
+		struct ExternalMethodResolver<TReturn()> {
+			constexpr static usize const ARG_COUNT = 0;
+
+			constexpr static ExternalMethodInfo info() {
+				return {Meta::arthashof<TReturn>(), {}};
+			}
+
+			template <class TFunc>
+			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
+				return new ExternalInvocation(
+					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
+					-> MethodResult {
+						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
+							return Error::AV2_CCE_MISSING_ART_TYPE;
+						if (args.size() < method.argc)
+							return Error::AV2_CCE_MISSING_ARGS;
+						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+							f();
+							return Object::Storage();
+						} else return Meta::ARTInfo<TReturn>::convert(
+							context.types,
+							f()
+						);
+						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
+					}
+				);
+			}
+		};
+
+		template <class TReturn, Type::OneOf<Context&, Context const&> TContext, class... TArgs>
+		struct ExternalMethodResolver<TReturn(TContext, TArgs...)> {
 			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
@@ -73,34 +103,34 @@ namespace Makai::Anima::V2::Core {
 			}
 		};
 
-		template <class TReturn, class... TArgs>
-		struct ExternalMethodResolver<TReturn(TArgs...)> {
+		template <class TReturn, Type::NoneOf<Context&, Context const&> TFirst, class... TArgs>
+		struct ExternalMethodResolver<TReturn(TFirst, TArgs...)> {
 			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
 
-			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
+			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + 1;
 
 			constexpr static ExternalMethodInfo info() {
 				return {
 					Meta::arthashof<TReturn>(),
-					List<usize>::from(Meta::arthashof<TArgs>()...)
+					List<usize>::from(Meta::arthashof<TFirst>(), Meta::arthashof<TArgs>()...)
 				};
 			}
 
 			template <class TFunc>
 			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
 				return new ExternalInvocation(
-					[f] (Database<Definition>& types, ExternalMethod& method, List<Object::Storage> const& args)
+					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
 					-> MethodResult {
-						if (types.byNameHash(Meta::arthashof<TReturn>()).empty())
+						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
 							return Error::AV2_CCE_MISSING_ART_TYPE;
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
-						auto tup = Meta::toArguments<TArgs...>(types, args.sliced(0, method.argc));
+						auto tup = Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
 						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 							invokeFromTuple<void>(f, tup);
 							return Object::Storage();
 						} else return Meta::ARTInfo<TReturn>::convert(
-							types,
+							context.types,
 							invokeFromTuple<TReturn>(
 								f,
 								tup
@@ -167,8 +197,6 @@ namespace Makai::Anima::V2::Core {
 			constexpr ContextHandler(Context& context): methods(context), types(context) {}
 		};
 
-
-
 		using Adder		= ContextHandler<MethodAdder, TypeAdder>;
 		using Remover	= ContextHandler<MethodRemover, TypeRemover>;
 
@@ -225,7 +253,7 @@ namespace Makai::Anima::V2::Core {
 				hasExternalMethod(hash)
 			&&	externalMethods[hash].invoker
 			)) return Error::AV2_CCE_MISSING_METHOD;
-			return externalMethods[hash].invoker->invoke(types, externalMethods[hash], args);
+			return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args);
 		}
 
 		template <class T>
