@@ -235,7 +235,11 @@ static Namespace::AttributeRef createMetaAttribute() {
 			auto& meta = ns->meta[base.name]->value["::meta"];
 			meta["name"]	= base.name.toString();
 			meta["hash"]	= base.baseTypeHash;
-			meta["map"]		= base.fieldMap.toList<Makai::Data::Value>();
+			meta["map"]		= base.fieldMap.toList<Makai::Data::Value>(
+				[] (Makai::UTF8String const& e) -> Makai::Data::Value {
+					return e.toString();
+				}
+			);
 		};
 		ns->attribute = attrib;
 	};
