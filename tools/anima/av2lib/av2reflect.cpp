@@ -1,5 +1,3 @@
-#include "makai/ctl/ctlex/data/value.hpp"
-#include "makai/lang/anima/v2/core/type.hpp"
 #include <makai/makai.hpp>
 
 using namespace Makai;
