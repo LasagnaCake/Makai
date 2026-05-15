@@ -33,13 +33,13 @@ struct StringLib: ALibrary {
 	}
 
 	void load(Context::Adder const& context) override {
-		context.methods.add("av2/string/replace", replace);
-		context.methods.add("av2/string/contains", contains);
-		context.methods.add("av2/string/matches", matches);
-		context.methods.add("av2/string/count", count);
-		context.methods.add("av2/string/findFirst", findFirst);
-		context.methods.add("av2/string/firstIndexOf", firstIndexOf);
-		context.methods.add("av2/string/find", find);
+		context.methods.add("av2/string/replace",		replace			);
+		context.methods.add("av2/string/contains",		contains		);
+		context.methods.add("av2/string/matches",		matches			);
+		context.methods.add("av2/string/count",			count			);
+		context.methods.add("av2/string/findFirst",		findFirst		);
+		context.methods.add("av2/string/firstIndexOf",	firstIndexOf	);
+		context.methods.add("av2/string/find",			find			);
 	}
 
 	String name() const override {return "av2/string";}

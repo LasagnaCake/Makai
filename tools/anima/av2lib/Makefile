@@ -85,6 +85,7 @@ av2:
 	$(call compile, tostring)
 	$(call compile, convert)
 	$(call compile, string)
+	$(call compile, meta)
 
 finale:
 	@echo 

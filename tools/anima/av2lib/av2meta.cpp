@@ -7,7 +7,7 @@ namespace ARTMeta = Anima::V2::Core::Meta;
 
 using Path = Makai::Data::Value::Path;
 
-struct ReflectLib: ALibrary {
+struct MetaLib: ALibrary {
 	static bool hasAttribute(Any const& obj, String const& attr) {
 		if (!obj.value)					return false;
 		if (!obj->getOriginalType())	return false;
@@ -64,12 +64,12 @@ struct ReflectLib: ALibrary {
 	}
 
 	void load(Context::Adder const& context) override {
-		context.types.add("av2/reflect/unpack",			unpack			);
-		context.types.add("av2/reflect/attributes",		attributes		);
-		context.types.add("av2/reflect/hasAttribute",	hasAttribute	);
+		context.methods.add("av2/meta/hasAttribute",	hasAttribute	);
+		context.methods.add("av2/meta/attributes",		attributes		);
+		context.methods.add("av2/meta/unpack",			unpack			);
 	}
 
 	String name() const override {return "av2/reflect";}
 };
 
-AV2_Library(ReflectLib);
+AV2_Library(MetaLib);

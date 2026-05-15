@@ -32,10 +32,10 @@ struct ConsoleLib: ALibrary {
 	}
 
 	void load(Context::Adder const& context) override {
-		context.methods.add("av2/console/write_string", write_string);
-		context.methods.add("av2/console/write_any", write_any);
-		context.methods.add("av2/console/writeLine_string", writeLine_string);
-		context.methods.add("av2/console/writeLine_any", writeLine_any);
+		context.methods.add("av2/console/write_string", 	write_string		);
+		context.methods.add("av2/console/write_any",		write_any			);
+		context.methods.add("av2/console/writeLine_string",	writeLine_string	);
+		context.methods.add("av2/console/writeLine_any",	writeLine_any		);
 	}
 
 	String name() const override {return "av2/console";}
