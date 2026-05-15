@@ -48,6 +48,7 @@ struct MetaLib: ALibrary {
 		;
 		Any out;
 		out.value = Object::create(types.byNameHash(Makai::hash("any")).front());
+		out.value->reserveFields(fields.size());
 		for (auto const& [field, index]: Range::expand(fields)) {
 			auto const value = meta[field];
 			switch (value.type()) {
