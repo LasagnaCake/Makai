@@ -8,6 +8,7 @@ namespace Makai::Anima::V2::Core {
 	struct Definition;
 	struct Value;
 	struct Object;
+	struct ALibrary;
 
 	struct Symbol {
 		Nullable<uint64>	source = null;

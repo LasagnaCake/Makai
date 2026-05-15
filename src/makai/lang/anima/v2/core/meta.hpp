@@ -281,6 +281,16 @@ namespace Makai::Anima::V2::Core::Meta {
 			constexpr static Type make(Database<Definition>& db, ObjectTupleType const& tup, IndexTuple<N...>) {
 				return {ARTTI<Makai::Meta::Select<N, Types...>>::construct(*tup.template get<N>())...};
 			}
+
+			template <class TContext>
+			constexpr static Tuple<TContext, Types...> makeWithContext(TContext& context, Database<Definition>& db, ObjectTupleType const& tup) {
+				return make(db, tup, IntegerPack<sizeof...(Types)>(), context);
+			}
+
+			template <class TContext, usize... N>
+			constexpr static Tuple<TContext, Types...> makeWithContext(TContext& context, Database<Definition>& db, ObjectTupleType const& tup, IndexTuple<N...>) {
+				return {context, ARTTI<Makai::Meta::Select<N, Types...>>::construct(*tup.template get<N>())...};
+			}
 		};
 	};
 
@@ -302,6 +312,15 @@ namespace Makai::Anima::V2::Core::Meta {
 		return Impl::ObjectTupleToArguments<Types...>::make(
 			db,
 			Impl::ListToTuple<Types...>::make(args)
+		);
+	}
+
+	template <class TContext, class... Types>
+	constexpr Tuple<Types...> toArgumentsWithContext(Database<Definition>& db, List<Object::Storage> const& args, TContext& context) {
+		return Impl::ObjectTupleToArguments<TContext&, Types...>::makeWithContext(
+			db,
+			Impl::ListToTuple<Types...>::make(args),
+			context
 		);
 	}
 

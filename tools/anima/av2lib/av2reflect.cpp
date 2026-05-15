@@ -20,15 +20,16 @@ struct ReflectLib: ALibrary {
 		return obj->getOriginalType()->meta.keys();
 	}
 
-	static Any unpackImpl(Database<Definition>& types, Any const& obj, TypeID const& attr) {
+	static Any unpack(Context& context, Any const& obj, TypeID const& attr) {
 		static auto const hashPath = Path{"::meta/hash"}.compiled();
 		static auto const fieldMapPath = Path{"::meta/map"}.compiled();
+		auto& types = context.types;
 		if (!obj.value)					return {};
 		if (!obj->getOriginalType())	return {};
 		auto const t = obj->getOriginalType();
 		AsNonConst<decltype(t)> metaType;
 		{
-			auto const ts = types.queryByNameHash(attr.id);
+			auto const ts = context.types.queryByNameHash(attr.id);
 			if (ts.empty()) return {};
 			metaType = ts.front();
 		}
@@ -51,11 +52,11 @@ struct ReflectLib: ALibrary {
 			auto const value = meta[field];
 			switch (value.type()) {
 				using enum Makai::Data::Value::Kind;
-				case DVK_STRING:	out.value->setAtIndex(index, Object::create(value.getString(), types.byNameHash(Makai::hash("string")).front()));
-				case DVK_SIGNED:	out.value->setAtIndex(index, Object::create(value.getSigned(), types.byNameHash(Makai::hash("int64")).front()));
-				case DVK_UNSIGNED:	out.value->setAtIndex(index, Object::create(value.getUnsigned(), types.byNameHash(Makai::hash("uint64")).front()));
-				case DVK_BOOLEAN:	out.value->setAtIndex(index, Object::create(value.getBoolean(), types.byNameHash(Makai::hash("bool")).front()));
-				case DVK_REAL:		out.value->setAtIndex(index, Object::create(value.getBytes(), types.byNameHash(Makai::hash("float64")).front()));
+				case DVK_STRING:	out.value->setAtIndex(index, Object::create(value.getString(), context.types.byNameHash(Makai::hash("string")).front()));
+				case DVK_SIGNED:	out.value->setAtIndex(index, Object::create(value.getSigned(), context.types.byNameHash(Makai::hash("int64")).front()));
+				case DVK_UNSIGNED:	out.value->setAtIndex(index, Object::create(value.getUnsigned(), context.types.byNameHash(Makai::hash("uint64")).front()));
+				case DVK_BOOLEAN:	out.value->setAtIndex(index, Object::create(value.getBoolean(), context.types.byNameHash(Makai::hash("bool")).front()));
+				case DVK_REAL:		out.value->setAtIndex(index, Object::create(value.getBytes(), context.types.byNameHash(Makai::hash("float64")).front()));
 				default: break;
 			}
 		};
@@ -63,7 +64,9 @@ struct ReflectLib: ALibrary {
 	}
 
 	void load(Context::Adder const& context) override {
-		context.methods.add("av2/reflect/unpack", wrapUnpack());
+		context.types.add("av2/reflect/unpack",			unpack			);
+		context.types.add("av2/reflect/attributes",		attributes		);
+		context.types.add("av2/reflect/hasAttribute",	hasAttribute	);
 	}
 
 	String name() const override {return "av2/reflect";}

@@ -40,7 +40,7 @@ bool Context::Library::open(Makai::String const& path, Context& context) {
 	Library lib;
 	lib.dll.open(path);
 	DEBUGLN("Getting entrypoint...");
-	auto const fn = lib.dll.function<owner<ILibrary>()>("AV2_Extern_getLibrary");
+	auto const fn = lib.dll.function<owner<ALibrary>()>("AV2_Extern_getLibrary");
 	lib.impl = fn();
 	if (!lib.impl) return false;
 	DEBUGLN("<library>");

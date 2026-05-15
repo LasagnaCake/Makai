@@ -8,8 +8,6 @@
 #include "database.hpp"
 
 namespace Makai::Anima::V2::Core {
-	struct ILibrary;
-
 	struct Context {
 		enum class Error {
 			AV2_CCE_MISSING_METHOD,
@@ -36,9 +34,48 @@ namespace Makai::Anima::V2::Core {
 
 		template <class T> struct ExternalMethodResolver;
 
+		template <class TReturn, Type::Equal<Context&> TContext, class... TArgs>
+		struct ExternalMethodResolver<TReturn(TContext&, TArgs...)> {
+			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
+
+			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
+
+			constexpr static ExternalMethodInfo info() {
+				return {
+					Meta::arthashof<TReturn>(),
+					List<usize>::from(Meta::arthashof<TArgs>()...)
+				};
+			}
+
+			template <class TFunc>
+			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
+				return new ExternalInvocation(
+					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
+					-> MethodResult {
+						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
+							return Error::AV2_CCE_MISSING_ART_TYPE;
+						if (args.size() < method.argc)
+							return Error::AV2_CCE_MISSING_ARGS;
+						auto tup = Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
+						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+							invokeFromTuple<void>(f, tup);
+							return Object::Storage();
+						} else return Meta::ARTInfo<TReturn>::convert(
+							context.types,
+							invokeFromTuple<TReturn>(
+								f,
+								tup
+							)
+						);
+						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
+					}
+				);
+			}
+		};
+
 		template <class TReturn, class... TArgs>
 		struct ExternalMethodResolver<TReturn(TArgs...)> {
-			static_assert((... && Makai::Type::EqualOrConst<TArgs, AsNonReference<TArgs>>), "Arument type(s) cannot be a reference!");
+			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
 
@@ -203,7 +240,7 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		struct Library {
-			Instance<ILibrary>	impl;
+			Instance<ALibrary>	impl;
 			CPP::Library		dll;
 
 			~Library();
@@ -246,7 +283,7 @@ namespace Makai::Anima::V2::Core {
 		Dictionary<Library>			dynlibs;
 
 	private:
-		List<Instance<ILibrary>>	toBeLoaded;
+		List<Instance<ALibrary>>	toBeLoaded;
 	};
 }
 
