@@ -3,7 +3,7 @@
 using namespace Makai;
 using namespace Anima::V2::Core;
 
-struct ToStringLib: ILibrary {
+struct ToStringLib: ALibrary {
 	template <class T>
 	static UTF8String toString(T val) {
 		if constexpr (Makai::Type::Equal<T, Any>) {

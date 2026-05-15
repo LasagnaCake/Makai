@@ -4,8 +4,8 @@
 #include "context.hpp"
 
 namespace Makai::Anima::V2::Core {
-	struct ILibrary {
-		virtual ~ILibrary() {}
+	struct ALibrary {
+		virtual ~ALibrary() {}
 		virtual void open()										{DEBUGLN("Opening [", name(), "]...");		}
 		virtual void load(Context::Adder const& context)		= 0;
 		virtual void unload(Context::Remover const& remover)	{DEBUGLN("Unloading [", name(), "]...");	}
@@ -19,6 +19,6 @@ namespace Makai::Anima::V2::Core {
 
 #define AV2_Library(LIB)\
 	static_assert(Makai::Type::Subclass<LIB, Makai::Anima::V2::Core::ILibrary>);\
-	CTL_CDECL CTL_DYNEXPORT owner<Makai::Anima::V2::Core::ILibrary> AV2_Extern_getLibrary() {return new LIB();}
+	CTL_CDECL CTL_DYNEXPORT owner<Makai::Anima::V2::Core::ALibrary> AV2_Extern_getLibrary() {return new LIB();}
 
 #endif

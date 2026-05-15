@@ -3,7 +3,7 @@
 using namespace Makai;
 using namespace Anima::V2::Core;
 
-struct SystemLib: ILibrary {
+struct SystemLib: ALibrary {
 	void load(Context::Adder const& context) override {
 	}
 

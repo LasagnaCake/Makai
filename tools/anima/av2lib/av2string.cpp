@@ -3,7 +3,7 @@
 using namespace Makai;
 using namespace Anima::V2::Core;
 
-struct StringLib: ILibrary {
+struct StringLib: ALibrary {
 	static String replace(String str, String expr, String fmt) {
 		return Regex::replace(str, expr, fmt);
 	}

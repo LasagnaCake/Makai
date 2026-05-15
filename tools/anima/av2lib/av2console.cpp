@@ -6,7 +6,7 @@ using namespace Anima::V2::Core;
 #define doWrite(WHAT) std::cout << WHAT
 #define doWriteLine(WHAT) std::cout << WHAT << "\n"
 
-struct ConsoleLib: ILibrary {
+struct ConsoleLib: ALibrary {
 	static void write_string(UTF8String str) {
 		doWrite(str);
 	}
