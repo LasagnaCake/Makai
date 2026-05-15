@@ -64,47 +64,11 @@ namespace Makai::Anima::V2::Core {
 			}
 		};
 
-		template <class TReturn, Type::OneOf<Context&, Context const&> TContext, class... TArgs>
-		struct ExternalMethodResolver<TReturn(TContext, TArgs...)> {
-			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
-
-			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
-
-			constexpr static ExternalMethodInfo info() {
-				return {
-					Meta::arthashof<TReturn>(),
-					List<usize>::from(Meta::arthashof<TArgs>()...)
-				};
-			}
-
-			template <class TFunc>
-			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
-				return new ExternalInvocation(
-					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
-					-> MethodResult {
-						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
-							return Error::AV2_CCE_MISSING_ART_TYPE;
-						if (args.size() < method.argc)
-							return Error::AV2_CCE_MISSING_ARGS;
-						auto tup = Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
-						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-							invokeFromTuple<void>(f, tup);
-							return Object::Storage();
-						} else return Meta::ARTInfo<TReturn>::convert(
-							context.types,
-							invokeFromTuple<TReturn>(
-								f,
-								tup
-							)
-						);
-						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
-					}
-				);
-			}
-		};
-
 		template <class TReturn, Type::NoneOf<Context&, Context const&> TFirst, class... TArgs>
+		requires (Type::NoneOf<TFirst, Context&, Context const&>)
 		struct ExternalMethodResolver<TReturn(TFirst, TArgs...)> {
+			static_assert(Type::NoneOf<TFirst, Context&, Context const&>);
+
 			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + 1;
@@ -126,6 +90,48 @@ namespace Makai::Anima::V2::Core {
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
 						auto tup = Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
+						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+							invokeFromTuple<void>(f, tup);
+							return Object::Storage();
+						} else return Meta::ARTInfo<TReturn>::convert(
+							context.types,
+							invokeFromTuple<TReturn>(
+								f,
+								tup
+							)
+						);
+						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
+					}
+				);
+			}
+		};
+
+		template <class TReturn, Type::OneOf<Context&, Context const&> TContext, class... TArgs>
+		requires (Type::OneOf<TContext, Context&, Context const&>)
+		struct ExternalMethodResolver<TReturn(TContext, TArgs...)> {
+			static_assert(Type::OneOf<TContext, Context&, Context const&>);
+
+			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
+
+			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
+
+			constexpr static ExternalMethodInfo info() {
+				return {
+					Meta::arthashof<TReturn>(),
+					List<usize>::from(Meta::arthashof<TArgs>()...)
+				};
+			}
+
+			template <class TFunc>
+			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
+				return new ExternalInvocation(
+					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
+					-> MethodResult {
+						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
+							return Error::AV2_CCE_MISSING_ART_TYPE;
+						if (args.size() < method.argc)
+							return Error::AV2_CCE_MISSING_ARGS;
+						auto tup = Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
 						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 							invokeFromTuple<void>(f, tup);
 							return Object::Storage();
