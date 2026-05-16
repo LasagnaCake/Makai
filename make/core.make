@@ -1,5 +1,5 @@
-include options.make
-include compiler.make
+sinclude options.make
+sinclude compiler.make
 
 export space :=
 export sep :=,
