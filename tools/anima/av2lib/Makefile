@@ -70,8 +70,9 @@ libs: prologue av2 finale
 all: libs
 
 define compile
-	@echo "[$(strip $(1))]"
+	@echo "compiling [$(strip $(1))]"
 	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
+	@echo "linking [$(strip $(1))]"
 	$(LINKER) $(LK) -o av2$(strip $(1)).$(dynlib) av2$(strip $(1)).o $(OBJ) -shared $(LIBRARIES)
 endef
 
