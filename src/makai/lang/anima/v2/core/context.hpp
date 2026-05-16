@@ -64,14 +64,13 @@ namespace Makai::Anima::V2::Core {
 			}
 		};
 
-		template <class TReturn, Type::NoneOf<Context&, Context const&> TFirst, class... TArgs>
-		requires (Type::NoneOf<TFirst, Context&, Context const&>)
+		template <class TReturn, class TFirst, class... TArgs>
 		struct ExternalMethodResolver<TReturn(TFirst, TArgs...)> {
-			static_assert(Type::NoneOf<TFirst, Context&, Context const&>);
-
 			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
 
-			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + 1;
+			constexpr bool CONTEXTUAL const = Type::EqualOrConst<TFirst, Context&>;
+
+			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + CONTEXTUAL;
 
 			constexpr static ExternalMethodInfo info() {
 				return {
@@ -81,7 +80,8 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
+			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f)
+			requires (!CONTEXTUAL) {
 				return new ExternalInvocation(
 					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
 					-> MethodResult {
@@ -104,26 +104,10 @@ namespace Makai::Anima::V2::Core {
 					}
 				);
 			}
-		};
-
-		template <class TReturn, Type::OneOf<Context&, Context const&> TContext, class... TArgs>
-		requires (Type::OneOf<TContext, Context&, Context const&>)
-		struct ExternalMethodResolver<TReturn(TContext, TArgs...)> {
-			static_assert(Type::OneOf<TContext, Context&, Context const&>);
-
-			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
-
-			constexpr static usize const ARG_COUNT = sizeof...(TArgs);
-
-			constexpr static ExternalMethodInfo info() {
-				return {
-					Meta::arthashof<TReturn>(),
-					List<usize>::from(Meta::arthashof<TArgs>()...)
-				};
-			}
 
 			template <class TFunc>
-			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
+			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f)
+			requires (CONTEXTUAL) {
 				return new ExternalInvocation(
 					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
 					-> MethodResult {
