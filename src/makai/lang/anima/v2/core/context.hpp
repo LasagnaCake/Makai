@@ -36,6 +36,8 @@ namespace Makai::Anima::V2::Core {
 
 		template <class TReturn>
 		struct ExternalMethodResolver<TReturn()> {
+			constexpr static bool const CONTEXTUAL = false;
+
 			constexpr static usize const ARG_COUNT = 0;
 
 			constexpr static ExternalMethodInfo info() {
@@ -68,7 +70,7 @@ namespace Makai::Anima::V2::Core {
 		struct ExternalMethodResolver<TReturn(TFirst, TArgs...)> {
 			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
 
-			constexpr bool CONTEXTUAL const = Type::EqualOrConst<TFirst, Context&>;
+			constexpr static bool const CONTEXTUAL = Type::EqualOrConst<TFirst, Context&>;
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + CONTEXTUAL;
 
