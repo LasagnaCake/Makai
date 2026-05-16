@@ -1,3 +1,5 @@
+sinclude options.make
+
 ifdef openmp
 export openmp
 endif

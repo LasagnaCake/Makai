@@ -22,6 +22,7 @@ OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-af
 export os ?=win
 
 sinclude $(ROOT)/make/os.make
+sinclude $(ROOT)/make/compiler.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
@@ -33,8 +34,8 @@ endif
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) -fPIC -fPIE
 LINKCFG	:= $(LINKER_CONFIG) -O$(o)
 
-COMPILER	:= $(CXX) $(INCLUDES)
-LINKER		:= $(CXX)
+COMPILER	:= $(CPP_COMPILER) $(INCLUDES)
+LINKER		:= $(CPP_COMPILER)
 
 INC_MAKAI:=$(ROOT)/output/lib/libmakai.a
 
