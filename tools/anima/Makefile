@@ -23,9 +23,9 @@ OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-af
 
 export os ?=win
 
-sinclude $(ROOT)/make/options.make
-sinclude $(ROOT)/make/core.make
-sinclude $(ROOT)/make/os.make
+include $(ROOT)/make/options.make
+include $(ROOT)/make/core.make
+include $(ROOT)/make/os.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)

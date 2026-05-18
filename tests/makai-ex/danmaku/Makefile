@@ -23,7 +23,7 @@ GRAPHREQS	:= -lopengl32 -static
 NOCMD 		:= -mwindows
 endif
 
-sinclude $(ROOT)/make/os.make
+include $(ROOT)/make/os.make
 
 testcmd = @$(CXX) $(COMPILER_CONFIG)  $(LQQ) -o output/$(1)/test.$(2).$(1)$(EXEC_TYPE) test.$(2).cpp $(ROOT)/output/lib/$(3)
 

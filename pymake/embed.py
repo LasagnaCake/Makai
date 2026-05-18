@@ -19,6 +19,6 @@ def make_embed_script(file_path: str, name: str):
 def embed(file_path: str, output_path: str, embed_as: str):
     script = make_embed_script(file_path, embed_as)
     subprocess.run(
-        executable=Compiler.app,
+        executable=Compiler.program,
         args=["-o", output_path, "-x", "assembler", "-", script],
     )

@@ -1,3 +1,5 @@
+include $(ROOT)/make/options.make
+
 ifdef compiler
 export compiler
 else

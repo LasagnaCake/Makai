@@ -19,7 +19,7 @@ GRAPHREQS	:= -lopengl32
 
 export os ?=win
 
-sinclude $(ROOT)/make/os.make
+include $(ROOT)/make/os.make
 
 o?=3
 

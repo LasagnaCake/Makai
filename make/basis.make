@@ -1,4 +1,4 @@
-sinclude options.make
+include $(ROOT)/make/options.make
 
 os ?=win
 

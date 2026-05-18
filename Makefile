@@ -4,6 +4,8 @@ define GET_TIME
 @echo ""
 endef
 
+export ROOT :=.
+
 prefix:=lib
 
 ifeq ($(os),linux)

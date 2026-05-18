@@ -21,7 +21,7 @@ GRAPHREQS	:= -lopengl32 -static
 NOCMD 		:= -mwindows
 endif
 
-sinclude $(ROOT)/make/os.make
+include $(ROOT)/make/os.make
 
 o?=3
 

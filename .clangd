@@ -19,7 +19,7 @@ CompileFlags:
     - -Ilib/minivorbis
     - -Ilib/json2xml
     - -Ilib/curl/include
-    - -frelaxed-template-template-args
+  #  - -frelaxed-template-template-args
 Documentation:
   CommentFormat: Doxygen
 Index:

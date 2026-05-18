@@ -1,5 +1,5 @@
-sinclude options.make
-sinclude compiler.make
+include $(ROOT)/make/options.make
+include $(ROOT)/make/compiler.make
 
 export space :=
 export sep :=,

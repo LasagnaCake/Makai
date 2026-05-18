@@ -21,8 +21,8 @@ OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-af
 
 export os ?=win
 
-sinclude $(ROOT)/make/os.make
-sinclude $(ROOT)/make/compiler.make
+include $(ROOT)/make/os.make
+include $(ROOT)/make/compiler.make
 
 INCLUDES	:= -I$(ROOT)/output/include
 ifeq ($(from-lite),1)
@@ -74,7 +74,7 @@ define compile
 	@echo "compiling [$(strip $(1))]"
 	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
 	@echo "linking [$(strip $(1))]"
-	$(LINKER) $(LK) -o av2$(strip $(1)).$(dynlib) av2$(strip $(1)).o $(OBJ) -shared $(LIBRARIES)
+	$(LINKER) $(LK) -o av2$(strip $(1)).andl av2$(strip $(1)).o $(OBJ) $(LIBRARIES)
 endef
 
 prologue:
