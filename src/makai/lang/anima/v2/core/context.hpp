@@ -8,6 +8,9 @@
 #include "database.hpp"
 
 namespace Makai::Anima::V2::Core {
+	template <class... Args>
+	concept NonMutableReferenceArgs = (... && Makai::Type::OneOf<AsNonVolatile<Args>, AsNormal<Args>, AsReference<AsConstant<AsNormal<Args>>>>);
+
 	struct Context {
 		enum class Error {
 			AV2_CCE_MISSING_METHOD,
@@ -66,24 +69,30 @@ namespace Makai::Anima::V2::Core {
 			}
 		};
 
-		template <class TReturn, class TFirst, class... TArgs>
+		template <class TReturn, class TFirst, NonMutableReferenceArgs... TArgs>
 		struct ExternalMethodResolver<TReturn(TFirst, TArgs...)> {
-			static_assert((... && Makai::Type::Equal<AsNonCV<TArgs>, AsNormal<TArgs>>), "Arument type(s) cannot be a reference!");
-
-			constexpr static bool const CONTEXTUAL = Type::EqualOrConst<TFirst, Context&>;
+			constexpr static bool const CONTEXTUAL = Type::OneOf<AsNonVolatile<TFirst>, Context&, Context const&>;
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + CONTEXTUAL;
 
-			constexpr static ExternalMethodInfo info() {
+			constexpr static ExternalMethodInfo info() requires (!CONTEXTUAL) {
 				return {
 					Meta::arthashof<TReturn>(),
 					List<usize>::from(Meta::arthashof<TFirst>(), Meta::arthashof<TArgs>()...)
 				};
 			}
 
+			constexpr static ExternalMethodInfo info()  requires (CONTEXTUAL) {
+				return {
+					Meta::arthashof<TReturn>(),
+					List<usize>::from(Meta::arthashof<TArgs>()...)
+				};
+			}
+
 			template <class TFunc>
 			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f)
 			requires (!CONTEXTUAL) {
+				static_assert(NonMutableReferenceArgs<TFirst>, "Arument type(s) cannot be a reference!");
 				return new ExternalInvocation(
 					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
 					-> MethodResult {
