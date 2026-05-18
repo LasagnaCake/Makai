@@ -8,19 +8,19 @@ namespace ARTMeta = Anima::V2::Core::Meta;
 using Path = Makai::Data::Value::Path;
 
 struct MetaLib: ALibrary {
-	static bool hasAttribute(Any const& obj, String const& attr) {
+	static bool hasAttribute(Any obj, String attr) {
 		if (!obj.value)					return false;
 		if (!obj->getOriginalType())	return false;
 		return obj->getOriginalType()->meta.contains(attr);
 	}
 
-	static StringList attributes(Any const& obj) {
+	static StringList attributes(Any obj) {
 		if (!obj.value)					return {};
 		if (!obj->getOriginalType())	return {};
 		return obj->getOriginalType()->meta.keys();
 	}
 
-	static Any unpack(Context& context, Any const& obj, TypeID const& attr) {
+	static Any unpack(Context& context, Any obj, TypeID attr) {
 		static auto const hashPath = Path{"::meta/hash"}.compiled();
 		static auto const fieldMapPath = Path{"::meta/map"}.compiled();
 		auto& types = context.types;
