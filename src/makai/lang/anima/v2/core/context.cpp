@@ -59,8 +59,8 @@ bool Context::Library::Impl::open(Makai::String const& path, Context& context) {
 	lib = fn();
 	if (!lib) return false;
 	DEBUGLN("<library>");
-	DEBUGLN("<name>", impl->name(), "</name>");
-	DEBUGLN("<version>", impl->version().serialize().toFLOWString(), "</version>");
+	DEBUGLN("<name>", lib->name(), "</name>");
+	DEBUGLN("<version>", lib->version().serialize().toFLOWString(), "</version>");
 	DEBUGLN("</library>");
 	lib->open();
 	return true;
