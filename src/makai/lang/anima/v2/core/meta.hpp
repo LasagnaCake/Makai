@@ -316,8 +316,8 @@ namespace Makai::Anima::V2::Core::Meta {
 	}
 
 	template <class TContext, class... Types>
-	constexpr Tuple<TContext&, Types...> toArgumentsWithContext(Database<Definition>& db, List<Object::Storage> const& args, TContext& context) {
-		return Impl::ObjectTupleToArguments<TContext&, Types...>::makeWithContext(
+	constexpr auto toArgumentsWithContext(Database<Definition>& db, List<Object::Storage> const& args, TContext& context) {
+		return Impl::ObjectTupleToArguments<Types...>::makeWithContext(
 			context,
 			db,
 			Impl::ListToTuple<Types...>::make(args)
