@@ -1063,7 +1063,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
 	auto const path = context.pathOf(node->leftSide);
 	auto const fpath = path.join("/").toString();
-	DEBUG("Path: ");
+	DEBUG("Import Path: ");
 	for (auto& p: path)
 		DEBUG("/", p);
 	DEBUGLN("");
