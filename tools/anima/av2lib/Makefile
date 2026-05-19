@@ -3,7 +3,7 @@
 
 ROOT	:= ../../..
 
-debug := 0
+debug ?=0
 
 ADDCONF := -static-libstdc++ -static-libgcc
 
