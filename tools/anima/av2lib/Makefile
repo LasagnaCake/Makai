@@ -31,13 +31,21 @@ else
 LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
 
+ifeq ($(debug),1)
+COMPCFG	:= $(COMPILER_CONFIG) -Og -fPIC -fPIE
+LINKCFG	:= $(LINKER_CONFIG) -Og
+INC_MAKAI:=$(ROOT)/output/lib/libmakai.debug.a
+EXTRAOBJS := -L$(ROOT)/output/lib -lmakai.debug
+else
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) -fPIC -fPIE
 LINKCFG	:= $(LINKER_CONFIG) -O$(o)
+INC_MAKAI:=$(ROOT)/output/lib/libmakai.a
+EXTRAOBJS := -L$(ROOT)/output/lib -lmakai
+endif
 
 COMPILER	:= $(CPP_COMPILER) $(INCLUDES)
 LINKER		:= $(CPP_COMPILER)
 
-INC_MAKAI:=$(ROOT)/output/lib/libmakai.a
 
 EXTRAOBJS := -L$(ROOT)/output/lib -lmakai
 
