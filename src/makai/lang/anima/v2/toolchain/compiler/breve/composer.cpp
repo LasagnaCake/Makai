@@ -124,7 +124,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	if (fields.size()) {
 		decl += "\n  fields [\n";
 		for (auto& [name, field]: fields) {
-			if (name == "this" or name == "base") continue;
+			auto const nn = copy(name);
+			if (nn == "this" or nn == "base") continue;
 			if (field) decl += "    " + (field->type->name) + "\n";
 		}
 		decl += "  ]";

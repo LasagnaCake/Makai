@@ -29,7 +29,14 @@ Intermediate::~Intermediate() {}
 
 Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
+	DEBUG("Subspaces in '", name,"' : [ ");
+	for (auto const& [name, subns]: subspaces)
+		DEBUG( "{", name , ":", subns->name, "} ");
+	DEBUGLN("]");
+	DEBUGLN("Looking for ", path.front().toString());
+	DEBUGLN("Exists? ", subspaces.contains(path.front()));
 	if (!subspaces.contains(path.front())) return nullptr;
+	DEBUGLN("You Sure? ", subspaces[path.front()].exists());
 	if (path.size() == 1)
 		return subspaces[path.front()];
 	else return subspaces[path.front()]->resolve(path.sliced(1));
@@ -54,6 +61,10 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 		DEBUGLN("Nope!");
 	}
 	DEBUGLN("Global scope");
+	DEBUG("Subspaces: [ ");
+	for (auto const& [name, subns]: root->subspaces)
+		DEBUG( "{", name , ":", subns->name, "} ");
+	DEBUGLN("]");
 	if (auto const ns = root->resolve(path))
 		return ns;
 	DEBUGLN("Nope!");

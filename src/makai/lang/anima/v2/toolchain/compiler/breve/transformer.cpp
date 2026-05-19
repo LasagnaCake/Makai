@@ -263,7 +263,7 @@ Namespace::Instance ATransformer::Context::fetch(Node::Instance const& nodePath)
 }
 
 Makai::UTF8StringList ATransformer::Context::pathOf(UTF8String const& path) {
-	return path.split(UTF8Char{'/'}).erase(0);
+	return path.split(UTF8Char{'/'}).sliced(1);
 }
 
 Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) {
@@ -283,7 +283,7 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	if (node->leftSide)
 		path.appendBack(pathOf(node->leftSide));
 	DEBUGLN("------ Right:", node->value.getString());
-	path.pushBack(node->value.getString());
+	path.appendBack(pathOf(node->value.getString()));
 	DEBUG("Path: ");
 	for (auto& name: path)
 		DEBUG("/", name);
