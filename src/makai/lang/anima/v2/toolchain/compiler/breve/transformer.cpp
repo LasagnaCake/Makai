@@ -280,9 +280,10 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	Makai::UTF8StringList path;
 	if (node->rightSide)
 		Context::error("This is not a valid path!", node->rightSide);
-	path.appendBack(pathOf(node->leftSide));
+	if (node->leftSide)
+		path.appendBack(pathOf(node->leftSide));
 	DEBUGLN("------ Right:", node->value.getString());
-	path.appendBack(pathOf(node->value.getString()));
+	path.pushBack(node->value.getString());
 	DEBUG("Path: ");
 	for (auto& name: path)
 		DEBUG("/", name);
