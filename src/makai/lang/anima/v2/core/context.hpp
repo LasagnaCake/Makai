@@ -269,14 +269,13 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		struct Library {
-			Instance<ALibrary>	impl;
-			CPP::Library		dll;
+			struct Impl;
 
 			~Library();
 
-			bool open(String const& path, Context& context);
+			Library();
 
-			void close();
+			owner<Impl> impl;
 		};
 
 		bool openLibrary(String const& path);
@@ -306,13 +305,13 @@ namespace Makai::Anima::V2::Core {
 
 		~Context();
 
-		Database<Definition>		types;
-		Database<Method>			methods;
-		Map<usize, ExternalMethod>	externalMethods;
-		Dictionary<Library>			dynlibs;
+		Database<Definition>			types;
+		Database<Method>				methods;
+		Map<usize, ExternalMethod>		externalMethods;
+		Dictionary<Instance<Library>>	dynlibs;
 
 	private:
-		List<Instance<ALibrary>>	toBeLoaded;
+		List<Reference<ALibrary>>		toBeLoaded;
 	};
 }
 

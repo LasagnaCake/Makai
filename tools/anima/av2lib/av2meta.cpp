@@ -70,7 +70,7 @@ struct MetaLib: ALibrary {
 		context.methods.add("av2/meta/unpack",			unpack			);
 	}
 
-	String name() const override {return "av2/reflect";}
+	String name() const override {return "av2/meta";}
 };
 
 AV2_Library(MetaLib);

@@ -4,22 +4,38 @@
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
+struct Context::Library::Impl {
+	Reference<ALibrary>	lib;
+	CPP::Library		dll;
+
+	~Impl();
+
+	bool open(String const& path, Context& context);
+
+	void close();
+};
+
+Context::Library::Library(): impl(new Context::Library::Impl()) {
+}
+
+
 Context::~Context()				{unloadLibraries();	}
-Context::Library::~Library()	{close();			}
+Context::Library::~Library()	{delete impl;		}
 
 bool Context::openLibrary(Makai::String const& path) {
 	if (dynlibs.contains(path)) return true;
 	DEBUGLN("Fetching library...");
-	Library lib;
-	if (!lib.open(path, *this))
+	Instance<Library> lib = lib.create();
+	if (!lib->impl->open(path, *this))
 		return false;
+	toBeLoaded.pushBack(lib->impl->lib);
 	dynlibs[path] = lib;
 	return true;
 }
 
-void Context::Library::close() {
-	if(!impl) return;
-	impl->close();
+void Context::Library::Impl::close() {
+	if(!lib) return;
+	lib->close();
 }
 
 void Context::loadLibraries() {
@@ -30,23 +46,22 @@ void Context::loadLibraries() {
 
 void Context::unloadLibraries() {
 	for (auto& [name, lib]: dynlibs)
-		lib.impl->unload(*this);
+		lib->impl->lib->unload(*this);
 	dynlibs.clear();
 }
 
-bool Context::Library::open(Makai::String const& path, Context& context) {
+bool Context::Library::Impl::open(Makai::String const& path, Context& context) {
 	if (!Makai::OS::FS::exists(path)) return false;
 	DEBUGLN("Opening library...");
-	Library lib;
-	lib.dll.open(path);
+	dll.open(path);
 	DEBUGLN("Getting entrypoint...");
-	auto const fn = lib.dll.function<owner<ALibrary>()>("AV2_Extern_getLibrary");
-	lib.impl = fn();
-	if (!lib.impl) return false;
+	auto const fn = dll.function<owner<ALibrary>()>("AV2_Extern_getLibrary");
+	lib = fn();
+	if (!lib) return false;
 	DEBUGLN("<library>");
-	DEBUGLN("<name>", lib.impl->name(), "</name>");
-	DEBUGLN("<version>", lib.impl->version().serialize().toFLOWString(), "</version>");
+	DEBUGLN("<name>", impl->name(), "</name>");
+	DEBUGLN("<version>", impl->version().serialize().toFLOWString(), "</version>");
 	DEBUGLN("</library>");
-	lib.impl->open();
+	lib->open();
 	return true;
 }
