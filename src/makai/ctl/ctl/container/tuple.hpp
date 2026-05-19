@@ -24,8 +24,6 @@ namespace Impl {
 
 		using typename Typed::DataType;
 
-		constexpr static bool NON_CONST_TUPLE = Type::NonConstant<T>;
-
 		/// @brief Nth element type.
 		/// @tparam I Type index.
 		template<usize I>
@@ -40,10 +38,7 @@ namespace Impl {
 
 		/// @brief Constructs the tuple.
 		/// @param first Element value.
-		constexpr Tuple(DataType const& first):							value(first)		{}
-		/// @brief Constructs the tuple.
-		/// @param first Element value.
-		constexpr Tuple(DataType&& first) requires (NON_CONST_TUPLE):	value(move(first))	{}
+		constexpr Tuple(DataType first): value(first) {}
 
 		/// @brief Gets the Nth element in the tuple.
 		/// @tparam INDEX Element index.
@@ -95,11 +90,7 @@ namespace Impl {
 		/// @brief Constructs the tuple.
 		/// @param first Frst element value.
 		/// @param ...rest Subsequent element values.
-		constexpr Tuple(T const& first, Types const&... rest):	value(first), rest(rest...)				{}
-		/// @brief Constructs the tuple.
-		/// @param first Frst element value.
-		/// @param ...rest Subsequent element values.
-		constexpr Tuple(T&& first, Types&&... rest):			value(move(first)), rest(move(rest)...)	{}
+		constexpr Tuple(T first, Types... rest): value(first), rest(rest...) {}
 
 		/// @brief Gets the Nth element in the tuple.
 		/// @tparam INDEX Element index.
