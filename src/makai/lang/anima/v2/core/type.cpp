@@ -145,8 +145,8 @@ Definition::Comparator Core::comparatorOf(BasicType const type) {
 }
 
 void Definition::makeBasic(Definition& type) {
+	type.byteSize = 0;
 	switch (type.hash) {
-		type.byteSize = 0;
 		case Makai::hash("bool"):	type.byteSize = sizeof(bool);				break;
 		case Makai::hash("i8"):		type.byteSize = sizeof(int8);				break;
 		case Makai::hash("u8"):		type.byteSize = sizeof(uint8);				break;
