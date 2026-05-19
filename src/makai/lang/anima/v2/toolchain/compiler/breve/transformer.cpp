@@ -1275,7 +1275,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		auto const ifEndLabel = "__if_" + node->name() + "_end_";
 		if (cond.shouldBePushed())
 			context.writeMainLine("push", cond.source.value());
-		context.writeMainLine("pick [", ifTrueLabel, node->rightSide ? ifFalseLabel : ifEndLabel, "]");
+		context.writeMainLine("pick [", node->rightSide ? ifFalseLabel : ifEndLabel, ifTrueLabel, "]");
 		context.writeMainLine("@target", ifTrueLabel, ":");
 		context.writeMainLine("begin 0");
 		context.writeMainLine("keep");

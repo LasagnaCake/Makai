@@ -1,4 +1,4 @@
-using import core;
+using import core
 
 module Test.Namespace {
 	@Nullable

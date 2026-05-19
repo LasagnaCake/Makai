@@ -44,6 +44,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_CUSTOM_PREFIX_OP,
 			AV2_TANC_CUSTOM_INFIX_OP,
 			AV2_TANC_CUSTOM_POSTFIX_OP,
+			AV2_TANC_RANGE,
+			AV2_TANC_ITERATION,
+			AV2_TANC_EXPANSION,
 		};
 
 		Content							content = Content::AV2_TANC_EMPTY;

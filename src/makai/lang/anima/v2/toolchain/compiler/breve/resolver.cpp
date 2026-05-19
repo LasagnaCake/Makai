@@ -362,6 +362,13 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 			result->rightSide = v->rightSide;
 		} else if (v->isPathOrName()) {
 			result->middle = v;
+		} else if (
+			v->content == Node::Content::AV2_TANC_RANGE
+		or	v->content == Node::Content::AV2_TANC_EXPANSION
+		) {
+			result->content = Node::Content::AV2_TANC_ITERATION;
+			result->middle = v->leftSide;
+			result->rightSide = v->rightSide;
 		} else parser.context.error("Expected type or assignment here!");
 	}
 	DEBUGLN("VariableDecl:DONE!");
@@ -581,6 +588,7 @@ Node::Instance DropExpressionResolver::resolve(Parser& parser, Node::Instance co
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DROP;
 	result->leftSide = parser.nextExpression();
+
 	return result;
 }
 
@@ -589,5 +597,22 @@ Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_NEW;
 	result->leftSide = parser.nextExpression();
+	return result;
+}
+
+Node::Instance RangeResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_RANGE;
+	result->leftSide	= leftSide;
+	result->rightSide	= parser.nextExpression(precedence);
+	return result;
+}
+
+Node::Instance ExpansionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_EXPANSION;
+	result->leftSide	= parser.nextExpression();
 	return result;
 }

@@ -216,6 +216,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct RangeResolver: AResolver {
+		RangeResolver(): AResolver(Parser::Precedence::AV2_TAPP_RANGE_EXPR, false) {}
+		virtual ~RangeResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct ExpansionResolver: AResolver {
+		ExpansionResolver(): AResolver(Parser::Precedence::AV2_TAPP_RANGE_EXPR, true) {}
+		virtual ~ExpansionResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct DynamicOperatorResolver: AResolver {
 		enum class Class {
 			AV2_TA_DORC_PREFIX,

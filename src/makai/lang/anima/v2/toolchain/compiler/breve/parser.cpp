@@ -181,6 +181,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("null", prefixes, new SpecialDirectResolver());
 	add("drop", prefixes, new DropExpressionResolver());
 	add("new", prefixes, new CreateExpressionResolver());
+	add(LTS_TT_ELLIPSIS, prefixes, new ExpansionResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());
@@ -204,6 +205,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_XOR_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_ELLIPSIS, infixes, new RangeResolver());
 	DEBUGLN("Done!");
 }
 
