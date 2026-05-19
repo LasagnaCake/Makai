@@ -122,11 +122,17 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	fields["this"] = nullptr;
 	fields["base"] = nullptr;
 	if (fields.size()) {
-		decl += "\n  fields [\n";
+		usize count = 0;
+		Makai::UTF8String buf;
 		for (auto& [name, field]: fields) {
-			if (field) decl += "    " + (field->type->name) + "\n";
+			if (field) {
+				buf += "    " + (field->type->name) + "\n";
+				++count;
+			}
 		}
-		decl += "  ]";
+		if (count) {
+			decl += "\n  fields [\n" + buf + "  ]";
+		}
 	}
 	decl += "\n]\n";
 	composer.types.pushBack(decl);
