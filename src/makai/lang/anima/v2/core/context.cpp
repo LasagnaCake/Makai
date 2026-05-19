@@ -5,7 +5,7 @@ using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 struct Context::Library::Impl {
-	Reference<ALibrary>	lib;
+	Instance<ALibrary>	lib;
 	CPP::Library		dll;
 
 	~Impl();
@@ -21,6 +21,7 @@ Context::Library::Library(): impl(new Context::Library::Impl()) {
 
 Context::~Context()				{unloadLibraries();	}
 Context::Library::~Library()	{delete impl;		}
+Context::Library::Impl::~Impl()	{close();			}
 
 bool Context::openLibrary(Makai::String const& path) {
 	if (dynlibs.contains(path)) return true;
@@ -28,7 +29,7 @@ bool Context::openLibrary(Makai::String const& path) {
 	Instance<Library> lib = lib.create();
 	if (!lib->impl->open(path, *this))
 		return false;
-	toBeLoaded.pushBack(lib->impl->lib);
+	toBeLoaded.pushBack(lib->impl->lib.reference());
 	dynlibs[path] = lib;
 	return true;
 }
