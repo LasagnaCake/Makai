@@ -3,18 +3,18 @@
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
-pointer ALibrary::operator new(usize sz) {
+pointer ALibrary::operator new(usize sz) noexcept {
 	return MX::malloc(sz);
 }
 
-pointer ALibrary::operator new[](usize sz) {
+pointer ALibrary::operator new[](usize sz) noexcept {
 	return MX::malloc(sz);
 }
 
-pointer ALibrary::operator delete(pointer mem, usize sz) {
-	return MX::free(sz);
+void ALibrary::operator delete(pointer mem, usize sz) noexcept {
+	return MX::free(mem);
 }
 
-pointer ALibrary::operator delete[](pointer mem, usize sz) {
-	return MX::free(sz);
+void ALibrary::operator delete[](pointer mem, usize sz) noexcept {
+	return MX::free(mem);
 }
