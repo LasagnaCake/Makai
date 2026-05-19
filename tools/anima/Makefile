@@ -79,7 +79,7 @@ endif
 
 ifeq ($(do-dynlibs),1)
 DYNLIB_ACTION :=av2lib
-DYNLIB_COPY :=cp av2lib/*.$(dynlib) ../../output/bin/av2
+DYNLIB_COPY :=cp av2lib/*.andl ../../output/bin/av2
 endif
 
 .PHONY: debug release all tooling packer concerto minimac brevec arte av2lib mkpg finale
