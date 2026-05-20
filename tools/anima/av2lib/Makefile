@@ -61,10 +61,13 @@ CFG := $(COMPCFG)
 LK := $(LINKCFG)
 OBJ := $(EXTRAOBJS)
 
+COMMA :=,
+SPACE :=
+
 ifeq ($(os),win)
 WINFLAG := -mwindows
 dynlib ?=dll
-makelib = -Wl,"$(LIBRARIES)",--subsystem,windows
+makelib = -Wl,--subsystem,windows
 else
 dynlib ?=so
 makelib = -Wl,-soname,$(strip $(1))
@@ -82,7 +85,7 @@ define compile
 	@echo "compiling [$(strip $(1))]"
 	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
 	@echo "linking [$(strip $(1))]"
-	$(LINKER) $(LK) -o av2$(strip $(1)).andl av2$(strip $(1)).o $(OBJ) $(LIBRARIES)
+	$(LINKER) $(LK) -o av2$(strip $(1)).andl -shared $(makelib) av2$(strip $(1)).o $(OBJ) $(LIBRARIES)
 endef
 
 prologue:
