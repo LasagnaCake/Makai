@@ -8,7 +8,7 @@ CompileFlags:
     - -fcoroutines
     - -m64
     - -I../../output/include
-  #  - -frelaxed-template-template-args
+    - -frelaxed-template-template-args
 Index:
   Background: Skip
 Diagnostics:
