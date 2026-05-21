@@ -17,7 +17,7 @@ endif
 LIBREQS		:= $(LITEREQS) $(ADDLIBS) -static-libstdc++ -static-libgcc
 
 ifeq ($(os),win)
-GRAPHREQS	:= -lopengl32 -static
+GRAPHREQS	:= -lopengl32
 NOCMD 		:= -mwindows
 endif
 

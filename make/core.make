@@ -20,7 +20,7 @@ export upper =$(shell echo $(1) | tr a-z A-Z)
 
 export concat =$(strip $(1)).$(strip $(2))
 
-export LEAN := -static -s
+#export LEAN := -static -s
 
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fconcepts-diagnostics-depth=4 -fcoroutines -fms-extensions
 

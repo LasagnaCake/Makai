@@ -32,22 +32,19 @@ LIBRARIES	:= $(OS_LIBS) $(ADDLIBS)
 endif
 
 ifeq ($(debug),1)
-COMPCFG	:= $(COMPILER_CONFIG) -Og -fPIC -fPIE
+COMPCFG	:= $(COMPILER_CONFIG) -Og
 LINKCFG	:= $(LINKER_CONFIG) -Og
 INC_MAKAI:=$(ROOT)/output/lib/libmakai.debug.a
 EXTRAOBJS := -L$(ROOT)/output/lib -lmakai.debug
 else
-COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS) -fPIC -fPIE
+COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
 LINKCFG	:= $(LINKER_CONFIG) -O$(o)
 INC_MAKAI:=$(ROOT)/output/lib/libmakai.a
 EXTRAOBJS := -L$(ROOT)/output/lib -lmakai
 endif
 
-COMPILER	:= $(CPP_COMPILER) $(INCLUDES)
+COMPILER	:= $(CPP_COMPILER) $(INCLUDES) -fPIC -fPIE
 LINKER		:= $(CPP_COMPILER)
-
-
-EXTRAOBJS := -L$(ROOT)/output/lib -lmakai
 
 LIBNAME	:= archive
 

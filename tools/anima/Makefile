@@ -3,7 +3,7 @@
 
 ROOT	:= ../..
 
-LEAN := -strip
+LEAN := -s
 
 debug ?=0
 
@@ -19,7 +19,7 @@ endif
 
 export o?=3
 
-OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize $(LEAN)
+OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize
 
 export os ?=win
 
@@ -43,10 +43,10 @@ COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
 COMPILER	:= $(CPP_COMPILER) $(INCLUDES)
 ifeq ($(os),linux)
 LINKER	:= $(CPP_COMPILER)
-LINKCFG	:= $(LINKER_CONFIG) -O$(o) $(LIBRARIES)
+LINKCFG	:= $(LINKER_CONFIG) -O$(o) $(LIBRARIES) $(LEAN)
 else
-LINKER	:= $(CPP_COMPILER) -static
-LINKCFG	:= $(LINKER_CONFIG) $(LEAN) -O$(o) $(LIBRARIES)
+LINKER	:= $(CPP_COMPILER)
+LINKCFG	:= $(LINKER_CONFIG) $(LEAN) -O$(o) $(LIBRARIES) $(LEAN)
 endif
 
 DEBUGEXTRAOBJS := $(ROOT)/output/lib/libmakai.debug.a
