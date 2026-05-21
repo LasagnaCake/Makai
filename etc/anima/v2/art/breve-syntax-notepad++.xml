@@ -24,7 +24,7 @@
             <Keywords name="Folders in comment, open">/*</Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close">*/</Keywords>
-            <Keywords name="Keywords1">struct&#x000D;&#x000A;prop&#x000D;&#x000A;using&#x000D;&#x000A;import&#x000D;&#x000A;module&#x000D;&#x000A;as&#x000D;&#x000A;if&#x000D;&#x000A;else&#x000D;&#x000A;for&#x000D;&#x000A;while&#x000D;&#x000A;repeat&#x000D;&#x000A;do</Keywords>
+            <Keywords name="Keywords1">struct&#x000D;&#x000A;prop&#x000D;&#x000A;using&#x000D;&#x000A;import&#x000D;&#x000A;module&#x000D;&#x000A;as&#x000D;&#x000A;if&#x000D;&#x000A;else&#x000D;&#x000A;for&#x000D;&#x000A;while&#x000D;&#x000A;repeat&#x000D;&#x000A;do&#x000D;&#x000A;fatal&#x000D;&#x000A;asm&#x000D;&#x000A;yield&#x000D;&#x000A;return&#x000D;&#x000A;pick</Keywords>
             <Keywords name="Keywords2">@</Keywords>
             <Keywords name="Keywords3">and&#x000D;&#x000A;or&#x000D;&#x000A;xor</Keywords>
             <Keywords name="Keywords4">void&#x000D;&#x000A;bool&#x000D;&#x000A;int8&#x000D;&#x000A;uint8&#x000D;&#x000A;int16&#x000D;&#x000A;uint16&#x000D;&#x000A;int32&#x000D;&#x000A;uint32&#x000D;&#x000A;int64&#x000D;&#x000A;uint64&#x000D;&#x000A;float32&#x000D;&#x000A;float64&#x000D;&#x000A;float128&#x000D;&#x000A;vector&#x000D;&#x000A;matrix&#x000D;&#x000A;bytes&#x000D;&#x000A;string&#x000D;&#x000A;any</Keywords>
