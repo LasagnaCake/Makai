@@ -13,8 +13,8 @@ CONFIG_C			:= -fexpensive-optimizations -m64 -fms-extensions
 DEBUG_CONFIG_C		:= $(CONFIG_C) -Wall -Og -ggdb3 -fno-omit-frame-pointer $(DEBUGMODE)
 RELEASE_CONFIG_C	:= $(CONFIG_C) -O$(o) $(RELEASEMODE) $(MATHMODE)
 
-MAKE_GLOADER_D	= $(CPP_COMPILER) $(INC_OPENGL) $(DEBUG_CONFIG_C) -c $(gl-loader).c -o $(prefix).glapi.$@.o
-MAKE_GLOADER	= $(CPP_COMPILER) $(INC_OPENGL) $(RELEASE_CONFIG_C) -c $(gl-loader).c -o $(prefix).glapi.$@.o
+MAKE_GLOADER_D	= $(CPP_COMPILER) $(INC_OPENGL) $(DEBUG_CONFIG_C) -c $(gl-loader).c -o $(prefix).glapi.$@.o -fPIC -fPIE
+MAKE_GLOADER	= $(CPP_COMPILER) $(INC_OPENGL) $(RELEASE_CONFIG_C) -c $(gl-loader).c -o $(prefix).glapi.$@.o -fPIC -fPIE
 
 .PHONY: debug release all
 .ONESHELL:
