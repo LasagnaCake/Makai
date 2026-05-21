@@ -66,10 +66,8 @@ SPACE :=
 
 ifeq ($(os),win)
 WINFLAG := -mwindows
-dynlib ?=dll
 makelib = -Wl,--subsystem,windows
 else
-dynlib ?=so
 makelib = -Wl,-soname,$(strip $(1))
 endif
 
