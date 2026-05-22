@@ -1,5 +1,6 @@
 #include "intermediate.hpp"
 #include "transformer.hpp"
+#include "../../../../../../tool/archive/archive.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -349,16 +350,27 @@ static Namespace::AttributeRef createSharedAttribute() {
 	attrib->fields["name"]		= {.type=DVK_STRING};
 	attrib->fields["lib"]		= {.type=DVK_STRING, .path=true};
 	attrib->fields["optional"]	= {.type=DVK_BOOLEAN, .defaultValue=false};
+	attrib->fields["version"]	= {.type=DVK_STRING, .defaultValue="latest", .path=true};
+	attrib->fields["key"]		= {.type=DVK_STRING, .defaultValue=""};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		static usize id = 0;
 		auto const name = (v["name"].getString());
 		auto const lib = (v["lib"].getString());
+		auto const version = (v["version"].getString()).replaced('/', '.');
+		auto const key = (v["key"].getString());
 		for (auto& ov: ns->function->overloads)
 			if (!ov->hasImplementation) {
 				DEBUGLN("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Applying shared attribute...");
 				ov->hasImplementation = true;
 				ov->outEntry = name;
 				ov->dynlib = lib;
+				if (version.size() && version != "latest")
+					ov->dynlib += + ":ver=" + version;
+				if (key.size())
+					ov->dynlib += ":key=" + Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(
+						Makai::Tool::Arch::hashPassword(key)
+							.toBytes()
+					);
 				ov->optional = v["optional"];
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
