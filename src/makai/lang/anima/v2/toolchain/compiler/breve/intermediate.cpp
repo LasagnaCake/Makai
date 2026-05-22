@@ -365,12 +365,12 @@ static Namespace::AttributeRef createSharedAttribute() {
 				ov->outEntry = name;
 				ov->dynlib = lib;
 				if (version.size() && version != "latest")
-					ov->dynlib += + ":ver=" + version;
+					ov->dynlib += + "?ver='" + version + "'";
 				if (key.size())
-					ov->dynlib += ":key=" + Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(
+					ov->dynlib += "?key='" + Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(
 						Makai::Tool::Arch::hashPassword(key)
 							.toBytes()
-					);
+					)  + "'";
 				ov->optional = v["optional"];
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
