@@ -5,9 +5,11 @@ ROOT	:= ../../..
 
 debug ?=0
 
+LEAN := -s
+
 ADDCONF := -static-libstdc++ -static-libgcc
 
-COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions $(LQQ)
+COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions
 LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
 
 ifdef openmp
@@ -17,7 +19,7 @@ endif
 
 export o?=3
 
-OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize $(LEAN)
+OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize
 
 export os ?=win
 
@@ -38,7 +40,7 @@ INC_MAKAI:=$(ROOT)/output/lib/libmakai.debug.a
 EXTRAOBJS := -L$(ROOT)/output/lib -lmakai.debug
 else
 COMPCFG	:= $(COMPILER_CONFIG) -O$(o) $(OPTIMIZATIONS)
-LINKCFG	:= $(LINKER_CONFIG) -O$(o)
+LINKCFG	:= $(LINKER_CONFIG) -O$(o) $(LEAN)
 INC_MAKAI:=$(ROOT)/output/lib/libmakai.a
 EXTRAOBJS := -L$(ROOT)/output/lib -lmakai
 endif
