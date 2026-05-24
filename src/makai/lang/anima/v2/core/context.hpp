@@ -252,11 +252,10 @@ namespace Makai::Anima::V2::Core {
 			DEBUGLN("Looking for method ", hash, "...");
 			for (auto& m: externalMethods)
 				DEBUGLN("  > ", m.key);
-			if (!(
-				hasExternalMethod(hash)
-			&&	externalMethods[hash].invoker
-			)) return Error::AV2_CCE_MISSING_METHOD;
+			if (!hasExternalMethod(hash)) return Error::AV2_CCE_MISSING_METHOD;
 			DEBUGLN("!!! Method exists !!!");
+			DEBUGLN("Invoker? ", externalMethods[hash].invoker.exists());
+			if (!externalMethods[hash].invoker) return Error::AV2_CCE_MISSING_METHOD;
 			return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args);
 		}
 
