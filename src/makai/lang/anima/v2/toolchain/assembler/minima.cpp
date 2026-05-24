@@ -515,6 +515,7 @@ static void doCall(Context& context, bool dynamic = false) {
 		invoke.external = m->out;
 		invoke.optional = m->optional;
 		invoke.noResult = context.program.detail.types[m->retType].flags & Definition::Flags::AV2_DF_NO_RESULT;
+		DEBUGLN("_______________________ Call entry: ", m->jump);
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
