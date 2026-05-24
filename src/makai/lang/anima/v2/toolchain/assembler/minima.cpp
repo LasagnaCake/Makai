@@ -139,9 +139,11 @@ void Context::addJumpTarget(String const& name) {
 	if (name.empty())
 		error("Missing jump target name!");
 	if (hasJumpTarget(name)) {
+		DEBUGLN("*********************** :::: Jump to: [ ", name, " -> ", jumps[name], " ]");
 		add(jumps[name]);
 		return;
 	}
+	DEBUGLN("*********************** ++++ New jump for: [ ", name, " @ ", program.code.size(), " ]");
 	jumpsToMap[name].pushBack(program.code.size());
 	add(0);
 }
@@ -156,19 +158,26 @@ bool Context::hasJumpTarget(String const& name) {
 
 void Context::finalize() {
 	auto unmapped = jumpsToMap.keys();
+	DEBUGLN("Unmapped jump count: ", jumpsToMap.size());
 	for (auto& label: unmapped) {
 		if (label.empty())
 			error("Somehow, jump target is empty!");
-		DEBUGLN("Mapping '", label, "'...")
-		if (jumpsToMap.contains(label) && jumps.contains(label)) {
+		DEBUGLN("Mapping '", label, "'...");
+		if (jumps.contains(label)) {
 			auto const toLoc = Makai::Cast::bit<Instruction>(jumps[label]);
 			DEBUGLN("To table ID [", jumps[label], "]");
 			for (auto& location: jumpsToMap[label])
 				program.code[location] = toLoc;
-			jumpsToMap.erase(label);
+			jumpsToMap[label].clear();
 		}
 	}
-	unmapped = jumpsToMap.keys();
+	for (auto& [name, index]: jumps) {
+		DEBUGLN("Map : [ ", name, " -> ", index, " ]");
+	}
+	unmapped.clear();
+	for (auto& [name, jumps]: jumpsToMap)
+		if (jumps.size())
+			unmapped.pushBack(name);
 	if (unmapped.size())
 		error("Some jump targets do not exist!\nTargets:\n[" + unmapped.join("]\n[") + "]");
 	if (entry.size() && jumps.contains(entry))
