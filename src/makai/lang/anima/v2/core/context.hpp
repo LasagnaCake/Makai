@@ -90,7 +90,7 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f)
+			constexpr static owner<ExternalInvocation> invoker(TFunc const& f)
 			requires (!CONTEXTUAL) {
 				static_assert(NonMutableReferenceArgs<TFirst>, "Arument type(s) cannot be a reference!");
 				return new ExternalInvocation(
@@ -117,7 +117,7 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f)
+			constexpr static owner<ExternalInvocation> invoker(TFunc const& f)
 			requires (CONTEXTUAL) {
 				return new ExternalInvocation(
 					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
@@ -224,6 +224,7 @@ namespace Makai::Anima::V2::Core {
 		template <class TFunc>
 		bool addExternalMethod(usize const& hash, TFunc const& f) {
 			if (hasExternalMethod(hash)) return false;
+			DEBUGLN("Adding method [", hash, "]...");
 			using Resolver = ExternalMethodResolver<TFunc>;
 			static auto const baseInfo = Resolver::info();
 			ExternalMethod method;
@@ -231,6 +232,7 @@ namespace Makai::Anima::V2::Core {
 			method.argc		= Resolver::ARG_COUNT;
 			method.hash		= hash;
 			method.invoker	= Resolver::invoker(f);
+			DEBUGLN("Invoker? ", method.invoker);
 			externalMethods[hash] = method;
 			return true;
 		}
@@ -254,6 +256,7 @@ namespace Makai::Anima::V2::Core {
 				hasExternalMethod(hash)
 			&&	externalMethods[hash].invoker
 			)) return Error::AV2_CCE_MISSING_METHOD;
+			DEBUGLN("!!! Method exists !!!");
 			return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args);
 		}
 
