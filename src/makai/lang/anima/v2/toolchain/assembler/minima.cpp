@@ -159,9 +159,12 @@ void Context::finalize() {
 	for (auto& label: unmapped) {
 		if (label.empty())
 			error("Somehow, jump target is empty!");
+		DEBUGLN("Mapping '", label, "'...")
 		if (jumpsToMap.contains(label) && jumps.contains(label)) {
+			auto const toLoc = Makai::Cast::bit<Instruction>(jumps[label]);
+			DEBUGLN("To table ID [", jumps[label], "]");
 			for (auto& location: jumpsToMap[label])
-				program.code[location] = Makai::Cast::bit<Instruction>(jumps[label]);
+				program.code[location] = toLoc;
 			jumpsToMap.erase(label);
 		}
 	}
