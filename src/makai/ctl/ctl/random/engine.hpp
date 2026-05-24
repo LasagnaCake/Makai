@@ -7,6 +7,7 @@
 #include "../typetraits/verify.hpp"
 #include "ctprng.hpp"
 #include "mersenne.hpp"
+#include "lincon.hpp"
 
 #if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 #include <windows.h>
@@ -94,6 +95,62 @@ namespace Engine {
 
 		/// @brief Destructor.
 		virtual ~Mersenne() {}
+
+		/// @brief
+		/// @return
+		constexpr virtual usize getSeed() const final {
+			return engine.getSeed();
+		}
+
+		/// @brief Sets the engine's current seed.
+		/// @param seed Seed to use.
+		/// @return Reference to self.
+		constexpr virtual void setSeed(usize const newSeed) final {
+			engine.setSeed(newSeed);
+		}
+
+		/// @brief Generates a new random number.
+		/// @return Generated number.
+		constexpr virtual usize next() final {
+			return engine.next();
+		}
+	};
+
+	/// @brief Linear congruential engine.
+	struct LinCon: Base::ISimpleEngine {
+	private:
+		using InternalEngine = Impl::LinCon;
+
+		/// @brief Underlying engine used.
+		InternalEngine engine;
+
+		constexpr static usize startingSeed() {
+			if (inCompileTime())	return ctsprng<usize>();
+			else					return OS::Time::now();
+		}
+	public:
+		/// @brief Constructs the engine with a given seed.
+		/// @param seed Seed to use.
+		constexpr LinCon(usize const seed):	engine(seed)			{}
+		/// @brief Constructs the engine with the seed being the current time.
+		constexpr LinCon():					LinCon(startingSeed())	{}
+
+		/// @brief Move constructor (defaulted).
+		constexpr LinCon(LinCon&& other)		= default;
+		/// @brief Copy constructor (deleted).
+		constexpr LinCon(LinCon const& other)	= delete;
+
+		/// @brief Move assignment operator (defaulted).
+		#ifdef __clang__
+		constexpr LinCon& operator=(LinCon&& other)			{engine = CTL::move(other.engine); return *this;}
+		#else
+		constexpr LinCon& operator=(LinCon&& other)			= default;
+		#endif
+		/// @brief Copy assignment operator (deleted).
+		constexpr LinCon& operator=(LinCon const& other)	= delete;
+
+		/// @brief Destructor.
+		virtual ~LinCon() {}
 
 		/// @brief
 		/// @return
