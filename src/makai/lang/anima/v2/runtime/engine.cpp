@@ -263,7 +263,7 @@ void Engine::v2Call() {
 					switch (e) {
 						using enum Core::Context::Error;
 						case AV2_CCE_MISSING_METHOD:		err += "Function does not exist";								break;
-						case AV2_CCE_MISSING_INVOKER:		err += "Invoker for function is mysteriously gone!";			break;
+						case AV2_CCE_MISSING_INVOKER:		err += "Invoker for function is mysteriously gone";				break;
 						case AV2_CCE_MISSING_ARGS:			err += "Not enough args for function";							break;
 						case AV2_CCE_MISSING_ART_TYPE:		err += "Return type does not exist in the current ART context";	break;
 						case AV2_CCE_HOW_DID_YOU_GET_HERE:	err += "Somehow, execution reached an unreachable point";		break;
@@ -322,7 +322,10 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			}
 		} break;
 		case DataLocation::AV2_DL_STRING: {
-			return context.art.newValue(program.strings[id]);
+			DEBUGLN("Creating string '", program.strings[id], "'");
+			auto const v = context.art.newValue(program.strings[id]);
+			DEBUGLN("Created '", v->toValue<String>(), "'");
+			return v;
 		} break;
 		case DataLocation::AV2_DL_STACK: {
 			if (context.globalValueStack.empty()) {

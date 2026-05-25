@@ -372,8 +372,7 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object(T const& v, Instance<Definition> const& info) {
 			type = origin = info;
 			content->invoke(origin->byteSize);
-			origin->construct.invoke(content->data());
-			origin->copy.invoke(content->data(), &v);
+			MX::construct(ref<T>(content->data()), v);
 		}
 
 		constexpr Object(Object const& other): type(other.type), origin(other.type) {

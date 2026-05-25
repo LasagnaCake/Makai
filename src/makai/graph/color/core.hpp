@@ -63,7 +63,7 @@ namespace Makai::Graph::Color {
 	constexpr Vector4 fromRGBA(float r, float g, float b, float a = 1) {
 		return Vector4(r, g, b, a);
 	}
-	
+
 	/// @brief Creates a color from a set of 8-bit RGBA values.
 	/// @param r Red channel.
 	/// @param g Green channel.
@@ -103,6 +103,18 @@ namespace Makai::Graph::Color {
 		res = Math::lerp(gray, res, Vector4(s));
 		res.w = a;
 		return res.clamped(0, 1);
+	}
+
+	/// @brief Creates an RGB color from a set of OPC (Opponent Process Channel) values.
+	/// @param rg Red-Green difference.
+	/// @param by Blue-Yellow difference.
+	/// @param l Luminosity.
+	/// @param a Alpha channel. By default, it is `1.0`.
+	/// @return Resulting color.
+	constexpr Vector4 fromOPC(float rg, float by, float l, float a = 1) {
+		Vector3 rgb{(1 - rg) + (by / 2), rg + (by / 2), 1 - by};
+		rgb *= l;
+		return Vector4(rgb, a);
 	}
 
 	/// @brief Creates a color from an RGBA hex code.

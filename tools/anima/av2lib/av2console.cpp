@@ -8,10 +8,18 @@ using namespace Anima::V2::Core;
 
 struct ConsoleLib: ALibrary {
 	static void write_string(UTF8String str) {
+		doWrite(__LINE__);
+		doWrite("/");
+		doWrite(str.size());
+		doWriteLine(" ::: Writing to standard output...");
 		doWrite(str);
 	}
 
 	static void writeLine_string(UTF8String str) {
+		doWrite(__LINE__);
+		doWrite("/");
+		doWrite(str.size());
+		doWriteLine(" ::: Writing to standard output...");
 		doWriteLine(str);
 	}
 
@@ -22,11 +30,15 @@ struct ConsoleLib: ALibrary {
 	}
 
 	static void write_any(Makai::Anima::V2::Core::Any what) {
+		doWrite(__LINE__);
+		doWriteLine(" ::: Writing to standard output...");
 		if (what.value)
 			write_string(toString(what.value->toDynamicValue()));
 	}
 
 	static void writeLine_any(Makai::Anima::V2::Core::Any what) {
+		doWrite(__LINE__);
+		doWriteLine(" ::: Writing to standard output...");
 		if (what.value)
 			writeLine_string(toString(what.value->toDynamicValue()));
 	}

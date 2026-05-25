@@ -9,7 +9,7 @@ LEAN := -s
 
 ADDCONF := -static-libstdc++ -static-libgcc
 
-COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions
+COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions #-DCTL_DEVMODE_DEBUG
 LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
 
 ifdef openmp
