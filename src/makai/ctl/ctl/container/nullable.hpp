@@ -95,8 +95,8 @@ public:
 
 	using typename Nulled::NullType;
 
-	using 
-		typename Ordered::OrderType, 
+	using
+		typename Ordered::OrderType,
 		typename Ordered::Order
 	;
 
@@ -106,21 +106,21 @@ public:
 	using ProcedureType	= Decay::AsFunction<void(DataType const&)>;
 
 	/// @brief Default constructor.
-	constexpr Nullable() noexcept										{												}
+	constexpr Nullable() noexcept												{									}
 	/// @brief Null constructor.
-	constexpr Nullable(NullType) noexcept								{												}
+	constexpr Nullable(NullType) noexcept										{									}
 	/// @brief Copy constructor (value).
 	/// @param value Value to copy.
-	constexpr Nullable(ConstReferenceType value): isSet(true)			{data = value;									}
+	constexpr Nullable(ConstReferenceType value): isSet(true), content(value)	{									}
 	/// @brief Move constructor (value).
 	/// @param value Value to move.
-	constexpr Nullable(TemporaryType value): isSet(true)				{data = CTL::move(value);						}
+	constexpr Nullable(TemporaryType value): isSet(true), content(move(value))	{									}
 	/// @brief Copy constructor (`Nullable`).
 	/// @param other `Nullable` to copy from.
-	constexpr Nullable(SelfType const& other): isSet(other.isSet)		{if (other.isSet) data = other.data;			}
+	constexpr Nullable(SelfType const& other)									{if (other.isSet) set(other);		}
 	/// @brief Move constructor (`Nullable`).
 	/// @param other `Nullable` to move from.
-	constexpr Nullable(SelfType&& other): isSet(CTL::move(other.isSet))	{if (other.isSet) data = CTL::move(other.data);	}
+	constexpr Nullable(SelfType&& other)										{if (other.isSet) set(move(other));	}
 
 	/// @brief Destructor.
 	constexpr ~Nullable() {}
@@ -129,21 +129,21 @@ public:
 	/// @return Stored value.
 	/// @throw Error::NonexistentValue if value is not set.
 	constexpr DataType value() const {
-		if (isSet) return data;
+		if (isSet) return content.data;
 		throw Error::NonexistentValue("Value is not set!", CTL_CPP_PRETTY_SOURCE);
 	}
 
 	/// @brief Returns the stored value, or a fallback.
 	/// @param fallback Fallback value.
 	/// @return Stored value, or `fallback` if not set.
-	constexpr DataType orElse(DataType const& fallback) const {return (isSet) ? data : fallback;}
+	constexpr DataType orElse(DataType const& fallback) const {return (isSet) ? content.data : fallback;}
 
 	/// @brief Applies an operation to the stored value, if it exists.
 	/// @tparam TFunction Operation type.
 	/// @param op Operation to apply.
 	/// @return Reference to self.
 	template<Type::Functional<OperationType> TFunction>
-	constexpr SelfType& then(TFunction const& op) {if (isSet) data = op(data); return *this;}
+	constexpr SelfType& then(TFunction const& op) {if (isSet) content.data = op(content.data); return *this;}
 
 	/// @brief Returns whether there is a stored value.
 	/// @return Whether there is a stored value.
@@ -187,7 +187,7 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& set(DataType const& value) {
 		clear();
-		data = value;
+		MX::construct(&content.data, value);
 		isSet = true;
 		return *this;
 	}
@@ -197,7 +197,7 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& set(DataType&& value) {
 		clear();
-		data = value;
+		MX::construct(&content.data, move(value));
 		isSet = true;
 		return *this;
 	}
@@ -207,24 +207,20 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& set(SelfType const& other) {
 		clear();
-		if (other.isSet) {	
-			data = other.data;
-			isSet = true;
-		}
+		if (other.isSet)
+			set(other.content.data);
 		return *this;
 	}
 
 	/// @brief Sets the stored value.
-	/// @param other `Nullable` to move from.
+	/// @param other `Nullable` to copy from.
 	/// @return Reference to self.
 	constexpr SelfType& set(SelfType&& other) {
 		clear();
-		if (other.isSet) {	
-			data = CTL::move(other.data);
-			isSet = true;
-		}
+		if (other.isSet)
+			set(move(other.content.data));
 		return *this;
-	}	
+	}
 
 	/// @brief Clears the current stored value.
 	/// @return Reference to self.
@@ -235,12 +231,13 @@ public:
 	/// @brief Clears the current stored value.
 	/// @return Reference to self.
 	constexpr SelfType& clear() {
+		if (!isSet) return *this;
 		if constexpr (Type::Constructible<DataType>)
-			data = DataType();
+			MX::destruct(&content.data);
 		isSet = false;
 		return *this;
 	}
-	
+
 	/// @brief Equality comparison operator.
 	/// @param other `Nullable` to compare with.
 	/// @return Whether they're equal.
@@ -251,7 +248,7 @@ public:
 		if (!isSet && !other.isSet)
 			return true;
 		if (isSet && other.isSet)
-			return SimpleComparator<DataType>::equals(data, other.data);
+			return SimpleComparator<DataType>::equals(content.data, other.content.data);
 		return false;
 	}
 
@@ -263,10 +260,10 @@ public:
 	constexpr bool operator==(DataType const& value) const
 	requires Type::Comparator::Equals<DataType, DataType> {
 		if (isSet)
-			return SimpleComparator<DataType>::equals(data, value);
+			return SimpleComparator<DataType>::equals(content.data, value);
 		return false;
 	}
-	
+
 	/// @brief Equality comparison operator.
 	/// @return Whether the value is set.
 	constexpr bool operator==(NullType) const {return !exists();}
@@ -281,7 +278,7 @@ public:
 		if (!other.isSet && !isSet)	return Order::EQUAL;
 		if (other.isSet && !isSet)	return Order::LESS;
 		if (!other.isSet && isSet)	return Order::GREATER;
-		return SimpleComparator<DataType>::compare(data, other);
+		return SimpleComparator<DataType>::compare(content.data, other);
 	}
 
 	/// @brief Threeway comparison operator.
@@ -292,7 +289,7 @@ public:
 	constexpr OrderType operator<=>(DataType const& value) const
 	requires Type::Comparator::Threeway<DataType, DataType>	{
 		if (!isSet)	return Order::LESS;
-		return SimpleComparator<DataType>::compare(data, value);
+		return SimpleComparator<DataType>::compare(content.data, value);
 	}
 
 	/// @brief Threeway comparison operator.
@@ -304,7 +301,7 @@ public:
 	friend constexpr OrderType operator<=>(DataType const& value, SelfType const& self)
 	requires Type::Comparator::Threeway<DataType, DataType>	{
 		if (!self.isSet) return Order::LESS;
-		return SimpleComparator<DataType>::compare(value, self.data);
+		return SimpleComparator<DataType>::compare(value, self.content.data);
 	}
 
 	/// @brief Returns the stored value.
@@ -323,10 +320,21 @@ public:
 	}
 
 private:
-	/// @brief Underlying data type.
-	DataType data;
 	/// @brief Whether there is data being stored.
 	bool isSet = false;
+	union Option {
+		/// @brief Underlying data type.
+		DataType data;
+		/// @brief Nothingness.
+		nulltype nothing;
+
+		constexpr Option() noexcept: nothing()							{}
+
+		constexpr Option(DataType const& data) noexcept: data(data)		{}
+		constexpr Option(DataType&& data) noexcept: data(move(data))	{}
+
+		constexpr ~Option() {}
+	} content{};
 };
 
 CTL_NAMESPACE_END

@@ -3,6 +3,7 @@
 
 #include "../../ctl/exnamespace.hpp"
 #include "../../ctl/async/atomic.hpp"
+#include "../../ctl/async/thread.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
 

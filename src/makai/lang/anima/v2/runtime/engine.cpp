@@ -142,7 +142,6 @@ void Engine::v2Compare() {
 
 void Engine::v2Halt() {
 	Instruction::Stop stop = bitcast<Instruction::Stop>(current.type);
-	CPP::Debug::breakpoint();
 	switch (stop.mode) {
 		case Core::Instruction::Stop::Mode::AV2_ISM_ERROR: {
 			auto const v = consumeValue(DataLocation::AV2_DL_STRING);
@@ -264,6 +263,7 @@ void Engine::v2Call() {
 					switch (e) {
 						using enum Core::Context::Error;
 						case AV2_CCE_MISSING_METHOD:		err += "Function does not exist";								break;
+						case AV2_CCE_MISSING_INVOKER:		err += "Invoker for function is mysteriously gone!";			break;
 						case AV2_CCE_MISSING_ARGS:			err += "Not enough args for function";							break;
 						case AV2_CCE_MISSING_ART_TYPE:		err += "Return type does not exist in the current ART context";	break;
 						case AV2_CCE_HOW_DID_YOU_GET_HERE:	err += "Somehow, execution reached an unreachable point";		break;

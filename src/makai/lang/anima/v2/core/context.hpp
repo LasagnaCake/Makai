@@ -14,6 +14,7 @@ namespace Makai::Anima::V2::Core {
 	struct Context {
 		enum class Error {
 			AV2_CCE_MISSING_METHOD,
+			AV2_CCE_MISSING_INVOKER,
 			AV2_CCE_MISSING_ART_TYPE,
 			AV2_CCE_MISSING_ARGS,
 			AV2_CCE_HOW_DID_YOU_GET_HERE,
@@ -23,7 +24,7 @@ namespace Makai::Anima::V2::Core {
 
 		using MethodResult = Result<Object::Storage, Error>;
 
-		using ExternalInvocation = Function<MethodResult(Context&, ExternalMethod&, List<Object::Storage> const&)>;
+		using ExternalInvocation = Functor<MethodResult(Context&, ExternalMethod&, List<Object::Storage> const&)>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -31,8 +32,8 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct ExternalMethod: Method {
-			Instance<ExternalInvocation>	invoker;
-			usize							argc;
+			ExternalInvocation	invoker;
+			usize				argc;
 		};
 
 		template <class T> struct ExternalMethodResolver;
@@ -90,10 +91,10 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static owner<ExternalInvocation> invoker(TFunc const& f)
+			constexpr static ExternalInvocation invoker(TFunc const& f)
 			requires (!CONTEXTUAL) {
 				static_assert(NonMutableReferenceArgs<TFirst>, "Arument type(s) cannot be a reference!");
-				return new ExternalInvocation(
+				return ExternalInvocation(
 					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
 					-> MethodResult {
 						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
@@ -117,9 +118,9 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static owner<ExternalInvocation> invoker(TFunc const& f)
+			constexpr static ExternalInvocation invoker(TFunc const& f)
 			requires (CONTEXTUAL) {
-				return new ExternalInvocation(
+				return ExternalInvocation(
 					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
 					-> MethodResult {
 						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
@@ -224,18 +225,13 @@ namespace Makai::Anima::V2::Core {
 		template <class TFunc>
 		bool addExternalMethod(usize const& hash, TFunc const& f) {
 			if (hasExternalMethod(hash)) return false;
-			DEBUGLN("Adding method [", hash, "]...");
 			using Resolver = ExternalMethodResolver<TFunc>;
 			static auto const baseInfo = Resolver::info();
-			ExternalMethod method;
-			method.out		= true;
-			method.argc		= Resolver::ARG_COUNT;
-			method.hash		= hash;
-			method.invoker	= Resolver::invoker(f);
-			DEBUGLN("Invoker? ", method.invoker);
-			externalMethods[hash] = method;
-			return true;
+			return addExternalMethod(hash, Resolver::ARG_COUNT, Resolver::invoker(f));
 		}
+
+		bool addExternalMethod(usize const& hash, usize const argc, ExternalInvocation const& invoker);
+
 
 		void removeExternalMethod(usize const& hash) {
 			externalMethods.erase(hash);
@@ -245,19 +241,7 @@ namespace Makai::Anima::V2::Core {
 			return externalMethods.contains(hash);
 		}
 
-		Result<Object::Storage, Error> invokeExternalMethod(
-			usize const& hash,
-			List<Object::Storage> const& args
-		) {
-			DEBUGLN("Looking for method ", hash, "...");
-			for (auto& m: externalMethods)
-				DEBUGLN("  > ", m.key);
-			if (!hasExternalMethod(hash)) return Error::AV2_CCE_MISSING_METHOD;
-			DEBUGLN("!!! Method exists !!!");
-			DEBUGLN("Invoker? ", externalMethods[hash].invoker.exists());
-			if (!externalMethods[hash].invoker) return Error::AV2_CCE_MISSING_METHOD;
-			return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args);
-		}
+		MethodResult invokeExternalMethod(usize const& hash, List<Object::Storage> const& args);
 
 		template <class T>
 		constexpr Object::Storage newValue(T const& value) const {

@@ -51,6 +51,29 @@ void Context::unloadLibraries() {
 	dynlibs.clear();
 }
 
+bool Context::addExternalMethod(usize const& hash, usize const argc, ExternalInvocation const& invoker) {
+	if (hasExternalMethod(hash)) return false;
+	DEBUGLN("Adding method [", hash, "]...");
+	ExternalMethod method;
+	method.out		= true;
+	method.argc		= argc;
+	method.hash		= hash;
+	method.invoker	= invoker;
+	externalMethods[hash] = method;
+	return true;
+}
+
+Context::MethodResult Context::invokeExternalMethod(usize const& hash, List<Object::Storage> const& args) {
+	DEBUGLN("Looking for method ", hash, "...");
+	for (auto& m: externalMethods)
+		DEBUGLN("  > ", m.key);
+	if (!hasExternalMethod(hash)) return Error::AV2_CCE_MISSING_METHOD;
+	DEBUGLN("!!! Method exists !!!");
+	DEBUGLN("Invoker? ", externalMethods[hash].invoker.exists());
+	if (!externalMethods[hash].invoker) return Error::AV2_CCE_MISSING_INVOKER;
+	return externalMethods[hash].invoker.invoke(*this, externalMethods[hash], args).value();
+}
+
 bool Context::Library::Impl::open(Makai::String const& path, Context& context) {
 	if (!Makai::OS::FS::exists(path)) return false;
 	DEBUGLN("Opening library...");
