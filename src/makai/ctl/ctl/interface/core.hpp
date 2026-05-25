@@ -6,7 +6,7 @@
 
 CTL_NAMESPACE_BEGIN
 
-/// @brief Interface for a compile-time-able stored value.
+/// @brief Interface for a stored constant value.
 /// @tparam T Value type.
 template<class T>
 struct IConstValue {
@@ -17,7 +17,7 @@ struct IConstValue {
 	constexpr virtual T value() const = 0;
 };
 
-/// @brief Interface for a stored value.
+/// @brief Interface for a stored mutable value.
 /// @tparam T Value type.
 template<class T>
 struct IValue {
@@ -25,7 +25,7 @@ struct IValue {
 	constexpr virtual ~IValue() {}
 	/// @brief Returns the stored value. Must be implemented.
 	/// @return Stored value.
-	constexpr virtual T value() const = 0;
+	constexpr virtual T value() = 0;
 };
 
 /// @brief Interface for an object with toggleable visibility.

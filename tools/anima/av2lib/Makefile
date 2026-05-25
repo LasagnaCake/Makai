@@ -5,11 +5,11 @@ ROOT	:= ../../..
 
 debug ?=0
 
-LEAN := -s
+#LEAN := -s
 
 ADDCONF := -static-libstdc++ -static-libgcc
 
-COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions #-DCTL_DEVMODE_DEBUG
+COMPILER_CONFIG	:= -m64 -std=gnu++20 -fcoroutines -fms-extensions #-DCTL_DEVMODE_DEBUG
 LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
 
 ifdef openmp
@@ -19,7 +19,7 @@ endif
 
 export o?=3
 
-OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize
+OPTIMIZATIONS	:= $(USE_OPENMP) -fexpensive-optimizations -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize
 
 export os ?=win
 
@@ -65,9 +65,9 @@ SPACE :=
 
 ifeq ($(os),win)
 WINFLAG := -mwindows
-makelib = -Wl,--subsystem,windows
+MAKELIB = -Wl,--subsystem,windows
 else
-makelib = -Wl,-soname,$(strip $(1))
+MAKELIB = -Wl,-soname,$(strip $(1))
 endif
 
 .PHONY:prologue av2 libs finale
@@ -80,9 +80,9 @@ all: libs
 
 define compile
 	@echo "compiling [$(strip $(1))]"
-	$(COMPILER) $(CFG) -c av2$(strip $(1)).cpp -o av2$(strip $(1)).o
+	$(COMPILER) -fPIC -fPIE $(CFG) -fPIC -fPIE -c av2$(strip $(1)).cpp -fPIC -fPIE -o av2$(strip $(1)).o -fPIC -fPIE
 	@echo "linking [$(strip $(1))]"
-	$(LINKER) $(LK) -o av2$(strip $(1)).andl -shared $(makelib) av2$(strip $(1)).o $(OBJ) $(LIBRARIES)
+	$(LINKER) -fPIC -fPIE $(LK) -fPIC -fPIE -o av2$(strip $(1)).andl -fPIC -fPIE -shared -fPIC -fPIE $(MAKELIB) -fPIC -fPIE av2$(strip $(1)).o $(OBJ) $(LIBRARIES) -fPIC -fPIE
 endef
 
 prologue:

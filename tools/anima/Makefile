@@ -9,7 +9,7 @@ debug ?=0
 
 ADDCONF := -static-libstdc++ -static-libgcc
 
-COMPILER_CONFIG	:= -fexpensive-optimizations -m64 -std=gnu++20 -fcoroutines -fms-extensions $(LQQ)
+COMPILER_CONFIG	:= -m64 -std=gnu++20 -fcoroutines -fms-extensions $(LQQ)
 LINKER_CONFIG	:= $(ADDCONF) -m64 -fms-extensions
 
 ifdef openmp
@@ -19,7 +19,7 @@ endif
 
 export o?=3
 
-OPTIMIZATIONS	:= $(USE_OPENMP) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize
+OPTIMIZATIONS	:= $(USE_OPENMP) -fexpensive-optimizations -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize
 
 export os ?=win
 

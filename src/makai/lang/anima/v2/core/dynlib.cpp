@@ -18,3 +18,8 @@ void ALibrary::operator delete(pointer mem, usize sz) noexcept {
 void ALibrary::operator delete[](pointer mem, usize sz) noexcept {
 	return MX::free(mem);
 }
+
+ALibrary::~ALibrary() {}
+void ALibrary::open()									{DEBUGLN("Opening [", name(), "]...");		}
+void ALibrary::unload(Context::Remover const& remover)	{DEBUGLN("Unloading [", name(), "]...");	}
+void ALibrary::close()									{DEBUGLN("Closing [", name(), "]...");		}

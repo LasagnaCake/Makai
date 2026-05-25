@@ -10,7 +10,7 @@ INCLUDES := $(INC_SDL)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, manager)
+	$(call compile-all, manager textcapture)
 endef
 
 all: debug release

@@ -58,7 +58,7 @@ template <Type::Ex::Tween::Tweenable T>
 class Tween:
 	public ATweenPeriodic,
 	public ITweenPlayable,
-	public IValue<T>,
+	public IConstValue<T>,
 	public IStepable {
 public:
 	/// @brief Value type.
@@ -232,7 +232,7 @@ public:
 		isFinished = true;
 		return *this;
 	}
-	
+
 	/// @brief Starts the tween from the beginning.
 	/// @return Reference to self.
 	Tween<T>& start() override final {
@@ -326,7 +326,7 @@ template<Type::Ex::Tween::Tweenable T = float>
 class TweenChain:
 	public ATweenPeriodic,
 	public ITweenPlayable,
-	public IValue<T>,
+	public IConstValue<T>,
 	public IStageable {
 public:
 	/// @brief Value type.
@@ -364,7 +364,7 @@ public:
 
 	/// @brief Destructor.
 	virtual ~TweenChain() {}
-	
+
 	/// @brief Processes a step.
 	/// @param delta Delta between steps.
 	void onUpdate(usize delta) override final {

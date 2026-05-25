@@ -1,3 +1,4 @@
+#include "input/textcapture.hpp"
 #ifndef AUDIO_SAMPLE_FRAMES
 #define AUDIO_SAMPLE_FRAMES 2048
 #endif // AUDIO_SAMPLE_FRAMES
@@ -91,6 +92,8 @@ appState(App::AppState::AS_CLOSED) {
 	// Create OpenGL context
 	SDL_GL_CreateContext(sdlWindow);
 	Makai::Input::Manager::setTargetWindow(window);
+	if (Makai::Input::TextCapture::capturing())
+		Makai::Input::TextCapture::end();
 	DEBUGLN("Created!");
 	DEBUGLN("Starting graphical API...");
 	// Try and initialize graphical API
@@ -222,6 +225,10 @@ void App::run() {
 						case SDL_WINDOWEVENT_FOCUS_GAINED: input.refreshCapture(); break;
 						default: break;
 					}
+				} break;
+				case SDL_TEXTINPUT: {
+					DEBUGLN("SDL Event: TEXT INPUT");
+					Input::ATextCaptureObject::process(event.text.text);
 				} break;
 				default: {
 				} break;
