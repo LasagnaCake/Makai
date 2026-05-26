@@ -88,6 +88,13 @@ struct IConstInvokable<TReturn(TArgs...)> {
 	constexpr virtual TReturn invoke(TArgs... args) const = 0;
 };
 
+/// @brief Interface for a text output object.
+template <class T>
+struct IWriter {
+	constexpr void write(T const& what)		= 0;
+	constexpr void writeLine(T const& what)	= 0;
+};
+
 CTL_NAMESPACE_END
 
 #endif // CTL_INTERFACE_CORE_H

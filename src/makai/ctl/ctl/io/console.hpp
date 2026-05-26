@@ -4,6 +4,7 @@
 #include "../namespace.hpp"
 #include "../meta/fold.hpp"
 #include "../cpperror.hpp"
+#include "../interface/core.hpp"
 #include "stream.hpp"
 
 #ifdef CTL_CONSOLE_OUT
@@ -42,7 +43,7 @@ struct Console {
 	static void println(Args... args) {
 		print(args..., "\n");
 	}
-	
+
 	/// @brief Synchronous version of `print`.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Values to print.

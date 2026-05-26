@@ -18,7 +18,6 @@ struct Context::Library::Impl {
 Context::Library::Library(): impl(new Context::Library::Impl()) {
 }
 
-
 Context::~Context()				{unloadLibraries();	}
 Context::Library::~Library()	{delete impl;		}
 Context::Library::Impl::~Impl()	{close();			}
