@@ -4,7 +4,7 @@
 #include "../compat/ctl.hpp"
 
 #include "extern.hpp"
-#include "input/manager.hpp"
+#include "input/input.hpp"
 #include "../graph/graph.hpp"
 #include "../audio/audio.hpp"
 
@@ -236,6 +236,9 @@ namespace Makai {
 
 		/// @brief Input manager.
 		Input::Manager input;
+
+		/// @brief Text capture.
+		Input::TextCapture textCapture;
 
 		/// @brief Audio engine.
 		Audio::Engine audio;

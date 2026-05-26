@@ -3,6 +3,7 @@
 
 #include "buttons.hpp"
 #include "manager.hpp"
+#include "textcapture.hpp"
 
 namespace MkInput = Makai::Input;
 

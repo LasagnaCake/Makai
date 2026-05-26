@@ -1,4 +1,3 @@
-#include "input/textcapture.hpp"
 #ifndef AUDIO_SAMPLE_FRAMES
 #define AUDIO_SAMPLE_FRAMES 2048
 #endif // AUDIO_SAMPLE_FRAMES
@@ -228,7 +227,7 @@ void App::run() {
 				} break;
 				case SDL_TEXTINPUT: {
 					DEBUGLN("SDL Event: TEXT INPUT");
-					Input::ATextCaptureObject::process(event.text.text);
+					textCapture.update(event.text.text);
 				} break;
 				default: {
 				} break;

@@ -15,11 +15,13 @@
 using namespace Makai;
 using namespace Input;
 
-void TextCapture::onUpdate(String const& text) {
+String TextCapture::buffer;
+
+void TextCapture::update(String const& text) {
 	buffer += text;
 }
 
-String TextCapture::value() const {
+String TextCapture::value() {
 	return buffer;
 }
 
