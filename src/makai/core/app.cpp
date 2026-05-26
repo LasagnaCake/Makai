@@ -234,7 +234,7 @@ void App::run() {
 			}
 		}
 		// Get rates
-		cycleRate	= 1.0/maxFrameRate;
+		frameRate	= 1.0/maxFrameRate;
 		cycleRate	= 1.0/maxCycleRate;
 		// Get deltas
 		cycleDelta = SDL_GetTicks() - cycleTicks;
