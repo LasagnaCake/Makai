@@ -372,7 +372,11 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object(T const& v, Instance<Definition> const& info) {
 			type = origin = info;
 			content->invoke(origin->byteSize);
-			MX::construct(ref<T>(content->data()), v);
+			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
+				MX::construct(ref<UTF8String>(content->data()), v);
+			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
+				MX::construct(ref<UTF8Char>(content->data()), v);
+			} else MX::construct(ref<T>(content->data()), v);
 		}
 
 		constexpr Object(Object const& other): type(other.type), origin(other.type) {
