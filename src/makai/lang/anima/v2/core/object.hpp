@@ -373,10 +373,20 @@ namespace Makai::Anima::V2::Core {
 			type = origin = info;
 			content->invoke(origin->byteSize);
 			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
-				MX::construct(ref<UTF8String>(content->data()), v);
+				initialize<UTF8String>(v);
 			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
-				MX::construct(ref<UTF8Char>(content->data()), v);
-			} else MX::construct(ref<T>(content->data()), v);
+				initialize<UTF8Char>(v);
+			} else initialize<T>(v);
+		}
+
+		template <Makai::Type::Different<Object> T>
+		void initialize(T const& v) {
+			if (sizeof(v) < origin->byteSize)
+				throw Error::FailedAction(
+					"Origin type is too small to contain desired type!",
+					CTL_CPP_PRETTY_SOURCE
+				);
+			MX::construct(ref<T>(content->data()), v);
 		}
 
 		constexpr Object(Object const& other): type(other.type), origin(other.type) {
