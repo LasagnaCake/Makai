@@ -72,6 +72,7 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_RANGE:				return "range";
 		case Content::AV2_TANC_EXPANSION:			return "expand";
 		case Content::AV2_TANC_ITERATION:			return "iter";
+		case Content::AV2_TANC_NULLABLE_DECL:		return "null_decl";
 	}
 	return "???";
 }

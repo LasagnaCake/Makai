@@ -1,2 +1,2 @@
-@[Basic(type = "type")]
+@Basic(type = "type")
 struct type {}

@@ -206,6 +206,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_ELLIPSIS, infixes, new RangeResolver());
+	add(LTS_TT_QUESTION, infixes, new NullableDeclResolver());
 	DEBUGLN("Done!");
 }
 

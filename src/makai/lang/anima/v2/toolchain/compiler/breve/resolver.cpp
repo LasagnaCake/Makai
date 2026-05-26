@@ -80,6 +80,16 @@ Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& le
 	return result;
 }
 
+Node::Instance NullableDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	DEBUGLN("Resolving nullable declaration expression [", token.text, "]...");
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->leftSide = leftSide;
+	result->content = Node::Content::AV2_TANC_NULLABLE_DECL;
+	DEBUGLN("NullableDeclResolver:DONE!");
+	return result;
+}
+
 Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	DEBUGLN("Resolving inline assembly expression...");
 	Node::Instance result = Node::Instance::create();

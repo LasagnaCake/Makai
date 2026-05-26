@@ -7,7 +7,7 @@ using namespace Anima::V2::Core;
 #define doWriteLine(WHAT) std::cout << WHAT << "\n"
 
 struct ConsoleLib: ALibrary {
-	static void write_string(UTF8String str) {
+	static void write_string(String str) {
 		doWrite(__LINE__);
 		doWrite("/");
 		doWrite(str.size());
@@ -15,7 +15,7 @@ struct ConsoleLib: ALibrary {
 		doWrite(str);
 	}
 
-	static void writeLine_string(UTF8String str) {
+	static void writeLine_string(String str) {
 		doWrite(__LINE__);
 		doWrite("/");
 		doWrite(str.size());
@@ -23,9 +23,12 @@ struct ConsoleLib: ALibrary {
 		doWriteLine(str);
 	}
 
-	static UTF8String toString(Makai::Data::Value val) {
+	static String toString(Makai::Data::Value val) {
+		doWrite(__LINE__);
 		if (val.isUndefined()) return "";
+		doWrite(__LINE__);
 		if (val.isString()) return val.getString();
+		doWrite(__LINE__);
 		return val.toFLOWString();
 	}
 

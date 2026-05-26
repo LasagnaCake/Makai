@@ -47,6 +47,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_RANGE,
 			AV2_TANC_ITERATION,
 			AV2_TANC_EXPANSION,
+			AV2_TANC_NULLABLE_DECL,
 		};
 
 		Content							content = Content::AV2_TANC_EMPTY;

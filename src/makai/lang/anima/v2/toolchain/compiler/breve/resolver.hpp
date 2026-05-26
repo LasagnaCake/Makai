@@ -142,6 +142,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct NullableDeclResolver: AResolver {
+		NullableDeclResolver(): AResolver(Parser::Precedence::AV2_TAPP_POSTFIX, false) {}
+		virtual ~NullableDeclResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct ImportResolver: AResolver {
 		ImportResolver(): AResolver() {}
 		virtual ~ImportResolver() {}

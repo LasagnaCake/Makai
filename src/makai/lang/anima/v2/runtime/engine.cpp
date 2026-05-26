@@ -245,8 +245,11 @@ void Engine::v2Call() {
 	}
 	DEBUGLN("Handling call...");
 	if (invocation.external) {
+		auto gcopy = copy(context.globalValueStack);
+		if (gcopy.size())
+			gcopy.reverse();
 		context.art
-			.invokeExternalMethod(loc, context.globalValueStack.reversed())
+			.invokeExternalMethod(loc, gcopy)
 			.then(
 				[&] (auto const& v) {
 					if (v && !v->isEmptyType())

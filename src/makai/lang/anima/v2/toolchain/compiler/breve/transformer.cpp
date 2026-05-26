@@ -802,8 +802,10 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
-	if (node->content == Node::Content::AV2_TANC_DECLARATION && node->base.text == "*")
+	if (node->content == Node::Content::AV2_TANC_ARRAY)
 		return ArrayTypeDecl().transform(context, node);
+	if (node->content == Node::Content::AV2_TANC_NULLABLE_DECL)
+		return NullableTypeDecl().transform(context, node);
 	auto const t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
 	return {.type = t};
@@ -1313,7 +1315,7 @@ ATransformer::Result Definition::transform(Context& context, Node::Instance cons
 	if (node->base.text == "prop")			return PropertyDecl().transform(context, node);
 	if (node->base.text == "struct")		return StructureDecl().transform(context, node);
 	if (node->base.text == "module")		return NamespaceDecl().transform(context, node);
-	if (node->base.text == "*")				return ArrayTypeDecl().transform(context, node);
+	if (node->base.text == "?")				return NullableTypeDecl().transform(context, node);
 	context.error("Unimplemented support for given declaration!", node);
 }
 
@@ -1334,7 +1336,17 @@ ATransformer::Result TheEntireProgram::transform(Context& context, Node::Instanc
 }
 
 ATransformer::Result ArrayTypeDecl::transform(Context& context, Node::Instance const& node) {
-	auto const t = context.arrayFor(TypeRequest().transform(context, node->leftSide).type);
+	if (node->children.empty())
+		context.error("Expected array type!", node);
+	if (node->children.size() > 1)
+		context.error("Arrays can only contain one type!", node);
+	auto const t = context.arrayFor(TypeRequest().transform(context, node->children.front()).type);
+	context.registerType(t->scope.raw());
+	return {.type = t};
+}
+
+ATransformer::Result NullableTypeDecl::transform(Context& context, Node::Instance const& node) {
+	auto const t = context.nullableFor(TypeRequest().transform(context, node).type);
 	context.registerType(t->scope.raw());
 	return {.type = t};
 }
@@ -1360,6 +1372,22 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 		arrays[type.asWeak()] = arr;
 		return arr;
 	} else return arrays[type.asWeak()];
+}
+
+Namespace::TypeRef ATransformer::Context::nullableFor(Namespace::TypeRef const& type) {
+	if (!type) return nullptr;
+	if (!nullables.contains(type.asWeak())) {
+		auto const arr = type.create();
+		arr->flags |= Core::Definition::Flags::AV2_DF_NULLABLE;
+		arr->base = type;
+		arr->name = type->name + "OrNull";
+		auto const nsp = Namespace::Instance::create(arr->name);
+		registerType(nsp);
+		auto& ns = *nsp;
+		ns.type = arr;
+		nullables[type.asWeak()] = arr;
+		return arr;
+	} else return nullables[type.asWeak()];
 }
 
 static Makai::String idName(usize const id) {

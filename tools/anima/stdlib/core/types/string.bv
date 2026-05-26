@@ -1,4 +1,4 @@
 using import core.types.any
 
-@[Basic(type = "string"), Nullable]
+@Basic(type = "string")
 struct string : any {}

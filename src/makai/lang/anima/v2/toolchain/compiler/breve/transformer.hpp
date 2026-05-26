@@ -52,6 +52,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Namespace::TypeRef basicType(UTF8String const& name);
 			Namespace::TypeRef arrayFor(Namespace::TypeRef const& type);
+			Namespace::TypeRef nullableFor(Namespace::TypeRef const& type);
 
 			static UTF8StringList pathOf(UTF8String const& path);
 			static UTF8StringList pathOf(Node::Instance const& node);
@@ -70,6 +71,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			UTF8Dictionary<Namespace::TypeRef>			basics;
 			Map<Handle<TypeDecl>, Namespace::TypeRef>	arrays;
+			Map<Handle<TypeDecl>, Namespace::TypeRef>	nullables;
 		};
 
 		virtual ~ATransformer();
@@ -233,6 +235,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct ArrayTypeDecl: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct NullableTypeDecl: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
