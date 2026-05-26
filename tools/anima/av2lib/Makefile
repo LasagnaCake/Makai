@@ -67,7 +67,7 @@ ifeq ($(os),win)
 WINFLAG := -mwindows
 MAKELIB = -Wl,--subsystem,windows
 else
-DLL_BULLSHIT = dlltool -e $(strip $(1)).o $(strip $(1)).o
+MAKELIB = -Wl,-soname,$(strip $(1))
 endif
 
 .PHONY:prologue av2 libs finale
@@ -83,9 +83,8 @@ all: libs
 define compile
 	@echo "compiling [$(strip $(1))]"
 	$(COMPILER) -fPIC -fPIE $(CFG) -fPIC -fPIE -c av2$(strip $(1)).cpp -fPIC -fPIE -o av2$(strip $(1)).o -fPIC -fPIE
-	$(call DLL_BULLSHIT, $(strip $(1)))
 	@echo "linking [$(strip $(1))]"
-	$(LINKER) -fPIC -fPIE $(LK) -fPIC -fPIE -o av2$(strip $(1)).andl -fPIC -fPIE -shared -fPIC -fPIE $(MAKELIB) -fPIC -fPIE av2$(strip $(1)).o $(OBJ) $(LIBRARIES) -fPIC -fPIE
+	$(LINKER) -fPIC -fPIE $(LK) -fPIC -fPIE -o av2$(strip $(1)).andl -fPIC -fPIE -shared -fPIC -fPIE $(call MAKELIB,$(strip $(1))) -fPIC -fPIE av2$(strip $(1)).o $(OBJ) $(LIBRARIES) -fPIC -fPIE
 endef
 
 prologue:
