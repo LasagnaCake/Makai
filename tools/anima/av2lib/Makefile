@@ -82,7 +82,7 @@ all: libs
 
 define compile
 	@echo "compiling [$(strip $(1))]"
-	$(COMPILER) -fPIC -fPIE $(CFG) -fPIC -fPIE -c av2$(strip $(1)).cpp -fPIC -fPIE -o av2$(strip $(1)).o -fPIC -fPIE
+	$(COMPILER) -fPIC -fPIE $(CFG) -fPIC -fPIE -shared -c av2$(strip $(1)).cpp -fPIC -fPIE -o av2$(strip $(1)).o -fPIC -fPIE
 	@echo "linking [$(strip $(1))]"
 	$(LINKER) -fPIC -fPIE $(LK) -fPIC -fPIE -o av2$(strip $(1)).andl -fPIC -fPIE -shared -fPIC -fPIE $(call MAKELIB,$(strip $(1))) -fPIC -fPIE av2$(strip $(1)).o $(OBJ) $(LIBRARIES) -fPIC -fPIE
 endef

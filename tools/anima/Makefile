@@ -124,7 +124,7 @@ arte:
 av2lib:
 	@echo "[$@]"
 	@cd $@
-	$(GNU_MAKE) from-lite=$(lite) dynlib=$(dynlib) debug=$(debug) o=$(o)
+	$(GNU_MAKE) from-lite=$(lite) dynlib=$(dynlib) debug=$(debug) o=$(o) os=$(os)
 	@cd ../..
 
 mk-push:
