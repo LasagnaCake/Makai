@@ -6,6 +6,12 @@
 #include "../staticvalue.hpp"
 #include "function.hpp"
 
+#ifdef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpredefined-identifier-outside-function"
+#pragma GCC diagnostic ignored "-Wmismatched-tags"
+#endif
+
 CTL_NAMESPACE_BEGIN
 
 /// @brief Callable object wrapper, with support for comparison & ordering.
@@ -67,7 +73,7 @@ public:
 	/// @brief Copy constructor.
 	/// @param f Other `Functor` object.
 	constexpr Functor(SelfType const& other): func(other.func), id(other.id)	{}
-	
+
 	/// @brief Callable/wrapper assignment operator.
 	/// @tparam TFunction function type.
 	/// @param f Callable to bind.
@@ -82,7 +88,7 @@ public:
 	/// @param f Callable to bind.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other)	{func = other.func; id = other.id; return *this;	}
-	
+
 	/// @brief Invokes the callable bound to it. If no callable was attached, returns `nullptr`.
 	/// @param ...args Argument types.
 	/// @return Result of the call, or `nullptr` if no callable was attached.
@@ -152,5 +158,9 @@ constexpr Functor<TFunction> toFunctor(TFunction const& func) {
 }
 
 CTL_NAMESPACE_END
+
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif
 
 #endif // CTL_CONTAINER_FUNCTOR_H
