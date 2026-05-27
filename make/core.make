@@ -22,7 +22,11 @@ export concat =$(strip $(1)).$(strip $(2))
 
 #export LEAN := -static -s
 
+ifeq ($(CPP_COMPILER),clang++)
+COMPILER_CONFIG	:= -m64 -std=gnu++20 -frelaxed-template-template-args -fms-extensions
+else
 COMPILER_CONFIG	:= -m64 -std=gnu++20 -fconcepts-diagnostics-depth=4 -fcoroutines -fms-extensions
+endif
 
 ifdef openmp
 export USE_OPENMP := -fopenmp -openmp -ftree-parallelize-loops=$(omp-threads)
@@ -39,7 +43,13 @@ ifeq ($(math),safe)
 	export MATHMODE := -frounding-math -fsignaling-nans
 endif
 
+ifeq ($(CPP_COMPILER),clang++)
+COMPILER_CONFIG	:= -m64 -std=gnu++20 -frelaxed-template-template-args -fms-extensions
+OPTIMIZATIONS	:= $(USE_OPENMP) $(MATHMODE) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize
+else
+COMPILER_CONFIG	:= -m64 -std=gnu++20 -fconcepts-diagnostics-depth=4 -fcoroutines -fms-extensions
 OPTIMIZATIONS	:= $(USE_OPENMP) $(MATHMODE) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize -fexpensive-optimizations
+endif
 
 export DEBUGMODE	:= -DMAKAILIB_DEBUG -DCTL_CONSOLE_OUT -DNDEBUG
 
