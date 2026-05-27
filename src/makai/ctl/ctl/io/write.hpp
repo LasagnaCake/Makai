@@ -10,6 +10,8 @@ namespace IO {
 	template <class... TArgs>	inline void	write(TArgs const&... args)		{Console::print(toString(args)...);		}
 	template <class... TArgs>	inline void	writeLine(TArgs const&... args)	{Console::println(toString(args)...);	}
 	template <class T>			inline T	read()							{return Console::get<T>();				}
+
+	constexpr auto const NEWLINE = "\n";
 }
 
 CTL_NAMESPACE_END

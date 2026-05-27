@@ -82,15 +82,15 @@ namespace ANSI {
 	};
 
 	constexpr Code::Format operator|(Code::Format const a, Code::Format const b) {
-		return Code::Format{enumcast(a) | enumcast(b)};
+		return static_cast<Code::Format>(enumcast(a) | enumcast(b));
 	}
 
 	constexpr Code::Format operator&(Code::Format const a, Code::Format const b) {
-		return Code::Format{enumcast(a) & enumcast(b)};
+		return static_cast<Code::Format>(enumcast(a) & enumcast(b));
 	}
 
 	constexpr Code::Format operator~(Code::Format const a) {
-		return Code::Format{~enumcast(a)};
+		return static_cast<Code::Format>(~enumcast(a));
 	}
 
 	constexpr Code const NONE = Code{};

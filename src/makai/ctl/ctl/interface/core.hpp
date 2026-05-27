@@ -88,11 +88,29 @@ struct IConstInvokable<TReturn(TArgs...)> {
 	constexpr virtual TReturn invoke(TArgs... args) const = 0;
 };
 
+#define CTL_IWRITER_WRAP(F) ([] <class _> (_ const& e) {return F(e);})
+
 /// @brief Interface for a text output object.
-template <class T>
+template <class T, auto C = [] <class _> (_ const& e) {return T(e);}>
+requires (Type::Equal<decltype(C(declval<T>())), T>)
 struct IWriter {
-	constexpr void write(T const& what)		= 0;
-	constexpr void writeLine(T const& what)	= 0;
+	constexpr virtual ~IWriter() {}
+
+	constexpr virtual IWriter& display(T const& what)	= 0;
+	constexpr virtual IWriter& newLine()				= 0;
+
+	template <class... Args>
+	constexpr IWriter& write(Args const&... args)
+	requires (... && Type::Equal<decltype(C(declval<Args>())), T>) {
+		(..., write(args));
+		return *this;
+	}
+
+	template <class... Args>
+	constexpr IWriter& writeLine(Args const&... args)
+	requires (... && Type::Equal<decltype(C(declval<Args>())), T>)  {
+		return write(args...).newLine();
+	}
 };
 
 CTL_NAMESPACE_END

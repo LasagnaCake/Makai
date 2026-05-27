@@ -18,6 +18,14 @@ struct Context::Library::Impl {
 Context::Library::Library(): impl(new Context::Library::Impl()) {
 }
 
+Instance<OutputStringWriter> Context::writer =
+#ifdef MAKAILIB_DEBUG
+	new OutputStringWriter()
+#else
+	nullptr
+#endif
+;
+
 Context::~Context()				{unloadLibraries();	}
 Context::Library::~Library()	{delete impl;		}
 Context::Library::Impl::~Impl()	{close();			}

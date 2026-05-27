@@ -228,6 +228,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Overload();
 			virtual ~Overload();
 		};
+
 		using OverloadRef = Instance<Overload>;
 
 		List<OverloadRef> overloads;
