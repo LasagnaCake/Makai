@@ -7,6 +7,12 @@
 
 CTL_NAMESPACE_BEGIN
 
+#ifdef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpredefined-identifier-outside-function"
+#pragma GCC diagnostic ignored "-Wmismatched-tags"
+#endif
+
 /// @brief Detailed errors.
 namespace Error {
 	/// @brief Basic error type.
@@ -56,7 +62,7 @@ namespace Error {
 	typedef ref<Exception> ErrorPointer;
 
 	/// @brief Returns a pointer to the current exception.
-	/// @return Pointer to the current exception. 
+	/// @return Pointer to the current exception.
 	inline ErrorPointer current() {return Exception::current();}
 
 	/// @brief Re-throws an error.
@@ -70,7 +76,7 @@ namespace Error {
 	/// @param err Pointer to error to re-throw.
 	template<Type::Derived<Generic> T>
 	[[noreturn]] inline void rethrow(ref<T> const err)			{if (err) throw T(*err);	}
-	
+
 	/// @brief Re-throws an `Exception` as an error.
 	/// @tparam T Error type.
 	/// @param err `Exception` to re-throw.
@@ -79,7 +85,7 @@ namespace Error {
 
 	/// @brief Re-throws an `Exception` as an error.
 	/// @tparam T Error type.
-	/// @param err Pointer to `Exception` to re-throw. 
+	/// @param err Pointer to `Exception` to re-throw.
 	template<Type::Derived<Generic> T>
 	[[noreturn]] inline void rethrow(ref<Exception> const err)	{throw T(*err);				}
 }
@@ -128,5 +134,9 @@ CTL_NAMESPACE_END
 			::CTL::CPP::SourceFile const&	src			= CTL_CPP_PRETTY_SOURCE\
 		): BASE (#NAME ": " + message, info, callerInfo, src) {}\
 	}
+
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif
 
 #endif // CTL_CUSTOM_RUNTIME_ERRORS_H
