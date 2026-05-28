@@ -259,6 +259,19 @@ static Namespace::AttributeRef createMetaAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createMetaTransformerAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Transformer";
+	attrib->fields["attribute"]	= {DVK_STRING, true};
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+
+	};
+	return attrib;
+}
+
 static Namespace::AttributeRef createOperatorAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
