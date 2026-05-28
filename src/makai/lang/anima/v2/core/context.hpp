@@ -102,11 +102,11 @@ namespace Makai::Anima::V2::Core {
 						if (args.size() < method.argc)
 							return Error::AV2_CCE_MISSING_ARGS;
 						auto tup = Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
-						if (context.writer) {
-							context.writer->writeLine("Argc: ", args.size());
-							for (auto& arg: args)
-							 	context.writer->writeLine("Argument: ", arg->toDynamicValue().toFLOWString());
-						}
+						CPP::Debug::breakpoint();
+						context.writer->writeLine("Argc: ", args.size());
+						for (auto& arg: args)
+						 	context.writer->writeLine("Argument: ", arg->toDynamicValue().toFLOWString());
+						CPP::Debug::breakpoint();
 						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 							invokeFromTuple<void>(f, tup);
 							return Object::Storage();
