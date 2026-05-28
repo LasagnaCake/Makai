@@ -20,6 +20,14 @@ Context::Library::Library(): impl(new Context::Library::Impl()) {
 
 Instance<OutputStringWriter> Context::writer = new OutputStringWriter();
 
+void Context::debugArgs(List<Object::Storage> const& args) {
+	CPP::Debug::breakpoint();
+	writer->writeLine("Argc: ", args.size());
+	for (auto& arg: args)
+	 	writer->writeLine("Argument: ", arg->toDynamicValue().toFLOWString());
+	CPP::Debug::breakpoint();
+}
+
 Context::~Context()				{unloadLibraries();	}
 Context::Library::~Library()	{delete impl;		}
 Context::Library::Impl::~Impl()	{close();			}
@@ -52,6 +60,15 @@ void Context::unloadLibraries() {
 	dynlibs.clear();
 }
 
+Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, List<Object::Storage> const& args)  {
+	if (retType && context.types.byNameHash(retType->hash).empty())
+		return Error::AV2_CCE_MISSING_ART_TYPE;
+	if (args.size() < argc)
+		return Error::AV2_CCE_MISSING_ARGS;
+	Context::debugArgs(args);
+	return null;
+}
+
 bool Context::addExternalMethod(usize const& hash, usize const argc, ExternalInvocation const& invoker) {
 	if (hasExternalMethod(hash)) return false;
 	DEBUGLN("Adding method [", hash, "]...");
@@ -72,7 +89,9 @@ Context::MethodResult Context::invokeExternalMethod(usize const& hash, List<Obje
 	DEBUGLN("!!! Method exists !!!");
 	DEBUGLN("Invoker? ", externalMethods[hash].invoker.exists());
 	if (!externalMethods[hash].invoker) return Error::AV2_CCE_MISSING_INVOKER;
-	return externalMethods[hash].invoker.invoke(*this, externalMethods[hash], args).value();
+	if (auto err = externalMethods[hash].validate(*this, args))
+		return *err;
+	return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args).value();
 }
 
 bool Context::Library::Impl::open(Makai::String const& path, Context& context) {

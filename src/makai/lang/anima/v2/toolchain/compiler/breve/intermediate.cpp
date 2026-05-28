@@ -264,7 +264,7 @@ static Namespace::AttributeRef createMetaTransformerAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Transformer";
-	attrib->fields["attribute"]	= {DVK_STRING, true};
+	attrib->fields["of"] = {DVK_STRING, true};
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 
@@ -688,6 +688,7 @@ void Intermediate::addGlobalAttribute(Namespace::AttributeRef const& attrib) {
 
 Intermediate::Intermediate() {
 	addGlobalAttribute(createMetaAttribute());
+	addGlobalAttribute(createMetaTransformerAttribute());
 	addGlobalAttribute(createOperatorAttribute());
 	addGlobalAttribute(createNullableAttribute());
 	addGlobalAttribute(createEmptyAttribute());

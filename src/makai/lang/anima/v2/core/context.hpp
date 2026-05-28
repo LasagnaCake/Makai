@@ -12,6 +12,8 @@ namespace Makai::Anima::V2::Core {
 	concept NonMutableReferenceArgs = (... && Makai::Type::OneOf<AsNonVolatile<Args>, AsNormal<Args>, AsReference<AsConstant<AsNormal<Args>>>>);
 
 	struct Context {
+		using Arguments = List<Object::Storage>;
+
 		enum class Error {
 			AV2_CCE_MISSING_METHOD,
 			AV2_CCE_MISSING_INVOKER,
@@ -24,7 +26,12 @@ namespace Makai::Anima::V2::Core {
 
 		using MethodResult = Result<Object::Storage, Error>;
 
-		using ExternalInvocation = Functor<MethodResult(Context&, ExternalMethod&, List<Object::Storage> const&)>;
+		struct IExternalCall {
+			virtual ~IExternalCall();
+			virtual MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) = 0;
+		};
+
+		using ExternalInvocation = Instance<IExternalCall>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -34,9 +41,13 @@ namespace Makai::Anima::V2::Core {
 		struct ExternalMethod: Method {
 			ExternalInvocation	invoker;
 			usize				argc;
+
+			Nullable<Error> validate(Context& context, Arguments const& args);
 		};
 
 		template <class T> struct ExternalMethodResolver;
+
+		static void debugArgs(Arguments const& args);
 
 		template <class TReturn>
 		struct ExternalMethodResolver<TReturn()> {
@@ -49,24 +60,26 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static Instance<ExternalInvocation> invoker(TFunc const& f) {
-				return new ExternalInvocation(
-					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
-					-> MethodResult {
-						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
-							return Error::AV2_CCE_MISSING_ART_TYPE;
-						if (args.size() < method.argc)
-							return Error::AV2_CCE_MISSING_ARGS;
-						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-							f();
-							return Object::Storage();
-						} else return Meta::ARTInfo<TReturn>::convert(
-							context.types,
-							f()
-						);
-						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
-					}
-				);
+			struct CallHandler: IExternalCall {
+				TFunc const f;
+
+				CallHandler(TFunc const& f): f(f) {}
+
+				MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) override {
+					return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
+					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+						f();
+						return Object::Storage();
+					} else return Meta::ARTInfo<TReturn>::convert(
+						context.types,
+						f()
+					);
+				}
+			};
+
+			template <class TFunc>
+			constexpr static ExternalInvocation invoker(TFunc const& f) {
+				return new CallHandler<TFunc>(f);
 			}
 		};
 
@@ -91,61 +104,43 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static ExternalInvocation invoker(TFunc const& f)
-			requires (!CONTEXTUAL) {
-				static_assert(NonMutableReferenceArgs<TFirst>, "Arument type(s) cannot be a reference!");
-				return ExternalInvocation(
-					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
-					-> MethodResult {
-						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
-							return Error::AV2_CCE_MISSING_ART_TYPE;
-						if (args.size() < method.argc)
-							return Error::AV2_CCE_MISSING_ARGS;
-						auto tup = Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
-						CPP::Debug::breakpoint();
-						context.writer->writeLine("Argc: ", args.size());
-						for (auto& arg: args)
-						 	context.writer->writeLine("Argument: ", arg->toDynamicValue().toFLOWString());
-						CPP::Debug::breakpoint();
-						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-							invokeFromTuple<void>(f, tup);
-							return Object::Storage();
-						} else return Meta::ARTInfo<TReturn>::convert(
-							context.types,
-							invokeFromTuple<TReturn>(
-								f,
-								tup
-							)
-						);
-						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
-					}
-				);
-			}
+			struct CallHandler: IExternalCall {
+				TFunc const f;
+
+				CallHandler(TFunc const& f): f(f) {}
+
+				template <bool B>
+				static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+				requires (!B) {
+					return Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
+				}
+
+				template <bool B>
+				static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+				requires (B) {
+					return Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
+				}
+
+				MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) override {
+					return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
+					auto tup = makeArgumentTuple<CONTEXTUAL>(context, method, args);
+					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+						invokeFromTuple<void>(f, tup);
+						return Object::Storage();
+					} else return Meta::ARTInfo<TReturn>::convert(
+						context.types,
+						invokeFromTuple<TReturn>(
+							f,
+							tup
+						)
+					);
+				}
+			};
 
 			template <class TFunc>
-			constexpr static ExternalInvocation invoker(TFunc const& f)
-			requires (CONTEXTUAL) {
-				return ExternalInvocation(
-					[f] (Context& context, ExternalMethod& method, List<Object::Storage> const& args)
-					-> MethodResult {
-						if (context.types.byNameHash(Meta::arthashof<TReturn>()).empty())
-							return Error::AV2_CCE_MISSING_ART_TYPE;
-						if (args.size() < method.argc)
-							return Error::AV2_CCE_MISSING_ARGS;
-						auto tup = Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
-						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-							invokeFromTuple<void>(f, tup);
-							return Object::Storage();
-						} else return Meta::ARTInfo<TReturn>::convert(
-							context.types,
-							invokeFromTuple<TReturn>(
-								f,
-								tup
-							)
-						);
-						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
-					}
-				);
+			constexpr static ExternalInvocation invoker(TFunc const& f) {
+				static_assert(NonMutableReferenceArgs<TFirst>, "Arument type(s) cannot be a reference!");
+				return new CallHandler<TFunc>(f);
 			}
 		};
 
