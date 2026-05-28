@@ -102,7 +102,7 @@ struct IWriter {
 	template <class... Args>
 	constexpr IWriter& write(Args const&... args)
 	requires (... && Type::Equal<decltype(C(declval<Args>())), T>) {
-		(..., write(args));
+		(..., display(C(args)));
 		return *this;
 	}
 
