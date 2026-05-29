@@ -595,7 +595,7 @@ static Namespace::AttributeRef createBeforeAttribute() {
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		auto fn = ns->function->overloadFromTypes({}).asWeak();
 		if (!fn)
-			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
+			Transformer::ATransformer::Context::error("No valid function overload found!", ns->node);
 		inter.before.pushBack(fn);
 	};
 	return attrib;
@@ -611,8 +611,8 @@ static Namespace::AttributeRef createAfterAttribute() {
 	attrib->globalMax = 1;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		auto fn = ns->function->overloadFromTypes({}).asWeak();
-		if (!after)
-			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
+		if (!fn)
+			Transformer::ATransformer::Context::error("No valid function overload found!", ns->node);
 		inter.before.pushBack(fn);
 	};
 	return attrib;
@@ -627,11 +627,11 @@ static Namespace::AttributeRef createMainAttribute() {
 	attrib->globalMin = 0;
 	attrib->globalMax = 1;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		if (inter.entry)
-			Transformer::ATransformer::Context::error("Redeclaration of previously-declared entry!", ns->node);
-		inter.entry = ns->function->overloadFromTypes({}).asWeak();
-		if (!inter.entry)
-			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
+		if (inter.main)
+			Transformer::ATransformer::Context::error("Redeclaration of previously-declared main!", ns->node);
+		inter.main = ns->function->overloadFromTypes({}).asWeak();
+		if (!inter.main)
+			Transformer::ATransformer::Context::error("No valid function overload for main!", ns->node);
 	};
 	return attrib;
 }
@@ -708,8 +708,6 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createMemberAttribute());
 	addGlobalAttribute(createSharedAttribute());
 	addGlobalAttribute(createARTCallAttribute());
-	addGlobalAttribute(createEntryAttribute());
-	addGlobalAttribute(createExitAttribute());
 	addGlobalAttribute(createPathAttribute());
 }
 
