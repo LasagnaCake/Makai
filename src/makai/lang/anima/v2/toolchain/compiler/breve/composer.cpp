@@ -165,7 +165,7 @@ Makai::UTF8String Composer::toMinima() {
 	if (cache.size()) return cache;
 	doNamespace(*this, inter.root);
 	cache = types.join("\n") + functions.join("\n") + impl->toString();
-	if (mustHaveMain && !inter.entry)
+	if (mustHaveMain && !inter.main)
 		Transformer::ATransformer::Context::error("Missing required entrypoint!");
 	cache += [this] () -> UTF8String {
 		UTF8String out = "@target __initializer__:\n";
@@ -176,7 +176,7 @@ Makai::UTF8String Composer::toMinima() {
 			if (before) cache += "call " + before->entry + "\n";
 		for (auto& init: preMain)
 			out += init->impl->toString();
-		if (inter.main) out += "call " + inter.main->main + "\n";
+		if (inter.main) out += "call " + inter.main->entry + "\n";
 		for (auto& after: inter.after)
 			if (after) cache += "call " + after->entry + "\n";
 		out += "stop\n";
