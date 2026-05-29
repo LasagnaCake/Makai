@@ -43,8 +43,6 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
 	if (v.contains("entry"))
 		mod.entry = v["entry"].getUnsigned();
-	if (v.contains("exit"))
-		mod.exit = v["exit"].getUnsigned();
 }
 
 Module Module::deserialize(Makai::Data::Value const& v) {
@@ -84,8 +82,7 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	if (ani)
 		out["ani"]	= *ani;
 	out["type"]	= enumcast(type);
-	if (entry + 1)	out["entry"]	= entry;
-	if (exit + 1)	out["exit"]		= exit;
+	if (entry + 1) out["entry"] = entry;
 	return out;
 }
 

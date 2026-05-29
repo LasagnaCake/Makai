@@ -624,11 +624,6 @@ void Engine::v2Op() {
 
 void Engine::terminate() {
 	DEBUGLN("Terminating...");
-	if (engineState == State::AV2_RES_RUNNING && program.exit != Limit::MAX<uint64>) {
-		engineState = State::AV2_RES_EXITING;
-		jumpBy(program.exit, false);
-		while (running()) process();
-	}
 	engineState = State::AV2_RES_FINISHED;
 }
 

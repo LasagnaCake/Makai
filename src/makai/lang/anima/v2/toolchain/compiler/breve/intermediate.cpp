@@ -584,6 +584,40 @@ static Namespace::AttributeRef createBoundAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createBeforeAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Before";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->globalMin = 0;
+	attrib->globalMax = 1;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		auto fn = ns->function->overloadFromTypes({}).asWeak();
+		if (!fn)
+			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
+		inter.before.pushBack(fn);
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createAfterAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "After";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->globalMin = 0;
+	attrib->globalMax = 1;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		auto fn = ns->function->overloadFromTypes({}).asWeak();
+		if (!after)
+			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
+		inter.before.pushBack(fn);
+	};
+	return attrib;
+}
+
 static Namespace::AttributeRef createMainAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
@@ -598,42 +632,6 @@ static Namespace::AttributeRef createMainAttribute() {
 		inter.entry = ns->function->overloadFromTypes({}).asWeak();
 		if (!inter.entry)
 			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
-	};
-	return attrib;
-}
-
-static Namespace::AttributeRef createEntryAttribute() {
-	using enum Makai::Data::Value::Kind;
-	using enum Core::BasicType;
-	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Entry";
-	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->globalMin = 0;
-	attrib->globalMax = 1;
-	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		if (inter.entry)
-			Transformer::ATransformer::Context::error("Redeclaration of previously-declared entry!", ns->node);
-		inter.entry = ns->function->overloadFromTypes({}).asWeak();
-		if (!inter.entry)
-			Transformer::ATransformer::Context::error("No valid function overload for entry!", ns->node);
-	};
-	return attrib;
-}
-
-static Namespace::AttributeRef createExitAttribute() {
-	using enum Makai::Data::Value::Kind;
-	using enum Core::BasicType;
-	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Exit";
-	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->globalMin = 0;
-	attrib->globalMax = 1;
-	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		if (inter.exit)
-			Transformer::ATransformer::Context::error("Redeclaration of previously-declared exit!", ns->node);
-		inter.exit = ns->function->overloadFromTypes({}).asWeak();
-		if (!inter.exit)
-			Transformer::ATransformer::Context::error("No valid function overload for exit!", ns->node);
 	};
 	return attrib;
 }
@@ -701,7 +699,9 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createBoundAttribute());
 	addGlobalAttribute(createGlobalAttribute());
 	addGlobalAttribute(createStaticAttribute());
+	addGlobalAttribute(createBeforeAttribute());
 	addGlobalAttribute(createMainAttribute());
+	addGlobalAttribute(createAfterAttribute());
 	addGlobalAttribute(createGetterAttribute());
 	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());

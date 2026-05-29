@@ -61,7 +61,7 @@ namespace Makai::Anima::V2::Core {
 
 			template <class TFunc>
 			struct CallHandler: IExternalCall {
-				TFunc const f;
+				Function<TFunc> const f;
 
 				CallHandler(TFunc const& f): f(f) {}
 
@@ -105,7 +105,7 @@ namespace Makai::Anima::V2::Core {
 
 			template <class TFunc>
 			struct CallHandler: IExternalCall {
-				TFunc const f;
+				Function<TFunc> const f;
 
 				CallHandler(TFunc const& f): f(f) {}
 

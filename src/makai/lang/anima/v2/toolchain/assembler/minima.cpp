@@ -183,9 +183,6 @@ void Context::finalize() {
 	if (entry.size() && jumps.contains(entry))
 		program.entry = jumps[entry];
 	else if (entry.size()) error("Missing entry location!");
-	if (exit.size() && jumps.contains(exit))
-		program.exit = jumps[exit];
-	else if (exit.size()) error("Missing exit location!");
 }
 
 static Makai::String resolvePath(Context& context, bool absolute = false, Type const pathSeparator = Type{'.'}) {
@@ -1352,13 +1349,6 @@ static void declareEntry(Context& context) {
 	context.entry = resolvePath(context);
 }
 
-static void declareExit(Context& context) {
-	if (context.entry.size())
-		context.error("Redeclaration of previously-declared exit!");
-	context.next();
-	context.entry = resolvePath(context);
-}
-
 static void declareHook(Context& context) {
 	context.next();
 	auto const hook = resolvePath(context);
@@ -1416,8 +1406,6 @@ static void doDeclaration(Context& context) {
 		declareImport(context);
 	else if (decl == "entry")
 		declareEntry(context);
-	else if (decl == "exit")
-		declareExit(context);
 	else if (decl == "bin")
 		declareBinaryInfo(context);
 	else if (decl == "target") {

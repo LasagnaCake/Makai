@@ -103,7 +103,6 @@ namespace Makai::Anima::V2::Core {
 		Symbols				sym;
 		Instance<ANI>		ani			= new ANI();
 		uint64				entry	= -1;
-		uint64				exit	= -1;
 	};
 }
 
