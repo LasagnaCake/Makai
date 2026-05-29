@@ -143,14 +143,14 @@ compile-splice = $(call compile-chain,$(1));$(space)
 
 ifndef SUBSYSTEM
 	compile-splice = $(call compile-chain,$(1));$(space)
-	compile-all-impl = @$(foreach file,$(1),$(call compile-splice,$(file)))
+	compile-all-impl = @rm -rf *.$@.o ; $(foreach file,$(1),$(call compile-splice,$(file)))
 else
 	ifneq ($(SUBSYSTEM_PROPAGATE),)
 		compile-all-impl = $(NO_OP);
 	else ifeq ($(SUBSYSTEM_BASE),*)
-		compile-all-impl = @$(foreach file,$(1),$(call compile-splice,$(file)))
+		compile-all-impl = @rm -rf *.$@.o ; $(foreach file,$(1),$(call compile-splice,$(file)))
 	else
-		compile-all-impl = @$(call compile-splice, $(SUBSYSTEM_BASE))
+		compile-all-impl = @rm -rf $(prefix).$(SUBSYSTEM_BASE).$@.o; $(call compile-splice, $(SUBSYSTEM_BASE))
 	endif
 endif
 
