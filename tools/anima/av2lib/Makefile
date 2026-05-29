@@ -91,6 +91,8 @@ prologue:
 	@echo ""
 	@echo "libraries: $(LIBRARIES)"
 	@echo "debug? $(debug)"
+	@rm -rf *.andl
+	@rm -rf *.o
 
 av2:
 	$(call compile, console)

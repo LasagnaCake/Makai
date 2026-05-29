@@ -21,11 +21,11 @@ Context::Library::Library(): impl(new Context::Library::Impl()) {
 Instance<OutputStringWriter> Context::writer = new OutputStringWriter();
 
 void Context::debugArgs(List<Object::Storage> const& args) {
-	CPP::Debug::breakpoint();
+	//CPP::Debug::breakpoint();
 	writer->writeLine("Argc: ", args.size());
 	for (auto& arg: args)
 	 	writer->writeLine("Argument: ", arg->toDynamicValue().toFLOWString());
-	CPP::Debug::breakpoint();
+	//CPP::Debug::breakpoint();
 }
 
 Context::~Context()				{unloadLibraries();	}
@@ -69,7 +69,7 @@ Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, Lis
 	return null;
 }
 
-bool Context::addExternalMethod(usize const& hash, usize const argc, ExternalInvocation const& invoker) {
+bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker) {
 	if (hasExternalMethod(hash)) return false;
 	DEBUGLN("Adding method [", hash, "]...");
 	ExternalMethod method;
@@ -81,7 +81,7 @@ bool Context::addExternalMethod(usize const& hash, usize const argc, ExternalInv
 	return true;
 }
 
-Context::MethodResult Context::invokeExternalMethod(usize const& hash, List<Object::Storage> const& args) {
+Context::MethodResult Context::invokeExternalMethod(usize const hash, List<Object::Storage> const& args) {
 	DEBUGLN("Looking for method ", hash, "...");
 	for (auto& m: externalMethods)
 		DEBUGLN("  > ", m.key);
@@ -91,7 +91,7 @@ Context::MethodResult Context::invokeExternalMethod(usize const& hash, List<Obje
 	if (!externalMethods[hash].invoker) return Error::AV2_CCE_MISSING_INVOKER;
 	if (auto err = externalMethods[hash].validate(*this, args))
 		return *err;
-	return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args).value();
+	return externalMethods[hash].invoker.invoke(*this, externalMethods[hash], args).value();
 }
 
 bool Context::Library::Impl::open(Makai::String const& path, Context& context) {

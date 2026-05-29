@@ -86,5 +86,5 @@ Breve::File Breve::parseFile(
 	Transformer::ATransformer::Context compCtx;
 	Transformer::TheEntireProgram tf;
 	tf.transform(compCtx, parser.parse());
-	return {compCtx.root, compCtx.entry.raw(), compCtx.exit.raw()};
+	return {compCtx.root, compCtx.main.raw()};
 }

@@ -151,6 +151,11 @@ public:
     /// @brief Default constructor.
     constexpr Function() {}
 
+	/// @brief Returns whether there is a callable bound to this object.
+    constexpr bool exists() const	{return func;		}
+	/// @brief Returns whether there is a callable bound to this object.
+    constexpr operator bool() const	{return exists();	}
+
     /// @brief Move constructor (callable).
     /// @tparam TFunction Callable type.
     /// @param f Callable.

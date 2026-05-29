@@ -144,6 +144,17 @@ constexpr TTo& violate(TFrom& v) noexcept {return violate<TTo>(addressof(v));}
 template<class TTo, class TFrom>
 constexpr TTo const& violate(TFrom const& v) noexcept {return violate<TTo>(addressof(v));}
 
+
+/// @brief Wraps an object within another templated object.
+/// @tparam TBase Source object type.
+/// @tparam TWrapper<class> Wrapper object type.
+/// @param v Value to wrap.
+/// @return Wrapped value.
+template <template <class> class TWrapper, class TBase>
+constexpr static TWrapper<TBase> wrap(TBase const& f) {
+	return TWrapper<TBase>(f);
+}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_TYPETRAITS_DECAY_H

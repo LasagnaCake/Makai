@@ -26,12 +26,7 @@ namespace Makai::Anima::V2::Core {
 
 		using MethodResult = Result<Object::Storage, Error>;
 
-		struct IExternalCall {
-			virtual ~IExternalCall();
-			virtual MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) = 0;
-		};
-
-		using ExternalInvocation = Instance<IExternalCall>;
+		using ExternalInvocation = Function<MethodResult(Context& context, ExternalMethod& method, Arguments const& args)>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -60,12 +55,8 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			struct CallHandler: IExternalCall {
-				Function<TFunc> const f;
-
-				CallHandler(TFunc const& f): f(f) {}
-
-				MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) override {
+			constexpr static ExternalInvocation invoker(TFunc const& f) {
+				return [f = wrap<Function>(f)] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
 					return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						f();
@@ -74,12 +65,7 @@ namespace Makai::Anima::V2::Core {
 						context.types,
 						f()
 					);
-				}
-			};
-
-			template <class TFunc>
-			constexpr static ExternalInvocation invoker(TFunc const& f) {
-				return new CallHandler<TFunc>(f);
+				};
 			}
 		};
 
@@ -103,27 +89,21 @@ namespace Makai::Anima::V2::Core {
 				};
 			}
 
+			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+			requires (!CONTEXTUAL) {
+				return Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
+			}
+
+			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+			requires (CONTEXTUAL) {
+				return Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
+			}
+
 			template <class TFunc>
-			struct CallHandler: IExternalCall {
-				Function<TFunc> const f;
-
-				CallHandler(TFunc const& f): f(f) {}
-
-				template <bool B>
-				static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
-				requires (!B) {
-					return Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
-				}
-
-				template <bool B>
-				static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
-				requires (B) {
-					return Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
-				}
-
-				MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) override {
+			constexpr static ExternalInvocation invoker(TFunc const& f) {
+				return [f = wrap<Function>(f)] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
 					return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
-					auto tup = makeArgumentTuple<CONTEXTUAL>(context, method, args);
+					auto tup = makeArgumentTuple(context, method, args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						invokeFromTuple<void>(f, tup);
 						return Object::Storage();
@@ -134,13 +114,7 @@ namespace Makai::Anima::V2::Core {
 							tup
 						)
 					);
-				}
-			};
-
-			template <class TFunc>
-			constexpr static ExternalInvocation invoker(TFunc const& f) {
-				static_assert(NonMutableReferenceArgs<TFirst>, "Arument type(s) cannot be a reference!");
-				return new CallHandler<TFunc>(f);
+				};
 			}
 		};
 
@@ -230,9 +204,10 @@ namespace Makai::Anima::V2::Core {
 			return addExternalMethod(hash, Resolver::ARG_COUNT, Resolver::invoker(f));
 		}
 
-		bool addExternalMethod(usize const& hash, usize const argc, ExternalInvocation const& invoker);
+		bool addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker);
 
 		void removeExternalMethod(usize const& hash) {
+			if (!hasExternalMethod(hash)) return;
 			externalMethods.erase(hash);
 		}
 
@@ -240,7 +215,7 @@ namespace Makai::Anima::V2::Core {
 			return externalMethods.contains(hash);
 		}
 
-		MethodResult invokeExternalMethod(usize const& hash, List<Object::Storage> const& args);
+		MethodResult invokeExternalMethod(usize const hash, List<Object::Storage> const& args);
 
 		template <class T>
 		constexpr Object::Storage newValue(T const& value) const {
@@ -298,7 +273,7 @@ namespace Makai::Anima::V2::Core {
 		static Instance<OutputStringWriter> writer;
 
 	private:
-		List<Reference<ALibrary>>		toBeLoaded;
+		List<Reference<ALibrary>>	toBeLoaded;
 	};
 }
 

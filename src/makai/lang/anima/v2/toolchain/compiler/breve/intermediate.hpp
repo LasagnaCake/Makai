@@ -340,8 +340,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct File {
 		Namespace::Instance		content;
-	 	Function::OverloadRef	entry;
-	 	Function::OverloadRef	exit;
+	 	Function::OverloadRef	main;
 	};
 
 	struct Intermediate: IWritable, ISerializable {
