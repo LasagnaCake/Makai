@@ -104,8 +104,8 @@ namespace Makai::Anima::V2::Core {
 			constexpr static ExternalInvocation invoker(TFunc const& f) {
 				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
 					return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
-					auto tup = makeArgumentTuple(context, method, args);
 					debugArgs(args);
+					auto tup = makeArgumentTuple(context, method, args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						invokeFromTuple<void>(f, tup);
 						return Object::Storage();
