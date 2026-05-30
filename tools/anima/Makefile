@@ -100,6 +100,7 @@ prologue:
 	@echo ""
 	@echo "libraries: $(LIBRARIES)"
 	@echo "debug? $(debug)"
+	@rm -rf *.o
 
 packer:
 	$(call compile, $@)
