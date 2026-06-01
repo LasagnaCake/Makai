@@ -12,7 +12,9 @@ struct ConsoleLib: ALibrary {
 		doWrite("/");
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
+		doWriteLine("<text>");
 		doWrite(str);
+		doWriteLine("</text>");
 	}
 
 	static void writeLine_string(String str) {
@@ -20,7 +22,9 @@ struct ConsoleLib: ALibrary {
 		doWrite("/");
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
+		doWriteLine("<text>");
 		doWriteLine(str);
+		doWriteLine("</text>");
 	}
 
 	static String toString(Makai::Data::Value val) {

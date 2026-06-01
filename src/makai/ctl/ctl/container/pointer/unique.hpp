@@ -64,11 +64,11 @@ struct Unique:
 
 	/// @brief Destructor.
 	constexpr ~Unique() {unbind();}
-	
+
 	/// @brief Constructs the unique pointer from an unmanaged object.
 	/// @param obj Object to bind.
 	constexpr explicit Unique(owner<DataType> const& obj): ref(obj) {}
-	
+
 	/// @brief Returns a `Reference` to the underlying data.
 	/// @return `Reference` to underlying data.
 	constexpr Reference<DataType> reference() const {return	ref;}
@@ -117,7 +117,7 @@ struct Unique:
 	/// @brief Returns whether the bound object doesn't exist.
 	/// @return Whether the bound object doesn't exist.
 	constexpr bool operator!() const	{return	!exists();	}
-	
+
 	/// @brief Equality comparison operator (raw pointer).
 	/// @param obj Raw pointer to compare to.
 	/// @return Whether they're equal.
@@ -126,7 +126,7 @@ struct Unique:
 	/// @param obj Raw pointer to compare to.
 	/// @return Order between objects.
 	constexpr OrderType operator<=>(PointerType const& obj) const	{return	ref <=> obj;		}
-	
+
 	/// @brief Equality comparison operator (`Pointer`).
 	/// @param obj `Pointer` to compare to.
 	/// @return Whether they're equal.
@@ -138,7 +138,7 @@ struct Unique:
 
 	/// @brief Copy assignment operator (deleted).
 	constexpr Unique& operator=(Unique const& other)	= delete;
-	
+
 	/// @brief Move assignment operator.
 	/// @param other `Unique` to copy from.
 	/// @return Reference to self.
@@ -148,10 +148,6 @@ struct Unique:
 		other.ref = nullptr;
 		return *this;
 	}
-	
-	/// @brief Returns a raw pointer to the bound object.
-	/// @return Raw pointer to bound object.
-	constexpr PointerType operator&() const {return raw();}
 
 	/// @brief Returns the value pointed to.
 	/// @return Unique to object being pointed to.
@@ -159,7 +155,7 @@ struct Unique:
 		if (!exists()) nullPointerError();
 		return (*ref);
 	}
-	
+
 	/// @brief Pointer member access operator.
 	/// @return Underlying pointer.
 	constexpr PointerType operator->()				{return getPointer();	}
@@ -169,7 +165,7 @@ struct Unique:
 	/// @brief Dereference operator.
 	/// @return Unique to underlying object.
 	constexpr ReferenceType operator*() const		{return value();		}
-	
+
 	/// @brief Returns whether the object exists.
 	/// @return Whether the object exists.
 	constexpr bool exists() const {
@@ -194,7 +190,7 @@ struct Unique:
 		ref = ptr;
 		return (*this);
 	}
-	
+
 	/// @brief Unbinds the bound object.
 	/// @return Reference to self.
 	constexpr SelfType& unbind() {

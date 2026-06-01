@@ -266,11 +266,6 @@ public:
 	/// @return Whether the object exists.
 	constexpr bool operator()() const {return exists();}
 
-//	constexpr PointerType operator&()		{return raw();}
-	/// @brief Returns a raw pointer to the bound object.
-	/// @return Raw pointer to bound object.
-	constexpr PointerType operator&() const {return raw();}
-
 	/// @brief Statically casts the shared pointer to point to a new type.
 	/// @tparam TNew New object type.
 	/// @return Shared pointer to new object type.
