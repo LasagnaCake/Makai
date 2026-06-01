@@ -60,6 +60,7 @@ namespace Makai::Anima::V2::Core {
 					return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
 					debugArgs(args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
 						f();
 						return Object::Storage();
 					} else return Meta::ARTInfo<TReturn>::convert(
@@ -107,6 +108,7 @@ namespace Makai::Anima::V2::Core {
 					debugArgs(args);
 					auto tup = makeArgumentTuple(context, method, args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+						return Error::AV2_CCE_HOW_DID_YOU_GET_HERE;
 						invokeFromTuple<void>(f, tup);
 						return Object::Storage();
 					} else return Meta::ARTInfo<TReturn>::convert(
