@@ -92,6 +92,7 @@ all: tooling
 
 define compile
 	@echo "[$(strip $(1))]"
+	@rm -rf $(strip $(1))$(EXEC_TYPE)
 	$(COMPILER) $(CFG) -c $(strip $(1)).cpp -o $(strip $(1)).o
 	$(LINKER) -o $(strip $(1))$(EXEC_TYPE) $(strip $(1)).o $(OBJ) $(LK)
 endef
