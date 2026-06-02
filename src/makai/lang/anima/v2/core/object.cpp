@@ -7,10 +7,8 @@ using namespace Makai::Anima::V2::Core;
 Object::~Object() {
 	if (content.unique()) {
 		if (!origin) return;
-		if (origin->flags & Definition::Flags::AV2_DF_VALUE) {
-			for (usize i = 0; i < count(); ++i)
-				origin->destruct(addressAt(i));
-		} else origin->destruct(content->data());
+		if (!(origin->flags & Definition::Flags::AV2_DF_VALUE))
+			origin->destruct(*content);
 	}
 }
 
@@ -45,7 +43,7 @@ bool Object::setAtIndex(uint64 const index, Object::Storage const& value) {
 	if (isValueType()) {
 		if (!(index > count() && type->copy))
 			return false;
-		MX::memcpy(addressAt(index), value->content->data(), value->content->type->byteSize);
+		MX::memcpy(addressAt(index), value->content->data(), value->type->byteSize);
 		return true;
 	}
 	if (!(index < fields.size()))

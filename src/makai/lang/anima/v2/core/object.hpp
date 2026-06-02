@@ -50,8 +50,8 @@ namespace Makai::Anima::V2::Core {
 			if (!isString())
 				invalidCastError<T>("Mismatched types");
 			if constexpr (Makai::Type::Equal<T, String>)
-				return UTF8String((<cref>(UTF8Char))content->data(), content->size())->toString();
-			else return UTF8String((<cref>(UTF8Char))content->data(), content->size());
+				return UTF8String(cref<UTF8Char>(content->data()), content->size()).toString();
+			else return UTF8String(cref<UTF8Char>(content->data()), content->size());
 		}
 
 		template <Makai::Type::Equal<Binary<>> T>
@@ -121,11 +121,6 @@ namespace Makai::Anima::V2::Core {
 
 		constexpr uint64 flags() const {
 			return origin->flags;
-		}
-
-		void copyTo(usize const index, ref<void const> const data) {
-			if (index < count())
-				origin->copy(addressAt(index), data);
 		}
 
 		Storage cloneFrom(usize const index) const;
@@ -274,7 +269,7 @@ namespace Makai::Anima::V2::Core {
 			if (!type->compare)
 				return (!other->type->compare) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
 			if ((type == other->type) || type->canBecome(other->type))
-				return StandardOrder(type->compare(content, other->content).value());
+				return StandardOrder(type->compare(*content, *other->content).value());
 			return Ordered::Order::UNORDERED;
 		}
 
@@ -375,7 +370,7 @@ namespace Makai::Anima::V2::Core {
 			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String, Bytes<>>) {
 				UTF8String const us = v;
 				content->resize(us.size() * sizeof(UTF8Char));
-				MX::memmove((cref<UTF8Char>)content->data(), us.data(), us.size());
+				MX::memmove(content->data(), us.data(), us.size());
 			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
 				initialize<UTF8Char>(v);
 			} else initialize<T>(v);
@@ -394,7 +389,7 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object(Object const& other): type(other.type), origin(other.type) {
 			if (type->copy) {
 				content->invoke(type->byteSize);
-				type->copy.invoke(content, other.content);
+				type->copy.invoke(*content, *other.content);
 			}
 		}
 
