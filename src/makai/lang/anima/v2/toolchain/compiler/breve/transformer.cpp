@@ -435,8 +435,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			auto& var = *sub->variable;
 			var.fieldOf = scope->type.asWeak();
 			type.fields[name] = sub->variable;
-		} else if (sub->function or sub->property)
-			context.error("This is forbidden inside a structure declaration!");
+		} else if (sub->function or sub->property or sub->isPureNamespace())
+			context.error("This declaration is forbidden inside a structure declaration!");
 	}
 	context.pop(name.size());
 	context.registerType(scope);
