@@ -4,6 +4,7 @@
 #include "type.hpp"
 #include "method.hpp"
 #include "object.hpp"
+#include "proxy.hpp"
 #include "database.hpp"
 
 namespace Makai::Anima::V2::Core::Meta {

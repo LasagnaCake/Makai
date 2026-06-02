@@ -418,21 +418,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			context.error("No type with this name exists!", node->middle);
 		type.base = base;
 		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
-		auto baseFields = base->fields;
-		baseFields["base"] = baseFields["this"];
-		baseFields.erase("this");
 		type.fields.append(baseFields);
 		scope->varc += base->scope->varc;
-	}
-	{
-		auto const thisVarScope = context.declare(UTF8StringList::from("this"));
-		auto& thisVar = *(thisVarScope->variable = thisVarScope->variable.create());
-		thisVar.fieldOf = scope->type;
-		thisVar.source = "ref stack[-0]";
-		thisVar.type = scope->type.asWeak();
-		thisVar.parentScope = scope;
-		scope->subspaces["this"] = thisVarScope;
-		context.pop(1);
 	}
 	auto const initer = "__init_" + name.join("_") + node->name();
 	Block().transform(context, node->rightSide);
@@ -448,7 +435,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			auto& var = *sub->variable;
 			var.fieldOf = scope->type.asWeak();
 			type.fields[name] = sub->variable;
-		}
+		} else if (sub->function or sub->property)
+			context.error("This is forbidden inside a structure declaration!");
 	}
 	context.pop(name.size());
 	context.registerType(scope);

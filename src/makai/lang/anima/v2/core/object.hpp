@@ -50,22 +50,22 @@ namespace Makai::Anima::V2::Core {
 			if (!isString())
 				invalidCastError<T>("Mismatched types");
 			if constexpr (Makai::Type::Equal<T, String>)
-				return ref<UTF8String>(content->data())->toString();
-			else return *ref<UTF8String>(content->data());
+				return UTF8String((<cref>(UTF8Char))content->data(), content->size())->toString();
+			else return UTF8String((<cref>(UTF8Char))content->data(), content->size());
 		}
 
 		template <Makai::Type::Equal<Binary<>> T>
 		T toValue() const {
 			if (!isBytes())
 				invalidCastError<T>("Mismatched types");
-			return *ref<T>(content->data());
+			return Bytes<>(content->data(), content->size());
 		}
 
 		template <Makai::Type::OneOf<char, UTF8Char, UTF32Char> T>
 		T toValue() const {
 			if (!isCharacter())
 				invalidCastError<T>("Mismatched types");
-			return *ref<UTF8Char>(content->data());
+			return *cref<UTF8Char>(content->data());
 		}
 
 		template <Makai::Type::OneOf<Vector2, Vector3, Vector4> T>
@@ -74,7 +74,7 @@ namespace Makai::Anima::V2::Core {
 				return toValue<float>();
 			if (!isVector())
 				invalidCastError<T>("Mismatched types");
-			return *ref<Vector4>(content->data());
+			return *cref<Vector4>(content->data());
 		}
 
 		template <Makai::Type::Equal<Matrix4x4> T>
@@ -274,7 +274,7 @@ namespace Makai::Anima::V2::Core {
 			if (!type->compare)
 				return (!other->type->compare) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
 			if ((type == other->type) || type->canBecome(other->type))
-				return StandardOrder(type->compare(content->data(), other->content->data()).value());
+				return StandardOrder(type->compare(content, other->content).value());
 			return Ordered::Order::UNORDERED;
 		}
 
@@ -372,8 +372,10 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object(T const& v, Instance<Definition> const& info) {
 			type = origin = info;
 			content->invoke(origin->byteSize);
-			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
-				initialize<UTF8String>(v);
+			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String, Bytes<>>) {
+				UTF8String const us = v;
+				content->resize(us.size() * sizeof(UTF8Char));
+				MX::memmove((cref<UTF8Char>)content->data(), us.data(), us.size());
 			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
 				initialize<UTF8Char>(v);
 			} else initialize<T>(v);
@@ -392,7 +394,7 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object(Object const& other): type(other.type), origin(other.type) {
 			if (type->copy) {
 				content->invoke(type->byteSize);
-				type->copy.invoke(content->data(), other.content->data());
+				type->copy.invoke(content, other.content);
 			}
 		}
 

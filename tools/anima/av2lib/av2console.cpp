@@ -13,7 +13,8 @@ struct ConsoleLib: ALibrary {
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
 		auto const b = str.toBytes();
-		doWriteLine("<bytes data='" + Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(b) + "' />");
+		auto const cont = Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(b);
+		doWriteLine("<bytes data='" + cont + "' />");
 		doWriteLine("<text>");
 		doWrite(str);
 		doWriteLine("</text>");
@@ -25,7 +26,8 @@ struct ConsoleLib: ALibrary {
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
 		auto const b = str.toBytes();
-		doWriteLine("<bytes data='" + Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(b) + "' />");
+		auto const cont = Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(b);
+		doWriteLine("<bytes data='" + cont + "' />");
 		doWriteLine("<text>");
 		doWriteLine(str);
 		doWriteLine("</text>");

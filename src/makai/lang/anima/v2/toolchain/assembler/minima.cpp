@@ -937,10 +937,12 @@ static void validateType(Context& context, Context::Declaration& type) {
 			if (context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_ARRAY)
 				context.error("Value types cannot contain arrays!");
 		}
-		if (
-			type.flags & Definition::Flags::AV2_DF_ARRAY
-		&&	!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_VALUE)
-		) context.error("Value arrays can only contain value types!");
+		if (type.flags & Definition::Flags::AV2_DF_ARRAY) {
+			if (!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_ARRAY))
+				context.error("Value arrays of other arrays are forbidden!");
+			if (!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_VALUE))
+				context.error("Value arrays can only contain value types!");
+		}
 	}
 	if (type.flags & Definition::Flags::AV2_DF_ARRAY && type.fields.size())
 		context.error("Arrays cannot contain fields!");
@@ -1005,6 +1007,8 @@ static void validateType(Context& context, Context::Declaration& type) {
 		;
 		type.byteSize	= 0;
 		type.alignment	= 1;
+		if (type.basic == BasicType::AV2_BT_STRING or type.basic == BasicType::AV2_BT_BYTES)
+			type.flags ^= Definition::Flags::AV2_DF_VALUE;
 	}
 }
 
@@ -1120,7 +1124,7 @@ static void declareType(Context& context) {
 		} else if (flag == "casts") {
 			declareTypeCasts(context, *type);
 		} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
-		else if (flag == "bound")	type->flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
+		else if (flag == "proxy")	type->flags |= Definition::Flags::AV2_DF_PROXY;
 		else if (flag == "final")	type->flags |= Definition::Flags::AV2_DF_FINAL;
 		else if (flag == "meta")
 			declareTypeMeta(context, *type);

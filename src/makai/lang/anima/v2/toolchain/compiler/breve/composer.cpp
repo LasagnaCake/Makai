@@ -98,8 +98,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		decl += " struct";
 	if (type->flags & Core::Definition::Flags::AV2_DF_CLONABLE)
 		decl += " copy";
-	if (type->flags & Core::Definition::Flags::AV2_DF_ART_EQUIVALENT)
-		decl += " bound";
+	if (type->flags & Core::Definition::Flags::AV2_DF_PROXY)
+		decl += " proxy";
 	if (type->flags & Core::Definition::Flags::AV2_DF_FINAL)
 		decl += " final";
 	if (type->base) {

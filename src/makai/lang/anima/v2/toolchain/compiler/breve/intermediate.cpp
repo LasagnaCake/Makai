@@ -414,6 +414,29 @@ static Namespace::AttributeRef createStaticAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createRemangleAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Remangle";
+	attrib->fields["name"] = {.type=DVK_STRING, .path=true};
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE | Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createDoNotMangleAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "DoNotMangle";
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE | Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+	};
+	return attrib;
+}
+
 static Namespace::AttributeRef createMemberAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
@@ -573,13 +596,10 @@ static Namespace::AttributeRef createBoundAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Bound";
+	attrib->name = "Proxy";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
-	attrib->fields["artType"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_ART_EQUIVALENT;
-		auto const artt = (v["artType"].getString());
-		ns->type->artEquivalent = artt;
+		ns->type->flags |= Core::Definition::Flags::AV2_DF_PROXY;
 	};
 	return attrib;
 }

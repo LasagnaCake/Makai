@@ -144,6 +144,8 @@ namespace Makai::Anima::V2::Core {
 	}
 
 	struct Definition: Entry {
+		using Source = MemorySlice<byte>;
+
 		struct Flags {
 			constexpr static uint64 const AV2_DF_BASIC			= 1 << 0;
 			constexpr static uint64 const AV2_DF_NULLABLE		= 1 << 1;
@@ -153,7 +155,7 @@ namespace Makai::Anima::V2::Core {
 			constexpr static uint64 const AV2_DF_STRUCTURE		= 1 << 5;
 			constexpr static uint64 const AV2_DF_DYNAMIC		= 1 << 6;
 			constexpr static uint64 const AV2_DF_CLONABLE		= 1 << 7;
-			constexpr static uint64 const AV2_DF_ART_EQUIVALENT	= 1 << 8;
+			constexpr static uint64 const AV2_DF_PROXY			= 1 << 8;
 			constexpr static uint64 const AV2_DF_NO_RESULT		= 1 << 9;
 			constexpr static uint64 const AV2_DF_POINTER		= 1 << 10;
 			constexpr static uint64 const AV2_DF_FINAL			= 1 << 11;
@@ -178,10 +180,10 @@ namespace Makai::Anima::V2::Core {
 
 		Data::Value::ObjectType		meta;
 
-		using Constructor	= Functor<void(ptr<void>)>;
-		using Destructor	= Functor<void(ptr<void>)>;
-		using Cloner		= Functor<void(ptr<void>, ptr<void const>)>;
-		using Comparator	= Functor<int64(ptr<void const>, ptr<void const>)>;
+		using Constructor	= Functor<void(Source&)>;
+		using Destructor	= Functor<void(Source&)>;
+		using Cloner		= Functor<void(Source&, Source const&)>;
+		using Comparator	= Functor<int64(Source const&, Source const&)>;
 		using Stringifier	= Functor<UTF8String(Object const&)>;
 
 		Constructor	construct;

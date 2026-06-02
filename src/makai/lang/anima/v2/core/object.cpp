@@ -45,7 +45,7 @@ bool Object::setAtIndex(uint64 const index, Object::Storage const& value) {
 	if (isValueType()) {
 		if (!(index > count() && type->copy))
 			return false;
-		type->copy(addressAt(index), value->content->data());
+		MX::memcpy(addressAt(index), value->content->data(), value->content->type->byteSize);
 		return true;
 	}
 	if (!(index < fields.size()))
@@ -72,18 +72,22 @@ void Object::reserveFields(usize const count) {
 
 Object::Storage Object::cloneFrom(usize const index) const {
 	if (index >= count()) return nullptr;
-	auto const addr = addressAt(index);
-	auto const mem = new Memory();
-	if (isStructrure() && isClonable()) {
-		mem->resize(origin->byteSize);
-		origin->copy(mem->data(), addr);
-		return create(mem, type, origin);
-	}
-	if (isArray() && origin->base->flags & Definition::Flags::AV2_DF_CLONABLE) {
-		mem->resize(origin->base->byteSize);
-		origin->copy(mem->data(), addr);
-		return create(mem, type->base.raw(), origin->base.raw());
-	}
+	if (isValueType()) {
+		auto const addr = addressAt(index);
+		auto const mem = new Memory();
+		if (isStructrure() && isClonable()) {
+			auto const t = origin->fields[index];
+			mem->resize(t->byteSize);
+			MX::memcpy(mem->data(), addr, t->byteSize);
+			return create(mem, t.raw(), t.raw());
+		}
+		if (isArray() && origin->base->flags & Definition::Flags::AV2_DF_CLONABLE) {
+			mem->resize(origin->base->byteSize);
+			MX::memcpy(mem->data(), addr, origin->base->byteSize);
+			return create(mem, type->base.raw(), origin->base.raw());
+		}
+	} else if (fields[index])
+		return fields[index]->clone();
 	return nullptr;
 }
 

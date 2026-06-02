@@ -1011,6 +1011,22 @@ public:
 		return Span<DataType, R>(data[idx]);
 	}
 
+	/// @brief Returns the matrix as an array.
+	/// @return Unpacked matrix as array.
+	constexpr Array<DataType, R * C> toArray() const {
+		Array<DataType, R * C> out;
+		for (usize i = 0; i < R*C; i++)
+			out[i] = ((DataType*)data)[i];
+		return out;
+	}
+
+	/// @brief Unpacks the matrix to an array.
+	/// @return Reference to self.
+	constexpr SelfType const& unpackTo(ArrayType<>& out) const {
+		for (usize i = 0; i < R*C; i++)
+			out[i] = ((DataType*)data)[i];
+		return *this;
+	}
 
 	/// @brief Array subscription operator.
 	/// @param idx Index to match.

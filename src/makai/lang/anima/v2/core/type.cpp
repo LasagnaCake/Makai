@@ -6,9 +6,9 @@ using namespace Makai::Anima::V2::Core;
 
 
 template <class T>
-static void castAndConstructImpl(ref<void> a) {
+static void castAndConstructImpl(Definition::Source& a) {
 	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
-	MX::construct<T>(Cast::rewrite<ref<T>>(a));
+	MX::construct<T>(Cast::rewrite<ref<T>>(a.data()));
 }
 
 static Definition::Constructor doNotConstruct() {
@@ -20,10 +20,13 @@ static Definition::Destructor castAndConstruct() {
 	return {castAndConstructImpl<T>};
 }
 
+template <class T>
+static Definition::Destructor proxyConstruct() {
+	return {proxyConstructImpl<T>};
+}
+
 Definition::Constructor Core::constructorOf(BasicType const type) {
 	switch (type) {
-		case BasicType::AV2_BT_STRING:	return castAndConstruct<UTF8String>();
-		case BasicType::AV2_BT_BYTES:	return castAndConstruct<Bytes<>>();
 		case BasicType::AV2_BT_MATRIX:	return castAndConstruct<Matrix4x4>();
 		case BasicType::AV2_BT_VECTOR:	return castAndConstruct<Vector4>();
 		default: return doNotConstruct();
@@ -47,8 +50,6 @@ static Definition::Destructor doNotDestruct() {
 
 Definition::Destructor Core::destructorOf(BasicType const type) {
 	switch (type) {
-		case BasicType::AV2_BT_STRING:	return castAndDestruct<UTF8String>();
-		case BasicType::AV2_BT_BYTES:	return castAndDestruct<Bytes<>>();
 		case BasicType::AV2_BT_MATRIX:	return castAndDestruct<Matrix4x4>();
 		case BasicType::AV2_BT_VECTOR:	return castAndDestruct<Vector4>();
 		default: return doNotDestruct();
@@ -56,15 +57,27 @@ Definition::Destructor Core::destructorOf(BasicType const type) {
 }
 
 template <class T>
-static void castAndCloneImpl(ref<void> a, ref<void const> b) {
+static void castAndCloneImpl(Definition::Source& a, Definition::Source const& b) {
 	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
-	violate<T>(a) = violate<T>(b);
+	violate<T>(a.data()) = violate<T>(b.data());
+}
+
+template <class T>
+static void proxyCloneImpl(Definition::Source& a, Definition::Source const& b) {
+	if (b.size())
+		MX::memmove(a.resize(b.size()).data(), b.data(), b.size());
+	else a.free();
 }
 
 template <class T>
 static Definition::Cloner castAndClone() {
 	return {castAndCloneImpl<T>};
+}
+
+template <class T>
+static Definition::Cloner proxyClone() {
+	return {proxyCloneImpl<T>};
 }
 
 static Definition::Cloner doNotClone() {
@@ -86,8 +99,8 @@ Definition::Cloner Core::clonerOf(BasicType const type) {
 		case BasicType::AV2_BT_REAL64:	return castAndClone<float64>();
 		case BasicType::AV2_BT_REAL128:	return castAndClone<float128>();
 		case BasicType::AV2_BT_CHAR:	return castAndClone<UTF8Char>();
-		case BasicType::AV2_BT_STRING:	return castAndClone<UTF8String>();
-		case BasicType::AV2_BT_BYTES:	return castAndClone<Bytes<>>();
+		case BasicType::AV2_BT_STRING:	return proxyClone<UTF8String>();
+		case BasicType::AV2_BT_BYTES:	return proxyClone<Bytes<>>();
 		case BasicType::AV2_BT_VECTOR:	return castAndClone<Vector4>();
 		case BasicType::AV2_BT_TYPEID:	return castAndClone<TypeID>();
 		case BasicType::AV2_BT_MATRIX:	return castAndClone<Matrix4x4>();
@@ -96,10 +109,17 @@ Definition::Cloner Core::clonerOf(BasicType const type) {
 }
 
 template <class T>
-static int64 castAndCompareImpl(ref<void const> const a, ref<void const> const b) {
+static int64 castAndCompareImpl(Definition::Source const& a, Definition::Source const& b) {
 	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	return enumcast<StandardOrder>(violate<T>(a) <=> violate<T>(b));
+}
+
+template <class T>
+static int64 proxyCompareImpl(Definition::Source const& a, Definition::Source const& b) {
+	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
+	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
+	return MX::memcmp(a.data(), b.data(), (a.size() < b.size() ? a.size() : b.size()));
 }
 
 template <class T>
@@ -108,7 +128,7 @@ static Definition::Comparator castAndCompare() {
 }
 
 template <class T>
-static int64 primitiveCompareImpl(ref<void const> const a, ref<void const> const b) {
+static int64 primitiveCompareImpl(Definition::Source const& a, Definition::Source const& b) {
 	return MX::memcmp(a, b, sizeof(T));
 }
 
@@ -136,8 +156,8 @@ Definition::Comparator Core::comparatorOf(BasicType const type) {
 		case BasicType::AV2_BT_REAL64:	return primitiveCompare<float64>();
 		case BasicType::AV2_BT_REAL128:	return primitiveCompare<float128>();
 		case BasicType::AV2_BT_CHAR:	return castAndCompare<UTF8Char>();
-		case BasicType::AV2_BT_STRING:	return castAndCompare<UTF8String>();
-		case BasicType::AV2_BT_BYTES:	return castAndCompare<Bytes<>>();
+		case BasicType::AV2_BT_STRING:	return proxyCompare<UTF8String>();
+		case BasicType::AV2_BT_BYTES:	return proxyCompare<Bytes<>>();
 		case BasicType::AV2_BT_VECTOR:	return castAndCompare<Vector4>();
 		case BasicType::AV2_BT_TYPEID:	return castAndCompare<TypeID>();
 		default: return doNotCompare();
@@ -161,10 +181,10 @@ void Definition::makeBasic(Definition& type) {
 		case AV2_BT_REAL64:		type.byteSize = sizeof(float64);			break;
 		case AV2_BT_REAL128:	type.byteSize = sizeof(float128);			break;
 		case AV2_BT_CHAR:		type.byteSize = sizeof(Makai::UTF8Char);	break;
-		case AV2_BT_STRING:		type.byteSize = sizeof(Makai::UTF8String);	break;
 		case AV2_BT_VECTOR:		type.byteSize = sizeof(Makai::Vector4);		break;
 		case AV2_BT_MATRIX:		type.byteSize = sizeof(Makai::Matrix4x4);	break;
-		case AV2_BT_BYTES:		type.byteSize = sizeof(Makai::Bytes<>);		break;
+		case AV2_BT_STRING:		type.alignment = 4;							break;
+		case AV2_BT_BYTES:		type.alignment = 1;							break;
 		case AV2_BT_TYPEID:		type.byteSize = sizeof(TypeID);				break;
 		case AV2_BT_VOID:		type.alignment = 0;							break;
 		case AV2_BT_ANY:		type.alignment = 0;							break;
