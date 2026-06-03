@@ -1356,9 +1356,10 @@ static void declareEntry(Context& context) {
 static void declareHook(Context& context) {
 	context.next();
 	auto const hook = resolvePath(context);
-	declareJumpTarget(context);
 	if (context.program.ani->in.contains(hook))
 		context.error("Redeclaration of previously-declared hook!");
+	if (!context.jumps.contain(hook))
+		context.error("Hook target has not been declared yet!");
 	context.program.ani->in[hook] = context.jumps[hook];
 }
 
