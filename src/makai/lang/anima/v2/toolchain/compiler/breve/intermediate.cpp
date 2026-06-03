@@ -729,6 +729,8 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createSharedAttribute());
 	addGlobalAttribute(createARTCallAttribute());
 	addGlobalAttribute(createPathAttribute());
+	addGlobalAttribute(createRemangleAttribute());
+	addGlobalAttribute(createDoNotMangleAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {

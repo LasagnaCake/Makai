@@ -418,7 +418,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			context.error("No type with this name exists!", node->middle);
 		type.base = base;
 		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
-		type.fields.append(baseFields);
+		type.fields.append(base->fields);
 		scope->varc += base->scope->varc;
 	}
 	auto const initer = "__init_" + name.join("_") + node->name();

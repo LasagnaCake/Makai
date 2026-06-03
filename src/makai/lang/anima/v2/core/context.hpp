@@ -254,7 +254,7 @@ namespace Makai::Anima::V2::Core {
 		void removeExternalType() {
 			if (!hasExternalType<T>()) return;
 			auto const type = types.queryByNameHash(Meta::arthashof<T>()).front();
-			if (type->flags & Definition::Flags::AV2_DF_ART_EQUIVALENT)
+			if (type->flags & Definition::Flags::AV2_DF_PROXY)
 				types.values[type->id] = nullptr;
 		}
 

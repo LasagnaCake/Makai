@@ -4,7 +4,6 @@
 #include "type.hpp"
 #include "method.hpp"
 #include "object.hpp"
-#include "proxy.hpp"
 #include "database.hpp"
 
 namespace Makai::Anima::V2::Core::Meta {
@@ -326,7 +325,13 @@ namespace Makai::Anima::V2::Core::Meta {
 	}
 
 	namespace Impl {
-		template <Type::Class T>
+		template <class T>
+		concept CanBeEasilyImplemented = (
+			Type::Class<T>
+		&&	Type::Pure<T>
+		&&	Type::DefaultConstructible<T>
+		);
+		template <CanBeEasilyImplemented T>
 		class EasyImplementor {
 			constexpr static bool const IS_ART_TYPE			= ARTType<T>;
 			constexpr static bool const HAS_CONSTRUCTOR		= Type::Constructible<T>;
@@ -393,7 +398,7 @@ namespace Makai::Anima::V2::Core::Meta {
 				type.byteSize	= sizeof (T);
 				if constexpr (HAS_EXPLICIT_BASE)
 					type.base = db.byNameHash(EasyImplementor<typename T::BaseType>::TYPE_HASH).front();
-				type.flags |= Definition::Flags::AV2_DF_ART_EQUIVALENT;
+				type.flags |= Definition::Flags::AV2_DF_PROXY;
 			}
 		};
 	}

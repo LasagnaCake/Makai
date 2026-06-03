@@ -7,7 +7,7 @@ using namespace Makai::Anima::V2::Core;
 
 template <class T>
 static void castAndConstructImpl(Definition::Source& a) {
-	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
+	if (a.empty()) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	MX::construct<T>(Cast::rewrite<ref<T>>(a.data()));
 }
 
@@ -20,11 +20,6 @@ static Definition::Destructor castAndConstruct() {
 	return {castAndConstructImpl<T>};
 }
 
-template <class T>
-static Definition::Destructor proxyConstruct() {
-	return {proxyConstructImpl<T>};
-}
-
 Definition::Constructor Core::constructorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_MATRIX:	return castAndConstruct<Matrix4x4>();
@@ -34,9 +29,9 @@ Definition::Constructor Core::constructorOf(BasicType const type) {
 }
 
 template <class T>
-static void castAndDestructImpl(ref<void> a) {
-	if (!a) return;
-	MX::destruct<T>(Cast::rewrite<ref<T>>(a));
+static void castAndDestructImpl(Definition::Source& a) {
+	if (a.empty()) return;
+	MX::destruct<T>(Cast::rewrite<ref<T>>(a.data()));
 }
 
 template <class T>
@@ -58,8 +53,8 @@ Definition::Destructor Core::destructorOf(BasicType const type) {
 
 template <class T>
 static void castAndCloneImpl(Definition::Source& a, Definition::Source const& b) {
-	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
-	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
+	if (a.empty()) return;
+	if (b.empty()) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	violate<T>(a.data()) = violate<T>(b.data());
 }
 
@@ -110,16 +105,9 @@ Definition::Cloner Core::clonerOf(BasicType const type) {
 
 template <class T>
 static int64 castAndCompareImpl(Definition::Source const& a, Definition::Source const& b) {
-	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
-	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
+	if (a.empty()) return b.empty() ? 0: -1;
+	if (b.empty()) return a.empty() ? 0: 1;
 	return enumcast<StandardOrder>(violate<T>(a) <=> violate<T>(b));
-}
-
-template <class T>
-static int64 proxyCompareImpl(Definition::Source const& a, Definition::Source const& b) {
-	if (!a) throw Makai::Error::NonexistentValue("Oops, hehe :3");
-	if (!b) throw Makai::Error::NonexistentValue("Oops, hehe :3");
-	return MX::memcmp(a.data(), b.data(), (a.size() < b.size() ? a.size() : b.size()));
 }
 
 template <class T>
@@ -129,12 +117,24 @@ static Definition::Comparator castAndCompare() {
 
 template <class T>
 static int64 primitiveCompareImpl(Definition::Source const& a, Definition::Source const& b) {
-	return MX::memcmp(a, b, sizeof(T));
+	return MX::memcmp(a.data(), b.data(), sizeof(T));
 }
 
 template <class T>
 static Definition::Comparator primitiveCompare() {
 	return {primitiveCompareImpl<T>};
+}
+
+template <class T>
+static int64 proxyCompareImpl(Definition::Source const& a, Definition::Source const& b) {
+	if (a.empty()) return b.empty() ? 0: -1;
+	if (b.empty()) return a.empty() ? 0: 1;
+	return MX::memcmp(a.data(), b.data(), (a.size() < b.size() ? a.size() : b.size()));
+}
+
+template <class T>
+static Definition::Comparator proxyCompare() {
+	return {proxyCompareImpl<T>};
 }
 
 static Definition::Comparator doNotCompare() {

@@ -671,7 +671,7 @@ void Engine::load() {
 	Map<uint64, uint64> boundTypes;
 	Map<uint64, List<uint64>> fields;
 	for (auto const& [type, i]: Range::expand(program.detail.types)) {
-		if (type.flags & Definition::Flags::AV2_DF_ART_EQUIVALENT) {
+		if (type.flags & Definition::Flags::AV2_DF_PROXY) {
 			boundTypes[i] = type.hash;
 			context.art.types.values.pushBack(nullptr);
 			continue;

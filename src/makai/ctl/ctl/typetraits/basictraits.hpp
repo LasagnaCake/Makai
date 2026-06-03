@@ -211,6 +211,10 @@ namespace Type {
 		template <class T> struct IsPolymorphic: decltype(Partial::isPoly<T>()) {};
 
 		template <class T> struct IsVirtual: BooleanConstant<__has_virtual_destructor(T)> {};
+
+		template <class T> struct IsPure:		BooleanConstant<__is_standard_layout(T)> {};
+		template <class T> struct IsPlain:		BooleanConstant<__is_pod(T)> {};
+		template <class T> struct IsTrivial:	BooleanConstant<__is_trivial(T)> {};
 	}
 
 	/// @brief Both types must be equal.
@@ -776,6 +780,26 @@ namespace Type {
 	/// @brief Type must match a given rule.
 	template <class T, template <class> class TRule>
 	concept Matches = TRule<T>::value;
+
+	/// @brief Type must match any rule in a given set of rules.
+	template <class T, template <class> class... TRules>
+	concept MatchesAny = (... or Matches<T, TRules>);
+
+	/// @brief Type must match all rules in a given set of rules.
+	template <class T, template <class> class... TRules>
+	concept MatchesAll = (... and Matches<T, TRules>);
+
+	/// @brief Type must be a pure (Standard-Layout) type.
+	template <class T>
+	concept Pure = Matches<T, Impl::IsPure>;
+
+	/// @brief Type must be a plain (ol' data) type.
+	template <class T>
+	concept Plain = Matches<T, Impl::IsPlain>;
+
+	/// @brief Type must be a trivial type.
+	template <class T>
+	concept Trivial = Matches<T, Impl::IsTrivial>;
 }
 
 CTL_NAMESPACE_END

@@ -367,10 +367,13 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object(T const& v, Instance<Definition> const& info) {
 			type = origin = info;
 			content->invoke(origin->byteSize);
-			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String, Bytes<>>) {
+			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
 				UTF8String const us = v;
 				content->resize(us.size() * sizeof(UTF8Char));
-				MX::memmove(content->data(), us.data(), us.size());
+				MX::memmove<UTF8Char>((ref<UTF8Char>)content->data(), us.data(), us.size());
+			} else if constexpr (Type::Equal<T, Bytes<>>) {
+				content->resize(v.size());
+				MX::memmove(content->data(), v.data(), v.size());
 			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
 				initialize<UTF8Char>(v);
 			} else initialize<T>(v);

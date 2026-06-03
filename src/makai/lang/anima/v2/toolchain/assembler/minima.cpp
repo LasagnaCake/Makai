@@ -959,10 +959,10 @@ static void validateType(Context& context, Context::Declaration& type) {
 	&&	type.flags & (
 			Definition::Flags::AV2_DF_STRUCTURE
 		|	Definition::Flags::AV2_DF_ARRAY
-		|	Definition::Flags::AV2_DF_ART_EQUIVALENT
+		|	Definition::Flags::AV2_DF_PROXY
 		|	Definition::Flags::AV2_DF_DYNAMIC
 		)
-	) context.error("Basic types cannot be structures, arrays, ART-Equivalent, or dynamic types!");
+	) context.error("Basic types cannot be structures, arrays, proxies, or dynamic types!");
 	if (
 		type.flags & Definition::Flags::AV2_DF_STRUCTURE
 	&&	type.flags & (
