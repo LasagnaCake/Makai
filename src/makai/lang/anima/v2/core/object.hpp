@@ -50,8 +50,8 @@ namespace Makai::Anima::V2::Core {
 			if (!isString())
 				invalidCastError<T>("Mismatched types");
 			if constexpr (Makai::Type::Equal<T, String>)
-				return UTF8String(cref<UTF8Char>(content->data()), content->size()).toString();
-			else return UTF8String(cref<UTF8Char>(content->data()), content->size());
+				return UTF8String(cref<UTF8Char>(content->data()), content->size() / sizeof(UTF8Char)).toString();
+			else return UTF8String(cref<UTF8Char>(content->data()), content->size() / sizeof(UTF8Char));
 		}
 
 		template <Makai::Type::Equal<Binary<>> T>

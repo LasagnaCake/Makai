@@ -5,7 +5,7 @@ using namespace Anima::V2::Core;
 
 struct ToStringLib: ALibrary {
 	template <class T>
-	static UTF8String toString(T val) {
+	static UTF8String AV2Call toString(T val) {
 		if constexpr (Makai::Type::Equal<T, Any>) {
 			if (!val.value) return "";
 			auto const vv = val.value->toDynamicValue();

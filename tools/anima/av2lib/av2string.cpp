@@ -4,31 +4,31 @@ using namespace Makai;
 using namespace Anima::V2::Core;
 
 struct StringLib: ALibrary {
-	static String replace(String str, String expr, String fmt) {
+	static String AV2Call replace(String str, String expr, String fmt) {
 		return Regex::replace(str, expr, fmt);
 	}
 
-	static bool contains(String str, String expr) {
+	static bool AV2Call contains(String str, String expr) {
 		return Regex::contains(str, expr);
 	}
 
-	static bool matches(String str, String expr) {
+	static bool AV2Call matches(String str, String expr) {
 		return Regex::matches(str, expr);
 	}
 
-	static usize count(String str, String expr) {
+	static usize AV2Call count(String str, String expr) {
 		return Regex::count(str, expr);
 	}
 
-	static String findFirst(String str, String expr) {
+	static String AV2Call findFirst(String str, String expr) {
 		return Regex::findFirst(str, expr).match;
 	}
 
-	static ssize firstIndexOf(String str, String expr) {
+	static ssize AV2Call firstIndexOf(String str, String expr) {
 		return Regex::findFirst(str, expr).position;
 	}
 
-	static StringList find(String str, String expr) {
+	static StringList AV2Call find(String str, String expr) {
 		return Regex::find(str, expr).toList<String>([] (auto const& e) {return e.match;});
 	}
 

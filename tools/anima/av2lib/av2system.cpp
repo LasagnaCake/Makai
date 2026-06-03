@@ -5,12 +5,12 @@ using namespace Anima::V2::Core;
 
 struct SystemLib: ALibrary {
 
-	static void dload(Context& context, String const& libpath) {
+	static void AV2Call dload(Context& context, String const& libpath) {
 		context.openLibrary(libpath);
 		context.loadLibraries();
 	}
 
-	static Any dcall(Context& context, String const& fname, List<Any> const& args) {
+	static Any AV2Call dcall(Context& context, String const& fname, List<Any> const& args) {
 		Any out;
 		context
 			.invokeExternalMethod(fname, args)
@@ -19,7 +19,7 @@ struct SystemLib: ALibrary {
 		return out;
 	}
 
-	static void dinvoke(Context& context, String const& fname, List<Any> const& args) {
+	static void AV2Call dinvoke(Context& context, String const& fname, List<Any> const& args) {
 		context.invokeExternalMethod(fname, args);
 	}
 

@@ -55,8 +55,12 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static ExternalInvocation invoker(TFunc const& f) {
+			[[gnu::noinline]]
+			static ExternalInvocation invoker(TFunc const& f) {
+				CPP::Debug::breakpoint();
 				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
+					debugArgs(args);
+					CPP::Debug::breakpoint();
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						f();
 						return Object::Storage();
@@ -99,8 +103,10 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFunc>
-			constexpr static ExternalInvocation invoker(TFunc const& f) {
+			[[gnu::noinline]]
+			static ExternalInvocation invoker(TFunc const& f) {
 				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
+					debugArgs(args);
 					auto tup = makeArgumentTuple(context, method, args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						invokeFromTuple<void>(f, tup);

@@ -55,6 +55,8 @@ namespace CTL::_Devmode {
 #pragma warning "What system is this?"
 #endif
 
+#define CTL_DO_NOT_INLINE asm("")
+
 #ifdef CTL_BUILD_MODE
 #define CTL_DYNCALL CTL_DYNEXPORT
 #else

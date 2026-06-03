@@ -38,9 +38,9 @@ namespace CPP::Debug {
 	}
 
 	/// @brief Traceable function. Can be used in debugging.
-	[[gnu::noinline, maybe_unused]] static void trace()			{			}
+	[[gnu::noinline, maybe_unused]] static void trace()			{CTL_DO_NOT_INLINE;			}
 	/// @brief Emits a breakpoint.
-	[[gnu::noinline, maybe_unused]] static void breakpoint()	{fire();	}
+	[[gnu::noinline, maybe_unused]] static void breakpoint()	{CTL_DO_NOT_INLINE; fire();	}
 
 	/// @brief Traceable object.
 	struct Traceable {

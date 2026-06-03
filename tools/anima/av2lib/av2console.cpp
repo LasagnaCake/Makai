@@ -7,33 +7,37 @@ using namespace Anima::V2::Core;
 #define doWriteLine(WHAT) std::cout << WHAT << "\n"
 
 struct ConsoleLib: ALibrary {
-	static void write_string(String str) {
+	static void AV2Call write_string(String str) {
 		doWrite(__LINE__);
 		doWrite("/");
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
-		auto const b = str.toBytes();
-		auto const cont = Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(b);
+		CTL::CPP::Debug::breakpoint();
+		auto const b = copy(str).toBytes();
+		CTL::CPP::Debug::breakpoint();
+		auto const cont = Makai::Data::encode(b, Makai::Data::EncodingType::ET_BASE64);
 		doWriteLine("<bytes data='" + cont + "' />");
 		doWriteLine("<text>");
 		doWrite(str);
 		doWriteLine("</text>");
 	}
 
-	static void writeLine_string(String str) {
+	static void AV2Call writeLine_string(String str) {
 		doWrite(__LINE__);
 		doWrite("/");
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
-		auto const b = str.toBytes();
-		auto const cont = Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(b);
+		CTL::CPP::Debug::breakpoint();
+		auto const b = copy(str).toBytes();
+		CTL::CPP::Debug::breakpoint();
+		auto const cont = Makai::Data::encode(b, Makai::Data::EncodingType::ET_BASE64);
 		doWriteLine("<bytes data='" + cont + "' />");
 		doWriteLine("<text>");
 		doWriteLine(str);
 		doWriteLine("</text>");
 	}
 
-	static String toString(Makai::Data::Value val) {
+	static String AV2Call toString(Makai::Data::Value val) {
 		doWrite(__LINE__);
 		if (val.isUndefined()) return "";
 		doWrite(__LINE__);
@@ -42,14 +46,14 @@ struct ConsoleLib: ALibrary {
 		return val.toFLOWString();
 	}
 
-	static void write_any(Makai::Anima::V2::Core::Any what) {
+	static void AV2Call write_any(Makai::Anima::V2::Core::Any what) {
 		doWrite(__LINE__);
 		doWriteLine(" ::: Writing to standard output...");
 		if (what.value)
 			write_string(toString(what.value->toDynamicValue()));
 	}
 
-	static void writeLine_any(Makai::Anima::V2::Core::Any what) {
+	static void AV2Call writeLine_any(Makai::Anima::V2::Core::Any what) {
 		doWrite(__LINE__);
 		doWriteLine(" ::: Writing to standard output...");
 		if (what.value)

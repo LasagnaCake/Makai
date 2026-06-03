@@ -270,6 +270,13 @@ static Location getStack(Context& context) {
 	return loc;
 }
 
+static Location getStackTop(Context& context) {
+	Location loc;
+	loc.source = loc.source | DataLocation::AV2_DL_STACK_OFFSET;
+	loc.id = uint64(0);
+	return loc;
+}
+
 static Location getLocal(Context& context) {
 	auto const localID =
 		context
@@ -433,6 +440,7 @@ static Location getDataLocation(Context& context) {
 			else if (id == "stack")						loc |= getStack(context);
 			else if (id == "global" || id == "g")		loc |= getGlobal(context);
 			else if (id == "external" || id == "out")	loc |= getExtern(context);
+			else if (id == "top")						loc |= getStackTop(context);
 			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_BOOL, null};
 			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_BOOL | DataLocation::AV2_DLB_TRUE, null};
 			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_VOID, null};
