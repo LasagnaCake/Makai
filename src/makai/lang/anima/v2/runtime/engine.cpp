@@ -711,10 +711,14 @@ void Engine::load() {
 		)));
 	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
-	if (program.ani && loader)
-		for (auto& lib: program.ani->shared.libraries)
-			loader->loadLibrary(context, lib + ".andl");
-	context.art.loadLibraries();
+	// CLB not working
+	// FIXME: Cross-Library Boundary has SEVERE issues
+	if (config.allowDynamicLibraries) {
+		if (program.ani && loader)
+			for (auto& lib: program.ani->shared.libraries)
+				loader->loadLibrary(context, lib + ".andl");
+		context.art.loadLibraries();
+	}
 	engineState = State::AV2_RES_RUNNING;
 }
 

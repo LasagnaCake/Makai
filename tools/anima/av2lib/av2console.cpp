@@ -8,56 +8,25 @@ using namespace Anima::V2::Core;
 
 struct ConsoleLib: ALibrary {
 	static void AV2Call write_string(String str) {
-		doWrite(__LINE__);
-		doWrite("/");
-		doWrite(str.size());
-		doWriteLine(" ::: Writing to standard output...");
-		CTL::CPP::Debug::breakpoint();
-		auto content = copy(str);
-		if (Makai::OS::FS::exists("log.txt"))
-			content = Makai::File::getText("log.txt") + content;
-		Makai::File::saveBinary("log.txt", str.toBytes());
-		CTL::CPP::Debug::breakpoint();
-		doWriteLine("<text>");
 		doWrite(str);
-		doWriteLine("</text>");
 	}
 
 	static void AV2Call writeLine_string(String str) {
-		doWrite(__LINE__);
-		doWrite("/");
-		doWrite(str.size());
-		doWriteLine(" ::: Writing to standard output...");
-		CTL::CPP::Debug::breakpoint();
-		auto content = copy(str);
-		if (Makai::OS::FS::exists("log.txt"))
-			content = Makai::File::getText("log.txt") + content;
-		Makai::File::saveBinary("log.txt", str.toBytes());
-		CTL::CPP::Debug::breakpoint();
-		doWriteLine("<text>");
 		doWriteLine(str);
-		doWriteLine("</text>");
 	}
 
 	static String AV2Call toString(Makai::Data::Value val) {
-		doWrite(__LINE__);
 		if (val.isUndefined()) return "";
-		doWrite(__LINE__);
 		if (val.isString()) return val.getString();
-		doWrite(__LINE__);
 		return val.toFLOWString();
 	}
 
 	static void AV2Call write_any(Makai::Anima::V2::Core::Any what) {
-		doWrite(__LINE__);
-		doWriteLine(" ::: Writing to standard output...");
 		if (what.value)
 			write_string(toString(what.value->toDynamicValue()));
 	}
 
 	static void AV2Call writeLine_any(Makai::Anima::V2::Core::Any what) {
-		doWrite(__LINE__);
-		doWriteLine(" ::: Writing to standard output...");
 		if (what.value)
 			writeLine_string(toString(what.value->toDynamicValue()));
 	}

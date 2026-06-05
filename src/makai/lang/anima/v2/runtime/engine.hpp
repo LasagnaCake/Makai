@@ -5,6 +5,13 @@
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
+		struct Config {
+			bool allowDynamicLibraries = false;
+
+			static Config createDefault() {
+				return Config();
+			}
+		};
 
 		enum class State {
 			AV2_RES_READY,
@@ -29,6 +36,8 @@ namespace Makai::Anima::V2::Runtime {
 		struct DefaultLibraryLoader: ILibraryLoader {
 			bool loadLibrary(Context& context, String const& path) override;
 		};
+
+		Engine(Config const& cfg = Config::createDefault()): config(cfg) {}
 
 		virtual ~Engine() {}
 
@@ -63,6 +72,8 @@ namespace Makai::Anima::V2::Runtime {
 		Context context;
 
 		Instance<ILibraryLoader> loader = new DefaultLibraryLoader();
+
+		Config config;
 
 	private:
 		void load();
