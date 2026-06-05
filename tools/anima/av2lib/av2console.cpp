@@ -13,10 +13,11 @@ struct ConsoleLib: ALibrary {
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
 		CTL::CPP::Debug::breakpoint();
-		auto const b = copy(str).toBytes();
+		auto content = copy(str);
+		if (Makai::OS::FS::exists("log.txt"))
+			content = Makai::File::getText("log.txt") + content;
+		Makai::File::saveBinary("log.txt", str.toBytes());
 		CTL::CPP::Debug::breakpoint();
-		auto const cont = Makai::Data::encode(b, Makai::Data::EncodingType::ET_BASE64);
-		doWriteLine("<bytes data='" + cont + "' />");
 		doWriteLine("<text>");
 		doWrite(str);
 		doWriteLine("</text>");
@@ -28,10 +29,11 @@ struct ConsoleLib: ALibrary {
 		doWrite(str.size());
 		doWriteLine(" ::: Writing to standard output...");
 		CTL::CPP::Debug::breakpoint();
-		auto const b = copy(str).toBytes();
+		auto content = copy(str);
+		if (Makai::OS::FS::exists("log.txt"))
+			content = Makai::File::getText("log.txt") + content;
+		Makai::File::saveBinary("log.txt", str.toBytes());
 		CTL::CPP::Debug::breakpoint();
-		auto const cont = Makai::Data::encode(b, Makai::Data::EncodingType::ET_BASE64);
-		doWriteLine("<bytes data='" + cont + "' />");
 		doWriteLine("<text>");
 		doWriteLine(str);
 		doWriteLine("</text>");
