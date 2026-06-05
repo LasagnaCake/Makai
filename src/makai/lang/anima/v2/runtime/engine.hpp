@@ -75,6 +75,8 @@ namespace Makai::Anima::V2::Runtime {
 
 		Config config;
 
+		virtual void onLoad() {}
+
 	private:
 		void load();
 		void unload();

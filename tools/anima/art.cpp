@@ -38,10 +38,13 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 
 	ARTE(
-		bool const allowDynlibs		= false,
-		bool const consoleOutput	= false
-	): Engine(Config{allowDynlibs}) {
-		if (!allowDynlibs && consoleOutput) {
+		bool const allowDynlibs	= false,
+		bool const cliEnabled	= false
+	): Engine(Config{allowDynlibs}), cliEnabled(cliEnabled) {
+	}
+
+	void onLoad() override {
+		if (!config.allowDynamicLibraries && cliEnabled) {
 			context.art.addExternalMethod("av2/console/write_string", 		write_string		);
 			context.art.addExternalMethod("av2/console/write_any",			write_any			);
 			context.art.addExternalMethod("av2/console/writeLine_string",	writeLine_string	);
@@ -92,7 +95,6 @@ struct ARTEMain: Makai::AMain {
 				args["allow-dynlibs"].getBoolean(),
 				args["cli"].getBoolean()
 			};
-			engine.cliEnabled = args["cli"];
 			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 			engine.execute();
 			while (engine.process()) {

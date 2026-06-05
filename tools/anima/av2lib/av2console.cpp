@@ -8,10 +8,18 @@ using namespace Anima::V2::Core;
 
 struct ConsoleLib: ALibrary {
 	static void AV2Call write_string(String str) {
+		doWrite(__LINE__);
+		doWrite("/");
+		doWrite(str.size());
+		doWriteLine(" ::: Writing to standard output...");
 		doWrite(str);
 	}
 
 	static void AV2Call writeLine_string(String str) {
+		doWrite(__LINE__);
+		doWrite("/");
+		doWrite(str.size());
+		doWriteLine(" ::: Writing to standard output...");
 		doWriteLine(str);
 	}
 

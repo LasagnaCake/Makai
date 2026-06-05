@@ -719,6 +719,7 @@ void Engine::load() {
 				loader->loadLibrary(context, lib + ".andl");
 		context.art.loadLibraries();
 	}
+	onLoad();
 	engineState = State::AV2_RES_RUNNING;
 }
 
