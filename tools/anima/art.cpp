@@ -14,10 +14,12 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	bool cliEnabled = false;
 
 	static void AV2Call write_string(Makai::String str) {
+		Makai::CPP::Debug::breakpoint();
 		doWrite(str);
 	}
 
 	static void AV2Call writeLine_string(Makai::String str) {
+		Makai::CPP::Debug::breakpoint();
 		doWriteLine(str);
 	}
 

@@ -58,6 +58,7 @@ namespace Makai::Anima::V2::Core {
 			[[gnu::noinline]]
 			static ExternalInvocation invoker(TFunc const& f) {
 				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
+					debugArgs(args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						f();
 						return Object::Storage();
@@ -103,6 +104,7 @@ namespace Makai::Anima::V2::Core {
 			[[gnu::noinline]]
 			static ExternalInvocation invoker(TFunc const& f) {
 				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
+					debugArgs(args);
 					auto tup = makeArgumentTuple(context, method, args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						invokeFromTuple<void>(f, tup);
