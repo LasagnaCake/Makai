@@ -50,10 +50,10 @@ namespace Makai::Anima::V2::Core {
 
 #if defined (CTL_ON_UNIX)
 #define AV2_Library(LIB) AV2_Library_Unix(LIB)
-#define AV2Call [[using gnu: fastcall, noinline]]
+#define AV2Call [[using gnu: cdecl, noinline]]
 #elif defined (CTL_ON_WINDOWS)
 #define AV2_Library(LIB) AV2_Library_Windows(LIB)
-#define AV2Call __fastcall __declspec(noinline)
+#define AV2Call __cdecl __declspec(noinline)
 #elif defined (MAKAI_AV2_DYNLIBS_ARE_REQUIRED)
 #error "Invalid/Unsupported system for AV2 Shared Libraries!"
 #else
