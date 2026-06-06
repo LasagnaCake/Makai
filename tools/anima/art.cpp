@@ -1,3 +1,6 @@
+#define MAKAILIB_DEBUG
+#define CTL_CONSOLE_OUT
+
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 
@@ -15,11 +18,19 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	static void AV2Call write_string(Makai::String str) {
 		Makai::CPP::Debug::breakpoint();
+		doWrite(__LINE__);
+		doWrite("/");
+		doWrite(str.size());
+		doWriteLine(" ::: Writing to standard output...");
 		doWrite(str);
 	}
 
 	static void AV2Call writeLine_string(Makai::String str) {
 		Makai::CPP::Debug::breakpoint();
+		doWrite(__LINE__);
+		doWrite("/");
+		doWrite(str.size());
+		doWriteLine(" ::: Writing to standard output...");
 		doWriteLine(str);
 	}
 

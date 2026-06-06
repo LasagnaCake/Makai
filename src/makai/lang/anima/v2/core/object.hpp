@@ -45,13 +45,19 @@ namespace Makai::Anima::V2::Core {
 			return fromBasicNumber<T>();
 		}
 
-		template <Makai::Type::OneOf<String, UTF8String, UTF32String> T>
+		template <Makai::Type::OneOf<UTF8String, UTF32String> T>
 		T toValue() const {
 			if (!isString())
 				invalidCastError<T>("Mismatched types");
-			if constexpr (Makai::Type::Equal<T, String>)
-				return UTF8String(cref<UTF8Char>(content->data()), content->size() / sizeof(UTF8Char)).toString();
-			else return UTF8String(cref<UTF8Char>(content->data()), content->size() / sizeof(UTF8Char));
+			DEBUGLN("Fetching string [SIZE: ", content->size() / sizeof(UTF8Char), "]...");
+			return UTF8String(cref<UTF8Char>(content->data()), content->size() / sizeof(UTF8Char));
+		}
+
+		template <Makai::Type::OneOf<String> T>
+		T toValue() const {
+			if (!isString())
+				invalidCastError<T>("Mismatched types");
+			else return toValue<UTF8String>().toString();
 		}
 
 		template <Makai::Type::Equal<Binary<>> T>

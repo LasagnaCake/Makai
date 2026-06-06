@@ -44,78 +44,69 @@ namespace Makai::Anima::V2::Core {
 
 		static void debugArgs(Arguments const& args);
 
-		template <class TReturn>
-		struct ExternalMethodResolver<TReturn()> {
-			constexpr static bool const CONTEXTUAL = false;
+		template <class TReturn, class... TArgs>
+		struct ExternalMethodResolver<TReturn(TArgs...)> {
+			constexpr static bool const CONTEXTUAL = Type::OneOf<AsNonVolatile<Makai::Meta::First<TArgs...>>, Context&, Context const&>;
 
-			constexpr static usize const ARG_COUNT = 0;
+			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + CONTEXTUAL;
 
-			constexpr static ExternalMethodInfo info() {
-				return {Meta::arthashof<TReturn>(), {}};
+			constexpr static bool const HAS_ARGS = ARG_COUNT > 0;
+
+			template <class TFirst, class... TRest>
+			constexpr static ExternalMethodInfo makeInfo() requires (!CONTEXTUAL && HAS_ARGS) {
+				return {
+					Meta::arthashof<TReturn>(),
+					List<usize>::from(Meta::arthashof<TFirst>(), Meta::arthashof<TRest>()...)
+				};
 			}
 
-			template <class TFunc>
+			template <class TFirst, class... TRest>
+			constexpr static ExternalMethodInfo makeInfo() requires (CONTEXTUAL && HAS_ARGS) {
+				return {
+					Meta::arthashof<TReturn>(),
+					List<usize>::from(Meta::arthashof<TRest>()...)
+				};
+			}
+
+			constexpr static ExternalMethodInfo info() requires (HAS_ARGS) {
+				return makeInfo<TArgs...>();
+			}
+
+			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+			requires (!CONTEXTUAL && HAS_ARGS) {
+				return Meta::toArguments<TArgs...>(context.types, args.sliced(0, method.argc));
+			}
+
+			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+			requires (CONTEXTUAL && HAS_ARGS) {
+				return Meta::toArgumentsWithContext<TArgs...>(context.types, args.sliced(0, method.argc), context);
+			}
+
+			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
 			static ExternalInvocation invoker(TFunc const& f) {
+				CPP::Debug::breakpoint();
 				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
+					CPP::Debug::breakpoint();
 					debugArgs(args);
-					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+					if constexpr (HAS_ARGS) {
+						auto tup = makeArgumentTuple(context, method, args);
+						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+							invokeFromTuple<void>(f, tup);
+						} else return Meta::ARTInfo<TReturn>::convert(
+							context.types,
+							invokeFromTuple<TReturn>(
+								f,
+								tup
+							)
+						);
+					} else if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						f();
-						return Object::Storage();
 					} else return Meta::ARTInfo<TReturn>::convert(
 						context.types,
 						f()
 					);
-				};
-			}
-		};
-
-		template <class TReturn, class TFirst, NonMutableReferenceArgs... TArgs>
-		struct ExternalMethodResolver<TReturn(TFirst, TArgs...)> {
-			constexpr static bool const CONTEXTUAL = Type::OneOf<AsNonVolatile<TFirst>, Context&, Context const&>;
-
-			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + CONTEXTUAL;
-
-			constexpr static ExternalMethodInfo info() requires (!CONTEXTUAL) {
-				return {
-					Meta::arthashof<TReturn>(),
-					List<usize>::from(Meta::arthashof<TFirst>(), Meta::arthashof<TArgs>()...)
-				};
-			}
-
-			constexpr static ExternalMethodInfo info()  requires (CONTEXTUAL) {
-				return {
-					Meta::arthashof<TReturn>(),
-					List<usize>::from(Meta::arthashof<TArgs>()...)
-				};
-			}
-
-			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
-			requires (!CONTEXTUAL) {
-				return Meta::toArguments<TFirst, TArgs...>(context.types, args.sliced(0, method.argc));
-			}
-
-			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
-			requires (CONTEXTUAL) {
-				return Meta::toArgumentsWithContext<Context, TArgs...>(context.types, args.sliced(0, method.argc), context);
-			}
-
-			template <class TFunc>
-			[[gnu::noinline]]
-			static ExternalInvocation invoker(TFunc const& f) {
-				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
-					debugArgs(args);
-					auto tup = makeArgumentTuple(context, method, args);
-					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-						invokeFromTuple<void>(f, tup);
-						return Object::Storage();
-					} else return Meta::ARTInfo<TReturn>::convert(
-						context.types,
-						invokeFromTuple<TReturn>(
-							f,
-							tup
-						)
-					);
+					return Object::Storage();
 				};
 			}
 		};
