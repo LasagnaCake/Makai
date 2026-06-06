@@ -35,13 +35,13 @@ namespace Impl {
 /// @brief Callable object wrapper.
 /// @tparam T Function type.
 /// @note Callable objects: functions and lambdas.
-template<typename T> struct Function;
+template<class T> struct Function;
 
 /// @brief Callable object wrapper.
 /// @tparam TReturn Function return type.
 /// @tparam ...TArgs Function arguments.
 /// @note Callable objects: functions and lambdas.
-template<typename TReturn, typename... TArgs>
+template<class TReturn, class... TArgs>
 struct Function<TReturn(TArgs...)>:
 	SelfIdentified<Function<TReturn(TArgs...)>>,
 	Returnable<TReturn>,
@@ -129,24 +129,24 @@ public:
 	/// @tparam TFunction Derived type.
 	/// @param f Function to bind.
 	/// @return Reference to self.
-	template<typename TFunction>
+	template <class TFunction>
     constexpr SelfType& operator=(TFunction&& f)
-	requires (!Type::Derived<TFunction, SelfType>)		{destroy(); func = makeCallable(move(f)); return *this;				}
+	requires (!Type::Derived<TFunction, SelfType>)		{destroy(); func = makeCallable(move(f)); return *this;	}
 	/// @brief Copy assignment operator.
 	/// @tparam TFunction Derived type.
 	/// @param f Function to bind.
 	/// @return Reference to self.
-    template<typename TFunction>
+    template <class TFunction>
     constexpr SelfType& operator=(TFunction const& f)
-	requires (!Type::Derived<TFunction, SelfType>)		{destroy(); func = makeCallable(f); return *this;					}
+	requires (!Type::Derived<TFunction, SelfType>)		{destroy(); func = makeCallable(f); return *this;		}
     /// @brief Move assignment operator.
     /// @param f `Function` to move from.
     /// @return Reference to self.
-    constexpr SelfType& operator=(SelfType&& f)			{destroy(); func = move(f.func); f.func = nullptr; return *this;	}
+    constexpr SelfType& operator=(SelfType&& f)			{destroy(); assign(f); return *this;					}
     /// @brief Copy assignment operator.
     /// @param f `Function` to copy from.
     /// @return Reference to self.
-    constexpr SelfType& operator=(SelfType const& f)	{destroy(); assign(f); return *this;								}
+    constexpr SelfType& operator=(SelfType const& f)	{destroy(); assign(f); return *this;					}
 
     /// @brief Default constructor.
     constexpr Function() {}
@@ -159,12 +159,12 @@ public:
     /// @brief Move constructor (callable).
     /// @tparam TFunction Callable type.
     /// @param f Callable.
-    template<typename TFunction>
+    template<class TFunction>
     constexpr Function(TFunction&& f)		{operator=(move(f));	}
     /// @brief Copy constructor (callable).
     /// @tparam TFunction Callable type.
     /// @param f Callable.
-    template<typename TFunction>
+    template<class TFunction>
     constexpr Function(TFunction const& f)	{operator=(f);			}
 	/// @brief Copy constructor (`Function`).
 	/// @param f `Function` object.

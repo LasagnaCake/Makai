@@ -319,8 +319,6 @@ public:
 		ref = op(ref);
 		return (*this);
 	}
-	template<Type::Functional<OperationType> TFunction>
-	constexpr Shared& operator()(TFunction const& op)	{return modify(op);													}
 
 	/// @brief Returns whether the bound object doesn't exist.
 	/// @return Whether the bound object doesn't exist.

@@ -85,27 +85,41 @@ namespace Makai::Anima::V2::Core {
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
 			static ExternalInvocation invoker(TFunc const& f) {
-				CPP::Debug::breakpoint();
 				return [=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
-					CPP::Debug::breakpoint();
+					CTL_DO_NOT_INLINE;
+					DEBUGLN("Invoking function...");
+					panic();
 					debugArgs(args);
+					/*
 					if constexpr (HAS_ARGS) {
+						DEBUGLN("Function has arguments");
 						auto tup = makeArgumentTuple(context, method, args);
 						if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-							invokeFromTuple<void>(f, tup);
-						} else return Meta::ARTInfo<TReturn>::convert(
-							context.types,
-							invokeFromTuple<TReturn>(
-								f,
-								tup
-							)
-						);
+							DEBUGLN("Void function");
+							invokeFromTuple<void, TArgs...>(f, tup);
+						} else {
+							DEBUGLN("Function returns value");
+							return Meta::ARTInfo<TReturn>::convert(
+								context.types,
+								invokeFromTuple<TReturn, TArgs...>(
+									f,
+									tup
+								)
+							);
+						}
 					} else if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
+						DEBUGLN("Pure void function");
+						static_assert(false);
 						f();
-					} else return Meta::ARTInfo<TReturn>::convert(
-						context.types,
-						f()
-					);
+					} else {
+						DEBUGLN("Getter-like function");
+						static_assert(false);
+						return Meta::ARTInfo<TReturn>::convert(
+							context.types,
+							f()
+						);
+					}
+					*/
 					return Object::Storage();
 				};
 			}
@@ -205,7 +219,7 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		bool hasExternalMethod(usize const& hash) const {
-			return externalMethods.contains(hash);
+			return externalMethods.contains(hash) && externalMethods[hash].invoker;
 		}
 
 		MethodResult invokeExternalMethod(usize const hash, List<Object::Storage> const& args);

@@ -272,7 +272,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		template <class... Types>
 		struct ObjectTupleToArguments {
 			using ObjectTupleType = typename ToObjectTuple<Types...>::Type;
-			using Type = Tuple<Types...>;
+			using Type = Tuple<AsNormal<Types>...>;
 
 			constexpr static Type make(Database<Definition>& db, ObjectTupleType const& tup) {
 				CPP::Debug::breakpoint();
@@ -282,19 +282,19 @@ namespace Makai::Anima::V2::Core::Meta {
 			template <usize... N>
 			constexpr static Type make(Database<Definition>& db, ObjectTupleType const& tup, IndexTuple<N...>) {
 				CPP::Debug::breakpoint();
-				return {ARTTI<Makai::Meta::Select<N, Types...>>::construct(*tup.template get<N>())...};
+				return {ARTTI<Makai::Meta::Select<N, AsNormal<Types>...>>::construct(*tup.template get<N>())...};
 			}
 
 			template <class TContext>
-			constexpr static Tuple<TContext&, Types...> makeWithContext(TContext& context, Database<Definition>& db, ObjectTupleType const& tup) {
+			constexpr static Tuple<TContext&, AsNormal<Types>...> makeWithContext(TContext& context, Database<Definition>& db, ObjectTupleType const& tup) {
 				CPP::Debug::breakpoint();
 				return makeWithContext(context, db, tup, IntegerPack<sizeof...(Types)>());
 			}
 
 			template <class TContext, usize... N>
-			constexpr static Tuple<TContext&, Types...> makeWithContext(TContext& context, Database<Definition>& db, ObjectTupleType const& tup, IndexTuple<N...>) {
+			constexpr static Tuple<TContext&, AsNormal<Types>...> makeWithContext(TContext& context, Database<Definition>& db, ObjectTupleType const& tup, IndexTuple<N...>) {
 				CPP::Debug::breakpoint();
-				return {context, ARTTI<Makai::Meta::Select<N, Types...>>::construct(*tup.template get<N>())...};
+				return {context, ARTTI<Makai::Meta::Select<N, AsNormal<Types>...>>::construct(*tup.template get<N>())...};
 			}
 		};
 	};
