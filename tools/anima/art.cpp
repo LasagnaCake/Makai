@@ -4,8 +4,6 @@
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 
-#include "base.cc"
-
 #define doWrite(WHAT) std::cout << WHAT
 #define doWriteLine(WHAT) std::cout << WHAT << "\n"
 
