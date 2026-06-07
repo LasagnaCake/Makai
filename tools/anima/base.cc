@@ -1,3 +1,4 @@
+#include <iostream>
 #undef DEBUG
 #define DEBUG(...)		Makai::Fold::strins(std::cout, __VA_ARGS__)
 #undef DEBUGLN
