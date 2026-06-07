@@ -78,7 +78,7 @@ define clear-old-shaders
 	@cd ../..
 endef
 
-ifneq ($(skip-tooling),1)
+ifneq ($(no-tools),1)
 	TOOLING_STEP := tooling
 endif
 
@@ -119,6 +119,8 @@ link-all: $(CREATE_LIB_3P) link-debug link-release
 debug: build-debug up-debug $(CREATE_LIB_3P) link-debug
 
 release: build-release up-release $(CREATE_LIB_3P) link-release
+
+body: clear-output up-all link-all $(TOOLING_STEP)
 
 build-debug:
 	@$(GNU_MAKE) -C"$(MAKAISRC)" debug prefix="$(prefix)" $(SUBSYSTEM)
