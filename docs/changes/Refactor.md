@@ -10,6 +10,8 @@
 - - [ ] Add pipeline support
 - - - Via `Dispatcher`
 - - [ ] Use `Value` for shader uniforms
+- - [ ] Separate model data from render server
+-	- - For easier model instancing
 - [x] Rethink old audio system
 - - [x] Add 3D audio support
 - - - Perhaps via [miniaudio](https://miniaud.io/)?
