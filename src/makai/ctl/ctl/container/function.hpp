@@ -144,7 +144,7 @@ public:
     /// @brief Move assignment operator.
     /// @param f `Function` to move from.
     /// @return Reference to self.
-    constexpr SelfType& operator=(SelfType&& f)			{destroy(); func = f.func.transfer(); return *this;		}
+    constexpr SelfType& operator=(SelfType&& f)			{destroy(); assign(f); return *this;					}
     /// @brief Copy assignment operator.
     /// @param f `Function` to copy from.
     /// @return Reference to self.
