@@ -140,7 +140,7 @@ struct Unique:
 	constexpr Unique& operator=(Unique const& other)	= delete;
 
 	/// @brief Move assignment operator.
-	/// @param other `Unique` to copy from.
+	/// @param other `Unique` to move.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
 		unbind();

@@ -6,6 +6,7 @@
 #include "../typetraits/traits.hpp"
 #include "../typetraits/cast.hpp"
 #include "../cpperror.hpp"
+#include "pointer/unique.hpp"
 
 // Function implementation based off of: https://stackoverflow.com/a/61191826
 
@@ -68,32 +69,33 @@ public:
 private:
 	using PrototypeType  = ReturnType(TArgs...);
 
+	using ContainerType = Unique<IConstInvokable<PrototypeType>>;
+
 	/// @brief Callable bound to the object.
-	owner<IConstInvokable<PrototypeType>> func{nullptr};
+	ContainerType func;
 
 	template<class TFunction>
 	using Callable = Impl::Callable<Decay::AsArgument<TFunction>, PrototypeType>;
 
 	template<class TFunction>
-	constexpr static owner<Callable<TFunction>>
+	constexpr static ContainerType
 	makeCallable(TFunction&& f) {
-		return ::new Callable<TFunction>(CTL::move(f));
+		return ContainerType::template create<Callable<TFunction>>(CTL::move(f));
 	}
 
 	template<class TFunction>
-	constexpr static owner<Callable<TFunction>>
+	constexpr static ContainerType
 	makeCallable(TFunction const& f) {
-		return ::new Callable<TFunction>(f);
+		return ContainerType::template create<Callable<TFunction>>(f);
 	}
 
 	constexpr void assign(SelfType const& other) {
 		if (!other.func) return;
-		func = makeCallable(Cast::as<owner<Callable<FunctionType>>>(other.func)->func);
+		func = makeCallable((other.func.template as<Callable<FunctionType>>())->func);
 	}
 
 	constexpr void destroy() {
-		if (func) delete func;
-		func = nullptr;
+		func.unbind();
 	}
 
 	[[noreturn]] static void badCallError() {
@@ -142,7 +144,7 @@ public:
     /// @brief Move assignment operator.
     /// @param f `Function` to move from.
     /// @return Reference to self.
-    constexpr SelfType& operator=(SelfType&& f)			{destroy(); assign(f); return *this;					}
+    constexpr SelfType& operator=(SelfType&& f)			{destroy(); func = f.func.transfer(); return *this;		}
     /// @brief Copy assignment operator.
     /// @param f `Function` to copy from.
     /// @return Reference to self.

@@ -345,7 +345,7 @@ namespace Type {
 	template<typename T, typename Base>
 	concept Derived	= Impl::IsDerived<T, Base>::value;
 
-	/// @brief Type must be a subclass of (or is) `Base`.
+	/// @brief Type must be a subclass of `Base`.
 	template<typename T, typename Base>
 	concept Subclass = Derived<T, Base> && Different<T, Base>;
 
