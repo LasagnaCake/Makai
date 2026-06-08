@@ -120,7 +120,7 @@ debug: build-debug up-debug $(CREATE_LIB_3P) link-debug
 
 release: build-release up-release $(CREATE_LIB_3P) link-release
 
-body: clear-output up-all link-all $(TOOLING_STEP)
+body: clear-output up-all $(LINK_EXTERN) link-all $(TOOLING_STEP)
 
 build-debug:
 	@$(GNU_MAKE) -C"$(MAKAISRC)" debug prefix="$(prefix)" $(SUBSYSTEM)
