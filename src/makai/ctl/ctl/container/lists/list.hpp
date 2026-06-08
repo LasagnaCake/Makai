@@ -13,6 +13,7 @@
 #include "../../algorithm/reverse.hpp"
 #include "../../algorithm/search.hpp"
 #include "../../algorithm/transform.hpp"
+#include "../../algorithm/transfer.hpp"
 #include "../../adapter/comparator.hpp"
 #include "../../memory/memory.hpp"
 
@@ -316,13 +317,13 @@ public:
 	constexpr SelfType& insert(DataType const& value, IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		if (count >= contents.size()) increase();
-		superCopy({
-			.from				= contents.data() + index,
-			.to					= contents.data() + index + 1,
-			.count				= count - index,
-			.clearInDestination	= count - index - 1
-		});
+		::CTL::Transfer<DataType> transfer {
+			.from					= contents.data() + index,
+			.to						= contents.data() + index + 1,
+			.count					= count - index,
+			.remakeInDestination	= count - index - 1
+		};
+		transfer.perform();
 		MX::reconstruct(contents.data() + index, value);
 		++count;
 		return *this;
@@ -335,19 +336,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	constexpr SelfType& insert(SelfType const& other, IndexType index) {
-		assertIsInBounds(index);
-		wrapBounds(index, count);
-		expand(other.count);
-		superCopy({
-			.from				= contents.data() + index,
-			.to					= contents.data() + index + other.count,
-			.count				= count - index,
-			.clearInDestination	= count - index - other.count
-		});
-		MX::objclear(contents.data() + index, other.count);
-		simpleCopy(other.contents.data(), contents.data() + index, other.count);
-		count += other.count;
-		return *this;
+		return insert(other.begin(), other.end(), index);
 	}
 
 	/// @brief Inserts a fixed array of elements at a specified index in the `List`.
@@ -359,7 +348,7 @@ public:
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	template<SizeType S>
 	constexpr SelfType& insert(As<ConstantType[S]> const& values, IndexType const index) {
-		return insert(SelfType(values), index);
+		return insert(values, values + S, index);
 	}
 
 	/// @brief Inserts a given value, a given amount of times, at a specified index in the `List`.
@@ -369,8 +358,47 @@ public:
 	/// @return Reference to self.
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
-	constexpr SelfType& insert(DataType const& value, SizeType const count, IndexType const index) {
-		return insert(SelfType(count, value), index);
+	constexpr SelfType& insert(DataType const& value, SizeType const count, IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index, count);
+		expand(count);
+		::CTL::Transfer<DataType> transfer {
+			.from					= contents.data() + index,
+			.to						= contents.data() + index + count,
+			.count					= count - index,
+			.remakeInDestination	= count - index - count
+		};
+		transfer.perform();
+		MX::objclear(contents.data() + index, count);
+		for (usize i = 0; i < count; ++i)
+			MX::construct(contents.data() + index + i, value);
+		this->count += count;
+		return *this;
+	}
+
+	/// @brief Inserts a range of elements at a specified index in the `List`.
+	/// @param begin Iterator to beginning of range.
+	/// @param begin Iterator to end of range.
+	/// @param index Index of which to insert in.
+	/// @return Reference to self.
+	/// @throw OutOfBoundsException when index is bigger than `List` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
+	constexpr SelfType& insert(ConstIteratorType const& begin, ConstIteratorType const& end, IndexType index) {
+		assertIsInBounds(index);
+		wrapBounds(index, count);
+		auto const sz = end - begin;
+		expand(sz);
+		::CTL::Transfer<DataType> transfer {
+			.from					= contents.data() + index,
+			.to						= contents.data() + index + sz,
+			.count					= count - index,
+			.remakeInDestination	= count - index - sz
+		};
+		transfer.perform();
+		MX::objclear(contents.data() + index, sz);
+		simpleCopy(begin, contents.data() + index, sz);
+		count += sz;
+		return *this;
 	}
 
 	/// @brief Ensures the `List` can hold AT LEAST a given capacity.
@@ -1383,7 +1411,11 @@ private:
 	}
 
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
-		superCopy({src, dst, count});
+		if (!(count and src and dst)) return;
+		if (src == dst) return;
+		if (Type::Standard<DataType> && inRunTime())
+			MX::memmove<DataType>(dst, src, count);
+		else MX::objcopy<DataType>(dst, src, count);
 	}
 
 	struct Transfer {
@@ -1395,20 +1427,13 @@ private:
 
 	constexpr static void superCopy(Transfer const& transfer) {
 		CTL_DEVMODE_FN_DECL;
-		if (!(transfer.count and transfer.from and transfer.to)) return;
-		if (transfer.from == transfer.to) return;
-		if (Type::Standard<DataType> && inRunTime())
-			MX::memmove<DataType>(transfer.to, transfer.from, transfer.count);
-		else {
-			if (!transfer.clearInDestination)
-				MX::objcopy<DataType>(transfer.to, transfer.from, transfer.count);
-			else {
-				for (usize i = 0; i < transfer.count; ++i)
-					if (i < transfer.clearInDestination)
-						MX::reconstruct(transfer.to + i, *(transfer.from + i));
-					else MX::construct(transfer.to + i, *(transfer.from + i));
-			}
-		}
+		::CTL::Transfer<DataType> tx {
+			.from					= transfer.from,
+			.to						= transfer.to,
+			.count					= transfer.count,
+			.remakeInDestination	= transfer.clearInDestination
+		};
+		tx.perform();
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {

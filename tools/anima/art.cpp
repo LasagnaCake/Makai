@@ -1,6 +1,3 @@
-#define MAKAILIB_DEBUG
-#define CTL_CONSOLE_OUT
-
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 

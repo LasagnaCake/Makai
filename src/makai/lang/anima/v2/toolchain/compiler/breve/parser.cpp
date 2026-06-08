@@ -182,6 +182,8 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("drop", prefixes, new DropExpressionResolver());
 	add("new", prefixes, new CreateExpressionResolver());
 	add(LTS_TT_ELLIPSIS, prefixes, new ExpansionResolver());
+	add(LTS_TT_QUESTION, prefixes, new NullableDeclResolver());
+	add("maybe", prefixes, new NullableDeclResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
 	add("if", infixes, new InlineIfElseResolver());
@@ -206,7 +208,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_ELLIPSIS, infixes, new RangeResolver());
-	add(LTS_TT_QUESTION, infixes, new NullableDeclResolver());
 	DEBUGLN("Done!");
 }
 
