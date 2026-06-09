@@ -1397,7 +1397,6 @@ private:
 		};
 		transfer.perform();
 		MX::objclear(contents.data() + index, amount);
-		return *this;
 	}
 
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
