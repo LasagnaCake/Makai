@@ -317,14 +317,8 @@ public:
 	constexpr SelfType& insert(DataType const& value, IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		::CTL::Transfer<DataType> transfer {
-			.from					= contents.data() + index,
-			.to						= contents.data() + index + 1,
-			.count					= count - index,
-			.remakeInDestination	= count - index - 1
-		};
-		transfer.perform();
-		MX::reconstruct(contents.data() + index, value);
+		widenAt(index, 1);
+		MX::construct(contents.data() + index, value);
 		++count;
 		return *this;
 	}
@@ -361,15 +355,7 @@ public:
 	constexpr SelfType& insert(DataType const& value, SizeType const count, IndexType index) {
 		assertIsInBounds(index);
 		wrapBounds(index, count);
-		expand(count);
-		::CTL::Transfer<DataType> transfer {
-			.from					= contents.data() + index,
-			.to						= contents.data() + index + count,
-			.count					= count - index,
-			.remakeInDestination	= count - index - count
-		};
-		transfer.perform();
-		MX::objclear(contents.data() + index, count);
+		widenAt(index, count);
 		for (usize i = 0; i < count; ++i)
 			MX::construct(contents.data() + index + i, value);
 		this->count += count;
@@ -387,15 +373,7 @@ public:
 		assertIsInBounds(index);
 		wrapBounds(index, count);
 		auto const sz = end - begin;
-		expand(sz);
-		::CTL::Transfer<DataType> transfer {
-			.from					= contents.data() + index,
-			.to						= contents.data() + index + sz,
-			.count					= count - index,
-			.remakeInDestination	= count - index - sz
-		};
-		transfer.perform();
-		MX::objclear(contents.data() + index, sz);
+		widenAt(index, sz);
 		simpleCopy(begin, contents.data() + index, sz);
 		count += sz;
 		return *this;
@@ -1388,10 +1366,8 @@ private:
 		CTL_DEVMODE_FN_DECL;
 		if (contents.empty()) return;
 		auto const sz = (count < contents.size()) ? count : contents.size();
-		if constexpr (!Type::Standard<DataType>) {
-			for (usize i = 0; i < sz; ++i)
-				MX::destruct(contents.data() + i);
-		}
+		if constexpr (!Type::Standard<DataType>)
+			MX::objclear(contents.data(), sz);
 		contents.free();
 	}
 
@@ -1410,30 +1386,26 @@ private:
 		count = newCount;
 	}
 
+
+	constexpr void widenAt(SizeType const index, SizeType const amount) {
+		expand(amount);
+		Transfer<DataType> transfer {
+			.from					= contents.data() + index,
+			.to						= contents.data() + index + amount,
+			.count					= count - index,
+			.remakeInDestination	= count - index - amount
+		};
+		transfer.perform();
+		MX::objclear(contents.data() + index, amount);
+		return *this;
+	}
+
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
 		if (!(count and src and dst)) return;
 		if (src == dst) return;
 		if (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
-	}
-
-	struct Transfer {
-		ref<ConstantType>	from;
-		ref<DataType>		to;
-		SizeType			count;
-		SizeType			clearInDestination	= 0;
-	};
-
-	constexpr static void superCopy(Transfer const& transfer) {
-		CTL_DEVMODE_FN_DECL;
-		::CTL::Transfer<DataType> tx {
-			.from					= transfer.from,
-			.to						= transfer.to,
-			.count					= transfer.count,
-			.remakeInDestination	= transfer.clearInDestination
-		};
-		tx.perform();
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {

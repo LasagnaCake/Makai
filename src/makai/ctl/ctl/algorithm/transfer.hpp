@@ -46,7 +46,8 @@ struct Transfer {
 				auto const remakeEnd = (remakeStart + remakeCount);
 				MX::objcopy(to, from, remakeStart);
 				MX::objremake(to + remakeStart, from, remakeCount);
-				MX::objcopy(to + remakeEnd, from + remakeEnd, count - remakeEnd);
+				if (auto const remain = count - remakeEnd)
+					MX::objcopy(to + remakeEnd, from + remakeEnd, remain);
 			}
 			if (clearInSource.count)
 				MX::objclear(from + clearInSource.start, clearInSource.count);
