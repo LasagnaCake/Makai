@@ -671,7 +671,7 @@ void Engine::load() {
 	Map<uint64, uint64> boundTypes;
 	Map<uint64, List<uint64>> fields;
 	for (auto const& [type, i]: Range::expand(program.detail.types)) {
-		if (type.flags & Definition::Flags::AV2_DF_PROXY) {
+		if (type.flags & Definition::Flags::AV2_DF_PROXY && !(type.flags & Definition::Flags::AV2_DF_BASIC)) {
 			boundTypes[i] = type.hash;
 			context.art.types.values.pushBack(nullptr);
 			continue;
@@ -689,17 +689,17 @@ void Engine::load() {
 			Definition::makeBasic(*dt);
 		context.art.types.addElement(dt);
 	}
-	for (auto const& [self, base]: inheritances)
-		context.art.types.values[self]->base = context.art.types.values[base].asWeak();
-	for (auto const& [self, fields]: fields)
-		for (auto const& field: fields)
-			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
 	for (auto const& [self, artEquiv]: boundTypes) {
 		auto const types = context.art.types.byNameHash(artEquiv);
 		if (types.size())
 			context.art.types.values[self] = types.front();
 		else return crash(makeErrorHere("ART context does not contain the requested type!"));
 	}
+	for (auto const& [self, base]: inheritances)
+		context.art.types.values[self]->base = context.art.types.values[base].asWeak();
+	for (auto const& [self, fields]: fields)
+		for (auto const& field: fields)
+			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
 	DEBUGLN("[", context.art.types.values.size(), " < ", program.detail.types.size(), "]? ", context.art.types.values.size() < program.detail.types.size());
 	if (context.art.types.values.size() < program.detail.types.size())
 		return crash(makeErrorHere(toString(

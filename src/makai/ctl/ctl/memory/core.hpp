@@ -401,36 +401,14 @@ namespace MX {
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) return dst;
-		T* start = dst;
-		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
-		if (inCompileTime())
+		if (dst < src)
 			while (sz--)
 				construct(dst++, *src++);
-		else
-		#endif
-		try {
-			if (dst < src) {
-				while (sz--) {
-					//*(dst++) = *(src++);
-					construct(dst++, *src++);
-				}
-			}
-			else {
-				dst += sz;
-				src += sz;
-				start = dst;
-				while (sz--) {
-					//*(--dst) = *(--src);
-					construct(--dst, *--src);
-				}
-			}
-		} catch (...) {
-			if (dst < src)
-				for (;dst != start; --dst)
-					destruct(dst);
-			else
-				for (;dst != start; ++dst)
-					destruct(dst);
+		else {
+			dst += sz;
+			src += sz;
+			while (sz--)
+				construct(--dst, *--src);
 		}
 		return dst;
 	}
@@ -451,41 +429,25 @@ namespace MX {
 		return mem;
 	}
 
+	/// @brief Safely recmakes data from one place in another place, respecting the type's constructor.
+	/// @tparam T Type of data to copy.
+	/// @param dst Destination.
+	/// @param src Source.
+	/// @param count Count of elements to copy.
+	/// @return Pointer to destination.
 	template<Type::NonVoid T>
 	[[gnu::nonnull(1, 2)]]
 	constexpr ref<T> objremake(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) return dst;
-		T* start = dst;
-		#ifdef CTL_EXPERIMENTAL_COMPILE_TIME_MEMORY
-		if (inCompileTime())
+		if (dst < src)
 			while (sz--)
 				reconstruct(dst++, *src++);
-		else
-		#endif
-		try {
-			if (dst < src) {
-				while (sz--) {
-					//*(dst++) = *(src++);
-					reconstruct(dst++, *src++);
-				}
-			}
-			else {
-				dst += sz;
-				src += sz;
-				start = dst;
-				while (sz--) {
-					//*(--dst) = *(--src);
-					reconstruct(--dst, *--src);
-				}
-			}
-		} catch (...) {
-			if (dst < src)
-				for (;dst != start; --dst)
-					destruct(dst);
-			else
-				for (;dst != start; ++dst)
-					destruct(dst);
+		else {
+			dst += sz;
+			src += sz;
+			while (sz--)
+				reconstruct(--dst, *--src);
 		}
 		return dst;
 	}

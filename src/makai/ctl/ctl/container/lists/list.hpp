@@ -1342,16 +1342,13 @@ private:
 		return *this;
 	}
 
-	constexpr SelfType& squashRange(SizeType start, SizeType const amount) {
+	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
 		if (count > 1 && start < count-amount) {
-			while (start < count-amount) {
-				MX::reconstruct(contents.data() + start + amount, contents.data()[start]);
-				++start;
-			}
+			MX::objremake(contents.data() + start, contents.data() + start + amount, amount);
+			MX::objclear(contents.data() + start + amount, amount);
 		}
-		MX::objclear(contents.data()+start, amount);
 		return *this;
 	}
 
@@ -1388,15 +1385,31 @@ private:
 
 
 	constexpr void widenAt(SizeType const index, SizeType const amount) {
-		expand(amount);
-		Transfer<DataType> transfer {
-			.from					= contents.data() + index,
-			.to						= contents.data() + index + amount,
-			.count					= count - index,
-			.remakeInDestination	= count - index - amount
-		};
-		transfer.perform();
-		MX::objclear(contents.data() + index, amount);
+		if (count + amount < contents.size()) {
+			Transfer<DataType> transfer {
+				.from					= contents.data() + index,
+				.to						= contents.data() + index + amount,
+				.count					= count - index,
+				.remakeInDestination	= count - index - amount
+			};
+			transfer.perform();
+			MX::objclear(contents.data() + index, amount);
+		} else {
+			auto const newCount = count + amount;
+			SizeType mag = magnitude;
+			if ((count + amount) < count)
+				atItsLimitError();
+			while (mag < (count + amount))
+				mag <<= 1;
+			StorageType buffer;
+			buffer.create(mag);
+			simpleCopy(contents.data(), buffer.data(), index);
+			simpleCopy(contents.data() + index, buffer.data() + index + amount, count - index);
+			destroy(count);
+			swap(contents, buffer);
+			recalculateMagnitude();
+			count = newCount;
+		}
 	}
 
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
