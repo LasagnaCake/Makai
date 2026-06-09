@@ -1335,8 +1335,6 @@ public:
 private:
 	using Iteratable::wrapBounds;
 
-	ContextAllocatorType alloc;
-
 	constexpr SelfType& squash(SizeType i) {
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
@@ -1348,8 +1346,10 @@ private:
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
 		if (count > 1 && start < count-amount) {
-			while (start < count-amount)
+			while (start < count-amount) {
 				MX::reconstruct(contents.data() + start + amount, contents.data()[start]);
+				++start;
+			}
 		}
 		MX::objclear(contents.data()+start, amount);
 		return *this;
@@ -1400,6 +1400,7 @@ private:
 	}
 
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+		CTL_DEVMODE_FN_DECL;
 		if (!(count and src and dst)) return;
 		if (src == dst) return;
 		if (Type::Standard<DataType> && inRunTime())

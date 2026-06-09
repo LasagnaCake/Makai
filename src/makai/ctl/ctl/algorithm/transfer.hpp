@@ -31,6 +31,9 @@ struct Transfer {
 		CTL_DEVMODE_FN_DECL;
 		if (!(count and from and to)) return;
 		if (from == to) return;
+		if (!(clearInSource.count + 1))			unreachable();
+		if (!(remakeInDestination.count + 1))	unreachable();
+		if (!(count + 1))						unreachable();
 		if (Type::Standard<T> && inRunTime())
 			MX::memmove<T>(to, from, count);
 		else {
