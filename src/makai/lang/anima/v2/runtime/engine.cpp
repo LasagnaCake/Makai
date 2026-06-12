@@ -695,12 +695,17 @@ void Engine::load() {
 			context.art.types.values[self] = types.front();
 		else return crash(makeErrorHere("ART context does not contain the requested type!"));
 	}
+	List<String> missingTypes;
+	for (auto const& [type, index]: Range::expand(context.art.types.values)) {
+		if (!type)
+			missingTypes.pushBack(toString(index));
+	}
+	if (missingTypes.size())
+		return crash(makeErrorHere(toString(
+			"Program has missing types [ " + missingTypes.join(", ") + " ]!"
+		)));
 	for (auto const& [self, base]: inheritances)
 		context.art.types.values[self]->base = context.art.types.values[base].asWeak();
-	for (auto const& [self, fields]: fields)
-		for (auto const& field: fields)
-			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
-	DEBUGLN("[", context.art.types.values.size(), " < ", program.detail.types.size(), "]? ", context.art.types.values.size() < program.detail.types.size());
 	if (context.art.types.values.size() < program.detail.types.size())
 		return crash(makeErrorHere(toString(
 			"Program has missing types [",
@@ -709,6 +714,9 @@ void Engine::load() {
 			program.detail.types.size(),
 			"]!"
 		)));
+	for (auto const& [self, fields]: fields)
+		for (auto const& field: fields)
+			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
 	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	// CLB not working
