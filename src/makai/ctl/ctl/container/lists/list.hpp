@@ -1385,20 +1385,20 @@ private:
 
 
 	constexpr void widenAt(SizeType const index, SizeType const amount) {
-		/*
 		StorageType buffer;
-		SizeType newSize = magnitude;
-		while (newSize < (count + amount))
-			newSize <<= 1;
-		if (newSize < (count + amount))
+		SizeType newSize = 1;
+		if (count + amount < count)
 			atItsLimitError();
+		while (newSize < (count + amount)) newSize <<= 1;
+		if (newSize < (count + amount))
+			throw AllocationFailure();
 		buffer.create(newSize);
 		simpleCopy(contents.data(), buffer.data(), index);
 		simpleCopy(contents.data() + index, buffer.data() + index + amount, count - index);
 		destroy(count);
 		swap(contents, buffer);
-		recalculateMagnitude();
-		*/
+		magnitude = newSize << 1;
+		/*
 		expand(amount);
 		Transfer<DataType> transfer {
 			.from					= contents.data() + index,
@@ -1409,6 +1409,7 @@ private:
 			.clearInSource			= amount
 		};
 		transfer.perform();
+		*/
 	}
 
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
