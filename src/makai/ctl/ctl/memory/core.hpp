@@ -269,8 +269,8 @@ namespace MX {
 		CTL_DEVMODE_OUT(sz * sizeof(T));
 		CTL_DEVMODE_OUT(" Byte(s)]...\n");
 		owner<T> m = static_cast<owner<T>>(__builtin_malloc(sz * sizeof(T)));
-		CTL_DEVMODE_OUT("Allocated successfully\n");
 		if (!m) throw AllocationFailure();
+		CTL_DEVMODE_OUT("Allocated successfully\n");
 		return m;
 	}
 
@@ -401,14 +401,38 @@ namespace MX {
 	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) return dst;
-		if (dst < src)
+		if (dst < src) [[unlikely]]
 			while (sz--)
-				construct(dst++, *src++);
-		else {
+				construct(dst++, copy(*src++));
+		else [[likely]] {
 			dst += sz;
 			src += sz;
 			while (sz--)
-				construct(--dst, *--src);
+				construct(--dst, copy(*--src));
+		}
+		return dst;
+	}
+
+
+	/// @brief Safely moves data from one place to another, respecting the type's constructor.
+	/// @tparam T Type of data to move.
+	/// @param dst Destination.
+	/// @param src Source.
+	/// @param count Count of elements to copy.
+	/// @return Pointer to destination.
+	template<Type::NonVoid T>
+	[[gnu::nonnull(1, 2)]]
+	constexpr ref<T> objmove(ref<T> dst, ref<T const> src, usize sz) {
+		if (!(sz + 1)) unreachable();
+		if (!sz) return dst;
+		if (dst < src) [[unlikely]]
+			while (sz--)
+				construct(dst++, move(*src++));
+		else [[likely]] {
+			dst += sz;
+			src += sz;
+			while (sz--)
+				construct(--dst, move(*--src));
 		}
 		return dst;
 	}
@@ -434,20 +458,21 @@ namespace MX {
 	/// @param dst Destination.
 	/// @param src Source.
 	/// @param count Count of elements to copy.
+	/// @param byCopy Whether to reconstruct by copy (`true`) or by move (`false`). By default, it is `true`.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
 	[[gnu::nonnull(1, 2)]]
-	constexpr ref<T> objremake(ref<T> dst, ref<T const> src, usize sz) {
+	constexpr ref<T> objremake(ref<T> dst, ref<T const> src, usize sz, bool const byCopy = true) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) return dst;
-		if (dst < src)
+		if (dst < src) [[unlikely]]
 			while (sz--)
-				reconstruct(dst++, *src++);
-		else {
+				reconstruct(dst++, byCopy ? copy(*src++) : move(*src++));
+		else [[likely]] {
 			dst += sz;
 			src += sz;
 			while (sz--)
-				reconstruct(--dst, *--src);
+				reconstruct(--dst, byCopy ? copy(*--src) : move(*--src));
 		}
 		return dst;
 	}
