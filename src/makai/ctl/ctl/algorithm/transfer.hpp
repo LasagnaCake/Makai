@@ -41,8 +41,7 @@ struct Transfer {
 				MX::objcopy<T>(to, from, count);
 			else if (!remakeInDestination.start) {
 				auto const remakeCount = remakeInDestination.count;
-				for (usize i = remakeCount; i > 0; --i)
-					MX::reconstruct(to + i - 1, copy(from[i - 1]));
+				MX::objremake(to, from, remakeCount);
 				if (auto const remain = count < remakeCount ? (count - remakeCount) : 0)
 					MX::objcopy(to + remakeCount, from + remakeCount, count - remain);
 			} else {
@@ -50,8 +49,7 @@ struct Transfer {
 				auto const remakeStart = remakeInDestination.start;
 				auto const remakeEnd = (remakeStart + remakeCount);
 				MX::objcopy(to, from, remakeCount);
-				for (usize i = remakeEnd; i > remakeStart; --i)
-					MX::reconstruct(to + i - 1, copy(from[i - remakeStart - 1]));
+				MX::objremake(to + remakeStart, from + remakeStart, remakeCount);
 				if (auto const remain = count < remakeEnd ? (count - remakeEnd) : 0)
 					MX::objcopy(to + remakeEnd, from + remakeEnd, remain);
 			}
