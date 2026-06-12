@@ -1385,15 +1385,30 @@ private:
 
 
 	constexpr void widenAt(SizeType const index, SizeType const amount) {
+		/*
+		StorageType buffer;
+		SizeType newSize = magnitude;
+		while (newSize < (count + amount))
+			newSize <<= 1;
+		if (newSize < (count + amount))
+			atItsLimitError();
+		buffer.create(newSize);
+		simpleCopy(contents.data(), buffer.data(), index);
+		simpleCopy(contents.data() + index, buffer.data() + index + amount, count - index);
+		destroy(count);
+		swap(contents, buffer);
+		recalculateMagnitude();
+		*/
 		expand(amount);
 		Transfer<DataType> transfer {
 			.from					= contents.data() + index,
 			.to						= contents.data() + index + amount,
-			.count					= count - index,
-			.remakeInDestination	= count - index - amount
+			.count					= count > index ? count - index : 0,
+		//	.remakeInDestination	= (count > (index + amount)) ? (count - index - amount) : 0,
+			.remakeInDestination	= 0,
+			.clearInSource			= amount
 		};
 		transfer.perform();
-		MX::objclear(contents.data() + index, amount);
 	}
 
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
