@@ -25,12 +25,14 @@ constexpr auto const METAINFO = R"###(
 struct ConcertoMain: Makai::AMain {
 	static Makai::Data::Value configBase() {
 		Makai::Data::Value cfg;
-		cfg["help"]	= false;
+		cfg["help"]		= false;
+		cfg["write"]	= false;
 		return cfg;
 	}
 
 	static void translationBase(Makai::CLI::Parser::Translation& tl) {
 		tl["H"]	= "help";
+		tl["W"]	= "write";
 	}
 
 	ConcertoMain(Makai::CLI::Parser& cli): AMain(cli) {

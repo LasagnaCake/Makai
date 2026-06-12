@@ -9,6 +9,7 @@ static Makai::Data::Value configBase() {
 	cfg["help"]		= false;
 	cfg["output"]	= "out.anp";
 	cfg["link"]		= cfg.array();
+	cfg["write"]	= false;
 	return cfg;
 }
 
@@ -19,6 +20,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["c"]	= "code";
 	tl["P"]	= "pack";
 	tl["S"]	= "strip";
+	tl["W"]	= "write";
 }
 
 static void doHelpMessage() {

@@ -15,6 +15,7 @@ static Makai::Data::Value configBase() {
 	cfg["output"]	= "**{{name}}";
 	cfg["src"]		= cfg.array();
 	cfg["level"]	= "full";
+	cfg["write"]	= false;
 	return cfg;
 }
 
@@ -24,6 +25,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["o"]	= "output";
 	tl["s"]	= "src";
 	tl["S"]	= "strip";
+	tl["W"]	= "write";
 }
 
 static void doHelpMessage() {

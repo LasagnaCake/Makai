@@ -145,6 +145,7 @@ struct MakePageMain: AMain {
 
 	static void translationBase(Makai::CLI::Parser::Translation& tl) {
 		tl["H"]	= "help";
+		tl["W"]	= "write";
 	}
 
 	MakePageMain(Makai::CLI::Parser& cli): AMain(cli) {
