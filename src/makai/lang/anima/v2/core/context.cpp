@@ -65,6 +65,7 @@ Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, Lis
 		return Error::AV2_CCE_MISSING_ART_TYPE;
 	if (args.size() < argc)
 		return Error::AV2_CCE_MISSING_ARGS;
+	DEBUGLN("Validating method...");
 	Context::debugArgs(args);
 	return null;
 }
