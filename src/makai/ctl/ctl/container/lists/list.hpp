@@ -1398,18 +1398,6 @@ private:
 		destroy(count);
 		swap(contents, buffer);
 		magnitude = newSize << 1;
-		/*
-		expand(amount);
-		Transfer<DataType> transfer {
-			.from					= contents.data() + index,
-			.to						= contents.data() + index + amount,
-			.count					= count > index ? count - index : 0,
-		//	.remakeInDestination	= (count > (index + amount)) ? (count - index - amount) : 0,
-			.remakeInDestination	= 0,
-			.clearInSource			= amount
-		};
-		transfer.perform();
-		*/
 	}
 
 	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
