@@ -92,7 +92,7 @@ Context::MethodResult Context::invokeExternalMethod(usize const hash, List<Objec
 	if (!externalMethods[hash].invoker) return Error::AV2_CCE_MISSING_INVOKER;
 	if (auto err = externalMethods[hash].validate(*this, args))
 		return *err;
-	return externalMethods[hash].invoker.invoke(*this, externalMethods[hash], args).value();
+	return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args).value();
 }
 
 bool Context::Library::Impl::open(Makai::String const& path, Context& context) {

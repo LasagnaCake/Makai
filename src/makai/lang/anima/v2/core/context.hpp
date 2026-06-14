@@ -26,7 +26,7 @@ namespace Makai::Anima::V2::Core {
 
 		using MethodResult = Result<Object::Storage, Error>;
 
-		using ExternalInvocation = Function<MethodResult(Context& context, ExternalMethod& method, Arguments const& args)>;
+		using ExternalInvocation = Instance<Function<MethodResult(Context& context, ExternalMethod& method, Arguments const& args)>>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -89,6 +89,7 @@ namespace Makai::Anima::V2::Core {
 				DEBUGLN("Invoking function...");
 				panic();
 				debugArgs(args);
+				exit(1);
 				/*
 				if constexpr (HAS_ARGS) {
 					DEBUGLN("Function has arguments");
@@ -125,11 +126,11 @@ namespace Makai::Anima::V2::Core {
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
 			static ExternalInvocation invoker(TFunc const& f) {
-				return ExternalInvocation {
+				return ExternalInvocation::create<ExternalInvocation::DataType>(
 					[=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
 						return handleInvocation(context, method, args, f);
 					}
-				};
+				);
 			}
 		};
 
