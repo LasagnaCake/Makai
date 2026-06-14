@@ -103,6 +103,7 @@ prologue:
 	@echo "libraries: $(LIBRARIES)"
 	@echo "debug? $(debug)"
 	@rm -rf *.o
+	@rm -rf *.exe
 
 packer:
 	$(call compile, $@)
