@@ -216,7 +216,6 @@ namespace Makai::Anima::V2::Core {
 		bool addExternalMethod(usize const& hash, TFunc const& f) {
 			using FuncResolver = ExternalMethodResolver<TFunc>;
 			if (hasExternalMethod(hash)) return false;
-			static auto const baseInfo = FuncResolver::info();
 			return addExternalMethod(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
 		}
 
