@@ -73,11 +73,12 @@ Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, Lis
 bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker) {
 	if (hasExternalMethod(hash)) return false;
 	DEBUGLN("Adding method [", hash, "]...");
-	ExternalMethod method;
-	method.out		= true;
-	method.argc		= argc;
-	method.hash		= hash;
-	method.invoker	= invoker;
+	Instance<ExternalMethod> method = method.create();
+	method->out		= true;
+	method->argc	= argc;
+	method->hash	= hash;
+	method->invoker	= invoker;
+	loadedMethods.pushBack(method);
 	externalMethods[hash] = method;
 	return true;
 }
@@ -88,11 +89,11 @@ Context::MethodResult Context::invokeExternalMethod(usize const hash, List<Objec
 		DEBUGLN("  > ", m.key);
 	if (!hasExternalMethod(hash)) return Error::AV2_CCE_MISSING_METHOD;
 	DEBUGLN("!!! Method exists !!!");
-	DEBUGLN("Invoker? ", externalMethods[hash].invoker.exists());
-	if (!externalMethods[hash].invoker) return Error::AV2_CCE_MISSING_INVOKER;
-	if (auto err = externalMethods[hash].validate(*this, args))
+	DEBUGLN("Invoker? ", externalMethods[hash]->invoker.exists());
+	if (!externalMethods[hash]->invoker) return Error::AV2_CCE_MISSING_INVOKER;
+	if (auto err = externalMethods[hash]->validate(*this, args))
 		return *err;
-	return externalMethods[hash].invoker->invoke(*this, externalMethods[hash], args).value();
+	return externalMethods[hash]->invoker->invoke(*this, *externalMethods[hash], args).value();
 }
 
 bool Context::Library::Impl::open(Makai::String const& path, Context& context) {

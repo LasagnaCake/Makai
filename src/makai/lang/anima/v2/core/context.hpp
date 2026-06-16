@@ -26,7 +26,9 @@ namespace Makai::Anima::V2::Core {
 
 		using MethodResult = Result<Object::Storage, Error>;
 
-		using ExternalInvocation = Instance<Function<MethodResult(Context& context, ExternalMethod& method, Arguments const& args)>>;
+		using ICallable = IConstInvokable<MethodResult(Context&, ExternalMethod&, Arguments const&)>;
+
+		using ExternalInvocation = Instance<ICallable>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -84,13 +86,9 @@ namespace Makai::Anima::V2::Core {
 
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
-			static MethodResult handleInvocation(Context& context, ExternalMethod& method, Arguments const& args, TFunc const& f) {
+			static MethodResult handleInvocation(Context& context, ExternalMethod& method, Arguments const& args, TFunc& f) {
 				CTL_DO_NOT_INLINE;
 				DEBUGLN("Invoking function...");
-				panic();
-				debugArgs(args);
-				exit(1);
-				/*
 				if constexpr (HAS_ARGS) {
 					DEBUGLN("Function has arguments");
 					auto tup = makeArgumentTuple(context, method, args);
@@ -119,24 +117,33 @@ namespace Makai::Anima::V2::Core {
 						f()
 					);
 				}
-				*/
 				return Object::Storage();
 			}
 
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
+			struct Invoker: ICallable {
+				TFunc& f;
+
+				virtual ~Invoker() {}
+
+				template <Type::Functional<TReturn(TArgs...)> T>
+				Invoker(T& f): f(f) {}
+
+				MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) const override {
+					return handleInvocation(context, method, args, f);
+				}
+			};
+
+			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
-			static ExternalInvocation invoker(TFunc const& f) {
-				return ExternalInvocation::create<ExternalInvocation::DataType>(
-					[=] (Context& context, ExternalMethod& method, Arguments const& args) -> MethodResult {
-						return handleInvocation(context, method, args, f);
-					}
-				);
+			static ExternalInvocation invoker(TFunc& f) {
+				return new Invoker<TFunc>(f);
 			}
 		};
 
 		struct MethodAdder {
 			template <class TFunc>
-			bool add(String const& name, TFunc const& f) const {
+			bool add(String const& name, TFunc& f) const {
 				return context.addExternalMethod(name, f);
 			}
 
@@ -213,7 +220,7 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		template <class TFunc>
-		bool addExternalMethod(usize const& hash, TFunc const& f) {
+		bool addExternalMethod(usize const& hash, TFunc& f) {
 			using FuncResolver = ExternalMethodResolver<TFunc>;
 			if (hasExternalMethod(hash)) return false;
 			return addExternalMethod(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
@@ -223,11 +230,13 @@ namespace Makai::Anima::V2::Core {
 
 		void removeExternalMethod(usize const& hash) {
 			if (!hasExternalMethod(hash)) return;
+			auto em = externalMethods[hash];
 			externalMethods.erase(hash);
+			loadedMethods.eraseLike(em);
 		}
 
 		bool hasExternalMethod(usize const& hash) const {
-			return externalMethods.contains(hash) && externalMethods[hash].invoker;
+			return externalMethods.contains(hash) && externalMethods[hash]->invoker;
 		}
 
 		MethodResult invokeExternalMethod(usize const hash, List<Object::Storage> const& args);
@@ -280,15 +289,16 @@ namespace Makai::Anima::V2::Core {
 
 		~Context();
 
-		Database<Definition>			types;
-		Database<Method>				methods;
-		Map<usize, ExternalMethod>		externalMethods;
-		Dictionary<Instance<Library>>	dynlibs;
+		Database<Definition>					types;
+		Database<Method>						methods;
+		Map<usize, Instance<ExternalMethod>>	externalMethods;
+		Dictionary<Instance<Library>>			dynlibs;
 
 		static Instance<OutputStringWriter> writer;
 
 	private:
-		List<Reference<ALibrary>>	toBeLoaded;
+		List<Instance<ExternalMethod>>	loadedMethods;
+		List<Reference<ALibrary>>		toBeLoaded;
 	};
 }
 
