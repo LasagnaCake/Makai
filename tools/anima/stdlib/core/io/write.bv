@@ -4,7 +4,7 @@ module IO {
 	@Shared(lib = av2console, name = "av2/console/write_string", optional = true)
 	write :: (what: string) -> void
 
-	@Shared(lib = av2console, name = "av2/console/writLine_string", optional = true)
+	@Shared(lib = av2console, name = "av2/console/writeLine_string", optional = true)
 	writeLine :: (what: string) -> void
 
 	@Shared(lib = av2console, name = "av2/console/write_any", optional = true)
