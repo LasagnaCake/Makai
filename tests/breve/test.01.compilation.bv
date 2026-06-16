@@ -15,12 +15,18 @@ module Test.Namespace {
 	baz :: (var: int64) => (bar(copy var) - ref var)
 
 	biff :: () -> void
+	
+	printToOutput :: () => IO.writeLine("Beginning calculations...")
 }
 
 @Main
 main :: () {
-    IO.write("We are calculating!")
+    IO.writeLine("We are calculating!")
+    Test.Namespace.printToOutput()
     val := Test.Namespace.baz(32 + 64)
     IO.write("32 + 64 = ")
+    IO.writeLine(val as any)
+    val = Test.Namespace.baz(32 - 64)
+    IO.write("32 - 64 = ")
     IO.writeLine(val as any)
 }
