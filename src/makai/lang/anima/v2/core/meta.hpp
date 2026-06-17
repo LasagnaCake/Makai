@@ -203,6 +203,30 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
+		template<> struct ARTTI<JumpID> {
+			constexpr static auto const ART_HASH = ConstHasher::hash("jump");
+
+			static JumpID construct(Object const& value) {
+				return value.toValue<JumpID>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, JumpID const& value) {
+				return Object::create(value, db.byNameHash(ART_HASH).front());
+			}
+		};
+
+		template<> struct ARTTI<CallID> {
+			constexpr static auto const ART_HASH = ConstHasher::hash("call");
+
+			static CallID construct(Object const& value) {
+				return value.toValue<CallID>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, CallID const& value) {
+				return Object::create(value, db.byNameHash(ART_HASH).front());
+			}
+		};
+
 		template<> struct ARTTI<Data::Value> {
 			constexpr static auto const ART_HASH = ConstHasher::hash("any");
 

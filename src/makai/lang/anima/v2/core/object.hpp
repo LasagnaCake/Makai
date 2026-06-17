@@ -102,6 +102,20 @@ namespace Makai::Anima::V2::Core {
 			return *ref<TypeID>(content->data());
 		}
 
+		template <Makai::Type::Equal<JumpID> T>
+		T toValue() const {
+			if (!isJumpID())
+				invalidCastError<T>("Mismatched types");
+			return *ref<JumpID>(content->data());
+		}
+
+		template <Makai::Type::Equal<CallID> T>
+		T toValue() const {
+			if (!isCallID())
+				invalidCastError<T>("Mismatched types");
+			return *ref<CallID>(content->data());
+		}
+
 		template <ARTType T>
 		T toValue() const {
 			if (sizeof(T) != type->byteSize)
@@ -216,6 +230,12 @@ namespace Makai::Anima::V2::Core {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_TYPEID);
+		}
+
+		bool isJumpID() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_JUMPID);
 		}
 
 		bool isCharacter() const {

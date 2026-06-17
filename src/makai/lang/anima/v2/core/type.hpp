@@ -62,12 +62,13 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_REAL32,
 		AV2_BT_REAL64,
 		AV2_BT_REAL128,
-		AV2_BT_TYPEID,
-		AV2_BT_JUMPID,
 		AV2_BT_VECTOR,
 		AV2_BT_MATRIX,
 		AV2_BT_BYTES,
 		AV2_BT_STRING,
+		AV2_BT_TYPEID,
+		AV2_BT_JUMPID,
+		AV2_BT_CALLID,
 	};
 
 	constexpr bool isBoolean(BasicType const bt) {
@@ -106,6 +107,14 @@ namespace Makai::Anima::V2::Core {
 
 	constexpr bool isTypeID(BasicType const bt) {
 		return (bt == BasicType::AV2_BT_TYPEID);
+	}
+
+	constexpr bool isJumpID(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_JUMPID);
+	}
+
+	constexpr bool isCallID(BasicType const bt) {
+		return (bt == BasicType::AV2_BT_CALLID);
 	}
 
 	constexpr bool isNumber(BasicType const bt) {

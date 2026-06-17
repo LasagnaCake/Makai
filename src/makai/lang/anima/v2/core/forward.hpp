@@ -53,17 +53,21 @@ namespace Makai::Anima::V2::Core {
 		}
 	};
 
-	struct TypeID: Ordered {
+	struct Identifier: Ordered {
 		uint64 id;
 
-		constexpr OrderType operator<=>(TypeID const& other) const {
+		constexpr OrderType operator<=>(Identifier const& other) const {
 			return id <=> other.id;
 		}
 
-		constexpr bool operator==(TypeID const& other) const {
+		constexpr bool operator==(Identifier const& other) const {
 			return id == other.id;
 		}
 	};
+
+	struct TypeID:	Identifier {};
+	struct JumpID:	Identifier {};
+	struct CallID:	Identifier {};
 }
 
 #endif

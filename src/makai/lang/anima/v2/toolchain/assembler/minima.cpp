@@ -600,8 +600,7 @@ static void doReturn(Context& context) {
 static void doStackClear(Context& context) {
 	auto const count = context.getNext(LTS_TT_INTEGER).getUnsigned();
 	if (count < 1) return;
-	context.add(Instruction::Name::AV2_IN_STACK_CLEAR);
-	context.add(count);
+	context.add(Instruction::Name::AV2_IN_STACK_CLEAR, count);
 }
 
 static void doField(Context& context, bool const setter, bool const dyn = false) {
@@ -826,7 +825,27 @@ static void doOperation(Context& context) {
 }
 
 static void doYield(Context& context) {
-	context.add(Instruction::Name::AV2_IN_YIELD);
+	context.add(Instruction::Name::AV2_IN_YIELD, Instruction::Waiting{.dynamic = false, .once = true});
+}
+
+static void doAwait(Context& context, bool const dyn = false) {
+	Instruction::Waiting wait{.dynamic = dyn};
+	if (dyn) {
+		context.add(
+			Instruction::Name::AV2_IN_YIELD,
+			wait
+		);
+	} else {
+		auto const amount = context.getNext(LTS_TT_INTEGER).getUnsigned();
+		if (!amount) return;
+		if (amount == 1) wait.once = true;
+		context.add(
+			Instruction::Name::AV2_IN_YIELD,
+			wait
+		);
+		if (!wait.once)
+			context.add(amount);
+	}
 }
 
 static void doCast(Context& context, bool const dyn = false) {
@@ -899,6 +918,8 @@ static void doDynamic(Context& context) {
 		doUnsafeCast(context, true);
 	else if (id == "is")
 		doTypeCheck(context, true);
+	else if (id == "await")
+		doAwait(context, true);
 	else context.error("Invalid dynamic operation!");
 }
 
@@ -1491,6 +1512,7 @@ static void doExpression(Context& context) {
 	else if (id == "type")						doTypeGet(context);
 	else if (id == "is")						doTypeCheck(context);
 	else if (id == "yield")						doYield(context);
+	else if (id == "await")						doAwait(context);
 	else if (id == "cast" || id == "as")		doCast(context);
 	else if (id == "rewrite")					doUnsafeCast(context);
 	else if (id == "random" || id == "rng")		doRandomNumber(context);

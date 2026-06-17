@@ -182,6 +182,11 @@ namespace Makai::Anima::V2::Core {
 			bool dynamic: 1;
 		};
 
+		struct [[gnu::aligned(4)]] Waiting {
+			bool dynamic: 1;
+			bool once: 1;
+		};
+
 		/// @brief Randomness.
 		struct [[gnu::aligned(4)]] Randomness {
 			enum class Type: uint8 {
@@ -278,7 +283,7 @@ namespace Makai::Anima::V2::Core {
 			/// @details `op`
 			AV2_IN_OP,
 			/// @brief Returns execution to the engine.
-			/// @param type Discarded.
+			/// @param type `Waiting` = How to handle the waiting.
 			/// @details `yield`
 			AV2_IN_YIELD,
 			/// @brief Casts a given value to another type.

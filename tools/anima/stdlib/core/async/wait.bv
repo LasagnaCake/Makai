@@ -1,9 +1,4 @@
 using import core.types
 
 module Async {
-	wait :: (times: uint64 = 1) -> void {
-		if times
-			for i : 0 ... num
-				yield
-	}
 }

@@ -152,7 +152,7 @@ namespace Makai::Anima::V2::Runtime {
 		void returnBack();
 
 		State				engineState	= State::AV2_RES_READY;
-		bool				paused		= false;
+		usize				delay		= 0;
 		Core::Module		program;
 		Core::Instruction	current;
 		Nullable<Error>		err;

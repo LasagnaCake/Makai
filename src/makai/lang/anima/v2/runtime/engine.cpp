@@ -81,8 +81,8 @@ bool Engine::yieldCycle() {
 }
 
 bool Engine::process() {
-	paused = false;
-	while (Engine::yieldCycle() && !paused) {}
+	if (delay) --delay;
+	else while (Engine::yieldCycle() && !delay) {}
 	DEBUGLN("Done processing for now!");
 	return running();
 }
@@ -93,7 +93,15 @@ void Engine::crash(Engine::Error const& e) {
 }
 
 void Engine::v2Yield() {
-	paused = true;
+	Instruction::Waiting wait = bitcast<Instruction::Waiting>(current.type);
+	if (wait.dynamic)
+		delay = context.pop()->toValue<uint64>();
+	else if (wait.once)
+		delay = 1;
+	else {
+		advance(true);
+		delay = Makai::Cast::bit<uint64>(current);
+	}
 }
 
 void Engine::v2Compare() {
@@ -238,7 +246,7 @@ void Engine::v2Call() {
 	if (invocation.dynamic) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.pop()->toValue<uint64>();
+		loc = context.pop()->toValue<CallID>().id;
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
@@ -635,7 +643,7 @@ static void fbop(T& lhs, T& rhs, Operator const op) {
 			default: return;
 		}
 		if constexpr (Makai::Type::Number<T>) switch (op) {
-			using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, float>;
+			using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, floatmax>;
 			case Operator::AV2_BOP_REM: if constexpr (Makai::Type::Real<T>) lhs = Makai::Math::mod(lhs, rhs); else lhs %= rhs; return;
 			case Operator::AV2_BOP_POW: lhs = Makai::Math::pow<TCalc>(lhs, rhs); return;
 			case Operator::AV2_BOP_ATAN2: lhs = Makai::Math::atan2<TCalc>(lhs, rhs); return;
@@ -666,7 +674,7 @@ static void fuop(T& val, Operator const op) {
 		if constexpr (Makai::Type::Different<T, Makai::Matrix4x4>) switch (op) {
 			using enum Operator;
 			case AV2_UOP_NEGATE:	val = -val; return;
-			case AV2_UOP_INVERSE:	val = Cast::as<T>(1) / val; return;
+			case AV2_UOP_INVERSE:	val = Makai::Cast::as<T>(1) / val; return;
 			default: break;
 		} else switch (op) {
 			using enum Operator;
@@ -677,7 +685,7 @@ static void fuop(T& val, Operator const op) {
 		if constexpr (Makai::Type::Number<T>) {
 			switch (op) {
 				using enum Operator;
-				using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, float>;
+				using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, floatmax>;
 				case AV2_UOP_INCREMENT:	++val;									return;
 				case AV2_UOP_DECREMENT:	--val;									return;
 				case AV2_UOP_SIN:		val = Makai::Math::sin<TCalc>(val);		return;
@@ -694,6 +702,15 @@ static void fuop(T& val, Operator const op) {
 				case AV2_UOP_LN:		val = Makai::Math::log<TCalc>(val);		return;
 				case AV2_UOP_SQRT:		val = Makai::Math::sqrt<TCalc>(val);	return;
 				case AV2_UOP_LENGTH:	val = Makai::Math::abs(val);			return;
+				default: break;
+			}
+		}
+		if constexpr (Makai::Type::Equal<T, Makai::Vector4>) {
+			switch (op) {
+				using enum Operator;
+				case AV2_UOP_INCREMENT:	val += 1;				return;
+				case AV2_UOP_DECREMENT:	val -= 1;				return;
+				case AV2_UOP_LENGTH:	val = val.absolute();	return;
 				default: break;
 			}
 		}
@@ -740,7 +757,6 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		case Core::BasicType::AV2_BT_REAL64:	fbopu<float64>(lhs->data(), rhs->data(), op);	break;
 		case Core::BasicType::AV2_BT_REAL128:	fbopu<float128>(lhs->data(), rhs->data(), op);	break;
 		case Core::BasicType::AV2_BT_VECTOR:	fbopu<Vector4>(lhs->data(), rhs->data(), op);	break;
-		case Core::BasicType::AV2_BT_MATRIX:	fbopu<Matrix4x4>(lhs->data(), rhs->data(), op);	break;
 		default: {
 			if (inStrictMode())
 				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
@@ -815,6 +831,7 @@ void Engine::reset() {
 	context		= {};
 	current		= {};
 	err			= {};
+	delay		= 0;
 	engineState = State::AV2_RES_READY;
 }
 
@@ -889,8 +906,6 @@ void Engine::load() {
 			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
 	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
-	// CLB not working
-	// FIXME: Cross-Library Boundary has SEVERE issues
 	if (config.allowDynamicLibraries) {
 		if (program.ani && loader)
 			for (auto& lib: program.ani->shared.libraries)
@@ -947,7 +962,7 @@ void Engine::v2Jump() {
 	if (leap.dyn) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.pop()->toValue<uint64>();
+		loc = context.pop()->toValue<JumpID>().id;
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
