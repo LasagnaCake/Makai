@@ -10,8 +10,13 @@ static bool valueExists(Makai::Data::Value const& v) {
 }
 
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
+	DEBUGLN("Strings: ", v["strings"].toFLOWString());
 	if (v.contains("strings"))
-		mod.strings = v["strings"].getArray().filter(valueExists).toList<String>([](auto const& e){return e.isString() ? e.getString() : "";});
+		for (auto& str: v["strings"].getArray())
+			if (str.isString())
+				mod.strings.pushBack(str.getString());
+	for (auto& str: mod.strings)
+		DEBUGLN("Text: `", str, "`");
 	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
 	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
 	DEBUGLN("Bytecode Section: ", code.size());

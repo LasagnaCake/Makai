@@ -139,6 +139,8 @@ namespace Makai::Anima::V2::Core {
 		/// @brief Comparison operator.
 		struct [[gnu::aligned(4)]] Comparison {
 			Comparator	comp;
+			bool		sameType:	1;
+			BasicType	assume:		7;
 		};
 
 		/// @brief Stack push.
@@ -148,7 +150,9 @@ namespace Makai::Anima::V2::Core {
 
 		/// @brief Operation.
 		struct [[gnu::aligned(4)]] Operation {
-			Operator op;
+			Operator	op;
+			bool		sameType:	1;
+			BasicType	assume:		7;
 		};
 
 		/// @brief Blitting.

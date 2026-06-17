@@ -44,9 +44,9 @@ namespace Makai::Anima::V2::Core {
 		AV2_BOP_POW,
 	};
 
-	enum class BasicType {
+	enum class BasicType: int8 {
 		AV2_BT_NOT_A_BASIC_TYPE = -1,
-		AV2_BT_VOID,
+		AV2_BT_VOID = 0,
 		AV2_BT_ANY,
 		AV2_BT_NULL,
 		AV2_BT_BOOL,

@@ -48,6 +48,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_ITERATION,
 			AV2_TANC_EXPANSION,
 			AV2_TANC_NULLABLE_DECL,
+			AV2_TANC_PROPERTY,
+			AV2_TANC_PROPERTY_GETTER,
+			AV2_TANC_PROPERTY_SETTER,
+			AV2_TANC_TRAIT,
 		};
 
 		Content							content = Content::AV2_TANC_EMPTY;

@@ -793,6 +793,35 @@ static void doOperation(Context& context) {
 	else if (op == "lnot")	bop.op = Operator::AV2_UOP_LOGIC_NOT;
 	else if (op == "bnot")	bop.op = Operator::AV2_UOP_BIT_NOT;
 	else context.error("Invalid/Unsupported operation!");
+	if (context.peek().type == LTS_TT_LESS_THAN) {
+		bop.sameType = true;
+		auto const type = context.expectNext(LTS_TT_LESS_THAN).getNext(LTS_TT_IDENTIFIER, "basic type").getString();
+		context.expectNext(LTS_TT_GREATER_THAN);
+		switch (Makai::hash(type)) {
+			case Makai::hash("bool"):	bop.assume = BasicType::AV2_BT_BOOL;	break;
+			case Makai::hash("i8"):		bop.assume = BasicType::AV2_BT_INT8;	break;
+			case Makai::hash("u8"):		bop.assume = BasicType::AV2_BT_UINT8;	break;
+			case Makai::hash("i16"):	bop.assume = BasicType::AV2_BT_INT16;	break;
+			case Makai::hash("u16"):	bop.assume = BasicType::AV2_BT_UINT16;	break;
+			case Makai::hash("i32"):	bop.assume = BasicType::AV2_BT_INT32;	break;
+			case Makai::hash("u32"):	bop.assume = BasicType::AV2_BT_UINT32;	break;
+			case Makai::hash("i64"):	bop.assume = BasicType::AV2_BT_INT64;	break;
+			case Makai::hash("u64"):	bop.assume = BasicType::AV2_BT_UINT64;	break;
+			case Makai::hash("f32"):	bop.assume = BasicType::AV2_BT_REAL32;	break;
+			case Makai::hash("f64"):	bop.assume = BasicType::AV2_BT_REAL64;	break;
+			case Makai::hash("f128"):	bop.assume = BasicType::AV2_BT_REAL128;	break;
+			case Makai::hash("char"):	bop.assume = BasicType::AV2_BT_CHAR;	break;
+			case Makai::hash("vec"):	bop.assume = BasicType::AV2_BT_VECTOR;	break;
+			case Makai::hash("mat"):	bop.assume = BasicType::AV2_BT_MATRIX;	break;
+			case Makai::hash("void"):
+			case Makai::hash("nil"): return;
+			case Makai::hash("bin"):
+			case Makai::hash("str"):
+			case Makai::hash("type"):
+			case Makai::hash("any"): bop.sameType = false; break;
+			default: context.error("Invalid basic type!");
+		}
+	}
 	context.add(Instruction::Name::AV2_IN_OP, bop);
 }
 

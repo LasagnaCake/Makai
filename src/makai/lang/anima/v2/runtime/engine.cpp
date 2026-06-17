@@ -245,11 +245,13 @@ void Engine::v2Call() {
 	}
 	DEBUGLN("Handling call...");
 	if (invocation.external) {
-		auto gcopy = copy(context.globalValueStack);
-		if (gcopy.size())
-			gcopy.reverse();
+		decltype(context.globalValueStack) args;
+		if (auto argc = context.art.argumentCountOf(loc)) {
+			args = context.globalValueStack.sliced(0, argc).reverse();
+			context.globalValueStack.eraseRange(-argc, -1);
+		}
 		context.art
-			.invokeExternalMethod(loc, gcopy)
+			.invokeExternalMethod(loc, args)
 			.then(
 				[&] (auto const& v) {
 					if (v && !v->isEmptyType())
@@ -257,11 +259,11 @@ void Engine::v2Call() {
 				}
 			).onError(
 				[&] (auto const& e) {
-					/*if (invocation.optional) {
+					if (invocation.optional) {
 						if (!invocation.noResult)
 							context.globalValueStack.pushBack(nullptr);
 						return;
-						}*/
+					}
 					Makai::String err = "EXTERNAL FUNCTION: ";
 					switch (e) {
 						using enum Core::Context::Error;
@@ -615,11 +617,179 @@ void Engine::doUnaryOperation(Operator const op) {
 	}
 }
 
+template <class T>
+static void fbop(T& lhs, T& rhs, Operator const op) {
+	if constexpr (Makai::Type::Equal<T, bool>) switch (op) {
+		case Operator::AV2_BOP_LOGIC_OR:
+		case Operator::AV2_BOP_ADD: lhs = lhs or rhs; return;
+		case Operator::AV2_BOP_LOGIC_XOR:
+		case Operator::AV2_BOP_SUB: lhs = lhs != rhs; return;
+		case Operator::AV2_BOP_LOGIC_AND:
+		case Operator::AV2_BOP_MUL: lhs = lhs and rhs; return;
+		default: return;
+	} else {
+		switch (op) {
+			case Operator::AV2_BOP_ADD: lhs += rhs; return;
+			case Operator::AV2_BOP_SUB: lhs -= rhs; return;
+			case Operator::AV2_BOP_MUL: lhs *= rhs; return;
+			default: return;
+		}
+		if constexpr (Makai::Type::Number<T>) switch (op) {
+			using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, float>;
+			case Operator::AV2_BOP_REM: if constexpr (Makai::Type::Real<T>) lhs = Makai::Math::mod(lhs, rhs); else lhs %= rhs; return;
+			case Operator::AV2_BOP_POW: lhs = Makai::Math::pow<TCalc>(lhs, rhs); return;
+			case Operator::AV2_BOP_ATAN2: lhs = Makai::Math::atan2<TCalc>(lhs, rhs); return;
+			case Operator::AV2_BOP_LOGX: lhs = Makai::Math::logn<TCalc>(lhs, rhs); return;
+			default: return;
+		}
+		if constexpr (Makai::Type::Integer<T>) switch (op) {
+			case Operator::AV2_BOP_BIT_AND: lhs &= rhs; return;
+			case Operator::AV2_BOP_BIT_OR: lhs |= rhs; return;
+			case Operator::AV2_BOP_BIT_XOR: lhs ^= rhs; return;
+			default: return;
+		}
+		if constexpr (Makai::Type::Different<T, Makai::Matrix4x4>) switch (op) {
+			case Operator::AV2_BOP_DIV: lhs /= rhs;
+			default: return;
+		}
+	}
+}
+
+template <class T>
+static void fbopu(pointer const lhs, pointer const rhs, Operator const op) {
+	return fbop(*(T*)lhs, *(T*)rhs, op);
+}
+
+template <class T>
+static void fuop(T& val, Operator const op) {
+	if constexpr (Makai::Type::Different<T, bool>) {
+		if constexpr (Makai::Type::Different<T, Makai::Matrix4x4>) switch (op) {
+			using enum Operator;
+			case AV2_UOP_NEGATE:	val = -val; return;
+			case AV2_UOP_INVERSE:	val = 1 / val; return;
+			default: break;
+		} else switch (op) {
+			using enum Operator;
+			case AV2_UOP_NEGATE:	val = -val; return;
+			case AV2_UOP_INVERSE:	val.invert(); return;
+			default: break;
+		}
+		if constexpr (Makai::Type::Number<T>) {
+			switch (op) {
+				using enum Operator;
+				using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, float>;
+				case AV2_UOP_INCREMENT:	++val;									return;
+				case AV2_UOP_DECREMENT:	--val;									return;
+				case AV2_UOP_SIN:		val = Makai::Math::sin<TCalc>(val);		return;
+				case AV2_UOP_COS:		val = Makai::Math::cos<TCalc>(val);		return;
+				case AV2_UOP_TAN:		val = Makai::Math::tan<TCalc>(val);		return;
+				case AV2_UOP_ASIN:		val = asin(val);						return;
+				case AV2_UOP_ACOS:		val = acos(val);						return;
+				case AV2_UOP_ATAN:		val = Makai::Math::atan<TCalc>(val);	return;
+				case AV2_UOP_SINH:		val = sinh(val);						return;
+				case AV2_UOP_COSH:		val = cosh(val);						return;
+				case AV2_UOP_TANH:		val = tanh(val);						return;
+				case AV2_UOP_LOG2:		val = Makai::Math::log2<TCalc>(val);	return;
+				case AV2_UOP_LOG10:		val = Makai::Math::log10<TCalc>(val);	return;
+				case AV2_UOP_LN:		val = Makai::Math::log<TCalc>(val);		return;
+				case AV2_UOP_SQRT:		val = Makai::Math::sqrt<TCalc>(val);	return;
+				case AV2_UOP_LENGTH:	val = Makai::Math::abs(val);			return;
+				default: break;
+			}
+		}
+		if constexpr (Makai::Type::Integer<T>) {
+			switch (op) {
+				using enum Operator;
+				case AV2_UOP_BIT_NOT:	val = ~val;
+				default: break;
+			}
+		}
+	} else {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_LOGIC_NOT:	val = !val;
+			default: break;
+		}
+	}
+}
+
+template <class T>
+static void fuopu(pointer const val, Operator const op) {
+	return fuop(*(T*)val, op);
+}
+
+void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
+	if (context.globalValueStack.size() < 2)
+		return crash(invalidSourceError("Missing values to operate on!"));
+	auto rhs	= context.pop();
+	auto lhs	= context.top();
+	switch (type) {
+		case Core::BasicType::AV2_BT_VOID:
+		case Core::BasicType::AV2_BT_NULL:		break;
+		case Core::BasicType::AV2_BT_BOOL:		fbopu<bool>(lhs->data(), rhs->data(), op);		break;
+		case Core::BasicType::AV2_BT_INT8:		fbopu<int8>(lhs->data(), rhs->data(), op);		break;
+		case Core::BasicType::AV2_BT_UINT8:		fbopu<uint8>(lhs->data(), rhs->data(), op);		break;
+		case Core::BasicType::AV2_BT_INT16:		fbopu<int16>(lhs->data(), rhs->data(), op);		break;
+		case Core::BasicType::AV2_BT_UINT16:	fbopu<uint16>(lhs->data(), rhs->data(), op);	break;
+		case Core::BasicType::AV2_BT_INT32:		fbopu<int32>(lhs->data(), rhs->data(), op);		break;
+		case Core::BasicType::AV2_BT_CHAR:
+		case Core::BasicType::AV2_BT_UINT32:	fbopu<uint32>(lhs->data(), rhs->data(), op);	break;
+		case Core::BasicType::AV2_BT_INT64:		fbopu<int64>(lhs->data(), rhs->data(), op);		break;
+		case Core::BasicType::AV2_BT_UINT64:	fbopu<uint64>(lhs->data(), rhs->data(), op);	break;
+		case Core::BasicType::AV2_BT_REAL32:	fbopu<float32>(lhs->data(), rhs->data(), op);	break;
+		case Core::BasicType::AV2_BT_REAL64:	fbopu<float64>(lhs->data(), rhs->data(), op);	break;
+		case Core::BasicType::AV2_BT_REAL128:	fbopu<float128>(lhs->data(), rhs->data(), op);	break;
+		case Core::BasicType::AV2_BT_VECTOR:	fbopu<Vector4>(lhs->data(), rhs->data(), op);	break;
+		case Core::BasicType::AV2_BT_MATRIX:	fbopu<Matrix4x4>(lhs->data(), rhs->data(), op);	break;
+		default: {
+			if (inStrictMode())
+				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
+			*lhs = *Object::create();
+		}
+	}
+}
+
+void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
+	if (context.globalValueStack.size() < 2)
+		return crash(invalidSourceError("Missing values to operate on!"));
+	auto val	= context.pop();
+	switch (type) {
+		case Core::BasicType::AV2_BT_VOID:
+		case Core::BasicType::AV2_BT_NULL:		break;
+		case Core::BasicType::AV2_BT_BOOL:		fuopu<bool>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_INT8:		fuopu<int8>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_UINT8:		fuopu<uint8>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_INT16:		fuopu<int16>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_UINT16:	fuopu<uint16>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_INT32:		fuopu<int32>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_CHAR:
+		case Core::BasicType::AV2_BT_UINT32:	fuopu<uint32>(val->data(), op);		break;
+		case Core::BasicType::AV2_BT_INT64:		fuopu<int64>(val->data(), op);		break;
+		case Core::BasicType::AV2_BT_UINT64:	fuopu<uint64>(val->data(), op);		break;
+		case Core::BasicType::AV2_BT_REAL32:	fuopu<float32>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_REAL64:	fuopu<float64>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_REAL128:	fuopu<float128>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_VECTOR:	fuopu<Vector4>(val->data(), op);	break;
+		case Core::BasicType::AV2_BT_MATRIX:	fuopu<Matrix4x4>(val->data(), op);	break;
+		default: {
+			if (inStrictMode())
+				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
+			*val = *Object::create();
+		}
+	}
+}
+
 void Engine::v2Op() {
 	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
-	if (op.op < Operator::AV2_BOP_START)
-		doUnaryOperation(op.op);
-	else doBinaryOperation(op.op);
+	if (op.op < Operator::AV2_BOP_START) {
+		if (op.sameType)
+			return fastUnaryOperation(op.op, op.assume);
+		else return doUnaryOperation(op.op);
+	} else {
+		if (op.sameType)
+			return fastBinaryOperation(op.op, op.assume);
+		else return doBinaryOperation(op.op);
+	}
 }
 
 void Engine::terminate() {
@@ -999,7 +1169,9 @@ void Engine::v2Cast() {
 	}
 	if (auto const t = context.art.types.byID(typeID)) {
 		auto const v = context.top();
-		if (!v->changeType(t))
+		if (v->isBasic() && t->basic) {
+			// TODO: Basic-to-Basic conversion
+		} else if (!v->changeType(t))
 			return crash(makeErrorHere("Cannot convert value to requested type!"));
 	} else return crash(makeErrorHere("Type does not exist!"));
 }

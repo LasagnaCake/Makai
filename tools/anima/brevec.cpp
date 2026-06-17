@@ -12,7 +12,7 @@ static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
 	cfg["strip"]	= false;
-	cfg["output"]	= "**{{name}}";
+	cfg["output"]	= "FillConsoleOutputCharacterA()/**{{name}}";
 	cfg["src"]		= cfg.array();
 	cfg["level"]	= "full";
 	cfg["write"]	= false;
@@ -70,7 +70,7 @@ int main(int argc, char** argv) try {
 				.splitAtLast('/').back()
 				.splitAtLast('.').front()
 		);
-		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
+		auto const outPath = Makai::OS::FS::currentDirectory() + "/" + outName;
 		DEBUGLN("Level: ", level);
 		if (level == "parse-tree" || level == "parse") {
 			Makai::File::saveText(

@@ -239,6 +239,10 @@ namespace Makai::Anima::V2::Core {
 			return externalMethods.contains(hash) && externalMethods[hash]->invoker;
 		}
 
+		usize argumentCountOf(usize const& hash) const {
+			return hasExternalMethod(hash) ? externalMethods[hash]->argc : 0;
+		}
+
 		MethodResult invokeExternalMethod(usize const hash, List<Object::Storage> const& args);
 
 		template <class T>

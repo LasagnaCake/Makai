@@ -443,18 +443,9 @@ static Namespace::AttributeRef createMemberAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Member";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->fields["of"] = {.type = DVK_STRING, .path = true};
-	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		auto const bns = inter.resolve(Makai::UTF8String(v["of"].getString()).split(Makai::UTF8Char{'/'}));
-		if (!(bns && bns->type))
-			Transformer::ATransformer::Context::error("Symbol must be a type!", ns->node);
-		auto const bt = bns->type;
-		if (bns->subspaces.contains(ns->name))
-			Transformer::ATransformer::Context::error("Symbol has already been declared in the type!", ns->node);
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {;
 		for (auto& ov: ns->function->overloads)
 			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
-				if (!(ov->arguments.size() >= 1 && ov->arguments[0]->type == bt.asWeak()))
-					Transformer::ATransformer::Context::error("Missing appropriate [this] parameter for member function!", ns->node);
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
 			}
 	};

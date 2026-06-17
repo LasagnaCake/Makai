@@ -19,6 +19,7 @@ namespace Makai::Anima::V2::Core {
 
 		~Object();
 
+		pointer			data()				{return content->data();	}
 		ref<void const>	data() const		{return content->data();	}
 		constexpr usize byteSize() const	{return origin->byteSize;	}
 

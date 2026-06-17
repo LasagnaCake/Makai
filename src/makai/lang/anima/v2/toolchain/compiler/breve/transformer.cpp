@@ -5,7 +5,7 @@
 /*
 
 [MikuTeto (+ Yi Xi)]
-↑O↑   ▼O▼    Θ-▐▌
+↑O↑   ▼O▼   Θ-▐▌
 /|\   /|\   /|\!
 / \   / \   / \
 
@@ -436,7 +436,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			var.fieldOf = scope->type.asWeak();
 			type.fields[name] = sub->variable;
 		} else if (sub->function or sub->property or sub->isPureNamespace())
-			context.error("This declaration is forbidden inside a structure declaration!");
+			context.error("This type of declaration is forbidden inside a structure declaration!");
 	}
 	context.pop(name.size());
 	context.registerType(scope);
@@ -646,6 +646,27 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	} else return prefixResolve(context, node, val.type);
 }
 
+static Makai::String asFastOpQualifier(Core::BasicType const& type) {
+	switch (type) {
+		case Core::BasicType::AV2_BT_INT8:		return "<i8>";
+		case Core::BasicType::AV2_BT_INT16:		return "<i16>";
+		case Core::BasicType::AV2_BT_INT32:		return "<i32>";
+		case Core::BasicType::AV2_BT_INT64:		return "<i64>";
+		case Core::BasicType::AV2_BT_UINT8:		return "<u8>";
+		case Core::BasicType::AV2_BT_UINT16:	return "<u16>";
+		case Core::BasicType::AV2_BT_UINT32:	return "<u32>";
+		case Core::BasicType::AV2_BT_UINT64:	return "<u64>";
+		case Core::BasicType::AV2_BT_REAL32:	return "<f32>";
+		case Core::BasicType::AV2_BT_REAL64:	return "<f64>";
+		case Core::BasicType::AV2_BT_REAL128:	return "<f128>";
+		case Core::BasicType::AV2_BT_VECTOR:	return "<vec>";
+		case Core::BasicType::AV2_BT_MATRIX:	return "<mat>";
+		case Core::BasicType::AV2_BT_BOOL:		return "<bool>";
+		case Core::BasicType::AV2_BT_CHAR:		return "<char>";
+		default: return "";
+	}
+}
+
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const val = expr.transform(context, node->rightSide);
@@ -660,7 +681,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 		context.top()->impl->writeMainLine("push copy", *val.source);
 	context.top()->impl->writeMainLine("op", uopName(context, node));
 	if (val.type->basic) {
-		context.top()->impl->writeMainLine("op", bopName(context, node));
+		context.top()->impl->writeMainLine("op", bopName(context, node) + asFastOpQualifier(*val.type->basic));
 		return {{"move stack[-0]"}, val.type->scope.raw(), val.type};
 	} else return postfixResolve(context, node, val.type);
 }
@@ -677,8 +698,15 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	||	node->base.text == "is"
 	) {
 		auto const t = TypeRequest().transform(context, node->rightSide);
+		if (node->base.text == "is") {
+			auto const retType = context.basicType("bool");
+			context.writeMainLine(node->base.text, t.type->name);
+			return {{"move stack[-0]"}, retType->scope.raw(), retType};
+		}
+		auto const retType = t.type;
+		if (t.type->basic != Core::BasicType::AV2_BT_ANY && !t.type->derivedFrom(retType))
+			context.error("Value's type cannot be converted to given type!", node);
 		context.writeMainLine(node->base.text, t.type->name);
-		auto const retType = node->base.text == "is" ? context.basicType("bool") : t.type;
 		return {{"move stack[-0]"}, retType->scope.raw(), retType};
 	}
 	auto const rhs = expr.transform(context, node->rightSide);
@@ -695,7 +723,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		context.top()->impl->writeMainLine("push", *rhs.source);
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		if (t->basic) {
-			context.top()->impl->writeMainLine("op", bopName(context, node));
+			if (lhs.type->basic == rhs.type->basic)
+				context.top()->impl->writeMainLine("op", bopName(context, node) + asFastOpQualifier(*t->basic));
+			else
+				context.top()->impl->writeMainLine("op", bopName(context, node));
 			return {{"move stack[-0]"}, t->scope.raw(), t};
 		} else return infixResolve(context, node, t);
 	}
@@ -1337,6 +1368,38 @@ ATransformer::Result NullableTypeDecl::transform(Context& context, Node::Instanc
 	auto const t = context.nullableFor(TypeRequest().transform(context, node).type);
 	context.registerType(t->scope.raw());
 	return {.type = t};
+}
+
+ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {
+	auto const type = TypeRequest().transform(context, node->leftSide);
+	AsNonConst<decltype(type)> trait;
+	context.scopeStack.pushBack(type.type->scope.raw());
+	if (node->middle) {
+
+	}
+	for (auto& extension: node->children) {
+		auto const ext = Expression().transform(context, extension);
+		if (!ext.scope)
+			context.error("Invalid expression!", extension);
+		auto const ns = ext.scope;
+		if (ns->function) {
+			for (auto& ov : ns->function->overloads)
+			if (
+				ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE
+			or	ov->variant == Function::Overload::Variant::AV2_TCB_FOV_CLASS
+			) {
+				if (ov->arguments.empty() or ov->arguments.front()->type != type.scope->type.asWeak())
+					context.error("Missing [this] argument for member function!", extension);
+				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
+			}
+		} else if (ns->property) {
+
+		} else if (ns->isPureNamespace())
+			context.error("This type of declaration is disallowed in this context!", extension);
+		else context.error("Invalid/unsupported declaration!");
+	}
+	context.scopeStack.popBack();
+	return {};
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
