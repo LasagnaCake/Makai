@@ -1168,9 +1168,28 @@ void Engine::v2Cast() {
 		typeID = Makai::Cast::bit<uint64>(current);
 	}
 	if (auto const t = context.art.types.byID(typeID)) {
-		auto const v = context.top();
+		auto const v = context.pop();
 		if (v->isBasic() && t->basic) {
-			// TODO: Basic-to-Basic conversion
+			switch (*t->basic) {
+				case BasicType::AV2_BT_BOOL:	context.push(context.newValue(v->toValue<bool>()));
+				case BasicType::AV2_BT_INT8:	context.push(context.newValue(v->toValue<int8>()));
+				case BasicType::AV2_BT_UINT8:	context.push(context.newValue(v->toValue<uint8>()));
+				case BasicType::AV2_BT_INT16:	context.push(context.newValue(v->toValue<int16>()));
+				case BasicType::AV2_BT_UINT16:	context.push(context.newValue(v->toValue<uint16>()));
+				case BasicType::AV2_BT_INT32:	context.push(context.newValue(v->toValue<int32>()));
+				case BasicType::AV2_BT_UINT32:	context.push(context.newValue(v->toValue<uint32>()));
+				case BasicType::AV2_BT_INT64:	context.push(context.newValue(v->toValue<int64>()));
+				case BasicType::AV2_BT_UINT64:	context.push(context.newValue(v->toValue<uint64>()));
+				case BasicType::AV2_BT_REAL32:	context.push(context.newValue(v->toValue<float32>()));
+				case BasicType::AV2_BT_REAL64:	context.push(context.newValue(v->toValue<float64>()));
+				case BasicType::AV2_BT_REAL128:	context.push(context.newValue(v->toValue<float128>()));
+				case BasicType::AV2_BT_VECTOR:	context.push(context.newValue(v->toValue<Vector4>()));
+				case BasicType::AV2_BT_MATRIX:	context.push(context.newValue(v->toValue<Matrix4x4>()));
+				case BasicType::AV2_BT_TYPEID:	context.push(context.newValue(v->toValue<Core::TypeID>()));
+				case BasicType::AV2_BT_STRING:	context.push(context.newValue(v->toValue<UTF8String>()));
+				case BasicType::AV2_BT_BYTES:	context.push(context.newValue(v->toValue<Bytes<>>()));
+				default: return crash(outOfRangeError("Invalid conversion!"));
+			}
 		} else if (!v->changeType(t))
 			return crash(makeErrorHere("Cannot convert value to requested type!"));
 	} else return crash(makeErrorHere("Type does not exist!"));
