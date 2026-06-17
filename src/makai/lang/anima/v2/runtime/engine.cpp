@@ -666,7 +666,7 @@ static void fuop(T& val, Operator const op) {
 		if constexpr (Makai::Type::Different<T, Makai::Matrix4x4>) switch (op) {
 			using enum Operator;
 			case AV2_UOP_NEGATE:	val = -val; return;
-			case AV2_UOP_INVERSE:	val = 1 / val; return;
+			case AV2_UOP_INVERSE:	val = Cast::as<T>(1) / val; return;
 			default: break;
 		} else switch (op) {
 			using enum Operator;
