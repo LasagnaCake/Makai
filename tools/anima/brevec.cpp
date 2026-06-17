@@ -12,7 +12,7 @@ static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
 	cfg["strip"]	= false;
-	cfg["output"]	= "FillConsoleOutputCharacterA()/**{{name}}";
+	cfg["output"]	= "output/**{{name}}";
 	cfg["src"]		= cfg.array();
 	cfg["level"]	= "full";
 	cfg["write"]	= false;
