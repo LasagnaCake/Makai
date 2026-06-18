@@ -349,7 +349,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			auto& loc = context.globalValueStack[id  % context.globalValueStack.size()];
 			auto const v = loc;
 			if (byMove) loc = nullptr;
-			return accessor(v, byRef);
+			return accessor(v, byRef or byMove);
 		}
 		case DataLocation::AV2_DL_STACK_OFFSET: {
 			if (context.globalValueStack.empty()) {
@@ -360,7 +360,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			auto& loc = context.globalValueStack[-Cast::as<ssize>(id % context.globalValueStack.size() + 1)];
 			auto const v = loc;
 			if (byMove) loc = nullptr;
-			return accessor(v, byRef);
+			return accessor(v, byRef or byMove);
 		}
 		case DataLocation::AV2_DL_GLOBAL:	return global(id);
 		case DataLocation::AV2_DL_LOCAL: {
@@ -372,11 +372,11 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			auto& loc = context.scopeStack.back().localStack[id  % context.scopeStack.back().localStack.size()];
 			auto const v = loc;
 			if (byMove) loc = nullptr;
-			return accessor(v, byRef);
+			return accessor(v, byRef or byMove);
 		}
 		case DataLocation::AV2_DL_EXTERNAL: {
 			if (program.ani)
-				return external(program.ani->out[id], byRef);
+				return external(program.ani->out[id], byRef or byMove);
 			else if (inStrictMode())
 				crash(invalidLocationError(loc));
 			return Object::create();

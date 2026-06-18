@@ -238,6 +238,12 @@ namespace Makai::Anima::V2::Core {
 			return (origin->basic == BasicType::AV2_BT_JUMPID);
 		}
 
+		bool isCallID() const {
+			if (!isBasic())
+				return false;
+			return (origin->basic == BasicType::AV2_BT_CALLID);
+		}
+
 		bool isCharacter() const {
 			if (!isBasic())
 				return false;
@@ -416,7 +422,12 @@ namespace Makai::Anima::V2::Core {
 			MX::construct(ref<T>(content->data()), v);
 		}
 
-		constexpr Object(Object const& other): type(other.type), origin(other.type) {
+		constexpr Object(Object const& other): Object(other.type ? other.type : other.origin) {
+			if (!type)
+				throw Error::FailedAction(
+					"Missing type information!",
+					CTL_CPP_PRETTY_SOURCE
+				);
 			if (type->copy) {
 				content->invoke(type->byteSize);
 				type->copy.invoke(*content, *other.content);

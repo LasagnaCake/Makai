@@ -39,7 +39,7 @@ namespace Constants {
 	/// @brief Approximate value of the natural logarithm of 2, to the first 64 decimal places.
 	constexpr const litfloat	LN2		= 0.6931471805599453094172321214581765680755001343602552541206800095;
 	/// @brief Approximate value of the natural logarithm of 10, to the first 64 decimal places.
-	constexpr const litfloat LN10	= 2.3025850929940456840179914546843642076011014886287729760333279010;
+	constexpr const litfloat	LN10	= 2.3025850929940456840179914546843642076011014886287729760333279010;
 	/// @brief Approximate value of pi, to the first 64 decimal places.
 	constexpr const litfloat	PI		= 3.1415926535897932384626433832795028841971693993751058209749445923;
 	/// @brief Approximate value of tau (double of pi), to the first 64 decimal places.
@@ -404,7 +404,7 @@ constexpr void sincos(F const angle, F& sin, F& cos) {
 	}
 	else {
 		sin = Impl::Trigonometry::sin<F>(angle);
-		cos = Impl::Trigonometry::sin<F>(angle + Constants::PI);
+		cos = Impl::Trigonometry::sin<F>(angle + static_cast<F>(Constants::PI*0.5l));
 	}
 }
 
