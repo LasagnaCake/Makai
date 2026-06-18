@@ -303,8 +303,8 @@ static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bo
 Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, uint64 const id) {
 	auto const place	= asPlace(loc);
 	auto const mod		= asModifiers(loc);
-	bool byRef	= mod == DataLocation::AV2_DLM_BY_REF;
-	bool byMove	= mod == DataLocation::AV2_DLM_MOVE;
+	bool byRef	= Cast::as<bool>(mod & DataLocation::AV2_DLM_BY_REF);
+	bool byMove	= Cast::as<bool>(mod & DataLocation::AV2_DLM_MOVE);
 	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
 	switch (place) {
 		case DataLocation::AV2_DL_BOOL: {
