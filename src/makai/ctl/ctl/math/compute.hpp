@@ -8,7 +8,7 @@ CTL_NAMESPACE_BEGIN
 namespace Math::Compute {
 	template<class T, Type::Functional<T(T const&)> TFunc>
 	constexpr T sum(TFunc const& f, T const& stop, T const& start = 0, T const& step = 1)
-	requires Type::Math::Addable<T, T> {
+	requires Type::Addable<T, T> {
 		T out = {};
 		for (T x = start; x < stop; x += step)
 			out += f(x);
@@ -17,7 +17,7 @@ namespace Math::Compute {
 
 	template<class T, Type::Functional<T(T const&)> TFunc>
 	constexpr T product(TFunc const& f, T const& stop, T const& start = 0, T const& step = 1)
-	requires Type::Math::Addable<T, T> {
+	requires Type::Addable<T, T> {
 		T out = {};
 		for (T x = start; x < stop; x += step)
 			out *= f(x);

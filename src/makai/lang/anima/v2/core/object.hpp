@@ -134,13 +134,14 @@ namespace Makai::Anima::V2::Core {
 
 		bool changeType(Instance<Definition> const& newType);
 
-		constexpr Object& operator=(Object const& other) {
-			if (other.type->copy)
+		Object& operator=(Object const& other) {
+			if (other.isClonable())
 				return operator=(Object(other));
 			return *this;
 		}
 
 		constexpr uint64 flags() const {
+			if (!origin) return 0;
 			return origin->flags;
 		}
 
@@ -149,20 +150,24 @@ namespace Makai::Anima::V2::Core {
 		usize count() const;
 
 		bool isBoolean() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_BOOL);
 		}
 
 		bool isValueType() const {
+			if (!origin) return false;
 			return (origin->flags & Definition::Flags::AV2_DF_VALUE);
 		}
 
 		bool isClonable() const {
+			if (!origin) return false;
 			return (origin->flags & Definition::Flags::AV2_DF_CLONABLE);
 		}
 
 		bool isEmptyType() const {
+			if (!origin) return true;
 			return (origin->flags & Definition::Flags::AV2_DF_NO_RESULT);
 		}
 
@@ -398,8 +403,10 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Different<Object> T>
 		constexpr Object(T const& v, Instance<Definition> const& info) {
-			type = origin = info;
+			type = info;
+			origin = info;
 			content->invoke(origin->byteSize);
+			DEBUGLN("Object Type: ", type->hash);
 			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
 				UTF8String const us = v;
 				content->resize(us.size() * sizeof(UTF8Char));

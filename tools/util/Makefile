@@ -77,16 +77,11 @@ else
 dynlib ?=so
 endif
 
-ifeq ($(do-dynlibs),1)
-DYNLIB_ACTION :=av2lib
-DYNLIB_COPY :=cp av2lib/*.andl ../../output/bin/av2
-endif
-
-.PHONY: debug release all tooling packer concerto minimac brevec arte av2lib mkpg finale
+.PHONY: debug release all prologue flow2json packer mkpg finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue brevec minimac arte $(DYNLIB_ACTION) finale # concerto
+tooling: prologue flow2json packer mkpg finale # concerto
 
 all: tooling
 
@@ -105,33 +100,19 @@ prologue:
 	@rm -rf *.o
 	@rm -rf *.exe
 
-concerto:
+packer:
 	$(call compile, $@)
 
-minimac:
+mkpg:
 	$(call compile, $@)
 
-brevec:
+flow2json:
 	$(call compile, $@)
-
-arte:
-	@echo "[$@]"
-	$(COMPILER) $(CFG) -c art.cpp -o art.o
-	$(LINKER) -o art$(EXEC_TYPE) art.o $(OBJ) $(LK)
-
-av2lib:
-	@echo "[$@]"
-	@cd $@
-	$(GNU_MAKE) from-lite=$(lite) dynlib=$(dynlib) debug=$(debug) o=$(o) os=$(os)
-	@cd ../..
 
 mk-push:
-	cp art$(EXEC_TYPE) ../../output/bin
-	cp minimac$(EXEC_TYPE) ../../output/bin
-	cp brevec$(EXEC_TYPE) ../../output/bin
-#	cp concerto$(EXEC_TYPE) ../../output/bin
-	mkdir -p ../../output/bin/av2
-	$(DYNLIB_COPY)
+	cp packer$(EXEC_TYPE) ../../output/bin
+	cp mkpg$(EXEC_TYPE) ../../output/bin
+	cp flow2json$(EXEC_TYPE) ../../output/bin
 
 finale:
 	@echo 

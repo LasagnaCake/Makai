@@ -211,10 +211,15 @@ link-extern:
 
 tooling: build-tooling copy-tooling
 
-build-tooling:
-	@cd tools/anima
+define do-build
+	@cd tools/$(strip $(1))
 	$(GNU_MAKE) debug=$(debug-tooling) from-lite=$(lite) do-dynlibs=$(do-dynlibs)
 	@cd ../..
+endef
+
+build-tooling:
+	$(call do-build, util)
+	$(call do-build, anima)
 
 ifeq ($(os),win)
 define MOVE_DLL_TOOLS
@@ -224,12 +229,18 @@ define MOVE_DLL_TOOLS
 endef
 endif
 
+define do-toolcopy
+	@cd tools/$(strip $(1))
+	$(GNU_MAKE) mk-push do-dynlibs=$(do-dynlibs)
+	@cd ../..
+endef
+
 copy-tooling:
 	@echo "Copying tooling..."
 	@mkdir -p output/bin/anima/breve/lib
-	@cd tools/anima
-	$(GNU_MAKE) mk-push do-dynlibs=$(do-dynlibs)
-	@cd stdlib
+	$(call do-toolcopy, util)
+	$(call do-toolcopy, anima)
+	@cd tools/anima/stdlib
 	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
 	$(MOVE_DLL_TOOLS)
 

@@ -262,8 +262,10 @@ void Engine::v2Call() {
 			.invokeExternalMethod(loc, args)
 			.then(
 				[&] (auto const& v) {
-					if (v && !v->isEmptyType())
-						context.globalValueStack.pushBack(v);
+					if (invocation.noResult) return;
+					if (!(v && v->isEmptyType()))
+						crash(invalidFunctionError("Expected return type, but function is void"));
+					else context.globalValueStack.pushBack(v);
 				}
 			).onError(
 				[&] (auto const& e) {
@@ -307,6 +309,9 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	bool byMove	= Cast::as<bool>(mod & DataLocation::AV2_DLM_MOVE);
 	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
 	switch (place) {
+		case DataLocation::AV2_DL_NULL: {
+			return nullptr;
+		} break;
 		case DataLocation::AV2_DL_BOOL: {
 			return context.art.newValue((mod & DataLocation::AV2_DLB_TRUE) == DataLocation::AV2_DLB_TRUE);
 		} break;
@@ -348,6 +353,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			}
 			auto& loc = context.globalValueStack[id  % context.globalValueStack.size()];
 			auto const v = loc;
+			DEBUGLN("Value exists? ", v ? "YES" : "NO");
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
@@ -359,6 +365,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			}
 			auto& loc = context.globalValueStack[-Cast::as<ssize>(id % context.globalValueStack.size() + 1)];
 			auto const v = loc;
+			DEBUGLN("Value exists? ", v ? "YES" : "NO");
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
@@ -913,6 +920,9 @@ void Engine::load() {
 		context.art.loadLibraries();
 	}
 	onLoad();
+	DEBUGLN("Types:");
+	for (auto& type : context.art.types.values)
+		DEBUGLN("> ", type ? toString(type->hash) : toString("NULL"));
 	engineState = State::AV2_RES_RUNNING;
 }
 

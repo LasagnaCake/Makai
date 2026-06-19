@@ -1,5 +1,3 @@
-#include "makai/ctl/ctlex/data/value.hpp"
-#include "makai/file/get.hpp"
 #define MAKAILIB_MAIN_NO_POPUPS
 
 #include <makai/makai.hpp>

@@ -5,5 +5,6 @@
 #include "allocator.hpp"
 #include "deleter.hpp"
 #include "memoryslice.hpp"
+#include "prefetch.hpp"
 
 #endif // CTL_MEMORY_H
