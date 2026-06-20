@@ -7,7 +7,7 @@ module Test.Namespace {
 	}
 
 	foo :: (var: int64) -> int64 {
-		return copy var + ref var
+		return (copy var) + (ref var)
 	}
 
 	bar :: (var: int64) -> int64 => (foo(copy var) * ref var)

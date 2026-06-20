@@ -626,8 +626,9 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	) {
 		auto mod = node->base.text;
 		DEBUGLN("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
-		if (mod == "copy") mod = "dup";
-		return {{node->base.text + " " + *val.source}, val.scope, val.type, val.direct};
+		if (mod == "copy") mod = "val";
+		DEBUGLN("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
+		return {{mod + " " + *val.source}, val.scope, val.type, val.direct};
 	}
 	if (val.shouldBePushed()) {
 		if (

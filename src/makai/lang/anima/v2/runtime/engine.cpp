@@ -522,7 +522,7 @@ void Engine::returnBack() {
 	context.pointers = context.pointerStack.popBack();
 	while (
 		context.scopeStack.size()
-	&&	context.scopeStack.back().pointerFrame >= context.pointerStack.size()
+	&&	context.scopeStack.back().pointerFrame > context.pointerStack.size()
 	) context.scopeStack.popBack();
 }
 

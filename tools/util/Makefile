@@ -77,11 +77,11 @@ else
 dynlib ?=so
 endif
 
-.PHONY: debug release all prologue flow2json packer mkpg finale
+.PHONY: debug release all prologue d2d packer mkpg finale
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue flow2json packer mkpg finale # concerto
+tooling: prologue d2d packer mkpg finale # concerto
 
 all: tooling
 
@@ -106,13 +106,13 @@ packer:
 mkpg:
 	$(call compile, $@)
 
-flow2json:
+d2d:
 	$(call compile, $@)
 
 mk-push:
 	cp packer$(EXEC_TYPE) ../../output/bin
 	cp mkpg$(EXEC_TYPE) ../../output/bin
-	cp flow2json$(EXEC_TYPE) ../../output/bin
+	cp d2d$(EXEC_TYPE) ../../output/bin
 
 finale:
 	@echo 

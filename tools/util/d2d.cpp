@@ -62,8 +62,8 @@ struct Data2DataMain: AMain {
 			}
 			case FileType::FT_XML: {
 				switch (to) {
-					case FileType::FT_JSON: return fromXML(src).toJSONString();
-					case FileType::FT_FLOW: return fromXML(src).toFLOWString();
+					case FileType::FT_JSON: return XML::fromXML(src).toJSONString();
+					case FileType::FT_FLOW: return XML::fromXML(src).toFLOWString();
 					case FileType::FT_XML: return src;
 				}
 			}
@@ -82,10 +82,10 @@ struct Data2DataMain: AMain {
 			} else if (args["__args"].size() < 1)
 				throw Error::FailedAction("Expected file content to follow 'd2d'!");
 			else parse = args["__args"][0].getString();
-			auto const srcType = fromString(cfg["from"].getString());
-			auto const destType = fromString(cfg["to"].getString());
+			auto const srcType = fromString(args["from"].getString());
+			auto const destType = fromString(args["to"].getString());
 			if (srcType != destType)
-				parse = convert(src, srcType, destType);
+				parse = convert(parse, srcType, destType);
 			if (args.contains("out"))
 				Makai::File::saveText(args["out"].getString(), parse);
 			else std::cout << parse;

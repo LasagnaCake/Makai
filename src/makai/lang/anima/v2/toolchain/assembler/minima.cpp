@@ -238,7 +238,7 @@ static DataLocation getLoadType(Context& context, DataLocation const prev) {
 			locAt = locAt | DataLocation::AV2_DLM_BY_REF;
 		else if (id == "move")
 			locAt = locAt | DataLocation::AV2_DLM_MOVE;
-		else if (id == "value" || id == "dup")
+		else if (id == "value" || id == "val")
 			locAt = locAt | DataLocation{0};
 	}
 	return locAt;
@@ -420,7 +420,9 @@ static Location getDataLocation(Context& context) {
 		if (
 			lt == "move"
 		||	lt == "ref"
-		||	lt == "copy"
+		||	lt == "val"
+		||	lt == "reference"
+		||	lt == "value"
 		) {
 			DEBUGLN("Has move!");
 			if (!hasLoadType) {
