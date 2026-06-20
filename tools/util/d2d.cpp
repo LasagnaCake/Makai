@@ -68,6 +68,7 @@ struct Data2DataMain: AMain {
 				}
 			}
 		}
+		throw Makai::Error::InvalidValue("Failed to parse file!");
 	}
 
 	void run(Makai::Data::Value const& args) override {
