@@ -625,6 +625,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	||	node->base.text == "move"
 	) {
 		auto mod = node->base.text;
+		DEBUGLN("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		if (mod == "copy") mod = "dup";
 		return {{node->base.text + " " + *val.source}, val.scope, val.type, val.direct};
 	}
@@ -721,7 +722,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (!result.isUndefined())
 			return {{result.toString()}, directName(context, result.type())->scope.raw(), directName(context, result.type()), result};
 	}
-	if (lhs.shouldBePushed())
+	if (lhs.direct)
 		context.top()->impl->writeMainLine("push", *lhs.source);
 	if (rhs.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *rhs.source);
