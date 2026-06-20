@@ -34,13 +34,13 @@ struct FLOW2JSONMain: AMain {
 			writeLine("flow2json (<source> OR -f <source-path>) [-o <out-path>]");
 		} else {
 			String parse;
-			if (args.contain("file")) {
-				parse = Makai::File::getFLOW(args["file"].getString());
+			if (args.contains("file")) {
+				parse = Makai::File::getText(args["file"].getString());
 			} else if (args["__args"].size() < 1)
 				throw Error::FailedAction("Expected file content to follow 'flow2json'!");
 			else parse = args["__args"][0].getString();
 			parse = Makai::FLOW::parse(parse).toJSONString();
-			if (args.contain("out"))
+			if (args.contains("out"))
 				Makai::File::saveText(args["out"].getString(), parse);
 			else std::cout << parse;
 		}

@@ -47,6 +47,11 @@ namespace Makai::Anima::V2::Runtime {
 			return *this;
 		}
 
+		Context& pushEmpty() {
+			globalValueStack.pushBack(nullptr);
+			return *this;
+		}
+
 		Storage pop() {
 			return globalValueStack.popBack();
 		}

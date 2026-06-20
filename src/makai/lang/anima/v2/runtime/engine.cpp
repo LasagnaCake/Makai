@@ -9,6 +9,50 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 
 using namespace Core;
 
+static void printValueState(Object::Storage const& value) {
+	#ifdef MAKAILIB_DEBUG
+	DEBUG("> Value? ", value ? "YES" : "NO");
+	if (value) DEBUGLN(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
+	else DEBUGLN("");
+	#endif
+}
+
+static void printStackState(Runtime::Context& context) {
+	#ifdef MAKAILIB_DEBUG
+	DEBUGLN("Stack Size: ", context.globalValueStack.size());
+	DEBUGLN("Stack State {");
+	for (auto& v: context.globalValueStack)
+		printValueState(v);
+	DEBUGLN("}");
+	#endif
+}
+
+struct StackStateScopePrinter {
+	StackStateScopePrinter(Runtime::Context& context): context(context) {
+		DEBUGLN("<before>");
+		print();
+		DEBUGLN("</before>");
+	}
+
+	~StackStateScopePrinter() {
+		DEBUGLN("<after>");
+		print();
+		DEBUGLN("</after>");
+	}
+
+	void print() {
+		#ifdef MAKAILIB_DEBUG
+		DEBUGLN("Stack Size: ", context.globalValueStack.size());
+		DEBUGLN("Stack State {");
+		for (auto& v: context.globalValueStack)
+			printValueState(v);
+		DEBUGLN("}");
+		#endif
+	}
+
+	Runtime::Context& context;
+};
+
 bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& path) {
 	DEBUGLN("Searching for library [", path, "]...");
 	StringList paths = {
@@ -122,14 +166,14 @@ void Engine::v2Compare() {
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Types do not match!"));
 	else {
-		context.globalValueStack.pushBack(Object::create());
+		context.pushEmpty();
 		return;
 	}
 	if (order == Makai::StandardOrder::UNORDERED) {
 		if (inStrictMode())
 			return crash(invalidComparisonError("Failed to compare types!"));
 		else {
-			context.globalValueStack.pushBack(Object::create());
+			context.pushEmpty();
 			return;
 		}
 	}
@@ -293,12 +337,14 @@ void Engine::v2Call() {
 Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
 	if (asPlace(from) != DataLocation::AV2_DL_BOOL) advance(true);
 	auto const store = getValueFromLocation(from, bitcast<uint64>(current));
-	if (!store) return Object::create();
+	printValueState(store);
+	if (store && !store->getOriginalType())
+		crash(makeErrorHere("Missing type information!"));
 	return store;
 }
 
 static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bool const noCopy) {
-	if (!v) return Object::create();
+	if (!v) return Object::Storage();
 	return noCopy ? v : Object::create(*v);
 }
 
@@ -308,6 +354,8 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	bool byRef	= Cast::as<bool>(mod & DataLocation::AV2_DLM_BY_REF);
 	bool byMove	= Cast::as<bool>(mod & DataLocation::AV2_DLM_MOVE);
 	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
+	DEBUGLN("By ref? ", byRef);
+	DEBUGLN("By move? ", byMove);
 	switch (place) {
 		case DataLocation::AV2_DL_NULL: {
 			return nullptr;
@@ -316,7 +364,9 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			return context.art.newValue((mod & DataLocation::AV2_DLB_TRUE) == DataLocation::AV2_DLB_TRUE);
 		} break;
 		case DataLocation::AV2_DL_INT: {
+			DEBUGLN("Creating integer...");
 			if ((mod & DataLocation::AV2_DLI_UNSIGNED) == DataLocation::AV2_DLI_UNSIGNED) {
+				DEBUGLN(":: UNSIGNED");
 				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
 					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::bit<int16, uint16>(id)); break;
 					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::bit<int32, uint32>(id)); break;
@@ -324,6 +374,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 					default: return context.art.newValue(Makai::Cast::bit<int8, uint8>(id)); break;
 				}
 			} else {
+				DEBUGLN(":: SIGNED");
 				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
 					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::as<uint16>(id)); break;
 					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::as<uint32>(id)); break;
@@ -349,11 +400,11 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			if (context.globalValueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
-				return Object::create();
+				return nullptr;
 			}
 			auto& loc = context.globalValueStack[id  % context.globalValueStack.size()];
 			auto const v = loc;
-			DEBUGLN("Value exists? ", v ? "YES" : "NO");
+			printValueState(v);
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
@@ -361,23 +412,25 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			if (context.globalValueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
-				return Object::create();
+				return nullptr;
 			}
 			auto& loc = context.globalValueStack[-Cast::as<ssize>(id % context.globalValueStack.size() + 1)];
 			auto const v = loc;
-			DEBUGLN("Value exists? ", v ? "YES" : "NO");
+			printValueState(v);
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
 		case DataLocation::AV2_DL_GLOBAL:	return global(id);
 		case DataLocation::AV2_DL_LOCAL: {
-			if (context.scopeStack.back().localStack.empty()) {
+			if (context.locals().empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
-				return Object::create();
+				return nullptr;
 			}
-			auto& loc = context.scopeStack.back().localStack[id  % context.scopeStack.back().localStack.size()];
+			auto& loc = context.locals()[id  % context.locals().size()];
 			auto const v = loc;
+			DEBUGLN("Local: ", id % context.locals().size());
+			printValueState(v);
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
@@ -386,22 +439,21 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 				return external(program.ani->out[id], byRef or byMove);
 			else if (inStrictMode())
 				crash(invalidLocationError(loc));
-			return Object::create();
+			return nullptr;
 		}
 		default: {
 			if (inStrictMode())
 				crash(invalidLocationError(loc));
-			return Object::create();
+			return nullptr;
 		}
 	}
 	if (inStrictMode())
 		crash(invalidLocationError(loc));
-	return Object::create();
+	return nullptr;
 }
 
 Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 	auto& loc = accessLocation(from, bitcast<uint64>(current));
-	if (!loc) loc = Object::create();
 	return loc;
 }
 
@@ -475,7 +527,7 @@ void Engine::returnBack() {
 }
 
 Runtime::Context::Storage Engine::external(String const& name, bool const byRef) {
-	return Object::create();
+	return nullptr;
 }
 
 template <Makai::Type::Integer T>
@@ -542,7 +594,17 @@ void Engine::doBinaryOperation(Operator const op) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
 	auto rhs	= context.pop();
+	if (!rhs) {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Right-Side Operand does not exist!"));
+		return;
+	}
 	auto lhs	= context.top();
+	if (!lhs) {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
+		return;
+	}
 	auto out	= lhs;
 	if (err) return;
 	bool success = false;
@@ -555,7 +617,8 @@ void Engine::doBinaryOperation(Operator const op) {
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
-		*out = *Object::create();
+		context.pop();
+		context.pushEmpty();
 	}
 }
 
@@ -617,6 +680,11 @@ void Engine::doUnaryOperation(Operator const op) {
 	if (context.globalValueStack.size() < 1)
 		return crash(invalidSourceError("Missing values to operate on!"));
 	auto lhs	= context.top();
+	if (!lhs) {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Operand does not exist!"));
+		return;
+	}
 	auto out	= lhs;
 	if (err) return;
 	bool success = false;
@@ -628,7 +696,8 @@ void Engine::doUnaryOperation(Operator const op) {
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
-		*out = *Object::create();
+		context.pop();
+		context.pushEmpty();
 	}
 }
 
@@ -746,7 +815,17 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
 	auto rhs	= context.pop();
+	if (!rhs) {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Right-Side Operand does not exist!"));
+		return;
+	}
 	auto lhs	= context.top();
+	if (!lhs) {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
+		return;
+	}
 	switch (type) {
 		case Core::BasicType::AV2_BT_VOID:
 		case Core::BasicType::AV2_BT_NULL:		break;
@@ -765,9 +844,8 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		case Core::BasicType::AV2_BT_REAL128:	fbopu<float128>(lhs->data(), rhs->data(), op);	break;
 		case Core::BasicType::AV2_BT_VECTOR:	fbopu<Vector4>(lhs->data(), rhs->data(), op);	break;
 		default: {
-			if (inStrictMode())
+			if (inStrictMode()) [[likely]]
 				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
-			*lhs = *Object::create();
 		}
 	}
 }
@@ -775,7 +853,12 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
-	auto val	= context.pop();
+	auto val	= context.top();
+	if (!val) {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Operand does not exist!"));
+		return;
+	}
 	switch (type) {
 		case Core::BasicType::AV2_BT_VOID:
 		case Core::BasicType::AV2_BT_NULL:		break;
@@ -797,7 +880,6 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 		default: {
 			if (inStrictMode())
 				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
-			*val = *Object::create();
 		}
 	}
 }
@@ -938,28 +1020,40 @@ void Engine::v2SetContext() {
 }
 
 void Engine::v2StackPush() {
+	StackStateScopePrinter s3p{context};
 	auto const inter = Cast::bit<Instruction::StackPush>(current.type);
 	auto const value = consumeValue(inter.location);
+	DEBUGLN("You sure? ", value.exists());
 	if (err) return;
 	context.push(value);
 }
 
 void Engine::v2StackPop() {
+	StackStateScopePrinter s3p{context};
 	if (context.globalValueStack.size())
 		context.pop();
 }
 
 void Engine::v2StackSwap() {
+	StackStateScopePrinter s3p{context};
 	if (context.globalValueStack.size() >= 2)
 		Makai::swap(context.globalValueStack[-1], context.globalValueStack[-2]);
 }
 
 void Engine::v2StackClear() {
-	if (current.type)
-		context.globalValueStack.removeRange(-Math::max<int>(current.type, context.globalValueStack.size()));
+	StackStateScopePrinter s3p{context};
+	if (current.type) {
+		auto const total = context.globalValueStack.size();
+		auto const count = current.type < total ? current.type : total;
+		DEBUGLN("Clearing ", count, " entries...");
+		if (count < total)
+			context.globalValueStack.eraseRange(total-count,-1);
+		else context.globalValueStack.clear();
+	}
 }
 
 void Engine::v2StackFlush() {
+	StackStateScopePrinter s3p{context};
 	context.globalValueStack.clear();
 }
 
@@ -1036,6 +1130,7 @@ void Engine::v2ScopeBring() {
 }
 
 void Engine::v2ScopeBind() {
+	StackStateScopePrinter s3p{context};
 	Instruction::Binding bind = Makai::Cast::bit<Instruction::Binding>(current.type);
 	advance(true);
 	auto const count = Makai::Cast::bit<uint64>(current);
@@ -1045,8 +1140,15 @@ void Engine::v2ScopeBind() {
 		return crash(outOfRangeError("Requested global stack range falls outside its size!"));
 	if ((bind.dst + count) > dst.size())
 		return crash(outOfRangeError("Requested destination range falls outside its size!"));
-	for (usize i = 0; i < count; ++i)
-		dst[i + bind.dst] = src[i + (src.size() - count - bind.src - 1)];
+	DEBUGLN("Binding values...");
+	for (usize i = 0; i < count; ++i) {
+		auto const si = (src.size() - count - bind.src);
+		auto const di = i + bind.dst;
+		auto const v = src[si];
+		DEBUG("> [", si, " -> ", di, "]", ": ");
+		printValueState(v);
+		dst[di] = v;
+	}
 }
 
 void Engine::v2ScopeEnter() {
@@ -1135,6 +1237,7 @@ void Engine::v2Random() {
 }
 
 void Engine::v2StackBlit() {
+	StackStateScopePrinter s3p{context};
 	Instruction::Blitting blit = Makai::Cast::bit<Instruction::Blitting>(current.type);
 	auto& src = blit.fromGlobal ? context.globalValueStack : context.locals();
 	auto& dst = blit.fromGlobal ? context.locals() : context.globalValueStack;
@@ -1161,7 +1264,7 @@ void Engine::v2Initialize() {
 
 void Engine::v2ScopeKeep() {
 	if (context.scopeStack.size() < 2) return;
-	auto& locals = context.scope().localStack;
+	auto& locals = context.locals();
 	auto& parentLocals = context.scopeStack[-2].localStack;
 	if (locals.size() >= parentLocals.size())
 		for (auto const& i: range(parentLocals.size()))
@@ -1173,7 +1276,7 @@ void Engine::v2ScopeKeep() {
 
 void Engine::v2ScopeDeclare() {
 	for (usize i = 0; i < current.type; ++i)
-		context.push(Object::create());
+		context.locals().pushBack(nullptr);
 }
 
 void Engine::v2Cast() {
