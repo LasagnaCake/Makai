@@ -17,16 +17,6 @@ static void printValueState(Object::Storage const& value) {
 	#endif
 }
 
-static void printStackState(Runtime::Context& context) {
-	#ifdef MAKAILIB_DEBUG
-	DEBUGLN("Stack Size: ", context.globalValueStack.size());
-	DEBUGLN("Stack State {");
-	for (auto& v: context.globalValueStack)
-		printValueState(v);
-	DEBUGLN("}");
-	#endif
-}
-
 struct StackStateScopePrinter {
 	StackStateScopePrinter(Runtime::Context& context): context(context) {
 		DEBUGLN("<before>");
@@ -74,8 +64,8 @@ bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& p
 bool Engine::yieldCycle() {
 	bool revertContext = false;
 	if (context.scopeStack.empty())
-		context.scopeStack.pushBack({});
-	if (context.scopeStack.back().prevMode != context.scopeStack.back().mode)
+		context.scopeStack.pushBack(new Context::Scope{});
+	if (context.scopeStack.back()->prevMode != context.scopeStack.back()->mode)
 		revertContext = true;
 	if (!running()) return false;
 	do {
@@ -120,7 +110,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_NO_OP: break;
 //		default: crash(invalidInstructionError());
 	}
-	if (revertContext) context.scopeStack.back().mode = context.scopeStack.back().prevMode;
+	if (revertContext) context.scopeStack.back()->mode = context.scopeStack.back()->prevMode;
 	return running();
 }
 
@@ -522,7 +512,7 @@ void Engine::returnBack() {
 	context.pointers = context.pointerStack.popBack();
 	while (
 		context.scopeStack.size()
-	&&	context.scopeStack.back().pointerFrame > context.pointerStack.size()
+	&&	context.scopeStack.back()->pointerFrame > context.pointerStack.size()
 	) context.scopeStack.popBack();
 }
 
@@ -1047,7 +1037,7 @@ void Engine::v2StackClear() {
 		auto const count = current.type < total ? current.type : total;
 		DEBUGLN("Clearing ", count, " entries...");
 		if (count < total)
-			context.globalValueStack.eraseRange(total-count,-1);
+			context.globalValueStack = context.globalValueStack.sliced(0, total-count);
 		else context.globalValueStack.clear();
 	}
 }
@@ -1119,7 +1109,7 @@ void Engine::v2ScopeBring() {
 	auto const count = Makai::Cast::bit<uint64>(current);
 	if (!(scope < context.scopeStack.size()))
 		return crash(outOfRangeError("Requested scope is out-of-range!"));
-	auto& src = context.scopeStack[-scope].localStack;
+	auto& src = context.scopeStack[-scope]->localStack;
 	auto& dst = context.locals();
 	if (!((bind.src + count) < src.size()))
 		return crash(outOfRangeError("Requested source start + count is bigger than its stack size!"));
@@ -1153,7 +1143,7 @@ void Engine::v2ScopeBind() {
 
 void Engine::v2ScopeEnter() {
 	auto const count = current.type;
-	context.scopeStack.pushBack({
+	context.scopeStack.pushBack(new Context::Scope{
 		.mode			= context.scope().mode,
 		.prevMode		= context.scope().mode,
 		.pointerFrame	= context.pointerStack.size()
@@ -1265,7 +1255,7 @@ void Engine::v2Initialize() {
 void Engine::v2ScopeKeep() {
 	if (context.scopeStack.size() < 2) return;
 	auto& locals = context.locals();
-	auto& parentLocals = context.scopeStack[-2].localStack;
+	auto& parentLocals = context.scopeStack[-2]->localStack;
 	if (locals.size() >= parentLocals.size())
 		for (auto const& i: range(parentLocals.size()))
 			locals[i] = parentLocals[i];

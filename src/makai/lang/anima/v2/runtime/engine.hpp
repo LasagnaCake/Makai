@@ -60,7 +60,7 @@ namespace Makai::Anima::V2::Runtime {
 		virtual Context::Storage	external	(String const& name, bool const doNotCopy	);
 		Context::Storage&			global		(uint64 const globalID						);
 
-		constexpr bool inStrictMode() const {return context.scopeStack.back().mode == Core::ContextMode::AV2_CM_STRICT;}
+		constexpr bool inStrictMode() const {return context.scopeStack.back()->mode == Core::ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
 

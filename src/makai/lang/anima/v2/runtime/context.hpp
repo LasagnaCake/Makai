@@ -65,7 +65,7 @@ namespace Makai::Anima::V2::Runtime {
 		}
 
 		Scope& scope() {
-			return scopeStack.back();
+			return *scopeStack.back();
 		}
 
 		List<Storage>& locals() {
@@ -77,12 +77,12 @@ namespace Makai::Anima::V2::Runtime {
 			return art.newValue(value);
 		}
 
-		Pointers			pointers;
-		List<Storage>		globalValueStack;
-		List<Pointers>		pointerStack;
-		List<Scope>			scopeStack;
-		Map<usize, Storage>	globals;
-		Core::Context		art;
+		Pointers				pointers;
+		List<Storage>			globalValueStack;
+		List<Pointers>			pointerStack;
+		List<Instance<Scope>>	scopeStack;
+		Map<usize, Storage>		globals;
+		Core::Context			art;
 	};
 }
 
