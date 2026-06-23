@@ -23,10 +23,16 @@ module Test.Namespace {
 main :: () {
     IO.writeLine("We are calculating!")
     Test.Namespace.printToOutput()
-    val := Test.Namespace.baz(32 + 64)
+    val := 32 + 64
     IO.write("32 + 64 = ")
     IO.writeLine(val as any)
-    val = Test.Namespace.baz(32 - 64)
+    val = Test.Namespace.baz(32 + 64)
+    IO.write("baz(32 + 64) = ")
+    IO.writeLine(val as any)
+    val = 32 - 64
     IO.write("32 - 64 = ")
+    IO.writeLine(val as any)
+    val = Test.Namespace.baz(32 - 64)
+    IO.write("baz(32 - 64) = ")
     IO.writeLine(val as any)
 }

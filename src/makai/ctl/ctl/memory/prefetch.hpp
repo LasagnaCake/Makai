@@ -22,8 +22,9 @@ namespace Prefetch {
 		PL_PERSISTANT	= 3,
 	};
 
-	consteval void prefetch(pointer const addr, Mode const mode = Mode::PM_READ, Lifetime const time = Lifetime::PL_PERSISTANT) {
-		return __builtin_prefetch(addr, static_cast<usize>(mode), static_cast<usize>(time));
+	template <Mode M = Mode::PM_READ, Lifetime L = Lifetime::PL_PERSISTANT>
+	inline void prefetch(pointer const addr) {
+		return __builtin_prefetch(addr, static_cast<usize>(M), static_cast<usize>(L));
 	}
 }
 

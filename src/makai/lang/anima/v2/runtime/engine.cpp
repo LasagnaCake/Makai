@@ -289,7 +289,7 @@ void Engine::v2Call() {
 	if (invocation.external) {
 		decltype(context.globalValueStack) args;
 		if (auto argc = context.art.argumentCountOf(loc)) {
-			args = context.globalValueStack.sliced(0, argc).reverse();
+			args = context.globalValueStack.sliced(-argc, -1).reverse();
 			context.globalValueStack.eraseRange(-argc, -1);
 		}
 		context.art
@@ -343,6 +343,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	auto const mod		= asModifiers(loc);
 	bool byRef	= Cast::as<bool>(mod & DataLocation::AV2_DLM_BY_REF);
 	bool byMove	= Cast::as<bool>(mod & DataLocation::AV2_DLM_MOVE);
+	DEBUGLN("Full Request: ", Makai::Cast::as<uint64>(enumcast(loc)));
 	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
 	DEBUGLN("By ref? ", byRef);
 	DEBUGLN("By move? ", byMove);
@@ -875,6 +876,7 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 }
 
 void Engine::v2Op() {
+	StackStateScopePrinter s3p{context};
 	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
 	if (op.op < Operator::AV2_BOP_START) {
 		if (op.sameType)
@@ -1197,7 +1199,7 @@ void Engine::v2Sizeof() {
 }
 
 void Engine::v2Typeof() {
-	context.push(context.pop()->getCurrentType()->id);
+	context.push(TypeID{Identifier{.id = context.pop()->getCurrentType()->id}});
 }
 
 void Engine::v2Random() {

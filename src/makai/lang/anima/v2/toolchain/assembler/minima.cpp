@@ -476,6 +476,7 @@ static Location getDataLocation(Context& context) {
 		break;
 		default: context.error("Invalid data source!");
 	}
+	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(enumcast(loc.source)));
 	return loc;
 }
 
