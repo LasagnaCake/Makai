@@ -8,7 +8,9 @@ CompileFlags:
     - -fcoroutines
     - -m64
     - -I../../output/include
-    - -frelaxed-template-template-args
+  #    - -frelaxed-template-template-args
+  Compiler: g++
+  MallocTrim: true
 Index:
   Background: Skip
 Diagnostics:
