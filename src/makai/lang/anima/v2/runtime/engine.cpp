@@ -359,18 +359,18 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			if ((mod & DataLocation::AV2_DLI_UNSIGNED) == DataLocation::AV2_DLI_UNSIGNED) {
 				DEBUGLN(":: UNSIGNED");
 				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
-					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::bit<int16, uint16>(id)); break;
-					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::bit<int32, uint32>(id)); break;
-					case DataLocation::AV2_DLI_64: return context.art.newValue(Makai::Cast::bit<int64, uint64>(id)); break;
-					default: return context.art.newValue(Makai::Cast::bit<int8, uint8>(id)); break;
-				}
-			} else {
-				DEBUGLN(":: SIGNED");
-				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
 					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::as<uint16>(id)); break;
 					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::as<uint32>(id)); break;
 					case DataLocation::AV2_DLI_64: return context.art.newValue(Makai::Cast::as<uint64>(id)); break;
 					default: return context.art.newValue(Makai::Cast::as<uint8>(id)); break;
+				}
+			} else {
+				DEBUGLN(":: SIGNED");
+				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
+					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::bit<int16, uint16>(id)); break;
+					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::bit<int32, uint32>(id)); break;
+					case DataLocation::AV2_DLI_64: return context.art.newValue(Makai::Cast::bit<int64, uint64>(id)); break;
+					default: return context.art.newValue(Makai::Cast::bit<int8, uint8>(id)); break;
 				}
 			}
 		} break;
