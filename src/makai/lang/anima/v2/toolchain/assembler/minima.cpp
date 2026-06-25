@@ -324,7 +324,10 @@ static DataLocation getIntWidth(Context& context) {
 		return DataLocation::AV2_DLI_32;
 	else if (id == "i64")
 		return DataLocation::AV2_DLI_64;
-	else context.error("Invalid integer type!");
+	else {
+		context.pad();
+		return DataLocation::AV2_DLI_64;
+	}
 }
 
 static DataLocation getRealWidth(Context& context) {
@@ -335,7 +338,10 @@ static DataLocation getRealWidth(Context& context) {
 		return DataLocation::AV2_DLF_64;
 	else if (id == "f128")
 		return DataLocation::AV2_DLF_128;
-	else context.error("Invalid float type!");
+	else {
+		context.pad();
+		return DataLocation::AV2_DLF_64;
+	}
 }
 
 static Location getConstantLocation(Context& context) {
