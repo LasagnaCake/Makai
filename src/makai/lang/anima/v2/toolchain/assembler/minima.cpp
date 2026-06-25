@@ -370,6 +370,7 @@ static Location getConstantLocation(Context& context) {
 			break;
 			default: context.error("Expected number here!");
 		}
+		loc.source = loc.source & DataLocation(0b11100111);
 		return loc;
 	} else {
 		switch (context.type()) {
@@ -398,6 +399,7 @@ static Location getConstantLocation(Context& context) {
 			break;
 			default: context.error("Invalid constant!");
 		}
+		loc.source = loc.source & DataLocation(0b11100111);
 		return loc;
 	}
 	context.error("Invalid constant!");
@@ -473,10 +475,12 @@ static Location getDataLocation(Context& context) {
 		case LTS_TT_INTEGER:
 		case LTS_TT_REAL:
 			loc |= getConstantLocation(context);
+			loc.source = loc.source & DataLocation(0b11100111);
 		break;
 		default: context.error("Invalid data source!");
 	}
 	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(Makai::enumcast(loc.source)));
+
 	return loc;
 }
 
