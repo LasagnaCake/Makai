@@ -147,6 +147,9 @@ namespace Makai::Anima::V2::Runtime {
 		void fastBinaryOperation(Core::Operator const op, Core::BasicType const type);
 		void fastUnaryOperation(Core::Operator const op, Core::BasicType const type);
 
+		void shortCircuitOperation(Core::Operator const op, Core::BasicType const type, usize const count);
+		void fastShortCircuitOperation(Core::Operator const op, Core::BasicType const type, usize const count);
+
 		void jumpBy(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);
 		void returnBack();

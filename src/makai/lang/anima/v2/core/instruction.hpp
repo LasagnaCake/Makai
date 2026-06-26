@@ -153,6 +153,7 @@ namespace Makai::Anima::V2::Core {
 			Operator	op;
 			bool		sameType:	1;
 			BasicType	assume:		7;
+			uint8		count		= 1;
 		};
 
 		/// @brief Blitting.

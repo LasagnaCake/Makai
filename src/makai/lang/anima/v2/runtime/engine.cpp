@@ -875,17 +875,27 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 	}
 }
 
+void Engine::shortCircuitOperation(Operator const op, BasicType const type, usize const count) {
+
+}
+
+void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, usize const count) {
+
+}
+
 void Engine::v2Op() {
 	StackStateScopePrinter s3p{context};
 	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
-	if (op.op < Operator::AV2_BOP_START) {
-		if (op.sameType)
-			return fastUnaryOperation(op.op, op.assume);
-		else return doUnaryOperation(op.op);
-	} else {
-		if (op.sameType)
-			return fastBinaryOperation(op.op, op.assume);
-		else return doBinaryOperation(op.op);
+	while (op.count--) {
+		if (op.op < Operator::AV2_BOP_START) {
+			if (op.sameType)
+				return fastUnaryOperation(op.op, op.assume);
+			else return doUnaryOperation(op.op);
+		} else {
+			if (op.sameType)
+				return fastBinaryOperation(op.op, op.assume);
+			else return doBinaryOperation(op.op);
+		}
 	}
 }
 

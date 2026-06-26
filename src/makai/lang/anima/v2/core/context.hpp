@@ -236,7 +236,11 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		bool hasExternalMethod(usize const& hash) const {
-			return externalMethods.contains(hash) && externalMethods[hash]->invoker;
+			return
+				externalMethods.contains(hash)
+			&&	externalMethods[hash]
+			&&	externalMethods[hash]->invoker
+			;
 		}
 
 		usize argumentCountOf(usize const& hash) const {
