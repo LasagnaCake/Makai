@@ -28,6 +28,14 @@ void Context::debugArgs(List<Object::Storage> const& args) {
 	//CPP::Debug::breakpoint();
 }
 
+void Context::debugExternalFunction(bool const isExiting) {
+	if (isExiting) {
+		DEBUGLN("<<<<<<<<<<<<<<<<<<<<<< Destroying external function...");
+	} else {
+		DEBUGLN(">>>>>>>>>>>>>>>>>>>>>> Creating external function...");
+	}
+}
+
 Context::~Context()				{unloadLibraries();						}
 Context::Library::~Library()	{if (impl) delete impl; impl = nullptr;	}
 Context::Library::Impl::~Impl()	{close();								}
