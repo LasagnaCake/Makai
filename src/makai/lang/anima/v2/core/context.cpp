@@ -51,9 +51,14 @@ void Context::Library::Impl::close() {
 }
 
 void Context::loadLibraries() {
-	for (auto& lib: toBeLoaded)
+	DEBUGLN("Loading libraries...");
+	for (auto& lib: toBeLoaded) {
+		DEBUGLN("<", lib->name(), ">");
 		lib->load(*this);
+		DEBUGLN("</", lib->name(), ">");
+	}
 	toBeLoaded.clear();
+	DEBUGLN("Done loading libraries!");
 }
 
 void Context::unloadLibraries() {
@@ -74,8 +79,12 @@ Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, Lis
 }
 
 bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker) {
-	if (hasExternalMethod(hash)) return false;
-	DEBUGLN("Adding method [", hash, "]...");
+	DEBUGLN("Adding method [", hash, "]");
+	if (hasExternalMethod(hash)) {
+		DEBUGLN("WARN: [", hash, "] duplicate found");
+		return false;
+	}
+	DEBUGLN("OK: [", hash, "] has no duplicates");
 	Instance<ExternalMethod> method = method.create();
 	method->out		= true;
 	method->argc	= argc;
@@ -83,6 +92,11 @@ bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvo
 	method->invoker	= invoker;
 	loadedMethods.pushBack(method);
 	externalMethods[hash] = method;
+	if (!hasExternalMethod(hash))
+		throw Makai::Error::FailedAction(
+			"Failed to add external function ["+ toString(hash) + "]!",
+			CTL_CPP_PRETTY_SOURCE
+		);
 	return true;
 }
 

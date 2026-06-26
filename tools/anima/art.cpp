@@ -55,7 +55,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 
 	void onLoad() override {
-		if (!config.allowDynamicLibraries && cliEnabled) {
+		if (cliEnabled) {
 			context.art.addExternalMethod("av2/console/write_string", 		write_string		);
 			context.art.addExternalMethod("av2/console/write_any",			write_any			);
 			context.art.addExternalMethod("av2/console/writeLine_string",	writeLine_string	);

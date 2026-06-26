@@ -1080,11 +1080,14 @@ void Engine::load() {
 	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (config.allowDynamicLibraries) {
+		DEBUGLN("<dynlib-loading>");
 		if (program.ani && loader)
 			for (auto& lib: program.ani->shared.libraries)
 				loader->loadLibrary(context, lib + ".andl");
 		context.art.loadLibraries();
+		DEBUGLN("</dynlib-loading>");
 	}
+	DEBUGLN("Finishing loading step...");
 	onLoad();
 	DEBUGLN("Types:");
 	for (auto& type : context.art.types.values)
