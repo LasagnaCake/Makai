@@ -32,7 +32,8 @@ namespace Makai::Anima::V2::Core {
 	static_assert(\
 		Makai::Type::Subclass<LIB, Makai::Anima::V2::Core::ALibrary>\
 	);\
-	CTL_CDECL CTL_DYNEXPORT auto AV2_Extern_getLibrary() {\
+	CTL_CDECL CTL_DYNEXPORT\
+	owner<Makai::Anima::V2::Core::ALibrary> AV2_Extern_getLibrary() {\
 		return Makai::Anima::V2::Core::createLibrary<LIB>();\
 	}\
 	int main() {\
