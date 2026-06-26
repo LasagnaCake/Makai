@@ -875,17 +875,59 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 	}
 }
 
-void Engine::shortCircuitOperation(Operator const op, BasicType const type, usize const count) {
-
+void Engine::shortCircuitOperation(Operator const op, usize count) {
+	while (--count) {
+		auto lhs = context.top();
+		switch (op) {
+			case Operator::AV2_BOP_LOGIC_AND: if (!lhs->toValue<bool>()) {
+				context.globalValueStack.eraseRange(-(count+1), -1);
+				*context.top() = *context.newValue(false);
+				return;
+			}
+			case Operator::AV2_BOP_LOGIC_OR: if (lhs->toValue<bool>()) {
+				context.globalValueStack.eraseRange(-(count+1), -1);
+				*context.top() = *context.newValue(true);
+				return;
+			}
+			default: break;
+		}
+		doBinaryOperation(op);
+	}
 }
 
-void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, usize const count) {
-
+void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, usize count) {
+	while (count--) {
+		auto lhs = context.top();
+		switch (op) {
+			case Operator::AV2_BOP_LOGIC_AND: if (!*(bool*)lhs->data()) {
+				context.globalValueStack.eraseRange(-(count+1), -1);
+				*context.top() = *context.newValue(false);
+				return;
+			}
+			case Operator::AV2_BOP_LOGIC_OR: if (*(bool*)lhs->data()) {
+				context.globalValueStack.eraseRange(-(count+1), -1);
+				*context.top() = *context.newValue(true);
+				return;
+			}
+			default: break;
+		}
+		fastBinaryOperation(op, type);
+	}
 }
 
 void Engine::v2Op() {
 	StackStateScopePrinter s3p{context};
 	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
+	if (op.op == Operator::AV2_UOP_LOGIC_NOT && !(op.count % 2))
+		return;
+	if (
+		op.op == Operator::AV2_BOP_LOGIC_AND
+	or	op.op == Operator::AV2_BOP_LOGIC_OR
+	) {
+		if (op.sameType)
+			return fastShortCircuitOperation(op.op, op.assume, op.count);
+		return shortCircuitOperation(op.op, op.count);
+	}
 	while (op.count--) {
 		if (op.op < Operator::AV2_BOP_START) {
 			if (op.sameType)
