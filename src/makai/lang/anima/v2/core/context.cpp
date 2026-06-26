@@ -28,9 +28,9 @@ void Context::debugArgs(List<Object::Storage> const& args) {
 	//CPP::Debug::breakpoint();
 }
 
-Context::~Context()				{unloadLibraries();	}
-Context::Library::~Library()	{delete impl;		}
-Context::Library::Impl::~Impl()	{close();			}
+Context::~Context()				{unloadLibraries();						}
+Context::Library::~Library()	{if (impl) delete impl; impl = nullptr;	}
+Context::Library::Impl::~Impl()	{close();								}
 
 bool Context::openLibrary(Makai::String const& path) {
 	if (dynlibs.contains(path)) return true;
@@ -39,6 +39,7 @@ bool Context::openLibrary(Makai::String const& path) {
 	if (!lib->impl->open(path, *this))
 		return false;
 	toBeLoaded.pushBack(lib->impl->lib.reference());
+	loadedLibraries.pushBack(lib);
 	dynlibs[path] = lib;
 	return true;
 }
@@ -46,6 +47,7 @@ bool Context::openLibrary(Makai::String const& path) {
 void Context::Library::Impl::close() {
 	if(!lib) return;
 	lib->close();
+	lib.unbind();
 }
 
 void Context::loadLibraries() {
@@ -58,6 +60,7 @@ void Context::unloadLibraries() {
 	for (auto& [name, lib]: dynlibs)
 		lib->impl->lib->unload(*this);
 	dynlibs.clear();
+	loadedLibraries.clear();
 }
 
 Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, List<Object::Storage> const& args)  {
