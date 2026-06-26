@@ -46,6 +46,8 @@ namespace Makai::Anima::V2::Core {
 
 		static void debugArgs(Arguments const& args);
 
+		static void debugExternalFunction(bool const isExiting);
+
 		template <class TReturn, class... TArgs>
 		struct ExternalMethodResolver<TReturn(TArgs...)> {
 			constexpr static bool const CONTEXTUAL = Type::OneOf<AsNonVolatile<Makai::Meta::First<TArgs...>>, Context&, Context const&>;
@@ -124,10 +126,10 @@ namespace Makai::Anima::V2::Core {
 			struct Invoker: ICallable {
 				TFunc& f;
 
-				virtual ~Invoker() {}
+				virtual ~Invoker() {debugExternalFunction(true);}
 
 				template <Type::Functional<TReturn(TArgs...)> T>
-				Invoker(T& f): f(f) {}
+				Invoker(T& f): f(f) {debugExternalFunction(false);}
 
 				MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) const override {
 					return handleInvocation(context, method, args, f);
