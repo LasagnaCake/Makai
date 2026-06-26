@@ -145,6 +145,7 @@ void Engine::v2Compare() {
 	auto rhs	= context.pop();
 	auto lhs	= context.top();
 	Makai::Ordered::OrderType order = Makai::Ordered::Order::EQUAL;
+	// TODO: Fast comparisons
 	if (
 		lhs->getCurrentType() == rhs->getCurrentType()
 	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
