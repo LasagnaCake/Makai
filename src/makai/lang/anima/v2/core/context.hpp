@@ -303,6 +303,7 @@ namespace Makai::Anima::V2::Core {
 
 	private:
 		List<Instance<ExternalMethod>>	loadedMethods;
+		List<Instance<Library>>			loadedLibraries;
 		List<Reference<ALibrary>>		toBeLoaded;
 	};
 }
