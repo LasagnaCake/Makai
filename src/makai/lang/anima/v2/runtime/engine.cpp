@@ -876,7 +876,22 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 }
 
 void Engine::shortCircuitOperation(Operator const op, usize count) {
-	while (--count) {
+	auto lhs = context.top();
+	switch (op) {
+		case Operator::AV2_BOP_LOGIC_AND: if (!lhs->toValue<bool>()) {
+			context.globalValueStack.eraseRange(-(count+1), -1);
+			*context.top() = *context.newValue(false);
+			return;
+		}
+		case Operator::AV2_BOP_LOGIC_OR: if (lhs->toValue<bool>()) {
+			context.globalValueStack.eraseRange(-(count+1), -1);
+			*context.top() = *context.newValue(true);
+			return;
+		}
+		default: break;
+	}
+	doBinaryOperation(op);
+	while (--count) [[unlikely]] {
 		auto lhs = context.top();
 		switch (op) {
 			case Operator::AV2_BOP_LOGIC_AND: if (!lhs->toValue<bool>()) {
@@ -896,7 +911,22 @@ void Engine::shortCircuitOperation(Operator const op, usize count) {
 }
 
 void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, usize count) {
-	while (count--) {
+	auto lhs = context.top();
+	switch (op) {
+		case Operator::AV2_BOP_LOGIC_AND: if (!*(bool*)lhs->data()) {
+			context.globalValueStack.eraseRange(-(count+1), -1);
+			*context.top() = *context.newValue(false);
+			return;
+		}
+		case Operator::AV2_BOP_LOGIC_OR: if (*(bool*)lhs->data()) {
+			context.globalValueStack.eraseRange(-(count+1), -1);
+			*context.top() = *context.newValue(true);
+			return;
+		}
+		default: break;
+	}
+	fastBinaryOperation(op, type);
+	while (--count) [[unlikely]] {
 		auto lhs = context.top();
 		switch (op) {
 			case Operator::AV2_BOP_LOGIC_AND: if (!*(bool*)lhs->data()) {
@@ -928,7 +958,16 @@ void Engine::v2Op() {
 			return fastShortCircuitOperation(op.op, op.assume, op.count);
 		return shortCircuitOperation(op.op, op.count);
 	}
-	while (op.count--) {
+	if (op.op < Operator::AV2_BOP_START) {
+		if (op.sameType)
+			return fastUnaryOperation(op.op, op.assume);
+		else return doUnaryOperation(op.op);
+	} else {
+		if (op.sameType)
+			return fastBinaryOperation(op.op, op.assume);
+		else return doBinaryOperation(op.op);
+	}
+	while (--op.count) [[unlikely]] {
 		if (op.op < Operator::AV2_BOP_START) {
 			if (op.sameType)
 				return fastUnaryOperation(op.op, op.assume);
