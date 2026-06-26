@@ -954,26 +954,26 @@ void Engine::v2Op() {
 		op.op == Operator::AV2_BOP_LOGIC_AND
 	or	op.op == Operator::AV2_BOP_LOGIC_OR
 	) {
-		if (op.sameType)
+		if (op.sameType) [[likely]]
 			return fastShortCircuitOperation(op.op, op.assume, op.count);
 		return shortCircuitOperation(op.op, op.count);
 	}
 	if (op.op < Operator::AV2_BOP_START) {
-		if (op.sameType)
+		if (op.sameType) [[likely]]
 			return fastUnaryOperation(op.op, op.assume);
 		else return doUnaryOperation(op.op);
 	} else {
-		if (op.sameType)
+		if (op.sameType) [[likely]]
 			return fastBinaryOperation(op.op, op.assume);
 		else return doBinaryOperation(op.op);
 	}
 	while (--op.count) [[unlikely]] {
 		if (op.op < Operator::AV2_BOP_START) {
-			if (op.sameType)
+			if (op.sameType) [[likely]]
 				return fastUnaryOperation(op.op, op.assume);
 			else return doUnaryOperation(op.op);
 		} else {
-			if (op.sameType)
+			if (op.sameType) [[likely]]
 				return fastBinaryOperation(op.op, op.assume);
 			else return doBinaryOperation(op.op);
 		}
