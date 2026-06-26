@@ -108,9 +108,11 @@ struct ARTEMain: Makai::AMain {
 			};
 			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
 			engine.execute();
+			DEBUGLN("<art:output>");
 			while (engine.process()) {
 				DEBUGLN("Frame!");
 			}
+			DEBUGLN("</art:output>");
 			engine.error().then(handleError);
 		}
 	}

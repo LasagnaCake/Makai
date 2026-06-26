@@ -81,7 +81,7 @@ Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, Lis
 		return Error::AV2_CCE_MISSING_ART_TYPE;
 	if (args.size() < argc)
 		return Error::AV2_CCE_MISSING_ARGS;
-	DEBUGLN("Validating method...");
+	MAKAILIB_DEBUGLN_FULL("Validating method...");
 	Context::debugArgs(args);
 	return null;
 }
@@ -109,21 +109,23 @@ bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvo
 }
 
 Context::MethodResult Context::invokeExternalMethod(usize const hash, List<Object::Storage> const& args) {
-	DEBUGLN("Looking for method ", hash, "...");
-	for (auto& m: externalMethods)
-		DEBUGLN("  > ", m.key);
-	#ifdef MAKAILIB_DEBUG
-	DEBUGLN("Method exists? ", hasExternalMethod(hash));
-	DEBUGLN("Registered? ", externalMethods.contains(hash));
-	if (externalMethods.contains(hash)) {
-		DEBUGLN("Created? ", externalMethods[hash].exists());
-		if (externalMethods[hash].exists())
-			DEBUGLN("Invoker? ", externalMethods[hash]->invoker.exists());
+	MAKAILIB_DEBUG_BLOCK_FULL {
+		MAKAILIB_DEBUGLN_FULL("Looking for method ", hash, "...");
+		for (auto& m: externalMethods)
+			DEBUGLN("  > ", m.key);
 	}
-	#endif
+	MAKAILIB_DEBUG_BLOCK_FULL {
+		DEBUGLN("Method exists? ", hasExternalMethod(hash));
+		DEBUGLN("Registered? ", externalMethods.contains(hash));
+		if (externalMethods.contains(hash)) {
+			DEBUGLN("Created? ", externalMethods[hash].exists());
+			if (externalMethods[hash].exists())
+				DEBUGLN("Invoker? ", externalMethods[hash]->invoker.exists());
+		}
+	}
 	if (!hasExternalMethod(hash)) return Error::AV2_CCE_MISSING_METHOD;
-	DEBUGLN("!!! Method exists !!!");
-	DEBUGLN("Invoker? ", externalMethods[hash]->invoker.exists());
+	MAKAILIB_DEBUGLN_FULL("!!! Method exists !!!");
+	MAKAILIB_DEBUGLN_FULL("Invoker? ", externalMethods[hash]->invoker.exists());
 	if (!externalMethods[hash]->invoker) return Error::AV2_CCE_MISSING_INVOKER;
 	if (auto err = externalMethods[hash]->validate(*this, args))
 		return *err;

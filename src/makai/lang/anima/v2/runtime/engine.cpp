@@ -10,41 +10,45 @@ namespace Runtime	= Makai::Anima::V2::Runtime;
 using namespace Core;
 
 static void printValueState(Object::Storage const& value) {
-	#ifdef MAKAILIB_DEBUG
-	DEBUG("> Value? ", value ? "YES" : "NO");
-	if (value) DEBUGLN(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
-	else DEBUGLN("");
-	#endif
+	MAKAILIB_DEBUG_BLOCK_FULL {
+		MAKAILIB_DEBUG_FULL("> Value? ", value ? "YES" : "NO");
+		if (value) MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
+		else MAKAILIB_DEBUGLN_FULL("");
+	}
 }
 
 struct StackStateScopePrinter {
 	StackStateScopePrinter(Runtime::Context& context): context(context) {
-		DEBUGLN("<before>");
-		print();
-		DEBUGLN("</before>");
+		MAKAILIB_DEBUG_BLOCK_FULL {
+			MAKAILIB_DEBUGLN_FULL("<before>");
+			print();
+			MAKAILIB_DEBUGLN_FULL("</before>");
+		}
 	}
 
 	~StackStateScopePrinter() {
-		DEBUGLN("<after>");
-		print();
-		DEBUGLN("</after>");
+		MAKAILIB_DEBUG_BLOCK_FULL {
+			MAKAILIB_DEBUGLN_FULL("<after>");
+			print();
+			MAKAILIB_DEBUGLN_FULL("</after>");
+		}
 	}
 
 	void print() {
-		#ifdef MAKAILIB_DEBUG
-		DEBUGLN("Stack Size: ", context.globalValueStack.size());
-		DEBUGLN("Stack State {");
-		for (auto& v: context.globalValueStack)
-			printValueState(v);
-		DEBUGLN("}");
-		#endif
+		MAKAILIB_DEBUG_BLOCK_FULL {
+			MAKAILIB_DEBUGLN_FULL("Stack Size: ", context.globalValueStack.size());
+			MAKAILIB_DEBUGLN_FULL("Stack State {");
+			for (auto& v: context.globalValueStack)
+				printValueState(v);
+			MAKAILIB_DEBUGLN_FULL("}");
+		}
 	}
 
 	Runtime::Context& context;
 };
 
 bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& path) {
-	DEBUGLN("Searching for library [", path, "]...");
+	MAKAILIB_DEBUGLN_FULL("Searching for library [", path, "]...");
 	StringList paths = {
 		path,
 		OS::FS::concatenate(OS::FS::currentDirectory(), path),
@@ -53,11 +57,11 @@ bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& p
 	if (auto const artHome = getenv("ART_HOME"))
 		paths.pushBack(OS::FS::concatenate(artHome, "av2", path));
 	for (auto const& p: paths) {
-		DEBUGLN("  > On path '", p, "'");
+		MAKAILIB_DEBUGLN_FULL("  > On path '", p, "'");
 		if (OS::FS::exists(p))
 			return context.art.openLibrary(p);
 	}
-	DEBUGLN("Not found");
+	MAKAILIB_DEBUGLN_FULL("Not found");
 	return false;
 }
 
@@ -69,11 +73,11 @@ bool Engine::yieldCycle() {
 		revertContext = true;
 	if (!running()) return false;
 	do {
-		DEBUGLN("Next instruction, please!");
+		MAKAILIB_DEBUGLN_FULL("Next instruction, please!");
 		advance();
 	} while (running() && current.name == Instruction::Name::AV2_IN_NO_OP && current.type);
 	if (!running()) return false;
-	DEBUGLN("Instruction: ", Instruction::asString(current.name));
+	MAKAILIB_DEBUGLN_FULL("Instruction: ", Instruction::asString(current.name));
 	switch (current.name) {
 		using enum Instruction::Name;
 		case AV2_IN_HALT:			v2Halt();			break;
@@ -117,7 +121,7 @@ bool Engine::yieldCycle() {
 bool Engine::process() {
 	if (delay) --delay;
 	else while (Engine::yieldCycle() && !delay) {}
-	DEBUGLN("Done processing for now!");
+	MAKAILIB_DEBUGLN_FULL("Done processing for now!");
 	return running();
 }
 
@@ -251,7 +255,7 @@ Engine::Error Engine::missingArgumentsError() {
 
 void Engine::advance(bool isRequired) {
 	++context.pointers.instruction;
-	if (!isRequired) DEBUGLN("Fetching instruction [", context.pointers.instruction, "] ...");
+	if (!isRequired) MAKAILIB_DEBUGLN_FULL("Fetching instruction [", context.pointers.instruction, "] ...");
 	if (context.pointers.instruction < program.code.size())
 		current = program.code[context.pointers.instruction];
 	else if (isRequired)
@@ -265,10 +269,10 @@ void Engine::v2Return() {
 
 void Engine::v2Copy() {
 	Instruction::Transfer tf = bitcast<Instruction::Transfer>(current.type);
-	DEBUGLN("Reading source...");
+	MAKAILIB_DEBUGLN_FULL("Reading source...");
 	auto const from	= consumeValue(tf.from);
 	if (err) return;
-	DEBUGLN("Writing to destination...");
+	MAKAILIB_DEBUGLN_FULL("Writing to destination...");
 	auto& to		= accessValue(tf.to);
 	if (err) return;
 	to = from;
@@ -286,7 +290,7 @@ void Engine::v2Call() {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
 	}
-	DEBUGLN("Handling call...");
+	MAKAILIB_DEBUGLN_FULL("Handling call...");
 	if (invocation.external) {
 		decltype(context.globalValueStack) args;
 		if (auto argc = context.art.argumentCountOf(loc)) {
@@ -344,10 +348,10 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	auto const mod		= asModifiers(loc);
 	bool byRef	= Cast::as<bool>(mod & DataLocation::AV2_DLM_BY_REF);
 	bool byMove	= Cast::as<bool>(mod & DataLocation::AV2_DLM_MOVE);
-	DEBUGLN("Full Request: ", Makai::Cast::as<uint64>(enumcast(loc)));
-	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
-	DEBUGLN("By ref? ", byRef);
-	DEBUGLN("By move? ", byMove);
+	MAKAILIB_DEBUGLN_FULL("Full Request: ", Makai::Cast::as<uint64>(enumcast(loc)));
+	MAKAILIB_DEBUGLN_FULL("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
+	MAKAILIB_DEBUGLN_FULL("By ref? ", byRef);
+	MAKAILIB_DEBUGLN_FULL("By move? ", byMove);
 	switch (place) {
 		case DataLocation::AV2_DL_NULL: {
 			return nullptr;
@@ -356,9 +360,9 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			return context.art.newValue((mod & DataLocation::AV2_DLB_TRUE) == DataLocation::AV2_DLB_TRUE);
 		} break;
 		case DataLocation::AV2_DL_INT: {
-			DEBUGLN("Creating integer...");
+			MAKAILIB_DEBUGLN_FULL("Creating integer...");
 			if ((mod & DataLocation::AV2_DLI_UNSIGNED) == DataLocation::AV2_DLI_UNSIGNED) {
-				DEBUGLN(":: UNSIGNED");
+				MAKAILIB_DEBUGLN_FULL(":: UNSIGNED");
 				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
 					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::as<uint16>(id)); break;
 					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::as<uint32>(id)); break;
@@ -366,7 +370,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 					default: return context.art.newValue(Makai::Cast::as<uint8>(id)); break;
 				}
 			} else {
-				DEBUGLN(":: SIGNED");
+				MAKAILIB_DEBUGLN_FULL(":: SIGNED");
 				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
 					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::bit<int16, uint16>(id)); break;
 					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::bit<int32, uint32>(id)); break;
@@ -383,9 +387,9 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			}
 		} break;
 		case DataLocation::AV2_DL_STRING: {
-			DEBUGLN("Creating string '", program.strings[id], "'");
+			MAKAILIB_DEBUGLN_FULL("Creating string '", program.strings[id], "'");
 			auto const v = context.art.newValue(program.strings[id]);
-			DEBUGLN("Created '", v->toValue<String>(), "'");
+			MAKAILIB_DEBUGLN_FULL("Created '", v->toValue<String>(), "'");
 			return v;
 		} break;
 		case DataLocation::AV2_DL_STACK: {
@@ -421,7 +425,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			}
 			auto& loc = context.locals()[id  % context.locals().size()];
 			auto const v = loc;
-			DEBUGLN("Local: ", id % context.locals().size());
+			MAKAILIB_DEBUGLN_FULL("Local: ", id % context.locals().size());
 			printValueState(v);
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
@@ -489,16 +493,16 @@ void Engine::jumpTo(usize const point, bool returnable) {
 }
 
 void Engine::jumpBy(usize const tableID, bool returnable) {
-	DEBUGLN("Doing jump...");
+	MAKAILIB_DEBUGLN_FULL("Doing jump...");
 	if (tableID == Makai::Limit::MAX<uint64>)
 		return;
-	DEBUGLN("Jumping to target...");
+	MAKAILIB_DEBUGLN_FULL("Jumping to target...");
 	if (tableID < program.jumpTable.size())
 		jumpTo(program.jumpTable[tableID], returnable);
 	else return crash(invalidJump());
-	DEBUGLN("Table index: ", tableID);
-	DEBUGLN("We goin to: ", program.jumpTable[tableID]);
-	DEBUGLN("The Rabbit has Landed!");
+	MAKAILIB_DEBUGLN_FULL("Table index: ", tableID);
+	MAKAILIB_DEBUGLN_FULL("We goin to: ", program.jumpTable[tableID]);
+	MAKAILIB_DEBUGLN_FULL("The Rabbit has Landed!");
 }
 
 bool Engine::hasSignal(String const& signal) {
@@ -982,7 +986,7 @@ void Engine::v2Op() {
 }
 
 void Engine::terminate() {
-	DEBUGLN("Terminating...");
+	MAKAILIB_DEBUGLN_FULL("Terminating...");
 	engineState = State::AV2_RES_FINISHED;
 }
 
@@ -1080,20 +1084,23 @@ void Engine::load() {
 	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (config.allowDynamicLibraries) {
-		DEBUGLN("<dynlib-open>");
+		MAKAILIB_DEBUGLN_FULL("<dynlib-open>");
 		if (program.ani && loader)
 			for (auto& lib: program.ani->shared.libraries)
 				loader->loadLibrary(context, lib + ".andl");
-		DEBUGLN("</dynlib-open>");
-		DEBUGLN("<dynlib-load>");
+		MAKAILIB_DEBUGLN_FULL("</dynlib-open>");
+		MAKAILIB_DEBUGLN_FULL("<dynlib-load>");
 		context.art.loadLibraries();
-		DEBUGLN("</dynlib-load>");
+		MAKAILIB_DEBUGLN_FULL("</dynlib-load>");
 	}
-	DEBUGLN("Finishing loading step...");
+	MAKAILIB_DEBUGLN_FULL("Finishing loading step...");
 	onLoad();
-	DEBUGLN("Types:");
-	for (auto& type : context.art.types.values)
-		DEBUGLN("> ", type ? toString(type->hash) : toString("NULL"));
+	MAKAILIB_DEBUG_BLOCK_FULL {
+		MAKAILIB_DEBUGLN_FULL("Types:");
+		MAKAILIB_DEBUG_BLOCK_FULL
+			for (auto& type : context.art.types.values)
+				MAKAILIB_DEBUGLN_FULL("> ", type ? toString(type->hash) : toString("NULL"));
+	}
 	engineState = State::AV2_RES_RUNNING;
 }
 
@@ -1112,7 +1119,7 @@ void Engine::v2StackPush() {
 	StackStateScopePrinter s3p{context};
 	auto const inter = Cast::bit<Instruction::StackPush>(current.type);
 	auto const value = consumeValue(inter.location);
-	DEBUGLN("You sure? ", value.exists());
+	MAKAILIB_DEBUGLN_FULL("You sure? ", value.exists());
 	if (err) return;
 	context.push(value);
 }
@@ -1134,7 +1141,7 @@ void Engine::v2StackClear() {
 	if (current.type) {
 		auto const total = context.globalValueStack.size();
 		auto const count = current.type < total ? current.type : total;
-		DEBUGLN("Clearing ", count, " entries...");
+		MAKAILIB_DEBUGLN_FULL("Clearing ", count, " entries...");
 		if (count < total)
 			context.globalValueStack = context.globalValueStack.sliced(0, total-count);
 		else context.globalValueStack.clear();
@@ -1229,12 +1236,12 @@ void Engine::v2ScopeBind() {
 		return crash(outOfRangeError("Requested global stack range falls outside its size!"));
 	if ((bind.dst + count) > dst.size())
 		return crash(outOfRangeError("Requested destination range falls outside its size!"));
-	DEBUGLN("Binding values...");
+	MAKAILIB_DEBUGLN_FULL("Binding values...");
 	for (usize i = 0; i < count; ++i) {
 		auto const si = (src.size() - count - bind.src);
 		auto const di = i + bind.dst;
 		auto const v = src[si];
-		DEBUG("> [", si, " -> ", di, "]", ": ");
+		MAKAILIB_DEBUG_FULL("> [", si, " -> ", di, "]", ": ");
 		printValueState(v);
 		dst[di] = v;
 	}

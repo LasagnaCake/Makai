@@ -90,15 +90,15 @@ namespace Makai::Anima::V2::Core {
 			[[gnu::noinline]]
 			static MethodResult handleInvocation(Context& context, ExternalMethod& method, Arguments const& args, TFunc& f) {
 				CTL_DO_NOT_INLINE;
-				DEBUGLN("Invoking function...");
+				MAKAILIB_DEBUGLN_FULL("Invoking function...");
 				if constexpr (HAS_ARGS) {
-					DEBUGLN("Function has arguments");
+					MAKAILIB_DEBUGLN_FULL("Function has arguments");
 					auto tup = makeArgumentTuple(context, method, args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-						DEBUGLN("Void function");
+						MAKAILIB_DEBUGLN_FULL("Void function");
 						invokeFromTuple<void, TArgs...>(f, tup);
 					} else {
-						DEBUGLN("Function returns value");
+						MAKAILIB_DEBUGLN_FULL("Function returns value");
 						return Meta::ARTInfo<TReturn>::convert(
 							context.types,
 							invokeFromTuple<TReturn, TArgs...>(
@@ -108,11 +108,11 @@ namespace Makai::Anima::V2::Core {
 						);
 					}
 				} else if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
-					DEBUGLN("Pure void function");
+					MAKAILIB_DEBUGLN_FULL("Pure void function");
 					static_assert(false);
 					f();
 				} else {
-					DEBUGLN("Getter-like function");
+					MAKAILIB_DEBUGLN_FULL("Getter-like function");
 					static_assert(false);
 					return Meta::ARTInfo<TReturn>::convert(
 						context.types,
@@ -259,7 +259,7 @@ namespace Makai::Anima::V2::Core {
 					"Could not find ART analog for the given type!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			DEBUGLN("Selected Type: ", query.front()->hash);
+			MAKAILIB_DEBUGLN_FULL("Selected Type: ", query.front()->hash);
 			return Object::create(value, query.front());
 		}
 

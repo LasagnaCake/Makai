@@ -48,4 +48,14 @@ namespace Makai {
 	using CTL::String, CTL::List, CTL::OrderedMap, CTL::ListMap, CTL::Map;
 }
 
+#ifdef MAKAILIB_DEBUG_ABSOLUTELY_EVERYTHING
+#define MAKAILIB_DEBUG_FULL(...) DEBUG(__VA_ARGS__)
+#define MAKAILIB_DEBUGLN_FULL(...) DEBUGLN(__VA_ARGS__)
+#define MAKAILIB_DEBUG_BLOCK_FULL if constexpr (true)
+#else
+#define MAKAILIB_DEBUG_FULL(...)
+#define MAKAILIB_DEBUGLN_FULL(...)
+#define MAKAILIB_DEBUG_BLOCK_FULL if constexpr (false)
+#endif
+
 #endif // MAKAILIB_COMPAT_CTL_H

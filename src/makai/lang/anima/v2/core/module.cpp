@@ -5,29 +5,34 @@ using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 static bool valueExists(Makai::Data::Value const& v) {
-	DEBUGLN("WHAT? ", !v.isUndefined());
+	MAKAILIB_DEBUGLN_FULL("WHAT? ", !v.isUndefined());
 	return !v.isUndefined();
 }
 
 static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
-	DEBUGLN("Strings: ", v["strings"].toFLOWString());
+	MAKAILIB_DEBUGLN_FULL("Strings: ", v["strings"].toFLOWString());
 	if (v.contains("strings"))
 		for (auto& str: v["strings"].getArray())
 			if (str.isString())
 				mod.strings.pushBack(str.getString());
-	for (auto& str: mod.strings)
-		DEBUGLN("Text: `", str, "`");
+	MAKAILIB_DEBUG_BLOCK_FULL {
+		MAKAILIB_DEBUG_BLOCK_FULL
+			for (auto& str: mod.strings)
+				MAKAILIB_DEBUGLN_FULL("Text: `", str, "`");
+	}
 	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
 	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
-	DEBUGLN("Bytecode Section: ", code.size());
-	DEBUGLN("Jump Table Section: ", jumps.size());
+	MAKAILIB_DEBUGLN_FULL("Bytecode Section: ", code.size());
+	MAKAILIB_DEBUGLN_FULL("Jump Table Section: ", jumps.size());
 	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
-	DEBUGLN("Instructions: ", mod.code.size());
-	DEBUG("Jump Table Entries: ", mod.jumpTable.size(), " [ ");
-	for (auto& jump : mod.jumpTable)
-		DEBUG(jump, " ");
-	DEBUGLN("]");
+	MAKAILIB_DEBUG_BLOCK_FULL {
+		DEBUGLN("Instructions: ", mod.code.size());
+		DEBUG("Jump Table Entries: ", mod.jumpTable.size(), " [ ");
+		for (auto& jump : mod.jumpTable)
+			DEBUG(jump, " ");
+		DEBUGLN("]");
+	}
 	if (mod.code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
 		"Failed to load bytecode section",
@@ -172,7 +177,7 @@ Module::Detail Module::Detail::deserialize(Makai::Data::Value const& v) {
 		for (auto& sym: v["types"].getArray())
 			if (!sym.isUndefined())
 				result.types.pushBack(sym);
-	DEBUGLN("Total types: ", result.types.size());
+	MAKAILIB_DEBUGLN_FULL("Total types: ", result.types.size());
 	if (v.contains("methods"))
 		for (auto& sym: v["methods"].getArray())
 			if (!sym.isUndefined())
@@ -212,7 +217,7 @@ Makai::Data::Value Module::Method::serialize() const {
 Module::Method Module::Method::deserialize(Data::Value const& v) {
 	Module::Method result;
 	if (!v) return result;
-	DEBUGLN ("Method ", v.toFLOWString("  "));
+	MAKAILIB_DEBUGLN_FULL("Method ", v.toFLOWString("  "));
 	result.id = v["id"];
 	if (v.contains("name"))
 		result.name = v["name"].getString();
@@ -255,7 +260,7 @@ Makai::Data::Value Module::Declaration::serialize() const {
 Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 	Module::Declaration result;
 	if (!v) return result;
-	DEBUGLN ("Type ", v.toFLOWString("  "));
+	MAKAILIB_DEBUGLN_FULL("Type ", v.toFLOWString("  "));
 	result.id		= v["id"].getUnsigned();
 	result.flags	= v["flags"].getUnsigned();
 	result.hash		= v["hash"].getUnsigned();

@@ -21,11 +21,11 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		StorageType byNameHash(uint64 const& hash) const {
-			DEBUGLN("Looking for hash: ", hash);
+			MAKAILIB_DEBUGLN_FULL("Looking for hash: ", hash);
 			StorageType out;
-			DEBUGLN("Database Size: ", values.size());
+			MAKAILIB_DEBUGLN_FULL("Database Size: ", values.size());
 			for (auto& v: values) {
-				DEBUGLN("    > Hash: ", v->hash, " :: ", v->hash == hash);
+				MAKAILIB_DEBUGLN_FULL("    > Hash: ", v->hash, " :: ", v->hash == hash);
 				if (v->hash == hash)
 					out.pushBack(v);
 			}
