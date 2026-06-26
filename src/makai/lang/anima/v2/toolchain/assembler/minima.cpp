@@ -771,6 +771,7 @@ static void doContext(Context& context, bool immediate = false) {
 
 static void doOperation(Context& context) {
 	Instruction::Operation bop;
+	bop.count = 1;
 	auto const op = context.getNext(LTS_TT_IDENTIFIER, "unary operation name").getString();
 	if (op == "add")		bop.op = Operator::AV2_BOP_ADD;
 	else if (op == "sub")	bop.op = Operator::AV2_BOP_SUB;
