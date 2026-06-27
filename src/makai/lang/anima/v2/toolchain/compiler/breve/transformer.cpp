@@ -1292,10 +1292,10 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
-	auto const cond = Expression().transform(context, node->leftSide);
+	auto const cond = Expression().transform(context, node->middle);
 	DEBUGLN("If-Condition: ", cond.type ? cond.type->name : "ERR");
 	if (!cond.direct.isUndefined()) {
-		if (cond.direct.isTruthy()) return Expression().transform(context, node->middle);
+		if (cond.direct.isTruthy()) return Expression().transform(context, node->leftSide);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
 		else return {};
 	} else {
