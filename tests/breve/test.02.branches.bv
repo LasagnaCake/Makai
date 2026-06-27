@@ -2,7 +2,7 @@ using import core
 
 isEven :: (val: int64) => if val % 2 IO.writeLine("Is odd!") else IO.writeLine("Is even!")
 
-isEven2 :: (val: int64) => IO.writeLine(("Is odd!" if val % 2 else "Is even!"))
+isEven2 :: (val: int64) => IO.writeLine("Is odd!" if val % 2 else "Is even!")
 
 @Main
 main :: () {
