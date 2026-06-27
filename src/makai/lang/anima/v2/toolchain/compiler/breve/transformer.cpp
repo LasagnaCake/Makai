@@ -1296,7 +1296,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		else return {};
 	} else {
 		if (!cond.source)
-			context.error("Expression does not result in a value!", node->leftSide);
+			context.error("Expression does not result in a value!", node->middle);
 		auto const ifTrueLabel = "__if_" + node->name() + "_true_";
 		auto const ifFalseLabel = "__if_" + node->name() + "_false_";
 		auto const ifEndLabel = "__if_" + node->name() + "_end_";
@@ -1306,7 +1306,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		context.writeMainLine("@target", ifTrueLabel, ":");
 		context.writeMainLine("begin 0");
 		context.writeMainLine("keep");
-		auto const ifTrue = Expression().transform(context, node->middle);
+		auto const ifTrue = Expression().transform(context, node->leftSide);
 		if (ifTrue.source && ifTrue.shouldBePushed())
 			context.writeMainLine("push", ifTrue.source.value());
 		context.writeMainLine("end");
