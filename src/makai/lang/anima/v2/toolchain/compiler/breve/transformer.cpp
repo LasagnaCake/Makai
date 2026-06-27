@@ -1318,6 +1318,8 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			auto const ifFalse = Expression().transform(context, node->rightSide);
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				context.writeMainLine("push", ifFalse.source.value());
+			DEBUGLN("Left-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
+			DEBUGLN("Right-side: ", ifFalse.type ? ifFalse.type->name : "NO TYPE");
 			if (ifTrue.type != ifFalse.type)
 				context.error("Both paths return different types!", node);
 			context.writeMainLine("end");

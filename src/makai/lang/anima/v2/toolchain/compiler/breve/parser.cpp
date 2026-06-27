@@ -11,8 +11,7 @@ Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 		case LTS_TT_IDENTIFIER: {
 			if (!tok.strict) return AV2_TAPP_NONE;
 			auto const id = tok.text;
-			if (id == "else") return AV2_TAPP_NULL_DECAY;
-			else if (id == "and") return AV2_TAPP_LAND;
+			if (id == "and") return AV2_TAPP_LAND;
 			else if (id == "or") return AV2_TAPP_LOR;
 			else if (id == "xor") return AV2_TAPP_LXOR;
 			else if (id == "pow") return AV2_TAPP_POW_ROOT;
@@ -58,7 +57,7 @@ Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 		case LTS_TT_DECREMENT:
 		case LTS_TT_DOT: return AV2_TAPP_PATH;
 		case LTS_TT_COMMA: return AV2_TAPP_RHS_DECAY;
-		case LTS_TT_QUESTION: return AV2_TAPP_NULL_DECAY;
+		case LTS_TT_NULL_DECAY: return AV2_TAPP_NULL_DECAY;
 	}
 	return Parser::Precedence::AV2_TAPP_NONE;
 }
