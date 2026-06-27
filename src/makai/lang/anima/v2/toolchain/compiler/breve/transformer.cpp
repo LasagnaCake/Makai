@@ -1283,6 +1283,9 @@ ATransformer::Result Drop::transform(Context& context, Node::Instance const& nod
 }
 
 ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance const& node) {
+	if (!node->rightSide)
+		context.error("Missing [else] expression!");
+	DEBUGLN("Handling inline if-else...");
 	auto const iif = Branch().transform(context, node);
 	if (!(iif.source and iif.type)) context.error("inline if-elses must result in a value!", node);
 	return iif;
@@ -1290,6 +1293,7 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
 	auto const cond = Expression().transform(context, node->leftSide);
+	DEBUGLN("If-Condition: ", cond.type ? cond.type->name : "ERR");
 	if (!cond.direct.isUndefined()) {
 		if (cond.direct.isTruthy()) return Expression().transform(context, node->middle);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
@@ -1318,12 +1322,15 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			auto const ifFalse = Expression().transform(context, node->rightSide);
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				context.writeMainLine("push", ifFalse.source.value());
-			DEBUGLN("Left-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
-			DEBUGLN("Right-side: ", ifFalse.type ? ifFalse.type->name : "NO TYPE");
+			DEBUGLN("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
+			DEBUGLN("If-False-side: ", ifFalse.type ? ifFalse.type->name : "NO TYPE");
 			if (ifTrue.type != ifFalse.type)
 				context.error("Both paths return different types!", node);
 			context.writeMainLine("end");
 			context.writeMainLine("jump", ifEndLabel);
+		} else {
+			DEBUGLN("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
+			DEBUGLN("If-False-side: ", "NONE");
 		}
 		context.writeMainLine("@target", ifEndLabel, ":");
 		return {.source = {"move stack[-0}"}, .type = ifTrue.type};

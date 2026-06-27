@@ -107,13 +107,18 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 	DEBUGLN("Resolving inline if-else expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->middle = leftSide;
-	result->leftSide = parser.nextExpression(precedence);
+	result->leftSide = leftSide;
+	result->middle = parser.nextExpression(precedence);
 	parser.context.expectNext(LTS_TT_IDENTIFIER, "'else'");
 	if (parser.context.value().getString() != "else")
 		parser.context.error("Expected 'else' here!");
 	result->rightSide = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INLINE_IF_ELSE;
+	DEBUGLN("<inline-if-else>");
+	DEBUGLN("Condition: ", result->middle->base.text);
+	DEBUGLN("If-True: ", result->leftSide->base.text);
+	DEBUGLN("If-False: ", result->rightSide->base.text);
+	DEBUGLN("</inline-if-else>");
 	DEBUGLN("IfElse:DONE!");
 	return result;
 }
