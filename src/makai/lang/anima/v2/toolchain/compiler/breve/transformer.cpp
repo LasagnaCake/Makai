@@ -613,7 +613,7 @@ static ssize likelihoodOf(Node::Instance const& node) {
 		case LTS_TT_LOGIC_OR: return 1;
 		case LTS_TT_DECREMENT:
 		case LTS_TT_LOGIC_AND: return -1;
-		default [[likely]]: return 0;
+		default: [[likely]] return 0;
 	}
 }
 
