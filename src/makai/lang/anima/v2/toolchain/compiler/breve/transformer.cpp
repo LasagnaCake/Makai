@@ -715,13 +715,6 @@ static bool isLogicOp(Node::Instance const& node) {
 	);
 }
 
-static bool isLogicOp(Node::Instance const& node) {
-	return (
-		node->base.type == LTS_TT_LOGIC_OR
-	or	node->base.type == LTS_TT_LOGIC_AND
-	);
-}
-
 ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const lhs = expr.transform(context, node->leftSide);

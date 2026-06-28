@@ -7,7 +7,7 @@ constexpr auto const VER = Makai::Data::Version{1};
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
-	cfg["output"]	= "out.anp";
+	cfg["output"]	= "output/out.anp";
 	cfg["link"]		= cfg.array();
 	cfg["write"]	= false;
 	return cfg;
@@ -50,7 +50,7 @@ int main(int argc, char** argv) try {
 				.splitAtLast('/').back()
 				.splitAtLast('.').front()
 		);
-		auto const outPath = Makai::OS::FS::currentDirectory() + "/output/" + outName;
+		auto const outPath = Makai::OS::FS::currentDirectory() + "/" + outName;
 		auto const code = Assembler::Minima::assemble(outName, file);
 		DEBUGLN("Done!");
 		Makai::File::saveText(

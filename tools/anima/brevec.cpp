@@ -90,7 +90,11 @@ int main(int argc, char** argv) try {
 		} else {
 			Makai::File::saveText(
 				outPath + ".anp",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString("  ")
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString(
+					#ifdef MAKAILIB_DEBUG
+					"  "
+					#endif
+				)
 			);
 		}
 	}

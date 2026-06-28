@@ -19,7 +19,9 @@ CompileFlags:
     - -Ilib/minivorbis
     - -Ilib/json2xml
     - -Ilib/curl/include
-    - -frelaxed-template-template-args
+  #    - -frelaxed-template-template-args
+  Compiler: g++
+  MallocTrim: true
 Documentation:
   CommentFormat: Doxygen
 Index:
