@@ -1362,12 +1362,14 @@ void Engine::v2ScopeKeep() {
 	if (context.scopeStack.size() < 2) return;
 	auto& locals = context.locals();
 	auto& parentLocals = context.scopeStack[-2]->localStack;
-	if (locals.size() >= parentLocals.size())
+	if (parentLocals.empty())
+		locals.clear();
+	else if (locals.empty())
+		locals.appendBack(parentLocals);
+	else if (locals.size() >= parentLocals.size())
 		for (auto const& i: range(parentLocals.size()))
 			locals[i] = parentLocals[i];
-	if (locals.size() < parentLocals.size())
-		locals = parentLocals;
-	else locals.appendBack(parentLocals);
+	else locals = parentLocals;
 }
 
 void Engine::v2ScopeDeclare() {
