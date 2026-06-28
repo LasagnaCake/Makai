@@ -93,7 +93,7 @@ int main(int argc, char** argv) try {
 			Makai::File::saveText(
 				outPath + ".anp",
 				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString(
-					code.serialize().toFLOWString(cfg.fetch("pretty", false) ? null : "  ")
+					cfg.fetch("pretty", false) ? null : "  "
 				)
 			);
 		}
