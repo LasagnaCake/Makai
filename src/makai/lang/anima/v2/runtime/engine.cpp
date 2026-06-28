@@ -1366,8 +1366,8 @@ void Engine::v2ScopeKeep() {
 		locals.clear();
 	else if (locals.empty())
 		locals.appendBack(parentLocals);
-	else if (locals.size() >= parentLocals.size())
-		for (auto const& i: range(parentLocals.size()))
+	else if (locals.size() > parentLocals.size())
+		for (usize i = 0; i < parentLocals.size(); ++i)
 			locals[i] = parentLocals[i];
 	else locals = parentLocals;
 }
