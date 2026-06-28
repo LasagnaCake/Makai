@@ -13,10 +13,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Namespace::Instance		scope;
 			Namespace::TypeRef		type;
 			Data::Value				direct;
+			ssize					likelihood = 0;
 
 			bool shouldBePushed() const;
 			bool isStackTop() const;
 			bool isDiscardable() const;
+
+			bool isCompilable() const {
+				return !direct.isUndefined();
+			}
 		};
 
 		using Instance = Instance<ATransformer>;

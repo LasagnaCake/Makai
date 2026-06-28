@@ -63,7 +63,7 @@ static ATransformer::Result expandVariable(
 			expandProperty(context, node, path, *parent->property, true);
 		else if (stack) context.top()->impl->writeMainLine("push", var.getSource());
 		context.top()->impl->writeMainLine("at", var.id);
-		return {{"move stack[-0]"}, var.scope.raw(), var.type.raw()};
+		return {{"move top"}, var.scope.raw(), var.type.raw()};
 	} else
 		return {var.getSource(), var.scope.raw(), var.type.raw()};
 }
@@ -90,7 +90,7 @@ static ATransformer::Result expandProperty(
 	else if (parent && parent->property)
 		expandProperty(context, node, path, *parent->property, true);
 	context.top()->impl->writeMainLine("call", get->entry);
-	return {{"move stack[-0]"}, prop.scope.raw(), get->result};
+	return {{"move top"}, prop.scope.raw(), get->result};
 }
 
 static Makai::Nullable<Makai::UTF8String> addToStack(
@@ -100,13 +100,13 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 	if (ns->variable) {
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
 			context.top()->impl->writeMainLine("at", ns->variable->id);
-			return {"move stack[-0]"};
+			return {"move top"};
 		}
 		return ns->variable->getSource();
 	} else if (ns->property) {
 		auto const ov = ns->property->getter->overloadFromTypes({});
 		context.top()->impl->writeMainLine("call", ov->entry);
-		return {"move stack[-0]"};
+		return {"move top"};
 	}
 	return null;
 }
@@ -120,13 +120,13 @@ static ATransformer::Result resolveSubfield(
 	if (!ns)
 		context.error("Symbol with this name does not exist at the given path!", node);
 	if (sub.empty()) {
-		return {{"move stack[-0]"}, ns};
+		return {{"move top"}, ns};
 	}
 	if (ns->variable) {
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->type->fields[sub];
 			context.top()->impl->writeMainLine("at", f->id);
-			return {{"move stack[-0]"}, f->scope.raw(), f->type.raw()};
+			return {{"move top"}, f->scope.raw(), f->type.raw()};
 		}
 	}
 	if (ns->property) {
@@ -134,7 +134,7 @@ static ATransformer::Result resolveSubfield(
 			auto const f = ns->type->fields[sub];
 			auto const ov = ns->property->getter->overloadFromTypes({});
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move stack[-0]"}, f->scope.raw(), f->type.raw()};
+			return {{"move top"}, f->scope.raw(), f->type.raw()};
 		}
 	}
 	return {};
@@ -203,7 +203,7 @@ static ATransformer::Result infixResolve(ATransformer::Context& context, Node::I
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move stack[-0]"}, ov->result->scope.raw(), ov->result};
+			return {{"move top"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -218,7 +218,7 @@ static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move stack[-0]"}, ov->result->scope.raw(), ov->result};
+			return {{"move top"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -233,7 +233,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move stack[-0]"}, ov->result->scope.raw(), ov->result};
+			return {{"move top"}, ov->result->scope.raw(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -306,7 +306,7 @@ ATransformer::resolve(Context& context, Node::Instance const& node, bool allowPa
 }
 
 bool ATransformer::Result::isStackTop() const {
-	return source && Makai::Regex::contains(*source, R"re(stack\[\-0\])re");
+	return source && Makai::Regex::contains(*source, R"re(stack\[\-0\]|top)re");
 }
 
 bool ATransformer::Result::isDiscardable() const {
@@ -451,24 +451,24 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	if (val.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *val.source);
 	context.top()->impl->writeMainLine("ret");
-	return {{"move stack[-0]"}, val.scope, val.type};
+	return {{"move top"}, val.scope, val.type};
 }
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	context.writeMainLine("begin", context.top()->varc);
-	context.writeMainLine("keep");
+	context.top()->impl->writeMainLine("begin", context.top()->varc);
+	context.top()->impl->writeMainLine("keep");
 	for (auto const& child: node->children) {
 		result = Expression().transform(context, child);
 		if (result.scope && result.scope->variable) {
-			context.writeMainLine(result.scope->impl->toString());
+			context.top()->impl->writeMainLine(result.scope->impl->toString());
 			if (!result.scope->variable->initializer)		continue;
 			if (context.nearestVarScope() == context.root)	continue;
-			context.writeMainLine(result.scope->variable->initializer->impl->toString());
+			context.top()->impl->writeMainLine(result.scope->variable->initializer->impl->toString());
 			result.scope->variable->initializer = null;
 		}
 	}
-	context.writeMainLine("end");
+	context.top()->impl->writeMainLine("end");
 	return result;
 }
 
@@ -607,17 +607,27 @@ static Makai::Data::Value bopDirectResolve(Makai::Data::Value const& a, Makai::D
 	}
 }
 
+static ssize likelihoodOf(Node::Instance const& node) {
+	switch (node->base.type) {
+		case LTS_TT_INCREMENT:
+		case LTS_TT_LOGIC_OR: return 1;
+		case LTS_TT_DECREMENT:
+		case LTS_TT_LOGIC_AND: return -1;
+		default [[likely]]: return 0;
+	}
+}
+
 ATransformer::Result PrefixExpression::transform(Context& context, Node::Instance const& node) {
 	if (node->base.text == "return")
 		return Return().transform(context, node);
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
 	if (!val.source)
-		context.error("Invalid expression!", node->leftSide);
-	if (val.direct && node->base.text != "typeof") {
+		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
+	if (val.isCompilable() && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString()}, val.scope, directName(context, result.type()), result};
+			return {{result.toString()}, val.scope, directName(context, result.type()), result, val.likelihood + likelihoodOf(node)};
 	}
 	if (
 		node->base.text == "copy"
@@ -628,7 +638,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		DEBUGLN("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		if (mod == "copy") mod = "val";
 		DEBUGLN("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
-		return {{mod + " " + *val.source}, val.scope, val.type, val.direct};
+		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood};
 	}
 	if (val.shouldBePushed()) {
 		if (
@@ -644,11 +654,11 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	) {
 		context.top()->impl->writeMainLine(node->base.text.sliced(0, -3));
 		auto const retType = node->base.text == "typeof" ? context.basicType("type") : context.basicType("uint64");
-		return {{"move stack[-0]"}, retType->scope.raw(), retType};
+		return {{"move top"}, retType->scope.raw(), retType, 1};
 	}
 	if (val.type->basic) {
 		context.top()->impl->writeMainLine("op", bopName(context, node));
-		return {{"move stack[-0]"}, val.type->scope.raw(), val.type};
+		return {{"move top"}, val.type->scope.raw(), val.type, val.direct.undefined(), val.likelihood + likelihoodOf(node)};
 	} else return prefixResolve(context, node, val.type);
 }
 
@@ -675,29 +685,53 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type) {
 
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
-	auto const val = expr.transform(context, node->rightSide);
+	auto const val = expr.transform(context, node->leftSide);
 	if (!val.source)
-		context.error("Invalid expression!", node->rightSide);
-	if (val.direct && node->base.text != "typeof") {
+		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
+	if (val.isCompilable() && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString()}, val.type->scope.raw(), directName(context, result.type()), result};
+			return {{result.toString()}, val.type->scope.raw(), directName(context, result.type()), result, val.likelihood};
 	}
 	if (val.shouldBePushed())
-		context.top()->impl->writeMainLine("push dup", *val.source);
-	context.top()->impl->writeMainLine("op", uopName(context, node));
+		context.top()->impl->writeMainLine("push", *val.source);
+	context.top()->impl->writeMainLine("push val top");
+	context.top()->impl->writeMainLine("swap");
 	if (val.type->basic) {
-		context.top()->impl->writeMainLine("op", bopName(context, node) + asFastOpQualifier(*val.type->basic));
-		return {{"move stack[-0]"}, val.type->scope.raw(), val.type};
-	} else return postfixResolve(context, node, val.type);
+		context.top()->impl->writeMainLine("op", uopName(context, node) + asFastOpQualifier(*val.type->basic));
+		context.top()->impl->writeMainLine("pop");
+		return {{"move top"}, val.type->scope.raw(), val.type, val.direct.undefined(), val.likelihood};
+	} else {
+		auto const result = postfixResolve(context, node, val.type);
+		context.top()->impl->writeMainLine("pop");
+		return result;
+	}
+}
+
+static bool isLogicOp(Node::Instance const& node) {
+	return (
+		node->base.type == LTS_TT_LOGIC_OR
+	or	node->base.type == LTS_TT_LOGIC_AND
+	);
+}
+
+static bool isLogicOp(Node::Instance const& node) {
+	return (
+		node->base.type == LTS_TT_LOGIC_OR
+	or	node->base.type == LTS_TT_LOGIC_AND
+	);
 }
 
 ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const lhs = expr.transform(context, node->leftSide);
 	if (!lhs.source)
-		context.error("Invalid expression!", node->leftSide);
-	if (lhs.shouldBePushed() && !lhs.direct)
+		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
+	if (lhs.isCompilable() && isLogicOp(node)) {
+		if (lhs.direct.isFalsy() && node->base.type == LTS_TT_LOGIC_AND) return lhs;
+		if (lhs.direct.isTruthy() && node->base.type == LTS_TT_LOGIC_OR) return lhs;
+	}
+	if (lhs.shouldBePushed() && !lhs.isCompilable())
 		context.top()->impl->writeMainLine("push", *lhs.source);
 	if (
 		node->base.text == "as"
@@ -706,24 +740,31 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		auto const t = TypeRequest().transform(context, node->rightSide);
 		if (node->base.text == "is") {
 			auto const retType = context.basicType("bool");
-			context.writeMainLine(node->base.text, t.type->name);
-			return {{"move stack[-0]"}, retType->scope.raw(), retType};
+			context.top()->impl->writeMainLine(node->base.text, t.type->name);
+			return {{"move top"}, retType->scope.raw(), retType};
 		}
 		auto const retType = t.type;
 		if (t.type->basic != Core::BasicType::AV2_BT_ANY && !t.type->derivedFrom(retType))
 			context.error("Value's type cannot be converted to given type!", node);
-		context.writeMainLine(node->base.text, t.type->name);
-		return {{"move stack[-0]"}, retType->scope.raw(), retType};
+		context.top()->impl->writeMainLine(node->base.text, t.type->name);
+		return {{"move top"}, retType->scope.raw(), retType};
 	}
 	auto const rhs = expr.transform(context, node->rightSide);
 	if (!rhs.source)
-		context.error("Invalid expression!", node->rightSide);
-	if (lhs.direct && rhs.direct) {
+		context.error("Invalid expression (Does not result in a value)!", node->rightSide);
+	auto const likelihood = lhs.likelihood + rhs.likelihood + likelihoodOf(node);
+	if (lhs.isCompilable() && rhs.isCompilable()) {
 		auto const result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString()}, directName(context, result.type())->scope.raw(), directName(context, result.type()), result};
+			return {
+				{result.toString()},
+				directName(context, result.type())->scope.raw(),
+				directName(context, result.type()),
+				result,
+				likelihood
+			};
 	}
-	if (lhs.direct)
+	if (!lhs.isCompilable())
 		context.top()->impl->writeMainLine("push", *lhs.source);
 	if (rhs.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *rhs.source);
@@ -733,7 +774,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				context.top()->impl->writeMainLine("op", bopName(context, node) + asFastOpQualifier(*t->basic));
 			else
 				context.top()->impl->writeMainLine("op", bopName(context, node));
-			return {{"move stack[-0]"}, t->scope.raw(), t};
+			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 		} else return infixResolve(context, node, t);
 	}
 	context.error("Type mismatch!", node);
@@ -743,11 +784,11 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
 	auto const v = node->value.toString();
-	if (node->value.isBoolean())	return {{v}, context.basicType("bool")->scope.raw(),	context.basicType("bool"),		node->value	};
-	if (node->value.isString())		return {{v}, context.basicType("string")->scope.raw(),	context.basicType("string"),	node->value	};
-	if (node->value.isUnsigned())	return {{v}, context.basicType("uint64")->scope.raw(),	context.basicType("uint64"),	node->value	};
-	if (node->value.isSigned())		return {{v}, context.basicType("int64")->scope.raw(),	context.basicType("int64"),		node->value	};
-	if (node->value.isReal())		return {{v}, context.basicType("float64")->scope.raw(),	context.basicType("float64"),	node->value	};
+	if (node->value.isBoolean())	return {{v}, context.basicType("bool")->scope.raw(),	context.basicType("bool"),		node->value, 0	};
+	if (node->value.isString())		return {{v}, context.basicType("string")->scope.raw(),	context.basicType("string"),	node->value, 1	};
+	if (node->value.isUnsigned())	return {{v}, context.basicType("uint64")->scope.raw(),	context.basicType("uint64"),	node->value, 1	};
+	if (node->value.isSigned())		return {{v}, context.basicType("int64")->scope.raw(),	context.basicType("int64"),		node->value, 1	};
+	if (node->value.isReal())		return {{v}, context.basicType("float64")->scope.raw(),	context.basicType("float64"),	node->value, 1	};
 	context.error("Invalid constant!", node);
 }
 
@@ -1081,10 +1122,10 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 ATransformer::Result Assignment::transform(Context& context, Node::Instance const& node) {
 	auto const lhs = Expression().transform(context, node->leftSide);
 	auto const rhs = Expression().transform(context, node->rightSide);
-	if (lhs.direct) context.error("Cannot assign a value to a direct value!", node->leftSide);
+	if (!lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
 	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
 		context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
-		return {lhs.source, lhs.scope, t, rhs.direct};
+		return {lhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
 	} else context.error("Type mismatch!", node);
 }
 
@@ -1215,7 +1256,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		)
 	&&	Makai::Regex::contains(fn.source.orElse("").toString(), "stack")
 	) context.top()->impl->writeMainLine("pop");
-	return {{"move stack[-0]"}, ov.result->scope.raw(), ov.result};
+	return {{"move top"}, ov.result->scope.raw(), ov.result};
 }
 
 ATransformer::Result Subscript::transform(Context& context, Node::Instance const& node) {
@@ -1227,7 +1268,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	if (src.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *src.source);
 	auto const index = Expression().transform(context, node->rightSide);
-	if (index.direct) {
+	if (index.isCompilable()) {
 		if (!index.direct.isUnsigned())
 			context.error("Direct value must be an unsigned integer here!", node->rightSide);
 		context.top()->impl->writeMainLine("at", index.direct.getUnsigned());
@@ -1243,7 +1284,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("dyn at");
 	} else context.error("Expected unsigned integer here!", node->rightSide);
 	auto const t = src.type->base;
-	return {{"move stack[-0]"}, t->scope.raw(), t};
+	return {{"move top"}, t->scope.raw(), t};
 }
 
 ATransformer::Result Array::transform(Context& context, Node::Instance const& node) {
@@ -1264,20 +1305,20 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	context.top()->impl->writeMainLine("new", arr->name);
 	for (auto const i: range(count))
 		context.top()->impl->writeMainLine("set", count - (i+1));
-	return {{"move stack[-0]"}, arr->scope.raw(), arr};
+	return {{"move top"}, arr->scope.raw(), arr};
 }
 
 ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {
 	auto const t = TypeRequest().transform(context, node->leftSide).type;
 	context.top()->impl->writeMainLine("new", t->name);
-	return {{"move stack[-0]"}, t->scope.raw(), t};
+	return {{"move top"}, t->scope.raw(), t};
 }
 
 ATransformer::Result Drop::transform(Context& context, Node::Instance const& node) {
 	auto const at = PathExpression().transform(context, node->leftSide);
 	if (!at.source)
 		context.error("Expression does not result in a value!", node->leftSide);
-	if (!at.direct)
+	if (!at.isCompilable())
 		context.top()->impl->writeMainLine("drop", *at.source);
 	return {};
 }
@@ -1294,7 +1335,7 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
 	auto const cond = Expression().transform(context, node->middle);
 	DEBUGLN("If-Condition: ", cond.type ? cond.type->name : "ERR");
-	if (!cond.direct.isUndefined()) {
+	if (cond.isCompilable()) {
 		if (cond.direct.isTruthy()) return Expression().transform(context, node->leftSide);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
 		else return {};
@@ -1305,35 +1346,53 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		auto const ifFalseLabel = "__if_" + node->name() + "_false_";
 		auto const ifEndLabel = "__if_" + node->name() + "_end_";
 		if (cond.shouldBePushed())
-			context.writeMainLine("push", cond.source.value());
-		context.writeMainLine("pick [", node->rightSide ? ifFalseLabel : ifEndLabel, ifTrueLabel, "]");
-		context.writeMainLine("@target", ifTrueLabel, ":");
-		context.writeMainLine("begin 0");
-		context.writeMainLine("keep");
-		auto const ifTrue = Expression().transform(context, node->leftSide);
-		if (ifTrue.source && ifTrue.shouldBePushed())
-			context.writeMainLine("push", ifTrue.source.value());
-		context.writeMainLine("end");
-		context.writeMainLine("jump", ifEndLabel);
-		if (node->rightSide) {
-			context.writeMainLine("@target", ifFalseLabel, ":");
-			context.writeMainLine("begin 0");
-			context.writeMainLine("keep");
-			auto const ifFalse = Expression().transform(context, node->rightSide);
+			context.top()->impl->writeMainLine("push", cond.source.value());
+		ATransformer::Result ifTrue, ifFalse;
+		auto const writeTrueBranch = [&] {
+			context.top()->impl->writeMainLine("begin 0");
+			context.top()->impl->writeMainLine("keep");
+			ifTrue = Expression().transform(context, node->leftSide);
+			if (ifTrue.source && ifTrue.shouldBePushed())
+				context.top()->impl->writeMainLine("push", ifTrue.source.value());
+			context.top()->impl->writeMainLine("end");
+			context.top()->impl->writeMainLine("jump", ifEndLabel);
+		};
+		auto const writeFalseBranch = [&] {
+			if (!node->rightSide) return;
+			context.top()->impl->writeMainLine("@target", ifFalseLabel, ":");
+			context.top()->impl->writeMainLine("begin 0");
+			context.top()->impl->writeMainLine("keep");
+			ifFalse = Expression().transform(context, node->rightSide);
 			if (ifFalse.source && ifFalse.shouldBePushed())
-				context.writeMainLine("push", ifFalse.source.value());
+				context.top()->impl->writeMainLine("push", ifFalse.source.value());
+			context.top()->impl->writeMainLine("end");
+			context.top()->impl->writeMainLine("jump", ifEndLabel);
+		};
+		if (cond.likelihood >= 0) {
+			context.top()->impl->writeMainLine("jump if false ", node->rightSide ? ifFalseLabel : ifEndLabel);
+			writeTrueBranch();
+			writeFalseBranch();
+		} else /*if (cond.likelihood < 0)*/ {
+			context.top()->impl->writeMainLine("jump if true ", ifTrueLabel);
+			writeFalseBranch();
+			writeTrueBranch();
+		} /*else {
+			context.top()->impl->writeMainLine("pick [", node->rightSide ? ifFalseLabel : ifEndLabel, ifTrueLabel, "]");
+			writeTrueBranch();
+			writeFalseBranch();
+		}
+		*/
+		if (node->rightSide && ifTrue.type != ifFalse.type)
+			context.error("Both paths return different types!", node);
+		if (node->rightSide) {
 			DEBUGLN("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
 			DEBUGLN("If-False-side: ", ifFalse.type ? ifFalse.type->name : "NO TYPE");
-			if (ifTrue.type != ifFalse.type)
-				context.error("Both paths return different types!", node);
-			context.writeMainLine("end");
-			context.writeMainLine("jump", ifEndLabel);
 		} else {
 			DEBUGLN("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
 			DEBUGLN("If-False-side: ", "NONE");
 		}
-		context.writeMainLine("@target", ifEndLabel, ":");
-		return {.source = {"move stack[-0}"}, .type = ifTrue.type};
+		context.top()->impl->writeMainLine("@target", ifEndLabel, ":");
+		return {.source = {"move top"}, .type = ifTrue.type, .likelihood = ifTrue.likelihood + ifFalse.likelihood};
 	}
 }
 
