@@ -505,7 +505,7 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 			else if (id == "null" || id == "nil")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL;
 			else if (id == "void" || id == "v")			leap.type = Instruction::Leap::Type::AV2_ILT_IF_UNDEFINED;
 			else if (id == "empty" || id == "e")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_UNDEFINED;
-		}
+		} break;
 		default: context.error("Invalid condition!");
 	}
 	context.add(Instruction::Name::AV2_IN_JUMP, leap);
