@@ -48,15 +48,15 @@ namespace Makai::Anima::V2::Core {
 	};
 
 	constexpr DataLocation operator|(DataLocation const& a, DataLocation const& b) {
-		return Cast::as<DataLocation>(enumcast(a) | enumcast(b));
+		return Cast::as<DataLocation>(bitcast<uint8>(a) | bitcast<uint8>(b));
 	}
 
 	constexpr DataLocation operator&(DataLocation const& a, DataLocation const& b) {
-		return Cast::as<DataLocation>(enumcast(a) & enumcast(b));
+		return Cast::as<DataLocation>(bitcast<uint8>(a) & bitcast<uint8>(b));
 	}
 
 	constexpr DataLocation operator~(DataLocation const& a) {
-		return Cast::as<DataLocation>(~enumcast(a));
+		return Cast::as<DataLocation>(~bitcast<uint8>(a));
 	}
 
 	/// @brief Execution context mode.
