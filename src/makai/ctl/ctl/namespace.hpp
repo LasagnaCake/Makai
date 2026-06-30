@@ -43,6 +43,24 @@ namespace CTL::_Devmode {
 #define CTL_ON_UNIX (1)
 #endif
 
+#define CTL_CXX_UNKNOWN (0)
+#define CTL_CXX_GCC (1)
+#define CTL_CXX_CLANG (2)
+#define CTL_CXX_MSVC (2)
+
+#ifdef __clang__
+#define CTL_TARGET_COMPILER (CTL_CXX_CLANG)
+#define CTL_ON_CLANG (1)
+#else
+#ifdef __GNUC__
+#define CTL_TARGET_COMPILER (CTL_CXX_GCC)
+#define CTL_ON_GCC (1)
+#else
+#define CTL_TARGET_COMPILER (CTL_CXX_MCTL_CXX_MSVC)
+#define CTL_ON_MSVC (1)
+#endif
+#endif
+
 #if CTL_ON_WINDOWS
 #define CTL_DYNEXPORT __declspec(dllexport)
 #define CTL_DYNIMPORT __declspec(dllimport)
@@ -65,6 +83,12 @@ namespace CTL::_Devmode {
 
 #define CTL_CDECL extern "C"
 
+#ifdef CTL_ON_CLANG
+#define CTL_UNAVAILABLE(REASON) clang::unavailable(REASON)
+#else
+#define CTL_UNAVAILABLE(REASON)  gnu::unavailable(REASON)
+#endif
+
 /// @brief Core library.
 namespace CTL {
 }
@@ -76,6 +100,12 @@ enum class OperatingSystem {
 	OS_UNIX = CTL_OS_UNIX
 };
 
+enum class Compiler {
+	CXX_GCC = CTL_CXX_GCC,
+	CXX_CLANG = CTL_CXX_CLANG,
+	CXX_MSVC = CTL_CXX_MSVC
+};
+
 /// @brief Target operating system.
 constexpr auto const TARGET_OS =
 	#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
@@ -85,9 +115,26 @@ constexpr auto const TARGET_OS =
 	#endif
 ;
 
+/// @brief Target compiler.
+constexpr auto const TARGET_CXX =
+	#if (CTL_TARGET_COMPILER == CTL_CXX_GCC)
+	Compiler::CXX_GCC
+	#else
+	#if (CTL_TARGET_COMPILER == CTL_CXX_CLANG)
+	Compiler::CXX_CLANG
+	#else
+	Compiler::CXX_MSVC
+	#endif
+	#endif
+;
+
 /// @brief Core library.
 namespace CTL = ::CTL;
 
 CTL_NAMESPACE_END
+
+#ifdef CTL_ON_MSVC
+#error "MSVC is not supported!"
+#endif
 
 #endif // CTL_NAMESPACE_H

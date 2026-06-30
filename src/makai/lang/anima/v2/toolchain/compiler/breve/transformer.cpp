@@ -717,6 +717,7 @@ static bool isLogicOp(Node::Instance const& node) {
 
 ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
+	bool lhsHasBeenPushed = false;
 	auto const lhs = expr.transform(context, node->leftSide);
 	if (!lhs.source)
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
@@ -724,8 +725,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (lhs.direct.isFalsy() && node->base.type == LTS_TT_LOGIC_AND) return lhs;
 		if (lhs.direct.isTruthy() && node->base.type == LTS_TT_LOGIC_OR) return lhs;
 	}
-	if (lhs.shouldBePushed() && !lhs.isCompilable())
+	if (lhs.shouldBePushed() && !lhs.isCompilable()) {
+		lhsHasBeenPushed = true;
 		context.top()->impl->writeMainLine("push", *lhs.source);
+	}
 	if (
 		node->base.text == "as"
 	||	node->base.text == "is"
@@ -757,7 +760,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				likelihood
 			};
 	}
-	if (!lhs.isCompilable())
+	if (!lhsHasBeenPushed)
 		context.top()->impl->writeMainLine("push", *lhs.source);
 	if (rhs.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *rhs.source);
@@ -1341,16 +1344,16 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		if (cond.shouldBePushed())
 			context.top()->impl->writeMainLine("push", cond.source.value());
 		ATransformer::Result ifTrue, ifFalse;
-		auto const writeTrueBranch = [&] {
+		auto const writeTrueBranch = [&] (bool const skipEndLabel = false) {
 			context.top()->impl->writeMainLine("begin 0");
 			context.top()->impl->writeMainLine("keep");
 			ifTrue = Expression().transform(context, node->leftSide);
 			if (ifTrue.source && ifTrue.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifTrue.source.value());
 			context.top()->impl->writeMainLine("end");
-			context.top()->impl->writeMainLine("jump", ifEndLabel);
+			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
-		auto const writeFalseBranch = [&] {
+		auto const writeFalseBranch = [&] (bool const skipEndLabel = false) {
 			if (!node->rightSide) return;
 			context.top()->impl->writeMainLine("@target", ifFalseLabel, ":");
 			context.top()->impl->writeMainLine("begin 0");
@@ -1359,16 +1362,16 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifFalse.source.value());
 			context.top()->impl->writeMainLine("end");
-			context.top()->impl->writeMainLine("jump", ifEndLabel);
+			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
 		if (cond.likelihood >= 0) {
 			context.top()->impl->writeMainLine("jump if false ", node->rightSide ? ifFalseLabel : ifEndLabel);
 			writeTrueBranch();
-			writeFalseBranch();
+			writeFalseBranch(true);
 		} else /*if (cond.likelihood < 0)*/ {
 			context.top()->impl->writeMainLine("jump if true ", ifTrueLabel);
 			writeFalseBranch();
-			writeTrueBranch();
+			writeTrueBranch(true);
 		} /*else {
 			context.top()->impl->writeMainLine("pick [", node->rightSide ? ifFalseLabel : ifEndLabel, ifTrueLabel, "]");
 			writeTrueBranch();

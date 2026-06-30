@@ -239,7 +239,7 @@ static DataLocation getLoadType(Context& context, DataLocation const prev) {
 		else if (id == "move")
 			locAt = locAt | DataLocation::AV2_DLM_MOVE;
 		else if (id == "value" || id == "val")
-			locAt = locAt | DataLocation{0};
+			locAt = locAt;
 	}
 	return locAt;
 }
@@ -272,7 +272,7 @@ static Location getStack(Context& context) {
 
 static Location getStackTop(Context& context) {
 	Location loc;
-	loc.source = loc.source | DataLocation::AV2_DL_STACK_OFFSET;
+	loc.source = DataLocation::AV2_DL_STACK_OFFSET;
 	loc.id = uint64(0);
 	return loc;
 }
@@ -441,6 +441,7 @@ static Location getDataLocation(Context& context) {
 			continue;
 		} else break;
 	}
+	DEBUGLN("Move type: ", Makai::Cast::as<uint64>(Makai::enumcast(loc.source)));
 	DEBUGLN("Getting location...");
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {

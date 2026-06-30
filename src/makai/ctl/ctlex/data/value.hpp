@@ -1043,6 +1043,12 @@ namespace Data {
 			return "none";
 		}
 
+		[[CTL_UNAVAILABLE("Unimplemented!")]]
+		constexpr Value flattened(StringType const& sep = "/", StringType const root = "") const;
+
+		[[CTL_UNAVAILABLE("Unimplemented!")]]
+		constexpr Value expanded(StringType const& sep = "/") const;
+
 	private:
 		/// @brief Value type.
 		Kind	kind;
