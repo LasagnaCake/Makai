@@ -17,7 +17,7 @@ namespace Format {
 
 	/// @brief Pads the given string with a given character, such that the size is at least the given width.
 	/// @tparam TString String type.
-	/// @tparam TChar Character type. By default, it is the same character type aused by the string type.
+	/// @tparam TChar Character type. By default, it is the same character type used by the string type.
 	/// @param str String to pad.
 	/// @param chr Character to pad with.
 	/// @param width Minimum width the resulting string must have.

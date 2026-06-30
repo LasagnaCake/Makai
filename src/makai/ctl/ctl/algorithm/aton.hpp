@@ -323,9 +323,10 @@ constexpr bool atof(As<const T[S]> const& str, F& out, usize const base = 0) {
 /// @param buf Output string buffer of the conversion.
 /// @param bufSize String buffer size.
 /// @param base Base to convert to. By default, it is base 10.
+/// @param base Whether to append the base identifier to the string. By default, it is `true`.
 /// @return Size of resulting number string.
 template<Type::Integer I, Type::ASCII T>
-constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base = 10) {
+constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base = 10, bool const addBase = true) {
 	// Digits
 	cstring const digits = "0123456789abcdefghijklmnopqrstuv";
 	// If empty buffer, or buffer is too small for a non-decimal base
@@ -349,7 +350,7 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 		val = -val;
 	}
 	// If not decimal, append base identifier accoordingly
-	if (base != 10) {
+	if (addBase && base != 10) {
 		buf[offset++] = '0';
 		switch (base) {
 			case 2:		buf[offset] = 'b'; ++offset; break;

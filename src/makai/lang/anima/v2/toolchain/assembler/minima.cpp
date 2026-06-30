@@ -486,7 +486,12 @@ static Location getDataLocation(Context& context) {
 		break;
 		default: context.error("Invalid data source!");
 	}
-	DEBUGLN("Data Location: ", Makai::Cast::as<uint64>(Makai::enumcast(loc.source)));
+	auto const iloc = Makai::Cast::as<uint64>(Makai::enumcast(loc.source));
+	DEBUGLN("Data Location: ", iloc, " (", Makai::Format::pad(
+		Makai::String::fromNumber<uint8>(iloc, 2, false),
+		'0',
+		8
+	), ")");
 
 	return loc;
 }

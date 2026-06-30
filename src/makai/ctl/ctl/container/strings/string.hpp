@@ -1424,13 +1424,14 @@ public:
 	/// @tparam T Integer type.
 	/// @param val Value to convert.
 	/// @param base Base to convert as. By default, it is base 10.
+/// @param base Whether to append the base identifier to the string. By default, it is `true`.
 	/// @return Converted value as string.
 	/// @throw FailedActionException if conversion fails.
 	template<Type::Integer T>
-	constexpr static SelfType fromNumber(T const& val, T const& base = 10)
+	constexpr static SelfType fromNumber(T const& val, T const& base = 10, bool const addBase = true)
 	requires Type::Different<T, bool> {
-		SelfType result(sizeof(T)*4, '\0');
-		ssize sz = itoa<T, DataType>(val, result.data(), result.size(), base);
+		SelfType result(sizeof(T)*8, '\0');
+		ssize sz = itoa<T, DataType>(val, result.data(), result.size(), base, addBase);
 		if (sz < 0) throw FailedActionException("Integer-to-String conversion failure!");
 		result.resize(sz);
 		return result;
