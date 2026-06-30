@@ -174,7 +174,7 @@ namespace MX {
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
 	[[gnu::nonnull(1)]]
-	constexpr T* memset(ref<T> const dst, int const val, usize const count) {
+	constexpr ref<T> memset(ref<T> const dst, int const val, usize const count) {
 		return static_cast<ref<T>>(memset(static_cast<pointer>(dst), val, count * sizeof(T)));
 	}
 
@@ -185,7 +185,7 @@ namespace MX {
 	/// @return Pointer to data.
 	template<Type::NonVoid T>
 	[[gnu::nonnull(1)]]
-	constexpr T* memset(ref<T> const dst, int const val) {
+	constexpr ref<T> memset(ref<T> const dst, int const val) {
 		return memset<T>(dst, val, 1);
 	}
 
@@ -418,7 +418,7 @@ namespace MX {
 	/// @tparam T Type of data to move.
 	/// @param dst Destination.
 	/// @param src Source.
-	/// @param count Count of elements to copy.
+	/// @param count Count of elements to move.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
 	[[gnu::nonnull(1, 2)]]
@@ -453,11 +453,11 @@ namespace MX {
 		return mem;
 	}
 
-	/// @brief Safely recmakes data from one place in another place, respecting the type's constructor.
-	/// @tparam T Type of data to copy.
+	/// @brief Safely remakes data from one place in another place, respecting the type's constructor.
+	/// @tparam T Type of data to transfer.
 	/// @param dst Destination.
 	/// @param src Source.
-	/// @param count Count of elements to copy.
+	/// @param count Count of elements to transfer.
 	/// @param byCopy Whether to reconstruct by copy (`true`) or by move (`false`). By default, it is `true`.
 	/// @return Pointer to destination.
 	template<Type::NonVoid T>
@@ -475,6 +475,40 @@ namespace MX {
 				reconstruct(--dst, byCopy ? copy(*--src) : move(*--src));
 		}
 		return dst;
+	}
+
+	/// @brief Copies data from one place to another.
+	/// @tparam T Type of data to copy.
+	/// @param dst Destination.
+	/// @param src Source.
+	/// @param count Count of elements to copy.
+	/// @return Pointer to destination.
+	template <class T>
+	[[gnu::nonnull(1, 2)]]
+	constexpr ref<T> excopy(ref<T> dst, ref<T const> src, usize sz) {
+		if constexpr (Type::Void<T>)
+			return memmove(dst, src, sz);
+		else if (inCompileTime() && Type::Standard<T>)
+			return memmove(dst, src, sz);
+		else return objcopy(dst, src, sz);
+	}
+
+	template <class T>
+	[[gnu::nonnull(1)]]
+	constexpr ref<T> exset(ref<T> dst, T const& val, usize sz) {
+		if constexpr (Type::Void<T>)
+			return memset(dst, val, sz);
+		else if (inCompileTime() && Type::Standard<T>)
+			return memset(dst, val, sz);
+		else while (sz--)
+			dst[sz] = val;
+		return dst;
+	}
+
+	template <class T>
+	[[gnu::nonnull(1)]]
+	constexpr ref<T> exzero(ref<T> dst, usize sz) {
+		return exset<T>(dst, 0, sz);
 	}
 }
 

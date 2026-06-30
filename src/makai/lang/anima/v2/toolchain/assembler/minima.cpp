@@ -1365,6 +1365,10 @@ static void declareMethodBody(Context& context) {
 	}
 }
 
+static void declareFullMethod(Context& context) {
+
+}
+
 static void declareNamespaceStart(Context& context) {
 	auto const name = resolvePath(context, true);
 	context.moduleStack.pushBack(name);
@@ -1473,6 +1477,8 @@ static void doDeclaration(Context& context) {
 		declareMethodBody(context);
 	else if (decl == "fn")
 		declareMethodPrototype(context);
+	else if (decl == "defn")
+		declareFullMethod(context);
 	else if (decl == "out")
 		declareOutboundMethod(context);
 	else if (decl == "shared")

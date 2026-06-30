@@ -276,7 +276,7 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 			if (lexer.peek() == UTF::U8Char{'.'}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_ELLIPSIS;
-			}// else tok.type = LTS_TT_RANGE;
+			} else tok.type = LTS_TT_RANGE;
 		}
 	}
 	lexer.next();

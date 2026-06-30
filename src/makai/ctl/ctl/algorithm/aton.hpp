@@ -333,7 +333,7 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 	if ((!bufSize) || (bufSize < 4 && base != 10))
 		return -1;
 	// Clear buffer
-	MX::memzero(buf, bufSize);
+	MX::exzero(buf, bufSize);
 	// Get stating points
 	usize
 		offset = 0,
@@ -367,9 +367,9 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 		buf[i] = digits[val % base];
 	}
 	// Move stuff around to beginning of buffer
-	MX::memmove(buf+offset, buf+offset+i, bufSize-i);
+	MX::excopy(buf+offset, buf+offset+i, bufSize-i);
 	if (!offset)
-		MX::memmove(buf, buf+1, bufSize-i);
+		MX::excopy(buf, buf+1, bufSize-i);
 	// Return full size of number string
 	return (bufSize - i - 2 + offset);
 }
