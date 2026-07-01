@@ -51,13 +51,13 @@ COMPILER_CONFIG	:= -m64 -std=gnu++20 -fconcepts-diagnostics-depth=4 -fcoroutines
 OPTIMIZATIONS	:= $(USE_OPENMP) $(MATHMODE) -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-vectorize -fexpensive-optimizations
 endif
 
-ifdef let-me-peek-beyond-the-veil-of-reality
+ifeq ($(let-me-peek-beyond-the-veil-of-reality),1)
 export DEBUGMODE	:= -DMAKAILIB_DEBUG -DCTL_CONSOLE_OUT -DNDEBUG -DMAKAILIB_DEBUG_ABSOLUTELY_EVERYTHING
 else
 export DEBUGMODE	:= -DMAKAILIB_DEBUG -DCTL_CONSOLE_OUT -DNDEBUG
 endif
 
-ifdef debug-release
+ifeq ($(debug-release),1)
 	export RELEASEMODE := $(DEBUGMODE)
 else
 	export RELEASEMODE := $(LEAN)
