@@ -516,28 +516,23 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 	}
 	context.add(Instruction::Name::AV2_IN_JUMP, leap);
 	if (!dynamic)
-		context.addJumpTarget(context.getNext(LTS_TT_IDENTIFIER, "jump expression").getString());
+		context.addJumpTarget(resolvePath(context));
 }
 
 static void doJump(Context& context, bool dynamic = false) {
-	context.next();
-	if (!dynamic) context.expect(LTS_TT_IDENTIFIER, "jump expression");
-	else if (!context.has(LTS_TT_IDENTIFIER)) {
-		context.pad(1);
+	if (!dynamic) context.expectNext(LTS_TT_IDENTIFIER, "jump expression");
+	if (context.peek().text == "if")
+		doConditionalJump(context, dynamic);
+	else {
 		context.add(
 			Instruction::Name::AV2_IN_JUMP,
 			Instruction::Leap{
 				Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
-				true
+				dynamic
 			}
 		);
+		if (!dynamic) context.addJumpTarget(resolvePath(context));
 	}
-	auto const jt = context.value().getString();
-	if (jt == "if")
-		doConditionalJump(context, dynamic);
-	else if (!dynamic)
-		context.addJumpTarget(resolvePath(context));
-	else context.error("Invalid jump instruction!");
 }
 
 static void doCall(Context& context, bool dynamic = false) {
