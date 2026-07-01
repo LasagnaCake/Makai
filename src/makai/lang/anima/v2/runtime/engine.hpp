@@ -140,6 +140,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2Clear();
 		void v2Create();
 		void v2Initialize();
+		void v2Breakpoint();
 
 		void doBinaryOperation(Core::Operator const op);
 		void doUnaryOperation(Core::Operator const op);

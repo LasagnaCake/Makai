@@ -973,6 +973,10 @@ static void doInitialize(Context& context) {
 	// TODO: this
 }
 
+static void doBreakpoint(Context& context) {
+	context.add(Instruction::Name::AV2_IN_BREAKPOINT);
+}
+
 static void declareTypeFields(Context& context, Context::Declaration& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
@@ -1550,6 +1554,7 @@ static void doExpression(Context& context) {
 	else if (id == "unbind" || id == "drop")	doUnbind(context);
 	else if (id == "create" || id == "new")		doCreate(context);
 	else if (id == "init" || id == "make")		doInitialize(context);
+	else if (id == "break")						doBreakpoint(context);
 	else context.error("Invalid instruction!");
 }
 

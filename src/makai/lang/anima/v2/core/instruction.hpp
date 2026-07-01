@@ -352,6 +352,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `init`
 			AV2_IN_INITIALIZE,
+			/// @brief Sends a debug breakpoint.
+			/// @param type Discarded.
+			/// @details `break`
+			AV2_IN_BREAKPOINT,
 		};
 
 		/// @brief Instruction "Name" (opcode).
@@ -393,6 +397,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_CLEAR:			return "drop";
 				case Name::AV2_IN_CREATE:			return "new";
 				case Name::AV2_IN_INITIALIZE:		return "init";
+				case Name::AV2_IN_BREAKPOINT:		return "break";
 			}
 			return "???";
 		}

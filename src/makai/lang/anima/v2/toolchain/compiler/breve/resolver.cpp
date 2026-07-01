@@ -255,11 +255,22 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& leftS
 	result->value = null;
 	if (token.text == "do") {
 		result->rightSide	= parser.nextExpression();
-		parser.context.expectNext(LTS_TT_IDENTIFIER);
-		if (parser.context.token().text != "while")
-			parser.context.error("Expected 'while' here!");
-		result->value = parser.context.token().text.toString();
+		if (parser.context.peek().text == "while") {
+			parser.context.next();
+			result->value = parser.context.token().text.toString();
+			result->leftSide = parser.nextExpression();
+		}
+	} else if (token.text == "for") {
 		result->leftSide	= parser.nextExpression();
+		result->rightSide	= parser.nextExpression();
+	} else if (token.text == "repeat") {
+		result->leftSide	= parser.nextExpression();
+		if (parser.context.peek().type == LTS_TT_LITTLE_ARROW) {
+			result->middle = result->leftSide;
+			parser.context.next();
+			result->leftSide = parser.nextExpression();
+		}
+		result->rightSide	= parser.nextExpression();
 	} else {
 		result->leftSide	= parser.nextExpression();
 		result->rightSide	= parser.nextExpression();
