@@ -132,8 +132,14 @@ namespace Makai::Anima::V2::Core {
 				AV2_ILT_IF_UNDEFINED,
 				AV2_ILT_IF_NULL_OR_UNDEFINED,
 			};
-			Type	type;
-			bool	dyn: 1;
+			enum class Mode: uint8 {
+				AV2_ILM_TABLE_INDEX,
+				AV2_ILM_RELATIVE,
+				AV2_ILM_ABSOLUTE,
+			};
+			Type	type:	4;
+			bool	dyn:	1;
+			Mode	mode:	2;
 		};
 
 		/// @brief Comparison operator.

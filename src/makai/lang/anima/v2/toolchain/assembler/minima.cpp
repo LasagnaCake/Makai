@@ -135,16 +135,19 @@ uint64 Context::addGlobal(String const& name) {
 	return program.strings.size()-1;
 }
 
-void Context::addJumpTarget(String const& name) {
+void Context::addJumpTarget(String const& name, Context::JumpMode const mode) {
 	if (name.empty())
 		error("Missing jump target name!");
-	if (hasJumpTarget(name)) {
-		DEBUGLN("*********************** :::: Jump to: [ ", name, " -> ", jumps[name], " ]");
-		add(jumps[name]);
-		return;
+	if (mode == JumpMode::AV2_ILM_TABLE_INDEX) {
+		program.relocations.pushBack(program.code.size());
+		if (hasJumpTarget(name)) {
+			DEBUGLN("*********************** :::: Jump to: [ ", name, " -> ", jumps[name], " ]");
+			add(jumps[name]);
+			return;
+		}
 	}
 	DEBUGLN("*********************** ++++ New jump for: [ ", name, " @ ", program.code.size(), " ]");
-	jumpsToMap[name].pushBack(program.code.size());
+	jumpsToMap[name].pushBack({program.code.size(), mode});
 	add(0);
 }
 
@@ -164,10 +167,19 @@ void Context::finalize() {
 			error("Somehow, jump target is empty!");
 		DEBUGLN("Mapping '", label, "'...");
 		if (jumps.contains(label)) {
-			auto const toLoc = Makai::Cast::bit<Instruction>(jumps[label]);
+			auto const toLocID = jumps[label];
+			auto const toLoc = bitcast<Instruction>(toLocID);
 			DEBUGLN("To table ID [", jumps[label], "]");
-			for (auto& location: jumpsToMap[label])
-				program.code[location] = toLoc;
+			for (auto& location: jumpsToMap[label]) {
+				switch (location.mode) {
+					case (JumpMode::AV2_ILM_TABLE_INDEX): program.code[location.at]	= toLoc; break;
+					case (JumpMode::AV2_ILM_ABSOLUTE): program.code[location.at]	= bitcast<Instruction>(program.jumpTable[toLocID]); break;
+					case (JumpMode::AV2_ILM_RELATIVE): {
+						auto const to = program.jumpTable[toLocID];
+						program.code[location.at] = bitcast<Instruction>(Cast::as<int64>(location.at) - Cast::as<int64>(to)); break;
+					}
+				}
+			}
 			jumpsToMap[label].clear();
 		}
 	}
@@ -498,7 +510,7 @@ static Location getDataLocation(Context& context) {
 
 static void doConditionalJump(Context& context, bool dynamic = false) {
 	context.next();
-	Instruction::Leap leap{.dyn = dynamic};
+	Instruction::Leap leap{.dyn = dynamic, .mode = context.globalJumpMode};
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
@@ -516,7 +528,8 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 	}
 	context.add(Instruction::Name::AV2_IN_JUMP, leap);
 	if (!dynamic)
-		context.addJumpTarget(resolvePath(context));
+		context.addJumpTarget(resolvePath(context), context.globalJumpMode);
+	context.next();
 }
 
 static void doJump(Context& context, bool dynamic = false) {
@@ -528,10 +541,11 @@ static void doJump(Context& context, bool dynamic = false) {
 			Instruction::Name::AV2_IN_JUMP,
 			Instruction::Leap{
 				Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
-				dynamic
+				dynamic,
+				context.globalJumpMode
 			}
 		);
-		if (!dynamic) context.addJumpTarget(resolvePath(context));
+		if (!dynamic) context.addJumpTarget(resolvePath(context), context.globalJumpMode);
 	}
 }
 
@@ -552,7 +566,7 @@ static void doCall(Context& context, bool dynamic = false) {
 			invoke
 		);
 		if (m->out) context.add(m->hash);
-		else context.addJumpTarget(m->jump);
+		else context.addJumpTarget(m->jump, Context::JumpMode::AV2_ILM_TABLE_INDEX);
 	} else {
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
@@ -948,7 +962,7 @@ static void doSelect(Context& context) {
 	context.expectNext(LTS_TT_OPEN_BRACKET);
 	while (true) {
 		if (context.next().has(LTS_TT_CLOSE_BRACKET)) break;
-		context.addJumpTarget(resolvePath(context));
+		context.addJumpTarget(resolvePath(context), context.globalJumpMode);
 		++count;
 	}
 	if (count < 2)

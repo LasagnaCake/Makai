@@ -1188,8 +1188,22 @@ void Engine::v2Jump() {
 			default: break;
 		}
 	}
-	if (shouldJump)
-		jumpBy(loc, false);
+	if (shouldJump) {
+		switch (leap.mode) {
+			case Core::Instruction::Leap::Mode::AV2_ILM_TABLE_INDEX:	return jumpBy(loc, false);
+			case Core::Instruction::Leap::Mode::AV2_ILM_ABSOLUTE: {
+				if (loc < program.code.size())
+					return jumpTo(loc, false);
+				else crash(invalidJump());
+			}
+			case Core::Instruction::Leap::Mode::AV2_ILM_RELATIVE: {
+				auto const to = context.pointers.instruction + bitcast<int64>(loc);
+				if (to < program.code.size())
+					return jumpTo(to, false);
+				else crash(invalidJump());
+			}
+		}
+	}
 }
 
 Engine::Error Engine::invalidLocationError(DataLocation const& loc) {

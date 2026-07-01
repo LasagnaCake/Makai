@@ -92,17 +92,18 @@ namespace Makai::Anima::V2::Core {
 
 		static Module deserialize(Data::Value const& v);
 
-		Type				type		= Type::AV2_CMT_CLI_EXE;
-		String				name;
-		Version				art			= ART_VER;
-		Version				version		= {0, 0, 1};
-		StringList			strings;
-		Bytecode			code;
-		List<uint64>		jumpTable;
-		Detail				detail;
-		Symbols				sym;
-		Instance<ANI>		ani			= new ANI();
-		uint64				entry	= -1;
+		Type			type		= Type::AV2_CMT_CLI_EXE;
+		String			name;
+		Version			art			= ART_VER;
+		Version			version		= {0, 0, 1};
+		StringList		strings;
+		Bytecode		code;
+		List<uint64>	jumpTable;
+		Detail			detail;
+		Symbols			sym;
+		Instance<ANI>	ani			= new ANI();
+		uint64			entry		= -1;
+		List<uint64>	relocations;
 	};
 }
 

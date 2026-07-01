@@ -1368,16 +1368,11 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			context.top()->impl->writeMainLine("jump if false ", node->rightSide ? ifFalseLabel : ifEndLabel);
 			writeTrueBranch();
 			writeFalseBranch(true);
-		} else /*if (cond.likelihood < 0)*/ {
+		} else {
 			context.top()->impl->writeMainLine("jump if true ", ifTrueLabel);
 			writeFalseBranch();
 			writeTrueBranch(true);
-		} /*else {
-			context.top()->impl->writeMainLine("pick [", node->rightSide ? ifFalseLabel : ifEndLabel, ifTrueLabel, "]");
-			writeTrueBranch();
-			writeFalseBranch();
 		}
-		*/
 		if (node->rightSide && ifTrue.type != ifFalse.type)
 			context.error("Both paths return different types!", node);
 		if (node->rightSide) {

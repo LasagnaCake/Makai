@@ -19,6 +19,13 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Declaration: Core::Module::Declaration {
 			};
 
+			using JumpMode = Core::Instruction::Leap::Mode;
+
+			struct JumpMap {
+				uint64		at;
+				JumpMode	mode;
+			};
+
 			using OpCode = Core::Instruction::Name;
 
 			usize add(OpCode const opcode = OpCode::AV2_IN_NO_OP, uint32 const type = 0);
@@ -35,7 +42,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			uint64 addStringLiteral(String const& val);
 			uint64 addGlobal(String const& name);
 
-			void addJumpTarget(String const& name);
+			void addJumpTarget(String const& name, JumpMode const mode = JumpMode::AV2_ILM_TABLE_INDEX);
 			uint64 getJumpTarget(String const& name);
 			bool hasJumpTarget(String const& name);
 
@@ -78,7 +85,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			List<Instance<Method>>		methodStack;
 			StringList					moduleStack;
-			Dictionary<List<usize>>		jumpsToMap;
+			Dictionary<List<JumpMap>>	jumpsToMap;
 			Dictionary<uint64>			jumps;
 
 			String entry, exit;
@@ -86,6 +93,8 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			Dictionary<Instance<Core::Module>> linkedModules;
 
 			String fullModulePath() const;
+
+			JumpMode globalJumpMode = JumpMode::AV2_ILM_RELATIVE;
 		};
 
 		Minima(Context& context): AAssembler(context), context(context) {}

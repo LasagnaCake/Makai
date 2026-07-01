@@ -20,27 +20,43 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 			for (auto& str: mod.strings)
 				MAKAILIB_DEBUGLN_FULL("Text: `", str, "`");
 	}
-	auto const code		= Makai::Tool::Arch::decompress(v["code"].getBytes());
-	auto const jumps	= Makai::Tool::Arch::decompress(v["jumps"].getBytes());
+	auto const code = Makai::Tool::Arch::decompress(v["code"].getBytes());
 	MAKAILIB_DEBUGLN_FULL("Bytecode Section: ", code.size());
-	MAKAILIB_DEBUGLN_FULL("Jump Table Section: ", jumps.size());
-	mod.code		= decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
-	mod.jumpTable	= decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
+	mod.code = decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
+	if (v.contains("jumps")) {
+		auto const jumps = Makai::Tool::Arch::decompress(v["jumps"].getBytes());
+		MAKAILIB_DEBUGLN_FULL("Jump Table Section: ", jumps.size());
+		mod.jumpTable = decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
+		if (mod.jumpTable.empty()) throw Error::FailedAction(
+			"Failed to load file!",
+			"Failed to load jump table section",
+			CTL_CPP_PRETTY_SOURCE
+		);
+	}
+	if (v.contains("rel")) {
+		auto const relocations = Makai::Tool::Arch::decompress(v["rel"].getBytes());
+		MAKAILIB_DEBUGLN_FULL("Relocation Section: ", relocations.size());
+		mod.relocations = decltype(mod.relocations){ref<uint64>(relocations.data()), ref<uint64>(relocations.data()) + (relocations.size() / sizeof(uint64))};
+		if (mod.relocations.empty()) throw Error::FailedAction(
+			"Failed to load file!",
+			"Failed to load relocation section",
+			CTL_CPP_PRETTY_SOURCE
+		);
+	}
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		DEBUGLN("Instructions: ", mod.code.size());
 		DEBUG("Jump Table Entries: ", mod.jumpTable.size(), " [ ");
 		for (auto& jump : mod.jumpTable)
 			DEBUG(jump, " ");
 		DEBUGLN("]");
+		DEBUG("Relocations: ", mod.relocations.size(), " [ ");
+		for (auto& rel : mod.relocations)
+			DEBUG(rel, " ");
+		DEBUGLN("]");
 	}
 	if (mod.code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
 		"Failed to load bytecode section",
-		CTL_CPP_PRETTY_SOURCE
-	);
-	if (mod.jumpTable.empty()) throw Error::FailedAction(
-		"Failed to load file!",
-		"Failed to load jump table section",
 		CTL_CPP_PRETTY_SOURCE
 	);
 	if (v.contains("sym"))
@@ -74,7 +90,10 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
 	out["strings"]	= strings.toList<Makai::Data::Value>();
 	DEBUGLN("Binary: ", code.size());
-	out["jumps"]	= Makai::Tool::Arch::compress(jumpTable.toBytes());
+	if (jumpTable.size())
+		out["jumps"] = Makai::Tool::Arch::compress(jumpTable.toBytes());
+	if (relocations.size())
+		out["rel"] = Makai::Tool::Arch::compress(relocations.toBytes());
 	out["code"]		= Makai::Tool::Arch::compress(code.toBytes());
 	out["art"]		= art;
 	out["version"]	= version;
@@ -90,7 +109,7 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 		out["detail"] = dt;
 	}
 	if (ani)
-		out["ani"]	= *ani;
+		out["ani"] = *ani;
 	out["type"]	= enumcast(type);
 	if (entry + 1) out["entry"] = entry;
 	return out;
