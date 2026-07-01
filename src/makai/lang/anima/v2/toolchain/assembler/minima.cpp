@@ -749,8 +749,12 @@ static void doScopeDeclare(Context& context) {
 static void doCopy(Context& context) {
 	context.next();
 	auto const src = getDataLocation(context);
+	if (asPlace(src.source) == DataLocation::AV2_DL_VOID)
+		context.error("Cannot copy from void!");
 	context.expectNext(LTS_TT_LITTLE_ARROW).next();
 	auto const dst = getDataLocation(context);
+	if (asPlace(dst.source) < DataLocation::AV2_DL_STACK)
+		context.error("Cannot copy to constant location!");
 	Instruction::Transfer tf {
 		src.source,
 		dst.source
@@ -1366,7 +1370,7 @@ static void declareMethodBody(Context& context) {
 }
 
 static void declareFullMethod(Context& context) {
-
+	context.error("[defn] declarations arew currently unimplemented!");
 }
 
 static void declareNamespaceStart(Context& context) {
