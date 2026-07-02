@@ -1441,14 +1441,16 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	var.id = loopScope->varc++;
 	context.pop(1);
 	auto const it = Expression().transform(context, node->leftSide);
+	String opq;
 	if (it.isCompilable() or it.source) {
 		if (!it.type)
 			context.error("Expression must be an integer!", node->leftSide);
 		if (auto const intType = TypeDecl::stronger(it.type, context.basicType("uint64"))) {
-			if (intType->basic >= Core::BasicType::AV2_BT_INT64)
+			if (intType->basic > Core::BasicType::AV2_BT_UINT64)
 				context.error("Expression must be an integer!", node->leftSide);
 			if (it.shouldBePushed())
 				context.top()->impl->writeMainLine("push", it.source.value());
+			opq = asFastOpQualifier(*it->basic);
 		} else context.error("Expression must be an integer!", node->leftSide);
 	} else context.error("Expression must be an integer!", node->leftSide);
 	context.top()->impl->writeMainLine("copy", it.source.value(), "->", var.getSource());
@@ -1459,7 +1461,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	context.top()->impl->writeMainLine("@target", loopStart, ":");
 	auto const loopExpr = Expression().transform(context, node->rightSide);
 	context.top()->impl->writeMainLine("push ref", var.getSource());
-	context.top()->impl->writeMainLine("op dec");
+	context.top()->impl->writeMainLine("op dec", opq);
 	context.top()->impl->writeMainLine("jump if true", loopStart);
 	context.top()->impl->writeMainLine("end");
 	context.pop(1);
