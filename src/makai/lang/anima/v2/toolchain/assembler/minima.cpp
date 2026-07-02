@@ -176,7 +176,9 @@ void Context::finalize() {
 					case (JumpMode::AV2_ILM_ABSOLUTE): program.code[location.at]	= bitcast<Instruction>(program.jumpTable[toLocID]); break;
 					case (JumpMode::AV2_ILM_RELATIVE): {
 						auto const to = program.jumpTable[toLocID];
-						program.code[location.at] = bitcast<Instruction>(Cast::as<int64>(location.at) - Cast::as<int64>(to)); break;
+						auto const target = Cast::as<int64>(to) - Cast::as<int64>(location.at);
+						DEBUGLN("Target offset: ", target);
+						program.code[location.at] = bitcast<Instruction>(target); break;
 					}
 				}
 			}
@@ -527,8 +529,10 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 		default: context.error("Invalid condition!");
 	}
 	context.add(Instruction::Name::AV2_IN_JUMP, leap);
-	if (!dynamic)
+	if (!dynamic) {
+			context.expectNext(LTS_TT_IDENTIFIER, "jump target");
 		context.addJumpTarget(resolvePath(context), context.globalJumpMode);
+	}
 }
 
 static void doJump(Context& context, bool dynamic = false) {
@@ -545,7 +549,7 @@ static void doJump(Context& context, bool dynamic = false) {
 			}
 		);
 		if (!dynamic) {
-			context.expectNext(LTS_TT_IDENTIFIER, "jump expression");
+			context.expectNext(LTS_TT_IDENTIFIER, "jump target");
 			context.addJumpTarget(resolvePath(context), context.globalJumpMode);
 		}
 	}
