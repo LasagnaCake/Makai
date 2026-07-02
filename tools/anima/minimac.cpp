@@ -53,9 +53,12 @@ int main(int argc, char** argv) try {
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/" + outName;
 		auto const code = Assembler::Minima::assemble(outName, file);
 		DEBUGLN("Done!");
+		Makai::Data::Value::Padding pad;
+		if (cfg.fetch("pretty", false))
+			pad = Makai::String("  ");
 		Makai::File::saveText(
 			outPath	 + ".anp",
-			code.serialize().toFLOWString(cfg.fetch("pretty", false) ? "  " : null)
+			code.serialize().toFLOWString(pad)
 		);
 	}
 	return 0;
