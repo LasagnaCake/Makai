@@ -90,11 +90,12 @@ int main(int argc, char** argv) try {
 				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_MINIMA).getString()
 			);
 		} else {
+			Makai::Data::Value::Padding pad;
+			if (cfg.fetch("pretty", false))
+				pad = Makai::String("  ");
 			Makai::File::saveText(
 				outPath + ".anp",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString(
-					cfg.fetch("pretty", false) ? "  " : null
-				)
+				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString(pad)
 			);
 		}
 	}
