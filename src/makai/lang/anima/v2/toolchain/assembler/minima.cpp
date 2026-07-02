@@ -529,14 +529,13 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 	context.add(Instruction::Name::AV2_IN_JUMP, leap);
 	if (!dynamic)
 		context.addJumpTarget(resolvePath(context), context.globalJumpMode);
-	context.next();
 }
 
 static void doJump(Context& context, bool dynamic = false) {
-	if (!dynamic) context.expectNext(LTS_TT_IDENTIFIER, "jump expression");
-	if (context.peek().text == "if")
+	if (context.peek().text == "if") {
+		context.next();
 		doConditionalJump(context, dynamic);
-	else {
+	} else {
 		context.add(
 			Instruction::Name::AV2_IN_JUMP,
 			Instruction::Leap{
@@ -545,7 +544,10 @@ static void doJump(Context& context, bool dynamic = false) {
 				context.globalJumpMode
 			}
 		);
-		if (!dynamic) context.addJumpTarget(resolvePath(context), context.globalJumpMode);
+		if (!dynamic) {
+			context.expectNext(LTS_TT_IDENTIFIER, "jump expression");
+			context.addJumpTarget(resolvePath(context), context.globalJumpMode);
+		}
 	}
 }
 
