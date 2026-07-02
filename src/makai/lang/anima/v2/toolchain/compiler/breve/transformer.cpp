@@ -1365,11 +1365,13 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
 		if (cond.likelihood >= 0) {
-			context.top()->impl->writeMainLine("jump if false ", node->rightSide ? ifFalseLabel : ifEndLabel);
+			String const condType = (node->base.text != "unless") ? "false" : "true";
+			context.top()->impl->writeMainLine("jump if", condType, node->rightSide ? ifFalseLabel : ifEndLabel);
 			writeTrueBranch();
 			writeFalseBranch(true);
 		} else {
-			context.top()->impl->writeMainLine("jump if true ", ifTrueLabel);
+			String const condType = (node->base.text == "unless") ? "false" : "true";
+			context.top()->impl->writeMainLine("jump if", condType, ifTrueLabel);
 			writeFalseBranch();
 			writeTrueBranch(true);
 		}

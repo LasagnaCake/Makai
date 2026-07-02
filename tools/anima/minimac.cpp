@@ -18,8 +18,8 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["o"]	= "output";
 	tl["l"]	= "link";
 	tl["c"]	= "code";
-	tl["P"]	= "pack";
 	tl["S"]	= "strip";
+	tl["P"]	= "pretty";
 	tl["W"]	= "write";
 }
 
@@ -54,8 +54,8 @@ int main(int argc, char** argv) try {
 		auto const code = Assembler::Minima::assemble(outName, file);
 		DEBUGLN("Done!");
 		Makai::File::saveText(
-			outPath + ".anp",
-			code.serialize().toFLOWString(cfg.fetch("strip", false) ? null : "  ")
+			outPath	 + ".anp",
+			code.serialize().toFLOWString(cfg.fetch("pretty", false) ? "  " : null)
 		);
 	}
 	return 0;
