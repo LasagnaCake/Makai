@@ -201,6 +201,22 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
+	struct ForLoop: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct WhileLoop: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct RepeatLoop: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct DoLoop: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
 	struct InlineAssembly: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};

@@ -257,7 +257,6 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& leftS
 		result->rightSide	= parser.nextExpression();
 		if (parser.context.peek().text == "while") {
 			parser.context.next();
-			result->value = parser.context.token().text.toString();
 			result->leftSide = parser.nextExpression();
 		}
 	} else if (token.text == "for") {

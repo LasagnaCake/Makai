@@ -456,8 +456,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	context.top()->impl->writeMainLine("begin", context.top()->varc);
-	context.top()->impl->writeMainLine("keep");
+	context.top()->impl->writeMainLine("begin");
 	for (auto const& child: node->children) {
 		result = Expression().transform(context, child);
 		if (result.scope && result.scope->variable) {
@@ -1070,11 +1069,11 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				if (!implOv) implOv = oo;
 				else {
 					overloadScope->impl->writePreLine("@def", oo->entry, ":");
-					overloadScope->impl->writePreLine("begin", toString(args.size()));
+					overloadScope->impl->writePreLine("enter", toString(args.size()));
 					overloadScope->impl->writePreLine("bind ref", toString(args.size()), "[0 -> 0]");
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
 					overloadScope->impl->writePostLine("call", implOv->entry);
-					overloadScope->impl->writePostLine("end");
+					overloadScope->impl->writePostLine("exit");
 					overloadScope->impl->writePostLine("ret");
 					overloadScope->impl->writePostLine("@def .\n");
 					oo->hasImplementation = true;
@@ -1093,13 +1092,13 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	if (node->rightSide) {
 		context.scopeStack.pushBack(implScope);
 		implScope->impl->writePreLine("@def", implOv->entry, ":");
-		implScope->impl->writePreLine("begin", implScope->varc);
+		implScope->impl->writePreLine("enter", implScope->varc);
 		implScope->impl->writePreLine("bind ref", implScope->varc, "[0 -> 0]");
 		implScope->impl->writePreLine("clear", implScope->varc);
 		auto const expr = Expression().transform(context, node->rightSide);
 		if (expr.source && expr.shouldBePushed())
 			implScope->impl->writePostLine("push", *expr.source);
-		implScope->impl->writePostLine("end");
+		implScope->impl->writePostLine("exit");
 		implScope->impl->writePostLine("ret");
 		implScope->impl->writePostLine("@def .\n");
 		implOv->scope = implScope.asWeak();
@@ -1345,8 +1344,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			context.top()->impl->writeMainLine("push", cond.source.value());
 		ATransformer::Result ifTrue, ifFalse;
 		auto const writeTrueBranch = [&] (bool const skipEndLabel = false) {
-			context.top()->impl->writeMainLine("begin 0");
-			context.top()->impl->writeMainLine("keep");
+			context.top()->impl->writeMainLine("begin");
 			ifTrue = Expression().transform(context, node->leftSide);
 			if (ifTrue.source && ifTrue.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifTrue.source.value());
@@ -1356,8 +1354,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		auto const writeFalseBranch = [&] (bool const skipEndLabel = false) {
 			if (!node->rightSide) return;
 			context.top()->impl->writeMainLine("@target", ifFalseLabel, ":");
-			context.top()->impl->writeMainLine("begin 0");
-			context.top()->impl->writeMainLine("keep");
+			context.top()->impl->writeMainLine("begin");
 			ifFalse = Expression().transform(context, node->rightSide);
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifFalse.source.value());
@@ -1391,7 +1388,104 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 
 ATransformer::Result Loop::transform(Context& context, Node::Instance const& node) {
 	// TODO: This
+	auto const scope = UTF8StringList::from("__" + node->base.text + "_loop_" + node->name());
+	context.declare(scope);
+	if (node->base.text == "do")			return DoLoop().transform(context, node);
+	else if (node->base.text == "while")	return WhileLoop().transform(context, node);
+	else if (node->base.text == "repeat")	return RepeatLoop().transform(context, node);
+	else if (node->base.text == "for")		return ForLoop().transform(context, node);
+	context.pop(scope.size());
 	return {};
+}
+
+ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& node) {
+	context.error("This has been unimplemented yet!", node);
+	auto const loopStart = context.top()->name + "_start" + node->name();
+	auto const loopEnd = context.top()->name + "_end" + node->name();
+	context.top()->impl->writeMainLine("begin");
+	context.top()->impl->writeMainLine("@target", loopStart, ":");
+	// TODO: This
+	context.top()->impl->writeMainLine("jump if true", loopStart);
+	context.top()->impl->writeMainLine("end");
+	return {};
+}
+
+ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const& node) {
+	auto const loopStart = context.top()->name + "_start" + node->name();
+	auto const loopEnd = context.top()->name + "_end" + node->name();
+	context.top()->impl->writeMainLine("begin");
+	context.top()->impl->writeMainLine("@target", loopStart, ":");
+	auto const condExpr = Expression().transform(context, node->rightSide);
+	if (!condExpr.isCompilable()) {
+		if (condExpr.shouldBePushed())
+			context.top()->impl->writeMainLine("push", condExpr.source.value());
+		context.top()->impl->writeMainLine("jump if false", loopEnd);
+	} else if (!condExpr.direct) return {};
+	context.declare(UTF8StringList::from(node->name()));
+	auto const loopExpr = Expression().transform(context, node->rightSide);
+	context.pop(1);
+	context.top()->impl->writeMainLine("jump", loopStart);
+	context.top()->impl->writeMainLine("@target", loopEnd, ":");
+	context.top()->impl->writeMainLine("end");
+	return loopExpr;
+}
+
+ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance const& node) {
+	auto const loopStart = context.top()->name + "_start" + node->name();
+	auto const loopEnd = context.top()->name + "_end" + node->name();
+	auto const loopScope = context.declare(UTF8StringList::from(node->name()));
+	auto const varScope = context.declare(UTF8StringList::from("##ITERATE::" + node->name()));
+	auto& var = *(varScope->variable = varScope->variable.create());
+	context.top()->impl->writeMainLine("begin");
+	context.top()->impl->writeMainLine("decl 1");
+	var.id = loopScope->varc++;
+	context.pop(1);
+	auto const it = Expression().transform(context, node->leftSide);
+	if (it.isCompilable() or it.source) {
+		if (!it.type)
+			context.error("Expression must be an integer!", node->leftSide);
+		if (auto const intType = TypeDecl::stronger(it.type, context.basicType("uint64"))) {
+			if (intType->basic >= Core::BasicType::AV2_BT_INT64)
+				context.error("Expression must be an integer!", node->leftSide);
+			if (it.shouldBePushed())
+				context.top()->impl->writeMainLine("push", it.source.value());
+		} else context.error("Expression must be an integer!", node->leftSide);
+	} else context.error("Expression must be an integer!", node->leftSide);
+	context.top()->impl->writeMainLine("copy", it.source.value(), "->", var.getSource());
+	if (node->middle) {
+		auto const refVar = VariableDecl().transform(context, node->middle);
+		context.top()->impl->writeMainLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSource());
+	}
+	context.top()->impl->writeMainLine("@target", loopStart, ":");
+	auto const loopExpr = Expression().transform(context, node->rightSide);
+	context.top()->impl->writeMainLine("push ref", var.getSource());
+	context.top()->impl->writeMainLine("op dec");
+	context.top()->impl->writeMainLine("jump if true", loopStart);
+	context.top()->impl->writeMainLine("end");
+	context.pop(1);
+	return loopExpr;
+}
+
+ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& node) {
+	auto const loopStart = context.top()->name + "_start" + node->name();
+	auto const loopEnd = context.top()->name + "_end" + node->name();
+	context.top()->impl->writeMainLine("begin");
+	context.top()->impl->writeMainLine("@target", loopStart, ":");
+	context.declare(UTF8StringList::from(node->name()));
+	auto const loopExpr = Expression().transform(context, node->rightSide);
+	context.pop(1);
+	if (node->leftSide) {
+		auto const condExpr = Expression().transform(context, node->rightSide);
+		if (!condExpr.isCompilable()) {
+			if (condExpr.shouldBePushed())
+				context.top()->impl->writeMainLine("push", condExpr.source.value());
+			context.top()->impl->writeMainLine("jump if true", loopStart);
+		} else if (!condExpr.direct)
+			return loopExpr;
+	}
+	context.top()->impl->writeMainLine("jump", loopStart);
+	context.top()->impl->writeMainLine("end");
+	return loopExpr;
 }
 
 ATransformer::Result Definition::transform(Context& context, Node::Instance const& node) {

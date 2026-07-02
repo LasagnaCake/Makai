@@ -192,6 +192,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
 
 		bool derivedFrom(Namespace::TypeRef const& otherType) const;
+		bool canBecome(Namespace::TypeRef const& otherType) const;
 
 		Makai::Data::Value serialize() const override;
 

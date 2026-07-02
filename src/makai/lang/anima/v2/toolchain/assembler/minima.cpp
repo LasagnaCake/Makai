@@ -512,7 +512,8 @@ static Location getDataLocation(Context& context) {
 
 static void doConditionalJump(Context& context, bool dynamic = false) {
 	context.next();
-	Instruction::Leap leap{.dyn = dynamic, .mode = context.globalJumpMode};
+	auto const mode = dynamic ? Instruction::Leap::Mode::AV2_ILM_TABLE_INDEX : context.globalJumpMode;
+	Instruction::Leap leap{.dyn = dynamic, .mode = mode};
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
@@ -530,7 +531,7 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 	}
 	context.add(Instruction::Name::AV2_IN_JUMP, leap);
 	if (!dynamic) {
-			context.expectNext(LTS_TT_IDENTIFIER, "jump target");
+		context.expectNext(LTS_TT_IDENTIFIER, "jump target");
 		context.addJumpTarget(resolvePath(context), context.globalJumpMode);
 	}
 }
@@ -540,17 +541,18 @@ static void doJump(Context& context, bool dynamic = false) {
 		context.next();
 		doConditionalJump(context, dynamic);
 	} else {
+		auto const mode = dynamic ? Instruction::Leap::Mode::AV2_ILM_TABLE_INDEX : context.globalJumpMode;
 		context.add(
 			Instruction::Name::AV2_IN_JUMP,
 			Instruction::Leap{
 				Instruction::Leap::Type::AV2_ILT_UNCONDITIONAL,
 				dynamic,
-				context.globalJumpMode
+				mode
 			}
 		);
 		if (!dynamic) {
 			context.expectNext(LTS_TT_IDENTIFIER, "jump target");
-			context.addJumpTarget(resolvePath(context), context.globalJumpMode);
+			context.addJumpTarget(resolvePath(context), mode);
 		}
 	}
 }
@@ -698,11 +700,18 @@ static void doCompare(Context& context) {
 }
 
 static void doScopeEnter(Context& context) {
-	auto const count = context.getNext(LTS_TT_INTEGER, "scope-local stack size");
-	context.add(
-		Instruction::Name::AV2_IN_SCOPE_ENTER,
-		count
-	);
+	if (context.token().text == "begin") {
+		context.add(
+			Instruction::Name::AV2_IN_SCOPE_ENTER,
+			-1
+		);
+	} else {
+		auto const count = context.getNext(LTS_TT_INTEGER, "scope-local stack size");
+		context.add(
+			Instruction::Name::AV2_IN_SCOPE_ENTER,
+			count
+		);
+	}
 }
 
 static void doScopeExit(Context& context) {

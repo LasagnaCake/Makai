@@ -1269,7 +1269,9 @@ void Engine::v2ScopeEnter() {
 		.prevMode		= context.scope().mode,
 		.pointerFrame	= context.pointerStack.size()
 	});
-	if (count) context.locals().resize(count, nullptr);
+	if (count == Cast::as<decltype(count)>(-1))
+		context.locals() = context.scopeStack[-2]->localStack;
+	else if (count) context.locals().resize(count, nullptr);
 }
 
 void Engine::v2ScopeExit() {
