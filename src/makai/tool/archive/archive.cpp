@@ -371,7 +371,7 @@ void Arch::pack(
 				DEBUGLN("After encryption: ", contents.size());
 			}
 			fheader.compSize	= contents.size();	// Compressed file size
-			fheader.crc			= crcOf(contents);	// CRC (currently not working)
+			fheader.crc			= crcOf(contents);	// CRC
 			// Debug info
 			DEBUGLN("'", files[i], "':");
 			DEBUGLN("          FILE INDEX: ", i							);
@@ -710,7 +710,7 @@ void Arch::FileArchive::processFileEntry(FileEntry& entry) const {
 	demangleData(data, entry.header.block);
 	if (data.size() != entry.header.uncSize)
 		corruptedFileError(entry.path);
-	if (header.flags & Flags::SHOULD_CHECK_CRC_BIT && (entry.header.crc != crcOf(data))) // CRC currently not working
+	if (header.flags & Flags::SHOULD_CHECK_CRC_BIT && (entry.header.crc != crcOf(data)))
 		crcFailError(entry.path);
 	entry.data = data;
 }
