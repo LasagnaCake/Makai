@@ -157,10 +157,10 @@ Implementation::Instance Namespace::compose() const {
 		return out;
 	}
 	if (impl) {
-		if (!variable)
-			out->writePreLine("begin", varc);
+		if (!variable && varc)
+			out->writePreLine("enter", varc);
 		if (isPureNamespace())
-			out->writePostLine("keep");
+			out->writePostLine(varc ? "keep" : "begin");
 		if (!variable) out->writePostLine("end");
 	}
 	return out;
