@@ -1437,12 +1437,13 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	auto const loopScope = context.top();
 	loopScope->impl->writeMainLine("begin");
 	loopScope->impl->writeMainLine("decl 1");
-	auto const varScope = context.declare(UTF8StringList::from("##ITERATE::" + node->name()));
+	auto const vsn = UTF8StringList::from("##ITERATE::" + node->name());
+	auto const varScope = context.declare(vsn);
 	auto& var = *(varScope->variable = varScope->variable.create());
 	var.id = loopScope->varc++;
 	var.type = context.basicType("uint64").raw();
 	var.name = "##ITERATE::" + node->name();
-	context.pop(1);
+	context.pop(vsn.size());
 	auto const it = Expression().transform(context, node->leftSide);
 	String opq;
 	if (it.isCompilable() or it.source) {
