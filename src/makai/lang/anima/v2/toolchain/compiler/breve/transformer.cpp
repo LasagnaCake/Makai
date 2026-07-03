@@ -1389,13 +1389,13 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 ATransformer::Result Loop::transform(Context& context, Node::Instance const& node) {
 	auto const scope = UTF8StringList::from("__" + node->base.text + "_loop_" + node->name());
 	ATransformer::Result exprOut;
-	context.declare(scope);
+	auto const loopScope = context.declare(scope);
 	if (node->base.text == "do")			exprOut = DoLoop().transform(context, node);
 	else if (node->base.text == "while")	exprOut = WhileLoop().transform(context, node);
 	else if (node->base.text == "repeat")	exprOut = RepeatLoop().transform(context, node);
 	else if (node->base.text == "for")		exprOut = ForLoop().transform(context, node);
 	context.pop(scope.size());
-	context.top()->impl->writeMainLine(exprOut.scope->impl->toString());
+	context.top()->impl->writeMainLine(loopScope->compose()->toString());
 	return exprOut;
 }
 
@@ -1403,12 +1403,13 @@ ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& 
 	context.error("This has been unimplemented yet!", node);
 	auto const loopStart = context.top()->name + "_start" + node->name();
 	auto const loopEnd = context.top()->name + "_end" + node->name();
-	context.top()->impl->writeMainLine("begin");
-	context.top()->impl->writeMainLine("@target", loopStart, ":");
+	auto const loopScope = context.top();
+	loopScope->impl->writeMainLine("begin");
+	loopScope->impl->writeMainLine("@target", loopStart, ":");
 	// TODO: This
-	context.top()->impl->writeMainLine("jump if true", loopStart);
-	context.top()->impl->writeMainLine("end");
-	return {};
+	loopScope->impl->writeMainLine("jump if true", loopStart);
+	loopScope->impl->writeMainLine("end");
+	return {.scope = loopScope};
 }
 
 ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const& node) {
@@ -1427,7 +1428,7 @@ ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const
 	loopScope->impl->writeMainLine("jump", loopStart);
 	loopScope->impl->writeMainLine("@target", loopEnd, ":");
 	loopScope->impl->writeMainLine("end");
-	return loopExpr;
+	return {.scope = loopScope};
 }
 
 ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance const& node) {
@@ -1467,7 +1468,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	loopScope->impl->writeMainLine("op dec", opq);
 	loopScope->impl->writeMainLine("jump if true", loopStart);
 	loopScope->impl->writeMainLine("end");
-	return loopExpr;
+	return {.scope = loopScope};
 }
 
 ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& node) {
@@ -1488,7 +1489,7 @@ ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& n
 	}
 	loopScope->impl->writeMainLine("jump", loopStart);
 	loopScope->impl->writeMainLine("end");
-	return loopExpr;
+	return {.scope = loopScope};
 }
 
 ATransformer::Result Definition::transform(Context& context, Node::Instance const& node) {
