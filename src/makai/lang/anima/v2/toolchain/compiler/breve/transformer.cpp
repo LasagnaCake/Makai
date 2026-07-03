@@ -1396,6 +1396,7 @@ ATransformer::Result Loop::transform(Context& context, Node::Instance const& nod
 	else if (node->base.text == "for")		exprOut = ForLoop().transform(context, node);
 	context.pop(scope.size());
 	context.top()->impl->writeMainLine(loopScope->compose()->toString());
+	DEBUGLN(loopScope->serialize()->toFLOWString("  "));
 	return exprOut;
 }
 
