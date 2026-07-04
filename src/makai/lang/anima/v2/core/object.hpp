@@ -180,7 +180,7 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		bool isNumber() const {
-			return isInteger() || isReal();
+			return isBoolean() || isInteger() || isReal();
 		}
 
 		bool isInteger() const {
