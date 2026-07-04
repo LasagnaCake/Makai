@@ -474,7 +474,7 @@ namespace Makai::Anima::V2::Core {
 		[[noreturn]]
 		void invalidCastError(String const& reason) const {
 			throw Error::InvalidCast(
-				"Could not convert [" + origin->name + "] to [" + nameof<T>() + "]!",
+				"Could not convert [" + toString(origin->hash) + "] to [" + nameof<T>() + "]!",
 				reason,
 				CTL_CPP_PRETTY_SOURCE
 			);

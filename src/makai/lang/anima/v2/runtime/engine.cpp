@@ -155,10 +155,10 @@ void Engine::v2Compare() {
 		lhs->getCurrentType() == rhs->getCurrentType()
 	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
 	) order = lhs->compareWith(rhs);
-	else if (lhs->isBoolean() && rhs->isBoolean())		order = lhs->toValue<bool>() <=> lhs->toValue<bool>();
-	else if (lhs->isUnsigned() && rhs->isUnsigned())	order = lhs->toValue<uint64>() <=> lhs->toValue<uint64>();
-	else if (lhs->isInteger() && rhs->isInteger())		order = lhs->toValue<int64>() <=> lhs->toValue<int64>();
-	else if (lhs->isNumber() && rhs->isNumber())		order = lhs->toValue<double>() <=> lhs->toValue<double>();
+	else if (lhs->isBoolean() && rhs->isBoolean())		order = lhs->toValue<bool>() <=> rhs->toValue<bool>();
+	else if (lhs->isUnsigned() && rhs->isUnsigned())	order = lhs->toValue<uint64>() <=> rhs->toValue<uint64>();
+	else if (lhs->isInteger() && rhs->isInteger())		order = lhs->toValue<int64>() <=> rhs->toValue<int64>();
+	else if (lhs->isNumber() && rhs->isNumber())		order = lhs->toValue<double>() <=> rhs->toValue<double>();
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Types do not match!"));
 	else {
@@ -176,7 +176,7 @@ void Engine::v2Compare() {
 	switch (comp.comp) {
 		using enum Core::Comparator;
 		case AV2_OP_THREEWAY:
-			*context.top() = *context.art.newValue(enumcast<Makai::StandardOrder>(order));
+			*context.top() = *context.art.newValue(Cast::as<int8>(order.order()));
 		break;
 		using enum Makai::StandardOrder;
 		case AV2_OP_EQUALS:			*context.top() = *context.art.newValue(order == EQUAL);		break;
@@ -186,6 +186,7 @@ void Engine::v2Compare() {
 		case AV2_OP_LESS_THAN:		*context.top() = *context.art.newValue(order == LESS);		break;
 		case AV2_OP_LESS_EQUALS:	*context.top() = *context.art.newValue(order != GREATER);	break;
 	}
+	MAKAILIB_DEBUGLN_FULL("Result: ", context.top()->toValue<int64>());
 }
 
 void Engine::v2Halt() {

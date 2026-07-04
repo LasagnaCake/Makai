@@ -157,6 +157,8 @@ static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance 
 		case LTS_TT_PERCENT:				return "mod";
 		case LTS_TT_COMPARE_EQUALS:			return "e";
 		case LTS_TT_COMPARE_NOT_EQUALS:		return "n";
+		case LTS_TT_GREATER_THAN:			return "g";
+		case LTS_TT_LESS_THAN:				return "l";
 		case LTS_TT_COMPARE_GREATER_EQUALS:	return "ge";
 		case LTS_TT_COMPARE_LESS_EQUALS:	return "le";
 		case LTS_TT_ORDER:					return "o";
@@ -558,13 +560,13 @@ static Makai::Data::Value bopDirectResolveEX(T const& a, T const& b, Token const
 	}
 	if constexpr (Makai::Type::Integer<T>) {
 		switch (tok.type) {
-			case LTS_TT_BIT_AND:	return a & b;
-			case LTS_TT_BIT_OR:		return a | b;
-			case LTS_TT_BIT_XOR:	return a ^ b;
-			case LTS_TT_LOGIC_AND:	return a && b;
-			case LTS_TT_LOGIC_OR:	return a || b;
-			case LTS_TT_LOGIC_XOR:	return bool(a) != bool(b);
-			case LTS_TT_MODULO:		return a % b;
+			case LTS_TT_BIT_AND:		return a & b;
+			case LTS_TT_BIT_OR:			return a | b;
+			case LTS_TT_BIT_XOR:		return a ^ b;
+			case LTS_TT_LOGIC_AND:		return a && b;
+			case LTS_TT_LOGIC_OR:		return a || b;
+			case LTS_TT_LOGIC_XOR:		return bool(a) != bool(b);
+			case LTS_TT_MODULO:			return a % b;
 			default: break;
 		}
 	}
@@ -580,12 +582,19 @@ static Makai::Data::Value bopDirectResolveEX(T const& a, T const& b, Token const
 	}
 	if (tok.type == LTS_TT_IDENTIFIER) {
 	} else switch (tok.type) {
-		case LTS_TT_INCREMENT:	return a + 1;
-		case LTS_TT_DECREMENT:	return a - 1;
-		case LTS_TT_PLUS:		return a + b;
-		case LTS_TT_MINUS:		return a - b;
-		case LTS_TT_STAR:		return a * b;
-		case LTS_TT_DIVIDE:		return a / b;
+		case LTS_TT_INCREMENT:				return a + 1;
+		case LTS_TT_DECREMENT:				return a - 1;
+		case LTS_TT_PLUS:					return a + b;
+		case LTS_TT_MINUS:					return a - b;
+		case LTS_TT_STAR:					return a * b;
+		case LTS_TT_DIVIDE:					return a / b;
+		case LTS_TT_LESS_THAN:				return a < b;
+		case LTS_TT_GREATER_THAN:			return a < b;
+		case LTS_TT_COMPARE_GREATER_EQUALS:	return a >= b;
+		case LTS_TT_COMPARE_LESS_EQUALS:	return a <= b;
+		case LTS_TT_COMPARE_EQUALS:			return a == b;
+		case LTS_TT_COMPARE_NOT_EQUALS:		return a != b;
+		case LTS_TT_ORDER:					return Makai::ValueOrder(a <=> b).order();
 		default: break;
 	}
 	return {};
@@ -714,10 +723,23 @@ static bool isLogicOp(Node::Instance const& node) {
 	);
 }
 
+static bool isComparison(Node::Instance const& node) {
+	return (
+		node->base.type == LTS_TT_LESS_THAN
+	or	node->base.type == LTS_TT_GREATER_THAN
+	or	node->base.type == LTS_TT_COMPARE_GREATER_EQUALS
+	or	node->base.type == LTS_TT_COMPARE_LESS_EQUALS
+	or	node->base.type == LTS_TT_COMPARE_EQUALS
+	or	node->base.type == LTS_TT_COMPARE_NOT_EQUALS
+	or	node->base.type == LTS_TT_ORDER
+	);
+}
+
 ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	bool lhsHasBeenPushed = false;
 	auto const lhs = expr.transform(context, node->leftSide);
+	bool const comparison = isComparison(node);
 	if (!lhs.source)
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
 	if (lhs.isCompilable() && isLogicOp(node)) {
@@ -766,9 +788,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		if (t->basic) {
 			if (lhs.type->basic == rhs.type->basic)
-				context.top()->impl->writeMainLine("op", bopName(context, node) + asFastOpQualifier(*t->basic));
+				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->basic));
 			else
-				context.top()->impl->writeMainLine("op", bopName(context, node));
+				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
 			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 		} else return infixResolve(context, node, t);
 	}
@@ -1421,11 +1443,11 @@ ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const
 	auto const loopEnd = context.top()->name + "_end" + node->name();
 	auto const loopScope = context.top();
 	loopScope->impl->writePreLine("@target", loopStart, ":");
-	auto const condExpr = Expression().transform(context, node->rightSide);
+	auto const condExpr = Expression().transform(context, node->leftSide);
 	if (!condExpr.isCompilable()) {
 		if (condExpr.shouldBePushed())
-			loopScope->impl->writePreLine("push", condExpr.source.value());
-		loopScope->impl->writePreLine("jump if false", loopEnd);
+			loopScope->impl->writeMainLine("push", condExpr.source.value());
+		loopScope->impl->writeMainLine("jump if false", loopEnd);
 	} else if (!condExpr.direct) return {};
 	auto const loopExpr = Expression().transform(context, node->rightSide);
 	loopScope->impl->writePostLine("jump", loopStart);

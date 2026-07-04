@@ -128,8 +128,9 @@ static Definition::Comparator primitiveCompare() {
 template <class T>
 static int64 proxyCompareImpl(Definition::Source const& a, Definition::Source const& b) {
 	if (a.empty()) return b.empty() ? 0: -1;
-	if (b.empty()) return a.empty() ? 0: 1;
-	return MX::memcmp(a.data(), b.data(), (a.size() < b.size() ? a.size() : b.size()));
+	if (b.empty()) return a.empty() ? 0: +1;
+	if (a.size() != b.size()) return a.size() < b.size() ? -1 : +1;
+	return MX::memcmp(a.data(), b.data(), a.size());
 }
 
 template <class T>

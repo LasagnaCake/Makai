@@ -696,6 +696,35 @@ static void doCompare(Context& context) {
 	else if (id == "greaterequals" || id == "ge")	cmp.comp = Comparator::AV2_OP_GREATER_EQUALS;
 	else if (id == "lessequals" || id == "le")		cmp.comp = Comparator::AV2_OP_LESS_EQUALS;
 	else if (id == "order" || id == "o")			cmp.comp = Comparator::AV2_OP_THREEWAY;
+	if (context.peek().type == LTS_TT_LESS_THAN) {
+		cmp.sameType = true;
+		auto const type = context.expectNext(LTS_TT_LESS_THAN).getNext(LTS_TT_IDENTIFIER, "basic type").getString();
+		context.expectNext(LTS_TT_GREATER_THAN);
+		switch (Makai::hash(type)) {
+			case Makai::hash("bool"):	cmp.assume = BasicType::AV2_BT_BOOL;	break;
+			case Makai::hash("i8"):		cmp.assume = BasicType::AV2_BT_INT8;	break;
+			case Makai::hash("u8"):		cmp.assume = BasicType::AV2_BT_UINT8;	break;
+			case Makai::hash("i16"):	cmp.assume = BasicType::AV2_BT_INT16;	break;
+			case Makai::hash("u16"):	cmp.assume = BasicType::AV2_BT_UINT16;	break;
+			case Makai::hash("i32"):	cmp.assume = BasicType::AV2_BT_INT32;	break;
+			case Makai::hash("u32"):	cmp.assume = BasicType::AV2_BT_UINT32;	break;
+			case Makai::hash("i64"):	cmp.assume = BasicType::AV2_BT_INT64;	break;
+			case Makai::hash("u64"):	cmp.assume = BasicType::AV2_BT_UINT64;	break;
+			case Makai::hash("f32"):	cmp.assume = BasicType::AV2_BT_REAL32;	break;
+			case Makai::hash("f64"):	cmp.assume = BasicType::AV2_BT_REAL64;	break;
+			case Makai::hash("f128"):	cmp.assume = BasicType::AV2_BT_REAL128;	break;
+			case Makai::hash("char"):	cmp.assume = BasicType::AV2_BT_CHAR;	break;
+			case Makai::hash("vec"):	cmp.assume = BasicType::AV2_BT_VECTOR;	break;
+			case Makai::hash("mat"):	cmp.assume = BasicType::AV2_BT_MATRIX;	break;
+			case Makai::hash("void"):
+			case Makai::hash("nil"): return;
+			case Makai::hash("bin"):
+			case Makai::hash("str"):
+			case Makai::hash("type"):
+			case Makai::hash("any"): cmp.sameType = false; break;
+			default: context.error("Invalid basic type!");
+		}
+	}
 	context.add(Instruction::Name::AV2_IN_COMPARE, cmp);
 }
 
