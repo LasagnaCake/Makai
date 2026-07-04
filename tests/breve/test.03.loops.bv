@@ -7,8 +7,19 @@ isEven2 :: (val: uint64) => IO.writeLine("Is odd!" if val % 2 else "Is even!")
 @Main
 main :: () {
 	val: uint64 = 0
-	repeat 10
+	while val < 10
 		isEven((ref val)++)
 	repeat 10
-		isEven2((ref val)++)
+		isEven((ref val)++)
+	do
+		isEven((ref val)++)
+	while val < 30
+	val = 0
+	while val < 10
+		isEven((ref val)++)
+	repeat 10
+		isEven((ref val)++)
+	do
+		isEven((ref val)++)
+	while val < 30
 }

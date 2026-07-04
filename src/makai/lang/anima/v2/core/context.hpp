@@ -28,7 +28,7 @@ namespace Makai::Anima::V2::Core {
 
 		using ICallable = IConstInvokable<MethodResult(Context&, ExternalMethod&, Arguments const&)>;
 
-		using ExternalInvocation = Instance<ICallable>;
+		using ExternalInvocation = owner<ICallable>;
 
 		struct ExternalMethodInfo {
 			usize 		retTypeHash;
@@ -228,7 +228,7 @@ namespace Makai::Anima::V2::Core {
 			return addExternalMethod(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
 		}
 
-		bool addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker);
+		virtual bool addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker) final;
 
 		void removeExternalMethod(usize const& hash) {
 			if (!hasExternalMethod(hash)) return;

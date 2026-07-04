@@ -160,8 +160,10 @@ Implementation::Instance Namespace::compose() const {
 		if (!variable && varc)
 			out->writePreLine("enter", varc);
 		if (isPureNamespace())
-			out->writePostLine(varc ? "keep" : "begin");
+			out->writePreLine(varc ? "keep" : "begin");
 		if (!variable) out->writePostLine("end");
+		if (implementContents)
+			out->writeMainLine(impl->toString());
 	}
 	return out;
 }

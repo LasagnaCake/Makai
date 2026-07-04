@@ -42,7 +42,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			uint64 addStringLiteral(String const& val);
 			uint64 addGlobal(String const& name);
 
-			void addJumpTarget(String const& name, JumpMode const mode = JumpMode::AV2_ILM_TABLE_INDEX);
+			void addJumpTarget(String const& name, JumpMode const mode = JumpMode::AV2_JM_TABLE_INDEX);
 			uint64 getJumpTarget(String const& name);
 			bool hasJumpTarget(String const& name);
 
@@ -94,7 +94,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			String fullModulePath() const;
 
-			JumpMode globalJumpMode = JumpMode::AV2_ILM_RELATIVE;
+			JumpMode globalJumpMode = JumpMode::AV2_JM_RELATIVE;
 		};
 
 		Minima(Context& context): AAssembler(context), context(context) {}

@@ -45,7 +45,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 void Context::addType(Makai::String const& name, Instance<Declaration> const& type) {
 	if (types.contains(name))
 		error("Type with this name already exists!");
-	auto const fullID = name + "@" + type->name;
+	auto const fullID = type->name;
 	moduleTypes[fullID] = type;
 	types[name] = new Reference{.name = fullID};
 	type->id = program.detail.types.size();
@@ -57,7 +57,7 @@ void Context::addExternalMethod(Makai::String const& module, Makai::String const
 	if (method->local) return;
 	if (methods.contains(name))
 		error("Method with this name already exists!");
-	auto const fullID = module + ":" + name + "@" + method->name;
+	auto const fullID = module + "@" + method->name;
 	auto const refID = cleanPath(module + "/" + name);
 	externalMethods[fullID] = method;
 	methods[refID] = new Reference{module, fullID};
@@ -73,7 +73,7 @@ void Context::addExternalMethod(Makai::String const& module, Makai::String const
 void Context::addExternalType(Makai::String const& module, Makai::String const& name, Instance<Declaration> const& type) {
 	if (methods.contains(name))
 		error("Type with this name already exists!");
-	auto const fullID = module + ":" + name + "@" + type->name;
+	auto const fullID = module + "@" + type->name;
 	auto const refID = cleanPath(module + "/" + name);
 	externalTypes[fullID] = type;
 	methods[refID] = new Reference{module, fullID};
@@ -138,7 +138,7 @@ uint64 Context::addGlobal(String const& name) {
 void Context::addJumpTarget(String const& name, Context::JumpMode const mode) {
 	if (name.empty())
 		error("Missing jump target name!");
-	if (mode == JumpMode::AV2_ILM_TABLE_INDEX) {
+	if (mode == JumpMode::AV2_JM_TABLE_INDEX) {
 		program.relocations.pushBack(program.code.size());
 		if (hasJumpTarget(name)) {
 			DEBUGLN("*********************** :::: Jump to: [ ", name, " -> ", jumps[name], " ]");
@@ -172,9 +172,9 @@ void Context::finalize() {
 			DEBUGLN("To table ID [", jumps[label], "]");
 			for (auto& location: jumpsToMap[label]) {
 				switch (location.mode) {
-					case (JumpMode::AV2_ILM_TABLE_INDEX): program.code[location.at]	= toLoc; break;
-					case (JumpMode::AV2_ILM_ABSOLUTE): program.code[location.at]	= bitcast<Instruction>(program.jumpTable[toLocID]); break;
-					case (JumpMode::AV2_ILM_RELATIVE): {
+					case (JumpMode::AV2_JM_TABLE_INDEX): program.code[location.at]	= toLoc; break;
+					case (JumpMode::AV2_JM_ABSOLUTE): program.code[location.at]	= bitcast<Instruction>(program.jumpTable[toLocID]); break;
+					case (JumpMode::AV2_JM_RELATIVE): {
 						auto const to = program.jumpTable[toLocID];
 						auto const target = Cast::as<int64>(to) - Cast::as<int64>(location.at);
 						DEBUGLN("Target offset: ", target);
@@ -512,7 +512,7 @@ static Location getDataLocation(Context& context) {
 
 static void doConditionalJump(Context& context, bool dynamic = false) {
 	context.next();
-	auto const mode = dynamic ? Instruction::Leap::Mode::AV2_ILM_TABLE_INDEX : context.globalJumpMode;
+	auto const mode = dynamic ? JumpMode::AV2_JM_TABLE_INDEX : context.globalJumpMode;
 	Instruction::Leap leap{.dyn = dynamic, .mode = mode};
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
@@ -541,7 +541,7 @@ static void doJump(Context& context, bool dynamic = false) {
 		context.next();
 		doConditionalJump(context, dynamic);
 	} else {
-		auto const mode = dynamic ? Instruction::Leap::Mode::AV2_ILM_TABLE_INDEX : context.globalJumpMode;
+		auto const mode = dynamic ? Context::JumpMode::AV2_JM_TABLE_INDEX : context.globalJumpMode;
 		context.add(
 			Instruction::Name::AV2_IN_JUMP,
 			Instruction::Leap{
@@ -574,7 +574,7 @@ static void doCall(Context& context, bool dynamic = false) {
 			invoke
 		);
 		if (m->out) context.add(m->hash);
-		else context.addJumpTarget(m->jump, Context::JumpMode::AV2_ILM_TABLE_INDEX);
+		else context.addJumpTarget(m->jump, Context::JumpMode::AV2_JM_TABLE_INDEX);
 	} else {
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
@@ -898,11 +898,12 @@ static void doAwait(Context& context, bool const dyn = false) {
 
 static void doCast(Context& context, bool const dyn = false) {
 	if (!dyn) {
+		context.next();
 		auto const type = resolvePath(context);
 		if (context.types.contains(type)) {
 			context.add(Instruction::Name::AV2_IN_CAST);
 			context.add(context.getType(type)->id);
-		} else context.error("Type with this name does not exist!");
+		} else context.error("Type with name [" + type + "] does not exist!");
 	} else {
 		context.add(
 			Instruction::Name::AV2_IN_CAST,
@@ -913,6 +914,7 @@ static void doCast(Context& context, bool const dyn = false) {
 
 static void doUnsafeCast(Context& context, bool const dyn = false) {
 	if (!dyn) {
+		context.next();
 		auto const type = resolvePath(context);
 		if (context.types.contains(type)) {
 			context.add(
@@ -920,7 +922,7 @@ static void doUnsafeCast(Context& context, bool const dyn = false) {
 				Instruction::Casting{.unsafe = true}
 			);
 			context.add(context.getType(type)->id);
-		} else context.error("Type with this name does not exist!");
+		} else context.error("Type with name [" + type + "] does not exist!");
 	} else {
 		context.add(
 			Instruction::Name::AV2_IN_CAST,
@@ -972,17 +974,17 @@ static void doDynamic(Context& context) {
 }
 
 static void doSelect(Context& context) {
-	uint32 count = 0;
+	Instruction::Selection select = {.mode = context.globalJumpMode};
 	auto const inst = context.add(Instruction::Name::AV2_IN_SELECT);
 	context.expectNext(LTS_TT_OPEN_BRACKET);
 	while (true) {
 		if (context.next().has(LTS_TT_CLOSE_BRACKET)) break;
-		context.addJumpTarget(resolvePath(context), context.globalJumpMode);
-		++count;
+		context.addJumpTarget(resolvePath(context), select.mode);
+		++select.count;
 	}
-	if (count < 2)
+	if (select.count < 2)
 		context.error("Select must have at least two targets!");
-	context.update(inst, count);
+	context.update(inst, Makai::Cast::bit<uint32>(select));
 }
 
 static void doUnbind(Context& context) {

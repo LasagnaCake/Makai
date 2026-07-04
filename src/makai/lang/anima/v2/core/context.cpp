@@ -120,12 +120,12 @@ Context::MethodResult Context::invokeExternalMethod(usize const hash, List<Objec
 		if (externalMethods.contains(hash)) {
 			DEBUGLN("Created? ", externalMethods[hash].exists());
 			if (externalMethods[hash].exists())
-				DEBUGLN("Invoker? ", externalMethods[hash]->invoker.exists());
+				DEBUGLN("Invoker? ", externalMethods[hash]->invoker);
 		}
 	}
 	if (!hasExternalMethod(hash)) return Error::AV2_CCE_MISSING_METHOD;
 	MAKAILIB_DEBUGLN_FULL("!!! Method exists !!!");
-	MAKAILIB_DEBUGLN_FULL("Invoker? ", externalMethods[hash]->invoker.exists());
+	MAKAILIB_DEBUGLN_FULL("Invoker? ", externalMethods[hash]->invoker);
 	if (!externalMethods[hash]->invoker) return Error::AV2_CCE_MISSING_INVOKER;
 	if (auto err = externalMethods[hash]->validate(*this, args))
 		return *err;

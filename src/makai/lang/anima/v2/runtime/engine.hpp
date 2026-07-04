@@ -151,8 +151,9 @@ namespace Makai::Anima::V2::Runtime {
 		void shortCircuitOperation(Core::Operator const op, usize const count);
 		void fastShortCircuitOperation(Core::Operator const op, Core::BasicType const type, usize const count);
 
-		void jumpBy(usize const tableID, bool returnable);
+		void jumpByTableIndex(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);
+		void jumpByMode(Core::Instruction::Leap::Mode const mode, usize const location, bool returnable);
 		void returnBack();
 
 		State				engineState	= State::AV2_RES_READY;

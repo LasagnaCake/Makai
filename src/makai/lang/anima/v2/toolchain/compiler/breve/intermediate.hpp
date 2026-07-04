@@ -160,6 +160,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		TraitRef		trait;
 		PropertyRef		property;
 
+		bool implementContents = false;
+
 		Implementation::Instance	impl = impl.create();
 
 		Instance resolve(UTF8StringList const& path) const;

@@ -47,6 +47,12 @@ namespace Makai::Anima::V2::Core {
 		AV2_DL_MODIFIERS	= 0b1110'0000,
 	};
 
+	enum class JumpMode: uint8 {
+		AV2_JM_TABLE_INDEX,
+		AV2_JM_RELATIVE,
+		AV2_JM_ABSOLUTE,
+	};
+
 	constexpr DataLocation operator|(DataLocation const& a, DataLocation const& b) {
 		return Cast::as<DataLocation>(bitcast<uint8>(a) | bitcast<uint8>(b));
 	}
@@ -132,11 +138,7 @@ namespace Makai::Anima::V2::Core {
 				AV2_ILT_IF_UNDEFINED,
 				AV2_ILT_IF_NULL_OR_UNDEFINED,
 			};
-			enum class Mode: uint8 {
-				AV2_ILM_TABLE_INDEX,
-				AV2_ILM_RELATIVE,
-				AV2_ILM_ABSOLUTE,
-			};
+			using Mode = JumpMode;
 			Type	type:	4;
 			bool	dyn:	1;
 			Mode	mode:	2;
@@ -223,8 +225,13 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Create {
-			bool			dyn:			1;
-			bool			initWithScope:	1;
+			bool	dyn:			1;
+			bool	initWithScope:	1;
+		};
+
+		struct [[gnu::aligned(4)]] Selection {
+			uint16		count;
+			JumpMode	mode:	2;
 		};
 
 		/// @brief Instruction name.

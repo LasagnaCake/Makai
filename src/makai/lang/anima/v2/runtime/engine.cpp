@@ -327,7 +327,7 @@ void Engine::v2Call() {
 				}
 			)
 		;
-	} else jumpBy(loc, true);
+	} else jumpByTableIndex(loc, true /*returnable*/);
 }
 
 Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
@@ -493,7 +493,7 @@ void Engine::jumpTo(usize const point, bool returnable) {
 	context.pointers.instruction = point;
 }
 
-void Engine::jumpBy(usize const tableID, bool returnable) {
+void Engine::jumpByTableIndex(usize const tableID, bool returnable) {
 	MAKAILIB_DEBUGLN_FULL("Doing jump...");
 	if (tableID == Makai::Limit::MAX<uint64>)
 		return;
@@ -504,6 +504,24 @@ void Engine::jumpBy(usize const tableID, bool returnable) {
 	MAKAILIB_DEBUGLN_FULL("Table index: ", tableID);
 	MAKAILIB_DEBUGLN_FULL("We goin to: ", program.jumpTable[tableID]);
 	MAKAILIB_DEBUGLN_FULL("The Rabbit has Landed!");
+}
+
+void Engine::jumpByMode(Instruction::Leap::Mode const mode, usize const location, bool returnable) {
+	switch (mode) {
+		case JumpMode::AV2_JM_TABLE_INDEX:
+			return jumpByTableIndex(location, returnable);
+		case JumpMode::AV2_JM_ABSOLUTE: {
+			if (location < program.code.size())
+				return jumpTo(location, returnable);
+			else crash(invalidJump());
+		}
+		case JumpMode::AV2_JM_RELATIVE: {
+			auto const to = context.pointers.instruction + bitcast<int64>(location);
+			if (to < program.code.size())
+				return jumpTo(to, returnable);
+			else crash(invalidJump());
+		}
+	}
 }
 
 bool Engine::hasSignal(String const& signal) {
@@ -1082,7 +1100,7 @@ void Engine::load() {
 	for (auto const& [self, fields]: fields)
 		for (auto const& field: fields)
 			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
-	if (program.entry != Limit::MAX<uint64>) jumpBy(program.entry, false);
+	if (program.entry != Limit::MAX<uint64>) jumpByTableIndex(program.entry, false /*not returnable*/);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (config.allowDynamicLibraries) {
 		MAKAILIB_DEBUGLN_FULL("<dynlib-open>");
@@ -1158,11 +1176,9 @@ void Engine::v2Jump() {
 	Instruction::Leap leap = current.getTypeAs<Instruction::Leap>();
 	using enum Instruction::Leap::Type;
 	uint64 loc = 0;
-	if (context.globalValueStack.size() < Makai::Cast::as<uint>((leap.type != AV2_ILT_UNCONDITIONAL) + leap.dyn))
-		return crash(invalidSourceError("Not enough parameters for jump!"));
 	if (leap.dyn) {
 		if (context.globalValueStack.empty())
-			return crash(invalidSourceError("Global stack is empty!"));
+			return crash(invalidSourceError("Missing jump target for dynamic jump!"));
 		loc = context.pop()->toValue<JumpID>().id;
 	} else {
 		advance(true);
@@ -1173,7 +1189,7 @@ void Engine::v2Jump() {
 		shouldJump = true;
 	} else {
 		if (context.globalValueStack.empty())
-			return crash(invalidSourceError("Global stack is empty!"));
+			return crash(invalidSourceError("Missing condition for conditional jump!"));
 		auto const cond = context.pop();
 		switch (leap.type) {
 			case AV2_ILT_IF_TRUTHY:				shouldJump	= cond->toValue<bool>();		break;
@@ -1188,22 +1204,8 @@ void Engine::v2Jump() {
 			default: break;
 		}
 	}
-	if (shouldJump) {
-		switch (leap.mode) {
-			case Core::Instruction::Leap::Mode::AV2_ILM_TABLE_INDEX:	return jumpBy(loc, false);
-			case Core::Instruction::Leap::Mode::AV2_ILM_ABSOLUTE: {
-				if (loc < program.code.size())
-					return jumpTo(loc, false);
-				else crash(invalidJump());
-			}
-			case Core::Instruction::Leap::Mode::AV2_ILM_RELATIVE: {
-				auto const to = context.pointers.instruction + bitcast<int64>(loc);
-				if (to < program.code.size())
-					return jumpTo(to, false);
-				else crash(invalidJump());
-			}
-		}
-	}
+	if (shouldJump)
+		jumpByMode(leap.mode, loc, false /*not returnable*/);
 }
 
 Engine::Error Engine::invalidLocationError(DataLocation const& loc) {
@@ -1441,7 +1443,7 @@ void Engine::v2Cast() {
 }
 
 void Engine::v2Select() {
-	auto const selCount = current.type;
+	auto const select = Makai::Cast::bit<Instruction::Selection>(current.type);
 	if (context.globalValueStack.empty())
 		return crash(outOfRangeError("Global stack is empty!"));
 	if (!context.top())
@@ -1449,14 +1451,14 @@ void Engine::v2Select() {
 	if (!(context.top()->isUnsigned() or context.top()->isBoolean()))
 		return crash(makeErrorHere("Expected unsigned integer or boolean value for select!"));
 	uint64 const to = context.pop()->toValue<uint64>();
-	if (!selCount) return;
+	if (!select.count) return;
 	List<uint64> targets;
-	targets.resize(selCount);
-	for (usize i = 0; i < selCount; ++i) {
+	targets.resize(select.count);
+	for (usize i = 0; i < select.count; ++i) {
 		advance(true);
 		targets.pushBack(Makai::Cast::bit<uint64>(current));
 	}
 	if (to >= targets.size())
-		jumpBy(targets.back(), false);
-	else jumpBy(targets[to], false);
+		jumpByMode(select.mode, targets.back(), false /*not returnable*/);
+	else jumpByMode(select.mode, targets[to], false /*not returnable*/);
 }
