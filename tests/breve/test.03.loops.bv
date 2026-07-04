@@ -16,10 +16,10 @@ main :: () {
 	while val < 30
 	val = 0
 	while val < 10
-		isEven((ref val)++)
+		isEven2((ref val)++)
 	repeat 10
-		isEven((ref val)++)
+		isEven2((ref val)++)
 	do
-		isEven((ref val)++)
+		isEven2((ref val)++)
 	while val < 30
 }
