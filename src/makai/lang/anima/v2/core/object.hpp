@@ -32,7 +32,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Equal<bool> T>
 		T toValue() const {
-			if (isNumber())
+			if (isArithmetic())
 				return fromBasicNumber<bool>();
 			if (!isBoolean())
 				invalidCastError<T>("Mismatched types");
@@ -41,7 +41,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Number T>
 		T toValue() const requires Makai::Type::Different<T, bool> {
-			if (!isNumber())
+			if (!isArithmetic())
 				invalidCastError<T>("Mismatched types");
 			return fromBasicNumber<T>();
 		}
@@ -77,7 +77,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::OneOf<Vector2, Vector3, Vector4> T>
 		T toValue() const {
-			if (isNumber())
+			if (isArithmetic())
 				return toValue<float>();
 			if (!isVector())
 				invalidCastError<T>("Mismatched types");
@@ -86,7 +86,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Equal<Matrix4x4> T>
 		T toValue() const {
-			if (isNumber())
+			if (isArithmetic())
 				return Matrix4x4::identity() * toValue<float>();
 			if (isVector())
 				return Matrix4x4::fromTranslation(toValue<Vector4>());
@@ -180,7 +180,11 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		bool isNumber() const {
-			return isBoolean() || isInteger() || isReal();
+			return isInteger() || isReal();
+		}
+
+		bool isArithmetic() const {
+			return isBoolean() || isNumber();
 		}
 
 		bool isInteger() const {
