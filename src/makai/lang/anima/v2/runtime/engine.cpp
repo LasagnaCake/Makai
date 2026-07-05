@@ -143,23 +143,84 @@ void Engine::v2Yield() {
 	}
 }
 
+template <class T>
+static int8 doFastCompareEX(T& lhs, T& rhs, Comparator const comp) {
+	switch (comp) {
+		case Comparator::AV2_OP_THREEWAY: {
+			if (lhs < rhs) return -1;
+			else return lhs > rhs;
+		}
+		case Comparator::AV2_OP_EQUALS:			return lhs == rhs;
+		case Comparator::AV2_OP_NOT_EQUALS:		return lhs != rhs;
+		case Comparator::AV2_OP_GREATER_THAN:	return lhs > rhs;
+		case Comparator::AV2_OP_GREATER_EQUALS:	return lhs >= rhs;
+		case Comparator::AV2_OP_LESS_THAN:		return lhs < rhs;
+		case Comparator::AV2_OP_LESS_EQUALS:	return lhs <= rhs;
+	}
+	return 0;
+}
+
+template <class T>
+inline static int8 doFastCompareStringOrBytes(Object::Storage const& lhs, Object::Storage const& rhs, Comparator const comp) {
+	T lx = lhs->toValue<T>();
+	T rx = rhs->toValue<T>();
+	return doFastCompareEX(lx, rx, comp);
+}
+
+template <class T>
+inline static int8 doFastCompareCoherent(Object::Storage const& lhs, Object::Storage const& rhs, Comparator const comp) {
+	T& lx = *(T*)(lhs->data());
+	T& rx = *(T*)(rhs->data());
+	return doFastCompareEX(lx, rx, comp);
+}
+
+static int8 doFastCompare(Object::Storage const& lx, Object::Storage const& rx, BasicType const type, Comparator const comp) {
+	if (type == BasicType::AV2_BT_STRING) [[unlikely]]	return doFastCompareStringOrBytes<Makai::UTF8String>(lx, rx, comp);
+	if (type == BasicType::AV2_BT_BYTES) [[unlikely]]	return doFastCompareStringOrBytes<Makai::Bytes<>>(lx, rx, comp);
+	switch (type) {
+		default:
+		case Core::BasicType::AV2_BT_VOID:
+		case Core::BasicType::AV2_BT_NULL:		return 0;
+		case Core::BasicType::AV2_BT_BOOL:		return doFastCompareCoherent<bool>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_INT8:		return doFastCompareCoherent<int8>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_UINT8:		return doFastCompareCoherent<uint8>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_INT16:		return doFastCompareCoherent<int16>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_UINT16:	return doFastCompareCoherent<uint16>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_INT32:		return doFastCompareCoherent<int32>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_CHAR:
+		case Core::BasicType::AV2_BT_UINT32:	return doFastCompareCoherent<uint32>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_INT64:		return doFastCompareCoherent<int64>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_UINT64:	return doFastCompareCoherent<uint64>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_REAL32:	return doFastCompareCoherent<float32>(lx, rx, comp);		break;
+		case Core::BasicType::AV2_BT_REAL64:	return doFastCompareCoherent<float64>(lx, rx, comp);		break;
+		case Core::BasicType::AV2_BT_REAL128:	return doFastCompareCoherent<float128>(lx, rx, comp);		break;
+		case Core::BasicType::AV2_BT_VECTOR:	return doFastCompareCoherent<Makai::Vector4>(lx, rx, comp);	break;
+		case Core::BasicType::AV2_BT_TYPEID:
+		case Core::BasicType::AV2_BT_JUMPID:
+		case Core::BasicType::AV2_BT_CALLID:	return doFastCompareCoherent<Identifier>(lx, rx, comp);		break;
+	}
+}
+
 void Engine::v2Compare() {
 	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to compare!"));
-	auto lhs	= context.pop();
-	auto rhs	= context.top();
+	auto rhs	= context.pop();
+	auto lhs	= context.top();
+	if (comp.sameType) {
+		*rhs = *context.newValue(doFastCompare(lhs, rhs, comp.assume, comp.comp));
+		return;
+	}
 	Makai::Ordered::OrderType order = Makai::Ordered::Order::EQUAL;
-	// TODO: Fast comparisons
-	if (
-		lhs->getCurrentType() == rhs->getCurrentType()
-	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
-	) order = lhs->compareWith(rhs);
-	else if (lhs->isBoolean() && rhs->isBoolean())			order = lhs->toValue<bool>() <=> rhs->toValue<bool>();
+	if (lhs->isBoolean() && rhs->isBoolean())				order = lhs->toValue<bool>() <=> rhs->toValue<bool>();
 	else if (lhs->isUnsigned() && rhs->isUnsigned())		order = lhs->toValue<uint64>() <=> rhs->toValue<uint64>();
 	else if (lhs->isInteger() && rhs->isInteger())			order = lhs->toValue<int64>() <=> rhs->toValue<int64>();
 	else if (lhs->isNumber() && rhs->isNumber())			order = lhs->toValue<double>() <=> rhs->toValue<double>();
 	else if (lhs->isVectorable() && rhs->isVectorable())	order = lhs->toValue<Vector4>() <=> rhs->toValue<Vector4>();
+	else if (
+		lhs->getCurrentType() == rhs->getCurrentType()
+	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
+	) order = lhs->compareWith(rhs);
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Types do not match!"));
 	else {
@@ -977,6 +1038,18 @@ void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, 
 void Engine::v2Op() {
 	StackStateScopePrinter s3p{context};
 	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
+	if (
+		op.sameType && (
+			op.assume == BasicType::AV2_BT_STRING
+		||	op.assume == BasicType::AV2_BT_BYTES
+		)
+	) [[unlikely]] {
+
+		if (op.op < Operator::AV2_BOP_START)
+			return doUnaryOperation(op.op);
+		else
+			return doBinaryOperation(op.op);
+	}
 	if (op.op == Operator::AV2_UOP_LOGIC_NOT && !(op.count % 2))
 		return;
 	if (

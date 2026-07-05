@@ -8,7 +8,7 @@ namespace Makai::Anima::V2::Core {
 	struct Module {
 		using Version = Data::Version;
 
-		enum class Type {
+		enum class Type: uint8 {
 			AV2_CMT_LIBRARY,
 			AV2_CMT_SHARED_MODULE,
 			AV2_CMT_CLI_EXE,

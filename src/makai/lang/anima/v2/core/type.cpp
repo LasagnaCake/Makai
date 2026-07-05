@@ -105,9 +105,12 @@ Definition::Cloner Core::clonerOf(BasicType const type) {
 
 template <class T>
 static int64 castAndCompareImpl(Definition::Source const& a, Definition::Source const& b) {
+	MAKAILIB_DEBUGLN_FULL("Comparing values...");
 	if (a.empty()) return b.empty() ? 0: -1;
+	MAKAILIB_DEBUGLN_FULL("A exists!");
 	if (b.empty()) return a.empty() ? 0: 1;
-	return enumcast<StandardOrder>(violate<T>(a) <=> violate<T>(b));
+	MAKAILIB_DEBUGLN_FULL("B exists!");
+	return enumcast(Makai::ValueOrder(violate<T>(a.data()) <=> violate<T>(b.data())).order());
 }
 
 template <class T>
@@ -117,7 +120,8 @@ static Definition::Comparator castAndCompare() {
 
 template <class T>
 static int64 primitiveCompareImpl(Definition::Source const& a, Definition::Source const& b) {
-	return MX::memcmp(a.data(), b.data(), sizeof(T));
+	MAKAILIB_DEBUGLN_FULL("Comparing [", violate<T>(a.data()), "] <=> [", violate<T>(b.data()), "]...");
+	return castAndCompareImpl<T>(a, b);
 }
 
 template <class T>
