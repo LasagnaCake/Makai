@@ -147,18 +147,19 @@ void Engine::v2Compare() {
 	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to compare!"));
-	auto rhs	= context.pop();
-	auto lhs	= context.top();
+	auto lhs	= context.pop();
+	auto rhs	= context.top();
 	Makai::Ordered::OrderType order = Makai::Ordered::Order::EQUAL;
 	// TODO: Fast comparisons
 	if (
 		lhs->getCurrentType() == rhs->getCurrentType()
 	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
 	) order = lhs->compareWith(rhs);
-	else if (lhs->isBoolean() && rhs->isBoolean())		order = lhs->toValue<bool>() <=> rhs->toValue<bool>();
-	else if (lhs->isUnsigned() && rhs->isUnsigned())	order = lhs->toValue<uint64>() <=> rhs->toValue<uint64>();
-	else if (lhs->isInteger() && rhs->isInteger())		order = lhs->toValue<int64>() <=> rhs->toValue<int64>();
-	else if (lhs->isNumber() && rhs->isNumber())		order = lhs->toValue<double>() <=> rhs->toValue<double>();
+	else if (lhs->isBoolean() && rhs->isBoolean())			order = lhs->toValue<bool>() <=> rhs->toValue<bool>();
+	else if (lhs->isUnsigned() && rhs->isUnsigned())		order = lhs->toValue<uint64>() <=> rhs->toValue<uint64>();
+	else if (lhs->isInteger() && rhs->isInteger())			order = lhs->toValue<int64>() <=> rhs->toValue<int64>();
+	else if (lhs->isNumber() && rhs->isNumber())			order = lhs->toValue<double>() <=> rhs->toValue<double>();
+	else if (lhs->isVectorable() && rhs->isVectorable())	order = lhs->toValue<Vector4>() <=> rhs->toValue<Vector4>();
 	else if (inStrictMode())
 		return crash(invalidComparisonError("Types do not match!"));
 	else {
