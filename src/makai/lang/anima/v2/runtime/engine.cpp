@@ -173,6 +173,9 @@ void Engine::v2Compare() {
 			return;
 		}
 	}
+	MAKAILIB_DEBUGLN_FULL("Left: ", lhs->toValue<int64>());
+	MAKAILIB_DEBUGLN_FULL("Right: ", rhs->toValue<int64>());
+	MAKAILIB_DEBUGLN_FULL("Order = ", Cast::as<int16>(order.order()));
 	switch (comp.comp) {
 		using enum Core::Comparator;
 		case AV2_OP_THREEWAY:
