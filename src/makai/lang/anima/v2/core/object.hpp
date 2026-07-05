@@ -32,7 +32,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Equal<bool> T>
 		T toValue() const {
-			if (isArithmetic())
+			if (isNumber())
 				return fromBasicNumber<bool>();
 			if (!isBoolean())
 				invalidCastError<T>("Mismatched types");
@@ -41,7 +41,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Number T>
 		T toValue() const requires Makai::Type::Different<T, bool> {
-			if (!isArithmetic())
+			if (!isNumber())
 				invalidCastError<T>("Mismatched types");
 			return fromBasicNumber<T>();
 		}
@@ -77,7 +77,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::OneOf<Vector2, Vector3, Vector4> T>
 		T toValue() const {
-			if (isArithmetic())
+			if (isNumber())
 				return toValue<float>();
 			if (!isVector())
 				invalidCastError<T>("Mismatched types");
@@ -86,7 +86,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Equal<Matrix4x4> T>
 		T toValue() const {
-			if (isArithmetic())
+			if (isNumber())
 				return Matrix4x4::identity() * toValue<float>();
 			if (isVector())
 				return Matrix4x4::fromTranslation(toValue<Vector4>());
@@ -149,49 +149,57 @@ namespace Makai::Anima::V2::Core {
 
 		usize count() const;
 
-		bool isBoolean() const {
+		constexpr bool isBoolean() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_BOOL);
 		}
 
-		bool isValueType() const {
+		constexpr bool isValueType() const {
 			if (!origin) return false;
 			return (origin->flags & Definition::Flags::AV2_DF_VALUE);
 		}
 
-		bool isClonable() const {
+		constexpr bool isClonable() const {
 			if (!origin) return false;
 			return (origin->flags & Definition::Flags::AV2_DF_CLONABLE);
 		}
 
-		bool isEmptyType() const {
+		constexpr bool isEmptyType() const {
 			if (!origin) return true;
 			return (origin->flags & Definition::Flags::AV2_DF_NO_RESULT);
 		}
 
-		bool isAlgebraic() const {
+		constexpr bool isAlgebraic() const {
 			return isVector() || isMatrix();
 		}
 
-		bool isVectorable() const {
+		constexpr bool isVectorable() const {
 			return isNumber() || isVector();
 		}
 
-		bool isNumber() const {
+		constexpr bool isNumber() const {
 			return isInteger() || isReal();
 		}
 
-		bool isArithmetic() const {
-			return isBoolean() || isNumber();
+		constexpr bool isNonBoolNumber() const {
+			return isNonBoolInteger() || isReal();
 		}
 
-		bool isInteger() const {
-			return isSigned() || isUnsigned();
+		constexpr bool isNonBoolUnsigned() const {
+			return (!isBoolean()) && isUnsigned();
 		}
 
-		bool isSigned() const {
+		constexpr bool isNonBoolInteger() const {
+			return isSigned() or isNonBoolUnsigned();
+		}
+
+		constexpr bool isInteger() const {
+			return isSigned() or isUnsigned();
+		}
+
+		constexpr bool isSigned() const {
 			if (!isBasic())
 				return false;
 			return (
@@ -202,18 +210,19 @@ namespace Makai::Anima::V2::Core {
 			);
 		}
 
-		bool isUnsigned() const {
+		constexpr bool isUnsigned() const {
 			if (!isBasic())
 				return false;
 			return (
-				origin->basic == BasicType::AV2_BT_UINT8
+				origin->basic == BasicType::AV2_BT_BOOL
+			||	origin->basic == BasicType::AV2_BT_UINT8
 			||	origin->basic == BasicType::AV2_BT_UINT16
 			||	origin->basic == BasicType::AV2_BT_UINT32
 			||	origin->basic == BasicType::AV2_BT_UINT64
 			);
 		}
 
-		bool isReal() const {
+		constexpr bool isReal() const {
 			if (!isBasic())
 				return false;
 			return (
@@ -223,71 +232,71 @@ namespace Makai::Anima::V2::Core {
 			);
 		}
 
-		bool isVector() const {
+		constexpr bool isVector() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_VECTOR);
 		}
 
-		bool isMatrix() const {
+		constexpr bool isMatrix() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_MATRIX);
 		}
 
-		bool isTypeID() const {
+		constexpr bool isTypeID() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_TYPEID);
 		}
 
-		bool isJumpID() const {
+		constexpr bool isJumpID() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_JUMPID);
 		}
 
-		bool isCallID() const {
+		constexpr bool isCallID() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_CALLID);
 		}
 
-		bool isCharacter() const {
+		constexpr bool isCharacter() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_CHAR);
 		}
 
-		bool isString() const {
+		constexpr bool isString() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_STRING);
 		}
 
-		bool isBytes() const {
+		constexpr bool isBytes() const {
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_BYTES);
 		}
 
-		bool isVoid() const {
+		constexpr bool isVoid() const {
 			return origin->basic == BasicType::AV2_BT_VOID;
 		}
 
-		bool isNull() const {
+		constexpr bool isNull() const {
 			return origin->basic == BasicType::AV2_BT_NULL;
 		}
 
-		bool isArray() const {
+		constexpr bool isArray() const {
 			return (origin->flags & Definition::Flags::AV2_DF_ARRAY);
 		}
 
-		bool isStructrure() const {
+		constexpr bool isStructrure() const {
 			return (origin->flags & Definition::Flags::AV2_DF_STRUCTURE);
 		}
 
-		bool isBasic() const {
+		constexpr bool isBasic() const {
 			return (origin->flags & Definition::Flags::AV2_DF_BASIC);
 		}
 
