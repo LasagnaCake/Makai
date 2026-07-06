@@ -338,6 +338,14 @@ static DataLocation getIntWidth(Context& context) {
 		return DataLocation::AV2_DLI_32;
 	else if (id == "i64")
 		return DataLocation::AV2_DLI_64;
+	else if (id == "u8")
+		return DataLocation{0} | DataLocation::AV2_DLI_UNSIGNED;
+	else if (id == "u16")
+		return DataLocation::AV2_DLI_16 | DataLocation::AV2_DLI_UNSIGNED;
+	else if (id == "u32")
+		return DataLocation::AV2_DLI_32 | DataLocation::AV2_DLI_UNSIGNED;
+	else if (id == "u64")
+		return DataLocation::AV2_DLI_64 | DataLocation::AV2_DLI_UNSIGNED;
 	else {
 		context.pad();
 		return DataLocation::AV2_DLI_64;
@@ -406,7 +414,10 @@ static Location getConstantLocation(Context& context) {
 			case LTS_TT_INTEGER:
 				loc.id = context.value().getUnsigned();
 				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
-				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'u'})
+				if (context.peek().type == LTS_TT_IDENTIFIER && (
+					context.peek().text[0] == Makai::UTF::U8Char{'u'}
+				or	context.peek().text[0] == Makai::UTF::U8Char{'i'}
+				))
 					loc.source = loc.source | getIntWidth(context);
 				else loc.source = loc.source | DataLocation::AV2_DLI_64;
 			break;
