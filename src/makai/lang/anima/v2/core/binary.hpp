@@ -39,7 +39,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		usize	pointer = 0;
 
 		Bytes<> read(usize const count) override {
-			DEBUGLN("Reading ", count, " bytes at index ", count, "...");
+			DEBUGLN("Size: ", input.size());
+			DEBUGLN("Reading ", count, " bytes at index ", pointer, "...");
 			if (pointer > input.size())
 				return {};
 			pointer += count;
