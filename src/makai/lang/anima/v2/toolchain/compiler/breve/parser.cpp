@@ -181,8 +181,8 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("maybe", prefixes, new NullableDeclResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
-	add("if", infixes, new InlineIfElseResolver());
-	add("unless", infixes, new InlineIfElseResolver());
+	add("when", infixes, new InlineIfElseResolver());
+	add("except", infixes, new InlineIfElseResolver());
 	add(LTS_TT_NAMESPACE_RESOLVE, infixes, new FunctionDeclResolver());
 	add(LTS_TT_NULL_DECAY, infixes, new EmptyDecayResolver());
 	add(LTS_TT_DOT, infixes, new PathResolver());
