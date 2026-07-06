@@ -7,8 +7,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	struct IConsumable {
 		virtual ~IConsumable() {}
 
-		Bytes<>	consume(usize const count)					= 0;
-		void	go(usize const pos = 0)						= 0;
+		virtual Bytes<>	consume(usize const count)	= 0;
+		virtual void	go(usize const pos = 0)		= 0;
 	};
 
 	struct ByteReader: IConsumable {
@@ -56,7 +56,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	template <class T, auto CONVERT = [] (Bytes<> const&) -> Nullable<T> {return null;}>
 	struct [[gnu::packed, gnu::aligned(1)]] Table: Entry {
 		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc>
-		static Nullable<T> readFromSource(IConsumable& source, usize const index, TFunc const convert = CONVERT) const {
+		Nullable<T> readFromSource(IConsumable& source, usize const index, TFunc const convert = CONVERT) const {
 			if (index >= size) return null;
 			source.go(start + index);
 			auto entryBlock = source.consume(sizeof(Entry));
@@ -73,8 +73,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	constexpr Nullable<T> stringFromBytes(Bytes<> const& block) {
 		return T(
 			String(
-				(ref<typename T::DataType>)block.cbegin(),
-				(ref<typename T::DataType>)block.cend()
+				(ref<typename T::DataType>)block.data(),
+				block.size() / sizeof(typename T::DataType)
 			)
 		);
 	}
