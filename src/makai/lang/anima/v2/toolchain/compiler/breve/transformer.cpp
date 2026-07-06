@@ -1382,7 +1382,8 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
 	auto const cond = Expression().transform(context, node->middle);
-	DEBUGLN("If-Condition: ", cond.type ? cond.type->name : "ERR");
+	auto const invert = node->base.text == "unless";
+	DEBUGLN("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" + "FALSE", ")");
 	if (cond.isCompilable()) {
 		if (cond.direct.isTruthy()) return Expression().transform(context, node->leftSide);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
@@ -1415,12 +1416,12 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
 		if (cond.likelihood >= 0) {
-			String const condType = (node->base.text != "unless") ? "false" : "true";
+			String const condType = (invert) ? "true" : "false";
 			context.top()->impl->writeMainLine("jump if", condType, node->rightSide ? ifFalseLabel : ifEndLabel);
 			writeTrueBranch();
 			writeFalseBranch(true);
 		} else {
-			String const condType = (node->base.text == "unless") ? "false" : "true";
+			String const condType = (invert) ? "false" : "true";
 			context.top()->impl->writeMainLine("jump if", condType, ifTrueLabel);
 			writeFalseBranch();
 			writeTrueBranch(true);
