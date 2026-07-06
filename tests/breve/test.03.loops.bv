@@ -7,7 +7,7 @@ isEven :: (val: uint64) {
 
 isEven2 :: (val: uint64) {
 	IO.write((copy val) as any);
-	IO.writeLine("Is odd!" when val % 2 else "Is even!")
+	IO.writeLine(" Is odd!" when val % 2 else " Is even!")
 }
 
 @Main
@@ -33,5 +33,5 @@ main :: () {
 	IO.writeLine("Testing loop construct 3...")
 	do
 		isEven2(val++)
-	while (val) < 30
+	while (copy val) < 30
 }
