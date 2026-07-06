@@ -172,9 +172,10 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	template <class T>
 	struct [[gnu::packed, gnu::aligned(1)]] Data: Entry {
 		Nullable<List<T>> fromBytes(IReadable& source) const {
+			if (!size) return {List<T>()};
 			source.go(start);
 			auto block = source.read(size);
-			if (block.size() != size) return {};
+			if (block.size() != size) return null;
 			return listFromBytes<T>(block).value();
 		}
 	};
