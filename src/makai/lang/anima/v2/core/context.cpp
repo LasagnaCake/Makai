@@ -94,7 +94,7 @@ bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvo
 	}
 	DEBUGLN("OK: [", hash, "] has no duplicates");
 	Instance<ExternalMethod> method = method.create();
-	method->out		= true;
+	method->flags	|= Method::Flags::AV2_MF_EXTERNAL;
 	method->argc	= argc;
 	method->hash	= hash;
 	method->invoker	= invoker;

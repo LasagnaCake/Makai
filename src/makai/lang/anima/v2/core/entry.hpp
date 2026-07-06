@@ -8,6 +8,7 @@ namespace Makai::Anima::V2::Core {
 		uint64 id;
 		String name;
 		uint64 hash;
+		uint64 flags = 0;
 	};
 }
 

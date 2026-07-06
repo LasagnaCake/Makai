@@ -25,11 +25,9 @@ namespace Makai::Anima::V2::Core {
 			uint64			id;
 			UTF8String		name;
 			uint64			hash;
+			uint64			flags = 0;
 			uint64			retType;
 			List<uint64>	argTypes;
-			bool			out = false;
-			bool			shared = false;
-			bool			optional = false;
 			uint64			entrypoint;
 			uint64			size;
 			Data::Value		meta;
@@ -94,6 +92,7 @@ namespace Makai::Anima::V2::Core {
 
 		Type			type		= Type::AV2_CMT_CLI_EXE;
 		String			name;
+		uint64			flags		= 0;
 		Version			art			= ART_VER;
 		Version			version		= {0, 0, 1};
 		StringList		strings;

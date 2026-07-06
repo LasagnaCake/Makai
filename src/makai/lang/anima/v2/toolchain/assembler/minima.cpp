@@ -1,4 +1,5 @@
 #include "minima.hpp"
+#include "../../core/method.hpp"
 
 using namespace Makai::Anima::V2::Core;
 
@@ -8,6 +9,8 @@ using Context = Minima::Context;
 
 using Type = Context::Tokenizer::Token::Type;
 using enum Type;
+
+using CoreMethod = Method;
 
 static Makai::String cleanPath(Makai::String const& path) {
 	return Makai::Regex::replace(path, "\\/\\/+", "\\/");
@@ -33,7 +36,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	auto const fullID = name + "@" + method->name;
 	moduleMethods[fullID] = method;
 	methods[name] = new Reference{.name = fullID};
-	if (!method->out) {
+	if (!method->flags & CoreMethod::Flags::AV2_MF_EXTERNAL) {
 		method->jump = name + "/entry";
 		method->hash = hash(name);
 	}
@@ -576,15 +579,15 @@ static void doCall(Context& context, bool dynamic = false) {
 		if (!context.methods.contains(id))
 			context.error("Method with this name does not exist!");
 		auto const m = context.getMethod(id);
-		invoke.external = m->out;
-		invoke.optional = m->optional;
+		invoke.external = m->flags & Method::Flags::AV2_MF_EXTERNAL;
+		invoke.optional = m->flags & Method::Flags::AV2_MF_OPTIONAL;
 		invoke.noResult = context.program.detail.types[m->retType].flags & Definition::Flags::AV2_DF_NO_RESULT;
 		DEBUGLN("_______________________ Call entry: ", m->jump);
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
 		);
-		if (m->out) context.add(m->hash);
+		if (invoke.external) context.add(m->hash);
 		else context.addJumpTarget(m->jump, Context::JumpMode::AV2_JM_TABLE_INDEX);
 	} else {
 		context.add(
@@ -1328,9 +1331,9 @@ static void getMethodAttriutes(Context& context, Context::Method& method) {
 		else if (attr == "global")
 			method.local = false;
 		else if (attr == "required")
-			method.optional = false;
+			method.flags &= ~Method::Flags::AV2_MF_OPTIONAL;
 		else if (attr == "optional")
-			method.optional = true;
+			method.flags |= Method::Flags::AV2_MF_OPTIONAL;
 		else break;
 	}
 }
@@ -1365,7 +1368,7 @@ static void declareOutboundMethod(Context& context) {
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
-	method->out = true;
+	method->flags |= Method::Flags::AV2_MF_EXTERNAL;
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
 	else context.error("Return type does not exist!");
@@ -1394,8 +1397,7 @@ static void declareSharedMethod(Context& context) {
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
-	method->out		= true;
-	method->shared	= true;
+	method->flags		|= (Method::Flags::AV2_MF_EXTERNAL | Method::Flags::AV2_MF_SHARED);
 	if (context.program.ani->shared.libraries.find(dynlibName) == -1)
 		context.program.ani->shared.libraries.pushBack(dynlibName);
 	if (context.types.contains(id))
@@ -1430,7 +1432,12 @@ static void declareMethodBody(Context& context) {
 		if (!context.methods.contains(name))
 			context.error("Method prototype does not exist!");
 		auto const method = context.getMethod(name);
-		if (method->shared || method->out) context.error("Cannot declare a body for a shared/external method!");
+		if (
+			method->flags & (
+				Method::Flags::AV2_MF_EXTERNAL
+			|	Method::Flags::AV2_MF_SHARED
+			)
+		) context.error("Cannot declare a body for a shared/external method!");
 		context.methodStack.pushBack(method);
 		context.registerLandingPoint(method->jump);
 		method->entrypoint = context.jumps[method->jump];

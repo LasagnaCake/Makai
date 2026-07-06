@@ -181,7 +181,6 @@ namespace Makai::Anima::V2::Core {
 
 		static void makeBasic(Definition& type);
 
-		uint64						flags		= 0;
 		Nullable<BasicType>			basic;
 		Handle<Definition>			base		= nullptr;
 		uint64						byteSize	= 0;

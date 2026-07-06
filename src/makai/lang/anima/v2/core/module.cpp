@@ -69,6 +69,8 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 	mod.type = v["type"].get<Module::Type>(Module::Type::AV2_CMT_LIBRARY);
 	if (v.contains("entry"))
 		mod.entry = v["entry"].getUnsigned();
+	if (v.contains("flags"))
+		mod.flags = v["flags"].getUnsigned();
 }
 
 Module Module::deserialize(Makai::Data::Value const& v) {
@@ -98,6 +100,8 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	out["art"]		= art;
 	out["version"]	= version;
 	out["detail"]	= detail;
+	if (flags)
+		out["flags"] = flags;
 	if (type == Module::Type::AV2_CMT_LIBRARY or forceSymbolsToBeKept) {
 		out["detail"]	= detail;
 		out["sym"]		= sym;
@@ -223,10 +227,8 @@ Makai::Data::Value Module::Method::serialize() const {
 	result["hash"] = hash;
 	result["return"] = retType;
 	result["args"] = argTypes.toList<Data::Value>();
-	result["out"] = out;
-	result["shared"] = shared;
+	result["flags"] = flags;
 	result["entry"] = entrypoint;
-	result["optional"] = optional;
 	result["size"] = size;
 	result["meta"] = meta;
 	return result;
@@ -241,12 +243,10 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 	if (v.contains("name"))
 		result.name = v["name"].getString();
 	result.hash = v["hash"].getUnsigned();
+	result.flags = v["flags"].getUnsigned();
 	result.retType = v["return"];
 	result.argTypes = v["args"].getArray().toList<uint64>().filter(valueExists);
-	result.out = v["out"];
-	result.shared = v["shared"];
 	result.entrypoint = v["entry"];
-	result.optional = v["optional"];
 	result.size = v["size"];
 	if (v.contains("meta"))
 		result.meta = v["meta"];

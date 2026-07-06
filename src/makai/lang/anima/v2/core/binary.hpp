@@ -4,48 +4,72 @@
 #include "module.hpp"
 
 namespace Makai::Anima::V2::Core::BinaryFormat {
-	struct IConsumable {
-		virtual ~IConsumable() {}
+	struct IReadable {
+		virtual ~IReadable() {}
 
-		virtual Bytes<>	consume(usize const count)	= 0;
-		virtual void	go(usize const pos = 0)		= 0;
+		virtual Bytes<>	read(usize const count)	= 0;
+		virtual void	go(usize const pos = 0)	= 0;
 	};
 
-	struct ByteReader: IConsumable {
-		Bytes<>	source;
+	struct IWritable {
+		virtual ~IWritable() {}
+
+		virtual void	write(ByteSpan<> const& bytes)	= 0;
+		virtual void	go(usize const pos = 0)			= 0;
+
+		template <class T>
+		void put(T const& data) {
+			write({
+				(ref<byte>)&data,
+				sizeof(T)
+			});
+		}
+
+		template <class T>
+		void append(List<T> const& data) {
+			write({
+				(ref<byte>)data.data(),
+				data.size() * sizeof(T)
+			});
+		}
+	};
+
+	struct ByteReader: IReadable {
+		Bytes<>	input;
 		usize	pointer = 0;
 
-		Bytes<> consume(usize const count) override {
-			if (pointer > source.size())
+		Bytes<> read(usize const count) override {
+			if (pointer > input.size())
 				return {};
 			pointer += count;
-			if (pointer > source.size())
-				return source.sliced(pointer - count, -1);
-			return source.sliced(pointer - count, pointer);
+			if (pointer > input.size())
+				return input.sliced(pointer - count, -1);
+			return input.sliced(pointer - count, pointer);
 		}
 
 		void go(usize const pos) override {
-			pointer = pos < (source.size() - 1) ? pos : source.size() - 1;
+			pointer = pos < (input.size() - 1) ? pos : input.size() - 1;
 		}
 
-		ByteReader(Bytes<> const& source = {}): source(source) {}
+		ByteReader(Bytes<> const& input): input(input) {}
 	};
 
-	template <class T>
-	struct [[gnu::packed, gnu::aligned(1)]] Header {
-		uint64 const size = sizeof (T);
-		T data;
+	struct ByteWriter: IWritable {
+		Bytes<>&	output;
+		usize		pointer = 0;
 
-		static Nullable<Header> build(IConsumable& source) {
-			auto block = source.consume(sizeof(uint64));
-			if (block.size() < sizeof(uint64)) return null;
-			auto const s = *(uint64*)block.data();
-			auto const sz = s < sizeof(T) ? s : sizeof(T);
-			Header out{.size = sz};
-			block = source.consume(s);
-			if (block.size() < sz) return null;
-			MX::memmove(&out.data, block.data(), sz);
+		void write(ByteSpan<> const& bytes) override {
+			if (pointer < output.size())
+				output.insert(bytes.begin(), bytes.end(), pointer);
+			else output.appendBack(bytes.begin(), bytes.end());
+			pointer += bytes.size();
 		}
+
+		void go(usize const pos) override {
+			pointer = pos < (output.size() - 1) ? pos : output.size() - 1;
+		}
+
+		ByteWriter(Bytes<>& output): output(output) {}
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Entry {
@@ -53,23 +77,47 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		uint64 size;
 	};
 
+	template <class T>
+	struct [[gnu::packed, gnu::aligned(1)]] Header: Entry {
+		Nullable<T> fromBytes(IReadable& source) const {
+			auto block = source.read(sizeof(uint64));
+			if (block.size() < sizeof(uint64)) return null;
+			auto const s = *(uint64*)block.data();
+			auto const sz = s < sizeof(T) ? s : sizeof(T);
+			T out;
+			block = source.read(s);
+			if (block.size() < sz) return null;
+			MX::memmove(&out, block.data(), sz);
+			return out;
+		}
+
+		static Nullable<Header<T>> build(IReadable& source) {
+			auto block = source.read(sizeof(Entry));
+			if (block.size() < sizeof(Entry)) return null;
+			return {*(Header<T>*)block.data()};
+		}
+	};
+
 	template <class T, auto CONVERT = [] (Bytes<> const&) -> Nullable<T> {return null;}>
 	struct [[gnu::packed, gnu::aligned(1)]] Table: Entry {
-		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(CONVERT)>
-		Nullable<T> readFromSource(IConsumable& source, usize const index, TFunc const convert = CONVERT) const {
+		using EntryType = T;
+		constexpr static auto const convert = CONVERT;
+
+		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
+		Nullable<T> readFromSource(IReadable& source, usize const index, TFunc const convert = CONVERT) const {
 			if (index >= size) return null;
 			source.go(start + index);
-			auto entryBlock = source.consume(sizeof(Entry));
+			auto entryBlock = source.read(sizeof(Entry));
 			if (entryBlock.size() < sizeof(Entry)) return null;
 			auto const entry = *(Entry*)entryBlock.data();
 			source.go(entry.start);
-			auto block = source.consume(entry.size);
+			auto block = source.read(entry.size);
 			if (block.size() != entry.size) return null;
 			return convert(block);
 		}
 
-		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(CONVERT)>
-		Nullable<List<T>> fromBytes(IConsumable& source, TFunc const convert = CONVERT) const {
+		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
+		Nullable<List<T>> fromBytes(IReadable& source, TFunc const convert = CONVERT) const {
 			List<T> out;
 			for (usize i = 0; i < size; ++i)
 				if (auto const v = readFromSource(source, i))
@@ -98,12 +146,6 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	}
 
 	template <class T>
-	Nullable<Header<T>> headerFromBytes(Bytes<> const& block) {
-		ByteReader reader{block};
-		return T::build(reader);
-	}
-
-	template <class T>
 	constexpr Nullable<T> valueFromBytes(Bytes<> const& block) {
 		T out;
 		if (block.size() < sizeof(T)) return null;
@@ -111,21 +153,27 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		return out;
 	}
 
+	template <class T>
+	Nullable<Header<T>> headerFromBytes(Bytes<> const& block) {
+		return valueFromBytes<Header<T>>(block);
+	}
+
 	struct [[gnu::packed, gnu::aligned(1)]] Text: Entry {
 		template <Type::OneOf<String, UTF8String, UTF32String> T>
-		Nullable<T> fromBytes(IConsumable& source) const {
+		Nullable<T> fromBytes(IReadable& source) const {
+			if (!size) return {T()};
 			source.go(start);
-			auto block = source.consume(size);
-			if (block.size() != size) return "";
+			auto block = source.read(size);
+			if (block.size() != size) return null;
 			return stringFromBytes<T>(block).value();
 		}
 	};
 
 	template <class T>
 	struct [[gnu::packed, gnu::aligned(1)]] Data: Entry {
-		Nullable<List<T>> fromBytes(IConsumable& source) const {
+		Nullable<List<T>> fromBytes(IReadable& source) const {
 			source.go(start);
-			auto block = source.consume(size);
+			auto block = source.read(size);
 			if (block.size() != size) return {};
 			return listFromBytes<T>(block).value();
 		}
@@ -140,13 +188,28 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	template <class T>
 	using ValueTable = Table<T, valueFromBytes<T>>;
 
+	template <class T>
+	constexpr Nullable<List<T>> unpack(HeaderTable<T> const& table, IReadable& source) {
+		List<T> out;
+		for (usize i = 0; i < table.size; ++i)
+			if (auto const h = table.readFromSource(source, i))
+				if (auto const v = h.value().fromBytes(source))
+					out.pushBack(v.value());
+				else return null;
+			else return null;
+		return out;
+	}
+
 	struct [[gnu::packed, gnu::aligned(1)]] Label: Text {
 		uint64 id;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Base {
+	struct [[gnu::packed, gnu::aligned(1)]] Record {
 		uint64	id;
 		Text	name;
+	};
+
+	struct [[gnu::packed, gnu::aligned(1)]] Symbol: Record {
 		uint64	hash;
 		uint64	flags;
 		Text	meta;
@@ -157,14 +220,14 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		uint64 dst;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Method: Base {
+	struct [[gnu::packed, gnu::aligned(1)]] Method: Symbol {
 		uint64				returnType;
 		ValueTable<uint64>	argTypes;
 		uint64				entry;
 		uint64				size;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Decl: Base {
+	struct [[gnu::packed, gnu::aligned(1)]] Decl: Symbol {
 		BasicType			basic;
 		uint64				base;
 		uint64				byteSize;
@@ -173,18 +236,18 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Module {
-		ValueTable<Header<Decl>>	types;
-		ValueTable<Header<Method>>	methods;
+		HeaderTable<Decl>	types;
+		HeaderTable<Method>	methods;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Symbol {
+	struct [[gnu::packed, gnu::aligned(1)]] Include {
 		uint64				module;
-		ValueTable<Mapping>	types;
-		ValueTable<Mapping>	methods;
+		HeaderTable<Record>	types;
+		HeaderTable<Record>	methods;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] External {
-		ValueTable<Header<Symbol>> modules;
+		HeaderTable<Include> modules;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Shared {
@@ -194,18 +257,28 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] ANI {
-		ValueTable<Header<Label>>	in;
-		StringTable<String>			out;
-		Header<Shared>				shared;
+		HeaderTable<Label>	in;
+		StringTable<String>	out;
+		Header<Shared>		shared;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] FileStructure {
-		struct Flags {};
+		struct Version {
+			uint64 major	= 1;
+			uint64 minor	= 0;
+			uint64 patch	= 0;
+			uint64 hotfix	= 0;
+		};
 		As<char const[10]>		magic = "AV2::ANPB";
 		Core::Module::Type		type;
-		As<uint64[4]>			version;
+		Version					artVersion;
+		Version					binVersion;
+		Version					moduleVersion;
 		uint64					flags;
+		uint64					moduleFlags;
 		uint64					entry;
+		uint64					totalTypes;
+		uint64					totalMethods;
 		StringTable<String>		strings;
 		ValueTable<uint64>		jumps;
 		Data<Instruction>		code;
@@ -223,6 +296,113 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	struct Error {
 		String message;
+	};
+
+	struct Builder {
+		Bytes<> output;
+		FileStructure file;
+		ByteWriter writer = {output};
+
+		template <class T>
+		Entry put(T const& value) {
+			Entry entry;
+			entry.start = writer.pointer;
+			writer.put(value);
+			entry.size = writer.pointer - entry.start;
+			return entry;
+		}
+
+		template <class T>
+		Entry append(List<T> const& values) {
+			Entry entry;
+			entry.start = writer.pointer;
+			writer.append(values);
+			entry.size = writer.pointer - entry.start;
+			return entry;
+		}
+
+
+		template <Type::OneOf<String, UTF8String, UTF32String> T>
+		Entry append(T const& value) {
+			Entry entry;
+			entry.start = writer.pointer;
+			String s = value;
+			writer.write({(ref<byte>)s.data(), s.size()});
+			entry.size = writer.pointer - entry.start;
+			return entry;
+		}
+
+		template <class T>
+		Entry add(T const& value) {
+			return put(put(value));
+		}
+
+		template <class T>
+		Entry insert(T const& value) {
+			return put(append(value));
+		}
+
+		template <class T>
+		Entry include(List<T> const& values) {
+			List<Entry> headers;
+			for (auto const& value: values)
+				headers.pushBack(put(value));
+			return insert(headers);
+		}
+
+		template <class T>
+		Entry embed(List<T> const& values) {
+			List<Entry> headers;
+			for (auto const& value: values)
+				headers.pushBack(append(value));
+			return insert(headers);
+		}
+
+		template <class T>
+		Entry pack(List<T> const& values) {
+			List<Entry> headers;
+			for (auto const& value: values)
+				headers.pushBack(add(value));
+			return insert(headers);
+		}
+
+		template <class T>
+		Entry pack(List<List<T>> const& values) {
+			List<Entry> headers;
+			for (auto const& value: values)
+				headers.pushBack(insert(value));
+			return insert(headers);
+		}
+
+		Builder& begin() {
+			put(Entry(0, sizeof(FileStructure)));
+			return *this;
+		}
+
+
+		template <Type::Functional<void(Builder&)> TFunc>
+		Builder& run(TFunc const& func) {
+			func(*this);
+			return *this;
+		}
+
+		template <Type::Functional<Entry(Builder&)> TFunc>
+		Entry process(TFunc const& func) {
+			return func(*this);
+		}
+
+		template <Type::Functional<Entry(Builder&)> TFunc>
+		Entry processIf(bool const cond, TFunc const& func) {
+			if (!cond) return {};
+			return func(*this);
+		}
+
+		Builder& end() {
+			Entry fin = put(file);
+			writer.go(0);
+			writer.put(fin);
+			return *this;
+		}
 	};
 
 	Result<Core::Module, Error>	fromBytes(Bytes<> const& source);
