@@ -106,7 +106,15 @@ struct ARTEMain: Makai::AMain {
 				args["allow-dynlibs"].getBoolean(),
 				args["cli"].getBoolean()
 			};
-			engine.load(Makai::File::getFLOW(args["__args"][0].getString() + ".anp"));
+			Makai::Anima::V2::Core::Module file;
+			Makai::String fpath = args["__args"][0].getString() + ".anp";
+			if (Makai::OS::FS::exists(fpath))
+				file = Makai::File::getFLOW(fpath);
+			else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + "b"))
+				.then([&] (auto const e) {file = e;})
+				.onError([&] (auto const e) {throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);})
+			;
+			engine.load(file);
 			engine.execute();
 			DEBUGLN("<art:output>");
 			while (engine.process()) {

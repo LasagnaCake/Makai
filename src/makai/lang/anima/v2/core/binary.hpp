@@ -263,7 +263,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] FileStructure {
-		struct Version {
+		struct [[gnu::packed, gnu::aligned(1)]] Version {
 			uint64 major	= 1;
 			uint64 minor	= 0;
 			uint64 patch	= 0;

@@ -15,6 +15,7 @@ static Makai::Data::Value configBase() {
 	cfg["output"]	= "output/**{{name}}";
 	cfg["src"]		= cfg.array();
 	cfg["level"]	= "full";
+	cfg["binary"]	= false;
 	cfg["write"]	= false;
 	cfg["pretty"]	= false;
 	return cfg;
@@ -28,6 +29,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["S"]	= "strip";
 	tl["P"]	= "pretty";
 	tl["W"]	= "write";
+	tl["B"]	= "binary";
 }
 
 static void doHelpMessage() {
@@ -93,9 +95,25 @@ int main(int argc, char** argv) try {
 			Makai::Data::Value::Padding pad;
 			if (cfg.fetch("pretty", false))
 				pad = Makai::String("  ");
-			Makai::File::saveText(
+			auto const out = compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]);
+			if (cfg.fetch("binary", false))
+				Core::BinaryFormat::toBytes(out)
+					.then(
+						[&] (auto const& e) {
+							Makai::File::saveBinary(
+								outPath + ".anpb",
+								e
+							);
+						}
+					).onError(
+						[] (auto const& e) {
+							throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);
+						}
+					)
+				;
+			else Makai::File::saveText(
 				outPath + ".anp",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]).toFLOWString(pad)
+				out.toFLOWString(pad)
 			);
 		}
 	}

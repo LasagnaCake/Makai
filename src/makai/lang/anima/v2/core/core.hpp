@@ -11,5 +11,6 @@
 #include "database.hpp"
 #include "module.hpp"
 #include "dynlib.hpp"
+#include "binary.hpp"
 
 #endif

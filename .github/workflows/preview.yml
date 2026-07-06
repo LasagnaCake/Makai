@@ -89,3 +89,5 @@ jobs:
           name: Preview Snapshot ${{steps.info.outputs.today}}
           body: |
             Automatically-generated preview via GitHub action.
+
+            Tooling binaries are included in the **full** builds.
