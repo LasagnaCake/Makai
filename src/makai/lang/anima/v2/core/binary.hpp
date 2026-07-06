@@ -42,7 +42,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			auto const s = *(uint64*)block.data();
 			auto const sz = s < sizeof(T) ? s : sizeof(T);
 			Header out{.size = sz};
-			auto block = source.consume(s);
+			block = source.consume(s);
 			if (block.size() < sz) return null;
 			MX::memmove(&out.data, block.data(), sz);
 		}
@@ -55,7 +55,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	template <class T, auto CONVERT = [] (Bytes<> const&) -> Nullable<T> {return null;}>
 	struct [[gnu::packed, gnu::aligned(1)]] Table: Entry {
-		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc>
+		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(CONVERT)>
 		Nullable<T> readFromSource(IConsumable& source, usize const index, TFunc const convert = CONVERT) const {
 			if (index >= size) return null;
 			source.go(start + index);
@@ -67,14 +67,24 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			if (block.size() != entry.size) return null;
 			return convert(block);
 		}
+
+		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(CONVERT)>
+		Nullable<List<T>> fromBytes(IConsumable& source, TFunc const convert = CONVERT) const {
+			List<T> out;
+			for (usize i = 0; i < size; ++i)
+				if (auto const v = readFromSource(source, i))
+					out.pushBack(v.value());
+				else return null;
+			return out;
+		}
 	};
 
 	template <class T>
 	constexpr Nullable<T> stringFromBytes(Bytes<> const& block) {
 		return T(
 			String(
-				(ref<typename T::DataType>)block.data(),
-				block.size() / sizeof(typename T::DataType)
+				(cstring)block.cbegin(),
+				(cstring)block.cend()
 			)
 		);
 	}
@@ -88,7 +98,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	}
 
 	template <class T>
-	constexpr Nullable<Header<T>> headerFromBytes(Bytes<> const& block) {
+	Nullable<Header<T>> headerFromBytes(Bytes<> const& block) {
 		ByteReader reader{block};
 		return T::build(reader);
 	}
@@ -103,7 +113,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	struct [[gnu::packed, gnu::aligned(1)]] Text: Entry {
 		template <Type::OneOf<String, UTF8String, UTF32String> T>
-		Nullable<T> fromBytes(IConsumable& source) {
+		Nullable<T> fromBytes(IConsumable& source) const {
 			source.go(start);
 			auto block = source.consume(size);
 			if (block.size() != size) return "";
@@ -113,7 +123,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	template <class T>
 	struct [[gnu::packed, gnu::aligned(1)]] Data: Entry {
-		Nullable<List<T>> fromBytes(IConsumable& source) {
+		Nullable<List<T>> fromBytes(IConsumable& source) const {
 			source.go(start);
 			auto block = source.consume(size);
 			if (block.size() != size) return {};
@@ -142,6 +152,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		Text	meta;
 	};
 
+	struct [[gnu::packed, gnu::aligned(1)]] Mapping {
+		uint64 src;
+		uint64 dst;
+	};
+
 	struct [[gnu::packed, gnu::aligned(1)]] Method: Base {
 		uint64				returnType;
 		ValueTable<uint64>	argTypes;
@@ -158,12 +173,18 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Module {
-		Entry	types;
-		Entry	methods;
+		ValueTable<Header<Decl>>	types;
+		ValueTable<Header<Method>>	methods;
+	};
+
+	struct [[gnu::packed, gnu::aligned(1)]] Symbol {
+		uint64				module;
+		ValueTable<Mapping>	types;
+		ValueTable<Mapping>	methods;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] External {
-		StringTable<> modules;
+		ValueTable<Header<Symbol>> modules;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Shared {
@@ -173,22 +194,39 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] ANI {
-		ValueTable<Label>	in;
-		StringTable<Text>	out;
-		Header<Shared>		shared;
+		ValueTable<Header<Label>>	in;
+		StringTable<String>			out;
+		Header<Shared>				shared;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] FileStructure {
-		Type					type;
-		As<unt64[4]>			version;
-		StringTable<UTF8String>	strings;
+		struct Flags {};
+		As<char const[10]>		magic = "AV2::ANPB";
+		Core::Module::Type		type;
+		As<uint64[4]>			version;
+		uint64					flags;
+		uint64					entry;
+		StringTable<String>		strings;
 		ValueTable<uint64>		jumps;
 		Data<Instruction>		code;
 		Data<uint64>			relocations;
 		Header<ANI>				ani;
 		Header<Module>			module;
 		Header<External>		external;
+
+		bool has(uint64 const bit) const {
+			return flags & bit;
+		}
 	};
+
+	using FileHeader = Header<FileStructure>;
+
+	struct Error {
+		String message;
+	};
+
+	Result<Core::Module, Error>	fromBytes(Bytes<> const& source);
+	Result<Bytes<>, Error>		toBytes(Core::Module const& source);
 }
 
 #endif
