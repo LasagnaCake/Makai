@@ -786,6 +786,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	if (rhs.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *rhs.source);
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
+		DEBUGLN("LHS Type: ", lhs.type->name);
+		DEBUGLN("RHS Type: ", rhs.type->name);
+		DEBUGLN("Stronger: ", t->name);
 		if (t->basic) {
 			if (lhs.type->basic == rhs.type->basic)
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->basic));
@@ -800,13 +803,34 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 ATransformer::Result Direct::transform(Context& context, Node::Instance const& node) {
 	if (!node || node->content != Node::Content::AV2_TANC_VALUE)
 		context.error("Expected value here!", node);
-	auto const v = node->value.toString();
-	if (node->value.isBoolean())	return {{v}, context.basicType("bool")->scope.raw(),	context.basicType("bool"),		node->value, 0	};
-	if (node->value.isString())		return {{v}, context.basicType("string")->scope.raw(),	context.basicType("string"),	node->value, 1	};
-	if (node->value.isUnsigned())	return {{v}, context.basicType("uint64")->scope.raw(),	context.basicType("uint64"),	node->value, 1	};
-	if (node->value.isSigned())		return {{v}, context.basicType("int64")->scope.raw(),	context.basicType("int64"),		node->value, 1	};
-	if (node->value.isReal())		return {{v}, context.basicType("float64")->scope.raw(),	context.basicType("float64"),	node->value, 1	};
-	context.error("Invalid constant!", node);
+	auto value = node->value.toString();
+	ATransformer::Result out;
+	Namespace::TypeRef type;
+	if (node->value.isBoolean()) {
+		type = context.basicType("bool");
+		out.likelihood	= 0;
+	} else if (node->value.isString()) {
+		type = context.basicType("string");
+		out.likelihood	= 1;
+	} else if (node->value.isUnsigned()) {
+		type = context.basicType("uint64");
+		out.likelihood	= 1;
+		value += " u64";
+	} else if (node->value.isSigned()) {
+		type = context.basicType("int64");
+		out.likelihood	= 1;
+		value += " i64";
+	} else if (node->value.isReal()) {
+		type = context.basicType("float64");
+		out.likelihood	= 1;
+		value += " f64";
+	}
+	else context.error("Invalid constant!", node);
+	out.source		= value;
+	out.scope		= type->scope.raw();
+	out.type		= type;
+	out.direct		= node->value;
+	return out;
 }
 
 ATransformer::Result PathExpression::transform(Context& context, Node::Instance const& node) {
