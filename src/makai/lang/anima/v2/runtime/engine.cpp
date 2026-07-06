@@ -516,7 +516,10 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 }
 
 Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
+	if (asPlace(from) != DataLocation::AV2_DL_BOOL) advance(true);
 	auto& loc = accessLocation(from, bitcast<uint64>(current));
+	if (loc && !loc->getOriginalType())
+		crash(makeErrorHere("Missing type information!"));
 	return loc;
 }
 

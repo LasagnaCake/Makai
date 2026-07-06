@@ -1507,8 +1507,7 @@ ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& n
 			loopScope->impl->writePostLine("jump if true", loopStart);
 		} else if (!condExpr.direct)
 			return loopExpr;
-	}
-	loopScope->impl->writePostLine("jump", loopStart);
+	} else loopScope->impl->writePostLine("jump", loopStart);
 	return {.scope = loopScope};
 }
 
