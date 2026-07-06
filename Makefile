@@ -29,9 +29,11 @@ CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl$(LIBFILE_TYPE)
 ifeq ($(lite),1)
 LINK_EXTERN :=
 EXTERN_AR_STEP :=:
+DO_TOOLING :=
 else
 LINK_EXTERN :=link-extern
 EXTERN_AR_STEP :=ar
+DO_TOOLING := tooling
 endif
 
 ifeq ($(os),win)
@@ -79,7 +81,7 @@ define clear-old-shaders
 endef
 
 ifneq ($(no-tools),1)
-	TOOLING_STEP := tooling
+	TOOLING_STEP := $(DO_TOOLING)
 endif
 
 help:
@@ -250,4 +252,4 @@ copy-tooling:
 #export lite-solver = $(call lite-solver-pass2,$(1))
 configure-ubuntu:
 	sudo apt update
-	sudo apt install --yes libgl1-mesa-dev libcrypto++-dev
+	sudo apt install --yes libgl1-mesa-dev
