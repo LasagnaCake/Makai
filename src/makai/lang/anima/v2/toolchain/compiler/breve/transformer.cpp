@@ -708,8 +708,13 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 		if (!result.isUndefined())
 			return {{result.toString()}, val.type->scope.raw(), directName(context, result.type()), result, val.likelihood};
 	}
-	if (val.shouldBePushed())
-		context.top()->impl->writeMainLine("push", *val.source);
+	if (val.shouldBePushed()) {
+		if (
+			node->base.type == LTS_TT_INCREMENT
+		||	node->base.type == LTS_TT_DECREMENT
+		) context.top()->impl->writeMainLine("push ref", *val.source);
+		else context.top()->impl->writeMainLine("push", *val.source);
+	}
 	context.top()->impl->writeMainLine("push val top");
 	context.top()->impl->writeMainLine("swap");
 	if (val.type->basic) {
