@@ -629,7 +629,14 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	if (node->base.text == "return")
 		return Return().transform(context, node);
 	Expression expr;
-	auto const val = expr.transform(context, node->leftSide);
+	auto val = expr.transform(context, node->leftSide);
+	if (
+		node->base.text == "likely"
+	||	node->base.text == "unlikely"
+	) {
+		val.likelihood = node->base.text == "likely" ? +1 : -1;
+		return val;
+	}
 	if (!val.source)
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
 	if (val.isCompilable() && node->base.text != "typeof") {
