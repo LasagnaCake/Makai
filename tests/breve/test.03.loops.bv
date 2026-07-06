@@ -7,18 +7,24 @@ isEven2 :: (val: uint64) => IO.writeLine("Is odd!" if val % 2 else "Is even!")
 @Main
 main :: () {
 	val: uint64 = 0
+	IO.writeLine("Testing loop construct 1...")
 	while (copy val) < 10
 		isEven((ref val)++)
+	IO.writeLine("Testing loop construct 2...")
 	repeat 10
 		isEven((ref val)++)
+	IO.writeLine("Testing loop construct 3...")
 	do
 		isEven((ref val)++)
 	while (copy val) < 30
 	val = 0
+	IO.writeLine("Testing loop construct 1...")
 	while (copy val) < 10
 		isEven2((ref val)++)
+	IO.writeLine("Testing loop construct 2...")
 	repeat 10
 		isEven2((ref val)++)
+	IO.writeLine("Testing loop construct 3...")
 	do
 		isEven2((ref val)++)
 	while (copy val) < 30
