@@ -1388,7 +1388,7 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
 	auto const cond = Expression().transform(context, node->middle);
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
-	DEBUGLN("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" + "FALSE", ")");
+	DEBUGLN("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
 	if (cond.isCompilable()) {
 		if (cond.direct.isTruthy()) return Expression().transform(context, node->leftSide);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
