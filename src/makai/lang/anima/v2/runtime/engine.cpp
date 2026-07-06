@@ -1499,23 +1499,29 @@ void Engine::v2Cast() {
 		auto const v = context.pop();
 		if (v->isBasic() && t->basic) {
 			switch (*t->basic) {
-				case BasicType::AV2_BT_BOOL:	context.push(context.newValue(v->toValue<bool>()));
-				case BasicType::AV2_BT_INT8:	context.push(context.newValue(v->toValue<int8>()));
-				case BasicType::AV2_BT_UINT8:	context.push(context.newValue(v->toValue<uint8>()));
-				case BasicType::AV2_BT_INT16:	context.push(context.newValue(v->toValue<int16>()));
-				case BasicType::AV2_BT_UINT16:	context.push(context.newValue(v->toValue<uint16>()));
-				case BasicType::AV2_BT_INT32:	context.push(context.newValue(v->toValue<int32>()));
-				case BasicType::AV2_BT_UINT32:	context.push(context.newValue(v->toValue<uint32>()));
-				case BasicType::AV2_BT_INT64:	context.push(context.newValue(v->toValue<int64>()));
-				case BasicType::AV2_BT_UINT64:	context.push(context.newValue(v->toValue<uint64>()));
-				case BasicType::AV2_BT_REAL32:	context.push(context.newValue(v->toValue<float32>()));
-				case BasicType::AV2_BT_REAL64:	context.push(context.newValue(v->toValue<float64>()));
-				case BasicType::AV2_BT_REAL128:	context.push(context.newValue(v->toValue<float128>()));
-				case BasicType::AV2_BT_VECTOR:	context.push(context.newValue(v->toValue<Vector4>()));
-				case BasicType::AV2_BT_MATRIX:	context.push(context.newValue(v->toValue<Matrix4x4>()));
-				case BasicType::AV2_BT_TYPEID:	context.push(context.newValue(v->toValue<Core::TypeID>()));
-				case BasicType::AV2_BT_STRING:	context.push(context.newValue(v->toValue<UTF8String>()));
-				case BasicType::AV2_BT_BYTES:	context.push(context.newValue(v->toValue<Bytes<>>()));
+				case BasicType::AV2_BT_BOOL:	context.push(context.newValue(context.pop()->toValue<bool>()));			break;
+				case BasicType::AV2_BT_INT8:	context.push(context.newValue(context.pop()->toValue<int8>()));			break;
+				case BasicType::AV2_BT_UINT8:	context.push(context.newValue(context.pop()->toValue<uint8>()));		break;
+				case BasicType::AV2_BT_INT16:	context.push(context.newValue(context.pop()->toValue<int16>()));		break;
+				case BasicType::AV2_BT_UINT16:	context.push(context.newValue(context.pop()->toValue<uint16>()));		break;
+				case BasicType::AV2_BT_INT32:	context.push(context.newValue(context.pop()->toValue<int32>()));		break;
+				case BasicType::AV2_BT_UINT32:	context.push(context.newValue(context.pop()->toValue<uint32>()));		break;
+				case BasicType::AV2_BT_INT64:	context.push(context.newValue(context.pop()->toValue<int64>()));		break;
+				case BasicType::AV2_BT_UINT64:	context.push(context.newValue(context.pop()->toValue<uint64>()));		break;
+				case BasicType::AV2_BT_REAL32:	context.push(context.newValue(context.pop()->toValue<float32>()));		break;
+				case BasicType::AV2_BT_REAL64:	context.push(context.newValue(context.pop()->toValue<float64>()));		break;
+				case BasicType::AV2_BT_REAL128:	context.push(context.newValue(context.pop()->toValue<float128>()));		break;
+				case BasicType::AV2_BT_VECTOR:	context.push(context.newValue(context.pop()->toValue<Vector4>()));		break;
+				case BasicType::AV2_BT_MATRIX:	context.push(context.newValue(context.pop()->toValue<Matrix4x4>()));	break;
+				case BasicType::AV2_BT_TYPEID:	context.push(context.newValue(context.pop()->toValue<Core::TypeID>()));	break;
+				case BasicType::AV2_BT_STRING:	context.push(context.newValue(context.pop()->toValue<UTF8String>()));	break;
+				case BasicType::AV2_BT_BYTES:	context.push(context.newValue(context.pop()->toValue<Bytes<>>()));		break;
+				case BasicType::AV2_BT_ANY: {
+					auto const types = context.art.types.byNameHash(hash("any"));
+					if (types.empty())
+						return crash(outOfRangeError("[any] conversion failed!"));
+					v->changeType(types.front());
+				} break;
 				default: return crash(outOfRangeError("Invalid conversion!"));
 			}
 		} else if (!v->changeType(t))
