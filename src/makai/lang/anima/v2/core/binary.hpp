@@ -95,6 +95,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			auto const sz = size < sizeof(T) ? size : sizeof(T);
 			T out;
 			auto const block = source.read(size);
+			DEBUGLN("Size [", size, " : ", block.size(), "]");
 			if (block.size() < sz) return null;
 			MX::memmove(&out, block.data(), sz);
 			return out;
@@ -108,7 +109,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
 		Nullable<T> readFromSource(IReadable& source, usize const index, TFunc const convert = CONVERT) const {
-			DEBUGLN("[", String(nameof<T>()), "]");
+			DEBUGLN("[", String(nameof<T>()), " @ ", index, "]");
 			if (index >= size) return null;
 			source.go(start + index);
 			DEBUGLN("Reading entry...");
@@ -118,13 +119,14 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			source.go(entry.start);
 			DEBUGLN("Reading data...");
 			auto block = source.read(entry.size);
+			DEBUGLN("Size [", size, " : ", block.size(), "]");
 			if (block.size() != entry.size) return null;
 			return convert(block);
 		}
 
 		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
 		Nullable<List<T>> fromBytes(IReadable& source, TFunc const convert = CONVERT) const {
-			DEBUGLN("[", String(nameof<T>()), "]");
+			DEBUGLN("[Table<", String(nameof<T>()), ">]");
 			List<T> out;
 			for (usize i = 0; i < size; ++i)
 				if (auto const v = readFromSource(source, i))
