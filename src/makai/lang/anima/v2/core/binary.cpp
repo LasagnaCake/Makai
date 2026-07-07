@@ -271,8 +271,8 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module) {
 					}
 					builder.file.module = {builder.put(
 						Module {
-							.types		= {builder.pack(moduleTypes)},
-							.methods	= {builder.pack(moduleMethods)}
+							.types		= {builder.include(moduleTypes)},
+							.methods	= {builder.include(moduleMethods)}
 						}
 					)};
 					List<Include> includes;
@@ -280,13 +280,13 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module) {
 						includes.pushBack(
 							Include {
 								.module		= id,
-								.types		= {builder.pack(include.types)},
-								.methods	= {builder.pack(include.methods)}
+								.types		= {builder.include(include.types)},
+								.methods	= {builder.include(include.methods)}
 							}
 						);
 					builder.file.external = {builder.put(
 						External {
-							.modules = {builder.pack(includes)}
+							.modules = {builder.include(includes)}
 						}
 					)};
 				}

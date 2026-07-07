@@ -113,6 +113,22 @@ struct IWriter {
 	}
 };
 
+template <class T>
+struct IInput {
+	virtual ~IInput() {}
+
+	virtual T		read(usize const count)	= 0;
+	virtual void	go(usize const pos = 0)	= 0;
+};
+
+template <class T>
+struct IOutput {
+	virtual ~IOutput() {}
+
+	virtual void	write(T const& data)	= 0;
+	virtual void	go(usize const pos = 0)	= 0;
+};
+
 CTL_NAMESPACE_END
 
 #endif // CTL_INTERFACE_CORE_H

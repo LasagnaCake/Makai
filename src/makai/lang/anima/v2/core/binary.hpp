@@ -4,18 +4,10 @@
 #include "module.hpp"
 
 namespace Makai::Anima::V2::Core::BinaryFormat {
-	struct IReadable {
-		virtual ~IReadable() {}
+	using IReadable = IInput<Bytes<>>;
 
-		virtual Bytes<>	read(usize const count)	= 0;
-		virtual void	go(usize const pos = 0)	= 0;
-	};
-
-	struct IWritable {
+	struct IWritable: IOutput<ConstByteSpan<>> {
 		virtual ~IWritable() {}
-
-		virtual void	write(ByteSpan<> const& bytes)	= 0;
-		virtual void	go(usize const pos = 0)			= 0;
 
 		template <class T>
 		void put(T const& data) {
@@ -60,7 +52,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		Bytes<>&	output;
 		usize		pointer = 0;
 
-		void write(ByteSpan<> const& bytes) override {
+		void write(ConstByteSpan<> const& bytes) override {
 			if (pointer < output.size()) {
 				if (output.size() < pointer + bytes.size())
 					output.reserve(pointer + bytes.size(), 0);
@@ -111,7 +103,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		Nullable<T> readFromSource(IReadable& source, usize const index, TFunc const convert = CONVERT) const {
 			DEBUGLN("[", String(nameof<T>()), " @ ", index, "]");
 			if (index >= size) return null;
-			source.go(start + index);
+			source.go(start + index * sizeof(Entry));
 			DEBUGLN("Reading entry...");
 			auto entryBlock = source.read(sizeof(Entry));
 			if (entryBlock.size() < sizeof(Entry)) return null;
@@ -126,9 +118,10 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
 		Nullable<List<T>> fromBytes(IReadable& source, TFunc const convert = CONVERT) const {
-			DEBUGLN("[Table<", String(nameof<T>()), ">]");
 			List<T> out;
-			for (usize i = 0; i < size; ++i)
+			auto const sz = (size / sizeof(Entry));
+			DEBUGLN("[Table<", String(nameof<T>()), "> : ", sz, "]");
+			for (usize i = 0; i < sz; ++i)
 				if (auto const v = readFromSource(source, i))
 					out.pushBack(v.value());
 				else return null;
@@ -162,11 +155,6 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		return out;
 	}
 
-	template <class T>
-	Nullable<Header<T>> headerFromBytes(Bytes<> const& block) {
-		return valueFromBytes<Header<T>>(block);
-	}
-
 	struct [[gnu::packed, gnu::aligned(1)]] Text: Entry {
 		template <Type::OneOf<String, UTF8String, UTF32String> T>
 		Nullable<T> fromBytes(IReadable& source) const {
@@ -192,21 +180,14 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	template <Type::OneOf<String, UTF8String, UTF32String> T = String>
-	using StringTable = Table<Text, valueFromBytes<Text>>;
+	using StringTable = Table<T, stringFromBytes<T>>;
 
 	template <Type::NoneOf<String, UTF8String, UTF32String> T>
 	using ValueTable = Table<T, valueFromBytes<T>>;
 
 	template <class T>
 	constexpr Nullable<List<T>> unpack(StringTable<T> const& table, IReadable& source) {
-		List<T> out;
-		for (usize i = 0; i < table.size; ++i)
-			if (auto const h = table.readFromSource(source, i))
-				if (auto const v = h.value().template fromBytes<T>(source))
-					out.pushBack(v.value());
-				else return null;
-			else return null;
-		return out;
+		return table.fromBytes(source);
 	}
 
 	template <class T>
@@ -215,8 +196,13 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	}
 
 	template <class T>
-	constexpr Nullable<List<T>> unpack(Data<T> const& table, IReadable& source) {
-		return table.fromBytes(source);
+	constexpr Nullable<List<T>> unpack(Data<T> const& data, IReadable& source) {
+		return data.fromBytes(source);
+	}
+
+	template <class T>
+	constexpr Nullable<T> unpack(Text const& data, IReadable& source) {
+		return data.fromBytes<T>(source);
 	}
 
 	struct [[gnu::packed, gnu::aligned(1)]] Label: Text {
@@ -283,16 +269,16 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	struct [[gnu::packed, gnu::aligned(1)]] FileStructure {
 		struct [[gnu::packed, gnu::aligned(1)]] Version {
-			uint64 major	= 1;
+			uint64 major	= 0;
 			uint64 minor	= 0;
 			uint64 patch	= 0;
 			uint64 hotfix	= 0;
 		};
 		As<char const[10]>		magic = "AV2::ANPB";
 		Core::Module::Type		type;
-		Version					artVersion;
-		Version					binVersion;
-		Version					moduleVersion;
+		Version					artVersion		= {1};
+		Version					binVersion		= {1};
+		Version					moduleVersion	= {1};
 		uint64					flags;
 		uint64					moduleFlags;
 		uint64					entry;
@@ -346,7 +332,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			Entry entry;
 			entry.start = writer.pointer;
 			String s = value;
-			writer.write({(ref<byte>)s.data(), s.size()});
+			writer.write({(ref<byte const>)s.data(), s.size()});
 			entry.size = writer.pointer - entry.start;
 			return entry;
 		}
@@ -366,7 +352,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			List<Entry> headers;
 			for (auto const& value: values)
 				headers.pushBack(put(value));
-			return insert(headers);
+			return append(headers);
 		}
 
 		template <class T>
@@ -374,7 +360,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			List<Entry> headers;
 			for (auto const& value: values)
 				headers.pushBack(append(value));
-			return insert(headers);
+			return append(headers);
 		}
 
 		template <class T>
@@ -382,7 +368,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			List<Entry> headers;
 			for (auto const& value: values)
 				headers.pushBack(add(value));
-			return insert(headers);
+			return append(headers);
 		}
 
 		template <class T>
@@ -390,7 +376,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			List<Entry> headers;
 			for (auto const& value: values)
 				headers.pushBack(insert(value));
-			return insert(headers);
+			return append(headers);
 		}
 
 		Builder& begin() {
