@@ -13,22 +13,23 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 	auto const base = FileHeader::build(reader);
 	if (!base)
 		return Error{"Failed to get file header!"};
-	if (auto const header = base.value().fromBytes(reader)) {
+	if (auto const header = FileHeader(base.value()).fromBytes(reader)) {
 		auto const file = header.value();
+		DEBUGLN("Magic bytes [", String(file.magic), "]");
 		if (String(file.magic) != "AV2::ANPB")
 			return Error{"File is not an ART-compatible binary!"};
 		out.entry = file.entry;
 		out.type = file.type;
-		out.version	= {file.moduleVersion.major, file.moduleVersion.minor, file.moduleVersion.patch, file.moduleVersion.hotfix};
-		out.art		= {file.artVersion.major, file.artVersion.minor, file.artVersion.patch, file.artVersion.hotfix};
+		out.version	= {file.moduleVersion.major,	file.moduleVersion.minor,	file.moduleVersion.patch,	file.moduleVersion.hotfix	};
+		out.art		= {file.artVersion.major,		file.artVersion.minor,		file.artVersion.patch,		file.artVersion.hotfix		};
 		out.flags = file.moduleFlags;
 		if (auto const code = file.code.fromBytes(reader))
 			out.code = code.value();
 		else return Error{"Failed to get code!"};
-		if (auto const jumps = file.jumps.fromBytes(reader))
+		if (auto const jumps = unpack(file.jumps, reader))
 			out.jumpTable = jumps.value();
 		else return Error{"Failed to get jump table!"};
-		if (auto const strings = file.strings.fromBytes(reader))
+		if (auto const strings = unpack<String>(file.strings, reader))
 			out.strings = strings.value();
 		else return Error{"Failed to get string table!"};
 		if (auto const relocations = file.relocations.fromBytes(reader))
@@ -82,7 +83,7 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 					target.name = sym.name;
 					target.flags = method.flags;
 					target.retType = method.returnType;
-					if (auto const args = method.argTypes.fromBytes(reader))
+					if (auto const args = unpack(method.argTypes, reader))
 						target.argTypes = args.value();
 					else return Error{"Failed to get method arguments!"};
 					target.entrypoint = method.entry;
@@ -136,22 +137,22 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 						out.ani->in[s.value()] = sig.id;
 					else return Error{"Failed to get signals"};
 			} else return Error{"Failed to get signals!"};
-			if (auto const header = ani.out.fromBytes(reader)) {
+			if (auto const header = unpack<String>(ani.out, reader)) {
 				auto const outf = header.value();
 				for (auto& fn: outf)
 					out.ani->out.pushBack(fn);
 			} else return Error{"Failed to get external calls!"};
 			if (auto const header = ani.shared.fromBytes(reader)) {
 				auto const shared = header.value();
-				if (auto const header = shared.interops.fromBytes(reader)) {
+				if (auto const header = unpack<String>(shared.interops, reader)) {
 					auto const interops = header.value();
 					for (auto& i: interops) out.ani->shared.interops.pushBack(i);
 				} else return Error{"Failed to get interoperability features!"};
-				if (auto const header = shared.modules.fromBytes(reader)) {
+				if (auto const header = unpack<String>(shared.interops, reader)) {
 					auto const modules = header.value();
 					for (auto& m: modules) out.ani->shared.modules.pushBack(m);
 				} else return Error{"Failed to get shared modules!"};
-				if (auto const header = shared.libraries.fromBytes(reader)) {
+				if (auto const header = unpack<String>(shared.interops, reader)) {
 					auto const dynlibs = header.value();
 					for (auto& dy: dynlibs) out.ani->shared.libraries.pushBack(dy);
 				} else return Error{"Failed to get shared libraries!"};
@@ -181,9 +182,9 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module) {
 					builder.file.totalTypes		= module.sym.types.size();
 					builder.file.totalMethods	= module.sym.methods.size();
 					builder.file.strings		= {builder.embed(module.strings.toList<String>())};
-					builder.file.jumps			= {builder.insert(module.jumpTable)};
-					builder.file.code			= {builder.insert(module.code)};
-					builder.file.relocations	= {builder.insert(module.relocations)};
+					builder.file.jumps			= {builder.append(module.jumpTable)};
+					builder.file.code			= {builder.append(module.code)};
+					builder.file.relocations	= {builder.append(module.relocations)};
 					builder.file.ani			= {builder.processIf(
 						module.ani.exists(),
 						[&module] (Builder& builder) {

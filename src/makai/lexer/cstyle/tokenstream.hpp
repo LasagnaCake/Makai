@@ -169,6 +169,10 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_ELLIPSIS,
 				/// @brief Range (`..`).
 				LTS_TT_RANGE,
+				/// @brief Template declaration start (<:`).
+				LTS_TT_TEMPLATE_BEGIN,
+				/// @brief Template declaration end (`:>`).
+				LTS_TT_TEMPLATE_END,
 			};
 
 			/// @brief Token type.
@@ -228,6 +232,9 @@ namespace Makai::Lexer::CStyle {
 					case Type::LTS_TT_PTR_ACCESS:				return "*.";
 					case Type::LTS_TT_DEREF_ACCESS:				return "^.";
 					case Type::LTS_TT_ELLIPSIS:					return "...";
+					case Type::LTS_TT_RANGE:					return "..";
+					case Type::LTS_TT_TEMPLATE_BEGIN:			return "<:";
+					case Type::LTS_TT_TEMPLATE_END:				return ":>";
 					default: return "<!UNKNOWN>";
 				}
 				return "<!UNKNOWN>";

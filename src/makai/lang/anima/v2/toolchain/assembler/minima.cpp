@@ -36,7 +36,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	auto const fullID = name + "@" + method->name;
 	moduleMethods[fullID] = method;
 	methods[name] = new Reference{.name = fullID};
-	if (!method->flags & CoreMethod::Flags::AV2_MF_EXTERNAL) {
+	if (!(method->flags & CoreMethod::Flags::AV2_MF_EXTERNAL)) {
 		method->jump = name + "/entry";
 		method->hash = hash(name);
 	}

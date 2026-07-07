@@ -170,17 +170,18 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_ORDER;
 			} else tok.type = LTS_TT_COMPARE_LESS_EQUALS;
-		}
-		if (lexer.peek() == UTF::U8Char{'|'}) {
+		} else if (lexer.peek() == UTF::U8Char{'|'}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_STREAM_INSERT;
-		}
-		if (lexer.peek() == UTF::U8Char{'<'}) {
+		} else if (lexer.peek() == UTF::U8Char{'<'}) {
 			tok.text.pushBack(lexer.next());
 			if (lexer.peek() == UTF::U8Char{'='}) {
 				tok.text.pushBack(lexer.next());
 				tok.type = LTS_TT_BIT_SHIFT_LEFT_ASSIGN;
 			} else tok.type = LTS_TT_BIT_SHIFT_LEFT;
+		} else if (lexer.peek() == UTF::U8Char{':'}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_TEMPLATE_BEGIN;
 		}
 	} else if (lexer.now() == UTF::U8Char{'-'}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
@@ -200,6 +201,9 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 		} else if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_DECLARE;
+		} else if (lexer.peek() == UTF::U8Char{'>'}) {
+			tok.text.pushBack(lexer.next());
+			tok.type = LTS_TT_TEMPLATE_END;
 		}
 	} else if (lexer.now() == UTF::U8Char{'+'}) {
 		if (lexer.peek() == UTF::U8Char{'+'}) {

@@ -46,7 +46,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			pointer += count;
 			if (pointer > input.size())
 				return input.sliced(pointer - count, -1);
-			return input.sliced(pointer - count, pointer);
+			return input.sliced(pointer - count, pointer - 1);
 		}
 
 		void go(usize const pos) override {
@@ -61,8 +61,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		usize		pointer = 0;
 
 		void write(ByteSpan<> const& bytes) override {
-			if (pointer < output.size())
-				output.insert(bytes.begin(), bytes.end(), pointer);
+			if (pointer < output.size()) {
+				if (output.size() < pointer + bytes.size())
+					output.reserve(pointer + bytes.size(), 0);
+				MX::memmove(output.data() + pointer, bytes.data(), bytes.size());
+			}
 			else output.appendBack(bytes.begin(), bytes.end());
 			pointer += bytes.size();
 		}
@@ -77,26 +80,24 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	struct [[gnu::packed, gnu::aligned(1)]] Entry {
 		uint64 start;
 		uint64 size;
+
+		static Nullable<Entry> build(IReadable& source) {
+			auto block = source.read(sizeof(Entry));
+			if (block.size() < sizeof(Entry)) return null;
+			return {*(Entry*)block.data()};
+		}
 	};
 
 	template <class T>
 	struct [[gnu::packed, gnu::aligned(1)]] Header: Entry {
 		Nullable<T> fromBytes(IReadable& source) const {
-			auto block = source.read(sizeof(uint64));
-			if (block.size() < sizeof(uint64)) return null;
-			auto const s = *(uint64*)block.data();
-			auto const sz = s < sizeof(T) ? s : sizeof(T);
+			source.go(start);
+			auto const sz = size < sizeof(T) ? size : sizeof(T);
 			T out;
-			block = source.read(s);
+			auto const block = source.read(size);
 			if (block.size() < sz) return null;
 			MX::memmove(&out, block.data(), sz);
 			return out;
-		}
-
-		static Nullable<Header<T>> build(IReadable& source) {
-			auto block = source.read(sizeof(Entry));
-			if (block.size() < sizeof(Entry)) return null;
-			return {*(Header<T>*)block.data()};
 		}
 	};
 
@@ -107,12 +108,15 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
 		Nullable<T> readFromSource(IReadable& source, usize const index, TFunc const convert = CONVERT) const {
+			DEBUGLN("[", String(nameof<T>()), "]");
 			if (index >= size) return null;
 			source.go(start + index);
+			DEBUGLN("Reading entry...");
 			auto entryBlock = source.read(sizeof(Entry));
 			if (entryBlock.size() < sizeof(Entry)) return null;
 			auto const entry = *(Entry*)entryBlock.data();
 			source.go(entry.start);
+			DEBUGLN("Reading data...");
 			auto block = source.read(entry.size);
 			if (block.size() != entry.size) return null;
 			return convert(block);
@@ -120,6 +124,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
 		Nullable<List<T>> fromBytes(IReadable& source, TFunc const convert = CONVERT) const {
+			DEBUGLN("[", String(nameof<T>()), "]");
 			List<T> out;
 			for (usize i = 0; i < size; ++i)
 				if (auto const v = readFromSource(source, i))
@@ -166,6 +171,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			if (!size) return {T()};
 			source.go(start);
 			auto block = source.read(size);
+			DEBUGLN("Size [", size, " : ", block.size(), "]");
 			if (block.size() != size) return null;
 			return stringFromBytes<T>(block).value();
 		}
@@ -177,30 +183,33 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			if (!size) return {List<T>()};
 			source.go(start);
 			auto block = source.read(size);
+			DEBUGLN("Size [", size, " : ", block.size(), "]");
 			if (block.size() != size) return null;
 			return listFromBytes<T>(block).value();
 		}
 	};
 
 	template <Type::OneOf<String, UTF8String, UTF32String> T = String>
-	using StringTable = Table<T, stringFromBytes<T>>;
+	using StringTable = Table<Text, valueFromBytes<Text>>;
 
-	template <class T>
-	using HeaderTable = Table<Header<T>, headerFromBytes<T>>;
-
-	template <class T>
+	template <Type::NoneOf<String, UTF8String, UTF32String> T>
 	using ValueTable = Table<T, valueFromBytes<T>>;
 
 	template <class T>
-	constexpr Nullable<List<T>> unpack(HeaderTable<T> const& table, IReadable& source) {
+	constexpr Nullable<List<T>> unpack(StringTable<T> const& table, IReadable& source) {
 		List<T> out;
 		for (usize i = 0; i < table.size; ++i)
 			if (auto const h = table.readFromSource(source, i))
-				if (auto const v = h.value().fromBytes(source))
+				if (auto const v = h.value().template fromBytes<T>(source))
 					out.pushBack(v.value());
 				else return null;
 			else return null;
 		return out;
+	}
+
+	template <class T>
+	constexpr Nullable<List<T>> unpack(ValueTable<T> const& table, IReadable& source) {
+		return table.fromBytes(source);
 	}
 
 	struct [[gnu::packed, gnu::aligned(1)]] Label: Text {
@@ -239,28 +248,28 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Module {
-		HeaderTable<Decl>	types;
-		HeaderTable<Method>	methods;
+		ValueTable<Decl>	types;
+		ValueTable<Method>	methods;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Include {
 		uint64				module;
-		HeaderTable<Record>	types;
-		HeaderTable<Record>	methods;
+		ValueTable<Record>	types;
+		ValueTable<Record>	methods;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] External {
-		HeaderTable<Include> modules;
+		ValueTable<Include> modules;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Shared {
-		StringTable<> libraries;
-		StringTable<> modules;
-		StringTable<> interops;
+		StringTable<String> libraries;
+		StringTable<String> modules;
+		StringTable<String> interops;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] ANI {
-		HeaderTable<Label>	in;
+		ValueTable<Label>	in;
 		StringTable<String>	out;
 		Header<Shared>		shared;
 	};
@@ -311,7 +320,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			Entry entry;
 			entry.start = writer.pointer;
 			writer.put(value);
-			entry.size = writer.pointer - entry.start;
+			entry.size = sizeof(T);
 			return entry;
 		}
 
