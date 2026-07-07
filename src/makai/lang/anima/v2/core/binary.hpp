@@ -214,6 +214,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		return table.fromBytes(source);
 	}
 
+	template <class T>
+	constexpr Nullable<List<T>> unpack(Data<T> const& table, IReadable& source) {
+		return table.fromBytes(source);
+	}
+
 	struct [[gnu::packed, gnu::aligned(1)]] Label: Text {
 		uint64 id;
 	};
@@ -294,7 +299,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		uint64					totalTypes;
 		uint64					totalMethods;
 		StringTable<String>		strings;
-		ValueTable<uint64>		jumps;
+		Data<uint64>			jumps;
 		Data<Instruction>		code;
 		Data<uint64>			relocations;
 		Header<ANI>				ani;
