@@ -227,7 +227,7 @@ Makai::Data::Value Module::Method::serialize() const {
 	result["hash"] = hash;
 	result["return"] = retType;
 	result["args"] = argTypes.toList<Data::Value>();
-	result["flags"] = flags;
+	result["flags"] = bitcast<uint64>(flags);
 	result["entry"] = entrypoint;
 	result["size"] = size;
 	result["meta"] = meta;
@@ -243,7 +243,7 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 	if (v.contains("name"))
 		result.name = v["name"].getString();
 	result.hash = v["hash"].getUnsigned();
-	result.flags = v["flags"].getUnsigned();
+	result.flags = Makai::bitcast<decltype(result.flags)>(v["flags"].getUnsigned());
 	result.retType = v["return"];
 	result.argTypes = v["args"].getArray().toList<uint64>().filter(valueExists);
 	result.entrypoint = v["entry"];
@@ -256,7 +256,7 @@ Module::Method Module::Method::deserialize(Data::Value const& v) {
 Makai::Data::Value Module::Declaration::serialize() const {
 	auto result = Data::Value::object();
 	result["id"]	= id;
-	result["flags"]	= flags;
+	result["flags"]	= bitcast<uint64>(flags);
 	result["hash"]	= hash;
 	if (name.size())
 		result["name"] = name.toString();
@@ -281,7 +281,7 @@ Module::Declaration Module::Declaration::deserialize(Data::Value const& v) {
 	if (!v) return result;
 	MAKAILIB_DEBUGLN_FULL("Type ", v.toFLOWString("  "));
 	result.id		= v["id"].getUnsigned();
-	result.flags	= v["flags"].getUnsigned();
+	result.flags	= Makai::bitcast<decltype(result.flags)>(v["flags"].getUnsigned());
 	result.hash		= v["hash"].getUnsigned();
 	if (v.contains("name"))
 		result.name = v["name"].getString();

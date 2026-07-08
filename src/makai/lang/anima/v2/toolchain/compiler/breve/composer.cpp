@@ -54,7 +54,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	Makai::UTF8String decl;
 	decl += "@type " + type->name + " [\n ";
 	DEBUGLN("Type Name: '", type->name, "'");
-	if (type->flags & Core::Definition::Flags::AV2_DF_BASIC) {
+	if (type->flags.isBasic) {
 		decl += " basic<";
 		if (!type->basic)
 			Transformer::ATransformer::Context::error("Missing basic type analog!");
@@ -84,26 +84,26 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		}
 		decl += ">";
 	}
-	if (type->flags & Core::Definition::Flags::AV2_DF_NULLABLE)
+	if (type->flags.isNullable)
 		decl += " nil";
-	if (type->flags & Core::Definition::Flags::AV2_DF_VALUE)
+	if (type->flags.isValueType)
 		decl += " value";
-	if (type->flags & Core::Definition::Flags::AV2_DF_EMPTY)
+	if (type->flags.isEmpty)
 		decl += " empty";
-	if (type->flags & Core::Definition::Flags::AV2_DF_NO_RESULT)
+	if (type->flags.hasNoResult)
 		decl += " discard";
-	if (type->flags & Core::Definition::Flags::AV2_DF_DYNAMIC)
+	if (type->flags.isDynamic)
 		decl += " dyn";
-	if (type->flags & Core::Definition::Flags::AV2_DF_STRUCTURE)
+	if (type->flags.isStructure)
 		decl += " struct";
-	if (type->flags & Core::Definition::Flags::AV2_DF_CLONABLE)
+	if (type->flags.isCcopyable)
 		decl += " copy";
-	if (type->flags & Core::Definition::Flags::AV2_DF_PROXY)
+	if (type->flag.isProxy)
 		decl += " proxy";
-	if (type->flags & Core::Definition::Flags::AV2_DF_FINAL)
+	if (type->flags.isFinal)
 		decl += " final";
 	if (type->base) {
-		if (type->flags & Core::Definition::Flags::AV2_DF_ARRAY)
+		if (type->flags.isArray)
 			decl += " array<" + type->base->name + ">";
 		else decl += " derived<" + type->base->name + ">";
 	}

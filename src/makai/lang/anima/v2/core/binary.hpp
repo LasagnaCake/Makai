@@ -97,6 +97,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			auto const block = source.read(size);
 			DEBUGLN("Size [", size, " : ", block.size(), "]");
 			if (block.size() < sz) return null;
+			DEBUGLN("Converting...");
 			MX::memmove(&out, block.data(), sz);
 			return out;
 		}
@@ -119,8 +120,9 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			source.go(entry.start);
 			DEBUGLN("Reading data...");
 			auto block = source.read(entry.size);
-			DEBUGLN("Size [", size, " : ", block.size(), "]");
+			DEBUGLN("Size [", entry.size, " : ", block.size(), "]");
 			if (block.size() != entry.size) return null;
+			DEBUGLN("Converting...");
 			return convert(block);
 		}
 
@@ -139,19 +141,23 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	template <class T>
 	constexpr Nullable<T> stringFromBytes(Bytes<> const& block) {
-		return T(
-			String(
-				(cstring)block.cbegin(),
-				(cstring)block.cend()
+		return Nullable<T>(
+			T(
+				String(
+					(cstring)block.cbegin(),
+					(cstring)block.cend()
+				)
 			)
 		);
 	}
 
 	template <class T>
 	constexpr Nullable<List<T>> listFromBytes(Bytes<> const& block) {
-		return List<T>(
-			(ref<T const>)block.cbegin(),
-			(ref<T const>)block.cend()
+		return Nullable<List<T>>(
+			List<T>(
+				(ref<T const>)block.data(),
+				block.size() / sizeof(T)
+			)
 		);
 	}
 
@@ -160,6 +166,13 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		T out;
 		if (block.size() < sizeof(T)) return null;
 		MX::memmove(&out, block.data(), sizeof(T));
+		return Nullable<T>(out);
+	}
+
+	template <class T>
+	constexpr Nullable<T> headerFromBytes(Bytes<> const& block) {
+		T out;
+		MX::memmove(&out, block.data(), block.size() < sizeof(T) ? block.size() : sizeof(T));
 		return out;
 	}
 
@@ -172,7 +185,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			auto block = source.read(size);
 			DEBUGLN("Size [", size, " : ", block.size(), "]");
 			if (block.size() != size) return null;
-			return stringFromBytes<T>(block).value();
+			DEBUGLN("Converting...");
+			return stringFromBytes<T>(block);
 		}
 	};
 
@@ -185,7 +199,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			auto block = source.read(size);
 			DEBUGLN("Size [", size, " : ", block.size(), "]");
 			if (block.size() != size) return null;
-			return listFromBytes<T>(block).value();
+			DEBUGLN("Converting...");
+			return listFromBytes<T>(block);
 		}
 	};
 
@@ -195,13 +210,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	template <Type::NoneOf<String, UTF8String, UTF32String> T>
 	using ValueTable = Table<T, valueFromBytes<T>>;
 
-	template <class T>
-	constexpr Nullable<List<T>> unpack(StringTable<T> const& table, IReadable& source) {
-		return table.fromBytes(source);
-	}
+	template <Type::NoneOf<String, UTF8String, UTF32String> T>
+	using HeaderTable = Table<T, headerFromBytes<T>>;
 
-	template <class T>
-	constexpr Nullable<List<T>> unpack(ValueTable<T> const& table, IReadable& source) {
+	template <class T, auto F = Table<T>::convert>
+	constexpr Nullable<List<T>> unpack(Table<T, F> const& table, IReadable& source) {
 		return table.fromBytes(source);
 	}
 
@@ -224,9 +237,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		Text	name;
 	};
 
+	template <class T>
+	requires (sizeof(T) == sizeof(uint64))
 	struct [[gnu::packed, gnu::aligned(1)]] Symbol: Record {
 		uint64	hash	= 0;
-		uint64	flags	= 0;
+		T		flags	= T();
 		Text	meta;
 	};
 
@@ -235,14 +250,14 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		uint64 dst	= 0;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Method: Symbol {
+	struct [[gnu::packed, gnu::aligned(1)]] Method: Symbol<Core::MethodFlags> {
 		uint64				returnType	= -1;
 		ValueTable<uint64>	argTypes;
 		uint64				entry		= 0;
 		uint64				size		= 0;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Decl: Symbol {
+	struct [[gnu::packed, gnu::aligned(1)]] Decl: Symbol<Core::TypeFlags> {
 		BasicType			basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
 		uint64				base		= -1;
 		uint64				byteSize	= 0;
@@ -251,18 +266,18 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Module {
-		ValueTable<Decl>	types;
-		ValueTable<Method>	methods;
+		HeaderTable<Decl>	types;
+		HeaderTable<Method>	methods;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Include {
 		uint64				module	= 0;
-		ValueTable<Record>	types;
-		ValueTable<Record>	methods;
+		HeaderTable<Record>	types;
+		HeaderTable<Record>	methods;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] External {
-		ValueTable<Include> modules;
+		HeaderTable<Include> modules;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Shared {
@@ -272,7 +287,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] ANI {
-		ValueTable<Label>	in;
+		HeaderTable<Label>	in;
 		StringTable<String>	out;
 		Header<Shared>		shared;
 	};

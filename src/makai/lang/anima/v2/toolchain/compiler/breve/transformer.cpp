@@ -312,7 +312,7 @@ bool ATransformer::Result::isStackTop() const {
 }
 
 bool ATransformer::Result::isDiscardable() const {
-	return type && type->flags & Core::Definition::Flags::AV2_DF_NO_RESULT;
+	return type && type->flags.hasNoResult;
 }
 
 bool ATransformer::Result::shouldBePushed() const {
@@ -364,7 +364,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	context.pop(path.size());
 	if (!var.type)
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
-	else if (var.type->flags & Core::Definition::Flags::AV2_DF_NO_RESULT)
+	else if (var.type->flags.hasNoResult)
 		context.error("[Variables cannot have discardable types!", node);
 	return {{var.getSource()}, scope, var.type.raw(), direct};
 }
@@ -419,7 +419,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		if (!base)
 			context.error("No type with this name exists!", node->middle);
 		type.base = base;
-		type.flags |= base->flags & (~Core::Definition::Flags::AV2_DF_BASIC);
+		violate<uint64>(type.flags) |= bitcast<uint64>(base->flags);
+		type.flags.isBasic = false;
 		type.fields.append(base->fields);
 		scope->varc += base->scope->varc;
 	}
@@ -431,7 +432,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
 	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
-	scope->type->flags |= Core::Definition::Flags::AV2_DF_STRUCTURE;
+	scope->type->flags.isStructure = true;
 	for (auto const& [name, sub]: scope->subspaces) {
 		if (sub->variable) {
 			auto& var = *sub->variable;
@@ -1316,7 +1317,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	auto const src = Expression().transform(context, node->leftSide);
 	if (!src.source)
 		context.error("Expected value here!", node->leftSide);
-	if (!(src.type->flags & Core::Definition::Flags::AV2_DF_ARRAY))
+	if (!(src.type->flags.isArray))
 		context.error("Value is not an array!", node->rightSide);
 	if (src.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *src.source);
@@ -1634,7 +1635,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 	if (!type) return nullptr;
 	if (!arrays.contains(type.asWeak())) {
 		auto const arr = type.create();
-		arr->flags |= Core::Definition::Flags::AV2_DF_ARRAY;
+		arr->flags.isArray = true;
 		arr->base = type;
 		arr->name = type->name + "Array";
 		auto const nsp = Namespace::Instance::create(arr->name);
@@ -1650,7 +1651,7 @@ Namespace::TypeRef ATransformer::Context::nullableFor(Namespace::TypeRef const& 
 	if (!type) return nullptr;
 	if (!nullables.contains(type.asWeak())) {
 		auto const arr = type.create();
-		arr->flags |= Core::Definition::Flags::AV2_DF_NULLABLE;
+		arr->flags.isNullable = true;
 		arr->base = type;
 		arr->name = type->name + "OrNull";
 		auto const nsp = Namespace::Instance::create(arr->name);
@@ -1727,7 +1728,8 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 cons
 	auto& t = *(ns->type = ns->type.create());
 	t.name = name;
 	t.basic = type;
-	t.flags |= Core::Definition::Flags::AV2_DF_BASIC | flags;
+	t.flags = flags;
+	t.flags.isBasic = true;
 	if (type != AV2_BT_VOID && type != AV2_BT_ANY)
 		t.base = basicType("any");
 	basics[name] = ns->type;

@@ -36,7 +36,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	auto const fullID = name + "@" + method->name;
 	moduleMethods[fullID] = method;
 	methods[name] = new Reference{.name = fullID};
-	if (!(method->flags & CoreMethod::Flags::AV2_MF_EXTERNAL)) {
+	if (!(method->flags.isExternal)) {
 		method->jump = name + "/entry";
 		method->hash = hash(name);
 	}
@@ -579,9 +579,9 @@ static void doCall(Context& context, bool dynamic = false) {
 		if (!context.methods.contains(id))
 			context.error("Method with this name does not exist!");
 		auto const m = context.getMethod(id);
-		invoke.external = m->flags & Method::Flags::AV2_MF_EXTERNAL;
-		invoke.optional = m->flags & Method::Flags::AV2_MF_OPTIONAL;
-		invoke.noResult = context.program.detail.types[m->retType].flags & Definition::Flags::AV2_DF_NO_RESULT;
+		invoke.external = m->flags.isExternal;
+		invoke.optional = m->flags.isOptional;
+		invoke.noResult = context.program.detail.types[m->retType].flags.hasNoResult;
 		DEBUGLN("_______________________ Call entry: ", m->jump);
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
@@ -1050,13 +1050,11 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
 	else if (
-		type.flags & (
-			Definition::Flags::AV2_DF_DYNAMIC
-		|	Definition::Flags::AV2_DF_ARRAY
-		|	Definition::Flags::AV2_DF_BASIC
-		)
+		type.flags.isDynamic
+	or	type.flags.isArray
+	or	type.flags.isBasic
 	) context.error("Cannot declare fields on basic, array and dynamic types!");
-	type.flags |= Definition::Flags::AV2_DF_STRUCTURE;
+	type.flags.isStructure = true;
 	context.expectNext(Type{'['});
 	while (true) {
 		if (context.next().has(Type{']'})) break;
@@ -1070,101 +1068,100 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 static void validateType(Context& context, Context::Declaration& type) {
 		DEBUGLN("Name: ", type.name);
 		DEBUGLN("Flags: ", type.flags);
-	if (type.base && !(type.flags & Definition::Flags::AV2_DF_ARRAY)) {
+	if (type.base && !(type.flags.isArray)) {
 		auto& base = *context.getTypeByID(type.base);
-		type.flags |= base.flags;
+		Makai::violate<uint64>(type.flags) |= Makai::bitcast<uint64>(base.flags);
 		if (type.fields.size())
 			type.fields.insert(base.fields, 0);
 		else type.fields.appendBack(base.fields);
 	}
-	if (type.base && context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_FINAL)
+	if (type.base && context.getTypeByID(*type.base)->flags.isFinal)
 		context.error("Final types cannot be inherited from!");
 	if (!type.basic) {
-		if (type.alignment && !(type.flags & Definition::Flags::AV2_DF_VALUE))
+		if (type.alignment && !(type.flags.isValueType))
 			context.error("Only value types can have alignment size!");
-		if (!type.alignment && type.flags & Definition::Flags::AV2_DF_VALUE)
+		if (!type.alignment && type.flags.isValueType)
 			context.error("Value types must have an alignment!");
 	}
-	if (type.flags & Definition::Flags::AV2_DF_VALUE) {
+	if (type.flags.isValueType) {
 		for (auto& field : type.fields) {
-			if (!(context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_VALUE))
+			if (!(context.getTypeByID(field)->flags.isValueType))
 				context.error("Value types can only contain other value types!");
-			if (context.getTypeByID(field)->flags & Definition::Flags::AV2_DF_ARRAY)
+			if (context.getTypeByID(field)->flags.isArray)
 				context.error("Value types cannot contain arrays!");
 		}
-		if (type.flags & Definition::Flags::AV2_DF_ARRAY) {
-			if (!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_ARRAY))
+		if (type.flags.isArray) {
+			if (!(context.getTypeByID(*type.base)->flags.isArray))
 				context.error("Value arrays of other arrays are forbidden!");
-			if (!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_VALUE))
+			if (!(context.getTypeByID(*type.base)->flags.isValueType))
 				context.error("Value arrays can only contain value types!");
 		}
 	}
-	if (type.flags & Definition::Flags::AV2_DF_ARRAY && type.fields.size())
+	if (type.flags.isArray && type.fields.size())
 		context.error("Arrays cannot contain fields!");
 	if (
-		type.flags & Definition::Flags::AV2_DF_ARRAY
-	&&	type.flags & Definition::Flags::AV2_DF_STRUCTURE
-	) context.error("Cannot have a type be both an array or a structure!");
+		type.flags.isArray
+	&&	type.flags.isStructure
+	) context.error("Cannot have a type be both an array and a structure!");
 	if (
-		type.flags & Definition::Flags::AV2_DF_DYNAMIC
-	&&	type.flags & Definition::Flags::AV2_DF_VALUE
+		type.flags.isDynamic
+	&&	type.flags.isValueType
 	) context.error("Cannot have a dynamic value type!");
 	if (
-		type.flags & Definition::Flags::AV2_DF_BASIC
-	&&	type.flags & (
-			Definition::Flags::AV2_DF_STRUCTURE
-		|	Definition::Flags::AV2_DF_ARRAY
-		|	Definition::Flags::AV2_DF_PROXY
-		|	Definition::Flags::AV2_DF_DYNAMIC
+		type.flags.isBasic
+	&&	(
+			type.flags.isStructure
+		or	type.flags.isArray
+		or	type.flags.isProxy
+		or	type.flags.isDynamic
 		)
 	) context.error("Basic types cannot be structures, arrays, proxies, or dynamic types!");
 	if (
-		type.flags & Definition::Flags::AV2_DF_STRUCTURE
-	&&	type.flags & (
-			Definition::Flags::AV2_DF_ARRAY
-		|	Definition::Flags::AV2_DF_BASIC
+		type.flags.isStructure
+	&&	(
+			type.flags.isArray
+		or	type.flags.isBasic
 		)
 	) context.error("Structure types cannot be basic or array types!");
-	if (type.flags & Definition::Flags::AV2_DF_EMPTY) {
+	if (type.flags.isEmpty) {
 		if (type.alignment) context.error("Empty types cannot have size nor alignment!");
 		if (
-			type.flags & ~(
-				Definition::Flags::AV2_DF_EMPTY
-			|	Definition::Flags::AV2_DF_NULLABLE
-			|	Definition::Flags::AV2_DF_NO_RESULT
-			|	Definition::Flags::AV2_DF_BASIC
-			)
+			type.flags.isArray
+		or	type.flags.isValueType
+		or	type.flags.isStructure
+		or	type.flags.isDynamic
+		or	type.flags.isPointer
 		) context.error("Malformed empty type!");
 		type.byteSize	= 0;
 		type.alignment	= 0;
 	}
-	if (type.flags & Definition::Flags::AV2_DF_CLONABLE) {
-		if (type.flags & Definition::Flags::AV2_DF_ARRAY) {
-			if (!(context.getTypeByID(*type.base)->flags & Definition::Flags::AV2_DF_CLONABLE))
+	if (type.flags.isCopyable) {
+		if (type.flags.isArray) {
+			if (!(context.getTypeByID(*type.base)->flags.isCopyable))
 				context.error("Clonable arrays must contain clonable elements!");
 		} else for (auto const f: type.fields) {
 			auto& field = *context.getTypeByID(f);
-			if (!(field.flags & Definition::Flags::AV2_DF_CLONABLE))
+			if (!(field.flags.isCopyable))
 				context.error("Clonable structures must contain clonable fields!");
 		}
 	}
-	if (type.fields.size() && !(type.flags & Definition::Flags::AV2_DF_STRUCTURE))
+	if (type.fields.size() && !(type.flags.isStructure))
 		context.error("Fields can only be declared on structures!");
 	if (!type.basic) {
 		for (auto& field: type.fields)
 			type.byteSize += context.getTypeByID(field)->byteSize;
 		type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
 	} else if (type.basic != BasicType::AV2_BT_ANY && type.basic != BasicType::AV2_BT_VOID) {
-		type.flags |=
-			Definition::Flags::AV2_DF_VALUE
-		|	Definition::Flags::AV2_DF_CLONABLE
-		|	Definition::Flags::AV2_DF_FINAL
-		;
+		type.flags.isValueType = true;
+		type.flags.isCopyable = true;
+		type.flags.isFinal = true;
 		type.byteSize	= 0;
 		type.alignment	= 1;
 		if (type.basic == BasicType::AV2_BT_STRING or type.basic == BasicType::AV2_BT_BYTES)
-			type.flags ^= Definition::Flags::AV2_DF_VALUE;
+			type.flags.isValueType = false;
 	}
+	if (type.flags.isValueType && type.flags.isProxy)
+		context.error("Proxy types cannot be value types!");
 }
 
 static void declareTypeOperators(Context& context, Context::Declaration& type) {}
@@ -1193,7 +1190,7 @@ static void declareType(Context& context) {
 		if (context.next().has(Type{']'})) break;
 		auto const flag = context.get(LTS_TT_IDENTIFIER, "type flag").getString();
 		if (flag == "basic") {
-			type->flags |= Definition::Flags::AV2_DF_BASIC;
+			type->flags.isBasic = true;
 			auto const basic =
 				context
 					.expectNext(Type{'<'})
@@ -1229,9 +1226,9 @@ static void declareType(Context& context) {
 			}
 			context.expectNext(Type{'>'});
 		}
-		else if (flag == "nil") type->flags |= Definition::Flags::AV2_DF_NULLABLE;
+		else if (flag == "nil") type->flags.isNullable = true;
 		else if (flag == "derived") {
-			if (type->flags & Definition::Flags::AV2_DF_ARRAY)
+			if (type->flags.isArray)
 				context.error("Type cannot be both a derived type and an array type!");
 			if (type->base)
 				context.error("Redeclaration of base type!");
@@ -1244,18 +1241,18 @@ static void declareType(Context& context) {
 		} else if (flag == "array") {
 			if (type->base)
 				context.error("Redeclaration of element type!");
-			type->flags |= Definition::Flags::AV2_DF_ARRAY;
+			type->flags.isArray = true;
 			context.expectNext(Type{'<'}).next();
 			auto const base = resolvePath(context);
 			if (context.types.contains(base))
 				type->base = context.getType(base)->id;
 			else context.error("Element type does not exist!");
 			context.expectNext(Type{'>'});
-		} else if (flag == "value")	type->flags |= Definition::Flags::AV2_DF_VALUE;
-		else if (flag == "empty")	type->flags |= Definition::Flags::AV2_DF_EMPTY;
-		else if (flag == "discard")	type->flags |= Definition::Flags::AV2_DF_NO_RESULT;
-		else if (flag == "dyn")		type->flags |= Definition::Flags::AV2_DF_DYNAMIC;
-		else if (flag == "struct")	type->flags |= Definition::Flags::AV2_DF_STRUCTURE;
+		} else if (flag == "value")	type->flags.isValueType = true;
+		else if (flag == "empty")	type->flags.isEmpty = true;
+		else if (flag == "discard")	type->flags.hasNoResult = true;
+		else if (flag == "dyn")		type->flags.isDynamic = true;
+		else if (flag == "struct")	type->flags.isStructure = true;
 		else if (flag == "pack") {
 			if (type->alignment)
 				context.error("Redefinition of alignment!");
@@ -1278,9 +1275,9 @@ static void declareType(Context& context) {
 			declareTypeOperators(context, *type);
 		} else if (flag == "casts") {
 			declareTypeCasts(context, *type);
-		} else if (flag == "copy")	type->flags |= Definition::Flags::AV2_DF_CLONABLE;
-		else if (flag == "proxy")	type->flags |= Definition::Flags::AV2_DF_PROXY;
-		else if (flag == "final")	type->flags |= Definition::Flags::AV2_DF_FINAL;
+		} else if (flag == "copy")	type->flags.isCopyable = true;
+		else if (flag == "proxy")	type->flags.isProxy = true;
+		else if (flag == "final")	type->flags.isFinal = true;
 		else if (flag == "meta")
 			declareTypeMeta(context, *type);
 		else context.error("Invalid flag!");
@@ -1331,9 +1328,9 @@ static void getMethodAttriutes(Context& context, Context::Method& method) {
 		else if (attr == "global")
 			method.local = false;
 		else if (attr == "required")
-			method.flags &= ~Method::Flags::AV2_MF_OPTIONAL;
+			method.flags.isOptional = false;
 		else if (attr == "optional")
-			method.flags |= Method::Flags::AV2_MF_OPTIONAL;
+			method.flags.isOptional = true;
 		else break;
 	}
 }
@@ -1368,7 +1365,7 @@ static void declareOutboundMethod(Context& context) {
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
-	method->flags |= Method::Flags::AV2_MF_EXTERNAL;
+	method->flags.isExternal = true;
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
 	else context.error("Return type does not exist!");
@@ -1397,7 +1394,7 @@ static void declareSharedMethod(Context& context) {
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
-	method->flags		|= (Method::Flags::AV2_MF_EXTERNAL | Method::Flags::AV2_MF_SHARED);
+	method->flags.isExternal = method->flags.isShared = true;
 	if (context.program.ani->shared.libraries.find(dynlibName) == -1)
 		context.program.ani->shared.libraries.pushBack(dynlibName);
 	if (context.types.contains(id))
@@ -1433,10 +1430,8 @@ static void declareMethodBody(Context& context) {
 			context.error("Method prototype does not exist!");
 		auto const method = context.getMethod(name);
 		if (
-			method->flags & (
-				Method::Flags::AV2_MF_EXTERNAL
-			|	Method::Flags::AV2_MF_SHARED
-			)
+			method->flags.isExternal
+		or	method->flags.isShared
 		) context.error("Cannot declare a body for a shared/external method!");
 		context.methodStack.pushBack(method);
 		context.registerLandingPoint(method->jump);

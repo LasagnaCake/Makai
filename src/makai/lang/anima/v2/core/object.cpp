@@ -7,7 +7,7 @@ using namespace Makai::Anima::V2::Core;
 Object::~Object() {
 	if (content.unique()) {
 		if (!origin) return;
-		if (!(origin->flags & Definition::Flags::AV2_DF_VALUE))
+		if (!(origin->flags.isValueType))
 			origin->destruct(*content);
 	}
 }
@@ -79,7 +79,7 @@ Object::Storage Object::cloneFrom(usize const index) const {
 			MX::memcpy(mem->data(), addr, t->byteSize);
 			return create(mem, t.raw(), t.raw());
 		}
-		if (isArray() && origin->base->flags & Definition::Flags::AV2_DF_CLONABLE) {
+		if (isArray() && origin->base->flags.isCopyable) {
 			mem->resize(origin->base->byteSize);
 			MX::memcpy(mem->data(), addr, origin->base->byteSize);
 			return create(mem, type->base.raw(), origin->base.raw());

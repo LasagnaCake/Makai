@@ -4,13 +4,13 @@
 #include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
-	struct Method: Entry {
-		struct Flags {
-			constexpr static uint64 const AV2_MF_EXTERNAL	= 1 << 0;
-			constexpr static uint64 const AV2_MF_SHARED		= 1 << 1;
-			constexpr static uint64 const AV2_MF_OPTIONAL	= 1 << 2;
-		};
+	struct [[gnu::packed, gnu::aligned(1)]] MethodFlags {
+		uint64 isExternal:	1 = false;
+		uint64 isShared:	1 = false;
+		uint64 isOptional:	1 = false;
+	};
 
+	struct Method: Entry, Flagged<MethodFlags> {
 		Instance<Definition>		retType;
 		List<Instance<Definition>>	argTypes;
 	};

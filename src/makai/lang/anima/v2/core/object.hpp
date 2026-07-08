@@ -140,8 +140,8 @@ namespace Makai::Anima::V2::Core {
 			return *this;
 		}
 
-		constexpr uint64 flags() const {
-			if (!origin) return 0;
+		constexpr TypeFlags flags() const {
+			if (!origin) return {};
 			return origin->flags;
 		}
 
@@ -158,17 +158,17 @@ namespace Makai::Anima::V2::Core {
 
 		constexpr bool isValueType() const {
 			if (!origin) return false;
-			return (origin->flags & Definition::Flags::AV2_DF_VALUE);
+			return (origin->flags.isValueType);
 		}
 
 		constexpr bool isClonable() const {
 			if (!origin) return false;
-			return (origin->flags & Definition::Flags::AV2_DF_CLONABLE);
+			return (origin->flags.isCopyable);
 		}
 
 		constexpr bool isEmptyType() const {
 			if (!origin) return true;
-			return (origin->flags & Definition::Flags::AV2_DF_NO_RESULT);
+			return (origin->flags.hasNoResult);
 		}
 
 		constexpr bool isAlgebraic() const {
@@ -289,15 +289,15 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		constexpr bool isArray() const {
-			return (origin->flags & Definition::Flags::AV2_DF_ARRAY);
+			return (origin->flags.isArray);
 		}
 
 		constexpr bool isStructrure() const {
-			return (origin->flags & Definition::Flags::AV2_DF_STRUCTURE);
+			return (origin->flags.isStructure);
 		}
 
 		constexpr bool isBasic() const {
-			return (origin->flags & Definition::Flags::AV2_DF_BASIC);
+			return (origin->flags.isBasic);
 		}
 
 		Data::Value toDynamicValue() const {

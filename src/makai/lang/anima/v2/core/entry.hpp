@@ -5,10 +5,19 @@
 
 namespace Makai::Anima::V2::Core {
 	struct Entry {
-		uint64 id;
-		String name;
-		uint64 hash;
-		uint64 flags = 0;
+		uint64	id		= 0;
+		String	name;
+		uint64	hash	= 0;
+	};
+
+	template <class T>
+	requires (sizeof(T) == sizeof(uint64))
+	struct Flagged {
+		T		flags	= T();
+
+		constexpr uint64 flagNumber() const {
+			return bitcast<uint64>(flags);
+		}
 	};
 }
 

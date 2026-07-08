@@ -3,6 +3,7 @@
 
 #include "instruction.hpp"
 #include "type.hpp"
+#include "method.hpp"
 
 namespace Makai::Anima::V2::Core {
 	struct Module {
@@ -25,7 +26,7 @@ namespace Makai::Anima::V2::Core {
 			uint64			id;
 			UTF8String		name;
 			uint64			hash;
-			uint64			flags = 0;
+			MethodFlags		flags;
 			uint64			retType;
 			List<uint64>	argTypes;
 			uint64			entrypoint;
@@ -40,7 +41,7 @@ namespace Makai::Anima::V2::Core {
 			uint64						id;
 			UTF8String					name;
 			uint64						hash;
-			uint64						flags		= 0;
+			TypeFlags					flags;
 			Nullable<Core::BasicType>	basic		= Core::BasicType::AV2_BT_VOID;
 			Nullable<uint64>			base		= null;
 			uint64						byteSize	= 0;

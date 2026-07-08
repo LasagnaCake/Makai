@@ -410,7 +410,7 @@ namespace Makai::Anima::V2::Core::Meta {
 				type.id = db.values.size();
 				type.name = nameof<T>();
 				if  constexpr (HAS_CLONER) {
-					type.flags |= Definition::Flags::AV2_DF_CLONABLE;
+					type.flags.isCopyable = true;
 					type.copy = cloner();
 				}
 				if constexpr (HAS_COMPARATOR)
@@ -422,7 +422,7 @@ namespace Makai::Anima::V2::Core::Meta {
 				type.byteSize	= sizeof (T);
 				if constexpr (HAS_EXPLICIT_BASE)
 					type.base = db.byNameHash(EasyImplementor<typename T::BaseType>::TYPE_HASH).front();
-				type.flags |= Definition::Flags::AV2_DF_PROXY;
+				type.flags.isProxy = true;
 			}
 		};
 	}

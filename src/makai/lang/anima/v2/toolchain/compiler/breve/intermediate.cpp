@@ -461,7 +461,7 @@ static Namespace::AttributeRef createNullableAttribute() {
 	attrib->name = "Nullable";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_NULLABLE;
+		ns->type->flags.isNullable = true;
 	};
 	return attrib;
 }
@@ -473,7 +473,7 @@ static Namespace::AttributeRef createEmptyAttribute() {
 	attrib->name = "Empty";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_EMPTY;
+		ns->type->flags.isEmpty = true;
 		if (ns->type->fields.size() > 1)
 			Transformer::ATransformer::Context::error("Empty type must not contain fields!", ns->node);
 	};
@@ -487,7 +487,7 @@ static Namespace::AttributeRef createDiscardAttribute() {
 	attrib->name = "Discard";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_NO_RESULT;
+		ns->type->flags.hasNoResult = true;
 	};
 	return attrib;
 }
@@ -499,7 +499,7 @@ static Namespace::AttributeRef createDynamicAttribute() {
 	attrib->name = "Dynamic";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_DYNAMIC;
+		ns->type->flags.isDynamic = true;
 		if (ns->type->fields.size())
 			Transformer::ATransformer::Context::error("Dynamic type must not contain fields!", ns->node);
 	};
@@ -513,7 +513,7 @@ static Namespace::AttributeRef createCopyAttribute() {
 	attrib->name = "Copy";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_CLONABLE;
+		ns->type->flags.isCopyable = true;
 	};
 	return attrib;
 }
@@ -525,7 +525,7 @@ static Namespace::AttributeRef createFinalAttribute() {
 	attrib->name = "Final";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_FINAL;
+		ns->type->flags.isFinal = true;
 	};
 	return attrib;
 }
@@ -537,7 +537,7 @@ static Namespace::AttributeRef createValueAttribute() {
 	attrib->name = "Value";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_VALUE;
+		ns->type->flags.isValueType = true;
 	};
 	return attrib;
 }
@@ -551,8 +551,8 @@ static Namespace::AttributeRef createBasicAttribute() {
 	attrib->fields["type"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->def = TypeDecl::Definition::AV2_TCTD_BASIC;
-		ns->type->flags &= ~Core::Definition::Flags::AV2_DF_STRUCTURE;
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_BASIC;
+		ns->type->flags.isStructure = false;
+		ns->type->flags.isBasic = true;
 		if (ns->type->fields.size() > 2) {
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
 		} else if (ns->type->fields.size() > 1 && !ns->type->fields.contains("base")) {
@@ -592,7 +592,7 @@ static Namespace::AttributeRef createBoundAttribute() {
 	attrib->name = "Proxy";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->type->flags |= Core::Definition::Flags::AV2_DF_PROXY;
+		ns->type->flags.isProxy = true;
 	};
 	return attrib;
 }

@@ -153,23 +153,23 @@ namespace Makai::Anima::V2::Core {
 		return (isVectorable(bt) || isMatrix(bt));
 	}
 
-	struct Definition: Entry {
-		using Source = MemorySlice<byte>;
+	struct [[gnu::packed, gnu::aligned(1)]] TypeFlags {
+		uint64 isBasic:		1 = false;
+		uint64 isNullable:	1 = false;
+		uint64 isEmpty:		1 = false;
+		uint64 hasNoResult:	1 = false;
+		uint64 isArray:		1 = false;
+		uint64 isValueType:	1 = false;
+		uint64 isStructure:	1 = false;
+		uint64 isDynamic:	1 = false;
+		uint64 isCopyable:	1 = false;
+		uint64 isProxy:		1 = false;
+		uint64 isPointer:	1 = false;
+		uint64 isFinal:		1 = false;
+	};
 
-		struct Flags {
-			constexpr static uint64 const AV2_DF_BASIC			= 1 << 0;
-			constexpr static uint64 const AV2_DF_NULLABLE		= 1 << 1;
-			constexpr static uint64 const AV2_DF_EMPTY			= 1 << 2;
-			constexpr static uint64 const AV2_DF_ARRAY			= 1 << 3;
-			constexpr static uint64 const AV2_DF_VALUE			= 1 << 4;
-			constexpr static uint64 const AV2_DF_STRUCTURE		= 1 << 5;
-			constexpr static uint64 const AV2_DF_DYNAMIC		= 1 << 6;
-			constexpr static uint64 const AV2_DF_CLONABLE		= 1 << 7;
-			constexpr static uint64 const AV2_DF_PROXY			= 1 << 8;
-			constexpr static uint64 const AV2_DF_NO_RESULT		= 1 << 9;
-			constexpr static uint64 const AV2_DF_POINTER		= 1 << 10;
-			constexpr static uint64 const AV2_DF_FINAL			= 1 << 11;
-		};
+	struct Definition: Entry, Flagged<TypeFlags> {
+		using Source = MemorySlice<byte>;
 
 		bool canBecome(Handle<Definition> const& type) const {
 			if (type == base) return true;
