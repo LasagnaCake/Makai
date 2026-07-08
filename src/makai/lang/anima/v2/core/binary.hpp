@@ -135,13 +135,14 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 				if (auto const v = readFromSource(source, i))
 					out.pushBack(v.value());
 				else return null;
-			return Nullable<List<T>>(out);
+			return wrap<Nullable>(out);
 		}
 	};
 
 	template <class T>
 	constexpr Nullable<T> stringFromBytes(Bytes<> const& block) {
-		return Nullable<T>(
+		DEBUGLN("Converting [", block.size(), "] bytes...");
+		return wrap<Nullable>(
 			T(
 				String(
 					(cstring)block.cbegin(),
@@ -153,7 +154,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	template <class T>
 	constexpr Nullable<List<T>> listFromBytes(Bytes<> const& block) {
-		return Nullable<List<T>>(
+		DEBUGLN("Converting [", block.size(), "] bytes...");
+		return wrap<Nullable>(
 			List<T>(
 				(ref<T const>)block.data(),
 				block.size() / sizeof(T)
@@ -163,10 +165,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	template <class T>
 	constexpr Nullable<T> valueFromBytes(Bytes<> const& block) {
+		DEBUGLN("Converting [", block.size(), "] bytes...");
 		T out;
 		if (block.size() < sizeof(T)) return null;
 		MX::memmove(&out, block.data(), sizeof(T));
-		return Nullable<T>(out);
+		return wrap<Nullable>(out);
 	}
 
 	template <class T>
