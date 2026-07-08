@@ -69,9 +69,16 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		ByteWriter(Bytes<>& output): output(output) {}
 	};
 
+	struct [[gnu::packed, gnu::aligned(1)]] VersionInfo {
+		uint64 major	= 0;
+		uint64 minor	= 0;
+		uint64 patch	= 0;
+		uint64 hotfix	= 0;
+	};
+
 	struct [[gnu::packed, gnu::aligned(1)]] Entry {
-		uint64 start;
-		uint64 size;
+		uint64 start	= 0;
+		uint64 size		= 0;
 
 		static Nullable<Entry> build(IReadable& source) {
 			auto block = source.read(sizeof(Entry));
@@ -85,6 +92,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		Nullable<T> fromBytes(IReadable& source) const {
 			source.go(start);
 			auto const sz = size < sizeof(T) ? size : sizeof(T);
+			DEBUGLN("[Header<", String(nameof<T>()), "> : ", sz, "]");
 			T out;
 			auto const block = source.read(size);
 			DEBUGLN("Size [", size, " : ", block.size(), "]");
@@ -125,7 +133,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 				if (auto const v = readFromSource(source, i))
 					out.pushBack(v.value());
 				else return null;
-			return out;
+			return Nullable<List<T>>(out);
 		}
 	};
 
@@ -142,8 +150,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	template <class T>
 	constexpr Nullable<List<T>> listFromBytes(Bytes<> const& block) {
 		return List<T>(
-			(ref<T>)block.cbegin(),
-			(ref<T>)block.cend()
+			(ref<T const>)block.cbegin(),
+			(ref<T const>)block.cend()
 		);
 	}
 
@@ -158,6 +166,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	struct [[gnu::packed, gnu::aligned(1)]] Text: Entry {
 		template <Type::OneOf<String, UTF8String, UTF32String> T>
 		Nullable<T> fromBytes(IReadable& source) const {
+			DEBUGLN("[Text<", String(nameof<T>()), "> : ", size, "]");
 			if (!size) return {T()};
 			source.go(start);
 			auto block = source.read(size);
@@ -170,6 +179,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	template <class T>
 	struct [[gnu::packed, gnu::aligned(1)]] Data: Entry {
 		Nullable<List<T>> fromBytes(IReadable& source) const {
+			DEBUGLN("[Data<", String(nameof<T>()), "> : ", size, "]");
 			if (!size) return {List<T>()};
 			source.go(start);
 			auto block = source.read(size);
@@ -206,37 +216,37 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	}
 
 	struct [[gnu::packed, gnu::aligned(1)]] Label: Text {
-		uint64 id;
+		uint64 id	= 0;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Record {
-		uint64	id;
+		uint64	id		= 0;
 		Text	name;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Symbol: Record {
-		uint64	hash;
-		uint64	flags;
+		uint64	hash	= 0;
+		uint64	flags	= 0;
 		Text	meta;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Mapping {
-		uint64 src;
-		uint64 dst;
+		uint64 src	= 0;
+		uint64 dst	= 0;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Method: Symbol {
-		uint64				returnType;
+		uint64				returnType	= -1;
 		ValueTable<uint64>	argTypes;
-		uint64				entry;
-		uint64				size;
+		uint64				entry		= 0;
+		uint64				size		= 0;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Decl: Symbol {
-		BasicType			basic;
-		uint64				base;
-		uint64				byteSize;
-		uint64				alignment;
+		BasicType			basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
+		uint64				base		= -1;
+		uint64				byteSize	= 0;
+		uint64				alignment	= 0;
 		ValueTable<uint64>	fields;
 	};
 
@@ -246,7 +256,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Include {
-		uint64				module;
+		uint64				module	= 0;
 		ValueTable<Record>	types;
 		ValueTable<Record>	methods;
 	};
@@ -268,22 +278,16 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] FileStructure {
-		struct [[gnu::packed, gnu::aligned(1)]] Version {
-			uint64 major	= 0;
-			uint64 minor	= 0;
-			uint64 patch	= 0;
-			uint64 hotfix	= 0;
-		};
 		As<char const[10]>		magic = "AV2::ANPB";
 		Core::Module::Type		type;
-		Version					artVersion		= {1};
-		Version					binVersion		= {1};
-		Version					moduleVersion	= {1};
-		uint64					flags;
-		uint64					moduleFlags;
-		uint64					entry;
-		uint64					totalTypes;
-		uint64					totalMethods;
+		VersionInfo				artVersion		= {1};
+		VersionInfo				binVersion		= {1};
+		VersionInfo				moduleVersion	= {1};
+		uint64					flags			= 0;
+		uint64					moduleFlags		= 0;
+		uint64					entry			= 0;
+		uint64					totalTypes		= 0;
+		uint64					totalMethods	= 0;
 		StringTable<String>		strings;
 		Data<uint64>			jumps;
 		Data<Instruction>		code;
@@ -411,7 +415,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	Result<Core::Module, Error>	fromBytes(Bytes<> const& source);
-	Result<Bytes<>, Error>		toBytes(Core::Module const& source);
+	Result<Bytes<>, Error>		toBytes(Core::Module const& source, bool const strip = false);
 }
 
 #endif

@@ -12,6 +12,31 @@ using namespace Compiler;
 
 // TODO: This hellspawn
 
+Core::Module Breve::compile(
+	Makai::UTF8String const& fname,
+	Makai::UTF8String const& file,
+	Makai::UTF8String const& append
+) {
+	Assembler::BaseContext ctx;
+	Breve::Parser parser(ctx);
+	Makai::Lexer::CStyle::TokenStream stream;
+	stream.open(file);
+	Makai::List<Assembler::BaseContext::Axiom> ax;
+	while (stream.next())
+		ax.pushBack({stream.current(), true, fname});
+	if (!stream.ok())
+		throw Makai::Error::InvalidValue(
+			"Parsing failure!",
+			stream.error().value().what
+		);
+	ctx.put(ax).pad();
+	Transformer::ATransformer::Context ctx2;
+	Transformer::TheEntireProgram tf;
+	Composer comp(ctx2);
+	tf.transform(ctx2, parser.parse());
+	return Assembler::Minima::assemble(fname, append + comp.toMinima());
+}
+
 Makai::Data::Value Breve::compile(
 	Makai::UTF8String const& fname,
 	Makai::UTF8String const& file,

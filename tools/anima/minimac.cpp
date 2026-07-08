@@ -10,6 +10,8 @@ static Makai::Data::Value configBase() {
 	cfg["output"]	= "output/out.anp";
 	cfg["link"]		= cfg.array();
 	cfg["write"]	= false;
+	cfg["strip"]	= false;
+	cfg["pretty"]	= false;
 	return cfg;
 }
 
@@ -51,14 +53,29 @@ int main(int argc, char** argv) try {
 				.splitAtLast('.').front()
 		);
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/" + outName;
-		auto const code = Assembler::Minima::assemble(outName, file);
+		auto const out = Assembler::Minima::assemble(outName, file, cfg["strip"]);
 		DEBUGLN("Done!");
 		Makai::Data::Value::Padding pad;
 		if (cfg.fetch("pretty", false))
 			pad = Makai::String("  ");
-		Makai::File::saveText(
-			outPath	 + ".anp",
-			code.serialize().toFLOWString(pad)
+		if (cfg.fetch("binary", false))
+			Makai::Anima::V2::Core::BinaryFormat::toBytes(out, cfg.fetch("strip", false))
+				.then(
+					[&] (auto const& e) {
+						Makai::File::saveBinary(
+							outPath + ".anpb",
+							e
+						);
+					}
+				).onError(
+					[] (auto const& e) {
+						throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);
+					}
+				)
+			;
+		else Makai::File::saveText(
+			outPath + ".anp",
+			out.serialize(!cfg.fetch("strip", false)).toFLOWString(pad)
 		);
 	}
 	return 0;

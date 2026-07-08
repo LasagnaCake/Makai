@@ -23,6 +23,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8String const& append = ""
 	);
 
+	Core::Module compile(
+		UTF8String const& fname,
+		UTF8String const& file,
+		UTF8String const& append = ""
+	);
+
 	File parseFile(
 		UTF8String const& fname,
 		UTF8String const& file

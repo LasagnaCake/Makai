@@ -110,7 +110,7 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 		for (auto& s : dt.methods)	s.name = "";
 		for (auto& s : dt.types)	s.name = "";
 		dt.methods.clear();
-		out["detail"] = dt;
+		out["detail"]	= dt;
 	}
 	if (ani)
 		out["ani"] = *ani;

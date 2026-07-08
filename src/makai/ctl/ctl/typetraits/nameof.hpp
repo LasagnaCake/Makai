@@ -44,7 +44,7 @@ namespace Impl::TypeName {
 
 	template <class T>
 	struct Solver {
-		constexpr static usize NAME_SIZE = csize(getFuncName<T>()) - fmt.total + 1;
+		constexpr static usize NAME_SIZE = csize(getFuncName<T>()) - fmt.total;
 
 		using ReturnType = Span<char const, NAME_SIZE>;
 

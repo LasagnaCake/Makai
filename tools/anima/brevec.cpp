@@ -95,9 +95,9 @@ int main(int argc, char** argv) try {
 			Makai::Data::Value::Padding pad;
 			if (cfg.fetch("pretty", false))
 				pad = Makai::String("  ");
-			auto const out = compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_FULL, cfg["strip"]);
+			auto const out = compile(outName, Makai::File::getText(file));
 			if (cfg.fetch("binary", false))
-				Core::BinaryFormat::toBytes(out)
+				Core::BinaryFormat::toBytes(out, cfg.fetch("strip", false))
 					.then(
 						[&] (auto const& e) {
 							Makai::File::saveBinary(
@@ -113,7 +113,7 @@ int main(int argc, char** argv) try {
 				;
 			else Makai::File::saveText(
 				outPath + ".anp",
-				out.toFLOWString(pad)
+				out.serialize(!cfg.fetch("strip", false)).toFLOWString(pad)
 			);
 		}
 	}

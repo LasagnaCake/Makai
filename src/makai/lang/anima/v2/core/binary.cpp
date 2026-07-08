@@ -39,6 +39,8 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 		usize actualTotalMethods = 0;
 		out.sym.methods.resize(file.totalMethods, {});
 		out.sym.types.resize(file.totalTypes, {});
+		DEBUGLN("Total methods = [", file.totalMethods, "]");
+		DEBUGLN("Total types = [", file.totalTypes, "]");
 		if (auto const header = file.module.fromBytes(reader)) {
 			auto const symbols = header.value();
 			if (auto const header = unpack(symbols.types, reader)) {
@@ -167,13 +169,14 @@ struct ExternalMapping {
 	List<Record> methods;
 };
 
-Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module) {
+Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const strip) {
 	Builder builder;
 	return
 		builder
 			.begin()
 			.run(
 				[&module] (Builder& builder) {
+					DEBUGLN("Adding basic information...");
 					builder.file.type			= module.type;
 					builder.file.artVersion		= {module.art.major,		module.art.minor,		module.art.patch,		module.art.hotfix		};
 					builder.file.moduleVersion	= {module.version.major,	module.version.minor,	module.version.patch,	module.version.hotfix	};
@@ -212,16 +215,18 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module) {
 				}
 			)
 			.run(
-				[&module] (Builder& builder) {
+				[&module, strip] (Builder& builder) {
+					DEBUGLN("Adding types & methods...");
 					List<Decl> moduleTypes;
 					List<Method> moduleMethods;
 					Map<usize, ExternalMapping> external;
+					DEBUGLN("Total types: ", module.sym.types.size());
 					for (auto& symbol: module.sym.types) {
 						if (symbol.source) {
 							external[symbol.source.value()].types.pushBack(
 								Record {
 									.id		= symbol.id,
-									.name	= {builder.append(symbol.name)},
+									.name	= {!strip ? builder.append(symbol.name) : Entry()},
 								}
 							);
 						} else {
@@ -237,38 +242,44 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module) {
 							);
 							auto& mt = moduleTypes.back();
 							mt.id 		= type.id;
-							mt.name		= {builder.append(type.name)};
 							mt.hash		= type.hash;
 							mt.flags	= type.flags;
-							mt.meta		= {builder.append(type.meta.toFLOWString())};
+							if (!strip)
+								mt.name	= {builder.append(type.name)};
+							if (type.meta.isObject())
+								mt.meta	= {builder.append(type.meta.toFLOWString())};
 						}
 					}
-					for (auto& symbol: module.sym.types) {
-						if (symbol.source) {
-							external[symbol.source.value()].methods.pushBack(
-								Record {
-									.id		= symbol.id,
-									.name	= {builder.append(symbol.name)},
-								}
-							);
-						} else {
-							auto& method = module.detail.methods[symbol.id];
-							moduleMethods.pushBack(
-								Method {
-									.returnType	= method.retType,
-									.argTypes	= {builder.append(method.argTypes)},
-									.entry		= method.entrypoint,
-									.size		= method.size
-								}
-							);
-							auto& mm = moduleMethods.back();
-							mm.id 		= method.id;
-							mm.name		= {builder.append(method.name)};
-							mm.hash		= method.hash;
-							mm.flags	= method.flags;
-							mm.meta		= {builder.append(method.meta.toFLOWString())};
+					DEBUGLN("Total methods: ", module.sym.methods.size());
+					if (!strip)
+						for (auto& symbol: module.sym.methods) {
+							if (symbol.source) {
+								external[symbol.source.value()].methods.pushBack(
+									Record {
+										.id		= symbol.id,
+										.name	= {!strip ? builder.append(symbol.name) : Entry()},
+									}
+								);
+							} else {
+								auto& method = module.detail.methods[symbol.id];
+								moduleMethods.pushBack(
+									Method {
+										.returnType	= method.retType,
+										.argTypes	= {builder.append(method.argTypes)},
+										.entry		= method.entrypoint,
+										.size		= method.size
+									}
+								);
+								auto& mm = moduleMethods.back();
+								mm.id 		= method.id;
+								mm.hash		= method.hash;
+								mm.flags	= method.flags;
+								if (!strip)
+									mm.name	= {builder.append(method.name)};
+								if (method.meta.isObject())
+									mm.meta	= {builder.append(method.meta.toFLOWString())};
+							}
 						}
-					}
 					builder.file.module = {builder.put(
 						Module {
 							.types		= {builder.include(moduleTypes)},

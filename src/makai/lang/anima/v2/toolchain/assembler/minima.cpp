@@ -1678,5 +1678,7 @@ Makai::Anima::V2::Core::Module Minima::assemble(
 	ctx.put(ax);
 	Assembler::Minima minAsm(ctx);
 	minAsm.invoke();
+	DEBUGLN("Total types: ", ctx.program.sym.types.size());
+	DEBUGLN("Total methods: ", ctx.program.sym.methods.size());
 	return ctx.program;
 }
