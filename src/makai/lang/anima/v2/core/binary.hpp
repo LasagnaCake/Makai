@@ -12,7 +12,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		template <class T>
 		void put(T const& data) {
 			write({
-				(ref<byte>)&data,
+				(ref<byte const>)&data,
 				sizeof(T)
 			});
 		}
@@ -20,8 +20,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		template <class T>
 		void append(List<T> const& data) {
 			write({
-				(ref<byte>)data.data(),
-				data.size() * sizeof(T)
+				(ref<byte const>)data.data(),
+				data.size() / sizeof(T)
 			});
 		}
 	};
