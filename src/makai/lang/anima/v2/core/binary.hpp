@@ -21,7 +21,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		void append(List<T> const& data) {
 			write({
 				(ref<byte const>)data.data(),
-				data.size() / sizeof(T)
+				data.size() * sizeof(T)
 			});
 		}
 	};
@@ -154,11 +154,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	template <class T>
 	constexpr Nullable<List<T>> listFromBytes(Bytes<> const& block) {
-		MAKAILIB_DEBUGLN_FULL("Converting [", block.size(), "] bytes...");
+		MAKAILIB_DEBUGLN_FULL("Converting [", block.size(), "] bytes (", block.size() / sizeof(T), " elements)...");
 		return wrap<Nullable>(
 			List<T>(
 				(ref<T const>)block.data(),
-				block.size() / sizeof(T)
+				(ref<T const>)block.data() + (block.size() / sizeof(T))
 			)
 		);
 	}
