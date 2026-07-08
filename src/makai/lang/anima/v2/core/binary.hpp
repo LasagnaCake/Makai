@@ -155,12 +155,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	template <class T>
 	constexpr Nullable<List<T>> listFromBytes(Bytes<> const& block) {
 		MAKAILIB_DEBUGLN_FULL("Converting [", block.size(), "] bytes (", block.size() / sizeof(T), " elements)...");
-		return wrap<Nullable>(
-			List<T>(
-				(ref<T const>)block.data(),
-				(ref<T const>)block.data() + (block.size() / sizeof(T))
-			)
-		);
+		List<T> out;
+		out.reserve(block.size() / sizeof(T), T());
+		MX::excopy<T>(out.data(), (ref<T const>)block.data(), out.size());
+		MAKAILIB_DEBUGLN_FULL("Converted!");
+		return out;
 	}
 
 	template <class T>
@@ -168,8 +167,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		MAKAILIB_DEBUGLN_FULL("Converting [", block.size(), "] bytes...");
 		T out;
 		if (block.size() < sizeof(T)) return null;
-		MX::memmove(&out, block.data(), sizeof(T));
-		return wrap<Nullable>(out);
+		MX::construct(&out, *(ref<T const>)block.data());
+		return out;
 	}
 
 	template <class T>
