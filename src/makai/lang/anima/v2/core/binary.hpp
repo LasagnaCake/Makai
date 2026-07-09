@@ -108,8 +108,12 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		using EntryType = T;
 		constexpr static auto const convert = CONVERT;
 
-		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
-		Nullable<T> readFromSource(IReadable& source, usize const index, TFunc const convert = CONVERT) const {
+		template <class TFunc = decltype(convert)>
+		Nullable<T> readFromSource(IReadable& source, usize const index, TFunc const convert = CONVERT) const
+		requires (
+			Type::Functional<TFunc, Nullable<T>(Bytes<> const&)>
+		or	Type::Functional<TFunc, T(Bytes<> const&)>
+		) {
 			MAKAILIB_DEBUGLN_FULL("[", String(nameof<T>()), " @ ", index, "]");
 			if (index >= size) return null;
 			source.go(start + index * sizeof(Entry));
@@ -123,11 +127,15 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			MAKAILIB_DEBUGLN_FULL("Size [", entry.size, " : ", block.size(), "]");
 			if (block.size() != entry.size) return null;
 			MAKAILIB_DEBUGLN_FULL("Converting...");
-			return convert(block);
+			return wrap<Nullable>(convert(block));
 		}
 
-		template <Type::Functional<Nullable<T>(Bytes<> const&)> TFunc = decltype(convert)>
-		Nullable<List<T>> fromBytes(IReadable& source, TFunc const convert = CONVERT) const {
+		template <class TFunc = decltype(convert)>
+		Nullable<List<T>> fromBytes(IReadable& source, TFunc const convert = CONVERT) const
+	 	requires (
+			Type::Functional<TFunc, Nullable<T>(Bytes<> const&)>
+		or	Type::Functional<TFunc, T(Bytes<> const&)>
+		) {
 			List<T> out;
 			auto const sz = (size / sizeof(Entry));
 			MAKAILIB_DEBUGLN_FULL("[Table<", String(nameof<T>()), "> : ", sz, "]");
@@ -140,26 +148,24 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	template <class T>
-	constexpr Nullable<T> stringFromBytes(Bytes<> const& block) {
+	constexpr T stringFromBytes(Bytes<> const& block) {
 		MAKAILIB_DEBUGLN_FULL("Converting [", block.size(), "] bytes...");
-		return wrap<Nullable>(
-			T(
-				String(
-					(cstring)block.cbegin(),
-					(cstring)block.cend()
-				)
+		return T(
+			String(
+				(cstring)block.cbegin(),
+				(cstring)block.cend()
 			)
 		);
 	}
 
 	template <class T>
-	constexpr Nullable<List<T>> listFromBytes(Bytes<> const& block) {
+	constexpr List<T> listFromBytes(Bytes<> const& block) {
 		MAKAILIB_DEBUGLN_FULL("Converting [", block.size(), "] bytes (", block.size() / sizeof(T), " elements)...");
 		List<T> out;
 		out.reserve(block.size() / sizeof(T), T());
 		MX::excopy<T>(out.data(), (ref<T const>)block.data(), out.size());
 		MAKAILIB_DEBUGLN_FULL("Converted!");
-		return out;
+		return wrap<Nullable>(out);
 	}
 
 	template <class T>
@@ -168,11 +174,11 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		T out;
 		if (block.size() < sizeof(T)) return null;
 		MX::construct(&out, *(ref<T const>)block.data());
-		return out;
+		return wrap<Nullable>(out);
 	}
 
 	template <class T>
-	constexpr Nullable<T> headerFromBytes(Bytes<> const& block) {
+	constexpr T headerFromBytes(Bytes<> const& block) {
 		T out;
 		MX::memmove(&out, block.data(), block.size() < sizeof(T) ? block.size() : sizeof(T));
 		return out;
@@ -188,7 +194,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			MAKAILIB_DEBUGLN_FULL("Size [", size, " : ", block.size(), "]");
 			if (block.size() != size) return null;
 			MAKAILIB_DEBUGLN_FULL("Converting...");
-			return stringFromBytes<T>(block);
+			return wrap<Nullable>(stringFromBytes<T>(block));
 		}
 	};
 
@@ -202,7 +208,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 			MAKAILIB_DEBUGLN_FULL("Size [", size, " : ", block.size(), "]");
 			if (block.size() != size) return null;
 			MAKAILIB_DEBUGLN_FULL("Converting...");
-			return listFromBytes<T>(block);
+			return wrap<Nullable>(listFromBytes<T>(block));
 		}
 	};
 
