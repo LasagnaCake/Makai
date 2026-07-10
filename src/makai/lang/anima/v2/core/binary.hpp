@@ -242,12 +242,12 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 
 	struct [[gnu::packed, gnu::aligned(1)]] Record {
 		uint64	id		= 0;
-		Text	name;
 	};
 
 	template <class T>
 	requires (sizeof(T) == sizeof(uint64))
 	struct [[gnu::packed, gnu::aligned(1)]] Symbol: Record {
+		Text	name;
 		uint64	hash	= 0;
 		T		flags	= T();
 		Text	meta;
