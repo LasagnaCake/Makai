@@ -1,3 +1,4 @@
+#define CTL_DEVMODE_DEBUG
 #include "binary.hpp"
 #include "../../../../file/flow.hpp"
 
@@ -15,7 +16,7 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 		return Error{"Failed to get file header!"};
 	if (auto const header = FileHeader(base.value()).fromBytes(reader)) {
 		auto const file = header.value();
-		DEBUGLN("Magic bytes [", String(file.magic), "]");
+		MAKAILIB_DEBUGLN_FULL("Magic bytes [", String(file.magic), "]");
 		if (String(file.magic) != "AV2::ANPB")
 			return Error{"File is not an ART-compatible binary!"};
 		out.entry = file.entry;
@@ -23,24 +24,29 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 		out.version	= {file.moduleVersion.major,	file.moduleVersion.minor,	file.moduleVersion.patch,	file.moduleVersion.hotfix	};
 		out.art		= {file.artVersion.major,		file.artVersion.minor,		file.artVersion.patch,		file.artVersion.hotfix		};
 		out.flags = file.moduleFlags;
+		MAKAILIB_DEBUGLN_FULL("Getting bytecode...");
 		if (auto const code = file.code.fromBytes(reader))
 			out.code = code.value();
 		else return Error{"Failed to get code!"};
+		MAKAILIB_DEBUGLN_FULL("Getting jump table...");
 		if (auto const jumps = unpack(file.jumps, reader))
 			out.jumpTable = jumps.value();
 		else return Error{"Failed to get jump table!"};
+		MAKAILIB_DEBUGLN_FULL("Getting relocations...");
+		if (auto const relocations = unpack(file.relocations, reader))
+			out.relocations = relocations.value();
+		else return Error{"Failed to get relocation table!"};
+		MAKAILIB_DEBUGLN_FULL("Getting strings...");
 		if (auto const strings = unpack<String>(file.strings, reader))
 			out.strings = strings.value();
 		else return Error{"Failed to get string table!"};
-		if (auto const relocations = file.relocations.fromBytes(reader))
-			out.relocations = relocations.value();
-		else return Error{"Failed to get string table!"};
+		MAKAILIB_DEBUGLN_FULL("Getting method & type information...");
 		usize actualTotalTypes = 0;
 		usize actualTotalMethods = 0;
 		out.sym.methods.resize(file.totalMethods, {});
 		out.sym.types.resize(file.totalTypes, {});
-		DEBUGLN("Total methods = [", file.totalMethods, "]");
-		DEBUGLN("Total types = [", file.totalTypes, "]");
+		MAKAILIB_DEBUGLN_FULL("Total methods = [", file.totalMethods, "]");
+		MAKAILIB_DEBUGLN_FULL("Total types = [", file.totalTypes, "]");
 		if (auto const header = file.module.fromBytes(reader)) {
 			auto const symbols = header.value();
 			if (auto const header = unpack(symbols.types, reader)) {
@@ -176,7 +182,7 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 			.begin()
 			.run(
 				[&module] (Builder& builder) {
-					DEBUGLN("Adding basic information...");
+					MAKAILIB_DEBUGLN_FULL("Adding basic information...");
 					builder.file.type			= module.type;
 					builder.file.artVersion		= {module.art.major,		module.art.minor,		module.art.patch,		module.art.hotfix		};
 					builder.file.moduleVersion	= {module.version.major,	module.version.minor,	module.version.patch,	module.version.hotfix	};
@@ -216,11 +222,11 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 			)
 			.run(
 				[&module, strip] (Builder& builder) {
-					DEBUGLN("Adding types & methods...");
+					MAKAILIB_DEBUGLN_FULL("Adding types & methods...");
 					List<Decl> moduleTypes;
 					List<Method> moduleMethods;
 					Map<usize, ExternalMapping> external;
-					DEBUGLN("Total types: ", module.sym.types.size());
+					MAKAILIB_DEBUGLN_FULL("Total types: ", module.sym.types.size());
 					for (auto& symbol: module.sym.types) {
 						if (symbol.source) {
 							external[symbol.source.value()].types.pushBack(
@@ -250,7 +256,7 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 								mt.meta	= {builder.append(type.meta.toFLOWString())};
 						}
 					}
-					DEBUGLN("Total methods: ", module.sym.methods.size());
+					MAKAILIB_DEBUGLN_FULL("Total methods: ", module.sym.methods.size());
 					if (!strip)
 						for (auto& symbol: module.sym.methods) {
 							if (symbol.source) {
