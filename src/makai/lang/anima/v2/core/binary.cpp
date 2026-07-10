@@ -58,7 +58,9 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 					sym.source = null;
 					auto& target = out.detail.types.pushBack({}).back();
 					target.id = sym.id;
-					target.name = type.name.fromBytes<String>(reader);
+					if (auto const v = type.name.fromBytes<UTF8String>(reader))
+						target.name = v.value();
+					else return Error{"Failed to get type name!"};
 					target.flags = type.flags;
 					target.hash = type.hash;
 					if (type.base < Limit::MAX<uint64>)
@@ -82,7 +84,9 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 					sym.source = null;
 					auto& target = out.detail.methods.pushBack({}).back();
 					target.id = sym.id;
-					target.name = method.name.fromBytes<String>(reader);
+					if (auto const v = method.name.fromBytes<UTF8String>(reader))
+						target.name = v.value();
+					else return Error{"Failed to get type name!"};
 					target.flags = method.flags;
 					target.retType = method.returnType;
 					if (auto const args = unpack(method.argTypes, reader))
@@ -112,8 +116,8 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 						auto const methods = header.value();
 						actualTotalMethods += methods.size();
 						for (auto& method: methods) {
-							auto& sym = out.sym.types[method.id];
-							sym.id = out.detail.types.size();
+							auto& sym = out.sym.methods[method.id];
+							sym.id = out.detail.methods.size();
 							sym.source = include.module;
 						}
 					} else return Error{"Failed to get external method data!"};
