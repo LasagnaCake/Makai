@@ -96,9 +96,9 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		decl += " dyn";
 	if (type->flags.isStructure)
 		decl += " struct";
-	if (type->flags.isCcopyable)
+	if (type->flags.isCopyable)
 		decl += " copy";
-	if (type->flag.isProxy)
+	if (type->flags.isProxy)
 		decl += " proxy";
 	if (type->flags.isFinal)
 		decl += " final";

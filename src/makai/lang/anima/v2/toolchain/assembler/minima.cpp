@@ -42,7 +42,7 @@ void Context::addMethod(Makai::String const& name, Instance<Method> const& metho
 	}
 	method->id = program.detail.methods.size();
 	program.detail.methods.pushBack(*method);
-	program.sym.methods.pushBack({nullptr, method->id, name});
+	program.sym.methods.pushBack({nullptr, method->id});
 }
 
 void Context::addType(Makai::String const& name, Instance<Declaration> const& type) {
@@ -53,7 +53,7 @@ void Context::addType(Makai::String const& name, Instance<Declaration> const& ty
 	types[name] = new Reference{.name = fullID};
 	type->id = program.detail.types.size();
 	program.detail.types.pushBack(*type);
-	program.sym.types.pushBack({nullptr, type->id, name});
+	program.sym.types.pushBack({nullptr, type->id});
 }
 
 void Context::addExternalMethod(Makai::String const& module, Makai::String const& name, Instance<Method> const& method) {
@@ -70,7 +70,7 @@ void Context::addExternalMethod(Makai::String const& module, Makai::String const
 	uint64 moduleID = program.ani->shared.modules.find(module);
 	if (moduleID == Makai::Limit::MAX<uint64>)
 		moduleID = program.ani->shared.modules.size();
-	program.sym.methods.pushBack({moduleID, method->id, refID});
+	program.sym.methods.pushBack({moduleID, method->id});
 }
 
 void Context::addExternalType(Makai::String const& module, Makai::String const& name, Instance<Declaration> const& type) {
@@ -85,7 +85,7 @@ void Context::addExternalType(Makai::String const& module, Makai::String const& 
 	uint64 moduleID = program.ani->shared.modules.find(module);
 	if (moduleID == Makai::Limit::MAX<uint64>)
 		moduleID = program.ani->shared.modules.size();
-	program.sym.methods.pushBack({moduleID, type->id, refID});
+	program.sym.methods.pushBack({moduleID, type->id});
 }
 
 Makai::Instance<Context::Method> Context::getMethod(Makai::String const& name) {
@@ -108,13 +108,13 @@ Makai::Instance<Context::Declaration> Context::getType(Makai::String const& name
 
 Makai::Instance<Context::Method> Context::getMethodByID(uint64 const& id) {
 	if (id < program.sym.methods.size())
-		return getMethod(program.sym.methods[id].name);
+		return getMethod(program.detail.methods[program.sym.methods[id].id].name);
 	error("Method with the given ID does not exist!");
 }
 
 Makai::Instance<Context::Declaration> Context::getTypeByID(uint64 const& id) {
 	if (id < program.sym.types.size())
-		return getType(program.sym.types[id].name);
+		return getType(program.detail.types[program.sym.types[id].id].name);
 	error("Type with the given ID does not exist!");
 }
 
@@ -144,12 +144,12 @@ void Context::addJumpTarget(String const& name, Context::JumpMode const mode) {
 	if (mode == JumpMode::AV2_JM_TABLE_INDEX) {
 		program.relocations.pushBack(program.code.size());
 		if (hasJumpTarget(name)) {
-			DEBUGLN("*********************** :::: Jump to: [ ", name, " -> ", jumps[name], " ]");
+			MAKAILIB_DEBUGLN_FULL("*********************** :::: Jump to: [ ", name, " -> ", jumps[name], " ]");
 			add(jumps[name]);
 			return;
 		}
 	}
-	DEBUGLN("*********************** ++++ New jump for: [ ", name, " @ ", program.code.size(), " ]");
+	MAKAILIB_DEBUGLN_FULL("*********************** ++++ New jump for: [ ", name, " @ ", program.code.size(), " ]");
 	jumpsToMap[name].pushBack({program.code.size(), mode});
 	add(0);
 }
@@ -164,15 +164,15 @@ bool Context::hasJumpTarget(String const& name) {
 
 void Context::finalize() {
 	auto unmapped = jumpsToMap.keys();
-	DEBUGLN("Unmapped jump count: ", jumpsToMap.size());
+	MAKAILIB_DEBUGLN_FULL("Unmapped jump count: ", jumpsToMap.size());
 	for (auto& label: unmapped) {
 		if (label.empty())
 			error("Somehow, jump target is empty!");
-		DEBUGLN("Mapping '", label, "'...");
+		MAKAILIB_DEBUGLN_FULL("Mapping '", label, "'...");
 		if (jumps.contains(label)) {
 			auto const toLocID = jumps[label];
 			auto const toLoc = bitcast<Instruction>(toLocID);
-			DEBUGLN("To table ID [", jumps[label], "]");
+			MAKAILIB_DEBUGLN_FULL("To table ID [", jumps[label], "]");
 			for (auto& location: jumpsToMap[label]) {
 				switch (location.mode) {
 					case (JumpMode::AV2_JM_TABLE_INDEX): program.code[location.at]	= toLoc; break;
@@ -180,7 +180,7 @@ void Context::finalize() {
 					case (JumpMode::AV2_JM_RELATIVE): {
 						auto const to = program.jumpTable[toLocID];
 						auto const target = Cast::as<int64>(to) - Cast::as<int64>(location.at);
-						DEBUGLN("Target offset: ", target);
+						MAKAILIB_DEBUGLN_FULL("Target offset: ", target);
 						program.code[location.at] = bitcast<Instruction>(target); break;
 					}
 				}
@@ -189,7 +189,7 @@ void Context::finalize() {
 		}
 	}
 	for (auto& [name, index]: jumps) {
-		DEBUGLN("Map : [ ", name, " -> ", index, " ]");
+		MAKAILIB_DEBUGLN_FULL("Map : [ ", name, " -> ", index, " ]");
 	}
 	unmapped.clear();
 	for (auto& [name, jumps]: jumpsToMap)
@@ -450,7 +450,7 @@ static Location getLabelLocation(Context& context) {
 static Location getDataLocation(Context& context) {
 	Location loc;
 	bool hasLoadType = false;
-	DEBUGLN("Getting move type...");
+	MAKAILIB_DEBUGLN_FULL("Getting move type...");
 	while (context.has(LTS_TT_IDENTIFIER)) {
 		auto const lt = context.value().getString();
 		if (
@@ -460,7 +460,7 @@ static Location getDataLocation(Context& context) {
 		||	lt == "reference"
 		||	lt == "value"
 		) {
-			DEBUGLN("Has move!");
+			MAKAILIB_DEBUGLN_FULL("Has move!");
 			if (!hasLoadType) {
 				hasLoadType = true;
 				loc.source = getLoadType(context, DataLocation{0});
@@ -469,8 +469,8 @@ static Location getDataLocation(Context& context) {
 			continue;
 		} else break;
 	}
-	DEBUGLN("Move type: ", Makai::Cast::as<uint64>(Makai::enumcast(loc.source)));
-	DEBUGLN("Getting location...");
+	MAKAILIB_DEBUGLN_FULL("Move type: ", Makai::Cast::as<uint64>(Makai::enumcast(loc.source)));
+	MAKAILIB_DEBUGLN_FULL("Getting location...");
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
@@ -515,7 +515,7 @@ static Location getDataLocation(Context& context) {
 		default: context.error("Invalid data source!");
 	}
 	auto const iloc = Makai::Cast::as<uint64>(Makai::enumcast(loc.source));
-	DEBUGLN("Data Location: ", iloc, " (", Makai::Format::pad(
+	MAKAILIB_DEBUGLN_FULL("Data Location: ", iloc, " (", Makai::Format::pad(
 		Makai::String::fromNumber<uint8>(iloc, 2, false),
 		'0',
 		8
@@ -582,7 +582,7 @@ static void doCall(Context& context, bool dynamic = false) {
 		invoke.external = m->flags.isExternal;
 		invoke.optional = m->flags.isOptional;
 		invoke.noResult = context.program.detail.types[m->retType].flags.hasNoResult;
-		DEBUGLN("_______________________ Call entry: ", m->jump);
+		MAKAILIB_DEBUGLN_FULL("_______________________ Call entry: ", m->jump);
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
@@ -1066,8 +1066,8 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 }
 
 static void validateType(Context& context, Context::Declaration& type) {
-		DEBUGLN("Name: ", type.name);
-		DEBUGLN("Flags: ", type.flags);
+		MAKAILIB_DEBUGLN_FULL("Name: ", type.name);
+		MAKAILIB_DEBUGLN_FULL("Flags: ", Makai::bitcast<uint64>(type.flags));
 	if (type.base && !(type.flags.isArray)) {
 		auto& base = *context.getTypeByID(type.base);
 		Makai::violate<uint64>(type.flags) |= Makai::bitcast<uint64>(base.flags);
@@ -1417,8 +1417,8 @@ static void declareSharedMethod(Context& context) {
 
 static void declareMethodBody(Context& context) {
 	context.next();
-	DEBUGLN("Body type: ", Context::Tokenizer::Token::asName(context.token().type));
-	DEBUGLN("Body text: ", context.token().text);
+	MAKAILIB_DEBUGLN_FULL("Body type: ", Context::Tokenizer::Token::asName(context.token().type));
+	MAKAILIB_DEBUGLN_FULL("Body text: ", context.token().text);
 	if (context.has(Type{'.'})) {
 		if (context.methodStack.empty())
 			context.error("Missing method body!");
@@ -1487,13 +1487,13 @@ static void resolveImport(Context& context, Makai::String const& name) {
 	for (auto& type: mod->sym.types)
 		if (!type.source) context.addExternalType(
 			mod->name,
-			type.name,
+			mod->name,
 			new Context::Declaration(mod->detail.types[type.id])
 		);
 	for (auto& method: mod->sym.methods)
 		if (!method.source) context.addExternalMethod(
 			mod->name,
-			method.name,
+			mod->name,
 			new Context::Method(mod->detail.methods[method.id])
 		);
 }
@@ -1638,7 +1638,7 @@ void Minima::invoke() {
 		}
 	).filter(
 		[this] (auto const& e) -> bool {
-			DEBUGLN("Method: ", e.value->name);
+			MAKAILIB_DEBUGLN_FULL("Method: ", e.value->name);
 			return e.value->module.empty() && !context.getMethod(e.key)->local;
 		}
 	);
@@ -1673,7 +1673,7 @@ Makai::Anima::V2::Core::Module Minima::assemble(
 	ctx.put(ax);
 	Assembler::Minima minAsm(ctx);
 	minAsm.invoke();
-	DEBUGLN("Total types: ", ctx.program.sym.types.size());
-	DEBUGLN("Total methods: ", ctx.program.sym.methods.size());
+	MAKAILIB_DEBUGLN_FULL("Total types: ", ctx.program.sym.types.size());
+	MAKAILIB_DEBUGLN_FULL("Total methods: ", ctx.program.sym.methods.size());
 	return ctx.program;
 }

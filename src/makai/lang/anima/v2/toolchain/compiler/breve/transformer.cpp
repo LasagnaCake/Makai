@@ -1693,7 +1693,7 @@ ATransformer::Context::Context(): Intermediate() {
 	root->subspaces["##T3_TRAITS"]		= Namespace::Instance::create("##T3_TRAITS");
 }
 
-void ATransformer::Context::addBasicType(Core::BasicType const type, uint64 const flags) {
+void ATransformer::Context::addBasicType(Core::BasicType const type, Core::TypeFlags const flags) {
 	static usize id = 0;
 	using enum Core::BasicType;
 	UTF8String name;
