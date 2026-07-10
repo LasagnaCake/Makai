@@ -55,13 +55,10 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 				for (auto& type: types) {
 					auto& sym = out.sym.types[type.id];
 					sym.id = out.detail.types.size();
-					if (auto const v = type.name.fromBytes<UTF8String>(reader))
-						sym.name = v.value();
-					else return Error{"Failed to get type name!"};
 					sym.source = null;
 					auto& target = out.detail.types.pushBack({}).back();
 					target.id = sym.id;
-					target.name = sym.name;
+					target.name = type.name.fromBytes<String>(reader);
 					target.flags = type.flags;
 					target.hash = type.hash;
 					if (type.base < Limit::MAX<uint64>)
@@ -82,13 +79,10 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 				for (auto& method: methods) {
 					auto& sym = out.sym.methods[method.id];
 					sym.id = out.detail.methods.size();
-					if (auto const v = method.name.fromBytes<UTF8String>(reader))
-						sym.name = v.value();
-					else return Error{"Failed to get method name!"};
 					sym.source = null;
 					auto& target = out.detail.methods.pushBack({}).back();
 					target.id = sym.id;
-					target.name = sym.name;
+					target.name = method.name.fromBytes<String>(reader);
 					target.flags = method.flags;
 					target.retType = method.returnType;
 					if (auto const args = unpack(method.argTypes, reader))
@@ -111,9 +105,6 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 						for (auto& type: types) {
 							auto& sym = out.sym.types[type.id];
 							sym.id = out.detail.types.size();
-							if (auto const v = type.name.fromBytes<UTF8String>(reader))
-								sym.name = v.value();
-							else return Error{"Failed to get type name!"};
 							sym.source = include.module;
 						}
 					} else return Error{"Failed to get external type data!"};
@@ -123,9 +114,6 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 						for (auto& method: methods) {
 							auto& sym = out.sym.types[method.id];
 							sym.id = out.detail.types.size();
-							if (auto const v = method.name.fromBytes<UTF8String>(reader))
-								sym.name = v.value();
-							else return Error{"Failed to get type name!"};
 							sym.source = include.module;
 						}
 					} else return Error{"Failed to get external method data!"};
@@ -231,8 +219,7 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 						if (symbol.source) {
 							external[symbol.source.value()].types.pushBack(
 								Record {
-									.id		= symbol.id,
-									.name	= {!strip ? builder.append(symbol.name) : Entry()},
+									.id		= symbol.id
 								}
 							);
 						} else {
@@ -262,8 +249,7 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 							if (symbol.source) {
 								external[symbol.source.value()].methods.pushBack(
 									Record {
-										.id		= symbol.id,
-										.name	= {!strip ? builder.append(symbol.name) : Entry()},
+										.id		= symbol.id
 									}
 								);
 							} else {
