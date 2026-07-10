@@ -1,4 +1,3 @@
-#define CTL_DEVMODE_DEBUG
 #include "binary.hpp"
 #include "../../../../file/flow.hpp"
 
@@ -124,8 +123,10 @@ Result<Core::Module, BF::Error> BF::fromBytes(Bytes<> const& source) {
 				}
 			} else return Error{"Failed to get module include data!"};
 		} else return Error{"Failed to get external symbol data!"};
+		MAKAILIB_DEBUGLN_FULL("Types: [", actualTotalTypes, " = ", out.sym.types.size(), "]");
 		if (actualTotalTypes != out.sym.types.size())
 			return Error{"Invalid/Missing type data!"};
+		MAKAILIB_DEBUGLN_FULL("Types: [", actualTotalMethods, " = ", out.sym.methods.size(), "]");
 		if (actualTotalMethods != out.sym.methods.size())
 			return Error{"Invalid/Missing method data!"};
 		if (auto const header = file.ani.fromBytes(reader)) {
@@ -173,7 +174,7 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 		builder
 			.begin()
 			.run(
-				[&module] (Builder& builder) {
+				[&module, strip] (Builder& builder) {
 					MAKAILIB_DEBUGLN_FULL("Adding basic information...");
 					builder.file.type			= module.type;
 					builder.file.artVersion		= {module.art.major,		module.art.minor,		module.art.patch,		module.art.hotfix		};
@@ -181,7 +182,7 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 					builder.file.moduleFlags	= module.flags;
 					builder.file.entry			= module.entry;
 					builder.file.totalTypes		= module.sym.types.size();
-					builder.file.totalMethods	= module.sym.methods.size();
+					builder.file.totalMethods	= strip ? 0 : module.sym.methods.size();
 					builder.file.strings		= {builder.embed(module.strings.toList<String>())};
 					builder.file.jumps			= {builder.append(module.jumpTable)};
 					builder.file.code			= {builder.append(module.code)};
