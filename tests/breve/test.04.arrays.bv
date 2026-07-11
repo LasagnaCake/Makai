@@ -1,7 +1,7 @@
 using import core
 
-printArray(arr: [int64]) =>
-	repeat @ByRef i : uint64 -> countof array
+printArray :: (@ByRef arr: [int64]) =>
+	repeat @ByRef i : uint64 -> countof arr
 		IO.writeLine(arr[32 - i])
 
 @Main
@@ -10,7 +10,7 @@ main :: () {
 	repeat @ByRef i : uint64 -> 32
 		val[i] = 32 - i
 	printArray(val)
-	@ByCopy sz := countof array
+	@ByCopy sz := countof val
 	repeat @ByRef i : uint64 -> sz
 		val[i] = val[sz - i]
 	printArray(val)
