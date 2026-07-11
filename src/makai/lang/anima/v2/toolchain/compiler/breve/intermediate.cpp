@@ -351,7 +351,9 @@ static Namespace::AttributeRef createPassByAttribute(Makai::UTF8String const mod
 	attrib->name = "By" + mode;
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->variable->passBy = (mode == "Copy") ? "val" : mode.toLower();
+		if (mode == "Copy")			ns->variable->passBy = "val";
+		else if (mode == "Ref")		ns->variable->passBy = "ref";
+		else if (mode == "Move")	ns->variable->passBy = "move";
 	};
 	return attrib;
 }
