@@ -694,7 +694,7 @@ static Namespace::AttributeRef createEventAttribute() {
 	attrib->fields["name"] = {.type = DVK_STRING, .defaultValue = ""};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		static usize id = 0;
-		auto const name = (v["name"] ? v["name"].getString() : ns->function->pureName);
+		auto const name = (v["name"] ? v["name"].getString() : ns->function->pureName.toString());
 		if (ns->function->sigCall) return;
 		for (auto& ov: ns->function->overloads)
 			if (ov->sigEntry.empty()) {
