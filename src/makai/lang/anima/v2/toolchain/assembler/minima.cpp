@@ -1512,14 +1512,16 @@ static void declareEntry(Context& context) {
 }
 
 static void declareHook(Context& context) {
-	context.next();
+	context.expectNext(LTS_TT_OPEN_BRACKET);
+	auto const signame = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING);
+	context.expectNext(LTS_TT_CLOSE_BRACKET);
 	auto const hook = resolvePath(context);
-	if (context.program.ani->in.contains(hook))
+	if (context.program.ani->in.contains(signame))
 		context.error("Redeclaration of previously-declared hook!");
 	if (!context.methods.contains(hook))
 		context.error("Hook target has not been declared yet!");
 
-	context.program.ani->in[hook] = getMethod(context.methods[hook]->name)->id;
+	context.program.ani->in[signame] = getMethod(context.methods[hook]->name)->id;
 }
 
 static void declareBinaryType(Context& context) {

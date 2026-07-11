@@ -216,6 +216,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			List<Namespace::VariableRef>	arguments;
 			UTF8String						entry;
 			UTF8String						outEntry;
+			UTF8String						sigEntry;
 			UTF8String						dynlib;
 			Handle<TypeDecl>				methodOf;
 			Variant							variant = Variant::AV2_TCB_FOV_NONE;
@@ -235,6 +236,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		using OverloadRef = Instance<Overload>;
 
 		List<OverloadRef> overloads;
+
+		OverloadRef sigCall;
 
 		using ArgTypes = List<Namespace::TypeRef>;
 

@@ -685,6 +685,27 @@ static Namespace::AttributeRef createARTCallAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createEventAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Event";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->fields["name"] = {DVK_STRING};
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		static usize id = 0;
+		auto const name = (v["name"].getString());
+		if (ns->function->sigCall) return;
+		for (auto& ov: ns->function->overloads)
+			if (ov->sigEntry.empty()) {
+				ov->sigEntry = name;
+				ns->function->sigCall = ov;
+				break;
+			}
+	};
+	return attrib;
+}
+
 bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 	using enum Lexer::CStyle::TokenStream::Token::Type;
 	if (target == Target::AV2_TAAT_EMPTY)
@@ -741,6 +762,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createPassByAttribute("Move"));
 	addGlobalAttribute(createPassByAttribute("Ref"));
 	addGlobalAttribute(createPassByAttribute("Copy"));
+	addGlobalAttribute(createEventAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {
