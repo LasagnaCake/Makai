@@ -36,6 +36,8 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		if (ov->scope)
 			composer.funcDefs.pushBack(ov->scope->impl);
 	}
+	if (fn->sigEntry.size())
+		composer.functions.pushBack("@hook[\"" + sigCall->sigEntry + "\"] " + sigCall->name);
 }
 
 static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
