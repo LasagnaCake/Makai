@@ -597,9 +597,12 @@ bool Engine::hasSignal(String const& signal) {
 	return program.ani && program.ani->in.contains(signal);
 }
 
-void Engine::fire(String const& signal) {
-	if (hasSignal(signal))
+void Engine::fire(String const& signal, Context::Arguments const& args) {
+	if (hasSignal(signal)) {
+		if (args.size())
+			context.globalValueStack.append(args.reversed());
 		jumpTo(program.jumpTable[program.ani->in[signal]], true);
+	}
 }
 
 void Engine::returnBack() {

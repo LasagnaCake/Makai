@@ -44,7 +44,25 @@ namespace Makai::Anima::V2::Runtime {
 		bool process();
 
 		bool hasSignal(String const& name);
-		void fire(String const& signal);
+
+		template <class... TArgs>
+		void fire(String const& signal, TArgs... args) {
+			return fire(
+				signal,
+				Context::Arguments::from(
+					context.newValue(args)...
+				)
+			);
+		}
+
+		template <class TReturn, class... Args>
+		Meta::If<Type::Void<TReturn>, void, Nullable<TReturn>>
+		invoke(String const& signal, TArgs... args) {
+			fire(signal, args...);
+			if constexpr (Type::NonVoid<TReturn>)
+				return context.top() ? context.pop()->toValue<TReturn>() : null;
+			else return;
+		}
 
 		void terminate();
 		void reset();
@@ -57,6 +75,8 @@ namespace Makai::Anima::V2::Runtime {
 		bool finished() const;
 
 	protected:
+		void fire(String const& signal, Context::Arguments const& args);
+
 		virtual Context::Storage	external	(String const& name, bool const doNotCopy	);
 		Context::Storage&			global		(uint64 const globalID						);
 

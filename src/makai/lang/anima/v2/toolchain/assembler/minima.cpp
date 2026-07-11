@@ -1516,9 +1516,10 @@ static void declareHook(Context& context) {
 	auto const hook = resolvePath(context);
 	if (context.program.ani->in.contains(hook))
 		context.error("Redeclaration of previously-declared hook!");
-	if (!context.jumps.contains(hook))
+	if (!context.methods.contains(hook))
 		context.error("Hook target has not been declared yet!");
-	context.program.ani->in[hook] = context.jumps[hook];
+
+	context.program.ani->in[hook] = getMethod(context.methods[hook]->name)->id;
 }
 
 static void declareBinaryType(Context& context) {
