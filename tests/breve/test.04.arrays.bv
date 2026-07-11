@@ -1,8 +1,8 @@
 using import core
 
-printArray :: (@ByRef arr: [int64]) =>
+printArray :: (@ByRef arr: [uint64]) =>
 	repeat @ByRef i : uint64 -> countof arr
-		IO.writeLine(arr[32 - i])
+		IO.writeLine(arr[32 - i] as any)
 
 @Main
 main :: () {
