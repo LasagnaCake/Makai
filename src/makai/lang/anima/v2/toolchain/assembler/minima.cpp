@@ -1521,7 +1521,7 @@ static void declareHook(Context& context) {
 	if (!context.methods.contains(hook))
 		context.error("Hook target has not been declared yet!");
 
-	context.program.ani->in[signame] = getMethod(context.methods[hook]->name)->id;
+	context.program.ani->in[signame] = context.getMethod(context.methods[hook]->name)->id;
 }
 
 static void declareBinaryType(Context& context) {
