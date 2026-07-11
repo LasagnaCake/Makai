@@ -8,7 +8,7 @@ using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 
 IWritable::~IWritable() {}
 
-#define ATTRIBUTE_TRANSFORMER()  [] (Intermediate& inter, Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base)
+#define ATTRIBUTE_TRANSFORMER()  [=] (Intermediate& inter, Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base)
 
 Namespace::Namespace(UTF8String const& name): Labeled(name) {}
 Function::Function(UTF8String const& name): Labeled(name) {}
