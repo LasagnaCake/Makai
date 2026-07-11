@@ -1075,7 +1075,7 @@ static void validateType(Context& context, Context::Declaration& type) {
 			type.fields.insert(base.fields, 0);
 		else type.fields.appendBack(base.fields);
 	}
-	if (type.base && context.getTypeByID(*type.base)->flags.isFinal)
+	if (!type.flags.isArray && type.base && context.getTypeByID(*type.base)->flags.isFinal)
 		context.error("Final types cannot be inherited from!");
 	if (!type.basic) {
 		if (type.alignment && !(type.flags.isValueType))
