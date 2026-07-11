@@ -50,7 +50,7 @@ namespace Makai::Anima::V2::Runtime {
 			return runEvent(
 				signal,
 				Core::Context::Arguments::from(
-					context.newValue(args)...
+					context.newValue<TArgs>(args)...
 				)
 			);
 		}
