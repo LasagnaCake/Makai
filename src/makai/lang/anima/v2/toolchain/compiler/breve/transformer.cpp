@@ -1067,12 +1067,14 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		if (!scope->function) {
 			scope->function = scope->function.create();
 			scope->function->name = path.join("_");
+			scope->function->pureName = path.back();
 		}
 		context.scopeStack.pushBack(scope);
 	} else {
 		scope = context.declare(path);
 		scope->function = scope->function.create();
 		scope->function->name = path.join("_");
+		scope->function->pureName = path.back();
 		isCompletelyNewFunction = true;
 	}
 	DEBUG("Stack = ");

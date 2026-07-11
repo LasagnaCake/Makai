@@ -593,11 +593,11 @@ void Engine::jumpByMode(Instruction::Leap::Mode const mode, usize const location
 	}
 }
 
-bool Engine::hasSignal(String const& signal) {
+bool Engine::hasEvent(String const& signal) {
 	return program.ani && program.ani->in.contains(signal);
 }
 
-void Engine::fire(String const& signal, Context::Arguments const& args) {
+void Engine::runEvent(String const& signal, Context::Arguments const& args) {
 	if (hasSignal(signal)) {
 		if (args.size())
 			context.globalValueStack.append(args.reversed());

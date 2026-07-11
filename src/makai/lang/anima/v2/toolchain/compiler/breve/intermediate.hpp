@@ -10,6 +10,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct Labeled {
 		UTF8String name;
+		UTF8String pureName;
 	};
 
 	struct Positioned {
