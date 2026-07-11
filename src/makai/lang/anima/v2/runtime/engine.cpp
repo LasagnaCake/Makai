@@ -598,7 +598,7 @@ bool Engine::hasEvent(String const& signal) {
 }
 
 void Engine::runEvent(String const& signal, Core::Context::Arguments const& args) {
-	if (hasSignal(signal)) {
+	if (hasEvent(signal)) {
 		if (args.size())
 			context.globalValueStack.append(args.reversed());
 		jumpTo(program.jumpTable[program.ani->in[signal]], true);
