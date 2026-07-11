@@ -6,7 +6,7 @@ printArray(arr: [int64]) =>
 
 @Main
 main :: () {
-	@ByRef val: [uint64]
+	@ByRef val : [uint64]
 	repeat @ByRef i : uint64 -> 32
 		val[i] = 32 - i
 	printArray(val)
