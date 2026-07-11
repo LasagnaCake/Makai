@@ -1180,7 +1180,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Assignment::transform(Context& context, Node::Instance const& node) {
-	auto const lhs = Expression().transform(context, node->leftSide);
+	auto lhs = Expression().transform(context, node->leftSide);
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.isCompilable() && !lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
 	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
