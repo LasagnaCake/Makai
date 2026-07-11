@@ -1184,7 +1184,10 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.isCompilable() && !lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
 	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
-		context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
+		if (lhs.isStackTop() && rhs.isStackTop())
+			lhs.source = UTF8String("move stack[-1]");
+		if (*lhs.source != *rhs.source)
+			context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
 		return {lhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
 	} else context.error("Type mismatch!", node);
 }
@@ -1505,6 +1508,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	auto const loopScope = context.top();
 	auto const vsn = UTF8StringList::from("##ITERATE::" + node->name());
 	auto const varScope = context.declare(vsn);
+	varScope->varc += loopScope->varc;
 	auto& var = *(varScope->variable = varScope->variable.create());
 	var.id = loopScope->varc++;
 	var.type = context.basicType("uint64").raw();
