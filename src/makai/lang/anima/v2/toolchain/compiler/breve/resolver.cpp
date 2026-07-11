@@ -226,6 +226,8 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& left
 		if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
 			parser.context.error("Expected expression after the comma!");
 	}
+	if (result->children.size())
+		result->rightSide = result->children.front();
 	parser.context.expect(LTS_TT_CLOSE_BRACKET);
 	result->content = leftSide ? Node::Content::AV2_TANC_SUBSCRIPT : Node::Content::AV2_TANC_ARRAY;
 	DEBUGLN("Array:DONE!");
