@@ -597,7 +597,7 @@ bool Engine::hasEvent(String const& signal) {
 	return program.ani && program.ani->in.contains(signal);
 }
 
-void Engine::runEvent(String const& signal, Context::Arguments const& args) {
+void Engine::runEvent(String const& signal, Core::Context::Arguments const& args) {
 	if (hasSignal(signal)) {
 		if (args.size())
 			context.globalValueStack.append(args.reversed());
