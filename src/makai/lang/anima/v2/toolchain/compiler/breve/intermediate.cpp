@@ -339,7 +339,19 @@ static Namespace::AttributeRef createGlobalAttribute() {
 		auto const srcName = v["source"].getString().replace('\\', '/').replace('/', '.');
 		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type.raw())
 			Transformer::ATransformer::Context::error("Global variable type mismatch!", ns->node);
-		ns->variable->source = "move $" + srcName;
+		ns->variable->source = "$" + srcName;
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createPassByAttribute(Makai::UTF8String const mode) {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "By" + mode;
+	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		ns->variable->passBy = (mode == "Copy") ? "val" : mode.lower();
 	};
 	return attrib;
 }
@@ -724,6 +736,9 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createPathAttribute());
 	addGlobalAttribute(createRemangleAttribute());
 	addGlobalAttribute(createDoNotMangleAttribute());
+	addGlobalAttribute(createPassByAttribute("Move"));
+	addGlobalAttribute(createPassByAttribute("Ref"));
+	addGlobalAttribute(createPassByAttribute("Copy"));
 }
 
 Makai::Data::Value Implementation::serialize() const {

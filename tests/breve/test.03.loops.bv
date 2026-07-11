@@ -1,20 +1,20 @@
 using import core
 
-isEven :: (val: uint64) {
-	IO.write((copy val) as any)
+isEven :: (@ByCopy val: uint64) {
+	IO.write(val as any)
 	if val % 2 IO.writeLine(" Is odd!") else IO.writeLine(" Is even!")
 }
 
-isEven2 :: (val: uint64) {
-	IO.write((copy val) as any);
+isEven2 :: (@ByCopy val: uint64) {
+	IO.write(val as any);
 	IO.writeLine(" Is odd!" when val % 2 else " Is even!")
 }
 
 @Main
 main :: () {
-	val: uint64 = 0
+	@ByCopy val: uint64 = 0
 	IO.writeLine("Testing loop construct 1...")
-	while (copy val) < 10
+	while val < 10
 		isEven(val++)
 	IO.writeLine("Testing loop construct 2...")
 	repeat 10
@@ -22,10 +22,10 @@ main :: () {
 	IO.writeLine("Testing loop construct 3...")
 	do
 		isEven(val++)
-	while (copy val) < 30
+	while val < 30
 	val = 0
 	IO.writeLine("Testing loop construct 1...")
-	while (copy val) < 10
+	while val < 10
 		isEven2(val++)
 	IO.writeLine("Testing loop construct 2...")
 	repeat 10
@@ -33,5 +33,5 @@ main :: () {
 	IO.writeLine("Testing loop construct 3...")
 	do
 		isEven2(val++)
-	while (copy val) < 30
+	while val < 30
 }

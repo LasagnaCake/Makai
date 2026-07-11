@@ -125,14 +125,14 @@ static ATransformer::Result resolveSubfield(
 	if (ns->variable) {
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->type->fields[sub];
-			context.top()->impl->writeMainLine("at", f->id);
+			context.top()->impl->writeMainLine("at by"+ns->variable->passBy, f->id);
 			return {{"move top"}, f->scope.raw(), f->type.raw()};
 		}
 	}
 	if (ns->property) {
 		if (ns->property->type->fields.contains(sub)) {
 			auto const f = ns->type->fields[sub];
-			auto const ov = ns->property->getter->overloadFromTypes({});
+			auto const ov = ns->property->getter->overloadFromTypes({ns->type.raw()});
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, f->scope.raw(), f->type.raw()};
 		}
@@ -1611,7 +1611,11 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 			or	ov->variant == Function::Overload::Variant::AV2_TCB_FOV_CLASS
 			) {
 				if (ov->arguments.empty() or ov->arguments.front()->type != type.scope->type.asWeak())
-					context.error("Missing [this] argument for member function!", extension);
+					context.error(
+						"Missing valid [this] argument for member function!\n"
+						"Did you make sure the type is correct, or to set function as [@Static]?"
+						, extension
+					);
 				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
 			}
 		} else if (ns->property) {

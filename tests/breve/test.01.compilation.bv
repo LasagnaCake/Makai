@@ -3,16 +3,16 @@ using import core
 module Test.Namespace {
 	@Nullable
 	struct MySpecialStruct {
-		example : int64 = 0
+		@ByCopy example : int64 = 0
 	}
 
-	foo :: (var: int64) -> int64 {
-		return (copy var) + (ref var)
+	foo :: (@ByCopy var: int64) -> int64 {
+		return var + var
 	}
 
-	bar :: (var: int64) -> int64 => (foo(copy var) * ref var)
+	bar :: (@ByCopy var: int64) -> int64 => (foo(var) * var)
 
-	baz :: (var: int64) => (bar(copy var) - ref var)
+	baz :: (@ByCopy var: int64) => (bar(var) - var)
 
 	biff :: () -> void
 	

@@ -258,10 +258,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Handle<TypeDecl>	fieldOf;
 		uint64				id = 0;
 		Handle<Namespace>	parentScope;
+		UTF8String			passBy = "move";
 
 		UTF8String getSource() {
-			if (global) return source;
-			else return "move local[" + Makai::toString(id) + "]";
+			if (global) return passBy + " " + source;
+			else return passBy + " local[" + Makai::toString(id) + "]";
 		}
 
 		Makai::Data::Value serialize() const override;
