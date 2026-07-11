@@ -600,7 +600,7 @@ bool Engine::hasEvent(String const& signal) {
 void Engine::runEvent(String const& signal, Core::Context::Arguments const& args) {
 	if (hasEvent(signal)) {
 		if (args.size())
-			context.globalValueStack.append(args.reversed());
+			context.globalValueStack.appendBack(args.reversed());
 		jumpTo(program.jumpTable[program.ani->in[signal]], true);
 	}
 }
