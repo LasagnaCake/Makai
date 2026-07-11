@@ -693,7 +693,6 @@ static Namespace::AttributeRef createEventAttribute() {
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"] = {.type = DVK_STRING, .defaultValue = ""};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		static usize id = 0;
 		auto const name = (v["name"] ? v["name"].getString() : ns->function->pureName.toString());
 		if (ns->function->sigCall) return;
 		for (auto& ov: ns->function->overloads)
