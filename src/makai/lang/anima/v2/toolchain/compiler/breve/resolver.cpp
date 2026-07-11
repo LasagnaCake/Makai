@@ -385,8 +385,6 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 		if (v->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 			result->middle = v->leftSide;
 			result->rightSide = v->rightSide;
-		} else if (v->isPathOrName()) {
-			result->middle = v;
 		} else if (
 			v->content == Node::Content::AV2_TANC_RANGE
 		or	v->content == Node::Content::AV2_TANC_EXPANSION
@@ -394,7 +392,9 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 			result->content = Node::Content::AV2_TANC_ITERATION;
 			result->middle = v->leftSide;
 			result->rightSide = v->rightSide;
-		} else parser.context.error("Expected type or assignment here!");
+		} else {
+			result->middle = v;
+		}
 	}
 	DEBUGLN("VariableDecl:DONE!");
 	return result;
