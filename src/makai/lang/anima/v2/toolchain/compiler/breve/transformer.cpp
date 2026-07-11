@@ -915,6 +915,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_IMPORT:			return Import().transform(context, node);
 		case Node::Content::AV2_TANC_ALIAS:				return Aliasing().transform(context, node);
 		case Node::Content::AV2_TANC_UNSCOPING:			return Using().transform(context, node);
+		case Node::Content::AV2_TANC_SUBSCRIPT:			return Subscript().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
 		default: context.error("Unsupported expression!", node);
@@ -1028,9 +1029,11 @@ static Makai::UTF8StringList resolveAttribute(
 }
 
 ATransformer::Result AttributeExpression::transform(Context& context, Node::Instance const& node) {
+	MAKAILIB_DEBUGLN_FULL("<attrib-expr>");
 	auto const expr = Expression().transform(context, node->rightSide);
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
 	Makai::Dictionary<Metadata::Instance> attributes;
+	MAKAILIB_DEBUGLN_FULL("Resolving attributes for expression '", expr.scope->name, "'...");
 	resolveAttribute(context, node->leftSide, expr.scope, attributes);
 	Makai::StringList repeat;
 	if (!expr.scope->function) {
@@ -1043,6 +1046,7 @@ ATransformer::Result AttributeExpression::transform(Context& context, Node::Inst
 	if (attributes.contains("Attribute"))
 		if (!expr.scope->type) context.error("Expected structure here!", node->rightSide);
 	expr.scope->meta.append(attributes);
+	MAKAILIB_DEBUGLN_FULL("</attrib-expr>");
 	return expr;
 }
 
@@ -1081,14 +1085,14 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	if (proto->rightSide && !(ov->result = TypeRequest().transform(context, node->rightSide).type))
 		context.error("Type does not exist!");
 	auto const newScope = context.declare(Makai::UTF8StringList::from("<fn>" + node->name()));
-	VariableDecl vd;
+	Expression vd;
 	List<Namespace::VariableRef> optionals;
 	for (auto const& arg: proto->children) {
 		auto const decl = vd.transform(context, arg);
-		if (!decl.scope->variable->type)
-			context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
 		if (!(decl.scope && decl.scope->variable))
 			context.error("Expected variable declaration here!", arg);
+		if (!decl.scope->variable->type)
+			context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
 		if (decl.scope->variable->defaulted && decl.scope->variable->initializer)
 			optionals.pushBack(decl.scope->variable);
 		else if (optionals.empty())
@@ -1519,7 +1523,9 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	} else context.error("Expression must be an integer!", node->leftSide);
 	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSource());
 	if (node->middle) {
-		auto const refVar = VariableDecl().transform(context, node->middle);
+		auto const refVar = Expression().transform(context, node->middle);
+		if (!(refVar.scope and refVar.scope->variable))
+			context.error("Expected variable declaration here!", node->middle);
 		loopScope->impl->writePreLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSource());
 		var.type = refVar.scope->variable->type;
 	}
