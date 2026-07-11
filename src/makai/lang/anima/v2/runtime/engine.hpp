@@ -55,7 +55,7 @@ namespace Makai::Anima::V2::Runtime {
 			);
 		}
 
-		template <class TReturn, class... Args>
+		template <class TReturn, class... TArgs>
 		Meta::If<Type::Void<TReturn>, void, Nullable<TReturn>>
 		invoke(String const& event, TArgs... args) {
 			fire(event, args...);
