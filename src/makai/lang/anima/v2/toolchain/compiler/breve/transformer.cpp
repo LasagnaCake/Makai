@@ -132,7 +132,9 @@ static ATransformer::Result resolveSubfield(
 	if (ns->property) {
 		if (ns->property->type->fields.contains(sub)) {
 			auto const f = ns->type->fields[sub];
-			auto const ov = ns->property->getter->overloadFromTypes({ns->type.raw()});
+			auto const ov = ns->property->getter->overloadFromTypes(
+				List<Namespace::TypeRef>::from(ns->type.raw())
+			);
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, f->scope.raw(), f->type.raw()};
 		}
