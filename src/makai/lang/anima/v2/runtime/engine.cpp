@@ -316,6 +316,10 @@ Engine::Error Engine::invalidFieldError(String const& description) {
 	return makeErrorHere("INVALID FIELD: " + description);
 }
 
+Engine::Error Engine::invalidTypeError(String const& description) {
+	return makeErrorHere("INVALID TYPE: " + description);
+}
+
 Engine::Error Engine::missingArgumentsError() {
 	return makeErrorHere("Missing arguments for built-in function!");
 }
@@ -1450,7 +1454,53 @@ void Engine::v2StackBlit() {
 }
 
 void Engine::v2Create() {
-	// TODO: This
+	Instruction::Create create = Makai::bitcast<Instruction::Create>(current.type);
+	uint64 typeID;
+	if (create.dyn) {
+		if (context.globalValueStack.empty())
+			return crash(invalidSourceError("Missing jump target for dynamic jump!"));
+		typeID = context.pop()->toValue<TypeID>().id;
+	} else {
+		advance(true);
+		typeID = Makai::Cast::bit<uint64>(current);
+	}
+	auto const type = context.art.types.byID(typeID);
+	if (!type)
+		return crash(invalidTypeError("Type does not exist!"));
+	auto obj = Object::create(type);
+	if (create.initWithScope) {
+		if (type->flags.isStructure) {
+			if (context.locals().size() != type->fields.size())
+				return crash(invalidFieldError("Local variable count does not match type's field size!"));
+			if (type->flags.isValueType)
+				obj = Object::create(
+					new Object::Memory(type->byteSize),
+					type,
+					type
+				);
+			else obj->reserveFields(type->fields.size());
+			for (auto const& [field, i]: Makai::Range::expand(context.locals())) {
+				if (!field->getOriginalType()->canBecome(type->fields[i]))
+					return crash(invalidSourceError("Value for field [" + toString(i) + "] does not match required field value!"));
+				obj->setAtIndex(i, field);
+			}
+		} else if (type->flags.isArray) {
+			auto const elemType = type->base;
+			if (type->flags.isValueType)
+				obj = Object::create(
+					new Object::Memory(elemType->byteSize * context.locals().size()),
+					type,
+					type
+				);
+			else obj->reserveFields(context.locals().size());
+			for (auto const& [elem, i]: Makai::Range::expand(context.locals())) {
+				if (!elem->getOriginalType()->canBecome(elemType))
+					return crash(invalidSourceError("Value for element [" + toString(i) + "] does not match array element value!"));
+				obj->setAtIndex(i, elem);
+			}
+		}
+	}
+	context.push(obj);
 }
 
 void Engine::v2Clear() {

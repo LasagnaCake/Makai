@@ -1030,12 +1030,14 @@ static void doSelect(Context& context) {
 	context.update(inst, Makai::Cast::bit<uint32>(select));
 }
 
-static void doUnbind(Context& context) {
-	// TODO: this
+static void doUnbind(Context& context, bool const dynamic = false) {
+	Instruction::Clear clear{.dyn = dynamic};
+	auto const loc = getDataLocation(context);
 }
 
 static void doCreate(Context& context, bool const dynamic = false) {
-	// TODO: this
+	Instruction::Create create{.dyn = dynamic, .initWithScope = context.token().text == "create"};
+	context.add(Instruction::Name::AV2_IN_CREATE, create);
 }
 
 static void doInitialize(Context& context) {

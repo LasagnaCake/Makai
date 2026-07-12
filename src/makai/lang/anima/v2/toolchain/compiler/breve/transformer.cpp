@@ -133,7 +133,7 @@ static ATransformer::Result resolveSubfield(
 		if (ns->property->type->fields.contains(sub)) {
 			auto const f = ns->type->fields[sub];
 			auto const ov = ns->property->getter->overloadFromTypes(
-				List<Namespace::TypeRef>::from(ns->type.raw())
+				Makai::List<Namespace::TypeRef>::from(ns->type.raw())
 			);
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, f->scope.raw(), f->type.raw()};
@@ -1367,15 +1367,36 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 			context.error("Type mismatch here!", arg);
 	}
 	auto const arr = context.arrayFor(prev);
-	context.top()->impl->writeMainLine("new", arr->name);
-	for (auto const i: range(count))
-		context.top()->impl->writeMainLine("set", count - (i+1));
+	if (count) {
+		context.top()->impl->writeMainLine("enter 0");
+		context.top()->impl->writeMainLine("bind ref", count, "[0 -> 0]");
+		context.top()->impl->writeMainLine("create", arr->name);
+		context.top()->impl->writeMainLine("exit");
+	} else {
+		context.top()->impl->writeMainLine("new", arr->name);
+	}
 	return {{"move top"}, arr->scope.raw(), arr};
 }
 
 ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {
 	auto const t = TypeRequest().transform(context, node->leftSide).type;
-	context.top()->impl->writeMainLine("new", t->name);
+	auto const count = node->children.size();
+	if (count) {
+		Namespace::TypeRef prev;
+		for (auto const& [arg, i]: Range::expand(node->children)) {
+			auto const expr = Expression().transform(context, arg);
+			if (!expr.source)
+				context.error("Expected value here!", arg);
+			if (expr.shouldBePushed())
+				context.top()->impl->writeMainLine("push", *expr.source);
+			if (!prev) prev = expr.type;
+			if (t->flags.isStructure) {
+
+			} else if (t->flags.isArray) {
+
+			}
+		}
+	} else context.top()->impl->writeMainLine("new", t->name);
 	return {{"move top"}, t->scope.raw(), t};
 }
 

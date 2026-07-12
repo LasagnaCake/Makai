@@ -624,6 +624,27 @@ Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_NEW;
 	result->leftSide = parser.nextExpression();
+	auto const next = parser.context.peek().type;
+	if (
+		next == LTS_TT_OPEN_BRACKET
+//	or	next == LTS_TT_OPEN_PAREN
+	) {
+		while (true) {
+			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+				parser.context.next();
+				break;
+			}
+			result->children.pushBack(parser.nextExpression());
+			auto const next = parser.context.peek();
+			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+				parser.context.next();
+				break;
+			}
+			parser.context.expectNext(LTS_TT_COMMA);
+			if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
+				parser.context.error("Expected expression after the comma!");
+		}
+	}
 	return result;
 }
 

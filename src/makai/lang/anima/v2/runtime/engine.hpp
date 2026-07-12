@@ -111,6 +111,7 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error invalidSourceError(String const& description);
 		Engine::Error invalidDestinationError(String const& description);
 		Engine::Error invalidFunctionError(String const& description);
+		Engine::Error invalidTypeError(String const& description);
 		Engine::Error invalidComparisonError(String const& description);
 		Engine::Error invalidFieldError(String const& description);
 		Engine::Error invalidCast(String const& description);
