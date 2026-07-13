@@ -338,6 +338,8 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	auto& var = *(scope->variable = scope->variable.create());
 	parent->impl->writeMainLine("decl 1");
 	var.name = scope->name;
+	var.parentScope = parent.asWeak();
+	var.id = parent->varc++;
 	TypeRequest t;
 	if (node->middle)
 		var.type = t.transform(context, node->middle).type.asWeak();
@@ -362,9 +364,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 			var.initializer = nullptr;
 		}
 	}
-	var.parentScope = parent.asWeak();
 	var.value = direct;
-	var.id = parent->varc++;
 	context.pop(path.size());
 	if (!var.type)
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);

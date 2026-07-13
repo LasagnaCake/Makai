@@ -1404,8 +1404,8 @@ void Engine::v2Sizeof() {
 	auto const val = context.pop();
 	if (current.type)
 		context.push(val->count());
-	else
-		context.push(val->count() * val->getOriginalType()->byteSize);
+	else context.push(val->count() * val->getOriginalType()->byteSize);
+	if (!context.top()) return crash(makeErrorHere("???"));
 }
 
 void Engine::v2Typeof() {
@@ -1543,6 +1543,7 @@ void Engine::v2Cast() {
 	}
 	if (auto const t = context.art.types.byID(typeID)) {
 		auto const v = context.pop();
+		if (!v) return crash(makeErrorHere("Value does not exist!"));
 		if (v->isBasic() && t->basic) {
 			switch (*t->basic) {
 				case BasicType::AV2_BT_BOOL:	context.push(context.newValue(context.pop()->toValue<bool>()));			break;

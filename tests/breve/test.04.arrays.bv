@@ -3,6 +3,8 @@ using import core
 printArray :: (@ByRef arr: [uint64]) {
 	IO.writeLine("Printing array...")
 	@ByCopy sz := countof arr
+	IO.write("Size: ")
+	IO.writeLine(sz as any)
 	repeat @ByRef i : uint64 -> sz {
 		@ByCopy at := sz - i
 		IO.write("Index [")
