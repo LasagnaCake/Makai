@@ -627,7 +627,9 @@ Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance 
 	auto const next = parser.context.peek().type;
 	if (result->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
 		auto const sz = result->leftSide->rightSide;
-		result->leftSide = result->leftSide->leftSide;
+		auto const type = result->leftSide->leftSide;
+		result->leftSide = nullptr;
+		result->leftSide = type;
 		result->rightSide = sz;
 	}
 	if (
