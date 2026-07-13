@@ -1,19 +1,34 @@
 using import core
 
 printArray :: (@ByRef arr: [uint64]) {
+	IO.writeLine("Printing array...")
 	@ByCopy sz := countof arr
-	repeat @ByRef i : uint64 -> sz
-		IO.writeLine(arr[sz - i] as any)
+	repeat @ByRef i : uint64 -> sz {
+		@ByCopy at := sz - i
+		IO.write("Index [")
+		IO.write(at as any)
+		IO.write("] :")
+		IO.writeLine(arr[at] as any)
+	}
+	IO.writeLine("Done!")
 }
 
 @Main
 main :: () {
 	@ByRef val := new uint64[32]
-	repeat @ByRef i : uint64 -> 32
+	IO.writeLine("Creating array...")
+	repeat @ByRef i : uint64 -> 32 {
+		IO.writeLine(i as any)
 		val[i] = 32 - i
+	}
+	IO.writeLine("Done creating!")
 	printArray(val)
 	@ByCopy sz := countof val
-	repeat @ByRef i : uint64 -> sz
+	IO.writeLine("Modifying array...")
+	repeat @ByRef i : uint64 -> sz {
+		IO.writeLine(i as any)
 		val[i] = val[sz - i]
+	}
+	IO.writeLine("Done modifying!")
 	printArray(val)
 }

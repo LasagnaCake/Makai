@@ -226,7 +226,6 @@ namespace Makai::Anima::V2::Core {
 
 		struct [[gnu::aligned(4)]] Create {
 			bool	dyn:			1;
-			bool	initWithScope:	1;
 			bool	forArray:		1;
 			bool	dynSize:		1;
 		};
@@ -285,6 +284,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `flush`
 			AV2_IN_STACK_FLUSH,
+			/// @brief Extends the end of the stack with empty values.
+			/// @param type Amount of values add to stack.
+			/// @details `grow <count>`
+			AV2_IN_STACK_GROW,
 			/// @brief Copies a set of values from one stack to another.
 			/// @param type `Blitting` = how to blit the values.
 			/// @note Values are transfered "front"-to-"back", offset starts at the end of the stack for global stack.
@@ -392,6 +395,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_STACK_CLEAR:		return "clear";
 				case Name::AV2_IN_STACK_FLUSH:		return "flush";
 				case Name::AV2_IN_STACK_SWAP:		return "swap";
+				case Name::AV2_IN_STACK_GROW:		return "grow";
 				case Name::AV2_IN_STACK_BLIT:		return "blit";
 				case Name::AV2_IN_RETURN:			return "return";
 				case Name::AV2_IN_OP:				return "op";

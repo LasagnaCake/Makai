@@ -349,6 +349,8 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		if (result.source)
 			tmp->impl->writeMainLine("copy", *result.source, "->", var.getSource());
 		else context.error("Expected value here!", node->rightSide);
+		if (!result.shouldBePushed())
+			context.top()->impl->writeMainLine("pop");
 		context.pop(1);
 		direct = result.direct;
 		var.initializer = tmp;
@@ -1182,6 +1184,9 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Assignment::transform(Context& context, Node::Instance const& node) {
+	if (node->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+
+	}
 	auto lhs = Expression().transform(context, node->leftSide);
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.isCompilable() && !lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
@@ -1190,7 +1195,9 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			lhs.source = UTF8String("move stack[-1]");
 		if (*lhs.source != *rhs.source)
 			context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
-		return {lhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
+		if (!rhs.shouldBePushed())
+			context.top()->impl->writeMainLine("pop");
+		return {rhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
 	} else context.error("Type mismatch!", node);
 }
 
@@ -1334,11 +1341,10 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("push", *src.source);
 	auto const index = Expression().transform(context, node->rightSide);
 	if (index.isCompilable()) {
-		if (!index.direct.isUnsigned())
+		if (!index.direct.isInteger() or index.direct.getSigned() < 0)
 			context.error("Direct value must be an unsigned integer here!", node->rightSide);
 		context.top()->impl->writeMainLine("at", index.direct.getUnsigned());
-	}
-	if (
+	} else if (
 		index.type == context.basicType("uint8")
 	||	index.type == context.basicType("uint16")
 	||	index.type == context.basicType("uint32")
@@ -1404,8 +1410,16 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
 		else opstr = "*" + t->name;
 	}
+	context.top()->impl->writeMainLine("new", opstr);
 	if (node->children.size()) {
-		context.top()->impl->writeMainLine("enter", count);
+		context.top()->impl->writeMainLine("begin");
+		context.top()->impl->writeMainLine("decl 1");
+		auto const tempID = context.top()->varc++;
+		context.top()->impl->writeMainLine("copy move top -> local[", tempID, "]");
+		context.top()->impl->writeMainLine("pop");
+		auto const tempStart = context.top()->varc;
+		context.top()->impl->writeMainLine("decl", count);
+		context.top()->varc += count;
 		if (t->flags.isStructure) {
 			usize index = 0;
 			Map<usize, UTF8String> remap;
@@ -1425,7 +1439,11 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					auto const fx = t->fields[field.front()];
 					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
 						context.error("Type mismatch!", arg->rightSide);
-					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id, "]");
+					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
+					if (!expr.shouldBePushed())
+						context.top()->impl->writeMainLine("pop");
+					if (!expr.shouldBePushed())
+					context.top()->impl->writeMainLine("pop");
 					remap.erase(fx->id);
 				} else {
 					if (remap.empty())
@@ -1440,7 +1458,9 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					auto const fx = t->fields[remap[index]];
 					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
 						context.error("Type mismatch!", arg);
-					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id, "]");
+					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
+					if (!expr.shouldBePushed())
+						context.top()->impl->writeMainLine("pop");
 					remap.erase(index);
 					++index;
 				}
@@ -1450,12 +1470,16 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 				auto const expr = Expression().transform(context, arg);
 				if (TypeDecl::stronger(expr.type, t->base) != t->base)
 					context.error("Type mismatch!", arg);
-				context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", i, "]");
+				context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", tempStart + i, "]");
+				if (!expr.shouldBePushed())
+					context.top()->impl->writeMainLine("pop");
 			}
 		}
-		context.top()->impl->writeMainLine("create", opstr);
-		context.top()->impl->writeMainLine("exit");
-	} else context.top()->impl->writeMainLine("new", opstr);
+		context.top()->impl->writeMainLine("blit ref", count, "[", tempStart, "] -> global");
+		context.top()->impl->writeMainLine("push local[", tempID, "]");
+		context.top()->impl->writeMainLine("init");
+		context.top()->impl->writeMainLine("end");
+	}
 	return {{"move top"}, t->scope.raw(), t};
 }
 
@@ -1610,6 +1634,8 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 		} else context.error("Expression must be an integer!", node->leftSide);
 	} else context.error("Expression must be an integer!", node->leftSide);
 	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSource());
+	if (!it.shouldBePushed())
+		context.top()->impl->writeMainLine("pop");
 	if (node->middle) {
 		auto const refVar = Expression().transform(context, node->middle);
 		if (!(refVar.scope and refVar.scope->variable))

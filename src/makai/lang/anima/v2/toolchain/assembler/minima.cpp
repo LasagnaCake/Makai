@@ -628,7 +628,19 @@ static void doStackPop(Context& context) {
 
 static void doStackBlit(Context& context) {
 	Instruction::Blitting blit {.type = Instruction::Blitting::Type::AV2_IBT_COPY};
+	if (
+		context.peek().text == "ref"
+	or	context.peek().text == "move"
+	) {
+		blit.type = context.peek().text == "ref" ? Instruction::Blitting::Type::AV2_IBT_REFERENCE : Instruction::Blitting::Type::AV2_IBT_MOVE;
+		context.next();
+	}
 	auto const count = context.getNext(LTS_TT_INTEGER).getUnsigned();
+	if (context.peek().type == LTS_TT_OPEN_BRACKET) {
+		context.next();
+		blit.offset = context.getNext(LTS_TT_INTEGER).getUnsigned();
+		context.expectNext(LTS_TT_CLOSE_BRACKET);
+	}
 	context.expectNext(LTS_TT_LITTLE_ARROW);
 	auto const src = context.getNext(LTS_TT_IDENTIFIER, "blit source").getString();
 	if (src == "local" || src == "l")
@@ -643,6 +655,11 @@ static void doStackBlit(Context& context) {
 	context.add(count);
 }
 
+static void doStackGrow(Context& context) {
+	auto const count = context.getNext(LTS_TT_INTEGER).getUnsigned();
+	context.add(Instruction::Name::AV2_IN_STACK_GROW, count);
+}
+
 static void doReturn(Context& context) {
 	context.add(Instruction::Name::AV2_IN_RETURN);
 }
@@ -655,22 +672,22 @@ static void doStackClear(Context& context) {
 
 static void doField(Context& context, bool const setter, bool const dyn = false) {
 	Makai::Nullable<uint64> field;
-	Instruction::Field f;
-	if (!dyn) {
-		field =
-			context
-				.expectNext(Type{'['})
-				.getNext(LTS_TT_INTEGER, "field ID")
-				.getUnsigned()
-		;
-		context.expectNext(Type{']'});
-	} else f.dynamic = dyn;
+	Instruction::Field f = {.dynamic = dyn};
 	context.add(
 		setter
 	?	Instruction::Name::AV2_IN_FIELD_SET
 	:	Instruction::Name::AV2_IN_FIELD_GET,
 		f
 	);
+	if (!dyn) {
+		context.add(
+			context
+				.expectNext(Type{'['})
+				.getNext(LTS_TT_INTEGER, "field ID")
+				.getUnsigned()
+		);
+		context.expectNext(Type{']'});
+	}
 }
 
 static void doSizeOf(Context& context, bool const inBytes = false) {
@@ -1036,7 +1053,11 @@ static void doUnbind(Context& context, bool const dynamic = false) {
 }
 
 static void doCreate(Context& context, bool const dynamic = false) {
-	Instruction::Create create{.dyn = dynamic, .initWithScope = context.token().text == "create"};
+	Instruction::Create create{
+		.dyn = dynamic,
+		.forArray = false,
+		.dynSize = false
+	};
 	if (context.peek().type == LTS_TT_OPEN_BRACKET) {
 		create.forArray = true;
 		context.next();
@@ -1624,6 +1645,7 @@ static void doExpression(Context& context) {
 	else if (id == "pop")						doStackPop(context);
 	else if (id == "clear")						doStackClear(context);
 	else if (id == "blit")						doStackBlit(context);
+	else if (id == "grow")						doStackGrow(context);
 	else if (id == "return" || id == "ret")		doReturn(context);
 	else if (id == "terminate" || id == "stop")	doHalt(context);
 	else if (id == "error")						doHalt(context, true);

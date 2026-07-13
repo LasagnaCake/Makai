@@ -86,6 +86,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_STACK_PUSH:		v2StackPush();		break;
 		case AV2_IN_STACK_CLEAR:	v2StackClear();		break;
 		case AV2_IN_STACK_FLUSH:	v2StackFlush();		break;
+		case AV2_IN_STACK_GROW:		v2StackGrow();		break;
 		case AV2_IN_STACK_SWAP:		v2StackSwap();		break;
 		case AV2_IN_SCOPE_ENTER:	v2ScopeEnter();		break;
 		case AV2_IN_SCOPE_EXIT:		v2ScopeExit();		break;
@@ -529,7 +530,7 @@ Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
 
 Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
 	static Context::Storage failsafe;
-	auto const place = asPlace(loc);
+	auto const place = asPlace(loc) & DataLocation{0xF};
 	switch (place) {
 		case DataLocation::AV2_DL_STACK: {
 			if (context.globalValueStack.empty()) {
@@ -1380,7 +1381,6 @@ void Engine::v2FieldGet() {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
 	}
-	advance(true);
 	context.push(context.pop()->at(loc));
 }
 
@@ -1401,12 +1401,11 @@ void Engine::v2FieldSet() {
 }
 
 void Engine::v2Sizeof() {
-	if (current.type) {
-		context.push(context.pop()->count());
-	} else {
-		auto const val = context.pop();
+	auto const val = context.pop();
+	if (current.type)
+		context.push(val->count());
+	else
 		context.push(val->count() * val->getOriginalType()->byteSize);
-	}
 }
 
 void Engine::v2Typeof() {
@@ -1482,44 +1481,6 @@ void Engine::v2Create() {
 		}
 		obj->reserveFields(size);
 	}
-	if (create.initWithScope) {
-		if (type->flags.isStructure) {
-			if (context.locals().size() != type->fields.size())
-				return crash(invalidFieldError("Local variable count does not match type's field size!"));
-			if (type->flags.isValueType)
-				obj = Object::create(
-					new Object::Memory(type->byteSize),
-					type,
-					type
-				);
-			else obj->reserveFields(type->fields.size());
-			for (auto const& [field, i]: Makai::Range::expand(context.locals())) {
-				if (!field->getOriginalType()->canBecome(type->fields[i]))
-					return crash(invalidSourceError("Value for field [" + toString(i) + "] does not match required field value!"));
-				obj->setAtIndex(i, field);
-			}
-		} else if (type->flags.isArray) {
-			auto const elemType = type->base;
-			if (type->flags.isValueType)
-				obj = Object::create(
-					new Object::Memory(elemType->byteSize * context.locals().size()),
-					type,
-					type
-				);
-			else if (create.forArray) {
-			} else obj->reserveFields(context.locals().size());
-			for (auto const& [elem, i]: Makai::Range::expand(context.locals())) {
-				if (i >= obj->count()) break;
-				if (!elem->getOriginalType()->canBecome(elemType))
-					return crash(invalidSourceError("Value for element [" + toString(i) + "] does not match array element value!"));
-				obj->setAtIndex(i, elem);
-			}
-		}
-		if (type->flags.isArray)
-			for (usize i = 0; i < obj->count(); ++i)
-				if (!obj->getAtIndex(i))
-					obj->setAtIndex(i, Object::create(type->base.raw()));
-	}
 	context.push(obj);
 }
 
@@ -1527,8 +1488,20 @@ void Engine::v2Clear() {
 	// TODO: This
 }
 
-void Engine::v2Initialize() {
+void Engine::v2StackGrow() {
 	// TODO: This
+}
+
+void Engine::v2Initialize() {
+	if (context.globalValueStack.empty())
+		return crash(invalidSourceError("Missing value to initialize!"));
+	auto const val = context.pop();
+	if (context.globalValueStack.size() < val->count())
+		return crash(invalidSourceError("Stack is too small to initialize the given value!"));
+	auto const content = context.globalValueStack.sliced(-val->count(), -1);
+	context.globalValueStack.eraseRange(-val->count(), -1);
+	for (auto const& [e, i]: Makai::Range::expand(content))
+		if (e) val->setAtIndex(i, e);
 }
 
 void Engine::v2Breakpoint() {

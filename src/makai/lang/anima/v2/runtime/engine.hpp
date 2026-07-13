@@ -136,6 +136,7 @@ namespace Makai::Anima::V2::Runtime {
 		void v2StackPush();
 		void v2StackPop();
 		void v2StackSwap();
+		void v2StackGrow();
 		void v2StackClear();
 		void v2StackFlush();
 		void v2Return();

@@ -174,8 +174,9 @@ namespace Makai::Anima::V2::Core {
 		bool canBecome(Handle<Definition> const& type) const {
 			if (type == base) return true;
 			Handle<Definition> current = base;
-			while ((current = current->base))
-				if (current == type) return true;
+			if (!base) return false;
+			do if (current == type) return true;
+			while ((current = current->base));
 			return false;
 		}
 

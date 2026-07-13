@@ -19,7 +19,10 @@ Object::Storage Object::as(Instance<Definition> const& newType) const {
 }
 
 bool Object::changeType(Instance<Definition> const& newType) {
-	if (type->canBecome(newType)) {
+	if (type && type->canBecome(newType)) {
+		type = newType;
+		return true;
+	} else if (!type && origin && origin->canBecome(newType)) {
 		type = newType;
 		return true;
 	}
