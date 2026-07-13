@@ -1386,8 +1386,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 		opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
 	}
 	if (node->rightSide) {
-		if (!t.flags->isArray)
-			t = context.arrayFor(t);
+		t = context.arrayFor(t);
 		auto const sz = Expression().transform(context, node->rightSide);
 		if (!sz.source)
 			context.error("Expected value here!", node->rightSide);
