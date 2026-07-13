@@ -1390,10 +1390,14 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 		auto const sz = Expression().transform(context, node->rightSide);
 		if (!sz.source)
 			context.error("Expected value here!", node->rightSide);
-		if (sz.direct.isUnsigned())
+		if (sz.direct.isInteger()) {
+			if (sz.direct.isSigned() && sz.direct.getSigned() < 0)
+				context.error("Arrays cannot have negative sizes!", node->rightSide);
 			count = sz.direct.getUnsigned();
+		} else if (!sz.direct.isUndefined() and !sz.direct.isInteger())
+			context.error("Expected integer here!", node->rightSide);
 		else if (!TypeDecl::stronger(sz.type, context.basicType("uint64")))
-			context.error("Value cannot be esily converted to [uint64]!", node->rightSide);
+			context.error("Expected integer here!", node->rightSide);
 		else if (sz.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *sz.source);
 		if (!sz.direct.isUndefined())
