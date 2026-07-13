@@ -1345,7 +1345,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	||	index.type == context.basicType("uint64")
 	) {
 		if (index.shouldBePushed())
-			context.top()->impl->writeMainLine("push", *src.source);
+			context.top()->impl->writeMainLine("push", *index.source);
 		context.top()->impl->writeMainLine("dyn at");
 	} else context.error("Expected unsigned integer here!", node->rightSide);
 	auto const t = src.type->base;
