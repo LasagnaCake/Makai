@@ -1047,6 +1047,7 @@ static void doCreate(Context& context, bool const dynamic = false) {
 	}
 	context.add(Instruction::Name::AV2_IN_CREATE, create);
 	if (!create.dyn) {
+		context.next();
 		auto const name = resolvePath(context);
 		if (!context.types.contains(name))
 			context.error("This type does not exist!");
