@@ -1404,7 +1404,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
 		else opstr = "*" + t->name;
 	}
-	if (count) {
+	if (node->children.size()) {
 		context.top()->impl->writeMainLine("enter", count);
 		if (t->flags.isStructure) {
 			usize index = 0;
