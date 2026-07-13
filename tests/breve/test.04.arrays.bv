@@ -9,7 +9,7 @@ printArray :: (@ByRef arr: [uint64]) {
 		@ByCopy at := sz - i
 		IO.write("Index [")
 		IO.write(at as any)
-		IO.write("] :")
+		IO.write("] = ")
 		IO.writeLine(arr[at] as any)
 	}
 	IO.writeLine("Done!")
@@ -19,13 +19,13 @@ printArray :: (@ByRef arr: [uint64]) {
 main :: () {
 	@ByRef val := new uint64[32]
 	IO.writeLine("Creating array...")
-	repeat @ByRef i : uint64 -> 32 {
+	@ByCopy sz := countof val
+	repeat @ByRef i : uint64 -> sz {
 		IO.writeLine(i as any)
-		val[i] = 32 - i
+		val[i] = sz - i
 	}
 	IO.writeLine("Done creating!")
 	printArray(val)
-	@ByCopy sz := countof val
 	IO.writeLine("Modifying array...")
 	repeat @ByRef i : uint64 -> sz {
 		IO.writeLine(i as any)
