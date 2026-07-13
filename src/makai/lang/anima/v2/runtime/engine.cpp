@@ -1515,6 +1515,10 @@ void Engine::v2Create() {
 				obj->setAtIndex(i, elem);
 			}
 		}
+		if (type->flags.isArray)
+			for (usize i = 0; i < obj->count(); ++i)
+				if (!obj->getAtIndex(i))
+					obj->setAtIndex(i, Object::create(type->base.raw()));
 	}
 	context.push(obj);
 }
