@@ -69,6 +69,8 @@ Object::Storage Object::clone() {
 
 void Object::reserveFields(usize const count) {
 	fields.reserve(count, null);
+	if (fields.size() < count)
+		throw Error::FailedAction("Failed to reserve fields!", CTL_CPP_PRETTY_SOURCE);
 }
 
 Object::Storage Object::cloneFrom(usize const index) const {
@@ -93,7 +95,7 @@ Object::Storage Object::cloneFrom(usize const index) const {
 }
 
 usize Object::count() const {
-	if (!origin) return 0;
+	if (!origin) return -1;
 	if (!isValueType())
 		return fields.size();
 	if (!(content & content->size())) return 0;

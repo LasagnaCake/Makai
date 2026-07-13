@@ -20,6 +20,8 @@ main :: () {
 	@ByRef val := new uint64[32]
 	IO.writeLine("Creating array...")
 	@ByCopy sz := countof val
+	IO.write("Size: ")
+	IO.writeLine(sz as any)
 	repeat @ByRef i : uint64 -> sz {
 		IO.writeLine(i as any)
 		val[i] = sz - i

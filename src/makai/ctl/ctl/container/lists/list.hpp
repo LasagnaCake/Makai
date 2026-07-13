@@ -432,7 +432,7 @@ public:
 	///		For that, use `resize`.
 	constexpr SelfType& reserve(SizeType const count, DataType const& fill) {
 		reserve(count);
-		if (count > this->count) {
+		if (this->count < count) {
 			for (SizeType i = this->count; i < count; ++i)
 				contents[i] = fill;
 			this->count = count;

@@ -1402,6 +1402,10 @@ void Engine::v2FieldSet() {
 
 void Engine::v2Sizeof() {
 	auto const val = context.pop();
+	if (!val) return crash(invalidSourceError("Value does not exist!"));
+	auto const sz = val->count();
+	if (sz == Makai::Limit::MAX<usize>)
+		return crash(invalidSourceError("Value type does not exist!"));
 	if (current.type)
 		context.push(val->count());
 	else context.push(val->count() * val->getOriginalType()->byteSize);
