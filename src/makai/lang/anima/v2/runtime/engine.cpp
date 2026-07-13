@@ -1458,7 +1458,7 @@ void Engine::v2Create() {
 	uint64 typeID;
 	if (create.dyn) {
 		if (context.globalValueStack.empty())
-			return crash(invalidSourceError("Missing jump target for dynamic jump!"));
+			return crash(invalidSourceError("Missing type for dynamic creation!"));
 		typeID = context.pop()->toValue<TypeID>().id;
 	} else {
 		advance(true);
@@ -1468,6 +1468,20 @@ void Engine::v2Create() {
 	if (!type)
 		return crash(invalidTypeError("Type does not exist!"));
 	auto obj = Object::create(type);
+	if (create.forArray) {
+		if (!type->flags.isArray)
+			return crash(invalidTypeError("Type is not an array, but create instruction expects it!"));
+		uint64 size;
+		if (create.dynSize) {
+			if (context.globalValueStack.empty())
+				return crash(invalidSourceError("Missing size for dynamic creation size!"));
+			size = context.pop()->toValue<uint64>();
+		} else {
+			advance(true);
+			size = Makai::Cast::bit<uint64>(current);
+		}
+		obj->reserveFields(size);
+	}
 	if (create.initWithScope) {
 		if (type->flags.isStructure) {
 			if (context.locals().size() != type->fields.size())
@@ -1492,8 +1506,10 @@ void Engine::v2Create() {
 					type,
 					type
 				);
-			else obj->reserveFields(context.locals().size());
+			else if (create.forArray) {
+			} else obj->reserveFields(context.locals().size());
 			for (auto const& [elem, i]: Makai::Range::expand(context.locals())) {
+				if (i >= obj->count()) break;
 				if (!elem->getOriginalType()->canBecome(elemType))
 					return crash(invalidSourceError("Value for element [" + toString(i) + "] does not match array element value!"));
 				obj->setAtIndex(i, elem);

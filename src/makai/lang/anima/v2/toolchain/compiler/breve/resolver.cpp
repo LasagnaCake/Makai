@@ -625,8 +625,13 @@ Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance 
 	result->content = Node::Content::AV2_TANC_NEW;
 	result->leftSide = parser.nextExpression();
 	auto const next = parser.context.peek().type;
+	if (result->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+		auto const sz = result->leftSide->rightSide;
+		result->leftSide = result->leftSide->leftSide;
+		result->rightSide = sz;
+	}
 	if (
-		next == LTS_TT_OPEN_BRACKET
+		next == LTS_TT_OPEN_CURLY
 //	or	next == LTS_TT_OPEN_PAREN
 	) {
 		while (true) {

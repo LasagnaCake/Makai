@@ -1368,7 +1368,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	}
 	auto const arr = context.arrayFor(prev);
 	if (count) {
-		context.top()->impl->writeMainLine("enter 0");
+		context.top()->impl->writeMainLine("enter", count);
 		context.top()->impl->writeMainLine("bind ref", count, "[0 -> 0]");
 		context.top()->impl->writeMainLine("create", arr->name);
 		context.top()->impl->writeMainLine("exit");
@@ -1379,24 +1379,80 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 }
 
 ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {
-	auto const t = TypeRequest().transform(context, node->leftSide).type;
-	auto const count = node->children.size();
+	auto t = TypeRequest().transform(context, node->leftSide).type;
+	auto count = node->children.size();
+	String opstr;
+	if (t->flags.isArray) {
+		opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
+	}
+	if (node->rightSide) {
+		if (!t.flags->isArray)
+			t = context.arrayFor(t);
+		auto const sz = Expression().transform(context, node->rightSide);
+		if (!sz.source)
+			context.error("Expected value here!", node->rightSide);
+		if (sz.direct.isUnsigned())
+			count = sz.direct.getUnsigned();
+		else if (!TypeDecl::stronger(sz.type, context.basicType("uint64")))
+			context.error("Value cannot be esily converted to [uint64]!", node->rightSide);
+		else if (sz.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *sz.source);
+		if (!sz.direct.isUndefined())
+			opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
+		else opstr = "*" + t->name;
+	}
 	if (count) {
-		Namespace::TypeRef prev;
-		for (auto const& [arg, i]: Range::expand(node->children)) {
-			auto const expr = Expression().transform(context, arg);
-			if (!expr.source)
-				context.error("Expected value here!", arg);
-			if (expr.shouldBePushed())
-				context.top()->impl->writeMainLine("push", *expr.source);
-			if (!prev) prev = expr.type;
-			if (t->flags.isStructure) {
-
-			} else if (t->flags.isArray) {
-
+		context.top()->impl->writeMainLine("enter", count);
+		if (t->flags.isStructure) {
+			usize index = 0;
+			Map<usize, UTF8String> remap;
+			for (auto& [name, entry]: t->fields)
+				remap[entry->id] = name;
+			for (auto const& arg: node->children) {
+				if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
+					auto const field = context.pathOf(arg->leftSide);
+					if (field.size() > 1) context.error("Invalid field access!", arg->leftSide);
+					if (!remap.contains(t->fields[field.front()]->id))
+						context.error("Field has already been set!", arg->leftSide);
+					if (!t->fields.contains(field.front()))
+						context.error("Field does not exist!", arg->leftSide);
+					auto const expr = Expression().transform(context, arg->rightSide);
+					if (!expr.source)
+						context.error("Expected value here!", arg->rightSide);
+					auto const fx = t->fields[field.front()];
+					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
+						context.error("Type mismatch!", arg->rightSide);
+					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id, "]");
+					remap.erase(fx->id);
+				} else {
+					if (remap.empty())
+						context.error("All fields have been already set!", arg);
+					if (!remap.contains(index))
+						index = remap.keys().front();
+					if (index >= t->fields.size())
+						context.error("All fields have been already set!", arg);
+					auto const expr = Expression().transform(context, arg);
+					if (!expr.source)
+						context.error("Expected value here!", arg);
+					auto const fx = t->fields[remap[index]];
+					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
+						context.error("Type mismatch!", arg);
+					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id, "]");
+					remap.erase(index);
+					++index;
+				}
+			}
+		} else if (t->flags.isArray) {
+			for (auto const& [arg, i]: Range::expand(node->children)) {
+				auto const expr = Expression().transform(context, arg);
+				if (TypeDecl::stronger(expr.type, t->base) != t->base)
+					context.error("Type mismatch!", arg);
+				context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", i, "]");
 			}
 		}
-	} else context.top()->impl->writeMainLine("new", t->name);
+		context.top()->impl->writeMainLine("create", opstr);
+		context.top()->impl->writeMainLine("exit");
+	} else context.top()->impl->writeMainLine("new", opstr);
 	return {{"move top"}, t->scope.raw(), t};
 }
 

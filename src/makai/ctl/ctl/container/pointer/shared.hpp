@@ -327,20 +327,29 @@ public:
 	/// @brief Equality comparison operator (raw pointer).
 	/// @param obj Raw pointer to compare to.
 	/// @return Whether they're equal.
-	constexpr bool operator==(PointerType const& obj) const			{return	ref == obj;			}
+	constexpr bool operator==(PointerType const& obj) const						{return	ref == obj;			}
 	/// @brief Threeway comparison operator (raw pointer).
 	/// @param obj Raw pointer to compare to.
 	/// @return Order between objects.
-	constexpr OrderType operator<=>(PointerType const& obj) const	{return	ref <=> obj;		}
+	constexpr OrderType operator<=>(PointerType const& obj) const				{return	ref <=> obj;		}
 
 	/// @brief Equality comparison operator (`Shared`).
 	/// @param obj `Shared` to compare to.
 	/// @return Whether they're equal.
-	constexpr bool operator==(SelfType const& other) const			{return ref == other.ref;	}
+	constexpr bool operator==(SelfType const& other) const						{return ref == other.ref;	}
 	/// @brief Threeway comparison operator (`Shared`).
 	/// @param obj `Shared` to compare to.
 	/// @return Order between objects.
-	constexpr OrderType operator<=>(SelfType const& other) const	{return ref <=> other.ref;	}
+	constexpr OrderType operator<=>(SelfType const& other) const				{return ref <=> other.ref;	}
+
+	/// @brief Equality comparison operator (`Shared`).
+	/// @param obj `Shared` to compare to.
+	/// @return Whether they're equal.
+	constexpr bool operator==(Shared<DataType, !WEAK> const& other) const		{return ref == other.ref;	}
+	/// @brief Threeway comparison operator (`Shared`).
+	/// @param obj `Shared` to compare to.
+	/// @return Order between objects.
+	constexpr OrderType operator<=>(Shared<DataType, !WEAK> const& other) const	{return ref <=> other.ref;	}
 
 	/// @brief Assignment operator.
 	/// @param obj Object to reference.

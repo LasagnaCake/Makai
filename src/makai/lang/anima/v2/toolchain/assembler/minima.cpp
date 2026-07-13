@@ -1037,7 +1037,33 @@ static void doUnbind(Context& context, bool const dynamic = false) {
 
 static void doCreate(Context& context, bool const dynamic = false) {
 	Instruction::Create create{.dyn = dynamic, .initWithScope = context.token().text == "create"};
+	if (context.peek().type == LTS_TT_OPEN_BRACKET) {
+		create.forArray = true;
+		context.next();
+	} else if (context.peek().type == LTS_TT_STAR) {
+		create.forArray	= true;
+		create.dynSize	= true;
+		context.next();
+	}
 	context.add(Instruction::Name::AV2_IN_CREATE, create);
+	if (!create.dyn) {
+		auto const name = resolvePath(context);
+		if (!context.types.contains(name))
+			context.error("This type does not exist!");
+		auto const t = context.getType(name);
+		if (create.forArray && !t->flags.isArray)
+			context.error("Type is not an array type!");
+		context.add(t->id);
+	}
+	if (!create.dynSize) {
+		context.add(
+			context
+				.expectNext(LTS_TT_COLON)
+				.getNext(LTS_TT_INTEGER)
+				.getUnsigned()
+		);
+		context.expectNext(LTS_TT_CLOSE_BRACKET);
+	}
 }
 
 static void doInitialize(Context& context) {
