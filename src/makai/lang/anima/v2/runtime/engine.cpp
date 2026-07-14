@@ -1404,6 +1404,7 @@ void Engine::v2Sizeof() {
 	auto const val = context.pop();
 	if (!val) return crash(invalidSourceError("Value does not exist!"));
 	auto const sz = val->count();
+	DEBUGLN(">> VALUE SIZE: ", sz);
 	if (sz == Makai::Limit::MAX<usize>)
 		return crash(invalidSourceError("Value type does not exist!"));
 	if (current.type)
