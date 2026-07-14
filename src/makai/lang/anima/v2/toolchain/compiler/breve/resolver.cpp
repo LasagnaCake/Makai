@@ -299,7 +299,10 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_ASSIGNMENT;
-	result->leftSide = leftSide;
+	if (leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+		result->leftSide = leftSide->leftSide;
+		result->middle = leftSide->rightSide;
+	} else result->leftSide = leftSide;
 	result->rightSide = parser.nextExpression(precedence);
 	return result;
 }
