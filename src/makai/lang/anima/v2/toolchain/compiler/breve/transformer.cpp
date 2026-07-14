@@ -5,7 +5,7 @@
 /*
 
 [MikuTeto (+ Yi Xi)]
-↑O↑   ▼O▼   Θ-▐▌
+↑O↑   ▼O▼    Θ-▐▌
 /|\   /|\   /|\!
 / \   / \   / \
 
@@ -1184,20 +1184,44 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Assignment::transform(Context& context, Node::Instance const& node) {
-	if (node->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-
+	if (node->middle) {
+		auto lhs = Expression().transform(context, node->leftSide);
+		if (!(lhs.source && (lhs.type->flags.isArray)))
+			context.error("Expected array value here!", node->leftSide);
+		if (lhs.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *lhs.source);
+		auto i = Expression().transform(context, node->middle);
+		if (!(i.source && TypeDecl::stronger(i.type, context.basicType("uint64"))))
+			context.error("Expected integer here!", node->middle);
+		if (i.direct.isUndefined() && i.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *i.source);
+		auto const rhs = Expression().transform(context, node->rightSide);
+		if (!rhs.source)
+			context.error("Expected value here!", node->rightSide);
+		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type)) {
+			if (rhs.shouldBePushed())
+				context.top()->impl->writeMainLine("push", *rhs.source);
+			context.top()->impl->writeMainLine("push val top");
+			if (i.direct.isUndefined())
+				context.top()->impl->writeMainLine("dyn set");
+			else if (i.direct.isInteger())
+				context.top()->impl->writeMainLine("set [", i.direct.isInteger(), "]");
+			else context.error("Expected integer here!", node->middle);
+			context.top()->impl->writeMainLine("set [", i.direct.isInteger(), "]");
+			return {{"move top"}, lhs.scope, t, rhs.direct, rhs.likelihood};
+		} else context.error("Type mismatch!", node);
 	}
 	auto lhs = Expression().transform(context, node->leftSide);
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.isCompilable() && !lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
-	if (auto const t = TypeDecl::stronger(lhs.type, lhs.type)) {
+	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		if (lhs.isStackTop() && rhs.isStackTop())
 			lhs.source = UTF8String("move stack[-1]");
 		if (*lhs.source != *rhs.source)
 			context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
 		if (!rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
-		return {rhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
+		return {lhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
 	} else context.error("Type mismatch!", node);
 }
 
@@ -1633,6 +1657,8 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 			opq = asFastOpQualifier(*intType->basic);
 		} else context.error("Expression must be an integer!", node->leftSide);
 	} else context.error("Expression must be an integer!", node->leftSide);
+	loopScope->impl->writePreLine("push val top");
+	loopScope->impl->writePostLine("jump if false", loopEnd);
 	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSource());
 	if (!it.shouldBePushed())
 		context.top()->impl->writeMainLine("pop");
