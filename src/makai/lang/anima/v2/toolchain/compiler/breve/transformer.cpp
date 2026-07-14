@@ -1205,9 +1205,8 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			if (i.direct.isUndefined())
 				context.top()->impl->writeMainLine("dyn set");
 			else if (i.direct.isInteger())
-				context.top()->impl->writeMainLine("set [", i.direct.isInteger(), "]");
+				context.top()->impl->writeMainLine("set [", i.direct.getUnsigned(), "]");
 			else context.error("Expected integer here!", node->middle);
-			context.top()->impl->writeMainLine("set [", i.direct.isInteger(), "]");
 			return {{"move top"}, lhs.scope, t, rhs.direct, rhs.likelihood};
 		} else context.error("Type mismatch!", node);
 	}
@@ -1674,6 +1673,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	loopScope->impl->writePostLine("push ref", var.getSource());
 	loopScope->impl->writePostLine("op dec", opq);
 	loopScope->impl->writePostLine("jump if true", loopStart);
+	loopScope->impl->writePostLine("@target", loopEnd, ":");
 	return {.scope = loopScope};
 }
 
