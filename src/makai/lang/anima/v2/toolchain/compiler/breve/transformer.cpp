@@ -1657,7 +1657,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 		} else context.error("Expression must be an integer!", node->leftSide);
 	} else context.error("Expression must be an integer!", node->leftSide);
 	loopScope->impl->writePreLine("push val", it.source.value());
-	loopScope->impl->writePostLine("jump if false", loopEnd);
+	loopScope->impl->writePreLine("jump if false", loopEnd);
 	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSource());
 	if (!it.shouldBePushed())
 		context.top()->impl->writeMainLine("pop");
