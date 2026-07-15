@@ -151,8 +151,8 @@ struct ARTEMain: Makai::AMain {
 											err.message,
 											Makai::CPP::SourceFile(
 												"COLUMN " + Makai::toString(err.column),
-												err.file,
-												err.line
+												err.line,
+												err.file
 											)
 										);
 									})
