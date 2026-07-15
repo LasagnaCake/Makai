@@ -12,7 +12,8 @@ namespace Makai::Anima::V2::Runtime::ARTModule {
 			String	file;
 			usize	line;
 			usize	column = 0;
-		}
+		};
+
 		virtual ~IBuilder() {}
 
 		virtual Result<Bytes<>, Error> build(String const& source) = 0;
