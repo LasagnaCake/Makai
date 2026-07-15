@@ -109,8 +109,8 @@ struct ARTEMain: Makai::AMain {
 			} else {
 				Makai::String fpath = args["__args"][0].getString();
 				auto const fdata = Makai::File::getText(fpath);
-				if (Makai::Regex::contains(fpath, R"(\.bv$)"))			file = Makai::Anima::V2::Toolchain::Compiler::Breve::compile(fpath, fdata);
-				else if (Makai::Regex::contains(fpath, R"(\.min$)"))	file = Makai::Anima::V2::Toolchain::Assembler::Minima::assemble(fpath, fdata);
+				if (Makai::Regex::contains(fpath, R"re(\.bv$)re"))			file = Makai::Anima::V2::Toolchain::Compiler::Breve::compile(fpath, fdata);
+				else if (Makai::Regex::contains(fpath, R"re(\.min$)re"))	file = Makai::Anima::V2::Toolchain::Assembler::Minima::assemble(fpath, fdata);
 				else [[unlikely]] {
 					auto const ext = Makai::Regex::findFirst(fpath, R"(\.(\w+)$)");
 					if (ext.match.empty())
@@ -118,11 +118,11 @@ struct ARTEMain: Makai::AMain {
 							"Invalid file extension!",
 							CTL_CPP_PRETTY_SOURCE
 						);
-					Makai::String const moduleName = "lang." + Makai::Regex::replace(ext.match, "\.", "") + ".builder";
+					Makai::String const moduleName = "lang." + Makai::Regex::replace(ext.match, R"re(\.)re", "") + ".builder";
 					static auto const moduleSources = Makai::StringList::from(
 						Makai::OS::FS::currentDirectory() + "/",
 						Makai::OS::FS::sourceLocation() + "/module/art/",
-						Makai::OS::FS::sourceLocation() + "/module/3p/",
+						Makai::OS::FS::sourceLocation() + "/module/3p/"
 					);
 					bool hit = false;
 					for (auto& src: moduleSources) {
@@ -130,16 +130,16 @@ struct ARTEMain: Makai::AMain {
 							hit = true;
 							Makai::CPP::Library modlib;
 							modlib.open(src + moduleName);
-							auto const builder = modlib.function<ref<Makai::Anima::V2::Runtime::ARTModule::IBuilder>()>(
+							auto const getBuilder = modlib.function<ref<Makai::Anima::V2::Runtime::ARTModule::IBuilder>()>(
 								Makai::Anima::V2::Runtime::ARTModule::BUILDER_FN_NAME
 							);
-							if (!builder)
+							if (!getBuilder)
 								throw Makai::Error::FailedAction(
 									"Improper module (missing builder function)!",
 									CTL_CPP_PRETTY_SOURCE
 								);
-							else if (auto const builder = builder()) {
-								builder->build(fdata)
+							else if (auto const builder = getBuilder()) {
+								builder.value()->build(fdata)
 									.then([&] (auto const& bin) {
 										Makai::Anima::V2::Core::BinaryFormat::fromBytes(bin)
 											.then([&] (auto const e) {file = e;})
@@ -148,7 +148,7 @@ struct ARTEMain: Makai::AMain {
 									}).onError([&] (auto const& err) {
 										throw Makai::Error::FailedAction(
 											"Failed to build file!",
-											e.message,
+											err.message,
 											Makai::CPP::SourceFile(
 												"COLUMN " + Makai::toString(err.column),
 												err.file,
