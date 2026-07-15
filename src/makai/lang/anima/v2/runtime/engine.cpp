@@ -1381,11 +1381,17 @@ void Engine::v2FieldGet() {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
 	}
-	context.push(context.pop()->at(loc));
+	if (!context.top())
+		return crash(invalidSourceError("Value does not exist!"));
+	if (!context.top()->canHaveFields())
+		return crash(invalidSourceError("Value is not an array or structure!"));
+	context.push(context.pop()->getAtIndex(loc));
+	printValueState(context.top());
 }
 
 void Engine::v2FieldSet() {
 	Instruction::Field field = current.getTypeAs<Instruction::Field>();
+	auto const v = context.pop();
 	uint64 loc = 0;
 	if (field.dynamic) {
 		if (context.globalValueStack.empty())
@@ -1395,22 +1401,38 @@ void Engine::v2FieldSet() {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
 	}
-	advance(true);
-	auto const v = context.pop();
-	context.top()->at(loc).set(v);
+	auto const dst = context.pop();
+	MAKAILIB_DEBUGLN_FULL("Value: ", v->getType()->hash);
+	MAKAILIB_DEBUGLN_FULL("Destination: ", dst->getType()->hash);
+	MAKAILIB_DEBUGLN_FULL("Field: ", loc);
+	if (!dst)
+		return crash(invalidSourceError("Value does not exist!"));
+	if (!dst->canHaveFields())
+		return crash(invalidSourceError("Value is not an array or structure!"));
+	MAKAILIB_DEBUGLN_FULL("Field Count: ", dst->count());
+	auto const result = dst->setAtIndex(loc, v);
+	if (result != Object::SetError::AV2_COSE_OK) {
+		switch (result) {
+			using enum Object::SetError;
+			case AV2_COSE_NO_TYPE:						return crash(invalidSourceError("Object does not have a type!"));
+			case AV2_COSE_TYPE_DOES_NOT_CONTAIN_FIELDS:	return crash(invalidSourceError("Type does not contain fields!"));
+			case AV2_COSE_FIELD_IS_NOT_COPYABLE:		return crash(invalidSourceError("Field is not copyable!"));
+			case AV2_COSE_FIELD_DOES_NOT_EXIST:			return crash(invalidSourceError("Field does not exist!"));
+			case AV2_COSE_OK: break;
+		}
+	}
+	context.push(v);
 }
 
 void Engine::v2Sizeof() {
 	auto const val = context.pop();
 	if (!val) return crash(invalidSourceError("Value does not exist!"));
 	auto const sz = val->count();
-	DEBUGLN(">> VALUE SIZE: ", sz);
 	if (sz == Makai::Limit::MAX<usize>)
 		return crash(invalidSourceError("Value type does not exist!"));
 	if (current.type)
-		context.push(val->count());
-	else context.push(val->count() * val->getOriginalType()->byteSize);
-	if (!context.top()) return crash(makeErrorHere("???"));
+		context.push(sz * val->getOriginalType()->byteSize);
+	else context.push(sz);
 }
 
 void Engine::v2Typeof() {
@@ -1547,9 +1569,8 @@ void Engine::v2Cast() {
 		typeID = Makai::Cast::bit<uint64>(current);
 	}
 	if (auto const t = context.art.types.byID(typeID)) {
-		auto const v = context.pop();
-		if (!v) return crash(makeErrorHere("Value does not exist!"));
-		if (v->isBasic() && t->basic) {
+		if (!context.top()) return crash(makeErrorHere("Value does not exist!"));
+		if (context.top()->isBasic() && t->basic) {
 			switch (*t->basic) {
 				case BasicType::AV2_BT_BOOL:	context.push(context.newValue(context.pop()->toValue<bool>()));			break;
 				case BasicType::AV2_BT_INT8:	context.push(context.newValue(context.pop()->toValue<int8>()));			break;
@@ -1572,11 +1593,11 @@ void Engine::v2Cast() {
 					auto const types = context.art.types.byNameHash(hash("any"));
 					if (types.empty())
 						return crash(outOfRangeError("[any] conversion failed!"));
-					v->changeType(types.front());
+					context.top()->changeType(types.front());
 				} break;
 				default: return crash(outOfRangeError("Invalid conversion!"));
 			}
-		} else if (!v->changeType(t))
+		} else if (!context.top()->changeType(t))
 			return crash(makeErrorHere("Cannot convert value to requested type!"));
 	} else return crash(makeErrorHere("Type does not exist!"));
 }

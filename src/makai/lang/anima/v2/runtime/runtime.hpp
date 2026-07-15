@@ -3,5 +3,6 @@
 
 #include "context.hpp"
 #include "engine.hpp"
+#include "module.hpp"
 
 #endif

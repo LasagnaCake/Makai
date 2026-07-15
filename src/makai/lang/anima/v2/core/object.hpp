@@ -9,7 +9,7 @@ namespace Makai::Anima::V2::Core {
 	concept ARTType = requires (Object o) {
 		requires Type::NonVoid<T>;
 		sizeof(T) >= sizeof(byte);
-		{T::ART_NAME}		-> Makai::Type::Equal<scstring>;
+		{T::ART_HASH}		-> Makai::Type::Equal<uint64>;
 		{T::construct(o)}	-> Makai::Type::Equal<T>;
 	};
 
@@ -233,70 +233,87 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		constexpr bool isVector() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_VECTOR);
 		}
 
 		constexpr bool isMatrix() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_MATRIX);
 		}
 
 		constexpr bool isTypeID() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_TYPEID);
 		}
 
 		constexpr bool isJumpID() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_JUMPID);
 		}
 
 		constexpr bool isCallID() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_CALLID);
 		}
 
 		constexpr bool isCharacter() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_CHAR);
 		}
 
 		constexpr bool isString() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_STRING);
 		}
 
 		constexpr bool isBytes() const {
+			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_BYTES);
 		}
 
 		constexpr bool isVoid() const {
+			if (!origin) return true;
 			return origin->basic == BasicType::AV2_BT_VOID;
 		}
 
 		constexpr bool isNull() const {
+			if (!origin) return true;
 			return origin->basic == BasicType::AV2_BT_NULL;
 		}
 
 		constexpr bool isArray() const {
+			if (!origin) return false;
 			return (origin->flags.isArray);
 		}
 
-		constexpr bool isStructrure() const {
+		constexpr bool isStructure() const {
+			if (!origin) return false;
 			return (origin->flags.isStructure);
 		}
 
+		constexpr bool canHaveFields() const {
+			return isArray() or isStructure();
+		}
+
 		constexpr bool isBasic() const {
+			if (!origin) return false;
 			return (origin->flags.isBasic);
 		}
 
@@ -325,7 +342,16 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		Storage getAtIndex(uint64 const index) const;
-		bool setAtIndex(uint64 const index, Storage const& value);
+
+		enum class SetError: uint8 {
+			AV2_COSE_OK,
+			AV2_COSE_NO_TYPE,
+			AV2_COSE_TYPE_DOES_NOT_CONTAIN_FIELDS,
+			AV2_COSE_FIELD_IS_NOT_COPYABLE,
+			AV2_COSE_FIELD_DOES_NOT_EXIST,
+		};
+
+		SetError setAtIndex(uint64 const index, Storage const& value);
 
 		Storage clone();
 		Storage clone() const;
@@ -392,6 +418,8 @@ namespace Makai::Anima::V2::Core {
 
 		Object(Object&&)			= default;
 		Object& operator=(Object&&)	= default;
+
+		Handle<Definition>	getType()	const;
 
 		Handle<Definition>	getCurrentType()	const;
 		Handle<Definition>	getOriginalType()	const;

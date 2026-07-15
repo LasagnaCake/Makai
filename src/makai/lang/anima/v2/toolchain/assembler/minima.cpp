@@ -1198,9 +1198,15 @@ static void validateType(Context& context, Context::Declaration& type) {
 	if (type.fields.size() && !(type.flags.isStructure))
 		context.error("Fields can only be declared on structures!");
 	if (!type.basic) {
-		for (auto& field: type.fields)
-			type.byteSize += context.getTypeByID(field)->byteSize;
-		type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
+		if (type.flags.isStructure) {
+			for (auto& field: type.fields)
+				type.byteSize += context.getTypeByID(field)->byteSize;
+			type.byteSize = (type.byteSize / type.alignment + 1) * type.alignment;
+		} else if (type.flags.isArray) {
+			auto const base = context.getTypeByID(type.base);
+			type.byteSize	= base->byteSize;
+			type.alignment	= base->alignment;
+		}
 	} else if (type.basic != BasicType::AV2_BT_ANY && type.basic != BasicType::AV2_BT_VOID) {
 		type.flags.isValueType = true;
 		type.flags.isCopyable = true;

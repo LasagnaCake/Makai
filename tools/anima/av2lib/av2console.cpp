@@ -8,36 +8,26 @@ using namespace Anima::V2::Core;
 #define doWriteLine(WHAT) std::cout << WHAT << "\n"
 
 struct ConsoleLib: ALibrary {
-	static void AV2Call write_string(String str) {
-		doWrite(__LINE__);
-		doWrite("/");
-		doWrite(str.size());
-		doWriteLine(" ::: Writing to standard output...");
+	static void AV2Call write_string(String const& str) {
 		doWrite(str);
 	}
 
-	static void AV2Call writeLine_string(String str) {
-		doWrite(__LINE__);
-		doWrite("/");
-		doWrite(str.size());
-		doWriteLine(" ::: Writing to standard output...");
+	static void AV2Call writeLine_string(String const& str) {
 		doWriteLine(str);
 	}
 
-	static String AV2Call toString(Makai::Data::Value val) {
+	static String AV2Call toString(Makai::Data::Value const& val) {
 		if (val.isUndefined()) return "";
 		if (val.isString()) return val.getString();
 		return val.toFLOWString();
 	}
 
-	static void AV2Call write_any(Makai::Anima::V2::Core::Any what) {
-		if (what.value)
-			write_string(toString(what.value->toDynamicValue()));
+	static void AV2Call write_any(Makai::Data::Value const& what) {
+		write_string(toString(what));
 	}
 
-	static void AV2Call writeLine_any(Makai::Anima::V2::Core::Any what) {
-		if (what.value)
-			writeLine_string(toString(what.value->toDynamicValue()));
+	static void AV2Call writeLine_any(Makai::Data::Value const& what) {
+		writeLine_string(toString(what));
 	}
 
 	void load(Context::Adder const& context) override {

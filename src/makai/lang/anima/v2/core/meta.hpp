@@ -231,7 +231,7 @@ namespace Makai::Anima::V2::Core::Meta {
 			constexpr static auto const ART_HASH = ConstHasher::hash("any");
 
 			static Data::Value construct(Object const& value) {
-				return value.toValue<Data::Value>();
+				return value.toDynamicValue();
 			}
 
 			static Object::Storage convert(Database<Definition>& db, TypeID const& value) {
@@ -332,7 +332,7 @@ namespace Makai::Anima::V2::Core::Meta {
 	}
 
 	template <class... Types>
-	constexpr Tuple<Types...> toArguments(Database<Definition>& db, List<Object::Storage> const& args) {
+	constexpr auto toArguments(Database<Definition>& db, List<Object::Storage> const& args) {
 		return Impl::ObjectTupleToArguments<Types...>::make(
 			db,
 			Impl::ListToTuple<Types...>::make(args)

@@ -11,6 +11,11 @@ namespace Makai::Anima::V2::Core {
 	template <class... Args>
 	concept NonMutableReferenceArgs = (... && Makai::Type::OneOf<AsNonVolatile<Args>, AsNormal<Args>, AsReference<AsConstant<AsNormal<Args>>>>);
 
+	struct Context;
+
+	template <class T>
+	using AsConsumable = Makai::Meta::If<Makai::Type::OneOf<T, Context&>, T, AsNormal<T>>;
+
 	struct Context {
 		using Arguments = List<Object::Storage>;
 
@@ -86,6 +91,24 @@ namespace Makai::Anima::V2::Core {
 				return Meta::toArgumentsWithContext<TArgs...>(context.types, args.sliced(0, method.argc), context);
 			}
 
+			template <Type::Functional<TReturn(TArgs...)> TFunc, class... T2>
+			static TReturn bridgeCall(TFunc& f, Tuple<T2...>& tup) {
+				bridgeCall(
+					f,
+					tup,
+					IntegerPack<sizeof...(TArgs)>()
+				);
+			}
+
+			template <Type::Functional<TReturn(TArgs...)> TFunc, usize... N, class... T2>
+			static TReturn bridgeCall(TFunc& f, Tuple<T2...>& tup, IndexTuple<N...>) {
+				auto bridge = Tuple<TArgs...>{tup.template get<N>()...};
+				invokeFromTuple<TReturn, TArgs...>(
+					f,
+					bridge
+				);
+			}
+
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
 			static MethodResult handleInvocation(Context& context, ExternalMethod& method, Arguments const& args, TFunc& f) {
@@ -96,12 +119,12 @@ namespace Makai::Anima::V2::Core {
 					auto tup = makeArgumentTuple(context, method, args);
 					if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 						MAKAILIB_DEBUGLN_FULL("Void function");
-						invokeFromTuple<void, TArgs...>(f, tup);
+						bridgeCall(f, tup);
 					} else {
 						MAKAILIB_DEBUGLN_FULL("Function returns value");
 						return Meta::ARTInfo<TReturn>::convert(
 							context.types,
-							invokeFromTuple<TReturn, TArgs...>(
+							bridgeCall(
 								f,
 								tup
 							)
@@ -146,12 +169,19 @@ namespace Makai::Anima::V2::Core {
 		struct MethodAdder {
 			template <class TFunc>
 			bool add(String const& name, TFunc& f) const {
-				return context.addExternalMethod(name, f);
+				auto const hash = ConstHasher::hash(name);
+				using FuncResolver = ExternalMethodResolver<TFunc>;
+				if (context.hasExternalMethod(hash)) return false;
+				return add(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
 			}
 
 			constexpr MethodAdder(Context& context): context(context) {}
 
+			virtual ~MethodAdder();
+
 		private:
+			virtual bool add(usize const hash, usize const argc, ExternalInvocation const& invoker) const;
+
 			Context& context;
 		};
 
@@ -159,6 +189,8 @@ namespace Makai::Anima::V2::Core {
 			void remove(String const& name) const {
 				context.removeExternalMethod(name);
 			}
+
+			virtual ~MethodRemover();
 
 			constexpr MethodRemover(Context& context): context(context) {}
 
@@ -172,6 +204,8 @@ namespace Makai::Anima::V2::Core {
 				return context.addExternalType<T>();
 			}
 
+			virtual ~TypeAdder();
+
 			constexpr TypeAdder(Context& context): context(context) {}
 
 		private:
@@ -183,6 +217,8 @@ namespace Makai::Anima::V2::Core {
 			void remove() const {
 				context.removeExternalType<T>();
 			}
+
+			virtual ~TypeRemover();
 
 			constexpr TypeRemover(Context& context): context(context) {}
 
@@ -228,7 +264,7 @@ namespace Makai::Anima::V2::Core {
 			return addExternalMethod(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
 		}
 
-		virtual bool addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker) final;
+		bool addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker);
 
 		void removeExternalMethod(usize const& hash) {
 			if (!hasExternalMethod(hash)) return;

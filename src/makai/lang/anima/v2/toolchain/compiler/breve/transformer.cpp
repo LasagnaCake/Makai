@@ -1201,7 +1201,6 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type)) {
 			if (rhs.shouldBePushed())
 				context.top()->impl->writeMainLine("push", *rhs.source);
-			context.top()->impl->writeMainLine("push val top");
 			if (i.direct.isUndefined())
 				context.top()->impl->writeMainLine("dyn set");
 			else if (i.direct.isInteger())

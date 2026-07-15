@@ -8,7 +8,7 @@ namespace ARTMeta = Anima::V2::Core::Meta;
 using Path = Makai::Data::Value::Path;
 
 struct MetaLib: ALibrary {
-	static bool AV2Call hasAttribute(Any obj, String attr) {
+	static bool AV2Call hasAttribute(Any const& obj, String const& attr) {
 		if (!obj.value)					return false;
 		if (!obj->getOriginalType())	return false;
 		return obj->getOriginalType()->meta.contains(attr);
@@ -20,7 +20,7 @@ struct MetaLib: ALibrary {
 		return obj->getOriginalType()->meta.keys();
 	}
 
-	static Any AV2Call unpack(Context& context, Any obj, TypeID attr) {
+	static Any AV2Call unpack(Context& context, Any const& obj, TypeID const& attr) {
 		static auto const hashPath = Path{"::meta/hash"}.compiled();
 		static auto const fieldMapPath = Path{"::meta/map"}.compiled();
 		auto& types = context.types;
