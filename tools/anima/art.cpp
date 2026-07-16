@@ -98,7 +98,7 @@ struct ARTEMain: Makai::AMain {
 			};
 			Makai::Anima::V2::Core::Module file;
 			if (!args.fetch("script", false)) {
-				static Makai::StringList const ext = Makai::StringList::from(".anp", ".anpb");
+				static auto const ext = Makai::StringList::from(Makai::tring(".anp"), Makai::String(".anpb"));
 				Makai::String fpath = args["__args"][0].getString() + ext[args.fetch("binary-first", false)];
 				if (Makai::OS::FS::exists(fpath))
 					file = Makai::File::getFLOW(fpath);
