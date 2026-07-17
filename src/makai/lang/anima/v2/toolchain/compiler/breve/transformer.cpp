@@ -731,8 +731,8 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 		||	node->base.type == LTS_TT_DECREMENT
 		) context.top()->impl->writeMainLine("push ref", *val.source);
 		else context.top()->impl->writeMainLine("push", *val.source);
-	} else if (rhs.isStackTop() && rhs.isCopied()) {
-		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+	} else if (val.isStackTop() && val.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *val.source, "-> top");
 	}
 	context.top()->impl->writeMainLine("push val top");
 	context.top()->impl->writeMainLine("swap");
@@ -781,6 +781,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		lhsHasBeenPushed = true;
 		context.top()->impl->writeMainLine("push", *lhs.source);
 	} else if (lhs.isStackTop() && lhs.isCopied()) {
+		lhsHasBeenPushed = true;
 		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 	}
 	if (
