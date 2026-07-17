@@ -109,11 +109,11 @@ struct ARTEMain: Makai::AMain {
 				;
 			} else {
 				using namespace Makai::Anima::V2::Toolchain;
-				static auto dirs = Makai::StringList::from("/");
-				dirs.appendBack(args["add-sources"].getArray().toList<Makai::String>());
 				Compiler::Breve::Transformer::Import::importer
-					= [&dirs] (auto const path) ->
+					= [args] (auto const path) ->
 						Compiler::Breve::File {
+						auto dirs = Makai::StringList::from("/");
+						dirs.appendBack(args["add-sources"].getArray().toList<Makai::String>());
 						static Makai::Dictionary<Compiler::Breve::File> cache;
 						if (path.empty()) throw Makai::Error::FailedAction("Module name is empty!");
 						if (cache.contains(path)) return cache[path];
