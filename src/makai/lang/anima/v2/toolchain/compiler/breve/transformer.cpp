@@ -309,6 +309,10 @@ ATransformer::resolve(Context& context, Node::Instance const& node, bool allowPa
 	return {path, scope};
 }
 
+bool ATransformer::Result::isCopied() const {
+	return source && Makai::Regex::contains(*source, R"re(^val(ue)?)re");
+}
+
 bool ATransformer::Result::isStackTop() const {
 	return source && Makai::Regex::contains(*source, R"re(stack\[\-0\]|top)re");
 }
@@ -457,6 +461,12 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 		context.error("Invalid expression!", node->leftSide);
 	if (val.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *val.source);
+	else if (val.isStackTop() && val.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *val.source, "-> top");
+	}
+	else if (val.isStackTop() && val.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *val.source, "-> top");
+	}
 	context.top()->impl->writeMainLine("ret");
 	return {{"move top"}, val.scope, val.type};
 }
@@ -666,6 +676,8 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		||	node->base.type == LTS_TT_DECREMENT
 		) context.top()->impl->writeMainLine("push ref", *val.source);
 		else context.top()->impl->writeMainLine("push", *val.source);
+	} else if (val.isStackTop() && val.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *val.source, "-> top");
 	}
 	if (
 		node->base.text == "sizeof"
@@ -719,6 +731,8 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 		||	node->base.type == LTS_TT_DECREMENT
 		) context.top()->impl->writeMainLine("push ref", *val.source);
 		else context.top()->impl->writeMainLine("push", *val.source);
+	} else if (rhs.isStackTop() && rhs.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
 	}
 	context.top()->impl->writeMainLine("push val top");
 	context.top()->impl->writeMainLine("swap");
@@ -766,6 +780,8 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	if (lhs.shouldBePushed() && !lhs.isCompilable()) {
 		lhsHasBeenPushed = true;
 		context.top()->impl->writeMainLine("push", *lhs.source);
+	} else if (lhs.isStackTop() && lhs.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 	}
 	if (
 		node->base.text == "as"
@@ -802,6 +818,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		context.top()->impl->writeMainLine("push", *lhs.source);
 	if (rhs.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *rhs.source);
+	else if (rhs.isStackTop() && rhs.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+	}
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		DEBUGLN("LHS Type: ", lhs.type->name);
 		DEBUGLN("RHS Type: ", rhs.type->name);
@@ -1165,8 +1184,11 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		implScope->impl->writePreLine("bind ref", implScope->varc, "[0 -> 0]");
 		implScope->impl->writePreLine("clear", implScope->varc);
 		auto const expr = Expression().transform(context, node->rightSide);
-		if (expr.source && expr.shouldBePushed())
+		if (expr.shouldBePushed())
 			implScope->impl->writePostLine("push", *expr.source);
+		else if (expr.isStackTop() && expr.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
+		}
 		implScope->impl->writePostLine("exit");
 		implScope->impl->writePostLine("ret");
 		implScope->impl->writePostLine("@def .\n");
@@ -1190,6 +1212,9 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			context.error("Expected array value here!", node->leftSide);
 		if (lhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *lhs.source);
+		else if (lhs.isStackTop() && lhs.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
+		}
 		auto i = Expression().transform(context, node->middle);
 		if (!(i.source && TypeDecl::stronger(i.type, context.basicType("uint64"))))
 			context.error("Expected integer here!", node->middle);
@@ -1201,6 +1226,9 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type)) {
 			if (rhs.shouldBePushed())
 				context.top()->impl->writeMainLine("push", *rhs.source);
+			else if (rhs.isStackTop() && rhs.isCopied()) {
+				context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+			}
 			if (i.direct.isUndefined())
 				context.top()->impl->writeMainLine("dyn set");
 			else if (i.direct.isInteger())
@@ -1320,12 +1348,18 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	Function::ArgTypes args;
 	if (fn.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *fn.source);
+	else if (fn.isStackTop() && fn.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *fn.source, "-> top");
+	}
 	for (auto const& arg: node->children) {
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
 		if (expr.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *expr.source);
+		else if (expr.isStackTop() && expr.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
+		}
 		args.pushBack(expr.type);
 	}
 	DEBUGLN("Function: ", f.name);
@@ -1361,6 +1395,9 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.error("Value is not an array!", node->rightSide);
 	if (src.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *src.source);
+	else if (src.isStackTop() && src.isCopied()) {
+		context.top()->impl->writeMainLine("copy", *src.source, "-> top");
+	}
 	auto const index = Expression().transform(context, node->rightSide);
 	if (index.isCompilable()) {
 		if (!index.direct.isInteger() or index.direct.getSigned() < 0)
@@ -1374,6 +1411,9 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	) {
 		if (index.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *index.source);
+		else if (index.isStackTop() && index.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *index.source, "-> top");
+		}
 		context.top()->impl->writeMainLine("dyn at");
 	} else context.error("Expected unsigned integer here!", node->rightSide);
 	auto const t = src.type->base;
@@ -1389,6 +1429,9 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 			context.error("Expected value here!", arg);
 		if (expr.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *expr.source);
+		else if (expr.isStackTop() && expr.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
+		}
 		if (!prev)
 			prev = expr.type;
 		else if (!(prev = TypeDecl::stronger(prev, expr.type)))
@@ -1428,6 +1471,9 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			context.error("Expected integer here!", node->rightSide);
 		else if (sz.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *sz.source);
+		else if (sz.isStackTop() && sz.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *sz.source, "-> top");
+		}
 		if (!sz.direct.isUndefined())
 			opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
 		else opstr = "*" + t->name;
@@ -1539,12 +1585,18 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		auto const ifEndLabel = "__if_" + node->name() + "_end_";
 		if (cond.shouldBePushed())
 			context.top()->impl->writeMainLine("push", cond.source.value());
+		else if (cond.isStackTop() && cond.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *cond.source, "-> top");
+		}
 		ATransformer::Result ifTrue, ifFalse;
 		auto const writeTrueBranch = [&] (bool const skipEndLabel = false) {
 			context.top()->impl->writeMainLine("begin");
 			ifTrue = Expression().transform(context, node->leftSide);
 			if (ifTrue.source && ifTrue.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifTrue.source.value());
+			else if (ifTrue.isStackTop() && ifTrue.isCopied()) {
+				context.top()->impl->writeMainLine("copy", *ifTrue.source, "-> top");
+			}
 			context.top()->impl->writeMainLine("end");
 			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
@@ -1555,6 +1607,9 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			ifFalse = Expression().transform(context, node->rightSide);
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifFalse.source.value());
+			else if (ifFalse.isStackTop() && ifFalse.isCopied()) {
+				context.top()->impl->writeMainLine("copy", *ifFalse.source, "-> top");
+			}
 			context.top()->impl->writeMainLine("end");
 			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
@@ -1622,6 +1677,9 @@ ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const
 	if (!condExpr.isCompilable()) {
 		if (condExpr.shouldBePushed())
 			loopScope->impl->writeMainLine("push", condExpr.source.value());
+		else if (condExpr.isStackTop() && condExpr.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *condExpr.source, "-> top");
+		}
 		loopScope->impl->writeMainLine("jump if false", loopEnd);
 	} else if (!condExpr.direct) return {};
 	auto const loopExpr = Expression().transform(context, node->rightSide);
@@ -1652,6 +1710,9 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 				context.error("Expression must be an integer!", node->leftSide);
 			if (it.shouldBePushed())
 				loopScope->impl->writePreLine("push", it.source.value());
+			else if (it.isStackTop() && it.isCopied()) {
+				context.top()->impl->writeMainLine("copy", *it.source, "-> top");
+			}
 			opq = asFastOpQualifier(*intType->basic);
 		} else context.error("Expression must be an integer!", node->leftSide);
 	} else context.error("Expression must be an integer!", node->leftSide);
@@ -1687,6 +1748,9 @@ ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& n
 		if (!condExpr.isCompilable()) {
 			if (condExpr.shouldBePushed())
 				loopScope->impl->writePostLine("push", condExpr.source.value());
+			else if (condExpr.isStackTop() && condExpr.isCopied()) {
+				context.top()->impl->writeMainLine("copy", *condExpr.source, "-> top");
+			}
 			loopScope->impl->writePostLine("jump if true", loopStart);
 		} else if (!condExpr.direct)
 			return loopExpr;

@@ -22,13 +22,13 @@ main :: () {
 	@ByCopy sz := countof val
 	IO.write("Size: ")
 	IO.writeLine(sz as any)
-	repeat @ByRef i : uint64 -> sz
+	repeat @ByCopy i : uint64 -> sz
 		val[sz - i] = i
 	IO.writeLine("Done creating!")
 	printArray(val)
 	IO.writeLine("Modifying array...")
-	repeat @ByRef i : uint64 -> sz
-		val[i - 1] = val[sz - i]
+	repeat @ByCopy i : uint64 -> sz
+		val[i - 1] = (copy val[i - 1]) + (copy val[sz - i])
 	IO.writeLine("Done modifying!")
 	printArray(val)
 }

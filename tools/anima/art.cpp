@@ -58,6 +58,7 @@ struct ARTEMain: Makai::AMain {
 		cfg["allow-dynlibs"]	= false;
 		cfg["binary-first"]		= false;
 		cfg["script"]			= false;
+		cfg["add-sources"]		= cfg.array();
 		return cfg;
 	}
 
@@ -98,19 +99,39 @@ struct ARTEMain: Makai::AMain {
 			};
 			Makai::Anima::V2::Core::Module file;
 			if (!args.fetch("script", false)) {
-				static auto const ext = Makai::StringList::from(Makai::tring(".anp"), Makai::String(".anpb"));
-				Makai::String fpath = args["__args"][0].getString() + ext[args.fetch("binary-first", false)];
-				if (Makai::OS::FS::exists(fpath))
-					file = Makai::File::getFLOW(fpath);
+				static auto const ext = Makai::StringList::from(".anp", ".anpb");
+				Makai::String fpath = args["__args"][0].getString();
+				if (Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
+					file = Makai::File::getFLOW(fpath + ext[args.fetch("binary-first", false)]);
 				else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ext[!args.fetch("binary-first", false)]))
 					.then([&] (auto const e) {file = e;})
 					.onError([&] (auto const e) {throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);})
 				;
 			} else {
+				using namespace Makai::Anima::V2::Toolchain;
+				static auto dirs = Makai::StringList::from("/");
+				dirs.appendBack(args["add-sources"].getArray().toList<Makai::String>());
+				Compiler::Breve::Transformer::Import::importer
+					= [&dirs] (auto const path) ->
+						Compiler::Breve::File {
+						static Makai::Dictionary<Compiler::Breve::File> cache;
+						if (path.empty()) throw Makai::Error::FailedAction("Module name is empty!");
+						if (cache.contains(path)) return cache[path];
+						if (Makai::OS::FS::exists(path + ".bv"))
+							return cache[path] = Compiler::Breve::parseFile(path + ".bv", Makai::File::getText(path + ".bv"));
+						auto const brevecDir = Makai::OS::FS::sourceLocation() + "/anima/breve/lib";
+						if (Makai::OS::FS::exists(brevecDir + "/" + path + ".bv"))
+							return cache[path] = Compiler::Breve::parseFile(brevecDir + "/" + path + ".bv", Makai::File::getText(brevecDir + "/" + path + ".bv"));
+						for (auto& dir: dirs)
+							if (Makai::OS::FS::exists(dir + "/" + path + ".bv"))
+								return cache[path] = Compiler::Breve::parseFile(dir + "/" + path + ".bv", Makai::File::getText(dir + "/" + path + ".bv"));
+						throw Makai::Error::FailedAction("Failed to find module '" + path + "'");
+					}
+				;
 				Makai::String fpath = args["__args"][0].getString();
 				auto const fdata = Makai::File::getText(fpath);
-				if (Makai::Regex::contains(fpath, R"re(\.bv$)re"))			file = Makai::Anima::V2::Toolchain::Compiler::Breve::compile(fpath, fdata);
-				else if (Makai::Regex::contains(fpath, R"re(\.min$)re"))	file = Makai::Anima::V2::Toolchain::Assembler::Minima::assemble(fpath, fdata);
+				if (Makai::Regex::contains(fpath, R"re(\.bv$)re"))			file = Compiler::Breve::compile(fpath, fdata);
+				else if (Makai::Regex::contains(fpath, R"re(\.min$)re"))	file = Assembler::Minima::assemble(fpath, fdata);
 				else [[unlikely]] {
 					auto const ext = Makai::Regex::findFirst(fpath, R"(\.(\w+)$)");
 					if (ext.match.empty())

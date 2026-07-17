@@ -41,7 +41,11 @@ Object::Storage Object::getAtIndex(uint64 const index) const {
 			return null;
 		return cloneFrom(index);
 	}
-	return index < fields.size() ? fields[index] : null;
+	if (index < fields.size()) {
+		MAKAILIB_DEBUGLN_FULL("[", index, "] -> ", fields[index]->toDynamicValue().toFLOWString());
+		return fields[index];
+	}
+	return null;
 }
 
 Object::SetError Object::setAtIndex(uint64 const index, Object::Storage const& value) {
@@ -65,7 +69,9 @@ Object::SetError Object::setAtIndex(uint64 const index, Object::Storage const& v
 		return SetError::AV2_COSE_OK;
 	}
 	if (index < fields.size()) {
+		MAKAILIB_DEBUGLN_FULL("[", index, "] -> ", value->toDynamicValue().toFLOWString());
 		fields[index] = value;
+		MAKAILIB_DEBUGLN_FULL("[", index, "] -> ", 	fields[index]->toDynamicValue().toFLOWString());
 		return SetError::AV2_COSE_OK;
 	}
 	return SetError::AV2_COSE_FIELD_DOES_NOT_EXIST;

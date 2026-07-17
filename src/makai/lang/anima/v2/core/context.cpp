@@ -82,7 +82,7 @@ Context::TypeAdder::~TypeAdder()			{}
 Context::TypeRemover::~TypeRemover()		{}
 
 bool Context::MethodAdder::add(usize const hash, usize const argc, ExternalInvocation const& invoker) const {
-	context.addExternalMethod(hash, argc, invoker);
+	return context.addExternalMethod(hash, argc, invoker);
 }
 
 Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, List<Object::Storage> const& args)  {

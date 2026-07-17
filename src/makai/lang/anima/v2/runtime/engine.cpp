@@ -1385,7 +1385,12 @@ void Engine::v2FieldGet() {
 		return crash(invalidSourceError("Value does not exist!"));
 	if (!context.top()->canHaveFields())
 		return crash(invalidSourceError("Value is not an array or structure!"));
-	context.push(context.pop()->getAtIndex(loc));
+	auto const src = context.pop();
+	MAKAILIB_DEBUGLN_FULL("Source: ", src->getType()->hash);
+	MAKAILIB_DEBUGLN_FULL("Field: ", loc);
+	auto const v =  src->getAtIndex(loc);
+	MAKAILIB_DEBUGLN_FULL("Field: ", loc);
+	context.push(src->getAtIndex(loc));
 	printValueState(context.top());
 }
 

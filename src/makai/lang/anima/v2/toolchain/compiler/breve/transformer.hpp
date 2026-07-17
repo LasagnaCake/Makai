@@ -17,6 +17,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			bool shouldBePushed() const;
 			bool isStackTop() const;
+			bool isCopied() const;
 			bool isDiscardable() const;
 
 			bool isCompilable() const {
