@@ -43,8 +43,8 @@ struct AtomicCell:
 		constexpr void release()	{if (refs) --refs;					}
 	};
 
-	constexpr AtomicCell():			wrapper(nullptr) {}
-	constexpr AtomicCell(nulltype):	wrapper(nullptr) {}
+	constexpr AtomicCell()			{}
+	constexpr AtomicCell(nulltype)	{}
 
 	constexpr AtomicCell(SelfType const& other): wrapper(other.wrapper) {
 		if (!exists()) return;
@@ -58,7 +58,7 @@ struct AtomicCell:
 
 	constexpr SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
-		unbind();
+		//unbind();
 		wrapper = other.wrapper;
 		if (!other.exists()) return *this;
 		auto const _ = wrapper->lock();
@@ -71,7 +71,7 @@ struct AtomicCell:
 			other.wrapper = nullptr;
 			return *this;
 		}
-		unbind();
+		//unbind();
 		wrapper = move(other.wrapper);
 		other.wrapper = nullptr;
 		return *this;
@@ -126,7 +126,7 @@ private:
 	[[noreturn]] constexpr static void emptyError() {
 		throw NullPointerException("Atomic cell is empty!");
 	}
-	ptr<Wrapper>	wrapper;
+	ptr<Wrapper>	wrapper = nullptr;
 	Mutex			mtx;
 };
 
