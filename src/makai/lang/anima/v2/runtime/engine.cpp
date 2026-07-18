@@ -918,6 +918,11 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
 		return;
 	}
+	if (lhs->getType() != rhs->getType()) {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Value types do not match!"));
+		return;
+	}
 	MAKAILIB_DEBUGLN_FULL("Left-Side  := ", lhs->toDynamicValue().toFLOWString());
 	MAKAILIB_DEBUGLN_FULL("Right-Side := ", rhs->toDynamicValue().toFLOWString());
 	switch (type) {
