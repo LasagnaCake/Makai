@@ -1,0 +1,18 @@
+using import core
+
+struct Person {
+	@ByCopy firstName : string
+	@ByCopy lastName : string
+}
+
+extend Person {
+	fullName :: (self: Person) => self.firstName + " " + self.lastName
+}
+
+@Main
+main :: () {
+	foo := new Person
+	foo.firstName = "John"
+	foo.lastName = "Doe"
+	IO.writeLine("Hello, " + foo.fullName! + "!")
+}

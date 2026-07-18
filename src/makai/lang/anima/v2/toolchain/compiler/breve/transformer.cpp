@@ -62,8 +62,9 @@ static ATransformer::Result expandVariable(
 		else if (parent && parent->property)
 			expandProperty(context, node, path, *parent->property, true);
 		else if (stack) context.top()->impl->writeMainLine("push", var.getSource());
-		context.top()->impl->writeMainLine("at", var.id);
-		return {{"move top"}, var.scope.raw(), var.type.raw()};
+		ATransformer::Result out = {{"move top"}, var.scope.raw(), var.type.raw()};
+		out.parent = var.fieldOf.raw();
+		return out;
 	} else
 		return {var.getSource(), var.scope.raw(), var.type.raw()};
 }
@@ -124,9 +125,12 @@ static ATransformer::Result resolveSubfield(
 	}
 	if (ns->variable) {
 		if (ns->variable->type->fields.contains(sub)) {
-			auto const f = ns->type->fields[sub];
-			context.top()->impl->writeMainLine("at by"+ns->variable->passBy, f->id);
-			return {{"move top"}, f->scope.raw(), f->type.raw()};
+			auto const f = ns->variable->type->fields[sub];
+			context.top()->impl->writeMainLine("push", ns->variable->getSource()+ " " + ns->variable->passBy);
+			if (node->forAssignment)
+				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, f->id, ns->variable->type.raw()};
+			context.top()->impl->writeMainLine("at", f->id);
+			return {{f->passBy + " top"}, f->scope.raw(), f->type.raw(), {}, 0, ns->variable->type.raw()};
 		}
 	}
 	if (ns->property) {
@@ -1239,7 +1243,19 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		} else context.error("Type mismatch!", node);
 	}
 	auto lhs = Expression().transform(context, node->leftSide);
+	if (lhs.isStackTop() && lhs.isCopied())
+		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 	auto const rhs = Expression().transform(context, node->rightSide);
+	if (lhs.parent) {
+		if (lhs.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *lhs.source);
+		if (rhs.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *rhs.source);
+		else if (rhs.isStackTop() && rhs.isCopied())
+			context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+		context.top()->impl->writeMainLine("set", lhs.likelihood);
+		return {{"move top"}, lhs.scope, lhs.type, rhs.direct, rhs.likelihood};
+	}
 	if (lhs.isCompilable() && !lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		if (lhs.isStackTop() && rhs.isStackTop())

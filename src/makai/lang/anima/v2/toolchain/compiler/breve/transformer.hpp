@@ -14,6 +14,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Namespace::TypeRef		type;
 			Data::Value				direct;
 			ssize					likelihood = 0;
+			Namespace::TypeRef		parent;
 
 			bool shouldBePushed() const;
 			bool isStackTop() const;

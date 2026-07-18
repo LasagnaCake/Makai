@@ -302,6 +302,9 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 	if (leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
 		result->leftSide = leftSide->leftSide;
 		result->middle = leftSide->rightSide;
+	} if (leftSide->content == Node::Content::AV2_TANC_PATH) {
+		result->leftSide = leftSide;
+		result->forAssignment = true;
 	} else result->leftSide = leftSide;
 	result->rightSide = parser.nextExpression(precedence);
 	return result;
@@ -312,7 +315,7 @@ Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_TYPE_EXTENSION;
 	result->leftSide = parser.nextExpression();
-	if (!leftSide->isPathOrName())
+	if (!result->leftSide->isPathOrName())
 		parser.context.error("Invalid expression for extension!");
 	if (parser.context.peek().type == LTS_TT_IDENTIFIER) {
 		auto const id = parser.context.peek().value.getString();
