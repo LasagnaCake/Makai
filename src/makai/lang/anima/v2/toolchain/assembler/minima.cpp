@@ -957,17 +957,22 @@ static void doAwait(Context& context, bool const dyn = false) {
 }
 
 static void doCast(Context& context, bool const dyn = false) {
+	Instruction::Casting cast{.dynamic = dyn};
+	if (context.peek().text == "ref") {
+		context.next();
+		cast.noCopy = true;
+	}
 	if (!dyn) {
 		context.next();
 		auto const type = resolvePath(context);
 		if (context.types.contains(type)) {
-			context.add(Instruction::Name::AV2_IN_CAST);
+			context.add(Instruction::Name::AV2_IN_CAST, cast);
 			context.add(context.getType(type)->id);
 		} else context.error("Type with name [" + type + "] does not exist!");
 	} else {
 		context.add(
 			Instruction::Name::AV2_IN_CAST,
-			Instruction::Casting{.dynamic = true}
+			cast
 		);
 	}
 }

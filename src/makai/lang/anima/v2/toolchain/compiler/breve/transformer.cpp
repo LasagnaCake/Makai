@@ -795,7 +795,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 			return {{"move top"}, retType->scope.raw(), retType};
 		}
 		auto const retType = t.type;
-		if (t.type->basic != Core::BasicType::AV2_BT_ANY && !t.type->derivedFrom(retType))
+		if (t.type->basic != Core::BasicType::AV2_BT_ANY && !TypeDecl::stronger(t.type, retType))
 			context.error("Value's type cannot be converted to given type!", node);
 		context.top()->impl->writeMainLine(node->base.text, t.type->name);
 		return {{"move top"}, retType->scope.raw(), retType};

@@ -10,7 +10,7 @@ printArray :: (@ByRef arr: [uint64]) {
 		IO.write("Index [")
 		IO.write(at as any)
 		IO.write("] = ")
-		IO.writeLine(arr[at] as any)
+		IO.writeLine((copy arr[at]) as any)
 	}
 	IO.writeLine("Done!")
 }
@@ -28,7 +28,7 @@ main :: () {
 	printArray(val)
 	IO.writeLine("Modifying array...")
 	repeat @ByCopy i : uint64 -> sz
-		val[i - 1] = (copy val[i - 1]) + (copy val[sz - i])
+		val[i - 1] = (copy val[i - 1]) + val[sz - i]
 	IO.writeLine("Done modifying!")
 	printArray(val)
 }

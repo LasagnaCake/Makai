@@ -318,6 +318,7 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		Data::Value toDynamicValue() const {
+			if (!content->size()) return Data::Value::undefined();
 			if (!isBasic()) 	return Data::Value::undefined();
 			if (isNull())		return toValue<nulltype>();
 			if (isBoolean())	return toValue<bool>();

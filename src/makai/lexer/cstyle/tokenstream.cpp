@@ -52,6 +52,23 @@ static bool isWordChar(UTF::U8Char const ch) {
 	if (ch >= UTF::U8Char{'A'} && ch <= UTF::U8Char{'Z'}) return true;
 	if (ch >= UTF::U8Char{'a'} && ch <= UTF::U8Char{'z'}) return true;
 	if (ch == UTF::U8Char{'_'}) return true;
+	// Unicode Hell, don't even bother checking
+	if (ch >= UTF::U8Char{"\u00C0"} && ch <= UTF::U8Char{"\u00D6"}) return true;
+	if (ch >= UTF::U8Char{"\u00D8"} && ch <= UTF::U8Char{"\u00F6"}) return true;
+	if (ch >= UTF::U8Char{"\u0590"} && ch <= UTF::U8Char{"\u05FF"}) return true;
+	if (ch >= UTF::U8Char{"\u0600"} && ch <= UTF::U8Char{"\u077F"}) return true;
+	if (ch >= UTF::U8Char{"\u0780"} && ch <= UTF::U8Char{"\u07BF"}) return true;
+	if (ch >= UTF::U8Char{"\u0800"} && ch <= UTF::U8Char{"\u086F"}) return true;
+	if (ch >= UTF::U8Char{"\u08A0"} && ch <= UTF::U8Char{"\u1FFF"}) return true;
+	if (ch >= UTF::U8Char{"\u2800"} && ch <= UTF::U8Char{"\u28FF"}) return true;
+	if (ch >= UTF::U8Char{"\u2C00"} && ch <= UTF::U8Char{"\u2FEF"}) return true;
+	if (ch >= UTF::U8Char{"\u3040"} && ch <= UTF::U8Char{"\u31FF"}) return true;
+	if (ch >= UTF::U8Char{"\u3300"} && ch <= UTF::U8Char{"\u4DBF"}) return true;
+	if (ch >= UTF::U8Char{"\u4E00"} && ch <= UTF::U8Char{"\u9FFF"}) return true;
+	if (ch >= UTF::U8Char{"\U00013000"} && ch <= UTF::U8Char{"\U0001467F"}) return true;
+	if (ch >= UTF::U8Char{"\U00020000"} && ch <= UTF::U8Char{"\U0002EE5F"}) return true;
+	if (ch >= UTF::U8Char{"\U0002F800"} && ch <= UTF::U8Char{"\U0002FA1F"}) return true;
+	if (ch >= UTF::U8Char{"\U00030000"} && ch <= UTF::U8Char{"\U0003347F"}) return true;
 	return false;
 }
 

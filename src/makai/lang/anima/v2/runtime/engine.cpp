@@ -907,18 +907,18 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
 	auto rhs	= context.pop();
-	if (!rhs) {
+	if (!rhs) [[unlikely]] {
 		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
 		else [[likely]] crash(invalidOperationError("Right-Side Operand does not exist!"));
 		return;
 	}
 	auto lhs	= context.top();
-	if (!lhs) {
+	if (!lhs) [[unlikely]] {
 		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
 		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
 		return;
 	}
-	if (lhs->getType() != rhs->getType()) {
+	if (lhs->getType() != rhs->getType()) [[unlikely]] {
 		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
 		else [[likely]] crash(invalidOperationError("Value types do not match!"));
 		return;
@@ -1580,6 +1580,15 @@ void Engine::v2Cast() {
 		advance(true);
 		typeID = Makai::Cast::bit<uint64>(current);
 	}
+	auto const copyConvert = [&] (AtomicCell<Core::Definition> const& type) {
+		return context.push(context.pop()->as(type)).top().exists();
+	};
+	auto const moveConvert = [&] (AtomicCell<Core::Definition> const& type) {
+		return context.top()->changeType(type);
+	};
+	auto const convert = [&] (AtomicCell<Core::Definition> const& type) {
+		return cast.noCopy ? moveConvert(type) : copyConvert(type);
+	};
 	if (auto const t = context.art.types.byID(typeID)) {
 		if (!context.top()) return crash(makeErrorHere("Value does not exist!"));
 		if (context.top()->isBasic() && t->basic) {
@@ -1602,14 +1611,12 @@ void Engine::v2Cast() {
 				case BasicType::AV2_BT_STRING:	context.push(context.newValue(context.pop()->toValue<UTF8String>()));	break;
 				case BasicType::AV2_BT_BYTES:	context.push(context.newValue(context.pop()->toValue<Bytes<>>()));		break;
 				case BasicType::AV2_BT_ANY: {
-					auto const types = context.art.types.byNameHash(hash("any"));
-					if (types.empty())
+					if (!convert(t))
 						return crash(outOfRangeError("[any] conversion failed!"));
-					context.top()->changeType(types.front());
 				} break;
 				default: return crash(outOfRangeError("Invalid conversion!"));
 			}
-		} else if (!context.top()->changeType(t))
+		} else if (!convert(t))
 			return crash(makeErrorHere("Cannot convert value to requested type!"));
 	} else return crash(makeErrorHere("Type does not exist!"));
 }
