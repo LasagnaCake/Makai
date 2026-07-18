@@ -10,7 +10,7 @@ printArray :: (@ByRef arr: [uint64]) {
 		IO.write("Index [")
 		IO.write(at as any)
 		IO.write("] = ")
-		IO.writeLine((copy arr[at]) as any)
+		IO.writeLine(arr[at] as any)
 	}
 	IO.writeLine("Done!")
 }
