@@ -114,7 +114,7 @@ struct AtomicCell:
 private:
 	constexpr void unbind() {
 		if (!exists()) return;
-		auto const _ = wrapper->oplock.acquire();
+		wrapper->oplock.capture();
 		wrapper->release();
 		if (!wrapper->refs) {
 			wrapper->oplock.release();
