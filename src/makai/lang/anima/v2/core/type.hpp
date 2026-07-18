@@ -171,9 +171,9 @@ namespace Makai::Anima::V2::Core {
 	struct Definition: Entry, Flagged<TypeFlags> {
 		using Source = MemorySlice<byte>;
 
-		bool canBecome(Handle<Definition> const& type) const {
+		bool canBecome(AtomicCell<Definition> const& type) const {
 			if (type == base) return true;
-			Handle<Definition> current = base;
+			AtomicCell<Definition> current = base;
 			if (!base) return false;
 			do if (current == type) return true;
 			while ((current = current->base));
@@ -182,11 +182,11 @@ namespace Makai::Anima::V2::Core {
 
 		static void makeBasic(Definition& type);
 
-		Nullable<BasicType>			basic;
-		Handle<Definition>			base		= nullptr;
-		uint64						byteSize	= 0;
-		uint64						alignment	= 1;
-		List<Handle<Definition>>	fields;
+		Nullable<BasicType>				basic;
+		AtomicCell<Definition>			base		= nullptr;
+		uint64							byteSize	= 0;
+		uint64							alignment	= 1;
+		List<AtomicCell<Definition>>	fields;
 
 		Data::Value::ObjectType		meta;
 

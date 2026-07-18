@@ -918,6 +918,8 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
 		return;
 	}
+	MAKAILIB_DEBUGLN_FULL("Left-Side  := ", lhs->toDynamicValue().toFLOWString());
+	MAKAILIB_DEBUGLN_FULL("Right-Side := ", rhs->toDynamicValue().toFLOWString());
 	switch (type) {
 		case Core::BasicType::AV2_BT_VOID:
 		case Core::BasicType::AV2_BT_NULL:		break;
@@ -1148,7 +1150,7 @@ void Engine::load() {
 			context.art.types.values.pushBack(nullptr);
 			continue;
 		}
-		Instance<Core::Definition> dt = dt.create();
+		AtomicCell<Core::Definition> dt = dt.create();
 		dt->hash = type.hash;
 		if (type.base) inheritances[i] = *type.base;
 		if (type.fields.size())
@@ -1177,7 +1179,7 @@ void Engine::load() {
 			"Program has missing types [ " + missingTypes.join(", ") + " ]!"
 		)));
 	for (auto const& [self, base]: inheritances)
-		context.art.types.values[self]->base = context.art.types.values[base].asWeak();
+		context.art.types.values[self]->base = context.art.types.values[base];
 	if (context.art.types.values.size() < program.detail.types.size())
 		return crash(makeErrorHere(toString(
 			"Program has missing types [",
@@ -1188,7 +1190,7 @@ void Engine::load() {
 		)));
 	for (auto const& [self, fields]: fields)
 		for (auto const& field: fields)
-			context.art.types.values[self]->fields.pushBack(context.art.types.values[field].asWeak());
+			context.art.types.values[self]->fields.pushBack(context.art.types.values[field]);
 	if (program.entry != Limit::MAX<uint64>) jumpByTableIndex(program.entry, false /*not returnable*/);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (config.allowDynamicLibraries) {

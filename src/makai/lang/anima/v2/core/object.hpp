@@ -14,7 +14,7 @@ namespace Makai::Anima::V2::Core {
 	};
 
 	struct Object {
-		using Storage = Instance<Object>;
+		using Storage = AtomicCell<Object>;
 		using Memory = MemorySlice<byte>;
 
 		~Object();
@@ -130,9 +130,9 @@ namespace Makai::Anima::V2::Core {
 			return toDynamicValue();
 		}
 
-		Object::Storage as(Instance<Definition> const& newType) const;
+		Object::Storage as(AtomicCell<Definition> const& newType) const;
 
-		bool changeType(Instance<Definition> const& newType);
+		bool changeType(AtomicCell<Definition> const& newType);
 
 		Object& operator=(Object const& other) {
 			if (other.isClonable())
@@ -358,71 +358,42 @@ namespace Makai::Anima::V2::Core {
 
 		void reserveFields(usize const count);
 
-		struct Accessor {
-			Accessor const& operator=(Storage const& value) const	{return set(value);	}
-			operator Storage() const								{return get();		}
-
-			Storage			get() const;
-			Accessor const&	set(Storage const& value) const;
-
-			Storage source() const;
-
-			Accessor() = default;
-
-			Accessor(Accessor const&) = default;
-			Accessor(Accessor&&) = default;
-
-		private:
-			friend struct Object;
-
-			usize	index;
-			Storage store;
-
-			Accessor(usize const& index, Storage const& value): index(index), store(value) {}
-		};
-
-		Accessor	at(uint64 const index)			{return {index, this};		}
-		Storage		at(uint64 const index) const	{return getAtIndex(index);	}
-
-		Accessor	operator[](uint64 const index)			{return at(index);	}
-		Storage		operator[](uint64 const index) const	{return at(index);	}
-
 		static Storage create() {
-			return new Object();
+			return Storage::create();
 		}
 
-		static Storage create(Instance<Definition> const& type) {
-			return new Object(type);
+		static Storage create(AtomicCell<Definition> const& type) {
+			return Storage::create(type);
 		}
 
-		static Storage create(Object const& other, Instance<Definition> const& newType) {
-			return new Object(other, newType);
+		static Storage create(Object const& other, AtomicCell<Definition> const& newType) {
+			return Storage::create(other, newType);
 		}
 
 		template <Makai::Type::Different<Object> T>
-		static Storage create(T const& val, Instance<Definition> const& info) {
-			return new Object(val, info);
+		static Storage create(T const& val, AtomicCell<Definition> const& info) {
+			return Storage::create(val, info);
 		}
 
 		static Storage create(Object const& other) {
-			return new Object(other);
+			return Storage::create(other);
 		}
 
 		static Storage create(
-			Instance<Memory> const& content,
-			Instance<Definition> const& type,
-			Instance<Definition> const& origin
+			AtomicCell<Memory> const& content,
+			AtomicCell<Definition> const& type,
+			AtomicCell<Definition> const& origin
 		) {
-			return new Object(content, type, origin);
+			return Storage::create(content, type, origin);
 		}
 
 		Object(Object&&)			= default;
 		Object& operator=(Object&&)	= default;
 
-		Handle<Definition>	getType()	const;
+		AtomicCell<Definition>	getType()	const;
 
-		Handle<Definition>	getCurrentType()	const;
-		Handle<Definition>	getOriginalType()	const;
+		AtomicCell<Definition>	getCurrentType()	const;
+		AtomicCell<Definition>	getOriginalType()	const;
 
 		template <class T> explicit operator T() const {return toValue<T>();}
 
@@ -432,18 +403,18 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object() noexcept {}
 
 		constexpr Object(
-			Instance<Definition> const& type
+			AtomicCell<Definition> const& type
 		): type(type), origin(type) {
 		}
 
 		constexpr Object(
 			Object const& other,
-			Instance<Definition> const& newType
+			AtomicCell<Definition> const& newType
 		): content(other.content), type(newType), origin(other.origin) {
 		}
 
 		template <Makai::Type::Different<Object> T>
-		constexpr Object(T const& v, Instance<Definition> const& info) {
+		constexpr Object(T const& v, AtomicCell<Definition> const& info) {
 			type = info;
 			origin = info;
 			content->invoke(origin->byteSize);
@@ -483,9 +454,9 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		constexpr Object(
-			Instance<Memory> const& content,
-			Instance<Definition> const& type,
-			Instance<Definition> const& origin
+			AtomicCell<Memory> const& content,
+			AtomicCell<Definition> const& type,
+			AtomicCell<Definition> const& origin
 		): content(content), type(type), origin(origin) {}
 
 		pointer addressAt(usize index) const;
@@ -522,9 +493,9 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		List<Storage>			fields;
-		Instance<Memory>		content = new Memory();
-		Instance<Definition>	type;
-		Instance<Definition>	origin;
+		AtomicCell<Memory>		content = content.create();
+		AtomicCell<Definition>	type;
+		AtomicCell<Definition>	origin;
 	};
 
 	constexpr Data::Value decay(Object::Storage const& val) {

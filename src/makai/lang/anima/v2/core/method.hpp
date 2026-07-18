@@ -11,8 +11,8 @@ namespace Makai::Anima::V2::Core {
 	};
 
 	struct Method: Entry, Flagged<MethodFlags> {
-		Instance<Definition>		retType;
-		List<Instance<Definition>>	argTypes;
+		AtomicCell<Definition>			retType;
+		List<AtomicCell<Definition>>	argTypes;
 	};
 }
 

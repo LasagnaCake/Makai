@@ -12,7 +12,7 @@ Object::~Object() {
 	}
 }
 
-Object::Storage Object::as(Instance<Definition> const& newType) const {
+Object::Storage Object::as(AtomicCell<Definition> const& newType) const {
 	if (type && type->canBecome(newType))
 		return Object::create(*this, newType);
 	else if (!type && origin && origin->canBecome(newType))
@@ -20,7 +20,7 @@ Object::Storage Object::as(Instance<Definition> const& newType) const {
 	else return null;
 }
 
-bool Object::changeType(Instance<Definition> const& newType) {
+bool Object::changeType(AtomicCell<Definition> const& newType) {
 	if (type && type->canBecome(newType)) {
 		type = newType;
 		return true;
@@ -99,17 +99,17 @@ Object::Storage Object::cloneFrom(usize const index) const {
 	if (index >= count()) return nullptr;
 	if (isValueType()) {
 		auto const addr = addressAt(index);
-		auto const mem = new Memory();
+		auto const mem = AtomicCell<Memory>::create();
 		if (isStructure() && isClonable()) {
 			auto const t = origin->fields[index];
 			mem->resize(t->byteSize);
 			MX::memcpy(mem->data(), addr, t->byteSize);
-			return create(mem, t.raw(), t.raw());
+			return create(mem, t, t);
 		}
 		if (isArray() && origin->base->flags.isCopyable) {
 			mem->resize(origin->base->byteSize);
 			MX::memcpy(mem->data(), addr, origin->base->byteSize);
-			return create(mem, getType()->base.raw(), origin->base.raw());
+			return create(mem, getType()->base, origin->base);
 		}
 	} else if (fields[index])
 		return fields[index]->clone();
@@ -140,23 +140,14 @@ pointer Object::addressAt(usize index) const {
 	} else return content->data();
 }
 
-Object::Storage Object::Accessor::get() const {
-	return store->getAtIndex(index);
+AtomicCell<Definition> Object::getType() const {
+	return type ? type : origin;
 }
 
-Object::Accessor const& Object::Accessor::set(Object::Storage const& value) const {
-	store->setAtIndex(index, value);
-	return *this;
+AtomicCell<Definition> Object::getCurrentType() const {
+	return getType();
 }
 
-Makai::Handle<Definition> Object::getType() const {
-	return type ? type.asWeak() : origin.asWeak();
-}
-
-Makai::Handle<Definition> Object::getCurrentType() const {
-	return getType().asWeak();
-}
-
-Makai::Handle<Definition> Object::getOriginalType() const {
-	return origin.asWeak();
+AtomicCell<Definition> Object::getOriginalType() const {
+	return origin;
 }

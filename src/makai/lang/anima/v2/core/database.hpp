@@ -6,9 +6,9 @@
 namespace Makai::Anima::V2::Core {
 	template <Type::Derived<Entry> T>
 	struct Database {
-		using ElementType		= Instance<T>;
+		using ElementType		= AtomicCell<T>;
 		using StorageType		= List<ElementType>;
-		using QueryType			= Handle<T>;
+		using QueryType			= AtomicCell<T>;
 		using QueryResultType	= List<QueryType>;
 
 		StorageType byName(String const& name) const {

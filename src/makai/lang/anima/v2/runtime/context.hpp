@@ -41,7 +41,7 @@ namespace Makai::Anima::V2::Runtime {
 			return *this;
 		}
 
-		template <Type::NoneOf<Storage, Core::Object::Accessor> T>
+		template <Type::Different<Storage> T>
 		Context& push(T const& value) {
 			globalValueStack.pushBack(newValue(value));
 			return *this;

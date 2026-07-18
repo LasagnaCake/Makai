@@ -43,9 +43,9 @@ namespace Makai::Anima::V2::Core {
 	struct Void {};
 
 	struct Any {
-		Instance<Object> value;
+		AtomicCell<Object> value;
 
-		constexpr Instance<Object> const& operator->() const {
+		constexpr AtomicCell<Object> const& operator->() const {
 			return value;
 		}
 	};

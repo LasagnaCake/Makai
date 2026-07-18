@@ -4,5 +4,6 @@
 #include "reference.hpp"
 #include "shared.hpp"
 #include "unique.hpp"
+#include "atomiccell.hpp"
 
 #endif
