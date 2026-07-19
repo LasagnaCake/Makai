@@ -351,7 +351,11 @@ static Namespace::AttributeRef createPassByAttribute(Makai::UTF8String const mod
 	attrib->name = "By" + mode;
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		if (mode == "Copy")			ns->variable->passBy = "val";
+		if (mode == "Copy") {
+			if (!ns->variable->type->flags.isCopyable)
+				Transformer::ATransformer::Context::error("Variable is not of a copyable type!", ns->node);
+			ns->variable->passBy = "val";
+		}
 		else if (mode == "Ref")		ns->variable->passBy = "ref";
 		else if (mode == "Move")	ns->variable->passBy = "move";
 	};
@@ -529,6 +533,11 @@ static Namespace::AttributeRef createCopyAttribute() {
 	attrib->name = "Copy";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		for (auto& [name, field]: ns->type->fields) {
+			if (!field->type->flags.isCopyable)
+				Transformer::ATransformer::Context::error("Copyable types must only contain copyable fields!", ns->node);
+			ns->variable->passBy = "val";
+		}
 		ns->type->flags.isCopyable = true;
 	};
 	return attrib;
@@ -553,6 +562,15 @@ static Namespace::AttributeRef createValueAttribute() {
 	attrib->name = "Value";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		if (ns->type->flags.isArray && ns->type->base->flags.isArray)
+			Transformer::ATransformer::Context::error("Value arrays of arrays are disallowed!", ns->node);
+		if (ns->type->flags.isArray && !ns->type->base->flags.isValueType)
+			Transformer::ATransformer::Context::error("Value arrays of non-value-types are disallowed!", ns->node);
+		for (auto& [name, field]: ns->type->fields) {
+			if (!field->type->flags.isValueType)
+				Transformer::ATransformer::Context::error("Value types must only contain value fields!", ns->node);
+			ns->variable->passBy = "val";
+		}
 		ns->type->flags.isValueType = true;
 	};
 	return attrib;
@@ -569,6 +587,7 @@ static Namespace::AttributeRef createBasicAttribute() {
 		ns->type->def = TypeDecl::Definition::AV2_TCTD_BASIC;
 		ns->type->flags.isStructure = false;
 		ns->type->flags.isBasic = true;
+		ns->type->flags.isFinal = true;
 		if (ns->type->fields.size() > 2) {
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
 		} else if (ns->type->fields.size() > 1 && !ns->type->fields.contains("base")) {
@@ -597,6 +616,8 @@ static Namespace::AttributeRef createBasicAttribute() {
 		else if (bt == "any")		ns->type->basic = AV2_BT_ANY;
 		else if (bt == "null")		ns->type->basic = AV2_BT_NULL;
 		else Transformer::ATransformer::Context::error("Invalid basic type!", ns->node);
+		if (!(bt == "string" or bt == "bytes"))
+			ns->type->flags.isValueType = true;
 	};
 	return attrib;
 }

@@ -78,6 +78,7 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_PROPERTY_SETTER:		return "set";
 		case Content::AV2_TANC_PROPERTY:			return "prop";
 		case Content::AV2_TANC_AWAIT:				return "await";
+		case Content::AV2_TANC_STREAM_EXPR:			return "stream";
 	}
 	return "???";
 }

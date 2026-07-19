@@ -229,7 +229,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct ExpansionResolver: AResolver {
-		ExpansionResolver(): AResolver(Parser::Precedence::AV2_TAPP_RANGE_EXPR, true) {}
+		ExpansionResolver(): AResolver(Parser::Precedence::AV2_TAPP_EXPAND_EXPR, false) {}
 		virtual ~ExpansionResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
@@ -249,6 +249,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct AwaitExpressionResolver: AResolver {
 		AwaitExpressionResolver(): AResolver() {}
 		virtual ~AwaitExpressionResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct InsertionResolver: AResolver {
+		InsertionResolver(): AResolver(Parser::Precedence::AV2_TAPP_INSERT_EXTRACT, true) {}
+		virtual ~InsertionResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct ExtractionResolver: AResolver {
+		ExtractionResolver(): AResolver(Parser::Precedence::AV2_TAPP_INSERT_EXTRACT, false) {}
+		virtual ~ExtractionResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 

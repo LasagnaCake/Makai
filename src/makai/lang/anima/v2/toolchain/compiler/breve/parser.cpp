@@ -202,6 +202,8 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_XOR_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_STREAM_INSERT, infixes, new InsertionResolver());
+	add(LTS_TT_STREAM_EXTRACT, infixes, new ExtractionResolver());
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
 	DEBUGLN("Done!");
 }

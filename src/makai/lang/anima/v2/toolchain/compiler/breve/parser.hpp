@@ -12,6 +12,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		enum class Precedence: uint16 {
 			AV2_TAPP_NONE,
 			AV2_TAPP_DECL,
+			AV2_TAPP_INSERT_EXTRACT,
 			AV2_TAPP_BLOCK,
 			AV2_TAPP_RHS_DECAY,
 			AV2_TAPP_NULL_DECAY,
@@ -27,6 +28,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TAPP_EQ_INEQ,
 			AV2_TAPP_COMPARE,
 			AV2_TAPP_ORDER,
+			AV2_TAPP_EXPAND_EXPR,
 			AV2_TAPP_RANGE_EXPR,
 			AV2_TAPP_BIT_SHIFT,
 			AV2_TAPP_ADD_SUB,

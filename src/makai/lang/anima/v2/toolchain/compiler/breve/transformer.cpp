@@ -439,17 +439,33 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto const initer = "__init_" + name.join("_") + node->name();
 	List<Node::Instance> fields;
 	List<Node::Instance> methods;
-	for (auto& entry: node->rightSide->children) {
-		if (entry->content == Node::Content::AV2_TANC_DECLARATION) {
-			if (entry->base.type == LTS_TT_NAMESPACE_RESOLVE)
-				methods.pushBack(entry);
-			else if (entry->base.type == LTS_TT_COLON)
-				fields.pushBack(entry);
-			else if (entry->base.text == "prop")
-				fields.pushBack(entry);
-			else context.error("Unsupported declaration in structure declaration!", entry);
-		}
-	}
+	List<Node::Instance> properties;
+	Makai::Function<void(Node::Instance const&)> evalDecl;
+	evalDecl = [&] (Node::Instance const& node) {
+		if (node->content == Node::Content::AV2_TANC_DECLARATION) {
+			if (node->base.type == LTS_TT_NAMESPACE_RESOLVE) {
+				DEBUGLN("  > Function");
+				methods.pushBack(node);
+			} else if (
+				node->base.type == LTS_TT_COLON
+			or	node->base.type == LTS_TT_DECLARE
+			or	node->base.type == LTS_TT_ASSIGN
+			) {
+				DEBUGLN("  > Field");
+				fields.pushBack(node);
+			} else if (node->base.text == "prop") {
+				DEBUGLN("  > Property");
+				properties.pushBack(node);
+			}
+			else context.error("Invalid declaration inside structure declaration!", node);
+		} else if (node->content == Node::Content::AV2_TANC_ATTRIBUTE) {
+			evalDecl(node->rightSide);
+		} else context.error("Invalid expression inside structure declaration!", node);
+	};
+	DEBUGLN("struct {");
+	for (auto& entry: node->rightSide->children)
+		evalDecl(entry);
+	DEBUGLN("}");
 	type.scope = scope.asWeak();
 	type.node = node;
 	type.name = "__" + name.join("_") + node->name();
@@ -457,25 +473,38 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	List<Namespace::VariableRef> statics;
 	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
 	scope->type->flags.isStructure = true;
-	for (auto& [field, id]: Range::expand(field)) {
+	DEBUGLN("Parsing fields...");
+	DEBUGLN("Field count: ", fields.size());
+	for (auto const& [field, id]: Range::expand(fields)) {
 		auto const decl = VariableDecl().transform(context, field);
 		auto& var = *decl.scope->variable;
 		var.fieldOf = scope->type.asWeak();
-		type.fields[name] = decl.scope->variable;
+		type.fields[var.name] = decl.scope->variable;
+		scope->subspaces[var.name] = decl.scope;
+		DEBUGLN("Field: ", var.name);
 		var.id = id;
 	}
+	context.pop(name.size());
 	context.registerType(scope);
+	auto implName = name;
+	implName.back() = "::IMPL__" + implName.back();
+	context.declare(implName);
+	DEBUGLN("Parsing methods...");
+	DEBUGLN("Method count: ", methods.size());
 	for (auto& method: methods) {
 		auto const decl = FunctionDecl().transform(context, method);
 		auto& fn = *decl.scope->function;
 		for (auto& ov: fn.overloads) {
-			if (!ov.staticEntity && (ov.arguments.empty() or ov.arguments[0]->type != scope->type))
+			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
 				context.error("Missing appropriate [this] parameter!", method);
+			if (!ov->staticEntity)
+				ov->methodOf = scope->type.asWeak();
 		}
-		fn.methodOf = scope->type.asWeak();
+		if (scope->subspaces.contains(fn.name))
+			context.error("Symbol with this name already exists!", method);
+		scope->subspaces[fn.name] = decl.scope;
 	}
-	context.pop(name.size());
-	context.registerType(scope);
+	context.pop(implName.size());
 	return {.scope = scope, .type = scope->type};
 }
 
@@ -691,7 +720,11 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	) {
 		auto mod = node->base.text;
 		DEBUGLN("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
-		if (mod == "copy") mod = "val";
+		if (mod == "copy") {
+			if (!(val.type->flags.isBasic or val.type->flags.isCopyable))
+				context.error("Value is not of a copyable type!", node);
+			mod = "val";
+		}
 		DEBUGLN("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood};
 	}
@@ -847,9 +880,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	else if (rhs.isStackTop() && rhs.isCopied()) {
 		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
 	}
+	DEBUGLN("LHS Type: ", lhs.type ? lhs.type->name : "NO_TYPE");
+	DEBUGLN("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
-		DEBUGLN("LHS Type: ", lhs.type->name);
-		DEBUGLN("RHS Type: ", rhs.type->name);
 		DEBUGLN("Stronger: ", t->name);
 		if (t->basic) {
 			if (lhs.type->basic == rhs.type->basic)
@@ -922,10 +955,11 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		result = nsx;
 		if (result.source && nsx.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *result.source);
-		return resolveSubfield(context, node, result.scope, path.back());
+		return resolveSubfield(context, node, result.scope, path.front());
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
-		path = context.pathOf(node);
+		path = context.pathOf(node->leftSide);
 		auto const ns = context.resolve(path);
+		path = context.pathOf(node->value.getString()).reverse();
 		if (!ns)
 			context.error("Symbol does not exist!", node);
 		result.source = addToStack(context, ns.raw());
@@ -1896,10 +1930,11 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 	else if (expr.type->flags.isNullable)
 		check = "exists";
 	else context.error("Await expressions can only be used in checkable values!");
-	context.top()->impl->writePreLine("jump if", check, awaitEnd);
-	context.top()->impl->writePreLine("@label", awaitStart, ":");
-	context.top()->impl->writePostLine("jump if not", check, awaitStart);
-	context.top()->impl->writePostLine("@label", awaitEnd, ":");
+	awaitScope->impl->writePreLine("@label", awaitStart, ":");
+	awaitScope->impl->writePostLine("jump if", check, awaitEnd, ":");
+	awaitScope->impl->writePostLine("yield");
+	awaitScope->impl->writePostLine("jump", awaitStart);
+	awaitScope->impl->writePostLine("@label", awaitEnd, ":");
 	context.pop(scope.size());
 	context.top()->impl->writeMainLine(awaitScope->compose()->toString());
 	return {};

@@ -640,6 +640,7 @@ Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance 
 		next == LTS_TT_OPEN_CURLY
 //	or	next == LTS_TT_OPEN_PAREN
 	) {
+		parser.context.next();
 		while (true) {
 			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
 				parser.context.next();
@@ -681,5 +682,23 @@ Node::Instance ExpansionResolver::resolve(Parser& parser, Node::Instance const& 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_EXPANSION;
 	result->leftSide	= parser.nextExpression();
+	return result;
+}
+
+Node::Instance InsertionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_STREAM_EXPR;
+	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression();
+	return result;
+}
+
+Node::Instance ExtractionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_STREAM_EXPR;
+	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression();
 	return result;
 }
