@@ -1866,8 +1866,8 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 	}
 	if (!expr.source)
 		context.error("Await expressions can only be used in checkable values!");
-	auto const awaitStart =  "__await_start" + node->name();
-	auto const awaitEnd = "__await_end" + node->name();
+	auto const awaitStart =  "__await_start_" + node->name();
+	auto const awaitEnd = "__await_end_" + node->name();
 	String check;
 	if (expr.type->basic && expr.type->basic == Core::BasicType::AV2_BT_BOOL)
 		check = "true";
