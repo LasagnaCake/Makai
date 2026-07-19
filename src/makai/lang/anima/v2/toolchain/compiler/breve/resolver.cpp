@@ -661,6 +661,13 @@ Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance 
 	return result;
 }
 
+Node::Instance AwaitExpressionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_AWAIT;
+	result->leftSide = parser.nextExpression();
+}
+
 Node::Instance RangeResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;

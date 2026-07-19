@@ -528,18 +528,21 @@ static void doConditionalJump(Context& context, bool dynamic = false) {
 	context.next();
 	auto const mode = dynamic ? JumpMode::AV2_JM_TABLE_INDEX : context.globalJumpMode;
 	Instruction::Leap leap{.dyn = dynamic, .mode = mode};
+	if (context.token().text == "not") {
+		context.next();
+		leap.invert = true;
+	}
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
-			if (id == "zero" || id == "z")				leap.type = Instruction::Leap::Type::AV2_ILT_IF_ZERO;
-			else if (id == "nonzero" || id == "nz")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NOT_ZERO;
-			else if (id == "negative" || id == "n")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NEGATIVE;
-			else if (id == "positive" || id == "p")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_POSITIVE;
-			else if (id == "true" || id == "t")			leap.type = Instruction::Leap::Type::AV2_ILT_IF_TRUTHY;
-			else if (id == "false" || id == "f")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_FALSY;
-			else if (id == "null" || id == "nil")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL;
-			else if (id == "void" || id == "v")			leap.type = Instruction::Leap::Type::AV2_ILT_IF_UNDEFINED;
-			else if (id == "empty" || id == "e")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_UNDEFINED;
+			if (id == "zero" || id == "z")			leap.type = Instruction::Leap::Type::AV2_ILT_IF_ZERO;
+			else if (id == "nonzero" || id == "nz")	leap.type = Instruction::Leap::Type::AV2_ILT_IF_NOT_ZERO;
+			else if (id == "negative" || id == "n")	leap.type = Instruction::Leap::Type::AV2_ILT_IF_NEGATIVE;
+			else if (id == "positive" || id == "p")	leap.type = Instruction::Leap::Type::AV2_ILT_IF_POSITIVE;
+			else if (id == "true" || id == "t")		leap.type = Instruction::Leap::Type::AV2_ILT_IF_TRUTHY;
+			else if (id == "false" || id == "f")	leap.type = Instruction::Leap::Type::AV2_ILT_IF_FALSY;
+			else if (id == "null" || id == "nx")	leap.type = Instruction::Leap::Type::AV2_ILT_IF_NULL_OR_VOID;
+			else if (id == "exists" || id == "x")	leap.type = Instruction::Leap::Type::AV2_ILT_IF_EXISTS;
 		} break;
 		default: context.error("Invalid condition!");
 	}

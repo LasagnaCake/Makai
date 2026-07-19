@@ -134,14 +134,14 @@ namespace Makai::Anima::V2::Core {
 				AV2_ILT_IF_NOT_ZERO,
 				AV2_ILT_IF_NEGATIVE,
 				AV2_ILT_IF_POSITIVE,
-				AV2_ILT_IF_NULL,
-				AV2_ILT_IF_UNDEFINED,
-				AV2_ILT_IF_NULL_OR_UNDEFINED,
+				AV2_ILT_IF_NULL_OR_VOID,
+				AV2_ILT_IF_EXISTS,
 			};
 			using Mode = JumpMode;
 			Type	type:	4;
 			bool	dyn:	1;
 			Mode	mode:	2;
+			bool	invert:	1;
 		};
 
 		/// @brief Comparison operator.

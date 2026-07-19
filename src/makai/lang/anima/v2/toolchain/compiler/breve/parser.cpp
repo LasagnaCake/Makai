@@ -179,6 +179,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_ELLIPSIS, prefixes, new ExpansionResolver());
 	add(LTS_TT_QUESTION, prefixes, new NullableDeclResolver());
 	add("maybe", prefixes, new NullableDeclResolver());
+	add("await", prefixes, new AwaitExpressionResolver());
 	// Advanced infixes
 	DEBUGLN("Advanced infix parsers");
 	add("when", infixes, new InlineIfElseResolver());
@@ -189,7 +190,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_DECLARE, infixes, new VariableDeclResolver());
 	add(LTS_TT_COLON, infixes, new VariableDeclResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
-	add(LTS_TT_EXCLAMATION, infixes, new FunctionCallResolver());
 	add(LTS_TT_OPEN_BRACKET, infixes, new ArrayResolver());
 	add(LTS_TT_EQUALS, infixes, new AssignmentResolver());
 	add(LTS_TT_ADD_ASSIGN, infixes, new AssignmentResolver());

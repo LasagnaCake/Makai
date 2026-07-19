@@ -14,5 +14,5 @@ main :: () {
 	foo := new Person
 	foo.firstName = "John"
 	foo.lastName = "Doe"
-	IO.writeLine("Hello, " + foo.fullName! + "!")
+	IO.writeLine("Hello, " + foo.fullName() + "!")
 }

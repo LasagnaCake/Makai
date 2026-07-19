@@ -1300,7 +1300,7 @@ void Engine::v2Jump() {
 			default: break;
 		}
 	}
-	if (shouldJump)
+	if (shouldJump != leap.invert)
 		jumpByMode(leap.mode, loc, false /*not returnable*/);
 }
 

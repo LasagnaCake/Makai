@@ -288,7 +288,7 @@ namespace Makai::Anima::V2::Core {
 		MethodResult invokeExternalMethod(usize const hash, List<Object::Storage> const& args);
 
 		template <class T>
-		constexpr Object::Storage newValue(T const& value) const {
+		Object::Storage newValue(T const& value) const {
 			auto const query = types.byNameHash(Meta::arthashof<T>());
 			if (query.empty() or !query.front())
 				throw Makai::Error::NotFound(

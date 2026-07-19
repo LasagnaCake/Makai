@@ -1695,7 +1695,7 @@ ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const
 		if (condExpr.shouldBePushed())
 			loopScope->impl->writeMainLine("push", condExpr.source.value());
 		else if (condExpr.isStackTop() && condExpr.isCopied()) {
-			context.top()->impl->writeMainLine("copy", *condExpr.source, "-> top");
+			loopScope->impl->writeMainLine("copy", *condExpr.source, "-> top");
 		}
 		loopScope->impl->writeMainLine("jump if false", loopEnd);
 	} else if (!condExpr.direct) return {};
@@ -1728,7 +1728,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 			if (it.shouldBePushed())
 				loopScope->impl->writePreLine("push", it.source.value());
 			else if (it.isStackTop() && it.isCopied()) {
-				context.top()->impl->writeMainLine("copy", *it.source, "-> top");
+				loopScope->impl->writePreLine("copy", *it.source, "-> top");
 			}
 			opq = asFastOpQualifier(*intType->basic);
 		} else context.error("Expression must be an integer!", node->leftSide);
@@ -1766,7 +1766,7 @@ ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& n
 			if (condExpr.shouldBePushed())
 				loopScope->impl->writePostLine("push", condExpr.source.value());
 			else if (condExpr.isStackTop() && condExpr.isCopied()) {
-				context.top()->impl->writeMainLine("copy", *condExpr.source, "-> top");
+				loopScope->impl->writePostLine("copy", *condExpr.source, "-> top");
 			}
 			loopScope->impl->writePostLine("jump if true", loopStart);
 		} else if (!condExpr.direct)
@@ -1823,7 +1823,7 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 	AsNonConst<decltype(type)> trait;
 	context.scopeStack.pushBack(type.type->scope.raw());
 	if (node->middle) {
-
+		// TODO: This
 	}
 	for (auto& extension: node->children) {
 		auto const ext = Expression().transform(context, extension);
@@ -1851,6 +1851,35 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 		else context.error("Invalid/unsupported declaration!");
 	}
 	context.scopeStack.popBack();
+	return {};
+}
+
+
+ATransformer::Result Await::transform(Context& context, Node::Instance const& node) {
+	auto const scope = UTF8StringList::from("__await_" + node->name());
+	auto const awaitScope = context.declare(scope);
+	auto const expr = Expression().transform(context, node->leftSide);
+	if (expr.shouldBePushed())
+		awaitScope->impl->writeMainLine("push", expr.source.value());
+	else if (expr.isStackTop() && expr.isCopied()) {
+		awaitScope->impl->writeMainLine("copy", *expr.source, "-> top");
+	}
+	if (!expr.source)
+		context.error("Await expressions can only be used in checkable values!");
+	auto const awaitStart =  "__await_start" + node->name();
+	auto const awaitEnd = "__await_end" + node->name();
+	String check;
+	if (expr.type->basic)
+		check = "true";
+	else if (expr.type->flags.isNullable)
+		check = "exists";
+	else context.error("Await expressions can only be used in checkable values!");
+	context.top()->impl->writePreLine("jump if", check, awaitEnd);
+	context.top()->impl->writePreLine("@label", awaitStart, ":");
+	context.top()->impl->writePostLine("jump if not", check, awaitStart);
+	context.top()->impl->writePostLine("@label", awaitEnd, ":");
+	context.pop(scope.size());
+	context.top()->impl->writeMainLine(awaitScope->compose()->toString());
 	return {};
 }
 
