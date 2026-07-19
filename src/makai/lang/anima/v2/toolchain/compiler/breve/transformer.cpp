@@ -1869,7 +1869,7 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 	auto const awaitStart =  "__await_start" + node->name();
 	auto const awaitEnd = "__await_end" + node->name();
 	String check;
-	if (expr.type->basic)
+	if (expr.type->basic && expr.type->basic == Core::BasicType::AV2_BT_BOOL)
 		check = "true";
 	else if (expr.type->flags.isNullable)
 		check = "exists";
