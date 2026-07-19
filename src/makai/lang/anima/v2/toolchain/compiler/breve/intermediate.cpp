@@ -423,8 +423,10 @@ static Namespace::AttributeRef createStaticAttribute() {
 			ns->variable->source = "move $__STATIC__._ns_" + Makai::toString(++id) + "._ns_" + ns->node->name() + "._" + ns->variable->name;
 		} else if (ns->function) {
 			for (auto& ov: ns->function->overloads)
-				if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE)
+				if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
 					ov->variant = Function::Overload::Variant::AV2_TCB_FOV_GLOBAL;
+					ov->staticEntity = true;
+				}
 		}
 	};
 	return attrib;

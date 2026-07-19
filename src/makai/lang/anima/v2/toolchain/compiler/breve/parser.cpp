@@ -146,7 +146,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	);
 	// Advanced prefixes
 	DEBUGLN("Advanced prefix parsers");
-	add(LTS_TT_SEMICOLON, prefixes, new EmptyResolver());
 	add(LTS_TT_OPEN_PAREN, prefixes, new SubExpressionResolver());
 	add(LTS_TT_OPEN_CURLY, prefixes, new BlockResolver());
 	add(LTS_TT_OPEN_BRACKET, prefixes, new ArrayResolver());
@@ -190,6 +189,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_DECLARE, infixes, new VariableDeclResolver());
 	add(LTS_TT_COLON, infixes, new VariableDeclResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
+	add(LTS_TT_SEMICOLON, infixes, new FunctionCallResolver());
 	add(LTS_TT_OPEN_BRACKET, infixes, new ArrayResolver());
 	add(LTS_TT_EQUALS, infixes, new AssignmentResolver());
 	add(LTS_TT_ADD_ASSIGN, infixes, new AssignmentResolver());
@@ -211,6 +211,18 @@ AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft
 	rightToLeft(rightToLeft) {
 }
 
+static bool isString(Makai::Lexer::CStyle::TokenStream::Token::Type const t) {
+	return (
+		t == LTS_TT_BACKTICK_STRING
+	||	t == LTS_TT_SINGLE_QUOTE_STRING
+	||	t == LTS_TT_DOUBLE_QUOTE_STRING
+	||	t == LTS_TT_FR_SINGLE_QUOTE_STRING
+	||	t == LTS_TT_FR_DOUBLE_QUOTE_STRING
+	||	t == LTS_TT_JP_SINGLE_QUOTE_STRING
+	||	t == LTS_TT_JP_DOUBLE_QUOTE_STRING
+	);
+}
+
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (context.empty()) {
 		DEBUGLN("End-of-File Reached!?");
@@ -223,7 +235,7 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	}
 	Node::Instance lhs;
 	DEBUGLN("Prefix: ", tok.text);
-	if (prefixes.contains(tok.text))
+	if (!isString(tok.type) && prefixes.contains(tok.text))
 		lhs = prefixes[tok.text]->resolve(*this, null, tok);
 	else if (directs.contains(tok.type))
 		lhs = directs[tok.type]->resolve(*this, null, tok);

@@ -437,7 +437,19 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		scope->varc += base->scope->varc;
 	}
 	auto const initer = "__init_" + name.join("_") + node->name();
-	Block().transform(context, node->rightSide);
+	List<Node::Instance> fields;
+	List<Node::Instance> methods;
+	for (auto& entry: node->rightSide->children) {
+		if (entry->content == Node::Content::AV2_TANC_DECLARATION) {
+			if (entry->base.type == LTS_TT_NAMESPACE_RESOLVE)
+				methods.pushBack(entry);
+			else if (entry->base.type == LTS_TT_COLON)
+				fields.pushBack(entry);
+			else if (entry->base.text == "prop")
+				fields.pushBack(entry);
+			else context.error("Unsupported declaration in structure declaration!", entry);
+		}
+	}
 	type.scope = scope.asWeak();
 	type.node = node;
 	type.name = "__" + name.join("_") + node->name();
@@ -445,13 +457,22 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	List<Namespace::VariableRef> statics;
 	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
 	scope->type->flags.isStructure = true;
-	for (auto const& [name, sub]: scope->subspaces) {
-		if (sub->variable) {
-			auto& var = *sub->variable;
-			var.fieldOf = scope->type.asWeak();
-			type.fields[name] = sub->variable;
-		} else if (sub->function or sub->property or sub->isPureNamespace())
-			context.error("This type of declaration is forbidden inside a structure declaration!");
+	for (auto& [field, id]: Range::expand(field)) {
+		auto const decl = VariableDecl().transform(context, field);
+		auto& var = *decl.scope->variable;
+		var.fieldOf = scope->type.asWeak();
+		type.fields[name] = decl.scope->variable;
+		var.id = id;
+	}
+	context.registerType(scope);
+	for (auto& method: methods) {
+		auto const decl = FunctionDecl().transform(context, method);
+		auto& fn = *decl.scope->function;
+		for (auto& ov: fn.overloads) {
+			if (!ov.staticEntity && (ov.arguments.empty() or ov.arguments[0]->type != scope->type))
+				context.error("Missing appropriate [this] parameter!", method);
+		}
+		fn.methodOf = scope->type.asWeak();
 	}
 	context.pop(name.size());
 	context.registerType(scope);
@@ -944,6 +965,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_ALIAS:				return Aliasing().transform(context, node);
 		case Node::Content::AV2_TANC_UNSCOPING:			return Using().transform(context, node);
 		case Node::Content::AV2_TANC_SUBSCRIPT:			return Subscript().transform(context, node);
+		case Node::Content::AV2_TANC_TYPE_EXTENSION:	return TypeExtension().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
 		default: context.error("Unsupported expression!", node);
@@ -955,6 +977,8 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 		return ArrayTypeDecl().transform(context, node);
 	if (node->content == Node::Content::AV2_TANC_NULLABLE_DECL)
 		return NullableTypeDecl().transform(context, node);
+	if (node->content == Node::Content::AV2_TANC_DECLARATION)
+		return StructureDecl().transform(context, node);
 	auto const t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
 	return {.type = t};
@@ -1527,8 +1551,6 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
 					if (!expr.shouldBePushed())
 						context.top()->impl->writeMainLine("pop");
-					if (!expr.shouldBePushed())
-					context.top()->impl->writeMainLine("pop");
 					remap.erase(fx->id);
 				} else {
 					if (remap.empty())

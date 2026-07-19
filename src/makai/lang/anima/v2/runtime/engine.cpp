@@ -1294,9 +1294,8 @@ void Engine::v2Jump() {
 			case AV2_ILT_IF_NOT_ZERO:			shouldJump	= cond->toValue<double>() != 0;	break;
 			case AV2_ILT_IF_NEGATIVE:			shouldJump	= cond->toValue<double>() < 0;	break;
 			case AV2_ILT_IF_POSITIVE:			shouldJump	= cond->toValue<double>() > 0;	break;
-			case AV2_ILT_IF_NULL:
-			case AV2_ILT_IF_UNDEFINED:
-			case AV2_ILT_IF_NULL_OR_UNDEFINED:	shouldJump	= cond.exists();				break;
+			case AV2_ILT_IF_NULL_OR_VOID:		shouldJump	= !cond.exists();				break;
+			case AV2_ILT_IF_EXISTS:				shouldJump	= cond.exists();				break;
 			default: break;
 		}
 	}

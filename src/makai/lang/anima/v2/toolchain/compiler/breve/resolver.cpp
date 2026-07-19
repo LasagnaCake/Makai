@@ -155,10 +155,8 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 	result->base = token;
 	result->leftSide = leftSide;
 	result->content = Node::Content::AV2_TANC_FN_CALL;
-	if (parser.context.peek().type == LTS_TT_EXCLAMATION) {
-		parser.context.next();
+	if (token.type != LTS_TT_OPEN_PAREN)
 		return result;
-	}
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			parser.context.next();
@@ -666,6 +664,7 @@ Node::Instance AwaitExpressionResolver::resolve(Parser& parser, Node::Instance c
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_AWAIT;
 	result->leftSide = parser.nextExpression();
+	return result;
 }
 
 Node::Instance RangeResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {

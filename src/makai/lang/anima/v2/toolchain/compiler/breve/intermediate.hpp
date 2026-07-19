@@ -222,6 +222,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			Variant							variant = Variant::AV2_TCB_FOV_NONE;
 			bool							optional = false;
 			bool							hasImplementation = false;
+			bool							staticEntity = false;
 
 			UTF8Dictionary<Metadata::Instance> meta;
 
