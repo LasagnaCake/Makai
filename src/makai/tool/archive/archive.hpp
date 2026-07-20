@@ -126,7 +126,7 @@ namespace Makai::Tool::Arch {
 	/// @brief File archive header.
 	struct [[gnu::packed]] ArchiveHeader {
 		/// @brief File archive header flags.
-		struct [[gnu::packed, gnu::aligned(sizeof(uint64))]] Flags {
+		struct [[gnu::packed, gnu::aligned(1)]] Flags {
 			uint64 isSingleFileArchive:	1;
 			uint64 shouldCheckCRC:		1;
 		};
