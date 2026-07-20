@@ -307,7 +307,7 @@ void main(void) {
 
     if (hashAlpha)
         FragColor = color;
-    else if (noise(texelUV + normal.xy * normal.z) < color.a)
+    else if (noise(texelUV + normal.xy + normal.xz + normal.yz) < color.a)
         discard;
     else FragColor = vec4(color.xyz, 1);
 
