@@ -127,7 +127,7 @@ static ATransformer::Result resolveSubfield(
 	if (ns->variable) {
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
-			context.top()->impl->writeMainLine("push", ns->variable->getSource()+ " " + ns->variable->passBy);
+			context.top()->impl->writeMainLine("push", ns->variable->getSource());
 			if (node->forAssignment)
 				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, f->id, ns->variable->type.raw()};
 			context.top()->impl->writeMainLine("at", f->id);
@@ -135,7 +135,7 @@ static ATransformer::Result resolveSubfield(
 		}
 		if (ns->variable->type->scope->subspaces.contains(sub)) {
 			auto const f = ns->variable->type->scope->subspaces[sub];
-			if (f->function) return {.scope = f};
+			if (f->function) return {.source = ns->variable->getSource(), .scope = f, .type = ns->variable->type.raw()};
 			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
 			context.error("Invalid expression!", node);
 		}
@@ -143,7 +143,7 @@ static ATransformer::Result resolveSubfield(
 	}
 	if (ns->property) {
 		if (ns->property->type->fields.contains(sub)) {
-			auto const f = ns->type->fields[sub];
+			auto const f = ns->property->type->fields[sub];
 			auto const ov = ns->property->getter->overloadFromTypes(
 				Makai::List<Namespace::TypeRef>::from(ns->type.raw())
 			);
@@ -1442,11 +1442,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
 	Function::ArgTypes args;
-	if (fn.shouldBePushed())
-		context.top()->impl->writeMainLine("push", *fn.source);
-	else if (fn.isStackTop() && fn.isCopied()) {
-		context.top()->impl->writeMainLine("copy", *fn.source, "-> top");
-	}
+	context.top()->impl->writeMainLine("push nil");
 	for (auto const& arg: node->children) {
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
@@ -1463,23 +1459,27 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	for (auto const& ov: f.overloads)
 		DEBUG(ov->prototype(), " ");
 	DEBUGLN("]");
-	auto const ovLookupSig = args.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
-	DEBUGLN("Looking for: [", ovLookupSig, "]");
 	auto memArgs = args;
-	if (fn.source)
+	if (fn.type)
 		memArgs.reverse().pushBack(fn.type).reverse();
+	auto const ovLookupSig = args.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
+	auto const ovMemLookupSig = memArgs.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
+	DEBUGLN("Looking for: [", ovLookupSig, "] or [", ovMemLookupSig, "]");
 	if (!(f.overloadFromTypes(args) or f.overloadFromTypes(memArgs)))
 		context.error("No suitable overload exists!", node);
-	auto const ovf = f.overloadFromTypes(args);
-	auto& ov = ovf ? *ovf : *f.overloadFromTypes(memArgs);
+	auto ovf = f.overloadFromTypes(args);
+	bool isMemFn = false;
+	if (!ovf) {
+		ovf = f.overloadFromTypes(memArgs);
+		if (!(ovf && !ovf->staticEntity))
+			context.error("No suitable overload exists!", node);
+		isMemFn = true;
+	}
+	auto& ov = *ovf;
+	if (isMemFn)
+		context.top()->impl->writeMainLine("copy", fn.source.value(), "-> stack[-"+ Makai::toString(memArgs.size()) +"]");
 	context.top()->impl->writeMainLine("call", ov.entry);
-	if (
-		(
-			ov.variant == decltype(ov.variant)::AV2_TCB_FOV_NONE
-		||	ov.variant == decltype(ov.variant)::AV2_TCB_FOV_GLOBAL
-		)
-	&&	Makai::Regex::contains(fn.source.orElse("").toString(), "stack")
-	) context.top()->impl->writeMainLine("pop");
+	if (!isMemFn) context.top()->impl->writeMainLine("pop");
 	return {{"move top"}, ov.result->scope.raw(), ov.result};
 }
 
@@ -1551,7 +1551,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 	String opstr;
 	if (t->flags.isArray) {
 		opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
-	}
+	} else opstr = t->name;
 	if (node->rightSide) {
 		t = context.arrayFor(t);
 		auto const sz = Expression().transform(context, node->rightSide);
