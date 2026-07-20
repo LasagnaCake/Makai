@@ -89,6 +89,8 @@ namespace CTL::_Devmode {
 #define CTL_UNAVAILABLE(REASON)  gnu::unavailable(REASON)
 #endif
 
+#define CTL_FLAG_STRUCT(INTX) [[gnu::packed, gnu::aligned(sizeof(INTX))]]
+
 /// @brief Core library.
 namespace CTL {
 }

@@ -865,7 +865,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	} else if (lhs.isStackTop() && lhs.isCopied()) {
 		lhsHasBeenPushed = true;
 		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
-	}
+	} else if (lhs.isStackTop()) lhsHasBeenPushed = true;
 	if (
 		node->base.text == "as"
 	||	node->base.text == "is"
@@ -904,6 +904,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	else if (rhs.isStackTop() && rhs.isCopied()) {
 		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
 	}
+	if (!lhsHasBeenPushed && !lhs.isStackTop() && rhs.isStackTop())
+		context.top()->impl->writeMainLine("swap");
+	DEBUGLN("LHS = [", lhs.source.value(), "]");
+	DEBUGLN("RHS = [", rhs.source.value(), "]");
 	DEBUGLN("LHS Type: ", lhs.type ? lhs.type->name : "NO_TYPE");
 	DEBUGLN("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
@@ -1357,7 +1361,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	auto const subinter = importer(fpath);
 	// This is for testing purposes
 	if (!subinter.content) return {};
-	for (auto& [name, imp]: context.root->subspaces["##T0_IMPORTS"]->subspaces)
+	for (auto& [name, imp]: context.root->subspaces["  T0_IMPORTS"]->subspaces)
 		if (imp == subinter.content) return {.scope = subinter.content};
 	context.registerImport(subinter.content);
 	return {.scope = subinter.content};
@@ -2011,27 +2015,27 @@ static Makai::String idName(usize const id) {
 void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T1_USER_TYPES"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+	root->subspaces["  T1_USER_TYPES"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerFunction(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T2_FUNCTIONS"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+	root->subspaces["  T2_FUNCTIONS"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerImport(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["##T0_IMPORTS"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+	root->subspaces["  T0_IMPORTS"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
 }
 
 ATransformer::Context::Context(): Intermediate() {
 	using enum Core::BasicType;
-	root->subspaces["##T0_IMPORTS"]		= Namespace::Instance::create("##T0_IMPORTS");
-	root->subspaces["##T1_USER_TYPES"]	= Namespace::Instance::create("##T1_USER_TYPES");
-	root->subspaces["##T2_FUNCTIONS"]	= Namespace::Instance::create("##T2_FUNCTIONS");
-	root->subspaces["##T3_TRAITS"]		= Namespace::Instance::create("##T3_TRAITS");
+	root->subspaces["  T0_IMPORTS"]		= Namespace::Instance::create("  T0_IMPORTS");
+	root->subspaces["  T1_USER_TYPES"]	= Namespace::Instance::create("  T1_USER_TYPES");
+	root->subspaces["  T2_FUNCTIONS"]	= Namespace::Instance::create("  T2_FUNCTIONS");
+	root->subspaces["  T3_TRAITS"]		= Namespace::Instance::create("  T3_TRAITS");
 }
 
 void ATransformer::Context::addBasicType(Core::BasicType const type, Core::TypeFlags const flags) {
@@ -2064,7 +2068,7 @@ void ATransformer::Context::addBasicType(Core::BasicType const type, Core::TypeF
 	}
 	if (root->subspaces.contains(name)) return;
 	auto const ns = Namespace::Instance::create();
-	root->subspaces["##T1_BASICS"]->subspaces[Makai::toString("#", idName(++id), "::") + name] = ns;
+	root->subspaces["  T1_BASICS"]->subspaces[Makai::toString("#", idName(++id), "::") + name] = ns;
 	root->subspaces[name] = ns;
 	auto& t = *(ns->type = ns->type.create());
 	t.name = name;

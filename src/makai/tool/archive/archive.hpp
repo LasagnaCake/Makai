@@ -125,6 +125,12 @@ namespace Makai::Tool::Arch {
 
 	/// @brief File archive header.
 	struct [[gnu::packed]] ArchiveHeader {
+		/// @brief File archive header flags.
+		struct [[gnu::packed, gnu::aligned(sizeof(uint64))]] Flags {
+			uint64 isSingleFileArchive:	1;
+			uint64 shouldCheckCRC:		1;
+		};
+
 		uint64 headerSize		= sizeof(ArchiveHeader);
 		uint64 fileHeaderSize	= sizeof(FileHeader);
 		uint64 dirHeaderSize	= sizeof(DirectoryHeader);
@@ -133,19 +139,11 @@ namespace Makai::Tool::Arch {
 		uint16	encryption		= enumcast(EncryptionMethod::AEM_AES256);
 		uint16	compression		= enumcast(CompressionMethod::ACM_ZIP);
 		uint8	level			= 9;
-		uint64	flags			= 0;
+		Flags	flags			= {};
 		uint64	dirHeaderLoc	= 0;
 		FileToken const token	= "Makai::FileArchive";
 		// Put new things BELOW this line
 	};
-
-	/// @brief Archive flags.
-	namespace Flags {
-		/// @brief Flags the archive as a special single-file archive.
-		constexpr uint64 SINGLE_FILE_ARCHIVE_BIT	= (1 << 0);
-		/// @brief Flags the archive as containing a checksum to check.
-		constexpr uint64 SHOULD_CHECK_CRC_BIT		= (1 << 1);
-	}
 
 	/// @brief Packs a folder into a file archive.
 	/// @param archivePath Path to resulting file archive.

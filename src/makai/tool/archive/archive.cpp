@@ -322,9 +322,9 @@ void Arch::pack(
 		header.encryption	= (uint16)enc;					// encryption mode
 		header.compression	= (uint16)comp;					// compression mode
 		header.level		= complvl;						// compression level
-		header.flags =
-			Flags::SHOULD_CHECK_CRC_BIT	// Do CRC step
-		;
+		header.flags = {
+			.shouldCheckCRC = true
+		};
 		DEBUGLN("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
 		DEBUGLN("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
 		DEBUGLN("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
@@ -532,7 +532,7 @@ FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password)
 	// check if file is archive
 	if (header.minVersion > 1 && String(header.token) != "Makai::FileArchive")
 		notAFileArchiveError();
-	if (header.flags & Flags::SINGLE_FILE_ARCHIVE_BIT)
+	if (header.flags.isSingleFileArchive)
 		singleFileArchiveError();
 	if (!header.dirHeaderLoc)
 		directoryTreeError();
@@ -710,7 +710,7 @@ void Arch::FileArchive::processFileEntry(FileEntry& entry) const {
 	demangleData(data, entry.header.block);
 	if (data.size() != entry.header.uncSize)
 		corruptedFileError(entry.path);
-	if (header.flags & Flags::SHOULD_CHECK_CRC_BIT && (entry.header.crc != crcOf(data)))
+	if (header.flags.shouldCheckCRC && (entry.header.crc != crcOf(data)))
 		crcFailError(entry.path);
 	entry.data = data;
 }
@@ -904,7 +904,7 @@ BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& pas
 		archive.read((char*)&header, hs);
 	}
 	// Check if single-file archive
-	if (!(header.flags & Flags::SINGLE_FILE_ARCHIVE_BIT))
+	if (!(header.flags.isSingleFileArchive))
 		File::FileLoadError(
 			"Failed to load '" + path + "'!",
 			"File is not a single-file archive!"
@@ -934,7 +934,7 @@ BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& pas
 				"Failed to load '" + path + "'!",
 				"Uncompressed size doesn't match!"
 			);
-		if ((header.flags & Flags::SHOULD_CHECK_CRC_BIT) && (fh.crc != crcOf(fd))) // CRC currently not working
+		if ((header.flags.shouldCheckCRC) && (fh.crc != crcOf(fd))) // CRC currently not working
 			File::FileLoadError(
 				"Failed to load '" + path + "'!",
 				"CRC check failed!"
@@ -980,10 +980,10 @@ void Arch::saveEncryptedBinaryFile(
 	header.encryption	= (uint16)enc;	// encryption mode
 	header.compression	= (uint16)comp;	// compression mode
 	header.level		= lvl;			// compression level
-	header.flags =
-		Flags::SINGLE_FILE_ARCHIVE_BIT	// Single-file archive
-	|	Flags::SHOULD_CHECK_CRC_BIT		// Do CRC step
-	;
+	header.flags = {
+		.isSingleFileArchive = true,
+		.shouldCheckCRC = true
+	};
 	// Write header
 	file.write((char*)&header, header.headerSize);
 	// Write file info
