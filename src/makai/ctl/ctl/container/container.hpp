@@ -25,5 +25,6 @@
 #include "id/id.hpp"
 #include "nodegraph/nodegraph.hpp"
 #include "tree/tree.hpp"
+#include "data/data.hpp"
 
 #endif // CTL_CONTAINER_H

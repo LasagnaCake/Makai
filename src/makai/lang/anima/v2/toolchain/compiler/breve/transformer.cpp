@@ -123,6 +123,7 @@ static ATransformer::Result resolveSubfield(
 	if (sub.empty()) {
 		return {{"move top"}, ns};
 	}
+	DEBUGLN("Looking for subspace '", sub, "'...");
 	if (ns->variable) {
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
@@ -131,6 +132,12 @@ static ATransformer::Result resolveSubfield(
 				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, f->id, ns->variable->type.raw()};
 			context.top()->impl->writeMainLine("at", f->id);
 			return {{f->passBy + " top"}, f->scope.raw(), f->type.raw(), {}, 0, ns->variable->type.raw()};
+		}
+		if (ns->subspaces.contains(sub)) {
+			auto const f = ns->subspaces[sub];
+			if (f->function) return {.scope = f};
+			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
+			context.error("Invalid expression!", node);
 		}
 	}
 	if (ns->property) {
@@ -142,8 +149,24 @@ static ATransformer::Result resolveSubfield(
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, f->scope.raw(), f->type.raw()};
 		}
+		context.error("Symbol does not exist in the given scope!", node);
 	}
-	return {};
+	if (ns->type) {
+		if (ns->type->scope->subspaces.contains(sub)) {
+			auto const f = ns->subspaces[sub];
+			if (f->function) return {.scope = f};
+			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
+			context.error("Invalid expression!", node);
+		}
+		context.error("Symbol does not exist in the given scope!", node);
+	}
+	DEBUG("Available Subspaces: [ ");
+	for (auto const& [name, subns]: ns->subspaces)
+		DEBUG( "{", name , ":", subns->name, "} ");
+	DEBUGLN("]");
+	if (!ns->subspaces.contains(sub))
+		context.error("Symbol does not exist in the given scope!", node);
+	return {.scope = ns->subspaces[sub]};
 }
 
 static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance const& node) {

@@ -5,6 +5,8 @@
 #include "../../templates.hpp"
 #include "../../typeinfo.hpp"
 #include "../../ctypes.hpp"
+#include "../../order.hpp"
+#include "../../cpperror.hpp"
 #include "../../typetraits/traits.hpp"
 
 CTL_NAMESPACE_BEGIN

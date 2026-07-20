@@ -69,6 +69,14 @@ struct Mutex: SelfIdentified<Mutex> {
 		return *this;
 	}
 
+	bool captured() const {
+		#ifdef CTL_ON_WINDOWS
+		return false;
+		#else
+		return false;
+		#endif
+	}
+
 private:
 	#ifdef CTL_ON_WINDOWS
 	HANDLE mutex;
