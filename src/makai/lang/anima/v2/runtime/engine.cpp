@@ -135,7 +135,7 @@ void Engine::crash(Engine::Error const& e) {
 void Engine::v2Yield() {
 	Instruction::Waiting wait = bitcast<Instruction::Waiting>(current.type);
 	if (wait.dynamic)
-		delay = context.pop()->toValue<uint64>();
+		context.pop().perform([&] (auto const& obj) {delay = obj.template toValue<uint64>();});
 	else if (wait.once)
 		delay = 1;
 	else {
@@ -208,6 +208,7 @@ void Engine::v2Compare() {
 		return crash(invalidSourceError("Missing values to compare!"));
 	auto rhs	= context.pop();
 	auto lhs	= context.top();
+	auto const _l = lhs.sync(), _r = rhs.sync();
 	if (comp.sameType) {
 		*rhs = *context.newValue(doFastCompare(lhs, rhs, comp.assume, comp.comp));
 		return;
@@ -261,6 +262,7 @@ void Engine::v2Halt() {
 		case Core::Instruction::Stop::Mode::AV2_ISM_ERROR: {
 			auto const v = consumeValue(DataLocation::AV2_DL_STRING);
 			if (err) return;
+			auto const _ = v.sync();
 			return crash(makeErrorHere("PROGRAM_ERROR: " + v->toValue<String>()));
 		};
 		default: terminate();
@@ -357,7 +359,7 @@ void Engine::v2Call() {
 	if (invocation.dynamic) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.pop()->toValue<CallID>().id;
+		context.pop().perform([&] (auto const& obj) {loc = obj.template toValue<CallID>().id;});
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
@@ -691,12 +693,14 @@ void Engine::doBinaryOperation(Operator const op) {
 		else [[likely]] crash(invalidOperationError("Right-Side Operand does not exist!"));
 		return;
 	}
+	auto const _r = rhs.sync();
 	auto lhs	= context.top();
 	if (!lhs) {
 		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
 		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
 		return;
 	}
+	auto const _l = lhs.sync();
 	auto out	= lhs;
 	if (err) return;
 	bool success = false;
@@ -777,6 +781,7 @@ void Engine::doUnaryOperation(Operator const op) {
 		else [[likely]] crash(invalidOperationError("Operand does not exist!"));
 		return;
 	}
+	auto const _ = lhs.sync();
 	auto out	= lhs;
 	if (err) return;
 	bool success = false;
@@ -913,6 +918,7 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		return;
 	}
 	auto lhs	= context.top();
+	auto const _l = lhs.sync();
 	if (!lhs) [[unlikely]] {
 		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
 		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
@@ -923,6 +929,7 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		else [[likely]] crash(invalidOperationError("Value types do not match!"));
 		return;
 	}
+	auto const _r = rhs.sync();
 	MAKAILIB_DEBUGLN_FULL("Left-Side  := ", lhs->toDynamicValue().toFLOWString());
 	MAKAILIB_DEBUGLN_FULL("Right-Side := ", rhs->toDynamicValue().toFLOWString());
 	switch (type) {
@@ -958,6 +965,7 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 		else [[likely]] crash(invalidOperationError("Operand does not exist!"));
 		return;
 	}
+	auto const _ = val.sync();
 	switch (type) {
 		case Core::BasicType::AV2_BT_VOID:
 		case Core::BasicType::AV2_BT_NULL:		break;
@@ -985,6 +993,7 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 
 void Engine::shortCircuitOperation(Operator const op, usize count) {
 	auto lhs = context.top();
+	auto const _l = lhs.sync();
 	switch (op) {
 		case Operator::AV2_BOP_LOGIC_AND: if (!lhs->toValue<bool>()) {
 			context.globalValueStack.eraseRange(-(count+1), -1);
@@ -1001,6 +1010,7 @@ void Engine::shortCircuitOperation(Operator const op, usize count) {
 	doBinaryOperation(op);
 	while (--count) [[unlikely]] {
 		auto lhs = context.top();
+		auto const _r = lhs.sync();
 		switch (op) {
 			case Operator::AV2_BOP_LOGIC_AND: if (!lhs->toValue<bool>()) {
 				context.globalValueStack.eraseRange(-(count+1), -1);
@@ -1020,6 +1030,7 @@ void Engine::shortCircuitOperation(Operator const op, usize count) {
 
 void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, usize count) {
 	auto lhs = context.top();
+	auto const _l = lhs.sync();
 	switch (op) {
 		case Operator::AV2_BOP_LOGIC_AND: if (!*(bool*)lhs->data()) {
 			context.globalValueStack.eraseRange(-(count+1), -1);
@@ -1036,6 +1047,7 @@ void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, 
 	fastBinaryOperation(op, type);
 	while (--count) [[unlikely]] {
 		auto lhs = context.top();
+		auto const _r = lhs.sync();
 		switch (op) {
 			case Operator::AV2_BOP_LOGIC_AND: if (!*(bool*)lhs->data()) {
 				context.globalValueStack.eraseRange(-(count+1), -1);
@@ -1275,7 +1287,7 @@ void Engine::v2Jump() {
 	if (leap.dyn) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Missing jump target for dynamic jump!"));
-		loc = context.pop()->toValue<JumpID>().id;
+		context.pop().perform([&] (auto const& obj) {loc = obj.template toValue<JumpID>().id;});
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
@@ -1287,6 +1299,7 @@ void Engine::v2Jump() {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Missing condition for conditional jump!"));
 		auto const cond = context.pop();
+		auto const _c = cond.sync();
 		switch (leap.type) {
 			case AV2_ILT_IF_TRUTHY:				shouldJump	= cond->toValue<bool>();		break;
 			case AV2_ILT_IF_FALSY:			 	shouldJump	= !cond->toValue<bool>();		break;
@@ -1382,7 +1395,7 @@ void Engine::v2FieldGet() {
 	if (field.dynamic) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.pop()->toValue<uint64>();
+		context.pop().perform([&] (auto const& obj) {loc = obj.template toValue<uint64>();});
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
@@ -1394,7 +1407,9 @@ void Engine::v2FieldGet() {
 	auto const src = context.pop();
 	MAKAILIB_DEBUGLN_FULL("Source: ", src->getType()->hash);
 	MAKAILIB_DEBUGLN_FULL("Field: ", loc);
-	auto const v =  src->getAtIndex(loc);
+	Object::Storage v;
+	auto const _ = v.sync();
+	v =  src->getAtIndex(loc);
 	MAKAILIB_DEBUGLN_FULL("Field: ", loc);
 	context.push(src->getAtIndex(loc));
 	printValueState(context.top());
@@ -1407,7 +1422,7 @@ void Engine::v2FieldSet() {
 	if (field.dynamic) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Global stack is empty!"));
-		loc = context.pop()->toValue<uint64>();
+		context.pop().perform([&] (auto const& obj) {loc = obj.template toValue<uint64>();});
 	} else {
 		advance(true);
 		loc = Makai::Cast::bit<uint64>(current);
@@ -1421,15 +1436,16 @@ void Engine::v2FieldSet() {
 	if (!dst->canHaveFields())
 		return crash(invalidSourceError("Value is not an array or structure!"));
 	MAKAILIB_DEBUGLN_FULL("Field Count: ", dst->count());
+	auto const _s = dst.sync();
 	auto const result = dst->setAtIndex(loc, v);
-	if (result != Object::SetError::AV2_COSE_OK) {
+	if (result != Object::SetError::AV2_COSE_OK) [[unlikely]] {
 		switch (result) {
 			using enum Object::SetError;
+			[[unlikely]] case AV2_COSE_OK: break;
 			case AV2_COSE_NO_TYPE:						return crash(invalidSourceError("Object does not have a type!"));
 			case AV2_COSE_TYPE_DOES_NOT_CONTAIN_FIELDS:	return crash(invalidSourceError("Type does not contain fields!"));
 			case AV2_COSE_FIELD_IS_NOT_COPYABLE:		return crash(invalidSourceError("Field is not copyable!"));
 			case AV2_COSE_FIELD_DOES_NOT_EXIST:			return crash(invalidSourceError("Field does not exist!"));
-			case AV2_COSE_OK: break;
 		}
 	}
 	context.push(v);
@@ -1454,7 +1470,11 @@ void Engine::v2Random() {
 	Instruction::Randomness rng = Makai::Cast::bit<Instruction::Randomness>(current.type);
 	Nullable<uint64> val;
 	if (rng.getSeed) val = prng.getSeed();
-	if (rng.setSeed) prng.setSeed(context.pop()->toValue<uint64>());
+	if (rng.setSeed) {
+		auto const val = context.pop();
+		auto const _ = val.sync();
+		prng.setSeed(val->toValue<uint64>());
+	}
 	if (val) context.push(*val);
 	if (!(rng.setSeed || rng.getSeed)) {
 		Object::Storage lo, hi;
@@ -1462,6 +1482,8 @@ void Engine::v2Random() {
 			hi = context.pop();
 			lo = context.pop();
 		}
+		auto const _1 = lo.sync();
+		auto const _2 = hi.sync();
 		if (rng.secure) switch (rng.type) {
 			using enum Instruction::Randomness::Type;
 			case AV2_IRT_INT:	context.push(rng.bounded ? srng.number<int64>(lo->toValue<int64>(), hi->toValue<int64>()) : srng.number<int64>());		break;
@@ -1496,7 +1518,7 @@ void Engine::v2Create() {
 	if (create.dyn) {
 		if (context.globalValueStack.empty())
 			return crash(invalidSourceError("Missing type for dynamic creation!"));
-		typeID = context.pop()->toValue<TypeID>().id;
+		context.pop().perform([&] (auto const& obj) {typeID = obj.template toValue<TypeID>().id;});
 	} else {
 		advance(true);
 		typeID = Makai::Cast::bit<uint64>(current);
@@ -1505,6 +1527,7 @@ void Engine::v2Create() {
 	if (!type)
 		return crash(invalidTypeError("Type does not exist!"));
 	auto obj = Object::create(type);
+	auto const _ = obj.sync();
 	if (create.forArray) {
 		if (!type->flags.isArray)
 			return crash(invalidTypeError("Type is not an array, but create instruction expects it!"));

@@ -49,7 +49,7 @@ struct Reference:
 	/// @brief Move constructor (defaulted)
 	/// @param other `Reference` to copy from.
 	constexpr Reference(Reference const& other)	= default;
-	
+
 	/// @brief Copy constructor (raw pointer).
 	/// @param obj Pointer to bind.
 	constexpr Reference(ref<DataType> const& obj): ref(obj) {}
@@ -84,7 +84,7 @@ struct Reference:
 	/// @brief Returns whether the bound object doesn't exist.
 	/// @return Whether the bound object doesn't exist.
 	constexpr bool operator!() const	{return	!exists();	}
-	
+
 	/// @brief Equality comparison operator (raw pointer).
 	/// @param obj Raw pointer to compare to.
 	/// @return Whether they're equal.
@@ -93,7 +93,7 @@ struct Reference:
 	/// @param obj Raw pointer to compare to.
 	/// @return Order between objects.
 	constexpr OrderType operator<=>(PointerType const& obj) const	{return	ref <=> obj;		}
-	
+
 	/// @brief Equality comparison operator (`Pointer`).
 	/// @param obj `Pointer` to compare to.
 	/// @return Whether they're equal.
@@ -115,7 +115,7 @@ struct Reference:
 	/// @param obj `Reference` to move.
 	/// @return Reference to self.
 	constexpr Reference& operator=(Reference&& other)		= default;
-	
+
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	constexpr PointerType operator&() const {return raw();}
@@ -126,7 +126,7 @@ struct Reference:
 		if (!exists()) nullPointerError();
 		return (*ref);
 	}
-	
+
 	/// @brief Pointer member access operator.
 	/// @return Underlying pointer.
 	constexpr PointerType operator->() requires (!IS_VOID_TYPE)				{return getPointer();	}
@@ -136,7 +136,7 @@ struct Reference:
 	/// @brief Dereference operator.
 	/// @return Reference to underlying object.
 	constexpr ReferenceType operator*() const requires (!IS_VOID_TYPE)		{return value();		}
-	
+
 	/// @brief Returns whether the object exists.
 	/// @return Whether the object exists.
 	constexpr bool exists() const {

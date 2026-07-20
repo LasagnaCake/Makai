@@ -91,7 +91,7 @@ namespace OS {
 			prgArgs.pushBack(arg.cstr());
 		prgArgs.pushBack(NULL);
 		auto const pid = getpid();
-		fork();
+		vfork();
 		if (pid != getpid()) {
 			chdir(directory.cstr());
 			return execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
@@ -146,7 +146,7 @@ namespace OS {
 			prgArgs.pushBack(arg.cstr());
 		prgArgs.pushBack(NULL);
 		auto const pid = getpid();
-		fork();
+		vfork();
 		if (pid != getpid())
 			execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
 		#endif

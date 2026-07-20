@@ -1,28 +1,30 @@
-#ifndef CTL_CONTAINER_POINTER_ATOMICCELL_H
-#define CTL_CONTAINER_POINTER_ATOMICCELL_H
+#ifndef CTL_CONTAINER_POINTER_CELL_H
+#define CTL_CONTAINER_POINTER_CELL_H
 
 #include "../../namespace.hpp"
 #include "../../templates.hpp"
 #include "../../typeinfo.hpp"
 #include "../../ctypes.hpp"
 #include "../../typetraits/traits.hpp"
-#include "../../async/lock.hpp"
 
 CTL_NAMESPACE_BEGIN
 
-/// @brief Type-exclusive thread-safe shared pointer.
+/// @brief Type-exclusive shared pointer.
 /// @tparam TData Type of data pointed to.
 /// @note
 ///		Differences between this and `Shared<T>`:
 ///		- `Shared<T>` handles references for any type (better suited for classes with virtual members)
-///		- `Shared<T>` `Shared<T>` is slower (Global sync lock vs per-value sync lock)
+///		- `Shared<T>` `Shared<T>` is slower (Global sync lock, `Cell<T>` has no sync lock)
+/// @caution
+/// 	*This class is thread-unsafe!*
+/// 	If you need thread safety, use `AtomicCell<T>`.
 template <class TData>
-struct AtomicCell:
+struct Cell:
 	Typed<TData>,
-	SelfIdentified<AtomicCell<TData>>,
+	SelfIdentified<Cell<TData>>,
 	Ordered {
 	using Typed				= ::CTL::Typed<TData>;
-	using SelfIdentified	= ::CTL::SelfIdentified<AtomicCell<TData>>;
+	using SelfIdentified	= ::CTL::SelfIdentified<Cell<TData>>;
 
 	using
 		typename Typed::DataType,
@@ -40,39 +42,27 @@ struct AtomicCell:
 
 	/// @brief Value wrapper.
 	struct Wrapper {
-		/// @brief Thread synchronization barrier.
-		Mutex		oplock;
 		/// @brief Underlying value.
 		DataType	value;
 		/// @brief Count of reference to value.
 		usize		refs;
-
-		/// @brief Creates a scope-bound lock.
-		/// @return Scope lock.
-		[[nodiscard]]
-		constexpr auto lock()		{return ScopeLock<Mutex>(oplock);		}
-		/// @brief Increments the reference counter, if applicable.
-		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs;	}
-		/// @brief Decrements the reference counter, if applicable.
-		constexpr void release()	{if (refs) --refs;						}
 	};
 
 	/// @brief Empty constructor.
-	constexpr AtomicCell()			{}
+	constexpr Cell()			{}
 	/// @brief Empty constructor.
-	constexpr AtomicCell(nulltype)	{}
+	constexpr Cell(nulltype)	{}
 
-	/// @brief Copy constructor (`AtomicCell`).
+	/// @brief Copy constructor (`Cell`).
 	/// @param obj Cell to reference.
-	constexpr AtomicCell(SelfType const& other): wrapper(other.wrapper) {
+	constexpr Cell(SelfType const& other): wrapper(other.wrapper) {
 		if (!exists()) return;
-		auto const _ = wrapper->lock();
 		wrapper->acquire();
 	}
 
-	/// @brief Move constructor (`AtomicCell`).
+	/// @brief Move constructor (`Cell`).
 	/// @param obj Cell to reference.
-	constexpr AtomicCell(SelfType&& other): wrapper(move(other.wrapper)) {
+	constexpr Cell(SelfType&& other): wrapper(move(other.wrapper)) {
 		other.wrapper = nullptr;
 	}
 
@@ -104,25 +94,21 @@ struct AtomicCell:
 	}
 
 	/// @brief Destructor.
-	constexpr ~AtomicCell() {
+	constexpr ~Cell() {
 		unbind();
 	}
 
 	/// @brief Returns a pointer to the underlying value.
 	/// @return Pointer to value.
-	/// @throw `NullPointerException` if object does not exist.
 	constexpr PointerType operator->() const {
 		if (!exists()) emptyError();
-		auto const _ = wrapper->lock();
 		return &wrapper->value;
 	}
 
 	/// @brief Returns a reference to the underlying value.
 	/// @return Reference to value.
-	/// @throw `NullPointerException` if object does not exist.
 	constexpr ReferenceType operator*() const {
 		if (!exists()) emptyError();
-		auto const _ = wrapper->lock();
 		return wrapper->value;
 	}
 
@@ -137,14 +123,13 @@ struct AtomicCell:
 		return cell;
 	}
 
-	/// @brief Atomically modifies the underlying value.
+	/// @brief Modifies the underlying value.
 	/// @tparam TFunction Operation type.
 	/// @tparam op Operation to perform.
 	/// @return Reference to self.
 	template<Type::Functional<DataType(DataType const&)> TFunction>
 	constexpr SelfType& modify(TFunction const& op) {
 		if (!exists()) return *this;
-		auto const _ = wrapper->lock();
 		wrapper->value = op(wrapper->value);
 		return (*this);
 	}
@@ -156,36 +141,9 @@ struct AtomicCell:
 	template<Type::Functional<void(DataType const&)> TFunction>
 	constexpr SelfType& perform(TFunction const& op) {
 		if (!exists()) return *this;
-		auto const _ = wrapper->lock();
 		op(wrapper->value);
 		return (*this);
 	}
-
-	/// @brief Atomically performs an operation synchronized to the underlying value.
-	/// @tparam TFunction Operation type.
-	/// @tparam op Operation to perform.
-	/// @return Reference to self.
-	template<Type::Functional<void()> TFunction>
-	constexpr SelfType& perform(TFunction const& op) {
-		if (!exists()) {
-			op();
-			return *this;
-		}
-		auto const _ = wrapper->lock();
-		op();
-		return (*this);
-	}
-
-	/// @brief Creates a synchronization barrier bound to the cell's value.
-	/// @return Sync barrier.
-	/// @throw `NullPointerException` if object does not exist.
-	[[nodiscard]]
-	constexpr ScopeLock<Mutex> sync() 		{return exists() ? wrapper->lock() : lock(); }
-	/// @brief Creates a synchronization barrier bound to the cell's value.
-	/// @return Sync barrier.
-	/// @throw `NullPointerException` if object does not exist.
-	[[nodiscard]]
-	constexpr ScopeLock<Mutex> sync() const	{if (exists()) return wrapper->lock(); emptyError();}
 
 	/// @brief Equality comparison operator (`Cell`).
 	/// @param obj `Cell` to compare to.
@@ -207,31 +165,20 @@ struct AtomicCell:
 	/// @return Whether this cell is the sole owner of the bound object.
 	constexpr bool unique()		const {return (wrapper && wrapper->refs == 1);	}
 
-	/// @brief Creates a scope-bound lock bound to the cells own mutex.
-	/// @return Scope lock.
-	[[nodiscard]]
-	constexpr ScopeLock<Mutex>	lock()	{return ScopeLock<Mutex>(mtx);	}
-	/// @brief Returns the cell's own mutex.
-	/// @return Mutex.
-	constexpr Mutex&			mutex() {return mtx;					}
-
 private:
 	constexpr void unbind() {
 		if (!exists()) return;
-		wrapper->oplock.capture();
 		wrapper->release();
-		if (!wrapper->refs) {
-			wrapper->oplock.release();
+		if (!wrapper->refs)
 			delete wrapper;
-		} else wrapper->oplock.release();
 		wrapper = nullptr;
 	}
 
 	[[noreturn]] constexpr static void emptyError() {
 		throw NullPointerException("Atomic cell is empty!");
 	}
+	// Wrapper.
 	ptr<Wrapper>	wrapper = nullptr;
-	Mutex			mtx;
 };
 
 CTL_NAMESPACE_END

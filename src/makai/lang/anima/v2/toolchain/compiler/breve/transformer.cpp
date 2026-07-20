@@ -953,8 +953,10 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		auto const nsx = PathExpression().transform(context, node->leftSide);
 		path = context.pathOf(node->value.getString()).reverse();
 		result = nsx;
-		if (result.source && nsx.shouldBePushed())
-			context.top()->impl->writeMainLine("push", *result.source);
+		if (nsx.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *nsx.source);
+		else if (nsx.isStackTop() && nsx.isCopied())
+			context.top()->impl->writeMainLine("copy", *nsx.source, "-> top");
 		return resolveSubfield(context, node, result.scope, path.front());
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
 		path = context.pathOf(node->leftSide);
@@ -962,12 +964,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		path = context.pathOf(node->value.getString()).reverse();
 		if (!ns)
 			context.error("Symbol does not exist!", node);
-		result.source = addToStack(context, ns.raw());
-		if (ns->variable) {
-			result.type		= ns->variable->type.raw();
-			result.scope	= ns->variable->scope.raw();
-		} else result.scope = ns;
-		return result;
+		return resolveSubfield(context, node, ns, path.front());
 	}
 	if (!result.scope->subspaces.contains(path.front()))
 		context.error("Subpath type doesn't contain the given member!", node->leftSide);
@@ -1566,14 +1563,19 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 		if (t->flags.isStructure) {
 			usize index = 0;
 			Map<usize, UTF8String> remap;
-			for (auto& [name, entry]: t->fields)
+			for (auto& [name, entry]: t->fields) {
+				DEBUGLN("Field: ", name, " -> ", entry->id);
 				remap[entry->id] = name;
+			}
 			for (auto const& arg: node->children) {
 				if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 					auto const field = context.pathOf(arg->leftSide);
+					DEBUGLN("Setting Field: ", field.join("/"));
+					for (auto& [id, name]: remap)
+						DEBUGLN("Available Field: ", name);
 					if (field.size() > 1) context.error("Invalid field access!", arg->leftSide);
 					if (!remap.contains(t->fields[field.front()]->id))
-						context.error("Field has already been set!", arg->leftSide);
+						context.error("Field does not exist or has already been set!", arg->leftSide);
 					if (!t->fields.contains(field.front()))
 						context.error("Field does not exist!", arg->leftSide);
 					auto const expr = Expression().transform(context, arg->rightSide);
