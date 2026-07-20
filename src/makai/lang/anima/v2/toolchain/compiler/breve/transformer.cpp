@@ -1563,6 +1563,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 		if (t->flags.isStructure) {
 			usize index = 0;
 			Map<usize, UTF8String> remap;
+			Map<UTF8String, bool> filled;
 			for (auto& [name, entry]: t->fields) {
 				DEBUGLN("Field: ", name, " -> ", entry->id);
 				remap[entry->id] = name;
@@ -1571,13 +1572,11 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 				if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 					auto const field = context.pathOf(arg->leftSide);
 					DEBUGLN("Setting Field: ", field.join("/"));
-					for (auto& [id, name]: remap)
-						DEBUGLN("Available Field: ", name);
 					if (field.size() > 1) context.error("Invalid field access!", arg->leftSide);
-					if (!remap.contains(t->fields[field.front()]->id))
-						context.error("Field does not exist or has already been set!", arg->leftSide);
 					if (!t->fields.contains(field.front()))
 						context.error("Field does not exist!", arg->leftSide);
+					if (filled.contains(field.front()))
+						context.error("Field has already been set!", arg->leftSide);
 					auto const expr = Expression().transform(context, arg->rightSide);
 					if (!expr.source)
 						context.error("Expected value here!", arg->rightSide);
@@ -1587,7 +1586,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
 					if (!expr.shouldBePushed())
 						context.top()->impl->writeMainLine("pop");
-					remap.erase(fx->id);
+					filled[field.front()] = true;
 				} else {
 					if (remap.empty())
 						context.error("All fields have been already set!", arg);
