@@ -133,12 +133,13 @@ static ATransformer::Result resolveSubfield(
 			context.top()->impl->writeMainLine("at", f->id);
 			return {{f->passBy + " top"}, f->scope.raw(), f->type.raw(), {}, 0, ns->variable->type.raw()};
 		}
-		if (ns->subspaces.contains(sub)) {
-			auto const f = ns->subspaces[sub];
+		if (ns->variable->type->scope->subspaces.contains(sub)) {
+			auto const f = ns->variable->type->scope->subspaces[sub];
 			if (f->function) return {.scope = f};
 			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
 			context.error("Invalid expression!", node);
 		}
+		context.error("Invalid expression!", node);
 	}
 	if (ns->property) {
 		if (ns->property->type->fields.contains(sub)) {
