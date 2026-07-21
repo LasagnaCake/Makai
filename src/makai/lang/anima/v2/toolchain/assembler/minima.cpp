@@ -1240,7 +1240,7 @@ static void declareTypeMeta(Context& context, Context::Declaration& type) {
 		context.next();
 		if (context.has(LTS_TT_BACKTICK_STRING))
 			type.meta[key] = Makai::FLOW::parse(context.get(LTS_TT_BACKTICK_STRING).getString());
-		else if (context.has(LTS_TT_DOT))
+		else if (context.has(LTS_TT_BANG))
 			type.meta[key] = Makai::FLOW::Value::object();
 		else context.error("Expected attribute value or '.' here!");
 	}
