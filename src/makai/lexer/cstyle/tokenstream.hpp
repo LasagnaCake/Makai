@@ -66,6 +66,7 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_ASSIGN			= LTS_TT_EQUALS,
 				LTS_TT_AT				= '@',
 				LTS_TT_EXCLAMATION		= '!',
+				LTS_TT_BANG				= LTS_TT_EXCLAMATION,
 				LTS_TT_LOGIC_NOT		= LTS_TT_EXCLAMATION,
 				LTS_TT_DOLLAR			= '$',
 				LTS_TT_QUESTION			= '?',
