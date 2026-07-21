@@ -120,7 +120,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 				if (!attrib->value.isUndefined())
 					decl += "    " + name + " `" + attrib->value.toFLOWString() + "`\n";
 				else
-					decl += "    " + name + " .\n";
+					decl += "    " + name + "!\n";
 			decl += "  ]";
 		}
 	}
