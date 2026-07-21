@@ -6,6 +6,8 @@ namespace Core = Makai::Anima::V2::Core;
 
 using namespace Makai::Anima::V2::Toolchain::Compiler::Breve;
 
+static void doType(Composer& composer, Namespace::TypeRef const& fn);
+
 static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 	if (composer.visitedFunctions.contains(fn)) return;
 	composer.visitedFunctions[fn] = true;
@@ -26,7 +28,8 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		+	" ("
 		+	ov->arguments
 			.toList<Makai::UTF8String>(
-			[] (auto const& e) {
+			[&] (auto const& e) {
+				doType(composer, e->type.raw());
 				return e->type->name;
 			}
 		).join(" ")
@@ -105,6 +108,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	if (type->flags.isFinal)
 		decl += " final";
 	if (type->base) {
+		doType(composer, type->base);
 		if (type->flags.isArray)
 			decl += " array<" + type->base->name + ">";
 		else decl += " derived<" + type->base->name + ">";
@@ -114,9 +118,9 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			decl += "\n  meta [\n";
 			for (auto& [name, attrib]: type->scope->meta)
 				if (!attrib->value.isUndefined())
-					decl += "    " + name + " `" + attrib->value.toFLOWString("      ") + "`\n";
+					decl += "    " + name + " `" + attrib->value.toFLOWString() + "`\n";
 				else
-					decl += "    " + name + " `{}`\n";
+					decl += "    " + name + " .\n";
 			decl += "  ]";
 		}
 	}
@@ -128,6 +132,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		Makai::UTF8String buf;
 		for (auto& [name, field]: fields) {
 			if (field) {
+				doType(composer, field->type.raw());
 				buf += "    " + (field->type->name) + "\n";
 				++count;
 			}

@@ -584,40 +584,48 @@ static Namespace::AttributeRef createBasicAttribute() {
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
 	attrib->fields["type"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		auto const bt = (v["type"].getString());
 		ns->type->def = TypeDecl::Definition::AV2_TCTD_BASIC;
 		ns->type->flags.isStructure = false;
 		ns->type->flags.isBasic = true;
-		ns->type->flags.isFinal = true;
+		if (bt != "any") {
+			ns->type->flags.isCopyable = true;
+			ns->type->flags.isFinal = true;
+		}
 		if (ns->type->fields.size() > 2) {
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
 		} else if (ns->type->fields.size() > 1 && !ns->type->fields.contains("base")) {
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
 		}
-		auto const bt = (v["type"].getString());
-		if (bt == "void")			ns->type->basic = AV2_BT_VOID;
-		else if (bt == "bool")		ns->type->basic = AV2_BT_BOOL;
-		else if (bt == "int8")		ns->type->basic = AV2_BT_INT8;
-		else if (bt == "uint8")		ns->type->basic = AV2_BT_UINT8;
-		else if (bt == "int16")		ns->type->basic = AV2_BT_INT16;
-		else if (bt == "uint16")	ns->type->basic = AV2_BT_UINT16;
-		else if (bt == "int32")		ns->type->basic = AV2_BT_INT32;
-		else if (bt == "uint32")	ns->type->basic = AV2_BT_UINT32;
-		else if (bt == "int64")		ns->type->basic = AV2_BT_INT64;
-		else if (bt == "uint64")	ns->type->basic = AV2_BT_UINT64;
-		else if (bt == "float32")	ns->type->basic = AV2_BT_REAL32;
-		else if (bt == "float64")	ns->type->basic = AV2_BT_REAL64;
-		else if (bt == "float128")	ns->type->basic = AV2_BT_REAL128;
-		else if (bt == "vector")	ns->type->basic = AV2_BT_VECTOR;
-		else if (bt == "bytes")		ns->type->basic = AV2_BT_BYTES;
-		else if (bt == "matrix")	ns->type->basic = AV2_BT_MATRIX;
-		else if (bt == "type")		ns->type->basic = AV2_BT_TYPEID;
-		else if (bt == "string")	ns->type->basic = AV2_BT_STRING;
-		else if (bt == "char")		ns->type->basic = AV2_BT_CHAR;
-		else if (bt == "any")		ns->type->basic = AV2_BT_ANY;
-		else if (bt == "null")		ns->type->basic = AV2_BT_NULL;
+		if (bt == "void")			{ns->type->basic = AV2_BT_VOID;		}
+		else if (bt == "bool")		{ns->type->basic = AV2_BT_BOOL;		}
+		else if (bt == "int8")		{ns->type->basic = AV2_BT_INT8;		}
+		else if (bt == "uint8")		{ns->type->basic = AV2_BT_UINT8;	}
+		else if (bt == "int16")		{ns->type->basic = AV2_BT_INT16;	}
+		else if (bt == "uint16")	{ns->type->basic = AV2_BT_UINT16;	}
+		else if (bt == "int32")		{ns->type->basic = AV2_BT_INT32;	}
+		else if (bt == "uint32")	{ns->type->basic = AV2_BT_UINT32;	}
+		else if (bt == "int64")		{ns->type->basic = AV2_BT_INT64;	}
+		else if (bt == "uint64")	{ns->type->basic = AV2_BT_UINT64;	}
+		else if (bt == "float32")	{ns->type->basic = AV2_BT_REAL32;	}
+		else if (bt == "float64")	{ns->type->basic = AV2_BT_REAL64;	}
+		else if (bt == "float128")	{ns->type->basic = AV2_BT_REAL128;	}
+		else if (bt == "vector")	{ns->type->basic = AV2_BT_VECTOR;	}
+		else if (bt == "bytes")		{ns->type->basic = AV2_BT_BYTES;	}
+		else if (bt == "matrix")	{ns->type->basic = AV2_BT_MATRIX;	}
+		else if (bt == "type")		{ns->type->basic = AV2_BT_TYPEID;	}
+		else if (bt == "string")	{ns->type->basic = AV2_BT_STRING;	}
+		else if (bt == "char")		{ns->type->basic = AV2_BT_CHAR;		}
+		else if (bt == "any")		{ns->type->basic = AV2_BT_ANY;		}
+		else if (bt == "null")		{ns->type->basic = AV2_BT_NULL;		}
 		else Transformer::ATransformer::Context::error("Invalid basic type!", ns->node);
-		if (!(bt == "string" or bt == "bytes"))
-			ns->type->flags.isValueType = true;
+		switch (*ns->type->basic) {
+			case AV2_BT_STRING:
+			case AV2_BT_BYTES:
+			case AV2_BT_VOID:
+			case AV2_BT_NULL: break;
+			default: ns->type->flags.isValueType = true; break;
+		}
 	};
 	return attrib;
 }

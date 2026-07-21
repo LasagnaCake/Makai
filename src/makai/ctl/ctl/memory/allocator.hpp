@@ -18,7 +18,7 @@ namespace Type {
 		template<template <class> class T, class TData>
 		concept Allocator = requires (T<TData> t, usize sz, owner<TData> p) {
 			{t.allocate(sz)}	-> Type::Equal<owner<TData>>	;
-			{t.deallocate(p)}	-> Type::Equal<void>		;
+			{t.deallocate(p)}	-> Type::Equal<void>			;
 		};
 
 		/// @brief Type must be a valid constant allocator for `TData`.
@@ -30,7 +30,7 @@ namespace Type {
 	}
 }
 
-/// @brief Default allocator. Allocates from the heap, as the name implies.
+/// @brief Default allocator. Allocates from the process's own heap.
 /// @tparam T Type to handle memory for.
 template<Type::NonVoid T>
 struct HeapAllocator {

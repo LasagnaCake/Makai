@@ -24,7 +24,14 @@ struct Failure: CPP::Debug::Traceable {
 
 /// @brief Irrecoverable failure. Catastrophic.
 struct CatastrophicFailure: Crash, CPP::Debug::Traceable {
+	CatastrophicFailure() {exit(666);}
+
 	constexpr virtual cstring what() const noexcept {return "Something REALLY bad happened!";}
+};
+
+/// @brief Heap creation failure. Catastrophic.
+struct HeapCreationFailure: CatastrophicFailure {
+	constexpr cstring what() const noexcept override {return "Failed to create heap!";}
 };
 
 /// @brief Allocation failure. Catastrophic.

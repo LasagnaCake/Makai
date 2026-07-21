@@ -1219,8 +1219,6 @@ static void validateType(Context& context, Context::Declaration& type) {
 		type.flags.isValueType = true;
 		type.flags.isCopyable = true;
 		type.flags.isFinal = true;
-		type.byteSize	= 0;
-		type.alignment	= 1;
 		if (type.basic == BasicType::AV2_BT_STRING or type.basic == BasicType::AV2_BT_BYTES)
 			type.flags.isValueType = false;
 	}
@@ -1239,7 +1237,12 @@ static void declareTypeMeta(Context& context, Context::Declaration& type) {
 		auto const key = resolvePath(context);
 		if (type.meta.contains(key))
 			context.error("Meta attribute has already been declared!");
-		type.meta[key] = Makai::FLOW::parse(context.getNext(LTS_TT_BACKTICK_STRING, "meta attribute value").getString());
+		context.next();
+		if (context.has(LTS_TT_BACKTICK_STRING))
+			type.meta[key] = Makai::FLOW::parse(context.get(LTS_TT_BACKTICK_STRING).getString());
+		else if (context.has(LTS_TT_DOT))
+			type.meta[key] = Makai::FLOW::Value::object();
+		else context.error("Expected attribute value or '.' here!");
 	}
 }
 
