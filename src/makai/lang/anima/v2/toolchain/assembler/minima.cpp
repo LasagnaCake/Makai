@@ -1085,7 +1085,7 @@ static void doCreate(Context& context, bool const dynamic = false) {
 			context.error("Type is not an array type!");
 		context.add(t->id);
 	}
-	if (!create.dynSize) {
+	if (create.forArray && !create.dynSize) {
 		context.add(
 			context
 				.expectNext(LTS_TT_COLON)
