@@ -689,6 +689,22 @@ static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object
 	return false;
 }
 
+static bool stringBopIt(Object::Storage const& out, Object::Storage const& lhs, Object::Storage const& rhs, Operator const op, Runtime::Context& context) {
+	using S = Makai::UTF8String;
+	switch (op) {
+		using enum Operator;
+		case AV2_BOP_ADD: *out = *context.art.newValue<S>(lhs->toValue<S>() + rhs->toValue<S>()); return true;
+		case AV2_BOP_MUL: {
+			S result;
+			S const str = lhs->toValue<S>();
+			auto const times = lhs->toValue<uint64>();
+			for (usize i = 0; i < times; ++i) result += str;
+			*out = *context.art.newValue<S>(result);
+		} return true;
+		default: break;
+	}
+}
+
 void Engine::doBinaryOperation(Operator const op) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
@@ -710,11 +726,12 @@ void Engine::doBinaryOperation(Operator const op) {
 	if (err) return;
 	bool success = false;
 	if (lhs->isBoolean() && rhs->isBoolean())				success = bopIt<bool>(out, lhs, rhs, op, context);
-	if (lhs->isUnsigned() && rhs->isUnsigned())				success = bopIt<uint64>(out, lhs, rhs, op, context);
+	else if (lhs->isUnsigned() && rhs->isUnsigned())		success = bopIt<uint64>(out, lhs, rhs, op, context);
 	else if (lhs->isSigned() && rhs->isSigned())			success = bopIt<int64>(out, lhs, rhs, op, context);
 	else if (lhs->isNumber() && rhs->isNumber())			success = bopIt<double>(out, lhs, rhs, op, context);
 	else if (lhs->isVectorable() && rhs->isVectorable())	success = bopIt<Vector4>(out, lhs, rhs, op, context);
 	else if (lhs->isAlgebraic() && rhs->isAlgebraic())		success = bopIt<Matrix4x4>(out, lhs, rhs, op, context);
+	else if (lhs->isString() && rhs->isString())			success = bopIt<Matrix4x4>(out, lhs, rhs, op, context);
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
@@ -791,7 +808,7 @@ void Engine::doUnaryOperation(Operator const op) {
 	if (err) return;
 	bool success = false;
 	if (lhs->isBoolean())			success = uopIt<bool>(out, lhs, op, context);
-	if (lhs->isUnsigned())			success = uopIt<uint64>(out, lhs, op, context);
+	else if (lhs->isUnsigned())		success = uopIt<uint64>(out, lhs, op, context);
 	else if (lhs->isSigned())		success = uopIt<int64>(out, lhs, op, context);
 	else if (lhs->isNumber())		success = uopIt<double>(out, lhs, op, context);
 	else if (lhs->isAlgebraic())	success = uopIt<Vector4>(out, lhs, op, context);
