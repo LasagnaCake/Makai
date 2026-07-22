@@ -343,10 +343,22 @@ Node::Instance AttributeResolver::resolve(Parser& parser, Node::Instance const& 
 }
 
 Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving function prototype expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
+	if (leftSide) {
+		if (
+			leftSide->content == Node::Content::AV2_TANC_NAME
+		or	(leftSide->content == Node::Content::AV2_TANC_DECLARATION && leftSide->base.type == LTS_TT_COMMA)
+		or	(leftSide->content == Node::Content::AV2_TANC_ASSIGNMENT && leftSide->base.type == LTS_TT_EQUALS)
+		) result->children.pushBack(leftSide);
+		else if (leftSide->content == Node::Content::AV2_TANC_BLOCK && leftSide->base.type == LTS_TT_OPEN_PAREN)
+			result->children = leftSide->children;
+		else parser.context.error("Expected parenthesized arguments here!");
+		result->leftSide = parser.nextExpression();
+		return result;
+	}
+	DEBUGLN("Resolving function prototype expression...");
 	parser.context.expectNext(LTS_TT_OPEN_PAREN);
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
@@ -699,6 +711,25 @@ Node::Instance ExtractionResolver::resolve(Parser& parser, Node::Instance const&
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_STREAM_EXPR;
 	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression();
+	return result;
+}
+
+Node::Instance LambdaResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_LAMBDA;
+	if (
+		leftSide->content == Node::Content::AV2_TANC_NAME
+	or	(leftSide->content == Node::Content::AV2_TANC_DECLARATION && leftSide->base.type == LTS_TT_COMMA)
+	or	(leftSide->content == Node::Content::AV2_TANC_ASSIGNMENT && leftSide->base.type == LTS_TT_EQUALS)
+	) result->children.pushBack(leftSide);
+	else if (leftSide->content == Node::Content::AV2_TANC_BLOCK && leftSide->base.type == LTS_TT_OPEN_PAREN)
+		result->children.appendBack(leftSide->children);
+	else if (leftSide->content == Node::Content::AV2_TANC_DECLARATION && leftSide->base.type == LTS_TT_LITTLE_ARROW) {
+		result->children.appendBack(leftSide->children);
+		result->leftSide = leftSide->leftSide;
+	} else parser.context.error("Invalid left-side expression for lambda!");
 	result->rightSide = parser.nextExpression();
 	return result;
 }

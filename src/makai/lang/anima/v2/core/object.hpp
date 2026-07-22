@@ -342,8 +342,6 @@ namespace Makai::Anima::V2::Core {
 			return Ordered::Order::UNORDERED;
 		}
 
-		Storage getAtIndex(uint64 const index) const;
-
 		enum class SetError: uint8 {
 			AV2_COSE_OK,
 			AV2_COSE_NO_TYPE,
@@ -351,6 +349,15 @@ namespace Makai::Anima::V2::Core {
 			AV2_COSE_FIELD_IS_NOT_COPYABLE,
 			AV2_COSE_FIELD_DOES_NOT_EXIST,
 		};
+
+		enum class GetError: uint8 {
+			AV2_COGE_NO_TYPE,
+			AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS,
+			AV2_COGE_FIELD_IS_NOT_COPYABLE,
+			AV2_COGE_FIELD_DOES_NOT_EXIST,
+		};
+
+		Result<Storage, GetError> getAtIndex(uint64 const index) const;
 
 		SetError setAtIndex(uint64 const index, Storage const& value);
 

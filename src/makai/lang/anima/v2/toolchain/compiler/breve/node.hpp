@@ -54,6 +54,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_TRAIT,
 			AV2_TANC_AWAIT,
 			AV2_TANC_STREAM_EXPR,
+			AV2_TANC_LAMBDA,
 		};
 
 		Content							content = Content::AV2_TANC_EMPTY;
@@ -62,7 +63,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Instance						middle;
 		Instance						rightSide;
 		List<Instance>					children;
-		Nullable<Core::DataLocation>	source;
+		Nullable<Core::ValueLocation>	source;
 		BaseContext::Axiom				base;
 		List<BaseContext::Axiom>		interject;
 		bool							forAssignment = false;

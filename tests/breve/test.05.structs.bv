@@ -4,7 +4,7 @@ struct Person {
 	@ByCopy firstName : string
 	@ByCopy lastName : string
 	
-	fullName :: (self: Person) => self.firstName + " " + self.lastName
+	fullName :: (@ByRef self: Person) => self.firstName + " " + self.lastName
 }
 
 @Main
@@ -14,4 +14,4 @@ main :: () {
 		lastName	= "Doe"
 	}
 	IO.writeLine("Hello, " + foo.fullName; + "!")
-}
+} 

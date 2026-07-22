@@ -205,6 +205,8 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_STREAM_INSERT, infixes, new InsertionResolver());
 	add(LTS_TT_STREAM_EXTRACT, infixes, new ExtractionResolver());
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
+	add(LTS_TT_BIG_ARROW, infixes, new LambdaResolver());
+	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
 	DEBUGLN("Done!");
 }
 

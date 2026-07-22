@@ -32,37 +32,46 @@ bool Object::changeType(AtomicCell<Definition> const& newType) {
 	else return false;
 }
 
-Object::Storage Object::getAtIndex(uint64 const index) const {
-	if (!getType()) return null;
-	if (!(isArray()|| isStructure()))
-		return null;
-	if (isValueType()) {
-		if (!isClonable())
-			return null;
+Result<Object::Storage, Object::GetError> Object::getAtIndex(uint64 const index) const {
+	auto const t = getType();
+	if (!t) return GetError::AV2_COGE_NO_TYPE;
+	if (!(t->flags.isArray || t->flags.isStructure))
+		return GetError::AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS;
+	MAKAILIB_DEBUGLN_FULL("Type (Size:", t->fields.size(), " :: ", fields.size(), ") -> [", index, "]");
+	if (t->flags.isStructure && (index >= t->fields.size()))
+		return GetError::AV2_COGE_FIELD_DOES_NOT_EXIST;
+	if (t->flags.isValueType) {
+		if (t->flags.isStructure && !t->fields[index]->flags.isCopyable)
+			return GetError::AV2_COGE_FIELD_IS_NOT_COPYABLE;
+		if (t->flags.isArray && !t->base->flags.isCopyable)
+			return GetError::AV2_COGE_FIELD_IS_NOT_COPYABLE;
 		return cloneFrom(index);
 	}
 	if (index < fields.size()) {
 		MAKAILIB_DEBUGLN_FULL("[", index, "] -> ", fields[index]->toDynamicValue().toFLOWString());
 		return fields[index];
 	}
-	return null;
+	return GetError::AV2_COGE_FIELD_DOES_NOT_EXIST;
 }
 
 Object::SetError Object::setAtIndex(uint64 const index, Object::Storage const& value) {
 	auto const t = getType();
 	if (!t) return SetError::AV2_COSE_NO_TYPE;
-	if (!canHaveFields())
+	if (!(t->flags.isArray || t->flags.isStructure))
 		return SetError::AV2_COSE_TYPE_DOES_NOT_CONTAIN_FIELDS;
-	if (isValueType()) {
-		if (isArray()) {
-			if (t->fields.size() <= index)
+	MAKAILIB_DEBUGLN_FULL("Type (Size:", t->fields.size(), ") -> [", index, "]");
+	if (t->flags.isStructure && index >= t->fields.size())
+		return SetError::AV2_COSE_FIELD_DOES_NOT_EXIST;
+	if (t->flags.isValueType) {
+		if (t->flags.isStructure) {
+			if (index >= t->fields.size())
 				return SetError::AV2_COSE_FIELD_DOES_NOT_EXIST;
-			if (!t->fields[index]->copy)
+			if (!t->fields[index]->flags.isCopyable)
 				return SetError::AV2_COSE_FIELD_IS_NOT_COPYABLE;
-		} else if (isStructure()) {
-			if (count() <= index)
+		} else if (t->flags.isArray) {
+			if (index >= count())
 				return SetError::AV2_COSE_FIELD_DOES_NOT_EXIST;
-			if (!t->base->copy)
+			if (!t->base->flags.isCopyable)
 				return SetError::AV2_COSE_FIELD_IS_NOT_COPYABLE;
 		} else return SetError::AV2_COSE_TYPE_DOES_NOT_CONTAIN_FIELDS;
 		MX::memcpy(addressAt(index), value->content->data(), value->getType()->byteSize);

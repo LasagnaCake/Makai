@@ -4,66 +4,99 @@
 #include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
-	/// @brief Data location.
-	enum class DataLocation: uint8 {
-		/// @brief Void value.
-		AV2_DL_VOID,
-		/// @brief Null value.
-		AV2_DL_NULL,
-		/// @brief Boolean value.
-		AV2_DL_BOOL,
-		/// @brief Integer value.
-		AV2_DL_INT,
-		/// @brief Floating point value.
-		AV2_DL_REAL,
-		/// @brief Text value.
-		AV2_DL_STRING,
-		/// @brief Value in absolute position in the global stack.
-		AV2_DL_STACK,
-		/// @brief Value in offset from the top of the global stack.
-		AV2_DL_STACK_OFFSET,
-		/// @brief Global value.
-		AV2_DL_GLOBAL,
-		/// @brief Implemetation-defined value.
-		AV2_DL_EXTERNAL,
-		/// @brief Scope-local value.
-		AV2_DL_LOCAL,
-		/// @brief Location modifier (non-constants): By reference.
-		AV2_DLM_BY_REF		= 0b1000'0000,
-		/// @brief Location modifier (non-constants): By move.
-		AV2_DLM_MOVE		= 0b0100'0000,
-		/// @brief Integer modifier (constants): signedness.
-		AV2_DLI_UNSIGNED	= 0b1000'0000,
-		/// @brief Integer modifier (constants): size.
-		AV2_DLI_64			= 0b0110'0000,
-		AV2_DLI_32			= 0b0100'0000,
-		AV2_DLI_16			= 0b0010'0000,
-		/// @brief Floating point (constants): Size.
-		AV2_DLF_128			= 0b1000'0000,
-		AV2_DLF_64			= 0b0100'0000,
-		/// @brief Boolean (constants): Truthiness.
-		AV2_DLB_TRUE		= 0b1000'0000,
-		/// @brief Modifier bits.
-		AV2_DL_MODIFIERS	= 0b1110'0000,
+	/// @brief Value location.
+	union ValueLocation {
+		/// @brief Value source.
+		enum class Source: uint8 {
+			/// @brief Null value.
+			AV2_VLS_NULL,
+			/// @brief Boolean value.
+			AV2_VLS_BOOL,
+			/// @brief Integer value.
+			AV2_VLS_INT,
+			/// @brief Floating point value.
+			AV2_VLS_REAL,
+			/// @brief Text value.
+			AV2_VLS_STRING,
+			/// @brief Value in absolute position in the global stack.
+			AV2_VLS_STACK,
+			/// @brief Value in offset from the top of the global stack.
+			AV2_VLS_STACK_OFFSET,
+			/// @brief Global value.
+			AV2_VLS_GLOBAL,
+			/// @brief Implemetation-defined value.
+			AV2_VLS_EXTERNAL,
+			/// @brief Scope-local value.
+			AV2_VLS_LOCAL,
+		};
+		/// @brief Description of a constant empty value.
+		struct [[gnu::packed, gnu::aligned(1)]] ForVoidOrNull {
+			Source	source:	4;
+		} forVoidOrNull;
+		/// @brief Description of a constant boolean value.
+		struct [[gnu::packed, gnu::aligned(1)]] ForBoolean {
+			Source	source:	4;
+			uint8	flag:	1;
+		} forBool;
+		/// @brief Description of an constant integer value.
+		struct [[gnu::packed, gnu::aligned(1)]] ForInteger {
+			enum class Size: uint8 {
+				AV2_VL_IS_8_BIT,
+				AV2_VL_IS_16_BIT,
+				AV2_VL_IS_32_BIT,
+				AV2_VL_IS_64_BIT
+			};
+			Source	source:		4;
+			uint8	isUnsigned:	1;
+			Size	size:		2;
+		} forInt;
+		/// @brief Description of a constant floating point value.
+		struct [[gnu::packed, gnu::aligned(1)]] ForReal {
+			enum class Size: uint8 {
+				AV2_VL_RS_32_BIT,
+				AV2_VL_RS_64_BIT,
+				AV2_VL_RS_128_BIT
+			};
+			Source	source:	4;
+			Size	size:	2;
+		} forReal;
+		/// @brief Description of a constant string value.
+		struct [[gnu::packed, gnu::aligned(1)]] ForString {
+			Source	source:	4;
+		} forString;
+		/// @brief Description of a non-constant value.
+		struct [[gnu::packed, gnu::aligned(1)]] ForObject {
+			Source	source:	4;
+			uint8	byRef:	1;
+			uint8	byMove: 1;
+		} forObject;
+		/// @brief Generic descriptor of a value.
+		struct [[gnu::packed, gnu::aligned(1)]] Description {
+			Source	source:		4;
+			uint8	modifiers:	4;
+		} desc;
+		/// @brief Location as integer.
+		uint8 value;
+		/// @brief Creates a value location for a given source.
+		/// @param source Source to create location for.
+		/// @return Location for source.
+		constexpr static ValueLocation fromSource(Source const source) {
+			return ValueLocation{
+				.desc = {
+					.source = source
+				}
+			};
+		}
 	};
 
+	static_assert(sizeof(ValueLocation) == sizeof(uint8));
+
+	/// @brief Address jump mode.
 	enum class JumpMode: uint8 {
 		AV2_JM_TABLE_INDEX,
 		AV2_JM_RELATIVE,
 		AV2_JM_ABSOLUTE,
 	};
-
-	constexpr DataLocation operator|(DataLocation const& a, DataLocation const& b) {
-		return Cast::as<DataLocation>(bitcast<uint8>(a) | bitcast<uint8>(b));
-	}
-
-	constexpr DataLocation operator&(DataLocation const& a, DataLocation const& b) {
-		return Cast::as<DataLocation>(bitcast<uint8>(a) & bitcast<uint8>(b));
-	}
-
-	constexpr DataLocation operator~(DataLocation const& a) {
-		return Cast::as<DataLocation>(~bitcast<uint8>(a));
-	}
 
 	/// @brief Execution context mode.
 	enum class ContextMode: uint8 {
@@ -72,16 +105,6 @@ namespace Makai::Anima::V2::Core {
 		/// @brief Loose context.
 		AV2_CM_LOOSE,
 	};
-
-	/// @brief Returns the data location without modifiers.
-	constexpr DataLocation asPlace(DataLocation const loc) {
-		return (loc & ~(DataLocation::AV2_DL_MODIFIERS));
-	}
-
-	/// @brief Returns the modifiers for a data location.
-	constexpr DataLocation asModifiers(DataLocation const loc) {
-		return (loc & DataLocation::AV2_DL_MODIFIERS);
-	}
 
 	/// @brief Comparison operator.
 	enum class Comparator: uint8 {
@@ -108,20 +131,20 @@ namespace Makai::Anima::V2::Core {
 		/// @brief Context mode.
 		struct [[gnu::aligned(4)]] Context {
 			ContextMode	mode;
-			bool		immediate:	1;
+			uint8		immediate:	1;
 		};
 
 		/// @brief Value transfer.
 		struct [[gnu::aligned(4)]] Transfer {
-			DataLocation	from, to;
+			ValueLocation	from, to;
 		};
 
 		/// @brief Function invocation.
 		struct [[gnu::aligned(4)]] Invocation {
-			bool	dynamic:	1;
-			bool	external:	1;
-			bool	optional:	1;
-			bool	noResult:	1;
+			uint8	dynamic:	1;
+			uint8	external:	1;
+			uint8	optional:	1;
+			uint8	noResult:	1;
 		};
 
 		/// @brief Jump leap.
@@ -139,27 +162,27 @@ namespace Makai::Anima::V2::Core {
 			};
 			using Mode = JumpMode;
 			Type	type:	4;
-			bool	dyn:	1;
+			uint8	dyn:	1;
 			Mode	mode:	2;
-			bool	invert:	1;
+			uint8	invert:	1;
 		};
 
 		/// @brief Comparison operator.
 		struct [[gnu::aligned(4)]] Comparison {
 			Comparator	comp;
-			bool		sameType:	1;
+			uint8		sameType:	1;
 			BasicType	assume:		7;
 		};
 
 		/// @brief Stack push.
 		struct [[gnu::aligned(4)]] StackPush {
-			DataLocation	location;
+			ValueLocation	location;
 		};
 
 		/// @brief Operation.
 		struct [[gnu::aligned(4)]] Operation {
 			Operator	op;
-			bool		sameType:	1;
+			uint8		sameType:	1;
 			BasicType	assume:		7;
 			uint8		count		= 1;
 		};
@@ -172,7 +195,7 @@ namespace Makai::Anima::V2::Core {
 				AV2_IBT_MOVE
 			};
 			Type 	type:		7;
-			bool	fromGlobal:	1;
+			uint8	fromGlobal:	1;
 			uint16	offset;
 		};
 
@@ -183,18 +206,18 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Casting {
-			bool dynamic:	1;
-			bool noCopy:	1;
-			bool unsafe:	1;
+			uint8 dynamic:	1;
+			uint8 noCopy:	1;
+			uint8 unsafe:	1;
 		};
 
 		struct [[gnu::aligned(4)]] Field {
-			bool dynamic: 1;
+			uint8 dynamic: 1;
 		};
 
 		struct [[gnu::aligned(4)]] Waiting {
-			bool dynamic: 1;
-			bool once: 1;
+			uint8 dynamic:	1;
+			uint8 once:		1;
 		};
 
 		/// @brief Randomness.
@@ -205,31 +228,23 @@ namespace Makai::Anima::V2::Core {
 				AV2_IRT_REAL,
 			};
 
-			enum class Flags: uint8 {
-				AV2_IRF_NONE		= 0,
-				AV2_IRF_SECURE		= 1 << 0,
-				AV2_IRF_BOUNDED		= 1 << 1,
-				AV2_IRF_SET_SEED	= 1 << 2,
-				AV2_IRF_GET_SEED	= 1 << 3,
-			};
-
 			Type	type:		2;
-			bool	secure:		1;
-			bool	bounded:	1;
-			bool	getSeed:	1;
-			bool	setSeed:	1;
+			uint8	secure:		1;
+			uint8	bounded:	1;
+			uint8	getSeed:	1;
+			uint8	setSeed:	1;
 		};
 
 		struct [[gnu::aligned(4)]] Clear {
-			DataLocation	at;
-			bool			dyn: 1;
+			ValueLocation	at;
+			uint8			dyn: 1;
 		};
 
 		struct [[gnu::aligned(4)]] Create {
-			bool	dyn:			1;
-			bool	forArray:		1;
-			bool	dynSize:		1;
-			bool	andInit:		1;
+			uint8	dyn:			1;
+			uint8	forArray:		1;
+			uint8	dynSize:		1;
+			uint8	andInit:		1;
 		};
 
 		struct [[gnu::aligned(4)]] Selection {

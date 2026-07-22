@@ -260,7 +260,7 @@ void Engine::v2Halt() {
 	Instruction::Stop stop = bitcast<Instruction::Stop>(current.type);
 	switch (stop.mode) {
 		case Core::Instruction::Stop::Mode::AV2_ISM_ERROR: {
-			auto const v = consumeValue(DataLocation::AV2_DL_STRING);
+			auto const v = context.pop();
 			if (err) return;
 			auto const _ = v.sync();
 			return crash(makeErrorHere("PROGRAM_ERROR: " + v->toValue<String>()));
@@ -403,8 +403,8 @@ void Engine::v2Call() {
 	} else jumpByTableIndex(loc, true /*returnable*/);
 }
 
-Runtime::Context::Storage Engine::consumeValue(DataLocation const from) {
-	if (asPlace(from) != DataLocation::AV2_DL_BOOL) advance(true);
+Runtime::Context::Storage Engine::consumeValue(ValueLocation const from) {
+	if (from.desc.source != ValueLocation::Source::AV2_VLS_BOOL) advance(true);
 	auto const store = getValueFromLocation(from, bitcast<uint64>(current));
 	printValueState(store);
 	if (store && !store->getOriginalType())
@@ -417,56 +417,54 @@ static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bo
 	return noCopy ? v : Object::create(*v);
 }
 
-Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, uint64 const id) {
-	auto const place	= asPlace(loc);
-	auto const mod		= asModifiers(loc);
-	bool byRef	= Cast::as<bool>(mod & DataLocation::AV2_DLM_BY_REF);
-	bool byMove	= Cast::as<bool>(mod & DataLocation::AV2_DLM_MOVE);
-	MAKAILIB_DEBUGLN_FULL("Full Request: ", Makai::Cast::as<uint64>(enumcast(loc)));
-	MAKAILIB_DEBUGLN_FULL("Data Location: ", Makai::Cast::as<uint64>(enumcast(place)));
+Runtime::Context::Storage Engine::getValueFromLocation(ValueLocation const loc, uint64 const id) {
+	bool byRef	= loc.forObject.byRef;
+	bool byMove	= loc.forObject.byMove;
+	MAKAILIB_DEBUGLN_FULL("Full Request: ", Makai::Cast::as<uint64>(loc.value));
+	MAKAILIB_DEBUGLN_FULL("Data Location: ", Makai::Cast::as<uint64>(loc.desc.source));
 	MAKAILIB_DEBUGLN_FULL("By ref? ", byRef);
 	MAKAILIB_DEBUGLN_FULL("By move? ", byMove);
-	switch (place) {
-		case DataLocation::AV2_DL_NULL: {
+	switch (loc.desc.source) {
+		case ValueLocation::Source::AV2_VLS_NULL: {
 			return nullptr;
 		} break;
-		case DataLocation::AV2_DL_BOOL: {
-			return context.art.newValue((mod & DataLocation::AV2_DLB_TRUE) == DataLocation::AV2_DLB_TRUE);
+		case ValueLocation::Source::AV2_VLS_BOOL: {
+			return context.art.newValue(loc.forBool.flag);
 		} break;
-		case DataLocation::AV2_DL_INT: {
+		case ValueLocation::Source::AV2_VLS_INT: {
 			MAKAILIB_DEBUGLN_FULL("Creating integer...");
-			if ((mod & DataLocation::AV2_DLI_UNSIGNED) == DataLocation::AV2_DLI_UNSIGNED) {
+			if (loc.forInt.isUnsigned) {
 				MAKAILIB_DEBUGLN_FULL(":: UNSIGNED");
-				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
-					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::as<uint16>(id)); break;
-					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::as<uint32>(id)); break;
-					case DataLocation::AV2_DLI_64: return context.art.newValue(Makai::Cast::as<uint64>(id)); break;
+				switch (loc.forInt.size) {
+					case ValueLocation::ForInteger::Size::AV2_VL_IS_16_BIT: return context.art.newValue(Makai::Cast::as<uint16>(id)); break;
+					case ValueLocation::ForInteger::Size::AV2_VL_IS_32_BIT: return context.art.newValue(Makai::Cast::as<uint32>(id)); break;
+					case ValueLocation::ForInteger::Size::AV2_VL_IS_64_BIT: return context.art.newValue(Makai::Cast::as<uint64>(id)); break;
 					default: return context.art.newValue(Makai::Cast::as<uint8>(id)); break;
 				}
 			} else {
 				MAKAILIB_DEBUGLN_FULL(":: SIGNED");
-				switch (mod & ~DataLocation::AV2_DLI_UNSIGNED) {
-					case DataLocation::AV2_DLI_16: return context.art.newValue(Makai::Cast::bit<int16, uint16>(id)); break;
-					case DataLocation::AV2_DLI_32: return context.art.newValue(Makai::Cast::bit<int32, uint32>(id)); break;
-					case DataLocation::AV2_DLI_64: return context.art.newValue(Makai::Cast::bit<int64, uint64>(id)); break;
+				switch (loc.forInt.size) {
+					case ValueLocation::ForInteger::Size::AV2_VL_IS_16_BIT: return context.art.newValue(Makai::Cast::bit<int16, uint16>(id)); break;
+					case ValueLocation::ForInteger::Size::AV2_VL_IS_32_BIT: return context.art.newValue(Makai::Cast::bit<int32, uint32>(id)); break;
+					case ValueLocation::ForInteger::Size::AV2_VL_IS_64_BIT: return context.art.newValue(Makai::Cast::bit<int64, uint64>(id)); break;
 					default: return context.art.newValue(Makai::Cast::bit<int8, uint8>(id)); break;
 				}
 			}
 		} break;
-		case DataLocation::AV2_DL_REAL: {
-			switch (mod) {
-				case DataLocation::AV2_DLF_64: return context.art.newValue(Makai::Cast::bit<float64>(id)); break;
-				case DataLocation::AV2_DLF_128: return context.art.newValue(Makai::Cast::as<float128>(Makai::Cast::bit<float64>(id))); break;
+		case ValueLocation::Source::AV2_VLS_REAL: {
+			switch (loc.forReal.size) {
+				case ValueLocation::ForReal::Size::AV2_VL_RS_64_BIT: return context.art.newValue(Makai::Cast::bit<float64>(id)); break;
+				case ValueLocation::ForReal::Size::AV2_VL_RS_128_BIT: return context.art.newValue(Makai::Cast::as<float128>(Makai::Cast::bit<float64>(id))); break;
 				default: return context.art.newValue(Makai::Cast::bit<float32, uint32>(id)); break;
 			}
 		} break;
-		case DataLocation::AV2_DL_STRING: {
+		case ValueLocation::Source::AV2_VLS_STRING: {
 			MAKAILIB_DEBUGLN_FULL("Creating string '", program.strings[id], "'");
 			auto const v = context.art.newValue(program.strings[id]);
 			MAKAILIB_DEBUGLN_FULL("Created '", v->toValue<String>(), "'");
 			return v;
 		} break;
-		case DataLocation::AV2_DL_STACK: {
+		case ValueLocation::Source::AV2_VLS_STACK: {
 			if (context.globalValueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
@@ -478,7 +476,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
-		case DataLocation::AV2_DL_STACK_OFFSET: {
+		case ValueLocation::Source::AV2_VLS_STACK_OFFSET: {
 			if (context.globalValueStack.empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
@@ -490,8 +488,8 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
-		case DataLocation::AV2_DL_GLOBAL:	return global(id);
-		case DataLocation::AV2_DL_LOCAL: {
+		case ValueLocation::Source::AV2_VLS_GLOBAL:	return global(id);
+		case ValueLocation::Source::AV2_VLS_LOCAL: {
 			if (context.locals().empty()) {
 				if (inStrictMode())
 					crash(invalidLocationError(loc));
@@ -504,7 +502,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 			if (byMove) loc = nullptr;
 			return accessor(v, byRef or byMove);
 		}
-		case DataLocation::AV2_DL_EXTERNAL: {
+		case ValueLocation::Source::AV2_VLS_EXTERNAL: {
 			if (program.ani)
 				return external(program.ani->out[id], byRef or byMove);
 			else if (inStrictMode())
@@ -522,31 +520,30 @@ Runtime::Context::Storage Engine::getValueFromLocation(DataLocation const loc, u
 	return nullptr;
 }
 
-Runtime::Context::Storage& Engine::accessValue(DataLocation const from) {
-	if (asPlace(from) != DataLocation::AV2_DL_BOOL) advance(true);
+Runtime::Context::Storage& Engine::accessValue(ValueLocation const from) {
+	if (from.desc.source != ValueLocation::Source::AV2_VLS_BOOL) advance(true);
 	auto& loc = accessLocation(from, bitcast<uint64>(current));
 	if (loc && !loc->getOriginalType())
 		crash(makeErrorHere("Missing type information!"));
 	return loc;
 }
 
-Runtime::Context::Storage& Engine::accessLocation(DataLocation const loc, usize const id) {
+Runtime::Context::Storage& Engine::accessLocation(ValueLocation const loc, usize const id) {
 	static Context::Storage failsafe;
-	auto const place = asPlace(loc) & DataLocation{0xF};
-	switch (place) {
-		case DataLocation::AV2_DL_STACK: {
+	switch (loc.desc.source) {
+		case ValueLocation::Source::AV2_VLS_STACK: {
 			if (context.globalValueStack.empty()) {
 				crash(invalidLocationError(loc));
 			}
 			return context.globalValueStack[id  % context.globalValueStack.size()];
 		}
-		case DataLocation::AV2_DL_STACK_OFFSET: {
+		case ValueLocation::Source::AV2_VLS_STACK_OFFSET: {
 			if (context.globalValueStack.empty()) {
 				crash(invalidLocationError(loc));
 			}
 			return context.globalValueStack[-Cast::as<ssize>(id % context.globalValueStack.size() + 1)];
 		}
-		case DataLocation::AV2_DL_LOCAL: {
+		case ValueLocation::Source::AV2_VLS_LOCAL: {
 			if (context.locals().empty()) {
 				crash(invalidLocationError(loc));
 			}
@@ -1318,8 +1315,8 @@ void Engine::v2Jump() {
 		jumpByMode(leap.mode, loc, false /*not returnable*/);
 }
 
-Engine::Error Engine::invalidLocationError(DataLocation const& loc) {
-	return makeErrorHere("Invalid data location for instruction ["+ toString(enumcast(loc)) + "]!");
+Engine::Error Engine::invalidLocationError(ValueLocation const& loc) {
+	return makeErrorHere("Invalid data location for instruction ["+ toString(enumcast(loc.desc.source)) + "]!");
 }
 
 Engine::Error Engine::invalidCast(String const& description) {
@@ -1408,12 +1405,22 @@ void Engine::v2FieldGet() {
 		return crash(invalidSourceError("Value is not an array or structure!"));
 	auto const src = context.pop();
 	MAKAILIB_DEBUGLN_FULL("Source: ", src->getType()->hash);
-	MAKAILIB_DEBUGLN_FULL("Field: ", loc);
 	Object::Storage v;
 	auto const _ = v.sync();
-	v =  src->getAtIndex(loc);
-	MAKAILIB_DEBUGLN_FULL("Field: ", loc);
-	context.push(src->getAtIndex(loc));
+	src->getAtIndex(loc)
+		.then([&] (auto const& val) {v = val;})
+		.onError([&] (auto const& err) {
+			switch (err) {
+				using enum Object::GetError;
+				case AV2_COGE_NO_TYPE:						crash(invalidSourceError("Object does not have a type!"));
+				case AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS:	crash(invalidSourceError("Type does not contain fields!"));
+				case AV2_COGE_FIELD_IS_NOT_COPYABLE:		crash(invalidSourceError("Field is not copyable!"));
+				case AV2_COGE_FIELD_DOES_NOT_EXIST:			crash(invalidSourceError("Field does not exist!"));
+			}
+		});
+	if  (err) return;
+	MAKAILIB_DEBUGLN_FULL("Field[", loc, "] = ", v ? Makai::toString(v->getType()->hash) : "NULL");
+	context.push(v);
 	printValueState(context.top());
 }
 
@@ -1521,8 +1528,24 @@ void Engine::initializeObject(Object::Storage const& object) {
 	context.globalValueStack.eraseRange(-object->count(), -1);
 	MAKAILIB_DEBUGLN_FULL("Value: ", object->getType()->hash);
 	MAKAILIB_DEBUGLN_FULL("Size: ", object->count());
-	for (auto const& [e, i]: Makai::Range::expand(content))
-		if (e) object->setAtIndex(i, e);
+	MAKAILIB_DEBUGLN_FULL("Fields {");
+	for (auto const& [e, i]: Makai::Range::expand(content)) {
+		if (e) {
+			auto const result = object->setAtIndex(i, e);
+			if (result != Object::SetError::AV2_COSE_OK) [[unlikely]] {
+				switch (result) {
+					using enum Object::SetError;
+					[[unlikely]] case AV2_COSE_OK: break;
+					case AV2_COSE_NO_TYPE:						return crash(invalidSourceError("Object does not have a type!"));
+					case AV2_COSE_TYPE_DOES_NOT_CONTAIN_FIELDS:	return crash(invalidSourceError("Type does not contain fields!"));
+					case AV2_COSE_FIELD_IS_NOT_COPYABLE:		return crash(invalidSourceError("Field is not copyable!"));
+					case AV2_COSE_FIELD_DOES_NOT_EXIST:			return crash(invalidSourceError("Field does not exist!"));
+				}
+			}
+		}
+		MAKAILIB_DEBUG_FULL("  [", i, "] -"); printValueState(e);
+	}
+	MAKAILIB_DEBUGLN_FULL("}");
 }
 
 void Engine::v2Create() {

@@ -107,7 +107,7 @@ namespace Makai::Anima::V2::Runtime {
 		Engine::Error endOfProgramError();
 		Engine::Error invalidOperationError(String const& description);
 		Engine::Error invalidInternalValueError(uint64 const id);
-		Engine::Error invalidLocationError(Core::DataLocation const& loc);
+		Engine::Error invalidLocationError(Core::ValueLocation const& loc);
 		Engine::Error invalidSourceError(String const& description);
 		Engine::Error invalidDestinationError(String const& description);
 		Engine::Error invalidFunctionError(String const& description);
@@ -121,11 +121,11 @@ namespace Makai::Anima::V2::Runtime {
 
 		Engine::Error makeErrorHere(String const& message);
 
-		Context::Storage consumeValue(Core::DataLocation const from);
-		Context::Storage getValueFromLocation(Core::DataLocation const location, uint64 const id);
+		Context::Storage consumeValue(Core::ValueLocation const from);
+		Context::Storage getValueFromLocation(Core::ValueLocation const location, uint64 const id);
 
-		Context::Storage& accessValue(Core::DataLocation const from);
-		Context::Storage& accessLocation(Core::DataLocation const location, uint64 const id);
+		Context::Storage& accessValue(Core::ValueLocation const from);
+		Context::Storage& accessLocation(Core::ValueLocation const location, uint64 const id);
 
 		void advance(bool isRequired = false);
 

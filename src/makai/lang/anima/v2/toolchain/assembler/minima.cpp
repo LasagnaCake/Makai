@@ -12,6 +12,8 @@ using enum Type;
 
 using CoreMethod = Method;
 
+using enum ValueLocation::Source;
+
 static Makai::String cleanPath(Makai::String const& path) {
 	return Makai::Regex::replace(path, "\\/\\/+", "\\/");
 }
@@ -222,21 +224,8 @@ static Makai::String resolvePath(Context& context, bool absolute = false, Type c
 }
 
 struct Location {
-	DataLocation			source;
+	ValueLocation			source;
 	Makai::Nullable<uint64>	id		= null;
-
-	constexpr Location operator|(Location const& other) const {
-		return {
-			source | other.source,
-			other.id
-		};
-	}
-
-	constexpr Location& operator|=(Location const& other) {
-		source = source | other.source;
-		id = other.id;
-		return *this;
-	}
 
 	constexpr bool hasID() const {
 		return id.exists();
@@ -247,18 +236,18 @@ struct Location {
 	}
 };
 
-static DataLocation getLoadType(Context& context, DataLocation const prev) {
-	DataLocation locAt = asPlace(prev);
+static uint8 getLoadType(Context& context) {
+	uint8 load = 0;
 	if (context.has(LTS_TT_IDENTIFIER)) {
 		auto const id = context.value().getString();
 		if (id == "reference" || id == "ref")
-			locAt = locAt | DataLocation::AV2_DLM_BY_REF;
+			load = 1 << 2;
 		else if (id == "move")
-			locAt = locAt | DataLocation::AV2_DLM_MOVE;
+			load = 2 << 2;
 		else if (id == "value" || id == "val")
-			locAt = locAt;
+			load = 0 << 2;
 	}
-	return locAt;
+	return load;
 }
 
 static Location getStack(Context& context) {
@@ -278,10 +267,10 @@ static Location getStack(Context& context) {
 		context.next();
 	}
 	loc.id = context.get(LTS_TT_INTEGER, "stack index").getUnsigned();
-	loc.source = loc.source | (
+	loc.source.desc.source = (
 		backshots
-	?	DataLocation::AV2_DL_STACK_OFFSET
-	:	DataLocation::AV2_DL_STACK
+	?	ValueLocation::Source::AV2_VLS_STACK_OFFSET
+	:	ValueLocation::Source::AV2_VLS_STACK
 	);
 	context.expectNext(Type{']'});
 	return loc;
@@ -289,7 +278,7 @@ static Location getStack(Context& context) {
 
 static Location getStackTop(Context& context) {
 	Location loc;
-	loc.source = DataLocation::AV2_DL_STACK_OFFSET;
+	loc.source.desc.source = ValueLocation::Source::AV2_VLS_STACK_OFFSET;
 	loc.id = uint64(0);
 	return loc;
 }
@@ -303,7 +292,7 @@ static Location getLocal(Context& context) {
 	;
 	context.expectNext(Type{']'});
 	return {
-		DataLocation::AV2_DL_LOCAL,
+		ValueLocation::fromSource(AV2_VLS_LOCAL),
 		localID
 	};
 }
@@ -319,53 +308,53 @@ static Location getExtern(Context& context) {
 		break;
 		default: context.error("Expected external location name here!");
 	}
-	return {DataLocation::AV2_DL_EXTERNAL, externID};
+	return {ValueLocation::fromSource(AV2_VLS_EXTERNAL), externID};
 }
 
 static Location getGlobal(Context& context) {
 	auto const name = resolvePath(context);
 	uint64 globalID = context.addGlobal(name);
 	return {
-		DataLocation::AV2_DL_GLOBAL,
+		ValueLocation::fromSource(AV2_VLS_GLOBAL),
 		globalID
 	};
 }
 
-static DataLocation getIntWidth(Context& context) {
+static uint8 getIntWidth(Context& context) {
 	auto const id = context.getNext(LTS_TT_IDENTIFIER, "int type").getString();
 	if (id == "i8")
-		return DataLocation{0};
+		return 0 << 1;
 	else if (id == "i16")
-		return DataLocation::AV2_DLI_16;
+		return 1 << 1;
 	else if (id == "i32")
-		return DataLocation::AV2_DLI_32;
+		return 2 << 1;
 	else if (id == "i64")
-		return DataLocation::AV2_DLI_64;
+		return 3 << 1;
 	else if (id == "u8")
-		return DataLocation{0} | DataLocation::AV2_DLI_UNSIGNED;
+		return 4 << 1;
 	else if (id == "u16")
-		return DataLocation::AV2_DLI_16 | DataLocation::AV2_DLI_UNSIGNED;
+		return 5 << 1;
 	else if (id == "u32")
-		return DataLocation::AV2_DLI_32 | DataLocation::AV2_DLI_UNSIGNED;
+		return 6 << 1;
 	else if (id == "u64")
-		return DataLocation::AV2_DLI_64 | DataLocation::AV2_DLI_UNSIGNED;
+		return 7 << 1;
 	else {
 		context.pad();
-		return DataLocation::AV2_DLI_64;
+		return 7 << 1;
 	}
 }
 
-static DataLocation getRealWidth(Context& context) {
+static uint8 getRealWidth(Context& context) {
 	auto const id = context.getNext(LTS_TT_IDENTIFIER, "real type").getString();
 	if (id == "f32")
-		return DataLocation{0};
+		return 0 << 2;
 	else if (id == "f64")
-		return DataLocation::AV2_DLF_64;
+		return 1 << 2;
 	else if (id == "f128")
-		return DataLocation::AV2_DLF_128;
+		return 2 << 2;
 	else {
 		context.pad();
-		return DataLocation::AV2_DLF_64;
+		return 1 << 2;
 	}
 }
 
@@ -382,26 +371,26 @@ static Location getConstantLocation(Context& context) {
 			negated = !negated;
 		type = context.next().type();
 	}
-	Location loc {.source = DataLocation::AV2_DL_STRING};
+	Location loc {.source = ValueLocation::fromSource(AV2_VLS_STRING)};
 	if (isNumber) {
 		switch (context.type()) {
 			case LTS_TT_INTEGER:
 				loc.id = context.value().getSigned() * (negated ? -1 : +1);
-				loc.source = DataLocation::AV2_DL_INT;
+				loc.source.desc.source = ValueLocation::Source::AV2_VLS_INT;
 				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'i'})
-					loc.source = loc.source | getIntWidth(context);
-				else loc.source = loc.source | DataLocation::AV2_DLI_64;
+					loc.source.desc.modifiers = getIntWidth(context);
+				else loc.source.forInt.size = ValueLocation::ForInteger::Size::AV2_VL_IS_64_BIT;
 			break;
 			case LTS_TT_REAL:
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal() * (negated ? -1 : +1));
-				loc.source = DataLocation::AV2_DL_REAL;
+				loc.source.desc.source = ValueLocation::Source::AV2_VLS_INT;
 				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'f'})
-					loc.source = loc.source | getRealWidth(context);
-				else loc.source = loc.source | DataLocation::AV2_DLF_64;
+					loc.source.desc.modifiers = getRealWidth(context);
+				else loc.source.forReal.size = ValueLocation::ForReal::Size::AV2_VL_RS_64_BIT;
 			break;
 			default: context.error("Expected number here!");
 		}
-		loc.source = loc.source & DataLocation(0b11100111);
+		//loc.source.value &= 0b11100111;
 		return loc;
 	} else {
 		switch (context.type()) {
@@ -412,28 +401,31 @@ static Location getConstantLocation(Context& context) {
 			case LTS_TT_FR_DOUBLE_QUOTE_STRING:
 			case LTS_TT_JP_SINGLE_QUOTE_STRING:
 			case LTS_TT_JP_DOUBLE_QUOTE_STRING:
+				MAKAILIB_DEBUGLN_FULL("STRING");
+				loc.source.forString.source = AV2_VLS_STRING;
 				loc.id = context.addStringLiteral(context.value().getString());
 			break;
 			case LTS_TT_INTEGER:
 				loc.id = context.value().getUnsigned();
-				loc.source = DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED;
+				loc.source.forInt.source = AV2_VLS_INT;
+				loc.source.forInt.isUnsigned = true;
 				if (context.peek().type == LTS_TT_IDENTIFIER && (
 					context.peek().text[0] == Makai::UTF::U8Char{'u'}
 				or	context.peek().text[0] == Makai::UTF::U8Char{'i'}
 				))
-					loc.source = loc.source | getIntWidth(context);
-				else loc.source = loc.source | DataLocation::AV2_DLI_64;
+					loc.source.desc.modifiers = getIntWidth(context);
+				else loc.source.forInt.size = ValueLocation::ForInteger::Size::AV2_VL_IS_64_BIT;
 			break;
 			case LTS_TT_REAL:
 				loc.id = Makai::Cast::bit<uint64>(context.value().getReal());
-				loc.source = DataLocation::AV2_DL_REAL;
+				loc.source.forReal.source = AV2_VLS_REAL;
 				if (context.peek().type == LTS_TT_IDENTIFIER && context.peek().text[0] == Makai::UTF::U8Char{'f'})
-					loc.source = loc.source | getRealWidth(context);
-				else loc.source = loc.source | DataLocation::AV2_DLF_64;
+					loc.source.desc.modifiers = getRealWidth(context);
+				else loc.source.forReal.size = ValueLocation::ForReal::Size::AV2_VL_RS_64_BIT;
 			break;
 			default: context.error("Invalid constant!");
 		}
-		loc.source = loc.source & DataLocation(0b11100111);
+		//loc.source.value &= 0b11100111;
 		return loc;
 	}
 	context.error("Invalid constant!");
@@ -444,12 +436,21 @@ static Location getLabelLocation(Context& context) {
 	auto const current = resolvePath(context);
 	if (!context.hasJumpTarget(current))
 		context.error("Label has not been declared yet!");
-	return {DataLocation::AV2_DL_INT | DataLocation::AV2_DLI_UNSIGNED, context.getJumpTarget(current)};
+	return {
+		ValueLocation{
+			.forInt = {
+				.source = AV2_VLS_INT,
+				.isUnsigned = true,
+				.size = ValueLocation::ForInteger::Size::AV2_VL_IS_64_BIT
+			}
+		}, context.getJumpTarget(current)
+	};
 }
 
 static Location getDataLocation(Context& context) {
 	Location loc;
 	bool hasLoadType = false;
+	uint8 loadType = 0;
 	MAKAILIB_DEBUGLN_FULL("Getting move type...");
 	while (context.has(LTS_TT_IDENTIFIER)) {
 		auto const lt = context.value().getString();
@@ -463,40 +464,39 @@ static Location getDataLocation(Context& context) {
 			MAKAILIB_DEBUGLN_FULL("Has move!");
 			if (!hasLoadType) {
 				hasLoadType = true;
-				loc.source = getLoadType(context, DataLocation{0});
+				loadType = getLoadType(context);
 			}
 			context.next();
 			continue;
 		} else break;
 	}
-	MAKAILIB_DEBUGLN_FULL("Move type: ", Makai::Cast::as<uint64>(Makai::enumcast(loc.source)));
+	MAKAILIB_DEBUGLN_FULL("Move type: ", Makai::Cast::as<uint64>(loadType));
 	MAKAILIB_DEBUGLN_FULL("Getting location...");
 	switch (context.type()) {
 		case LTS_TT_IDENTIFIER: {
 			auto const id = context.value().getString();
-			if (id == "local" || id == "arg")			loc |= getLocal(context);
-			else if (id == "placeof")					loc |= getLabelLocation(context);
-			else if (id == "stack")						loc |= getStack(context);
-			else if (id == "global" || id == "g")		loc |= getGlobal(context);
-			else if (id == "external" || id == "out")	loc |= getExtern(context);
-			else if (id == "top")						loc |= getStackTop(context);
-			else if (id == "false")						loc |= Location{DataLocation::AV2_DL_BOOL, null};
-			else if (id == "true")						loc |= Location{DataLocation::AV2_DL_BOOL | DataLocation::AV2_DLB_TRUE, null};
-			else if (id == "void")						loc |= Location{DataLocation::AV2_DL_VOID, null};
-			else if (id == "null" || id == "nil")		loc |= Location{DataLocation::AV2_DL_NULL, null};
+			if (id == "local" || id == "arg")			loc = getLocal(context);
+			else if (id == "placeof")					loc = getLabelLocation(context);
+			else if (id == "stack")						loc = getStack(context);
+			else if (id == "global" || id == "g")		loc = getGlobal(context);
+			else if (id == "external" || id == "out")	loc = getExtern(context);
+			else if (id == "top")						loc = getStackTop(context);
+			else if (id == "false")						loc = Location{ValueLocation{.forBool = {.source = AV2_VLS_BOOL, .flag = false}}, null};
+			else if (id == "true")						loc = Location{ValueLocation{.forBool = {.source = AV2_VLS_BOOL, .flag = true}}, null};
+			else if (id == "null" || id == "nil")		loc = Location{ValueLocation{.forVoidOrNull = {.source = AV2_VLS_NULL}}, null};
 			else context.error("Invalid data source!");
 		} break;
 		case Type{'&'}:
-			loc |= getLabelLocation(context);
+			loc = getLabelLocation(context);
 		break;
 		case Type{':'}:
-			loc |= getExtern(context);
+			loc = getExtern(context);
 		break;
 		case Type{'$'}:
-			loc |= getGlobal(context);
+			loc = getGlobal(context);
 		break;
 		case Type{'.'}:
-			loc |= getLocal(context);
+			loc = getLocal(context);
 		break;
 		case Type{'+'}:
 		case Type{'-'}:
@@ -509,18 +509,19 @@ static Location getDataLocation(Context& context) {
 		case LTS_TT_JP_DOUBLE_QUOTE_STRING:
 		case LTS_TT_INTEGER:
 		case LTS_TT_REAL:
-			loc |= getConstantLocation(context);
-			loc.source = loc.source & DataLocation(0b11100111);
+			loc = getConstantLocation(context);
+			//loc.source.value &= 0b11100111;
 		break;
 		default: context.error("Invalid data source!");
 	}
-	auto const iloc = Makai::Cast::as<uint64>(Makai::enumcast(loc.source));
+	if (hasLoadType && loc.source.desc.source > AV2_VLS_STRING)
+		loc.source.desc.modifiers = loadType;
+	auto const iloc = Makai::Cast::as<uint64>(Makai::enumcast(loc.source.desc.source));
 	MAKAILIB_DEBUGLN_FULL("Data Location: ", iloc, " (", Makai::Format::pad(
 		Makai::String::fromNumber<uint8>(iloc, 2, false),
 		'0',
 		8
 	), ")");
-
 	return loc;
 }
 
@@ -836,11 +837,9 @@ static void doScopeDeclare(Context& context) {
 static void doCopy(Context& context) {
 	context.next();
 	auto const src = getDataLocation(context);
-	if (asPlace(src.source) == DataLocation::AV2_DL_VOID)
-		context.error("Cannot copy from void!");
 	context.expectNext(LTS_TT_LITTLE_ARROW).next();
 	auto const dst = getDataLocation(context);
-	if (asPlace(dst.source) < DataLocation::AV2_DL_STACK)
+	if (dst.source.desc.source < ValueLocation::Source::AV2_VLS_STACK)
 		context.error("Cannot copy to constant location!");
 	Instruction::Transfer tf {
 		src.source,

@@ -31,7 +31,7 @@ Makai::Data::Value Node::serialize() const {
 		ij.popBack();
 		out["asm"] = ij;
 	}
-	if (source) out["source"] = *source;
+	if (source) out["source"] = source.value().value;
 	out["base"] = base.text.toString();
 	return out;
 }
