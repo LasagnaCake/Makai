@@ -178,6 +178,8 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpByMode(Core::Instruction::Leap::Mode const mode, usize const location, bool returnable);
 		void returnBack();
 
+		void initializeObject(Core::Object::Storage const& object);
+
 		State				engineState	= State::AV2_RES_READY;
 		usize				delay		= 0;
 		Core::Module		program;

@@ -259,18 +259,18 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Method: Symbol<Core::MethodFlags> {
-		uint64				returnType	= -1;
-		ValueTable<uint64>	argTypes;
-		uint64				entry		= 0;
-		uint64				size		= 0;
+		uint64			returnType	= -1;
+		Data<uint64>	argTypes;
+		uint64			entry		= 0;
+		uint64			size		= 0;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Decl: Symbol<Core::TypeFlags> {
-		BasicType			basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
-		uint64				base		= -1;
-		uint64				byteSize	= 0;
-		uint64				alignment	= 0;
-		ValueTable<uint64>	fields;
+		BasicType		basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
+		uint64			base		= -1;
+		uint64			byteSize	= 0;
+		uint64			alignment	= 0;
+		Data<uint64>	fields;
 	};
 
 	struct [[gnu::packed, gnu::aligned(1)]] Module {

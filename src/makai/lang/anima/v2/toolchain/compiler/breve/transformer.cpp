@@ -100,7 +100,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 ) {
 	if (ns->variable) {
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
-			context.top()->impl->writeMainLine("at", ns->variable->id);
+			context.top()->impl->writeMainLine("at[", ns->variable->id, "]");
 			return {"move top"};
 		}
 		return ns->variable->getSource();
@@ -130,7 +130,7 @@ static ATransformer::Result resolveSubfield(
 			context.top()->impl->writeMainLine("push", ns->variable->getSource());
 			if (node->forAssignment)
 				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, f->id, ns->variable->type.raw()};
-			context.top()->impl->writeMainLine("at", f->id);
+			context.top()->impl->writeMainLine("at[", f->id, "]");
 			return {{f->passBy + " top"}, f->scope.raw(), f->type.raw(), {}, 0, ns->variable->type.raw()};
 		}
 		if (ns->variable->type->scope->subspaces.contains(sub)) {
@@ -1502,7 +1502,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	if (index.isCompilable()) {
 		if (!index.direct.isInteger() or index.direct.getSigned() < 0)
 			context.error("Direct value must be an unsigned integer here!", node->rightSide);
-		context.top()->impl->writeMainLine("at", index.direct.getUnsigned());
+		context.top()->impl->writeMainLine("at[", index.direct.getUnsigned(), "]");
 	} else if (
 		index.type == context.basicType("uint8")
 	||	index.type == context.basicType("uint16")
@@ -1538,14 +1538,8 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 			context.error("Type mismatch here!", arg);
 	}
 	auto const arr = context.arrayFor(prev);
-	if (count) {
-		context.top()->impl->writeMainLine("enter", count);
-		context.top()->impl->writeMainLine("bind ref", count, "[0 -> 0]");
-		context.top()->impl->writeMainLine("create", arr->name);
-		context.top()->impl->writeMainLine("exit");
-	} else {
-		context.top()->impl->writeMainLine("new", arr->name);
-	}
+	if (count)
+		context.top()->impl->writeMainLine(count ? "create" : "new", arr->name);
 	return {{"move top"}, arr->scope.raw(), arr};
 }
 
@@ -1578,13 +1572,8 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
 		else opstr = "*" + t->name;
 	}
-	context.top()->impl->writeMainLine("new", opstr);
 	if (node->children.size()) {
 		context.top()->impl->writeMainLine("begin");
-		context.top()->impl->writeMainLine("decl 1");
-		auto const tempID = context.top()->varc++;
-		context.top()->impl->writeMainLine("copy move top -> local[", tempID, "]");
-		context.top()->impl->writeMainLine("pop");
 		auto const tempStart = context.top()->varc;
 		context.top()->impl->writeMainLine("decl", count);
 		context.top()->varc += count;
@@ -1646,10 +1635,9 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			}
 		}
 		context.top()->impl->writeMainLine("blit ref", count, "[", tempStart, "] -> global");
-		context.top()->impl->writeMainLine("push local[", tempID, "]");
-		context.top()->impl->writeMainLine("init");
+		context.top()->impl->writeMainLine("create", opstr);
 		context.top()->impl->writeMainLine("end");
-	}
+	} else context.top()->impl->writeMainLine("new", opstr);
 	return {{"move top"}, t->scope.raw(), t};
 }
 

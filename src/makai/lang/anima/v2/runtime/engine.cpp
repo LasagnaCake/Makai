@@ -1269,8 +1269,10 @@ void Engine::v2StackClear() {
 		auto const total = context.globalValueStack.size();
 		auto const count = current.type < total ? current.type : total;
 		MAKAILIB_DEBUGLN_FULL("Clearing ", count, " entries...");
-		if (count < total)
-			context.globalValueStack = context.globalValueStack.sliced(0, total-count);
+		if (total && count == 1)
+			context.globalValueStack.popBack();
+		else if (count < total)
+			context.globalValueStack = context.globalValueStack.sliced(0, total-count-1);
 		else context.globalValueStack.clear();
 	}
 }
@@ -1509,10 +1511,22 @@ void Engine::v2StackBlit() {
 		return crash(outOfRangeError("Requested blit range falls outside source's size!"));
 	if (blit.fromGlobal)
 		dst.appendBack(src.sliced(-(blit.offset+1 + count), -(blit.offset+1)));
-	else dst.appendBack(src.sliced(blit.offset, blit.offset + count));
+	else dst.appendBack(src.sliced(blit.offset, blit.offset + count - 1));
+}
+
+void Engine::initializeObject(Object::Storage const& object) {
+	if (context.globalValueStack.size() < object->count())
+		return crash(invalidSourceError("Stack is too small to initialize the given value!"));
+	auto const content = context.globalValueStack.sliced(-object->count(), -1);
+	context.globalValueStack.eraseRange(-object->count(), -1);
+	MAKAILIB_DEBUGLN_FULL("Value: ", object->getType()->hash);
+	MAKAILIB_DEBUGLN_FULL("Size: ", object->count());
+	for (auto const& [e, i]: Makai::Range::expand(content))
+		if (e) object->setAtIndex(i, e);
 }
 
 void Engine::v2Create() {
+	StackStateScopePrinter s3p{context};
 	Instruction::Create create = Makai::bitcast<Instruction::Create>(current.type);
 	uint64 typeID;
 	if (create.dyn) {
@@ -1541,7 +1555,9 @@ void Engine::v2Create() {
 			size = Makai::Cast::bit<uint64>(current);
 		}
 		obj->reserveFields(size);
-	}
+	} else obj->reserveFields(type->fields.size());
+	if (create.andInit)
+		initializeObject(obj);
 	context.push(obj);
 }
 
@@ -1554,15 +1570,14 @@ void Engine::v2StackGrow() {
 }
 
 void Engine::v2Initialize() {
+	StackStateScopePrinter s3p{context};
 	if (context.globalValueStack.empty())
 		return crash(invalidSourceError("Missing value to initialize!"));
+	if (!context.top()) return crash(invalidSourceError("Value does not exist!"));
+	if (!context.top()->count()) return;
 	auto const val = context.pop();
-	if (context.globalValueStack.size() < val->count())
-		return crash(invalidSourceError("Stack is too small to initialize the given value!"));
-	auto const content = context.globalValueStack.sliced(-val->count(), -1);
-	context.globalValueStack.eraseRange(-val->count(), -1);
-	for (auto const& [e, i]: Makai::Range::expand(content))
-		if (e) val->setAtIndex(i, e);
+	initializeObject(val);
+	context.push(val);
 }
 
 void Engine::v2Breakpoint() {

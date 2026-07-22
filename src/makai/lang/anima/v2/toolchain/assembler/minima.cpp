@@ -1064,7 +1064,8 @@ static void doCreate(Context& context, bool const dynamic = false) {
 	Instruction::Create create{
 		.dyn = dynamic,
 		.forArray = false,
-		.dynSize = false
+		.dynSize = false,
+		.andInit = context.token().text == "create"
 	};
 	if (context.peek().type == LTS_TT_OPEN_BRACKET) {
 		create.forArray = true;
@@ -1097,7 +1098,7 @@ static void doCreate(Context& context, bool const dynamic = false) {
 }
 
 static void doInitialize(Context& context) {
-	// TODO: this
+	context.add(Instruction::Name::AV2_IN_INITIALIZE);
 }
 
 static void doBreakpoint(Context& context) {

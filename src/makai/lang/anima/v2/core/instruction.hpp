@@ -229,6 +229,7 @@ namespace Makai::Anima::V2::Core {
 			bool	dyn:			1;
 			bool	forArray:		1;
 			bool	dynSize:		1;
+			bool	andInit:		1;
 		};
 
 		struct [[gnu::aligned(4)]] Selection {
