@@ -236,16 +236,16 @@ struct Location {
 	}
 };
 
-static uint8 getLoadType(Context& context) {
-	uint8 load = 0;
+static ValueLocation::ForObject::Transfer getLoadType(Context& context) {
+	ValueLocation::ForObject::Transfer load = {};
 	if (context.has(LTS_TT_IDENTIFIER)) {
 		auto const id = context.value().getString();
 		if (id == "reference" || id == "ref")
-			load = 1 << 2;
+			load = ValueLocation::ForObject::Transfer::AV2_VL_OT_REF;
 		else if (id == "move")
-			load = 2 << 2;
+			load = ValueLocation::ForObject::Transfer::AV2_VL_OT_MOVE;
 		else if (id == "value" || id == "val")
-			load = 0 << 2;
+			load = ValueLocation::ForObject::Transfer::AV2_VL_OT_COPY;
 	}
 	return load;
 }
@@ -390,7 +390,6 @@ static Location getConstantLocation(Context& context) {
 			break;
 			default: context.error("Expected number here!");
 		}
-		//loc.source.value &= 0b11100111;
 		return loc;
 	} else {
 		switch (context.type()) {
@@ -425,7 +424,6 @@ static Location getConstantLocation(Context& context) {
 			break;
 			default: context.error("Invalid constant!");
 		}
-		//loc.source.value &= 0b11100111;
 		return loc;
 	}
 	context.error("Invalid constant!");
@@ -450,7 +448,7 @@ static Location getLabelLocation(Context& context) {
 static Location getDataLocation(Context& context) {
 	Location loc;
 	bool hasLoadType = false;
-	uint8 loadType = 0;
+	ValueLocation::ForObject::Transfer loadType = ValueLocation::ForObject::Transfer::AV2_VL_OT_COPY;
 	MAKAILIB_DEBUGLN_FULL("Getting move type...");
 	while (context.has(LTS_TT_IDENTIFIER)) {
 		auto const lt = context.value().getString();
@@ -510,12 +508,11 @@ static Location getDataLocation(Context& context) {
 		case LTS_TT_INTEGER:
 		case LTS_TT_REAL:
 			loc = getConstantLocation(context);
-			//loc.source.value &= 0b11100111;
 		break;
 		default: context.error("Invalid data source!");
 	}
 	if (hasLoadType && loc.source.desc.source > AV2_VLS_STRING)
-		loc.source.desc.modifiers = loadType;
+		loc.source.forObject.transfer = loadType;
 	auto const iloc = Makai::Cast::as<uint64>(Makai::enumcast(loc.source.desc.source));
 	MAKAILIB_DEBUGLN_FULL("Data Location: ", iloc, " (", Makai::Format::pad(
 		Makai::String::fromNumber<uint8>(iloc, 2, false),

@@ -412,18 +412,26 @@ Runtime::Context::Storage Engine::consumeValue(ValueLocation const from) {
 	return store;
 }
 
-static Runtime::Context::Storage accessor(Runtime::Context::Storage const& v, bool const noCopy) {
-	if (!v) return Object::Storage();
-	return noCopy ? v : Object::create(*v);
+Runtime::Context::Storage Engine::validate(Runtime::Context::Storage const& value, bool const passByCopy) {
+	if (!value) return Object::Storage();
+	if (auto const type = value->getType())
+		if (type->flags.isCopyable && passByCopy) {
+			crash(makeErrorHere("Type is not copyable!"));
+			return nullptr;
+		}
+	return passByCopy ? Object::create(*value) : value;
 }
 
 Runtime::Context::Storage Engine::getValueFromLocation(ValueLocation const loc, uint64 const id) {
-	bool byRef	= loc.forObject.byRef;
-	bool byMove	= loc.forObject.byMove;
+	bool byCopy	= loc.forObject.transfer == ValueLocation::ForObject::Transfer::AV2_VL_OT_COPY;
+	bool byMove	= loc.forObject.transfer == ValueLocation::ForObject::Transfer::AV2_VL_OT_MOVE;
 	MAKAILIB_DEBUGLN_FULL("Full Request: ", Makai::Cast::as<uint64>(loc.value));
 	MAKAILIB_DEBUGLN_FULL("Data Location: ", Makai::Cast::as<uint64>(loc.desc.source));
-	MAKAILIB_DEBUGLN_FULL("By ref? ", byRef);
-	MAKAILIB_DEBUGLN_FULL("By move? ", byMove);
+	if (loc.forObject.source > ValueLocation::Source::AV2_VLS_STRING) {
+		MAKAILIB_DEBUGLN_FULL("By copy? ", byCopy);
+		MAKAILIB_DEBUGLN_FULL("By ref? ", loc.forObject.transfer == ValueLocation::ForObject::Transfer::AV2_VL_OT_REF);
+		MAKAILIB_DEBUGLN_FULL("By move? ", byMove);
+	}
 	switch (loc.desc.source) {
 		case ValueLocation::Source::AV2_VLS_NULL: {
 			return nullptr;
@@ -474,7 +482,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(ValueLocation const loc, 
 			auto const v = loc;
 			printValueState(v);
 			if (byMove) loc = nullptr;
-			return accessor(v, byRef or byMove);
+			return validate(v, byCopy);
 		}
 		case ValueLocation::Source::AV2_VLS_STACK_OFFSET: {
 			if (context.globalValueStack.empty()) {
@@ -486,7 +494,7 @@ Runtime::Context::Storage Engine::getValueFromLocation(ValueLocation const loc, 
 			auto const v = loc;
 			printValueState(v);
 			if (byMove) loc = nullptr;
-			return accessor(v, byRef or byMove);
+			return validate(v, byCopy);
 		}
 		case ValueLocation::Source::AV2_VLS_GLOBAL:	return global(id);
 		case ValueLocation::Source::AV2_VLS_LOCAL: {
@@ -500,11 +508,11 @@ Runtime::Context::Storage Engine::getValueFromLocation(ValueLocation const loc, 
 			MAKAILIB_DEBUGLN_FULL("Local: ", id % context.locals().size());
 			printValueState(v);
 			if (byMove) loc = nullptr;
-			return accessor(v, byRef or byMove);
+			return validate(v, byCopy);
 		}
 		case ValueLocation::Source::AV2_VLS_EXTERNAL: {
 			if (program.ani)
-				return external(program.ani->out[id], byRef or byMove);
+				return external(program.ani->out[id], !byCopy);
 			else if (inStrictMode())
 				crash(invalidLocationError(loc));
 			return nullptr;

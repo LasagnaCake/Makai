@@ -127,6 +127,8 @@ namespace Makai::Anima::V2::Runtime {
 		Context::Storage& accessValue(Core::ValueLocation const from);
 		Context::Storage& accessLocation(Core::ValueLocation const location, uint64 const id);
 
+		Context::Storage validate(Context::Storage const& value, bool const passByCopy);
+
 		void advance(bool isRequired = false);
 
 		void v2Copy();

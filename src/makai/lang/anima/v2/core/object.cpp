@@ -37,7 +37,7 @@ Result<Object::Storage, Object::GetError> Object::getAtIndex(uint64 const index)
 	if (!t) return GetError::AV2_COGE_NO_TYPE;
 	if (!(t->flags.isArray || t->flags.isStructure))
 		return GetError::AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS;
-	MAKAILIB_DEBUGLN_FULL("Type (Size:", t->fields.size(), " :: ", fields.size(), ") -> [", index, "]");
+	MAKAILIB_DEBUGLN_FULL("Type (Size: ", t->fields.size(), " :: ", fields.size(), ") -> [", index, "]");
 	if (t->flags.isStructure && (index >= t->fields.size()))
 		return GetError::AV2_COGE_FIELD_DOES_NOT_EXIST;
 	if (t->flags.isValueType) {

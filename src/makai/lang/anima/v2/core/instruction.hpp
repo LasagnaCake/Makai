@@ -66,9 +66,13 @@ namespace Makai::Anima::V2::Core {
 		} forString;
 		/// @brief Description of a non-constant value.
 		struct [[gnu::packed, gnu::aligned(1)]] ForObject {
-			Source	source:	4;
-			uint8	byRef:	1;
-			uint8	byMove: 1;
+			enum class Transfer: uint8 {
+				AV2_VL_OT_COPY,
+				AV2_VL_OT_REF,
+				AV2_VL_OT_MOVE,
+			};
+			Source		source:		4;
+			Transfer	transfer:	2;
 		} forObject;
 		/// @brief Generic descriptor of a value.
 		struct [[gnu::packed, gnu::aligned(1)]] Description {
