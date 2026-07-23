@@ -14,4 +14,8 @@ main :: () {
 		lastName	= "Doe"
 	}
 	IO.writeLine("Hello, " + foo.fullName; + "!")
+	foo.lastName = "Lastname"
+	IO.writeLine("Hello, " + foo.fullName; + "!")
+	foo.firstName = "Firstname"
+	IO.writeLine("Hello, " + foo.fullName; + "!")
 } 
