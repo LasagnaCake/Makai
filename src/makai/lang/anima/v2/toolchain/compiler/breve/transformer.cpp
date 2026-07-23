@@ -100,7 +100,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 ) {
 	if (ns->variable) {
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
-			context.top()->impl->writeMainLine("at[", ns->variable->id, "]");
+			context.top()->impl->writeMainLine("at [", ns->variable->id, "]");
 			return {"move top"};
 		}
 		return ns->variable->getSource();
@@ -129,9 +129,9 @@ static ATransformer::Result resolveSubfield(
 			auto const f = ns->variable->type->fields[sub];
 			context.top()->impl->writeMainLine("push", ns->variable->getSource());
 			if (node->forAssignment)
-				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, f->id, ns->variable->type.raw()};
-			context.top()->impl->writeMainLine("at[", f->id, "]");
-			return {{f->passBy + " top"}, f->scope.raw(), f->type.raw(), {}, 0, ns->variable->type.raw()};
+				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, ssize(f->id), ns->variable->type.raw()};
+			context.top()->impl->writeMainLine("at [", f->id, "]");
+			return {{f->passBy + " top"}, f->scope.raw(), f->type.raw(), {}, ssize(f->id), ns->variable->type.raw()};
 		}
 		if (ns->variable->type->scope->subspaces.contains(sub)) {
 			auto const f = ns->variable->type->scope->subspaces[sub];
@@ -1332,11 +1332,12 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	if (lhs.parent) {
 		if (lhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *lhs.source);
+		context.top()->impl->main.popBack();
 		if (rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *rhs.source);
 		else if (rhs.isStackTop() && rhs.isCopied())
 			context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
-		context.top()->impl->writeMainLine("set", lhs.likelihood);
+		context.top()->impl->writeMainLine("set [", lhs.likelihood, "]");
 		return {{"move top"}, lhs.scope, lhs.type, rhs.direct, rhs.likelihood};
 	}
 	if (lhs.isCompilable() && !lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
@@ -1505,7 +1506,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	if (index.isCompilable()) {
 		if (!index.direct.isInteger() or index.direct.getSigned() < 0)
 			context.error("Direct value must be an unsigned integer here!", node->rightSide);
-		context.top()->impl->writeMainLine("at[", index.direct.getUnsigned(), "]");
+		context.top()->impl->writeMainLine("at [", index.direct.getUnsigned(), "]");
 	} else if (
 		index.type == context.basicType("uint8")
 	||	index.type == context.basicType("uint16")
