@@ -38,8 +38,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			if (implStack.empty()) return;
 			auto const prevImpl = implStack.popBack();
 			if (prevImpl->main.empty()) return;
-			if (implStack.empty()) impl->writeMain(prevImpl->toString());
-			else implStack.back()->writeMain(prevImpl->toString());
+			if (implStack.empty()) impl->addMainLine(prevImpl->toString());
+			else implStack.back()->addMainLine(prevImpl->toString());
 		}
 
 		Implementation::Instance top() const {

@@ -35,56 +35,23 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct IWritable {
 		virtual ~IWritable();
 
-		virtual void writePre(UTF8String const& what) = 0;
-		virtual void writeMain(UTF8String const& what) = 0;
-		virtual void writePost(UTF8String const& what) = 0;
-
-		template <Makai::Type::NoneOf<UTF8String, UTF32String, String> T>
-		void writePre(T const& what) {
-			writePre(toString(what));
-		}
-
-		template <Makai::Type::NoneOf<UTF8String, UTF32String, String> T>
-		void writeMain(T const& what) {
-			writeMain(toString(what));
-		}
-
-		template <Makai::Type::NoneOf<UTF8String, UTF32String, String> T>
-		void writePost(T const& what) {
-			writePost(toString(what));
-		}
-
-		template <class... Types>
-		void writePre(Types const&... values)
-		requires (sizeof...(Types) > 1) {
-			(..., writePre(toString(values)));
-		}
-
-		template <class... Types>
-		void writeMain(Types const&... values)
-		requires (sizeof...(Types) > 1) {
-			(..., writeMain(toString(values)));
-		}
-
-		template <class... Types>
-		void writePost(Types const&... values)
-		requires (sizeof...(Types) > 1) {
-			(..., writePost(toString(values)));
-		}
+		virtual void addPreLine(UTF8String const& what) = 0;
+		virtual void addMainLine(UTF8String const& what) = 0;
+		virtual void addPostLine(UTF8String const& what) = 0;
 
 		template <class... Types>
 		void writePreLine(Types const&... values) {
-			writePre(values..., "\n");
+			addPreLine((... + (" " + toString(values))));
 		}
 
 		template <class... Types>
 		void writeMainLine(Types const&... values) {
-			writeMain(values..., "\n");
+			addMainLine((... + (" " + toString(values))));
 		}
 
 		template <class... Types>
 		void writePostLine(Types const&... values) {
-			writePost(values..., "\n");
+			addPostLine((... + (" " + toString(values))));
 		}
 
 	private:
@@ -107,11 +74,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct Implementation: IWritable, IComposable, ISerializable {
 		using Instance		= Instance<Implementation>;
-		UTF8String pre, main, post;
+		UTF8StringList pre, main, post;
 
-		void writePre(UTF8String const& what) override;
-		void writeMain(UTF8String const& what) override;
-		void writePost(UTF8String const& what) override;
+		void addPreLine(UTF8String const& what) override;
+		void addMainLine(UTF8String const& what) override;
+		void addPostLine(UTF8String const& what) override;
 
 		Instance compose() const override {
 			auto const impl = new Implementation;
@@ -121,7 +88,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			return impl;
 		}
 
-		UTF8String toString() const {return pre + main + post;}
+		UTF8String toString() const {return pre.join("\n") + main.join("\n") + post.join("\n");}
 
 		Makai::Data::Value serialize() const override;
 
@@ -360,9 +327,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Handle<Function::Overload>			main;
 		List<Handle<Function::Overload>>	after;
 
-		void writePre(UTF8String const& what) override;
-		void writeMain(UTF8String const& what) override;
-		void writePost(UTF8String const& what) override;
+		void addPreLine(UTF8String const& what) override;
+		void addMainLine(UTF8String const& what) override;
+		void addPostLine(UTF8String const& what) override;
 
 		List<Namespace::Instance> scopeStack;
 

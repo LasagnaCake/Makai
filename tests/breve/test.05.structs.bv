@@ -4,7 +4,7 @@ struct Person {
 	@ByCopy firstName : string
 	@ByCopy lastName : string
 	
-	fullName :: (@ByRef self: Person) => self.firstName + " " + self.lastName
+	fullName :: (@ByRef self: Person) => '"' + self.firstName + " " + self.lastName + '"'
 }
 
 @Main

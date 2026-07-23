@@ -1446,7 +1446,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
 	Function::ArgTypes args;
-	context.top()->impl->writeMainLine("push nil");
+	usize const memspot = context.top()->impl->main.size();
+	context.top()->impl->writeMainLine("");
 	for (auto const& arg: node->children) {
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
@@ -1480,10 +1481,12 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		isMemFn = true;
 	}
 	auto& ov = *ovf;
-	if (isMemFn)
-		context.top()->impl->writeMainLine("copy", fn.source.value(), "-> stack[-"+ Makai::toString(memArgs.size()) +"]");
+	if (isMemFn) {
+		auto const pushAction = (fn.shouldBePushed()) ? Makai::toString("push ", *fn.source)  : "";
+		auto const copyAction = (fn.isStackTop() && fn.isCopied()) ? Makai::toString("\ncopy ", *fn.source, " -> top")  : "";
+		context.top()->impl->main[memspot] = pushAction + copyAction;
+	}
 	context.top()->impl->writeMainLine("call", ov.entry);
-	if (!isMemFn) context.top()->impl->writeMainLine("pop");
 	return {{"move top"}, ov.result->scope.raw(), ov.result};
 }
 
@@ -1861,9 +1864,10 @@ ATransformer::Result Definition::transform(Context& context, Node::Instance cons
 
 ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance const& node) {
 	auto const scope = context.nearestVarScope();
+	Makai::UTF8String interject = "";
 	for (auto& tok: node->interject)
-		scope->impl->writeMain(tok.text);
-	scope->impl->writeMainLine("");
+		interject += tok.text + " ";
+	scope->impl->writeMainLine(interject);
 	context.pop(1);
 	return {};
 }

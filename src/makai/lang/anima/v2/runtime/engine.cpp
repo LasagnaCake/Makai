@@ -415,11 +415,9 @@ Runtime::Context::Storage Engine::consumeValue(ValueLocation const from) {
 Runtime::Context::Storage Engine::validate(Runtime::Context::Storage const& value, bool const passByCopy) {
 	if (!value) return Object::Storage();
 	if (auto const type = value->getType())
-		if (type->flags.isCopyable && passByCopy) {
-			crash(makeErrorHere("Type is not copyable!"));
-			return nullptr;
-		}
-	return passByCopy ? Object::create(*value) : value;
+		if (passByCopy && !type->flags.isCopyable)
+			return value->shallowClone();
+	return passByCopy ? value->clone() : value;
 }
 
 Runtime::Context::Storage Engine::getValueFromLocation(ValueLocation const loc, uint64 const id) {
@@ -693,7 +691,6 @@ static bool stringBopIt(Object::Storage const& out, Object::Storage const& lhs, 
 	using S = Makai::UTF8String;
 	switch (op) {
 		using enum Operator;
-		case AV2_BOP_ADD: *out = *context.art.newValue<S>(lhs->toValue<S>() + rhs->toValue<S>()); return true;
 		case AV2_BOP_MUL: {
 			S result;
 			S const str = lhs->toValue<S>();
@@ -701,8 +698,14 @@ static bool stringBopIt(Object::Storage const& out, Object::Storage const& lhs, 
 			for (usize i = 0; i < times; ++i) result += str;
 			*out = *context.art.newValue<S>(result);
 		} return true;
-		default: break;
+		case AV2_BOP_ADD:		*out = *context.art.newValue<S>(lhs->toValue<S>() + rhs->toValue<S>()); 								return true;
+		case AV2_BOP_REM:		*out = *context.art.newValue<S>(Makai::Regex::findFirst(lhs->toValue<S>(), rhs->toValue<S>()).match);	return true;
+		case AV2_BOP_BIT_OR:	*out = *context.art.newValue(Makai::Regex::contains(lhs->toValue<S>(), rhs->toValue<S>()));				return true;
+		case AV2_BOP_BIT_AND:	*out = *context.art.newValue(Makai::Regex::matches(lhs->toValue<S>(), rhs->toValue<S>()));				return true;
+		case AV2_BOP_SUB:		*out = *context.art.newValue<S>(Makai::Regex::replace(lhs->toValue<S>(), rhs->toValue<S>(), ""));		return true;
+		default: return false;
 	}
+	return false;
 }
 
 void Engine::doBinaryOperation(Operator const op) {

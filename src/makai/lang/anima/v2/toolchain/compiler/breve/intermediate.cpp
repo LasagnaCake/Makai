@@ -100,28 +100,28 @@ void Intermediate::pop(usize count) {
 	}
 }
 
-void Implementation::writePre(UTF8String const& what) {
-	pre += " " + what;
+void Implementation::addPreLine(UTF8String const& what) {
+	pre.pushBack(what);
 }
 
-void Implementation::writeMain(UTF8String const& what) {
-	main += " " + what;
+void Implementation::addMainLine(UTF8String const& what) {
+	main.pushBack(what);
 }
 
-void Implementation::writePost(UTF8String const& what) {
-	post += " " + what;
+void Implementation::addPostLine(UTF8String const& what) {
+	main.pushBack(what);
 }
 
-void Intermediate::writePre(UTF8String const& what) {
-	root->impl->pre += " " + what;
+void Intermediate::addPreLine(UTF8String const& what) {
+	root->impl->addPreLine(what);
 }
 
-void Intermediate::writeMain(UTF8String const& what) {
-	root->impl->main += " " + what;
+void Intermediate::addMainLine(UTF8String const& what) {
+	root->impl->addMainLine(what);
 }
 
-void Intermediate::writePost(UTF8String const& what) {
-	root->impl->post += " " + what;
+void Intermediate::addPostLine(UTF8String const& what) {
+	root->impl->addPostLine(what);
 }
 
 Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args) const {
@@ -797,9 +797,9 @@ Intermediate::Intermediate() {
 
 Makai::Data::Value Implementation::serialize() const {
 	Makai::Data::Value out = out.object();
-	out["pre"]	= pre.toString();
-	out["main"]	= main.toString();
-	out["post"]	= post.toString();
+	out["pre"]	= pre.join("\n").toString();
+	out["main"]	= main.join("\n").toString();
+	out["post"]	= post.join("\n").toString();
 	return out;
 }
 

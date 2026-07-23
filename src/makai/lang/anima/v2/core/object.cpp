@@ -87,20 +87,49 @@ Object::SetError Object::setAtIndex(uint64 const index, Object::Storage const& v
 }
 
 Object::Storage Object::clone() const {
-	if (origin->copy)
+	if (origin->flags.isCopyable)
 		return create(*this);
 	return null;
 }
 
-Object::Storage Object::clone() {
-	if (origin->copy)
-		return create(*this);
-	return null;
+Object::Storage Object::shallowClone() const {
+	return create(*this, null);
+}
+
+Object::Object(Object const& other): Object(other.getType(), other.getOriginalType()) {
+	operator=(other);
+}
+
+Object& Object::operator=(Object const& other) {
+	type = other.getType();
+	origin = other.getOriginalType();
+	if (!type)
+		return *this;
+	if (type->flags.isValueType)
+		content = content.create();
+	if (other.content->size() && type->flags.isCopyable) {
+		content->invoke(type->byteSize);
+		type->copy.invoke(*content, *other.content);
+	} else if (other.fields.size()) {
+		fields.reserve(other.fields.size(), {});
+		for (auto const& [field, index]: Range::expand(other.fields))
+			if (field) {
+				auto const type = field->getType();
+				if (!type) continue;
+				fields[index] = (type->flags.isCopyable ? field->clone() : field->shallowClone());
+			}
+	}
+	return *this;
+}
+
+Object::Object(Object const& other, nulltype): Object(other.getType(), other.getOriginalType()) {
+	fields = other.fields;
+	content = other.content;
 }
 
 void Object::reserveFields(usize const count) {
 	fields.reserve(count, null);
-	if (fields.size() < count)
+	if (fields.size() < count) [[unlikely]]
 		throw Error::FailedAction("Failed to reserve fields!", CTL_CPP_PRETTY_SOURCE);
 }
 

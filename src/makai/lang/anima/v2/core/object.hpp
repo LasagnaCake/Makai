@@ -134,11 +134,7 @@ namespace Makai::Anima::V2::Core {
 
 		bool changeType(AtomicCell<Definition> const& newType);
 
-		Object& operator=(Object const& other) {
-			if (other.isClonable())
-				return operator=(Object(other));
-			return *this;
-		}
+		Object& operator=(Object const& other);
 
 		constexpr TypeFlags flags() const {
 			if (!origin) return {};
@@ -361,8 +357,8 @@ namespace Makai::Anima::V2::Core {
 
 		SetError setAtIndex(uint64 const index, Storage const& value);
 
-		Storage clone();
-		Storage clone() const;
+		Storage clone()			const;
+		Storage shallowClone()	const;
 
 		void reserveFields(usize const count);
 
@@ -385,6 +381,10 @@ namespace Makai::Anima::V2::Core {
 
 		static Storage create(Object const& other) {
 			return Storage::create(other);
+		}
+
+		static Storage create(Object const& other, nulltype) {
+			return Storage::create(other, null);
 		}
 
 		static Storage create(
@@ -413,6 +413,8 @@ namespace Makai::Anima::V2::Core {
 		constexpr Object(
 			AtomicCell<Definition> const& type
 		): type(type), origin(type) {
+			if (type->flags.isValueType)
+				content = content.create();
 		}
 
 		constexpr Object(
@@ -422,9 +424,8 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		template <Makai::Type::Different<Object> T>
-		constexpr Object(T const& v, AtomicCell<Definition> const& info) {
-			type = info;
-			origin = info;
+		constexpr Object(T const& v, AtomicCell<Definition> const& info): Object(info) {
+			content = content.create();
 			content->invoke(origin->byteSize);
 			DEBUGLN("Object Type: ", type->hash);
 			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
@@ -449,17 +450,9 @@ namespace Makai::Anima::V2::Core {
 			MX::construct(ref<T>(content->data()), v);
 		}
 
-		constexpr Object(Object const& other): Object(other.type ? other.type : other.origin) {
-			if (!type)
-				throw Error::FailedAction(
-					"Missing type information!",
-					CTL_CPP_PRETTY_SOURCE
-				);
-			if (type->copy) {
-				content->invoke(type->byteSize);
-				type->copy.invoke(*content, *other.content);
-			}
-		}
+		Object(Object const& other);
+
+		Object(Object const& other, nulltype);
 
 		constexpr Object(
 			AtomicCell<Memory> const& content,
@@ -501,7 +494,7 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		List<Storage>			fields;
-		AtomicCell<Memory>		content = content.create();
+		AtomicCell<Memory>		content;
 		AtomicCell<Definition>	type;
 		AtomicCell<Definition>	origin;
 	};

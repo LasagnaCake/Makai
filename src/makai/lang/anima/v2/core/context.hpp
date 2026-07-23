@@ -93,7 +93,7 @@ namespace Makai::Anima::V2::Core {
 
 			template <Type::Functional<TReturn(TArgs...)> TFunc, class... T2>
 			static TReturn bridgeCall(TFunc& f, Tuple<T2...>& tup) {
-				bridgeCall(
+				return bridgeCall(
 					f,
 					tup,
 					IntegerPack<sizeof...(TArgs)>()
@@ -103,7 +103,7 @@ namespace Makai::Anima::V2::Core {
 			template <Type::Functional<TReturn(TArgs...)> TFunc, usize... N, class... T2>
 			static TReturn bridgeCall(TFunc& f, Tuple<T2...>& tup, IndexTuple<N...>) {
 				auto bridge = Tuple<TArgs...>{tup.template get<N>()...};
-				invokeFromTuple<TReturn, TArgs...>(
+				return invokeFromTuple<TReturn, TArgs...>(
 					f,
 					bridge
 				);

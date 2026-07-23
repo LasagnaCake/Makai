@@ -42,7 +42,7 @@ namespace Makai::Anima::V2::Core {
 			QueryResultType out;
 			for (auto& v: values) {
 				if (v->name == name)
-					out.pushBack(v.asWeak());
+					out.pushBack(v);
 			}
 			return out;
 		}
@@ -51,14 +51,14 @@ namespace Makai::Anima::V2::Core {
 			QueryResultType out;
 			for (auto& v: values) {
 				if (v->hash == hash)
-					out.pushBack(v.asWeak());
+					out.pushBack(v);
 			}
 			return out;
 		}
 
 		QueryResultType queryByID(uint64 const id) const {
 			if (id < values.size())
-				return values[id].asWeak();
+				return values[id];
 			return nullptr;
 		}
 
