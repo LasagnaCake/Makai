@@ -433,8 +433,6 @@ namespace Makai::Anima::V2::Core {
 				if (auto const t = getType())
 					return t->hash == T::ART_HASH;
 				return false;
-			} if constexpr (Type::Equal<T, Nullable<typename T::DataType>>) {
-				return canBecome<typename T::DataType>();
 			} else return false;
 		}
 
