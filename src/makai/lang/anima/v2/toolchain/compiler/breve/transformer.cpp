@@ -391,10 +391,6 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		var.defaulted = true;
 		if (!var.type)
 			var.type = result.type.asWeak();
-		if (parent != context.root && !var.staticEntity) {
-			parent->impl->writeMainLine(tmp->impl->toString());
-			var.initializer = nullptr;
-		}
 	}
 	var.value = direct;
 	context.pop(path.size());
@@ -1282,6 +1278,9 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 					overloadScope->impl->writePreLine("enter", toString(args.size()));
 					overloadScope->impl->writePreLine("bind ref", toString(args.size()), "[0 -> 0]");
 					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
+					if (overloadScope->impl->main.back() == "pop")
+						overloadScope->impl->main.popBack();
+					overloadScope->impl->main.popBack();
 					overloadScope->impl->writePostLine("call", implOv->entry);
 					overloadScope->impl->writePostLine("exit");
 					overloadScope->impl->writePostLine("ret");

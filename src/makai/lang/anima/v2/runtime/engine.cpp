@@ -1366,14 +1366,14 @@ void Engine::v2Jump() {
 		auto const cond = context.pop();
 		auto const _c = cond.sync();
 		switch (leap.type) {
-			case AV2_ILT_IF_TRUTHY:				shouldJump	= cond->toValue<bool>();		break;
-			case AV2_ILT_IF_FALSY:			 	shouldJump	= !cond->toValue<bool>();		break;
-			case AV2_ILT_IF_ZERO:				shouldJump	= cond->toValue<double>() == 0;	break;
-			case AV2_ILT_IF_NOT_ZERO:			shouldJump	= cond->toValue<double>() != 0;	break;
-			case AV2_ILT_IF_NEGATIVE:			shouldJump	= cond->toValue<double>() < 0;	break;
-			case AV2_ILT_IF_POSITIVE:			shouldJump	= cond->toValue<double>() > 0;	break;
-			case AV2_ILT_IF_NULL_OR_VOID:		shouldJump	= !cond.exists();				break;
-			case AV2_ILT_IF_EXISTS:				shouldJump	= cond.exists();				break;
+			case AV2_ILT_IF_TRUTHY:				shouldJump	= cond->toValue<bool>();				break;
+			case AV2_ILT_IF_FALSY:			 	shouldJump	= !cond->toValue<bool>();				break;
+			case AV2_ILT_IF_ZERO:				shouldJump	= cond->toValue<double>() == 0;			break;
+			case AV2_ILT_IF_NOT_ZERO:			shouldJump	= cond->toValue<double>() != 0;			break;
+			case AV2_ILT_IF_NEGATIVE:			shouldJump	= cond->toValue<double>() < 0;			break;
+			case AV2_ILT_IF_POSITIVE:			shouldJump	= cond->toValue<double>() > 0;			break;
+			case AV2_ILT_IF_NULL_OR_VOID:		shouldJump	= !(cond.exists() && cond->exists());	break;
+			case AV2_ILT_IF_EXISTS:				shouldJump	= cond.exists() && cond->exists();		break;
 			default: break;
 		}
 	}

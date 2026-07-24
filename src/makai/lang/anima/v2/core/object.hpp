@@ -405,6 +405,81 @@ namespace Makai::Anima::V2::Core {
 
 		template <class T> explicit operator T() const {return toValue<T>();}
 
+		template <class T>
+		constexpr bool canBecome() const {
+			if constexpr(Makai::Type::Equal<T, bool>)
+				return isBoolean();
+			else if constexpr (Makai::Type::Unsigned<T>)
+				return isUnsigned();
+			else if constexpr (Makai::Type::Integer<T>)
+				return isInteger();
+			else if constexpr (Makai::Type::Number<T>)
+				return isNumber();
+			else if constexpr (Makai::Type::OneOf<T, Vector2, Vector3, Vector4>)
+				return isVectorable();
+			else if constexpr (Makai::Type::OneOf<T, String, UTF8String, UTF32String>)
+				return isString();
+			else if constexpr(Makai::Type::OneOf<T, Bytes<>>)
+				return isBytes();
+			else if constexpr (Makai::Type::OneOf<T, Matrix4x4>)
+				return isMatrix();
+			else if constexpr (Makai::Type::OneOf<T, JumpID>)
+				return isJumpID();
+			else if constexpr (Makai::Type::OneOf<T, TypeID>)
+				return isTypeID();
+			else if constexpr (Makai::Type::OneOf<T, CallID>)
+				return isCallID();
+			else if constexpr (ARTType<T>) {
+				if (auto const t = getType())
+					return t->hash == T::ART_HASH;
+				return false;
+			} if constexpr (Type::Equal<T, Nullable<typename T::DataType>>) {
+				return canBecome<typename T::DataType>();
+			} else return false;
+		}
+
+		template <class T>
+		bool set(T const& value) {
+			if (!canBecome<T>()) return false;
+			if (content) unset();
+			content = content.create();
+			content->invoke(origin->byteSize);
+			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
+				UTF8String const us = v;
+				content->resize(us.size() * sizeof(UTF8Char));
+				MX::memmove<UTF8Char>((ref<UTF8Char>)content->data(), us.data(), us.size());
+			} else if constexpr (Type::Equal<T, Bytes<>>) {
+				content->resize(v.size());
+				MX::memmove(content->data(), v.data(), v.size());
+			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
+				initialize<UTF8Char>(v);
+			} else initialize<T>(v);
+			return true;
+		}
+
+		template <class T>
+		bool set(Nullable<T> const& value) {
+			if (!canBecome<T>()) return false;
+			if (content) unset();
+			if (!value) return true;
+			content = content.create();
+			content->invoke(origin->byteSize);
+			auto const v = *value;
+			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
+				UTF8String const us = v;
+				content->resize(us.size() * sizeof(UTF8Char));
+				MX::memmove<UTF8Char>((ref<UTF8Char>)content->data(), us.data(), us.size());
+			} else if constexpr (Type::Equal<T, Bytes<>>) {
+				content->resize(v.size());
+				MX::memmove(content->data(), v.data(), v.size());
+			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
+				initialize<UTF8Char>(v);
+			} else initialize<T>(v);
+			return true;
+		}
+
+		constexpr bool exists() const {return content;}
+
 	private:
 		friend Storage;
 
@@ -425,19 +500,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <Makai::Type::Different<Object> T>
 		constexpr Object(T const& v, AtomicCell<Definition> const& info): Object(info) {
-			content = content.create();
-			content->invoke(origin->byteSize);
-			DEBUGLN("Object Type: ", type->hash);
-			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
-				UTF8String const us = v;
-				content->resize(us.size() * sizeof(UTF8Char));
-				MX::memmove<UTF8Char>((ref<UTF8Char>)content->data(), us.data(), us.size());
-			} else if constexpr (Type::Equal<T, Bytes<>>) {
-				content->resize(v.size());
-				MX::memmove(content->data(), v.data(), v.size());
-			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
-				initialize<UTF8Char>(v);
-			} else initialize<T>(v);
+			set(v);
 		}
 
 		template <Makai::Type::Different<Object> T>
@@ -491,6 +554,15 @@ namespace Makai::Anima::V2::Core {
 				reason,
 				CTL_CPP_PRETTY_SOURCE
 			);
+		}
+
+		void unset() {
+			if (content.unique()) {
+				if (!origin) return;
+				if (!(origin->flags.isValueType))
+					origin->destruct(*content);
+			}
+			content = nullptr;
 		}
 
 		List<Storage>			fields;

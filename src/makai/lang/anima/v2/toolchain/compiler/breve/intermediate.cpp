@@ -32,7 +32,7 @@ Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
 	DEBUG("Subspaces in '", name,"' : [ ");
 	for (auto const& [name, subns]: subspaces)
-		DEBUG( "{", name , ":", subns->name, "} ");
+		DEBUG( "{", name , ":", subns ? subns->name : "???NULL???", "} ");
 	DEBUGLN("]");
 	DEBUGLN("Looking for ", path.front().toString());
 	DEBUGLN("Exists? ", subspaces.contains(path.front()));
@@ -40,7 +40,7 @@ Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	DEBUGLN("You Sure? ", subspaces[path.front()].exists());
 	if (path.size() == 1)
 		return subspaces[path.front()];
-	else return subspaces[path.front()]->resolve(path.sliced(1));
+	else if (subspaces[path.front()]) return subspaces[path.front()]->resolve(path.sliced(1));
 	return nullptr;
 }
 
@@ -51,7 +51,7 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 		DEBUGLN("Scope: ", scope->name);
 		DEBUG("Subspaces: [ ");
 		for (auto const& [name, subns]: scope->subspaces)
-			DEBUG( "{", name , ":", subns->name, "} ");
+			DEBUG( "{", name , ":", subns ? subns->name : "???NULL???", "} ");
 		DEBUGLN("]");
 		if (scope->name == path.front()) {
 			if (path.size() == 1)

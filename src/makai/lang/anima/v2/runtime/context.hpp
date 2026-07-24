@@ -77,6 +77,11 @@ namespace Makai::Anima::V2::Runtime {
 			return art.newValue(value);
 		}
 
+		template <class T>
+		Storage newEmpty() {
+			return art.template newEmpty<T>();
+		}
+
 		Pointers				pointers;
 		List<Storage>			globalValueStack;
 		List<Pointers>			pointerStack;

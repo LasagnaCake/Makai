@@ -299,6 +299,18 @@ namespace Makai::Anima::V2::Core {
 			return Object::create(value, query.front());
 		}
 
+		template <class T>
+		Object::Storage newEmpty() const {
+			auto const query = types.byNameHash(Meta::arthashof<T>());
+			if (query.empty() or !query.front())
+				throw Makai::Error::NotFound(
+					"Could not find ART analog for the given type!",
+					CTL_CPP_PRETTY_SOURCE
+				);
+			MAKAILIB_DEBUGLN_FULL("Selected Type: ", query.front()->hash);
+			return Object::create(query.front());
+		}
+
 		struct Library {
 			struct Impl;
 

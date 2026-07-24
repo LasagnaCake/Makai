@@ -5,11 +5,7 @@ using namespace Makai;
 using namespace Makai::Anima::V2::Core;
 
 Object::~Object() {
-	if (content.unique()) {
-		if (!origin) return;
-		if (!(origin->flags.isValueType))
-			origin->destruct(*content);
-	}
+	unset();
 }
 
 Object::Storage Object::as(AtomicCell<Definition> const& newType) const {
