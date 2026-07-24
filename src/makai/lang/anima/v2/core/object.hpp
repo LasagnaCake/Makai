@@ -443,17 +443,18 @@ namespace Makai::Anima::V2::Core {
 			if (!canBecome<T>()) return false;
 			if (content) unset();
 			content = content.create();
+			auto const _ = content.sync();
 			content->invoke(origin->byteSize);
 			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
-				UTF8String const us = v;
+				UTF8String const us = value;
 				content->resize(us.size() * sizeof(UTF8Char));
 				MX::memmove<UTF8Char>((ref<UTF8Char>)content->data(), us.data(), us.size());
 			} else if constexpr (Type::Equal<T, Bytes<>>) {
-				content->resize(v.size());
-				MX::memmove(content->data(), v.data(), v.size());
+				content->resize(value.size());
+				MX::memmove(content->data(), value.data(), value.size());
 			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
-				initialize<UTF8Char>(v);
-			} else initialize<T>(v);
+				initialize<UTF8Char>(value);
+			} else initialize<T>(value);
 			return true;
 		}
 
@@ -462,20 +463,7 @@ namespace Makai::Anima::V2::Core {
 			if (!canBecome<T>()) return false;
 			if (content) unset();
 			if (!value) return true;
-			content = content.create();
-			content->invoke(origin->byteSize);
-			auto const v = *value;
-			if constexpr (Type::OneOf<T, String, UTF8String, UTF32String>) {
-				UTF8String const us = v;
-				content->resize(us.size() * sizeof(UTF8Char));
-				MX::memmove<UTF8Char>((ref<UTF8Char>)content->data(), us.data(), us.size());
-			} else if constexpr (Type::Equal<T, Bytes<>>) {
-				content->resize(v.size());
-				MX::memmove(content->data(), v.data(), v.size());
-			} else if constexpr (Type::OneOf<T, char, UTF8Char, UTF32Char>) {
-				initialize<UTF8Char>(v);
-			} else initialize<T>(v);
-			return true;
+			set(*value);
 		}
 
 		constexpr bool exists() const {return content;}
@@ -498,7 +486,7 @@ namespace Makai::Anima::V2::Core {
 		): content(other.content), type(newType), origin(other.origin) {
 		}
 
-		template <Makai::Type::Different<Object> T>
+		template <Makai::Type::NoneOf<Object, AtomicCell<Definition>> T>
 		constexpr Object(T const& v, AtomicCell<Definition> const& info): Object(info) {
 			set(v);
 		}
@@ -522,6 +510,11 @@ namespace Makai::Anima::V2::Core {
 			AtomicCell<Definition> const& type,
 			AtomicCell<Definition> const& origin
 		): content(content), type(type), origin(origin) {}
+
+		constexpr explicit Object(
+			AtomicCell<Definition> const& type,
+			AtomicCell<Definition> const& origin
+		): type(type), origin(origin) {}
 
 		pointer addressAt(usize index) const;
 
@@ -557,10 +550,13 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		void unset() {
-			if (content.unique()) {
-				if (!origin) return;
-				if (!(origin->flags.isValueType))
-					origin->destruct(*content);
+			{
+				auto const _ = content.sync();
+				if (content.unique()) {
+					if (!origin) return;
+					if (!(origin->flags.isValueType))
+						origin->destruct(*content);
+				}
 			}
 			content = nullptr;
 		}
