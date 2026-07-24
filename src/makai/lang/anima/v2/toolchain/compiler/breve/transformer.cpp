@@ -500,7 +500,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	DEBUGLN("Parsing fields...");
 	DEBUGLN("Field count: ", fields.size());
 	for (auto const& [field, id]: Range::expand(fields)) {
-		auto const decl = VariableDecl().transform(context, field);
+		auto const decl = Expression().transform(context, field);
 		auto& var = *decl.scope->variable;
 		var.fieldOf = scope->type.asWeak();
 		type.fields[var.name] = decl.scope->variable;
@@ -516,7 +516,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	DEBUGLN("Parsing methods...");
 	DEBUGLN("Method count: ", methods.size());
 	for (auto& method: methods) {
-		auto const decl = FunctionDecl().transform(context, method);
+		auto const decl = Expression().transform(context, method);
 		auto& fn = *decl.scope->function;
 		for (auto& ov: fn.current) {
 			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
@@ -1464,7 +1464,7 @@ ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance co
 					context.error("Property getter has already been declared!");
 				scope->property->getter = member.scope->function;
 				bool hit = false;
-				for (auto const& ov: member.scope->function->overloads)
+				for (auto const& ov: member.scope->function->current)
 					if (ov->methodOf && ov->arguments.size() == 0) {
 						hit = true;
 						break;
@@ -1476,7 +1476,7 @@ ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance co
 					context.error("Property setter has already been declared!");
 				scope->property->setter = member.scope->function;
 				bool hit = false;
-				for (auto const& ov: member.scope->function->overloads)
+				for (auto const& ov: member.scope->function->current)
 					if (ov->methodOf && ov->arguments.size() == 1) {
 						hit = true;
 						break;
@@ -1688,10 +1688,10 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 						context.top()->impl->writeMainLine("pop");
 					filled[field.front()] = true;
 				} else {
-					if (remap.empty())
+					if (filled.size() >= remap.size())
 						context.error("All fields have been already set!", arg);
-					if (!remap.contains(index))
-						index = remap.keys().front();
+					while (remap.contains(index))
+						++index;
 					if (index >= t->fields.size())
 						context.error("All fields have been already set!", arg);
 					auto const expr = Expression().transform(context, arg);
@@ -1703,7 +1703,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
 					if (!expr.shouldBePushed())
 						context.top()->impl->writeMainLine("pop");
-					remap.erase(index);
+					filled[remap[index]] = true;
 					++index;
 				}
 			}
@@ -1988,7 +1988,7 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 			context.error("Invalid expression!", extension);
 		auto const ns = ext.scope;
 		if (ns->function) {
-			for (auto& ov : ns->function->overloads)
+			for (auto& ov : ns->function->current)
 			if (
 				ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_NONE
 			or	ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_CLASS
