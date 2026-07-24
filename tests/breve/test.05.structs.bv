@@ -7,7 +7,7 @@ struct Person {
 	fullName :: (@ByRef self: Person) => '"' + self.firstName + " " + self.lastName + '"'
 	
 	@Static
-	create :: (firstName : string, lastName : string = "Someone") => new Person{firstName = firstName, lastName = lastName}
+	create :: (firstName : string, lastName : string = "Someone") => new Person{firstName, lastName}
 }
 
 @Main
@@ -21,5 +21,5 @@ main :: () {
 	IO.writeLine("Hello, " + foo.fullName; + "!")
 	foo.firstName = "Firstname"
 	IO.writeLine("Hello, " + foo.fullName; + "!")
-//	IO.writeLine("Hello, " + Person.create("Iam").fullName; + "!")
+	IO.writeLine("Hello, " + Person.create("Iam").fullName; + "!")
 } 
