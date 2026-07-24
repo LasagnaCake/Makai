@@ -27,6 +27,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_INLINE_IF_ELSE,
 			AV2_TANC_BLOCK,
 			AV2_TANC_PATH,
+			AV2_TANC_FAILABLE_PATH,
 			AV2_TANC_ARRAY,
 			AV2_TANC_SUBSCRIPT,
 			AV2_TANC_BRANCH,

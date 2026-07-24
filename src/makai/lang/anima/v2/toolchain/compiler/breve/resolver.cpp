@@ -372,7 +372,7 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 			parser.context.next();
 			break;
 		}
-		parser.context.expect(LTS_TT_COMMA);
+		parser.context.expectNext(LTS_TT_COMMA);
 		if (parser.context.peek().type == LTS_TT_CLOSE_PAREN)
 			parser.context.error("Expected expression after the comma!");
 	}
@@ -498,7 +498,7 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 
 Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
-	result->content = Node::Content::AV2_TANC_PATH;
+	result->content = token.type == LTS_TT_NULL_ACCESS ? Node::Content::AV2_TANC_FAILABLE_PATH : Node::Content::AV2_TANC_PATH;
 	result->leftSide = leftSide;
 	String subpath;
 	while (true) {

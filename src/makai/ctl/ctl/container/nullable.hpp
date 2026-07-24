@@ -5,9 +5,9 @@
 #include "../templates.hpp"
 #include "../order.hpp"
 #include "../typetraits/traits.hpp"
-#include "../algorithm/strconv.hpp"
 #include "../adapter/comparator.hpp"
-#include "error.hpp"
+#include "../memory/core.hpp"
+#include "../cpperror.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -100,27 +100,32 @@ public:
 		typename Ordered::Order
 	;
 
+	/// @brief Whether data type is a reference to another type.
+	constexpr static auto const REFERENCE = Type::Equal<DataType, AsNonReference<DataType>&>;
+
 	/// @brief Operation type.
 	using OperationType	= Decay::AsFunction<DataType(DataType const&)>;
 	/// @brief Procedure type.
 	using ProcedureType	= Decay::AsFunction<void(DataType const&)>;
 
 	/// @brief Default constructor.
-	constexpr Nullable() noexcept												{									}
+	constexpr Nullable() noexcept			{}
 	/// @brief Null constructor.
-	constexpr Nullable(NullType) noexcept										{									}
-	/// @brief Copy constructor (value).
-	/// @param value Value to copy.
-	constexpr Nullable(ConstReferenceType value): isSet(true), content(value)	{									}
-	/// @brief Move constructor (value).
-	/// @param value Value to move.
-	constexpr Nullable(TemporaryType value): isSet(true), content(move(value))	{									}
+	constexpr Nullable(NullType) noexcept	{}
 	/// @brief Copy constructor (`Nullable`).
 	/// @param other `Nullable` to copy from.
-	constexpr Nullable(SelfType const& other)									{if (other.isSet) set(other);		}
+	constexpr Nullable(SelfType const& other)	{if (other.isSet) set(other);		}
 	/// @brief Move constructor (`Nullable`).
 	/// @param other `Nullable` to move from.
-	constexpr Nullable(SelfType&& other)										{if (other.isSet) set(move(other));	}
+	constexpr Nullable(SelfType&& other)		{if (other.isSet) set(move(other));	}
+	/// @brief Copy constructor (value).
+	/// @param value Value to copy.
+	constexpr Nullable(ConstReferenceType value) requires (!REFERENCE): isSet(true), content(value)		{}
+	/// @brief Move constructor (value).
+	/// @param value Value to move.
+	constexpr Nullable(TemporaryType value) requires (!REFERENCE): isSet(true), content(move(value))	{}
+	/// @param value Value to referenve.
+	constexpr Nullable(DataType value) noexcept requires (REFERENCE): isSet(true), content(value)		{}
 
 	/// @brief Destructor.
 	constexpr ~Nullable() {}
@@ -130,7 +135,7 @@ public:
 	/// @throw Error::NonexistentValue if value is not set.
 	constexpr DataType value() const {
 		if (isSet) return content.data;
-		throw Error::NonexistentValue("Value is not set!", CTL_CPP_PRETTY_SOURCE);
+		throw NonexistentValueException("Value is not set!");
 	}
 
 	/// @brief Returns the stored value, or a fallback.
@@ -165,11 +170,15 @@ public:
 	/// @brief Copy assignment operator (value).
 	/// @param value Value to copy.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType const& value)	{return set(value);				}
+	constexpr SelfType& operator=(DataType const& value) requires (!REFERENCE)	{return set(value);	}
 	/// @brief Copy assignment operator (value).
 	/// @param value Value to move.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(DataType&& value)			{return set(value);				}
+	constexpr SelfType& operator=(DataType&& value) requires (!REFERENCE)		{return set(value);	}
+	/// @brief Assignment operator (value).
+	/// @param value Value to reference.
+	/// @return Reference to self.
+	constexpr SelfType& operator=(DataType value) requires (REFERENCE)			{return set(value);	}
 	/// @brief Clears the current stored value.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(NullType)					{return clear();				}
@@ -185,7 +194,7 @@ public:
 	/// @brief Sets the stored value.
 	/// @param value Value to store.
 	/// @return Reference to self.
-	constexpr SelfType& set(DataType const& value) {
+	constexpr SelfType& set(DataType const& value) requires (!REFERENCE) {
 		clear();
 		MX::construct(&content.data, value);
 		isSet = true;
@@ -195,9 +204,19 @@ public:
 	/// @brief Sets the stored value.
 	/// @param value Value to store.
 	/// @return Reference to self.
-	constexpr SelfType& set(DataType&& value) {
+	constexpr SelfType& set(DataType&& value) requires (!REFERENCE) {
 		clear();
 		MX::construct(&content.data, move(value));
+		isSet = true;
+		return *this;
+	}
+
+	/// @brief Sets the stored value.
+	/// @param value Value to store.
+	/// @return Reference to self.
+	constexpr SelfType& set(DataType value) requires (REFERENCE) {
+		clear();
+		MX::construct(&content.data, value);
 		isSet = true;
 		return *this;
 	}
@@ -328,10 +347,11 @@ private:
 		/// @brief Nothingness.
 		nulltype nothing;
 
-		constexpr Option() noexcept: nothing()							{}
+		constexpr Option() noexcept: nothing() {}
 
-		constexpr Option(DataType const& data) noexcept: data(data)		{}
-		constexpr Option(DataType&& data) noexcept: data(move(data))	{}
+		constexpr Option(DataType const& data) requires (!REFERENCE): data(data)	{}
+		constexpr Option(DataType&& data) requires (!REFERENCE): data(move(data))	{}
+		constexpr Option(DataType data) noexcept requires (REFERENCE): data(data)	{}
 
 		constexpr ~Option() {}
 	} content{};

@@ -6,7 +6,7 @@
 
 namespace Makai::Anima::V2::Core {
 	/// @brief Operator.
-	enum class Operator: uint16 {
+	enum class Operator: uint8 {
 		AV2_UOP_NEGATE,
 		AV2_UOP_INCREMENT,
 		AV2_UOP_DECREMENT,
@@ -27,7 +27,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_UOP_LN,
 		AV2_UOP_SQRT,
 		AV2_UOP_LENGTH,
-		AV2_BOP_START = 0x1000,
+		AV2_BOP_START = 1 << 6,
 		AV2_BOP_ADD = AV2_BOP_START,
 		AV2_BOP_SUB,
 		AV2_BOP_MUL,
@@ -42,6 +42,8 @@ namespace Makai::Anima::V2::Core {
 		AV2_BOP_LOGX,
 		AV2_BOP_ATAN2,
 		AV2_BOP_POW,
+		AV2_TOP_START = 2 << 6,
+		AV2_QOP_START = 3 << 6,
 	};
 
 	enum class BasicType: int8 {

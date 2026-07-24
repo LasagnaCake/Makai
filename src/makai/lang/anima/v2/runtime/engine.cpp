@@ -703,6 +703,7 @@ static bool stringBopIt(Object::Storage const& out, Object::Storage const& lhs, 
 		case AV2_BOP_BIT_OR:	*out = *context.art.newValue(Makai::Regex::contains(lhs->toValue<S>(), rhs->toValue<S>()));				return true;
 		case AV2_BOP_BIT_AND:	*out = *context.art.newValue(Makai::Regex::matches(lhs->toValue<S>(), rhs->toValue<S>()));				return true;
 		case AV2_BOP_SUB:		*out = *context.art.newValue<S>(Makai::Regex::replace(lhs->toValue<S>(), rhs->toValue<S>(), ""));		return true;
+		case AV2_BOP_BIT_XOR:	*out = *context.art.newValue<S>(Makai::Regex::replace(lhs->toValue<S>(), rhs->toValue<S>(), ""));		return true;
 		default: return false;
 	}
 	return false;
@@ -937,6 +938,7 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
 	auto rhs	= context.pop();
+	auto const _r = rhs.sync();
 	if (!rhs) [[unlikely]] {
 		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
 		else [[likely]] crash(invalidOperationError("Right-Side Operand does not exist!"));
@@ -954,7 +956,6 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		else [[likely]] crash(invalidOperationError("Value types do not match!"));
 		return;
 	}
-	auto const _r = rhs.sync();
 	MAKAILIB_DEBUGLN_FULL("Left-Side  := ", lhs->toDynamicValue().toFLOWString());
 	MAKAILIB_DEBUGLN_FULL("Right-Side := ", rhs->toDynamicValue().toFLOWString());
 	switch (type) {
@@ -974,6 +975,38 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		case Core::BasicType::AV2_BT_REAL64:	fbopu<float64>(lhs->data(), rhs->data(), op);	break;
 		case Core::BasicType::AV2_BT_REAL128:	fbopu<float128>(lhs->data(), rhs->data(), op);	break;
 		case Core::BasicType::AV2_BT_VECTOR:	fbopu<Vector4>(lhs->data(), rhs->data(), op);	break;
+		default: {
+			if (inStrictMode()) [[likely]]
+				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
+		}
+	}
+}
+
+void Engine::immediateBinaryOperation(Operator const op, BasicType const type, pointer const rhs) {
+	auto lhs	= context.top();
+	auto const _l = lhs.sync();
+	if (!lhs) [[unlikely]] {
+		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
+		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
+		return;
+	}
+	switch (type) {
+		case Core::BasicType::AV2_BT_VOID:
+		case Core::BasicType::AV2_BT_NULL:		break;
+		case Core::BasicType::AV2_BT_BOOL:		fbopu<bool>(lhs->data(), rhs, op);		break;
+		case Core::BasicType::AV2_BT_INT8:		fbopu<int8>(lhs->data(), rhs, op);		break;
+		case Core::BasicType::AV2_BT_UINT8:		fbopu<uint8>(lhs->data(), rhs, op);		break;
+		case Core::BasicType::AV2_BT_INT16:		fbopu<int16>(lhs->data(), rhs, op);		break;
+		case Core::BasicType::AV2_BT_UINT16:	fbopu<uint16>(lhs->data(), rhs, op);	break;
+		case Core::BasicType::AV2_BT_INT32:		fbopu<int32>(lhs->data(), rhs, op);		break;
+		case Core::BasicType::AV2_BT_CHAR:
+		case Core::BasicType::AV2_BT_UINT32:	fbopu<uint32>(lhs->data(), rhs, op);	break;
+		case Core::BasicType::AV2_BT_INT64:		fbopu<int64>(lhs->data(), rhs, op);		break;
+		case Core::BasicType::AV2_BT_UINT64:	fbopu<uint64>(lhs->data(), rhs, op);	break;
+		case Core::BasicType::AV2_BT_REAL32:	fbopu<float32>(lhs->data(), rhs, op);	break;
+		case Core::BasicType::AV2_BT_REAL64:	fbopu<float64>(lhs->data(), rhs, op);	break;
+		case Core::BasicType::AV2_BT_REAL128:	fbopu<float128>(lhs->data(), rhs, op);	break;
+		case Core::BasicType::AV2_BT_VECTOR:	fbopu<Vector4>(lhs->data(), rhs, op);	break;
 		default: {
 			if (inStrictMode()) [[likely]]
 				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
@@ -1093,17 +1126,18 @@ void Engine::fastShortCircuitOperation(Operator const op, BasicType const type, 
 void Engine::v2Op() {
 	StackStateScopePrinter s3p{context};
 	Instruction::Operation op = Cast::bit<Instruction::Operation>(current.type);
+	if (op.immediate) advance(true);
 	if (
 		op.sameType && (
 			op.assume == BasicType::AV2_BT_STRING
 		||	op.assume == BasicType::AV2_BT_BYTES
 		)
 	) [[unlikely]] {
-
+		if (op.immediate)
+			context.push(program.strings[Makai::bitcast<uint64>(current) % program.strings.size()]);
 		if (op.op < Operator::AV2_BOP_START)
 			return doUnaryOperation(op.op);
-		else
-			return doBinaryOperation(op.op);
+		else return doBinaryOperation(op.op);
 	}
 	if (op.op == Operator::AV2_UOP_LOGIC_NOT && !(op.count % 2))
 		return;
@@ -1113,16 +1147,18 @@ void Engine::v2Op() {
 	) {
 		if (op.sameType) [[likely]]
 			return fastShortCircuitOperation(op.op, op.assume, op.count);
-		return shortCircuitOperation(op.op, op.count);
+		else [[unlikely]] return shortCircuitOperation(op.op, op.count);
 	}
 	if (op.op < Operator::AV2_BOP_START) {
 		if (op.sameType) [[likely]]
 			return fastUnaryOperation(op.op, op.assume);
-		else return doUnaryOperation(op.op);
+		else [[unlikely]] return doUnaryOperation(op.op);
 	} else {
-		if (op.sameType) [[likely]]
+		if (op.immediate) [[likely]]
+			return immediateBinaryOperation(op.op, op.assume, &current);
+		else if (op.sameType) [[likely]]
 			return fastBinaryOperation(op.op, op.assume);
-		else return doBinaryOperation(op.op);
+		else [[unlikely]] return doBinaryOperation(op.op);
 	}
 	while (--op.count) [[unlikely]] {
 		if (op.op < Operator::AV2_BOP_START) {
@@ -1130,9 +1166,11 @@ void Engine::v2Op() {
 				return fastUnaryOperation(op.op, op.assume);
 			else return doUnaryOperation(op.op);
 		} else {
-			if (op.sameType) [[likely]]
+			if (op.immediate) [[likely]]
+				return immediateBinaryOperation(op.op, op.assume, &current);
+			else if (op.sameType) [[likely]]
 				return fastBinaryOperation(op.op, op.assume);
-			else return doBinaryOperation(op.op);
+			else [[unlikely]] return doBinaryOperation(op.op);
 		}
 	}
 }

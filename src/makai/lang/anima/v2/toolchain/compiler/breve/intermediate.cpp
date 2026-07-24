@@ -152,7 +152,7 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 Implementation::Instance Namespace::compose() const {
 	Implementation::Instance out = out.create();
 	if (function) {
-		for (auto& ov: function->overloads)
+		for (auto& ov: function->current)
 			out->writePreLine(ov->prototype());
 		return out;
 	}
@@ -383,7 +383,7 @@ static Namespace::AttributeRef createSharedAttribute() {
 	attrib->fields["name"]		= {.type=DVK_STRING};
 	attrib->fields["lib"]		= {.type=DVK_STRING, .path=true};
 	attrib->fields["optional"]	= {.type=DVK_BOOLEAN, .defaultValue=false};
-	attrib->fields["version"]	= {.type=DVK_STRING, .defaultValue="latest", .path=true};
+	attrib->fields["version"]	= {.type=DVK_STRING, .defaultValue="latest", .path = true};
 	attrib->fields["key"]		= {.type=DVK_STRING, .defaultValue=""};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		static usize id = 0;
@@ -391,8 +391,11 @@ static Namespace::AttributeRef createSharedAttribute() {
 		auto const lib = (v["lib"].getString());
 		auto const version = (v["version"].getString()).replaced('/', '.');
 		auto const key = (v["key"].getString());
-		for (auto& ov: ns->function->overloads)
-			if (!ov->hasImplementation) {
+		bool hit = false;
+		for (auto& ov: ns->function->current)
+			if (ov->variant == Function::Overload::Variant::External::AV2_TCB_FO_VE_NONE && !ov->hasImplementation) {
+				ov->variant = Function::Overload::Variant::External::AV2_TCB_FO_VE_DYNLIB;
+				hit = true;
 				DEBUGLN("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Applying shared attribute...");
 				ov->hasImplementation = true;
 				ov->outEntry = name;
@@ -407,6 +410,35 @@ static Namespace::AttributeRef createSharedAttribute() {
 				ov->optional = v["optional"];
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
+		if (!hit)
+			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nShared functions cannot have a body!", ns->node);
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createARTCallAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "ARTCall";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->fields["name"] = {DVK_STRING};
+	attrib->fields["optional"]	= {.type=DVK_STRING, .defaultValue=false, .path=true};
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		static usize id = 0;
+		auto const name = (v["name"].getString());
+		bool hit = false;
+		for (auto& ov: ns->function->current)
+			if (ov->variant == Function::Overload::Variant::External::AV2_TCB_FO_VE_NONE && !ov->hasImplementation) {
+				ov->variant = Function::Overload::Variant::External::AV2_TCB_FO_VE_ART_CALL;
+				hit = true;
+				ov->hasImplementation = true;
+				ov->outEntry = name;
+				ov->optional = v["optional"];
+				ov->entry = "__art_call_" + Makai::toString(id) + ov->entry;
+			}
+		if (!hit)
+			Transformer::ATransformer::Context::error("Missing valid internal call declaration!\nInternal calls cannot have a body!", ns->node);
 	};
 	return attrib;
 }
@@ -426,9 +458,9 @@ static Namespace::AttributeRef createStaticAttribute() {
 			ns->variable->staticEntity = true;
 			ns->variable->source = "move $__STATIC__._ns_" + Makai::toString(++id) + "._ns_" + ns->node->name() + "._" + ns->variable->name;
 		} else if (ns->function) {
-			for (auto& ov: ns->function->overloads)
-				if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
-					ov->variant = Function::Overload::Variant::AV2_TCB_FOV_GLOBAL;
+			for (auto& ov: ns->function->current)
+				if (ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_NONE) {
+					ov->variant = Function::Overload::Variant::Object::AV2_TCB_FO_VO_GLOBAL;
 					ov->staticEntity = true;
 				}
 		}
@@ -466,9 +498,9 @@ static Namespace::AttributeRef createMemberAttribute() {
 	attrib->name = "Member";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {;
-		for (auto& ov: ns->function->overloads)
-			if (ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE) {
-				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
+		for (auto& ov: ns->function->current)
+			if (ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_NONE) {
+				ov->variant = Function::Overload::Variant::Object::AV2_TCB_FO_VO_CLASS;
 			}
 	};
 	return attrib;
@@ -597,6 +629,7 @@ static Namespace::AttributeRef createBasicAttribute() {
 		} else if (ns->type->fields.size() > 1 && !ns->type->fields.contains("base")) {
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
 		}
+		ns->type->pureName = bt;
 		if (bt == "void")			{ns->type->basic = AV2_BT_VOID;		}
 		else if (bt == "bool")		{ns->type->basic = AV2_BT_BOOL;		}
 		else if (bt == "int8")		{ns->type->basic = AV2_BT_INT8;		}
@@ -694,28 +727,6 @@ static Namespace::AttributeRef createMainAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createARTCallAttribute() {
-	using enum Makai::Data::Value::Kind;
-	using enum Core::BasicType;
-	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "ARTCall";
-	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->fields["name"] = {DVK_STRING};
-	attrib->fields["optional"]	= {.type=DVK_STRING, .defaultValue=false, .path=true};
-	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		static usize id = 0;
-		auto const name = (v["name"].getString());
-		for (auto& ov: ns->function->overloads)
-			if (!ov->hasImplementation) {
-				ov->hasImplementation = true;
-				ov->outEntry = name;
-				ov->optional = v["optional"];
-				ov->entry = "__art_call_" + Makai::toString(id) + ov->entry;
-			}
-	};
-	return attrib;
-}
-
 static Namespace::AttributeRef createEventAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
@@ -726,9 +737,18 @@ static Namespace::AttributeRef createEventAttribute() {
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		auto const name = (v["name"] ? v["name"].getString() : ns->function->pureName.toString());
 		if (ns->function->sigCall) return;
-		for (auto& ov: ns->function->overloads)
+		for (auto& ov: ns->function->current)
 			if (ov->sigEntry.empty()) {
-				ov->sigEntry = name;
+				ov->sigEntry =
+					name
+				+	"("
+				+	ov->arguments.toList<Makai::String>(
+						[] (auto const& e) -> Makai::String {
+							return e->type->basic ? e->type->pureName : e->type->name;
+						}
+					).join(",")
+				+	")"
+				;
 				ns->function->sigCall = ov;
 				break;
 			}
@@ -841,14 +861,18 @@ Makai::Data::Value Function::Overload::serialize() const {
 		out["scope"] = scope->serialize();
 	if (methodOf)
 		out["method_of"] = methodOf->name.toString();
-	switch (variant) {
-		using enum Variant;
-		case Variant::AV2_TCB_FOV_NONE:
-		case Variant::AV2_TCB_FOV_GLOBAL:	out["variant"] = "global";		break;
-		case Variant::AV2_TCB_FOV_CLASS:	out["variant"] = "class";		break;
-		case Variant::AV2_TCB_FOV_INSTANCE:	out["variant"] = "instance";	break;
-		case Variant::AV2_TCB_FOV_ART_CALL:	out["variant"] = "artcall";		break;
-		case Variant::AV2_TCB_FOV_DYNLIB:	out["variant"] = "dynlib";		break;
+	switch (variant.external) {
+		using enum Variant::External;
+		case AV2_TCB_FO_VE_NONE:		out["extern"] = "none";		break;
+		case AV2_TCB_FO_VE_ART_CALL:	out["extern"] = "artcall";	break;
+		case AV2_TCB_FO_VE_DYNLIB:		out["extern"] = "dynlib";	break;
+	}
+	switch (variant.object) {
+		using enum Variant::Object;
+		case AV2_TCB_FO_VO_NONE:		out["variant"] = "none";		break;
+		case AV2_TCB_FO_VO_INSTANCE:	out["variant"] = "instance";	break;
+		case AV2_TCB_FO_VO_CLASS:		out["variant"] = "class";		break;
+		case AV2_TCB_FO_VO_GLOBAL:		out["variant"] = "static";		break;
 	}
 	return out;
 }

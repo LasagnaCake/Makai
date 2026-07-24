@@ -250,6 +250,38 @@ static ValueLocation::ForObject::Transfer getLoadType(Context& context) {
 	return load;
 }
 
+static Makai::Data::Value processConstant(Context& context) {
+	switch (context.type()) {
+		case LTS_TT_IDENTIFIER: {
+			if (context.token().text == "true")		return true;
+			if (context.token().text == "false")	return false;
+			if (context.token().text == "nil")		return null;
+			context.error("Invalid constant!");
+		}
+		case LTS_TT_SINGLE_QUOTE_STRING:
+		case LTS_TT_DOUBLE_QUOTE_STRING:
+		case LTS_TT_BACKTICK_STRING:
+		case LTS_TT_FR_SINGLE_QUOTE_STRING:
+		case LTS_TT_FR_DOUBLE_QUOTE_STRING:
+		case LTS_TT_JP_SINGLE_QUOTE_STRING:
+		case LTS_TT_INTEGER:
+		case LTS_TT_REAL:
+		case LTS_TT_JP_DOUBLE_QUOTE_STRING: return context.value().isInteger() ? Makai::Data::Value(context.value().getUnsigned()) : context.value();
+		case LTS_TT_PLUS:
+		case LTS_TT_MINUS: {
+			context.next();
+			auto const val = processConstant(context);
+			if (!val.isNumber())
+				context.error("Expected number here!");
+			if (val.isBoolean()) return (context.type() == LTS_TT_MINUS) ? !val.getBoolean() : val.getBoolean();
+			if (val.isInteger()) return (context.type() == LTS_TT_MINUS) ? -val.getSigned() : val.getSigned();
+			if (val.isNumber()) return (context.type() == LTS_TT_MINUS) ? -val.getReal() : val.getReal();
+		}
+		default: break;
+	}
+	context.error("Invalid constant!");
+}
+
 static Location getStack(Context& context) {
 	Location loc;
 	context
@@ -866,6 +898,7 @@ static void doOperation(Context& context) {
 	Instruction::Operation bop;
 	bop.count = 1;
 	auto const op = context.getNext(LTS_TT_IDENTIFIER, "unary operation name").getString();
+	Makai::Data::Value value;
 	if (op == "add")		bop.op = Operator::AV2_BOP_ADD;
 	else if (op == "sub")	bop.op = Operator::AV2_BOP_SUB;
 	else if (op == "mul")	bop.op = Operator::AV2_BOP_MUL;
@@ -902,6 +935,11 @@ static void doOperation(Context& context) {
 	if (context.peek().type == LTS_TT_LESS_THAN) {
 		bop.sameType = true;
 		auto const type = context.expectNext(LTS_TT_LESS_THAN).getNext(LTS_TT_IDENTIFIER, "basic type").getString();
+		if (context.peek().type == LTS_TT_COLON) {
+			bop.immediate = true;
+			context.expectNext(LTS_TT_COLON).next();
+			value = processConstant(context);
+		}
 		context.expectNext(LTS_TT_GREATER_THAN);
 		switch (Makai::hash(type)) {
 			case Makai::hash("bool"):	bop.assume = BasicType::AV2_BT_BOOL;	break;
@@ -927,8 +965,45 @@ static void doOperation(Context& context) {
 			case Makai::hash("any"): bop.sameType = false; break;
 			default: context.error("Invalid basic type!");
 		}
+		if (!value.isUndefined()) {
+			if (value.isBoolean() != (bop.assume == BasicType::AV2_BT_BOOL))
+				context.error("Type mismatch");
+			if (value.isNumber() != (
+				bop.assume == BasicType::AV2_BT_INT8
+			or	bop.assume == BasicType::AV2_BT_UINT8
+			or	bop.assume == BasicType::AV2_BT_INT16
+			or	bop.assume == BasicType::AV2_BT_UINT16
+			or	bop.assume == BasicType::AV2_BT_INT32
+			or	bop.assume == BasicType::AV2_BT_UINT32
+			or	bop.assume == BasicType::AV2_BT_INT64
+			or	bop.assume == BasicType::AV2_BT_UINT64
+			or	bop.assume == BasicType::AV2_BT_REAL32
+			or	bop.assume == BasicType::AV2_BT_REAL64
+			or	bop.assume == BasicType::AV2_BT_REAL128
+			)) context.error("Type mismatch");
+			if (value.isString() != (bop.assume == BasicType::AV2_BT_STRING))
+				context.error("Type mismatch");
+		}
 	}
 	context.add(Instruction::Name::AV2_IN_OP, bop);
+	if (!value.isUndefined()) {
+		switch (bop.assume) {
+			case BasicType::AV2_BT_BOOL:
+			case BasicType::AV2_BT_UINT8:
+			case BasicType::AV2_BT_UINT16:
+			case BasicType::AV2_BT_UINT32:
+			case BasicType::AV2_BT_UINT64: context.add(value.getUnsigned());
+			case BasicType::AV2_BT_INT8:
+			case BasicType::AV2_BT_INT16:
+			case BasicType::AV2_BT_INT32:
+			case BasicType::AV2_BT_INT64: context.add(value.getSigned());
+			case BasicType::AV2_BT_REAL32:
+			case BasicType::AV2_BT_REAL64:
+			case BasicType::AV2_BT_REAL128: context.add(value.getReal());
+			case BasicType::AV2_BT_STRING: context.addStringLiteral(value.getString());
+			default: context.error("Invalid immediate operation!");
+		}
+	}
 }
 
 static void doYield(Context& context) {

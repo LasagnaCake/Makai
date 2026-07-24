@@ -464,31 +464,31 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	List<Node::Instance> fields;
 	List<Node::Instance> methods;
 	List<Node::Instance> properties;
-	Makai::Function<void(Node::Instance const&)> evalDecl;
-	evalDecl = [&] (Node::Instance const& node) {
+	Makai::Function<void(Node::Instance const&, Node::Instance const&)> evalDecl;
+	evalDecl = [&] (Node::Instance const& node, Node::Instance const& root) {
 		if (node->content == Node::Content::AV2_TANC_DECLARATION) {
 			if (node->base.type == LTS_TT_NAMESPACE_RESOLVE) {
 				DEBUGLN("  > Function");
-				methods.pushBack(node);
+				methods.pushBack(root);
 			} else if (
 				node->base.type == LTS_TT_COLON
 			or	node->base.type == LTS_TT_DECLARE
 			or	node->base.type == LTS_TT_ASSIGN
 			) {
 				DEBUGLN("  > Field");
-				fields.pushBack(node);
+				fields.pushBack(root);
 			} else if (node->base.text == "prop") {
 				DEBUGLN("  > Property");
-				properties.pushBack(node);
+				properties.pushBack(root);
 			}
 			else context.error("Invalid declaration inside structure declaration!", node);
 		} else if (node->content == Node::Content::AV2_TANC_ATTRIBUTE) {
-			evalDecl(node->rightSide);
+			evalDecl(node->rightSide, root);
 		} else context.error("Invalid expression inside structure declaration!", node);
 	};
 	DEBUGLN("struct {");
 	for (auto& entry: node->rightSide->children)
-		evalDecl(entry);
+		evalDecl(entry, entry);
 	DEBUGLN("}");
 	type.scope = scope.asWeak();
 	type.node = node;
@@ -518,7 +518,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	for (auto& method: methods) {
 		auto const decl = FunctionDecl().transform(context, method);
 		auto& fn = *decl.scope->function;
-		for (auto& ov: fn.overloads) {
+		for (auto& ov: fn.current) {
 			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
 				context.error("Missing appropriate [this] parameter!", method);
 			if (!ov->staticEntity)
@@ -776,23 +776,34 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	} else return prefixResolve(context, node, val.type);
 }
 
-static Makai::String asFastOpQualifier(Core::BasicType const& type) {
+static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer::Result const& rhs = {}) {
+	Makai::Function<Makai::String(Makai::String const&)> qualifier =
+		[] (Makai::String const& in) {
+			return "<" + in + ">";
+		}
+	;
+	if (rhs.direct.isUndefined())
+		qualifier =
+			[vx = rhs.direct.toString()] (Makai::String const& in) {
+				return "<" + in + ":" + vx + ">";
+			}
+		;
 	switch (type) {
-		case Core::BasicType::AV2_BT_INT8:		return "<i8>";
-		case Core::BasicType::AV2_BT_INT16:		return "<i16>";
-		case Core::BasicType::AV2_BT_INT32:		return "<i32>";
-		case Core::BasicType::AV2_BT_INT64:		return "<i64>";
-		case Core::BasicType::AV2_BT_UINT8:		return "<u8>";
-		case Core::BasicType::AV2_BT_UINT16:	return "<u16>";
-		case Core::BasicType::AV2_BT_UINT32:	return "<u32>";
-		case Core::BasicType::AV2_BT_UINT64:	return "<u64>";
-		case Core::BasicType::AV2_BT_REAL32:	return "<f32>";
-		case Core::BasicType::AV2_BT_REAL64:	return "<f64>";
-		case Core::BasicType::AV2_BT_REAL128:	return "<f128>";
-		case Core::BasicType::AV2_BT_VECTOR:	return "<vec>";
-		case Core::BasicType::AV2_BT_MATRIX:	return "<mat>";
-		case Core::BasicType::AV2_BT_BOOL:		return "<bool>";
-		case Core::BasicType::AV2_BT_CHAR:		return "<char>";
+		case Core::BasicType::AV2_BT_INT8:		return qualifier("i8");
+		case Core::BasicType::AV2_BT_INT16:		return qualifier("i16");
+		case Core::BasicType::AV2_BT_INT32:		return qualifier("i32");
+		case Core::BasicType::AV2_BT_INT64:		return qualifier("i64");
+		case Core::BasicType::AV2_BT_UINT8:		return qualifier("u8");
+		case Core::BasicType::AV2_BT_UINT16:	return qualifier("u16");
+		case Core::BasicType::AV2_BT_UINT32:	return qualifier("u32");
+		case Core::BasicType::AV2_BT_UINT64:	return qualifier("u64");
+		case Core::BasicType::AV2_BT_REAL32:	return qualifier("f32");
+		case Core::BasicType::AV2_BT_REAL64:	return qualifier("f64");
+		case Core::BasicType::AV2_BT_REAL128:	return qualifier("f128");
+		case Core::BasicType::AV2_BT_VECTOR:	return qualifier("vec");
+		case Core::BasicType::AV2_BT_MATRIX:	return qualifier("mat");
+		case Core::BasicType::AV2_BT_BOOL:		return qualifier("bool");
+		case Core::BasicType::AV2_BT_CHAR:		return qualifier("char");
 		default: return "";
 	}
 }
@@ -899,10 +910,12 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	}
 	if (!lhsHasBeenPushed)
 		context.top()->impl->writeMainLine("push", *lhs.source);
-	if (rhs.shouldBePushed())
-		context.top()->impl->writeMainLine("push", *rhs.source);
-	else if (rhs.isStackTop() && rhs.isCopied()) {
-		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+	if (rhs.direct.isUndefined()) {
+		if (rhs.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *rhs.source);
+		else if (rhs.isStackTop() && rhs.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+		}
 	}
 	if (!lhsHasBeenPushed && !lhs.isStackTop() && rhs.isStackTop())
 		context.top()->impl->writeMainLine("swap");
@@ -914,7 +927,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		DEBUGLN("Stronger: ", t->name);
 		if (t->basic) {
 			if (lhs.type->basic == rhs.type->basic)
-				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->basic));
+				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->basic, rhs));
 			else
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
 			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
@@ -947,6 +960,8 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 		type = context.basicType("float64");
 		out.likelihood	= 1;
 		value += " f64";
+	} else if (node->value.isNull()) {
+		return {.source = {"nil"}, .direct = null};
 	}
 	else context.error("Invalid constant!", node);
 	out.source		= value;
@@ -986,6 +1001,21 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		else if (nsx.isStackTop() && nsx.isCopied())
 			context.top()->impl->writeMainLine("copy", *nsx.source, "-> top");
 		return resolveSubfield(context, node, result.scope, path.front());
+	} else if (node->leftSide->content == Node::Content::AV2_TANC_FAILABLE_PATH) {
+		auto const success =  "__success_" + node->name();
+		auto const fail =  "__fail_" + node->name();
+		auto const nsx = PathExpression().transform(context, node->leftSide);
+		path = context.pathOf(node->value.getString()).reverse();
+		result = nsx;
+		if (nsx.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *nsx.source);
+		else if (nsx.isStackTop() && nsx.isCopied())
+			context.top()->impl->writeMainLine("copy", *nsx.source, "-> top");
+		context.top()->impl->writeMainLine("push val top");
+		context.top()->impl->writeMainLine("jump if nil", fail);
+		auto const ox = resolveSubfield(context, node, result.scope, path.front());
+		context.top()->impl->writeMainLine("@label", fail);
+		return ox;
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
 		path = context.pathOf(node->leftSide);
 		auto const ns = context.resolve(path);
@@ -1025,7 +1055,9 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_UNSCOPING:			return Using().transform(context, node);
 		case Node::Content::AV2_TANC_SUBSCRIPT:			return Subscript().transform(context, node);
 		case Node::Content::AV2_TANC_TYPE_EXTENSION:	return TypeExtension().transform(context, node);
+		case Node::Content::AV2_TANC_EMPTY_DECAY:		return NullDecay().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
+		case Node::Content::AV2_TANC_FAILABLE_PATH:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
 		default: context.error("Unsupported expression!", node);
 	}
@@ -1193,6 +1225,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		DEBUG("/", sco->name);
 	DEBUGLN("");
 	auto& fn = *scope->function;
+	fn.current.clear();
 	auto const proto = node->middle;
 	Function::OverloadRef ov = ov.create();
 	if (proto->rightSide && !(ov->result = TypeRequest().transform(context, node->rightSide).type))
@@ -1242,6 +1275,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				for (auto const& arg: args)
 					oo->scope->subspaces[arg->name] = arg->scope.raw();
 				fn.overloads.pushBack(oo);
+				fn.current.pushBack(oo);
 				if (!implOv) implOv = oo;
 				else {
 					overloadScope->impl->writePreLine("@def", oo->entry, ":");
@@ -1264,6 +1298,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		auto const ovName = scope->function->name + overloadName(ov->arguments);
 		ov->entry = "__" + ovName  + node->name();
 		fn.overloads.pushBack(implOv);
+		fn.current.pushBack(implOv);
 	}
 	if (node->rightSide) {
 		context.scopeStack.pushBack(implScope);
@@ -1294,6 +1329,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Assignment::transform(Context& context, Node::Instance const& node) {
+	auto const ndecl = "__exists_" + node->name();
 	if (node->middle) {
 		auto lhs = Expression().transform(context, node->leftSide);
 		if (!(lhs.source && (lhs.type->flags.isArray)))
@@ -1308,10 +1344,22 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			context.error("Expected integer here!", node->middle);
 		if (i.direct.isUndefined() && i.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *i.source);
+		if (node->base.type == LTS_TT_NULL_ASSIGN) {
+			context.top()->impl->writeMainLine("push stack[-1]");
+			if (i.direct.isUndefined()) {
+				context.top()->impl->writeMainLine("push stack[-1]");
+				context.top()->impl->writeMainLine("dyn get");
+			} else if (i.direct.isInteger())
+				context.top()->impl->writeMainLine("get [", i.direct.getUnsigned(), "]");
+			else context.error("Expected integer here!", node->middle);
+				context.top()->impl->writeMainLine("jump if not empty", ndecl);
+		}
 		auto const rhs = Expression().transform(context, node->rightSide);
 		if (!rhs.source)
 			context.error("Expected value here!", node->rightSide);
 		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type)) {
+			if (t != lhs.type->base)
+				context.error("Right-hand type is weaker than left-hand type!", node);
 			if (rhs.shouldBePushed())
 				context.top()->impl->writeMainLine("push", *rhs.source);
 			else if (rhs.isStackTop() && rhs.isCopied()) {
@@ -1322,6 +1370,8 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			else if (i.direct.isInteger())
 				context.top()->impl->writeMainLine("set [", i.direct.getUnsigned(), "]");
 			else context.error("Expected integer here!", node->middle);
+			if (node->base.type == LTS_TT_NULL_ASSIGN)
+				context.top()->impl->writeMainLine("@label", ndecl);
 			return {{"move top"}, lhs.scope, t, rhs.direct, rhs.likelihood};
 		} else context.error("Type mismatch!", node);
 	}
@@ -1341,13 +1391,42 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		return {{"move top"}, lhs.scope, lhs.type, rhs.direct, rhs.likelihood};
 	}
 	if (lhs.isCompilable() && !lhs.scope) context.error("Cannot assign a value to a direct value!", node->leftSide);
-	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
+	if (node->base.type == LTS_TT_NULL_ASSIGN) {
+		if (lhs.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *lhs.source);
+		else if (lhs.isStackTop() && lhs.isCopied()) {
+			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
+		}
+		context.top()->impl->writeMainLine("jump if not empty", ndecl);
+	}
+	if (rhs.direct.isNull() && !lhs.type->flags.isNullable)
+		context.error("Expected non-null value here!", node->rightSide);
+	if (rhs.type && rhs.type->flags.isNullable && !lhs.type->flags.isNullable)
+		context.error("Nullable values cannot directly convert to non-nullable values!", node->rightSide);
+	if (lhs.type->flags.isNullable) {
+		if (lhs.type != rhs.type && lhs.type->base != rhs.type)
+			context.error("Type mismatch!", node->rightSide);
 		if (lhs.isStackTop() && rhs.isStackTop())
 			lhs.source = UTF8String("move stack[-1]");
 		if (*lhs.source != *rhs.source)
 			context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
 		if (!rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
+		if (node->base.type == LTS_TT_NULL_ASSIGN)
+			context.top()->impl->writeMainLine("@label", ndecl);
+		return {lhs.source, lhs.scope, rhs.type, rhs.direct, rhs.likelihood};
+	}
+	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
+		if (t != lhs.type)
+			context.error("Right-hand type is weaker than left-hand type!", node);
+		if (lhs.isStackTop() && rhs.isStackTop())
+			lhs.source = UTF8String("move stack[-1]");
+		if (*lhs.source != *rhs.source)
+			context.top()->impl->writeMainLine("copy", *rhs.source, "->", *lhs.source);
+		if (!rhs.shouldBePushed())
+			context.top()->impl->writeMainLine("pop");
+		if (node->base.type == LTS_TT_NULL_ASSIGN)
+			context.top()->impl->writeMainLine("@label", ndecl);
 		return {lhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
 	} else context.error("Type mismatch!", node);
 }
@@ -1911,8 +1990,8 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 		if (ns->function) {
 			for (auto& ov : ns->function->overloads)
 			if (
-				ov->variant == Function::Overload::Variant::AV2_TCB_FOV_NONE
-			or	ov->variant == Function::Overload::Variant::AV2_TCB_FOV_CLASS
+				ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_NONE
+			or	ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_CLASS
 			) {
 				if (ov->arguments.empty() or ov->arguments.front()->type != type.scope->type.asWeak())
 					context.error(
@@ -1920,7 +1999,7 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 						"Did you make sure the type is correct, or to set function as [@Static]?"
 						, extension
 					);
-				ov->variant = Function::Overload::Variant::AV2_TCB_FOV_CLASS;
+				ov->variant = Function::Overload::Variant::Object::AV2_TCB_FO_VO_CLASS;
 			}
 		} else if (ns->property) {
 
@@ -1937,10 +2016,16 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 	auto const scope = UTF8StringList::from("__await_" + node->name());
 	auto const awaitScope = context.declare(scope);
 	auto const expr = Expression().transform(context, node->leftSide);
+	auto const awaitType = TypeDecl::stronger(expr.type, context.basicType("uint64"));
 	if (expr.shouldBePushed())
 		awaitScope->impl->writeMainLine("push", expr.source.value());
 	else if (expr.isStackTop() && expr.isCopied()) {
 		awaitScope->impl->writeMainLine("copy", *expr.source, "-> top");
+	}
+	if (awaitType && awaitType->basic != Core::BasicType::AV2_BT_BOOL) {
+		if (expr.direct.isUndefined())
+			awaitScope->impl->writeMainLine("dyn await");
+		else awaitScope->impl->writeMainLine("await", expr.direct.getUnsigned());
 	}
 	if (!expr.source)
 		context.error("Await expressions can only be used in checkable values!");
@@ -1960,6 +2045,30 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 	context.pop(scope.size());
 	context.top()->impl->writeMainLine(awaitScope->compose()->toString());
 	return {};
+}
+
+
+ATransformer::Result NullDecay::transform(Context& context, Node::Instance const& node) {
+	auto const exit = "__null_decay_" + node->name() + "_end";
+	ATransformer::Result result;
+	auto const lhs = Expression().transform(context, node);
+	if (!(lhs.type && lhs.type->flags.isNullable))
+		context.error("Expression must result in a nullable value!", node->leftSide);
+	if (lhs.shouldBePushed())
+		context.top()->impl->writeMainLine("push", lhs.source.value());
+	else if (lhs.isStackTop() && lhs.isCopied())
+		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
+	context.top()->impl->writeMainLine("push val top");
+	context.top()->impl->writeMainLine("jump if not empty", exit);
+	auto const rhs = Expression().transform(context, node);
+	if (!(lhs.type->base != rhs.type))
+		context.error("Type mismatch!", node->rightSide);
+	if (rhs.shouldBePushed())
+		context.top()->impl->writeMainLine("push", rhs.source.value());
+	else if (rhs.isStackTop() && rhs.isCopied())
+		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+	context.top()->impl->writeMainLine("@label", exit);
+	return {{"move top"}, null, lhs.type->base};
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {

@@ -58,7 +58,7 @@ private:
 	Exception* const prev		= nullptr;
 	/// @brief Current exception.
 	inline static Exception* ex	= nullptr;
-	 
+
 	template <class TString> friend class DetailedError;
 };
 
@@ -329,7 +329,7 @@ public:
 	}
 
 	/// @brief Returns a summary of the exception.
-	/// @return Summary. 
+	/// @return Summary.
 	CStringType what() const noexcept override {
 		return strlit(sumbuf);
 	}

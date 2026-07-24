@@ -186,6 +186,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_NAMESPACE_RESOLVE, infixes, new FunctionDeclResolver());
 	add(LTS_TT_NULL_DECAY, infixes, new EmptyDecayResolver());
 	add(LTS_TT_DOT, infixes, new PathResolver());
+	add(LTS_TT_NULL_ACCESS, infixes, new PathResolver());
 	add(LTS_TT_DECLARE, infixes, new VariableDeclResolver());
 	add(LTS_TT_COLON, infixes, new VariableDeclResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
@@ -202,6 +203,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_XOR_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_NULL_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_STREAM_INSERT, infixes, new InsertionResolver());
 	add(LTS_TT_STREAM_EXTRACT, infixes, new ExtractionResolver());
 	add(LTS_TT_RANGE, infixes, new RangeResolver());

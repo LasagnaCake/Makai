@@ -185,10 +185,11 @@ namespace Makai::Anima::V2::Core {
 
 		/// @brief Operation.
 		struct [[gnu::aligned(4)]] Operation {
-			Operator	op;
-			uint8		sameType:	1;
-			BasicType	assume:		7;
-			uint8		count		= 1;
+			Operator		op;
+			uint8			sameType:	1;
+			BasicType		assume:		7;
+			uint8			count		= 1;
+			uint8			immediate:	1;
 		};
 
 		/// @brief Blitting.

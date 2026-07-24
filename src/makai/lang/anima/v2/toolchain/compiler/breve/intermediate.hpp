@@ -171,13 +171,27 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct Function: Labeled, Positioned, ISerializable {
 		struct Overload: Scoped, ISerializable {
-			enum class Variant {
-				AV2_TCB_FOV_NONE,
-				AV2_TCB_FOV_GLOBAL,
-				AV2_TCB_FOV_CLASS,
-				AV2_TCB_FOV_INSTANCE,
-				AV2_TCB_FOV_ART_CALL,
-				AV2_TCB_FOV_DYNLIB,
+			struct Variant {
+				enum class External {
+					AV2_TCB_FO_VE_NONE,
+					AV2_TCB_FO_VE_ART_CALL,
+					AV2_TCB_FO_VE_DYNLIB,
+				};
+				enum class Object {
+					AV2_TCB_FO_VO_NONE,
+					AV2_TCB_FO_VO_GLOBAL,
+					AV2_TCB_FO_VO_CLASS,
+					AV2_TCB_FO_VO_INSTANCE,
+				};
+
+				External	external	= External::AV2_TCB_FO_VE_NONE;
+				Object		object		= Object::AV2_TCB_FO_VO_NONE;
+
+				constexpr bool operator==(External const variant) const	{return variant == external;	}
+				constexpr bool operator==(Object const variant) const	{return variant == object;		}
+
+				constexpr Variant& operator=(External const variant)	{return (external = variant, *this);	}
+				constexpr Variant operator=(Object const variant)		{return (object = variant, *this);		}
 			};
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
@@ -186,7 +200,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			UTF8String						sigEntry;
 			UTF8String						dynlib;
 			Handle<TypeDecl>				methodOf;
-			Variant							variant = Variant::AV2_TCB_FOV_NONE;
+			Variant							variant;
 			bool							optional = false;
 			bool							hasImplementation = false;
 			bool							staticEntity = false;
@@ -204,6 +218,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		using OverloadRef = Instance<Overload>;
 
 		List<OverloadRef> overloads;
+		List<OverloadRef> current;
 
 		OverloadRef sigCall;
 

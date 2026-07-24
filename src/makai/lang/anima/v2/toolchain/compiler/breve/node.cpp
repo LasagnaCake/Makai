@@ -41,6 +41,7 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_EMPTY:				return "none";
 		case Content::AV2_TANC_ARRAY:				return "array";
 		case Content::AV2_TANC_ASSIGNMENT:			return "assign";
+		case Content::AV2_TANC_FAILABLE_PATH:		return "maybe_path";
 		case Content::AV2_TANC_PATH:				return "path";
 		case Content::AV2_TANC_BLOCK:				return "block";
 		case Content::AV2_TANC_DECLARATION:			return "decl";
