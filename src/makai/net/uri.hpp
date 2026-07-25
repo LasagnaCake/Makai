@@ -5,18 +5,29 @@
 
 namespace Makai::Net::URI {
 	constexpr String normalize(String const& str) {
-		return Regex::replace(str, R"(\\\\)", "/")
+		return (
+			Regex::replace(str, R"(\\\\)", "/")
 			.split('/')
-			.filter([] (String const& part) {
-				return (
-					part.isNullOrSpaces()
-				or	part == "."
-				or	part == ".."
-				);
-			})
-			.join('/')
+			| [] (StringList const& parts) {
+				StringList out;
+				for (auto& part: parts) {
+					if (
+						part.isNullOrSpaces()
+					or	part == "."
+					) continue;
+					if (part == "..") {
+						if (out.size())
+							out.popBack();
+						continue;
+					}
+					out.pushBack(part);
+				}
+				return out;
+			}
+			).join('/')
 		;
 	}
+
 	constexpr String decode(String const& str) {
 		bool first = true;
 		return
@@ -32,6 +43,19 @@ namespace Makai::Net::URI {
 				})
 				.join("")
 		;
+	}
+
+	constexpr String encode(String const& str) {
+		bool first = true;
+		String out;
+		for (auto& c: str)
+			out += "%" + Format::pad(
+				String::fromNumber<int8>(c, 16, false),
+				'0',
+				2,
+				Format::Justify::CFJ_LEFT
+			);
+		return out;
 	}
 }
 
