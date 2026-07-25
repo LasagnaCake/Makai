@@ -800,6 +800,7 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 		case Core::BasicType::AV2_BT_MATRIX:	return qualifier("mat");
 		case Core::BasicType::AV2_BT_BOOL:		return qualifier("bool");
 		case Core::BasicType::AV2_BT_CHAR:		return qualifier("char");
+		case Core::BasicType::AV2_BT_STRING:	return qualifier("str");
 		default: return "";
 	}
 }
