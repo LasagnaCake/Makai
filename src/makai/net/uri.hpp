@@ -29,7 +29,6 @@ namespace Makai::Net::URI {
 	}
 
 	constexpr String decode(String const& str) {
-		[[maybe_unused]]
 		bool first = true;
 		return
 			str
@@ -47,7 +46,6 @@ namespace Makai::Net::URI {
 	}
 
 	constexpr String encode(String const& str) {
-		bool first = true;
 		String out;
 		for (auto& c: str)
 			out += "%" + Format::pad(
