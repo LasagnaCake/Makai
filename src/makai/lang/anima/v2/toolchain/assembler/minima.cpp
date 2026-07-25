@@ -992,15 +992,15 @@ static void doOperation(Context& context) {
 			case BasicType::AV2_BT_UINT8:
 			case BasicType::AV2_BT_UINT16:
 			case BasicType::AV2_BT_UINT32:
-			case BasicType::AV2_BT_UINT64: context.add(value.getUnsigned());
+			case BasicType::AV2_BT_UINT64: context.add(value.getUnsigned()); break;
 			case BasicType::AV2_BT_INT8:
 			case BasicType::AV2_BT_INT16:
 			case BasicType::AV2_BT_INT32:
-			case BasicType::AV2_BT_INT64: context.add(value.getSigned());
+			case BasicType::AV2_BT_INT64: context.add(value.getSigned()); break;
 			case BasicType::AV2_BT_REAL32:
 			case BasicType::AV2_BT_REAL64:
-			case BasicType::AV2_BT_REAL128: context.add(value.getReal());
-			case BasicType::AV2_BT_STRING: context.addStringLiteral(value.getString());
+			case BasicType::AV2_BT_REAL128: context.add(value.getReal()); break;
+			case BasicType::AV2_BT_STRING: context.addStringLiteral(value.getString()); break;
 			default: context.error("Invalid immediate operation!");
 		}
 	}
