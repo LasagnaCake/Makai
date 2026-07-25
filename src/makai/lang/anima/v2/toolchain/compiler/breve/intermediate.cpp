@@ -374,11 +374,11 @@ static Namespace::AttributeRef createPathAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createDynCallAttribute() {
+static Namespace::AttributeRef createDynLibAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "DynCall";
+	attrib->name = "DynLib";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"]		= {.type=DVK_STRING};
 	attrib->fields["lib"]		= {.type=DVK_STRING, .path=true};
@@ -411,16 +411,16 @@ static Namespace::AttributeRef createDynCallAttribute() {
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
 		if (!hit)
-			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nDynCall functions cannot have a body!", ns->node);
+			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nDynLib functions cannot have a body!", ns->node);
 	};
 	return attrib;
 }
 
-static Namespace::AttributeRef createNativeCallAttribute() {
+static Namespace::AttributeRef createNativeAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "NativeCall";
+	attrib->name = "Native";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"] = {DVK_STRING};
 	attrib->fields["optional"]	= {.type=DVK_STRING, .defaultValue=false, .path=true};
@@ -727,11 +727,11 @@ static Namespace::AttributeRef createMainAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createARTCallAttribute() {
+static Namespace::AttributeRef createExposeAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "ARTCall";
+	attrib->name = "Expose";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"] = {.type = DVK_STRING, .defaultValue = ""};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
@@ -804,15 +804,15 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
-	addGlobalAttribute(createDynCallAttribute());
-	addGlobalAttribute(createNativeCallAttribute());
+	addGlobalAttribute(createDynLibAttribute());
+	addGlobalAttribute(createNativeAttribute());
 	addGlobalAttribute(createPathAttribute());
 	addGlobalAttribute(createRemangleAttribute());
 	addGlobalAttribute(createDoNotMangleAttribute());
 	addGlobalAttribute(createPassByAttribute("Move"));
 	addGlobalAttribute(createPassByAttribute("Ref"));
 	addGlobalAttribute(createPassByAttribute("Copy"));
-	addGlobalAttribute(createARTCallAttribute());
+	addGlobalAttribute(createExposeAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {
@@ -864,7 +864,7 @@ Makai::Data::Value Function::Overload::serialize() const {
 	switch (variant.external) {
 		using enum Variant::External;
 		case AV2_TCB_FO_VE_NONE:		out["extern"] = "none";		break;
-		case AV2_TCB_FO_VE_ART_CALL:	out["extern"] = "artcall";	break;
+		case AV2_TCB_FO_VE_ART_CALL:	out["extern"] = "Expose";	break;
 		case AV2_TCB_FO_VE_DYNLIB:		out["extern"] = "dynlib";	break;
 	}
 	switch (variant.object) {
