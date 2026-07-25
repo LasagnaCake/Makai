@@ -966,9 +966,9 @@ static void doOperation(Context& context) {
 			default: context.error("Invalid basic type!");
 		}
 		if (!value.isUndefined()) {
-			if (value.isBoolean() != (bop.assume == BasicType::AV2_BT_BOOL))
+			if (!value.isBoolean() && (bop.assume == BasicType::AV2_BT_BOOL))
 				context.error("Type mismatch");
-			if (value.isNumber() != (
+			if (!value.isNumber() && (
 				bop.assume == BasicType::AV2_BT_INT8
 			or	bop.assume == BasicType::AV2_BT_UINT8
 			or	bop.assume == BasicType::AV2_BT_INT16
@@ -981,7 +981,7 @@ static void doOperation(Context& context) {
 			or	bop.assume == BasicType::AV2_BT_REAL64
 			or	bop.assume == BasicType::AV2_BT_REAL128
 			)) context.error("Type mismatch");
-			if (value.isString() != (bop.assume == BasicType::AV2_BT_STRING))
+			if (!value.isString() && (bop.assume == BasicType::AV2_BT_STRING))
 				context.error("Type mismatch");
 		}
 	}
