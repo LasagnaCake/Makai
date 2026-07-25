@@ -4,7 +4,7 @@
 #include "../compat/ctl.hpp"
 
 namespace Makai::Net::URI {
-	constexpr String normalize(String const& str) {
+	inline String normalize(String const& str) {
 		return (
 			Regex::replace(str, R"(\\\\)", "/")
 			.split('/')
@@ -29,6 +29,7 @@ namespace Makai::Net::URI {
 	}
 
 	constexpr String decode(String const& str) {
+		[[maybe_unused]]
 		bool first = true;
 		return
 			str
