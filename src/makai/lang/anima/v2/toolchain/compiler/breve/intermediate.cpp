@@ -374,11 +374,11 @@ static Namespace::AttributeRef createPathAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createSharedAttribute() {
+static Namespace::AttributeRef createDynCallAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Shared";
+	attrib->name = "DynCall";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"]		= {.type=DVK_STRING};
 	attrib->fields["lib"]		= {.type=DVK_STRING, .path=true};
@@ -411,16 +411,16 @@ static Namespace::AttributeRef createSharedAttribute() {
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
 		if (!hit)
-			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nShared functions cannot have a body!", ns->node);
+			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nDynCall functions cannot have a body!", ns->node);
 	};
 	return attrib;
 }
 
-static Namespace::AttributeRef createARTCallAttribute() {
+static Namespace::AttributeRef createNativeCallAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "ARTCall";
+	attrib->name = "NativeCall";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"] = {DVK_STRING};
 	attrib->fields["optional"]	= {.type=DVK_STRING, .defaultValue=false, .path=true};
@@ -727,11 +727,11 @@ static Namespace::AttributeRef createMainAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createEventAttribute() {
+static Namespace::AttributeRef createARTCallAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Event";
+	attrib->name = "ARTCall";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"] = {.type = DVK_STRING, .defaultValue = ""};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
@@ -804,15 +804,15 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
-	addGlobalAttribute(createSharedAttribute());
-	addGlobalAttribute(createARTCallAttribute());
+	addGlobalAttribute(createDynCallAttribute());
+	addGlobalAttribute(createNativeCallAttribute());
 	addGlobalAttribute(createPathAttribute());
 	addGlobalAttribute(createRemangleAttribute());
 	addGlobalAttribute(createDoNotMangleAttribute());
 	addGlobalAttribute(createPassByAttribute("Move"));
 	addGlobalAttribute(createPassByAttribute("Ref"));
 	addGlobalAttribute(createPassByAttribute("Copy"));
-	addGlobalAttribute(createEventAttribute());
+	addGlobalAttribute(createARTCallAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {
