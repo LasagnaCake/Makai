@@ -778,7 +778,7 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 			return "<" + in + ">";
 		}
 	;
-	if (rhs.direct.isUndefined())
+	if (!rhs.direct.isUndefined())
 		qualifier =
 			[vx = rhs.direct.toString()] (Makai::String const& in) {
 				return "<" + in + ":" + vx + ">";
