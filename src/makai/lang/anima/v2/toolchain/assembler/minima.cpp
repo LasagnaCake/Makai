@@ -957,10 +957,10 @@ static void doOperation(Context& context) {
 			case Makai::hash("char"):	bop.assume = BasicType::AV2_BT_CHAR;	break;
 			case Makai::hash("vec"):	bop.assume = BasicType::AV2_BT_VECTOR;	break;
 			case Makai::hash("mat"):	bop.assume = BasicType::AV2_BT_MATRIX;	break;
+			case Makai::hash("str"):	bop.assume = BasicType::AV2_BT_STRING;	break;
 			case Makai::hash("void"):
 			case Makai::hash("nil"): return;
 			case Makai::hash("bin"):
-			case Makai::hash("str"):
 			case Makai::hash("type"):
 			case Makai::hash("any"): bop.sameType = false; break;
 			default: context.error("Invalid basic type!");
