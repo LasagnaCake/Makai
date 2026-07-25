@@ -3,6 +3,7 @@
 
 #include "file.hpp"
 #include "http.hpp"
+#include "uri.hpp"
 
 namespace MkNet = Makai::Net;
 
