@@ -42,10 +42,10 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	void onLoad() override {
 		if (cliEnabled) {
-			context.art.addExternalMethod("av2/console/write_string", 		write_string		);
-			context.art.addExternalMethod("av2/console/write_any",			write_any			);
-			context.art.addExternalMethod("av2/console/writeLine_string",	writeLine_string	);
-			context.art.addExternalMethod("av2/console/writeLine_any",		writeLine_any		);
+			context.art.addNativeCall("av2/console/write_string", 		write_string		);
+			context.art.addNativeCall("av2/console/write_any",			write_any			);
+			context.art.addNativeCall("av2/console/writeLine_string",	writeLine_string	);
+			context.art.addNativeCall("av2/console/writeLine_any",		writeLine_any		);
 		}
 	}
 };
