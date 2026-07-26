@@ -6,6 +6,7 @@
 #include "format.hpp"
 #include "hash.hpp"
 #include "reverse.hpp"
+#include "shuffle.hpp"
 #include "sort.hpp"
 #include "strconv.hpp"
 #include "transform.hpp"

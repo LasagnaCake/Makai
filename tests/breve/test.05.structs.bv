@@ -5,6 +5,8 @@ struct Person {
 	@ByCopy lastName : string
 	
 	fullName :: (@ByRef self: Person) => '"' + self.firstName + " " + self.lastName + '"'
+	
+	create :: (firstName: string, lastName: string = "Someone") => new Person {firstName, lastName}
 }
 
 @Main
@@ -17,5 +19,7 @@ main :: () {
 	foo.lastName = "Lastname"
 	IO.writeLine("Hello, " + foo.fullName; + "!")
 	foo.firstName = "Firstname"
+	IO.writeLine("Hello, " + foo.fullName; + "!")
+	foo = Person.create("Iam")
 	IO.writeLine("Hello, " + foo.fullName; + "!")
 } 

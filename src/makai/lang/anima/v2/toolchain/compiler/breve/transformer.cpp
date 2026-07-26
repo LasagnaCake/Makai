@@ -1696,7 +1696,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 				} else {
 					if (filled.size() >= remap.size())
 						context.error("All fields have been already set!", arg);
-					while (remap.contains(index))
+					while (filled.contains(remap[index]))
 						++index;
 					if (index >= t->fields.size())
 						context.error("All fields have been already set!", arg);

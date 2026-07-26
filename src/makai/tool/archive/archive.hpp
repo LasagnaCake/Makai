@@ -129,6 +129,7 @@ namespace Makai::Tool::Arch {
 		struct [[gnu::packed, gnu::aligned(1)]] Flags {
 			uint64 isSingleFileArchive:	1;
 			uint64 shouldCheckCRC:		1;
+			uint64 flowHeader:			1;
 		};
 
 		uint64 headerSize		= sizeof(ArchiveHeader);
@@ -273,7 +274,7 @@ namespace Makai::Tool::Arch {
 		/// @brief Archive header.
 		ArchiveHeader	header;
 		/// @brief Archive file structure.
-		JSON::Value		fstruct;
+		Data::Value		fstruct;
 		/// @brief Synchronization barrier for thread safety.
 		mutable Mutex	sync;
 	};

@@ -56,12 +56,12 @@ The directory header is structured as follows, in order:
     COMPRESSED SIZE : 8 Bytes
               BLOCK : 16 Bytes
 
-The directory information is formatted as a JSON object:
+The directory information is formatted as a JSON or a FLOW object:
 {
     "tree": {...}
 }
 
-The "tree" object contains the directory tree structure, where the folders are JSON objects, and the files contain base64-encoded adresses to their location in the archive (i.e. the beginning of their header).
+The "tree" object contains the directory tree structure, where the folders are objects, and the files contain base64-encoded adresses to their location in the archive (i.e. the beginning of their header).
 
 The directory information can be compressed and encrypted, much like the files. If the files are compressed and/or encrypted, it must also be.
 

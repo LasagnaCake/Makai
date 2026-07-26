@@ -115,18 +115,18 @@ struct IWriter {
 
 template <class T>
 struct IInput {
-	virtual ~IInput() {}
+	constexpr virtual ~IInput() {}
 
-	virtual T		read(usize const count)	= 0;
-	virtual void	go(usize const pos = 0)	= 0;
+	constexpr virtual T		read(usize const count)	= 0;
+	constexpr virtual void	go(usize const pos = 0)	= 0;
 };
 
 template <class T>
 struct IOutput {
-	virtual ~IOutput() {}
+	constexpr virtual ~IOutput() {}
 
-	virtual void	write(T const& data)	= 0;
-	virtual void	go(usize const pos = 0)	= 0;
+	constexpr virtual void	write(T const& data)	= 0;
+	constexpr virtual void	go(usize const pos = 0)	= 0;
 };
 
 CTL_NAMESPACE_END
