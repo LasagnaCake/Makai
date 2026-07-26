@@ -250,11 +250,11 @@ namespace Makai::Anima::V2::Core {
 			return hasNativeCall(ConstHasher::hash(name));
 		}
 
-		Result<Object::Storage, Error> invokeNativeCall(
+		Result<Object::Storage, Error> callNative(
 			String const& name,
 			List<Object::Storage> const& args
 		) {
-			return invokeNativeCall(ConstHasher::hash(name), args);
+			return callNative(ConstHasher::hash(name), args);
 		}
 
 		template <class TFunc>
@@ -332,7 +332,7 @@ namespace Makai::Anima::V2::Core {
 
 		template <class T>
 		bool hasNativeType() const {
-			return types.contains(Meta::arthashof<T>());
+			return types.byNameHash(Meta::arthashof<T>()).size();
 		}
 
 		template <class T>
