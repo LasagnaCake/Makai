@@ -27,34 +27,34 @@ namespace Makai::Anima::V2::Core {
 			AV2_CCE_HOW_DID_YOU_GET_HERE,
 		};
 
-		struct ExternalMethod;
+		struct NativeCall;
 
 		using MethodResult = Result<Object::Storage, Error>;
 
-		using ICallable = IConstInvokable<MethodResult(Context&, ExternalMethod&, Arguments const&)>;
+		using ICallable = IConstInvokable<MethodResult(Context&, NativeCall&, Arguments const&)>;
 
 		using ExternalInvocation = owner<ICallable>;
 
-		struct ExternalMethodInfo {
+		struct NativeCallInfo {
 			usize 		retTypeHash;
 			List<usize>	argTypeHashes;
 		};
 
-		struct ExternalMethod: Method {
+		struct NativeCall: Method {
 			ExternalInvocation	invoker;
 			usize				argc;
 
 			Nullable<Error> validate(Context& context, Arguments const& args);
 		};
 
-		template <class T> struct ExternalMethodResolver;
+		template <class T> struct NativeCallResolver;
 
 		static void debugArgs(Arguments const& args);
 
 		static void debugExternalFunction(bool const isExiting);
 
 		template <class TReturn, class... TArgs>
-		struct ExternalMethodResolver<TReturn(TArgs...)> {
+		struct NativeCallResolver<TReturn(TArgs...)> {
 			constexpr static bool const CONTEXTUAL = Type::OneOf<AsNonVolatile<Makai::Meta::First<TArgs...>>, Context&, Context const&>;
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + CONTEXTUAL;
@@ -62,7 +62,7 @@ namespace Makai::Anima::V2::Core {
 			constexpr static bool const HAS_ARGS = ARG_COUNT > 0;
 
 			template <class TFirst, class... TRest>
-			constexpr static ExternalMethodInfo makeInfo() requires (!CONTEXTUAL && HAS_ARGS) {
+			constexpr static NativeCallInfo makeInfo() requires (!CONTEXTUAL && HAS_ARGS) {
 				return {
 					Meta::arthashof<TReturn>(),
 					List<usize>::from(Meta::arthashof<TFirst>(), Meta::arthashof<TRest>()...)
@@ -70,23 +70,23 @@ namespace Makai::Anima::V2::Core {
 			}
 
 			template <class TFirst, class... TRest>
-			constexpr static ExternalMethodInfo makeInfo() requires (CONTEXTUAL && HAS_ARGS) {
+			constexpr static NativeCallInfo makeInfo() requires (CONTEXTUAL && HAS_ARGS) {
 				return {
 					Meta::arthashof<TReturn>(),
 					List<usize>::from(Meta::arthashof<TRest>()...)
 				};
 			}
 
-			constexpr static ExternalMethodInfo info() requires (HAS_ARGS) {
+			constexpr static NativeCallInfo info() requires (HAS_ARGS) {
 				return makeInfo<TArgs...>();
 			}
 
-			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+			static auto makeArgumentTuple(Context& context, NativeCall& method, Arguments const& args)
 			requires (!CONTEXTUAL && HAS_ARGS) {
 				return Meta::toArguments<TArgs...>(context.types, args.sliced(0, method.argc));
 			}
 
-			static auto makeArgumentTuple(Context& context, ExternalMethod& method, Arguments const& args)
+			static auto makeArgumentTuple(Context& context, NativeCall& method, Arguments const& args)
 			requires (CONTEXTUAL && HAS_ARGS) {
 				return Meta::toArgumentsWithContext<TArgs...>(context.types, args.sliced(0, method.argc), context);
 			}
@@ -111,7 +111,7 @@ namespace Makai::Anima::V2::Core {
 
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
-			static MethodResult handleInvocation(Context& context, ExternalMethod& method, Arguments const& args, TFunc& f) {
+			static MethodResult handleInvocation(Context& context, NativeCall& method, Arguments const& args, TFunc& f) {
 				CTL_DO_NOT_INLINE;
 				MAKAILIB_DEBUGLN_FULL("Invoking function...");
 				if constexpr (HAS_ARGS) {
@@ -154,7 +154,7 @@ namespace Makai::Anima::V2::Core {
 				template <Type::Functional<TReturn(TArgs...)> T>
 				Invoker(T& f): f(f) {debugExternalFunction(false);}
 
-				MethodResult invoke(Context& context, ExternalMethod& method, Arguments const& args) const override {
+				MethodResult invoke(Context& context, NativeCall& method, Arguments const& args) const override {
 					return handleInvocation(context, method, args, f);
 				}
 			};
@@ -170,8 +170,8 @@ namespace Makai::Anima::V2::Core {
 			template <class TFunc>
 			bool add(String const& name, TFunc& f) const {
 				auto const hash = ConstHasher::hash(name);
-				using FuncResolver = ExternalMethodResolver<TFunc>;
-				if (context.hasExternalMethod(hash)) return false;
+				using FuncResolver = NativeCallResolver<TFunc>;
+				if (context.hasNativeCall(hash)) return false;
 				return add(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
 			}
 
@@ -187,7 +187,7 @@ namespace Makai::Anima::V2::Core {
 
 		struct MethodRemover {
 			void remove(String const& name) const {
-				context.removeExternalMethod(name);
+				context.removeNativeCall(name);
 			}
 
 			virtual ~MethodRemover();
@@ -201,7 +201,7 @@ namespace Makai::Anima::V2::Core {
 		struct TypeAdder {
 			template <class T>
 			bool add() const {
-				return context.addExternalType<T>();
+				return context.addNativeType<T>();
 			}
 
 			virtual ~TypeAdder();
@@ -215,7 +215,7 @@ namespace Makai::Anima::V2::Core {
 		struct TypeRemover {
 			template <class T>
 			void remove() const {
-				context.removeExternalType<T>();
+				context.removeNativeType<T>();
 			}
 
 			virtual ~TypeRemover();
@@ -238,42 +238,42 @@ namespace Makai::Anima::V2::Core {
 		using Remover	= ContextHandler<MethodRemover, TypeRemover>;
 
 		template <class TFunc>
-		bool addExternalMethod(String const& name, TFunc const& f) {
-			return addExternalMethod(ConstHasher::hash(name), f);
+		bool addNativeCall(String const& name, TFunc const& f) {
+			return addNativeCall(ConstHasher::hash(name), f);
 		}
 
-		void removeExternalMethod(String const& name) {
-			removeExternalMethod(ConstHasher::hash(name));
+		void removeNativeCall(String const& name) {
+			removeNativeCall(ConstHasher::hash(name));
 		}
 
-		bool hasExternalMethod(String const& name) const {
-			return hasExternalMethod(ConstHasher::hash(name));
+		bool hasNativeCall(String const& name) const {
+			return hasNativeCall(ConstHasher::hash(name));
 		}
 
-		Result<Object::Storage, Error> invokeExternalMethod(
+		Result<Object::Storage, Error> invokeNativeCall(
 			String const& name,
 			List<Object::Storage> const& args
 		) {
-			return invokeExternalMethod(ConstHasher::hash(name), args);
+			return invokeNativeCall(ConstHasher::hash(name), args);
 		}
 
 		template <class TFunc>
-		bool addExternalMethod(usize const& hash, TFunc& f) {
-			using FuncResolver = ExternalMethodResolver<TFunc>;
-			if (hasExternalMethod(hash)) return false;
-			return addExternalMethod(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
+		bool addNativeCall(usize const& hash, TFunc& f) {
+			using FuncResolver = NativeCallResolver<TFunc>;
+			if (hasNativeCall(hash)) return false;
+			return addNativeCall(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
 		}
 
-		bool addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker);
+		bool addNativeCall(usize const hash, usize const argc, ExternalInvocation const& invoker);
 
-		void removeExternalMethod(usize const& hash) {
-			if (!hasExternalMethod(hash)) return;
+		void removeNativeCall(usize const& hash) {
+			if (!hasNativeCall(hash)) return;
 			auto em = externalMethods[hash];
 			externalMethods.erase(hash);
 			loadedMethods.eraseLike(em);
 		}
 
-		bool hasExternalMethod(usize const& hash) const {
+		bool hasNativeCall(usize const& hash) const {
 			return
 				externalMethods.contains(hash)
 			&&	externalMethods[hash]
@@ -282,10 +282,10 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		usize argumentCountOf(usize const& hash) const {
-			return hasExternalMethod(hash) ? externalMethods[hash]->argc : 0;
+			return hasNativeCall(hash) ? externalMethods[hash]->argc : 0;
 		}
 
-		MethodResult invokeExternalMethod(usize const hash, List<Object::Storage> const& args);
+		MethodResult callNative(usize const hash, List<Object::Storage> const& args);
 
 		template <class T>
 		Object::Storage newValue(T const& value) const {
@@ -324,20 +324,20 @@ namespace Makai::Anima::V2::Core {
 		bool openLibrary(String const& path);
 
 		template <class T>
-		bool addExternalType() {
-			if (hasExternalType<T>()) return false;
+		bool addNativeType() {
+			if (hasNativeType<T>()) return false;
 			types.addElement(Meta::implement<T>(types));
 			return true;
 		}
 
 		template <class T>
-		bool hasExternalType() const {
-			return externalMethods.contains(Meta::arthashof<T>());
+		bool hasNativeType() const {
+			return types.contains(Meta::arthashof<T>());
 		}
 
 		template <class T>
-		void removeExternalType() {
-			if (!hasExternalType<T>()) return;
+		void removeNativeType() {
+			if (!hasNativeType<T>()) return;
 			auto const type = types.queryByNameHash(Meta::arthashof<T>()).front();
 			if (type->flags.isProxy)
 				types.values[type->id] = nullptr;
@@ -348,15 +348,15 @@ namespace Makai::Anima::V2::Core {
 
 		~Context();
 
-		Database<Definition>					types;
-		Database<Method>						methods;
-		Map<usize, Instance<ExternalMethod>>	externalMethods;
-		Dictionary<Instance<Library>>			dynlibs;
+		Database<Definition>				types;
+		Database<Method>					methods;
+		Map<usize, Instance<NativeCall>>	externalMethods;
+		Dictionary<Instance<Library>>		dynlibs;
 
 		static Instance<OutputStringWriter> writer;
 
 	private:
-		List<Instance<ExternalMethod>>	loadedMethods;
+		List<Instance<NativeCall>>	loadedMethods;
 		List<Instance<Library>>			loadedLibraries;
 		List<Reference<ALibrary>>		toBeLoaded;
 	};

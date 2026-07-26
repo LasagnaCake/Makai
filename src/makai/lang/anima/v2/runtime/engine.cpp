@@ -372,7 +372,7 @@ void Engine::v2Call() {
 			context.globalValueStack.eraseRange(-argc, -1);
 		}
 		context.art
-			.invokeExternalMethod(loc, args)
+			.callNative(loc, args)
 			.then(
 				[&] (auto const& v) {
 					if (invocation.noResult) return;
@@ -603,12 +603,12 @@ void Engine::jumpByMode(Instruction::Leap::Mode const mode, usize const location
 	}
 }
 
-bool Engine::hasEvent(String const& signal) {
+bool Engine::hasExposedCall(String const& signal) {
 	return program.ani && program.ani->in.contains(signal);
 }
 
-void Engine::runEvent(String const& signal, Core::Context::Arguments const& args) {
-	if (hasEvent(signal)) {
+void Engine::invokeExposedCall(String const& signal, Core::Context::Arguments const& args) {
+	if (hasExposedCall(signal)) {
 		if (args.size())
 			context.globalValueStack.appendBack(args.reversed());
 		jumpTo(program.jumpTable[program.ani->in[signal]], true);

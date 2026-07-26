@@ -82,10 +82,10 @@ Context::TypeAdder::~TypeAdder()			{}
 Context::TypeRemover::~TypeRemover()		{}
 
 bool Context::MethodAdder::add(usize const hash, usize const argc, ExternalInvocation const& invoker) const {
-	return context.addExternalMethod(hash, argc, invoker);
+	return context.addNativeCall(hash, argc, invoker);
 }
 
-Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, List<Object::Storage> const& args)  {
+Nullable<Context::Error> Context::NativeCall::validate(Context& context, List<Object::Storage> const& args)  {
 	if (retType && context.types.byNameHash(retType->hash).empty())
 		return Error::AV2_CCE_MISSING_ART_TYPE;
 	if (args.size() < argc)
@@ -95,21 +95,21 @@ Nullable<Context::Error> Context::ExternalMethod::validate(Context& context, Lis
 	return null;
 }
 
-bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvocation const& invoker) {
+bool Context::addNativeCall(usize const hash, usize const argc, ExternalInvocation const& invoker) {
 	DEBUGLN("Adding method [", hash, "]");
-	if (hasExternalMethod(hash)) {
+	if (hasNativeCall(hash)) {
 		DEBUGLN("WARN: [", hash, "] duplicate found");
 		return false;
 	}
 	DEBUGLN("OK: [", hash, "] has no duplicates");
-	Instance<ExternalMethod> method = method.create();
+	Instance<NativeCall> method = method.create();
 	method->flags.isExternal = true;
 	method->argc	= argc;
 	method->hash	= hash;
 	method->invoker	= invoker;
 	loadedMethods.pushBack(method);
 	externalMethods[hash] = method;
-	if (!hasExternalMethod(hash))
+	if (!hasNativeCall(hash))
 		throw Makai::Error::FailedAction(
 			"Failed to add external function ["+ toString(hash) + "]!",
 			CTL_CPP_PRETTY_SOURCE
@@ -117,14 +117,14 @@ bool Context::addExternalMethod(usize const hash, usize const argc, ExternalInvo
 	return true;
 }
 
-Context::MethodResult Context::invokeExternalMethod(usize const hash, List<Object::Storage> const& args) {
+Context::MethodResult Context::callNative(usize const hash, List<Object::Storage> const& args) {
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUGLN_FULL("Looking for method ", hash, "...");
 		for (auto& m: externalMethods)
 			DEBUGLN("  > ", m.key);
 	}
 	MAKAILIB_DEBUG_BLOCK_FULL {
-		DEBUGLN("Method exists? ", hasExternalMethod(hash));
+		DEBUGLN("Method exists? ", hasNativeCall(hash));
 		DEBUGLN("Registered? ", externalMethods.contains(hash));
 		if (externalMethods.contains(hash)) {
 			DEBUGLN("Created? ", externalMethods[hash].exists());
@@ -132,7 +132,7 @@ Context::MethodResult Context::invokeExternalMethod(usize const hash, List<Objec
 				DEBUGLN("Invoker? ", externalMethods[hash]->invoker);
 		}
 	}
-	if (!hasExternalMethod(hash)) return Error::AV2_CCE_MISSING_METHOD;
+	if (!hasNativeCall(hash)) return Error::AV2_CCE_MISSING_METHOD;
 	MAKAILIB_DEBUGLN_FULL("!!! Method exists !!!");
 	MAKAILIB_DEBUGLN_FULL("Invoker? ", externalMethods[hash]->invoker);
 	if (!externalMethods[hash]->invoker) return Error::AV2_CCE_MISSING_INVOKER;

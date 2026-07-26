@@ -43,12 +43,35 @@ namespace Makai::Anima::V2::Runtime {
 
 		bool process();
 
-		bool hasEvent(String const& name);
+		bool hasExposedCall(String const& name);
+
+		template <class TFunc>
+		struct ExposedCall;
+
+		template <class TReturn, class... TArgs>
+		struct ExposedCall<TReturn(TArgs...)> {
+			using ReturnType = Meta::If<Type::Void<TReturn>, void, Nullable<TReturn>>;
+
+			ReturnType call(TArgs... args) const		{return engine.template callExposed<TReturn, TArgs...>(name, args...);	}
+			ReturnType operator()(TArgs... args) const	{return call(args...);													}
+
+			ExposedCall(Engine& engine, String const& name): engine(engine), name(name) {}
+
+		private:
+			Engine&			engine;
+			String const	name;
+		};
+
+		template <class TFunc>
+		Nullable<ExposedCall<TFunc>> expose(String const& name) {
+			if (!hasExposedCall(name)) return null;
+			return ExposedCall<TFunc>{*this, name};
+		}
 
 		template <class... TArgs>
-		void fire(String const& event, TArgs... args) {
-			return runEvent(
-				signal,
+		void callExposed(String const& name, TArgs... args) {
+			return invokeExposedCall(
+				name,
 				Core::Context::Arguments::from(
 					context.newValue<TArgs>(args)...
 				)
@@ -57,8 +80,13 @@ namespace Makai::Anima::V2::Runtime {
 
 		template <class TReturn, class... TArgs>
 		Meta::If<Type::Void<TReturn>, void, Nullable<TReturn>>
-		invoke(String const& event, TArgs... args) {
-			fire(event, args...);
+		callExposed(String const& name, TArgs... args) {
+			invokeExposedCall(
+				name,
+				Core::Context::Arguments::from(
+					context.newValue<TArgs>(args)...
+				)
+			);
 			if constexpr (Type::NonVoid<TReturn>)
 				return context.top() ? context.pop()->toValue<TReturn>() : null;
 			else return;
@@ -75,7 +103,7 @@ namespace Makai::Anima::V2::Runtime {
 		bool finished() const;
 
 	protected:
-		void runEvent(String const& signal, Core::Context::Arguments const& args);
+		void invokeExposedCall(String const& name, Core::Context::Arguments const& args);
 
 		virtual Context::Storage	external	(String const& name, bool const doNotCopy	);
 		Context::Storage&			global		(uint64 const globalID						);

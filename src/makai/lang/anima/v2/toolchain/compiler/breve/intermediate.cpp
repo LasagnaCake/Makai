@@ -374,11 +374,11 @@ static Namespace::AttributeRef createPathAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createDynLibAttribute() {
+static Namespace::AttributeRef createSharedAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "DynLib";
+	attrib->name = "Shared";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->fields["name"]		= {.type=DVK_STRING};
 	attrib->fields["lib"]		= {.type=DVK_STRING, .path=true};
@@ -411,7 +411,7 @@ static Namespace::AttributeRef createDynLibAttribute() {
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
 		if (!hit)
-			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nDynLib functions cannot have a body!", ns->node);
+			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nShared functions cannot have a body!", ns->node);
 	};
 	return attrib;
 }
@@ -804,7 +804,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
-	addGlobalAttribute(createDynLibAttribute());
+	addGlobalAttribute(createSharedAttribute());
 	addGlobalAttribute(createNativeAttribute());
 	addGlobalAttribute(createPathAttribute());
 	addGlobalAttribute(createRemangleAttribute());
