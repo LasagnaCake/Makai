@@ -778,7 +778,7 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 			return "<" + in + ">";
 		}
 	;
-	if (!rhs.direct.isUndefined())
+	if (!(rhs.direct.isUndefined() or rhs.direct.isString()))
 		qualifier =
 			[vx = rhs.direct.toString()] (Makai::String const& in) {
 				return "<" + in + ":" + vx + ">";
@@ -800,7 +800,7 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 		case Core::BasicType::AV2_BT_MATRIX:	return qualifier("mat");
 		case Core::BasicType::AV2_BT_BOOL:		return qualifier("bool");
 		case Core::BasicType::AV2_BT_CHAR:		return qualifier("char");
-		case Core::BasicType::AV2_BT_STRING:	return qualifier("str");
+	//	case Core::BasicType::AV2_BT_STRING:	return qualifier("str");
 		default: return "";
 	}
 }
@@ -907,7 +907,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	}
 	if (!lhsHasBeenPushed)
 		context.top()->impl->writeMainLine("push", *lhs.source);
-	if (rhs.direct.isUndefined()) {
+	if (!rhs.direct.isUndefined() or rhs.direct.isString()) {
 		if (rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *rhs.source);
 		else if (rhs.isStackTop() && rhs.isCopied()) {
@@ -1352,7 +1352,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			} else if (i.direct.isInteger())
 				context.top()->impl->writeMainLine("get [", i.direct.getUnsigned(), "]");
 			else context.error("Expected integer here!", node->middle);
-				context.top()->impl->writeMainLine("jump if not empty", ndecl);
+			context.top()->impl->writeMainLine("jump if not empty", ndecl);
 		}
 		auto const rhs = Expression().transform(context, node->rightSide);
 		if (!rhs.source)
@@ -1380,9 +1380,15 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 	auto const rhs = Expression().transform(context, node->rightSide);
 	if (lhs.parent) {
+		context.top()->impl->main.popBack();
+		if (lhs.isStackTop() && lhs.isCopied())
+			context.top()->impl->main.popBack();
 		if (lhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *lhs.source);
-		context.top()->impl->main.popBack();
+		if (node->base.type == LTS_TT_NULL_ASSIGN) {
+			context.top()->impl->writeMainLine("push val top");
+			context.top()->impl->writeMainLine("jump if not empty", ndecl);
+		}
 		if (rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *rhs.source);
 		else if (rhs.isStackTop() && rhs.isCopied())

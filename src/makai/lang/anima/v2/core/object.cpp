@@ -101,7 +101,7 @@ Object& Object::operator=(Object const& other) {
 	origin = other.getOriginalType();
 	if (!type)
 		return *this;
-	if (type->flags.isValueType)
+	if (type->flags.isValueType or other.content)
 		content = content.create();
 	if (other.content->size() && type->flags.isCopyable) {
 		content->invoke(type->byteSize);

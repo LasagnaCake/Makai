@@ -987,6 +987,7 @@ static void doOperation(Context& context) {
 	}
 	context.add(Instruction::Name::AV2_IN_OP, bop);
 	if (!value.isUndefined()) {
+		DEBUGLN("Immediate: ", uint64(bop.assume));
 		switch (bop.assume) {
 			case BasicType::AV2_BT_BOOL:
 			case BasicType::AV2_BT_UINT8:
