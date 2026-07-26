@@ -51,7 +51,7 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 		DEBUGLN("Scope: ", scope->name);
 		DEBUG("Subspaces: [ ");
 		for (auto const& [name, subns]: scope->subspaces)
-			DEBUG( "{", name , ":", subns ? subns->name : "???NULL???", "} ");
+			DEBUG( "{", name , ":", subns ? subns->name : "###__NULL__###", "} ");
 		DEBUGLN("]");
 		if (scope->name == path.front()) {
 			if (path.size() == 1)
