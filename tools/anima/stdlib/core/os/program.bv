@@ -4,7 +4,7 @@ module OS {
 	struct Program {
 		struct Option {
 			@ByValue key: string
-			@ByValue value: any
+			@ByValue value: ?any
 		}
 		
 		@ByRef name:	?string
@@ -20,22 +20,22 @@ module OS {
 		
 		@Private
 		@Static
-		@Native(name = "av2i/os/proc/args", optional = true)
+		@Shared(name = "av2i/os/proc/args", optional = true)
 		getArgs :: () -> ?[string]
 		
 		@Private
 		@Static
-		@Native(name = "av2i/os/proc/cfg/keys", optional = true)
+		@Shared(name = "av2i/os/proc/cfg/keys", optional = true)
 		getConfigKeys :: () -> ?[string]
 		
 		@Private
 		@Static
-		@Native(name="av2i/os/proc/cfg/value", optional = true)
+		@Shared(name="av2i/os/proc/cfg/value", optional = true)
 		getConfigValue :: (key: string) -> ?any
 		
 		@Private
 		@Static
-		@Native(name = "av2i/os/proc/name", optional = true)
+		@Shared(name = "av2i/os/proc/name", optional = true)
 		getName :: () -> ?string
 		
 		@Private
