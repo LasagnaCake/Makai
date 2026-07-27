@@ -14,7 +14,7 @@ struct IStream {
 };
 
 template <class T, class TData = typename T::DataType>
-struct IInputStream: IInput<T>, IStream {
+struct IInputStream: IStream, IInput<T> {
 	virtual ~IInputStream() {}
 
 	constexpr virtual Nullable<T> tryRead(usize const count) = 0;
@@ -74,7 +74,7 @@ struct IInputStream: IInput<T>, IStream {
 };
 
 template <class T>
-struct IOutputStream: IOutput<T>, IStream {
+struct IOutputStream: IStream, IOutput<T> {
 	virtual ~IOutputStream() {}
 
 	constexpr friend IOutputStream& operator|(T const& val, IOutputStream& self) {

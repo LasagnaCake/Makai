@@ -710,6 +710,8 @@ static ssize likelihoodOf(Node::Instance const& node) {
 		case LTS_TT_LOGIC_OR: return 1;
 		case LTS_TT_DECREMENT:
 		case LTS_TT_LOGIC_AND: return -1;
+		case LTS_TT_PUSH: return 1;
+		case LTS_TT_POP: return -1;
 		default: [[likely]] return 0;
 	}
 }
@@ -907,7 +909,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	}
 	if (!lhsHasBeenPushed)
 		context.top()->impl->writeMainLine("push", *lhs.source);
-	if (!rhs.direct.isUndefined() or rhs.direct.isString()) {
+	if ((lhs.type == rhs.type) && (!rhs.direct.isUndefined() or rhs.direct.isString())) {
 		if (rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *rhs.source);
 		else if (rhs.isStackTop() && rhs.isCopied()) {
@@ -920,6 +922,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	DEBUGLN("RHS = [", rhs.source.value(), "]");
 	DEBUGLN("LHS Type: ", lhs.type ? lhs.type->name : "NO_TYPE");
 	DEBUGLN("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
+	if (!(lhs.type->flags.isBasic && rhs.type->flags.isBasic)) {
+		// TODO: Infix resolve
+		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+	}
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		DEBUGLN("Stronger: ", t->name);
 		if (t->basic) {
@@ -929,6 +935,14 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
 			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 		} else return infixResolve(context, node, t);
+	} else if (
+		lhs.type->flags.isArray
+	&&	node->base.type == LTS_TT_STREAM_INSERT
+	) {
+		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type))
+			context.top()->impl->writeMainLine("op apush");
+		else context.error("Array element type mismatch!", node);
+		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 	}
 	context.error("Type mismatch!", node);
 }

@@ -94,7 +94,8 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_LOGIC_NOT,
 		LTS_TT_BIT_NOT,
 		LTS_TT_INCREMENT,
-		LTS_TT_DECREMENT
+		LTS_TT_DECREMENT,
+		LTS_TT_STREAM_INSERT
 	);
 	// Basic infixes
 	DEBUGLN("Infix parsers");
@@ -115,6 +116,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix(LTS_TT_COMPARE_GREATER_EQUALS, false);
 	infix(LTS_TT_COMPARE_EQUALS, false);
 	infix(LTS_TT_COMPARE_NOT_EQUALS, false);
+	infix(LTS_TT_STREAM_INSERT, false);
 	infix("atan", false);
 	infix("cross", false);
 	infix("fcross", false);
