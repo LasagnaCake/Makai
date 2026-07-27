@@ -1,9 +1,7 @@
 #ifndef MAKAILIB_TOOL_ARCHIVE_H
 #define MAKAILIB_TOOL_ARCHIVE_H
 
-#include <fstream>
 #include "../../compat/ctl.hpp"
-#include "../../file/get.hpp"
 #include "../../file/json.hpp"
 
 /// @brief Custom file archive format facilites.
@@ -190,6 +188,9 @@ namespace Makai::Tool::Arch {
 			uint64 const minimum;
 		};
 
+		// @brief Archive source
+		using Source = Unique<IInputStream<Bytes<>>>;
+
 		/// @brief Default constructor.
 		FileArchive() {}
 
@@ -197,7 +198,7 @@ namespace Makai::Tool::Arch {
 		/// @param buffer Buffer to stream data from.
 		/// @param password Archive password. Can be a password hash. By default, it is empty.
 		/// @details If archive version is 1 or greater, then `password` is the password hash.
-		FileArchive(DataBuffer& buffer, String const& password = "");
+		FileArchive(Source&& buffer, String const& password = "");
 
 		/// @brief Destructor.
 		~FileArchive();
@@ -208,7 +209,7 @@ namespace Makai::Tool::Arch {
 		/// @details If archive version is 1 or greater, then `password` is the password hash.
 		/// @return Reference to self.
 		/// @throw File::FileLoadError for errors that happen.
-		FileArchive& open(DataBuffer& buffer, String const& password);
+		FileArchive& open(Source&& buffer, String const& password);
 
 		/// @brief Closes the file archive.
 		/// @return Reference to self.
@@ -270,7 +271,7 @@ namespace Makai::Tool::Arch {
 		/// @brief Archive password.
 		String			pass;
 		/// @brief Archive stream.
-		DataStream		archive		= DataStream(nullptr);
+		Source			archive;
 		/// @brief Archive header.
 		ArchiveHeader	header;
 		/// @brief Archive file structure.
@@ -278,92 +279,6 @@ namespace Makai::Tool::Arch {
 		/// @brief Synchronization barrier for thread safety.
 		mutable Mutex	sync;
 	};
-
-	/// @brief Reads an encrypted (single-file archive) text file from disk.
-	/// @param path Path to file.
-	/// @param password File password. Can be a password hash. By default, it is empty.
-	/// @return File contents.
-	/// @details If archive version is 1 or greater, then `password` is the password hash.
-	/// @throw File::FileLoadError on file read errors.
-	String loadEncryptedTextFile(String const& path, String const& password = "");
-
-	/// @brief Reads an encrypted (single-file archive) binary file from disk.
-	/// @param path Path to file.
-	/// @param password File password. Can be a password hash. By default, it is empty.
-	/// @return File contents.
-	/// @details If archive version is 1 or greater, then `password` is the password hash.
-	/// @throw File::FileLoadError on file read errors.
-	BinaryData<> loadEncryptedBinaryFile(String const& path, String const& password = "");
-
-	/// @brief Writes an encrypted (single-file archive) binary file to disk.
-	/// @tparam T Value type.
-	/// @param path Path to file.
-	/// @param data Data to write.
-	/// @param size Size of data to write.
-	/// @param password File password. It is hashed. By default, it is empty.
-	/// @param enc Encryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param comp Compression method. By default, it is `CompressionMethod::ACM_ZIP`.
-	/// @param complvl Compression level. By default, it is `9`.
-	template<typename T>
-	void saveEncryptedBinaryFile(
-		String const&				path,
-		T* const					data,
-		usize const					size,
-		String const&				password	= "",
-		EncryptionMethod const&		enc			= EncryptionMethod::AEM_AES256,
-		CompressionMethod const&	comp		= CompressionMethod::ACM_ZIP,
-		uint8 const					lvl			= 9
-	);
-
-	/// @brief Writes an encrypted (single-file archive) text file to disk.
-	/// @param path Path to file.
-	/// @param data Data to write.
-	/// @param password File password. It is hashed. By default, it is empty.
-	/// @param enc Encryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param comp Compression method. By default, it is `CompressionMethod::ACM_ZIP`.
-	/// @param complvl Compression level. By default, it is `9`.
-	void saveEncryptedTextFile(
-		String const&				path,
-		BinaryData<> const&			data,
-		String const&				password	= "",
-		EncryptionMethod const&		enc			= EncryptionMethod::AEM_AES256,
-		CompressionMethod const&	comp		= CompressionMethod::ACM_ZIP,
-		uint8 const					lvl			= 9
-	);
-
-	/// @brief Writes an encrypted (single-file archive) binary file to disk.
-	/// @tparam T Value type.
-	/// @param path Path to file.
-	/// @param data Data to write.
-	/// @param password File password. It is hashed. By default, it is empty.
-	/// @param enc Encryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param comp Compression method. By default, it is `CompressionMethod::ACM_ZIP`.
-	/// @param complvl Compression level. By default, it is `9`.
-	template<typename T>
-	void saveEncryptedBinaryFile(
-		String const&				path,
-		List<T> const&				data,
-		String const&				password	= "",
-		EncryptionMethod const&		enc			= EncryptionMethod::AEM_AES256,
-		CompressionMethod const&	comp		= CompressionMethod::ACM_ZIP,
-		uint8 const					lvl			= 9
-	);
-
-	/// @brief Writes an encrypted (single-file archive) text file to disk.
-	/// @param path Path to file.
-	/// @param data Data to write.
-	/// @param password File password. It is hashed. By default, it is empty.
-	/// @param enc Encryption method. By default, it is `EncryptionMethod::AEM_AES256`.
-	/// @param comp Compression method. By default, it is `CompressionMethod::ACM_ZIP`.
-	/// @param complvl Compression level. By default, it is `9`.
-	void saveEncryptedTextFile(
-		String const&				path,
-		String const&				data,
-		String const&				password	= "",
-		EncryptionMethod const&		enc			= EncryptionMethod::AEM_AES256,
-		CompressionMethod const&	comp		= CompressionMethod::ACM_ZIP,
-		uint8 const					lvl			= 9
-	);
 }
 
 #endif // MAKAILIB_TOOL_ARCHIVE_H

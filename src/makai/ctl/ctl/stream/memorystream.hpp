@@ -9,6 +9,8 @@
 CTL_NAMESPACE_BEGIN
 
 struct InputMemoryStream: IInputStream<Bytes<>> {
+	virtual ~InputMemoryStream() {}
+
 	InputMemoryStream() {}
 
 	InputMemoryStream(ByteSpan<> const& buffer): buffer(buffer) {}
@@ -17,50 +19,16 @@ struct InputMemoryStream: IInputStream<Bytes<>> {
 		if (!isOpen()) return null;
 		Bytes<> out;
 		if (pointer < buffer.size()) {
-			out = buffer.sliced(pointer, ((pointer + count) < buffer.size()) ? pointer + count : buffer.size());
+			auto const span = buffer.sliced(pointer, ((pointer + count) < buffer.size()) ? pointer + count : buffer.size());
+			out = Bytes<>(span.begin(), span.end());
 			pointer = ((pointer + count) < buffer.size()) ? pointer + count : buffer.size();
-		}
-		return out;
-	}
-
-	constexpr Nullable<T> tryReadAll(usize const chunk = 1024) {
-		if (!isOpen()) return null;
-		T out, buf;
-		while (true) {
-			auto const v = read(chunk);
-			if (!v) return null;
-			buf = v.value();
-			out += buf;
-			if (buf.size() < chunk) break;
-		}
-		return out;
-	}
-
-	constexpr Nullable<T> tryReadUntil(byte const match, usize const chunk = 1024, usize const max = -1) {
-		if (!isOpen()) return null;
-		T out, buf;
-		ssize pos = -1;
-		while (true) {
-			auto const v = read(chunk);
-			if (!v) return null;
-			buf = v.value();
-			if ((pos = buf.rfind(match)) != -1) {
-				out += buf.sliced(0, pos);
-				break;
-			}
-			out += buf;
-			if (buf.size() < chunk) break;
-			if (max < out.size()) {
-				out.resize(max);
-				break;
-			}
 		}
 		return out;
 	}
 
 	constexpr virtual void go(usize const pos = 0) override {
 		if (!isOpen()) return;
-		buffer = (pos < buffer.size()) ? pos : buffer.size();
+		pointer = (pos < buffer.size()) ? pos : buffer.size();
 	}
 
 	constexpr virtual usize position() const override {
@@ -78,6 +46,8 @@ private:
 };
 
 struct OutputMemoryStream: IOutputStream<Bytes<>> {
+	virtual ~OutputMemoryStream() {}
+
 	OutputMemoryStream() {}
 
 	OutputMemoryStream(ByteSpan<> const& buffer): buffer(buffer) {}
@@ -97,7 +67,7 @@ struct OutputMemoryStream: IOutputStream<Bytes<>> {
 
 	constexpr virtual void go(usize const pos = 0) override {
 		if (!isOpen()) return;
-		buffer = (pos < buffer.size()) ? pos : buffer.size();
+		pointer = (pos < buffer.size()) ? pos : buffer.size();
 	}
 
 	constexpr virtual usize position() const override {

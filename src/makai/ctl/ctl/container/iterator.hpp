@@ -245,11 +245,11 @@ namespace Type::Container {
 
 	/**
 	 * @brief Type must fullfill the following requirements:
-	 * 
+	 *
 	 * 1. Have both `data()` and `size()` functions.
-	 * 
+	 *
 	 * 2. The result of dereferencing the result of `data()` must be convertible to `TData`.
-	 * 
+	 *
 	 * 3. The result of `size()` must be convertible to `TSize`.
 	*/
 	template<class T, class TData, class TSize>
@@ -291,7 +291,7 @@ struct Iteratable: Typed<TData>, Indexed<TIndex> {
 	typedef ReverseIterator<DataType, SizeType>		ReverseIteratorType;
 	/// @brief Constant reverse iterator type.
 	typedef ReverseIterator<ConstantType, SizeType>	ConstReverseIteratorType;
-	
+
 	/// @brief Ensures a given index, when negative, is between the bounds of the iteratable class.
 	/// @param index Index to wrap.
 	/// @param count Size of the iteratable range.

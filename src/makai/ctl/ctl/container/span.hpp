@@ -66,7 +66,7 @@ struct Span:
 	/// @brief Whether the span is a dynamic span.
 	constexpr static bool DYNAMIC	= (S == DYNAMIC_SIZE && EXTENT != ExtentSize::CES_STATIC);
 
-	/// @brief Comparator type.	
+	/// @brief Comparator type.
 	using ComparatorType = SimpleComparator<DataType>;
 
 	/// @brief Transformation function type.
@@ -201,7 +201,7 @@ struct Span:
 	/// @brief Returns a pointer to the end of the `Span`.
 	/// @return Pointer to the end of the `Span`.
 	constexpr ref<ConstantType>	cend() const	{return contents+count;	}
-	
+
 	/// @brief Returns the value of the first element.
 	/// @return Reference to the first element.
 	/// @throw NonexistentValueException when no span is bound, or `Span` is empty.
@@ -357,7 +357,7 @@ struct Span:
 	constexpr SelfType& operator|=(TProcedure const& fun) {
 		return fun(*this);
 	}
-	
+
 	/// @brief Returns a copy of the span, with the given procedure applied to it.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
@@ -387,14 +387,13 @@ struct Span:
 		return SelfType(*this).transform(fun);
 	}
 
-	
 	/// @brief Returns a `Span` containing all elements located between two indices.
 	/// @param start Starting index to copy from.
 	/// @param stop End index to stop copying from.
 	/// @return `Span` containing elements between `start` and `stop`.
 	/// @throw OutOfBoundsException when indices is bigger than `Span` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `Span`.
-	constexpr SelfType sliced(IndexType start, IndexType stop) const {
+	constexpr SelfType sliced(IndexType start, IndexType stop) {
 		if (IndexType(count) < start) return SelfType();
 		assertIsInBounds(start);
 		wrapBounds(start, count);
@@ -402,10 +401,66 @@ struct Span:
 		assertIsInBounds(stop);
 		wrapBounds(stop, count);
 		if (stop < start) return SelfType();
-		return SelfType(cbegin() + start, cbegin() + stop + 1);
+		return SelfType(cbegin() + start, stop + 1);
 	}
-	
+
+	/// @brief Returns a `Span` containing all elements starting from a given index.
+	/// @param start Starting index to copy from.
+	/// @return `Span` containing elements starting from the given `start`.
+	/// @throw OutOfBoundsException when index is bigger than `Span` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `Span`.
+	constexpr SelfType sliced(IndexType start) {
+		if (IndexType(count) <= start) return SelfType();
+		assertIsInBounds(start);
+		wrapBounds(start, count);
+		return SelfType(cbegin() + start, cend() - (cbegin() + start));
+	}
+
+	/// @brief Returns a `Span` containing all elements located between two indices.
+	/// @param start Starting index to copy from.
+	/// @param stop End index to stop copying from.
+	/// @return `Span` containing elements between `start` and `stop`.
+	/// @throw OutOfBoundsException when indices is bigger than `Span` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `Span`.
+	constexpr Span<ConstantType, DYNAMIC_SIZE, TIndex, EXTENT> sliced(IndexType start, IndexType stop) const {
+		if (IndexType(count) < start) return SelfType();
+		assertIsInBounds(start);
+		wrapBounds(start, count);
+		if (IndexType(count) < stop) return sliced(start);
+		assertIsInBounds(stop);
+		wrapBounds(stop, count);
+		if (stop < start) return SelfType();
+		return SelfType(cbegin() + start, stop + 1);
+	}
+
+	/// @brief Returns a `Span` containing all elements starting from a given index.
+	/// @param start Starting index to copy from.
+	/// @return `Span` containing elements starting from the given `start`.
+	/// @throw OutOfBoundsException when index is bigger than `Span` size.
+	/// @note If index is negative, it will be interpreted as starting from the end of the `Span`.
+	constexpr Span<ConstantType, DYNAMIC_SIZE, TIndex, EXTENT> sliced(IndexType start) const {
+		if (IndexType(count) <= start) return SelfType();
+		assertIsInBounds(start);
+		wrapBounds(start, count);
+		return SelfType(cbegin() + start, cend() - (cbegin() + start));
+	}
+
+	template <Type::Container::Ranged<IteratorType, ConstIteratorType> T>
+	constexpr static Span from(T& source) 									{return SelfType(source.begin(), source.end());	}
+	template <Type::Container::Bounded<DataType, SizeType> T>
+	constexpr static Span from(T& source)
+	requires (!Type::Container::Ranged<T, IteratorType, ConstIteratorType>)	{return SelfType(source.data(), source.size());	}
+
 private:
+	constexpr void assertIsInBounds(IndexType const index) const {
+		CTL_DEVMODE_FN_DECL;
+		if (index > static_cast<IndexType>(count-1)) outOfBoundsError();
+	}
+
+	[[noreturn]] constexpr static void outOfBoundsError() {
+		throw OutOfBoundsException("Index is out of bounds!");
+	}
+
 	constexpr void assertExists() const {
 		if (!(contents && count))
 			throw NonexistentValueException("No element range bound to span!");

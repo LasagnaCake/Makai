@@ -246,11 +246,11 @@ namespace UTF {
 		private List<Character<UTF>, TIndex, TAlloc>,
 		public SelfIdentified<UTFString<UTF, TIndex, TAlloc, TConstAlloc>>,
 		public Derived<List<Character<UTF>, TIndex, TAlloc, TConstAlloc>>,
-		public Streamable<char> {
+		public STLStreamable<char> {
 		using Iteratable		= ::CTL::Iteratable<Character<UTF>, TIndex>;
 		using SelfIdentified	= ::CTL::SelfIdentified<UTFString<UTF, TIndex, TAlloc, TConstAlloc>>;
 		using Derived			= ::CTL::Derived<List<Character<UTF>, TIndex, TAlloc, TConstAlloc>>;
-		using Streamable		= ::CTL::Streamable<char>;
+		using STLStreamable		= ::CTL::STLStreamable<char>;
 
 		using typename Derived::BaseType;
 
@@ -290,8 +290,8 @@ namespace UTF {
 		;
 
 		using
-			typename Streamable::InputStreamType,
-			typename Streamable::OutputStreamType
+			typename STLStreamable::InputSTLStreamType,
+			typename STLStreamable::OutputSTLStreamType
 		;
 
 		using
@@ -1415,14 +1415,14 @@ namespace UTF {
 		constexpr SelfType replaced(List<Replacement, SizeType> const& reps) const	{return SelfType(*this).replace(reps);	}
 
 		/// @brief Stream insertion operator.
-		constexpr OutputStreamType& operator<<(OutputStreamType& o) const	{if (!empty()) o << toString(); return o;}
+		constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o) const	{if (!empty()) o << toString(); return o;}
 		/// @brief Stream insertion operator.
-		constexpr OutputStreamType& operator<<(OutputStreamType& o)			{if (!empty()) o << toString(); return o;}
+		constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o)		{if (!empty()) o << toString(); return o;}
 
 		/// @brief Stream insertion operator.
-		friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType& self)			{if (!self.empty()) o << self.toString(); return o;}
+		friend constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o, SelfType& self)		{if (!self.empty()) o << self.toString(); return o;}
 		/// @brief Stream insertion operator.
-		friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType const& self)	{if (!self.empty()) o << self.toString(); return o;}
+		friend constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o, SelfType const& self)	{if (!self.empty()) o << self.toString(); return o;}
 
 		/// @brief Copy assignment operator (`UTFString`).
 		/// @param other `UTFString` to copy from.

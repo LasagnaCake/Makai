@@ -23,8 +23,8 @@ enum class ArchiveState {
 	FAS_OPEN
 };
 
-static ArchiveState& state() {
-	static ArchiveState s = ArchiveState::FAS_CLOSED;
+static Atomic<ArchiveState>& state() {
+	static Atomic<ArchiveState> s = ArchiveState::FAS_CLOSED;
 	return s;
 }
 
@@ -130,17 +130,12 @@ static void assertFileExists(String const& path) {
 		fileLoadError(path, toString("File or directory '", path, "' does not exist!"));
 }
 
-void Makai::File::attachArchive(String const& path, String const& password) try {
+void Makai::File::attachArchive(String const& path, String const& password) {
 	assertFileExists(path);
-	static FileBuffer buffer;
-	if (buffer.is_open()) buffer.close();
-	buffer.open(path.cstr(), std::ios::in | std::ios::binary);
-	Makai::File::attachArchive(buffer, password);
-} catch (std::runtime_error const& e) {
-	fileLoadError(path, e.what());
+	Makai::File::attachArchive(Tool::Arch::FileArchive::Source::create<InputByteFileStream>(path), password);
 }
 
-void Makai::File::attachArchive(DataBuffer& buffer, String const& password) {
+void Makai::File::attachArchive(Tool::Arch::FileArchive::Source&& buffer, String const& password) {
 	#ifdef IMPL_ARCHIVE_
 	DEBUGLN("Attaching archive...");
 	if (state() == ArchiveState::FAS_LOADING)
@@ -148,7 +143,7 @@ void Makai::File::attachArchive(DataBuffer& buffer, String const& password) {
 	try {
 		state() = ArchiveState::FAS_LOADING;
 		archive().close();
-		archive().open(buffer, password);
+		archive().open(buffer.transfer(), password);
 		state() = ArchiveState::FAS_OPEN;
 		DEBUGLN("Archive Attached!");
 	} catch (Error::Generic const& e) {
@@ -196,133 +191,79 @@ static void assertArchive(String const& path) {
 }
 #endif
 
-void setExceptionMask(std::ios& stream) {
-	#ifndef MAKAILIB_FILE_GET_NO_EXCEPTIONS
-	stream.exceptions(std::ios::failbit | std::ios::badbit);
-	//stream.exceptions(std::ios::badbit);
-	//stream.exceptions(std::ios::failbit);
-	#endif
-}
-
-/*
-// If all else fails, the horrors
-template<class T>
-void readFile(String const& path, T& buf) {
-	FILE* file = fopen(path.cstr(), "rb");
-	if (!file)							fileLoadError(path, "File open error");
-	if (fseek(file, 0, SEEK_END))		fileLoadError(path, "File seek error");
-	ssize sz;
-	if ((sz = ftell(file)) == -1)		fileLoadError(path, "File tell error");
-	if (fseek(file, 0, SEEK_SET))		fileLoadError(path, "File rewind error");
-	buf.reserve(sz);
-	if (fread(buf.data(), sz, 1, file))	fileLoadError(path, "File read error");
-	if (fclose(file))					fileLoadError(path, "File close error");
-}
-*/
-
 String Makai::File::loadText(String const& path) {
 	assertPathIsValid(path);
 	// Ensure directory exists
 	assertFileExists(path);
-	try {
-		// The file and its contents
-		String content;
-		std::ifstream file;		// This line SEGFAULTS on init() for -o1 and above
-		// Ensure ifstream object can throw exceptions
-		setExceptionMask(file);
-		// Open file
-		file.open(path.cstr());
-		std::stringstream stream;
-		// Read file's buffer contents into stringstream
-		stream << file.rdbuf();
-		// Convert stream into string
-		content = String(stream.str());
-		// Close file handler
-		file.close();
-		// Return contents
-		return content;
-	} catch (std::exception const& e) {
-		fileLoadError(path, e.what());
-	}
+	// Try and read file
+	String content;
+	InputFileStream<String> file{path};
+	if (!file.isOpen())
+		fileLoadError(path, "Failed to open file!");
+	if (auto const v = file.tryReadAll())
+		content = v.value();
+	else fileLoadError(path, "Failed to read contents!");
 	// Return contents
-	return "";
+	return content;
 }
 
 BinaryData<> Makai::File::loadBinary(String const& path) {
 	assertPathIsValid(path);
 	// Ensure directory exists
 	assertFileExists(path);
-	try {
-		// Try and open the file
-		std::ifstream file;
-		// Ensure ifstream object can throw exceptions
-		setExceptionMask(file);
-		// Open file
-		file.open(path.cstr(), /*std::ios::ate | */std::ios::binary);
-		// Get file size
-		usize const fsize = std::filesystem::file_size(path.cstr());
-		//file.seekg(0);
-		// Preallocate data
-		BinaryData<> data;
-		data.resize(fsize, 0);
-		// Read & close file
-		if(static_cast<std::streamsize>(fsize) != file.readsome((char*)data.data(), fsize))
-			fileLoadError(path, "Failure to read entire file!");
-		file.close();
-		// Return data
-		return data;
-	} catch (std::exception const& e) {
-		fileLoadError(path, e.what());
-	}
-	return BinaryData<>();
+	// Try and read file
+	Bytes<> content;
+	InputFileStream<Bytes<>> file{path};
+	if (!file.isOpen())
+		fileLoadError(path, "Failed to open file!");
+	if (auto const v = file.tryReadAll())
+		content = v.value();
+	else fileLoadError(path, "Failed to read contents!");
+	// Return contents
+	return content;
 }
 
 Makai::File::CSVData Makai::File::loadCSV(String const& path, char const delimiter) {
-	// The file and its contents
-	String content = Makai::File::loadText(path);
-	// Get values
-	return content.split(delimiter);
+	// Try and read file
+	StringList content;
+	InputFileStream<String> file{path};
+	if (!file.isOpen())
+		fileLoadError(path, "Failed to open file!");
+	if (auto const v = file.tryReadUntil(delimiter))
+		content.pushBack(v.value());
+	else fileLoadError(path, "Failed to read contents!");
+	// Return contents
+	return content;
 }
 
 void Makai::File::saveBinary(String const& path, CTL::ByteSpan<> const& data) {
 	assertPathIsValid(path);
 	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
-	try {
-		std::ofstream file(path.cstr(), std::ios::binary);
-		if (!file) fileLoadError(path, "Mysterious error");
-		// Ensure ofstream object can throw exceptions
-		setExceptionMask(file);
-		// Write data to file
-		file.write((char*)data.data(), data.size());
-		file.flush();
-		file.close();
-	} catch (std::exception const& e) {
-		fileSaveError(path, e.what());
-	}
+	OutputFileStream<Bytes<>> file{path};
+	if (!file.isOpen())
+		fileSaveError(path, "Failed to open file!");
+	file.write(Bytes<>(data));
 }
 
 void Makai::File::saveBinary(String const& path, BinaryData<> const& data) {
 	assertPathIsValid(path);
-	Makai::File::saveBinary(path, ByteSpan<>((ubyte*)data.data(), data.size()));
+	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
+	// Try and save data
+	OutputFileStream<Bytes<>> file{path};
+	if (!file.isOpen())
+		fileSaveError(path, "Failed to open file!");
+	file.write(data);
 }
 
 void Makai::File::saveText(String const& path, String const& text) {
 	assertPathIsValid(path);
 	try {OS::FS::makeDirectory(OS::FS::directoryFromPath(path));} catch (...) {}
 	// Try and save data
-	try {
-		std::ofstream file(path.cstr(), std::ios::trunc);
-		if (!file) fileLoadError(path, "Mysterious error");
-		// Ensure ofstream object can throw exceptions
-		setExceptionMask(file);
-		// Write data to file
-		file.write(text.data(), text.size());
-		file.flush();
-		file.close();
-	} catch (std::exception const& e) {
-		fileSaveError(path, e.what());
-	}
+	OutputFileStream<String> file{path};
+	if (!file.isOpen())
+		fileSaveError(path, "Failed to open file!");
+	file.write(text);
 }
 
 String Makai::File::loadTextFromArchive(String const& path) {

@@ -7,22 +7,26 @@
 CTL_NAMESPACE_BEGIN
 
 struct IStream {
+	virtual ~IStream() {}
+
 	constexpr virtual bool isOpen() const		= 0;
 	constexpr virtual usize position() const	= 0;
 };
 
-template <class T>
+template <class T, class TData = typename T::DataType>
 struct IInputStream: IInput<T>, IStream {
+	virtual ~IInputStream() {}
+
 	constexpr virtual Nullable<T> tryRead(usize const count) = 0;
 
 	constexpr virtual Nullable<T> tryReadAll(usize const chunk = 1024) {
 		if (!isOpen()) return null;
 		T out, buf;
 		while (true) {
-			auto const v = read(chunk);
+			auto const v = tryRead(chunk);
 			if (!v) return null;
 			buf = v.value();
-			out += buf;
+			out.appendBack(buf);
 			if (buf.size() < chunk) break;
 		}
 		return out;
@@ -32,18 +36,47 @@ struct IInputStream: IInput<T>, IStream {
 		return tryRead(count).orElse(T());
 	}
 
-	constexpr T readAll(usize const chunk = 1024) {
-		return tryReadAll(count).orElse(T());
+	constexpr virtual T readAll(usize const chunk = 1024) {
+		return tryReadAll(chunk).orElse(T());
+	}
+
+	constexpr virtual Nullable<T> tryReadUntil(TData const match, usize const chunk = 1024, usize const max = -1) {
+		if (!isOpen()) return null;
+		T out, buf;
+		ssize pos = -1;
+		while (true) {
+			auto const v = tryRead(chunk);
+			if (!v) return null;
+			buf = v.value();
+			if ((pos = buf.rfind(match)) != -1) {
+				out.appendBack(buf.sliced(0, pos));
+				break;
+			}
+			out.appendBack(buf);
+			if (buf.size() < chunk) break;
+			if (max < out.size()) {
+				out.resize(max);
+				break;
+			}
+		}
+		return out;
 	}
 
 	template <Type::Functional<T(T const&)> TFunc>
 	constexpr T operator|(TFunc const& f) {
 		return f(readAll());
 	}
+
+	constexpr virtual void readInto(ref<TData> const where, usize const count) {
+		auto const v = read(count);
+		MX::memcpy(where, v.data(), count);
+	}
 };
 
 template <class T>
 struct IOutputStream: IOutput<T>, IStream {
+	virtual ~IOutputStream() {}
+
 	constexpr friend IOutputStream& operator|(T const& val, IOutputStream& self) {
 		self.write(val);
 	}

@@ -2,7 +2,6 @@
 #define MAKAILIB_FILE_JSON_H
 
 #include "../compat/ctl.hpp"
-#include "get.hpp"
 
 /// @brief JSON-related facilities.
 namespace Makai::JSON {

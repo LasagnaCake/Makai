@@ -5,7 +5,7 @@
 #include "../meta/fold.hpp"
 #include "../cpperror.hpp"
 #include "../interface/core.hpp"
-#include "stream.hpp"
+#include "../compat/stream.hpp"
 
 #ifdef CTL_CONSOLE_OUT
 #include <syncstream>
@@ -18,14 +18,14 @@ CTL_NAMESPACE_BEGIN
 struct Console {
 	#ifdef CTL_CONSOLE_OUT
 	/// @brief Console input stream.
-	inline static InputStream<char>		in	= InputStream<char>(std::cin.rdbuf());
+	inline static STLInputStream<char>	in	= STLInputStream<char>(std::cin.rdbuf());
 	/// @brief Console output stream.
-	inline static OutputStream<char>	out	= OutputStream<char>(std::cout.rdbuf());
+	inline static STLOutputStream<char>	out	= STLOutputStream<char>(std::cout.rdbuf());
 	#else
 	/// @brief Console input stream.
-	inline static InputStream<char>		in	= InputStream<char>(nullptr);
+	inline static STLInputStream<char>	in	= STLInputStream<char>(nullptr);
 	/// @brief Console output stream.
-	inline static OutputStream<char>	out	= OutputStream<char>(nullptr);
+	inline static STLOutputStream<char>	out	= STLOutputStream<char>(nullptr);
 	#endif // CTL_CONSOLE_OUT
 
 	/// @brief Prints to the output stream.

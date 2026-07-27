@@ -10,11 +10,11 @@
 #include "../pair.hpp"
 #include "../../typeinfo.hpp"
 #include "../../cpperror.hpp"
-#include "../../io/stream.hpp"
 #include "../../algorithm/aton.hpp"
 #include "../../algorithm/transform.hpp"
 #include "../../algorithm/validate.hpp"
 #include "../../typetraits/traits.hpp"
+#include "../../compat/stream.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -34,12 +34,12 @@ struct BaseString:
 	public SelfIdentified<BaseString<TChar, TIndex, TAlloc, TConstAlloc>>,
 	public Derived<List<TChar, TIndex, TAlloc, TConstAlloc>>,
 	public CStringable<TChar>,
-	public Streamable<TChar> {
+	public STLStreamable<TChar> {
 public:
 	using Iteratable		= ::CTL::Iteratable<TChar, TIndex>;
 	using SelfIdentified	= ::CTL::SelfIdentified<BaseString<TChar, TIndex, TAlloc, TConstAlloc>>;
 	using Derived			= ::CTL::Derived<List<TChar, TIndex, TAlloc, TConstAlloc>>;
-	using Streamable		= ::CTL::Streamable<TChar>;
+	using STLStreamable		= ::CTL::STLStreamable<TChar>;
 	using CStringable		= ::CTL::CStringable<TChar>;
 
 	using typename Derived::BaseType;
@@ -84,8 +84,8 @@ public:
 	;
 
 	using
-		typename Streamable::InputStreamType,
-		typename Streamable::OutputStreamType
+		typename STLStreamable::InputSTLStreamType,
+		typename STLStreamable::OutputSTLStreamType
 	;
 
 	/// @brief STL library view analog.
@@ -1119,20 +1119,20 @@ public:
 //	constexpr SelfType replaced(Arguments<Replacement> const& reps) const		{return SelfType(*this).replace(reps);	}
 
 	/// @brief Stream insertion operator.
-	constexpr OutputStreamType& operator<<(OutputStreamType& o) const	{if (!empty()) o << cstr(); return o;}
+	constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o) const	{if (!empty()) o << cstr(); return o;}
 	/// @brief Stream insertion operator.
-	constexpr OutputStreamType& operator<<(OutputStreamType& o)			{if (!empty()) o << cstr(); return o;}
+	constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o)		{if (!empty()) o << cstr(); return o;}
 
 	/// @brief Stream insertion operator.
-	friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType& self)			{if (!self.empty()) o << self.cstr(); return o;}
+	friend constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o, SelfType& self)		{if (!self.empty()) o << self.cstr(); return o;}
 	/// @brief Stream insertion operator.
-	friend constexpr OutputStreamType& operator<<(OutputStreamType& o, SelfType const& self)	{if (!self.empty()) o << self.cstr(); return o;}
+	friend constexpr OutputSTLStreamType& operator<<(OutputSTLStreamType& o, SelfType const& self)	{if (!self.empty()) o << self.cstr(); return o;}
 
 	/// @brief Reads from an input stream until a character is reached.
 	/// @param i Input stream.
 	/// @param stop Stop character.
 	/// @return Input stream.
-	constexpr InputStreamType& readFrom(InputStreamType& i, DataType const& stop) {
+	constexpr InputSTLStreamType& readFrom(InputSTLStreamType& i, DataType const& stop) {
 		DataType buf[32];
 		while(i.getline(buf, 32, stop))
 			appendBack(buf, i.gcount());
@@ -1142,7 +1142,7 @@ public:
 	/// @brief Reads from an input stream until a null character is reached.
 	/// @param i Input stream.
 	/// @return Input stream.
-	constexpr InputStreamType& readFrom(InputStreamType& i) {
+	constexpr InputSTLStreamType& readFrom(InputSTLStreamType& i) {
 		return readFromStream(i, '\0');
 	}
 
@@ -1513,8 +1513,8 @@ private:
 /// @param string `BaseString` to extract to.
 /// @return Input stream.
 template<Type::ASCII TChar, Type::Integer TIndex = usize>
-constexpr typename BaseString<TChar, TIndex>::InputStreamType& operator>>(
-	typename BaseString<TChar, TIndex>::InputStreamType& stream,
+constexpr typename BaseString<TChar, TIndex>::InputSTLStreamType& operator>>(
+	typename BaseString<TChar, TIndex>::InputSTLStreamType& stream,
 	BaseString<TChar, TIndex>& string
 ) {
 	return string.readFrom(stream);

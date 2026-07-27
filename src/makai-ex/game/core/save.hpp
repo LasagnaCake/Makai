@@ -28,7 +28,7 @@ namespace Makai::Ex::Game {
 		/// @param pass File password.
 		/// @return Reference to self.
 		Save& close(String const& path, String const& pass)	{return save(path).clear();}
-		
+
 		/// @brief Clears the object's contents.
 		/// @return Reference to self.
 		Save& clear() {
@@ -73,7 +73,7 @@ namespace Makai::Ex::Game {
 		}
 
 		/// @brief Loads a save file from disk.
-		/// @param path Path to save file. 
+		/// @param path Path to save file.
 		/// @return Reference to self.
 		Save& load(String const& path) {
 			operator=(File::getJSON(path));
@@ -81,11 +81,11 @@ namespace Makai::Ex::Game {
 		}
 
 		/// @brief Loads a save file from disk.
-		/// @param path Path to save file. 
+		/// @param path Path to save file.
 		/// @param pass File password.
 		/// @return Reference to self.
 		Save& load(String const& path, String const& pass) {
-			operator=(JSON::parse(Tool::Arch::loadEncryptedTextFile(path)));
+			operator=(JSON::parse(path));
 			return *this;
 		}
 
@@ -98,7 +98,7 @@ namespace Makai::Ex::Game {
 		T get(String const& key, T const& fallback) {
 			return operator[](key).get<T>(fallback);
 		}
-		
+
 		/// @brief Gets a value from the save.
 		/// @tparam T Value type.
 		/// @param key Member name.
@@ -126,7 +126,7 @@ namespace Makai::Ex::Game {
 		Save const operator[](T const& key) const {
 			return Value::operator[](key);
 		}
-		
+
 		/// @brief Member access operator.
 		/// @param key Member to get.
 		/// @return View to member.
@@ -137,7 +137,7 @@ namespace Makai::Ex::Game {
 
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		JSON::Value	value()	const	{return *static_cast<ref<JSON::Value const>>(this);	}
+		JSON::Value	value()	const	{return *Cast::as<ref<JSON::Value const>>(this);	}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.

@@ -13,6 +13,7 @@
 
 #include "../../data/encdec.hpp"
 #include "../../data/hash.hpp"
+#include "../../file/get.hpp"
 
 using namespace CTL::Literals::Text;
 
@@ -503,25 +504,23 @@ void Arch::pack(
 	);
 }
 
-Arch::FileArchive::FileArchive(DataBuffer& buffer, String const& password) {open(buffer, password);}
+Arch::FileArchive::FileArchive(Unique<IInputStream<Bytes<>>>&& buffer, String const& password) {open(buffer.transfer(), password);}
 
 Arch::FileArchive::~FileArchive() {close();}
 
-FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password) try {
+FileArchive& Arch::FileArchive::open(Unique<IInputStream<Bytes<>>>&& buffer, String const& password) {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (streamOpen) return *this;
 	// Set archive
-	archive.rdbuf(&buffer);
+	archive = buffer.transfer();
 	// Set password
 	pass = password;
-	// Set exceptions
-	archive.exceptions(std::ifstream::badbit | std::ifstream::failbit);
 	// Read header
 	usize hs = 0;
-	archive.read((char*)&hs, sizeof(uint64));
-	archive.seekg(0);
+	archive->readInto((ref<byte>)&hs, sizeof(uint64));
+	archive->go(0);
 	hs = (hs < sizeof(ArchiveHeader)) ? hs : sizeof(ArchiveHeader);
-	archive.read((char*)&header, hs);
+	archive->readInto((ref<byte>)&header, hs);
 	// Make sure header sizes are OK
 	if (header.headerSize > sizeof(ArchiveHeader))
 		header.headerSize = sizeof(ArchiveHeader);
@@ -541,8 +540,6 @@ FileArchive& Arch::FileArchive::open(DataBuffer& buffer, String const& password)
 	// Set open flag
 	streamOpen = true;
 	return *this;
-} catch (std::exception const& e) {
-	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
 
 FileArchive& Arch::FileArchive::close() try {
@@ -592,25 +589,21 @@ Makai::JSON::Value Arch::FileArchive::getFileTree(String const& root) const {
 }
 
 ArchiveHeader Arch::FileArchive::getHeader(String const& path) {
-	std::ifstream af;
+	InputFileStream<Bytes<>> af{path};
 	ArchiveHeader ah;
-	// Set exceptions
-	af.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-	// Open file
-	af.open(path.cstr(), std::ios::binary | std::ios::in);
 	// Read header
 	usize hs = 0;
-	af.read((char*)&hs, sizeof(uint64));
-	af.seekg(0);
+	af.readInto((ref<byte>)&hs, sizeof(uint64));
+	af.go(0);
 	if (hs > sizeof(ArchiveHeader)) hs = sizeof(ArchiveHeader);
-	af.read((char*)&ah, hs);
+	af.readInto((ref<byte>)&ah, hs);
 	return ah;
 }
 
 FileArchive& Arch::FileArchive::unpackTo(String const& path) {
+	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (!streamOpen) return *this;
 	Value ftree = getFileTree();
-	_ARCDEBUGLN(ftree.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
 	unpackLayer(ftree, path);
 	return *this;
 }
@@ -628,21 +621,21 @@ void Arch::FileArchive::parseFileTree() {
 	case 0:
 		// "dirHeaderSize" is located in the old "dirInfoSize" parameter
 		fs.resize(header.dirHeaderSize, ' ');
-		archive.read(fs.data(), fs.size());
-		archive.seekg(0);
+		archive->readInto((ref<byte>)fs.data(), fs.size());
+		archive->go(0);
 		break;
 	case 1:
 		DirectoryHeader dh;
-		archive.seekg(header.dirHeaderLoc);
-		archive.read((char*)&dh, header.dirHeaderSize);
+		archive->go(header.dirHeaderLoc);
+		archive->readInto((ref<byte>)&dh, header.dirHeaderSize);
 		if (!dh.compSize || !dh.uncSize) directoryTreeError();
 		DEBUGLN("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
 		DEBUGLN("        UNCOMPRESSED SIZE: ", dh.uncSize,			"B"	);
 		DEBUGLN("          COMPRESSED SIZE: ", dh.compSize,			"B"	);
 		BinaryData<> pfs;
 		pfs.resize(dh.compSize, 0);
-		archive.read((char*)pfs.data(), pfs.size());
-		archive.seekg(0);
+		archive->readInto((ref<byte>)pfs.data(), pfs.size());
+		archive->go(0);
 		DEBUGLN("Demangling tree data...");
 		demangleData(pfs, dh.block);
 		fs.resize(pfs.size(), 0);
@@ -659,7 +652,6 @@ void Arch::FileArchive::parseFileTree() {
 			e.what()
 		);
 	}
-	_ARCDEBUGLN("File Structure:\n", fstruct.dump(2, ' ', false, Nlohmann::error_handler_t::replace), "\n");
 }
 
 void Arch::FileArchive::demangleData(BinaryData<>& data, Block const& block) const {
@@ -742,10 +734,10 @@ BinaryData<> Arch::FileArchive::getFileEntryData(uint64 const index, FileHeader 
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	BinaryData<> fd;
 	fd.resize(fh.compSize, 0);
-	auto lp = archive.tellg();
-	archive.seekg(index + header.fileHeaderSize);
-	archive.read((char*)fd.data(), fh.compSize);
-	archive.seekg(lp);
+	auto const lp = archive->position();
+	archive->go(index + header.fileHeaderSize);
+	archive->readInto(fd.data(), fh.compSize);
+	archive->go(lp);
 	return fd;
 } catch (std::ios_base::failure const& e) {
 	throw Error::FailedAction(
@@ -754,19 +746,14 @@ BinaryData<> Arch::FileArchive::getFileEntryData(uint64 const index, FileHeader 
 	);
 }
 
-FileHeader Arch::FileArchive::getFileEntryHeader(uint64 const index) try {
+FileHeader Arch::FileArchive::getFileEntryHeader(uint64 const index) {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	FileHeader fh;
-	auto lp = archive.tellg();
-	archive.seekg(index);
-	archive.read((char*)&fh, header.fileHeaderSize);
-	archive.seekg(lp);
+	auto const lp = archive->position();
+	archive->go(index);
+	archive->readInto((ref<byte>)&fh, header.fileHeaderSize);
+	archive->go(lp);
 	return fh;
-} catch (std::ios_base::failure const& e) {
-	throw Error::FailedAction(
-		"Failed at getting file entry header: "s + String(e.what()),
-		CTL_CPP_PRETTY_SOURCE
-	);
 }
 
 uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const& origpath) {
@@ -810,12 +797,7 @@ static void unpackV1(
 	String const folderPath,
 	String const& password = ""
 ) try {
-	_ARCDEBUGLN("\nOpening archive...\n");
-	FileBuffer buffer;
-	buffer.open(archivePath.cstr(), std::ios::in | std::ios::binary);
-	FileArchive arc(buffer, hashPassword(password));
-	buffer.close();
-	_ARCDEBUGLN("\nExtracting data...\n");
+	FileArchive arc(FileArchive::Source::create<InputByteFileStream>(archivePath), hashPassword(password));
 	arc.unpackTo(folderPath);
 #ifdef ARCSYS_APPLICATION_
 } catch (Error::Generic const& e) {
@@ -836,12 +818,7 @@ static void unpackV0(
 	String const folderPath,
 	String const& password = ""
 ) try {
-	_ARCDEBUGLN("\nOpening archive...\n");
-	FileBuffer buffer;
-	buffer.open(archivePath.cstr(), std::ios::in | std::ios::binary);
-	FileArchive arc(buffer, password);
-	buffer.close();
-	_ARCDEBUGLN("\nExtracting data...\n");
+	FileArchive arc(FileArchive::Source::create<InputByteFileStream>(archivePath), password);
 	arc.unpackTo(folderPath);
 #ifdef ARCSYS_APPLICATION_
 } catch (Error::Generic const& e) {
@@ -888,168 +865,3 @@ void Arch::unpack(
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
 #endif // ARCSYS_APPLICATION_
-
-BinaryData<> Arch::loadEncryptedBinaryFile(String const& path, String const& password) try {
-	std::ifstream archive;
-	// Set exceptions
-	archive.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-	// Open file
-	archive.open(path.cstr(), std::ios::binary | std::ios::in);
-	// Get archive header
-	ArchiveHeader header;
-	{
-		uint64 hs = 0;
-		archive.read((char*)&hs, sizeof(uint64));
-		archive.seekg(0);
-		archive.read((char*)&header, hs);
-	}
-	// Check if single-file archive
-	if (!(header.flags.isSingleFileArchive))
-		File::FileLoadError(
-			"Failed to load '" + path + "'!",
-			"File is not a single-file archive!"
-		);
-	// Get file header
-	FileHeader fh;
-	archive.read((char*)&fh, header.fileHeaderSize);
-	// Get file data
-	BinaryData<> fd(fh.compSize, 0);
-	archive.read((char*)fd.data(), fh.compSize);
-	// Extract file contents
-	{
-		if (fh.uncSize == 0) return BinaryData<>();
-		fd = decrypt(
-			fd,
-			password,
-			(EncryptionMethod)header.encryption,
-			fh.block
-		);
-		fd = decompress(
-			fd,
-			(CompressionMethod)header.compression,
-			header.level
-		);
-		if (fd.size() != fh.uncSize)
-			File::FileLoadError(
-				"Failed to load '" + path + "'!",
-				"Uncompressed size doesn't match!"
-			);
-		if ((header.flags.shouldCheckCRC) && (fh.crc != crcOf(fd))) // CRC currently not working
-			File::FileLoadError(
-				"Failed to load '" + path + "'!",
-				"CRC check failed!"
-			);
-	}
-	// Return file
-	return fd;
-} catch (std::exception const& e) {
-	throw File::FileLoadError(
-		"Failed to load '" + path + "'!",
-		e.what(),
-		CTL_CPP_PRETTY_SOURCE
-	);
-}
-
-String Arch::loadEncryptedTextFile(String const& path, String const& password) {
-	BinaryData<> fd = loadEncryptedBinaryFile(path, password);
-	return String(fd.toList<char>());
-}
-
-template<typename T>
-void Arch::saveEncryptedBinaryFile(
-	String const&				path,
-	T* const					data,
-	usize const					size,
-	String const&				password,
-	EncryptionMethod const&		enc,
-	CompressionMethod const&	comp,
-	uint8 const					lvl
-) {
-	if (enc != EncryptionMethod::AEM_NONE && password.empty())
-		throw Error::InvalidValue(
-			"Missing password for encrypted file!",
-			CTL_CPP_PRETTY_SOURCE
-		);
-	// Open file
-	std::ofstream file(path.cstr(), std::ios::binary | std::ios::trunc);
-	file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
-	// Header
-	ArchiveHeader header;
-	// Set main header params
-	header.dirHeaderLoc	= 0;			// directory info size
-	header.encryption	= (uint16)enc;	// encryption mode
-	header.compression	= (uint16)comp;	// compression mode
-	header.level		= lvl;			// compression level
-	header.flags = {
-		.isSingleFileArchive = true,
-		.shouldCheckCRC = true
-	};
-	// Write header
-	file.write((char*)&header, header.headerSize);
-	// Write file info
-	{
-		usize uncSize = (size*sizeof(T));
-		BinaryData<> contents((uint8*)data, ((uint8*)data) + uncSize);
-		// Prepare header
-		FileHeader fheader;
-		fheader.uncSize = uncSize;				// Uncompressed file size
-		// Generate block
-		fheader.block = Arch::Block::create();	// Encryption block
-		// Process file
-		if (!contents.empty()) {
-			contents = compress(
-				contents,
-				comp,
-				lvl
-			);
-			contents = encrypt(
-				contents,
-				password,
-				enc,
-				fheader.block
-			);
-		}
-		fheader.compSize	= contents.size();	// Compressed file size
-		fheader.crc			= crcOf(contents);	// CRC (currently not working)
-		// Copy header & file data
-		file.write((char*)&fheader, header.fileHeaderSize);
-		file.write((char*)contents.data(), contents.size());
-	}
-	// Flush & close file
-	file.flush();
-	file.close();
-}
-
-void Arch::saveEncryptedTextFile(
-	String const&				path,
-	BinaryData<> const&			data,
-	String const&				password,
-	EncryptionMethod const&		enc,
-	CompressionMethod const&	comp,
-	uint8 const					lvl
-) {
-	saveEncryptedBinaryFile(path, data.data(), data.size(), password, enc, comp, lvl);
-}
-
-template<typename T>
-void Arch::saveEncryptedBinaryFile(
-	String const&				path,
-	List<T> const&				data,
-	String const&				password,
-	EncryptionMethod const&		enc,
-	CompressionMethod const&	comp,
-	uint8 const					lvl
-) {
-	saveEncryptedBinaryFile<T>(path, data.data(), data.size(), password, enc, comp, lvl);
-}
-
-void Arch::saveEncryptedTextFile(
-	String const&				path,
-	String const&				data,
-	String const&				password,
-	EncryptionMethod const&		enc,
-	CompressionMethod const&	comp,
-	uint8 const					lvl
-) {
-	saveEncryptedBinaryFile(path, data.data(), data.size(), password, enc, comp, lvl);
-}

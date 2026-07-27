@@ -14,16 +14,15 @@ struct BaseStringSpan:
 	public Span<TChar const, DYNAMIC_SIZE, TIndex, ExtentSize::CES_DYNAMIC>,
 	public SelfIdentified<BaseStringSpan<TChar, TIndex>>,
 	public Derived<Span<TChar const, DYNAMIC_SIZE, TIndex, ExtentSize::CES_DYNAMIC>>,
-	public CStringable<TChar>,
-	public Streamable<TChar> {
+	public CStringable<TChar> {
 	using SelfIdentified	= ::CTL::SelfIdentified<BaseStringSpan<TChar, TIndex>>;
 	using Derived			= ::CTL::Derived<Span<TChar const, DYNAMIC_SIZE, TIndex, ExtentSize::CES_DYNAMIC>>;
-	
+
 	using typename Derived::BaseType;
 
 	using typename SelfIdentified::SelfType;
 
-	using 
+	using
 		typename BaseType::DataType,
 		typename BaseType::PointerType,
 		typename BaseType::ConstPointerType,

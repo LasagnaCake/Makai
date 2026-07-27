@@ -28,6 +28,22 @@ struct Mutex: SelfIdentified<Mutex> {
 		#endif
 	}
 
+	~Mutex() {
+		#ifdef CTL_ON_WINDOWS
+		if (mutex)
+			CloseHandle(mutex);
+		#else
+		#endif
+	}
+
+	#ifdef CTL_ON_WINDOWS
+	Mutex(Mutex const& other)					{clone(other.mutex);						}
+	Mutex& operator=(Mutex const& other)		{clone(other.mutex); return *this;			}
+	Mutex(Mutex&& other): mutex(other.mutex)	{other.mutex = nullptr;						}
+	Mutex& operator=(Mutex&& other)				{swap(mutex, other.mutex); return *this;	}
+	#else
+	#endif
+
 	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
 	/// @return Reference to self.
 	SelfType& capture()	{
@@ -35,6 +51,7 @@ struct Mutex: SelfIdentified<Mutex> {
 		SignalObjectAndWait(mutex, mutex, INFINITE, FALSE);
 		#else
 		#endif
+		locked = true;
 		return *this;
 	}
 
@@ -46,6 +63,7 @@ struct Mutex: SelfIdentified<Mutex> {
 			return false;
 		#else
 		#endif
+		locked = true;
 		return true;
 	}
 
@@ -53,7 +71,8 @@ struct Mutex: SelfIdentified<Mutex> {
 	/// @return Reference to self.
 	SelfType& release()	{
 		#ifdef CTL_ON_WINDOWS
-		ReleaseMutex(mutex);
+		if (ReleaseMutex(mutex))
+			locked = false;
 		#else
 		#endif
 		return *this;
@@ -70,18 +89,29 @@ struct Mutex: SelfIdentified<Mutex> {
 	}
 
 	bool captured() const {
-		#ifdef CTL_ON_WINDOWS
-		return false;
-		#else
-		return false;
-		#endif
+		return locked;
 	}
 
 private:
 	#ifdef CTL_ON_WINDOWS
-	HANDLE mutex;
+	void clone(HANDLE const other) {
+		if (mutex)
+			CloseHandle(mutex);
+		DuplicateHandle(
+			GetCurrentProcess(),
+			other,
+			GetCurrentProcess(),
+			&mutex,
+			0,
+			FALSE,
+			DUPLICATE_SAME_ACCESS
+		);
+	}
+
+	HANDLE mutex = nullptr;
 	#else
 	#endif
+	bool locked = false;
 };
 
 CTL_NAMESPACE_END

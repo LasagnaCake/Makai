@@ -23,5 +23,6 @@
 #include "templates.hpp"
 #include "typeinfo.hpp"
 #include "cpp/cpp.hpp"
+#include "stream/stream.hpp"
 
 #endif // CTL_H

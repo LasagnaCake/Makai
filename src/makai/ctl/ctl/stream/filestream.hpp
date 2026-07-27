@@ -9,33 +9,39 @@
 
 CTL_NAMESPACE_BEGIN
 
-struct File {
-	constexpr File() {}
+struct CFile {
+	constexpr CFile() {}
 
-	constexpr File(String const& path, String const& mode) {open(path, mode);}
+	constexpr CFile(String const& path, String const& mode) {open(path, mode);}
 
-	constexpr File(File&&)		= delete;
-	constexpr File(File const&)	= delete;
+	constexpr CFile(CFile&&)		= delete;
+	constexpr CFile(CFile const&)	= delete;
 
-	constexpr File& operator=(File&&)		= delete;
-	constexpr File& operator=(File const&)	= delete;
+	constexpr CFile& operator=(CFile&&)			= delete;
+	constexpr CFile& operator=(CFile const&)	= delete;
 
-	constexpr ~File() {close();}
+	constexpr ~CFile() {close();}
 
 	constexpr bool isOpen() const {
 		return file;
 	}
 
-	constexpr File& open(String const& path, String const& mode) {
+	constexpr CFile& open(String const& path, String const& mode) {
 		if (isOpen()) return *this;
 		file = fopen(path.cstr(), mode.cstr());
 		return *this;
 	}
 
-	constexpr File& close() {
+	constexpr CFile& close() {
 		if (!isOpen()) return *this;
 		if (file) fclose(file);
 		file = nullptr;
+		return *this;
+	}
+
+	constexpr CFile& go(usize const pos) {
+		if (!isOpen()) return *this;
+		fseek(file, pos, SEEK_SET);
 		return *this;
 	}
 
@@ -47,7 +53,11 @@ private:
 
 template <Type::OneOf<String, Bytes<>> T>
 struct InputFileStream: IInputStream<T> {
+	virtual ~InputFileStream() {}
+
 	constexpr static bool const BINARY = Type::Equal<T, Bytes<>>;
+
+	using IInputStream<T>::read;
 
 	InputFileStream() {}
 
@@ -55,6 +65,7 @@ struct InputFileStream: IInputStream<T> {
 
 	constexpr InputFileStream& open(String const& path) {
 		file.open(path, BINARY ? "rb" : "r");
+		return *this;
 	}
 
 	constexpr InputFileStream& close() {
@@ -72,31 +83,9 @@ struct InputFileStream: IInputStream<T> {
 		return out.resize(total);
 	}
 
-	constexpr Nullable<T> tryReadUntil(typename T::DataType const& match, usize const chunk = 1024, usize const max = -1) {
-		if (!isOpen()) return null;
-		T out, buf;
-		ssize pos = -1;
-		while (true) {
-			auto const v = read(chunk);
-			if (!v) return null;
-			buf = v.value();
-			if ((pos = buf.rfind(match)) != -1) {
-				out += buf.sliced(0, pos);
-				break;
-			}
-			out += buf;
-			if (buf.size() < chunk) break;
-			if (max < out.size()) {
-				out.resize(max);
-				break;
-			}
-		}
-		return out;
-	}
-
 	constexpr virtual void go(usize const pos = 0) override {
 		if (!isOpen()) return;
-		fseek(pos, file.handle(), SEEK_SET);
+		file.go(pos);
 	}
 
 	constexpr virtual usize position() const override {
@@ -109,11 +98,13 @@ struct InputFileStream: IInputStream<T> {
 	}
 
 private:
-	File file;
+	CFile file;
 };
 
 template <Type::OneOf<String, Bytes<>> T>
-struct OutputFileStream: IInputStream<T> {
+struct OutputFileStream: IOutputStream<T> {
+	virtual ~OutputFileStream() {}
+
 	constexpr static bool const BINARY = Type::Equal<T, Bytes<>>;
 
 	OutputFileStream() {}
@@ -125,6 +116,7 @@ struct OutputFileStream: IInputStream<T> {
 		if (append)
 			file.open(path.cstr(), BINARY ? "ab" : "a");
 		else file.open(path.cstr(), BINARY ? "wb" : "w");
+		return *this;
 	}
 
 	constexpr OutputFileStream& close() {
@@ -134,12 +126,12 @@ struct OutputFileStream: IInputStream<T> {
 
 	constexpr void write(T const& value) override {
 		if (!isOpen()) return;
-		fwrite(value.data(), 1, value.size(), file);
+		fwrite(value.data(), 1, value.size(), file.handle());
 	}
 
 	constexpr virtual void go(usize const pos = 0) override {
 		if (!isOpen()) return;
-		fseek(pos, file.handle(), SEEK_SET);
+		file.go(pos);
 	}
 
 	constexpr virtual usize position() const override {
@@ -152,8 +144,14 @@ struct OutputFileStream: IInputStream<T> {
 	}
 
 private:
-	File file;
+	CFile file;
 };
+
+using InputByteFileStream = InputFileStream<Bytes<>>;
+using InputTextFileStream = InputFileStream<String>;
+
+using OutputByteFileStream = OutputFileStream<Bytes<>>;
+using OutputTextFileStream = OutputFileStream<String>;
 
 CTL_NAMESPACE_END
 
