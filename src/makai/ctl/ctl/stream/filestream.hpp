@@ -53,11 +53,11 @@ private:
 
 template <Type::OneOf<String, Bytes<>> T>
 struct InputFileStream: IInputStream<T> {
-	virtual ~InputFileStream() {}
-
 	constexpr static bool const BINARY = Type::Equal<T, Bytes<>>;
 
 	using IInputStream<T>::read;
+
+	virtual ~InputFileStream() {}
 
 	InputFileStream() {}
 
@@ -73,7 +73,7 @@ struct InputFileStream: IInputStream<T> {
 		return *this;
 	}
 
-	constexpr virtual Nullable<T> tryRead(usize const count) override {
+	constexpr Nullable<T> tryRead(usize const count) override {
 		if (!isOpen()) return null;
 		T out;
 		out.resize(count, 0);
@@ -83,17 +83,17 @@ struct InputFileStream: IInputStream<T> {
 		return out.resize(total);
 	}
 
-	constexpr virtual void go(usize const pos = 0) override {
+	constexpr void go(usize const pos = 0) override {
 		if (!isOpen()) return;
 		file.go(pos);
 	}
 
-	constexpr virtual usize position() const override {
+	constexpr usize position() const override {
 		if (!isOpen()) return -1;
 		return ftell(file.handle());
 	}
 
-	constexpr virtual bool isOpen() const override {
+	constexpr bool isOpen() const override {
 		return file.isOpen();
 	}
 
@@ -129,17 +129,17 @@ struct OutputFileStream: IOutputStream<T> {
 		fwrite(value.data(), 1, value.size(), file.handle());
 	}
 
-	constexpr virtual void go(usize const pos = 0) override {
+	constexpr void go(usize const pos = 0) override {
 		if (!isOpen()) return;
 		file.go(pos);
 	}
 
-	constexpr virtual usize position() const override {
+	constexpr usize position() const override {
 		if (!file.isOpen()) return -1;
 		return ftell(file.handle());
 	}
 
-	constexpr virtual bool isOpen() const override {
+	constexpr bool isOpen() const override {
 		return file.isOpen();
 	}
 
