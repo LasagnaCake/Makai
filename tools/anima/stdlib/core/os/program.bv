@@ -20,22 +20,22 @@ module OS {
 		
 		@Private
 		@Static
-		@Shared(name = "av2i/os/proc/args", optional = true)
+		@Shared(name = "av2/os/proc/args", optional = true, lib = av2osinfo)
 		getArgs :: () -> ?[string]
 		
 		@Private
 		@Static
-		@Shared(name = "av2i/os/proc/cfg/keys", optional = true)
+		@Shared(name = "av2/os/proc/cfg/keys", optional = true, lib = av2osinfo)
 		getConfigKeys :: () -> ?[string]
 		
 		@Private
 		@Static
-		@Shared(name="av2i/os/proc/cfg/value", optional = true)
+		@Shared(name="av2/os/proc/cfg/value", optional = true, lib = av2osinfo)
 		getConfigValue :: (key: string) -> ?any
 		
 		@Private
 		@Static
-		@Shared(name = "av2i/os/proc/name", optional = true)
+		@Shared(name = "av2/os/proc/name", optional = true, lib = av2osinfo)
 		getName :: () -> ?string
 		
 		@Private

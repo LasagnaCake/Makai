@@ -1,10 +1,10 @@
 using import core.types
 
 module OS.Time {
-	@Shared(name = "av2i/os/time/local")
+	@Shared(name = "av2/os/time/local", lib = av2ostime)
 	localNow :: () -> ?int64
-	@Shared(name = "av2i/os/time/utc")
+	@Shared(name = "av2/os/time/utc", lib = av2ostime)
 	utcNow :: () -> ?int64
-	@Shared(name = "av2i/os/time/proc")
+	@Shared(name = "av2/os/time/proc", lib = av2ostime)
 	procNow :: () -> ?int64
 }

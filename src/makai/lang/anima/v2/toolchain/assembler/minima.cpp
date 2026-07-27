@@ -1179,46 +1179,6 @@ static void doBreakpoint(Context& context) {
 	context.add(Instruction::Name::AV2_IN_BREAKPOINT);
 }
 
-static void doTime(Context& context) {
-	bool inUTC = context.token().text == "utc";
-	Instruction::Time time;
-	if (inUTC) {
-		time.format.desc.mode = Instruction::Time::Mode::AV2_ITM_UTC_SINCE_EPOCH;
-		if (context.peek().type == LTS_TT_OPEN_BRACKET) {
-			context.expectNext(LTS_TT_OPEN_BRACKET);
-			int8 sign	= 0;
-			int8 h		= 0;
-			uint8 m		= 0;
-			switch (context.next().type()) {
-				case LTS_TT_PLUS: sign = -1; break;
-				case LTS_TT_MINUS: sign = +1; break;
-				case LTS_TT_INTEGER: sign = +1; h = context.value().getSigned(); break;
-				default: context.error("Expected timezone information here!");
-			}
-			if (context.type() != LTS_TT_INTEGER)
-				context.next();
-			m = context.expectNext(LTS_TT_COLON).getNext(LTS_TT_INTEGER).getUnsigned();
-			context.expectNext(LTS_TT_CLOSE_BRACKET);
-			time.format.utc.zoneHour	= h * sign;
-			time.format.utc.zoneMinute	= m;
-		}
-	} else {
-		auto const id = context.getNext(LTS_TT_IDENTIFIER, "Mode").getString();
-		if (id == "local")		time.format.desc.mode = Instruction::Time::Mode::AV2_ITM_LOCAL_SINCE_EPOCH;
-		else if (id == "proc")	time.format.desc.mode = Instruction::Time::Mode::AV2_ITM_SINCE_PROGRAM_START;
-		else context.error("Invalid time mode!");
-	}
-	auto const id = context.getNext(LTS_TT_IDENTIFIER, "Mode").getString();
-	if (id == "hours" || id == "h")			time.format.desc.precision = Instruction::Time::Precision::AV2_ITP_HOURS;
-	else if (id == "minutes" || id == "m")	time.format.desc.precision = Instruction::Time::Precision::AV2_ITP_MINUTES;
-	else if (id == "seconds" || id == "s")	time.format.desc.precision = Instruction::Time::Precision::AV2_ITP_SECONDS;
-	else if (id == "millis" || id == "ms")	time.format.desc.precision = Instruction::Time::Precision::AV2_ITP_MILLIS;
-	else if (id == "micros" || id == "us")	time.format.desc.precision = Instruction::Time::Precision::AV2_ITP_MICROS;
-	else if (id == "nanos" || id == "ns")	time.format.desc.precision = Instruction::Time::Precision::AV2_ITP_NANOS;
-	else context.error("Invalid time precision!");
-	context.add(Instruction::Name::AV2_IN_TIME, time);
-}
-
 static void declareTypeFields(Context& context, Context::Declaration& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
@@ -1809,7 +1769,6 @@ static void doExpression(Context& context) {
 	else if (id == "create" || id == "new")		doCreate(context);
 	else if (id == "init" || id == "make")		doInitialize(context);
 	else if (id == "break")						doBreakpoint(context);
-	else if (id == "time" || id == "utc")		doTime(context);
 	else context.error("Invalid instruction!");
 }
 
