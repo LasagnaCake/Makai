@@ -357,6 +357,9 @@ namespace Makai::Anima::V2::Core {
 
 		SetError setAtIndex(uint64 const index, Storage const& value);
 
+		Nullable<Storage> pop() const;
+		bool push(Storage const& value) const;
+
 		Storage clone()			const;
 		Storage shallowClone()	const;
 

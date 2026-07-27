@@ -662,7 +662,7 @@ static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object
 			case AV2_BOP_REM:	*out = *context.art.newValue<T>((T)Makai::Math::mod<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;
 			case AV2_BOP_POW:	*out = *context.art.newValue<T>(Makai::Math::pow<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;
 			case AV2_BOP_ATAN2:	*out = *context.art.newValue<T>((T)Makai::Math::atan2<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
-			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;;
+			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;
 			default: break;
 		}
 	}
@@ -709,6 +709,46 @@ static bool stringBopIt(Object::Storage const& out, Object::Storage const& lhs, 
 	return false;
 }
 
+static bool arrayBopIt(Object::Storage const& lhs, Object::Storage const& rhs, Operator const op, Runtime::Context& context) {
+	if(lhs->isArray() && rhs->getType()->canBecome(lhs->getType()->base)) {
+		switch (op) {
+			using enum Operator;
+			// TODO: These operators
+			case AV2_BOP_MUL:		return true;
+			case AV2_BOP_ADD:		return true;
+			case AV2_BOP_REM:		return true;
+			case AV2_BOP_DIV:		return true;
+			case AV2_BOP_SUB:		return true;
+			case AV2_BOP_PUSH: {
+				if (!lhs->push(rhs))
+					return false;
+			} return true;
+			default: return false;
+		}
+	}
+	return false;
+}
+
+static bool arrayUopIt(Object::Storage const& val, Operator const op, Runtime::Context& context) {
+	if(val->isArray()) {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_LENGTH: {
+				context.push(val->size());
+				return true;
+			} return true;
+			case AV2_UOP_POP: {
+				if (auto const v = val->pop()) {
+					context.push(v)
+					return true;
+				} else return false;
+			}
+			default: return false;
+		}
+	}
+	return false;
+}
+
 void Engine::doBinaryOperation(Operator const op) {
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to operate on!"));
@@ -736,6 +776,7 @@ void Engine::doBinaryOperation(Operator const op) {
 	else if (lhs->isVectorable() && rhs->isVectorable())	success = bopIt<Vector4>(out, lhs, rhs, op, context);
 	else if (lhs->isAlgebraic() && rhs->isAlgebraic())		success = bopIt<Matrix4x4>(out, lhs, rhs, op, context);
 	else if (lhs->isString() && rhs->isString())			success = stringBopIt(out, lhs, rhs, op, context);
+	else if (lhs->isArray() && rhs->isArray())				success = arrayBopIt(lhs, rhs, op, context);
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
@@ -816,6 +857,7 @@ void Engine::doUnaryOperation(Operator const op) {
 	else if (lhs->isSigned())		success = uopIt<int64>(out, lhs, op, context);
 	else if (lhs->isNumber())		success = uopIt<double>(out, lhs, op, context);
 	else if (lhs->isAlgebraic())	success = uopIt<Vector4>(out, lhs, op, context);
+	else if (lhs->isArray())		success = arrayBopIt(lhs, op, context);
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
