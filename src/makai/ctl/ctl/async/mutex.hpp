@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../templates.hpp"
+#include "../algorithm/swap.hpp"
 
 #ifdef CTL_ON_WINDOWS
 #include <windows.h>

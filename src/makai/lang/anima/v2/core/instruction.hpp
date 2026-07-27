@@ -439,6 +439,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_CREATE:			return "new";
 				case Name::AV2_IN_INITIALIZE:		return "init";
 				case Name::AV2_IN_BREAKPOINT:		return "break";
+				case Name::AV2_IN_TIME:				return "time";
 			}
 			return "???";
 		}

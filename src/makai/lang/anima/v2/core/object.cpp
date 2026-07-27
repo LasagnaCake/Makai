@@ -82,6 +82,16 @@ Object::SetError Object::setAtIndex(uint64 const index, Object::Storage const& v
 	return SetError::AV2_COSE_FIELD_DOES_NOT_EXIST;
 }
 
+bool Object::push(Object::Storage const& value) {
+	if (!isArray()) return false;
+}
+
+Makai::Nullable<Object::Storage> Object::pop() {
+	if (!isArray()) return null;
+	if (!count()) return null;
+	return fields.popBack();
+}
+
 Object::Storage Object::clone() const {
 	if (origin->flags.isCopyable)
 		return create(*this);

@@ -710,8 +710,8 @@ static ssize likelihoodOf(Node::Instance const& node) {
 		case LTS_TT_LOGIC_OR: return 1;
 		case LTS_TT_DECREMENT:
 		case LTS_TT_LOGIC_AND: return -1;
-		case LTS_TT_PUSH: return 1;
-		case LTS_TT_POP: return -1;
+		case LTS_TT_STREAM_INSERT: return 1;
+		case LTS_TT_STREAM_EXTRACT: return -1;
 		default: [[likely]] return 0;
 	}
 }
@@ -924,7 +924,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	DEBUGLN("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
 	if (!(lhs.type->flags.isBasic && rhs.type->flags.isBasic)) {
 		// TODO: Infix resolve
-		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+		return {};
 	}
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		DEBUGLN("Stronger: ", t->name);

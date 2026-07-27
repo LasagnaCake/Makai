@@ -1,0 +1,57 @@
+using import core.types
+
+module OS {
+	struct Program {
+		struct Option {
+			@ByValue key: string
+			@ByValue value: any
+		}
+		
+		@ByRef name:	?string
+		@ByRef args:	?[string]
+		@ByRef config:	?[Option]
+		
+		info :: () -> Program =>
+			new Program {
+				name = Program.getName;,
+				args = Program.getArgs;,
+				config = Program.getConfig;
+			}
+		
+		@Private
+		@Static
+		@Native(name = "av2i/os/proc/args", optional = true)
+		getArgs :: () -> ?[string]
+		
+		@Private
+		@Static
+		@Native(name = "av2i/os/proc/cfg/keys", optional = true)
+		getConfigKeys :: () -> ?[string]
+		
+		@Private
+		@Static
+		@Native(name="av2i/os/proc/cfg/value", optional = true)
+		getConfigValue :: (key: string) -> ?any
+		
+		@Private
+		@Static
+		@Native(name = "av2i/os/proc/name", optional = true)
+		getName :: () -> ?string
+		
+		@Private
+		@Static
+		getConfig :: () -> ?[Setting] {
+			@ByRef keys := Program.getConfigKeys;
+			if not keys return null
+			@ByCopy total := countof keys
+			@ByRef out := new Setting[total]
+			repeat @ByRef i: uint64 -> total {
+				key := copy keys[i - total]
+				out[i - total] new Program{key = key, value = Program.getConfigValue(key)}
+			}
+			return out
+		}
+	}
+	
+	env :: () => Program.info()
+}

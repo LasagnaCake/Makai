@@ -106,7 +106,7 @@ struct AtomicCell:
 	}
 
 	/// @brief Destructor.
-	constexpr ~AtomicCell() {
+	~AtomicCell() {
 		unbind();
 	}
 

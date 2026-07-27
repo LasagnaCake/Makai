@@ -734,12 +734,12 @@ static bool arrayUopIt(Object::Storage const& val, Operator const op, Runtime::C
 		switch (op) {
 			using enum Operator;
 			case AV2_UOP_LENGTH: {
-				context.push(val->size());
+				context.push(val->count());
 				return true;
 			} return true;
 			case AV2_UOP_POP: {
 				if (auto const v = val->pop()) {
-					context.push(v)
+					context.push(v.value());
 					return true;
 				} else return false;
 			}
@@ -857,7 +857,7 @@ void Engine::doUnaryOperation(Operator const op) {
 	else if (lhs->isSigned())		success = uopIt<int64>(out, lhs, op, context);
 	else if (lhs->isNumber())		success = uopIt<double>(out, lhs, op, context);
 	else if (lhs->isAlgebraic())	success = uopIt<Vector4>(out, lhs, op, context);
-	else if (lhs->isArray())		success = arrayBopIt(lhs, op, context);
+	else if (lhs->isArray())		success = arrayUopIt(lhs, op, context);
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
