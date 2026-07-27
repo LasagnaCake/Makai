@@ -26,17 +26,17 @@ struct InputMemoryStream: IInputStream<Bytes<>> {
 		return out;
 	}
 
-	constexpr virtual void go(usize const pos = 0) override {
+	constexpr void go(usize const pos = 0) override {
 		if (!isOpen()) return;
 		pointer = (pos < buffer.size()) ? pos : buffer.size();
 	}
 
-	constexpr virtual usize position() const override {
+	constexpr usize position() const override {
 		if (!isOpen()) return -1;
 		return pointer;
 	}
 
-	constexpr virtual bool isOpen() const override {
+	constexpr bool isOpen() const override {
 		return buffer.size();
 	}
 
@@ -65,17 +65,17 @@ struct OutputMemoryStream: IOutputStream<Bytes<>> {
 			pointer = buffer.size();
 	}
 
-	constexpr virtual void go(usize const pos = 0) override {
+	constexpr void go(usize const pos = 0) override {
 		if (!isOpen()) return;
 		pointer = (pos < buffer.size()) ? pos : buffer.size();
 	}
 
-	constexpr virtual usize position() const override {
+	constexpr usize position() const override {
 		if (!isOpen()) return -1;
 		return pointer;
 	}
 
-	constexpr virtual bool isOpen() const override {
+	constexpr bool isOpen() const override {
 		return buffer.size();
 	}
 
