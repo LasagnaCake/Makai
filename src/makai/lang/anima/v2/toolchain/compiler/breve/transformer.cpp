@@ -1295,8 +1295,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	if (node->rightSide) {
 		auto const def = Expression().transform(context, node->rightSide);
-		if (retType && retType != def.type)
-			context.error("Function does not return a type!", node);
+		if (retType && def.type && retType != def.type)
+			context.error("Expression return type does not match function return type!", node);
 		else if (!retType) {
 			if (!def.type)
 				retType = context.basicType("void");
@@ -1308,6 +1308,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	context.pop(1 + optional.size());
 	for (auto& ov: fn->current)
 		ov->result = retType;
+	current->result = retType;
 	context.registerFunction(scope);
 	context.pop(path.size());
 	return {.scope = scope};
