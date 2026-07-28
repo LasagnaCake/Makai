@@ -1240,6 +1240,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	auto const proto = node->middle;
 	auto const fn = scope->function;
+	fn->current.clear();
 	List<Node::Instance> required, optional;
 	for (auto const& arg: proto->children) {
 		auto const desc = resolveFunctionArgument(arg, arg);
