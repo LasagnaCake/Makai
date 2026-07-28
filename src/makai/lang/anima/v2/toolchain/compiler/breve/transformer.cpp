@@ -859,6 +859,8 @@ static bool isComparison(Node::Instance const& node) {
 }
 
 ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
+	auto const sseAnd = "__sce_and_" + node->name();
+	auto const sseOr = "__sce_or_" + node->name();
 	Expression expr;
 	bool lhsHasBeenPushed = false;
 	auto const lhs = expr.transform(context, node->leftSide);
@@ -871,11 +873,20 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	}
 	if (lhs.shouldBePushed() && !lhs.isCompilable()) {
 		lhsHasBeenPushed = true;
-		context.top()->impl->writeMainLine("push", *lhs.source);
+		context.impl()->writeMainLine("push", *lhs.source);
 	} else if (lhs.isStackTop() && lhs.isCopied()) {
 		lhsHasBeenPushed = true;
-		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
+		context.impl()->writeMainLine("copy", *lhs.source, "-> top");
 	} else if (lhs.isStackTop()) lhsHasBeenPushed = true;
+	if (isLogicOp(node) && !lhs.isCompilable()) {
+		if (node->base.type == LTS_TT_LOGIC_AND) {
+			context.impl()->writeMainLine("push val top");
+			context.impl()->writeMainLine("jump if false", sseAnd);
+		} if (node->base.type == LTS_TT_LOGIC_OR) {
+			context.impl()->writeMainLine("push val top");
+			context.impl()->writeMainLine("jump if true", sseOr);
+		}
+	}
 	if (
 		node->base.text == "as"
 	||	node->base.text == "is"
@@ -922,11 +933,15 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	DEBUGLN("RHS = [", rhs.source.value(), "]");
 	DEBUGLN("LHS Type: ", lhs.type ? lhs.type->name : "NO_TYPE");
 	DEBUGLN("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
-	if (!(lhs.type->flags.isBasic && rhs.type->flags.isBasic)) {
-		// TODO: Infix resolve
-		return {};
-	}
-	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
+	if (isLogicOp(node)) {
+		if (node->base.type == LTS_TT_LOGIC_AND)
+			context.impl()->writeMainLine("@label", sseAnd);
+		if (node->base.type == LTS_TT_LOGIC_OR)
+			context.impl()->writeMainLine("@label", sseOr);
+		auto const t = TypeDecl::stronger(lhs.type, rhs.type);
+		if (!t) context.error("Type mismatch!", node);
+		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+	} else if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		DEBUGLN("Stronger: ", t->name);
 		if (t->basic) {
 			if (lhs.type->basic == rhs.type->basic)
@@ -953,27 +968,22 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 	auto value = node->value.toString();
 	ATransformer::Result out;
 	Namespace::TypeRef type;
-	if (node->value.isBoolean()) {
-		type = context.basicType("bool");
+	type = context.basicTypeOf(node->value);
+	if (node->value.isBoolean())
 		out.likelihood	= 0;
-	} else if (node->value.isString()) {
-		type = context.basicType("string");
+	else if (node->value.isString())
 		out.likelihood	= 1;
-	} else if (node->value.isUnsigned()) {
-		type = context.basicType("uint64");
+	else if (node->value.isUnsigned()) {
 		out.likelihood	= 1;
 		value += " u64";
 	} else if (node->value.isSigned()) {
-		type = context.basicType("int64");
 		out.likelihood	= 1;
 		value += " i64";
 	} else if (node->value.isReal()) {
-		type = context.basicType("float64");
 		out.likelihood	= 1;
 		value += " f64";
-	} else if (node->value.isNull()) {
+	} else if (node->value.isNull())
 		return {.source = {"nil"}, .direct = null};
-	}
 	else context.error("Invalid constant!", node);
 	out.source		= value;
 	out.scope		= type->scope.raw();
@@ -1067,6 +1077,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_SUBSCRIPT:			return Subscript().transform(context, node);
 		case Node::Content::AV2_TANC_TYPE_EXTENSION:	return TypeExtension().transform(context, node);
 		case Node::Content::AV2_TANC_EMPTY_DECAY:		return NullDecay().transform(context, node);
+		case Node::Content::AV2_TANC_EVAL_BLOCK:		return Evaluation().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_FAILABLE_PATH:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
@@ -1246,55 +1257,64 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		auto const desc = resolveFunctionArgument(arg, arg);
 		if (!desc)
 			context.error("Expected variable declaration here!", arg);
-		auto const [argd, argi] = desc.value();
-		if (argi->rightSide)
-			optional.pushBack(argd);
+		auto const [full, base] = desc.value();
+		if (base->rightSide)
+			optional.pushBack(full);
 		else if (optional.empty())
-			required.pushBack(argd);
-		else context.error("Optional arguments must occur AFTER required ones!", argd);
+			required.pushBack(full);
+		else context.error("Optional arguments must occur AFTER required ones!", full);
 	}
 	Namespace::TypeRef retType;
-	if (proto->rightSide) {
-		retType = Expression().transform(context, proto->rightSide).type;
-		if (!retType) context.error("Return type does not exist!", proto->rightSide);
+	if (proto->leftSide) {
+		auto const ret = Expression().transform(context, proto->leftSide);
+		retType = ret.type;
+		if (!retType && !ret.scope)
+			context.error("Return type does not exist!", proto->leftSide);
+		retType = ret.scope->type;
+		if (!retType)
+			context.error("Return type does not exist!", proto->leftSide);
 	}
 	auto const impl = context.declare(Makai::UTF8StringList::from("<impl>" + node->name()));
-	Function::OverloadRef current = current.create(), prev;
+	Function::OverloadRef current = current.create(), prev, first = current;
 	fn->current.pushBack(current);
-	current->entry = "__" + fn->name + node->name();
 	current->scope = impl.asWeak();
-	impl->impl->writePreLine("@def", current->entry, ":");
-	impl->impl->writePreLine("enter", required.size() + optional.size());
-	impl->impl->writePreLine("bind ref", required.size(), "[0 -> 0]");
 	for (auto& arg: required) {
 		auto const ax = Expression().transform(context, arg);
 		current->arguments.pushBack(ax.scope->variable);
 	}
-	current->entry = "__" + overloadName(current->arguments) + node->name();
-	if (fn->overloadFromVariables(current->arguments))
+	current->entry = "__"+ fn->name + overloadName(current->arguments) + node->name();
+	impl->impl->writePreLine("@def", current->entry, ":");
+	impl->impl->writePreLine("enter", required.size() + optional.size());
+	impl->impl->writePreLine("bind ref", required.size(), "[0 -> 0]");
+	auto const vx = fn->overloadFromVariables(current->arguments);
+	if (vx && vx->hasImplementation)
 		context.error("An overload already exists for this function!", node);
 	fn->overloads.pushBack(current);
+	List<Implementation::Instance> ovImpl;
+	ovImpl.pushBack(impl->impl);
 	for (auto const [opt, i]: Range::expand(optional)) {
 		auto const overload = context.declare(Makai::UTF8StringList::from("<impl>" + node->name()));
 		prev = current;
 		current = current.create();
 		fn->current.pushBack(current);
-		overload->impl->writePreLine("@def", current->entry, ":");
-		current->scope = overload.asWeak();
 		auto const ox = Expression().transform(context, opt);
 		current->arguments = prev->arguments;
 		overload->varc = current->arguments.size();
 		current->arguments.pushBack(ox.scope->variable);
-		current->entry = "__" + overloadName(current->arguments) + node->name();
-		overload->impl->writeMainLine(ox.scope->variable->initializer->compose()->toString());
+		current->entry = "__" + fn->name + overloadName(current->arguments) + node->name();
+		overload->impl->writePreLine("@def", current->entry, ":");
+		overload->impl->writePreLine(ox.scope->variable->initializer->compose()->toString());
 		if (overload->impl->main.back() == "pop")
 			overload->impl->main.popBack();
-		overload->impl->writeMainLine("copy move top -> arg[", i + required.size(), "]");
+		overload->impl->writePreLine("copy move top -> arg[", i + required.size(), "]");
 		if (fn->overloadFromVariables(current->arguments))
 			context.error("An overload already exists for this function!", node);
 		fn->overloads.pushBack(current);
+		ovImpl.pushBack(overload->impl);
+		current->hasImplementation = true;
 	}
 	if (node->rightSide) {
+		context.functionStack.pushBack(current);
 		auto const def = Expression().transform(context, node->rightSide);
 		if (retType && def.type && retType != def.type)
 			context.error("Expression return type does not match function return type!", node);
@@ -1303,15 +1323,24 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				retType = context.basicType("void");
 			else retType = def.type;
 		}
-	}
+		current->hasImplementation = true;
+		current->scope = context.top().asWeak();
+		context.functionStack.popBack();
+	} else if (ovImpl.size() == 1)
+		current->scope = nullptr;
 	if (!retType)
-		retType = context.basicType("void");
+		context.error("Missing function return type!", node);
+	//	retType = context.basicType("void");
 	impl->impl->writePostLine("exit");
 	impl->impl->writePostLine("ret");
 	context.pop(1 + optional.size());
 	for (auto& ov: fn->current)
 		ov->result = retType;
 	current->result = retType;
+	while (ovImpl.size() > 1) {
+		auto const top = ovImpl.popBack();
+		ovImpl.back()->writeMainLine(top->compose()->toString());
+	}
 	context.registerFunction(scope);
 	context.pop(path.size());
 	return {.scope = scope};
@@ -1511,8 +1540,13 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 	context.error("Invalid declaration!", node);
 }
 
+static Makai::Data::Value callDirect(ATransformer::Context& context, Function::Overload& ov, Makai::Data::Value::ArrayType const& args) {
+	// TODO: Direct functions
+}
+
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
 	DEBUGLN("Left-side: ", node->leftSide->base.text);
+	auto const dx = context.impl()->main.size();
 	auto const fn = Expression().transform(context, node->leftSide);
 	if (!fn.scope)
 		context.error("Symbol does not exist!", node->leftSide);
@@ -1523,6 +1557,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	Function::ArgTypes args;
 	usize const memspot = context.top()->impl->main.size();
 	context.top()->impl->writeMainLine("");
+	Makai::Data::Value::ArrayType directArgs;
+	bool runtimeCall = false;
 	for (auto const& arg: node->children) {
 		auto const expr = Expression().transform(context, arg);
 		if (!expr.source)
@@ -1533,6 +1569,9 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
 		}
 		args.pushBack(expr.type);
+		if (expr.isCompilable())
+			directArgs.pushBack(expr.direct);
+		else runtimeCall = true;
 	}
 	DEBUGLN("Function: ", f.name);
 	DEBUG("Overloads: [ ");
@@ -1557,11 +1596,29 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	}
 	auto& ov = *ovf;
 	if (isMemFn) {
+		if (fn.isCompilable())
+			directArgs.insert(fn.direct, 0);
 		auto const pushAction = (fn.shouldBePushed()) ? Makai::toString("push ", *fn.source)  : "";
 		auto const copyAction = (fn.isStackTop() && fn.isCopied()) ? Makai::toString("\ncopy ", *fn.source, " -> top")  : "";
 		context.top()->impl->main[memspot] = pushAction + copyAction;
 	}
-	context.top()->impl->writeMainLine("call", ov.entry);
+	if (!runtimeCall && ov.variant.context > ExecutionContext::AV2_TCB_EC_RUNTIME) {
+		auto const ret = callDirect(context, ov, directArgs);
+		context.impl()->main.eraseRange(-dx, -1);
+		if (ret.isUndefined())
+			return {.type = context.basicType("void")};
+		else if (ret.isObject())
+			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
+		else return {{ret.isNull() ? "nil" : ret.toString()}, nullptr, context.basicTypeOf(ret), ret};
+	} else if (ov.variant.context != ExecutionContext::AV2_TCB_EC_COMPILE)
+		context.top()->impl->writeMainLine("call", ov.entry);
+	else context.error("It is forbidden to call a direct function with indirect arguments!", node);
+	if (context.functionStack.size() && ov.variant.context == ExecutionContext::AV2_TCB_EC_RUNTIME) {
+		auto& ctx = context.functionStack.back()->variant.context;
+		if (ctx < ExecutionContext::AV2_TCB_EC_RUNTIME)
+			context.functionStack.back()->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
+		else context.error("Cannot call indirect functions inside mixed or direct functions!", node);
+	}
 	return {{"move top"}, ov.result->scope.raw(), ov.result};
 }
 
@@ -2006,7 +2063,6 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 	return {};
 }
 
-
 ATransformer::Result Await::transform(Context& context, Node::Instance const& node) {
 	auto const scope = UTF8StringList::from("__await_" + node->name());
 	auto const awaitScope = context.declare(scope);
@@ -2042,7 +2098,6 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 	return {};
 }
 
-
 ATransformer::Result NullDecay::transform(Context& context, Node::Instance const& node) {
 	auto const exit = "__null_decay_" + node->name() + "_end";
 	ATransformer::Result result;
@@ -2066,11 +2121,33 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 	return {{"move top"}, null, lhs.type->base};
 }
 
+ATransformer::Result Evaluation::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result result;
+	auto const lhs = Expression().transform(context, node);
+	if (lhs.isCompilable() && lhs.direct.isString())
+		return Expression().transform(context, context.evaluate(lhs.direct.getString()));
+	context.error("Invalid evaluation!", node->leftSide);
+}
+
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
 	auto const scope = resolve(UTF8StringList::from(name));
 	if (!(scope && scope->type))
 		error("Basic type ["+name+"] does not exist!\nDid you forget to [using import core.types]?");
 	return scope->type;
+}
+
+Namespace::TypeRef ATransformer::Context::basicTypeOf(Makai::Data::Value const& value) {
+	if (value.isBoolean()) {
+		return basicType("bool");
+	} else if (value.isString()) {
+		return basicType("string");
+	} else if (value.isUnsigned()) {
+		return basicType("uint64");
+	} else if (value.isSigned()) {
+		return basicType("int64");
+	} else if (value.isReal()) {
+		return basicType("float64");
+	} else return nullptr;
 }
 
 Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& type) {
@@ -2133,6 +2210,18 @@ ATransformer::Context::Context(): Intermediate() {
 	root->subspaces["  T1_USER_TYPES"]	= Namespace::Instance::create("  T1_USER_TYPES");
 	root->subspaces["  T2_FUNCTIONS"]	= Namespace::Instance::create("  T2_FUNCTIONS");
 	root->subspaces["  T3_TRAITS"]		= Namespace::Instance::create("  T3_TRAITS");
+}
+
+Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
+	BaseContext ctx;
+	ctx.append(
+		Lexer::CStyle::tokenize(eval)
+			.value()
+			.orElse({})
+			.toList<BaseContext::Axiom>()
+	);
+	auto const parse = Parser(ctx).parse();
+	return parse;
 }
 
 void ATransformer::Context::addBasicType(Core::BasicType const type, Core::TypeFlags const flags) {

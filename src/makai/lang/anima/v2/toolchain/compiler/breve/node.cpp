@@ -81,6 +81,7 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_AWAIT:				return "await";
 		case Content::AV2_TANC_STREAM_EXPR:			return "stream";
 		case Content::AV2_TANC_LAMBDA:				return "lambda";
+		case Content::AV2_TANC_EVAL_BLOCK:			return "eval";
 	}
 	return "???";
 }

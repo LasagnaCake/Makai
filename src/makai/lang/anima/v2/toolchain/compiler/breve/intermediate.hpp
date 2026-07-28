@@ -16,6 +16,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Positioned {
 		Instance<Node> node;
 	};
+	enum class ExecutionContext {
+		AV2_TCB_EC_NONE,
+		AV2_TCB_EC_RUNTIME,
+		AV2_TCB_EC_MIXED,
+		AV2_TCB_EC_COMPILE,
+	};
 
 	struct Namespace;
 	struct TypeDecl;
@@ -184,14 +190,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 					AV2_TCB_FO_VO_INSTANCE,
 				};
 
-				External	external	= External::AV2_TCB_FO_VE_NONE;
-				Object		object		= Object::AV2_TCB_FO_VO_NONE;
+				External			external	= External::AV2_TCB_FO_VE_NONE;
+				Object				object		= Object::AV2_TCB_FO_VO_NONE;
+				ExecutionContext	context		= ExecutionContext::AV2_TCB_EC_NONE;
 
-				constexpr bool operator==(External const variant) const	{return variant == external;	}
-				constexpr bool operator==(Object const variant) const	{return variant == object;		}
+				constexpr bool operator==(External const variant) const			{return variant == external;	}
+				constexpr bool operator==(Object const variant) const			{return variant == object;		}
+				constexpr bool operator==(ExecutionContext const variant) const	{return variant == context;		}
 
-				constexpr Variant& operator=(External const variant)	{return (external = variant, *this);	}
-				constexpr Variant operator=(Object const variant)		{return (object = variant, *this);		}
+				constexpr Variant& operator=(External const variant)		{return (external = variant, *this);	}
+				constexpr Variant operator=(Object const variant)			{return (object = variant, *this);		}
+				constexpr Variant operator=(ExecutionContext const variant)	{return (context = variant, *this);		}
 			};
 			Namespace::TypeRef				result;
 			List<Namespace::VariableRef>	arguments;
@@ -347,12 +356,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		void addPostLine(UTF8String const& what) override;
 
 		List<Namespace::Instance> scopeStack;
+		List<Function::OverloadRef> functionStack;
 
 		Namespace::Instance resolve(UTF8StringList const& path) const;
 		Namespace::Instance push(UTF8StringList const& path);
 		void pop(usize const count);
 		Namespace::Instance top() const;
 		Namespace::Instance parent() const;
+
+		Implementation::Instance impl() const;
 
 		void addGlobalAttribute(Namespace::AttributeRef const& attrib);
 

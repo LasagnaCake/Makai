@@ -280,6 +280,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		DynamicOperatorResolver(Class const opClass, Parser::Precedence const precedence, bool const rightToLeft): AResolver(precedence, rightToLeft), opClass(opClass) {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
+
+	struct EvaluationResolver: AResolver {
+		EvaluationResolver(): AResolver(Parser::Precedence::AV2_TAPP_DECL, false) {}
+		virtual ~EvaluationResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
 }
 
 #endif

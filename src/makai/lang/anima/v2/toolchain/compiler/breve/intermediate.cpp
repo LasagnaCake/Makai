@@ -394,6 +394,10 @@ static Namespace::AttributeRef createSharedAttribute() {
 		bool hit = false;
 		for (auto& ov: ns->function->current)
 			if (ov->variant == Function::Overload::Variant::External::AV2_TCB_FO_VE_NONE && !ov->hasImplementation) {
+				if (ov->variant.context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+					continue;
+				if (ov->variant.context == ExecutionContext::AV2_TCB_EC_NONE)
+					ov->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
 				ov->variant = Function::Overload::Variant::External::AV2_TCB_FO_VE_DYNLIB;
 				hit = true;
 				DEBUGLN("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Applying shared attribute...");
@@ -411,7 +415,7 @@ static Namespace::AttributeRef createSharedAttribute() {
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
 		if (!hit)
-			Transformer::ATransformer::Context::error("Missing valid shared function declaration!\nShared functions cannot have a body!", ns->node);
+			Transformer::ATransformer::Context::error("Missing valid shared function declaration!", ns->node);
 	};
 	return attrib;
 }
@@ -430,6 +434,10 @@ static Namespace::AttributeRef createNativeAttribute() {
 		bool hit = false;
 		for (auto& ov: ns->function->current)
 			if (ov->variant == Function::Overload::Variant::External::AV2_TCB_FO_VE_NONE && !ov->hasImplementation) {
+				if (ov->variant.context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+					continue;
+				if (ov->variant.context == ExecutionContext::AV2_TCB_EC_NONE)
+					ov->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
 				ov->variant = Function::Overload::Variant::External::AV2_TCB_FO_VE_ART_CALL;
 				hit = true;
 				ov->hasImplementation = true;
@@ -438,7 +446,7 @@ static Namespace::AttributeRef createNativeAttribute() {
 				ov->entry = "__art_call_" + Makai::toString(id) + ov->entry;
 			}
 		if (!hit)
-			Transformer::ATransformer::Context::error("Missing valid internal call declaration!\nInternal calls cannot have a body!", ns->node);
+			Transformer::ATransformer::Context::error("Missing valid internal call declaration!", ns->node);
 	};
 	return attrib;
 }
@@ -756,6 +764,84 @@ static Namespace::AttributeRef createExposeAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createRuntimeAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Indirect";
+	attrib->target =
+		Attribute::Target::AV2_TAAT_FUNCTION
+	|	Attribute::Target::AV2_TAAT_VARIABLE
+	;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		for (auto& ov: ns->function->current) {
+			if (ov->variant.context > ExecutionContext::AV2_TCB_EC_NONE)
+				continue;
+			ov->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
+		}
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createMixedAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Mixed";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		for (auto& ov: ns->function->current) {
+			if (ov->variant.context > ExecutionContext::AV2_TCB_EC_NONE)
+				continue;
+			ov->variant.context = ExecutionContext::AV2_TCB_EC_MIXED;
+		}
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createDirectAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Direct";
+	attrib->target =
+		Attribute::Target::AV2_TAAT_FUNCTION
+	|	Attribute::Target::AV2_TAAT_VARIABLE
+	;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		if (ns->function) {
+			for (auto& ov: ns->function->current) {
+				if (ov->variant.context > ExecutionContext::AV2_TCB_EC_NONE)
+					continue;
+				ov->variant.context = ExecutionContext::AV2_TCB_EC_COMPILE;
+			}
+		} else if (ns->variable) {
+
+		}
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createTransformerAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Transformer";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		bool hit = false;
+		for (auto& ov: ns->function->current) {
+			if (ov->variant.context > ExecutionContext::AV2_TCB_EC_NONE)
+				continue;
+			ov->variant.context = ExecutionContext::AV2_TCB_EC_MIXED;
+			hit = true;
+		}
+		if (!hit)
+			Transformer::ATransformer::Context::error("Missing valid transformer declaration!", ns->node);
+	};
+	return attrib;
+}
+
 bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 	using enum Lexer::CStyle::TokenStream::Token::Type;
 	if (target == Target::AV2_TAAT_EMPTY)
@@ -813,6 +899,10 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createPassByAttribute("Ref"));
 	addGlobalAttribute(createPassByAttribute("Copy"));
 	addGlobalAttribute(createExposeAttribute());
+	addGlobalAttribute(createRuntimeAttribute());
+	addGlobalAttribute(createMixedAttribute());
+	addGlobalAttribute(createDirectAttribute());
+	addGlobalAttribute(createTransformerAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {
@@ -982,6 +1072,10 @@ Namespace::Instance Intermediate::top() const {
 Namespace::Instance Intermediate::parent() const {
 	if (scopeStack.size() < 2) return root;
 	return scopeStack[-2];
+}
+
+Implementation::Instance Intermediate::impl() const {
+	return top()->impl;
 }
 
 Makai::UTF8String Function::Overload::prototype() const {

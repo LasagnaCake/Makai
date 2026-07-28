@@ -733,3 +733,11 @@ Node::Instance LambdaResolver::resolve(Parser& parser, Node::Instance const& lef
 	result->rightSide = parser.nextExpression();
 	return result;
 }
+
+Node::Instance EvaluationResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_EVAL_BLOCK;
+	result->leftSide = parser.nextExpression();
+	return result;
+}
