@@ -1286,6 +1286,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	impl->impl->writePreLine("@def", current->entry, ":");
 	impl->impl->writePreLine("enter", required.size() + optional.size());
 	impl->impl->writePreLine("bind ref", required.size(), "[0 -> 0]");
+	current->scope = impl.asWeak();
 	auto const vx = fn->overloadFromVariables(current->arguments);
 	if (vx && vx->hasImplementation)
 		context.error("An overload already exists for this function!", node);
@@ -1294,6 +1295,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	ovImpl.pushBack(impl->impl);
 	for (auto const [opt, i]: Range::expand(optional)) {
 		auto const overload = context.declare(Makai::UTF8StringList::from("<impl>" + node->name()));
+		if (prev)
+			prev->scope = nullptr;
 		prev = current;
 		current = current.create();
 		fn->current.pushBack(current);
@@ -1333,6 +1336,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	//	retType = context.basicType("void");
 	impl->impl->writePostLine("exit");
 	impl->impl->writePostLine("ret");
+	impl->impl->writePostLine("@def .");
 	context.pop(1 + optional.size());
 	for (auto& ov: fn->current)
 		ov->result = retType;
