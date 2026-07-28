@@ -1228,15 +1228,11 @@ static Makai::Nullable<FunctionArgument> resolveFunctionArgument(Node::Instance 
 
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto [path, scope] = resolve(context, node->leftSide);
-	bool isNew = false;
 	if (scope) {
 		if (!scope->isPureNamespace() && !scope->function)
 			context.error("Symbol is already defined as a different kind!", node);
 		context.scopeStack.pushBack(scope);
-	} else {
-		scope = context.declare(path);
-		isNew = true;
-	}
+	} else scope = context.declare(path);
 	if (!scope->function) {
 		scope->function = scope->function.create();
 		scope->function->name = path.join("_");
@@ -1309,10 +1305,11 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	impl->impl->writePostLine("exit");
 	impl->impl->writePostLine("ret");
-	context.pop(2 + optional.size());
+	context.pop(1 + optional.size());
 	for (auto& ov: fn->current)
 		ov->result = retType;
 	context.registerFunction(scope);
+	context.pop(path.size());
 	return {.scope = scope};
 }
 
