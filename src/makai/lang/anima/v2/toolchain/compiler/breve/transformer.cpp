@@ -1303,6 +1303,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			else retType = def.type;
 		}
 	}
+	if (!retType)
+		retType = context.basicType("void");
 	impl->impl->writePostLine("exit");
 	impl->impl->writePostLine("ret");
 	context.pop(1 + optional.size());
