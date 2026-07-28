@@ -1211,133 +1211,107 @@ static Makai::UTF8String overloadName(Makai::List<Namespace::VariableRef> const&
 	return name;
 }
 
+struct FunctionArgument {
+	Node::Instance decl;
+	Node::Instance arg;
+};
+
+static Makai::Nullable<FunctionArgument> resolveFunctionArgument(Node::Instance const& root, Node::Instance const& node) {
+	if (node->content == Node::Content::AV2_TANC_ATTRIBUTE)
+		return resolveFunctionArgument(root, node->rightSide);
+	else if (
+		node->base.type == LTS_TT_COLON
+	or	node->base.type == LTS_TT_DECLARE
+	) return FunctionArgument{root, node};
+	else return null;
+}
+
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto [path, scope] = resolve(context, node->leftSide);
-	DEBUGLN("Path = /", path.join("/"));
-	bool isCompletelyNewFunction = false;
+	bool isNew = false;
 	if (scope) {
 		if (!scope->isPureNamespace() && !scope->function)
 			context.error("Symbol is already defined as a different kind!", node);
-		if (!scope->function) {
-			scope->function = scope->function.create();
-			scope->function->name = path.join("_");
-			scope->function->pureName = path.back();
-		}
 		context.scopeStack.pushBack(scope);
 	} else {
 		scope = context.declare(path);
+		isNew = true;
+	}
+	if (!scope->function) {
 		scope->function = scope->function.create();
 		scope->function->name = path.join("_");
 		scope->function->pureName = path.back();
-		isCompletelyNewFunction = true;
 	}
-	DEBUG("Stack = ");
-	for (auto& sco: context.scopeStack)
-		DEBUG("/", sco->name);
-	DEBUGLN("");
-	auto& fn = *scope->function;
-	fn.current.clear();
 	auto const proto = node->middle;
-	Function::OverloadRef ov = ov.create();
-	if (proto->rightSide && !(ov->result = TypeRequest().transform(context, node->rightSide).type))
-		context.error("Type does not exist!");
-	auto const newScope = context.declare(Makai::UTF8StringList::from("<fn>" + node->name()));
-	Expression vd;
-	List<Namespace::VariableRef> optionals;
+	auto const fn = scope->function;
+	List<Node::Instance> required, optional;
 	for (auto const& arg: proto->children) {
-		auto const decl = vd.transform(context, arg);
-		if (!(decl.scope && decl.scope->variable))
+		auto const desc = resolveFunctionArgument(arg, arg);
+		if (!desc)
 			context.error("Expected variable declaration here!", arg);
-		if (!decl.scope->variable->type)
-			context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!");
-		if (decl.scope->variable->defaulted && decl.scope->variable->initializer)
-			optionals.pushBack(decl.scope->variable);
-		else if (optionals.empty())
-			ov->arguments.pushBack(decl.scope->variable);
-		else context.error("Cannot have required arguments follow optional ones!", arg);
+		auto const [argd, argi] = desc.value();
+		if (argi->rightSide)
+			optional.pushBack(argd);
+		else if (optional.empty())
+			required.pushBack(argd);
+		else context.error("Optional arguments must occur AFTER required ones!", argd);
 	}
-	context.pop(1);
-	Namespace::Instance implScope;
-	Function::OverloadRef implOv;
-	DEBUGLN("Optionals: ", optionals.size());
-	if (optionals.size()) {
-		for (auto i: Makai::range(optionals.size())) {
-			auto args = ov->arguments;
-			args.appendBack(optionals.sliced(0, -(i+1)));
-			if (auto const f = fn.overloadFromVariables(args)) {
-				if (f->hasImplementation)
-					context.error("Redeclaration of function overload!", node);
-				if (!implScope) {
-					auto const ovName = scope->function->name + overloadName(args);
-					implScope = context.declare(Makai::UTF8StringList::from("<overload>" + ovName));
-					f->entry = "__" + ovName  + node->name();
-					context.pop(1);
-				}
-			} else {
-				auto const ovName = scope->function->name + overloadName(args);
-				auto const overloadScope = context.declare(Makai::UTF8StringList::from("<overload>" + ovName));
-				if (!implScope)
-					implScope = overloadScope;
-				auto const oo = ov.create();
-				oo->entry = "__" + ovName + node->name();
-				oo->arguments = args;
-				oo->result = ov->result;
-				oo->scope = overloadScope.asWeak();
-				for (auto const& arg: args)
-					oo->scope->subspaces[arg->name] = arg->scope.raw();
-				fn.overloads.pushBack(oo);
-				fn.current.pushBack(oo);
-				if (!implOv) implOv = oo;
-				else {
-					overloadScope->impl->writePreLine("@def", oo->entry, ":");
-					overloadScope->impl->writePreLine("enter", toString(args.size()));
-					overloadScope->impl->writePreLine("bind ref", toString(args.size()), "[0 -> 0]");
-					overloadScope->impl->writeMainLine(oo->arguments[i+1]->initializer->compose()->toString());
-					if (overloadScope->impl->main.back() == "pop")
-						overloadScope->impl->main.popBack();
-					overloadScope->impl->main.popBack();
-					overloadScope->impl->writePostLine("call", implOv->entry);
-					overloadScope->impl->writePostLine("exit");
-					overloadScope->impl->writePostLine("ret");
-					overloadScope->impl->writePostLine("@def .\n");
-					oo->hasImplementation = true;
-				}
-				context.pop(1);
-			}
-		}
-	} else {
-		implOv = ov;
-		if (node->rightSide)
-			implScope = newScope;
-		auto const ovName = scope->function->name + overloadName(ov->arguments);
-		ov->entry = "__" + ovName  + node->name();
-		fn.overloads.pushBack(implOv);
-		fn.current.pushBack(implOv);
+	Namespace::TypeRef retType;
+	if (proto->rightSide) {
+		retType = Expression().transform(context, proto->rightSide).type;
+		if (!retType) context.error("Return type does not exist!", proto->rightSide);
+	}
+	auto const impl = context.declare(Makai::UTF8StringList::from("<impl>" + node->name()));
+	Function::OverloadRef current = current.create(), prev;
+	fn->current.pushBack(current);
+	current->entry = "__" + fn->name + node->name();
+	current->scope = impl.asWeak();
+	impl->impl->writePreLine("@def", current->entry, ":");
+	impl->impl->writePreLine("enter", required.size() + optional.size());
+	impl->impl->writePreLine("bind ref", required.size(), "[0 -> 0]");
+	for (auto& arg: required) {
+		auto const ax = Expression().transform(context, arg);
+		current->arguments.pushBack(ax.scope->variable);
+	}
+	current->entry = "__" + overloadName(current->arguments) + node->name();
+	if (fn->overloadFromVariables(current->arguments))
+		context.error("An overload already exists for this function!", node);
+	fn->overloads.pushBack(current);
+	for (auto const [opt, i]: Range::expand(optional)) {
+		auto const overload = context.declare(Makai::UTF8StringList::from("<impl>" + node->name()));
+		prev = current;
+		current = current.create();
+		fn->current.pushBack(current);
+		overload->impl->writePreLine("@def", current->entry, ":");
+		current->scope = overload.asWeak();
+		auto const ox = Expression().transform(context, opt);
+		current->arguments = prev->arguments;
+		overload->varc = current->arguments.size();
+		current->arguments.pushBack(ox.scope->variable);
+		current->entry = "__" + overloadName(current->arguments) + node->name();
+		overload->impl->writeMainLine(ox.scope->variable->initializer->compose()->toString());
+		if (overload->impl->main.back() == "pop")
+			overload->impl->main.popBack();
+		overload->impl->writeMainLine("copy move top -> arg[", i + required.size(), "]");
+		if (fn->overloadFromVariables(current->arguments))
+			context.error("An overload already exists for this function!", node);
+		fn->overloads.pushBack(current);
 	}
 	if (node->rightSide) {
-		context.scopeStack.pushBack(implScope);
-		implScope->impl->writePreLine("@def", implOv->entry, ":");
-		implScope->impl->writePreLine("enter", implScope->varc);
-		implScope->impl->writePreLine("bind ref", implScope->varc, "[0 -> 0]");
-		implScope->impl->writePreLine("clear", implScope->varc);
-		auto const expr = Expression().transform(context, node->rightSide);
-		if (expr.shouldBePushed())
-			implScope->impl->writePostLine("push", *expr.source);
-		else if (expr.isStackTop() && expr.isCopied()) {
-			context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
+		auto const def = Expression().transform(context, node->rightSide);
+		if (retType && retType != def.type)
+			context.error("Function does not return a type!", node);
+		else if (!retType) {
+			if (!def.type)
+				retType = context.basicType("void");
+			else retType = def.type;
 		}
-		implScope->impl->writePostLine("exit");
-		implScope->impl->writePostLine("ret");
-		implScope->impl->writePostLine("@def .\n");
-		implOv->scope = implScope.asWeak();
-		context.scopeStack.popBack();
-		if (!implOv->result && expr.source)
-			implOv->result = expr.type;
-		implOv->hasImplementation = true;
 	}
-	if (!implOv->result)
-		implOv->result = context.basicType("void");
-	context.pop(isCompletelyNewFunction ? path.size() : 1);
+	impl->impl->writePostLine("exit");
+	impl->impl->writePostLine("ret");
+	context.pop(2 + optional.size());
+	for (auto& ov: fn->current)
+		ov->result = retType;
 	context.registerFunction(scope);
 	return {.scope = scope};
 }

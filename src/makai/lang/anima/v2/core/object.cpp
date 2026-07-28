@@ -84,6 +84,8 @@ Object::SetError Object::setAtIndex(uint64 const index, Object::Storage const& v
 
 bool Object::push(Object::Storage const& value) {
 	if (!isArray()) return false;
+	fields.pushBack(value);
+	return true;
 }
 
 Makai::Nullable<Object::Storage> Object::pop() {

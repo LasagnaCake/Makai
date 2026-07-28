@@ -6,6 +6,7 @@ struct Person {
 	
 	fullName :: (@ByRef self: Person) => '"' + self.firstName + " " + self.lastName + '"'
 	
+	@Static
 	create :: (firstName: string, lastName: string = "Someone") => new Person {firstName, lastName}
 }
 
