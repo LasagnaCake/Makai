@@ -94,7 +94,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			return impl;
 		}
 
-		UTF8String toString() const {return pre.join("\n") + main.join("\n") + post.join("\n");}
+		UTF8String toString() const {return pre.join("\n") + "\n" + main.join("\n") + "\n" + post.join("\n");}
 
 		Makai::Data::Value serialize() const override;
 
