@@ -1306,9 +1306,9 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		current = current.create();
 		current->fullImpl = first->fullImpl;
 		fn->current.pushBack(current);
-		auto const ox = Expression().transform(context, opt);
 		current->arguments = prev->arguments;
-		overload->varc = current->arguments.size() + 1;
+		overload->varc = current->arguments.size();
+		auto const ox = Expression().transform(context, opt);
 		current->arguments.pushBack(ox.scope->variable);
 		auto const fx = fn->overloadFromVariables(current->arguments);
 		if (fx && fx->hasImplementation)
