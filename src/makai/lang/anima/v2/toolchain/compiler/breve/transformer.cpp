@@ -1315,7 +1315,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			context.error("An overload already exists for this function!", node);
 		current->entry = "__" + fn->name + overloadName(current->arguments) + node->name();
 		MAKAILIB_DEBUGLN_FULL("Overload: ", current->entry);
-		overload->impl->writePreLine(ox.scope->variable->initializer->compose()->toString());
+		overload->impl->writePreLine(ox.scope->variable->initializer->impl->toString());
 		overload->impl->writePreLine("@def", current->entry, ":");
 		ox.scope->variable->initializer = nullptr;
 		fn->overloads.pushBack(current);
