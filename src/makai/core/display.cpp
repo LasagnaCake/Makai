@@ -10,7 +10,7 @@ using namespace Makai;
 
 Makai::Math::Vector2 Makai::getDisplaySize(usize const display) {
 	SDL_Rect bounds;
-	MAKAILIB_DEBUGLN_ALL("Starting SDL...");
+	MAKAILIB_DEBUGLN_FULL("Starting SDL...");
 	if (!SDL_WasInit(SDL_INIT_VIDEO))
 		if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 			throw Error::FailedAction(

@@ -101,9 +101,9 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Constructs the player.
 		/// @param cfg Player configuration to use.
 		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), Flaggable{Flags::DEFAULT}, mask(cfg.mask) {
-			MAKAILIB_DEBUGLN_ALL("Building player...");
-			MAKAILIB_DEBUGLN_ALL("Graze: ", Collision::Layer::asName(cfg.grazebox.layer));
-			MAKAILIB_DEBUGLN_ALL("Item: ", Collision::Layer::asName(cfg.itembox.layer));
+			MAKAILIB_DEBUGLN_FULL("Building player...");
+			MAKAILIB_DEBUGLN_FULL("Graze: ", Collision::Layer::asName(cfg.grazebox.layer));
+			MAKAILIB_DEBUGLN_FULL("Item: ", Collision::Layer::asName(cfg.itembox.layer));
 			grazebox	= CollisionServer::createCollider(cfg.grazebox.layer);
 			itembox		= CollisionServer::createCollider(cfg.itembox.layer);
 			collision()->getLayer().affects		= cfg.hitboxLayer.affects;
@@ -128,9 +128,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Destructor.
 		virtual ~APlayer() {
-			MAKAILIB_DEBUGLN_ALL("Demagnetizing player...");
+			MAKAILIB_DEBUGLN_FULL("Demagnetizing player...");
 			Instance<Vector2>::detach(&trans.position);
-			MAKAILIB_DEBUGLN_ALL("Player demagnetized!");
+			MAKAILIB_DEBUGLN_FULL("Player demagnetized!");
 		}
 
 		/// @brief Called every execution cycle.

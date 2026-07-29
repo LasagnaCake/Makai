@@ -44,15 +44,15 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 		);
 	}
 	MAKAILIB_DEBUG_BLOCK_FULL {
-		MAKAILIB_DEBUGLN_ALL("Instructions: ", mod.code.size());
-		MAKAILIB_DEBUG_ALL("Jump Table Entries: ", mod.jumpTable.size(), " [ ");
+		MAKAILIB_DEBUGLN_FULL("Instructions: ", mod.code.size());
+		MAKAILIB_DEBUG_FULL("Jump Table Entries: ", mod.jumpTable.size(), " [ ");
 		for (auto& jump : mod.jumpTable)
-			MAKAILIB_DEBUG_ALL(jump, " ");
-		MAKAILIB_DEBUGLN_ALL("]");
-		MAKAILIB_DEBUG_ALL("Relocations: ", mod.relocations.size(), " [ ");
+			MAKAILIB_DEBUG_FULL(jump, " ");
+		MAKAILIB_DEBUGLN_FULL("]");
+		MAKAILIB_DEBUG_FULL("Relocations: ", mod.relocations.size(), " [ ");
 		for (auto& rel : mod.relocations)
-			MAKAILIB_DEBUG_ALL(rel, " ");
-		MAKAILIB_DEBUGLN_ALL("]");
+			MAKAILIB_DEBUG_FULL(rel, " ");
+		MAKAILIB_DEBUGLN_FULL("]");
 	}
 	if (mod.code.empty()) throw Error::FailedAction(
 		"Failed to load file!",
@@ -91,7 +91,7 @@ Module Module::deserialize(Makai::Data::Value const& v) {
 Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	Makai::Data::Value out;
 	out["strings"]	= strings.toList<Makai::Data::Value>();
-	MAKAILIB_DEBUGLN_ALL("Binary: ", code.size());
+	MAKAILIB_DEBUGLN_FULL("Binary: ", code.size());
 	if (jumpTable.size())
 		out["jumps"] = Makai::Tool::Arch::compress(jumpTable.toBytes());
 	if (relocations.size())

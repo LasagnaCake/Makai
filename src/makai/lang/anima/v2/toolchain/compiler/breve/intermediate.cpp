@@ -30,14 +30,14 @@ Intermediate::~Intermediate() {}
 
 Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
-	MAKAILIB_DEBUG_ALL("Subspaces in '", name,"' : [ ");
+	MAKAILIB_DEBUG_FULL("Subspaces in '", name,"' : [ ");
 	for (auto const& [name, subns]: subspaces)
-		MAKAILIB_DEBUG_ALL( "{", name , ":", subns ? subns->name : "???NULL???", "} ");
-	MAKAILIB_DEBUGLN_ALL("]");
-	MAKAILIB_DEBUGLN_ALL("Looking for ", path.front().toString());
-	MAKAILIB_DEBUGLN_ALL("Exists? ", subspaces.contains(path.front()));
+		MAKAILIB_DEBUG_FULL( "{", name , ":", subns ? subns->name : "???NULL???", "} ");
+	MAKAILIB_DEBUGLN_FULL("]");
+	MAKAILIB_DEBUGLN_FULL("Looking for ", path.front().toString());
+	MAKAILIB_DEBUGLN_FULL("Exists? ", subspaces.contains(path.front()));
 	if (!subspaces.contains(path.front())) return nullptr;
-	MAKAILIB_DEBUGLN_ALL("You Sure? ", subspaces[path.front()].exists());
+	MAKAILIB_DEBUGLN_FULL("You Sure? ", subspaces[path.front()].exists());
 	if (path.size() == 1)
 		return subspaces[path.front()];
 	else if (subspaces[path.front()]) return subspaces[path.front()]->resolve(path.sliced(1));
@@ -46,29 +46,29 @@ Namespace::Instance Namespace::resolve(UTF8StringList const& path) const {
 
 Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 	if (path.empty()) return nullptr;
-	MAKAILIB_DEBUGLN_ALL("Looking for '/", path.join("/"), "'");
+	MAKAILIB_DEBUGLN_FULL("Looking for '/", path.join("/"), "'");
 	for (auto& scope: Makai::Range::reverse(scopeStack)) {
-		MAKAILIB_DEBUGLN_ALL("Scope: ", scope->name);
-		MAKAILIB_DEBUG_ALL("Subspaces: [ ");
+		MAKAILIB_DEBUGLN_FULL("Scope: ", scope->name);
+		MAKAILIB_DEBUG_FULL("Subspaces: [ ");
 		for (auto const& [name, subns]: scope->subspaces)
-			MAKAILIB_DEBUG_ALL( "{", name , ":", subns ? subns->name : "###__NULL__###", "} ");
-		MAKAILIB_DEBUGLN_ALL("]");
+			MAKAILIB_DEBUG_FULL( "{", name , ":", subns ? subns->name : "###__NULL__###", "} ");
+		MAKAILIB_DEBUGLN_FULL("]");
 		if (scope->name == path.front()) {
 			if (path.size() == 1)
 				return scope;
 			else if (auto const ns = scope->resolve(path.sliced(1)))
 				return ns;
 		} else if (auto const ns = scope->resolve(path)) return ns;
-		MAKAILIB_DEBUGLN_ALL("Nope!");
+		MAKAILIB_DEBUGLN_FULL("Nope!");
 	}
-	MAKAILIB_DEBUGLN_ALL("Global scope");
-	MAKAILIB_DEBUG_ALL("Subspaces: [ ");
+	MAKAILIB_DEBUGLN_FULL("Global scope");
+	MAKAILIB_DEBUG_FULL("Subspaces: [ ");
 	for (auto const& [name, subns]: root->subspaces)
-		MAKAILIB_DEBUG_ALL( "{", name , ":", subns->name, "} ");
-	MAKAILIB_DEBUGLN_ALL("]");
+		MAKAILIB_DEBUG_FULL( "{", name , ":", subns->name, "} ");
+	MAKAILIB_DEBUGLN_FULL("]");
 	if (auto const ns = root->resolve(path))
 		return ns;
-	MAKAILIB_DEBUGLN_ALL("Nope!");
+	MAKAILIB_DEBUGLN_FULL("Nope!");
 	return nullptr;
 }
 
@@ -400,7 +400,7 @@ static Namespace::AttributeRef createSharedAttribute() {
 					ov->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
 				ov->variant = Function::Overload::Variant::External::AV2_TCB_FO_VE_DYNLIB;
 				hit = true;
-				MAKAILIB_DEBUGLN_ALL("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Applying shared attribute...");
+				MAKAILIB_DEBUGLN_FULL("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Applying shared attribute...");
 				ov->hasImplementation = true;
 				ov->outEntry = name;
 				ov->dynlib = lib;

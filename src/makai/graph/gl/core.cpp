@@ -78,13 +78,13 @@ inline void printErrors() {
 	GLenum error = GL_NO_ERROR;
 	while ((error = glGetError()) != GL_NO_ERROR) {
 		switch(error) {
-			case GL_INVALID_ENUM:					MAKAILIB_DEBUGLN_ALL("error: NVALID ENUM"			);
-			case GL_INVALID_VALUE:					MAKAILIB_DEBUGLN_ALL("error: INVALID VALUE"			);
-			case GL_INVALID_OPERATION:				MAKAILIB_DEBUGLN_ALL("error: INVALID OPERATION"		);
-			case GL_INVALID_FRAMEBUFFER_OPERATION:	MAKAILIB_DEBUGLN_ALL("error: INVALID FB OPERATION"	);
-			case GL_OUT_OF_MEMORY:					MAKAILIB_DEBUGLN_ALL("error: OUT OF MEMORY"			);
-			case GL_STACK_UNDERFLOW:				MAKAILIB_DEBUGLN_ALL("error: STACK UNDERFLOW"		);
-			case GL_STACK_OVERFLOW:					MAKAILIB_DEBUGLN_ALL("error: STACK OVERFLOW"			);
+			case GL_INVALID_ENUM:					MAKAILIB_DEBUGLN_FULL("error: NVALID ENUM"			);
+			case GL_INVALID_VALUE:					MAKAILIB_DEBUGLN_FULL("error: INVALID VALUE"			);
+			case GL_INVALID_OPERATION:				MAKAILIB_DEBUGLN_FULL("error: INVALID OPERATION"		);
+			case GL_INVALID_FRAMEBUFFER_OPERATION:	MAKAILIB_DEBUGLN_FULL("error: INVALID FB OPERATION"	);
+			case GL_OUT_OF_MEMORY:					MAKAILIB_DEBUGLN_FULL("error: OUT OF MEMORY"			);
+			case GL_STACK_UNDERFLOW:				MAKAILIB_DEBUGLN_FULL("error: STACK UNDERFLOW"		);
+			case GL_STACK_OVERFLOW:					MAKAILIB_DEBUGLN_FULL("error: STACK OVERFLOW"			);
 		}
 	}
 }
@@ -196,14 +196,14 @@ void GLAPIENTRY glAPIMessageCallback(
 	const void* userParam
 ) {
 	if (type == GL_DEBUG_TYPE_PUSH_GROUP) {
-		MAKAILIB_DEBUGLN_ALL("<api:context name=\"", message, "\">");
+		MAKAILIB_DEBUGLN_FULL("<api:context name=\"", message, "\">");
 		return;
 	}
 	if (type == GL_DEBUG_TYPE_POP_GROUP) {
-		MAKAILIB_DEBUGLN_ALL("</api:context>");
+		MAKAILIB_DEBUGLN_FULL("</api:context>");
 		return;
 	}
-	MAKAILIB_DEBUGLN_ALL(
+	MAKAILIB_DEBUGLN_FULL(
 		"<api:message>\n"
 		, "Source: "	, glDebugSource(source)		, "\n"
 		, "Type: "		, glDebugType(type)			, "\n"
@@ -322,7 +322,7 @@ void Makai::Graph::API::beginRender() {
 void Makai::Graph::API::endRender() {
 	#ifdef MAKAILIB_DEBUG
 	if (apiDebug) {
-		MAKAILIB_DEBUGLN_ALL(renderContext->report());
+		MAKAILIB_DEBUGLN_FULL(renderContext->report());
 		renderContext.unbind();
 	}
 	#endif // MAKAILIB_DEBUG

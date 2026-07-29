@@ -123,7 +123,7 @@ static ATransformer::Result resolveSubfield(
 	if (sub.empty()) {
 		return {{"move top"}, ns};
 	}
-	MAKAILIB_DEBUGLN_ALL("Looking for subspace '", sub, "'...");
+	MAKAILIB_DEBUGLN_FULL("Looking for subspace '", sub, "'...");
 	if (ns->variable) {
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
@@ -161,10 +161,10 @@ static ATransformer::Result resolveSubfield(
 		}
 		context.error("Symbol does not exist in the given scope!", node);
 	}
-	MAKAILIB_DEBUG_ALL("Available Subspaces: [ ");
+	MAKAILIB_DEBUG_FULL("Available Subspaces: [ ");
 	for (auto const& [name, subns]: ns->subspaces)
-		MAKAILIB_DEBUG_ALL( "{", name , ":", subns->name, "} ");
-	MAKAILIB_DEBUGLN_ALL("]");
+		MAKAILIB_DEBUG_FULL( "{", name , ":", subns->name, "} ");
+	MAKAILIB_DEBUGLN_FULL("]");
 	if (!ns->subspaces.contains(sub))
 		context.error("Symbol does not exist in the given scope!", node);
 	return {.scope = ns->subspaces[sub]};
@@ -302,9 +302,9 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	if (!node)
 		return Makai::UTF8StringList();
 	// CPP::Debug::breakpoint();
-	MAKAILIB_DEBUGLN_ALL("NODE_ADDR_", node.raw());
+	MAKAILIB_DEBUGLN_FULL("NODE_ADDR_", node.raw());
 	if (node->content == Node::Content::AV2_TANC_NAME) {
-		MAKAILIB_DEBUGLN_ALL("------ Left:", node->value.getString());
+		MAKAILIB_DEBUGLN_FULL("------ Left:", node->value.getString());
 		return Makai::UTF8StringList::from(node->value.getString());
 	}
 	else if (!node->isPathOrName())
@@ -314,12 +314,12 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 		Context::error("This is not a valid path!", node->rightSide);
 	if (node->leftSide)
 		path.appendBack(pathOf(node->leftSide));
-	MAKAILIB_DEBUGLN_ALL("------ Right:", node->value.getString());
+	MAKAILIB_DEBUGLN_FULL("------ Right:", node->value.getString());
 	path.appendBack(pathOf(node->value.getString()));
-	MAKAILIB_DEBUG_ALL("Path: ");
+	MAKAILIB_DEBUG_FULL("Path: ");
 	for (auto& name: path)
-		MAKAILIB_DEBUG_ALL("/", name);
-	MAKAILIB_DEBUG_ALL("\n");
+		MAKAILIB_DEBUG_FULL("/", name);
+	MAKAILIB_DEBUG_FULL("\n");
 	return copy(path);
 }
 
@@ -431,7 +431,7 @@ ATransformer::Result Using::transform(Context& context, Node::Instance const& no
 		context.error("Scope is not a pure namespace!", node->leftSide);
 	for (auto& [name, mem]: scope->subspaces) {
 		if (!context.top()->subspaces.contains(name)) {
-			MAKAILIB_DEBUGLN_ALL("Adding ", name, "...");
+			MAKAILIB_DEBUGLN_FULL("Adding ", name, "...");
 			context.top()->subspaces[name] = mem;
 		}
 	}
@@ -464,17 +464,17 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	evalDecl = [&] (Node::Instance const& node, Node::Instance const& root) {
 		if (node->content == Node::Content::AV2_TANC_DECLARATION) {
 			if (node->base.type == LTS_TT_NAMESPACE_RESOLVE) {
-				MAKAILIB_DEBUGLN_ALL("  > Function");
+				MAKAILIB_DEBUGLN_FULL("  > Function");
 				methods.pushBack(root);
 			} else if (
 				node->base.type == LTS_TT_COLON
 			or	node->base.type == LTS_TT_DECLARE
 			or	node->base.type == LTS_TT_ASSIGN
 			) {
-				MAKAILIB_DEBUGLN_ALL("  > Field");
+				MAKAILIB_DEBUGLN_FULL("  > Field");
 				fields.pushBack(root);
 			} else if (node->base.text == "prop") {
-				MAKAILIB_DEBUGLN_ALL("  > Property");
+				MAKAILIB_DEBUGLN_FULL("  > Property");
 				properties.pushBack(root);
 			}
 			else context.error("Invalid declaration inside structure declaration!", node);
@@ -482,10 +482,10 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			evalDecl(node->rightSide, root);
 		} else context.error("Invalid expression inside structure declaration!", node);
 	};
-	MAKAILIB_DEBUGLN_ALL("struct {");
+	MAKAILIB_DEBUGLN_FULL("struct {");
 	for (auto& entry: node->rightSide->children)
 		evalDecl(entry, entry);
-	MAKAILIB_DEBUGLN_ALL("}");
+	MAKAILIB_DEBUGLN_FULL("}");
 	type.scope = scope.asWeak();
 	type.node = node;
 	type.name = "__" + name.join("_") + node->name();
@@ -493,15 +493,15 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	List<Namespace::VariableRef> statics;
 	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
 	scope->type->flags.isStructure = true;
-	MAKAILIB_DEBUGLN_ALL("Parsing fields...");
-	MAKAILIB_DEBUGLN_ALL("Field count: ", fields.size());
+	MAKAILIB_DEBUGLN_FULL("Parsing fields...");
+	MAKAILIB_DEBUGLN_FULL("Field count: ", fields.size());
 	for (auto const& [field, id]: Range::expand(fields)) {
 		auto const decl = Expression().transform(context, field);
 		auto& var = *decl.scope->variable;
 		var.fieldOf = scope->type.asWeak();
 		type.fields[var.name] = decl.scope->variable;
 		scope->subspaces[var.name] = decl.scope;
-		MAKAILIB_DEBUGLN_ALL("Field: ", var.name);
+		MAKAILIB_DEBUGLN_FULL("Field: ", var.name);
 		var.id = id;
 	}
 	context.pop(name.size());
@@ -509,8 +509,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto implName = name;
 	implName.back() = "::IMPL__" + implName.back();
 	context.declare(implName);
-	MAKAILIB_DEBUGLN_ALL("Parsing methods...");
-	MAKAILIB_DEBUGLN_ALL("Method count: ", methods.size());
+	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
+	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
 	for (auto& method: methods) {
 		auto const decl = Expression().transform(context, method);
 		auto& fn = *decl.scope->function;
@@ -741,13 +741,13 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	||	node->base.text == "move"
 	) {
 		auto mod = node->base.text;
-		MAKAILIB_DEBUGLN_ALL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
+		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		if (mod == "copy") {
 			if (!(val.type->flags.isBasic or val.type->flags.isCopyable))
 				context.error("Value is not of a copyable type!", node);
 			mod = "val";
 		}
-		MAKAILIB_DEBUGLN_ALL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
+		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood};
 	}
 	if (val.shouldBePushed()) {
@@ -929,10 +929,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	}
 	if (!lhsHasBeenPushed && !lhs.isStackTop() && rhs.isStackTop())
 		context.top()->impl->writeMainLine("swap");
-	MAKAILIB_DEBUGLN_ALL("LHS = [", lhs.source.value(), "]");
-	MAKAILIB_DEBUGLN_ALL("RHS = [", rhs.source.value(), "]");
-	MAKAILIB_DEBUGLN_ALL("LHS Type: ", lhs.type ? lhs.type->name : "NO_TYPE");
-	MAKAILIB_DEBUGLN_ALL("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
+	MAKAILIB_DEBUGLN_FULL("LHS = [", lhs.source.value(), "]");
+	MAKAILIB_DEBUGLN_FULL("RHS = [", rhs.source.value(), "]");
+	MAKAILIB_DEBUGLN_FULL("LHS Type: ", lhs.type ? lhs.type->name : "NO_TYPE");
+	MAKAILIB_DEBUGLN_FULL("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
 	if (isLogicOp(node)) {
 		if (node->base.type == LTS_TT_LOGIC_AND)
 			context.impl()->writeMainLine("@label", sseAnd);
@@ -942,7 +942,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (!t) context.error("Type mismatch!", node);
 		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 	} else if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
-		MAKAILIB_DEBUGLN_ALL("Stronger: ", t->name);
+		MAKAILIB_DEBUGLN_FULL("Stronger: ", t->name);
 		if (t->basic) {
 			if (lhs.type->basic == rhs.type->basic)
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->basic, rhs));
@@ -1052,7 +1052,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 
 ATransformer::Result Expression::transform(Context& context, Node::Instance const& node) {
 	if (!node) return {};
-	MAKAILIB_DEBUGLN_ALL("Expression Type: ", Node::asString(node->content));
+	MAKAILIB_DEBUGLN_FULL("Expression Type: ", Node::asString(node->content));
 	switch (node->content) {
 		case Node::Content::AV2_TANC_EMPTY:				return {};
 		case Node::Content::AV2_TANC_VALUE:				return Direct().transform(context, node);
@@ -1154,7 +1154,7 @@ static Makai::UTF8StringList resolveAttribute(
 			if (at->leftSide->content != Node::Content::AV2_TANC_NAME)
 				context.error("Expected name here!", at->leftSide);
 			auto const name = at->leftSide->value.getString();
-			MAKAILIB_DEBUGLN_ALL("~~~~~~~~~~~~ Attribute Field: ", name);
+			MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~ Attribute Field: ", name);
 			if (attr->value.contains(name))
 				context.error("Redeclaration of previously-declared field!", at->leftSide);
 			if (!attr->attribute->fields.contains(name))
@@ -1287,7 +1287,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	impl->impl->writePreLine("@def", current->entry, ":");
 	impl->impl->writePreLine("enter", required.size() + optional.size());
 	impl->impl->writePreLine("bind ref", required.size(), "[0 -> 0]");
-	MAKAILIB_DEBUGLN_ALL("Overload: ", current->entry);
+	MAKAILIB_DEBUGLN_FULL("Overload: ", current->entry);
 	current->scope = impl.asWeak();
 	auto const vx = fn->overloadFromVariables(current->arguments);
 	if (vx && vx->hasImplementation)
@@ -1311,7 +1311,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		if (fx && fx->hasImplementation)
 			context.error("An overload already exists for this function!", node);
 		current->entry = "__" + fn->name + overloadName(current->arguments) + node->name();
-		MAKAILIB_DEBUGLN_ALL("Overload: ", current->entry);
+		MAKAILIB_DEBUGLN_FULL("Overload: ", current->entry);
 		overload->impl->writePreLine(ox.scope->variable->initializer->compose()->toString());
 		overload->impl->writePreLine("@def", current->entry, ":");
 		ox.scope->variable->initializer = nullptr;
@@ -1472,10 +1472,10 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
 	auto const path = context.pathOf(node->leftSide);
 	auto const fpath = path.join("/").toString();
-	MAKAILIB_DEBUG_ALL("Import Path: ");
+	MAKAILIB_DEBUG_FULL("Import Path: ");
 	for (auto& p: path)
-		MAKAILIB_DEBUG_ALL("/", p);
-	MAKAILIB_DEBUGLN_ALL("");
+		MAKAILIB_DEBUG_FULL("/", p);
+	MAKAILIB_DEBUGLN_FULL("");
 	auto const subinter = importer(fpath);
 	// This is for testing purposes
 	if (!subinter.content) return {};
@@ -1559,12 +1559,12 @@ static Makai::Data::Value callDirect(ATransformer::Context& context, Function::O
 }
 
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
-	MAKAILIB_DEBUGLN_ALL("Left-side: ", node->leftSide->base.text);
+	MAKAILIB_DEBUGLN_FULL("Left-side: ", node->leftSide->base.text);
 	auto const dx = context.impl()->main.size();
 	auto const fn = Expression().transform(context, node->leftSide);
 	if (!fn.scope)
 		context.error("Symbol does not exist!", node->leftSide);
-	MAKAILIB_DEBUGLN_ALL(fn.scope->name);
+	MAKAILIB_DEBUGLN_FULL(fn.scope->name);
 	if (!fn.scope->function)
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
@@ -1587,17 +1587,17 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			directArgs.pushBack(expr.direct);
 		else runtimeCall = true;
 	}
-	MAKAILIB_DEBUGLN_ALL("Function: ", f.name);
-	MAKAILIB_DEBUG_ALL("Overloads: [ ");
+	MAKAILIB_DEBUGLN_FULL("Function: ", f.name);
+	MAKAILIB_DEBUG_FULL("Overloads: [ ");
 	for (auto const& ov: f.overloads)
-		MAKAILIB_DEBUG_ALL(ov->prototype(), " ");
-	MAKAILIB_DEBUGLN_ALL("]");
+		MAKAILIB_DEBUG_FULL(ov->prototype(), " ");
+	MAKAILIB_DEBUGLN_FULL("]");
 	auto memArgs = args;
 	if (fn.type)
 		memArgs.reverse().pushBack(fn.type).reverse();
 	auto const ovLookupSig = args.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
 	auto const ovMemLookupSig = memArgs.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
-	MAKAILIB_DEBUGLN_ALL("Looking for: [", ovLookupSig, "] or [", ovMemLookupSig, "]");
+	MAKAILIB_DEBUGLN_FULL("Looking for: [", ovLookupSig, "] or [", ovMemLookupSig, "]");
 	if (!(f.overloadFromTypes(args) or f.overloadFromTypes(memArgs)))
 		context.error("No suitable overload exists!", node);
 	auto ovf = f.overloadFromTypes(args);
@@ -1732,13 +1732,13 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			Map<usize, UTF8String> remap;
 			Map<UTF8String, bool> filled;
 			for (auto& [name, entry]: t->fields) {
-				MAKAILIB_DEBUGLN_ALL("Field: ", name, " -> ", entry->id);
+				MAKAILIB_DEBUGLN_FULL("Field: ", name, " -> ", entry->id);
 				remap[entry->id] = name;
 			}
 			for (auto const& arg: node->children) {
 				if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 					auto const field = context.pathOf(arg->leftSide);
-					MAKAILIB_DEBUGLN_ALL("Setting Field: ", field.join("/"));
+					MAKAILIB_DEBUGLN_FULL("Setting Field: ", field.join("/"));
 					if (field.size() > 1) context.error("Invalid field access!", arg->leftSide);
 					if (!t->fields.contains(field.front()))
 						context.error("Field does not exist!", arg->leftSide);
@@ -1803,7 +1803,7 @@ ATransformer::Result Drop::transform(Context& context, Node::Instance const& nod
 ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance const& node) {
 	if (!node->rightSide)
 		context.error("Missing [else] expression!");
-	MAKAILIB_DEBUGLN_ALL("Handling inline if-else...");
+	MAKAILIB_DEBUGLN_FULL("Handling inline if-else...");
 	auto const iif = Branch().transform(context, node);
 	if (!(iif.source and iif.type)) context.error("inline if-elses must result in a value!", node);
 	return iif;
@@ -1812,7 +1812,7 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
 	auto const cond = Expression().transform(context, node->middle);
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
-	MAKAILIB_DEBUGLN_ALL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
+	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
 	if (cond.isCompilable()) {
 		if (cond.direct.isTruthy()) return Expression().transform(context, node->leftSide);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
@@ -1867,11 +1867,11 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		if (node->rightSide && ifTrue.type != ifFalse.type)
 			context.error("Both paths return different types!", node);
 		if (node->rightSide) {
-			MAKAILIB_DEBUGLN_ALL("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
-			MAKAILIB_DEBUGLN_ALL("If-False-side: ", ifFalse.type ? ifFalse.type->name : "NO TYPE");
+			MAKAILIB_DEBUGLN_FULL("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
+			MAKAILIB_DEBUGLN_FULL("If-False-side: ", ifFalse.type ? ifFalse.type->name : "NO TYPE");
 		} else {
-			MAKAILIB_DEBUGLN_ALL("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
-			MAKAILIB_DEBUGLN_ALL("If-False-side: ", "NONE");
+			MAKAILIB_DEBUGLN_FULL("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
+			MAKAILIB_DEBUGLN_FULL("If-False-side: ", "NONE");
 		}
 		context.top()->impl->writeMainLine("@target", ifEndLabel, ":");
 		return {.source = {"move top"}, .type = ifTrue.type, .likelihood = ifTrue.likelihood + ifFalse.likelihood};
@@ -1891,8 +1891,8 @@ ATransformer::Result Loop::transform(Context& context, Node::Instance const& nod
 	else if (node->base.text == "for")		exprOut = ForLoop().transform(context, node);
 	context.pop(scope.size());
 	auto const lpi = loopScope->compose();
-	MAKAILIB_DEBUGLN_ALL(loopScope->serialize().toFLOWString("  "));
-	MAKAILIB_DEBUGLN_ALL(lpi->serialize().toFLOWString("  "));
+	MAKAILIB_DEBUGLN_FULL(loopScope->serialize().toFLOWString("  "));
+	MAKAILIB_DEBUGLN_FULL(lpi->serialize().toFLOWString("  "));
 	context.top()->impl->writeMainLine(lpi->toString());
 	return exprOut;
 }

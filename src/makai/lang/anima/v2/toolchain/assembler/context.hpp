@@ -83,7 +83,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			void writeLine(Args const&... args)	{(..., display(toString(args))); display("\n");	}
 
 		protected:
-			virtual void display(String const& str)	{MAKAILIB_DEBUG_ALL(str);	}
+			virtual void display(String const& str)	{MAKAILIB_DEBUG_FULL(str);	}
 		};
 
 		Messager& out;
@@ -99,7 +99,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		BaseContext& next() {
 			if (empty()) return *this;
 			tokens.popBack();
-			if (!empty()) MAKAILIB_DEBUGLN_ALL("Token: ", token().text);
+			if (!empty()) MAKAILIB_DEBUGLN_FULL("Token: ", token().text);
 			return *this;
 		}
 

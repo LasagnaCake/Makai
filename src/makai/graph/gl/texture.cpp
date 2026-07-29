@@ -40,7 +40,7 @@ constexpr uint32 convert(FilterMode const& type) {
 }
 
 uint32 createCopyBuffer() {
-	MAKAILIB_DEBUGLN_ALL("Creating copy buffer...");
+	MAKAILIB_DEBUGLN_FULL("Creating copy buffer...");
 	uint id = 0;
 	glGenFramebuffers(1, &id);
 	return id;
@@ -61,9 +61,9 @@ void copyTexture(
 ) {
 	if (!src || !dst) return;
 	static uint32 const fb = createCopyBuffer();
-	MAKAILIB_DEBUGLN_ALL("Binding copy buffer...");
+	MAKAILIB_DEBUGLN_FULL("Binding copy buffer...");
 	glBindFramebuffer(GL_FRAMEBUFFER, fb);
-	MAKAILIB_DEBUGLN_ALL("Binding source...");
+	MAKAILIB_DEBUGLN_FULL("Binding source...");
 	glFramebufferTexture2D(
 		GL_READ_FRAMEBUFFER,
 		GL_COLOR_ATTACHMENT0,
@@ -71,7 +71,7 @@ void copyTexture(
 		src->getID(),
 		0
 	);
-	MAKAILIB_DEBUGLN_ALL("Binding destination...");
+	MAKAILIB_DEBUGLN_FULL("Binding destination...");
 	glFramebufferTexture2D(
 		GL_DRAW_FRAMEBUFFER,
 		GL_COLOR_ATTACHMENT1,
@@ -81,14 +81,14 @@ void copyTexture(
 	);
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glDrawBuffer(GL_COLOR_ATTACHMENT1);
-	MAKAILIB_DEBUGLN_ALL((glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "OK" : "ERR"));
-	MAKAILIB_DEBUGLN_ALL("Copying textures...");
+	MAKAILIB_DEBUGLN_FULL((glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "OK" : "ERR"));
+	MAKAILIB_DEBUGLN_FULL("Copying textures...");
 	glBlitFramebuffer(
 		srcStartX, srcStartY, srcEndX, srcEndY,
 		dstStartX, dstStartY, dstEndX, dstEndY,
 		GL_COLOR_BUFFER_BIT, convert(filter)
 	);
-	MAKAILIB_DEBUGLN_ALL("Finalizing...");
+	MAKAILIB_DEBUGLN_FULL("Finalizing...");
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -259,9 +259,9 @@ Texture2D& Texture2D::create(
 	Image2D::ImageData const& image
 ) {
 	if (exists()) return *this;
-	MAKAILIB_DEBUGLN_ALL("copying textures...");
+	MAKAILIB_DEBUGLN_FULL("copying textures...");
 	if (image.data.empty()) return *this;
-	MAKAILIB_DEBUGLN_ALL("Texture data exists!");
+	MAKAILIB_DEBUGLN_FULL("Texture data exists!");
 	create(
 		image.width,
 		image.height,

@@ -173,7 +173,7 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 	sound->instance->group = group;
 	sound->instance->type = type;
 	sound->instance->data = data;
-	MAKAILIB_DEBUGLN_ALL("Creating decoder...");
+	MAKAILIB_DEBUGLN_FULL("Creating decoder...");
 	ma_result result;
 	if (
 		(result = ma_decoder_init_memory(
@@ -183,10 +183,10 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 			&sound->instance->decoder
 		)) != MA_SUCCESS
 	) {
-		MAKAILIB_DEBUGLN_ALL("ERROR: ", ma_result_description(result));
+		MAKAILIB_DEBUGLN_FULL("ERROR: ", ma_result_description(result));
 		return nullptr;
 	}
-	MAKAILIB_DEBUGLN_ALL("Creating sound instance...");
+	MAKAILIB_DEBUGLN_FULL("Creating sound instance...");
 	if (
 		(result = ma_sound_init_from_data_source(
 			&engine,
@@ -196,10 +196,10 @@ Instance<Engine::Sound> Engine::Resource::createSound(
 			&sound->instance->source
 		)) != MA_SUCCESS
 	) {
-		MAKAILIB_DEBUGLN_ALL("ERROR: ", ma_result_description(result));
+		MAKAILIB_DEBUGLN_FULL("ERROR: ", ma_result_description(result));
 		return nullptr;
 	}
-	MAKAILIB_DEBUGLN_ALL("Done!");
+	MAKAILIB_DEBUGLN_FULL("Done!");
 	sounds.pushBack(sound->instance);
 	return sound;
 }
@@ -288,10 +288,10 @@ Engine::Sound& Engine::Sound::setLoopPoints(float const begin, float end) {
 		stop = Math::min<uint64>(instance->toPCMFrames(end), stop);
 	start = instance->toPCMFrames(begin);
 	if (stop <= start) return *this;
-	MAKAILIB_DEBUGLN_ALL("<loop>");
-	MAKAILIB_DEBUGLN_ALL("    BEGIN: ", begin, " (", start, ")");
-	MAKAILIB_DEBUGLN_ALL("    END:   ", end, " (", stop, ")");
-	MAKAILIB_DEBUGLN_ALL("</loop>");
+	MAKAILIB_DEBUGLN_FULL("<loop>");
+	MAKAILIB_DEBUGLN_FULL("    BEGIN: ", begin, " (", start, ")");
+	MAKAILIB_DEBUGLN_FULL("    END:   ", end, " (", stop, ")");
+	MAKAILIB_DEBUGLN_FULL("</loop>");
 	ma_data_source_set_loop_point_in_pcm_frames(&instance->decoder, start, stop);
 	return *this;
 }

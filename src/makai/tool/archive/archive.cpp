@@ -286,14 +286,14 @@ void Arch::pack(
 	try {
 		// Hash the password
 		String passhash = hashPassword(password);
-		MAKAILIB_DEBUGLN_ALL("FOLDER: ", folderPath, "\nARCHIVE: ", archivePath);
+		MAKAILIB_DEBUGLN_FULL("FOLDER: ", folderPath, "\nARCHIVE: ", archivePath);
 		// Get file structure
-		MAKAILIB_DEBUGLN_ALL("Getting file structure...");
+		MAKAILIB_DEBUGLN_FULL("Getting file structure...");
 		Value dir;
 		StringList files;
 		Value tree = dir["tree"];
 		tree = getStructure(fs::path(folderPath.std()), files, String(fs::path(folderPath.std()).stem().string()));
-		MAKAILIB_DEBUGLN_ALL("\n", dir.toFLOWString(String{"  "}));
+		MAKAILIB_DEBUGLN_FULL("\n", dir.toFLOWString(String{"  "}));
 		// Populate with temporary values
 		List<uint64> locations;
 		locations.resize(files.size(), 0);
@@ -302,7 +302,7 @@ void Arch::pack(
 		file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
 		file.open(archivePath.cstr(), std::ios::binary | std::ios::trunc);
 		// Populate header
-		MAKAILIB_DEBUGLN_ALL("Creating header...\n");
+		MAKAILIB_DEBUGLN_FULL("Creating header...\n");
 		// Headers
 		ArchiveHeader	header;
 		// Set main header params
@@ -314,29 +314,29 @@ void Arch::pack(
 		header.flags = {
 			.shouldCheckCRC = true
 		};
-		MAKAILIB_DEBUGLN_ALL("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
-		MAKAILIB_DEBUGLN_ALL("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
-		MAKAILIB_DEBUGLN_ALL("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
-		MAKAILIB_DEBUGLN_ALL("     FILE FORMAT VERSION: ", (uint64)header.version				);
-		MAKAILIB_DEBUGLN_ALL(" FILE FORMAT MIN VERSION: ", (uint64)header.minVersion				);
-		MAKAILIB_DEBUGLN_ALL("         ENCRYPTION MODE: ", (uint64)header.encryption				);
-		MAKAILIB_DEBUGLN_ALL("        COMPRESSION MODE: ", (uint64)header.compression			);
-		MAKAILIB_DEBUGLN_ALL("       COMPRESSION LEVEL: ", (uint64)header.level					);
-		MAKAILIB_DEBUGLN_ALL("\nDirectory structure layout:");
-		MAKAILIB_DEBUGLN_ALL("       FILE COUNT: ", files.size()			);
+		MAKAILIB_DEBUGLN_FULL("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
+		MAKAILIB_DEBUGLN_FULL("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
+		MAKAILIB_DEBUGLN_FULL("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
+		MAKAILIB_DEBUGLN_FULL("     FILE FORMAT VERSION: ", (uint64)header.version				);
+		MAKAILIB_DEBUGLN_FULL(" FILE FORMAT MIN VERSION: ", (uint64)header.minVersion				);
+		MAKAILIB_DEBUGLN_FULL("         ENCRYPTION MODE: ", (uint64)header.encryption				);
+		MAKAILIB_DEBUGLN_FULL("        COMPRESSION MODE: ", (uint64)header.compression			);
+		MAKAILIB_DEBUGLN_FULL("       COMPRESSION LEVEL: ", (uint64)header.level					);
+		MAKAILIB_DEBUGLN_FULL("\nDirectory structure layout:");
+		MAKAILIB_DEBUGLN_FULL("       FILE COUNT: ", files.size()			);
 		// Write main header first pass
 		file.write((char*)&header, header.headerSize);
 		// Write file info
-		MAKAILIB_DEBUGLN_ALL("\nWriting files...\n");
+		MAKAILIB_DEBUGLN_FULL("\nWriting files...\n");
 		usize i = 0;
 		for (auto const& f: files) {
 			// Get current stream position as file location
 			locations[i] = file.tellp();
 			// Read file
 			String const loc = Regex::replace(f, "^(.*?)[\\\\\\/]", "");
-			MAKAILIB_DEBUGLN_ALL("Clean path: '", loc, "'");
+			MAKAILIB_DEBUGLN_FULL("Clean path: '", loc, "'");
 			String const fpath = Makai::OS::FS::concatenate(folderPath, loc);
-			MAKAILIB_DEBUGLN_ALL("Full path: '", fpath, "'");
+			MAKAILIB_DEBUGLN_FULL("Full path: '", fpath, "'");
 			BinaryData<> contents = File::loadBinary(fpath);
 			// Prepare header
 			FileHeader fheader;
@@ -350,25 +350,25 @@ void Arch::pack(
 					comp,
 					complvl
 				);
-				MAKAILIB_DEBUGLN_ALL("Before encryption: ", contents.size());
+				MAKAILIB_DEBUGLN_FULL("Before encryption: ", contents.size());
 				contents = encrypt(
 					contents,
 					passhash,
 					enc,
 					fheader.block
 				);
-				MAKAILIB_DEBUGLN_ALL("After encryption: ", contents.size());
+				MAKAILIB_DEBUGLN_FULL("After encryption: ", contents.size());
 			}
 			fheader.compSize	= contents.size();	// Compressed file size
 			fheader.crc			= crcOf(contents);	// CRC
 			// Debug info
-			MAKAILIB_DEBUGLN_ALL("'", files[i], "':");
-			MAKAILIB_DEBUGLN_ALL("          FILE INDEX: ", i							);
-			MAKAILIB_DEBUGLN_ALL("       FILE LOCATION: ", locations[i]				);
-			MAKAILIB_DEBUGLN_ALL("                 ENCODED: ", encoded(locations[i])	);
-			MAKAILIB_DEBUGLN_ALL("   UNCOMPRESSED SIZE: ", fheader.uncSize,	"B"		);
-			MAKAILIB_DEBUGLN_ALL("     COMPRESSED SIZE: ", fheader.compSize,	"B"		);
-			MAKAILIB_DEBUGLN_ALL("               CRC32: ", fheader.crc,		"\n"	);
+			MAKAILIB_DEBUGLN_FULL("'", files[i], "':");
+			MAKAILIB_DEBUGLN_FULL("          FILE INDEX: ", i							);
+			MAKAILIB_DEBUGLN_FULL("       FILE LOCATION: ", locations[i]				);
+			MAKAILIB_DEBUGLN_FULL("                 ENCODED: ", encoded(locations[i])	);
+			MAKAILIB_DEBUGLN_FULL("   UNCOMPRESSED SIZE: ", fheader.uncSize,	"B"		);
+			MAKAILIB_DEBUGLN_FULL("     COMPRESSED SIZE: ", fheader.compSize,	"B"		);
+			MAKAILIB_DEBUGLN_FULL("               CRC32: ", fheader.crc,		"\n"	);
 			// Copy header & file data
 			file.write((char*)&fheader, header.fileHeaderSize);
 			file.write((char*)contents.data(), contents.size());
@@ -378,8 +378,8 @@ void Arch::pack(
 		populateTree(tree, locations);
 		dir["tree"] = tree;
 		// Process directory structure
-		MAKAILIB_DEBUGLN_ALL("\nWriting directory structure...\n");
-		MAKAILIB_DEBUGLN_ALL("\n", dir.toFLOWString(String{"  "}));
+		MAKAILIB_DEBUGLN_FULL("\nWriting directory structure...\n");
+		MAKAILIB_DEBUGLN_FULL("\n", dir.toFLOWString(String{"  "}));
 		{
 			// Directory header
 			DirectoryHeader	dheader;
@@ -399,9 +399,9 @@ void Arch::pack(
 			// Get directory header location
 			header.dirHeaderLoc = file.tellp();
 			// Debug info
-			MAKAILIB_DEBUGLN_ALL("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
-			MAKAILIB_DEBUGLN_ALL("        UNCOMPRESSED SIZE: ", dheader.uncSize,		"B"	);
-			MAKAILIB_DEBUGLN_ALL("          COMPRESSED SIZE: ", dheader.compSize,	"B"	);
+			MAKAILIB_DEBUGLN_FULL("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
+			MAKAILIB_DEBUGLN_FULL("        UNCOMPRESSED SIZE: ", dheader.uncSize,		"B"	);
+			MAKAILIB_DEBUGLN_FULL("          COMPRESSED SIZE: ", dheader.compSize,	"B"	);
 			// Write header & directory info
 			file.write((char*)&dheader, header.dirHeaderSize);
 			file.write((char*)pdi.data(), pdi.size());
@@ -412,7 +412,7 @@ void Arch::pack(
 		// Close file
 		file.flush();
 		file.close();
-		MAKAILIB_DEBUGLN_ALL("\nDone!");
+		MAKAILIB_DEBUGLN_FULL("\nDone!");
 	} catch (std::exception const& e) {
 		throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 	}
@@ -606,14 +606,14 @@ void Arch::FileArchive::parseFileTree() {
 		archive->go(header.dirHeaderLoc);
 		archive->readInto((ref<byte>)&dh, header.dirHeaderSize);
 		if (!dh.compSize || !dh.uncSize) directoryTreeError();
-		MAKAILIB_DEBUGLN_ALL("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
-		MAKAILIB_DEBUGLN_ALL("        UNCOMPRESSED SIZE: ", dh.uncSize,			"B"	);
-		MAKAILIB_DEBUGLN_ALL("          COMPRESSED SIZE: ", dh.compSize,			"B"	);
+		MAKAILIB_DEBUGLN_FULL("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
+		MAKAILIB_DEBUGLN_FULL("        UNCOMPRESSED SIZE: ", dh.uncSize,			"B"	);
+		MAKAILIB_DEBUGLN_FULL("          COMPRESSED SIZE: ", dh.compSize,			"B"	);
 		BinaryData<> pfs;
 		pfs.resize(dh.compSize, 0);
 		archive->readInto((ref<byte>)pfs.data(), pfs.size());
 		archive->go(0);
-		MAKAILIB_DEBUGLN_ALL("Demangling tree data...");
+		MAKAILIB_DEBUGLN_FULL("Demangling tree data...");
 		demangleData(pfs, dh.block);
 		fs.resize(pfs.size(), 0);
 		MX::memcpy(fs.data(), pfs.data(), fs.size());
@@ -621,7 +621,7 @@ void Arch::FileArchive::parseFileTree() {
 		break;
 	}
 	try {
-		MAKAILIB_DEBUGLN_ALL("Parsing tree...");
+		MAKAILIB_DEBUGLN_FULL("Parsing tree...");
 		fstruct = Makai::JSON::parse(fs);
 	} catch (Error::FailedAction const& e) {
 		throw File::FileLoadError(
@@ -678,11 +678,11 @@ Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path)
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (!fstruct["tree"].isObject())
 		directoryTreeError();
-	MAKAILIB_DEBUGLN_ALL("Getting file entry location...");
+	MAKAILIB_DEBUGLN_FULL("Getting file entry location...");
 	uint64		idx	= getFileEntryLocation(path.lower(), path);
-	MAKAILIB_DEBUGLN_ALL("Getting file entry header...");
+	MAKAILIB_DEBUGLN_FULL("Getting file entry header...");
 	FileHeader	fh	= getFileEntryHeader(idx);
-	MAKAILIB_DEBUGLN_ALL("Getting file entry data...");
+	MAKAILIB_DEBUGLN_FULL("Getting file entry data...");
 	return Arch::FileArchive::FileEntry{idx, path, fh, getFileEntryData(idx, fh)};
 } catch (File::FileLoadError const& e) {
 	Error::rethrow(e);
@@ -723,8 +723,8 @@ uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const&
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	List<Value> stack;
 	Value entry = fstruct["tree"];
-	MAKAILIB_DEBUGLN_ALL("Path: ", origpath);
-	MAKAILIB_DEBUGLN_ALL("Cleaned: ", Regex::replace(path, "[\\\\\\/]+", "/"));
+	MAKAILIB_DEBUGLN_FULL("Path: ", origpath);
+	MAKAILIB_DEBUGLN_FULL("Cleaned: ", Regex::replace(path, "[\\\\\\/]+", "/"));
 	// Loop through path and get entry location
 	for (String fld: Regex::replace(path, "[\\\\\\/]+", "/").split('/')) {
 		if (fld == "..") {

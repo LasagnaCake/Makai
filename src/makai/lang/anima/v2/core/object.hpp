@@ -50,7 +50,7 @@ namespace Makai::Anima::V2::Core {
 		T toValue() const {
 			if (!isString())
 				invalidCastError<T>("Mismatched types");
-			MAKAILIB_DEBUGLN_ALL("Fetching string [SIZE: ", content->size() / sizeof(UTF8Char), "]...");
+			MAKAILIB_DEBUGLN_FULL("Fetching string [SIZE: ", content->size() / sizeof(UTF8Char), "]...");
 			return UTF8String(cref<UTF8Char>(content->data()), content->size() / sizeof(UTF8Char));
 		}
 

@@ -16,8 +16,8 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		if (ov->variant.context == ExecutionContext::AV2_TCB_EC_COMPILE)
 			continue;
 		if (!ov->uses) continue;
-		MAKAILIB_DEBUGLN_ALL("Name: ", ov->entry);
-		MAKAILIB_DEBUGLN_ALL("Variant: ", ov->serialize()["variant"].getString());
+		MAKAILIB_DEBUGLN_FULL("Name: ", ov->entry);
+		MAKAILIB_DEBUGLN_FULL("Variant: ", ov->serialize()["variant"].getString());
 		if (ov->dynlib.size())
 			ovstr += "@shared[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";
 		else if (ov->outEntry.size())
@@ -62,7 +62,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	composer.visitedTypes[type] = true;
 	Makai::UTF8String decl;
 	decl += "@type " + type->name + " [\n ";
-	MAKAILIB_DEBUGLN_ALL("Type Name: '", type->name, "'");
+	MAKAILIB_DEBUGLN_FULL("Type Name: '", type->name, "'");
 	if (type->flags.isBasic) {
 		decl += " basic<";
 		if (!type->basic)

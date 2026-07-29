@@ -137,7 +137,7 @@ void Makai::File::attachArchive(String const& path, String const& password) {
 
 void Makai::File::attachArchive(Tool::Arch::FileArchive::Source&& buffer, String const& password) {
 	#ifdef IMPL_ARCHIVE_
-	MAKAILIB_DEBUGLN_ALL("Attaching archive...");
+	MAKAILIB_DEBUGLN_FULL("Attaching archive...");
 	if (state() == ArchiveState::FAS_LOADING)
 		throw Error::FailedAction("Other archive is being loaded!", CTL_CPP_PRETTY_SOURCE);
 	try {
@@ -145,13 +145,13 @@ void Makai::File::attachArchive(Tool::Arch::FileArchive::Source&& buffer, String
 		archive().close();
 		archive().open(buffer.transfer(), password);
 		state() = ArchiveState::FAS_OPEN;
-		MAKAILIB_DEBUGLN_ALL("Archive Attached!");
+		MAKAILIB_DEBUGLN_FULL("Archive Attached!");
 	} catch (Error::Generic const& e) {
-		MAKAILIB_DEBUGLN_ALL("Archive attachment failed!");
-		MAKAILIB_DEBUGLN_ALL("Reason: ", e.report());
+		MAKAILIB_DEBUGLN_FULL("Archive attachment failed!");
+		MAKAILIB_DEBUGLN_FULL("Reason: ", e.report());
 	} catch (std::exception const& e) {
-		MAKAILIB_DEBUGLN_ALL("Archive attachment failed!");
-		MAKAILIB_DEBUGLN_ALL("Reason: ", e.what());
+		MAKAILIB_DEBUGLN_FULL("Archive attachment failed!");
+		MAKAILIB_DEBUGLN_FULL("Reason: ", e.what());
 	}
 	#endif
 }
@@ -166,10 +166,10 @@ bool Makai::File::isArchiveAttached() {
 
 [[gnu::destructor]] void Makai::File::detachArchive() {
 	#ifdef IMPL_ARCHIVE_
-	MAKAILIB_DEBUGLN_ALL("Detaching archive...");
+	MAKAILIB_DEBUGLN_FULL("Detaching archive...");
 	archive().close();
 	state() = ArchiveState::FAS_CLOSED;
-	MAKAILIB_DEBUGLN_ALL("Archive detached!");
+	MAKAILIB_DEBUGLN_FULL("Archive detached!");
 	#endif
 }
 
@@ -300,21 +300,21 @@ String Makai::File::getText(String const& path) {
 	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	String res;
-	MAKAILIB_DEBUGLN_ALL("Getting text file '" + path + "'...");
+	MAKAILIB_DEBUGLN_FULL("Getting text file '" + path + "'...");
 	if (isArchiveAttached())
 		try {
-			MAKAILIB_DEBUGLN_ALL("[ARC] Loading text file...");
+			MAKAILIB_DEBUGLN_FULL("[ARC] Loading text file...");
 			res = Makai::File::loadTextFromArchive(path);
 		} catch (FileLoadError const& ae) {
 			try {
-				MAKAILIB_DEBUGLN_ALL("[FLD-2] Loading text file...");
+				MAKAILIB_DEBUGLN_FULL("[FLD-2] Loading text file...");
 				res = Makai::File::loadText(path);
 			} catch (FileLoadError const& fe) {
 				fileGetError(path, fe.summary(), ae.summary());
 			}
 		}
 	else try {
-		MAKAILIB_DEBUGLN_ALL("[FLD-1] Loading text file...");
+		MAKAILIB_DEBUGLN_FULL("[FLD-1] Loading text file...");
 		res = Makai::File::loadText(path);
 	} catch (FileLoadError const& e) {
 		fileGetError(path, e.summary(), "Archive not attached!");
@@ -329,21 +329,21 @@ BinaryData<> Makai::File::getBinary(String const& path) {
 	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	BinaryData<> res;
-	MAKAILIB_DEBUGLN_ALL("Getting binary file '" + path + "'...");
+	MAKAILIB_DEBUGLN_FULL("Getting binary file '" + path + "'...");
 	if (isArchiveAttached())
 		try {
-			MAKAILIB_DEBUGLN_ALL("[ARC] Loading binary file...");
+			MAKAILIB_DEBUGLN_FULL("[ARC] Loading binary file...");
 			res = Makai::File::loadBinaryFromArchive(path);
 		} catch (FileLoadError const& ae) {
 			try {
-				MAKAILIB_DEBUGLN_ALL("[FLD-2] Loading binary file...");
+				MAKAILIB_DEBUGLN_FULL("[FLD-2] Loading binary file...");
 				res = Makai::File::loadBinary(path);
 			} catch (FileLoadError const& fe) {
 				fileGetError(path, fe.summary(), ae.summary());
 			}
 		}
 	else try {
-		MAKAILIB_DEBUGLN_ALL("[FLD-1] Loading binary file...");
+		MAKAILIB_DEBUGLN_FULL("[FLD-1] Loading binary file...");
 		res = Makai::File::loadBinary(path);
 	} catch (FileLoadError const& e) {
 		fileGetError(path, e.summary(), "Archive not attached!");
@@ -358,21 +358,21 @@ Makai::File::CSVData Makai::File::getCSV(String const& path, char const delimite
 	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	CSVData res;
-	MAKAILIB_DEBUGLN_ALL("Getting CSV file '" + path + "'...");
+	MAKAILIB_DEBUGLN_FULL("Getting CSV file '" + path + "'...");
 	if (isArchiveAttached())
 		try {
-			MAKAILIB_DEBUGLN_ALL("[ARC] Loading CSV file...");
+			MAKAILIB_DEBUGLN_FULL("[ARC] Loading CSV file...");
 			res = Makai::File::loadCSVFromArchive(path);
 		} catch (FileLoadError const& ae) {
 			try {
-				MAKAILIB_DEBUGLN_ALL("[FLD-2] Loading CSV file...");
+				MAKAILIB_DEBUGLN_FULL("[FLD-2] Loading CSV file...");
 				res = Makai::File::loadCSV(path);
 			} catch (FileLoadError const& fe) {
 				fileGetError(path, fe.summary(), ae.summary());
 			}
 		}
 	else try {
-		MAKAILIB_DEBUGLN_ALL("[FLD-1] Loading CSV file...");
+		MAKAILIB_DEBUGLN_FULL("[FLD-1] Loading CSV file...");
 		res = Makai::File::loadCSV(path);
 	} catch (FileLoadError const& e) {
 		fileGetError(path, e.summary(), "Archive not attached!");

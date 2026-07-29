@@ -44,12 +44,12 @@ appState(App::AppState::AS_CLOSED) {
 			CTL_CPP_PRETTY_SOURCE
 		);
 	else mainApp = this;
-	MAKAILIB_DEBUGLN_ALL("Starting app...");
+	MAKAILIB_DEBUGLN_FULL("Starting app...");
 	// Save window resolution
 	width = config.window.size.width;
 	height = config.window.size.height;
 	// Initialize SDL
-	MAKAILIB_DEBUGLN_ALL("Starting SDL...");
+	MAKAILIB_DEBUGLN_FULL("Starting SDL...");
 	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) != 0) {
 		throw Error::FailedAction(
 			"Unable to start SDL!",
@@ -57,13 +57,13 @@ appState(App::AppState::AS_CLOSED) {
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}
-	MAKAILIB_DEBUGLN_ALL("Started!");
+	MAKAILIB_DEBUGLN_FULL("Started!");
 	// Initialize sound system
-	MAKAILIB_DEBUGLN_ALL("Starting Audio System...");
+	MAKAILIB_DEBUGLN_FULL("Starting Audio System...");
 	audio.open();
-	MAKAILIB_DEBUGLN_ALL("Started!");
+	MAKAILIB_DEBUGLN_FULL("Started!");
 	// Create window and make active
-	MAKAILIB_DEBUGLN_ALL("Creating window...");
+	MAKAILIB_DEBUGLN_FULL("Creating window...");
 	window = (Extern::Resource)SDL_CreateWindow(
 		config.window.title.cstr(),
 		SDL_WINDOWPOS_CENTERED,
@@ -93,8 +93,8 @@ appState(App::AppState::AS_CLOSED) {
 	Makai::Input::Manager::setTargetWindow(window);
 	if (Makai::Input::TextCapture::capturing())
 		Makai::Input::TextCapture::end();
-	MAKAILIB_DEBUGLN_ALL("Created!");
-	MAKAILIB_DEBUGLN_ALL("Starting graphical API...");
+	MAKAILIB_DEBUGLN_FULL("Created!");
+	MAKAILIB_DEBUGLN_FULL("Starting graphical API...");
 	// Try and initialize graphical API
 	Makai::Graph::API::open();
 	if (!Makai::Graph::API::hasRequiredVersion()) {
@@ -104,7 +104,7 @@ appState(App::AppState::AS_CLOSED) {
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}
-	MAKAILIB_DEBUGLN_ALL("Started!");
+	MAKAILIB_DEBUGLN_FULL("Started!");
 	// Toggle depth test & blend
 	{
 		using enum Makai::Graph::API::Facility;
@@ -117,28 +117,28 @@ appState(App::AppState::AS_CLOSED) {
 		Graph::API::setViewport(res.width, res.height);
 	}
 	// Setup camera
-	MAKAILIB_DEBUGLN_ALL("Setting starting camera...");
+	MAKAILIB_DEBUGLN_FULL("Setting starting camera...");
 	Graph::Global::camera.aspect	= Vector2(res.width, res.height);
 	Graph::Global::camera.fov		= Math::radians<float>(45);
-	MAKAILIB_DEBUGLN_ALL("creating default framebuffer...");
+	MAKAILIB_DEBUGLN_FULL("creating default framebuffer...");
 	// Create framebuffer
 	framebuffer.create(res.width, res.height);
 	// Create layer buffer
 	layerbuffer.create(res.width, res.height);
 	framebuffer();
-	MAKAILIB_DEBUGLN_ALL("All core systems initialized!");
+	MAKAILIB_DEBUGLN_FULL("All core systems initialized!");
 }
 
 void App::loadShaders(SLF::SLFData const& main, SLF::SLFData const& buffer) {
 	// Create buffer shaders
-	MAKAILIB_DEBUGLN_ALL("Creating shaders...");
-	MAKAILIB_DEBUGLN_ALL("> Making framebuffer & layerbuffer shader");
+	MAKAILIB_DEBUGLN_FULL("Creating shaders...");
+	MAKAILIB_DEBUGLN_FULL("> Making framebuffer & layerbuffer shader");
 	framebuffer.shader.create(buffer);
 	layerbuffer.shader = framebuffer.shader;
 	// Create main shader
-	MAKAILIB_DEBUGLN_ALL("> Making default shader");
+	MAKAILIB_DEBUGLN_FULL("> Making default shader");
 	Makai::Graph::Shader::DEFAULT.create(main);
-	MAKAILIB_DEBUGLN_ALL("Done!");
+	MAKAILIB_DEBUGLN_FULL("Done!");
 }
 
 void App::loadDefaultShaders() {
@@ -215,18 +215,18 @@ void App::run() {
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 				case SDL_QUIT: {
-					MAKAILIB_DEBUGLN_ALL("SDL Event: EXIT");
+					MAKAILIB_DEBUGLN_FULL("SDL Event: EXIT");
 					appState = App::AppState::AS_CLOSING;
 				} break;
 				case SDL_WINDOWEVENT: {
-					MAKAILIB_DEBUGLN_ALL("SDL Event: WINDOW EVENT");
+					MAKAILIB_DEBUGLN_FULL("SDL Event: WINDOW EVENT");
 					switch (event.window.event) {
 						case SDL_WINDOWEVENT_FOCUS_GAINED: input.refreshCapture(); break;
 						default: break;
 					}
 				} break;
 				case SDL_TEXTINPUT: {
-					MAKAILIB_DEBUGLN_ALL("SDL Event: TEXT INPUT");
+					MAKAILIB_DEBUGLN_FULL("SDL Event: TEXT INPUT");
 					textCapture.update(event.text.text);
 				} break;
 				default: {
@@ -404,25 +404,25 @@ void App::pushLayerToFrame() {pushToFrame = true;}
 void App::finalize() {
 	if (appState != App::AppState::AS_CLOSING)
 		return;
-	MAKAILIB_DEBUGLN_ALL("\nClosing incoherent program...");
+	MAKAILIB_DEBUGLN_FULL("\nClosing incoherent program...");
 	// Call final function
 	onClose();
 	// Remove window from input manager
-	MAKAILIB_DEBUGLN_ALL("Detaching target window...");
+	MAKAILIB_DEBUGLN_FULL("Detaching target window...");
 	Makai::Input::Manager::clearTargetWindow(window);
 	// Close sound system
-	MAKAILIB_DEBUGLN_ALL("Closing sound system...");
+	MAKAILIB_DEBUGLN_FULL("Closing sound system...");
 	audio.close();
-	MAKAILIB_DEBUGLN_ALL("Sound system closed!");
+	MAKAILIB_DEBUGLN_FULL("Sound system closed!");
 	// Destroy buffers
-	MAKAILIB_DEBUGLN_ALL("Destroying frame buffers...");
+	MAKAILIB_DEBUGLN_FULL("Destroying frame buffers...");
 	framebuffer.destroy();
 	layerbuffer.destroy();
-	MAKAILIB_DEBUGLN_ALL("Frame buffers destroyed!");
+	MAKAILIB_DEBUGLN_FULL("Frame buffers destroyed!");
 	// Quit SDL
-	MAKAILIB_DEBUGLN_ALL("Ending SDL...");
+	MAKAILIB_DEBUGLN_FULL("Ending SDL...");
 	SDL_Quit();
-	MAKAILIB_DEBUGLN_ALL("SDL ended!");
+	MAKAILIB_DEBUGLN_FULL("SDL ended!");
 	//exit(0);
 	appState = App::AppState::AS_CLOSED;
 }

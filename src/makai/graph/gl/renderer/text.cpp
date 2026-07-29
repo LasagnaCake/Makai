@@ -217,7 +217,7 @@ void CharLabel::generate() {
 	// If no text is present, return
 	if (!text)					return;
 	if (text->content.empty())	return;
-	MAKAILIB_DEBUGLN_ALL("Generating text for '", text->content, "'...");
+	MAKAILIB_DEBUGLN_FULL("Generating text for '", text->content, "'...");
 	// The current character's position
 	Vector2		cursor;
 	TextRect	chrRect = {0,0};

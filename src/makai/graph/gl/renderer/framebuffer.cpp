@@ -78,13 +78,13 @@ Graph::DrawBuffer::~DrawBuffer() {
 
 Graph::DrawBuffer& Graph::DrawBuffer::destroy() {
 	if (!exists()) return *this;
-	MAKAILIB_DEBUGLN_ALL("Destroying framebuffer...");
+	MAKAILIB_DEBUGLN_FULL("Destroying framebuffer...");
 	buffer.screen.destroy();
 	buffer.depth.destroy();
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 	Base::ABuffer::destroy();
-	MAKAILIB_DEBUGLN_ALL("Framebuffer destroyed!");
+	MAKAILIB_DEBUGLN_FULL("Framebuffer destroyed!");
 	return *this;
 }
 

@@ -17,9 +17,9 @@ ADrawable::ADrawable(bool const manual): ADrawable(manual, 0) {
 }
 
 ADrawable::~ADrawable() {
-	MAKAILIB_DEBUGLN_ALL("Removing from rendering layers...");
+	MAKAILIB_DEBUGLN_FULL("Removing from rendering layers...");
 	setManual();
-	MAKAILIB_DEBUGLN_ALL("Finalizing...\n");
+	MAKAILIB_DEBUGLN_FULL("Finalizing...\n");
 }
 
 ADrawable& ADrawable::setManual() {
@@ -57,14 +57,14 @@ ADrawable& ADrawable::removeFromRenderLayer(usize const renderLayer) {
 }
 
 AGraphic::AGraphic(usize const layer, bool const manual): ADrawable(layer, manual), Blendable() {
-	MAKAILIB_DEBUGLN_ALL("Creating drawable object...");
+	MAKAILIB_DEBUGLN_FULL("Creating drawable object...");
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
-	MAKAILIB_DEBUGLN_ALL("Drawable object created!");
+	MAKAILIB_DEBUGLN_FULL("Drawable object created!");
 }
 
 AGraphic::~AGraphic() {
-	MAKAILIB_DEBUGLN_ALL("Deleting buffers...");
+	MAKAILIB_DEBUGLN_FULL("Deleting buffers...");
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 }

@@ -257,10 +257,10 @@ Renderable::Renderable(
 
 Renderable::~Renderable() {
 	locked = false;
-	MAKAILIB_DEBUGLN_ALL("Renderable!");
-	MAKAILIB_DEBUGLN_ALL("Deleting references...");
+	MAKAILIB_DEBUGLN_FULL("Renderable!");
+	MAKAILIB_DEBUGLN_FULL("Deleting references...");
 	clearData();
-	MAKAILIB_DEBUGLN_ALL("Killing renderable object...");
+	MAKAILIB_DEBUGLN_FULL("Killing renderable object...");
 }
 
 void Renderable::bakeAndLock() {
@@ -292,8 +292,8 @@ void Renderable::extendFromBinaryFile(String const& path) {
 		CTL_CPP_PRETTY_SOURCE
 	);
 	extend((Vertex*)data.data(), data.size() / sizeof(Vertex));
-	MAKAILIB_DEBUG_ALL("Vertices: ");
-	MAKAILIB_DEBUGLN_ALL(data.size() / sizeof(Vertex));
+	MAKAILIB_DEBUG_FULL("Vertices: ");
+	MAKAILIB_DEBUGLN_FULL(data.size() / sizeof(Vertex));
 }
 
 void Renderable::extendFromDefinitionFile(String const& path) {
@@ -331,11 +331,11 @@ void Renderable::saveToDefinitionFile(
 	bool const integratedTextures,
 	bool const pretty
 ) {
-	MAKAILIB_DEBUGLN_ALL("Saving object '" + name + "'...");
+	MAKAILIB_DEBUGLN_FULL("Saving object '" + name + "'...");
 	// Get paths
 	String binpath		= folder + "/" + name + ".mesh";
-	MAKAILIB_DEBUGLN_ALL(binpath);
-	MAKAILIB_DEBUGLN_ALL(folder + "/" + name + ".mrod");
+	MAKAILIB_DEBUGLN_FULL(binpath);
+	MAKAILIB_DEBUGLN_FULL(folder + "/" + name + ".mrod");
 	OS::FS::makeDirectory(OS::FS::concatenate(folder, texturesFolder));
 	// Get object definition
 	JSON::Value file = getObjectDefinition("base64", integratedBinary, integratedTextures);
@@ -404,8 +404,8 @@ void Renderable::extendFromDefinitionV0(
 		auto data	= mesh["data"];
 		if (data.isString()) {
 			String encoding	= mesh["encoding"].get<String>();
-			MAKAILIB_DEBUGLN_ALL("Encoding: [", encoding, "]");
-			MAKAILIB_DEBUGLN_ALL("ID: ", enumcast(Data::fromString(encoding)));
+			MAKAILIB_DEBUGLN_FULL("Encoding: [", encoding, "]");
+			MAKAILIB_DEBUGLN_FULL("ID: ", enumcast(Data::fromString(encoding)));
 			vdata		= Data::decode(data.get<String>(), Data::fromString(encoding));
 		} else if (data.isObject()) {
 			vdata		= File::getBinary(OS::FS::concatenate(sourcepath, data["path"].get<String>()));
@@ -419,7 +419,7 @@ void Renderable::extendFromDefinitionV0(
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}
-	MAKAILIB_DEBUGLN_ALL(componentData);
+	MAKAILIB_DEBUGLN_FULL(componentData);
 	// Check if important data is not empty
 	{
 		String error = "";
@@ -521,14 +521,14 @@ void Renderable::extendFromDefinitionV0(
 		material = fromDefinition(def["material"], sourcepath);
 	}
 	// Set armature data
-	MAKAILIB_DEBUGLN_ALL("Armature...");
+	MAKAILIB_DEBUGLN_FULL("Armature...");
 	if (def["armature"].isObject()) {
 		bool const hasBones = def["armature"]["bones"].isArray();
 		armature.unbake();
 		armature.clearAllRelations();
 		for (usize bone = 0; bone < Renderable::MAX_BONES; ++bone) {
 			if (hasBones && def["armature"]["bones"][bone].isObject()) {
-				MAKAILIB_DEBUGLN_ALL("Bone [", bone, "]");
+				MAKAILIB_DEBUGLN_FULL("Bone [", bone, "]");
 				armature.rest[bone] = Transform3D(
 					fromJSONArrayV3(def["armature"]["bones"][bone]["position"]),
 					fromJSONArrayV3(def["armature"]["bones"][bone]["rotation"]),
@@ -538,7 +538,7 @@ void Renderable::extendFromDefinitionV0(
 			if (!def["armature"]["relations"].contains(toString(bone))) continue;
 			auto children = def["armature"]["relations"][toString(bone)].get<List<usize>>({});
 			for (auto child: children) {
-				MAKAILIB_DEBUGLN_ALL("Relation [", bone, " -> ", child, "]");
+				MAKAILIB_DEBUGLN_FULL("Relation [", bone, " -> ", child, "]");
 				armature.addChild(bone, child);
 			}
 		}
@@ -547,11 +547,11 @@ void Renderable::extendFromDefinitionV0(
 			JSON::Value names = def["armature"]["names"];
 			for (auto [name, bone]: names.get<Dictionary<usize>>()) {
 				armature.names[name] = bone;
-				MAKAILIB_DEBUGLN_ALL("Map [ '", name, "' -> ", bone, " ]");
+				MAKAILIB_DEBUGLN_FULL("Map [ '", name, "' -> ", bone, " ]");
 			}
 		}
 	}
-	MAKAILIB_DEBUGLN_ALL("Armature!");
+	MAKAILIB_DEBUGLN_FULL("Armature!");
 	// Set blend data
 	if (def["blend"].isObject()) {
 		try {
