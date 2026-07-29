@@ -16,11 +16,11 @@ main :: () {
 		firstName	= "John",
 		lastName	= "Doe"
 	}
-	IO.writeLine(["Hello, ", foo.fullName;, "!"])
+	IO.writeLine("Hello, " + foo.fullName; + "!")
 	foo.lastName = "Lastname"
-	IO.writeLine(["Hello, ", foo.fullName;, "!"])
+	IO.writeLine("Hello, " + foo.fullName; + "!")
 	foo.firstName = "Firstname"
-	IO.writeLine(["Hello, ", foo.fullName;, "!"])
+	IO.writeLine("Hello, " + foo.fullName; + "!")
 	foo = Person.create("Iam")
-	IO.writeLine(["Hello, ", foo.fullName;, "!"])
+	IO.writeLine("Hello, " + foo.fullName; + "!")
 } 
