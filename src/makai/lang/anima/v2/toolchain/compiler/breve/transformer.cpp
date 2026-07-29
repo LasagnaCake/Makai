@@ -1086,6 +1086,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result rest;
 	if (node->content == Node::Content::AV2_TANC_ARRAY)
 		return ArrayTypeDecl().transform(context, node);
 	if (node->content == Node::Content::AV2_TANC_NULLABLE_DECL)
@@ -1094,6 +1095,7 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 		return StructureDecl().transform(context, node);
 	auto const t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
+	++t->uses;
 	return {.type = t};
 }
 

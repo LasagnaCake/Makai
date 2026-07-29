@@ -165,6 +165,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Nullable<UTF8String>					artEquivalent;
 		UTF8Dictionary<Namespace::VariableRef>	fields;
 
+		usize uses = 0;
+
 		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
 
 		bool derivedFrom(Namespace::TypeRef const& otherType) const;
@@ -214,6 +216,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			bool							hasImplementation = false;
 			bool							staticEntity = false;
 			Handle<Overload>				fullImpl;
+
+			usize uses = 0;
 
 			UTF8Dictionary<Metadata::Instance> meta;
 
