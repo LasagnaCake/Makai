@@ -109,7 +109,7 @@ void Implementation::addMainLine(UTF8String const& what) {
 }
 
 void Implementation::addPostLine(UTF8String const& what) {
-	main.pushBack(what);
+	post.pushBack(what);
 }
 
 void Intermediate::addPreLine(UTF8String const& what) {
