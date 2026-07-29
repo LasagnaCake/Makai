@@ -1286,6 +1286,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	impl->impl->writePreLine("@def", current->entry, ":");
 	impl->impl->writePreLine("enter", required.size() + optional.size());
 	impl->impl->writePreLine("bind ref", required.size(), "[0 -> 0]");
+	DEBUGLN("Overload: ", current->entry);
 	current->scope = impl.asWeak();
 	auto const vx = fn->overloadFromVariables(current->arguments);
 	if (vx && vx->hasImplementation)
@@ -1305,18 +1306,23 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		overload->varc = current->arguments.size();
 		current->arguments.pushBack(ox.scope->variable);
 		current->entry = "__" + fn->name + overloadName(current->arguments) + node->name();
+		DEBUGLN("Overload: ", current->entry);
 		overload->impl->writePreLine("@def", current->entry, ":");
-		overload->impl->writePreLine(ox.scope->variable->initializer->compose()->toString());
+		overload->impl->writeMainLine(ox.scope->variable->initializer->compose()->toString());
 		if (overload->impl->main.back() == "pop")
 			overload->impl->main.popBack();
-		overload->impl->writePreLine("copy move top -> arg[", i + required.size(), "]");
+		overload->impl->writeMainLine("copy move top -> arg[", i + required.size(), "]");
+		ox.scope->variable->initializer = nullptr;
 		if (fn->overloadFromVariables(current->arguments))
 			context.error("An overload already exists for this function!", node);
 		fn->overloads.pushBack(current);
 		ovImpl.pushBack(overload->impl);
 		current->hasImplementation = true;
+		impl->impl->writePostLine("@def .");
 	}
 	if (node->rightSide) {
+		if (ovImpl.size())
+			current = current.create();
 		context.functionStack.pushBack(current);
 		auto const def = Expression().transform(context, node->rightSide);
 		if (retType && def.type && retType != def.type)
@@ -1329,8 +1335,11 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		current->hasImplementation = true;
 		current->scope = context.top().asWeak();
 		context.functionStack.popBack();
-	} else if (ovImpl.size() == 1)
-		current->scope = nullptr;
+	} else {
+		if (ovImpl.size() == 1)
+			current->scope = nullptr;
+		first->scope = nullptr;
+	}
 	if (!retType)
 		context.error("Missing function return type!", node);
 	//	retType = context.basicType("void");
