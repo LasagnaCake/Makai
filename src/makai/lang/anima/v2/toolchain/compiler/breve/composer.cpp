@@ -15,7 +15,7 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		Makai::UTF8String ovstr;
 		if (ov->variant.context == ExecutionContext::AV2_TCB_EC_COMPILE)
 			continue;
-		if (!ov->uses) continue;
+		if (!ov->fullImpl->uses) continue;
 		MAKAILIB_DEBUGLN_FULL("Name: ", ov->entry);
 		MAKAILIB_DEBUGLN_FULL("Variant: ", ov->serialize()["variant"].getString());
 		if (ov->dynlib.size())
