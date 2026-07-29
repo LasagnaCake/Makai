@@ -23,8 +23,13 @@ module OS {
 		
 		@Private
 		@Static
-		@Shared(name = "av2/proc/getArgs", optional = true, lib = av2proc)
-		getArgs :: () -> ?[string]
+		@Shared(name = "av2/proc/getArgCount", optional = true, lib = av2proc)
+		getArgCount :: (index: uint64) -> ?uint64
+		
+		@Private
+		@Static
+		@Shared(name = "av2/proc/getArg", optional = true, lib = av2proc)
+		getArg :: (index: uint64) -> ?string
 		
 		@Private
 		@Static
@@ -34,7 +39,7 @@ module OS {
 		@Private
 		@Static
 		@Shared(name = "av2/proc/getConfigKey", optional = true, lib = av2proc)
-		getConfigKey :: (id: uint64) -> ?string
+		getConfigKey :: (index: uint64) -> ?string
 		
 		@Private
 		@Static
@@ -43,7 +48,7 @@ module OS {
 		
 		@Private
 		@Static
-		@Shared(name = "av2/os/getName", optional = true, lib = av2proc)
+		@Shared(name = "av2/proc/getName", optional = true, lib = av2proc)
 		getName :: () -> ?string
 		
 		@Private
@@ -54,9 +59,24 @@ module OS {
 			@ByRef out := new Setting[total]
 			repeat @ByRef i: uint64 -> total {
 				key := Program.getConfigKey(i - total)
-				if not copy key return null
-				@ByRef kx := key ?? ""
-				out[i - total] new Program{key = kx, value = Program.getConfigValue(kx)}
+				if copy key {
+					@ByRef kx := key ?? ""
+					out[i - total] = new Program{key = kx, value = Program.getConfigValue(kx)}
+				}
+			}
+			return out
+		}
+		
+		@Private
+		@Static
+		getArgs :: () -> ?[string] {
+			@ByCopy total := Program.getArgCount;
+			if not total return null
+			@ByRef out := new string[total]
+			repeat @ByRef i: uint64 -> total {
+				arg := Program.getArg(i - total)
+				if not copy arg return null
+				out[i - total] = arg ?? ""
 			}
 			return out
 		}
