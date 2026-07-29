@@ -1278,7 +1278,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	auto const impl = context.declare(Makai::UTF8StringList::from("<impl>" + node->name()));
 	Function::OverloadRef current = current.create(), prev, first = current;
-	current.fullImpl = first.fullImpl;
+	current->fullImpl = first->fullImpl = first.asWeak();
 	fn->current.pushBack(current);
 	current->scope = impl.asWeak();
 	for (auto& arg: required) {
@@ -1303,7 +1303,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			prev->scope = nullptr;
 		prev = current;
 		current = current.create();
-		current.fullImpl = first.fullImpl;
+		current->fullImpl = first->fullImpl;
 		fn->current.pushBack(current);
 		auto const ox = Expression().transform(context, opt);
 		current->arguments = prev->arguments;
