@@ -1305,20 +1305,17 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		current->arguments = prev->arguments;
 		overload->varc = current->arguments.size();
 		current->arguments.pushBack(ox.scope->variable);
+		auto const fx = fn->overloadFromVariables(current->arguments);
+		if (fx && fx->hasImplementation)
+			context.error("An overload already exists for this function!", node);
 		current->entry = "__" + fn->name + overloadName(current->arguments) + node->name();
 		DEBUGLN("Overload: ", current->entry);
+		overload->impl->writePreLine(ox.scope->variable->initializer->compose()->toString());
 		overload->impl->writePreLine("@def", current->entry, ":");
-		overload->impl->writeMainLine(ox.scope->variable->initializer->compose()->toString());
-		if (overload->impl->main.back() == "pop")
-			overload->impl->main.popBack();
-		overload->impl->writeMainLine("copy move top -> arg[", i + required.size(), "]");
 		ox.scope->variable->initializer = nullptr;
-		if (fn->overloadFromVariables(current->arguments))
-			context.error("An overload already exists for this function!", node);
 		fn->overloads.pushBack(current);
 		ovImpl.pushBack(overload->impl);
 		current->hasImplementation = true;
-		impl->impl->writePostLine("@def .");
 	}
 	if (node->rightSide) {
 		if (ovImpl.size())
@@ -1333,7 +1330,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			else retType = def.type;
 		}
 		current->hasImplementation = true;
-		current->scope = context.top().asWeak();
+		if (ovImpl.empty())
+			current->scope = context.top().asWeak();
 		context.functionStack.popBack();
 	} else {
 		if (ovImpl.size() == 1)
@@ -1345,7 +1343,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	//	retType = context.basicType("void");
 	impl->impl->writePostLine("exit");
 	impl->impl->writePostLine("ret");
-	impl->impl->writePostLine("@def .");
+	for (usize _ = 0; _ < optional.size() + 1; ++_)
+		impl->impl->writePostLine("@def .");
 	context.pop(1 + optional.size());
 	for (auto& ov: fn->current)
 		ov->result = retType;
