@@ -690,9 +690,14 @@ static Namespace::AttributeRef createBeforeAttribute() {
 	attrib->name = "Before";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->globalMin = 0;
-	attrib->globalMax = 1;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		auto fn = ns->function->overloadFromTypes({}).asWeak();
+		Makai::Handle<Function::Overload> fn;
+		MAKAILIB_DEBUGLN_FULL("Overloads: ", ns->function->current.size());
+		for (auto const& ov: ns->function->current)
+			if (ov->arguments.empty()) {
+				fn = ov.asWeak();
+				break;
+			}
 		if (!fn)
 			Transformer::ATransformer::Context::error("No valid function overload found!", ns->node);
 		inter.before.pushBack(fn);
@@ -708,9 +713,14 @@ static Namespace::AttributeRef createAfterAttribute() {
 	attrib->name = "After";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->globalMin = 0;
-	attrib->globalMax = 1;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		auto fn = ns->function->overloadFromTypes({}).asWeak();
+		Makai::Handle<Function::Overload> fn;
+		MAKAILIB_DEBUGLN_FULL("Overloads: ", ns->function->current.size());
+		for (auto const& ov: ns->function->current)
+			if (ov->arguments.empty()) {
+				fn = ov.asWeak();
+				break;
+			}
 		if (!fn)
 			Transformer::ATransformer::Context::error("No valid function overload found!", ns->node);
 		inter.after.pushBack(fn);
@@ -730,7 +740,11 @@ static Namespace::AttributeRef createMainAttribute() {
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		if (inter.main)
 			Transformer::ATransformer::Context::error("Redeclaration of previously-declared main!", ns->node);
-		inter.main = ns->function->overloadFromTypes({}).asWeak();
+		for (auto const& ov: ns->function->current)
+			if (ov->arguments.empty()) {
+				inter.main = ov.asWeak();
+				break;
+			}
 		if (!inter.main)
 			Transformer::ATransformer::Context::error("No valid function overload for main!", ns->node);
 		inter.main->uses++;
