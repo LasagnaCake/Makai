@@ -43,10 +43,10 @@ constexpr bool isValidShaderExtension(String const& path) {
 }
 
 SLFData Makai::SLF::parse(String const& slf, String const& srcFolder, bool const pathOnly) {
-	DEBUGLN("Parsing SLF file...");
+	MAKAILIB_DEBUGLN_ALL("Parsing SLF file...");
 	// Get file location
 	String dir = OS::FS::directoryFromPath(srcFolder);
-	DEBUGLN("Directory: ", dir);
+	MAKAILIB_DEBUGLN_ALL("Directory: ", dir);
 	// Parse content
 	String content = slf;
 	// Remove comments and empty lines
@@ -59,7 +59,7 @@ SLFData Makai::SLF::parse(String const& slf, String const& srcFolder, bool const
 	// Process file
 	SLFData result{dir};
 	for (String shader: content.split('|')) {
-		DEBUGLN("Line: ", shader);
+		MAKAILIB_DEBUGLN_ALL("Line: ", shader);
 		// If line is a type specifier, try and get it
 		String tt = Regex::findFirst(shader, "^[<](.*)[>]").match;
 		if (!tt.empty()) {

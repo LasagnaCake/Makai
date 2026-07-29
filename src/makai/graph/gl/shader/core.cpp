@@ -114,7 +114,7 @@ bool Shader::create(SLF::SLFData const& slfData) {
 	String code;
 	for (SLF::ShaderEntry const& shader: slfData.shaders) {
 		shaderPath = OS::FS::concatenate(dir, shader.path);
-		DEBUGLN(shaderPath);
+		MAKAILIB_DEBUGLN_ALL(shaderPath);
 		if (shader.code.empty())
 			code = File::getText(shaderPath);
 		else

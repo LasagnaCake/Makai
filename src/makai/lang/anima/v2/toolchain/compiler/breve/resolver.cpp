@@ -5,39 +5,39 @@ using Type = Makai::Lexer::CStyle::TokenStream::Token::Type;
 using enum Type;
 
 Node::Instance EmptyResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving empty expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving empty expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_EMPTY;
-	DEBUGLN("Empty:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Empty:DONE!");
 	return result;
 }
 
 Node::Instance EnumResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	// TODO: This
-	DEBUGLN("Resolving enumeration expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving enumeration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_EMPTY;
-	DEBUGLN("Empty:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Empty:DONE!");
 	return result;
 }
 
 Node::Instance DirectResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving direct expression...");
-	DEBUGLN("######## Value: ", token.value ? token.value.toString() : token.text.toString());
+	MAKAILIB_DEBUGLN_ALL("Resolving direct expression...");
+	MAKAILIB_DEBUGLN_ALL("######## Value: ", token.value ? token.value.toString() : token.text.toString());
 	auto isIdentifier = parser.context.type() == LTS_TT_IDENTIFIER;
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->value = token.value;
 	result->content = isIdentifier ? Node::Content::AV2_TANC_NAME : Node::Content::AV2_TANC_VALUE;
-	DEBUGLN("Direct:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Direct:DONE!");
 	return result;
 }
 
 Node::Instance SpecialDirectResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving special direct expression...");
-	DEBUGLN("######## Value: ", token.text);
+	MAKAILIB_DEBUGLN_ALL("Resolving special direct expression...");
+	MAKAILIB_DEBUGLN_ALL("######## Value: ", token.text);
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	auto const id = token.text;
@@ -45,53 +45,53 @@ Node::Instance SpecialDirectResolver::resolve(Parser& parser, Node::Instance con
 	else if (id == "false")	result->value = false;
 	else if (id == "null")	result->value = null;
 	result->content = Node::Content::AV2_TANC_VALUE;
-	DEBUGLN("Direct:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Direct:DONE!");
 	return result;
 }
 
 Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving prefix expression [", token.text, "]...");
+	MAKAILIB_DEBUGLN_ALL("Resolving prefix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->leftSide = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_PREFIX_OP;
-	DEBUGLN("Prefix:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Prefix:DONE!");
 	return result;
 }
 
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving infix expression [", token.text, "]...");
+	MAKAILIB_DEBUGLN_ALL("Resolving infix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->leftSide = leftSide;
 	result->rightSide = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INFIX_OP;
-	DEBUGLN("Infix:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Infix:DONE!");
 	return result;
 }
 
 Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving postfix expression [", token.text, "]...");
+	MAKAILIB_DEBUGLN_ALL("Resolving postfix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->leftSide = leftSide;
 	result->content = Node::Content::AV2_TANC_POSTFIX_OP;
-	DEBUGLN("Postfix:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Postfix:DONE!");
 	return result;
 }
 
 Node::Instance NullableDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving nullable declaration expression [", token.text, "]...");
+	MAKAILIB_DEBUGLN_ALL("Resolving nullable declaration expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->leftSide = leftSide;
 	result->content = Node::Content::AV2_TANC_NULLABLE_DECL;
-	DEBUGLN("NullableDeclResolver:DONE!");
+	MAKAILIB_DEBUGLN_ALL("NullableDeclResolver:DONE!");
 	return result;
 }
 
 Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving inline assembly expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving inline assembly expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	parser.context.expectNext(LTS_TT_OPEN_CURLY).next();
@@ -99,12 +99,12 @@ Node::Instance InlineMinimaResolver::resolve(Parser& parser, Node::Instance cons
 		result->interject.pushBack(parser.context.token());
 		parser.context.next();
 	}
-	DEBUGLN("Assembly:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Assembly:DONE!");
 	return result;
 }
 
 Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving inline if-else expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving inline if-else expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->leftSide = leftSide;
@@ -114,17 +114,17 @@ Node::Instance InlineIfElseResolver::resolve(Parser& parser, Node::Instance cons
 		parser.context.error("Expected 'else' here!");
 	result->rightSide = parser.nextExpression(precedence);
 	result->content = Node::Content::AV2_TANC_INLINE_IF_ELSE;
-	DEBUGLN("<inline-if-else>");
-	DEBUGLN("Condition: ", result->middle->base.text);
-	DEBUGLN("If-True: ", result->leftSide->base.text);
-	DEBUGLN("If-False: ", result->rightSide->base.text);
-	DEBUGLN("</inline-if-else>");
-	DEBUGLN("IfElse:DONE!");
+	MAKAILIB_DEBUGLN_ALL("<inline-if-else>");
+	MAKAILIB_DEBUGLN_ALL("Condition: ", result->middle->base.text);
+	MAKAILIB_DEBUGLN_ALL("If-True: ", result->leftSide->base.text);
+	MAKAILIB_DEBUGLN_ALL("If-False: ", result->rightSide->base.text);
+	MAKAILIB_DEBUGLN_ALL("</inline-if-else>");
+	MAKAILIB_DEBUGLN_ALL("IfElse:DONE!");
 	return result;
 }
 
 Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving sub-expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving sub-expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_BLOCK;
@@ -143,13 +143,13 @@ Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance con
 			parser.context.error("Expected expression after the comma!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_PAREN);
-	DEBUGLN("SubExpression:DONE!");
+	MAKAILIB_DEBUGLN_ALL("SubExpression:DONE!");
 	return result;
 }
 
 Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
-	DEBUGLN("Resolving function call expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving function call expression...");
 	if (!leftSide)
 		parser.context.error("["+Makai::toString(__LINE__)+"] INTERNAL_ERROR :: Uh oh, hehe :D");
 	result->base = token;
@@ -165,10 +165,10 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 		result->children.pushBack(parser.nextExpression());
 		if (!result->children.back())
 			parser.context.error("[" + Makai::toString(__LINE__) + "] INTERNAL_ERROR :: Oops :/");
-		DEBUGLN(":::::: Argument: ", result->children.back()->base.text);
-		DEBUGLN(":::::: Followup: ", parser.context.peek().text);
+		MAKAILIB_DEBUGLN_ALL(":::::: Argument: ", result->children.back()->base.text);
+		MAKAILIB_DEBUGLN_ALL(":::::: Followup: ", parser.context.peek().text);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
-			DEBUGLN("No more arguments!");
+			MAKAILIB_DEBUGLN_ALL("No more arguments!");
 			parser.context.next();
 			break;
 		}
@@ -177,12 +177,12 @@ Node::Instance FunctionCallResolver::resolve(Parser& parser, Node::Instance cons
 			parser.context.error("Expected expression after the comma!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_PAREN);
-	DEBUGLN("FunctionCall:DONE!");
+	MAKAILIB_DEBUGLN_ALL("FunctionCall:DONE!");
 	return result;
 }
 
 Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving block expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving block expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	while (true) {
@@ -190,9 +190,9 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& left
 			parser.context.next();
 			break;
 		}
-		DEBUGLN("!!!!!!!!!!!!!!!!!!!!!! Resolving block statement...");
+		MAKAILIB_DEBUGLN_ALL("!!!!!!!!!!!!!!!!!!!!!! Resolving block statement...");
 		result->children.pushBack(parser.nextExpression());
-		DEBUGLN("!!!!!!!!!!!!!!!!!!!!!! Block:Statement:DONE!");
+		MAKAILIB_DEBUGLN_ALL("!!!!!!!!!!!!!!!!!!!!!! Block:Statement:DONE!");
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
 			parser.context.next();
 			break;
@@ -200,12 +200,12 @@ Node::Instance BlockResolver::resolve(Parser& parser, Node::Instance const& left
 	}
 	parser.context.expect(LTS_TT_CLOSE_CURLY);
 	result->content = Node::Content::AV2_TANC_BLOCK;
-	DEBUGLN("Block:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Block:DONE!");
 	return result;
 }
 
 Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving array expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving array expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	if (leftSide)
@@ -228,12 +228,12 @@ Node::Instance ArrayResolver::resolve(Parser& parser, Node::Instance const& left
 		result->rightSide = result->children.front();
 	parser.context.expect(LTS_TT_CLOSE_BRACKET);
 	result->content = leftSide ? Node::Content::AV2_TANC_SUBSCRIPT : Node::Content::AV2_TANC_ARRAY;
-	DEBUGLN("Array:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Array:DONE!");
 	return result;
 }
 
 Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving branch expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving branch expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_BRANCH;
@@ -244,7 +244,7 @@ Node::Instance BranchResolver::resolve(Parser& parser, Node::Instance const& lef
 		parser.context.next();
 		result->rightSide = parser.nextExpression();
 	}
-	DEBUGLN("Branch:DONE!");
+	MAKAILIB_DEBUGLN_ALL("Branch:DONE!");
 	return result;
 }
 
@@ -279,14 +279,14 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& leftS
 
 Node::Instance ImportResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
-	DEBUGLN("Resolving import expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving import expression...");
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_IMPORT;
 	result->value = token.text.toString();
-	DEBUGLN("Follows: ", parser.context.token().text);
-	DEBUGLN("Follows: ", parser.context.peek().text);
+	MAKAILIB_DEBUGLN_ALL("Follows: ", parser.context.token().text);
+	MAKAILIB_DEBUGLN_ALL("Follows: ", parser.context.peek().text);
 	if (parser.context.type() == LTS_TT_DOT) {
-		DEBUGLN("Here!");
+		MAKAILIB_DEBUGLN_ALL("Here!");
 		parser.context.next();
 	}
 	result->leftSide = parser.nextExpression();
@@ -358,16 +358,16 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 		result->leftSide = parser.nextExpression();
 		return result;
 	}
-	DEBUGLN("Resolving function prototype expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving function prototype expression...");
 	parser.context.expectNext(LTS_TT_OPEN_PAREN);
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			parser.context.next();
 			break;
 		}
-		DEBUGLN(">>>>>>>>>>>> Argument");
+		MAKAILIB_DEBUGLN_ALL(">>>>>>>>>>>> Argument");
 		result->children.pushBack(parser.nextExpression(precedence));
-		DEBUGLN("<<<<<<<<<<<< Follows: ", parser.context.peek().text);
+		MAKAILIB_DEBUGLN_ALL("<<<<<<<<<<<< Follows: ", parser.context.peek().text);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			parser.context.next();
 			break;
@@ -377,19 +377,19 @@ Node::Instance FunctionPrototypeResolver::resolve(Parser& parser, Node::Instance
 			parser.context.error("Expected expression after the comma!");
 	}
 	parser.context.expect(LTS_TT_CLOSE_PAREN);
-	DEBUGLN("FunctionPrototype:Arguments:DONE!");
+	MAKAILIB_DEBUGLN_ALL("FunctionPrototype:Arguments:DONE!");
 	if (parser.context.peek().type == LTS_TT_LITTLE_ARROW) {
-		DEBUGLN("Resolving result type...");
+		MAKAILIB_DEBUGLN_ALL("Resolving result type...");
 		parser.context.next();
 		result->leftSide = parser.nextExpression();
-		DEBUGLN("FunctionPrototype:Result:DONE!");
+		MAKAILIB_DEBUGLN_ALL("FunctionPrototype:Result:DONE!");
 	}
-	DEBUGLN("FunctionPrototype:DONE!");
+	MAKAILIB_DEBUGLN_ALL("FunctionPrototype:DONE!");
 	return result;
 }
 
 Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving variable declaration expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving variable declaration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
@@ -414,7 +414,7 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 			result->middle = v;
 		}
 	}
-	DEBUGLN("VariableDecl:DONE!");
+	MAKAILIB_DEBUGLN_ALL("VariableDecl:DONE!");
 	return result;
 }
 
@@ -427,22 +427,22 @@ Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance cons
 }
 
 Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving named block expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving named block expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	auto name = parser.nextExpression();
 	if (optionalName && name->isBlock()) {
 		result->rightSide = name;
-		DEBUGLN("NamedBlock:DONE!");
+		MAKAILIB_DEBUGLN_ALL("NamedBlock:DONE!");
 		return result;
 	} else if (canInherit && name->content == Node::Content::AV2_TANC_DECLARATION) {
 		if (name->base.text != ":")
 			parser.context.error("Invalid inheritance expression!");
-		DEBUGLN("+++++++++++++++ DECL::LHS is ", Node::asString(name->leftSide->content));
-		DEBUGLN("+++++++++++++++ DECL::LHS = ", name->leftSide->base.text);
-		DEBUGLN("+++++++++++++++ DECL::MHS is ", Node::asString(name->middle->content));
-		DEBUGLN("+++++++++++++++ DECL::MHS = ", name->middle->base.text);
+		MAKAILIB_DEBUGLN_ALL("+++++++++++++++ DECL::LHS is ", Node::asString(name->leftSide->content));
+		MAKAILIB_DEBUGLN_ALL("+++++++++++++++ DECL::LHS = ", name->leftSide->base.text);
+		MAKAILIB_DEBUGLN_ALL("+++++++++++++++ DECL::MHS is ", Node::asString(name->middle->content));
+		MAKAILIB_DEBUGLN_ALL("+++++++++++++++ DECL::MHS = ", name->middle->base.text);
 		if (!name->leftSide->isPathOrName())
 			parser.context.error("Expected name or path here!");
 		result->middle = name->middle;
@@ -454,12 +454,12 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 	if (def->content != Node::Content::AV2_TANC_BLOCK)
 		parser.context.error("Expected block expression here!");
 	result->rightSide = def;
-	DEBUGLN("NamedBlock:DONE!");
+	MAKAILIB_DEBUGLN_ALL("NamedBlock:DONE!");
 	return result;
 }
 
 Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
-	DEBUGLN("Resolving function declaration expression...");
+	MAKAILIB_DEBUGLN_ALL("Resolving function declaration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
@@ -472,7 +472,7 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	}
 	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)
 		result->rightSide = parser.nextExpression();
-	DEBUGLN("FunctionDecl:DONE!");
+	MAKAILIB_DEBUGLN_ALL("FunctionDecl:DONE!");
 	return result;
 }
 
@@ -510,10 +510,10 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftS
 	}
 	result->value = subpath;
 	result->base = token;
-	DEBUGLN("Path Expression {");
-	DEBUGLN("  LHS: ", result->leftSide->base.text);
-	DEBUGLN("  Subpath: ", result->value.getString());
-	DEBUGLN("}");
+	MAKAILIB_DEBUGLN_ALL("Path Expression {");
+	MAKAILIB_DEBUGLN_ALL("  LHS: ", result->leftSide->base.text);
+	MAKAILIB_DEBUGLN_ALL("  Subpath: ", result->value.getString());
+	MAKAILIB_DEBUGLN_ALL("}");
 	return result;
 }
 

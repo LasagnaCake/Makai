@@ -462,7 +462,7 @@ List<Button> Manager::getButtonsHeld() {
 }
 
 void Manager::refreshCapture() {
-	DEBUGLN("Refreshing mouse capture states...");
+	MAKAILIB_DEBUGLN_ALL("Refreshing mouse capture states...");
 	setMouseCapturing(mouseCaptured, !mouseVisible);
 }
 

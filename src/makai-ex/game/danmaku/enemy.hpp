@@ -89,13 +89,13 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @param collider Collider colliding with the enemy's hitbox.
 		/// @param direction Direction in which collision happens.
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
-			//DEBUGLN("Collision event!\nFlags: ", collider.tags);
+			//MAKAILIB_DEBUGLN_ALL("Collision event!\nFlags: ", collider.tags);
 			if (isInvincible() || !isForThisPlayer(collider)) return;
-			//DEBUGLN("Layer: ", collider.getLayer().affects);
+			//MAKAILIB_DEBUGLN_ALL("Layer: ", collider.getLayer().affects);
 			if (collider.getLayer().affects & mask.player.attack)
 				takeDamage(collider.data.mutate<>().as<AGameObject>(), collider.getLayer().affects);
 		}
-		
+
 		/// @brief Returns whether the collider is tagged for the player this object is associated with.
 		/// @param collider Collider to check tag.
 		/// @return Whether collider is tagged for this object's player.
@@ -114,7 +114,7 @@ namespace Makai::Ex::Game::Danmaku {
 				else if (collider & mask.player.laser)
 					takeDamage(object.as<Laser>()->getDamage());
 				if (collider & (mask.player.bullet | mask.player.laser)) {
-					//DEBUGLN("Owie! :'(");
+					//MAKAILIB_DEBUGLN_ALL("Owie! :'(");
 					object.as<AServerObject>()->discard();
 				}
 			}

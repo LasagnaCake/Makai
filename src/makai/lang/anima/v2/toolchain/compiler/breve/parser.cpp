@@ -64,7 +64,7 @@ Parser::Precedence Parser::precedenceOf(BaseContext::Axiom const& tok) {
 
 Parser::Parser(BaseContext& context): context(context) {
 	// Basic prefixes
-	DEBUGLN("Prefix parsers");
+	MAKAILIB_DEBUGLN_ALL("Prefix parsers");
 	prefix(
 		"sizeof",
 		"countof",
@@ -98,7 +98,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_STREAM_INSERT
 	);
 	// Basic infixes
-	DEBUGLN("Infix parsers");
+	MAKAILIB_DEBUGLN_ALL("Infix parsers");
 	infix(LTS_TT_PLUS, false);
 	infix(LTS_TT_MINUS, false);
 	infix(LTS_TT_DIVIDE, false);
@@ -127,13 +127,13 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix("or", false);
 	infix("xor", false);
 	// Basic postfixes
-	DEBUGLN("Postfix parsers");
+	MAKAILIB_DEBUGLN_ALL("Postfix parsers");
 	postfix(
 		LTS_TT_INCREMENT,
 		LTS_TT_DECREMENT
 	);
 	// Direct resolutions
-	DEBUGLN("Direct parsers");
+	MAKAILIB_DEBUGLN_ALL("Direct parsers");
 	direct(
 		LTS_TT_IDENTIFIER,
 		LTS_TT_INTEGER,
@@ -147,7 +147,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		LTS_TT_REAL
 	);
 	// Advanced prefixes
-	DEBUGLN("Advanced prefix parsers");
+	MAKAILIB_DEBUGLN_ALL("Advanced prefix parsers");
 	add(LTS_TT_OPEN_PAREN, prefixes, new SubExpressionResolver());
 	add(LTS_TT_OPEN_CURLY, prefixes, new BlockResolver());
 	add(LTS_TT_OPEN_BRACKET, prefixes, new ArrayResolver());
@@ -182,7 +182,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("maybe", prefixes, new NullableDeclResolver());
 	add("await", prefixes, new AwaitExpressionResolver());
 	// Advanced infixes
-	DEBUGLN("Advanced infix parsers");
+	MAKAILIB_DEBUGLN_ALL("Advanced infix parsers");
 	add("when", infixes, new InlineIfElseResolver());
 	add("except", infixes, new InlineIfElseResolver());
 	add(LTS_TT_NAMESPACE_RESOLVE, infixes, new FunctionDeclResolver());
@@ -209,7 +209,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
 	add(LTS_TT_BIG_ARROW, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
-	DEBUGLN("Done!");
+	MAKAILIB_DEBUGLN_ALL("Done!");
 }
 
 AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft):
@@ -231,16 +231,16 @@ static bool isString(Makai::Lexer::CStyle::TokenStream::Token::Type const t) {
 
 Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (context.empty()) {
-		DEBUGLN("End-of-File Reached!?");
+		MAKAILIB_DEBUGLN_ALL("End-of-File Reached!?");
 		return nullptr;
 	}
 	auto tok = context.next().token();
 	if (tok.type == LTS_TT_INVALID) {
-		DEBUGLN("Invalid Token!?");
+		MAKAILIB_DEBUGLN_ALL("Invalid Token!?");
 		return nullptr;
 	}
 	Node::Instance lhs;
-	DEBUGLN("Prefix: ", tok.text);
+	MAKAILIB_DEBUGLN_ALL("Prefix: ", tok.text);
 	if (!isString(tok.type) && prefixes.contains(tok.text))
 		lhs = prefixes[tok.text]->resolve(*this, null, tok);
 	else if (directs.contains(tok.type))
@@ -248,14 +248,14 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	else context.error("Invalid expression!");
 	if (context.empty())
 		return lhs;
-	DEBUGLN("Next token: [", context.peek().text, "]");
-	DEBUGLN("Is infix? ", infixes.contains(context.peek().text));
+	MAKAILIB_DEBUGLN_ALL("Next token: [", context.peek().text, "]");
+	MAKAILIB_DEBUGLN_ALL("Is infix? ", infixes.contains(context.peek().text));
 	if (!infixes.contains(context.peek().text))
 		return lhs;
-	DEBUGLN("Infix!");
+	MAKAILIB_DEBUGLN_ALL("Infix!");
 	do {
 		tok = context.next().token();
-		DEBUGLN("Resolving infix for: '", tok.text, "' :: (", tok.at.line, " : ", tok.at.column, ")");
+		MAKAILIB_DEBUGLN_ALL("Resolving infix for: '", tok.text, "' :: (", tok.at.line, " : ", tok.at.column, ")");
 		lhs = infixes[tok.text]->resolve(*this, lhs, tok);
 	} while (precedence < currentPrecedence());
 	return lhs;

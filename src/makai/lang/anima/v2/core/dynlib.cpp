@@ -20,6 +20,6 @@ void ALibrary::operator delete[](pointer mem, usize sz) noexcept {
 }
 
 ALibrary::~ALibrary() {}
-void ALibrary::open()									{DEBUGLN("Opening [", name(), "]...");		}
-void ALibrary::unload(Context::Remover const& remover)	{DEBUGLN("Unloading [", name(), "]...");	}
-void ALibrary::close()									{DEBUGLN("Closing [", name(), "]...");		}
+void ALibrary::open()									{MAKAILIB_DEBUGLN_ALL("Opening [", name(), "]...");		}
+void ALibrary::unload(Context::Remover const& remover)	{MAKAILIB_DEBUGLN_ALL("Unloading [", name(), "]...");	}
+void ALibrary::close()									{MAKAILIB_DEBUGLN_ALL("Closing [", name(), "]...");		}

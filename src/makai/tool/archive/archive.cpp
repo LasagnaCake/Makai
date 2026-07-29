@@ -17,18 +17,6 @@
 
 using namespace CTL::Literals::Text;
 
-// Legacy stuff, TODO: Remove this later
-#ifdef ARCSYS_APPLICATION_
-#define _ARCDEBUG(...)		DEBUG(__VA_ARGS__)
-#define _ARCDEBUGLN(...)	DEBUGLN(__VA_ARGS__)
-#define _ARCEXIT exit(-1)
-#else
-// This is now the default
-#define _ARCDEBUG(...)
-#define _ARCDEBUGLN(...)
-#define _ARCEXIT
-#endif // ARCSYS_ARCHIVE_APLLICATION_
-
 namespace fs = std::filesystem;
 using namespace CryptoPP;
 namespace File = Makai::File;
@@ -298,14 +286,14 @@ void Arch::pack(
 	try {
 		// Hash the password
 		String passhash = hashPassword(password);
-		DEBUGLN("FOLDER: ", folderPath, "\nARCHIVE: ", archivePath);
+		MAKAILIB_DEBUGLN_ALL("FOLDER: ", folderPath, "\nARCHIVE: ", archivePath);
 		// Get file structure
-		DEBUGLN("Getting file structure...");
+		MAKAILIB_DEBUGLN_ALL("Getting file structure...");
 		Value dir;
 		StringList files;
 		Value tree = dir["tree"];
 		tree = getStructure(fs::path(folderPath.std()), files, String(fs::path(folderPath.std()).stem().string()));
-		DEBUGLN("\n", dir.toFLOWString(String{"  "}));
+		MAKAILIB_DEBUGLN_ALL("\n", dir.toFLOWString(String{"  "}));
 		// Populate with temporary values
 		List<uint64> locations;
 		locations.resize(files.size(), 0);
@@ -314,7 +302,7 @@ void Arch::pack(
 		file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
 		file.open(archivePath.cstr(), std::ios::binary | std::ios::trunc);
 		// Populate header
-		DEBUGLN("Creating header...\n");
+		MAKAILIB_DEBUGLN_ALL("Creating header...\n");
 		// Headers
 		ArchiveHeader	header;
 		// Set main header params
@@ -326,29 +314,29 @@ void Arch::pack(
 		header.flags = {
 			.shouldCheckCRC = true
 		};
-		DEBUGLN("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
-		DEBUGLN("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
-		DEBUGLN("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
-		DEBUGLN("     FILE FORMAT VERSION: ", (uint64)header.version				);
-		DEBUGLN(" FILE FORMAT MIN VERSION: ", (uint64)header.minVersion				);
-		DEBUGLN("         ENCRYPTION MODE: ", (uint64)header.encryption				);
-		DEBUGLN("        COMPRESSION MODE: ", (uint64)header.compression			);
-		DEBUGLN("       COMPRESSION LEVEL: ", (uint64)header.level					);
-		DEBUGLN("\nDirectory structure layout:");
-		DEBUGLN("       FILE COUNT: ", files.size()			);
+		MAKAILIB_DEBUGLN_ALL("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
+		MAKAILIB_DEBUGLN_ALL("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
+		MAKAILIB_DEBUGLN_ALL("   DIRECTORY HEADER SIZE: ", (uint64)header.dirHeaderSize,		"B"	);
+		MAKAILIB_DEBUGLN_ALL("     FILE FORMAT VERSION: ", (uint64)header.version				);
+		MAKAILIB_DEBUGLN_ALL(" FILE FORMAT MIN VERSION: ", (uint64)header.minVersion				);
+		MAKAILIB_DEBUGLN_ALL("         ENCRYPTION MODE: ", (uint64)header.encryption				);
+		MAKAILIB_DEBUGLN_ALL("        COMPRESSION MODE: ", (uint64)header.compression			);
+		MAKAILIB_DEBUGLN_ALL("       COMPRESSION LEVEL: ", (uint64)header.level					);
+		MAKAILIB_DEBUGLN_ALL("\nDirectory structure layout:");
+		MAKAILIB_DEBUGLN_ALL("       FILE COUNT: ", files.size()			);
 		// Write main header first pass
 		file.write((char*)&header, header.headerSize);
 		// Write file info
-		DEBUGLN("\nWriting files...\n");
+		MAKAILIB_DEBUGLN_ALL("\nWriting files...\n");
 		usize i = 0;
 		for (auto const& f: files) {
 			// Get current stream position as file location
 			locations[i] = file.tellp();
 			// Read file
 			String const loc = Regex::replace(f, "^(.*?)[\\\\\\/]", "");
-			DEBUGLN("Clean path: '", loc, "'");
+			MAKAILIB_DEBUGLN_ALL("Clean path: '", loc, "'");
 			String const fpath = Makai::OS::FS::concatenate(folderPath, loc);
-			DEBUGLN("Full path: '", fpath, "'");
+			MAKAILIB_DEBUGLN_ALL("Full path: '", fpath, "'");
 			BinaryData<> contents = File::loadBinary(fpath);
 			// Prepare header
 			FileHeader fheader;
@@ -362,25 +350,25 @@ void Arch::pack(
 					comp,
 					complvl
 				);
-				DEBUGLN("Before encryption: ", contents.size());
+				MAKAILIB_DEBUGLN_ALL("Before encryption: ", contents.size());
 				contents = encrypt(
 					contents,
 					passhash,
 					enc,
 					fheader.block
 				);
-				DEBUGLN("After encryption: ", contents.size());
+				MAKAILIB_DEBUGLN_ALL("After encryption: ", contents.size());
 			}
 			fheader.compSize	= contents.size();	// Compressed file size
 			fheader.crc			= crcOf(contents);	// CRC
 			// Debug info
-			DEBUGLN("'", files[i], "':");
-			DEBUGLN("          FILE INDEX: ", i							);
-			DEBUGLN("       FILE LOCATION: ", locations[i]				);
-			DEBUGLN("                 ENCODED: ", encoded(locations[i])	);
-			DEBUGLN("   UNCOMPRESSED SIZE: ", fheader.uncSize,	"B"		);
-			DEBUGLN("     COMPRESSED SIZE: ", fheader.compSize,	"B"		);
-			DEBUGLN("               CRC32: ", fheader.crc,		"\n"	);
+			MAKAILIB_DEBUGLN_ALL("'", files[i], "':");
+			MAKAILIB_DEBUGLN_ALL("          FILE INDEX: ", i							);
+			MAKAILIB_DEBUGLN_ALL("       FILE LOCATION: ", locations[i]				);
+			MAKAILIB_DEBUGLN_ALL("                 ENCODED: ", encoded(locations[i])	);
+			MAKAILIB_DEBUGLN_ALL("   UNCOMPRESSED SIZE: ", fheader.uncSize,	"B"		);
+			MAKAILIB_DEBUGLN_ALL("     COMPRESSED SIZE: ", fheader.compSize,	"B"		);
+			MAKAILIB_DEBUGLN_ALL("               CRC32: ", fheader.crc,		"\n"	);
 			// Copy header & file data
 			file.write((char*)&fheader, header.fileHeaderSize);
 			file.write((char*)contents.data(), contents.size());
@@ -390,8 +378,8 @@ void Arch::pack(
 		populateTree(tree, locations);
 		dir["tree"] = tree;
 		// Process directory structure
-		DEBUGLN("\nWriting directory structure...\n");
-		DEBUGLN("\n", dir.toFLOWString(String{"  "}));
+		MAKAILIB_DEBUGLN_ALL("\nWriting directory structure...\n");
+		MAKAILIB_DEBUGLN_ALL("\n", dir.toFLOWString(String{"  "}));
 		{
 			// Directory header
 			DirectoryHeader	dheader;
@@ -411,9 +399,9 @@ void Arch::pack(
 			// Get directory header location
 			header.dirHeaderLoc = file.tellp();
 			// Debug info
-			DEBUGLN("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
-			DEBUGLN("        UNCOMPRESSED SIZE: ", dheader.uncSize,		"B"	);
-			DEBUGLN("          COMPRESSED SIZE: ", dheader.compSize,	"B"	);
+			MAKAILIB_DEBUGLN_ALL("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
+			MAKAILIB_DEBUGLN_ALL("        UNCOMPRESSED SIZE: ", dheader.uncSize,		"B"	);
+			MAKAILIB_DEBUGLN_ALL("          COMPRESSED SIZE: ", dheader.compSize,	"B"	);
 			// Write header & directory info
 			file.write((char*)&dheader, header.dirHeaderSize);
 			file.write((char*)pdi.data(), pdi.size());
@@ -424,21 +412,10 @@ void Arch::pack(
 		// Close file
 		file.flush();
 		file.close();
-		DEBUGLN("\nDone!");
-		_ARCDEBUGLN("Please run [arcgen \"YOUR_PASSWORD_HERE\"] to generate the hash to use in your game.");
-	#ifdef ARCSYS_APPLICATION_
-	} catch (Error::Generic const& e) {
-		_ARCDEBUGLN(e.report());
-		_ARCEXIT;
-	} catch (std::exception const& e) {
-		_ARCDEBUGLN("ERROR: ", e.what());
-		_ARCEXIT;
-	}
-	#else
+		MAKAILIB_DEBUGLN_ALL("\nDone!");
 	} catch (std::exception const& e) {
 		throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 	}
-	#endif // ARCSYS_APPLICATION_
 }
 
 [[noreturn]] static void notOpenError() {
@@ -629,14 +606,14 @@ void Arch::FileArchive::parseFileTree() {
 		archive->go(header.dirHeaderLoc);
 		archive->readInto((ref<byte>)&dh, header.dirHeaderSize);
 		if (!dh.compSize || !dh.uncSize) directoryTreeError();
-		DEBUGLN("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
-		DEBUGLN("        UNCOMPRESSED SIZE: ", dh.uncSize,			"B"	);
-		DEBUGLN("          COMPRESSED SIZE: ", dh.compSize,			"B"	);
+		MAKAILIB_DEBUGLN_ALL("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
+		MAKAILIB_DEBUGLN_ALL("        UNCOMPRESSED SIZE: ", dh.uncSize,			"B"	);
+		MAKAILIB_DEBUGLN_ALL("          COMPRESSED SIZE: ", dh.compSize,			"B"	);
 		BinaryData<> pfs;
 		pfs.resize(dh.compSize, 0);
 		archive->readInto((ref<byte>)pfs.data(), pfs.size());
 		archive->go(0);
-		DEBUGLN("Demangling tree data...");
+		MAKAILIB_DEBUGLN_ALL("Demangling tree data...");
 		demangleData(pfs, dh.block);
 		fs.resize(pfs.size(), 0);
 		MX::memcpy(fs.data(), pfs.data(), fs.size());
@@ -644,7 +621,7 @@ void Arch::FileArchive::parseFileTree() {
 		break;
 	}
 	try {
-		DEBUGLN("Parsing tree...");
+		MAKAILIB_DEBUGLN_ALL("Parsing tree...");
 		fstruct = Makai::JSON::parse(fs);
 	} catch (Error::FailedAction const& e) {
 		throw File::FileLoadError(
@@ -656,21 +633,17 @@ void Arch::FileArchive::parseFileTree() {
 
 void Arch::FileArchive::demangleData(BinaryData<>& data, Block const& block) const {
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
-	_ARCDEBUGLN("Before decryption: ", data.size());
 	data = decrypt(
 		data,
 		pass,
 		(EncryptionMethod)header.encryption,
 		block
 	);
-	_ARCDEBUGLN("After decryption: ", data.size());
-	_ARCDEBUGLN("After decompression: ", data.size());
 	data = decompress(
 		data,
 		(CompressionMethod)header.compression,
 		header.level
 	);
-	_ARCDEBUGLN("After decompression: ", data.size());
 }
 
 void Arch::FileArchive::unpackLayer(Value const& layer, String const& path) {
@@ -684,12 +657,6 @@ void Arch::FileArchive::unpackLayer(Value const& layer, String const& path) {
 	}
 	for (auto& [name, data]: files) {
 		String filepath = OS::FS::concatenate(path, data);
-		_ARCDEBUGLN(path, " + ", data, " = ", filepath);
-		_ARCDEBUGLN(
-			"'", name, "': ",
-			filepath,
-			" (dir: ", OS::FS::directoryFromPath(filepath), ")"
-		);
 		BinaryData<> contents = getBinaryFile(data);
 		OS::FS::makeDirectory(OS::FS::directoryFromPath(filepath));
 		File::saveBinary(filepath, contents);
@@ -711,15 +678,11 @@ Arch::FileArchive::FileEntry Arch::FileArchive::getFileEntry(String const& path)
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	if (!fstruct["tree"].isObject())
 		directoryTreeError();
-	DEBUGLN("Getting file entry location...");
+	MAKAILIB_DEBUGLN_ALL("Getting file entry location...");
 	uint64		idx	= getFileEntryLocation(path.lower(), path);
-	_ARCDEBUGLN("ENTRY LOCATION: ", idx);
-	DEBUGLN("Getting file entry header...");
+	MAKAILIB_DEBUGLN_ALL("Getting file entry header...");
 	FileHeader	fh	= getFileEntryHeader(idx);
-	_ARCDEBUGLN("   UNCOMPRESSED SIZE: ", fh.uncSize,	"B"	);
-	_ARCDEBUGLN("     COMPRESSED SIZE: ", fh.compSize,	"B"	);
-	_ARCDEBUGLN("               CRC32: ", fh.crc			);
-	DEBUGLN("Getting file entry data...");
+	MAKAILIB_DEBUGLN_ALL("Getting file entry data...");
 	return Arch::FileArchive::FileEntry{idx, path, fh, getFileEntryData(idx, fh)};
 } catch (File::FileLoadError const& e) {
 	Error::rethrow(e);
@@ -760,8 +723,8 @@ uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const&
 	CTL::ScopeLock<CTL::Mutex> lock(sync);
 	List<Value> stack;
 	Value entry = fstruct["tree"];
-	DEBUGLN("Path: ", origpath);
-	DEBUGLN("Cleaned: ", Regex::replace(path, "[\\\\\\/]+", "/"));
+	MAKAILIB_DEBUGLN_ALL("Path: ", origpath);
+	MAKAILIB_DEBUGLN_ALL("Cleaned: ", Regex::replace(path, "[\\\\\\/]+", "/"));
 	// Loop through path and get entry location
 	for (String fld: Regex::replace(path, "[\\\\\\/]+", "/").split('/')) {
 		if (fld == "..") {
@@ -799,19 +762,9 @@ static void unpackV1(
 ) try {
 	FileArchive arc(FileArchive::Source::create<InputByteFileStream>(archivePath), hashPassword(password));
 	arc.unpackTo(folderPath);
-#ifdef ARCSYS_APPLICATION_
-} catch (Error::Generic const& e) {
-	_ARCDEBUGLN(e.report());
-	_ARCEXIT;
-} catch (std::exception const& e) {
-	_ARCDEBUGLN("ERROR: ", e.what());
-	_ARCEXIT;
-}
-#else
 } catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
-#endif // ARCSYS_APPLICATION_
 
 static void unpackV0(
 	String const& archivePath,
@@ -820,30 +773,16 @@ static void unpackV0(
 ) try {
 	FileArchive arc(FileArchive::Source::create<InputByteFileStream>(archivePath), password);
 	arc.unpackTo(folderPath);
-#ifdef ARCSYS_APPLICATION_
-} catch (Error::Generic const& e) {
-	_ARCDEBUGLN(e.report());
-	_ARCEXIT;
-} catch (std::exception const& e) {
-	_ARCDEBUGLN("ERROR: ", e.what());
-	_ARCEXIT;
-}
-#else
 } catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
-#endif // ARCSYS_APPLICATION_
 
 void Arch::unpack(
 	String const& archivePath,
 	String const folderPath,
 	String const& password
 ) try {
-	uint64 mv;
-	{
-		mv = FileArchive::getHeader(archivePath).minVersion;
-		_ARCDEBUGLN("Minimum Version: ", toString(mv));
-	}
+	uint64 mv = FileArchive::getHeader(archivePath).minVersion;
 	switch(mv) {
 		case 1: unpackV1(archivePath, folderPath, password);	break;
 		case 0: unpackV0(archivePath, folderPath, password);	break;
@@ -852,16 +791,6 @@ void Arch::unpack(
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}
-#ifdef ARCSYS_APPLICATION_
-} catch (Error::Generic const& e) {
-	_ARCDEBUGLN(e.report());
-	_ARCEXIT;
-} catch (std::exception const& e) {
-	_ARCDEBUGLN("ERROR: ", e.what());
-	_ARCEXIT;
-}
-#else
 } catch (std::exception const& e) {
 	throw File::FileLoadError(e.what(), CTL_CPP_PRETTY_SOURCE);
 }
-#endif // ARCSYS_APPLICATION_

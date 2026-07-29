@@ -109,7 +109,7 @@ static UTF8String parseString(TokenStream::Lexer& lexer, UTF::U8Char const delim
 		lexer.next();
 		if (lexer.now() == delim) break;
 	}
-	//DEBUGLN("String: ", result);
+	//MAKAILIB_DEBUGLN_ALL("String: ", result);
 	return result;
 }
 
@@ -158,7 +158,7 @@ constexpr TokenStream::Token::Type stringType(UTF::U8Char const op) {
 }
 
 static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
-	//DEBUGLN("Operator time!");
+	//MAKAILIB_DEBUGLN_ALL("Operator time!");
 	tok.type = TokenStream::Token::Type{lexer.now().value()};
 	tok.text.pushBack(lexer.now());
 	if (lexer.now() == UTF::U8Char{'='}) {
@@ -324,7 +324,7 @@ bool TokenStream::next() {
 	}
 	UTF::U8String lexeme;
 	curToken = {.at = position()};
-	//DEBUGLN("Char: ", (char)lexer->now().value(), ", next: ", (char)lexer->peek().value());
+	//MAKAILIB_DEBUGLN_ALL("Char: ", (char)lexer->now().value(), ", next: ", (char)lexer->peek().value());
 	if (isNumberChar(lexer->now()) || ((lexer->now() == UTF::U8Char{'.'}) && isNumberChar(lexer->peek()))) {
 		lexeme = parseNumber(*lexer);
 		try {
@@ -364,8 +364,8 @@ bool TokenStream::next() {
 		curToken.text = lexeme;
 	if (lexer->empty())
 		isFinished = true;
-	//DEBUGLN("Type: ", Token::asName(curToken.type));
-	//DEBUGLN("Text: ", curToken.text.toString());
+	//MAKAILIB_DEBUGLN_ALL("Type: ", Token::asName(curToken.type));
+	//MAKAILIB_DEBUGLN_ALL("Text: ", curToken.text.toString());
 	return !isFinished;
 }
 
@@ -411,7 +411,7 @@ TokenStream::~TokenStream()							{close();		}
 CStyle::TokenStream& TokenStream::open(UTF8String const& source) {
 	if (lexer) return *this;
 	lexer.bind(new Lexer{source.reversed()});
-	//DEBUGLN("Source size: ", lexer->source.size());
+	//MAKAILIB_DEBUGLN_ALL("Source size: ", lexer->source.size());
 	err = nullptr;
 	isFinished = false;
 	return *this;

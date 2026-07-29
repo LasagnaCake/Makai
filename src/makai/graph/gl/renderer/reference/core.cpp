@@ -4,11 +4,11 @@
 using namespace Makai::Graph::Ref;
 
 AReference::~AReference() {
-	DEBUGLN("Destroying reference...");
+	MAKAILIB_DEBUGLN_ALL("Destroying reference...");
 	if (triangles) {
-		DEBUGLN("> Clearing triangles...");
+		MAKAILIB_DEBUGLN_ALL("> Clearing triangles...");
 		parent.removeReference(*this);
-		DEBUGLN("> Triangles cleared!");
+		MAKAILIB_DEBUGLN_ALL("> Triangles cleared!");
 	}
 }
 

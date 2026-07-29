@@ -208,7 +208,7 @@ ImageData Image2D::getData() const {
 	#ifdef MAKAILIB_DEBUG
 	API::Debug::Context ctx("Image2D::getData");
 	#endif // MAKAILIB_DEBUG
-	DEBUGLN("Getting image data...");
+	MAKAILIB_DEBUGLN_ALL("Getting image data...");
 	if (!exists()) return ImageData{
 		0, 0,
 		ComponentType::CT_BYTE,
@@ -229,7 +229,7 @@ ImageData Image2D::getData() const {
 		case ComponentType::CT_INT:
 		case ComponentType::CT_FLOAT:		size = 4;	break;
 	}
-	DEBUG("Image Size: ", size);
+	MAKAILIB_DEBUG_ALL("Image Size: ", size);
 	switch (attributes.format) {
 		case ImageFormat::IF_D:
 		case ImageFormat::IF_R:					break;
@@ -239,21 +239,21 @@ ImageData Image2D::getData() const {
 		default:
 		case ImageFormat::IF_RGBA:	size *= 4;	break;
 	}
-	DEBUGLN("Image Pixel Width: ", size);
-	DEBUGLN("Width: ", attributes.width);
-	DEBUGLN("Height: ", attributes.height);
-	DEBUGLN("Image Size: ", ((usize)attributes.width) * ((usize)attributes.height) * size);
+	MAKAILIB_DEBUGLN_ALL("Image Pixel Width: ", size);
+	MAKAILIB_DEBUGLN_ALL("Width: ", attributes.width);
+	MAKAILIB_DEBUGLN_ALL("Height: ", attributes.height);
+	MAKAILIB_DEBUGLN_ALL("Image Size: ", ((usize)attributes.width) * ((usize)attributes.height) * size);
 	ImageData imgdat = (ImageData)attributes;
-	DEBUGLN("Reserving buffer...");
+	MAKAILIB_DEBUGLN_ALL("Reserving buffer...");
 	imgdat.data.resize(((usize)attributes.width) * ((usize)attributes.height) * size, 0);
-	DEBUGLN("Reserved: ", imgdat.data.size());
+	MAKAILIB_DEBUGLN_ALL("Reserved: ", imgdat.data.size());
 	if (imgdat.data.empty()) throw Error::FailedAction("Somehow, the image data is empty.", CTL_CPP_PRETTY_SOURCE);
-	DEBUGLN("Extracting pixels...");
+	MAKAILIB_DEBUGLN_ALL("Extracting pixels...");
 	glBindTexture(GL_TEXTURE_2D, getID());
 	glGetTexImage(GL_TEXTURE_2D, 0, convert(attributes.format), convert(attributes.type), imgdat.data.data());
 	glBindTexture(GL_TEXTURE_2D, 0);
-	DEBUGLN("Done!");
-	DEBUGLN("Reserved: ", imgdat.data.size());
+	MAKAILIB_DEBUGLN_ALL("Done!");
+	MAKAILIB_DEBUGLN_ALL("Reserved: ", imgdat.data.size());
 	return imgdat;
 }
 

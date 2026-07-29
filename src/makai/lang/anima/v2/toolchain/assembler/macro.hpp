@@ -145,7 +145,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				usize i = 0;
 				for (auto& expr: exprs)
 					if (expr.rule.fit(args)) {
-						DEBUGLN("Found matching rule: ", i);
+						MAKAILIB_DEBUGLN_ALL("Found matching rule: ", i);
 						Context ctx{.input = args, .rule = expr.rule, .baseContext = context};
 						ctx.parse();
 						return expr.transform.apply(ctx).result(ctx);

@@ -257,7 +257,7 @@ void Scene::extendFromDefinitionV0(JSON::Value def, String const& sourcepath) {
 			} else if (def["data"].isObject()) {
 				auto objs = def["data"].items();
 				for(auto const& [name, obj]: objs) {
-					DEBUGLN("[[ ", name," ]]");
+					MAKAILIB_DEBUGLN_ALL("[[ ", name," ]]");
 					auto r = createObject(name).value;
 					r->extendFromDefinition(
 						obj,

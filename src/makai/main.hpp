@@ -23,7 +23,7 @@ namespace Makai {
 		/// @brief Prints a string of text to the command-line.
 		/// @param what what to print.
 		virtual void write(Makai::String const& what) const {
-			DEBUG(what);
+			MAKAILIB_DEBUG_ALL(what);
 		}
 
 		/// @brief Prints a series of values to the command line.

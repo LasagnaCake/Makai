@@ -805,6 +805,13 @@ static void doScopeEnter(Context& context) {
 			count
 		);
 	}
+	if (
+		context.peek().text == "end"
+	or	context.peek().text == "exit"
+	) {
+		context.next();
+		context.program.code.popBack();
+	}
 }
 
 static void doScopeExit(Context& context) {
@@ -989,7 +996,7 @@ static void doOperation(Context& context) {
 	}
 	context.add(Instruction::Name::AV2_IN_OP, bop);
 	if (!value.isUndefined()) {
-		DEBUGLN("Immediate: ", uint64(bop.assume));
+		MAKAILIB_DEBUGLN_ALL("Immediate: ", uint64(bop.assume));
 		switch (bop.assume) {
 			case BasicType::AV2_BT_BOOL:
 			case BasicType::AV2_BT_UINT8:

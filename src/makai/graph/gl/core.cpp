@@ -78,13 +78,13 @@ inline void printErrors() {
 	GLenum error = GL_NO_ERROR;
 	while ((error = glGetError()) != GL_NO_ERROR) {
 		switch(error) {
-			case GL_INVALID_ENUM:					DEBUGLN("error: NVALID ENUM"			);
-			case GL_INVALID_VALUE:					DEBUGLN("error: INVALID VALUE"			);
-			case GL_INVALID_OPERATION:				DEBUGLN("error: INVALID OPERATION"		);
-			case GL_INVALID_FRAMEBUFFER_OPERATION:	DEBUGLN("error: INVALID FB OPERATION"	);
-			case GL_OUT_OF_MEMORY:					DEBUGLN("error: OUT OF MEMORY"			);
-			case GL_STACK_UNDERFLOW:				DEBUGLN("error: STACK UNDERFLOW"		);
-			case GL_STACK_OVERFLOW:					DEBUGLN("error: STACK OVERFLOW"			);
+			case GL_INVALID_ENUM:					MAKAILIB_DEBUGLN_ALL("error: NVALID ENUM"			);
+			case GL_INVALID_VALUE:					MAKAILIB_DEBUGLN_ALL("error: INVALID VALUE"			);
+			case GL_INVALID_OPERATION:				MAKAILIB_DEBUGLN_ALL("error: INVALID OPERATION"		);
+			case GL_INVALID_FRAMEBUFFER_OPERATION:	MAKAILIB_DEBUGLN_ALL("error: INVALID FB OPERATION"	);
+			case GL_OUT_OF_MEMORY:					MAKAILIB_DEBUGLN_ALL("error: OUT OF MEMORY"			);
+			case GL_STACK_UNDERFLOW:				MAKAILIB_DEBUGLN_ALL("error: STACK UNDERFLOW"		);
+			case GL_STACK_OVERFLOW:					MAKAILIB_DEBUGLN_ALL("error: STACK OVERFLOW"			);
 		}
 	}
 }
@@ -196,14 +196,14 @@ void GLAPIENTRY glAPIMessageCallback(
 	const void* userParam
 ) {
 	if (type == GL_DEBUG_TYPE_PUSH_GROUP) {
-		DEBUGLN("<api:context name=\"", message, "\">");
+		MAKAILIB_DEBUGLN_ALL("<api:context name=\"", message, "\">");
 		return;
 	}
 	if (type == GL_DEBUG_TYPE_POP_GROUP) {
-		DEBUGLN("</api:context>");
+		MAKAILIB_DEBUGLN_ALL("</api:context>");
 		return;
 	}
-	DEBUGLN(
+	MAKAILIB_DEBUGLN_ALL(
 		"<api:message>\n"
 		, "Source: "	, glDebugSource(source)		, "\n"
 		, "Type: "		, glDebugType(type)			, "\n"
@@ -322,7 +322,7 @@ void Makai::Graph::API::beginRender() {
 void Makai::Graph::API::endRender() {
 	#ifdef MAKAILIB_DEBUG
 	if (apiDebug) {
-		DEBUGLN(renderContext->report());
+		MAKAILIB_DEBUGLN_ALL(renderContext->report());
 		renderContext.unbind();
 	}
 	#endif // MAKAILIB_DEBUG

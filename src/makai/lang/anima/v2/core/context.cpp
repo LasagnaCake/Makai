@@ -30,9 +30,9 @@ void Context::debugArgs(List<Object::Storage> const& args) {
 
 void Context::debugExternalFunction(bool const isExiting) {
 	if (isExiting) {
-		DEBUGLN("<<<<<<<<<<<<<<<<<<<<<< Destroying external function...");
+		MAKAILIB_DEBUGLN_ALL("<<<<<<<<<<<<<<<<<<<<<< Destroying external function...");
 	} else {
-		DEBUGLN(">>>>>>>>>>>>>>>>>>>>>> Creating external function...");
+		MAKAILIB_DEBUGLN_ALL(">>>>>>>>>>>>>>>>>>>>>> Creating external function...");
 	}
 }
 
@@ -42,7 +42,7 @@ Context::Library::Impl::~Impl()	{close();								}
 
 bool Context::openLibrary(Makai::String const& path) {
 	if (dynlibs.contains(path)) return true;
-	DEBUGLN("Fetching library...");
+	MAKAILIB_DEBUGLN_ALL("Fetching library...");
 	Instance<Library> lib = lib.create();
 	if (!lib->impl->open(path, *this))
 		return false;
@@ -59,14 +59,14 @@ void Context::Library::Impl::close() {
 }
 
 void Context::loadLibraries() {
-	DEBUGLN("Loading libraries...");
+	MAKAILIB_DEBUGLN_ALL("Loading libraries...");
 	for (auto& lib: toBeLoaded) {
-		DEBUGLN("<", lib->name(), ">");
+		MAKAILIB_DEBUGLN_ALL("<", lib->name(), ">");
 		lib->load(*this);
-		DEBUGLN("</", lib->name(), ">");
+		MAKAILIB_DEBUGLN_ALL("</", lib->name(), ">");
 	}
 	toBeLoaded.clear();
-	DEBUGLN("Done loading libraries!");
+	MAKAILIB_DEBUGLN_ALL("Done loading libraries!");
 }
 
 void Context::unloadLibraries() {
@@ -96,12 +96,12 @@ Nullable<Context::Error> Context::NativeCall::validate(Context& context, List<Ob
 }
 
 bool Context::addNativeCall(usize const hash, usize const argc, ExternalInvocation const& invoker) {
-	DEBUGLN("Adding method [", hash, "]");
+	MAKAILIB_DEBUGLN_ALL("Adding method [", hash, "]");
 	if (hasNativeCall(hash)) {
-		DEBUGLN("WARN: [", hash, "] duplicate found");
+		MAKAILIB_DEBUGLN_ALL("WARN: [", hash, "] duplicate found");
 		return false;
 	}
-	DEBUGLN("OK: [", hash, "] has no duplicates");
+	MAKAILIB_DEBUGLN_ALL("OK: [", hash, "] has no duplicates");
 	Instance<NativeCall> method = method.create();
 	method->flags.isExternal = true;
 	method->argc	= argc;
@@ -121,15 +121,15 @@ Context::MethodResult Context::callNative(usize const hash, List<Object::Storage
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUGLN_FULL("Looking for method ", hash, "...");
 		for (auto& m: externalMethods)
-			DEBUGLN("  > ", m.key);
+			MAKAILIB_DEBUGLN_ALL("  > ", m.key);
 	}
 	MAKAILIB_DEBUG_BLOCK_FULL {
-		DEBUGLN("Method exists? ", hasNativeCall(hash));
-		DEBUGLN("Registered? ", externalMethods.contains(hash));
+		MAKAILIB_DEBUGLN_ALL("Method exists? ", hasNativeCall(hash));
+		MAKAILIB_DEBUGLN_ALL("Registered? ", externalMethods.contains(hash));
 		if (externalMethods.contains(hash)) {
-			DEBUGLN("Created? ", externalMethods[hash].exists());
+			MAKAILIB_DEBUGLN_ALL("Created? ", externalMethods[hash].exists());
 			if (externalMethods[hash].exists())
-				DEBUGLN("Invoker? ", externalMethods[hash]->invoker);
+				MAKAILIB_DEBUGLN_ALL("Invoker? ", externalMethods[hash]->invoker);
 		}
 	}
 	if (!hasNativeCall(hash)) return Error::AV2_CCE_MISSING_METHOD;
@@ -143,16 +143,16 @@ Context::MethodResult Context::callNative(usize const hash, List<Object::Storage
 
 bool Context::Library::Impl::open(Makai::String const& path, Context& context) {
 	if (!Makai::OS::FS::exists(path)) return false;
-	DEBUGLN("Opening library...");
+	MAKAILIB_DEBUGLN_ALL("Opening library...");
 	dll.open(path);
-	DEBUGLN("Getting entrypoint...");
+	MAKAILIB_DEBUGLN_ALL("Getting entrypoint...");
 	auto const fn = dll.function<owner<ALibrary>()>("AV2_Extern_getLibrary");
 	lib = fn();
 	if (!lib) return false;
-	DEBUGLN("<library>");
-	DEBUGLN("<name>", lib->name(), "</name>");
-	DEBUGLN("<version>", lib->version().serialize().toFLOWString(), "</version>");
-	DEBUGLN("</library>");
+	MAKAILIB_DEBUGLN_ALL("<library>");
+	MAKAILIB_DEBUGLN_ALL("<name>", lib->name(), "</name>");
+	MAKAILIB_DEBUGLN_ALL("<version>", lib->version().serialize().toFLOWString(), "</version>");
+	MAKAILIB_DEBUGLN_ALL("</library>");
 	lib->open();
 	return true;
 }

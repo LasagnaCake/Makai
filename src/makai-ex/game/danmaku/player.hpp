@@ -101,9 +101,9 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Constructs the player.
 		/// @param cfg Player configuration to use.
 		APlayer(PlayerConfig const& cfg): AGameObject({cfg, cfg.hitbox}), Flaggable{Flags::DEFAULT}, mask(cfg.mask) {
-			DEBUGLN("Building player...");
-			DEBUGLN("Graze: ", Collision::Layer::asName(cfg.grazebox.layer));
-			DEBUGLN("Item: ", Collision::Layer::asName(cfg.itembox.layer));
+			MAKAILIB_DEBUGLN_ALL("Building player...");
+			MAKAILIB_DEBUGLN_ALL("Graze: ", Collision::Layer::asName(cfg.grazebox.layer));
+			MAKAILIB_DEBUGLN_ALL("Item: ", Collision::Layer::asName(cfg.itembox.layer));
 			grazebox	= CollisionServer::createCollider(cfg.grazebox.layer);
 			itembox		= CollisionServer::createCollider(cfg.itembox.layer);
 			collision()->getLayer().affects		= cfg.hitboxLayer.affects;
@@ -128,9 +128,9 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Destructor.
 		virtual ~APlayer() {
-			DEBUGLN("Demagnetizing player...");
+			MAKAILIB_DEBUGLN_ALL("Demagnetizing player...");
 			Instance<Vector2>::detach(&trans.position);
-			DEBUGLN("Player demagnetized!");
+			MAKAILIB_DEBUGLN_ALL("Player demagnetized!");
 		}
 
 		/// @brief Called every execution cycle.
@@ -152,7 +152,7 @@ namespace Makai::Ex::Game::Danmaku {
 			onUpdate(delta);
 			if (paused()) return;
 		}
-		
+
 		/// @brief Called when a collision event with the player's hitbox happens.
 		/// @param collider Collider colliding with the player's hitbox.
 		/// @param direction Direction in which collision happens.
@@ -205,7 +205,7 @@ namespace Makai::Ex::Game::Danmaku {
 			bombTime = frames;
 			return *this;
 		}
-		
+
 		/// @brief Disables shooting for a set period of time.
 		/// @param frames Frames to disable shooting for.
 		/// @return Reference to self.
@@ -213,7 +213,7 @@ namespace Makai::Ex::Game::Danmaku {
 			shotTime = frames;
 			return *this;
 		}
-		
+
 		/// @brief Makes the player invincible for a set period of time.
 		/// @param frames Frames to be invincible for.
 		/// @return Reference to self.
