@@ -48,7 +48,9 @@ namespace Makai::Net::URI {
 	constexpr String encode(String const& str) {
 		String out;
 		for (auto& c: str)
-			out += "%" + Format::pad(
+			if (isIdentifierNameChar(c))
+				out += c;
+			else out += "%" + Format::pad(
 				String::fromNumber<int8>(c, 16, false),
 				'0',
 				2,
