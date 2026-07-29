@@ -696,6 +696,7 @@ static Namespace::AttributeRef createBeforeAttribute() {
 		if (!fn)
 			Transformer::ATransformer::Context::error("No valid function overload found!", ns->node);
 		inter.before.pushBack(fn);
+		inter.before.back()->uses++;
 	};
 	return attrib;
 }
@@ -712,7 +713,8 @@ static Namespace::AttributeRef createAfterAttribute() {
 		auto fn = ns->function->overloadFromTypes({}).asWeak();
 		if (!fn)
 			Transformer::ATransformer::Context::error("No valid function overload found!", ns->node);
-		inter.before.pushBack(fn);
+		inter.after.pushBack(fn);
+		inter.after.back()->uses++;
 	};
 	return attrib;
 }
@@ -731,6 +733,7 @@ static Namespace::AttributeRef createMainAttribute() {
 		inter.main = ns->function->overloadFromTypes({}).asWeak();
 		if (!inter.main)
 			Transformer::ATransformer::Context::error("No valid function overload for main!", ns->node);
+		inter.main->uses++;
 	};
 	return attrib;
 }
