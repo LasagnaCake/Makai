@@ -213,6 +213,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			bool							optional = false;
 			bool							hasImplementation = false;
 			bool							staticEntity = false;
+			Handle<Overload>				fullImpl;
 
 			UTF8Dictionary<Metadata::Instance> meta;
 
