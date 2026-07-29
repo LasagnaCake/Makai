@@ -12,26 +12,4 @@ module IO {
 
 	@Shared(lib = av2console, name = "av2/console/writeLine_any", optional = true)
 	writeLine :: (what: any) -> void
-	
-	write :: (@ByRef what: [string]) -> void {
-		@ByCopy sz := countof what
-		repeat @ByCopy i: uint64 -> sz
-			write(what[i - sz])
-	}
-	
-	writeLine :: (@ByRef what: [string]) -> void {
-		write(what)
-		write("\n")
-	}
-	
-	write :: (@ByRef what: [any]) -> void {
-		@ByCopy sz := countof what
-		repeat @ByCopy i: uint64 -> sz
-			write(what[i - sz])
-	}
-	
-	writeLine :: (@ByRef what: [any]) -> void {
-		write(what)
-		write("\n")
-	}
 }
