@@ -1239,6 +1239,7 @@ static Makai::Nullable<FunctionArgument> resolveFunctionArgument(Node::Instance 
 	else return null;
 }
 
+// FIXME: Optional arguments are not producing the correct code
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto [path, scope] = resolve(context, node->leftSide);
 	if (scope) {
