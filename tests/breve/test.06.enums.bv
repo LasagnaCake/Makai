@@ -30,10 +30,34 @@ enum Weekday: uint8 {
 		else if self == Weekday.SUNDAY		return "Sun"
 		else return "INVALID_DAY"
 	}
+	
+	display :: (@ByCopy self: Weekday)
+		=> IO.writeLine(self.fullName; + " (" + self.shortName; + ")")
 }
 
 @Main
 main :: () {
+	// Full mode
 	day := Weekday.MONDAY
-	IO.writeLine(day.fullName; + " (" + day.shortName;+ ")")
+	day.display;
+	day = Weekday.TUESDAY
+	day.display;
+	day = Weekday.WEDNESDAY
+	day.display;
+	day = Weekday.THURSDAY
+	day.display;
+	day = Weekday.FRIDAY
+	day.display;
+	day = Weekday.SATURDAY
+	day.display;
+	day = Weekday.SUNDAY
+	day.display;
+	// Shorthand mode
+	Weekday.MONDAY.display;
+	Weekday.TUESDAY.display;
+	Weekday.WEDNESDAY.display;
+	Weekday.THURSDAY.display;
+	Weekday.FRIDAY.display;
+	Weekday.SATURDAY.display;
+	Weekday.SUNDAY.display;
 } 
