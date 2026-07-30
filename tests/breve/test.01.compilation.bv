@@ -1,7 +1,6 @@
 using import core
 
 module Test.Namespace {
-	@Nullable
 	struct MySpecialStruct {
 		@ByCopy example : int64 = 0
 	}
