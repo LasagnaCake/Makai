@@ -1,0 +1,39 @@
+using import core
+
+enum Weekday: uint8 {
+	MONDAY = 1
+	TUESDAY
+	WEDNESDAY
+	THURSDAY
+	FRIDAY
+	SATURDAY
+	SUNDAY
+	
+	name :: (@ByCopy self: Weekday) -> string {
+		if self == MONDAY			return "Monday"
+		else if self == TUESDAY		return "Tuesday"
+		else if self == WEDNESDAY	return "Wednesday"
+		else if self == THURSDAY	return "Thursday"
+		else if self == FRIDAY		return "Friday"
+		else if self == SATURDAY	return "Saturday"
+		else if self == SUNDAY		return "Sunday"
+		else return "INVALID_DAY"
+	}
+	
+	shortName :: (@ByCopy self: Weekday) -> string {
+		if self == MONDAY			return "Mon"
+		else if self == TUESDAY		return "Tue"
+		else if self == WEDNESDAY	return "Wed"
+		else if self == THURSDAY	return "Thu"
+		else if self == FRIDAY		return "Fri"
+		else if self == SATURDAY	return "Sat"
+		else if self == SUNDAY		return "Sun"
+		else return "INVALID_DAY"
+	}
+}
+
+@Main
+main :: () {
+	day := Weekday.MONDAY
+	IO.writeLine(day.name; + " (" + day.shortName;+ ")")
+} 
