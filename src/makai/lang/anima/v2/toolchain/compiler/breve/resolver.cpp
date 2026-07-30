@@ -18,8 +18,15 @@ Node::Instance EnumResolver::resolve(Parser& parser, Node::Instance const& leftS
 	MAKAILIB_DEBUGLN_FULL("Resolving enumeration expression...");
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->content = Node::Content::AV2_TANC_EMPTY;
-	MAKAILIB_DEBUGLN_FULL("Empty:DONE!");
+	result->content = Node::Content::AV2_TANC_DECLARATION;
+	parser.context.error("Unimplemented!");
+	auto const decl = parser.nextExpression();
+	if (decl->base.type == LTS_TT_COLON) {
+		result->leftSide = decl->leftSide;
+		result->middle = decl->rightSide;
+	}
+	result->rightSide = parser.nextExpression();
+	MAKAILIB_DEBUGLN_FULL("Enum:DONE!");
 	return result;
 }
 

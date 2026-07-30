@@ -1,10 +1,18 @@
 using import core.types
 
 module OS.Time {
-	@Shared(name = "av2/os/time/local", lib = av2time)
-	localNow :: () -> ?int64
-	@Shared(name = "av2/os/time/utc", lib = av2time)
-	utcNow :: () -> ?int64
-	@Shared(name = "av2/os/time/proc", lib = av2time)
-	procNow :: () -> ?int64
+	enum Precision: int64 {
+		HOURS = -2
+		MINUTES
+		SECONDS
+		MILLIS
+		MICROS
+		NANOS
+	}
+	@Shared(name = "av2/time/localNow", lib = av2time)
+	localNow :: (precision: Precision = Precision.SECONDS) -> int64
+	@Shared(name = "av2/time/utcNow", lib = av2time)
+	utcNow :: (precision: Precision = Precision.SECONDS) -> int64
+	@Shared(name = "av2/time/procNow", lib = av2time)
+	procNow :: (precision: Precision = Precision.SECONDS) -> int64
 }

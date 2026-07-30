@@ -260,6 +260,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Handle<Namespace>	parentScope;
 		UTF8String			passBy = "move";
 
+		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
+
 		UTF8String getSource() {
 			if (global) return passBy + " " + source;
 			else return passBy + " local[" + Makai::toString(id) + "]";

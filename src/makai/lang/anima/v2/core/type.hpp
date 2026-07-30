@@ -170,6 +170,7 @@ namespace Makai::Anima::V2::Core {
 		uint64 isProxy:		1 = false;
 		uint64 isPointer:	1 = false;
 		uint64 isFinal:		1 = false;
+		uint64 isEnum:		1 = false;
 	};
 
 	struct Definition: Entry, Flagged<TypeFlags> {

@@ -99,6 +99,8 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 	Namespace::Instance const& ns
 ) {
 	if (ns->variable) {
+		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+			return ns->variable->value.toString();
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
 			context.top()->impl->writeMainLine("at [", ns->variable->id, "]");
 			return {"move top"};
@@ -526,6 +528,49 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	}
 	context.pop(implName.size());
 	return {.scope = scope, .type = scope->type};
+}
+
+ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const& node) {
+	// TODO: This
+	if (!node->leftSide)
+		context.error("Expected declaration name here!");
+	auto const name = context.pathOf(node->leftSide);
+	if (context.top()->subspaces.contains(name.front()))
+		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
+	auto const scope = context.declare(name);
+	auto& type = *(scope->type = scope->type.create());
+	if (node->middle) {
+		auto const base = TypeRequest().transform(context, node->middle).type;
+		if (!base)
+			context.error("No type with this name exists!", node->middle);
+		if (!base->isBasic)
+			context.error("Enums can only inherit integers!", node->middle);
+		if (!Core::isInteger(*base->basic))
+			context.error("Enums can only inherit integers!", node->middle);
+		type.base = base;
+	}
+	type.flags.isEnum = true;
+	List<Node::Instance> fields;
+	List<Node::Instance> methods;
+	Makai::Function<void(Node::Instance const&, Node::Instance const&)> evalDecl;
+	evalDecl = [&] (Node::Instance const& node, Node::Instance const& root) {
+		if (node->content == Node::Content::AV2_TANC_DECLARATION) {
+			if (node->base.type == LTS_TT_NAMESPACE_RESOLVE) {
+				MAKAILIB_DEBUGLN_FULL("  > Function");
+				methods.pushBack(root);
+			} else if (
+				node->base.type == LTS_TT_ASSIGN
+			) {
+				MAKAILIB_DEBUGLN_FULL("  > Field");
+				fields.pushBack(root);
+			} else context.error("Invalid declaration inside enum declaration!", node);
+		} else if (node->content == Node::Content::AV2_TANC_ATTRIBUTE) {
+			evalDecl(node->rightSide, root);
+		} else context.error("Invalid expression inside enum declaration!", node);
+	};
+	for (auto& entry: node->rightSide->children)
+		evalDecl(entry, entry);
+	return {};
 }
 
 ATransformer::Result Return::transform(Context& context, Node::Instance const& node) {
@@ -1553,6 +1598,8 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 			return PropertyDecl().transform(context, node);
 		if (node->base.text == "module")
 			return NamespaceDecl().transform(context, node);
+		if (node->base.text == "enum")
+			return EnumDecl().transform(context, node);
 	}
 	context.error("Invalid declaration!", node);
 }
