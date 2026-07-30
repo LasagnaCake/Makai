@@ -1400,7 +1400,7 @@ static void declareType(Context& context) {
 				type->base = context.getType(base)->id;
 			else context.error("Element type does not exist!");
 			context.expectNext(Type{'>'});
-		} else if (flag == "array") {
+		} else if (flag == "enum") {
 			if (type->base)
 				context.error("Redeclaration of enumeration base type!");
 			type->flags.isEnum = true;
