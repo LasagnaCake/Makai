@@ -237,10 +237,12 @@ static ATransformer::Result infixResolve(ATransformer::Context& context, Node::I
 		if (
 			tok->function
 		&&	tok->meta.contains("Operator")
+		&&	tok->meta["Operator"]->value
 		&&	tok->meta["Operator"]->value.contains("infix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("infix", "") == bopName(context, node)
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
+			if (!ov) continue;
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, ov->result->scope.raw(), ov->result};
 		}
@@ -252,6 +254,7 @@ static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::
 		if (
 			tok->function
 		&&	tok->meta.contains("Operator")
+		&&	tok->meta["Operator"]->value
 		&&	tok->meta["Operator"]->value.contains("prefix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("prefix", "") == uopName(context, node)
 		) {
@@ -267,6 +270,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 		if (
 			tok->function
 		&&	tok->meta.contains("Operator")
+		&&	tok->meta["Operator"]->value
 		&&	tok->meta["Operator"]->value.contains("postfix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("postfix", "") == uopName(context, node)
 		) {
@@ -1050,7 +1054,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 			else
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
 			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
-		} else if (t->flags.isEnum) {
+		} else if (t->flags.isEnum && comparison) {
 			if (lhs.type->base->basic == rhs.type->base->basic)
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->base->basic, rhs));
 			else
