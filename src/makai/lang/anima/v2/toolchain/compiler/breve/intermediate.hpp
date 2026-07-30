@@ -155,6 +155,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
 			AV2_TCTD_STRUCT,
+			AV2_TCTD_ENUM,
 			AV2_TCTD_TEMPLATE,
 		};
 

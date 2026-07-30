@@ -531,7 +531,6 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const& node) {
-	// TODO: This
 	if (!node->leftSide)
 		context.error("Expected declaration name here!");
 	auto const name = context.pathOf(node->leftSide);
@@ -548,7 +547,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 		if (!Core::isInteger(*base->basic))
 			context.error("Enums can only inherit integers!", node->middle);
 		type.base = base;
-	}
+	} else type.base = context.basicType("int64");
 	type.flags.isEnum = true;
 	List<Node::Instance> fields;
 	List<Node::Instance> methods;
@@ -560,6 +559,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 				methods.pushBack(root);
 			} else if (
 				node->base.type == LTS_TT_ASSIGN
+			or	node->base.type == LTS_TT_IDENTIFIER
 			) {
 				MAKAILIB_DEBUGLN_FULL("  > Field");
 				fields.pushBack(root);
@@ -568,8 +568,57 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 			evalDecl(node->rightSide, root);
 		} else context.error("Invalid expression inside enum declaration!", node);
 	};
+	MAKAILIB_DEBUGLN_FULL("struct {");
 	for (auto& entry: node->rightSide->children)
 		evalDecl(entry, entry);
+	MAKAILIB_DEBUGLN_FULL("}");
+	type.scope = scope.asWeak();
+	type.node = node;
+	type.name = "__" + name.join("_") + node->name();
+	List<Namespace::VariableRef> defaulted;
+	List<Namespace::VariableRef> statics;
+	scope->type->def = TypeDecl::Definition::AV2_TCTD_ENUM;
+	scope->type->flags.isStructure = true;
+	MAKAILIB_DEBUGLN_FULL("Parsing fields...");
+	MAKAILIB_DEBUGLN_FULL("Field count: ", fields.size());
+	int64 defx = 0;
+	for (auto const& [field, id]: Range::expand(fields)) {
+		if (field->rightSide) {
+			auto const vx = Expression().resolve(field->rightSide);
+			if (!vx.value.isInteger())
+				context.error("Expected direct integer here!", field->rightSide);
+			defx = vx.value.getSigned();
+			if (defx < 0 && Core::isUnsigned(type.base->basic))
+				context.error("Cannot store negative values in unsigned integers!", field->rightSide);
+		}
+		auto const varName = (field->base.type == LTS_TT_ASSIGN) ? context.pathOf(field->leftSide) : context.pathOf(field);
+		auto const varScope = context.declare(varName);
+		auto& var = *(varScope->variable = varScope->variable.create());
+		var.value = defx++;
+		var.context = ExecutionContext::AV2_TCB_EC_COMPILE;
+		var.type = type.base;
+		context.pop(varName.size());
+	}
+	context.pop(name.size());
+	context.registerType(scope);
+	auto implName = name;
+	implName.back() = "::IMPL__" + implName.back();
+	context.declare(implName);
+	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
+	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
+	for (auto& method: methods) {
+		auto const decl = Expression().transform(context, method);
+		auto& fn = *decl.scope->function;
+		for (auto& ov: fn.current) {
+			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
+				context.error("Missing appropriate [this] parameter!", method);
+			if (!ov->staticEntity)
+				ov->methodOf = scope->type.asWeak();
+		}
+		if (scope->subspaces.contains(fn.name))
+			context.error("Symbol with this name already exists!", method);
+		scope->subspaces[fn.name] = decl.scope;
+	}
 	return {};
 }
 

@@ -1192,8 +1192,9 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 	else if (
 		type.flags.isDynamic
 	or	type.flags.isArray
+	or	type.flags.isEnum
 	or	type.flags.isBasic
-	) context.error("Cannot declare fields on basic, array and dynamic types!");
+	) context.error("Cannot declare fields on basic, array, enum, and dynamic types!");
 	type.flags.isStructure = true;
 	context.expectNext(Type{'['});
 	while (true) {
@@ -1379,6 +1380,8 @@ static void declareType(Context& context) {
 		else if (flag == "derived") {
 			if (type->flags.isArray)
 				context.error("Type cannot be both a derived type and an array type!");
+			if (type->flags.isEnum)
+				context.error("Type cannot be both a derived type and an enum type!");
 			if (type->base)
 				context.error("Redeclaration of base type!");
 			context.expectNext(Type{'<'}).next();
@@ -1396,6 +1399,16 @@ static void declareType(Context& context) {
 			if (context.types.contains(base))
 				type->base = context.getType(base)->id;
 			else context.error("Element type does not exist!");
+			context.expectNext(Type{'>'});
+		} else if (flag == "array") {
+			if (type->base)
+				context.error("Redeclaration of enumeration base type!");
+			type->flags.isEnum = true;
+			context.expectNext(Type{'<'}).next();
+			auto const base = resolvePath(context);
+			if (context.types.contains(base))
+				type->base = context.getType(base)->id;
+			else context.error("Base type does not exist!");
 			context.expectNext(Type{'>'});
 		} else if (flag == "value")	type->flags.isValueType = true;
 		else if (flag == "empty")	type->flags.isEmpty = true;

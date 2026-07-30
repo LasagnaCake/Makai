@@ -116,6 +116,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		doType(composer, type->base);
 		if (type->flags.isArray)
 			decl += " array<" + type->base->name + ">";
+		else if (type->flags.isEnum)
+			decl += " enum<" + type->base->name + ">";
 		else decl += " derived<" + type->base->name + ">";
 	}
 	if (type->scope) {
@@ -130,9 +132,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		}
 	}
 	auto fields = copy(type->fields);
-	fields["this"] = nullptr;
-	fields["base"] = nullptr;
-	if (fields.size()) {
+	if (fields.size() && !type->flags.isEnum) {
 		usize count = 0;
 		Makai::UTF8String buf;
 		for (auto& [name, field]: fields) {
