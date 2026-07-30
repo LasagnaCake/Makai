@@ -158,7 +158,12 @@ static ATransformer::Result resolveSubfield(
 		if (ns->type->scope->subspaces.contains(sub)) {
 			auto const f = ns->subspaces[sub];
 			if (f->function) return {.scope = f};
-			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
+			if (f->variable) {
+				if (f->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+					return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw(), .direct = f->variable->value};
+				if (f->variable->staticEntity)
+					return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
+			}
 			context.error("Invalid expression!", node);
 		}
 		context.error("Symbol does not exist in the given scope!", node);
