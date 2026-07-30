@@ -175,6 +175,14 @@ inline static int8 doFastCompareCoherent(Object::Storage const& lhs, Object::Sto
 	return doFastCompareEX(lx, rx, comp);
 }
 
+
+template <class T>
+static int8 doImmediateCompareCoherent(Object::Storage const& lhs, uint64& rhs, Comparator const comp) {
+	T& lx = *(T*)(lhs->data());
+	T& rx = *(T*)(&rhs);
+	return doFastCompareEX(lx, rx, comp);
+}
+
 static int8 doFastCompare(Object::Storage const& lx, Object::Storage const& rx, BasicType const type, Comparator const comp) {
 	if (type == BasicType::AV2_BT_STRING) [[unlikely]]	return doFastCompareStringOrBytes<Makai::UTF8String>(lx, rx, comp);
 	if (type == BasicType::AV2_BT_BYTES) [[unlikely]]	return doFastCompareStringOrBytes<Makai::Bytes<>>(lx, rx, comp);
@@ -202,10 +210,41 @@ static int8 doFastCompare(Object::Storage const& lx, Object::Storage const& rx, 
 	}
 }
 
+static int8 doImmediateCompare(Object::Storage const& lx, uint64 const rx, BasicType const type, Comparator const comp) {
+	switch (type) {
+		default:
+		case Core::BasicType::AV2_BT_VOID:
+		case Core::BasicType::AV2_BT_NULL:		return 0;
+		case Core::BasicType::AV2_BT_BOOL:		return doImmediateCompareCoherent<bool>(lx, &rx, comp);			break;
+		case Core::BasicType::AV2_BT_INT8:		return doImmediateCompareCoherent<int8>(lx, &rx, comp);			break;
+		case Core::BasicType::AV2_BT_UINT8:		return doImmediateCompareCoherent<uint8>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_INT16:		return doImmediateCompareCoherent<int16>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_UINT16:	return doImmediateCompareCoherent<uint16>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_INT32:		return doImmediateCompareCoherent<int32>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_CHAR:
+		case Core::BasicType::AV2_BT_UINT32:	return doImmediateCompareCoherent<uint32>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_INT64:		return doImmediateCompareCoherent<int64>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_UINT64:	return doImmediateCompareCoherent<uint64>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_REAL32:	return doImmediateCompareCoherent<float32>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_REAL64:	return doImmediateCompareCoherent<float64>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_TYPEID:
+		case Core::BasicType::AV2_BT_JUMPID:
+		case Core::BasicType::AV2_BT_CALLID:	return doImmediateCompareCoherent<Identifier>(lx, &rx, comp);	break;
+	}
+	return 0;
+}
+
 void Engine::v2Compare() {
 	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
 	if (context.globalValueStack.size() < 2)
 		return crash(invalidSourceError("Missing values to compare!"));
+	if (comp.immediate) {
+		auto lhs = context.top();
+		advance(true);
+		uint64 val = bitcast<uint64>(current);
+		*lhs = *context.newValue(doImmediateCompare(lhs, val, comp.assume, comp.comp));
+		return;
+	}
 	auto rhs	= context.pop();
 	auto lhs	= context.top();
 	auto const _l = lhs.sync(), _r = rhs.sync();

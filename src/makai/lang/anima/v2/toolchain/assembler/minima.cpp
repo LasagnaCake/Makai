@@ -750,48 +750,6 @@ static void doHalt(Context& context, bool const error = false) {
 	);
 }
 
-static void doCompare(Context& context) {
-	auto const id = context.getNext(LTS_TT_IDENTIFIER, "comparison").getString();
-	Instruction::Comparison cmp;
-	if (id == "less" || id == "l")					cmp.comp = Comparator::AV2_OP_LESS_THAN;
-	else if (id == "greater" || id == "g")			cmp.comp = Comparator::AV2_OP_GREATER_THAN;
-	else if (id == "equals" || id == "e")			cmp.comp = Comparator::AV2_OP_EQUALS;
-	else if (id == "notequals" || id == "ne")		cmp.comp = Comparator::AV2_OP_NOT_EQUALS;
-	else if (id == "greaterequals" || id == "ge")	cmp.comp = Comparator::AV2_OP_GREATER_EQUALS;
-	else if (id == "lessequals" || id == "le")		cmp.comp = Comparator::AV2_OP_LESS_EQUALS;
-	else if (id == "order" || id == "o")			cmp.comp = Comparator::AV2_OP_THREEWAY;
-	if (context.peek().type == LTS_TT_LESS_THAN) {
-		cmp.sameType = true;
-		auto const type = context.expectNext(LTS_TT_LESS_THAN).getNext(LTS_TT_IDENTIFIER, "basic type").getString();
-		context.expectNext(LTS_TT_GREATER_THAN);
-		switch (Makai::hash(type)) {
-			case Makai::hash("bool"):	cmp.assume = BasicType::AV2_BT_BOOL;	break;
-			case Makai::hash("i8"):		cmp.assume = BasicType::AV2_BT_INT8;	break;
-			case Makai::hash("u8"):		cmp.assume = BasicType::AV2_BT_UINT8;	break;
-			case Makai::hash("i16"):	cmp.assume = BasicType::AV2_BT_INT16;	break;
-			case Makai::hash("u16"):	cmp.assume = BasicType::AV2_BT_UINT16;	break;
-			case Makai::hash("i32"):	cmp.assume = BasicType::AV2_BT_INT32;	break;
-			case Makai::hash("u32"):	cmp.assume = BasicType::AV2_BT_UINT32;	break;
-			case Makai::hash("i64"):	cmp.assume = BasicType::AV2_BT_INT64;	break;
-			case Makai::hash("u64"):	cmp.assume = BasicType::AV2_BT_UINT64;	break;
-			case Makai::hash("f32"):	cmp.assume = BasicType::AV2_BT_REAL32;	break;
-			case Makai::hash("f64"):	cmp.assume = BasicType::AV2_BT_REAL64;	break;
-			case Makai::hash("f128"):	cmp.assume = BasicType::AV2_BT_REAL128;	break;
-			case Makai::hash("char"):	cmp.assume = BasicType::AV2_BT_CHAR;	break;
-			case Makai::hash("vec"):	cmp.assume = BasicType::AV2_BT_VECTOR;	break;
-			case Makai::hash("mat"):	cmp.assume = BasicType::AV2_BT_MATRIX;	break;
-			case Makai::hash("void"):
-			case Makai::hash("nil"): return;
-			case Makai::hash("bin"):
-			case Makai::hash("str"):
-			case Makai::hash("type"):
-			case Makai::hash("any"): cmp.sameType = false; break;
-			default: context.error("Invalid basic type!");
-		}
-	}
-	context.add(Instruction::Name::AV2_IN_COMPARE, cmp);
-}
-
 static void doScopeEnter(Context& context) {
 	if (context.token().text == "begin") {
 		context.add(
@@ -1016,6 +974,93 @@ static void doOperation(Context& context) {
 	}
 }
 
+static void doCompare(Context& context) {
+	auto const id = context.getNext(LTS_TT_IDENTIFIER, "comparison").getString();
+	Instruction::Comparison cmp;
+	Makai::Data::Value value;
+	if (id == "less" || id == "l")					cmp.comp = Comparator::AV2_OP_LESS_THAN;
+	else if (id == "greater" || id == "g")			cmp.comp = Comparator::AV2_OP_GREATER_THAN;
+	else if (id == "equals" || id == "e")			cmp.comp = Comparator::AV2_OP_EQUALS;
+	else if (id == "notequals" || id == "ne")		cmp.comp = Comparator::AV2_OP_NOT_EQUALS;
+	else if (id == "greaterequals" || id == "ge")	cmp.comp = Comparator::AV2_OP_GREATER_EQUALS;
+	else if (id == "lessequals" || id == "le")		cmp.comp = Comparator::AV2_OP_LESS_EQUALS;
+	else if (id == "order" || id == "o")			cmp.comp = Comparator::AV2_OP_THREEWAY;
+	else context.error("Invalid comparison!");
+	if (context.peek().type == LTS_TT_LESS_THAN) {
+		cmp.sameType = true;
+		auto const type = context.expectNext(LTS_TT_LESS_THAN).getNext(LTS_TT_IDENTIFIER, "basic type").getString();
+		if (context.peek().type == LTS_TT_COLON) {
+			cmp.immediate = true;
+			context.expectNext(LTS_TT_COLON).next();
+			value = processConstant(context);
+		}
+		context.expectNext(LTS_TT_GREATER_THAN);
+		switch (Makai::hash(type)) {
+			case Makai::hash("bool"):	cmp.assume = BasicType::AV2_BT_BOOL;	break;
+			case Makai::hash("i8"):		cmp.assume = BasicType::AV2_BT_INT8;	break;
+			case Makai::hash("u8"):		cmp.assume = BasicType::AV2_BT_UINT8;	break;
+			case Makai::hash("i16"):	cmp.assume = BasicType::AV2_BT_INT16;	break;
+			case Makai::hash("u16"):	cmp.assume = BasicType::AV2_BT_UINT16;	break;
+			case Makai::hash("i32"):	cmp.assume = BasicType::AV2_BT_INT32;	break;
+			case Makai::hash("u32"):	cmp.assume = BasicType::AV2_BT_UINT32;	break;
+			case Makai::hash("i64"):	cmp.assume = BasicType::AV2_BT_INT64;	break;
+			case Makai::hash("u64"):	cmp.assume = BasicType::AV2_BT_UINT64;	break;
+			case Makai::hash("f32"):	cmp.assume = BasicType::AV2_BT_REAL32;	break;
+			case Makai::hash("f64"):	cmp.assume = BasicType::AV2_BT_REAL64;	break;
+			case Makai::hash("f128"):	cmp.assume = BasicType::AV2_BT_REAL128;	break;
+			case Makai::hash("char"):	cmp.assume = BasicType::AV2_BT_CHAR;	break;
+			case Makai::hash("vec"):	cmp.assume = BasicType::AV2_BT_VECTOR;	break;
+			case Makai::hash("mat"):	cmp.assume = BasicType::AV2_BT_MATRIX;	break;
+			case Makai::hash("str"):	cmp.assume = BasicType::AV2_BT_STRING;	break;
+			case Makai::hash("void"):
+			case Makai::hash("nil"): return;
+			case Makai::hash("bin"):
+			case Makai::hash("type"):
+			case Makai::hash("any"): cmp.sameType = false; break;
+			default: context.error("Invalid basic type!");
+		}
+		if (!value.isUndefined()) {
+			if (!value.isBoolean() && (cmp.assume == BasicType::AV2_BT_BOOL))
+				context.error("Type mismatch");
+			if (!value.isNumber() && (
+				cmp.assume == BasicType::AV2_BT_INT8
+			or	cmp.assume == BasicType::AV2_BT_UINT8
+			or	cmp.assume == BasicType::AV2_BT_INT16
+			or	cmp.assume == BasicType::AV2_BT_UINT16
+			or	cmp.assume == BasicType::AV2_BT_INT32
+			or	cmp.assume == BasicType::AV2_BT_UINT32
+			or	cmp.assume == BasicType::AV2_BT_INT64
+			or	cmp.assume == BasicType::AV2_BT_UINT64
+			or	cmp.assume == BasicType::AV2_BT_REAL32
+			or	cmp.assume == BasicType::AV2_BT_REAL64
+			or	cmp.assume == BasicType::AV2_BT_REAL128
+			)) context.error("Type mismatch");
+			if (!value.isString() && (cmp.assume == BasicType::AV2_BT_STRING))
+				context.error("Type mismatch");
+		}
+	}
+	context.add(Instruction::Name::AV2_IN_COMPARE, cmp);
+	if (!value.isUndefined()) {
+		MAKAILIB_DEBUGLN_FULL("Immediate: ", uint64(cmp.assume));
+		switch (cmp.assume) {
+			case BasicType::AV2_BT_BOOL:
+			case BasicType::AV2_BT_UINT8:
+			case BasicType::AV2_BT_UINT16:
+			case BasicType::AV2_BT_UINT32:
+			case BasicType::AV2_BT_UINT64: context.add(value.getUnsigned()); break;
+			case BasicType::AV2_BT_INT8:
+			case BasicType::AV2_BT_INT16:
+			case BasicType::AV2_BT_INT32:
+			case BasicType::AV2_BT_INT64: context.add(value.getSigned()); break;
+			case BasicType::AV2_BT_REAL32:
+			case BasicType::AV2_BT_REAL64:
+			case BasicType::AV2_BT_REAL128: context.add(value.getReal()); break;
+			case BasicType::AV2_BT_STRING: context.addStringLiteral(value.getString()); break;
+			default: context.error("Invalid immediate operation!");
+		}
+	}
+}
+
 static void doYield(Context& context) {
 	context.add(Instruction::Name::AV2_IN_YIELD, Instruction::Waiting{.dynamic = false, .once = true});
 }
@@ -1209,14 +1254,14 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 static void validateType(Context& context, Context::Declaration& type) {
 		MAKAILIB_DEBUGLN_FULL("Name: ", type.name);
 		MAKAILIB_DEBUGLN_FULL("Flags: ", Makai::bitcast<uint64>(type.flags));
-	if (type.base && !(type.flags.isArray)) {
+	if (type.base && !(type.flags.isArray || type.flags.isEnum)) {
 		auto& base = *context.getTypeByID(type.base);
 		Makai::violate<uint64>(type.flags) |= Makai::bitcast<uint64>(base.flags);
 		if (type.fields.size())
 			type.fields.insert(base.fields, 0);
 		else type.fields.appendBack(base.fields);
 	}
-	if (!type.flags.isArray && type.base && context.getTypeByID(*type.base)->flags.isFinal)
+	if (!(type.flags.isArray || type.flags.isEnum) && type.base && context.getTypeByID(*type.base)->flags.isFinal)
 		context.error("Final types cannot be inherited from!");
 	if (!type.basic) {
 		if (type.alignment && !(type.flags.isValueType))

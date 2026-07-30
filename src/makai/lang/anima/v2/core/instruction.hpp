@@ -176,6 +176,7 @@ namespace Makai::Anima::V2::Core {
 			Comparator	comp;
 			uint8		sameType:	1;
 			BasicType	assume:		7;
+			uint8		immediate:	1;
 		};
 
 		/// @brief Stack push.
