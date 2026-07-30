@@ -52,12 +52,4 @@ main :: () {
 	day.display;
 	day = Weekday.SUNDAY
 	day.display;
-	// Shorthand mode
-	Weekday.MONDAY.display;
-	Weekday.TUESDAY.display;
-	Weekday.WEDNESDAY.display;
-	Weekday.THURSDAY.display;
-	Weekday.FRIDAY.display;
-	Weekday.SATURDAY.display;
-	Weekday.SUNDAY.display;
 } 
