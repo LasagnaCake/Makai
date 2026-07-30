@@ -556,6 +556,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 	type.flags.isEnum = true;
 	type.flags.isValueType = true;
 	type.flags.isCopyable = true;
+	type.flags.isStructure = false;
 	List<Node::Instance> fields;
 	List<Node::Instance> methods;
 	Makai::Function<void(Node::Instance const&, Node::Instance const&)> evalDecl;
@@ -1043,9 +1044,15 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 	} else if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		MAKAILIB_DEBUGLN_FULL("Stronger: ", t->name);
-		if (t->basic) {
+		if (t->flags.isBasic) {
 			if (lhs.type->basic == rhs.type->basic)
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->basic, rhs));
+			else
+				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
+			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+		} else if (t->flags.isEnum) {
+			if (lhs.type->base->basic == rhs.type->base->basic)
+				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->base->basic, rhs));
 			else
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
 			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
