@@ -1009,6 +1009,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		return {{"move top"}, retType->scope.raw(), retType};
 	}
 	auto const rhs = expr.transform(context, node->rightSide);
+	if (lhs.isCompilable() && isLogicOp(node)) {
+		if (lhs.direct.isTruthy() && node->base.type == LTS_TT_LOGIC_AND) return rhs;
+		if (lhs.direct.isFalsy() && node->base.type == LTS_TT_LOGIC_OR) return rhs;
+	}
 	if (!rhs.source)
 		context.error("Invalid expression (Does not result in a value)!", node->rightSide);
 	auto const likelihood = lhs.likelihood + rhs.likelihood + likelihoodOf(node);
@@ -1025,7 +1029,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	}
 	if (!lhsHasBeenPushed)
 		context.top()->impl->writeMainLine("push", *lhs.source);
-	if ((lhs.type == rhs.type) && (!rhs.direct.isUndefined() or rhs.direct.isString())) {
+	if ((lhs.type == rhs.type) && (!rhs.isCompilable() or rhs.direct.isString())) {
 		if (rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *rhs.source);
 		else if (rhs.isStackTop() && rhs.isCopied()) {
@@ -1930,7 +1934,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
 	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
 	if (cond.isCompilable()) {
-		if (cond.direct.isTruthy()) return Expression().transform(context, node->leftSide);
+		if (cond.direct.isTruthy() != invert) return Expression().transform(context, node->leftSide);
 		else if (node->rightSide) return Expression().transform(context, node->rightSide);
 		else return {};
 	} else {
