@@ -264,6 +264,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
 
 		UTF8String getSource() {
+			if (context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+				return value.toString();
 			if (global) return passBy + " " + source;
 			else return passBy + " local[" + Makai::toString(id) + "]";
 		}
