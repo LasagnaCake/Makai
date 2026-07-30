@@ -585,9 +585,9 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 	for (auto const& [field, id]: Range::expand(fields)) {
 		if (field->rightSide) {
 			auto const vx = Expression().transform(context, field->rightSide);
-			if (!vx.value.isInteger())
+			if (!vx.direct.isInteger())
 				context.error("Expected direct integer here!", field->rightSide);
-			defx = vx.value.getSigned();
+			defx = vx.direct.getSigned();
 			if (defx < 0 && Core::isUnsigned(type.base->basic))
 				context.error("Cannot store negative values in unsigned integers!", field->rightSide);
 		}
