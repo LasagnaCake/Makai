@@ -1254,14 +1254,14 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 static void validateType(Context& context, Context::Declaration& type) {
 		MAKAILIB_DEBUGLN_FULL("Name: ", type.name);
 		MAKAILIB_DEBUGLN_FULL("Flags: ", Makai::bitcast<uint64>(type.flags));
-	if (type.base && !(type.flags.isArray || type.flags.isEnum)) {
+	if (type.base && !(type.flags.isArray || type.flags.isEnum || type.flags.isNullable)) {
 		auto& base = *context.getTypeByID(type.base);
 		Makai::violate<uint64>(type.flags) |= Makai::bitcast<uint64>(base.flags);
 		if (type.fields.size())
 			type.fields.insert(base.fields, 0);
 		else type.fields.appendBack(base.fields);
 	}
-	if (!(type.flags.isArray || type.flags.isEnum) && type.base && context.getTypeByID(*type.base)->flags.isFinal)
+	if (!(type.flags.isArray || type.flags.isEnum || type.flags.isNullable) && type.base && context.getTypeByID(*type.base)->flags.isFinal)
 		context.error("Final types cannot be inherited from!");
 	if (!type.basic) {
 		if (type.alignment && !(type.flags.isValueType))
@@ -1421,12 +1421,18 @@ static void declareType(Context& context) {
 			}
 			context.expectNext(Type{'>'});
 		}
-		else if (flag == "nil") type->flags.isNullable = true;
+		else if (flag == "nil") {
+			if (type->base)
+				context.error("Redeclaration of nullable base type!");
+			type->flags.isNullable = true;
+			context.expectNext(Type{'<'}).next();
+			auto const base = resolvePath(context);
+			if (context.types.contains(base))
+				type->base = context.getType(base)->id;
+			else context.error("Base type does not exist!");
+			context.expectNext(Type{'>'});
+		}
 		else if (flag == "derived") {
-			if (type->flags.isArray)
-				context.error("Type cannot be both a derived type and an array type!");
-			if (type->flags.isEnum)
-				context.error("Type cannot be both a derived type and an enum type!");
 			if (type->base)
 				context.error("Redeclaration of base type!");
 			context.expectNext(Type{'<'}).next();
