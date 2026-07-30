@@ -210,89 +210,28 @@ static int8 doFastCompare(Object::Storage const& lx, Object::Storage const& rx, 
 	}
 }
 
-static int8 doImmediateCompare(Object::Storage const& lx, uint64 const rx, BasicType const type, Comparator const comp) {
+static int8 doImmediateCompare(Object::Storage const& lx, uint64& rx, BasicType const type, Comparator const comp) {
 	switch (type) {
 		default:
 		case Core::BasicType::AV2_BT_VOID:
 		case Core::BasicType::AV2_BT_NULL:		return 0;
-		case Core::BasicType::AV2_BT_BOOL:		return doImmediateCompareCoherent<bool>(lx, &rx, comp);			break;
-		case Core::BasicType::AV2_BT_INT8:		return doImmediateCompareCoherent<int8>(lx, &rx, comp);			break;
-		case Core::BasicType::AV2_BT_UINT8:		return doImmediateCompareCoherent<uint8>(lx, &rx, comp);		break;
-		case Core::BasicType::AV2_BT_INT16:		return doImmediateCompareCoherent<int16>(lx, &rx, comp);		break;
-		case Core::BasicType::AV2_BT_UINT16:	return doImmediateCompareCoherent<uint16>(lx, &rx, comp);		break;
-		case Core::BasicType::AV2_BT_INT32:		return doImmediateCompareCoherent<int32>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_BOOL:		return doImmediateCompareCoherent<bool>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_INT8:		return doImmediateCompareCoherent<int8>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_UINT8:		return doImmediateCompareCoherent<uint8>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_INT16:		return doImmediateCompareCoherent<int16>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_UINT16:	return doImmediateCompareCoherent<uint16>(lx, rx, comp);		break;
+		case Core::BasicType::AV2_BT_INT32:		return doImmediateCompareCoherent<int32>(lx, rx, comp);			break;
 		case Core::BasicType::AV2_BT_CHAR:
-		case Core::BasicType::AV2_BT_UINT32:	return doImmediateCompareCoherent<uint32>(lx, &rx, comp);		break;
-		case Core::BasicType::AV2_BT_INT64:		return doImmediateCompareCoherent<int64>(lx, &rx, comp);		break;
-		case Core::BasicType::AV2_BT_UINT64:	return doImmediateCompareCoherent<uint64>(lx, &rx, comp);		break;
-		case Core::BasicType::AV2_BT_REAL32:	return doImmediateCompareCoherent<float32>(lx, &rx, comp);		break;
-		case Core::BasicType::AV2_BT_REAL64:	return doImmediateCompareCoherent<float64>(lx, &rx, comp);		break;
+		case Core::BasicType::AV2_BT_UINT32:	return doImmediateCompareCoherent<uint32>(lx, rx, comp);		break;
+		case Core::BasicType::AV2_BT_INT64:		return doImmediateCompareCoherent<int64>(lx, rx, comp);			break;
+		case Core::BasicType::AV2_BT_UINT64:	return doImmediateCompareCoherent<uint64>(lx, rx, comp);		break;
+		case Core::BasicType::AV2_BT_REAL32:	return doImmediateCompareCoherent<float32>(lx, rx, comp);		break;
+		case Core::BasicType::AV2_BT_REAL64:	return doImmediateCompareCoherent<float64>(lx, rx, comp);		break;
 		case Core::BasicType::AV2_BT_TYPEID:
 		case Core::BasicType::AV2_BT_JUMPID:
-		case Core::BasicType::AV2_BT_CALLID:	return doImmediateCompareCoherent<Identifier>(lx, &rx, comp);	break;
+		case Core::BasicType::AV2_BT_CALLID:	return doImmediateCompareCoherent<Identifier>(lx, rx, comp);	break;
 	}
 	return 0;
-}
-
-void Engine::v2Compare() {
-	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
-	if (context.globalValueStack.size() < 2)
-		return crash(invalidSourceError("Missing values to compare!"));
-	if (comp.immediate) {
-		auto lhs = context.top();
-		advance(true);
-		uint64 val = bitcast<uint64>(current);
-		*lhs = *context.newValue(doImmediateCompare(lhs, val, comp.assume, comp.comp));
-		return;
-	}
-	auto rhs	= context.pop();
-	auto lhs	= context.top();
-	auto const _l = lhs.sync(), _r = rhs.sync();
-	if (comp.sameType) {
-		*rhs = *context.newValue(doFastCompare(lhs, rhs, comp.assume, comp.comp));
-		return;
-	}
-	Makai::Ordered::OrderType order = Makai::Ordered::Order::EQUAL;
-	if (lhs->isBoolean() && rhs->isBoolean())				order = lhs->toValue<bool>() <=> rhs->toValue<bool>();
-	else if (lhs->isUnsigned() && rhs->isUnsigned())		order = lhs->toValue<uint64>() <=> rhs->toValue<uint64>();
-	else if (lhs->isInteger() && rhs->isInteger())			order = lhs->toValue<int64>() <=> rhs->toValue<int64>();
-	else if (lhs->isNumber() && rhs->isNumber())			order = lhs->toValue<double>() <=> rhs->toValue<double>();
-	else if (lhs->isVectorable() && rhs->isVectorable())	order = lhs->toValue<Vector4>() <=> rhs->toValue<Vector4>();
-	else if (
-		lhs->getCurrentType() == rhs->getCurrentType()
-	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
-	) order = lhs->compareWith(rhs);
-	else if (inStrictMode())
-		return crash(invalidComparisonError("Types do not match!"));
-	else {
-		context.pushEmpty();
-		return;
-	}
-	if (order == Makai::StandardOrder::UNORDERED) {
-		if (inStrictMode())
-			return crash(invalidComparisonError("Failed to compare types!"));
-		else {
-			context.pushEmpty();
-			return;
-		}
-	}
-	MAKAILIB_DEBUGLN_FULL("Left: ", lhs->toValue<int64>());
-	MAKAILIB_DEBUGLN_FULL("Right: ", rhs->toValue<int64>());
-	MAKAILIB_DEBUGLN_FULL("Order = ", Cast::as<int16>(order.order()));
-	switch (comp.comp) {
-		using enum Core::Comparator;
-		case AV2_OP_THREEWAY:
-			*context.top() = *context.art.newValue(Cast::as<int8>(order.order()));
-		break;
-		using enum Makai::StandardOrder;
-		case AV2_OP_EQUALS:			*context.top() = *context.art.newValue(order == EQUAL);		break;
-		case AV2_OP_NOT_EQUALS:		*context.top() = *context.art.newValue(order != EQUAL);		break;
-		case AV2_OP_GREATER_THAN:	*context.top() = *context.art.newValue(order == GREATER);	break;
-		case AV2_OP_GREATER_EQUALS:	*context.top() = *context.art.newValue(order != LESS);		break;
-		case AV2_OP_LESS_THAN:		*context.top() = *context.art.newValue(order == LESS);		break;
-		case AV2_OP_LESS_EQUALS:	*context.top() = *context.art.newValue(order != GREATER);	break;
-	}
-	MAKAILIB_DEBUGLN_FULL("Result: ", context.top()->toValue<int64>());
 }
 
 void Engine::v2Halt() {
@@ -1254,6 +1193,78 @@ void Engine::v2Op() {
 			else [[unlikely]] return doBinaryOperation(op.op);
 		}
 	}
+}
+
+void Engine::v2Compare() {
+	StackStateScopePrinter s3p{context};
+	Instruction::Comparison comp = bitcast<Instruction::Comparison>(current.type);
+	if (context.globalValueStack.size() < 2)
+		return crash(invalidSourceError("Missing values to compare!"));
+	if (comp.immediate)
+		advance(true);
+	if (
+		comp.sameType && (
+			comp.assume == BasicType::AV2_BT_STRING
+		||	comp.assume == BasicType::AV2_BT_BYTES
+		)
+	) [[unlikely]] {
+		if (comp.immediate)
+			context.push(program.strings[Makai::bitcast<uint64>(current) % program.strings.size()]);
+		comp.sameType = false;
+	} else if (comp.immediate) {
+		auto lhs = context.top();
+		uint64 val = bitcast<uint64>(current);
+		*lhs = *context.newValue(doImmediateCompare(lhs, val, comp.assume, comp.comp));
+		return;
+	}
+	auto rhs	= context.pop();
+	auto lhs	= context.top();
+	auto const _l = lhs.sync(), _r = rhs.sync();
+	if (comp.sameType) {
+		*rhs = *context.newValue(doFastCompare(lhs, rhs, comp.assume, comp.comp));
+		return;
+	}
+	Makai::Ordered::OrderType order = Makai::Ordered::Order::EQUAL;
+	if (lhs->isBoolean() && rhs->isBoolean())				order = lhs->toValue<bool>() <=> rhs->toValue<bool>();
+	else if (lhs->isUnsigned() && rhs->isUnsigned())		order = lhs->toValue<uint64>() <=> rhs->toValue<uint64>();
+	else if (lhs->isInteger() && rhs->isInteger())			order = lhs->toValue<int64>() <=> rhs->toValue<int64>();
+	else if (lhs->isNumber() && rhs->isNumber())			order = lhs->toValue<double>() <=> rhs->toValue<double>();
+	else if (lhs->isVectorable() && rhs->isVectorable())	order = lhs->toValue<Vector4>() <=> rhs->toValue<Vector4>();
+	else if (
+		lhs->getCurrentType() == rhs->getCurrentType()
+	||	lhs->getCurrentType()->canBecome(rhs->getCurrentType())
+	) order = lhs->compareWith(rhs);
+	else if (inStrictMode())
+		return crash(invalidComparisonError("Types do not match!"));
+	else {
+		context.pushEmpty();
+		return;
+	}
+	if (order == Makai::StandardOrder::UNORDERED) {
+		if (inStrictMode())
+			return crash(invalidComparisonError("Failed to compare types!"));
+		else {
+			context.pushEmpty();
+			return;
+		}
+	}
+	MAKAILIB_DEBUGLN_FULL("Left: ", lhs->toValue<int64>());
+	MAKAILIB_DEBUGLN_FULL("Right: ", rhs->toValue<int64>());
+	MAKAILIB_DEBUGLN_FULL("Order = ", Cast::as<int16>(order.order()));
+	switch (comp.comp) {
+		using enum Core::Comparator;
+		case AV2_OP_THREEWAY:
+			*context.top() = *context.art.newValue(Cast::as<int8>(order.order()));
+		break;
+		using enum Makai::StandardOrder;
+		case AV2_OP_EQUALS:			*context.top() = *context.art.newValue(order == EQUAL);		break;
+		case AV2_OP_NOT_EQUALS:		*context.top() = *context.art.newValue(order != EQUAL);		break;
+		case AV2_OP_GREATER_THAN:	*context.top() = *context.art.newValue(order == GREATER);	break;
+		case AV2_OP_GREATER_EQUALS:	*context.top() = *context.art.newValue(order != LESS);		break;
+		case AV2_OP_LESS_THAN:		*context.top() = *context.art.newValue(order == LESS);		break;
+		case AV2_OP_LESS_EQUALS:	*context.top() = *context.art.newValue(order != GREATER);	break;
+	}
+	MAKAILIB_DEBUGLN_FULL("Result: ", context.top()->toValue<int64>());
 }
 
 void Engine::terminate() {
