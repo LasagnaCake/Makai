@@ -549,6 +549,8 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 		type.base = base;
 	} else type.base = context.basicType("int64");
 	type.flags.isEnum = true;
+	type.flags.isValueType = true;
+	type.flags.isCopyable = true;
 	List<Node::Instance> fields;
 	List<Node::Instance> methods;
 	Makai::Function<void(Node::Instance const&, Node::Instance const&)> evalDecl;
@@ -557,15 +559,14 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 			if (node->base.type == LTS_TT_NAMESPACE_RESOLVE) {
 				MAKAILIB_DEBUGLN_FULL("  > Function");
 				methods.pushBack(root);
-			} else if (
-				node->base.type == LTS_TT_ASSIGN
-			or	node->base.type == LTS_TT_IDENTIFIER
-			) {
-				MAKAILIB_DEBUGLN_FULL("  > Field");
-				fields.pushBack(root);
 			} else context.error("Invalid declaration inside enum declaration!", node);
 		} else if (node->content == Node::Content::AV2_TANC_ATTRIBUTE) {
 			evalDecl(node->rightSide, root);
+		} else if (
+			node->content == Node::Content::AV2_TANC_ASSIGNMENT
+		or	node->content == Node::Content::AV2_TANC_NAME
+		) {
+				fields.pushBack(root);
 		} else context.error("Invalid expression inside enum declaration!", node);
 	};
 	MAKAILIB_DEBUGLN_FULL("struct {");
@@ -596,7 +597,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 		auto& var = *(varScope->variable = varScope->variable.create());
 		var.value = defx++;
 		var.context = ExecutionContext::AV2_TCB_EC_COMPILE;
-		var.type = type.base;
+		var.type = scope->type;
 		context.pop(varName.size());
 	}
 	context.pop(name.size());
