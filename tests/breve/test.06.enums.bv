@@ -10,23 +10,23 @@ enum Weekday: uint8 {
 	SUNDAY
 	
 	fullName :: (@ByCopy self: Weekday) =>
-		if self == Weekday.MONDAY			"Monday"
-		else if self == Weekday.TUESDAY		"Tuesday"
-		else if self == Weekday.WEDNESDAY	"Wednesday"
-		else if self == Weekday.THURSDAY	"Thursday"
-		else if self == Weekday.FRIDAY		"Friday"
-		else if self == Weekday.SATURDAY	"Saturday"
-		else if self == Weekday.SUNDAY		"Sunday"
+		if		self == Weekday.MONDAY		"Monday"
+		else if	self == Weekday.TUESDAY		"Tuesday"
+		else if	self == Weekday.WEDNESDAY	"Wednesday"
+		else if	self == Weekday.THURSDAY	"Thursday"
+		else if	self == Weekday.FRIDAY		"Friday"
+		else if	self == Weekday.SATURDAY	"Saturday"
+		else if	self == Weekday.SUNDAY		"Sunday"
 		else "INVALID_DAY"
 	
 	shortName :: (@ByCopy self: Weekday) =>
-		if self == Weekday.MONDAY			"Mon"
-		else if self == Weekday.TUESDAY		"Tue"
-		else if self == Weekday.WEDNESDAY	"Wed"
-		else if self == Weekday.THURSDAY	"Thu"
-		else if self == Weekday.FRIDAY		"Fri"
-		else if self == Weekday.SATURDAY	"Sat"
-		else if self == Weekday.SUNDAY		"Sun"
+		if		self == Weekday.MONDAY		"Mon"
+		else if	self == Weekday.TUESDAY		"Tue"
+		else if	self == Weekday.WEDNESDAY	"Wed"
+		else if	self == Weekday.THURSDAY	"Thu"
+		else if	self == Weekday.FRIDAY		"Fri"
+		else if	self == Weekday.SATURDAY	"Sat"
+		else if	self == Weekday.SUNDAY		"Sun"
 		else "INVALID_DAY"
 	
 	display :: (@ByCopy self: Weekday) =>
