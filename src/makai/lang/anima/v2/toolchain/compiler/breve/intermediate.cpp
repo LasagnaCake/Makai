@@ -1009,9 +1009,10 @@ Makai::Data::Value TypeDecl::serialize() const {
 		out["base"] = base->name.toString();
 	switch (def) {
 		case Definition::AV2_TCTD_ARRAY: out["def"] = "array"; break;
-		case Definition::AV2_TCTD_STRUCT: out["def"] = "basic"; break;
+		case Definition::AV2_TCTD_STRUCT: out["def"] = "struct"; break;
 		case Definition::AV2_TCTD_TEMPLATE: out["def"] = "template"; break;
 		case Definition::AV2_TCTD_BASIC: out["def"] = "basic"; break;
+		case Definition::AV2_TCTD_ENUM: out["def"] = "enum"; break;
 	}
 	if (basic)
 		// TODO: Not this
