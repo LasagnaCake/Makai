@@ -100,7 +100,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 ) {
 	if (ns->variable) {
 		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
-			return ns->variable->value.toString();
+			return {{ns->variable->value.toString()}};
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
 			context.top()->impl->writeMainLine("at [", ns->variable->id, "]");
 			return {"move top"};
@@ -542,7 +542,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 		auto const base = TypeRequest().transform(context, node->middle).type;
 		if (!base)
 			context.error("No type with this name exists!", node->middle);
-		if (!base->isBasic)
+		if (!base->flags.isBasic)
 			context.error("Enums can only inherit integers!", node->middle);
 		if (!Core::isInteger(*base->basic))
 			context.error("Enums can only inherit integers!", node->middle);
@@ -584,7 +584,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 	int64 defx = 0;
 	for (auto const& [field, id]: Range::expand(fields)) {
 		if (field->rightSide) {
-			auto const vx = Expression().resolve(field->rightSide);
+			auto const vx = Expression().transform(context, field->rightSide);
 			if (!vx.value.isInteger())
 				context.error("Expected direct integer here!", field->rightSide);
 			defx = vx.value.getSigned();
