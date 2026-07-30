@@ -118,6 +118,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			decl += " array<" + type->base->name + ">";
 		else if (type->flags.isEnum)
 			decl += " enum<" + type->base->name + ">";
+		else if (type->flags.isNullable)
+			decl += " nil<" + type->base->name + ">";
 		else decl += " derived<" + type->base->name + ">";
 	}
 	if (type->scope) {
