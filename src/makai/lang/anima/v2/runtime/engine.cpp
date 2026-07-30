@@ -745,6 +745,8 @@ void Engine::doBinaryOperation(Operator const op) {
 	}
 	auto const _l = lhs.sync();
 	auto out	= lhs;
+	MAKAILIB_DEBUGLN_FULL("LHS: ", lhs->getType() ? Makai::toString(lhs->getType()->hash) : "##ERR");
+	MAKAILIB_DEBUGLN_FULL("RHS: ", rhs->getType() ? Makai::toString(rhs->getType()->hash) : "##ERR");
 	if (err) return;
 	bool success = false;
 	if (lhs->isBoolean() && rhs->isBoolean())				success = bopIt<bool>(out, lhs, rhs, op, context);
