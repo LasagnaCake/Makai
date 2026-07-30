@@ -9,25 +9,25 @@ enum Weekday: uint8 {
 	SATURDAY
 	SUNDAY
 	
-	name :: (@ByCopy self: Weekday) -> string {
-		if self == MONDAY			return "Monday"
-		else if self == TUESDAY		return "Tuesday"
-		else if self == WEDNESDAY	return "Wednesday"
-		else if self == THURSDAY	return "Thursday"
-		else if self == FRIDAY		return "Friday"
-		else if self == SATURDAY	return "Saturday"
-		else if self == SUNDAY		return "Sunday"
+	fullName :: (@ByCopy self: Weekday) -> string {
+		if self == Weekday.MONDAY			return "Monday"
+		else if self == Weekday.TUESDAY		return "Tuesday"
+		else if self == Weekday.WEDNESDAY	return "Wednesday"
+		else if self == Weekday.THURSDAY	return "Thursday"
+		else if self == Weekday.FRIDAY		return "Friday"
+		else if self == Weekday.SATURDAY	return "Saturday"
+		else if self == Weekday.SUNDAY		return "Sunday"
 		else return "INVALID_DAY"
 	}
 	
 	shortName :: (@ByCopy self: Weekday) -> string {
-		if self == MONDAY			return "Mon"
-		else if self == TUESDAY		return "Tue"
-		else if self == WEDNESDAY	return "Wed"
-		else if self == THURSDAY	return "Thu"
-		else if self == FRIDAY		return "Fri"
-		else if self == SATURDAY	return "Sat"
-		else if self == SUNDAY		return "Sun"
+		if self == Weekday.MONDAY			return "Mon"
+		else if self == Weekday.TUESDAY		return "Tue"
+		else if self == Weekday.WEDNESDAY	return "Wed"
+		else if self == Weekday.THURSDAY	return "Thu"
+		else if self == Weekday.FRIDAY		return "Fri"
+		else if self == Weekday.SATURDAY	return "Sat"
+		else if self == Weekday.SUNDAY		return "Sun"
 		else return "INVALID_DAY"
 	}
 }
@@ -35,5 +35,5 @@ enum Weekday: uint8 {
 @Main
 main :: () {
 	day := Weekday.MONDAY
-	IO.writeLine(day.name; + " (" + day.shortName;+ ")")
+	IO.writeLine(day.fullName; + " (" + day.shortName;+ ")")
 } 
