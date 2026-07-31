@@ -19,6 +19,7 @@ Node::Instance EnumResolver::resolve(Parser& parser, Node::Instance const& leftS
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	auto const decl = parser.nextExpression();
+	MAKAILIB_DEBUGLN_FULL("Has type? ", decl->base.type == LTS_TT_COLON);
 	if (decl->base.type == LTS_TT_COLON) {
 		result->leftSide = decl->leftSide;
 		result->middle = decl->rightSide;
