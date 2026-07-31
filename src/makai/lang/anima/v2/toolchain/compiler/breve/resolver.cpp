@@ -22,7 +22,7 @@ Node::Instance EnumResolver::resolve(Parser& parser, Node::Instance const& leftS
 	if (decl->base.type == LTS_TT_COLON) {
 		result->leftSide = decl->leftSide;
 		result->middle = decl->rightSide;
-	}
+	} else result->leftSide = decl;
 	result->rightSide = parser.nextExpression();
 	MAKAILIB_DEBUGLN_FULL("Enum:DONE!");
 	return result;

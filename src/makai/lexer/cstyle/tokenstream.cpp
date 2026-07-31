@@ -164,10 +164,19 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 	if (lexer.now() == UTF::U8Char{'='}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
-			tok.type = LTS_TT_COMPARE_EQUALS;
+			if (lexer.peek() == UTF::U8Char{'>'}) {
+				tok.text.pushBack(lexer.next());
+				if (lexer.peek() == UTF::U8Char{'>'}) {
+					tok.text.pushBack(lexer.next());
+					tok.type = LTS_TT_BIG_HALBERD;
+				} else tok.type = LTS_TT_BIG_SPEAR;
+			} tok.type = LTS_TT_COMPARE_EQUALS;
 		} else if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
-			tok.type = LTS_TT_BIG_ARROW;
+			if (lexer.peek() == UTF::U8Char{'>'}) {
+				tok.text.pushBack(lexer.next());
+				tok.type = LTS_TT_BIG_GLAIVE;
+			} else tok.type = LTS_TT_BIG_ARROW;
 		}
 	} else if (lexer.now() == UTF::U8Char{'|'}) {
 		if (lexer.peek() == UTF::U8Char{'='}) {
@@ -206,15 +215,27 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 			tok.type = LTS_TT_SUB_ASSIGN;
 		} else if (lexer.peek() == UTF::U8Char{'-'}) {
 			tok.text.pushBack(lexer.next());
-			tok.type = LTS_TT_DECREMENT;
+			if (lexer.peek() == UTF::U8Char{'>'}) {
+				tok.text.pushBack(lexer.next());
+				if (lexer.peek() == UTF::U8Char{'>'}) {
+					tok.text.pushBack(lexer.next());
+					tok.type = LTS_TT_LITTLE_HALBERD;
+				} else tok.type = LTS_TT_LITTLE_SPEAR;
+			} else tok.type = LTS_TT_DECREMENT;
 		} else if (lexer.peek() == UTF::U8Char{'>'}) {
 			tok.text.pushBack(lexer.next());
-			tok.type = LTS_TT_LITTLE_ARROW;
+			if (lexer.peek() == UTF::U8Char{'>'}) {
+				tok.text.pushBack(lexer.next());
+				tok.type = LTS_TT_LITTLE_GLAIVE;
+			} else tok.type = LTS_TT_LITTLE_ARROW;
 		}
 	} else if (lexer.now() == UTF::U8Char{':'}) {
 		if (lexer.peek() == UTF::U8Char{':'}) {
 			tok.text.pushBack(lexer.next());
-			tok.type = LTS_TT_NAMESPACE_RESOLVE;
+			if (lexer.peek() == UTF::U8Char{'>'}) {
+				tok.text.pushBack(lexer.next());
+				tok.type = LTS_TT_LAMBDA;
+			} else tok.type = LTS_TT_NAMESPACE_RESOLVE;
 		} else if (lexer.peek() == UTF::U8Char{'='}) {
 			tok.text.pushBack(lexer.next());
 			tok.type = LTS_TT_DECLARE;

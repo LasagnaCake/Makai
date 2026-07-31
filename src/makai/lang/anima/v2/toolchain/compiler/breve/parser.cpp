@@ -207,7 +207,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_NULL_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
-	add(LTS_TT_BIG_ARROW, infixes, new LambdaResolver());
+	add(LTS_TT_LAMBDA, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
 	MAKAILIB_DEBUGLN_FULL("Done!");
 }

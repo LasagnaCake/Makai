@@ -174,6 +174,20 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_TEMPLATE_BEGIN,
 				/// @brief Template declaration end (`:>`).
 				LTS_TT_TEMPLATE_END,
+				/// @brief Little spear (`-->`).
+				LTS_TT_LITTLE_SPEAR,
+				/// @brief Big spear (`==>`).
+				LTS_TT_BIG_SPEAR,
+				/// @brief Little glaive (`->>`).
+				LTS_TT_LITTLE_GLAIVE,
+				/// @brief Big glaive (`=>>`).
+				LTS_TT_BIG_GLAIVE,
+				/// @brief Little halberd (`-->>`).
+				LTS_TT_LITTLE_HALBERD,
+				/// @brief Big halberd (`==>>`).
+				LTS_TT_BIG_HALBERD,
+				/// @brief Lambda (`::>`).
+				LTS_TT_LAMBDA,
 			};
 
 			/// @brief Token type.
