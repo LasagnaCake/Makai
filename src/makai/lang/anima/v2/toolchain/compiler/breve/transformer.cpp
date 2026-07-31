@@ -557,6 +557,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 			context.error("Enums can only inherit integers!", node->middle);
 		type.base = base;
 	} else type.base = context.basicType("int64");
+	MAKAILIB_DEBUGLN_FULL("Integer type is ", type.base->name);
 	type.flags.isEnum = true;
 	type.flags.isValueType = true;
 	type.flags.isCopyable = true;
