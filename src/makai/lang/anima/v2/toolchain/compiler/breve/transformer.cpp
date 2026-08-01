@@ -2306,7 +2306,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 				context.error("Expected direct value here!", caseExpr->leftSide);
 			if (!match.direct.isInteger())
 				context.error("Expected enumerable value here!", caseExpr->leftSide);
-			if (match.direct.getSigned() != switchExpr.direct.getUnsigned()) continue;
+			if (match.direct.getSigned() != switchExpr.direct.getSigned()) continue;
 			result = Expression().transform(context, caseExpr->rightSide);
 			context.pop(1);
 			context.impl()->writeMainLine(switchScope->compose()->toString());
