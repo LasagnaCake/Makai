@@ -747,3 +747,12 @@ Node::Instance EvaluationResolver::resolve(Parser& parser, Node::Instance const&
 	result->leftSide = parser.nextExpression();
 	return result;
 }
+
+Node::Instance SwitchResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_SWITCH;
+	result->leftSide = parser.nextExpression();
+	// TODO: This
+	return result;
+}
