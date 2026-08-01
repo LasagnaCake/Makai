@@ -1851,13 +1851,9 @@ void Engine::v2Select() {
 		return crash(makeErrorHere("Expected unsigned integer or boolean value for select!"));
 	uint64 const to = context.pop()->toValue<uint64>();
 	if (!select.count) return;
-	List<uint64> targets;
-	targets.resize(select.count);
-	for (usize i = 0; i < select.count; ++i) {
-		advance(true);
-		targets.pushBack(Makai::Cast::bit<uint64>(current));
-	}
-	if (to >= targets.size())
-		jumpByMode(select.mode, targets.back(), false /*not returnable*/);
-	else jumpByMode(select.mode, targets[to], false /*not returnable*/);
+	usize at = (to < select.count ? to : select.count);
+	if ((context.pointers.instruction + at) >= program.code.size())
+		return crash(endOfProgramError());
+	uint64 const loc = Makai::Cast::bit<uint64>(program.code[context.pointers.instruction + at]);
+	jumpByMode(select.mode, loc, false /*not returnable*/);
 }

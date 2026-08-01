@@ -10,14 +10,16 @@ enum Weekday: uint8 {
 	SUNDAY
 	
 	fullName :: (@ByCopy self: Weekday) =>
-		if		self == Weekday.MONDAY		"Monday"
-		else if	self == Weekday.TUESDAY		"Tuesday"
-		else if	self == Weekday.WEDNESDAY	"Wednesday"
-		else if	self == Weekday.THURSDAY	"Thursday"
-		else if	self == Weekday.FRIDAY		"Friday"
-		else if	self == Weekday.SATURDAY	"Saturday"
-		else if	self == Weekday.SUNDAY		"Sunday"
-		else "INVALID_DAY"
+		switch self {
+			Weekday.MONDAY		=>	"Monday"
+			Weekday.TUESDAY		=>	"Tuesday"
+			Weekday.WEDNESDAY	=>	"Wednesday"
+			Weekday.THURSDAY	=>	"Thursday"
+			Weekday.FRIDAY		=>	"Friday"
+			Weekday.SATURDAY	=>	"Saturday"
+			Weekday.SUNDAY		=>	"Sunday"
+			_					=>	"INVALID_DAY"
+		}
 	
 	shortName :: (@ByCopy self: Weekday) =>
 		if		self == Weekday.MONDAY		"Mon"

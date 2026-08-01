@@ -1934,10 +1934,19 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 	auto const cond = Expression().transform(context, node->middle);
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
 	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
+	auto const varc = context.top()->varc;
+	auto const ifScope = context.declare(UTF8StringList::from("<if>" + node->name()));
+	ifScope->varc += varc;
+	ifScope->implementContents = true;
 	if (cond.isCompilable()) {
-		if (cond.direct.isTruthy() != invert) return Expression().transform(context, node->leftSide);
-		else if (node->rightSide) return Expression().transform(context, node->rightSide);
-		else return {};
+		ATransformer::Result expr;
+		if (cond.direct.isTruthy() != invert)
+			expr = Expression().transform(context, node->leftSide);
+		else if (node->rightSide)
+			expr = Expression().transform(context, node->rightSide);
+		context.pop(1);
+		context.impl()->writeMainLine(ifScope->compose()->toString());
+		return expr;
 	} else {
 		if (!cond.source)
 			context.error("Expression does not result in a value!", node->middle);
@@ -1951,27 +1960,33 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		}
 		ATransformer::Result ifTrue, ifFalse;
 		auto const writeTrueBranch = [&] (bool const skipEndLabel = false) {
-			context.top()->impl->writeMainLine("begin");
+			auto const branchScope = context.declare(UTF8StringList::from("<if-true>" + node->name()));
+			branchScope->varc += ifScope->varc;
+			branchScope->implementContents = true;
 			ifTrue = Expression().transform(context, node->leftSide);
 			if (ifTrue.source && ifTrue.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifTrue.source.value());
 			else if (ifTrue.isStackTop() && ifTrue.isCopied()) {
 				context.top()->impl->writeMainLine("copy", *ifTrue.source, "-> top");
 			}
-			context.top()->impl->writeMainLine("end");
+			context.pop(1);
+			context.impl()->writeMainLine(branchScope->compose()->toString());
 			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
 		auto const writeFalseBranch = [&] (bool const skipEndLabel = false) {
 			if (!node->rightSide) return;
 			context.top()->impl->writeMainLine("@target", ifFalseLabel, ":");
-			context.top()->impl->writeMainLine("begin");
+			auto const branchScope = context.declare(UTF8StringList::from("<if-false>" + node->name()));
+			branchScope->varc += ifScope->varc;
+			branchScope->implementContents = true;
 			ifFalse = Expression().transform(context, node->rightSide);
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				context.top()->impl->writeMainLine("push", ifFalse.source.value());
 			else if (ifFalse.isStackTop() && ifFalse.isCopied()) {
 				context.top()->impl->writeMainLine("copy", *ifFalse.source, "-> top");
 			}
-			context.top()->impl->writeMainLine("end");
+			context.pop(1);
+			context.impl()->writeMainLine(branchScope->compose()->toString());
 			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
 		};
 		if (cond.likelihood >= 0) {
@@ -1994,7 +2009,9 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			MAKAILIB_DEBUGLN_FULL("If-True-side: ", ifTrue.type ? ifTrue.type->name : "NO TYPE");
 			MAKAILIB_DEBUGLN_FULL("If-False-side: ", "NONE");
 		}
-		context.top()->impl->writeMainLine("@target", ifEndLabel, ":");
+		ifScope->impl->writePostLine("@target", ifEndLabel, ":");
+		context.pop(1);
+		context.impl()->writeMainLine(ifScope->compose()->toString());
 		return {.source = {"move top"}, .type = ifTrue.type, .likelihood = ifTrue.likelihood + ifFalse.likelihood};
 	}
 }
@@ -2263,6 +2280,102 @@ ATransformer::Result Evaluation::transform(Context& context, Node::Instance cons
 	if (lhs.isCompilable() && lhs.direct.isString())
 		return Expression().transform(context, context.evaluate(lhs.direct.getString()));
 	context.error("Invalid evaluation!", node->leftSide);
+}
+
+ATransformer::Result Switch::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result result;
+	auto const varc = context.top()->varc;
+	auto const switchScope = context.declare(UTF8StringList::from("<switch>" + node->name()));
+	switchScope->varc += varc;
+	switchScope->implementContents = true;
+	auto const switchExpr = Expression().transform(context, node->leftSide);
+	usize pickExprLoc = 0;
+	if (!switchExpr.isCompilable()) {
+		if (switchExpr.shouldBePushed())
+			switchScope->impl->writeMainLine("push", switchExpr.source.value());
+		else if (switchExpr.isStackTop() && switchExpr.isCopied())
+			switchScope->impl->writeMainLine("copy", *switchExpr.source, "-> top");
+		pickExprLoc = switchScope->impl->main.size();
+		switchScope->impl->writeMainLine("");
+	} else {
+		if (!switchExpr.direct.isInteger())
+			context.error("Expected enumerable value here!", node->leftSide);
+		for (auto& caseExpr: node->children) {
+			auto const match = Expression().transform(context, caseExpr->leftSide);
+			if (!match.isCompilable())
+				context.error("Expected direct value here!", caseExpr->leftSide);
+			if (!match.direct.isInteger())
+				context.error("Expected enumerable value here!", caseExpr->leftSide);
+			if (match.direct.getSigned() != switchExpr.direct.getUnsigned()) continue;
+			result = Expression().transform(context, caseExpr->rightSide);
+			context.pop(1);
+			context.impl()->writeMainLine(switchScope->compose()->toString());
+			return result;
+		}
+	}
+	if (!switchExpr.source)
+		context.error("Expected value here!", node->leftSide);
+	if (!(switchExpr.type->flags.isBasic or switchExpr.type->flags.isEnum))
+		context.error("Expected enumeratable value here!", node->leftSide);
+	auto switchType = switchExpr.type;
+	if (!Core::isInteger(switchType->flags.isEnum ? *switchType->base->basic : *switchType->basic))
+		context.error("Expected enumerable value here!", node->leftSide);
+	auto const caseMarker = "__switch_case" + node->name();
+	auto const switchEnd = "__switch_end" + node->name();
+	auto const defaultCase = "__switch_default" + node->name();
+	bool hasDefault = false;
+	Makai::Map<ssize, String> matches;
+	decltype(switchType) prevCaseType;
+	bool isFirstCase = true;
+	if (node->children.size() < 2)
+		context.error("Switch statements must have at least two cases!", node);
+	for (auto& caseExpr: node->children) {
+		bool isDefaultCase = false;
+		if (caseExpr->leftSide->base.text != "_") {
+			auto const match = Expression().transform(context, caseExpr->leftSide);
+			if (!match.isCompilable())
+				context.error("Expected direct value here!", caseExpr->leftSide);
+			if (match.type != switchType)
+				context.error("Type mismatch!", caseExpr->leftSide);
+			ssize matchIndex = match.direct.getSigned();
+			if (matches.contains(matchIndex))
+				context.error("A case for this value was already declared!", caseExpr->leftSide);
+			matches[matchIndex] = caseMarker + caseExpr->name();
+		} else if (!hasDefault) {
+			hasDefault = true;
+			isDefaultCase = true;
+		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
+		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
+		caseScope->varc += switchScope->varc;
+		caseScope->implementContents = true;
+		auto const then = Expression().transform(context, caseExpr->rightSide);
+		if (!isFirstCase && prevCaseType != then.type)
+			context.error("Case result mismatch!", caseExpr->rightSide);
+		else if (isFirstCase)
+			prevCaseType = then.type;
+		if (then.shouldBePushed())
+			switchScope->impl->writeMainLine("push", then.source.value());
+		else if (then.isStackTop() && then.isCopied())
+			switchScope->impl->writeMainLine("copy", *then.source, "-> top");
+		context.pop(1);
+		switchScope->impl->writeMainLine("@label", isDefaultCase ? defaultCase : (caseMarker + caseExpr->name()), ":");
+		switchScope->impl->writeMainLine(caseScope->compose()->toString());
+		switchScope->impl->writeMainLine("jump", switchEnd);
+		isFirstCase = false;
+	}
+	auto const matchIndices = matches.keys();
+	auto const lowestIndex = matchIndices.front();
+	auto const highestIndex = matchIndices.back();
+	UTF8String choices = "[";
+	auto const switchDefault = (hasDefault ? defaultCase : switchEnd);
+	for (ssize i = lowestIndex; i <= highestIndex; ++i)
+		choices += " " + (matches.contains(i) ? matches[i] : switchDefault);
+	choices += switchDefault + " ]";
+	switchScope->impl->main[pickExprLoc] = "pick " + choices;
+	switchScope->impl->writePostLine("@label", switchEnd, ":");
+	context.pop(1);
+	context.impl()->writeMainLine(switchScope->compose()->toString());
+	return result;
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {

@@ -753,6 +753,21 @@ Node::Instance SwitchResolver::resolve(Parser& parser, Node::Instance const& lef
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_SWITCH;
 	result->leftSide = parser.nextExpression();
-	// TODO: This
+	parser.context.expectNext(LTS_TT_OPEN_CURLY);
+	while (true) {
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+			parser.context.next();
+			break;
+		}
+		auto const caseDecl = Node::Instance::create();
+		caseDecl->leftSide = parser.nextExpression();
+		parser.context.expectNext(LTS_TT_BIG_ARROW);
+		caseDecl->rightSide = parser.nextExpression();
+		result->children.pushBack(caseDecl);
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+			parser.context.next();
+			break;
+		}
+	}
 	return result;
 }
