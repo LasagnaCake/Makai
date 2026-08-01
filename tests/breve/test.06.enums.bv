@@ -52,4 +52,4 @@ main :: () {
 	day.display;
 	day = Weekday.SUNDAY
 	day.display;
-} 
+}
