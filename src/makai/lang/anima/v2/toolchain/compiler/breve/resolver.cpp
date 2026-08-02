@@ -775,3 +775,28 @@ Node::Instance SwitchResolver::resolve(Parser& parser, Node::Instance const& lef
 		parser.context.error("Switch statements must have at least two cases!");
 	return result;
 }
+
+Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_SWITCH;
+	parser.context.expectNext(LTS_TT_OPEN_CURLY);
+	while (true) {
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+			parser.context.next();
+			break;
+		}
+		auto const caseDecl = Node::Instance::create();
+		caseDecl->leftSide = parser.nextExpression();
+		parser.context.expectNext(LTS_TT_BIG_ARROW);
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY))
+			parser.context.error("Missing case statement!");
+		caseDecl->rightSide = parser.nextExpression();
+		result->children.pushBack(caseDecl);
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+			parser.context.next();
+			break;
+		}
+	}
+	return result;
+}

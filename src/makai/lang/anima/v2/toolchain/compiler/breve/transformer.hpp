@@ -295,6 +295,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct Switch: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
+
+	struct Match: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct SwitchMatch: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
 }
 
 #endif

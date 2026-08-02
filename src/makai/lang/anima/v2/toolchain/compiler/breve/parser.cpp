@@ -209,6 +209,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_LAMBDA, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
 	add("switch", prefixes, new SwitchResolver());
+	add("match", prefixes, new MatchResolver());
 	MAKAILIB_DEBUGLN_FULL("Done!");
 }
 

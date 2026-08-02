@@ -18,19 +18,19 @@ enum Weekday: uint8 {
 			Weekday.FRIDAY		=>	"Friday"
 			Weekday.SATURDAY	=>	"Saturday"
 			Weekday.SUNDAY		=>	"Sunday"
-			_					=>	"INVALID_DAY"
+			else				=>	"INVALID_DAY"
 		}
 	
 	shortName :: (self: Weekday) =>
-		switch self {
-			Weekday.MONDAY		=>	"Mon"
-			Weekday.TUESDAY		=>	"Tue"
-			Weekday.WEDNESDAY	=>	"Wed"
-			Weekday.THURSDAY	=>	"Thu"
-			Weekday.FRIDAY		=>	"Fri"
-			Weekday.SATURDAY	=>	"Sat"
-			Weekday.SUNDAY		=>	"Sun"
-			_					=>	"INVALID_DAY"
+		match {
+			self == Weekday.MONDAY		=>	"Mon"
+			self == Weekday.TUESDAY		=>	"Tue"
+			self == Weekday.WEDNESDAY	=>	"Wed"
+			self == Weekday.THURSDAY	=>	"Thu"
+			self == Weekday.FRIDAY		=>	"Fri"
+			self == Weekday.SATURDAY	=>	"Sat"
+			self == Weekday.SUNDAY		=>	"Sun"
+			else						=>	"INVALID_DAY"
 		}
 	
 	display :: (@ByRef self: Weekday) =>

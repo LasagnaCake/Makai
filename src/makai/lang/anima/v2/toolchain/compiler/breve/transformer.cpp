@@ -1194,7 +1194,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_TYPE_EXTENSION:	return TypeExtension().transform(context, node);
 		case Node::Content::AV2_TANC_EMPTY_DECAY:		return NullDecay().transform(context, node);
 		case Node::Content::AV2_TANC_EVAL_BLOCK:		return Evaluation().transform(context, node);
-		case Node::Content::AV2_TANC_SWITCH:			return Switch().transform(context, node);
+		case Node::Content::AV2_TANC_SWITCH:			return SwitchMatch().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_FAILABLE_PATH:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
@@ -2334,7 +2334,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
 		caseScope->varc += switchScope->varc;
 		caseScope->implementContents = true;
-		if (caseExpr->leftSide->base.text != "_") {
+		if (caseExpr->leftSide->base.text != "else") {
 			auto const match = Expression().transform(context, caseExpr->leftSide);
 			if (!match.isCompilable())
 				context.error("Expected direct value here!", caseExpr->leftSide);
@@ -2377,6 +2377,80 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	context.pop(1);
 	context.impl()->writeMainLine(switchScope->compose()->toString());
 	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
+}
+
+ATransformer::Result Match::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result result;
+	auto const varc = context.top()->varc;
+	auto const matchScope = context.declare(UTF8StringList::from("<match>" + node->name()));
+	matchScope->varc += varc;
+	matchScope->implementContents = true;
+	auto const caseMarker = "__match_case" + node->name();
+	auto const caseSkipMarker = "__match_case_skip" + node->name();
+	auto const matchEnd = "__match_end" + node->name();
+	auto const defaultCase = "__match_default" + node->name();
+	Node::Instance defaultCaseExpr;
+	Namespace::TypeRef prevCaseType;
+	bool isFirstCase = true;
+	for (auto& caseExpr: node->children) {
+		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
+		caseScope->varc += matchScope->varc;
+		caseScope->implementContents = true;
+		if (caseExpr->leftSide->base.text != "else") {
+			auto const match = Expression().transform(context, caseExpr->leftSide);
+			if (match.shouldBePushed())
+				caseScope->impl->writeMainLine("push", match.source.value());
+			else if (match.isStackTop() && match.isCopied())
+				caseScope->impl->writeMainLine("copy", *match.source, "-> top");
+			caseScope->impl->writeMainLine("jump if false", caseSkipMarker + caseExpr->name());
+		} else if (!defaultCaseExpr) {
+			defaultCaseExpr = caseExpr;
+			continue;
+		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
+		auto const then = Expression().transform(context, caseExpr->rightSide);
+		if (!isFirstCase && prevCaseType != then.type)
+			context.error("Case result mismatch!", caseExpr->rightSide);
+		else if (isFirstCase)
+			prevCaseType = then.type;
+		result = then;
+		if (then.shouldBePushed())
+			caseScope->impl->writeMainLine("push", then.source.value());
+		else if (then.isStackTop() && then.isCopied())
+			caseScope->impl->writeMainLine("copy", *then.source, "-> top");
+		context.pop(1);
+		matchScope->impl->writeMainLine("@target", (caseMarker + caseExpr->name()), ":");
+		matchScope->impl->writeMainLine(caseScope->compose()->toString());
+		matchScope->impl->writeMainLine("jump", matchEnd);
+		matchScope->impl->writeMainLine("@target", (caseSkipMarker + caseExpr->name()), ":");
+		isFirstCase = false;
+	}
+	if (defaultCaseExpr) {
+		auto const caseScope = context.declare(UTF8StringList::from("<default>" + defaultCaseExpr->name()));
+		caseScope->varc += matchScope->varc;
+		caseScope->implementContents = true;
+		auto const then = Expression().transform(context, defaultCaseExpr->rightSide);
+		if (!isFirstCase && prevCaseType != then.type)
+			context.error("Case result mismatch!", defaultCaseExpr->rightSide);
+		else if (isFirstCase)
+			prevCaseType = then.type;
+		result = then;
+		if (then.shouldBePushed())
+			caseScope->impl->writeMainLine("push", then.source.value());
+		else if (then.isStackTop() && then.isCopied())
+			caseScope->impl->writeMainLine("copy", *then.source, "-> top");
+		matchScope->impl->writeMainLine(caseScope->compose()->toString());
+		result = then;
+	}
+	matchScope->impl->writePostLine("@target", matchEnd, ":");
+	context.pop(1);
+	context.impl()->writeMainLine(matchScope->compose()->toString());
+	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
+}
+
+ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance const& node) {
+	if (node->leftSide)
+		return Switch().transform(context, node);
+	else return Match().transform(context, node);
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
