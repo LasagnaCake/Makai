@@ -20,7 +20,7 @@ Core::Module Breve::compile(
 	Assembler::BaseContext ctx;
 	Breve::Parser parser(ctx);
 	Makai::Lexer::CStyle::TokenStream stream;
-	stream.open(file);
+	stream.open(file + "\n\n\n");
 	Makai::List<Assembler::BaseContext::Axiom> ax;
 	while (stream.next())
 		ax.pushBack({stream.current(), true, fname});
@@ -47,7 +47,7 @@ Makai::Data::Value Breve::compile(
 	Assembler::BaseContext ctx;
 	Breve::Parser parser(ctx);
 	Makai::Lexer::CStyle::TokenStream stream;
-	stream.open(file);
+	stream.open(file + "\n\n\n");
 	Makai::List<Assembler::BaseContext::Axiom> ax;
 	while (stream.next())
 		ax.pushBack({stream.current(), true, fname});
@@ -98,7 +98,7 @@ Breve::File Breve::parseFile(
 	Assembler::BaseContext ctx;
 	Breve::Parser parser(ctx);
 	Makai::Lexer::CStyle::TokenStream stream;
-	stream.open(file);
+	stream.open(file + "\n\n\n");
 	Makai::List<Assembler::BaseContext::Axiom> ax;
 	while (stream.next())
 		ax.pushBack({stream.current(), true, fname});

@@ -1194,6 +1194,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_TYPE_EXTENSION:	return TypeExtension().transform(context, node);
 		case Node::Content::AV2_TANC_EMPTY_DECAY:		return NullDecay().transform(context, node);
 		case Node::Content::AV2_TANC_EVAL_BLOCK:		return Evaluation().transform(context, node);
+		case Node::Content::AV2_TANC_SWITCH:			return Switch().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_FAILABLE_PATH:
 		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
@@ -2351,6 +2352,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		auto const then = Expression().transform(context, caseExpr->rightSide);
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", caseExpr->rightSide);
+		result = then;
 		else if (isFirstCase)
 			prevCaseType = then.type;
 		if (then.shouldBePushed())
@@ -2375,7 +2377,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	switchScope->impl->writePostLine("@label", switchEnd, ":");
 	context.pop(1);
 	context.impl()->writeMainLine(switchScope->compose()->toString());
-	return result;
+	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {

@@ -762,6 +762,8 @@ Node::Instance SwitchResolver::resolve(Parser& parser, Node::Instance const& lef
 		auto const caseDecl = Node::Instance::create();
 		caseDecl->leftSide = parser.nextExpression();
 		parser.context.expectNext(LTS_TT_BIG_ARROW);
+		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY))
+			parser.context.error("Missing case statement!");
 		caseDecl->rightSide = parser.nextExpression();
 		result->children.pushBack(caseDecl);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
@@ -769,5 +771,7 @@ Node::Instance SwitchResolver::resolve(Parser& parser, Node::Instance const& lef
 			break;
 		}
 	}
+	if (result->children.size() < 2)
+		parser.context.error("Switch statements must have at least two cases!");
 	return result;
 }
