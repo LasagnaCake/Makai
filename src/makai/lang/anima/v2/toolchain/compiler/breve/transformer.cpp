@@ -2381,7 +2381,6 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 }
 
 ATransformer::Result Match::transform(Context& context, Node::Instance const& node) {
-	Makai::CPP::Debug::breakpoint();
 	ATransformer::Result result;
 	auto const varc = context.top()->varc;
 	auto const matchScope = context.declare(UTF8StringList::from("<match>" + node->name()));
