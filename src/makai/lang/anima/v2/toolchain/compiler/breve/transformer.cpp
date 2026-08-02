@@ -2329,6 +2329,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	bool isFirstCase = true;
 	if (node->children.size() < 2)
 		context.error("Switch statements must have at least two cases!", node);
+	MAKAILIB_DEBUGLN_FULL("Total cases: ", node->children.size());
 	for (auto& caseExpr: node->children) {
 		bool isDefaultCase = false;
 		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
@@ -2393,6 +2394,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 	Node::Instance defaultCaseExpr;
 	Namespace::TypeRef prevCaseType;
 	bool isFirstCase = true;
+	MAKAILIB_DEBUGLN_FULL("Total cases: ", node->children.size());
 	for (auto& caseExpr: node->children) {
 		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
 		caseScope->varc += matchScope->varc;
@@ -2439,6 +2441,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 			caseScope->impl->writeMainLine("push", then.source.value());
 		else if (then.isStackTop() && then.isCopied())
 			caseScope->impl->writeMainLine("copy", *then.source, "-> top");
+		context.pop(1);
 		matchScope->impl->writeMainLine(caseScope->compose()->toString());
 		result = then;
 	}
