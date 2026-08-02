@@ -2376,10 +2376,12 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	switchScope->impl->writePostLine("@target", switchEnd, ":");
 	context.pop(1);
 	context.impl()->writeMainLine(switchScope->compose()->toString());
+	if (!result.source) return {};
 	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
 }
 
 ATransformer::Result Match::transform(Context& context, Node::Instance const& node) {
+	Makai::CPP::Debug::breakpoint();
 	ATransformer::Result result;
 	auto const varc = context.top()->varc;
 	auto const matchScope = context.declare(UTF8StringList::from("<match>" + node->name()));
@@ -2444,6 +2446,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 	matchScope->impl->writePostLine("@target", matchEnd, ":");
 	context.pop(1);
 	context.impl()->writeMainLine(matchScope->compose()->toString());
+	if (!result.source) return {};
 	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
 }
 
