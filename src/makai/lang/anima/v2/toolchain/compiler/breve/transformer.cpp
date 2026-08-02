@@ -2355,9 +2355,9 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 			prevCaseType = then.type;
 		result = then;
 		if (then.shouldBePushed())
-			switchScope->impl->writeMainLine("push", then.source.value());
+			caseScope->impl->writeMainLine("push", then.source.value());
 		else if (then.isStackTop() && then.isCopied())
-			switchScope->impl->writeMainLine("copy", *then.source, "-> top");
+			caseScope->impl->writeMainLine("copy", *then.source, "-> top");
 		context.pop(1);
 		switchScope->impl->writeMainLine("@label", isDefaultCase ? defaultCase : (caseMarker + caseExpr->name()), ":");
 		switchScope->impl->writeMainLine(caseScope->compose()->toString());
