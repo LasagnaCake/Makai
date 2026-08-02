@@ -21,7 +21,7 @@ enum Weekday: uint8 {
 			else				=>	"INVALID_DAY"
 		}
 	
-	shortName :: (self: Weekday) =>
+	shortName :: (@ByCopy self: Weekday) =>
 		match {
 			self == Weekday.MONDAY		=>	"Mon"
 			self == Weekday.TUESDAY		=>	"Tue"
