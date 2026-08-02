@@ -9,7 +9,7 @@ enum Weekday: uint8 {
 	SATURDAY
 	SUNDAY
 	
-	fullName :: (@ByCopy self: Weekday) =>
+	fullName :: (self: Weekday) =>
 		switch self {
 			Weekday.MONDAY		=>	"Monday"
 			Weekday.TUESDAY		=>	"Tuesday"
@@ -21,7 +21,7 @@ enum Weekday: uint8 {
 			_					=>	"INVALID_DAY"
 		}
 	
-	shortName :: (@ByCopy self: Weekday) =>
+	shortName :: (self: Weekday) =>
 		switch self {
 			Weekday.MONDAY		=>	"Mon"
 			Weekday.TUESDAY		=>	"Tue"
@@ -33,7 +33,7 @@ enum Weekday: uint8 {
 			_					=>	"INVALID_DAY"
 		}
 	
-	display :: (@ByCopy self: Weekday) =>
+	display :: (@ByRef self: Weekday) =>
 		IO.writeLine(self.fullName; + " (" + self.shortName; + ")")
 }
 
