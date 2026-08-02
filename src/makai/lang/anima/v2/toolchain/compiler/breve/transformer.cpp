@@ -2427,6 +2427,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		matchScope->impl->writeMainLine("@target", (caseSkipMarker + caseExpr->name()), ":");
 		isFirstCase = false;
 	}
+	/*
 	if (defaultCaseExpr) {
 		auto const caseScope = context.declare(UTF8StringList::from("<default>" + defaultCaseExpr->name()));
 		caseScope->varc += matchScope->varc;
@@ -2444,7 +2445,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		context.pop(1);
 		matchScope->impl->writeMainLine(caseScope->compose()->toString());
 		result = then;
-	}
+	} */
 	matchScope->impl->writePostLine("@target", matchEnd, ":");
 	context.pop(1);
 	context.impl()->writeMainLine(matchScope->compose()->toString());
