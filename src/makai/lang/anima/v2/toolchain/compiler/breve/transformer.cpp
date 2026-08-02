@@ -2368,10 +2368,10 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	auto const lowestIndex = matchIndices.front() < matchIndices.back() ? matchIndices.front() : matchIndices.back();
 	auto const highestIndex = matchIndices.front() < matchIndices.back() ? matchIndices.back() : matchIndices.front();
 	UTF8String choices = "[";
-	auto const switchDefault = (hasDefault ? defaultCase : switchEnd);
+	auto const elseGoHere = (hasDefault ? defaultCase : switchEnd);
 	for (ssize i = lowestIndex; i <= highestIndex; ++i)
-		choices += " " + (matches.contains(i) ? matches[i] : switchDefault);
-	choices += switchDefault + " ]";
+		choices += " " + (matches.contains(i) ? matches[i] : elseGoHere);
+	choices += " " + elseGoHere + " ]";
 	switchScope->impl->main[pickExprLoc] = "pick " + choices;
 	switchScope->impl->writePostLine("@target", switchEnd, ":");
 	context.pop(1);
