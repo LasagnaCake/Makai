@@ -1940,13 +1940,12 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 	ifScope->varc += varc;
 	ifScope->implementContents = true;
 	if (cond.isCompilable()) {
+		context.pop(1);
 		ATransformer::Result expr;
 		if (cond.direct.isTruthy() != invert)
 			expr = Expression().transform(context, node->leftSide);
 		else if (node->rightSide)
 			expr = Expression().transform(context, node->rightSide);
-		context.pop(1);
-		context.impl()->writeMainLine(ifScope->compose()->toString());
 		return expr;
 	} else {
 		if (!cond.source)
@@ -2308,11 +2307,10 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 			if (!match.direct.isInteger())
 				context.error("Expected enumerable value here!", caseExpr->leftSide);
 			if (match.direct.getSigned() != switchExpr.direct.getSigned()) continue;
-			result = Expression().transform(context, caseExpr->rightSide);
 			context.pop(1);
-			context.impl()->writeMainLine(switchScope->compose()->toString());
-			return result;
+			return Expression().transform(context, caseExpr->rightSide);
 		}
+		context.error("No matching case found!", node->leftSide);
 	}
 	if (!switchExpr.source)
 		context.error("Expected value here!", node->leftSide);
@@ -2332,6 +2330,9 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		context.error("Switch statements must have at least two cases!", node);
 	for (auto& caseExpr: node->children) {
 		bool isDefaultCase = false;
+		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
+		caseScope->varc += switchScope->varc;
+		caseScope->implementContents = true;
 		if (caseExpr->leftSide->base.text != "_") {
 			auto const match = Expression().transform(context, caseExpr->leftSide);
 			if (!match.isCompilable())
@@ -2346,15 +2347,12 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 			hasDefault = true;
 			isDefaultCase = true;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
-		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
-		caseScope->varc += switchScope->varc;
-		caseScope->implementContents = true;
 		auto const then = Expression().transform(context, caseExpr->rightSide);
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", caseExpr->rightSide);
-		result = then;
 		else if (isFirstCase)
 			prevCaseType = then.type;
+		result = then;
 		if (then.shouldBePushed())
 			switchScope->impl->writeMainLine("push", then.source.value());
 		else if (then.isStackTop() && then.isCopied())
@@ -2366,8 +2364,8 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		isFirstCase = false;
 	}
 	auto const matchIndices = matches.keys();
-	auto const lowestIndex = matchIndices.front();
-	auto const highestIndex = matchIndices.back();
+	auto const lowestIndex = matchIndices.front() < matchIndices.back() ? matchIndices.front() : matchIndices.back();
+	auto const highestIndex = matchIndices.front() < matchIndices.back() ? matchIndices.back() : matchIndices.front();
 	UTF8String choices = "[";
 	auto const switchDefault = (hasDefault ? defaultCase : switchEnd);
 	for (ssize i = lowestIndex; i <= highestIndex; ++i)
