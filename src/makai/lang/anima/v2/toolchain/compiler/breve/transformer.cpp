@@ -2407,6 +2407,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 				caseScope->impl->writeMainLine("copy", *match.source, "-> top");
 			caseScope->impl->writeMainLine("jump if false", caseSkipMarker + caseExpr->name());
 		} else if (!defaultCaseExpr) {
+			context.pop(1);
 			defaultCaseExpr = caseExpr;
 			continue;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
@@ -2425,9 +2426,9 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		matchScope->impl->writeMainLine(caseScope->compose()->toString());
 		matchScope->impl->writeMainLine("jump", matchEnd);
 		matchScope->impl->writeMainLine("@target", (caseSkipMarker + caseExpr->name()), ":");
+		matchScope->impl->writeMainLine("end");
 		isFirstCase = false;
 	}
-	/*
 	if (defaultCaseExpr) {
 		auto const caseScope = context.declare(UTF8StringList::from("<default>" + defaultCaseExpr->name()));
 		caseScope->varc += matchScope->varc;
@@ -2445,7 +2446,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		context.pop(1);
 		matchScope->impl->writeMainLine(caseScope->compose()->toString());
 		result = then;
-	} */
+	}
 	matchScope->impl->writePostLine("@target", matchEnd, ":");
 	context.pop(1);
 	context.impl()->writeMainLine(matchScope->compose()->toString());
