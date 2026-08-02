@@ -1965,38 +1965,39 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			branchScope->implementContents = true;
 			ifTrue = Expression().transform(context, node->leftSide);
 			if (ifTrue.source && ifTrue.shouldBePushed())
-				context.top()->impl->writeMainLine("push", ifTrue.source.value());
+				branchScope->impl->writeMainLine("push", ifTrue.source.value());
 			else if (ifTrue.isStackTop() && ifTrue.isCopied()) {
-				context.top()->impl->writeMainLine("copy", *ifTrue.source, "-> top");
+				branchScope->impl->writeMainLine("copy", *ifTrue.source, "-> top");
 			}
 			context.pop(1);
-			context.impl()->writeMainLine(branchScope->compose()->toString());
-			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
+			ifScope->impl->writeMainLine("@target", ifTrueLabel, ":");
+			ifScope->impl->writeMainLine(branchScope->compose()->toString());
+			if (!skipEndLabel) ifScope->impl->writeMainLine("jump", ifEndLabel);
 		};
 		auto const writeFalseBranch = [&] (bool const skipEndLabel = false) {
 			if (!node->rightSide) return;
-			context.top()->impl->writeMainLine("@target", ifFalseLabel, ":");
 			auto const branchScope = context.declare(UTF8StringList::from("<if-false>" + node->name()));
 			branchScope->varc += ifScope->varc;
 			branchScope->implementContents = true;
 			ifFalse = Expression().transform(context, node->rightSide);
 			if (ifFalse.source && ifFalse.shouldBePushed())
-				context.top()->impl->writeMainLine("push", ifFalse.source.value());
+				branchScope->impl->writeMainLine("push", ifFalse.source.value());
 			else if (ifFalse.isStackTop() && ifFalse.isCopied()) {
-				context.top()->impl->writeMainLine("copy", *ifFalse.source, "-> top");
+				branchScope->impl->writeMainLine("copy", *ifFalse.source, "-> top");
 			}
 			context.pop(1);
-			context.impl()->writeMainLine(branchScope->compose()->toString());
-			if (!skipEndLabel) context.top()->impl->writeMainLine("jump", ifEndLabel);
+			ifScope->impl->writeMainLine("@target", ifFalseLabel, ":");
+			ifScope->impl->writeMainLine(branchScope->compose()->toString());
+			if (!skipEndLabel) ifScope->impl->writeMainLine("jump", ifEndLabel);
 		};
 		if (cond.likelihood >= 0) {
 			String const condType = (invert) ? "true" : "false";
-			context.top()->impl->writeMainLine("jump if", condType, node->rightSide ? ifFalseLabel : ifEndLabel);
+			ifScope->impl->writeMainLine("jump if", condType, node->rightSide ? ifFalseLabel : ifEndLabel);
 			writeTrueBranch();
 			writeFalseBranch(true);
 		} else {
 			String const condType = (invert) ? "false" : "true";
-			context.top()->impl->writeMainLine("jump if", condType, ifTrueLabel);
+			ifScope->impl->writeMainLine("jump if", condType, ifTrueLabel);
 			writeFalseBranch();
 			writeTrueBranch(true);
 		}
