@@ -1045,9 +1045,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	MAKAILIB_DEBUGLN_FULL("RHS Type: ", rhs.type ? rhs.type->name : "NO_TYPE");
 	if (isLogicOp(node)) {
 		if (node->base.type == LTS_TT_LOGIC_AND)
-			context.impl()->writeMainLine("@label", sseAnd);
+			context.impl()->writeMainLine("@target", sseAnd);
 		if (node->base.type == LTS_TT_LOGIC_OR)
-			context.impl()->writeMainLine("@label", sseOr);
+			context.impl()->writeMainLine("@target", sseOr);
 		auto const t = TypeDecl::stronger(lhs.type, rhs.type);
 		if (!t) context.error("Type mismatch!", node);
 		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
@@ -1151,7 +1151,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		context.top()->impl->writeMainLine("push val top");
 		context.top()->impl->writeMainLine("jump if nil", fail);
 		auto const ox = resolveSubfield(context, node, result.scope, path.front());
-		context.top()->impl->writeMainLine("@label", fail);
+		context.top()->impl->writeMainLine("@target", fail);
 		return ox;
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_NAME) {
 		path = context.pathOf(node->leftSide);
@@ -1523,7 +1523,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 				context.top()->impl->writeMainLine("set [", i.direct.getUnsigned(), "]");
 			else context.error("Expected integer here!", node->middle);
 			if (node->base.type == LTS_TT_NULL_ASSIGN)
-				context.top()->impl->writeMainLine("@label", ndecl);
+				context.top()->impl->writeMainLine("@target", ndecl);
 			return {{"move top"}, lhs.scope, t, rhs.direct, rhs.likelihood};
 		} else context.error("Type mismatch!", node);
 	}
@@ -1571,7 +1571,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		if (!rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
 		if (node->base.type == LTS_TT_NULL_ASSIGN)
-			context.top()->impl->writeMainLine("@label", ndecl);
+			context.top()->impl->writeMainLine("@target", ndecl);
 		return {lhs.source, lhs.scope, rhs.type, rhs.direct, rhs.likelihood};
 	}
 	if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
@@ -1584,7 +1584,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		if (!rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
 		if (node->base.type == LTS_TT_NULL_ASSIGN)
-			context.top()->impl->writeMainLine("@label", ndecl);
+			context.top()->impl->writeMainLine("@target", ndecl);
 		return {lhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
 	} else context.error("Type mismatch!", node);
 }
@@ -2242,11 +2242,11 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 	else if (expr.type->flags.isNullable)
 		check = "exists";
 	else context.error("Await expressions can only be used in checkable values!");
-	awaitScope->impl->writePreLine("@label", awaitStart, ":");
+	awaitScope->impl->writePreLine("@target", awaitStart, ":");
 	awaitScope->impl->writePostLine("jump if", check, awaitEnd, ":");
 	awaitScope->impl->writePostLine("yield");
 	awaitScope->impl->writePostLine("jump", awaitStart);
-	awaitScope->impl->writePostLine("@label", awaitEnd, ":");
+	awaitScope->impl->writePostLine("@target", awaitEnd, ":");
 	context.pop(scope.size());
 	context.top()->impl->writeMainLine(awaitScope->compose()->toString());
 	return {};
@@ -2271,7 +2271,7 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("push", rhs.source.value());
 	else if (rhs.isStackTop() && rhs.isCopied())
 		context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
-	context.top()->impl->writeMainLine("@label", exit);
+	context.top()->impl->writeMainLine("@target", exit);
 	return {{"move top"}, null, lhs.type->base};
 }
 
@@ -2359,7 +2359,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		else if (then.isStackTop() && then.isCopied())
 			caseScope->impl->writeMainLine("copy", *then.source, "-> top");
 		context.pop(1);
-		switchScope->impl->writeMainLine("@label", isDefaultCase ? defaultCase : (caseMarker + caseExpr->name()), ":");
+		switchScope->impl->writeMainLine("@target", isDefaultCase ? defaultCase : (caseMarker + caseExpr->name()), ":");
 		switchScope->impl->writeMainLine(caseScope->compose()->toString());
 		switchScope->impl->writeMainLine("jump", switchEnd);
 		isFirstCase = false;
@@ -2373,7 +2373,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		choices += " " + (matches.contains(i) ? matches[i] : switchDefault);
 	choices += switchDefault + " ]";
 	switchScope->impl->main[pickExprLoc] = "pick " + choices;
-	switchScope->impl->writePostLine("@label", switchEnd, ":");
+	switchScope->impl->writePostLine("@target", switchEnd, ":");
 	context.pop(1);
 	context.impl()->writeMainLine(switchScope->compose()->toString());
 	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
