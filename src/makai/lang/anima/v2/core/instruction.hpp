@@ -184,6 +184,12 @@ namespace Makai::Anima::V2::Core {
 			ValueLocation	location;
 		};
 
+		/// @brief Stack clear.
+		struct [[gnu::aligned(4)]] StackClear {
+			uint16	offset;
+			uint16	count;
+		};
+
 		/// @brief Operation.
 		struct [[gnu::aligned(4)]] Operation {
 			Operator		op;
@@ -300,8 +306,8 @@ namespace Makai::Anima::V2::Core {
 			/// @details `swap`
 			AV2_IN_STACK_SWAP,
 			/// @brief Clears a given number of elements from the top of the global stack.
-			/// @param type Discarded.
-			/// @details `clear <count>`
+			/// @param type `StackClear` = how to clear the stack.
+			/// @details `clear`
 			AV2_IN_STACK_CLEAR,
 			/// @brief Clears the entire global stack.
 			/// @param type Discarded.

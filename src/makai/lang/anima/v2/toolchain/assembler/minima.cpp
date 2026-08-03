@@ -698,9 +698,19 @@ static void doReturn(Context& context) {
 }
 
 static void doStackClear(Context& context) {
-	auto const count = context.getNext(LTS_TT_INTEGER).getUnsigned();
-	if (count < 1) return;
-	context.add(Instruction::Name::AV2_IN_STACK_CLEAR, count);
+	Instruction::StackClear clear;
+	clear.count = context.getNext(LTS_TT_INTEGER).getUnsigned();
+	if (clear.count < 1) return;
+	if (context.peek().type == LTS_TT_OPEN_BRACKET) {
+		clear.offset =
+			context
+				.expectNext(LTS_TT_OPEN_BRACKET)
+				.getNext(LTS_TT_INTEGER)
+				.getUnsigned()
+		;
+		context.expectNext(LTS_TT_CLOSE_BRACKET);
+	}
+	context.add(Instruction::Name::AV2_IN_STACK_CLEAR, clear);
 }
 
 static void doField(Context& context, bool const setter, bool const dyn = false) {

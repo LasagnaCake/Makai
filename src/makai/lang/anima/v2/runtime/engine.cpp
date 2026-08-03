@@ -1423,13 +1423,19 @@ void Engine::v2StackSwap() {
 void Engine::v2StackClear() {
 	StackStateScopePrinter s3p{context};
 	if (current.type) {
-		auto const total = context.globalValueStack.size();
-		auto const count = current.type < total ? current.type : total;
-		MAKAILIB_DEBUGLN_FULL("Clearing ", count, " entries...");
-		if (total && count == 1)
+		auto& stack = context.globalValueStack;
+		auto const clear = Cast::bit<Instruction::StackClear>(current.type);
+		MAKAILIB_DEBUGLN_FULL("Clearing ", clear.count, " entries...");
+		if (stack.size() < clear.count) {
+			context.globalValueStack.clear();
+			return;
+		}
+		auto const maxOffset = stack.size() - clear.count;
+		auto const offset = clear.offset < maxOffset ? clear.offset : maxOffset;
+		if (stack.size() && clear.count == 1)
 			context.globalValueStack.popBack();
-		else if (count < total)
-			context.globalValueStack = context.globalValueStack.sliced(0, total-count-1);
+		else if ((clear.count + offset) < stack.size())
+			context.globalValueStack.eraseRange(-offset-clear.count, -offset);
 		else context.globalValueStack.clear();
 	}
 }

@@ -1597,7 +1597,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 		MAKAILIB_DEBUG_FULL("/", p);
 	MAKAILIB_DEBUGLN_FULL("");
 	auto const subinter = importer(fpath);
-	// This is for testing purposes
+	// This is for testing purposes (probably (I don't know if I'll replace it))
 	if (!subinter.content) return {};
 	for (auto& [name, imp]: context.root->subspaces["  T0_IMPORTS"]->subspaces)
 		if (imp == subinter.content) return {.scope = subinter.content};
@@ -1747,8 +1747,10 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		else if (ret.isObject())
 			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
 		else return {{ret.isNull() ? "nil" : ret.toString()}, nullptr, context.basicTypeOf(ret), ret};
-	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE)
+	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
 		context.top()->impl->writeMainLine("call", ov.entry);
+		context.top()->impl->writeMainLine("clear ", args.size(), "[1]");
+	}
 	else context.error("It is forbidden to call a direct function with indirect arguments!", node);
 	if (context.functionStack.size() && ov.variant.context == ExecutionContext::AV2_TCB_EC_RUNTIME) {
 		auto& ctx = context.functionStack.back()->variant.context;
