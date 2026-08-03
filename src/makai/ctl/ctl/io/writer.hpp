@@ -7,12 +7,17 @@
 
 CTL_NAMESPACE_BEGIN
 
-struct OutputStringWriter: IWriter<String, CTL_IWRITER_WRAP(toString)> {
+CTL_DIAGBLOCK_BEGIN
+CTL_DIAGBLOCK_IGNORE_SUBOBJECTS
+using IStringWriter = IWriter<String, CTL_IWRITER_WRAP(toString)>;
+
+struct OutputStringWriter: IStringWriter {
 	virtual ~OutputStringWriter() {}
 
 	OutputStringWriter& display(String const& what) override	{IO::write(what); return *this;			}
 	OutputStringWriter& newLine() override						{IO::write(IO::NEWLINE); return *this;	}
 };
+CTL_DIAGBLOCK_END
 
 CTL_NAMESPACE_END
 

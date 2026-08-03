@@ -30,16 +30,16 @@ namespace Makai::Anima::V2::Core {
 			AV2_VLS_LOCAL,
 		};
 		/// @brief Description of a constant empty value.
-		struct [[gnu::packed, gnu::aligned(1)]] ForVoidOrNull {
+		struct [[CTL_PACKED_STRUCT]] ForVoidOrNull {
 			Source	source:	4;
 		} forVoidOrNull;
 		/// @brief Description of a constant boolean value.
-		struct [[gnu::packed, gnu::aligned(1)]] ForBoolean {
+		struct [[CTL_PACKED_STRUCT]] ForBoolean {
 			Source	source:	4;
 			uint8	flag:	1;
 		} forBool;
 		/// @brief Description of an constant integer value.
-		struct [[gnu::packed, gnu::aligned(1)]] ForInteger {
+		struct [[CTL_PACKED_STRUCT]] ForInteger {
 			enum class Size: uint8 {
 				AV2_VL_IS_8_BIT,
 				AV2_VL_IS_16_BIT,
@@ -51,7 +51,7 @@ namespace Makai::Anima::V2::Core {
 			Size	size:		2;
 		} forInt;
 		/// @brief Description of a constant floating point value.
-		struct [[gnu::packed, gnu::aligned(1)]] ForReal {
+		struct [[CTL_PACKED_STRUCT]] ForReal {
 			enum class Size: uint8 {
 				AV2_VL_RS_32_BIT,
 				AV2_VL_RS_64_BIT,
@@ -61,11 +61,11 @@ namespace Makai::Anima::V2::Core {
 			Size	size:	2;
 		} forReal;
 		/// @brief Description of a constant string value.
-		struct [[gnu::packed, gnu::aligned(1)]] ForString {
+		struct [[CTL_PACKED_STRUCT]] ForString {
 			Source	source:	4;
 		} forString;
 		/// @brief Description of a non-constant value.
-		struct [[gnu::packed, gnu::aligned(1)]] ForObject {
+		struct [[CTL_PACKED_STRUCT]] ForObject {
 			enum class Transfer: uint8 {
 				AV2_VL_OT_COPY,
 				AV2_VL_OT_REF,
@@ -75,7 +75,7 @@ namespace Makai::Anima::V2::Core {
 			Transfer	transfer:	2;
 		} forObject;
 		/// @brief Generic descriptor of a value.
-		struct [[gnu::packed, gnu::aligned(1)]] Description {
+		struct [[CTL_PACKED_STRUCT]] Description {
 			Source	source:		4;
 			uint8	modifiers:	4;
 		} desc;

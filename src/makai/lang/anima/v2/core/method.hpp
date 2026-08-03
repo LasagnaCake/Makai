@@ -4,11 +4,14 @@
 #include "type.hpp"
 
 namespace Makai::Anima::V2::Core {
-	struct [[gnu::packed, gnu::aligned(1)]] MethodFlags {
+	struct [[CTL_FLAG_STRUCT(uint64)]] MethodFlags {
 		uint64 isExternal:	1 = false;
 		uint64 isShared:	1 = false;
 		uint64 isOptional:	1 = false;
+		uint64: 0;
 	};
+
+	static_assert(sizeof(MethodFlags) == sizeof(uint64), "Uh oh :/");
 
 	struct Method: Entry, Flagged<MethodFlags> {
 		AtomicCell<Definition>			retType;

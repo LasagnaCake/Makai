@@ -95,7 +95,7 @@ namespace Makai::Tool::Arch {
 	uint32 crcOf(BinaryData<> const& data);
 
 	/// @brief File entry header.
-	struct [[gnu::packed]] FileHeader {
+	struct [[CTL_PACKED_STRUCT]] FileHeader {
 		uint64	uncSize;
 		uint64	compSize;
 		uint32	crc			= 0;
@@ -104,7 +104,7 @@ namespace Makai::Tool::Arch {
 	};
 
 	/// @brief Directory structure header.
-	struct [[gnu::packed]] DirectoryHeader {
+	struct [[CTL_PACKED_STRUCT]] DirectoryHeader {
 		uint64	uncSize;
 		uint64	compSize;
 		uint32	crc			= 0;
@@ -122,12 +122,15 @@ namespace Makai::Tool::Arch {
 	using FileToken = As<char const[FILE_TOKEN_SIZE]>;
 
 	/// @brief File archive header.
-	struct [[gnu::packed]] ArchiveHeader {
+	CTL_DIAGBLOCK_BEGIN
+	CTL_DIAGBLOCK_IGNORE_MISALIGNMENT
+	struct [[CTL_PACKED_STRUCT]] ArchiveHeader {
 		/// @brief File archive header flags.
-		struct [[gnu::packed, gnu::aligned(1)]] Flags {
+		struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
 			uint64 isSingleFileArchive:	1;
 			uint64 shouldCheckCRC:		1;
 			uint64 flowHeader:			1;
+			uint64: 0;
 		};
 
 		uint64 headerSize		= sizeof(ArchiveHeader);
@@ -143,6 +146,7 @@ namespace Makai::Tool::Arch {
 		FileToken const token	= "Makai::FileArchive";
 		// Put new things BELOW this line
 	};
+	CTL_DIAGBLOCK_END
 
 	/// @brief Packs a folder into a file archive.
 	/// @param archivePath Path to resulting file archive.

@@ -69,14 +69,14 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		ByteWriter(Bytes<>& output): output(output) {}
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] VersionInfo {
+	struct [[CTL_PACKED_STRUCT]] VersionInfo {
 		uint64 major	= 0;
 		uint64 minor	= 0;
 		uint64 patch	= 0;
 		uint64 hotfix	= 0;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Entry {
+	struct [[CTL_PACKED_STRUCT]] Entry {
 		uint64 start	= 0;
 		uint64 size		= 0;
 
@@ -88,7 +88,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	template <class T>
-	struct [[gnu::packed, gnu::aligned(1)]] Header: Entry {
+	struct [[CTL_PACKED_STRUCT]] Header: Entry {
 		Nullable<T> fromBytes(IReadable& source) const {
 			source.go(start);
 			auto const sz = size < sizeof(T) ? size : sizeof(T);
@@ -104,7 +104,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	template <class T, auto CONVERT = [] (Bytes<> const&) -> Nullable<T> {return null;}>
-	struct [[gnu::packed, gnu::aligned(1)]] Table: Entry {
+	struct [[CTL_PACKED_STRUCT]] Table: Entry {
 		using EntryType = T;
 		constexpr static auto const convert = CONVERT;
 
@@ -184,7 +184,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		return out;
 	}
 
-	struct [[gnu::packed, gnu::aligned(1)]] Text: Entry {
+	struct [[CTL_PACKED_STRUCT]] Text: Entry {
 		template <Type::OneOf<String, UTF8String, UTF32String> T>
 		Nullable<T> fromBytes(IReadable& source) const {
 			MAKAILIB_DEBUGLN_FULL("[Text<", String(nameof<T>()), "> : ", size, "]");
@@ -199,7 +199,7 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	};
 
 	template <class T>
-	struct [[gnu::packed, gnu::aligned(1)]] Data: Entry {
+	struct [[CTL_PACKED_STRUCT]] Data: Entry {
 		Nullable<List<T>> fromBytes(IReadable& source) const {
 			MAKAILIB_DEBUGLN_FULL("[Data<", String(nameof<T>()), "> : ", size, "]");
 			if (!size) return {List<T>()};
@@ -236,36 +236,36 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		return data.fromBytes<T>(source);
 	}
 
-	struct [[gnu::packed, gnu::aligned(1)]] Label: Text {
+	struct [[CTL_PACKED_STRUCT]] Label: Text {
 		uint64 id	= 0;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Record {
+	struct [[CTL_PACKED_STRUCT]] Record {
 		uint64	id		= 0;
 	};
 
 	template <class T>
 	requires (sizeof(T) == sizeof(uint64))
-	struct [[gnu::packed, gnu::aligned(1)]] Symbol: Record {
+	struct [[CTL_PACKED_STRUCT]] Symbol: Record {
 		Text	name;
 		uint64	hash	= 0;
 		T		flags	= T();
 		Text	meta;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Mapping {
+	struct [[CTL_PACKED_STRUCT]] Mapping {
 		uint64 src	= 0;
 		uint64 dst	= 0;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Method: Symbol<Core::MethodFlags> {
+	struct [[CTL_PACKED_STRUCT]] Method: Symbol<Core::MethodFlags> {
 		uint64			returnType	= -1;
 		Data<uint64>	argTypes;
 		uint64			entry		= 0;
 		uint64			size		= 0;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Decl: Symbol<Core::TypeFlags> {
+	struct [[CTL_PACKED_STRUCT]] Decl: Symbol<Core::TypeFlags> {
 		BasicType		basic		= BasicType::AV2_BT_NOT_A_BASIC_TYPE;
 		uint64			base		= -1;
 		uint64			byteSize	= 0;
@@ -273,34 +273,34 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 		Data<uint64>	fields;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Module {
+	struct [[CTL_PACKED_STRUCT]] Module {
 		HeaderTable<Decl>	types;
 		HeaderTable<Method>	methods;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Include {
+	struct [[CTL_PACKED_STRUCT]] Include {
 		uint64				module	= 0;
 		HeaderTable<Record>	types;
 		HeaderTable<Record>	methods;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] External {
+	struct [[CTL_PACKED_STRUCT]] External {
 		HeaderTable<Include> modules;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] Shared {
+	struct [[CTL_PACKED_STRUCT]] Shared {
 		StringTable<String> libraries;
 		StringTable<String> modules;
 		StringTable<String> interops;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] ANI {
+	struct [[CTL_PACKED_STRUCT]] ANI {
 		HeaderTable<Label>	in;
 		StringTable<String>	out;
 		Header<Shared>		shared;
 	};
 
-	struct [[gnu::packed, gnu::aligned(1)]] FileStructure {
+	struct [[CTL_PACKED_STRUCT]] FileStructure {
 		As<char const[10]>		magic = "AV2::ANPB";
 		Core::Module::Type		type;
 		VersionInfo				artVersion		= {1};

@@ -9,8 +9,8 @@
 CTL_NAMESPACE_BEGIN
 
 namespace ANSI {
-	struct [[gnu::packed]] Code {
-		enum class Format: uint16 {
+	struct [[CTL_FLAG_STRUCT(uint32)]] Code {
+		enum class Format: uint32 {
 			ACF_NONE		= 0,
 			ACF_BOLD		= 1 << 0,
 			ACF_DIM			= 1 << 1,
@@ -23,7 +23,7 @@ namespace ANSI {
 			ACF_STRIKE		= 1 << 8
 		};
 
-		enum class Font: uint8 {
+		enum class Font: uint32 {
 			ACF_DEFAULT_FONT,
 			ACF_ALT_FONT_0,
 			ACF_ALT_FONT_1,
@@ -37,7 +37,7 @@ namespace ANSI {
 			ACF_ALT_GOTHIC_FONT,
 		};
 
-		enum class Color: uint8 {
+		enum class Color: uint32 {
 			ACC_BLACK,
 			ACC_RED,
 			ACC_GREEN,
@@ -60,6 +60,7 @@ namespace ANSI {
 		Font	font:	4	= Font::ACF_DEFAULT_FONT;
 		Color	text:	4	= Color::ACC_WHITE;
 		Color	bg:		4	= Color::ACC_BLACK;
+		uint32: 0;
 
 		constexpr String toString() const {
 			String out = "\033[0;";

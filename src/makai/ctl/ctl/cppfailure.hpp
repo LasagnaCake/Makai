@@ -5,6 +5,8 @@
 #include "cpp/debug.hpp"
 #include "ctypes.hpp"
 
+#include <cstdlib>
+
 CTL_NAMESPACE_BEGIN
 
 namespace {struct Untraceable {};}

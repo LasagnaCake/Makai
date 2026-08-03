@@ -157,7 +157,7 @@ namespace Makai::Anima::V2::Core {
 		return (isVectorable(bt) || isMatrix(bt));
 	}
 
-	struct [[gnu::packed, gnu::aligned(1)]] TypeFlags {
+	struct [[CTL_FLAG_STRUCT(uint64)]] TypeFlags {
 		uint64 isBasic:		1 = false;
 		uint64 isNullable:	1 = false;
 		uint64 isEmpty:		1 = false;
@@ -171,7 +171,10 @@ namespace Makai::Anima::V2::Core {
 		uint64 isPointer:	1 = false;
 		uint64 isFinal:		1 = false;
 		uint64 isEnum:		1 = false;
+		uint64: 0;
 	};
+
+	static_assert(sizeof(TypeFlags) == sizeof(uint64), "Uh oh :/");
 
 	struct Definition: Entry, Flagged<TypeFlags> {
 		using Source = MemorySlice<byte>;
