@@ -4,10 +4,11 @@
 #include "instruction.hpp"
 #include "type.hpp"
 #include "method.hpp"
+#include "info.hpp"
 
 namespace Makai::Anima::V2::Core {
 	struct Module {
-		using Version = Data::Version;
+		using Version = Info::Version;
 
 		enum class Type: uint8 {
 			AV2_CMT_LIBRARY,
@@ -16,7 +17,7 @@ namespace Makai::Anima::V2::Core {
 			AV2_CMT_EXE,
 		};
 
-		constexpr static Version const ART_VER = {1};
+		constexpr static Version const ART_VER = Info::ART_VER;
 
 		using Label = Dictionary<usize>;
 

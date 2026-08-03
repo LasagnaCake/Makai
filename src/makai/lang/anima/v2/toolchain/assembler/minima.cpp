@@ -700,7 +700,6 @@ static void doReturn(Context& context) {
 static void doStackClear(Context& context) {
 	Instruction::StackClear clear;
 	clear.count = context.getNext(LTS_TT_INTEGER).getUnsigned();
-	if (clear.count < 1) return;
 	if (context.peek().type == LTS_TT_OPEN_BRACKET) {
 		clear.offset =
 			context
@@ -710,6 +709,7 @@ static void doStackClear(Context& context) {
 		;
 		context.expectNext(LTS_TT_CLOSE_BRACKET);
 	}
+	if (clear.count < 1) return;
 	context.add(Instruction::Name::AV2_IN_STACK_CLEAR, clear);
 }
 

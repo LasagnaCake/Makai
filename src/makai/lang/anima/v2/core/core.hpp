@@ -1,6 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_CORE_H
 #define MAKAILIB_ANIMA_V2_CORE_H
 
+#include "info.hpp"
 #include "instruction.hpp"
 #include "meta.hpp"
 #include "entry.hpp"

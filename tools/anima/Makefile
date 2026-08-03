@@ -86,7 +86,7 @@ endif
 .ONESHELL:
 .SHELLFLAGS = -ec
 
-tooling: prologue brevec minimac arte $(DYNLIB_ACTION) finale # concerto
+tooling: prologue brevec minimac concerto arte $(DYNLIB_ACTION) finale
 
 all: tooling
 
@@ -129,7 +129,7 @@ mk-push:
 	cp art$(EXEC_TYPE) ../../output/bin
 	cp minimac$(EXEC_TYPE) ../../output/bin
 	cp brevec$(EXEC_TYPE) ../../output/bin
-#	cp concerto$(EXEC_TYPE) ../../output/bin
+	cp concerto$(EXEC_TYPE) ../../output/bin
 	mkdir -p ../../output/bin/av2
 	$(DYNLIB_COPY)
 

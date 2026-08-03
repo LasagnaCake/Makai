@@ -20,9 +20,28 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			String path;
 		};
 
+		enum class Type {
+			AV2_TCPT_LIBRARY,
+			AV2_TCPT_WEB_PROGRAM,
+			AV2_TCPT_BIN_PROGRAM,
+			AV2_TCPT_EXECUTABLE,
+		};
+
+		enum class Language {
+			AV2_TCPL_BREVE,
+			AV2_TCPL_MINIMA,
+		};
+
+		Version				version		= {1};
+		Version				art			= Core::Info::ART_VER;
+		Version				concerto	= Core::Info::CONCERTO_VER;
+
 		StringList			sources;
 		Dictionary<Library>	libraries;
 		File				main;
+
+		Type				type;
+		Language			language;
 
 		Data::Value serialize() const;
 		static Project deserialize(Data::Value const& v);
