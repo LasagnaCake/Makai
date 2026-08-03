@@ -32,6 +32,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			AV2_TCPL_MINIMA,
 		};
 
+		String				name;
+
 		Version				version		= {1};
 		Version				art			= Core::Info::ART_VER;
 		Version				concerto	= Core::Info::CONCERTO_VER;

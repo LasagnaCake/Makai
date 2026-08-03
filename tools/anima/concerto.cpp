@@ -72,11 +72,11 @@ struct ConcertoMain: Makai::AMain {
 		auto const projName = args["__args"][1].getString();
 		if (Makai::OS::FS::exists(projName))
 			throw Makai::Error::InvalidValue("Project with this name already exists!");
-		Makai::OS::FS::createDirectory({projName, projName + "/src"});
+		Makai::OS::FS::makeDirectory(Makai::StringList::from(projName, projName + "/src"));
 		Project project;
 		project.name = projName;
 		Makai::String langp;
-		auto const lang = args.fetch("lang", "breve");
+		auto const lang = args.fetch<Makai::String>("lang", "breve");
 		if (lang == "breve") {
 			Makai::File::saveText(projName + "/src/main.bv", MAINFILE_BV);
 			project.language = Project::Language::AV2_TCPL_BREVE;
@@ -84,8 +84,7 @@ struct ConcertoMain: Makai::AMain {
 			Makai::File::saveText(projName + "/src/main.min", MAINFILE_MIN);
 			project.language = Project::Language::AV2_TCPL_MINIMA;
 		} else throw Makai::Error::InvalidValue("Invalid/unsupported project language!");
-		projfile = Makai::Regex::replace(projfile, R"(\*\*\{\{langp\}\})", langp);
-		auto const type = args.fetch("type", "program");
+		auto const type = args.fetch<Makai::String>("type", "program");
 		if (type == "program")			project.type = args.fetch("binary", true) ? Project::Type::AV2_TCPT_BIN_PROGRAM : Project::Type::AV2_TCPT_WEB_PROGRAM;
 		else if (type == "library") 	project.type = Project::Type::AV2_TCPT_LIBRARY;
 		else if (type == "executable")	project.type = Project::Type::AV2_TCPT_EXECUTABLE;

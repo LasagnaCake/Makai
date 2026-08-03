@@ -1749,7 +1749,9 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		else return {{ret.isNull() ? "nil" : ret.toString()}, nullptr, context.basicTypeOf(ret), ret};
 	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
 		context.top()->impl->writeMainLine("call", ov.entry);
-		context.top()->impl->writeMainLine("clear ", args.size(), "[1]");
+		auto const argc = ov.arguments.size();
+		if (argc)
+			context.top()->impl->writeMainLine("clear", argc, "[1]");
 	}
 	else context.error("It is forbidden to call a direct function with indirect arguments!", node);
 	if (context.functionStack.size() && ov.variant.context == ExecutionContext::AV2_TCB_EC_RUNTIME) {

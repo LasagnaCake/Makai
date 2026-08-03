@@ -4,6 +4,7 @@ using namespace Makai::Anima::V2::Toolchain::Compiler;
 
 Makai::Data::Value Project::serialize() const {
 	Makai::Data::Value out;
+	out["name"]		= name;
 	if (main.path.size())
 		out["main"]	= main.path;
 	else out["main_src"] = main.source;
@@ -31,6 +32,7 @@ Makai::Data::Value Project::serialize() const {
 
 Project Project::deserialize(Makai::Data::Value const& v) {
 	Project out;
+	out.name = v["name"].toString();
 	if (v.contains("main"))
 		out.main.path = v["main"].getString();
 	else if (v.contains("main_src"))
