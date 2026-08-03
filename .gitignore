@@ -22,3 +22,4 @@ res/data/
 **/output/*
 .vscode/*
 **/.vscode/*
+package/*

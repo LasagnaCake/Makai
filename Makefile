@@ -246,6 +246,20 @@ copy-tooling:
 	$(call refcopy, *.bv, ../../../output/bin/anima/breve/lib)
 	$(MOVE_DLL_TOOLS)
 
+package-tooling-deb:
+	mkdir -p output/package
+	rm -rf package
+	mkdir -p package/apt/art-re/usr/bin
+	mkdir -p package/apt/art-dk/usr/bin
+	cp -r package-template/apt package/
+	cp output/bin/art package/apt/art-re/usr/bin
+	cp output/bin/brevec package/apt/art-dk/usr/bin
+	cp output/bin/minimac package/apt/art-dk/usr/bin
+	cp output/bin/concerto package/apt/art-dk/usr/bin
+	cp -r output/bin/anima package/apt/art-dk/usr/bin
+	dpkg-deb --build package/apt/art-dk output/package/art.dk.deb
+	dpkg-deb --build package/apt/art-re output/package/art.re.deb
+
 #export clean-libname = $(subst dec,,$(subst _krb5,,$(subst lber,ldap2,$(subst api,,$(1)))))
 #export lite-solver-pass1 = $(foreach lib,$(foreach lib,$(1), $(patsubst -l%,%,$(shell pkg-config --libs-only-l --static $(lib)))), lib$(call clean-libname,$(lib))-dev)
 #export lite-solver-pass2 = $(subst libz-dev,zlib1g-dev,$(subst libcurl-dev,,$(subst nettle,nettle*,$(subst gnutls,gnutls*,$(call lite-solver-pass1,$(1))))))
