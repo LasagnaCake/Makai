@@ -5,27 +5,28 @@ using namespace Makai::Anima::V2::Toolchain::Compiler;
 Makai::Data::Value Project::serialize() const {
 	Makai::Data::Value out;
 	out["name"]		= name;
-	if (main.path.size())
-		out["main"]	= main.path;
-	else out["main_src"] = main.source;
+	out["main"]		= main;
 	out["src"]		= sources.toList<Makai::Data::Value>();
 	out["ver"]		= version;
 	out["concerto"]	= concerto;
 	out["art"]		= art;
 	switch (type) {
-		case Type::AV2_TCPT_LIBRARY:		out["type"]	= "lib";
-		case Type::AV2_TCPT_WEB_PROGRAM:	out["type"]	= "anp";
-		case Type::AV2_TCPT_BIN_PROGRAM:	out["type"]	= "anpb";
-		case Type::AV2_TCPT_EXECUTABLE:		out["type"]	= "exe";
+		case Type::AV2_TCPT_LIBRARY:		out["type"]	= "lib"; break;
+		case Type::AV2_TCPT_WEB_PROGRAM:	out["type"]	= "anp"; break;
+		case Type::AV2_TCPT_BIN_PROGRAM:	out["type"]	= "anpb"; break;
+		case Type::AV2_TCPT_EXECUTABLE:		out["type"]	= "exe"; break;
 	}
 	switch (language) {
-		case Language::AV2_TCPL_MINIMA:	out["lang"]	= "breve";
-		case Language::AV2_TCPL_BREVE:	out["lang"]	= "minima";
+		case Language::AV2_TCPL_MINIMA:	out["lang"]	= "breve"; break;
+		case Language::AV2_TCPL_BREVE:	out["lang"]	= "minima"; break;
 	}
-	for (auto& [name, lib]: libraries) {
-		out["lib"][name] = out.object();
-		out["lib"][name]["src"] = lib.source;
-		out["lib"][name]["ver"] = lib.version;
+	if (!libraries.empty()) {
+		out["lib"] = out.object();
+		for (auto& [name, lib]: libraries) {
+			out["lib"][name] = out.object();
+			out["lib"][name]["src"] = lib.source;
+			out["lib"][name]["ver"] = lib.version;
+		}
 	}
 	return out;
 }
@@ -34,10 +35,8 @@ Project Project::deserialize(Makai::Data::Value const& v) {
 	Project out;
 	out.name = v["name"].toString();
 	if (v.contains("main"))
-		out.main.path = v["main"].getString();
-	else if (v.contains("main_src"))
-		out.main.source = v["main_src"].getString();
-	else throw Makai::Error::NonexistentValue("Missing main file source or path!");
+		out.main = v["main"].getString();
+	else throw Makai::Error::NonexistentValue("Missing main file path!");
 	if (v.contains("ver"))		out.version = v["ver"];
 	if (v.contains("art"))		out.art = v["art"];
 	else						out.art = {1};
@@ -53,5 +52,14 @@ Project Project::deserialize(Makai::Data::Value const& v) {
 	if (lang == "breve")		out.language = Language::AV2_TCPL_BREVE;
 	else if (lang == "minima")	out.language = Language::AV2_TCPL_MINIMA;
 	else throw Makai::Error::NonexistentValue("Invali/unsupported project language!");
+	if (v.contains("lib")) {
+		auto const libraries = v["lib"].keys();
+		for (auto& lib: libraries) {
+			out.libraries[lib] = {
+				v["lib"][lib]["src"].getString(),
+				v["lib"][lib]["ver"]
+			};
+		}
+	}
 	return out;
 }

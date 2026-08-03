@@ -1,0 +1,8 @@
+
+using import core
+
+@Main
+main :: () {
+    // Main code goes here...
+    IO.writeLine("Hello, World!")
+}

@@ -40,11 +40,13 @@ lib/*
 )###";
 
 struct ConcertoMain: Makai::AMain {
+	using Project = Makai::Anima::V2::Toolchain::Compiler::Project;
+
 	static Makai::Data::Value configBase() {
 		Makai::Data::Value cfg;
 		cfg["help"]		= false;
 		cfg["write"]	= false;
-		cfg["type"]		= "program";
+		cfg["type"]		= "prog";
 		cfg["lang"]		= "breve";
 		cfg["bin"]		= true;
 		return cfg;
@@ -62,16 +64,24 @@ struct ConcertoMain: Makai::AMain {
 		showDialogOnError = false;
 	}
 
+	static bool isValidProjectNameChar(char const c) {
+		return (
+			Makai::isIdentifierNameChar(c)
+		or	c == '-'
+		or	c == '.'
+		);
+	}
 
 	void write(Makai::String const& what) const override {DEBUGLN(what);}
 
 	void doCreate(Makai::Data::Value const& args) {
-		using Project = Makai::Anima::V2::Toolchain::Compiler::Project;
 		if (args["__args"].size() < 2)
 			throw Makai::Error::NonexistentValue("Missing project name!");
 		auto const projName = args["__args"][1].getString();
 		if (Makai::OS::FS::exists(projName))
 			throw Makai::Error::InvalidValue("Project with this name already exists!");
+		if (!projName.validate(isValidProjectNameChar))
+			throw Makai::Error::InvalidValue("Project name must only contain alphanumeric characters, '_', '.' and '-'!");
 		Makai::OS::FS::makeDirectory(Makai::StringList::from(projName, projName + "/src"));
 		Project project;
 		project.name = projName;
@@ -80,21 +90,81 @@ struct ConcertoMain: Makai::AMain {
 		if (lang == "breve") {
 			Makai::File::saveText(projName + "/src/main.bv", MAINFILE_BV);
 			project.language = Project::Language::AV2_TCPL_BREVE;
+			project.main = "main.bv";
 		} else if (lang == "minima") {
 			Makai::File::saveText(projName + "/src/main.min", MAINFILE_MIN);
 			project.language = Project::Language::AV2_TCPL_MINIMA;
+			project.main = "main.min";
 		} else throw Makai::Error::InvalidValue("Invalid/unsupported project language!");
 		auto const type = args.fetch<Makai::String>("type", "program");
-		if (type == "program")			project.type = args.fetch("binary", true) ? Project::Type::AV2_TCPT_BIN_PROGRAM : Project::Type::AV2_TCPT_WEB_PROGRAM;
-		else if (type == "library") 	project.type = Project::Type::AV2_TCPT_LIBRARY;
-		else if (type == "executable")	project.type = Project::Type::AV2_TCPT_EXECUTABLE;
+		if (type == "prog")		project.type = args.fetch("binary", true) ? Project::Type::AV2_TCPT_BIN_PROGRAM : Project::Type::AV2_TCPT_WEB_PROGRAM;
+		else if (type == "lib") project.type = Project::Type::AV2_TCPT_LIBRARY;
+		else if (type == "exe")	project.type = Project::Type::AV2_TCPT_EXECUTABLE;
 		else throw Makai::Error::InvalidValue("Invalid/unsupported project type!");
 		Makai::File::saveText(projName + "/project.flow", project.serialize().toFLOWString("  "));
 		Makai::File::saveText(projName + "/.gitignore", PROJ_GITIGNORE);
 	}
 
 	void doBuild(Makai::Data::Value const& args) {
+		if (args["__args"].size() < 2)
+			throw Makai::Error::NonexistentValue("Missing build target!");
+		auto const target = args["__args"][1].getString();
+		Project project = Project::deserialize(Makai::File::getFLOW("project.flow"));
+		Makai::OS::FS::remove("output");
+		Makai::String compiler;
+		switch (project.language) {
+			case Project::Language::AV2_TCPL_BREVE:		compiler = "brevec";	break;
+			case Project::Language::AV2_TCPL_MINIMA:	compiler = "minimac";	break;
+		}
+		switch (project.type) {
+			case Project::Type::AV2_TCPT_LIBRARY: {
+				Makai::OS::FS::makeDirectory(
+					Makai::StringList::from("output/" + project.name)
+				);
+				Makai::OS::FS::copy("src/*", "output/" + project.name);
+			} break;
+			case Project::Type::AV2_TCPT_BIN_PROGRAM:
+			case Project::Type::AV2_TCPT_WEB_PROGRAM: {
+				if (Makai::OS::FS::isDirectory("lib")) {
+					auto cache = Makai::OS::FS::exists("lib/.cache/.cache")
+					?	Makai::File::getFLOW("lib/.cache/.cache")
+					:	Makai::FLOW::Value::object();
+					;
+					auto const libs = Makai::OS::FS::foldersIn("lib");
+					for (auto& lib: libs) {
+						if (cache.contains(lib)) continue;
+						cache[lib] = true;
+						Makai::OS::launch(
+							Makai::OS::FS::sourceLocation() + Makai::OS::FS::asExecutable("/concerto"),
+							Makai::OS::FS::currentDirectory() + "/" + lib,
+							Makai::StringList::from("build", target)
+						);
+						auto const outDir = "lib/.cache/" + Makai::OS::FS::childPath(lib);
+						Makai::OS::FS::makeDirectory(outDir);
+						Makai::OS::FS::copy(lib + "/output/*", outDir);
+					}
+					Makai::File::saveText("lib/.cache/.cache", cache.toFLOWString("  "));
+				}
+				Makai::OS::launch(
+					Makai::OS::FS::sourceLocation() + "/" + Makai::OS::FS::asExecutable(compiler),
+					Makai::OS::FS::currentDirectory() + "/src",
+					Makai::StringList::from(
+						project.main,
+						"-S",
+						project.type == Project::Type::AV2_TCPT_BIN_PROGRAM ? "-B" : "",
+						"-o",
+						"output/" +  project.name,
+						"-s",
+						"[" + project.sources.join(" ") + (Makai::OS::FS::isDirectory("lib/.cache") ? " lib/.cache" : "") + "]"
+					)
+				);
+			} break;
+			case Project::Type::AV2_TCPT_EXECUTABLE:
+				throw Makai::Error::InvalidValue("This program type is currently unsupported!");
+		}
+	}
 
+	void doCache(Makai::Data::Value const& args) {
 	}
 
 	void run(Makai::Data::Value const& args) override {

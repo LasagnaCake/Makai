@@ -15,11 +15,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 			Version	version;
 		};
 
-		struct File {
-			String source;
-			String path;
-		};
-
 		enum class Type {
 			AV2_TCPT_LIBRARY,
 			AV2_TCPT_WEB_PROGRAM,
@@ -40,7 +35,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler {
 
 		StringList			sources;
 		Dictionary<Library>	libraries;
-		File				main;
+		String				main;
 
 		Type				type;
 		Language			language;

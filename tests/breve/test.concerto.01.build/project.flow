@@ -1,0 +1,10 @@
+{
+  art "1.0" 
+  concerto "1.0" 
+  lang breve 
+  main "main.bv" 
+  name "test.concerto.01.build" 
+  src [] 
+  type anpb 
+  ver "1.0"
+}

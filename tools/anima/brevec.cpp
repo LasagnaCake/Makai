@@ -13,7 +13,7 @@ static Makai::Data::Value configBase() {
 	cfg["help"]		= false;
 	cfg["strip"]	= false;
 	cfg["output"]	= "output/**{{name}}";
-	cfg["src"]		= cfg.array();
+	cfg["src"]		= "[]";
 	cfg["level"]	= "full";
 	cfg["binary"]	= false;
 	cfg["write"]	= false;
@@ -44,7 +44,7 @@ int main(int argc, char** argv) try {
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
-	Transformer::Import::importer = [dirs = cfg["src"].getArray().toList<Makai::String>()] (auto const path) -> File {
+	Transformer::Import::importer = [dirs = Makai::FLOW::parse(cfg["src"].getString()).getArray().toList<Makai::String>()] (auto const path) -> File {
 		static Makai::Dictionary<File> cache;
 		if (path.empty()) throw Makai::Error::FailedAction("Module name is empty!");
 		if (cache.contains(path)) return cache[path];

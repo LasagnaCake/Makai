@@ -51,7 +51,7 @@ namespace OS {
 	/// @note Running the program in a separate directory is currently only supported on Windows.
 	inline int launch(String const& path, String const& directory = "", StringList args = StringList()) {
 		if (!FS::exists(path))
-			throw Error::InvalidValue("File [" + path + "] does not exist!", CTL_CPP_PRETTY_SOURCE);
+			throw Error::InvalidValue("Program [" + path + "] does not exist!", CTL_CPP_PRETTY_SOURCE);
 		#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 		String prgArgs = "";
 		if (!args.empty())
@@ -93,7 +93,8 @@ namespace OS {
 		auto const pid = getpid();
 		vfork();
 		if (pid != getpid()) {
-			chdir(directory.cstr());
+			if (directory.size())
+				chdir(directory.cstr());
 			return execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
 		} else {
 			int result = -1;
