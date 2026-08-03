@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <synchapi.h>
 #else
+#include <pthread.h>
 #endif
 
 CTL_NAMESPACE_BEGIN
