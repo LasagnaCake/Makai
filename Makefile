@@ -25,6 +25,31 @@ SDLNET		= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
 CRYPTOPP	= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
 CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl$(LIBFILE_TYPE)
 #OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl$(LIBFILE_TYPE)
+#
+
+define ART_SDK_DEBPKG
+Package: art-sdk
+Version: $(strip $(1))
+Architecture: $(strip $(2))
+Maintainer: LasagnaCake <support@animart.dev>
+Description: ART Development Kit
+endef
+
+define ART_ENV_DEBPKG
+Package: art-env
+Version: $(strip $(1))
+Architecture: $(strip $(2))
+Maintainer: LasagnaCake <support@animart.dev>
+Description: Anima Runtime Environment
+endef
+
+packagever?=dev-$(shell date +"%Y%M%d-%H%M%S")-$(shell cat dev/urandom)
+
+arch?=x86_64
+
+ifeq ($(os),linux)
+DEBX := package-tooling-deb
+endif
 
 ifeq ($(lite),1)
 LINK_EXTERN :=
@@ -33,7 +58,7 @@ DO_TOOLING :=
 else
 LINK_EXTERN :=link-extern
 EXTERN_AR_STEP :=ar
-DO_TOOLING := tooling
+DO_TOOLING := tooling $(DEBX)
 endif
 
 ifeq ($(os),win)
@@ -249,16 +274,18 @@ copy-tooling:
 package-tooling-deb:
 	mkdir -p output/package
 	rm -rf package
-	mkdir -p package/apt/art-re/usr/bin
-	mkdir -p package/apt/art-dk/usr/bin
+	mkdir -p package/apt/art-env/usr/bin
+	mkdir -p package/apt/art-sdk/usr/bin
 	cp -r package-template/apt package/
-	cp output/bin/art package/apt/art-re/usr/bin
-	cp output/bin/brevec package/apt/art-dk/usr/bin
-	cp output/bin/minimac package/apt/art-dk/usr/bin
-	cp output/bin/concerto package/apt/art-dk/usr/bin
-	cp -r output/bin/anima package/apt/art-dk/usr/bin
-	dpkg-deb --build package/apt/art-dk output/package/art.dk.deb
-	dpkg-deb --build package/apt/art-re output/package/art.re.deb
+	echo "$(call ART_ENV_DEBPKG, $(packagever), $(arch))" > package/apt/art-env/DEBIAN/control
+	echo "$(call ART_SDK_DEBPKG, $(packagever), $(arch))" > package/apt/art-sdk/DEBIAN/control
+	cp output/bin/art package/apt/art-env/usr/bin
+	cp output/bin/brevec package/apt/art-sdk/usr/bin
+	cp output/bin/minimac package/apt/art-sdk/usr/bin
+	cp output/bin/concerto package/apt/art-sdk/usr/bin
+	cp -r output/bin/anima package/apt/art-sdk/usr/bin
+	dpkg-deb --build package/apt/art-sdk output/package/art.sdk.deb
+	dpkg-deb --build package/apt/art-env output/package/art.env.deb
 
 #export clean-libname = $(subst dec,,$(subst _krb5,,$(subst lber,ldap2,$(subst api,,$(1)))))
 #export lite-solver-pass1 = $(foreach lib,$(foreach lib,$(1), $(patsubst -l%,%,$(shell pkg-config --libs-only-l --static $(lib)))), lib$(call clean-libname,$(lib))-dev)
