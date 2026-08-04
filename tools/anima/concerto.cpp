@@ -153,7 +153,7 @@ struct ConcertoMain: Makai::AMain {
 						"-S",
 						project.type == Project::Type::AV2_TCPT_BIN_PROGRAM ? "-B" : "",
 						"-o",
-						"output/" +  project.name,
+						"../output/" +  project.name,
 						"-s",
 						"[" + project.sources.join(" ") + (Makai::OS::FS::isDirectory("lib/.cache") ? " lib/.cache" : "") + "]"
 					)
