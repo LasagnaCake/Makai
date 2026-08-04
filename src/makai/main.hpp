@@ -47,6 +47,14 @@ namespace Makai {
 		/// @param args Arguments passed to the program, as parsed by the CLI parser.
 		virtual void run(Data::Value const& args) = 0;
 
+		/// @brief Causes an error when called.
+		/// @param message Error message to display to user.
+		template <Type::Derived<Error::Generic> T = Error::FailedAction>
+		[[noreturn]]
+		static void error(String const& message) {
+			throw T(message);
+		}
+
 		/// @brief Wrapper.
 		inline int main() try {
 			if (Makai::CPP::Debug::hasDebugger())

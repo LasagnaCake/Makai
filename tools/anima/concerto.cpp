@@ -76,12 +76,12 @@ struct ConcertoMain: Makai::AMain {
 
 	void doCreate(Makai::Data::Value const& args) {
 		if (args["__args"].size() < 2)
-			throw Makai::Error::NonexistentValue("Missing project name!");
+			error("Missing project name!");
 		auto const projName = args["__args"][1].getString();
 		if (Makai::OS::FS::exists(projName))
-			throw Makai::Error::InvalidValue("Project with this name already exists!");
+			error("Project with this name already exists!");
 		if (!projName.validate(isValidProjectNameChar))
-			throw Makai::Error::InvalidValue("Project name must only contain alphanumeric characters, '_', '.' and '-'!");
+			error("Project name must only contain alphanumeric characters, '_', '.' and '-'!");
 		Makai::OS::FS::makeDirectory(Makai::StringList::from(projName, projName + "/src"));
 		Project project;
 		project.name = projName;
@@ -95,19 +95,19 @@ struct ConcertoMain: Makai::AMain {
 			Makai::File::saveText(projName + "/src/main.min", MAINFILE_MIN);
 			project.language = Project::Language::AV2_TCPL_MINIMA;
 			project.main = "main.min";
-		} else throw Makai::Error::InvalidValue("Invalid/unsupported project language!");
+		} else error("Invalid/unsupported project language!");
 		auto const type = args.fetch<Makai::String>("type", "program");
 		if (type == "prog")		project.type = args.fetch("binary", true) ? Project::Type::AV2_TCPT_BIN_PROGRAM : Project::Type::AV2_TCPT_WEB_PROGRAM;
 		else if (type == "lib") project.type = Project::Type::AV2_TCPT_LIBRARY;
 		else if (type == "exe")	project.type = Project::Type::AV2_TCPT_EXECUTABLE;
-		else throw Makai::Error::InvalidValue("Invalid/unsupported project type!");
+		else error("Invalid/unsupported project type!");
 		Makai::File::saveText(projName + "/project.flow", project.serialize().toFLOWString("  "));
 		Makai::File::saveText(projName + "/.gitignore", PROJ_GITIGNORE);
 	}
 
 	void doBuild(Makai::Data::Value const& args) {
 		if (args["__args"].size() < 2)
-			throw Makai::Error::NonexistentValue("Missing build target!");
+			error("Missing build target!");
 		auto const target = args["__args"][1].getString();
 		Project project = Project::deserialize(Makai::File::getFLOW("project.flow"));
 		Makai::OS::FS::remove("output");
@@ -160,24 +160,34 @@ struct ConcertoMain: Makai::AMain {
 				);
 			} break;
 			case Project::Type::AV2_TCPT_EXECUTABLE:
-				throw Makai::Error::InvalidValue("This program type is currently unsupported!");
+				error("This program type is currently unsupported!");
 		}
 	}
 
 	void doCache(Makai::Data::Value const& args) {
+		if (args["__args"].size() < 2)
+			error("Missing cache action!");
+		auto const verb = args["__args"][1].getString();
+		if (verb == "clear") Makai::OS::FS::remove("lib/.cache");
+		else error("Invalid cache action [" + verb + "]!");
+	}
+
+	void doHelp(Makai::Data::Value const& args) {
+		writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
+		writeLine("Available commands:");
+		writeLine("concerto <action>");
 	}
 
 	void run(Makai::Data::Value const& args) override {
 		if (args.fetch("help", false)) {
-			writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
-			writeLine("Available commands:");
-			writeLine("concerto <action>");
+			doHelp(args);
 		} else {
 			if (args["__args"].empty())
-				throw Makai::Error::NonexistentValue("No file given!");
+				return doHelp(args);
 			auto const verb = args["__args"][0].getString();
-			if (verb == "create")	doCreate(args);
-			if (verb == "build")	doBuild(args);
+			if (verb == "create")		doCreate(args);
+			else if (verb == "build")	doBuild(args);
+			else error("Invalid action [" + verb + "]!");
 		}
 	}
 };
