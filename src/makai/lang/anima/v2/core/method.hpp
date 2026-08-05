@@ -8,7 +8,7 @@ namespace Makai::Anima::V2::Core {
 		uint64 isExternal:	1 = false;
 		uint64 isShared:	1 = false;
 		uint64 isOptional:	1 = false;
-		uint64: 0;
+		CTL_FLAG_STRUCT_END(uint64);
 	};
 
 	static_assert(sizeof(MethodFlags) == sizeof(uint64), "Uh oh :/");
