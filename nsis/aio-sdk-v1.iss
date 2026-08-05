@@ -38,6 +38,7 @@ SetupArchitecture=x64
 SetupMutex=MakaiSuperbInstallationMutexLock,Global\MakaiSuperbInstallationMutexLock
 SetupIconFile=../etc/branding/logo-v1b.ico
 ;WizardImageFile=../etc/branding/chr-v1.png
+WizardSmallImageFile=../etc/branding/logo-v1b-small.png
 DisableWelcomePage=no
 
 [Types]
