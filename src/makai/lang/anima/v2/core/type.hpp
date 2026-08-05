@@ -171,7 +171,7 @@ namespace Makai::Anima::V2::Core {
 		uint64 isPointer:	1 = false;
 		uint64 isFinal:		1 = false;
 		uint64 isEnum:		1 = false;
-		uint64: 0;
+		CTL_FLAG_STRUCT_END(uint64);
 	};
 
 	static_assert(sizeof(TypeFlags) == sizeof(uint64), "Uh oh :/");
