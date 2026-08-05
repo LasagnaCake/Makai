@@ -66,8 +66,8 @@ namespace CTL::_Devmode {
 #if CTL_ON_WINDOWS
 #define CTL_DYNEXPORT __declspec(dllexport)
 #define CTL_DYNIMPORT __declspec(dllimport)
-#define CTL_PACKED_STRUCT gnu::packed, gnu::aligned(1)
-#define CTL_FLAG_STRUCT(T) CTL_PACKED_STRUCT
+#define CTL_PACKED_STRUCT gnu::packed
+#define CTL_FLAG_STRUCT(T) CTL_PACKED_STRUCT, gnu::aligned(1)
 #elif CTL_ON_UNIX
 #define CTL_DYNEXPORT __attribute__((visibility("default")))
 #define CTL_DYNIMPORT
