@@ -63,9 +63,6 @@ endif
 
 ifeq ($(os),win)
 define MOVE_DLL
-	@cd res
-	$(call refmove, *.dll, ../output/lib)
-	@cd ..
 endef
 LINUX_FULL_PRE := :
 OS_DEPENDENT_LIBS := cryptopp:$(CRYPTOPP) sdl:$(SDL) sdl-net:$(SDLNET) curl:$(CURL)
