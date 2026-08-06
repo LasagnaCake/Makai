@@ -15,6 +15,7 @@
 #else
 #include <unistd.h>
 #include <sys/wait.h>
+#include <spawn.h>
 #endif
 
 CTL_NAMESPACE_BEGIN
@@ -84,23 +85,16 @@ namespace OS {
 		CloseHandle(pInfo.hThread);
 		return (int)res;
 		#else
-		List<const char*> prgArgs;
+		List<cstring> prgArgs;
 		auto const fname = FS::fileName(path);
 		prgArgs.pushBack(fname.cstr());
 		for (String& arg: args)
 			prgArgs.pushBack(arg.cstr());
 		prgArgs.pushBack(NULL);
-		auto const pid = getpid();
-		vfork();
-		if (pid != getpid()) {
-			if (directory.size())
-				chdir(directory.cstr());
-			return execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
-		} else {
-			int result = -1;
-			wait(&result);
-			return result;
-		}
+		pid_t pid;
+		posix_spawnp(&pid, path.cstr(), NULL, NULL, Cast::mutate<ref<char>>(prgArgs.data()), NULL);
+		wait(&result);
+		return ;
 		#endif
 	}
 
