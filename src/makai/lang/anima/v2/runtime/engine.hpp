@@ -88,7 +88,7 @@ namespace Makai::Anima::V2::Runtime {
 				)
 			);
 			if constexpr (Type::NonVoid<TReturn>)
-				return context.top() ? context.pop()->toValue<TReturn>() : null;
+				return context->top() ? context->pop()->toValue<TReturn>() : null;
 			else return;
 		}
 
@@ -108,7 +108,7 @@ namespace Makai::Anima::V2::Runtime {
 		virtual Context::Storage	external	(String const& name, bool const doNotCopy	);
 		Context::Storage&			global		(uint64 const globalID						);
 
-		constexpr bool inStrictMode() const {return context.scopeStack.back()->mode == Core::ContextMode::AV2_CM_STRICT;}
+		constexpr bool inStrictMode() const {return context->scopeStack.back()->mode == Core::ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
 
@@ -117,7 +117,7 @@ namespace Makai::Anima::V2::Runtime {
 		Random::SecureGenerator	srng;
 		Random::SimpleGenerator	prng;
 
-		Context context;
+		AtomicCell<Context> context;
 
 		Instance<ILibraryLoader> loader = new DefaultLibraryLoader();
 
@@ -205,18 +205,34 @@ namespace Makai::Anima::V2::Runtime {
 		void shortCircuitOperation(Core::Operator const op, usize const count);
 		void fastShortCircuitOperation(Core::Operator const op, Core::BasicType const type, usize const count);
 
+		struct Leap {
+			using Mode = Core::Instruction::Leap::Mode;
+			Mode	mode;
+			usize	to;
+			bool	returnable	= true;
+			bool	async		= false;
+		};
+
 		void jumpByTableIndex(usize const tableID, bool returnable);
 		void jumpTo(usize const point, bool returnable);
-		void jumpByMode(Core::Instruction::Leap::Mode const mode, usize const location, bool returnable);
+		void jumpByMode(Core::Instruction::Leap::Mode const mode, usize const location, bool returnable, bool async);
+		void jump(Leap const& jump);
 		void returnBack();
+
+		usize spawn();
+		void clone(AtomicCell<Context> const& other);
+		void restore(usize const contextID);
+		void kill(usize const contextID);
 
 		void initializeObject(Core::Object::Storage const& object);
 
-		State				engineState	= State::AV2_RES_READY;
-		usize				delay		= 0;
-		Core::Module		program;
-		Core::Instruction	current;
-		Nullable<Error>		err;
+		State							engineState	= State::AV2_RES_READY;
+		usize							delay		= 0;
+		Core::Module					program;
+		Core::Instruction				current;
+		Nullable<Error>					err;
+		Map<usize, AtomicCell<Context>>	spawned;
+		usize							currentCID = 0;
 	};
 }
 

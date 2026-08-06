@@ -92,8 +92,9 @@ namespace OS {
 			prgArgs.pushBack(arg.cstr());
 		prgArgs.pushBack(NULL);
 		pid_t pid;
+		int result;
 		posix_spawnp(&pid, path.cstr(), NULL, NULL, Cast::mutate<ref<char>>(prgArgs.data()), NULL);
-		wait(&result);
+		waitpid(pid, &result, WUNTRACED | WCONTINUED);
 		return ;
 		#endif
 	}

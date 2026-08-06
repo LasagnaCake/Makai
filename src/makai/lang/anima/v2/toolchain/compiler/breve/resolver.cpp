@@ -139,7 +139,7 @@ Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance con
 			parser.context.next();
 			break;
 		}
-		result->children.pushBack(parser.nextExpression(precedence));
+		result->children.pushBack(parser.nextExpression());
 		if (parser.context.peek().type == (LTS_TT_CLOSE_PAREN)) {
 			parser.context.next();
 			break;
@@ -150,6 +150,10 @@ Node::Instance SubExpressionResolver::resolve(Parser& parser, Node::Instance con
 	}
 	parser.context.expect(LTS_TT_CLOSE_PAREN);
 	MAKAILIB_DEBUGLN_FULL("SubExpression:DONE!");
+	if (parser.context.peek().type == (LTS_TT_LITTLE_ARROW)) {
+		result->content = Node::Content::AV2_TANC_FN_PROTOTYPE;
+		result->leftSide = parser.nextExpression();
+	}
 	return result;
 }
 

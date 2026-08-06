@@ -22,20 +22,32 @@ struct Mutex: SelfIdentified<Mutex> {
 		typename SelfIdentified::SelfType
 	;
 
+	struct Impl {
+		bool	locked = false;
+		usize	rcount = 0;
+		#ifdef CTL_ON_WINDOWS
+		HANDLE	mutex = nullptr;
+		#else
+		pthread_mutex_t	mutex;
+		#endif
+	};
+
 	/// @brief Empty constuctor.
 	Mutex() {
+		mutex = new Impl;
 		#ifdef CTL_ON_WINDOWS
-		mutex = CreateMutexA(NULL, FALSE, NULL);
+		mutex->mutex = CreateMutexA(NULL, FALSE, NULL);
 		#else
+		pthread_mutexattr_t pat;
+		pthread_mutexartter_init(&pat);
+		pthread_mutexattr_settype(&pat, PTHREAD_MUTEX_ERRORCHECK);
+		pthread_mutex_init(&mutex->mutex, &pat);
+		pthread_mutexartter_destroy(&pat);
 		#endif
 	}
 
 	~Mutex() {
-		#ifdef CTL_ON_WINDOWS
-		if (mutex)
-			CloseHandle(mutex);
-		#else
-		#endif
+		unbind();
 	}
 
 	#ifdef CTL_ON_WINDOWS
@@ -49,71 +61,96 @@ struct Mutex: SelfIdentified<Mutex> {
 	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
 	/// @return Reference to self.
 	SelfType& capture()	{
+		if (!mutex) return *this;
 		#ifdef CTL_ON_WINDOWS
-		SignalObjectAndWait(mutex, mutex, INFINITE, FALSE);
+		SignalObjectAndWait(mutex->mutex, mutex->mutex, INFINITE, FALSE);
 		#else
+		pthread_mutex_lock(&mutex->mutex);
 		#endif
-		locked = true;
+		mutex->locked = true;
 		return *this;
 	}
+
+	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
+	/// @return Reference to self.
+	SelfType& lock() {return capture();}
 
 	/// @brief Tries to capture the mutex. Fails if mutex is captured by another thread.
 	/// @return Whether mutex caputure was successful.
 	bool tryCapture() {
+		if (!mutex) return false;
 		#ifdef CTL_ON_WINDOWS
-		if (SignalObjectAndWait(mutex, mutex, 0, FALSE) == WAIT_TIMEOUT)
+		if (SignalObjectAndWait(mutex->mutex, mutex->mutex, 0, FALSE) == WAIT_TIMEOUT)
 			return false;
 		#else
+		if (pthread_mutex_trylock(&mutex->mutex) == EBUSY)
+			return false;
 		#endif
-		locked = true;
+		mutex->locked = true;
 		return true;
 	}
 
+	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
+	/// @return Reference to self.
+	bool tryLock() {return tryLock();}
+
 	/// @brief Releases the captured mutex, if mutex is captured by the current hread.
 	/// @return Reference to self.
-	SelfType& release()	{
+	SelfType& release() {
+		if (!mutex) return *this;
 		#ifdef CTL_ON_WINDOWS
-		if (ReleaseMutex(mutex))
-			locked = false;
+		if (ReleaseMutex(mutex->mutex))
+			mutex->locked = false;
 		#else
+		pthread_mutex_unlock(&mutex->mutex);
 		#endif
 		return *this;
 	}
 
+	/// @brief Releases the captured mutex, if mutex is captured by the current hread.
+	/// @return Reference to self.
+	SelfType& unlock() {return release();}
+
 	/// @brief Waits for the mutex to be released.
 	/// @return Reference to self.
 	SelfType& wait() {
+		if (!mutex) return *this;
 		#ifdef CTL_ON_WINDOWS
-		WaitForSingleObject(mutex, INFINITE);
+		WaitForSingleObject(mutex->mutex, INFINITE);
 		#else
+		while (mutex->locked);
 		#endif
 		return *this;
 	}
 
 	bool captured() const {
-		return locked;
+		return mutex ? mutex->locked : false;
 	}
 
 private:
-	#ifdef CTL_ON_WINDOWS
-	void clone(HANDLE const other) {
-		if (mutex)
-			CloseHandle(mutex);
-		DuplicateHandle(
-			GetCurrentProcess(),
-			other,
-			GetCurrentProcess(),
-			&mutex,
-			0,
-			FALSE,
-			DUPLICATE_SAME_ACCESS
-		);
+	void clone(ref<Impl> const other) {
+		if (mutex && mutex->rcount)
+			unbind();
+		mutex = other;
+		++mutex->rcount;
 	}
 
-	HANDLE mutex = nullptr;
-	#else
-	#endif
-	bool locked = false;
+	void unbind() {
+		if (!mutex) return;
+		if (mutex && mutex->rcount)
+			--mutex->rcount;
+		if (!mutex->rcount) {
+			#ifdef CTL_ON_WINDOWS
+			CloseHandle(mutex->mutex);
+			#else
+			pthread_mutex_destroy(&mutex->mutex);
+			#endif
+			delete mutex;
+		}
+		mutex = nullptr;
+	}
+
+	ref<Impl> mutex = nullptr;
 };
 
 CTL_NAMESPACE_END

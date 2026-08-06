@@ -303,6 +303,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct SwitchMatch: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
+
+	struct FunctionTypeDecl: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
 }
 
 #endif

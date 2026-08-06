@@ -1264,14 +1264,17 @@ static void declareTypeFields(Context& context, Context::Declaration& type) {
 static void validateType(Context& context, Context::Declaration& type) {
 		MAKAILIB_DEBUGLN_FULL("Name: ", type.name);
 		MAKAILIB_DEBUGLN_FULL("Flags: ", Makai::bitcast<uint64>(type.flags));
-	if (type.base && !(type.flags.isArray || type.flags.isEnum || type.flags.isNullable)) {
+	if (type.base && !(type.flags.isArray || type.flags.isEnum || type.flags.isNullable || type.flags.isFunction)) {
 		auto& base = *context.getTypeByID(type.base);
 		Makai::violate<uint64>(type.flags) |= Makai::bitcast<uint64>(base.flags);
 		if (type.fields.size())
 			type.fields.insert(base.fields, 0);
 		else type.fields.appendBack(base.fields);
 	}
-	if (!(type.flags.isArray || type.flags.isEnum || type.flags.isNullable) && type.base && context.getTypeByID(*type.base)->flags.isFinal)
+	if (
+		!(type.flags.isArray || type.flags.isEnum || type.flags.isNullable || type.flags.isFunction)
+		&& type.base && context.getTypeByID(*type.base)->flags.isFinal
+	)
 		context.error("Final types cannot be inherited from!");
 	if (!type.basic) {
 		if (type.alignment && !(type.flags.isValueType))
@@ -1310,8 +1313,9 @@ static void validateType(Context& context, Context::Declaration& type) {
 		or	type.flags.isArray
 		or	type.flags.isProxy
 		or	type.flags.isDynamic
+		or	type.flags.isFunction
 		)
-	) context.error("Basic types cannot be structures, arrays, proxies, or dynamic types!");
+	) context.error("Basic types cannot be structures, arrays, proxies, functions, or dynamic types!");
 	if (
 		type.flags.isStructure
 	&&	(
@@ -1327,6 +1331,8 @@ static void validateType(Context& context, Context::Declaration& type) {
 		or	type.flags.isStructure
 		or	type.flags.isDynamic
 		or	type.flags.isPointer
+		or	type.flags.isEnum
+		or	type.flags.isFunction
 		) context.error("Malformed empty type!");
 		type.byteSize	= 0;
 		type.alignment	= 0;
@@ -1470,6 +1476,25 @@ static void declareType(Context& context) {
 			if (context.types.contains(base))
 				type->base = context.getType(base)->id;
 			else context.error("Base type does not exist!");
+			context.expectNext(Type{'>'});
+		} else if (flag == "fn") {
+			if (type->base)
+				context.error("Redeclaration of function type!");
+			type->flags.isFunction = true;
+			type->basic = BasicType::AV2_BT_CALLID;
+			context.expectNext(Type{'<'}).next();
+			auto const ret = resolvePath(context);
+			if (context.types.contains(ret))
+				type->base = context.getType(ret)->id;
+			else context.error("Return type does not exist!");
+			context.expectNext(Type{'('}).next();
+			while (context.peek().type != Type{')'}) {
+				auto const arg = resolvePath(context);
+				if (context.types.contains(arg))
+					type->fields.pushBack(context.getType(arg)->id);
+				else context.error("Argument type does not exist!");
+			}
+			context.expectNext(Type{')'});
 			context.expectNext(Type{'>'});
 		} else if (flag == "value")	type->flags.isValueType = true;
 		else if (flag == "empty")	type->flags.isEmpty = true;

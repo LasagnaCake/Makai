@@ -1210,6 +1210,8 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 		return NullableTypeDecl().transform(context, node);
 	if (node->content == Node::Content::AV2_TANC_DECLARATION)
 		return StructureDecl().transform(context, node);
+	if (node->content == Node::Content::AV2_TANC_FN_PROTOTYPE)
+		return FunctionTypeDecl().transform(context, node);
 	auto const t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
 	++t->uses;
@@ -1356,7 +1358,6 @@ static Makai::Nullable<FunctionArgument> resolveFunctionArgument(Node::Instance 
 	else return null;
 }
 
-// FIXME: Optional arguments are not producing the correct code
 ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance const& node) {
 	auto [path, scope] = resolve(context, node->leftSide);
 	if (scope) {
@@ -2183,6 +2184,18 @@ ATransformer::Result NullableTypeDecl::transform(Context& context, Node::Instanc
 	auto const t = context.nullableFor(TypeRequest().transform(context, node).type);
 	context.registerType(t->scope.raw());
 	return {.type = t};
+}
+
+ATransformer::Result FunctionTypeDecl::transform(Context& context, Node::Instance const& node) {
+	auto const scope = context.declare(UTF8StringList::from("<proto>" + node->name()));
+	auto& type = *(scope->type = scope->type.create());
+	type.flags.isFunction = true;
+	type.base = TypeRequest().transform(context, node->leftSide).type;
+	for (auto& arg: node->children)
+		type.args.pushBack(TypeRequest().transform(context, arg).type);
+	context.pop(1);
+	context.registerType(scope);
+	return {.type = scope->type};
 }
 
 ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {

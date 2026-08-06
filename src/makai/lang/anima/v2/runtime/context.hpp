@@ -82,10 +82,12 @@ namespace Makai::Anima::V2::Runtime {
 			return art.template newEmpty<T>();
 		}
 
+		usize					id;
+		Nullable<usize>			parent;
 		Pointers				pointers;
 		List<Storage>			globalValueStack;
 		List<Pointers>			pointerStack;
-		List<Instance<Scope>>	scopeStack;
+		List<AtomicCell<Scope>>	scopeStack;
 		Map<usize, Storage>		globals;
 		Core::Context			art;
 	};
