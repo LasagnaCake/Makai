@@ -10,6 +10,7 @@
 #include <synchapi.h>
 #else
 #include <pthread.h>
+#include <cerrno>
 #endif
 
 CTL_NAMESPACE_BEGIN
@@ -39,10 +40,10 @@ struct Mutex: SelfIdentified<Mutex> {
 		mutex->mutex = CreateMutexA(NULL, FALSE, NULL);
 		#else
 		pthread_mutexattr_t pat;
-		pthread_mutexartter_init(&pat);
+		pthread_mutexattr_init(&pat);
 		pthread_mutexattr_settype(&pat, PTHREAD_MUTEX_ERRORCHECK);
 		pthread_mutex_init(&mutex->mutex, &pat);
-		pthread_mutexartter_destroy(&pat);
+		pthread_mutexattr_destroy(&pat);
 		#endif
 	}
 
@@ -92,7 +93,7 @@ struct Mutex: SelfIdentified<Mutex> {
 
 	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
 	/// @return Reference to self.
-	bool tryLock() {return tryLock();}
+	bool tryLock() {return tryCapture();}
 
 	/// @brief Releases the captured mutex, if mutex is captured by the current hread.
 	/// @return Reference to self.

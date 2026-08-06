@@ -9,6 +9,14 @@
 
 CTL_NAMESPACE_BEGIN
 
+namespace New {
+	struct Thread: SelfIdentified<Thread> {
+		using SelfIdentified	= ::CTL::SelfIdentified<Thread>;
+
+
+	};
+}
+
 /// @brief Execution thread.
 struct Thread:
 	public SelfIdentified<Thread>,
@@ -139,7 +147,7 @@ struct Thread:
 		/// @param other `std::thread::id` to copy from.
 		ID(BaseType const& other): BaseType(CTL::move(other))	{}
 
-		friend class ::CTL::Thread;
+		friend struct ::CTL::Thread;
 	};
 
 	/// @brief Starts a thread of execution.

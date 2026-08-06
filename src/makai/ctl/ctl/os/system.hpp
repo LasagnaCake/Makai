@@ -93,9 +93,9 @@ namespace OS {
 		prgArgs.pushBack(NULL);
 		pid_t pid;
 		int result;
-		posix_spawnp(&pid, path.cstr(), NULL, NULL, Cast::mutate<ref<char>>(prgArgs.data()), NULL);
+		posix_spawnp(&pid, path.cstr(), NULL, NULL, Cast::mutate<ref<ref<char>>>(prgArgs.data()), NULL);
 		waitpid(pid, &result, WUNTRACED | WCONTINUED);
-		return ;
+		return result;
 		#endif
 	}
 
@@ -141,10 +141,8 @@ namespace OS {
 		for (String& arg: args)
 			prgArgs.pushBack(arg.cstr());
 		prgArgs.pushBack(NULL);
-		auto const pid = getpid();
-		vfork();
-		if (pid != getpid())
-			execvp(path.cstr(), Cast::mutate<char* const*>(prgArgs.data()));
+		pid_t pid;
+		posix_spawnp(&pid, path.cstr(), NULL, NULL, Cast::mutate<ref<ref<char>>>(prgArgs.data()), NULL);
 		#endif
 	}
 }
