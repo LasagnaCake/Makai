@@ -51,6 +51,14 @@ Maintainer: LasagnaCake <support@animart.dev>
 Description: Makai Framework (Development Files)
 endef
 
+define MKUTILS_DEBPKG
+Package: mkutils
+Version: $(strip $(1))
+Architecture: $(strip $(2))
+Maintainer: LasagnaCake <support@animart.dev>
+Description: Makai Utilities
+endef
+
 packagever?=dev-$(shell date +"%Y%M%d-%H%M%S")-$(shell cat dev/urandom)
 
 arch?=x64
@@ -283,10 +291,16 @@ package-tooling-deb:
 	mkdir -p package/apt/art-sdk/usr/bin
 	mkdir -p package/apt/libmakai-dev/usr/lib
 	mkdir -p package/apt/libmakai-dev/usr/include
-	cp -r package-template/apt package/
+	mkdir -p package/apt/mkutils/usr/bin
+	mkdir -p package/apt/art-env/DEBIAN
+	mkdir -p package/apt/art-sdk/DEBIAN
+	mkdir -p package/apt/libmakai-dev/DEBIAN
+	mkdir -p package/apt/mkutils/DEBIAN
+#	cp -r package-template/apt package/
 	echo "$(call ART_ENV_DEBPKG, $(packagever), $(arch))" > package/apt/art-env/DEBIAN/control
 	echo "$(call ART_SDK_DEBPKG, $(packagever), $(arch))" > package/apt/art-sdk/DEBIAN/control
 	echo "$(call LIBMAKAI_DEBPKG, $(packagever), $(arch))" > package/apt/libmakai-dev/DEBIAN/control
+	echo "$(call MKUTILS_DEBPKG, $(packagever), $(arch))" > package/apt/mkutils/DEBIAN/control
 	cp output/bin/art package/apt/art-env/usr/bin
 	cp output/bin/brevec package/apt/art-sdk/usr/bin
 	cp output/bin/minimac package/apt/art-sdk/usr/bin
@@ -294,9 +308,13 @@ package-tooling-deb:
 	cp -r output/bin/anima package/apt/art-sdk/usr/bin
 	cp -r output/lib package/apt/libmakai-dev/usr/lib
 	cp -r output/include package/apt/libmakai-dev/usr/include
+	cp output/bin/packer package/apt/mkutils/usr/bin
+	cp output/bin/mkpg package/apt/mkutils/usr/bin
+	cp output/bin/d2d package/apt/mkutils/usr/bin
 	dpkg-deb --build package/apt/art-sdk output/package/art-sdk.deb
 	dpkg-deb --build package/apt/art-env output/package/art-env.deb
 	dpkg-deb --build package/apt/libmakai-dev output/package/art-env.deb
+	dpkg-deb --build package/apt/mkutils output/package/mkutils.deb
 
 #export clean-libname = $(subst dec,,$(subst _krb5,,$(subst lber,ldap2,$(subst api,,$(1)))))
 #export lite-solver-pass1 = $(foreach lib,$(foreach lib,$(1), $(patsubst -l%,%,$(shell pkg-config --libs-only-l --static $(lib)))), lib$(call clean-libname,$(lib))-dev)
