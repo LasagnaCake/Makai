@@ -200,8 +200,7 @@ namespace New {
 			AtomicCell<Impl> thread;
 		};
 
-		Thread() noexcept {
-		}
+		Thread() noexcept {}
 
 		template <class TReturn, class... TArgs>
 		Thread(Executor<TReturn(TArgs...)>::Caller const& call, TArgs... args) {
