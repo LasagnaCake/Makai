@@ -1407,7 +1407,6 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	current->entry = "__"+ fn->name + overloadName(current->arguments) + node->name();
 	impl->impl->writePreLine("@def", current->entry, ":");
 	impl->impl->writePreLine("enter", required.size() + optional.size());
-	impl->impl->writePreLine("bind ref", required.size(), "[0 -> 0]");
 	MAKAILIB_DEBUGLN_FULL("Overload: ", current->entry);
 	current->scope = impl.asWeak();
 	auto const vx = fn->overloadFromVariables(current->arguments);
@@ -1434,6 +1433,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		current->entry = "__" + fn->name + overloadName(current->arguments) + node->name();
 		MAKAILIB_DEBUGLN_FULL("Overload: ", current->entry);
 		overload->impl->writePreLine(ox.scope->variable->initializer->impl->toString());
+		context.top()->impl->writeMainLine("push", ox.source.value());
 		overload->impl->writePreLine("@def", current->entry, ":");
 		ox.scope->variable->initializer = nullptr;
 		fn->overloads.pushBack(current);
@@ -1444,6 +1444,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		if (ovImpl.size())
 			current = current.create();
 		context.functionStack.pushBack(current);
+		impl->impl->writePreLine("bind ref", required.size() + optional.size(), "[0 -> 0]");
 		auto const def = Expression().transform(context, node->rightSide);
 		if (retType && def.type && retType != def.type)
 			context.error("Expression return type does not match function return type!", node);
