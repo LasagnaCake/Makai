@@ -1428,6 +1428,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		prev = current;
 		current = current.create();
 		current->fullImpl = first->fullImpl;
+		current->decl = node->rightSide;
 		fn->current.pushBack(current);
 		current->arguments = prev->arguments;
 		overload->varc = current->arguments.size();
@@ -1447,6 +1448,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		current->hasImplementation = true;
 	}
 	if (node->rightSide) {
+		current->decl = node->rightSide;
 		if (ovImpl.size())
 			current = current.create();
 		context.functionStack.pushBack(current);
