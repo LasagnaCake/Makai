@@ -248,6 +248,11 @@ public:
 			database[(pointer)ptr] = {false, 0};
 	}
 
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.ref, b.ref);
+	}
+
 	/// @brief Returns whether the object exists.
 	/// @return Whether the object exists.
 	constexpr bool exists() const {

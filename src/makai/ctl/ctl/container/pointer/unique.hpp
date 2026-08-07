@@ -143,10 +143,13 @@ struct Unique:
 	/// @param other `Unique` to move.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		unbind();
-		ref = other.ref;
-		other.ref = nullptr;
+		swap(ref, other.ref);
 		return *this;
+	}
+
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.ref, b.ref);
 	}
 
 	/// @brief Returns the value pointed to.

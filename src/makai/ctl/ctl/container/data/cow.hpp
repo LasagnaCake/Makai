@@ -61,6 +61,11 @@ struct Cow:
 	constexpr DataType operator*() const	{return get();}
 	constexpr operator DataType() const		{return get();}
 
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.value, b.value);
+	}
+
 	/// @brief Equality comparison operator (`Cow`).
 	/// @param obj `Cow` to compare to.
 	/// @return Whether they're equal.

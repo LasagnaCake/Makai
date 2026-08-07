@@ -12,7 +12,10 @@ using namespace Core;
 static void printValueState(Object::Storage const& value) {
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUG_FULL("> Value? ", value ? "YES" : "NO");
-		if (value) MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
+		if (value) {
+			 MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
+				MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
+		}
 		else MAKAILIB_DEBUGLN_FULL("");
 	}
 }

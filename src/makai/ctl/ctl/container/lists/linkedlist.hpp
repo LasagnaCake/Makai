@@ -50,7 +50,7 @@ namespace Type::Container {
 
 	/// Type must be `LinkedList`.
 	template<class T>
-	concept LinkedList = Impl::IsLinkedList<T>::value; 
+	concept LinkedList = Impl::IsLinkedList<T>::value;
 }
 
 /// @brief Dynamic array of objects.
@@ -158,7 +158,7 @@ public:
 
 		constexpr Iterator& operator++()	{if constexpr (R) retreat(); else advance(); return *this;}
 		constexpr Iterator& operator--()	{if constexpr (R) advance(); else retreat(); return *this;}
-		
+
 
 		constexpr Iterator operator++(int)	{auto prev = copy(*this); if constexpr (R) retreat(); else advance(); return prev;}
 		constexpr Iterator operator--(int)	{auto prev = copy(*this); if constexpr (R) advance(); else retreat(); return prev;}
@@ -174,7 +174,7 @@ public:
 			if (!current) emptyError();
 			return *current;
 		}
-		
+
 		constexpr LinkedListType& list() const {
 			if (!parent) emptyError();
 			return *parent;
@@ -232,11 +232,11 @@ public:
 			Node::unlink(*tail);
 			delete tail;
 			tail = newTail;
-		} else if (tail) 
+		} else if (tail)
 			removeHeadAndTail();
 		return value;
 	}
-	
+
 	constexpr SelfType& pushFront(ConstReferenceType value) {
 		ref<Node> const node = new Node{value};
 		if (tail == nullptr)
@@ -287,7 +287,7 @@ public:
 	constexpr Iterator<false, false>	end()			{return {nullptr,	this};	};
 	constexpr Iterator<false, true>		begin() const	{return {head,		this};	};
 	constexpr Iterator<false, true>		end() const		{return {nullptr,	this};	};
-	
+
 	constexpr Iterator<true, false>		rbegin()		{return {tail,		this};	};
 	constexpr Iterator<true, false>		rend()			{return {nullptr,	this};	};
 	constexpr Iterator<true, true>		rbegin() const	{return {tail,		this};	};
@@ -314,6 +314,13 @@ public:
 		Node::parent(*newNode, at.node());
 		if (&at.node() == head) head = newNode;
 		return *this;
+	}
+
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.head, b.head);
+		swap(a.tail, b.tail);
+		swap(a.count, b.count);
 	}
 
 private:

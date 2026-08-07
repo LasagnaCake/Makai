@@ -81,18 +81,17 @@ struct Cell:
 		return *this;
 	}
 
-	/// @brief Move assignment operator (`Cell`).
+	/// @brief Move assignment operator.
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		if (wrapper == other.wrapper) {
-			other.wrapper = nullptr;
-			return *this;
-		}
-		//unbind();
-		wrapper = move(other.wrapper);
-		other.wrapper = nullptr;
+		swap(wrapper, other.wrapper);
 		return *this;
+	}
+
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.wrapper, b.wrapper);
 	}
 
 	/// @brief Destructor.
