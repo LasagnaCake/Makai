@@ -3,6 +3,8 @@
 
 #include "../namespace.hpp"
 #include "../templates.hpp"
+#include "../order.hpp"
+#include "../adapter/comparator.hpp"
 #include "../typetraits/traits.hpp"
 #include "mutex.hpp"
 
@@ -73,7 +75,7 @@ public:
 		this->wait();
 		return data;
 	}
-	
+
 	/// @brief Safely compares values.
 	/// @param other Value to compare with.
 	/// @return Whether they're equal.

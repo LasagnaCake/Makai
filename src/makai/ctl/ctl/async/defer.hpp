@@ -11,11 +11,11 @@ CTL_NAMESPACE_BEGIN
 struct Defer {
 	/// @brief Default constructor.
 	constexpr Defer() {}
-	
+
 	/// @brief Sets a function to be called at the end of the scope.
 	/// @param f Function to call.
 	constexpr Defer(Functor<void()> const& f): func(f) {}
-	
+
 	/// @brief Sets a function to be called at the end of the scope.
 	/// @param f Function to call.
 	/// @return Reference to self.

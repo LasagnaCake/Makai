@@ -4,6 +4,7 @@
 #include "../namespace.hpp"
 #include "nullable.hpp"
 #include "../staticvalue.hpp"
+#include "../algorithm/swap.hpp"
 #include "function.hpp"
 
 #ifdef __clang__
