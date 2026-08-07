@@ -38,8 +38,9 @@ struct StackStateScopePrinter {
 		MAKAILIB_DEBUG_BLOCK_FULL {
 			MAKAILIB_DEBUGLN_FULL("Stack Size: ", context.globalValueStack.size());
 			MAKAILIB_DEBUGLN_FULL("Stack State {");
-			for (auto& v: context.globalValueStack)
-				printValueState(v);
+			if (context.globalValueStack.size())
+				for (auto& v: context.globalValueStack)
+					printValueState(v);
 			MAKAILIB_DEBUGLN_FULL("}");
 		}
 	}
