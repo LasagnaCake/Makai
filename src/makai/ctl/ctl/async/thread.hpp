@@ -1,7 +1,6 @@
 #ifndef CTL_ASYNC_THREAD_H
 #define CTL_ASYNC_THREAD_H
 
-#include <thread>
 #include "../namespace.hpp"
 #include "../os/time.hpp"
 #include "../templates.hpp"
@@ -333,7 +332,7 @@ public:
 		SleepEx(millis, FALSE);
 		#else
 		if (!millis) {
-			sleep(0);
+			sched_yield();
 			return;
 		}
 		timespec spec;
