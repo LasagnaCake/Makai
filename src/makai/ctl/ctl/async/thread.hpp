@@ -332,11 +332,14 @@ public:
 		#ifdef CTL_ON_WINDOWS
 		SleepEx(millis, FALSE);
 		#else
-		if (!millis) return sleep(0);
+		if (!millis) {
+			sleep(0);
+			return;
+		}
 		timespec spec;
 		spec.tv_sec = millis / 1000;
     	spec.tv_nsec = (millis % 1000) * 1000000;
-     	nanosleep(&ts, &ts);
+     	nanosleep(&spec, &spec);
 		#endif
 	}
 
