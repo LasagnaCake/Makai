@@ -1,6 +1,4 @@
 using import core.types.type
 
 @Basic(type = "any")
-struct any {
-    type :: (self: any) => typeof self
-}
+struct any {}
