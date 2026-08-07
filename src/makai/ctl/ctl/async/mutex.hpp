@@ -128,6 +128,15 @@ struct Mutex: SelfIdentified<Mutex> {
 		return mutex ? mutex->locked : false;
 	}
 
+	bool locked() const {
+		return captured();
+	}
+
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.mutex, b.mutex);
+	}
+
 private:
 	void clone(ref<Impl> const other) {
 		if (mutex && mutex->rcount)

@@ -178,12 +178,12 @@ struct ConcertoMain: Makai::AMain {
 		writeLine("concerto <action>");
 	}
 
-	void run(Makai::Data::Value const& args) override {
+	Task run(Makai::Data::Value const& args) override {
 		if (args.fetch("help", false)) {
 			doHelp(args);
 		} else {
 			if (args["__args"].empty())
-				return doHelp(args);
+				co_return doHelp(args);
 			auto const verb = args["__args"][0].getString();
 			if (verb == "create")		doCreate(args);
 			else if (verb == "build")	doBuild(args);

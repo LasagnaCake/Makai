@@ -227,8 +227,8 @@ public:
 		T value() const {
 			await();
 			if constexpr (Type::Equal<T, AsReference<AsNonReference<T>>>)
-				return **(T**)thread->exec->outp;
-			else return *(T*)thread->exec->outp;
+				return **(ref<ref<T>>)thread->exec->outp;
+			else return *(ref<T>)thread->exec->outp;
 		}
 
 		friend struct Thread;
@@ -364,6 +364,11 @@ public:
 	/// @param other `Thread` to compare with.
 	/// @return Order between `Thrad`s.
 	auto operator<=>(Thread const& other) const	{return id() <=> other.id();	}
+
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.thread, b.thread);
+	}
 
 private:
 	AtomicCell<Impl> thread;

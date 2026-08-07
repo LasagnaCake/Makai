@@ -12,25 +12,30 @@ DEFINE_ERROR_TYPE_EX(EngineError, FailedAction);
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	bool cliEnabled = false;
 
-	static void AV2Call write_string(Makai::String const& str) {
+	AV2Call
+	static void write_string(Makai::String const& str) {
 		doWrite(str);
 	}
 
-	static void AV2Call writeLine_string(Makai::String const& str) {
+	AV2Call
+	static void writeLine_string(Makai::String const& str) {
 		doWriteLine(str);
 	}
 
-	static Makai::String AV2Call toString(Makai::Data::Value const& val) {
+	AV2Call
+	static Makai::String toString(Makai::Data::Value const& val) {
 		if (val.isUndefined()) return "";
 		if (val.isString()) return val.getString();
 		return val.toFLOWString();
 	}
 
-	static void AV2Call write_any(Makai::Data::Value const& what) {
+	AV2Call
+	static void write_any(Makai::Data::Value const& what) {
 		write_string(toString(what));
 	}
 
-	static void AV2Call writeLine_any(Makai::Data::Value const& what) {
+	AV2Call
+	static void writeLine_any(Makai::Data::Value const& what) {
 		writeLine_string(toString(what));
 	}
 
@@ -87,7 +92,7 @@ struct ARTEMain: Makai::AMain {
 		));
 	}
 
-	void run(Makai::Data::Value const& args) override {
+	Task run(Makai::Data::Value const& args) override {
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");

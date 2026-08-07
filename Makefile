@@ -59,7 +59,7 @@ Maintainer: LasagnaCake <support@animart.dev>
 Description: Makai Utilities
 endef
 
-packagever?=dev-$(shell date +"%Y%M%d-%H%M%S")-$(shell cat dev/urandom)
+packagever?=dev-$(shell date +"%Y%M%d-%H%M%S")-$(shell cat dev/urandom)-owo
 
 arch?=x64
 

@@ -13,6 +13,8 @@ namespace Makai {
 		/// @brief CLI parser.
 		CLI::Parser& cli;
 
+		using Task = Co::Task<>;
+
 		/// @brief Initializes main.
 		/// @param parser Command-line parser.
 		AMain(CLI::Parser& parser): cli(parser) {}
@@ -45,7 +47,7 @@ namespace Makai {
 
 		/// @brief Called when program runs.
 		/// @param args Arguments passed to the program, as parsed by the CLI parser.
-		virtual void run(Data::Value const& args) = 0;
+		virtual Task run(Data::Value const& args) = 0;
 
 		/// @brief Causes an error when called.
 		/// @param message Error message to display to user.
@@ -59,7 +61,8 @@ namespace Makai {
 		inline int main() try {
 			if (Makai::CPP::Debug::hasDebugger())
 				Makai::CPP::Debug::Traceable::trap = true;
-			run(cli.parse(baseArgs));
+			auto const task = run(cli.parse(baseArgs));
+			task.await();
 			return 0;
 		} catch (Makai::Error::Generic const& e) {
 			#ifndef MAKAILIB_MAIN_NO_POPUPS
