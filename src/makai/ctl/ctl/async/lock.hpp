@@ -61,6 +61,7 @@ private:
 };
 
 
+/// @brief Creates a scope lock for a given mutex.
 template<Type::Derived<Mutex> TMutex = Mutex>
 constexpr ScopeLock<TMutex> lock(TMutex& mutex) {return {mutex};}
 
