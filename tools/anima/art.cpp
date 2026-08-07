@@ -205,6 +205,7 @@ struct ARTEMain: Makai::AMain {
 			DEBUGLN("</art:output>");
 			engine.error().then(handleError);
 		}
+		co_return;
 	}
 };
 

@@ -91,6 +91,7 @@ struct Data2DataMain: AMain {
 				Makai::File::saveText(args["out"].getString(), parse);
 			else std::cout << parse;
 		}
+		co_return;
 	}
 };
 

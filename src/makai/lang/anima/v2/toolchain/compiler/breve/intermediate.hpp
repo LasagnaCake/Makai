@@ -165,6 +165,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Namespace::TypeRef						base;
 		Nullable<UTF8String>					artEquivalent;
 		UTF8Dictionary<Namespace::VariableRef>	fields;
+		UTF8Dictionary<Namespace::FunctionRef>	methods;
 		List<Namespace::TypeRef>				args;
 
 		usize uses = 0;

@@ -236,6 +236,7 @@ struct MakePageMain: AMain {
 			if (act == "build") doBuild();
 			if (act == "new") doNew(args);
 		}
+		co_return;
 	}
 };
 

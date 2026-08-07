@@ -2,3 +2,5 @@ using import core.types.any
 
 @Basic(type = "bool")
 struct bool : any {}
+
+using flag = bool

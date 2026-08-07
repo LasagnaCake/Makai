@@ -189,6 +189,7 @@ struct ConcertoMain: Makai::AMain {
 			else if (verb == "build")	doBuild(args);
 			else error("Invalid action [" + verb + "]!");
 		}
+		co_return;
 	}
 };
 

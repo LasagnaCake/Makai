@@ -13,8 +13,8 @@ static void printValueState(Object::Storage const& value) {
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUG_FULL("> Value? ", value ? "YES" : "NO");
 		if (value) {
-			 MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
-				MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
+			MAKAILIB_DEBUG_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
+			MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
 		}
 		else MAKAILIB_DEBUGLN_FULL("");
 	}
@@ -1430,7 +1430,7 @@ void Engine::v2StackClear() {
 		auto& stack = context.globalValueStack;
 		auto const clear = Cast::bit<Instruction::StackClear>(current.type);
 		MAKAILIB_DEBUGLN_FULL("Clearing ", clear.count, " entries...");
-		if (stack.size() < clear.count) {
+		if (stack.size() <= clear.count) {
 			context.globalValueStack.clear();
 			return;
 		}

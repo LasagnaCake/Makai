@@ -465,6 +465,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		violate<uint64>(type.flags) |= bitcast<uint64>(base->flags);
 		type.flags.isBasic = false;
 		type.fields.append(base->fields);
+		type.methods.append(base->methods);
+		for (auto& [name, method]: base->methods) {
+			auto& ns = *(type.scope->subspaces[name] = new Namespace);
+			ns.function = method;
+		}
 		scope->varc += base->scope->varc;
 	}
 	auto const initer = "__init_" + name.join("_") + node->name();
@@ -533,6 +538,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		}
 		if (scope->subspaces.contains(fn.name))
 			context.error("Symbol with this name already exists!", method);
+		type.methods[fn.name] = decl.scope->function;
 		scope->subspaces[fn.name] = decl.scope;
 	}
 	context.pop(implName.size());
