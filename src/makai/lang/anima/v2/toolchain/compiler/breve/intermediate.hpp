@@ -198,7 +198,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 				External			external	= External::AV2_TCB_FO_VE_NONE;
 				Object				object		= Object::AV2_TCB_FO_VO_NONE;
 				ExecutionContext	context		= ExecutionContext::AV2_TCB_EC_NONE;
-				Node::Instance		decl		= nullptr;
 
 				constexpr bool operator==(External const variant) const			{return variant == external;	}
 				constexpr bool operator==(Object const variant) const			{return variant == object;		}
@@ -220,6 +219,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			bool							hasImplementation = false;
 			bool							staticEntity = false;
 			Handle<Overload>				fullImpl;
+			Node::Instance					decl = nullptr;
 
 			usize uses = 0;
 
