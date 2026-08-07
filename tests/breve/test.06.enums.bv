@@ -41,17 +41,24 @@ enum Weekday: uint8 {
 main :: () {
 	// Full mode
 	day := Weekday.MONDAY
-	day.display;
+	IO.writeLine(day.fullName;)
+	IO.writeLine(day.shortName;)
 	day = Weekday.TUESDAY
-	day.display;
+	IO.writeLine(day.fullName;)
+	IO.writeLine(day.shortName;)
 	day = Weekday.WEDNESDAY
-	day.display;
+	IO.writeLine(day.fullName;)
+	IO.writeLine(day.shortName;)
 	day = Weekday.THURSDAY
-	day.display;
+	IO.writeLine(day.fullName;)
+	IO.writeLine(day.shortName;)
 	day = Weekday.FRIDAY
-	day.display;
+	IO.writeLine(day.fullName;)
+	IO.writeLine(day.shortName;)
 	day = Weekday.SATURDAY
-	day.display;
+	IO.writeLine(day.fullName;)
+	IO.writeLine(day.shortName;)
 	day = Weekday.SUNDAY
-	day.display;
+	IO.writeLine(day.fullName;)
+	IO.writeLine(day.shortName;)
 }
