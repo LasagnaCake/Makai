@@ -71,7 +71,7 @@ struct Data2DataMain: AMain {
 		throw Makai::Error::InvalidValue("Failed to parse file!");
 	}
 
-	Task run(Makai::Data::Value const& args) override {
+	void run(Makai::Data::Value const& args) override {
 		if (args.fetch("help", false)) {
 			writeLine("Data2Data - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
@@ -91,7 +91,6 @@ struct Data2DataMain: AMain {
 				Makai::File::saveText(args["out"].getString(), parse);
 			else std::cout << parse;
 		}
-		co_return;
 	}
 };
 

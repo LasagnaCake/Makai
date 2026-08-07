@@ -224,7 +224,7 @@ struct MakePageMain: AMain {
 			Makai::OS::FS::copy(p, OS::FS::concatenate(proj["output"].getString(), p));
 	}
 
-	Task run(Makai::Data::Value const& args) override {
+	void run(Makai::Data::Value const& args) override {
 		if (args.fetch("help", false)) {
 			writeLine("MakePage - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
@@ -236,7 +236,6 @@ struct MakePageMain: AMain {
 			if (act == "build") doBuild();
 			if (act == "new") doNew(args);
 		}
-		co_return;
 	}
 };
 

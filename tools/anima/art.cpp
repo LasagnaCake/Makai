@@ -92,7 +92,7 @@ struct ARTEMain: Makai::AMain {
 		));
 	}
 
-	Task run(Makai::Data::Value const& args) override {
+	void run(Makai::Data::Value const& args) override {
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
@@ -205,7 +205,6 @@ struct ARTEMain: Makai::AMain {
 			DEBUGLN("</art:output>");
 			engine.error().then(handleError);
 		}
-		co_return;
 	}
 };
 
