@@ -330,8 +330,9 @@ public:
 
 	static void wait(usize const millis) noexcept {
 		#ifdef CTL_ON_WINDOWS
-		Sleep(millis);
+		SleepEx(millis, FALSE);
 		#else
+		if (!millis) return sleep(0);
 		timespec spec;
 		spec.tv_sec = millis / 1000;
     	spec.tv_nsec = (millis % 1000) * 1000000;
