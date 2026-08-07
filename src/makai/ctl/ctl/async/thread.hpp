@@ -6,6 +6,15 @@
 #include "../os/time.hpp"
 #include "../templates.hpp"
 #include "../order.hpp"
+#include "../container/pointer/atomiccell.hpp"
+#include "../container/tuple.hpp"
+#include "../container/function.hpp"
+#include "../container/nullable.hpp"
+
+#ifdef CTL_ON_WINDOWS
+#else
+#include <pthread.h>
+#endif
 
 CTL_NAMESPACE_BEGIN
 
@@ -13,7 +22,258 @@ namespace New {
 	struct Thread: SelfIdentified<Thread> {
 		using SelfIdentified	= ::CTL::SelfIdentified<Thread>;
 
+		struct IExecutor {
+			virtual ~IExecutor() {}
 
+			pointer outp		= nullptr;
+			bool	running		= false;
+			bool	hasResult	= false;
+		};
+
+		template <class T>
+		struct Executor;
+
+		template <class TReturn, class... TArgs>
+		struct Executor<TReturn(TArgs...)>: IExecutor {
+			struct None {};
+			using Caller	= Function<TReturn(TArgs...)>;
+			using Arguments	= Meta::If<sizeof...(TArgs), Tuple<TArgs...>, None>;
+			using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsArgument<TReturn>, None>;
+
+			static pointer invoke(pointer ep) {
+				if (!ep) return nullptr;
+				auto& exec = *(ref<Executor>)ep;
+				exec.outp = &exec.result;
+				exec.running	= true;
+				exec.hasResult	= false;
+				if constexpr (Type::Equal<Result, None>) {
+					invokeFromTuple(
+						exec.func,
+						exec.args
+					);
+					exec.running	= false;
+					exec.hasResult	= true;
+					return nullptr;
+				} else if constexpr (Type::Equal<Result, AsReference<AsNonReference<Result>>>)
+					exec.result = &invokeFromTuple(
+						exec.func,
+						exec.args
+					);
+				else exec.result = invokeFromTuple(
+					exec.func,
+					exec.args
+				);
+				exec.running	= false;
+				exec.hasResult	= true;
+				return (pointer)&exec.result;
+			}
+
+			Executor(Caller&& func, Arguments&& args): func(move(func)), args(move(args)) {}
+
+			Caller		func;
+			Arguments	args;
+			Result		result;
+		};
+
+		struct Impl {
+			Impl& stop() {
+				if (running()) return *this;
+				#ifdef CTL_ON_WINDOWS
+				#else
+				pthread_cancel(thread);
+				#endif
+				return *this;
+			}
+
+			Impl& join() {
+				if (!running()) return *this;
+				#ifdef CTL_ON_WINDOWS
+				#else
+				pthread_join(thread, NULL);
+				#endif
+				return *this;
+			}
+
+			Impl& detach() {
+				if (!running()) return *this;
+				#ifdef CTL_ON_WINDOWS
+				#else
+				pthread_detach(thread);
+				#endif
+				return *this;
+			}
+
+			~Impl() {
+				detach();
+			}
+
+			bool running() const {
+				return exec && exec->running;
+			}
+
+			bool hasResult() const {
+				return exec && exec->hasResult;
+			}
+
+			#ifdef CTL_ON_WINDOWS
+			#else
+			pthread_t		thread;
+			#endif
+			ref<IExecutor>	exec	= nullptr;
+			usize			id		= count++;
+		private:
+			inline static usize count = 0;
+		};
+
+		template<class T>
+		struct Promise;
+
+		template<>
+		struct Promise<void> {
+			Promise& await() {
+				if (thread) thread->join();
+				return *this;
+			}
+
+			/// @brief Returns whether the function is done processing.
+			/// @return Whether the function is done processing.
+			bool ready() {
+				return !thread or thread->hasResult();
+			}
+
+			/// @brief Returns whether awaiting is necessary.
+			/// @return Whether to await.
+			bool await_ready()			{return ready();	}
+			/// @brief Returns the suspension state.
+			void await_suspend()		{					}
+			/// @brief Returns the result of the await.
+			/// @return Await result.
+			void await_resume()			{					}
+
+		private:
+			friend struct Thread;
+			AtomicCell<Impl> thread;
+		};
+
+		template <Type::NonVoid T>
+		struct Promise<T> {
+			Promise& await() {
+				if (thread) thread->join();
+				return *this;
+			}
+
+			Promise const& await() const {
+				if (thread) thread->join();
+				return *this;
+			}
+
+			/// @brief Returns whether the function is done processing.
+			/// @return Whether the function is done processing.
+			bool ready() {
+				return !thread or thread->hasResult();
+			}
+
+			Nullable<T> result() const {
+				if (!thread) return null;
+				if (!thread->hasResult()) return null;
+				return value();
+			}
+
+			/// @brief Returns whether awaiting is necessary.
+			/// @return Whether to await.
+			bool await_ready()			{return ready();	}
+			/// @brief Returns the suspension state.
+			void await_suspend()		{					}
+			/// @brief Returns the result of the await.
+			/// @return Await result.
+			Nullable<T> await_resume()	{return result();	}
+
+		private:
+			T value() const {
+				await();
+				if constexpr (Type::Equal<T, AsReference<AsNonReference<T>>>)
+					return **(T**)thread->exec->outp;
+				else return *(T*)thread->exec->outp;
+			}
+
+			friend struct Thread;
+			AtomicCell<Impl> thread;
+		};
+
+		Thread() noexcept {
+		}
+
+		template <class TReturn, class... TArgs>
+		Thread(Executor<TReturn(TArgs...)>::Caller const& call, TArgs... args) {
+			invoke(call, args...);
+		}
+
+		~Thread() {}
+
+		template <class TReturn, class... TArgs>
+		Promise<TReturn> invoke(Executor<TReturn(TArgs...)>::Caller const& call, TArgs... args) {
+			if (running())
+				detach();
+			return tryInvoke(call, args...).value();
+		}
+
+		template <class TReturn, class... TArgs>
+		Nullable<Promise<TReturn>> tryInvoke(Executor<TReturn(TArgs...)>::Caller const& call, TArgs... args) {
+			if (running()) return nullptr;
+			thread = thread.create();
+			thread->exec = new Executor<TReturn(TArgs...)>(
+				call,
+				{args...}
+			);
+			#ifdef CTL_ON_WINDOWS
+			#else
+			pthread_create(&thread->thread, NULL, Executor<TReturn(TArgs...)>::invoke, (pointer)&thread->exec);
+			#endif
+			return Promise<TReturn>(thread);
+		}
+
+		bool running() const {
+			return thread && thread->running();
+		}
+
+		bool hasResult() const {
+			return thread && thread->hasResult();
+		}
+
+		Thread& stop() {
+			if (running()) return *this;
+			thread->stop();
+			return *this;
+		}
+
+		Thread& join() {
+			if (!running()) return *this;
+			thread->join();
+			return *this;
+		}
+
+		Thread& detach() {
+			if (!running()) return *this;
+			thread = nullptr;
+			return *this;
+		}
+
+		static void yield() noexcept {
+		}
+
+		Thread(Thread&& other)		= default;
+		Thread(Thread const& other)	= default;
+
+		Thread& operator=(Thread&& other)		= default;
+		Thread& operator=(Thread const& other)	= default;
+
+		Nullable<usize> id() const {if (thread) return thread->id; return null;};
+
+		bool operator==(Thread const& other) const	{return id() == other.id();		}
+		auto operator<=>(Thread const& other) const	{return id() <=> other.id();	}
+
+	private:
+		AtomicCell<Impl> thread;
 	};
 }
 
