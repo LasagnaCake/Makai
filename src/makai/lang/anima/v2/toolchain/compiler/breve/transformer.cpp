@@ -1444,7 +1444,9 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		if (ovImpl.size())
 			current = current.create();
 		context.functionStack.pushBack(current);
-		impl->impl->writePreLine("bind ref", required.size() + optional.size(), "[0 -> 0]");
+		auto const argc = required.size() + optional.size();
+		impl->impl->writePreLine("bind ref", argc, "[0 -> 0]");
+		impl->impl->writePreLine("clear", argc);
 		auto const def = Expression().transform(context, node->rightSide);
 		if (retType && def.type && retType != def.type)
 			context.error("Expression return type does not match function return type!", node);
