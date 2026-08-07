@@ -8,3 +8,6 @@ struct float64 : any {}
 
 @Basic(type = "float128")
 struct float128 : any {}
+
+using float	= float32
+using real	= float64

@@ -11,3 +11,5 @@ struct uint32 : any {}
 
 @Basic(type = "uint64")
 struct uint64 : any {}
+
+using uint = uint64
