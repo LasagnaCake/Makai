@@ -128,8 +128,8 @@ namespace New {
 		template<class T>
 		struct Promise;
 
-		template<>
-		struct Promise<void> {
+		template<Type::Void T>
+		struct Promise<T> {
 			Promise& await() {
 				if (thread) thread->join();
 				return *this;
