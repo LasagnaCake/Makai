@@ -6,8 +6,6 @@
 #include "box.hpp"
 #include "lock.hpp"
 #include "mutex.hpp"
-#include "promise.hpp"
-#include "task.hpp"
 #include "thread.hpp"
 #include "wait.hpp"
 

@@ -5,6 +5,7 @@
 #include "../container/functor.hpp"
 #include "thread.hpp"
 #include "atomic.hpp"
+#include "../container/error.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -16,11 +17,9 @@ namespace Error::Async {
 /// @brief Asynchronous facilities.
 namespace Async {
 	/// @brief Sleeps the thread it is called in, for a specific amount of time.
-	/// @tparam T Time unit.
 	/// @param time Time to sleep for.
-	template<class T = OS::Time::Millis>
-	inline void wait(usize const time) {
-		Thread::wait<T>(time);
+	inline void wait(usize const millis) {
+		Thread::wait(millis);
 	}
 
 	/// @brief Makes the thread it is called in wait for a condition to be met.
