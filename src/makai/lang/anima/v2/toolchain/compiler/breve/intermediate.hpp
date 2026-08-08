@@ -267,10 +267,35 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
 
-		UTF8String getSource() {
-			if (context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+		constexpr bool isCompiled() const {
+			return context > ExecutionContext::AV2_TCB_EC_RUNTIME;
+		}
+
+		constexpr bool exists() const {
+			return isCompiled() or hasValue;
+		}
+
+		constexpr void fill() {
+			setFillState(true);
+		}
+
+		constexpr void setFillState(bool const flag) {
+			hasValue = flag;
+		}
+
+		constexpr void fillIf(bool const cond) {
+			if (cond) fill();
+		}
+
+		constexpr UTF8String getSource() {
+			if (!isCompiled() && passBy == "move")
+				hasValue = false;
+			return getSourceWithoutMoveCheck();
+		}
+
+		constexpr UTF8String getSourceWithoutMoveCheck() {
+			if (isCompiled())
 				return value.toString();
-			if (passBy == "move" && context <= ExecutionContext::AV2_TCB_EC_RUNTIME) hasValue = false;
 			if (global) return passBy + " " + source;
 			else return passBy + " local[" + Makai::toString(id) + "]";
 		}
