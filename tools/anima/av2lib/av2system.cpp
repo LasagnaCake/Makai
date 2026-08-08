@@ -5,22 +5,25 @@ using namespace Anima::V2::Core;
 
 struct SystemLib: ALibrary {
 
-	static void AV2Call dload(Context& context, String const& libpath) {
+	AV2Call
+	static void dload(Context& context, String const& libpath) {
 		context.openLibrary(libpath);
 		context.loadLibraries();
 	}
 
-	static Any AV2Call dcall(Context& context, String const& fname, List<Any> const& args) {
+	AV2Call
+	static Any dcall(Context& context, String const& fname, List<Any> const& args) {
 		Any out;
 		context
-			.invokeExternalMethod(fname, args)
-			.then([&] (auto const& v) {out.value = v})
+			.callNative(fname, args.toList<Object::Storage>([] (auto const& e) {return e.value;}))
+			.then([&] (auto const& v) {out.value = v;})
 		;
 		return out;
 	}
 
-	static void AV2Call dinvoke(Context& context, String const& fname, List<Any> const& args) {
-		context.invokeExternalMethod(fname, args);
+	AV2Call
+	static void dinvoke(Context& context, String const& fname, List<Any> const& args) {
+		context.callNative(fname, args.toList<Object::Storage>([] (auto const& e) {return e.value;}));
 	}
 
 	void load(Context::Adder const& context) override {

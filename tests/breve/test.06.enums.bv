@@ -8,7 +8,7 @@ enum Weekday: uint8 {
 	FRIDAY
 	SATURDAY
 	SUNDAY
-	
+
 	fullName :: (self: Weekday) =>
 		switch self {
 			Weekday.MONDAY		=>	"Monday"
@@ -20,7 +20,7 @@ enum Weekday: uint8 {
 			Weekday.SUNDAY		=>	"Sunday"
 			else				=>	"INVALID_DAY"
 		}
-	
+
 	shortName :: (@ByCopy self: Weekday) =>
 		match {
 			self == Weekday.MONDAY		=>	"Mon"
@@ -32,33 +32,33 @@ enum Weekday: uint8 {
 			self == Weekday.SUNDAY		=>	"Sun"
 			else						=>	"INVALID_DAY"
 		}
-	
+
 	display :: (@ByRef self: Weekday) =>
-		IO.writeLine(self.fullName; + " (" + self.shortName; + ")")
+		IO.writeLine(self.fullName! + " (" + self.shortName! + ")")
 }
 
 @Main
 main :: () {
 	// Full mode
-	day := Weekday.MONDAY
-	IO.writeLine(day.fullName;)
-	IO.writeLine(day.shortName;)
+	@ByCopy day := Weekday.MONDAY
+	IO.writeLine(day.fullName!)
+	IO.writeLine(day.shortName!)
 	day = Weekday.TUESDAY
-	IO.writeLine(day.fullName;)
-	IO.writeLine(day.shortName;)
+	IO.writeLine(day.fullName!)
+	IO.writeLine(day.shortName!)
 	day = Weekday.WEDNESDAY
-	IO.writeLine(day.fullName;)
-	IO.writeLine(day.shortName;)
+	IO.writeLine(day.fullName!)
+	IO.writeLine(day.shortName!)
 	day = Weekday.THURSDAY
-	IO.writeLine(day.fullName;)
-	IO.writeLine(day.shortName;)
+	IO.writeLine(day.fullName!)
+	IO.writeLine(day.shortName!)
 	day = Weekday.FRIDAY
-	IO.writeLine(day.fullName;)
-	IO.writeLine(day.shortName;)
+	IO.writeLine(day.fullName!)
+	IO.writeLine(day.shortName!)
 	day = Weekday.SATURDAY
-	IO.writeLine(day.fullName;)
-	IO.writeLine(day.shortName;)
+	IO.writeLine(day.fullName!)
+	IO.writeLine(day.shortName!)
 	day = Weekday.SUNDAY
-	IO.writeLine(day.fullName;)
-	IO.writeLine(day.shortName;)
+	IO.writeLine(day.fullName!)
+	IO.writeLine(day.shortName!)
 }

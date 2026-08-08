@@ -1429,18 +1429,24 @@ void Engine::v2StackClear() {
 	if (current.type) {
 		auto& stack = context.globalValueStack;
 		auto const clear = Cast::bit<Instruction::StackClear>(current.type);
-		MAKAILIB_DEBUGLN_FULL("Clearing ", clear.count, " entries...");
+		MAKAILIB_DEBUGLN_FULL("Clearing ", clear.count, " entries (stack : ", stack.size(), ")...");
 		if (stack.size() <= clear.count) {
 			context.globalValueStack.clear();
 			return;
 		}
-		auto const maxOffset = stack.size() - clear.count;
-		auto const offset = clear.offset < maxOffset ? clear.offset : maxOffset;
-		if (stack.size() && clear.count == 1)
-			context.globalValueStack.erase(-(clear.offset+1));
-		else if ((clear.count + offset) < stack.size())
-			context.globalValueStack.eraseRange(-offset-clear.count, -offset);
-		else context.globalValueStack.clear();
+		if (clear.offset) [[unlikely]] {
+			auto const maxOffset = stack.size() - clear.count;
+			auto const offset = (clear.offset < maxOffset ? clear.offset : maxOffset) + 1;
+			if (stack.size() && (clear.count == 1))
+				context.globalValueStack.erase(-offset);
+			else if ((clear.count + offset) < stack.size())
+				context.globalValueStack.eraseRange(-offset-clear.count, -offset);
+			else context.globalValueStack.clear();
+		} else [[likely]] {
+			if (stack.size() && (clear.count == 1))
+				context.globalValueStack.popBack();
+			else context.globalValueStack.eraseRange(-clear.count, -1);
+		}
 	}
 }
 

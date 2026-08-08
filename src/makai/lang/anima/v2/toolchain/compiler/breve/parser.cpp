@@ -191,7 +191,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_DECLARE, infixes, new VariableDeclResolver());
 	add(LTS_TT_COLON, infixes, new VariableDeclResolver());
 	add(LTS_TT_OPEN_PAREN, infixes, new FunctionCallResolver());
-	add(LTS_TT_SEMICOLON, infixes, new FunctionCallResolver());
+	add(LTS_TT_BANG, infixes, new FunctionCallResolver());
 	add(LTS_TT_OPEN_BRACKET, infixes, new ArrayResolver());
 	add(LTS_TT_EQUALS, infixes, new AssignmentResolver());
 	add(LTS_TT_ADD_ASSIGN, infixes, new AssignmentResolver());
