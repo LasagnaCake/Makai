@@ -2124,7 +2124,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	} else context.error("Expression must be an integer!", node->leftSide);
 	loopScope->impl->writePreLine("push val", it.source.value());
 	loopScope->impl->writePreLine("jump if false", loopEnd);
-	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSource());
+	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSourceWithoutMoveCheck());
 	if (!it.shouldBePushed())
 		context.top()->impl->writeMainLine("pop");
 	if (node->middle) {
@@ -2132,7 +2132,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 		if (!(refVar.scope and refVar.scope->variable))
 			context.error("Expected variable declaration here!", node->middle);
 		refVar.scope->variable->fill();
-		loopScope->impl->writePreLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSource());
+		loopScope->impl->writePreLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSourceWithoutMoveCheck());
 		var.type = refVar.scope->variable->type;
 	}
 	loopScope->impl->writePreLine("@target", loopStart, ":");
