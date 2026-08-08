@@ -102,7 +102,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 	if (ns->variable) {
 		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 			return {{ns->variable->value.toString()}};
-		if (!ns->variable->hasValue)
+		if (!ns->variable->exists())
 			context.error("Variable has been referenced after value has been moved!", node);
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
 			context.top()->impl->writeMainLine("at [", ns->variable->id, "]");
@@ -130,7 +130,7 @@ static ATransformer::Result resolveSubfield(
 	}
 	MAKAILIB_DEBUGLN_FULL("Looking for subspace '", sub, "'...");
 	if (ns->variable) {
-		if (ns->variable->context <= ExecutionContext::AV2_TCB_EC_RUNTIME && !ns->variable->hasValue)
+		if (!ns->variable->exists())
 			context.error("Variable has been referenced after value has been moved!", node);
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
@@ -393,12 +393,12 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		var.type = t.transform(context, node->middle).type.asWeak();
 	Makai::Data::Value direct;
 	if (node->rightSide) {
-		var.hasValue = true;
+		var.fill();
 		Expression expr;
 		auto const tmp = context.declare(UTF8StringList::from("<init>" + node->name()));
 	 	auto const result = expr.transform(context, node->rightSide);
 		if (result.source)
-			tmp->impl->writeMainLine("copy", *result.source, "->", var.getSource());
+			tmp->impl->writeMainLine("copy", *result.source, "->", var.getSourceWithoutMoveCheck());
 		else context.error("Expected value here!", node->rightSide);
 		if (!result.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
@@ -415,7 +415,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
 	else if (var.type->flags.hasNoResult)
 		context.error("[Variables cannot have discardable types!", node);
-	return {{var.getSource()}, scope, var.type.raw(), direct};
+	return {{"ref " + var.getSourceWithoutMoveCheck()}, scope, var.type.raw(), direct};
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
@@ -867,7 +867,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		}
 		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		if (val.scope && val.scope->variable)
-			val.scope->variable->hasValue = node->base.text != "move";
+			val.scope->variable->setFillState(node->base.text != "move");
 		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood};
 	}
 	if (val.shouldBePushed()) {
@@ -1417,7 +1417,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	for (auto& arg: required) {
 		auto const ax = Expression().transform(context, arg);
 		current->arguments.pushBack(ax.scope->variable);
-		ax.scope->variable->hasValue = true;
+		ax.scope->variable->fill();
 	}
 	current->entry = "__"+ fn->name + overloadName(current->arguments) + node->name();
 	impl->impl->writePreLine("@def", current->entry, ":");
@@ -1452,7 +1452,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		context.top()->impl->writeMainLine("push", ox.source.value());
 		overload->impl->writePreLine("@def", current->entry, ":");
 		ox.scope->variable->initializer = nullptr;
-		ox.scope->variable->hasValue = true;
+		ox.scope->variable->fill();
 		fn->overloads.pushBack(current);
 		ovImpl.pushBack(overload->impl);
 		current->hasImplementation = true;
@@ -1585,7 +1585,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		context.error("Nullable values cannot directly convert to non-nullable values!", node->rightSide);
 	if (lhs.type->flags.isNullable) {
 		if (lhs.scope && lhs.scope->variable)
-			lhs.scope->variable->hasValue = true;
+			lhs.scope->variable->fill();
 		if (lhs.type != rhs.type && lhs.type->base != rhs.type)
 			context.error("Type mismatch!", node->rightSide);
 		if (lhs.isStackTop() && rhs.isStackTop())
@@ -2101,7 +2101,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	auto const varScope = context.declare(vsn);
 	varScope->varc += loopScope->varc;
 	auto& var = *(varScope->variable = varScope->variable.create());
-	var.hasValue = true;
+	var.fill();
 	var.id = loopScope->varc++;
 	var.type = context.basicType("uint64").raw();
 	var.name = "##ITERATE::" + node->name();
@@ -2131,7 +2131,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 		auto const refVar = Expression().transform(context, node->middle);
 		if (!(refVar.scope and refVar.scope->variable))
 			context.error("Expected variable declaration here!", node->middle);
-		refVar.scope->variable->hasValue = true;
+		refVar.scope->variable->fill();
 		loopScope->impl->writePreLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSource());
 		var.type = refVar.scope->variable->type;
 	}
