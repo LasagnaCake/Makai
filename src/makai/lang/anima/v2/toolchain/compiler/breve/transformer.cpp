@@ -100,10 +100,10 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 	Node::Instance const& node
 ) {
 	if (ns->variable) {
-		if (!ns->variable->hasValue)
-			context.error("Variable has been referenced after value has been moved!", node);
 		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 			return {{ns->variable->value.toString()}};
+		if (!ns->variable->hasValue)
+			context.error("Variable has been referenced after value has been moved!", node);
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
 			context.top()->impl->writeMainLine("at [", ns->variable->id, "]");
 			return {"move top"};
