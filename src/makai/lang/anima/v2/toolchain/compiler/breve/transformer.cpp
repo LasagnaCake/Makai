@@ -96,9 +96,12 @@ static ATransformer::Result expandProperty(
 
 static Makai::Nullable<Makai::UTF8String> addToStack(
 	ATransformer::Context& context,
-	Namespace::Instance const& ns
+	Namespace::Instance const& ns,
+	Node::Instance const& node
 ) {
 	if (ns->variable) {
+		if (!ns->variable->hasValue)
+			context.error("Variable has been referenced after value has been moved!", node);
 		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 			return {{ns->variable->value.toString()}};
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
@@ -1126,10 +1129,8 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		auto const [path, ns] = resolve(context, node);
 		if (!ns)
 			context.error("Symbol does not exist!", node);
-		result.source = addToStack(context, ns.raw());
+		result.source = addToStack(context, ns.raw(), node);
 		if (ns->variable) {
-			if (!ns->variable->hasValue)
-				context.error("Variable has been referenced after value has been moved!", node);
 			result.type		= ns->variable->type.raw();
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;
