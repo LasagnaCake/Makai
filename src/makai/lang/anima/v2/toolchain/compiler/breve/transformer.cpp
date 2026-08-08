@@ -130,7 +130,7 @@ static ATransformer::Result resolveSubfield(
 	}
 	MAKAILIB_DEBUGLN_FULL("Looking for subspace '", sub, "'...");
 	if (ns->variable) {
-		if (!ns->variable->hasValue)
+		if (ns->variable->context <= ExecutionContext::AV2_TCB_EC_RUNTIME && !ns->variable->hasValue)
 			context.error("Variable has been referenced after value has been moved!", node);
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
