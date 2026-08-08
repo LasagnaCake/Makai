@@ -263,12 +263,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		uint64				id = 0;
 		Handle<Namespace>	parentScope;
 		UTF8String			passBy = "move";
+		bool				hasValue = false;
 
 		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
 
 		UTF8String getSource() {
 			if (context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 				return value.toString();
+			if (passBy == "move" && context <= ExecutionContext::AV2_TCB_EC_RUNTIME) hasValue = false;
 			if (global) return passBy + " " + source;
 			else return passBy + " local[" + Makai::toString(id) + "]";
 		}
