@@ -1416,6 +1416,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	for (auto& arg: required) {
 		auto const ax = Expression().transform(context, arg);
 		current->arguments.pushBack(ax.scope->variable);
+		ax.scope->variable->hasValue = true;
 	}
 	current->entry = "__"+ fn->name + overloadName(current->arguments) + node->name();
 	impl->impl->writePreLine("@def", current->entry, ":");
@@ -1450,6 +1451,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		context.top()->impl->writeMainLine("push", ox.source.value());
 		overload->impl->writePreLine("@def", current->entry, ":");
 		ox.scope->variable->initializer = nullptr;
+		ox.scope->variable->hasValue = true;
 		fn->overloads.pushBack(current);
 		ovImpl.pushBack(overload->impl);
 		current->hasImplementation = true;
