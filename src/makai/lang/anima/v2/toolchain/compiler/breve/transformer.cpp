@@ -127,6 +127,8 @@ static ATransformer::Result resolveSubfield(
 	}
 	MAKAILIB_DEBUGLN_FULL("Looking for subspace '", sub, "'...");
 	if (ns->variable) {
+		if (!ns->variable->hasValue)
+			context.error("Variable has been referenced after value has been moved!", node);
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
 			context.top()->impl->writeMainLine("push", ns->variable->getSource());
@@ -388,6 +390,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		var.type = t.transform(context, node->middle).type.asWeak();
 	Makai::Data::Value direct;
 	if (node->rightSide) {
+		var.hasValue = true;
 		Expression expr;
 		auto const tmp = context.declare(UTF8StringList::from("<init>" + node->name()));
 	 	auto const result = expr.transform(context, node->rightSide);
@@ -860,6 +863,8 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 			mod = "val";
 		}
 		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
+		if (val.scope && val.scope->variable)
+			val.scope->variable->hasValue = node->base.text != "move";
 		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood};
 	}
 	if (val.shouldBePushed()) {
@@ -1123,6 +1128,8 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 			context.error("Symbol does not exist!", node);
 		result.source = addToStack(context, ns.raw());
 		if (ns->variable) {
+			if (!ns->variable->hasValue)
+				context.error("Variable has been referenced after value has been moved!", node);
 			result.type		= ns->variable->type.raw();
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;
@@ -1574,6 +1581,8 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	if (rhs.type && rhs.type->flags.isNullable && !lhs.type->flags.isNullable)
 		context.error("Nullable values cannot directly convert to non-nullable values!", node->rightSide);
 	if (lhs.type->flags.isNullable) {
+		if (lhs.scope && lhs.scope->variable)
+			lhs.scope->variable->hasValue = true;
 		if (lhs.type != rhs.type && lhs.type->base != rhs.type)
 			context.error("Type mismatch!", node->rightSide);
 		if (lhs.isStackTop() && rhs.isStackTop())
@@ -2089,6 +2098,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	auto const varScope = context.declare(vsn);
 	varScope->varc += loopScope->varc;
 	auto& var = *(varScope->variable = varScope->variable.create());
+	var.hasValue = true;
 	var.id = loopScope->varc++;
 	var.type = context.basicType("uint64").raw();
 	var.name = "##ITERATE::" + node->name();
@@ -2118,6 +2128,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 		auto const refVar = Expression().transform(context, node->middle);
 		if (!(refVar.scope and refVar.scope->variable))
 			context.error("Expected variable declaration here!", node->middle);
+		refVar.scope->variable->hasValue = true;
 		loopScope->impl->writePreLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSource());
 		var.type = refVar.scope->variable->type;
 	}
