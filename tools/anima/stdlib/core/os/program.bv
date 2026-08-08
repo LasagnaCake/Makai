@@ -6,55 +6,55 @@ module OS {
 			@ByValue key: string
 			@ByValue value: ?any
 		}
-		
+
 		@ByRef name:	?string
 		@ByRef args:	?[string]
 		@ByRef config:	?[Option]
-		
+
 		@Static
 		info :: () -> ?Program =>
 			new Program {
-				name = Program.getName;,
-				args = Program.getArgs;,
-				config = Program.getConfig;
+				name = Program.getName!,
+				args = Program.getArgs!,
+				config = Program.getConfig!
 			}
-			when Program.getConfigKeyCount;
+			when Program.getConfigKeyCount!
 			else null
-		
+
 		@Private
 		@Static
 		@Shared(name = "av2/proc/getArgCount", optional = true, lib = av2proc)
 		getArgCount :: (index: uint64) -> ?uint64
-		
+
 		@Private
 		@Static
 		@Shared(name = "av2/proc/getArg", optional = true, lib = av2proc)
 		getArg :: (index: uint64) -> ?string
-		
+
 		@Private
 		@Static
 		@Shared(name = "av2/proc/getConfigKeyCount", optional = true, lib = av2proc)
 		getConfigKeyCount :: () -> ?uint64
-		
+
 		@Private
 		@Static
 		@Shared(name = "av2/proc/getConfigKey", optional = true, lib = av2proc)
 		getConfigKey :: (index: uint64) -> ?string
-		
+
 		@Private
 		@Static
 		@Shared(name="av2/proc/getConfigValue", optional = true, lib = av2proc)
 		getConfigValue :: (key: string) -> ?any
-		
+
 		@Private
 		@Static
 		@Shared(name = "av2/proc/getName", optional = true, lib = av2proc)
 		getName :: () -> ?string
-		
+
 		@Private
 		@Static
 		getConfig :: () -> ?[Setting] {
-			@ByCopy total := Program.getConfigKeyCount;
+			@ByCopy total := Program.getConfigKeyCount!
 			if not total return null
 			@ByRef out := new Setting[total]
 			repeat @ByRef i: uint64 -> total {
@@ -66,11 +66,11 @@ module OS {
 			}
 			return out
 		}
-		
+
 		@Private
 		@Static
 		getArgs :: () -> ?[string] {
-			@ByCopy total := Program.getArgCount;
+			@ByCopy total := Program.getArgCount!
 			if not total return null
 			@ByRef out := new string[total]
 			repeat @ByRef i: uint64 -> total {
@@ -81,6 +81,6 @@ module OS {
 			return out
 		}
 	}
-	
-	env :: () => Program.info()
+
+	env :: () => Program.info!
 }
