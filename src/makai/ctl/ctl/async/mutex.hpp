@@ -50,6 +50,7 @@ struct Mutex: SelfIdentified<Mutex> {
 	~Mutex() {
 		unbind();
 	}
+
 	Mutex(Mutex const& other)						{clone(other.mutex);										}
 	Mutex& operator=(Mutex const& other)			{clone(other.mutex); return *this;							}
 	Mutex(Mutex&& other): mutex(move(other.mutex))	{other.mutex = nullptr;										}
@@ -130,8 +131,8 @@ struct Mutex: SelfIdentified<Mutex> {
 
 private:
 	void clone(ref<Impl> const other) {
-		if (mutex && mutex->rcount)
-			unbind();
+		/*if (mutex && mutex->rcount)
+			unbind();*/
 		mutex = other;
 		++mutex->rcount;
 	}
