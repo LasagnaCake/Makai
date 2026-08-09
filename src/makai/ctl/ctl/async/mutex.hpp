@@ -50,14 +50,10 @@ struct Mutex: SelfIdentified<Mutex> {
 	~Mutex() {
 		unbind();
 	}
-
-	#ifdef CTL_ON_WINDOWS
-	Mutex(Mutex const& other)				{clone(other.mutex);							}
-	Mutex& operator=(Mutex const& other)	{clone(other.mutex); return *this;				}
-	Mutex(Mutex&& other)					{displace(mutex, other.mutex);					}
-	Mutex& operator=(Mutex&& other)			{displace(mutex, other.mutex); return *this;	}
-	#else
-	#endif
+	Mutex(Mutex const& other)						{clone(other.mutex);										}
+	Mutex& operator=(Mutex const& other)			{clone(other.mutex); return *this;							}
+	Mutex(Mutex&& other): mutex(move(other.mutex))	{other.mutex = nullptr;										}
+	Mutex& operator=(Mutex&& other)					{mutex = other.mutex; other.mutex = nullptr; return *this;	}
 
 	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
 	/// @return Reference to self.
@@ -130,11 +126,6 @@ struct Mutex: SelfIdentified<Mutex> {
 
 	bool locked() const {
 		return captured();
-	}
-
-	/// @brief `swap` algorithm.
-	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
-		swap(a.mutex, b.mutex);
 	}
 
 private:

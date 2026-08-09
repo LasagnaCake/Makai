@@ -365,11 +365,6 @@ public:
 	/// @return Order between `Thrad`s.
 	auto operator<=>(Thread const& other) const	{return id() <=> other.id();	}
 
-	/// @brief `swap` algorithm.
-	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
-		swap(a.thread, b.thread);
-	}
-
 private:
 	AtomicCell<Impl> thread;
 };
