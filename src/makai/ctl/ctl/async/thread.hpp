@@ -43,7 +43,7 @@ private:
 		struct None {};
 		using Caller	= Function<TReturn(TArgs...)>;
 		using Arguments	= Meta::If<sizeof...(TArgs), Tuple<TArgs...>, None>;
-		using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsArgument<TReturn>, None>;
+		using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsPassable<TReturn>, None>;
 
 		#ifdef CTL_ON_WINDOWS
 		using ThreadResponse = DWORD;

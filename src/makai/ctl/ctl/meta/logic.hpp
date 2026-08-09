@@ -5,6 +5,7 @@
 #include "../typetraits/typecontainer.hpp"
 #include "../typetraits/converter.hpp"
 #include "if.hpp"
+#include "typeof.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -35,13 +36,13 @@ namespace Meta {
 	/// @brief Logical `or`.
 	/// @tparam ...Values Values to `or`.
 	template <bool... Values>
-	constexpr bool LogicalOr	= (... && Values);
+	constexpr bool LogicalOr	= (... || Values);
 
 	/// @brief Applies a type qualifier to another type, if it is not void.
 	/// @tparam T Type to apply qualifier to.
 	/// @tparam TQualifier<class> Qualifier to apply.
 	template<class T, template <class> class TQualifier>
-	using Apply = typename Impl::ApplyType<T, TQualifier>::Type;
+	using Apply = Unwrap<Impl::ApplyType<T, TQualifier>>;
 
 	/// @brief Decays to either `T const` or `T`, depending on the condition.
 	/// @tparam T Type to const-ify depending on condition.

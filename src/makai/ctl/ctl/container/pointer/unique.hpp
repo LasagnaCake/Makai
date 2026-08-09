@@ -143,7 +143,7 @@ struct Unique:
 	/// @param other `Unique` to move.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		swap(ref, other.ref);
+		ref = displace(other.ref);
 		return *this;
 	}
 

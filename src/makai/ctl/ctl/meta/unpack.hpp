@@ -4,6 +4,7 @@
 #include "pack.hpp"
 #include "../typetraits/decay.hpp"
 #include "../container/tuple.hpp"
+#include "typeof.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -36,6 +37,8 @@ namespace Meta::Unpack {
 	using AsTuple = typename Impl::Unpack<T>::All;
 	template <class T, usize... N>
 	using Columns = typename Impl::Unpack<T>::template Columns<N...>;
+	template <class T, usize... N>
+	using With = If<sizeof...(N), Columns<T, N...>, AsTuple<T>>;
 }
 
 CTL_NAMESPACE_END

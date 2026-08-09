@@ -4,7 +4,8 @@
 #include "typecontainer.hpp"
 #include "converter.hpp"
 #include "basictraits.hpp"
-#include "../meta/logic.hpp"
+#include "../meta/if.hpp"
+#include "../meta/pack.hpp"
 #include "../namespace.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -13,15 +14,21 @@ CTL_NAMESPACE_BEGIN
 namespace Decay {
 	/// @brief Decays type as if it was a function argument passed by value.
 	template<class T>
-	using AsArgument = Meta::DualType<
-        Type::Array<AsNonReference<T>>,
-        AsPointer<AsNonExtent<AsNonReference<T>>>,
-        Meta::DualType<
-            Type::Function<AsNonReference<T>>,
-            AsPointer<AsNonReference<T>>,
-            AsNonCV<AsNonReference<T>>
-        >
+	using AsArgument = Meta::Any<
+        Meta::When<Type::Array<AsNonReference<T>>, AsPointer<AsNonExtent<AsNonReference<T>>>>,
+        Meta::When<Type::Function<AsNonReference<T>>, AsPointer<AsNonReference<T>>>,
+        AsNonCV<AsNonReference<T>>
     >;
+
+	/// @brief Decays type to a passable form.
+	template<class T>
+	using AsPassable = AsArgument<
+		Meta::If<
+	        Type::Equal<T, AsNonReference<T>&>,
+			AsPointer<AsNonReference<T>>,
+   			T
+	    >
+	>;
 
 	/// @brief Decays type to itself. Behaves the same as `As<T>`.
 	template<class T> using AsType = As<T>;
@@ -153,6 +160,16 @@ constexpr TTo const& violate(TFrom const& v) noexcept {return violate<TTo>(addre
 template <template <class> class TWrapper, class TBase>
 constexpr static TWrapper<TBase> wrap(TBase const& f) {
 	return TWrapper<TBase>(f);
+}
+
+/// @brief Ensures that the pointer can be safely moved. Effectively ensures that the original owner of the pointer is set to `nullptr`.
+/// @param v Pointer to move.
+/// @return Moved pointer.
+template<class T>
+constexpr static AsNonReference<owner<T>>&& displace(owner<T>& v) {
+	auto&& i = move(v);
+	v = nullptr;
+	return move(i);
 }
 
 CTL_NAMESPACE_END

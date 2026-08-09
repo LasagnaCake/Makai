@@ -3,6 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../ctypes.hpp"
+#include "if.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -17,7 +18,7 @@ namespace Meta {
 		};
 		template <usize N, typename T, typename... Types>
 		struct NthInPack<N, T, Types...> {
-			using Type = typename NthInPack<N-1, Types...>::Type;
+			using Type = TypeOf<NthInPack<N-1, Types...>>;
 		};
 
 		template <typename... T>
@@ -28,13 +29,31 @@ namespace Meta {
 
 		template <typename T, typename... Types>
 		struct Inherit<T, Types...>: Inherit<T>, Inherit<Types...> {};
+
+		template <typename... T>
+		struct Any;
+
+		template <>
+		struct Any<Invalid> {
+			using Type = Invalid;
+		};
+
+		template <Type::Different<Invalid> T>
+		struct Any<T> {
+			using Type = T;
+		};
+
+		template <typename T, typename... Types>
+		struct Any<T, Types...> {
+			using Type = If<Type::Different<T, Invalid>, T, Unwrap<Any<Types...>>>;
+		};
 	}
 
 	/// @brief Returns the Nth type in a series of types.
 	/// @tparam ...Types Types.
 	/// @tparam N Type to locate.
 	template <usize N, typename... Types>
-	using NthType = typename Impl::NthInPack<N, Types...>::Type;
+	using NthType = Unwrap<Impl::NthInPack<N, Types...>>;
 
 	/// @brief Returns the Nth type in a series of types.
 	/// @tparam ...Types Types.
@@ -62,10 +81,10 @@ namespace Meta {
 	template<typename... Types>
 	using Last = LastType<Types...>;
 
-	/// @brief Creates a class that inherits all of the given types.
+	/// @brief Returns the first non-`Invalid` type.
 	/// @tparam ...Types Types.
 	template <class... Types>
-	using Inherit = Impl::Inherit<Types...>;
+	using Any = Unwrap<Impl::Any<Types...>>;
 }
 
 CTL_NAMESPACE_END

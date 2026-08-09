@@ -52,10 +52,10 @@ struct Mutex: SelfIdentified<Mutex> {
 	}
 
 	#ifdef CTL_ON_WINDOWS
-	Mutex(Mutex const& other)					{clone(other.mutex);						}
-	Mutex& operator=(Mutex const& other)		{clone(other.mutex); return *this;			}
-	Mutex(Mutex&& other): mutex(other.mutex)	{other.mutex = nullptr;						}
-	Mutex& operator=(Mutex&& other)				{swap(mutex, other.mutex); return *this;	}
+	Mutex(Mutex const& other)					{clone(other.mutex);							}
+	Mutex& operator=(Mutex const& other)		{clone(other.mutex); return *this;				}
+	Mutex(Mutex&& other): mutex(other.mutex)	{other.mutex = nullptr;							}
+	Mutex& operator=(Mutex&& other)				{mutex = displace(other.mutex); return *this;	}
 	#else
 	#endif
 
@@ -119,7 +119,7 @@ struct Mutex: SelfIdentified<Mutex> {
 		#ifdef CTL_ON_WINDOWS
 		WaitForSingleObject(mutex->mutex, INFINITE);
 		#else
-		while (mutex->locked);
+		lock().unlock();
 		#endif
 		return *this;
 	}
