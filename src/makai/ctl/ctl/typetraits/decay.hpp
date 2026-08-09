@@ -163,13 +163,23 @@ constexpr static TWrapper<TBase> wrap(TBase const& f) {
 }
 
 /// @brief Ensures that the pointer can be safely moved. Effectively ensures that the original owner of the pointer is set to `nullptr`.
-/// @param v Pointer to move.
+/// @param dst Destination.
+/// @param src Source.
 /// @return Moved pointer.
 template<class T>
-constexpr static owner<T> displace(owner<T>& v) {
-	auto const i = v;
-	v = nullptr;
-	return i;
+constexpr static owner<T>& displace(owner<T>& dst, owner<T>& src) {
+	dst = move(src);
+	src = nullptr;
+	return dst;
+}
+
+/// @brief Ensures that the pointer can be safely moved. Effectively ensures that the original owner of the pointer is set to `nullptr`.
+/// @param ptr Pointer to move.
+/// @return Moved pointer.
+template<class T>
+constexpr static owner<T> displace(owner<T>& ptr) {
+	owner<T> tmp;
+	return displace(tmp, ptr);
 }
 
 CTL_NAMESPACE_END

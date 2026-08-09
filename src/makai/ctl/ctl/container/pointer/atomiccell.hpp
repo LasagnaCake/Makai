@@ -74,7 +74,7 @@ struct AtomicCell:
 
 	/// @brief Move constructor (`AtomicCell`).
 	/// @param obj Cell to reference.
-	constexpr AtomicCell(SelfType&& other): wrapper(displace(other.wrapper)) {}
+	constexpr AtomicCell(SelfType&& other) {displace(wrapper, other.wrapper);}
 
 	/// @brief Copy assignment operator.
 	/// @param obj Cell to reference.

@@ -64,7 +64,7 @@ struct Cell:
 
 	/// @brief Move constructor (`Cell`).
 	/// @param obj Cell to reference.
-	constexpr Cell(SelfType&& other): wrapper(displace(other.wrapper)) {}
+	constexpr Cell(SelfType&& other) {displace(wrapper, other.wrapper);}
 
 	/// @brief Copy assignment operator (`Cell`).
 	/// @param obj Cell to reference.
