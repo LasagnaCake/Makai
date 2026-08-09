@@ -166,7 +166,7 @@ constexpr static TWrapper<TBase> wrap(TBase const& f) {
 /// @param v Pointer to move.
 /// @return Moved pointer.
 template<class T>
-constexpr static AsNonReference<owner<T>>&& displace(owner<T>& v) {
+constexpr static owner<T> displace(owner<T>& v) {
 	auto const i = v;
 	v = nullptr;
 	return i;
