@@ -264,6 +264,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Handle<Namespace>	parentScope;
 		UTF8String			passBy = "move";
 		bool				hasValue = false;
+		Node::Instance		lastConsumer;
 
 		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
 
@@ -287,17 +288,51 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			if (cond) fill();
 		}
 
-		constexpr UTF8String getSource() {
+		constexpr UTF8String consume(Node::Instance const& consumer) {
 			if (!isCompiled() && passBy == "move")
 				hasValue = false;
-			return getSourceWithoutMoveCheck();
+			lastConsumer = consumer;
+			return getSource();
 		}
 
-		constexpr UTF8String getSourceWithoutMoveCheck() {
+		constexpr UTF8String getSource() {
 			if (isCompiled())
 				return value.toString();
 			if (global) return passBy + " " + source;
 			else return passBy + " local[" + Makai::toString(id) + "]";
+		}
+
+		constexpr String consumerInfo() {
+			if (!lastConsumer) {
+				return
+					"FILE: EOF"
+					"\nLINE: none"
+					"\nCOLUMN: none"
+				;
+			} else {
+				auto const tok = lastConsumer->base;
+				return toString(
+					"FILE:", tok.sourceFile,
+					"\nLINE:", tok.at.line,
+					"\nCOLUMN:", tok.at.column
+				);
+			}
+		}
+
+		constexpr String emptyVarError() {
+			return lastConsumer ? varHasBeenConsumedError() : uninitError();
+		}
+
+		constexpr String varHasBeenConsumedError() {
+			return Makai::toString(
+				"Variable has been referenced after value has been moved!",
+				"\nValue was consumed here:\n",
+				consumerInfo()
+			);
+		}
+
+		constexpr String uninitError() {
+			return Makai::toString("Variable has not yet been initialized here!");
 		}
 
 		Makai::Data::Value serialize() const override;

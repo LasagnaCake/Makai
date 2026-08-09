@@ -61,12 +61,12 @@ static ATransformer::Result expandVariable(
 			expandVariable(context, node, path, *parent->variable, true);
 		else if (parent && parent->property)
 			expandProperty(context, node, path, *parent->property, true);
-		else if (stack) context.top()->impl->writeMainLine("push", var.getSource());
+		else if (stack) context.top()->impl->writeMainLine("push", var.consume(node));
 		ATransformer::Result out = {{"move top"}, var.scope.raw(), var.type.raw()};
 		out.parent = var.fieldOf.raw();
 		return out;
 	} else
-		return {var.getSource(), var.scope.raw(), var.type.raw()};
+		return {var.consume(node), var.scope.raw(), var.type.raw()};
 }
 
 static ATransformer::Result expandProperty(
@@ -103,12 +103,12 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 			return {{ns->variable->value.toString()}};
 		if (!ns->variable->exists())
-			context.error("Variable has been referenced after value has been moved!", node);
+			context.error(ns->variable->emptyVarError(), node);
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
 			context.top()->impl->writeMainLine("at [", ns->variable->id, "]");
 			return {"move top"};
 		}
-		return ns->variable->getSource();
+		return ns->variable->consume(node);
 	} else if (ns->property) {
 		auto const ov = ns->property->getter->overloadFromTypes({});
 		context.top()->impl->writeMainLine("call", ov->entry);
@@ -131,10 +131,10 @@ static ATransformer::Result resolveSubfield(
 	MAKAILIB_DEBUGLN_FULL("Looking for subspace '", sub, "'...");
 	if (ns->variable) {
 		if (!ns->variable->exists())
-			context.error("Variable has been referenced after value has been moved!", node);
+			context.error(ns->variable->emptyVarError(), node);
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
-			context.top()->impl->writeMainLine("push", ns->variable->getSource());
+			context.top()->impl->writeMainLine("push", ns->variable->consume(node));
 			if (node->forAssignment)
 				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, ssize(f->id), ns->variable->type.raw()};
 			context.top()->impl->writeMainLine("at [", f->id, "]");
@@ -142,8 +142,8 @@ static ATransformer::Result resolveSubfield(
 		}
 		if (ns->variable->type->scope->subspaces.contains(sub)) {
 			auto const f = ns->variable->type->scope->subspaces[sub];
-			if (f->function) return {.source = ns->variable->getSource(), .scope = f, .type = ns->variable->type.raw()};
-			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
+			if (f->function) return {.source = ns->variable->consume(node), .scope = f, .type = ns->variable->type.raw()};
+			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw()};
 			context.error("Invalid expression!", node);
 		}
 		context.error("Invalid expression!", node);
@@ -165,9 +165,9 @@ static ATransformer::Result resolveSubfield(
 			if (f->function) return {.scope = f};
 			if (f->variable) {
 				if (f->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
-					return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw(), .direct = f->variable->value};
+					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw(), .direct = f->variable->value};
 				if (f->variable->staticEntity)
-					return {.source = {f->variable->getSource()}, .scope = f, .type = f->variable->type.raw()};
+					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw()};
 			}
 			context.error("Invalid expression!", node);
 		}
@@ -398,7 +398,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		auto const tmp = context.declare(UTF8StringList::from("<init>" + node->name()));
 	 	auto const result = expr.transform(context, node->rightSide);
 		if (result.source)
-			tmp->impl->writeMainLine("copy", *result.source, "->", var.getSourceWithoutMoveCheck());
+			tmp->impl->writeMainLine("copy", *result.source, "->", var.getSource());
 		else context.error("Expected value here!", node->rightSide);
 		if (!result.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
@@ -415,7 +415,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
 	else if (var.type->flags.hasNoResult)
 		context.error("[Variables cannot have discardable types!", node);
-	return {{"ref " + var.getSourceWithoutMoveCheck()}, scope, var.type.raw(), direct};
+	return {{"ref " + var.getSource()}, scope, var.type.raw(), direct};
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
@@ -1063,7 +1063,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (node->base.type == LTS_TT_LOGIC_OR)
 			context.impl()->writeMainLine("@target", sseOr);
 		auto const t = TypeDecl::stronger(lhs.type, rhs.type);
-		if (!t) context.error("Type mismatch!", node);
+		if (!t) context.error("Type mismatch in infix expression!", node);
 		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 	} else if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		MAKAILIB_DEBUGLN_FULL("Stronger: ", t->name);
@@ -1089,7 +1089,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		else context.error("Array element type mismatch!", node);
 		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 	}
-	context.error("Type mismatch!", node);
+	context.error("Type mismatch in infix expression!", node);
 }
 
 ATransformer::Result Direct::transform(Context& context, Node::Instance const& node) {
@@ -1547,7 +1547,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			if (node->base.type == LTS_TT_NULL_ASSIGN)
 				context.top()->impl->writeMainLine("@target", ndecl);
 			return {{"move top"}, lhs.scope, t, rhs.direct, rhs.likelihood};
-		} else context.error("Type mismatch!", node);
+		} else context.error("Type mismatch in assignment expression!", node);
 	}
 	auto lhs = Expression().transform(context, node->leftSide);
 	if (lhs.isStackTop() && lhs.isCopied())
@@ -1587,7 +1587,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		if (lhs.scope && lhs.scope->variable)
 			lhs.scope->variable->fill();
 		if (lhs.type != rhs.type && lhs.type->base != rhs.type)
-			context.error("Type mismatch!", node->rightSide);
+			context.error("Type mismatch in assignment expression!", node->rightSide);
 		if (lhs.isStackTop() && rhs.isStackTop())
 			lhs.source = UTF8String("move stack[-1]");
 		if (*lhs.source != *rhs.source)
@@ -1610,7 +1610,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		if (node->base.type == LTS_TT_NULL_ASSIGN)
 			context.top()->impl->writeMainLine("@target", ndecl);
 		return {lhs.source, lhs.scope, t, rhs.direct, rhs.likelihood};
-	} else context.error("Type mismatch!", node);
+	} else context.error("Type mismatch in assignment expression!", node);
 }
 
 ATransformer::Result Import::transform(Context& context, Node::Instance const& node) {
@@ -1897,7 +1897,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 						context.error("Expected value here!", arg->rightSide);
 					auto const fx = t->fields[field.front()];
 					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
-						context.error("Type mismatch!", arg->rightSide);
+						context.error("Type mismatch in field!", arg->rightSide);
 					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
 					if (!expr.shouldBePushed())
 						context.top()->impl->writeMainLine("pop");
@@ -1914,7 +1914,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 						context.error("Expected value here!", arg);
 					auto const fx = t->fields[remap[index]];
 					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
-						context.error("Type mismatch!", arg);
+						context.error("Type mismatch in field!", arg);
 					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
 					if (!expr.shouldBePushed())
 						context.top()->impl->writeMainLine("pop");
@@ -1926,7 +1926,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			for (auto const& [arg, i]: Range::expand(node->children)) {
 				auto const expr = Expression().transform(context, arg);
 				if (TypeDecl::stronger(expr.type, t->base) != t->base)
-					context.error("Type mismatch!", arg);
+					context.error("Type mismatch in array element!", arg);
 				context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", tempStart + i, "]");
 				if (!expr.shouldBePushed())
 					context.top()->impl->writeMainLine("pop");
@@ -2124,7 +2124,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	} else context.error("Expression must be an integer!", node->leftSide);
 	loopScope->impl->writePreLine("push val", it.source.value());
 	loopScope->impl->writePreLine("jump if false", loopEnd);
-	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSourceWithoutMoveCheck());
+	loopScope->impl->writePreLine("copy", it.source.value(), "->", var.getSource());
 	if (!it.shouldBePushed())
 		context.top()->impl->writeMainLine("pop");
 	if (node->middle) {
@@ -2132,7 +2132,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 		if (!(refVar.scope and refVar.scope->variable))
 			context.error("Expected variable declaration here!", node->middle);
 		refVar.scope->variable->fill();
-		loopScope->impl->writePreLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSourceWithoutMoveCheck());
+		loopScope->impl->writePreLine("copy ref", var.getSource(), "->", refVar.scope->variable->getSource());
 		var.type = refVar.scope->variable->type;
 	}
 	loopScope->impl->writePreLine("@target", loopStart, ":");
@@ -2306,7 +2306,7 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 	context.top()->impl->writeMainLine("jump if not empty", exit);
 	auto const rhs = Expression().transform(context, node);
 	if (!(lhs.type->base != rhs.type))
-		context.error("Type mismatch!", node->rightSide);
+		context.error("Type mismatch in null decay!", node->rightSide);
 	if (rhs.shouldBePushed())
 		context.top()->impl->writeMainLine("push", rhs.source.value());
 	else if (rhs.isStackTop() && rhs.isCopied())
@@ -2380,7 +2380,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 			if (!match.isCompilable())
 				context.error("Expected direct value here!", caseExpr->leftSide);
 			if (match.type != switchType)
-				context.error("Type mismatch!", caseExpr->leftSide);
+				context.error("Type mismatch in switch case!", caseExpr->leftSide);
 			ssize matchIndex = match.direct.getSigned();
 			if (matches.contains(matchIndex))
 				context.error("A case for this value was already declared!", caseExpr->leftSide);

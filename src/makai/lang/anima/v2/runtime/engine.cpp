@@ -13,8 +13,8 @@ static void printValueState(Object::Storage const& value) {
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUG_FULL("> Value? ", value ? "YES" : "NO");
 		if (value) {
-			MAKAILIB_DEBUG_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
-			MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
+			 MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
+				MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
 		}
 		else MAKAILIB_DEBUGLN_FULL("");
 	}
@@ -1429,24 +1429,18 @@ void Engine::v2StackClear() {
 	if (current.type) {
 		auto& stack = context.globalValueStack;
 		auto const clear = Cast::bit<Instruction::StackClear>(current.type);
-		MAKAILIB_DEBUGLN_FULL("Clearing ", clear.count, " entries (stack : ", stack.size(), ")...");
-		if (stack.size() <= clear.count) {
+		MAKAILIB_DEBUGLN_FULL("Clearing ", clear.count, " entries...");
+		if (stack.size() < clear.count) {
 			context.globalValueStack.clear();
 			return;
 		}
-		if (clear.offset) [[unlikely]] {
-			auto const maxOffset = stack.size() - clear.count;
-			auto const offset = (clear.offset < maxOffset ? clear.offset : maxOffset) + 1;
-			if (stack.size() && (clear.count == 1))
-				context.globalValueStack.erase(-offset);
-			else if ((clear.count + offset) < stack.size())
-				context.globalValueStack.eraseRange(-offset-clear.count, -offset);
-			else context.globalValueStack.clear();
-		} else [[likely]] {
-			if (stack.size() && (clear.count == 1))
-				context.globalValueStack.popBack();
-			else context.globalValueStack.eraseRange(-clear.count, -1);
-		}
+		auto const maxOffset = stack.size() - clear.count;
+		auto const offset = clear.offset < maxOffset ? clear.offset : maxOffset;
+		if (stack.size() && clear.count == 1)
+			context.globalValueStack.erase(-(clear.offset+1));
+		else if ((clear.count + offset) < stack.size())
+			context.globalValueStack.eraseRange(-offset-clear.count, -offset);
+		else context.globalValueStack.clear();
 	}
 }
 
@@ -1800,8 +1794,7 @@ void Engine::v2ScopeKeep() {
 }
 
 void Engine::v2ScopeDeclare() {
-	for (usize i = 0; i < current.type; ++i)
-		context.locals().pushBack(nullptr);
+	context.locals().appendBack(Makai::List<Context::Storage>(current.type, nullptr));
 }
 
 void Engine::v2Cast() {
