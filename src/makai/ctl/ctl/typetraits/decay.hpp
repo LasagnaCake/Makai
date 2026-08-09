@@ -167,9 +167,9 @@ constexpr static TWrapper<TBase> wrap(TBase const& f) {
 /// @return Moved pointer.
 template<class T>
 constexpr static AsNonReference<owner<T>>&& displace(owner<T>& v) {
-	auto&& i = move(v);
+	auto const i = v;
 	v = nullptr;
-	return move(i);
+	return i;
 }
 
 CTL_NAMESPACE_END
