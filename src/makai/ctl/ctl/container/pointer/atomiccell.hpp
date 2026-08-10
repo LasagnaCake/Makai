@@ -194,10 +194,10 @@ struct AtomicCell:
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	bool exists() const			{return (wrapper && !wrapper->dead());	}
+	bool exists() const			{return (wrapper && !wrapper->dead());		}
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	operator bool() const		{return exists();						}
+	operator bool() const		{return exists();							}
 
 	/// @brief Returns whether this cell is the sole owner of the bound object.
 	/// @return Whether this cell is the sole owner of the bound object.
