@@ -76,9 +76,9 @@ struct Cell:
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
-		//unbind();
-		wrapper = other.wrapper;
+		unbind();
 		if (!other.exists()) return *this;
+		wrapper = other.wrapper;
 		wrapper->acquire();
 		return *this;
 	}

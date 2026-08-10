@@ -10,6 +10,9 @@ namespace Makai::Anima::V2::Core {
 	struct Object;
 	struct ALibrary;
 
+	// While `AtomicCell` is not working, this will do
+	using ObjectStorage = AtomicCell<Object>;
+
 	struct Symbol {
 		Nullable<uint64>	source = null;
 		uint64				id;
@@ -43,9 +46,9 @@ namespace Makai::Anima::V2::Core {
 	struct Void {};
 
 	struct Any {
-		AtomicCell<Object> value;
+		ObjectStorage value;
 
-		constexpr AtomicCell<Object> const& operator->() const {
+		constexpr ObjectStorage const& operator->() const {
 			return value;
 		}
 	};

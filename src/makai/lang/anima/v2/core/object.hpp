@@ -14,14 +14,14 @@ namespace Makai::Anima::V2::Core {
 	};
 
 	struct Object {
-		using Storage = AtomicCell<Object>;
+		using Storage = ObjectStorage;
 		using Memory = MemorySlice<byte>;
 
 		~Object();
 
 		pointer			data()				{return content->data();	}
 		ref<void const>	data() const		{return content->data();	}
-		constexpr usize byteSize() const	{return origin->byteSize;	}
+		usize			byteSize() const	{return origin->byteSize;	}
 
 		template <Makai::Type::Equal<nulltype> T>
 		T toValue() const {
@@ -136,7 +136,7 @@ namespace Makai::Anima::V2::Core {
 
 		Object& operator=(Object const& other);
 
-		constexpr TypeFlags flags() const {
+		TypeFlags flags() const {
 			if (!origin) return {};
 			return origin->flags;
 		}
@@ -145,57 +145,57 @@ namespace Makai::Anima::V2::Core {
 
 		usize count() const;
 
-		constexpr bool isBoolean() const {
+		bool isBoolean() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_BOOL);
 		}
 
-		constexpr bool isValueType() const {
+		bool isValueType() const {
 			if (!origin) return false;
 			return (origin->flags.isValueType);
 		}
 
-		constexpr bool isClonable() const {
+		bool isClonable() const {
 			if (!origin) return false;
 			return (origin->flags.isCopyable);
 		}
 
-		constexpr bool isEmptyType() const {
+		bool isEmptyType() const {
 			if (!origin) return true;
 			return (origin->flags.hasNoResult);
 		}
 
-		constexpr bool isAlgebraic() const {
+		bool isAlgebraic() const {
 			return isVector() || isMatrix();
 		}
 
-		constexpr bool isVectorable() const {
+		bool isVectorable() const {
 			return isNumber() || isVector();
 		}
 
-		constexpr bool isNumber() const {
+		bool isNumber() const {
 			return isInteger() || isReal();
 		}
 
-		constexpr bool isNonBoolNumber() const {
+		bool isNonBoolNumber() const {
 			return isNonBoolInteger() || isReal();
 		}
 
-		constexpr bool isNonBoolUnsigned() const {
+		bool isNonBoolUnsigned() const {
 			return (!isBoolean()) && isUnsigned();
 		}
 
-		constexpr bool isNonBoolInteger() const {
+		bool isNonBoolInteger() const {
 			return isSigned() or isNonBoolUnsigned();
 		}
 
-		constexpr bool isInteger() const {
+		bool isInteger() const {
 			return isSigned() or isUnsigned();
 		}
 
-		constexpr bool isSigned() const {
+		bool isSigned() const {
 			if (!isBasic())
 				return false;
 			return (
@@ -206,7 +206,7 @@ namespace Makai::Anima::V2::Core {
 			);
 		}
 
-		constexpr bool isUnsigned() const {
+		bool isUnsigned() const {
 			if (!isBasic())
 				return false;
 			return (
@@ -218,7 +218,7 @@ namespace Makai::Anima::V2::Core {
 			);
 		}
 
-		constexpr bool isReal() const {
+		bool isReal() const {
 			if (!isBasic())
 				return false;
 			return (
@@ -228,87 +228,87 @@ namespace Makai::Anima::V2::Core {
 			);
 		}
 
-		constexpr bool isVector() const {
+		bool isVector() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_VECTOR);
 		}
 
-		constexpr bool isMatrix() const {
+		bool isMatrix() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_MATRIX);
 		}
 
-		constexpr bool isTypeID() const {
+		bool isTypeID() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_TYPEID);
 		}
 
-		constexpr bool isJumpID() const {
+		bool isJumpID() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_JUMPID);
 		}
 
-		constexpr bool isCallID() const {
+		bool isCallID() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_CALLID);
 		}
 
-		constexpr bool isCharacter() const {
+		bool isCharacter() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_CHAR);
 		}
 
-		constexpr bool isString() const {
+		bool isString() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_STRING);
 		}
 
-		constexpr bool isBytes() const {
+		bool isBytes() const {
 			if (!origin) return false;
 			if (!isBasic())
 				return false;
 			return (origin->basic == BasicType::AV2_BT_BYTES);
 		}
 
-		constexpr bool isVoid() const {
+		bool isVoid() const {
 			if (!origin) return true;
 			return origin->basic == BasicType::AV2_BT_VOID;
 		}
 
-		constexpr bool isNull() const {
+		bool isNull() const {
 			if (!origin) return true;
 			return origin->basic == BasicType::AV2_BT_NULL;
 		}
 
-		constexpr bool isArray() const {
+		bool isArray() const {
 			if (!origin) return false;
 			return (origin->flags.isArray);
 		}
 
-		constexpr bool isStructure() const {
+		bool isStructure() const {
 			if (!origin) return false;
 			return (origin->flags.isStructure);
 		}
 
-		constexpr bool canHaveFields() const {
+		bool canHaveFields() const {
 			return isArray() or isStructure();
 		}
 
-		constexpr bool isBasic() const {
+		bool isBasic() const {
 			if (!origin) return false;
 			return (origin->flags.isBasic);
 		}
@@ -409,7 +409,7 @@ namespace Makai::Anima::V2::Core {
 		template <class T> explicit operator T() const {return toValue<T>();}
 
 		template <class T>
-		constexpr bool canBecome() const {
+		bool canBecome() const {
 			if constexpr(Makai::Type::Equal<T, bool>)
 				return isBoolean();
 			else if constexpr (Makai::Type::Unsigned<T>)
@@ -467,21 +467,21 @@ namespace Makai::Anima::V2::Core {
 			set(*value);
 		}
 
-		constexpr bool exists() const {return content;}
+		bool exists() const {return content;}
 
 	private:
 		friend Storage;
 
-		constexpr Object() noexcept {}
+		Object() noexcept {}
 
-		constexpr Object(
+		Object(
 			AtomicCell<Definition> const& type
 		): type(type), origin(type) {
 			if (type->flags.isValueType)
 				content = content.create();
 		}
 
-		constexpr Object(
+		Object(
 			Object const& other,
 			AtomicCell<Definition> const& newType
 		): content(other.content), type(newType), origin(other.origin) {
@@ -506,13 +506,13 @@ namespace Makai::Anima::V2::Core {
 
 		Object(Object const& other, nulltype);
 
-		constexpr Object(
+		Object(
 			AtomicCell<Memory> const& content,
 			AtomicCell<Definition> const& type,
 			AtomicCell<Definition> const& origin
 		): content(content), type(type), origin(origin) {}
 
-		constexpr explicit Object(
+		explicit Object(
 			AtomicCell<Definition> const& type,
 			AtomicCell<Definition> const& origin
 		): type(type), origin(origin) {}
@@ -568,16 +568,16 @@ namespace Makai::Anima::V2::Core {
 		AtomicCell<Definition>	origin;
 	};
 
-	constexpr Data::Value decay(Object::Storage const& val) {
+	inline Data::Value decay(Object::Storage const& val) {
 		if (!val) return Data::Value::undefined();
 		return val->toDynamicValue();
 	}
 
-	constexpr Data::Value decay(Any const& any) {
+	inline Data::Value decay(Any const& any) {
 		return decay(any.value);
 	}
 
-	constexpr Data::Value operator*(Any const& any) {
+	inline Data::Value operator*(Any const& any) {
 		return decay(any);
 	}
 }

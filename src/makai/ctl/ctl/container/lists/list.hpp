@@ -1345,9 +1345,22 @@ private:
 	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
-		if (count > 1 && start < count-amount) {
-			MX::objremake(contents.data() + start, contents.data() + start + amount, amount);
-			MX::objclear(contents.data() + start + amount, amount);
+		if (count > 1 && start <= (count-amount)) {
+			auto const end = (start + amount);
+			StorageType buffer;
+			buffer.invoke(contents.size());
+			simpleCopy(contents.data(), buffer.data(), start);
+			simpleCopy(contents.data() + end, buffer.data() + start, count - end);
+			destroy(count);
+			swap(contents, buffer);
+			count -= amount;
+		} else if (start < count) {
+			StorageType buffer;
+			buffer.invoke(contents.size());
+			simpleCopy(contents.data(), buffer.data(), start);
+			destroy(count);
+			swap(contents, buffer);
+			count -= amount;
 		}
 		return *this;
 	}

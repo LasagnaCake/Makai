@@ -9,6 +9,8 @@
 #include "../../cpperror.hpp"
 #include "../../typetraits/traits.hpp"
 #include "../../async/lock.hpp"
+// For debugging purposes
+#include <stdio.h>
 
 CTL_NAMESPACE_BEGIN
 
@@ -52,40 +54,40 @@ struct AtomicCell:
 		/// @brief Creates a scope-bound lock.
 		/// @return Scope lock.
 		[[nodiscard]]
-		constexpr auto lock()		{return ScopeLock<Mutex>(oplock);		}
+		constexpr auto lock()		{return ScopeLock<Mutex>(oplock);												}
 		/// @brief Increments the reference counter, if applicable.
-		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs;	}
+		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs; printf("& References =  %zu\n", refs);	}
 		/// @brief Decrements the reference counter, if applicable.
-		constexpr void release()	{if (refs) --refs;						}
+		constexpr void release()	{if (refs) --refs; printf("& References =  %zu\n", refs);						}
 		/// @brief Returns whether there are no more references left.
-		constexpr bool dead() const	{return !refs;							}
+		constexpr bool dead() const	{return !refs;																	}
 	};
 
 	/// @brief Empty constructor.
-	constexpr AtomicCell()			{}
+	AtomicCell()			{}
 	/// @brief Empty constructor.
-	constexpr AtomicCell(nulltype)	{}
+	AtomicCell(nulltype)	{}
 
 	/// @brief Copy constructor (`AtomicCell`).
 	/// @param obj Cell to reference.
-	constexpr AtomicCell(SelfType const& other): wrapper(other.wrapper) {
-		if (!exists()) return;
+	AtomicCell(SelfType const& other): wrapper(other.wrapper) {
+		if (!other.exists()) return;
 		auto const _ = wrapper->lock();
 		wrapper->acquire();
 	}
 
 	/// @brief Move constructor (`AtomicCell`).
 	/// @param obj Cell to reference.
-	constexpr AtomicCell(SelfType&& other): wrapper(displace(other.wrapper)) {}
+	AtomicCell(SelfType&& other): wrapper(displace(other.wrapper)) {}
 
 	/// @brief Copy assignment operator.
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType const& other) {
+	SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
-		//unbind();
-		wrapper = other.wrapper;
+		unbind();
 		if (!other.exists()) return *this;
+		wrapper = other.wrapper;
 		auto const _ = wrapper->lock();
 		wrapper->acquire();
 		return *this;
@@ -94,7 +96,7 @@ struct AtomicCell:
 	/// @brief Move assignment operator.
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
-	constexpr SelfType& operator=(SelfType&& other) {
+	SelfType& operator=(SelfType&& other) {
 		wrapper = displace(other.wrapper);
 		return *this;
 	}
@@ -107,7 +109,7 @@ struct AtomicCell:
 	/// @brief Returns a pointer to the underlying value.
 	/// @return Pointer to value.
 	/// @throw `NullPointerException` if object does not exist.
-	constexpr PointerType operator->() const {
+	PointerType operator->() const {
 		if (!exists()) emptyError();
 		auto const _ = wrapper->lock();
 		return &wrapper->value;
@@ -116,7 +118,7 @@ struct AtomicCell:
 	/// @brief Returns a reference to the underlying value.
 	/// @return Reference to value.
 	/// @throw `NullPointerException` if object does not exist.
-	constexpr ReferenceType operator*() const {
+	ReferenceType operator*() const {
 		if (!exists()) emptyError();
 		auto const _ = wrapper->lock();
 		return wrapper->value;
@@ -127,7 +129,7 @@ struct AtomicCell:
 	/// @param ...args Arguments to pass to object construtor.
 	/// @return Cell to value.
 	template <class... TArgs>
-	constexpr static SelfType create(TArgs... args) {
+	static SelfType create(TArgs... args) {
 		SelfType cell;
 		cell.wrapper = new Wrapper{.value = move(DataType(args...)), .refs = 1};
 		return cell;
@@ -138,7 +140,7 @@ struct AtomicCell:
 	/// @tparam op Operation to perform.
 	/// @return Reference to self.
 	template<Type::Functional<DataType(DataType const&)> TFunction>
-	constexpr SelfType& modify(TFunction const& op) {
+	SelfType& modify(TFunction const& op) {
 		if (!exists()) return *this;
 		auto const _ = wrapper->lock();
 		wrapper->value = op(wrapper->value);
@@ -150,7 +152,7 @@ struct AtomicCell:
 	/// @tparam op Operation to perform.
 	/// @return Reference to self.
 	template<Type::Functional<void(DataType const&)> TFunction>
-	constexpr SelfType& perform(TFunction const& op) {
+	SelfType& perform(TFunction const& op) {
 		if (!exists()) return *this;
 		auto const _ = wrapper->lock();
 		op(wrapper->value);
@@ -162,11 +164,9 @@ struct AtomicCell:
 	/// @tparam op Operation to perform.
 	/// @return Reference to self.
 	template<Type::Functional<void()> TFunction>
-	constexpr SelfType& perform(TFunction const& op) {
-		if (!exists()) {
-			op();
-			return *this;
-		}
+	SelfType& perform(TFunction const& op) {
+		if (!exists())
+			return (op(), *this);
 		auto const _ = wrapper->lock();
 		op();
 		return (*this);
@@ -176,54 +176,49 @@ struct AtomicCell:
 	/// @return Sync barrier.
 	/// @throw `NullPointerException` if object does not exist.
 	[[nodiscard]]
-	constexpr ScopeLock<Mutex> sync() 		{return exists() ? wrapper->lock() : lock();}
+	ScopeLock<Mutex> sync() 		{return exists() ? wrapper->lock() : lock();}
 	/// @brief Creates a synchronization barrier bound to the cell's value.
 	/// @return Sync barrier.
 	/// @throw `NullPointerException` if object does not exist.
 	[[nodiscard]]
-	constexpr ScopeLock<Mutex> sync() const	{if (exists()) return wrapper->lock(); emptyError();}
+	ScopeLock<Mutex> sync() const	{if (exists()) return wrapper->lock(); emptyError();}
 
 	/// @brief Equality comparison operator (`Cell`).
 	/// @param obj `Cell` to compare to.
 	/// @return Whether they're equal.
-	constexpr bool operator==(SelfType const& other) const			{return wrapper == other.wrapper;	}
+	bool operator==(SelfType const& other) const		{return wrapper == other.wrapper;	}
 	/// @brief Threeway comparison operator (`Cell`).
 	/// @param obj `Cell` to compare to.
 	/// @return Order between objects.
-	constexpr OrderType operator<=>(SelfType const& other) const	{return wrapper <=> other.wrapper;	}
+	OrderType operator<=>(SelfType const& other) const	{return wrapper <=> other.wrapper;	}
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr bool exists()		const {return (wrapper && !wrapper->dead());	}
+	bool exists() const			{return (wrapper && !wrapper->dead());	}
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr operator bool()	const {return exists();							}
+	operator bool() const		{return exists();						}
 
 	/// @brief Returns whether this cell is the sole owner of the bound object.
 	/// @return Whether this cell is the sole owner of the bound object.
-	constexpr bool unique()		const {return (wrapper && wrapper->refs == 1);	}
+	bool unique() const			{return (wrapper && wrapper->refs == 1);	}
 
 	/// @brief Creates a scope-bound lock bound to the cells own mutex.
 	/// @return Scope lock.
 	[[nodiscard]]
-	constexpr ScopeLock<Mutex>	lock()	{return ScopeLock<Mutex>(mtx);	}
+	ScopeLock<Mutex>	lock()	{return ScopeLock<Mutex>(mtx);	}
 	/// @brief Returns the cell's own mutex.
 	/// @return Mutex.
-	constexpr Mutex&			mutex() {return mtx;					}
+	Mutex&				mutex()	{return mtx;					}
 
 	/// @brief `swap` algorithm.
-	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+	friend void swap(SelfType& a, SelfType& b) noexcept {
 		swap(a.wrapper, b.wrapper);
 	}
 
 private:
-	constexpr void unbind() {
+	void unbind() {
 		printf("<cell>\n");
-		if (wrapper) {
-			printf("----------------------> Wrapper: %p, ", (pointer)wrapper);
-			printf("References: %zu\n", wrapper->refs);
-		}
-		else printf("----------------------> No references\n");
 		if (!exists()) return;
 		wrapper->oplock.lock();
 		wrapper->release();
@@ -231,18 +226,16 @@ private:
 			wrapper->oplock.unlock();
 			delete displace(wrapper);
 		} else wrapper->oplock.unlock();
-		if (wrapper) {
-			printf("----------------------> Wrapper: %p, ", (pointer)wrapper);
-			printf("References: %zu\n", wrapper->refs);
-		}
-		else printf("----------------------> No references\n");
 		printf("</cell>\n");
 	}
 
-	[[noreturn]] constexpr static void emptyError() {
+	[[noreturn]] static void emptyError() {
 		throw NullPointerException("Atomic cell is empty!");
 	}
+
+	// Underlying wrapper to data.
 	ptr<Wrapper>	wrapper = nullptr;
+	// Cell-local mutex.
 	Mutex			mtx;
 };
 
