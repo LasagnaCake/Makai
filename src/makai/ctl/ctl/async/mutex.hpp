@@ -25,7 +25,7 @@ struct Mutex: SelfIdentified<Mutex> {
 
 	struct Impl {
 		bool	locked = false;
-		usize	rcount = 0;
+		usize	rcount = 1;
 		#ifdef CTL_ON_WINDOWS
 		HANDLE	mutex = nullptr;
 		#else
