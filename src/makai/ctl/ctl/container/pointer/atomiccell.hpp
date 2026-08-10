@@ -9,6 +9,7 @@
 #include "../../cpperror.hpp"
 #include "../../typetraits/traits.hpp"
 #include "../../async/lock.hpp"
+#include "../../memory/deleter.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -18,13 +19,15 @@ CTL_NAMESPACE_BEGIN
 ///		Differences between this and `Shared<T>`:
 ///		- `Shared<T>` handles references for any type (better suited for classes with virtual members)
 ///		- `Shared<T>` `Shared<T>` is slower (Global sync lock vs per-value sync lock)
-template <class TData>
+template <class TData, auto D = Deleter<TData>()>
 struct AtomicCell:
 	Typed<TData>,
 	SelfIdentified<AtomicCell<TData>>,
-	Ordered {
+	Ordered,
+	Deletable<D, TData> {
 	using Typed				= ::CTL::Typed<TData>;
 	using SelfIdentified	= ::CTL::SelfIdentified<AtomicCell<TData>>;
+	using Deletable			= ::CTL::Deletable<D, TData>;
 
 	using
 		typename Typed::DataType,
@@ -40,14 +43,16 @@ struct AtomicCell:
 		typename SelfIdentified::SelfType
 	;
 
+	using Deletable::deleter;
+
 	/// @brief Value wrapper.
 	struct Wrapper {
 		/// @brief Thread synchronization barrier.
-		Mutex		oplock;
+		Mutex			oplock;
 		/// @brief Underlying value.
-		DataType	value;
+		ptr<DataType>	value;
 		/// @brief Count of reference to value.
-		usize		refs;
+		usize			refs;
 
 		/// @brief Creates a scope-bound lock.
 		/// @return Scope lock.
@@ -74,14 +79,14 @@ struct AtomicCell:
 
 	/// @brief Move constructor (`AtomicCell`).
 	/// @param obj Cell to reference.
-	constexpr AtomicCell(SelfType&& other): wrapper(move(other.wrapper)) {other.wrapper = nullptr;}
+	constexpr AtomicCell(SelfType&& other): wrapper(displace(other.wrapper)) {}
 
 	/// @brief Copy assignment operator.
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
-		//unbind();
+		unbind();
 		wrapper = other.wrapper;
 		if (!other.exists()) return *this;
 		auto const _ = wrapper->lock();
@@ -93,19 +98,14 @@ struct AtomicCell:
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		wrapper = move(other.wrapper);
-		other.wrapper = nullptr;
+		wrapper = displace(other.wrapper);
+		flag = displace(other.flag);
 		return *this;
-	}
-
-	/// @brief `swap` algorithm.
-	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
-		swap(a.wrapper, b.wrapper);
 	}
 
 	/// @brief Destructor.
 	~AtomicCell() {
-		unbind();
+		unbind(true);
 	}
 
 	/// @brief Returns a pointer to the underlying value.
@@ -133,7 +133,8 @@ struct AtomicCell:
 	template <class... TArgs>
 	constexpr static SelfType create(TArgs... args) {
 		SelfType cell;
-		cell.wrapper = new Wrapper{.value = DataType(args...), .refs = 1};
+		cell.wrapper = new Wrapper{.value = new DataType(args...), .refs = 1};
+		cell.flag = new bool(true);
 		return cell;
 	}
 
@@ -198,14 +199,14 @@ struct AtomicCell:
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr bool exists()		const {return (wrapper && wrapper->refs);		}
+	constexpr bool exists()		const {return (wrapper && wrapper->refs && wrapper->value);	}
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr operator bool()	const {return exists();							}
+	constexpr operator bool()	const {return exists();										}
 
 	/// @brief Returns whether this cell is the sole owner of the bound object.
 	/// @return Whether this cell is the sole owner of the bound object.
-	constexpr bool unique()		const {return (wrapper && wrapper->refs == 1);	}
+	constexpr bool unique()		const {return (exists() && wrapper->refs == 1);	}
 
 	/// @brief Creates a scope-bound lock bound to the cells own mutex.
 	/// @return Scope lock.
@@ -215,14 +216,20 @@ struct AtomicCell:
 	/// @return Mutex.
 	constexpr Mutex&			mutex() {return mtx;					}
 
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.wrapper, b.wrapper);
+	}
+
 private:
-	constexpr void unbind() {
+	constexpr void unbind(bool const deleteWrapper = false) {
 		if (!exists()) return;
 		wrapper->oplock.capture();
 		wrapper->release();
 		if (!wrapper->refs) {
 			wrapper->oplock.release();
-			delete wrapper;
+			deleter(displace(wrapper->value));
+			if (deleteWrapper) delete wrapper;
 		} else wrapper->oplock.release();
 		wrapper = nullptr;
 	}

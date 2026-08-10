@@ -35,7 +35,6 @@ struct Mutex: SelfIdentified<Mutex> {
 
 	/// @brief Empty constuctor.
 	Mutex() {
-		mutex = Cell<Impl>::create();
 		#ifdef CTL_ON_WINDOWS
 		mutex.mutex = CreateMutexA(NULL, FALSE, NULL);
 		#else
@@ -49,10 +48,11 @@ struct Mutex: SelfIdentified<Mutex> {
 
 	~Mutex() {unbind();}
 
-	Mutex(Mutex const& other)				= delete;
-	Mutex& operator=(Mutex const& other)	= delete;
-	Mutex& operator=(Mutex&& other)			= delete;
-	Mutex(Mutex&& other)					= delete;
+	Mutex(Mutex const&)				= delete;
+	Mutex(Mutex&&)					= delete;
+
+	Mutex& operator=(Mutex const&)	= delete;
+	Mutex& operator=(Mutex&&)		= delete;
 
 	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
 	/// @return Reference to self.
@@ -121,7 +121,7 @@ struct Mutex: SelfIdentified<Mutex> {
 	}
 
 	bool captured() const {
-		return mutex ? mutex.locked : false;
+		return mutex.exists ? mutex.locked : false;
 	}
 
 	bool locked() const {

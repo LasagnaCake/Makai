@@ -45,9 +45,9 @@ struct Cell:
 	/// @brief Value wrapper.
 	struct Wrapper {
 		/// @brief Underlying value.
-		DataType	value;
+		ptr<DataType>	value;
 		/// @brief Count of reference to value.
-		usize		refs;
+		usize			refs;
 
 		/// @brief Increments the reference counter, if applicable.
 		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs;	}
@@ -69,14 +69,14 @@ struct Cell:
 
 	/// @brief Move constructor (`Cell`).
 	/// @param obj Cell to reference.
-	constexpr Cell(SelfType&& other): wrapper(move(other.wrapper)) {other.wrapper = nullptr;}
+	constexpr Cell(SelfType&& other): wrapper(displace(other.wrapper)) {}
 
 	/// @brief Copy assignment operator (`Cell`).
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
-		//unbind();
+		unbind();
 		wrapper = other.wrapper;
 		if (!other.exists()) return *this;
 		wrapper->acquire();
@@ -87,14 +87,13 @@ struct Cell:
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		wrapper = other.wrapper;
-		other.wrapper = nullptr;
+		wrapper = displace(other.wrapper);
 		return *this;
 	}
 
 	/// @brief Destructor.
 	constexpr ~Cell() {
-		unbind();
+		unbind(true);
 	}
 
 	/// @brief Returns a pointer to the underlying value.
@@ -118,7 +117,7 @@ struct Cell:
 	template <class... TArgs>
 	constexpr static SelfType create(TArgs... args) {
 		SelfType cell;
-		cell.wrapper = new Wrapper{.value = DataType(args...), .refs = 1};
+		cell.wrapper = new Wrapper{.value = new DataType(args...), .refs = 1};
 		return cell;
 	}
 
@@ -155,21 +154,28 @@ struct Cell:
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr bool exists()		const {return (wrapper && wrapper->refs);		}
+	constexpr bool exists()		const {return (wrapper && wrapper->refs && wrapper->value);	}
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr operator bool()	const {return exists();							}
+	constexpr operator bool()	const {return exists();										}
 
 	/// @brief Returns whether this cell is the sole owner of the bound object.
 	/// @return Whether this cell is the sole owner of the bound object.
-	constexpr bool unique()		const {return (wrapper && wrapper->refs == 1);	}
+	constexpr bool unique()		const {return (exists() && wrapper->refs == 1);	}
+
+	/// @brief `swap` algorithm.
+	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
+		swap(a.wrapper, b.wrapper);
+	}
 
 private:
-	constexpr void unbind() {
+	constexpr void unbind(bool const deleteWrapper = false) {
 		if (!exists()) return;
 		wrapper->release();
-		if (!wrapper->refs)
-			delete wrapper;
+		if (!wrapper->refs) {
+			deleter(displace(wrapper->value));
+			if (deleteWrapper) delete wrapper;
+		}
 		wrapper = nullptr;
 	}
 
