@@ -9,7 +9,6 @@
 #include "../../cpperror.hpp"
 #include "../../typetraits/traits.hpp"
 #include "../../async/lock.hpp"
-#include "../../memory/deleter.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -19,15 +18,13 @@ CTL_NAMESPACE_BEGIN
 ///		Differences between this and `Shared<T>`:
 ///		- `Shared<T>` handles references for any type (better suited for classes with virtual members)
 ///		- `Shared<T>` `Shared<T>` is slower (Global sync lock vs per-value sync lock)
-template <class TData, auto D = Deleter<TData>()>
+template <class TData>
 struct AtomicCell:
 	Typed<TData>,
 	SelfIdentified<AtomicCell<TData>>,
-	Ordered,
-	Deletable<D, TData> {
+	Ordered {
 	using Typed				= ::CTL::Typed<TData>;
 	using SelfIdentified	= ::CTL::SelfIdentified<AtomicCell<TData>>;
-	using Deletable			= ::CTL::Deletable<D, TData>;
 
 	using
 		typename Typed::DataType,
@@ -43,16 +40,14 @@ struct AtomicCell:
 		typename SelfIdentified::SelfType
 	;
 
-	using Deletable::deleter;
-
 	/// @brief Value wrapper.
 	struct Wrapper {
 		/// @brief Thread synchronization barrier.
-		Mutex			oplock;
+		Mutex		oplock;
 		/// @brief Underlying value.
-		ptr<DataType>	value;
+		DataType	value;
 		/// @brief Count of reference to value.
-		usize			refs;
+		usize		refs;
 
 		/// @brief Creates a scope-bound lock.
 		/// @return Scope lock.
@@ -62,6 +57,8 @@ struct AtomicCell:
 		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs;	}
 		/// @brief Decrements the reference counter, if applicable.
 		constexpr void release()	{if (refs) --refs;						}
+		/// @brief Returns whether there are no more references left.
+		constexpr bool dead() const	{return !refs;							}
 	};
 
 	/// @brief Empty constructor.
@@ -86,7 +83,7 @@ struct AtomicCell:
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
-		unbind();
+		//unbind();
 		wrapper = other.wrapper;
 		if (!other.exists()) return *this;
 		auto const _ = wrapper->lock();
@@ -99,13 +96,12 @@ struct AtomicCell:
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
 		wrapper = displace(other.wrapper);
-		flag = displace(other.flag);
 		return *this;
 	}
 
 	/// @brief Destructor.
 	~AtomicCell() {
-		unbind(true);
+		unbind();
 	}
 
 	/// @brief Returns a pointer to the underlying value.
@@ -133,8 +129,7 @@ struct AtomicCell:
 	template <class... TArgs>
 	constexpr static SelfType create(TArgs... args) {
 		SelfType cell;
-		cell.wrapper = new Wrapper{.value = new DataType(args...), .refs = 1};
-		cell.flag = new bool(true);
+		cell.wrapper = new Wrapper{.value = move(DataType(args...)), .refs = 1};
 		return cell;
 	}
 
@@ -181,7 +176,7 @@ struct AtomicCell:
 	/// @return Sync barrier.
 	/// @throw `NullPointerException` if object does not exist.
 	[[nodiscard]]
-	constexpr ScopeLock<Mutex> sync() 		{return exists() ? wrapper->lock() : lock(); }
+	constexpr ScopeLock<Mutex> sync() 		{return exists() ? wrapper->lock() : lock();}
 	/// @brief Creates a synchronization barrier bound to the cell's value.
 	/// @return Sync barrier.
 	/// @throw `NullPointerException` if object does not exist.
@@ -199,14 +194,14 @@ struct AtomicCell:
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr bool exists()		const {return (wrapper && wrapper->refs && wrapper->value);	}
+	constexpr bool exists()		const {return (wrapper && !wrapper->dead());	}
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr operator bool()	const {return exists();										}
+	constexpr operator bool()	const {return exists();							}
 
 	/// @brief Returns whether this cell is the sole owner of the bound object.
 	/// @return Whether this cell is the sole owner of the bound object.
-	constexpr bool unique()		const {return (exists() && wrapper->refs == 1);	}
+	constexpr bool unique()		const {return (wrapper && wrapper->refs == 1);	}
 
 	/// @brief Creates a scope-bound lock bound to the cells own mutex.
 	/// @return Scope lock.
@@ -222,16 +217,26 @@ struct AtomicCell:
 	}
 
 private:
-	constexpr void unbind(bool const deleteWrapper = false) {
+	constexpr void unbind() {
+		printf("<cell>\n");
+		if (wrapper) {
+			printf("----------------------> Wrapper: %p, ", (pointer)wrapper);
+			printf("References: %zu\n", wrapper->refs);
+		}
+		else printf("----------------------> No references\n");
 		if (!exists()) return;
-		wrapper->oplock.capture();
+		wrapper->oplock.lock();
 		wrapper->release();
-		if (!wrapper->refs) {
-			wrapper->oplock.release();
-			deleter(displace(wrapper->value));
-			if (deleteWrapper) delete wrapper;
-		} else wrapper->oplock.release();
-		wrapper = nullptr;
+		if (wrapper->dead()) {
+			wrapper->oplock.unlock();
+			delete displace(wrapper);
+		} else wrapper->oplock.unlock();
+		if (wrapper) {
+			printf("----------------------> Wrapper: %p, ", (pointer)wrapper);
+			printf("References: %zu\n", wrapper->refs);
+		}
+		else printf("----------------------> No references\n");
+		printf("</cell>\n");
 	}
 
 	[[noreturn]] constexpr static void emptyError() {

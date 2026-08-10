@@ -45,9 +45,9 @@ struct Cell:
 	/// @brief Value wrapper.
 	struct Wrapper {
 		/// @brief Underlying value.
-		ptr<DataType>	value;
+		DataType	value;
 		/// @brief Count of reference to value.
-		usize			refs;
+		usize		refs;
 
 		/// @brief Increments the reference counter, if applicable.
 		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs;	}
@@ -76,7 +76,7 @@ struct Cell:
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
-		unbind();
+		//unbind();
 		wrapper = other.wrapper;
 		if (!other.exists()) return *this;
 		wrapper->acquire();
@@ -93,7 +93,7 @@ struct Cell:
 
 	/// @brief Destructor.
 	constexpr ~Cell() {
-		unbind(true);
+		unbind();
 	}
 
 	/// @brief Returns a pointer to the underlying value.
@@ -117,7 +117,7 @@ struct Cell:
 	template <class... TArgs>
 	constexpr static SelfType create(TArgs... args) {
 		SelfType cell;
-		cell.wrapper = new Wrapper{.value = new DataType(args...), .refs = 1};
+		cell.wrapper = new Wrapper{.value = DataType(args...), .refs = 1};
 		return cell;
 	}
 
@@ -154,14 +154,14 @@ struct Cell:
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr bool exists()		const {return (wrapper && wrapper->refs && wrapper->value);	}
+	constexpr bool exists()		const {return (wrapper && wrapper->refs);		}
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	constexpr operator bool()	const {return exists();										}
+	constexpr operator bool()	const {return exists();							}
 
 	/// @brief Returns whether this cell is the sole owner of the bound object.
 	/// @return Whether this cell is the sole owner of the bound object.
-	constexpr bool unique()		const {return (exists() && wrapper->refs == 1);	}
+	constexpr bool unique()		const {return (wrapper && wrapper->refs == 1);	}
 
 	/// @brief `swap` algorithm.
 	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
@@ -169,13 +169,11 @@ struct Cell:
 	}
 
 private:
-	constexpr void unbind(bool const deleteWrapper = false) {
+	constexpr void unbind() {
 		if (!exists()) return;
 		wrapper->release();
-		if (!wrapper->refs) {
-			deleter(displace(wrapper->value));
-			if (deleteWrapper) delete wrapper;
-		}
+		if (!wrapper->refs)
+			delete wrapper;
 		wrapper = nullptr;
 	}
 
