@@ -48,6 +48,11 @@ struct Cell:
 		DataType	value;
 		/// @brief Count of reference to value.
 		usize		refs;
+
+		/// @brief Increments the reference counter, if applicable.
+		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs;	}
+		/// @brief Decrements the reference counter, if applicable.
+		constexpr void release()	{if (refs) --refs;						}
 	};
 
 	/// @brief Empty constructor.
@@ -74,7 +79,6 @@ struct Cell:
 		//unbind();
 		wrapper = other.wrapper;
 		if (!other.exists()) return *this;
-		auto const _ = wrapper->lock();
 		wrapper->acquire();
 		return *this;
 	}
@@ -83,13 +87,9 @@ struct Cell:
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		swap(wrapper, other.wrapper);
+		wrapper = other.wrapper;
+		other.wrapper = nullptr;
 		return *this;
-	}
-
-	/// @brief `swap` algorithm.
-	friend constexpr void swap(SelfType& a, SelfType& b) noexcept {
-		swap(a.wrapper, b.wrapper);
 	}
 
 	/// @brief Destructor.
@@ -177,7 +177,7 @@ private:
 		throw NullPointerException("Atomic cell is empty!");
 	}
 	// Wrapper.
-	ptr<Wrapper>	wrapper = nullptr;
+	ptr<Wrapper> wrapper = nullptr;
 };
 
 CTL_NAMESPACE_END

@@ -25,47 +25,45 @@ struct Mutex: SelfIdentified<Mutex> {
 
 	struct Impl {
 		bool	locked = false;
-		usize	rcount = 1;
 		#ifdef CTL_ON_WINDOWS
 		HANDLE	mutex = nullptr;
 		#else
 		pthread_mutex_t	mutex;
 		#endif
+		bool exists = true;
 	};
 
 	/// @brief Empty constuctor.
 	Mutex() {
-		mutex = new Impl;
+		mutex = Cell<Impl>::create();
 		#ifdef CTL_ON_WINDOWS
-		mutex->mutex = CreateMutexA(NULL, FALSE, NULL);
+		mutex.mutex = CreateMutexA(NULL, FALSE, NULL);
 		#else
 		pthread_mutexattr_t pat;
 		pthread_mutexattr_init(&pat);
 		pthread_mutexattr_settype(&pat, PTHREAD_MUTEX_ERRORCHECK);
-		pthread_mutex_init(&mutex->mutex, &pat);
+		pthread_mutex_init(&mutex.mutex, &pat);
 		pthread_mutexattr_destroy(&pat);
 		#endif
 	}
 
-	~Mutex() {
-		unbind();
-	}
+	~Mutex() {unbind();}
 
-	Mutex(Mutex const& other)						{clone(other.mutex);										}
-	Mutex& operator=(Mutex const& other)			{clone(other.mutex); return *this;							}
-	Mutex(Mutex&& other): mutex(move(other.mutex))	{other.mutex = nullptr;										}
-	Mutex& operator=(Mutex&& other)					{mutex = other.mutex; other.mutex = nullptr; return *this;	}
+	Mutex(Mutex const& other)				= delete;
+	Mutex& operator=(Mutex const& other)	= delete;
+	Mutex& operator=(Mutex&& other)			= delete;
+	Mutex(Mutex&& other)					= delete;
 
 	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
 	/// @return Reference to self.
 	SelfType& capture()	{
-		if (!mutex) return *this;
+		if (!mutex.exists) return *this;
 		#ifdef CTL_ON_WINDOWS
-		SignalObjectAndWait(mutex->mutex, mutex->mutex, INFINITE, FALSE);
+		SignalObjectAndWait(mutex.mutex, mutex.mutex, INFINITE, FALSE);
 		#else
-		pthread_mutex_lock(&mutex->mutex);
+		pthread_mutex_lock(&mutex.mutex);
 		#endif
-		mutex->locked = true;
+		mutex.locked = true;
 		return *this;
 	}
 
@@ -76,15 +74,15 @@ struct Mutex: SelfIdentified<Mutex> {
 	/// @brief Tries to capture the mutex. Fails if mutex is captured by another thread.
 	/// @return Whether mutex caputure was successful.
 	bool tryCapture() {
-		if (!mutex) return false;
+		if (!mutex.exists) return false;
 		#ifdef CTL_ON_WINDOWS
-		if (SignalObjectAndWait(mutex->mutex, mutex->mutex, 0, FALSE) == WAIT_TIMEOUT)
+		if (SignalObjectAndWait(mutex.mutex, mutex.mutex, 0, FALSE) == WAIT_TIMEOUT)
 			return false;
 		#else
-		if (pthread_mutex_trylock(&mutex->mutex) == EBUSY)
+		if (pthread_mutex_trylock(&mutex.mutex) == EBUSY)
 			return false;
 		#endif
-		mutex->locked = true;
+		mutex.locked = true;
 		return true;
 	}
 
@@ -95,13 +93,13 @@ struct Mutex: SelfIdentified<Mutex> {
 	/// @brief Releases the captured mutex, if mutex is captured by the current hread.
 	/// @return Reference to self.
 	SelfType& release() {
-		if (!mutex) return *this;
+		if (!mutex.exists) return *this;
 		#ifdef CTL_ON_WINDOWS
-		if (ReleaseMutex(mutex->mutex))
-			mutex->locked = false;
+		if (ReleaseMutex(mutex.mutex))
 		#else
-		pthread_mutex_unlock(&mutex->mutex);
+		if (pthread_mutex_unlock(&mutex.mutex) != EPERM)
 		#endif
+			mutex.locked = false;
 		return *this;
 	}
 
@@ -112,17 +110,18 @@ struct Mutex: SelfIdentified<Mutex> {
 	/// @brief Waits for the mutex to be released.
 	/// @return Reference to self.
 	SelfType& wait() {
-		if (!mutex) return *this;
+		if (!mutex.exists) return *this;
 		#ifdef CTL_ON_WINDOWS
-		WaitForSingleObject(mutex->mutex, INFINITE);
+		WaitForSingleObject(mutex.mutex, INFINITE);
 		#else
 		lock().unlock();
 		#endif
+		mutex.exists = false;
 		return *this;
 	}
 
 	bool captured() const {
-		return mutex ? mutex->locked : false;
+		return mutex ? mutex.locked : false;
 	}
 
 	bool locked() const {
@@ -130,28 +129,15 @@ struct Mutex: SelfIdentified<Mutex> {
 	}
 
 private:
-	void clone(ref<Impl> const other) {
-		unbind();
-		mutex = other;
-		++mutex->rcount;
-	}
-
 	void unbind() {
-		if (!mutex) return;
-		if (mutex && mutex->rcount)
-			--mutex->rcount;
-		if (!mutex->rcount) {
-			#ifdef CTL_ON_WINDOWS
-			CloseHandle(mutex->mutex);
-			#else
-			pthread_mutex_destroy(&mutex->mutex);
-			#endif
-			delete mutex;
-		}
-		mutex = nullptr;
+		#ifdef CTL_ON_WINDOWS
+		CloseHandle(mutex.mutex);
+		#else
+		pthread_mutex_destroy(&mutex.mutex);
+		#endif
 	}
 
-	ref<Impl> mutex = nullptr;
+	Impl mutex;
 };
 
 CTL_NAMESPACE_END
