@@ -131,8 +131,7 @@ struct Mutex: SelfIdentified<Mutex> {
 
 private:
 	void clone(ref<Impl> const other) {
-		/*if (mutex && mutex->rcount)
-			unbind();*/
+		unbind();
 		mutex = other;
 		++mutex->rcount;
 	}
