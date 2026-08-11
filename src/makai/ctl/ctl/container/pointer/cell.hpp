@@ -173,8 +173,7 @@ private:
 		if (!exists()) return;
 		wrapper->release();
 		if (!wrapper->refs)
-			delete wrapper;
-		wrapper = nullptr;
+			delete displace(wrapper);
 	}
 
 	[[noreturn]] constexpr static void emptyError() {
