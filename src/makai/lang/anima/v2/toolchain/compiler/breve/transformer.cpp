@@ -1773,9 +1773,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		else if (ret.isObject())
 			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
 		else return {{ret.isNull() ? "nil" : ret.toString()}, nullptr, context.basicTypeOf(ret), ret};
-	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
+	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE)
 		context.top()->impl->writeMainLine("call", ov.entry);
-	}
 	else context.error("It is forbidden to call a direct function with indirect arguments!", node);
 	if (context.functionStack.size() && ov.variant.context == ExecutionContext::AV2_TCB_EC_RUNTIME) {
 		auto& ctx = context.functionStack.back()->variant.context;
