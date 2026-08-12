@@ -1436,11 +1436,19 @@ void Engine::v2StackClear() {
 		}
 		auto const maxOffset = stack.size() - clear.count;
 		auto const offset = clear.offset < maxOffset ? clear.offset : maxOffset;
-		if (stack.size() && clear.count == 1)
-			context.globalValueStack.erase(-(clear.offset+1));
-		else if ((clear.count + offset) < stack.size())
-			context.globalValueStack.eraseRange(-offset-clear.count, -offset);
-		else context.globalValueStack.clear();
+		if (!offset) {
+			if (stack.size() && clear.count == 1)
+				context.globalValueStack.popBack();
+			else if (clear.count < stack.size())
+				context.globalValueStack.eraseRange(-offset, -1);
+			else context.globalValueStack.clear();
+		} else {
+			if (stack.size() && clear.count == 1)
+				context.globalValueStack.erase(-(clear.offset+1));
+			else if ((clear.count + offset) < stack.size())
+				context.globalValueStack.eraseRange(-offset-clear.count, -offset);
+			else context.globalValueStack.clear();
+		}
 	}
 }
 

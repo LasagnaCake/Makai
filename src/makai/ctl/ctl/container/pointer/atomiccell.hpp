@@ -9,8 +9,6 @@
 #include "../../cpperror.hpp"
 #include "../../typetraits/traits.hpp"
 #include "../../async/lock.hpp"
-// For debugging purposes
-#include <stdio.h>
 
 CTL_NAMESPACE_BEGIN
 
@@ -19,7 +17,7 @@ CTL_NAMESPACE_BEGIN
 /// @note
 ///		Differences between this and `Shared<T>`:
 ///		- `Shared<T>` handles references for any type (better suited for classes with virtual members)
-///		- `Shared<T>` `Shared<T>` is slower (Global sync lock vs per-value sync lock)
+///		- `Shared<T>` is slower (Global sync lock vs per-value sync lock)
 template <class TData>
 struct AtomicCell:
 	Typed<TData>,
@@ -54,13 +52,13 @@ struct AtomicCell:
 		/// @brief Creates a scope-bound lock.
 		/// @return Scope lock.
 		[[nodiscard]]
-		constexpr auto lock()		{return ScopeLock<Mutex>(oplock);												}
+		auto lock()			{return ScopeLock<Mutex>(oplock);		}
 		/// @brief Increments the reference counter, if applicable.
-		constexpr void acquire()	{if (refs < Limit::MAX<usize>) ++refs; printf("& References =  %zu\n", refs);	}
+		void acquire()		{if (refs < Limit::MAX<usize>) ++refs;	}
 		/// @brief Decrements the reference counter, if applicable.
-		constexpr void release()	{if (refs) --refs; printf("& References =  %zu\n", refs);						}
+		void release()		{if (refs) --refs;						}
 		/// @brief Returns whether there are no more references left.
-		constexpr bool dead() const	{return !refs;																	}
+		bool dead() const	{return !refs;							}
 	};
 
 	/// @brief Empty constructor.
@@ -176,12 +174,12 @@ struct AtomicCell:
 	/// @return Sync barrier.
 	/// @throw `NullPointerException` if object does not exist.
 	[[nodiscard]]
-	ScopeLock<Mutex> sync() 		{return exists() ? wrapper->lock() : lock();}
+	ScopeLock<Mutex> sync() 		{return exists() ? wrapper->lock() : lock();			}
 	/// @brief Creates a synchronization barrier bound to the cell's value.
 	/// @return Sync barrier.
 	/// @throw `NullPointerException` if object does not exist.
 	[[nodiscard]]
-	ScopeLock<Mutex> sync() const	{if (exists()) return wrapper->lock(); emptyError();}
+	ScopeLock<Mutex> sync() const	{if (exists()) return wrapper->lock(); emptyError();	}
 
 	/// @brief Equality comparison operator (`Cell`).
 	/// @param obj `Cell` to compare to.
@@ -218,7 +216,6 @@ struct AtomicCell:
 
 private:
 	void unbind() {
-		printf("<cell>\n");
 		if (!exists()) return;
 		wrapper->oplock.lock();
 		wrapper->release();
@@ -226,7 +223,6 @@ private:
 			wrapper->oplock.unlock();
 			delete displace(wrapper);
 		} else wrapper->oplock.unlock();
-		printf("</cell>\n");
 	}
 
 	[[noreturn]] static void emptyError() {

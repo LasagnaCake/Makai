@@ -16,7 +16,7 @@ CTL_NAMESPACE_BEGIN
 /// @note
 ///		Differences between this and `Shared<T>`:
 ///		- `Shared<T>` handles references for any type (better suited for classes with virtual members)
-///		- `Shared<T>` `Shared<T>` is slower (Global sync lock, `Cell<T>` has no sync lock)
+///		- `Shared<T>` is slower (Global sync lock, `Cell<T>` has no sync lock)
 /// @caution
 /// 	*This class is thread-unsafe!*
 /// 	If you need thread safety, use `AtomicCell<T>`.

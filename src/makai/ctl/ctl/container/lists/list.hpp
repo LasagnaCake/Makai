@@ -550,7 +550,6 @@ public:
 		assertIsInBounds(index);
 		wrapBounds(index, count);
 		squash(index);
-		--count;
 		return *this;
 	}
 
@@ -659,7 +658,6 @@ public:
 		if (stop < start) return 0;
 		if (SizeType(stop) > count) stop = count;
 		squashRange(start, stop - start);
-		count -= (stop - start);
 		return stop - start;
 	}
 
@@ -741,7 +739,7 @@ public:
 	/// @throw OutOfBoundsException when index is bigger than `List` size.
 	/// @note If index is negative, it will be interpreted as starting from the end of the `List`.
 	constexpr SelfType withoutRange(IndexType const start, IndexType const stop) const {
-		return sliced(0, start).appendBack(sliced(stop));
+		return copy(*this).eraseRange(start, stop);
 	}
 
 
@@ -1353,14 +1351,12 @@ private:
 			simpleCopy(contents.data() + end, buffer.data() + start, count - end);
 			destroy(count);
 			swap(contents, buffer);
-			count -= amount;
 		} else if (start < count) {
 			StorageType buffer;
 			buffer.invoke(contents.size());
 			simpleCopy(contents.data(), buffer.data(), start);
 			destroy(count);
 			swap(contents, buffer);
-			count -= amount;
 		}
 		return *this;
 	}
