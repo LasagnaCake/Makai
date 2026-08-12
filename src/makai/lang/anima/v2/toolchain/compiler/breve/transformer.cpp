@@ -1457,12 +1457,12 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		ovImpl.pushBack(overload->impl);
 		current->hasImplementation = true;
 	}
+	auto const argc = required.size() + optional.size();
 	if (node->rightSide) {
 		current->decl = node->rightSide;
 		if (ovImpl.size())
 			current = current.create();
 		context.functionStack.pushBack(current);
-		auto const argc = required.size() + optional.size();
 		impl->impl->writePreLine("bind ref", argc, "[0 -> 0]");
 		impl->impl->writePreLine("clear", argc);
 		auto const def = Expression().transform(context, node->rightSide);
@@ -1478,6 +1478,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 			current->scope = context.top().asWeak();
 		context.functionStack.popBack();
 	} else {
+		impl->impl->writePreLine("blit ref", argc, "[0 -> 0]");
+		impl->impl->writeMainLine("call", current->entry);
 		if (ovImpl.size() == 1)
 			current->scope = nullptr;
 		first->scope = nullptr;
