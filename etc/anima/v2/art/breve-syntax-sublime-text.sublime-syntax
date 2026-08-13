@@ -75,6 +75,9 @@ contexts:
     - match: '\b(true|false|null)\b'
       scope: constant.language
 
+    - match: '\b(maybe)\b'
+      scope: storage.modifier.breve
+
   operators:
     - match: '([*/%]|[+\-]{1,2})'
       scope: keyword.operator.arithmetic.breve
@@ -100,11 +103,17 @@ contexts:
     - match: ':'
       scope: keyword.operator.other.breve
 
+    - match: '\?\?'
+      scope: keyword.operator.other.breve
+
     - match: ','
       scope: punctuation.separator.breve
 
     - match: '\.'
       scope: punctuation.accessor.breve
+
+    - match: '\?'
+      scope: storage.modifier.breve
 
   numbers:
     - match: '\b(\+-)?[0-9.]+\b'
@@ -180,7 +189,8 @@ contexts:
   backtick_string:
     - meta_scope: string.quoted.other.breve
     - include: escape_char
-    - match: "'"
+    - include: interpolations
+    - match: "`"
       scope: punctuation.definition.string.end.breve
       pop: true
 
