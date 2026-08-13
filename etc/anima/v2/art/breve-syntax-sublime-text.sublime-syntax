@@ -7,8 +7,24 @@ file_extensions:
 scope: source.breve
 variables:
   id: '[A-Za-z_][A-Za-z_0-9]*'
+  op: '[+\-*/%&|^~<>:?!]{1,2}'
 contexts:
   main:
+    - match: ''
+      push: [breve]
+
+  breve:
+    - include: strings
+    - include: comments
+    - include: keywords
+    - include: operators
+    - include: template
+    - include: numbers
+    - include: attributes
+    - include: blocks
+    - include: named_block
+
+  strings:
     - match: '"'
       scope: punctuation.definition.string.begin.breve
       push: double_quoted_string
@@ -21,6 +37,7 @@ contexts:
       scope: punctuation.definition.string.begin.breve
       push: backtick_string
 
+  comments:
     - match: '//'
       scope: punctuation.definition.comment.breve
       push: line_comment
@@ -29,8 +46,12 @@ contexts:
       scope: punctuation.definition.comment.breve
       push: block_comment
 
+  keywords:
     - match: '\b(if|unless|when|except|else|switch|match)\b'
-      scope: keyword.control.breve
+      scope: keyword.control.conditional.breve
+
+    - match: '\b(using|import)\b'
+      scope: keyword.control.conditional.breve
 
     - match: '\b((type|name|count)of)\b'
       scope: keyword.operator.breve
@@ -41,21 +62,39 @@ contexts:
     - match: '\b(asm)\b'
       scope: keyword.control.breve
 
-    - match: '\b(struct|prop|enum|extend|with)\b'
-      scope: keyword.control.breve
-
     - match: '\b(ref|move|copy|(un)?likely|maybe)\b'
       scope: keyword.operator.breve
 
-    - match: '<:'
-      scope: keyword.operator.template.begin.breve
-      push: template_decl
+    - match: '\b(and|x?or|not|as|is)\b'
+      scope: keyword.operator.word.breve
 
-    - match: '[+\-*/%&|^~<>:?]{0,2}=?'
-      scope: keyword.operator.breve
+    - match: '\b(true|false|null)\b'
+      scope: constant.language
+
+  operators:
+    - match: '([*/%]|[+\-]{1,2})'
+      scope: keyword.operator.arithmetic.breve
+
+    - match: '([&|\^~])'
+      scope: keyword.operator.bitwise.breve
+
+    - match: '([+\-*/%&|^~:?]|<<|>>)?='
+      scope: keyword.operator.assignment.breve
+
+    - match: '([<>!]|[<>!=]=|[&|\^]{2})'
+      scope: keyword.operator.logic.breve
 
     - match: '\.\.\.?'
-      scope: keyword.operator.breve
+      scope: keyword.operator.other.breve
+
+    - match: '[\-\=]\>'
+      scope: keyword.operator.other.breve
+
+    - match: '::\>'
+      scope: keyword.operator.other.breve
+
+    - match: ':'
+      scope: keyword.operator.other.breve
 
     - match: ','
       scope: punctuation.separator.breve
@@ -63,41 +102,43 @@ contexts:
     - match: '\.'
       scope: punctuation.accessor.breve
 
-    - match: '\b(and|x?or|not)\b'
-      scope: keyword.operator.breve
-
-    - match: '\b(true|false|null)\b'
-      scope: constant.language
-
+  numbers:
     - match: '\b(\+-)?[0-9.]+\b'
       scope: constant.numeric.breve
 
-    - match: '@{{id}}\b'
+  template:
+    - match: '<:'
+      scope: keyword.operator.template.begin.breve
+      push: template_decl
+
+  attributes:
+    - match: '@{{id}}'
       scope: punctuation.definition.annotation.breve
 
     - match: '@\['
       scope: punctuation.definition.annotation.begin.breve
       push: attribute_list
 
-    - match: \(
-      push: parens
-    - match: \)
-      scope: invalid.illegal.stray-bracket-end
+  blocks:
+    - match: '\{'
+      scope: punctuation.section.braces.begin.breve
+      push: code_block
 
-    - match: \[
-      push: brackets
-    - match: \]
-      scope: invalid.illegal.stray-bracket-end
+    - match: '\['
+      scope: punctuation.section.brackets.begin.breve
+      push: array
 
-    - match: \{
-      push: curlies
-    - match: \}
-      scope: invalid.illegal.stray-bracket-end
+    - match: '\('
+      scope: punctuation.section.parens.begin.breve
+      push: sub_expression
 
-    - match: '<:'
-      push: templates
-    - match: ':>'
-      scope: invalid.illegal.stray-bracket-end
+  named_block:
+    - match: '\b(struct|prop|enum|extend|with|module)\b'
+      scope: keyword.control.breve
+
+  basics:
+    - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix)\b'
+      scope: storage.type.breve
 
   double_quoted_string:
     - meta_scope: string.quoted.double.breve
@@ -129,8 +170,9 @@ contexts:
       pop: true
 
   template_decl:
-    - meta_scope: keyword.operator.template.breve
+    - meta_scope: template.breve
     - match: :>
+      scope: keyword.operator.template.end.breve
       pop: true
 
   block_comment:
@@ -143,26 +185,28 @@ contexts:
 
   attribute_list:
     - meta_scope: annotation.list.breve
+    - include: attributes
     - match: '\]'
       scope: punctuation.definition.annotation.end.breve
       pop: true
 
-  parens:
-    - match: \)
+  code_block:
+    - meta_scope: meta.braces.breve
+    - include: breve
+    - match: '\}'
+      scope: punctuation.section.braces.end.breve
       pop: true
-    - include: main
 
-  brackets:
-    - match: \]
+  array:
+    - meta_scope: meta.brackets.breve
+    - include: breve
+    - match: '\]'
+      scope: punctuation.section.brackets.end.breve
       pop: true
-    - include: main
 
-  curlies:
-    - match: \}
+  sub_expression:
+    - meta_scope: meta.parens.breve
+    - include: breve
+    - match: '\)'
+      scope: punctuation.section.parens.end.breve
       pop: true
-    - include: main
-
-  templates:
-    - match: ':>'
-      pop: true
-    - include: main
