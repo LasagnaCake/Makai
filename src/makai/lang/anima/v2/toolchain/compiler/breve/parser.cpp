@@ -180,6 +180,10 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_QUESTION, prefixes, new NullableDeclResolver());
 	add("maybe", prefixes, new NullableDeclResolver());
 	add("await", prefixes, new AwaitExpressionResolver());
+	add("switch", prefixes, new SwitchResolver());
+	add("match", prefixes, new MatchResolver());
+	add("get", prefixes, new GetterResolver());
+	add("set", prefixes, new SetterResolver());
 	// Advanced infixes
 	MAKAILIB_DEBUGLN_FULL("Advanced infix parsers");
 	add("when", infixes, new InlineIfElseResolver());
@@ -208,8 +212,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
 	add(LTS_TT_LAMBDA, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
-	add("switch", prefixes, new SwitchResolver());
-	add("match", prefixes, new MatchResolver());
 	MAKAILIB_DEBUGLN_FULL("Done!");
 }
 

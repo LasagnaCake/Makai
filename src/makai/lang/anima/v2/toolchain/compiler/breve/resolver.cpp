@@ -476,12 +476,7 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	FunctionPrototypeResolver resolver;
 	result->leftSide = leftSide;
 	result->middle = resolver.resolve(parser, null, {});
-	if (parser.context.peek().type == LTS_TT_BIG_ARROW) {
-		parser.context.next();
-		result->rightSide = parser.nextExpression();
-	}
-	else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)
-		result->rightSide = parser.nextExpression();
+	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
 	MAKAILIB_DEBUGLN_FULL("FunctionDecl:DONE!");
 	return result;
 }
@@ -490,26 +485,102 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	auto const expr = parser.nextExpression();
-	if (expr->content == Node::Content::AV2_TANC_ASSIGNMENT) {
-		result->leftSide = expr->leftSide;
-		result->middle = expr->rightSide;
-		return result;
+	auto const type = parser.context.peek().text;
+	if (type == "get" || type == "set") {
+		parser.context.next();
+		auto const gs = parser.context.token();
+		result->middle = parser.nextExpression();
+		if (!result->middle->isPathOrName())
+			parser.context.error("Expected path or name here!");
+		auto const decl = Node::Instance::create();
+		decl->content = type == "set" ? Node::Content::AV2_TANC_PROPERTY_SETTER : Node::Content::AV2_TANC_PROPERTY_GETTER;
+		decl->base = gs;
+		decl->leftSide = protoName(type);
+		decl->middle = FunctionPrototypeResolver().resolve(parser, null, {});
+		decl->rightSide = FunctionContentResolver().resolve(parser, null, {});
+		if (type == "set")
+			result->rightSide = decl;
+		else result->leftSide = decl;
+	} else {
+		result->middle = parser.nextExpression();
+		if (!result->middle->isPathOrName())
+			parser.context.error("Expected path or name here!");
+		parser.context.expectNext(LTS_TT_OPEN_CURLY);
+		while (true) {
+			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+				parser.context.next();
+				break;
+			}
+			auto const expr = parser.nextExpression();
+			if (expr->content == Node::Content::AV2_TANC_PROPERTY_GETTER) {
+				if (result->leftSide)
+					parser.context.error("Redeclaration of property getter!");
+				result->leftSide = expr;
+			} else if (expr->content == Node::Content::AV2_TANC_PROPERTY_SETTER) {
+				if (result->rightSide)
+					parser.context.error("Redeclaration of property setter!");
+				result->rightSide = expr;
+			} else parser.context.error("Expected property getter or setter here!");
+			auto const next = parser.context.peek();
+			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+				parser.context.next();
+				break;
+			}
+			parser.context.expectNext(LTS_TT_COMMA);
+			if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
+				parser.context.error("Expected expression after the comma!");
+		}
+		if (!(result->leftSide or result->rightSide))
+			parser.context.error("Expected getter or setter!");
 	}
-	if (!expr->isPathOrName())
-		parser.context.error("Direct getter, or block, for property!");
-	result->leftSide = expr;
-	auto const expr2 = parser.nextExpression();
-	if (expr2->content == Node::Content::AV2_TANC_BLOCK)
-		parser.context.error("Expected block here!");
-	result->children = expr2->children;
 	return result;
 }
+
+static Node::Instance protoName(String const& name) {
+	Node::Instance pname = Node::Instance::create();
+	pname->content = Node::Content::AV2_TANC_NAME;
+	pname->value = "__" + name;
+	return pname;
+}
+
+Node::Instance GetterResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	FunctionPrototypeResolver resolver;
+	Node::Instance result = Node::Instance::create();
+	result->content = Node::Content::AV2_TANC_PROPERTY_GETTER;
+	result->base = token;
+	result->leftSide = protoName("get");
+	result->middle = FunctionPrototypeResolver().resolve(parser, null, {});
+	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
+	return proto;
+}
+
+Node::Instance SetterResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	FunctionPrototypeResolver resolver;
+	Node::Instance result = Node::Instance::create();
+	result->content = Node::Content::AV2_TANC_PROPERTY_SETTER;
+	result->base = token;
+	result->leftSide = protoName("set");
+	result->middle = FunctionPrototypeResolver().resolve(parser, null, {});
+	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
+	return proto;
+}
+
+Node::Instance FunctionContentResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	if (parser.context.peek().type == LTS_TT_BIG_ARROW) {
+		parser.context.next();
+		return parser.nextExpression();
+	} else if (parser.context.peek().type == LTS_TT_OPEN_CURLY)
+		return parser.nextExpression();
+	else return null;
+}
+
 
 Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = token.type == LTS_TT_NULL_ACCESS ? Node::Content::AV2_TANC_FAILABLE_PATH : Node::Content::AV2_TANC_PATH;
 	result->leftSide = leftSide;
+	FunctionPrototypeResolver resolver;
+	auto const proto = resolver.resolve(parser, null, {});
 	String subpath;
 	while (true) {
 		subpath += "/" + parser.context.getNext(LTS_TT_IDENTIFIER, "name").getString();

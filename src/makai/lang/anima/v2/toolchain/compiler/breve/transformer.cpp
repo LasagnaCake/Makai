@@ -531,6 +531,41 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto implName = name;
 	implName.back() = "::IMPL__" + implName.back();
 	context.declare(implName);
+	MAKAILIB_DEBUGLN_FULL("Parsing properties...");
+	MAKAILIB_DEBUGLN_FULL("Property count: ", properties.size());
+	for (auto& property: properties) {
+		auto const decl = Expression().transform(context, method);
+		auto& prop = *decl.scope->property;
+		if (prop->getter) {
+			auto& fn = *prop->getter;
+			fn.name += "_" + prop->name + node->name();
+			for (auto& ov: fn.current) {
+				if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
+					context.error("Missing appropriate [this] parameter!", property);
+				if (!ov->staticEntity)
+					ov->methodOf = scope->type.asWeak();
+			}
+			if (scope->subspaces.contains(fn.name))
+				context.error("Symbol with this name already exists!", method);
+		}
+		if (prop->setter) {
+			auto& fn = *prop->setter;
+			fn.name += "_" + prop->name + node->name();
+			for (auto& ov: fn.current) {
+				if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
+					context.error("Missing appropriate [this] parameter!", property);
+				if (!ov->staticEntity)
+					ov->methodOf = scope->type.asWeak();
+			}
+			if (scope->subspaces.contains(fn.name))
+				context.error("Symbol with this name already exists!", method);
+		}
+		if (scope->subspaces.contains(fn.name))
+			context.error("Symbol with this name already exists!", property);
+		prop.fieldOf = scope->type.asWeak();
+		type.methods[fn.name] = decl.scope->function;
+		scope->subspaces[fn.name] = decl.scope;
+	}
 	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
 	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
 	for (auto& method: methods) {
@@ -1632,45 +1667,41 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 }
 
 ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance const& node) {
-	auto const path = context.pathOf(node->leftSide);
-	if (context.top()->resolve(path))
-		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
-	auto const scope = context.declare(path);
-	scope->property = scope->property.create();
-	if (node->middle) {
-	} else if (node->children.size()) {
-		for (auto const& child: node->children) {
-			auto const member = Expression().transform(context, child);
-			if (!member.scope->function)
-				context.error("Properties can only have functions!", child);
-			if (member.scope->meta.contains("Getter")) {
-				if (scope->property->getter)
-					context.error("Property getter has already been declared!");
-				scope->property->getter = member.scope->function;
-				bool hit = false;
-				for (auto const& ov: member.scope->function->current)
-					if (ov->methodOf && ov->arguments.size() == 0) {
-						hit = true;
-						break;
-					}
-				if (!hit) context.error("Missing required overload for getter!", child);
-			}
-			if (member.scope->meta.contains("Setter")) {
-				if (scope->property->setter)
-					context.error("Property setter has already been declared!");
-				scope->property->setter = member.scope->function;
-				bool hit = false;
-				for (auto const& ov: member.scope->function->current)
-					if (ov->methodOf && ov->arguments.size() == 1) {
-						hit = true;
-						break;
-					}
-				if (!hit) context.error("Missing required overload for setter!", child);
-			}
-		}
+	auto path = context.pathOf(node->middle);
+	auto scope = context.top()->resolve(path);
+	if (scope && !scope->property)
+		context.error("Redeclaration of previously-declared symbol!", node->middle);
+	if (!scope) {
+		scope = context.declare(path);
+		scope->property = scope->property.create();
+	} else {
+		context.scopeStack.pushBack(scope);
+		path = decltype(path)::from(path.back());
 	}
+	if (node->leftSide)
+		property->getter = PropertyGetter().transform(context, node->leftSide).scope->function;
+	if (node->rightSide)
+		property->setter = PropertySetter().transform(context, node->leftSide).scope->function;
 	context.pop(path.size());
 	return {.scope = scope};
+}
+
+ATransformer::Result PropertyGetter::transform(Context& context, Node::Instance const& node) {
+	auto const decl = FunctionDecl().transform(context, node);
+	if (decl->scope->function->current.size() != 1)
+		context.error("Default arguments are not allowed in property declarations!", node);
+	if (decl->scope->function->current.back()->arguments.size() != 1)
+		context.error("Getters can only have exactly one argument!");
+	return decl;
+}
+
+ATransformer::Result PropertySetter::transform(Context& context, Node::Instance const& node) {
+	auto const decl = FunctionDecl().transform(context, node);
+	if (decl->scope->function->current.size() != 1)
+		context.error("Default arguments are not allowed in property declarations!", node);
+	if (decl->scope->function->current.back()->arguments.size() != 2)
+		context.error("Getters can only have exactly two arguments!");
+	return decl;
 }
 
 ATransformer::Result NamespaceDecl::transform(Context& context, Node::Instance const& node) {

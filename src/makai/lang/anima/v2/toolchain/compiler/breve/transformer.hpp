@@ -307,6 +307,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct FunctionTypeDecl: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
+
+	struct PropertyGetter: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct PropertySetter: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
 }
 
 #endif
