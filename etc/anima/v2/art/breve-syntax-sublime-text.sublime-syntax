@@ -129,7 +129,7 @@ contexts:
       pop: true
 
   template_decl:
-    - meta_scope: punctuation.definition.operator.template.breve
+    - meta_scope: keyword.operator.template.breve
     - match: :>
       pop: true
 
