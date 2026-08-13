@@ -481,6 +481,13 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
+static Node::Instance protoName(Makai::String const& name) {
+	Node::Instance pname = Node::Instance::create();
+	pname->content = Node::Content::AV2_TANC_NAME;
+	pname->value = "__" + name;
+	return pname;
+}
+
 Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
@@ -534,13 +541,6 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 			parser.context.error("Expected getter or setter!");
 	}
 	return result;
-}
-
-static Node::Instance protoName(Makai::String const& name) {
-	Node::Instance pname = Node::Instance::create();
-	pname->content = Node::Content::AV2_TANC_NAME;
-	pname->value = "__" + name;
-	return pname;
 }
 
 Node::Instance GetterResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {

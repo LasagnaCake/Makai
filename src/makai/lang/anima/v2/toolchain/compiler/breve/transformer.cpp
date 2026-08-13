@@ -534,11 +534,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	MAKAILIB_DEBUGLN_FULL("Parsing properties...");
 	MAKAILIB_DEBUGLN_FULL("Property count: ", properties.size());
 	for (auto& property: properties) {
-		auto const decl = Expression().transform(context, method);
+		auto const decl = Expression().transform(context, property);
 		auto& prop = *decl.scope->property;
-		if (prop->getter) {
-			auto& fn = *prop->getter;
-			fn.name += "_" + prop->name + node->name();
+		if (prop.getter) {
+			auto& fn = *prop.getter;
+			fn.name += "_" + prop.name + node->name();
 			for (auto& ov: fn.current) {
 				if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
 					context.error("Missing appropriate [this] parameter!", property);
@@ -546,11 +546,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 					ov->methodOf = scope->type.asWeak();
 			}
 			if (scope->subspaces.contains(fn.name))
-				context.error("Symbol with this name already exists!", method);
+				context.error("Symbol with this name already exists!", property);
 		}
-		if (prop->setter) {
-			auto& fn = *prop->setter;
-			fn.name += "_" + prop->name + node->name();
+		if (prop.setter) {
+			auto& fn = *prop.setter;
+			fn.name += "_" + prop.name + node->name();
 			for (auto& ov: fn.current) {
 				if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
 					context.error("Missing appropriate [this] parameter!", property);
@@ -558,13 +558,13 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 					ov->methodOf = scope->type.asWeak();
 			}
 			if (scope->subspaces.contains(fn.name))
-				context.error("Symbol with this name already exists!", method);
+				context.error("Symbol with this name already exists!", property);
 		}
-		if (scope->subspaces.contains(fn.name))
+		if (scope->subspaces.contains(prop.name))
 			context.error("Symbol with this name already exists!", property);
 		prop.fieldOf = scope->type.asWeak();
-		type.methods[fn.name] = decl.scope->function;
-		scope->subspaces[fn.name] = decl.scope;
+		type.methods[prop.name] = decl.scope->function;
+		scope->subspaces[prop.name] = decl.scope;
 	}
 	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
 	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
@@ -1546,8 +1546,8 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	auto const ndecl = "__exists_" + node->name();
 	if (node->middle) {
 		auto lhs = Expression().transform(context, node->leftSide);
-		if (!(lhs.source && (lhs.type->flags.isArray)))
-			context.error("Expected array value here!", node->leftSide);
+		if (!(lhs.source && (lhs.type->flags.isArray or lhs.type->basic == Core::BasicType::AV2_BT_VECTOR)))
+			context.error("Expected indexable value here!", node->leftSide);
 		if (lhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *lhs.source);
 		else if (lhs.isStackTop() && lhs.isCopied()) {
@@ -1561,10 +1561,15 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		if (node->base.type == LTS_TT_NULL_ASSIGN) {
 			context.top()->impl->writeMainLine("push stack[-1]");
 			if (i.direct.isUndefined()) {
+				if (lhs.type->basic == Core::BasicType::AV2_BT_VECTOR)
+					context.top()->impl->writeMainLine("mod" + asFastOpQualifier(*i.type->basic, {.direct = 4}));
 				context.top()->impl->writeMainLine("push stack[-1]");
 				context.top()->impl->writeMainLine("dyn get");
-			} else if (i.direct.isInteger())
+			} else if (i.direct.isInteger()) {
+				if (lhs.type->basic == Core::BasicType::AV2_BT_VECTOR && i.direct.getUnsigned() > 3)
+					context.error("Index range must be between 0 and 3!", node->rightSide);
 				context.top()->impl->writeMainLine("get [", i.direct.getUnsigned(), "]");
+			}
 			else context.error("Expected integer here!", node->middle);
 			context.top()->impl->writeMainLine("jump if not empty", ndecl);
 		}
@@ -1579,10 +1584,16 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			else if (rhs.isStackTop() && rhs.isCopied()) {
 				context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
 			}
-			if (i.direct.isUndefined())
+			if (i.direct.isUndefined()) {
+				if (lhs.type->basic == Core::BasicType::AV2_BT_VECTOR)
+					context.top()->impl->writeMainLine("mod" + asFastOpQualifier(*i.type->basic, {.direct = 4}));
 				context.top()->impl->writeMainLine("dyn set");
-			else if (i.direct.isInteger())
+			}
+			else if (i.direct.isInteger()) {
+				if (lhs.type->basic == Core::BasicType::AV2_BT_VECTOR && i.direct.getUnsigned() > 3)
+					context.error("Index range must be between 0 and 3!", node->rightSide);
 				context.top()->impl->writeMainLine("set [", i.direct.getUnsigned(), "]");
+			}
 			else context.error("Expected integer here!", node->middle);
 			if (node->base.type == LTS_TT_NULL_ASSIGN)
 				context.top()->impl->writeMainLine("@target", ndecl);
@@ -1681,28 +1692,29 @@ ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance co
 		context.scopeStack.pushBack(scope);
 		path = decltype(path)::from(path.back());
 	}
+	auto& property = *scope->property;
 	if (node->leftSide)
-		property->getter = PropertyGetter().transform(context, node->leftSide).scope->function;
+		property.getter = PropertyGetter().transform(context, node->leftSide).scope->function;
 	if (node->rightSide)
-		property->setter = PropertySetter().transform(context, node->leftSide).scope->function;
+		property.setter = PropertySetter().transform(context, node->leftSide).scope->function;
 	context.pop(path.size());
 	return {.scope = scope};
 }
 
 ATransformer::Result PropertyGetter::transform(Context& context, Node::Instance const& node) {
 	auto const decl = FunctionDecl().transform(context, node);
-	if (decl->scope->function->current.size() != 1)
+	if (decl.scope->function->current.size() != 1)
 		context.error("Default arguments are not allowed in property declarations!", node);
-	if (decl->scope->function->current.back()->arguments.size() != 1)
+	if (decl.scope->function->current.back()->arguments.size() != 1)
 		context.error("Getters can only have exactly one argument!");
 	return decl;
 }
 
 ATransformer::Result PropertySetter::transform(Context& context, Node::Instance const& node) {
 	auto const decl = FunctionDecl().transform(context, node);
-	if (decl->scope->function->current.size() != 1)
+	if (decl.scope->function->current.size() != 1)
 		context.error("Default arguments are not allowed in property declarations!", node);
-	if (decl->scope->function->current.back()->arguments.size() != 2)
+	if (decl.scope->function->current.back()->arguments.size() != 2)
 		context.error("Getters can only have exactly two arguments!");
 	return decl;
 }
@@ -1823,8 +1835,8 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	auto const src = Expression().transform(context, node->leftSide);
 	if (!src.source)
 		context.error("Expected value here!", node->leftSide);
-	if (!(src.type->flags.isArray))
-		context.error("Value is not an array!", node->rightSide);
+	if (!(src.type->flags.isArray || src.type->basic == Core::BasicType::AV2_BT_VECTOR))
+		context.error("Value is not indexable!", node->rightSide);
 	if (src.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *src.source);
 	else if (src.isStackTop() && src.isCopied()) {
@@ -1834,6 +1846,8 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	if (index.isCompilable()) {
 		if (!index.direct.isInteger() or index.direct.getSigned() < 0)
 			context.error("Direct value must be an unsigned integer here!", node->rightSide);
+		if (src.type->basic == Core::BasicType::AV2_BT_VECTOR && index.direct.getUnsigned() > 3)
+			context.error("Index range must be between 0 and 3!", node->rightSide);
 		context.top()->impl->writeMainLine("at [", index.direct.getUnsigned(), "]");
 	} else if (
 		index.type == context.basicType("uint8")
@@ -1846,6 +1860,8 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		else if (index.isStackTop() && index.isCopied()) {
 			context.top()->impl->writeMainLine("copy", *index.source, "-> top");
 		}
+		if (src.type->basic == Core::BasicType::AV2_BT_VECTOR)
+			context.top()->impl->writeMainLine("mod" + asFastOpQualifier(*index.type->basic, {.direct = 4}));
 		context.top()->impl->writeMainLine("dyn at");
 	} else context.error("Expected unsigned integer here!", node->rightSide);
 	auto const t = src.type->base;
@@ -1897,9 +1913,8 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			context.error("Expected integer here!", node->rightSide);
 		else if (sz.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *sz.source);
-		else if (sz.isStackTop() && sz.isCopied()) {
+		else if (sz.isStackTop() && sz.isCopied())
 			context.top()->impl->writeMainLine("copy", *sz.source, "-> top");
-		}
 		if (!sz.direct.isUndefined())
 			opstr = "[" + t->name + ":" + Makai::toString(count) + "]";
 		else opstr = "*" + t->name;
@@ -1964,6 +1979,27 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 				context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", tempStart + i, "]");
 				if (!expr.shouldBePushed())
 					context.top()->impl->writeMainLine("pop");
+			}
+		} else if (t->flags.isBasic) {
+			if (t->basic != Core::BasicType::AV2_BT_VECTOR && node->children.size() > 1)
+				context.error("Scalar types can only take one value!", node->leftSide);
+			if (t->basic == Core::BasicType::AV2_BT_VECTOR) {
+				context.impl()->main.popBack();
+				context.impl()->main.popBack();
+				if (node->children.size() > 4)
+					context.error("Vectors can only take at most four values!");
+				context.top()->impl->writeMainLine("new", opstr);
+				for (auto const& [arg, i]: Range::expand(node->children)) {
+					auto const expr = Expression().transform(context, arg);
+					if (!TypeDecl::stronger(expr.type, context.basicType("float32")))
+						context.error("Expected float here!", node->rightSide);
+					else if (expr.shouldBePushed())
+						context.top()->impl->writeMainLine("push", *expr.source);
+					else if (expr.isStackTop() && expr.isCopied())
+						context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
+					context.top()->impl->writeMainLine("set [", *expr.source, "]");
+				}
+				return {{"move top"}, t->scope.raw(), t};
 			}
 		}
 		context.top()->impl->writeMainLine("blit ref", count, "[", tempStart, "] -> global");
