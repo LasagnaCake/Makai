@@ -2,7 +2,8 @@ using import core.types.any
 
 @Basic(type = "vector")
 struct vector : any {
-	/*prop x {
+	/*
+	prop x {
 		get (self: vector)				=> self[0]
 		set (self: vector, val: float)	=> self[0] = val
 	}
@@ -64,5 +65,6 @@ struct vector : any {
 	@[Static, Direct] FORWARD	= new vector{0, 0, +1, 0}
 	@[Static, Direct] BACK		= new vector{0, 0, -1, 0}
 	@[Static, Direct] FUTURE	= new vector{0, 0, 0, +1}
-	@[Static, Direct] PAST		= new vector{0, 0, 0, -1}*/
+	@[Static, Direct] PAST		= new vector{0, 0, 0, -1}
+	*/
 }
