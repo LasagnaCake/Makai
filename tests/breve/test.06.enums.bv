@@ -35,7 +35,6 @@ enum Weekday: uint8 {
 
 	display :: (@ByRef self: Weekday) =>
 		IO.writeLine(self.fullName! + " (" + self.shortName! + ")")
-	//	IO.writeLine(`${self.fullName!} (${self.shortName!})`)
 }
 
 @Main
