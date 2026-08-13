@@ -48,14 +48,14 @@ contexts:
       scope: keyword.operator.breve
 
     - match: '<:'
-      scope: punctuation.definition.operator.template.begin.breve
+      scope: keyword.operator.template.begin.breve
       push: template_decl
 
     - match: '[+\-*/%&|^~<>:?]{0,2}=?'
-      scope: punctuation.definition.operator.breve
+      scope: keyword.operator.breve
 
     - match: '\.\.\.?'
-      scope: punctuation.definition.operator.breve
+      scope: keyword.operator.breve
 
     - match: ','
       scope: punctuation.separator.breve
