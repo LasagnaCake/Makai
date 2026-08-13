@@ -174,15 +174,15 @@ contexts:
 
   interpolations:
     - match: '\$\{'
-      scope: constant.character.escape.breve
+      scope: punctuation.section.interpolation.begin
       push: string_interpolation
 
   string_interpolation:
     - meta_scope: meta.string
     - include: breve
-    - include: interpolations
+      scope: source.bv.embedded
     - match: '\}'
-      scope: constant.character.escape.breve
+      scope: punctuation.section.interpolation.end
       pop: true
 
   double_quoted_string:
