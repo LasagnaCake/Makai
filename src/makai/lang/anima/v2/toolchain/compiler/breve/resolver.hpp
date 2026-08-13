@@ -252,18 +252,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
-	struct GetterResolver: AResolver {
-		GetterResolver(): AResolver() {}
-		virtual ~GetterResolver() {}
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct SetterResolver: AResolver {
-		SetterResolver(): AResolver() {}
-		virtual ~SetterResolver() {}
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
 	struct AwaitExpressionResolver: AResolver {
 		AwaitExpressionResolver(): AResolver() {}
 		virtual ~AwaitExpressionResolver() {}
