@@ -69,6 +69,9 @@ contexts:
     - match: '\b(ref|move|copy|(un)?likely|maybe)\b'
       scope: keyword.operator.breve
 
+    - match: '\b(new|drop)\b'
+      scope: keyword.operator.breve
+
     - match: '\b(and|x?or|not|as|is)\b'
       scope: keyword.operator.word.breve
 
@@ -146,11 +149,23 @@ contexts:
       push: sub_expression
 
   named_blocks:
-    - match: '\b(struct|prop|enum|extend|with|module|trait)\b'
-      scope: keyword.control.breve
+    - match: '\b(struct)\b'
+      scope: storage.type.struct
+
+    - match: '\b(trait)\b'
+      scope: storage.type.trait
+
+    - match: '\b(enum)\b'
+      scope: storage.type.enum
+
+    - match: '\b(extend|with)\b'
+      scope: storage.type.impl
+
+    - match: '\b(prop|module)\b'
+      scope: storage.type.interface
 
   basic_types:
-    - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix)\b'
+    - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix|type|any)\b'
       scope: storage.type.breve
 
   escape_char:
