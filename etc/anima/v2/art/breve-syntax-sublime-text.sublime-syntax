@@ -1,0 +1,168 @@
+%YAML 1.2
+---
+name: Breve
+# See http://www.sublimetext.com/docs/3/syntax.html
+file_extensions:
+  - bv
+scope: source.breve
+variables:
+  id: '[A-Za-z_][A-Za-z_0-9]*'
+contexts:
+  main:
+    - match: '"'
+      scope: punctuation.definition.string.begin.breve
+      push: double_quoted_string
+
+    - match: "'"
+      scope: punctuation.definition.string.begin.breve
+      push: single_quoted_string
+      
+    - match: '`'
+      scope: punctuation.definition.string.begin.breve
+      push: backtick_string
+
+    - match: '//'
+      scope: punctuation.definition.comment.breve
+      push: line_comment
+
+    - match: '/\*'
+      scope: punctuation.definition.comment.breve
+      push: block_comment
+
+    - match: '\b(if|unless|when|except|else|switch|match)\b'
+      scope: keyword.control.breve
+
+    - match: '\b((type|name|count)of)\b'
+      scope: keyword.operator.breve
+
+    - match: '\b(repeat|while|do)\b'
+      scope: keyword.control.breve
+
+    - match: '\b(asm)\b'
+      scope: keyword.control.breve
+
+    - match: '\b(struct|prop|enum|extend|with)\b'
+      scope: keyword.control.breve
+
+    - match: '\b(ref|move|copy|(un)?likely|maybe)\b'
+      scope: keyword.operator.breve
+
+    - match: '<:'
+      scope: punctuation.definition.operator.template.begin.breve
+      push: template_decl
+
+    - match: '[+\-*/%&|^~<>:?]{0,2}=?'
+      scope: punctuation.definition.operator.breve
+
+    - match: '\.\.\.?'
+      scope: punctuation.definition.operator.breve
+
+    - match: ','
+      scope: punctuation.separator.breve
+
+    - match: '\.'
+      scope: punctuation.accessor.breve
+
+    - match: '\b(and|x?or|not)\b'
+      scope: keyword.operator.breve
+
+    - match: '\b(true|false|null)\b'
+      scope: constant.language
+
+    - match: '\b(\+-)?[0-9.]+\b'
+      scope: constant.numeric.breve
+
+    - match: '@{{id}}\b'
+      scope: punctuation.definition.annotation.breve
+
+    - match: '@\['
+      scope: punctuation.definition.annotation.begin.breve
+      push: attribute_list
+
+    - match: \(
+      push: parens
+    - match: \)
+      scope: invalid.illegal.stray-bracket-end
+
+    - match: \[
+      push: brackets
+    - match: \]
+      scope: invalid.illegal.stray-bracket-end
+
+    - match: \{
+      push: curlies
+    - match: \}
+      scope: invalid.illegal.stray-bracket-end
+
+    - match: '<:'
+      push: templates
+    - match: ':>'
+      scope: invalid.illegal.stray-bracket-end
+
+  double_quoted_string:
+    - meta_scope: string.quoted.double.breve
+    - match: '\\.'
+      scope: constant.character.escape.breve
+    - match: '"'
+      scope: punctuation.definition.string.end.breve
+      pop: true
+
+  single_quoted_string:
+    - meta_scope: string.quoted.single.breve
+    - match: '\\.'
+      scope: constant.character.escape.breve
+    - match: "'"
+      scope: punctuation.definition.string.end.breve
+      pop: true
+
+  backtick_string:
+    - meta_scope: string.quoted.backtick.breve
+    - match: '\\.'
+      scope: constant.character.escape.breve
+    - match: "'"
+      scope: punctuation.definition.string.end.breve
+      pop: true
+
+  line_comment:
+    - meta_scope: comment.line.breve
+    - match: $
+      pop: true
+
+  template_decl:
+    - meta_scope: punctuation.definition.operator.template.breve
+    - match: :>
+      pop: true
+
+  block_comment:
+    - meta_scope: comment.block.breve
+    - match: '\\\*'
+      scope: constant.character.escape.breve
+    - match: '\*/'
+      scope: punctuation.definition.comment.breve
+      pop: true
+
+  attribute_list:
+    - meta_scope: annotation.list.breve
+    - match: '\]'
+      scope: punctuation.definition.annotation.end.breve
+      pop: true
+
+  parens:
+    - match: \)
+      pop: true
+    - include: main
+
+  brackets:
+    - match: \]
+      pop: true
+    - include: main
+
+  curlies:
+    - match: \}
+      pop: true
+    - include: main
+
+  templates:
+    - match: ':>'
+      pop: true
+    - include: main
