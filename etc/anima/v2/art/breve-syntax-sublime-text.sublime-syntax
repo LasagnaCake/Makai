@@ -121,7 +121,7 @@ contexts:
 
   template:
     - match: '<:'
-      scope: keyword.operator.template.begin.breve
+      scope: punctuation.definition.generic.begin.breve
       push: template_decl
 
   attributes:
@@ -146,7 +146,7 @@ contexts:
       push: sub_expression
 
   named_blocks:
-    - match: '\b(struct|prop|enum|extend|with|module)\b'
+    - match: '\b(struct|prop|enum|extend|with|module|trait)\b'
       scope: keyword.control.breve
 
   basic_types:
@@ -200,9 +200,9 @@ contexts:
       pop: true
 
   template_decl:
-    - meta_scope: template.breve
+    - meta_scope: meta.generic.breve
     - match: :>
-      scope: keyword.operator.template.end.breve
+      scope: punctuation.definition.generic.end.breve
       pop: true
 
   block_comment:
