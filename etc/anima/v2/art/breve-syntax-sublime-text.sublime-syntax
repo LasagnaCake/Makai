@@ -22,7 +22,8 @@ contexts:
     - include: numbers
     - include: attributes
     - include: blocks
-    - include: named_block
+    - include: named_blocks
+    - include: basic_types
 
   strings:
     - match: '"'
@@ -47,6 +48,9 @@ contexts:
       push: block_comment
 
   keywords:
+    - match: '\b(return|error|terminate)\b'
+      scope: keyword.control.breve
+
     - match: '\b(if|unless|when|except|else|switch|match)\b'
       scope: keyword.control.conditional.breve
 
@@ -132,34 +136,35 @@ contexts:
       scope: punctuation.section.parens.begin.breve
       push: sub_expression
 
-  named_block:
+  named_blocks:
     - match: '\b(struct|prop|enum|extend|with|module)\b'
       scope: keyword.control.breve
 
-  basics:
+  basic_types:
     - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix)\b'
       scope: storage.type.breve
 
-  double_quoted_string:
-    - meta_scope: string.quoted.double.breve
+  escape_char:
     - match: '\\.'
       scope: constant.character.escape.breve
+
+  double_quoted_string:
+    - meta_scope: string.quoted.double.breve
+    - include: escape_char
     - match: '"'
       scope: punctuation.definition.string.end.breve
       pop: true
 
   single_quoted_string:
     - meta_scope: string.quoted.single.breve
-    - match: '\\.'
-      scope: constant.character.escape.breve
+    - include: escape_char
     - match: "'"
       scope: punctuation.definition.string.end.breve
       pop: true
 
   backtick_string:
     - meta_scope: string.quoted.backtick.breve
-    - match: '\\.'
-      scope: constant.character.escape.breve
+    - include: escape_char
     - match: "'"
       scope: punctuation.definition.string.end.breve
       pop: true
