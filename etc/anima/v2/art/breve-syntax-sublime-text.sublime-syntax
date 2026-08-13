@@ -65,6 +65,7 @@ contexts:
 
     - match: '\b(asm)\b'
       scope: keyword.control.breve
+      push: inline_assembly
 
     - match: '\b(ref|move|copy|(un)?likely|maybe)\b'
       scope: keyword.operator.breve
@@ -235,8 +236,8 @@ contexts:
       pop: true
 
   attribute_list:
-    - meta_scope: annotation.list.breve
-    - include: attributes
+    - meta_scope: punctuation.definition.annotation.breve
+    - include: breve
     - match: '\]'
       scope: punctuation.definition.annotation.end.breve
       pop: true
@@ -260,4 +261,14 @@ contexts:
     - include: breve
     - match: '\)'
       scope: punctuation.section.parens.end.breve
+      pop: true
+
+  inline_assembly:
+    - match: '\{'
+      push: inline_assembly_block
+      pop: true
+
+  inline_assembly_block:
+    - meta_scope: string.quoted.other.breve
+    - match: '\}'
       pop: true
