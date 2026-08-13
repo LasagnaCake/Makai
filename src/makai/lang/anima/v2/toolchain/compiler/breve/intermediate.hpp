@@ -265,6 +265,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8String			passBy = "move";
 		bool				hasValue = false;
 		Node::Instance		lastConsumer;
+		bool				isConstant = false;
 
 		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
 
@@ -289,6 +290,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		}
 
 		constexpr UTF8String consume(Node::Instance const& consumer) {
+			if (isConstant) return getSource();
 			if (!isCompiled() && passBy == "move")
 				hasValue = false;
 			lastConsumer = consumer;
@@ -298,8 +300,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		constexpr UTF8String getSource() {
 			if (isCompiled())
 				return value.toString();
-			if (global) return passBy + " " + source;
-			else return passBy + " local[" + Makai::toString(id) + "]";
+			auto const pb = (isConstant ? "copy" : passBy);
+			if (global) return pb + " " + source;
+			else return pb + " local[" + Makai::toString(id) + "]";
 		}
 
 		constexpr String consumerInfo() {

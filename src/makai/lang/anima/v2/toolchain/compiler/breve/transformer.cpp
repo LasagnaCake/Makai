@@ -901,8 +901,11 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 			mod = "val";
 		}
 		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
-		if (val.scope && val.scope->variable)
+		if (val.scope && val.scope->variable) {
+			if (val.scope->variable->isConstant && node->base.text != "copy")
+				context.error("Constants can only be copied!", node);
 			val.scope->variable->setFillState(node->base.text != "move");
+		}
 		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood};
 	}
 	if (val.shouldBePushed()) {

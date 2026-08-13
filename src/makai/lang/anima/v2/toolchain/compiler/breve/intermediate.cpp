@@ -351,6 +351,8 @@ static Namespace::AttributeRef createPassByAttribute(Makai::UTF8String const mod
 	attrib->name = "By" + mode;
 	attrib->target = Attribute::Target::AV2_TAAT_VARIABLE;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		if (ns->variable->isConstant)
+				Transformer::ATransformer::Context::error("Cannot change transfer mode for constants!", ns->node);
 		if (mode == "Copy") {
 			if (!ns->variable->type->flags.isCopyable)
 				Transformer::ATransformer::Context::error("Variable is not of a copyable type!", ns->node);
@@ -833,8 +835,27 @@ static Namespace::AttributeRef createDirectAttribute() {
 				ov->variant.context = ExecutionContext::AV2_TCB_EC_COMPILE;
 			}
 		} else if (ns->variable) {
-
+			ns->variable->context = ExecutionContext::AV2_TCB_EC_COMPILE;
+			ns->variable->isConstant = true;
+			ns->variable->passBy = "copy";
 		}
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createConstAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Direct";
+	attrib->target =
+		Attribute::Target::AV2_TAAT_VARIABLE
+	;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		if (!ns->variable->type->flags.isCopyable)
+			Transformer::ATransformer::Context::error("Variable is not of a copyable type!", ns->node);
+		ns->variable->isConstant = true;
+		ns->variable->passBy = "copy";
 	};
 	return attrib;
 }
@@ -912,6 +933,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createPathAttribute());
 	addGlobalAttribute(createRemangleAttribute());
 	addGlobalAttribute(createDoNotMangleAttribute());
+	addGlobalAttribute(createConstAttribute());
 	addGlobalAttribute(createPassByAttribute("Move"));
 	addGlobalAttribute(createPassByAttribute("Ref"));
 	addGlobalAttribute(createPassByAttribute("Copy"));
