@@ -145,12 +145,26 @@ contexts:
       scope: storage.type.breve
 
   escape_char:
-    - match: '\\.'
+    - match: '\\.|\\u\{[0-9]+\}'
       scope: constant.character.escape.breve
+
+  interpolations:
+    - match: '\$\{'
+      scope: constant.character.escape.breve
+      push: string_interpolation
+
+  string_interpolation:
+    - meta_scope: meta.string
+    - include: breve
+    - include: interpolations
+    - match: '\}'
+      scope: constant.character.escape.breve
+      pop: true
 
   double_quoted_string:
     - meta_scope: string.quoted.double.breve
     - include: escape_char
+    - include: interpolations
     - match: '"'
       scope: punctuation.definition.string.end.breve
       pop: true
@@ -158,12 +172,13 @@ contexts:
   single_quoted_string:
     - meta_scope: string.quoted.single.breve
     - include: escape_char
+    - include: interpolations
     - match: "'"
       scope: punctuation.definition.string.end.breve
       pop: true
 
   backtick_string:
-    - meta_scope: string.quoted.backtick.breve
+    - meta_scope: string.quoted.other.breve
     - include: escape_char
     - match: "'"
       scope: punctuation.definition.string.end.breve
