@@ -536,7 +536,7 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
-static Node::Instance protoName(String const& name) {
+static Node::Instance protoName(Makai::String const& name) {
 	Node::Instance pname = Node::Instance::create();
 	pname->content = Node::Content::AV2_TANC_NAME;
 	pname->value = "__" + name;
@@ -551,7 +551,7 @@ Node::Instance GetterResolver::resolve(Parser& parser, Node::Instance const& lef
 	result->leftSide = protoName("get");
 	result->middle = FunctionPrototypeResolver().resolve(parser, null, {});
 	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
-	return proto;
+	return result;
 }
 
 Node::Instance SetterResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
@@ -562,7 +562,7 @@ Node::Instance SetterResolver::resolve(Parser& parser, Node::Instance const& lef
 	result->leftSide = protoName("set");
 	result->middle = FunctionPrototypeResolver().resolve(parser, null, {});
 	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
-	return proto;
+	return result;
 }
 
 Node::Instance FunctionContentResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
