@@ -172,7 +172,7 @@ contexts:
       scope: storage.type.interface
 
   basic_types:
-    - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix|type|any)\b'
+    - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix|type|any|bool|bytes)\b'
       scope: storage.type.breve
 
   escape_char:

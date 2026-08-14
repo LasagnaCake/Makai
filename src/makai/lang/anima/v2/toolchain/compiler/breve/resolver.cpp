@@ -548,7 +548,7 @@ Node::Instance GetterResolver::resolve(Parser& parser, Node::Instance const& lef
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_PROPERTY_GETTER;
 	result->base = token;
-	result->leftSide = protoName("get");
+	result->leftSide = protoName("get" + result->name());
 	result->middle = FunctionPrototypeResolver().resolve(parser, null, {});
 	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
 	return result;
@@ -559,7 +559,7 @@ Node::Instance SetterResolver::resolve(Parser& parser, Node::Instance const& lef
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_PROPERTY_SETTER;
 	result->base = token;
-	result->leftSide = protoName("set");
+	result->leftSide = protoName("set" + result->name());
 	result->middle = FunctionPrototypeResolver().resolve(parser, null, {});
 	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
 	return result;
@@ -579,8 +579,6 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftS
 	Node::Instance result = Node::Instance::create();
 	result->content = token.type == LTS_TT_NULL_ACCESS ? Node::Content::AV2_TANC_FAILABLE_PATH : Node::Content::AV2_TANC_PATH;
 	result->leftSide = leftSide;
-	FunctionPrototypeResolver resolver;
-	auto const proto = resolver.resolve(parser, null, {});
 	String subpath;
 	while (true) {
 		subpath += "/" + parser.context.getNext(LTS_TT_IDENTIFIER, "name").getString();
