@@ -317,13 +317,50 @@ public:
 	/// @return Whether the bound object exists.
 	constexpr operator bool() const	{return exists();	}
 
+
+	/// @brief Atomically performs an operation synchronized to the underlying value.
+	/// @tparam TFunction Operation type.
+	/// @tparam op Operation to perform.
+	/// @return Reference to self.
 	template<Type::Functional<OperationType> TFunction>
 	constexpr Shared& modify(TFunction const& op) {
-		ScopeLock<> lock{mutex};
+		if (!exists()) return *this;
+		auto const _ = sync();
 		ReferenceType ref = *getPointer();
 		ref = op(ref);
 		return (*this);
 	}
+
+	/// @brief Atomically performs an operation synchronized to the underlying value.
+	/// @tparam TFunction Operation type.
+	/// @tparam op Operation to perform.
+	/// @return Reference to self.
+	template<Type::Functional<void(DataType const&)> TFunction>
+	constexpr Shared& perform(TFunction const& op) {
+		if (!exists()) return *this;
+		auto const _ = sync();
+		ReferenceType ref = *getPointer();
+		op(ref);
+		return (*this);
+	}
+
+	/// @brief Atomically performs an operation synchronized to the underlying value.
+	/// @tparam TFunction Operation type.
+	/// @tparam op Operation to perform.
+	/// @return Reference to self.
+	template<Type::Functional<void()> TFunction>
+	SelfType& perform(TFunction const& op) {
+		if (!exists())
+			return (op(), *this);
+		auto const _ = sync();
+		op();
+		return (*this);
+	}
+
+	/// @brief Creates a synchronization barrier.
+	/// @return Sync barrier.
+	[[nodiscard]]
+	constexpr static ScopeLock<Mutex> sync() {return ::CTL::lock(mutex);}
 
 	/// @brief Returns whether the bound object doesn't exist.
 	/// @return Whether the bound object doesn't exist.

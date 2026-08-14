@@ -1,0 +1,210 @@
+%YAML 1.2
+---
+name: Minima
+# See http://www.sublimetext.com/docs/3/syntax.html
+file_extensions:
+  - min
+scope: source.minima
+variables:
+  id: '[A-Za-z_][A-Za-z_0-9]*'
+  op: '[+\-*/%&|^~<>:?!]{1,2}'
+contexts:
+  main:
+    - match: ''
+      push: [minima]
+
+  minima:
+    - include: strings
+    - include: numbers
+    - include: comments
+    - include: keywords
+    - include: operators
+    - include: declarations
+    - include: blocks
+    - include: basic_types
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.minima
+      push: double_quoted_string
+
+    - match: "'"
+      scope: punctuation.definition.string.begin.minima
+      push: single_quoted_string
+      
+    - match: '`'
+      scope: punctuation.definition.string.begin.minima
+      push: backtick_string
+
+  comments:
+    - match: '//'
+      scope: punctuation.definition.comment.minima
+      push: line_comment
+
+    - match: '/\*'
+      scope: punctuation.definition.comment.minima
+      push: block_comment
+
+  keywords:
+    - match: '\b(copy|nop|call|jump|if|bind|clear|decl|jump|do|go|op|begin|end|push|pop|stop|ret|blit|as|set|rewrite|field|is|next|swap|flush|clear|return|terminate|error|compare|cmp|enter|exit|bring|keep|decl|copy|context|mode|operator|count|size|type|yield|random|rng|select|pick|unbind|drop|create|new|init|make|dyn(amic)?|at)\b'
+      scope: keyword.operator.minima
+
+    - match: '\b(zero|z|nonzero|nz|negative|n|positive|p|empty|e|t|f|v|loose|strict|getseed|setseed|reseed|safe|fast|bounded)\b'
+      scope: storage.modifier.minima
+
+    - match: '\b(ref|move|val)\b'
+      scope: keyword.modifier.minima
+
+    - match: '\b(atan|mod|pow|abs|sqrt|root)\b'
+      scope: keyword.operator.minima
+
+    - match: '\b(local|l|global|arg|g|stack|external|out|placeof|top)\b'
+      scope: variable.other.minima
+
+    - match: '\b(land|lx?or|band|bx?or|pow|sqrt|atan|neg|inc|dec|inv|sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|add|sub|mul|div|mod|log2|log10|ln|lnot|bnot|less|greater|notequals|ne|equals|greaterequals|ge|lessequals|le|order|o)\b'
+      scope: keyword.operator.word.minima
+
+    - match: '\b(basic|nil|derived|meta|empty|discard|struct|fields|required|optional|value|final|enum|union)\b'
+      scope: variable.parameter.minima
+
+    - match: '\b(true|false|null)\b'
+      scope: constant.language
+
+    - match: '\b(void|i8|i16|i32|i64|u8|u16|u32|u64|f32|f64|f128|str|vec|mat|min)\b'
+      scope: storage.type
+
+  operators:
+    - match: '([*/%]|[+\-]{1,2})'
+      scope: keyword.operator.arithmetic.minima
+
+    - match: '([&|\^~])'
+      scope: keyword.operator.bitwise.minima
+
+    - match: '([+\-*/%&|^~:?]|<<|>>)?='
+      scope: keyword.operator.assignment.minima
+
+    - match: '([<>!]|[<>!=]=|[&|\^]{2})'
+      scope: keyword.operator.logic.minima
+
+    - match: '\.\.\.?'
+      scope: keyword.operator.other.minima
+
+    - match: '[\-\=]\>'
+      scope: keyword.operator.other.minima
+
+    - match: '::\>'
+      scope: keyword.operator.other.minima
+
+    - match: ':'
+      scope: keyword.operator.other.minima
+
+    - match: '\?\?'
+      scope: keyword.operator.other.minima
+
+    - match: ','
+      scope: punctuation.separator.minima
+
+    - match: '\.'
+      scope: punctuation.accessor.minima
+
+    - match: '\?'
+      scope: storage.modifier.minima
+
+  numbers:
+    - match: '\b(\+-)?[0-9.]+\b'
+      scope: constant.numeric.minima
+
+  declarations:
+    - match: '@{{id}}'
+      scope: punctuation.definition.annotation.minima
+
+  blocks:
+    - match: '\['
+      scope: punctuation.section.brackets.begin.minima
+      push: array
+
+    - match: '\('
+      scope: punctuation.section.parens.begin.minima
+      push: sub_expression
+
+  named_blocks:
+    - match: '\b(struct)\b'
+      scope: storage.type.struct
+
+    - match: '\b(trait)\b'
+      scope: storage.type.trait
+
+    - match: '\b(enum)\b'
+      scope: storage.type.enum
+
+    - match: '\b(extend|with)\b'
+      scope: storage.type.impl
+
+    - match: '\b(prop|module)\b'
+      scope: storage.type.interface
+
+  basic_types:
+    - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix|type|any|bool|bytes)\b'
+      scope: storage.type.minima
+
+  escape_char:
+    - match: '\\.|\\u\{[0-9]+\}'
+      scope: constant.character.escape.minima
+
+  double_quoted_string:
+    - meta_scope: string.quoted.double.minima
+    - include: escape_char
+    - include: interpolations
+    - match: '"'
+      scope: punctuation.definition.string.end.minima
+      pop: true
+
+  single_quoted_string:
+    - meta_scope: string.quoted.single.minima
+    - include: escape_char
+    - include: interpolations
+    - match: "'"
+      scope: punctuation.definition.string.end.minima
+      pop: true
+
+  backtick_string:
+    - meta_scope: string.quoted.other.minima
+    - include: escape_char
+    - include: interpolations
+    - match: "`"
+      scope: punctuation.definition.string.end.minima
+      pop: true
+
+  line_comment:
+    - meta_scope: comment.line.minima
+    - match: $
+      pop: true
+
+  block_comment:
+    - meta_scope: comment.block.minima
+    - match: '\\\*'
+      scope: constant.character.escape.minima
+    - match: '\*/'
+      scope: punctuation.definition.comment.minima
+      pop: true
+
+  attribute_list:
+    - meta_scope: punctuation.definition.annotation.minima
+    - include: minima
+    - match: '\]'
+      scope: punctuation.definition.annotation.end.minima
+      pop: true
+
+  array:
+    - meta_scope: meta.brackets.minima
+    - include: minima
+    - match: '\]'
+      scope: punctuation.section.brackets.end.minima
+      pop: true
+
+  sub_expression:
+    - meta_scope: meta.parens.minima
+    - include: minima
+    - match: '\)'
+      scope: punctuation.section.parens.end.minima
+      pop: true

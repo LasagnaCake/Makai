@@ -28,16 +28,16 @@ extend vector {
 	}
 
 	/*
-	prop get wxyz (@ByRef self: vector) => self[[3,0,1,2]]
-	prop get wzyx (@ByRef self: vector) => self[[3,2,1,0]]
-	prop get yxwz (@ByRef self: vector) => self[[1,0,3,2]]
-	prop get yzwx (@ByRef self: vector) => self[[1,2,3,0]]
-	prop get xzyw (@ByRef self: vector) => self[[0,2,1,3]]
+	prop wxyz get (self: vector) => self[[3,0,1,2]]
+	prop wzyx get (self: vector) => self[[3,2,1,0]]
+	prop yxwz get (self: vector) => self[[1,0,3,2]]
+	prop yzwx get (self: vector) => self[[1,2,3,0]]
+	prop xzyw get (self: vector) => self[[0,2,1,3]]
 
-	prop get xxxx (@ByRef self: vector) => self[[0,0,0,0]]
-	prop get xyxy (@ByRef self: vector) => self[[0,1,0,1]]
-	prop get xyzx (@ByRef self: vector) => self[[0,1,2,0]]
-	prop get xyzy (@ByRef self: vector) => self[[0,1,2,1]]
+	prop xxxx get (self: vector) => self[[0,0,0,0]]
+	prop xyxy get (self: vector) => self[[0,1,0,1]]
+	prop xyzx get (self: vector) => self[[0,1,2,0]]
+	prop xyzy get (self: vector) => self[[0,1,2,1]]
 	*/
 
 	prop angle2d get (@ByRef self: vector) => self.y atan self.x
