@@ -327,7 +327,6 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 static Makai::UTF8String parseBlockComment(TokenStream::Lexer& lexer) {
 	Makai::UTF8String out;
 	lexer.next();
-	lexer.next();
 	while (!(lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'/'}))
 		out.pushBack(lexer.next());
 	lexer.next();
@@ -337,7 +336,6 @@ static Makai::UTF8String parseBlockComment(TokenStream::Lexer& lexer) {
 
 static Makai::UTF8String parseLineComment(TokenStream::Lexer& lexer) {
 	Makai::UTF8String out;
-	lexer.next();
 	lexer.next();
 	while (lexer.now() != UTF::U8Char{'\n'})
 		out.pushBack(lexer.next());
