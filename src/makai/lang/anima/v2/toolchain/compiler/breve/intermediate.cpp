@@ -972,6 +972,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createPassByAttribute("Copy"));
 	addGlobalAttribute(createPrivateAttribute());
 	addGlobalAttribute(createProtectedAttribute());
+	addGlobalAttribute(createPublicAttribute());
 	addGlobalAttribute(createExposeAttribute());
 	addGlobalAttribute(createRuntimeAttribute());
 	addGlobalAttribute(createMixedAttribute());

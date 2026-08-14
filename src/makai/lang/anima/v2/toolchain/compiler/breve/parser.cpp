@@ -250,6 +250,8 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 			context.peek().type == LTS_TT_LINE_COMMENT
 		or	context.peek().type == LTS_TT_BLOCK_COMMENT
 		) context.next();
+		if (context.empty())
+			return nullptr;
 		return nextExpression(precedence);
 	}
 	Node::Instance lhs;
