@@ -40,7 +40,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		constexpr void makePublic()		{visibility = Visibility::AV2_TCBV_PUBLIC;		}
 		constexpr void makeProtected()	{visibility = Visibility::AV2_TCBV_PROTECTED;	}
 		constexpr void makePrivate()	{visibility = Visibility::AV2_TCBV_PRIVATE;		}
-	}
+	};
 
 	struct Namespace;
 	struct TypeDecl;
