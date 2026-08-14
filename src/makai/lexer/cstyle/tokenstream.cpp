@@ -341,9 +341,8 @@ static Makai::UTF8String parseLineComment(TokenStream::Lexer& lexer) {
 	Makai::UTF8String out;
 	lexer.next();
 	lexer.next();
-	while (true) {
+	while (lexer.now() != UTF::U8Char{'\n'}) {
 		out.pushBack(lexer.now());
-		if (lexer.peek() == UTF::U8Char{'\n'}) break;
 		lexer.next();
 	}
 	return out;
