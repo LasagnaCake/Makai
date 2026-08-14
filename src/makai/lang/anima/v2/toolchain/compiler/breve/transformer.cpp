@@ -114,9 +114,9 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 			Makai::List<Namespace::TypeRef>::from(ns->type.raw())
 		);
 		if (!ov)
-			return {.scope = ov};
+			return null;
 		context.top()->impl->writeMainLine("call", ov->entry);
-		return {"move top", ns, ov->result};
+		return {"move top"};
 	}
 	return null;
 }
@@ -1625,7 +1625,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	}
 	auto lhs = Expression().transform(context, node->leftSide);
 	if (lhs.scope && lhs.scope->property) {
-		if (!prop.setter)
+		if (!lhs.scope->property.setter)
 			context.error("Cannot set a read-only property!", node->leftSide);
 		auto& prop = *lhs.scope->property;
 		context.impl()->main.popBack();
