@@ -98,6 +98,10 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_FR_DOUBLE_QUOTE_STRING,
 				/// @brief Japanese-double-quote string literal.
 				LTS_TT_JP_DOUBLE_QUOTE_STRING,
+				/// @brief Line comment.
+				LTS_TT_LINE_COMMENT,
+				/// @brief Block comment.
+				LTS_TT_BLOCK_COMMENT,
 				/// @brief Equality comparison (`==`).
 				LTS_TT_COMPARE_EQUALS,
 				/// @brief Inequality comparison (`!=`).

@@ -324,15 +324,25 @@ static void parseOperator(TokenStream::Lexer& lexer, TokenStream::Token& tok) {
 	lexer.next();
 }
 
-static void parseBlockComment(TokenStream::Lexer& lexer) {
-	while (!(lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'/'}))
-		lexer.next();
+static Makai::UTF8String parseBlockComment(TokenStream::Lexer& lexer) {
+	Makai::UTF8String out;
 	lexer.next();
+	lexer.next();
+	while (!(lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'/'}))
+		out.pushBack(lexer.next());
+	lexer.next();
+	lexer.next();
+	return out;
 }
 
-static void parseLineComment(TokenStream::Lexer& lexer) {
+static Makai::UTF8String parseLineComment(TokenStream::Lexer& lexer) {
+	Makai::UTF8String out;
+	lexer.next();
+	lexer.next();
 	while (lexer.now() != UTF::U8Char{'\n'})
-		lexer.next();
+		out.pushBack(lexer.next());
+	lexer.next();
+	return out;
 }
 
 bool TokenStream::next() {
@@ -361,10 +371,18 @@ bool TokenStream::next() {
 			isFinished = true;
 		}
 	}
-	else if (lexer->now() == UTF::U8Char{'/'} && lexer->peek() == UTF::U8Char{'*'})
-		parseBlockComment(*lexer);
-	else if (lexer->now() == UTF::U8Char{'/'} && lexer->peek() == UTF::U8Char{'/'})
-		parseLineComment(*lexer);
+	else if (lexer->now() == UTF::U8Char{'/'} && lexer->peek() == UTF::U8Char{'*'}) {
+		lexeme = parseBlockComment(*lexer);
+		curToken.text = lexeme;
+		curToken.value = curToken.text.toString();
+		curToken.type = LTS_TT_BLOCK_COMMENT;
+	}
+	else if (lexer->now() == UTF::U8Char{'/'} && lexer->peek() == UTF::U8Char{'/'}) {
+		lexeme = parseLineComment(*lexer);
+		curToken.text = lexeme;
+		curToken.value = curToken.text.toString();
+		curToken.type = LTS_TT_LINE_COMMENT;
+	}
 	else if (isWordChar(lexer->now())) {
 		lexeme = parseID(*lexer);
 		curToken.text = lexeme;

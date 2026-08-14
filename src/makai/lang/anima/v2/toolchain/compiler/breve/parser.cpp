@@ -242,6 +242,16 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 		MAKAILIB_DEBUGLN_FULL("Invalid Token!?");
 		return nullptr;
 	}
+	if (
+		tok.type == LTS_TT_LINE_COMMENT
+	or	tok.type == LTS_TT_BLOCK_COMMENT
+	) {
+		while (
+			context.peek().type == LTS_TT_LINE_COMMENT
+		or	context.peek().type == LTS_TT_BLOCK_COMMENT
+		) context.next();
+		return nextExpression(precedence);
+	}
 	Node::Instance lhs;
 	MAKAILIB_DEBUGLN_FULL("Prefix: ", tok.text);
 	if (!isString(tok.type) && prefixes.contains(tok.text))

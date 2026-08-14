@@ -120,6 +120,10 @@ namespace Makai::Parser::Data {
 		}
 
 		ResultType parseValue() {
+			while (
+				lexer.current().type == TokenType::LTS_TT_BLOCK_COMMENT
+			or	lexer.current().type == TokenType::LTS_TT_LINE_COMMENT
+			) lexer.next();
 			auto const token = lexer.current();
 			switch (token.type) {
 			case TokenType{'-'}:
