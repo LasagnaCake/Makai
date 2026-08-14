@@ -492,26 +492,16 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	auto const type = parser.context.peek().text;
-	if (type == "get" || type == "set") {
+	result->middle = parser.nextExpression();
+	if (!result->middle->isPathOrName())
+		parser.context.error("Expected path or name here!");
+	auto const tok = parser.context.peek();
+	if (tok.text == "get" || tok.text == "set") {
 		parser.context.next();
-		auto const gs = parser.context.token();
-		result->middle = parser.nextExpression();
-		if (!result->middle->isPathOrName())
-			parser.context.error("Expected path or name here!");
-		auto const decl = Node::Instance::create();
-		decl->content = type == "set" ? Node::Content::AV2_TANC_PROPERTY_SETTER : Node::Content::AV2_TANC_PROPERTY_GETTER;
-		decl->base = gs;
-		decl->leftSide = protoName(type);
-		decl->middle = FunctionPrototypeResolver().resolve(parser, null, {});
-		decl->rightSide = FunctionContentResolver().resolve(parser, null, {});
-		if (type == "set")
-			result->rightSide = decl;
-		else result->leftSide = decl;
-	} else {
-		result->middle = parser.nextExpression();
-		if (!result->middle->isPathOrName())
-			parser.context.error("Expected path or name here!");
+		if (ok.text == "set")
+			result->rightSide = GetterResolver().resolve(context, null, tok);
+		else result->leftSide = SetterResolver().resolve(context, null, tok);
+	} else if (tok.type == LTS_TT_OPEN_CURLY) {
 		parser.context.expectNext(LTS_TT_OPEN_CURLY);
 		while (true) {
 			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
@@ -536,7 +526,7 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 		}
 		if (!(result->leftSide or result->rightSide))
 			parser.context.error("Expected getter or setter!");
-	}
+	} else parser.context.error("Invalid property declaration!");
 	return result;
 }
 
