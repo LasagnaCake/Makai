@@ -70,7 +70,7 @@ contexts:
     - match: '\b(ref|move|copy|(un)?likely|maybe)\b'
       scope: keyword.operator.breve
 
-    - match: '\b(atan2|mod|pow|abs|sqrt|root)\b'
+    - match: '\b(atan|mod|pow|abs|sqrt|root)\b'
       scope: keyword.operator.breve
 
     - match: '\b(new|drop)\b'
