@@ -39,32 +39,30 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		writeLine_string(toString(what));
 	}
 
-	template <class T> using now = Makai::OS::Time::sinceEpoch<T>;
-
 	AV2Call
 	static int64 procNow(int64 const precision) {
+		using Time = Makai::OS::Time;
 		switch (precision) {
-			case -2:	return now<Makai::OS::Time::Hours>();
-			case -1:	return now<Makai::OS::Time::Minutes>();
-			case 0:		return now<Makai::OS::Time::Seconds>();
-			case +1:	return now<Makai::OS::Time::Millis>();
-			case +2:	return now<Makai::OS::Time::Micros>();
-			case +3:	return now<Makai::OS::Time::Nanos>();
+			case -2:	return Time::sinceEpoch<Time::Hours>();
+			case -1:	return Time::sinceEpoch<Time::Minutes>();
+			case 0:		return Time::sinceEpoch<Time::Seconds>();
+			case +1:	return Time::sinceEpoch<Time::Millis>();
+			case +2:	return Time::sinceEpoch<Time::Micros>();
+			case +3:	return Time::sinceEpoch<Time::Nanos>();
 			default:	return Makai::Limit::MAX<int64>;
 		}
 	}
 
-	template <class T> using epoch = Makai::OS::Time::sinceEpoch<T>;
-
 	AV2Call
 	static int64 localNow(int64 const precision) {
+		using Time = Makai::OS::Time;
 		switch (precision) {
-			case -2:	return epoch<Makai::OS::Time::Hours>();
-			case -1:	return epoch<Makai::OS::Time::Minutes>();
-			case 0:		return epoch<Makai::OS::Time::Seconds>();
-			case +1:	return epoch<Makai::OS::Time::Millis>();
-			case +2:	return epoch<Makai::OS::Time::Micros>();
-			case +3:	return epoch<Makai::OS::Time::Nanos>();
+			case -2:	return Time::sinceEpoch<Time::Hours>();
+			case -1:	return Time::sinceEpoch<Time::Minutes>();
+			case 0:		return Time::sinceEpoch<Time::Seconds>();
+			case +1:	return Time::sinceEpoch<Time::Millis>();
+			case +2:	return Time::sinceEpoch<Time::Micros>();
+			case +3:	return Time::sinceEpoch<Time::Nanos>();
 			default:	return Makai::Limit::MAX<int64>;
 		}
 	}
