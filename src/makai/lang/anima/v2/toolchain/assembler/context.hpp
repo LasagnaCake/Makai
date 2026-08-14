@@ -108,7 +108,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 		}
 
 		Axiom token() const	{
-			assertNotEmpty();
+			if (empty()) return Axiom::invalid();
 			return tokens.back();
 		}
 
