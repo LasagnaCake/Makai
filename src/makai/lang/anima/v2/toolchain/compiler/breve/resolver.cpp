@@ -566,15 +566,7 @@ Node::Instance PathResolver::resolve(Parser& parser, Node::Instance const& leftS
 	Node::Instance result = Node::Instance::create();
 	result->content = token.type == LTS_TT_NULL_ACCESS ? Node::Content::AV2_TANC_FAILABLE_PATH : Node::Content::AV2_TANC_PATH;
 	result->leftSide = leftSide;
-	String subpath;
-	while (true) {
-		subpath += "/" + parser.context.getNext(LTS_TT_IDENTIFIER, "name").getString();
-		 if (parser.context.peek().type == LTS_TT_DOT) {
-			parser.context.next();
-			continue;
-		} else break;
-	}
-	result->value = subpath;
+	result->value = "/" + parser.context.getNext(LTS_TT_IDENTIFIER, "name").getString();
 	result->base = token;
 	MAKAILIB_DEBUGLN_FULL("Path Expression {");
 	MAKAILIB_DEBUGLN_FULL("  LHS: ", result->leftSide->base.text);
