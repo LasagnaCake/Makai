@@ -38,11 +38,11 @@ struct vector : any {
 	prop get xyzy (@ByRef self: vector) => self[[0,1,2,1]]
 	*/
 
-	prop get angle2d (@ByRef self: vector) => self.y atan2 self.x
+	prop angle2d get (@ByRef self: vector) => self.y atan2 self.x
 
-	prop get length (@ByRef self: vector) => sqrt (self.x pow 2 + self.y pow 2 + self.z pow 2 + self.w pow 2)
+	prop length get (@ByRef self: vector) => sqrt (self.x pow 2 + self.y pow 2 + self.z pow 2 + self.w pow 2)
 
-	prop get normal (@ByCopy self: vector) => self / self.length
+	prop normal get (@ByCopy self: vector) => self / self.length
 
 	angle2dTo	:: (@ByRef self: vector, other: vector) => (other - self).angle2d
 
