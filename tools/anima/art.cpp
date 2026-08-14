@@ -70,7 +70,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	AV2Call
 	static int64 utcNow(int64 const precision) {
 		using Zone = Makai::Zone;
-		using pow = Makai::Math::pow<double>;
+		constexpr static pow = Makai::Math::pow<double>;
 		auto const local = localNow(precision);
 		if (local == Makai::Limit::MAX<int64>) return local;
 		auto secs = int64(local * pow(10, -precision));
