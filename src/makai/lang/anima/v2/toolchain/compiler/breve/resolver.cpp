@@ -533,9 +533,6 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 				parser.context.next();
 				break;
 			}
-			parser.context.expectNext(LTS_TT_COMMA);
-			if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
-				parser.context.error("Expected expression after the comma!");
 		}
 		if (!(result->leftSide or result->rightSide))
 			parser.context.error("Expected getter or setter!");
