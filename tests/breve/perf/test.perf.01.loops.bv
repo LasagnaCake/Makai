@@ -5,10 +5,10 @@ main :: () {
 	IO.writeLine("Doing 100 million loops...")
 	start := OS.Time.localNow(OS.Time.Precision.MILLIS)
 	IO.writeLine("Loop iteration #0");
-	repeat @ByCopy i: uint64 -> 100_000_000 {
-		unless likely (i % 100) {
+	repeat @ByCopy i: uint64 -> 100_000 {
+		unless likely i % 100_000 {
 			IO.write("Loop iteration #")
-			IO.writeLine((i * 100) as any);
+			IO.writeLine((i * 100_000) as any)
 		}
 	}
 	stop := OS.Time.localNow(OS.Time.Precision.MILLIS)
