@@ -1836,7 +1836,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	if (!src.source)
 		context.error("Expected value here!", node->leftSide);
 	if (!(src.type->flags.isArray || src.type->basic == Core::BasicType::AV2_BT_VECTOR))
-		context.error("Value is not indexable!", node->rightSide);
+		context.error("Value is not indexable!", node->leftSide);
 	if (src.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *src.source);
 	else if (src.isStackTop() && src.isCopied()) {
