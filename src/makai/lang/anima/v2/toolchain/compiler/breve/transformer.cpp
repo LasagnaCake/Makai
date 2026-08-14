@@ -133,10 +133,10 @@ static ATransformer::Result resolveSubfield(
 		return {{"move top"}, ns};
 	}
 	MAKAILIB_DEBUGLN_FULL("Looking for subspace '", sub, "'...");
+	if (!ns->isPublic()) context.error("Symbol is not public!", node);
 	if (ns->variable) {
 		if (!ns->variable->exists())
 			context.error(ns->variable->emptyVarError(), node);
-		if (!ns->variable->isPublic()) context.error("Variable is not public!", node);
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
 			context.top()->impl->writeMainLine("push", ns->variable->consume(node));
@@ -169,9 +169,9 @@ static ATransformer::Result resolveSubfield(
 	if (ns->type) {
 		if (ns->type->scope->subspaces.contains(sub)) {
 			auto const f = ns->subspaces[sub];
+			if (!f->isPublic()) context.error("Symbol is not public!", node);
 			if (f->function) return {.scope = f};
 			if (f->variable) {
-				if (!f->variable->isPublic()) context.error("Variable is not public!", node);
 				if (f->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw(), .direct = f->variable->value};
 				if (f->variable->staticEntity)
@@ -535,11 +535,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		scope->subspaces[var.name] = decl.scope;
 		MAKAILIB_DEBUGLN_FULL("Field: ", var.name);
 		var.id = id;
-		if (var.isPrivate())
+		if (var.scope->isPrivate())
 			privates.pushBack(decl.scope->variable);
-		else if (var.isProtected())
+		else if (var.scope->isProtected())
 			protecteds.pushBack(decl.scope->variable);
-		var.makePublic();
+		var.scope->makePublic();
 		if (var.staticEntity)
 			statics.pushBack(decl.scope->variable);
 	}
@@ -601,9 +601,9 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	}
 	context.pop(implName.size());
 	for (auto& var: privates)
-		var->makePrivate();
+		var->scope->makePrivate();
 	for (auto& var: protecteds)
-		var->makeProtected();
+		var->scope->makeProtected();
 	return {.scope = scope, .type = scope->type};
 }
 
@@ -923,7 +923,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		}
 		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		if (val.scope && val.scope->variable) {
-			if (!val.scope->variable->isPublic()) context.error("Variable is not public!", node);
+			if (!val.scope->isPublic()) context.error("Variable is not public!", node);
 			if (val.scope->variable->isConstant && node->base.text != "copy")
 				context.error("Constants can only be copied!", node);
 			val.scope->variable->setFillState(node->base.text != "move");
@@ -1189,9 +1189,9 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		auto const [path, ns] = resolve(context, node);
 		if (!ns)
 			context.error("Symbol does not exist!", node);
+		if (!ns->isPublic()) context.error("Variable is not public!", node);
 		result.source = addToStack(context, ns.raw(), node);
 		if (ns->variable) {
-			if (!val.scope->variable->isPublic()) context.error("Variable is not public!", node);
 			result.type		= ns->variable->type.raw();
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;

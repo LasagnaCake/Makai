@@ -16,12 +16,31 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Positioned {
 		Instance<Node> node;
 	};
-	enum class ExecutionContext {
+
+	enum class ExecutionContext: byte {
 		AV2_TCB_EC_NONE,
 		AV2_TCB_EC_RUNTIME,
 		AV2_TCB_EC_MIXED,
 		AV2_TCB_EC_COMPILE,
 	};
+
+	enum class Visibility: byte {
+		AV2_TCBV_PUBLIC,
+		AV2_TCBV_PROTECTED,
+		AV2_TCBV_PRIVATE,
+	};
+
+	struct Visible {
+		Visibility visibility = Visibility::AV2_TCBV_PUBLIC;
+
+		constexpr bool isPublic() const		{return visibility <= Visibility::AV2_TCBV_PUBLIC;		}
+		constexpr bool isProtected() const	{return visibility <= Visibility::AV2_TCBV_PROTECTED;	}
+		constexpr bool isPrivate() const	{return visibility <= Visibility::AV2_TCBV_PRIVATE;		}
+
+		constexpr void makePublic()		{visibility = Visibility::AV2_TCBV_PUBLIC;		}
+		constexpr void makeProtected()	{visibility = Visibility::AV2_TCBV_PROTECTED;	}
+		constexpr void makePrivate()	{visibility = Visibility::AV2_TCBV_PRIVATE;		}
+	}
 
 	struct Namespace;
 	struct TypeDecl;
@@ -109,7 +128,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value			value;
 	};
 
-	struct Namespace: Labeled, Positioned, IComposable, ISerializable {
+	struct Namespace: Labeled, Positioned, IComposable, Visible, ISerializable {
 		using TypeRef		= Instance<TypeDecl>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -252,12 +271,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Variable: Labeled, Positioned, Scoped, ISerializable {
-		enum class Visibility: byte {
-			AV2_TCB_VV_PUBLIC,
-			AV2_TCB_VV_PROTECTED,
-			AV2_TCB_VV_PRIVATE,
-		};
-
 		Handle<TypeDecl>	type;
 		Namespace::Instance	initializer;
 		UTF8String			source;
@@ -273,33 +286,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance		lastConsumer;
 		bool				isConstant = false;
 
-		Visibility			visibility = Visibility::AV2_TCB_VV_PUBLIC;
-
 		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
-
-		constexpr bool isPublic() const {
-			return visibility <= Visibility::AV2_TCB_VV_PUBLIC;
-		}
-
-		constexpr bool isProtected() const {
-			return visibility <= Visibility::AV2_TCB_VV_PROTECTED;
-		}
-
-		constexpr bool isPrivate() const {
-			return visibility <= Visibility::AV2_TCB_VV_PRIVATE;
-		}
-
-		constexpr void makePublic() {
-			visibility = Visibility::AV2_TCB_VV_PUBLIC;
-		}
-
-		constexpr void makeProtected() {
-			visibility = Visibility::AV2_TCB_VV_PROTECTED;
-		}
-
-		constexpr void makePrivate() {
-			visibility = Visibility::AV2_TCB_VV_PRIVATE;
-		}
 
 		constexpr bool isCompiled() const {
 			return context > ExecutionContext::AV2_TCB_EC_RUNTIME;

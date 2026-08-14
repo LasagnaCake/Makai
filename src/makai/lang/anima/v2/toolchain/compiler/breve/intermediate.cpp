@@ -865,11 +865,8 @@ static Namespace::AttributeRef createPrivateAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Private";
-	attrib->target =
-		Attribute::Target::AV2_TAAT_VARIABLE
-	;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->variable->makePrivate();
+		ns->makePrivate();
 	};
 	return attrib;
 }
@@ -879,11 +876,8 @@ static Namespace::AttributeRef createProtectedAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Protected";
-	attrib->target =
-		Attribute::Target::AV2_TAAT_VARIABLE
-	;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->variable->makeProtected();
+		ns->makeProtected();
 	};
 	return attrib;
 }
@@ -893,11 +887,8 @@ static Namespace::AttributeRef createPublicAttribute() {
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Public";
-	attrib->target =
-		Attribute::Target::AV2_TAAT_VARIABLE
-	;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		ns->variable->makePublic();
+		ns->makePublic();
 	};
 	return attrib;
 }
