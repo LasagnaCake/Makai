@@ -38,7 +38,7 @@ struct vector : any {
 	prop get xyzy (@ByRef self: vector) => self[[0,1,2,1]]
 	*/
 
-	prop angle2d get (@ByRef self: vector) => self.y atan2 self.x
+	prop angle2d get (@ByRef self: vector) => self.y atan self.x
 
 	prop length get (@ByRef self: vector) => sqrt (self.x pow 2 + self.y pow 2 + self.z pow 2 + self.w pow 2)
 
@@ -48,12 +48,12 @@ struct vector : any {
 
 	normalTo	:: (@ByRef self: vector, other: vector) => (other - self).normal
 
-	@[Static, Direct] RIGHT		:= new vector{+1, 0, 0, 0}
-	@[Static, Direct] LEFT		:= new vector{-1, 0, 0, 0}
-	@[Static, Direct] UP		:= new vector{0, +1, 0, 0}
-	@[Static, Direct] DOWN		:= new vector{0, -1, 0, 0}
-	@[Static, Direct] FORWAR	:= new vector{0, 0, +1, 0}
-	@[Static, Direct] BACK		:= new vector{0, 0, -1, 0}
-	@[Static, Direct] FUTURE	:= new vector{0, 0, 0, +1}
-	@[Static, Direct] PAST		:= new vector{0, 0, 0, -1}
+	@Static RIGHT	:: () => new vector{+1, 0, 0, 0}
+	@Static LEFT	:: () => new vector{-1, 0, 0, 0}
+	@Static UP		:: () => new vector{0, +1, 0, 0}
+	@Static DOWN	:: () => new vector{0, -1, 0, 0}
+	@Static FORWARD	:: () => new vector{0, 0, +1, 0}
+	@Static BACK	:: () => new vector{0, 0, -1, 0}
+	@Static FUTURE	:: () => new vector{0, 0, 0, +1}
+	@Static PAST	:: () => new vector{0, 0, 0, -1}
 }
