@@ -1,7 +1,9 @@
 using import core.types.any
 
 @Basic(type = "vector")
-struct vector : any {
+struct vector : any {}
+
+extend vector {
 	prop x {
 		get (self: vector)				=> self[0]
 		set (self: vector, val: float)	=> self[0] = val
