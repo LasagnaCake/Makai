@@ -1,2 +1,2 @@
-using import core.os.program
+// using import core.os.program
 using import core.os.time

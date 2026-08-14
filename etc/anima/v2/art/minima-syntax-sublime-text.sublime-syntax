@@ -111,7 +111,7 @@ contexts:
       scope: storage.modifier.minima
 
   numbers:
-    - match: '\b(\+-)?[0-9.]+\b'
+    - match: '\b(\+-)?[0-9._]+\b'
       scope: constant.numeric.minima
 
   declarations:

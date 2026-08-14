@@ -41,28 +41,28 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	AV2Call
 	static int64 procNow(int64 const precision) {
-		using Time = Makai::OS::Time;
+		namespace Time = Makai::OS::Time;
 		switch (precision) {
-			case -2:	return Time::sinceEpoch<Time::Hours>();
-			case -1:	return Time::sinceEpoch<Time::Minutes>();
-			case 0:		return Time::sinceEpoch<Time::Seconds>();
-			case +1:	return Time::sinceEpoch<Time::Millis>();
-			case +2:	return Time::sinceEpoch<Time::Micros>();
-			case +3:	return Time::sinceEpoch<Time::Nanos>();
+			case -2:	return Time::Clock::sinceEpoch<Time::Hours>();
+			case -1:	return Time::Clock::sinceEpoch<Time::Minutes>();
+			case 0:		return Time::Clock::sinceEpoch<Time::Seconds>();
+			case +1:	return Time::Clock::sinceEpoch<Time::Millis>();
+			case +2:	return Time::Clock::sinceEpoch<Time::Micros>();
+			case +3:	return Time::Clock::sinceEpoch<Time::Nanos>();
 			default:	return Makai::Limit::MAX<int64>;
 		}
 	}
 
 	AV2Call
 	static int64 localNow(int64 const precision) {
-		using Time = Makai::OS::Time;
+		namespace Time = Makai::OS::Time;
 		switch (precision) {
-			case -2:	return Time::sinceEpoch<Time::Hours>();
-			case -1:	return Time::sinceEpoch<Time::Minutes>();
-			case 0:		return Time::sinceEpoch<Time::Seconds>();
-			case +1:	return Time::sinceEpoch<Time::Millis>();
-			case +2:	return Time::sinceEpoch<Time::Micros>();
-			case +3:	return Time::sinceEpoch<Time::Nanos>();
+			case -2:	return Time::Clock::sinceEpoch<Time::Hours>();
+			case -1:	return Time::Clock::sinceEpoch<Time::Minutes>();
+			case 0:		return Time::Clock::sinceEpoch<Time::Seconds>();
+			case +1:	return Time::Clock::sinceEpoch<Time::Millis>();
+			case +2:	return Time::Clock::sinceEpoch<Time::Micros>();
+			case +3:	return Time::Clock::sinceEpoch<Time::Nanos>();
 			default:	return Makai::Limit::MAX<int64>;
 		}
 	}
@@ -70,12 +70,11 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	AV2Call
 	static int64 utcNow(int64 const precision) {
 		using Zone = Makai::Zone;
-		constexpr static pow = Makai::Math::pow<double>;
 		auto const local = localNow(precision);
 		if (local == Makai::Limit::MAX<int64>) return local;
-		auto secs = int64(local * pow(10, -precision));
+		auto secs = int64(local * Makai::Math::pow<double>(10, -precision));
 		secs -= Zone::convert(secs, Zone::current(), Zone::utc());
-		return local + int64(secs * pow(10, precision));
+		return local + int64(secs * Makai::Math::pow<double>(10, precision));
 	}
 
 	ARTE(
