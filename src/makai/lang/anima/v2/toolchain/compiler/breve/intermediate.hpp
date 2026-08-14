@@ -252,6 +252,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	};
 
 	struct Variable: Labeled, Positioned, Scoped, ISerializable {
+		enum class Visibility: byte {
+			AV2_TCB_VV_PUBLIC,
+			AV2_TCB_VV_PROTECTED,
+			AV2_TCB_VV_PRIVATE,
+		};
+
 		Handle<TypeDecl>	type;
 		Namespace::Instance	initializer;
 		UTF8String			source;
@@ -267,7 +273,33 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance		lastConsumer;
 		bool				isConstant = false;
 
+		Visibility			visibility = Visibility::AV2_TCB_VV_PUBLIC;
+
 		ExecutionContext	context = ExecutionContext::AV2_TCB_EC_NONE;
+
+		constexpr bool isPublic() const {
+			return visibility <= Visibility::AV2_TCB_VV_PUBLIC;
+		}
+
+		constexpr bool isProtected() const {
+			return visibility <= Visibility::AV2_TCB_VV_PROTECTED;
+		}
+
+		constexpr bool isPrivate() const {
+			return visibility <= Visibility::AV2_TCB_VV_PRIVATE;
+		}
+
+		constexpr void makePublic() {
+			visibility = Visibility::AV2_TCB_VV_PUBLIC;
+		}
+
+		constexpr void makeProtected() {
+			visibility = Visibility::AV2_TCB_VV_PROTECTED;
+		}
+
+		constexpr void makePrivate() {
+			visibility = Visibility::AV2_TCB_VV_PRIVATE;
+		}
 
 		constexpr bool isCompiled() const {
 			return context > ExecutionContext::AV2_TCB_EC_RUNTIME;

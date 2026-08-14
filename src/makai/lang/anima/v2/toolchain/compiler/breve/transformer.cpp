@@ -110,9 +110,13 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 		}
 		return ns->variable->consume(node);
 	} else if (ns->property) {
-		auto const ov = ns->property->getter->overloadFromTypes({});
+		auto const ov = ns->property->getter->overloadFromTypes(
+			Makai::List<Namespace::TypeRef>::from(ns->type.raw())
+		);
+		if (!ov)
+			return {.scope = ov};
 		context.top()->impl->writeMainLine("call", ov->entry);
-		return {"move top"};
+		return {"move top", ns, ov->result};
 	}
 	return null;
 }
@@ -132,6 +136,7 @@ static ATransformer::Result resolveSubfield(
 	if (ns->variable) {
 		if (!ns->variable->exists())
 			context.error(ns->variable->emptyVarError(), node);
+		if (!ns->variable->isPublic()) context.error("Variable is not public!", node);
 		if (ns->variable->type->fields.contains(sub)) {
 			auto const f = ns->variable->type->fields[sub];
 			context.top()->impl->writeMainLine("push", ns->variable->consume(node));
@@ -154,8 +159,10 @@ static ATransformer::Result resolveSubfield(
 			auto const ov = ns->property->getter->overloadFromTypes(
 				Makai::List<Namespace::TypeRef>::from(ns->type.raw())
 			);
+			if (!ov)
+				return {.scope = ns};
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move top"}, f->scope.raw(), f->type.raw()};
+			return {{"move top"}, ns, ov->result};
 		}
 		context.error("Symbol does not exist in the given scope!", node);
 	}
@@ -164,6 +171,7 @@ static ATransformer::Result resolveSubfield(
 			auto const f = ns->subspaces[sub];
 			if (f->function) return {.scope = f};
 			if (f->variable) {
+				if (!f->variable->isPublic()) context.error("Variable is not public!", node);
 				if (f->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw(), .direct = f->variable->value};
 				if (f->variable->staticEntity)
@@ -513,6 +521,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	type.name = "__" + name.join("_") + node->name();
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
+	List<Namespace::VariableRef> privates;
+	List<Namespace::VariableRef> protecteds;
 	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
 	scope->type->flags.isStructure = true;
 	MAKAILIB_DEBUGLN_FULL("Parsing fields...");
@@ -525,6 +535,13 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		scope->subspaces[var.name] = decl.scope;
 		MAKAILIB_DEBUGLN_FULL("Field: ", var.name);
 		var.id = id;
+		if (var.isPrivate())
+			privates.pushBack(decl.scope->variable);
+		else if (var.isProtected())
+			protecteds.pushBack(decl.scope->variable);
+		var.makePublic();
+		if (var.staticEntity)
+			statics.pushBack(decl.scope->variable);
 	}
 	context.pop(name.size());
 	context.registerType(scope);
@@ -583,6 +600,10 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		scope->subspaces[fn.name] = decl.scope;
 	}
 	context.pop(implName.size());
+	for (auto& var: privates)
+		var->makePrivate();
+	for (auto& var: protecteds)
+		var->makeProtected();
 	return {.scope = scope, .type = scope->type};
 }
 
@@ -902,6 +923,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		}
 		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		if (val.scope && val.scope->variable) {
+			if (!val.scope->variable->isPublic()) context.error("Variable is not public!", node);
 			if (val.scope->variable->isConstant && node->base.text != "copy")
 				context.error("Constants can only be copied!", node);
 			val.scope->variable->setFillState(node->base.text != "move");
@@ -1169,6 +1191,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 			context.error("Symbol does not exist!", node);
 		result.source = addToStack(context, ns.raw(), node);
 		if (ns->variable) {
+			if (!val.scope->variable->isPublic()) context.error("Variable is not public!", node);
 			result.type		= ns->variable->type.raw();
 			result.scope	= ns->variable->scope.raw();
 		} else result.scope = ns;
@@ -1601,6 +1624,25 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		} else context.error("Type mismatch in assignment expression!", node);
 	}
 	auto lhs = Expression().transform(context, node->leftSide);
+	if (lhs.scope && lhs.scope->property) {
+		if (!prop.setter)
+			context.error("Cannot set a read-only property!", node->leftSide);
+		auto& prop = *lhs.scope->property;
+		context.impl()->main.popBack();
+		if (lhs.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *lhs.source);
+		else if (lhs.isStackTop() && lhs.isCopied())
+			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
+		auto const rhs = Expression().transform(context, node->rightSide);
+		auto const set = prop.setter->overloadFromTypes({lhs.parent, rhs.type});
+		if (!set)
+			context.error("No suitable setter for expression type", node->rightSide);
+		if (rhs.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *rhs.source);
+		else if (rhs.isStackTop() && rhs.isCopied())
+			context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+		context.top()->impl->writeMainLine("call", set->entry);
+	}
 	if (lhs.isStackTop() && lhs.isCopied())
 		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 	auto const rhs = Expression().transform(context, node->rightSide);

@@ -847,7 +847,7 @@ static Namespace::AttributeRef createConstAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Direct";
+	attrib->name = "Const";
 	attrib->target =
 		Attribute::Target::AV2_TAAT_VARIABLE
 	;
@@ -856,6 +856,48 @@ static Namespace::AttributeRef createConstAttribute() {
 			Transformer::ATransformer::Context::error("Variable is not of a copyable type!", ns->node);
 		ns->variable->isConstant = true;
 		ns->variable->passBy = "copy";
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createPrivateAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Private";
+	attrib->target =
+		Attribute::Target::AV2_TAAT_VARIABLE
+	;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		ns->variable->makePrivate();
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createProtectedAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Protected";
+	attrib->target =
+		Attribute::Target::AV2_TAAT_VARIABLE
+	;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		ns->variable->makeProtected();
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createPublicAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Public";
+	attrib->target =
+		Attribute::Target::AV2_TAAT_VARIABLE
+	;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		ns->variable->makePublic();
 	};
 	return attrib;
 }
@@ -937,6 +979,8 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createPassByAttribute("Move"));
 	addGlobalAttribute(createPassByAttribute("Ref"));
 	addGlobalAttribute(createPassByAttribute("Copy"));
+	addGlobalAttribute(createPrivateAttribute());
+	addGlobalAttribute(createProtectedAttribute());
 	addGlobalAttribute(createExposeAttribute());
 	addGlobalAttribute(createRuntimeAttribute());
 	addGlobalAttribute(createMixedAttribute());
