@@ -122,8 +122,8 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 			decl += " nil<" + type->base->name + ">";
 		else decl += " derived<" + type->base->name + ">";
 	}
-	if (type->scope && type->scope->meta) {
-		if (type->scope->meta.values().filter([] (auto const& e) {return !e->value.isUndefined();}).size()) {
+	if (type->scope) {
+		if (type->scope->meta.values().filter([] (auto const& e) {return !e || !e->value.isUndefined();}).size()) {
 			decl += "\n  meta [\n";
 			for (auto& [name, attrib]: type->scope->meta)
 				if (!attrib->value.isUndefined())
