@@ -330,14 +330,17 @@ static Makai::UTF8String parseBlockComment(TokenStream::Lexer& lexer) {
 	while (!(lexer.now() == UTF::U8Char{'*'} && lexer.peek() == UTF::U8Char{'/'}))
 		out.pushBack(lexer.next());
 	lexer.next();
+	lexer.next();
 	return out;
 }
 
 static Makai::UTF8String parseLineComment(TokenStream::Lexer& lexer) {
 	Makai::UTF8String out;
 	lexer.next();
-	while (lexer.now() != UTF::U8Char{'\n'})
+	while (lexer.now() != UTF::U8Char{'\n'}) {
 		out.pushBack(lexer.next());
+		if (lexer.peek() == UTF::U8Char{'\n'}) break;
+	}
 	return out;
 }
 
