@@ -498,9 +498,9 @@ Node::Instance PropertyDeclResolver::resolve(Parser& parser, Node::Instance cons
 	auto const tok = parser.context.peek();
 	if (tok.text == "get" || tok.text == "set") {
 		parser.context.next();
-		if (ok.text == "set")
-			result->rightSide = GetterResolver().resolve(context, null, tok);
-		else result->leftSide = SetterResolver().resolve(context, null, tok);
+		if (tok.text == "set")
+			result->rightSide = SetterResolver().resolve(parser, null, tok);
+		else result->leftSide = GetterResolver().resolve(parser, null, tok);
 	} else if (tok.type == LTS_TT_OPEN_CURLY) {
 		parser.context.expectNext(LTS_TT_OPEN_CURLY);
 		while (true) {
