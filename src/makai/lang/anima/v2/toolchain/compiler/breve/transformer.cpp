@@ -1625,7 +1625,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	}
 	auto lhs = Expression().transform(context, node->leftSide);
 	if (lhs.scope && lhs.scope->property) {
-		if (!lhs.scope->property.setter)
+		if (!lhs.scope->property->setter)
 			context.error("Cannot set a read-only property!", node->leftSide);
 		auto& prop = *lhs.scope->property;
 		context.impl()->main.popBack();
