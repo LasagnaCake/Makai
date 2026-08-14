@@ -12,6 +12,6 @@ end
 
 local total = (os.clock() - start)
 
-print("Result::{")
-print("total-time: " .. total)
+print("\nResult::{")
+print("  total-time: " .. total)
 print("}")

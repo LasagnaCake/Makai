@@ -505,6 +505,15 @@ private:
 	}
 };
 
+namespace {
+	consteval usize orng(usize const seed, usize const n) {
+		if (!n) return orng(seed, n+1);
+		auto const x = seed % (highBit(n) * 2) + (highBit(n) * 2);
+		if (!x) orng(seed+1, n);
+		return x * 2;
+	}
+}
+
 /// @brief Obfuscates a string.
 /// @param str String to obfuscate.
 /// @return Obfuscated string.
@@ -512,7 +521,7 @@ private:
 /// 	Ensures the string is obfuscated at compile-time,
 /// 	and only deobfuscated at runtime.
 /// 	Obfuscation tactic changes with each compilation.
-template <usize N, class TObfuscator = ObfuscatedStaticString<Random::CTPRNG<usize> % highBit(N) * 2 + highBit(N) * 2>>
+template <usize N, class TObfuscator = ObfuscatedStaticString<orng(Random::CTPRNG<usize>, N)>>
 consteval TObfuscator obfuscate(As<char const[N]> const& str) {
 	return TObfuscator(str);
 }

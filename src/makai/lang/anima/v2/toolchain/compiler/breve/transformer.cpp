@@ -604,6 +604,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		var->scope->makePrivate();
 	for (auto& var: protecteds)
 		var->scope->makeProtected();
+	context.pop(1);
 	return {.scope = scope, .type = scope->type};
 }
 
@@ -699,6 +700,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 			context.error("Symbol with this name already exists!", method);
 		scope->subspaces[fn.name] = decl.scope;
 	}
+	context.pop(1);
 	return {};
 }
 

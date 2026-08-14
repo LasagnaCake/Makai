@@ -6,13 +6,13 @@ main :: () {
 	start := OS.Time.localNow(OS.Time.Precision.NANOS)
 	IO.writeLine("Loop iteration #0")
 	repeat @ByCopy i: uint64 -> 100_000_000 {
-		unless likely i % 10_000_000 {
+		unless likely (i+1) % 10_000_000 {
 			IO.write("Loop iteration #")
 			IO.writeLine(i as any)
 		}
 	}
 	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / 1_000_000_000.0)
-	IO.write("Result::{\ntotal-time-ms: ")
+	IO.write("\nResult::{\n  total-time: ")
 	IO.writeLine(total as any)
-	IO.writeLine("ms")
+	IO.writeLine("}")
 }
