@@ -39,6 +39,47 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		writeLine_string(toString(what));
 	}
 
+	template <class T> using now = Makai::OS::Time::sinceEpoch<T>;
+
+	AV2Call
+	static int64 procNow(int64 const precision) {
+		switch (precision) {
+			case -2:	return now<Makai::OS::Time::Hours>();
+			case -1:	return now<Makai::OS::Time::Minutes>();
+			case 0:		return now<Makai::OS::Time::Seconds>();
+			case +1:	return now<Makai::OS::Time::Millis>();
+			case +2:	return now<Makai::OS::Time::Micros>();
+			case +3:	return now<Makai::OS::Time::Nanos>();
+			default:	return Makai::Limit::MAX<int64>;
+		}
+	}
+
+	template <class T> using epoch = Makai::OS::Time::sinceEpoch<T>;
+
+	AV2Call
+	static int64 localNow(int64 const precision) {
+		switch (precision) {
+			case -2:	return epoch<Makai::OS::Time::Hours>();
+			case -1:	return epoch<Makai::OS::Time::Minutes>();
+			case 0:		return epoch<Makai::OS::Time::Seconds>();
+			case +1:	return epoch<Makai::OS::Time::Millis>();
+			case +2:	return epoch<Makai::OS::Time::Micros>();
+			case +3:	return epoch<Makai::OS::Time::Nanos>();
+			default:	return Makai::Limit::MAX<int64>;
+		}
+	}
+
+	AV2Call
+	static int64 utcNow(int64 const precision) {
+		using Zone = Makai::Zone;
+		using pow = Makai::Math::pow<double>;
+		auto const local = localNow(precision);
+		if (local == Makai::Limit::MAX<int64>) return local;
+		auto secs = int64(local * pow(10, -precision));
+		secs -= Zone::convert(secs, Zone::current(), Zone::utc());
+		return local + int64(secs * pow(10, precision));
+	}
+
 	ARTE(
 		bool const allowDynlibs	= false,
 		bool const cliEnabled	= false
@@ -51,6 +92,10 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 			context.art.addNativeCall("av2/console/write_any",			write_any			);
 			context.art.addNativeCall("av2/console/writeLine_string",	writeLine_string	);
 			context.art.addNativeCall("av2/console/writeLine_any",		writeLine_any		);
+
+			context.art.addNativeCall("av2/time/localNow",	localNow	);
+			context.art.addNativeCall("av2/time/utcNow",	utcNow		);
+			context.art.addNativeCall("av2/time/procNow",	procNow		);
 		}
 	}
 };

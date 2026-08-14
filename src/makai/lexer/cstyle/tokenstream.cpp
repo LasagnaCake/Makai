@@ -124,7 +124,11 @@ static UTF8String parseID(TokenStream::Lexer& lexer) {
 
 static UTF8String parseNumber(TokenStream::Lexer& lexer) {
 	UTF8String result;
-	while (isIdentifierChar(lexer.now()) || isOtherNumberChar(lexer.now())) {
+	while (isIdentifierChar(lexer.now()) || isOtherNumberChar(lexer.now()) || lexer.now() == UTF::U8Char{'_'}) {
+		if (lexer.now() == UTF::U8Char{'_'}) {
+			lexer.next();
+			continue;
+		}
 		result.pushBack(lexer.now());
 		lexer.next();
 	}

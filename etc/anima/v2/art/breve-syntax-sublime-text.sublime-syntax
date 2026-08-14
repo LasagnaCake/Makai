@@ -38,6 +38,10 @@ contexts:
       scope: punctuation.definition.string.begin.breve
       push: backtick_string
 
+  numbers:
+    - match: '\b(\+-)?[0-9._]+\b'
+      scope: constant.numeric.breve
+
   comments:
     - match: '//'
       scope: punctuation.definition.comment.breve
@@ -124,10 +128,6 @@ contexts:
 
     - match: '\?'
       scope: storage.modifier.breve
-
-  numbers:
-    - match: '\b(\+-)?[0-9.]+\b'
-      scope: constant.numeric.breve
 
   template:
     - match: '<:'
