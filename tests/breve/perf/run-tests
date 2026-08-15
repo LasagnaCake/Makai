@@ -12,6 +12,26 @@ end () {
 	echo "$1 [" >> output/result.flow
 }
 
+do-python () {
+	python test.perf.$1.*.py > output/result.$1.python.txt ;
+}
+
+do-lua () {
+	lua test.perf.$1.*.lua > output/result.$1.lua.txt ;
+}
+
+do-breve () {
+	../../../output/bin/art test.perf.$1.*.bv -S -C > output/result.$1.breve.txt ;
+}
+
+PERF_TESTS=()
+
+do-test() {
+	do-python $1 & PERF_TESTS[${#example_array[@]}]=$!
+	do-lua $1 & PERF_TESTS[${#example_array[@]}]=$!
+	#do-breve $1 & PERF_TESTS[${#example_array[@]}]=$!
+}
+
 mkdir -p output
 
 echo "" > output/result.flow
@@ -23,9 +43,7 @@ PERF_TESTS=()
 
 echo Starting tests...
 
-#{ python test.perf.01.loops.py > output/result.01.python.txt ; } & PERF_TESTS[${#example_array[@]}]=$!
-{ lua test.perf.01.loops.lua > output/result.01.lua.txt ; } & PERF_TESTS[${#example_array[@]}]=$!
-#{ ../../../output/bin/art test.perf.01.loops.bv -S -C > output/result.01.breve.txt ; } & PERF_TESTS[${#example_array[@]}]=$!
+do-test 01
 
 echo Waiting for tests to finish...
 
@@ -35,16 +53,14 @@ done
 
 echo Generating result file...
 
-perf () {
+profile () {
 	begin $1
 	get-total-time output/result.01.$1.txt
 	end
 }
 
-#perf breve
-
-perf lua
-
-#perf python
+#profile breve
+profile lua
+profile python
 
 echo Done!
