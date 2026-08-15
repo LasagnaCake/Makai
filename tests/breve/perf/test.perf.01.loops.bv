@@ -8,7 +8,7 @@ main :: () {
 	repeat @ByCopy i: uint64 => 100_000_000 {
 		unless unlikely (i+1) % 10_000_000 {
 			IO.write("Loop iteration #")
-			IO.writeLine(i as any)
+			IO.writeLine((i+1) as any)
 		}
 	}
 	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / 1_000_000_000.0)

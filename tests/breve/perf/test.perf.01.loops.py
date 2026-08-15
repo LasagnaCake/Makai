@@ -8,7 +8,7 @@ print("Loop iteration #0")
 
 for i in range(int(10e8)):
 	if not int((i+1) % 10e7):
-		print(f"Loop iteration #{i}")
+		print(f"Loop iteration #{i+1}")
 
 total_time = (time.time() - start)
 

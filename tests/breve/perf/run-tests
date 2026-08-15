@@ -1,0 +1,50 @@
+#! /bin/bash
+
+get-total-time () {
+	grep -o "total-time:\s*[0-9._]*" "$1" | sed -e "s/total-time:/ /g" >> output/result.flow
+}
+
+begin () {
+	echo ] >> output/result.flow
+}
+
+end () {
+	echo "$1 [" >> output/result.flow
+}
+
+mkdir -p output
+
+echo "" > output/result.flow
+
+rm -rf output/result*.txt
+rm -rf output/result.flow
+
+PERF_TESTS=()
+
+echo Starting tests...
+
+#{ python test.perf.01.loops.py > output/result.01.python.txt ; } & PERF_TESTS[${#example_array[@]}]=$!
+{ lua test.perf.01.loops.lua > output/result.01.lua.txt ; } & PERF_TESTS[${#example_array[@]}]=$!
+#{ ../../../output/bin/art test.perf.01.loops.bv -S -C > output/result.01.breve.txt ; } & PERF_TESTS[${#example_array[@]}]=$!
+
+echo Waiting for tests to finish...
+
+for TEST in ${PERF_TESTS[*]}; do
+    wait $TEST
+done
+
+echo Generating result file...
+
+perf () {
+	begin $1
+	get-total-time output/result.01.$1.txt
+	end
+}
+
+#perf breve
+
+perf lua
+
+#perf python
+
+echo Done!
