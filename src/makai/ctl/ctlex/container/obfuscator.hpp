@@ -155,11 +155,11 @@ namespace Impl {
 	/// @brief Does some funky math calculations with numbers.
 	template<usize S1, usize S2>
 	constexpr usize nextOffset(usize const previous, usize const offset) {
-		if (previous % 3 && S1 > 4)
+		if (previous % 3 && (S1 % 255) > 4)
 			return offset + (previous % (nearestPrime(S1 % 255, true)));
 		if (previous % 2 && (previous % 255) > 0)
 			return offset + (previous % (nearestPrime(previous % 255, true)));
-		if (S2 > 4)
+		if ((S2 % 255) > 4)
 			return offset + (previous % (nearestPrime(S2 % 255, true)));
 		return offset + (previous % (nearestPrime((previous % 255) + 32, true)));
 	}
