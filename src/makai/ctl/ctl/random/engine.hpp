@@ -13,6 +13,7 @@
 #include <windows.h>
 //#include <bcrypt.h>
 #else
+#include "../ctl/os/cfile.hpp"
 #endif
 
 CTL_NAMESPACE_BEGIN
