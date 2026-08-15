@@ -75,9 +75,15 @@ measure () {
 tid=0
 
 do-test() {
-	do-python $1 $2 & PERF_TESTS[$((tid++))]=$!
-	do-lua $1 $2 & PERF_TESTS[$((tid++))]=$!
-	#do-breve $1 $2 & PERF_TESTS[$((tid++))]=$!
+	if [ "$SEQUENTIAL" == "" ]; then
+		#do-breve $1 $2 & PERF_TESTS[$((tid++))]=$!
+		do-lua $1 $2 & PERF_TESTS[$((tid++))]=$!
+		do-python $1 $2 & PERF_TESTS[$((tid++))]=$!
+	else
+		#do-breve $1 $2
+		do-lua $1 $2
+		do-python $1 $2
+	fi
 }
 
 get-samples() {
