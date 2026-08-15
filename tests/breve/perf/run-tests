@@ -4,6 +4,12 @@ OUTFILE=output/results.flow
 
 PERF_TESTS=()
 
+TEST_ID=$1
+
+TEST_COUNT=$2
+
+TEST_MODE="$3"
+
 write () {
 	echo $1 >> $OUTFILE
 }
@@ -34,8 +40,8 @@ do-breve () {
 
 profile () {
 	begin $1
-	if compgen -G "output/result.*.$1.txt" > /dev/null; then
-		for log in output/result.*.$1.txt; do
+	if compgen -G "output/result.$2-*.$1.txt" > /dev/null; then
+		for log in output/result.$2-*.$1.txt; do
 			total-time $log
 		done
 	fi
@@ -80,7 +86,7 @@ get-samples() {
 
 mkdir -p output
 
-if [ "$2" != "-M" ]; then
+if [ $TEST_MODE != "-M" ]; then
 	rm -rf output/result*.txt
 	rm -rf output/results.flow
 	rm -rf output/metrics.txt
@@ -89,7 +95,7 @@ fi
 echo Starting tests...
 
 if [ "$2" != "-M" ]; then
-	get-samples 01 $1
+	get-samples $TEST_ID $TEST_COUNT
 fi
 
 echo Waiting for tests to finish...
@@ -103,9 +109,9 @@ echo Processing results...
 echo "" > $OUTFILE
 
 write "{"
-profile breve
-profile lua
-profile python
+profile breve $TEST_ID
+profile lua $TEST_ID
+profile python $TEST_ID
 write "}"
 
 echo Generating metrics...
@@ -114,8 +120,8 @@ OUTFILE=output/metrics.txt
 
 echo "" > $OUTFILE
 
-measure breve $1
-measure lua $1
-measure python $1
+measure breve $TEST_COUNT
+measure lua $TEST_COUNT
+measure python $TEST_COUNT
 
 echo Done!
