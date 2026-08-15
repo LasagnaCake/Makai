@@ -1,47 +1,96 @@
 #! /bin/bash
 
-get-total-time () {
-	grep -o "total-time:\s*[0-9._]*" "$1" | sed -e "s/total-time:/ /g" >> output/result.flow
-}
-
-begin () {
-	echo ] >> output/result.flow
-}
-
-end () {
-	echo "$1 [" >> output/result.flow
-}
-
-do-python () {
-	python test.perf.$1.*.py > output/result.$1.python.txt ;
-}
-
-do-lua () {
-	lua test.perf.$1.*.lua > output/result.$1.lua.txt ;
-}
-
-do-breve () {
-	../../../output/bin/art test.perf.$1.*.bv -S -C > output/result.$1.breve.txt ;
-}
+OUTFILE=output/results.flow
 
 PERF_TESTS=()
 
+write () {
+	echo $1 >> $OUTFILE
+}
+
+total-time () {
+	grep -o "total-time:\s*[0-9._]*" "$1" | sed -e "s/total-time:/ /g" >> $OUTFILE
+}
+
+begin () {
+	write "$1 ["
+}
+
+end () {
+	write ]
+}
+
+do-python () {
+	python test.perf.$1.*.py > output/result.$1-$2.python.txt 
+}
+
+do-lua () {
+	lua test.perf.$1.*.lua > output/result.$1-$2.lua.txt 
+}
+
+do-breve () {
+	../../../output/bin/art test.perf.$1.*.bv -S -C > output/result.$1-$2.breve.txt 
+}
+
+profile () {
+	begin $1
+	if compgen -G "output/result.*.$1.txt" > /dev/null; then
+		for log in output/result.*.$1.txt; do
+			total-time $log
+		done
+	fi
+	end
+}
+
+measure () {
+	local perf_avg=0
+	local perf_count=0
+	local perf=$(grep "$1\s*\[" -A$(($2+1)) output/results.flow)
+	while read metric; do
+		if [ "$metric" == "]" ]; then
+			break
+		fi
+		if [ "$metric" == "$1 [" ]; then
+			continue
+		fi
+		if [ "$metric" == "" ]; then
+			continue
+		fi
+		perf_avg=$(bc -l <<< "$perf_avg+$metric")
+		((perf_count++))
+	done < <(echo "$perf")
+	echo "Total Samples: $perf_count"
+	if [ $perf_count -gt 0 ]; then
+		perf_avg=$(bc -l <<< "$perf_avg/$perf_count")
+		write "$1 average time = $perf_avg seconds (over $perf_count samples)"
+	fi
+}
+
 do-test() {
-	do-python $1 & PERF_TESTS[${#example_array[@]}]=$!
-	do-lua $1 & PERF_TESTS[${#example_array[@]}]=$!
-	#do-breve $1 & PERF_TESTS[${#example_array[@]}]=$!
+	do-python $1 $2 & PERF_TESTS[${#example_array[@]}]=$!
+	do-lua $1 $2 & PERF_TESTS[${#example_array[@]}]=$!
+	#do-breve $1 $2 & PERF_TESTS[${#example_array[@]}]=$!
+}
+
+get-samples() {
+	for ((i=1;i<=$2;++i)); do
+		do-test $1 $i
+	done
 }
 
 mkdir -p output
 
-echo "" > output/result.flow
-
-rm -rf output/result*.txt
-rm -rf output/result.flow
+if [ "$2" != "-M" ]; then
+	rm -rf output/result*.txt
+	rm -rf output/results.flow
+	rm -rf output/metrics.txt
+fi
 
 echo Starting tests...
 
-do-test 01
+if [ "$2" != "-M" ]; then
+	get-samples 01 $1
+fi
 
 echo Waiting for tests to finish...
 
@@ -49,16 +98,24 @@ for TEST in ${PERF_TESTS[*]}; do
     wait $TEST
 done
 
-echo Generating result file...
+echo Processing results...
 
-profile () {
-	begin $1
-	get-total-time output/result.01.$1.txt
-	end
-}
+echo "" > $OUTFILE
 
-#profile breve
+write "{"
+profile breve
 profile lua
 profile python
+write "}"
+
+echo Generating metrics...
+
+OUTFILE=output/metrics.txt
+
+echo "" > $OUTFILE
+
+measure breve $1
+measure lua $1
+measure python $1
 
 echo Done!
