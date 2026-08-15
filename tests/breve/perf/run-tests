@@ -39,8 +39,6 @@ echo "" > output/result.flow
 rm -rf output/result*.txt
 rm -rf output/result.flow
 
-PERF_TESTS=()
-
 echo Starting tests...
 
 do-test 01
