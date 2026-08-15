@@ -2208,6 +2208,11 @@ ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const
 }
 
 ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance const& node) {
+	MAKAILIB_DEBUGLN_FULL("Iteration Count: ", node->leftSide->base.text);
+	if (node->middle) {
+		MAKAILIB_DEBUGLN_FULL("Iterand: ", node->middle->leftSide->base.text);
+		MAKAILIB_DEBUGLN_FULL("Iterand Type: ", node->middle->rightSide->base.text);
+	}
 	auto const loopStart = context.top()->name + "_start" + node->name();
 	auto const loopEnd = context.top()->name + "_end" + node->name();
 	auto const loopScope = context.top();

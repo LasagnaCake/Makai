@@ -274,7 +274,7 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& leftS
 		result->rightSide	= parser.nextExpression();
 	} else if (token.text == "repeat") {
 		result->leftSide	= parser.nextExpression();
-		if (parser.context.peek().type == LTS_TT_LITTLE_ARROW) {
+		if (parser.context.peek().type == LTS_TT_BIG_ARROW) {
 			result->middle = result->leftSide;
 			parser.context.next();
 			result->leftSide = parser.nextExpression();
