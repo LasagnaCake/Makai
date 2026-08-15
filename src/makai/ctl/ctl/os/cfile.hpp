@@ -7,6 +7,7 @@
 
 CTL_NAMESPACE_BEGIN
 
+// C-Style file wrapper.
 struct CFile {
 	constexpr CFile() {}
 
@@ -43,13 +44,13 @@ struct CFile {
 		return *this;
 	}
 
-	constexpr usize position() const override {
+	constexpr usize position() const {
 		if (!isOpen()) return -1;
 		return ftell(file);
 	}
 
 	template <class T>
-	constexpr Nullable<usize> tryRead(ref<T> const out, usize const count = 1) override {
+	constexpr Nullable<usize> tryRead(ref<T> const out, usize const count = 1) {
 		if (!isOpen()) return null;
 		auto const total = fread(out, 1, count * sizeof(T), file);
 		if (ferror(file))
@@ -58,7 +59,7 @@ struct CFile {
 	}
 
 	template <class T>
-	constexpr void tryWrite(ref<T> const data, usize const count = 1) override {
+	constexpr void tryWrite(ref<T> const data, usize const count = 1) {
 		if (!isOpen()) return;
 		fwrite(data, 1, count * sizeof(T), file);
 		return !ferror(file);
