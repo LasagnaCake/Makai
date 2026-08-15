@@ -2,55 +2,13 @@
 #define CTL_STREAM_FILESTREAM_H
 
 #include "core.hpp"
+#include "../os/cfile.hpp"
 #include "../container/strings/strings.hpp"
 #include "../container/lists/lists.hpp"
 #include "../container/nullable.hpp"
 #include <cstdio>
 
 CTL_NAMESPACE_BEGIN
-
-struct CFile {
-	constexpr CFile() {}
-
-	constexpr CFile(String const& path, String const& mode) {open(path, mode);}
-
-	constexpr CFile(CFile&&)		= delete;
-	constexpr CFile(CFile const&)	= delete;
-
-	constexpr CFile& operator=(CFile&&)			= delete;
-	constexpr CFile& operator=(CFile const&)	= delete;
-
-	constexpr ~CFile() {close();}
-
-	constexpr bool isOpen() const {
-		return file;
-	}
-
-	constexpr CFile& open(String const& path, String const& mode) {
-		if (isOpen()) return *this;
-		file = fopen(path.cstr(), mode.cstr());
-		return *this;
-	}
-
-	constexpr CFile& close() {
-		if (!isOpen()) return *this;
-		if (file) fclose(file);
-		file = nullptr;
-		return *this;
-	}
-
-	constexpr CFile& go(usize const pos) {
-		if (!isOpen()) return *this;
-		fseek(file, pos, SEEK_SET);
-		return *this;
-	}
-
-	constexpr ref<FILE> handle() const {return file;}
-
-private:
-	ref<FILE> file = nullptr;
-};
-
 template <Type::OneOf<String, Bytes<>> T>
 struct InputFileStream: IInputStream<T> {
 	constexpr static bool const BINARY = Type::Equal<T, Bytes<>>;
@@ -64,7 +22,7 @@ struct InputFileStream: IInputStream<T> {
 	InputFileStream(String const& path) {open(path);}
 
 	constexpr InputFileStream& open(String const& path) {
-		file.open(path, BINARY ? "rb" : "r");
+		file.open(path.cstr(), BINARY ? "rb" : "r");
 		return *this;
 	}
 
@@ -77,10 +35,9 @@ struct InputFileStream: IInputStream<T> {
 		if (!isOpen()) return null;
 		T out;
 		out.resize(count, 0);
-		auto const total = fread(out.data(), 1, count, file.handle());
-		if (ferror(file.handle()))
-			return null;
-		return out.resize(total);
+		if (auto const total = file.tryRead(out.data(), count))
+			return out.resize(*total);
+		return null;
 	}
 
 	constexpr void go(usize const pos = 0) override {
@@ -126,7 +83,7 @@ struct OutputFileStream: IOutputStream<T> {
 
 	constexpr void write(T const& value) override {
 		if (!isOpen()) return;
-		fwrite(value.data(), 1, value.size(), file.handle());
+		file.tryWrite(value.data(), value.size());
 	}
 
 	constexpr void go(usize const pos = 0) override {

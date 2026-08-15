@@ -178,10 +178,6 @@ namespace Engine {
 	private:
 		/// @brief Random number algorithm wrapper.
 		struct Algorithm {
-		private:
-			/// @brief Windows handle to algorithm.
-			BCRYPT_ALG_HANDLE algHandle;
-		public:
 			/// @brief Constructs the algorithm.
 			Algorithm() {
 				BCryptOpenAlgorithmProvider(&algHandle, L"RNG", NULL, 0);
@@ -208,6 +204,10 @@ namespace Engine {
 			~Algorithm() {
 				BCryptCloseAlgorithmProvider(&algHandle, 0);
 			}
+
+		private:
+			/// @brief Windows handle to algorithm.
+			BCRYPT_ALG_HANDLE algHandle;
 		};
 
 		/// @brief Random number algorithm to use.
@@ -267,7 +267,15 @@ namespace Engine {
 		virtual ~Secure() {}
 		/// @brief Generates a new random number.
 		/// @return Generated number.
-		virtual usize next() final {return system("/dev/urandom");}
+		virtual usize next() final {
+			usize out = 0;
+			rand.tryRead(&out);
+			return out;
+		}
+
+		private:
+			/// @brief `/dev/urandom`.
+			CFile rand{"/dev/urandom", "rb"};
 	};
 	#endif
 }
