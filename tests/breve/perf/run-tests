@@ -35,7 +35,8 @@ do-lua () {
 }
 
 do-breve () {
-	../../../output/bin/art test.perf.$1.*.bv -S -C > output/result.$1-$2.breve.txt 
+	[ -f ../../../output/bin/art ] &&
+		../../../output/bin/art test.perf.$1.*.bv -S -C > output/result.$1-$2.breve.txt 
 }
 
 profile () {
