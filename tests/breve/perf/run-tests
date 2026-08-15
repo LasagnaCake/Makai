@@ -90,19 +90,17 @@ if [ $TEST_MODE != "-M" ]; then
 	rm -rf output/result*.txt
 	rm -rf output/results.flow
 	rm -rf output/metrics.txt
-fi
 
-echo Starting tests...
-
-if [ "$2" != "-M" ]; then
+	echo Starting tests...
+	
 	get-samples $TEST_ID $TEST_COUNT
+
+	echo Waiting for tests to finish...
+
+	for TEST in ${PERF_TESTS[*]}; do
+	    wait $TEST
+	done
 fi
-
-echo Waiting for tests to finish...
-
-for TEST in ${PERF_TESTS[*]}; do
-    wait $TEST
-done
 
 echo Processing results...
 
