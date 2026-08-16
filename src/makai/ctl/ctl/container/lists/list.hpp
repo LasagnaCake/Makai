@@ -899,17 +899,7 @@ public:
 	/// @param other Other `List`.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		if (inCompileTime()) {
-			clear();
-			resize(other.count);
-			simpleCopy(other.contents.data(), contents.data(), other.count);
-			count = other.count;
-		} else {
-			destroy(count);
-			contents	= CTL::move(other.contents);
-			count		= CTL::move(other.count);
-			magnitude	= CTL::move(other.magnitude);
-		}
+		swap(*this, other);
 		return *this;
 	}
 
@@ -1347,15 +1337,15 @@ private:
 			auto const end = (start + amount);
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleCopy(contents.data(), buffer.data(), start);
-			simpleCopy(contents.data() + end, buffer.data() + start, count - end);
-			destroy(count);
+			simpleMove(contents.data(), buffer.data(), start);
+			simpleMove(contents.data() + end, buffer.data() + start, count - end);
+			MX::objclear(contents.data() + start, count);
 			swap(contents, buffer);
 		} else if (start < count) {
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleCopy(contents.data(), buffer.data(), start);
-			destroy(count);
+			simpleMove(contents.data(), buffer.data(), start);
+			MX::objclear(contents.data() + amount, count - start);
 			swap(contents, buffer);
 		}
 		return *this;
@@ -1385,8 +1375,7 @@ private:
 		else {
 			StorageType buffer;
 			buffer.create(newSize);
-			simpleCopy(contents.data(), buffer.data(), newCount);
-			destroy(count);
+			simpleMove(contents.data(), buffer.data(), newCount);
 			swap(contents, buffer);
 		}
 		count = newCount;
@@ -1394,17 +1383,16 @@ private:
 
 
 	constexpr void widenAt(SizeType const index, SizeType const amount) {
-		StorageType buffer;
 		SizeType newSize = 1;
 		if (count + amount < count)
 			atItsLimitError();
 		while (newSize < (count + amount)) newSize <<= 1;
 		if (newSize < (count + amount))
 			throw AllocationFailure();
+		StorageType buffer;
 		buffer.create(newSize);
-		simpleCopy(contents.data(), buffer.data(), index);
-		simpleCopy(contents.data() + index, buffer.data() + index + amount, count - index);
-		destroy(count);
+		simpleMove(contents.data(), buffer.data(), index);
+		simpleMove(contents.data() + index, buffer.data() + index + amount, count - index);
 		swap(contents, buffer);
 		magnitude = newSize << 1;
 	}
@@ -1416,6 +1404,15 @@ private:
 		if (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
+	}
+
+	constexpr static void simpleMove(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+		CTL_DEVMODE_FN_DECL;
+		if (!(count and src and dst)) return;
+		if (src == dst) return;
+		if (inRunTime())
+			MX::memmove<DataType>(dst, src, count);
+		else MX::objmove<DataType>(dst, src, count);
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
