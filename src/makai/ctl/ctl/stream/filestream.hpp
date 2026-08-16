@@ -9,6 +9,7 @@
 #include <cstdio>
 
 CTL_NAMESPACE_BEGIN
+
 template <Type::OneOf<String, Bytes<>> T>
 struct InputFileStream: IInputStream<T> {
 	constexpr static bool const BINARY = Type::Equal<T, Bytes<>>;
