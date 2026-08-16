@@ -1,7 +1,6 @@
-#ifndef CTL_STREAM_CFILE_H
-#define CTL_STREAM_CFILE_H
+#ifndef CTL_OS_CFILE_H
+#define CTL_OS_CFILE_H
 
-#include "core.hpp"
 #include "../container/nullable.hpp"
 #include <cstdio>
 
@@ -59,7 +58,7 @@ struct CFile {
 	}
 
 	template <class T>
-	constexpr void tryWrite(ref<T> const data, usize const count = 1) {
+	constexpr bool tryWrite(ref<T> const data, usize const count = 1) {
 		if (!isOpen()) return;
 		fwrite(data, 1, count * sizeof(T), file);
 		return !ferror(file);
@@ -70,3 +69,7 @@ struct CFile {
 private:
 	ref<FILE> file = nullptr;
 };
+
+CTL_NAMESPACE_END
+
+#endif
