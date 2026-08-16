@@ -838,8 +838,8 @@ static Makai::Data::Value bopDirectResolveEX(T const& a, T const& b, Token const
 	if constexpr (Makai::Type::Number<T>) {
 		if (tok.type == LTS_TT_IDENTIFIER) {
 			auto const id = tok.text;
-			if (id == "pow")	return Makai::Math::atan2<double>(a, b);
-			if (id == "atan2")	return Makai::Math::pow<double>(a, b);
+			if (id == "atan")	return Makai::Math::atan2<double>(a, b);
+			if (id == "pow")	return Makai::Math::pow<double>(a, b);
 		} else switch (tok.type) {
 			case LTS_TT_MODULO:	return Makai::Math::mod<double>(a, b);
 			default: break;

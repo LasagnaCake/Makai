@@ -59,7 +59,7 @@ struct CFile {
 
 	template <class T>
 	constexpr bool tryWrite(ref<T> const data, usize const count = 1) {
-		if (!isOpen()) return;
+		if (!isOpen()) return false;
 		fwrite(data, 1, count * sizeof(T), file);
 		return !ferror(file);
 	}
