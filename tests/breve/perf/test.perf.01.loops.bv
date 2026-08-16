@@ -2,13 +2,14 @@ using import core
 
 @Main
 main :: () {
+	@Direct count := 100_000_000
 	IO.writeLine("Doing 100 million loops...")
 	start := OS.Time.localNow(OS.Time.Precision.NANOS)
 	IO.writeLine("Loop iteration #0")
-	repeat @ByCopy i: uint64 => 100_000_000 {
-		unless unlikely (i+1) % 10_000_000 {
+	repeat @ByCopy i: uint64 => count {
+		unless unlikely (count-i+1) % (count/10) {
 			IO.write("Loop iteration #")
-			IO.writeLine((i+1) as any)
+			IO.writeLine((count-i+1) as any)
 		}
 	}
 	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / 1_000_000_000.0)
