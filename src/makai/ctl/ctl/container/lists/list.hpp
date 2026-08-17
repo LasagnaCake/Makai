@@ -1408,6 +1408,15 @@ private:
 		else MX::objcopy<DataType>(dst, src, count);
 	}
 
+	constexpr static void simpleMove(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+		CTL_DEVMODE_FN_DECL;
+		if (!(count and src and dst)) return;
+		if (src == dst) return;
+		if (inRunTime())
+			MX::memmove<DataType>(dst, src, count);
+		else MX::objcopy<DataType>(dst, src, count);
+	}
+
 	constexpr SelfType& invoke(SizeType const size) {
 		CTL_DEVMODE_FN_DECL;
 		if (contents.size()) return *this;

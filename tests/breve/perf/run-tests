@@ -1,7 +1,5 @@
 #! /bin/bash
 
-OUTFILE=output/results.flow
-
 PERF_TESTS=()
 
 TEST_ID=$1
@@ -9,6 +7,10 @@ TEST_ID=$1
 TEST_COUNT=$2
 
 TEST_MODE="$3"
+
+UUID=$TEST_ID-$TEST_COUNT
+
+OUTFILE=output/results-$UUID.flow
 
 write () {
 	echo $1 >> $OUTFILE
@@ -52,7 +54,7 @@ profile () {
 measure () {
 	local perf_avg=0
 	local perf_count=0
-	local perf=$(grep "$1\s*\[" -A$(($2+1)) output/results.flow)
+	local perf=$(grep "$1\s*\[" -A$(($2+1)) output/results-$UUID.flow)
 	while read metric; do
 		if [ "$metric" == "]" ]; then
 			break
@@ -123,7 +125,7 @@ write "}"
 
 echo Generating metrics...
 
-OUTFILE=output/metrics.txt
+OUTFILE=output/metrics-$UUID.txt
 
 echo "" > $OUTFILE
 
