@@ -32,7 +32,7 @@ namespace Meta {
 	/// @tparam TTrue Type to decay to when `COND` is true.
 	/// @tparam COND Condition to check for.
 	template<bool COND, class TTrue>
-	using When = DualType<COND, TTrue, Impl::Invalid>;
+	using When = If<COND, TTrue, Impl::Invalid>;
 }
 
 CTL_NAMESPACE_END

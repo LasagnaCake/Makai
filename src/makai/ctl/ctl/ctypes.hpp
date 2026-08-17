@@ -2,6 +2,7 @@
 #define CTL_EXTENDED_TYPES_H
 
 #include "meta/if.hpp"
+#include "meta/empty.hpp"
 
 #if		__INTPTR_MAX__ == __INT64_MAX__
 /// @brief CPU architecture.
