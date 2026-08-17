@@ -899,7 +899,18 @@ public:
 	/// @param other Other `List`.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		swap(*this, other);
+		if (inCompileTime()) {
+			clear();
+			resize(other.count);
+			simpleCopy(other.contents.data(), contents.data(), other.count);
+			count = other.count;
+		} else {
+			destroy(count);
+			contents	= CTL::move(other.contents);
+			count		= CTL::move(other.count);
+			magnitude	= CTL::move(other.magnitude);
+		}
+		//swap(*this, other);
 		return *this;
 	}
 
@@ -1411,6 +1422,7 @@ private:
 
 	constexpr static void simpleMove(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
 		CTL_DEVMODE_FN_DECL;
+		return simpleCopy(src, dst, count);
 		if (!(count and src and dst)) return;
 		if (src == dst) return;
 		if (inRunTime())
