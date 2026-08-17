@@ -343,11 +343,11 @@ private:
 	bool isSet = false;
 	union Option {
 		/// @brief Underlying data type.
-		DataType data;
+		DataType	data;
 		/// @brief Nothingness.
-		nulltype nothing;
+		byte		nothing;
 
-		constexpr Option() noexcept: nothing() {}
+		constexpr Option() noexcept: nothing(0) {}
 
 		constexpr Option(DataType const& data) requires (!REFERENCE): data(data)	{}
 		constexpr Option(DataType&& data) requires (!REFERENCE): data(move(data))	{}
