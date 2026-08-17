@@ -1337,14 +1337,15 @@ private:
 			auto const end = (start + amount);
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleCopy(contents.data(), buffer.data(), start);
-			simpleCopy(contents.data() + end, buffer.data() + start, count - end);
-			destroy(count);
+			simpleMove(contents.data(), buffer.data(), start);
+			simpleMove(contents.data() + end, buffer.data() + start, count - end);
+			MX::objclear(contents.data() + start, amount);
 			swap(contents, buffer);
 		} else if (start < count) {
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleCopy(contents.data(), buffer.data(), start);
+			simpleMove(contents.data(), buffer.data(), start);
+			MX::objclear(contents.data() + start, count - start);
 			destroy(count);
 			swap(contents, buffer);
 		}
@@ -1375,8 +1376,9 @@ private:
 		else {
 			StorageType buffer;
 			buffer.create(newSize);
-			simpleCopy(contents.data(), buffer.data(), newCount);
-			destroy(count);
+			simpleMove(contents.data(), buffer.data(), newCount);
+			if (newCount < count)
+				MX::objclear(contents.data() + count, count - newCount);
 			swap(contents, buffer);
 		}
 		count = newCount;
@@ -1392,9 +1394,8 @@ private:
 		if (newSize < (count + amount))
 			throw AllocationFailure();
 		buffer.create(newSize);
-		simpleCopy(contents.data(), buffer.data(), index);
-		simpleCopy(contents.data() + index, buffer.data() + index + amount, count - index);
-		destroy(count);
+		simpleMove(contents.data(), buffer.data(), index);
+		simpleMove(contents.data() + index, buffer.data() + index + amount, count - index);
 		swap(contents, buffer);
 		magnitude = newSize << 1;
 	}
