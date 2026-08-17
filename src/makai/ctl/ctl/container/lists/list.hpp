@@ -1337,15 +1337,15 @@ private:
 			auto const end = (start + amount);
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleMove(contents.data(), buffer.data(), start);
-			simpleMove(contents.data() + end, buffer.data() + start, count - end);
-			MX::objclear(contents.data() + start, count);
+			simpleCopy(contents.data(), buffer.data(), start);
+			simpleCopy(contents.data() + end, buffer.data() + start, count - end);
+			destroy(count);
 			swap(contents, buffer);
 		} else if (start < count) {
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleMove(contents.data(), buffer.data(), start);
-			MX::objclear(contents.data() + amount, count - start);
+			simpleCopy(contents.data(), buffer.data(), start);
+			destroy(count);
 			swap(contents, buffer);
 		}
 		return *this;
@@ -1375,7 +1375,8 @@ private:
 		else {
 			StorageType buffer;
 			buffer.create(newSize);
-			simpleMove(contents.data(), buffer.data(), newCount);
+			simpleCopy(contents.data(), buffer.data(), newCount);
+			destroy(count);
 			swap(contents, buffer);
 		}
 		count = newCount;
@@ -1383,16 +1384,17 @@ private:
 
 
 	constexpr void widenAt(SizeType const index, SizeType const amount) {
+		StorageType buffer;
 		SizeType newSize = 1;
 		if (count + amount < count)
 			atItsLimitError();
 		while (newSize < (count + amount)) newSize <<= 1;
 		if (newSize < (count + amount))
 			throw AllocationFailure();
-		StorageType buffer;
 		buffer.create(newSize);
-		simpleMove(contents.data(), buffer.data(), index);
-		simpleMove(contents.data() + index, buffer.data() + index + amount, count - index);
+		simpleCopy(contents.data(), buffer.data(), index);
+		simpleCopy(contents.data() + index, buffer.data() + index + amount, count - index);
+		destroy(count);
 		swap(contents, buffer);
 		magnitude = newSize << 1;
 	}
@@ -1404,15 +1406,6 @@ private:
 		if (Type::Standard<DataType> && inRunTime())
 			MX::memmove<DataType>(dst, src, count);
 		else MX::objcopy<DataType>(dst, src, count);
-	}
-
-	constexpr static void simpleMove(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
-		CTL_DEVMODE_FN_DECL;
-		if (!(count and src and dst)) return;
-		if (src == dst) return;
-		if (inRunTime())
-			MX::memmove<DataType>(dst, src, count);
-		else MX::objmove<DataType>(dst, src, count);
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
