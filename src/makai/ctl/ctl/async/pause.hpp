@@ -22,7 +22,8 @@ namespace Async {
 		#ifdef CTL_ON_X86
 		_mm_pause();
 		#else
-		asm volatile ("yield");
+		//asm volatile ("yield");
+		asm volatile ("isb");
 		#endif
 	}
 };
