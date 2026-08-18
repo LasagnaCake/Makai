@@ -411,7 +411,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		if (!result.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
 		context.pop(1);
-		MAKAILIB_DEBUGLN_FULL("Direct Value = " result.direct.toString());
+		MAKAILIB_DEBUGLN_FULL("Direct Value = ", result.direct.toString());
 		var.value = result.direct;
 		var.initializer = tmp;
 		var.defaulted = true;
