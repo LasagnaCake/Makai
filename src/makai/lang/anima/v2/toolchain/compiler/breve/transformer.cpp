@@ -411,13 +411,12 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		if (!result.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
 		context.pop(1);
-		direct = result.direct;
+		var.value = result.direct;
 		var.initializer = tmp;
 		var.defaulted = true;
 		if (!var.type)
 			var.type = result.type.asWeak();
 	}
-	var.value = direct;
 	context.pop(path.size());
 	if (!var.type)
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);

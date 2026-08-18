@@ -493,6 +493,22 @@ namespace MX {
 		else return objcopy(dst, src, sz);
 	}
 
+	/// @brief Moves data from one place to another.
+	/// @tparam T Type of data to move.
+	/// @param dst Destination.
+	/// @param src Source.
+	/// @param count Count of elements to move.
+	/// @return Pointer to destination.
+	template <class T>
+	[[gnu::nonnull(1, 2)]]
+	constexpr ref<T> exmove(ref<T> dst, ref<T const> src, usize sz) {
+		if constexpr (Type::Void<T>)
+			return memmove(dst, src, sz);
+		else if (inCompileTime() && Type::Standard<T>)
+			return memmove(dst, src, sz);
+		else return objmove(dst, src, sz);
+	}
+
 	template <class T>
 	[[gnu::nonnull(1)]]
 	constexpr ref<T> exset(ref<T> dst, T const& val, usize sz) {
