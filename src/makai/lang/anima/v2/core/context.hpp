@@ -132,11 +132,9 @@ namespace Makai::Anima::V2::Core {
 					}
 				} else if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 					MAKAILIB_DEBUGLN_FULL("Pure void function");
-					static_assert(false);
 					f();
 				} else {
 					MAKAILIB_DEBUGLN_FULL("Getter-like function");
-					static_assert(false);
 					return Meta::ARTInfo<TReturn>::convert(
 						context.types,
 						f()
