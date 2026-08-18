@@ -10,7 +10,12 @@ constexpr auto const VER = Makai::Data::Version{1};
 DEFINE_ERROR_TYPE_EX(EngineError, FailedAction);
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
-	bool cliEnabled = false;
+	struct BuiltinAPI {
+		bool console:	1;
+		bool time:		1;
+	};
+
+	BuiltinAPI bapi;
 
 	AV2Call
 	static void write_string(Makai::String const& str) {
@@ -84,12 +89,13 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 
 	void onLoad() override {
-		if (cliEnabled) {
+		if (bapi.console) {
 			context.art.addNativeCall("av2/console/write_string", 		write_string		);
 			context.art.addNativeCall("av2/console/write_any",			write_any			);
 			context.art.addNativeCall("av2/console/writeLine_string",	writeLine_string	);
 			context.art.addNativeCall("av2/console/writeLine_any",		writeLine_any		);
-
+		}
+		if (bapi.time) {
 			context.art.addNativeCall("av2/time/localNow",	localNow	);
 			context.art.addNativeCall("av2/time/utcNow",	utcNow		);
 			context.art.addNativeCall("av2/time/procNow",	procNow		);
@@ -101,7 +107,8 @@ struct ARTEMain: Makai::AMain {
 	static Makai::Data::Value configBase() {
 		Makai::Data::Value cfg;
 		cfg["help"]				= false;
-		cfg["cli"]				= false;
+		cfg["bapi-console"]		= false;
+		cfg["bapi-time"]		= false;
 		cfg["allow-dynlibs"]	= false;
 		cfg["binary-first"]		= false;
 		cfg["script"]			= false;
@@ -111,7 +118,8 @@ struct ARTEMain: Makai::AMain {
 
 	static void translationBase(Makai::CLI::Parser::Translation& tl) {
 		tl["H"]		= "help";
-		tl["C"]		= "cli";
+		tl["BAC"]	= "bapi-cli";
+		tl["BAT"]	= "bapi-time";
 		tl["DL"]	= "allow-dynlibs";
 		tl["B"]		= "binary-first";
 		tl["S"]		= "script";
@@ -138,11 +146,14 @@ struct ARTEMain: Makai::AMain {
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
-			writeLine("art <program> [-C] [-DL] [-B] [-S]");
+			writeLine("art <program> [-BA-C] [-BA-T] [-DL] [-B] [-S]");
 		} else {
 			ARTE engine{
 				args["allow-dynlibs"].getBoolean(),
-				args["cli"].getBoolean()
+				{
+					args["bapi-cli"].getBoolean(),
+					args["bapi-time"].getBoolean()
+				}
 			};
 			Makai::Anima::V2::Core::Module file;
 			if (!args.fetch("script", false)) {
