@@ -12,11 +12,11 @@ module OS.Time {
 	}
 	
 	@Shared(name = "av2/time/localNow", lib = av2time)
-	localNow :: (precision: Precision = Precision.SECONDS) -> int64
+	localNow :: (precision: Precision) -> int64
 
 	@Shared(name = "av2/time/utcNow", lib = av2time)
-	utcNow :: (precision: Precision = Precision.SECONDS) -> int64
+	utcNow :: (precision: Precision) -> int64
 
 	@Shared(name = "av2/time/procNow", lib = av2time)
-	procNow :: (precision: Precision = Precision.SECONDS) -> int64
+	procNow :: (precision: Precision) -> int64
 }
