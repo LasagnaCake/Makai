@@ -164,7 +164,7 @@ public:
 	template<SizeType S>
 	constexpr List(As<ConstantType[S]> const& values) {
 		invoke(S);
-		simpleCopy(values, contents.data(), S);
+		safeCopy(values, contents.data(), S);
 		count = S;
 	}
 
@@ -172,7 +172,7 @@ public:
 	/// @param other `List` to copy from.
 	constexpr List(SelfType const& other) {
 		invoke(other.contents.size());
-		simpleCopy(other.contents.data(), contents.data(), other.count);
+		safeCopy(other.contents.data(), contents.data(), other.count);
 		count = other.count;
 	}
 
@@ -193,7 +193,7 @@ public:
 	requires Type::Different<T2, DataType> {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
-		simpleCopy(begin, contents.data(), end - begin);
+		safeCopy(begin, contents.data(), end - begin);
 		count = end - begin;
 	}
 
@@ -217,7 +217,7 @@ public:
 	constexpr explicit List(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		if (end <= begin) return;
 		invoke(end - begin + 1);
-		simpleCopy(begin, contents.data(), end - begin);
+		safeCopy(begin, contents.data(), end - begin);
 		count = end - begin;
 	}
 
@@ -374,7 +374,7 @@ public:
 		wrapBounds(index, count);
 		auto const sz = end - begin;
 		widenAt(index, sz);
-		simpleCopy(begin, contents.data() + index, sz);
+		safeCopy(begin, contents.data() + index, sz);
 		count += sz;
 		return *this;
 	}
@@ -839,7 +839,7 @@ public:
 	/// @return Reference to self.
 	constexpr SelfType& appendBack(ConstIteratorType const& begin, ConstIteratorType const& end) {
 		expand(end - begin);
-		simpleCopy(begin, contents.data() + count, end - begin);
+		safeCopy(begin, contents.data() + count, end - begin);
 		count += (end - begin);
 		return *this;
 	}
@@ -859,7 +859,7 @@ public:
 	template<SizeType S>
 	constexpr SelfType& appendBack(As<DataType[S]> const& values) {
 		expand(S);
-		simpleCopy(values, contents.data() + count, S);
+		safeCopy(values, contents.data() + count, S);
 		count += S;
 		return *this;
 	}
@@ -890,7 +890,7 @@ public:
 	constexpr SelfType& operator=(SelfType const& other) {
 		clear();
 		resize(other.count);
-		simpleCopy(other.contents.data(), contents.data(), other.count);
+		safeCopy(other.contents.data(), contents.data(), other.count);
 		count = other.count;
 		return *this;
 	}
@@ -899,18 +899,18 @@ public:
 	/// @param other Other `List`.
 	/// @return Reference to self.
 	constexpr SelfType& operator=(SelfType&& other) {
-		if (inCompileTime()) {
+		/*if (inCompileTime()) {
 			clear();
 			resize(other.count);
-			simpleCopy(other.contents.data(), contents.data(), other.count);
+			safeCopy(other.contents.data(), contents.data(), other.count);
 			count = other.count;
 		} else {
 			destroy(count);
 			contents	= CTL::move(other.contents);
 			count		= CTL::move(other.count);
 			magnitude	= CTL::move(other.magnitude);
-		}
-		//swap(*this, other);
+		}*/
+		swap(*this, other);
 		return *this;
 	}
 
@@ -1348,14 +1348,14 @@ private:
 			auto const end = (start + amount);
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleMove(contents.data(), buffer.data(), start);
-			simpleMove(contents.data() + end, buffer.data() + start, count - end);
+			safeMove(contents.data(), buffer.data(), start);
+			safeMove(contents.data() + end, buffer.data() + start, count - end);
 			MX::objclear(contents.data() + start, amount);
 			swap(contents, buffer);
 		} else if (start < count) {
 			StorageType buffer;
 			buffer.invoke(contents.size());
-			simpleMove(contents.data(), buffer.data(), start);
+			safeMove(contents.data(), buffer.data(), start);
 			MX::objclear(contents.data() + start, count - start);
 			destroy(count);
 			swap(contents, buffer);
@@ -1387,7 +1387,7 @@ private:
 		else {
 			StorageType buffer;
 			buffer.create(newSize);
-			simpleMove(contents.data(), buffer.data(), newCount);
+			safeMove(contents.data(), buffer.data(), newCount);
 			if (newCount < count)
 				MX::objclear(contents.data() + count, count - newCount);
 			swap(contents, buffer);
@@ -1405,29 +1405,24 @@ private:
 		if (newSize < (count + amount))
 			throw AllocationFailure();
 		buffer.create(newSize);
-		simpleMove(contents.data(), buffer.data(), index);
-		simpleMove(contents.data() + index, buffer.data() + index + amount, count - index);
+		safeMove(contents.data(), buffer.data(), index);
+		safeMove(contents.data() + index, buffer.data() + index + amount, count - index);
 		swap(contents, buffer);
 		magnitude = newSize << 1;
 	}
 
-	constexpr static void simpleCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+	constexpr static void safeCopy(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
 		CTL_DEVMODE_FN_DECL;
 		if (!(count and src and dst)) return;
 		if (src == dst) return;
-		if (Type::Standard<DataType> && inRunTime())
-			MX::memmove<DataType>(dst, src, count);
-		else MX::objcopy<DataType>(dst, src, count);
+		MX::excopy(dst, src, count);
 	}
 
-	constexpr static void simpleMove(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
+	constexpr static void safeMove(ref<ConstantType> src, ref<DataType> dst, SizeType count) {
 		CTL_DEVMODE_FN_DECL;
-		return simpleCopy(src, dst, count);
 		if (!(count and src and dst)) return;
 		if (src == dst) return;
-		if (inRunTime())
-			MX::memmove<DataType>(dst, src, count);
-		else MX::objcopy<DataType>(dst, src, count);
+		MX::exmove(dst, src, count);
 	}
 
 	constexpr SelfType& invoke(SizeType const size) {
