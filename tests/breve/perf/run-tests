@@ -79,11 +79,11 @@ tid=0
 
 do-test() {
 	if [ "$SEQUENTIAL" == "" ]; then
-		#do-breve $1 $2 & PERF_TESTS[$((tid++))]=$!
+		do-breve $1 $2 & PERF_TESTS[$((tid++))]=$!
 		do-lua $1 $2 & PERF_TESTS[$((tid++))]=$!
 		do-python $1 $2 & PERF_TESTS[$((tid++))]=$!
 	else
-		#do-breve $1 $2
+		do-breve $1 $2
 		do-lua $1 $2
 		do-python $1 $2
 	fi
@@ -98,9 +98,7 @@ get-samples() {
 mkdir -p output
 
 if [ "$TEST_MODE" != "-M" ]; then
-	rm -rf output/result*.txt
-	rm -rf output/results.flow
-	rm -rf output/metrics.txt
+	rm -rf output/result.*.txt
 
 	echo Starting tests...
 	
