@@ -9,5 +9,6 @@
 #include "thread.hpp"
 #include "wait.hpp"
 #include "synchronized.hpp"
+#include "pause.hpp"
 
 #endif // CTL_ASYNC_H

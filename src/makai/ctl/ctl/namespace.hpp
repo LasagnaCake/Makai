@@ -58,9 +58,26 @@ namespace CTL::_Devmode {
 #define CTL_TARGET_COMPILER (CTL_CXX_GCC)
 #define CTL_ON_GCC (1)
 #else
-#define CTL_TARGET_COMPILER (CTL_CXX_MCTL_CXX_MSVC)
+#define CTL_TARGET_COMPILER (CTL_CXX_MSVC)
 #define CTL_ON_MSVC (1)
 #endif
+#endif
+
+#define CTL_ARCH_UNKNOWN (0)
+#define CTL_ARCH_X86 (1)
+#define CTL_ARCH_ARM (2)
+
+#if defined(_M_X64) || defined(__amd64__) || defined(_M_X86) || defined(__i386__)
+#define CTL_TARGET_ARCH (CTL_ARCH_X86)
+#define CTL_ON_X86 (1)
+#endif
+#if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__)
+#define CTL_TARGET_ARCH (CTL_ARCH_X86)
+#define CTL_ON_X86 (1)
+#endif
+#if defined(__aarch64__) || defined(_M_ARM64)
+#define CTL_TARGET_ARCH (CTL_ARCH_ARM)
+#define CTL_ON_ARM (1)
 #endif
 
 #if CTL_ON_WINDOWS

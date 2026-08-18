@@ -24,6 +24,9 @@
 #if (_WIN32 || _WIN64 || __WIN32__ || __WIN64__)
 #define X86
 #endif
+#if defined(__aarch64__) || defined(_M_ARM64)
+#define ARM
+#endif
 
 /// @brief 8-bit signed integer.
 typedef signed char			int8;
