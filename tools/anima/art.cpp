@@ -84,8 +84,8 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	ARTE(
 		bool const allowDynlibs	= false,
-		bool const cliEnabled	= false
-	): Engine(Config{allowDynlibs}), cliEnabled(cliEnabled) {
+		BuiltinAPI const bapi	= {false, false}
+	): Engine(Config{allowDynlibs}), bapi(bapi) {
 	}
 
 	void onLoad() override {
@@ -107,22 +107,23 @@ struct ARTEMain: Makai::AMain {
 	static Makai::Data::Value configBase() {
 		Makai::Data::Value cfg;
 		cfg["help"]				= false;
-		cfg["bapi-console"]		= false;
-		cfg["bapi-time"]		= false;
 		cfg["allow-dynlibs"]	= false;
 		cfg["binary-first"]		= false;
 		cfg["script"]			= false;
 		cfg["add-sources"]		= cfg.array();
+		cfg["bapi:console"]		= false;
+		cfg["bapi:time"]		= false;
 		return cfg;
 	}
 
 	static void translationBase(Makai::CLI::Parser::Translation& tl) {
 		tl["H"]		= "help";
-		tl["BAC"]	= "bapi-cli";
-		tl["BAT"]	= "bapi-time";
 		tl["DL"]	= "allow-dynlibs";
 		tl["B"]		= "binary-first";
 		tl["S"]		= "script";
+		tl["i"]		= "add-sources";
+		tl["BA:C"]	= "bapi-console";
+		tl["BA:T"]	= "bapi-time";
 	}
 
 	ARTEMain(Makai::CLI::Parser& cli): AMain(cli) {
@@ -146,12 +147,12 @@ struct ARTEMain: Makai::AMain {
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
-			writeLine("art <program> [-BA-C] [-BA-T] [-DL] [-B] [-S]");
+			writeLine("art <program> [-BA:C] [-BA:T] [-DL] [-B] [-S]");
 		} else {
 			ARTE engine{
 				args["allow-dynlibs"].getBoolean(),
 				{
-					args["bapi-cli"].getBoolean(),
+					args["bapi-console"].getBoolean(),
 					args["bapi-time"].getBoolean()
 				}
 			};

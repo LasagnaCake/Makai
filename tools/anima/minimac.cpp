@@ -9,7 +9,6 @@ static Makai::Data::Value configBase() {
 	cfg["help"]		= false;
 	cfg["output"]	= "output/out.anp";
 	cfg["link"]		= cfg.array();
-	cfg["write"]	= false;
 	cfg["strip"]	= false;
 	cfg["pretty"]	= false;
 	return cfg;
@@ -19,16 +18,15 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["H"]	= "help";
 	tl["o"]	= "output";
 	tl["l"]	= "link";
-	tl["c"]	= "code";
 	tl["S"]	= "strip";
 	tl["P"]	= "pretty";
-	tl["W"]	= "write";
+	tl["p"]	= "pipe";
 }
 
 static void doHelpMessage() {
 	DEBUGLN("Minima Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(minimac (<file> OR -c <code>) [--output <name>] [--link "[<modules> ...]"])");
+	DEBUGLN(R"(minimac (<file> OR -p <code>) [--output <name>] [--link "[<modules> ...]"])");
 	DEBUGLN("init");
 }
 
@@ -42,9 +40,9 @@ int main(int argc, char** argv) try {
 		doHelpMessage();
 	else {
 		DEBUGLN("Assembilg minima program...");
-		if (cfg["__args"].empty() && !cfg.contains("code"))
+		if (cfg["__args"].empty() && !cfg.contains("pipe"))
 			throw Makai::Error::NonexistentValue("No file given!");
-		auto const file = cfg.contains("code") ? cfg["code"].getString() : Makai::File::getText(cfg["__args"][0].getString());
+		auto const file = cfg.contains("pipe") ? cfg["pipe"].getString() : Makai::File::getText(cfg["__args"][0].getString());
 		auto const outName = Makai::Regex::replace(
 			cfg["output"].getString(),
 			R"(\*\*\{\{name\}\})",

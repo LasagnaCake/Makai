@@ -16,7 +16,6 @@ static Makai::Data::Value configBase() {
 	cfg["src"]		= "[]";
 	cfg["level"]	= "full";
 	cfg["binary"]	= false;
-	cfg["write"]	= false;
 	cfg["pretty"]	= false;
 	return cfg;
 }
@@ -28,8 +27,8 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["s"]	= "src";
 	tl["S"]	= "strip";
 	tl["P"]	= "pretty";
-	tl["W"]	= "write";
 	tl["B"]	= "binary";
+	tl["p"]	= "pipe";
 }
 
 static void doHelpMessage() {
@@ -62,9 +61,16 @@ int main(int argc, char** argv) try {
 		doHelpMessage();
 	else {
 		DEBUGLN("Here!");
-		if (cfg["__args"].empty())
+		if (cfg["__args"].empty() and !cfg.contains("pipe"))
 			throw Makai::Error::NonexistentValue("No file given!");
-		auto const file = Makai::OS::FS::standardize(cfg["__args"][0].get<Makai::String>(), Makai::OS::FS::PathSeparator::PS_POSIX);
+		auto const file =
+			cfg.contains("pipe")
+		?	cfg.fetch("pipe").getString()
+		:	Makai::OS::FS::standardize(
+				cfg["__args"][0].get<Makai::String>(),
+				Makai::OS::FS::PathSeparator::PS_POSIX
+			)
+		;
 		DEBUGLN("Compiling file \"", file, "\"...");
 		auto const level = cfg.fetch<Makai::String>("level", "full");
 		auto const outName = Makai::Regex::replace(
@@ -79,23 +85,23 @@ int main(int argc, char** argv) try {
 		if (level == "parse-tree" || level == "parse") {
 			Makai::File::saveText(
 				outPath + ".bpt",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_PARSE_TREE).toFLOWString("  ")
+				compile(outName, cfg.contains("pipe") ? file : Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_PARSE_TREE).toFLOWString("  ")
 			);
 		} else if (level == "intermediate" || level == "ir") {
 			Makai::File::saveText(
 				outPath + ".bir",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_INTERMEDIATE).toFLOWString("  ")
+				compile(outName, cfg.contains("pipe") ? file : Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_INTERMEDIATE).toFLOWString("  ")
 			);
 		} else if (level == "minima" || level == "min") {
 			Makai::File::saveText(
 				outPath + ".min",
-				compile(outName, Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_MINIMA).getString()
+				compile(outName, cfg.contains("pipe") ? file : Makai::File::getText(file), CompilationLevel::AV2_TCB_CCL_MINIMA).getString()
 			);
 		} else {
 			Makai::Data::Value::Padding pad;
 			if (cfg.fetch("pretty", false))
 				pad = Makai::String("  ");
-			auto const out = compile(outName, Makai::File::getText(file));
+			auto const out = compile(outName, cfg.contains("pipe") ? file : Makai::File::getText(file));
 			if (cfg.fetch("binary", false))
 				Core::BinaryFormat::toBytes(out, cfg.fetch("strip", false))
 					.then(
