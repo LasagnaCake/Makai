@@ -43,12 +43,12 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	static int64 procNow(int64 const precision) {
 		namespace Time = Makai::OS::Time;
 		switch (precision) {
-			case -2:	return Time::Clock::sinceEpoch<Time::Hours>();
-			case -1:	return Time::Clock::sinceEpoch<Time::Minutes>();
-			case 0:		return Time::Clock::sinceEpoch<Time::Seconds>();
-			case +1:	return Time::Clock::sinceEpoch<Time::Millis>();
-			case +2:	return Time::Clock::sinceEpoch<Time::Micros>();
-			case +3:	return Time::Clock::sinceEpoch<Time::Nanos>();
+			case -2:	return Time::Clock::sinceStart<Time::Hours>();
+			case -1:	return Time::Clock::sinceStart<Time::Minutes>();
+			case 0:		return Time::Clock::sinceStart<Time::Seconds>();
+			case +1:	return Time::Clock::sinceStart<Time::Millis>();
+			case +2:	return Time::Clock::sinceStart<Time::Micros>();
+			case +3:	return Time::Clock::sinceStart<Time::Nanos>();
 			default:	return Makai::Limit::MAX<int64>;
 		}
 	}
@@ -57,12 +57,12 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	static int64 localNow(int64 const precision) {
 		namespace Time = Makai::OS::Time;
 		switch (precision) {
-			case -2:	return Time::Clock::sinceStart<Time::Hours>();
-			case -1:	return Time::Clock::sinceStart<Time::Minutes>();
-			case 0:		return Time::Clock::sinceStart<Time::Seconds>();
-			case +1:	return Time::Clock::sinceStart<Time::Millis>();
-			case +2:	return Time::Clock::sinceStart<Time::Micros>();
-			case +3:	return Time::Clock::sinceStart<Time::Nanos>();
+			case -2:	return Time::Clock::sinceEpoch<Time::Hours>();
+			case -1:	return Time::Clock::sinceEpoch<Time::Minutes>();
+			case 0:		return Time::Clock::sinceEpoch<Time::Seconds>();
+			case +1:	return Time::Clock::sinceEpoch<Time::Millis>();
+			case +2:	return Time::Clock::sinceEpoch<Time::Micros>();
+			case +3:	return Time::Clock::sinceEpoch<Time::Nanos>();
 			default:	return Makai::Limit::MAX<int64>;
 		}
 	}
