@@ -358,7 +358,7 @@ void Engine::v2Call() {
 			.then(
 				[&] (auto const& v) {
 					if (invocation.noResult) return;
-					if (!(v && v->isEmptyType()))
+					if (!v || v->isEmptyType())
 						crash(invalidFunctionError("Expected return type, but function is void"));
 					else context.globalValueStack.pushBack(v);
 				}
