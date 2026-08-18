@@ -411,6 +411,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		if (!result.shouldBePushed())
 			context.top()->impl->writeMainLine("pop");
 		context.pop(1);
+		MAKAILIB_DEBUGLN_FULL("Direct Value = " result.direct.toString());
 		var.value = result.direct;
 		var.initializer = tmp;
 		var.defaulted = true;
@@ -1039,6 +1040,45 @@ static bool isComparison(Node::Instance const& node) {
 	);
 }
 
+ATransformer::Result specialDirectResolve(
+	ATransformer::Context& context,
+	ATransformer::Result value,
+	Namespace::TypeRef type,
+	Makai::UTF8String const& kw,
+	Node::Instance const& node
+) {
+	ATransformer::Result out;
+	if (kw == "as") {
+		if (auto const t = TypeDecl::stronger(value.type, type)) {
+			Makai::Data::Value val;
+			if (type->basic) {
+				switch (*type->basic) {
+					default: val = value.direct;
+					case Core::BasicType::AV2_BT_BOOL: val = value.direct.getBoolean();
+					case Core::BasicType::AV2_BT_INT8:
+					case Core::BasicType::AV2_BT_INT16:
+					case Core::BasicType::AV2_BT_INT32:
+					case Core::BasicType::AV2_BT_INT64: val = value.direct.getSigned();
+					case Core::BasicType::AV2_BT_UINT8:
+					case Core::BasicType::AV2_BT_UINT16:
+					case Core::BasicType::AV2_BT_UINT32:
+					case Core::BasicType::AV2_BT_UINT64: val = value.direct.getUnsigned();
+					case Core::BasicType::AV2_BT_REAL32:
+					case Core::BasicType::AV2_BT_REAL64:
+					case Core::BasicType::AV2_BT_REAL128: val = value.direct.getReal();
+					case Core::BasicType::AV2_BT_STRING: val = value.direct.toString();
+				}
+			} else val = value.direct;
+			return {value.source, value.scope, type, value.direct, value.likelihood};
+		}
+		else context.error("Value cannot be converted to the given type!", node);
+	} else if (kw == "is") {
+		auto const match = value.type == type;
+		return {{Makai::toString(match)}, context.basicType("bool")->scope.raw(), context.basicType("bool"), match};
+	} else context.error("Unsupported direct operation!", node);
+	return out;
+}
+
 ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
 	auto const sseAnd = "__sce_and_" + node->name();
 	auto const sseOr = "__sce_or_" + node->name();
@@ -1073,6 +1113,8 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	||	node->base.text == "is"
 	) {
 		auto const t = TypeRequest().transform(context, node->rightSide);
+		if (lhs.isCompilable())
+			return specialDirectResolve(context, lhs, t.type, node->base.text, node->leftSide);
 		if (node->base.text == "is") {
 			auto const retType = context.basicType("bool");
 			context.top()->impl->writeMainLine(node->base.text, t.type->name);
