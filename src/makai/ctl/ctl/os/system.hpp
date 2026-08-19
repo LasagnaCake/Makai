@@ -24,13 +24,9 @@ CTL_NAMESPACE_BEGIN
 namespace OS {
 	namespace {
 		inline String sanitizedArgument(String arg) {
-			arg = Regex::replace(arg, "\\\\+", "\\\\");
 			#if (CTL_TARGET_OS == CTL_OS_WINDOWS)
-			arg = Regex::replace(arg, "\\\\+\"", "\\\"");
 			return "\"" + arg + "\"";
 			#else
-			arg = Regex::replace(arg, "\\\\+'", "\\'");
-			arg = Regex::replace(arg, "'", "\\'");
 			return "'" + arg + "'";
 			#endif
 		}

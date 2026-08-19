@@ -7,9 +7,13 @@ export apply = $(foreach arg,$(2),$(call $(1),$(arg)))
 ifeq ($(os),win)
 define MAKAILIB_EXTERN_MRI
 create obj/extern/extern.3p.a
-addlib obj/extern/$(THIRD_PARTY_PREFIX).sdl.a
 addlib obj/extern/$(THIRD_PARTY_PREFIX).sdl-net.a
 addlib obj/extern/$(THIRD_PARTY_PREFIX).cryptopp.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-8.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-16.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-32.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-posix.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).sdl.a
 addlib obj/extern/$(THIRD_PARTY_PREFIX).curl.a
 save
 end
@@ -19,8 +23,12 @@ endif
 ifeq ($(os),linux)
 define MAKAILIB_EXTERN_MRI
 create obj/extern/extern.3p.a
-addlib obj/extern/$(THIRD_PARTY_PREFIX).cryptopp.a
 addlib obj/extern/$(THIRD_PARTY_PREFIX).sdl-net.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).cryptopp.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-8.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-16.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-32.a
+addlib obj/extern/$(THIRD_PARTY_PREFIX).pcre2-posix.a
 save
 end
 endef
