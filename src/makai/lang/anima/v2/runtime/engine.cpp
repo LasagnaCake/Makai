@@ -681,7 +681,12 @@ static bool stringBopIt(Object::Storage const& out, Object::Storage const& lhs, 
 			*out = *context.art.newValue<S>(result);
 		} return true;
 		case AV2_BOP_ADD:		*out = *context.art.newValue<S>(lhs->toValue<S>() + rhs->toValue<S>()); 								return true;
-		case AV2_BOP_REM:		*out = *context.art.newValue<S>(Makai::Regex::findFirst(lhs->toValue<S>(), rhs->toValue<S>()).match);	return true;
+		case AV2_BOP_REM: {
+			if (auto const m = Makai::Regex::findFirst(lhs->toValue<S>(), rhs->toValue<S>())) {
+				*out = *context.art.newValue<S>(m.value().match);
+			} else *out = *context.newValue<S>("");
+			return true;
+		}
 		case AV2_BOP_BIT_OR:	*out = *context.art.newValue(Makai::Regex::contains(lhs->toValue<S>(), rhs->toValue<S>()));				return true;
 		case AV2_BOP_BIT_AND:	*out = *context.art.newValue(Makai::Regex::matches(lhs->toValue<S>(), rhs->toValue<S>()));				return true;
 		case AV2_BOP_SUB:		*out = *context.art.newValue<S>(Makai::Regex::replace(lhs->toValue<S>(), rhs->toValue<S>(), ""));		return true;

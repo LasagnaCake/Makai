@@ -201,7 +201,8 @@ namespace UTF {
 			return bitcast<TDst>(static_cast<PassType>(src));
 		}
 
-		constexpr void updateCodeSize() requires (TYPE == 32) {}
+		constexpr void updateCodeSize() requires (TYPE == 8)	{}
+		constexpr void updateCodeSize() requires (TYPE == 32)	{}
 	};
 
 	static_assert(sizeof(Character<8>) == sizeof(uint32));
@@ -356,6 +357,22 @@ namespace UTF {
 			BaseType::appendBack(other.begin(), other.end());
 			BaseType::pushBack('\0');
 			BaseType::tighten();
+		}
+
+		/// @brief Copy constructor.
+		/// @param other `UTFString` to copy from.
+		template <usize OUTF>
+		constexpr UTFString(UTFString<OUTF> const& other) requires (OUTF != UTF) {
+			BaseType::resize(other.size()+1, '\0');
+			MX::excopy(data(), other.data(), other.size());
+		}
+
+		/// @brief Move constructor.
+		/// @param other `UTFString` to move from.
+		template <usize OUTF>
+		constexpr UTFString(UTFString<OUTF>&& other) requires (OUTF != UTF) {
+			BaseType::resize(other.size()+1, '\0');
+			MX::excopy(data(), other.data(), other.size());
 		}
 
 		/// @brief Constructs the `UTFString` from a fixed array of characters.

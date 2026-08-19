@@ -14,6 +14,7 @@
 #include "../namespace.hpp"
 #include "../typetraits/traits.hpp"
 #include "../typetraits/verify.hpp"
+#include "../typetraits/cast.hpp"
 
 // One day... one day these will work without builtins...
 
@@ -391,17 +392,18 @@ namespace MX {
 
 
 	/// @brief Safely copies data from one place to another, respecting the type's constructor.
-	/// @tparam T Type of data to copy.
+	/// @tparam T Destination type.
+	/// @tparam T2 Type of data to transfer.
 	/// @param dst Destination.
 	/// @param src Source.
 	/// @param count Count of elements to copy.
 	/// @return Pointer to destination.
-	template<Type::NonVoid T>
+	template<Type::NonVoid T, Type::NonVoid T2>
 	[[gnu::nonnull(1, 2)]]
-	constexpr ref<T> objcopy(ref<T> dst, ref<T const> src, usize sz) {
+	constexpr ref<T> objcopy(ref<T> dst, ref<T2 const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) return dst;
-		if (dst < src) [[unlikely]]
+		if (bitcast<pointer>(dst) < bitcast<pointer>(src)) [[unlikely]]
 			while (sz--)
 				construct(dst++, copy(*src++));
 		else [[likely]] {
@@ -415,17 +417,18 @@ namespace MX {
 
 
 	/// @brief Safely moves data from one place to another, respecting the type's constructor.
-	/// @tparam T Type of data to move.
+	/// @tparam T Destination type.
+	/// @tparam T2 Type of data to transfer.
 	/// @param dst Destination.
 	/// @param src Source.
 	/// @param count Count of elements to move.
 	/// @return Pointer to destination.
-	template<Type::NonVoid T>
+	template<Type::NonVoid T, Type::NonVoid T2>
 	[[gnu::nonnull(1, 2)]]
-	constexpr ref<T> objmove(ref<T> dst, ref<T const> src, usize sz) {
+	constexpr ref<T> objmove(ref<T> dst, ref<T2 const> src, usize sz) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) return dst;
-		if (dst < src) [[unlikely]]
+		if (bitcast<pointer>(dst) < bitcast<pointer>(src)) [[unlikely]]
 			while (sz--)
 				construct(dst++, move(*src++));
 		else [[likely]] {
@@ -454,18 +457,19 @@ namespace MX {
 	}
 
 	/// @brief Safely remakes data from one place in another place, respecting the type's constructor.
-	/// @tparam T Type of data to transfer.
+	/// @tparam T Destination type.
+	/// @tparam T2 Type of data to transfer.
 	/// @param dst Destination.
 	/// @param src Source.
 	/// @param count Count of elements to transfer.
 	/// @param byCopy Whether to reconstruct by copy (`true`) or by move (`false`). By default, it is `true`.
 	/// @return Pointer to destination.
-	template<Type::NonVoid T>
+	template<Type::NonVoid T, Type::NonVoid T2>
 	[[gnu::nonnull(1, 2)]]
-	constexpr ref<T> objremake(ref<T> dst, ref<T const> src, usize sz, bool const byCopy = true) {
+	constexpr ref<T> objremake(ref<T> dst, ref<T2 const> src, usize sz, bool const byCopy = true) {
 		if (!(sz + 1)) unreachable();
 		if (!sz) return dst;
-		if (dst < src) [[unlikely]]
+		if (bitcast<pointer>(dst) < bitcast<pointer>(src)) [[unlikely]]
 			while (sz--)
 				reconstruct(dst++, byCopy ? copy(*src++) : move(*src++));
 		else [[likely]] {
@@ -483,13 +487,13 @@ namespace MX {
 	/// @param src Source.
 	/// @param count Count of elements to copy.
 	/// @return Pointer to destination.
-	template <class T>
+	template <class T, class T2>
 	[[gnu::nonnull(1, 2)]]
-	constexpr ref<T> excopy(ref<T> dst, ref<T const> src, usize sz) {
-		if constexpr (Type::Void<T>)
-			return memmove(dst, src, sz);
-		else if (inCompileTime() && Type::Standard<T>)
-			return memmove(dst, src, sz);
+	constexpr ref<T> excopy(ref<T> dst, ref<T2 const> src, usize sz) {
+		if constexpr (Type::Void<T> || Type::Void<T2>)
+			return (memmove(dst, src, sz), dst);
+		else if (inCompileTime() && Type::Standard<T> && Type::Standard<T2>)
+			return (memmove(dst, src, sz), dst);
 		else return objcopy(dst, src, sz);
 	}
 
@@ -499,13 +503,13 @@ namespace MX {
 	/// @param src Source.
 	/// @param count Count of elements to move.
 	/// @return Pointer to destination.
-	template <class T>
+	template <class T, class T2>
 	[[gnu::nonnull(1, 2)]]
-	constexpr ref<T> exmove(ref<T> dst, ref<T const> src, usize sz) {
-		if constexpr (Type::Void<T>)
-			return memmove(dst, src, sz);
-		else if (inCompileTime() && Type::Standard<T>)
-			return memmove(dst, src, sz);
+	constexpr ref<T> exmove(ref<T> dst, ref<T2 const> src, usize sz) {
+		if constexpr (Type::Void<T> || Type::Void<T2>)
+			return (memmove(dst, src, sz), dst);
+		else if (inCompileTime() && Type::Standard<T> && Type::Standard<T2>)
+			return (memmove(dst, src, sz), dst);
 		else return objmove(dst, src, sz);
 	}
 

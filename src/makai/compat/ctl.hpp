@@ -27,6 +27,11 @@ namespace Makai {
 		using namespace CTL::Ex::Data;
 	//	using namespace CTL::Data;
 	}
+	/// @brief Regular expression facilities.
+	namespace Regex {
+		using namespace CTL::Regex;
+	//	using namespace CTL::Ex::Regex;
+	}
 	#ifndef __clang__
 	namespace Type = Type;
 	#endif

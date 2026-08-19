@@ -357,6 +357,9 @@ private:
 	} content{};
 };
 
+/// @brief `Nullable` analog.
+template <class T> using Maybe = Nullable<T>;
+
 CTL_NAMESPACE_END
 
 #endif // CTL_CONTAINER_NULLABLE_H

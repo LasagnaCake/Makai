@@ -61,7 +61,9 @@ SLFData Makai::SLF::parse(String const& slf, String const& srcFolder, bool const
 	for (String shader: content.split('|')) {
 		MAKAILIB_DEBUGLN_FULL("Line: ", shader);
 		// If line is a type specifier, try and get it
-		String tt = Regex::findFirst(shader, "^[<](.*)[>]").match;
+		String tt;
+		if (auto const m = Regex::findFirst(shader, "^[<](.*)[>]"))
+			String tt = m.value().match;
 		if (!tt.empty()) {
 			type = fromFileExtension(
 				Regex::replace(tt, "<|>", "")
