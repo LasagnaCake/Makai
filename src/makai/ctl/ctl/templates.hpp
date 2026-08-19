@@ -80,7 +80,7 @@ struct Indexed {
 };
 
 /// @brief Contains information on a parameter pack.
-/// @tparam ...T 
+/// @tparam ...T
 template<class... T>
 struct PackInfo: Decay::Pack<T...> {
 	/// @brief Nth type finder.
@@ -129,7 +129,7 @@ struct Nulled {
 };
 
 /// @brief Tags the deriving class as containing a default value for a given type.
-/// @tparam T Type. 
+/// @tparam T Type.
 template<Type::Constructible<> T>
 struct Defaultable {
 	constexpr static T defaultValue() {return T();}
