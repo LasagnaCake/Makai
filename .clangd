@@ -45,3 +45,7 @@ InlayHints:
 #       - -Ilib/cppcodec-0.2
 #       - -Ilib/cryptopp/include
 #       - -Ilib/xml2json/include
+If:
+  PathMatch: [lib/*]
+  Index:
+    Background: Skip
