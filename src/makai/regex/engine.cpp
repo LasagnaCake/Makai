@@ -105,10 +105,8 @@ Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str) const {
 UTF32String Engine::replaceIn(UTF32String const& str, UTF32String const& rep) const {
 	auto const match = pcre2_match_data_create_from_pattern_32(impl->code, NULL);
 	UTF32String out;
-	// How the fuck do they expect me to guess this one???
-	out.resize((str.size() + rep.size()) * 2);
-	usize sz;
-	auto const total = pcre2_substitute_32(
+	usize sz = 0;
+	auto total = pcre2_substitute_32(
 		impl->code,
 		(PCRE2_SPTR32)str.data(),
 		str.size(),
@@ -122,5 +120,18 @@ UTF32String Engine::replaceIn(UTF32String const& str, UTF32String const& rep) co
 		&sz
 	);
 	out.resize(sz);
+	total = pcre2_substitute_32(
+		impl->code,
+		(PCRE2_SPTR32)str.data(),
+		str.size(),
+		0,
+		PCRE2_SUBSTITUTE_GLOBAL,
+		NULL,
+		NULL,
+		(PCRE2_SPTR32)rep.data(),
+		rep.size(),
+		(ref<PCRE2_UCHAR32>)out.data(),
+		&sz
+	);
 	return out;
 }
