@@ -102,6 +102,14 @@ Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str) const {
 	return result;
 }
 
+String Engine::replaceIn(String const& str, String const& rep) const {
+	return replace(UTF32String(str), UTF32String(rep));
+}
+
+UTF8String Engine::replaceIn(UTF8String const& str, UTF8String const& rep) const {
+	return replace(UTF32String(str), UTF32String(rep));
+}
+
 UTF32String Engine::replaceIn(UTF32String const& str, UTF32String const& rep) const {
 	auto const match = pcre2_match_data_create_from_pattern_32(impl->code, NULL);
 	UTF32String out;
