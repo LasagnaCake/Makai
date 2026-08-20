@@ -356,8 +356,8 @@ namespace Makai::Anima::V2::Core {
 
 	private:
 		List<Instance<NativeCall>>	loadedMethods;
-		List<Instance<Library>>			loadedLibraries;
-		List<Reference<ALibrary>>		toBeLoaded;
+		List<Instance<Library>>		loadedLibraries;
+		List<Reference<ALibrary>>	toBeLoaded;
 	};
 }
 
