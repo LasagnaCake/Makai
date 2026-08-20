@@ -65,6 +65,13 @@ namespace Regex {
 			globalHandler = &handler;
 		}
 
+		template <Type::Subclass<IHandler> T>
+		static T& makeHandler() {
+			static T handler;
+			setHandler(handler);
+			return handler;
+		}
+
 	private:
 		inline static ref<IHandler> globalHandler = nullptr;
 	};

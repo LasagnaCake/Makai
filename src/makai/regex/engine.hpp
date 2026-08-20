@@ -40,9 +40,9 @@ namespace Makai::Regex {
 		Engine& operator=(Engine const&);
 		Engine& operator=(Engine&&);
 
-		Matches<String>			matchIn(String const& str) const;
-		Matches<UTF8String>		matchIn(UTF8String const& str) const;
-		Matches<UTF32String>	matchIn(UTF32String const& str) const;
+		Matches<String>			matchIn(String const& str, bool const fullMatch = false) const;
+		Matches<UTF8String>		matchIn(UTF8String const& str, bool const fullMatch = false) const;
+		Matches<UTF32String>	matchIn(UTF32String const& str, bool const fullMatch = false) const;
 
 		String					replaceIn(String const& str, String const& rep) const;
 		UTF8String				replaceIn(UTF8String const& str, UTF8String const& rep) const;

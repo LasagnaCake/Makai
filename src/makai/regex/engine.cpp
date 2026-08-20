@@ -62,15 +62,15 @@ static Engine::Match<T> unwrap(Engine::Match<UTF32String> const& match) {
 	return {match.position, match.match};
 }
 
-Engine::Matches<UTF8String> Engine::matchIn(UTF8String const& str) const {
-	return matchIn(UTF32String(str)).toList<Match<UTF8String>>(unwrap<UTF8String>);
+Engine::Matches<UTF8String> Engine::matchIn(UTF8String const& str, bool const fullMatch) const {
+	return matchIn(UTF32String(str), fullMatch).toList<Match<UTF8String>>(unwrap<UTF8String>);
 }
 
-Engine::Matches<String> Engine::matchIn(String const& str) const {
-	return matchIn(UTF32String(str)).toList<Match<String>>(unwrap<String>);
+Engine::Matches<String> Engine::matchIn(String const& str, bool const fullMatch) const {
+	return matchIn(UTF32String(str), fullMatch).toList<Match<String>>(unwrap<String>);
 }
 
-Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str) const {
+Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str, bool const fullMatch) const {
 	int vectors[64];
   	auto const match = pcre2_match_data_create_32(2, NULL);
 	auto status = pcre2_dfa_match_32(
@@ -78,7 +78,10 @@ Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str) const {
 		(PCRE2_SPTR32)str.data(),
 		str.size(),
 		0,
-		0,
+		(
+			pcreFlag<PCRE_ANCHORED>(fullMatch)
+		|	pcreFlag<PCRE_ENDANCHORED>(fullMatch)
+		),
 		match,
 		NULL,
 		vectors,

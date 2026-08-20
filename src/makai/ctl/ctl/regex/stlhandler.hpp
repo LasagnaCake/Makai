@@ -116,14 +116,8 @@ namespace Regex {
 			return Match{rm.position(0), ctlstr(rm[0].str())};
 		}
 
-		static STLHandler& defaultSTLHandler() {
-			static STLHandler shand;
-			IHandler::setHandler(shand);
-			return shand;
-		}
-
 	private:
-		inline static STLHandler& shand = defaultSTLHandler();
+		inline static STLHandler& _ = makeHandler<STLHandler>();
 	};
 
 

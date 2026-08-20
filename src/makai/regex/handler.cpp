@@ -1,31 +1,35 @@
-#ifndef MAKAILIB_REGEX_HANDLER_H
-#define MAKAILIB_REGEX_HANDLER_H
+#include "handler.hpp"
 
-#include "../compat/ctl.hpp"
+using namespace Makai;
+using namespace Regex;
 
-namespace Makai::Regex {
-	struct PCRE2Handler: IHandler {
-		String replace(String const& str, String const& expr, String const& fmt) override;
-
-		bool contains(String const& str, String const& expr) override;
-
-		bool matches(String const& str, String const& expr) override;
-
-		usize count(String const& str, String const& expr) override;
-
-		List<Match> find(String const& str, String const& expr) override;
-
-		Nullable<Match> findFirst(String const& str, String const& expr) override;
-
-		static PCRE2Handler& defaultPCRE2Handler() {
-			static PCRE2Handler pcre;
-			IHandler::setHandler(pcre);
-			return pcre;
-		}
-
-	private:
-		inline static PCRE2Handler& pcre = defaultPCRE2Handler();
-	};
+String PCRE2Handler::replace(String const& str, String const& expr, String const& fmt) {
+	Engine engine{expr, {}};
+	return engine.replaceIn(str, fmt);
 }
 
-#endif
+usize PCRE2Handler::count(String const& str, String const& expr) {
+	Engine engine{expr, {}};
+	return engine.matchIn(str).size();
+}
+
+bool PCRE2Handler::contains(String const& str, String const& expr) {
+	Engine engine{expr, {}};
+	return engine.matchIn(str).size();
+}
+
+bool PCRE2Handler::matches(String const& str, String const& expr) {
+	Engine engine{expr, {}};
+	return engine.matchIn(str, true).size();
+}
+
+bool PCRE2Handler::find(String const& str, String const& expr) {
+	Engine engine{expr, {}};
+	return engine.matchIn(str).toList<CTL::Regex::Match>();
+}
+
+bool PCRE2Handler::findFirst(String const& str, String const& expr) {
+	Engine engine{expr, {}};
+	auto const m = engine.matchIn(str);
+	return m.size() ? m.front() : null;
+}
