@@ -87,7 +87,7 @@ ifeq ($(os),win)
 define MOVE_DLL
 endef
 LINUX_FULL_PRE := :
-OS_DEPENDENT_LIBS := $(BASE_LIBS) sdl-net:$(SDLNET) curl:$(CURL)
+OS_DEPENDENT_LIBS := $(BASE_LIBS) sdl:$(SDL) curl:$(CURL)
 else
 ifeq ($(os),linux)
 LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/$(os)64/libcryptopp.a.zip -d lib/cryptopp/lib/$(os)64/
