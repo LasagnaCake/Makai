@@ -3,7 +3,7 @@ include $(ROOT)/make/core.make
 
 override prefix := $(call concat, $(prefix), re)
 
-INCLUDES := $(INC_CURL) $(INC_SDL_NET)
+INCLUDES := $(INC_PCRE2)
 
 .PHONY: debug release all
 .ONESHELL:

@@ -1,7 +1,8 @@
 #include "handler.hpp"
+#include "engine.hpp"
 
 using namespace Makai;
-using namespace Regex;
+using namespace Makai::Regex;
 
 String PCRE2Handler::replace(String const& str, String const& expr, String const& fmt) {
 	Engine engine{expr, {}};
@@ -23,13 +24,13 @@ bool PCRE2Handler::matches(String const& str, String const& expr) {
 	return engine.matchIn(str, true).size();
 }
 
-bool PCRE2Handler::find(String const& str, String const& expr) {
+List<Match> PCRE2Handler::find(String const& str, String const& expr) {
 	Engine engine{expr, {}};
 	return engine.matchIn(str).toList<CTL::Regex::Match>();
 }
 
-bool PCRE2Handler::findFirst(String const& str, String const& expr) {
+Nullable<Match> PCRE2Handler::findFirst(String const& str, String const& expr) {
 	Engine engine{expr, {}};
 	auto const m = engine.matchIn(str);
-	return m.size() ? m.front() : null;
+	return m.size() ? Nullable<Match>{m.front()} : Nullable<Match>{null};
 }

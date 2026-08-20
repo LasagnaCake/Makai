@@ -21,15 +21,25 @@ static uint32 pcreFlag(bool const isSet) {
 	return isSet ? F : 0;
 }
 
+Engine::Engine() {}
+
+Engine::~Engine() {
+	if (impl.unique()) {
+		auto const _ = impl.sync();
+		delete *impl;
+	}
+}
+
 Engine::Engine(String const& str, Flags const& flags): Engine(UTF32String(str), flags) {}
 
 Engine::Engine(UTF8String const& str, Flags const& flags): Engine(UTF32String(str), flags) {}
 
 Engine::Engine(UTF32String const& str, Flags const& flags) {
 	impl = impl.create();
+	(*impl) = new Impl();
 	int errNum;
 	PCRE2_SIZE errOff;
-	impl->code = pcre2_compile_32(
+	(*impl)->code = pcre2_compile_32(
 		(PCRE2_SPTR32)str.data(),
 		str.size(),
 		(
@@ -46,7 +56,7 @@ Engine::Engine(UTF32String const& str, Flags const& flags) {
 		&errOff,
 		NULL
 	);
-	if (!impl->code) {
+	if (!(*impl)->code) {
 		char ebuf[1024];
 		pcre2_get_error_message_8(errNum, (ref<PCRE2_UCHAR8>)ebuf, 1024);
 		throw Error::FailedAction(
@@ -71,10 +81,11 @@ Engine::Matches<UTF8String> Engine::matchIn(UTF8String const& str, bool const fu
 }
 
 Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str, bool const fullMatch) const {
+	if (!impl) return {};
 	int vectors[64];
   	auto const match = pcre2_match_data_create_32(2, NULL);
 	auto status = pcre2_dfa_match_32(
-		impl->code,
+		(*impl)->code,
 		(PCRE2_SPTR32)str.data(),
 		str.size(),
 		0,
@@ -93,11 +104,11 @@ Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str, bool const 
 	}
 	auto const offset = pcre2_get_ovector_pointer_32(match);
 	Engine::Matches<UTF32String> result;
-	for (usize i = 0; i < status; i += 2) {
+	for (usize i = 0; i < Cast::as<usize>(status); i += 2) {
 		usize const start = offset[i];
 		usize const end = offset[i+1] - offset[i];
 		result.pushBack({
-			start,
+			Cast::as<ssize>(start),
 			str.sliced(start, end)
 		});
 	}
@@ -114,11 +125,11 @@ UTF8String Engine::replaceIn(UTF8String const& str, UTF8String const& rep) const
 }
 
 UTF32String Engine::replaceIn(UTF32String const& str, UTF32String const& rep) const {
-	auto const match = pcre2_match_data_create_from_pattern_32(impl->code, NULL);
+	if (!impl) return str;
 	UTF32String out;
 	usize sz = 0;
-	auto total = pcre2_substitute_32(
-		impl->code,
+	pcre2_substitute_32(
+		(*impl)->code,
 		(PCRE2_SPTR32)str.data(),
 		str.size(),
 		0,
@@ -130,9 +141,10 @@ UTF32String Engine::replaceIn(UTF32String const& str, UTF32String const& rep) co
 		(ref<PCRE2_UCHAR32>)out.data(),
 		&sz
 	);
+	if (!sz) return str;
 	out.resize(sz);
-	total = pcre2_substitute_32(
-		impl->code,
+	pcre2_substitute_32(
+		(*impl)->code,
 		(PCRE2_SPTR32)str.data(),
 		str.size(),
 		0,

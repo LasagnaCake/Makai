@@ -5,31 +5,31 @@ using namespace Anima::V2::Core;
 
 struct StringLib: ALibrary {
 	static String AV2Call replace(String const& str, String const& expr, String const& fmt) {
-		return Regex::replace(str, expr, fmt);
+		return Makai::Regex::replace(str, expr, fmt);
 	}
 
 	static bool AV2Call contains(String const& str, String const& expr) {
-		return Regex::contains(str, expr);
+		return Makai::Regex::contains(str, expr);
 	}
 
 	static bool AV2Call matches(String const& str, String const& expr) {
-		return Regex::matches(str, expr);
+		return Makai::Regex::matches(str, expr);
 	}
 
 	static usize AV2Call count(String const& str, String const& expr) {
-		return Regex::count(str, expr);
+		return Makai::Regex::count(str, expr);
 	}
 
 	static String AV2Call findFirst(String const& str, String const& expr) {
-		return Regex::findFirst(str, expr).match;
+		return Makai::Regex::findFirst(str, expr).match;
 	}
 
 	static ssize AV2Call firstIndexOf(String const& str, String const& expr) {
-		return Regex::findFirst(str, expr).position;
+		return Makai::Regex::findFirst(str, expr).position;
 	}
 
 	static StringList AV2Call find(String const& str, String const& expr) {
-		return Regex::find(str, expr).toList<String>([] (auto const& e) {return e.match;});
+		return Makai::Regex::find(str, expr).toList<String>([] (auto const& e) {return e.match;});
 	}
 
 	void load(Context::Adder const& context) override {

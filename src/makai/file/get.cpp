@@ -270,7 +270,7 @@ String Makai::File::loadTextFromArchive(String const& path) {
 	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
-	return archive().getTextFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
+	return archive().getTextFile(Makai::Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
 	#else
 	fileLoadError(path, "Archive functionality disabled!");
 	#endif
@@ -280,7 +280,7 @@ BinaryData<> Makai::File::loadBinaryFromArchive(String const& path) {
 	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
-	return archive().getBinaryFile(Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
+	return archive().getBinaryFile(Makai::Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
 	#else
 	fileLoadError(path, "Archive functionality disabled!");
 	#endif

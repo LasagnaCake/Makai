@@ -13,7 +13,7 @@ namespace Makai::Regex {
 		template <class T>
 		struct Match;
 
-		template <> struct Match<String>: CTL::Regex::Match {};
+		template <Type::Equal<String> T> struct Match<T>: CTL::Regex::Match {};
 
 		template <Type::OneOf<UTF8String, UTF32String> T>
 		struct Match<T> {
@@ -29,6 +29,8 @@ namespace Makai::Regex {
 		struct Impl;
 
 		Engine();
+
+		~Engine();
 
 		Engine(String const& regex, Flags const& flags);
 		Engine(UTF8String const& regex, Flags const& flags);
@@ -49,7 +51,7 @@ namespace Makai::Regex {
 		UTF32String				replaceIn(UTF32String const& str, UTF32String const& rep) const;
 
 	private:
-		AtomicCell<Impl> impl;
+		AtomicCell<ref<Impl>> impl;
 	};
 }
 

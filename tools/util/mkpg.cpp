@@ -24,7 +24,7 @@ static CPP::SourceFile errorLocation(String const& file) {
 
 struct PageProcessor {
 	Makai::String processAction(Makai::UTF8String const& act, Makai::Data::Value const& env, String const& basePath) {
-		auto const name = Makai::Regex::findFirst(act, "@.*?:").match;
+		auto const name = Makai::Regex::findFirst(act, "@.*?:").value().match;
 		auto const vars = Makai::Regex::replace(act, "@.*?:", "");
 		if (name == "@embed:")
 			return Makai::File::getText(vars);
@@ -109,7 +109,7 @@ struct PageProcessor {
 			auto type = block.rfind('/');
 			if (type > 0 && type < ssize(block.size() - 1))
 				type = block.find('/');
-			Makai::String blname = Regex::replace(bldat.front(), "\\/", "");
+			Makai::String blname = Makai::Regex::replace(bldat.front(), "\\/", "");
 			Makai::Data::Value blparams;
 			if (bldat.size() > 1) {
 				if (bldat.back().back() == '/')
@@ -168,8 +168,8 @@ struct MakePageMain: AMain {
 						PageProcessor proc;
 						proc.doPage(page["html"].getString(), pageEnv, file);
 						auto basePath =
-							Regex::replace(
-								Regex::replace(file, "[\\\\/]", "/"),
+							Makai::Regex::replace(
+								Makai::Regex::replace(file, "[\\\\/]", "/"),
 								"\\.mp",
 								".html"
 							)

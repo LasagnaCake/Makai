@@ -14,13 +14,13 @@ namespace Makai::Graph {
 	/// @brief Base classes.
 	namespace Base {
 		/// @brief Collection of drawable objects.
-		/// @tparam TDraw 
+		/// @tparam TDraw
 		template<GraphicType TDraw>
 		class Collection: public ADrawable {
 		public:
 			/// @brief Drawable object type.
 			using DrawableType	= TDraw;
-			
+
 			/// @brief Drawable object entry type.
 			using DrawableEntry	= KeyValuePair<String, DrawableType*>;
 			/// @brief Drawable object database type.
@@ -35,7 +35,7 @@ namespace Makai::Graph {
 			virtual ~Collection() {
 				destroy();
 			}
-			
+
 			/// @brief Global transform.
 			Transform3D	space;
 
@@ -86,7 +86,7 @@ namespace Makai::Graph {
 
 			/// @brief Returns all objects this collection has.
 			/// @return All objects.
-			/// @note Pointers returned are non-owning pointers. 
+			/// @note Pointers returned are non-owning pointers.
 			inline DrawableBank getObjects() {
 				return objects;
 			}
@@ -125,7 +125,7 @@ namespace Makai::Graph {
 			/// @param name Name to check.
 			/// @return Whether it is valid.
 			static bool isValidName(String const& name) {
-				return !Regex::contains(name, "([\\cA-\\cZ]|[ \\t\"\\\\/?*<>:|])");
+				return !Makai::Regex::contains(name, "([\\cA-\\cZ]|[ \\t\"\\\\/?*<>:|])");
 			}
 
 		protected:

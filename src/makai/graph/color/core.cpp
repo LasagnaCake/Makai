@@ -9,7 +9,7 @@ using namespace Color;
 
 Vector4 Color::fromHexCodeString(String code) {
 	// Remove hex markers if necessary
-	code = Regex::replace(code, "(#|0x)", "");
+	code = Makai::Regex::replace(code, "(#|0x)", "");
 	// Check if color exists
 	if (code.empty())
 		throw Error::InvalidValue(

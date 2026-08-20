@@ -6,7 +6,7 @@
 namespace Makai::Net::URI {
 	inline String normalize(String const& str) {
 		return (
-			Regex::replace(str, R"(\\\\)", "/")
+			Makai::Regex::replace(str, R"(\\\\)", "/")
 			.split('/')
 			| [] (StringList const& parts) {
 				StringList out;

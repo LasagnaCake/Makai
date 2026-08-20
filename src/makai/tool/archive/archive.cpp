@@ -333,7 +333,7 @@ void Arch::pack(
 			// Get current stream position as file location
 			locations[i] = file.tellp();
 			// Read file
-			String const loc = Regex::replace(f, "^(.*?)[\\\\\\/]", "");
+			String const loc = Makai::Regex::replace(f, "^(.*?)[\\\\\\/]", "");
 			MAKAILIB_DEBUGLN_FULL("Clean path: '", loc, "'");
 			String const fpath = Makai::OS::FS::concatenate(folderPath, loc);
 			MAKAILIB_DEBUGLN_FULL("Full path: '", fpath, "'");
@@ -724,9 +724,9 @@ uint64 Arch::FileArchive::getFileEntryLocation(String const& path, String const&
 	List<Value> stack;
 	Value entry = fstruct["tree"];
 	MAKAILIB_DEBUGLN_FULL("Path: ", origpath);
-	MAKAILIB_DEBUGLN_FULL("Cleaned: ", Regex::replace(path, "[\\\\\\/]+", "/"));
+	MAKAILIB_DEBUGLN_FULL("Cleaned: ", Makai::Regex::replace(path, "[\\\\\\/]+", "/"));
 	// Loop through path and get entry location
-	for (String fld: Regex::replace(path, "[\\\\\\/]+", "/").split('/')) {
+	for (String fld: Makai::Regex::replace(path, "[\\\\\\/]+", "/").split('/')) {
 		if (fld == "..") {
 			if (stack.empty())
 				outOfArchiveBoundsError(origpath);

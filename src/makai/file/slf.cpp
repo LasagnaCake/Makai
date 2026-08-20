@@ -50,8 +50,8 @@ SLFData Makai::SLF::parse(String const& slf, String const& srcFolder, bool const
 	// Parse content
 	String content = slf;
 	// Remove comments and empty lines
-	content = Regex::replace(content, "(:[<]([\\s\\S]*?)[>]:)|(::([\\s\\S]*?)(\\n|\\r|\\r\\n))", "");
-	content = Regex::replace(content, "((\\n|\\r|\\r\\n)+)", "|");
+	content = Makai::Regex::replace(content, "(:[<]([\\s\\S]*?)[>]:)|(::([\\s\\S]*?)(\\n|\\r|\\r\\n))", "");
+	content = Makai::Regex::replace(content, "((\\n|\\r|\\r\\n)+)", "|");
 	// Initialize type specifier here
 	ShaderType type = ShaderType::ST_INVALID;
 	// Remove specifier for processing
@@ -62,11 +62,11 @@ SLFData Makai::SLF::parse(String const& slf, String const& srcFolder, bool const
 		MAKAILIB_DEBUGLN_FULL("Line: ", shader);
 		// If line is a type specifier, try and get it
 		String tt;
-		if (auto const m = Regex::findFirst(shader, "^[<](.*)[>]"))
+		if (auto const m = Makai::Regex::findFirst(shader, "^[<](.*)[>]"))
 			String tt = m.value().match;
 		if (!tt.empty()) {
 			type = fromFileExtension(
-				Regex::replace(tt, "<|>", "")
+				Makai::Regex::replace(tt, "<|>", "")
 			);
 			continue;
 		}

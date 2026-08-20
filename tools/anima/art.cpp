@@ -193,12 +193,12 @@ struct ARTEMain: Makai::AMain {
 				else if (Makai::Regex::contains(fpath, R"re(\.min$)re"))	file = Assembler::Minima::assemble(fpath, fdata);
 				else [[unlikely]] {
 					auto const ext = Makai::Regex::findFirst(fpath, R"(\.(\w+)$)");
-					if (ext.match.empty())
+					if (!ext)
 						throw Makai::Error::InvalidValue(
 							"Invalid file extension!",
 							CTL_CPP_PRETTY_SOURCE
 						);
-					Makai::String const moduleName = "lang." + Makai::Regex::replace(ext.match, R"re(\.)re", "") + ".builder";
+					Makai::String const moduleName = "lang." + Makai::Regex::replace(ext.value().match, R"re(\.)re", "") + ".builder";
 					static auto const moduleSources = Makai::StringList::from(
 						Makai::OS::FS::currentDirectory() + "/",
 						Makai::OS::FS::sourceLocation() + "/module/art/",
