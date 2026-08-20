@@ -92,7 +92,11 @@ typedef float128	ldouble;
 /// @brief Wide character.
 typedef wchar_t	wchar;
 /// @brief UTF-8 character.
-typedef char8_t u8char;
+typedef uint8	u8char;
+/// @brief UTF-16 character.
+typedef uint16	u8char;
+/// @brief UTF-32 character.
+typedef uint32	u8char;
 
 /// @brief Signed byte.
 typedef int8	sbyte;
@@ -158,10 +162,14 @@ typedef void*		pointer;
 
 /// @brief "C-style" string.
 typedef char const*		cstring;
-/// @brief "C-style" UTF-8 string.
-typedef u8char const*	u8cstring;
 /// @brief "C-style" wide string.
 typedef wchar const*	cwstring;
+/// @brief "C-style" UTF-8 string.
+typedef u8char const*	u8cstring;
+/// @brief "C-style" UTF-16 string.
+typedef u16char const*	u16cstring;
+/// @brief "C-style" UTF-32 string.
+typedef u32char const*	u32cstring;
 
 /// @brief Null type.
 typedef decltype(nullptr) nulltype;
