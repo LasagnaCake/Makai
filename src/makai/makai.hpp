@@ -16,5 +16,6 @@
 #include "audio/audio.hpp"
 #include "tool/tool.hpp"
 #include "net/net.hpp"
+#include "regex/regex.hpp"
 
 #endif // MAKAILIB_H

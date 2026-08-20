@@ -62,12 +62,12 @@ static Engine::Match<T> unwrap(Engine::Match<UTF32String> const& match) {
 	return {match.position, match.match};
 }
 
-Engine::Matches<UTF8String> Engine::matchIn(UTF8String const& str, bool const fullMatch) const {
-	return matchIn(UTF32String(str), fullMatch).toList<Match<UTF8String>>(unwrap<UTF8String>);
-}
-
 Engine::Matches<String> Engine::matchIn(String const& str, bool const fullMatch) const {
 	return matchIn(UTF32String(str), fullMatch).toList<Match<String>>(unwrap<String>);
+}
+
+Engine::Matches<UTF8String> Engine::matchIn(UTF8String const& str, bool const fullMatch) const {
+	return matchIn(UTF32String(str), fullMatch).toList<Match<UTF8String>>(unwrap<UTF8String>);
 }
 
 Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str, bool const fullMatch) const {
@@ -79,8 +79,8 @@ Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str, bool const 
 		str.size(),
 		0,
 		(
-			pcreFlag<PCRE_ANCHORED>(fullMatch)
-		|	pcreFlag<PCRE_ENDANCHORED>(fullMatch)
+			pcreFlag<PCRE2_ANCHORED>(fullMatch)
+		|	pcreFlag<PCRE2_ENDANCHORED>(fullMatch)
 		),
 		match,
 		NULL,
@@ -106,11 +106,11 @@ Engine::Matches<UTF32String> Engine::matchIn(UTF32String const& str, bool const 
 }
 
 String Engine::replaceIn(String const& str, String const& rep) const {
-	return replace(UTF32String(str), UTF32String(rep));
+	return replaceIn(UTF32String(str), UTF32String(rep));
 }
 
 UTF8String Engine::replaceIn(UTF8String const& str, UTF8String const& rep) const {
-	return replace(UTF32String(str), UTF32String(rep));
+	return replaceIn(UTF32String(str), UTF32String(rep));
 }
 
 UTF32String Engine::replaceIn(UTF32String const& str, UTF32String const& rep) const {

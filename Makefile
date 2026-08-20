@@ -24,10 +24,10 @@ SDL			= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2$(LIBFILE_TYPE)
 SDLNET		= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
 CRYPTOPP	= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
 CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl$(LIBFILE_TYPE)
-PCRE2_8		= lib/pcre/lib/$(LIBFILE_SRC)/libpcre2-8.a
-PCRE2_16	= lib/pcre/lib/$(LIBFILE_SRC)/libpcre2-16.a
-PCRE2_32	= lib/pcre/lib/$(LIBFILE_SRC)/libpcre2-32.a
-PCRE2_POSIX	= lib/pcre/lib/$(LIBFILE_SRC)/libpcre2-posix.a
+PCRE2_8		= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-8.a
+PCRE2_16	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-16.a
+PCRE2_32	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-32.a
+PCRE2_POSIX	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-posix.a
 #OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl$(LIBFILE_TYPE)
 #
 

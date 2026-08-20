@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), makai)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call submake-all,embed impl tool lexer file data lang net audio graph core)
+	$(call submake-all,embed impl tool regex lexer file data lang net audio graph core)
 endef
 
 all: debug release
@@ -30,7 +30,7 @@ debug:
 	@echo "TYPE: $@"
 	@echo ""
 	@echo "[--- START ---]"
-	
+
 	@echo "[1/2] compiling [$@]..."
 
 	@echo ""
@@ -44,7 +44,7 @@ debug:
 	@echo ""
 
 	@echo "Done!"
-	
+
 	@echo "[--- END ---]"
 	@echo ""
 	@echo "TYPE: $@"
@@ -78,7 +78,7 @@ release:
 	@echo "TYPE: $@"
 	@echo ""
 	@echo "[--- START ---]"
-	
+
 	@echo "[1/2] compiling [$@]..."
 
 	@echo ""
@@ -92,8 +92,8 @@ release:
 	@echo ""
 
 	@echo "Done!"
-	
-	
+
+
 	@echo "[--- END ---]"
 	@echo ""
 	@echo "TYPE: $@"

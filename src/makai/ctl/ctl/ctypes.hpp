@@ -94,9 +94,9 @@ typedef wchar_t	wchar;
 /// @brief UTF-8 character.
 typedef uint8	u8char;
 /// @brief UTF-16 character.
-typedef uint16	u8char;
+typedef uint16	u16char;
 /// @brief UTF-32 character.
-typedef uint32	u8char;
+typedef uint32	u32char;
 
 /// @brief Signed byte.
 typedef int8	sbyte;

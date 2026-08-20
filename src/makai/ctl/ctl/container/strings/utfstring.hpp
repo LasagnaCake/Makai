@@ -40,9 +40,6 @@ namespace UTF {
 		/// @brief Constructs the unicode character from a character byte string.
 		template<usize C>
 		constexpr Character(As<char const[C]> const& chr): Character(chr, chr + C)		{}
-		/// @brief Constructs the unicode character from an unicode character literal.
-		template<usize C>
-		constexpr Character(As<u8char const[C]> const& chr): Character(chr, chr + C)	{}
 		/// @brief Constructs the unicode character from a set of bytes.
 		template<usize C>
 		constexpr Character(As<uint8 const[C]> const& chr): Character(chr, chr + C)		{}
