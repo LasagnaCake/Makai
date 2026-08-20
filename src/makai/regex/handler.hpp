@@ -5,6 +5,10 @@
 
 namespace Makai::Regex {
 	struct PCRE2Handler: IHandler {
+		PCRE2Handler();
+
+		virtual ~PCRE2Handler();
+
 		String replace(String const& str, String const& expr, String const& fmt) override;
 
 		bool contains(String const& str, String const& expr) override;

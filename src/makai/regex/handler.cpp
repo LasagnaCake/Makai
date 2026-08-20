@@ -4,6 +4,14 @@
 using namespace Makai;
 using namespace Makai::Regex;
 
+PCRE2Handler::PCRE2Handler() {
+
+}
+
+PCRE2Handler::~PCRE2Handler() {
+
+}
+
 String PCRE2Handler::replace(String const& str, String const& expr, String const& fmt) {
 	Engine engine{expr, {}};
 	return engine.replaceIn(str, fmt);
