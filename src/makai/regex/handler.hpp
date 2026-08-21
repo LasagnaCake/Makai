@@ -22,7 +22,7 @@ namespace Makai::Regex {
 		Nullable<Match> findFirst(String const& str, String const& expr) override;
 
 	private:
-		inline static PCRE2Handler& _ = makeHandler<PCRE2Handler>();
+		//static PCRE2Handler& handler;
 	};
 }
 

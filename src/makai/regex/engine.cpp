@@ -61,7 +61,6 @@ Engine::Engine(UTF32String const& str, Flags const& flags) {
 		pcre2_get_error_message_8(errNum, (ref<PCRE2_UCHAR8>)ebuf, 1024);
 		throw Error::FailedAction(
 			"Failed to compile regex [\"" + str + "\"]!",
-			String(ebuf),
 			CTL_CPP_PRETTY_SOURCE
 		);
 	}

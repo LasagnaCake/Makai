@@ -4,6 +4,7 @@
 #include "../namespace.hpp"
 #include "../container/strings/string.hpp"
 #include "../container/nullable.hpp"
+#include "../container/error.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -58,6 +59,9 @@ namespace Regex {
 		constexpr virtual Nullable<Match> findFirst(String const& str, String const& expr) = 0;
 
 		static IHandler& handler() {
+			if (!globalHandler) {
+				throw Error::NonexistentValue("Missing global regex handler!", CTL_CPP_PRETTY_SOURCE);
+			}
 			return *globalHandler;
 		}
 
