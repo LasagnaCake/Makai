@@ -119,8 +119,6 @@ namespace Regex {
 	private:
 		inline static STLHandler& _ = makeHandler<STLHandler>();
 	};
-
-
 }
 
 CTL_NAMESPACE_END
