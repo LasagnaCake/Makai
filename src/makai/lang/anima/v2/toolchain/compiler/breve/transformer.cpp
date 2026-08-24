@@ -2418,37 +2418,77 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result Await::transform(Context& context, Node::Instance const& node) {
+	if (node->base.text != "await") return AwaitBlock().transform(context, node);
+	else return AwaitOne().transform(context, node);
+}
+
+ATransformer::Result AwaitOne::transform(Context& context, Node::Instance const& node) {
 	auto const scope = UTF8StringList::from("__await_" + node->name());
 	auto const awaitScope = context.declare(scope);
-	auto const expr = Expression().transform(context, node->leftSide);
+	awaitScope->impl->writePreLine("@target", awaitStart, ":");
+	auto expr = Expression().transform(context, node->leftSide);
 	auto const awaitType = TypeDecl::stronger(expr.type, context.basicType("uint64"));
-	if (expr.shouldBePushed())
-		awaitScope->impl->writeMainLine("push", expr.source.value());
-	else if (expr.isStackTop() && expr.isCopied()) {
-		awaitScope->impl->writeMainLine("copy", *expr.source, "-> top");
-	}
-	if (awaitType && awaitType->basic != Core::BasicType::AV2_BT_BOOL) {
-		if (expr.direct.isUndefined())
-			awaitScope->impl->writeMainLine("dyn await");
-		else awaitScope->impl->writeMainLine("await", expr.direct.getUnsigned());
-	}
-	if (!expr.source)
-		context.error("Await expressions can only be used in checkable values!");
 	auto const awaitStart =  "__await_start_" + node->name();
 	auto const awaitEnd = "__await_end_" + node->name();
+	if (expr.isCompilable())
+		context.error("Cannot await on direct expressions!");
+	if (expr.shouldBePushed())
+		awaitScope->impl->writeMainLine("push", expr.source.value());
+	else if (expr.isStackTop() && expr.isCopied())
+		awaitScope->impl->writeMainLine("copy", *expr.source, "-> top");
+	if (!expr.source)
+		context.error("Await expressions can only be used in checkable values!");
 	String check;
-	if (expr.type->basic && expr.type->basic == Core::BasicType::AV2_BT_BOOL)
-		check = "true";
-	else if (expr.type->flags.isNullable)
+	if (expr.type->flags.isNullable)
 		check = "exists";
+	else if (expr.type->basic && expr.type->basic == Core::BasicType::AV2_BT_BOOL)
+		check = "true";
 	else context.error("Await expressions can only be used in checkable values!");
-	awaitScope->impl->writePreLine("@target", awaitStart, ":");
-	awaitScope->impl->writePostLine("jump if", check, awaitEnd, ":");
+	awaitScope->impl->writeMainLine("jump if", check, awaitEnd);
 	awaitScope->impl->writePostLine("yield");
 	awaitScope->impl->writePostLine("jump", awaitStart);
 	awaitScope->impl->writePostLine("@target", awaitEnd, ":");
 	context.pop(scope.size());
 	context.top()->impl->writeMainLine(awaitScope->compose()->toString());
+	if (expr.type->flags.isNullable)
+		expr.type = expr.type->base;
+	return expr;
+}
+
+
+ATransformer::Result AwaitBlock::transform(Context& context, Node::Instance const& node) {
+	auto const scope = UTF8StringList::from("__await_" + node->name());
+	auto const awaitScope = context.declare(scope);
+	auto const awaitStart =  "__await_start_" + node->name();
+	auto const awaitEnd = "__await_end_" + node->name();
+	auto const awaitNext = "__await_next_" + node->name();
+	StringList awaitExprs;
+	auto const awaitVarsStart = awaitScope->varc;
+	awaitScope->varc += node->children.size();
+	awaitScope->impl->writePreLine("decl", node->children.size());
+	for (auto const& [chk, index]: Range::expand(node->children)) {
+		auto const expr = Expression().transform(context, node->leftSide);
+		if (!expr.source)
+			context.error("Await block expressions can only be used in checkable values!");
+		if (expr.isCompilable())
+			context.error("Cannot await on direct expressions!");
+		awaitScope->impl->writeMainLine("copy", *expr.source, "-> local[", awaitVarsStart + index, "]");
+		if (expr.type->flags.isNullable)
+			awaitExprs.pushBack("exists");
+		else context.error("Await block expressions can only be used in nullable values!");
+	}
+	awaitScope->impl->writePostLine("@target", awaitStart, ":");
+	for (auto const& [expr, index]: Range::expand(awaitExprs)) {
+		awaitScope->impl->writePostLine("push local[", awaitVarsStart + index, "]");
+		if (node->base.text == "race")
+			awaitScope->impl->writePostLine("jump if", expr, awaitEnd);
+		else awaitScope->impl->writePostLine("jump if not", expr, awaitNext);
+	}
+	awaitScope->impl->writePostLine("@target", awaitNext, ":");
+	awaitScope->impl->writePostLine("yield");
+	awaitScope->impl->writePostLine("jump", awaitStart);
+	awaitScope->impl->writePostLine("@target", awaitEnd, ":");
+	// TODO: Proper return type
 	return {};
 }
 

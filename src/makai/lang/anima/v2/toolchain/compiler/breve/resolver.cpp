@@ -723,7 +723,7 @@ Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance 
 				break;
 			}
 			parser.context.expectNext(LTS_TT_COMMA);
-			if (parser.context.peek().type == LTS_TT_CLOSE_BRACKET)
+			if (parser.context.peek().type == LTS_TT_CLOSE_CURLY)
 				parser.context.error("Expected expression after the comma!");
 		}
 	}
@@ -734,7 +734,28 @@ Node::Instance AwaitExpressionResolver::resolve(Parser& parser, Node::Instance c
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_AWAIT;
-	result->leftSide = parser.nextExpression();
+	auto const next = parser.context.peek();
+	if (
+		next.text == "yield"
+	or	next.text == "race"
+	) {
+		result->base = parser.context.expectNext(LTS_TT_IDENTIFIER).token();
+		parser.context.expectNext(LTS_TT_OPEN_CURLY);
+		while (true) {
+			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+				parser.context.next();
+				break;
+			}
+			result->children.pushBack(parser.nextExpression());
+			auto const next = parser.context.peek();
+			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+				parser.context.next();
+				break;
+			}
+			if (parser.context.peek().type == LTS_TT_CLOSE_CURLY)
+				parser.context.error("Expected expression after the comma!");
+		}
+	} else result->leftSide = parser.nextExpression();
 	return result;
 }
 

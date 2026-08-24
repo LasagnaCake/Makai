@@ -53,38 +53,41 @@ contexts:
 
   keywords:
     - match: '\b(return|error|terminate)\b'
-      scope: keyword.control.breve
+      scope: keyword.control.flow.breve
 
     - match: '\b(if|unless|when|except|else|switch|match)\b'
       scope: keyword.control.conditional.breve
 
+    - match: '\b(await|sync|yield|defer)\b'
+      scope: keyword.control.synchro.breve
+
     - match: '\b(using|import)\b'
-      scope: keyword.control.conditional.breve
+      scope: keyword.control.import.breve
 
     - match: '\b((type|name|count)of)\b'
-      scope: keyword.operator.breve
+      scope: keyword.operator.info.breve
 
     - match: '\b(repeat|while|do)\b'
-      scope: keyword.control.breve
+      scope: keyword.control.loop.breve
 
     - match: '\b(asm)\b'
-      scope: keyword.control.breve
+      scope: keyword.control.asm-block.breve
       push: inline_assembly
 
     - match: '\b(ref|move|copy|(un)?likely|maybe)\b'
-      scope: keyword.operator.breve
+      scope: keyword.operator.move-or-likelihood.breve
 
     - match: '\b(atan|mod|pow|abs|sqrt|root)\b'
-      scope: keyword.operator.breve
+      scope: keyword.operator.math.breve
 
     - match: '\b(new|drop)\b'
-      scope: keyword.operator.breve
+      scope: keyword.operator.alloc.breve
 
     - match: '\b(and|x?or|not|as|is)\b'
-      scope: keyword.operator.word.breve
+      scope: keyword.operator.logic.breve
 
     - match: '\b([gs]et)\b'
-      scope: keyword.operator.word.breve
+      scope: keyword.operator.property.breve
 
     - match: '\b(true|false|null)\b'
       scope: constant.language

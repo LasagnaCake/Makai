@@ -117,7 +117,7 @@ namespace Regex {
 		}
 
 	private:
-		inline static STLHandler& _ = makeHandler<STLHandler>();
+		inline static STLHandler& _ = (makeHandler<STLHandler>(), makeHandler<STLHandler>());
 	};
 }
 
