@@ -4,7 +4,8 @@
 using namespace Makai;
 using namespace Makai::Regex;
 
-//PCRE2Handler& PCRE2Handler::handler = PCRE2Handler::makeHandler<PCRE2Handler>();
+//PCRE2Handler& PCRE2Handler::handler = IHandler::makeHandler<PCRE2Handler>();
+STLHandler& _ = IHandler::makeHandler<STLHandler>();
 
 PCRE2Handler::PCRE2Handler() {
 
