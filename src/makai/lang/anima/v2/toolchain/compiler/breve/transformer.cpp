@@ -2425,11 +2425,11 @@ ATransformer::Result Await::transform(Context& context, Node::Instance const& no
 ATransformer::Result AwaitOne::transform(Context& context, Node::Instance const& node) {
 	auto const scope = UTF8StringList::from("__await_" + node->name());
 	auto const awaitScope = context.declare(scope);
+	auto const awaitStart =  "__await_start_" + node->name();
+	auto const awaitEnd = "__await_end_" + node->name();
 	awaitScope->impl->writePreLine("@target", awaitStart, ":");
 	auto expr = Expression().transform(context, node->leftSide);
 	auto const awaitType = TypeDecl::stronger(expr.type, context.basicType("uint64"));
-	auto const awaitStart =  "__await_start_" + node->name();
-	auto const awaitEnd = "__await_end_" + node->name();
 	if (expr.isCompilable())
 		context.error("Cannot await on direct expressions!");
 	if (expr.shouldBePushed())
