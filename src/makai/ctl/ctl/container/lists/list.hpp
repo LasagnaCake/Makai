@@ -1114,14 +1114,6 @@ public:
 		return transform(fun);
 	}
 
-	/// @brief Returns a `List` of `transform`ed elements.
-	/// @tparam TProcedure Procedure type.
-	/// @param fun Procedure to apply.
-	/// @return List of transformed elements.
-	template <Type::Functional<TransformType> TProcedure>
-	constexpr SelfType operator|(TProcedure const& fun) const {
-		return transformed(fun);
-	}
 
 	/// @brief Apllies a procedure to the `List`.
 	/// @tparam TProcedure Procedure type.
@@ -1132,12 +1124,21 @@ public:
 		return fun(*this);
 	}
 
-	/// @brief Returns a copy of the list, with the given procedure applied to it.
+	/// @brief Returns a `List` of `transform`ed elements.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
-	/// @return Transformed list.
-	template <Type::Functional<SelfType(SelfType const&)> TProcedure>
+	/// @return List of transformed elements.
+	template <Type::Functional<TransformType> TProcedure>
 	constexpr SelfType operator|(TProcedure const& fun) const {
+		return transformed(fun);
+	}
+
+	/// @brief Applies a procedure to the list.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return Result of the procedure.
+	template <class T, Type::Functional<T(SelfType const&)> TProcedure>
+	constexpr T operator|(TProcedure const& fun) const {
 		return fun(*this);
 	}
 
@@ -1172,6 +1173,19 @@ public:
 			if (!cond(c))
 				return false;
 		return true;
+	}
+
+	/// @brief Returns whether any element match a given predicate.
+	/// @tparam TPredicate Predicate type.
+	/// @param cond Predicate to match.
+	/// @return Whether any element matches.
+	template<class TPredicate>
+	constexpr bool includes(TPredicate const& cond) const {
+		if (!count) return false;
+		for (DataType const& c: *this)
+			if (cond(c))
+				return true;
+		return false;
 	}
 
 	/// @brief Removes all elements that do not match a given predicate.
