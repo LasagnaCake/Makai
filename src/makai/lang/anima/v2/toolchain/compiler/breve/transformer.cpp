@@ -1040,6 +1040,26 @@ static bool isComparison(Node::Instance const& node) {
 	);
 }
 
+Makai::Data::Value directCast(Makai::Data::Value const& value, Core::BasicType const type) {
+	switch (type) {
+		default: return value;
+		case Core::BasicType::AV2_BT_BOOL: return value.getBoolean();
+		case Core::BasicType::AV2_BT_INT8:
+		case Core::BasicType::AV2_BT_INT16:
+		case Core::BasicType::AV2_BT_INT32:
+		case Core::BasicType::AV2_BT_INT64: return value.getSigned();
+		case Core::BasicType::AV2_BT_UINT8:
+		case Core::BasicType::AV2_BT_UINT16:
+		case Core::BasicType::AV2_BT_UINT32:
+		case Core::BasicType::AV2_BT_UINT64: return value.getUnsigned();
+		case Core::BasicType::AV2_BT_REAL32:
+		case Core::BasicType::AV2_BT_REAL64:
+		case Core::BasicType::AV2_BT_REAL128: return value.getReal();
+		case Core::BasicType::AV2_BT_STRING: return (value.isString() ? value.getString() : value.toString());
+	}
+	return value;
+}
+
 ATransformer::Result specialDirectResolve(
 	ATransformer::Context& context,
 	ATransformer::Result value,
@@ -1049,26 +1069,11 @@ ATransformer::Result specialDirectResolve(
 ) {
 	ATransformer::Result out;
 	if (kw == "as") {
-		if (auto const t = TypeDecl::stronger(value.type, type)) {
+		if (TypeDecl::stronger(value.type, type)) {
 			Makai::Data::Value val;
-			if (type->basic) {
-				switch (*type->basic) {
-					default: val = value.direct;
-					case Core::BasicType::AV2_BT_BOOL: val = value.direct.getBoolean();
-					case Core::BasicType::AV2_BT_INT8:
-					case Core::BasicType::AV2_BT_INT16:
-					case Core::BasicType::AV2_BT_INT32:
-					case Core::BasicType::AV2_BT_INT64: val = value.direct.getSigned();
-					case Core::BasicType::AV2_BT_UINT8:
-					case Core::BasicType::AV2_BT_UINT16:
-					case Core::BasicType::AV2_BT_UINT32:
-					case Core::BasicType::AV2_BT_UINT64: val = value.direct.getUnsigned();
-					case Core::BasicType::AV2_BT_REAL32:
-					case Core::BasicType::AV2_BT_REAL64:
-					case Core::BasicType::AV2_BT_REAL128: val = value.direct.getReal();
-					case Core::BasicType::AV2_BT_STRING: val = value.direct.toString();
-				}
-			} else val = value.direct;
+			if (type->basic)
+				val = directCast(val.direct, *type->basic);
+			else val = value.direct;
 			return {value.source, value.scope, type, value.direct, value.likelihood};
 		}
 		else context.error("Value cannot be converted to the given type!", node);
@@ -1135,8 +1140,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		context.error("Invalid expression (Does not result in a value)!", node->rightSide);
 	auto const likelihood = lhs.likelihood + rhs.likelihood + likelihoodOf(node);
 	if (lhs.isCompilable() && rhs.isCompilable()) {
-		auto const result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
-		if (!result.isUndefined())
+		auto result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
+		if (!result.isUndefined()) {
+			result = directCast(result, *TypeDecl::stronger(lhs.type, rhs.type)->basic);
 			return {
 				{result.toString()},
 				directName(context, result.type())->scope.raw(),
@@ -1144,6 +1150,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				result,
 				likelihood
 			};
+		}
 	}
 	if (!lhsHasBeenPushed)
 		context.top()->impl->writeMainLine("push", *lhs.source);
