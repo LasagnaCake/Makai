@@ -239,6 +239,18 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 		};
 
+		template<> struct ARTTI<Object::Storage> {
+			constexpr static auto const ART_HASH = ConstHasher::hash("any");
+
+			static Data::Value construct(Object const& value) {
+				return value.toDynamicValue();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, Object::Storage const& value) {
+				return value;
+			}
+		};
+
 		template<ARTType T>
 		struct ARTTI<T>: T {
 			constexpr static auto const ART_HASH = ConstHasher::hash(T::ART_NAME);
@@ -250,8 +262,6 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template<class T>
 		struct ARTTI<List<T>>: List<T> {
-			inline static auto const ART_HASH = ConstHasher::hash(toString(nameof<T>(), "Array"));
-
 			static List<T> construct(Object const& value) {
 				List<T> result;
 				result.resize(value.count());
@@ -261,9 +271,36 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 
 			static Object::Storage convert(Database<Definition>& db, List<T> const& value) {
-				Object::Storage obj = Object::create(db.byNameHash(ART_HASH).front());
+				Database<Definition>::ElementType type;
+				for (auto const& t: db.values) {
+					if (!t->base) continue;
+					if (!t->flags.isArray) continue;
+					if (t->base->hash != ARTTI<T>::ART_HASH) continue;
+				}
+				Object::Storage obj = Object::create(type);
+				obj->reserve(value.size());
 				for (usize i: range(value.size()))
-					obj->setAtIndex(i, Object::create(value[i], db.byNameHash(ARTTI<T>::ART_HASH).front()));
+					obj->setAtIndex(i, ARTTI<T>::convert(db, value[i]));
+				return obj;
+			}
+		};
+
+		template<class T>
+		struct ARTTI<Nullable<T>>: Nullable<T> {
+			static Nullable<T> construct(Object const& value) {
+				if (!value.exists()) return null;
+				return value.get<T>();
+			}
+
+			static Object::Storage convert(Database<Definition>& db, List<T> const& value) {
+				Database<Definition>::ElementType type;
+				for (auto const& t: db.values) {
+					if (!t->base) continue;
+					if (!t->flags.isNullable) continue;
+					if (t->base->hash != ARTTI<T>::ART_HASH) continue;
+				}
+				Object::Storage obj = Object::create(type);
+				// TODO: The rest
 				return obj;
 			}
 		};

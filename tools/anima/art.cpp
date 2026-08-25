@@ -16,12 +16,12 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	AV2Call
 	static void write_string(Makai::String const& str) {
-		doWrite(str);
+		printf("%s", str.cstr());
 	}
 
 	AV2Call
 	static void writeLine_string(Makai::String const& str) {
-		doWriteLine(str);
+		printf("%s\n", str.cstr());
 	}
 
 	AV2Call
@@ -80,33 +80,33 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 
 	static Makai::Mutex threadEditLock;
-	static Makai::List<Makai::AtomicCell<TMakai::hread>> processes;
+	static Makai::List<Makai::AtomicCell<Makai::Thread>> processes;
 
-	static bool AV2Call cd(String const& str) {
+	static bool AV2Call cd(Makai::String const& str) {
 		return chdir(str.cstr()) != -1;
 	}
 
-	static void handleExec(Makai::AtomicCell<Makai::Thread> self, Object::Storage out, Makai::String command, Makai::StringList args) {
-		out->set(OS::launch(command, "", args));
+	static nulltype handleExec(Makai::AtomicCell<Makai::Thread> self, Makai::Anima::V2::Core::Object::Storage out, Makai::String command, Makai::StringList args) {
+		out->set(Makai::OS::launch(command, "", args));
 		threadEditLock.lock();
 		processes.eraseLike(self);
 		threadEditLock.unlock();
-
+		return null;
 	}
 
-	static Object::Storage AV2Call exec(Context& context, Makai::String const& command, Makai::StringList const& args) {
-		Object::Storage output = output.newEmpty<int64>();
-		auto const thread = AtomicCell<Thread>::create();
+	static Makai::Anima::V2::Core::Object::Storage AV2Call exec(Makai::Anima::V2::Runtime::Context& context, Makai::String const& command, Makai::StringList const& args) {
+		Makai::Anima::V2::Core::Object::Storage output = context.art.newEmpty<int64>();
+		auto const thread = Makai::AtomicCell<Makai::Thread>::create();
 		threadEditLock.lock();
 		processes.pushBack(thread);
 		threadEditLock.unlock();
-		thread->invoke(handleExec, thread, output, command, args);
+		thread->invoke<nulltype>(handleExec, thread, output, command, args);
 		return output;
 	}
 
 	ARTE(
 		bool const allowDynlibs	= false,
-		BuiltinAPI const bapi	= BuiltinAPI()
+		BuiltinAPI const bapi	= BuiltinAPI{false, false, false}
 	): Engine(Config{allowDynlibs}), bapi(bapi) {
 	}
 
@@ -160,7 +160,7 @@ struct ARTEMain: Makai::AMain {
 		showDialogOnError = false;
 	}
 
-	void write(Makai::String const& what) const override {doWrite(what);}
+	void write(Makai::String const& what) const override {printf("%s", what.cstr());}
 
 	static ARTE::Error handleError(ARTE::Error const& e) {
 		throw EngineError(Makai::toString(
@@ -187,16 +187,14 @@ struct ARTEMain: Makai::AMain {
 			};
 			Makai::Anima::V2::Core::Module file;
 			if (!args.fetch("script", false)) {
-				if (args.contains("pipe")) {
-					static auto const ext = Makai::StringList::from(".anp", ".anpb");
-					Makai::String fpath = args["__args"][0].getString();
-					if (Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
-						file = Makai::File::getFLOW(fpath + ext[args.fetch("binary-first", false)]);
-					else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ext[!args.fetch("binary-first", false)]))
-						.then([&] (auto const e) {file = e;})
-						.onError([&] (auto const e) {throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);})
-					;
-				} else file = args["pipe"].getString();
+				static auto const ext = Makai::StringList::from(".anp", ".anpb");
+				Makai::String fpath = args["__args"][0].getString();
+				if (Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
+					file = Makai::File::getFLOW(fpath + ext[args.fetch("binary-first", false)]);
+				else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ext[!args.fetch("binary-first", false)]))
+					.then([&] (auto const e) {file = e;})
+					.onError([&] (auto const e) {throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);})
+				;
 			} else {
 				using namespace Makai::Anima::V2::Toolchain;
 				Compiler::Breve::Transformer::Import::importer
@@ -218,8 +216,15 @@ struct ARTEMain: Makai::AMain {
 						throw Makai::Error::FailedAction("Failed to find module '" + path + "'");
 					}
 				;
-				Makai::String fpath = args["__args"][0].getString();
-				auto const fdata = Makai::File::getText(fpath);
+				Makai::String fpath;
+				Makai::String fdata;
+				if (args.contains("pipe")) {
+					fpath="<<stdin>>.bv";
+					fdata = args["pipe"].getString();
+				} else {
+					fpath = args["__args"][0].getString();
+					fdata = Makai::File::getText(fpath);
+				}
 				if (Makai::Regex::contains(fpath, R"re(\.bv$)re"))			file = Compiler::Breve::compile(fpath, fdata);
 				else if (Makai::Regex::contains(fpath, R"re(\.min$)re"))	file = Assembler::Minima::assemble(fpath, fdata);
 				else [[unlikely]] {

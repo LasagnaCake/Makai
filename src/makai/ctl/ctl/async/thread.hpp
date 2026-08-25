@@ -258,7 +258,7 @@ public:
 	Promise<TReturn> invoke(Executor<TReturn(TArgs...)>::Caller const& call, TArgs... args) {
 		if (running())
 			detach();
-		return tryInvoke(call, args...).value();
+		return tryInvoke<TReturn>(call, args...).value();
 	}
 
 	/// @brief Tries to invoke a thread with the given function. Fails if a thread is already running.
