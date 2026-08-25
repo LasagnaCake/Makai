@@ -31,7 +31,7 @@ struct ShellLib: ALibrary {
 	}
 
 	void load(Context::Adder const& context) override {
-		context.methods.add("av2/shell/cd", 	cd		);
+		context.methods.add("av2/shell/cd",		cd		);
 		context.methods.add("av2/shell/exec",	exec	);
 	}
 
