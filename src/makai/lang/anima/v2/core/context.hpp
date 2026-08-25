@@ -121,15 +121,15 @@ namespace Makai::Anima::V2::Core {
 						MAKAILIB_DEBUGLN_FULL("Void function");
 						bridgeCall(f, tup);
 					} else {
-						CPP::Debug::breakpoint();
 						MAKAILIB_DEBUGLN_FULL("Function returns value");
-						return Meta::ARTInfo<TReturn>::convert(
+						auto const v = Meta::ARTInfo<TReturn>::convert(
 							context.types,
 							bridgeCall(
 								f,
 								tup
 							)
 						);
+						return v;
 					}
 				} else if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
 					MAKAILIB_DEBUGLN_FULL("Pure void function");
