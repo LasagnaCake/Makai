@@ -158,7 +158,7 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_ORDER,
 				/// @brief Declaration (`:=`).
 				LTS_TT_DECLARE,
-				/// @brief Bitwise shift right assignment (`::`).
+				/// @brief Namespace resolution (`::`).
 				LTS_TT_NAMESPACE_RESOLVE,
 				/// @brief Null decay (`??`).
 				LTS_TT_NULL_DECAY,
