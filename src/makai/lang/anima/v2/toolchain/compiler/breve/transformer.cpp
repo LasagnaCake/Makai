@@ -1072,7 +1072,7 @@ ATransformer::Result specialDirectResolve(
 		if (TypeDecl::stronger(value.type, type)) {
 			Makai::Data::Value val;
 			if (type->basic)
-				val = directCast(val.direct, *type->basic);
+				val = directCast(value.direct, *type->basic);
 			else val = value.direct;
 			return {value.source, value.scope, type, value.direct, value.likelihood};
 		}
