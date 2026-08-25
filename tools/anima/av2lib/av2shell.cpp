@@ -6,8 +6,8 @@ using namespace Anima::V2::Core;
 struct ShellLib: ALibrary {
 	using ProcessThread = Makai::AtomicCell<Makai::Thread>;
 
-	static Makai::Mutex threadEditLock;
-	static List<ProcessThread> processes;
+	inline static Makai::Mutex threadEditLock;
+	inline static List<ProcessThread> processes;
 
 	static bool AV2Call cd(String const& str) {
 		#ifdef CTL_ON_WINDOWS
@@ -26,8 +26,8 @@ struct ShellLib: ALibrary {
 		return null;
 	}
 
-	static Object::Storage AV2Call exec(Context& context, String const& command, StringList const& args) {
-		Object::Storage output = context.promise<int64>();
+	static Anima::V2::Core::Promise<int64> AV2Call exec(Context& context, String const& command, StringList const& args) {
+		auto output = context.promise<int64>();
 		auto const thread = ProcessThread::create();
 		threadEditLock.lock();
 		processes.pushBack(thread);

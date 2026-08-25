@@ -79,8 +79,8 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		return local + int64(secs * Makai::Math::pow<double>(10, precision));
 	}
 
-	static Makai::Mutex threadEditLock;
-	static Makai::List<Makai::AtomicCell<Makai::Thread>> processes;
+	inline static Makai::Mutex threadEditLock;
+	inline static Makai::List<Makai::AtomicCell<Makai::Thread>> processes;
 
 	static bool AV2Call cd(Makai::String const& str) {
 		#ifdef CTL_ON_WINDOWS
