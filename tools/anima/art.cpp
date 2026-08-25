@@ -1,9 +1,5 @@
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
-#include <iostream>
-
-#define doWrite(WHAT) std::cout << WHAT
-#define doWriteLine(WHAT) std::cout << WHAT << "\n"
 
 constexpr auto const VER = Makai::Data::Version{1};
 
@@ -83,14 +79,14 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		return local + int64(secs * Makai::Math::pow<double>(10, precision));
 	}
 
-	static Mutex threadEditLock;
-	static List<AtomicCell<Thread>> processes;
+	static Makai::Mutex threadEditLock;
+	static Makai::List<Makai::AtomicCell<TMakai::hread>> processes;
 
 	static bool AV2Call cd(String const& str) {
 		return chdir(str.cstr()) != -1;
 	}
 
-	static void handleExec(AtomicCell<Thread> self, Object::Storage out, String command, StringList args) {
+	static void handleExec(Makai::AtomicCell<Makai::Thread> self, Object::Storage out, Makai::String command, Makai::StringList args) {
 		out->set(OS::launch(command, "", args));
 		threadEditLock.lock();
 		processes.eraseLike(self);
@@ -98,7 +94,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	}
 
-	static Object::Storage AV2Call exec(Context& context, String const& command, StringList const& args) {
+	static Object::Storage AV2Call exec(Context& context, Makai::String const& command, Makai::StringList const& args) {
 		Object::Storage output = output.newEmpty<int64>();
 		auto const thread = AtomicCell<Thread>::create();
 		threadEditLock.lock();
@@ -110,7 +106,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	ARTE(
 		bool const allowDynlibs	= false,
-		BuiltinAPI const bapi	= {}
+		BuiltinAPI const bapi	= BuiltinAPI()
 	): Engine(Config{allowDynlibs}), bapi(bapi) {
 	}
 

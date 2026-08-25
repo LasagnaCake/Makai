@@ -1,15 +1,13 @@
 #include <makai/makai.hpp>
-#include <iostream>
 
 using namespace Makai;
 using namespace Anima::V2::Core;
 
-#define doWrite(WHAT) std::cout << WHAT
-#define doWriteLine(WHAT) std::cout << WHAT << "\n"
-
 struct ShellLib: ALibrary {
-	static Mutex threadEditLock;
-	static List<AtomicCell<Thread>> processes;
+	using ProcessThread = Makai::AtomicCell<Makai::Thread>;
+
+	static Makai::Mutex threadEditLock;
+	static List<ProcessThread> processes;
 
 	static bool AV2Call cd(String const& str) {
 		return chdir(str.cstr()) != -1;
@@ -20,12 +18,11 @@ struct ShellLib: ALibrary {
 		threadEditLock.lock();
 		processes.eraseLike(self);
 		threadEditLock.unlock();
-
 	}
 
 	static Object::Storage AV2Call exec(Context& context, String const& command, StringList const& args) {
 		Object::Storage output = output.newEmpty<int64>();
-		auto const thread = AtomicCell<Thread>::create();
+		auto const thread = ProcessThread::create();
 		threadEditLock.lock();
 		processes.pushBack(thread);
 		threadEditLock.unlock();

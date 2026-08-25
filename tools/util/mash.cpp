@@ -134,7 +134,7 @@ struct Data2DataMain: AMain {
 		else if (cd.name == "run")
 			return Command::invoke({"./" + cmd.name, cmd.args});
 		else if (cd.name == "rbv")
-			return Command::invoke({"art", {"-S", "-BA:C", "-BA:T", "-BA:S", "--pipe", cmd.args.join(" "), "-i", "[mash/art/shell]"}});
+			return Command::invoke({"art", {"-S", "-BA:C", "-BA:T", "-BA:S", "--pipe", cmd.args.join(" ")}});
 		else if (cd.name == "echo")
 			writeLine(cmd.args.join(" "));
 		else return Command::invoke(cmd);
